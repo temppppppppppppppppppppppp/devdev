@@ -1,4 +1,5 @@
 # Wuxia BI Production Harness
+<!-- utf8-hygiene: allow-file rationale: this harness intentionally documents literal mojibake tokens like ??? and � as detection examples. -->
 
 > 인코딩: **UTF-8 only (기본값, 예외 없음)**
 > 작성일: 2026-03-24
@@ -27,7 +28,14 @@
    - UTF-8 저장
    - 정합성 검증
    - 5-Pass 감리
+   - PASS/FAIL 보고 후 정지
 8. 하나라도 실패하면 다음 단계로 넘어가지 않는다.
+
+추가 해석:
+
+- TR production의 `5블록 자동 연속 cap`은 source TR 쪽 규칙이다.
+- BI 단계는 block count로 환산하지 않는다.
+- source TR이 70블록 완료 전이거나, 5블록 창 중간 정지 상태면 BI로 넘어가지 않는다.
 
 금지:
 
@@ -587,6 +595,17 @@ python -X utf8 scripts/audit_narrative_bi.py --genre wuxia --phase0 treatments/<
 | 그다음 `다음 스텝` | UTF-8 저장 검증 + 5-Pass 감리 | 감리 report |
 | 그다음 `다음 스텝` | 중간 산출물 정리 또는 최종 패키징 | 보존본만 남김 |
 
+### 9.1A BI auto-handoff boundary
+
+TR production의 5블록 cap은 BI 단계에 그대로 적용하지 않는다.
+BI는 block 단위가 아니라 handoff 단위로 움직인다.
+
+규칙:
+
+1. BI auto-run은 `스켈레톤 -> 결정적 동기화 -> UTF-8 저장 -> 5-Pass 감리` **1사이클**까지만 허용한다.
+2. PASS 또는 FAIL 보고가 나오면 그 지점에서 멈춘다. 같은 오더로 BI를 무한 재생성하지 않는다.
+3. source TR이 5블록 cap 때문에 중간 정지한 상태라면 BI로 넘어가지 않는다. BI 시작 조건은 `TR 70블록 완료 + source TR handoff gate PASS`다.
+
 ### 9.2 강제 정지 게이트
 
 - `TR draft` 또는 `phase0_design` 부재
@@ -596,6 +615,7 @@ python -X utf8 scripts/audit_narrative_bi.py --genre wuxia --phase0 treatments/<
 - `???` / `�` 탐지
 - 감리 FAIL
 - NPC deceased 모순 탐지
+- PASS/FAIL 보고 완료 후 새 오더 대기
 
 ---
 

@@ -1,5 +1,7 @@
 # TF-LCP: 토큰 한계 중장기 프로젝트 연속 진행 전략
 
+<!-- utf8-hygiene: allow-file rationale: this persistence note intentionally includes literal stop-gate tokens and source URLs with query strings as reference examples. -->
+
 > 상태: **CONFIRMED** (3-Pass 감리 완료 2026-03-12)
 > 감리 결과: P1 3건 수정, P2 2건 수정, MINOR 1건 수용
 > 트리거: TF-OBP 작성 중 "컨텍스트 윈도우 근인"에 대한 구조적 대응 필요성 도출
@@ -133,6 +135,8 @@ Tool 출력 (감리 결과, 차이 행렬)    → 인라인 압축
 # 개념적 구조
 state = load_state("production_state.json")
 while state.next_block <= 70:
+    if state.blocks_in_current_order >= 5:
+        break  # fresh order required
     prompt = build_prompt(ssot_rules, state, last_block)
     response = llm.generate(prompt)
     block = parse_block(response)
@@ -169,7 +173,7 @@ while state.next_block <= 70:
 ### 4.1 언제 Clear하는가
 
 - **Claude Code:** 컨텍스트 사용량 60% 초과 시 (자동 compaction 전에 선제 clear)
-- **채팅 UI:** 블록 10개 생산 후 또는 아크 경계에서
+- **채팅 UI:** 같은 운영 오더에서 5블록 생산 후 또는 그 이전 아크 경계에서
 - **판단 기준:** "SSOT 규칙을 아직 기억하고 있는가?" — 기억 못 하면 즉시 clear
 
 ### 4.2 Clear 전 저장할 것
@@ -198,7 +202,7 @@ while state.next_block <= 70:
 4. treatments/{work_id}_block_{last}_candidate.json (직전 블록)
 5. treatments/{work_id}_phase0_design.json (Phase 0 설계)
 
-상태 파일의 next_block부터 즉시 생산 시작. "계속할까요?" 금지.
+상태 파일의 next_block부터 즉시 생산 시작. 단, 같은 운영 오더의 5블록 창이 이미 소진됐으면 fresh order를 먼저 받는다. "계속할까요?" 금지.
 ```
 
 ### 4.4 Claude Code 전용: 컨텍스트 관리

@@ -235,7 +235,19 @@
 ### 3A. `seed_baseline_sync`와 `sequential_production`을 구분한다
 
 Production을 시작하거나 compaction 뒤 재개할 때는 먼저
-`treatments/preprocess/{work_id}/docs/sequential_run_status.md`를 읽는다.
+상태 파일을 읽는다.
+
+읽기 우선순위:
+
+1. `treatments/preprocess/{work_id}/sequential_run_status.json` (primary)
+2. `treatments/preprocess/{work_id}/docs/sequential_run_status.md` (deprecated fallback, 유예 기간 내만 허용)
+3. 둘 다 없으면 `status_missing` → `restart_at_block_001`
+
+cutover 기준:
+
+- 기존 작품: `run_class`가 `sequential_production`으로 전환 시 JSON 필수
+- 신규 작품: Stage 0 완료 시 JSON 필수
+- 유예: cutover 후 30일간 md 병행, 이후 JSON-only (md-only는 hard_fail)
 
 run class는 아래 둘만 허용한다.
 
@@ -319,7 +331,7 @@ Rollback 규칙:
 5. 첫 블록(`Block 1`) 또는 아크 전환 직후 첫 블록(`11/21/31/41/51/61`)이면 더 느리게 간다.
 6. 이번 턴 생산 단위는 블록 1개로 고정한다.
 7. 직전 블록의 수동 감리 메모가 없으면 다음 블록으로 넘어가지 않는다.
-8. `treatments/preprocess/{work_id}/docs/sequential_run_status.md`가 있으면 먼저 읽는다.
+8. 상태 파일을 먼저 읽는다: `sequential_run_status.json` (primary) → `.md` (deprecated fallback, 유예 기간 내만).
 9. `run_class = seed_baseline_sync`면 기존 block 폴더와 `04_tr_final/`은 참고 seed로만 취급한다.
 10. 최고 번호 block 디렉터리 개수나 final draft 존재만으로 진행률을 판정하지 않는다.
 11. 재개 근거가 모호하면 `Block 001`부터 다시 시작한다.
@@ -354,18 +366,20 @@ Rollback 규칙:
 - `not auto-run` = 무조건 멈추고 사용자 승인만 기다리는 것
 - `auto-run`은 **스크립트 실행 강제**가 아니다.
 - Production에서는 `auto-run`이어도 `Block 1 -> 감리 -> Block 2 -> 감리`처럼 1개씩만 간다.
+- 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이며, `Block 005/010/015...` 경계마다 새 오더가 필요하다.
 - `seed_baseline_sync`는 참고용 seed이며 progress로 계산하지 않는다.
 - progress는 `sequential_production`과 그에 연결된 수동 감리 PASS 기록에서만 나온다.
 
 정지 게이트:
 
 - UTF-8 파싱 실패
-- `???`, `�` 탐지
+- `???`, `�` 탐지 <!-- utf8-hygiene: allow-line rationale: literal mojibake tokens are documented here as stop-gate examples. -->
 - P0 또는 감리 FAIL
 - 직전 SSOT 부재
 - 직전 단위 수동 감리 메모 부재
-- `sequential_run_status.md`와 실제 수동 감리 기록이 충돌
+- `sequential_run_status.json` (또는 .md deprecated fallback)와 실제 수동 감리 기록이 충돌
 - `seed_baseline_sync`를 `sequential_production`처럼 취급하려는 시도
+- 같은 운영 오더에서 5블록 창 소진
 - 사용자가 방향 수정 또는 수동 검토를 명시
 
 ---
@@ -406,6 +420,12 @@ Rollback 규칙:
 
 단계 전환은 정지 게이트가 아니다. Go 조건이 충족되면 멈추지 않고 다음 단계로 넘어간다.
 
+Production/BI 자동 진행 경계:
+
+- Production auto-run의 내부 단위는 항상 `Block 1개`다.
+- 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이며, `Block 005/010/015...` 경계마다 새 오더가 필요하다.
+- BI auto-run은 **handoff 1사이클**까지만 허용한다. sync/audit PASS 또는 FAIL 보고가 끝나면 반드시 정지한다.
+
 금지:
 - "Stage 0 끝났습니다. Planning으로 갈까요?"
 - "Phase 0 설계 완료했습니다. Production 시작할까요?"
@@ -413,9 +433,12 @@ Rollback 규칙:
 
 허용:
 - "Stage 0 완료. Planning 진입." (1줄 상태 보고 후 즉시 진행)
-- "Block 10 완료. Block 11 시작." (보고와 동시에 진행)
+- "Block 4 완료. Block 5 시작." (같은 운영 오더 내 허용)
+- "TR 70 완료. BI handoff 1사이클 진행." (상태 보고 후 바로 감리/동기화)
 
 유일한 정지 조건:
 - manual_audit_pass 필요 시 (Stage 0 → Planning 전환)
 - context window 한계 도달
+- 같은 운영 오더에서 5블록 창 소진
+- BI handoff 1사이클 완료
 - 사용자의 명시적 정지 지시

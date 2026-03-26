@@ -1,4 +1,5 @@
 # BI 생산 하네스 v1
+<!-- utf8-hygiene: allow-file rationale: this harness intentionally documents literal mojibake tokens like ??? and � as detection examples. -->
 
 > 인코딩: **UTF-8 only (기본값, 예외 없음)**
 > 작성일: 2026-03-09
@@ -29,7 +30,14 @@
    - UTF-8 저장
    - 정합성 검증
    - 5-Pass 감리
+   - PASS/FAIL 보고 후 정지
 10. 하나라도 실패하면 다음 단계로 넘어가지 않는다.
+
+추가 해석:
+
+- TR production의 `5블록 자동 연속 cap`은 source TR 쪽 규칙이다.
+- BI 단계는 block count로 환산하지 않는다.
+- source TR이 70블록 완료 전이거나, 5블록 창 중간 정지 상태면 BI로 넘어가지 않는다.
 
 금지:
 
@@ -252,6 +260,17 @@ BI handoff 전에는 source TR이 **구조상 존재**하는 것만으로는 부
 - BI가 구조적으로 맞아 보여도 source TR gate 실패면 PASS 불가
 - source TR에 cadence 경고 또는 반복 경고가 남아 있으면, BI 감리 보고서에 그 사실을 명시한다.
 
+### 3.1B BI auto-handoff boundary
+
+TR production의 5블록 cap은 BI 단계에 그대로 적용하지 않는다.
+BI는 block 단위가 아니라 handoff 단위로 움직인다.
+
+규칙:
+
+1. BI auto-run은 `스켈레톤 -> 결정적 동기화 -> UTF-8 저장 -> 5-Pass 감리` **1사이클**까지만 허용한다.
+2. PASS 또는 FAIL 보고가 나오면 그 지점에서 멈춘다. 같은 오더로 BI를 무한 재생성하지 않는다.
+3. source TR이 5블록 cap 때문에 중간 정지한 상태라면 BI로 넘어가지 않는다. BI 시작 조건은 `TR 70블록 완료 + source TR handoff gate PASS`다.
+
 ### 3.2 연속 handoff 허용 모드 (Quality-First)
 
 BI 단계도 연속 handoff를 허용한다.
@@ -284,7 +303,9 @@ BI 단계도 연속 handoff를 허용한다.
 4. 컨텍스트 compaction이 발생해도 같은 원칙을 유지한다. 이 경우 `TR draft`, `phase0_design`, 기존 `BI`를 UTF-8로 재오픈한 뒤 자동 재개한다.
 5. BI와 감리 보고서는 전부 **UTF-8 only**로 읽고 쓴다. 한글 깨짐은 즉시 재생성 대상으로 본다.
 6. BI 감리 PASS 전에는 후처리 삭제로 넘어가지 않는다.
-7. 중간에 하나라도 실패하면 자동 진행을 중단하고, 실패 단계와 원인을 바로 보고한다.
+7. TR의 5블록 cap은 BI에 적용하지 않는다. BI는 handoff 1사이클 기준으로만 자동 진행한다.
+8. 중간에 하나라도 실패하면 자동 진행을 중단하고, 실패 단계와 원인을 바로 보고한다.
+9. PASS/FAIL 보고가 끝나면 새 오더 전까지 재생성 루프를 이어 가지 않는다.
 
 ### 3.3 초세분화 handoff 루틴 (저지능 LLM 기본값)
 

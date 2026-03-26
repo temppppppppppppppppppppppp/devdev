@@ -2,7 +2,8 @@
 
 - run_class: `seed_baseline_sync`
 - last_sequential_block_pass: `0`
-- next_block: `Block 001`
+- next_unit_type: `block`
+- next_block_id: `Block 001`
 - manual_audit_ready: `false`
 - notes:
   - This preprocess base may contain copied or mirrored canonical assets.

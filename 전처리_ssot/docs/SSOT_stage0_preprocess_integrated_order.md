@@ -88,7 +88,8 @@ Stage 0가 끝난 뒤 preprocess 작업공간이 이미 채워져 있더라도, 
 ```text
 run_class: seed_baseline_sync | sequential_production
 last_sequential_block_pass: 0..70
-next_block: Block 001..070 | merge | BI_handoff
+next_unit_type: block | merge | bi_handoff
+next_block_id: Block 001..070 | null
 manual_audit_ready: true | false
 notes: free text
 ```
@@ -161,7 +162,8 @@ Production handoff 추가 규칙:
 
 - preprocess 작업공간에 block 디렉터리나 final draft가 이미 있더라도 그것만으로는 sequential progress를 인정하지 않는다.
 - Stage 0를 끝낸 뒤 production으로 넘길 때는 `sequential_run_status.json` (primary) 또는 `docs/sequential_run_status.md` (deprecated fallback)에 현재 상태를 먼저 적는다.
-- seed만 있는 기지는 `run_class = seed_baseline_sync`, `last_sequential_block_pass = 0`, `next_block = Block 001`로 시작한다.
+- seed만 있는 기지는 `run_class = seed_baseline_sync`, `last_sequential_block_pass = 0`, `next_unit_type = block`, `next_block_id = Block 001`로 시작한다.
+- TR auto-run은 production 진입 후에도 1블록씩만 움직이며, 같은 오더에서 최대 5블록 후 새 오더를 기다린다.
 
 금지:
 
@@ -196,7 +198,7 @@ Production handoff 추가 규칙:
 - `material_bundle_summary`가 작품 전장에 바로 옮길 수 있는 재료를 담고 있다
 - `phase0_ready_snapshot.manual_audit_pass == true`
 
-**Go 행동 규칙:** Go 조건이 전부 충족되면 **멈추지 않고** Planning으로 바로 넘긴다. "Stage 0 끝났습니다. Planning으로 갈까요?"를 묻는 것은 금지한다. 단계 전환은 정지 게이트가 아니다.
+**Go 행동 규칙:** Go 조건이 전부 충족되면 **멈추지 않고** Planning으로 바로 넘긴다. "Stage 0 끝났습니다. Planning으로 갈까요?"를 묻는 것은 금지한다. 단계 전환은 정지 게이트가 아니다. <!-- utf8-hygiene: allow-line rationale: literal quoted operator question example. -->
 
 ---
 

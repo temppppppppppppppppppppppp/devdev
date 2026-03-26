@@ -80,6 +80,8 @@ Resume rules:
 2. If `stage == production`, open `docs/wuxguide/wuxia-production-harness.md`.
 3. If `stage == bi`, open `docs/wuxguide/wuxia-bi-production-harness.md`.
 4. If `stage == audit_or_repair`, audit the BI first and repair the smallest failing layer.
+5. Production 재개 시에는 `treatments/preprocess/{work_id}/sequential_run_status.json`을 먼저 읽고, `.md`는 deprecated fallback으로만 취급한다.
+6. Production auto-run은 내부 단위가 항상 1블록이며, 같은 운영 오더에서 최대 5블록까지만 허용한다.
 
 If `artifact_state.preprocess_ready == false`, return to `전처리_ssot/docs/SSOT_stage0_preprocess_integrated_order.md` before family planning.
 
@@ -94,9 +96,9 @@ python -X utf8 scripts/narrative_router.py --genre wuxia --work-id <work_id>
 TR prompt / check / merge:
 
 ```bash
-python -X utf8 scripts/narrative_tr_batch.py --genre wuxia prompt --draft treatments/<work_id>_tr_block_070_draft.json --roadmap bible/0_bi_<work_id>.json --start 1 --batch-size 3
-python -X utf8 scripts/narrative_tr_batch.py --genre wuxia check --candidate treatments/<candidate>.json --draft treatments/<work_id>_tr_block_070_draft.json --start 1 --batch-size 3 --report treatments/<work_id>_batch_check.md
-python -X utf8 scripts/narrative_tr_batch.py --genre wuxia merge --draft treatments/<work_id>_tr_block_070_draft.json --candidate treatments/<candidate>.json --start 1 --batch-size 3 --report treatments/<work_id>_batch_merge.md
+python -X utf8 scripts/narrative_tr_batch.py --genre wuxia prompt --draft treatments/<work_id>_tr_block_070_draft.json --roadmap bible/0_bi_<work_id>.json --start 1 --batch-size 1
+python -X utf8 scripts/narrative_tr_batch.py --genre wuxia check --candidate treatments/<candidate>.json --draft treatments/<work_id>_tr_block_070_draft.json --start 1 --batch-size 1 --report treatments/<work_id>_batch_check.md
+python -X utf8 scripts/narrative_tr_batch.py --genre wuxia merge --draft treatments/<work_id>_tr_block_070_draft.json --candidate treatments/<candidate>.json --start 1 --batch-size 1 --report treatments/<work_id>_batch_merge.md
 ```
 
 BI build and audit:
@@ -154,6 +156,13 @@ TR/BI 감리 중 발견되는 무협 특화 실패 유형과 대응 절차.
 
 단계 전환은 정지 게이트가 아니다. Go 조건이 충족되면 멈추지 않고 다음 단계로 넘어간다.
 
+Production 단위 규칙:
+
+- Production auto-run의 내부 단위는 항상 `Block 1개`다.
+- 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이다.
+- `Block 005/010/015...` 경계에 도달하면 새 오더 전까지 반드시 멈춘다.
+- BI auto-run은 `handoff 1사이클`까지만 허용한다. sync/audit PASS 또는 FAIL 보고가 끝나면 반드시 정지한다.
+
 금지:
 - "Stage 0 끝났습니다. Planning으로 갈까요?"
 - "Phase 0 설계 완료했습니다. Production 시작할까요?"
@@ -161,9 +170,12 @@ TR/BI 감리 중 발견되는 무협 특화 실패 유형과 대응 절차.
 
 허용:
 - "Stage 0 완료. Planning 진입." (1줄 상태 보고 후 즉시 진행)
-- "Block 10 완료. Block 11 시작." (보고와 동시에 진행)
+- "Block 4 완료. Block 5 시작." (같은 운영 오더 내 허용)
+- "TR 70 완료. BI handoff 1사이클 진행." (상태 보고 후 바로 감리/동기화)
 
 유일한 정지 조건:
 - manual_audit_pass 필요 시 (Stage 0 → Planning 전환)
 - context window 한계 도달
+- 같은 운영 오더에서 5블록 창 소진
+- BI handoff 1사이클 완료
 - 사용자의 명시적 정지 지시
