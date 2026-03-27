@@ -1,0 +1,13 @@
+{"timestamp": "2026-03-27 17:23:40", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_end_state 위치 동기화: '알 수 없음' → '진가장 본산 내 넷째 진소풍의 요양 전각, 피비린내가 가시지 않은 병상 옆 차가운 바닥'"]}}
+{"timestamp": "2026-03-27 17:26:14", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_end_state 위치 동기화: '알 수 없음' → '진가장 본산 내 넷째 진소풍의 요양 전각, 피비린내가 가시지 않은 병상 옆 차가운 바닥'"]}}
+{"timestamp": "2026-03-27 17:28:08", "type": "field_repair", "message": "hybrid_composition default injected", "data": {"arc_no": 1}}
+{"timestamp": "2026-03-27 17:28:08", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-27 17:28:39", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 2}}
+{"timestamp": "2026-03-27 17:32:54", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-27 17:32:54", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "dialogue_focused", "score": 85, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-03-27 17:37:35", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-27 17:37:35", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "dialogue_focused", "score": 88, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-03-27 17:41:36", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-27 17:41:36", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "action_focused", "score": 90, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-03-27 17:56:07", "type": "target_ep_reached", "message": "stage4 target episode reached", "data": {"target_ep": 2, "next_ep": 3}}
+{"timestamp": "2026-03-27 17:56:07", "type": "stage4_complete", "message": "stage4 production completed", "data": {"target_ep": 2}}

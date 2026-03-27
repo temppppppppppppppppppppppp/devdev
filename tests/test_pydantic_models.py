@@ -200,6 +200,24 @@ class TestStateChangesDict:
 # ArcState
 # ═══════════════════════════════════════════════════════════════════
 
+class TestNpcMartialStateChanges:
+    def test_arc_data_accepts_npc_martial_state_changes(self):
+        sc: StateChangesDict = {
+            "npc_martial_state_changes": [
+                {
+                    "name": "Chief Han",
+                    "episode": 5,
+                    "realm": "Peak",
+                    "techniques_learned": ["Storm Palm"],
+                }
+            ]
+        }
+
+        arc = ArcData.model_validate({"arc_no": 1, "ep_start": 1, "ep_end": 5, "state_changes": sc})
+
+        assert arc.state_changes["npc_martial_state_changes"][0]["realm"] == "Peak"
+        assert arc.state_changes["npc_martial_state_changes"][0]["techniques_learned"] == ["Storm Palm"]
+
 
 class TestArcState:
     def test_defaults(self):

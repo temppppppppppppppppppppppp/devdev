@@ -632,6 +632,68 @@ class TestProcessPassResult:
         assert result["actual_truth"]["inventory_counts"] == {"독수리 비검": 1, "은자": 3}
         assert {"name": "은자", "from": 1, "to": 3, "delta": 2} in result["inventory_count_deltas"]
 
+    def test_collect_manager_and_build_delta_normalizes_dict_martial_arts(self):
+        pp = self._make_pp()
+        pp.ctx.current_project.latest_state = {
+            "actual_truth": {
+                "martial_arts": [{"name": "Storm Palm"}],
+            }
+        }
+        pp.post_pass_runtime._resolve_manager_audit = MagicMock(
+            return_value={
+                "state_updates": {
+                    "actual_truth": {
+                        "martial_arts": [
+                            {"name": "Storm Palm"},
+                            {"name": "Cloud Step", "realm": "Peak"},
+                            {"main_technique": "Heavenly Blade"},
+                            {"unknown": "ignored"},
+                        ]
+                    }
+                }
+            }
+        )
+        pp.post_pass_runtime._build_manager_delta_collections = MagicMock(
+            return_value={
+                "new_npc_names": [],
+                "npc_deaths": [],
+                "relationship_changes": [],
+                "karma_matrix": [],
+                "reveal_list": [],
+            }
+        )
+        pp.post_pass_runtime._apply_state_text_and_pressure_vectors = MagicMock(
+            side_effect=lambda **kwargs: {
+                "actual_truth": kwargs["actual_truth"],
+                "active_pressure_vectors": [],
+                "pressure_vectors_changed": False,
+            }
+        )
+        pp.post_pass_runtime._persist_manager_delta_outputs = MagicMock(
+            return_value={"bible_delta": {"state_changes": {}}, "meta_save_failed": False}
+        )
+
+        result = pp.post_pass_runtime._collect_manager_and_build_delta(
+            next_ep=11,
+            final_manuscript="test manuscript",
+            bible_future=None,
+            current_state={"actual_truth": {}},
+            lore_list=[],
+            active_seeds=[],
+            causal_history="",
+            genre_type="wuxia",
+            critical_keys=[],
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+        )
+
+        assert result["meta_save_failed"] is False
+        assert result["bible_delta"] == {"state_changes": {}}
+        assert set(pp.post_pass_runtime._persist_manager_delta_outputs.call_args.kwargs["all_new_items"]) == {
+            "Cloud Step",
+            "Heavenly Blade",
+        }
+
     def test_merge_manager_key_npcs_into_master_bible_merges_existing_and_new_entries(self):
         pp = self._make_pp()
         pp.ctx.current_project.master_bible = {
@@ -1403,6 +1465,35 @@ class TestAtomicMetadataSave:
         assert result["world_state_changes"]["active_pressure_vectors"] == [{"text": "압박", "source": "ending_hook"}]
         assert "active_pressure_vectors" not in result["fact_ledger_changes"]
         assert result["fact_ledger_changes"]["inventory_count_deltas"] == [{"name": "gold", "delta": 2}]
+
+    def test_build_atomic_state_payloads_keeps_npc_martial_state_world_only(self):
+        pp = self._make_pp_with_metadata()
+
+        result = pp.post_pass_runtime._build_atomic_state_payloads(
+            final_state_updates={"hp": 10},
+            bible_delta={
+                "state_changes": {
+                    "npc_martial_state_changes": [
+                        {
+                            "name": "Chief Han",
+                            "episode": 4,
+                            "realm": "Peak",
+                            "techniques_learned": ["Storm Palm"],
+                        }
+                    ]
+                }
+            },
+        )
+
+        assert result["world_state_changes"]["npc_martial_state_changes"] == [
+            {
+                "name": "Chief Han",
+                "episode": 4,
+                "realm": "Peak",
+                "techniques_learned": ["Storm Palm"],
+            }
+        ]
+        assert "npc_martial_state_changes" not in result["fact_ledger_changes"]
 
     def test_persist_atomic_world_state_updates_and_logs(self):
         pp = self._make_pp_with_metadata()

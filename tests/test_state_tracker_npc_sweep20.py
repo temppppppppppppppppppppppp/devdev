@@ -4,6 +4,7 @@ import sys
 import types
 from unittest.mock import MagicMock
 
+from modules.domain.agents.state_tracker import StateTracker
 from modules.domain.agents.state_tracker_npc import StateTrackerNPC
 
 
@@ -90,3 +91,51 @@ def test_verify_npc_names_llm_retry_exhausted_fail_closed(monkeypatch):
 
     assert result == []
     assert tracker._llm_client.models.generate_content.call_count == 2
+
+
+def test_extract_npc_martial_state_changes_reads_explicit_state_changes_only():
+    tracker = StateTracker()
+    helper = tracker._npc
+
+    result = helper.extract_npc_martial_state_changes_from_arc(
+        {
+            "arc_no": 3,
+            "ep_start": 11,
+            "tactical_doc": "Chief Han reached Peak and used Storm Palm.",
+            "state_changes": {
+                "npc_martial_state_changes": [
+                    {
+                        "name": "Chief Han",
+                        "episode": 12,
+                        "realm": "Peak",
+                        "techniques_learned": ["Storm Palm", "Storm Palm"],
+                    }
+                ]
+            },
+        }
+    )
+
+    assert result == [
+        {
+            "name": "Chief Han",
+            "episode": 12,
+            "realm": "Peak",
+            "techniques_learned": ["Storm Palm"],
+        }
+    ]
+
+
+def test_extract_npc_martial_state_changes_does_not_fallback_to_regex_only_text():
+    tracker = StateTracker()
+    helper = tracker._npc
+
+    result = helper.extract_npc_martial_state_changes_from_arc(
+        {
+            "arc_no": 3,
+            "ep_start": 11,
+            "tactical_doc": "Chief Han reached Peak and learned Storm Palm.",
+            "state_changes": {},
+        }
+    )
+
+    assert result == []

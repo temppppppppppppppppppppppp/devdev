@@ -16,6 +16,32 @@ if TYPE_CHECKING:
     from modules.core.stage4_post_processor import Stage4PostProcessor
 
 
+def _normalize_martial_arts_snapshot(raw_entries) -> list[str]:
+    """Normalize manager martial_arts payloads into comparable technique names."""
+    if not isinstance(raw_entries, list):
+        return []
+
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for raw_entry in raw_entries:
+        technique_name = ""
+        if isinstance(raw_entry, str):
+            technique_name = raw_entry.strip()
+        elif isinstance(raw_entry, dict):
+            for key in ("name", "technique", "main_technique", "title"):
+                raw_value = raw_entry.get(key)
+                if isinstance(raw_value, str) and raw_value.strip():
+                    technique_name = raw_value.strip()
+                    break
+
+        if not technique_name or technique_name in seen:
+            continue
+        normalized.append(technique_name)
+        seen.add(technique_name)
+
+    return normalized
+
+
 class Stage4PostPassRuntime:
     """Bounded runtime authority for Stage 4 post-pass settlement."""
 
@@ -255,10 +281,14 @@ class Stage4PostPassRuntime:
             curr_equipment = set(curr_inventory_counts)
             if is_wuxia(genre_type):
                 prev_martial = set(
-                    prev_actual.get("martial_arts", []) if isinstance(prev_actual.get("martial_arts"), list) else []
+                    _normalize_martial_arts_snapshot(
+                        prev_actual.get("martial_arts", []) if isinstance(prev_actual, dict) else []
+                    )
                 )
                 curr_martial = set(
-                    actual_truth.get("martial_arts", []) if isinstance(actual_truth.get("martial_arts"), list) else []
+                    _normalize_martial_arts_snapshot(
+                        actual_truth.get("martial_arts", []) if isinstance(actual_truth, dict) else []
+                    )
                 )
             else:
                 prev_martial = set()
@@ -882,6 +912,7 @@ class Stage4PostPassRuntime:
     def _build_atomic_state_payloads(self, *, final_state_updates, bible_delta):
         inventory_payload = {}
         relationship_payload = {}
+        martial_payload = {}
         pressure_payload = {}
 
         if isinstance(bible_delta, dict):
@@ -897,6 +928,12 @@ class Stage4PostPassRuntime:
                 relationship_payload["relationship_changes"] = list(relationship_changes)
 
             state_changes = bible_delta.get("state_changes")
+            martial_state_changes = None
+            if isinstance(state_changes, dict):
+                martial_state_changes = state_changes.get("npc_martial_state_changes")
+            if isinstance(martial_state_changes, list) and martial_state_changes:
+                martial_payload["npc_martial_state_changes"] = list(martial_state_changes)
+
             pressure_vectors = None
             if "active_pressure_vectors" in bible_delta:
                 pressure_vectors = bible_delta.get("active_pressure_vectors")
@@ -910,6 +947,8 @@ class Stage4PostPassRuntime:
             world_state_changes.update(inventory_payload)
         if relationship_payload:
             world_state_changes.update(relationship_payload)
+        if martial_payload:
+            world_state_changes.update(martial_payload)
         if pressure_payload:
             world_state_changes.update(pressure_payload)
 

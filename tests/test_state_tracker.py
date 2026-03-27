@@ -384,6 +384,47 @@ class TestCheckDeadNpcInManuscript:
         assert violations == []
 
 
+class TestExtractNpcMartialStateChanges:
+    def test_extract_all_state_changes_emits_storage_only_npc_martial_family(self, tracker):
+        arc = {
+            "arc_no": 7,
+            "ep_start": 25,
+            "ep_end": 28,
+            "state_changes": {
+                "npc_martial_state_changes": [
+                    {
+                        "name": "Chief Han",
+                        "episode": 28,
+                        "realm": "Peak",
+                        "techniques_learned": ["Storm Palm", "Cloud Step", "Storm Palm", ""],
+                    },
+                    {
+                        "name": "Scout Min",
+                        "episode": "bad",
+                        "techniques_learned": ["Shadow Step"],
+                    },
+                    {"name": "NoOp", "episode": 28},
+                ]
+            },
+        }
+
+        state_changes = tracker.extract_all_state_changes(arc)
+
+        assert state_changes["npc_martial_state_changes"] == [
+            {
+                "name": "Chief Han",
+                "episode": 28,
+                "realm": "Peak",
+                "techniques_learned": ["Storm Palm", "Cloud Step"],
+            },
+            {
+                "name": "Scout Min",
+                "episode": 28,
+                "techniques_learned": ["Shadow Step"],
+            },
+        ]
+
+
 class TestFullExtractFromArcs:
     """B-1/B-2: full_extract_from_arcs가 17개 메서드를 일관 호출하는지 검증."""
 
@@ -523,3 +564,32 @@ class TestResolvedPlotsSummaryLimit:
         assert len(lines) > 2
         assert lines[1].strip().startswith("(")
         assert "5" in lines[1]
+
+
+class TestExtractAllStateChanges:
+    def test_includes_npc_martial_state_changes(self, tracker):
+        arc = {
+            "arc_no": 3,
+            "ep_start": 11,
+            "state_changes": {
+                "npc_martial_state_changes": [
+                    {
+                        "name": "Chief Han",
+                        "episode": 12,
+                        "realm": "Peak",
+                        "techniques_learned": ["Storm Palm"],
+                    }
+                ]
+            },
+        }
+
+        result = tracker.extract_all_state_changes(arc)
+
+        assert result["npc_martial_state_changes"] == [
+            {
+                "name": "Chief Han",
+                "episode": 12,
+                "realm": "Peak",
+                "techniques_learned": ["Storm Palm"],
+            }
+        ]
