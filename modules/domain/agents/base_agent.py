@@ -393,8 +393,25 @@ class BaseAgent:
         request = LLMRequest(model=model, contents=contents, config=config)
         provider = self._llm_router.get_provider_for_model(model)
         response = provider.generate(client=self.client, request=request)
-        self._last_llm_usage = response.usage  # 실측 토큰 보존
+        self._last_llm_usage = self._normalize_usage(response.usage)
         return response
+
+    @staticmethod
+    def _normalize_usage(usage: dict | None) -> dict:
+        """Normalize provider-specific usage keys to Gemini-canonical internal format.
+
+        Claude/OpenAI return ``input_tokens``/``output_tokens``; Gemini returns
+        ``prompt_token_count``/``candidates_token_count``.  Downstream accumulation
+        and metric payload builders rely on Gemini keys, so we bridge here once.
+        """
+        if not isinstance(usage, dict):
+            return {}
+        normalized = dict(usage)
+        if "input_tokens" in normalized and "prompt_token_count" not in normalized:
+            normalized["prompt_token_count"] = normalized["input_tokens"]
+        if "output_tokens" in normalized and "candidates_token_count" not in normalized:
+            normalized["candidates_token_count"] = normalized["output_tokens"]
+        return normalized
 
     def _generate_content(self, *, model: str, contents, config):
         """Legacy raw-response compatibility seam for BaseAgent internals."""
@@ -1379,8 +1396,8 @@ class BaseAgent:
             chunk = ""
             logging.warning("[base_agent] response.text 접근 실패 (safety filter?) — 빈 응답 처리")
 
-        # [TF-28] thinking content 추출 (첫 응답에서만)
-        if thinking_level and attempt == 0 and not _thinking_text:
+        # [TF-28] thinking content 추출 (첫 응답에서만, Gemini raw only)
+        if thinking_level and attempt == 0 and not _thinking_text and hasattr(response, "candidates"):
             try:
                 if response.candidates and response.candidates[0].content:
                     _tparts = []
@@ -1419,7 +1436,8 @@ class BaseAgent:
             "action": "break",
         }
 
-        if not response.candidates:
+        # [Wave1:C] non-Gemini raw responses lack .candidates — skip continuation logic
+        if not hasattr(response, "candidates") or not response.candidates:
             return result
         candidate = response.candidates[0]
 

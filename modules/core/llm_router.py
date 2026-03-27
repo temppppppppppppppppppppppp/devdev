@@ -3,6 +3,7 @@ from __future__ import annotations
 from modules.core.llm_provider import LLMProvider
 from modules.core.models_config import load_models_yaml, resolve_models_yaml_path
 from modules.core.providers.anthropic_provider import AnthropicProvider
+from modules.core.providers.anthropic_vertex_provider import AnthropicVertexProvider
 from modules.core.providers.gemini_provider import GeminiProvider
 from modules.core.providers.openai_provider import OpenAIProvider
 from modules.core.providers.vertex_provider import VertexAIProvider
@@ -14,10 +15,17 @@ DEFAULT_PROVIDER_CONFIGS = {
     "vertex_ai": {
         "enabled": False,
         "sdk": "google-genai",
+        "auth_mode": "api_key",
         "api_key_env": "VERTEX_API_KEY",
         "project_id_env": "VERTEX_PROJECT_ID",
         "location_env": "VERTEX_LOCATION",
         "credentials_env": "GOOGLE_APPLICATION_CREDENTIALS",
+    },
+    "anthropic_vertex": {
+        "enabled": False,
+        "sdk": "anthropic",
+        "project_id_env": "VERTEX_PROJECT_ID",
+        "location_env": "VERTEX_LOCATION",
     },
 }
 
@@ -26,8 +34,43 @@ BACKEND_FAMILY_MAP: dict[str, tuple[str, str]] = {
     "gemini": ("google_direct", "gemini"),
     "vertex_ai": ("google_vertex", "gemini"),
     "anthropic": ("anthropic_direct", "claude"),
+    "anthropic_vertex": ("anthropic_vertex", "claude"),
     "openai": ("openai_direct", "gpt"),
 }
+
+
+def _infer_provider_name_safe(model: str) -> str:
+    """Infer provider name from model string prefix.
+
+    Returns ``"unknown"`` for unrecognised prefixes instead of raising.
+    This is the single implementation of the prefix-matching logic;
+    :meth:`LLMProviderRouter.infer_provider_name` and
+    :func:`resolve_provider_identity` both delegate here.
+    """
+    normalized = (model or "").strip().lower()
+    if normalized.startswith(("anthropic-vertex:", "anthropic_vertex:")):
+        return "anthropic_vertex"
+    if normalized.startswith(("vertexai:", "vertex:", "vertex/")):
+        return "vertex_ai"
+    if normalized.startswith("gemini"):
+        return "gemini"
+    if normalized.startswith("claude"):
+        return "anthropic"
+    if normalized.startswith(("gpt", "o1", "o3", "o4")):
+        return "openai"
+    return "unknown"
+
+
+def resolve_provider_identity(model: str) -> tuple[str, str, str]:
+    """Return ``(provider_name, backend, family)`` for a model string.
+
+    Single source of truth for provider identity resolution across
+    routing, metrics, and observability surfaces.  Falls back to
+    ``("unknown", "unknown", "unknown")`` for unrecognised models.
+    """
+    provider_name = _infer_provider_name_safe(model)
+    backend, family = BACKEND_FAMILY_MAP.get(provider_name, ("unknown", "unknown"))
+    return (provider_name, backend, family)
 
 
 def _resolve_models_config_path():
@@ -59,10 +102,16 @@ def _build_provider(provider_name: str, config: dict) -> LLMProvider:
         return OpenAIProvider(api_key_env=config.get("api_key_env", "OPENAI_API_KEY"))
     if provider_name == "vertex_ai":
         return VertexAIProvider(
+            auth_mode=config.get("auth_mode", "api_key"),
             api_key_env=config.get("api_key_env", "VERTEX_API_KEY"),
             project_id_env=config.get("project_id_env", "VERTEX_PROJECT_ID"),
             location_env=config.get("location_env", "VERTEX_LOCATION"),
             credentials_env=config.get("credentials_env", "GOOGLE_APPLICATION_CREDENTIALS"),
+        )
+    if provider_name == "anthropic_vertex":
+        return AnthropicVertexProvider(
+            project_id_env=config.get("project_id_env", "VERTEX_PROJECT_ID"),
+            location_env=config.get("location_env", "VERTEX_LOCATION"),
         )
     raise ValueError(f"Unsupported provider registration: {provider_name}")
 
@@ -102,16 +151,15 @@ class LLMProviderRouter:
 
     @staticmethod
     def infer_provider_name(model: str) -> str:
-        normalized = (model or "").strip().lower()
-        if normalized.startswith(("vertexai:", "vertex:", "vertex/")):
-            return "vertex_ai"
-        if normalized.startswith("gemini"):
-            return "gemini"
-        if normalized.startswith("claude"):
-            return "anthropic"
-        if normalized.startswith(("gpt", "o1", "o3", "o4")):
-            return "openai"
-        raise ValueError(f"Unsupported LLM model/provider mapping: {model!r}")
+        """Infer provider name from model string.
+
+        Raises :class:`ValueError` for unrecognised models (routing must
+        fail loudly).  Delegates to :func:`_infer_provider_name_safe`.
+        """
+        result = _infer_provider_name_safe(model)
+        if result == "unknown":
+            raise ValueError(f"Unsupported LLM model/provider mapping: {model!r}")
+        return result
 
     def get_provider_for_model(self, model: str) -> LLMProvider:
         provider_name = self.infer_provider_name(model)

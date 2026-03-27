@@ -730,6 +730,109 @@ def test_quality_dashboard_endpoint_surfaces_episode_rol(tmp_path, monkeypatch):
     assert episode_rol["rows"][1]["rol_score"] == 90.0
 
 
+def test_quality_dashboard_endpoint_surfaces_budget_status_as_read_only_guidance(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+
+    dashboard = QualityDashboard(project_dir)
+    dashboard.record_validation(ep_num=3, result={"decision": "PASS_WITH_FIX", "score": 88}, stage=4)
+    dashboard.record_validation(ep_num=4, result={"decision": "PASS", "score": 90}, stage=4)
+    dashboard.record_retrieval_observation(
+        ep_num=4,
+        stage="director",
+        observation={
+            "work_focus_present": True,
+            "work_slot_summary_included": True,
+            "relation_slice_included": True,
+            "budget_ledger": {
+                "budget_bucket": "context.mandatory_context_max",
+                "configured_cap": 2000,
+                "effective_cap": 1800,
+                "consumed_chars": 1900,
+                "dropped_chars": 200,
+                "overflow_chars": 100,
+                "headroom_chars": 0,
+                "trim_applied": True,
+            },
+        },
+    )
+
+    monitor = PassRateMonitor(str(project_dir))
+    monitor.record_attempt(stage=4, episode=3, attempt_num=1, success=False, token_cost=0.4, duration_ms=60000)
+    monitor.record_attempt(stage=4, episode=3, attempt_num=2, success=True, token_cost=0.6, duration_ms=60000)
+    monitor.record_attempt(stage=4, episode=4, attempt_num=1, success=True, token_cost=0.5, duration_ms=30000)
+    monitor.save()
+
+    db = DBManager(project_dir / "project_data.db")
+    try:
+        db.save_cost_record(
+            session_id="sess_budget",
+            scope_type="episode",
+            scope_id=4,
+            total_calls=5,
+            total_tokens=900,
+            total_cost_usd=1.25,
+            model_breakdown={"gpt-5": {"calls": 5}},
+        )
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=2,
+            ep_num=4,
+            arc_num=1,
+            score=90,
+            session_id="sess_budget",
+            attempt_key="s4:ep4:arc1:a2:sess_budget",
+            candidate_key="A|balanced",
+            content_hash="hash-budget",
+            artifact_path="logs/artifacts/stage4/ep_0004/attempt_02/final_manuscript__A_balanced.txt",
+            advisory_flags={
+                "retry_budget_axes": {"round": 1, "repair": 1, "guidance": 0},
+            },
+        )
+        before_counts = {
+            "cost_log": db.cursor.execute("SELECT COUNT(*) FROM cost_log").fetchone()[0],
+            "stage_attempts": db.cursor.execute("SELECT COUNT(*) FROM stage_attempts").fetchone()[0],
+        }
+    finally:
+        db.close()
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    db = DBManager(project_dir / "project_data.db")
+    try:
+        after_counts = {
+            "cost_log": db.cursor.execute("SELECT COUNT(*) FROM cost_log").fetchone()[0],
+            "stage_attempts": db.cursor.execute("SELECT COUNT(*) FROM stage_attempts").fetchone()[0],
+        }
+    finally:
+        db.close()
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    assert after_counts == before_counts
+    budget_status = payload["data"]["budget_status"]
+    assert budget_status["available"] is True
+    assert budget_status["authority_role"] == "companion_snapshot"
+    assert budget_status["operator_guidance_only"] is True
+    assert budget_status["authoritative_inputs"] == ["cost_summary", "gate_repair_summary"]
+    assert budget_status["companion_inputs"] == ["episode_rol", "retrieval_summary"]
+    assert budget_status["status"] == "warning"
+    assert "runtime gate" not in budget_status["summary"].lower()
+    assert budget_status["components"]["cost"]["status"] == "warning"
+    assert budget_status["components"]["cost"]["total_cost_usd"] == 1.25
+    assert budget_status["components"]["rol"]["status"] == "watch"
+    assert budget_status["components"]["rol"]["avg_rol"] == 56.0
+    assert budget_status["components"]["retry"]["status"] == "watch"
+    assert budget_status["components"]["retry"]["retry_budget_axes"] == {"round": 1, "repair": 1, "guidance": 0}
+    assert budget_status["components"]["retrieval"]["status"] == "warning"
+    assert budget_status["components"]["retrieval"]["trimmed_rows"] == 1
+    assert budget_status["components"]["retrieval"]["overflow_rows"] == 1
+    assert budget_status["components"]["retrieval"]["budget_buckets"] == ["context.mandatory_context_max"]
+
+
 def test_quality_dashboard_endpoint_surfaces_arc_cost_correlation(tmp_path, monkeypatch):
     monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
     project_dir = tmp_path / "projects" / "demo"

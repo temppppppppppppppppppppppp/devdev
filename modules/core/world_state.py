@@ -12,6 +12,8 @@ import json
 import logging
 import re
 
+from modules.models.arc import StateChangesDict
+
 _logger = logging.getLogger(__name__)
 
 
@@ -176,7 +178,7 @@ class WorldStateManager:
             "changed_ep": ep_num,
         }
 
-    def _apply_actor_and_inventory_state_changes(self, ep_num: int, state_changes: dict):
+    def _apply_actor_and_inventory_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         try:
             # 1. NPC 사망 처리
             for death in state_changes.get("npc_deaths") or []:
@@ -314,7 +316,7 @@ class WorldStateManager:
         except Exception as e:
             _logger.error("[WorldState] §4a 수량 인벤토리 처리 실패: %s", e)
 
-    def _apply_entity_and_companion_state_changes(self, ep_num: int, state_changes: dict):
+    def _apply_entity_and_companion_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         try:
             # 5. 엔티티 파괴 (조직/장소)
             _existing_destroyed_names = {
@@ -412,7 +414,7 @@ class WorldStateManager:
         except Exception as e:
             _logger.error("[WorldState] §8 동행자 변화 처리 실패: %s", e)
 
-    def _apply_timeline_and_goal_state_changes(self, ep_num: int, state_changes: dict):
+    def _apply_timeline_and_goal_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         try:
             # 12. 시간 마커 추적 (time_markers)
             for marker in state_changes.get("time_markers") or []:
@@ -519,7 +521,7 @@ class WorldStateManager:
         except Exception as e:
             _logger.error("[WorldState] §14 약속/서약 처리 실패: %s", e)
 
-    def _apply_physical_known_attr_state_changes(self, ep_num: int, state_changes: dict):
+    def _apply_physical_known_attr_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         try:
             # 15. [LM-I] NPC 부상 상태 → known_attrs 반영 (NpcDriftAdvisor 검사 대상)
             for entry in state_changes.get("npc_injuries") or []:
@@ -590,7 +592,7 @@ class WorldStateManager:
         except Exception as e:
             _logger.error("[WorldState] §17 NPC 영구 부상 known_attrs 반영 실패: %s", e)
 
-    def _apply_npc_registry_and_law_state_changes(self, ep_num: int, state_changes: dict):
+    def _apply_npc_registry_and_law_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         try:
             # 9. NPC 속성 변경 — 의도적 직업/나이 등 변경 기록 (장기 기억 추적)
             for attr_change in state_changes.get("npc_attribute_changes") or []:
@@ -694,7 +696,7 @@ class WorldStateManager:
     # state_changes 기반 자동 갱신
     # ═══════════════════════════════════════════════════════════════
 
-    def update_from_state_changes(self, ep_num: int, state_changes: dict, *, source: str = "episode"):
+    def update_from_state_changes(self, ep_num: int, state_changes: StateChangesDict, *, source: str = "episode"):
         """
         state_changes에서 자동 갱신 -- Python만으로.
 
@@ -763,6 +765,15 @@ class WorldStateManager:
 
     def get_canonical_constraints(self, max_chars: int = 8000) -> str:
         """[Phase1-L0] NPC 고정 속성(role_at_intro + known_attrs) 압축 요약.
+
+        Returns: str -- "[캐릭터 고정 속성 (L0)]" header + per-NPC lines (up to 20)
+                 + "[NPC 간 관계 (L0-Graph)]" section (up to 20 edges).
+        Max: 8000 chars (default), truncated with "...(절삭)" if exceeded.
+
+        Includes: role_at_intro, first_seen_ep, known_attrs (up to 5 per NPC),
+                  NPC-NPC relationship edges from DB.
+        Excludes: injuries, dynamic state (health, disposition), motivations,
+                  world laws (covered by get_summary()), protagonist state.
 
         get_summary()에 없는 정보(최초 역할·초기 속성)만 담당.
         세계관 법칙은 get_summary()에 이미 포함되므로 제외.

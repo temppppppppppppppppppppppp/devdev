@@ -1,0 +1,19 @@
+{
+  "prepared_at": "2026-03-27T12:45:30",
+  "source_project": "코덱스_테스트",
+  "target_project": "canary_0327_prs_wave1",
+  "from_ep": 1,
+  "cleanup": {
+    "from_ep": 1,
+    "db_impact": {
+      "blueprints": 11,
+      "stage3_attempts": 14,
+      "stage3_director_selections": 11
+    },
+    "file_cleanup": {
+      "blueprint_files_removed": 11,
+      "stage3_artifact_dirs_removed": 0,
+      "log_entries_removed": 0
+    }
+  }
+}

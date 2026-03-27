@@ -1,0 +1,6 @@
+{"timestamp": "2026-03-27 13:03:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-27 13:03:34", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "dialogue_focused", "score": 92, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-03-27 13:08:03", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-27 13:08:03", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "action_focused", "score": 96, "final_verdict": "PASS", "quality_risk": true, "revision_required": false}}
+{"timestamp": "2026-03-27 13:14:26", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-27 13:14:26", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "emotion_focused", "score": 88, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}

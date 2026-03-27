@@ -1,0 +1,39 @@
+{
+  "topic": "multi-provider-vertex-auth-mode-split-wave1",
+  "date": "2026-03-26",
+  "baseline_commit": "eb7a41d86a52b075861bcbd59a402622ab08d6cc",
+  "findings": {
+    "gemini_vertex_shared_env_fail": {
+      "status": "FAIL",
+      "model": "vertexai:gemini-3.1-pro-preview",
+      "error_type": "ValueError",
+      "error": "Project/location and API key are mutually exclusive in the client initializer.",
+      "env_shape": {
+        "VERTEX_API_KEY": true,
+        "VERTEX_PROJECT_ID": true,
+        "VERTEX_LOCATION": true
+      }
+    },
+    "gemini_vertex_api_key_only_pass": {
+      "status": "PASS",
+      "model": "vertexai:gemini-3.1-pro-preview",
+      "provider": "vertex_ai",
+      "backend": "google_vertex",
+      "family": "gemini",
+      "forced_mode": "api_key_only"
+    },
+    "anthropic_vertex_project_credentials_shape": {
+      "provider": "anthropic_vertex",
+      "backend": "anthropic_vertex",
+      "family": "claude",
+      "requires": [
+        "VERTEX_PROJECT_ID",
+        "VERTEX_LOCATION",
+        "ADC or GOOGLE_APPLICATION_CREDENTIALS"
+      ],
+      "does_not_use": [
+        "VERTEX_API_KEY"
+      ]
+    }
+  }
+}

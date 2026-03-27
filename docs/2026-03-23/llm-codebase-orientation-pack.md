@@ -46,6 +46,10 @@ When entering the codebase cold, use this order.
    - [stage4_director_runtime.py](/c:/Users/User/Desktop/글도비/modules/core/stage4_director_runtime.py)
    - [stage4_post_processor.py](/c:/Users/User/Desktop/글도비/modules/core/stage4_post_processor.py)
    - [stage4_post_pass_runtime.py](/c:/Users/User/Desktop/글도비/modules/core/stage4_post_pass_runtime.py)
+   - [stage4_reject_runtime.py](/c:/Users/User/Desktop/글도비/modules/core/stage4_reject_runtime.py) — retry/reject loop
+   - [stage4_retry_runtime.py](/c:/Users/User/Desktop/글도비/modules/core/stage4_retry_runtime.py) — retry lane routing
+   - [stage4_outcome_runtime.py](/c:/Users/User/Desktop/글도비/modules/core/stage4_outcome_runtime.py) — outcome processing
+   - [stage4_context_packets.py](/c:/Users/User/Desktop/글도비/modules/core/stage4_context_packets.py) — context packet assembly
 6. Shared domain runtimes
    - [four_phase_arc_runtime.py](/c:/Users/User/Desktop/글도비/modules/domain/agents/four_phase_arc_runtime.py)
    - [director_ensemble.py](/c:/Users/User/Desktop/글도비/modules/domain/agents/director_ensemble.py)
@@ -78,6 +82,12 @@ When entering the codebase cold, use this order.
           (`modules/domain/agents/chief_writer_context_packets.py`)
    - Both pipelines produce string/dict outputs consumed by ChiefWriter's
      prompt assembly step; they do not call the LLM directly.
+10. Provider / Router layer
+    - [models_config.py](/c:/Users/User/Desktop/글도비/modules/core/models_config.py) — YAML model metadata loader
+    - [llm_provider.py](/c:/Users/User/Desktop/글도비/modules/core/llm_provider.py) — LLMRequest/LLMResponse protocol
+    - [llm_router.py](/c:/Users/User/Desktop/글도비/modules/core/llm_router.py) — model-to-provider dispatch
+    - [llm_generate.py](/c:/Users/User/Desktop/글도비/modules/core/llm_generate.py) — thin generate bridge
+    - [providers/](/c:/Users/User/Desktop/글도비/modules/core/providers/) — 5 adapter modules (Gemini, Vertex, Anthropic, AnthropicVertex, OpenAI)
 
 ## 3. Topology
 The production pipeline is still best understood as:

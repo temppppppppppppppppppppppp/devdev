@@ -12,6 +12,8 @@ LLM 호출 없이 Python만으로 state_changes 기반 자동 갱신 — 비용 
 import logging
 import re
 
+from modules.models.arc import StateChangesDict
+
 _logger = logging.getLogger(__name__)
 _DIRECT_FINANCIAL_FACT_KEYS = ("capital", "total_assets", "wealth")
 _KOREAN_UNIT_MAP = (
@@ -201,7 +203,7 @@ class FactLedger:
     # state_changes 기반 자동 갱신
     # ═══════════════════════════════════════════════════════════════
 
-    def update_from_state_changes(self, ep_num: int, state_changes: dict):
+    def update_from_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         """
         state_changes에서 자동 갱신 — Python만으로, LLM 불필요.
 
@@ -226,7 +228,7 @@ class FactLedger:
 
         self._ledger["last_updated_ep"] = ep_num
 
-    def _apply_character_foundation_state_changes(self, ep_num: int, state_changes: dict):
+    def _apply_character_foundation_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         # npc_deaths — [Sweep54] WorldState와 동일하게 str/dict 모두 처리
         for death in state_changes.get("npc_deaths") or []:  # [V70] None 방어
             if isinstance(death, dict):
@@ -258,7 +260,7 @@ class FactLedger:
                     note=f"관계 변화: {rel.get('from', '?')} -> {rel.get('to', '?')}",
                 )
 
-    def _apply_item_state_changes(self, ep_num: int, state_changes: dict):
+    def _apply_item_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         # skill_acquisitions — [Sweep55] WorldState와 동일하게 str/dict 모두 처리
         for skill in state_changes.get("skill_acquisitions") or []:  # [V70] None 방어
             if isinstance(skill, dict):
@@ -310,7 +312,7 @@ class FactLedger:
             note = f"수량 {delta.get('from', '?')} -> {to_count}"
             self._upsert_item(item_name, ep_num, owner="주인공", status=status, quantity=to_count, note=note)
 
-    def _apply_entity_state_changes(self, ep_num: int, state_changes: dict):
+    def _apply_entity_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         # entity_destructions
         for dest in state_changes.get("entity_destructions") or []:  # [V70] None 방어
             if not isinstance(dest, dict):
@@ -324,7 +326,7 @@ class FactLedger:
                 else:
                     self._upsert_location(name, ep_num, status="destroyed", note=note)
 
-    def _apply_character_followup_state_changes(self, ep_num: int, state_changes: dict):
+    def _apply_character_followup_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         # npc_injuries
         for injury in state_changes.get("npc_injuries") or []:  # [V70] None 방어
             if not isinstance(injury, dict):
@@ -448,7 +450,7 @@ class FactLedger:
             except Exception as _e:
                 _logger.debug("[FactLedger] canonical_facts DB sync 실패 (비치명): %s", _e)
 
-    def _extract_numerical_facts(self, ep_num: int, state_changes: dict) -> None:
+    def _extract_numerical_facts(self, ep_num: int, state_changes: StateChangesDict) -> None:
         """[TF-C07] state_changes에서 수치 팩트 자동 추출 → update_number() 배선."""
         if not state_changes or not isinstance(state_changes, dict):
             return

@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -167,8 +167,40 @@ class HybridComposition(BaseModel):
 # ── state_changes (V61 구조화) ────────────────────────────────────
 
 
+class StateChangesDict(TypedDict, total=False):
+    """state_changes 최상위 계약 TypedDict.
+
+    canonical producer: StateTracker.extract_all_state_changes()
+    primary consumers: WorldStateManager, FactLedger
+
+    이 TypedDict는 최상위 키 계약만 정의합니다.
+    각 키의 내부 엔트리 구조는 이 웨이브에서 정형화하지 않습니다.
+    total=False — 모든 키 선택적 (런타임 .get() 폴백과 호환).
+    """
+
+    npc_deaths: list[dict[str, Any] | str]
+    skill_acquisitions: list[dict[str, Any] | str]
+    relationship_changes: list[dict[str, Any] | str]
+    major_items: list[dict[str, Any]]
+    resolved_plots: list[dict[str, Any] | str]
+    npc_injuries: list[dict[str, Any] | str]
+    npc_movements: list[dict[str, Any] | str]
+    financial_events: dict[str, Any]
+    entity_destructions: list[dict[str, Any] | str]
+    npc_personality_changes: list[dict[str, Any] | str]
+    npc_npc_relationships: list[dict[str, Any] | str]
+    time_markers: list[dict[str, Any] | str]
+    permanent_injuries: list[dict[str, Any] | str]
+    companion_changes: list[dict[str, Any] | str]
+    commitments: list[dict[str, Any] | str]
+    protagonist_emotion: dict[str, Any]
+
+
 class StateChanges(BaseModel):
-    """V61 구조화된 상태 변화 추적"""
+    """V61 구조화된 상태 변화 추적 — limited legacy compat shell.
+
+    NOTE: 이 Pydantic 모델은 4개 필드만 커버하는 제한적 호환 셸입니다.
+    canonical SSOT는 위의 StateChangesDict TypedDict를 사용하세요."""
 
     model_config = ConfigDict(extra="allow")
 
@@ -207,7 +239,7 @@ class ArcData(BaseModel):
     joint_docs: dict = Field(default_factory=dict)
     status_shadow: dict = Field(default_factory=dict)
     constraint_summary: str = ""
-    state_changes: dict = Field(default_factory=dict)
+    state_changes: StateChangesDict = Field(default_factory=dict)
     hybrid_composition: dict = Field(default_factory=dict)
     seed_injection: list[dict] | None = None
     seeds: list[dict] | None = None

@@ -19,6 +19,7 @@ from modules.models.arc import (
     HybridComposition,
     JointDocs,
     StateChanges,
+    StateChangesDict,
     StateConstraints,
     StatusShadow,
     validate_arc,
@@ -158,6 +159,41 @@ class TestStateConstraints:
         sc = StateConstraints.model_validate({})
         assert sc.protagonist_items == []
         assert sc.items_acquired is None
+
+
+# ═══════════════════════════════════════════════════════════════════
+# StateChangesDict
+# ═══════════════════════════════════════════════════════════════════
+
+
+class TestStateChangesDict:
+    """StateChangesDict TypedDict — canonical top-level contract 검증"""
+
+    def test_importable(self):
+        """StateChangesDict가 modules.models.arc에서 import 가능"""
+        assert StateChangesDict is not None
+
+    def test_arc_data_accepts_typed_state_changes(self):
+        """ArcData.state_changes에 StateChangesDict 호환 dict 수용"""
+        sc: StateChangesDict = {
+            "npc_deaths": [{"name": "장풍", "episode": 3}],
+            "skill_acquisitions": [{"name": "태극검법", "episode": 5}],
+            "relationship_changes": [],
+            "major_items": [{"name": "천잠사", "type": "무기"}],
+        }
+        arc = ArcData.model_validate({"arc_no": 1, "ep_start": 1, "ep_end": 5, "state_changes": sc})
+        assert arc.state_changes["npc_deaths"][0]["name"] == "장풍"
+        assert arc.state_changes["major_items"][0]["name"] == "천잠사"
+
+    def test_arc_data_empty_state_changes_default(self):
+        """state_changes 누락 시 빈 dict 기본값 유지"""
+        arc = ArcData.model_validate({"arc_no": 1, "ep_start": 1, "ep_end": 5})
+        assert arc.state_changes == {}
+
+    def test_state_changes_pydantic_compat_shell_still_available(self):
+        """StateChanges Pydantic compat shell이 여전히 import/사용 가능"""
+        sc = StateChanges.model_validate({"npc_deaths": [{"name": "test"}]})
+        assert sc.npc_deaths == [{"name": "test"}]
 
 
 # ═══════════════════════════════════════════════════════════════════

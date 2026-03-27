@@ -12,6 +12,19 @@ DAG(Directed Acyclic Graph) 형태로 타임라인을 구성하여 검증합니�
   - state_tracker_npc.py      → NPC 레지스트리, 사망/무공/관계/부상/이동/영구부상/동행자/주인공감정 추적
   - state_tracker_financial.py → 금융 상태 추적 (투자물)
   - state_tracker_plots.py     → 완결된 플롯 + 엔티티 명칭 일관성 + 시간선 추적 + 약속/맹세 추적
+
+[Authority Hierarchy]
+  StateTracker (upstream source of truth -- extracts state from arcs/episodes)
+    -> FactLedger (long-term numeric SSOT -- accumulates characters, numbers,
+       items, locations, organizations across all episodes)
+    -> WorldState (narrative context cache -- alive/dead NPCs, relationships,
+       items, plots, timeline, motivations, world laws)
+
+  Data flow: StateTracker.full_extract_from_arcs() populates the tracker,
+  then WorldState and FactLedger are updated from tracker data at episode end.
+  At prompt injection time (Stage 4), WorldState/FactLedger canonical layers
+  override StateTracker advisory summaries on conflict (see Wave 1 authority
+  contract in stage4_context_builder.py _filter_state_tracker_summaries_for_authority).
 """
 
 import copy
@@ -26,6 +39,7 @@ from modules.domain.agents.state_tracker_financial import StateTrackerFinancial
 # [V64.P3] 서브모듈 import
 from modules.domain.agents.state_tracker_npc import StateTrackerNPC
 from modules.domain.agents.state_tracker_plots import StateTrackerPlots
+from modules.models.arc import StateChangesDict
 
 # [V60.95] PresetRegistry 연동
 try:
@@ -1565,7 +1579,7 @@ class StateTracker:
     # [V64.P3] 통합 추출 메서드 (여러 서브모듈 조합)
     # ═══════════════════════════════════════════════════════════════
 
-    def extract_all_state_changes(self, arc: dict) -> dict:
+    def extract_all_state_changes(self, arc: dict) -> StateChangesDict:
         """
         [V61] Arc에서 모든 state_changes 추출 (통합 메서드)
         [V63] npc_injuries, npc_movements 추가

@@ -21,6 +21,10 @@ def generate_llm_response_via_router(
         client=client,
         request=LLMRequest(model=model, contents=contents, config=config),
     )
+    # [COMPAT-BELT] Per-adapter generate() already sets response.backend
+    # and response.family. This overwrite is a safety belt ensuring consistency
+    # with BACKEND_FAMILY_MAP. Adapters are the authoritative source; if
+    # adapter values and map values ever diverge, investigate the adapter.
     backend, family = BACKEND_FAMILY_MAP.get(
         getattr(provider, "provider_name", ""), ("unknown", "unknown")
     )

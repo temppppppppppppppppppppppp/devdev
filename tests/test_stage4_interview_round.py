@@ -791,12 +791,6 @@ class TestPreDirectorValidation:
             total_budget_chars=800,
         )
         ir = Stage4InterviewRound(ctx)
-        ir._god1_stage4_spinner = MagicMock()
-        ir._god1_round_num = 0
-        ir._god1_arc_pos = 1
-        ir._god1_total_ep_in_arc = 10
-        ir._god1_arc_data = {}
-        ir._god1_prev_manuscript = ""
 
         round_ctx = _make_round_ctx()
         round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
@@ -816,7 +810,7 @@ class TestPreDirectorValidation:
             patch.object(ir, "_build_director_work_focus_summary", return_value="[작품 추적 슬롯 요약]\n- 소꿉친구 라인"),
             patch.object(ir, "_build_director_relationship_context", return_value=""),
         ):
-            validation_results = ir.director_runtime.run_pre_director_validation(
+            validation_results, _director_mem = ir.director_runtime.run_pre_director_validation(
                 candidates=[_candidate()],
                 next_ep=4,
                 blueprint={"characters": ["연홍"]},
@@ -827,6 +821,12 @@ class TestPreDirectorValidation:
                 consistency_validator=round_ctx.consistency_validator,
                 blocking_validator=round_ctx.blocking_validator,
                 continuity_validator=round_ctx.continuity_validator,
+                stage4_spinner=MagicMock(),
+                round_num=0,
+                arc_pos=1,
+                total_ep_in_arc=10,
+                arc_data={},
+                prev_manuscript="",
             )
 
         assert validation_results[0]["coverage_warnings"] == ["missing_relation_slice"]
@@ -948,12 +948,6 @@ class TestPreDirectorValidation:
     def test_run_pre_director_validation_forwards_blocking_degraded_advisory(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
-        ir._god1_stage4_spinner = MagicMock()
-        ir._god1_round_num = 0
-        ir._god1_arc_pos = 1
-        ir._god1_total_ep_in_arc = 10
-        ir._god1_arc_data = {}
-        ir._god1_prev_manuscript = ""
 
         round_ctx = _make_round_ctx()
         round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
@@ -964,7 +958,7 @@ class TestPreDirectorValidation:
             "degraded_checks": ["relationship_consistency"],
         }
 
-        validation_results = ir.director_runtime.run_pre_director_validation(
+        validation_results, _director_mem = ir.director_runtime.run_pre_director_validation(
             candidates=[_candidate()],
             next_ep=4,
             blueprint={"characters": ["연홍"]},
@@ -975,6 +969,12 @@ class TestPreDirectorValidation:
             consistency_validator=round_ctx.consistency_validator,
             blocking_validator=round_ctx.blocking_validator,
             continuity_validator=round_ctx.continuity_validator,
+            stage4_spinner=MagicMock(),
+            round_num=0,
+            arc_pos=1,
+            total_ep_in_arc=10,
+            arc_data={},
+            prev_manuscript="",
         )
 
         assert validation_results[0]["warnings"] == [
