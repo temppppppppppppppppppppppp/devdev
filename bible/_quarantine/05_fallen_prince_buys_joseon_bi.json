@@ -7,7 +7,7 @@
     "ProjectData": {
       "MetaInfo": {
         "title": "피 맛과 계약서",
-        "grand_objective": "이번 실소유주 선언에서 밀리면 식민지 조선의 실소유주 전체가 흔들리고, 은행/금융 병목은 구도 겐이치 쪽으로 넘어간다.",
+        "grand_objective": "1936년 취리히에서 독살당한 대한제국 황족 이강윤이 1907년으로 회귀하여, 합방 전 황실 자산을 빼돌리고 1차대전·대공황·중일전쟁의 타이밍을 이용해 식민지 조선의 해운·보험·철도·은행·광산 5대 병목을 장악, 최종적으로 조선의 실소유주가 된다.",
         "genre_archetype": "investment + chaebol + business strategy",
         "logline": "미래 붕괴를 경험한 재벌 3세가 회귀 후 산업 전 섹터를 순차 공략하며 제국을 재건한다.",
         "total_episodes": 350,
@@ -31,8 +31,18 @@
       "world_origin": "현대인",
       "incarnation_type": "회귀자",
       "regression_point": {
-        "return_year": 2006,
-        "return_context": "사업/승계 의사결정 직전"
+        "return_year": 1907,
+        "return_context": "1936년 취리히에서 독살당한 뒤 1907년 8월 3일 경운궁 침전에서 깨어남. 헤이그 특사 파문 직후, 고종 강제 퇴위 직전."
+      },
+      "name": "이강윤",
+      "pov": "1인칭 제한 시점 (이강윤)",
+      "external_pov_insert_policy": "적대자 내면 또는 동맹 시점 에피소드에서 제한적 허용. 기본값은 이강윤 고정.",
+      "regression_mechanic": {
+        "knowledge_scope": "1907~1938년 대한제국 멸망부터 일제강점기 전시체제까지. 헤이그 특사, 합방, 1차대전, 대공황, 중일전쟁의 타임라인과 식민지 경제 구조 변화.",
+        "knowledge_limit": "거시 역사 흐름과 주요 사건 시점은 정확하지만, 미시적 인물 반응, 유럽 금융시장 일별 변동, 총독부 내부 정치 변수는 예측 불가.",
+        "slip_up_pattern": "아직 일어나지 않은 사건(합방 시한, 대전 발발, 대공황 시점)을 지나치게 정확히 언급할 때 주변의 의심이 쌓인다.",
+        "suspicion_pressure": "열일곱 황자가 국제 금융과 역사 전환점을 너무 정확히 아는 것에 대한 궁내부·통감부·유럽 파트너의 누적 의심.",
+        "dramatic_function": "미래 지식이 병목 자산 선점의 최대 무기이자, 정체 노출 시 모든 것을 잃는 최대 약점이 되는 이중 구조."
       }
     },
     "FinanceHUD": {
@@ -66,7 +76,7 @@
       }
     },
     "WorldState": {
-      "CurrentEra": "2006년 시작",
+      "CurrentEra": "1907년 8월 ~ 1938년 12월",
       "CurrentLocation": "취리히 호텔 스위트룸 / 경운궁 침전",
       "KarmaMatrix": {}
     },
@@ -402,7 +412,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 1
       },
       {
         "block_id": "Block 2",
@@ -490,7 +501,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 2
       },
       {
         "block_id": "Block 3",
@@ -576,7 +588,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 3
       },
       {
         "block_id": "Block 4",
@@ -662,7 +675,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 4
       },
       {
         "block_id": "Block 5",
@@ -748,7 +762,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 5
       },
       {
         "block_id": "Block 6",
@@ -834,7 +849,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 6
       },
       {
         "block_id": "Block 7",
@@ -920,7 +936,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 7
       },
       {
         "block_id": "Block 8",
@@ -1004,7 +1021,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 8
       },
       {
         "block_id": "Block 9",
@@ -1095,7 +1113,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 9
       },
       {
         "block_id": "Block 10",
@@ -1186,7 +1205,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 10
       },
       {
         "block_id": "Block 11",
@@ -1272,7 +1292,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 11
       },
       {
         "block_id": "Block 12",
@@ -1358,7 +1379,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 12
       },
       {
         "block_id": "Block 13",
@@ -1442,7 +1464,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 13
       },
       {
         "block_id": "Block 14",
@@ -1533,7 +1556,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 14
       },
       {
         "block_id": "Block 15",
@@ -1619,7 +1643,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 15
       },
       {
         "block_id": "Block 16",
@@ -1705,7 +1730,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 16
       },
       {
         "block_id": "Block 17",
@@ -1794,7 +1820,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 17
       },
       {
         "block_id": "Block 18",
@@ -1878,7 +1905,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 18
       },
       {
         "block_id": "Block 19",
@@ -1962,7 +1990,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 19
       },
       {
         "block_id": "Block 20",
@@ -2053,7 +2082,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 20
       },
       {
         "block_id": "Block 21",
@@ -2137,7 +2167,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 21
       },
       {
         "block_id": "Block 22",
@@ -2221,7 +2252,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 22
       },
       {
         "block_id": "Block 23",
@@ -2307,7 +2339,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 23
       },
       {
         "block_id": "Block 24",
@@ -2391,7 +2424,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 24
       },
       {
         "block_id": "Block 25",
@@ -2477,7 +2511,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 25
       },
       {
         "block_id": "Block 26",
@@ -2563,7 +2598,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 26
       },
       {
         "block_id": "Block 27",
@@ -2647,7 +2683,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 27
       },
       {
         "block_id": "Block 28",
@@ -2736,7 +2773,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 28
       },
       {
         "block_id": "Block 29",
@@ -2822,7 +2860,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 29
       },
       {
         "block_id": "Block 30",
@@ -2913,7 +2952,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 30
       },
       {
         "block_id": "Block 31",
@@ -3004,7 +3044,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 31
       },
       {
         "block_id": "Block 32",
@@ -3093,7 +3134,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 32
       },
       {
         "block_id": "Block 33",
@@ -3177,7 +3219,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 33
       },
       {
         "block_id": "Block 34",
@@ -3261,7 +3304,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 34
       },
       {
         "block_id": "Block 35",
@@ -3352,7 +3396,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 35
       },
       {
         "block_id": "Block 36",
@@ -3441,7 +3486,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 36
       },
       {
         "block_id": "Block 37",
@@ -3527,7 +3573,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 37
       },
       {
         "block_id": "Block 38",
@@ -3616,7 +3663,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 38
       },
       {
         "block_id": "Block 39",
@@ -3700,7 +3748,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 39
       },
       {
         "block_id": "Block 40",
@@ -3791,7 +3840,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 40
       },
       {
         "block_id": "Block 41",
@@ -3875,7 +3925,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 41
       },
       {
         "block_id": "Block 42",
@@ -3961,7 +4012,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 42
       },
       {
         "block_id": "Block 43",
@@ -4045,7 +4097,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 43
       },
       {
         "block_id": "Block 44",
@@ -4129,7 +4182,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 44
       },
       {
         "block_id": "Block 45",
@@ -4220,7 +4274,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 45
       },
       {
         "block_id": "Block 46",
@@ -4304,7 +4359,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 46
       },
       {
         "block_id": "Block 47",
@@ -4390,7 +4446,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 47
       },
       {
         "block_id": "Block 48",
@@ -4476,7 +4533,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 48
       },
       {
         "block_id": "Block 49",
@@ -4560,7 +4618,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 49
       },
       {
         "block_id": "Block 50",
@@ -4651,7 +4710,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 50
       },
       {
         "block_id": "Block 51",
@@ -4737,7 +4797,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 51
       },
       {
         "block_id": "Block 52",
@@ -4821,7 +4882,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 52
       },
       {
         "block_id": "Block 53",
@@ -4910,7 +4972,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 53
       },
       {
         "block_id": "Block 54",
@@ -4994,7 +5057,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 54
       },
       {
         "block_id": "Block 55",
@@ -5078,7 +5142,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 55
       },
       {
         "block_id": "Block 56",
@@ -5169,7 +5234,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 56
       },
       {
         "block_id": "Block 57",
@@ -5258,7 +5324,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 57
       },
       {
         "block_id": "Block 58",
@@ -5342,7 +5409,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 58
       },
       {
         "block_id": "Block 59",
@@ -5426,7 +5494,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 59
       },
       {
         "block_id": "Block 60",
@@ -5517,7 +5586,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 60
       },
       {
         "block_id": "Block 61",
@@ -5606,7 +5676,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 61
       },
       {
         "block_id": "Block 62",
@@ -5695,7 +5766,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 62
       },
       {
         "block_id": "Block 63",
@@ -5779,7 +5851,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 63
       },
       {
         "block_id": "Block 64",
@@ -5870,7 +5943,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 64
       },
       {
         "block_id": "Block 65",
@@ -5954,7 +6028,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 65
       },
       {
         "block_id": "Block 66",
@@ -6043,7 +6118,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 66
       },
       {
         "block_id": "Block 67",
@@ -6132,7 +6208,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 67
       },
       {
         "block_id": "Block 68",
@@ -6228,7 +6305,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 68
       },
       {
         "block_id": "Block 69",
@@ -6319,7 +6397,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 69
       },
       {
         "block_id": "Block 70",
@@ -6415,7 +6494,8 @@
           "is_regressor": true,
           "regression_type": "회귀",
           "execution_doctrine": "명분보다 병목, 충성보다 소유권, 독립보다 현금흐름을 먼저 쥔다."
-        }
+        },
+        "block_no": 70
       }
     ]
   }
