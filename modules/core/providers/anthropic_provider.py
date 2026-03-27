@@ -8,6 +8,8 @@ from modules.core.llm_provider import LLMRequest, LLMResponse
 
 class AnthropicProvider:
     provider_name = "anthropic"
+    _backend = "anthropic_direct"
+    _family = "claude"
 
     def __init__(self, api_key_env: str = "ANTHROPIC_API_KEY") -> None:
         self.api_key_env = api_key_env
@@ -85,6 +87,6 @@ class AnthropicProvider:
             usage=usage,
             raw=raw,
             provider=self.provider_name,
-            backend="anthropic_direct",
-            family="claude",
+            backend=self._backend,
+            family=self._family,
         )

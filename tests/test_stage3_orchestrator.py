@@ -991,6 +991,66 @@ class TestGenerateBlueprint:
         assert any("선택 근거: 후보 A가 감정선과 장면 연결이 가장 안정적" in text for text in log_texts)
         assert any("자유 리뷰: 감정 여운을 한 템포 더 눌러주면 완성도가 올라간다" in text for text in log_texts)
 
+    def test_generate_blueprint_rejects_when_dead_npc_precheck_fails(self, orch, app_mock):
+        app_mock.state_tracker = MagicMock()
+        app_mock.state_tracker.check_dead_npc_in_blueprint.return_value = [
+            {"npc_name": "흑풍", "reason": "deceased NPC scheduled for active present-time action"}
+        ]
+
+        app_mock.agents["three_phase_bp"].generate.return_value = (
+            {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}},
+            {
+                "final_verdict": "PASS",
+                "phases": {
+                    "generate": {"selected_strategy": "A", "selected_score": 88},
+                    "validate": {"verdict": "PASS", "issues_count": 0},
+                },
+            },
+        )
+
+        blueprint, pipeline_result = orch._run_stage3_blueprint_generation_handoff(
+            working_ep=12,
+            arc_data={"arc_no": 1, "title": "도입"},
+            arc_idx=0,
+            prev_blueprint=None,
+            protagonist_name="장무기",
+            protagonist_config={},
+            entity_registry={},
+            semantic_bundle={"semantic_ctx": "", "blueprint_window": []},
+        )
+
+        assert blueprint["integrated_scenario"] == "test"
+        assert pipeline_result["final_verdict"] == "REJECT"
+        assert pipeline_result["phases"]["validate"]["verdict"] == "REJECT"
+        assert "dead_npc_precheck" in pipeline_result["reject_reason"]
+        assert "흑풍" in pipeline_result["reject_reason"]
+        assert pipeline_result["precheck_failures"][0]["npc_name"] == "흑풍"
+        assert (
+            "dead_npc_precheck"
+            in pipeline_result["phases"]["validate"]["contradictions"][0]
+        )
+
+    def test_build_stage3_reject_reason_prefers_explicit_reject_reason(self):
+        reason = Stage3Orchestrator._build_stage3_reject_reason(
+            {
+                "reject_reason": "dead_npc_precheck: deceased NPC '흑풍' assigned active present-time role in blueprint",
+                "phases": {
+                    "validate": {
+                        "verdict": "REJECT",
+                        "issues_count": 1,
+                        "contradictions": [
+                            "dead_npc_precheck: deceased NPC '흑풍' assigned active present-time role in blueprint"
+                        ],
+                    }
+                },
+            }
+        )
+
+        assert "dead_npc_precheck" in reason
+        assert "흑풍" in reason
+        assert "validate_verdict=REJECT" in reason
+        assert "issues=1" in reason
+
     def test_build_stage3_success_operator_lines_includes_advisory_without_caps(self):
         lines = Stage3Orchestrator._build_stage3_success_operator_lines(
             {
@@ -1686,4 +1746,3 @@ def test_stage3_failure_attempt_survives_session_logger_failure(orch, app_mock, 
     app_mock.pass_rate_monitor.record_attempt.assert_called_once()
     app_mock.current_project.db.save_stage_attempt.assert_called_once()
     app_mock.current_project.db.save_director_selection.assert_called_once()
-

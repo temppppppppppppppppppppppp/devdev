@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
+from modules.models.arc import StateChangesDict
+
 # ──────────────────────────────────────────────────────────────
 # 1. UIServiceProtocol
 # ──────────────────────────────────────────────────────────────
@@ -149,7 +151,7 @@ class StateServiceProtocol(Protocol):
     def extract_financial_events_from_arc(self, arc: dict) -> dict: ...
     def extract_item_states_from_arc(self, arc: dict) -> list: ...
     def extract_protagonist_emotion_from_arc(self, arc_data: dict) -> Any: ...
-    def extract_all_state_changes(self, arc: dict) -> dict: ...
+    def extract_all_state_changes(self, arc: dict) -> StateChangesDict: ...
 
     # --- 동반자/플롯 갱신 (stage2에서 호출) ---
 

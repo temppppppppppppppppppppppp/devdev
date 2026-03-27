@@ -96,18 +96,16 @@ class Stage4DirectorRuntime:
         consistency_validator,
         blocking_validator,
         continuity_validator,
-    ) -> list[dict]:
+        stage4_spinner=None,
+        round_num: int = 0,
+        arc_pos: int = 0,
+        total_ep_in_arc: int = 0,
+        arc_data: dict | None = None,
+        prev_manuscript: str = "",
+    ) -> tuple[list[dict], str]:
         owner = self.owner
-
-        # _god1_* channel consumer: reads round-local metadata set by
-        # Stage4InterviewRound._run_validation_phase(). See the producer
-        # comment there for migration intent.
-        stage4_spinner = getattr(owner, "_god1_stage4_spinner", None)
-        round_num = getattr(owner, "_god1_round_num", 0)
-        arc_pos = getattr(owner, "_god1_arc_pos", 0)
-        total_ep_in_arc = getattr(owner, "_god1_total_ep_in_arc", 0)
-        arc_data = getattr(owner, "_god1_arc_data", {})
-        prev_manuscript = getattr(owner, "_god1_prev_manuscript", "")
+        if arc_data is None:
+            arc_data = {}
 
         if stage4_spinner is not None and hasattr(stage4_spinner, "update_detail"):
             stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · Python 검증")
@@ -164,8 +162,7 @@ class Stage4DirectorRuntime:
             prev_manuscript=prev_manuscript,
         )
 
-        owner._god1_director_memory_context = director_memory_context
-        return validation_results
+        return validation_results, director_memory_context
 
     def run_director_core_validation_modules(
         self,
@@ -1277,7 +1274,7 @@ class Stage4DirectorRuntime:
         genre_name: str,
     ) -> _DirectorAdvisoryPayload:
         owner = self.owner
-        advisory_parts = owner._run_advisory_chain(candidates, validation_results, next_ep, genre_name)
+        advisory_parts = owner._run_advisory_chain(candidates, validation_results, next_ep, genre_name, round_num=round_num)
         advisory_parts = owner._suppress_conflicting_advisories(advisory_parts or [])
         advisory_summary: dict[str, int] = {}
         for advisory in advisory_parts or []:

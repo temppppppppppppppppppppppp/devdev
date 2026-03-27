@@ -11,6 +11,7 @@ from modules.core.llm_provider import LLMRequest, LLMResponse
 class VertexAIProvider:
     provider_name = "vertex_ai"
     _MODEL_PREFIXES = ("vertexai:", "vertex:", "vertex/")
+    _AUTH_MODES = {"api_key", "project_credentials", "auto"}
 
     def __init__(
         self,
@@ -19,11 +20,19 @@ class VertexAIProvider:
         project_id_env: str = "VERTEX_PROJECT_ID",
         location_env: str = "VERTEX_LOCATION",
         credentials_env: str = "GOOGLE_APPLICATION_CREDENTIALS",
+        auth_mode: str = "api_key",
     ) -> None:
+        normalized_auth_mode = (auth_mode or "api_key").strip().lower()
+        if normalized_auth_mode not in self._AUTH_MODES:
+            raise ValueError(
+                f"Unsupported Vertex AI auth_mode {auth_mode!r}; "
+                f"expected one of {sorted(self._AUTH_MODES)}."
+            )
         self.api_key_env = api_key_env
         self.project_id_env = project_id_env
         self.location_env = location_env
         self.credentials_env = credentials_env
+        self.auth_mode = normalized_auth_mode
         self._client = None
 
     @classmethod
@@ -53,33 +62,29 @@ class VertexAIProvider:
         )
         return credentials
 
-    def _get_client(self):
-        if self._client is not None:
-            return self._client
+    def _resolve_auth_mode(self) -> str:
+        if self.auth_mode != "auto":
+            return self.auth_mode
+        if os.getenv(self.api_key_env):
+            return "api_key"
+        return "project_credentials"
 
-        # Priority 1: API key (Vertex AI Express mode)
+    def _build_api_key_client(self):
         api_key = os.getenv(self.api_key_env)
-        if api_key:
-            client_kwargs: dict[str, Any] = {
-                "vertexai": True,
-                "api_key": api_key,
-            }
-            project = os.getenv(self.project_id_env) or os.getenv("GOOGLE_CLOUD_PROJECT")
-            location = os.getenv(self.location_env) or os.getenv("GOOGLE_CLOUD_LOCATION")
-            if project:
-                client_kwargs["project"] = project
-            if location:
-                client_kwargs["location"] = location
-            self._client = genai.Client(**client_kwargs)
-            return self._client
+        if not api_key:
+            raise RuntimeError(
+                f"Vertex AI auth_mode=api_key requires {self.api_key_env}."
+            )
+        return genai.Client(vertexai=True, api_key=api_key)
 
-        # Priority 2: Service account credentials + project/location
+    def _build_project_credentials_client(self):
         project = os.getenv(self.project_id_env) or os.getenv("GOOGLE_CLOUD_PROJECT")
         location = os.getenv(self.location_env) or os.getenv("GOOGLE_CLOUD_LOCATION")
         if not project or not location:
             raise RuntimeError(
-                f"Vertex AI requires {self.api_key_env} (Express mode) "
-                f"or {self.project_id_env}/{self.location_env} with credentials."
+                f"Vertex AI auth_mode=project_credentials requires "
+                f"{self.project_id_env}/{self.location_env} or "
+                "GOOGLE_CLOUD_PROJECT/GOOGLE_CLOUD_LOCATION."
             )
 
         client_kwargs = {
@@ -92,7 +97,19 @@ class VertexAIProvider:
         if credentials is not None:
             client_kwargs["credentials"] = credentials
 
-        self._client = genai.Client(**client_kwargs)
+        return genai.Client(**client_kwargs)
+
+    def _get_client(self):
+        if self._client is not None:
+            return self._client
+
+        auth_mode = self._resolve_auth_mode()
+        if auth_mode == "api_key":
+            self._client = self._build_api_key_client()
+        elif auth_mode == "project_credentials":
+            self._client = self._build_project_credentials_client()
+        else:
+            raise RuntimeError(f"Unexpected resolved Vertex AI auth mode: {auth_mode}")
         return self._client
 
     def generate(self, *, client: Any, request: LLMRequest) -> LLMResponse:

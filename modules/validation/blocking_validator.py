@@ -87,6 +87,11 @@ class BlockingValidator:
         if not damaged_item_check["passed"]:
             failures.append(damaged_item_check)
 
+        # [Degradation semantics] A check result with {"passed": True, "degraded": True}
+        # means the check encountered an error and fell back to a safe default (pass).
+        # It does NOT mean the check actually ran and succeeded.
+        # Downstream consumers (Director, verdict chain) should treat degraded=True
+        # as "inconclusive" rather than "confirmed pass."
         relationship_check = self._check_relationship_consistency(manuscript, validation_context)
         degraded_checks = []
         if relationship_check.get("degraded"):
@@ -121,6 +126,11 @@ class BlockingValidator:
             authority_check = self._check_authority_exercise(manuscript, validation_context)
             if not authority_check["passed"]:
                 failures.append(authority_check)
+
+        # [Wave-TR1] Wuxia protagonist technique-vs-realm consistency
+        wuxia_realm_check = self._check_wuxia_technique_realm_consistency(manuscript, validation_context)
+        if not wuxia_realm_check["passed"]:
+            failures.append(wuxia_realm_check)
 
         if validation_context.get("mode") == "MANUSCRIPT":
             scene_completeness_check = self._check_scene_completeness(manuscript, validation_context)
@@ -189,6 +199,9 @@ class BlockingValidator:
         except (ValueError, KeyError, RuntimeError) as e:
             logging.warning(f"[C-3] information consistency check failed (degraded): {e}")
             return {"check": "information_consistency", "passed": True, "degraded": True, "error": str(e)}
+
+    def _check_wuxia_technique_realm_consistency(self, manuscript: str, context: dict) -> dict:
+        return self.consistency_checks._check_wuxia_technique_realm_consistency(manuscript, context)
 
     def _check_scene_completeness(self, manuscript: str, context: dict) -> dict:
         return self.scene_checks._check_scene_completeness(manuscript, context)

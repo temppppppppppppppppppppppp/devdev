@@ -64,11 +64,12 @@ def build_item_payload(temp_doc: Path) -> dict[str, object]:
 
 def infer_roadmap_status(roadmap_path: Path) -> str:
     metadata = parse_metadata(roadmap_path)
-    status = (metadata.get("status") or "").lower()
-    if "closed" in status:
-        return "closed"
-    if "active" in status or "in progress" in status:
+    status = (metadata.get("status") or "").strip().lower()
+    lead = status.split("(", 1)[0].strip()
+    if lead.startswith("active") or "in progress" in lead:
         return "active"
+    if lead.startswith("closed") or lead.startswith("completed"):
+        return "closed"
     return "draft"
 
 

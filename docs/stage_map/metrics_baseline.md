@@ -8,8 +8,8 @@ Purpose:
 
 | Metric | Value | Verified Date | Source | Notes |
 |---|---|---|---|---|
-| Full test suite | `3,831 passed / 16 skipped / 0 failed` | 2026-03-10 | `CLAUDE.md` | Latest verified full-suite baseline recorded in repo guidance |
-| Ruff | `0 violations` | 2026-03-10 | `CLAUDE.md` | Keep as last verified full-repo lint baseline |
+| Full test suite | `3,831 passed / 16 skipped / 0 failed` | 2026-03-10 | `docs/2026-03-12/TF-HEALTH-codebase-full-audit.md` | Latest verified full-suite baseline recorded in dated audit evidence |
+| Ruff | `0 violations` | 2026-03-10 | `docs/2026-03-12/TF-HEALTH-codebase-full-audit.md` | Keep as last verified full-repo lint baseline |
 
 ## Live Threshold Ledger
 
@@ -41,8 +41,8 @@ Purpose:
 - Current-session targeted pytest evidence remains in the dated `docs/2026-03-13/*` audit documents.
 
 ## Last Verified
-- Date: 2026-03-13
-- Commit: `e18f9910`
+- Date: 2026-03-27
+- Commit: `eb7a41d8`
 - Workspace State: dirty
 - Code Sync (Yes/No): Yes
 - Verified By: Codex

@@ -181,6 +181,14 @@ def _fit_compact_context(value: object, max_chars: int, *, head_ratio: float = 0
     return smart_truncate(raw, max_chars=max_chars, head_chars=head_chars)
 
 
+def _append_constraint_section(lines: list[str], header: str, band_lines: list[str]) -> None:
+    if not band_lines:
+        return
+    lines.append(header)
+    lines.extend(band_lines)
+    lines.append("")
+
+
 class BlueprintEnsembleGenerator(BaseAgent):
     """
     [V60.80] Blueprint Ensemble Generator
@@ -1021,31 +1029,20 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 if text:
                     advisory_lines.append(f"  [미래 복선 참고용] foreshadow: {_fit_compact_context(text, 120)}")
 
-        # ── Assemble with explicit band headers and priority preamble ──
-        lines: list[str] = []
-
-        lines.append("[제약 우선순위: IMMUTABLE > HARD CONSTRAINT > EXPECTED CONTINUITY > ADVISORY]")
-        lines.append("충돌 시 상위 등급이 하위 등급을 무조건 우선합니다.")
-        lines.append("")
-
-        if immutable_lines:
-            lines.append("═══ IMMUTABLE (확정 사실 — 절대 변경 금지) ═══")
-            lines.extend(immutable_lines)
-            lines.append("")
-
-        if hard_lines:
-            lines.append("─── HARD CONSTRAINT (필수 준수 — 위반 시 REJECT) ───")
-            lines.extend(hard_lines)
-            lines.append("")
-
-        if continuity_lines:
-            lines.append("─── EXPECTED CONTINUITY (계승 기대 — 불일치 시 경고) ───")
-            lines.extend(continuity_lines)
-            lines.append("")
-
-        if advisory_lines:
-            lines.append("··· ADVISORY (참고용 — 필수 아님) ···")
-            lines.extend(advisory_lines)
+        lines = [
+            "[\uc81c\uc57d \uc6b0\uc120\uc21c\uc704: IMMUTABLE > HARD CONSTRAINT > EXPECTED CONTINUITY > ADVISORY]",
+            "\ucda9\ub3cc \uc2dc \uc0c1\uc704 \ub4f1\uae09\uc774 \ud558\uc704 \ub4f1\uae09\uc744 \ubb34\uc870\uac74 \uc6b0\uc120\ud569\ub2c8\ub2e4.",
+            "",
+        ]
+        for header, band_lines in (
+            ("\u2550\u2550\u2550 IMMUTABLE (\ud655\uc815 \uc0ac\uc2e4 \u2014 \uc808\ub300 \ubcc0\uacbd \uae08\uc9c0) \u2550\u2550\u2550", immutable_lines),
+            ("\u2500\u2500\u2500 HARD CONSTRAINT (\ud544\uc218 \uc900\uc218 \u2014 \uc704\ubc18 \uc2dc REJECT) \u2500\u2500\u2500", hard_lines),
+            ("\u2500\u2500\u2500 EXPECTED CONTINUITY (\uacc4\uc2b9 \uae30\ub300 \u2014 \ubd88\uc77c\uce58 \uc2dc \uacbd\uace0) \u2500\u2500\u2500", continuity_lines),
+            ("\u00b7\u00b7\u00b7 ADVISORY (\ucc38\uace0\uc6a9 \u2014 \ud544\uc218 \uc544\ub2d8) \u00b7\u00b7\u00b7", advisory_lines),
+        ):
+            _append_constraint_section(lines, header, band_lines)
+        if lines[-1] == "":
+            lines.pop()
 
         return "\n".join(lines) if lines else "(constraints unavailable)"
 

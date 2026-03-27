@@ -154,6 +154,8 @@ def _classify_stage3_failure_category(pipeline_result: dict) -> str | None:
             return "validation_issue"
 
     reject_reason = str(pipeline_result.get("reject_reason", "") or "")
+    if "dead_npc_precheck" in reject_reason.lower():
+        return "canonical_precheck"
     if "continuity" in reject_reason.lower():
         return "continuity"
     return "reject"
@@ -696,6 +698,11 @@ class Stage3Orchestrator:
     # ─────────────────────────────────────────────────────────────
     # V68 Lazy Init 헬퍼
     # ─────────────────────────────────────────────────────────────
+    # [Implicit state transfer] These methods assign to self.app because
+    # Stage 4's lazy-init gateway also reads them from app (main_a.py:3813+).
+    # The DI context (Stage3Context / Stage4Context) receives them later
+    # via getattr(app, ...) in from_app(). This makes Stage 3 a hidden
+    # producer of app-level domain state, not just a consumer.
     def _init_state_tracker_if_needed(self) -> None:
         """[V60.96] StateTracker lazy init — app 인스턴스에 할당"""
         app = self.app
@@ -1501,6 +1508,12 @@ class Stage3Orchestrator:
                 adversarial_self_play=ctx.adversarial_self_play,
                 prev_hud=_bp_prev_hud,
             )
+            blueprint, pipeline_result = self._apply_stage3_dead_npc_precheck(
+                blueprint=blueprint,
+                pipeline_result=pipeline_result,
+                working_ep=working_ep,
+                arc_data=arc_data,
+            )
             _verdict = pipeline_result.get("final_verdict", "UNKNOWN")
             _bp_score = pipeline_result.get(
                 "last_score", pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0)
@@ -1538,8 +1551,75 @@ class Stage3Orchestrator:
                         "score": _bp_score,
                         "selected_strategy": _selected_strategy or "",
                     },
-                )
+            )
             return blueprint, pipeline_result
+
+    def _apply_stage3_dead_npc_precheck(
+        self,
+        *,
+        blueprint,
+        pipeline_result,
+        working_ep,
+        arc_data,
+    ):
+        if not isinstance(blueprint, dict) or not isinstance(pipeline_result, dict):
+            return blueprint, pipeline_result
+
+        verdict = str(pipeline_result.get("final_verdict", "") or "").upper()
+        if verdict in {"ERROR", "REJECT"}:
+            return blueprint, pipeline_result
+
+        tracker = getattr(self.ctx, "state_tracker", None)
+        if tracker is None or not hasattr(tracker, "check_dead_npc_in_blueprint"):
+            return blueprint, pipeline_result
+
+        try:
+            arc_no = int((arc_data or {}).get("arc_no") or 0)
+        except (TypeError, ValueError):
+            arc_no = 0
+
+        try:
+            violations = tracker.check_dead_npc_in_blueprint(blueprint, working_ep, arc_no) or []
+        except Exception as precheck_err:
+            _logging.debug("[Stage3] dead NPC pre-check failed (non-blocking): %s", precheck_err)
+            return blueprint, pipeline_result
+
+        if not isinstance(violations, list) or not violations:
+            return blueprint, pipeline_result
+
+        primary = violations[0] if isinstance(violations[0], dict) else {}
+        npc_name = str(primary.get("npc_name", "") or "unknown NPC")
+        reason = f"dead_npc_precheck: deceased NPC '{npc_name}' assigned active present-time role in blueprint"
+
+        phases = pipeline_result.get("phases")
+        if not isinstance(phases, dict):
+            phases = {}
+            pipeline_result["phases"] = phases
+        validate = phases.get("validate")
+        if not isinstance(validate, dict):
+            validate = {}
+            phases["validate"] = validate
+        contradictions = validate.get("contradictions")
+        if not isinstance(contradictions, list):
+            contradictions = []
+            validate["contradictions"] = contradictions
+        if reason not in contradictions:
+            contradictions.append(reason)
+
+        validate["verdict"] = "REJECT"
+        validate["issues_count"] = max(int(validate.get("issues_count") or 0), len(contradictions), len(violations))
+        pipeline_result["final_verdict"] = "REJECT"
+        pipeline_result["reject_reason"] = reason
+        pipeline_result["precheck_failures"] = violations
+
+        _logging.warning(
+            "[Stage3] dead NPC pre-check reject: ep=%s arc=%s npc=%s violations=%d",
+            working_ep,
+            arc_no,
+            npc_name,
+            len(violations),
+        )
+        return blueprint, pipeline_result
 
     def _finalize_stage3_blueprint_pipeline_result(
         self,
@@ -2117,6 +2197,9 @@ class Stage3Orchestrator:
         error_text = str(pipeline_result.get("error", "") or "").strip()
         if error_text:
             parts.append(error_text)
+        reject_reason = str(pipeline_result.get("reject_reason", "") or "").strip()
+        if reject_reason:
+            parts.append(reject_reason)
 
         score = pipeline_result.get("last_score")
         if isinstance(score, int | float):

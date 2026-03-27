@@ -371,6 +371,65 @@ class BlockingValidatorConsistencyChecks:
 
         return {"check": "information_consistency", "passed": True}
 
+    def _check_wuxia_technique_realm_consistency(self, manuscript: str, context: dict) -> dict:
+        """[Wave-TR1] 무협 주인공 경지-기술 불일치 검출.
+
+        현재 확정된 경지에서 금지된 기술 패밀리가 원고에 나타나면 서페이싱.
+        경지 미확인 시 no-op. NPC는 검사하지 않음.
+        """
+        genre = context.get("genre") or ""
+        if genre != "wuxia":
+            return {"check": "wuxia_technique_realm", "passed": True}
+
+        # 확정된 주인공 경지 추출 (martial_hud 또는 context 직접 전달)
+        martial_hud = context.get("martial_hud", {})
+        actual_truth = martial_hud.get("actual_truth", {})
+        realm = actual_truth.get("realm") or context.get("protagonist_realm") or ""
+        realm = str(realm).strip()
+        if not realm:
+            return {"check": "wuxia_technique_realm", "passed": True}
+
+        # wuxia.yaml realm_technique_limits 로드
+        try:
+            from modules.core.models_config import resolve_models_yaml_path
+            import yaml
+            from pathlib import Path
+
+            wuxia_yaml_path = Path(resolve_models_yaml_path()).parent.parent / "config" / "genres" / "wuxia.yaml"
+            if not wuxia_yaml_path.exists():
+                return {"check": "wuxia_technique_realm", "passed": True}
+            with open(wuxia_yaml_path, encoding="utf-8") as f:
+                wuxia_config = yaml.safe_load(f) or {}
+        except Exception:
+            return {"check": "wuxia_technique_realm", "passed": True}
+
+        realm_limits = wuxia_config.get("realm_technique_limits", {})
+        forbidden = realm_limits.get(realm)
+        if not isinstance(forbidden, list) or not forbidden:
+            return {"check": "wuxia_technique_realm", "passed": True}
+
+        # 원고에서 금지 기술 사용 검색
+        for technique in forbidden:
+            if technique in manuscript:
+                # 부정/불가 문맥 제외 (예: "검기를 쓸 수 없었다")
+                idx = manuscript.find(technique)
+                context_window = manuscript[max(0, idx - 30):min(len(manuscript), idx + len(technique) + 30)]
+                negation_keywords = ["못했", "불가", "없었", "않았", "할 수 없", "쓸 수 없", "불능", "사용 불가"]
+                if any(neg in context_window for neg in negation_keywords):
+                    continue
+
+                return {
+                    "check": "wuxia_technique_realm",
+                    "passed": False,
+                    "reason": f"주인공 경지 '{realm}'에서 '{technique}'은(는) 사용 불가 (wuxia.yaml realm_technique_limits)",
+                    "severity": "MEDIUM",
+                    "realm": realm,
+                    "forbidden_technique": technique,
+                    "context": context_window,
+                }
+
+        return {"check": "wuxia_technique_realm", "passed": True}
+
     def _extract_keywords(self, text: str, max_keywords: int = 3) -> list[str]:
         """텍스트에서 핵심 키워드 추출 (간단한 휴리스틱)"""
         # 명사 추출 (한글 2글자 이상)

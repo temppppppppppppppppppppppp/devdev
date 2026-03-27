@@ -1,244 +1,895 @@
 {
-  "_schema_version": "2.0",
-  "_schema_description": "쓰레기통 상속 전용 Bible - 03_chaebol_ent_empire_tr_block_070_draft.json 기반 자동 생성",
-  "_last_updated": "2026-03-20",
-  "_genre": "investment",
+  "_schema_version": "2.1",
+  "_schema_description": "쓰레기통 상속 전용 Bible — TR 03_chaebol_ent_empire_tr_block_070_draft.json 기반, 2026-03-27 수동 BI repair",
+  "_last_updated": "2026-03-27",
+  "_genre": "entertainment_media",
+  "_repair_note": "2026-03-27 BI repair: 회귀자→비회귀 정정, NPC 개별화, FinanceHUD 실수치, npc_timeline/foreshadow_map/opponent_transition_plan 신규, Seeds 라이프사이클 추적",
   "MasterBible": {
     "ProjectData": {
       "MetaInfo": {
         "title": "쓰레기통 상속",
-        "grand_objective": "결말을 개인 화해로 좁히면 이 작품의 크기는 회사 하나를 지킨 이야기에서 멈춘다. 산업을 바꾼 이야기로 끝내야 한다.",
-        "genre_archetype": "investment + chaebol + business strategy",
-        "logline": "미래 붕괴를 경험한 재벌 3세가 회귀 후 산업 전 섹터를 순차 공략하며 제국을 재건한다.",
+        "grand_objective": "권태하가 만든 세령컬처웍스 방식이 업계 표준이 되는 것. 아버지의 인정이 아니라, 남들이 결국 따라 하게 되는 구조를 만드는 것이 최종 승리다.",
+        "genre_archetype": "entertainment_media + chaebol_succession + lifestyle_IP",
+        "logline": "몰락 재벌 3세가 쓰레기처럼 떠넘겨진 소형 엔터 자회사를 배우·아이돌·셰프·팬덤·커머스를 묶는 스타 IP 복합기업으로 키워 업계 표준을 만든다.",
+        "genre_profile_primary": "entertainment_media_profile",
+        "genre_profile_secondary": "business_growth_profile",
         "total_episodes": 350,
         "episodes_per_arc": 5,
         "arcs_per_volume": 5
       },
       "CoreIdentity": {
         "protagonist": "권태하",
-        "protagonist_faction": "제국그룹 본사",
-        "edge": "미래 지식 + 협상 설계",
-        "desire": "실패한 미래를 완전히 교정하고 승리 루트만 남긴다.",
-        "crisis": "2009년 8월 말. 권태하는 호텔 스위트룸 사고를 수습하자마자 아버지 권도현 회장에게 끌려가고, 핵심 계열사 대신 망해가는 소형 엔터 자회사 세령컬처웍스를 1년 안에 살려 보라는 통보를 받는다. 모두가 비웃는 자리에서 그는 지하 연습실에 버려지듯 남아 있던 연습생 강이현을 보고 한 번에 시선을 빼앗긴다."
+        "protagonist_faction": "세령컬처웍스",
+        "edge": "스타 감지 — 사람의 터질 타이밍을 읽고 맞는 자리에 배치하는 선천적 감각. 단순한 발굴이 아니라, 개별 재능을 서로 맞물리는 구조로 조립하는 배치 능력으로 진화한다.",
+        "desire": "자기 이름으로 산업 자체를 만든다. 아버지의 승인이 아니라 시장이 따라 하는 구조를 남긴다.",
+        "crisis": "2009년 8월 말. 권태하는 호텔 스위트룸 사고를 수습하자마자 아버지 권도현 회장에게 끌려가고, 핵심 계열사 대신 망해가는 소형 엔터 자회사 세령컬처웍스를 1년 안에 살려 보라는 통보를 받는다. 모두가 비웃는 자리에서 그는 지하 연습실에 버려지듯 남아 있던 연습생 강이현을 보고 한 번에 시선을 빼앗긴다.",
+        "engine_evolution": [
+          "Phase 1 (B1-10): 사람 발굴 — 재능의 터질 타이밍을 읽는다",
+          "Phase 2 (B11-20): 사람 배치 — 재능을 맞는 자리와 순서에 놓는다",
+          "Phase 3 (B21-30): 패키지 설계 — 개별 자산을 묶어 다른 게임을 만든다",
+          "Phase 4 (B31-40): 접점 구조 — 채널이 아니라 접점 다발로 움직이는 회사를 설계한다",
+          "Phase 5 (B41-50): 산업 재정의 — 엔터가 아니라 생활형 스타 IP 기업이라는 언어를 만든다",
+          "Phase 6 (B51-60): 글로벌 확장 — 세계 시장에서 통하는 구조를 만든다",
+          "Phase 7 (B61-70): 권력전과 표준화 — 시장과 여론을 무기로 산업 표준을 확정한다"
+        ]
       },
       "CommercialCode": {
-        "cider_point": "패배로 보이는 장면을 미리 설계된 승리로 반전",
-        "success_device": "타이밍 투자 + 글로벌 거물 협업",
-        "attitude": "항상 이기는 구조를 먼저 만들고 실행"
+        "cider_point": "누구도 가치를 못 보던 사람을 맞는 자리에 놓는 순간 폭발하는 반전. 업계가 비웃던 변칙이 시장에서 먼저 통하는 쾌감.",
+        "success_device": "개별 자산(배우·아이돌·셰프·스트리머)을 묶어 시장 자체를 만드는 패키지 전략. 방송이 아니라 팬 접점을 먼저 장악하는 비대칭 확장.",
+        "attitude": "결과로만 말한다. 감정적 호소 대신 시장이 반응하는 구조를 먼저 깔고, 그 위에서 권력전을 싸운다.",
+        "defeat_mechanic": "성공의 대가를 미리 읽지 못하면 이긴 순간부터 진다. Block 55 pyrrhic victory, Block 63 경영권 탈취가 이 패턴."
       }
     },
     "protagonist_config": {
       "world_origin": "현대인",
-      "incarnation_type": "회귀자",
-      "regression_point": {
-        "return_year": 2006,
-        "return_context": "사업/승계 의사결정 직전"
-      }
+      "incarnation_type": "일반인",
+      "is_regressor": false,
+      "regression_note": "본 작품은 회귀물이 아니다. 권태하는 선천적 감각(스타 감지)을 가진 비회귀 주인공이다. TR 전 블록에서 is_regressor: false 확인됨.",
+      "name": "권태하",
+      "special_ability": {
+        "name": "스타 감지",
+        "type": "선천적 감각",
+        "description": "사람의 재능이 터질 타이밍과 맞는 자리를 직감적으로 읽는 능력. 초반에는 개인 발굴에 쓰이고, 후반에는 산업 구조의 방향을 읽는 힘으로 확장된다.",
+        "evolution_arc": "연습생 잠재력 판별 → 배우 포지셔닝 → 인재 조합과 무대 배치 → 사업 구조 설계 → 글로벌 확장 구조 설계 → 산업 표준 방향 읽기"
+      },
+      "pov": "3인칭",
+      "external_pov_insert_policy": "제한적 허용"
     },
     "FinanceHUD": {
-      "_description": "투자/경영물 HUD - 자산·영향력·네트워크 추적",
+      "_description": "엔터/라이프스타일 IP 기업 Resource-Power HUD — 자본·팬덤·IP자산·영향력 추적",
       "Protagonist": {
         "actual_truth": {
           "name": "권태하",
-          "alias": "시장 설계자",
+          "alias": "스타 IP 설계자",
           "age": 30,
-          "rank": "재벌 3세/핵심 경영자",
+          "rank": "세령컬처웍스 대표 / 재벌 3세",
           "financial_status": {
-            "total_assets": "초기 설정 필요",
-            "liquid_cash": "초기 설정 필요",
+            "total_assets": "6800억",
+            "mobilizable_capital": "6800억",
+            "liquid_cash": "추정 2000억+",
+            "initial_capital": "120억 (조건부 위임)",
+            "final_capital": "6800억",
+            "growth_multiple": "57x",
             "stocks": [],
             "real_estate": [],
+            "ip_assets": [
+              "ORBIT (글로벌 보이그룹 IP)",
+              "윤서아 배우 라인 IP",
+              "문선우 F&B 브랜드 IP",
+              "박재인 스트리머/팬덤 플랫폼 IP",
+              "세령컬처웍스 자체 팬덤 플랫폼"
+            ],
             "foreign_currency": {},
             "derivatives": {},
-            "debt": "관리 중"
+            "debt": "관리 중",
+            "company": "세령컬처웍스",
+            "company_state": "아이돌·배우·스트리머·셰프·F&B·팬덤 플랫폼·커머스를 하나의 산업 구조로 묶은 스타 IP 대기업. 업계가 따라 하는 표준.",
+            "business_lines": [
+              "아이돌 (ORBIT 글로벌 보이그룹)",
+              "배우 매니지먼트 (윤서아 라인)",
+              "스트리머/웹콘텐츠 (박재인 라인)",
+              "F&B 브랜드 (문선우 라인)",
+              "팬덤 커머스 (하은솔 유통)",
+              "자체 팬덤 플랫폼",
+              "글로벌 투어/라이선싱"
+            ]
           },
-          "network_level": "중상",
-          "wealth": "성장 국면",
-          "current_objective": "몰락한 제국그룹을 재건해 한국 1위에서 세계 1위 그룹까지 확장한다.",
-          "causal_injuries": "승계 압박, 정책 충돌, 글로벌 경쟁이 동시에 몰려오는 복합 위기.",
+          "network_level": "글로벌",
+          "wealth": "대기업급",
+          "current_objective": "세령컬처웍스를 스타 IP 복합기업의 산업 표준으로 확정한다.",
+          "causal_injuries": "경영권 탈취 시도(Block 63), 글로벌 독점 계약 압박(마커스 리), 아버지와의 승인 전쟁",
           "inventory": []
         },
         "public_reputation": {
-          "identity": "젊은 실무형 후계자",
-          "wealth_level": "신흥",
-          "perceived_influence": "빠르게 상승"
-        }
+          "identity": "스타 IP 복합기업 창업자",
+          "wealth_level": "대기업급",
+          "perceived_influence": "산업 표준 설정자"
+        },
+        "portfolio_history": [
+          {
+            "milestone": "세령컬처웍스 인수",
+            "block": 1,
+            "capital": "120억",
+            "event": "조건부 경영권 위임. 1년 시한."
+          },
+          {
+            "milestone": "청산 위기 탈출",
+            "block": 10,
+            "capital": "190억",
+            "event": "배우+연습생+현금흐름 패키지로 외부 투자 유치, 청산 보류."
+          },
+          {
+            "milestone": "공식 청산 보류",
+            "block": 20,
+            "capital": "380억",
+            "event": "포트폴리오 자료 묶음으로 외부 투자+선계약 확보. 회사 존속 공식화."
+          },
+          {
+            "milestone": "첫 업계전쟁 승리",
+            "block": 30,
+            "capital": "470억",
+            "event": "비방송 패키지 전략으로 업계 신흥 세력 인정. 서민재 전략 파트너 확정."
+          },
+          {
+            "milestone": "시장형 회사 전환",
+            "block": 40,
+            "capital": "760억",
+            "event": "방송 밖 시장 직접 공략. 첫 대형 광고-유통 협업. 체질 전환 완료."
+          },
+          {
+            "milestone": "생활형 스타 IP 기업 선언",
+            "block": 50,
+            "capital": "1280억",
+            "event": "엔터 아닌 생활권력으로 자기 정의. 배우+아이돌+셰프+커머스 통합."
+          },
+          {
+            "milestone": "Pyrrhic Victory — 글로벌 대가",
+            "block": 55,
+            "capital": "1548억 (▼264억)",
+            "event": "ORBIT 글로벌 성공과 동시에 마커스 리 독점 계약으로 통제권 일부 상실."
+          },
+          {
+            "milestone": "글로벌 구조 확정",
+            "block": 60,
+            "capital": "3600억",
+            "event": "독점 탈피, 로컬 파트너+팬 접점 분산으로 세계 시장 플레이어 확정."
+          },
+          {
+            "milestone": "경영권 탈취 위기",
+            "block": 63,
+            "capital": "약 3200억 (추정)",
+            "event": "공신 라인 쿠데타로 경영권 탈취. 태하 회사 밖으로 밀려남."
+          },
+          {
+            "milestone": "시장 폭로로 반격",
+            "block": 68,
+            "capital": "5112억",
+            "event": "공신 라인 내부거래/비리 시장 폭로. IR+팬덤+파트너 동시 공세."
+          },
+          {
+            "milestone": "산업 표준 확정",
+            "block": 70,
+            "capital": "6800억",
+            "event": "세령컬처웍스 방식이 업계 표준. 인정이 아니라 구조로 승리."
+          }
+        ]
       }
     },
     "WorldState": {
-      "CurrentEra": "2006년 시작",
-      "CurrentLocation": "세령그룹 회장실 / 세령컬처웍스 지하 연습실",
-      "KarmaMatrix": {}
+      "CurrentEra": "2009년 시작, Block 70 기준 추정 2020년대 초반",
+      "CurrentLocation": "세령컬처웍스 본사 / 글로벌 (투어·라이선싱 거점 다수)",
+      "KarmaMatrix": {
+        "core_tension": "감각 vs 시스템, 개인 재능 vs 조직 구조, 엔터 관습 vs 시장 혁신",
+        "power_structure": "세령그룹(아버지 권도현) → 세령컬처웍스(태하) → 업계 대형사(백승문) → 글로벌 플랫폼(마커스 리) → 공신 라인(한도윤)"
+      }
     },
     "AssetLibrary": {
       "KeyNPCs": [
         {
           "name": "권도현(아버지)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "role": "구조적 적대자 / 심판자",
+          "desc": "세령그룹 회장. 태하를 시험하려 쓰레기 자회사를 던졌지만, 태하가 키운 회사가 그룹 전체 승계 전선의 변수가 되자 통제와 인정 사이에서 흔들린다. 끝까지 완전히 인정하지 못하지만 결과 앞에서 막지도 못한다."
         },
         {
-          "name": "강이현(연습생)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "name": "강이현(연습생→ORBIT 센터)",
+          "role": "핵심 자산 / 내부 갈등 축",
+          "desc": "태하가 지하 연습실에서 발견한 첫 재능. 압도적 무대 장악력이 있지만 팀 적응에 실패하는 양날의 카드. 성장할수록 팀을 찢는 힘도 커지고, 글로벌 성공 직후 정상 압박에 폭발 직전까지 간다."
         },
         {
-          "name": "한도윤(경영관리실장)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "name": "한도윤(경영관리실장→공신 라인 실무자)",
+          "role": "지속적 적대자",
+          "desc": "처음에는 청산 감시자, 중반에는 예산 통제자, 후반에는 공신 라인의 쿠데타 실무자. 숫자와 절차의 언어로 태하를 압박하지만, Block 68에서 공급망·지분 공작이 폭로되며 명분을 잃고 무너진다."
         },
         {
-          "name": "서민재(A&R 총괄)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "name": "서민재(A&R 총괄→전략 참모)",
+          "role": "핵심 동맹 / 시스템 축",
+          "desc": "태하의 감각을 인정하면서도 시스템 없는 독주에 반발하는 실무 파트너. 감각 대 시스템 갈등은 3대단원의 핵심 축. 결국 태하 방식이 산업 표준이 되는 걸 함께 만든 핵심 참모로 완성된다."
         },
         {
           "name": "윤서아(배우)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "role": "배우 라인 기둥 / 과거 복선 축",
+          "desc": "이미 끝났다고 여겨진 배우를 태하가 차갑고 위험한 조연으로 재포지셔닝. 과거 추락의 배후가 업계 공작이었다는 복선이 Block 37에서 열리며, 태하의 첫 성공 증거이자 배우 라인의 출발점."
         },
         {
-          "name": "오지혁(현장 매니저)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "name": "오지혁(현장 매니저→현장 브레인)",
+          "role": "현장 동맹",
+          "desc": "낙하산 도련님이라 멸시하다가 태하가 직접 지방 행사장을 뛰는 걸 보고 첫 신뢰. 오프라인 이벤트와 라이브를 동시에 굴리는 운영 축으로 성장. 태하의 가장 단단한 실무 동맹."
         },
         {
-          "name": "문선우(호텔 서브 셰프)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "name": "문선우(호텔 서브 셰프→F&B 브랜드 얼굴)",
+          "role": "F&B 사업축 핵심",
+          "desc": "호텔 주방에서 손놀림과 분위기 장악력으로 태하의 눈에 든 셰프. 완고한 장인 기질이 브랜드 성격으로 전환되며, 단순 셰프에서 세령컬처웍스 핵심 사업축의 얼굴로 격상."
         },
         {
-          "name": "최라희(콘텐츠 기획자)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "name": "최라희(콘텐츠 기획자→브랜딩 설계자)",
+          "role": "전략 설계 축",
+          "desc": "포맷 기획자에서 회사 전체 세계관을 짜는 브랜딩 설계자로 성장. 플랫폼 제재 이후 분산 유통 구조 설계, 후반에는 각 사업군 팬덤을 한 판으로 묶는 전략의 핵심."
         },
         {
           "name": "백승문(제국엔터 전략본부장)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "role": "업계 적대자",
+          "desc": "방송 중심 업계 질서를 쥔 대형 기획사 실세. 태하가 놓친 인재를 앞세워 우위를 과시하지만, 세령컬처웍스의 비방송 변칙 전략에 대응이 느려 결국 불편한 경쟁자로 인정할 수밖에 없게 된다."
         },
         {
-          "name": "박재인(스트리머 지망생)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "name": "박재인(스트리머→팬덤 엔진)",
+          "role": "디지털 접점 축",
+          "desc": "스트리머 지망생에서 시작해 자기 방송이 회사 전체 브랜드의 입구가 될 수 있음을 체감한 인물. 후반에는 개별 스타가 아니라 태하 쪽 팬덤 전선을 여는 핵심 채널로 격상."
         },
         {
           "name": "하은솔(유통 계열 MD)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "role": "커머스 축",
+          "desc": "매출 숫자만 믿는 냉정한 유통 실무자. 문선우 IP를 상품과 팝업 구조로 바꿀 수 있다고 보고 태하 편에 선다. 후반 팬덤 커머스와 플랫폼 소비 전환의 핵심 실무자."
         },
         {
           "name": "마커스 리(글로벌 플랫폼 아시아 총괄)",
-          "role": "주요 이해관계자",
-          "desc": "블록 진행 과정에서 관계 변화가 누적되는 핵심 인물"
+          "role": "글로벌 적대자",
+          "desc": "ORBIT의 글로벌 진출에 협력자 얼굴로 접근하지만, 계약서에는 수익보다 통제권을 깊게 파고든다. Block 55에서 독점 계약 본색을 드러내며 우호 파트너에서 외부 적으로 전환."
+        },
+        {
+          "name": "이세린(법무)",
+          "role": "후반 반격 키맨",
+          "desc": "공신 라인의 내부 거래와 공급망 비리를 보고 태하 편으로 돌아서는 법무 키맨. Block 68에서 폭로와 IR 전장을 동시에 설계하는 최종 반격의 실무 축."
         }
       ],
       "KeyItems": [
         {
-          "item": "경영 대시보드",
-          "desc": "실시간 지표 기반 의사결정 도구"
+          "item": "위임 계약서 조건 조항",
+          "desc": "Block 1에서 권도현이 내민 경영 위임 계약. 후반 지배권 싸움에서 칼이 된다."
         },
         {
-          "item": "핵심 네트워크 맵",
-          "desc": "정치/금융/산업 인맥 연결도"
+          "item": "세령호텔 계열 자산",
+          "desc": "초기 쇼케이스(Block 7)부터 F&B·팝업·이벤트까지 반복 활용되는 물리적 기반."
+        },
+        {
+          "item": "자체 팬덤 플랫폼",
+          "desc": "Block 69에서 출범. 팬 접점과 커머스를 자체 통제하는 최종 무기."
         }
       ],
-      "Persona": "냉정한 전략가, 실패를 승리 재료로 전환",
+      "Persona": "결과로만 말하는 실행가. 사람의 재능을 읽되, 그 사람을 맞는 자리에 놓는 배치로 승부한다. 감정적 호소 대신 시장 구조로 권력전을 싸운다.",
       "SpeechStyle": {
-        "tone": "정확하고 단호한 비즈니스 화법",
-        "vocabulary": "경제·재무·협상 중심"
+        "tone": "단호하고 절제된 화법. 불필요한 설명 없이 판단과 결과만 말한다.",
+        "vocabulary": "엔터·IP·팬덤·배치·구조 중심. 투자 용어보다 콘텐츠와 사람 배치의 언어를 쓴다."
       }
     },
+    "npc_timeline": [
+      {
+        "name": "권도현",
+        "entry_block": 1,
+        "active_blocks": "1-70",
+        "function": "아버지이자 구조적 심판자. 시험대를 던지고 결과를 지켜보는 위치.",
+        "turning_blocks": [
+          1,
+          10,
+          20,
+          50,
+          60,
+          70
+        ],
+        "final_state": "태하 방식을 끝내 완전히 이해하지 못하지만 결과 앞에서 막지 못하고 인정한다."
+      },
+      {
+        "name": "강이현",
+        "entry_block": 1,
+        "active_blocks": "1-60",
+        "function": "핵심 자산이자 팀 갈등 축. ORBIT 센터로 성장.",
+        "turning_blocks": [
+          1,
+          12,
+          15,
+          26,
+          51,
+          55,
+          58
+        ],
+        "final_state": "정상 직전 압박과 팀 갈등을 거쳐 성숙하지만, 과정에서 팀과 태하 모두에게 가장 큰 부담."
+      },
+      {
+        "name": "한도윤",
+        "entry_block": 2,
+        "active_blocks": "2-68",
+        "function": "지속적 적대자. 청산 감시자→예산 통제자→쿠데타 실무자.",
+        "turning_blocks": [
+          2,
+          5,
+          10,
+          16,
+          20,
+          39,
+          48,
+          62,
+          63,
+          68
+        ],
+        "final_state": "공급망·지분 공작이 폭로되며 명분을 잃고 무너진다."
+      },
+      {
+        "name": "서민재",
+        "entry_block": 2,
+        "active_blocks": "2-70",
+        "function": "감각 vs 시스템 갈등 축. 전략 파트너로 성장.",
+        "turning_blocks": [
+          2,
+          7,
+          15,
+          25,
+          30,
+          70
+        ],
+        "final_state": "태하 방식이 산업 표준이 되는 걸 함께 만든 핵심 참모."
+      },
+      {
+        "name": "윤서아",
+        "entry_block": 2,
+        "active_blocks": "2-44",
+        "function": "배우 라인 기둥. 과거 복선 축.",
+        "turning_blocks": [
+          2,
+          4,
+          5,
+          8,
+          11,
+          13,
+          22,
+          37,
+          44
+        ],
+        "final_state": "과거 공작의 진실을 되찾고 독립적 배우로 완성."
+      },
+      {
+        "name": "오지혁",
+        "entry_block": 3,
+        "active_blocks": "3-65",
+        "function": "현장 동맹. 오프라인 운영 축.",
+        "turning_blocks": [
+          3,
+          7,
+          35,
+          65
+        ],
+        "final_state": "오프라인 이벤트와 라이브를 동시에 굴리는 운영 축으로 완성."
+      },
+      {
+        "name": "문선우",
+        "entry_block": 14,
+        "active_blocks": "14-50",
+        "function": "F&B 사업축 핵심. 셰프→브랜드 얼굴.",
+        "turning_blocks": [
+          14,
+          33,
+          41,
+          42,
+          43,
+          45,
+          47,
+          50
+        ],
+        "final_state": "셰프가 아니라 세령컬처웍스 핵심 사업축의 브랜드 얼굴로 확정."
+      },
+      {
+        "name": "최라희",
+        "entry_block": 31,
+        "active_blocks": "31-65",
+        "function": "포맷 기획→브랜딩 설계자. 분산 유통+팬덤 통합 전략.",
+        "turning_blocks": [
+          31,
+          32,
+          35,
+          38,
+          46,
+          65
+        ],
+        "final_state": "각 사업군 팬덤을 한 판으로 묶는 전략 설계자."
+      },
+      {
+        "name": "백승문",
+        "entry_block": 29,
+        "active_blocks": "29-40",
+        "function": "업계 적대자. 방송 중심 질서 수호.",
+        "turning_blocks": [
+          29,
+          30
+        ],
+        "final_state": "세령컬처웍스를 운 좋은 자회사가 아니라 불편한 경쟁자로 인정."
+      },
+      {
+        "name": "박재인",
+        "entry_block": 31,
+        "active_blocks": "31-65",
+        "function": "디지털 접점 축. 스트리머→팬덤 엔진.",
+        "turning_blocks": [
+          31,
+          36,
+          40,
+          57,
+          65
+        ],
+        "final_state": "개별 스타가 아니라 태하 쪽 팬덤 전선을 여는 핵심 채널."
+      },
+      {
+        "name": "하은솔",
+        "entry_block": 45,
+        "active_blocks": "45-69",
+        "function": "커머스 축. 유통 실무→팬덤 커머스 핵심.",
+        "turning_blocks": [
+          45,
+          46,
+          49
+        ],
+        "final_state": "후반 팬덤 커머스와 플랫폼 소비 전환의 핵심 실무자."
+      },
+      {
+        "name": "마커스 리",
+        "entry_block": 52,
+        "active_blocks": "52-60",
+        "function": "글로벌 적대자. 우호 파트너→독점 통제자.",
+        "turning_blocks": [
+          52,
+          55,
+          56,
+          60
+        ],
+        "final_state": "완전한 적대는 아니지만 태하가 끝까지 경계해야 할 글로벌 세력."
+      },
+      {
+        "name": "이세린",
+        "entry_block": 66,
+        "active_blocks": "66-68",
+        "function": "후반 반격 키맨. 법무 축.",
+        "turning_blocks": [
+          66,
+          68
+        ],
+        "final_state": "폭로와 IR 전장을 동시에 설계하는 최종 반격 실무 축."
+      }
+    ],
+    "foreshadow_map": [
+      {
+        "id": "F-001",
+        "thread": "위임 계약서 조건 조항",
+        "planted_blocks": [
+          1
+        ],
+        "payoff_blocks": [
+          63,
+          68
+        ],
+        "status": "harvested",
+        "payoff": "초반 경영권 위임 조건이 후반 공신 라인의 탈취 명분이자 태하의 반격 근거로 동시에 작동."
+      },
+      {
+        "id": "F-002",
+        "thread": "강이현 — 팀의 시작과 양날의 카드",
+        "planted_blocks": [
+          1,
+          12,
+          15
+        ],
+        "payoff_blocks": [
+          26,
+          51,
+          55,
+          58
+        ],
+        "status": "harvested",
+        "payoff": "첫 발견에서 시작된 강이현의 재능이 ORBIT 글로벌 성공으로 최대화되지만, 팀 적응 실패와 정상 압박이 pyrrhic victory를 만드는 핵심 원인."
+      },
+      {
+        "id": "F-003",
+        "thread": "윤서아 추락의 진짜 배후",
+        "planted_blocks": [
+          4,
+          5
+        ],
+        "payoff_blocks": [
+          22,
+          37,
+          44
+        ],
+        "status": "harvested",
+        "payoff": "단순 스캔들이 아니라 업계 권력전에 의한 의도적 추락이었음이 밝혀지며, 태하가 진실을 되돌려주는 서사로 완성."
+      },
+      {
+        "id": "F-004",
+        "thread": "태하와 서민재의 감각 vs 시스템 갈등",
+        "planted_blocks": [
+          7,
+          15,
+          25
+        ],
+        "payoff_blocks": [
+          30,
+          70
+        ],
+        "status": "harvested",
+        "payoff": "감각과 시스템의 충돌이 결국 둘 다 필요한 구조로 통합되며, 서민재가 태하의 핵심 참모로 완성."
+      },
+      {
+        "id": "F-005",
+        "thread": "비방송 팬 접점 → 자체 팬덤 플랫폼",
+        "planted_blocks": [
+          24,
+          35,
+          38,
+          46
+        ],
+        "payoff_blocks": [
+          57,
+          65,
+          69
+        ],
+        "status": "harvested",
+        "payoff": "초반 비방송 루트 실험이 분산 접점 → 팬덤 데이터 → 자체 플랫폼으로 진화하며, 경영권 반격의 무기가 된다."
+      },
+      {
+        "id": "F-006",
+        "thread": "한도윤의 장부와 공급망",
+        "planted_blocks": [
+          39,
+          48
+        ],
+        "payoff_blocks": [
+          66,
+          68
+        ],
+        "status": "harvested",
+        "payoff": "자본 흐름의 이상 징후가 장부 카드로 축적되어 최종 시장 폭로의 핵심 증거가 된다."
+      },
+      {
+        "id": "F-007",
+        "thread": "마커스 리 독점 계약의 독소 조항",
+        "planted_blocks": [
+          52
+        ],
+        "payoff_blocks": [
+          55,
+          56,
+          60
+        ],
+        "status": "harvested",
+        "payoff": "우호적으로 보이던 조건표의 통제권 독소가 Block 55의 pyrrhic victory를 만들고, Block 60에서 구조적 탈피로 해소."
+      }
+    ],
+    "opponent_transition_plan": [
+      {
+        "arc": "ARC-01",
+        "section_rotation": "ARC-01 — 쓰레기통에서 사람 찾기",
+        "block_range": "1-10",
+        "entry_block": 1,
+        "main_actors": [
+          "권도현",
+          "한도윤",
+          "내부 냉소"
+        ],
+        "goal": "태하를 실패시켜 청산 명분을 만든다.",
+        "methods": [
+          "청산 압박",
+          "예산 통제",
+          "내부 무관심",
+          "윤서아 스캔들 재점화"
+        ],
+        "weakness": "문화 사업을 장난으로 보는 오만. 태하가 숫자와 사람을 동시에 보여주면 명분이 무너진다."
+      },
+      {
+        "arc": "ARC-02",
+        "section_rotation": "ARC-02 — 배우·연습생으로 첫 증명",
+        "block_range": "11-20",
+        "entry_block": 11,
+        "main_actors": [
+          "한도윤",
+          "권도현",
+          "감사실"
+        ],
+        "goal": "성과가 나와도 회사를 키우지 않고 청산 쪽으로 몰아간다.",
+        "methods": [
+          "감사실 칼날(Block 16)",
+          "아버지의 진짜 조건(Block 18)",
+          "예산 묶기"
+        ],
+        "weakness": "태하가 단일 히트가 아니라 포트폴리오 논리를 만들면 청산 명분이 사라진다."
+      },
+      {
+        "arc": "ARC-03",
+        "section_rotation": "ARC-03 — 방송 밖 팬 유입과 업계전쟁",
+        "block_range": "21-30",
+        "entry_block": 21,
+        "main_actors": [
+          "백승문",
+          "방송 중심 업계",
+          "강이현 팀 갈등"
+        ],
+        "goal": "세령컬처웍스를 방송 질서 밖의 변칙으로 고립시킨다.",
+        "methods": [
+          "방송 채널 차단(Block 23)",
+          "인재 빼가기(Block 29)",
+          "변칙 비웃기"
+        ],
+        "weakness": "비방송 팬 유입이 실제 숫자를 만들면 변칙이 아니라 대안이 된다."
+      },
+      {
+        "arc": "ARC-04",
+        "section_rotation": "ARC-04 — 웹·라이브·F&B로 시장 전환",
+        "block_range": "31-40",
+        "entry_block": 31,
+        "main_actors": [
+          "플랫폼 정책",
+          "방송 중심 광고 관성",
+          "유통 회의론"
+        ],
+        "goal": "디지털 실험을 실패작으로 낙인찍고 전통 채널 의존으로 되돌린다.",
+        "methods": [
+          "플랫폼 노출 제재(Block 34)",
+          "광고주 이탈 압박",
+          "셰프 IP 회의론"
+        ],
+        "weakness": "분산 접점 구조가 한 채널 막힘에 면역이면 제재 효과가 사라진다."
+      },
+      {
+        "arc": "ARC-05",
+        "section_rotation": "ARC-05 — 생활 IP 기업으로 도약",
+        "block_range": "41-50",
+        "entry_block": 41,
+        "main_actors": [
+          "유통 실무 관성",
+          "업계 정의 프레임"
+        ],
+        "goal": "세령컬처웍스를 엔터 회사로만 가둬 확장을 막는다.",
+        "methods": [
+          "매출 회의론",
+          "산업 분류 관성",
+          "화제성≠실매출 논리"
+        ],
+        "weakness": "팝업·상품·영상이 동시에 붙을 때 구매 전환이 빨라지면 논리가 무너진다."
+      },
+      {
+        "arc": "ARC-06",
+        "section_rotation": "ARC-06 — 글로벌 확장과 pyrrhic victory",
+        "block_range": "51-60",
+        "entry_block": 51,
+        "main_actors": [
+          "마커스 리",
+          "글로벌 플랫폼",
+          "외부 자본"
+        ],
+        "goal": "세령컬처웍스를 글로벌 성공의 하청 회사로 종속시킨다.",
+        "methods": [
+          "독점 계약 통제(Block 55)",
+          "무리한 일정(Block 53)",
+          "외부 자본 탐욕(Block 60)"
+        ],
+        "weakness": "세령컬처웍스가 한 플랫폼에 묶이지 않고 접점을 분산시키면 종속이 불가능하다."
+      },
+      {
+        "arc": "ARC-07",
+        "section_rotation": "ARC-07 — 경영권 전쟁과 최종 반격",
+        "block_range": "61-70",
+        "entry_block": 61,
+        "main_actors": [
+          "한도윤",
+          "공신 라인",
+          "권도현"
+        ],
+        "goal": "태하를 회사에서 축출하고 세령컬처웍스를 흡수한다.",
+        "methods": [
+          "이사회 표결(Block 63)",
+          "공급망 비리 은폐",
+          "문서·의결권 통제"
+        ],
+        "weakness": "시장과 팬덤 영향력을 과소평가. 장부 증거와 여론이 동시에 터지면 명분이 무너진다."
+      }
+    ],
     "Seeds": [
       {
         "id": "S-001",
-        "category": "foreshadow",
+        "category": "권력",
         "description": "권도현이 내민 위임 계약서의 조건 조항이 후반 지배권 싸움의 칼이 된다.",
-        "status": "active",
+        "status": "harvested",
         "planted_ep": 1,
-        "echo_count": 0,
-        "harvested_ep": null
+        "target_harvest_ep": 340,
+        "echo_count": 4,
+        "echo_blocks": [
+          10,
+          18,
+          63,
+          68
+        ],
+        "harvested_ep": 340
       },
       {
         "id": "S-002",
-        "category": "foreshadow",
-        "description": "강이현은 회사의 미래 대형 그룹을 여는 첫 씨앗이다.",
-        "status": "active",
+        "category": "인물",
+        "description": "강이현은 회사의 미래 대형 그룹(ORBIT)을 여는 첫 씨앗이다.",
+        "status": "harvested",
         "planted_ep": 1,
-        "echo_count": 0,
-        "harvested_ep": null
+        "target_harvest_ep": 255,
+        "echo_count": 5,
+        "echo_blocks": [
+          12,
+          15,
+          26,
+          51,
+          55
+        ],
+        "harvested_ep": 300
       },
       {
         "id": "S-003",
-        "category": "foreshadow",
-        "description": "태하의 방식은 회사를 정리하는 경영이 아니라 사람의 타이밍을 읽는 배치로 시작된다.",
-        "status": "active",
+        "category": "전략",
+        "description": "태하의 방식은 사람의 타이밍을 읽는 배치에서 시작해 산업 구조 설계로 진화한다.",
+        "status": "harvested",
         "planted_ep": 1,
-        "echo_count": 0,
-        "harvested_ep": null
+        "target_harvest_ep": 350,
+        "echo_count": 6,
+        "echo_blocks": [
+          7,
+          25,
+          40,
+          50,
+          60,
+          70
+        ],
+        "harvested_ep": 350
       },
       {
         "id": "S-004",
-        "category": "foreshadow",
-        "description": "윤서아를 다시 세우는 첫 판단이 배우 라인의 출발점이 된다.",
-        "status": "active",
-        "planted_ep": 2,
-        "echo_count": 0,
-        "harvested_ep": null
+        "category": "인물",
+        "description": "윤서아를 다시 세우는 첫 판단이 배우 라인 전체의 출발점이 된다.",
+        "status": "harvested",
+        "planted_ep": 10,
+        "target_harvest_ep": 220,
+        "echo_count": 4,
+        "echo_blocks": [
+          8,
+          11,
+          13,
+          44
+        ],
+        "harvested_ep": 220
       },
       {
         "id": "S-005",
-        "category": "foreshadow",
-        "description": "한도윤이 쥔 계약과 예산 통제권은 후반까지 태하를 괴롭힌다.",
-        "status": "active",
-        "planted_ep": 2,
-        "echo_count": 0,
-        "harvested_ep": null
+        "category": "갈등",
+        "description": "한도윤이 쥔 계약과 예산 통제권은 후반 쿠데타까지 태하를 괴롭히는 지속적 위협이다.",
+        "status": "harvested",
+        "planted_ep": 10,
+        "target_harvest_ep": 340,
+        "echo_count": 5,
+        "echo_blocks": [
+          10,
+          16,
+          20,
+          48,
+          63
+        ],
+        "harvested_ep": 340
       },
       {
         "id": "S-006",
-        "category": "foreshadow",
-        "description": "서민재의 부분적 인정은 훗날 시스템 설계 동맹으로 이어진다.",
-        "status": "active",
-        "planted_ep": 2,
-        "echo_count": 0,
-        "harvested_ep": null
+        "category": "동맹",
+        "description": "서민재의 감각 대 시스템 갈등은 결국 둘 다 필요한 전략 동맹으로 수렴한다.",
+        "status": "harvested",
+        "planted_ep": 10,
+        "target_harvest_ep": 350,
+        "echo_count": 4,
+        "echo_blocks": [
+          15,
+          25,
+          30,
+          70
+        ],
+        "harvested_ep": 350
       },
       {
         "id": "S-007",
-        "category": "foreshadow",
-        "description": "오지혁의 현장 신뢰는 훗날 태하의 가장 단단한 실무 동맹이 된다.",
-        "status": "active",
-        "planted_ep": 3,
-        "echo_count": 0,
-        "harvested_ep": null
+        "category": "동맹",
+        "description": "오지혁의 현장 신뢰는 태하의 가장 단단한 실무 동맹이 된다.",
+        "status": "harvested",
+        "planted_ep": 15,
+        "target_harvest_ep": 325,
+        "echo_count": 3,
+        "echo_blocks": [
+          7,
+          35,
+          65
+        ],
+        "harvested_ep": 325
       },
       {
         "id": "S-008",
-        "category": "foreshadow",
-        "description": "태하가 직접 현장을 만지는 방식은 이후 공연, 팝업, 투어까지 반복된다.",
-        "status": "active",
-        "planted_ep": 3,
-        "echo_count": 0,
-        "harvested_ep": null
+        "category": "전략",
+        "description": "비방송 팬 접점 실험이 분산 접점→자체 팬덤 플랫폼으로 진화한다.",
+        "status": "harvested",
+        "planted_ep": 120,
+        "target_harvest_ep": 345,
+        "echo_count": 5,
+        "echo_blocks": [
+          24,
+          35,
+          38,
+          57,
+          69
+        ],
+        "harvested_ep": 345
       },
       {
         "id": "S-009",
-        "category": "foreshadow",
-        "description": "초기 미수금 회수 경험은 태하가 사람과 숫자를 함께 묶는 경영 스타일의 출발이다.",
-        "status": "active",
-        "planted_ep": 3,
-        "echo_count": 0,
-        "harvested_ep": null
+        "category": "복선",
+        "description": "윤서아 과거 추락의 배후에는 업계 권력전에 의한 의도적 공작이 있다.",
+        "status": "harvested",
+        "planted_ep": 20,
+        "target_harvest_ep": 220,
+        "echo_count": 3,
+        "echo_blocks": [
+          5,
+          22,
+          37
+        ],
+        "harvested_ep": 220
       },
       {
         "id": "S-010",
-        "category": "foreshadow",
-        "description": "윤서아 과거 스캔들의 배후에는 체계적인 라인 개입이 있다.",
-        "status": "active",
-        "planted_ep": 4,
-        "echo_count": 0,
-        "harvested_ep": null
+        "category": "갈등",
+        "description": "마커스 리의 독점 계약 독소 조항이 글로벌 성공의 대가가 된다.",
+        "status": "harvested",
+        "planted_ep": 260,
+        "target_harvest_ep": 300,
+        "echo_count": 3,
+        "echo_blocks": [
+          52,
+          55,
+          60
+        ],
+        "harvested_ep": 300
+      },
+      {
+        "id": "S-011",
+        "category": "복선",
+        "description": "자본 흐름의 이상 징후(Block 39, 48)가 장부 카드로 축적되어 최종 폭로 증거가 된다.",
+        "status": "harvested",
+        "planted_ep": 195,
+        "target_harvest_ep": 340,
+        "echo_count": 3,
+        "echo_blocks": [
+          39,
+          48,
+          66
+        ],
+        "harvested_ep": 340
+      },
+      {
+        "id": "S-012",
+        "category": "성장",
+        "description": "문선우 발견에서 시작된 F&B 축이 라이프스타일 IP의 핵심 사업선이 된다.",
+        "status": "harvested",
+        "planted_ep": 70,
+        "target_harvest_ep": 250,
+        "echo_count": 4,
+        "echo_blocks": [
+          14,
+          33,
+          45,
+          50
+        ],
+        "harvested_ep": 250
       }
     ],
     "HistoricalEvents": {
@@ -321,10 +972,14 @@
       ]
     },
     "GenreRules": {
-      "rule_no_partial_defeat": true,
-      "rule_surface_fail_real_win": true,
-      "rule_single_heir": true,
-      "rule_global_mogul_short_cycle": true
+      "rule_talent_discovery_drives_plot": true,
+      "rule_bundle_strategy_over_single_hit": true,
+      "rule_non_broadcast_path_valid": true,
+      "rule_fan_touchpoint_as_power": true,
+      "rule_defeat_creates_structure_upgrade": true,
+      "rule_ip_ecosystem_over_talent_management": true,
+      "rule_no_regression_mechanic": true,
+      "_note": "본 작품은 회귀물이 아닌 비회귀 엔터/라이프스타일 IP 기업물. GenreRules는 entertainment_media_profile + business_growth_profile 기반."
     },
     "plot_roadmap": [
       {
@@ -415,7 +1070,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "숫자가 아니라 먼저 사람의 터질 타이밍을 찾고, 그 사람에게 맞는 판을 깐다."
-        }
+        },
+        "block_no": 1
       },
       {
         "block_id": "Block 2",
@@ -512,7 +1168,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "버려진 재능의 현재 가치보다 다음 자리의 폭발력을 먼저 본다."
-        }
+        },
+        "block_no": 2
       },
       {
         "block_id": "Block 3",
@@ -604,7 +1261,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "감각은 현장에서 돈으로 증명되어야 의미가 있다."
-        }
+        },
+        "block_no": 3
       },
       {
         "block_id": "Block 4",
@@ -696,7 +1354,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "맞는 사람을 찾는 것과 그 사람을 지켜내는 것은 다른 문제다."
-        }
+        },
+        "block_no": 4
       },
       {
         "block_id": "Block 5",
@@ -788,7 +1447,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "실패는 끝이 아니라 누가 판을 뒤집었는지 찾는 출발점이다."
-        }
+        },
+        "block_no": 5
       },
       {
         "block_id": "Block 6",
@@ -880,7 +1540,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람이 남아야 감각도 다음 판을 만든다."
-        }
+        },
+        "block_no": 6
       },
       {
         "block_id": "Block 7",
@@ -973,7 +1634,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "개별 능력을 나열하지 말고, 함께 있을 때 더 크게 보이는 순서를 만든다."
-        }
+        },
+        "block_no": 7
       },
       {
         "block_id": "Block 8",
@@ -1065,7 +1727,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "중요한 건 원래 자리보다 지금 가장 잘 터질 자리다."
-        }
+        },
+        "block_no": 8
       },
       {
         "block_id": "Block 9",
@@ -1158,7 +1821,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "반응이 왔다고 바로 승리로 계산하지 말고, 돈이 붙는 순간까지 냉정하게 보류한다."
-        }
+        },
+        "block_no": 9
       },
       {
         "block_id": "Block 10",
@@ -1260,7 +1924,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "한 번의 대박보다 여러 가능성을 묶어 회사가 계속 가야 할 이유를 만든다."
-        }
+        },
+        "block_no": 10
       },
       {
         "block_id": "Block 11",
@@ -1352,7 +2017,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람을 다시 세울 때는 동정이 아니라 지금 시장이 원하는 얼굴로 다시 소개해야 한다."
-        }
+        },
+        "block_no": 11
       },
       {
         "block_id": "Block 12",
@@ -1443,7 +2109,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "재능을 키우는 일은 응원보다 먼저, 무너지는 방식을 알아채고 통제하는 일이다."
-        }
+        },
+        "block_no": 12
       },
       {
         "block_id": "Block 13",
@@ -1534,7 +2201,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "작품 전체를 팔기 전에 먼저 사람 하나를 이야기로 만들어야 한다."
-        }
+        },
+        "block_no": 13
       },
       {
         "block_id": "Block 14",
@@ -1625,7 +2293,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "엔터 회사의 미래는 같은 업계 안이 아니라, 아직 아무도 스타로 보지 않는 사람에게서 열린다."
-        }
+        },
+        "block_no": 14
       },
       {
         "block_id": "Block 15",
@@ -1716,7 +2385,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "잘하는 사람을 모으는 것과 기억되는 팀을 만드는 일은 다르다."
-        }
+        },
+        "block_no": 15
       },
       {
         "block_id": "Block 16",
@@ -1807,7 +2477,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "맞는 사람을 찾았다고 끝이 아니다. 그 사람에게 닿는 길까지 지켜야 한다."
-        }
+        },
+        "block_no": 16
       },
       {
         "block_id": "Block 17",
@@ -1899,7 +2570,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "길이 막히면 더 세게 밀지 말고, 돈과 사람이 숨 쉴 다른 통로를 먼저 연다."
-        }
+        },
+        "block_no": 17
       },
       {
         "block_id": "Block 18",
@@ -1990,7 +2662,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람을 보는 눈이 맞아도, 그 눈이 살아남을 룰은 따로 계산해야 한다."
-        }
+        },
+        "block_no": 18
       },
       {
         "block_id": "Block 19",
@@ -2081,7 +2754,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "스타 한 명을 띄우는 것에서 끝내지 말고, 그 사람이 속한 회사 이름까지 함께 기억되게 만든다."
-        }
+        },
+        "block_no": 19
       },
       {
         "block_id": "Block 20",
@@ -2173,7 +2847,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "회사를 살릴 때는 한 사람의 승리보다, 여러 가능성을 한 장의 이유로 묶는 능력이 필요하다."
-        }
+        },
+        "block_no": 20
       },
       {
         "block_id": "Block 21",
@@ -2265,7 +2940,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "감각이 맞다는 걸 증명하려면, 그 감각이 반복될 규칙부터 만들어야 한다."
-        }
+        },
+        "block_no": 21
       },
       {
         "block_id": "Block 22",
@@ -2356,7 +3032,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "누가 막는지 모르면 계속 당한다. 먼저 사람 뒤의 구조를 읽어야 한다."
-        }
+        },
+        "block_no": 22
       },
       {
         "block_id": "Block 23",
@@ -2447,7 +3124,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "반응과 승리는 다르다. 판을 쥔 쪽이 문을 열지 않으면 화제는 돈이 되지 않는다."
-        }
+        },
+        "block_no": 23
       },
       {
         "block_id": "Block 24",
@@ -2538,7 +3216,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "문이 닫히면 두드리지 말고, 팬이 먼저 모일 다른 길부터 만든다."
-        }
+        },
+        "block_no": 24
       },
       {
         "block_id": "Block 25",
@@ -2629,7 +3308,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "팀은 좋은 사람 모음이 아니라 역할이 맞물리는 구조물이다."
-        }
+        },
+        "block_no": 25
       },
       {
         "block_id": "Block 26",
@@ -2720,7 +3400,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "가장 빛나는 카드일수록, 그 빛이 누구를 태우는지도 같이 봐야 한다."
-        }
+        },
+        "block_no": 26
       },
       {
         "block_id": "Block 27",
@@ -2811,7 +3492,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "스타 하나를 살렸다면, 그 이름이 회사 전체 값을 올리게 만들어야 한다."
-        }
+        },
+        "block_no": 27
       },
       {
         "block_id": "Block 28",
@@ -2901,7 +3583,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "스타를 찾는 사람에서 끝나지 말고, 스타가 버틸 회사를 만드는 사람으로 남는다."
-        }
+        },
+        "block_no": 28
       },
       {
         "block_id": "Block 29",
@@ -2992,7 +3675,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "발굴이 끝이 아니다. 본 재능을 지켜 내는 구조까지 가져야 진짜 회사가 된다."
-        }
+        },
+        "block_no": 29
       },
       {
         "block_id": "Block 30",
@@ -3083,7 +3767,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "작은 회사는 남이 만든 룰에서 정면승부하지 말고, 자기 카드들을 묶어 다른 게임을 만들어야 한다."
-        }
+        },
+        "block_no": 30
       },
       {
         "block_id": "Block 31",
@@ -3174,7 +3859,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "스타는 방송국이 아니라 반복해서 찾아오게 만드는 접점에서 만들어진다."
-        }
+        },
+        "block_no": 31
       },
       {
         "block_id": "Block 32",
@@ -3265,7 +3951,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "한 번 뜨는 장면을 만들지 말고, 계속 소비되는 형식을 먼저 만든다."
-        }
+        },
+        "block_no": 32
       },
       {
         "block_id": "Block 33",
@@ -3356,7 +4043,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람을 스타로 만드는 건 직업이 아니라, 카메라 앞에서 무엇이 살아나는지 보는 일이다."
-        }
+        },
+        "block_no": 33
       },
       {
         "block_id": "Block 34",
@@ -3447,7 +4135,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "남의 플랫폼 위에서 자란 성공은 문이 닫히는 순간 가장 먼저 무너진다."
-        }
+        },
+        "block_no": 34
       },
       {
         "block_id": "Block 35",
@@ -3538,7 +4227,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "한 군데에서 크게 터지는 것보다, 여러 곳에서 계속 닿는 구조가 오래 남는다."
-        }
+        },
+        "block_no": 35
       },
       {
         "block_id": "Block 36",
@@ -3629,7 +4319,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "팬을 모으는 것보다 더 중요한 건, 그 팬이 매일 돌아오게 만드는 습관을 만드는 일이다."
-        }
+        },
+        "block_no": 36
       },
       {
         "block_id": "Block 37",
@@ -3720,7 +4411,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "숨기는 순간 지고, 정면으로 받는 순간 서사가 된다."
-        }
+        },
+        "block_no": 37
       },
       {
         "block_id": "Block 38",
@@ -3810,7 +4502,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람들이 좋아하는 건 한 명이 아니라, 그 한 명이 속한 세계 전체가 되어야 오래 간다."
-        }
+        },
+        "block_no": 38
       },
       {
         "block_id": "Block 39",
@@ -3901,7 +4594,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "성장은 자유가 아니다. 통제권을 못 쥐면 커질수록 더 쉽게 빼앗긴다."
-        }
+        },
+        "block_no": 39
       },
       {
         "block_id": "Block 40",
@@ -3992,7 +4686,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "방송을 허락받으려 하지 말고, 소비자가 먼저 반응하는 시장의 접점을 설계한다."
-        }
+        },
+        "block_no": 40
       },
       {
         "block_id": "Block 41",
@@ -4083,7 +4778,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사업의 다음 축은 익숙한 업계 안보다, 아직 아무도 스타라고 부르지 않는 사람에게서 나온다."
-        }
+        },
+        "block_no": 41
       },
       {
         "block_id": "Block 42",
@@ -4173,7 +4869,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람을 바꾸지 말고, 그 사람의 결이 가장 잘 보이는 환경부터 만든다."
-        }
+        },
+        "block_no": 42
       },
       {
         "block_id": "Block 43",
@@ -4264,7 +4961,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "강한 개인은 시작점일 뿐이다. 오래 가는 브랜드는 결국 구조를 가진 팀으로 완성된다."
-        }
+        },
+        "block_no": 43
       },
       {
         "block_id": "Block 44",
@@ -4354,7 +5052,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "상처를 끝까지 남겨 두지 말고, 말할 수 있을 때 회사의 무기로 바꾼다."
-        }
+        },
+        "block_no": 44
       },
       {
         "block_id": "Block 45",
@@ -4444,7 +5143,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "화제가 붙은 사람은 화면 안에만 두지 말고, 공간과 상품으로 확장해 손에 잡히는 IP로 만든다."
-        }
+        },
+        "block_no": 45
       },
       {
         "block_id": "Block 46",
@@ -4534,7 +5234,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "팬을 숫자로 보되 조회 수가 아니라 반복 행동으로 읽어야 진짜 사업이 된다."
-        }
+        },
+        "block_no": 46
       },
       {
         "block_id": "Block 47",
@@ -4625,7 +5326,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "브랜드는 키우는 것보다 망가지지 않게 지키는 쪽이 더 어렵고 더 비싸다."
-        }
+        },
+        "block_no": 47
       },
       {
         "block_id": "Block 48",
@@ -4715,7 +5417,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사고가 너무 깔끔하면 사람 하나보다 뒤의 숫자 흐름부터 의심한다."
-        }
+        },
+        "block_no": 48
       },
       {
         "block_id": "Block 49",
@@ -4805,7 +5508,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "크게 벌기보다 오래 남는 구조를 먼저 만들면, 큰 돈은 그 뒤에 따라온다."
-        }
+        },
+        "block_no": 49
       },
       {
         "block_id": "Block 50",
@@ -4896,7 +5600,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사업을 늘리는 것보다 중요한 건, 늘어난 사업들을 하나의 힘으로 묶는 언어를 갖는 일이다."
-        }
+        },
+        "block_no": 50
       },
       {
         "block_id": "Block 51",
@@ -4986,7 +5691,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "국내에서 인정받고 나가는 시대를 기다리지 말고, 처음부터 세계가 바로 느끼는 무드를 만든다."
-        }
+        },
+        "block_no": 51
       },
       {
         "block_id": "Block 52",
@@ -5076,7 +5782,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "설명이 늦어도 무드가 먼저 먹히면, 계약은 그 다음에 붙일 수 있다."
-        }
+        },
+        "block_no": 52
       },
       {
         "block_id": "Block 53",
@@ -5166,7 +5873,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "반응이 커질수록 사람도 같이 흔들린다. 성공의 속도만큼 내부 압력도 관리해야 한다."
-        }
+        },
+        "block_no": 53
       },
       {
         "block_id": "Block 54",
@@ -5257,7 +5965,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "놓친 카드에 흔들리기보다, 손에 있는 카드의 색을 더 선명하게 만든다."
-        }
+        },
+        "block_no": 54
       },
       {
         "block_id": "Block 55",
@@ -5347,7 +6056,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "성공이 보여도 그 성공의 조건을 읽지 못하면, 이긴 순간부터 진다."
-        }
+        },
+        "block_no": 55
       },
       {
         "block_id": "Block 56",
@@ -5437,7 +6147,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "성공을 만든 방식이 사람을 부수기 시작하면, 그 순간부터 방식 자체를 고쳐야 한다."
-        }
+        },
+        "block_no": 56
       },
       {
         "block_id": "Block 57",
@@ -5527,7 +6238,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "국경은 달라도 팬이 반복해서 돌아오는 방식은 비슷하다. 그 행동을 먼저 쥐어야 세계에서 남는다."
-        }
+        },
+        "block_no": 57
       },
       {
         "block_id": "Block 58",
@@ -5617,7 +6329,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "에이스를 지킨다는 건 무조건 감싸는 게 아니라, 그 에이스가 부술 수 있는 범위까지 줄이는 일이다."
-        }
+        },
+        "block_no": 58
       },
       {
         "block_id": "Block 59",
@@ -5707,7 +6420,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "더 크게 가는 것보다, 같이 간 사람을 부수지 않고 더 오래 가는 쪽을 택한다."
-        }
+        },
+        "block_no": 59
       },
       {
         "block_id": "Block 60",
@@ -5797,7 +6511,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "세계에서 남으려면 무대 하나가 아니라, 그 무대를 계속 반복시킬 구조를 먼저 만들어야 한다."
-        }
+        },
+        "block_no": 60
       },
       {
         "block_id": "Block 61",
@@ -5887,7 +6602,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "가장 취약한 순간은 실패 직후가 아니라, 모두가 축하하는 직후다."
-        }
+        },
+        "block_no": 61
       },
       {
         "block_id": "Block 62",
@@ -5978,7 +6694,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "권력전에서는 먼저 이기기보다, 누가 어떤 논리로 빼앗으려는지부터 정확히 읽는다."
-        }
+        },
+        "block_no": 62
       },
       {
         "block_id": "Block 63",
@@ -6068,7 +6785,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람을 키운다고 권력까지 따라오진 않는다. 구조를 못 쥐면 가장 큰 성공도 빼앗긴다."
-        }
+        },
+        "block_no": 63
       },
       {
         "block_id": "Block 64",
@@ -6158,7 +6876,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "권력을 잃어도 사람이 남으면 아직 끝난 게 아니다."
-        }
+        },
+        "block_no": 64
       },
       {
         "block_id": "Block 65",
@@ -6248,7 +6967,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "권력을 빼앗겼다면 법보다 먼저 시장과 사람의 감각에서 주도권을 되찾는다."
-        }
+        },
+        "block_no": 65
       },
       {
         "block_id": "Block 66",
@@ -6338,7 +7058,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "상대가 숫자로 숨었다면, 결국 그 숫자 자체를 증언하게 만들어야 한다."
-        }
+        },
+        "block_no": 66
       },
       {
         "block_id": "Block 67",
@@ -6428,7 +7149,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "이기는 것보다, 무엇을 남기는 승리인지 먼저 정한다."
-        }
+        },
+        "block_no": 67
       },
       {
         "block_id": "Block 68",
@@ -6518,7 +7240,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "증거를 갖고 있어도 한 번에 못 터뜨리면 약하다. 시장과 여론이 동시에 반응할 순간에 던진다."
-        }
+        },
+        "block_no": 68
       },
       {
         "block_id": "Block 69",
@@ -6608,7 +7331,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "스타를 키우는 것보다 더 큰 힘은, 그 스타를 보려는 사람들의 입구를 직접 쥐는 일이다."
-        }
+        },
+        "block_no": 69
       },
       {
         "block_id": "Block 70",
@@ -6696,7 +7420,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "최종 승리는 인정받는 게 아니라, 남들이 결국 따라 하게 되는 구조를 만드는 것이다."
-        }
+        },
+        "block_no": 70
       }
     ]
   }

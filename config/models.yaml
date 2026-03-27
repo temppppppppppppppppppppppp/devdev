@@ -14,15 +14,24 @@ providers:
   vertex_ai:
     enabled: true
     sdk: "google-genai"
+    auth_mode: "api_key"
+    # auth_mode=api_key keeps Gemini Vertex Express mode isolated from project credentials.
     api_key_env: "VERTEX_API_KEY"
     project_id_env: "VERTEX_PROJECT_ID"
     location_env: "VERTEX_LOCATION"
     credentials_env: "GOOGLE_APPLICATION_CREDENTIALS"
-    # Auth priority: api_key_env → project_id_env+location_env+credentials_env
+    # auth_mode=auto falls back from api_key_env to project/location+credentials.
     # Use explicit model prefixes to keep Gemini Developer API and Vertex AI side by side.
     # Example opt-in models:
     # - "vertexai:gemini-3.1-flash-lite-preview"
     # - "vertexai:gemini-2.5-flash"
+  anthropic_vertex:
+    enabled: false
+    sdk: "anthropic"
+    project_id_env: "VERTEX_PROJECT_ID"
+    location_env: "VERTEX_LOCATION"
+    # Claude on Vertex AI — uses Vertex credentials, not ANTHROPIC_API_KEY.
+    # Prefix convention: "anthropic-vertex:claude-sonnet-4-6"
 
 agents:
   analyst: "gemini-3.1-pro-preview"

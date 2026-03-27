@@ -152,3 +152,22 @@ def test_end_call_retry_count_drives_retry_stats(tmp_path):
         assert session_stats.total_retries == 2
     finally:
         MetricsCollector.reset(tmp_path / "metrics")
+
+
+def test_get_session_stats_preserves_micro_costs(tmp_path):
+    collector = MetricsCollector.reset(tmp_path / "metrics")
+    try:
+        metric_id = collector.start_call("Writer", "vertexai:gemini-2.5-flash")
+        collector.end_call(metric_id, success=True, input_tokens=18, output_tokens=14)
+
+        session_stats = collector.get_session_stats()
+        expected_cost = round(
+            collector.calculate_cost("vertexai:gemini-2.5-flash", input_tokens=18, output_tokens=14),
+            6,
+        )
+
+        assert expected_cost > 0
+        assert session_stats.total_cost_usd == expected_cost
+        assert session_stats.model_stats["vertexai:gemini-2.5-flash"]["cost_usd"] == expected_cost
+    finally:
+        MetricsCollector.reset(tmp_path / "metrics")

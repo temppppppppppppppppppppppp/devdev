@@ -53,6 +53,8 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
+from modules.models.arc import StateChangesDict
+
 
 @runtime_checkable
 class PipelineGenerator(Protocol):
@@ -154,6 +156,6 @@ class StateAggregator(Protocol):
 
     def validate_timeline(self, **kwargs: object) -> list[dict]: ...
 
-    def extract_all_state_changes(self, arc: dict, **kwargs: object) -> dict: ...
+    def extract_all_state_changes(self, arc: dict, **kwargs: object) -> StateChangesDict: ...
 
     def generate_arc_summary(self, arc_no: int, **kwargs: object) -> dict: ...

@@ -77,6 +77,9 @@ class SessionStats:
 # Developer API for equivalent models. _normalize_billable_model() strips the
 # "vertexai:"/"vertex:" prefix so Vertex calls resolve to the same cost entries.
 # If Vertex pricing diverges in the future, add explicit "vertex:*" keys here.
+# [INTERIM] Inline cost table. Must be manually updated when vendor
+# pricing changes. Target: move to config/models.yaml or a dedicated
+# pricing config. See llm-multi-provider-context-note.md S8.5.
 MODEL_COSTS = {
     "gemini-2.5-flash": {
         "input": 0.30, "output": 2.50,
@@ -86,28 +89,22 @@ MODEL_COSTS = {
         "input": 1.25, "output": 10.00,
         "cache_read": 0.125,
     },
+    # Claude model pricing (USD per 1M tokens, Anthropic 2026-03 기준)
+    "claude-sonnet-4-6": {"input": 3.00, "output": 15.00, "cache_read": 0.30},
+    "claude-opus-4-6": {"input": 15.00, "output": 75.00, "cache_read": 1.50},
+    "claude-haiku-4-5": {"input": 0.80, "output": 4.00, "cache_read": 0.08},
     "default": {"input": 1.25, "output": 10.00, "cache_read": 0.125},
 }
 
 
-def _infer_provider_identity(model: str) -> tuple[str, str, str]:
-    """Return (provider, backend, family) from model name prefix."""
-    lowered = (model or "").strip().lower()
-    if lowered.startswith(("vertexai:", "vertex:", "vertex/")):
-        return ("vertex_ai", "google_vertex", "gemini")
-    if lowered.startswith("gemini"):
-        return ("gemini", "google_direct", "gemini")
-    if lowered.startswith("claude"):
-        return ("anthropic", "anthropic_direct", "claude")
-    if lowered.startswith(("gpt", "o1", "o3", "o4")):
-        return ("openai", "openai_direct", "gpt")
-    return ("unknown", "unknown", "unknown")
+# Provider identity — delegated to the single implementation in llm_router.
+from modules.core.llm_router import resolve_provider_identity as _infer_provider_identity
 
 
 def _normalize_billable_model(model: str) -> str:
     normalized = (model or "").strip()
     lowered = normalized.lower()
-    for prefix in ("vertexai:", "vertex:", "vertex/"):
+    for prefix in ("anthropic-vertex:", "anthropic_vertex:", "vertexai:", "vertex:", "vertex/"):
         if lowered.startswith(prefix):
             return normalized[len(prefix) :]
     return normalized
@@ -414,7 +411,7 @@ class MetricsCollector:
                     "cached_tokens": cached_t,
                     "thinking_tokens": thinking_t,
                     "total_tokens": input_t + output_t,
-                    "cost_usd": round(cost, 4),
+                    "cost_usd": round(cost, 6),
                 }
 
             # 에이전트별 통계
@@ -428,7 +425,7 @@ class MetricsCollector:
                 failed_calls=total_calls - successful_calls,
                 total_retries=total_retries,
                 total_tokens=total_tokens,
-                total_cost_usd=round(total_cost, 4),
+                total_cost_usd=round(total_cost, 6),
                 agent_stats=agent_stats,
                 model_stats=model_stats,
             )
