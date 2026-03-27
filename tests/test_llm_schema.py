@@ -48,6 +48,7 @@ def test_arc_design_schema_uses_structured_state_change_contract():
     spec = schema_to_dict(ARC_DESIGN_SCHEMA)
     state_changes = spec["properties"]["state_changes"]["properties"]
     timeline = state_changes["timeline"]["properties"]
+    npc_martial = state_changes["npc_martial_state_changes"]["items"]["properties"]
 
     assert timeline["start"]["type"] == "object"
     assert timeline["end"]["type"] == "object"
@@ -55,15 +56,21 @@ def test_arc_design_schema_uses_structured_state_change_contract():
     assert state_changes["npc_deaths"]["items"]["required"] == ["name"]
     assert state_changes["skill_acquisitions"]["items"]["type"] == "object"
     assert state_changes["skill_acquisitions"]["items"]["required"] == ["name"]
+    assert state_changes["npc_martial_state_changes"]["items"]["required"] == ["name"]
+    assert npc_martial["realm"]["type"] == "string"
+    assert npc_martial["techniques_learned"]["items"]["type"] == "string"
 
 
 def test_get_schema_spec_for_task_arc_design_preserves_state_change_shapes():
     spec = get_schema_spec_for_task("ARC_DESIGN")
     state_changes = spec["properties"]["state_changes"]["properties"]
+    npc_martial = state_changes["npc_martial_state_changes"]["items"]["properties"]
 
     assert state_changes["timeline"]["properties"]["start"]["properties"]["year"]["type"] == "integer"
     assert state_changes["timeline"]["properties"]["end"]["properties"]["month"]["type"] == "integer"
     assert state_changes["skill_acquisitions"]["items"]["properties"]["source"]["type"] == "string"
+    assert npc_martial["episode"]["type"] == "integer"
+    assert npc_martial["techniques_learned"]["type"] == "array"
 
 
 def test_arc_design_schema_includes_pacing_decision_contract():

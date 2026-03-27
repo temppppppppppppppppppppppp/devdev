@@ -170,7 +170,8 @@ class HybridComposition(BaseModel):
 class StateChangesDict(TypedDict, total=False):
     """state_changes 최상위 계약 TypedDict.
 
-    canonical producer: StateTracker.extract_all_state_changes()
+    persisted replay authority: Stage4PostPassRuntime -> episode_bibles.state_changes
+    tracker normalization helper: StateTracker.extract_all_state_changes()
     primary consumers: WorldStateManager, FactLedger
 
     이 TypedDict는 최상위 키 계약만 정의합니다.
@@ -185,6 +186,7 @@ class StateChangesDict(TypedDict, total=False):
     resolved_plots: list[dict[str, Any] | str]
     npc_injuries: list[dict[str, Any] | str]
     npc_movements: list[dict[str, Any] | str]
+    npc_martial_state_changes: list[dict[str, Any]]
     financial_events: dict[str, Any]
     entity_destructions: list[dict[str, Any] | str]
     npc_personality_changes: list[dict[str, Any] | str]

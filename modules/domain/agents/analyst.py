@@ -1236,6 +1236,7 @@ class Analyst(BaseAgent):
             "skill_acquisitions",
             "relationship_changes",
             "major_items",
+            "npc_martial_state_changes",
             "entity_destructions",
             "npc_personality_changes",
             "npc_npc_relationships",

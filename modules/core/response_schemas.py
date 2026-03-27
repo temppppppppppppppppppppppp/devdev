@@ -468,6 +468,22 @@ ARC_DESIGN_SCHEMA = types.Schema(
                         required=["name"],
                     ),
                 ),
+                "npc_martial_state_changes": types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(
+                        type=types.Type.OBJECT,
+                        properties={
+                            "name": types.Schema(type=types.Type.STRING),
+                            "episode": types.Schema(type=types.Type.INTEGER),
+                            "realm": types.Schema(type=types.Type.STRING),
+                            "techniques_learned": types.Schema(
+                                type=types.Type.ARRAY,
+                                items=types.Schema(type=types.Type.STRING),
+                            ),
+                        },
+                        required=["name"],
+                    ),
+                ),
                 "npc_introductions": types.Schema(
                     type=types.Type.ARRAY,
                     items=types.Schema(

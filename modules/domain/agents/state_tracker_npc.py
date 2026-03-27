@@ -865,6 +865,69 @@ class StateTrackerNPC:
 
         return list(set(learned_skills))
 
+    def extract_npc_martial_state_changes_from_arc(self, arc: dict) -> list[dict]:
+        """
+        Storage-only NPC martial delta extraction.
+
+        Explicit state_changes payload only. This helper is bounded normalization
+        for tracker-side consumers; persisted runtime authority still comes from
+        the Stage 4 episode-bible state_changes path.
+        """
+        arc_no = arc.get("arc_no", 0)
+        default_episode = arc.get("ep_end", arc.get("ep_start", arc_no))
+        state_changes = arc.get("state_changes", {})
+        if not isinstance(state_changes, dict):
+            return []
+
+        raw_changes = state_changes.get("npc_martial_state_changes", [])
+        if not isinstance(raw_changes, list):
+            return []
+
+        normalized_changes = []
+        for raw_change in raw_changes:
+            if not isinstance(raw_change, dict):
+                continue
+
+            npc_name = str(raw_change.get("name", "") or "").strip()
+            if len(npc_name) < 2:
+                continue
+
+            realm = str(raw_change.get("realm", "") or "").strip()
+            raw_techniques = raw_change.get("techniques_learned")
+            if raw_techniques is None:
+                raw_techniques = raw_change.get("techniques")
+            techniques_learned = []
+            if isinstance(raw_techniques, list):
+                for technique in raw_techniques:
+                    technique_name = str(technique or "").strip()
+                    if technique_name and technique_name not in techniques_learned:
+                        techniques_learned.append(technique_name)
+            elif isinstance(raw_techniques, str):
+                technique_name = raw_techniques.strip()
+                if technique_name:
+                    techniques_learned.append(technique_name)
+
+            if not realm and not techniques_learned:
+                continue
+
+            episode = raw_change.get("episode", default_episode)
+            try:
+                episode = int(episode)
+            except (TypeError, ValueError):
+                episode = default_episode if isinstance(default_episode, int) else arc_no
+
+            entry = {
+                "name": npc_name,
+                "episode": episode,
+            }
+            if realm:
+                entry["realm"] = realm
+            if techniques_learned:
+                entry["techniques_learned"] = techniques_learned
+            normalized_changes.append(entry)
+
+        return normalized_changes
+
     def extract_relationship_changes_from_arc(self, arc: dict) -> list[dict]:
         """
         [V61] Arc에서 관계 변화 추출

@@ -592,6 +592,75 @@ class WorldStateManager:
         except Exception as e:
             _logger.error("[WorldState] §17 NPC 영구 부상 known_attrs 반영 실패: %s", e)
 
+    def _apply_npc_martial_state_changes(self, ep_num: int, state_changes: StateChangesDict):
+        try:
+            for entry in state_changes.get("npc_martial_state_changes") or []:
+                if not isinstance(entry, dict):
+                    continue
+
+                npc_name = str(entry.get("name", "") or "").strip()
+                if not npc_name or npc_name in self._state.get("dead_npcs", {}):
+                    continue
+
+                change_ep = entry.get("episode", ep_num)
+                try:
+                    change_ep = int(change_ep)
+                except (TypeError, ValueError):
+                    change_ep = ep_num
+
+                realm = str(entry.get("realm", "") or "").strip()
+                raw_techniques = entry.get("techniques_learned")
+                if raw_techniques is None:
+                    raw_techniques = entry.get("techniques")
+                normalized_techniques = []
+                seen_techniques = set()
+                if isinstance(raw_techniques, list):
+                    for raw_technique in raw_techniques:
+                        technique_name = str(raw_technique or "").strip()
+                        if not technique_name or technique_name in seen_techniques:
+                            continue
+                        normalized_techniques.append(technique_name)
+                        seen_techniques.add(technique_name)
+                elif isinstance(raw_techniques, str):
+                    technique_name = raw_techniques.strip()
+                    if technique_name:
+                        normalized_techniques.append(technique_name)
+
+                if not realm and not normalized_techniques:
+                    continue
+
+                npc_entry = self._ensure_alive_npc_entry(npc_name, change_ep)
+                martial_state = npc_entry.setdefault("martial_state", {})
+                changed = False
+
+                if realm:
+                    martial_state["realm"] = realm
+                    martial_state["realm_changed_ep"] = change_ep
+                    changed = True
+
+                if normalized_techniques:
+                    existing_techniques = martial_state.get("techniques", [])
+                    if not isinstance(existing_techniques, list):
+                        existing_techniques = [str(existing_techniques).strip()] if str(existing_techniques).strip() else []
+
+                    merged_techniques = []
+                    seen_merged = set()
+                    for technique_name in existing_techniques + normalized_techniques:
+                        cleaned_name = str(technique_name or "").strip()
+                        if not cleaned_name or cleaned_name in seen_merged:
+                            continue
+                        merged_techniques.append(cleaned_name)
+                        seen_merged.add(cleaned_name)
+                    if merged_techniques != existing_techniques:
+                        changed = True
+                    martial_state["techniques"] = merged_techniques
+
+                if changed:
+                    martial_state["last_martial_ep"] = change_ep
+
+        except Exception as e:
+            _logger.error("[WorldState] NPC martial_state 처리 실패: %s", e)
+
     def _apply_npc_registry_and_law_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         try:
             # 9. NPC 속성 변경 — 의도적 직업/나이 등 변경 기록 (장기 기억 추적)
@@ -726,6 +795,7 @@ class WorldStateManager:
         self._apply_npc_registry_and_law_state_changes(ep_num, state_changes)
         self._apply_timeline_and_goal_state_changes(ep_num, state_changes)
         self._apply_physical_known_attr_state_changes(ep_num, state_changes)
+        self._apply_npc_martial_state_changes(ep_num, state_changes)
 
         # 크기 제한: destroyed 최대 100개, world_notes 최대 10개 (항상 실행)
         try:

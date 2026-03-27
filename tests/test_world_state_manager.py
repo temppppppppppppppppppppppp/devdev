@@ -1,5 +1,6 @@
 """Focused persistence contract tests for WorldStateManager."""
 
+import json
 from unittest.mock import MagicMock
 
 from modules.core.world_state import WorldStateManager
@@ -11,6 +12,19 @@ class _WorldStateDB:
 
     def save_anchor(self, _name, _payload):
         return None
+
+
+class _SavingWorldStateDB(_WorldStateDB):
+    def __init__(self):
+        self.anchor = None
+
+    def load_anchor(self, _name):
+        if self.anchor is None:
+            return None
+        return json.loads(json.dumps(self.anchor, ensure_ascii=False))
+
+    def save_anchor(self, _name, _payload):
+        self.anchor = json.loads(json.dumps(_payload, ensure_ascii=False))
 
 
 class _BrokenWorldStateDB(_WorldStateDB):
@@ -131,6 +145,95 @@ def test_apply_physical_known_attr_state_changes_updates_lmi_contracts():
     assert known_attrs["location"]["value"] == "소림사"
     assert known_attrs["location"]["prev"] == "흑풍곡"
     assert "scar: 얼굴 흉터" in known_attrs["permanent_injuries"]["value"]
+
+
+def test_update_from_state_changes_replays_npc_martial_state_owner_contract():
+    manager = WorldStateManager(_WorldStateDB())
+
+    manager.update_from_state_changes(
+        5,
+        {
+            "npc_martial_state_changes": [
+                {
+                    "name": "Chief Han",
+                    "episode": 5,
+                    "realm": "Peak",
+                    "techniques_learned": ["Storm Palm"],
+                }
+            ]
+        },
+    )
+    manager.update_from_state_changes(
+        6,
+        {
+            "npc_martial_state_changes": [
+                {
+                    "name": "Chief Han",
+                    "episode": 6,
+                    "realm": "Master",
+                    "techniques_learned": ["Storm Palm", "Cloud Step"],
+                }
+            ]
+        },
+    )
+
+    martial_state = manager._state["alive_npcs"]["Chief Han"]["martial_state"]
+
+    assert martial_state["realm"] == "Master"
+    assert martial_state["realm_changed_ep"] == 6
+    assert martial_state["techniques"] == ["Storm Palm", "Cloud Step"]
+    assert martial_state["last_martial_ep"] == 6
+
+
+def test_save_and_reload_preserves_npc_martial_state_owner_contract():
+    db = _SavingWorldStateDB()
+    manager = WorldStateManager(db)
+
+    manager.update_from_state_changes(
+        6,
+        {
+            "npc_martial_state_changes": [
+                {
+                    "name": "Chief Han",
+                    "episode": 6,
+                    "realm": "Master",
+                    "techniques_learned": ["Storm Palm", "Cloud Step"],
+                }
+            ]
+        },
+    )
+
+    assert manager.save() is True
+
+    reloaded = WorldStateManager(db)
+    martial_state = reloaded._state["alive_npcs"]["Chief Han"]["martial_state"]
+
+    assert martial_state["realm"] == "Master"
+    assert martial_state["realm_changed_ep"] == 6
+    assert martial_state["techniques"] == ["Storm Palm", "Cloud Step"]
+    assert martial_state["last_martial_ep"] == 6
+
+
+def test_update_from_state_changes_skips_martial_write_for_same_payload_dead_npc():
+    manager = WorldStateManager(_WorldStateDB())
+
+    manager.update_from_state_changes(
+        8,
+        {
+            "npc_deaths": [{"name": "Chief Han", "cause": "final duel"}],
+            "npc_martial_state_changes": [
+                {
+                    "name": "Chief Han",
+                    "episode": 8,
+                    "realm": "Master",
+                    "techniques_learned": ["Storm Palm"],
+                }
+            ],
+        },
+    )
+
+    assert "Chief Han" in manager._state["dead_npcs"]
+    assert "Chief Han" not in manager._state["alive_npcs"]
 
 
 def test_apply_npc_registry_and_law_state_changes_updates_registry_contracts():
