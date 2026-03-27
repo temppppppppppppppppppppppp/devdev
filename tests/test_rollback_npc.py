@@ -110,6 +110,55 @@ class TestGetRollbackImpact:
 
 
 class TestWorldStateRollback:
+    def test_rollback_replays_npc_martial_state_before_target(self, db):
+        """npc_martial_state_changes should replay only episodes before the rollback target."""
+        from modules.core.world_state import WorldStateManager
+
+        db.save_episode_bible(
+            2,
+            {
+                "state_changes": {
+                    "npc_martial_state_changes": [
+                        {"name": "Chief Han", "episode": 2, "realm": "Peak", "techniques_learned": ["Storm Palm"]}
+                    ]
+                },
+            },
+        )
+        db.save_episode_bible(
+            5,
+            {
+                "state_changes": {
+                    "npc_martial_state_changes": [
+                        {
+                            "name": "Chief Han",
+                            "episode": 5,
+                            "realm": "Transcendent",
+                            "techniques_learned": ["Sky Step"],
+                        }
+                    ]
+                },
+            },
+        )
+
+        ws = WorldStateManager(db)
+        ws.update_from_state_changes(
+            2,
+            {"npc_martial_state_changes": [{"name": "Chief Han", "episode": 2, "realm": "Peak", "techniques_learned": ["Storm Palm"]}]},
+        )
+        ws.update_from_state_changes(
+            5,
+            {"npc_martial_state_changes": [{"name": "Chief Han", "episode": 5, "realm": "Transcendent", "techniques_learned": ["Sky Step"]}]},
+        )
+        ws.save()
+
+        ws.rollback_to(3)
+
+        martial_state = ws._state["alive_npcs"]["Chief Han"]["martial_state"]
+        assert martial_state["realm"] == "Peak"
+        assert martial_state["realm_changed_ep"] == 2
+        assert martial_state["techniques"] == ["Storm Palm"]
+        assert martial_state["last_martial_ep"] == 2
+
     def test_rollback_replays_episodes_before_target(self, db):
         """[Sweep64] rollback_to는 target_ep 이전 에피소드를 리플레이해야 함."""
         from modules.core.world_state import WorldStateManager

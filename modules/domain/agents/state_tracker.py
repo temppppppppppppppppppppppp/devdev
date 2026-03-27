@@ -1023,6 +1023,10 @@ class StateTracker:
     def extract_skill_acquisitions_from_arc(self, arc: dict) -> list[str]:
         return self._npc.extract_skill_acquisitions_from_arc(arc)
 
+    def extract_npc_martial_state_changes_from_arc(self, arc: dict) -> list[dict]:
+        """Tracker-side explicit-only normalization helper for NPC martial deltas."""
+        return self._npc.extract_npc_martial_state_changes_from_arc(arc)
+
     def extract_relationship_changes_from_arc(self, arc: dict) -> list[dict]:
         return self._npc.extract_relationship_changes_from_arc(arc)
 
@@ -1591,6 +1595,7 @@ class StateTracker:
             {
                 "npc_deaths": [...],
                 "skill_acquisitions": [...],
+                "npc_martial_state_changes": [...],
                 "relationship_changes": [...],
                 "major_items": [...],
                 "resolved_plots": [...],
@@ -1615,6 +1620,7 @@ class StateTracker:
             "resolved_plots": self.extract_resolved_plots_from_arc(arc),
             "npc_injuries": self.extract_npc_injuries_from_arc(arc),
             "npc_movements": self.extract_npc_movements_from_arc(arc),
+            "npc_martial_state_changes": self.extract_npc_martial_state_changes_from_arc(arc),
             "financial_events": self.extract_financial_events_from_arc(arc),
             "entity_destructions": self.extract_entity_destructions_from_arc(arc),
             "npc_personality_changes": self.extract_npc_personality_from_arc(arc),

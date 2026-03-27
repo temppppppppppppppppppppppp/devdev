@@ -1,0 +1,91 @@
+{
+  "tag": "stage4_complete",
+  "timestamp": "2026-03-27 18:28:32",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 2,
+  "counts": {
+    "target_ep_reached": 1,
+    "stage4_complete": 1
+  },
+  "latest_event_type": "stage4_complete",
+  "recent_events": [
+    {
+      "type": "target_ep_reached",
+      "message": "stage4 target episode reached"
+    },
+    {
+      "type": "stage4_complete",
+      "message": "stage4 production completed"
+    }
+  ],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth."
+  },
+  "proof_digest": {
+    "available": true,
+    "status": "warn",
+    "artifacts": {
+      "db_available": true,
+      "session_decisions_exists": true,
+      "ui_events_jsonl_exists": true,
+      "pass_rate_monitor_exists": true,
+      "episode_production_exists": true,
+      "runtime_audit_jsonl_exists": true,
+      "ui_events_db_available": true,
+      "ui_events_count": 603,
+      "ui_event_coverage_status": "ok"
+    },
+    "stages": {
+      "stage3": {
+        "status": "warn",
+        "attempts_considered": 3,
+        "complete_final_attempts": 0,
+        "complete_lifecycle_attempts": 0,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 3,
+        "coverage": {
+          "stage_attempts": 3,
+          "pass_rate_monitor": 0,
+          "director_selections": 3,
+          "episode_production": 0,
+          "session_decisions": 0
+        },
+        "issue_counts": {
+          "final_sink_missing": 6,
+          "artifact_missing_files": 3
+        }
+      },
+      "stage4": {
+        "status": "warn",
+        "attempts_considered": 1,
+        "complete_final_attempts": 1,
+        "complete_lifecycle_attempts": 1,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 1,
+        "coverage": {
+          "stage_attempts": 1,
+          "pass_rate_monitor": 1,
+          "director_selections": 1,
+          "episode_production": 1,
+          "session_decisions": 1
+        },
+        "issue_counts": {}
+      }
+    },
+    "session_lineage": {
+      "plain_log_token": "20260327_181933",
+      "structured_session_id": "20260327_181933",
+      "status": "unified"
+    }
+  }
+}

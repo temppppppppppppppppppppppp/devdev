@@ -464,6 +464,42 @@ class TestAnalystNormalizeArcOutput:
 # ══════════════════════════════════════════════════════════════
 
 
+class TestAnalystPostProcessArc:
+    def test_post_process_arc_defaults_npc_martial_state_changes(self, analyst):
+        result = analyst._post_process_arc(
+            final_arc_data={"beat_sequence": [], "tactical_doc": ""},
+            clean_arc_no=1,
+            vol_no=1,
+            ep_start=1,
+            target_ep_count=2,
+        )
+
+        assert result["state_changes"]["npc_martial_state_changes"] == []
+
+    def test_post_process_arc_preserves_npc_martial_state_changes(self, analyst):
+        martial_changes = [
+            {
+                "name": "Chief Han",
+                "episode": 2,
+                "realm": "Peak",
+                "techniques_learned": ["Storm Palm"],
+            }
+        ]
+        result = analyst._post_process_arc(
+            final_arc_data={
+                "beat_sequence": [],
+                "tactical_doc": "",
+                "state_changes": {"npc_martial_state_changes": martial_changes},
+            },
+            clean_arc_no=1,
+            vol_no=1,
+            ep_start=1,
+            target_ep_count=2,
+        )
+
+        assert result["state_changes"]["npc_martial_state_changes"] == martial_changes
+
+
 class TestAnalystStitchJoints:
     def test_method_exists(self, analyst):
         """stitch_joints 메서드가 존재해야 한다"""
