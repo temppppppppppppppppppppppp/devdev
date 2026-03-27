@@ -21,6 +21,7 @@ import re
 
 from modules.core.constants import Stage2Limits, smart_truncate
 from modules.core.tactical_utils import _EPISODE_HEADER_PATTERNS, extract_episode_tactical
+from modules.models.arc import StateChangesDict
 
 
 class BlueprintConstraintCompiler:
@@ -904,7 +905,7 @@ class BlueprintConstraintCompiler:
 
         return "\n".join(carryover_lines)
 
-    def _summarize_state_changes(self, state_changes: dict, ep_num: int = 0) -> str:
+    def _summarize_state_changes(self, state_changes: StateChangesDict, ep_num: int = 0) -> str:
         """
         [V63.2] Arc state_changes를 Blueprint 제약용 요약 문자열로 변환.
         [W1] ep_num > 0이면 해당 화 이하 에피소드 이벤트만 포함, 미래 화 이벤트 제외.

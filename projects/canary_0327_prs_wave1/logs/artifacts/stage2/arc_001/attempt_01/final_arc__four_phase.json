@@ -1,0 +1,79 @@
+{
+  "arc_drive": {
+    "desire_vector": "stable",
+    "status": "ok"
+  },
+  "arc_no": 1,
+  "beat_sequence": [
+    "arc 1 beat one conflict escalates with concrete action",
+    "arc 1 beat two pressure rises with external consequence",
+    "arc 1 beat three strategic response triggers new cost",
+    "arc 1 beat four reversal creates urgent tactical decision",
+    "arc 1 beat five closes with forward hook and payoff"
+  ],
+  "constraint_summary": "none",
+  "content": {
+    "context": "",
+    "event_villain": "",
+    "reward": "",
+    "solution": ""
+  },
+  "ep_count": 4,
+  "ep_end": 4,
+  "ep_start": 1,
+  "episode_details": [],
+  "global_arc_no": 1,
+  "hybrid_composition": {
+    "mixing_logic": "smoke",
+    "primary": "momentum",
+    "secondary": [
+      "continuity"
+    ]
+  },
+  "joint_docs": {
+    "final_location": "market",
+    "physical_inventory": [
+      "ledger"
+    ],
+    "world_joint": "stable"
+  },
+  "rationale_digest": "",
+  "seed_injection": null,
+  "seeds": null,
+  "semantic_carryover": {},
+  "state_changes": {
+    "major_items": [],
+    "npc_deaths": [],
+    "relationship_changes": [],
+    "skill_acquisitions": []
+  },
+  "state_constraints": {
+    "arc_end_state": {
+      "equipment": [
+        "ledger"
+      ],
+      "injuries": "normal",
+      "internal_energy": 90,
+      "location": "market"
+    },
+    "arc_start_state": {
+      "location": "office"
+    },
+    "continuity_checkpoints": [],
+    "foreshadowings": [],
+    "items_consumed": [],
+    "power_changes": {},
+    "protagonist_items": [
+      "ledger"
+    ],
+    "relationship_changes": []
+  },
+  "status_shadow": {
+    "expected_injuries": "none",
+    "internal_energy_loss": "0%",
+    "item_consumption": []
+  },
+  "tactical_doc": "arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence. arc 1 block-1 detailed progression and consequence sentence.",
+  "title": "Arc 1",
+  "volume_no": 0
+}

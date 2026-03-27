@@ -1580,11 +1580,150 @@ class TestBuildMandatoryContext:
 
         text = result["mandatory_context"]
         assert "[Authority precedence]" in text
+        assert "WorldState current-state facts override extracted or advisory summaries on conflict." in text
+        assert "FactLedger numeric facts override BI seed numbers and arc-derived summaries on conflict." in text
         assert "[파괴 엔티티]" in text
         assert "[사망 NPC]" not in text
         assert "[아이템 상태]" not in text
         assert "[관계 변화]" not in text
         assert "[금융 상태]" not in text
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_injects_authority_precedence_when_canonical_layers_exist_without_state_tracker_overlap(self, *_mocks):
+        ctx = _make_ctx()
+        ctx.world_state = MagicMock()
+        ctx.world_state.get_summary.return_value = ""
+        ctx.world_state.get_timeline_summary.return_value = ""
+        ctx.world_state.get_canonical_constraints.return_value = "[Canonical NPC]"
+        ctx.fact_ledger = MagicMock()
+        ctx.fact_ledger.to_summary.return_value = ""
+        ctx.fact_ledger.get_canonical_summary.return_value = "[Canonical Number]"
+        ctx.state_tracker = MagicMock()
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="tactical summary",
+            prev_text="previous episode " * 30,
+            prev_ending="ending",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        text = result["mandatory_context"]
+        assert "[Authority precedence]" in text
+        assert "WorldState current-state facts override extracted or advisory summaries on conflict." in text
+        assert "FactLedger numeric facts override BI seed numbers and arc-derived summaries on conflict." in text
+        assert "[Canonical NPC]" in text
+        assert "[Canonical Number]" in text
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_wuxia_technique_realm_authority_injected_when_skills_exist(self, *_mocks):
+        """[Wave-TR1] 무협 장르 + 주인공 기술 존재 시 경지/기술 권위 문구 주입."""
+        ctx = _make_ctx()
+        ctx.current_project.genre = {"name": "무협"}
+        ctx.world_state = MagicMock()
+        ctx.world_state._state = {"protagonist": {"skills": ["검기", "장풍"]}}
+        ctx.world_state.get_summary.return_value = ""
+        ctx.world_state.get_timeline_summary.return_value = ""
+        ctx.world_state.get_canonical_constraints.return_value = ""
+        ctx.fact_ledger = None
+        ctx.state_tracker = MagicMock()
+        ctx.state_tracker.get_all_summaries.return_value = {}
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="tactical",
+            prev_text="prev " * 30,
+            prev_ending="ending",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        text = result["mandatory_context"]
+        assert "[무협 기술/경지 권위]" in text
+        assert "경지에서 허용되지 않는 기술" in text
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_wuxia_technique_realm_authority_absent_for_non_wuxia(self, *_mocks):
+        """[Wave-TR1] 비무협 장르에서는 경지/기술 권위 문구 미주입."""
+        ctx = _make_ctx()
+        ctx.current_project.genre = {"name": "현대판타지"}
+        ctx.world_state = MagicMock()
+        ctx.world_state._state = {"protagonist": {"skills": ["마법탄", "텔레키네시스"]}}
+        ctx.world_state.get_summary.return_value = ""
+        ctx.world_state.get_timeline_summary.return_value = ""
+        ctx.world_state.get_canonical_constraints.return_value = ""
+        ctx.state_tracker = MagicMock()
+        ctx.state_tracker.get_all_summaries.return_value = {}
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="tactical",
+            prev_text="prev " * 30,
+            prev_ending="ending",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="fantasy",
+            v50_modules_available=False,
+        )
+
+        text = result["mandatory_context"]
+        assert "[무협 기술/경지 권위]" not in text
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_wuxia_technique_realm_authority_absent_when_no_skills(self, *_mocks):
+        """[Wave-TR1] 무협이어도 기술 목록 비어있으면 미주입."""
+        ctx = _make_ctx()
+        ctx.current_project.genre = {"name": "무협"}
+        ctx.world_state = MagicMock()
+        ctx.world_state._state = {"protagonist": {"skills": []}}
+        ctx.world_state.get_summary.return_value = ""
+        ctx.world_state.get_timeline_summary.return_value = ""
+        ctx.world_state.get_canonical_constraints.return_value = ""
+        ctx.state_tracker = MagicMock()
+        ctx.state_tracker.get_all_summaries.return_value = {}
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1},
+            arc_tactical="tactical",
+            prev_text="prev " * 30,
+            prev_ending="ending",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        text = result["mandatory_context"]
+        assert "[무협 기술/경지 권위]" not in text
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_keeps_state_tracker_summaries_when_no_canonical_layers_exist(self, *_mocks):

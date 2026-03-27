@@ -3804,6 +3804,11 @@ class SovereignApp:
           5. Stage4Context DI injection via Stage4Context.from_app(self)
         All init failures are non-blocking; Stage4Orchestrator receives
         whatever was successfully initialized.
+
+        [Non-blocking init contract] Downstream Stage4Orchestrator must handle
+        None for any of state_tracker / world_state / fact_ledger.
+        Each component is independently initialized; failure of one does not
+        block others. Stage4Context.from_app(self) snapshots whatever succeeded.
         """
         self._show_resume_status()
 

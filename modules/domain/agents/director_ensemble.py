@@ -610,6 +610,16 @@ class _EnsemblePromptResponse:
 
 @dataclass
 class _EnsembleSelectionState:
+    """Mutable state carrier for quality gate chain.
+
+    Gate-mutated fields: score, firewall_triggered, firewall_fixable,
+    firewall_reason, contradiction_details.
+    Inputs (set once): selected_letter, selected_idx, selected_candidate,
+    original_verdict, pre_firewall_score, score_breakdown_raw,
+    contradiction_check, numeric_consistency_review, consistency_checklist,
+    v60_97_swapped.
+    """
+
     selected_letter: str
     selected_idx: int
     selected_candidate: dict
@@ -986,15 +996,15 @@ class DirectorEnsembleSelector:
         retry_count: int,
         ep_type: str = "normal",
     ) -> tuple[str, dict]:
-        self._apply_scm_single_candidate_cap(state=state, scm_single_candidate=scm_single_candidate)
-        self._apply_contradiction_firewall_gate(state=state)
+        self._apply_scm_single_candidate_cap(state=state, scm_single_candidate=scm_single_candidate)  # Mutates: state.score
+        self._apply_contradiction_firewall_gate(state=state)  # Mutates: state.firewall_triggered/mode/reason, state.contradiction_details
         self._log_numeric_consistency_gate(
             state=state,
             combined_context=combined_context,
             mandatory_context=mandatory_context,
         )
-        self._apply_nc3_consistency_penalty(result=result, state=state)
-        return self._resolve_adaptive_ensemble_verdict(
+        self._apply_nc3_consistency_penalty(result=result, state=state)  # Mutates: state.score
+        return self._resolve_adaptive_ensemble_verdict(  # Mutates: state.score (potentially)
             state=state,
             arc_pos=arc_pos,
             total_eps=total_eps,

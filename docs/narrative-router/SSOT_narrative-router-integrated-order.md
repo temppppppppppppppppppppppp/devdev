@@ -34,6 +34,12 @@ This router does not replace family harnesses. It only decides which family beco
   - `docs/wuxguide/wuxia-production-harness.md`
   - `docs/wuxguide/wuxia-bi-production-harness.md`
 
+### 2.3 `shared pair-revival`
+
+- Shared scope: salvage / repair / promotion flow for existing `TR + BI` pairs
+- Canonical docs:
+  - `docs/narrative-router/material-revival-ladder-harness.md`
+
 ## 3. Routing Order
 
 When a request is narrative-pipeline work, use this sequence.
@@ -41,8 +47,9 @@ When a request is narrative-pipeline work, use this sequence.
 1. Read this file first.
 2. Resolve family.
 3. Open the resolved family integrated order.
-4. Open the resolved family planning / production / BI harnesses.
-5. Continue only inside that family unless the user explicitly re-routes.
+4. If the target is an existing `TR + BI` pair under salvage / repair / promotion flow, open `docs/narrative-router/material-revival-ladder-harness.md`.
+5. Otherwise open the resolved family planning / production / BI harnesses.
+6. Continue only inside that family unless the user explicitly re-routes.
 
 ## 4. Family Resolution Rules
 
@@ -81,6 +88,22 @@ The router keeps the existing cross-family stage file rules unless a family doc 
 - `phase0_design` 있음, `tr_block_070_draft` 없음: production
 - `tr_block_070_draft` 있음, `0_bi_{work_id}.json` 없음: BI
 - `BI`가 있어도 감리 FAIL이면 완료가 아니다
+
+Pair-revival note:
+
+- If both `TR` and `BI` already exist and the request is salvage, repair, revival, promotion, canary, or probe, treat the task as `audit_or_repair` entry plus shared pair-revival flow.
+- In that case, read the resolved family integrated order first, then `docs/narrative-router/material-revival-ladder-harness.md`.
+
+## 5A. Project-Only Handoff Mode
+
+When the user gives only a concrete project target such as a `work_id`, target pair, or promoted active pair:
+
+1. inspect live workspace files first
+2. determine the current stage from file existence plus the latest relevant audit / repair artifacts
+3. if the next required step is clear with high confidence, execute that step directly
+4. if the target or stage is ambiguous, ask one short clarifying question
+
+Do not stop just because the user did not manually name the stage.
 
 ## 6. Shared Output Paths
 

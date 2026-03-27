@@ -816,4 +816,12 @@ class ProcessRunner:
             if value:
                 env[env_key] = str(value)
 
+        # Anthropic direct API key (Claude direct / Claude on Vertex fallback)
+        if inputs.get("anthropic_api_key"):
+            env["ANTHROPIC_API_KEY"] = inputs["anthropic_api_key"]
+
+        # OpenAI direct API key
+        if inputs.get("openai_api_key"):
+            env["OPENAI_API_KEY"] = inputs["openai_api_key"]
+
         return env

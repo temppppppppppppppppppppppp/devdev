@@ -8,6 +8,7 @@ from modules.core.llm_generate import generate_content_via_router, generate_raw_
 from modules.core.llm_provider import LLMRequest
 from modules.core.llm_router import LLMProviderRouter, get_shared_llm_router
 from modules.core.providers.anthropic_provider import AnthropicProvider
+from modules.core.providers.anthropic_vertex_provider import AnthropicVertexProvider
 from modules.core.providers.openai_provider import OpenAIProvider
 from modules.core.providers.vertex_provider import VertexAIProvider
 from modules.core.response_schemas import DIRECTOR_AUDIT_SCHEMA
@@ -36,13 +37,27 @@ def test_router_enables_registered_non_gemini_providers():
         provider_configs={
             "anthropic": {"enabled": True, "api_key_env": "ANTHROPIC_API_KEY"},
             "openai": {"enabled": True, "api_key_env": "OPENAI_API_KEY"},
-            "vertex_ai": {"enabled": True, "project_id_env": "VERTEX_PROJECT_ID", "location_env": "VERTEX_LOCATION"},
+            "vertex_ai": {
+                "enabled": True,
+                "auth_mode": "project_credentials",
+                "project_id_env": "VERTEX_PROJECT_ID",
+                "location_env": "VERTEX_LOCATION",
+            },
         }
     )
     assert isinstance(router.get_provider_for_model("claude-sonnet-4-6"), AnthropicProvider)
     assert isinstance(router.get_provider_for_model("gpt-5"), OpenAIProvider)
     assert isinstance(router.get_provider_for_model("vertexai:gemini-2.5-pro"), VertexAIProvider)
     assert router.get_enabled_provider_names() == ("anthropic", "gemini", "openai", "vertex_ai")
+
+
+def test_router_passes_vertex_auth_mode_config():
+    router = LLMProviderRouter(
+        provider_configs={"vertex_ai": {"enabled": True, "auth_mode": "project_credentials"}}
+    )
+    provider = router.get_provider_for_model("vertexai:gemini-2.5-pro")
+    assert isinstance(provider, VertexAIProvider)
+    assert provider.auth_mode == "project_credentials"
 
 
 def test_shared_router_is_singleton():
@@ -197,7 +212,7 @@ def test_vertex_provider_generate_with_fake_sdk(monkeypatch):
         lambda self: fake_credentials,
     )
 
-    provider = VertexAIProvider()
+    provider = VertexAIProvider(auth_mode="project_credentials")
     response = provider.generate(
         client=MagicMock(),
         request=LLMRequest(
@@ -219,6 +234,79 @@ def test_vertex_provider_generate_with_fake_sdk(monkeypatch):
     assert captured_kwargs["model"] == "gemini-2.5-pro"
     assert captured_kwargs["config"] == {"temperature": 0.1}
     assert captured_kwargs["client_kwargs"]["vertexai"] is True
+
+
+def test_vertex_provider_api_key_mode_ignores_project_location(monkeypatch):
+    captured_kwargs = {}
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            captured_kwargs.update(kwargs)
+
+    monkeypatch.setenv("VERTEX_API_KEY", "vertex-express-key")
+    monkeypatch.setenv("VERTEX_PROJECT_ID", "vertex-proj")
+    monkeypatch.setenv("VERTEX_LOCATION", "us-central1")
+    monkeypatch.setattr("modules.core.providers.vertex_provider.genai.Client", FakeClient)
+
+    provider = VertexAIProvider(auth_mode="api_key")
+    provider._get_client()
+
+    assert captured_kwargs == {"vertexai": True, "api_key": "vertex-express-key"}
+
+
+def test_vertex_provider_auto_mode_prefers_api_key(monkeypatch):
+    captured_kwargs = {}
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            captured_kwargs.update(kwargs)
+
+    monkeypatch.setenv("VERTEX_API_KEY", "vertex-express-key")
+    monkeypatch.setenv("VERTEX_PROJECT_ID", "vertex-proj")
+    monkeypatch.setenv("VERTEX_LOCATION", "us-central1")
+    monkeypatch.setattr("modules.core.providers.vertex_provider.genai.Client", FakeClient)
+
+    provider = VertexAIProvider(auth_mode="auto")
+    provider._get_client()
+
+    assert captured_kwargs == {"vertexai": True, "api_key": "vertex-express-key"}
+
+
+def test_vertex_provider_project_credentials_mode_uses_project_location(monkeypatch):
+    captured_kwargs = {}
+    fake_credentials = object()
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            captured_kwargs.update(kwargs)
+
+    monkeypatch.delenv("VERTEX_API_KEY", raising=False)
+    monkeypatch.setenv("VERTEX_PROJECT_ID", "vertex-proj")
+    monkeypatch.setenv("VERTEX_LOCATION", "us-central1")
+    monkeypatch.setattr("modules.core.providers.vertex_provider.genai.Client", FakeClient)
+    monkeypatch.setattr(
+        "modules.core.providers.vertex_provider.VertexAIProvider._load_credentials",
+        lambda self: fake_credentials,
+    )
+
+    provider = VertexAIProvider(auth_mode="project_credentials")
+    provider._get_client()
+
+    assert captured_kwargs["vertexai"] is True
+    assert captured_kwargs["project"] == "vertex-proj"
+    assert captured_kwargs["location"] == "us-central1"
+    assert captured_kwargs["credentials"] is fake_credentials
+    assert "api_key" not in captured_kwargs
+
+
+def test_vertex_provider_api_key_mode_requires_api_key(monkeypatch):
+    monkeypatch.delenv("VERTEX_API_KEY", raising=False)
+    monkeypatch.setenv("VERTEX_PROJECT_ID", "vertex-proj")
+    monkeypatch.setenv("VERTEX_LOCATION", "us-central1")
+
+    provider = VertexAIProvider(auth_mode="api_key")
+    with pytest.raises(RuntimeError, match="VERTEX_API_KEY"):
+        provider._get_client()
 
 
 # ── Wave 1: Provider envelope identity tests ──────────────────────────────
@@ -268,7 +356,7 @@ def test_vertex_provider_sets_backend_family(monkeypatch):
         lambda self: None,
     )
 
-    response = VertexAIProvider().generate(
+    response = VertexAIProvider(auth_mode="project_credentials").generate(
         client=MagicMock(),
         request=LLMRequest(model="vertexai:gemini-2.5-flash", contents="hello"),
     )
@@ -425,3 +513,259 @@ def test_generate_content_via_router_returns_normalized_response(monkeypatch):
 
     raw_response = generate_raw_content_via_router(client=MagicMock(), model="gemini-2.5-flash", contents="hello")
     assert raw_response is raw
+
+
+# ── Wave 1: Claude on Vertex — routing / identity / guard tests ─────────
+
+
+def test_router_infers_anthropic_vertex_from_prefix():
+    assert LLMProviderRouter.infer_provider_name("anthropic-vertex:claude-sonnet-4-6") == "anthropic_vertex"
+    assert LLMProviderRouter.infer_provider_name("anthropic_vertex:claude-opus-4-6") == "anthropic_vertex"
+
+
+def test_router_anthropic_vertex_does_not_steal_bare_claude():
+    """Bare 'claude-*' must still route to anthropic (direct), not anthropic_vertex."""
+    assert LLMProviderRouter.infer_provider_name("claude-sonnet-4-6") == "anthropic"
+
+
+def test_router_resolves_anthropic_vertex_provider():
+    router = LLMProviderRouter(
+        provider_configs={"anthropic_vertex": {"enabled": True}},
+    )
+    provider = router.get_provider_for_model("anthropic-vertex:claude-sonnet-4-6")
+    assert isinstance(provider, AnthropicVertexProvider)
+    assert provider.provider_name == "anthropic_vertex"
+
+
+def test_router_rejects_disabled_anthropic_vertex():
+    router = LLMProviderRouter(provider_configs={"anthropic_vertex": {"enabled": False}})
+    with pytest.raises(ValueError, match="disabled"):
+        router.get_provider_for_model("anthropic-vertex:claude-sonnet-4-6")
+
+
+def test_router_enabled_names_include_anthropic_vertex():
+    router = LLMProviderRouter(
+        provider_configs={
+            "anthropic_vertex": {"enabled": True},
+            "anthropic": {"enabled": True, "api_key_env": "ANTHROPIC_API_KEY"},
+        },
+    )
+    names = router.get_enabled_provider_names()
+    assert "anthropic_vertex" in names
+    assert "anthropic" in names
+
+
+def test_anthropic_vertex_provider_generate_with_fake_sdk(monkeypatch):
+    captured_kwargs = {}
+
+    class FakeAnthropicVertex:
+        def __init__(self, project_id, region):
+            self.project_id = project_id
+            self.region = region
+            self.messages = SimpleNamespace(create=self._create)
+
+        @staticmethod
+        def _create(**kwargs):
+            captured_kwargs.update(kwargs)
+            return SimpleNamespace(
+                content=[SimpleNamespace(type="text", text="hello from vertex claude")],
+                stop_reason="end_turn",
+                usage=SimpleNamespace(input_tokens=15, output_tokens=25),
+            )
+
+    fake_module = ModuleType("anthropic")
+    fake_module.Anthropic = MagicMock()  # not used by vertex path
+    fake_module.AnthropicVertex = FakeAnthropicVertex
+    monkeypatch.setenv("VERTEX_PROJECT_ID", "my-proj")
+    monkeypatch.setenv("VERTEX_LOCATION", "us-east5")
+    monkeypatch.setitem(sys.modules, "anthropic", fake_module)
+
+    provider = AnthropicVertexProvider()
+    response = provider.generate(
+        client=MagicMock(),
+        request=LLMRequest(
+            model="anthropic-vertex:claude-sonnet-4-6",
+            contents="hello",
+            config={"max_output_tokens": 128, "temperature": 0.3},
+        ),
+    )
+
+    assert response.text == "hello from vertex claude"
+    assert response.finish_reason == "end_turn"
+    assert response.provider == "anthropic_vertex"
+    assert response.backend == "anthropic_vertex"
+    assert response.family == "claude"
+    assert response.usage == {"input_tokens": 15, "output_tokens": 25}
+    # Model prefix should be stripped before sending to SDK
+    assert captured_kwargs["model"] == "claude-sonnet-4-6"
+
+
+def test_anthropic_vertex_provider_sets_backend_family(monkeypatch):
+    class FakeAnthropicVertex:
+        def __init__(self, project_id, region):
+            self.messages = SimpleNamespace(
+                create=lambda **kw: SimpleNamespace(
+                    content=[SimpleNamespace(type="text", text="ok")],
+                    stop_reason="end_turn",
+                    usage=SimpleNamespace(input_tokens=1, output_tokens=1),
+                )
+            )
+
+    fake_module = ModuleType("anthropic")
+    fake_module.Anthropic = MagicMock()
+    fake_module.AnthropicVertex = FakeAnthropicVertex
+    monkeypatch.setenv("VERTEX_PROJECT_ID", "proj")
+    monkeypatch.setenv("VERTEX_LOCATION", "us-east5")
+    monkeypatch.setitem(sys.modules, "anthropic", fake_module)
+
+    response = AnthropicVertexProvider().generate(
+        client=MagicMock(),
+        request=LLMRequest(model="anthropic-vertex:claude-sonnet-4-6", contents="hello"),
+    )
+    assert response.provider == "anthropic_vertex"
+    assert response.backend == "anthropic_vertex"
+    assert response.family == "claude"
+
+
+def test_anthropic_direct_provider_non_regression(monkeypatch):
+    """Ensure AnthropicProvider (direct) still emits anthropic_direct backend."""
+
+    class FakeAnthropic:
+        def __init__(self, api_key):
+            self.messages = SimpleNamespace(
+                create=lambda **kw: SimpleNamespace(
+                    content=[SimpleNamespace(type="text", text="direct ok")],
+                    stop_reason="end_turn",
+                    usage=SimpleNamespace(input_tokens=1, output_tokens=1),
+                )
+            )
+
+    fake_module = ModuleType("anthropic")
+    fake_module.Anthropic = FakeAnthropic
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
+    monkeypatch.setitem(sys.modules, "anthropic", fake_module)
+
+    response = AnthropicProvider().generate(
+        client=MagicMock(),
+        request=LLMRequest(model="claude-sonnet-4-6", contents="hello"),
+    )
+    assert response.provider == "anthropic"
+    assert response.backend == "anthropic_direct"
+    assert response.family == "claude"
+
+
+# ── Wave 1: Metrics — Claude identity + pricing tests ──────────────────
+
+
+def test_metrics_infer_anthropic_vertex_identity():
+    from modules.core.metrics_collector import MetricsCollector
+
+    MetricsCollector.reset()
+    collector = MetricsCollector()
+    try:
+        mid = collector.start_call("Writer", "anthropic-vertex:claude-sonnet-4-6")
+        metric = collector._metrics[mid]
+        assert metric.provider == "anthropic_vertex"
+        assert metric.backend == "anthropic_vertex"
+        assert metric.family == "claude"
+    finally:
+        MetricsCollector.reset()
+
+
+def test_metrics_anthropic_vertex_vs_direct_distinguishable():
+    from modules.core.metrics_collector import MetricsCollector
+
+    MetricsCollector.reset()
+    collector = MetricsCollector()
+    try:
+        mid_direct = collector.start_call("Writer", "claude-sonnet-4-6")
+        mid_vertex = collector.start_call("Writer", "anthropic-vertex:claude-sonnet-4-6")
+
+        m_direct = collector._metrics[mid_direct]
+        m_vertex = collector._metrics[mid_vertex]
+
+        assert m_direct.provider == "anthropic"
+        assert m_direct.backend == "anthropic_direct"
+        assert m_vertex.provider == "anthropic_vertex"
+        assert m_vertex.backend == "anthropic_vertex"
+        assert m_direct.family == m_vertex.family == "claude"
+    finally:
+        MetricsCollector.reset()
+
+
+def test_metrics_claude_pricing_not_default():
+    from modules.core.metrics_collector import MODEL_COSTS, _normalize_billable_model
+
+    # Direct model name → Claude pricing
+    assert "claude-sonnet-4-6" in MODEL_COSTS
+    assert MODEL_COSTS["claude-sonnet-4-6"]["input"] == 3.00
+
+    # Prefixed model name → strips prefix → Claude pricing
+    assert _normalize_billable_model("anthropic-vertex:claude-sonnet-4-6") == "claude-sonnet-4-6"
+
+
+def test_metrics_claude_cost_calculation():
+    from modules.core.metrics_collector import MetricsCollector
+
+    MetricsCollector.reset()
+    collector = MetricsCollector()
+    try:
+        cost = collector.calculate_cost("claude-sonnet-4-6", input_tokens=1_000_000, output_tokens=1_000_000)
+        assert cost == pytest.approx(3.00 + 15.00, abs=0.01)  # $3 input + $15 output
+
+        cost_vertex = collector.calculate_cost("anthropic-vertex:claude-sonnet-4-6", 1_000_000, 1_000_000)
+        assert cost_vertex == pytest.approx(cost, abs=0.01)  # same pricing after prefix strip
+    finally:
+        MetricsCollector.reset()
+
+
+# ── Wave 1: BaseAgent non-Gemini raw guard tests ───────────────────────
+
+
+def test_base_agent_normalize_usage_gemini_passthrough():
+    from modules.domain.agents.base_agent import BaseAgent
+
+    gemini_usage = {"prompt_token_count": 100, "candidates_token_count": 50, "thoughts_token_count": 10}
+    result = BaseAgent._normalize_usage(gemini_usage)
+    assert result["prompt_token_count"] == 100
+    assert result["candidates_token_count"] == 50
+
+
+def test_base_agent_normalize_usage_claude_bridge():
+    from modules.domain.agents.base_agent import BaseAgent
+
+    claude_usage = {"input_tokens": 200, "output_tokens": 80}
+    result = BaseAgent._normalize_usage(claude_usage)
+    assert result["prompt_token_count"] == 200
+    assert result["candidates_token_count"] == 80
+    # Original keys preserved
+    assert result["input_tokens"] == 200
+
+
+def test_base_agent_normalize_usage_none_safe():
+    from modules.domain.agents.base_agent import BaseAgent
+
+    assert BaseAgent._normalize_usage(None) == {}
+    assert BaseAgent._normalize_usage("not a dict") == {}
+
+
+# ── Wave 1: ProcessRunner env passthrough — anthropic key ──────────────
+
+
+def test_process_runner_build_env_anthropic_key_passthrough():
+    from modules.api.process_runner import ProcessRunner
+
+    runner = ProcessRunner()
+    env = runner._build_env({"anthropic_api_key": "sk-ant-123"})
+    assert env["ANTHROPIC_API_KEY"] == "sk-ant-123"
+
+
+def test_process_runner_build_env_anthropic_key_absent():
+    import os
+
+    from modules.api.process_runner import ProcessRunner
+
+    runner = ProcessRunner()
+    env = runner._build_env({})
+    if "ANTHROPIC_API_KEY" not in os.environ:
+        assert "ANTHROPIC_API_KEY" not in env

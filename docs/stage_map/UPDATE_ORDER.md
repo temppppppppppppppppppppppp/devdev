@@ -34,7 +34,7 @@
   - `modules/core/stage3_*`, `three_phase_blueprint_generator.py` -> `stage3.md`
   - `modules/core/stage4_*`, `chief_writer*`, `consistency_validator.py` -> `stage4.md`
   - `db_manager.py`, `project_manager.py` -> `interfaces.md`, `runbook.md`
-  - `config/settings/validation.yaml`, `constants.py`, `CLAUDE.md` -> `metrics_baseline.md`
+  - `config/settings/validation.yaml`, `constants.py`, `docs/2026-03-12/TF-HEALTH-codebase-full-audit.md` -> `metrics_baseline.md`
 - Inventory stale metadata first:
   - mismatched footers
   - stale `doc_status` rows
@@ -123,8 +123,8 @@ Required reflection points:
 - Historical stage_map helper orders remain archived guidance, not active instructions.
 
 ## Last Verified
-- Date: 2026-03-13
-- Commit: `e18f9910`
+- Date: 2026-03-27
+- Commit: `eb7a41d8`
 - Workspace State: dirty
 - Code Sync (Yes/No): Yes
 - Verified By: Codex

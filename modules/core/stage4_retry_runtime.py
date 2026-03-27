@@ -822,6 +822,12 @@ class Stage4RetryRuntime:
             director_feedback=director_feedback,
         )
 
+    # [Retry lane routing priority]
+    # 1. inplace: fix_scope == "inplace" AND fix_pack ready AND no consecutive empty patches
+    # 2. patch: post_select_conflict or partial fix_scope (patch_enabled required)
+    # 3. rewrite: full scope, fallback from failed inplace/patch, or IFC escalation
+    # 4. ASP correction: runs independently after candidate generation (not mutually exclusive)
+    # Consecutive empty patches (missing_patch_targets) escalate from inplace -> rewrite.
     def _resolve_retry_lane_routing(
         self,
         *,

@@ -23,6 +23,7 @@ class Stage4PostPassRuntime:
         self.owner = owner
         self.ctx = owner.ctx
 
+    # -- [THIN DELEGATE] forwarding to owner -- (8 methods)
     def _report_soft_failure(self, **kwargs) -> None:
         self.owner._report_soft_failure(**kwargs)
 
@@ -51,6 +52,7 @@ class Stage4PostPassRuntime:
             target_ep=target_ep,
         )
 
+    # -- [AUTHORITY] post-pass settlement runtime starts here --
     def _submit_manager_async(self, *, next_ep, final_manuscript, genre_type, critical_keys):
         """[B-1-9a:A1] Manager LLM 비동기 제출 (ThreadPoolExecutor setup).
 

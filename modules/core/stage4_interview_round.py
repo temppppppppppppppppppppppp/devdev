@@ -2267,18 +2267,7 @@ class Stage4InterviewRound:
         prev_manuscript: str,
         candidates: list[dict],
     ) -> tuple[list[dict], str]:
-        # _god1_* channel: temporary owner→runtime context bridge.
-        # Stage4DirectorRuntime reads these via getattr(owner, "_god1_*", None)
-        # because they carry round-local metadata that predates the runtime split.
-        # TODO: migrate to explicit parameters when the runtime contract stabilizes.
-        self._god1_stage4_spinner = stage4_spinner
-        self._god1_round_num = round_num
-        self._god1_arc_pos = round_ctx.arc_pos
-        self._god1_total_ep_in_arc = round_ctx.total_ep_in_arc
-        self._god1_arc_data = round_ctx.arc_data if isinstance(round_ctx.arc_data, dict) else {}
-        self._god1_prev_manuscript = prev_manuscript
-        self._god1_director_memory_context = ""
-        validation_results = self.director_runtime.run_pre_director_validation(
+        validation_results, director_memory_context = self.director_runtime.run_pre_director_validation(
             candidates=candidates,
             next_ep=round_ctx.next_ep,
             blueprint=round_ctx.blueprint,
@@ -2289,8 +2278,14 @@ class Stage4InterviewRound:
             consistency_validator=round_ctx.consistency_validator,
             blocking_validator=round_ctx.blocking_validator,
             continuity_validator=round_ctx.continuity_validator,
+            stage4_spinner=stage4_spinner,
+            round_num=round_num,
+            arc_pos=round_ctx.arc_pos,
+            total_ep_in_arc=round_ctx.total_ep_in_arc,
+            arc_data=round_ctx.arc_data if isinstance(round_ctx.arc_data, dict) else {},
+            prev_manuscript=prev_manuscript,
         )
-        return validation_results, getattr(self, "_god1_director_memory_context", "")
+        return validation_results, director_memory_context
 
     def _persist_director_selection(
         self,
@@ -4597,6 +4592,8 @@ class Stage4InterviewRound:
         validation_results: list[dict],
         next_ep: int,
         genre_name: str,
+        *,
+        round_num: int | None = None,
     ) -> list[str]:
         """[B-1-3b][TF-50] Advisory chain 병렬 실행, Director mandatory_context 파트 반환."""
         from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -4605,7 +4602,7 @@ class Stage4InterviewRound:
         logging.debug(
             "Advisory 검증 시작 — 9개 병렬 실행 (TruthGate, NPC, 수치, 회상, 정보역설, 관계, 장기반복, 수치정합, StyleSignal)"
         )
-        _round_num = getattr(self, "_god1_round_num", None)
+        _round_num = round_num
         self.ctx.ui.log(
             "      \u23f3 Advisory 체인 9개 병렬 실행 중...",
             stage="stage4",

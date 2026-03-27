@@ -954,72 +954,25 @@ class ChiefWriter(BaseAgent):
 
     def regenerate_with_feedback(
         self,
-        ep_num: int,
-        blueprint: dict,
-        prev_manuscript: str,
-        hud_report: str,
-        arc_doc: str,
-        master_bible: dict,
-        style_guide: str,
-        director_feedback: str,
+        *,
         previous_attempt: dict,
         attempt_number: int,
-        reference_excerpt: str = "",
-        # [V60.80 FIX] 미래 침범 방지용 추가 파라미터
-        current_inventory: list[str] = None,
-        current_martial_arts: list[str] = None,
-        dead_npcs: list[str] = None,
-        item_acquisition_timeline: str = "",
-        # [V60.80+] 기존 Writer 핵심 기능
-        reference_anchor_prompt: str = "",
-        mandatory_context: str = "",
-        anti_trope_prompt: str = "",
-        justification_prompt: str = "",
-        reflexion_prompt: str = "",
-        genre_name: str = "무협",
-        # [V60.81] 추가 파라미터
-        npc_equipment_summary: str = "",
-        intro_dna: str = "",  # [QI-1-C3] CYNICAL 하드코딩 제거
-        # [V60.85] 장르 Guard Purism Prompt
-        purism_prompt: str = "",
-        # [V60.95] 고밀도 HUD 전달
-        state_tracker=None,
-        # [V67] 이전 원고 전문 — 모순 방지용 컨텍스트
-        prev_manuscripts_text: str = "",
-        # [V68] 세계 상태 요약 — 장기연재 모순 방지
-        world_state_summary: str = "",
-        # [V68] 에피소드 연결고리 — 직전 화에서 이어받아야 할 것
-        chain_link_section: str = "",
-        # [emotional_beat] 감정 정점
-        emotional_beat_section: str = "",
-        # [B-4] 주인공 동기/약속
-        motivations: list = None,
-        promises: list = None,
-        # [TF-49b] Arc 계획 아이템 사전 정당화
-        upcoming_arc_items: list[str] = None,
-        strategy_budget: str = "full",
-        preferred_strategy: str = "",
+        **writer_kwargs,
     ) -> list[dict]:
-        """
-        Director 피드백 반영 재생성
+        """Director 피드백 반영 재생성.
 
-        Args:
-            ... (기존 파라미터)
-            director_feedback: Director의 구체적 피드백
-            previous_attempt: 이전 시도 결과
-            attempt_number: 현재 시도 번호 (2 또는 3)
-            current_inventory: 현재 소지품 목록
-            current_martial_arts: 현재 무공 목록
-            dead_npcs: 죽은 NPC 목록
-            item_acquisition_timeline: 아이템 획득 타임라인
-            purism_prompt: 장르 Guard의 순혈주의 지침 (V60.85)
-            prev_manuscripts_text: [V67] 이전 30화 원고 전문 (모순 방지용)
-            world_state_summary: [V68] 세계 상태 요약 (장기연재 모순 방지)
-            chain_link_section: [V68] 직전 화 연결고리 (다음 화에서 이어받을 것)
+        ``writer_kwargs`` contains the same keys as
+        :meth:`generate_ensemble` (ep_num, blueprint, director_feedback,
+        style_guide, etc.).  Only the retry-specific params are explicit.
+
+        The caller (stage4_retry_runtime) already bundles common writer
+        kwargs into a dict and unpacks them here, so there is no value
+        in duplicating the full parameter list.
 
         Returns:
             List[Dict]: 새로운 3개 후보
         """
+        director_feedback = writer_kwargs.get("director_feedback", "")
         enhanced_feedback = self._build_regeneration_feedback(
             previous_attempt=previous_attempt,
             director_feedback=director_feedback,
@@ -1029,51 +982,11 @@ class ChiefWriter(BaseAgent):
             previous_attempt
         )
 
-        return self.generate_ensemble(
-            ep_num=ep_num,
-            blueprint=blueprint,
-            prev_manuscript=prev_manuscript,
-            hud_report=hud_report,
-            arc_doc=arc_doc,
-            master_bible=master_bible,
-            style_guide=style_guide,
-            reference_excerpt=reference_excerpt,
-            director_feedback=enhanced_feedback,
-            strategy_specific_feedback=strategy_feedback,
-            rejected_strategy=rejected_strategy,
-            failure_constraints=failure_constraints,
-            # 미래 침범 방지 데이터 전달
-            current_inventory=current_inventory,
-            current_martial_arts=current_martial_arts,
-            dead_npcs=dead_npcs,
-            item_acquisition_timeline=item_acquisition_timeline,
-            # 기존 Writer 핵심 기능
-            reference_anchor_prompt=reference_anchor_prompt,
-            mandatory_context=mandatory_context,
-            anti_trope_prompt=anti_trope_prompt,
-            justification_prompt=justification_prompt,
-            reflexion_prompt=reflexion_prompt,
-            genre_name=genre_name,
-            # [V60.81] 추가 파라미터
-            npc_equipment_summary=npc_equipment_summary,
-            intro_dna=intro_dna,
-            # [V60.85] 장르 Guard Purism Prompt
-            purism_prompt=purism_prompt,
-            # [V60.95] 고밀도 HUD 전달
-            state_tracker=state_tracker,
-            # [V67] 이전 원고 전문
-            prev_manuscripts_text=prev_manuscripts_text,
-            # [V68] 세계 상태 요약
-            world_state_summary=world_state_summary,
-            # [V68] 에피소드 연결고리
-            chain_link_section=chain_link_section,
-            emotional_beat_section=emotional_beat_section,
-            motivations=motivations,  # [B-4]
-            promises=promises,  # [B-4]
-            upcoming_arc_items=upcoming_arc_items,  # [TF-49b]
-            strategy_budget=strategy_budget,
-            preferred_strategy=preferred_strategy,
-        )
+        writer_kwargs["director_feedback"] = enhanced_feedback
+        writer_kwargs["strategy_specific_feedback"] = strategy_feedback
+        writer_kwargs["rejected_strategy"] = rejected_strategy
+        writer_kwargs["failure_constraints"] = failure_constraints
+        return self.generate_ensemble(**writer_kwargs)
 
     def _build_regeneration_feedback(self, *, previous_attempt: dict, director_feedback: str, attempt_number: int) -> str:
         """Director feedback와 이전 시도 히스토리를 재시도 prompt용으로 합친다."""
@@ -1963,56 +1876,31 @@ class ChiefWriter(BaseAgent):
 
     def patch_with_feedback(
         self,
-        ep_num: int,
-        blueprint: dict,
-        prev_manuscript: str,
-        hud_report: str,
-        arc_doc: str,
-        master_bible: dict,
-        style_guide: str,
+        *,
         original_manuscript: str,
-        director_feedback: str,
         previous_attempt: dict,
         attempt_number: int,
-        reference_excerpt: str = "",
-        # 이하 generate_ensemble과 동일
-        current_inventory: list[str] = None,
-        current_martial_arts: list[str] = None,
-        dead_npcs: list[str] = None,
-        item_acquisition_timeline: str = "",
-        reference_anchor_prompt: str = "",
-        mandatory_context: str = "",
-        anti_trope_prompt: str = "",
-        justification_prompt: str = "",
-        reflexion_prompt: str = "",
-        genre_name: str = "무협",
-        npc_equipment_summary: str = "",
-        intro_dna: str = "",  # [QI-1-C3] CYNICAL 하드코딩 제거
-        purism_prompt: str = "",
-        state_tracker=None,
-        prev_manuscripts_text: str = "",
-        world_state_summary: str = "",
-        chain_link_section: str = "",
-        emotional_beat_section: str = "",
-        # [B-4] 주인공 동기/약속
-        motivations: list = None,
-        promises: list = None,
-        # [TF-49b] Arc 계획 아이템 사전 정당화
-        upcoming_arc_items: list[str] = None,
+        **writer_kwargs,
     ) -> list[dict]:
         """[Phase 3-5B] 원본 원고를 보존하며 피드백 지적사항만 수정.
+
+        ``writer_kwargs`` contains the same keys as
+        :meth:`generate_ensemble`.  Only the patch-specific params are
+        explicit.
 
         패치 전용 프롬프트(PATCH_MODE_PROMPT)를 로드하여 원본 원고 + Director
         피드백을 director_feedback 섹션으로 포맷한 뒤, generate_ensemble()을
         호출한다.
 
         현재 runtime 의미는 broad 3-strategy ensemble이 아니라, 보통
-        `single_strategy=<previous selected strategy>`를 준 bounded regenerate
-        경로다. 즉 REJECT retry의 patch lane은 "선택된 전략 1개 대상 원문참조
-        재생성"에 가깝다.
+        ``single_strategy=<previous selected strategy>`` 를 준 bounded
+        regenerate 경로다.
 
         실패 시 빈 리스트 반환 → 호출측에서 full rewrite 폴백.
         """
+        director_feedback = writer_kwargs.get("director_feedback", "")
+        style_guide = writer_kwargs.get("style_guide", "")
+
         patch_section = self._build_patch_with_feedback_section(
             original_manuscript=original_manuscript,
             director_feedback=director_feedback,
@@ -2027,43 +1915,14 @@ class ChiefWriter(BaseAgent):
             previous_attempt
         )
 
+        writer_kwargs["director_feedback"] = enhanced_feedback
+        writer_kwargs["strategy_specific_feedback"] = strategy_feedback
+        writer_kwargs["rejected_strategy"] = rejected_strategy
+        writer_kwargs["single_strategy"] = rejected_strategy
+        writer_kwargs["failure_constraints"] = failure_constraints
+
         try:
-            return self.generate_ensemble(
-                ep_num=ep_num,
-                blueprint=blueprint,
-                prev_manuscript=prev_manuscript,
-                hud_report=hud_report,
-                arc_doc=arc_doc,
-                master_bible=master_bible,
-                style_guide=style_guide,
-                reference_excerpt=reference_excerpt,
-                director_feedback=enhanced_feedback,
-                strategy_specific_feedback=strategy_feedback,
-                rejected_strategy=rejected_strategy,
-                single_strategy=rejected_strategy,
-                failure_constraints=failure_constraints,
-                current_inventory=current_inventory,
-                current_martial_arts=current_martial_arts,
-                dead_npcs=dead_npcs,
-                item_acquisition_timeline=item_acquisition_timeline,
-                reference_anchor_prompt=reference_anchor_prompt,
-                mandatory_context=mandatory_context,
-                anti_trope_prompt=anti_trope_prompt,
-                justification_prompt=justification_prompt,
-                reflexion_prompt=reflexion_prompt,
-                genre_name=genre_name,
-                npc_equipment_summary=npc_equipment_summary,
-                intro_dna=intro_dna,
-                purism_prompt=purism_prompt,
-                state_tracker=state_tracker,
-                prev_manuscripts_text=prev_manuscripts_text,
-                world_state_summary=world_state_summary,
-                chain_link_section=chain_link_section,
-                emotional_beat_section=emotional_beat_section,
-                motivations=motivations,
-                promises=promises,
-                upcoming_arc_items=upcoming_arc_items,  # [TF-49b]
-            )
+            return self.generate_ensemble(**writer_kwargs)
         except Exception as e:
             logging.warning(f"[Phase 3-5B] patch_with_feedback 실패, 빈 리스트 반환: {e}")
             return []

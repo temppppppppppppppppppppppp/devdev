@@ -162,6 +162,90 @@ class TestConsistencyChecks:
 
         assert result["passed"] is True
 
+    # ── [Wave-TR1] Wuxia technique-vs-realm consistency ─────────────
+
+    def test_wuxia_realm_mismatch_detected(self):
+        """입문 경지에서 검기 사용 시 실패."""
+        validator = BlockingValidator()
+        manuscript = "주인공은 검기를 발출하여 적을 베었다."
+        context = {
+            "genre": "wuxia",
+            "martial_hud": {"actual_truth": {"realm": "입문"}},
+        }
+
+        result = validator.consistency_checks._check_wuxia_technique_realm_consistency(manuscript, context)
+
+        assert result["passed"] is False
+        assert result["check"] == "wuxia_technique_realm"
+        assert result["forbidden_technique"] == "검기"
+        assert result["realm"] == "입문"
+
+    def test_wuxia_realm_allowed_passes(self):
+        """절정 경지에서 검기 사용은 허용."""
+        validator = BlockingValidator()
+        manuscript = "주인공은 검기를 발출하여 적을 베었다."
+        context = {
+            "genre": "wuxia",
+            "martial_hud": {"actual_truth": {"realm": "절정"}},
+        }
+
+        result = validator.consistency_checks._check_wuxia_technique_realm_consistency(manuscript, context)
+
+        assert result["passed"] is True
+
+    def test_wuxia_realm_absent_noop(self):
+        """경지 미확인 시 no-op."""
+        validator = BlockingValidator()
+        manuscript = "주인공은 검기를 발출하여 적을 베었다."
+        context = {
+            "genre": "wuxia",
+            "martial_hud": {"actual_truth": {}},
+        }
+
+        result = validator.consistency_checks._check_wuxia_technique_realm_consistency(manuscript, context)
+
+        assert result["passed"] is True
+
+    def test_wuxia_realm_non_wuxia_genre_noop(self):
+        """비무협 장르에서는 no-op."""
+        validator = BlockingValidator()
+        manuscript = "주인공은 검기를 발출하여 적을 베었다."
+        context = {
+            "genre": "hunter",
+            "martial_hud": {"actual_truth": {"realm": "입문"}},
+        }
+
+        result = validator.consistency_checks._check_wuxia_technique_realm_consistency(manuscript, context)
+
+        assert result["passed"] is True
+
+    def test_wuxia_realm_negation_context_passes(self):
+        """부정 문맥(사용 불가 서술)은 허용."""
+        validator = BlockingValidator()
+        manuscript = "주인공은 아직 경지가 낮아 검기를 쓸 수 없었다."
+        context = {
+            "genre": "wuxia",
+            "martial_hud": {"actual_truth": {"realm": "입문"}},
+        }
+
+        result = validator.consistency_checks._check_wuxia_technique_realm_consistency(manuscript, context)
+
+        assert result["passed"] is True
+
+    def test_wuxia_realm_facade_integration(self):
+        """BlockingValidator facade를 통한 호출 확인."""
+        validator = BlockingValidator()
+        manuscript = "주인공은 검강을 날렸다."
+        context = {
+            "genre": "wuxia",
+            "martial_hud": {"actual_truth": {"realm": "삼류"}},
+        }
+
+        result = validator._check_wuxia_technique_realm_consistency(manuscript, context)
+
+        assert result["passed"] is False
+        assert result["forbidden_technique"] == "검강"
+
 
 class TestIntegration:
     def test_validate_runs(self):

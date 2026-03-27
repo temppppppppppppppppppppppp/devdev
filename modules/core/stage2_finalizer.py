@@ -15,7 +15,7 @@ from modules.core.constants import VolumeSettings
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.numeric_consistency_checker import NumericConsistencyChecker
-from modules.models.arc import validate_arc
+from modules.models.arc import StateChangesDict, validate_arc
 
 
 def _peek_scope_total_cost_usd() -> float:
@@ -411,7 +411,7 @@ def _normalize_checkpoint(value: object, limit: int = 80) -> str:
     return _clip_text(value, limit)
 
 
-def _build_semantic_carryover(state_constraints: dict | None, state_changes: dict | None) -> dict:
+def _build_semantic_carryover(state_constraints: dict | None, state_changes: StateChangesDict | None) -> dict:
     payload: dict[str, object] = {}
     sc = state_constraints if isinstance(state_constraints, dict) else {}
     changes = state_changes if isinstance(state_changes, dict) else {}

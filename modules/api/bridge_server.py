@@ -73,6 +73,13 @@ _QUALITY_SIGNAL_LABELS = {
     "complexity": "Density",
 }
 
+_BUDGET_STATUS_PRIORITY = {
+    "unavailable": -1,
+    "ok": 0,
+    "watch": 1,
+    "warning": 2,
+}
+
 _QUALITY_REVIEW_LABELS = ("좋음", "경계", "AI 티", "지나친 단조", "과잉 설명")
 _QUALITY_REVIEW_HELP = {
     "좋음": "지금 신호보다 원고 체감이 좋다고 판단된 화",
@@ -446,6 +453,77 @@ def _quality_dashboard_runtime_defaults(lookback: int) -> dict[str, Any]:
 
 def _quality_dashboard_roi_defaults(lookback: int) -> dict[str, Any]:
     return {
+        "budget_status": {
+            "available": False,
+            "authority_role": _authority_role_for("/quality/dashboard"),
+            "status": "unavailable",
+            "summary": "No budget signals available.",
+            "operator_guidance_only": True,
+            "authoritative_inputs": [],
+            "companion_inputs": [],
+            "authority_note": (
+                "Operator guidance only. Authoritative DB-derived summaries and companion snapshots are listed "
+                "separately."
+            ),
+            "thresholds": {
+                "cost": {
+                    "watch_total_cost_usd": 1.0,
+                    "warning_total_cost_usd": 5.0,
+                    "watch_avg_cost_per_snapshot_usd": 0.5,
+                    "warning_avg_cost_per_snapshot_usd": 1.0,
+                },
+                "rol": {
+                    "watch_avg_rol_below": 60.0,
+                    "warning_avg_rol_below": 25.0,
+                },
+                "retry": {
+                    "watch_total_retry_axes_at_or_above": 1,
+                    "warning_total_retry_axes_at_or_above": 3,
+                    "warning_single_axis_at_or_above": 2,
+                },
+                "retrieval": {
+                    "watch_trimmed_rows_at_or_above": 1,
+                    "warning_overflow_rows_at_or_above": 1,
+                },
+            },
+            "components": {
+                "cost": {
+                    "available": False,
+                    "authority_basis": "authoritative_db_cost_log",
+                    "status": "unavailable",
+                    "row_count": 0,
+                    "total_cost_usd": 0.0,
+                    "avg_cost_per_snapshot_usd": 0.0,
+                    "latest_session_id": "",
+                },
+                "rol": {
+                    "available": False,
+                    "authority_basis": "companion_pass_rate_monitor_join",
+                    "status": "unavailable",
+                    "row_count": 0,
+                    "avg_rol": 0.0,
+                    "best_rol": 0.0,
+                    "latest_ep": None,
+                },
+                "retry": {
+                    "available": False,
+                    "authority_basis": "authoritative_stage_attempt_gate_snapshot",
+                    "status": "unavailable",
+                    "retry_budget_axes": {},
+                    "total_retry_axes": 0,
+                    "max_retry_axis": 0,
+                },
+                "retrieval": {
+                    "available": False,
+                    "authority_basis": "companion_quality_metrics_budget_ledger",
+                    "status": "unavailable",
+                    "recent_rows": 0,
+                    "trimmed_rows": 0,
+                    "overflow_rows": 0,
+                    "budget_buckets": [],
+                },
+            },
+        },
         "patch_effectiveness": {
             "available": False,
             "stage": 4,
@@ -736,6 +814,170 @@ def _build_arc_cost_correlation_payload(summary: dict[str, Any] | None, lookback
             "rows": compact_rows,
         }
     )
+    return payload
+
+
+def _promote_budget_status(current: str, candidate: str) -> str:
+    if _BUDGET_STATUS_PRIORITY.get(candidate, -1) > _BUDGET_STATUS_PRIORITY.get(current, -1):
+        return candidate
+    return current
+
+
+def _build_budget_status_payload(
+    cost_summary: dict[str, Any] | None,
+    episode_rol: dict[str, Any] | None,
+    gate_repair_summary: dict[str, Any] | None,
+    retrieval_summary: dict[str, Any] | None,
+) -> dict[str, Any]:
+    payload = _quality_dashboard_roi_defaults(5)["budget_status"]
+    authoritative_inputs: list[str] = []
+    companion_inputs: list[str] = []
+    reasons: list[str] = []
+    status = "ok"
+    available = False
+
+    cost_component = payload["components"]["cost"]
+    if isinstance(cost_summary, dict) and cost_summary.get("available"):
+        available = True
+        authoritative_inputs.append("cost_summary")
+        row_count = max(0, int(cost_summary.get("row_count") or 0))
+        total_cost_usd = round(float(cost_summary.get("total_cost_usd") or 0.0), 6)
+        avg_cost = round(total_cost_usd / row_count, 6) if row_count else 0.0
+        cost_status = "ok"
+        if total_cost_usd >= 5.0 or avg_cost >= 1.0:
+            cost_status = "warning"
+        elif total_cost_usd >= 1.0 or avg_cost >= 0.5:
+            cost_status = "watch"
+        cost_component.update(
+            {
+                "available": True,
+                "status": cost_status,
+                "row_count": row_count,
+                "total_cost_usd": total_cost_usd,
+                "avg_cost_per_snapshot_usd": avg_cost,
+                "latest_session_id": str(cost_summary.get("latest_session_id") or ""),
+            }
+        )
+        status = _promote_budget_status(status, cost_status)
+        if cost_status != "ok":
+            reasons.append(f"cost {cost_status} (total ${total_cost_usd:.2f}, avg ${avg_cost:.2f}/snapshot)")
+
+    rol_component = payload["components"]["rol"]
+    if isinstance(episode_rol, dict) and episode_rol.get("available"):
+        available = True
+        companion_inputs.append("episode_rol")
+        row_count = max(0, int(episode_rol.get("row_count") or 0))
+        avg_rol = round(float(episode_rol.get("avg_rol") or 0.0), 4)
+        best_rol = round(float(episode_rol.get("best_rol") or 0.0), 4)
+        rol_status = "ok"
+        if avg_rol < 25.0:
+            rol_status = "warning"
+        elif avg_rol < 60.0:
+            rol_status = "watch"
+        rol_component.update(
+            {
+                "available": True,
+                "status": rol_status,
+                "row_count": row_count,
+                "avg_rol": avg_rol,
+                "best_rol": best_rol,
+                "latest_ep": int(episode_rol.get("latest_ep") or 0) or None,
+            }
+        )
+        status = _promote_budget_status(status, rol_status)
+        if rol_status != "ok":
+            reasons.append(f"ROL {rol_status} (avg {avg_rol:.1f})")
+
+    retry_component = payload["components"]["retry"]
+    retry_axes = {}
+    if isinstance(gate_repair_summary, dict):
+        retry_axes = gate_repair_summary.get("retry_budget_axes") or {}
+    if isinstance(retry_axes, dict) and retry_axes:
+        available = True
+        authoritative_inputs.append("gate_repair_summary")
+        normalized_axes = {
+            str(key): max(0, int(value or 0))
+            for key, value in retry_axes.items()
+            if str(key).strip()
+        }
+        total_retry_axes = sum(normalized_axes.values())
+        max_retry_axis = max(normalized_axes.values(), default=0)
+        retry_status = "ok"
+        if total_retry_axes >= 3 or max_retry_axis >= 2:
+            retry_status = "warning"
+        elif total_retry_axes >= 1:
+            retry_status = "watch"
+        retry_component.update(
+            {
+                "available": True,
+                "status": retry_status,
+                "retry_budget_axes": normalized_axes,
+                "total_retry_axes": total_retry_axes,
+                "max_retry_axis": max_retry_axis,
+            }
+        )
+        status = _promote_budget_status(status, retry_status)
+        if retry_status != "ok":
+            reasons.append(f"retry budget {retry_status} (axes {normalized_axes})")
+
+    retrieval_component = payload["components"]["retrieval"]
+    retrieval_recent = []
+    if isinstance(retrieval_summary, dict):
+        retrieval_recent = retrieval_summary.get("recent") or []
+    if isinstance(retrieval_recent, list) and retrieval_recent:
+        available = True
+        companion_inputs.append("retrieval_summary")
+        trimmed_rows = 0
+        overflow_rows = 0
+        budget_buckets: Counter[str] = Counter()
+        for row in retrieval_recent:
+            if not isinstance(row, dict):
+                continue
+            budget_ledger = row.get("budget_ledger") or {}
+            if not isinstance(budget_ledger, dict):
+                continue
+            bucket = str(budget_ledger.get("budget_bucket") or "").strip()
+            if bucket:
+                budget_buckets[bucket] += 1
+            dropped_chars = max(0, int(budget_ledger.get("dropped_chars") or 0))
+            overflow_chars = max(0, int(budget_ledger.get("overflow_chars") or 0))
+            trim_applied = bool(budget_ledger.get("trim_applied")) or dropped_chars > 0 or overflow_chars > 0
+            if trim_applied:
+                trimmed_rows += 1
+            if overflow_chars > 0:
+                overflow_rows += 1
+        retrieval_status = "ok"
+        if overflow_rows >= 1:
+            retrieval_status = "warning"
+        elif trimmed_rows >= 1:
+            retrieval_status = "watch"
+        retrieval_component.update(
+            {
+                "available": True,
+                "status": retrieval_status,
+                "recent_rows": len(retrieval_recent),
+                "trimmed_rows": trimmed_rows,
+                "overflow_rows": overflow_rows,
+                "budget_buckets": sorted(budget_buckets.keys()),
+            }
+        )
+        status = _promote_budget_status(status, retrieval_status)
+        if retrieval_status != "ok":
+            reasons.append(
+                f"retrieval budget {retrieval_status} (trimmed={trimmed_rows}, overflow={overflow_rows})"
+            )
+
+    payload["available"] = available
+    payload["authoritative_inputs"] = authoritative_inputs
+    payload["companion_inputs"] = companion_inputs
+    payload["status"] = status if available else "unavailable"
+    if not available:
+        return payload
+
+    if reasons:
+        payload["summary"] = f"{payload['status'].upper()}: " + "; ".join(reasons)
+    else:
+        payload["summary"] = "Budget signals are within wave1 guidance thresholds."
     return payload
 
 
@@ -1924,6 +2166,12 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
         )
     except Exception as exc:
         logger.debug("pass monitor dashboard payload load failed for %s: %s", project_dir, exc)
+    payload["budget_status"] = _build_budget_status_payload(
+        payload["cost_summary"],
+        payload["episode_rol"],
+        payload["gate_repair_summary"],
+        payload["retrieval_summary"],
+    )
     payload["proof_status"] = _build_dashboard_proof_status(
         sink_alignment_summary=payload["sink_alignment_summary"],
         runtime_audit_summary=payload["runtime_audit_summary"],
@@ -2000,6 +2248,12 @@ def _build_quality_dashboard_payload(project: str, lookback: int) -> dict:
             pass
 
     payload["gate_repair_summary"] = _build_gate_repair_summary(gate_repair_snapshot)
+    payload["budget_status"] = _build_budget_status_payload(
+        payload["cost_summary"],
+        payload["episode_rol"],
+        payload["gate_repair_summary"],
+        payload["retrieval_summary"],
+    )
     payload["result_summary"] = _build_result_summary(payload["latest_ep"], latest_label, payload["quality_summary"])
     payload["result_summary"]["gate_repair"] = payload["gate_repair_summary"]
     payload["compare_rows"] = _build_compare_rows(compare_labels, compare_signals)

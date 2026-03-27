@@ -992,6 +992,26 @@ class Stage4ContextBuilder:
             + "\n".join(rendered[:8])
         )
 
+    # [Wave-1 authority contract] This statement is the prompt-facing declaration
+    # that canonical layers (WorldState, FactLedger) override advisory summaries.
+    # The code-facing counterpart is _filter_state_tracker_summaries_for_authority()
+    # at L939, which suppresses 7 overlapping StateTracker domains when canonical
+    # layers are present. Together they form the Wave 1 authority contract.
+    @staticmethod
+    def _build_persisted_authority_statement(
+        *,
+        include_world_state: bool,
+        include_fact_ledger: bool,
+    ) -> str:
+        lines: list[str] = []
+        if include_world_state:
+            lines.append("- WorldState current-state facts override extracted or advisory summaries on conflict.")
+        if include_fact_ledger:
+            lines.append("- FactLedger numeric facts override BI seed numbers and arc-derived summaries on conflict.")
+        if not lines:
+            return ""
+        return "[Authority precedence]\n" + "\n".join(lines)
+
     def _execute_retrieval_plan(self, plan: "RetrievalPlan", arc_no: int | None = None) -> list[str]:
         """Execute retrieval plan slots and return context sections."""
         memory = getattr(self.ctx, "memory", None)
@@ -1612,6 +1632,15 @@ class Stage4ContextBuilder:
         mandatory_context: str,
     ) -> list[str]:
         """Assemble tier-0 mandatory sections in stable insertion order."""
+        # [Tier-0 injection stack] Final ordering after all insert(0, ...) calls:
+        #   canonical constraints (authority statement + NPC L0 + numeric L0)
+        #   > continuity packet
+        #   > fact ledger summary
+        #   > timeline summary
+        #   > world state summary
+        #   > mandatory_context (arc constraints, etc.)
+        #   > wuxia technique/realm authority clause (append, not insert)
+        # Sections inserted via insert(0, ...) end up in reverse order of insertion.
         tier0_parts = [mandatory_context] if mandatory_context else []
 
         arc_constraint_summary = arc_data.get("constraint_summary", "") if arc_data else ""
@@ -1672,11 +1701,35 @@ class Stage4ContextBuilder:
             if getattr(self.ctx, "fact_ledger", None):
                 canonical_numeric = self.ctx.fact_ledger.get_canonical_summary(max_chars=int(canonical_budget * 0.38))
             if canonical_npc or canonical_numeric:
-                canonical_block = "\n\n".join(x for x in [canonical_npc, canonical_numeric] if x)
+                authority_statement = self._build_persisted_authority_statement(
+                    include_world_state=bool(canonical_npc),
+                    include_fact_ledger=bool(canonical_numeric),
+                )
+                canonical_parts = [authority_statement] if authority_statement else []
+                canonical_parts.extend(x for x in [canonical_npc, canonical_numeric] if x)
+                canonical_block = "\n\n".join(canonical_parts)
                 tier0_parts.insert(0, canonical_block)
                 logging.info("[Phase1-L0] Canonical 고정 주입 (%d자)", len(canonical_block))
         except Exception as canonical_err:
             logging.warning("[Phase1-L0] Canonical 주입 실패 (비치명): %s", str(canonical_err)[:50])
+
+        # [Wave-TR1] Wuxia-only protagonist technique/realm authority clause
+        try:
+            _genre_name = ""
+            if getattr(self.ctx, "current_project", None):
+                _genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get("name", "")
+            if _genre_name in ("무협", "wuxia"):
+                _ws = getattr(self.ctx, "world_state", None)
+                _protag_skills = (_ws._state.get("protagonist", {}).get("skills") or []) if _ws else []
+                if _protag_skills:
+                    tier0_parts.append(
+                        "[무협 기술/경지 권위]\n"
+                        "- 확정된 주인공 경지 및 습득 기술 목록이 BI 초기 설정이나 advisory 요약보다 우선한다.\n"
+                        "- 주인공의 현재 경지에서 허용되지 않는 기술을 사용하면 안 된다."
+                    )
+                    logging.info("[Wave-TR1] Wuxia technique/realm authority clause injected (%d skills)", len(_protag_skills))
+        except Exception as _wuxia_auth_err:
+            logging.debug("[Wave-TR1] Wuxia authority clause skipped (non-blocking): %s", _wuxia_auth_err)
 
         if blueprint:
             try:
