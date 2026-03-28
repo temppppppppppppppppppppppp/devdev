@@ -210,6 +210,43 @@
 
 ---
 
+## 2B. Existing Pair Repair 기본값
+
+기존 `TR + BI` pair를 살리거나 승격시키는 요청은 fresh production 기본공정으로 처리하지 않는다.
+
+원칙:
+
+1. 먼저 router의 `shared pair-revival` 레이어를 탄다.
+2. 기본값은 `lite audit -> top 3 repair -> recheck`다.
+3. `top 10` 블록 수술이나 전 아크 재공사는 기본값이 아니다.
+
+lite audit 기본 5축:
+
+- 적대 / 압박원
+- 승리의 비용
+- 표면 반복
+- 테마 carry
+- 섹터 / 현장 질감
+
+repair cap 기본값:
+
+- quarantine salvage 확인: `top 3`까지만
+- 승격 후보 / Stage 4 목표: `top 3` 재점검 후에만 `4-6` 확장 검토
+- 확산형 문제면 salvage를 늘리지 말고 regenerate-first를 검토
+
+운영 규칙:
+
+- 기존 pair repair는 블록 1개씩 수동 진행한다.
+- 방금 고친 체인을 보호하는 인접 블록이 있으면 순위보다 먼저 처리할 수 있다.
+- pair-level 규칙이 비어 있으면 블록 추가 수리 전에 BI 강화 섹션을 먼저 잠근다.
+
+즉:
+
+- fresh build는 기존 production/BI 하네스를 따른다.
+- existing pair salvage는 revival ladder를 따르고, blockguide 본체는 그 위에 family semantics만 제공한다.
+
+---
+
 ## 3. 특정 기획안이 들어왔을 때의 자동 오더
 
 사용자가 특정 기획안, 작품명, `work_id`를 던지면 아래 순서를 기본값으로 실행한다.

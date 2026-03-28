@@ -1,14 +1,14 @@
 # NPC Martial State Substrate Wave1 Execution SSOT
 
 Date: 2026-03-27
-Status: active (reopened for bounded martial_arts shape-normalization hotfix)
+Status: blocked (parked follow-up item after 2026-03-28 queue reorder; future work requires fresh Stage 4 / STV seam evidence)
 Canonical Path: `docs/2026-03-27/npc-martial-state-substrate-wave1-execution-ssot.md`
 Temp Mirror Path: `docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md`
 Commit State:
 - Baseline Commit: `161b71348732e06d9542daf3f54ad8a65126eada`
 - Baseline Dirty Summary: `dirty: untracked docs only (npc-technique-realm-persistence-compact-survey.md, npc-technique-realm-owner-model-design-memo.md, npc-technique-realm-execution-readiness-deep-dive-audit.md)`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `reopened after authority reconciliation; same-day closure was premature because persisted runtime authority flows through Stage 4 bible_delta["state_changes"], not tracker extractors; reopened again for bounded pre-persistence martial_arts normalization after wuxia canary confirmed manager raw shape drift`
+- Resume Drift Summary: `reopened after authority reconciliation; same-day closure was premature because persisted runtime authority flows through Stage 4 bible_delta["state_changes"], not tracker extractors; later parked on 2026-03-28 after Director reorder because no live Stage 4 / STV seam diff remained`
 Source Survey Docs:
 - `docs/2026-03-27/npc-technique-realm-persistence-compact-survey.md`
 - `docs/2026-03-27/npc-technique-realm-owner-model-design-memo.md`
@@ -206,9 +206,10 @@ Replay semantics:
 
 ## 12. Temp Queue Notes
 
-- temp status: active
+- temp status: blocked
 - cleanup condition: remove temp mirror after implementation, closure audit, queue-state refresh, and validator clean pass
-- roadmap dependency: none; single-item queue
+- roadmap dependency:
+  - governed by `docs/2026-03-27/npc-martial-and-soak-canary-execution-roadmap.md`
 
 ## 13. Validation and Closure Hooks
 
@@ -426,3 +427,73 @@ Pass 3. Execution Readiness
 - PASS
 
 Hotfix addendum confidence: 96%
+
+## 22. Queue Reconciliation 2026-03-28
+
+Reconciliation Verdict: `blocked`
+
+Why blocked now:
+
+- the declared hotfix seam remains the bounded Stage 4 / STV pre-persistence normalization path
+- live `git status --short` does not touch that seam
+- current dirty work is instead in provider, benchmark, TR-harness, config, and governance lanes
+- leaving this item marked `active` would overstate live execution reality
+
+Authority consequences:
+
+- this item remains in the queue but is no longer treated as an actively advancing implementation lane
+- do not treat unrelated dirty files as progress on this SSOT
+- do not promote the next queue item by implication; use an explicit refreshed roadmap decision
+
+Resume conditions:
+
+- a fresh bounded diff appears on the declared Stage 4 / STV seam, or
+- the item is formally closed or reordered by queue authority
+
+Queue reconciliation 3-pass:
+
+- Pass 1. Scope Discipline
+  - kept the reconciliation bounded to queue authority and live-seam status only
+  - PASS
+- Pass 2. Evidence Consistency
+  - confirmed the live dirty tree does not overlap the declared hotfix write scope
+  - confirmed queue-state drift had overstated progress
+  - PASS
+- Pass 3. Execution Readability
+  - active vs blocked state is now explicit for operators
+  - the next decision boundary is clear: resume on seam or close/reorder
+  - PASS
+
+Queue reconciliation confidence: `97%`
+
+## 23. Director Reorder 2026-03-28
+
+Reorder Verdict: `blocked off active lane`
+
+Why no longer the active blocker:
+
+- live `git status --short` still shows no bounded diff on the declared Stage 4 / STV hotfix seam
+- live process inspection showed no active wuxia canary `python` process whose continuity required holding the queue here
+- keeping this item as a parked blocked follow-up preserves the hotfix context without forcing the active soak lane to stall
+
+Authority consequences:
+
+- `frontier-lag-soak-canary-wave1` is promoted ahead of this item in the aggregate roadmap
+- do not treat unrelated provider, benchmark, TR-harness, governance, or future canary chatter as progress on this SSOT
+- any future return to this item requires a fresh bounded diff on the declared seam or fresh survey evidence justifying reopen
+
+Director reorder 3-pass:
+
+- Pass 1. Structure and Scope
+  - bounded this refresh to queue position and blocker truth only
+  - PASS
+- Pass 2. Evidence Consistency
+  - confirmed the declared hotfix seam is still absent from the live dirty tree
+  - confirmed no active wuxia canary process remains in the workspace at decision time
+  - PASS
+- Pass 3. Execution Readability
+  - the item stays preserved as context, but no longer pretends to own the active lane
+  - future resumption conditions are explicit for the next operator
+  - PASS
+
+Director reorder confidence: `97%`

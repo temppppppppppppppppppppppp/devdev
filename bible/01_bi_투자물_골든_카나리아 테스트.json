@@ -40,7 +40,9 @@
       },
       "execution_doctrine": "가격이 아니라 이득 구조와 exit를 먼저 본다. 확신 구간에서만 크게 베팅하고, 나머지는 현금과 통제권을 지킨다.",
       "governance_doctrine": "가족 자산과 개인 자산 사이에 방화벽을 둔다. 도움은 주되 운용권은 넘기지 않는다.",
-      "secrecy_rule": "회귀의 비밀은 끝까지 공개하지 않는다. 인정은 받아도 정체는 넘기지 않는다."
+      "secrecy_rule": "회귀의 비밀은 끝까지 공개하지 않는다. 인정은 받아도 정체는 넘기지 않는다.",
+      "pov": "혼합",
+      "external_pov_insert_policy": "제한적 허용"
     },
     "FinanceHUD": {
       "_description": "투자물 전용 HUD - 자산, 현금화 가능 실탄, 출구 설계, 운용권 상태를 추적",
@@ -7731,6 +7733,311 @@
           }
         }
       }
-    ]
+    ],
+    "AntagonistRegistry": {
+      "_description": "Cycle-1 repair에서 도출된 아크별 압박원 레지스트리",
+      "_rule": "시장 심리만 적대로 쓰는 블록이 2개 연속 금지. 압박원은 자기 직업을 하는 사람이어야 한다.",
+      "pressure_types": [
+        "절차형",
+        "추적형",
+        "가족형",
+        "파트너형",
+        "배신형"
+      ],
+      "registry": [
+        {
+          "name": "데이비드 왕",
+          "type": "절차형",
+          "role": "골드만 리스크 리뷰 VP",
+          "entry": 18,
+          "cascade": [
+            26
+          ],
+          "status": "분기 보고 모니터링"
+        },
+        {
+          "name": "김도윤",
+          "type": "추적형",
+          "role": "블룸버그코리아 기자",
+          "entry": 41,
+          "cascade": [
+            45,
+            46
+          ],
+          "status": "공시 추적 중"
+        },
+        {
+          "name": "한태준",
+          "type": "가족형",
+          "role": "큰형",
+          "entry": 5,
+          "cascade": [
+            15,
+            25,
+            28,
+            46,
+            47,
+            54,
+            59
+          ],
+          "status": "B54 직접 항복 접근"
+        },
+        {
+          "name": "어머니",
+          "type": "가족형",
+          "role": "감정 비용원",
+          "entry": 46,
+          "cascade": [
+            54,
+            60
+          ],
+          "status": "돈으로 해결 불가"
+        },
+        {
+          "name": "마이클 첸",
+          "type": "파트너형",
+          "role": "유일한 신뢰 파트너",
+          "entry": 7,
+          "friction": 54,
+          "resolution": 58,
+          "status": "B54 첫 이견"
+        },
+        {
+          "name": "제이슨",
+          "type": "배신형",
+          "role": "OTC 크립토 딜러",
+          "entry": 19,
+          "wavering": 46,
+          "betrayal": 47,
+          "status": "해고"
+        },
+        {
+          "name": "정민재",
+          "type": "파트너형",
+          "role": "패밀리오피스 실장",
+          "entry": 41,
+          "cascade": [
+            46,
+            49,
+            54,
+            59
+          ],
+          "status": "운용 원칙 내부 마찰"
+        }
+      ]
+    },
+    "CostLadder": {
+      "_description": "주요 승리 후 1-2블록 이내 가시적 비용 필수. 비용은 cascade해야 한다.",
+      "_rule": "블록 안에서 즉각 체감 가능. 이론적 리스크 서술 금지. 비극보다 즉각 체감형 friction.",
+      "cost_types": [
+        "금융마찰",
+        "구조제약",
+        "관계손상",
+        "노출리스크"
+      ],
+      "active_costs": [
+        {
+          "origin": 18,
+          "cost": "골드만 독점+분기보고+경로 1개 고정",
+          "type": "구조제약",
+          "cascade_to": [
+            26
+          ],
+          "effect": "B26 배분 뒷순위+세컨더리 프리미엄"
+        },
+        {
+          "origin": 26,
+          "cost": "세컨더리 프리미엄 — 같은 자산 비싸게 매수",
+          "type": "금융마찰",
+          "cascade_to": [],
+          "effect": "독립 딜 라인 필요성 인식"
+        },
+        {
+          "origin": 41,
+          "cost": "법인 밖 개인 월렛 경유 — 체결 열화",
+          "type": "구조제약",
+          "cascade_to": [
+            45,
+            46
+          ],
+          "effect": "크립토 포지션 법인 보호 밖"
+        },
+        {
+          "origin": 46,
+          "cost": "어머니 전화 — 관계 비용",
+          "type": "관계손상",
+          "cascade_to": [
+            54,
+            60
+          ],
+          "effect": "가족 통제권 딜레마 점화"
+        },
+        {
+          "origin": 54,
+          "cost": "대량 주문 실행 제약+마이클 이견",
+          "type": "구조제약+관계손상",
+          "cascade_to": [
+            56,
+            58
+          ],
+          "effect": "TWAP 설계 필요 / 우정 복원 전제"
+        }
+      ]
+    },
+    "ControlThemeMap": {
+      "_description": "돈보다 통제권 테마 6구간 에스컬레이션. 아크당 최소 1블록 전진 필수.",
+      "_rule": "B59-60 결산이 뜬금없으면 안 된다. 각 단계가 사전에 깔려야 답이 의미를 갖는다.",
+      "escalation": [
+        {
+          "phase": "B1-10",
+          "question": "누구 돈으로 시작하나",
+          "tension": "그룹 돈 vs 내 돈",
+          "anchors": [
+            1,
+            5
+          ]
+        },
+        {
+          "phase": "B11-20",
+          "question": "누가 내 거래를 보나",
+          "tension": "골드만 컴플라이언스",
+          "anchors": [
+            15,
+            18
+          ]
+        },
+        {
+          "phase": "B21-30",
+          "question": "누가 내 딜 접근을 통제하나",
+          "tension": "배분 위계, 독립 라인 필요",
+          "anchors": [
+            26,
+            28
+          ]
+        },
+        {
+          "phase": "B31-40",
+          "question": "인프라를 내가 소유하나",
+          "tension": "독립 법인, 아버지 도움 요청",
+          "anchors": [
+            37,
+            40
+          ]
+        },
+        {
+          "phase": "B41-50",
+          "question": "누가 내 비밀을 아나",
+          "tension": "기자, 배신, 가족 압박",
+          "anchors": [
+            41,
+            46,
+            47
+          ]
+        },
+        {
+          "phase": "B51-60",
+          "question": "100조 이후 누구 규칙으로 움직이나",
+          "tension": "거버넌스, 헌장, 가족 항복",
+          "anchors": [
+            54,
+            59,
+            60
+          ]
+        }
+      ]
+    },
+    "SectorSceneKit": {
+      "_description": "섹터 블록 강의식 요약 방지. 현장/위계/마찰 최소 요건.",
+      "_rule": "설명이 아니라 행동/거절/위계로 보여줄 것. 현장 0개인 섹터 블록 금지.",
+      "sectors": [
+        {
+          "name": "원자재/에너지",
+          "arcs": [
+            "ARC-01"
+          ],
+          "location": "증권사 VIP룸",
+          "hierarchy": "PB-클라이언트",
+          "friction": "레버리지 승인, 리스크팀 압박"
+        },
+        {
+          "name": "금융위기/신용파생",
+          "arcs": [
+            "ARC-01",
+            "ARC-02"
+          ],
+          "location": "IFC, 란콰이퐁, 맨해튼",
+          "hierarchy": "딜러-클라이언트",
+          "friction": "CDS 카운터파티, 내부 조사"
+        },
+        {
+          "name": "플랫폼/IPO",
+          "arcs": [
+            "ARC-03"
+          ],
+          "location": "신디케이트 데스크, 스타트업 사옥",
+          "hierarchy": "배분 위계(우대 vs 표준)",
+          "friction": "컴플라이언스 블로킹, 세컨더리 프리미엄"
+        },
+        {
+          "name": "크립토",
+          "arcs": [
+            "ARC-03",
+            "ARC-04",
+            "ARC-05"
+          ],
+          "location": "OTC 딜러, 콜드월렛 현장",
+          "hierarchy": "딜러-고래, 거래소 vs OTC",
+          "friction": "물량 확보, 온체인 추적"
+        },
+        {
+          "name": "테슬라/팬데믹/거시",
+          "arcs": [
+            "ARC-04"
+          ],
+          "location": "블록딜 루트, 트레이딩룸",
+          "hierarchy": "대량 주문 실행, 인덱스 수급",
+          "friction": "숏셀러, 편입 출구 설계"
+        },
+        {
+          "name": "AI/ETF/패밀리오피스",
+          "arcs": [
+            "ARC-06"
+          ],
+          "location": "패밀리오피스, 본가",
+          "hierarchy": "규제 대기열, 시장영향력",
+          "friction": "TWAP 분할, 운용권 거버넌스"
+        }
+      ]
+    },
+    "POVCutPolicy": {
+      "_description": "외부 POV 컷 사용 규칙. 블록 레벨 pov_character는 주인공 앵커. 씬 레벨에서만 외부 허용.",
+      "runtime_primary_pov": "혼합",
+      "runtime_anchor_character": "한시우",
+      "episode_open_close": "한시우_고정",
+      "position": "중간_씬_only",
+      "max_per_episode": 1,
+      "max_per_block": 1,
+      "max_lines": 10,
+      "allowed": [
+        "threat_amplification",
+        "sector_texture",
+        "information_asymmetry",
+        "cliffhanger_intensification"
+      ],
+      "forbidden": [
+        "admiration_reaction",
+        "atmosphere_decoration",
+        "foreshadow_over_explanation"
+      ],
+      "rules": [
+        "같은 씬 안에서 시점 혼합 금지 — 씬 경계에서만 전환",
+        "컷은 한시우 서사 스레드를 전진시켜야 한다",
+        "리액션 스팸 금지 — 추적/위계/비대칭만 허용",
+        "블록 레벨 pov_character 변경 금지 — 컷은 씬 레벨 운용",
+        "화 첫 씬과 마지막 씬은 반드시 한시우 앵커",
+        "혼합 POV는 scene-level switching만 허용하며 같은 씬 내부 시점 혼합은 금지"
+      ],
+      "_block_episode_alignment": "block 레벨 max_per_block=1은 TR 설계용. episode 레벨 정책은 protagonist_config.pov=혼합, protagonist_config.external_pov_insert_policy=제한적 허용을 참조."
+    }
   }
 }

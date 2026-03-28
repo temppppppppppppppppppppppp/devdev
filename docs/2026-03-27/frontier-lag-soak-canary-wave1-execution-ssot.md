@@ -1,14 +1,14 @@
 # Frontier Lag Soak Canary Wave1 Execution SSOT
 
 Date: 2026-03-27
-Status: execution-ready (queued behind active `npc-martial-state-substrate-wave1`)
+Status: in_progress (queue-promoted active item; bounded soak realization authorized; code diff not started in this turn)
 Canonical Path: `docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md`
 Temp Mirror Path: `docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md`
 Commit State:
 - Baseline Commit: `155906f3adb1c2f4a3810ce359f6b59124d8556a`
 - Baseline Dirty Summary: `dirty: tracked npc-martial docs/code/tests, docs/temp/queue-state.json, canary DB artifact; untracked soak survey/benchmark docs, temp npc mirror, canary directories`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `opened after 3-lane corroborated merge audit; blocked for realization until the active npc-martial queue item and current wuxia canary thread are finished`
+- Resume Drift Summary: `opened after 3-lane corroborated merge audit; promoted on 2026-03-28 after Director reorder because npc-martial remained blocked off the active lane and no live wuxia canary thread remained`
 Source Survey Docs:
 - `docs/2026-03-27/frontier-lag-soak-canary-compact-survey.md`
 Evidence Artifacts:
@@ -24,7 +24,7 @@ Why now:
 - the compact survey is final and 3-pass audited
 - runner/control, lightweight config, and observability seams were independently corroborated
 - the next concrete step is no longer survey; it is bounded harness realization
-- the item cannot start immediately because the active temp queue is still occupied by `npc-martial-state-substrate-wave1`
+- the aggregate temp queue has now promoted this item to the active lane after `npc-martial-state-substrate-wave1` was parked off the critical path
 
 ## 2. Baseline Facts
 
@@ -39,7 +39,7 @@ Why now:
   - `episode_bibles`
   - `state_logs`
   - `world_state`
-- the active temp queue already contains one in-progress execution SSOT, so this item must be governed by an aggregate roadmap before realization begins
+- the aggregate temp queue still contains the parked npc-martial follow-up item, but it no longer blocks this bounded soak lane
 
 ## 3. Scope
 
@@ -153,8 +153,8 @@ If a category is not applicable, say so explicitly:
     - `state_logs`
     - `world_state`
 - queue constraint:
-  - realization must not begin until the aggregate roadmap says this item is active
-  - current dependency blocker is the active `npc-martial-state-substrate-wave1` queue item
+  - the aggregate roadmap now marks this item as the active queue item
+  - this promotion turn does not itself realize code; a fresh bounded implementation turn should start on the soak harness seam
 
 ## 8. Execution Tranches
 
@@ -181,7 +181,7 @@ If a category is not applicable, say so explicitly:
   - `tests/test_auto_frontier_lag_harness.py`
   - any new soak-harness test file if introduced
 - `python scripts/check_utf8_hygiene.py` on touched docs/scripts/tests
-- disposable pilot commands after the item becomes active:
+- disposable pilot commands after tranche 1 and tranche 2 land:
   - harness plan
   - harness run
   - harness analysis
@@ -190,7 +190,7 @@ If a category is not applicable, say so explicitly:
 
 ## 11. Guardrails
 
-- do not start realization while the current wuxia canary thread is still the active queue blocker
+- do not overlap this item with a new wuxia canary or a resumed npc-martial hotfix lane
 - do not mutate non-disposable project targets
 - do not broaden the item into benchmark implementation
 - do not change global production model defaults as a shortcut for harness-local override behavior
@@ -202,7 +202,7 @@ If a category is not applicable, say so explicitly:
 
 ## 12. Temp Queue Notes
 
-- temp status: pending
+- temp status: in_progress
 - cleanup condition:
   - remove `docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md` only after the item is realized and closed
 - roadmap dependency:
@@ -226,14 +226,40 @@ If a category is not applicable, say so explicitly:
 
 ### Pass 2. Contradiction Check
 
-- no contradiction found between survey conclusions and current queue state
-- no contradiction found between bounded soak scope and the active npc-martial queue item
+- no contradiction found between survey conclusions and the bounded soak scope
+- later queue-roadmap refreshes were left free to reorder the item when blocker reality changed
 - PASS
 
 ### Pass 3. Decision Audit
 
 - opening the SSOT now is useful because the design is stable
-- realization is still correctly blocked behind the active queue item
+- the document remained ready for later promotion without requiring a rewrite
 - PASS
 
 Estimated confidence: `96%`
+
+## 15. Director Promotion 2026-03-28
+
+Promotion Verdict: `in_progress`
+
+Why promoted now:
+
+- queue authority refresh established `npc-martial-state-substrate-wave1` as a parked blocked item rather than a live blocker
+- live process inspection showed no active wuxia canary `python` process in the workspace at decision time
+- this soak item remains the highest-ROI bounded next step on already-corroborated survey evidence
+
+Promotion 3-pass:
+
+- Pass 1. Structure and Scope
+  - promotion is bounded to queue authority only; no code realization starts in this turn
+  - PASS
+- Pass 2. Evidence Consistency
+  - aligned the SSOT with the reordered roadmap and current live workspace evidence
+  - no active npc-martial seam diff or active wuxia canary thread remains to justify holding this item back
+  - PASS
+- Pass 3. Execution Readability
+  - the active queue item is now explicit
+  - the next implementation turn can start directly on the bounded soak harness seam
+  - PASS
+
+Promotion confidence: `97%`
