@@ -1,8 +1,31 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-03-27T08:10:26.884766+00:00",
-  "queue_mode": "empty",
-  "active_item_count": 0,
-  "roadmap": null,
-  "items": []
+  "generated_at": "2026-03-27T11:25:51.698508+00:00",
+  "queue_mode": "aggregate",
+  "active_item_count": 2,
+  "roadmap": {
+    "temp_path": "docs/temp/execution-roadmap.md",
+    "canonical_path": "docs/2026-03-27/npc-martial-and-soak-canary-execution-roadmap.md",
+    "status": "active"
+  },
+  "items": [
+    {
+      "topic": "frontier-lag-soak-canary-wave1",
+      "temp_path": "docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md",
+      "canonical_path": "docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md",
+      "status": "in_progress",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "npc-martial-state-substrate-wave1",
+      "temp_path": "docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md",
+      "canonical_path": "docs/2026-03-27/npc-martial-state-substrate-wave1-execution-ssot.md",
+      "status": "in_progress",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    }
+  ]
 }

@@ -18,7 +18,27 @@ if TYPE_CHECKING:
 
 def _normalize_martial_arts_snapshot(raw_entries) -> list[str]:
     """Normalize manager martial_arts payloads into comparable technique names."""
-    if not isinstance(raw_entries, list):
+    if isinstance(raw_entries, str):
+        stripped = raw_entries.strip()
+        if not stripped:
+            return []
+        if stripped.casefold() in {"none", "null", "n/a"} or stripped in {"없음", "없다", "해당 없음", "미습득"}:
+            return []
+        if stripped.startswith("["):
+            try:
+                parsed = json.loads(stripped)
+            except (json.JSONDecodeError, TypeError, ValueError):
+                raw_entries = [raw_entries]
+            else:
+                if isinstance(parsed, list):
+                    raw_entries = parsed
+                elif isinstance(parsed, str):
+                    raw_entries = [parsed]
+                else:
+                    return []
+        else:
+            raw_entries = [raw_entries]
+    elif not isinstance(raw_entries, list):
         return []
 
     normalized: list[str] = []
@@ -34,12 +54,38 @@ def _normalize_martial_arts_snapshot(raw_entries) -> list[str]:
                     technique_name = raw_value.strip()
                     break
 
-        if not technique_name or technique_name in seen:
+        if (
+            not technique_name
+            or technique_name.casefold() in {"none", "null", "n/a"}
+            or technique_name in {"없음", "없다", "해당 없음", "미습득"}
+            or technique_name in seen
+        ):
             continue
         normalized.append(technique_name)
         seen.add(technique_name)
 
     return normalized
+
+
+def _merge_storage_only_state_change_families(*, base_state_changes, final_state_updates, arc_data) -> dict:
+    """Preserve storage-only state-change families that Stage 4 manager actual_truth does not model."""
+    merged_state_changes = dict(base_state_changes) if isinstance(base_state_changes, dict) else {}
+
+    source_candidates = []
+    if isinstance(final_state_updates, dict):
+        source_candidates.append(final_state_updates)
+    if isinstance(arc_data, dict):
+        arc_state_changes = arc_data.get("state_changes")
+        if isinstance(arc_state_changes, dict):
+            source_candidates.append(arc_state_changes)
+
+    for source in source_candidates:
+        martial_state_changes = source.get("npc_martial_state_changes")
+        if isinstance(martial_state_changes, list) and martial_state_changes:
+            merged_state_changes["npc_martial_state_changes"] = list(martial_state_changes)
+            break
+
+    return merged_state_changes
 
 
 class Stage4PostPassRuntime:
@@ -243,6 +289,7 @@ class Stage4PostPassRuntime:
         critical_keys,
         final_state_updates,
         blueprint,
+        arc_data,
     ):
         """[B-1-9a:A3] Manager Future 회수 + bible_delta 조립 + state_log 저장.
 
@@ -332,6 +379,7 @@ class Stage4PostPassRuntime:
                 key_npcs=key_npcs,
                 actual_truth=actual_truth,
                 final_state_updates=final_state_updates,
+                arc_data=arc_data,
                 state_updates_from_audit=state_updates_from_audit,
                 knowledge_map=knowledge_map,
                 karma_matrix=karma_matrix,
@@ -389,6 +437,10 @@ class Stage4PostPassRuntime:
                 stv_result = stv.verify(final_manuscript, actual_truth)
                 if not stv_result["verified"] and stv_result["corrections"]:
                     actual_truth = stv.apply_corrections(actual_truth, stv_result["corrections"])
+                    if isinstance(actual_truth, dict) and "martial_arts" in actual_truth:
+                        actual_truth["martial_arts"] = _normalize_martial_arts_snapshot(
+                            actual_truth.get("martial_arts")
+                        )
                     self.ctx.ui.log(
                         f"      🧪 [V75] State-Text 검증 {len(stv_result['mismatches'])}건 불일치 →"
                         f"{len(stv_result['corrections'])}건 수정"
@@ -503,6 +555,8 @@ class Stage4PostPassRuntime:
         actual_truth = (
             state_updates_from_audit.get("actual_truth", {}) if isinstance(state_updates_from_audit, dict) else {}
         )
+        if isinstance(actual_truth, dict) and "martial_arts" in actual_truth:
+            actual_truth["martial_arts"] = _normalize_martial_arts_snapshot(actual_truth.get("martial_arts"))
 
         prev_actual = {}
         if hasattr(self.ctx.current_project, "latest_state"):
@@ -666,6 +720,7 @@ class Stage4PostPassRuntime:
         key_npcs: list,
         actual_truth,
         final_state_updates,
+        arc_data,
         state_updates_from_audit,
         knowledge_map,
         karma_matrix,
@@ -681,13 +736,18 @@ class Stage4PostPassRuntime:
         npc_deaths: list,
         reveal_list: list,
     ) -> dict:
+        persisted_state_changes = _merge_storage_only_state_change_families(
+            base_state_changes=actual_truth if actual_truth else final_state_updates,
+            final_state_updates=final_state_updates,
+            arc_data=arc_data,
+        )
         bible_delta = {
             "new_items": all_new_items,
             "lost_items": lost_items_from_equip,
             "new_npcs": new_npc_names,
             "npc_deaths": npc_deaths,
             "relationship_changes": relationship_changes,
-            "state_changes": actual_truth if actual_truth else final_state_updates,
+            "state_changes": persisted_state_changes,
             "time_passed": state_updates_from_audit.get("time_passed", ""),
             "reveals": reveal_list,
             "causal_links": causal_links,

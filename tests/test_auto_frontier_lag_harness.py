@@ -253,3 +253,160 @@ def test_run_worker_calls_frontier_with_requested_arc_limit_and_writes_result(tm
     assert worker_result["frontier_result"]["requested_limit_hit"] is True
     app._shutdown_app.assert_called_once_with()
     close_handles.assert_not_called()
+
+
+# ── Soak Profile Override Contract ───────────────────────────────────────
+
+
+def test_default_soak_profile_uses_flash_and_reduced_lengths():
+    """default_soak_profile returns a well-formed profile with all-flash + lower lengths."""
+    soak = harness.default_soak_profile()
+    assert soak.stage2_model is not None
+    assert "flash" in soak.stage2_model.lower()
+    assert soak.stage4_model is not None
+    assert "flash" in soak.stage4_model.lower()
+    assert soak.manuscript_min_length is not None
+    assert soak.manuscript_min_length < 4000
+    assert soak.manuscript_target_length is not None
+    assert soak.manuscript_target_length < 5000
+    assert soak.heavy_path_toggles.get("post_pass_advisories") is False
+
+
+def test_resolve_soak_profile_returns_none_for_empty():
+    assert harness.resolve_soak_profile(None) is None
+    assert harness.resolve_soak_profile("") is None
+
+
+def test_resolve_soak_profile_returns_profile_for_soak():
+    soak = harness.resolve_soak_profile("soak")
+    assert isinstance(soak, harness.SoakProfile)
+    assert soak.stage2_model is not None
+
+
+def test_resolve_soak_profile_rejects_unknown():
+    import pytest
+
+    with pytest.raises(ValueError, match="unknown soak profile"):
+        harness.resolve_soak_profile("nonexistent")
+
+
+def test_apply_soak_overrides_none_is_noop():
+    """When soak is None, apply_soak_overrides yields without side effects."""
+    from modules.core.constants import AIModels, ManuscriptLimits
+
+    orig_s2 = AIModels.STAGE2_MAIN_MODEL
+    orig_s4 = AIModels.STAGE4_FIXED_WRITER_MODEL
+    orig_min = int(ManuscriptLimits.MIN_LENGTH)
+    orig_target = int(ManuscriptLimits.TARGET_LENGTH)
+
+    with harness.apply_soak_overrides(None):
+        assert AIModels.STAGE2_MAIN_MODEL == orig_s2
+        assert AIModels.STAGE4_FIXED_WRITER_MODEL == orig_s4
+        assert int(ManuscriptLimits.MIN_LENGTH) == orig_min
+        assert int(ManuscriptLimits.TARGET_LENGTH) == orig_target
+
+
+def test_apply_soak_overrides_patches_and_restores():
+    """Overrides take effect inside the context and are fully restored on exit."""
+    from modules.core.constants import AIModels, ManuscriptLimits
+
+    orig_s2 = AIModels.STAGE2_MAIN_MODEL
+    orig_s4 = AIModels.STAGE4_FIXED_WRITER_MODEL
+    orig_min = int(ManuscriptLimits.MIN_LENGTH)
+    orig_target = int(ManuscriptLimits.TARGET_LENGTH)
+
+    soak = harness.SoakProfile(
+        stage2_model="test-flash-model",
+        stage4_model="test-flash-model",
+        manuscript_min_length=800,
+        manuscript_target_length=1200,
+        heavy_path_toggles={},
+    )
+
+    with harness.apply_soak_overrides(soak):
+        assert AIModels.STAGE2_MAIN_MODEL == "test-flash-model"
+        assert AIModels.STAGE4_FIXED_WRITER_MODEL == "test-flash-model"
+        assert int(ManuscriptLimits.MIN_LENGTH) == 800
+        assert int(ManuscriptLimits.TARGET_LENGTH) == 1200
+
+    # Restored after exit
+    assert AIModels.STAGE2_MAIN_MODEL == orig_s2
+    assert AIModels.STAGE4_FIXED_WRITER_MODEL == orig_s4
+    assert int(ManuscriptLimits.MIN_LENGTH) == orig_min
+    assert int(ManuscriptLimits.TARGET_LENGTH) == orig_target
+
+
+def test_apply_soak_overrides_heavy_path_toggle_disables_post_pass_advisories():
+    """post_pass_advisories=False replaces the method with a no-op inside the context."""
+    from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime
+
+    original_method = Stage4PostPassRuntime._run_post_pass_advisories
+
+    soak = harness.SoakProfile(
+        heavy_path_toggles={"post_pass_advisories": False},
+    )
+
+    with harness.apply_soak_overrides(soak):
+        # Method should be replaced with a no-op
+        assert Stage4PostPassRuntime._run_post_pass_advisories is not original_method
+
+    # Restored after exit
+    assert Stage4PostPassRuntime._run_post_pass_advisories is original_method
+
+
+def test_apply_soak_overrides_rejects_unknown_toggle():
+    """Unknown toggle names raise ValueError."""
+    import pytest
+
+    soak = harness.SoakProfile(heavy_path_toggles={"nonexistent_toggle": False})
+    with pytest.raises(ValueError, match="unknown heavy-path toggle"):
+        with harness.apply_soak_overrides(soak):
+            pass
+
+
+def test_build_worker_command_includes_soak_profile_flag():
+    cmd = harness.build_worker_command(
+        target_project="test_proj",
+        arc_count=3,
+        seed_profile="00_20260314",
+        batch_size=1,
+        soak_profile_name="soak",
+    )
+    assert "--soak-profile" in cmd
+    idx = cmd.index("--soak-profile")
+    assert cmd[idx + 1] == "soak"
+
+
+def test_build_worker_command_omits_soak_profile_when_empty():
+    cmd = harness.build_worker_command(
+        target_project="test_proj",
+        arc_count=3,
+        seed_profile="00_20260314",
+        batch_size=1,
+    )
+    assert "--soak-profile" not in cmd
+
+
+def test_build_execution_plan_includes_soak_profile_when_provided():
+    soak = harness.default_soak_profile()
+    plan = harness.build_execution_plan(
+        arc_count=3,
+        seed_profile="00_20260314",
+        batch_size=1,
+        target_project="test_proj",
+        trigger="",
+        soak_profile=soak,
+    )
+    assert "soak_profile" in plan
+    assert plan["soak_profile"]["manuscript_min_length"] == soak.manuscript_min_length
+
+
+def test_build_execution_plan_omits_soak_profile_when_none():
+    plan = harness.build_execution_plan(
+        arc_count=3,
+        seed_profile="00_20260314",
+        batch_size=1,
+        target_project="test_proj",
+        trigger="",
+    )
+    assert "soak_profile" not in plan

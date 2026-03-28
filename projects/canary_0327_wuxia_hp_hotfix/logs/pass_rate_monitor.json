@@ -1,0 +1,62 @@
+{
+  "session_start": "2026-03-27T19:20:10.286362",
+  "last_updated": "2026-03-27T19:25:54.501285",
+  "total_records": 1,
+  "records": [
+    {
+      "timestamp": "2026-03-27T19:24:29.649826",
+      "stage": 4,
+      "episode": 1,
+      "arc": 1,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 259296,
+      "token_cost": 0.469637,
+      "is_patch": false,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep1:arc1:a1:20260327_192009",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "repair_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [],
+        "must_fix": [],
+        "do_not_regress": [
+          "진소백의 침착하고 단호한 성격 묘사",
+          "무협 장르 특유의 기혈 및 초식 묘사 톤"
+        ],
+        "success_condition": "현재 상태 유지",
+        "target_kind": "local_phrase",
+        "target_kinds": [
+          "local_phrase"
+        ]
+      },
+      "retry_budget_axes": {
+        "round": "initial",
+        "repair": "ensemble_generation",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "baseline"
+      },
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 18,
+        "length": 10,
+        "python_warnings": 7
+      },
+      "candidate_key": "A|균형 전략",
+      "content_hash": "5c34f574becf722977357df05706da35650ee91a8f9c1531f65f81141ed65f97",
+      "artifact_path": "logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__A.txt"
+    }
+  ]
+}
