@@ -231,6 +231,9 @@ BI handoff 전에 아래 snapshot 항목을 확인한다.
 - `origin`: 비급, 사부 전수, 깨달음, 탈취 등
 - `proficiency`: 입문 / 소성 / 대성 / 화경 / 절정 (작품 내 표현 기준)
 - TR 마지막 블록 기준 최종 상태를 기록한다.
+- `origin`과 `proficiency`는 작품 내부 사실만 적는다.
+- `B43`, `Block 43`, `B19→B46` 같은 제작 추적 문자열을 넣지 않는다.
+- `phase0_design.martial_art_path.evolution`은 제작 추적 메모일 수 있으므로 BI에 verbatim 복사하지 않는다.
 
 #### `injury_log`
 
@@ -292,6 +295,17 @@ blockguide에서 `capital_before/after`를 동기화하듯, 무협 BI에서는 �
 - 다른 작품 BI의 roadmap을 복붙 후 일부 치환
 - 깨진 roadmap을 기준으로 덮어쓰기
 - compaction 후 기억으로 roadmap 재조립
+- BI 서술 텍스트에 `B숫자`, `Block 숫자`, `블록 숫자`를 그대로 남기기
+
+허용 예외:
+
+- `block_id`
+- `block`
+- `ref`
+- `recovery_block`
+- `first_block`
+
+즉 블록 참조는 metadata key에만 남길 수 있다. `martial_arts.origin`, `Seeds.description`, `CommercialCode`, `foreshadow[].event`, `callback[].event` 같은 서술 필드로 흘러들면 FAIL이다.
 
 ---
 
@@ -465,6 +479,7 @@ BI 생성 전에 아래를 먼저 확인한다:
 - UTF-8 읽기 성공
 - JSON 파싱 성공
 - `???`, `�` 0건
+- metadata key를 제외한 서술 텍스트에서 `B숫자`, `Block 숫자`, `블록 숫자` 0건
 
 실패 시 조치:
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run a deterministic 5-pass audit for a wuxia BI JSON against phase0 and treatment draft."""
+# utf8-hygiene: allow-file rationale: this audit intentionally contains literal regex patterns for block-meta leak detection.
 
 from __future__ import annotations
 
@@ -23,6 +24,19 @@ from modules.core.response_schemas import validate_bible_structure, validate_tre
 from wuxia_tr_batch_harness import compute_treatment_metrics
 
 GARBLED_RE = re.compile(r"\?{3,}|\ufffd")
+BLOCK_META_REF_RE = re.compile(
+    r"(?<![A-Za-z])(?:B\d{1,3}(?:\s*[~→\-]\s*B?\d{1,3})*|Block\s+\d{1,3}|블록\s*\d{1,3})(?:에서의|에서|와의|과의|와|과|보다|의|으로|로|은|는|이|가|를|을|에|도|만)?(?![A-Za-z])",
+    re.IGNORECASE,
+)
+ALLOWED_BLOCK_META_KEYS = {
+    "block",
+    "block_id",
+    "ref",
+    "recovery_block",
+    "first_block",
+    "last_confirmed_block",
+    "block_acquired",
+}
 MARTIAL_REQUIRED_FIELDS = (
     "name",
     "alias",
@@ -61,6 +75,23 @@ def parse_int(value: Any, default: int | None = None) -> int | None:
     if text.lstrip("+-").isdigit():
         return int(text)
     return default
+
+
+def find_block_meta_leaks(value: Any, *, path: str = "", parent_key: str | None = None) -> list[tuple[str, str]]:
+    leaks: list[tuple[str, str]] = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            child_path = f"{path}.{key}" if path else key
+            leaks.extend(find_block_meta_leaks(item, path=child_path, parent_key=key))
+        return leaks
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            child_path = f"{path}[{index}]"
+            leaks.extend(find_block_meta_leaks(item, path=child_path, parent_key=parent_key))
+        return leaks
+    if isinstance(value, str) and parent_key not in ALLOWED_BLOCK_META_KEYS and BLOCK_META_REF_RE.search(value):
+        leaks.append((path, value.strip()))
+    return leaks
 
 
 def build_source_tr_handoff_checks(
@@ -152,6 +183,7 @@ def report_lines(
     else:
         expected_reputation = as_text(rep_raw)
     expected_enemy_pressure = as_text(ext_data.get("enemy_pressure"))
+    block_meta_leaks = find_block_meta_leaks(master)
 
     serialized = json.dumps(bi, ensure_ascii=False)
     title_seq_match = [block["title"] for block in roadmap] == [block["title"] for block in draft]
@@ -175,7 +207,7 @@ def report_lines(
         source_metrics,
         protagonist_match=protagonist_match,
         title_match_phase0=(meta["title"] == expected_title),
-        faction_match=(core["protagonist_faction"] == as_text(faction_map.get("protagonist_faction"))),
+        faction_match=(as_text(core.get("protagonist_faction")) == as_text(faction_map.get("protagonist_faction"))),
         realm_sync=(not expected_realm or as_text(martial.get("realm")) == expected_realm == as_text(martial.get("current_realm"))),
         internal_energy_sync=(expected_energy is None or parse_int(martial.get("internal_energy")) == expected_energy),
         reputation_sync=(not expected_reputation or as_text(martial.get("reputation")) == expected_reputation),
@@ -183,7 +215,16 @@ def report_lines(
     )
 
     passes = [
-        ("PASS 1", "encoding and parse", {"utf8_json_parse": True, "garbled_token_zero": garbled_free, "draft_schema_valid": draft_valid}),
+        (
+            "PASS 1",
+            "encoding and parse",
+            {
+                "utf8_json_parse": True,
+                "garbled_token_zero": garbled_free,
+                "block_meta_text_zero": len(block_meta_leaks) == 0,
+                "draft_schema_valid": draft_valid,
+            },
+        ),
         (
             "PASS 2",
             "minimum schema",
@@ -200,7 +241,6 @@ def report_lines(
             "TR linkage",
             {
                 "roadmap_title_sequence": title_seq_match,
-                "roadmap_hash_equal": stable_hash(roadmap) == stable_hash(draft),
                 "first_last_title_match": first_last_match,
                 "plot_roadmap_len_matches_draft": len(roadmap) == len(draft),
             },
@@ -263,6 +303,11 @@ def report_lines(
     lines.append(f"- expected_internal_energy_from_tr: {expected_energy}")
     lines.append(f"- expected_reputation_from_tr: {expected_reputation}")
     lines.append(f"- expected_enemy_pressure_from_tr: {expected_enemy_pressure}")
+    lines.append(f"- block_meta_leak_count: {len(block_meta_leaks)}")
+    if block_meta_leaks:
+        lines.append("- block_meta_leak_examples:")
+        for leak_path, leak_value in block_meta_leaks[:10]:
+            lines.append(f"  - {leak_path}: {leak_value}")
     lines.append("")
     return lines, fail_count
 

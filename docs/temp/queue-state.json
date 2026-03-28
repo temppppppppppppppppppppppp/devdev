@@ -1,6 +1,6 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-03-27T11:25:51.698508+00:00",
+  "generated_at": "2026-03-28T03:25:41.856529+00:00",
   "queue_mode": "aggregate",
   "active_item_count": 2,
   "roadmap": {
@@ -22,7 +22,7 @@
       "topic": "npc-martial-state-substrate-wave1",
       "temp_path": "docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md",
       "canonical_path": "docs/2026-03-27/npc-martial-state-substrate-wave1-execution-ssot.md",
-      "status": "in_progress",
+      "status": "blocked",
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
