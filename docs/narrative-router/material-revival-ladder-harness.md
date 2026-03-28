@@ -9,6 +9,7 @@ Scope: shared salvage / repair / promotion flow for existing narrative material 
 - Standardize the repeated revival pattern for existing `BI + TR` pairs.
 - Remove the need to rewrite custom order prompts for the same salvage ladder.
 - Keep family semantics inside `blockguide` / `wuxguide` while moving the shared pair-revival flow into one router-level harness.
+- Keep most pair repairs on a `lite audit -> top 3 repair -> recheck` path instead of defaulting to full-wave surgery.
 
 This harness is for existing material pairs only. It does not replace planning, production, or BI-generation harnesses.
 
@@ -100,8 +101,42 @@ Allowed verdicts:
 
 Branch:
 
-- `strong` or `mixed` -> continue to BI repair decision
+- `strong` -> continue to BI repair decision
+- `mixed` -> continue to `Step 2A. Lite Repair Audit`
 - `skeleton` or `regenerate` -> regenerate `TR` first, then restart the ladder
+
+### Step 2A. Lite Repair Audit
+
+Goal:
+
+- identify the smallest profitable repair scope for a `mixed` pair
+
+Default check axis:
+
+- live antagonists / pressure sources
+- visible cost after major wins
+- surface-template repetition
+- theme carry / endgame preparation
+- sector texture or equivalent family texture
+
+Default output:
+
+- top `3` weak blocks or repair units only
+- one-sentence reason per item
+- cascade range per item
+- recommended repair order
+
+Rules:
+
+- default cap is `top 3` repairs
+- do not jump to `top 10`, full-wave surgery, or full-arc rebuild by default
+- repair one unit at a time, then recheck the pair
+- only expand beyond `top 3` when a later promotion gate explicitly justifies it
+
+Recheck:
+
+- if the pair becomes usable after the bounded repair set, continue to `BI repair` or `revival canary`
+- if the pair remains `mixed`, use the promotion gate below before expanding the scope
 
 ### Step 3. BI Repair
 
@@ -197,7 +232,10 @@ If this passes, the pair qualifies as an active baseline candidate for that fami
 | Current result | Next action |
 | --- | --- |
 | pair consumability = fail | minimal contract patch first |
-| TR verdict = strong or mixed, BI repair viable = yes | BI repair |
+| TR verdict = strong, BI repair viable = yes | BI repair |
+| TR verdict = mixed | Step 2A lite repair audit |
+| lite repair top 3 recheck = pass | BI repair or revival canary |
+| lite repair top 3 recheck = still mixed | use promotion gate before expanding |
 | TR verdict = skeleton or regenerate | regenerate TR first |
 | BI repair status = pass | revival canary |
 | revival canary = pass, only trivial blockers remain | promotion patch |
@@ -205,6 +243,22 @@ If this passes, the pair qualifies as an active baseline candidate for that fami
 | revival-stage probe = pass | active promotion |
 | active promotion = done | bounded Stage 4 canary |
 | Stage 4 canary = pass | treat as active family baseline candidate |
+
+## 6A. Promotion Escalation Gate
+
+Use this table before expanding beyond the default `top 3` repair cap.
+
+| Pair target state | Allowed repair depth | Rule |
+| --- | --- | --- |
+| quarantine salvage check | top `3` only | stop after recheck unless a single continuity micro-patch is obviously required |
+| quarantine promotion candidate | top `3` + optional `4-6` | expand only if top `3` recheck is still mixed and the remaining blockers are concentrated, not diffuse |
+| active baseline candidate / Stage 4 target | top `3` + optional `4-6` + bounded continuity patches | expansion is allowed only when it directly protects runtime admission or stage survival |
+
+Hard guardrails:
+
+- `top 10` or all-arc repair is not the default path
+- full-wave surgery must be explicitly justified as higher ROI than regenerate-first
+- if repair spread becomes too diffuse, classify the pair as regenerate-first instead of endlessly extending salvage scope
 
 ## 7. Family Overlays
 
