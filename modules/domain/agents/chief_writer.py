@@ -27,6 +27,7 @@ from modules.core.genre_schema_builder import build_state_updates_schema
 from modules.models.manuscript import validate_manuscript_candidate
 
 from .base_agent import _SYSTEM_CFG, BaseAgent
+from .chief_writer_inplace_local_ops import attempt_local_edit_patch
 from .chief_writer_context import ChiefWriterContextBuilder, normalize_chief_writer_genre_code
 from .chief_writer_prompts import (
     get_prompt_template_output,
@@ -1689,11 +1690,12 @@ class ChiefWriter(BaseAgent):
         fallback_reason: str,
         focus: str,
         structural_attempted: bool,
+        patch_strategy: str = "inplace_patch",
     ) -> list[dict]:
         existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})
         trace_focus = "" if normalized_fix_pack.get("patch_targets") else str(existing_trace.get("focus") or focus)
         self._set_last_inplace_patch_trace(
-            patch_strategy="inplace_patch",
+            patch_strategy=patch_strategy,
             patch_targets=list(existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or []),
             fallback_reason=str(existing_trace.get("fallback_reason") or fallback_reason),
             focus=trace_focus,
@@ -1703,7 +1705,7 @@ class ChiefWriter(BaseAgent):
 
         result = {
             "manuscript": manuscript,
-            "strategy": "inplace_patch",
+            "strategy": patch_strategy,
             "state_updates": state_updates,
         }
         patch_targets = list(existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or [])
@@ -1732,6 +1734,34 @@ class ChiefWriter(BaseAgent):
         )
         if structural_result:
             return structural_result
+
+        local_edit_attempt = attempt_local_edit_patch(
+            ask_fn=self.ask,
+            original_manuscript=original_manuscript,
+            director_feedback=director_feedback,
+            style_guide=style_guide,
+            fix_pack_guidance=fix_pack_guidance,
+            normalized_fix_pack=normalized_fix_pack,
+        )
+        if local_edit_attempt.success:
+            return self._build_inplace_patch_result(
+                manuscript=local_edit_attempt.manuscript,
+                state_updates=local_edit_attempt.state_updates or {},
+                normalized_fix_pack=normalized_fix_pack,
+                fallback_reason="",
+                focus="",
+                structural_attempted=False,
+                patch_strategy="inplace_patch_local_ops",
+            )
+        if local_edit_attempt.failure_reason:
+            existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})
+            self._set_last_inplace_patch_trace(
+                patch_strategy="inplace_patch",
+                patch_targets=list(existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or []),
+                fallback_reason=local_edit_attempt.failure_reason,
+                focus=str(existing_trace.get("focus") or focus),
+                structural_attempted=bool(existing_trace.get("structural_attempted") or structural_attempted),
+            )
 
         prompt = self._build_inplace_patch_prompt(
             original_manuscript=original_manuscript,
@@ -1898,6 +1928,17 @@ class ChiefWriter(BaseAgent):
 
         실패 시 빈 리스트 반환 → 호출측에서 full rewrite 폴백.
         """
+        normalized_fix_pack = self._normalize_fix_pack(previous_attempt.get("fix_pack"))
+        if not (
+            normalized_fix_pack.get("patch_targets")
+            and normalized_fix_pack.get("must_fix")
+            and normalized_fix_pack.get("do_not_regress")
+            and str(normalized_fix_pack.get("success_condition", "") or "").strip()
+            and str(normalized_fix_pack.get("target_kind", "") or "").strip()
+        ):
+            logging.warning("[Phase 3-5B] patch_with_feedback fail-closed: non-ready fix_pack contract")
+            return []
+
         director_feedback = writer_kwargs.get("director_feedback", "")
         style_guide = writer_kwargs.get("style_guide", "")
 
