@@ -71,7 +71,7 @@ class _PassResultLoggingPayload:
     session_verdict_reason: str
     session_runtime_advisory: str
     session_retry_directives: str
-    session_gate_semantics: dict[str, str]
+    session_gate_semantics: dict[str, object]
 
 
 @dataclass
@@ -381,6 +381,8 @@ class Stage4InterviewRound:
         retry_directives: str = "",
         firewall_triggered: bool = False,
         firewall_reason: str = "",
+        authoritative_fix_scope: str = "",
+        authoritative_fix_scope_violation: dict | None = None,
     ) -> None:
         _sl = getattr(self.ctx, "session_logger", None)
         if not _sl:
@@ -421,6 +423,8 @@ class Stage4InterviewRound:
             retry_directives=self._compact_text(retry_directives, limit=None),
             firewall_triggered=bool(firewall_triggered),
             firewall_reason=self._compact_text(firewall_reason, limit=None),
+            authoritative_fix_scope=str(authoritative_fix_scope or ""),
+            authoritative_fix_scope_violation=dict(authoritative_fix_scope_violation or {}),
         )
 
     def _get_round_metrics_delta(self) -> dict:
@@ -1177,6 +1181,8 @@ class Stage4InterviewRound:
             "strategy": previous_attempt.get("strategy", ""),
             "score": previous_attempt.get("score", 0),
             "fix_scope": previous_attempt.get("fix_scope", ""),
+            # [DCM-T3] Preserve authoritative Director scope separate from derived retry scope
+            "authoritative_fix_scope": previous_attempt.get("authoritative_fix_scope", ""),
             "fix_scope_reasoning": str(previous_attempt.get("fix_scope_reasoning", "") or ""),
             "open_review": str(previous_attempt.get("open_review", "") or ""),
             "reject_bucket": previous_attempt.get("reject_bucket", ""),
@@ -1857,6 +1863,9 @@ class Stage4InterviewRound:
     def _normalize_director_gate_semantics(self, director_result: dict | None) -> dict:
         if not isinstance(director_result, dict):
             return {}
+        authoritative_fix_scope = str(
+            director_result.get("authoritative_fix_scope", director_result.get("fix_scope", "")) or ""
+        ).strip()
         director_verdict = str(
             director_result.get("director_verdict")
             or director_result.get("original_verdict")
@@ -1888,6 +1897,30 @@ class Stage4InterviewRound:
         director_result["repair_scope"] = repair_scope
         director_result["fix_pack"] = self._normalize_fix_pack(director_result.get("fix_pack"))
         director_result["verdict"] = final_verdict
+        director_result["authoritative_fix_scope"] = authoritative_fix_scope
+
+        # [DCM-T2] Authoritative fix_scope contract validation
+        _normalized_authoritative_scope = authoritative_fix_scope.lower()
+        if (
+            final_verdict in ("REJECT", "PASS_WITH_FIX")
+            and _normalized_authoritative_scope not in {"inplace", "partial", "full"}
+        ):
+            _vtype = (
+                "blank_authoritative_fix_scope"
+                if not _normalized_authoritative_scope
+                else "invalid_authoritative_fix_scope"
+            )
+            director_result.setdefault("authoritative_fix_scope_violation", {
+                "type": _vtype,
+                "raw_value": authoritative_fix_scope,
+                "verdict": final_verdict,
+            })
+            logging.warning(
+                "[Stage4Gate] fix_scope contract violation: verdict=%s fix_scope=%r",
+                final_verdict,
+                authoritative_fix_scope,
+            )
+
         return director_result
 
     def _apply_director_gate_update(
@@ -1912,16 +1945,22 @@ class Stage4InterviewRound:
             normalized["repair_scope"] = self._normalize_repair_scope_value(normalized.get("fix_scope"))
         return normalized
 
-    def _build_gate_semantics_payload(self, director_result: dict | None) -> dict[str, str]:
+    def _build_gate_semantics_payload(self, director_result: dict | None) -> dict[str, object]:
         normalized = self._normalize_director_gate_semantics(director_result)
         if not normalized:
             return {}
-        return {
+        payload: dict[str, object] = {
             "director_verdict": str(normalized.get("director_verdict", "") or ""),
             "final_verdict": str(normalized.get("final_verdict", "") or ""),
             "gate_basis": str(normalized.get("gate_basis", "") or ""),
             "repair_scope": str(normalized.get("repair_scope", "none") or "none"),
+            "authoritative_fix_scope": str(normalized.get("authoritative_fix_scope", "") or ""),
         }
+        # [DCM-T3] Surface authoritative fix_scope violation in gate semantics evidence
+        violation = normalized.get("authoritative_fix_scope_violation")
+        if isinstance(violation, dict):
+            payload["authoritative_fix_scope_violation"] = violation
+        return payload
 
     def _setup_writing_directive(
         self,
@@ -3405,22 +3444,33 @@ class Stage4InterviewRound:
             fix_pack=self._build_fix_pack_payload(
                 trace_director_result if isinstance(trace_director_result, dict) else director_result
             ),
-            retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
-            runtime_advisory=logging_payload.session_runtime_advisory,
-            retry_directives=logging_payload.session_retry_directives,
-            firewall_triggered=bool(
-                (
+                retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
+                runtime_advisory=logging_payload.session_runtime_advisory,
+                retry_directives=logging_payload.session_retry_directives,
+                firewall_triggered=bool(
+
                     trace_director_result.get("firewall_triggered")
                     if isinstance(trace_director_result, dict)
                     else director_result.get("firewall_triggered")
-                )
+
             ),
-            firewall_reason=(
-                trace_director_result.get("firewall_reason", "")
-                if isinstance(trace_director_result, dict)
-                else director_result.get("firewall_reason", "")
-            ),
-        )
+                firewall_reason=(
+                    trace_director_result.get("firewall_reason", "")
+                    if isinstance(trace_director_result, dict)
+                    else director_result.get("firewall_reason", "")
+                ),
+                authoritative_fix_scope=str(
+                    logging_payload.session_gate_semantics.get("authoritative_fix_scope", "") or ""
+                ),
+                authoritative_fix_scope_violation=(
+                    logging_payload.session_gate_semantics.get("authoritative_fix_scope_violation")
+                    if isinstance(
+                        logging_payload.session_gate_semantics.get("authoritative_fix_scope_violation"),
+                        dict,
+                    )
+                    else None
+                ),
+            )
 
     def _run_director_continuity_and_state_tracker_advisories(
         self,
@@ -3772,6 +3822,8 @@ class Stage4InterviewRound:
                 "score": score,
                 # [TF-36] S4-005: fix_scope/rejection_reason/selected_strategy 보존
                 "fix_scope": _post_select_fix_scope,
+                # [DCM-T3] Director-authored scope preserved separately from derived retry scope
+                "authoritative_fix_scope": _fix_scope,
                 "rejection_reason": director_feedback,
                 "selected_strategy": director_result.get("selected_strategy", "") if isinstance(director_result, dict) else "",
                 "selected_strategy_key": _sel_strategy_key,
@@ -5511,6 +5563,7 @@ class Stage4InterviewRound:
                     "repair_scope",
                     self._normalize_repair_scope_value(director_result.get("fix_scope", "")),
                 ),
+                "authoritative_fix_scope": str(_gate_semantics.get("authoritative_fix_scope", "") or ""),
                 "selected": director_result.get("selected", ""),
                 "strategy": _sel_candidate.get("strategy", "") or _sel_candidate.get("strategy_name", ""),
                 "model": model,
@@ -5561,6 +5614,9 @@ class Stage4InterviewRound:
                     "retry_directives": self._compact_text(_feedback_provenance.get("retry_directives", ""), None),
                 },
             }
+            _scope_violation = _gate_semantics.get("authoritative_fix_scope_violation")
+            if isinstance(_scope_violation, dict):
+                entry["authoritative_fix_scope_violation"] = _scope_violation
             log_path = Path(logs_dir) / "episode_production.jsonl"
             append_jsonl_record(log_path, entry)
         except Exception as e:

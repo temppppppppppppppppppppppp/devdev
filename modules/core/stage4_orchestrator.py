@@ -21,6 +21,7 @@ from modules.core.soft_failure import resolve_project_log_dir
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_interview_round import Stage4InterviewRound
 from modules.core.stage4_outcome_runtime import Stage4OutcomeRuntime
+from modules.core.stage4_policy_digest import resolve_stage4_policy_value
 from modules.core.stage4_post_processor import Stage4PostProcessor
 from modules.core.stage4_types import _RoundContext
 from modules.validation.threshold_helper import _threshold
@@ -477,6 +478,70 @@ class Stage4Orchestrator:
         self._context_builder = None  # [B-1-2] lazy init
         self._interview_round = None  # [B-1-3] lazy init
         self.outcome_runtime = Stage4OutcomeRuntime(self)
+
+    def get_stage4_policy_value(self, *path: str, default=None):
+        return resolve_stage4_policy_value(*path, default=default)
+
+    def get_stage4_policy_int(self, *path: str, default: int) -> int:
+        value = self.get_stage4_policy_value(*path, default=default)
+        try:
+            resolved = int(value)
+        except (TypeError, ValueError):
+            return int(default)
+        return resolved if resolved > 0 else int(default)
+
+    def get_stage4_policy_bool(self, *path: str, default: bool) -> bool:
+        value = self.get_stage4_policy_value(*path, default=default)
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return True
+            if normalized in {"0", "false", "no", "off"}:
+                return False
+        return bool(default)
+
+    def _get_stage4_accept_verdicts(self) -> set[str]:
+        raw = self.get_stage4_policy_value(
+            "interview_round",
+            "accepted_verdicts",
+            default=("PASS", "PASS_WITH_FIX"),
+        )
+        if not isinstance(raw, list | tuple | set):
+            return {"PASS", "PASS_WITH_FIX"}
+        normalized = {str(item or "").strip().upper() for item in raw if str(item or "").strip()}
+        return normalized or {"PASS", "PASS_WITH_FIX"}
+
+    def _get_stage4_max_rounds(self) -> int:
+        raw = self.get_stage4_policy_value("interview_round", "max_rounds", default=None)
+        if raw is None:
+            try:
+                return max(1, int(_threshold("retry.director_max_attempts", 5)))
+            except (TypeError, ValueError):
+                return 5
+        return self.get_stage4_policy_int("interview_round", "max_rounds", default=5)
+
+    def _get_stage4_shadow_max_rounds(self) -> int | None:
+        if not self.get_stage4_policy_bool("shadow_mode", "enabled", default=False):
+            return None
+        raw = self.get_stage4_policy_value("shadow_mode", "max_rounds", default=None)
+        if raw is None:
+            return None
+        try:
+            resolved = int(raw)
+        except (TypeError, ValueError):
+            return None
+        return resolved if resolved > 0 else None
+
+    def _stage4_shadow_log_all_episodes(self) -> bool:
+        return self.get_stage4_policy_bool("shadow_mode", "log_all_episodes", default=False)
+
+    def _allow_stage4_best_manuscript_adoption(self) -> bool:
+        return self.get_stage4_policy_bool("exhaustion", "allow_best_manuscript_adoption", default=True)
+
+    def _get_stage4_exhaustion_default_choice(self) -> int:
+        return self.get_stage4_policy_int("exhaustion", "default_operator_choice", default=2)
 
     @property
     def ctx(self):
@@ -1429,7 +1494,7 @@ JSON으로 출력:
             previous_attempt=loop_state.previous_attempt,
             round_ctx=round_ctx,
         )
-        if round_result.verdict in ("PASS", "PASS_WITH_FIX"):
+        if str(round_result.verdict or "").strip().upper() in self._get_stage4_accept_verdicts():
             pass_disposition = self.outcome_runtime.handle_pass_round_result(
                 round_ctx=round_ctx,
                 round_result=round_result,
@@ -1525,15 +1590,13 @@ JSON으로 출력:
         next_ep = round_ctx.next_ep
 
         loop_state = self._build_interview_round_loop_state()
+        rounds_attempted = 0
 
         with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
-            try:
-                _max_rounds = int(_threshold("retry.director_max_attempts", 5))
-            except (TypeError, ValueError):
-                _max_rounds = 5
-            _max_rounds = max(1, _max_rounds)
+            _max_rounds = self._get_stage4_max_rounds()
 
             for interview_round in range(_max_rounds):
+                rounds_attempted = interview_round + 1
                 _step_disposition = self._run_interview_round_step(
                     round_ctx=round_ctx,
                     loop_state=loop_state,
@@ -1557,6 +1620,7 @@ JSON으로 출력:
             final_state_updates=loop_state.final_state_updates,
             previous_attempt=loop_state.previous_attempt,
             blueprint_regenerated=loop_state.blueprint_regenerated,
+            rounds_attempted=rounds_attempted,
         )
 
     def _finalize_round_outcome_loop(
@@ -1569,20 +1633,34 @@ JSON으로 출력:
         final_state_updates: dict,
         previous_attempt: dict,
         blueprint_regenerated: bool,
+        rounds_attempted: int,
     ) -> _RoundOutcome:
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+
+        def _emit_shadow(final_result: str, *, accepted: bool, used_best_manuscript: bool = False) -> None:
+            self._emit_stage4_retry_shadow_compare(
+                next_ep=next_ep,
+                max_rounds=max_rounds,
+                rounds_attempted=rounds_attempted,
+                final_result=final_result,
+                accepted=accepted,
+                used_best_manuscript=used_best_manuscript,
+                blueprint_regenerated=blueprint_regenerated,
+            )
+
         # ===== 설정된 라운드 수 모두 실패 =====
         # [V75-B] B-Full: 블루프린트 재생성까지 했는데도 실패 → Arc 재생성 제안
         if not final_manuscript and blueprint_regenerated:
             self.ctx.ui.log("   🚨 [V75-B] 블루프린트 재생성 후에도 실패. Arc(전술서) 자체에 문제가 있을 수 있습니다.")
             self.ctx.ui.log("   💡 Stage 2에서 Arc를 재생성하면 해결될 수 있습니다.")
         if not final_manuscript:
-            last_best = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
-            last_score = previous_attempt.get("score", 0) if previous_attempt else 0
-            if last_best:
+            last_best = previous_attempt.get("best_manuscript", "")
+            last_score = previous_attempt.get("score", 0)
+            if last_best and self._allow_stage4_best_manuscript_adoption():
                 self.ctx.ui.log(
                     f"\n⚠️ [EP {next_ep}] {max_rounds}회 소진. 마지막 최선 결과물(score={last_score}) 존재."
                 )
-                choice = 2
+                choice = self._get_stage4_exhaustion_default_choice()
                 if callable(getattr(self.ctx, "get_int_input", None)):
                     choice = self.ctx.get_int_input(
                         "  1=최선 결과물로 진행  2=건너뛰기: ", default=2, min_val=1, max_val=2
@@ -1592,6 +1670,7 @@ JSON으로 출력:
                     final_title = final_title or f"제{next_ep}화"
                     final_state_updates = previous_attempt.get("state_updates", {})  # [TF-R3-S4-03] 폴백 시 상태 복구
                 else:
+                    _emit_shadow("SKIP", accepted=False)
                     return _RoundOutcome(
                         final_manuscript=None,
                         final_title=None,
@@ -1600,6 +1679,7 @@ JSON으로 출력:
                     )
             else:
                 self.ctx.ui.log(f"\n⛔ [EP {next_ep}] {max_rounds}회 면담 모두 실패. 인간 검토 필요.")
+                _emit_shadow("HUMAN_REVIEW", accepted=False)
                 return _RoundOutcome(
                     final_manuscript=None,
                     final_title=None,
@@ -1607,12 +1687,69 @@ JSON으로 출력:
                     should_return=True,
                 )
 
+        used_best_manuscript = bool(final_manuscript and previous_attempt.get("best_manuscript") == final_manuscript)
+        _emit_shadow(
+            "PASS_BEST_ADOPTED" if used_best_manuscript else "PASS",
+            accepted=bool(final_manuscript),
+            used_best_manuscript=used_best_manuscript,
+        )
         return _RoundOutcome(
             final_manuscript=final_manuscript,
             final_title=final_title,
             final_state_updates=final_state_updates,
             should_return=False,
         )
+
+    def _emit_stage4_retry_shadow_compare(
+        self,
+        *,
+        next_ep: int,
+        max_rounds: int,
+        rounds_attempted: int,
+        final_result: str,
+        accepted: bool,
+        used_best_manuscript: bool,
+        blueprint_regenerated: bool,
+    ) -> None:
+        shadow_max_rounds = self._get_stage4_shadow_max_rounds()
+        if shadow_max_rounds is None or rounds_attempted <= 0:
+            return
+
+        shadow_clipped = rounds_attempted > shadow_max_rounds
+        if not shadow_clipped and not self._stage4_shadow_log_all_episodes():
+            return
+
+        payload = {
+            "shadow_max_rounds": int(shadow_max_rounds),
+            "actual_max_rounds": int(max_rounds),
+            "rounds_attempted": int(rounds_attempted),
+            "final_result": str(final_result or "").strip(),
+            "accepted": bool(accepted),
+            "used_best_manuscript": bool(used_best_manuscript),
+            "blueprint_regenerated": bool(blueprint_regenerated),
+            "shadow_clipped": bool(shadow_clipped),
+        }
+        result = "WOULD_CLIP" if shadow_clipped else "WITHIN_SHADOW"
+
+        _sl = getattr(self.ctx, "session_logger", None)
+        if _sl and hasattr(_sl, "log_decision"):
+            _sl.log_decision(
+                stage="stage4_control",
+                ep_num=int(next_ep),
+                round_num=max(0, int(rounds_attempted) - 1),
+                decision_type="retry_shadow_compare",
+                result=result,
+                score=0,
+                **payload,
+            )
+
+        audit_event = getattr(self.ctx, "audit_event", None)
+        if callable(audit_event):
+            audit_event(
+                "stage4_retry_shadow_compare",
+                "stage4 retry shadow comparison recorded",
+                dict(payload),
+            )
 
     def _apply_v75d_inplace_repair(
         self,

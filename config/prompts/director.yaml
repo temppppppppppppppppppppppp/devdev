@@ -249,6 +249,9 @@ ENSEMBLE_VARIABLE_PROMPT: |
   - **PASS**: 문제 없음 → 그대로 저장
   - **PASS_WITH_FIX**: 총점 90점 이상이면서 남은 문제가 bounded local repair일 때만 허용 → 반드시 `fix_scope="inplace"`와 구조화된 `fix_pack`을 함께 작성. `scene_model` 급 수정이면 금지.
   - **REJECT**: 재작성 필요 → fix_scope에 따라 inplace/partial/full
+    - REJECT 판정이면서 `fix_scope`가 `"inplace"` 또는 `"partial"`이면 구조화된 `fix_pack`을 반드시 함께 작성하라.
+      `patch_targets`, `must_fix`, `do_not_regress`, `success_condition`, `target_kind`를 모두 채워라.
+    - `fix_scope="full"`이면 bounded local repair용 `fix_pack`은 필수가 아니다.
 
   **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS 또는 PASS_WITH_FIX, 90점 미만이면 반드시 REJECT으로 판정하세요.
   이 기준은 Python QualityGate와 동일합니다. 90점 미만인데 PASS를 출력하면 시스템이 강제 REJECT으로 전환합니다.
@@ -337,6 +340,7 @@ ENSEMBLE_VARIABLE_PROMPT: |
   - "inplace": `fix_pack`으로 patch_targets/must_fix/do_not_regress/success_condition을 명시할 수 있는 bounded local repair만 허용
   - "partial": 가장 좋은 후보 1개만 Director 피드백을 토대로 재생성 (1후보 집중 수정)
   - "full": 원고 전면 폐기 후 재작성 필요 (심각한 구조·설정 문제)
+  ⚠️ REJECT 또는 PASS_WITH_FIX verdict에서 fix_scope를 빈 문자열("")로 남기는 것은 계약 위반입니다. 반드시 "inplace", "partial", "full" 중 하나를 기입하세요.
   PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시에도 실제 수정 범위에 맞는 fix_scope를 판단하세요 (inplace/partial/full).
   fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
   PASS_WITH_FIX일 때 `fix_pack.target_kind="scene_model"`을 출력하지 마세요. 그런 경우는 REJECT로 판정하세요.
@@ -578,6 +582,9 @@ ENSEMBLE_SELECTION_PROMPT: |
   - **PASS**: 문제 없음 → 그대로 저장
   - **PASS_WITH_FIX**: 총점 90점 이상이면서 남은 문제가 bounded local repair일 때만 허용 → 반드시 `fix_scope="inplace"`와 구조화된 `fix_pack`을 함께 작성. `scene_model` 급 수정이면 금지.
   - **REJECT**: 재작성 필요 → fix_scope에 따라 inplace/partial/full
+    - REJECT 판정이면서 `fix_scope`가 `"inplace"` 또는 `"partial"`이면 구조화된 `fix_pack`을 반드시 함께 작성하라.
+      `patch_targets`, `must_fix`, `do_not_regress`, `success_condition`, `target_kind`를 모두 채워라.
+    - `fix_scope="full"`이면 bounded local repair용 `fix_pack`은 필수가 아니다.
 
   **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS 또는 PASS_WITH_FIX, 90점 미만이면 반드시 REJECT으로 판정하세요.
   이 기준은 Python QualityGate와 동일합니다. 90점 미만인데 PASS를 출력하면 시스템이 강제 REJECT으로 전환합니다.
@@ -666,6 +673,7 @@ ENSEMBLE_SELECTION_PROMPT: |
   - "inplace": `fix_pack`으로 patch_targets/must_fix/do_not_regress/success_condition을 명시할 수 있는 bounded local repair만 허용
   - "partial": 가장 좋은 후보 1개만 Director 피드백을 토대로 재생성 (1후보 집중 수정)
   - "full": 원고 전면 폐기 후 재작성 필요 (심각한 구조·설정 문제)
+  ⚠️ REJECT 또는 PASS_WITH_FIX verdict에서 fix_scope를 빈 문자열("")로 남기는 것은 계약 위반입니다. 반드시 "inplace", "partial", "full" 중 하나를 기입하세요.
   PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시에도 실제 수정 범위에 맞는 fix_scope를 판단하세요 (inplace/partial/full).
   fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
   PASS_WITH_FIX일 때 `fix_pack.target_kind="scene_model"`을 출력하지 마세요. 그런 경우는 REJECT로 판정하세요.
@@ -929,6 +937,7 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   - "inplace": 전술서 일부 수치/명칭만 수정 (LLM 1회)
   - "partial": 가장 좋은 후보 1개만 Director 피드백을 토대로 재생성 (1후보 집중 재설계)
   - "full": Arc 전면 재설계 필요
+  ⚠️ REJECT 또는 PASS_WITH_FIX verdict에서 fix_scope를 빈 문자열("")로 남기는 것은 계약 위반입니다. 반드시 "inplace", "partial", "full" 중 하나를 기입하세요.
   PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시에도 실제 수정 범위에 맞는 fix_scope를 판단하세요 (inplace/partial/full).
   fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
 
@@ -1196,6 +1205,6 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   - "inplace": 고유명사·수치 등 국소 수정 (LLM 1회)
   - "partial": 가장 좋은 후보 1개만 Director 피드백을 토대로 재생성 (1후보 집중 수정)
   - "full": 전면 폐기 후 재작성 (심각한 구조·설정 문제)
+  ⚠️ REJECT 또는 PASS_WITH_FIX verdict에서 fix_scope를 빈 문자열("")로 남기는 것은 계약 위반입니다. 반드시 "inplace", "partial", "full" 중 하나를 기입하세요.
   PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시에도 실제 수정 범위에 맞는 fix_scope를 판단하세요 (inplace/partial/full).
   fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
-

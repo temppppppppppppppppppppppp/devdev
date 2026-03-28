@@ -1298,10 +1298,32 @@ class TestHandleRoundOutcomeErrorPaths:
 
         monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
 
-        with patch("modules.core.stage4_orchestrator._threshold", return_value=2):
-            orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+        orch._get_stage4_max_rounds = MagicMock(return_value=2)
+        orch._handle_round_outcome(round_ctx=minimal_round_ctx)
 
         assert orch._interview_round.run.call_count == 2
+
+    def test_round_count_prefers_stage4_policy_max_rounds_override(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        orch = orch_with_ctx
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(
+            return_value=_InterviewRoundResult(
+                verdict="REJECT",
+                director_feedback="policy retry",
+                previous_attempt={"score": 30},
+            )
+        )
+
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+        orch._get_stage4_max_rounds = MagicMock(return_value=1)
+
+        orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        assert orch._interview_round.run.call_count == 1
 
     def test_handle_round_outcome_injects_stage4_to_3_feedback_into_inplace_patch(
         self,
@@ -2217,6 +2239,202 @@ class TestHandleRoundOutcomeRetryPathology:
         assert escalation_kwargs["tf29_advisory"] == "[bucket]"
         assert escalation_kwargs["dominant_contradiction"] == "timeline"
 
+    def test_apply_retry_repair_escalation_respects_quality_risk_threshold_override(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        round_ctx = dataclasses.replace(minimal_round_ctx, blueprint={"_stage3_meta": {"quality_risk": True}})
+        orch.get_stage4_policy_int = MagicMock(
+            side_effect=lambda *path, default: {
+                "quality_risk_inplace_threshold": 2,
+                "default_inplace_threshold": 3,
+                "blueprint_regeneration_after_inplace_streak": 4,
+            }.get(path[-1], default)
+        )
+        orch._apply_v75d_inplace_repair = MagicMock()
+
+        result = runtime.apply_retry_repair_escalation(
+            round_ctx=round_ctx,
+            next_ep=1,
+            interview_round=0,
+            director_feedback="retry feedback",
+            previous_attempt={"score": 61},
+            logic_error_streak=1,
+            inplace_attempted=False,
+            blueprint_regenerated=False,
+            tf29_advisory="",
+            dominant_contradiction="timeline",
+            pathology_counts={},
+            pathology_repeat_emitted=set(),
+        )
+
+        orch._apply_v75d_inplace_repair.assert_not_called()
+        assert result.round_ctx == round_ctx
+        assert result.logic_error_streak == 1
+        assert result.inplace_attempted is False
+        assert result.blueprint_regenerated is False
+
+    def test_apply_retry_repair_escalation_respects_blueprint_regeneration_threshold_override(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        orch.get_stage4_policy_int = MagicMock(
+            side_effect=lambda *path, default: {
+                "quality_risk_inplace_threshold": 1,
+                "default_inplace_threshold": 2,
+                "blueprint_regeneration_after_inplace_streak": 4,
+            }.get(path[-1], default)
+        )
+        regen_result = SimpleNamespace(
+            round_ctx=dataclasses.replace(minimal_round_ctx, blueprint={"regenerated": True}),
+            director_feedback="regen",
+            previous_attempt={},
+            logic_error_streak=0,
+            inplace_attempted=True,
+            blueprint_regenerated=True,
+        )
+        orch._apply_v75b_blueprint_regeneration = MagicMock(return_value=regen_result)
+
+        result = runtime.apply_retry_repair_escalation(
+            round_ctx=minimal_round_ctx,
+            next_ep=1,
+            interview_round=0,
+            director_feedback="retry feedback",
+            previous_attempt={"score": 61},
+            logic_error_streak=4,
+            inplace_attempted=True,
+            blueprint_regenerated=False,
+            tf29_advisory="",
+            dominant_contradiction="timeline",
+            pathology_counts={},
+            pathology_repeat_emitted=set(),
+        )
+
+        orch._apply_v75b_blueprint_regeneration.assert_called_once()
+        assert result is regen_result
+
+    def test_handle_reject_round_result_escalates_ifc_quality_issue_into_v75d_candidate(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        orch.get_stage4_policy_int = MagicMock(
+            side_effect=lambda *path, default: {
+                "quality_risk_inplace_threshold": 1,
+                "default_inplace_threshold": 2,
+                "blueprint_regeneration_after_inplace_streak": 4,
+            }.get(path[-1], default)
+        )
+        escalated = SimpleNamespace(
+            round_ctx=dataclasses.replace(minimal_round_ctx, blueprint={"patched": True}),
+            director_feedback="ifc escalated",
+            previous_attempt={"score": 50, "reject_bucket": "quality_issue", "escalated": True},
+            logic_error_streak=0,
+            inplace_attempted=True,
+            blueprint_regenerated=False,
+        )
+        orch._apply_v75d_inplace_repair = MagicMock(return_value=escalated)
+        round_result = SimpleNamespace(
+            director_feedback="retry feedback",
+            previous_attempt={
+                "score": 50,
+                "reject_bucket": "quality_issue",
+                "error_category": "QUALITY_ISSUE",
+                "fix_scope_reasoning": "[IFC] immutable fact conflict detected; local patch is unsafe",
+                "plateau_detected": True,
+            },
+        )
+
+        result = runtime.handle_reject_round_result(
+            round_ctx=minimal_round_ctx,
+            round_result=round_result,
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            logic_error_streak=1,
+            inplace_attempted=False,
+            blueprint_regenerated=False,
+            prev_reject_bucket="quality_issue",
+            bucket_streak=1,
+            prev_dominant_contradiction="",
+            contradiction_type_streak=0,
+            score_history=[50],
+            plateau_advisory_emitted=True,
+            pathology_counts={},
+            pathology_repeat_emitted=set(),
+        )
+
+        orch._apply_v75d_inplace_repair.assert_called_once()
+        assert result.round_ctx == escalated.round_ctx
+        assert result.director_feedback == "ifc escalated"
+        assert result.previous_attempt["escalated"] is True
+        assert result.inplace_attempted is True
+
+    def test_handle_reject_round_result_keeps_plain_quality_issue_outside_v75d_candidate(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        orch.get_stage4_policy_int = MagicMock(
+            side_effect=lambda *path, default: {
+                "quality_risk_inplace_threshold": 1,
+                "default_inplace_threshold": 2,
+                "blueprint_regeneration_after_inplace_streak": 4,
+            }.get(path[-1], default)
+        )
+        orch._apply_v75d_inplace_repair = MagicMock()
+        round_result = SimpleNamespace(
+            director_feedback="retry feedback",
+            previous_attempt={
+                "score": 50,
+                "reject_bucket": "quality_issue",
+                "error_category": "QUALITY_ISSUE",
+                "fix_scope_reasoning": "style drift and weak engagement",
+                "plateau_detected": True,
+            },
+        )
+
+        result = runtime.handle_reject_round_result(
+            round_ctx=minimal_round_ctx,
+            round_result=round_result,
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            logic_error_streak=1,
+            inplace_attempted=False,
+            blueprint_regenerated=False,
+            prev_reject_bucket="quality_issue",
+            bucket_streak=1,
+            prev_dominant_contradiction="",
+            contradiction_type_streak=0,
+            score_history=[50],
+            plateau_advisory_emitted=True,
+            pathology_counts={},
+            pathology_repeat_emitted=set(),
+        )
+
+        orch._apply_v75d_inplace_repair.assert_not_called()
+        assert result.round_ctx == minimal_round_ctx
+        assert result.logic_error_streak == 0
+        assert result.inplace_attempted is False
+        assert result.blueprint_regenerated is False
+
     def test_run_interview_round_step_updates_loop_state_from_reject_path(self, orch_with_ctx, minimal_round_ctx):
         from types import SimpleNamespace
 
@@ -2293,6 +2511,7 @@ class TestHandleRoundOutcomeRetryPathology:
                 "state_updates": {"hp": 10},
             },
             blueprint_regenerated=False,
+            rounds_attempted=5,
         )
 
         assert result.should_return is False
@@ -2312,6 +2531,7 @@ class TestHandleRoundOutcomeRetryPathology:
             final_state_updates={},
             previous_attempt={},
             blueprint_regenerated=True,
+            rounds_attempted=5,
         )
 
         assert result.should_return is True
@@ -2319,6 +2539,99 @@ class TestHandleRoundOutcomeRetryPathology:
         assert result.final_title is None
         assert result.final_state_updates == {}
         orch._ctx.get_int_input.assert_not_called()
+
+    def test_finalize_round_outcome_loop_uses_policy_default_choice_without_input(self, orch_with_ctx):
+        orch = orch_with_ctx
+        orch._ctx.get_int_input = None
+        orch._get_stage4_exhaustion_default_choice = MagicMock(return_value=1)
+
+        result = orch._finalize_round_outcome_loop(
+            next_ep=3,
+            max_rounds=5,
+            final_manuscript=None,
+            final_title=None,
+            final_state_updates={},
+            previous_attempt={
+                "best_manuscript": "best manuscript",
+                "score": 77,
+                "state_updates": {"hp": 10},
+            },
+            blueprint_regenerated=False,
+            rounds_attempted=5,
+        )
+
+        assert result.should_return is False
+        assert result.final_manuscript == "best manuscript"
+        assert result.final_title == "제3화"
+        assert result.final_state_updates == {"hp": 10}
+
+    def test_emit_stage4_retry_shadow_compare_logs_clip_decision_and_audit(self, orch_with_ctx):
+        orch = orch_with_ctx
+        orch._ctx.session_logger = MagicMock()
+        orch._ctx.audit_event = MagicMock()
+        orch._get_stage4_shadow_max_rounds = MagicMock(return_value=8)
+        orch._stage4_shadow_log_all_episodes = MagicMock(return_value=False)
+
+        orch._emit_stage4_retry_shadow_compare(
+            next_ep=5,
+            max_rounds=10,
+            rounds_attempted=9,
+            final_result="PASS",
+            accepted=True,
+            used_best_manuscript=False,
+            blueprint_regenerated=False,
+        )
+
+        orch._ctx.session_logger.log_decision.assert_called_once()
+        decision_kwargs = orch._ctx.session_logger.log_decision.call_args.kwargs
+        assert decision_kwargs["stage"] == "stage4_control"
+        assert decision_kwargs["decision_type"] == "retry_shadow_compare"
+        assert decision_kwargs["result"] == "WOULD_CLIP"
+        assert decision_kwargs["shadow_max_rounds"] == 8
+        assert decision_kwargs["actual_max_rounds"] == 10
+        assert decision_kwargs["rounds_attempted"] == 9
+        assert decision_kwargs["accepted"] is True
+
+        orch._ctx.audit_event.assert_called_once_with(
+            "stage4_retry_shadow_compare",
+            "stage4 retry shadow comparison recorded",
+            {
+                "shadow_max_rounds": 8,
+                "actual_max_rounds": 10,
+                "rounds_attempted": 9,
+                "final_result": "PASS",
+                "accepted": True,
+                "used_best_manuscript": False,
+                "blueprint_regenerated": False,
+                "shadow_clipped": True,
+            },
+        )
+
+    def test_finalize_round_outcome_loop_emits_shadow_compare_with_round_count(self, orch_with_ctx):
+        orch = orch_with_ctx
+        orch._emit_stage4_retry_shadow_compare = MagicMock()
+
+        result = orch._finalize_round_outcome_loop(
+            next_ep=3,
+            max_rounds=10,
+            final_manuscript="ok",
+            final_title="제3화",
+            final_state_updates={"hp": 10},
+            previous_attempt={},
+            blueprint_regenerated=False,
+            rounds_attempted=7,
+        )
+
+        assert result.should_return is False
+        orch._emit_stage4_retry_shadow_compare.assert_called_once_with(
+            next_ep=3,
+            max_rounds=10,
+            rounds_attempted=7,
+            final_result="PASS",
+            accepted=True,
+            used_best_manuscript=False,
+            blueprint_regenerated=False,
+        )
 
     def test_analyze_reject_round_emits_plateau_bucket_and_contradiction_advisories(
         self,
@@ -2387,6 +2700,138 @@ class TestHandleRoundOutcomeRetryPathology:
         assert previous_attempt["score_history"] == [95, 92, 88]
         assert "narrow patch" in previous_attempt["fix_scope_reasoning"]
         assert "[⚠️ 점수 하락 추세]" in result.director_feedback
+
+    def test_analyze_reject_round_treats_post_select_conflict_as_logic_like_failure(
+        self,
+        orch_with_ctx,
+    ):
+        from types import SimpleNamespace
+
+        runtime = orch_with_ctx.outcome_runtime
+        round_result = SimpleNamespace(error_category="")
+        previous_attempt = {
+            "score": 88,
+            "reject_bucket": "post_select_conflict",
+            "error_category": "POST_SELECT_CONTINUITY_CONFLICT",
+            "provisional_pass_downgrade": True,
+        }
+
+        result = runtime.analyze_reject_round(
+            round_result=round_result,
+            director_feedback="base feedback",
+            previous_attempt=previous_attempt,
+            logic_error_streak=1,
+            prev_reject_bucket="quality_issue",
+            bucket_streak=0,
+            prev_dominant_contradiction="",
+            contradiction_type_streak=0,
+            score_history=[92],
+            plateau_advisory_emitted=False,
+            blueprint_regenerated=False,
+        )
+
+        assert result.logic_error_streak == 2
+        assert result.prev_reject_bucket == "post_select_conflict"
+
+    def test_analyze_reject_round_can_disable_post_select_logic_like_escalation(
+        self,
+        orch_with_ctx,
+    ):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        orch.get_stage4_policy_bool = MagicMock(return_value=False)
+        round_result = SimpleNamespace(error_category="")
+        previous_attempt = {
+            "score": 88,
+            "reject_bucket": "post_select_conflict",
+            "error_category": "POST_SELECT_CONTINUITY_CONFLICT",
+            "provisional_pass_downgrade": True,
+        }
+
+        result = runtime.analyze_reject_round(
+            round_result=round_result,
+            director_feedback="base feedback",
+            previous_attempt=previous_attempt,
+            logic_error_streak=1,
+            prev_reject_bucket="quality_issue",
+            bucket_streak=0,
+            prev_dominant_contradiction="",
+            contradiction_type_streak=0,
+            score_history=[92],
+            plateau_advisory_emitted=False,
+            blueprint_regenerated=False,
+        )
+
+        assert result.logic_error_streak == 0
+        assert result.prev_reject_bucket == "post_select_conflict"
+
+    def test_analyze_reject_round_treats_ifc_quality_issue_as_logic_like_failure(
+        self,
+        orch_with_ctx,
+    ):
+        from types import SimpleNamespace
+
+        runtime = orch_with_ctx.outcome_runtime
+        round_result = SimpleNamespace(error_category="QUALITY_ISSUE")
+        previous_attempt = {
+            "score": 50,
+            "reject_bucket": "quality_issue",
+            "error_category": "QUALITY_ISSUE",
+            "fix_scope_reasoning": "[IFC] immutable fact conflict detected; local patch is unsafe",
+            "plateau_detected": True,
+        }
+
+        result = runtime.analyze_reject_round(
+            round_result=round_result,
+            director_feedback="base feedback",
+            previous_attempt=previous_attempt,
+            logic_error_streak=1,
+            prev_reject_bucket="quality_issue",
+            bucket_streak=1,
+            prev_dominant_contradiction="",
+            contradiction_type_streak=0,
+            score_history=[50],
+            plateau_advisory_emitted=True,
+            blueprint_regenerated=False,
+        )
+
+        assert result.logic_error_streak == 2
+        assert result.prev_reject_bucket == "quality_issue"
+
+    def test_analyze_reject_round_keeps_plain_quality_issue_outside_logic_like_failure(
+        self,
+        orch_with_ctx,
+    ):
+        from types import SimpleNamespace
+
+        runtime = orch_with_ctx.outcome_runtime
+        round_result = SimpleNamespace(error_category="QUALITY_ISSUE")
+        previous_attempt = {
+            "score": 50,
+            "reject_bucket": "quality_issue",
+            "error_category": "QUALITY_ISSUE",
+            "fix_scope_reasoning": "style drift and weak engagement",
+            "plateau_detected": True,
+        }
+
+        result = runtime.analyze_reject_round(
+            round_result=round_result,
+            director_feedback="base feedback",
+            previous_attempt=previous_attempt,
+            logic_error_streak=1,
+            prev_reject_bucket="quality_issue",
+            bucket_streak=1,
+            prev_dominant_contradiction="",
+            contradiction_type_streak=0,
+            score_history=[50],
+            plateau_advisory_emitted=True,
+            blueprint_regenerated=False,
+        )
+
+        assert result.logic_error_streak == 0
+        assert result.prev_reject_bucket == "quality_issue"
 
     def test_apply_v75d_inplace_repair_resets_attempt_state_and_logs_snapshot(
         self,

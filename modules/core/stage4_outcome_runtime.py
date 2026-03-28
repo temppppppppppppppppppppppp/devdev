@@ -538,7 +538,14 @@ class Stage4OutcomeRuntime:
         score_history = score_trend.score_history
         plateau_advisory_emitted = score_trend.plateau_advisory_emitted
 
-        logic_error_streak = logic_error_streak + 1 if round_result.error_category == "LOGIC_ERROR" else 0
+        logic_error_streak = (
+            logic_error_streak + 1
+            if self._should_count_reject_as_logic_like(
+                round_result=round_result,
+                previous_attempt=previous_attempt,
+            )
+            else 0
+        )
 
         bucket_disposition = self._apply_reject_bucket_advisory(
             previous_attempt=previous_attempt,
@@ -578,6 +585,58 @@ class Stage4OutcomeRuntime:
             tf29_advisory=tf29_advisory,
             dominant_contradiction=dominant_contradiction,
         )
+
+    def _should_count_reject_as_logic_like(
+        self,
+        *,
+        round_result,
+        previous_attempt: dict,
+    ) -> bool:
+        owner = self.owner
+        error_category = str(
+            getattr(round_result, "error_category", "") or previous_attempt.get("error_category", "") or ""
+        ).strip()
+        if error_category == "LOGIC_ERROR":
+            return True
+
+        if self._is_ifc_quality_issue_logic_like(
+            error_category=error_category,
+            previous_attempt=previous_attempt,
+        ):
+            return True
+
+        if not owner.get_stage4_policy_bool(
+            "retry_escalation",
+            "treat_post_select_conflict_as_logic_like",
+            default=True,
+        ):
+            return False
+
+        reject_bucket = str(previous_attempt.get("reject_bucket", "") or "").strip()
+        provisional_pass_downgrade = bool(previous_attempt.get("provisional_pass_downgrade", False))
+        return bool(
+            reject_bucket == "post_select_conflict"
+            and (provisional_pass_downgrade or error_category.startswith("POST_SELECT_"))
+        )
+
+    @staticmethod
+    def _is_ifc_quality_issue_logic_like(
+        *,
+        error_category: str,
+        previous_attempt: dict,
+    ) -> bool:
+        if error_category != "QUALITY_ISSUE":
+            return False
+
+        reject_bucket = str(previous_attempt.get("reject_bucket", "") or "").strip()
+        if reject_bucket != "quality_issue":
+            return False
+
+        fix_scope_reasoning = str(previous_attempt.get("fix_scope_reasoning", "") or "").strip()
+        if "[IFC]" not in fix_scope_reasoning:
+            return False
+
+        return bool(previous_attempt.get("plateau_detected", False))
 
     def _apply_reject_score_trend_advisory(
         self,
@@ -749,7 +808,22 @@ class Stage4OutcomeRuntime:
 
         s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
         quality_risk = bool(s3_meta.get("quality_risk", False))
-        v75d_threshold = 1 if quality_risk else 2
+        quality_risk_threshold = owner.get_stage4_policy_int(
+            "retry_escalation",
+            "quality_risk_inplace_threshold",
+            default=1,
+        )
+        default_inplace_threshold = owner.get_stage4_policy_int(
+            "retry_escalation",
+            "default_inplace_threshold",
+            default=2,
+        )
+        blueprint_regeneration_threshold = owner.get_stage4_policy_int(
+            "retry_escalation",
+            "blueprint_regeneration_after_inplace_streak",
+            default=2,
+        )
+        v75d_threshold = quality_risk_threshold if quality_risk else default_inplace_threshold
         logging.info(
             "[V75-D] quality_risk=%s -> threshold=%d, streak=%d",
             quality_risk,
@@ -767,7 +841,7 @@ class Stage4OutcomeRuntime:
                 tf29_advisory=tf29_advisory,
                 dominant_contradiction=dominant_contradiction,
             )
-        if logic_error_streak >= 2 and inplace_attempted and not blueprint_regenerated:
+        if logic_error_streak >= blueprint_regeneration_threshold and inplace_attempted and not blueprint_regenerated:
             return owner._apply_v75b_blueprint_regeneration(
                 round_ctx=round_ctx,
                 next_ep=next_ep,
@@ -802,6 +876,7 @@ class Stage4OutcomeRuntime:
         contradiction_type = self._pathology_contradiction_type(previous_attempt)
         gate_basis = str(previous_attempt.get("gate_basis", "") or "").strip()
         fix_scope = str(previous_attempt.get("fix_scope", "") or "").strip()
+        authoritative_fix_scope = str(previous_attempt.get("authoritative_fix_scope", "") or "").strip()
         repair_scope = str(previous_attempt.get("repair_scope", "") or "").strip()
         error_category = str(previous_attempt.get("error_category", "") or "").strip()
         pathology_source = str(previous_attempt.get("retry_pathology_source", "") or "").strip()
@@ -834,7 +909,7 @@ class Stage4OutcomeRuntime:
         )
 
         fingerprint = "|".join(tag for tag in tags if tag) or "unclassified_retry_pathology"
-        return {
+        payload = {
             "ep_num": int(ep_num),
             "round_num": int(round_num + 1),
             "pathology_fingerprint": fingerprint,
@@ -842,6 +917,7 @@ class Stage4OutcomeRuntime:
             "reject_bucket": reject_bucket,
             "gate_basis": gate_basis,
             "fix_scope": fix_scope,
+            "authoritative_fix_scope": authoritative_fix_scope,
             "repair_scope": repair_scope,
             "error_category": error_category,
             "contradiction_type": contradiction_type,
@@ -856,6 +932,10 @@ class Stage4OutcomeRuntime:
             "fix_scope_reasoning": fix_scope_reasoning,
             "open_review": open_review,
         }
+        authoritative_fix_scope_violation = previous_attempt.get("authoritative_fix_scope_violation")
+        if isinstance(authoritative_fix_scope_violation, dict):
+            payload["authoritative_fix_scope_violation"] = authoritative_fix_scope_violation
+        return payload
 
     def emit_retry_pathology_signal(
         self,

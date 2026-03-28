@@ -1,0 +1,24 @@
+{
+  "interview_round": {
+    "accepted_verdicts": [
+      "PASS",
+      "PASS_WITH_FIX"
+    ],
+    "max_rounds": null
+  },
+  "exhaustion": {
+    "allow_best_manuscript_adoption": true,
+    "default_operator_choice": 2
+  },
+  "shadow_mode": {
+    "enabled": true,
+    "max_rounds": 8,
+    "log_all_episodes": false
+  },
+  "retry_escalation": {
+    "quality_risk_inplace_threshold": 1,
+    "default_inplace_threshold": 2,
+    "blueprint_regeneration_after_inplace_streak": 2,
+    "treat_post_select_conflict_as_logic_like": true
+  }
+}
