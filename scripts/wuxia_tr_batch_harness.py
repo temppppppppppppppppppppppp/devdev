@@ -14,6 +14,10 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from modules.narrative_router.harness_digest import load_harness_digest, render_harness_digest_lines
 
 BLOCK_REF_RE = re.compile(r"Block\s*(\d+)", re.IGNORECASE)
 TOKEN_RE = re.compile(r"\w+", re.UNICODE)
@@ -722,6 +726,7 @@ def build_prompt(
 ) -> str:
     completed = draft_blocks[: start - 1]
     protagonist = as_text(meta.get("protagonist"))
+    digest_lines = render_harness_digest_lines(load_harness_digest(family="wuxguide", stage="tr_batch"))
     if mode == "flash":
         predeclare = [
             "1. Cite the previous realm_after and internal_energy_after before the JSON.",
@@ -771,6 +776,8 @@ def build_prompt(
         "",
         "## Open Foreshadows",
         foreshadow_table(completed),
+        "",
+        *digest_lines,
         "",
         "## Rules",
         "1. Preserve title sequence if roadmap titles are provided.",

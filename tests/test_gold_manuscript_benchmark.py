@@ -87,6 +87,8 @@ def test_run_gold_benchmark_self_check_scores_cases(tmp_path: Path) -> None:
     assert result["average_gold_fidelity_score"] >= 90
     assert result["average_writing_quality_score"] >= 45
     assert result["primary_score_axis"] == "continuity_index"
+    assert result["consistency_primary_axis"] == "consistency_score"
+    assert result["consistency_score_mode"] == "auto-only"
     assert result["score_profile"] == "continuity-gold-relative-v2"
     first = result["results"][0]
     assert first["continuity_index"] == 100.0
@@ -94,6 +96,11 @@ def test_run_gold_benchmark_self_check_scores_cases(tmp_path: Path) -> None:
     assert first["gold_fidelity_axes"]["gold_opening_overlap"] == 1.0
     assert "continuity_score" in first
     assert "writing_quality_score" in first
+    assert "consistency_score" in first
+    assert "consistency_auto_score" in first
+    assert "consistency_judge_score" in first
+    assert "major_contradiction_count" in first
+    assert "consistency_findings" in first
 
 
 def test_build_case_prompt_mentions_title_and_next_episode(tmp_path: Path) -> None:

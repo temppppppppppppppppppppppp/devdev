@@ -125,6 +125,16 @@ class TestContextCacheNamespace:
         assert fallback_agent._context_cache_project_namespace("arc", 3) == "investment_arc_3"
 
 
+def test_generate_content_preserves_provider_neutral_response(agent, monkeypatch):
+    response = LLMResponse(text='{"status":"ok"}', raw=SimpleNamespace(provider_raw=True))
+    monkeypatch.setattr(agent, "_generate_llm_response", lambda **_kwargs: response)
+
+    result = agent._generate_content(model="claude-sonnet-4-6", contents="ping", config={})
+
+    assert result is response
+    assert result.text == '{"status":"ok"}'
+
+
 # ══════════════════════════════════════════════════════════════
 # Test 1: _extract_json_robust - 정상 JSON
 # ══════════════════════════════════════════════════════════════
@@ -967,7 +977,7 @@ class TestNormalizedProviderHelpers:
         assert response.raw is raw
         assert agent._last_llm_usage == {"prompt_token_count": 3}
 
-    def test_generate_content_remains_raw_compatibility_seam(self, agent):
+    def test_generate_content_returns_provider_neutral_envelope(self, agent):
         raw = MagicMock()
         provider = MagicMock()
         provider.generate.return_value = LLMResponse(
@@ -982,7 +992,9 @@ class TestNormalizedProviderHelpers:
 
         result = agent._generate_content(model="gemini-2.5-flash", contents="prompt", config={"temperature": 0.1})
 
-        assert result is raw
+        assert isinstance(result, LLMResponse)
+        assert result.text == "ok"
+        assert result.raw is raw
 
 
 # ══════════════════════════════════════════════════════════════

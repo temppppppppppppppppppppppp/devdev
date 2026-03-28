@@ -414,9 +414,9 @@ class BaseAgent:
         return normalized
 
     def _generate_content(self, *, model: str, contents, config):
-        """Legacy raw-response compatibility seam for BaseAgent internals."""
+        """Return the provider-neutral response envelope for BaseAgent internals."""
 
-        return self._generate_llm_response(model=model, contents=contents, config=config).raw
+        return self._generate_llm_response(model=model, contents=contents, config=config)
 
     @staticmethod
     def _coerce_usage_int(value) -> int:

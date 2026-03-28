@@ -1,0 +1,38 @@
+{
+  "family": "wuxguide",
+  "stage": "tr_batch",
+  "hard_prohibitions": [
+    "business/capital/deal 언어 오염 금지",
+    "영문 템플릿 문장 사용 금지",
+    "generic opponent pressure 금지",
+    "callback을 빈 형식 문장으로 처리하는 것 금지"
+  ],
+  "continuity_equalities": [
+    "genre_ext.realm_before == previous realm_after",
+    "genre_ext.internal_energy_before == previous internal_energy_after"
+  ],
+  "family_axis_requirements": [
+    "각 블록은 realm, internal energy, martial art, faction standing, reputation, revenge, sect politics 중 최소 하나를 전진시켜야 한다",
+    "정치/회복 블록이어도 continuity debt를 설명해야 한다",
+    "opponent pressure는 구체적 세력, 제약, 위협 방식으로 적어야 한다"
+  ],
+  "lexicon_bans": [
+    "capital",
+    "deal",
+    "business-sector",
+    "starter-company"
+  ],
+  "output_contract": [
+    "short predeclare",
+    "JSON array",
+    "continuity diff",
+    "NPC tracker delta",
+    "foreshadow debt update"
+  ],
+  "acceptance_gates": [
+    "realm continuity preserved",
+    "internal energy continuity preserved",
+    "at least one wuxia axis advances",
+    "seed/callback debt is echoed or explicitly carried"
+  ]
+}

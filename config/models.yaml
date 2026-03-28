@@ -4,9 +4,10 @@ providers:
     sdk: "google-genai"
     api_key_env: "GOOGLE_API_KEY"
   anthropic:
-    enabled: false
+    enabled: true
     sdk: "anthropic"
     api_key_env: "ANTHROPIC_API_KEY"
+    # AnthropicProvider falls back to CLAUDE_API when ANTHROPIC_API_KEY is absent.
   openai:
     enabled: false
     sdk: "openai"
@@ -30,22 +31,22 @@ providers:
     sdk: "anthropic"
     project_id_env: "VERTEX_PROJECT_ID"
     location_env: "VERTEX_LOCATION"
-    # Claude on Vertex AI — uses Vertex credentials, not ANTHROPIC_API_KEY.
+    # Claude on Vertex AI uses Vertex credentials, not ANTHROPIC_API_KEY.
     # Prefix convention: "anthropic-vertex:claude-sonnet-4-6"
 
 agents:
-  analyst: "gemini-3.1-pro-preview"
+  analyst: "claude-sonnet-4-6"
   manager: "gemini-2.5-flash"
-  chief_writer: "gemini-3.1-pro-preview"
+  chief_writer: "claude-sonnet-4-6"
   blueprint_ensemble: "gemini-3.1-pro-preview"
   three_phase_blueprint_generator: "gemini-3.1-pro-preview"
   state_locked_arc_generator: "gemini-3.1-pro-preview"
   block_enricher: "gemini-2.5-flash"
   preflight_checker: "gemini-2.5-flash"
   state_extractor: "gemini-2.5-flash"
-  four_phase_arc_generator: "gemini-3.1-pro-preview"  # [Phase2] Arc 방향 결정
-  continuity_inspector: "gemini-3.1-pro-preview"      # [Phase2] 250화 연속성 고도 추론
-  director: "gemini-3.1-pro-preview"                  # [Phase2] 내각제 원칙: 심판관≥CW
+  four_phase_arc_generator: "gemini-3.1-pro-preview"
+  continuity_inspector: "gemini-3.1-pro-preview"
+  director: "claude-opus-4-6"
   arc_corrector: "gemini-2.5-flash"
   arc_critic: "gemini-2.5-flash"
   consensus_validator: "gemini-2.5-flash"
@@ -56,6 +57,10 @@ agents:
   writer: "gemini-2.5-flash"
 
 fallback_chain:
+  "claude-opus-4-6": "claude-sonnet-4-6"
+  "claude-opus-4-20250514": "claude-sonnet-4-20250514"
+  "claude-sonnet-4-6": "gemini-2.5-pro"
+  "claude-sonnet-4-20250514": "gemini-2.5-pro"
   "gemini-3.1-pro-preview": "gemini-2.5-pro"
   "gemini-2.5-pro": "gemini-2.5-flash"
   "gemini-2.5-flash": "gemini-2.5-flash"
@@ -63,14 +68,14 @@ fallback_chain:
 sub_components:
   four_phase_arc_generator:
     preflight: "gemini-2.5-flash"
-    ensemble: "gemini-3.1-pro-preview"  # [Phase2] Arc 앙상블 선택 = 스토리 핵심
+    ensemble: "gemini-3.1-pro-preview"
     validator: "gemini-2.5-flash"
   three_phase_blueprint_generator:
     ensemble: "gemini-3.1-pro-preview"
     validator: "gemini-2.5-flash"
 
-# ── [SSOT] 추상 역할 상수 — constants.py AIModels에서 참조 ──────────────────
+# role_constants remain Gemini to limit blast radius outside the core agent map.
 role_constants:
   pro_main: "gemini-3.1-pro-preview"
-  flash_main: "gemini-2.5-flash"  # 경량: module/analysis/summary 전용
-  emergency: "gemini-3.1-pro-preview" # 긴급/429 폴백
+  flash_main: "gemini-2.5-flash"
+  emergency: "gemini-3.1-pro-preview"
