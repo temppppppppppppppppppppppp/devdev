@@ -14,6 +14,10 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from modules.narrative_router.harness_digest import load_harness_digest, render_harness_digest_lines
 
 BLOCK_REF_RE = re.compile(r"Block\s*(\d+)", re.IGNORECASE)
 HANGUL_RE = re.compile(r"[가-힣]")
@@ -27,9 +31,9 @@ BANNED_TEMPLATE_RES = [
     re.compile(r"Capital moved from", re.IGNORECASE),
 ]
 GENERIC_CALLBACK_RE = re.compile(r"직전 블록의 .* 성과가 이번 .* 발판이 되었다")
-AMOUNT_RE = re.compile(r"\d[\d,.]*\s*(?:억|조|만|원|%|달러|위안|배)?")
+AMOUNT_RE = re.compile(r"\d[\d,.]*\s*(?:억|조|만|원|%|달러|위안|배)?")  # utf8-hygiene: allow-line -- regex uses literal ? quantifier.
 ORG_RE = re.compile(
-    r"[가-힣A-Za-z0-9]{2,}(?:사|그룹|회사|공장|호텔|병원|은행|연합|센터|재단|증권|캐피탈|인베스트먼트|파트너스|자산운용)"
+    r"[가-힣A-Za-z0-9]{2,}(?:사|그룹|회사|공장|호텔|병원|은행|연합|센터|재단|증권|캐피탈|인베스트먼트|파트너스|자산운용)"  # utf8-hygiene: allow-line -- regex uses literal ? quantifier.
 )
 RECOGNITION_RE = re.compile(
     r"(대단|인정|재평가|경탄|감탄|존중|신뢰|의지|믿게|다시\s*봤|경외|감복|수긍|고개를 숙|격이 다르)"
@@ -575,10 +579,10 @@ def capital_to_eok(raw: Any) -> int | None:
     if re.fullmatch(r"[+-]?\d+", text):
         return int(text)
 
-    if re.fullmatch(r"[+-]?\d+억", text):
+    if re.fullmatch(r"[+-]?\d+억", text):  # utf8-hygiene: allow-line -- regex uses literal ? quantifier.
         return int(text[:-1])
 
-    jo_match = re.fullmatch(r"([+-]?\d+(?:\.\d+)?)조(?:(\d+)억)?", text)
+    jo_match = re.fullmatch(r"([+-]?\d+(?:\.\d+)?)조(?:(\d+)억)?", text)  # utf8-hygiene: allow-line -- regex uses literal ? quantifier.
     if jo_match:
         jo = float(jo_match.group(1))
         eok = int(jo_match.group(2) or 0)
@@ -887,6 +891,7 @@ def build_prompt(
 ) -> str:
     completed = draft_blocks[: start - 1]
     protagonist = as_text(meta.get("protagonist"))
+    digest_lines = render_harness_digest_lines(load_harness_digest(family="blockguide", stage="tr_batch"))
 
     if mode == "flash":
         predeclare = """1. 직전 상태 인용: 직전 블록의 capital_after, emotional_beat, 관계 after를 인용하라.
@@ -929,6 +934,8 @@ def build_prompt(
         "",
         "## OPEN 복선 원장",
         foreshadow_table(completed),
+        "",
+        *digest_lines,
         "",
         "## 출력 순서",
         "1. 사전 선언",

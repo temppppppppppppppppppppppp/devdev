@@ -33,7 +33,8 @@ Within item 4, use this order when multiple specialized harnesses are relevant:
 10. `docs/implementation/execution-closure-harness.md`
 11. `docs/implementation/exception-registry-harness.md`
 12. `docs/implementation/process-health-scorecard-harness.md`
-13. `docs/implementation/stale-reference-sweep-harness.md`
+13. `docs/implementation/system-supervisor-harness.md`
+14. `docs/implementation/stale-reference-sweep-harness.md`
 
 Specific-over-general rule:
 - if two documents at the same precedence level do not agree, the more specific one wins for that task
@@ -67,6 +68,7 @@ Specific-over-general rule:
 - Evidence-heavy topics should prefer `docs/implementation/evidence-manifest-harness.md`.
 - Deep global survey claims should follow `docs/implementation/evidence-triangulation-contract.md`.
 - Deep global survey confidence claims should follow `docs/implementation/integrity-confidence-scoring-contract.md`.
+- Supervisor-style operator overlays should use `docs/implementation/system-supervisor-harness.md` and still emit conclusions through canonical scorecards, execution SSOTs, and the single active roadmap.
 - Filenames should follow `docs/implementation/canonical-naming-contract.md`.
 - Closure notes, if created, are canonical documents first and temp artifacts never.
 - Optional queue state files must follow `docs/implementation/temp-queue-state-contract-v1.json`.

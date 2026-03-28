@@ -10,6 +10,16 @@ class AnthropicProvider:
     provider_name = "anthropic"
     _backend = "anthropic_direct"
     _family = "claude"
+    _MAX_SYNC_OUTPUT_TOKENS = 8192
+    _API_KEY_FALLBACKS = {
+        "ANTHROPIC_API_KEY": ("CLAUDE_API",),
+        "CLAUDE_API": ("ANTHROPIC_API_KEY",),
+    }
+    _MODEL_ALIASES = {
+        # Anthropic direct API canonical IDs verified 2026-03-28.
+        "claude-sonnet-4-6": "claude-sonnet-4-20250514",
+        "claude-opus-4-6": "claude-opus-4-20250514",
+    }
 
     def __init__(self, api_key_env: str = "ANTHROPIC_API_KEY") -> None:
         self.api_key_env = api_key_env
@@ -35,6 +45,11 @@ class AnthropicProvider:
 
         api_key = os.getenv(self.api_key_env)
         if not api_key:
+            for fallback_env in self._API_KEY_FALLBACKS.get(self.api_key_env, ()):
+                api_key = os.getenv(fallback_env)
+                if api_key:
+                    break
+        if not api_key:
             raise RuntimeError(f"{self.api_key_env} is required to activate AnthropicProvider")
 
         try:
@@ -45,13 +60,23 @@ class AnthropicProvider:
         self._client = Anthropic(api_key=api_key)
         return self._client
 
+    def _resolve_model_name(self, model: str) -> str:
+        normalized = str(model or "").strip()
+        return self._MODEL_ALIASES.get(normalized, normalized)
+
+    def _resolve_max_tokens(self, config: Any) -> int:
+        requested = int(self._config_value(config, "max_output_tokens", 4096) or 4096)
+        if requested <= 0:
+            return 4096
+        # Anthropic sync calls reject very large max_tokens budgets as long-running requests.
+        return min(requested, self._MAX_SYNC_OUTPUT_TOKENS)
+
     def generate(self, *, client: Any, request: LLMRequest) -> LLMResponse:
         resolved_client = self._get_client()
-        max_tokens = int(self._config_value(request.config, "max_output_tokens", 4096) or 4096)
         kwargs = {
-            "model": request.model,
+            "model": self._resolve_model_name(request.model),
             "messages": self._normalize_messages(request.contents),
-            "max_tokens": max_tokens,
+            "max_tokens": self._resolve_max_tokens(request.config),
         }
 
         temperature = self._config_value(request.config, "temperature")
@@ -62,7 +87,7 @@ class AnthropicProvider:
         if top_p is not None:
             kwargs["top_p"] = top_p
 
-        system = self._config_value(request.config, "system")
+        system = self._config_value(request.config, "system") or self._config_value(request.config, "system_instruction")
         if system:
             kwargs["system"] = system
 

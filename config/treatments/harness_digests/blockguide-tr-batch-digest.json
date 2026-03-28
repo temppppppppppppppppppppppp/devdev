@@ -1,0 +1,36 @@
+{
+  "family": "blockguide",
+  "stage": "tr_batch",
+  "hard_prohibitions": [
+    "70블록 단일 출력 금지",
+    "영문 템플릿 문장 사용 금지",
+    "code-like 값(plan_01, type_1, _B01) 사용 금지",
+    "callback을 generic 한 문장으로 때우는 것 금지"
+  ],
+  "continuity_equalities": [
+    "capital_before == 직전 capital_after",
+    "relationship_delta.before == 직전 relationship_delta.after"
+  ],
+  "family_axis_requirements": [
+    "이번 배치의 각 블록은 사업축, 상대 구도, 감정 비트 중 최소 하나에서 직전과 차이를 만들어야 한다",
+    "deal_type, location, leverage_used는 반복 신호 없이 재탕하지 않는다",
+    "reward는 단순 수익이 아니라 승인권, 신용, 정보 우위 중 최소 하나의 이동을 보여야 한다"
+  ],
+  "lexicon_bans": [
+    "영문 프롬프트 문장",
+    "placeholder 식 문구",
+    "한국어 서사 대신 schema 설명문"
+  ],
+  "output_contract": [
+    "사전 선언",
+    "JSON 배열",
+    "차이 행렬",
+    "복선 원장 업데이트"
+  ],
+  "acceptance_gates": [
+    "title sequence 보존",
+    "callback debt 방치 금지",
+    "capital continuity 보존",
+    "relationship carry-over 보존"
+  ]
+}

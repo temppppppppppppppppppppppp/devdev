@@ -10,6 +10,8 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
+from modules.core.truth_gate import TruthGate
+from modules.validation.continuity_validator import ContinuityValidator
 from modules.validation.scoring_validator import ScoringValidator
 from scripts.investment_corpus_support import (
     COMMON_GIVEN_NAMES,
@@ -22,6 +24,16 @@ from scripts.investment_corpus_support import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
+MAJOR_CONTRADICTION_SEVERITIES = {"BLOCKING", "CRITICAL", "MAJOR"}
+CONSISTENCY_SEVERITY_PENALTIES = {
+    "BLOCKING": 28.0,
+    "CRITICAL": 24.0,
+    "MAJOR": 15.0,
+    "MEDIUM": 9.0,
+    "WARNING": 6.0,
+    "INFO": 3.0,
+    "MINOR": 3.0,
+}
 TXT_EPISODE_PATTERNS = (
     re.compile(r"^(?:ep)?(?P<episode>\d+)\.txt$", re.IGNORECASE),
     re.compile(r".*?(?P<episode>\d+)\uD654\.txt$", re.IGNORECASE),
@@ -278,6 +290,44 @@ def build_gold_package(
     }
 
 
+def attach_lightweight_ledgers(
+    gold_package: dict[str, Any],
+    *,
+    ledger_path: Path | None = None,
+) -> dict[str, Any]:
+    package_cases = gold_package.get("cases", [])
+    if not package_cases:
+        return gold_package
+
+    if ledger_path is None:
+        title_slug = gold_package.get("title_slug")
+        if not title_slug:
+            return gold_package
+        ledger_path = ROOT / "data" / "gold_manuscript_benchmark" / title_slug / "gold_ledger_light.json"
+
+    ledger_path = Path(ledger_path)
+    if not ledger_path.exists():
+        return gold_package
+
+    ledger_payload = json.loads(ledger_path.read_text(encoding="utf-8"))
+    case_ledgers = ledger_payload.get("cases", {})
+    if not isinstance(case_ledgers, dict):
+        return gold_package
+
+    by_case_id = {str(case_id): ledger for case_id, ledger in case_ledgers.items() if isinstance(ledger, dict)}
+    applied = 0
+    for case in package_cases:
+        case_id = case.get("case_id")
+        if case_id not in by_case_id:
+            continue
+        case["gold_ledger"] = by_case_id[case_id]
+        applied += 1
+
+    gold_package["gold_ledger_source"] = _relative_to_root(ledger_path)
+    gold_package["gold_ledger_case_count"] = applied
+    return gold_package
+
+
 def build_case_prompt(title: str, case: dict[str, Any]) -> str:
     checkpoint = case["checkpoint"]
     gold = case["gold_continuation"]
@@ -439,6 +489,563 @@ def _average_metric(results: list[dict[str, Any]], key: str) -> float:
     return round(sum(values) / len(values), 2) if values else 0.0
 
 
+def _read_episode_ref(episode_ref: dict[str, Any]) -> str:
+    path = ROOT / episode_ref["path"]
+    return path.read_text(encoding="utf-8").strip()
+
+
+def _ledger_lookup(ledger: dict[str, Any], *keys: str) -> Any:
+    for key in keys:
+        if key in ledger:
+            return ledger[key]
+    return None
+
+
+def _dedupe_strings(values: list[str]) -> list[str]:
+    deduped: list[str] = []
+    for value in values:
+        item = str(value or "").strip()
+        if item and item not in deduped:
+            deduped.append(item)
+    return deduped
+
+
+def _coerce_named_values(raw: Any, *, name_keys: tuple[str, ...] = ("name", "text", "law", "location", "item")) -> list[str]:
+    values: list[str] = []
+    if isinstance(raw, str):
+        values.append(raw)
+    elif isinstance(raw, list):
+        for item in raw:
+            if isinstance(item, str):
+                values.append(item)
+                continue
+            if isinstance(item, dict):
+                for key in name_keys:
+                    candidate = item.get(key)
+                    if isinstance(candidate, str) and candidate.strip():
+                        values.append(candidate)
+                        break
+    elif isinstance(raw, dict):
+        for key, value in raw.items():
+            if isinstance(value, dict):
+                for candidate_key in name_keys:
+                    candidate = value.get(candidate_key)
+                    if isinstance(candidate, str) and candidate.strip():
+                        values.append(candidate)
+                        break
+                else:
+                    values.append(str(key))
+                continue
+            if isinstance(value, str) and value.strip():
+                values.append(value)
+                continue
+            values.append(str(key))
+    return _dedupe_strings(values)
+
+
+def _case_gold_ledger(case: dict[str, Any]) -> dict[str, Any]:
+    ledger = case.get("gold_ledger")
+    return ledger if isinstance(ledger, dict) else {}
+
+
+def _build_prev_hud(case: dict[str, Any]) -> dict[str, Any]:
+    ledger = _case_gold_ledger(case)
+    protagonist = ledger.get("protagonist")
+    protagonist = protagonist if isinstance(protagonist, dict) else {}
+
+    actual_truth: dict[str, Any] = {}
+    location = protagonist.get("location") or _ledger_lookup(ledger, "location", "protagonist_location")
+    condition = protagonist.get("condition") or _ledger_lookup(ledger, "condition", "protagonist_condition")
+    inventory_counts = protagonist.get("inventory_counts") or _ledger_lookup(ledger, "inventory_counts")
+    equipment = protagonist.get("equipment")
+    if equipment is None:
+        equipment = _ledger_lookup(ledger, "active_items", "items")
+    active_pressure_vectors = protagonist.get("active_pressure_vectors")
+    if active_pressure_vectors is None:
+        active_pressure_vectors = _ledger_lookup(ledger, "active_pressure_vectors", "active_pressure")
+
+    if isinstance(location, str) and location.strip():
+        actual_truth["location"] = location.strip()
+    if isinstance(condition, str) and condition.strip():
+        actual_truth["condition"] = condition.strip()
+    if inventory_counts:
+        actual_truth["inventory_counts"] = inventory_counts
+    equipment_names = _coerce_named_values(equipment)
+    if equipment_names:
+        actual_truth["equipment"] = equipment_names
+    if isinstance(active_pressure_vectors, list) and active_pressure_vectors:
+        actual_truth["active_pressure_vectors"] = active_pressure_vectors
+
+    prev_hud = {"actual_truth": actual_truth}
+    if not actual_truth:
+        prev_hud["benchmark_fallback"] = True
+    return prev_hud
+
+
+def _extract_npc_personalities(ledger: dict[str, Any]) -> dict[str, dict[str, str]]:
+    personalities: dict[str, dict[str, str]] = {}
+    for source in (_ledger_lookup(ledger, "alive_npcs"), _ledger_lookup(ledger, "npc_registry")):
+        if not isinstance(source, dict):
+            continue
+        for name, info in source.items():
+            if not isinstance(info, dict):
+                continue
+            traits = info.get("traits") or info.get("personality") or info.get("personality_traits")
+            if isinstance(traits, str) and traits.strip():
+                personalities[str(name)] = {"traits": traits.strip()}
+    return personalities
+
+
+def _build_validation_context(case: dict[str, Any], *, genre: str) -> dict[str, Any]:
+    ledger = _case_gold_ledger(case)
+    validation_context: dict[str, Any] = {
+        "genre": genre,
+        "prev_hud": _build_prev_hud(case),
+        "prev_full_text": _read_episode_ref(case["checkpoint"]["episode_refs"][-1]),
+    }
+
+    npc_personalities = _extract_npc_personalities(ledger)
+    if npc_personalities:
+        validation_context["npc_personalities"] = npc_personalities
+
+    npc_history = _ledger_lookup(ledger, "npc_history")
+    if isinstance(npc_history, dict) and npc_history:
+        validation_context["npc_history"] = npc_history
+
+    time_warnings = _ledger_lookup(ledger, "time_warnings")
+    if isinstance(time_warnings, list) and time_warnings:
+        validation_context["time_warnings"] = time_warnings
+
+    arc_pos = _ledger_lookup(ledger, "arc_pos")
+    if isinstance(arc_pos, int):
+        validation_context["arc_pos"] = arc_pos
+
+    return validation_context
+
+
+class _BenchmarkWorldState:
+    def __init__(self, ledger: dict[str, Any]) -> None:
+        self._deceased_npcs = _coerce_named_values(
+            _ledger_lookup(ledger, "dead_npcs", "deceased_npcs", "deceased"),
+        )
+        self._destroyed_locations = _coerce_named_values(
+            _ledger_lookup(ledger, "destroyed_locations", "destroyed"),
+        )
+        self._owned_items = _coerce_named_values(_ledger_lookup(ledger, "active_items", "items"))
+        self._known_skills = _coerce_named_values(_ledger_lookup(ledger, "skills", "known_skills"))
+        self._world_laws = _coerce_named_values(_ledger_lookup(ledger, "world_laws"), name_keys=("law", "text", "name"))
+
+        self._npc_role_snapshot: dict[str, dict[str, Any]] = {}
+        alive_npcs = _ledger_lookup(ledger, "alive_npcs", "npc_registry")
+        if isinstance(alive_npcs, dict):
+            for name, info in alive_npcs.items():
+                if not isinstance(info, dict):
+                    continue
+                role_at_intro = str(info.get("role_at_intro") or info.get("role") or "").strip()
+                known_attrs: dict[str, dict[str, Any]] = {}
+                for field_name in ("relation", "location", "personality", "traits"):
+                    value = info.get(field_name)
+                    if isinstance(value, str) and value.strip():
+                        normalized_field = "personality_traits" if field_name in {"personality", "traits"} else field_name
+                        known_attrs[normalized_field] = {"value": value.strip()}
+                if role_at_intro or known_attrs:
+                    self._npc_role_snapshot[str(name)] = {
+                        "role_at_intro": role_at_intro,
+                        "first_seen_ep": int(info.get("first_seen_ep", 0) or 0),
+                        "known_attrs": known_attrs,
+                    }
+
+    def get_deceased_npcs(self) -> list[str]:
+        return list(self._deceased_npcs)
+
+    def get_owned_items(self) -> list[str]:
+        return list(self._owned_items)
+
+    def get_destroyed_locations(self) -> list[str]:
+        return list(self._destroyed_locations)
+
+    def get_known_skills(self) -> list[str]:
+        return list(self._known_skills)
+
+    def get_world_laws(self) -> list[str]:
+        return list(self._world_laws)
+
+    def get_npc_role_snapshot(self) -> dict[str, dict[str, Any]]:
+        return dict(self._npc_role_snapshot)
+
+
+def _build_npc_registry(ledger: dict[str, Any]) -> dict[str, Any] | None:
+    registry: dict[str, Any] = {}
+    alive_npcs = _ledger_lookup(ledger, "alive_npcs", "npc_registry")
+    if isinstance(alive_npcs, dict):
+        for name, info in alive_npcs.items():
+            if isinstance(info, dict):
+                registry[str(name)] = dict(info)
+            else:
+                registry[str(name)] = {}
+            registry[str(name)].setdefault("status", "alive")
+
+    deceased_names = _coerce_named_values(_ledger_lookup(ledger, "dead_npcs", "deceased_npcs", "deceased"))
+    for name in deceased_names:
+        entry = registry.setdefault(name, {})
+        entry["status"] = "dead"
+
+    return registry or None
+
+
+def _normalize_issue_entries(
+    entries: list[Any],
+    *,
+    source: str,
+    bucket: str,
+    default_severity: str = "WARNING",
+    skip_types: set[str] | None = None,
+) -> list[dict[str, Any]]:
+    normalized: list[dict[str, Any]] = []
+    blocked_types = skip_types or set()
+    for entry in entries or []:
+        payload = dict(entry) if isinstance(entry, dict) else {"reason": str(entry)}
+        issue_type = str(payload.get("type", "") or "").strip()
+        if issue_type in blocked_types:
+            continue
+        severity = str(payload.get("severity", default_severity) or default_severity).upper()
+        reason = str(payload.get("reason") or payload.get("text") or payload.get("description") or "").strip()
+        if not reason:
+            reason = str(entry)
+        if severity == "WARNING" and "contradiction" in reason.lower():
+            severity = "MAJOR"
+        normalized.append(
+            {
+                **payload,
+                "source": source,
+                "bucket": bucket,
+                "type": issue_type,
+                "severity": severity,
+                "reason": reason,
+            }
+        )
+    return normalized
+
+
+def _issue_penalty(issue: dict[str, Any]) -> float:
+    severity = str(issue.get("severity", "WARNING") or "WARNING").upper()
+    penalty = CONSISTENCY_SEVERITY_PENALTIES.get(severity, CONSISTENCY_SEVERITY_PENALTIES["WARNING"])
+    if issue.get("bucket") == "warning":
+        return max(2.0, round(penalty * 0.5, 2))
+    return penalty
+
+
+def _consistency_coverage_fields(case: dict[str, Any], validation_context: dict[str, Any]) -> list[str]:
+    coverage = ["prev_full_text"]
+    prev_hud = validation_context.get("prev_hud")
+    if isinstance(prev_hud, dict) and prev_hud.get("actual_truth"):
+        coverage.append("prev_hud")
+
+    ledger = _case_gold_ledger(case)
+    if ledger:
+        coverage.append("gold_ledger")
+        if _build_npc_registry(ledger):
+            coverage.append("npc_registry")
+        if _extract_npc_personalities(ledger):
+            coverage.append("npc_personalities")
+        if _coerce_named_values(_ledger_lookup(ledger, "dead_npcs", "deceased_npcs", "deceased")):
+            coverage.append("dead_npcs")
+        if _coerce_named_values(_ledger_lookup(ledger, "destroyed_locations", "destroyed")):
+            coverage.append("destroyed_locations")
+
+    return coverage
+
+
+def _constraint_scope_text(target_text: str, scope: str) -> str:
+    if scope == "opening":
+        return target_text[:1200]
+    if scope == "prefix":
+        return target_text[:2200]
+    return target_text
+
+
+def _manual_constraint_probe(ledger: dict[str, Any], target_text: str) -> list[dict[str, Any]]:
+    constraints = ledger.get("manual_constraints")
+    if not isinstance(constraints, list):
+        return []
+
+    findings: list[dict[str, Any]] = []
+    for raw in constraints:
+        if not isinstance(raw, dict):
+            continue
+
+        constraint_type = str(raw.get("type", "") or "").strip()
+        scope = str(raw.get("scope", "opening") or "opening").strip()
+        scope_text = _constraint_scope_text(target_text, scope)
+        lowered_scope = scope_text.lower()
+        terms = [str(term).strip() for term in raw.get("terms", []) if str(term).strip()]
+        allow_terms = [str(term).strip() for term in raw.get("allow_if_any_terms", []) if str(term).strip()]
+        severity = str(raw.get("severity", "WARNING") or "WARNING").upper()
+        constraint_id = str(raw.get("id", constraint_type) or constraint_type)
+        label = str(raw.get("label", constraint_id) or constraint_id)
+
+        if allow_terms and any(term.lower() in lowered_scope for term in allow_terms):
+            continue
+
+        if constraint_type == "require_any_terms":
+            matched_terms = [term for term in terms if term.lower() in lowered_scope]
+            min_matches = int(raw.get("min_matches", 1) or 1)
+            if len(matched_terms) >= min_matches:
+                continue
+            findings.append(
+                {
+                    "type": "manual_constraint_missing_terms",
+                    "severity": severity,
+                    "bucket": "warning",
+                    "source": "manual_constraint",
+                    "constraint_id": constraint_id,
+                    "label": label,
+                    "matched_terms": matched_terms,
+                    "expected_terms": terms,
+                    "reason": str(raw.get("reason") or f"expected opening carry-over missing: {label}"),
+                    "fix_suggestion": str(
+                        raw.get("fix_suggestion")
+                        or "opening 초반에 직전 화의 핵심 제약/장면/인물을 다시 연결하세요."
+                    ),
+                }
+            )
+            continue
+
+        if constraint_type == "forbid_any_terms":
+            matched_terms = [term for term in terms if term.lower() in lowered_scope]
+            if not matched_terms:
+                continue
+            findings.append(
+                {
+                    "type": "manual_constraint_forbidden_terms",
+                    "severity": severity,
+                    "bucket": "violation",
+                    "source": "manual_constraint",
+                    "constraint_id": constraint_id,
+                    "label": label,
+                    "matched_terms": matched_terms,
+                    "reason": str(raw.get("reason") or f"forbidden contradiction trigger: {label}"),
+                    "fix_suggestion": str(
+                        raw.get("fix_suggestion")
+                        or "checkpoint에서 확정되지 않은 상태 변화나 모순되는 표현을 제거하세요."
+                    ),
+                }
+            )
+
+    return findings
+
+
+def _extract_json_payload(raw_text: str) -> dict[str, Any] | None:
+    text = str(raw_text or "").strip()
+    if not text:
+        return None
+
+    fenced = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL | re.IGNORECASE)
+    if fenced:
+        text = fenced.group(1).strip()
+    else:
+        fenced = re.search(r"```\s*(.*?)\s*```", text, re.DOTALL)
+        if fenced:
+            text = fenced.group(1).strip()
+
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        start = text.find("{")
+        end = text.rfind("}")
+        if start < 0 or end < start:
+            return None
+        try:
+            payload = json.loads(text[start : end + 1])
+        except json.JSONDecodeError:
+            return None
+
+    return payload if isinstance(payload, dict) else None
+
+
+def _build_consistency_judge_prompt(case: dict[str, Any], target_text: str, *, genre: str) -> str:
+    ledger = _case_gold_ledger(case)
+    checkpoint = case["checkpoint"]
+    checkpoint_excerpt = checkpoint["combined_excerpt"][:6000]
+    tail_anchor = checkpoint["tail_anchor_excerpt"][:1200]
+    ledger_excerpt = dump_json(ledger) if ledger else "{}"
+    candidate_excerpt = target_text[:7000]
+    return f"""너는 장편 서사 benchmark의 contradiction-first continuity judge다.
+
+목표:
+- gold continuation과의 유사도는 보지 말 것
+- 오직 checkpoint / 직전 상태 / optional ledger 기준으로
+  후보 원고가 이전 내용과 모순되거나, 직전 제약을 말도 안 되게 깨는지 판정할 것
+
+장르: {genre}
+case_id: {case["case_id"]}
+다음 화 번호: {case["gold_continuation"]["ep_num"]}
+
+판정 원칙:
+- direct contradiction, impossible state shift, dead/alive reversal, location jump,
+  relationship/role reversal, item/state inconsistency는 강하게 감점
+- immediate active pressure를 아무 설명 없이 무시해 opening plausibility를 깨면 감점 가능
+- 단순히 gold와 다른 전개라는 이유만으로 감점 금지
+- checkpoint와 양립 가능한 새로운 전개는 허용
+- 애매하면 MAJOR 대신 WARNING을 사용
+
+반드시 JSON만 반환:
+{{
+  "score": 0-100,
+  "major_contradiction_count": 0,
+  "findings": [
+    {{
+      "severity": "CRITICAL|MAJOR|WARNING|INFO",
+      "type": "short_snake_case",
+      "reason": "why this contradicts prior state",
+      "evidence": "short quote or cue from candidate/checkpoint",
+      "fix_suggestion": "brief fix"
+    }}
+  ],
+  "summary": "one-line verdict"
+}}
+
+===== checkpoint excerpt start =====
+{checkpoint_excerpt}
+===== checkpoint excerpt end =====
+
+===== tail anchor start =====
+{tail_anchor}
+===== tail anchor end =====
+
+===== optional gold ledger start =====
+{ledger_excerpt}
+===== optional gold ledger end =====
+
+===== candidate manuscript start =====
+{candidate_excerpt}
+===== candidate manuscript end =====
+"""
+
+
+def _llm_consistency_probe(
+    case: dict[str, Any],
+    target_text: str,
+    *,
+    genre: str,
+    consistency_llm_ask: Any,
+) -> dict[str, Any] | None:
+    if consistency_llm_ask is None:
+        return None
+
+    prompt = _build_consistency_judge_prompt(case, target_text, genre=genre)
+    raw_response = consistency_llm_ask(prompt)
+    payload = _extract_json_payload(raw_response)
+    if not payload:
+        return {
+            "score": None,
+            "major_contradiction_count": 0,
+            "findings": [],
+            "summary": "llm judge parse failed",
+            "raw_response": str(raw_response or "")[:2000],
+            "judge_error": "invalid_json",
+        }
+
+    findings_raw = payload.get("findings", [])
+    findings = _normalize_issue_entries(
+        findings_raw if isinstance(findings_raw, list) else [],
+        source="llm_consistency_judge",
+        bucket="violation",
+        default_severity="WARNING",
+    )
+    try:
+        score = float(payload.get("score"))
+    except (TypeError, ValueError):
+        score = None
+    if score is not None:
+        score = max(0.0, min(100.0, score))
+
+    try:
+        major_contradiction_count = int(payload.get("major_contradiction_count", 0) or 0)
+    except (TypeError, ValueError):
+        major_contradiction_count = sum(
+            1 for finding in findings if str(finding.get("severity", "")).upper() in MAJOR_CONTRADICTION_SEVERITIES
+        )
+
+    return {
+        "score": score,
+        "major_contradiction_count": major_contradiction_count,
+        "findings": findings,
+        "summary": str(payload.get("summary", "") or "").strip(),
+        "raw_response": str(raw_response or "")[:2000],
+        "judge_error": None,
+    }
+
+
+def _consistency_probe(case: dict[str, Any], target_text: str, *, genre: str) -> dict[str, Any]:
+    validation_context = _build_validation_context(case, genre=genre)
+    continuity_result = ContinuityValidator(context=None).validate(
+        current_ep=int(case["gold_continuation"]["ep_num"]),
+        manuscript=target_text,
+        validation_context=validation_context,
+        prev_hud=validation_context.get("prev_hud"),
+    )
+
+    ledger = _case_gold_ledger(case)
+    truth_result = TruthGate(
+        world_state=_BenchmarkWorldState(ledger),
+        fact_ledger=ledger or None,
+        llm_ask=None,
+    ).validate(
+        target_text,
+        state_updates={},
+        npc_registry=_build_npc_registry(ledger),
+    )
+
+    continuity_violations = _normalize_issue_entries(
+        continuity_result.get("violations", []),
+        source="continuity_validator",
+        bucket="violation",
+        default_severity="WARNING",
+    )
+    continuity_warnings = _normalize_issue_entries(
+        continuity_result.get("warnings", []),
+        source="continuity_validator",
+        bucket="warning",
+        default_severity="WARNING",
+        skip_types={"threat_carryover_drift"},
+    )
+    truth_warnings = _normalize_issue_entries(
+        truth_result.get("structured_warnings", []),
+        source="truth_gate",
+        bucket="warning",
+        default_severity="WARNING",
+    )
+    manual_constraint_findings = _normalize_issue_entries(
+        _manual_constraint_probe(ledger, target_text),
+        source="manual_constraint",
+        bucket="warning",
+        default_severity="WARNING",
+    )
+
+    all_issues = continuity_violations + continuity_warnings + truth_warnings + manual_constraint_findings
+    total_penalty = min(100.0, sum(_issue_penalty(issue) for issue in all_issues))
+    major_contradiction_count = sum(
+        1 for issue in all_issues if str(issue.get("severity", "")).upper() in MAJOR_CONTRADICTION_SEVERITIES
+    )
+
+    return {
+        "score": max(0.0, 100.0 - total_penalty),
+        "penalty": round(total_penalty, 2),
+        "continuity_violations": continuity_violations,
+        "continuity_warnings": continuity_warnings,
+        "truth_warnings": truth_warnings,
+        "manual_constraint_findings": manual_constraint_findings,
+        "coverage_fields": _consistency_coverage_fields(case, validation_context),
+        "source_mode": "lightweight-ledger" if ledger else "checkpoint-only",
+        "major_contradiction_count": major_contradiction_count,
+        "continuity_violation_count": len(continuity_violations),
+        "continuity_warning_count": len(continuity_warnings),
+        "truth_warning_count": len(truth_warnings),
+        "manual_constraint_count": len(manual_constraint_findings),
+    }
+
+
 def _continuity_probe(case: dict[str, Any], target_text: str) -> dict[str, Any]:
     opening = target_text[:1200]
     prefix = target_text[:2200]
@@ -481,11 +1088,24 @@ def _gold_relative_index(candidate_score: float, gold_score: float) -> float | N
     return None
 
 
-def score_case(case: dict[str, Any], candidate_text: str, *, genre: str = "investment") -> dict[str, Any]:
-    gold_path = ROOT / case["gold_continuation"]["episode_ref"]["path"]
-    gold_text = gold_path.read_text(encoding="utf-8").strip()
+def score_case(
+    case: dict[str, Any],
+    candidate_text: str,
+    *,
+    genre: str = "investment",
+    consistency_llm_ask: Any = None,
+    consistency_judge_model: str | None = None,
+) -> dict[str, Any]:
+    gold_text = _read_episode_ref(case["gold_continuation"]["episode_ref"])
     candidate_probe = _continuity_probe(case, candidate_text)
     gold_probe = _continuity_probe(case, gold_text)
+    consistency_auto_probe = _consistency_probe(case, candidate_text, genre=genre)
+    consistency_llm_probe = _llm_consistency_probe(
+        case,
+        candidate_text,
+        genre=genre,
+        consistency_llm_ask=consistency_llm_ask,
+    )
     candidate_opening = candidate_probe["opening"]
     gold_opening = gold_text[:1200]
     intrinsic = _intrinsic_quality(candidate_text, genre=genre)
@@ -510,6 +1130,29 @@ def score_case(case: dict[str, Any], candidate_text: str, *, genre: str = "inves
         + (0.1 * length_alignment)
         + (0.2 * intrinsic_percent)
     )
+    auto_consistency_score = round(consistency_auto_probe["score"], 2)
+    llm_consistency_score = (
+        round(consistency_llm_probe["score"], 2)
+        if consistency_llm_probe and consistency_llm_probe.get("score") is not None
+        else None
+    )
+    primary_consistency_score = llm_consistency_score if llm_consistency_score is not None else auto_consistency_score
+    primary_consistency_findings = (
+        consistency_llm_probe["findings"]
+        if consistency_llm_probe and llm_consistency_score is not None
+        else (
+            consistency_auto_probe["continuity_violations"]
+            + consistency_auto_probe["continuity_warnings"]
+            + consistency_auto_probe["truth_warnings"]
+            + consistency_auto_probe["manual_constraint_findings"]
+        )
+    )
+    primary_major_contradiction_count = (
+        consistency_llm_probe["major_contradiction_count"]
+        if consistency_llm_probe and llm_consistency_score is not None
+        else consistency_auto_probe["major_contradiction_count"]
+    )
+    consistency_score_mode = "llm-judge" if llm_consistency_score is not None else "auto-only"
     return {
         "case_id": case["case_id"],
         "gold_ep_num": case["gold_continuation"]["ep_num"],
@@ -523,7 +1166,38 @@ def score_case(case: dict[str, Any], candidate_text: str, *, genre: str = "inves
         "writing_quality_score": round(intrinsic_percent * 100.0, 2),
         "legacy_blended_auto_score": round(legacy_blended_auto_score, 2),
         "auto_score": round(continuity_index, 2) if continuity_index is not None else None,
+        "consistency_score": primary_consistency_score,
+        "consistency_score_mode": consistency_score_mode,
+        "consistency_auto_score": auto_consistency_score,
+        "consistency_judge_score": llm_consistency_score,
+        "consistency_judge_model": consistency_judge_model,
+        "consistency_judge_summary": (
+            consistency_llm_probe["summary"]
+            if consistency_llm_probe and consistency_llm_probe.get("summary")
+            else None
+        ),
+        "consistency_penalty": consistency_auto_probe["penalty"],
+        "consistency_source_mode": consistency_auto_probe["source_mode"],
+        "continuity_violation_count": consistency_auto_probe["continuity_violation_count"],
+        "continuity_warning_count": consistency_auto_probe["continuity_warning_count"],
+        "truth_warning_count": consistency_auto_probe["truth_warning_count"],
+        "manual_constraint_count": consistency_auto_probe["manual_constraint_count"],
+        "major_contradiction_count": primary_major_contradiction_count,
         "continuity_axes": candidate_probe["axes"],
+        "consistency_axes": {
+            "mode": consistency_score_mode,
+            "penalty": consistency_auto_probe["penalty"],
+            "source_mode": consistency_auto_probe["source_mode"],
+            "coverage_fields": consistency_auto_probe["coverage_fields"],
+            "continuity_violation_count": consistency_auto_probe["continuity_violation_count"],
+            "continuity_warning_count": consistency_auto_probe["continuity_warning_count"],
+            "truth_warning_count": consistency_auto_probe["truth_warning_count"],
+            "manual_constraint_count": consistency_auto_probe["manual_constraint_count"],
+            "major_contradiction_count": primary_major_contradiction_count,
+            "consistency_auto_score": auto_consistency_score,
+            "consistency_judge_score": llm_consistency_score,
+            "consistency_judge_model": consistency_judge_model,
+        },
         "gold_continuity_axes": gold_probe["axes"],
         "gold_fidelity_axes": {
             "fulltext_similarity": round(fulltext_similarity, 4),
@@ -542,6 +1216,17 @@ def score_case(case: dict[str, Any], candidate_text: str, *, genre: str = "inves
         "tail_numeric_anchors": candidate_probe["numeric_result"]["expected"],
         "tail_numeric_anchors_matched": candidate_probe["numeric_result"]["matched"],
         "intrinsic_quality": intrinsic,
+        "consistency_findings": primary_consistency_findings,
+        "consistency_supporting_findings": (
+            consistency_auto_probe["continuity_violations"]
+            + consistency_auto_probe["continuity_warnings"]
+            + consistency_auto_probe["truth_warnings"]
+            + consistency_auto_probe["manual_constraint_findings"]
+        ),
+        "consistency_judge_raw_response": (
+            consistency_llm_probe["raw_response"] if consistency_llm_probe else None
+        ),
+        "consistency_judge_error": consistency_llm_probe["judge_error"] if consistency_llm_probe else None,
     }
 
 
@@ -551,7 +1236,10 @@ def run_gold_benchmark(
     candidate_dir: Path | None = None,
     use_gold_candidate: bool = False,
     genre: str = "investment",
+    consistency_llm_ask: Any = None,
+    consistency_judge_model: str | None = None,
 ) -> dict[str, Any]:
+    attach_lightweight_ledgers(gold_package)
     cases = gold_package.get("cases", [])
     results: list[dict[str, Any]] = []
     missing_cases: list[str] = []
@@ -568,7 +1256,13 @@ def run_gold_benchmark(
                 missing_cases.append(case_id)
                 continue
         candidate_text = candidate_path.read_text(encoding="utf-8").strip()
-        result = score_case(case, candidate_text, genre=genre)
+        result = score_case(
+            case,
+            candidate_text,
+            genre=genre,
+            consistency_llm_ask=consistency_llm_ask,
+            consistency_judge_model=consistency_judge_model,
+        )
         result["candidate_path"] = _relative_to_root(candidate_path)
         result["candidate_sha256"] = _sha256_bytes(candidate_text.encode("utf-8"))
         results.append(result)
@@ -579,6 +1273,13 @@ def run_gold_benchmark(
     average_gold_fidelity_score = _average_metric(results, "gold_fidelity_score")
     average_writing_quality_score = _average_metric(results, "writing_quality_score")
     average_legacy_blended_auto_score = _average_metric(results, "legacy_blended_auto_score")
+    average_consistency_score = _average_metric(results, "consistency_score")
+    average_consistency_auto_score = _average_metric(results, "consistency_auto_score")
+    average_consistency_judge_score = _average_metric(results, "consistency_judge_score")
+    average_continuity_violation_count = _average_metric(results, "continuity_violation_count")
+    average_truth_warning_count = _average_metric(results, "truth_warning_count")
+    average_manual_constraint_count = _average_metric(results, "manual_constraint_count")
+    average_major_contradiction_count = _average_metric(results, "major_contradiction_count")
     return {
         "generated_at": now_iso(),
         "title": gold_package.get("title", ""),
@@ -586,6 +1287,10 @@ def run_gold_benchmark(
         "mvp_type": gold_package.get("mvp_type", "manuscript-only"),
         "score_profile": "continuity-gold-relative-v2",
         "primary_score_axis": "continuity_index",
+        "consistency_score_profile": "contradiction-first-v1",
+        "consistency_primary_axis": "consistency_score",
+        "consistency_score_mode": "llm-judge" if consistency_judge_model else "auto-only",
+        "consistency_judge_model": consistency_judge_model,
         "score_axes": {
             "primary": "continuity_index",
             "secondary": [
@@ -594,6 +1299,13 @@ def run_gold_benchmark(
                 "gold_fidelity_score",
                 "writing_quality_score",
                 "legacy_blended_auto_score",
+                "consistency_score",
+                "consistency_auto_score",
+                "consistency_judge_score",
+                "major_contradiction_count",
+                "continuity_violation_count",
+                "truth_warning_count",
+                "manual_constraint_count",
             ],
         },
         "case_count": len(cases),
@@ -607,6 +1319,13 @@ def run_gold_benchmark(
         "average_gold_fidelity_score": average_gold_fidelity_score,
         "average_writing_quality_score": average_writing_quality_score,
         "average_legacy_blended_auto_score": average_legacy_blended_auto_score,
+        "average_consistency_score": average_consistency_score,
+        "average_consistency_auto_score": average_consistency_auto_score,
+        "average_consistency_judge_score": average_consistency_judge_score,
+        "average_continuity_violation_count": average_continuity_violation_count,
+        "average_truth_warning_count": average_truth_warning_count,
+        "average_manual_constraint_count": average_manual_constraint_count,
+        "average_major_contradiction_count": average_major_contradiction_count,
         "average_auto_score": average_continuity_index,
         "results": results,
     }
