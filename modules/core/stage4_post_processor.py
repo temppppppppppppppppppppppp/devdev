@@ -780,6 +780,7 @@ class Stage4PostProcessor:
             critical_keys=critical_keys,
             final_state_updates=final_state_updates,
             blueprint=blueprint,
+            arc_data=arc_data,
         )
         bible_delta = delta["bible_delta"]
 

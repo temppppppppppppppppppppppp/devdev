@@ -1,0 +1,62 @@
+{
+  "session_start": "2026-03-27T20:37:32.595307",
+  "last_updated": "2026-03-27T20:43:36.040715",
+  "total_records": 1,
+  "records": [
+    {
+      "timestamp": "2026-03-27T20:42:05.878602",
+      "stage": 4,
+      "episode": 1,
+      "arc": 1,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 273219,
+      "token_cost": 0.525037,
+      "is_patch": false,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep1:arc1:a1:20260327_203731",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "repair_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [],
+        "must_fix": [],
+        "do_not_regress": [
+          "진소백의 냉철하고 흔들림 없는 태도",
+          "무협 특유의 묵직한 분위기와 긴장감"
+        ],
+        "success_condition": "현재 상태 유지",
+        "target_kind": "local_phrase",
+        "target_kinds": [
+          "local_phrase"
+        ]
+      },
+      "retry_budget_axes": {
+        "round": "initial",
+        "repair": "ensemble_generation",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "baseline"
+      },
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 19,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "C|긴장감 + 반전 강조",
+      "content_hash": "706c7bea16e5ee8bcab67c6c58c74d525e27e017424d34fd1ff228214e682fc6",
+      "artifact_path": "logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__C.txt"
+    }
+  ]
+}
