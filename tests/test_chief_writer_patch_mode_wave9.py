@@ -104,6 +104,16 @@ def test_build_patch_with_feedback_director_feedback_appends_history_and_fix_pac
 def test_patch_with_feedback_shell_uses_extracted_patch_helpers():
     writer = _make_writer()
     writer.generate_ensemble.return_value = [{"manuscript": "patched"}]
+    previous_attempt = {
+        "selected_strategy_key": "strategy_a",
+        "fix_pack": {
+            "patch_targets": ["anchor_a"],
+            "must_fix": ["fix the selected sentence"],
+            "do_not_regress": ["preserve the surrounding paragraph"],
+            "success_condition": "selected sentence corrected",
+            "target_kind": "local_sentence",
+        },
+    }
 
     with (
         patch.object(writer, "_build_patch_with_feedback_section", return_value="[section]") as mock_section,
@@ -128,7 +138,7 @@ def test_patch_with_feedback_shell_uses_extracted_patch_helpers():
             style_guide="keep tone",
             original_manuscript="original manuscript " * 160,
             director_feedback="fix continuity only",
-            previous_attempt={"selected_strategy_key": "strategy_a"},
+            previous_attempt=previous_attempt,
             attempt_number=2,
         )
 
@@ -137,9 +147,9 @@ def test_patch_with_feedback_shell_uses_extracted_patch_helpers():
     mock_feedback.assert_called_once_with(
         patch_section="[section]",
         attempt_number=2,
-        previous_attempt={"selected_strategy_key": "strategy_a"},
+        previous_attempt=previous_attempt,
     )
-    mock_retry_args.assert_called_once_with({"selected_strategy_key": "strategy_a"})
+    mock_retry_args.assert_called_once_with(previous_attempt)
     kwargs = writer.generate_ensemble.call_args.kwargs
     assert kwargs["director_feedback"] == "[enhanced]"
     assert kwargs["failure_constraints"] == "constraints"

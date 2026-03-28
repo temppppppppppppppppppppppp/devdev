@@ -14,13 +14,13 @@ from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, Retrieval
 from modules.core.session_logger import SessionLogger
 from modules.core.stage4_context import Stage4Context
 from modules.core.stage4_director_runtime import _DirectorInputPackResult
-from modules.core.stage4_reject_runtime import _RejectLoggingPayload
 from modules.core.stage4_interview_round import (
     Stage4InterviewRound,
     _RoundOutcomeTracePayload,
     _Stage4AttemptPreludePayload,
 )
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundContext
+from modules.core.stage4_reject_runtime import _RejectLoggingPayload
 
 
 def _make_ctx():
@@ -2388,6 +2388,35 @@ class TestRecordS4Attempt:
         assert payload["is_patch_fallback"] is False
         assert payload["patch_strategy"] == "patch_with_feedback"
 
+    def test_log_session_decision_surfaces_authoritative_fix_scope_metadata(self):
+        ctx = _make_ctx()
+        ctx.session_logger = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir._log_session_decision(
+            next_ep=2,
+            round_num=1,
+            arc_num=1,
+            verdict="REJECT",
+            score=50,
+            selected="A",
+            error_category="QUALITY_ISSUE",
+            reason="reason",
+            fix_scope="partial",
+            open_review="review",
+            action_items=["fix"],
+            attempt_key="attempt-1",
+            authoritative_fix_scope="",
+            authoritative_fix_scope_violation={"type": "blank_authoritative_fix_scope"},
+        )
+
+        kwargs = ctx.session_logger.log_decision.call_args.kwargs
+        assert kwargs["fix_scope"] == "partial"
+        assert kwargs["authoritative_fix_scope"] == ""
+        assert kwargs["authoritative_fix_scope_violation"] == {
+            "type": "blank_authoritative_fix_scope"
+        }
+
     def test_record_stage4_pass_rate_attempt_uses_prelude_payload(self):
         ctx = _make_ctx()
         ctx.pass_rate_monitor = MagicMock()
@@ -3201,11 +3230,11 @@ class TestRecordS4Attempt:
         saved_verdict = ctx.current_project.db.save_director_selection.call_args.kwargs["verdict"]
         assert saved_verdict == "REJECT"
 
-    def test_retry_inplace_requires_fix_pack_and_routes_to_patch(self):
+    def test_retry_inplace_requires_fix_pack_and_routes_to_rewrite(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
-        round_ctx.chief_writer.patch_with_feedback.return_value = [_candidate()]
+        round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
 
         candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
             round_num=1,
@@ -3224,14 +3253,15 @@ class TestRecordS4Attempt:
             common_writer_kwargs={},
         )
 
-        assert candidates == round_ctx.chief_writer.patch_with_feedback.return_value
-        assert is_patch is True
+        assert candidates == round_ctx.chief_writer.regenerate_with_feedback.return_value
+        assert is_patch is False
         assert patch_fallback is False
         assert prev_score == 95
         assert asp_manuscript is None
         round_ctx.chief_writer.inplace_patch.assert_not_called()
-        round_ctx.chief_writer.patch_with_feedback.assert_called_once()
-        assert ir._last_retry_budget_axes["repair"] == "patch_revision"
+        round_ctx.chief_writer.patch_with_feedback.assert_not_called()
+        round_ctx.chief_writer.regenerate_with_feedback.assert_called_once()
+        assert ir._last_retry_budget_axes["repair"] == "rewrite_regenerate"
 
     def test_pass_with_fix_scene_model_target_downgrades_to_reject(self):
         ctx = _make_ctx()
@@ -6197,6 +6227,8 @@ class TestLane2DirectorSemantics:
                 "final_verdict": "REJECT",
                 "gate_basis": "consistency",
                 "repair_scope": "partial",
+                "authoritative_fix_scope": "",
+                "authoritative_fix_scope_violation": {"type": "blank_authoritative_fix_scope"},
                 "consistency_checklist": {"rule": "keep"},
                 "state_updates": {"hud": "snapshot"},
                 "open_review": "review note",
@@ -6235,11 +6267,53 @@ class TestLane2DirectorSemantics:
         assert payload.previous_attempt["_tot_used"] is True
         assert payload.previous_attempt["_mad_used"] is False
         assert payload.previous_attempt["fix_scope"] == "partial"
+        assert payload.previous_attempt["authoritative_fix_scope"] == ""
+        assert payload.previous_attempt["authoritative_fix_scope_violation"] == {
+            "type": "blank_authoritative_fix_scope"
+        }
         assert payload.previous_attempt["director_feedback_text"] == "director note"
         assert payload.previous_attempt["runtime_advisory"] == "runtime digest"
         assert payload.previous_attempt["retry_directives"] == "retry directives"
         assert payload.previous_attempt["prior_attempts"] == [{"old": True}]
         assert payload.previous_attempt["retry_budget_axes"] == {"repair": "patch_revision"}
+
+    def test_retry_pathology_payload_separates_authoritative_and_derived_fix_scope(self):
+        from modules.core.stage4_outcome_runtime import Stage4OutcomeRuntime
+
+        owner = MagicMock()
+        owner.interview_round = MagicMock()
+        owner.interview_round._evaluate_fix_pack_contract.return_value = {
+            "ready": False,
+            "reason": "missing_fix_pack",
+            "fix_pack": {},
+        }
+        runtime = Stage4OutcomeRuntime(owner)
+
+        payload = runtime.build_retry_pathology_payload(
+            ep_num=1,
+            round_num=2,
+            previous_attempt={
+                "reject_bucket": "quality_issue",
+                "gate_basis": "director_primary_reject",
+                "fix_scope": "partial",
+                "authoritative_fix_scope": "",
+                "authoritative_fix_scope_violation": {"type": "blank_authoritative_fix_scope"},
+                "repair_scope": "partial",
+                "error_category": "QUALITY_ISSUE",
+                "fix_scope_reasoning": "[IFC] keep the ending grounded",
+                "open_review": "review",
+                "score": 50,
+                "plateau_detected": True,
+                "fix_pack": {},
+            },
+        )
+
+        assert payload["fix_scope"] == "partial"
+        assert payload["authoritative_fix_scope"] == ""
+        assert payload["authoritative_fix_scope_violation"] == {
+            "type": "blank_authoritative_fix_scope"
+        }
+        assert payload["fix_pack_reason"] == "missing_fix_pack"
 
     def test_build_reject_guidance_payload_applies_inplace_gate_and_mad_hint(self):
         ctx = _make_ctx()
@@ -6527,8 +6601,8 @@ class TestLane2DirectorSemantics:
         assert payload["attempt_key"] == "s4:ep1:arc1:a1"
 
     def test_append_pass_episode_log_delegates_to_stage4_episode_logging(self):
-        from modules.core.stage4_interview_round import _PassResultLoggingPayload
         from modules.core import stage4_episode_logging as s4_episode_logging
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
 
         ctx = _make_ctx()
         ctx.current_project.metrics_session_id = "sess-pass-log"

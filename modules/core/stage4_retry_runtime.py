@@ -824,7 +824,7 @@ class Stage4RetryRuntime:
 
     # [Retry lane routing priority]
     # 1. inplace: fix_scope == "inplace" AND fix_pack ready AND no consecutive empty patches
-    # 2. patch: post_select_conflict or partial fix_scope (patch_enabled required)
+    # 2. patch: ready fix_pack contract required; otherwise fail-closed to rewrite
     # 3. rewrite: full scope, fallback from failed inplace/patch, or IFC escalation
     # 4. ASP correction: runs independently after candidate generation (not mutually exclusive)
     # Consecutive empty patches (missing_patch_targets) escalate from inplace -> rewrite.
@@ -888,6 +888,7 @@ class Stage4RetryRuntime:
         )
         use_patch = (
             not _consecutive_empty_patch  # [TF-4]
+            and bool(fix_pack_contract.get("ready"))
             and (
                 force_patch
                 or (
@@ -900,6 +901,17 @@ class Stage4RetryRuntime:
                 )
             )
         )
+        if (
+            patch_enabled
+            and prev_manuscript
+            and fix_scope in ("inplace", "partial")
+            and not bool(fix_pack_contract.get("ready"))
+            and not _consecutive_empty_patch
+        ):
+            logging.warning(
+                "[TF-PATCH-GATE] non-ready fix_pack blocks patch_revision; falling through to rewrite"
+            )
+            owner.ctx.ui.log("   [TF-PATCH-GATE] non-ready fix_pack -> patch 차단, rewrite 경로 사용")
         return _RetryLaneRoutingPayload(
             prev_score=prev_score,
             fix_scope=fix_scope,

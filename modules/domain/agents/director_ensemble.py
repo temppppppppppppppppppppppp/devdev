@@ -6,9 +6,9 @@ Blueprint/Manuscript 후보 비교, 선택, 판정을 담당.
 Director reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등) 접근.
 """
 
-from dataclasses import dataclass
 import json
 import logging
+from dataclasses import dataclass
 
 from modules.core.constants import ContextLimits, ManuscriptLimits, smart_truncate  # [V64.P4]
 from modules.core.prompt_loader import PromptLoader
@@ -176,9 +176,12 @@ def _collect_compare_candidate_advisories(candidates: list) -> list[dict]:
     return advisories
 
 
+_VALID_FIX_SCOPES = frozenset({"inplace", "partial", "full"})
+
+
 def _normalize_repair_scope(value: object) -> str:
     scope = str(value or "").strip().lower()
-    return scope if scope in {"inplace", "partial", "full"} else "none"
+    return scope if scope in _VALID_FIX_SCOPES else "none"
 
 
 def _normalize_fix_target_kind(value: object) -> str:
@@ -529,6 +532,119 @@ def _log_director_frame(
             logging.warning("[DirectorFrame] stage=%s ep=%s contradiction_%d=%s", stage, ep_num, idx, contradiction)
     if _thinking:
         logging.debug("[DirectorThinking] stage=%s ep=%s %s", stage, ep_num, _thinking)
+
+
+def _emit_stage4_operator_lines(
+    *,
+    director,
+    ep_num: int,
+    final_verdict: str,
+    score: int,
+    selected_letter: str,
+    original_verdict: str,
+    selection_reason: str,
+    verdict_reason: str,
+    score_breakdown: dict[str, int | float],
+    issues: list[str],
+    open_review: str,
+    adaptive_reason: str,
+    thinking: str,
+) -> None:
+    operator_lines = [
+        f"[Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})",
+        f"선택: 후보 {selected_letter} | 원래 판정: {original_verdict}",
+    ]
+    if selection_reason:
+        operator_lines.append(f"선택 사유: {selection_reason}")
+    if verdict_reason and verdict_reason != selection_reason:
+        operator_lines.append(f"verdict_reason: {verdict_reason}")
+    if score_breakdown:
+        score_breakdown_str = ", ".join(
+            f"{key}={value}" for key, value in score_breakdown.items() if isinstance(value, int | float)
+        )
+        if score_breakdown_str:
+            operator_lines.append(f"점수 분해: {score_breakdown_str}")
+    if issues:
+        for issue in issues:
+            operator_lines.append(f"이슈: {issue!s}")
+    if open_review and open_review not in ("특이사항 없음", "없음", ""):
+        operator_lines.append(f"자유 리뷰: {open_review}")
+    if adaptive_reason:
+        operator_lines.append(f"적응형: {adaptive_reason}")
+    if thinking:
+        operator_lines.append(f"💭 [Director Thinking]\n{thinking}")
+    for line in operator_lines:
+        director._operator_log(
+            line,
+            meta={"component": "Director", "stage": "stage4", "ep_num": ep_num, "score": score},
+        )
+
+
+def _build_stage4_ensemble_decision_payload(
+    *,
+    state: "_EnsembleSelectionState",
+    result: dict,
+    final_verdict: str,
+    gate_basis: str,
+    score_breakdown: dict[str, int | float],
+    selection_reason: str,
+    verdict_reason: str,
+    feedback: dict,
+    open_review: str,
+    adaptive_result: dict,
+    repair_scope: str,
+    authoritative_fix_scope: str,
+    fix_scope: str,
+    fix_scope_reasoning: str,
+    fix_pack: dict,
+    thinking: str,
+    authoritative_fix_scope_violation: dict | None,
+) -> dict:
+    return {
+        "selected": state.selected_letter,
+        "selected_candidate": state.selected_candidate,
+        "verdict": final_verdict,
+        "director_verdict": state.original_verdict,
+        "final_verdict": final_verdict,
+        "original_verdict": state.original_verdict,
+        "gate_basis": gate_basis,
+        "score": state.score,
+        "pre_firewall_score": state.pre_firewall_score,
+        "score_breakdown": score_breakdown,
+        "selection_reason": selection_reason,
+        "verdict_reason": verdict_reason,
+        "reject_reason": verdict_reason,
+        "firewall_triggered": state.firewall_triggered,
+        "firewall_fixable": state.firewall_fixable,
+        "firewall_reason": state.firewall_reason,
+        "feedback": feedback,
+        "state_updates": result.get("state_updates") or state.selected_candidate.get("state_updates") or {},
+        "action_items": feedback.get("action_items", []),
+        "other_candidates_notes": result.get("other_candidates_notes", {}),
+        "open_review": open_review,
+        "adaptive_threshold": adaptive_result.get("threshold_used", 65),
+        "adaptive_reason": adaptive_result.get("reason", ""),
+        "repair_scope": repair_scope,
+        "error_category": result.get("error_category", ""),
+        "fix_scope": fix_scope,
+        "authoritative_fix_scope": authoritative_fix_scope,
+        "fix_scope_reasoning": fix_scope_reasoning,
+        "fix_pack": fix_pack,
+        "numeric_consistency_review": state.numeric_consistency_review,
+        "consistency_checklist": state.consistency_checklist,
+        "contradiction_details": state.contradiction_details or [],
+        "contradiction_types": [
+            item.get("type", "")
+            for item in (
+                state.contradiction_check.get("found_contradictions", [])
+                if isinstance(state.contradiction_check, dict)
+                else []
+            )
+            if isinstance(item, dict)
+        ],
+        "_director_thinking": thinking,
+        "authoritative_fix_scope_violation": authoritative_fix_scope_violation,
+    }
 
 
 def _apply_candidate_quality_gate(result: dict, quality_flag: dict | None) -> dict:
@@ -1247,10 +1363,13 @@ class DirectorEnsembleSelector:
         if not verdict_reason:
             verdict_reason = selection_reason
 
-        fix_scope = str(result.get("fix_scope", "") or "").strip()
+        authoritative_fix_scope = str(
+            result.get("authoritative_fix_scope", result.get("fix_scope", "")) or ""
+        ).strip()
+        fix_scope = authoritative_fix_scope
         fix_scope_reasoning = str(result.get("fix_scope_reasoning", "") or "").strip()
         fix_pack = _normalize_fix_pack(result.get("fix_pack"))
-        repair_scope = _normalize_repair_scope(fix_scope)
+
         selected_manuscript = (
             str(state.selected_candidate.get("manuscript", "") or "")
             if isinstance(state.selected_candidate, dict)
@@ -1267,6 +1386,30 @@ class DirectorEnsembleSelector:
                 fix_scope_reasoning = state.firewall_reason
                 if contradiction_summary_lines:
                     fix_scope_reasoning = f"{fix_scope_reasoning}\n" + "\n".join(contradiction_summary_lines)
+
+        repair_scope = _normalize_repair_scope(fix_scope)
+
+        # [DCM-T2] Validate the Director-authored scope separately from any runtime-derived scope.
+        _authoritative_fix_scope_violation = None
+        if (
+            final_verdict in ("REJECT", "PASS_WITH_FIX")
+            and authoritative_fix_scope.lower() not in _VALID_FIX_SCOPES
+        ):
+            _violation_type = (
+                "blank_authoritative_fix_scope"
+                if not authoritative_fix_scope
+                else "invalid_authoritative_fix_scope"
+            )
+            _authoritative_fix_scope_violation = {
+                "type": _violation_type,
+                "raw_value": authoritative_fix_scope,
+                "verdict": final_verdict,
+            }
+            logging.warning(
+                "[DirectorFrame] fix_scope contract violation: verdict=%s fix_scope=%r (expected inplace|partial|full)",
+                final_verdict,
+                authoritative_fix_scope,
+            )
 
         if contradiction_summary_lines:
             feedback_issues = [str(item).strip() for item in (feedback.get("issues") or []) if str(item).strip()]
@@ -1306,6 +1449,8 @@ class DirectorEnsembleSelector:
             firewall_triggered=state.firewall_triggered,
         )
         issues = feedback.get("issues", []) if isinstance(feedback, dict) else []
+        score_breakdown = _canonical_score_breakdown(result.get("score_breakdown", {}))
+        thinking = getattr(self._d, "_last_thinking", "")
         _log_director_frame(
             stage="stage4",
             ep_num=ep_num,
@@ -1320,38 +1465,23 @@ class DirectorEnsembleSelector:
             fix_scope=fix_scope,
             repair_scope=repair_scope,
             open_review=open_review,
-            thinking=getattr(self._d, "_last_thinking", ""),
+            thinking=thinking,
         )
-        operator_lines = [
-            f"[Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {state.score})",
-            f"선택: 후보 {state.selected_letter} | 원래 판정: {state.original_verdict}",
-        ]
-        if selection_reason:
-            operator_lines.append(f"선택 사유: {selection_reason}")
-        if verdict_reason and verdict_reason != selection_reason:
-            operator_lines.append(f"verdict_reason: {verdict_reason}")
-        score_breakdown = _canonical_score_breakdown(result.get("score_breakdown", {}))
-        if score_breakdown:
-            score_breakdown_str = ", ".join(
-                f"{key}={value}" for key, value in score_breakdown.items() if isinstance(value, int | float)
-            )
-            if score_breakdown_str:
-                operator_lines.append(f"점수 분해: {score_breakdown_str}")
-        if issues:
-            for issue in issues:
-                operator_lines.append(f"이슈: {issue!s}")
-        if open_review and open_review not in ("특이사항 없음", "없음", ""):
-            operator_lines.append(f"자유 리뷰: {open_review}")
-        if adaptive_result.get("reason"):
-            operator_lines.append(f"적응형: {adaptive_result['reason']}")
-        thinking = getattr(self._d, "_last_thinking", "")
-        if thinking:
-            operator_lines.append(f"💭 [Director Thinking]\n{thinking}")
-        for line in operator_lines:
-            self._d._operator_log(
-                line,
-                meta={"component": "Director", "stage": "stage4", "ep_num": ep_num, "score": state.score},
-            )
+        _emit_stage4_operator_lines(
+            director=self._d,
+            ep_num=ep_num,
+            final_verdict=final_verdict,
+            score=state.score,
+            selected_letter=str(state.selected_letter),
+            original_verdict=str(state.original_verdict),
+            selection_reason=selection_reason,
+            verdict_reason=verdict_reason,
+            score_breakdown=score_breakdown,
+            issues=issues,
+            open_review=str(open_review),
+            adaptive_reason=str(adaptive_result.get("reason", "")),
+            thinking=thinking,
+        )
 
         # ── Verdict-field precedence contract (authoritative return boundary) ──
         # Consumers MUST use these fields in this precedence order:
@@ -1362,49 +1492,25 @@ class DirectorEnsembleSelector:
         #   4. gate_basis     — explains WHICH post-gate produced the delta
         #      between original_verdict and final_verdict (empty when equal)
         # All other fields are supplementary context, not adjudication truth.
-        return {
-            "selected": state.selected_letter,
-            "selected_candidate": state.selected_candidate,
-            "verdict": final_verdict,
-            "director_verdict": state.original_verdict,
-            "final_verdict": final_verdict,
-            "original_verdict": state.original_verdict,
-            "gate_basis": gate_basis,
-            "score": state.score,
-            "pre_firewall_score": state.pre_firewall_score,
-            "score_breakdown": _canonical_score_breakdown(result.get("score_breakdown", {})),
-            "selection_reason": selection_reason,
-            "verdict_reason": verdict_reason,
-            "reject_reason": verdict_reason,
-            "firewall_triggered": state.firewall_triggered,
-            "firewall_fixable": state.firewall_fixable,
-            "firewall_reason": state.firewall_reason,
-            "feedback": feedback,
-            "state_updates": result.get("state_updates") or state.selected_candidate.get("state_updates") or {},
-            "action_items": feedback.get("action_items", []) if isinstance(feedback, dict) else [],
-            "other_candidates_notes": result.get("other_candidates_notes", {}),
-            "open_review": open_review,
-            "adaptive_threshold": adaptive_result.get("threshold_used", 65),
-            "adaptive_reason": adaptive_result.get("reason", ""),
-            "repair_scope": repair_scope,
-            "error_category": result.get("error_category", ""),
-            "fix_scope": fix_scope,
-            "fix_scope_reasoning": fix_scope_reasoning,
-            "fix_pack": fix_pack,
-            "numeric_consistency_review": state.numeric_consistency_review,
-            "consistency_checklist": state.consistency_checklist,
-            "contradiction_details": state.contradiction_details or [],
-            "contradiction_types": [
-                item.get("type", "")
-                for item in (
-                    state.contradiction_check.get("found_contradictions", [])
-                    if isinstance(state.contradiction_check, dict)
-                    else []
-                )
-                if isinstance(item, dict)
-            ],
-            "_director_thinking": thinking,
-        }
+        return _build_stage4_ensemble_decision_payload(
+            state=state,
+            result=result,
+            final_verdict=final_verdict,
+            gate_basis=gate_basis,
+            score_breakdown=score_breakdown,
+            selection_reason=selection_reason,
+            verdict_reason=verdict_reason,
+            feedback=feedback if isinstance(feedback, dict) else {},
+            open_review=str(open_review),
+            adaptive_result=adaptive_result,
+            repair_scope=repair_scope,
+            authoritative_fix_scope=authoritative_fix_scope,
+            fix_scope=fix_scope,
+            fix_scope_reasoning=fix_scope_reasoning,
+            fix_pack=fix_pack,
+            thinking=thinking,
+            authoritative_fix_scope_violation=_authoritative_fix_scope_violation,
+        )
 
     def compare_and_select_blueprint(
         self,
@@ -1653,6 +1759,7 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
 }}
 
 [TF-23] fix_scope: 수정 범위 판단. inplace=국소수정, partial=일부씬재작성, full=전면재설계. PASS 계열은 보통 "inplace".
+⚠️ REJECT 또는 PASS_WITH_FIX에서 fix_scope를 빈 문자열("")로 남기면 계약 위반입니다.
 
 반드시 유효한 JSON만 출력하세요.
 """
@@ -1939,6 +2046,7 @@ Arc {arc_no}번 후보 {len(candidates)}개를 **각각 절대 기준으로 독�
 }}
 
 fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부재설계, full=전면재설계. PASS 시 "inplace".
+⚠️ REJECT 또는 PASS_WITH_FIX에서 fix_scope를 빈 문자열("")로 남기면 계약 위반입니다.
 
 반드시 유효한 JSON만 출력하세요.
 """

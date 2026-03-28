@@ -41,7 +41,7 @@ class _RejectLoggingPayload:
     session_verdict_reason: str
     session_runtime_advisory: str
     session_retry_directives: str
-    session_gate_semantics: dict[str, str]
+    session_gate_semantics: dict[str, object]
     feedback_provenance: dict[str, str]
 
 
@@ -386,6 +386,9 @@ class Stage4RejectRuntime:
             "_mad_used": mad_used,
             "state_updates": director_result.get("state_updates", {}),
             "fix_scope": resolved_fix_scope,
+            "authoritative_fix_scope": str(
+                director_result.get("authoritative_fix_scope", director_result.get("fix_scope", "")) or ""
+            ),
             "fix_scope_reasoning": resolved_fix_scope_reasoning,
             "fix_pack": snapshot_fix_pack,
             "fix_pack_reason": str(owner._evaluate_fix_pack_contract(snapshot_fix_pack).get("reason", "") or ""),  # [TF-4]
@@ -402,6 +405,10 @@ class Stage4RejectRuntime:
             "retry_directives": feedback_provenance["retry_directives"],
             "prior_attempts": owner._inherit_attempt_history(previous_attempt),
         }
+        if isinstance(director_result.get("authoritative_fix_scope_violation"), dict):
+            reject_attempt["authoritative_fix_scope_violation"] = dict(
+                director_result.get("authoritative_fix_scope_violation") or {}
+            )
         next_strategy_budget = (
             "reduced"
             if reject_bucket in {"quality_issue", "constraint_violation"} and resolved_fix_scope != "full"
@@ -780,9 +787,15 @@ class Stage4RejectRuntime:
                 selection_reason=selection_reason,
                 verdict_reason=verdict_reason,
                 fix_scope=(
-                    trace_director_result.get("fix_scope", "")
+                    trace_director_result.get(
+                        "authoritative_fix_scope",
+                        trace_director_result.get("fix_scope", ""),
+                    )
                     if isinstance(trace_director_result, dict)
-                    else director_result.get("fix_scope", "")
+                    else director_result.get(
+                        "authoritative_fix_scope",
+                        director_result.get("fix_scope", ""),
+                    )
                 ),
             )
         except Exception as exc:
@@ -902,15 +915,26 @@ class Stage4RejectRuntime:
             runtime_advisory=reject_logging.session_runtime_advisory,
             retry_directives=reject_logging.session_retry_directives,
             firewall_triggered=bool(
-                (
+
                     trace_director_result.get("firewall_triggered")
                     if isinstance(trace_director_result, dict)
                     else director_result.get("firewall_triggered")
-                )
+
             ),
             firewall_reason=(
                 trace_director_result.get("firewall_reason", "")
                 if isinstance(trace_director_result, dict)
                 else director_result.get("firewall_reason", "")
+            ),
+            authoritative_fix_scope=str(
+                reject_logging.session_gate_semantics.get("authoritative_fix_scope", "") or ""
+            ),
+            authoritative_fix_scope_violation=(
+                reject_logging.session_gate_semantics.get("authoritative_fix_scope_violation")
+                if isinstance(
+                    reject_logging.session_gate_semantics.get("authoritative_fix_scope_violation"),
+                    dict,
+                )
+                else None
             ),
         )

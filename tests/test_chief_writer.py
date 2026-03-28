@@ -281,6 +281,16 @@ class TestChiefWriterInplacePatchGuards:
         chief_writer.generate_ensemble = MagicMock(return_value=[{"manuscript": "patched"}])
         original = "original manuscript " * 160
 
+        previous_attempt = {
+            "fix_pack": {
+                "patch_targets": ["opening_location_name"],
+                "must_fix": ["fix the location label"],
+                "do_not_regress": ["preserve scene order"],
+                "success_condition": "location label corrected and continuity preserved",
+                "target_kind": "local_sentence",
+            }
+        }
+
         prompt_template = (
             "feedback={feedback_text}\n"
             "chars={original_char_count}\n"
@@ -300,7 +310,7 @@ class TestChiefWriterInplacePatchGuards:
                 style_guide="keep tone",
                 original_manuscript=original,
                 director_feedback="fix local continuity only",
-                previous_attempt={},
+                previous_attempt=previous_attempt,
                 attempt_number=2,
             )
 
@@ -313,6 +323,15 @@ class TestChiefWriterInplacePatchGuards:
     def test_patch_with_feedback_truncation_preserves_recent_tail_context(self, chief_writer):
         chief_writer.generate_ensemble = MagicMock(return_value=[{"manuscript": "patched"}])
         original = ("middle section " * 12000) + "\nTAIL-KEEP-CHIEF-WRITER-FIXLOOP\n"
+        previous_attempt = {
+            "fix_pack": {
+                "patch_targets": ["ending_hook"],
+                "must_fix": ["tighten the ending contradiction"],
+                "do_not_regress": ["keep the original structure"],
+                "success_condition": "ending contradiction removed without structural drift",
+                "target_kind": "local_sentence",
+            }
+        }
 
         with patch("modules.domain.agents.chief_writer.logging.warning") as mock_warning:
             result = chief_writer.patch_with_feedback(
@@ -325,7 +344,7 @@ class TestChiefWriterInplacePatchGuards:
                 style_guide="keep tone",
                 original_manuscript=original,
                 director_feedback="fix local continuity only",
-                previous_attempt={},
+                previous_attempt=previous_attempt,
                 attempt_number=2,
             )
 
@@ -334,6 +353,26 @@ class TestChiefWriterInplacePatchGuards:
         forwarded_feedback = chief_writer.generate_ensemble.call_args.kwargs["director_feedback"]
         assert "TAIL-KEEP-CHIEF-WRITER-FIXLOOP" in forwarded_feedback
         assert any("[TRUNCATION]" in str(call.args[0]) for call in mock_warning.call_args_list)
+
+    def test_patch_with_feedback_fail_closes_without_ready_fix_pack(self, chief_writer):
+        chief_writer.generate_ensemble = MagicMock(return_value=[{"manuscript": "patched"}])
+
+        result = chief_writer.patch_with_feedback(
+            ep_num=3,
+            blueprint={"ep_num": 3},
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible={},
+            style_guide="keep tone",
+            original_manuscript="original manuscript " * 160,
+            director_feedback="fix local continuity only",
+            previous_attempt={},
+            attempt_number=2,
+        )
+
+        assert result == []
+        chief_writer.generate_ensemble.assert_not_called()
 
 
 class TestChiefWriterStructuralInplacePatch:
