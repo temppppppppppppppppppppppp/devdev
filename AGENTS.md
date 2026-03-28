@@ -64,6 +64,17 @@
 - 시간 압박이 있는 구간에서 고위험 band가 이미 제거됐다면, 대규모 리팩토링보다 `snapshot commit -> fresh run -> fail-only bugfix` 순서를 우선한다.
 - substantial system-track code 변경 후에는 최소 touched area 기준 complexity recount를 수행하고, hotspot lane / roadmap / execution SSOT 작업이면 SSOT에도 현재 band 또는 hotspot delta를 반영한다.
 
+## External Advisory
+
+- optional third-party advisory systems may be vendored under `.agents/skills/`
+- the current external advisory entrypoint is `.agents/skills/gary-advisory/SKILL.md`
+- the vendored upstream source for that wrapper is `.agents/skills/gstack`
+- external advisory is advisory-only and never outranks `AGENTS.md`, Director authority, canonical docs, queue order, or fact ownership
+- external advisory runs stay read-only unless the user separately asks for internal implementation after the advisory
+- direct canonical doc edits, `docs/temp/` mutation, DB writes, deploy or ship flows, QA automation, browser automation, and git-history mutation are disallowed under external advisory mode
+- if upstream advice conflicts with workspace governance, label it `EXTERNAL_ADVISORY_CONFLICT` and let the internal Director or system-track flow decide
+- detailed operating rules live in `docs/implementation/gary-external-advisory-harness.md`
+
 ## System Init Harness (System Track Only)
 
 시스템 오더는 먼저 `docs/implementation/system-order-init-harness.md`를 읽는다.

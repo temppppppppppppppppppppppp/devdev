@@ -30,6 +30,7 @@ Downstream companion harnesses:
 - `docs/implementation/execution-closure-harness.md`
 - `docs/implementation/exception-registry-harness.md`
 - `docs/implementation/process-health-scorecard-harness.md`
+- `docs/implementation/system-supervisor-harness.md`
 - `docs/implementation/stale-reference-sweep-harness.md`
 Available templates:
 - `docs/implementation/execution-ssot-template.md`
@@ -70,6 +71,8 @@ Do not use this harness for narrative-pipeline orders.
 - If the user says `global`, `repo-wide`, `전역`, or `전역 전체`, load the global survey coverage contract unless the request narrows scope.
 - Treat `ROL 전역 전체 전수조사` as deep integrity survey mode by default unless the user explicitly asks for a lighter pass.
 - Treat `ROL 전수조사-실전테스트 병행`, `ROL live-merge`, or equivalent fresh-live-run-plus-survey wording as live-merge survey mode.
+
+- If the user asks for a `supervisor`, `boss`, `상사`, `사수`, blunt operator review, or explicit banmal review mode, load `docs/implementation/system-supervisor-harness.md` in addition to the normal survey or queue harnesses.
 
 ### Step 2. Inspect Active Temp Queue
 - Inspect `docs/temp/` before doing substantial work.
@@ -203,6 +206,8 @@ Bounded-loop rule:
   - read `docs/implementation/exception-registry-harness.md`
 - For operational status reporting:
   - read `docs/implementation/process-health-scorecard-harness.md`
+- For supervisor-style multi-survey synthesis, operator-facing prioritization, or requested banmal/direct review mode:
+  - read `docs/implementation/system-supervisor-harness.md`
 - For governance migrations or stale authority cleanup:
   - read `docs/implementation/stale-reference-sweep-harness.md`
 - For future specialized system harnesses:

@@ -14,7 +14,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from modules.core.llm_generate import generate_content_via_router  # noqa: E402
+from modules.core.llm_router import LLMProviderRouter  # noqa: E402
 from scripts.gold_manuscript_benchmark_support import (  # noqa: E402
+    attach_lightweight_ledgers,
     build_case_prompt,
     build_gold_package,
     run_gold_benchmark,
@@ -57,14 +59,41 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--temperature", type=float, default=0.4, help="Sampling temperature for model runs.")
     parser.add_argument("--max-output-tokens", type=int, default=8192, help="Generation max_output_tokens.")
+    parser.add_argument(
+        "--consistency-judge-model",
+        default=None,
+        help="Optional fixed model used only for contradiction-first consistency judging.",
+    )
+    parser.add_argument(
+        "--consistency-judge-temperature",
+        type=float,
+        default=0.0,
+        help="Sampling temperature for contradiction judge requests.",
+    )
+    parser.add_argument(
+        "--consistency-judge-max-output-tokens",
+        type=int,
+        default=2048,
+        help="max_output_tokens for contradiction judge requests.",
+    )
     return parser.parse_args()
 
 
-def _load_api_client():
+def _load_api_client(model: str):
     dotenv_path = ROOT / ".env"
     if dotenv_path.exists():
         load_dotenv(dotenv_path, override=True)
     load_dotenv(override=True)
+
+    anthropic_api_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API")
+    if anthropic_api_key and not os.getenv("ANTHROPIC_API_KEY"):
+        os.environ["ANTHROPIC_API_KEY"] = anthropic_api_key
+
+    provider_name = LLMProviderRouter.infer_provider_name(model)
+    if provider_name == "anthropic":
+        if anthropic_api_key:
+            return None, "anthropic"
+        raise RuntimeError("No Anthropic credentials found. Set ANTHROPIC_API_KEY or CLAUDE_API.")
 
     google_api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     if google_api_key:
@@ -81,8 +110,36 @@ def _load_api_client():
     raise RuntimeError("No Gemini or Vertex credentials found. Set .env / env vars before model runs.")
 
 
-def _run_model(output_root: Path, gold_package: dict, *, model: str, genre: str, temperature: float, max_output_tokens: int):
-    client, provider = _load_api_client()
+def _build_consistency_llm_ask(model: str, *, temperature: float, max_output_tokens: int):
+    client, provider = _load_api_client(model)
+
+    def _ask(prompt: str) -> str:
+        response = generate_content_via_router(
+            client=client,
+            model=model,
+            contents=prompt,
+            config={
+                "temperature": temperature,
+                "max_output_tokens": max_output_tokens,
+            },
+        )
+        return (response.text or "").strip()
+
+    return _ask, provider
+
+
+def _run_model(
+    output_root: Path,
+    gold_package: dict,
+    *,
+    model: str,
+    genre: str,
+    temperature: float,
+    max_output_tokens: int,
+    consistency_llm_ask=None,
+    consistency_judge_model: str | None = None,
+):
+    client, provider = _load_api_client(model)
     model_slug = slugify_title(model)
     run_root = output_root / "model_runs" / model_slug
     candidate_dir = run_root / "candidates"
@@ -110,7 +167,13 @@ def _run_model(output_root: Path, gold_package: dict, *, model: str, genre: str,
         except Exception as exc:  # noqa: BLE001
             generation_errors.append({"case_id": case_id, "error": str(exc)})
 
-    result = run_gold_benchmark(gold_package, candidate_dir=candidate_dir, genre=genre)
+    result = run_gold_benchmark(
+        gold_package,
+        candidate_dir=candidate_dir,
+        genre=genre,
+        consistency_llm_ask=consistency_llm_ask,
+        consistency_judge_model=consistency_judge_model,
+    )
     result["model"] = model
     result["provider"] = provider
     result["generation_errors"] = generation_errors
@@ -129,9 +192,18 @@ def main() -> int:
         checkpoint_size=args.checkpoint_size,
         max_cases=args.max_cases,
     )
+    attach_lightweight_ledgers(gold_package)
     output_root = Path(args.output_root) / slugify_title(gold_package["title"])
     package_path = output_root / "gold_package.json"
     write_json(package_path, gold_package)
+    consistency_llm_ask = None
+    consistency_judge_provider = None
+    if args.consistency_judge_model:
+        consistency_llm_ask, consistency_judge_provider = _build_consistency_llm_ask(
+            args.consistency_judge_model,
+            temperature=args.consistency_judge_temperature,
+            max_output_tokens=args.consistency_judge_max_output_tokens,
+        )
 
     result_path = None
     result_payload = None
@@ -141,8 +213,12 @@ def main() -> int:
             candidate_dir=Path(args.candidate_dir) if args.candidate_dir else None,
             use_gold_candidate=args.use_gold_candidate,
             genre=args.genre,
+            consistency_llm_ask=consistency_llm_ask,
+            consistency_judge_model=args.consistency_judge_model,
         )
         result_path = output_root / "benchmark_result.json"
+        if args.consistency_judge_model:
+            result_payload["consistency_judge_provider"] = consistency_judge_provider
         write_json(result_path, result_payload)
 
     model_runs = []
@@ -156,6 +232,8 @@ def main() -> int:
                     genre=args.genre,
                     temperature=args.temperature,
                     max_output_tokens=args.max_output_tokens,
+                    consistency_llm_ask=consistency_llm_ask,
+                    consistency_judge_model=args.consistency_judge_model,
                 )
             )
         comparison = {
@@ -163,6 +241,11 @@ def main() -> int:
             "title_slug": gold_package["title_slug"],
             "score_profile": "continuity-gold-relative-v2",
             "primary_score_axis": "continuity_index",
+            "consistency_score_profile": "contradiction-first-v1",
+            "consistency_primary_axis": "consistency_score",
+            "consistency_score_mode": "llm-judge" if args.consistency_judge_model else "auto-only",
+            "consistency_judge_model": args.consistency_judge_model,
+            "consistency_judge_provider": consistency_judge_provider,
             "case_count": gold_package["case_count"],
             "models": [
                 {
@@ -173,6 +256,13 @@ def main() -> int:
                     "average_gold_fidelity_score": item["result"]["average_gold_fidelity_score"],
                     "average_writing_quality_score": item["result"]["average_writing_quality_score"],
                     "average_legacy_blended_auto_score": item["result"]["average_legacy_blended_auto_score"],
+                    "average_consistency_score": item["result"]["average_consistency_score"],
+                    "average_consistency_auto_score": item["result"]["average_consistency_auto_score"],
+                    "average_consistency_judge_score": item["result"]["average_consistency_judge_score"],
+                    "average_continuity_violation_count": item["result"]["average_continuity_violation_count"],
+                    "average_truth_warning_count": item["result"]["average_truth_warning_count"],
+                    "average_manual_constraint_count": item["result"]["average_manual_constraint_count"],
+                    "average_major_contradiction_count": item["result"]["average_major_contradiction_count"],
                     "scored_case_count": item["result"]["scored_case_count"],
                     "missing_cases": item["result"]["missing_cases"],
                     "generation_error_count": len(item["result"].get("generation_errors", [])),
@@ -196,6 +286,11 @@ def main() -> int:
                     "average_gold_continuity_score": result_payload["average_gold_continuity_score"],
                     "average_gold_fidelity_score": result_payload["average_gold_fidelity_score"],
                     "average_writing_quality_score": result_payload["average_writing_quality_score"],
+                    "average_consistency_score": result_payload["average_consistency_score"],
+                    "average_consistency_auto_score": result_payload["average_consistency_auto_score"],
+                    "average_consistency_judge_score": result_payload["average_consistency_judge_score"],
+                    "average_manual_constraint_count": result_payload["average_manual_constraint_count"],
+                    "average_major_contradiction_count": result_payload["average_major_contradiction_count"],
                     "missing_cases": result_payload["missing_cases"],
                 }
             )
@@ -214,6 +309,11 @@ def main() -> int:
                             "average_gold_continuity_score": item["result"]["average_gold_continuity_score"],
                             "average_gold_fidelity_score": item["result"]["average_gold_fidelity_score"],
                             "average_writing_quality_score": item["result"]["average_writing_quality_score"],
+                            "average_consistency_score": item["result"]["average_consistency_score"],
+                            "average_consistency_auto_score": item["result"]["average_consistency_auto_score"],
+                            "average_consistency_judge_score": item["result"]["average_consistency_judge_score"],
+                            "average_manual_constraint_count": item["result"]["average_manual_constraint_count"],
+                            "average_major_contradiction_count": item["result"]["average_major_contradiction_count"],
                             "scored_case_count": item["result"]["scored_case_count"],
                             "generation_error_count": len(item["result"].get("generation_errors", [])),
                         }

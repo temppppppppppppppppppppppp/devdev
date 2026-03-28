@@ -34,6 +34,10 @@ class AnthropicVertexProvider(AnthropicProvider):
                 return normalized[len(prefix) :]
         return normalized
 
+    def _resolve_model_name(self, model: str) -> str:
+        # Vertex Model Garden naming stays on the publisher model id.
+        return str(model or "").strip()
+
     def _get_client(self):
         if self._client is not None:
             return self._client

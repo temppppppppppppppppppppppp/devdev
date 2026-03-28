@@ -129,9 +129,73 @@ def test_anthropic_provider_generate_with_fake_sdk(monkeypatch):
     assert response.finish_reason == "end_turn"
     assert response.usage == {"input_tokens": 10, "output_tokens": 20}
     assert captured_kwargs["max_tokens"] == 64
+    assert captured_kwargs["model"] == "claude-sonnet-4-20250514"
     assert captured_kwargs["temperature"] == 0.2
     assert captured_kwargs["top_p"] == 0.9
     assert captured_kwargs["system"] == "sys"
+
+
+def test_anthropic_provider_accepts_claude_api_env_alias(monkeypatch):
+    captured_api_key = {}
+
+    class FakeAnthropic:
+        def __init__(self, api_key):
+            captured_api_key["value"] = api_key
+            self.messages = SimpleNamespace(
+                create=lambda **kw: SimpleNamespace(
+                    content=[SimpleNamespace(type="text", text="alias ok")],
+                    stop_reason="end_turn",
+                    usage=SimpleNamespace(input_tokens=1, output_tokens=2),
+                )
+            )
+
+    fake_module = ModuleType("anthropic")
+    fake_module.Anthropic = FakeAnthropic
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("CLAUDE_API", "alias-key")
+    monkeypatch.setitem(sys.modules, "anthropic", fake_module)
+
+    response = AnthropicProvider().generate(
+        client=MagicMock(),
+        request=LLMRequest(model="claude-opus-4-6", contents="hello"),
+    )
+
+    assert captured_api_key["value"] == "alias-key"
+    assert response.text == "alias ok"
+
+
+def test_anthropic_provider_clamps_long_sync_requests(monkeypatch):
+    captured_kwargs = {}
+
+    class FakeAnthropic:
+        def __init__(self, api_key):
+            self.messages = SimpleNamespace(
+                create=lambda **kwargs: (
+                    captured_kwargs.update(kwargs)
+                    or SimpleNamespace(
+                        content=[SimpleNamespace(type="text", text="clamped ok")],
+                        stop_reason="end_turn",
+                        usage=SimpleNamespace(input_tokens=1, output_tokens=2),
+                    )
+                )
+            )
+
+    fake_module = ModuleType("anthropic")
+    fake_module.Anthropic = FakeAnthropic
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setitem(sys.modules, "anthropic", fake_module)
+
+    response = AnthropicProvider().generate(
+        client=MagicMock(),
+        request=LLMRequest(
+            model="claude-sonnet-4-6",
+            contents="hello",
+            config={"max_output_tokens": 65536, "temperature": 0.0},
+        ),
+    )
+
+    assert response.text == "clamped ok"
+    assert captured_kwargs["max_tokens"] == 8192
 
 
 def test_openai_provider_generate_with_fake_sdk(monkeypatch):
@@ -699,9 +763,11 @@ def test_metrics_claude_pricing_not_default():
     # Direct model name → Claude pricing
     assert "claude-sonnet-4-6" in MODEL_COSTS
     assert MODEL_COSTS["claude-sonnet-4-6"]["input"] == 3.00
+    assert MODEL_COSTS["claude-sonnet-4-20250514"]["input"] == 3.00
 
     # Prefixed model name → strips prefix → Claude pricing
     assert _normalize_billable_model("anthropic-vertex:claude-sonnet-4-6") == "claude-sonnet-4-6"
+    assert _normalize_billable_model("anthropic-vertex:claude-sonnet-4-20250514") == "claude-sonnet-4-20250514"
 
 
 def test_metrics_claude_cost_calculation():
@@ -758,6 +824,16 @@ def test_process_runner_build_env_anthropic_key_passthrough():
     runner = ProcessRunner()
     env = runner._build_env({"anthropic_api_key": "sk-ant-123"})
     assert env["ANTHROPIC_API_KEY"] == "sk-ant-123"
+    assert env["CLAUDE_API"] == "sk-ant-123"
+
+
+def test_process_runner_build_env_claude_key_passthrough():
+    from modules.api.process_runner import ProcessRunner
+
+    runner = ProcessRunner()
+    env = runner._build_env({"claude_api_key": "sk-ant-456"})
+    assert env["ANTHROPIC_API_KEY"] == "sk-ant-456"
+    assert env["CLAUDE_API"] == "sk-ant-456"
 
 
 def test_process_runner_build_env_anthropic_key_absent():
