@@ -685,6 +685,7 @@ class TestProcessPassResult:
             critical_keys=[],
             final_state_updates={},
             blueprint={"scene_breakdown": []},
+            arc_data={},
         )
 
         assert result["meta_save_failed"] is False
@@ -693,6 +694,22 @@ class TestProcessPassResult:
             "Cloud Step",
             "Heavenly Blade",
         }
+
+    def test_prepare_manager_delta_context_parses_stringified_martial_arts_list(self):
+        pp = self._make_pp()
+
+        result = pp.post_pass_runtime._prepare_manager_delta_context(
+            audit={
+                "state_updates": {
+                    "actual_truth": {
+                        "martial_arts": '["Storm Palm", {"name": "Cloud Step"}, "Storm Palm"]'
+                    }
+                }
+            },
+            genre_type="wuxia",
+        )
+
+        assert result["actual_truth"]["martial_arts"] == ["Storm Palm", "Cloud Step"]
 
     def test_merge_manager_key_npcs_into_master_bible_merges_existing_and_new_entries(self):
         pp = self._make_pp()
@@ -784,6 +801,7 @@ class TestProcessPassResult:
             key_npcs=[{"name": "npc-a"}],
             actual_truth={"location": "gate"},
             final_state_updates={"hp": 90},
+            arc_data={},
             state_updates_from_audit={"time_passed": "3h"},
             knowledge_map={"new_witnesses": ["npc-a"]},
             karma_matrix=[{"target": "npc-b", "obsession": 70, "value": 10}],
@@ -815,6 +833,59 @@ class TestProcessPassResult:
         pp.post_pass_runtime._persist_manager_state_log.assert_called_once()
         pp.post_pass_runtime._persist_karma_status.assert_called_once()
         pp.post_pass_runtime._log_manager_delta_summary.assert_called_once()
+
+    def test_persist_manager_delta_outputs_merges_npc_martial_state_changes_from_arc_data(self):
+        pp = self._make_pp()
+        pp.post_pass_runtime._sync_world_state_positions = MagicMock()
+        pp.post_pass_runtime._persist_manager_causal_side_effects = MagicMock()
+        pp.post_pass_runtime._persist_manager_state_log = MagicMock()
+        pp.post_pass_runtime._persist_karma_status = MagicMock()
+        pp.post_pass_runtime._log_manager_delta_summary = MagicMock()
+
+        result = pp.post_pass_runtime._persist_manager_delta_outputs(
+            next_ep=10,
+            key_npcs=[],
+            actual_truth={"location": "gate"},
+            final_state_updates={},
+            arc_data={
+                "state_changes": {
+                    "npc_martial_state_changes": [
+                        {
+                            "name": "Chief Han",
+                            "episode": 10,
+                            "realm": "Peak",
+                            "techniques_learned": ["Storm Palm"],
+                        }
+                    ]
+                }
+            },
+            state_updates_from_audit={},
+            knowledge_map={},
+            karma_matrix=[],
+            curr_inventory_counts={},
+            inventory_count_deltas=[],
+            relationship_changes=[],
+            active_pressure_vectors=[],
+            pressure_vectors_changed=False,
+            causal_links=[],
+            all_new_items=[],
+            lost_items_from_equip=[],
+            new_npc_names=[],
+            npc_deaths=[],
+            reveal_list=[],
+        )
+
+        assert result["meta_save_failed"] is False
+        saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
+        assert saved_bible["state_changes"]["location"] == "gate"
+        assert saved_bible["state_changes"]["npc_martial_state_changes"] == [
+            {
+                "name": "Chief Han",
+                "episode": 10,
+                "realm": "Peak",
+                "techniques_learned": ["Storm Palm"],
+            }
+        ]
 
     def test_overexposure_receives_empty_protagonist_name_when_callback_returns_none(self, tmp_path):
         pp = self._make_pp()
@@ -1233,6 +1304,218 @@ class TestProcessPassResult:
         pp.ctx.fact_ledger.update_from_state_changes.assert_not_called()
 
 
+    def test_process_pass_result_normalizes_martial_arts_before_stv_and_persistence(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.current_project.latest_state = {}
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "new_lore": {},
+            "knowledge_map_updates": {},
+            "recovered_seeds": [],
+            "state_updates": {
+                "actual_truth": {
+                    "martial_arts": [
+                        {"name": "Storm Palm", "origin": "legacy manager shape"},
+                        {"main_technique": "Cloud Step"},
+                        "Storm Palm",
+                        {"ignored": "drop me"},
+                    ]
+                }
+            },
+            "causal_links": [],
+        }
+
+        pp.ctx.world_state = MagicMock()
+        pp.ctx.world_state._state = {}
+        pp.ctx.fact_ledger = MagicMock()
+        pp.ctx.fact_ledger._ledger = {}
+        pp.ctx.fact_ledger.get_stats.return_value = {"characters": 0, "items": 0}
+
+        captured = {}
+
+        def _threshold_side_effect(key, default=None):
+            if key == "feature_flags.enable_state_text_verifier":
+                return True
+            return default
+
+        def _verify_side_effect(_self, manuscript, actual_truth):
+            captured["martial_arts"] = actual_truth.get("martial_arts")
+            return {"verified": True, "mismatches": [], "corrections": {}, "blocking": False}
+
+        with (
+            patch("modules.validation.threshold_helper._threshold", side_effect=_threshold_side_effect),
+            patch(
+                "modules.core.state_text_verifier.StateTextVerifier.verify",
+                autospec=True,
+                side_effect=_verify_side_effect,
+            ),
+        ):
+            result = pp.process_pass_result(
+                next_ep=5,
+                final_manuscript="The manuscript explicitly references Storm Palm and Cloud Step. " * 120,
+                final_title="test title",
+                final_state_updates={},
+                blueprint={"scene_breakdown": []},
+                arc_data={"arc_no": 1},
+                output_dir=tmp_path,
+                v50_modules_available=False,
+                extract_chain_link_fn=lambda *_args, **_kwargs: {},
+            )
+
+        assert result is True
+        assert captured["martial_arts"] == ["Storm Palm", "Cloud Step"]
+
+        saved_state_log = pp.ctx.current_project.db.save_state_log_with_summary.call_args.args[1]
+        assert saved_state_log["actual_truth"]["martial_arts"] == ["Storm Palm", "Cloud Step"]
+
+        saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
+        assert saved_bible["state_changes"]["martial_arts"] == ["Storm Palm", "Cloud Step"]
+
+    def test_process_pass_result_re_normalizes_stringified_stv_martial_arts_correction(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.current_project.latest_state = {}
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "new_lore": {},
+            "knowledge_map_updates": {},
+            "recovered_seeds": [],
+            "state_updates": {
+                "actual_truth": {
+                    "martial_arts": [{"name": "Storm Palm"}],
+                }
+            },
+            "causal_links": [],
+        }
+
+        pp.ctx.world_state = MagicMock()
+        pp.ctx.world_state._state = {}
+        pp.ctx.fact_ledger = MagicMock()
+        pp.ctx.fact_ledger._ledger = {}
+        pp.ctx.fact_ledger.get_stats.return_value = {"characters": 0, "items": 0}
+
+        captured = {}
+
+        def _threshold_side_effect(key, default=None):
+            if key == "feature_flags.enable_state_text_verifier":
+                return True
+            return default
+
+        def _verify_side_effect(_self, manuscript, actual_truth):
+            captured["before_correction"] = actual_truth.get("martial_arts")
+            return {
+                "verified": False,
+                "mismatches": [
+                    {
+                        "field": "martial_arts",
+                        "extracted": ["Storm Palm"],
+                        "evidence": "No technique was actually learned here.",
+                        "corrected": "[]",
+                    }
+                ],
+                "corrections": {"martial_arts": "[]"},
+                "blocking": False,
+            }
+
+        with (
+            patch("modules.validation.threshold_helper._threshold", side_effect=_threshold_side_effect),
+            patch(
+                "modules.core.state_text_verifier.StateTextVerifier.verify",
+                autospec=True,
+                side_effect=_verify_side_effect,
+            ),
+        ):
+            result = pp.process_pass_result(
+                next_ep=6,
+                final_manuscript="The manuscript explicitly says the protagonist has not learned any technique yet. " * 90,
+                final_title="test title",
+                final_state_updates={},
+                blueprint={"scene_breakdown": []},
+                arc_data={"arc_no": 1},
+                output_dir=tmp_path,
+                v50_modules_available=False,
+                extract_chain_link_fn=lambda *_args, **_kwargs: {},
+            )
+
+        assert result is True
+        assert captured["before_correction"] == ["Storm Palm"]
+
+        saved_state_log = pp.ctx.current_project.db.save_state_log_with_summary.call_args.args[1]
+        assert saved_state_log["actual_truth"]["martial_arts"] == []
+
+        saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
+        assert saved_bible["state_changes"]["martial_arts"] == []
+
+    def test_process_pass_result_treats_stv_none_marker_for_martial_arts_as_empty_list(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.current_project.latest_state = {}
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "new_lore": {},
+            "knowledge_map_updates": {},
+            "recovered_seeds": [],
+            "state_updates": {
+                "actual_truth": {
+                    "martial_arts": [{"name": "Storm Palm"}],
+                }
+            },
+            "causal_links": [],
+        }
+
+        pp.ctx.world_state = MagicMock()
+        pp.ctx.world_state._state = {}
+        pp.ctx.fact_ledger = MagicMock()
+        pp.ctx.fact_ledger._ledger = {}
+        pp.ctx.fact_ledger.get_stats.return_value = {"characters": 0, "items": 0}
+
+        def _threshold_side_effect(key, default=None):
+            if key == "feature_flags.enable_state_text_verifier":
+                return True
+            return default
+
+        def _verify_side_effect(_self, manuscript, actual_truth):
+            return {
+                "verified": False,
+                "mismatches": [
+                    {
+                        "field": "martial_arts",
+                        "extracted": ["Storm Palm"],
+                        "evidence": "The manuscript explicitly says no martial art was learned.",
+                        "corrected": "없음",
+                    }
+                ],
+                "corrections": {"martial_arts": "없음"},
+                "blocking": False,
+            }
+
+        with (
+            patch("modules.validation.threshold_helper._threshold", side_effect=_threshold_side_effect),
+            patch(
+                "modules.core.state_text_verifier.StateTextVerifier.verify",
+                autospec=True,
+                side_effect=_verify_side_effect,
+            ),
+        ):
+            result = pp.process_pass_result(
+                next_ep=7,
+                final_manuscript="The manuscript explicitly says no martial art was learned here. " * 90,
+                final_title="test title",
+                final_state_updates={},
+                blueprint={"scene_breakdown": []},
+                arc_data={"arc_no": 1},
+                output_dir=tmp_path,
+                v50_modules_available=False,
+                extract_chain_link_fn=lambda *_args, **_kwargs: {},
+            )
+
+        assert result is True
+
+        saved_state_log = pp.ctx.current_project.db.save_state_log_with_summary.call_args.args[1]
+        assert saved_state_log["actual_truth"]["martial_arts"] == []
+
+        saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
+        assert saved_bible["state_changes"]["martial_arts"] == []
+
+
 class TestRunPostEpisodeTasks:
     def test_vector_sync_called_when_operational(self, tmp_path):
         ctx = MagicMock()
@@ -1494,6 +1777,74 @@ class TestAtomicMetadataSave:
             }
         ]
         assert "npc_martial_state_changes" not in result["fact_ledger_changes"]
+
+    def test_process_pass_result_bridges_arc_npc_martial_state_changes_into_world_state_only(self, tmp_path):
+        pp = self._make_pp_with_metadata()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.current_project.latest_state = {}
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "new_lore": {},
+            "knowledge_map_updates": {},
+            "recovered_seeds": [],
+            "state_updates": {
+                "actual_truth": {
+                    "location": "gate",
+                }
+            },
+            "causal_links": [],
+        }
+
+        result = pp.process_pass_result(
+            next_ep=4,
+            final_manuscript="arc-bridged npc martial state test " * 120,
+            final_title="test",
+            final_state_updates={"hp": 10},
+            blueprint={"scene_breakdown": []},
+            arc_data={
+                "arc_no": 1,
+                "state_changes": {
+                    "npc_martial_state_changes": [
+                        {
+                            "name": "Chief Han",
+                            "episode": 4,
+                            "realm": "Peak",
+                            "techniques_learned": ["Storm Palm"],
+                        }
+                    ]
+                },
+            },
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+
+        saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
+        assert saved_bible["state_changes"]["location"] == "gate"
+        assert saved_bible["state_changes"]["npc_martial_state_changes"] == [
+            {
+                "name": "Chief Han",
+                "episode": 4,
+                "realm": "Peak",
+                "techniques_learned": ["Storm Palm"],
+            }
+        ]
+
+        world_state_changes = pp.ctx.world_state.update_from_state_changes.call_args.args[1]
+        assert world_state_changes["hp"] == 10
+        assert world_state_changes["npc_martial_state_changes"] == [
+            {
+                "name": "Chief Han",
+                "episode": 4,
+                "realm": "Peak",
+                "techniques_learned": ["Storm Palm"],
+            }
+        ]
+
+        fact_ledger_changes = pp.ctx.fact_ledger.update_from_state_changes.call_args.args[1]
+        assert fact_ledger_changes["hp"] == 10
+        assert "npc_martial_state_changes" not in fact_ledger_changes
 
     def test_persist_atomic_world_state_updates_and_logs(self):
         pp = self._make_pp_with_metadata()

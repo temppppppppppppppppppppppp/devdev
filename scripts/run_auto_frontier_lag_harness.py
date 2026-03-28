@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import re
 import signal
@@ -10,7 +11,7 @@ import subprocess
 import sys
 import time
 import traceback
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -78,6 +79,119 @@ def default_profile(seed_profile: str = DEFAULT_SEED_PROFILE) -> HarnessProfile:
     )
 
 
+KNOWN_SOAK_PROFILES = ("soak",)
+
+# Heavy-path toggle keys with their application points.
+# False = skip the path during soak runs.
+HEAVY_PATH_TOGGLE_REGISTRY: dict[str, str] = {
+    "post_pass_advisories": "Stage4PostPassRuntime._run_post_pass_advisories",
+}
+
+
+@dataclass(slots=True)
+class SoakProfile:
+    """Harness-local override contract for bounded soak canary runs.
+
+    All fields are optional — ``None`` means "keep production default".
+    ``heavy_path_toggles`` maps toggle names from HEAVY_PATH_TOGGLE_REGISTRY
+    to booleans: ``True`` = run as normal, ``False`` = skip.
+    """
+
+    stage2_model: str | None = None
+    stage4_model: str | None = None
+    manuscript_min_length: int | None = None
+    manuscript_target_length: int | None = None
+    heavy_path_toggles: dict[str, bool] = field(default_factory=dict)
+
+
+def default_soak_profile() -> SoakProfile:
+    """Return a standard soak profile: all-flash models, reduced lengths, heavy paths off."""
+    from modules.core.models_config import DEFAULT_FLASH_MODEL
+
+    return SoakProfile(
+        stage2_model=DEFAULT_FLASH_MODEL,
+        stage4_model=DEFAULT_FLASH_MODEL,
+        manuscript_min_length=1000,
+        manuscript_target_length=1500,
+        heavy_path_toggles={"post_pass_advisories": False},
+    )
+
+
+def resolve_soak_profile(name: str | None) -> SoakProfile | None:
+    """Resolve a named soak profile.  Returns ``None`` if *name* is falsy."""
+    if not name:
+        return None
+    if name == "soak":
+        return default_soak_profile()
+    raise ValueError(f"unknown soak profile: {name!r}  (known: {KNOWN_SOAK_PROFILES})")
+
+
+@contextlib.contextmanager
+def apply_soak_overrides(soak: SoakProfile | None):
+    """Temporarily patch global constants for the lifetime of a soak run.
+
+    Restores every patched value on exit so global state is never polluted.
+    When *soak* is ``None``, yields immediately with no side effects.
+    """
+    if soak is None:
+        yield
+        return
+
+    from modules.core.constants import AIModels, ManuscriptLimits
+
+    originals: dict[str, Any] = {}
+    mock_patches: list[Any] = []
+
+    try:
+        # ── Model tier overrides ──────────────────────────────────────
+        if soak.stage2_model is not None:
+            originals["s2_model"] = AIModels.STAGE2_MAIN_MODEL
+            AIModels.STAGE2_MAIN_MODEL = soak.stage2_model
+        if soak.stage4_model is not None:
+            originals["s4_model"] = AIModels.STAGE4_FIXED_WRITER_MODEL
+            AIModels.STAGE4_FIXED_WRITER_MODEL = soak.stage4_model
+
+        # ── Manuscript length overrides ───────────────────────────────
+        # Force lazy evaluation so the cache attrs exist, then override.
+        if soak.manuscript_min_length is not None:
+            _ = int(ManuscriptLimits.MIN_LENGTH)
+            originals["min_len"] = ManuscriptLimits._lazy_MIN_LENGTH  # noqa: SLF001
+            ManuscriptLimits._lazy_MIN_LENGTH = soak.manuscript_min_length  # noqa: SLF001
+        if soak.manuscript_target_length is not None:
+            _ = int(ManuscriptLimits.TARGET_LENGTH)
+            originals["target_len"] = ManuscriptLimits._lazy_TARGET_LENGTH  # noqa: SLF001
+            ManuscriptLimits._lazy_TARGET_LENGTH = soak.manuscript_target_length  # noqa: SLF001
+
+        # ── Heavy-path toggle set ─────────────────────────────────────
+        for toggle_name, enabled in soak.heavy_path_toggles.items():
+            if toggle_name not in HEAVY_PATH_TOGGLE_REGISTRY:
+                raise ValueError(f"unknown heavy-path toggle: {toggle_name!r}")
+            if not enabled and toggle_name == "post_pass_advisories":
+                from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime
+
+                p = patch.object(
+                    Stage4PostPassRuntime,
+                    "_run_post_pass_advisories",
+                    lambda self, **_kw: None,
+                )
+                p.start()
+                mock_patches.append(p)
+
+        yield
+    finally:
+        # Reverse order: patches first, then constants.
+        for p in reversed(mock_patches):
+            p.stop()
+        if "s2_model" in originals:
+            AIModels.STAGE2_MAIN_MODEL = originals["s2_model"]
+        if "s4_model" in originals:
+            AIModels.STAGE4_FIXED_WRITER_MODEL = originals["s4_model"]
+        if "min_len" in originals:
+            ManuscriptLimits._lazy_MIN_LENGTH = originals["min_len"]  # noqa: SLF001
+        if "target_len" in originals:
+            ManuscriptLimits._lazy_TARGET_LENGTH = originals["target_len"]  # noqa: SLF001
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Auto Frontier-Lag N-arc harness")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -88,12 +202,14 @@ def parse_args() -> argparse.Namespace:
     plan.add_argument("--seed-profile", default=DEFAULT_SEED_PROFILE)
     plan.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     plan.add_argument("--target-project", default="")
+    plan.add_argument("--soak-profile", default="", help="named soak profile (e.g. 'soak')")
 
     worker = subparsers.add_parser("worker", help="internal worker that boots app and runs the pipeline")
     worker.add_argument("--target-project", required=True)
     worker.add_argument("--arc-count", type=int, required=True)
     worker.add_argument("--seed-profile", default=DEFAULT_SEED_PROFILE)
     worker.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
+    worker.add_argument("--soak-profile", default="", help="named soak profile (e.g. 'soak')")
 
     run = subparsers.add_parser("run", help="spawn worker, watchdog it, analyze outputs, write SSOT")
     run.add_argument("--arc-count", type=int)
@@ -102,6 +218,7 @@ def parse_args() -> argparse.Namespace:
     run.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     run.add_argument("--poll-interval-seconds", type=int, default=DEFAULT_POLL_INTERVAL_SECONDS)
     run.add_argument("--target-project", default="")
+    run.add_argument("--soak-profile", default="", help="named soak profile (e.g. 'soak')")
 
     analyze = subparsers.add_parser("analyze", help="analyze an existing harness run and write SSOT")
     analyze.add_argument("--project", required=True)
@@ -113,6 +230,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
 
+    soak = resolve_soak_profile(getattr(args, "soak_profile", "") or "")
+
     if args.command == "plan":
         payload = build_execution_plan(
             arc_count=resolve_arc_count(args.arc_count, args.trigger),
@@ -120,6 +239,7 @@ def main() -> int:
             batch_size=args.batch_size,
             target_project=args.target_project or "",
             trigger=args.trigger,
+            soak_profile=soak,
         )
         _print_json(payload)
         return 0
@@ -130,6 +250,7 @@ def main() -> int:
             arc_count=int(args.arc_count),
             seed_profile=args.seed_profile,
             batch_size=int(args.batch_size),
+            soak_profile=soak,
         )
         _print_json(payload)
         return 0 if payload.get("status") == "success" else 1
@@ -146,6 +267,7 @@ def main() -> int:
         poll_interval_seconds=max(1, int(args.poll_interval_seconds or DEFAULT_POLL_INTERVAL_SECONDS)),
         target_project=args.target_project or "",
         trigger=args.trigger,
+        soak_profile=soak,
     )
     _print_json(payload)
     return 0 if payload.get("analysis", {}).get("judgment") == "success" else 1
@@ -187,10 +309,11 @@ def build_execution_plan(
     batch_size: int,
     target_project: str,
     trigger: str,
+    soak_profile: SoakProfile | None = None,
 ) -> dict[str, Any]:
     profile = default_profile(seed_profile)
     target_name = target_project or build_target_project_name(seed_profile, arc_count)
-    return {
+    plan: dict[str, Any] = {
         "summary_role": "auto_frontier_lag_harness_plan",
         "created_at": _now_iso(),
         "operator_trigger": trigger,
@@ -203,6 +326,9 @@ def build_execution_plan(
         "harness_ssot_doc": HARNESS_SSOT_DOC,
         "profile": asdict(profile),
     }
+    if soak_profile is not None:
+        plan["soak_profile"] = asdict(soak_profile)
+    return plan
 
 
 def run_harness(
@@ -213,6 +339,7 @@ def run_harness(
     poll_interval_seconds: int,
     target_project: str,
     trigger: str,
+    soak_profile: SoakProfile | None = None,
 ) -> dict[str, Any]:
     plan = build_execution_plan(
         arc_count=arc_count,
@@ -220,6 +347,7 @@ def run_harness(
         batch_size=batch_size,
         target_project=target_project,
         trigger=trigger,
+        soak_profile=soak_profile,
     )
     project_name = str(plan["target_project"])
     project_root = PROJECT_ROOT / "projects" / project_name
@@ -231,6 +359,7 @@ def run_harness(
         arc_count=arc_count,
         seed_profile=seed_profile,
         batch_size=batch_size,
+        soak_profile_name="soak" if soak_profile is not None else "",
     )
     process = subprocess.Popen(
         command,
@@ -289,8 +418,10 @@ def run_harness(
     }
 
 
-def build_worker_command(*, target_project: str, arc_count: int, seed_profile: str, batch_size: int) -> list[str]:
-    return [
+def build_worker_command(
+    *, target_project: str, arc_count: int, seed_profile: str, batch_size: int, soak_profile_name: str = ""
+) -> list[str]:
+    cmd = [
         sys.executable,
         str(Path(__file__).resolve()),
         "worker",
@@ -303,6 +434,9 @@ def build_worker_command(*, target_project: str, arc_count: int, seed_profile: s
         "--batch-size",
         str(max(1, int(batch_size or DEFAULT_BATCH_SIZE))),
     ]
+    if soak_profile_name:
+        cmd.extend(["--soak-profile", str(soak_profile_name)])
+    return cmd
 
 
 def _worker_creationflags() -> int:
@@ -317,77 +451,83 @@ def _menu_choice_for_value(options: tuple[str, ...] | list[str], expected: str) 
     raise ValueError(f"semantic option not found: {expected_text!r}")
 
 
-def run_worker(*, target_project: str, arc_count: int, seed_profile: str, batch_size: int) -> dict[str, Any]:
+def run_worker(
+    *, target_project: str, arc_count: int, seed_profile: str, batch_size: int, soak_profile: SoakProfile | None = None
+) -> dict[str, Any]:
     profile = default_profile(seed_profile)
     selected_genre = {"type": profile.genre_type, "name": profile.genre_name}
-    app = _boot_app(target_project, selected_genre)
-    project_root = Path(app.current_project.paths.root)
-    manifest = {
-        "summary_role": "auto_frontier_lag_harness_manifest",
-        "created_at": _now_iso(),
-        "status": "booted",
-        "target_project": target_project,
-        "project_locator": f"projects/{target_project}",
-        "arc_count": int(arc_count),
-        "batch_size": max(1, int(batch_size or DEFAULT_BATCH_SIZE)),
-        "seed_profile": seed_profile,
-        "manual_profile_doc": MANUAL_PROFILE_DOC,
-        "harness_ssot_doc": HARNESS_SSOT_DOC,
-        "profile": asdict(profile),
-    }
-    _update_manifest(project_root, manifest)
 
-    try:
-        _apply_stage0_existing_profile(app, profile)
-        _update_manifest(project_root, {"status": "stage0_existing_complete", "updated_at": _now_iso()})
-
-        _apply_stage0_style_profile(app, profile)
-        _update_manifest(project_root, {"status": "stage0_style_complete", "updated_at": _now_iso()})
-
-        _ensure_pass_rate_monitor(app, project_root)
-        _update_manifest(project_root, {"status": "frontier_running", "updated_at": _now_iso()})
-
-        with patch("builtins.input", side_effect=_worker_runtime_input):
-            frontier_result = app._one_stop_pipeline_frontier_lag(
-                max_arc_advances=int(arc_count),
-                batch_size_override=max(1, int(batch_size or DEFAULT_BATCH_SIZE)),
-                wait_for_menu_return=False,
-            )
-        if getattr(app, "pass_rate_monitor", None):
-            app.pass_rate_monitor.save()
-        if hasattr(app, "_flush_audit_buffer"):
-            app._flush_audit_buffer()
-
-        payload = {
-            "summary_role": "auto_frontier_lag_worker_result",
+    with apply_soak_overrides(soak_profile):
+        app = _boot_app(target_project, selected_genre)
+        project_root = Path(app.current_project.paths.root)
+        manifest: dict[str, Any] = {
+            "summary_role": "auto_frontier_lag_harness_manifest",
             "created_at": _now_iso(),
-            "status": "success",
-            "project": target_project,
+            "status": "booted",
+            "target_project": target_project,
             "project_locator": f"projects/{target_project}",
             "arc_count": int(arc_count),
             "batch_size": max(1, int(batch_size or DEFAULT_BATCH_SIZE)),
-            "frontier_result": frontier_result,
+            "seed_profile": seed_profile,
+            "manual_profile_doc": MANUAL_PROFILE_DOC,
+            "harness_ssot_doc": HARNESS_SSOT_DOC,
+            "profile": asdict(profile),
         }
-        _write_json(project_root / "logs" / "auto_frontier_lag_worker_result.json", payload)
-        _update_manifest(project_root, {"status": "worker_success", "updated_at": _now_iso()})
-        return payload
-    except Exception as exc:
-        payload = {
-            "summary_role": "auto_frontier_lag_worker_result",
-            "created_at": _now_iso(),
-            "status": "failed",
-            "project": target_project,
-            "project_locator": f"projects/{target_project}",
-            "arc_count": int(arc_count),
-            "batch_size": max(1, int(batch_size or DEFAULT_BATCH_SIZE)),
-            "error": str(exc),
-            "traceback": traceback.format_exc(),
-        }
-        _write_json(project_root / "logs" / "auto_frontier_lag_worker_result.json", payload)
-        _update_manifest(project_root, {"status": "worker_failed", "updated_at": _now_iso(), "error": str(exc)})
-        return payload
-    finally:
-        _shutdown_worker_app(app)
+        if soak_profile is not None:
+            manifest["soak_profile"] = asdict(soak_profile)
+        _update_manifest(project_root, manifest)
+
+        try:
+            _apply_stage0_existing_profile(app, profile)
+            _update_manifest(project_root, {"status": "stage0_existing_complete", "updated_at": _now_iso()})
+
+            _apply_stage0_style_profile(app, profile)
+            _update_manifest(project_root, {"status": "stage0_style_complete", "updated_at": _now_iso()})
+
+            _ensure_pass_rate_monitor(app, project_root)
+            _update_manifest(project_root, {"status": "frontier_running", "updated_at": _now_iso()})
+
+            with patch("builtins.input", side_effect=_worker_runtime_input):
+                frontier_result = app._one_stop_pipeline_frontier_lag(
+                    max_arc_advances=int(arc_count),
+                    batch_size_override=max(1, int(batch_size or DEFAULT_BATCH_SIZE)),
+                    wait_for_menu_return=False,
+                )
+            if getattr(app, "pass_rate_monitor", None):
+                app.pass_rate_monitor.save()
+            if hasattr(app, "_flush_audit_buffer"):
+                app._flush_audit_buffer()
+
+            payload: dict[str, Any] = {
+                "summary_role": "auto_frontier_lag_worker_result",
+                "created_at": _now_iso(),
+                "status": "success",
+                "project": target_project,
+                "project_locator": f"projects/{target_project}",
+                "arc_count": int(arc_count),
+                "batch_size": max(1, int(batch_size or DEFAULT_BATCH_SIZE)),
+                "frontier_result": frontier_result,
+            }
+            _write_json(project_root / "logs" / "auto_frontier_lag_worker_result.json", payload)
+            _update_manifest(project_root, {"status": "worker_success", "updated_at": _now_iso()})
+            return payload
+        except Exception as exc:
+            payload = {
+                "summary_role": "auto_frontier_lag_worker_result",
+                "created_at": _now_iso(),
+                "status": "failed",
+                "project": target_project,
+                "project_locator": f"projects/{target_project}",
+                "arc_count": int(arc_count),
+                "batch_size": max(1, int(batch_size or DEFAULT_BATCH_SIZE)),
+                "error": str(exc),
+                "traceback": traceback.format_exc(),
+            }
+            _write_json(project_root / "logs" / "auto_frontier_lag_worker_result.json", payload)
+            _update_manifest(project_root, {"status": "worker_failed", "updated_at": _now_iso(), "error": str(exc)})
+            return payload
+        finally:
+            _shutdown_worker_app(app)
 
 
 def _boot_app(project_name: str, selected_genre: dict[str, Any]) -> SovereignApp:
