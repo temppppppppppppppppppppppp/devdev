@@ -2,6 +2,7 @@
 Stage4 reject/runtime orchestration split.
 """
 
+import copy
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -352,9 +353,24 @@ class Stage4RejectRuntime:
         snapshot_open_review = director_result.get("open_review", "")
         snapshot_fix_pack = resolved_fix_pack
         snapshot_rejection_reason = director_result.get("verdict_reason") or director_feedback
+        downgraded_score = director_result.get("pre_firewall_score", score)
+        try:
+            downgraded_score = int(downgraded_score)
+        except (ValueError, TypeError):
+            downgraded_score = int(score or 0)
+        preserve_downgraded_pass_rationale = (
+            reject_bucket == "post_select_conflict"
+            and resolved_fix_scope == "full"
+            and bool((previous_attempt or {}).get("provisional_pass_downgrade"))
+            and downgraded_score >= 80
+        )
+        # [SSS-T3] Track runtime rationale elision — not Director omission
+        _rationale_blanked_by = ""
         if reject_bucket == "post_select_conflict" and resolved_fix_scope == "full":
-            snapshot_selection_reason = ""
-            snapshot_open_review = ""
+            if not preserve_downgraded_pass_rationale:
+                snapshot_selection_reason = ""
+                snapshot_open_review = ""
+                _rationale_blanked_by = "runtime_post_select_conflict_elision"
             snapshot_verdict_reason = director_feedback
             snapshot_rejection_reason = director_feedback
             snapshot_fix_pack = {}
@@ -409,6 +425,27 @@ class Stage4RejectRuntime:
             reject_attempt["authoritative_fix_scope_violation"] = dict(
                 director_result.get("authoritative_fix_scope_violation") or {}
             )
+        conflict_contract = (previous_attempt or {}).get("conflict_contract")
+        if isinstance(conflict_contract, dict) and conflict_contract:
+            reject_attempt["conflict_contract"] = copy.deepcopy(conflict_contract)
+        reuse_contract = (previous_attempt or {}).get("reuse_contract")
+        if isinstance(reuse_contract, dict) and reuse_contract:
+            reject_attempt["reuse_contract"] = dict(reuse_contract)
+        # [SSS-T3] Rationale elision marker
+        if _rationale_blanked_by:
+            reject_attempt["rationale_blanked_by"] = _rationale_blanked_by
+        # [SSS-T1] Scope origin metadata — distinguishes semantic layers in operator evidence
+        reject_attempt["scope_origin"] = {
+            "fix_scope": (
+                "runtime_widened"
+                if reject_attempt["authoritative_fix_scope"]
+                and reject_attempt["fix_scope"]
+                and reject_attempt["authoritative_fix_scope"].lower() != reject_attempt["fix_scope"].lower()
+                else "director_authoritative"
+            ),
+            "authoritative_fix_scope": "director_authoritative",
+            "repair_scope": "runtime_lane",
+        }
         next_strategy_budget = (
             "reduced"
             if reject_bucket in {"quality_issue", "constraint_violation"} and resolved_fix_scope != "full"
@@ -935,6 +972,11 @@ class Stage4RejectRuntime:
                     reject_logging.session_gate_semantics.get("authoritative_fix_scope_violation"),
                     dict,
                 )
+                else None
+            ),
+            scope_origin=(
+                reject_logging.session_gate_semantics.get("scope_origin")
+                if isinstance(reject_logging.session_gate_semantics.get("scope_origin"), dict)
                 else None
             ),
         )

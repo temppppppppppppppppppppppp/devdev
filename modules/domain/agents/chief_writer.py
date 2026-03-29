@@ -27,8 +27,8 @@ from modules.core.genre_schema_builder import build_state_updates_schema
 from modules.models.manuscript import validate_manuscript_candidate
 
 from .base_agent import _SYSTEM_CFG, BaseAgent
-from .chief_writer_inplace_local_ops import attempt_local_edit_patch
 from .chief_writer_context import ChiefWriterContextBuilder, normalize_chief_writer_genre_code
+from .chief_writer_inplace_local_ops import attempt_local_edit_patch
 from .chief_writer_prompts import (
     get_prompt_template_output,
 )
@@ -47,6 +47,66 @@ _CW_GENRE_CODE_MAP = {
     "작곡가": "composer",
     "대체역사": "alt_history",
 }
+
+
+def _format_retry_conflict_contract_block(conflict_contract: object) -> str:
+    if not isinstance(conflict_contract, dict):
+        return ""
+    conflicts = conflict_contract.get("conflicts")
+    if not isinstance(conflicts, list) or not conflicts:
+        return ""
+
+    lines = ["[Structured Conflict Contract — rewrite target]"]
+    for entry in conflicts[:3]:
+        if not isinstance(entry, dict):
+            continue
+        conflict_type = str(entry.get("conflict_type", "") or "unknown").strip()
+        conflict_detail = str(entry.get("conflict_detail", "") or "").strip()
+        expected_truth = str(entry.get("expected_truth", "") or "").strip()
+        source_episode = str(entry.get("source_episode", "") or "").strip()
+        summary_parts = [part for part in (f"type={conflict_type}" if conflict_type else "", f"source={source_episode}" if source_episode else "") if part]
+        if conflict_detail:
+            summary_parts.append(f"detail={conflict_detail}")
+        if expected_truth:
+            summary_parts.append(f"expected={expected_truth}")
+        if summary_parts:
+            lines.append("- " + " | ".join(summary_parts))
+    return "\n".join(lines) if len(lines) > 1 else ""
+
+
+def _build_retry_reuse_feedback_block(previous_attempt: dict | None) -> str:
+    if not isinstance(previous_attempt, dict):
+        return ""
+
+    reuse_contract = previous_attempt.get("reuse_contract")
+    if not isinstance(reuse_contract, dict) or not reuse_contract:
+        return ""
+
+    baseline_field = str(reuse_contract.get("baseline_field", "") or "best_manuscript").strip() or "best_manuscript"
+    baseline_manuscript = str(previous_attempt.get(baseline_field, "") or "").strip()
+    if not baseline_manuscript:
+        return ""
+
+    lines = [
+        "[Near-pass Baseline Reuse Contract — rewrite, do not discard gains]",
+        f"- mode={str(reuse_contract.get('mode', '') or 'best_manuscript_baseline').strip()}",
+        f"- baseline_field={baseline_field}",
+        "- rule=Preserve already-working material unless it directly conflicts with the structured conflict contract.",
+    ]
+    selection_reason = str(previous_attempt.get("selection_reason", "") or "").strip()
+    if selection_reason:
+        lines.append(f"- preserved_selection_reason={selection_reason}")
+    open_review = str(previous_attempt.get("open_review", "") or "").strip()
+    if open_review and open_review not in ("특이사항 없음", "없음"):
+        lines.append(f"- preserved_open_review={open_review}")
+
+    conflict_block = _format_retry_conflict_contract_block(previous_attempt.get("conflict_contract"))
+    if conflict_block:
+        lines.append(conflict_block)
+
+    lines.append("[Stored Near-pass Manuscript Baseline]")
+    lines.append(smart_truncate(baseline_manuscript, max_chars=20000, head_chars=6000))
+    return "\n".join(lines)
 
 
 class ChiefWriter(BaseAgent):
@@ -992,6 +1052,7 @@ class ChiefWriter(BaseAgent):
     def _build_regeneration_feedback(self, *, previous_attempt: dict, director_feedback: str, attempt_number: int) -> str:
         """Director feedback와 이전 시도 히스토리를 재시도 prompt용으로 합친다."""
         history_feedback = self._build_retry_history_feedback(previous_attempt)
+        reuse_feedback = _build_retry_reuse_feedback_block(previous_attempt)
         enhanced_feedback = f"""
 [🚨 {attempt_number}차 재시도 - Director 피드백 필수 반영]
 
@@ -1020,6 +1081,8 @@ class ChiefWriter(BaseAgent):
         open_review = previous_attempt.get("open_review", "")
         if open_review and open_review not in ("특이사항 없음", "없음", ""):
             enhanced_feedback += f"\n\n[Director 서사 관찰 — 반드시 개선할 것]\n{open_review}"
+        if reuse_feedback:
+            enhanced_feedback += f"\n\n{reuse_feedback}"
         if history_feedback:
             enhanced_feedback += f"\n\n{history_feedback}"
         return enhanced_feedback

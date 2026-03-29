@@ -302,6 +302,15 @@ class TestClassifyError:
 
 
 class TestHandleApiError:
+    def test_credit_balance_too_low_is_classified_as_quota_like(self, agent):
+        result = agent._classify_api_error_mode(
+            Exception("Your credit balance is too low to access the Anthropic API. Please purchase credits.")
+        )
+
+        assert result["is_quota_exhausted"] is True
+        assert result["is_rate_limit"] is False
+        assert result["is_ambiguous_429"] is False
+
     def test_ambiguous_429_prefers_immediate_fallback(self, agent, monkeypatch):
         monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
         monkeypatch.setattr(base_agent_module.types, "GenerateContentConfig", lambda **kwargs: kwargs)
@@ -919,11 +928,15 @@ class TestMetricsUsageTracking:
     def test_backup_recovery_uses_measured_usage_and_closes_failed_metric(self, agent, monkeypatch):
         collector = MagicMock()
         collector.start_call.return_value = "backup_metric"
+        collector.calculate_cost.side_effect = lambda model, *_args, **_kwargs: 0.321 if model == "gemini-2.5-pro" else 9.999
 
         monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", True)
         monkeypatch.setattr(base_agent_module, "get_metrics_collector", lambda: collector)
         monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+        session_logger = MagicMock()
+        monkeypatch.setattr(BaseAgent, "_session_logger_global", session_logger)
 
+        agent.backup_model = "gemini-2.5-pro"
         agent._log_llm_call_to_db = MagicMock()
         agent._classify_error = MagicMock(return_value=AgentErrorType.NETWORK_ERROR)
 
@@ -954,6 +967,67 @@ class TestMetricsUsageTracking:
         assert kwargs["output_tokens"] == 0
         assert kwargs["cached_tokens"] == 4
         assert kwargs["thinking_tokens"] == 2
+        assert kwargs["model"] == "gemini-2.5-pro"
+
+        session_logger.log_llm_call.assert_called_once()
+        log_kwargs = session_logger.log_llm_call.call_args.kwargs
+        assert log_kwargs["model"] == "gemini-2.5-pro"
+        assert log_kwargs["success"] is False
+        assert log_kwargs["context_tag"] == "backup_recovery"
+        assert log_kwargs["input_tokens"] == 30
+        assert log_kwargs["cached_tokens"] == 4
+        assert log_kwargs["thinking_tokens"] == 2
+        assert log_kwargs["total_cost_usd"] == 0.321
+
+    def test_backup_recovery_success_logs_session_entry_with_backup_model_pricing(self, agent, monkeypatch):
+        collector = MagicMock()
+        collector.start_call.return_value = "backup_metric"
+        collector.calculate_cost.side_effect = lambda model, *_args, **_kwargs: 0.432 if model == "gemini-2.5-pro" else 8.765
+
+        monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", True)
+        monkeypatch.setattr(base_agent_module, "get_metrics_collector", lambda: collector)
+        monkeypatch.setattr(base_agent_module.time, "sleep", lambda *_args, **_kwargs: None)
+        session_logger = MagicMock()
+        monkeypatch.setattr(BaseAgent, "_session_logger_global", session_logger)
+
+        agent.backup_model = "gemini-2.5-pro"
+        agent._log_llm_call_to_db = MagicMock()
+        agent._validate_response = MagicMock(return_value={"valid": True, "reason": ""})
+
+        def fake_generate(**_kwargs):
+            agent._last_llm_usage = {
+                "prompt_token_count": 18,
+                "candidates_token_count": 9,
+                "cached_content_token_count": 2,
+                "thoughts_token_count": 1,
+            }
+            return LLMResponse(text=json.dumps({"content": "backup ok"}), usage=None, raw=SimpleNamespace())
+
+        agent._generate_content = fake_generate
+
+        result = agent._attempt_backup_recovery(
+            base_prompt="backup prompt",
+            temperature=0.3,
+            response_schema=None,
+            full_response="",
+            error_type=AgentErrorType.UNKNOWN,
+        )
+
+        assert json.loads(result)["content"] == "backup ok"
+        collector.end_call.assert_called_once()
+        end_kwargs = collector.end_call.call_args.kwargs
+        assert end_kwargs["success"] is True
+        assert end_kwargs["model"] == "gemini-2.5-pro"
+        session_logger.log_llm_call.assert_called_once()
+        log_kwargs = session_logger.log_llm_call.call_args.kwargs
+        assert log_kwargs["model"] == "gemini-2.5-pro"
+        assert log_kwargs["success"] is True
+        assert log_kwargs["context_tag"] == "backup_recovery"
+        assert log_kwargs["input_tokens"] == 18
+        assert log_kwargs["output_tokens"] == 9
+        assert log_kwargs["cached_tokens"] == 2
+        assert log_kwargs["thinking_tokens"] == 1
+        assert log_kwargs["total_cost_usd"] == 0.432
 
 
 class TestNormalizedProviderHelpers:

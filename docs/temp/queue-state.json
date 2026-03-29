@@ -1,14 +1,23 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-03-28T03:25:41.856529+00:00",
+  "generated_at": "2026-03-29T06:04:00.203550+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 2,
+  "active_item_count": 4,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
-    "canonical_path": "docs/2026-03-27/npc-martial-and-soak-canary-execution-roadmap.md",
+    "canonical_path": "docs/2026-03-29/stage4-and-legacy-execution-roadmap.md",
     "status": "active"
   },
   "items": [
+    {
+      "topic": "canary-prep-truth-store-isolation",
+      "temp_path": "docs/temp/canary-prep-truth-store-isolation-execution-ssot.md",
+      "canonical_path": "docs/2026-03-29/canary-prep-truth-store-isolation-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
     {
       "topic": "frontier-lag-soak-canary-wave1",
       "temp_path": "docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md",
@@ -23,6 +32,15 @@
       "temp_path": "docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md",
       "canonical_path": "docs/2026-03-27/npc-martial-state-substrate-wave1-execution-ssot.md",
       "status": "blocked",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "stage4-provider-fallback-observability-gap",
+      "temp_path": "docs/temp/stage4-provider-fallback-observability-gap-execution-ssot.md",
+      "canonical_path": "docs/2026-03-29/stage4-provider-fallback-observability-gap-execution-ssot.md",
+      "status": "pending",
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true

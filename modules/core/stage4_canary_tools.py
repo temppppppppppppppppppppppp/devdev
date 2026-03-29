@@ -8,7 +8,9 @@ from datetime import datetime
 from pathlib import Path
 
 from modules.core.db_manager import DBManager
+from modules.core.fact_ledger import FactLedger
 from modules.core.failure_analyzer import FailureAnalyzer
+from modules.core.world_state import WorldStateManager
 
 _APP_ROOT = Path(__file__).resolve().parents[2]
 
@@ -37,9 +39,9 @@ _STAGE4_RETRY_CONTEXT_FIELDS = (
 _STAGE4_RETRY_REQUIRED_VERDICTS = {"REJECT", "PASS_WITH_FIX"}
 
 
-def _normalize_from_ep(from_ep: int) -> int:
+def _normalize_from_ep(from_ep: int, *, allow_partial: bool = False) -> int:
     normalized = max(1, int(from_ep or 1))
-    if normalized != 1:
+    if not allow_partial and normalized != 1:
         raise ValueError("Stage 4 canary prep currently supports only from_ep=1")
     return normalized
 
@@ -385,7 +387,7 @@ def prepare_stage4_canary_project(
     """Copy a baseline project and reset only Stage 4 outputs on the copy."""
     source = Path(source_root)
     target = Path(target_root)
-    from_ep = _normalize_from_ep(from_ep)
+    from_ep = _normalize_from_ep(from_ep, allow_partial=True)
     if not source.exists():
         raise FileNotFoundError(f"source project not found: {source}")
     if source.resolve() == target.resolve():
@@ -444,7 +446,7 @@ def prepare_stage34_canary_project(
 def reset_stage4_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict:
     """Delete Stage 4 and episode-derived outputs while preserving Stage 3 blueprints."""
     root = Path(project_root)
-    from_ep = _normalize_from_ep(from_ep)
+    from_ep = _normalize_from_ep(from_ep, allow_partial=True)
     db_path = root / "project_data.db"
     if not db_path.exists():
         raise FileNotFoundError(f"project database not found: {db_path}")
@@ -453,6 +455,7 @@ def reset_stage4_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict:
     try:
         impact = _collect_stage4_cleanup_impact(db, from_ep=from_ep)
         _delete_stage4_db_outputs(db, from_ep=from_ep)
+        anchor_validation = _validate_truth_store_reset(db, from_ep=from_ep)
     finally:
         db.close()
 
@@ -460,6 +463,7 @@ def reset_stage4_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict:
     return {
         "from_ep": from_ep,
         "db_impact": impact,
+        "anchor_validation": anchor_validation,
         "file_cleanup": files,
     }
 
@@ -476,6 +480,7 @@ def reset_stage34_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict
     try:
         impact = _collect_stage34_cleanup_impact(db, from_ep=from_ep)
         _delete_stage34_db_outputs(db, from_ep=from_ep)
+        anchor_validation = _validate_truth_store_reset(db, from_ep=from_ep)
     finally:
         db.close()
 
@@ -483,6 +488,7 @@ def reset_stage34_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict
     return {
         "from_ep": from_ep,
         "db_impact": impact,
+        "anchor_validation": anchor_validation,
         "file_cleanup": files,
     }
 
@@ -957,7 +963,83 @@ def _collect_stage4_cleanup_impact(db: DBManager, *, from_ep: int) -> dict[str, 
     impact["blueprints_kept"] = int(
         cur.execute("SELECT COUNT(*) AS c FROM blueprints WHERE ep_num >= ?", (from_ep,)).fetchone()["c"]
     )
+    impact["orphan_chain_link_anchors"] = len(_find_chain_link_keys(db, from_ep=from_ep))
     return impact
+
+
+def _find_chain_link_keys(db: DBManager, *, from_ep: int) -> list[str]:
+    rows = db.conn.execute("SELECT key FROM anchors WHERE key LIKE 'chain_link_%' ORDER BY key").fetchall()
+    keys: list[str] = []
+    for row in rows:
+        key = str(row["key"] or "").strip()
+        suffix = key.rsplit("_", 1)[-1]
+        if suffix.isdigit() and int(suffix) >= int(from_ep):
+            keys.append(key)
+    return keys
+
+
+def _extract_history_episode(history_entry) -> int | None:
+    text = str(history_entry or "").strip()
+    if not text.startswith("ep"):
+        return None
+    prefix = text.split(":", 1)[0]
+    ep_text = prefix[2:]
+    return int(ep_text) if ep_text.isdigit() else None
+
+
+def _validate_truth_store_reset(db: DBManager, *, from_ep: int) -> dict:
+    chain_links = _find_chain_link_keys(db, from_ep=from_ep)
+
+    fact_ledger = db.load_anchor("fact_ledger") or {}
+    fact_history_at_or_after: dict[str, list[str]] = {}
+    for key, info in (fact_ledger.get("numbers") or {}).items():
+        if not isinstance(info, dict):
+            continue
+        offending = [
+            str(entry)
+            for entry in (info.get("history") or [])
+            if (_extract_history_episode(entry) or 0) >= int(from_ep)
+        ]
+        if offending:
+            fact_history_at_or_after[str(key)] = offending
+
+    world_state = db.load_anchor("world_state") or {}
+    alive_npcs = [
+        name
+        for name, info in (world_state.get("alive_npcs") or {}).items()
+        if isinstance(info, dict) and int(info.get("first_seen_ep", 0) or 0) >= int(from_ep)
+    ]
+    active_items = [
+        name
+        for name, info in (world_state.get("active_items") or {}).items()
+        if isinstance(info, dict) and int(info.get("ep_acquired", 0) or 0) >= int(from_ep)
+    ]
+    world_last_updated_ep = int(world_state.get("last_updated_ep", 0) or 0)
+
+    ok = (
+        not chain_links
+        and not fact_history_at_or_after
+        and not alive_npcs
+        and not active_items
+        and world_last_updated_ep <= max(0, int(from_ep) - 1)
+    )
+    return {
+        "status": "ok" if ok else "fail",
+        "from_ep": int(from_ep),
+        "orphan_chain_links": chain_links,
+        "fact_ledger_history_at_or_after": fact_history_at_or_after,
+        "world_state_alive_npcs_at_or_after": alive_npcs,
+        "world_state_active_items_at_or_after": active_items,
+        "world_state_last_updated_ep": world_last_updated_ep,
+    }
+
+
+def _reset_truth_store_anchors(db: DBManager, *, from_ep: int) -> None:
+    for key in _find_chain_link_keys(db, from_ep=from_ep):
+        db.cursor.execute("DELETE FROM anchors WHERE key = ?", (key,))
+
+    FactLedger(db).rollback_to(from_ep)
+    WorldStateManager(db).rollback_to(from_ep)
 
 
 def _collect_stage34_cleanup_impact(db: DBManager, *, from_ep: int) -> dict[str, int]:
@@ -1013,6 +1095,7 @@ def _delete_stage4_db_outputs(db: DBManager, *, from_ep: int) -> None:
         cur.execute("DELETE FROM npc_relationship_history WHERE change_ep >= ?", (from_ep,))
         cur.execute("DELETE FROM seeds WHERE planted_ep >= ?", (from_ep,))
         cur.execute("UPDATE seeds SET status = 'active', recovered_ep = NULL WHERE recovered_ep >= ?", (from_ep,))
+        _reset_truth_store_anchors(db, from_ep=from_ep)
         db.conn.commit()
     except Exception:
         db.conn.rollback()
@@ -1062,6 +1145,7 @@ def _delete_stage34_db_outputs(db: DBManager, *, from_ep: int) -> None:
             (from_ep,),
         )
         cur.execute("DELETE FROM stage_attempts WHERE stage = 3 AND ep_num >= ?", (from_ep,))
+        _reset_truth_store_anchors(db, from_ep=from_ep)
         db.conn.commit()
     except Exception:
         db.conn.rollback()

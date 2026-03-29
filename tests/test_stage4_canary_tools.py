@@ -1,14 +1,12 @@
 import json
 from pathlib import Path
 
-import pytest
-
 from modules.core.db_manager import DBManager
 from modules.core.stage4_canary_tools import (
     build_stage4_branch_inventory,
     build_stage4_canary_summary,
-    prepare_stage34_canary_project,
     prepare_stage4_canary_project,
+    prepare_stage34_canary_project,
 )
 
 
@@ -97,14 +95,24 @@ def test_prepare_stage4_canary_project_copies_and_resets_stage4_only(tmp_path):
         source_db.close()
 
 
-def test_prepare_stage4_canary_project_rejects_partial_from_ep(tmp_path):
+def test_prepare_stage4_canary_project_supports_partial_from_ep(tmp_path):
     source = tmp_path / "source_project"
     target = tmp_path / "target_project"
     _make_project_root(source)
-    DBManager(source / "project_data.db").close()
+    db = DBManager(source / "project_data.db")
+    try:
+        db.save_anchor("genre_info", {"type": "investment", "name": "investment"})
+    finally:
+        db.close()
 
-    with pytest.raises(ValueError, match="from_ep=1"):
-        prepare_stage4_canary_project(source, target, from_ep=2)
+    (source / "drafts" / "ep_0001.txt").write_text("draft-1", encoding="utf-8")
+    (source / "drafts" / "ep_0004.txt").write_text("draft-4", encoding="utf-8")
+
+    result = prepare_stage4_canary_project(source, target, from_ep=4)
+
+    assert result["from_ep"] == 4
+    assert (target / "drafts" / "ep_0001.txt").exists() is True
+    assert (target / "drafts" / "ep_0004.txt").exists() is False
 
 
 def test_prepare_stage34_canary_project_resets_blueprints_and_stage3_stage4_outputs(tmp_path):
