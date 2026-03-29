@@ -1454,6 +1454,7 @@ class TestHandleRoundOutcomeErrorPaths:
             "stage4 CoVe runtime advisory observed",
             ANY,
         )
+        second_call = {"director_feedback": "", "previous_attempt": {"best_manuscript": ""}}
         return
 
         assert result.should_return is False
@@ -1650,6 +1651,7 @@ class TestHandleRoundOutcomeRetryPathology:
 
     def test_handle_round_outcome_still_retries_when_cove_requests_regeneration(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
         from types import SimpleNamespace
+
         from modules.core.stage4_types import _InterviewRoundResult
 
         orch = orch_with_ctx
@@ -2185,6 +2187,7 @@ class TestHandleRoundOutcomeRetryPathology:
                 score_history=[91, 88, 66],
                 plateau_advisory_emitted=True,
                 tf29_advisory="[bucket]",
+                tf29_advisory_emitted=True,
                 dominant_contradiction="timeline",
             )
         )
@@ -2215,6 +2218,7 @@ class TestHandleRoundOutcomeRetryPathology:
             contradiction_type_streak=1,
             score_history=[91, 88],
             plateau_advisory_emitted=False,
+            tf29_advisory_emitted=False,
             pathology_counts={},
             pathology_repeat_emitted=set(),
         )
@@ -2372,6 +2376,7 @@ class TestHandleRoundOutcomeRetryPathology:
             contradiction_type_streak=0,
             score_history=[50],
             plateau_advisory_emitted=True,
+            tf29_advisory_emitted=False,
             pathology_counts={},
             pathology_repeat_emitted=set(),
         )
@@ -2425,6 +2430,7 @@ class TestHandleRoundOutcomeRetryPathology:
             contradiction_type_streak=0,
             score_history=[50],
             plateau_advisory_emitted=True,
+            tf29_advisory_emitted=False,
             pathology_counts={},
             pathology_repeat_emitted=set(),
         )
@@ -2463,6 +2469,7 @@ class TestHandleRoundOutcomeRetryPathology:
                 contradiction_type_streak=2,
                 score_history=[91, 88, 66],
                 plateau_advisory_emitted=True,
+                tf29_advisory_emitted=False,
             )
         )
         loop_state = orch._build_interview_round_loop_state()
@@ -2661,6 +2668,7 @@ class TestHandleRoundOutcomeRetryPathology:
             contradiction_type_streak=1,
             score_history=[95, 92],
             plateau_advisory_emitted=False,
+            tf29_advisory_emitted=False,
             blueprint_regenerated=False,
         )
 
@@ -2679,6 +2687,33 @@ class TestHandleRoundOutcomeRetryPathology:
         assert "[⚠️ 반복 실패 패턴 감지]" in result.director_feedback
         assert "[⚠️ A-4 구조 진단]" in result.director_feedback
         assert result.tf29_advisory.startswith("[⚠️ 반복 실패 패턴 감지]")
+
+    def test_apply_reject_bucket_advisory_emits_tf29_only_once(self, orch_with_ctx):
+        runtime = orch_with_ctx.outcome_runtime
+        previous_attempt = {"reject_bucket": "quality_issue"}
+
+        first = runtime._apply_reject_bucket_advisory(
+            previous_attempt=previous_attempt,
+            director_feedback="base feedback",
+            prev_reject_bucket="quality_issue",
+            bucket_streak=2,
+            blueprint_regenerated=False,
+            tf29_advisory_emitted=False,
+        )
+
+        second = runtime._apply_reject_bucket_advisory(
+            previous_attempt=previous_attempt,
+            director_feedback=first.director_feedback,
+            prev_reject_bucket=first.prev_reject_bucket,
+            bucket_streak=first.bucket_streak,
+            blueprint_regenerated=False,
+            tf29_advisory_emitted=first.tf29_advisory_emitted,
+        )
+
+        assert first.tf29_advisory
+        assert first.tf29_advisory_emitted is True
+        assert second.tf29_advisory == ""
+        assert second.tf29_advisory_emitted is True
 
     def test_apply_reject_score_trend_advisory_marks_plateau_and_reasoning(self, orch_with_ctx):
         runtime = orch_with_ctx.outcome_runtime
@@ -2727,6 +2762,7 @@ class TestHandleRoundOutcomeRetryPathology:
             contradiction_type_streak=0,
             score_history=[92],
             plateau_advisory_emitted=False,
+            tf29_advisory_emitted=False,
             blueprint_regenerated=False,
         )
 
@@ -2761,6 +2797,7 @@ class TestHandleRoundOutcomeRetryPathology:
             contradiction_type_streak=0,
             score_history=[92],
             plateau_advisory_emitted=False,
+            tf29_advisory_emitted=False,
             blueprint_regenerated=False,
         )
 
@@ -2794,6 +2831,7 @@ class TestHandleRoundOutcomeRetryPathology:
             contradiction_type_streak=0,
             score_history=[50],
             plateau_advisory_emitted=True,
+            tf29_advisory_emitted=False,
             blueprint_regenerated=False,
         )
 
@@ -2827,6 +2865,7 @@ class TestHandleRoundOutcomeRetryPathology:
             contradiction_type_streak=0,
             score_history=[50],
             plateau_advisory_emitted=True,
+            tf29_advisory_emitted=False,
             blueprint_regenerated=False,
         )
 
@@ -3234,7 +3273,10 @@ class TestStage4OrchestratorImport:
         assert "TAIL-CONTEXT" in trimmed
 
     def test_fit_mandatory_context_budget_drops_low_priority_sections(self):
-        from modules.core.stage4_orchestrator import _MandatoryContextBudgetResult, _fit_mandatory_context_budget
+        from modules.core.stage4_orchestrator import (
+            _fit_mandatory_context_budget,
+            _MandatoryContextBudgetResult,
+        )
 
         text = "[A]\n" + ("A" * 50) + "\n[B]\n" + ("B" * 50) + "\n[C]\n" + ("C" * 50)
 

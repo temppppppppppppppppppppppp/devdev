@@ -189,6 +189,48 @@ def test_build_regeneration_feedback_includes_open_review_score_breakdown_and_hi
     assert "[retry history]" in feedback
 
 
+def test_build_regeneration_feedback_includes_reuse_contract_and_structured_conflict_payload():
+    writer = _make_writer()
+    writer._build_retry_history_feedback = MagicMock(return_value="")
+
+    feedback = writer._build_regeneration_feedback(
+        previous_attempt={
+            "strategy": "balanced",
+            "rejection_reason": "post-select conflict",
+            "selection_reason": "best candidate because the midpoint reveal worked",
+            "open_review": "keep the burner phone beat",
+            "best_manuscript": "baseline manuscript body " * 200,
+            "reuse_contract": {
+                "mode": "best_manuscript_baseline",
+                "baseline_field": "best_manuscript",
+                "conflict_field": "conflict_contract",
+                "preserve_rationale": True,
+            },
+            "conflict_contract": {
+                "contract_type": "post_select_conflict",
+                "conflicts": [
+                    {
+                        "conflict_type": "continuity",
+                        "conflict_detail": "scene overlap conflict",
+                        "source_episode": "",
+                        "expected_truth": "scene overlap conflict",
+                    }
+                ],
+            },
+        },
+        director_feedback="revise now",
+        attempt_number=2,
+    )
+
+    assert "[Near-pass Baseline Reuse Contract" in feedback
+    assert "preserved_selection_reason=best candidate because the midpoint reveal worked" in feedback
+    assert "preserved_open_review=keep the burner phone beat" in feedback
+    assert "[Structured Conflict Contract" in feedback
+    assert "type=continuity" in feedback
+    assert "[Stored Near-pass Manuscript Baseline]" in feedback
+    assert "baseline manuscript body" in feedback
+
+
 def test_build_regeneration_strategy_hints_stringifies_selection_reason_dict():
     writer = _make_writer()
 

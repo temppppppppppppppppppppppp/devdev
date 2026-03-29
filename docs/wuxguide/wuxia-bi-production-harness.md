@@ -61,6 +61,16 @@ Blockguide의 `FinanceHUD`(=Resource-Power HUD) 자리를 `MartialHUD`가 대체
 
 ## 0C. 공통 용어표
 
+## 0D. Shared `evolution` Metadata Standard
+
+- Shared standard doc: `docs/narrative-router/SSOT_bi-evolution-metadata-standard.md`
+- Wuxguide BI에서 named martial-technique growth trace의 canonical key는 `evolution`이다.
+- Primary placement:
+  - `MartialHUD.Protagonist.actual_truth.martial_status.martial_arts[*].evolution`
+- `evolution` value type은 `string` 또는 `string[]`를 허용한다.
+- legacy alias `engine_evolution`, `evolution_arc`, `evolution_stages`는 forward standard가 아니다.
+- 새로 생성하거나 새로 터치하는 wuxguide BI는 `evolution`을 우선 사용한다.
+
 | 용어 | SSOT 의미 |
 | ---- | ---- |
 | `realm` | 경지. 연마, 돌파, 마경 등으로 변하는 무공 단계 |
@@ -233,7 +243,8 @@ BI handoff 전에 아래 snapshot 항목을 확인한다.
 - TR 마지막 블록 기준 최종 상태를 기록한다.
 - `origin`과 `proficiency`는 작품 내부 사실만 적는다.
 - `B43`, `Block 43`, `B19→B46` 같은 제작 추적 문자열을 넣지 않는다.
-- `phase0_design.martial_art_path.evolution`은 제작 추적 메모일 수 있으므로 BI에 verbatim 복사하지 않는다.
+- `martial_arts[*].evolution`은 허용되는 BI metadata trace다.
+- `phase0_design`의 growth trace를 가져올 수는 있지만, source TR 기준으로 검증한 뒤 하나의 compact `evolution` 값으로 정규화해야 한다.
 
 #### `injury_log`
 
@@ -305,7 +316,7 @@ blockguide에서 `capital_before/after`를 동기화하듯, 무협 BI에서는 �
 - `recovery_block`
 - `first_block`
 
-즉 블록 참조는 metadata key에만 남길 수 있다. `martial_arts.origin`, `Seeds.description`, `CommercialCode`, `foreshadow[].event`, `callback[].event` 같은 서술 필드로 흘러들면 FAIL이다.
+즉 블록 참조는 metadata key에만 남길 수 있다. `martial_arts.evolution`, `martial_arts.origin`, `Seeds.description`, `CommercialCode`, `foreshadow[].event`, `callback[].event` 같은 서술 필드 중 narrative prose 필드로 흘러들면 FAIL이다.
 
 ---
 

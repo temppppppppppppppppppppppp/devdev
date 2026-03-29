@@ -154,6 +154,37 @@ def test_end_call_retry_count_drives_retry_stats(tmp_path):
         MetricsCollector.reset(tmp_path / "metrics")
 
 
+def test_end_call_model_override_attributes_cost_to_served_model(tmp_path):
+    collector = MetricsCollector.reset(tmp_path / "metrics")
+    try:
+        metric_id = collector.start_call("Writer", "claude-opus-4-6")
+        collector.end_call(
+            metric_id,
+            success=True,
+            input_tokens=120,
+            output_tokens=30,
+            model="gemini-2.5-pro",
+        )
+
+        expected_cost = round(
+            collector.calculate_cost("gemini-2.5-pro", input_tokens=120, output_tokens=30),
+            6,
+        )
+        peek = collector.peek_scope()
+        session_stats = collector.get_session_stats()
+
+        assert "gemini-2.5-pro" in peek["model_breakdown"]
+        assert "claude-opus-4-6" not in peek["model_breakdown"]
+        assert peek["model_breakdown"]["gemini-2.5-pro"]["tokens"] == 150
+        assert peek["total_cost_usd"] == expected_cost
+        assert "gemini-2.5-pro" in session_stats.model_stats
+        assert "claude-opus-4-6" not in session_stats.model_stats
+        assert session_stats.model_stats["gemini-2.5-pro"]["total_tokens"] == 150
+        assert session_stats.model_stats["gemini-2.5-pro"]["cost_usd"] == expected_cost
+    finally:
+        MetricsCollector.reset(tmp_path / "metrics")
+
+
 def test_get_session_stats_preserves_micro_costs(tmp_path):
     collector = MetricsCollector.reset(tmp_path / "metrics")
     try:

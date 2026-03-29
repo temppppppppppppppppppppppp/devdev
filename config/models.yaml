@@ -4,7 +4,7 @@ providers:
     sdk: "google-genai"
     api_key_env: "GOOGLE_API_KEY"
   anthropic:
-    enabled: true
+    enabled: false
     sdk: "anthropic"
     api_key_env: "ANTHROPIC_API_KEY"
     # AnthropicProvider falls back to CLAUDE_API when ANTHROPIC_API_KEY is absent.
@@ -13,7 +13,7 @@ providers:
     sdk: "openai"
     api_key_env: "OPENAI_API_KEY"
   vertex_ai:
-    enabled: true
+    enabled: false
     sdk: "google-genai"
     auth_mode: "api_key"
     # auth_mode=api_key keeps Gemini Vertex Express mode isolated from project credentials.
@@ -35,9 +35,9 @@ providers:
     # Prefix convention: "anthropic-vertex:claude-sonnet-4-6"
 
 agents:
-  analyst: "claude-sonnet-4-6"
+  analyst: "gemini-2.5-pro"
   manager: "gemini-2.5-flash"
-  chief_writer: "claude-sonnet-4-6"
+  chief_writer: "gemini-2.5-pro"
   blueprint_ensemble: "gemini-3.1-pro-preview"
   three_phase_blueprint_generator: "gemini-3.1-pro-preview"
   state_locked_arc_generator: "gemini-3.1-pro-preview"
@@ -46,7 +46,7 @@ agents:
   state_extractor: "gemini-2.5-flash"
   four_phase_arc_generator: "gemini-3.1-pro-preview"
   continuity_inspector: "gemini-3.1-pro-preview"
-  director: "claude-opus-4-6"
+  director: "gemini-2.5-pro"
   arc_corrector: "gemini-2.5-flash"
   arc_critic: "gemini-2.5-flash"
   consensus_validator: "gemini-2.5-flash"

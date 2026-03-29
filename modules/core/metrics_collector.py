@@ -22,6 +22,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
+from modules.core.llm_router import resolve_provider_identity as _infer_provider_identity
+
 
 @dataclass
 class AgentMetric:
@@ -97,11 +99,6 @@ MODEL_COSTS = {
     "claude-haiku-4-5": {"input": 0.80, "output": 4.00, "cache_read": 0.08},
     "default": {"input": 1.25, "output": 10.00, "cache_read": 0.125},
 }
-
-
-# Provider identity — delegated to the single implementation in llm_router.
-from modules.core.llm_router import resolve_provider_identity as _infer_provider_identity
-
 
 def _normalize_billable_model(model: str) -> str:
     normalized = (model or "").strip()
@@ -239,6 +236,7 @@ class MetricsCollector:
         cached_tokens: int = 0,
         thinking_tokens: int = 0,
         error_type: str | None = None,
+        model: str | None = None,
         provider: str | None = None,
         backend: str | None = None,
         family: str | None = None,
@@ -253,6 +251,7 @@ class MetricsCollector:
             input_tokens: 입력 토큰 수
             output_tokens: 출력 토큰 수
             error_type: 에러 타입 (실패 시)
+            model: served model override
             provider: provider 이름 override (start_call 추론값 우선)
             backend: backend override
             family: family override
@@ -270,6 +269,15 @@ class MetricsCollector:
             metric.cached_tokens = max(0, min(int(cached_tokens or 0), int(input_tokens or 0)))
             metric.thinking_tokens = max(0, int(thinking_tokens or 0))
             metric.error_type = error_type
+            if model:
+                metric.model = model
+                inferred_provider, inferred_backend, inferred_family = _infer_provider_identity(model)
+                if not provider:
+                    metric.provider = inferred_provider
+                if not backend:
+                    metric.backend = inferred_backend
+                if not family:
+                    metric.family = inferred_family
             if provider:
                 metric.provider = provider
             if backend:

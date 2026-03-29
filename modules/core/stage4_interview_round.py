@@ -26,6 +26,89 @@ from modules.core.stage4_reject_runtime import Stage4RejectRuntime
 from modules.core.stage4_retry_runtime import Stage4RetryRuntime
 
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
+_RETRY_ADVISORY_MARKER = "[Advisory 핵심 요약 - 재시도 시 반영]"
+_RETRY_SYSTEM_PREFIXES = ("[연속성 충돌]", "[Continuity Conflict]", "[V67]", "[CoVe]", "[ToT", "[MAD")
+_RETRY_PERSISTENT_DIRECTIVE_PREFIXES = (
+    "[IFC]",
+    "[Conflict-first retry]",
+    "[Lane3 Gate]",
+    "[A-4 continuity replay]",
+)
+
+
+def _parse_retry_advisory_round_tag(line: str) -> int | None:
+    stripped = str(line or "").strip()
+    if not stripped.startswith("- [R"):
+        return None
+    tag_end = stripped.find("]", 4)
+    if tag_end == -1:
+        return None
+    try:
+        return int(stripped[4:tag_end])
+    except ValueError:
+        return None
+
+
+def _strip_retry_advisory_round_tag(line: str) -> str:
+    stripped = str(line or "").strip()
+    if not stripped.startswith("- [R"):
+        return stripped
+    tag_end = stripped.find("]", 4)
+    if tag_end == -1:
+        return stripped
+    remainder = stripped[tag_end + 1 :].strip()
+    return f"- {remainder}".strip() if remainder else ""
+
+
+def _is_retry_advisory_line(line: str) -> bool:
+    return _strip_retry_advisory_round_tag(line).startswith("- ")
+
+
+def _tag_retry_advisory_line(line: str, *, round_num: int) -> str:
+    normalized = _strip_retry_advisory_round_tag(line)
+    body = normalized[2:].strip() if normalized.startswith("- ") else normalized
+    return f"- [R{round_num}] {body}".strip() if body else ""
+
+
+def _is_persistent_retry_directive_line(line: str) -> bool:
+    stripped = str(line or "").strip()
+    return any(stripped.startswith(prefix) for prefix in _RETRY_PERSISTENT_DIRECTIVE_PREFIXES)
+
+
+def _build_post_select_conflict_contract(conflicts: list[str] | None) -> dict[str, object]:
+    entries: list[dict[str, str]] = []
+    if not isinstance(conflicts, list):
+        return {}
+
+    for raw_line in conflicts:
+        line = str(raw_line or "").strip()
+        if not line:
+            continue
+        if "Continuity" in line:
+            conflict_type = "continuity"
+        elif "History" in line:
+            conflict_type = "history"
+        else:
+            conflict_type = "check_error"
+        detail = line.split("]", 1)[1].strip() if "]" in line else line
+        expected_truth = detail.split(":", 1)[1].strip() if ":" in detail else detail
+        entries.append(
+            {
+                "conflict_type": conflict_type,
+                "conflict_detail": detail,
+                "source_episode": "",
+                "expected_truth": expected_truth,
+            }
+        )
+
+    if not entries:
+        return {}
+
+    return {
+        "contract_type": "post_select_conflict",
+        "mode": "rewrite_with_best_manuscript_reuse",
+        "conflicts": entries,
+    }
 
 
 @dataclass
@@ -195,7 +278,7 @@ class Stage4InterviewRound:
         if not details:
             return ""
 
-        lines = ["[Advisory 핵심 요약 - 재시도 시 반영]"]
+        lines = [_RETRY_ADVISORY_MARKER]
         selected_details = details if max_items is None else details[:max_items]
         for text in selected_details:
             lines.append(f"- {text}")
@@ -207,9 +290,8 @@ class Stage4InterviewRound:
         if not advisory_digest:
             return director_feedback
 
-        marker = "[Advisory 핵심 요약 - 재시도 시 반영]"
         base = str(director_feedback or "").strip()
-        if marker in base:
+        if _RETRY_ADVISORY_MARKER in base:
             return base
         if not base:
             return advisory_digest
@@ -383,6 +465,9 @@ class Stage4InterviewRound:
         firewall_reason: str = "",
         authoritative_fix_scope: str = "",
         authoritative_fix_scope_violation: dict | None = None,
+        scope_origin: dict | None = None,
+        conflict_resolution_linkage: dict | None = None,
+        reuse_contract: dict | None = None,
     ) -> None:
         _sl = getattr(self.ctx, "session_logger", None)
         if not _sl:
@@ -425,6 +510,10 @@ class Stage4InterviewRound:
             firewall_reason=self._compact_text(firewall_reason, limit=None),
             authoritative_fix_scope=str(authoritative_fix_scope or ""),
             authoritative_fix_scope_violation=dict(authoritative_fix_scope_violation or {}),
+            **({"scope_origin": dict(scope_origin)} if isinstance(scope_origin, dict) else {}),
+            # [SSS-T2] Carryover linkage — captured via **meta in session logger
+            **({"conflict_resolution_linkage": conflict_resolution_linkage} if isinstance(conflict_resolution_linkage, dict) else {}),
+            **({"reuse_contract": dict(reuse_contract)} if isinstance(reuse_contract, dict) else {}),
         )
 
     def _get_round_metrics_delta(self) -> dict:
@@ -582,12 +671,11 @@ class Stage4InterviewRound:
         selected_validation: dict,
         round_num: int,
     ) -> dict:
-        system_prefixes = ("[연속성 충돌]", "[Continuity Conflict]", "[V67]", "[CoVe]", "[ToT", "[MAD")
         prev_system_lines = (
             [
                 line.strip()
                 for line in str(director_feedback or "").split("\n")
-                if any(line.strip().startswith(prefix) for prefix in system_prefixes)
+                if any(line.strip().startswith(prefix) for prefix in _RETRY_SYSTEM_PREFIXES)
             ]
             if director_feedback
             else []
@@ -597,9 +685,9 @@ class Stage4InterviewRound:
                 line.strip()
                 for line in str(director_feedback or "").split("\n")
                 if line.strip()
-                and not any(line.strip().startswith(prefix) for prefix in system_prefixes)
+                and not any(line.strip().startswith(prefix) for prefix in _RETRY_SYSTEM_PREFIXES)
                 and not line.strip().startswith("[R")
-                and "[Advisory 핵심 요약 - 재시도 시 반영]" not in line
+                and _RETRY_ADVISORY_MARKER not in line
             ]
             if director_feedback
             else []
@@ -651,17 +739,30 @@ class Stage4InterviewRound:
         runtime_advisory = self._build_retry_advisory_digest()
         retry_directives = ""
         if prev_general_lines and round_num > 0:
-            # [TF-R3] dedup + bounded cap — 최신 지시만 유지하여 stale backlog 방지
+            # [FW-1] Keep only latest-round advisory entries while preserving structural directives.
             _MAX_RETRY_DIRECTIVE_LINES = 20
             _seen: set[str] = set()
-            _deduped: list[str] = []
+            _retained: list[str] = []
+            _latest_round = round_num - 1
             for _line in prev_general_lines:
                 _stripped = _line.strip()
-                if _stripped and _stripped not in _seen:
-                    _seen.add(_stripped)
-                    _deduped.append(_stripped)
-            # 최신 N줄만 유지 (뒤쪽이 최신)
-            retry_directives = "\n".join(_deduped[-_MAX_RETRY_DIRECTIVE_LINES:])
+                if not _stripped:
+                    continue
+
+                _candidate = ""
+                if _is_persistent_retry_directive_line(_stripped):
+                    _candidate = _stripped
+                elif _is_retry_advisory_line(_stripped):
+                    _tagged_round = _parse_retry_advisory_round_tag(_stripped)
+                    if _tagged_round is not None and _tagged_round != _latest_round:
+                        continue
+                    _candidate = _tag_retry_advisory_line(_stripped, round_num=_latest_round)
+
+                if _candidate and _candidate not in _seen:
+                    _seen.add(_candidate)
+                    _retained.append(_candidate)
+
+            retry_directives = "\n".join(_retained[-_MAX_RETRY_DIRECTIVE_LINES:])
 
         system_feedback = self._join_unique_lines(prev_system_lines)
         director_feedback_text = self._join_unique_lines(director_lines)
@@ -1955,6 +2056,18 @@ class Stage4InterviewRound:
             "gate_basis": str(normalized.get("gate_basis", "") or ""),
             "repair_scope": str(normalized.get("repair_scope", "none") or "none"),
             "authoritative_fix_scope": str(normalized.get("authoritative_fix_scope", "") or ""),
+            "scope_origin": {
+                "fix_scope": (
+                    "runtime_widened"
+                    if str(normalized.get("authoritative_fix_scope", "") or "").strip()
+                    and str(normalized.get("fix_scope", "") or "").strip()
+                    and str(normalized.get("authoritative_fix_scope", "") or "").strip().lower()
+                    != str(normalized.get("fix_scope", "") or "").strip().lower()
+                    else "director_authoritative"
+                ),
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            },
         }
         # [DCM-T3] Surface authoritative fix_scope violation in gate semantics evidence
         violation = normalized.get("authoritative_fix_scope_violation")
@@ -3146,15 +3259,29 @@ class Stage4InterviewRound:
             if isinstance(trace_director_result, dict)
             else (reason or session_selection_reason)
         )
+        _gate = self._build_gate_semantics_payload(
+            trace_director_result if isinstance(trace_director_result, dict) else director_result
+        )
+        # [SSS-T2] PASS-side carryover linkage — conflict resolution and reuse contract
+        _prev_attempt = getattr(pass_result, "previous_attempt", None)
+        if isinstance(_prev_attempt, dict):
+            _prior_conflict = _prev_attempt.get("conflict_contract")
+            if isinstance(_prior_conflict, dict) and _prior_conflict:
+                _gate["conflict_resolution_linkage"] = {
+                    "resolved_from": "prior_attempt_conflict",
+                    "original_contract_type": str(_prior_conflict.get("contract_type", "")),
+                    "conflict_count": len(_prior_conflict.get("conflicts", []) or []),
+                }
+            _prior_reuse = _prev_attempt.get("reuse_contract")
+            if isinstance(_prior_reuse, dict) and _prior_reuse:
+                _gate["reuse_contract"] = dict(_prior_reuse)
         return _PassResultLoggingPayload(
             log_artifact_meta=log_artifact_meta,
             session_selection_reason=session_selection_reason,
             session_verdict_reason=session_verdict_reason,
             session_runtime_advisory=self._build_retry_advisory_digest(),
             session_retry_directives="",
-            session_gate_semantics=self._build_gate_semantics_payload(
-                trace_director_result if isinstance(trace_director_result, dict) else director_result
-            ),
+            session_gate_semantics=_gate,
         )
 
     def _sync_pass_result_selection_rationale(
@@ -3353,6 +3480,14 @@ class Stage4InterviewRound:
         trace_verdict_reason = None
         if isinstance(trace_director_result, dict):
             trace_verdict_reason = trace_director_result.get("verdict_reason")
+        # [SSS-T2] Extract PASS-side carryover contracts from enriched gate semantics
+        _carryover = {}
+        _linkage = logging_payload.session_gate_semantics.get("conflict_resolution_linkage")
+        if isinstance(_linkage, dict):
+            _carryover["conflict_resolution_linkage"] = _linkage
+        _reuse = logging_payload.session_gate_semantics.get("reuse_contract")
+        if isinstance(_reuse, dict):
+            _carryover["reuse_contract"] = _reuse
         self._append_episode_log(
             **s4_episode_logging.build_pass_episode_log_payload(
                 request=s4_episode_logging.Stage4PassEpisodeLogRequest(
@@ -3381,7 +3516,8 @@ class Stage4InterviewRound:
                     selection_artifact_meta=selection_artifact_meta,
                     session_id=resolve_logging_session_id(getattr(self.ctx, "current_project", None)),
                 )
-            )
+            ),
+            carryover_contracts=_carryover or None,
         )
 
     def _log_pass_session_decision(
@@ -3469,6 +3605,18 @@ class Stage4InterviewRound:
                         dict,
                     )
                     else None
+                ),
+                scope_origin=(
+                    logging_payload.session_gate_semantics.get("scope_origin")
+                    if isinstance(logging_payload.session_gate_semantics.get("scope_origin"), dict)
+                    else None
+                ),
+                # [SSS-T2] PASS-side carryover linkage to decisions.jsonl
+                conflict_resolution_linkage=(
+                    logging_payload.session_gate_semantics.get("conflict_resolution_linkage")
+                ),
+                reuse_contract=(
+                    logging_payload.session_gate_semantics.get("reuse_contract")
                 ),
             )
 
@@ -3816,6 +3964,7 @@ class Stage4InterviewRound:
             _selection_reason = director_result.get("selection_reason", "") if isinstance(director_result, dict) else ""
             _verdict_reason = director_result.get("verdict_reason", "") if isinstance(director_result, dict) else ""
             _post_select_fix_scope = "full"
+            _conflict_contract = _build_post_select_conflict_contract(_post_select_conflicts)
             previous_attempt = {
                 "best_manuscript": final_manuscript,
                 "state_updates": final_state_updates,
@@ -3850,6 +3999,20 @@ class Stage4InterviewRound:
                 if isinstance(director_result, dict)
                 else [],
                 "prior_attempts": self._inherit_attempt_history(previous_attempt),
+            }
+            if _conflict_contract:
+                previous_attempt["conflict_contract"] = _conflict_contract
+            previous_attempt["reuse_contract"] = {
+                "mode": "best_manuscript_baseline",
+                "baseline_field": "best_manuscript",
+                "conflict_field": "conflict_contract",
+                "preserve_rationale": True,
+            }
+            # [SSS-T1] Scope origin for post-select conflict carryover
+            previous_attempt["scope_origin"] = {
+                "fix_scope": "post_select_conflict_override",
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
             }
 
         return verdict, director_feedback, previous_attempt, error_category
@@ -5476,6 +5639,7 @@ class Stage4InterviewRound:
         selection_candidate_key="",
         selection_content_hash="",
         selection_artifact_path="",
+        carryover_contracts=None,
     ):
         """[V76] 라운드별 생산 로그를 JSONL로 기록."""
         try:
@@ -5617,6 +5781,17 @@ class Stage4InterviewRound:
             _scope_violation = _gate_semantics.get("authoritative_fix_scope_violation")
             if isinstance(_scope_violation, dict):
                 entry["authoritative_fix_scope_violation"] = _scope_violation
+            # [SSS-T1] Scope origin metadata — distinguishes semantic layers in operator evidence
+            entry["scope_origin"] = {
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            }
+            # [SSS-T2] Carryover persistence from enriched gate_semantics
+            if isinstance(carryover_contracts, dict):
+                for _ck in ("conflict_resolution_linkage", "reuse_contract"):
+                    _cv = carryover_contracts.get(_ck)
+                    if isinstance(_cv, dict):
+                        entry[_ck] = _cv
             log_path = Path(logs_dir) / "episode_production.jsonl"
             append_jsonl_record(log_path, entry)
         except Exception as e:

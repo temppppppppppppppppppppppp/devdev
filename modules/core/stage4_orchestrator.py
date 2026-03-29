@@ -324,6 +324,7 @@ class _RejectRoundDisposition:
     contradiction_type_streak: int = 0
     score_history: list[int] = dataclasses.field(default_factory=list)
     plateau_advisory_emitted: bool = False
+    tf29_advisory_emitted: bool = False
     tf29_advisory: str = ""
     dominant_contradiction: str = ""
 
@@ -376,6 +377,7 @@ class _RejectRoundStepDisposition:
     contradiction_type_streak: int = 0
     score_history: list[int] = dataclasses.field(default_factory=list)
     plateau_advisory_emitted: bool = False
+    tf29_advisory_emitted: bool = False
 
 
 @dataclasses.dataclass(slots=True)
@@ -394,6 +396,7 @@ class _InterviewRoundLoopState:
     contradiction_type_streak: int = 0
     score_history: list[int] = dataclasses.field(default_factory=list)
     plateau_advisory_emitted: bool = False
+    tf29_advisory_emitted: bool = False
     pathology_counts: dict[str, int] = dataclasses.field(default_factory=dict)
     pathology_repeat_emitted: set[str] = dataclasses.field(default_factory=set)
 
@@ -1527,6 +1530,7 @@ JSON으로 출력:
             contradiction_type_streak=loop_state.contradiction_type_streak,
             score_history=loop_state.score_history,
             plateau_advisory_emitted=loop_state.plateau_advisory_emitted,
+            tf29_advisory_emitted=loop_state.tf29_advisory_emitted,
             pathology_counts=loop_state.pathology_counts,
             pathology_repeat_emitted=loop_state.pathology_repeat_emitted,
         )
@@ -1579,6 +1583,7 @@ JSON으로 출력:
         loop_state.contradiction_type_streak = reject_step.contradiction_type_streak
         loop_state.score_history = reject_step.score_history
         loop_state.plateau_advisory_emitted = reject_step.plateau_advisory_emitted
+        loop_state.tf29_advisory_emitted = reject_step.tf29_advisory_emitted
 
     def _handle_round_outcome(self, *, round_ctx: _RoundContext) -> _RoundOutcome:
         """[4-R1-e-3] Run N-round interview loop (N = retry.director_max_attempts).

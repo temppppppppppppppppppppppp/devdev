@@ -92,6 +92,19 @@ _STAGE0_STYLE_ANALYSIS_SUB_KEY = "6"
 _PROMPT_DETECT_TIMEOUT = 0.5
 _RUNTIME_TAIL_LINES = 8
 _RUNTIME_STDERR_DECODE_POLICY = "utf-8-replace"
+_DEFAULT_PROVIDER_MODE = "gemini_direct"
+_AMBIENT_PROVIDER_MODE = "ambient"
+_NON_GEMINI_PROVIDER_ENV_KEYS = (
+    "ANTHROPIC_API_KEY",
+    "CLAUDE_API",
+    "VERTEX_API_KEY",
+    "VERTEX_PROJECT_ID",
+    "VERTEX_LOCATION",
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    "GOOGLE_CLOUD_PROJECT",
+    "GOOGLE_CLOUD_LOCATION",
+    "OPENAI_API_KEY",
+)
 
 _GENRE_INDEX_TO_TYPE = {
     "1": "wuxia",
@@ -200,6 +213,11 @@ def _load_stored_project_genre_type(project_name: str | None) -> str | None:
 
     stored_type = str(payload.get("type") or "").strip().lower()
     return stored_type or None
+
+
+def _resolve_provider_mode(inputs: dict | None) -> str:
+    requested = str((inputs or {}).get("provider_mode") or _DEFAULT_PROVIDER_MODE).strip().lower()
+    return requested if requested == _AMBIENT_PROVIDER_MODE else _DEFAULT_PROVIDER_MODE
 
 
 def _should_inject_boot_genre_confirm(inputs: dict | None) -> bool:
@@ -790,6 +808,12 @@ class ProcessRunner:
             env["GEULDOBI_RUN_ID"] = self._run_id.strip()
 
         inputs = inputs or {}
+        provider_mode = _resolve_provider_mode(inputs)
+        env["GEULDOBI_PROVIDER_MODE"] = provider_mode
+
+        if provider_mode != _AMBIENT_PROVIDER_MODE:
+            for env_key in _NON_GEMINI_PROVIDER_ENV_KEYS:
+                env.pop(env_key, None)
 
         # Gemini API 키 (기본)
         if inputs.get("api_key"):
@@ -805,27 +829,26 @@ class ProcessRunner:
         if inputs.get("slack_webhook"):
             env["SLACK_WEBHOOK_URL"] = inputs["slack_webhook"]
 
-        # Vertex AI runtime env vars (inputs dict override → os.environ fallthrough)
-        for env_key, input_key in (
-            ("VERTEX_API_KEY", "vertex_api_key"),
-            ("VERTEX_PROJECT_ID", "vertex_project_id"),
-            ("VERTEX_LOCATION", "vertex_location"),
-            ("GOOGLE_APPLICATION_CREDENTIALS", "google_credentials_path"),
-        ):
-            value = inputs.get(input_key)
-            if value:
-                env[env_key] = str(value)
+        if provider_mode == _AMBIENT_PROVIDER_MODE:
+            # Vertex / Claude / OpenAI passthrough is opt-in only.
+            for env_key, input_key in (
+                ("VERTEX_API_KEY", "vertex_api_key"),
+                ("VERTEX_PROJECT_ID", "vertex_project_id"),
+                ("VERTEX_LOCATION", "vertex_location"),
+                ("GOOGLE_APPLICATION_CREDENTIALS", "google_credentials_path"),
+            ):
+                value = inputs.get(input_key)
+                if value:
+                    env[env_key] = str(value)
 
-        # Anthropic direct API key (Claude direct / Claude on Vertex fallback)
-        if inputs.get("anthropic_api_key"):
-            env["ANTHROPIC_API_KEY"] = inputs["anthropic_api_key"]
-            env["CLAUDE_API"] = inputs["anthropic_api_key"]
-        if inputs.get("claude_api_key"):
-            env["ANTHROPIC_API_KEY"] = inputs["claude_api_key"]
-            env["CLAUDE_API"] = inputs["claude_api_key"]
+            if inputs.get("anthropic_api_key"):
+                env["ANTHROPIC_API_KEY"] = inputs["anthropic_api_key"]
+                env["CLAUDE_API"] = inputs["anthropic_api_key"]
+            if inputs.get("claude_api_key"):
+                env["ANTHROPIC_API_KEY"] = inputs["claude_api_key"]
+                env["CLAUDE_API"] = inputs["claude_api_key"]
 
-        # OpenAI direct API key
-        if inputs.get("openai_api_key"):
-            env["OPENAI_API_KEY"] = inputs["openai_api_key"]
+            if inputs.get("openai_api_key"):
+                env["OPENAI_API_KEY"] = inputs["openai_api_key"]
 
         return env
