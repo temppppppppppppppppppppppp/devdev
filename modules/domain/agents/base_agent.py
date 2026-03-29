@@ -16,9 +16,11 @@ from modules.core.llm_provider import LLMRequest, LLMResponse
 from modules.core.llm_router import get_shared_llm_router
 from modules.core.models_config import (
     DEFAULT_FLASH_MODEL,
-    DEFAULT_MODEL_FALLBACK_CHAIN as _MODELS_CONFIG_FALLBACK_CHAIN,
     load_models_yaml,
     resolve_models_yaml_path,
+)
+from modules.core.models_config import (
+    DEFAULT_MODEL_FALLBACK_CHAIN as _MODELS_CONFIG_FALLBACK_CHAIN,
 )
 from modules.validation.threshold_helper import _threshold
 
@@ -474,9 +476,10 @@ class BaseAgent:
             "thinking_tokens": thinking_tokens,
         }
 
-    def _session_token_cost_kwargs(self) -> dict:
+    def _session_token_cost_kwargs(self, *, model: str | None = None, usage: dict | None = None) -> dict:
         """Build optional token/cost kwargs for SessionLogger.log_llm_call()."""
-        usage = getattr(self, "_call_usage_totals", None)
+        if usage is None:
+            usage = getattr(self, "_call_usage_totals", None)
         if not isinstance(usage, dict):
             return {}
         result: dict = {}
@@ -493,7 +496,7 @@ class BaseAgent:
             try:
                 collector = get_metrics_collector()
                 cost = collector.calculate_cost(
-                    getattr(self, "primary_model", "") or "",
+                    model or getattr(self, "primary_model", "") or "",
                     result.get("input_tokens", 0),
                     result.get("output_tokens", 0),
                     cached_tokens=result.get("cached_tokens", 0),
@@ -886,7 +889,7 @@ class BaseAgent:
                     response_text=full_response,
                     use_accumulated=True,
                 )
-                collector.end_call(metric_id, success=True, **metric_usage)
+                collector.end_call(metric_id, success=True, model=current_model, **metric_usage)
             except Exception as metrics_error:
                 logging.debug(f"[SILENT] metrics end (success): {metrics_error}")
 
@@ -900,7 +903,7 @@ class BaseAgent:
         if BaseAgent._session_logger_global:
             try:
                 elapsed_ms = (time.time() - current_time) * 1000 if current_time else 0
-                _session_usage = self._session_token_cost_kwargs()
+                _session_usage = self._session_token_cost_kwargs(model=current_model)
                 BaseAgent._session_logger_global.log_llm_call(
                     agent_name=self._agent_name,
                     model=current_model,
@@ -975,6 +978,7 @@ class BaseAgent:
                     metric_id,
                     success=False,
                     error_type=error_type,
+                    model=current_model,
                     **metric_usage,
                 )
             except Exception as metrics_error:
@@ -983,7 +987,7 @@ class BaseAgent:
         if BaseAgent._session_logger_global:
             try:
                 elapsed_ms = (time.time() - current_time) * 1000 if current_time else 0
-                _session_usage = self._session_token_cost_kwargs()
+                _session_usage = self._session_token_cost_kwargs(model=current_model)
                 BaseAgent._session_logger_global.log_llm_call(
                     agent_name=self._agent_name,
                     model=current_model,
@@ -1226,7 +1230,12 @@ class BaseAgent:
 
     def _classify_api_error_mode(self, api_error: Exception) -> dict:
         error_text = str(api_error).lower()
-        is_quota_exhausted = "resource_exhausted" in error_text or "quota" in error_text
+        is_credit_exhausted = (
+            "credit balance" in error_text
+            or "purchase credits" in error_text
+            or ("credits" in error_text and "too low" in error_text)
+        )
+        is_quota_exhausted = "resource_exhausted" in error_text or "quota" in error_text or is_credit_exhausted
         is_rate_limit = (
             "429" in error_text
             and not is_quota_exhausted
@@ -1549,11 +1558,33 @@ class BaseAgent:
                     collector.end_call(
                         backup_metric_id,
                         success=bool(backup_text),
+                        model=self.backup_model,
                         **metric_usage,
                     )
                 except Exception as e:  # [V64.P4] OPTIONAL: backup metrics end
                     logging.debug(f"[SILENT] backup metrics end: {e}")
                     pass
+
+            if BaseAgent._session_logger_global:
+                try:
+                    _session_usage = self._session_token_cost_kwargs(
+                        model=self.backup_model,
+                        usage=getattr(self, "_last_llm_usage", None),
+                    )
+                    BaseAgent._session_logger_global.log_llm_call(
+                        agent_name=self._agent_name,
+                        model=self.backup_model,
+                        prompt=base_prompt,
+                        response=backup_text,
+                        temperature=temperature,
+                        duration_ms=(time.monotonic() - _backup_t0) * 1000,
+                        success=bool(backup_text),
+                        thinking="",
+                        context_tag="backup_recovery",
+                        **_session_usage,
+                    )
+                except Exception as session_error:
+                    logging.debug("[TF-26] audit_event (backup success) failed: %s", str(session_error)[:100])
 
             # [V44] 응답 검증
             if backup_text:
@@ -1595,6 +1626,7 @@ class BaseAgent:
                         backup_metric_id,
                         success=False,
                         error_type=inner_error_type,
+                        model=self.backup_model,
                         **metric_usage,
                     )
                 except Exception as metrics_err:  # [V64.P4] OPTIONAL: backup metrics end (failure)
@@ -1612,6 +1644,28 @@ class BaseAgent:
                 )
             except Exception:
                 pass
+
+            if BaseAgent._session_logger_global:
+                try:
+                    _session_usage = self._session_token_cost_kwargs(
+                        model=self.backup_model,
+                        usage=getattr(self, "_last_llm_usage", None),
+                    )
+                    BaseAgent._session_logger_global.log_llm_call(
+                        agent_name=self._agent_name,
+                        model=self.backup_model,
+                        prompt=base_prompt,
+                        response="",
+                        temperature=temperature,
+                        duration_ms=(time.monotonic() - _backup_t0) * 1000,
+                        success=False,
+                        error=str(e_inner)[:500],
+                        thinking="",
+                        context_tag="backup_recovery",
+                        **_session_usage,
+                    )
+                except Exception as session_error:
+                    logging.debug("[TF-26] audit_event (backup failure) failed: %s", str(session_error)[:100])
 
             # [V44] 최후의 복구 시도
             if self.last_partial_response:

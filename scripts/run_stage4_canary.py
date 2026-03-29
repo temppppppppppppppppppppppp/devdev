@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 
@@ -18,6 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from main_a import SovereignApp  # noqa: E402
 from modules.core.db_manager import DBManager  # noqa: E402
+from modules.core.llm_router import get_shared_llm_router  # noqa: E402
 from modules.core.pass_rate_monitor import PassRateMonitor  # noqa: E402
 from modules.core.stage4_canary_tools import (  # noqa: E402
     build_stage4_branch_inventory,
@@ -28,6 +31,19 @@ from scripts.regression_validation_tiers import FULL_CANARY_PROOF  # noqa: E402
 
 VALIDATION_TIER = FULL_CANARY_PROOF
 MUTATES_PROJECT_STATE = True
+DEFAULT_PROVIDER_MODE = "gemini_direct"
+AMBIENT_PROVIDER_MODE = "ambient"
+NON_GEMINI_PROVIDER_ENV_KEYS = (
+    "ANTHROPIC_API_KEY",
+    "CLAUDE_API",
+    "VERTEX_API_KEY",
+    "VERTEX_PROJECT_ID",
+    "VERTEX_LOCATION",
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    "GOOGLE_CLOUD_PROJECT",
+    "GOOGLE_CLOUD_LOCATION",
+    "OPENAI_API_KEY",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,12 +53,13 @@ def parse_args() -> argparse.Namespace:
     prepare = subparsers.add_parser("prepare", help="copy a baseline project and reset Stage 4 outputs")
     prepare.add_argument("--source-project", required=True)
     prepare.add_argument("--target-project", required=True)
-    prepare.add_argument("--from-ep", type=int, default=1, help="currently only from-ep=1 is supported")
+    prepare.add_argument("--from-ep", type=int, default=1, help="reset Stage 4 outputs from this episode onward")
     prepare.add_argument("--force", action="store_true")
 
     run = subparsers.add_parser("run", help="run Stage 4 on a prepared project")
     run.add_argument("--project", required=True)
     run.add_argument("--target-ep", type=int, default=4)
+    run.add_argument("--provider-mode", choices=(DEFAULT_PROVIDER_MODE, AMBIENT_PROVIDER_MODE), default=DEFAULT_PROVIDER_MODE)
 
     analyze = subparsers.add_parser("analyze", help="analyze an existing canary project")
     analyze.add_argument("--project", required=True)
@@ -57,9 +74,10 @@ def parse_args() -> argparse.Namespace:
     full = subparsers.add_parser("full", help="prepare, run, and analyze in one command")
     full.add_argument("--source-project", required=True)
     full.add_argument("--target-project", required=True)
-    full.add_argument("--from-ep", type=int, default=1, help="currently only from-ep=1 is supported")
+    full.add_argument("--from-ep", type=int, default=1, help="reset Stage 4 outputs from this episode onward")
     full.add_argument("--target-ep", type=int, default=4)
     full.add_argument("--force", action="store_true")
+    full.add_argument("--provider-mode", choices=(DEFAULT_PROVIDER_MODE, AMBIENT_PROVIDER_MODE), default=DEFAULT_PROVIDER_MODE)
 
     return parser.parse_args()
 
@@ -73,7 +91,7 @@ def main() -> int:
         return 0
 
     if args.command == "run":
-        payload = run_canary(args.project, target_ep=args.target_ep)
+        payload = run_canary(args.project, target_ep=args.target_ep, provider_mode=args.provider_mode)
         _print_json(payload)
         return 0
 
@@ -89,7 +107,7 @@ def main() -> int:
 
     payload = prepare_canary(args.source_project, args.target_project, from_ep=args.from_ep, force=args.force)
     _print_json(payload)
-    payload = run_canary(args.target_project, target_ep=args.target_ep)
+    payload = run_canary(args.target_project, target_ep=args.target_ep, provider_mode=args.provider_mode)
     _print_json(payload)
     return 0
 
@@ -100,24 +118,52 @@ def prepare_canary(source_project: str, target_project: str, *, from_ep: int, fo
     return prepare_stage4_canary_project(source_root, target_root, from_ep=from_ep, force=force)
 
 
-def run_canary(project_name: str, *, target_ep: int) -> dict:
+def _normalize_provider_mode(provider_mode: str | None) -> str:
+    normalized = str(provider_mode or DEFAULT_PROVIDER_MODE).strip().lower()
+    return normalized if normalized == AMBIENT_PROVIDER_MODE else DEFAULT_PROVIDER_MODE
+
+
+@contextmanager
+def _provider_mode_env(provider_mode: str):
+    normalized_mode = _normalize_provider_mode(provider_mode)
+    backups = {key: os.environ.get(key) for key in NON_GEMINI_PROVIDER_ENV_KEYS}
+    os.environ["GEULDOBI_PROVIDER_MODE"] = normalized_mode
+    try:
+        if normalized_mode != AMBIENT_PROVIDER_MODE:
+            for key in NON_GEMINI_PROVIDER_ENV_KEYS:
+                os.environ.pop(key, None)
+        get_shared_llm_router(force_reload=True)
+        yield normalized_mode
+    finally:
+        for key in NON_GEMINI_PROVIDER_ENV_KEYS:
+            previous = backups[key]
+            if previous is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = previous
+        os.environ.pop("GEULDOBI_PROVIDER_MODE", None)
+        get_shared_llm_router(force_reload=True)
+
+
+def run_canary(project_name: str, *, target_ep: int, provider_mode: str = DEFAULT_PROVIDER_MODE) -> dict:
     project_root = PROJECT_ROOT / "projects" / project_name
     selected_genre = _load_project_genre(project_root)
     if not selected_genre:
         raise RuntimeError(f"genre_info anchor missing or invalid for {project_name}")
 
-    app = _boot_app(project_name, selected_genre)
-    try:
-        _ensure_pass_rate_monitor(app, project_root)
-        app._get_int_input = lambda *args, **kwargs: kwargs.get("default", 1)
-        with patch("builtins.input", side_effect=_auto_input):
-            app._stage_4_v2_chief_writer(limit_mode=False, target_ep=int(target_ep))
-        if getattr(app, "pass_rate_monitor", None):
-            app.pass_rate_monitor.save()
-        if hasattr(app, "_flush_audit_buffer"):
-            app._flush_audit_buffer()
-    finally:
-        _close_app_handles(app)
+    with _provider_mode_env(provider_mode):
+        app = _boot_app(project_name, selected_genre)
+        try:
+            _ensure_pass_rate_monitor(app, project_root)
+            app._get_int_input = lambda *args, **kwargs: kwargs.get("default", 1)
+            with patch("builtins.input", side_effect=_auto_input):
+                app._stage_4_v2_chief_writer(limit_mode=False, target_ep=int(target_ep))
+            if getattr(app, "pass_rate_monitor", None):
+                app.pass_rate_monitor.save()
+            if hasattr(app, "_flush_audit_buffer"):
+                app._flush_audit_buffer()
+        finally:
+            _close_app_handles(app)
 
     summary = analyze_canary(project_name, target_ep=target_ep)
     return summary

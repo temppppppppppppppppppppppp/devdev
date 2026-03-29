@@ -422,11 +422,14 @@ class FactLedger:
     def update_number(self, key: str, value, unit: str, ep_num: int, note: str = ""):
         """숫자/금액 팩트 갱신 (수동 또는 LLM 추출 시)"""
         nums = self._ledger["numbers"]
-        if key not in nums:
+        is_new_entry = key not in nums
+        if is_new_entry:
             nums[key] = {"value": value, "unit": unit, "last_ep": ep_num, "history": []}
         entry = nums[key]
         first_ep = entry.get("established_ep", ep_num)
         old_val = entry.get("value", "")
+        if not is_new_entry and entry.get("last_ep") == ep_num and old_val == value and entry.get("unit", "") == unit:
+            return
         entry["value"] = value
         entry["unit"] = unit
         entry["last_ep"] = ep_num

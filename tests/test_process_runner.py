@@ -245,6 +245,53 @@ class TestBuildEnv:
         # 빈 값이 주입되지 않았는지만 확인
         assert env.get("SLACK_WEBHOOK_URL") is None
 
+    def test_default_provider_mode_scrubs_non_gemini_env(self, monkeypatch):
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant")
+        monkeypatch.setenv("CLAUDE_API", "sk-claude")
+        monkeypatch.setenv("VERTEX_API_KEY", "vk")
+        monkeypatch.setenv("VERTEX_PROJECT_ID", "proj")
+        monkeypatch.setenv("VERTEX_LOCATION", "us-central1")
+        monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", "/tmp/sa.json")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
+
+        runner = ProcessRunner()
+        env = runner._build_env({})
+
+        assert env["GEULDOBI_PROVIDER_MODE"] == "gemini_direct"
+        for key in (
+            "ANTHROPIC_API_KEY",
+            "CLAUDE_API",
+            "VERTEX_API_KEY",
+            "VERTEX_PROJECT_ID",
+            "VERTEX_LOCATION",
+            "GOOGLE_APPLICATION_CREDENTIALS",
+            "OPENAI_API_KEY",
+        ):
+            assert key not in env
+
+    def test_ambient_provider_mode_preserves_non_gemini_passthrough(self):
+        runner = ProcessRunner()
+        env = runner._build_env(
+            {
+                "provider_mode": "ambient",
+                "anthropic_api_key": "sk-ant-123",
+                "vertex_api_key": "vk-123",
+                "vertex_project_id": "my-proj",
+                "vertex_location": "us-central1",
+                "google_credentials_path": "/tmp/sa.json",
+                "openai_api_key": "sk-openai",
+            }
+        )
+
+        assert env["GEULDOBI_PROVIDER_MODE"] == "ambient"
+        assert env["ANTHROPIC_API_KEY"] == "sk-ant-123"
+        assert env["CLAUDE_API"] == "sk-ant-123"
+        assert env["VERTEX_API_KEY"] == "vk-123"
+        assert env["VERTEX_PROJECT_ID"] == "my-proj"
+        assert env["VERTEX_LOCATION"] == "us-central1"
+        assert env["GOOGLE_APPLICATION_CREDENTIALS"] == "/tmp/sa.json"
+        assert env["OPENAI_API_KEY"] == "sk-openai"
+
 
 class TestPathResolution:
     def test_resolve_projects_root_prefers_explicit_env(self, monkeypatch, tmp_path):

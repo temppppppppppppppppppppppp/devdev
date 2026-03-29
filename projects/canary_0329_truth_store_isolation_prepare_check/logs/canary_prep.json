@@ -1,0 +1,35 @@
+{
+  "prepared_at": "2026-03-29T15:09:58",
+  "source_project": "canary_0329_ep3_bp_patch_recheck",
+  "target_project": "canary_0329_truth_store_isolation_prepare_check",
+  "from_ep": 4,
+  "cleanup": {
+    "from_ep": 4,
+    "db_impact": {
+      "manuscripts": 0,
+      "state_logs": 0,
+      "episode_bibles": 0,
+      "causal_graph": 0,
+      "episode_meta": 0,
+      "episode_quality_labels": 0,
+      "stage4_attempts": 0,
+      "stage4_director_selections": 0,
+      "blueprints_kept": 9,
+      "orphan_chain_link_anchors": 4
+    },
+    "anchor_validation": {
+      "status": "ok",
+      "from_ep": 4,
+      "orphan_chain_links": [],
+      "fact_ledger_history_at_or_after": {},
+      "world_state_alive_npcs_at_or_after": [],
+      "world_state_active_items_at_or_after": [],
+      "world_state_last_updated_ep": 3
+    },
+    "file_cleanup": {
+      "draft_files_removed": 0,
+      "log_entries_removed": 11,
+      "memory_entries_removed": 0
+    }
+  }
+}

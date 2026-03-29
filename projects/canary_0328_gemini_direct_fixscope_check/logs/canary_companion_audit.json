@@ -1,0 +1,29 @@
+{
+  "project_locator": "projects/canary_0328_gemini_direct_fixscope_check",
+  "proof_record_summary": {
+    "classification": "current",
+    "proof_origin": "current_workspace_refresh",
+    "project_locator": "projects/canary_0328_gemini_direct_fixscope_check",
+    "summary_path": "logs/canary_summary.json",
+    "companion_audit_path": "logs/canary_companion_audit.json",
+    "latest_session_id": "20260328_220234",
+    "refreshed_at": "2026-03-28T22:41:42"
+  },
+  "companion_audit_summary": {
+    "status": "ok",
+    "latest_session_id": "20260328_220234",
+    "row_count": 5,
+    "required_stage_attempt_fields": [
+      "attempt_key",
+      "candidate_key",
+      "content_hash",
+      "artifact_path",
+      "selection_reason",
+      "verdict_reason"
+    ],
+    "rows_missing_required_fields": [],
+    "director_companion_rows": 5,
+    "director_rationale_available": 5,
+    "note": "Same-run stage_attempt provenance/rationale fields must stand on their own; director_selections is companion evidence only."
+  }
+}

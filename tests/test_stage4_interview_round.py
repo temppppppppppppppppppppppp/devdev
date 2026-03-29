@@ -393,7 +393,7 @@ class TestInterviewRoundHelpers:
         assert merged_feedback.count("[FACT]") == 4
         assert merged_feedback.count("[COVERAGE]") == 4
 
-    def test_retry_directives_preserve_newline_structure(self):
+    def legacy_test_retry_directives_preserve_newline_structure(self):
         """[pre-rerun] retry_directives가 줄바꿈 구조를 유지하는지 검증 (이전: ' / ' 평탄화)."""
         ir = Stage4InterviewRound(_make_ctx())
 
@@ -411,7 +411,7 @@ class TestInterviewRoundHelpers:
         assert "두 번째 지시사항입니다" in directives
         assert "세 번째 지시사항입니다" in directives
 
-    def test_retry_directives_dedup_and_keep_latest_20_lines(self):
+    def legacy_test_retry_directives_dedup_and_keep_latest_20_lines(self):
         ir = Stage4InterviewRound(_make_ctx())
         backlog = [f"line-{idx}" for idx in range(25)] + ["line-24", "line-23"]
 
@@ -427,6 +427,48 @@ class TestInterviewRoundHelpers:
         assert directives[0] == "line-5"
         assert directives[-1] == "line-24"
         assert directives.count("line-23") == 1
+
+    def test_retry_directives_keep_latest_round_advisories_and_persistent_directives(self):
+        ir = Stage4InterviewRound(_make_ctx())
+
+        provenance = ir._build_retry_feedback_provenance(
+            director_result={"feedback": {}},
+            director_feedback="\n".join(
+                [
+                    "[IFC] immutable fact conflict still unresolved",
+                    "- [R0] stale advisory from older round",
+                    "- latest advisory from previous round",
+                    "plain stale note that should be dropped",
+                    "[Lane3 Gate] REJECT retry widened to partial",
+                ]
+            ),
+            selected_validation={},
+            round_num=2,
+        )
+
+        directives = provenance["retry_directives"].splitlines()
+        assert directives == [
+            "[IFC] immutable fact conflict still unresolved",
+            "- [R1] latest advisory from previous round",
+            "[Lane3 Gate] REJECT retry widened to partial",
+        ]
+
+    def test_retry_directives_dedup_cap_and_drop_older_tagged_advisories(self):
+        ir = Stage4InterviewRound(_make_ctx())
+        backlog = [f"- advisory-{idx}" for idx in range(25)] + ["- advisory-24", "- [R1] stale older advisory"]
+
+        provenance = ir._build_retry_feedback_provenance(
+            director_result={"feedback": {}},
+            director_feedback="\n".join(backlog),
+            selected_validation={},
+            round_num=3,
+        )
+
+        directives = provenance["retry_directives"].splitlines()
+        assert len(directives) == 20
+        assert directives[0] == "- [R2] advisory-5"
+        assert directives[-1] == "- [R2] advisory-24"
+        assert "- [R1] stale older advisory" not in directives
 
     def test_compact_attempt_snapshot_preserves_full_feedback_lists(self):
         snapshot = Stage4InterviewRound._compact_attempt_snapshot(
@@ -2408,6 +2450,11 @@ class TestRecordS4Attempt:
             attempt_key="attempt-1",
             authoritative_fix_scope="",
             authoritative_fix_scope_violation={"type": "blank_authoritative_fix_scope"},
+            scope_origin={
+                "fix_scope": "director_authoritative",
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            },
         )
 
         kwargs = ctx.session_logger.log_decision.call_args.kwargs
@@ -2415,6 +2462,11 @@ class TestRecordS4Attempt:
         assert kwargs["authoritative_fix_scope"] == ""
         assert kwargs["authoritative_fix_scope_violation"] == {
             "type": "blank_authoritative_fix_scope"
+        }
+        assert kwargs["scope_origin"] == {
+            "fix_scope": "director_authoritative",
+            "authoritative_fix_scope": "director_authoritative",
+            "repair_scope": "runtime_lane",
         }
 
     def test_record_stage4_pass_rate_attempt_uses_prelude_payload(self):
@@ -2867,6 +2919,9 @@ class TestRecordS4Attempt:
         assert previous_attempt["provisional_pass_downgrade"] is True
         assert previous_attempt["fix_pack"]["patch_targets"] == ["opening_location_name"]
         assert previous_attempt["action_items"] == ["fix the opening location"]
+        assert previous_attempt["reuse_contract"]["mode"] == "best_manuscript_baseline"
+        assert previous_attempt["conflict_contract"]["contract_type"] == "post_select_conflict"
+        assert previous_attempt["conflict_contract"]["conflicts"][0]["conflict_type"] == "continuity"
 
     def test_post_select_checks_run_on_retry_rounds_too(self):
         ctx = _make_ctx()
@@ -6305,6 +6360,17 @@ class TestLane2DirectorSemantics:
                 "score": 50,
                 "plateau_detected": True,
                 "fix_pack": {},
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "conflicts": [
+                        {
+                            "conflict_type": "continuity",
+                            "conflict_detail": "repeat detected",
+                            "source_episode": "",
+                            "expected_truth": "repeat detected",
+                        }
+                    ],
+                },
             },
         )
 
@@ -6314,6 +6380,83 @@ class TestLane2DirectorSemantics:
             "type": "blank_authoritative_fix_scope"
         }
         assert payload["fix_pack_reason"] == "missing_fix_pack"
+        assert payload["conflict_contract"]["contract_type"] == "post_select_conflict"
+
+    def test_post_select_conflict_snapshot_preserves_high_score_downgraded_pass_rationale(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._collect_validation_warning_lines = MagicMock(return_value=["warn-a"])
+        ir._inherit_attempt_history = MagicMock(return_value=[{"old": True}])
+        ir._set_retry_budget_axes = MagicMock(return_value={"repair": "rewrite_regenerate"})
+
+        payload = ir.reject_runtime._build_reject_retry_snapshot(
+            director_result={
+                "selected_candidate": {
+                    "manuscript": "candidate manuscript",
+                    "strategy_name": "balanced",
+                },
+                "selection_reason": "best candidate because covert network felt sharp",
+                "verdict_reason": "sharp covert network",
+                "director_verdict": "PASS",
+                "final_verdict": "REJECT",
+                "gate_basis": "post_select_conflict",
+                "repair_scope": "full",
+                "pre_firewall_score": 98,
+                "consistency_checklist": {"rule": "keep"},
+                "state_updates": {"hud": "snapshot"},
+                "open_review": "keep the burner phone idea",
+                "contradiction_types": ["scene_overlap"],
+                "contradiction_details": ["detail-1"],
+                "firewall_triggered": True,
+                "firewall_reason": "firewall",
+            },
+            selected="A",
+            director_feedback="conflict-first reject feedback",
+            action_items=["rebuild from prior authority"],
+            score=44,
+            validation_results=[{}],
+            reject_bucket="post_select_conflict",
+            tot_used=True,
+            mad_used=False,
+            resolved_fix_scope="full",
+            resolved_fix_scope_reasoning="conflict-first rewrite",
+            resolved_fix_pack={"patch_targets": ["anchor"], "do_not_regress": ["burner phone"]},
+            error_category="LOGIC_ERROR",
+            feedback_provenance={
+                "director_feedback_text": "director note",
+                "runtime_advisory": "runtime digest",
+                "retry_directives": "retry directives",
+            },
+            previous_attempt={
+                "old": True,
+                "provisional_pass_downgrade": True,
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "conflicts": [
+                        {
+                            "conflict_type": "continuity",
+                            "conflict_detail": "scene overlap conflict",
+                            "source_episode": "",
+                            "expected_truth": "scene overlap conflict",
+                        }
+                    ],
+                },
+                "reuse_contract": {
+                    "mode": "best_manuscript_baseline",
+                    "baseline_field": "best_manuscript",
+                    "conflict_field": "conflict_contract",
+                    "preserve_rationale": True,
+                },
+            },
+            round_num=0,
+        )
+
+        assert payload.previous_attempt["selection_reason"] == "best candidate because covert network felt sharp"
+        assert payload.previous_attempt["open_review"] == "keep the burner phone idea"
+        assert payload.previous_attempt["fix_pack"] == {}
+        assert payload.previous_attempt["rejection_reason"] == "conflict-first reject feedback"
+        assert payload.previous_attempt["conflict_contract"]["contract_type"] == "post_select_conflict"
+        assert payload.previous_attempt["reuse_contract"]["mode"] == "best_manuscript_baseline"
 
     def test_build_reject_guidance_payload_applies_inplace_gate_and_mad_hint(self):
         ctx = _make_ctx()
@@ -6645,7 +6788,7 @@ class TestLane2DirectorSemantics:
                 asp_manuscript="asp",
             )
 
-        ir._append_episode_log.assert_called_once_with(**expected)
+        ir._append_episode_log.assert_called_once_with(**expected, carryover_contracts=None)
         mock_builder.assert_called_once()
         normalized_request = mock_builder.call_args.kwargs["request"]
         assert normalized_request.model_tier == "writer-model"
@@ -8148,3 +8291,380 @@ class TestOperatorParityCompactTextNone:
         assert "feedback=feedback-text" in summary
         assert "strategy=line_patch" in summary
         assert "change_ratio=37.5%" in summary
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# [SSS] Scope Sink Semantics regression tests
+# ═══════════════════════════════════════════════════════════════════════
+
+
+class TestScopeSinkSemantics:
+    """Prove scope_origin, carryover persistence, rationale elision, and no routing change."""
+
+    def test_reject_snapshot_contains_scope_origin_runtime_widened(self):
+        """When Director scope differs from resolved scope, scope_origin marks fix_scope as runtime_widened."""
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._collect_validation_warning_lines = MagicMock(return_value=[])
+        ir._inherit_attempt_history = MagicMock(return_value=[])
+        ir._set_retry_budget_axes = MagicMock(return_value={})
+        ir._evaluate_fix_pack_contract = MagicMock(return_value={"ready": False, "reason": "n/a"})
+
+        payload = ir.reject_runtime._build_reject_retry_snapshot(
+            director_result={
+                "selected_candidate": {"manuscript": "m", "strategy_name": "s"},
+                "selection_reason": "r",
+                "verdict_reason": "v",
+                "director_verdict": "REJECT",
+                "final_verdict": "REJECT",
+                "gate_basis": "director_primary_reject",
+                "repair_scope": "partial",
+                "fix_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+                "consistency_checklist": {},
+                "state_updates": {},
+                "open_review": "",
+            },
+            selected="A",
+            director_feedback="feedback",
+            action_items=[],
+            score=50,
+            validation_results=[{}],
+            reject_bucket="quality_issue",
+            tot_used=False,
+            mad_used=False,
+            resolved_fix_scope="full",
+            resolved_fix_scope_reasoning="widened by continuity replay",
+            resolved_fix_pack={},
+            error_category="QUALITY_ISSUE",
+            feedback_provenance={"director_feedback_text": "", "runtime_advisory": "", "retry_directives": ""},
+            previous_attempt=None,
+            round_num=0,
+        )
+
+        pa = payload.previous_attempt
+        assert "scope_origin" in pa
+        assert pa["scope_origin"]["authoritative_fix_scope"] == "director_authoritative"
+        assert pa["scope_origin"]["repair_scope"] == "runtime_lane"
+        # Director gave inplace, runtime widened to full → runtime_widened
+        assert pa["scope_origin"]["fix_scope"] == "runtime_widened"
+
+    def test_reject_snapshot_contains_scope_origin_director_authoritative(self):
+        """When Director scope matches resolved scope, scope_origin marks fix_scope as director_authoritative."""
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._collect_validation_warning_lines = MagicMock(return_value=[])
+        ir._inherit_attempt_history = MagicMock(return_value=[])
+        ir._set_retry_budget_axes = MagicMock(return_value={})
+        ir._evaluate_fix_pack_contract = MagicMock(return_value={"ready": False, "reason": "n/a"})
+
+        payload = ir.reject_runtime._build_reject_retry_snapshot(
+            director_result={
+                "selected_candidate": {"manuscript": "m", "strategy_name": "s"},
+                "selection_reason": "r",
+                "verdict_reason": "v",
+                "director_verdict": "REJECT",
+                "final_verdict": "REJECT",
+                "gate_basis": "director_primary_reject",
+                "repair_scope": "partial",
+                "fix_scope": "partial",
+                "authoritative_fix_scope": "partial",
+                "consistency_checklist": {},
+                "state_updates": {},
+                "open_review": "",
+            },
+            selected="A",
+            director_feedback="feedback",
+            action_items=[],
+            score=55,
+            validation_results=[{}],
+            reject_bucket="quality_issue",
+            tot_used=False,
+            mad_used=False,
+            resolved_fix_scope="partial",
+            resolved_fix_scope_reasoning="stays partial",
+            resolved_fix_pack={},
+            error_category="QUALITY_ISSUE",
+            feedback_provenance={"director_feedback_text": "", "runtime_advisory": "", "retry_directives": ""},
+            previous_attempt=None,
+            round_num=0,
+        )
+
+        pa = payload.previous_attempt
+        assert pa["scope_origin"]["fix_scope"] == "director_authoritative"
+
+    def test_rationale_blanked_by_set_on_elision_path(self):
+        """When runtime elides rationale in post_select_conflict, rationale_blanked_by is set."""
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._collect_validation_warning_lines = MagicMock(return_value=[])
+        ir._inherit_attempt_history = MagicMock(return_value=[])
+        ir._set_retry_budget_axes = MagicMock(return_value={})
+        ir._evaluate_fix_pack_contract = MagicMock(return_value={"ready": False, "reason": "n/a"})
+
+        payload = ir.reject_runtime._build_reject_retry_snapshot(
+            director_result={
+                "selected_candidate": {"manuscript": "m", "strategy_name": "s"},
+                "selection_reason": "original-selection-reason",
+                "verdict_reason": "original-verdict-reason",
+                "director_verdict": "PASS",
+                "final_verdict": "REJECT",
+                "gate_basis": "post_select_conflict",
+                "repair_scope": "full",
+                "pre_firewall_score": 60,
+                "consistency_checklist": {},
+                "state_updates": {},
+                "open_review": "original-review",
+            },
+            selected="A",
+            director_feedback="conflict feedback",
+            action_items=[],
+            score=60,
+            validation_results=[{}],
+            reject_bucket="post_select_conflict",
+            tot_used=False,
+            mad_used=False,
+            resolved_fix_scope="full",
+            resolved_fix_scope_reasoning="full rewrite",
+            resolved_fix_pack={},
+            error_category="LOGIC_ERROR",
+            feedback_provenance={"director_feedback_text": "", "runtime_advisory": "", "retry_directives": ""},
+            previous_attempt=None,
+            round_num=0,
+        )
+
+        pa = payload.previous_attempt
+        assert pa["rationale_blanked_by"] == "runtime_post_select_conflict_elision"
+        # Confirm blanking actually happened
+        assert pa["selection_reason"] == ""
+        assert pa["open_review"] == ""
+
+    def test_rationale_blanked_by_absent_when_preserved(self):
+        """High-score downgraded PASS preserves rationale and does not set rationale_blanked_by."""
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._collect_validation_warning_lines = MagicMock(return_value=[])
+        ir._inherit_attempt_history = MagicMock(return_value=[])
+        ir._set_retry_budget_axes = MagicMock(return_value={})
+        ir._evaluate_fix_pack_contract = MagicMock(return_value={"ready": False, "reason": "n/a"})
+
+        payload = ir.reject_runtime._build_reject_retry_snapshot(
+            director_result={
+                "selected_candidate": {"manuscript": "m", "strategy_name": "s"},
+                "selection_reason": "preserve-me",
+                "verdict_reason": "preserve-verdict",
+                "director_verdict": "PASS",
+                "final_verdict": "REJECT",
+                "gate_basis": "post_select_conflict",
+                "repair_scope": "full",
+                "pre_firewall_score": 98,
+                "consistency_checklist": {},
+                "state_updates": {},
+                "open_review": "preserve-review",
+            },
+            selected="A",
+            director_feedback="conflict feedback",
+            action_items=[],
+            score=44,
+            validation_results=[{}],
+            reject_bucket="post_select_conflict",
+            tot_used=False,
+            mad_used=False,
+            resolved_fix_scope="full",
+            resolved_fix_scope_reasoning="full rewrite",
+            resolved_fix_pack={},
+            error_category="LOGIC_ERROR",
+            feedback_provenance={"director_feedback_text": "", "runtime_advisory": "", "retry_directives": ""},
+            previous_attempt={"provisional_pass_downgrade": True},
+            round_num=0,
+        )
+
+        pa = payload.previous_attempt
+        assert "rationale_blanked_by" not in pa
+        assert pa["selection_reason"] == "preserve-me"
+        assert pa["open_review"] == "preserve-review"
+
+    def test_pathology_payload_contains_reuse_contract_and_scope_origin(self):
+        """build_retry_pathology_payload persists reuse_contract and scope_origin."""
+        ctx = _make_ctx()
+        orch = Stage4Orchestrator(ctx)
+        runtime = orch.outcome_runtime
+
+        payload = runtime.build_retry_pathology_payload(
+            ep_num=5,
+            round_num=1,
+            previous_attempt={
+                "reject_bucket": "post_select_conflict",
+                "gate_basis": "post_select_conflict",
+                "fix_scope": "full",
+                "authoritative_fix_scope": "inplace",
+                "repair_scope": "full",
+                "error_category": "LOGIC_ERROR",
+                "score": 50,
+                "fix_pack": {},
+                "reuse_contract": {
+                    "mode": "best_manuscript_baseline",
+                    "baseline_field": "best_manuscript",
+                    "conflict_field": "conflict_contract",
+                    "preserve_rationale": True,
+                },
+                "scope_origin": {
+                    "fix_scope": "post_select_conflict_override",
+                    "authoritative_fix_scope": "director_authoritative",
+                    "repair_scope": "runtime_lane",
+                },
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "conflicts": [{"conflict_type": "continuity"}],
+                },
+            },
+        )
+
+        assert payload["reuse_contract"]["mode"] == "best_manuscript_baseline"
+        assert "scope_origin" in payload
+        assert payload["scope_origin"]["authoritative_fix_scope"] == "director_authoritative"
+        assert payload["scope_origin"]["repair_scope"] == "runtime_lane"
+        # Preserve more specific provenance instead of flattening to generic runtime_widened
+        assert payload["scope_origin"]["fix_scope"] == "post_select_conflict_override"
+
+    def test_pathology_payload_contains_rationale_blanked_by(self):
+        """build_retry_pathology_payload surfaces rationale_blanked_by from previous_attempt."""
+        ctx = _make_ctx()
+        orch = Stage4Orchestrator(ctx)
+        runtime = orch.outcome_runtime
+
+        payload = runtime.build_retry_pathology_payload(
+            ep_num=5,
+            round_num=1,
+            previous_attempt={
+                "reject_bucket": "post_select_conflict",
+                "gate_basis": "post_select_conflict",
+                "fix_scope": "full",
+                "authoritative_fix_scope": "full",
+                "repair_scope": "full",
+                "error_category": "LOGIC_ERROR",
+                "score": 50,
+                "fix_pack": {},
+                "rationale_blanked_by": "runtime_post_select_conflict_elision",
+            },
+        )
+
+        assert payload["rationale_blanked_by"] == "runtime_post_select_conflict_elision"
+
+    def test_pass_side_conflict_resolution_linkage_in_gate_semantics(self):
+        """PASS-side logging payload contains conflict_resolution_linkage when previous_attempt had conflict_contract."""
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        mock_pass_result = SimpleNamespace(
+            attempt_artifact_meta={"candidate_key": "k", "content_hash": "h", "artifact_path": "p"},
+            final_manuscript="manuscript",
+            previous_attempt={
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "conflicts": [
+                        {"conflict_type": "continuity", "conflict_detail": "d"},
+                        {"conflict_type": "history", "conflict_detail": "d2"},
+                    ],
+                },
+                "reuse_contract": {
+                    "mode": "best_manuscript_baseline",
+                    "baseline_field": "best_manuscript",
+                },
+            },
+        )
+
+        payload = ir._build_pass_result_logging_payload(
+            pass_result=mock_pass_result,
+            next_ep=3,
+            round_num=1,
+            round_ctx=_make_round_ctx(),
+            director_result={"director_verdict": "PASS", "final_verdict": "PASS", "score": 90},
+            trace_director_result=None,
+            reason="good",
+            is_patch=False,
+            trace_patch_trace={},
+        )
+
+        gs = payload.session_gate_semantics
+        assert "conflict_resolution_linkage" in gs
+        assert gs["conflict_resolution_linkage"]["resolved_from"] == "prior_attempt_conflict"
+        assert gs["conflict_resolution_linkage"]["original_contract_type"] == "post_select_conflict"
+        assert gs["conflict_resolution_linkage"]["conflict_count"] == 2
+        assert "reuse_contract" in gs
+        assert gs["reuse_contract"]["mode"] == "best_manuscript_baseline"
+
+    def test_pass_side_no_linkage_when_no_prior_conflict(self):
+        """PASS-side logging payload has no conflict_resolution_linkage when previous_attempt lacks conflict_contract."""
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        mock_pass_result = SimpleNamespace(
+            attempt_artifact_meta={"candidate_key": "k", "content_hash": "h", "artifact_path": "p"},
+            final_manuscript="manuscript",
+            previous_attempt=None,
+        )
+
+        payload = ir._build_pass_result_logging_payload(
+            pass_result=mock_pass_result,
+            next_ep=3,
+            round_num=0,
+            round_ctx=_make_round_ctx(),
+            director_result={"director_verdict": "PASS", "final_verdict": "PASS", "score": 90},
+            trace_director_result=None,
+            reason="first attempt pass",
+            is_patch=False,
+            trace_patch_trace={},
+        )
+
+        gs = payload.session_gate_semantics
+        assert "conflict_resolution_linkage" not in gs
+        assert "reuse_contract" not in gs
+
+    def test_post_select_conflict_previous_attempt_contains_scope_origin(self):
+        """Post-select conflict downgrade path sets scope_origin with post_select_conflict_override."""
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 3
+        round_ctx.prev_manuscripts_text = "━━━ 제1화 원고 ━━━\n이전 원고"
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {
+            "decision": "CONFLICT",
+            "summary": "location mismatch",
+        }
+
+        verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+            verdict="PASS",
+            next_ep=3,
+            round_num=1,
+            round_ctx=round_ctx,
+            final_manuscript="원고 텍스트",
+            final_state_updates={},
+            director_result={
+                "director_verdict": "PASS",
+                "final_verdict": "PASS",
+                "selected": "A",
+                "selected_candidate": {"strategy_name": "tension", "manuscript": "원고"},
+                "fix_scope": "partial",
+                "selection_reason": "best candidate",
+                "verdict_reason": "pass before post-select",
+                "repair_scope": "partial",
+                "score_breakdown": {},
+                "consistency_checklist": {},
+                "open_review": "review",
+                "fix_pack": {"patch_targets": ["target"]},
+                "action_items": ["fix it"],
+            },
+            director_feedback="initial feedback",
+            score=95,
+            error_category="",
+            previous_attempt={},
+            stage4_spinner=MagicMock(),
+            director_memory_context="",
+        )
+
+        assert verdict == "REJECT"
+        assert "scope_origin" in previous_attempt
+        assert previous_attempt["scope_origin"]["fix_scope"] == "post_select_conflict_override"
+        assert previous_attempt["scope_origin"]["authoritative_fix_scope"] == "director_authoritative"
+        assert previous_attempt["scope_origin"]["repair_scope"] == "runtime_lane"

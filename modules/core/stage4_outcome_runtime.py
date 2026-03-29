@@ -451,6 +451,7 @@ class Stage4OutcomeRuntime:
         contradiction_type_streak: int,
         score_history: list[int],
         plateau_advisory_emitted: bool,
+        tf29_advisory_emitted: bool,
         pathology_counts: dict[str, int],
         pathology_repeat_emitted: set[str],
     ):
@@ -479,6 +480,7 @@ class Stage4OutcomeRuntime:
             contradiction_type_streak=contradiction_type_streak,
             score_history=score_history,
             plateau_advisory_emitted=plateau_advisory_emitted,
+            tf29_advisory_emitted=tf29_advisory_emitted,
             blueprint_regenerated=blueprint_regenerated,
         )
         escalation_disposition = self.apply_retry_repair_escalation(
@@ -508,6 +510,7 @@ class Stage4OutcomeRuntime:
             contradiction_type_streak=reject_disposition.contradiction_type_streak,
             score_history=reject_disposition.score_history,
             plateau_advisory_emitted=reject_disposition.plateau_advisory_emitted,
+            tf29_advisory_emitted=reject_disposition.tf29_advisory_emitted,
         )
 
     def analyze_reject_round(
@@ -523,6 +526,7 @@ class Stage4OutcomeRuntime:
         contradiction_type_streak: int,
         score_history: list[int],
         plateau_advisory_emitted: bool,
+        tf29_advisory_emitted: bool,
         blueprint_regenerated: bool,
     ):
         owner = self.owner
@@ -553,11 +557,13 @@ class Stage4OutcomeRuntime:
             prev_reject_bucket=prev_reject_bucket,
             bucket_streak=bucket_streak,
             blueprint_regenerated=blueprint_regenerated,
+            tf29_advisory_emitted=tf29_advisory_emitted,
         )
         director_feedback = bucket_disposition.director_feedback
         prev_reject_bucket = bucket_disposition.prev_reject_bucket
         bucket_streak = bucket_disposition.bucket_streak
         tf29_advisory = bucket_disposition.tf29_advisory
+        tf29_advisory_emitted = bucket_disposition.tf29_advisory_emitted
 
         contradiction_disposition = self._apply_reject_contradiction_advisory(
             previous_attempt=previous_attempt,
@@ -582,6 +588,7 @@ class Stage4OutcomeRuntime:
             contradiction_type_streak=contradiction_type_streak,
             score_history=score_history,
             plateau_advisory_emitted=plateau_advisory_emitted,
+            tf29_advisory_emitted=tf29_advisory_emitted,
             tf29_advisory=tf29_advisory,
             dominant_contradiction=dominant_contradiction,
         )
@@ -695,6 +702,7 @@ class Stage4OutcomeRuntime:
         prev_reject_bucket: str,
         bucket_streak: int,
         blueprint_regenerated: bool,
+        tf29_advisory_emitted: bool,
     ):
         owner = self.owner
         tf29_advisory = ""
@@ -705,7 +713,7 @@ class Stage4OutcomeRuntime:
             bucket_streak = 1 if current_bucket else 0
         prev_reject_bucket = current_bucket
 
-        if bucket_streak >= 3 and not blueprint_regenerated:
+        if bucket_streak >= 3 and not blueprint_regenerated and not tf29_advisory_emitted:
             bucket_label = {
                 "quality_issue": "연출",
                 "constraint_violation": "제약 위반",
@@ -721,12 +729,14 @@ class Stage4OutcomeRuntime:
                 "블루프린트의 해당 영역을 근본적으로 재검토하세요."
             )
             director_feedback = tf29_advisory + "\n" + director_feedback
+            tf29_advisory_emitted = True
 
         return SimpleNamespace(
             director_feedback=director_feedback,
             prev_reject_bucket=prev_reject_bucket,
             bucket_streak=bucket_streak,
             tf29_advisory=tf29_advisory,
+            tf29_advisory_emitted=tf29_advisory_emitted,
         )
 
     def _apply_reject_contradiction_advisory(
@@ -935,6 +945,43 @@ class Stage4OutcomeRuntime:
         authoritative_fix_scope_violation = previous_attempt.get("authoritative_fix_scope_violation")
         if isinstance(authoritative_fix_scope_violation, dict):
             payload["authoritative_fix_scope_violation"] = authoritative_fix_scope_violation
+        conflict_contract = previous_attempt.get("conflict_contract")
+        if isinstance(conflict_contract, dict) and conflict_contract:
+            payload["conflict_contract"] = conflict_contract
+        # [SSS-T2] Persist reuse_contract to operator-facing sink
+        reuse_contract_val = previous_attempt.get("reuse_contract")
+        if isinstance(reuse_contract_val, dict) and reuse_contract_val:
+            payload["reuse_contract"] = reuse_contract_val
+        # [SSS-T1] Scope origin metadata — distinguishes semantic layers in operator evidence
+        existing_scope_origin = previous_attempt.get("scope_origin")
+        if isinstance(existing_scope_origin, dict) and existing_scope_origin:
+            payload["scope_origin"] = dict(existing_scope_origin)
+            payload["scope_origin"].setdefault("authoritative_fix_scope", "director_authoritative")
+            payload["scope_origin"].setdefault("repair_scope", "runtime_lane")
+            payload["scope_origin"].setdefault(
+                "fix_scope",
+                (
+                    "runtime_widened"
+                    if authoritative_fix_scope and fix_scope
+                    and authoritative_fix_scope.lower() != fix_scope.lower()
+                    else "director_authoritative"
+                ),
+            )
+        else:
+            payload["scope_origin"] = {
+                "fix_scope": (
+                    "runtime_widened"
+                    if authoritative_fix_scope and fix_scope
+                    and authoritative_fix_scope.lower() != fix_scope.lower()
+                    else "director_authoritative"
+                ),
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            }
+        # [SSS-T3] Rationale elision marker
+        _rationale_blanked = previous_attempt.get("rationale_blanked_by")
+        if _rationale_blanked:
+            payload["rationale_blanked_by"] = _rationale_blanked
         return payload
 
     def emit_retry_pathology_signal(

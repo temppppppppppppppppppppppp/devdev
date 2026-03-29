@@ -86,6 +86,20 @@
 
 ## 0E. BI 계약 계층
 
+## 0F. Shared `evolution` Metadata Standard
+
+- Shared standard doc: `docs/narrative-router/SSOT_bi-evolution-metadata-standard.md`
+- Blockguide BI에서 compact growth-trace metadata의 canonical key는 `evolution`이다.
+- `evolution`은 concrete owner object에 붙인다.
+  - example: `protagonist_config.special_ability.evolution`
+- `evolution` value type은 `string` 또는 `string[]`를 허용한다.
+- Legacy alias:
+  - `engine_evolution`
+  - `evolution_arc`
+  - `evolution_stages`
+- 새로 생성하거나 새로 터치하는 blockguide BI는 legacy alias 대신 `evolution`을 우선 사용한다.
+- 하나의 newly touched object 안에 canonical key와 legacy alias를 동시에 새로 쓰지 않는다.
+
 BI 계약은 한 번에 전부 P0로 올리지 않는다.
 문서가 실제 생성기/감리보다 앞서가며 거짓 요구를 하지 않도록 **최소 계약(P0)** 과 **확장 계약(P1)** 을 분리한다.
 

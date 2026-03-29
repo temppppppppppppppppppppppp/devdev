@@ -7,11 +7,22 @@ import pytest
 from modules.core.llm_generate import generate_content_via_router, generate_raw_content_via_router
 from modules.core.llm_provider import LLMRequest
 from modules.core.llm_router import LLMProviderRouter, get_shared_llm_router
+from modules.core.models_config import load_models_yaml
 from modules.core.providers.anthropic_provider import AnthropicProvider
 from modules.core.providers.anthropic_vertex_provider import AnthropicVertexProvider
 from modules.core.providers.openai_provider import OpenAIProvider
 from modules.core.providers.vertex_provider import VertexAIProvider
 from modules.core.response_schemas import DIRECTOR_AUDIT_SCHEMA
+
+
+def test_repo_models_yaml_defaults_to_gemini_direct_core_roles():
+    payload = load_models_yaml()
+
+    assert payload["providers"]["anthropic"]["enabled"] is False
+    assert payload["providers"]["vertex_ai"]["enabled"] is False
+    assert payload["agents"]["analyst"] == "gemini-2.5-pro"
+    assert payload["agents"]["chief_writer"] == "gemini-2.5-pro"
+    assert payload["agents"]["director"] == "gemini-2.5-pro"
 
 
 def test_router_resolves_gemini_models():
@@ -530,6 +541,7 @@ def test_process_runner_build_env_vertex_passthrough():
 
     runner = ProcessRunner()
     env = runner._build_env({
+        "provider_mode": "ambient",
         "vertex_api_key": "vk-123",
         "vertex_project_id": "my-proj",
         "vertex_location": "us-central1",
@@ -822,7 +834,7 @@ def test_process_runner_build_env_anthropic_key_passthrough():
     from modules.api.process_runner import ProcessRunner
 
     runner = ProcessRunner()
-    env = runner._build_env({"anthropic_api_key": "sk-ant-123"})
+    env = runner._build_env({"provider_mode": "ambient", "anthropic_api_key": "sk-ant-123"})
     assert env["ANTHROPIC_API_KEY"] == "sk-ant-123"
     assert env["CLAUDE_API"] == "sk-ant-123"
 
@@ -831,7 +843,7 @@ def test_process_runner_build_env_claude_key_passthrough():
     from modules.api.process_runner import ProcessRunner
 
     runner = ProcessRunner()
-    env = runner._build_env({"claude_api_key": "sk-ant-456"})
+    env = runner._build_env({"provider_mode": "ambient", "claude_api_key": "sk-ant-456"})
     assert env["ANTHROPIC_API_KEY"] == "sk-ant-456"
     assert env["CLAUDE_API"] == "sk-ant-456"
 
