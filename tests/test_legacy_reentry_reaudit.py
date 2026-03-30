@@ -208,12 +208,16 @@ def test_unified_blueprint_validator_compare_mode_keeps_python_prevalidation_iss
         all_candidates=[selected_blueprint, other_blueprint],
     )
 
-    assert verdict == "PASS"
+    assert verdict == "PASS_WITH_FIX"
     assert result["phase"] == "director_compare+python_prevalidate"
     categories = {issue["category"] for issue in result["issues"]}
     assert "structure" in categories
     assert "fidelity" in categories
+    assert "scene_completeness" in categories
     assert result["quality_risk"] is True
+    assert result["revision_required"] is True
+    assert result["binding_prevalidation_issue_count"] == 1
+    assert result["fix_scope"] == "inplace"
     assert result["candidate_count"] == 2
     assert result["selected_candidate_advisory"]["quality_risk"] is True
     assert len(result["candidate_advisories"]) == 2
@@ -270,9 +274,9 @@ def test_unified_blueprint_validator_pass_with_warning_sets_revision_required_wi
     )
 
     assert verdict == "PASS_WITH_WARNING"
-    assert result["quality_risk"] is False
+    assert result["quality_risk"] is True
     assert result["revision_required"] is True
-    assert result["selected_candidate_advisory"]["quality_risk"] is False
+    assert result["selected_candidate_advisory"]["quality_risk"] is True
 
 
 def test_unified_blueprint_validator_rejects_stop_line_clause_leak():

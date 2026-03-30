@@ -70,7 +70,10 @@
   ],
   "scene_breakdown": {
     "scene_1": {
-      "characters": [],
+      "characters": [
+        "한시우",
+        "박성호 PB"
+      ],
       "content": "",
       "goal": "객장의 혼란스러운 상황을 뒤로하고 여유롭게 증권사를 빠져나간다.",
       "key_events": [
@@ -85,7 +88,9 @@
       "type": "opening_hook"
     },
     "scene_2": {
-      "characters": [],
+      "characters": [
+        "한시우"
+      ],
       "content": "",
       "goal": "카페에서 블룸버그 단말기를 통해 이란 핵 농축 재개 뉴스와 시장 변동성을 확인한다.",
       "key_events": [
@@ -100,7 +105,9 @@
       "type": "tension_build"
     },
     "scene_3": {
-      "characters": [],
+      "characters": [
+        "박성호 PB"
+      ],
       "content": "",
       "goal": "박성호 PB가 한시우의 극단적 매수 포지션이 적중했음을 확인하고 경악한다.",
       "key_events": [
@@ -115,7 +122,10 @@
       "type": "side_glimpse"
     },
     "scene_4": {
-      "characters": [],
+      "characters": [
+        "한시우",
+        "박성호 PB"
+      ],
       "content": "",
       "goal": "박성호의 전화를 받고 남은 투자금 5억 원에 대한 추가 지시를 내린다.",
       "key_events": [
