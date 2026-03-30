@@ -465,6 +465,7 @@ class Stage4InterviewRound:
         firewall_reason: str = "",
         authoritative_fix_scope: str = "",
         authoritative_fix_scope_violation: dict | None = None,
+        strong_advisory_escalation: dict | None = None,
         scope_origin: dict | None = None,
         conflict_resolution_linkage: dict | None = None,
         reuse_contract: dict | None = None,
@@ -510,6 +511,11 @@ class Stage4InterviewRound:
             firewall_reason=self._compact_text(firewall_reason, limit=None),
             authoritative_fix_scope=str(authoritative_fix_scope or ""),
             authoritative_fix_scope_violation=dict(authoritative_fix_scope_violation or {}),
+            **(
+                {"strong_advisory_escalation": dict(strong_advisory_escalation)}
+                if isinstance(strong_advisory_escalation, dict)
+                else {}
+            ),
             **({"scope_origin": dict(scope_origin)} if isinstance(scope_origin, dict) else {}),
             # [SSS-T2] Carryover linkage — captured via **meta in session logger
             **({"conflict_resolution_linkage": conflict_resolution_linkage} if isinstance(conflict_resolution_linkage, dict) else {}),
@@ -2000,6 +2006,27 @@ class Stage4InterviewRound:
         director_result["verdict"] = final_verdict
         director_result["authoritative_fix_scope"] = authoritative_fix_scope
 
+        # [Lane2-G1] Strong advisory binding: tier-2+ advisory classes must not end as plain PASS.
+        # TruthGate (tier 3) and NpcDrift/RelDrift/Flashback/InfoParadox (tier 2) are binding
+        # advisory classes that require at minimum PASS_WITH_FIX acknowledgement.
+        _STRONG_ADVISORY_KEYS = frozenset({"truth_gate", "npc_drift", "rel_drift", "flashback", "info_paradox"})
+        _advisory_summary = getattr(self, "_last_advisory_summary", None) or {}
+        _triggered = sorted(k for k in _STRONG_ADVISORY_KEYS if _advisory_summary.get(k))
+        if final_verdict == "PASS" and _triggered:
+            final_verdict = "PASS_WITH_FIX"
+            director_result["final_verdict"] = "PASS_WITH_FIX"
+            director_result["verdict"] = "PASS_WITH_FIX"
+            director_result["gate_basis"] = "strong_advisory_escalation"
+            director_result.setdefault("strong_advisory_escalation", {
+                "source_verdict": "PASS",
+                "escalated_to": "PASS_WITH_FIX",
+                "triggered_by": _triggered,
+            })
+            logging.warning(
+                "[Stage4Gate] strong advisory escalation: PASS → PASS_WITH_FIX (classes=%s)",
+                ",".join(_triggered),
+            )
+
         # [DCM-T2] Authoritative fix_scope contract validation
         _normalized_authoritative_scope = authoritative_fix_scope.lower()
         if (
@@ -2021,6 +2048,25 @@ class Stage4InterviewRound:
                 final_verdict,
                 authoritative_fix_scope,
             )
+            # [Lane2-G2] PASS_WITH_FIX with blank/invalid fix_scope cannot run the repair loop.
+            # Gate it to REJECT so the loop is not entered with an unresolved scope contract.
+            if final_verdict == "PASS_WITH_FIX":
+                _g2_basis = (
+                    "strong_advisory_escalation_no_scope"
+                    if director_result.get("strong_advisory_escalation")
+                    else "fix_scope_contract_violation"
+                )
+                final_verdict = "REJECT"
+                director_result["final_verdict"] = "REJECT"
+                director_result["verdict"] = "REJECT"
+                director_result["gate_basis"] = _g2_basis
+                logging.warning(
+                    "[Stage4Gate] PASS_WITH_FIX → REJECT: repair blocked, fix_scope invalid"
+                    " (gate_basis=%s type=%s scope=%r)",
+                    _g2_basis,
+                    _vtype,
+                    authoritative_fix_scope,
+                )
 
         return director_result
 
@@ -2073,6 +2119,9 @@ class Stage4InterviewRound:
         violation = normalized.get("authoritative_fix_scope_violation")
         if isinstance(violation, dict):
             payload["authoritative_fix_scope_violation"] = violation
+        escalation = normalized.get("strong_advisory_escalation")
+        if isinstance(escalation, dict):
+            payload["strong_advisory_escalation"] = escalation
         return payload
 
     def _setup_writing_directive(
@@ -3602,6 +3651,14 @@ class Stage4InterviewRound:
                     logging_payload.session_gate_semantics.get("authoritative_fix_scope_violation")
                     if isinstance(
                         logging_payload.session_gate_semantics.get("authoritative_fix_scope_violation"),
+                        dict,
+                    )
+                    else None
+                ),
+                strong_advisory_escalation=(
+                    logging_payload.session_gate_semantics.get("strong_advisory_escalation")
+                    if isinstance(
+                        logging_payload.session_gate_semantics.get("strong_advisory_escalation"),
                         dict,
                     )
                     else None
@@ -5786,6 +5843,9 @@ class Stage4InterviewRound:
             _scope_violation = _gate_semantics.get("authoritative_fix_scope_violation")
             if isinstance(_scope_violation, dict):
                 entry["authoritative_fix_scope_violation"] = _scope_violation
+            _strong_advisory = _gate_semantics.get("strong_advisory_escalation")
+            if isinstance(_strong_advisory, dict):
+                entry["strong_advisory_escalation"] = _strong_advisory
             # [SSS-T1] Scope origin metadata — distinguishes semantic layers in operator evidence
             entry["scope_origin"] = {
                 "authoritative_fix_scope": "director_authoritative",
@@ -5888,7 +5948,7 @@ class Stage4InterviewRound:
         artifact_meta: dict[str, str],
     ) -> dict:
         _gate_semantics, _fix_pack, _retry_budget_axes = self._extract_stage4_advisory_contract_payloads(advisory_flags)
-        return {
+        payload = {
             "stage": 4,
             "episode": episode,
             "arc": arc,
@@ -5917,6 +5977,10 @@ class Stage4InterviewRound:
             "content_hash": artifact_meta["content_hash"],
             "artifact_path": artifact_meta["artifact_path"],
         }
+        _strong_advisory = _gate_semantics.get("strong_advisory_escalation")
+        if isinstance(_strong_advisory, dict):
+            payload["strong_advisory_escalation"] = _strong_advisory
+        return payload
 
     def _build_stage4_db_attempt_payload(
         self,

@@ -412,7 +412,7 @@ class Stage4OutcomeRuntime:
             logs_dir = Path("projects") / project_name / "logs"
         payload = {
             "event": "STAGE4_COVE_RUNTIME_ADVISORY",
-            "ep_num": int(ep_num),
+            "ep": int(ep_num),  # [Lane4] normalized to authoritative ep key
             "round_num": int(round_num),
             "source": str(source or "").strip(),
             "error_type": type(error).__name__,
@@ -920,7 +920,7 @@ class Stage4OutcomeRuntime:
 
         fingerprint = "|".join(tag for tag in tags if tag) or "unclassified_retry_pathology"
         payload = {
-            "ep_num": int(ep_num),
+            "ep": int(ep_num),  # [Lane4] normalized to authoritative ep key
             "round_num": int(round_num + 1),
             "pathology_fingerprint": fingerprint,
             "pathology_source": pathology_source,

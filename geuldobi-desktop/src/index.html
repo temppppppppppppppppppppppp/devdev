@@ -3178,7 +3178,7 @@
 
           <div class="field-group">
             <span class="field-label">Gemini API Key <span style="color:#ef4444">*</span></span>
-            <span class="field-hint">필수 — 미입력 시 앱 실행 불가 · 저장 위치: .env GOOGLE_API_KEY</span>
+            <span class="field-hint">필수 — 미입력 시 앱 실행 불가 · 저장 위치: 앱 설정(AppData) → 실행 시 GOOGLE_API_KEY 환경변수로 주입</span>
             <div class="input-row">
               <input type="password" id="apiKey1" placeholder="AIza..." autocomplete="off" />
               <button type="button" class="btn-sm" id="toggleKey1">보기</button>
@@ -3193,7 +3193,7 @@
 
           <div class="field-group">
             <span class="field-label">Slack Webhook URL</span>
-            <span class="field-hint">선택 — 알림 연동 · 저장 위치: .env SLACK_WEBHOOK_URL</span>
+            <span class="field-hint">선택 — 알림 연동 · 저장 위치: 앱 설정(AppData) → 실행 시 SLACK_WEBHOOK_URL 환경변수로 주입</span>
             <div class="input-row">
               <input type="text" id="slackWebhook" placeholder="https://hooks.slack.com/..." />
             </div>
@@ -3215,21 +3215,21 @@
               <div class="input-row">
                 <span style="font-size:13px;min-width:110px">chief_writer</span>
                 <select class="btn-sm" id="modelCW" style="flex:1">
-                  <option value="pro" selected>gemini-2.5-pro</option>
+                  <option value="pro" selected>gemini-3.1-pro-preview</option>
                   <option value="flash">gemini-2.5-flash</option>
                 </select>
               </div>
               <div class="input-row">
                 <span style="font-size:13px;min-width:110px">director</span>
                 <select class="btn-sm" id="modelDir" style="flex:1">
-                  <option value="pro" selected>gemini-2.5-pro</option>
+                  <option value="pro" selected>gemini-3.1-pro-preview</option>
                   <option value="flash">gemini-2.5-flash</option>
                 </select>
               </div>
               <div class="input-row">
                 <span style="font-size:13px;min-width:110px">analyst</span>
                 <select class="btn-sm" id="modelAnl" style="flex:1">
-                  <option value="pro" selected>gemini-2.5-pro</option>
+                  <option value="pro" selected>gemini-3.1-pro-preview</option>
                   <option value="flash">gemini-2.5-flash</option>
                 </select>
               </div>
@@ -3324,10 +3324,11 @@
 
         <!-- 탭 4: 시스템 설정 -->
         <div class="tab-content" id="tab-system">
-          <p class="stub-notice">시스템 설정 — 저장 위치: config/system.yaml / config/settings/validation.yaml</p>
+          <p class="stub-notice">시스템 설정 — 이 값은 앱 설정(AppData)에 저장되며 런타임에 반영되지 않습니다. 실제 런타임 값은 config/system.yaml · config/settings/validation.yaml 기준입니다.</p>
 
           <div class="field-group">
             <span class="field-label">API 타임아웃</span>
+            <span class="field-hint">[미적용 — 런타임 값: config/system.yaml timeout]</span>
             <div class="slider-row">
               <input type="range" id="sliderTimeout" min="60" max="600" step="30" value="300" />
               <span class="slider-val" id="sliderTimeoutVal">300초</span>
@@ -3336,6 +3337,7 @@
 
           <div class="field-group">
             <span class="field-label">키 순환 간격</span>
+            <span class="field-hint">[미적용 — 런타임 미반영]</span>
             <div class="slider-row">
               <input type="range" id="sliderKeyRotate" min="5" max="60" step="5" value="10" />
               <span class="slider-val" id="sliderKeyRotateVal">10초</span>
@@ -3346,13 +3348,13 @@
 
           <div class="field-group">
             <span class="field-label">품질 게이트 점수</span>
-            <span class="field-hint">50~100 · 기본 90 · 전문가 전용</span>
+            <span class="field-hint">50~100 · 기본 90 · 전문가 전용 · [미적용 — 런타임 값: validation.yaml quality_gate_score]</span>
             <input type="number" class="number-input" id="qualityGate" min="50" max="100" value="90" />
           </div>
 
           <div class="field-group">
             <span class="field-label">원고 목표 길이</span>
-            <span class="field-hint">기본 5000자</span>
+            <span class="field-hint">기본 5000자 · [미적용 — 런타임 값: validation.yaml target_length]</span>
             <input type="number" class="number-input" id="targetLength" min="2000" max="15000" step="500" value="5000" />
           </div>
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import yaml
-
 
 # Runtime fallback SSOT.
 # `config/models.yaml` is authoritative when present, and these defaults are the
@@ -43,8 +43,15 @@ DEFAULT_MODEL_FALLBACK_CHAIN = {
 
 
 def resolve_models_yaml_path() -> Path:
-    """Return the repo-root `config/models.yaml` path."""
+    """Return the authoritative `config/models.yaml` path.
 
+    In packaged mode (PyInstaller) ``GEULDOBI_ENGINE_ROOT`` is set by
+    ``backend_entry.py`` to ``resources/engine/``.  Dev mode falls back to the
+    repo-root sibling path derived from ``__file__``.
+    """
+    engine_root = os.environ.get("GEULDOBI_ENGINE_ROOT")
+    if engine_root:
+        return Path(engine_root).resolve() / "config" / "models.yaml"
     return Path(__file__).resolve().parents[2] / "config" / "models.yaml"
 
 

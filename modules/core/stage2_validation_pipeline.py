@@ -396,9 +396,18 @@ class Stage2ValidationPipeline:
                     logging.info(f" [TF-25-08] Consensus REJECT → Director advisory: {advisory_msg[:100]}...")
                 else:
                     consensus_passed = True
-                    passed_checks = consensus_result.get("passed_checks", [])
-                    if passed_checks:
-                        logging.info(f"- 통과 항목: {passed_checks[:3]}")
+                    # [Lane-3] degraded validation과 true acceptance 구분
+                    if consensus_result.get("validation_degraded"):
+                        _degraded_reasons = consensus_result.get("degraded_reasons", [])
+                        _degraded_msg = f"Consensus 검증 degraded ({', '.join(_degraded_reasons)}) — 진짜 합의 없음"
+                        logging.warning(f"[Consensus] ⚠️ {_degraded_msg}")
+                        _python_advisories.append(
+                            {"source": "consensus", "severity": "WARNING", "message": _degraded_msg}
+                        )
+                    else:
+                        passed_checks = consensus_result.get("passed_checks", [])
+                        if passed_checks:
+                            logging.info(f"- 통과 항목: {passed_checks[:3]}")
             except (RuntimeError, ValueError, OSError) as cv_err:
                 logging.warning(f" [Consensus] 검증 스킵: {str(cv_err)[:50]}")
         return consensus_passed

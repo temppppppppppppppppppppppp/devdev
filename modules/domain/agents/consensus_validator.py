@@ -240,32 +240,43 @@ class ConsensusValidator(BaseAgent):
                             results.append(result)
                         except FutureTimeoutError:
                             logging.warning(f" [V61.3] {perspective_name} 타임아웃 ({self.SINGLE_VOTE_TIMEOUT}초)")
-                            # 타임아웃 시 보수적으로 PASS 처리
+                            # [Lane-3] 타임아웃은 ABSTAIN — 진짜 합의 증거가 아님
                             results.append(
                                 {
                                     "perspective": perspective_name,
-                                    "verdict": "PASS",
-                                    "confidence": 0.5,
+                                    "verdict": "ABSTAIN",
+                                    "confidence": 0.0,
                                     "issues_found": [],
+                                    "fallback_reason": "timeout",
                                     "error": "타임아웃",
                                 }
                             )
                         except Exception as e:
                             logging.warning(f" [Consensus] {perspective_name} 오류: {str(e)[:50]}")
-                            # 오류 시 보수적으로 PASS 처리 (다른 검증기에 의존)
+                            # [Lane-3] 오류도 ABSTAIN — 진짜 합의 증거가 아님
                             results.append(
                                 {
                                     "perspective": perspective_name,
-                                    "verdict": "PASS",
-                                    "confidence": 0.5,
+                                    "verdict": "ABSTAIN",
+                                    "confidence": 0.0,
                                     "issues_found": [],
+                                    "fallback_reason": "error",
                                     "error": str(e)[:100],
                                 }
                             )
                 except FutureTimeoutError:
-                    # 전체 합의 타임아웃 - 완료된 결과만 사용
-                    logging.warning(f" [V61.3] 합의 검증 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(results)}개 결과 사용"
-                    )
+                    # [Lane-3] 전체 합의 타임아웃 — 미완료 검증기는 ABSTAIN으로 기록
+                    logging.warning(f" [V61.3] 합의 검증 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(results)}개 결과 사용")
+                    _completed = {r.get("perspective") for r in results if isinstance(r, dict)}
+                    for _pname in futures.values():
+                        if _pname not in _completed:
+                            results.append({
+                                "perspective": _pname,
+                                "verdict": "ABSTAIN",
+                                "confidence": 0.0,
+                                "issues_found": [],
+                                "fallback_reason": "ensemble_timeout",
+                            })
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
                     logging.warning(f" [V61.3] 합의 루프 예외: {str(e)[:80]}")
@@ -287,10 +298,10 @@ class ConsensusValidator(BaseAgent):
         except Exception:
             pass
 
-        # [V70] 빈 결과 방어: 모든 검증기 실패 시 보수적 PASS
+        # [V70][Lane-3] 빈 결과 방어: 모든 검증기 실패 시 ABSTAIN — PASS로 가장하지 않음
         if not results:
-            logging.warning(" [Consensus] 모든 검증기 실패 — 보수적 PASS 처리")
-            results.append({"verdict": "PASS", "confidence": 0.3, "issues_found": [], "error": "all_validators_failed"})
+            logging.warning(" [Consensus] 모든 검증기 실패 — DEGRADED_PASS 처리 (진짜 합의 없음)")
+            results.append({"verdict": "ABSTAIN", "confidence": 0.0, "issues_found": [], "fallback_reason": "all_validators_failed"})
 
         # 합의 도출
         final_verdict, consensus_result = self._derive_consensus(results)
@@ -345,9 +356,11 @@ class ConsensusValidator(BaseAgent):
 
     def _derive_consensus(self, results: list[dict]) -> tuple[str, dict]:
         """합의 도출"""
-        total_count = len(results)
-        pass_count = sum(1 for r in results if isinstance(r, dict) and r.get("verdict") == "PASS")
-        reject_count = total_count - pass_count
+        # [Lane-3] ABSTAIN 분리: timeout/error 폴백은 진짜 투표가 아님
+        real_pass = sum(1 for r in results if isinstance(r, dict) and r.get("verdict") == "PASS")
+        real_reject = sum(1 for r in results if isinstance(r, dict) and r.get("verdict") == "REJECT")
+        abstain_count = sum(1 for r in results if isinstance(r, dict) and r.get("verdict") == "ABSTAIN")
+        total_real = real_pass + real_reject
 
         all_issues = []
         all_passed = []
@@ -368,21 +381,33 @@ class ConsensusValidator(BaseAgent):
         # CRITICAL 이슈가 있으면 즉시 REJECT
         critical_issues = [i for i in all_issues if i.get("severity") == "CRITICAL"]
 
-        # [V60.28] 합의 로직 (2개 또는 3개 검증기 지원):
-        # - CRITICAL 있으면 → REJECT
-        # - 과반수 이상 REJECT → REJECT
-        # - 그 외 → PASS
-        majority_threshold = (total_count // 2) + 1  # 2개면 2, 3개면 2
+        # [Lane-3] Degraded 플래그: ABSTAIN 있거나 실제 투표가 0이면 degraded
+        validation_degraded = abstain_count > 0 or total_real == 0
+        degraded_reasons: list[str] = []
 
-        if critical_issues:
+        # [Lane-3] 합의 로직 — ABSTAIN은 진짜 투표 카운트에서 제외
+        if total_real == 0:
+            # 모든 검증기가 응답 불가 — 진짜 합의 없음
+            final_verdict = "DEGRADED_PASS"
+            reason = f"실제 투표 없음 ({abstain_count}개 응답 없음) — DEGRADED_PASS"
+            degraded_reasons = ["all_validators_abstained"]
+        elif critical_issues:
             final_verdict = "REJECT"
             reason = f"CRITICAL 이슈 발견: {len(critical_issues)}개"
-        elif reject_count >= majority_threshold:
-            final_verdict = "REJECT"
-            reason = f"{reject_count}/{total_count} 검증기가 REJECT"
+            if abstain_count:
+                degraded_reasons.append(f"{abstain_count}_perspectives_abstained")
         else:
-            final_verdict = "PASS"
-            reason = f"{pass_count}/{total_count} 검증기가 PASS"
+            # [V60.28] 과반수 로직 — 진짜 투표 기준 (2개 또는 3개 검증기 지원)
+            majority_threshold = (total_real // 2) + 1
+            if real_reject >= majority_threshold:
+                final_verdict = "REJECT"
+                reason = f"{real_reject}/{total_real} 검증기가 REJECT"
+            else:
+                final_verdict = "PASS"
+                reason = f"{real_pass}/{total_real} 검증기가 PASS"
+            if abstain_count:
+                reason += f" ({abstain_count}개 응답 없음)"
+                degraded_reasons.append(f"{abstain_count}_perspectives_abstained")
 
         # [V60.37] 이슈 분류
         major_issues = [i for i in all_issues if i.get("severity") == "MAJOR"]
@@ -390,8 +415,10 @@ class ConsensusValidator(BaseAgent):
 
         consensus_result = {
             "final_verdict": final_verdict,
-            "vote_summary": {"pass": pass_count, "reject": reject_count},
+            "vote_summary": {"pass": real_pass, "reject": real_reject, "abstain": abstain_count},
             "consensus_reason": reason,
+            "validation_degraded": validation_degraded,
+            "degraded_reasons": degraded_reasons,
             "individual_results": results,
             "all_issues": all_issues,
             "critical_issues": critical_issues,
@@ -399,8 +426,9 @@ class ConsensusValidator(BaseAgent):
             "passed_checks": list(set(all_passed)),
         }
 
-        logging.warning(f"{'✅' if final_verdict == 'PASS' else '❌'} [Consensus] {reason}")
-        logging.warning(f"- 투표: PASS {pass_count} / REJECT {reject_count}")
+        _icon = "⚠️" if final_verdict == "DEGRADED_PASS" else ("✅" if final_verdict == "PASS" else "❌")
+        logging.warning(f"{_icon} [Consensus] {reason}")
+        logging.warning(f"- 투표: PASS {real_pass} / REJECT {real_reject} / ABSTAIN {abstain_count}")
 
         # [V60.37] 상세 이슈 출력
         if final_verdict == "REJECT":
