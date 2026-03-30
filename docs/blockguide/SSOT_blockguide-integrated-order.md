@@ -314,7 +314,7 @@ run class는 아래 둘만 허용한다.
 | Planning | 설계 항목 1개 또는 `Phase 0` 시트 1개 |
 | Production | 블록 1개 작성 + 수동 감리 1회 |
 | BI | 스켈레톤 작성 1회, 동기화 1회, 감리 1회 중 하나 |
-| Audit | 보고서 1회 또는 특정 위반군 재검토 1회 |
+| Audit | 보고서 1회, 특정 위반군 재검토 1회, 또는 `10-block 자체 감리` 1회 |
 
 금지:
 
@@ -404,6 +404,8 @@ Rollback 규칙:
 - `auto-run`은 **스크립트 실행 강제**가 아니다.
 - Production에서는 `auto-run`이어도 `Block 1 -> 감리 -> Block 2 -> 감리`처럼 1개씩만 간다.
 - 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이며, `Block 005/010/015...` 경계마다 새 오더가 필요하다.
+- `Block 010/020/030...` 완료 뒤의 다음 필수 단위는 `Block 011/021/031...`이 아니라 직전 10블록에 대한 `10-block 자체 감리 1회`다.
+- `10-block 자체 감리` PASS 전에는 다음 10블록 구간으로 진입하지 않는다.
 - `seed_baseline_sync`는 참고용 seed이며 progress로 계산하지 않는다.
 - progress는 `sequential_production`과 그에 연결된 수동 감리 PASS 기록에서만 나온다.
 
@@ -414,6 +416,7 @@ Rollback 규칙:
 - P0 또는 감리 FAIL
 - 직전 SSOT 부재
 - 직전 단위 수동 감리 메모 부재
+- `Block 010/020/030...` 완료 후 `10-block 자체 감리` 미실시 또는 FAIL
 - `sequential_run_status.json` (또는 .md deprecated fallback)와 실제 수동 감리 기록이 충돌
 - `seed_baseline_sync`를 `sequential_production`처럼 취급하려는 시도
 - 같은 운영 오더에서 5블록 창 소진
@@ -430,15 +433,16 @@ Rollback 규칙:
 3. 한 번에 1단위만 진행한다.
 4. 애매하면 더 작은 단위로 쪼갠다.
 5. 실패하면 같은 단위를 다시 한다.
-6. 기억보다 파일을 믿는다.
-7. `Phase 0` 없이 TR 금지, `TR draft` 없이 BI 금지.
-8. 실패작 요청은 일반 생산이 아니라 `Failure Triage`로 처리한다.
-9. source TR audit 없이 BI handoff 금지.
-10. 감리 PASS 전에는 완료 선언 금지.
-11. opponent는 이름 목록이 아니라 아크 배분표로 확인한다.
-12. weakness는 이름 치환이 아니라 구조 차이로 확인한다.
-13. `auto-run`은 순서 자동 진행이지, 스크립트 자동 실행이 아니다.
-14. Production은 항상 블록 1개씩 쌓고, 각 블록마다 수동 감리를 남긴다.
+6. `Block 010/020/030...`마다 지난 10블록 자체 감리를 먼저 한다.
+7. 기억보다 파일을 믿는다.
+8. `Phase 0` 없이 TR 금지, `TR draft` 없이 BI 금지.
+9. 실패작 요청은 일반 생산이 아니라 `Failure Triage`로 처리한다.
+10. source TR audit 없이 BI handoff 금지.
+11. 감리 PASS 전에는 완료 선언 금지.
+12. opponent는 이름 목록이 아니라 아크 배분표로 확인한다.
+13. weakness는 이름 치환이 아니라 구조 차이로 확인한다.
+14. `auto-run`은 순서 자동 진행이지, 스크립트 자동 실행이 아니다.
+15. Production은 항상 블록 1개씩 쌓고, 각 블록마다 수동 감리를 남긴다.
 
 ---
 
@@ -468,6 +472,7 @@ Production/BI 자동 진행 경계:
 
 - Production auto-run의 내부 단위는 항상 `Block 1개`다.
 - 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이며, `Block 005/010/015...` 경계마다 새 오더가 필요하다.
+- `Block 010/020/030...` 경계에서는 새 오더의 첫 필수 단위가 `10-block 자체 감리`다. PASS 전에는 다음 블록으로 넘어가지 않는다.
 - BI auto-run은 **handoff 1사이클**까지만 허용한다. sync/audit PASS 또는 FAIL 보고가 끝나면 반드시 정지한다.
 
 금지:
@@ -484,5 +489,6 @@ Production/BI 자동 진행 경계:
 - manual_audit_pass 필요 시 (Stage 0 → Planning 전환)
 - context window 한계 도달
 - 같은 운영 오더에서 5블록 창 소진
+- `10-block 자체 감리` 대기 또는 FAIL
 - BI handoff 1사이클 완료
 - 사용자의 명시적 정지 지시

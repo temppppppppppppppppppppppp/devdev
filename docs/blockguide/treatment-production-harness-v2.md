@@ -26,6 +26,7 @@
    - 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이다.
    - `Block 005`, `010`, `015` ... 경계에 도달하면 새 오더 전까지 반드시 멈춘다.
    - 10블록은 대단원 구조/감리 창(window)일 뿐, 출력 단위가 아니다.
+   - `Block 010`, `020`, `030` ... 완료 뒤의 다음 필수 단위는 `직전 10블록 자체 감리 1회`다.
    - 70블록 일괄 생성이나 10블록 일괄 생성은 금지한다.
 9. 각 블록에서 해야 할 일은 항상 같다.
     - 사전 선언
@@ -251,6 +252,24 @@ Stage 0, Planning, BI handoff에는 그대로 확장하지 않는다.
 4. P0, UTF-8, 수동 감리, continuity, compaction 경고가 먼저 오면 5블록 이전에도 즉시 멈춘다.
 5. BI handoff는 별도 단계다. TR의 5블록 cap을 BI 감리 생략 허가로 해석하지 않는다.
 
+### 1.1C 10-block 자체 감리
+
+`Block 010`, `020`, `030`, `040`, `050`, `060`, `070` 완료 뒤에는 직전 10블록을 묶어 자체 감리를 1회 수행한다.
+
+규칙:
+
+1. 이 감리는 다음 10블록으로 넘어가기 전의 **필수 Audit 단위**다.
+2. `Block 010`이 끝났다면 다음 단위는 `Block 011`이 아니라 `Block 001~010 자체 감리`다.
+3. 감리 범위는 직전 10블록 전체다. 최소 아래 6축을 본다.
+   - 주인공 우위와 간판 맛이 살아 있는가
+   - 성취 직후 보상/인정 리듬이 유지되는가
+   - 자본/권력/조직 장악 축이 실제로 커졌는가
+   - opponent, method, deal_type, stakes 반복이 누적되지 않았는가
+   - continuity와 열린 복선이 다음 10블록으로 자연스럽게 이어지는가
+   - 다음 10블록에서 키워야 할 확장축과 위험축이 분명한가
+4. 결과는 짧아도 문서화한다. 최소 `PASS/FAIL`, `top_risks`, `repair_targets`, `next_10_focus`를 남긴다.
+5. FAIL이면 같은 10블록 구간 안에서 필요한 블록을 먼저 수리하고, PASS 전에는 다음 블록으로 넘어가지 않는다.
+
 ### 1.2 연속 진행 허용 모드 (Quality-First)
 
 생산 단계는 연속 진행을 허용하지만, 기본 철학은 **quality-first**다.
@@ -274,6 +293,7 @@ Stage 0, Planning, BI handoff에는 그대로 확장하지 않는다.
 7. 컨텍스트 compaction이 발생해도 같은 원칙을 유지한다. 이 경우 `Phase 0` -> `sequential_run_status.json` (또는 .md fallback) -> 직전 수동 감리 -> 직전 `candidate/fixed` 순으로 다시 연다.
 8. 상태 파일의 `run_class`가 `seed_baseline_sync`면 자동 재개 시작점은 `Block 001`이다.
 9. candidate/fixed/draft/check/merge 산출물과 모든 감리 보고서는 **UTF-8 only**로 저장한다. 한글 오염은 P0다.
+10. `Block 010/020/030...`에 도달하면 다음 자동 단위는 `10-block 자체 감리`이며, 그 PASS 전에는 다음 블록으로 가지 않는다.
 
 권장 연속 진행 순서:
 
@@ -2095,29 +2115,35 @@ Treatment 필드가 파이프라인 어디서 소비되는지. 이 필드가 부
 ### 자동 저장 규칙
 1. 블록 생산 완료 시마다 즉시 tr_block_070_draft.json에 머지하고 저장한다. "나중에 한꺼번에" 금지.
 2. 블록 저장 후 sequential_run_status.json을 업데이트한다:
-   - last_sequential_block_pass = 완료된 블록 번호
-   - next_unit_type = 다음 단위 (`block` | `merge` | `bi_handoff`)
-   - next_block_id = 다음 단위가 block이면 다음 블록 번호, 아니면 null
-   - run_class = sequential_production
+    - last_sequential_block_pass = 완료된 블록 번호
+    - next_unit_type = 다음 단위 (`block` | `ten_block_audit` | `merge` | `bi_handoff`)
+    - next_block_id = 다음 단위가 block이면 다음 블록 번호, 아니면 null
+    - run_class = sequential_production
 3. 같은 운영 오더 안에서는 최대 5블록까지만 자동 연속 진행한다.
-   - Block 1~4 종료: continuity check 통과 시 다음 블록으로 진행 가능
-   - Block 5 종료: continuity check 후 반드시 정지하고 새 오더를 기다린다
+    - Block 1~4 종료: continuity check 통과 시 다음 블록으로 진행 가능
+    - Block 5 종료: continuity check 후 반드시 정지하고 새 오더를 기다린다
 4. 5블록마다 중간 정합성 체크를 수행한다:
-   - python scripts/block_continuity_checker.py --work-id {work_id} --family {family}
-   - 불일치 발견 시 즉시 수정 후 다음 블록 진행
+    - python scripts/block_continuity_checker.py --work-id {work_id} --family {family}
+    - 불일치 발견 시 즉시 수정 후 다음 블록 진행
+5. `Block 010/020/030...` 종료 시에는 직전 10블록 자체 감리를 별도 수행한다:
+   - 산출물: `PASS/FAIL + top_risks + repair_targets + next_10_focus`
+   - 감리 대기 중에는 `next_unit_type = ten_block_audit`
+   - FAIL이면 필요한 블록을 먼저 수정하고 다음 블록 진행 금지
+   - PASS여야 `next_unit_type = block`으로 다음 10블록 구간 진입 가능
 
 ### 세션 종료 시
-5. context window 한계가 가까워지면 (압축 경고 발생 시):
+6. context window 한계가 가까워지면 (압축 경고 발생 시):
    - 현재 진행 중인 블록을 완료하고 저장
    - sequential_run_status.json 업데이트
    - "세션 종료. python scripts/generate_resume_prompt.py --work-id {work_id} 실행하여 다음 세션 프롬프트를 생성하세요." 출력
-6. 비정상 종료 대비: 블록 단위 즉시 저장이 이미 되어 있으므로, 다음 세션에서 generate_resume_prompt.py가 정확한 재개 지점을 알려준다.
+7. 비정상 종료 대비: 블록 단위 즉시 저장이 이미 되어 있으므로, 다음 세션에서 generate_resume_prompt.py가 정확한 재개 지점을 알려준다.
 
 ### 자동 진행 규칙
-7. 이 절의 auto-run은 **TR production 범위에만** 적용한다. Stage 0/Planning 전이는 각 전용 하네스가 따로 판정한다.
-8. Production auto-run은 `1블록씩 + 최대 5블록`까지만 허용한다.
-9. `Block 70` 완료 후 source TR gate가 정상이면 BI 하네스로 handoff할 수 있다.
-10. 5블록 창 소진, 강제 정지 게이트, compaction 경고 중 하나라도 오면 새 오더 전까지 재개하지 않는다.
+8. 이 절의 auto-run은 **TR production 범위에만** 적용한다. Stage 0/Planning 전이는 각 전용 하네스가 따로 판정한다.
+9. Production auto-run은 `1블록씩 + 최대 5블록`까지만 허용한다.
+10. `Block 010/020/030...` 경계에서는 `10-block 자체 감리` PASS가 다음 진입의 추가 게이트다.
+11. `Block 70` 완료 후 source TR gate가 정상이면 BI 하네스로 handoff할 수 있다.
+12. 5블록 창 소진, `10-block 자체 감리` 대기/FAIL, 강제 정지 게이트, compaction 경고 중 하나라도 오면 새 오더 전까지 재개하지 않는다.
 
 ---
 
