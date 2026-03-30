@@ -49,6 +49,7 @@ _STOP_LINE_COMMON_TOKENS = {
     "이후",
     "화",
 }
+_BINDING_PREVALIDATION_CATEGORIES = {"scene_completeness", "arc_timeline", "capital_unit"}
 
 
 def _safe_int(value, default=0):
@@ -149,6 +150,52 @@ class UnifiedBlueprintValidator:
                 break
 
         return entries, bool(entries)
+
+    @staticmethod
+    def _collect_binding_prevalidation_issues(issues: list[dict]) -> list[dict]:
+        if not isinstance(issues, list):
+            return []
+        binding_issues: list[dict] = []
+        for issue in issues:
+            if not isinstance(issue, dict):
+                continue
+            category = str(issue.get("category", "") or "").strip()
+            severity = str(issue.get("severity", "MINOR") or "MINOR").upper()
+            if category not in _BINDING_PREVALIDATION_CATEGORIES:
+                continue
+            if severity not in {"MAJOR", "CRITICAL"}:
+                continue
+            binding_issues.append(issue)
+        return binding_issues
+
+    def _apply_binding_prevalidation_contract(
+        self,
+        *,
+        verdict: str,
+        issues: list[dict],
+        feedback: str,
+        verdict_reason: str,
+        fix_scope: str,
+        fix_scope_reasoning: str,
+    ) -> tuple[str, str, str, str, str, list[dict]]:
+        binding_issues = self._collect_binding_prevalidation_issues(issues)
+        if verdict != "PASS" or not binding_issues:
+            return verdict, feedback, verdict_reason, fix_scope, fix_scope_reasoning, binding_issues
+
+        snippets = [
+            str(issue.get("issue") or issue.get("evidence") or "").strip()
+            for issue in binding_issues
+            if str(issue.get("issue") or issue.get("evidence") or "").strip()
+        ]
+        summary = "; ".join(snippets[:2])[:240]
+        binding_note = f"[Binding prevalidation] {summary}" if summary else "[Binding prevalidation] structured invariant repair required"
+        merged_feedback = f"{feedback}\n{binding_note}".strip() if feedback else binding_note
+        merged_reason = f"{verdict_reason}; binding prevalidation repair required".strip("; ")
+        merged_scope = str(fix_scope or "inplace")
+        merged_scope_reasoning = str(
+            fix_scope_reasoning or "Binding Python prevalidation invariants require bounded repair before plain PASS."
+        )
+        return "PASS_WITH_FIX", merged_feedback, merged_reason, merged_scope, merged_scope_reasoning, binding_issues
 
     @staticmethod
     def _extract_stop_line_clauses(text: str) -> list[str]:
@@ -329,11 +376,30 @@ class UnifiedBlueprintValidator:
         quality_risk = bool(
             compare_result.get("quality_risk", False) or selected_candidate_advisory.get("quality_risk", False)
         )
+        feedback = str(compare_result.get("feedback", "") or "")
         revision_required = bool(
             compare_result.get("revision_required", False) or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
         )
         selection_reason = str(compare_result.get("selection_reason") or compare_result.get("reason", "") or "")
         verdict_reason = str(compare_result.get("verdict_reason") or selection_reason or "")
+        fix_scope = str(compare_result.get("fix_scope", "") or "")
+        fix_scope_reasoning = str(compare_result.get("fix_scope_reasoning", "") or "")
+        (
+            verdict,
+            feedback,
+            verdict_reason,
+            fix_scope,
+            fix_scope_reasoning,
+            binding_issues,
+        ) = self._apply_binding_prevalidation_contract(
+            verdict=verdict,
+            issues=selected_pre_result.get("issues", []),
+            feedback=feedback,
+            verdict_reason=verdict_reason,
+            fix_scope=fix_scope,
+            fix_scope_reasoning=fix_scope_reasoning,
+        )
+        revision_required = bool(revision_required or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"))
 
         result = {
             "verdict": verdict,
@@ -341,14 +407,14 @@ class UnifiedBlueprintValidator:
             "issues": selected_pre_result.get("issues", []),
             "summary": selection_reason,
             "score": compare_result.get("score", 0),
-            "feedback": compare_result.get("feedback", ""),
+            "feedback": feedback,
             "confidence": 0.9 if _safe_int(compare_result.get("score", 0), 0) >= 70 else 0.6,
             "selected_index": selected_idx,
             "selected_blueprint": selected_bp,
             "comparison_notes": compare_result.get("comparison_notes", ""),
             "contradictions": contradictions,
-            "fix_scope": compare_result.get("fix_scope", ""),
-            "fix_scope_reasoning": compare_result.get("fix_scope_reasoning", ""),
+            "fix_scope": fix_scope,
+            "fix_scope_reasoning": fix_scope_reasoning,
             "selection_reason": selection_reason,
             "verdict_reason": verdict_reason,
             "quality_risk": quality_risk,
@@ -356,6 +422,7 @@ class UnifiedBlueprintValidator:
             "candidate_count": len(all_candidates),
             "candidate_advisories": candidate_advisories,
             "selected_candidate_advisory": selected_candidate_advisory,
+            "binding_prevalidation_issue_count": len(binding_issues),
         }
 
         status = "PASS" if verdict in ("PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING") else "REJECT"
@@ -521,6 +588,21 @@ class UnifiedBlueprintValidator:
 
         final_verdict = director_verdict
         python_warnings, quality_risk = self._build_python_warning_entries(pre_result["issues"])
+        (
+            final_verdict,
+            director_feedback,
+            director_reason,
+            fix_scope,
+            fix_scope_reasoning,
+            binding_issues,
+        ) = self._apply_binding_prevalidation_contract(
+            verdict=final_verdict,
+            issues=pre_result["issues"],
+            feedback=director_feedback,
+            verdict_reason=director_reason,
+            fix_scope=str(director_result.get("fix_scope", "") or ""),
+            fix_scope_reasoning=str(director_result.get("fix_scope_reasoning", "") or ""),
+        )
         if python_warnings:
             ensemble_meta = blueprint.get("_ensemble_meta", {}) if isinstance(blueprint, dict) else {}
             if not isinstance(ensemble_meta, dict):
@@ -543,14 +625,15 @@ class UnifiedBlueprintValidator:
             "feedback": director_feedback if final_verdict in ("REJECT", "PASS_WITH_FIX") else "",
             "pre_issues": len(pre_result["issues"]),
             "confidence": 0.9 if director_score >= 70 else 0.6,
-            "fix_scope": director_result.get("fix_scope", ""),
-            "fix_scope_reasoning": director_result.get("fix_scope_reasoning", ""),
+            "fix_scope": fix_scope,
+            "fix_scope_reasoning": fix_scope_reasoning,
             "re_slice_instruction": director_result.get("re_slice_instruction", ""),
             "selection_reason": director_result.get("selection_reason", "") or director_reason,
             "verdict_reason": director_result.get("verdict_reason", "") or director_reason,
             "quality_risk": quality_risk,
             "revision_required": final_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"),
             "candidate_count": 1,
+            "binding_prevalidation_issue_count": len(binding_issues),
         }
 
         status = "PASS" if final_verdict in ("PASS", "PASS_WITH_FIX") else "REJECT"
@@ -893,6 +976,13 @@ class UnifiedBlueprintValidator:
             )
         )
         issues.extend(
+            self._collect_capital_unit_alignment_issues(
+                blueprint=blueprint,
+                integrated=integrated,
+                constraint_block=constraint_block,
+            )
+        )
+        issues.extend(
             self._collect_temporal_deictic_drift_issues(
                 blueprint=blueprint,
             )
@@ -902,6 +992,18 @@ class UnifiedBlueprintValidator:
             self._collect_scene_specificity_issues(
                 scenes=scenes,
                 scene_count=scene_count,
+            )
+        )
+        issues.extend(
+            self._collect_scene_characters_issues(
+                scenes=scenes,
+                scene_count=scene_count,
+            )
+        )
+        issues.extend(
+            self._collect_arc_timeline_alignment_issues(
+                blueprint=blueprint,
+                arc_data=arc_data,
             )
         )
         issues.extend(
@@ -1150,6 +1252,81 @@ class UnifiedBlueprintValidator:
 
         return issues[:3]
 
+    def _collect_capital_unit_alignment_issues(
+        self,
+        *,
+        blueprint: dict,
+        integrated: str,
+        constraint_block: dict,
+    ) -> list[dict]:
+        """Detect USD deployment amounts drifting into KRW-authoritative capital arcs."""
+        if not isinstance(constraint_block, dict) or not integrated:
+            return []
+        capital_pkt = constraint_block.get("capital_continuity_packet", {})
+        if not isinstance(capital_pkt, dict):
+            return []
+        fields = capital_pkt.get("fields", [])
+        if not isinstance(fields, list) or not fields:
+            return []
+
+        capital_label_hints = ("자본", "투입", "잔고", "보유")
+        krw_amount_re = re.compile(r"\d[\d,.]*\s*(?:억(?:\s*\d[\d,.]*\s*(?:천만|백만|만))?|천만|백만|만)?\s*(?:원|만원|만\s*원)")
+        usd_amount_re = re.compile(r"\d[\d,.]*\s*(?:억|천만|백만|만)?\s*달러")
+        capital_ctx_re = re.compile(
+            r"(?:증거금|투입|추가\s*증거금|예치|잔고|잔액|가용\s*현금|가용\s*자금|총자산|자산|유동성|자본|청산\s*대금)"
+        )
+        price_ctx_re = re.compile(r"(?:온스당|호가|가격|지표|금리|FOMC)")
+
+        authoritative_krw_fields: list[str] = []
+        authoritative_usd_fields: list[str] = []
+        for field in fields[:8]:
+            if not isinstance(field, dict):
+                continue
+            label = str(field.get("label", "") or "").strip()
+            value = str(field.get("value", "") or "").strip()
+            combined = f"{label}: {value}".strip(": ")
+            if not combined or not any(hint in label for hint in capital_label_hints):
+                continue
+            if krw_amount_re.search(combined) and "달러" not in combined:
+                authoritative_krw_fields.append(combined[:120])
+            elif usd_amount_re.search(combined):
+                authoritative_usd_fields.append(combined[:120])
+
+        if not authoritative_krw_fields or authoritative_usd_fields:
+            return []
+
+        text_blocks: list[tuple[str, str]] = [("integrated_scenario", integrated)]
+        for scene_value in self._iter_scene_entries(blueprint.get("scene_breakdown", {})):
+            if not isinstance(scene_value, dict):
+                continue
+            for key in ("summary", "content", "description"):
+                value = str(scene_value.get(key, "") or "").strip()
+                if value:
+                    text_blocks.append((f"scene.{key}", value))
+
+        for source, text in text_blocks:
+            for match in usd_amount_re.finditer(text):
+                amount = match.group(0).strip()
+                ctx_start = max(0, match.start() - 28)
+                ctx_end = min(len(text), match.end() + 56)
+                context_window = text[ctx_start:ctx_end]
+                if not capital_ctx_re.search(context_window):
+                    continue
+                if price_ctx_re.search(context_window):
+                    continue
+                authority = "; ".join(authoritative_krw_fields[:2])
+                return [
+                    {
+                        "severity": "MAJOR",
+                        "category": "capital_unit",
+                        "issue": f"자본 단위 불일치: KRW 기준 arc/state에 USD 투입 금액 '{amount}' 등장",
+                        "evidence": f"source={source}; authority={authority}; context={context_window[:160]}",
+                        "fix_hint": "capital_continuity_packet 기준 단위를 유지하고 투입/증거금/총자산 수치를 arc/state packet과 정합시킬 것",
+                    }
+                ]
+
+        return []
+
     @staticmethod
     def _collect_temporal_deictic_drift_issues(
         *,
@@ -1256,6 +1433,101 @@ class UnifiedBlueprintValidator:
                 }
             )
         return issues[:2]
+
+    def _collect_scene_characters_issues(
+        self,
+        *,
+        scenes,
+        scene_count: int,
+    ) -> list[dict]:
+        """Detect systemic empty scene character rosters in structured scene data."""
+        if scene_count <= 0:
+            return []
+        empty_count = 0
+        for scene_value in self._iter_scene_entries(scenes):
+            if not isinstance(scene_value, dict):
+                continue
+            characters = scene_value.get("characters", [])
+            if isinstance(characters, str):
+                if not characters.strip():
+                    empty_count += 1
+                continue
+            if isinstance(characters, list):
+                normalized = [str(item).strip() for item in characters if str(item).strip()]
+                if not normalized:
+                    empty_count += 1
+                continue
+            empty_count += 1
+        if empty_count < 2:
+            return []
+        return [
+            {
+                "severity": "MAJOR",
+                "category": "scene_completeness",
+                "issue": f"scene.characters 누락: {empty_count}/{scene_count}개 씬에서 characters가 비어 있음",
+                "evidence": f"empty_scene_characters={empty_count}",
+                "fix_hint": "각 scene에 실제 참여 인물을 최소 정확 집합으로 채우기",
+            }
+        ]
+
+    @staticmethod
+    def _parse_timeline_point(raw, *, pick: str) -> tuple[int, int] | None:
+        if isinstance(raw, dict):
+            year = raw.get("year")
+            month = raw.get("month")
+            if year is not None and month is not None:
+                try:
+                    return int(year), int(month)
+                except (TypeError, ValueError):
+                    return None
+            raw = raw.get("표현") or raw.get("expression") or raw.get("text") or raw.get("raw") or ""
+        text = str(raw or "").strip()
+        if not text:
+            return None
+        year_match = re.search(r"(\d{4})년", text)
+        months = [int(value) for value in re.findall(r"(\d{1,2})월", text)]
+        if not months:
+            return None
+        month = months[0] if pick == "start" else months[-1]
+        year = int(year_match.group(1)) if year_match else 0
+        return year, month
+
+    def _collect_arc_timeline_alignment_issues(
+        self,
+        *,
+        blueprint: dict,
+        arc_data: dict | None,
+    ) -> list[dict]:
+        """Detect ending-state timeline drift against authoritative arc timeline."""
+        if not isinstance(arc_data, dict):
+            return []
+        timeline = arc_data.get("state_changes", {}).get("timeline", {})
+        if not isinstance(timeline, dict):
+            return []
+        arc_end = self._parse_timeline_point(timeline.get("end"), pick="end")
+        if arc_end is None:
+            return []
+        ending_state = blueprint.get("ending_state", {})
+        if not isinstance(ending_state, dict):
+            return []
+        bp_timeline = ending_state.get("timeline", {})
+        bp_end = self._parse_timeline_point(bp_timeline, pick="end")
+        if bp_end is None or bp_end == arc_end:
+            return []
+        bp_expr = bp_timeline.get("표현") if isinstance(bp_timeline, dict) else ""
+        if not bp_expr:
+            bp_expr = bp_timeline.get("expression") if isinstance(bp_timeline, dict) else ""
+        bp_expr = str(bp_expr or bp_timeline or "").strip()
+        arc_expr = str(timeline.get("end") or "").strip()
+        return [
+            {
+                "severity": "MAJOR",
+                "category": "arc_timeline",
+                "issue": f"ending_state.timeline 불일치: blueprint '{bp_expr}' vs arc '{arc_expr}'",
+                "evidence": f"blueprint_timeline={bp_end}, arc_timeline={arc_end}",
+                "fix_hint": "ending_state.timeline과 time_flow를 arc state_changes.timeline 종료 시점에 맞추기",
+            }
+        ]
 
     def _collect_scenario_density_issues(
         self,

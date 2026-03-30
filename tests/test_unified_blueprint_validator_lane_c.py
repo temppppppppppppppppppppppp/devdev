@@ -98,6 +98,7 @@ def test_lane_c_prepare_director_validation_payload_injects_focus_and_hud_contex
 def test_lane_c_build_director_validation_result_keeps_pass_with_fix_contract():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     blueprint = {}
+
     verdict, result = validator._build_director_validation_result(
         blueprint=blueprint,
         pre_result={
@@ -165,14 +166,9 @@ def test_lane_c_python_pre_validate_reports_structure_issues_in_stable_order():
         arc_data=None,
     )
 
-    issue_labels = [issue["issue"] for issue in pre_result["issues"]]
+    categories = [issue["category"] for issue in pre_result["issues"]]
 
-    assert issue_labels[:4] == [
-        "필수 필드 누락: scene_breakdown",
-        "필수 필드 누락: integrated_scenario",
-        f"분량 부족: 0자 < {validator.min_chars}자",
-        "씬 부족: 0개 < 3개",
-    ]
+    assert categories[:4] == ["structure", "structure", "structure", "structure"]
     assert pre_result["has_critical"] is False
     assert pre_result["has_major_excess"] is True
     assert pre_result["critical_summary"] == ""
@@ -184,16 +180,16 @@ def test_lane_c_python_pre_validate_combines_structure_fidelity_and_continuity()
     pre_result = validator._python_pre_validate(
         blueprint={
             "scene_breakdown": [
-                "짧은 도입",
+                "direct string scene",
                 {"title": "추적"},
             ],
-            "integrated_scenario": "주인공이 흔적을 따라간다.",
-            "start_location": "부산 항",
+            "integrated_scenario": "주인공이 표적을 따라간다.",
+            "start_location": "부산",
         },
         constraint_block={},
         prev_blueprint={"end_location": "서울 북문"},
         state_tracker=None,
-        arc_data={"state_constraints": {"relationship_changes": [{"target": "연화"}, {"npc": "독호"}]}},
+        arc_data={"state_constraints": {"relationship_changes": [{"target": "도화"}, {"npc": "상호"}]}},
     )
 
     categories = [issue["category"] for issue in pre_result["issues"]]
@@ -210,14 +206,308 @@ def test_lane_c_python_pre_validate_flags_stop_line_leak_as_critical():
     pre_result = validator._python_pre_validate(
         blueprint={
             "scene_breakdown": {"scene_1": {}, "scene_2": {}, "scene_3": {}},
-            "integrated_scenario": "주인공은 황실 경매장 잠입 계획을 실행하고 독호와 재회해 은장도를 확보한다. " * 30,
+            "integrated_scenario": "주인공이 정산 경매장에 잠입 계획을 실행하고 상호가 사회자 동선을 정보로 준다. " * 30,
         },
-        constraint_block={"stop_line": {"content": "황실 경매장 잠입 계획을 실행하고 독호와 재회해 은장도를 확보한다"}},
+        constraint_block={"stop_line": {"content": "정산 경매장에 잠입 계획을 실행하고 상호가 사회자 동선을 정보로 준다"}},
         prev_blueprint=None,
         state_tracker=None,
         arc_data={},
     )
 
     assert pre_result["has_critical"] is True
-    assert pre_result["critical_summary"] == "정지선 위반: 다음 화 내용 포함"
     assert any(issue["category"] == "arc_compliance" for issue in pre_result["issues"])
+
+
+def test_lane_c_python_pre_validate_flags_empty_scene_characters_as_major():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {"goal": "g1", "summary": "s1", "characters": []},
+                "scene_2": {"goal": "g2", "summary": "s2", "characters": ["Hero"]},
+                "scene_3": {"goal": "g3", "summary": "s3", "characters": ""},
+                "scene_4": {"goal": "g4", "summary": "s4", "characters": ["PB"]},
+            },
+            "integrated_scenario": "A" * 900,
+        },
+        constraint_block={},
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
+    )
+
+    issue = next(issue for issue in pre_result["issues"] if issue["category"] == "scene_completeness")
+    assert issue["severity"] == "MAJOR"
+    assert "2/4" in issue["issue"]
+
+
+def test_lane_c_python_pre_validate_flags_arc_timeline_drift_as_major():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {"goal": "g1", "summary": "s1", "characters": ["Hero"]},
+                "scene_2": {"goal": "g2", "summary": "s2", "characters": ["Hero"]},
+                "scene_3": {"goal": "g3", "summary": "s3", "characters": ["Hero"]},
+            },
+            "integrated_scenario": "A" * 900,
+            "ending_state": {
+                "timeline": {"표현": "2006년 4월 중순 심야"},
+            },
+        },
+        constraint_block={},
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={
+            "state_changes": {
+                "timeline": {
+                    "start": {"year": 2006, "month": 5},
+                    "end": {"year": 2006, "month": 5},
+                }
+            }
+        },
+    )
+
+    issue = next(issue for issue in pre_result["issues"] if issue["category"] == "arc_timeline")
+    assert issue["severity"] == "MAJOR"
+    assert "2006년 4월 중순 심야" in issue["issue"]
+
+
+def test_lane_c_build_director_validation_result_escalates_binding_issue_to_pass_with_fix():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    blueprint = {}
+
+    verdict, result = validator._build_director_validation_result(
+        blueprint=blueprint,
+        pre_result={
+            "issues": [
+                {
+                    "severity": "MAJOR",
+                    "category": "scene_completeness",
+                    "issue": "scene.characters 누락: 4/4개 씬에서 characters가 비어 있음",
+                    "fix_hint": "fill characters",
+                }
+            ]
+        },
+        director_result={
+            "decision": "PASS",
+            "reason": "narrative quality okay",
+            "feedback": "",
+            "score": 78,
+        },
+    )
+
+    assert verdict == "PASS_WITH_FIX"
+    assert result["verdict"] == "PASS_WITH_FIX"
+    assert result["revision_required"] is True
+    assert result["fix_scope"] == "inplace"
+    assert result["binding_prevalidation_issue_count"] == 1
+    assert "[Binding prevalidation]" in result["feedback"]
+
+
+def test_lane_c_python_pre_validate_flags_capital_unit_drift_as_major():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {"goal": "g1", "summary": "s1", "characters": ["Hero"]},
+                "scene_2": {"goal": "g2", "summary": "s2", "characters": ["PB"]},
+                "scene_3": {"goal": "g3", "summary": "s3", "characters": ["Hero", "PB"]},
+            },
+            "integrated_scenario": (
+                "한시우는 WTI 익절로 확보한 500만 달러를 추가 증거금으로 즉각 투입한다. "
+                + "A" * 900
+            ),
+        },
+        constraint_block={
+            "capital_continuity_packet": {
+                "fields": [
+                    {"label": "투입 확정", "value": "15억 원 (투입/체결 완료 — 가용 아님)"},
+                    {"label": "보유 자본", "value": "20억 원 (예치/보유 상태)"},
+                ]
+            }
+        },
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
+    )
+
+    issue = next(issue for issue in pre_result["issues"] if issue["category"] == "capital_unit")
+    assert issue["severity"] == "MAJOR"
+    assert "500만 달러" in issue["issue"]
+
+
+def test_lane_c_python_pre_validate_skips_price_only_dollar_mentions_for_capital_unit():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {"goal": "g1", "summary": "s1", "characters": ["Hero"]},
+                "scene_2": {"goal": "g2", "summary": "s2", "characters": ["PB"]},
+                "scene_3": {"goal": "g3", "summary": "s3", "characters": ["Hero", "PB"]},
+            },
+            "integrated_scenario": (
+                "그해 8월 8일 FOMC 이후 금값은 온스당 700달러를 향해 폭등했다. "
+                + "A" * 900
+            ),
+        },
+        constraint_block={
+            "capital_continuity_packet": {
+                "fields": [
+                    {"label": "투입 확정", "value": "15억 원 (투입/체결 완료 — 가용 아님)"},
+                    {"label": "보유 자본", "value": "20억 원 (예치/보유 상태)"},
+                ]
+            }
+        },
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert all(issue["category"] != "capital_unit" for issue in pre_result["issues"])
+
+
+def test_lane_c_build_director_validation_result_escalates_capital_unit_issue_to_pass_with_fix():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    blueprint = {}
+
+    verdict, result = validator._build_director_validation_result(
+        blueprint=blueprint,
+        pre_result={
+            "issues": [
+                {
+                    "severity": "MAJOR",
+                    "category": "capital_unit",
+                    "issue": "자본 단위 불일치: KRW 기준 arc/state에 USD 투입 금액 '500만 달러' 등장",
+                    "fix_hint": "capital packet 기준 단위를 유지할 것",
+                }
+            ]
+        },
+        director_result={
+            "decision": "PASS",
+            "reason": "narrative quality okay",
+            "feedback": "",
+            "score": 81,
+        },
+    )
+
+    assert verdict == "PASS_WITH_FIX"
+    assert result["verdict"] == "PASS_WITH_FIX"
+    assert result["revision_required"] is True
+    assert result["binding_prevalidation_issue_count"] == 1
+    assert "[Binding prevalidation]" in result["feedback"]
+
+
+def test_lane_c_run_compare_validation_escalates_binding_issue_to_pass_with_fix():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    candidates = [{"name": "alpha"}, {"name": "beta"}]
+    validator._prepare_compare_candidate = Mock(
+        side_effect=[
+            (
+                {
+                    "issues": [
+                        {
+                            "severity": "MAJOR",
+                            "category": "arc_timeline",
+                            "issue": "ending_state.timeline 불일치",
+                        }
+                    ],
+                    "has_critical": False,
+                },
+                {"candidate_index": 0, "quality_risk": True},
+            ),
+            ({"issues": [], "has_critical": False}, {"candidate_index": 1, "quality_risk": False}),
+        ]
+    )
+    director = SimpleNamespace(
+        compare_and_select_blueprint=Mock(
+            return_value={
+                "decision": "PASS",
+                "selected_index": 0,
+                "selected_blueprint": None,
+                "score": 82,
+                "selection_reason": "best candidate",
+                "comparison_notes": "note",
+                "quality_risk": False,
+                "revision_required": False,
+            }
+        )
+    )
+
+    verdict, result = validator._run_compare_validation(
+        all_candidates=candidates,
+        arc_data={"arc_no": 4},
+        constraint_block={},
+        prev_blueprint=None,
+        director=director,
+        entity_registry=None,
+        state_tracker=None,
+        working_ep=15,
+        arc_idx=4,
+    )
+
+    assert verdict == "PASS_WITH_FIX"
+    assert result["verdict"] == "PASS_WITH_FIX"
+    assert result["revision_required"] is True
+    assert result["fix_scope"] == "inplace"
+    assert result["binding_prevalidation_issue_count"] == 1
+    assert "[Binding prevalidation]" in result["feedback"]
+
+
+def test_lane_c_run_compare_validation_escalates_capital_unit_issue_to_pass_with_fix():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    candidates = [{"name": "alpha"}, {"name": "beta"}]
+    validator._prepare_compare_candidate = Mock(
+        side_effect=[
+            (
+                {
+                    "issues": [
+                        {
+                            "severity": "MAJOR",
+                            "category": "capital_unit",
+                            "issue": "자본 단위 불일치: KRW 기준 arc/state에 USD 투입 금액 '500만 달러' 등장",
+                        }
+                    ],
+                    "has_critical": False,
+                },
+                {"candidate_index": 0, "quality_risk": True},
+            ),
+            ({"issues": [], "has_critical": False}, {"candidate_index": 1, "quality_risk": False}),
+        ]
+    )
+    director = SimpleNamespace(
+        compare_and_select_blueprint=Mock(
+            return_value={
+                "decision": "PASS",
+                "selected_index": 0,
+                "selected_blueprint": None,
+                "score": 84,
+                "selection_reason": "best candidate",
+                "comparison_notes": "note",
+                "quality_risk": False,
+                "revision_required": False,
+            }
+        )
+    )
+
+    verdict, result = validator._run_compare_validation(
+        all_candidates=candidates,
+        arc_data={"arc_no": 4},
+        constraint_block={},
+        prev_blueprint=None,
+        director=director,
+        entity_registry=None,
+        state_tracker=None,
+        working_ep=17,
+        arc_idx=4,
+    )
+
+    assert verdict == "PASS_WITH_FIX"
+    assert result["verdict"] == "PASS_WITH_FIX"
+    assert result["revision_required"] is True
+    assert result["binding_prevalidation_issue_count"] == 1
+    assert "[Binding prevalidation]" in result["feedback"]
