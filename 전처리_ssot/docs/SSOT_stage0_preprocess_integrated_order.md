@@ -47,6 +47,24 @@ Stage 0 작업은 아래 순서로 읽는다.
 
 즉, **Stage 0를 끝내고 나서야** blockguide의 일반 단계 문서로 넘어간다.
 
+## 1A. 용어 잠금
+
+이 lane에서 용어는 아래처럼 고정한다.
+
+| 용어 | 고정 의미 | Stage 0에서의 용도 | 금지 shortcut |
+| ---- | --------- | ------------------ | ------------- |
+| `block` | `2~6화` 분량의 이야기 덩어리 | Phase 0와 TR 설계를 위한 추출 단위 | `block = episode` |
+| `macro arc` / `대단원` | `10블록` 구조 단위 | 7대단원 골격, 입구/출구, block_slots | runtime용 느슨한 `arc`로 사용 |
+| `episode checkpoint` | `ep1`, `ep5`, `ep10`, `last` 같은 source reading anchor | 원고/레퍼런스 sampling 근거 | 설계 단위로 직접 승격 |
+| `opening representative spike` | opening macro arc 안에서 작품 간판 맛을 대표하는 폭발 | Stage 0 extraction label | 곧바로 `TR Block 1 spike`로 단정 |
+
+핵심 규칙:
+
+- Stage 0는 `episode checkpoint`를 읽어도 정식 산출물에는 반드시 `block-scale` 또는 `macro arc` 언어로 번역해서 적는다.
+- `ep1`을 읽었다는 사실만으로 `Block 1` 전체를 안다고 주장하면 안 된다.
+- `Block 1`의 정확한 장면 배치와 `TR Block 1 spike`의 확정은 downstream planning / production 단계의 소유다.
+- Stage 0에서 `arc`라는 말을 단독으로 써야 할 이유가 없다면 `macro arc` 또는 `대단원`이라고 쓴다.
+
 ---
 
 ## 2. Stage 0 정식 산출물 경로
