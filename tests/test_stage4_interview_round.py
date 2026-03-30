@@ -4525,65 +4525,109 @@ class TestRecordS4Attempt:
         assert payload.director_feedback.endswith("[TF-32-V] PASS_WITH_FIX 수정 실패 → REJECT")
 
     def test_append_episode_log_includes_round_cost_and_strategy_flags(self):
+            ctx = _make_ctx()
+            ctx.current_project.name = "proj"
+            ir = Stage4InterviewRound(ctx)
+            ir._round_start_ts = time.monotonic() - 1
+            ir._last_strategy_budget = "reduced"
+            ir._last_strategy_count = 2
+            ir._last_retry_budget_axes = {
+                "round": "retry_round_2",
+                "repair": "patch_revision",
+                "strategy": "reduced",
+                "escalation": "mad",
+                "guidance": "augmented",
+            }
+            ir._get_round_metrics_delta = MagicMock(
+                return_value={
+                    "total_calls": 4,
+                    "total_tokens": 4321,
+                    "total_cost_usd": 0.456,
+                    "model_breakdown": {"gemini-2.5-pro": {"tokens": 4321, "cost": 0.456}},
+                }
+            )
+
+            with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+                ir._append_episode_log(
+                    ep_num=3,
+                    round_num=1,
+                    director_result={
+                        "verdict": "REJECT",
+                        "score": 44,
+                        "selected": "A",
+                        "selection_reason": "best candidate",
+                        "selected_candidate": {"strategy_name": "tension"},
+                        "score_breakdown": {},
+                        "action_items": [],
+                        "open_review": "",
+                    },
+                    is_patch=False,
+                    patch_fallback=False,
+                    tot_used=False,
+                    mad_used=False,
+                    asp_used=False,
+                    model="gemini-2.5-pro",
+                    reject_bucket="constraint_violation",
+                    validation_warnings=["warn-1"],
+                )
+
+            written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
+            payload = json.loads(written.strip())
+            assert payload["round_total_calls"] == 4
+            assert payload["round_total_tokens"] == 4321
+            assert payload["round_total_cost_usd"] == 0.456
+            assert payload["round_model_breakdown"]["gemini-2.5-pro"]["tokens"] == 4321
+            assert payload["flags"]["strategy_budget"] == "reduced"
+            assert payload["flags"]["strategy_count"] == 2
+            assert payload["flags"]["reject_bucket"] == "constraint_violation"
+            assert payload["flags"]["retry_budget_axes"]["repair"] == "patch_revision"
+            assert payload["patch_trace"]["patch_strategy"] == ""
+            assert payload["patch_trace"]["patch_targets"] == []
+            assert payload["patch_trace"]["unchanged_ratio"] is None
+
+
+    def test_append_episode_log_normalizes_patch_strategy_for_feedback_retry(self):
         ctx = _make_ctx()
         ctx.current_project.name = "proj"
         ir = Stage4InterviewRound(ctx)
         ir._round_start_ts = time.monotonic() - 1
-        ir._last_strategy_budget = "reduced"
-        ir._last_strategy_count = 2
-        ir._last_retry_budget_axes = {
-            "round": "retry_round_2",
-            "repair": "patch_revision",
-            "strategy": "reduced",
-            "escalation": "mad",
-            "guidance": "augmented",
-        }
         ir._get_round_metrics_delta = MagicMock(
             return_value={
-                "total_calls": 4,
-                "total_tokens": 4321,
-                "total_cost_usd": 0.456,
-                "model_breakdown": {"gemini-2.5-pro": {"tokens": 4321, "cost": 0.456}},
+                "total_calls": 2,
+                "total_tokens": 2000,
+                "total_cost_usd": 0.2,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 2000, "cost": 0.2}},
             }
         )
 
         with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
             ir._append_episode_log(
-                ep_num=3,
+                ep_num=2,
                 round_num=1,
                 director_result={
-                    "verdict": "REJECT",
-                    "score": 44,
+                    "verdict": "PASS_WITH_FIX",
+                    "score": 61,
                     "selected": "A",
                     "selection_reason": "best candidate",
-                    "selected_candidate": {"strategy_name": "tension"},
+                    "selected_candidate": {"strategy_name": "balanced"},
                     "score_breakdown": {},
                     "action_items": [],
                     "open_review": "",
                 },
-                is_patch=False,
+                is_patch=True,
                 patch_fallback=False,
                 tot_used=False,
                 mad_used=False,
                 asp_used=False,
                 model="gemini-2.5-pro",
-                reject_bucket="constraint_violation",
-                validation_warnings=["warn-1"],
+                patch_trace={},
             )
 
         written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
         payload = json.loads(written.strip())
-        assert payload["round_total_calls"] == 4
-        assert payload["round_total_tokens"] == 4321
-        assert payload["round_total_cost_usd"] == 0.456
-        assert payload["round_model_breakdown"]["gemini-2.5-pro"]["tokens"] == 4321
-        assert payload["flags"]["strategy_budget"] == "reduced"
-        assert payload["flags"]["strategy_count"] == 2
-        assert payload["flags"]["reject_bucket"] == "constraint_violation"
-        assert payload["flags"]["retry_budget_axes"]["repair"] == "patch_revision"
-        assert payload["patch_trace"]["patch_strategy"] == ""
-        assert payload["patch_trace"]["patch_targets"] == []
-        assert payload["patch_trace"]["unchanged_ratio"] is None
+        assert payload["flags"]["patch_mode"] is True
+        assert payload["patch_trace"]["patch_strategy"] == "patch_with_feedback"
+
 
     def test_append_episode_log_persists_selection_and_verdict_reason(self):
         ctx = _make_ctx()
@@ -4591,44 +4635,44 @@ class TestRecordS4Attempt:
         ir = Stage4InterviewRound(ctx)
         ir._round_start_ts = time.monotonic() - 1
         ir._get_round_metrics_delta = MagicMock(
-            return_value={
-                "total_calls": 1,
-                "total_tokens": 1234,
-                "total_cost_usd": 0.123,
-                "model_breakdown": {"gemini-2.5-pro": {"tokens": 1234, "cost": 0.123}},
-            }
-        )
+                return_value={
+                    "total_calls": 1,
+                    "total_tokens": 1234,
+                    "total_cost_usd": 0.123,
+                    "model_breakdown": {"gemini-2.5-pro": {"tokens": 1234, "cost": 0.123}},
+                }
+            )
 
         with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
             ir._append_episode_log(
-                ep_num=4,
-                round_num=0,
-                director_result={
-                    "verdict": "REJECT",
-                    "score": 44,
-                    "selected": "A",
-                    "selection_reason": "최우수 후보 선택",
-                    "verdict_reason": "Contradiction Firewall: CRITICAL 1건",
-                    "selected_candidate": {"strategy_name": "balanced"},
-                    "score_breakdown": {},
-                    "action_items": ["마지막 장면 수정"],
-                    "open_review": "",
-                },
-                is_patch=False,
-                patch_fallback=False,
-                tot_used=False,
-                mad_used=False,
-                asp_used=False,
-                model="gemini-2.5-pro",
-                reject_bucket="constraint_violation",
-                validation_warnings=[],
-            )
+                    ep_num=4,
+                    round_num=0,
+                    director_result={
+                        "verdict": "REJECT",
+                        "score": 44,
+                        "selected": "A",
+                        "selection_reason": "최우수 후보 선택",
+                        "verdict_reason": "Contradiction Firewall: CRITICAL 1건",
+                        "selected_candidate": {"strategy_name": "balanced"},
+                        "score_breakdown": {},
+                        "action_items": ["마지막 장면 수정"],
+                        "open_review": "",
+                    },
+                    is_patch=False,
+                    patch_fallback=False,
+                    tot_used=False,
+                    mad_used=False,
+                    asp_used=False,
+                    model="gemini-2.5-pro",
+                    reject_bucket="constraint_violation",
+                    validation_warnings=[],
+                )
 
-        written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
-        payload = json.loads(written.strip())
-        assert payload["reason"] == "최우수 후보 선택"
-        assert payload["selection_reason"] == "최우수 후보 선택"
-        assert payload["verdict_reason"] == "Contradiction Firewall: CRITICAL 1건"
+            written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
+            payload = json.loads(written.strip())
+            assert payload["reason"] == "최우수 후보 선택"
+            assert payload["selection_reason"] == "최우수 후보 선택"
+            assert payload["verdict_reason"] == "Contradiction Firewall: CRITICAL 1건"
 
     def test_append_episode_log_defaults_verdict_reason_to_selection_reason(self):
         ctx = _make_ctx()

@@ -35,9 +35,9 @@ providers:
     # Prefix convention: "anthropic-vertex:claude-sonnet-4-6"
 
 agents:
-  analyst: "gemini-2.5-pro"
+  analyst: "gemini-3.1-pro-preview"
   manager: "gemini-2.5-flash"
-  chief_writer: "gemini-2.5-pro"
+  chief_writer: "gemini-3.1-pro-preview"
   blueprint_ensemble: "gemini-3.1-pro-preview"
   three_phase_blueprint_generator: "gemini-3.1-pro-preview"
   state_locked_arc_generator: "gemini-3.1-pro-preview"
@@ -46,7 +46,7 @@ agents:
   state_extractor: "gemini-2.5-flash"
   four_phase_arc_generator: "gemini-3.1-pro-preview"
   continuity_inspector: "gemini-3.1-pro-preview"
-  director: "gemini-2.5-pro"
+  director: "gemini-3.1-pro-preview"
   arc_corrector: "gemini-2.5-flash"
   arc_critic: "gemini-2.5-flash"
   consensus_validator: "gemini-2.5-flash"
@@ -59,8 +59,8 @@ agents:
 fallback_chain:
   "claude-opus-4-6": "claude-sonnet-4-6"
   "claude-opus-4-20250514": "claude-sonnet-4-20250514"
-  "claude-sonnet-4-6": "gemini-2.5-pro"
-  "claude-sonnet-4-20250514": "gemini-2.5-pro"
+  "claude-sonnet-4-6": "gemini-3.1-pro-preview"
+  "claude-sonnet-4-20250514": "gemini-3.1-pro-preview"
   "gemini-3.1-pro-preview": "gemini-2.5-pro"
   "gemini-2.5-pro": "gemini-2.5-flash"
   "gemini-2.5-flash": "gemini-2.5-flash"

@@ -20,9 +20,11 @@ def test_repo_models_yaml_defaults_to_gemini_direct_core_roles():
 
     assert payload["providers"]["anthropic"]["enabled"] is False
     assert payload["providers"]["vertex_ai"]["enabled"] is False
-    assert payload["agents"]["analyst"] == "gemini-2.5-pro"
-    assert payload["agents"]["chief_writer"] == "gemini-2.5-pro"
-    assert payload["agents"]["director"] == "gemini-2.5-pro"
+    assert payload["agents"]["analyst"] == "gemini-3.1-pro-preview"
+    assert payload["agents"]["chief_writer"] == "gemini-3.1-pro-preview"
+    assert payload["agents"]["director"] == "gemini-3.1-pro-preview"
+    assert payload["fallback_chain"]["claude-sonnet-4-6"] == "gemini-3.1-pro-preview"
+    assert payload["fallback_chain"]["claude-sonnet-4-20250514"] == "gemini-3.1-pro-preview"
 
 
 def test_router_resolves_gemini_models():

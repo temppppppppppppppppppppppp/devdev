@@ -176,25 +176,23 @@ def test_execute_stage2_pass_fix_iterations_delegates_to_helper_family(finalizer
         max_fix=2,
     )
     finalizer._apply_stage2_pass_fix_patch.assert_called_once()
-    finalizer._analyze_stage2_pass_fix_patch.assert_called_once_with(
-        current_arc=current_arc,
-        current_audit=current_audit,
-        patched=patched_arc,
-        fix_instr="tighten midpoint",
-        global_arc_no=1,
-        fix_i=0,
-        applied_patches=[],
-        patch_pressure_exceeded=False,
-    )
-    finalizer._build_stage2_pass_fix_reaudit_story_context.assert_called_once_with(
-        story_context="story",
-        arith_patch_ctx="[arith ctx]",
-        patch_guard_signals=patch_state["patch_guard_signals"],
-        patch_pressure_exceeded=False,
-        current_audit=current_audit,
-        applied_patches=[],
-        fix_i=0,
-    )
+    analyze_kw = finalizer._analyze_stage2_pass_fix_patch.call_args.kwargs
+    assert analyze_kw["current_arc"] == current_arc
+    assert analyze_kw["current_audit"] == current_audit
+    assert analyze_kw["patched"] == patched_arc
+    assert analyze_kw["fix_instr"] == "tighten midpoint"
+    assert analyze_kw["global_arc_no"] == 1
+    assert analyze_kw["fix_i"] == 0
+    assert analyze_kw["patch_pressure_exceeded"] is False
+    assert analyze_kw["applied_patches"] == ["tighten midpoint"]
+    story_kw = finalizer._build_stage2_pass_fix_reaudit_story_context.call_args.kwargs
+    assert story_kw["story_context"] == "story"
+    assert story_kw["arith_patch_ctx"] == "[arith ctx]"
+    assert story_kw["patch_guard_signals"] == patch_state["patch_guard_signals"]
+    assert story_kw["patch_pressure_exceeded"] is False
+    assert story_kw["current_audit"] == current_audit
+    assert story_kw["applied_patches"] == ["tighten midpoint"]
+    assert story_kw["fix_i"] == 0
     finalizer._run_stage2_pass_fix_reaudit.assert_called_once()
     finalizer._apply_stage2_pass_fix_reaudit_result.assert_called_once_with(
         patched=patched_arc,
@@ -205,6 +203,62 @@ def test_execute_stage2_pass_fix_iterations_delegates_to_helper_family(finalizer
         re_decision="PASS",
         re_score=97,
     )
+
+
+def test_execute_stage2_pass_fix_iterations_fail_closes_on_blocking_patch_guard_signal(finalizer):
+    current_arc = {"arc_no": 1, "tactical_doc": "draft"}
+    current_audit = {"re_slice_instruction": "tighten midpoint", "decision": "PASS_WITH_FIX"}
+    patched_arc = {"arc_no": 1, "tactical_doc": "patched"}
+    blocking_signal = {
+        "code": "episode_start_future_artifact",
+        "detail": "제 15화 돌아온 방향타: 최종 매도 체결 확인서 precedes later action '전량 익절 청산'",
+    }
+    patch_state = {
+        "patch_pressure_exceeded": False,
+        "arith_patch_ctx": "",
+        "patch_guard_signals": [blocking_signal],
+        "blocking_patch_guard_signals": [blocking_signal],
+    }
+    finalizer._resolve_stage2_pass_fix_instruction = MagicMock(return_value="tighten midpoint")
+    finalizer._apply_stage2_pass_fix_patch = MagicMock(return_value=patched_arc)
+    finalizer._analyze_stage2_pass_fix_patch = MagicMock(return_value=patch_state)
+    finalizer._build_stage2_pass_fix_reaudit_story_context = MagicMock()
+    finalizer._run_stage2_pass_fix_reaudit = MagicMock()
+    finalizer._apply_stage2_pass_fix_reaudit_result = MagicMock()
+
+    result = finalizer._execute_stage2_pass_fix_iterations(
+        four_phase=MagicMock(),
+        current_arc=current_arc,
+        current_audit=current_audit,
+        expanded_prev_context="prev-context",
+        enriched_block={"joint_docs": {}, "status_shadow": {}},
+        protagonist_name="hero",
+        suspected_duplicates=[],
+        entity_registry_for_director={},
+        story_context="story",
+        global_arc_no=1,
+        max_fix=2,
+        fix_ok=False,
+        applied_patches=[],
+        patch_pressure_exceeded=False,
+        re_score=91,
+    )
+
+    assert result == {
+        "current_arc": current_arc,
+        "current_audit": current_audit,
+        "fix_ok": False,
+        "patch_pressure_exceeded": False,
+        "re_score": 91,
+    }
+    assert "Do not place an episode-end outcome artifact inside [시작 상태]." in current_audit["re_slice_instruction"]
+    assert "episode_start_future_artifact" in current_audit["re_slice_instruction"]
+    finalizer._resolve_stage2_pass_fix_instruction.assert_called()
+    assert finalizer._resolve_stage2_pass_fix_instruction.call_count == 2
+    assert finalizer._apply_stage2_pass_fix_patch.call_count == 2
+    finalizer._build_stage2_pass_fix_reaudit_story_context.assert_not_called()
+    finalizer._run_stage2_pass_fix_reaudit.assert_not_called()
+    finalizer._apply_stage2_pass_fix_reaudit_result.assert_not_called()
 
 
 def test_legacy_stage2_pass_persistence_tail_delegates_to_existing_helpers(finalizer):

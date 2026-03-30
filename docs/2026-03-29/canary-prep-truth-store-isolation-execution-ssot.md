@@ -1,7 +1,7 @@
 # Canary Prep Truth-Store Isolation Execution SSOT
 
 Date: 2026-03-29
-Status: execution-ready
+Status: closed
 Canonical Path: `docs/2026-03-29/canary-prep-truth-store-isolation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/canary-prep-truth-store-isolation-execution-ssot.md`
 Commit State:
@@ -257,9 +257,9 @@ After `reset_stage4_outputs(project_root, from_ep=N)` completes:
 
 ## 12. Temp Queue Notes
 
-- temp status: pending
-- cleanup condition: remove mirror after all 4 tranches are realized and acceptance criteria verified
-- roadmap dependency: must be realized before narrative BP patch lane; independent of provider-fallback-observability-gap lane
+- temp status: closed
+- cleanup condition: satisfied during the 2026-03-29 closure sync
+- roadmap dependency: resolved; the dependent `world-state-rollback-fidelity` follow-up also landed and closed
 
 ## 13. Validation and Closure Hooks
 
@@ -298,3 +298,43 @@ After `reset_stage4_outputs(project_root, from_ep=N)` completes:
 - PASS
 
 Estimated confidence: `97%`
+
+## 15. Closure Note
+
+Date: 2026-03-29
+Closure Status: closed
+
+### 15.1 Realized Scope
+
+- canary prep reset now removes orphan `chain_link_{N}` anchors beyond the committed episode boundary
+- canary prep reuses the existing `FactLedger.rollback_to()` and `WorldStateManager.rollback_to()` primitives instead of leaving inherited truth-store residue in place
+- `fact_ledger.update_number()` now guards against same-episode duplicate scalar history accumulation
+- prepare-only validation now separates anchor cleanup success from minimum-truth preservation so the operator can distinguish contamination removal from fidelity
+
+### 15.2 Verification Summary
+
+- implementation verification:
+  - `pytest tests/test_stage4_canary_tools.py tests/test_canary_prep_isolation.py tests/test_run_stage4_canary.py -x -v` -> `20 passed`
+  - `python -m py_compile` on touched runtime files and tests passed
+  - `ruff check`, UTF-8 hygiene, `sync_temp_queue_state.py`, and `ops_validator.py --strict` all passed
+- live prepare-only validation after landing:
+  - source `canary_0329_ep3_bp_patch_recheck` showed contaminated truth-store state (`capital=40억`, orphan `chain_link_4+`)
+  - target `canary_0329_truth_store_isolation_prepare_check` normalized to `capital=20억` and removed the orphan chain-link bleed-through
+- closure validation after the world-state follow-up landed:
+  - fresh prepare-only run on `canary_0329_truth_store_isolation_prepare_check_v2` reported `anchor_validation.status=ok`, `cleanup_status=ok`, and `minimum_truth_status=ok`
+
+### 15.3 Residual Risks
+
+- this lane intentionally does not reconstruct manuscript-only or chain-link-only truth such as exact opening location, pending actions, or cliffhanger semantics inside `world_state`
+- those truths remain authoritative in committed manuscripts and `chain_link`, not in the reset substrate itself
+
+### 15.4 Follow-Up
+
+- no active follow-up remains in this substrate family
+- reopen only if a future prepare-only validation shows fresh anchor bleed-through or scalar accumulation regression
+
+### 15.5 Temp Cleanup
+
+- execution SSOT mirror removed: yes
+- roadmap mirror removed: no
+- queue-state refreshed or removed: refreshed during the 2026-03-29 closure sync

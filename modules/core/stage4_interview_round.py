@@ -5685,6 +5685,11 @@ class Stage4InterviewRound:
             _fix_pack = self._build_fix_pack_payload(director_result)
             _patch_trace = dict(patch_trace or {})
             _feedback_provenance = dict(feedback_provenance or {})
+            _normalized_patch_strategy = str(_patch_trace.get("patch_strategy", "") or "").strip()
+            if is_patch and not _normalized_patch_strategy:
+                _normalized_patch_strategy = "patch_fallback_rewrite" if patch_fallback else "patch_with_feedback"
+            if _normalized_patch_strategy and not str(_patch_trace.get("patch_strategy", "") or "").strip():
+                _patch_trace["patch_strategy"] = _normalized_patch_strategy
             _patch_targets = _patch_trace.get("patch_targets") or []
             _retry_budget_axes = dict(getattr(self, "_last_retry_budget_axes", {}) or {})
             _session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
@@ -5761,7 +5766,7 @@ class Stage4InterviewRound:
                     "retry_budget_axes": _retry_budget_axes,
                 },
                 "patch_trace": {
-                    "patch_strategy": str(_patch_trace.get("patch_strategy", "") or ""),
+                    "patch_strategy": _normalized_patch_strategy,
                     "patch_targets": list(_patch_targets),
                     "unchanged_ratio": round(_unchanged_ratio, 4) if _unchanged_ratio is not None else None,
                     "fallback_reason": str(_patch_trace.get("fallback_reason", "") or ""),

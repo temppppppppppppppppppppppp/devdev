@@ -25,8 +25,8 @@ import pytest
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.core.stage2_orchestrator import Stage2Orchestrator
 from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
+from modules.core.stage2_orchestrator import Stage2Orchestrator
 from modules.domain.agents.analyst import Analyst
 from modules.domain.agents.base_agent import BaseAgent
 
@@ -385,7 +385,7 @@ class TestAnalystArcStateContinuity:
         prev_arc = {"state_constraints": {"arc_end_state": {"equipment": ["용린검", "철혈패"]}, "joint_docs": {}}}
         curr_arc = {"state_constraints": {"arc_start_state": {"equipment": ["용린검"]}}}
         result = analyst._validate_arc_state_continuity_v60(curr_arc, prev_arc)
-        assert any("아이템" in issue or "손실" in issue for issue in result["issues"])
+        assert any("소지품 불일치" in issue or "누락" in issue for issue in result["issues"])
 
     def test_matching_states_pass(self, analyst):
         """일치하는 상태는 통과"""
@@ -398,6 +398,22 @@ class TestAnalystArcStateContinuity:
         curr_arc = {"state_constraints": {"arc_start_state": {"location": "무림맹", "equipment": ["검"]}}}
         result = analyst._validate_arc_state_continuity_v60(curr_arc, prev_arc)
         assert result["valid"] is True
+
+    def test_unexpected_items_trimmed_to_authoritative_prev_end(self, analyst):
+        """stale joint_docs보다 arc_end_state.equipment를 우선하고 예상 외 아이템을 제거한다"""
+        prev_arc = {
+            "state_constraints": {
+                "arc_end_state": {"equipment": ["검"]},
+                "joint_docs": {"physical_inventory": ["검", "망령패"]},
+            }
+        }
+        curr_arc = {"state_constraints": {"arc_start_state": {"equipment": ["검", "망령패"]}}}
+
+        result = analyst._validate_arc_state_continuity_v60(curr_arc, prev_arc)
+
+        assert result["valid"] is False
+        assert any("예상외" in issue for issue in result["issues"])
+        assert result["auto_corrections"]["equipment"] == ["검"]
 
 
 # ══════════════════════════════════════════════════════════════
@@ -810,6 +826,22 @@ class TestAnalystAutoCorrectJointDocs:
         arc_data = {"state_constraints": {}}
         result = analyst._auto_correct_joint_docs_v60(tactical_doc, arc_data)
         assert isinstance(result, dict)
+
+    def test_end_state_equipment_overwrites_stale_joint_docs_inventory(self, analyst):
+        """arc_end_state.equipment가 stale joint_docs를 덮어써야 한다"""
+        tactical_doc = "제 1화 전술 설계\n주인공이 개봉부에 도착한다."
+        arc_data = {
+            "state_constraints": {
+                "arc_end_state": {"equipment": ["검"]},
+                "joint_docs": {"physical_inventory": ["검", "망령패"]},
+            },
+            "joint_docs": {"physical_inventory": ["검", "망령패"]},
+        }
+
+        result = analyst._auto_correct_joint_docs_v60(tactical_doc, arc_data)
+
+        assert result["state_constraints"]["joint_docs"]["physical_inventory"] == ["검"]
+        assert result["joint_docs"]["physical_inventory"] == ["검"]
 
 
 # ══════════════════════════════════════════════════════════════

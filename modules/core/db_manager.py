@@ -990,11 +990,94 @@ class DBManager:
                 cur = self.cursor.execute("SELECT * FROM encyclopedia WHERE category = ?", (category,))
             return [dict(row) for row in cur.fetchall()]
 
+    @staticmethod
+    def _arc_payload_key(arc_no: int) -> str:
+        return f"arc_payload_{arc_no:04d}"
+
+    @staticmethod
+    def _arc_payload_no_from_key(key: str) -> int:
+        try:
+            return int(str(key).rsplit("_", 1)[-1])
+        except (TypeError, ValueError, AttributeError):
+            return 0
+
+    @classmethod
+    def _infer_arc_payload_no(cls, arc_data, *, fallback_no: int = 0) -> int:
+        if isinstance(arc_data, dict):
+            for field in ("arc_no", "global_arc_no", "arc_num"):
+                try:
+                    value = int(arc_data.get(field, 0) or 0)
+                except (TypeError, ValueError, AttributeError):
+                    value = 0
+                if value > 0:
+                    return value
+        return int(fallback_no or 0)
+
+    def load_arc_payloads(self) -> list[dict]:
+        with self._lock:
+            rows = self.cursor.execute(
+                "SELECT key, data FROM anchors WHERE key LIKE 'arc_payload_%' ORDER BY key"
+            ).fetchall()
+            payloads: list[tuple[int, dict]] = []
+            for row in rows:
+                try:
+                    payload = json.loads(row["data"]) if row["data"] else {}
+                except (json.JSONDecodeError, TypeError) as e:
+                    logging.warning(f" [DB] Arc payload JSON 파싱 실패 (key={row['key']}): {e}")
+                    continue
+                if not isinstance(payload, dict):
+                    continue
+                arc_no = self._infer_arc_payload_no(payload, fallback_no=self._arc_payload_no_from_key(row["key"]))
+                payloads.append((arc_no, payload))
+            payloads.sort(key=lambda item: item[0])
+            return [payload for _, payload in payloads]
+
+    def _save_arc_payload_collection(self, arcs_data, *, nested: bool) -> bool:
+        arc_map: dict[int, dict] = {}
+        for idx, arc in enumerate(arcs_data if isinstance(arcs_data, list) else [], start=1):
+            if not isinstance(arc, dict):
+                continue
+            arc_no = self._infer_arc_payload_no(arc, fallback_no=idx)
+            if arc_no <= 0:
+                continue
+            arc_map[arc_no] = arc
+
+        normalized = [arc_map[key] for key in sorted(arc_map)]
+        expected_keys = {self._arc_payload_key(arc_no) for arc_no in arc_map}
+        existing_rows = self.cursor.execute("SELECT key FROM anchors WHERE key LIKE 'arc_payload_%'").fetchall()
+        existing_keys = {row["key"] for row in existing_rows}
+
+        for arc_no, arc in sorted(arc_map.items()):
+            self.cursor.execute(
+                """
+                INSERT OR REPLACE INTO anchors (key, data, updated_at)
+                VALUES (?, ?, CURRENT_TIMESTAMP)
+            """,
+                (self._arc_payload_key(arc_no), json.dumps(arc, ensure_ascii=False)),
+            )
+
+        stale_keys = existing_keys - expected_keys
+        if stale_keys:
+            self.cursor.executemany("DELETE FROM anchors WHERE key = ?", [(key,) for key in sorted(stale_keys)])
+
+        self.cursor.execute(
+            """
+            INSERT OR REPLACE INTO anchors (key, data, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+        """,
+            ("arcs", json.dumps(normalized, ensure_ascii=False)),
+        )
+        if not nested:
+            self.commit()
+        return True
+
     def save_anchor(self, key, data) -> bool:
         """S등급 데이터를 박제하고 타임스탬프를 강제 갱신함"""
         with self._lock:
             nested = self.conn.in_transaction
             try:
+                if key == "arcs" and isinstance(data, list):
+                    return self._save_arc_payload_collection(data, nested=nested)
                 json_data = json.dumps(data, ensure_ascii=False)
                 # 쿼리문에 CURRENT_TIMESTAMP를 명시하여 REPLACE 시에도 시간이 갱신되게 함
                 self.cursor.execute(
@@ -1014,6 +1097,10 @@ class DBManager:
 
     def load_anchor(self, key, default=None):
         with self._lock:
+            if key == "arcs":
+                authoritative_arcs = self.load_arc_payloads()
+                if authoritative_arcs:
+                    return authoritative_arcs
             cur = self.cursor.execute("SELECT data FROM anchors WHERE key = ?", (key,))
             row = cur.fetchone()
             if not row:
@@ -1029,12 +1116,28 @@ class DBManager:
         with self._lock:
             cur = self.cursor.execute("SELECT key, data FROM anchors")
             result = {}
+            arc_payload_rows: list[tuple[int, dict]] = []
             for row in cur.fetchall():
+                key = row["key"]
+                if isinstance(key, str) and key.startswith("arc_payload_"):
+                    try:
+                        payload = json.loads(row["data"]) if row["data"] else {}
+                    except (json.JSONDecodeError, TypeError) as e:
+                        logging.warning(f" [DB] Arc payload JSON 파싱 실패 (key={key}): {e}")
+                        payload = {}
+                    if isinstance(payload, dict):
+                        arc_payload_rows.append(
+                            (self._infer_arc_payload_no(payload, fallback_no=self._arc_payload_no_from_key(key)), payload)
+                        )
+                    continue
                 try:
-                    result[row["key"]] = json.loads(row["data"]) if row["data"] else {}
+                    result[key] = json.loads(row["data"]) if row["data"] else {}
                 except (json.JSONDecodeError, TypeError) as e:
-                    logging.warning(f" [DB] Anchor JSON 파싱 실패 (key={row['key']}): {e}")
-                    result[row["key"]] = {}
+                    logging.warning(f" [DB] Anchor JSON 파싱 실패 (key={key}): {e}")
+                    result[key] = {}
+            if arc_payload_rows:
+                arc_payload_rows.sort(key=lambda item: item[0])
+                result["arcs"] = [payload for _, payload in arc_payload_rows]
             return result
 
         # --- [Section 4: 설계도 및 로그] ---
