@@ -881,6 +881,43 @@ def prompt_json_skeleton(start: int, batch_size: int, protagonist: str) -> str:
     return json.dumps(sample, ensure_ascii=False, indent=2)
 
 
+def render_pattern_feedback_lines(history_blocks: list[dict[str, Any]]) -> list[str]:
+    """Compute pattern feedback from history blocks and render as prompt lines."""
+    if not history_blocks:
+        return []
+    metrics = compute_treatment_metrics(history_blocks)
+    snap = metrics.get("pattern_feedback_snapshot", {})
+    lines: list[str] = ["", "## 패턴 피드백 (history 기반 자동 산출)"]
+    top_opp = snap.get("top_opponents", [])
+    if top_opp:
+        lines.append("### 빈출 상대")
+        for name, count in top_opp:
+            lines.append(f"- {name}: {count}회")
+    top_weak = snap.get("top_weaknesses", [])
+    if top_weak:
+        lines.append("### 빈출 약점 공략")
+        for weakness, count in top_weak:
+            lines.append(f"- {weakness}: {count}회")
+    warnings = snap.get("solution_pattern_warnings", [])
+    if warnings:
+        lines.append("### 솔루션 패턴 경고")
+        for warning in warnings:
+            lines.append(f"- {warning}")
+    forbidden = snap.get("forbidden_pattern_reuse", [])
+    if forbidden:
+        lines.append("### 금지 패턴 재사용")
+        for item in forbidden:
+            lines.append(f"- {item}")
+    gate_failures = snap.get("structural_gate_failures", [])
+    if gate_failures:
+        lines.append("### 구조 게이트 실패")
+        for gate in gate_failures:
+            lines.append(f"- {gate}")
+    if len(lines) == 2:
+        return []
+    return lines
+
+
 def build_prompt(
     draft_blocks: list[dict[str, Any]],
     roadmap_blocks: list[dict[str, Any]] | None,
@@ -892,6 +929,7 @@ def build_prompt(
     completed = draft_blocks[: start - 1]
     protagonist = as_text(meta.get("protagonist"))
     digest_lines = render_harness_digest_lines(load_harness_digest(family="blockguide", stage="tr_batch"))
+    pattern_feedback_lines = render_pattern_feedback_lines(completed)
 
     if mode == "flash":
         predeclare = """1. 직전 상태 인용: 직전 블록의 capital_after, emotional_beat, 관계 after를 인용하라.
@@ -936,6 +974,7 @@ def build_prompt(
         foreshadow_table(completed),
         "",
         *digest_lines,
+        *pattern_feedback_lines,
         "",
         "## 출력 순서",
         "1. 사전 선언",
