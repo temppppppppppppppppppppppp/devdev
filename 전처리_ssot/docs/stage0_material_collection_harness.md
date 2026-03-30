@@ -68,6 +68,23 @@
 - `urban_power_profile`
   - 능력 체계, 길드 규칙, 권리 구조, 공적 노출 리스크
 
+## 2A. source checkpoint -> block-scale extraction 규칙
+
+Stage 0는 source를 읽는 단계이면서, 동시에 설계 연료를 추출하는 단계다. 이 둘을 같은 말로 쓰면 안 된다.
+
+- `episode checkpoint`
+  - `ep1`, `ep5`, `ep10`, `ep20`, `last` 같은 source reading anchor다.
+- `block-scale extraction`
+  - `opening representative spike`, `first reward retention`, `authority gain route`처럼 설계에 바로 옮기는 추출 단위다.
+
+번역 규칙:
+
+- `ep1`에서 본 강한 장면은 곧바로 `Block 1 전체`가 아니다.
+- Stage 0 정본에 옮길 때는 `opening representative spike 후보`, `opening block authority gain route`, `초반 보상 체류 방식`처럼 block-scale 언어로 다시 적는다.
+- `TR Block 1 spike`라는 정확한 배치는 downstream planning / production 단계에서만 확정한다.
+
+즉, source는 episode checkpoint로 읽고, 정본 산출물에는 block-scale 언어로 번역해서 적는다.
+
 ---
 
 ## 3. 실물 원고 / NAS 수집 추가 규칙
@@ -157,7 +174,7 @@
 
 - 작품명이 오더와 다르다
 - 유사 제목 다른 작품으로 대체했다
-- `ep1` 또는 `Block 1`을 직접 못 읽었는데 추정/보간으로 채웠다
+- `ep1` 같은 opening checkpoint를 직접 못 읽었는데, 그것을 근거로 opening block 추출을 보간했다
 - 허용되지 않은 source scope를 썼다
 
 ### 3.4 Operator 저장 규칙
@@ -175,7 +192,7 @@
 ### 3.5 수집 대상
 
 - 현대 현판/기업물/재벌물/현대판타지 business-power 레퍼런스
-- 현판 기업물의 `opening humiliation`, `Block 1 spike`, `first reward`, `초반 30화 확장축`, `100화 이후 거물화 축`이 보이는 원고
+- 현판 기업물의 `opening humiliation`, `opening representative spike`, `first reward retention`, `초반 30화 확장축`, `100화 이후 거물화 축`이 보이는 원고
 - 유사 작품과 실패작을 함께 모아 `왜 먹히는지`와 `왜 버려야 하는지`를 같이 남길 수 있는 세트
 
 ### 3.6 최소 작업 단위
@@ -188,6 +205,7 @@
 4. `must_not_copy`와 `contamination_risk`
 5. sink 경로에 저장된 카드 파일 또는 wrapper 저장본
 6. `source_manifest.reference_only_sources`에 들어갈 요약 라벨
+7. opening 관련 재료는 `Block 1` 단정이 아니라 `opening representative spike / first reward retention / authority gain route`로 재서술
 
 ### 3.7 금지
 
@@ -260,12 +278,12 @@ master_reference_card:
     info_gap_owner:
     info_concealment:
     no_romance_compatibility:
-    block1_spike_timing:
-    block1_spike_type:
+    opening_representative_spike_timing:
+    opening_representative_spike_type:
     block2_3_role:
     pacing_risk:
 
-  opening_pacing:
+  opening_pacing:  # source checkpoint evidence zone; Stage 0 정본으로 넘길 때는 block-scale 언어로 다시 적는다.
     ep1_hook:
     ep1_first_saida:
     ep1_first_recognition:
@@ -356,7 +374,7 @@ slim_reference_card:
   protagonist_edge:
   what:
   how:
-  block1_spike:
+  opening_representative_spike:
   first_reward:
   growth_axis:
   authority_gain_route:
