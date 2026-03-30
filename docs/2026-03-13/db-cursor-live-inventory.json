@@ -15,13 +15,14 @@
     "mixed_bootstrap_methods": []
   },
   "inventory_counts": {
-    "shared_cursor_methods": 70,
-    "local_cursor_methods": 26,
+    "shared_cursor_methods": 71,
+    "local_cursor_methods": 29,
     "mixed_bootstrap_methods": 0
   },
   "current_preferred_local_cursor": {
     "classification": "current_preferred",
     "methods": [
+      "_archive_commit_episode_factory_recovered_seeds",
       "_migrate_vec_memory_db",
       "begin",
       "execute_query",
@@ -47,7 +48,9 @@
       "upsert_arc_dependency",
       "get_arc_dependencies",
       "_migrate_world_state_timeline_if_needed",
-      "get_all_character_voices"
+      "get_all_character_voices",
+      "save_stage_attempt",
+      "save_ui_event"
     ]
   },
   "legacy_shared_cursor_surfaces": [
@@ -110,14 +113,15 @@
       ]
     },
     {
-      "surface_id": "anchor_and_commit_factory_priority",
+      "surface_id": "anchor_and_arc_payload_priority",
       "classification": "must_migrate",
-      "rationale": "Anchors and episode-factory commit participate in recovery/provenance semantics and should not stay on shared cursor indefinitely.",
+      "rationale": "Anchors and arc payload collection participate in recovery/provenance semantics and should not stay on shared cursor indefinitely.",
       "methods": [
         "save_anchor",
         "load_anchor",
         "load_all_anchors",
-        "commit_episode_factory"
+        "load_arc_payloads",
+        "_save_arc_payload_collection"
       ]
     },
     {
@@ -151,8 +155,8 @@
         "get_recent_episode_scores",
         "get_stage_attempts_for_arc",
         "save_llm_call",
-        "save_stage_attempt",
-        "save_ui_event",
+        "save_attempt_raw_rationale",
+        "get_attempt_raw_rationale",
         "get_fix_scope_stats",
         "get_strategy_win_rates",
         "get_selection_analysis",
@@ -175,7 +179,6 @@
     "save_anchor",
     "load_anchor",
     "save_llm_call",
-    "save_stage_attempt",
     "transaction",
     "reset_after",
     "get_rollback_impact"

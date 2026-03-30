@@ -3041,7 +3041,8 @@ class DBManager:
                 if not self.accepts_runtime_telemetry_writes:
                     return False
                 nested = self.conn.in_transaction
-                self.cursor.execute(
+                cur = self.conn.cursor()  # [INF-P1-1] local cursor
+                cur.execute(
                     """INSERT INTO stage_attempts
                        (session_id, ts, stage, ep_num, arc_num, attempt_num,
                         verdict, score, failure_category, reject_reason,
@@ -3183,7 +3184,8 @@ class DBManager:
                 if not self.accepts_runtime_telemetry_writes:
                     return False
                 nested = self.conn.in_transaction
-                self.cursor.execute(
+                cur = self.conn.cursor()  # [INF-P1-1] local cursor
+                cur.execute(
                     """INSERT INTO ui_events
                        (session_id, ts, seq, stage, ep_num, arc_num, round_num, attempt_key,
                         component, event_kind, level, render_format, message, visible,
