@@ -285,7 +285,7 @@ def build_treatment_snapshot(treatment_blocks: list[dict[str, Any]]) -> dict[str
 
     return {
         "current_realm": _ext_text(last_block, "realm_after", default="") or _ext_text(last_block, "realm_before", default="novice"),
-        "internal_energy": _ext_text(last_block, "internal_energy_after", default="10"),
+        "internal_energy": first_number(last_block, "martial_ext.internal_energy_after", "genre_ext.internal_energy_after", default=10),
         "jianghu_reputation": _resolve_reputation(rep_raw),
         "faction_position": _resolve_faction_position(faction_raw) or "unsettled",
         "enemy_pressure": _ext_text(last_block, "enemy_pressure", default="active"),
@@ -414,7 +414,7 @@ def _build_martial_status(
     return {
         "realm": realm,
         "realm_history": extract_realm_history(treatment_blocks),
-        "internal_energy": as_text(snapshot.get("internal_energy")) or "10",
+        "internal_energy": snapshot.get("internal_energy", 10),
         "martial_arts": extract_martial_arts_final(treatment_blocks, phase0_design),
         "injury_log": extract_injury_log(treatment_blocks),
         "kill_log": extract_kill_log(treatment_blocks),
@@ -501,7 +501,7 @@ def build_martial_hud(
                 "rank": first_text(protagonist, "status", default=realm),
                 "realm": realm,
                 "current_realm": realm,
-                "internal_energy": as_text(snapshot.get("internal_energy")) or str(first_number(protagonist, "internal_energy", "energy", "qi", default=10)),
+                "internal_energy": snapshot.get("internal_energy", first_number(protagonist, "internal_energy", "energy", "qi", default=10)),
                 "mental_method": first_text(protagonist, "mental_method", "core_art", "signature_art", default="기본 심법"),
                 "reputation": as_text(snapshot.get("jianghu_reputation")) or first_text(protagonist, "reputation", default="무명"),
                 "public_image": alias,

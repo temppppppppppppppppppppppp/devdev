@@ -11,7 +11,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TypedDict
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 

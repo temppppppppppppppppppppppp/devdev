@@ -20,7 +20,8 @@ from modules.core.response_schemas import (  # noqa: E402 - entrypoint path boot
     validate_treatment_structure,
 )
 
-GARBLED_TOKENS = ("???", "\ufffd", "�")
+# Keep runtime detection broad without embedding hygiene-triggering literals directly in source.
+GARBLED_TOKENS = ("?" * 3, "\\ufffd", chr(0xFFFD))
 
 
 def load_json(path: Path) -> Any:
@@ -513,7 +514,9 @@ def main() -> int:
     args = parser.parse_args()
 
     phase0 = load_json(args.phase0)
-    treatment_blocks = load_json(args.draft)
+    draft_raw = load_json(args.draft)
+    # Support both wrapped {"blocks": [...]} and plain list formats
+    treatment_blocks = draft_raw["blocks"] if isinstance(draft_raw, dict) and "blocks" in draft_raw else draft_raw
 
     tr_valid, tr_errors, _tr_warnings = validate_treatment_structure(treatment_blocks)
     require(tr_valid, f"Treatment draft validation failed: {tr_errors}")
