@@ -140,3 +140,13 @@ def test_validate_tactical_doc_preserves_orchestrated_penalty_warning_and_sugges
         "relationship-warning",
     ]
     assert result["suggestions"] == ["density-suggestion", "action-suggestion"]
+
+
+def test_validate_state_checkpoints_flags_missing_explicit_start_state():
+    validator = ArcDraftValidator()
+    content = ("본문 " * 120) + "\n[종료 상태] 위치: 여의도 / 소지품: [] / 부상: 없음"
+
+    result = validator._validate_state_checkpoints({34: content, 35: content}, {})
+
+    assert "34화(시작 상태)" in result["missing_checkpoints"]
+    assert "35화(시작 상태)" in result["missing_checkpoints"]

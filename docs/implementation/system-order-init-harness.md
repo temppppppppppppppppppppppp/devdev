@@ -161,6 +161,21 @@ Mode C. Direct Focused Patch
 - Reuse active survey evidence or existing hotspot/audit docs for Pass 1 when available; do not regenerate broad survey artifacts just to satisfy the gate.
 - Lightweight local bugfixes or comment-only edits may use a reduced form, but any change that touches authority, persistence, or operator-observability should use the full gate.
 
+### Step 3E. Apply Encoding Evidence Gate
+- Treat console rendering as navigational only, not authoritative evidence.
+- Do not use `Get-Content`, shell stdout, copied terminal text, or IDE preview mojibake as the basis for:
+  - claiming a file is corrupted
+  - patching Korean/CJK text
+  - concluding UTF-8 regression
+  - writing a final audit finding
+- Before any encoding-sensitive patch or encoding-related claim, perform byte-level verification with an explicit UTF-8 reader.
+- If the authoritative state lives in DB anchors, payload JSON, or exported artifacts, verify those bytes directly and prefer them over rendered console output.
+- If console output and byte-level read-back disagree, stop and treat the console output as a rendering artifact unless byte-level evidence proves corruption.
+- For encoding incidents, the minimum acceptable evidence set is:
+  - source bytes or file hash
+  - explicit UTF-8 decode result
+  - authoritative DB or payload read-back when applicable
+
 Bounded-loop rule:
 - do not escalate from survey-only into implementation unless the user asked for it
 - do not escalate from execution-doc production into realization unless the user asked for it

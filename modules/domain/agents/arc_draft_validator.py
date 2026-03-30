@@ -633,18 +633,20 @@ class ArcDraftValidator:
         for i, ep_no in enumerate(sorted_eps):
             content = episode_sections[ep_no]
 
-            # 시작 상태 체크 (첫 화 제외하고는 이전 화 종료 상태 언급 필요)
-            if i > 0:
-                has_start_state = any(kw in content for kw in ["시작 상태", "이전", "직전", "에서 이어"])
-                if not has_start_state and len(content) > 300:
-                    pass  # [BUG-4] 복잡한 연속성 검증은 LLM에 위임
+            if len(content) <= 300:
+                continue
 
-            # 종료 상태 체크 (마지막 화 포함 모든 화)
+            has_explicit_start_state = "시작 상태" in content
+            has_explicit_end_state = "종료 상태" in content
+
+            if not has_explicit_start_state:
+                missing_checkpoints.append(f"{ep_no}화(시작 상태)")
+            if not has_explicit_end_state:
+                missing_checkpoints.append(f"{ep_no}화(종료 상태)")
+
             has_state_info = sum(1 for kw in state_keywords if kw in content)
-
-            # 상태 정보가 2개 미만이면 체크포인트 부족
-            if has_state_info < 2 and len(content) > 300:
-                missing_checkpoints.append(f"{ep_no}화")
+            if has_state_info < 2:
+                state_mismatches.append(f"{ep_no}화(상태 정보 희소)")
 
         return {"missing_checkpoints": missing_checkpoints, "state_mismatches": state_mismatches}
 

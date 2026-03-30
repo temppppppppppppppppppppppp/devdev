@@ -52,6 +52,10 @@
 - touched text/code/doc/config 파일은 `cp949`, `euc-kr`, `latin-1`, replacement fallback 기반 저장 또는 blind decode를 금지한다.
 - touched 파일에는 `three-question placeholder`, `U+FFFD`, non-ASCII 인접 `?`, Hangul/CJK mixed-script mojibake token을 남기지 않는다. archival evidence나 literal example이 꼭 필요하면 명시적 `utf8-hygiene: allow-line` 또는 `utf8-hygiene: allow-file` marker와 rationale을 함께 둔다.
 - 터미널 출력만 깨졌을 가능성이 있으면 출력 렌더링을 근거로 패치하지 말고, explicit UTF-8 reader로 source bytes를 재확인한 뒤 수정한다.
+- 콘솔 렌더링, `Get-Content`, PowerShell stdout, IDE preview text는 **인코딩 판정 근거가 아니다**. 탐색용으로만 쓰고, mojibake/손상/문장 파손 판정이나 패치 근거로 승격하지 않는다.
+- 인코딩 관련 수정이나 "파일이 깨졌다"는 주장 전에는 반드시 `read_bytes() -> UTF-8 decode` 또는 동급의 byte-level read-back을 수행한다. DB/anchor/payload가 authoritative source면 파일 preview보다 DB read-back을 우선한다.
+- 콘솔/preview와 byte-level read-back이 충돌하면 **byte-level read-back이 승리**한다. 이 경우 콘솔 출력 기준 패치, 콘솔 출력 인용 판단, 콘솔 출력 기반 회귀 판정을 금지한다.
+- 인코딩 이슈 조사에서 `Get-Content`류 출력은 최종 evidence 섹션에 단독 anchor로 적지 않는다. evidence에는 bytes/hash/UTF-8 decode 결과 또는 authoritative DB payload만 남긴다.
 - 기본 가드레일은 `.editorconfig`의 UTF-8 pin과 `scripts/check_utf8_hygiene.py` + pre-commit hook이다.
 
 ## Complexity Guardrails

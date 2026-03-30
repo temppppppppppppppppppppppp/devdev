@@ -32,6 +32,38 @@ def test_load_anchor_missing_default_behavior(db):
     assert db.load_anchor("missing_custom", default={"fallback": True}) == {"fallback": True}
 
 
+def test_arcs_anchor_roundtrips_via_per_arc_payload_authority(db):
+    arcs = [
+        {"arc_num": 2, "title": "Arc 2"},
+        {"arc_num": 1, "title": "Arc 1"},
+    ]
+
+    assert db.save_anchor("arcs", arcs) is True
+    assert db.load_anchor("arcs") == [{"arc_num": 1, "title": "Arc 1"}, {"arc_num": 2, "title": "Arc 2"}]
+
+    shard_keys = [
+        row["key"]
+        for row in db.conn.execute("SELECT key FROM anchors WHERE key LIKE 'arc_payload_%' ORDER BY key").fetchall()
+    ]
+    assert shard_keys == ["arc_payload_0001", "arc_payload_0002"]
+
+    all_anchors = db.load_all_anchors()
+    assert "arc_payload_0001" not in all_anchors
+    assert all_anchors["arcs"] == [{"arc_num": 1, "title": "Arc 1"}, {"arc_num": 2, "title": "Arc 2"}]
+
+
+def test_arcs_anchor_rewrite_deletes_stale_arc_payload_shards(db):
+    assert db.save_anchor("arcs", [{"arc_no": 1}, {"arc_no": 2}, {"arc_no": 3}]) is True
+    assert db.save_anchor("arcs", [{"arc_no": 1}]) is True
+
+    shard_keys = [
+        row["key"]
+        for row in db.conn.execute("SELECT key FROM anchors WHERE key LIKE 'arc_payload_%' ORDER BY key").fetchall()
+    ]
+    assert shard_keys == ["arc_payload_0001"]
+    assert db.load_anchor("arcs") == [{"arc_no": 1}]
+
+
 def test_save_and_get_blueprint(db):
     blueprint = {"ep_num": 1, "title": "시작", "scenes": [{"scene_no": 1}]}
     db.save_blueprint(1, blueprint)

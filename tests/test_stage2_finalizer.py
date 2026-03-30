@@ -13,7 +13,11 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.stage2_context import Stage2Context
-from modules.core.stage2_finalizer import Stage2Finalizer
+from modules.core.stage2_finalizer import (
+    Stage2Finalizer,
+    _compute_inventory_carryover,
+    _sync_first_episode_start_state_line,
+)
 
 
 @pytest.fixture
@@ -313,6 +317,17 @@ class TestConstraintDbLogging:
         assert ds_kw["artifact_path"] == prm_kw["artifact_path"]
 
 
+class TestDeterministicCarryover:
+    def test_compute_inventory_carryover_removes_consumed_and_dedupes_acquired(self):
+        carried = _compute_inventory_carryover(
+            prev_inventory=["검", "망령패"],
+            consumed=["망령패"],
+            acquired=["검", "부적"],
+        )
+
+        assert carried == ["검", "부적"]
+
+
 class TestRunFinalize:
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
@@ -352,6 +367,94 @@ class TestRunFinalize:
         assert "foreshadow_anchors" in saved_arc["semantic_carryover"]
         assert "continuity_checkpoints" in saved_arc["semantic_carryover"]
         assert "Han" in saved_arc["rationale_digest"]
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_finalize_overrides_stale_joint_docs_inventory_with_deterministic_carryover(
+        self,
+        _validate,
+        finalizer,
+        valid_refined_arc,
+    ):
+        prev_arc = {
+            "joint_docs": {
+                "final_location": "market",
+                "physical_inventory": ["검", "망령패"],
+                "world_joint": "stable",
+            },
+            "status_shadow": {
+                "internal_energy_loss": "0%",
+                "expected_injuries": "none",
+                "item_consumption": [],
+            },
+            "state_constraints": {"arc_end_state": {"equipment": ["검", "망령패"]}, "items_acquired": []},
+        }
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["state_constraints"] = {
+            "arc_start_state": {"location": "market", "equipment": ["검", "망령패"]},
+            "items_acquired": ["부적"],
+        }
+        kwargs = _make_finalize_kwargs(
+            refined_arc,
+            all_refined_arcs=[prev_arc],
+            global_arc_no=2,
+            current_ep_start=11,
+            enriched_block={
+                "joint_docs": {
+                    "final_location": "market",
+                    "physical_inventory": ["검", "망령패"],
+                    "world_joint": "stable",
+                },
+                "status_shadow": {
+                    "internal_energy_loss": "5%",
+                    "expected_injuries": "none",
+                    "item_consumption": ["망령패"],
+                },
+                "joint_docs_brief": "brief",
+            },
+        )
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        saved_arc = kwargs["all_refined_arcs"][1]
+        assert saved_arc["joint_docs"]["physical_inventory"] == ["검", "부적"]
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_finalize_syncs_start_equipment_from_prev_arc_deterministic_carryover(
+        self,
+        _validate,
+        finalizer,
+        valid_refined_arc,
+    ):
+        prev_arc = {
+            "joint_docs": {
+                "final_location": "market",
+                "physical_inventory": ["검", "망령패"],
+                "world_joint": "stable",
+            },
+            "status_shadow": {
+                "internal_energy_loss": "0%",
+                "expected_injuries": "none",
+                "item_consumption": ["망령패"],
+            },
+            "state_constraints": {
+                "arc_end_state": {"equipment": ["검", "망령패"]},
+                "items_acquired": ["부적"],
+            },
+        }
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["state_constraints"] = {
+            "arc_start_state": {"location": "market", "equipment": ["검", "망령패"]},
+            "items_acquired": [],
+        }
+
+        kwargs = _make_finalize_kwargs(refined_arc, all_refined_arcs=[prev_arc], global_arc_no=2, current_ep_start=11)
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        saved_arc = kwargs["all_refined_arcs"][1]
+        assert saved_arc["state_constraints"]["arc_start_state"]["equipment"] == ["검", "부적"]
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
@@ -621,6 +724,48 @@ class TestRunFinalize:
             },
         )
 
+    def test_collect_arc_patch_guard_signals_flags_future_artifact_in_first_episode_start_state(
+        self,
+        finalizer,
+        valid_refined_arc,
+    ):
+        patched_arc = dict(valid_refined_arc)
+        patched_arc["tactical_doc"] = (
+            "제 15화 돌아온 방향타\n"
+            '[시작 상태] 위치: 여의도 사무실 / 소지품 ["WTI 6월물 최종 매도 체결 확인서", "금 가격 추이 분석 리포트"]\n'
+            "주인공은 장 마감 직전 남은 WTI 포지션을 전량 익절 청산한다.\n"
+            '[종료 상태] 위치: 여의도 사무실 / 소지품 ["WTI 6월물 최종 매도 체결 확인서"]\n'
+            "제 16화 중간 자산\n"
+            "[시작 상태] 위치: 여의도 사무실 / 소지품 []\n"
+        )
+
+        signals = finalizer._collect_arc_patch_guard_signals(
+            original_arc=valid_refined_arc,
+            patched_arc=patched_arc,
+        )
+
+        assert {"code": "episode_start_future_artifact", "detail": "제 15화 돌아온 방향타: 최종 매도 체결 확인서 precedes later action '전량 익절 청산'"} in signals
+
+    def test_collect_arc_patch_guard_signals_ignores_other_asset_liquidation_carryover(
+        self,
+        finalizer,
+        valid_refined_arc,
+    ):
+        patched_arc = dict(valid_refined_arc)
+        patched_arc["tactical_doc"] = (
+            "제 20화 700달러의 도달과 은밀한 이전\n"
+            '[시작 상태] 위치: 여의도 사무실 / 소지품 ["WTI 6월물 최종 매도 체결 확인서", "금 선물 절반 매도 체결 확인서"]\n'
+            "주인공은 금 선물이 700달러를 돌파하자 잔여 포지션을 전량 익절 청산한다.\n"
+            '[종료 상태] 위치: 강남 룸 / 소지품 ["금 선물 최종 매도 체결 확인서"]\n'
+        )
+
+        signals = finalizer._collect_arc_patch_guard_signals(
+            original_arc=valid_refined_arc,
+            patched_arc=patched_arc,
+        )
+
+        assert not any(signal.get("code") == "episode_start_future_artifact" for signal in signals)
+
     def test_director_reject_returns_retry(self, finalizer, valid_refined_arc):
         finalizer.ctx.current_project.metrics_session_id = "sess_stage2_reject"
         finalizer.ctx.agents["director"].audit_strategic_plan.return_value = {
@@ -718,4 +863,27 @@ class TestRunFinalize:
         prompts = [call.args[0] for call in finalizer.ctx.agents["director"].ask.call_args_list]
         assert any("[인물 아크]" in prompt and "2000자 이내" in prompt for prompt in prompts)
         assert any("[미해결 복선]" in prompt and "5000자 이내" in prompt for prompt in prompts)
+
+
+def test_sync_first_episode_start_state_line_rewrites_stale_equipment_and_inserts_missing_fields():
+    tactical_doc = (
+        "제 40화: 귀환과 정적\n"
+        "[시작 상태] 위치: 홍콩, 소지품: [\"검\", \"망령패\"], 부상: 없음\n"
+        "본문\n"
+        "[종료 상태] 위치: 서울"
+    )
+
+    synced = _sync_first_episode_start_state_line(
+        tactical_doc,
+        {
+            "location": "홍콩",
+            "equipment": ["검"],
+            "injuries": "편두통",
+            "internal_energy": 30,
+        },
+    )
+
+    assert '소지품: ["검"]' in synced
+    assert "부상: 편두통" in synced
+    assert "내공: 30" in synced
 

@@ -85,6 +85,18 @@ def _normalize_pressure_vectors(raw_vectors, *, fallback_ep: int = 0) -> list[di
     return normalized
 
 
+def _extract_episode_bible_delta_name(raw, *, fallback_keys: tuple[str, ...] = ()) -> str:
+    if isinstance(raw, str):
+        return raw.strip()
+    if not isinstance(raw, dict):
+        return ""
+    for key in (*fallback_keys, "name", "npc", "target", "item"):
+        value = raw.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+
 class WorldStateManager:
     """[V68] 세계 상태 문서 -- 장기연재 모순 방지"""
 
@@ -177,6 +189,69 @@ class WorldStateManager:
             "prev": _prev,
             "changed_ep": ep_num,
         }
+
+    def _apply_episode_bible_top_level_delta(self, ep_num: int, bible: dict) -> None:
+        if not isinstance(bible, dict):
+            return
+
+        replayed = False
+        for raw_npc in bible.get("new_npcs") or []:
+            npc_name = _extract_episode_bible_delta_name(raw_npc)
+            if not npc_name or npc_name in self._state["dead_npcs"]:
+                continue
+            npc_entry = self._ensure_alive_npc_entry(npc_name, ep_num)
+            replayed = True
+            if not isinstance(raw_npc, dict):
+                continue
+
+            role = str(
+                raw_npc.get("role")
+                or raw_npc.get("role_at_intro")
+                or raw_npc.get("public_role")
+                or ""
+            ).strip()
+            relation = str(
+                raw_npc.get("relation")
+                or raw_npc.get("relation_to_protag")
+                or raw_npc.get("to")
+                or ""
+            ).strip()
+            if role:
+                npc_entry["role"] = role
+                npc_entry["role_at_intro"] = npc_entry.get("role_at_intro") or role
+            if relation:
+                self._state["relationships"][npc_name] = relation
+                npc_entry["relation"] = relation
+                npc_entry.setdefault("known_attrs", {})["relation_to_protag"] = {
+                    "value": relation,
+                    "prev": "",
+                    "changed_ep": ep_num,
+                }
+
+        delta_state_changes: dict[str, list[dict]] = {}
+        relationship_changes = bible.get("relationship_changes") or []
+        if relationship_changes:
+            delta_state_changes["relationship_changes"] = relationship_changes
+            replayed = True
+
+        major_items: list[dict] = []
+        for raw_item in bible.get("new_items") or []:
+            item_name = _extract_episode_bible_delta_name(raw_item)
+            if item_name:
+                major_items.append({"name": item_name, "action": "획득", "episode": ep_num})
+        for raw_item in bible.get("lost_items") or []:
+            item_name = _extract_episode_bible_delta_name(raw_item)
+            if item_name:
+                major_items.append({"name": item_name, "action": "lost", "episode": ep_num})
+        if major_items:
+            delta_state_changes["major_items"] = major_items
+            replayed = True
+
+        if delta_state_changes:
+            self._apply_actor_and_inventory_state_changes(ep_num, delta_state_changes)
+
+        if replayed:
+            self._state["last_updated_ep"] = ep_num
 
     def _apply_actor_and_inventory_state_changes(self, ep_num: int, state_changes: StateChangesDict):
         try:
@@ -1346,6 +1421,7 @@ class WorldStateManager:
                 if ep >= target_ep:
                     break  # ep_num 순 정렬이므로 즉시 중단
                 try:
+                    self._apply_episode_bible_top_level_delta(ep, bible)
                     sc = bible.get("state_changes", {})
                     if sc:
                         self.update_from_state_changes(ep, sc)
@@ -1357,6 +1433,7 @@ class WorldStateManager:
                 try:
                     bible = self.db.get_episode_bible(ep)
                     if bible:
+                        self._apply_episode_bible_top_level_delta(ep, bible)
                         sc = bible.get("state_changes", {})
                         if sc:
                             self.update_from_state_changes(ep, sc)

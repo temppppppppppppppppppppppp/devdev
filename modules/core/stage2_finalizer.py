@@ -31,6 +31,242 @@ def _peek_scope_total_cost_usd() -> float:
         return 0.0
 
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
+_TACTICAL_EPISODE_HEADER_RE = re.compile(r"(?:^|\n)\s*(?:\[\s*)?제\s*\d+\s*화[^\n]*", re.MULTILINE)
+_TACTICAL_START_STATE_LINE_RE = re.compile(r"^\s*\[시작 상태\].*$", re.MULTILINE)
+_BLOCKING_ARC_PATCH_SIGNAL_CODES = frozenset({"episode_start_future_artifact"})
+
+
+def _extract_first_tactical_episode_section(tactical_doc: str) -> str:
+    text = str(tactical_doc or "").strip()
+    if not text:
+        return ""
+
+    matches = list(_TACTICAL_EPISODE_HEADER_RE.finditer(text))
+    if not matches:
+        return text
+
+    first = matches[0].start()
+    second = matches[1].start() if len(matches) > 1 else len(text)
+    return text[first:second].strip()
+
+
+def _extract_future_artifact_asset_keywords(start_state_line: str, matched_artifact: str) -> tuple[str, ...]:
+    if not start_state_line or not matched_artifact:
+        return ()
+
+    artifact_idx = start_state_line.find(matched_artifact)
+    if artifact_idx < 0:
+        return ()
+
+    asset_window = start_state_line[max(0, artifact_idx - 40) : artifact_idx]
+    keywords: list[str] = []
+    if "WTI" in asset_window:
+        keywords.extend(["WTI", "원유"])
+    if "금" in asset_window:
+        keywords.append("금")
+    if "코스피" in asset_window:
+        keywords.append("코스피")
+
+    deduped: list[str] = []
+    for keyword in keywords:
+        if keyword and keyword not in deduped:
+            deduped.append(keyword)
+    return tuple(deduped)
+
+
+def _find_future_artifact_action_sentence(body: str, action_terms: tuple[str, ...]) -> tuple[str, str]:
+    if not body:
+        return "", ""
+
+    sentences = re.split(r"(?<=[.!?\n])\s+", body)
+    for sentence in sentences:
+        normalized = sentence.strip()
+        if not normalized:
+            continue
+        matched_action = next((term for term in action_terms if term in normalized), "")
+        if matched_action:
+            return matched_action, normalized
+    return "", ""
+
+
+def _detect_episode_start_future_artifact_signal(tactical_doc: str) -> dict[str, str] | None:
+    section = _extract_first_tactical_episode_section(tactical_doc)
+    if not section:
+        return None
+
+    start_state_match = _TACTICAL_START_STATE_LINE_RE.search(section)
+    if not start_state_match:
+        return None
+
+    start_state_line = start_state_match.group(0)
+    body = section[start_state_match.end() :].replace("\n", " ")
+    episode_header = section.splitlines()[0].strip() if section.splitlines() else "first_episode"
+
+    rulebook = (
+        (
+            ("최종 매도 체결 확인서", "매도 체결 확인서"),
+            ("전량 익절 청산", "전량 청산", "청산했다", "청산한다", "매도 주문", "매도했다", "매도한다"),
+        ),
+        (
+            ("매수 체결 확인서",),
+            ("매수 주문", "주문을 실행", "주문을 넣", "매수했다", "매입했다", "진입했다"),
+        ),
+    )
+    for artifact_terms, action_terms in rulebook:
+        matched_artifact = next((term for term in artifact_terms if term in start_state_line), "")
+        if not matched_artifact:
+            continue
+        matched_action, action_sentence = _find_future_artifact_action_sentence(body, action_terms)
+        if not matched_action:
+            continue
+        asset_keywords = _extract_future_artifact_asset_keywords(start_state_line, matched_artifact)
+        if asset_keywords and not any(keyword in action_sentence for keyword in asset_keywords):
+            continue
+        return {
+            "code": "episode_start_future_artifact",
+            "detail": f"{episode_header}: {matched_artifact} precedes later action '{matched_action}'",
+        }
+    return None
+
+
+def _render_start_state_field_value(value: object) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (int, float)):
+        return str(value)
+    if isinstance(value, list):
+        return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, dict):
+        return json.dumps([value], ensure_ascii=False)
+    return ""
+
+
+def _replace_or_append_start_state_field(line: str, label: str, value: object) -> str:
+    rendered = _render_start_state_field_value(value)
+    if not rendered:
+        return line
+
+    pattern = rf"({re.escape(label)}\s*:\s*)(.*?)(?=(?:,\s*[가-힣A-Za-z_ ]+\s*:|/\s*[가-힣A-Za-z_ ]+\s*:|$))"
+    if re.search(pattern, line):
+        return re.sub(pattern, lambda m: f"{m.group(1)}{rendered}", line, count=1)
+
+    separator = " / " if "/" in line else ", "
+    return f"{line}{separator}{label}: {rendered}"
+
+
+def _build_start_state_line_from_structured_state(start_state: dict[str, Any]) -> str:
+    line = "[시작 상태]"
+    for label, key in (
+        ("위치", "location"),
+        ("소지품", "equipment"),
+        ("부상", "injuries"),
+        ("내공", "internal_energy"),
+    ):
+        rendered = _render_start_state_field_value(start_state.get(key))
+        if not rendered:
+            continue
+        line = f"{line} {label}: {rendered}" if line == "[시작 상태]" else f"{line}, {label}: {rendered}"
+    return line
+
+
+def _sync_first_episode_start_state_line(tactical_doc: str, start_state: dict[str, Any]) -> str:
+    text = str(tactical_doc or "")
+    if not text or not isinstance(start_state, dict) or not start_state:
+        return text
+
+    episode_matches = list(_TACTICAL_EPISODE_HEADER_RE.finditer(text))
+    if not episode_matches:
+        return text
+
+    first_start = episode_matches[0].start()
+    first_end = episode_matches[1].start() if len(episode_matches) > 1 else len(text)
+    first_section = text[first_start:first_end]
+    start_state_match = _TACTICAL_START_STATE_LINE_RE.search(first_section)
+
+    if start_state_match:
+        synced_line = start_state_match.group(0).strip()
+        synced_line = _replace_or_append_start_state_field(synced_line, "위치", start_state.get("location"))
+        synced_line = _replace_or_append_start_state_field(synced_line, "소지품", start_state.get("equipment"))
+        synced_line = _replace_or_append_start_state_field(synced_line, "부상", start_state.get("injuries"))
+        synced_line = _replace_or_append_start_state_field(synced_line, "내공", start_state.get("internal_energy"))
+        first_section = first_section[: start_state_match.start()] + synced_line + first_section[start_state_match.end() :]
+    else:
+        header_match = _TACTICAL_EPISODE_HEADER_RE.search(first_section)
+        if not header_match:
+            return text
+        insert_pos = header_match.end()
+        generated_line = _build_start_state_line_from_structured_state(start_state)
+        suffix = "" if generated_line.endswith("\n") else "\n"
+        first_section = first_section[:insert_pos] + "\n" + generated_line + suffix + first_section[insert_pos:]
+
+    return text[:first_start] + first_section + text[first_end:]
+
+
+def _coerce_inventory_items(raw: Any) -> list[Any]:
+    if isinstance(raw, str):
+        text = raw.strip()
+        if not text or text == "[]":
+            return []
+        if text[:1] in {"[", "{"}:
+            try:
+                parsed = json.loads(text)
+            except (TypeError, ValueError):
+                return [raw]
+            return _coerce_inventory_items(parsed)
+        return [raw]
+    if isinstance(raw, list):
+        return list(raw)
+    if isinstance(raw, dict):
+        return [raw] if raw else []
+    return []
+
+
+def _inventory_item_key(item: Any) -> str:
+    if isinstance(item, dict):
+        candidate = item.get("name") or item.get("item") or item.get("title") or ""
+    else:
+        candidate = item
+    return str(candidate or "").strip()
+
+
+def _inventory_item_dedupe_key(item: Any) -> str:
+    key = _inventory_item_key(item)
+    if key:
+        return key
+    if isinstance(item, dict):
+        return json.dumps(item, ensure_ascii=False, sort_keys=True)
+    return str(item)
+
+
+def _compute_inventory_carryover(prev_inventory: Any, consumed: Any, acquired: Any) -> list[Any]:
+    prev_items = _coerce_inventory_items(prev_inventory)
+    acquired_items = _coerce_inventory_items(acquired)
+    consumed_names = {
+        name
+        for name in (_inventory_item_key(item) for item in _coerce_inventory_items(consumed))
+        if name
+    }
+
+    inherited: list[Any] = []
+    seen_keys: set[str] = set()
+    for item in prev_items:
+        item_name = _inventory_item_key(item)
+        if item_name and item_name in consumed_names:
+            continue
+        dedupe_key = _inventory_item_dedupe_key(item)
+        if dedupe_key in seen_keys:
+            continue
+        seen_keys.add(dedupe_key)
+        inherited.append(item)
+
+    for item in acquired_items:
+        dedupe_key = _inventory_item_dedupe_key(item)
+        if dedupe_key in seen_keys:
+            continue
+        seen_keys.add(dedupe_key)
+        inherited.append(item)
+
+    return inherited
 
 
 class Stage2PassPreparationResult(TypedDict):
@@ -874,8 +1110,6 @@ class Stage2Finalizer:
         constraint_db,
         constraint_block: str,
     ) -> Stage2PassPreparationResult:
-        from modules.core.constants import RecoveryLimits
-
         refined_arc["arc_drive"] = arc_drive if arc_drive else {}
         refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
         refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
@@ -950,56 +1184,24 @@ class Stage2Finalizer:
             critical_missing.append("joint_docs")
 
         curr_joint = refined_arc.get("joint_docs", {})
-        curr_inventory = curr_joint.get("physical_inventory", [])
-        if isinstance(curr_inventory, str):
-            curr_inventory = [curr_inventory] if curr_inventory and curr_inventory != "[]" else []
-        elif isinstance(curr_inventory, dict):
-            curr_inventory = [curr_inventory] if curr_inventory else []
-        if not curr_inventory and all_refined_arcs:
+        curr_inventory = _coerce_inventory_items(curr_joint.get("physical_inventory", []))
+        if all_refined_arcs:
             prev_joint = all_refined_arcs[-1].get("joint_docs", {})
-            prev_inventory = prev_joint.get("physical_inventory", [])
-            if isinstance(prev_inventory, str):
-                try:
-                    import json as _json
-
-                    prev_inventory = _json.loads(prev_inventory)
-                except (ValueError, TypeError):
-                    prev_inventory = []
-            if isinstance(prev_inventory, dict):
-                prev_inventory = [prev_inventory] if prev_inventory else []
-            if prev_inventory and prev_inventory != [] and prev_inventory != "[]":
-                curr_status = refined_arc.get("status_shadow", {})
-                consumed_raw = curr_status.get("item_consumption", [])
-                if isinstance(consumed_raw, str):
-                    consumed_names = [consumed_raw] if consumed_raw else []
-                elif isinstance(consumed_raw, list):
-                    consumed_names = []
-                    for consumed_item in consumed_raw:
-                        if isinstance(consumed_item, str):
-                            consumed_names.append(consumed_item)
-                        elif isinstance(consumed_item, dict):
-                            consumed_names.append(consumed_item.get("name", consumed_item.get("item", "")))
-                else:
-                    consumed_names = []
-                state_constraints = refined_arc.get("state_constraints", {})
-                acquired = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", [])
-                if isinstance(acquired, str):
-                    acquired = [acquired] if acquired else []
-                elif not isinstance(acquired, list):
-                    acquired = [acquired] if acquired else []
-                if isinstance(prev_inventory, list):
-
-                    def _item_name(item):
-                        if isinstance(item, dict):
-                            return item.get("name", item.get("item", ""))
-                        return str(item)
-
-                    inherited = [item for item in prev_inventory if _item_name(item) not in consumed_names]
-                    inherited.extend(acquired)
-                    refined_arc["joint_docs"]["physical_inventory"] = inherited
-                    self.ctx.ui.log(
-                        f"      🔄 [V49.6] physical_inventory 이전 Arc에서 계승: {inherited[:3]}{'...' if len(inherited) > 3 else ''}"
-                    )
+            curr_status = refined_arc.get("status_shadow", {}) or {}
+            state_constraints = refined_arc.get("state_constraints", {}) or {}
+            inherited = _compute_inventory_carryover(
+                prev_joint.get("physical_inventory", []),
+                curr_status.get("item_consumption", []),
+                state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", []),
+            )
+            if curr_inventory != inherited:
+                refined_arc["joint_docs"]["physical_inventory"] = inherited
+                self.ctx.ui.log(
+                    f"      🔄 [V49.6] physical_inventory deterministic carryover 적용: "
+                    f"{inherited[:3]}{'...' if len(inherited) > 3 else ''}"
+                )
+        elif curr_inventory != curr_joint.get("physical_inventory", []):
+            refined_arc["joint_docs"]["physical_inventory"] = curr_inventory
 
         if not refined_arc.get("status_shadow"):
             self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] status_shadow 누락 - 기본값 주입")
@@ -1093,20 +1295,16 @@ class Stage2Finalizer:
 
         if all_refined_arcs:
             prev_arc = all_refined_arcs[-1]
-            prev_end = prev_arc.get("state_constraints", {}).get("arc_end_state", {})
-            correct_equip = prev_end.get("equipment")
-            if correct_equip is None:
-                correct_equip = prev_arc.get("joint_docs", {}).get("physical_inventory", [])
-            if isinstance(correct_equip, str):
-                correct_equip = [correct_equip] if correct_equip and correct_equip != "[]" else []
-            elif isinstance(correct_equip, dict):
-                correct_equip = [correct_equip] if correct_equip else []
-            elif not isinstance(correct_equip, list):
-                correct_equip = []
+            prev_constraints = prev_arc.get("state_constraints", {}) or {}
+            correct_equip = _compute_inventory_carryover(
+                prev_arc.get("joint_docs", {}).get("physical_inventory", []),
+                prev_arc.get("status_shadow", {}).get("item_consumption", []),
+                prev_constraints.get("protagonist_items") or prev_constraints.get("items_acquired", []),
+            )
 
             curr_sc = refined_arc.get("state_constraints", {})
             curr_start = curr_sc.get("arc_start_state", {})
-            old_equip = curr_start.get("equipment", [])
+            old_equip = _coerce_inventory_items(curr_start.get("equipment", []))
             if old_equip != correct_equip:
                 curr_start["equipment"] = correct_equip
                 curr_sc["arc_start_state"] = curr_start
@@ -1115,6 +1313,14 @@ class Stage2Finalizer:
                     f"      🔧 [Equipment Sync] Arc {global_arc_no} 시작 소지품 → "
                     f"이전 Arc 종료 소지품으로 동기화 ({len(correct_equip)}개 아이템)"
                 )
+
+            synced_tactical_doc = _sync_first_episode_start_state_line(
+                refined_arc.get("tactical_doc", ""),
+                curr_start,
+            )
+            if synced_tactical_doc != refined_arc.get("tactical_doc", ""):
+                refined_arc["tactical_doc"] = synced_tactical_doc
+                self.ctx.ui.log(f"      🔧 [State Sync] Arc {global_arc_no} 첫 화 시작 상태 텍스트 동기화")
 
         if isinstance(refined_arc, dict) and "arc_no" not in refined_arc:
             refined_arc["arc_no"] = global_arc_no
@@ -2112,6 +2318,10 @@ class Stage2Finalizer:
         last_fix_scope_reasoning = current_audit.get("fix_scope_reasoning", "")
         if last_fix_scope_reasoning:
             audit["fix_scope_reasoning"] = last_fix_scope_reasoning
+        if isinstance(current_audit.get("patch_pressure"), dict):
+            audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
+        if isinstance(current_audit.get("patch_guard_signals"), dict):
+            audit["patch_guard_signals"] = deepcopy(current_audit["patch_guard_signals"])
         audit["reason"] = (audit.get("reason", "") or "") + f"\n[TF-32-V] PASS_WITH_FIX ?섏젙 {max_fix}????誘명빐寃???REJECT"
         audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "吏?곸궗??誘명빐寃????ъ꽕怨??꾩슂"
         self.ctx.ui.log("      ??[TF-32-V] ?섏젙 ?ㅽ뙣 ??REJECT ?꾪솚")
@@ -2131,8 +2341,6 @@ class Stage2Finalizer:
         global_arc_no: int,
         score: int,
     ) -> Stage2PassWithFixLoopResult:
-        from modules.validation.threshold_helper import _threshold
-
         max_fix = 3
         four_phase = self.ctx.agents.get("four_phase")
         current_arc = dict(refined_arc)
@@ -2274,6 +2482,19 @@ class Stage2Finalizer:
                     },
                 )
 
+        blocking_patch_guard_signals = [
+            signal for signal in patch_guard_signals if str(signal.get("code", "")).strip() in _BLOCKING_ARC_PATCH_SIGNAL_CODES
+        ]
+        if blocking_patch_guard_signals:
+            blocking_codes = ", ".join(str(signal.get("code", "")).strip() for signal in blocking_patch_guard_signals)
+            logging.warning(
+                "[S2-ArcPatchSignals] blocking attempt=%s arc=%s codes=%s",
+                fix_i + 1,
+                global_arc_no,
+                blocking_codes,
+            )
+            self.ctx.ui.log(f"      ⛔ [S2-ArcSignals] blocking attempt={fix_i + 1} codes={blocking_codes or 'n/a'}")
+
         arith_patch_ctx = ""
         tactical_patched = patched.get("tactical_doc", "") if isinstance(patched, dict) else ""
         if tactical_patched:
@@ -2315,11 +2536,9 @@ class Stage2Finalizer:
         except Exception as exc:
             logging.debug("[S2-Finalizer] change_ratio 계산 실패: %s", exc)
 
-        if fix_instr:
-            applied_patches.append(str(fix_instr))
-
         return {
             "patch_guard_signals": patch_guard_signals,
+            "blocking_patch_guard_signals": blocking_patch_guard_signals,
             "patch_pressure_exceeded": patch_pressure_exceeded,
             "arith_patch_ctx": arith_patch_ctx,
         }
@@ -2506,6 +2725,29 @@ class Stage2Finalizer:
                 patch_pressure_exceeded=patch_pressure_exceeded,
             )
             patch_pressure_exceeded = bool(patch_state["patch_pressure_exceeded"])
+            blocking_patch_guard_signals = list(patch_state.get("blocking_patch_guard_signals") or [])
+            if blocking_patch_guard_signals:
+                blocking_lines = "; ".join(
+                    f"{str(signal.get('code', '')).strip()}: {str(signal.get('detail', '')).strip()}"
+                    for signal in blocking_patch_guard_signals
+                    if str(signal.get("code", "")).strip()
+                )
+                blocking_hint = (
+                    "Do not place an episode-end outcome artifact inside [시작 상태]. "
+                    "Move confirmation/proof items to the later causal beat or [종료 상태]."
+                )
+                if blocking_lines:
+                    blocking_hint = f"{blocking_hint} Observed patch guard: {blocking_lines}"
+                current_fix_instr = str(current_audit.get("re_slice_instruction", "") or "").strip()
+                if blocking_hint not in current_fix_instr:
+                    current_audit["re_slice_instruction"] = "\n".join(
+                        part for part in (current_fix_instr, blocking_hint) if part
+                    )
+                current_audit["decision"] = "PASS_WITH_FIX"
+                self.ctx.ui.log("      ↩️ [TF-32-V] blocking Arc patch signal -> 재감리 생략, 다음 patch 시도")
+                continue
+            if fix_instr:
+                applied_patches.append(str(fix_instr))
             re_story_context = self._build_stage2_pass_fix_reaudit_story_context(
                 story_context=story_context,
                 arith_patch_ctx=patch_state["arith_patch_ctx"],
@@ -2606,6 +2848,10 @@ class Stage2Finalizer:
         last_fix_scope_reasoning = current_audit.get("fix_scope_reasoning", "")
         if last_fix_scope_reasoning:
             audit["fix_scope_reasoning"] = last_fix_scope_reasoning
+        if isinstance(current_audit.get("patch_pressure"), dict):
+            audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
+        if isinstance(current_audit.get("patch_guard_signals"), dict):
+            audit["patch_guard_signals"] = deepcopy(current_audit["patch_guard_signals"])
         audit["reason"] = (audit.get("reason", "") or "") + f"\n[TF-32-V] PASS_WITH_FIX 수정 {max_fix}회 내 미해결 → REJECT"
         audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "지적사항 미해결 — 재설계 필요"
         self.ctx.ui.log("      ❌ [TF-32-V] 수정 실패 → REJECT 전환")
@@ -3128,6 +3374,10 @@ class Stage2Finalizer:
         if span_detail:
             signals.append({"code": "episode_span_inconsistent", "detail": span_detail})
 
+        future_artifact_signal = _detect_episode_start_future_artifact_signal(patched_tactical)
+        if future_artifact_signal:
+            signals.append(future_artifact_signal)
+
         return signals
 
     @staticmethod
@@ -3242,5 +3492,3 @@ class Stage2Finalizer:
                     flags["arc_patch_signal_codes"] = compact_codes
 
         return flags or None
-
-

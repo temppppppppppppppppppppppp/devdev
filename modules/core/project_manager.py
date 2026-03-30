@@ -136,7 +136,14 @@ class ProjectContext:
         # [V44] 각 앵커 데이터 안전 추출
         self.master_bible = anchors.get("bible") if isinstance(anchors.get("bible"), dict) else {}
         self.volumes = anchors.get("volumes") if isinstance(anchors.get("volumes"), list) else []
-        self.arcs = anchors.get("arcs") if isinstance(anchors.get("arcs"), list) else []
+        authoritative_arcs = []
+        try:
+            authoritative_arcs = self.db.load_arc_payloads()
+        except Exception:
+            authoritative_arcs = []
+        self.arcs = authoritative_arcs if authoritative_arcs else (
+            anchors.get("arcs") if isinstance(anchors.get("arcs"), list) else []
+        )
 
         # [TF-7-P0-03] preset_state anchor 복원 — 호출부에서 app.preset_registry 재구성용
         try:
@@ -245,8 +252,6 @@ class ProjectContext:
             self.volumes = data
         elif stage == "arcs":
             self.arcs = data
-            # [V40.1] Arc txt 파일 저장
-            self._save_arcs_to_txt(data)
         elif stage == "karma":
             self.karma_status = data
 
@@ -259,6 +264,8 @@ class ProjectContext:
             self.db.resolve_pending_transaction(commit=bool(result))
         except Exception as rollback_err:
             logging.warning(f"[TF-15/P0] save_anchor resolve_pending failed: {rollback_err}")
+        if stage == "arcs" and result:
+            self._save_arcs_to_txt(data)
         return result
 
     def load_v20_anchor(self, stage, default=None):
@@ -280,6 +287,51 @@ class ProjectContext:
         # [V40.1] Blueprint txt 파일 저장
         self._save_blueprint_to_txt(ep_num, data)
 
+    def _render_arc_txt(self, arc: dict) -> str:
+        lines = [
+            f"{'=' * 60}",
+            f"ARC {arc.get('arc_no', arc.get('global_arc_no', arc.get('arc_num', 0)))}",
+            f"{'=' * 60}",
+            "",
+            "[기본 정보]",
+            f"- 볼륨: {arc.get('volume_no', 'N/A')}",
+            f"- 에피소드 범위: {arc.get('ep_start', 'N/A')} ~ {arc.get('ep_end', 'N/A')}",
+            f"- 에피소드 수: {arc.get('ep_count', 'N/A')}",
+            "",
+            "[전술 문서 (Tactical Doc)]",
+            f"{'-' * 40}",
+            f"{arc.get('tactical_doc', '내용 없음')}",
+            "",
+            "[비트 시퀀스 (Beat Sequence)]",
+            f"{'-' * 40}",
+        ]
+
+        beat_seq = arc.get("beat_sequence", [])
+        if isinstance(beat_seq, list):
+            for i, beat in enumerate(beat_seq, 1):
+                if isinstance(beat, dict):
+                    lines.append(f"Beat {i}: {beat.get('beat', beat.get('description', str(beat)))}")
+                else:
+                    lines.append(f"Beat {i}: {beat}")
+        elif isinstance(beat_seq, str):
+            lines.append(beat_seq)
+
+        seeds = arc.get("seed_injection", arc.get("seeds", []))
+        if seeds:
+            lines.append("")
+            lines.append("[복선 (Seeds)]")
+            lines.append(f"{'-' * 40}")
+            if isinstance(seeds, list):
+                for seed in seeds:
+                    if isinstance(seed, dict):
+                        lines.append(
+                            f"- {seed.get('id', seed.get('seed_id', 'N/A'))}: {seed.get('hint', seed.get('description', ''))}"
+                        )
+                    else:
+                        lines.append(f"- {seed}")
+
+        return "\n".join(lines)
+
     def _save_arcs_to_txt(self, arcs_data) -> None:
         # [DB-Eff-P4] export 전용: DB(blueprints/anchors 테이블)가 primary source.
         # 이 파일은 human-readable 참조용. 배포/롤백 대상 아님.
@@ -292,6 +344,7 @@ class ProjectContext:
             if not hasattr(self.paths, "plans_arcs"):
                 self.paths.plans_arcs = self.paths.root / "plans" / "arcs"
             self.paths.plans_arcs.mkdir(parents=True, exist_ok=True)
+            expected_files = set()
             for arc in arcs_data:
                 if not isinstance(arc, dict):
                     continue
@@ -303,52 +356,15 @@ class ProjectContext:
                 # 파일명: arc_001.txt
                 filename = f"arc_{arc_no:03d}.txt"
                 filepath = self.paths.plans_arcs / filename
+                expected_files.add(filename)
+                rendered = self._render_arc_txt(arc)
+                existing = filepath.read_text(encoding="utf-8") if filepath.exists() else None
+                if existing != rendered:
+                    filepath.write_text(rendered, encoding="utf-8")
 
-                # Arc 내용 포맷팅
-                lines = [
-                    f"{'=' * 60}",
-                    f"ARC {arc_no}",
-                    f"{'=' * 60}",
-                    "",
-                    "[기본 정보]",
-                    f"- 볼륨: {arc.get('volume_no', 'N/A')}",
-                    f"- 에피소드 범위: {arc.get('ep_start', 'N/A')} ~ {arc.get('ep_end', 'N/A')}",
-                    f"- 에피소드 수: {arc.get('ep_count', 'N/A')}",
-                    "",
-                    "[전술 문서 (Tactical Doc)]",
-                    f"{'-' * 40}",
-                    f"{arc.get('tactical_doc', '내용 없음')}",
-                    "",
-                    "[비트 시퀀스 (Beat Sequence)]",
-                    f"{'-' * 40}",
-                ]
-
-                beat_seq = arc.get("beat_sequence", [])
-                if isinstance(beat_seq, list):
-                    for i, beat in enumerate(beat_seq, 1):
-                        if isinstance(beat, dict):
-                            lines.append(f"Beat {i}: {beat.get('beat', beat.get('description', str(beat)))}")
-                        else:
-                            lines.append(f"Beat {i}: {beat}")
-                elif isinstance(beat_seq, str):
-                    lines.append(beat_seq)
-
-                # 복선 정보
-                seeds = arc.get("seed_injection", arc.get("seeds", []))
-                if seeds:
-                    lines.append("")
-                    lines.append("[복선 (Seeds)]")
-                    lines.append(f"{'-' * 40}")
-                    if isinstance(seeds, list):
-                        for seed in seeds:
-                            if isinstance(seed, dict):
-                                lines.append(
-                                    f"- {seed.get('id', seed.get('seed_id', 'N/A'))}: {seed.get('hint', seed.get('description', ''))}"
-                                )
-                            else:
-                                lines.append(f"- {seed}")
-
-                filepath.write_text("\n".join(lines), encoding="utf-8")
+            for stale_file in self.paths.plans_arcs.glob("arc_*.txt"):
+                if stale_file.name not in expected_files:
+                    stale_file.unlink()
 
             logging.info(f" [Plans] Arc txt 파일 {len(arcs_data)}개 저장 완료")
         except Exception as e:

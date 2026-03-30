@@ -430,16 +430,24 @@ class Analyst(BaseAgent):
         # 2. 소지품 검증
         # [Sweep50] 빈 리스트 [] 보존 — or 연산자가 falsy 값 무시하는 패턴 수정
         prev_inventory = (
-            prev_joint.get("physical_inventory")
-            if "physical_inventory" in prev_joint
-            else prev_end.get("equipment", [])
+            prev_end.get("equipment")
+            if "equipment" in prev_end
+            else prev_joint.get("physical_inventory", [])
         )
         curr_inventory = curr_start.get("equipment", [])
 
         if isinstance(prev_inventory, str):
             prev_inventory = [prev_inventory] if prev_inventory else []
+        elif isinstance(prev_inventory, dict):
+            prev_inventory = [prev_inventory] if prev_inventory else []
+        elif not isinstance(prev_inventory, list):
+            prev_inventory = []
         if isinstance(curr_inventory, str):
             curr_inventory = [curr_inventory] if curr_inventory else []
+        elif isinstance(curr_inventory, dict):
+            curr_inventory = [curr_inventory] if curr_inventory else []
+        elif not isinstance(curr_inventory, list):
+            curr_inventory = []
 
         # [Sweep-Codex] dict 아이템 방어 (unhashable type 방지)
         def _ikey(x):
@@ -449,9 +457,21 @@ class Analyst(BaseAgent):
         curr_set = {_ikey(i) for i in curr_inventory} if curr_inventory else set()
 
         missing_items = prev_set - curr_set
-        if missing_items:
-            issues.append(f"CRITICAL: 아이템 손실 - {missing_items} (이전 Arc에서 소지 중이던 아이템)")
-            auto_corrections["missing_items"] = list(missing_items)
+        unexpected_items = curr_set - prev_set
+        if missing_items or unexpected_items:
+            detail_parts = []
+            if missing_items:
+                detail_parts.append(f"누락={sorted(missing_items)}")
+                auto_corrections["missing_items"] = list(missing_items)
+            if unexpected_items:
+                detail_parts.append(f"예상외={sorted(unexpected_items)}")
+                auto_corrections["unexpected_items"] = list(unexpected_items)
+            issues.append(
+                "CRITICAL: 시작 소지품 불일치 - "
+                + ", ".join(detail_parts)
+                + " (직전 Arc 종료 상태와 정확히 일치해야 함)"
+            )
+            auto_corrections["equipment"] = list(prev_inventory)
 
         # 3. 내공/상태 검증
         prev_energy = prev_end.get("internal_energy", 0)
@@ -650,11 +670,29 @@ class Analyst(BaseAgent):
                 logging.warning(f" [V60] joint_docs 위치 보정: '{existing_location}' → '{final_location}'")
                 joint_docs["final_location"] = final_location
 
-        if final_inventory:
-            existing_inventory = joint_docs.get("physical_inventory", [])
-            if not existing_inventory:
-                logging.info(f" [V60] joint_docs 소지품 보정: {final_inventory}")
-                joint_docs["physical_inventory"] = final_inventory
+        existing_inventory = joint_docs.get("physical_inventory", [])
+        if isinstance(existing_inventory, str):
+            existing_inventory = [existing_inventory] if existing_inventory else []
+        elif isinstance(existing_inventory, dict):
+            existing_inventory = [existing_inventory] if existing_inventory else []
+        elif not isinstance(existing_inventory, list):
+            existing_inventory = []
+
+        arc_end_state = arc_data["state_constraints"].get("arc_end_state", {})
+        if isinstance(arc_end_state, dict) and "equipment" in arc_end_state:
+            end_inventory = arc_end_state.get("equipment", [])
+            if isinstance(end_inventory, str):
+                end_inventory = [end_inventory] if end_inventory else []
+            elif isinstance(end_inventory, dict):
+                end_inventory = [end_inventory] if end_inventory else []
+            elif not isinstance(end_inventory, list):
+                end_inventory = []
+            if existing_inventory != end_inventory:
+                logging.info(f" [V60] joint_docs 소지품 SSOT 동기화: {end_inventory}")
+                joint_docs["physical_inventory"] = end_inventory
+        elif final_inventory and existing_inventory != final_inventory:
+            logging.info(f" [V60] joint_docs 소지품 보정: {final_inventory}")
+            joint_docs["physical_inventory"] = final_inventory
 
         # [Sweep11] 상위 레벨에도 동기화 (finalizer/arc_corrector는 top-level에서 읽음)
         arc_data["joint_docs"] = arc_data["state_constraints"]["joint_docs"]
@@ -1195,7 +1233,10 @@ class Analyst(BaseAgent):
                         start_state["location"] = continuity_result["auto_corrections"]["location"]
                         logging.info(f" [V60] 시작 위치 자동 보정: {start_state['location']}")
 
-                    if "missing_items" in continuity_result["auto_corrections"]:
+                    if "equipment" in continuity_result["auto_corrections"]:
+                        start_state["equipment"] = continuity_result["auto_corrections"]["equipment"]
+                        logging.info(f" [V60] 시작 소지품 자동 보정: {start_state['equipment']}")
+                    elif "missing_items" in continuity_result["auto_corrections"]:
                         existing = start_state.get("equipment", [])
                         if isinstance(existing, str):
                             existing = [existing] if existing else []
