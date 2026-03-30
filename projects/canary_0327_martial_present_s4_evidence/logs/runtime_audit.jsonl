@@ -1,2 +1,0 @@
-{"timestamp": "2026-03-27 23:06:25", "type": "target_ep_reached", "message": "stage4 target episode reached", "data": {"target_ep": 2, "next_ep": 3}}
-{"timestamp": "2026-03-27 23:06:25", "type": "stage4_complete", "message": "stage4 production completed", "data": {"target_ep": 2}}

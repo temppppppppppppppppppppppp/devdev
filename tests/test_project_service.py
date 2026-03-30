@@ -85,6 +85,7 @@ class TestResetStage2:
         ) in execute_calls
         assert call("DELETE FROM anchors WHERE key LIKE 'narrative_summary_ep_%'") in execute_calls
         assert call("DELETE FROM anchors WHERE key = 'arcs'") in execute_calls
+        assert call("DELETE FROM anchors WHERE key LIKE 'arc_payload_%'") in execute_calls
 
         outcome = svc.last_destructive_result
         assert outcome is not None

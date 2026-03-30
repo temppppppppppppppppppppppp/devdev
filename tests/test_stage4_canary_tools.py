@@ -3,6 +3,7 @@ from pathlib import Path
 
 from modules.core.db_manager import DBManager
 from modules.core.stage4_canary_tools import (
+    _evaluate_stage4_canary_gates,
     build_stage4_branch_inventory,
     build_stage4_canary_summary,
     prepare_stage4_canary_project,
@@ -525,6 +526,32 @@ def test_build_stage4_canary_summary_fails_when_retry_context_missing(tmp_path):
     assert summary["rationale_contract_summary"]["retry_required_row_count"] == 1
     assert summary["rationale_contract_summary"]["rows_missing_retry_context"] == ["ep1:a1:REJECT"]
     assert "stage4_retry_context_missing" in summary["hard_gates"]["errors"]
+
+
+def test_evaluate_stage4_canary_gates_treats_metadata_only_sink_warn_as_warning():
+    gates = _evaluate_stage4_canary_gates(
+        target_ep=1,
+        draft_count=1,
+        runtime_summary={"tag": "stage4_complete", "total_events": 1},
+        pass_rate_monitor_exists=True,
+        patch_trace_summary={},
+        sink_alignment_summary={
+            "status": "warn",
+            "final_sink_missing": {},
+            "lifecycle_sink_missing": {},
+            "lifecycle_missing_in_final_sinks": {},
+            "patch_strategy_mismatches": [{"attempt_key": "s4:ep2:arc1:a2:sess"}],
+            "initial_verdict_mismatches": [],
+            "selection_candidate_key_mismatches": [],
+            "legacy_key_attempts": 0,
+        },
+        rationale_contract_summary={"status": "ok", "missing_columns": [], "rows_missing_selection_reason": []},
+    )
+
+    assert gates["status"] == "warn"
+    assert "patch_strategy_mismatches" in gates["warnings"]
+    assert "sink_alignment_status:warn" in gates["warnings"]
+    assert "patch_strategy_mismatches" not in gates["errors"]
 
 
 def test_build_stage4_branch_inventory_tracks_pass_patch_and_retry_coverage(tmp_path):

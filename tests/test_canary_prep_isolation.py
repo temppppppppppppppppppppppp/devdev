@@ -2,7 +2,11 @@ from pathlib import Path
 
 from modules.core.db_manager import DBManager
 from modules.core.fact_ledger import FactLedger
-from modules.core.stage4_canary_tools import prepare_stage4_canary_project, reset_stage4_outputs
+from modules.core.stage4_canary_tools import (
+    _validate_truth_store_reset,
+    prepare_stage4_canary_project,
+    reset_stage4_outputs,
+)
 
 
 def _make_project_root(root: Path) -> None:
@@ -59,6 +63,7 @@ def _polluted_world_state() -> dict:
         "active_items": {
             "기존장비": {"ep_acquired": 2, "status": "보유"},
             "미래장비": {"ep_acquired": 4, "status": "보유"},
+            "OTP 카드": {"ep_acquired": 1, "status": "소실"},
         },
         "destroyed": [],
         "active_plots": [],
@@ -85,12 +90,41 @@ def _seed_source_project(root: Path) -> None:
             if ep <= 3:
                 state_changes["capital"] = 2_000_000_000
             if ep == 1:
-                state_changes["relationship_changes"] = [{"npc": "기존인물", "from": "", "to": "협력자"}]
+                bible_delta = {
+                    "ep_num": ep,
+                    "state_changes": state_changes,
+                    "new_npcs": [{"name": "기존인물", "role": "조력자"}],
+                    "relationship_changes": [{"npc": "기존인물", "from": "", "to": "협력자"}],
+                    "new_items": ["OTP 카드"],
+                }
+                db.save_episode_bible(ep, bible_delta)
+                continue
             if ep == 2:
-                state_changes["major_items"] = [{"name": "기존장비", "action": "획득"}]
+                bible_delta = {
+                    "ep_num": ep,
+                    "state_changes": state_changes,
+                    "new_items": [{"name": "기존장비"}],
+                }
+                db.save_episode_bible(ep, bible_delta)
+                continue
+            if ep == 3:
+                bible_delta = {
+                    "ep_num": ep,
+                    "state_changes": state_changes,
+                    "lost_items": ["OTP 카드"],
+                }
+                db.save_episode_bible(ep, bible_delta)
+                continue
             if ep == 4:
-                state_changes["relationship_changes"] = [{"npc": "최민", "from": "", "to": "적대"}]
-                state_changes["major_items"] = [{"name": "미래장비", "action": "획득"}]
+                bible_delta = {
+                    "ep_num": ep,
+                    "state_changes": state_changes,
+                    "new_npcs": [{"name": "최민", "role": "감시자"}],
+                    "relationship_changes": [{"npc": "최민", "from": "", "to": "적대"}],
+                    "new_items": ["미래장비"],
+                }
+                db.save_episode_bible(ep, bible_delta)
+                continue
             db.save_episode_bible(ep, {"ep_num": ep, "state_changes": state_changes})
 
         db.save_anchor("fact_ledger", _polluted_fact_ledger())
@@ -112,7 +146,12 @@ def test_prepare_stage4_canary_project_cleans_orphan_truth_store_anchors_from_pa
     result = prepare_stage4_canary_project(source, target, from_ep=4)
 
     assert result["cleanup"]["anchor_validation"]["status"] == "ok"
+    assert result["cleanup"]["anchor_validation"]["cleanup_status"] == "ok"
+    assert result["cleanup"]["anchor_validation"]["minimum_truth_status"] == "ok"
     assert result["cleanup"]["db_impact"]["orphan_chain_link_anchors"] == 4
+    assert result["cleanup"]["anchor_validation"]["missing_world_state_npcs"] == []
+    assert result["cleanup"]["anchor_validation"]["missing_world_state_active_items"] == []
+    assert result["cleanup"]["anchor_validation"]["world_state_relationship_mismatches"] == []
 
     db = DBManager(target / "project_data.db")
     try:
@@ -131,7 +170,9 @@ def test_prepare_stage4_canary_project_cleans_orphan_truth_store_anchors_from_pa
         assert world_state["last_updated_ep"] == 3
         assert "기존인물" in world_state["alive_npcs"]
         assert "최민" not in world_state["alive_npcs"]
+        assert world_state["relationships"]["기존인물"] == "협력자"
         assert "기존장비" in world_state["active_items"]
+        assert world_state["active_items"]["OTP 카드"]["status"] == "lost"
         assert "미래장비" not in world_state["active_items"]
     finally:
         db.close()
@@ -149,6 +190,8 @@ def test_reset_stage4_outputs_is_idempotent_for_truth_store_boundary(tmp_path):
 
     assert first["anchor_validation"]["status"] == "ok"
     assert second["anchor_validation"]["status"] == "ok"
+    assert first["anchor_validation"]["minimum_truth_status"] == "ok"
+    assert second["anchor_validation"]["minimum_truth_status"] == "ok"
 
     db = DBManager(project / "project_data.db")
     try:
@@ -160,10 +203,41 @@ def test_reset_stage4_outputs_is_idempotent_for_truth_store_boundary(tmp_path):
 
         world_state = db.load_anchor("world_state")
         assert world_state["last_updated_ep"] == 3
+        assert "기존인물" in world_state["alive_npcs"]
+        assert world_state["relationships"]["기존인물"] == "협력자"
+        assert "기존장비" in world_state["active_items"]
+        assert world_state["active_items"]["OTP 카드"]["status"] == "lost"
         assert "최민" not in world_state["alive_npcs"]
         assert "미래장비" not in world_state["active_items"]
     finally:
         db.close()
+
+
+def test_truth_store_validation_fails_when_minimum_world_state_truth_is_missing(tmp_path):
+    project = tmp_path / "project"
+    _seed_source_project(project)
+    reset_stage4_outputs(project, from_ep=4)
+
+    db = DBManager(project / "project_data.db")
+    try:
+        world_state = db.load_anchor("world_state")
+        world_state["alive_npcs"].pop("기존인물", None)
+        world_state["relationships"].pop("기존인물", None)
+        world_state["active_items"].pop("기존장비", None)
+        db.save_anchor("world_state", world_state)
+
+        validation = _validate_truth_store_reset(db, from_ep=4)
+    finally:
+        db.close()
+
+    assert validation["cleanup_status"] == "ok"
+    assert validation["minimum_truth_status"] == "fail"
+    assert validation["status"] == "fail"
+    assert "기존인물" in validation["missing_world_state_npcs"]
+    assert "기존장비" in validation["missing_world_state_active_items"]
+    assert validation["world_state_relationship_mismatches"] == [
+        {"npc": "기존인물", "expected": "협력자", "actual": ""}
+    ]
 
 
 def test_fact_ledger_update_number_skips_same_ep_same_value_duplicate(tmp_path):

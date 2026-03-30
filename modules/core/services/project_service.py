@@ -443,6 +443,7 @@ class ProjectService:
             self._clear_stage2_summary_anchors(project)
             self._clear_narrative_summary_anchors(project)
             project.db.cursor.execute("DELETE FROM anchors WHERE key = 'arcs'")
+            project.db.cursor.execute("DELETE FROM anchors WHERE key LIKE 'arc_payload_%'")
             if not self._safe_commit():
                 self._rollback_open_transaction(project)
                 self._ui.log("DB commit failed during Stage 2 reset")

@@ -987,6 +987,87 @@ def _extract_history_episode(history_entry) -> int | None:
     return int(ep_text) if ep_text.isdigit() else None
 
 
+def _extract_episode_bible_delta_name(raw) -> str:
+    if isinstance(raw, str):
+        return raw.strip()
+    if not isinstance(raw, dict):
+        return ""
+    for key in ("name", "npc", "target", "item"):
+        value = raw.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+
+def _collect_expected_world_state_minimums(db: DBManager, *, from_ep: int) -> dict:
+    try:
+        all_bibles = db.get_all_episode_bibles()
+    except Exception:
+        all_bibles = [db.get_episode_bible(ep) for ep in range(1, int(from_ep))]
+
+    npc_names: set[str] = set()
+    relationships: dict[str, str] = {}
+    active_items: set[str] = set()
+    for bible in all_bibles or []:
+        if not isinstance(bible, dict):
+            continue
+        ep_num = int(bible.get("ep_num", 0) or 0)
+        if ep_num <= 0 or ep_num >= int(from_ep):
+            continue
+        for raw_npc in bible.get("new_npcs") or []:
+            npc_name = _extract_episode_bible_delta_name(raw_npc)
+            if npc_name:
+                npc_names.add(npc_name)
+        for rel in bible.get("relationship_changes") or []:
+            if not isinstance(rel, dict):
+                continue
+            npc_name = _extract_episode_bible_delta_name(rel)
+            relation = str(rel.get("to") or "").strip()
+            if npc_name:
+                npc_names.add(npc_name)
+            if npc_name and relation:
+                relationships[npc_name] = relation
+        for raw_item in bible.get("new_items") or []:
+            item_name = _extract_episode_bible_delta_name(raw_item)
+            if item_name:
+                active_items.add(item_name)
+        for raw_item in bible.get("lost_items") or []:
+            item_name = _extract_episode_bible_delta_name(raw_item)
+            if item_name:
+                active_items.discard(item_name)
+
+    return {
+        "npc_names": sorted(npc_names),
+        "relationships": {name: relationships[name] for name in sorted(relationships)},
+        "active_items": sorted(active_items),
+    }
+
+
+def _collect_actual_world_state_minimums(world_state: dict) -> dict:
+    alive_npcs = sorted(
+        str(name).strip()
+        for name, info in (world_state.get("alive_npcs") or {}).items()
+        if isinstance(info, dict) and str(name).strip()
+    )
+    active_items = sorted(
+        str(name).strip()
+        for name, info in (world_state.get("active_items") or {}).items()
+        if isinstance(info, dict)
+        and str(name).strip()
+        and str(info.get("status", "보유") or "보유").strip() not in {"소실", "파괴", "소모", "lost", "consumed", "destroyed"}
+    )
+    relationships = {
+        str(name).strip(): str(value).strip()
+        for name, value in (world_state.get("relationships") or {}).items()
+        if str(name).strip() and str(value or "").strip()
+    }
+    return {
+        "npc_names": alive_npcs,
+        "relationships": relationships,
+        "active_items": active_items,
+    }
+
+
 def _validate_truth_store_reset(db: DBManager, *, from_ep: int) -> dict:
     chain_links = _find_chain_link_keys(db, from_ep=from_ep)
 
@@ -1004,6 +1085,8 @@ def _validate_truth_store_reset(db: DBManager, *, from_ep: int) -> dict:
             fact_history_at_or_after[str(key)] = offending
 
     world_state = db.load_anchor("world_state") or {}
+    expected_minimums = _collect_expected_world_state_minimums(db, from_ep=from_ep)
+    actual_minimums = _collect_actual_world_state_minimums(world_state)
     alive_npcs = [
         name
         for name, info in (world_state.get("alive_npcs") or {}).items()
@@ -1016,21 +1099,48 @@ def _validate_truth_store_reset(db: DBManager, *, from_ep: int) -> dict:
     ]
     world_last_updated_ep = int(world_state.get("last_updated_ep", 0) or 0)
 
-    ok = (
+    cleanup_ok = (
         not chain_links
         and not fact_history_at_or_after
         and not alive_npcs
         and not active_items
         and world_last_updated_ep <= max(0, int(from_ep) - 1)
     )
+    actual_npc_names = set(actual_minimums["npc_names"])
+    actual_active_items = set(actual_minimums["active_items"])
+    missing_minimum_npcs = [name for name in expected_minimums["npc_names"] if name not in actual_npc_names]
+    missing_minimum_active_items = [
+        name for name in expected_minimums["active_items"] if name not in actual_active_items
+    ]
+    relationship_mismatches = [
+        {
+            "npc": name,
+            "expected": expected_relation,
+            "actual": actual_minimums["relationships"].get(name, ""),
+        }
+        for name, expected_relation in expected_minimums["relationships"].items()
+        if actual_minimums["relationships"].get(name, "") != expected_relation
+    ]
+    minimum_truth_ok = (
+        not missing_minimum_npcs
+        and not missing_minimum_active_items
+        and not relationship_mismatches
+    )
     return {
-        "status": "ok" if ok else "fail",
+        "status": "ok" if cleanup_ok and minimum_truth_ok else "fail",
+        "cleanup_status": "ok" if cleanup_ok else "fail",
+        "minimum_truth_status": "ok" if minimum_truth_ok else "fail",
         "from_ep": int(from_ep),
         "orphan_chain_links": chain_links,
         "fact_ledger_history_at_or_after": fact_history_at_or_after,
         "world_state_alive_npcs_at_or_after": alive_npcs,
         "world_state_active_items_at_or_after": active_items,
         "world_state_last_updated_ep": world_last_updated_ep,
+        "expected_minimum_world_state": expected_minimums,
+        "actual_minimum_world_state": actual_minimums,
+        "missing_world_state_npcs": missing_minimum_npcs,
+        "missing_world_state_active_items": missing_minimum_active_items,
+        "world_state_relationship_mismatches": relationship_mismatches,
     }
 
 
@@ -1239,10 +1349,7 @@ def _evaluate_stage4_canary_gates(
         for field in (
             "final_verdict_mismatches",
             "final_score_mismatches",
-            "initial_verdict_mismatches",
-            "patch_strategy_mismatches",
             "candidate_key_mismatches",
-            "selection_candidate_key_mismatches",
             "content_hash_mismatches",
             "artifact_path_mismatches",
             "artifact_metadata_missing",
@@ -1250,10 +1357,20 @@ def _evaluate_stage4_canary_gates(
         ):
             if sink_alignment_summary.get(field):
                 errors.append(field)
+        for field in (
+            "initial_verdict_mismatches",
+            "patch_strategy_mismatches",
+            "selection_candidate_key_mismatches",
+        ):
+            if sink_alignment_summary.get(field):
+                warnings.append(field)
         if int(sink_alignment_summary.get("legacy_key_attempts", 0) or 0) > 0:
             errors.append("legacy_key_attempts")
-        if sink_alignment_summary.get("status") not in ("", "ok"):
-            errors.append(f"sink_alignment_status:{sink_alignment_summary.get('status')}")
+        _sink_alignment_status = str(sink_alignment_summary.get("status", "") or "").strip()
+        if _sink_alignment_status == "fail":
+            errors.append(f"sink_alignment_status:{_sink_alignment_status}")
+        elif _sink_alignment_status not in ("", "ok"):
+            warnings.append(f"sink_alignment_status:{_sink_alignment_status}")
     else:
         errors.append("sink_alignment_summary_empty")
 
