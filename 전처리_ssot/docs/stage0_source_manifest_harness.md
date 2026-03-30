@@ -80,22 +80,37 @@
 - 예전 TR/BI
 - 다른 작품 샘플
 - material bank 조회 결과
+- `docs/실물기반 사각지대 테스트/few-shot-bank/cards/dokshik_jaebeol3se_A.md`
+- `docs/실물기반 사각지대 테스트/few-shot-bank/cards/gim_daerineun_byeorakbuja_B.md`
+- `docs/실물기반 사각지대 테스트/few-shot-bank/reference_card_manifest.json`에 등록된 카드 라벨
+- `Slim Reference Card v1 :: dokshik_jaebeol3se_A`
+
+주의:
+
+- raw epub/txt/html 원문 경로만 적어 두는 것은 부족하다
+- 실물 원고를 썼다면 `reference_only_sources`에는 카드/요약 라벨이 들어가야 한다
+- 저장되지 않은 채팅 응답은 `reference_only_sources`로 인정하지 않는다
+- `Master Reference Card v1` 전체를 그대로 옮기지 말고 `Slim Reference Card v1` 라벨/경로를 우선 넣는다
 
 ### 2.4 `core_materials`
 
 이 작품의 전장에 **바로 옮겨 넣을 수 있는 재료**만 넣는다.
+
+실물 원고/NAS 레퍼런스에서 가져온 재료라면, 기본 입력은 `Master Reference Card v1`이 아니라 `Slim Reference Card v1`이다.
 
 좋은 예:
 
 - “편성 슬롯 협상 때 쓰이는 우선 배정 논리”
 - “응급 수술 집도권 승인 경로”
 - “본부 KPI 산정식이 바뀌는 회의 루프”
+- “Slim Reference Card에서 추출한 Block 1 spike / first reward / authority gain route”
 
 나쁜 예:
 
 - “업계는 냉정하다”
 - “정치가 있다”
 - “성공하려면 인맥이 필요하다”
+- 저장된 master card 전체를 통째로 복붙한 덩어리
 
 ### 2.5 `npc_pool`
 
@@ -256,6 +271,7 @@
 ## 6. 금지사항
 
 - raw DB 전체를 그대로 넣기
+- raw NAS 원고 경로만 던져 넣기
 - 긴 원문을 통째로 복붙하기
 - 프로파일과 맞지 않는 재료를 억지로 섞기
 - 기획이 비어 있는데 일반론으로 채우기

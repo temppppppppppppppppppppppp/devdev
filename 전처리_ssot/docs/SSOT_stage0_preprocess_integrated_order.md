@@ -88,7 +88,7 @@ Stage 0가 끝난 뒤 preprocess 작업공간이 이미 채워져 있더라도, 
 ```text
 run_class: seed_baseline_sync | sequential_production
 last_sequential_block_pass: 0..70
-next_unit_type: block | merge | bi_handoff
+next_unit_type: block | ten_block_audit | merge | bi_handoff
 next_block_id: Block 001..070 | null
 manual_audit_ready: true | false
 notes: free text
@@ -149,8 +149,8 @@ cutover 기준:
 2. `treatments/preprocess/{work_id}/...` 4개 파일이 있는지 확인한다.
 3. 없으면 Stage 0부터 시작한다.
 4. `stage0_profile_lock_harness.md`를 보고 주 프로파일 1개와 보조 프로파일 0~1개를 정한다.
-5. `stage0_material_collection_harness.md`를 보고 자료를 우선순위대로 모은다.
-6. `stage0_source_manifest_harness.md`를 보고 `source_manifest` 초안을 만든다.
+5. `stage0_material_collection_harness.md`를 보고 자료를 우선순위대로 모은다. NAS/실물 원고를 참고하면 같은 문서의 `소스 고정 Preflight -> Master Reference Card v1 -> Slim Reference Card v1 -> sink 저장 -> collection manifest 갱신` 순서를 먼저 수행한다.
+6. `stage0_source_manifest_harness.md`를 보고 `source_manifest` 초안을 만든다. 이때 실물 원고 레퍼런스는 `Slim Reference Card v1`을 우선 입력으로 쓴다.
 7. `profile_lock.json`을 만든다.
 8. `material_bundle_summary.json`을 만든다.
 9. 사람이 읽고 `manual_audit_note`를 쓴다.
@@ -186,6 +186,9 @@ Production handoff 추가 규칙:
 - `npc_pool`과 `crisis_pool`이 작품 전장과 직접 연결되지 않는다
 - `do_not_fake`가 비어 있다
 - `manual_audit_note`가 비어 있다
+- NAS/실물 원고를 읽었다고 했는데 `reference_only`용 카드화 흔적이 없다
+- reference card sink 파일 또는 collection manifest 갱신 흔적이 없다
+- `Master Reference Card v1`은 있는데 `Slim Reference Card v1`이 없어 `source_manifest`에 바로 못 옮긴다
 - `phase0_ready_snapshot.manual_audit_pass != true`
 
 ### 5.2 Go
@@ -196,6 +199,9 @@ Production handoff 추가 규칙:
 - `profile_lock`의 주/보조 프로파일이 명확하다
 - `source_manifest`에 정본/참고본 구분이 있다
 - `material_bundle_summary`가 작품 전장에 바로 옮길 수 있는 재료를 담고 있다
+- NAS/실물 원고를 썼다면 `reference_only`용 카드화 결과가 남아 있다
+- reference card가 sink 경로에 저장돼 있고 collection manifest가 갱신돼 있다
+- 실물 원고/NAS 레퍼런스를 썼다면 `Slim Reference Card v1` 또는 동등 handoff 요약이 남아 있다
 - `phase0_ready_snapshot.manual_audit_pass == true`
 
 **Go 행동 규칙:** Go 조건이 전부 충족되면 **멈추지 않고** Planning으로 바로 넘긴다. "Stage 0 끝났습니다. Planning으로 갈까요?"를 묻는 것은 금지한다. 단계 전환은 정지 게이트가 아니다. <!-- utf8-hygiene: allow-line rationale: literal quoted operator question example. -->
@@ -271,6 +277,8 @@ Stage 0의 목적은 아래 3개다.
 1. 무엇이 정본인지 잠근다
 2. 어떤 프로파일로 읽을지 잠근다
 3. 이 상태로 `phase0_design`을 써도 되는지 수동 감리로 승인한다
+
+즉, Stage 0는 `많이 모으기`가 아니라 `최대한 써먹을 수 있게 정규화하고 줄여서 넘기기` 단계다.
 
 Stage 0를 건너뛰면 이후의 Planning, Production, BI는 빨라질 수는 있어도 흔들린다.
 

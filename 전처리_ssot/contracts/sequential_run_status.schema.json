@@ -1,7 +1,7 @@
 {
   "package_name": "preprocess_contracts",
   "schema_id": "sequential_run_status",
-  "version": "1.0.0-draft",
+  "version": "1.0.1-draft",
   "target_instance_path": "treatments/preprocess/{work_id}/sequential_run_status.json",
   "purpose": "작품별 순차 production 진행률과 재개 포인터를 구조화해 저장한다.",
   "required_keys": [
@@ -38,6 +38,7 @@
       "type": "string",
       "enum": [
         "block",
+        "ten_block_audit",
         "merge",
         "bi_handoff"
       ],
@@ -48,7 +49,7 @@
         "string",
         "null"
       ],
-      "description": "다음 단위가 block이면 `Block 001` 형식, 아니면 null"
+      "description": "다음 단위가 block이면 `Block 001` 형식, `ten_block_audit`/`merge`/`bi_handoff`면 null"
     },
     "manual_audit_ready": {
       "type": "boolean",
