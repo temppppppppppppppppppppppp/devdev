@@ -1,53 +1,25 @@
 {
   "tag": "shutdown_final",
-  "timestamp": "2026-03-30 09:33:09",
+  "timestamp": "2026-03-30 12:43:31",
   "summary_role": "runtime_heartbeat_with_proof_digest",
-  "total_events": 30,
+  "total_events": 3,
   "counts": {
-    "db_commit": 15,
-    "blueprint_success": 15
+    "stage4_retry_pathology_signal": 2,
+    "db_commit": 1
   },
-  "latest_event_type": "blueprint_success",
+  "latest_event_type": "db_commit",
   "recent_events": [
     {
-      "type": "db_commit",
-      "message": "데이터베이스 저장 완료"
+      "type": "stage4_retry_pathology_signal",
+      "message": "stage4 retry pathology observed"
     },
     {
-      "type": "blueprint_success",
-      "message": "ep_11_blueprint_generated"
-    },
-    {
-      "type": "db_commit",
-      "message": "데이터베이스 저장 완료"
-    },
-    {
-      "type": "blueprint_success",
-      "message": "ep_12_blueprint_generated"
+      "type": "stage4_retry_pathology_signal",
+      "message": "stage4 retry pathology observed"
     },
     {
       "type": "db_commit",
       "message": "데이터베이스 저장 완료"
-    },
-    {
-      "type": "blueprint_success",
-      "message": "ep_13_blueprint_generated"
-    },
-    {
-      "type": "db_commit",
-      "message": "데이터베이스 저장 완료"
-    },
-    {
-      "type": "blueprint_success",
-      "message": "ep_14_blueprint_generated"
-    },
-    {
-      "type": "db_commit",
-      "message": "데이터베이스 저장 완료"
-    },
-    {
-      "type": "blueprint_success",
-      "message": "ep_15_blueprint_generated"
     }
   ],
   "contract": {
@@ -65,39 +37,58 @@
   },
   "proof_digest": {
     "available": true,
-    "status": "ok",
+    "status": "warn",
     "artifacts": {
       "db_available": true,
       "session_decisions_exists": true,
       "ui_events_jsonl_exists": true,
       "pass_rate_monitor_exists": true,
-      "episode_production_exists": false,
+      "episode_production_exists": true,
       "runtime_audit_jsonl_exists": true,
       "ui_events_db_available": true,
-      "ui_events_count": 1113,
+      "ui_events_count": 2063,
       "ui_event_coverage_status": "ok"
     },
     "stages": {
       "stage3": {
         "status": "ok",
-        "attempts_considered": 15,
-        "complete_final_attempts": 15,
+        "attempts_considered": 20,
+        "complete_final_attempts": 20,
         "complete_lifecycle_attempts": 0,
         "legacy_key_attempts": 0,
-        "session_scoped_attempts": 15,
+        "session_scoped_attempts": 20,
         "coverage": {
-          "stage_attempts": 15,
-          "pass_rate_monitor": 15,
-          "director_selections": 15,
+          "stage_attempts": 20,
+          "pass_rate_monitor": 20,
+          "director_selections": 20,
           "episode_production": 0,
-          "session_decisions": 15
+          "session_decisions": 20
         },
         "issue_counts": {}
+      },
+      "stage4": {
+        "status": "warn",
+        "attempts_considered": 8,
+        "complete_final_attempts": 8,
+        "complete_lifecycle_attempts": 8,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 8,
+        "coverage": {
+          "stage_attempts": 8,
+          "pass_rate_monitor": 8,
+          "director_selections": 8,
+          "episode_production": 8,
+          "session_decisions": 8
+        },
+        "issue_counts": {
+          "selection_reason_mismatches": 2,
+          "verdict_reason_mismatches": 2
+        }
       }
     },
     "session_lineage": {
-      "plain_log_token": "20260330_074943",
-      "structured_session_id": "20260330_074952",
+      "plain_log_token": "20260330_113302",
+      "structured_session_id": "20260330_113305",
       "status": "split_mapped"
     }
   }
