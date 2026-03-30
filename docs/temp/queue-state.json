@@ -1,14 +1,23 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-03-29T09:04:25.828457+00:00",
+  "generated_at": "2026-03-30T07:39:23.807852+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 3,
+  "active_item_count": 6,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
-    "canonical_path": "docs/2026-03-29/stage4-and-legacy-execution-roadmap.md",
+    "canonical_path": "docs/2026-03-30/active-temp-execution-roadmap.md",
     "status": "active"
   },
   "items": [
+    {
+      "topic": "0_1-stage3-blueprint-fix",
+      "temp_path": "docs/temp/0_1-stage3-blueprint-fix-execution-ssot.md",
+      "canonical_path": "docs/2026-03-30/0_1-stage3-blueprint-fix-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
     {
       "topic": "frontier-lag-soak-canary-wave1",
       "temp_path": "docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md",
@@ -23,6 +32,24 @@
       "temp_path": "docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md",
       "canonical_path": "docs/2026-03-27/npc-martial-state-substrate-wave1-execution-ssot.md",
       "status": "blocked",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "stage3-blueprint-validator-hardening",
+      "temp_path": "docs/temp/stage3-blueprint-validator-hardening-execution-ssot.md",
+      "canonical_path": "docs/2026-03-30/stage3-blueprint-validator-hardening-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "stage3-capital-unit-drift-hardening",
+      "temp_path": "docs/temp/stage3-capital-unit-drift-hardening-execution-ssot.md",
+      "canonical_path": "docs/2026-03-30/stage3-capital-unit-drift-hardening-execution-ssot.md",
+      "status": "pending",
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true

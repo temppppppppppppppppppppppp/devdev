@@ -103,7 +103,7 @@
 - “편성 슬롯 협상 때 쓰이는 우선 배정 논리”
 - “응급 수술 집도권 승인 경로”
 - “본부 KPI 산정식이 바뀌는 회의 루프”
-- “Slim Reference Card에서 추출한 Block 1 spike / first reward / authority gain route”
+- “Slim Reference Card에서 추출한 opening representative spike / first reward retention / authority gain route”
 
 나쁜 예:
 
@@ -111,6 +111,25 @@
 - “정치가 있다”
 - “성공하려면 인맥이 필요하다”
 - 저장된 master card 전체를 통째로 복붙한 덩어리
+
+### 2.4A 추출 스케일 계약
+
+`source_manifest`는 source를 보관하는 파일이 아니라, Stage 0가 설계 연료를 확정하는 계약 파일이다.
+
+따라서 opening 관련 재료는 아래처럼 적는다.
+
+- `opening representative spike`
+  - opening macro arc 안에서 작품 간판 맛을 대표하는 폭발
+- `first reward retention`
+  - 첫 보상이 얼마나 오래 체류하는지
+- `authority gain route`
+  - 주인공이 어떤 권한/입지 상승 경로를 밟는지
+
+핵심 규칙:
+
+- source evidence가 `ep1`, `ep5` 같은 episode checkpoint에서 왔더라도, `core_materials`에는 block-scale 언어로 번역해서 적는다.
+- `TR Block 1 spike`라는 phrasing은 downstream planning / production에서 exact placement가 잠길 때만 쓴다.
+- Stage 0의 `source_manifest`는 `opening block 전체를 어떻게 쓸지`를 위한 연료를 적는 곳이지, scene-by-scene beat를 적는 곳이 아니다.
 
 ### 2.5 `npc_pool`
 

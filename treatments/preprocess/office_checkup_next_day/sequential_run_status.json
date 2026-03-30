@@ -1,0 +1,8 @@
+{
+  "run_class": "sequential_production",
+  "last_sequential_block_pass": 35,
+  "next_unit_type": "block",
+  "next_block_id": "Block 036",
+  "manual_audit_ready": true,
+  "notes": "Block 1-35 완료 (ARC-01~04 전반). 5-block cap. 다음: Block 36-40(ARC-04 후반). B37=오세진 최후 견제(defeat), B40=오세진 자멸+인사평가 S+팀 실질 리더."
+}
