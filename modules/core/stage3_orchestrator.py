@@ -698,11 +698,14 @@ class Stage3Orchestrator:
     # ─────────────────────────────────────────────────────────────
     # V68 Lazy Init 헬퍼
     # ─────────────────────────────────────────────────────────────
-    # [Implicit state transfer] These methods assign to self.app because
-    # Stage 4's lazy-init gateway also reads them from app (main_a.py:3813+).
-    # The DI context (Stage3Context / Stage4Context) receives them later
-    # via getattr(app, ...) in from_app(). This makes Stage 3 a hidden
-    # producer of app-level domain state, not just a consumer.
+    # [DOMAIN-STATE AUTHORITY — Stage 3 primary producer]
+    # On the Stage 2→3→4 path, Stage 3 is the authoritative lazy-init source
+    # for state_tracker / world_state / fact_ledger on self.app.
+    # Stage 4 gateway (_stage_4_v2_chief_writer, V69.1) re-runs these checks
+    # as a fallback for Stage-3-skip flows only.
+    # Each method is idempotent: no-op when app already carries the attribute.
+    # Stage 2 write-back (main_a.py _run_stage2_arc_async) may pre-populate
+    # state_tracker only; world_state and fact_ledger belong here exclusively.
     def _init_state_tracker_if_needed(self) -> None:
         """[V60.96] StateTracker lazy init — app 인스턴스에 할당"""
         app = self.app

@@ -368,8 +368,8 @@ class SovereignApp:
 
     def _init_core_runtime_state(self) -> None:
         self.ui = StudioVisualizer()
-        from modules.core.sovereign_bootstrap_runtime import SovereignBootstrapRuntime
         from modules.core.logger import init_logger
+        from modules.core.sovereign_bootstrap_runtime import SovereignBootstrapRuntime
 
         init_logger()  # [TF-26] logs/session_*.log 듀얼 출력 활성화
         self.sys = StudioSystem(api_client=genai.Client(api_key=os.getenv("GOOGLE_API_KEY")))
@@ -393,8 +393,8 @@ class SovereignApp:
         self._bootstrap_status = BootstrapStatus()
         self.bootstrap_runtime = SovereignBootstrapRuntime(self)
         self.perf_timer = PerfTimer("Pipeline")  # [V65] 파이프라인 성능 프로파일링
-        self.world_state = None  # [V68] WorldStateManager (Stage 4에서 lazy init)
-        self.fact_ledger = None  # [V68] FactLedger 누적 팩트 원장 (Stage 4에서 lazy init)
+        self.world_state = None  # [V68] WorldStateManager — Stage 3 primary init; Stage 4 gateway fallback (Stage-3-skip)
+        self.fact_ledger = None  # [V68] FactLedger 누적 팩트 원장 — Stage 3 primary init; Stage 4 gateway fallback (Stage-3-skip)
 
     def _init_session_and_service_runtime(self) -> None:
         self._session_logger = SessionLogger(
@@ -2907,8 +2907,18 @@ class SovereignApp:
     def _stage_2_arcs(self):
         """[V64.P3] Stage 2 Arc 설계 → Stage2Orchestrator 위임"""
         self._show_resume_status()
+        self._run_stage2_arc_async()
 
-        # [Phase 4C-3] DI 컨텍스트 주입 (최신 속성 반영)
+    def _run_stage2_arc_async(self, *, target_arc_count: int | None = None) -> None:
+        """[Lane-5] Single dispatch authority for Stage 2 async logic.
+
+        Sets Stage2Context, runs stage_2_arcs_async_logic (handles already-running
+        asyncio loops via ThreadPoolExecutor), then writes state_tracker back to app
+        so Stage 3/4 lazy-init can reuse it.
+
+        target_arc_count=None  → run all arcs (standalone Stage 2 menu path)
+        target_arc_count=1     → run one arc at a time (OneStop / FrontierLag paths)
+        """
         from modules.core.stage2_context import Stage2Context
 
         self._stage2_orch.ctx = Stage2Context.from_app(self)
@@ -2922,10 +2932,13 @@ class SovereignApp:
             import concurrent.futures
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(asyncio.run, self._stage2_orch.stage_2_arcs_async_logic())
+                future = executor.submit(
+                    asyncio.run,
+                    self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=target_arc_count),
+                )
                 future.result(timeout=600)  # [Sweep3-G1] 10분 타임아웃 — 무한 블록 방지
         else:
-            asyncio.run(self._stage2_orch.stage_2_arcs_async_logic())
+            asyncio.run(self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=target_arc_count))
 
         # [Sweep2-A1] Stage 2에서 구축한 StateTracker를 app에 동기화
         # Stage 3/4 lazy init이 재사용할 수 있도록 함
@@ -4055,31 +4068,7 @@ class SovereignApp:
 
         self.ui.log(f"\n   📐 [Stage 2] Arc {current_arc_no} 설계 중...")
         try:
-            from modules.core.stage2_context import Stage2Context
-
-            self._stage2_orch.ctx = Stage2Context.from_app(self)
-
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = None
-
-            if loop and loop.is_running():
-                import concurrent.futures
-
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(
-                        asyncio.run,
-                        self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1),
-                    )
-                    future.result(timeout=600)
-            else:
-                asyncio.run(self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1))
-
-            _s2_ctx = self._stage2_orch.ctx
-            if _s2_ctx is not None and getattr(_s2_ctx, "state_tracker", None) is not None:
-                self.state_tracker = _s2_ctx.state_tracker
-            self._state_tracker_loaded_arcs = getattr(_s2_ctx, "state_tracker_loaded_arcs", 0)
+            self._run_stage2_arc_async(target_arc_count=1)
         except Exception as s2_err:
             self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 설계 실패: {str(s2_err)[:100]}")
             self.ui.log("   🛑 Arc 없이 진행 불가 — 파이프라인을 중단합니다.")
@@ -4129,6 +4118,9 @@ class SovereignApp:
 
             if s3_success == 0 and s3_fail > 0:
                 self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
+                # [HIL-BOUNDARY] Operator skip/stop decision inside automated FrontierLag pipeline.
+                # Automation cannot silently continue after Stage 3 failure — the operator must
+                # decide whether to skip this Arc or stop the pipeline entirely.
                 skip_choice = (
                     self._get_choice_input(
                         "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
@@ -4166,6 +4158,8 @@ class SovereignApp:
             return {"status": "completed"}
         except Exception as s3_err:
             self.ui.log(f"   ❌ [Stage 3] Blueprint 생성 오류: {str(s3_err)[:100]}")
+            # [HIL-BOUNDARY] Operator skip/stop decision inside automated FrontierLag pipeline.
+            # Exception path — same contract as the fail-count branch above.
             skip_choice = (
                 self._get_choice_input(
                     "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
@@ -4557,31 +4551,7 @@ class SovereignApp:
         else:
             self.ui.log(f"\n   📐 [Stage 2] Arc {current_arc_no}/{total_arcs} 설계 중...")
             try:
-                from modules.core.stage2_context import Stage2Context
-
-                self._stage2_orch.ctx = Stage2Context.from_app(self)
-
-                try:
-                    loop = asyncio.get_running_loop()
-                except RuntimeError:
-                    loop = None
-
-                if loop and loop.is_running():
-                    import concurrent.futures
-
-                    with concurrent.futures.ThreadPoolExecutor() as executor:
-                        future = executor.submit(
-                            asyncio.run,
-                            self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1),
-                        )
-                        future.result(timeout=600)
-                else:
-                    asyncio.run(self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1))
-
-                s2_ctx = self._stage2_orch.ctx
-                if s2_ctx is not None and getattr(s2_ctx, "state_tracker", None) is not None:
-                    self.state_tracker = s2_ctx.state_tracker
-                self._state_tracker_loaded_arcs = getattr(s2_ctx, "state_tracker_loaded_arcs", 0)
+                self._run_stage2_arc_async(target_arc_count=1)
             except Exception as s2_err:
                 self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 설계 실패: {str(s2_err)[:100]}")
                 self.ui.log("   🛑 Arc 없이 진행 불가 — 파이프라인을 중단합니다.")
@@ -4609,6 +4579,9 @@ class SovereignApp:
 
             if s3_success == 0 and s3_fail > 0:
                 self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
+                # [HIL-BOUNDARY] Operator skip/stop decision inside automated OneStop pipeline.
+                # Automation cannot silently continue after Stage 3 failure — the operator must
+                # decide whether to skip this Arc or stop the pipeline entirely.
                 skip_choice = (
                     self._get_choice_input(
                         "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",
@@ -4629,6 +4602,8 @@ class SovereignApp:
                 self.ui.log(f"   ✅ [Stage 3] Blueprint 완료 (성공: {s3_success}, 실패: {s3_fail})")
         except Exception as s3_err:
             self.ui.log(f"   ❌ [Stage 3] Blueprint 생성 오류: {str(s3_err)[:100]}")
+            # [HIL-BOUNDARY] Operator skip/stop decision inside automated OneStop pipeline.
+            # Exception path — same contract as the fail-count branch above.
             skip_choice = (
                 self._get_choice_input(
                     "   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ",

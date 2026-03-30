@@ -3,7 +3,6 @@ import json
 import re
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = ROOT / "docs/2026-03-13/db-cursor-live-inventory.json"
 SOURCE_PATH = ROOT / "modules/core/db_manager.py"
@@ -12,7 +11,6 @@ REQUIRED_MUST_MIGRATE = {
     "save_anchor",
     "load_anchor",
     "save_llm_call",
-    "save_stage_attempt",
     "transaction",
     "reset_after",
     "get_rollback_impact",

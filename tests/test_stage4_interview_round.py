@@ -1654,6 +1654,7 @@ class TestInterviewRoundRun:
                 "best_manuscript": "원고",
                 "fix_scope": "partial",
                 "reject_bucket": "post_select_conflict",
+                "fix_pack": _local_fix_pack(),
             },
             round_ctx=round_ctx,
         )
@@ -2336,6 +2337,11 @@ class TestRecordS4Attempt:
                     "director_verdict": "PASS_WITH_FIX",
                     "gate_basis": "bounded_local_repair",
                     "repair_scope": "inplace",
+                    "strong_advisory_escalation": {
+                        "source_verdict": "PASS",
+                        "escalated_to": "PASS_WITH_FIX",
+                        "triggered_by": ["truth_gate"],
+                    },
                 },
                 "fix_pack": {"must_fix": ["repair ending"]},
                 "retry_budget_axes": {"round": 1, "repair": 1, "guidance": 0},
@@ -2356,6 +2362,7 @@ class TestRecordS4Attempt:
         assert payload["director_verdict"] == "PASS_WITH_FIX"
         assert payload["gate_basis"] == "bounded_local_repair"
         assert payload["repair_scope"] == "inplace"
+        assert payload["strong_advisory_escalation"]["triggered_by"] == ["truth_gate"]
         assert payload["fix_pack"] == {"must_fix": ["repair ending"]}
         assert payload["retry_budget_axes"] == {"round": 1, "repair": 1, "guidance": 0}
         assert payload["candidate_key"] == "A|balanced"
@@ -2676,6 +2683,7 @@ class TestRecordS4Attempt:
                 "best_manuscript": "원고",
                 "fix_scope": "partial",
                 "reject_bucket": "post_select_conflict",
+                "fix_pack": _local_fix_pack(),
             },
             round_ctx=round_ctx,
         )
@@ -2714,6 +2722,7 @@ class TestRecordS4Attempt:
                 "best_manuscript": "draft",
                 "fix_scope": "partial",
                 "reject_bucket": "post_select_conflict",
+                "fix_pack": _local_fix_pack(),
             },
             round_ctx=round_ctx,
         )
@@ -2749,6 +2758,7 @@ class TestRecordS4Attempt:
                 "best_manuscript": "원고",
                 "fix_scope": "partial",
                 "reject_bucket": "post_select_conflict",
+                "fix_pack": _local_fix_pack(),
             },
             round_ctx=round_ctx,
         )
@@ -4956,6 +4966,61 @@ class TestRecordS4Attempt:
         assert 0.0 <= payload["patch_trace"]["unchanged_ratio"] <= 1.0
         prm_kwargs = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
         assert prm_kwargs["is_patch"] is True
+
+    def test_append_episode_log_persists_strong_advisory_escalation(self, tmp_path):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 0,
+                "total_tokens": 0,
+                "total_cost_usd": 0.0,
+                "model_breakdown": {},
+            }
+        )
+        ir._build_fix_pack_payload = MagicMock(return_value={})
+        strong_advisory = {
+            "source_verdict": "PASS",
+            "escalated_to": "PASS_WITH_FIX",
+            "triggered_by": ["truth_gate"],
+        }
+
+        with (
+            patch("modules.core.stage4_interview_round.resolve_project_log_dir", return_value=tmp_path / "logs"),
+            patch("modules.core.stage4_interview_round.append_jsonl_record") as append_mock,
+        ):
+            ir._append_episode_log(
+                ep_num=1,
+                round_num=0,
+                director_result={
+                    "selected": "A",
+                    "selected_candidate": {"strategy_name": "balanced"},
+                    "director_verdict": "PASS",
+                    "final_verdict": "PASS_WITH_FIX",
+                    "verdict": "PASS_WITH_FIX",
+                    "score": 91,
+                    "selection_reason": "binding escalation",
+                    "verdict_reason": "strong advisory",
+                    "fix_scope": "partial",
+                    "authoritative_fix_scope": "partial",
+                    "strong_advisory_escalation": strong_advisory,
+                    "action_items": ["repair opening"],
+                    "score_breakdown": {},
+                    "open_review": "review",
+                },
+                is_patch=False,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="gemini-2.5-pro",
+                validation_warnings=[],
+            )
+
+        assert append_mock.called
+        log_path, payload = append_mock.call_args.args
+        assert log_path == (tmp_path / "logs" / "episode_production.jsonl")
+        assert payload["strong_advisory_escalation"] == strong_advisory
 
     def test_pass_with_fix_multi_anchor_fix_pack_is_logged_and_passes(self):
         ctx = _make_ctx()
@@ -8058,6 +8123,38 @@ class TestOperatorParitySessionLogger:
         assert call_kwargs["retry_directives"] == long_directives.strip()
         assert call_kwargs["firewall_reason"] == long_reason.strip()
         assert len(call_kwargs["action_items"]) == 30
+
+    def test_session_logger_receives_strong_advisory_escalation_meta(self):
+        ctx = _make_ctx()
+        sl = MagicMock()
+        ctx.session_logger = sl
+        ir = Stage4InterviewRound(ctx)
+
+        strong_advisory = {
+            "source_verdict": "PASS",
+            "escalated_to": "PASS_WITH_FIX",
+            "triggered_by": ["truth_gate", "npc_drift"],
+        }
+
+        ir._log_session_decision(
+            next_ep=1,
+            round_num=0,
+            arc_num=1,
+            verdict="PASS_WITH_FIX",
+            score=91,
+            selected="A",
+            error_category="LOGIC_ERROR",
+            reason="binding escalation",
+            fix_scope="partial",
+            open_review="review",
+            action_items=["repair opening"],
+            attempt_key="s4:ep1:arc1:a1",
+            strong_advisory_escalation=strong_advisory,
+        )
+
+        assert sl.log_decision.called
+        call_kwargs = sl.log_decision.call_args.kwargs
+        assert call_kwargs["strong_advisory_escalation"] == strong_advisory
 
 
 class TestOperatorParityAdvisoryFullSurface:
