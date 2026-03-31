@@ -1,0 +1,2 @@
+{"type": "validation", "timestamp": "2026-03-05T11:19:07.239034", "ep_num": 1, "stage": 2, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T11:23:59.929281", "ep_num": 2, "stage": 2, "decision": "REJECT", "score": 88, "violations": ["director_reject"], "warnings": 0}

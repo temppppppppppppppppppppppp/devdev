@@ -1,0 +1,129 @@
+{
+  "session_id": "20260305_144841",
+  "start_time": "2026-03-05T14:48:41.522789",
+  "end_time": "2026-03-05T15:14:15.417163",
+  "total_calls": 35,
+  "successful_calls": 35,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 314209,
+  "total_cost_usd": 0.5061,
+  "agent_stats": {
+    "Analyst": {
+      "agent_name": "Analyst",
+      "total_calls": 5,
+      "successful_calls": 5,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 34779.991817474365,
+        "min_ms": 28835.604190826416,
+        "max_ms": 39417.72532463074,
+        "p50_ms": 35916.703939437866,
+        "p90_ms": 38353.28183174133,
+        "p99_ms": 39311.2809753418
+      }
+    },
+    "Weaver": {
+      "agent_name": "Weaver",
+      "total_calls": 3,
+      "successful_calls": 3,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 15798.677206039429,
+        "min_ms": 9545.022249221802,
+        "max_ms": 20064.176321029663,
+        "p50_ms": 17786.83304786682,
+        "p90_ms": 19608.707666397095,
+        "p99_ms": 20018.629455566406
+      }
+    },
+    "ArcEnsembleGenerator": {
+      "agent_name": "ArcEnsembleGenerator",
+      "total_calls": 10,
+      "successful_calls": 10,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 69678.178358078,
+        "min_ms": 46951.744079589844,
+        "max_ms": 81138.48495483398,
+        "p50_ms": 71543.78688335419,
+        "p90_ms": 77973.17554950714,
+        "p99_ms": 80821.9540143013
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 10,
+      "successful_calls": 10,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 33787.18526363373,
+        "min_ms": 19437.652826309204,
+        "max_ms": 44192.363023757935,
+        "p50_ms": 35901.506423950195,
+        "p90_ms": 41572.060680389404,
+        "p99_ms": 43930.33278942108
+      }
+    },
+    "StateExtractor": {
+      "agent_name": "StateExtractor",
+      "total_calls": 3,
+      "successful_calls": 3,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 30212.75266011556,
+        "min_ms": 24870.469570159912,
+        "max_ms": 34655.38311004639,
+        "p50_ms": 31112.40530014038,
+        "p90_ms": 33946.787548065186,
+        "p99_ms": 34584.52355384827
+      }
+    },
+    "PreflightChecker": {
+      "agent_name": "PreflightChecker",
+      "total_calls": 4,
+      "successful_calls": 4,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 30556.607365608215,
+        "min_ms": 25773.471117019653,
+        "max_ms": 33582.26704597473,
+        "p50_ms": 31435.34564971924,
+        "p90_ms": 33238.6997461319,
+        "p99_ms": 33547.91031599045
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-2.5-pro": {
+      "input_tokens": 209374,
+      "output_tokens": 45301,
+      "total_tokens": 254675,
+      "cost_usd": 0.4882
+    },
+    "gemini-2.5-flash": {
+      "input_tokens": 39549,
+      "output_tokens": 19985,
+      "total_tokens": 59534,
+      "cost_usd": 0.0179
+    }
+  }
+}
