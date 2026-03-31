@@ -475,9 +475,14 @@ class TestInterviewRoundHelpers:
             {
                 "strategy": "repair",
                 "score": 44,
+                "attempt_key": "s4:ep9:arc1:a4",
+                "candidate_key": "A|repair",
+                "content_hash": "hash-123",
+                "selection_content_hash": "sel-hash-123",
                 "fix_scope_reasoning": "keep all details",
                 "open_review": "review",
                 "rejection_reason": "reason",
+                "retry_budget_axes": {"repair": "rewrite_regenerate"},
                 "action_items": [f"fix-step-{idx}" for idx in range(10)],
                 "contradiction_types": [f"type-{idx}" for idx in range(6)],
                 "contradiction_details": [
@@ -496,6 +501,11 @@ class TestInterviewRoundHelpers:
         assert len(snapshot["contradiction_types"]) == 6
         assert len(snapshot["contradiction_details"]) == 4
         assert "repair-3" in snapshot["contradiction_details"][-1]
+        assert snapshot["attempt_key"] == "s4:ep9:arc1:a4"
+        assert snapshot["candidate_key"] == "A|repair"
+        assert snapshot["content_hash"] == "hash-123"
+        assert snapshot["selection_content_hash"] == "sel-hash-123"
+        assert snapshot["retry_budget_axes"] == {"repair": "rewrite_regenerate"}
 
     def test_extract_fix_feedback_preserves_full_fix_pack_and_issue_lists(self):
         ir = Stage4InterviewRound(_make_ctx())
@@ -3557,6 +3567,50 @@ class TestRecordS4Attempt:
         assert call_kwargs["preferred_strategy"] == "tension"
         assert ir._last_strategy_budget == "reduced"
         assert ir._last_strategy_count == 2
+
+    def test_retry_regenerate_suppresses_exact_duplicate_hash_in_same_retry_context(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        prev_manuscript = "original manuscript"
+        fresh_candidate = {"manuscript": "fresh rewrite", "strategy": "narrative"}
+        round_ctx.chief_writer.regenerate_with_feedback.return_value = [
+            {"manuscript": prev_manuscript, "strategy": "balanced"},
+            fresh_candidate,
+        ]
+
+        candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
+            round_num=2,
+            chief_writer=round_ctx.chief_writer,
+            director_feedback="fix continuity only",
+            previous_attempt={
+                "score": 88,
+                "best_manuscript": prev_manuscript,
+                "content_hash": ir.retry_runtime._compute_candidate_content_hash(prev_manuscript),
+                "fix_scope": "full",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "balanced",
+                "retry_budget_axes": {"repair": "rewrite_regenerate"},
+            },
+            prev_manuscript=prev_manuscript,
+            style_guide="",
+            blueprint={},
+            common_writer_kwargs={"ep_num": 9},
+            arc_num=1,
+        )
+
+        assert candidates == [fresh_candidate]
+        assert is_patch is False
+        assert patch_fallback is False
+        assert prev_score == 88
+        assert asp_manuscript is None
+        tf_rh1_call = next(
+            call
+            for call in ctx.ui.log.call_args_list
+            if call.args and "[TF-RH1]" in call.args[0]
+        )
+        assert tf_rh1_call.kwargs["event_kind"] == "policy"
+        assert tf_rh1_call.kwargs["attempt_key"] == "s4:ep9:arc1:a3"
 
     def test_retry_regenerate_keeps_full_strategy_budget_for_structure_error(self):
         ctx = _make_ctx()

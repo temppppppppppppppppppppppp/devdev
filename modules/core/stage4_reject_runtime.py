@@ -194,6 +194,11 @@ class Stage4RejectRuntime:
             reject_bucket=_reject_bucket,
             error_category=error_category,
         )
+        if isinstance(previous_attempt, dict) and isinstance(_attempt_artifact_meta, dict):
+            for key in ("attempt_key", "candidate_key", "content_hash", "artifact_path"):
+                value = str(_attempt_artifact_meta.get(key, "") or "").strip()
+                if value:
+                    previous_attempt[key] = value
         director_feedback = self._run_reject_followup_side_effects(
             next_ep=next_ep,
             arc_num=round_ctx.arc_data.get("arc_no", 0),
@@ -238,6 +243,17 @@ class Stage4RejectRuntime:
         asp_manuscript: str,
     ):
         owner = self.owner
+        selection_artifact_meta = normalize_artifact_meta(selection_artifact_meta or {})
+        previous_attempt = getattr(reject_result, "previous_attempt", None)
+        if isinstance(previous_attempt, dict):
+            for source_key, target_key in (
+                ("candidate_key", "selection_candidate_key"),
+                ("content_hash", "selection_content_hash"),
+                ("artifact_path", "selection_artifact_path"),
+            ):
+                value = str(selection_artifact_meta.get(source_key, "") or "").strip()
+                if value:
+                    previous_attempt[target_key] = value
         reject_logging = self._build_reject_logging_payload(
             reject_result=reject_result,
             director_result=director_result,
@@ -438,8 +454,7 @@ class Stage4RejectRuntime:
         reject_attempt["scope_origin"] = {
             "fix_scope": (
                 "runtime_widened"
-                if reject_attempt["authoritative_fix_scope"]
-                and reject_attempt["fix_scope"]
+                if reject_attempt["fix_scope"]
                 and reject_attempt["authoritative_fix_scope"].lower() != reject_attempt["fix_scope"].lower()
                 else "director_authoritative"
             ),
@@ -494,6 +509,15 @@ class Stage4RejectRuntime:
             feedback=feedback,
             action_items=action_items,
         )
+        # [C-2 seam fix] Text-based _classify_reject_bucket cannot detect post-select
+        # conflict downgrades (they arrive via gate_basis, not via text patterns).
+        # Promote reject_bucket from gate_basis so the existing "full" scope guard fires.
+        _gate_basis = str(director_result.get("gate_basis", "") or "").strip()
+        if _gate_basis == "post_select_conflict" and reject_bucket != "post_select_conflict":
+            reject_bucket = "post_select_conflict"
+            logging.info(
+                "[Stage4Gate] reject_bucket promoted to post_select_conflict from gate_basis"
+            )
         resolved_fix_scope = str(director_result.get("fix_scope", "") or "")
         resolved_fix_scope_reasoning = str(director_result.get("fix_scope_reasoning", "") or "")
         resolved_fix_pack = owner._normalize_fix_pack(director_result.get("fix_pack"))

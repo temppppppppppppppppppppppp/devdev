@@ -6,7 +6,8 @@ Confidence: 96%
 Canonical Path: `docs/2026-03-30/stage3-capital-unit-drift-hardening-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage3-capital-unit-drift-hardening-execution-ssot.md`
 Baseline Commit: `9ad4efcc`
-Source Survey Doc: `docs/2026-03-30/stage3-capital-unit-drift-bounded-survey.md`
+Source Survey Docs:
+- `docs/2026-03-30/stage3-capital-unit-drift-bounded-survey.md`
 Related Docs:
 - `docs/2026-03-30/stage3-blueprint-validator-hardening-execution-ssot.md`
 - `docs/2026-03-30/0_1-stage3-blueprint-ep16-20-integrity-bounded-survey.md`

@@ -32,7 +32,14 @@ class NpcDriftAdvisor:
 
         Args:
             manuscript: 원고 텍스트
-            npc_snapshots: {npc_name: {"role_at_intro": str, "first_seen_ep": int, "known_attrs": dict}}
+            npc_snapshots: {
+                npc_name: {
+                    "role_at_intro": str,
+                    "authoritative_role": str,
+                    "first_seen_ep": int,
+                    "known_attrs": dict,
+                }
+            }
             ep_num: 현재 에피소드 번호
             max_npcs: 검사 대상 최대 NPC 수
 
@@ -48,11 +55,11 @@ class NpcDriftAdvisor:
         if not appearing:
             return []
 
-        # role_at_intro 또는 known_attrs가 있는 NPC만 검사 대상
+        # authoritative_role 또는 known_attrs가 있는 NPC만 검사 대상
         targets = []
         for name in appearing:
             snap = npc_snapshots.get(name, {})
-            if snap.get("role_at_intro") or snap.get("known_attrs"):
+            if snap.get("authoritative_role") or snap.get("role_at_intro") or snap.get("known_attrs"):
                 targets.append(name)
             if len(targets) >= max_npcs:
                 break
@@ -100,9 +107,12 @@ class NpcDriftAdvisor:
         for name in targets:
             snap = npc_snapshots.get(name, {})
             parts = [f"이름: {name}"]
-            role = snap.get("role_at_intro", "")
-            if role:
-                parts.append(f"최초역할: {role}")
+            authoritative_role = str(snap.get("authoritative_role", "") or "").strip()
+            if authoritative_role:
+                parts.append(f"현재기준역할: {authoritative_role}")
+            role = str(snap.get("role_at_intro", "") or "").strip()
+            if role and role != authoritative_role:
+                parts.append(f"초기참고역할: {role}")
             first_ep = snap.get("first_seen_ep", 0)
             if first_ep:
                 parts.append(f"첫등장: {first_ep}화")
@@ -122,17 +132,19 @@ class NpcDriftAdvisor:
         ms_snippet = smart_truncate(manuscript or "", max_chars=4000, head_chars=2500)
 
         prompt = (
-            "다음 NPC들의 초기 속성과 원고를 비교하여, 설명 없이 속성이 변한 경우만 지적하세요.\n"
+            "다음 NPC들의 현재 authoritative 속성과 원고를 비교하여, 설명 없이 속성이 변한 경우만 지적하세요.\n"
+            "각 NPC에 현재기준역할이 있으면 그것을 최우선 기준으로 사용하고, "
+            "초기참고역할은 현재 기준이 없을 때만 보조 참고하세요.\n"
             "검사 대상: 역할, 관계(relation_to_protag), 무장, 실력, 성격, "
             "부상 상태(injury), 현재 위치(location), 영구 부상(permanent_injuries), "
             "지식시대(knowledge_era), 전문영역(expertise_domain), 비밀 인지(secrets_known), "
             "이중 정체(dual_identity) 등.\n"
             "서사적 변화(성장·부상·전직 등 작중 이유가 있는 변화)는 표류가 아닙니다.\n"
             "설명 없이 속성이 바뀐 것만 지적하세요.\n\n"
-            f"[NPC 초기 속성]\n{snapshot_text}\n\n"
+            f"[NPC authoritative 속성]\n{snapshot_text}\n\n"
             f"[원고 (최대 4000자)]\n{ms_snippet}\n\n"
             "반드시 JSON 배열로만 답하세요. 표류가 없으면 빈 배열 []을 반환하세요.\n"
-            '형식: [{"npc": "이름", "field": "변경된 필드", "expected": "초기값", "found_in_ms": "원고에서 발견된 묘사"}]\n'
+            '형식: [{"npc": "이름", "field": "변경된 필드", "expected": "현재 authoritative 값", "found_in_ms": "원고에서 발견된 묘사"}]\n'
         )
 
         try:

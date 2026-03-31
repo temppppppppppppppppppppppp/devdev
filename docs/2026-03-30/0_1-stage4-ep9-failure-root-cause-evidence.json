@@ -1,0 +1,189 @@
+{
+  "topic": "0_1 Stage4 EP9 failure root-cause bounded survey",
+  "baseline_commit": "229b85c655c32366818c2278462b51f3ad490913",
+  "baseline_dirty_summary": "dirty: tracked changes in 0_temp.txt, stage4 runtime files, project 0_1 logs/db, tests; multiple untracked docs/scripts/artifacts",
+  "session_id": "20260330_193026",
+  "source_docs": [
+    "docs/2026-03-30/0_1-stage4-ep9-round7-parallel-bounded-survey.md",
+    "docs/2026-03-30/0_1-stage4-ep9-round7-parallel-evidence.json",
+    "docs/2026-03-29/stage4-retry-loop-compression-full-survey.md",
+    "docs/2026-03-28/stage4-feedback-windowing-full-survey.md"
+  ],
+
+  "round_by_round_failure_matrix": [
+    {
+      "attempt": 1, "round": 0,
+      "ts": "2026-03-30T19:38:04",
+      "director_verdict": "PASS", "final_verdict": "REJECT",
+      "score": 98,
+      "gate_basis": "strong_advisory_escalation_non_local_fix",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack_ready": false, "fix_pack_reason": "missing_patch_targets",
+      "advisory_triggered_by": ["npc_drift"],
+      "content_hash_prefix": "2350aec0",
+      "retry_directives_len": 0, "runtime_advisory_len": 1388,
+      "npc_drift_claims": [
+        {"npc": "박성호", "field": "역할", "expected": "SW인베스트먼트 전담 PB", "found": "한미증권 본사 파생상품 데스크에서 직접 매수 주문을 처리하는 트레이더처럼 묘사됨"},
+        {"npc": "박성호", "field": "관계(relation_to_protag)", "expected": "목격자", "found": "한시우(대표)의 지시를 절대적으로 따르는 담당 PB 및 부하직원처럼 행동함"}
+      ]
+    },
+    {
+      "attempt": 2, "round": 1,
+      "ts": "2026-03-30T19:43:38",
+      "director_verdict": "PASS", "final_verdict": "REJECT",
+      "score": 90,
+      "gate_basis": "strong_advisory_escalation_non_local_fix",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack_ready": false, "fix_pack_reason": "missing_patch_targets",
+      "advisory_triggered_by": ["npc_drift"],
+      "content_hash_prefix": "218d3d3b",
+      "retry_directives_len": 1429, "runtime_advisory_len": 745,
+      "npc_drift_claims": [
+        {"npc": "박성호", "field": "position", "expected": "SW인베스트먼트 전담 PB", "found": "박 팀장님"},
+        {"npc": "박성호", "field": "position", "expected": "SW인베스트먼트 전담 PB", "found": "한미증권 파생상품 데스크의 팀장으로 묘사됨"}
+      ]
+    },
+    {
+      "attempt": 3, "round": 2,
+      "ts": "2026-03-30T19:48:41",
+      "director_verdict": "PASS", "final_verdict": "REJECT",
+      "score": 95,
+      "gate_basis": "strong_advisory_escalation_non_local_fix",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack_ready": false, "fix_pack_reason": "missing_patch_targets",
+      "advisory_triggered_by": ["flashback", "npc_drift"],
+      "content_hash_prefix": "218d3d3b",
+      "retry_directives_len": 732, "runtime_advisory_len": 1132,
+      "npc_drift_claims": [
+        {"npc": "박성호", "field": "position", "expected": "SW인베스트먼트 전담 PB", "found": "한미증권 본사 파생상품 데스크의 팀장으로 등장하여 직접 주문을 처리함"}
+      ],
+      "note": "content_hash identical to attempt 2 — candidate reselection, not regeneration"
+    },
+    {
+      "attempt": 4, "round": 3,
+      "ts": "2026-03-30T19:55:39",
+      "director_verdict": "PASS", "final_verdict": "REJECT",
+      "score": 92,
+      "gate_basis": "patch_reaudit_fail",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack_ready": true, "fix_pack_reason": "",
+      "advisory_triggered_by": [],
+      "content_hash_prefix": "1b790e6c",
+      "retry_directives_len": 1178, "runtime_advisory_len": 874,
+      "npc_drift_claims": [
+        {"npc": "박성호", "field": "position", "expected": "SW인베스트먼트 전담 PB", "found": "한미증권 본사 파생상품 데스크의 팀장으로 묘사됨"}
+      ],
+      "note": "Only round reaching PASS_WITH_FIX loop; patch applied but re-audit rejected"
+    },
+    {
+      "attempt": 5, "round": 4,
+      "ts": "2026-03-30T20:02:13",
+      "director_verdict": "PASS", "final_verdict": "REJECT",
+      "score": 95,
+      "gate_basis": "strong_advisory_escalation_non_local_fix",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack_ready": false, "fix_pack_reason": "missing_patch_targets",
+      "advisory_triggered_by": ["npc_drift"],
+      "content_hash_prefix": "a228e538",
+      "retry_directives_len": 861, "runtime_advisory_len": 535,
+      "npc_drift_claims": [
+        {"npc": "박성호", "field": "location", "expected": "한미증권 본사 파생상품 데스크 (씬 2)", "found": "설명 없이 시우의 대표실 내부에서 보고를 마치고 물러나는 모습으로 등장 (씬 4)"}
+      ],
+      "note": "New content_hash — actual regeneration occurred"
+    },
+    {
+      "attempt": 6, "round": 5,
+      "ts": "2026-03-30T20:07:52",
+      "director_verdict": "PASS", "final_verdict": "REJECT",
+      "score": 95,
+      "gate_basis": "strong_advisory_escalation_non_local_fix",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack_ready": false, "fix_pack_reason": "missing_patch_targets",
+      "advisory_triggered_by": ["npc_drift"],
+      "content_hash_prefix": "a228e538",
+      "retry_directives_len": 571, "runtime_advisory_len": 622,
+      "npc_drift_claims": [
+        {"npc": "박성호", "field": "position", "expected": "SW인베스트먼트 전담 PB", "found": "한미증권 본사 파생상품 데스크에서 김 대리의 상사인 팀장으로 묘사됨"}
+      ],
+      "note": "content_hash identical to attempt 5 — candidate reselection"
+    }
+  ],
+
+  "advisory_claim_vs_artifact_truth": {
+    "npc_drift_expected_source": {
+      "source": "world_state.get_npc_role_snapshot()",
+      "code_path": "modules/core/world_state.py:1337-1355",
+      "value_origin": "role_at_intro — frozen at first NPC registration, never updated",
+      "registration_code": "modules/core/stage4_post_pass_runtime.py:823-828"
+    },
+    "expected_value": "SW인베스트먼트 전담 PB",
+    "blueprint_truth": {
+      "scene_1": "수화기 너머 박성호 PB — phone conversation",
+      "scene_2": "한미증권 본사 파생상품 데스크. 박성호는 미세하게 떨리는 손가락으로... 매수 주문을 엔터키로 때려 넣었다",
+      "scene_3": "박성호 PB가 두꺼운 일일 브리핑 서류를 두 손으로 공손히 든 채 서 있었다",
+      "scene_4": "박 팀장님. 원유 브리핑은 여기까지 듣겠습니다"
+    },
+    "ep8_cumulative_state": "여의도 본사 파생상품 데스크 박성호 PB (완전히 굴복)",
+    "verdict": "NpcDrift advisory compares against stale role_at_intro, not current blueprint. Blueprint itself places 박성호 at 한미증권 파생상품 데스크. All manuscripts correctly follow blueprint. NpcDrift fires FALSE POSITIVES on position/role."
+  },
+
+  "fix_pack_generation_gap": {
+    "director_output_schema_path": "modules/domain/agents/director_prompts.py:135-172",
+    "director_schema_includes_fix_pack": false,
+    "advisory_escalation_generates_fix_pack": false,
+    "escalation_code_path": "modules/core/stage4_interview_round.py:2009-2028",
+    "evaluation_code_path": "modules/core/stage4_interview_round.py:1810-1828",
+    "gap_summary": "Director PASS verdict produces no fix_pack. Advisory escalation changes verdict to PASS_WITH_FIX but does not generate fix_pack. Lane2-G2b evaluates empty fix_pack and gates to REJECT. Structural deadlock: PASS→PASS_WITH_FIX→REJECT is inevitable when advisory triggers on a PASS verdict."
+  },
+
+  "patch_reaudit_fail_evidence": {
+    "attempt": 4,
+    "patch_loop_code": "modules/core/stage4_retry_runtime.py:90-236",
+    "reaudit_code": "modules/core/stage4_retry_runtime.py:568-645",
+    "verdict_processing": "modules/core/stage4_retry_runtime.py:647-737",
+    "patch_content": "Single line change in 박성호 psychology description",
+    "reaudit_uses_same_director": true,
+    "reaudit_uses_same_advisory_chain": true,
+    "note": "Re-audit director receives patched manuscript but NpcDrift advisory fires again with same stale expected values"
+  },
+
+  "hash_group_analysis": {
+    "groups": [
+      {"hash_prefix": "2350aec0", "attempts": ["01"], "type": "unique_generation"},
+      {"hash_prefix": "218d3d3b", "attempts": ["02", "03", "04/selected_before_fix"], "type": "candidate_reselection"},
+      {"hash_prefix": "1b790e6c", "attempts": ["04/patched"], "type": "patch_applied"},
+      {"hash_prefix": "a228e538", "attempts": ["05", "06"], "type": "candidate_reselection"}
+    ],
+    "distinct_manuscripts": 3,
+    "total_attempts": 6,
+    "reselection_rate": "50% (3 of 6 attempts reselected existing manuscript)"
+  },
+
+  "ui_events_attribution_drift": {
+    "session_window": "2026-03-30T19:30:00 to 2026-03-30T20:30:00",
+    "null_stage_events": 162,
+    "attributed_events": 294,
+    "null_ratio": "35.5%",
+    "unattributed_message_types": ["TF-4", "TF-PATCH-GATE", "QR-7", "TF-49b"],
+    "attributed_message_types": ["Director 면담 시작", "Round N/10", "후보 수"],
+    "root_cause": "owner.ctx.ui.log() calls in stage4_retry_runtime.py lack stage/ep_num parameters",
+    "impact": "SQL-based EP9 diagnosis impossible for retry-lane decisions; requires text-based correlation"
+  },
+
+  "pathology_records": {
+    "total": 7,
+    "fingerprints": {
+      "constraint_violation|fix_pack:missing_patch_targets": 5,
+      "constraint_violation|fix_pack_ready": 1,
+      "quality_issue|fix_pack:missing_patch_targets": 1
+    }
+  },
+
+  "tf4_full_rewrite_effectiveness": {
+    "tf4_fires": 4,
+    "timestamps": ["19:43:57", "19:48:58", "20:02:32", "20:08:13"],
+    "subsequent_round_still_rejected": true,
+    "root_cause_addressed": false,
+    "assessment": "TF-4 switches retry lane but does not address NpcDrift false positive or fix_pack contract gap. Burns retry budget without convergence."
+  }
+}

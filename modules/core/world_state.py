@@ -46,6 +46,27 @@ def _normalize_known_attr_value(raw) -> str:
     return str(raw or "").strip()
 
 
+def _resolve_authoritative_npc_role(info: dict) -> tuple[str, str]:
+    """Read-only ladder for the freshest NPC role/position truth."""
+    if not isinstance(info, dict):
+        return "", ""
+
+    known_attrs = info.get("known_attrs", {}) if isinstance(info.get("known_attrs"), dict) else {}
+    current_position = _normalize_known_attr_value(known_attrs.get("position"))
+    if current_position:
+        return current_position, "known_attrs.position"
+
+    current_role = str(info.get("role", "") or "").strip()
+    if current_role:
+        return current_role, "role"
+
+    role_at_intro = str(info.get("role_at_intro", "") or "").strip()
+    if role_at_intro:
+        return role_at_intro, "role_at_intro"
+
+    return "", ""
+
+
 def _normalize_pressure_vectors(raw_vectors, *, fallback_ep: int = 0) -> list[dict]:
     normalized: list[dict] = []
     seen_texts: set[str] = set()
@@ -1338,17 +1359,31 @@ class WorldStateManager:
         """NPC 원본 역할 스냅샷 반환 (TruthGate role 일관성 검사용).
 
         Returns:
-            {npc_name: {"role_at_intro": str, "first_seen_ep": int, "known_attrs": dict}}
+            {
+                npc_name: {
+                    "role": str,
+                    "role_at_intro": str,
+                    "authoritative_role": str,
+                    "authoritative_role_source": str,
+                    "first_seen_ep": int,
+                    "known_attrs": dict,
+                }
+            }
         """
         result = {}
         for name, info in self._state.get("alive_npcs", {}).items():
             if not isinstance(info, dict):
                 continue
+            role = str(info.get("role", "") or "").strip()
             role_at_intro = info.get("role_at_intro", "")
             known_attrs = info.get("known_attrs", {})
-            if role_at_intro or known_attrs:
+            authoritative_role, authoritative_role_source = _resolve_authoritative_npc_role(info)
+            if role_at_intro or authoritative_role or known_attrs:
                 result[name] = {
+                    "role": role,
                     "role_at_intro": role_at_intro,
+                    "authoritative_role": authoritative_role,
+                    "authoritative_role_source": authoritative_role_source,
                     "first_seen_ep": info.get("first_seen_ep", 0),
                     "known_attrs": known_attrs,
                 }

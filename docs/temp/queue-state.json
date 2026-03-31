@@ -1,11 +1,11 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-03-30T07:39:23.807852+00:00",
+  "generated_at": "2026-03-30T23:24:04.870714+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 6,
+  "active_item_count": 9,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
-    "canonical_path": "docs/2026-03-30/active-temp-execution-roadmap.md",
+    "canonical_path": "docs/2026-03-31/active-temp-execution-roadmap.md",
     "status": "active"
   },
   "items": [
@@ -13,6 +13,33 @@
       "topic": "0_1-stage3-blueprint-fix",
       "temp_path": "docs/temp/0_1-stage3-blueprint-fix-execution-ssot.md",
       "canonical_path": "docs/2026-03-30/0_1-stage3-blueprint-fix-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "0_1-stage4-cw-first-pass-false-miss-remediation",
+      "temp_path": "docs/temp/0_1-stage4-cw-first-pass-false-miss-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-03-31/0_1-stage4-cw-first-pass-false-miss-remediation-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "0_1-stage4-ep9-remediation",
+      "temp_path": "docs/temp/0_1-stage4-ep9-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-03-30/0_1-stage4-ep9-remediation-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "0_1-stage4-retry-efficiency-remediation",
+      "temp_path": "docs/temp/0_1-stage4-retry-efficiency-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-03-31/0_1-stage4-retry-efficiency-remediation-execution-ssot.md",
       "status": "pending",
       "depends_on": [],
       "mirror_present": true,
