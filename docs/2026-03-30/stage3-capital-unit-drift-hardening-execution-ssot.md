@@ -1,7 +1,7 @@
 # Stage 3 Capital Unit Drift Hardening - Execution SSOT
 
 Date: 2026-03-30
-Status: ready-for-execution
+Status: closed
 Confidence: 96%
 Canonical Path: `docs/2026-03-30/stage3-capital-unit-drift-hardening-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage3-capital-unit-drift-hardening-execution-ssot.md`
@@ -261,3 +261,14 @@ Final judgment:
 
 - execution-ready
 - single-file production patch remains the lowest-risk path
+
+## 12. Closure Update
+
+Date: 2026-03-31
+Closure Audit: `docs/2026-03-31/stage3-capital-unit-drift-hardening-closure-audit.md`
+Closure Evidence: `docs/2026-03-31/stage3-capital-unit-drift-hardening-closure-evidence.json`
+Status Rationale:
+- the live validator owner already contains `_collect_capital_unit_alignment_issues()`
+- `capital_unit` is already part of the binding prevalidation category set
+- focused regression coverage for positive, negative, single-candidate, and compare-path cases already passes
+- no new production patch was required in this closure turn because the implementation was already present in the workspace

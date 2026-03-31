@@ -1,22 +1,25 @@
 # Stage4 CW Webnovel Identity Context Hierarchy Remediation Execution SSOT
 
 Date: 2026-03-31
-Status: code-landed-static-validation-closed
+Status: closed (3-pass audited, realized, runtime-validated)
 Confidence: 96%
 Document Type: execution SSOT
 Canonical Path: `docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/stage4-cw-webnovel-identity-context-hierarchy-remediation-execution-ssot.md`
+Temp Mirror Path: `(closed; mirror removed after canonical closure update)`
 Baseline Commit: `170963d34d30d3076a57926c5d1ed250f13ec421`
 Baseline Dirty Summary: `0_2 frontier-run logs/db/ui mutation had been active during survey drafting`
-Resume Commit: `same-as-baseline`
-Resume Drift Summary: `run was operator-aborted mid frontier; post-run merge audit confirmed the remediation ordering remains stable`
+Resume Commit: `512b0d23498d386d5199db2c01304b0d53bfd5aa`
+Resume Drift Summary: `0_1 stage34 canary reached target_ep=14; runtime closure evidence confirmed the targeted hierarchy-remediation lane and temp mirror was retired`
 Source Survey Docs:
 - `docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-parallel-bounded-survey.md`
 - `docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-actionability-audit.md`
 - `docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-post-run-merge-audit.md`
+- `docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-runtime-closure-audit.md`
 Evidence Artifacts:
 - `docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-parallel-evidence.json`
 - `docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-actionability-evidence.json`
+- `docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-runtime-closure-evidence.json`
+- `projects/canary_0_1_stage34_ep14_cw_hierarchy/logs/stage34_canary_summary.json`
 - `projects/0_2/logs/session/decisions.jsonl`
 - `projects/0_2/logs/artifacts/stage4/ep_0002/attempt_01/patched_blueprint_after_fix__V75-D_blueprint_inplace.json`
 - `projects/0_2/logs/artifacts/stage4/ep_0002/attempt_02/selected_before_fix__A.txt`
@@ -369,21 +372,23 @@ Current realization status:
 
 - code landed for bounded Stage 4 writer-facing blueprint sanitize and Stage 3 prompt hardening
 - static validation closed on `2026-03-31`
+- runtime validation closed on `2026-03-31`
 - validation evidence:
   - `python -m py_compile modules/core/stage4_interview_round.py modules/domain/agents/blueprint_ensemble.py`
   - `python -m ruff check modules/core/stage4_interview_round.py modules/domain/agents/blueprint_ensemble.py tests/test_stage4_handoff_carryover_guardrail.py tests/test_stage3_blueprint_self_audit_wave.py tests/test_tier4_ensemble_caching.py tests/test_blueprint_ensemble_generate_ensemble.py`
   - `python scripts/check_utf8_hygiene.py modules/core/stage4_interview_round.py modules/domain/agents/blueprint_ensemble.py tests/test_stage4_handoff_carryover_guardrail.py tests/test_stage3_blueprint_self_audit_wave.py tests/test_tier4_ensemble_caching.py tests/test_blueprint_ensemble_generate_ensemble.py config/prompts/ensemble.yaml`
   - `pytest tests/test_stage4_handoff_carryover_guardrail.py tests/test_stage4_cw_false_miss_remediation.py tests/test_chief_writer_context.py -q`
   - `pytest tests/test_blueprint_ensemble_generate_ensemble.py tests/test_tier4_ensemble_caching.py tests/test_stage3_blueprint_self_audit_wave.py -q`
-- fresh Stage 3 -> Stage 4 rerun evidence is still pending before closure
+- `projects/canary_0_1_stage34_ep14_cw_hierarchy/logs/stage34_canary_summary.json`
+- `docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-runtime-closure-audit.md`
 
 Live verification:
 
-- fresh Stage 3 -> Stage 4 bounded rerun after the current frontier run finishes
-- validate:
-  - no HUD/status-window contamination in new blueprint/manuscript path
-  - reduced briefing/recap register in first-pass manuscripts
-  - no regression in opening-anchor and continuity compliance
+- fresh Stage 3 -> Stage 4 bounded rerun completed via `0_1` canary `EP10~14`
+- validated:
+  - no HUD/status-window contamination in the final blueprint/manuscript path
+  - reduced briefing/recap register on the final path for the validated window
+  - no contradictory regression signal requiring lane reopen
 
 ## 8. Regression Risks
 
@@ -422,12 +427,23 @@ Deferred to later wave unless rerun evidence still demands them:
 - model-tier changes
 - broad taxonomy or post-select policy redesign
 
-## 11. Save Gate
+## 11. Closure Note
 
-This SSOT is `code-landed-static-validation-closed`.
+This SSOT is now `closed (3-pass audited, realized, runtime-validated)`.
 
-Implementation gate:
+Closure evidence:
 
-1. rerun 3-pass audit against the live workspace immediately before code edits
-2. keep canonical and temp mirror synchronized
-3. after realization, validate with fresh Stage 3 -> Stage 4 rerun evidence before closure
+1. `projects/canary_0_1_stage34_ep14_cw_hierarchy/logs/stage34_canary_summary.json` recorded terminal `target_ep_reached` and `stage4_complete` at `2026-03-31 14:16:21`
+2. exact-token sweeps found no `HUD 상태`, `상태창`, `홀로그램`, `시스템 메시지`, or `system window` matches in the final `Stage 3` blueprint artifacts or final `Stage 4` manuscript path for `EP10~14`
+3. `rationale_contract_summary.status = ok` and `companion_audit_summary.status = ok`
+4. remaining retry churn in `EP11~14` was continuity / arithmetic / fix-pack pressure, not recurrence of the hierarchy-remediation target pathology
+
+Residual risk:
+
+- intermediate `patched_blueprint_after_fix__V75-D_blueprint_inplace.json` artifacts for `EP11` and `EP12` still contain legacy HUD markers
+- no evidence in this canary showed those intermediate artifacts contaminating the final selected path
+- reopen only if a later run proves those intermediate patch snapshots are being reused as authoritative input
+
+Temp queue action:
+
+- the temp mirror for this lane should be removed after canonical roadmap refresh, queue-state sync, and validator pass
