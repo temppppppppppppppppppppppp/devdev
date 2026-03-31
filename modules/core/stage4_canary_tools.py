@@ -420,7 +420,7 @@ def prepare_stage34_canary_project(
     """Copy a baseline project and reset Stage 3/4 outputs on the copy."""
     source = Path(source_root)
     target = Path(target_root)
-    from_ep = _normalize_from_ep(from_ep)
+    from_ep = _normalize_from_ep(from_ep, allow_partial=True)
     if not source.exists():
         raise FileNotFoundError(f"source project not found: {source}")
     if source.resolve() == target.resolve():
@@ -471,7 +471,7 @@ def reset_stage4_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict:
 def reset_stage34_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict:
     """Delete Stage 3/4 outputs while preserving Stage 2 arc design and anchors."""
     root = Path(project_root)
-    from_ep = _normalize_from_ep(from_ep)
+    from_ep = _normalize_from_ep(from_ep, allow_partial=True)
     db_path = root / "project_data.db"
     if not db_path.exists():
         raise FileNotFoundError(f"project database not found: {db_path}")

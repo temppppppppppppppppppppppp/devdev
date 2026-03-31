@@ -212,7 +212,7 @@ class ChiefWriterContextBuilder:
         )
 
         writing_directive = self._resolve_writing_directive(writing_directive)
-        writer_core_section = self._build_writer_core_section(
+        writer_hard_canon_section, writer_soft_guidance_section = self._build_writer_core_sections(
             blueprint=blueprint,
             world_state_section=self._build_world_state_section(world_state_summary),
             writing_directive=writing_directive,
@@ -221,6 +221,10 @@ class ChiefWriterContextBuilder:
             anti_trope_prompt=anti_trope_prompt,
             justification_prompt=justification_prompt,
             reflexion_prompt=reflexion_prompt,
+        )
+        writer_core_section = self._join_writer_sections(
+            writer_hard_canon_section,
+            writer_soft_guidance_section,
         )
         writing_guidelines = get_writing_guidelines_section()
         if genre_code == "investment":
@@ -240,6 +244,12 @@ class ChiefWriterContextBuilder:
             future_guard_section=packet_sections["future_guard_section"],
             past_guard_section=packet_sections["past_guard_section"],
             writer_core_section=writer_core_section,
+            writer_hard_canon_section=self.host._escape_braces(writer_hard_canon_section)
+            if writer_hard_canon_section
+            else "",
+            writer_soft_guidance_section=self.host._escape_braces(writer_soft_guidance_section)
+            if writer_soft_guidance_section
+            else "",
             hud_anomaly_section=packet_sections["hud_anomaly_section"],
             scene_breakdown=self.host._escape_braces(scene_breakdown),
             prev_digest=self.host._escape_braces(packet_sections["prev_digest"]),
@@ -286,8 +296,10 @@ class ChiefWriterContextBuilder:
         if integrated:
             integrated_scenario_advisory = (
                 "### [Advisory] 통합 시나리오 초안 (낮은 우선순위)\n"
-                "이 블록은 흐름 참고용이다. Opening Anchor / Immutable Facts / prev digest / structured scene contract와 "
-                f"충돌하면 아래 prose는 버려라.\n{integrated}"
+                "이 블록은 흐름 참고용이다. Opening Anchor / Immutable Facts / writer hard canon / prev digest / "
+                "structured scene contract와 충돌하면 아래 prose는 버려라.\n"
+                "이 prose의 요약/브리핑/HUD/상태창/시스템 문구를 그대로 답습하지 말고, 정본에 없는 메타 표현은 재사용하지 마라.\n"
+                f"{integrated}"
             )
         hook = blueprint.get("ending_hook", "")
         if hook:
@@ -491,7 +503,12 @@ class ChiefWriterContextBuilder:
             logging.debug(f"[I-25] character_voice guide failed (non-blocking): {error}")
         return ""
 
-    def _build_writer_core_section(
+    @staticmethod
+    def _join_writer_sections(*sections: str) -> str:
+        parts = [section.strip() for section in sections if section and section.strip()]
+        return "\n\n".join(parts)
+
+    def _build_writer_core_sections(
         self,
         *,
         blueprint: dict,
@@ -502,25 +519,21 @@ class ChiefWriterContextBuilder:
         anti_trope_prompt: str,
         justification_prompt: str,
         reflexion_prompt: str,
-    ) -> str:
-        writer_core_section = ""
+    ) -> tuple[str, str]:
         character_voice_section = self._build_character_voice_section(blueprint)
-        if character_voice_section:
-            writer_core_section += character_voice_section
-
-        core_sections = [
+        hard_canon_section = self._join_writer_sections(
             world_state_section,
-            self._build_writing_directive_section(writing_directive),
             reference_anchor_prompt,
             mandatory_context,
+        )
+        soft_guidance_section = self._join_writer_sections(
+            character_voice_section,
+            self._build_writing_directive_section(writing_directive),
             anti_trope_prompt,
             justification_prompt,
             reflexion_prompt,
-        ]
-        for section in core_sections:
-            if section:
-                writer_core_section += f"\n{section}\n"
-        return writer_core_section
+        )
+        return hard_canon_section, soft_guidance_section
 
     def _build_immutable_fact_section(
         self,
@@ -601,4 +614,3 @@ class ChiefWriterContextBuilder:
         [V65] 프롬프트 본문 함수 래핑 호출
         """
         return get_anti_trope_instructions(genre_name=genre_name)
-
