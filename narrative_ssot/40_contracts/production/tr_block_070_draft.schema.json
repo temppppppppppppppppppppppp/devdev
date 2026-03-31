@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "narrative_ssot/production/tr_block_070_draft.schema.json",
+  "title": "tr_block_070_draft",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": true,
+    "required": [
+      "block_id",
+      "title",
+      "content",
+      "stakes"
+    ],
+    "properties": {
+      "block_id": {
+        "oneOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "integer"
+          }
+        ]
+      },
+      "title": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      },
+      "stakes": {},
+      "opponent": {},
+      "payoff": {},
+      "hook_strength": {
+        "type": "string"
+      }
+    }
+  }
+}
+

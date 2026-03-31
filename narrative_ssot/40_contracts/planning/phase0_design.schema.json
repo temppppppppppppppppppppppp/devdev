@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "narrative_ssot/planning/phase0_design.schema.json",
+  "title": "phase0_design",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "work_id",
+    "title",
+    "protagonist",
+    "core_fantasy",
+    "opening_arc",
+    "representative_spike",
+    "growth_axis",
+    "opponent_transition_plan",
+    "payoff_axis"
+  ],
+  "properties": {
+    "work_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "protagonist": {
+      "type": "string"
+    },
+    "core_fantasy": {
+      "type": "string"
+    },
+    "opening_arc": {},
+    "representative_spike": {},
+    "growth_axis": {},
+    "opponent_transition_plan": {},
+    "payoff_axis": {}
+  }
+}
+
