@@ -1,0 +1,1028 @@
+python main_a.py
+[V61.3] Faulthandler 활성화 → crash_dump.log
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                 🎹 V40 SOVEREIGN COCKPIT                                                 ┃
+┃                                              Multi-Genre Production Factory                                              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                  🎹 V40 GENRE SELECTOR                                                   ┃
+┃                                                  장르별 전문 공정 선택                                                   ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+📚 [V40 Multi-Genre Factory] 장르를 선택하십시오:
+
+      1. 무협 (Wuxia)
+         → 강호 배경, 내공/경지 시스템, 무림 세력
+
+      2. 헌터 (Hunter Fantasy)
+         → 현대 배경, 각성/던전 시스템, 길드
+
+      3. 투자 (Investment Fiction)
+         → 금융 배경, 자본/투자 시스템, 기업/시장
+
+      4. 판타지 (Fantasy)
+         → 이세계 배경, 마법/마나 시스템, 종족/길드
+
+      5. 작곡가 (Composer Fiction)
+         → 현대 배경, 음악 창작/산업 시스템, 작곡/프로듀싱
+
+      6. 요리 (Cooking Fiction)
+         → 현대 배경, 셰프 성장/식당 경영 시스템, 요리/미식
+
+      7. 대체역사 (Alt History)
+         → 조선 시대 배경, 관직/당파/신분 시스템, 궁중 정치
+
+      8. 배우물 (Actor Fiction)
+         → 현대 배경, 연예계/배우 성장 시스템, 오디션/촬영/시상식
+
+      9. 스포츠 (Sports Fiction)
+         → 현대 배경, 선수 성장/팀 스포츠 시스템, 경기/훈련
+
+      10. 의학 (Medical Fiction)
+         → 현대 배경, 의사 성장/병원 시스템, 수술/진료
+
+✏️ Choice (1.무협 / 2.헌터 / 3.투자 / 4.판타지 / 5.작곡가 / 6.요리 / 7.대체역사 / 8.배우물 / 9.스포츠 / 10.의학): 3
+   ✅ [투자 (Investment Fiction)] 전문 공정이 선택되었습니다.
+      📌 HUD 시스템: INVESTMENT
+      📦 프리셋 초기화: investment
+
+[Enter] 프로젝트 선택으로 이동
+    1. 0_1
+    2. 0_1_arc4_fix_validation
+    3. 0_1_stage2_forward_consistency_canary
+    4. 0_1_stage3_ep5_canary
+    5. 0_1_stage4_ep4_canary
+    6. 0_1_stage4_ep4_canary_r2
+    7. 0_2
+    8. _unknown_project
+    9. test_project
+    10. 기록용
+
+👉 Choice: 7
+      ✅ [TF7-P0-03] preset_registry DB에서 복원 완료
+   💾 프로젝트 장르 정보 저장: 투자 (Investment Fiction)
+      ✅ [투자 (Investment Fiction)] HUD 시스템 초기화 완료
+      🔍 [V61.3] HUD 호환성 체크: FinanceHUDManager
+         ✅ 필수 속성 모두 존재
+         ⚠️ 선택적 속성 누락 (정상): inventory (property), techniques (property), snapshot (method), bulk_update (method)   
+   🛡️ [투자 (Investment Fiction)] Guard 시스템 초기화 완료
+   ✅ [System] Vector DB integrity check complete.
+   ✅ [VecMemory] sqlite-vec 벡터 엔진 초기화 완료
+[V61.3] Faulthandler 활성화 → crash_dump.log
+      🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + ConstraintCompiler)
+      🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight + Critic + Consensus)
+      🔧 [V60.42] Arc Corrector 초기화 (MAJOR 이슈 부분 수정: 활성화)
+      ⚡ [V60.25] Stage 2 Optimizer 활성화 (StateSnapshot + AutoCorrector + ConstraintAmplifier)
+      🎭 Director 장르 설정: investment
+      🛡️ Director Guard 연결 완료
+      ✍️ Writer Guard/Genre 연결 완료
+      ✅ V0128 검증 시스템 활성화
+      🔩 [V49.7] 트래커 대기 (Arc 데이터 없음)
+      📊 [V66] SemanticPlotGuard 초기화 완료 (임베딩 모드)
+      💓 [V60.26] 감정선 추적기 활성화
+      ⚡ [V60.26] 파워 스케일링 추적기 활성화
+      📊 [V60.26] 상태 변화 추적기 활성화
+      📦 [V60.26] 의미적 아이템 레지스트리 활성화
+      🎭 [V60.26] 캐릭터 음성 프로파일러 활성화
+      🔄 [V52.1] Self-Reflection Chain 활성화
+      🎯 [V52.3] Expert Mixture 활성화 (investment)
+      🔗 [V52.4] Cross-Agent Verifier 활성화
+      ⚖️ [V53.1] Dynamic Prompt Weighter 활성화
+      🔍 [V53.2] Chain-of-Verification 활성화
+      📊 [V53.3] Confidence Calibrator 활성화
+      ✅ [V53.4] Pre-Director Checklist 활성화
+      🌳 [V53.5] Tree of Thoughts 활성화 (Gemini 3)
+      ⚔️ [V53.6] Adversarial Self-Play 활성화
+      🗣️ [V53.7] Multi-Agent Deliberation 활성화
+      🔄 [V54.3] Adaptive Retry Manager 활성화 (FailureLearner 연동)
+      📜 [V55.2] Constitutional Checker 활성화
+      📝 [V55.3] Writer Template 활성화
+      📊 [V55.3] Pass Rate Monitor 활성화
+      📊 [V60] Quality Dashboard 활성화
+      🧭 [SC] Context Advisor 활성화
+      📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: investment)
+   ✅ [System] 모든 에이전트 안전하게 초기화 완료
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                               🎹 V40 SOVEREIGN PRODUCTION                                                ┃
+┃                                     Genre: 투자 (Investment Fiction) | Project: 0_2                                      ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+👇 Select Command:
+   0. Stage 0: Bible/역설계/스타일 추출 [❌]
+   1. Stage 1: Volume Strategy (선택) [⏭️ 스킵가능]
+   2. Stage 2: Arc Tactical Design (유동) [❌]
+   3. 📐 Stage 3: Episode Blueprinting (Batch Design)
+   4. 🚀 Stage 4: Sovereign Production (Writing)
+   5. Exit
+   6. 🔄 One-Stop: Arc-by-Arc 자동 파이프라인
+   7. 🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)
+   44. ⏪ [ROLLBACK] Stage 4 회차별 롤백 (Episode Rewind)
+   77. 🔥 [WIPE] 원고 생산 기록만 삭제 (Stage 4 초기화)
+   88. 🔥 [RESET] Stage 2 (Arcs) 초기화
+   99. ⏪ Stage 2 정밀 되감기 (Selective Rewind)
+
+   👉 Choice: 0
+   
+⚙️ Phase 0: S-Grade 데이터 주권 동기화 가동...
+   📌 현재 장르: 투자 (Investment Fiction) (investment)
+
+==================================================
+     📚 Stage 0 - 프로젝트 설정
+   ==================================================
+
+  [1] 기존 방식 - Bible/Treatment 파일 선택
+     [2] 🆕 컨셉 → Bible 생성 (AI 확장)
+     [3] 🔄 역설계 - 기존 원고에서 Bible/스타일 추출
+     [4] 📥 Bible JSON 임포트
+     [5] 📈 Block 확장 - 기존 Treatment에 블록 추가
+     [6] 🎨 스타일 레퍼런스 분석 - 참조 원고에서 문체 DNA 추출
+     [7] 🛡 작품가드 설정 (선택)
+
+  [0] 취소
+
+  선택 (기본: 1):
+   📚 [Bible Selection] 사용할 성경(Lore)을 선택하십시오:
+   1. 01_bi_투자물_골든_카나리아 테스트.json
+   2. 0_bi_chaebol_ent_empire.json
+   3. 0_bi_wuxia_heavenly_physician.json
+
+👉 Choice (1-3):
+   Bible 선택
+   🧬 [Roadmap Selection] V25 상세 설계도(JSON)를 선택하십시오:
+   1. 01_tr_투자물_골든_카나리아 테스트.json
+   2. chaebol_ent_empire_tr_block_070_draft.json
+   3. office_checkup_next_day_phase0_design.json
+   4. office_checkup_next_day_tr_block_070_draft.json
+   5. wuxia_heavenly_physician_tr_block_070_draft.json
+
+👉 Choice (1-5, 미입력 시 1번):
+   로드맵 선택
+   ✅ 로드맵 선택 완료: 01_tr_투자물_골든_카나리아 테스트.json
+   🔧 [V60.10] Treatment Block 자동 농축을 수행하시겠습니까? (y/N): n
+   
+📌 [V60.87] 주인공 기본 설정
+      🌍 주인공의 세계관 출신을 선택하세요:
+         [1] 현대인 - 제약 없음 (권장: 회귀/빙의물)
+         [2] 원시인 - 현대 지식/용어 사용 제한 (권장: 무협/판타지)
+   선택 (기본: 1):
+      🎭 주인공의 유형을 선택하세요:
+         [1] 회귀자 - 먼 미래에서 과거로 회귀 (기억 보존)
+         [2] 빙의자 - 다른 사람의 몸에 빙의
+         [3] 환생자 - 아기로 다시 태어남
+         [4] 기타 - 특별한 유형 없음
+   선택 (기본: 1):
+      📖 서술 시점을 선택하세요:
+         [1] 1인칭 - 주인공 '나'의 시점 (몰입감↑, 정보 제한)
+         [2] 3인칭 - 주인공을 '그/그녀'로 지칭 (자유도↑)
+         [3] 전지적 - 모든 캐릭터 내면 접근 가능
+         [4] 혼합 - 씬 전환마다 시점을 바꿔 사용할 수 있음
+   선택 (기본: 2): 4
+      📝 외부 시점 삽입 정책을 선택하세요:
+         [1] 금지
+         [2] 제한적 허용
+         [3] 적극 허용
+   선택 (기본: 2): 2
+      ✅ 설정 완료: 현대인 / 일반 / 혼합
+      💾 [V60.87] 주인공 설정이 Bible에 저장됨: {'world_origin': '현대인', 'incarnation_type': '일반', 'regression_point':  
+{'death_year': 2024, 'death_cause': '가문 몰락 이후 고독사', 'return_year': 2006, 'return_month': '2006년 1월', 
+'return_age': 26, 'return_context': '승마 국가대표 은퇴 직후'}, 'execution_doctrine': '가격이 아니라 이득 구조와 exit를 먼저
+본다. 확신 구간에서만 크게 베팅하고, 나머지는 현금과 통제권을 지킨다.', 'governance_doctrine': '가족 자산과 개인 자산 사이에
+방화벽을 둔다. 도움은 주되 운용권은 넘기지 않는다.', 'secrecy_rule': '회귀의 비밀은 끝까지 공개하지 않는다. 인정은 받아도   
+정체는 넘기지 않는다.', 'pov': '혼합', 'external_pov_insert_policy': '제한적 허용'}
+   🆕 [New Project] 기존 원고가 없습니다. 신규 프로젝트로 기동합니다.
+   ✨ [Success] 설계도(50개)와 원고 역사가 무결하게 통합되었습니다.
+
+[Enter] 메뉴로 돌아가기
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                               🎹 V40 SOVEREIGN PRODUCTION                                                ┃
+┃                                     Genre: 투자 (Investment Fiction) | Project: 0_2                                      ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+👇 Select Command:
+   0. Stage 0: Bible/역설계/스타일 추출 [✅]
+   1. Stage 1: Volume Strategy (선택) [⏭️ 스킵가능]
+   2. Stage 2: Arc Tactical Design (유동) [❌]
+   3. 📐 Stage 3: Episode Blueprinting (Batch Design)
+   4. 🚀 Stage 4: Sovereign Production (Writing)
+   5. Exit
+   6. 🔄 One-Stop: Arc-by-Arc 자동 파이프라인
+   7. 🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)
+   44. ⏪ [ROLLBACK] Stage 4 회차별 롤백 (Episode Rewind)
+   77. 🔥 [WIPE] 원고 생산 기록만 삭제 (Stage 4 초기화)
+   88. 🔥 [RESET] Stage 2 (Arcs) 초기화
+   99. ⏪ Stage 2 정밀 되감기 (Selective Rewind)
+
+   👉 Choice: 0
+   
+⚙️ Phase 0: S-Grade 데이터 주권 동기화 가동...
+   📌 현재 장르: 투자 (Investment Fiction) (investment)
+
+==================================================
+     📚 Stage 0 - 프로젝트 설정
+   ==================================================
+
+  [1] 기존 방식 - Bible/Treatment 파일 선택
+     [2] 🆕 컨셉 → Bible 생성 (AI 확장)
+     [3] 🔄 역설계 - 기존 원고에서 Bible/스타일 추출
+     [4] 📥 Bible JSON 임포트
+     [5] 📈 Block 확장 - 기존 Treatment에 블록 추가
+     [6] 🎨 스타일 레퍼런스 분석 - 참조 원고에서 문체 DNA 추출
+     [7] 🛡 작품가드 설정 (선택)
+   
+  [0] 취소
+
+  선택 (기본: 1): 6
+   [*] 레퍼런스 로드 완료: 1개 작품, 1개 에피소드
+   - 참조작품1: 1개
+
+  분석을 시작하시겠습니까? (y/n): y
+   스타일 캐시 모드
+   [1] 캐시 사용 (기본)
+   [2] 참조 원고 기준 재분석
+   [3] 장르 캐시 초기화 후 재분석
+
+  선택 (기본: 1):
+   [*] 스타일 캐시 모드: 캐시 사용
+   [*] 문체 DNA 추출 중... (참조 원고 분석 - 시간 소요)
+    문체 DNA 추출 완료 (vv2)
+   - 캐시 상태: 캐시 사용
+   - 참조 원고: 1개 / 4,247,609자
+   - 참조 작품: 참조작품1
+   - 모범 문단: 15개
+   - Anti-AI 패턴: 10개
+   - 저장: C:\Users\User\Desktop\글도비\projects\0_2\stage0_output\style_guide.json
+   ✅ [V70] StyleGuide DB 저장 완료 (anchor: style_guide)
+
+[Enter] 메뉴로 돌아가기
+
+[Enter] 메뉴로 돌아가기
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                               🎹 V40 SOVEREIGN PRODUCTION                                                ┃
+┃                                     Genre: 투자 (Investment Fiction) | Project: 0_2                                      ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+👇 Select Command:
+   0. Stage 0: Bible/역설계/스타일 추출 [✅]
+   1. Stage 1: Volume Strategy (선택) [⏭️ 스킵가능]
+   2. Stage 2: Arc Tactical Design (유동) [❌]
+   3. 📐 Stage 3: Episode Blueprinting (Batch Design)
+   4. 🚀 Stage 4: Sovereign Production (Writing)
+   5. Exit
+   6. 🔄 One-Stop: Arc-by-Arc 자동 파이프라인
+   7. 🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)
+   44. ⏪ [ROLLBACK] Stage 4 회차별 롤백 (Episode Rewind)
+   77. 🔥 [WIPE] 원고 생산 기록만 삭제 (Stage 4 초기화)
+   88. 🔥 [RESET] Stage 2 (Arcs) 초기화
+   99. ⏪ Stage 2 정밀 되감기 (Selective Rewind)
+
+   👉 Choice: 7
+   ──────────────────────────────────────────────────
+   📥 [Resume] 프로젝트: 0_2
+      Arc 설계: 0개 완료
+      Blueprint: ep 0까지 완료
+      원고: ep 0까지 완료
+   ──────────────────────────────────────────────────
+
+════════════════════════════════════════════════════════════
+   🧭 [FrontierLag] One-Stop Frontier Lag
+      설계 frontier: 0 / 60 (추가 설계 가능: 60개)
+   ════════════════════════════════════════════════════════════
+
+👉 이번 실행에서 몇 개 Arc를 처리할까요? (1~60, 기본: 3): 2
+      🎯 [FrontierLag] 이번 실행 목표 Arc 수: 2
+      [FrontierLag] auto-selected default batch_size: 3 (remaining_design=60)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   🧭 [FrontierLag] Arc 1/60 frontier 전진 (1/2)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   📐 [Stage 2] Arc 1 설계 중...
+   🔞 [Stage 2] 0124 매니페스트 정합 엔진 및 멀티 공정 기동...
+   ⚠️ [Notice] Volume 전략이 없습니다. 기본값으로 Arc 단계를 진행합니다.
+   📝 [V42] 주인공 이름 락: 한시우
+   📤 현재 단계 완료: 0 / 60 아크
+   🔕 Tip: 결과를 직접 보기 위해 1~10개(권장 2개 내외) 진행을 권장합니다.
+   📝 [V49.4] ConstraintDB 초기화 완료 (기존 Arc: 0개)
+ ⠋ Batch 1~1 batch enrich  0s   [Batch] 1~1 range enrich start
+         [Enrich] Block 1 task start
+ ⠙ Batch 1~1 LLM enrich in progress (0/1)...  24s         [Enrich] Block 1 task done (1/1)
+         [Enrich Phase] Batch 1~1 completed: 25.2s (1 items)
+ ⠋ Arc 순차 설계 (총 1개)  0s         ⏳ [Preflight] 병렬 분석 시작 (arc_drive + preflight + constraint)...
+ ⠸ Arc 1/1 설계 중...  14s         ✅ [Preflight] arc_drive 완료
+         ✅ [Preflight] preflight 완료
+         ✅ [Preflight] constraint 완료
+         ⏳ [Stage 2] Arc 1 attempt 1/10: preflight/four-phase tactical generation 대기...
+      🧠 [Arc 1] 전술 설계 중 (시도 1/10)...
+         ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료
+         🎯 [V60.77] FourPhase-Director 대면 1/5
+ ⠇ Arc 1/1 설계 중...  3m 5s
+ ⠦ Arc 1/1 설계 중...  3m 10s         🔎 [Stage 2] Arc 1 attempt 1: generation=four_phase · validation 진입
+         🔍 [TF-38] Pre-Director 검증 체인 시작
+ ⠴ Arc 1/1 설계 중...  3m 15s         ✅ [TF-38] Pre-Director 검증 완료 → Director 심사 대기
+         🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...
+ ⠇ Arc 1/1 설계 중...  3m 35s   
+      🎬 [Director] PASS_WITH_FIX (score=90)
+            전체적인 서사 흐름, 페이싱, 인과율 밀도는 훌륭하며 원작 블록의 의도를 완벽하게 반영하고 있습니다. 다만, 
+현대물임에도 불구하고 각 화의 시작
+            /종료 상태 텍스트에 '내공'이라는 무협 장르 용어가 남아 있어 수정이 필요합니다.
+            📌 모순 1건:
+               ▸ 현대물(투자) 장르임에도 상태 텍스트에 '내공'이라는 무협 용어가 남아있음.
+         🔧 [TF-32-V] PASS_WITH_FIX patch #1/3 (fix: 각 화의 [시작 상태] 및 [종료 상태] 텍스트에 포함된 '내공 100%', '내공  
+95%' 등의 무협 장르 전용 용어를 삭제하십시오.)
+ ⠧ Arc 1/1 설계 중...  4m 40s         🔄 [TF-38] Director 재심사 #1 호출 중...
+ ⠼ Arc 1/1 설계 중...  4m 57s         🎬 [TF-32-V] 재심사 #1: PASS (score=95)
+         ?좑툘 [TF-32-V] Patch pressure exceeded -> advisory only, PASS ?좎?
+         [V49.4] ConstraintDB 업데이트 완료 (총 1개 Arc)
+ ⠸ Arc 1/1 설계 중...  5m 20s         ✨ [V60.25] Arc 1 최종 성공 - 실패 메모리 클리어
+   ✅ 배치(1~1) 욕망 엔진 이식 및 용접 완료.                                                                                
+   ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+      ✅ [Stage 2] Arc 1 완료 (ep 1~4)
+      🧭 [FrontierLag] true_final=60, frontier=1, ep=1~4, S3→3 (backlog), S4→2 (backlog)
+      📌 [FrontierLag] bp_max=0 / ms_max=0
+
+   📐 [Stage 3] Blueprint frontier 동기화 (target <= ep 3)...
+         🌍 [V68] WorldStateManager 초기화 (신규)
+         📋 [V68] 팩트 원장 초기화 (신규)
+   📂 [Fresh Start] 기존 데이터 없음 - 1화부터 시작
+   📊 [V60.80] 현재 총 4화까지 설계가 가능합니다.
+
+════════════════════════════════════════════════════════════
+   🎯 [V60.80] Three Phase Blueprint Generator 시작
+      범위: 제1화 ~ 제3화 (3개)
+   ════════════════════════════════════════════════════════════
+
+         ⏳ Entity Registry 추출 중... (Arc 0, 첫 호출)
+         📋 [V61] Entity Registry 추출: 39개 엔티티
+
+   📐 제1화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
+ ⠋ 제1화  0s         ⏳ 제1화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제1화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=0, semantic_ctx=2176자)
+ ⠇ 제1화 · Blueprint 생성  3m 47s         📊 제1화 Blueprint 결과: PASS (score=85)
+         └─ 선택 전략: dialogue_focused
+         └─ Director 판정: 장르적 재미(시드머니 파악)가 우수하나 엔딩 훅 대사 누락 및 구체성 보완 필요
+         비교 메모: 후보 1은 전개가 무난하나 다소 밋밋함. 후보 3은 각성 부작용 묘사가 강렬하지만 실질적인 다음 행동(투자    
+준비)으로의 연결이 부족함. 후보 2는 현재 자산 파악 및 해외 선물 시장 진입이라는 구체적인 목표를 즉각적으로 제시하여         
+회귀/재벌물 장르의 기대감을 가장 잘 충족함.
+         보완 포인트: 전체적인 서사 구조와 장르적 문법은 훌륭하게 짜여 있으므로, 결말부의 대사 추가 및 고유명사(인물/기관명)
+삽입 등 국소적인 텍스트 보완(inplace)만으로도 지적된 문제를 충분히 해결할 수 있음.
+         주의: intent 불일치: Arc 관계 변화 NPC 3명 blueprint 미언급
+         주의: 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 3개 < 5개 (1461자 중)
+      [Stage3] blueprint success (verdict=PASS, strategy=dialogue_focused, score=85)                                        
+      [Stage3] ep 1 blueprint save completed
+         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 0)
+
+   📐 제2화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
+ ⠋ 제2화  0s         ⏳ 제2화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제2화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=1, semantic_ctx=2176자)
+ ⠧ 제2화 · Blueprint 생성  5m 34s         📊 제2화 Blueprint 결과: PASS (score=90)
+         └─ 선택 전략: emotion_focused
+         └─ Director 판정: score strong (90.0)
+      [TF-49] inventory gaps 3: 스마트폰(2006년형), 지갑, 자산 내역서                                                       
+      [Stage3] blueprint success (verdict=PASS, strategy=emotion_focused, score=90)
+      [Stage3] ep 2 blueprint save completed
+         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 0)
+
+   📐 제3화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
+ ⠋ 제3화  0s         ⏳ 제3화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제3화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=2, semantic_ctx=2176자)
+ ⠸ 제3화 · Blueprint 생성  13m 39s         📊 제3화 Blueprint 결과: PASS (score=88)
+         └─ 선택 전략: emotion_focused
+         └─ Director 판정: 금융 디테일이 가장 뛰어나며, 가족 NPC 3명과의 관계 변화를 훌륭하게 담아냄.
+         비교 메모: 후보 1은 엔딩 훅의 긴장감은 좋으나 가족 NPC와의 상호작용이 부족하여 Advisory를 완전히 해소하지 못함.    
+후보 3은 불필요한 물리적 액션(차량 추격, 괴한 습격)이 포함되어 금융/기업물로서의 서사 톤을 해침. 후보 2는 수수료, 호가, 펀드
+환매 등 금융 디테일이 우수하고 가족과의 정서적 단절을 잘 표현하여 가장 적합함.
+         보완 포인트: 전반적인 씬의 배치, 대사의 퀄리티, 금융 고증이 훌륭하므로 씬을 재작성할 필요 없이 도입부의 동선 연결과
+엔딩 훅의 문장만 국소적으로 수정(inplace)하면 완벽한 시나리오가 됨.
+         모순 메모: 공간적 연속성 오류: 이전 화 엔딩 훅에서 이미 '육중한 현관문이 열리며' 외부의 겨울바람을 맞는 상황이 
+묘사되었으나, 이어지는 문장에서 '서재를 나선 한시우가 1층 로비에 다다랐을 때'로 시공간이 미세하게 역행하여 묘사됨.
+         주의: intent 불일치: Arc 관계 변화 NPC 3명 blueprint 미언급
+      [TF-49] inventory gaps 4: 스마트폰(2006년형), 지갑, 자산 내역서, 20억 4천만 원이 찍힌 잔고 증명서                     
+      [Stage3] blueprint success (verdict=PASS, strategy=emotion_focused, score=88)
+      [Stage3] ep 3 blueprint save completed
+
+════════════════════════════════════════════════════════════
+   📊 [V60.80] Stage 3 완료 통계
+      성공: 3개 | 실패: 0개
+      통과율: 54.5%
+   ════════════════════════════════════════════════════════════
+
+      ✅ [Stage 3] Blueprint 완료 (성공: 3, 실패: 0)
+   
+   🚀 [Stage 4] Manuscript frontier 동기화 (target <= ep 2)...
+   ──────────────────────────────────────────────────
+   📥 [Resume] 프로젝트: 0_2
+      Arc 설계: 1개 완료
+      Blueprint: ep 3까지 완료
+      원고: ep 0까지 완료
+      예상 총 에피소드: 4
+   ──────────────────────────────────────────────────
+   🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동
+      • Chief Writer 모델: gemini-3.1-pro-preview
+      • 앙상블: 3개 병렬 생성
+      • Director 면담: 5번 기회 (패치 모드 전 라운드 적용)
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                  🎹 V60.80 CHIEF WRITER                                                  ┃
+┃                                                Director 주권주의 아키텍처                                                ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+   🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: 진지, 시점: 혼합)
+   
+============================================================
+   📝 제1화 집필 시작 (Arc 1, 위치 1/4)
+   ============================================================
+ ⠋ 제1화 · 앙상블 준비  0s      🔄 [Round 1/10] 원고 생성 시도...
+ ⠹ 제1화 · 앙상블 준비  19s   
+🎬 [1차 면담] Chief Writer 앙상블 생성 중...
+      🎬 [1차 면담] 원고 앙상블 생성 중...
+ ⠧ 제1화 · 1차 면담 · 앙상블 생성  4m 11s      🔍 Python 사전 검증 중...
+         • 서사 강조: 경고 1개, 분량 4162자
+         • 긴장감 + 반전 강조: 경고 1개, 분량 4484자
+         • 균형 전략: 경고 0개, 분량 7385자
+         ⏳ [SC-5] Director 벡터 메모리 수집 중...
+      ⚠️ [PreCheck] 후보1: ❌ 실패 2건, 경고 1건...
+      ⚠️ [PreCheck] 후보2: ❌ 실패 1건, 경고 2건...
+      🎬 Director 면담 중...
+
+   ========================================================
+      🎬 Director 면담 시작 (제1화, 1차)
+      후보 수: 3개
+      후보 A: 경고 8건, 분량 4162자
+         - ⚠️ 분량 부족: 4162자 (목표 5000자)
+         - [PreCheck] 대화 비율 심각 부족: 9% (스타일 목표 30%, 현재 370자) → 약 545자 대화 추가 필요
+         - [PreCheck] 서사 폭주 감지: 초반에 해결 키워드 4개 집중 (사건을 더 잘게 쪼개라)
+         - [Confidence:medium] 길이가 다소 짧음 (4162자)
+         - [Confidence:medium] 대화/묘사 비율 불균형
+      후보 B: 경고 5건, 분량 4484자
+         - ⚠️ 분량 부족: 4484자 (목표 5000자)
+         - [PreCheck] 대화 비율 심각 부족: 6% (스타일 목표 30%, 현재 269자) → 약 717자 대화 추가 필요
+         - [Confidence:medium] 길이가 다소 짧음 (4484자)
+         - [Confidence:medium] 대화/묘사 비율 불균형
+         - [Confidence:medium] 대화 비율 문제 (0.3)
+      후보 C: 경고 4건, 분량 7385자
+         - [Confidence:high] 대화/묘사 비율 불균형
+         - [Confidence:high] 대화 비율 문제 (0.6)
+         - [CrossVerify:VIOLATION] 5개 씬 중 0개만 감지됨 (0%)
+         - [CrossVerify:VIOLATION] ending_hook '"지금 당장 현금화할 수 있는 자산이 얼마나 되죠?"...'이 원고 끝에 없음       
+      ========================================================
+         ⏳ Advisory 체인 9개 병렬 실행 중...
+ ⠸ 제1화 · 1차 면담 · Director 심사  4m 14s         ✅ Advisory 체인 완료 — 1건 경고
+            [StyleSignal] 1건
+               [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director]
+- [후보 A] ai_slop score 1.00 / hits=입을 열었다x1
+- [후보 A] ced_score 8.00 (python warnings 8건)
+- [후보 B] ai_slop score 3.00 / hits=입을 열었다x2, 순식간에x1
+- [후보 B] ced_score 5.00 (python warnings 5건)
+- [후보 C] ai_slop score 2.00 / hits=숨을 삼켰다x1, 입을 열었다x1
+- [후보 C] ced_score 4.00 (python warnings 4건)
+      ⏳ Director 판정 대기: 후보 3개 / advisory 1건 / LLM 응답 대기 중...
+ ⠙ 제1화 · 1차 면담 · Director 심사  4m 55s      📊 Director 판정: REJECT (초기: REJECT, 점수: 88, 선택: 후보 C)
+         └─ 사유: Blueprint에 없는 씬 6이 임의로 추가됨...
+
+   📊 Director 판정 결과:
+         판정: REJECT | 초기: REJECT | gate: director_primary_reject | 점수: 88 | 선택: 후보 C
+         선택 사유: 후보 A와 B는 Blueprint에 명시된 핵심 설정인 '초기 자본금 20억 원'을 무시하고 가용 자산을 0원으로 임의   
+변경하는 치명적인 오류를 범했습니다. 반면 후보 C는 자본금 설정을 충실히 반영하였으며, 주인공
+         판정 근거: gate=director_primary_reject | error=-
+         사유: Blueprint에 없는 씬 6이 임의로 추가됨
+         지시사항:
+            - 씬 6 전체를 삭제하십시오.
+            - 씬 5의 마지막을 최민호 PB에게 질문을 던지는 대사('지금 당장 현금화할 수 있는 자산이 얼마나 되죠?')로 끝맺고,  
+그 뒤에 이어지는 대화나 묘사는 모두 삭제하십시오.
+      ❌ 1차 면담 REJECT. 피드백: [근거 요약 - 수정 시 반드시 반영]
+  [STYLE] ai_slop score 2.00 / hits=숨을 삼켰다x1, 입을 열었다x1
+  [STYLE] ced_score 4.00 (python warnings 4건)
+씬 6 전체를 삭제하십시오.
+씬 5의 마지막을 최민호 PB에게 질문을 던지는 대사('지금 당장 현금화할 수 있는 자산이 얼마나 되죠?')로 끝맺고, 그 뒤에        
+이어지는 대화나 묘사는 모두 삭제하십시오.
+[자유 리뷰] 후보 C는 주인공의 처절한 과거와 회귀 후의 냉혹한 변화를 매우 몰입감 있게 그려냈습니다. 특히 경제 지표를 활용한  
+상황 판단 묘사가 투자물의 매력을 잘 살렸습니다. 다만 Blueprint의 지시를 넘어 씬 6을 임의로 추가하고, 엔딩 훅 이후에 사족을  
+붙인 점이 아쉽습니다. 이 부분만 덜어내면 완벽한 1화가 될 것입니다.
+[Advisory 핵심 요약 - 재시도 시 반영]
+- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / -     
+[후보 A] ai_slop score 1.00 / hits=입을 열었다x1 / - [후보 A] ced_score 8.00 (python warnings 8건) / - [후보 B] ai_slop     
+score 3.00 / hits=입을 열었다x2, 순식간에x1 / - [후보 B] ced_score 5.00 (python warnings 5건) / - [후보 C] ai_slop score    
+2.00 / hits=숨을 삼켰다x1, 입을 열었다x1 / - [후보 C] ced_score 4.00 (python warnings 4건)
+      ❌ [Round 1/10] REJECT → 다음 라운드
+      🔄 [Round 2/10] 원고 생성 시도...
+ ⠼ 제1화 · 1차 면담 · Director 심사  5m 21s   
+🎬 [2차 면담] Chief Writer 앙상블 생성 중...
+      🎬 [2차 면담] 원고 앙상블 생성 중...
+      [TF-PATCH-GATE] non-ready fix_pack -> patch 차단, rewrite 경로 사용
+ ⠏ 제1화 · 2차 면담 · 앙상블 생성  8m 54s      🔍 Python 사전 검증 중...
+         • 균형 전략: 경고 0개, 분량 5281자
+         • 긴장감 + 반전 강조: 경고 1개, 분량 4308자
+         ⏳ [SC-5] Director 벡터 메모리 수집 중...
+      ⚠️ [PreCheck] 후보2: ❌ 실패 1건, 경고 1건...
+      🎬 Director 면담 중...
+   
+   ========================================================
+      🎬 Director 면담 시작 (제1화, 2차)
+      후보 수: 2개
+      후보 A: 경고 3건, 분량 5281자
+         - [Confidence:medium] 대화/묘사 비율 불균형
+         - [Confidence:medium] 대화 비율 문제 (0.7)
+         - [Confidence:medium] Blueprint 씬 반영 부족
+      후보 B: 경고 5건, 분량 4308자
+         - ⚠️ 분량 부족: 4308자 (목표 5000자)
+         - [PreCheck] 대화 비율 심각 부족: 8% (스타일 목표 30%, 현재 327자) → 약 620자 대화 추가 필요
+         - [Confidence:medium] 길이가 다소 짧음 (4308자)
+         - [Confidence:medium] 대화/묘사 비율 불균형
+         - [Confidence:medium] 대화 비율 문제 (0.3)
+      ========================================================
+         ⏳ Advisory 체인 9개 병렬 실행 중...
+ ⠸ 제1화 · 2차 면담 · Director 심사  8m 57s         ✅ Advisory 체인 완료 — 1건 경고
+            [StyleSignal] 1건
+               [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director]
+- [후보 A] ced_score 3.00 (python warnings 3건)
+- [후보 B] ced_score 5.00 (python warnings 5건)
+      ⏳ Director 판정 대기: 후보 2개 / advisory 1건 / LLM 응답 대기 중...
+ ⠹ 제1화 · 2차 면담 · Director 심사  9m 32s      📊 Director 판정: PASS  (초기: PASS, 점수: 96, 선택: 후보 A)
+         └─ 사유: 후보 A는 회귀 전의 처절한 상황과 회귀 후의 냉철한 상황 판단을 대비감 있게 잘 묘사했습니다. 레버리지 및 
+수익률 계산이 정확하며, Bluep...
+
+   📊 Director 판정 결과:
+         판정: PASS | 초기: PASS | gate: director_primary_pass | 점수: 96 | 선택: 후보 A
+         판정 근거: gate=director_primary_pass | error=-
+         사유: 후보 A는 회귀 전의 처절한 상황과 회귀 후의 냉철한 상황 판단을 대비감 있게 잘 묘사했습니다. 레버리지 및 수익률
+계산이 정확하며, Blueprint의 모든 씬과 엔딩 훅을 충실히 반영했습니다. 후보 B에 비해 대
+      Round 2 PASS!
+ ⠹ 제1화 · 2차 면담 · Director 심사  9m 32s      ✅ [Round 2] PASS
+                                                                                                                            
+📦 제1화 데이터 정산 중...
+      📖 [V60.82] Manager 정산 비동기 제출...
+         ⏳ [S4-I6] Manager 정산 비동기 실행 중...
+      ✅ 벡터 메모리 저장 (arc=1, events=set())
+         ⏳ Manager 정산 대기: 비동기 audit future 완료를 기다리는 중...
+         ✅ Manager 정산 완료
+      📖 Episode Bible 저장 11개 변화 기록
+         • 신규 아이템/무공: 은색 슬라이드 휴대전화, 통장들, 승마 트로피들, 부동산 등기부등본, 증권사 자산 내역서
+         • 신규/갱신 NPC: 어머니, 최민호
+         • 지속 압박/위협: "지금 당장 현금화할 수 있는 자산이 얼마나 되죠?", 개인 자산을 확인하고 투자를 위한 첫 행동에     
+돌입하며 마무리
+      🌍 [V68] 세계 상태 갱신 완료 (제1화)
+      📋 [V68] 팩트 원장 갱신 완료 (인물 2명, 아이템 5개)
+      🏷️ 만족도 태그: 이행 (9/10, 자력)
+      📊 [TF-I24] 호흡 분석 저장: 점수 85/100, 대화 21%, 장면전환 4회
+
+✅ 제1화 '에피소드 1' 생산 완료! (5203자)
+      ℹ️ [TF-49b] Preflight: 3건 참고 사항 (경미, 패치 불필요)
+   
+============================================================
+   📝 제2화 집필 시작 (Arc 1, 위치 2/4)
+   ============================================================
+ ⠋ 제2화 · 앙상블 준비  0s      🔄 [Round 1/10] 원고 생성 시도...
+ ⠧ 제2화 · 앙상블 준비  34s   
+🎬 [1차 면담] Chief Writer 앙상블 생성 중...
+      🎬 [1차 면담] 원고 앙상블 생성 중...
+ ⠙ 제2화 · 1차 면담 · 앙상블 생성  5m 31s      🔍 Python 사전 검증 중...
+         • 긴장감 + 반전 강조: 경고 0개, 분량 6095자
+         • 서사 강조: 경고 0개, 분량 5545자
+         • 균형 전략: 경고 0개, 분량 6168자
+ ⠙ 제2화 · 1차 면담 · 앙상블 생성  5m 31s         ⏳ [SC-5] Director 벡터 메모리 수집 중...
+ ⠙ 제2화 · 1차 면담 · Python 검증  5m 31s         ✅ [SC-5] 1건 수집 완료
+      ⚠️ [PreCheck] 후보1: ❌ 실패 2건, 경고 2건...
+ ⠹ 제2화 · 1차 면담 · Python 검증  5m 31s      ⚠️ [PreCheck] 후보2: ❌ 실패 1건, 경고 1건...
+      ⚠️ [PreCheck] 후보3: ❌ 실패 1건, 경고 2건...
+      🎬 Director 면담 중...
+
+   ========================================================
+      🎬 Director 면담 시작 (제2화, 1차)
+      후보 수: 3개
+      후보 A: 경고 4건, 분량 6095자
+         - [PreCheck] Blueprint 시작 장소 '2006년 본가 저택 한시우의 방' 키워드가 원고 첫 600자에서 핵심 위치 토큰 0/4개    
+발견됨 — 시작 계약 완전 위반
+         - [PreCheck] 서사 폭주 감지: 초반에 해결 키워드 3개 집중 (사건을 더 잘게 쪼개라)
+         - [Confidence:high] 대화/묘사 비율 불균형
+         - [Confidence:high] 대화 부족
+      후보 B: 경고 4건, 분량 5545자
+         - [PreCheck] Blueprint 시작 장소 '2006년 본가 저택 한시우의 방' 키워드가 원고 첫 600자에서 핵심 위치 토큰 0/4개    
+발견됨 — 시작 계약 완전 위반
+         - [Confidence:medium] 대화/묘사 비율 불균형
+         - [Confidence:medium] 대화 부족
+         - [Confidence:medium] 감각 묘사 부족
+      후보 C: 경고 4건, 분량 6168자
+         - [PreCheck] Blueprint 시작 장소 '2006년 본가 저택 한시우의 방' 키워드가 원고 첫 600자에서 핵심 위치 토큰 0/4개    
+발견됨 — 시작 계약 완전 위반
+         - [Confidence:medium] 대화/묘사 비율 불균형
+         - [Confidence:medium] 대화 비율 문제 (0.8)
+         - [Confidence:medium] 감각 묘사 부족
+      ========================================================
+         ⏳ Advisory 체인 9개 병렬 실행 중...
+ ⠹ 제2화 · 1차 면담 · Director 심사  5m 55s         ✅ Advisory 체인 완료 — 1건 경고
+            [StyleSignal] 1건
+               [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director]
+- [후보 A] ai_slop score 1.00 / hits=입을 열었다x1
+- [후보 A] ced_score 4.00 (python warnings 4건)
+- [후보 B] ai_slop score 2.00 / hits=입을 열었다x2
+- [후보 B] ced_score 4.00 (python warnings 4건)
+- [후보 C] ai_slop score 1.00 / hits=입을 열었다x1
+- [후보 C] ced_score 4.00 (python warnings 4건)
+      ⏳ Director 판정 대기: 후보 3개 / advisory 1건 / LLM 응답 대기 중...
+ ⠏ 제2화 · 1차 면담 · Director 심사  6m 36s      📊 Director 판정: PASS_WITH_FIX  (초기: PASS_WITH_FIX, 점수: 95, 선택: 후보 C)
+         └─ 사유: 첫 문단에 명시적인 시작 장소 키워드('2006년 본가 저택 한시우의 방') 누락...
+
+   📊 Director 판정 결과:
+         판정: PASS_WITH_FIX | 초기: PASS_WITH_FIX | gate: director_primary_pass_with_fix | 점수: 95 | 선택: 후보 C
+         선택 사유: 직전 화의 마지막 대사를 반복하지 않고 상대방의 반응으로 자연스럽게 이어받아 연속성이 가장 뛰어납니다.   
+레버리지 수익률 및 예상 자산에 대한 수치 계산이 가장 정교하며, 인물들의 심리와 텐션 묘사가 훌륭합니다. Bl
+         판정 근거: gate=director_primary_pass_with_fix | error=-
+         사유: 첫 문단에 명시적인 시작 장소 키워드('2006년 본가 저택 한시우의 방') 누락
+         지시사항:
+            - 첫 문단에 '2006년 본가 저택 한시우의 방' 키워드를 삽입하여 시스템 요구사항을 충족할 것.
+ ⠇ Ep 2 · post-select checks (parallel)  7m 5s      [A-3] Post-select history conflict: 제1화에서 설정된 주인공의 초기 자산 규모(부동산 포함 총 20억)와 제2화에서 PB가 
+보고한 유동 자산 규모(부동산 제외 20억 4천만 원) 사이에 명백한 산술적 모순이 존재합니다. 투자물에서 시드머니의 규모는 핵심  
+설정이므로 수정이 필요합니다.
+      [TF-3] Provisional PASS → REJECT downgrade: 1 post-select conflicts (history)
+      ❌ 1차 면담 REJECT. 피드백: [Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음   
+라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.
+[V67] History Conflict: 제1화에서 설정된 주인공의 초기 자산 규모(부동산 포함 총 20억)와 제2화에서 PB가 보고한 유동 자산     
+규모(부동산 제외 20억 4천만 원) 사이에 명백한 산술적 모순이 존재합니다. 투자물에서 시드머니의 규모는 핵심 설정이므로 수정이 
+필요합니다.
+[근거 요약 - 수정 시 반드시 반영]
+  [STYLE] ai_slop score 1.00 / hits=입을 열었다x1
+  [STYLE] ced_score 4.00 (python warnings 4건)
+첫 문단에 '2006년 본가 저택 한시우의 방' 키워드를 삽입하여 시스템 요구사항을 충족할 것.
+[자유 리뷰] 직전 화 마지막 대사(질문)에 대한 대답으로 바로 시작하는 도입부가 매우 훌륭합니다. 불필요한 중복 서술을 피하면서 
+몰입감을 높였습니다. 다만 시스템 요구사항인 시작 장소 키워드가 누락되어 수정이 필요합니다.
+[Advisory 핵심 요약 - 재시도 시 반영]
+- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / -     
+[후보 A] ai_slop score 1.00 / hits=입을 열었다x1 / - [후보 A] ced_score 4.00 (python warnings 4건) / - [후보 B] ai_slop     
+score 2.00 / hits=입을 열었다x2 / - [후보 B] ced_score 4.00 (python warnings 4건) / - [후보 C] ai_slop score 1.00 /         
+hits=입을 열었다x1 / - [후보 C] ced_score 4.00 (python warnings 4건)
+      ❌ [Round 1/10] REJECT → 다음 라운드
+      🔧 [V75-D] LOGIC_ERROR 1연속 → 블루프린트 inplace 패치 시도...
+ ⠦ Ep 2 · post-select checks (parallel)  8m 10s      ✅ [V75-D] inplace 패치 성공
+      🔄 [Round 2/10] 원고 생성 시도...
+ ⠴ Ep 2 · post-select checks (parallel)  8m 34s   
+🎬 [2차 면담] Chief Writer 앙상블 생성 중...
+ ⠦ Ep 2 · post-select checks (parallel)  8m 34s      🎬 [2차 면담] 원고 앙상블 생성 중...
+ ⠦ 제2화 · 2차 면담 · 앙상블 생성  11m 23s      🔍 Python 사전 검증 중...
+         • 균형 전략: 경고 0개, 분량 4754자
+         • 긴장감 + 반전 강조: 경고 0개, 분량 5297자
+         • 서사 강조: 경고 1개, 분량 4069자
+         ⏳ [SC-5] Director 벡터 메모리 수집 중...
+ ⠧ 제2화 · 2차 면담 · Python 검증  11m 23s         ✅ [SC-5] 1건 수집 완료
+      ⚠️ [PreCheck] 후보1: ❌ 실패 1건, 경고 4건...
+      ⚠️ [PreCheck] 후보2: ❌ 실패 1건, 경고 3건...
+      ⚠️ [PreCheck] 후보3: ❌ 실패 1건, 경고 5건...
+      🎬 Director 면담 중...
+   
+   ========================================================
+      🎬 Director 면담 시작 (제2화, 2차)
+      후보 수: 3개
+      후보 A: 경고 4건, 분량 4754자
+         - [PreCheck] Blueprint 시작 장소 '2006년 본가 저택 한시우의 방' 키워드가 원고 첫 600자에서 핵심 위치 토큰 0/4개    
+발견됨 — 시작 계약 완전 위반
+         - [Confidence:medium] 길이가 다소 짧음 (4754자)
+         - [Confidence:medium] 대화/묘사 비율 불균형
+         - [Confidence:medium] 대화 부족
+      후보 B: 경고 4건, 분량 5297자
+         - [PreCheck] Blueprint 시작 장소 '2006년 본가 저택 한시우의 방' 키워드가 원고 첫 600자에서 핵심 위치 토큰 0/4개    
+발견됨 — 시작 계약 완전 위반
+         - [Confidence:medium] 대화/묘사 비율 불균형
+         - [Confidence:medium] 대화 비율 문제 (0.9)
+         - [Confidence:medium] 감각 묘사 부족
+      후보 C: 경고 5건, 분량 4069자
+         - ⚠️ 분량 부족: 4069자 (목표 5000자)
+         - [PreCheck] Blueprint 시작 장소 '2006년 본가 저택 한시우의 방' 키워드가 원고 첫 600자에서 핵심 위치 토큰 0/4개 
+발견됨 — 시작 계약 완전 위반
+         - [Confidence:low] 길이가 다소 짧음 (4069자)
+         - [Confidence:low] 대화/묘사 비율 불균형
+         - [Confidence:low] 대화 비율 문제 (1.0)
+      ========================================================
+         ⏳ Advisory 체인 9개 병렬 실행 중...
+ ⠹ 제2화 · 2차 면담 · Director 심사  12m 8s         ✅ Advisory 체인 완료 — 2건 경고
+            [Flashback] 1건
+               [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director]
+- [후보 C][MAJOR] '떠올랐다': 원고에서는 '직전 화에서 확인했던 수치 그대로였다'며 20억 원(15억 가용 자금, 5억 부동산)을     
+언급하지만, 요약된 1화(직전 화)의 결말은 자산 규모를 묻는 질문으로 끝났으므로 직전 화에서 이미 구체적인 수치를 확인했다는   
+서술은 과거 맥락과 모순됩니다.
+            [StyleSignal] 1건
+               [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director]
+- [후보 A] ai_slop score 1.00 / hits=시선을 돌렸다x1
+- [후보 A] ced_score 4.00 (python warnings 4건)
+- [후보 B] ced_score 4.00 (python warnings 4건)
+- [후보 C] ai_slop score 1.00 / hits=입을 열었다x1
+- [후보 C] ced_score 5.00 (python warnings 5건)
+      ⏳ Director 판정 대기: 후보 3개 / advisory 2건 / LLM 응답 대기 중...
+ ⠸ 제2화 · 2차 면담 · Director 심사  12m 45s      📊 Director 판정: PASS_WITH_FIX  (초기: PASS_WITH_FIX, 점수: 95, 선택: 후 보 A)
+         └─ 사유: 도입부 공간적 배경(2006년 본가 저택 한시우의 방) 묘사 누락...
+
+   📊 Director 판정 결과:
+         판정: PASS_WITH_FIX | 초기: PASS_WITH_FIX | gate: director_primary_pass_with_fix | 점수: 95 | 선택: 후보 A
+         선택 사유: 후보 A는 직전 화의 마지막 대사(질문)를 반복하지 않고 상대방의 반응과 주인공의 추가 압박으로 자연스럽게  
+이어받아 연속성이 가장 뛰어납니다. 또한 Blueprint의 씬 구성과 목표를 충실히 반영하였으며, 인물 간
+         판정 근거: gate=director_primary_pass_with_fix | error=-
+         사유: 도입부 공간적 배경(2006년 본가 저택 한시우의 방) 묘사 누락
+         지시사항:
+            - 도입부 첫 문단에 '2006년 본가 저택 한시우의 방'이라는 장소 키워드를 자연스럽게 녹여내어 공간적 배경을 명확히  
+할 것
+ ⠇ Ep 2 · post-select checks (parallel)  13m 12s      [A-3] Post-select continuity conflict: 1화에 존재하지 않았던 상태창(시스템) 설정이 2화에서 '직전 화에서 확인했다'는 
+서술과 함께 갑자기 등장하는 치명적인 설정 충돌이 발생했으며, 휴대전화의 명칭(스마트폰)에 대한 소소한 아이템 묘사 충돌이     
+확인되었습니다.
+      [A-3] Post-select history conflict: 제2화는 제1화에서 확립된 자산의 세부 구성 금액(부동산과 금융자산의 비율)을 다르게 
+서술하고 있으며, 1화에 존재하지 않았던 홀로그램 상태창을 이전 화에서 확인했다고 묘사하는 치명적인 설정 충돌이 발생했습니다. 
+또한 2006년 배경의 피처폰을 스마트폰으로 잘못 지칭하는 오류가 포함되어 있습니다.
+      [TF-3] Provisional PASS → REJECT downgrade: 2 post-select conflicts (continuity, history)
+      ❌ 2차 면담 REJECT. 피드백: [Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음   
+라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.
+[Continuity Conflict] 1화에 존재하지 않았던 상태창(시스템) 설정이 2화에서 '직전 화에서 확인했다'는 서술과 함께 갑자기       
+등장하는 치명적인 설정 충돌이 발생했으며, 휴대전화의 명칭(스마트폰)에 대한 소소한 아이템 묘사 충돌이 확인되었습니다.        
+[V67] History Conflict: 제2화는 제1화에서 확립된 자산의 세부 구성 금액(부동산과 금융자산의 비율)을 다르게 서술하고 있으며,  
+1화에 존재하지 않았던 홀로그램 상태창을 이전 화에서 확인했다고 묘사하는 치명적인 설정 충돌이 발생했습니다. 또한 2006년      
+배경의 피처폰을 스마트폰으로 잘못 지칭하는 오류가 포함되어 있습니다.
+[근거 요약 - 수정 시 반드시 반영]
+  [STYLE] ai_slop score 1.00 / hits=시선을 돌렸다x1
+  [STYLE] ced_score 4.00 (python warnings 4건)
+도입부 첫 문단에 '2006년 본가 저택 한시우의 방'이라는 장소 키워드를 자연스럽게 녹여내어 공간적 배경을 명확히 할 것
+[자유 리뷰] 도입부에서 직전 화의 대사를 반복하지 않고 바로 이어받은 점이 매우 훌륭합니다. 다만 Python 사전 검증에서         
+지적되었듯, 에피소드 시작 시 공간적 배경(본가 저택 한시우의 방)을 명시해 주는 것이 독자의 공간 인지에 도움이 됩니다. 그 외  
+인물들의 대화와 심리 묘사, 긴장감 조성이 탁월합니다.
+[R0 이전 지시] - [R0] [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종      
+판단은 Director] / - [후보 A] ai_slop score 1.00 / hits=시선을 돌렸다x1 / - [후보 A] ced_score 4.00 (python warnings 4건) / 
+- [후보 B] ced_score 4.00 (python warnings 4건) / - [후보 C] ai_slop score 1.00 / hits=입을 열었다x1 / - [후보 C] ced_score 
+5.00 (python warnings 5건)
+- [R0] [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 C][MAJOR] 
+'떠올랐다': 원고에서는 '직전 화에서 확인했던 수치 그대로였다'며 20억 원(15억 가용 자금, 5억 부동산)을 언급하지만, 요약된    
+1화(직전 화)의 결말은 자산 규모를 묻는 질문으로 끝났으므로 직전 화에서 이미 구체적인 수치를 확인했다는 서술은 과거 맥락과   
+모순됩니다.
+[Advisory 핵심 요약 - 재시도 시 반영]
+- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / -     
+[후보 A] ai_slop score 1.00 / hits=시선을 돌렸다x1 / - [후보 A] ced_score 4.00 (python warnings 4건) / - [후보 B] ced_score 
+4.00 (python warnings 4건) / - [후보 C] ai_slop score 1.00 / hits=입을 열었다x1 / - [후보 C] ced_score 5.00 (python warnings
+5건)
+- [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 C][MAJOR]      
+'떠올랐다': 원고에서는 '직전 화에서 확인했던 수치 그대로였다'며 20억 원(15억 가용 자금, 5억 부동산)을 언급하지만, 요약된    
+1화(직전 화)의 결말은 자산 규모를 묻는 질문으로 끝났으므로 직전 화에서 이미 구체적인 수치를 확인했다는 서술은 과거 맥락과   
+모순됩니다.
+      ❌ [Round 2/10] REJECT → 다음 라운드
+      ⚠️ [QR-7] [⚠️ 점수 plateau] 최근 두 라운드의 점수가 95점으로 동일합니다. 동일 수정 루프를 반복 중일 수 있습니다.      
+fix_scope 정책 또는 Blueprint 경계를 우선 검토하세요.
+      🔄 [Round 3/10] 원고 생성 시도...
+ ⠹ Ep 2 · post-select checks (parallel)  13m 32s   
+🎬 [3차 면담] Chief Writer 앙상블 생성 중...
+      🎬 [3차 면담] 원고 앙상블 생성 중...
+ ⠸ 제2화 · 3차 면담 · 앙상블 생성  16m 9s      🔥 [ASP] 레드팀 교정 발동 (재시도 3회차)
+ ⠼ 제2화 · 3차 면담 · 앙상블 생성  16m 34s      ✅ [ASP] 교정 완료 (delta: +0)
+      🔄 [TF-25-01] ASP 교정 후보가 기존 후보 3번 교체 (분량 최저 5294자)
+      🔍 Python 사전 검증 중...
+         • 서사 강조: 경고 0개, 분량 5332자
+         • 균형 전략: 경고 0개, 분량 5686자
+         • 후보3: 경고 0개, 분량 4754자
+         ⏳ [SC-5] Director 벡터 메모리 수집 중...
+ ⠼ 제2화 · 3차 면담 · 앙상블 생성  16m 34s         ✅ [SC-5] 1건 수집 완료
+      ⚠️ [PreCheck] 후보3: ❌ 실패 1건, 경고 4건...
+      🎬 Director 면담 중...
+
+   ========================================================
+      🎬 Director 면담 시작 (제2화, 3차)
+      후보 수: 3개
+      후보 A: 경고 3건, 분량 5332자
+         - [Confidence:medium] 대화/묘사 비율 불균형
+         - [Confidence:medium] 대화 부족
+         - [Confidence:medium] 감각 묘사 부족
+      후보 B: 경고 3건, 분량 5686자
+         - [Confidence:medium] 대화/묘사 비율 불균형
+         - [Confidence:medium] 대화 부족
+         - [Confidence:medium] 감각 묘사 부족
+      후보 C: 경고 4건, 분량 4754자
+         - [PreCheck] Blueprint 시작 장소 '2006년 본가 저택 한시우의 방' 키워드가 원고 첫 600자에서 핵심 위치 토큰 0/4개    
+발견됨 — 시작 계약 완전 위반
+         - [Confidence:medium] 길이가 다소 짧음 (4754자)
+         - [Confidence:medium] 대화/묘사 비율 불균형
+         - [Confidence:medium] 대화 부족
+      ========================================================
+         ⏳ Advisory 체인 9개 병렬 실행 중...
+ ⠦ 제2화 · 3차 면담 · Director 심사  17m 5s         ✅ Advisory 체인 완료 — 1건 경고
+            [StyleSignal] 1건
+               [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director]
+- [후보 A] ai_slop score 1.00 / hits=입을 열었다x1
+- [후보 A] ced_score 3.00 (python warnings 3건)
+- [후보 B] ai_slop score 1.00 / hits=입을 열었다x1
+- [후보 B] ced_score 3.00 (python warnings 3건)
+- [후보 C] ai_slop score 1.00 / hits=시선을 돌렸다x1
+- [후보 C] ced_score 4.00 (python warnings 4건)
+      ⏳ Director 판정 대기: 후보 3개 / advisory 1건 / LLM 응답 대기 중...
+ ⠋ 제2화 · 3차 면담 · Director 심사  17m 49s      📊 Director 판정: PASS  (초기: PASS, 점수: 94, 선택: 후보 B)
+         └─ 사유: 이전 화에서 확립된 자산 내역(금융 8억, 부동산 12억)을 정확히 유지하고, Blueprint에 잘못 기재된 HUD(상태창)
+설정을 현명하게 ...
+
+   📊 Director 판정 결과:
+         판정: PASS | 초기: PASS | gate: director_primary_pass | 점수: 94 | 선택: 후보 B
+         판정 근거: gate=director_primary_pass | error=-
+         사유: 이전 화에서 확립된 자산 내역(금융 8억, 부동산 12억)을 정확히 유지하고, Blueprint에 잘못 기재된 HUD(상태창)   
+설정을 현명하게 배제하여 치명적인 설정 충돌을 완벽하게 방어했습니다. 또한 2006년이라
+ ⠼ Ep 2 · post-select checks (parallel)  18m 10s      Round 3 PASS!
+      ✅ [Round 3] PASS
+      ⚠️ [CoVe] 사후검증 경고: 직전 화 아이템(봉)이 현재 화에서 언급되지 않음; 직전 화 아이템(패)이 현재 화에서 언급되지    
+않음
+ ⠏ Ep 2 · post-select checks (parallel)  18m 19s      ⚠️ [CoVe] LLM 검증 런타임 실패 → Director PASS 유지
+                                                                                                                            
+📦 제2화 데이터 정산 중...
+      📖 [V60.82] Manager 정산 비동기 제출...
+         ⏳ [S4-I6] Manager 정산 비동기 실행 중...
+      ✅ 벡터 메모리 저장 (arc=1, events=set())
+         ⏳ Manager 정산 대기: 비동기 audit future 완료를 기다리는 중...
+         ✅ Manager 정산 완료
+         🧪 [V75] State-Text 검증 1건 불일치 →1건 수정
+      📖 Episode Bible 저장 13개 변화 기록
+         • 신규 아이템/무공: 낡은 가죽 지갑, 서류 가방
+         • 신규/갱신 NPC: 최민호, 한정호, 어머니
+         • 지속 압박/위협: 육중한 현관문이 열리며 뿜어지는 겨울바람은 더 이상 차갑지 않았다., 아버지의 허락을 받아내고      
+완벽한 방관 환경을 조성한 뒤 저택을 나섬
+      🌍 [V68] 세계 상태 갱신 완료 (제2화)
+      📋 [V68] 팩트 원장 갱신 완료 (인물 6명, 아이템 7개)
+      🏷️ 만족도 태그: 성취 (9/10, 자력)
+      📊 [TF-I24] 호흡 분석 저장: 점수 80/100, 대화 25%, 장면전환 5회
+
+✅ 제2화 '완벽한 방관' 생산 완료! (5612자)
+   🏁 목표 회차(2화) 도달. 종료합니다.
+
+==================================================
+   📋 Stage 4 집필 세션 종료.
+      🔄 벡터 메모리 일괄 동기화 중...
+      ✅ 벡터 메모리 동기화 완료
+      ✅ [Stage 4] 원고 완료 (2화 생산)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   🧭 [FrontierLag] Arc 2/60 frontier 전진 (2/2)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   📐 [Stage 2] Arc 2 설계 중...
+   🔞 [Stage 2] 0124 매니페스트 정합 엔진 및 멀티 공정 기동...
+   ⚠️ [Notice] Volume 전략이 없습니다. 기본값으로 Arc 단계를 진행합니다.
+   📝 [V42] 주인공 이름 락: 한시우
+   📤 현재 단계 완료: 1 / 60 아크
+   🔕 Tip: 결과를 직접 보기 위해 1~10개(권장 2개 내외) 진행을 권장합니다.
+   📝 [V49.4] ConstraintDB 초기화 완료 (기존 Arc: 1개)
+ ⠋ Batch 2~2 batch enrich  0s   [Batch] 2~2 range enrich start
+         [V60.10] StateExtractor: 1 arcs extracted
+         [Enrich] Block 2 task start
+ ⠸ Batch 2~2 LLM enrich in progress (0/1)...  38s         [Enrich] Block 2 task done (1/1)
+         [Enrich Phase] Batch 2~2 completed: 38.3s (1 items)
+ ⠋ Arc 순차 설계 (총 1개)  0s         ⏳ [Preflight] 병렬 분석 시작 (arc_drive + preflight + constraint)...
+ ⠦ Arc 1/1 설계 중...  21s         ✅ [Preflight] arc_drive 완료
+ ⠏ Arc 1/1 설계 중...  23s         ✅ [Preflight] preflight 완료
+         ✅ [Preflight] constraint 완료
+         🔒 [V49.4] Arc 2 제약 조건 주입됨
+         ⏳ [StateExtractor] 누적 상태 추출 중...
+         ✅ [StateExtractor] 누적 상태 추출 완료
+         📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료
+         ⏳ [Stage 2] Arc 2 attempt 1/10: preflight/four-phase tactical generation 대기...
+      🧠 [Arc 2] 전술 설계 중 (시도 1/10)...
+         ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료
+         🎯 [V60.77] FourPhase-Director 대면 1/5
+         🔎 [TF-38] 벡터 검색 완료 (50자)
+ ⠸ Arc 1/1 설계 중...  3m 38s
+ ⠸ Arc 2 · Arc 생성  3m 14s         ✅ [TF-38] Arc 생성 완료
+         🔎 [Stage 2] Arc 2 attempt 1: generation=four_phase · validation 진입
+ ⠹ Arc 1/1 설계 중...  3m 43s         ✅ [TF-38] Pre-Director 검증 완료 → Director 심사 대기
+         🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...
+ ⠦ Arc 1/1 설계 중...  4m 34s   
+      🎬 [Director] PASS_WITH_FIX (score=95)
+            전반적인 서사 전개와 상태 연속성은 훌륭하며, 이전 Arc와의 연결성도 매끄럽습니다. 다만 제8화 종료 시 발생한 '긴장성 편두통'이 제9화 시
+            작 상태에서 '없음'으로 설명 없이 초기화된 상태 모순이 존재합니다. 또한, 유가 60달러에서 65달러로 상승 시(약 8.33% 상승) 3배 레
+            버리지를 적용하면 15억 원의 수익은 약 3.75억 원이 되어야 하나 본문은 3억 원으로 기재되어 있어 미세한 산술적 오차가 있습니다.
+            📌 모순 2건:
+               ▸ 제8화 종료 상태의 부상(긴장성 편두통)이 제9화 시작 상태에서 '없음'으로 누락됨
+               ▸ 유가 60->65달러(8.33% 상승)에 3배 레버리지 적용 시 15억 원의 수익은 약 3.75억 원이나 본문은 3억 원으로 기재됨
+         🔧 [TF-32-V] PASS_WITH_FIX patch #1/3 (fix: 1. 제9화 시작 상태의 부상을 '경상(긴장성 편두통)'으로 수정하고, 유가 폭등 뉴스를 확인한 후 두통이 씻은 듯이 사라지는 묘사를  
+지문에 추가하여 종료 상태를 '없음'으로 자연스럽게 연결하십시오. 2. 제9화의 미실현 수익을 3억 원에서 3.75억 원(총자산 23.75억 원)으로 수정하거나, 유가 도달 수치를 64달러로        
+수정하여 산술적 정합성을 맞추십시오.)
+ ⠴ Arc 1/1 설계 중...  5m 33s         🔄 [TF-38] Director 재심사 #1 호출 중...
+ ⠏ Arc 1/1 설계 중...  6m 18s         🎬 [TF-32-V] 재심사 #1: PASS (score=100)
+         ??[TF-32-V] Arc ?섏젙 ?꾨즺 ??PASS ?뺤젙
+         🔄 [V49.6] physical_inventory deterministic carryover 적용: ['SW인베스트먼트 법인 인감도장, 20억 원이 예치된 법인 명의 증권 계좌 보안카드', '임대차 계약서']
+ ⠋ Arc 1/1 설계 중...  6m 18s         🔧 [Equipment Sync] Arc 2 시작 소지품 → 이전 Arc 종료 소지품으로 동기화 (3개 아이템)
+         🔧 [State Sync] Arc 2 첫 화 시작 상태 텍스트 동기화
+         [V49.4] ConstraintDB 업데이트 완료 (총 2개 Arc)
+ ⠧ Arc 1/1 설계 중...  6m 47s         ✨ [V60.25] Arc 2 최종 성공 - 실패 메모리 클리어
+   ✅ 배치(2~2) 욕망 엔진 이식 및 용접 완료.                                                                                                                                      
+   ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+      ✅ [Stage 2] Arc 2 완료 (ep 5~9)
+      🧭 [FrontierLag] true_final=60, frontier=2, ep=5~9, S3→8 (backlog), S4→7 (backlog)
+      📌 [FrontierLag] bp_max=3 / ms_max=2
+
+   📐 [Stage 3] Blueprint frontier 동기화 (target <= ep 8)...
+   📂 [Detected] Blueprint 3화, 원고 2화까지 발견
+   📊 [V60.80] 현재 총 9화까지 설계가 가능합니다.
+   
+════════════════════════════════════════════════════════════
+   🎯 [V60.80] Three Phase Blueprint Generator 시작
+      범위: 제4화 ~ 제8화 (5개)
+   ════════════════════════════════════════════════════════════
+
+         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 0)
+
+   📐 제4화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
+ ⠋ 제4화  0s         ⏳ 제4화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제4화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=2, window=3, semantic_ctx=3280자)
+ ⠙ 제4화 · Blueprint 생성  3m 43s         📊 제4화 Blueprint 결과: PASS (score=85)
+         └─ 선택 전략: emotion_focused
+         └─ Director 판정: 금융 스릴러 톤앤매너에 완벽히 부합하며 전개도 매끄러우나, NPC 네이밍 보완 필요
+         비교 메모: 후보 1은 분량 1000자 미만으로 서사 밀도가 부족하여 자동 탈락 대상입니다. 후보 3은 개연성이 떨어지는 과도한 격투 액션 씬이 포함되어 금융물의 장르적 일관성을   
+크게 훼손합니다. 반면 후보 2는 이전 화의 훅(전화 통화)을 자연스럽게 이어받으며, 법인 설립과 해외 선물 계좌 개설이라는 아크 목표를 긴장감 있게 훌륭히 풀어냈습니다.
+         보완 포인트: 스토리라인, 감정선, 엔딩 훅 등 핵심 서사 요소가 모두 우수하며, 지적된 문제는 익명 NPC의 네이밍 부여와 기관명 단어 교체만으로 완벽히 해결 가능한 국소적      
+사안이므로 inplace 수정이 가장 적합합니다.
+         모순 메모: NPC 식별 누락: 아크 전술서 및 세계관에 존재하는 구체적 NPC(예: 브로커 김태만, 선물사 윤기철 등) 대신 '중년의 컨설턴트', '파생상품 담당 브로커' 등 익명으로    
+처리됨.
+         모순 메모: 기관명 표기 불일치: 사실잠금된 명칭인 '강남센터' 대신 '강남 PB센터'가 사용됨.
+         주의: intent 불일치: Arc 관계 변화 NPC 3명 blueprint 미언급
+         주의: 기관 사실잠금 위반: 확정 '강남센터' → blueprint 'PB센터' 사용
+      [TF-49] inventory gaps 7: 스마트폰(2006년형), 지갑, 자산 내역서, 20억 4천만 원 잔고 증명서, SW인베스트먼트 설립 신청서, 해외 선물 계좌 보안카드, OTP 기기                   
+      [Stage3] blueprint success (verdict=PASS, strategy=emotion_focused, score=85)
+      [Stage3] ep 4 blueprint save completed
+         ⏳ Entity Registry 추출 중... (Arc 1, 첫 호출)
+         📋 [V61] Entity Registry 추출: 65개 엔티티
+
+   📐 제5화 Blueprint 생성 중... (Arc 2, 주인공: 한시우)
+ ⠋ 제5화  0s         ⏳ 제5화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제5화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=2, window=4, semantic_ctx=3210자)
+ ⠧ 제5화 · Blueprint 생성  15m 24s         📊 제5화 Blueprint 결과: PASS (score=92)
+         └─ 선택 전략: emotion_focused
+         └─ Director 판정: score strong (92.0)
+      [TF-49] inventory gaps 6: 지갑, 자산 내역서, 20억 원 잔고 증명서, SW인베스트먼트 설립 신청서, 법인 명의 증권 계좌 보안카드, 임대차 계약서                                   
+      [Stage3] blueprint success (verdict=PASS, strategy=emotion_focused, score=92)
+      [Stage3] ep 5 blueprint save completed
+         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 1)
+
+   📐 제6화 Blueprint 생성 중... (Arc 2, 주인공: 한시우)
+ ⠋ 제6화  0s         ⏳ 제6화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제6화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=2, window=5, semantic_ctx=3210자)
+                                                                                                                                                                                  
+🛑 [System] 시스템 종료 시퀀스 가동...
+   
+============================================================
+  [V44] 글도비 성능 메트릭 리포트
+============================================================
+세션 ID: 20260331_090441
+실행 시간: 1:43:15.342746
+
+[호출 통계]
+- 총 호출: 203회
+- 성공: 202회 (99.5%)
+- 실패: 1회
+- 총 재시도: 0회
+
+[비용 통계]
+- 총 토큰: 2,779,710
+- 예상 비용: $7.7912 USD
+
+[에이전트별 통계]
+  Analyst:
+    - 호출: 2회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=31742ms, p50=31742ms, p90=36989ms
+  Weaver:
+    - 호출: 2회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=18250ms, p50=18250ms, p90=21175ms
+  ArcEnsembleGenerator:
+    - 호출: 8회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=93951ms, p50=91056ms, p90=129383ms
+  Director:
+    - 호출: 88회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=21632ms, p50=19495ms, p90=35935ms
+  StateExtractor:
+    - 호출: 4회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=17957ms, p50=17076ms, p90=27031ms
+  BlueprintEnsembleGenerator:
+    - 호출: 60회 (성공률: 98.3%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=58631ms, p50=61949ms, p90=72879ms
+  ChiefWriter:
+    - 호출: 33회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=77684ms, p50=70587ms, p90=116524ms
+  Manager:
+    - 호출: 4회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=19902ms, p50=19152ms, p90=31238ms
+  PreflightChecker:
+    - 호출: 2회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=23170ms, p50=23170ms, p90=23659ms
+
+[모델별 통계]
+  gemini-3.1-pro-preview:
+    - 토큰: 2,711,619 (in=2,201,401, out=510,218)
+    - 비용: $7.7396
+  gemini-2.5-flash:
+    - 토큰: 68,091 (in=53,416, out=14,675)
+    - 비용: $0.0516
+============================================================
+   📊 [Metrics] 세션 메트릭 저장: C:\Users\User\Desktop\글도비\projects\0_2\logs\metrics\metrics_20260331_090441.json
+   💾 [CostDB] Session 잔여 스코프 비용 저장: $2.8062 (1,121,897 tokens, 누적 총비용은 arc/episode 레코드 합산 참조)
+   📈 [PassRate] 통과율 기록 저장: 5건
+   ⚖️ [Director Bias] 유의미한 편향 경고 없음
+   📚 [V51.4] 실패 학습 기록 저장(DB): 3건
+   🎭 [V51.5] 캐릭터 음성 저장: 0명
+   🔮 [V51.6] 복선 저장: 0개 (회수율: 0%)
+   💓 [V60.26] 감정선 기록 저장: 0건
+   [System] VecMemory 연결 해제 완료
+   [System] DB 커밋 완료
+   [System] DB 연결 안전하게 해제됨
+   ✅ [System] 종료 완료
+PS C:\Users\User\Desktop\글도비> 

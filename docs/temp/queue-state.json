@@ -1,8 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-03-30T23:24:04.870714+00:00",
+  "generated_at": "2026-03-31T02:13:32.216709+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 9,
+  "active_item_count": 10,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
     "canonical_path": "docs/2026-03-31/active-temp-execution-roadmap.md",
@@ -77,6 +77,15 @@
       "temp_path": "docs/temp/stage3-capital-unit-drift-hardening-execution-ssot.md",
       "canonical_path": "docs/2026-03-30/stage3-capital-unit-drift-hardening-execution-ssot.md",
       "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "stage4-cw-webnovel-identity-context-hierarchy-remediation",
+      "temp_path": "docs/temp/stage4-cw-webnovel-identity-context-hierarchy-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-remediation-execution-ssot.md",
+      "status": "completed",
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true

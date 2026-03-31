@@ -34,6 +34,18 @@ _RETRY_PERSISTENT_DIRECTIVE_PREFIXES = (
     "[Lane3 Gate]",
     "[A-4 continuity replay]",
 )
+_WRITER_BLUEPRINT_UI_CONTAMINATION_MARKERS = (
+    "상태창",
+    "상태 창",
+    "시스템 메시지",
+    "시스템 창",
+    "status window",
+    "system window",
+    "system message",
+    "홀로그램",
+    "hologram",
+    "퀘스트 창",
+)
 
 
 def _parse_retry_advisory_round_tag(line: str) -> int | None:
@@ -73,6 +85,43 @@ def _tag_retry_advisory_line(line: str, *, round_num: int) -> str:
 def _is_persistent_retry_directive_line(line: str) -> bool:
     stripped = str(line or "").strip()
     return any(stripped.startswith(prefix) for prefix in _RETRY_PERSISTENT_DIRECTIVE_PREFIXES)
+
+
+def _has_writer_blueprint_ui_contamination(text: object) -> bool:
+    lowered = str(text or "").strip().lower()
+    if not lowered:
+        return False
+    return any(marker.lower() in lowered for marker in _WRITER_BLUEPRINT_UI_CONTAMINATION_MARKERS)
+
+
+def _sanitize_writer_blueprint_text(text: object) -> str:
+    raw = str(text or "").strip()
+    if not raw or not _has_writer_blueprint_ui_contamination(raw):
+        return raw
+    if "\n" not in raw:
+        return ""
+    kept_lines = [
+        line.rstrip()
+        for line in raw.splitlines()
+        if line.strip() and not _has_writer_blueprint_ui_contamination(line)
+    ]
+    return "\n".join(kept_lines).strip()
+
+
+def _sanitize_writer_blueprint_payload(value: object) -> object:
+    if isinstance(value, dict):
+        return {key: _sanitize_writer_blueprint_payload(item) for key, item in value.items()}
+    if isinstance(value, list):
+        cleaned_items = []
+        for item in value:
+            cleaned = _sanitize_writer_blueprint_payload(item)
+            if cleaned in ("", [], {}):
+                continue
+            cleaned_items.append(cleaned)
+        return cleaned_items
+    if isinstance(value, str):
+        return _sanitize_writer_blueprint_text(value)
+    return value
 
 
 def _build_post_select_conflict_contract(conflicts: list[str] | None) -> dict[str, object]:
@@ -932,13 +981,24 @@ class Stage4InterviewRound:
             return {}
 
         writer_blueprint = copy.deepcopy(blueprint)
-        advisory = str(writer_blueprint.get("integrated_scenario_advisory", "") or "").strip()
-        integrated = str(writer_blueprint.get("integrated_scenario", "") or "").strip()
+        scenes = writer_blueprint.get("scene_breakdown")
+        if isinstance(scenes, (dict, list)):
+            writer_blueprint["scene_breakdown"] = _sanitize_writer_blueprint_payload(scenes)
+        raw_advisory = str(writer_blueprint.get("integrated_scenario_advisory", "") or "").strip()
+        raw_integrated = str(writer_blueprint.get("integrated_scenario", "") or "").strip()
+        advisory = raw_advisory
+        integrated = raw_integrated
         if integrated and not advisory:
             advisory = integrated
+        advisory = _sanitize_writer_blueprint_text(advisory)
+        integrated = _sanitize_writer_blueprint_text(integrated)
         if advisory:
             writer_blueprint["integrated_scenario_advisory"] = advisory
+        elif raw_advisory or raw_integrated or "integrated_scenario_advisory" in writer_blueprint:
+            writer_blueprint["integrated_scenario_advisory"] = ""
         if integrated:
+            writer_blueprint["integrated_scenario"] = ""
+        elif "integrated_scenario" in writer_blueprint:
             writer_blueprint["integrated_scenario"] = ""
         return writer_blueprint
 
@@ -2320,8 +2380,10 @@ class Stage4InterviewRound:
         if type(mandatory_context) is not str:
             mandatory_context = str(mandatory_context or "")
 
-        if _preflight_advisory:
-            mandatory_context = f"{_preflight_advisory}\n\n{mandatory_context}"
+        reflexion_prompt = self._merge_writer_preflight_guidance(
+            reflexion_prompt=reflexion_prompt,
+            preflight_advisory=_preflight_advisory,
+        )
 
         emotional_beat_section = ""
         _arc_data_full = getattr(round_ctx, "arc_data", {}) or {}
@@ -2382,6 +2444,22 @@ class Stage4InterviewRound:
             # episode_digest는 Director 전용 — L713에서 별도 전달
         }
         return mandatory_context, _common_writer_kwargs
+
+    @staticmethod
+    def _merge_writer_preflight_guidance(*, reflexion_prompt: str, preflight_advisory: str) -> str:
+        base_prompt = reflexion_prompt if type(reflexion_prompt) is str else str(reflexion_prompt or "")
+        advisory = preflight_advisory if type(preflight_advisory) is str else str(preflight_advisory or "")
+        advisory = advisory.strip()
+        if not advisory:
+            return base_prompt
+        advisory_block = (
+            "### [Preflight Advisory - advisory only]\n"
+            "아래 사전 점검 경고는 writer guidance다. mandatory truth나 established canon보다 우선하지 않는다.\n"
+            f"{advisory}"
+        )
+        if not base_prompt:
+            return advisory_block
+        return f"{advisory_block}\n\n{base_prompt}"
 
     def _build_empty_candidates_result(
         self,

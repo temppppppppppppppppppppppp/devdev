@@ -2,6 +2,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from modules.core.constants import GenreTypes
+from modules.core.prompt_loader import PromptLoader
 from modules.domain.agents.base_agent import AgentErrorType
 from modules.domain.agents.blueprint_ensemble import BlueprintEnsembleGenerator
 
@@ -165,9 +166,60 @@ def test_request_blueprint_generation_rejects_missing_required_fields():
         prompt="PROMPT",
         full_prompt_fallback="FALLBACK",
         strategy_name="action_focused",
+        genre=GenreTypes.WUXIA,
     )
 
     assert result == (None, AgentErrorType.SCHEMA_INCOMPATIBLE)
+
+
+def test_request_blueprint_generation_rejects_contaminated_integrated_scenario():
+    agent = _make_agent()
+    agent._ask_with_cached_context = MagicMock(return_value="{}")
+    agent._extract_json_robust = MagicMock(
+        return_value={
+            "scene_breakdown": [],
+            "integrated_scenario": "직전 화의 HUD 상태창을 확인했다.",
+        }
+    )
+
+    result = agent._request_blueprint_generation(
+        cache_name="cache/bp",
+        prompt="PROMPT",
+        full_prompt_fallback="FALLBACK",
+        strategy_name="action_focused",
+        genre=GenreTypes.WUXIA,
+    )
+
+    assert result == (None, AgentErrorType.SCHEMA_INCOMPATIBLE)
+
+
+def test_request_blueprint_generation_sanitizes_contaminated_key_events():
+    agent = _make_agent()
+    candidate = {
+        "scene_breakdown": {
+            "scene_1": {
+                "summary": "주인공이 문을 열고 적과 마주친다.",
+                "key_events": [
+                    "문을 열고 적과 마주친다.",
+                    "HUD 상태창 점검",
+                ],
+            }
+        },
+        "integrated_scenario": "주인공은 문을 열고 적과 마주친다. " * 40,
+    }
+    agent._ask_with_cached_context = MagicMock(return_value="{}")
+    agent._extract_json_robust = MagicMock(return_value=candidate)
+
+    result = agent._request_blueprint_generation(
+        cache_name="cache/bp",
+        prompt="PROMPT",
+        full_prompt_fallback="FALLBACK",
+        strategy_name="action_focused",
+        genre=GenreTypes.WUXIA,
+    )
+
+    assert isinstance(result, dict)
+    assert result["scene_breakdown"]["scene_1"]["key_events"] == ["문을 열고 적과 마주친다."]
 
 
 class TestBlueprintTemporalCarryover:
@@ -198,6 +250,39 @@ class TestBlueprintTemporalCarryover:
 
         assert "원고 기준" not in result
 
+    def test_format_prev_info_expanded_replaces_raw_scenario_with_structured_carryover(self):
+        agent = _make_agent()
+        prev_bp = {"time_flow": "2006-01-17 저녁"}
+        previous_blueprints = [
+            {
+                "ep_num": 3,
+                "title": "도약",
+                "integrated_scenario": "상태창이 떠오르고 직전 화를 요약하는 장문 시나리오",
+                "start_location": "객잔",
+                "end_location": "산문 앞",
+                "time_flow": "저녁 → 심야",
+                "core_tension": "추적자 접근",
+                "ending_hook": "문이 열렸다",
+                "scene_breakdown": {
+                    "scene_1": {
+                        "title": "추적",
+                        "location": "골목",
+                        "summary": "주인공이 골목을 가로지른다.",
+                        "characters": ["주인공", "추적자"],
+                        "key_events": ["추적자를 따돌린다."],
+                    }
+                },
+            }
+        ]
+
+        result = agent._format_prev_info_expanded(prev_bp, previous_blueprints, "")
+
+        assert "상태창이 떠오르고 직전 화를 요약하는 장문 시나리오" not in result
+        assert "[시작위치] 객잔" in result
+        assert "[종료위치] 산문 앞" in result
+        assert "[scene_1] 추적" in result
+        assert "추적자를 따돌린다." in result
+
     def test_constraint_compiler_prefers_manuscript_ending(self):
         """원고 말미가 있으면 time_context에 원고 기준 정보가 포함."""
         from modules.domain.agents.blueprint_constraint_compiler import BlueprintConstraintCompiler
@@ -218,3 +303,13 @@ class TestBlueprintTemporalCarryover:
         continuity = compiler._extract_continuity(prev_bp)
 
         assert continuity["time_context"] == "2006-01-17 저녁"
+
+
+def test_blueprint_generation_prompt_contains_stage3_anti_contamination_contract():
+    prompt = PromptLoader().load("ensemble", "BLUEPRINT_GENERATION_PROMPT")
+
+    assert prompt is not None
+    assert "Stage3 장면 권위 계약" in prompt
+    assert "안티 HUD / 안티 시스템 UI" in prompt
+    assert "안티 크로스 장르 오염" in prompt
+    assert "scene_breakdown.key_events" in prompt

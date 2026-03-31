@@ -88,6 +88,20 @@ class TestSelfAuditChecklistContent:
         assert "tactical_doc" in prompt and ("초과" in prompt or "범위" in prompt)
 
 
+class TestStage3AuthorityContract:
+    """The prompt carries the anti-contamination authority contract."""
+
+    def test_stage3_scene_authority_contract_present(self):
+        prompt = _load_blueprint_prompt()
+        assert "Stage3 장면 권위 계약" in prompt
+        assert "scene_breakdown.key_events" in prompt
+
+    def test_stage3_anti_ui_and_cross_genre_contract_present(self):
+        prompt = _load_blueprint_prompt()
+        assert "안티 HUD / 안티 시스템 UI" in prompt
+        assert "안티 크로스 장르 오염" in prompt
+
+
 class TestNoNewTemplateVariables:
     """The checklist does not introduce new template variables."""
 

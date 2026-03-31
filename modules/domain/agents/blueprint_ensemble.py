@@ -81,12 +81,54 @@ BLUEPRINT_STRATEGIES = [
 
 AI_TELL_BLUEPRINT_GUARDRAIL = """
 [AI 티 회피 지침]
+- Blueprint는 downstream scene authority이지 브리핑 문서나 회차 요약문이 아닙니다.
+- integrated_scenario에 독자 대상 설명문, recap, 메타 해설을 끼워 넣지 마세요.
+- 상태창/HUD/시스템 메시지/홀로그램 같은 게임식 UI를 정본 근거 없이 새로 발명하지 마세요.
 - 장면 말미를 설명문으로 기계적으로 요약하지 마세요.
 - 감정 반응을 상투적인 반응구 반복으로 처리하지 말고 행동·대사·구체 감각으로 드러내세요.
 - 정보 전달만 수행하는 대사가 길게 이어지지 않게 하세요.
 - 매 씬의 도입과 종결 리듬을 같게 반복하지 마세요.
 - 독자가 "익숙한 AI 문장"이라고 느낄 만한 접속구·감탄구 남용을 피하세요.
 """
+
+_BLUEPRINT_SYSTEM_UI_MARKERS = tuple(
+    marker.casefold()
+    for marker in (
+        "HUD",
+        "상태창",
+        "상태 창",
+        "status window",
+        "홀로그램 창",
+        "홀로그램",
+        "hologram window",
+        "퀘스트 창",
+        "퀘스트",
+        "quest window",
+        "알림창",
+        "notification window",
+        "시스템 메시지",
+        "system message",
+        "스탯창",
+        "스테이터스 창",
+        "[👤",
+        "[💰",
+        "[🎯",
+        "[HP",
+        "[MP",
+        "[LV",
+        "[SYSTEM",
+    )
+)
+
+_BLUEPRINT_META_RECAP_MARKERS = tuple(
+    marker.casefold()
+    for marker in (
+        "직전 화",
+        "이전 화",
+        "이번 화",
+        "이번 에피소드",
+    )
+)
 
 
 # [V60.98] 씬 프리셋 정의 - 장면/화자 전환 연출
@@ -638,6 +680,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 prompt=prompt,
                 full_prompt_fallback=full_prompt_fallback,
                 strategy_name=strategy_name,
+                genre=genre,
             )
         except Exception as e:
             import traceback
@@ -727,6 +770,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         prompt: str,
         full_prompt_fallback: str,
         strategy_name: str,
+        genre: str,
     ) -> dict | tuple[None, str]:
         response = self._ask_with_cached_context(
             cache_name=cache_name,
@@ -745,7 +789,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             return None, AgentErrorType.SCHEMA_INCOMPATIBLE
         if "scene_breakdown" not in result or "integrated_scenario" not in result:
             return None, AgentErrorType.SCHEMA_INCOMPATIBLE
-        return result
+        return self._sanitize_blueprint_candidate(result, strategy_name=strategy_name, genre=genre)
 
     def _build_protagonist_instructions(self, protagonist_config: dict, genre: str = "wuxia") -> str:
         """
@@ -1110,6 +1154,211 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         return "\n".join(lines) if len(lines) > 3 else "(이전 화 정보 없음)"
 
+    @staticmethod
+    def _genre_allows_explicit_system_ui(genre: str) -> bool:
+        return genre in {GenreTypes.HUNTER, GenreTypes.FANTASY}
+
+    def _detect_blueprint_text_contamination(self, text: object, *, allow_system_ui: bool) -> str | None:
+        raw = str(text or "").strip()
+        if not raw:
+            return None
+
+        lowered = raw.casefold()
+        if any(marker in lowered for marker in _BLUEPRINT_META_RECAP_MARKERS):
+            return "meta_recap_register"
+        if not allow_system_ui and any(marker in lowered for marker in _BLUEPRINT_SYSTEM_UI_MARKERS):
+            return "system_ui_register"
+        return None
+
+    def _sanitize_blueprint_candidate(
+        self,
+        candidate: dict,
+        *,
+        strategy_name: str,
+        genre: str,
+    ) -> dict | tuple[None, str]:
+        allow_system_ui = self._genre_allows_explicit_system_ui(genre)
+        integrated_reason = self._detect_blueprint_text_contamination(
+            candidate.get("integrated_scenario", ""),
+            allow_system_ui=allow_system_ui,
+        )
+        if integrated_reason:
+            logging.warning(
+                "[BPEnsemble] rejecting contaminated blueprint candidate (%s): %s",
+                strategy_name,
+                integrated_reason,
+            )
+            self._operator_log(
+                f"⚠️ [Blueprint] '{strategy_name}' 오염 후보 폐기",
+                level="warning",
+                meta={"strategy": strategy_name, "reason": integrated_reason},
+            )
+            return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+
+        scene_breakdown = candidate.get("scene_breakdown")
+        if isinstance(scene_breakdown, list):
+            scene_iter = [(f"scene_{idx}", scene) for idx, scene in enumerate(scene_breakdown, start=1)]
+        elif isinstance(scene_breakdown, dict):
+            scene_iter = list(scene_breakdown.items())
+        else:
+            scene_iter = []
+
+        sanitized_key_events = 0
+        for scene_key, scene in scene_iter:
+            if not isinstance(scene, dict):
+                continue
+
+            for field_name in ("summary", "description", "goal", "content"):
+                reason = self._detect_blueprint_text_contamination(
+                    scene.get(field_name, ""),
+                    allow_system_ui=allow_system_ui,
+                )
+                if reason:
+                    logging.warning(
+                        "[BPEnsemble] rejecting contaminated scene field (%s/%s/%s): %s",
+                        strategy_name,
+                        scene_key,
+                        field_name,
+                        reason,
+                    )
+                    self._operator_log(
+                        f"⚠️ [Blueprint] '{strategy_name}' 오염 씬 폐기",
+                        level="warning",
+                        meta={
+                            "strategy": strategy_name,
+                            "scene": scene_key,
+                            "field": field_name,
+                            "reason": reason,
+                        },
+                    )
+                    return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+
+            raw_events = scene.get("key_events", [])
+            if isinstance(raw_events, str):
+                raw_events = [raw_events]
+            if not isinstance(raw_events, list):
+                continue
+
+            filtered_events = []
+            dropped_events = 0
+            for event in raw_events:
+                reason = self._detect_blueprint_text_contamination(event, allow_system_ui=allow_system_ui)
+                if reason:
+                    dropped_events += 1
+                    continue
+                filtered_events.append(event)
+
+            if dropped_events and not filtered_events:
+                logging.warning(
+                    "[BPEnsemble] rejecting blueprint candidate (%s): scene %s lost all key_events to contamination",
+                    strategy_name,
+                    scene_key,
+                )
+                self._operator_log(
+                    f"⚠️ [Blueprint] '{strategy_name}' key_events 오염 후보 폐기",
+                    level="warning",
+                    meta={"strategy": strategy_name, "scene": scene_key},
+                )
+                return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+
+            if dropped_events:
+                scene["key_events"] = filtered_events
+                sanitized_key_events += dropped_events
+
+        if sanitized_key_events:
+            logging.info(
+                "[BPEnsemble] sanitized %d contaminated key_events from %s",
+                sanitized_key_events,
+                strategy_name,
+            )
+            self._operator_log(
+                f"🧹 [Blueprint] '{strategy_name}' key_events 오염 정리",
+                meta={"strategy": strategy_name, "removed_key_events": sanitized_key_events},
+            )
+        return candidate
+
+    def _format_prev_blueprint_carryover(self, bp: dict) -> str:
+        bp_ep = bp.get("ep_num", "?")
+        bp_title = bp.get("title", "")
+        lines = [f"\n━━━ 제{bp_ep}화 '{bp_title}' ━━━"]
+
+        carryover_fields = (
+            ("시작위치", bp.get("start_location", "")),
+            ("종료위치", bp.get("end_location", "")),
+            ("시간흐름", bp.get("time_flow", "")),
+            ("핵심긴장", bp.get("core_tension", "")),
+            ("결말방향", bp.get("expected_ending", "")),
+            ("엔딩훅", bp.get("ending_hook", "")),
+        )
+        for label, value in carryover_fields:
+            if value:
+                lines.append(f"[{label}] {_fit_compact_context(value, 160)}")
+
+        protagonist_state = bp.get("protagonist_state", {})
+        if isinstance(protagonist_state, dict):
+            state_parts = []
+            mood = protagonist_state.get("mood", "")
+            injuries = protagonist_state.get("injuries", "")
+            equipment = protagonist_state.get("equipment", [])
+            if mood:
+                state_parts.append(f"감정:{_fit_compact_context(mood, 60)}")
+            if injuries and injuries != "없음":
+                state_parts.append(f"부상:{_fit_compact_context(injuries, 60)}")
+            if isinstance(equipment, list) and equipment:
+                equipment_text = ", ".join(str(item or "").strip() for item in equipment[:5] if str(item or "").strip())
+                if equipment_text:
+                    state_parts.append(f"장비:{_fit_compact_context(equipment_text, 100)}")
+            elif equipment:
+                state_parts.append(f"장비:{_fit_compact_context(equipment, 100)}")
+            if state_parts:
+                lines.append(f"[주인공상태] {' | '.join(state_parts)}")
+
+        scenes = bp.get("scene_breakdown", {})
+        if isinstance(scenes, list):
+            scenes = {f"scene_{i + 1}": scene for i, scene in enumerate(scenes) if isinstance(scene, dict)}
+        if isinstance(scenes, dict):
+            for scene_key, scene_value in scenes.items():
+                if not isinstance(scene_value, dict):
+                    continue
+                scene_title = _fit_compact_context(scene_value.get("title", ""), 80)
+                scene_location = _fit_compact_context(scene_value.get("location", ""), 60)
+                scene_summary = scene_value.get("summary", "") or scene_value.get("description", "")
+                scene_summary = _fit_compact_context(scene_summary, 120) if scene_summary else ""
+                scene_chars = scene_value.get("characters", [])
+                scene_events = scene_value.get("key_events", [])
+                if isinstance(scene_chars, str):
+                    scene_chars = [scene_chars]
+                if isinstance(scene_events, str):
+                    scene_events = [scene_events]
+                chars_str = (
+                    _fit_compact_context(
+                        ", ".join(str(item or "").strip() for item in scene_chars if str(item or "").strip()),
+                        120,
+                    )
+                    if scene_chars
+                    else ""
+                )
+                events_str = (
+                    _fit_compact_context(
+                        "; ".join(str(item or "").strip() for item in scene_events if str(item or "").strip()),
+                        180,
+                    )
+                    if scene_events
+                    else ""
+                )
+                scene_parts = [f"[{scene_key}] {scene_title}"]
+                if scene_location:
+                    scene_parts.append(f"장소: {scene_location}")
+                if chars_str:
+                    scene_parts.append(f"등장: {chars_str}")
+                if scene_summary:
+                    scene_parts.append(f"요약: {scene_summary}")
+                if events_str:
+                    scene_parts.append(f"이벤트: {events_str}")
+                lines.append(" | ".join(scene_parts))
+
+        return "\n".join(lines)
+
     def _format_prev_info_expanded(
         self, prev_blueprint: dict | None, prev_blueprints: list[dict] | None = None, prev_manuscripts_text: str = ""
     ) -> str:
@@ -1124,55 +1373,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         if prev_blueprints and len(prev_blueprints) > 0:
             bp_lines = []
             bp_lines.append(f"\n[V67] ═══ 이전 Blueprint 전문 ({len(prev_blueprints)}개) ═══")
-            bp_lines.append("이전 에피소드의 설계도입니다. 모순되는 내용을 절대 생성하지 마세요.")
+            bp_lines.append("이전 에피소드의 구조화된 계승 정보입니다. 모순되는 내용을 절대 생성하지 마세요.")
             for bp in prev_blueprints:
-                bp_ep = bp.get("ep_num", "?")
-                bp_title = bp.get("title", "")
-                bp_scenario = bp.get("integrated_scenario", "")
-                bp_end_loc = bp.get("end_location", "")
-                bp_hook = bp.get("ending_hook", "")
-                bp_lines.append(f"\n━━━ 제{bp_ep}화 '{bp_title}' ━━━")
-                if bp_scenario:
-                    bp_lines.append(f"[시나리오] {bp_scenario}")
-                if bp_end_loc:
-                    bp_lines.append(f"[종료위치] {bp_end_loc}")
-                if bp_hook:
-                    bp_lines.append(f"[엔딩훅] {bp_hook}")
-                # 씬 구성 요약
-                scenes = bp.get("scene_breakdown", {})
-                # [V70] list 타입 대응 (LLM이 list로 반환하는 경우)
-                if isinstance(scenes, list):
-                    scenes = {f"scene_{i + 1}": s for i, s in enumerate(scenes) if isinstance(s, dict)}
-                if isinstance(scenes, dict):
-                    for sk, sv in scenes.items():
-                        if isinstance(sv, dict):
-                            s_title = sv.get("title", "")
-                            s_chars = sv.get("characters", [])
-                            s_events = sv.get("key_events", [])
-                            # [V70] 타입 방어 (str → list 변환)
-                            if isinstance(s_chars, str):
-                                s_chars = [s_chars]
-                            if isinstance(s_events, str):
-                                s_events = [s_events]
-                            chars_str = (
-                                _fit_compact_context(
-                                    ", ".join(str(item or "").strip() for item in s_chars if str(item or "").strip()),
-                                    120,
-                                )
-                                if s_chars
-                                else ""
-                            )
-                            events_str = (
-                                _fit_compact_context(
-                                    "; ".join(str(item or "").strip() for item in s_events if str(item or "").strip()),
-                                    180,
-                                )
-                                if s_events
-                                else ""
-                            )
-                            bp_lines.append(
-                                f"  [{sk}] {_fit_compact_context(s_title, 80)} | 등장: {chars_str} | 이벤트: {events_str}"
-                            )
+                bp_lines.append(self._format_prev_blueprint_carryover(bp))
 
             bp_full = "\n".join(bp_lines)
             # 400K자 상한 (Gemini 1.05M 토큰 입력 여유)
