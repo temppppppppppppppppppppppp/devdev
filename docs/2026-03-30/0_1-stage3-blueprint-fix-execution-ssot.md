@@ -1,7 +1,7 @@
 # 0_1 Stage 3 Blueprint Fix Execution SSOT
 
 Date: 2026-03-30
-Status: pending
+Status: closed
 Canonical Path: docs/2026-03-30/0_1-stage3-blueprint-fix-execution-ssot.md
 Temp Mirror Path: docs/temp/0_1-stage3-blueprint-fix-execution-ssot.md
 Baseline Commit: 6fe5590d
@@ -144,3 +144,18 @@ Evidence-based character assignments (integrated_scenario + scene goal/summaryì—
 ---
 
 *3pass audit completed. Estimated confidence: 96%. Final save.*
+
+## 10. Closure Update
+
+Date: 2026-03-31
+Closure Audit: `docs/2026-03-31/0_1-stage3-blueprint-fix-closure-audit.md`
+Closure Evidence: `docs/2026-03-31/0_1-stage3-blueprint-fix-closure-evidence.json`
+Status Rationale:
+- authoritative EP8 and EP15 JSON artifacts already held the intended P1 repairs
+- the remaining live mismatch was the stale derived mirror `projects/0_1/plans/blueprints/blueprint_0008.txt`
+- this closure synchronized the EP8 txt mirror to the authoritative JSON and revalidated EP15 alignment
+- UTF-8 and JSON validity checks passed for the touched lane artifacts
+
+Residuals:
+- no residual inside this bounded artifact-fix lane
+- next queue item is `stage3-blueprint-validator-hardening`

@@ -1,21 +1,26 @@
 # 0_1 Stage4 EP9 Remediation Execution SSOT
 
 Date: 2026-03-30
-Status: execution-ready
+Status: closed (3-pass audited, realized, runtime-validated)
+Confidence: 96%
 Canonical Path: `docs/2026-03-30/0_1-stage4-ep9-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/0_1-stage4-ep9-remediation-execution-ssot.md`
+Temp Mirror Path: `(closed; mirror removed after canonical closure update)`
 Commit State:
 - Baseline Commit: `229b85c655c32366818c2278462b51f3ad490913`
 - Baseline Dirty Summary: `dirty: tracked changes in 0_temp.txt, Stage 4 runtime files/tests, project 0_1 logs/db, blueprint_0008; multiple untracked 2026-03-30 docs/artifacts/scripts`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Commit: `512b0d23498d386d5199db2c01304b0d53bfd5aa`
+- Resume Drift Summary: `fresh live session 20260330_231345 passed EP9 on round 1 with director_primary_pass; artifact, decision, episode_production, and stage_attempts row align on the same final manuscript; temp mirror retired after closure`
 Source Survey Docs:
 - `docs/2026-03-30/0_1-stage4-ep9-failure-root-cause-bounded-survey.md`
 - `docs/2026-03-30/0_1-stage4-ep9-round7-parallel-bounded-survey.md`
 - `docs/2026-03-29/stage4-retry-loop-compression-full-survey.md`
 - `docs/2026-03-30/0_1-ep8-artifact-vs-code-merge-audit.md`
+- `docs/2026-03-30/0_1-stage4-ep9-remediation-postpatch-bounded-survey.md`
+- `docs/2026-03-31/0_1-stage4-ep9-remediation-runtime-closure-audit.md`
 Evidence Artifacts:
 - `docs/2026-03-30/0_1-stage4-ep9-failure-root-cause-evidence.json`
+- `docs/2026-03-30/0_1-stage4-ep9-remediation-postpatch-evidence.json`
+- `docs/2026-03-31/0_1-stage4-ep9-remediation-runtime-closure-evidence.json`
 - `projects/0_1/project_data.db`
 - `projects/0_1/logs/session/decisions.jsonl`
 - `projects/0_1/logs/session/ui_events.jsonl`
@@ -248,12 +253,11 @@ Required contract:
 
 ## 12. Temp Queue Notes
 
-- temp status: ready-for-execution
+- temp status: closed
 - cleanup condition:
-  - remove `docs/temp/0_1-stage4-ep9-remediation-execution-ssot.md` after realization, closure audit, roadmap refresh, and queue-state sync
+  - completed; mirror removed after closure audit, roadmap refresh, and queue-state sync
 - roadmap dependency:
-  - must be admitted into the active aggregate roadmap in the same turn
-  - should be ordered ahead of the older deferred Stage 4 provider item because it is the direct current blocker and has stronger substrate leverage on live Stage 4 correctness
+  - completed; lane retired from the active aggregate roadmap after closure
 
 ## 13. Validation and Closure Hooks
 
@@ -290,3 +294,38 @@ Required contract:
 - deferred amplifiers are explicitly cut to keep the wave bounded
 
 Estimated confidence: `96%`
+
+## 15. Closure Record
+
+Static closure support came from:
+
+- `docs/2026-03-30/0_1-stage4-ep9-remediation-postpatch-bounded-survey.md`
+- landed tests in `tests/test_stage4_ep9_remediation.py`
+
+Runtime closure support came from the fresh live session `20260330_231345`:
+
+- [episode_production.jsonl](C:/Users/User/Desktop/글도비/projects/0_1/logs/episode_production.jsonl:51)
+  - `attempt_key=s4:ep9:arc2:a1:20260330_231345`
+  - `final_verdict=PASS`
+  - `gate_basis=director_primary_pass`
+- [decisions.jsonl](C:/Users/User/Desktop/글도비/projects/0_1/logs/session/decisions.jsonl:72)
+  - same `attempt_key`
+  - same `content_hash`
+  - `result=PASS`
+- `project_data.db` `stage_attempts.id=58`
+  - `verdict=PASS`
+  - same `artifact_path`
+- [ui_events.jsonl](C:/Users/User/Desktop/글도비/projects/0_1/logs/session/ui_events.jsonl:3833), [ui_events.jsonl](C:/Users/User/Desktop/글도비/projects/0_1/logs/session/ui_events.jsonl:3842), and [ui_events.jsonl](C:/Users/User/Desktop/글도비/projects/0_1/logs/session/ui_events.jsonl:3846)
+  - advisory chain completed with only `NumericConsistency` and `StyleSignal`
+  - round 1 ended as `PASS`
+
+Artifact truth:
+
+- [final_manuscript__C.txt](C:/Users/User/Desktop/글도비/projects/0_1/logs/artifacts/stage4/ep_0009/attempt_01/final_manuscript__C.txt)
+- [selected_candidate__C.txt](C:/Users/User/Desktop/글도비/projects/0_1/logs/artifacts/stage4/ep_0009/attempt_01/selected_candidate__C.txt)
+  - both resolve to hash `6f923544c0e6033f`
+
+Closure interpretation:
+
+- the EP9-specific false-positive retry pathology is closed
+- the retry-marker attribution subpath was not re-exercised in the successful rerun, but remains current-workspace test-covered and non-contradicted

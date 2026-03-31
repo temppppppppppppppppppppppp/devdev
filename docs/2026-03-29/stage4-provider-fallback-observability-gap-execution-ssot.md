@@ -1,7 +1,7 @@
 # Stage4 Provider Fallback Observability Gap Execution SSOT
 
 Date: 2026-03-29
-Status: execution-ready
+Status: closed
 Canonical Path: `docs/2026-03-29/stage4-provider-fallback-observability-gap-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage4-provider-fallback-observability-gap-execution-ssot.md`
 Commit State:
@@ -249,3 +249,14 @@ Fresh canary validation should happen only after this wave lands.
 - PASS
 
 Estimated confidence: `96%`
+
+## 15. Closure Update
+
+Date: `2026-03-31`
+Closure Audit: `docs/2026-03-31/stage4-provider-fallback-observability-gap-closure-audit.md`
+Closure Evidence: `docs/2026-03-31/stage4-provider-fallback-observability-gap-closure-evidence.json`
+Status Rationale:
+- the backup-recovery session logging path is already present and tested
+- served-model cost attribution is already present in both SessionLogger kwargs and MetricsCollector scope accounting
+- Anthropic credit-exhaustion classification is already covered by focused regression
+- no new code patch was required in this closure turn because the bounded observability correction was already present in the workspace
