@@ -1,7 +1,7 @@
 # Stage 3 Blueprint Validator Hardening - Execution SSOT
 
 Date: 2026-03-30
-Status: ready-for-execution (3-pass audited, confidence 97%)
+Status: closed
 Canonical Path: `docs/2026-03-30/stage3-blueprint-validator-hardening-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage3-blueprint-validator-hardening-execution-ssot.md`
 Baseline Commit: `9ad4efcc`
@@ -319,3 +319,14 @@ Additional audit
 - confirmed the closure criteria now depend on both warning creation and PASS blocking
 
 Estimated confidence: 97%
+
+## 12. Closure Update
+
+Date: 2026-03-31
+Closure Audit: `docs/2026-03-31/stage3-blueprint-validator-hardening-closure-audit.md`
+Closure Evidence: `docs/2026-03-31/stage3-blueprint-validator-hardening-closure-evidence.json`
+Status Rationale:
+- the validator owner already contains the `scene_completeness` and `arc_timeline` collectors required by Tranche 1A
+- the same owner already contains the binding prevalidation contract required by Tranche 1B
+- targeted validation passed cleanly (`py_compile`, `ruff`, `pytest`, UTF-8 hygiene)
+- no new code patch was required in this closure turn because the implementation was already present in the workspace

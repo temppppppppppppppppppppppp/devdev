@@ -1,26 +1,34 @@
 # 0_1 Stage4 CW First-Pass False-Miss Remediation Execution SSOT
 
 Date: 2026-03-31
-Status: execution-ready
+Status: closed (3-pass audited, realized, runtime-validated)
+Confidence: 96%
 Document Type: execution SSOT
 Canonical Path: `docs/2026-03-31/0_1-stage4-cw-first-pass-false-miss-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/0_1-stage4-cw-first-pass-false-miss-remediation-execution-ssot.md`
+Temp Mirror Path: `(closed; mirror removed after canonical closure update)`
 Baseline Commit: `229b85c655c32366818c2278462b51f3ad490913`
 Baseline Dirty Summary: `dirty: active stage4 runtime/tests/log-db drift, active temp queue, multiple 2026-03-30 docs untracked`
-Resume Commit: `same-as-baseline`
-Resume Drift Summary: `none`
+Resume Commit: `512b0d23498d386d5199db2c01304b0d53bfd5aa`
+Resume Drift Summary: `0_1 stage34 canary emitted runtime rows that persist verdict_layers and downstream-override classification; temp mirror retired after closure`
 Source Survey Docs:
 - `docs/2026-03-31/0_1-stage4-cw-first-pass-miss-parallel-bounded-survey.md`
 - `docs/2026-03-30/0_1-stage4-cw-first-pass-miss-lane1-prompt-topology-draft.md`
 - `docs/2026-03-30/0_1-stage4-cw-first-pass-miss-lane2-carryover-cognition-draft.md`
 - `docs/2026-03-30/0_1-stage4-cw-first-pass-miss-lane3-model-tier-budget-draft.md`
 - `docs/2026-03-30/0_1-stage4-cw-first-pass-miss-lane4-runtime-vs-gate-draft.md`
+- `docs/2026-03-31/0_1-stage4-cw-first-pass-false-miss-remediation-postpatch-bounded-survey.md`
+- `docs/2026-03-31/0_1-stage4-cw-first-pass-false-miss-remediation-runtime-closure-audit.md`
 Evidence Artifacts:
 - `docs/2026-03-31/0_1-stage4-cw-first-pass-miss-parallel-evidence.json`
+- `docs/2026-03-31/0_1-stage4-cw-first-pass-false-miss-remediation-postpatch-evidence.json`
+- `docs/2026-03-31/0_1-stage4-cw-first-pass-false-miss-remediation-runtime-closure-evidence.json`
 - `projects/0_1/project_data.db`
 - `projects/0_1/logs/session/decisions.jsonl`
 - `projects/0_1/logs/episode_production.jsonl`
 - `projects/0_1/logs/session/llm_io.jsonl`
+- `projects/canary_0_1_stage34_ep14_cw_hierarchy/logs/stage34_canary_summary.json`
+- `projects/canary_0_1_stage34_ep14_cw_hierarchy/logs/episode_production.jsonl`
+- `projects/canary_0_1_stage34_ep14_cw_hierarchy/logs/session/decisions.jsonl`
 Side-Effect Coverage: covered
 
 ## 1. Intent
@@ -288,4 +296,33 @@ Pass 3, execution and readability:
 - acceptance criteria are concrete
 - queue admission and validation hooks are explicit
 
-Confidence: 96%
+## 14. Closure Record
+
+Static closure support came from:
+
+- `docs/2026-03-31/0_1-stage4-cw-first-pass-false-miss-remediation-postpatch-bounded-survey.md`
+- landed tests around:
+  - verdict-layer persistence
+  - prompt authority preface
+  - generic carryover fallback
+
+Runtime closure support came from the fresh `0_1` canary:
+
+- `EP10` attempt `s4:ep10:arc3:a1:20260331_112930`
+  - `director_quality_passed=true`
+  - `downstream_override_applied=false`
+  - `primary_failure_layer="none"`
+- `EP11` attempt `s4:ep11:arc3:a1:20260331_112930`
+  - `director_quality_passed=true`
+  - `downstream_override_applied=true`
+  - `primary_failure_layer="downstream_gate"`
+- `EP14` attempt `s4:ep14:arc3:a4:20260331_112930`
+  - `director_quality_passed=true`
+  - `downstream_override_applied=false`
+  - `primary_failure_layer="none"`
+
+Closure interpretation:
+
+- the lane's diagnosis-correction goal is realized
+- runtime persistence now distinguishes `Director-quality pass` from `downstream override`
+- remaining Stage 4 churn belongs to separate retry-efficiency and continuity/math lanes

@@ -1,0 +1,40 @@
+{
+  "topic": "stage4-provider-fallback-observability-gap",
+  "date": "2026-03-31",
+  "baseline_commit": "512b0d23",
+  "canonical_execution_path": "docs/2026-03-29/stage4-provider-fallback-observability-gap-execution-ssot.md",
+  "temp_mirror_path": "docs/temp/stage4-provider-fallback-observability-gap-execution-ssot.md",
+  "production_files": [
+    "modules/domain/agents/base_agent.py",
+    "modules/core/metrics_collector.py"
+  ],
+  "test_files": [
+    "tests/test_base_agent.py",
+    "tests/test_cost_tracking.py"
+  ],
+  "realized_contract": {
+    "backup_recovery_logs_session_entry_with_backup_model": true,
+    "session_logger_cost_uses_served_model_pricing": true,
+    "metrics_collector_end_call_accepts_served_model_override": true,
+    "anthropic_credit_balance_too_low_classifies_as_quota_like": true
+  },
+  "validation": {
+    "py_compile": "pass",
+    "ruff_check": "pass",
+    "utf8_hygiene": "pass",
+    "pytest": [
+      {
+        "command": "pytest tests/test_base_agent.py -k \"credit_balance_too_low_is_classified_as_quota_like or backup_recovery_uses_measured_usage_and_closes_failed_metric or backup_recovery_success_logs_session_entry_with_backup_model_pricing or vertex_prefixed_pro_preserves_provider_on_fallback\" -q",
+        "result": "4 passed, 80 deselected in 1.56s"
+      },
+      {
+        "command": "pytest tests/test_cost_tracking.py -k \"end_call_model_override_attributes_cost_to_served_model\" -q",
+        "result": "1 passed, 8 deselected in 1.44s"
+      }
+    ]
+  },
+  "notes": [
+    "No new production patch was required in this closure turn because the observability correction was already present in the workspace.",
+    "This closure stays within the original SSOT guardrails and does not claim `model_tier` fallback awareness."
+  ]
+}

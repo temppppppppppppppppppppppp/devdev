@@ -7,19 +7,11 @@ Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `229b85c655c32366818c2278462b51f3ad490913`
 Baseline Dirty Summary: `dirty: active stage4 runtime/tests/log-db drift, active temp queue/roadmap already dirty, multiple 2026-03-30 and 2026-03-31 docs plus artifact outputs untracked`
 Resume Commit: `same-as-baseline`
-Resume Drift Summary: `none`
+Resume Drift Summary: `stage4-cw-webnovel-identity-context-hierarchy-remediation, 0_1-stage4-cw-first-pass-false-miss-remediation, 0_1-stage4-retry-efficiency-remediation, and 0_1-stage4-ep9-remediation all closed after runtime validation plus bounded closure audit; mirrors retired from docs/temp`
 Supersedes:
 - `docs/2026-03-30/active-temp-execution-roadmap.md`
 
 Queue Snapshot:
-- `docs/temp/stage4-cw-webnovel-identity-context-hierarchy-remediation-execution-ssot.md`
-- `docs/temp/0_1-stage4-cw-first-pass-false-miss-remediation-execution-ssot.md`
-- `docs/temp/0_1-stage4-retry-efficiency-remediation-execution-ssot.md`
-- `docs/temp/0_1-stage4-ep9-remediation-execution-ssot.md`
-- `docs/temp/0_1-stage3-blueprint-fix-execution-ssot.md`
-- `docs/temp/stage3-blueprint-validator-hardening-execution-ssot.md`
-- `docs/temp/stage3-capital-unit-drift-hardening-execution-ssot.md`
-- `docs/temp/stage4-provider-fallback-observability-gap-execution-ssot.md`
 - `docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md`
 - `docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md`
 
@@ -27,122 +19,55 @@ Queue Snapshot:
 
 This roadmap is the current controller for the aggregate `docs/temp/` execution queue.
 
-This refresh does four specific things:
+This refresh now does nine specific things:
 
-1. admits the new `stage4-cw-webnovel-identity-context-hierarchy-remediation` lane into the active queue
-2. places that lane at the top because it is the latest user-driven system priority and is backed by a completed post-run merge audit
-3. keeps the already in-progress `0_1-stage4-cw-first-pass-false-miss-remediation` lane near the top because its runtime evidence and closure work are already underway
-4. keeps older Stage 3 / legacy items visible without letting them outrank the current Stage 4 user-driven sequence
+1. retires the now-validated `stage4-cw-webnovel-identity-context-hierarchy-remediation` lane from the active temp queue
+2. retires the now-runtime-validated `0_1-stage4-cw-first-pass-false-miss-remediation` lane from the active temp queue
+3. retires the now-runtime-bounded-validated `0_1-stage4-retry-efficiency-remediation` lane from the active temp queue
+4. retires the now-runtime-validated `0_1-stage4-ep9-remediation` lane from the active temp queue
+5. retires the now-closed `0_1-stage3-blueprint-fix` lane after bounded artifact synchronization
+6. retires the now-validated `stage3-blueprint-validator-hardening` lane after focused validator regression closure
+7. retires the now-validated `stage3-capital-unit-drift-hardening` lane after overlapping validator-owner closure
+8. retires the now-validated `stage4-provider-fallback-observability-gap` lane after focused observability regression closure
+9. leaves older legacy items visible without letting them outrank the current active sequence
 
 ## 2. Queue Inventory
 
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `stage4-cw-webnovel-identity-context-hierarchy-remediation` | `docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-remediation-execution-ssot.md` | `docs/temp/stage4-cw-webnovel-identity-context-hierarchy-remediation-execution-ssot.md` | in_progress | code landed and targeted static validation passed; fresh Stage 3 -> Stage 4 rerun evidence still pending before closure |
-| `0_1-stage4-cw-first-pass-false-miss-remediation` | `docs/2026-03-31/0_1-stage4-cw-first-pass-false-miss-remediation-execution-ssot.md` | `docs/temp/0_1-stage4-cw-first-pass-false-miss-remediation-execution-ssot.md` | in_progress | code landed; runtime evidence through EP15 collected; merged closure audit still pending |
-| `0_1-stage4-retry-efficiency-remediation` | `docs/2026-03-31/0_1-stage4-retry-efficiency-remediation-execution-ssot.md` | `docs/temp/0_1-stage4-retry-efficiency-remediation-execution-ssot.md` | ready-for-execution | new bounded retry-compression lane from the EP8-15 efficiency survey |
-| `0_1-stage4-ep9-remediation` | `docs/2026-03-30/0_1-stage4-ep9-remediation-execution-ssot.md` | `docs/temp/0_1-stage4-ep9-remediation-execution-ssot.md` | closure-pending | code landed and EP9 live pass was observed; final closure doc/temp cleanup still pending |
-| `0_1-stage3-blueprint-fix` | `docs/2026-03-30/0_1-stage3-blueprint-fix-execution-ssot.md` | `docs/temp/0_1-stage3-blueprint-fix-execution-ssot.md` | pending | bounded artifact fix lane |
-| `stage3-blueprint-validator-hardening` | `docs/2026-03-30/stage3-blueprint-validator-hardening-execution-ssot.md` | `docs/temp/stage3-blueprint-validator-hardening-execution-ssot.md` | ready-for-execution | validator contract hardening lane |
-| `stage3-capital-unit-drift-hardening` | `docs/2026-03-30/stage3-capital-unit-drift-hardening-execution-ssot.md` | `docs/temp/stage3-capital-unit-drift-hardening-execution-ssot.md` | ready-for-execution | preventive Stage 3 capital drift lane |
-| `stage4-provider-fallback-observability-gap` | `docs/2026-03-29/stage4-provider-fallback-observability-gap-execution-ssot.md` | `docs/temp/stage4-provider-fallback-observability-gap-execution-ssot.md` | pending | lower immediate ROI than the current Stage 4 correctness/efficiency lanes |
 | `frontier-lag-soak-canary-wave1` | `docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md` | `docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md` | parked | non-critical soak lane |
 | `npc-martial-state-substrate-wave1` | `docs/2026-03-27/npc-martial-state-substrate-wave1-execution-ssot.md` | `docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md` | blocked | awaits fresh evidence and explicit reactivation |
 
 ## 3. Dependency Notes
 
-- `stage4-cw-webnovel-identity-context-hierarchy-remediation` is now the top user-driven lane because it addresses the currently observed Stage 3+4 prompt/authority failure family from the `0_2` frontier run and has a completed post-run merge audit.
-- `0_1-stage4-cw-first-pass-false-miss-remediation` remains near the top because code already landed and runtime evidence has already been gathered against it.
-- `0_1-stage4-retry-efficiency-remediation` should follow the new hierarchy-remediation lane because retry compression should not outrank upstream prompt/authority cleanup when both are active.
-- `0_1-stage4-retry-efficiency-remediation` depends conceptually on the already-landed Stage 4 substrates:
-  - EP9 NpcDrift/advisory-contract correction
-  - verdict-layer observability surfacing
-- `0_1-stage4-ep9-remediation` is no longer the top execution lane, but it remains in queue until formal closure and temp cleanup are finished.
-- the Stage 3 lanes remain independent and actionable, but they are not the current user-requested Stage 4 priority.
-- `stage4-provider-fallback-observability-gap` stays below the current Stage 4 correctness/efficiency sequence.
+- `stage4-cw-webnovel-identity-context-hierarchy-remediation` is closed and no longer part of the active temp queue; runtime closure evidence came from `0_1` canary `EP10~14`.
+- `0_1-stage4-cw-first-pass-false-miss-remediation` is closed and no longer part of the active temp queue; runtime closure evidence came from verdict-layer persistence in the same `0_1` canary window.
+- `0_1-stage4-retry-efficiency-remediation` is now closed; the canary proved retry-lane attempt identity, while `[QR-7 escalation]` and `[TF-RH1]` remained runtime-not-exercised but non-contradicted and test-covered.
+- `0_1-stage4-ep9-remediation` is now closed; live session `20260330_231345` published EP9 on round 1 and the mirror was retired after closure audit.
+- `0_1-stage3-blueprint-fix` is now closed; EP8 txt mirror drift was synchronized to the already-repaired authoritative JSON, and EP15 alignment was revalidated without new artifact regeneration.
+- `stage3-blueprint-validator-hardening` is now closed; the required collectors and binding verdict contract were already present in `unified_blueprint_validator.py` and validated by focused regression.
+- `stage3-capital-unit-drift-hardening` is now closed; the `capital_unit` collector and binding escalation were already absorbed into the same validator owner and verified by the same focused regression lane.
+- `stage4-provider-fallback-observability-gap` is now closed; the bounded observability correction was already present in `BaseAgent` and `MetricsCollector` and passed focused regression without further code change.
 - the last two items remain parked legacy lanes.
 
 ## 4. Execution Order
 
-1. `stage4-cw-webnovel-identity-context-hierarchy-remediation`
-2. `0_1-stage4-cw-first-pass-false-miss-remediation`
-3. `0_1-stage4-retry-efficiency-remediation`
-4. `0_1-stage4-ep9-remediation`
-5. `0_1-stage3-blueprint-fix`
-6. `stage3-blueprint-validator-hardening`
-7. `stage3-capital-unit-drift-hardening`
-8. `stage4-provider-fallback-observability-gap`
-9. `frontier-lag-soak-canary-wave1`
-10. `npc-martial-state-substrate-wave1`
+1. `frontier-lag-soak-canary-wave1`
+2. `npc-martial-state-substrate-wave1`
 
 Order rationale:
 
-- the new hierarchy-remediation lane is the latest user-driven execution priority and directly targets the currently observed `0_2` Stage 3+4 failure family
-- the current Stage 4 CW lane remains high because it is already in motion, but it is no longer the top priority after the user's redirect
-- the retry-efficiency lane remains high ROI, but it follows the hierarchy-remediation lane because retry compression should not outrank upstream prompt/authority cleanup when both are active
-- the EP9 lane is important substrate history but is now primarily a closure/pending-cleanup item rather than the highest active leverage lane
-- the remaining Stage 3 and legacy items keep their older lower-priority positions
+- the just-closed hierarchy-remediation lane drops out of the active queue after runtime validation and temp cleanup
+- the first-pass false-miss lane also drops out after runtime validation and temp cleanup
+- the retry-efficiency lane also drops out after bounded runtime closure proof and targeted residual-branch test confirmation
+- the EP9 lane now drops out after live pass closure and temp cleanup
+- the bounded Stage 3 blueprint-fix lane now drops out after txt mirror synchronization and artifact validation
+- the validator hardening lane now drops out after focused code/test closure
+- the preventive capital-unit lane also drops out because its implementation already landed inside the same validator owner and test surface
+- the provider-fallback observability lane now drops out after focused RC-1 through RC-4 regression closure
+- the remaining legacy items keep their older lower-priority positions
 
 ## 5. Per-Item Status Ledger
-
-### stage4-cw-webnovel-identity-context-hierarchy-remediation
-
-- next action:
-  - use the canonical SSOT as the governing document for the next bounded Stage 3+4 patch wave
-  - re-audit the canonical SSOT against the live workspace immediately before code edits
-- temp cleanup action:
-  - remove mirror after bounded code/test realization, fresh Stage 3 -> Stage 4 rerun validation, closure audit, roadmap refresh, and queue-state sync
-
-### 0_1-stage4-cw-first-pass-false-miss-remediation
-
-- next action:
-  - complete merged closure audit against the already collected runtime evidence
-  - if closure is not supportable, reopen only the residual seam that remains live
-- temp cleanup action:
-  - remove mirror after closure audit, roadmap refresh, and queue-state sync
-
-### 0_1-stage4-retry-efficiency-remediation
-
-- next action:
-  - use the canonical SSOT as the governing document for the next bounded Stage 4 policy wave
-  - re-audit the canonical SSOT against the live workspace immediately before code edits
-- temp cleanup action:
-  - remove mirror after bounded code/test realization, fresh-session live efficiency audit, closure review, roadmap refresh, and queue-state sync
-
-### 0_1-stage4-ep9-remediation
-
-- next action:
-  - convert the live pass plus post-patch survey chain into formal closure, or explicitly justify why the mirror remains active
-- temp cleanup action:
-  - remove mirror after closure audit, roadmap refresh, and queue-state sync
-
-### 0_1-stage3-blueprint-fix
-
-- next action:
-  - follow canonical SSOT if the artifact fix lane is reactivated
-- temp cleanup action:
-  - remove mirror after bounded artifact patch and closure validation
-
-### stage3-blueprint-validator-hardening
-
-- next action:
-  - follow canonical SSOT if the validator lane is reactivated
-- temp cleanup action:
-  - remove mirror after code/test closure
-
-### stage3-capital-unit-drift-hardening
-
-- next action:
-  - execute only after re-auditing the canonical SSOT against the live workspace
-- temp cleanup action:
-  - remove mirror after preventive validator lane lands and validates
-
-### stage4-provider-fallback-observability-gap
-
-- next action:
-  - remain deferred unless observability ROI rises again
-- temp cleanup action:
-  - remove mirror only after live validation or formal park/closure decision
 
 ### frontier-lag-soak-canary-wave1
 

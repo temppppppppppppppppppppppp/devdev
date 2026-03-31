@@ -1,25 +1,34 @@
 # 0_1 Stage4 Retry Efficiency Remediation Execution SSOT
 
 Date: 2026-03-31
-Status: execution-ready
+Status: closed (3-pass audited, realized, runtime-bounded-validated)
+Confidence: 96%
 Document Type: execution SSOT
 Canonical Path: `docs/2026-03-31/0_1-stage4-retry-efficiency-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/0_1-stage4-retry-efficiency-remediation-execution-ssot.md`
+Temp Mirror Path: `(closed; mirror removed after canonical closure update)`
 Baseline Commit: `229b85c655c32366818c2278462b51f3ad490913`
 Baseline Dirty Summary: `dirty: active stage4 runtime/tests/log-db drift, active temp queue/roadmap already dirty, multiple 2026-03-30 and 2026-03-31 docs plus artifact outputs untracked`
-Resume Commit: `same-as-baseline`
-Resume Drift Summary: `none`
+Resume Commit: `512b0d23498d386d5199db2c01304b0d53bfd5aa`
+Resume Drift Summary: `0_1 stage34 canary plus targeted tests proved retry-lane attempt_key in runtime and left QR-7 escalation / TF-RH1 non-contradicted; mirror retired after closure`
 Source Survey Docs:
 - `docs/2026-03-31/0_1-stage4-ep1-15-db-log-bounded-audit.md`
 - `docs/2026-03-31/0_1-stage4-ep10-15-residual-gate-observability-deep-dive-survey.md`
 - `docs/2026-03-31/0_1-stage4-ep8-15-retry-efficiency-bounded-survey.md`
+- `docs/2026-03-31/0_1-stage4-retry-efficiency-remediation-runtime-progress-audit.md`
+- `docs/2026-03-31/0_1-stage4-retry-efficiency-runtime-closure-proof-audit.md`
 Evidence Artifacts:
 - `docs/2026-03-31/0_1-stage4-ep10-15-residual-gate-observability-deep-dive-evidence.json`
 - `docs/2026-03-31/0_1-stage4-ep8-15-retry-efficiency-bounded-evidence.json`
+- `docs/2026-03-31/0_1-stage4-retry-efficiency-remediation-runtime-progress-evidence.json`
+- `docs/2026-03-31/0_1-stage4-retry-efficiency-runtime-closure-proof-evidence.json`
 - `projects/0_1/project_data.db`
 - `projects/0_1/logs/session/ui_events.jsonl`
 - `projects/0_1/logs/session/decisions.jsonl`
 - `projects/0_1/logs/episode_production.jsonl`
+- `projects/canary_0_1_stage34_ep14_cw_hierarchy/logs/stage34_canary_summary.json`
+- `projects/canary_0_1_stage34_ep14_cw_hierarchy/logs/session/ui_events.jsonl`
+- `projects/canary_0_1_stage34_ep14_cw_hierarchy/logs/runtime_audit.jsonl`
+- `projects/canary_0_1_stage34_ep14_cw_hierarchy/logs/episode_production.jsonl`
 Side-Effect Coverage: covered
 
 ## 1. Intent
@@ -334,3 +343,22 @@ Pass 3, execution and readability:
 - queue admission and roadmap dependency are explicit
 
 Confidence: 96%
+
+## 14. Closure Record
+
+Fresh-session runtime proof supports these parts:
+
+- retry-lane `policy` / `advisory` rows carry `attempt_key`
+- `TF-PATCH-GATE` and `QR-7` are operator-visible with fresh-session attempt identity
+- the fresh-session observability gate is satisfied
+
+Residual runtime branches are bounded as follows:
+
+- `[QR-7 escalation]`: runtime-not-exercised, non-contradicted
+- `[TF-RH1]`: runtime-not-exercised, non-contradicted
+
+Current interpretation:
+
+- code landed
+- targeted tests cover the residual branches and passed in the current workspace
+- runtime evidence is sufficient for closure because the unobserved residual branches were not contradicted by the canary
