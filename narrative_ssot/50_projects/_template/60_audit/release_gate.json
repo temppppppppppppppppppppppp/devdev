@@ -1,0 +1,10 @@
+{
+  "work_id": "template_work_id",
+  "phase0_pass": false,
+  "tr_pass": false,
+  "bi_pass": false,
+  "cross_stage_sync_pass": false,
+  "publish_allowed": false,
+  "blocking_reasons": []
+}
+
