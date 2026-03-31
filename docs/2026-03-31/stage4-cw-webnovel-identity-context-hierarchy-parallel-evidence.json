@@ -1,0 +1,183 @@
+{
+  "date": "2026-03-31",
+  "status": "draft-live-run-pending",
+  "mode": "live-merge synthesis",
+  "confidence": 0.93,
+  "run_state": {
+    "status": "in_progress",
+    "evidence": [
+      "git status shows active 0_2 log/db mutations",
+      "0_temp.txt continues to append runtime console evidence"
+    ]
+  },
+  "baseline": {
+    "commit": "170963d34d30d3076a57926c5d1ed250f13ec421",
+    "dirty_summary": "active 0_2 frontier-run logs/db/ui mutation in progress; 0_temp console scratch dirty"
+  },
+  "source_lane_docs": [
+    "docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-lane1-prompt-topology-draft.md",
+    "docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-lane2-context-delta-draft.md",
+    "docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-lane3-stage2-stage3-upstream-draft.md",
+    "docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-lane4-runtime-symptom-taxonomy-draft.md"
+  ],
+  "hard_conclusions": [
+    {
+      "id": "HC1",
+      "claim": "CW first-pass miss is primarily prompt/context hierarchy failure plus Stage 3 contamination, not a clean model-tier incapability diagnosis.",
+      "anchors": [
+        "modules/domain/agents/chief_writer_prompts.py:50-205",
+        "modules/domain/agents/chief_writer_context.py:494-518",
+        "projects/0_2/logs/artifacts/stage4/ep_0002/attempt_01/patched_blueprint_after_fix__V75-D_blueprint_inplace.json:59"
+      ]
+    },
+    {
+      "id": "HC2",
+      "claim": "The first-pass prompt is structurally an analyst workflow with a writer label.",
+      "anchors": [
+        "modules/domain/agents/chief_writer_prompts.py:106-205",
+        "modules/domain/agents/chief_writer_context_packets.py:173-205"
+      ]
+    },
+    {
+      "id": "HC3",
+      "claim": "Retry succeeds because it narrows the task with explicit conflict/reuse guidance on top of the same base prompt.",
+      "anchors": [
+        "modules/domain/agents/chief_writer.py:627-714",
+        "modules/domain/agents/chief_writer.py:1016-1052",
+        "modules/domain/agents/chief_writer.py:1970-2026",
+        "modules/core/stage4_interview_round.py:2488-2494",
+        "projects/0_2/logs/session/decisions.jsonl:8-10"
+      ]
+    },
+    {
+      "id": "HC4",
+      "claim": "Stage 3 currently injects HUD/system/meta contamination into EP2 blueprint authority.",
+      "anchors": [
+        "projects/0_2/logs/artifacts/stage4/ep_0002/attempt_01/patched_blueprint_after_fix__V75-D_blueprint_inplace.json:59",
+        "projects/0_2/logs/artifacts/stage4/ep_0002/attempt_01/patched_blueprint_after_fix__V75-D_blueprint_inplace.json:95-101",
+        "modules/domain/agents/blueprint_ensemble.py:1124-1136",
+        "config/prompts/ensemble.yaml:354"
+      ]
+    },
+    {
+      "id": "HC5",
+      "claim": "The current EP2 bad sentence is a mixed defect, but primary blocking family is hard truth conflict; briefing register is secondary.",
+      "anchors": [
+        "projects/0_2/logs/artifacts/stage4/ep_0002/attempt_02/selected_before_fix__A.txt:19-25",
+        "projects/0_2/drafts/ep_0001.txt:91-97",
+        "modules/core/flashback_verifier.py:21-29",
+        "modules/core/stage4_interview_round.py:3994-4178"
+      ]
+    }
+  ],
+  "medium_confidence_conclusions": [
+    {
+      "id": "MC1",
+      "claim": "Stage 2 quantitative under-specification can widen numeric drift, but is not the primary source of current briefing-style contamination.",
+      "anchors": [
+        "projects/0_2/plans/arcs/arc_001.txt:16-18",
+        "projects/0_2/drafts/ep_0001.txt:91-97"
+      ]
+    },
+    {
+      "id": "MC2",
+      "claim": "The system lacks a strong detector for briefing prose or recap register when those defects do not also create a truth conflict.",
+      "anchors": [
+        "modules/core/quality_signal_metrics.py:23-35",
+        "modules/core/flashback_verifier.py:21-29"
+      ]
+    }
+  ],
+  "not_supported": [
+    "CW simply does not know it is writing a webnovel",
+    "model tier is the primary problem",
+    "Stage 2 is the primary culprit"
+  ],
+  "required_questions": {
+    "q1": "Yes, but weak and positionally overwhelmed.",
+    "q2": [
+      "prev_digest",
+      "hud_report",
+      "high_density_hud_section",
+      "hud_trend_section",
+      "hud_anomaly_section",
+      "npc_frequency_section",
+      "integrated_scenario_advisory_section",
+      "opening_anchor_section",
+      "constraint_section",
+      "future_guard_section",
+      "past_guard_section",
+      "prev_manuscripts_section truth-source framing"
+    ],
+    "q3": "Layers are mixed rather than cleanly separated.",
+    "q4": "Retry uses the same base prompt but adds narrower, explicit conflict and reuse framing.",
+    "q5": "Mostly Stage 3, with Stage 2 as a secondary numeric under-spec factor.",
+    "q6": "Mixed, with truth conflict primary and briefing prose secondary.",
+    "q7": [
+      "CW writer-identity / anti-briefing hardening",
+      "Context hierarchy separation",
+      "Stage 3 integrated_scenario / scene_breakdown anti-contamination hardening",
+      "Anti-meta / recap-register detector",
+      "Stage 2 fact anchoring where later numeric continuity depends on it"
+    ]
+  },
+  "runtime_evidence": [
+    {
+      "path": "projects/0_2/logs/artifacts/stage4/ep_0002/attempt_02/selected_before_fix__A.txt",
+      "lines": "19-25",
+      "note": "Fabricated hologram/status window plus recap-style false recall."
+    },
+    {
+      "path": "projects/0_2/drafts/ep_0001.txt",
+      "lines": "91-97",
+      "note": "Canonical EP1 asset decomposition is 12억 부동산 + 5억 신탁 펀드 + 3억 예금."
+    },
+    {
+      "path": "projects/0_2/logs/session/decisions.jsonl",
+      "lines": "8-10",
+      "note": "EP2 R0 and R1 were REJECT at 95; R2 PASS at 94 after explicit conflict handling."
+    },
+    {
+      "path": "0_temp.txt",
+      "lines": "744,753",
+      "note": "Live console shows Flashback advisory surfacing during the same EP2 failure cluster."
+    }
+  ],
+  "primary_anchors": [
+    "modules/domain/agents/chief_writer_prompts.py:106-205",
+    "modules/domain/agents/chief_writer_context.py:177-267",
+    "modules/domain/agents/chief_writer_context.py:494-518",
+    "modules/domain/agents/chief_writer_context_packets.py:173-205",
+    "modules/domain/agents/chief_writer.py:627-714",
+    "modules/domain/agents/chief_writer.py:1016-1052",
+    "modules/domain/agents/chief_writer.py:1970-2026",
+    "modules/domain/agents/blueprint_ensemble.py:1124-1136",
+    "config/prompts/ensemble.yaml:340-397",
+    "modules/core/stage4_interview_round.py:2488-2494",
+    "modules/core/stage4_interview_round.py:3994-4178",
+    "modules/core/flashback_verifier.py:21-29"
+  ],
+  "detector_gaps": [
+    {
+      "id": "G1",
+      "gap": "anti-meta / briefing prose detector",
+      "priority": "high"
+    },
+    {
+      "id": "G2",
+      "gap": "recap-register detector",
+      "priority": "high"
+    },
+    {
+      "id": "G3",
+      "gap": "fabricated-entity pre-gate",
+      "priority": "medium"
+    }
+  ],
+  "post_run_watchlist": [
+    "Whether briefing/recap prose recurs without accompanying hard truth conflict",
+    "Whether later Stage 3 blueprints continue to emit HUD/system/genre contamination",
+    "Whether retry continues to rescue first-pass by conflict narrowing rather than baseline quality",
+    "Whether later episodes expose pure webnovel-voice collapse"
+  ]
+}

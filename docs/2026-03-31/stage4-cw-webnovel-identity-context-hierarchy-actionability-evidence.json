@@ -1,0 +1,84 @@
+{
+  "date": "2026-03-31",
+  "status": "draft-live-run-pending",
+  "confidence": 0.94,
+  "topic": "stage4 cw webnovel identity context hierarchy actionability",
+  "baseline": {
+    "commit": "170963d34d30d3076a57926c5d1ed250f13ec421",
+    "dirty_summary": "active 0_2 frontier-run logs/db/ui mutation in progress; 0_temp console scratch dirty"
+  },
+  "run_state": {
+    "active": true,
+    "anchors": [
+      "0_temp.txt:861-940",
+      "projects/0_2/logs/session/decisions.jsonl:15",
+      "docs/implementation/live-run-merge-survey-harness.md:45-80"
+    ]
+  },
+  "latest_runtime_signals": [
+    {
+      "anchor": "0_temp.txt:920-930",
+      "claim": "EP4 Stage 3 blueprint still shows authority drift: anonymous NPC naming and institution fact-lock violation."
+    },
+    {
+      "anchor": "projects/0_2/logs/session/decisions.jsonl:14",
+      "claim": "Stage 3 EP4 blueprint PASS still carries quality_risk=true."
+    },
+    {
+      "anchor": "projects/0_2/logs/session/decisions.jsonl:15",
+      "claim": "Stage 3 EP5 blueprint generation continued during this audit, confirming live-run state."
+    }
+  ],
+  "execution_seams": [
+    {
+      "id": "S4-A",
+      "path": "modules/domain/agents/chief_writer_prompts.py",
+      "lines": "93-205",
+      "purpose": "writer identity hardening and anti-briefing contract"
+    },
+    {
+      "id": "S4-B",
+      "path": "modules/domain/agents/chief_writer_context.py",
+      "lines": "274-324,494-523",
+      "purpose": "advisory wrapper hardening and writer_core hierarchy split"
+    },
+    {
+      "id": "S4-C",
+      "path": "modules/domain/agents/chief_writer_context_packets.py",
+      "lines": "171-276",
+      "purpose": "prior-truth/carryover salience support"
+    },
+    {
+      "id": "S3-D",
+      "path": "config/prompts/ensemble.yaml",
+      "lines": "334-402",
+      "purpose": "blueprint anti-briefing and anti-contamination contract"
+    },
+    {
+      "id": "S3-E",
+      "path": "modules/domain/agents/blueprint_ensemble.py",
+      "lines": "1123-1142",
+      "purpose": "previous-blueprint scenario feed pruning"
+    },
+    {
+      "id": "S4-F",
+      "path": "modules/core/stage4_interview_round.py",
+      "lines": "929-943",
+      "purpose": "maintain bounded writer-facing blueprint minimization"
+    }
+  ],
+  "defer_list": [
+    "dedicated anti-meta / recap-register detector",
+    "Flashback family relabeling",
+    "Stage 2 tactical-doc specificity rewrite",
+    "model/provider tier changes",
+    "broad post-select taxonomy rewrite"
+  ],
+  "source_docs": [
+    "docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-parallel-bounded-survey.md",
+    "docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-lane1-prompt-topology-draft.md",
+    "docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-lane2-context-delta-draft.md",
+    "docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-lane3-stage2-stage3-upstream-draft.md",
+    "docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-lane4-runtime-symptom-taxonomy-draft.md"
+  ]
+}

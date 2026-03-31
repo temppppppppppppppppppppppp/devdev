@@ -12,6 +12,7 @@ Supersedes:
 - `docs/2026-03-30/active-temp-execution-roadmap.md`
 
 Queue Snapshot:
+- `docs/temp/stage4-cw-webnovel-identity-context-hierarchy-remediation-execution-ssot.md`
 - `docs/temp/0_1-stage4-cw-first-pass-false-miss-remediation-execution-ssot.md`
 - `docs/temp/0_1-stage4-retry-efficiency-remediation-execution-ssot.md`
 - `docs/temp/0_1-stage4-ep9-remediation-execution-ssot.md`
@@ -26,16 +27,18 @@ Queue Snapshot:
 
 This roadmap is the current controller for the aggregate `docs/temp/` execution queue.
 
-This refresh does three specific things:
+This refresh does four specific things:
 
-1. admits the new `0_1-stage4-retry-efficiency-remediation` lane into the active queue
-2. keeps the already in-progress `0_1-stage4-cw-first-pass-false-miss-remediation` lane at the top because its runtime evidence and closure work are already underway
-3. keeps older Stage 3 / legacy items visible without letting them outrank the current Stage 4 user-driven sequence
+1. admits the new `stage4-cw-webnovel-identity-context-hierarchy-remediation` lane into the active queue
+2. places that lane at the top because it is the latest user-driven system priority and is backed by a completed post-run merge audit
+3. keeps the already in-progress `0_1-stage4-cw-first-pass-false-miss-remediation` lane near the top because its runtime evidence and closure work are already underway
+4. keeps older Stage 3 / legacy items visible without letting them outrank the current Stage 4 user-driven sequence
 
 ## 2. Queue Inventory
 
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
+| `stage4-cw-webnovel-identity-context-hierarchy-remediation` | `docs/2026-03-31/stage4-cw-webnovel-identity-context-hierarchy-remediation-execution-ssot.md` | `docs/temp/stage4-cw-webnovel-identity-context-hierarchy-remediation-execution-ssot.md` | in_progress | code landed and targeted static validation passed; fresh Stage 3 -> Stage 4 rerun evidence still pending before closure |
 | `0_1-stage4-cw-first-pass-false-miss-remediation` | `docs/2026-03-31/0_1-stage4-cw-first-pass-false-miss-remediation-execution-ssot.md` | `docs/temp/0_1-stage4-cw-first-pass-false-miss-remediation-execution-ssot.md` | in_progress | code landed; runtime evidence through EP15 collected; merged closure audit still pending |
 | `0_1-stage4-retry-efficiency-remediation` | `docs/2026-03-31/0_1-stage4-retry-efficiency-remediation-execution-ssot.md` | `docs/temp/0_1-stage4-retry-efficiency-remediation-execution-ssot.md` | ready-for-execution | new bounded retry-compression lane from the EP8-15 efficiency survey |
 | `0_1-stage4-ep9-remediation` | `docs/2026-03-30/0_1-stage4-ep9-remediation-execution-ssot.md` | `docs/temp/0_1-stage4-ep9-remediation-execution-ssot.md` | closure-pending | code landed and EP9 live pass was observed; final closure doc/temp cleanup still pending |
@@ -48,8 +51,9 @@ This refresh does three specific things:
 
 ## 3. Dependency Notes
 
-- `0_1-stage4-cw-first-pass-false-miss-remediation` remains the current live Stage 4 lane because code already landed and runtime evidence has already been gathered against it.
-- `0_1-stage4-retry-efficiency-remediation` should follow immediately after the current CW lane because it builds on the same diagnosis family and converts the newly proven inefficiency seams into bounded policy work.
+- `stage4-cw-webnovel-identity-context-hierarchy-remediation` is now the top user-driven lane because it addresses the currently observed Stage 3+4 prompt/authority failure family from the `0_2` frontier run and has a completed post-run merge audit.
+- `0_1-stage4-cw-first-pass-false-miss-remediation` remains near the top because code already landed and runtime evidence has already been gathered against it.
+- `0_1-stage4-retry-efficiency-remediation` should follow the new hierarchy-remediation lane because retry compression should not outrank upstream prompt/authority cleanup when both are active.
 - `0_1-stage4-retry-efficiency-remediation` depends conceptually on the already-landed Stage 4 substrates:
   - EP9 NpcDrift/advisory-contract correction
   - verdict-layer observability surfacing
@@ -60,24 +64,34 @@ This refresh does three specific things:
 
 ## 4. Execution Order
 
-1. `0_1-stage4-cw-first-pass-false-miss-remediation`
-2. `0_1-stage4-retry-efficiency-remediation`
-3. `0_1-stage4-ep9-remediation`
-4. `0_1-stage3-blueprint-fix`
-5. `stage3-blueprint-validator-hardening`
-6. `stage3-capital-unit-drift-hardening`
-7. `stage4-provider-fallback-observability-gap`
-8. `frontier-lag-soak-canary-wave1`
-9. `npc-martial-state-substrate-wave1`
+1. `stage4-cw-webnovel-identity-context-hierarchy-remediation`
+2. `0_1-stage4-cw-first-pass-false-miss-remediation`
+3. `0_1-stage4-retry-efficiency-remediation`
+4. `0_1-stage4-ep9-remediation`
+5. `0_1-stage3-blueprint-fix`
+6. `stage3-blueprint-validator-hardening`
+7. `stage3-capital-unit-drift-hardening`
+8. `stage4-provider-fallback-observability-gap`
+9. `frontier-lag-soak-canary-wave1`
+10. `npc-martial-state-substrate-wave1`
 
 Order rationale:
 
-- the current Stage 4 CW lane is already in motion and should be closed cleanly before opening a broader retry-policy wave
-- the new retry-efficiency lane is the latest user-driven execution priority and has stronger near-term ROI than the deferred Stage 3 / provider lanes
+- the new hierarchy-remediation lane is the latest user-driven execution priority and directly targets the currently observed `0_2` Stage 3+4 failure family
+- the current Stage 4 CW lane remains high because it is already in motion, but it is no longer the top priority after the user's redirect
+- the retry-efficiency lane remains high ROI, but it follows the hierarchy-remediation lane because retry compression should not outrank upstream prompt/authority cleanup when both are active
 - the EP9 lane is important substrate history but is now primarily a closure/pending-cleanup item rather than the highest active leverage lane
 - the remaining Stage 3 and legacy items keep their older lower-priority positions
 
 ## 5. Per-Item Status Ledger
+
+### stage4-cw-webnovel-identity-context-hierarchy-remediation
+
+- next action:
+  - use the canonical SSOT as the governing document for the next bounded Stage 3+4 patch wave
+  - re-audit the canonical SSOT against the live workspace immediately before code edits
+- temp cleanup action:
+  - remove mirror after bounded code/test realization, fresh Stage 3 -> Stage 4 rerun validation, closure audit, roadmap refresh, and queue-state sync
 
 ### 0_1-stage4-cw-first-pass-false-miss-remediation
 

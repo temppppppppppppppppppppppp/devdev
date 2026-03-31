@@ -139,6 +139,7 @@ class TestBuildCommonContext:
         assert "통합 흐름" not in scene_breakdown
         assert "낮은 우선순위" in integrated_advisory
         assert "통합 흐름" in integrated_advisory
+        assert "요약/브리핑/HUD/상태창/시스템 문구" in integrated_advisory
         assert "문이 열린다" in ending_hook
 
     def test_build_character_voice_section_uses_stage4_fallback(self):
@@ -209,6 +210,8 @@ class TestBuildCommonContext:
         kwargs = mock_prompt.call_args.kwargs
         assert "대화 비율 보강" in kwargs["feedback_section"]
         assert "독백 과다 금지" in kwargs["constraint_section"]
+        assert "문파 긴장 고조" in kwargs["writer_hard_canon_section"]
+        assert "절단" in kwargs["writer_soft_guidance_section"]
         assert "문파 긴장 고조" in kwargs["writer_core_section"]
         assert "절단" in kwargs["writer_core_section"]
         assert "참고 문장" in kwargs["reference_excerpt_section"]

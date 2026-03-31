@@ -57,6 +57,27 @@ def test_normalize_writer_blueprint_moves_integrated_scenario_to_advisory():
     assert normalized["scene_breakdown"]["scene_1"]["goal"] == "대치"
 
 
+def test_normalize_writer_blueprint_strips_explicit_system_ui_contamination():
+    normalized = Stage4InterviewRound._normalize_writer_blueprint(
+        {
+            "integrated_scenario": "홀로그램 상태창이 떠올랐다.",
+            "scene_breakdown": {
+                "scene_1": {
+                    "summary": "상태창이 시야를 가렸다.",
+                    "goal": "회의실로 들어간다",
+                    "key_events": ["시스템 메시지가 떠오른다", "문을 밀고 들어간다"],
+                }
+            },
+        }
+    )
+
+    assert normalized["integrated_scenario"] == ""
+    assert normalized["integrated_scenario_advisory"] == ""
+    assert normalized["scene_breakdown"]["scene_1"]["summary"] == ""
+    assert normalized["scene_breakdown"]["scene_1"]["goal"] == "회의실로 들어간다"
+    assert normalized["scene_breakdown"]["scene_1"]["key_events"] == ["문을 밀고 들어간다"]
+
+
 def test_build_common_writer_kwargs_prefers_writer_blueprint_override():
     ir = Stage4InterviewRound(_make_ctx())
     round_ctx = _make_round_ctx()
@@ -71,6 +92,23 @@ def test_build_common_writer_kwargs_prefers_writer_blueprint_override():
 
     assert kwargs["blueprint"]["integrated_scenario"] == ""
     assert kwargs["blueprint"]["integrated_scenario_advisory"] == "원본 통합 흐름"
+
+
+def test_build_common_writer_kwargs_keeps_preflight_out_of_mandatory_context():
+    ir = Stage4InterviewRound(_make_ctx())
+    round_ctx = _make_round_ctx()
+    round_ctx.preflight_advisory = "리캡 톤 금지"
+
+    mandatory_context, kwargs = ir._build_common_writer_kwargs(
+        round_ctx=round_ctx,
+        next_ep=2,
+        mandatory_context="ctx",
+    )
+
+    assert mandatory_context == "ctx"
+    assert kwargs["mandatory_context"] == "ctx"
+    assert "리캡 톤 금지" in kwargs["reflexion_prompt"]
+    assert kwargs["reflexion_prompt"].startswith("### [Preflight Advisory - advisory only]")
 
 
 def test_post_select_conflict_guidance_escalates_to_full_rewrite():

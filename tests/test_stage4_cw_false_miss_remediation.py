@@ -178,6 +178,41 @@ def test_main_prompt_has_early_authority_preface():
     assert prompt.index("Read This Authority First") < prompt.index("feedback")
 
 
+def test_main_prompt_strengthens_writer_identity_and_prefers_split_writer_sections():
+    prompt = build_chief_writer_main_prompt(
+        ep_num=5,
+        dna_instruction="dna",
+        purism_section="purism",
+        world_origin_constraint_section="origin",
+        feedback_section="feedback",
+        constraint_section="constraint",
+        future_guard_section="future",
+        past_guard_section="past",
+        writer_core_section="legacy-writer-core",
+        hud_anomaly_section="hud-anomaly",
+        scene_breakdown="scene-breakdown",
+        prev_digest="PREV-DIGEST",
+        prev_ending="PREV-ENDING",
+        hud_report="HUD",
+        high_density_hud_section="hd-hud",
+        hud_trend_section="hud-trend",
+        npc_equipment_section="npc-equip",
+        npc_frequency_section="npc-freq",
+        arc_doc="arc",
+        core_identity_desire="desire",
+        style_guide="style",
+        common_rules="common-rules",
+        writing_guidelines="guidelines",
+        writer_hard_canon_section="HARD-CANON",
+        writer_soft_guidance_section="SOFT-GUIDANCE",
+    )
+
+    assert "너는 분석가, 요약가, 브리핑 엔진" in prompt
+    assert prompt.index("HARD-CANON") < prompt.index("SOFT-GUIDANCE")
+    assert prompt.index("SOFT-GUIDANCE") < prompt.index("scene-breakdown")
+    assert "legacy-writer-core" not in prompt
+
+
 def test_carryover_ceiling_uses_prev_digest_fallback_when_specific_hits_are_sparse():
     builder = ChiefWriterContextBuilder(_make_host())
     section = builder.context_packets._build_stage4_carryover_ceiling_section(

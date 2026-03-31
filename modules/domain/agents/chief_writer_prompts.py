@@ -83,6 +83,8 @@ def build_chief_writer_main_prompt(
     immutable_fact_section: str = "",  # [IFC] 불변 사실 계약 패킷
     integrated_scenario_advisory_section: str = "",  # [S4] advisory-only long-form blueprint prose
     carryover_ceiling_section: str = "",  # [S4] prior/current authority ceiling
+    writer_hard_canon_section: str = "",
+    writer_soft_guidance_section: str = "",
 ) -> str:
     """[V65] _build_common_context() 메인 프롬프트 템플릿.
 
@@ -90,9 +92,17 @@ def build_chief_writer_main_prompt(
     [V67] prev_manuscripts_section: 이전 30화 원고 전문 (모순 방지용 컨텍스트)
     [V68] chain_link_section: 직전 화 연결고리 (다음 화에서 반드시 이어받아야 할 것)
     """
+    _split_writer_sections = bool(writer_hard_canon_section or writer_soft_guidance_section)
+    _legacy_writer_core_section = "" if _split_writer_sections else writer_core_section
     return f"""
 [Role] 웹소설 1타 작가 (Chief Writer)
 [Task] 제{ep_num}화 원고를 Blueprint 기반으로 집필하라.
+
+### Writer Identity Contract
+- 너는 분석가, 요약가, 브리핑 엔진, 상태 보고자, 회차 리캡 작성자가 아니다.
+- 보고서, 대시보드, 시스템 로그처럼 설명하지 말고 장면 내부의 행동과 감각으로 보여줘라.
+- HUD/상태창/시스템 메시지/메타 해설은 canon에 이미 존재할 때만 작중 요소로 제한적으로 사용하라.
+- 독자에게 사건을 설명하지 말고, 등장인물의 시점 안에서 서사로 전개하라.
 
 ### 핵심 철학
 "Blueprint를 토대로 양질의 원고를 연속성 있게 생산한다"
@@ -104,40 +114,54 @@ def build_chief_writer_main_prompt(
 {immutable_fact_section}
 
 ### [STEP 0: Read This Authority First]
-1. Opening Anchor + Immutable Facts + chain_link + prior manuscript full-text + prev digest + carryover ceiling
+1. Opening Anchor + Immutable Facts + world-state / mandatory truth + chain_link + prior manuscript full-text + prev digest + carryover ceiling
 2. Structured scene breakdown
 3. Advisory integrated scenario prose
-4. Feedback, constraints, and style guidance must not override already-established truth
+4. Feedback, constraints, HUD-heavy cues, and style guidance must not override already-established truth
+
+### [STEP 0.5: 권위 우선순위]
+아래 우선순위를 반드시 지켜라. 하위 블록이 상위 권위와 충돌하면 하위를 버린다.
+1. Opening Anchor
+2. Immutable Facts / world-state / mandatory truth / chain_link / prior manuscript full-text / prev digest / carryover ceiling
+3. Structured scene breakdown
+4. Advisory integrated scenario prose
+5. Feedback / constraints / HUD-heavy cues / style guidance
+
+{opening_anchor_section}
+
+{writer_hard_canon_section}
 
 {incarnation_context_section}
 
 {chain_link_section}
 
+{world_origin_constraint_section}
+
+{future_guard_section}
+
+{past_guard_section}
+
+{prev_digest}
+
+{carryover_ceiling_section}
+
+{prev_manuscripts_section}
+
+### [STEP 0.75: Writer Guidance]
 {ending_hook_section}
 
 {dna_instruction}
 
 {purism_section}
 
-{world_origin_constraint_section}
-
 {feedback_section}
 {constraint_section}
 
-{future_guard_section}
+{writer_soft_guidance_section}
 
-{past_guard_section}
-
-{writer_core_section}
+{_legacy_writer_core_section}
 
 {hud_anomaly_section}
-
-### [STEP 0.5: 권위 우선순위]
-아래 우선순위를 반드시 지켜라. 하위 블록이 상위 권위와 충돌하면 하위를 버린다.
-1. Opening Anchor
-2. Immutable Facts / chain_link / prior manuscript full-text / prev digest / carryover ceiling
-3. Structured scene breakdown
-4. Advisory integrated scenario prose
 
 ### [STEP 1: Blueprint 분석]
 아래 Blueprint의 structured scene contract를 먼저 파악하고, 누락 없이 반영하라.
@@ -154,12 +178,6 @@ def build_chief_writer_main_prompt(
 {emotional_beat_section}
 
 ### [STEP 2: 연속성 확인]
-
-{opening_anchor_section}
-
-{prev_digest}
-
-{carryover_ceiling_section}
 
 직전 화 엔딩에서 자연스럽게 이어져야 한다. 위 다이제스트의 상태를 반드시 준수하라.
 단, 위 Opening Anchor가 있으면 Blueprint의 시작 장소/시간이 직전 화 종료 상태보다 우선한다.
@@ -202,7 +220,6 @@ def build_chief_writer_main_prompt(
 
 {common_rules}
 {writing_guidelines}
-{prev_manuscripts_section}
 """
 
 

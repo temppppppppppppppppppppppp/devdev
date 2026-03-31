@@ -3,8 +3,8 @@ import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from modules.domain.agents.base_agent import AgentErrorType
 from modules.domain.agents.arc_ensemble import ArcEnsembleGenerator, _build_block_event_guard
+from modules.domain.agents.base_agent import AgentErrorType
 from modules.domain.agents.blueprint_ensemble import BlueprintEnsembleGenerator
 
 
@@ -387,16 +387,24 @@ def test_blueprint_ensemble_prev_info_expanded_preserves_tail_context():
     client = MagicMock()
     agent = BlueprintEnsembleGenerator(ctx, client)
 
-    bp_tail = "BP-TAIL-MARKER"
+    bp_tail = "BP-SCENE-TAIL-MARKER"
     ms_tail = "MS-TAIL-MARKER"
     prev_blueprints = [
         {
             "ep_num": idx,
             "title": f"title-{idx}",
-            "integrated_scenario": ("장면 " * 150000) + (bp_tail if idx == 3 else ""),
+            "integrated_scenario": "장면 " * 150000,
+            "start_location": "한양 객잔",
             "end_location": "한양",
             "ending_hook": "후크",
-            "scene_breakdown": [{"title": "scene", "characters": ["a"], "key_events": ["e"]}],
+            "scene_breakdown": [
+                {
+                    "title": "scene",
+                    "summary": ("요약 " * 2000) + (bp_tail if idx == 3 else ""),
+                    "characters": ["a"],
+                    "key_events": ["e"],
+                }
+            ],
         }
         for idx in range(1, 4)
     ]
@@ -409,6 +417,7 @@ def test_blueprint_ensemble_prev_info_expanded_preserves_tail_context():
     )
 
     assert bp_tail in result
+    assert "[시작위치] 한양 객잔" in result
     assert ms_tail in result
 
 
