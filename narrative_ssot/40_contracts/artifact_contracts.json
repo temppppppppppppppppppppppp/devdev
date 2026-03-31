@@ -1,0 +1,42 @@
+{
+  "package_name": "narrative_ssot_contracts",
+  "version": "0.1.0-draft",
+  "artifacts": [
+    {
+      "artifact_id": "reference_selection",
+      "path": "narrative_ssot/50_projects/{work_id}/10_reference_selection/reference_selection.json",
+      "schema": "narrative_ssot/40_contracts/reference/reference_selection.schema.json"
+    },
+    {
+      "artifact_id": "source_manifest",
+      "path": "narrative_ssot/50_projects/{work_id}/20_preprocess/source_manifest.json",
+      "schema": "narrative_ssot/40_contracts/preprocess/source_manifest.schema.json"
+    },
+    {
+      "artifact_id": "phase0_design",
+      "path": "narrative_ssot/50_projects/{work_id}/30_planning/phase0_design.json",
+      "schema": "narrative_ssot/40_contracts/planning/phase0_design.schema.json"
+    },
+    {
+      "artifact_id": "tr_block_070_draft",
+      "path": "narrative_ssot/50_projects/{work_id}/40_production/tr_block_070_draft.json",
+      "schema": "narrative_ssot/40_contracts/production/tr_block_070_draft.schema.json"
+    },
+    {
+      "artifact_id": "sequential_run_status",
+      "path": "narrative_ssot/50_projects/{work_id}/40_production/sequential_run_status.json",
+      "schema": "narrative_ssot/40_contracts/production/sequential_run_status.schema.json"
+    },
+    {
+      "artifact_id": "bi_output",
+      "path": "narrative_ssot/50_projects/{work_id}/50_bi/0_bi_{work_id}.json",
+      "schema": "narrative_ssot/40_contracts/bi/bi_output.schema.json"
+    },
+    {
+      "artifact_id": "release_gate",
+      "path": "narrative_ssot/50_projects/{work_id}/60_audit/release_gate.json",
+      "schema": "narrative_ssot/40_contracts/release/release_gate.schema.json"
+    }
+  ]
+}
+

@@ -1,0 +1,26 @@
+{
+  "version": "0.1.0-draft",
+  "handoffs": [
+    {
+      "from": "reference_selection",
+      "to": "source_manifest",
+      "rule": "saved slim card labels only"
+    },
+    {
+      "from": "source_manifest",
+      "to": "phase0_design",
+      "rule": "phase0_ready_snapshot.manual_audit_pass must be true"
+    },
+    {
+      "from": "phase0_design",
+      "to": "tr_block_070_draft",
+      "rule": "phase0 is the design source of truth"
+    },
+    {
+      "from": "verified_tr",
+      "to": "bi_output",
+      "rule": "phase0 + verified TR only"
+    }
+  ]
+}
+

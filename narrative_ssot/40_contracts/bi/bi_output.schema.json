@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "narrative_ssot/bi/bi_output.schema.json",
+  "title": "bi_output",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "_schema_version",
+    "MasterBible",
+    "_build_meta"
+  ],
+  "properties": {
+    "_schema_version": {
+      "type": "string"
+    },
+    "MasterBible": {
+      "type": "object",
+      "required": [
+        "ProjectData",
+        "CoreIdentity",
+        "plot_roadmap",
+        "FinanceHUD"
+      ],
+      "properties": {
+        "ProjectData": {
+          "type": "object"
+        },
+        "CoreIdentity": {
+          "type": "object"
+        },
+        "plot_roadmap": {
+          "type": "array"
+        },
+        "FinanceHUD": {
+          "type": "object"
+        }
+      }
+    },
+    "_build_meta": {
+      "type": "object",
+      "required": [
+        "phase0_hash",
+        "tr_hash"
+      ],
+      "properties": {
+        "phase0_hash": {
+          "type": "string"
+        },
+        "tr_hash": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+
