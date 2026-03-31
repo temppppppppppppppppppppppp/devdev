@@ -1,0 +1,48 @@
+{
+  "topic": "0_1-stage4-cw-first-pass-miss",
+  "date": "2026-03-31",
+  "baseline_commit": "229b85c655c32366818c2278462b51f3ad490913",
+  "lane_verdicts": {
+    "lane1_prompt_topology": "mixed",
+    "lane2_carryover_cognition": "mixed (carryover-gap + hierarchy-gap)",
+    "lane3_model_tier_budget": "not-model-first",
+    "lane4_runtime_vs_gate": "downstream-first"
+  },
+  "key_facts": {
+    "first_pass_director_pass_count": 10,
+    "first_pass_director_reject_count": 0,
+    "first_pass_score_range": [
+      90,
+      100
+    ],
+    "first_pass_score_median": 96,
+    "passing_attempts_lower_than_first_pass": [
+      {
+        "episode": 3,
+        "first_pass_score": 100,
+        "passing_score": 96
+      },
+      {
+        "episode": 9,
+        "first_pass_score": 98,
+        "passing_score": 95
+      },
+      {
+        "episode": 10,
+        "first_pass_score": 96,
+        "passing_score": 95
+      }
+    ]
+  },
+  "primary_families": [
+    "strong_advisory_escalation_non_local_fix",
+    "pass_with_fix_contract_missing_patch_targets",
+    "post_select_conflict"
+  ],
+  "primary_conclusion": "CW first-pass miss is downstream-first, with prompt salience and carryover framing as secondary contributors.",
+  "recommended_priority": [
+    "surface director-pass runtime-override semantics",
+    "harden first-pass authority framing",
+    "generalize carryover ceiling beyond investment cues"
+  ]
+}

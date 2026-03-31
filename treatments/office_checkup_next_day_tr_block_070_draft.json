@@ -1008,7 +1008,11 @@
         "type": "시간 벌기",
         "weakness_exploited": "장현태가 윤재환 보고에 의존하는 구조 — 보고 내용을 시혁이 조절 가능"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "MD 데이터 원본이 무기한 지연 중. 물류 현장 확인이 우회 경로.",
       "knowledge_used": "윤재환 보고 패턴 + TF 멤버 행동 의도 분석",
       "risk_level": "저위험 (현장 방문은 정당한 업무, 역이용은 비가시적)",
@@ -1088,13 +1092,21 @@
       "method": "물류센터 현장 방문으로 시스템-실물 재고 괴리를 직접 확인. 중립 프레임으로 TF 보고서에 반영.",
       "investment_type": "현장 증거 수집",
       "deal_type": "현장 검증 + TF 보고서 반영",
-      "leverage_used": ["현장 방문 기회", "조직 역학 조감 감각 (현장 이상 감지)", "최부장의 현장 지식"],
+      "leverage_used": [
+        "현장 방문 기회",
+        "조직 역학 조감 감각 (현장 이상 감지)",
+        "최부장의 현장 지식"
+      ],
       "opponent": {
         "name": "장현태 (간접 / 구조적)",
         "type": "MD사업부 정책이 현장을 병들게 하는 구조",
         "weakness_exploited": "장현태가 본사 데이터는 지연시킬 수 있지만 현장 실물 재고는 지울 수 없다"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "TF 물류 재설계 중간 보고가 2주 후",
       "knowledge_used": "시스템 재고 300팔레트 vs 실물 그 이상 + 반품 처리 3개월 지연",
       "risk_level": "저위험 (현장 방문은 TF 정당 업무)",
@@ -1174,13 +1186,21 @@
       "method": "오세진의 TF 복귀 시도를 읽고, 선제적으로 병행 근무를 제안하여 복귀 명분을 제거.",
       "investment_type": "방어 + 선제 대응",
       "deal_type": "조직 편성 방어 + 병행 근무 승인",
-      "leverage_used": ["조직 역학 조감 감각 (오세진 수 읽기)", "전무의 위계적 우위", "선제 제안의 시간 우위"],
+      "leverage_used": [
+        "조직 역학 조감 감각 (오세진 수 읽기)",
+        "전무의 위계적 우위",
+        "선제 제안의 시간 우위"
+      ],
       "opponent": {
         "name": "오세진",
         "type": "직속 팀장 (제도적 견제)",
         "weakness_exploited": "오세진의 복귀 요청은 전무가 먼저 해결책을 내면 명분이 사라진다"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "오세진의 인사팀 요청이 전무에게 가기 전에 선제 대응해야 한다",
       "knowledge_used": "오세진의 복귀 시도 + 인사평가 의견서 기재 패턴을 감각으로 읽음",
       "risk_level": "중위험 (병행 근무는 부담 증가)",
@@ -1259,13 +1279,21 @@
       "method": "전무 앞 첫 직접 발언 + 현장 데이터로 MD 문제 우회 증명.",
       "investment_type": "역량 실증 + 범위 확장",
       "deal_type": "TF 중간 보고 + 안성 센터 조사 승인",
-      "leverage_used": ["현장 데이터", "발표 역량", "중립 프레이밍"],
+      "leverage_used": [
+        "현장 데이터",
+        "발표 역량",
+        "중립 프레이밍"
+      ],
       "opponent": {
         "name": "윤재환 (간접 경계)",
         "type": "TF 내 감시",
         "weakness_exploited": "현장 데이터 기반 보고를 MD를 직접 겨냥하지 않는 프레임으로 감싸 반박 불가"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "중간 보고 결과에 따라 TF 방향이 결정된다",
       "knowledge_used": "현장 시스템-실물 괴리 데이터 + 윤재환 경계 상태 감지",
       "risk_level": "중위험 (첫 직접 발언의 부담)",
@@ -1334,13 +1362,20 @@
       "method": "야근 중 반품 데이터 분석에서 분기별 패턴 발견.",
       "investment_type": "정보 축적 (우연적 발견)",
       "deal_type": "해당 없음 — quiet block",
-      "leverage_used": ["SCM/물류 데이터 접근권", "야근 시간"],
+      "leverage_used": [
+        "SCM/물류 데이터 접근권",
+        "야근 시간"
+      ],
       "opponent": {
         "name": "장현태 (흔적만)",
         "type": "분기별 반품 조절의 원인 제공자",
         "weakness_exploited": "분기말 반품 인정률 급락 패턴이 데이터에 고스란히 남는다"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "없음 — quiet block. 증거를 아직 사용하지 않음.",
       "knowledge_used": "분기별 반품 인정률 패턴 발견",
       "risk_level": "무위험 (야근 데이터 분석)",
@@ -1415,13 +1450,21 @@
       "method": "안성 센터 현장 방문으로 용인보다 심각한 상태 확인. 밀어내기-반품 순환 구조를 데이터로 정리.",
       "investment_type": "현장 증거 수집 (확대)",
       "deal_type": "현장 검증 + TF 보고서 강화",
-      "leverage_used": ["현장 방문 기회", "감각 (밀어내기 반품 구성 즉시 감지)", "최부장 동행"],
+      "leverage_used": [
+        "현장 방문 기회",
+        "감각 (밀어내기 반품 구성 즉시 감지)",
+        "최부장 동행"
+      ],
       "opponent": {
         "name": "장현태 (구조적)",
         "type": "실적 관리의 물리적 부작용 원인",
         "weakness_exploited": "현장 물리적 상태는 데이터로 지울 수 없다"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "TF 최종 보고 전까지 2개 센터 데이터 완성 필요",
       "knowledge_used": "밀어내기-반품 순환 구조 + 분기별 패턴과의 연결",
       "risk_level": "저위험 (현장 방문은 TF 정당 업무)",
@@ -1500,13 +1543,21 @@
       "method": "재정리된 원본과 현장 데이터를 대조하여 원본 수정을 간접 증명. 최부장에게만 공유.",
       "investment_type": "증거 교차 검증 + 아군 네트워크",
       "deal_type": "내부 증거 확보 + 핵심 협력자 신뢰 전환",
-      "leverage_used": ["현장 데이터(대조군)", "감각(원본이 '너무 깨끗하다'는 이상 감지)", "최부장과의 신뢰"],
+      "leverage_used": [
+        "현장 데이터(대조군)",
+        "감각(원본이 '너무 깨끗하다'는 이상 감지)",
+        "최부장과의 신뢰"
+      ],
       "opponent": {
         "name": "장현태",
         "type": "데이터 재정리 (은폐 확대)",
         "weakness_exploited": "원본을 고쳐도 현장 실물은 고칠 수 없다"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "TF 최종 보고 전까지 원본-현장 대조를 마쳐야 한다",
       "knowledge_used": "Block 6 월별 요약본 패턴 vs 도착한 원본의 불일치 감지",
       "risk_level": "중위험 (원본 수정 의혹을 제기하면 MD사업부와 정면 충돌)",
@@ -1586,13 +1637,19 @@
       "method": "오세진의 제도적 공격에 직접 반박하지 않고, TF 성과 타이밍으로 간접 방어. 결과: B+ (최소 방어 성공, 완전 방어 실패).",
       "investment_type": "손실 최소화",
       "deal_type": "인사평가 방어전 (부분 패배)",
-      "leverage_used": ["TF 최종 보고 타이밍 조절"],
+      "leverage_used": [
+        "TF 최종 보고 타이밍 조절"
+      ],
       "opponent": {
         "name": "오세진",
         "type": "직속 팀장 (제도적 공격)",
         "weakness_exploited": "해당 없음 — 이 블록에서는 오세진이 승리"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "상반기 인사평가 마감",
       "knowledge_used": "본부장 성향 읽기 (오세진 의견을 존중하는 경향)",
       "risk_level": "고위험 (평가 하락의 누적 효과)",
@@ -1671,13 +1728,21 @@
       "method": "대표 경영전략회의에서 TF 최종안 발표. 대표 질문의 진짜 의도를 읽고 리스크 비교로 답변.",
       "investment_type": "성과 확정 + 인식 전환",
       "deal_type": "TF 최종안 대표 승인",
-      "leverage_used": ["현장 기반 데이터", "감각(대표 질문 의도 읽기)", "리스크 비교 프레이밍"],
+      "leverage_used": [
+        "현장 기반 데이터",
+        "감각(대표 질문 의도 읽기)",
+        "리스크 비교 프레이밍"
+      ],
       "opponent": {
         "name": "윤재환 (무력화)",
         "type": "반박 불가 상태",
         "weakness_exploited": "현장 데이터 기반 숫자에 반론 근거 없음"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "경영전략회의에서 이번에 승인 못 받으면 TF 해산 위험",
       "knowledge_used": "실물동량 기준 기존안 재산정(절감 120억→23억) + 대표 질문 의도 감지",
       "risk_level": "고위험 (대표 앞 발표 + 기존안 숫자 부정)",
@@ -1758,13 +1823,21 @@
       "method": "예산 편성 회의에서 프로모션 반품 물류 비용 15억을 TF 예산에 반영시켜, MD 밀어내기 구조를 예산 체계에 간접 노출.",
       "investment_type": "권한 확보 + 추적 장치 설치",
       "deal_type": "예산 편성 발언 + TF 예산 반영 + 예산 TF 합류",
-      "leverage_used": ["현장 데이터 기반 산출 근거", "감각(발언 타이밍 + MD 프로모션 구조 읽기)", "TF 실무 간사 자격"],
+      "leverage_used": [
+        "현장 데이터 기반 산출 근거",
+        "감각(발언 타이밍 + MD 프로모션 구조 읽기)",
+        "TF 실무 간사 자격"
+      ],
       "opponent": {
         "name": "MD사업부 (간접)",
         "type": "프로모션 예산 증액 vs 반품 비용 연결",
         "weakness_exploited": "프로모션 예산과 반품 물류 비용을 분리해서 관리하던 구조의 허점"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "하반기 예산 편성 마감 — 이번에 반영 못 하면 다음 반기까지 기다려야",
       "knowledge_used": "밀어내기-반품 순환 구조 + 연간 15억 산출 + 발언 타이밍 감각",
       "risk_level": "고위험 (예산 회의에서 MD 비용을 건드리는 것 — 장현태 정면 충돌 위험)",
@@ -1838,13 +1911,21 @@
       "method": "재무팀 차장에게 15억 산출 근거를 공유하고, 재무팀이 스스로 감사 항목에 넣도록 유도.",
       "investment_type": "아군 네트워크 + 감사 경로 개척",
       "deal_type": "재무팀 접선 + 감사 항목 후보 등재",
-      "leverage_used": ["15억 산출 근거(현장 데이터)", "재무팀의 기존 의심", "감각(서정민 의도 읽기)"],
+      "leverage_used": [
+        "15억 산출 근거(현장 데이터)",
+        "재무팀의 기존 의심",
+        "감각(서정민 의도 읽기)"
+      ],
       "opponent": {
         "name": "장현태 (미인지)",
         "type": "아직 재무팀 접선을 모름",
         "weakness_exploited": "윤재환이 TF 외부 접촉까지 감시하지 못하는 구조적 한계"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "하반기 재무감사 일정 전까지 항목 확정 필요",
       "knowledge_used": "서정민의 진짜 의도 읽기 + 재무팀의 기존 MD 의심 파악",
       "risk_level": "중위험 (장현태 발각 시 중립 프레임 붕괴)",
@@ -1924,13 +2005,19 @@
       "method": "장현태 시점: 프로모션 정책 재설계 + 본부장 경유 TF 범위 제한. 시혁 시점: 정책 변경 신호 감지 + 과거 데이터 즉시 백업.",
       "investment_type": "공방 교차",
       "deal_type": "데이터 패턴 교란 vs 데이터 보전",
-      "leverage_used": ["감각(프로모션 정책 재설계의 진짜 의도 감지)"],
+      "leverage_used": [
+        "감각(프로모션 정책 재설계의 진짜 의도 감지)"
+      ],
       "opponent": {
         "name": "장현태",
         "type": "공격적 방어 전환",
         "weakness_exploited": "이 블록에서는 장현태가 선제 — 시혁은 방어 포지션"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "장현태가 패턴을 바꾸기 전에 과거 데이터를 확보해야 한다",
       "knowledge_used": "프로모션 정책 재설계 공지에서 흔적 지우기 의도 감지",
       "risk_level": "고위험 (장현태가 시혁의 전략을 읽은 상태)",
@@ -2009,13 +2096,20 @@
       "method": "TF 범위 제한 수락 후 재무팀 감사 라인으로 우회.",
       "investment_type": "경로 전환",
       "deal_type": "TF 범위 수용 + 재무팀 독립 감사 확인",
-      "leverage_used": ["재무팀의 독립 감사 권한", "서정민 아군"],
+      "leverage_used": [
+        "재무팀의 독립 감사 권한",
+        "서정민 아군"
+      ],
       "opponent": {
         "name": "장현태",
         "type": "본부장 경유 TF 범위 제한 (성공)",
         "weakness_exploited": "해당 없음 — 이 블록에서는 장현태가 승리. 단, 재무팀 경로는 차단 못함."
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "TF 범위 제한 즉시 적용 — 재무팀 우회 확인이 급선무",
       "knowledge_used": "재무팀 감사가 TF와 독립적이라는 조직 구조 지식",
       "risk_level": "중위험 (재무팀 경로마저 막히면 MD 추적 완전 차단)",
@@ -2089,13 +2183,21 @@
       "method": "서정민에게 추가 근거 제공. 시혁 이름 빼고 TF 데이터 출처로만 기재.",
       "investment_type": "비가시적 추적 장치 설치",
       "deal_type": "재무팀 감사 보고서 기재",
-      "leverage_used": ["서정민의 독립 분석", "프로모션 비용 12% vs 업계 7% 비교", "시혁 이름 비노출"],
+      "leverage_used": [
+        "서정민의 독립 분석",
+        "프로모션 비용 12% vs 업계 7% 비교",
+        "시혁 이름 비노출"
+      ],
       "opponent": {
         "name": "장현태 (미인지)",
         "type": "재무팀 감사 경로를 모르는 상태",
         "weakness_exploited": "장현태가 TF만 막고 재무팀을 간과"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "정기감사 보고서 제출 기한",
       "knowledge_used": "프로모션 비용 매출 대비 12%(업계 7%) + 밀어내기 반품 순환 구조",
       "risk_level": "저위험 (시혁 이름이 보고서에 없음)",
@@ -2163,13 +2265,19 @@
       "method": "물류 재설계 실무 집중 + 감사 보고서 타이밍 대기.",
       "investment_type": "실무 축적",
       "deal_type": "해당 없음 — quiet block",
-      "leverage_used": ["물류 실무 역량"],
+      "leverage_used": [
+        "물류 실무 역량"
+      ],
       "opponent": {
         "name": "장현태 (간접, 정책 재설계 중)",
         "type": "흔적 지우기 진행 중",
         "weakness_exploited": "해당 없음 — 조용한 전선"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "없음 — 대기 구간",
       "knowledge_used": "해당 없음 — 실무 집중 블록",
       "risk_level": "무위험",
@@ -2248,13 +2356,21 @@
       "method": "시혁 직접 관여 없이 재무팀 감사 보고서가 경영진에 올라감.",
       "investment_type": "비가시적 성과 회수",
       "deal_type": "재무감사 보고서 → 경영진 소명 요청",
-      "leverage_used": ["재무팀 독립 감사", "시혁 이름 비노출", "현장 데이터 기반 숫자"],
+      "leverage_used": [
+        "재무팀 독립 감사",
+        "시혁 이름 비노출",
+        "현장 데이터 기반 숫자"
+      ],
       "opponent": {
         "name": "장현태",
         "type": "소명 태세로 밀림",
         "weakness_exploited": "TF만 막고 재무팀 경로를 간과한 구조적 실수"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "소명 기한이 주어질 것",
       "knowledge_used": "해당 없음 — 이 블록에서 시혁은 직접 행동하지 않음",
       "risk_level": "저위험 (시혁 이름 미노출)",
@@ -2333,13 +2449,21 @@
       "method": "서정민에게 대조 방향만 제시. 과거 3년 동기 대비표로 소명서의 '자체 개선' 논리를 약화.",
       "investment_type": "간접 반격",
       "deal_type": "감사 후속 의견 제출 (서정민 경유)",
-      "leverage_used": ["과거 3년 데이터", "서정민의 독립 분석", "감각(소명서 논리 약점 감지)"],
+      "leverage_used": [
+        "과거 3년 데이터",
+        "서정민의 독립 분석",
+        "감각(소명서 논리 약점 감지)"
+      ],
       "opponent": {
         "name": "장현태",
         "type": "소명서 방어",
         "weakness_exploited": "'자체 개선' 논리가 과거 3년 동기 대비에서 깨진다"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "소명서 수리 여부 결정 전에 후속 의견이 올라가야 한다",
       "knowledge_used": "소명서 논리 약점 감지 + 과거 3년 데이터 존재",
       "risk_level": "중위험 (후속 의견 출처 추적 시 연결 노출)",
@@ -2419,13 +2543,20 @@
       "method": "패배 인정 + 다음 분기 재시도 합의 + 장현태 약점 분석.",
       "investment_type": "손실 최소화 + 정보 수집",
       "deal_type": "감사 항목 유보 수용 + 재시도 합의",
-      "leverage_used": ["서정민과의 신뢰", "유보≠삭제라는 절차적 차이"],
+      "leverage_used": [
+        "서정민과의 신뢰",
+        "유보≠삭제라는 절차적 차이"
+      ],
       "opponent": {
         "name": "장현태",
         "type": "본부장 경유 감사 차단 (성공)",
         "weakness_exploited": "해당 없음 — 이 블록에서는 장현태 승리"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "다음 분기 감사까지 증거 추가 확보 필요",
       "knowledge_used": "장현태가 본부장 없이는 방어 못 한다는 약점 감지",
       "risk_level": "고위험 (감사 경로 차단은 큰 손실)",
@@ -2499,13 +2630,20 @@
       "method": "MD 내부 불만을 간접 인지하고, 물류 실무 접점을 통해 자연스러운 채널 확보.",
       "investment_type": "정보 감지 + 접점 포석",
       "deal_type": "해당 없음 — 관찰 및 포석",
-      "leverage_used": ["감각(MD 내부 균열 감지)", "물류 TF 실무 접점"],
+      "leverage_used": [
+        "감각(MD 내부 균열 감지)",
+        "물류 TF 실무 접점"
+      ],
       "opponent": {
         "name": "장현태",
         "type": "은폐+개선 딜레마",
         "weakness_exploited": "은폐를 유지하려면 개선을 못 하고, 개선하려면 은폐가 드러나는 딜레마"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "급하지 않음 — 때를 기다리는 포지션",
       "knowledge_used": "MD 영업팀 불만 존재 + 장현태의 딜레마 구조",
       "risk_level": "저위험 (관찰만, 직접 접촉 없음)",
@@ -2586,13 +2724,21 @@
       "method": "시혁이 직접 만들지 않은 결과. 장현태의 딜레마가 매출 하락을 만들고, 대표가 감사를 지시.",
       "investment_type": "구조적 성과 회수",
       "deal_type": "대표이사 지시에 의한 MD 자체 감사 발동 + 시혁 감사 지원 배치",
-      "leverage_used": ["장현태 딜레마의 자충수", "대표이사의 실적 우려", "경영기획 지원 자격"],
+      "leverage_used": [
+        "장현태 딜레마의 자충수",
+        "대표이사의 실적 우려",
+        "경영기획 지원 자격"
+      ],
       "opponent": {
         "name": "장현태",
         "type": "자체 감사 발동 — 방어 실패",
         "weakness_exploited": "은폐를 위해 개선했더니 매출이 떨어진 자충수"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "자체 감사 일정이 잡힌다",
       "knowledge_used": "장현태의 딜레마 구조가 자충수를 만들 것이라는 예견",
       "risk_level": "저위험 (대표 지시, 시혁은 지원 자격으로 참여)",
@@ -2666,13 +2812,21 @@
       "method": "감사 데이터 요청 순서를 전략적으로 배치 + 원본-정리본 동시 요청 설계.",
       "investment_type": "전술 설계",
       "deal_type": "감사 전략 설계 + 데이터 요청 배치",
-      "leverage_used": ["감각(장현태 방어 패턴 예측)", "Block 17 원본 수정 경험", "서정민 파트너십"],
+      "leverage_used": [
+        "감각(장현태 방어 패턴 예측)",
+        "Block 17 원본 수정 경험",
+        "서정민 파트너십"
+      ],
       "opponent": {
         "name": "장현태",
         "type": "감사 협조+방어 동시 진행",
         "weakness_exploited": "원본과 정리본을 동시에 요청하면 수정 흔적이 드러난다"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "감사 일정 시작 — 초반 요청이 전체 흐름을 결정",
       "knowledge_used": "Block 17 원본 수정 경험 + 장현태의 방어 패턴",
       "risk_level": "중위험 (감사 설계가 들키면 장현태가 대비)",
@@ -2747,13 +2901,20 @@
       "method": "감각이 안 통하는 상대 앞에서 실패를 인정하고, 서면 요청 세분화라는 절차적 보완으로 전환.",
       "investment_type": "한계 인식 + 전략 보완",
       "deal_type": "감사 회의 (부분 실패) + 서면 요청 세분화",
-      "leverage_used": ["서정민 파트너십", "절차적 세분화"],
+      "leverage_used": [
+        "서정민 파트너십",
+        "절차적 세분화"
+      ],
       "opponent": {
         "name": "MD 경영관리실장 (장현태 방패)",
         "type": "감정 없는 기계적 대응",
         "weakness_exploited": "해당 없음 — 이 블록에서 시혁의 감각이 무력화됨"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "감사 일정 진행 중 — 서면 회신 기한 설정 필요",
       "knowledge_used": "감각이 '감정적 의사결정'에 최적화되어 있다는 자기 발견",
       "risk_level": "중위험 (감각 한계 노출)",
@@ -2827,13 +2988,21 @@
       "method": "세분화된 서면 요청에서 숫자 불일치를 포착. 감사 보고서에 기재.",
       "investment_type": "절차적 증거 수집",
       "deal_type": "서면 분석 + 감사 보고서 업데이트",
-      "leverage_used": ["세분화된 서면 요청", "숫자 정합성 검증", "서정민 파트너십"],
+      "leverage_used": [
+        "세분화된 서면 요청",
+        "숫자 정합성 검증",
+        "서정민 파트너십"
+      ],
       "opponent": {
         "name": "MD 경영관리실장",
         "type": "서면 방어",
         "weakness_exploited": "항목이 세분화되면 모든 숫자의 정합성을 맞추기 어렵다"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "감사 중간 보고 전까지 불일치 확정 필요",
       "knowledge_used": "프로모션 물량 점포별 배정 vs 반품 집계 차이",
       "risk_level": "저위험 (서면 분석은 절차적 정당성 있음)",
@@ -2912,13 +3081,21 @@
       "method": "서정민 주관 보고 + 시혁 데이터 설계. 장현태 불안을 감각으로 포착.",
       "investment_type": "감사 지속 + 감각 연구",
       "deal_type": "감사 중간 보고 + 지속 승인",
-      "leverage_used": ["서정민의 발표", "데이터 구조 설계", "감각(장현태 불안 감지)"],
+      "leverage_used": [
+        "서정민의 발표",
+        "데이터 구조 설계",
+        "감각(장현태 불안 감지)"
+      ],
       "opponent": {
         "name": "장현태",
         "type": "감사 중간 보고 방어",
         "weakness_exploited": "장현태 본인은 감정이 있는 사람이라 불안이 읽힌다"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "중간 보고 결과에 따라 감사 지속 여부 결정",
       "knowledge_used": "감각이 감정 있는 상대에게 작동한다는 발견",
       "risk_level": "중위험 (감사 중단 판정 가능성)",
@@ -2992,7 +3169,11 @@
         "type": "내적 갈등",
         "weakness_exploited": "해당 없음"
       },
-      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
       "time_pressure": "정밀검사 2주 뒤",
       "knowledge_used": "해당 없음",
       "risk_level": "무위험",
@@ -3013,5 +3194,555 @@
       "execution_doctrine": "무기를 쓰려면 먼저 몸이 버텨야 한다."
     },
     "block_no": 35
+  },
+  {
+    "block_id": "Block 36",
+    "title": "팀장의 줄",
+    "content": {
+      "context": "2025년 11월 중순, 한일유통 연말 인사 시즌이 열린다. 오세진은 인사위원회 위원인 경영관리 부서장과 점심을 잡고, 경영기획팀 평가표를 자기 기준으로 다듬기 시작한다. 시혁은 TF룸에서 감사 보고서를 정리하다가 인사팀에서 내려온 평가표 양식을 본다. 양식 자체는 같지만, 올해는 '팀 기여도' 항목의 가중치가 작년보다 올라가 있다. 감각이 작동한다 — 팀 기여도 가중치가 높아지면 개인 성과가 팀 공으로 희석되기 쉽다. 시혁 개인의 TF 성과, 감사 지원, 물류 재설계 기여가 전부 '경영기획팀 성과'로 묶일 수 있다. 오세진이 원하는 구도다. 시혁은 평가표의 가중치가 언제 바뀌었는지를 역추적한다. 3주 전 인사위원회 회의록에 오세진의 건의가 있었다. '팀 기여도를 강화해 협업 문화를 장려하자'는 명목이었다.",
+      "event_villain": "오세진은 인사 시즌에 맞춰 가중치를 움직였다. 이것은 시혁 한 명을 겨냥한 것이 아니라, 팀장으로서 팀 성과를 통제하는 정당한 권한 행사처럼 보인다. 하지만 실질 효과는 시혁의 개별 공을 팀장 이름 밑에 묶는 것이다. 동시에 오세진은 인사위원 2명과 점심 모임을 시작한다.",
+      "solution": "시혁은 감각으로 읽은 구도를 기록하지 않는다. 대신 전무에게 올린 분기별 프로젝트 기여 리스트를 뽑아 본다. TF 참여 이력, 감사 데이터 요청서 작성자란, 물류 재설계 우선순위표 초안 이력 — 모두 시혁 이름이 문서 상단에 있다. 가중치가 바뀌어도 원본 문서의 이름은 바뀌지 않는다. 시혁은 아직 반격하지 않는다. 먼저 자기 이름이 적힌 문서의 목록을 조용히 만든다.",
+      "reward": "시혁이 만든 프로젝트별 기여 문서 목록은 이후 반격의 탄약이 된다. 동시에 오세진의 인사 라인 동원이 어디까지 뻗어 있는지를 처음으로 파악한다. 오세진은 인사위원 접근에 성공했지만, 시혁이 이를 감지한 사실은 모른다."
+    },
+    "stakes": "인사 가중치가 유지되면 시혁의 올해 모든 공이 팀장 이름 아래 묶인다. 개인 성과로 보여줄 수 없으면 S등급은 물 건너간다.",
+    "power_shift": {
+      "protagonist": "인사 구도를 감지하고 문서 기반 증거를 조용히 수집 시작.",
+      "antagonist": "오세진은 인사 가중치를 움직이는 데 성공했고, 인사위원 2명과 점심 라인을 확보했다."
+    },
+    "relationship_delta": [
+      {
+        "target": "오세진(팀장)",
+        "before": "공을 가져가려는 팀장이자 이제 물리적으로도 떨어진 상사",
+        "after": "인사 시즌에 맞춰 조직적으로 시혁의 성과를 묶으려는 견제자"
+      }
+    ],
+    "foreshadow": [
+      "시혁이 만든 기여 문서 목록은 두 블록 뒤에서 전무와 HR팀장 앞에 한 장으로 정리되어 나간다.",
+      "오세진의 인사위원 점심 라인은 오래가지 않는다. 실적 없는 네트워크는 인사 시즌이 지나면 소멸한다."
+    ],
+    "callback": [
+      "오세진이 시혁의 공을 가져가는 패턴은 시작부터 있었다. 이번에는 가중치 변경이라는 제도적 수단으로 진화했다.",
+      "시혁이 문서 이력을 추적하는 능력은 감사 지원에서 쌓은 데이터 추적 역량의 부산물이다."
+    ],
+    "emotional_beat": {
+      "type": "calculation",
+      "intensity": 6
+    },
+    "tension_level": 7,
+    "pov_character": "한시혁",
+    "location": {
+      "place": "한일유통 경영기획팀 사무실 / 인사팀 회의록 열람실",
+      "type": "본사"
+    },
+    "time_span": {
+      "duration": "3일",
+      "in_story_time": "2025년 11월 중순"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "Lv5 예산 발언권 + 체력 부채 심화 + 정밀검사 예약",
+      "capital_after": "Lv5 예산 발언권 + 인사 시즌 진입 + 오세진 견제 구도 감지 + 기여 문서 목록 수집",
+      "capital_delta": "인사 견제 감지 (소득) + 기여 문서 목록 축적 (소득)",
+      "profit_loss": "아직 실질 손실 없음. 오세진 견제 구도를 먼저 읽었다.",
+      "method": "인사 가중치 변경 역추적 + 프로젝트별 기여 이력 문서 수집.",
+      "investment_type": "정보 수집",
+      "deal_type": "인사 라인 방어 준비",
+      "leverage_used": [
+        "감각을 통한 가중치 변경 동기 추론",
+        "프로젝트별 원본 문서 작성자란 이력"
+      ],
+      "opponent": {
+        "name": "오세진",
+        "type": "직속 팀장의 제도적 견제",
+        "weakness_exploited": "가중치를 바꿔도 원본 문서의 기여자 이름은 바꿀 수 없다"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "연말 인사평가까지 약 6주",
+      "knowledge_used": "인사위원회 회의록의 가중치 변경 건의 이력",
+      "risk_level": "중위험 (인사 시즌 통제력 부재)",
+      "business_sector": "경영기획 / 인사",
+      "section_rotation": "ARC-04 감각의 흔들림",
+      "success_pattern": "적이 제도를 바꿔도 원본은 남는다. 원본을 먼저 수집한다.",
+      "special_ability": {
+        "has_ability": true,
+        "ability_type": "감각",
+        "ability_name": "조직 역학 조감",
+        "ability_source": "건강검진 이후 발현 (원인 불명)",
+        "ability_used_for": "인사 가중치 변경의 진짜 동기와 오세진 인사 라인 동원 범위 파악"
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "execution_doctrine": "제도가 바뀌어도 원본은 남는다. 원본을 먼저 쥔다."
+    },
+    "block_no": 36
+  },
+  {
+    "block_id": "Block 37",
+    "title": "평가의 벽",
+    "content": {
+      "context": "2025년 11월 하순, 1차 인사평가 피드백 시즌. 오세진은 경영기획팀 전체 성과서를 작성하면서 시혁의 TF 성과, 감사 지원 기여, 물류 재설계 우선순위표를 모두 '팀 차원의 협업 성과'로 기재한다. 시혁 이름은 본문에 두 번 나오지만, 성과 항목 옆의 주체는 전부 '경영기획팀'이다. 시혁은 인사팀에서 보내 온 자기 평가서를 작성하면서 같은 성과를 개인 항목으로 적었지만, 팀장 확인란에 오세진이 코멘트를 남겼다. '해당 성과는 팀 공동 프로젝트로, 개인 실적 배분이 어려움.' 시혁의 피로가 겹친다. 체력 부채가 쌓인 상태에서 인사 서류까지 막히자, 감각이 살짝 흔들린다. 평가서를 다시 읽는데 오세진의 코멘트가 어떤 효과를 낼지 읽히지 않는다. 이성적으로는 이 코멘트가 S등급을 차단한다는 걸 알지만, 감각이 확인해주지 않는다.",
+      "event_villain": "오세진은 팀장 권한 내에서 가장 효과적인 한 수를 둔다. 시혁의 성과를 부정하는 게 아니라 '배분이 어렵다'는 한 줄로 개인 평가를 흐린다. 이것은 거짓이 아니라 관점의 문제이기 때문에 반박하기 어렵다.",
+      "solution": "시혁은 이번에는 즉각 반격하지 않는다. 감각이 흔들리는 상태에서 급하게 움직이면 오판할 수 있다는 것을 이미 배웠다. 대신 서정민에게 전화한다. 감사 지원 TF에서 시혁의 기여가 어떤 수준이었는지를 서정민 관점에서 한 문장으로 적어줄 수 있겠냐고 묻는다. 서정민은 '보고서에 네 이름이 안 들어간 게 이상한 수준'이라고 말하고, 서면으로 확인서를 보내준다.",
+      "reward": "서정민의 확인서 확보. 이것은 오세진의 '팀 공동 프로젝트' 프레임에 대한 최초의 외부 증언이다. 하지만 이 확인서만으로는 인사위원회를 뒤집기에 부족하다. 시혁은 지금 자기가 진 것을 안다."
+    },
+    "stakes": "S등급이 막히면 연말 인사에서 올라갈 자리가 없다. 동시에 감각이 체력 부채로 흔들리는 상태에서 인사 전쟁까지 열리면 두 전선을 동시에 유지하기 어렵다.",
+    "power_shift": {
+      "protagonist": "외부 확인서 1건 확보. 하지만 오세진의 코멘트로 S등급 진입이 사실상 차단된 상태.",
+      "antagonist": "오세진은 팀장 권한으로 평가서 코멘트를 넣었다. 제도 안에서의 합법적 방어."
+    },
+    "relationship_delta": [
+      {
+        "target": "오세진(팀장)",
+        "before": "인사 시즌에 맞춰 조직적으로 시혁의 성과를 묶으려는 견제자",
+        "after": "평가서 코멘트로 S등급을 실질 차단한 제도적 적대자"
+      },
+      {
+        "target": "서정민(재무팀 차장)",
+        "before": "감사 협업 파트너",
+        "after": "감사 협업 파트너 + 시혁의 기여를 외부에서 증명하는 증인"
+      }
+    ],
+    "foreshadow": [
+      "서정민의 확인서는 다음 블록에서 시혁이 만드는 '프로젝트별 기여 증명서'의 한 축이 된다.",
+      "감각이 인사 서류 앞에서 흔들리는 경험은 감각의 본질에 대한 단서 — 감각은 조직 역학은 읽지만 제도적 결과까지 예측하지는 못한다."
+    ],
+    "callback": [
+      "체력 부채로 감각이 흐려지는 복선이 인사 시즌에서 현실화. 피로 상태에서는 감각의 신뢰도가 떨어진다.",
+      "오세진이 시혁의 공을 자기 것으로 가져가는 패턴이 코멘트 한 줄로 압축되어 나타남."
+    ],
+    "emotional_beat": {
+      "type": "frustration",
+      "intensity": 7
+    },
+    "tension_level": 8,
+    "pov_character": "한시혁",
+    "location": {
+      "place": "한일유통 경영기획팀 사무실 / 인사팀 평가서 시스템",
+      "type": "본사"
+    },
+    "time_span": {
+      "duration": "1주",
+      "in_story_time": "2025년 11월 하순"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "Lv5 예산 발언권 + 인사 시즌 진입 + 오세진 견제 구도 감지 + 기여 문서 목록 수집",
+      "capital_after": "Lv5 예산 발언권 + S등급 진입 차단 상태 + 서정민 확인서 1건",
+      "capital_delta": "S등급 차단 (손실) + 외부 확인서 1건 (소득)",
+      "profit_loss": "인사 전선에서 실질 패배. 서정민 확인서가 유일한 소득.",
+      "method": "감사 협업 파트너에게 기여 확인서를 요청해 외부 증언 확보.",
+      "investment_type": "인적 자산 활용",
+      "deal_type": "평가 희석 방어",
+      "leverage_used": [
+        "서정민과의 감사 협업 관계",
+        "감사 보고서 내 기여 이력"
+      ],
+      "opponent": {
+        "name": "오세진",
+        "type": "팀장 평가 권한",
+        "weakness_exploited": "오세진의 코멘트는 팀장 관점일 뿐이다. 외부 협업 파트너의 증언은 팀장이 통제할 수 없다."
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "인사평가 최종 제출까지 3주",
+      "knowledge_used": "감사 지원 TF에서의 실질 기여도에 대한 서정민의 경험",
+      "risk_level": "고위험 (S등급 차단은 커리어 정체를 의미)",
+      "business_sector": "인사 / 경영기획",
+      "section_rotation": "ARC-04 감각의 흔들림",
+      "success_pattern": "이번에는 졌다. 하지만 외부 증인은 확보했다.",
+      "special_ability": {
+        "has_ability": true,
+        "ability_type": "감각",
+        "ability_name": "조직 역학 조감",
+        "ability_source": "건강검진 이후 발현 (원인 불명)",
+        "ability_used_for": "오세진의 코멘트가 인사위원회에서 어떤 효과를 내는지 읽으려 했으나 피로로 인해 불완전"
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "execution_doctrine": "감각이 안 될 때는 사람에게 묻는다. 사람의 증언은 감각보다 제도에 강하다."
+    },
+    "block_no": 37
+  },
+  {
+    "block_id": "Block 38",
+    "title": "한 장의 증명",
+    "content": {
+      "context": "2025년 12월 초, 시혁은 3일간 야근하며 한 장짜리 문서를 만든다. 올해 자신이 관여한 모든 프로젝트의 before-after를 한 장에 담았다. 물류센터 통합안 저지(억 단위 손실 방지), 물류 재설계 TF 우선순위표(실행률 92%), 감사 데이터 전략 설계(서면 불일치 발견), 분기 예산 편성 기여(예산 3개 항목 반영). 각 항목 옆에는 해당 문서의 작성자란, 전무 CC 이력, 서정민 확인서가 링크되어 있다. 시혁은 이 문서를 전무에게 먼저 보여주고, 같은 날 오후 HR팀장에게도 보낸다. 전무가 묻는다. '이게 다 네가 한 거야?' 시혁이 답한다. '문서 작성자란을 확인하시면 됩니다.' 전무는 문서를 20분간 읽고 HR팀장에게 직접 전화한다.",
+      "event_villain": "오세진은 이 문서의 존재를 모른다. 시혁이 전무와 HR팀장을 같은 날 동시에 공략하는 것을 견제할 시간이 없었다.",
+      "solution": "시혁은 감각에 의존하지 않았다. 문서, 이력, 링크, 확인서 — 모두 감각 없이도 검증 가능한 증거다. 전무와 HR팀장을 같은 날 잡은 것은 오세진이 중간에 개입할 여유를 주지 않기 위해서였다. 이것은 감각이 아니라 타이밍 설계다.",
+      "reward": "전무가 HR팀장에게 전화를 걸었다. 이것은 인사 라인에서 전무가 직접 시혁의 성과를 확인하겠다는 의미다. 오세진의 '팀 공동 프로젝트' 코멘트는 전무의 직접 확인 요청 앞에서 무력화된다. S등급 가능성이 다시 열린다."
+    },
+    "stakes": "이 문서가 전무를 설득하지 못하면 남은 카드가 없다. 동시에 오세진을 우회해 전무와 HR을 직접 잡는 행위는 팀장과의 관계를 완전히 소각하는 것이다.",
+    "power_shift": {
+      "protagonist": "before-after 문서를 통해 전무와 HR팀장에게 직접 증명. 오세진의 코멘트 무력화.",
+      "antagonist": "오세진은 시혁의 직접 접근을 몰랐고, 전무의 HR 직통 전화로 방어선이 붕괴 시작."
+    },
+    "relationship_delta": [
+      {
+        "target": "박전무",
+        "before": "시혁을 신뢰하지만 인사까지 직접 개입하진 않던 후원자",
+        "after": "시혁의 성과를 직접 확인하고 HR에 전화를 건 적극적 후원자"
+      },
+      {
+        "target": "오세진(팀장)",
+        "before": "평가서 코멘트로 S등급을 실질 차단한 제도적 적대자",
+        "after": "전무의 직접 개입으로 코멘트가 무력화되기 시작한 후퇴 상태"
+      }
+    ],
+    "foreshadow": [
+      "전무가 HR팀장에게 건 전화는 오세진에게 곧 알려진다. 오세진의 마지막 저항이 시작될 것이다.",
+      "시혁이 감각 없이 문서와 타이밍만으로 승부한 경험은 이후 더 큰 판에서도 반복될 무기가 된다."
+    ],
+    "callback": [
+      "시혁이 수집했던 프로젝트별 기여 문서 목록이 한 장짜리 증명서로 완성되어 나감.",
+      "서정민의 확인서가 문서 안의 공식 링크 중 하나로 들어감."
+    ],
+    "emotional_beat": {
+      "type": "counterattack",
+      "intensity": 8
+    },
+    "tension_level": 8,
+    "pov_character": "한시혁",
+    "location": {
+      "place": "한일유통 전무실 / HR팀장 사무실",
+      "type": "본사"
+    },
+    "time_span": {
+      "duration": "3일",
+      "in_story_time": "2025년 12월 초"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "Lv5 예산 발언권 + S등급 진입 차단 상태 + 서정민 확인서 1건",
+      "capital_after": "Lv5 예산 발언권 + 전무 직접 확인 + HR팀장 인지 + S등급 가능성 재개",
+      "capital_delta": "S등급 재가능 (소득) + 오세진 코멘트 무력화 (소득) + 팀장 관계 소각 (비용)",
+      "profit_loss": "S등급 가능성 재개. 팀장과의 관계는 사실상 끝.",
+      "method": "프로젝트별 before-after 증명서를 전무와 HR에 동시 제출하여 오세진 견제를 우회.",
+      "investment_type": "증거 기반 직접 접근",
+      "deal_type": "성과 증명서 제출",
+      "leverage_used": [
+        "전무와의 기존 신뢰 관계",
+        "프로젝트별 원본 문서 작성자란",
+        "서정민 확인서",
+        "전무-HR 직통 라인"
+      ],
+      "opponent": {
+        "name": "오세진",
+        "type": "팀장 권한 기반 성과 희석",
+        "weakness_exploited": "오세진의 견제는 인사위원 점심 라인에 의존했지만, 전무의 직접 개입은 인사위원보다 상위 권한이다"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "인사평가 최종 확정까지 2주",
+      "knowledge_used": "올해 전체 프로젝트의 before-after 수치와 문서 이력",
+      "risk_level": "고위험 (팀장 완전 우회는 돌이킬 수 없다)",
+      "business_sector": "인사 / 전무실",
+      "section_rotation": "ARC-04 감각의 흔들림",
+      "success_pattern": "감각이 아니라 문서와 타이밍으로 이겼다.",
+      "special_ability": {
+        "has_ability": true,
+        "ability_type": "감각",
+        "ability_name": "조직 역학 조감",
+        "ability_source": "건강검진 이후 발현 (원인 불명)",
+        "ability_used_for": "이 블록에서는 감각에 의존하지 않음. 문서와 증거만 사용."
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "execution_doctrine": "감각이 흔들릴 때는 증거가 말하게 한다."
+    },
+    "block_no": 38
+  },
+  {
+    "block_id": "Block 39",
+    "title": "떨어지는 줄",
+    "content": {
+      "context": "2025년 12월 중순. 전무가 HR팀장에게 전화를 건 사실이 하루 만에 오세진에게 전달된다. 오세진은 처음으로 불안해한다. 경영기획팀 내에서도 변화가 느껴진다. 팀원 3명 중 시혁과 가장 자주 일했던 후배 사원이 연말 프로젝트 리뷰 자료를 시혁에게 직접 보내기 시작한다. 오세진을 거치지 않고. 오세진의 인사위원 점심 라인도 흔들린다 — 전무가 직접 개입한 이상 인사위원들이 팀장 코멘트만 보고 판단하기는 어려워졌다. 시혁은 이 변화를 감지한다. 감각이 돌아왔다. 체력이 아직 한계지만, 인사 라인에서 사람이 움직이기 시작하자 감각이 다시 작동한다. 누가 오세진 편에 남아 있고, 누가 이미 마음이 움직였는지가 복도 대화 한 마디에서 읽힌다.",
+      "event_villain": "오세진은 마지막으로 팀 회식을 잡는다. 표면은 연말 회식이지만 실제로는 팀원들의 충성도를 확인하려는 시도다. 하지만 회식 자리에서 오세진이 평소 하던 농담에 팀원들이 웃지 않는다. 분위기가 이미 바뀌었다.",
+      "solution": "시혁은 아무것도 하지 않는다. 이 블록에서 시혁의 역할은 관찰이다. 오세진의 네트워크가 스스로 무너지고 있다. 시혁이 직접 와해시키는 것이 아니라, 전무의 개입이라는 사건 이후 자연스럽게 사람들이 재배치되고 있다. 시혁은 회식에 참석하고 조용히 먹고 돌아온다.",
+      "reward": "오세진의 팀 내 통제력이 눈에 띄게 약해졌다. 후배 사원이 시혁에게 직접 자료를 보내는 것은 작은 신호지만, 조직에서 가장 분명한 충성 전환 신호다. 시혁은 아직 팀장이 아니지만, 팀의 실질 중심이 이동하고 있다."
+    },
+    "stakes": "오세진이 마지막 저항으로 인사위원회에서 시혁의 결격 사유를 만들 수 있다. 네트워크가 약해져도 팀장이 작정하면 평가서에 부정적 의견을 추가로 넣을 수 있다.",
+    "power_shift": {
+      "protagonist": "팀 내 실질 중심이 시혁으로 이동하기 시작. 감각 복귀.",
+      "antagonist": "오세진의 팀 내 통제력과 인사위원 라인이 동시에 약화."
+    },
+    "relationship_delta": [
+      {
+        "target": "오세진(팀장)",
+        "before": "전무의 직접 개입으로 코멘트가 무력화되기 시작한 후퇴 상태",
+        "after": "팀 내 충성 전환으로 고립이 시작된 팀장"
+      },
+      {
+        "target": "경영기획팀 후배사원",
+        "before": "오세진과 시혁 사이에서 중립이던 팀원",
+        "after": "시혁에게 직접 자료를 보내기 시작한 사실상의 시혁 라인"
+      }
+    ],
+    "foreshadow": [
+      "오세진의 고립은 다음 블록에서 최종 인사평가 결과로 확정된다.",
+      "팀 충성 전환은 이후 시혁이 경영기획팀 실질 리더로 서는 기반이 된다."
+    ],
+    "callback": [
+      "전무가 HR팀장에게 건 전화의 파급 효과가 팀 내부까지 전달됨.",
+      "감각이 인사 서류 앞에서 흔들렸던 경험 이후, 사람이 움직이자 감각이 다시 작동 — 감각은 서류보다 사람의 감정에 더 잘 반응한다는 확인."
+    ],
+    "emotional_beat": {
+      "type": "quiet_resolution",
+      "intensity": 5
+    },
+    "tension_level": 5,
+    "pov_character": "한시혁",
+    "location": {
+      "place": "한일유통 경영기획팀 사무실 / 사내 식당 (회식)",
+      "type": "본사"
+    },
+    "time_span": {
+      "duration": "1주",
+      "in_story_time": "2025년 12월 중순"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "Lv5 예산 발언권 + 전무 직접 확인 + HR팀장 인지 + S등급 가능성 재개",
+      "capital_after": "Lv5 예산 발언권 + 오세진 네트워크 와해 진행 + 팀 내 실질 중심 이동 시작",
+      "capital_delta": "오세진 네트워크 와해 (구조 변화) + 팀 충성 전환 시작 (소득)",
+      "profit_loss": "실질 소득 없음. 구조적 변화가 자연스럽게 진행 중.",
+      "method": "아무것도 하지 않음. 전무 개입 이후의 자연스러운 파급 효과를 관찰.",
+      "investment_type": "관찰",
+      "deal_type": "해당 없음 — 자연 와해 관찰",
+      "leverage_used": [
+        "전무의 HR 직접 개입이라는 기정사실"
+      ],
+      "opponent": {
+        "name": "오세진",
+        "type": "팀 내 통제력 상실",
+        "weakness_exploited": "오세진의 네트워크는 실적이 아니라 점심 라인에 의존했다. 상위 권한이 개입하자 점심 라인은 의미를 잃었다."
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "인사평가 최종 확정까지 1주",
+      "knowledge_used": "조직 내 충성 전환 신호를 읽는 감각",
+      "risk_level": "저위험 (시혁이 움직이지 않아도 구도가 변하고 있음)",
+      "business_sector": "경영기획팀 내부",
+      "section_rotation": "ARC-04 감각의 흔들림",
+      "success_pattern": "적의 네트워크가 스스로 무너지는 것을 지켜본다. 가장 좋은 반격은 가끔 아무것도 안 하는 것이다.",
+      "special_ability": {
+        "has_ability": true,
+        "ability_type": "감각",
+        "ability_name": "조직 역학 조감",
+        "ability_source": "건강검진 이후 발현 (원인 불명)",
+        "ability_used_for": "팀 충성 전환 감지. 누가 오세진 편에 남아 있고 누가 이미 옮겼는지를 복도 대화에서 읽음."
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "execution_doctrine": "적이 무너지는 중에는 건드리지 않는다."
+    },
+    "block_no": 39
+  },
+  {
+    "block_id": "Block 40",
+    "title": "연말 인사 S",
+    "content": {
+      "context": "2025년 12월 하순, 연말 인사평가 결과 발표. 시혁은 S등급을 받는다. 경영기획팀 소속 사원으로는 최초다. 인사팀에서 내려온 결과지에는 전무의 직접 의견이 첨부되어 있었다. '한시혁 사원은 올해 물류센터 통합안 저지, 물류 재설계 TF 실무 간사, MD사업부 감사 지원 등 팀 단위를 넘는 전사적 기여를 했음.' 오세진의 '팀 공동 프로젝트' 코멘트는 결과지 어디에도 반영되지 않았다. 같은 날, 인사팀에서 추가 공지가 내려온다. 경영기획팀장 직무대행 건. 오세진은 연초 유통사업부 파견으로 이동한다. 공식 사유는 '현장 경험 강화'이지만, 실질은 팀장직에서의 이탈이다. 시혁이 팀장이 되는 것은 아니다. 직급은 아직 사원이다. 하지만 경영기획팀의 팀장이 빠진 상태에서 전무 직보 라인과 TF 실무 간사를 쥔 사람은 시혁뿐이다.",
+      "event_villain": "해당 없음. 오세진은 이 블록에서 퇴장한다. 팀장에서 밀려난 것이 아니라, 더 이상 시혁의 적대자로 기능할 수 없는 위치로 이동한 것이다.",
+      "solution": "시혁은 S등급 결과를 확인하고, 오세진 파견 공지를 읽고, 경영기획팀 사무실에 혼자 앉는다. 3년간 이름 한 번 불린 적 없던 자리다. 이제 이 자리의 의미가 달라졌다. 시혁은 TF룸 책상 위에 내년도 물류 재설계 일정표를 펼쳐 놓는다.",
+      "reward": "S등급 확정. 오세진 팀장 축 정리 완료. 경영기획팀 실질 리더 포지션 확보. 전무 직보 + TF 실무 간사 + 감사 지원 경험이 한 사람에게 모였다. Lv6 TF 실권 진입. 동시에 시혁은 처음으로 자기 라인을 만들 수 있는 위치에 섰다."
+    },
+    "stakes": "S등급은 받았지만 직급은 사원이다. 실질 리더 포지션은 공식 직함이 뒷받침되지 않으면 다음 인사에서 뒤집힐 수 있다.",
+    "power_shift": {
+      "protagonist": "S등급 + 경영기획팀 실질 리더 + Lv6 TF 실권. 오세진 축 정리 완료.",
+      "antagonist": "오세진 퇴장. 장현태는 여전히 MD사업부에 있지만 감사 압박 아래."
+    },
+    "relationship_delta": [
+      {
+        "target": "오세진(팀장)",
+        "before": "팀 내 충성 전환으로 고립이 시작된 팀장",
+        "after": "유통사업부 파견. 시혁의 적대자에서 퇴장."
+      },
+      {
+        "target": "박전무",
+        "before": "시혁의 성과를 직접 확인하고 HR에 전화를 건 적극적 후원자",
+        "after": "인사평가에 직접 의견을 첨부한 시혁의 공식 후원자"
+      },
+      {
+        "target": "경영기획팀 후배사원",
+        "before": "시혁에게 직접 자료를 보내기 시작한 사실상의 시혁 라인",
+        "after": "팀장 부재 상태에서 시혁의 실질 지시를 따르는 팀원"
+      }
+    ],
+    "foreshadow": [
+      "오세진이 빠진 경영기획팀은 시혁이 채우지만, 공식 직함 없는 리더는 외부에서 도전받기 쉽다.",
+      "장현태는 아직 살아 있다. 오세진 축이 정리되면서 장현태와의 최종전이 더 선명해진다."
+    ],
+    "callback": [
+      "시혁의 이름이 처음 불린 것이 전무 입에서였다면, 이번에는 인사 결과지에 공식으로 각인됨.",
+      "오세진이 공을 가져가던 패턴이 마침내 뒤집혔다. 인사평가 결과지에는 시혁 이름만 있다."
+    ],
+    "emotional_beat": {
+      "type": "validation",
+      "intensity": 9
+    },
+    "tension_level": 4,
+    "pov_character": "한시혁",
+    "location": {
+      "place": "한일유통 인사팀 / 경영기획팀 사무실 / TF룸",
+      "type": "본사"
+    },
+    "time_span": {
+      "duration": "1일",
+      "in_story_time": "2025년 12월 하순"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "Lv5 예산 발언권 + 오세진 네트워크 와해 진행 + 팀 내 실질 중심 이동 시작",
+      "capital_after": "Lv6 TF 실권 + S등급 + 경영기획팀 실질 리더 + 전무 직보 + 자기 라인 형성 가능",
+      "capital_delta": "Lv5→Lv6 점프 (소득) + S등급 (소득) + 오세진 퇴장 (구조 변화)",
+      "profit_loss": "전면 소득. S등급, 실질 리더, 오세진 축 정리.",
+      "method": "해당 없음 — 보상 블록. 앞선 블록들의 축적이 인사 결과로 확정된 것.",
+      "investment_type": "보상 확정",
+      "deal_type": "인사평가 확정",
+      "leverage_used": [
+        "전무의 직접 의견 첨부",
+        "프로젝트별 before-after 증명서",
+        "서정민 확인서",
+        "올해 전사적 기여 이력"
+      ],
+      "opponent": {
+        "name": "해당 없음",
+        "type": "보상 블록",
+        "weakness_exploited": "해당 없음"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "해당 없음",
+      "knowledge_used": "해당 없음",
+      "risk_level": "무위험 (보상 블록)",
+      "business_sector": "인사 / 경영기획",
+      "section_rotation": "ARC-04 감각의 흔들림",
+      "success_pattern": "3년간의 투명인간이 S등급을 받았다. 인사평가 결과지에 이름이 남는 것이 조직에서 가장 확실한 증명이다.",
+      "special_ability": {
+        "has_ability": true,
+        "ability_type": "감각",
+        "ability_name": "조직 역학 조감",
+        "ability_source": "건강검진 이후 발현 (원인 불명)",
+        "ability_used_for": "이 블록에서 감각은 보조적. 결과는 문서와 증거로 만들었다."
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "execution_doctrine": "이름이 결과지에 남는 것이 조직에서 가장 확실한 무기다."
+    },
+    "block_no": 40
+  },
+  {
+    "block_id": "Block 41",
+    "title": "계열사 호출",
+    "content": {
+      "context": "2026년 1월 초, 시혁에게 처음 보는 회의 초대가 온다. 한일그룹 경영지원실에서 보낸 계열사 합동 물류 효율화 회의. 한일유통뿐 아니라 한일식품, 한일건설의 물류 담당자가 함께 모이는 자리다. 시혁이 불린 이유는 명확하다 — 한일유통 물류 재설계 TF에서 가장 숫자를 잘 아는 사람. 시혁은 처음으로 본사가 아닌 한일그룹 본관 회의실에 들어간다. 회의실 분위기가 다르다. 유통 안에서는 시혁이 전무 직보 라인이었지만, 여기서는 계열사 3곳의 부장급 이상이 앉아 있고 시혁은 가장 직급이 낮은 참석자다. 감각이 작동한다 — 하지만 읽히는 양이 달라졌다. 유통 내부에서는 모든 사람의 이해관계가 이어져 있었지만, 계열사 간에는 끊어진 부분이 많다. 시혁은 처음으로 읽히지 않는 구간이 사람이 아니라 조직 경계에서 발생한다는 것을 체감한다.",
+      "event_villain": "한일그룹 경영지원실 팀장 정태호가 회의를 주관한다. 정태호는 시혁을 호출했지만, 실제로는 유통의 물류 재설계 성과를 그룹 차원으로 가져와 자기 실적으로 보고하려는 의도가 있다. 시혁의 데이터가 필요하지 시혁이 필요한 것은 아니다.",
+      "solution": "시혁은 회의에서 자기 역할을 데이터 제공자로 한정한다. 유통의 물류 재설계 성과를 발표하되, 계열사에 적용할 수 있는 부분은 '검토가 필요하다'고 선을 긋는다. 감각으로 읽은 것 — 정태호가 원하는 건 시혁의 데이터를 자기 보고서에 넣는 것이다. 시혁은 데이터는 주되 보고서의 주체는 넘기지 않는 선을 유지한다.",
+      "reward": "계열사 회의 첫 참석 완료. 시혁은 한일유통 바깥의 숫자와 사람을 처음 직접 봤다. 감각이 조직 경계에서 끊어진다는 발견은 불편하지만, 동시에 '경계를 넘으면 감각이 새로 적응할 수 있는가'라는 질문이 생긴다."
+    },
+    "stakes": "계열사 회의에서 시혁의 데이터가 정태호 이름으로 나가면 그룹 레벨에서 시혁의 존재감은 0이 된다. 동시에 계열사 판에서 실패하면 유통 안의 지위도 흔들릴 수 있다.",
+    "power_shift": {
+      "protagonist": "계열사 합동 회의 첫 참석. 감각의 조직 경계 한계 발견.",
+      "antagonist": "정태호(경영지원실 팀장)는 시혁의 데이터를 자기 보고서로 가져가려 한다."
+    },
+    "relationship_delta": [
+      {
+        "target": "정태호(경영지원실 팀장)",
+        "before": "신규 — 시혁을 호출한 그룹 본관 인물",
+        "after": "시혁의 데이터를 원하지만 시혁 자체는 원하지 않는 이용적 관계"
+      }
+    ],
+    "foreshadow": [
+      "감각이 조직 경계에서 끊어지는 경험은 이후 시혁이 경계를 넘어 감각을 확장하는 동기가 된다.",
+      "정태호의 데이터 탈취 시도는 더 큰 규모로 반복된다 — 계열사 레벨에서는 데이터를 가진 사람이 아니라 보고서를 올리는 사람이 공을 갖는다."
+    ],
+    "callback": [
+      "시혁이 유통 안에서 올라간 성과(물류 재설계, 감사 지원)가 그룹 차원에서 주목받은 결과.",
+      "감각의 조직 경계 한계는 감각이 감정 있는 상대에게만 작동한다는 이전 발견의 확장판."
+    ],
+    "emotional_beat": {
+      "type": "curiosity",
+      "intensity": 6
+    },
+    "tension_level": 6,
+    "pov_character": "한시혁",
+    "location": {
+      "place": "한일그룹 본관 15층 합동 회의실",
+      "type": "그룹 본관"
+    },
+    "time_span": {
+      "duration": "2일",
+      "in_story_time": "2026년 1월 초"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "Lv6 TF 실권 + S등급 + 경영기획팀 실질 리더 + 전무 직보 + 자기 라인 형성 가능",
+      "capital_after": "Lv6 TF 실권 + 계열사 회의 접근권 + 그룹 레벨 데이터 노출 + 감각 경계 한계 인식",
+      "capital_delta": "계열사 회의 접근 (소득) + 감각 한계 새 발견 (중립)",
+      "profit_loss": "접근권은 얻었지만 데이터 소유권은 위협받고 있다.",
+      "method": "데이터는 제공하되 보고서 주체는 넘기지 않는 선 유지.",
+      "investment_type": "접근권 확보",
+      "deal_type": "계열사 협업 회의 진입",
+      "leverage_used": [
+        "한일유통 물류 재설계 성과 데이터",
+        "전무 직보 라인에서의 신뢰"
+      ],
+      "opponent": {
+        "name": "정태호",
+        "type": "그룹 경영지원실의 데이터 탈취 시도",
+        "weakness_exploited": "정태호는 데이터를 직접 만들 수 없다. 시혁이 데이터 제공을 조절하면 보고서의 질을 통제할 수 있다."
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "그룹 분기 경영회의까지 4주",
+      "knowledge_used": "유통 물류 재설계 전 과정의 숫자와 맥락",
+      "risk_level": "중위험 (그룹 레벨은 유통 내부보다 실패 비용이 크다)",
+      "business_sector": "그룹 경영지원 / 물류",
+      "section_rotation": "ARC-05 본사를 넘어서",
+      "success_pattern": "새 판에서는 먼저 규칙을 읽고, 자기 데이터의 소유권을 지킨다.",
+      "special_ability": {
+        "has_ability": true,
+        "ability_type": "감각",
+        "ability_name": "조직 역학 조감",
+        "ability_source": "건강검진 이후 발현 (원인 불명)",
+        "ability_used_for": "조직 경계에서 감각이 끊어지는 현상을 처음 체감. 정태호의 의도는 부분적으로 읽힘."
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "execution_doctrine": "새 판에서는 먼저 규칙을 배운다. 데이터를 주되 이름은 지킨다."
+    },
+    "block_no": 41
   }
 ]

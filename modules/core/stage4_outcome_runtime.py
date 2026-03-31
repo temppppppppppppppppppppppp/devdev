@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 from modules.core.jsonl_io import append_jsonl_record
+from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.soft_failure import resolve_project_log_dir
 
 if TYPE_CHECKING:
@@ -19,6 +20,29 @@ class Stage4OutcomeRuntime:
 
     def __init__(self, owner: "Stage4Orchestrator") -> None:
         self.owner = owner
+
+    def _build_retry_attempt_key(self, *, ep_num: int, round_num: int, arc_num: int = 0) -> str:
+        owner = self.owner
+        interview_round = getattr(owner, "interview_round", None) or getattr(owner, "_interview_round", None)
+        if interview_round is not None and hasattr(interview_round, "_build_round_attempt_key"):
+            try:
+                return str(
+                    interview_round._build_round_attempt_key(next_ep=ep_num, round_num=round_num, arc_num=arc_num) or ""
+                )
+            except Exception:
+                pass
+
+        current_project = getattr(getattr(owner, "ctx", None), "current_project", None)
+        session_id = resolve_logging_session_id(current_project)
+        return str(
+            build_attempt_key(
+                stage=4,
+                ep_num=ep_num,
+                arc_num=arc_num,
+                attempt_num=round_num + 1,
+                session_id=session_id,
+            )
+        )
 
     def handle_pass_round_result(
         self,
@@ -473,6 +497,9 @@ class Stage4OutcomeRuntime:
             round_result=round_result,
             director_feedback=director_feedback,
             previous_attempt=previous_attempt,
+            next_ep=next_ep,
+            interview_round=interview_round,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
             logic_error_streak=logic_error_streak,
             prev_reject_bucket=prev_reject_bucket,
             bucket_streak=bucket_streak,
@@ -528,6 +555,9 @@ class Stage4OutcomeRuntime:
         plateau_advisory_emitted: bool,
         tf29_advisory_emitted: bool,
         blueprint_regenerated: bool,
+        next_ep: int = 0,
+        interview_round: int = 0,
+        arc_num: int = 0,
     ):
         owner = self.owner
         previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
@@ -537,6 +567,9 @@ class Stage4OutcomeRuntime:
             director_feedback=director_feedback,
             score_history=score_history,
             plateau_advisory_emitted=plateau_advisory_emitted,
+            next_ep=next_ep,
+            interview_round=interview_round,
+            arc_num=arc_num,
         )
         director_feedback = score_trend.director_feedback
         score_history = score_trend.score_history
@@ -652,6 +685,9 @@ class Stage4OutcomeRuntime:
         director_feedback: str,
         score_history: list[int],
         plateau_advisory_emitted: bool,
+        next_ep: int = 0,
+        interview_round: int = 0,
+        arc_num: int = 0,
     ):
         owner = self.owner
         current_score = previous_attempt.get("score", 0)
@@ -677,6 +713,11 @@ class Stage4OutcomeRuntime:
                     )
 
                 if plateau_advisory:
+                    attempt_key = self._build_retry_attempt_key(
+                        ep_num=next_ep,
+                        round_num=interview_round,
+                        arc_num=arc_num,
+                    )
                     plateau_advisory_emitted = True
                     director_feedback = plateau_advisory + "\n" + director_feedback
                     previous_attempt["score_history"] = list(score_history[-3:])
@@ -687,7 +728,15 @@ class Stage4OutcomeRuntime:
                         if existing_reasoning
                         else plateau_advisory
                     )
-                    owner.ctx.ui.log(f"   ⚠️ [QR-7] {str(plateau_advisory)}")
+                    owner.ctx.ui.log(
+                        f"   ⚠️ [QR-7] {str(plateau_advisory)}",
+                        stage="stage4",
+                        component="retry_lane",
+                        ep_num=next_ep,
+                        round_num=interview_round,
+                        attempt_key=attempt_key,
+                        event_kind="advisory",
+                    )
         return SimpleNamespace(
             director_feedback=director_feedback,
             score_history=score_history,
@@ -816,6 +865,20 @@ class Stage4OutcomeRuntime:
             pathology_repeat_emitted=pathology_repeat_emitted,
         )
 
+        qr7_disposition = self._apply_qr7_bounded_escalation(
+            round_ctx=round_ctx,
+            next_ep=next_ep,
+            interview_round=interview_round,
+            director_feedback=director_feedback,
+            previous_attempt=previous_attempt,
+            logic_error_streak=logic_error_streak,
+            inplace_attempted=inplace_attempted,
+            blueprint_regenerated=blueprint_regenerated,
+            pathology_counts=pathology_counts,
+        )
+        if qr7_disposition is not None:
+            return qr7_disposition
+
         s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
         quality_risk = bool(s3_meta.get("quality_risk", False))
         quality_risk_threshold = owner.get_stage4_policy_int(
@@ -863,6 +926,95 @@ class Stage4OutcomeRuntime:
                 dominant_contradiction=dominant_contradiction,
             )
 
+        return SimpleNamespace(
+            round_ctx=round_ctx,
+            director_feedback=director_feedback,
+            previous_attempt=previous_attempt,
+            logic_error_streak=logic_error_streak,
+            inplace_attempted=inplace_attempted,
+            blueprint_regenerated=blueprint_regenerated,
+        )
+
+    def _apply_qr7_bounded_escalation(
+        self,
+        *,
+        round_ctx,
+        next_ep: int,
+        interview_round: int,
+        director_feedback: str,
+        previous_attempt: dict,
+        logic_error_streak: int,
+        inplace_attempted: bool,
+        blueprint_regenerated: bool,
+        pathology_counts: dict[str, int],
+    ):
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+        if not bool(previous_attempt.get("plateau_detected", False)):
+            return None
+
+        payload = self.build_retry_pathology_payload(
+            ep_num=next_ep,
+            round_num=interview_round,
+            previous_attempt=previous_attempt,
+        )
+        fingerprint = str(payload.get("pathology_fingerprint", "") or "").strip()
+        repeat_count = int(pathology_counts.get(fingerprint, 0) or 0)
+        current_fix_scope = str(previous_attempt.get("fix_scope", "") or "").strip().lower()
+        if repeat_count < 2 or current_fix_scope == "full":
+            return None
+
+        attempt_key = self._build_retry_attempt_key(
+            ep_num=next_ep,
+            round_num=interview_round,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
+        )
+        notice = (
+            f"[QR-7 escalation] 동일 retry pathology가 {repeat_count}회 반복되었습니다. "
+            "추가 local retry를 억제하고 full rewrite 경로로 reroute합니다."
+        )
+        previous_attempt["fix_scope"] = "full"
+        previous_attempt["repair_scope"] = "full"
+        retry_budget_axes = previous_attempt.get("retry_budget_axes")
+        if isinstance(retry_budget_axes, dict):
+            retry_budget_axes = dict(retry_budget_axes)
+            retry_budget_axes["repair"] = "rewrite_regenerate"
+            previous_attempt["retry_budget_axes"] = retry_budget_axes
+        previous_attempt["qr7_contract"] = {
+            "mode": "rewrite_reroute",
+            "reason": "repeat_plateau_same_pathology",
+            "pathology_fingerprint": fingerprint,
+            "repeat_count": repeat_count,
+        }
+        existing_reasoning = str(previous_attempt.get("fix_scope_reasoning", "") or "").strip()
+        if notice not in existing_reasoning:
+            previous_attempt["fix_scope_reasoning"] = (
+                f"{existing_reasoning}\n{notice}".strip() if existing_reasoning else notice
+            )
+
+        scope_origin = previous_attempt.get("scope_origin")
+        if not isinstance(scope_origin, dict):
+            scope_origin = {}
+        scope_origin["fix_scope"] = "qr7_plateau_override"
+        scope_origin.setdefault("authoritative_fix_scope", "director_authoritative")
+        scope_origin.setdefault("repair_scope", "runtime_lane")
+        previous_attempt["scope_origin"] = scope_origin
+
+        if notice not in director_feedback:
+            director_feedback = f"{notice}\n{director_feedback}".strip()
+        self.owner.ctx.ui.log(
+            "   ⚠️ [QR-7] repeated plateau -> local retry 차단, full rewrite reroute",
+            stage="stage4",
+            component="retry_lane",
+            ep_num=next_ep,
+            round_num=interview_round,
+            attempt_key=attempt_key,
+            event_kind="policy",
+            meta={
+                "repeat_count": repeat_count,
+                "pathology_fingerprint": fingerprint,
+                "reroute_mode": "rewrite_reroute",
+            },
+        )
         return SimpleNamespace(
             round_ctx=round_ctx,
             director_feedback=director_feedback,
@@ -942,6 +1094,15 @@ class Stage4OutcomeRuntime:
             "fix_scope_reasoning": fix_scope_reasoning,
             "open_review": open_review,
         }
+        attempt_key = str(previous_attempt.get("attempt_key", "") or "").strip()
+        if attempt_key:
+            payload["attempt_key"] = attempt_key
+        content_hash = str(previous_attempt.get("content_hash", "") or "").strip()
+        if content_hash:
+            payload["content_hash"] = content_hash
+        candidate_key = str(previous_attempt.get("candidate_key", "") or "").strip()
+        if candidate_key:
+            payload["candidate_key"] = candidate_key
         authoritative_fix_scope_violation = previous_attempt.get("authoritative_fix_scope_violation")
         if isinstance(authoritative_fix_scope_violation, dict):
             payload["authoritative_fix_scope_violation"] = authoritative_fix_scope_violation
@@ -962,8 +1123,7 @@ class Stage4OutcomeRuntime:
                 "fix_scope",
                 (
                     "runtime_widened"
-                    if authoritative_fix_scope and fix_scope
-                    and authoritative_fix_scope.lower() != fix_scope.lower()
+                    if fix_scope and authoritative_fix_scope.lower() != fix_scope.lower()
                     else "director_authoritative"
                 ),
             )
@@ -971,8 +1131,7 @@ class Stage4OutcomeRuntime:
             payload["scope_origin"] = {
                 "fix_scope": (
                     "runtime_widened"
-                    if authoritative_fix_scope and fix_scope
-                    and authoritative_fix_scope.lower() != fix_scope.lower()
+                    if fix_scope and authoritative_fix_scope.lower() != fix_scope.lower()
                     else "director_authoritative"
                 ),
                 "authoritative_fix_scope": "director_authoritative",

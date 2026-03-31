@@ -464,10 +464,11 @@ class TestProcessPassResult:
         pp = self._make_pp()
         pp.ctx.current_project.db.save_manuscript.return_value = True
         mock_fn = MagicMock(return_value={"cliffhanger": "test"})
+        manuscript = "테스트 원고 " * 500
 
         pp.process_pass_result(
             next_ep=5,
-            final_manuscript="테스트 원고 " * 500,
+            final_manuscript=manuscript,
             final_title="테스트",
             final_state_updates={},
             blueprint={"scene_breakdown": []},
@@ -477,7 +478,11 @@ class TestProcessPassResult:
             extract_chain_link_fn=mock_fn,
         )
 
-        mock_fn.assert_called_once_with(5, "테스트 원고 " * 500, {"scene_breakdown": []})
+        mock_fn.assert_called_once_with(
+            5,
+            Stage4PostProcessor._normalize_reader_facing_manuscript(manuscript),
+            {"scene_breakdown": []},
+        )
 
     def test_records_episode_cost_when_scope_has_usage(self, tmp_path):
         pp = self._make_pp()
@@ -1370,6 +1375,58 @@ class TestProcessPassResult:
 
         saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
         assert saved_bible["state_changes"]["martial_arts"] == ["Storm Palm", "Cloud Step"]
+
+    def test_normalize_reader_facing_manuscript_strips_scene_headers_and_brackets(self):
+        manuscript = (
+            "### 씬 1: 2024년의 끝, 2006년의 시작\n\n"
+            "[2024년 12월, 서울 외곽의 좁은 원룸]\n\n"
+            "첫 문장이다.\n\n"
+            "### 씬 2: 귀환\n\n"
+            "[2006년 1월, 한성그룹 본가 시우의 방]\n\n"
+            "둘째 문장이다."
+        )
+
+        normalized = Stage4PostProcessor._normalize_reader_facing_manuscript(manuscript)
+
+        assert "### 씬" not in normalized
+        assert "[2024년 12월, 서울 외곽의 좁은 원룸]" not in normalized
+        assert "[2006년 1월, 한성그룹 본가 시우의 방]" not in normalized
+        assert "2024년 12월, 서울 외곽의 좁은 원룸." in normalized
+        assert "2006년 1월, 한성그룹 본가 시우의 방." in normalized
+        assert "***" in normalized
+
+    def test_process_pass_result_persists_normalized_reader_facing_manuscript(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        manuscript = (
+            "### 씬 1: 시작\n\n"
+            "[2024년 12월, 서울 외곽의 좁은 원룸]\n\n"
+            "첫 문장이다.\n\n"
+            "### 씬 2: 전환\n\n"
+            "[2006년 1월, 한성그룹 본가 시우의 방]\n\n"
+            "둘째 문장이다."
+        )
+
+        result = pp.process_pass_result(
+            next_ep=1,
+            final_manuscript=manuscript,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        saved_content = pp.ctx.current_project.db.save_manuscript.call_args.kwargs["content"]
+        assert "### 씬" not in saved_content
+        assert "[2024년 12월, 서울 외곽의 좁은 원룸]" not in saved_content
+        assert "2024년 12월, 서울 외곽의 좁은 원룸." in saved_content
+        file_text = (tmp_path / "ep_0001.txt").read_text(encoding="utf-8")
+        assert "### 씬" not in file_text
+        assert "***" in file_text
 
     def test_process_pass_result_re_normalizes_stringified_stv_martial_arts_correction(self, tmp_path):
         pp = self._make_pp()

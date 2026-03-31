@@ -103,6 +103,12 @@ def build_chief_writer_main_prompt(
 
 {immutable_fact_section}
 
+### [STEP 0: Read This Authority First]
+1. Opening Anchor + Immutable Facts + chain_link + prior manuscript full-text + prev digest + carryover ceiling
+2. Structured scene breakdown
+3. Advisory integrated scenario prose
+4. Feedback, constraints, and style guidance must not override already-established truth
+
 {incarnation_context_section}
 
 {chain_link_section}
@@ -129,7 +135,7 @@ def build_chief_writer_main_prompt(
 ### [STEP 0.5: 권위 우선순위]
 아래 우선순위를 반드시 지켜라. 하위 블록이 상위 권위와 충돌하면 하위를 버린다.
 1. Opening Anchor
-2. Immutable Facts / prior manuscript facts / prev digest
+2. Immutable Facts / chain_link / prior manuscript full-text / prev digest / carryover ceiling
 3. Structured scene breakdown
 4. Advisory integrated scenario prose
 

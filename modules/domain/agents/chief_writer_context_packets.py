@@ -39,7 +39,7 @@ class ChiefWriterContextPackets:
         "offshore",
     )
 
-    def __init__(self, owner: "ChiefWriterContextBuilder") -> None:
+    def __init__(self, owner: ChiefWriterContextBuilder) -> None:
         self.owner = owner
 
     @property
@@ -255,6 +255,13 @@ This is optional and should follow narrative flow first.
             lines.extend(f"  - {item}" for item in planning_lines[:3])
             lines.append("  - 위 계산·계획·메모를 이번 화에서 처음 완성한 것처럼 다시 쓰지 마라.")
 
+        generic_digest_lines = self._collect_generic_prev_digest_carryover_lines(prev_digest, limit=3)
+        evidence_blocks = sum(bool(block) for block in (opening_evidence, note_evidence, planning_lines))
+        if generic_digest_lines and evidence_blocks < 2:
+            lines.append("- prior digest authority reminders:")
+            lines.extend(f"  - {item}" for item in generic_digest_lines)
+            lines.append("  - preserve these prior-state reminders unless the current authority explicitly replaces them.")
+
         if not self._authority_mentions_any_term(
             blueprint=blueprint,
             prev_manuscript=prev_manuscript,
@@ -267,6 +274,23 @@ This is optional and should follow narrative flow first.
             )
 
         return "\n".join(lines) if len(lines) > 2 else ""
+
+    @staticmethod
+    def _collect_generic_prev_digest_carryover_lines(prev_digest: str, *, limit: int = 3) -> list[str]:
+        if not prev_digest:
+            return []
+
+        collected: list[str] = []
+        seen: set[str] = set()
+        for raw_line in str(prev_digest or "").splitlines():
+            line = re.sub(r"^[\-\*\u2022]\s*", "", str(raw_line or "").strip()).strip()
+            if not line or line in seen:
+                continue
+            seen.add(line)
+            collected.append(line)
+            if len(collected) >= limit:
+                break
+        return collected
 
     def _collect_recent_sentence_evidence(
         self,

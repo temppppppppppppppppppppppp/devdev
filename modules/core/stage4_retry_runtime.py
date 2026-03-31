@@ -2,6 +2,7 @@
 Stage4 retry/runtime orchestration split.
 """
 
+import hashlib
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -86,6 +87,100 @@ class Stage4RetryRuntime:
 
     def __init__(self, owner: "Stage4InterviewRound") -> None:
         self.owner = owner
+
+    def _build_retry_attempt_key(self, *, ep_num: int, round_num: int, arc_num: int = 0) -> str:
+        owner = self.owner
+        if hasattr(owner, "_build_round_attempt_key"):
+            try:
+                return str(owner._build_round_attempt_key(next_ep=ep_num, round_num=round_num, arc_num=arc_num) or "")
+            except Exception:
+                return ""
+        return ""
+
+    @staticmethod
+    def _compute_candidate_content_hash(manuscript: str) -> str:
+        text = str(manuscript or "")
+        if not text.strip():
+            return ""
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+    def suppress_equivalent_retry_candidates(
+        self,
+        *,
+        candidates: list[dict],
+        previous_attempt: dict | None,
+        retry_family: str,
+        reject_bucket: str,
+        fix_pack_reason: str,
+        ep_num: int,
+        round_num: int,
+        arc_num: int = 0,
+    ) -> list[dict]:
+        owner = self.owner
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+        if not candidates or not previous_attempt:
+            return candidates
+        if isinstance(previous_attempt.get("reuse_contract"), dict):
+            return candidates
+
+        prior_hash = str(previous_attempt.get("content_hash", "") or "").strip()
+        if not prior_hash:
+            return candidates
+
+        prev_bucket = str(previous_attempt.get("reject_bucket", "") or "").strip()
+        prev_fix_pack_reason = str(previous_attempt.get("fix_pack_reason", "") or "").strip()
+        prev_retry_axes = previous_attempt.get("retry_budget_axes") if isinstance(previous_attempt, dict) else {}
+        prev_retry_family = (
+            str(prev_retry_axes.get("repair", "") or prev_retry_axes.get("repair_budget", "") or "").strip()
+            if isinstance(prev_retry_axes, dict)
+            else ""
+        )
+        if reject_bucket and prev_bucket and reject_bucket != prev_bucket:
+            return candidates
+        if fix_pack_reason and prev_fix_pack_reason and fix_pack_reason != prev_fix_pack_reason:
+            return candidates
+        if retry_family and prev_retry_family and retry_family != prev_retry_family:
+            return candidates
+
+        filtered: list[dict] = []
+        suppressed = 0
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
+                filtered.append(candidate)
+                continue
+            manuscript = str(candidate.get("manuscript", "") or "")
+            if self._compute_candidate_content_hash(manuscript) == prior_hash:
+                suppressed += 1
+                continue
+            filtered.append(candidate)
+
+        if suppressed <= 0 or not filtered:
+            return candidates
+
+        attempt_key = self._build_retry_attempt_key(ep_num=ep_num, round_num=round_num, arc_num=arc_num)
+        owner.ctx.ui.log(
+            "   [TF-RH1] 동일 retry context의 exact duplicate hash 후보를 억제",
+            stage="stage4",
+            component="retry_lane",
+            ep_num=ep_num,
+            round_num=round_num,
+            attempt_key=attempt_key,
+            event_kind="policy",
+            meta={
+                "suppressed_count": suppressed,
+                "retry_family": retry_family,
+                "reject_bucket": reject_bucket,
+                "content_hash": prior_hash,
+            },
+        )
+        logging.info(
+            "[TF-RH1] suppressed %d duplicate retry candidates (family=%s, bucket=%s, hash=%s)",
+            suppressed,
+            retry_family,
+            reject_bucket,
+            prior_hash[:16],
+        )
+        return filtered
 
     def execute_pass_with_fix_loop(
         self,
@@ -246,11 +341,16 @@ class Stage4RetryRuntime:
         style_guide,
         blueprint,
         common_writer_kwargs: dict,
+        arc_num: int = 0,
     ) -> tuple[list[dict], bool, bool, int, str | None]:
         owner = self.owner
         is_patch = False
         is_patch_fallback = False
         prev_score = 0
+        ep_num = int(common_writer_kwargs.get("ep_num", 0) or 0)
+        retry_family = ""
+        reject_bucket = ""
+        fix_pack_reason = ""
         owner._last_strategy_budget = "full"
         owner._last_strategy_count = 0
 
@@ -268,6 +368,8 @@ class Stage4RetryRuntime:
                 previous_attempt=previous_attempt,
                 prev_manuscript=prev_manuscript,
                 round_num=round_num,
+                ep_num=ep_num,
+                arc_num=arc_num,
             )
             prev_score = retry_lane.prev_score
             fix_scope = retry_lane.fix_scope
@@ -276,6 +378,7 @@ class Stage4RetryRuntime:
             selected_strategy_key = retry_lane.selected_strategy_key
             use_inplace = retry_lane.use_inplace
             use_patch = retry_lane.use_patch
+            fix_pack_reason = str(fix_pack_contract.get("reason", "") or "").strip()
 
             candidates = None
             if fix_scope == "inplace" and not fix_pack_contract.get("ready"):
@@ -323,6 +426,20 @@ class Stage4RetryRuntime:
             candidates = self._apply_asp_candidate_replacement(
                 candidates=candidates,
                 asp_manuscript=asp_manuscript,
+            )
+
+        retry_axes = dict(getattr(owner, "_last_retry_budget_axes", {}) or {})
+        retry_family = str(retry_axes.get("repair", "") or retry_axes.get("repair_budget", "") or "").strip()
+        if round_num > 0 and candidates:
+            candidates = self.suppress_equivalent_retry_candidates(
+                candidates=candidates,
+                previous_attempt=previous_attempt,
+                retry_family=retry_family,
+                reject_bucket=reject_bucket,
+                fix_pack_reason=fix_pack_reason,
+                ep_num=ep_num,
+                round_num=round_num,
+                arc_num=arc_num,
             )
 
         return candidates, is_patch, is_patch_fallback, prev_score, asp_manuscript
@@ -834,10 +951,13 @@ class Stage4RetryRuntime:
         previous_attempt: dict | None,
         prev_manuscript: str,
         round_num: int,
+        ep_num: int = 0,
+        arc_num: int = 0,
     ) -> _RetryLaneRoutingPayload:
         from modules.validation.threshold_helper import _threshold
 
         owner = self.owner
+        attempt_key = self._build_retry_attempt_key(ep_num=ep_num, round_num=round_num, arc_num=arc_num)
         try:
             prev_score = int(previous_attempt.get("score", 0)) if previous_attempt else 0
         except (ValueError, TypeError):
@@ -867,7 +987,15 @@ class Stage4RetryRuntime:
             logging.warning(
                 "[TF-4] missing_patch_targets 연속 감지 → patch 해제, full rewrite escalation"
             )
-            owner.ctx.ui.log("   [TF-4] patch_targets 연속 부재 → full rewrite로 전환")
+            owner.ctx.ui.log(
+                "   [TF-4] patch_targets 연속 부재 → full rewrite로 전환",
+                stage="stage4",
+                component="retry_lane",
+                ep_num=ep_num,
+                round_num=round_num,
+                attempt_key=attempt_key,
+                event_kind="policy",
+            )
 
         force_patch = (
             patch_enabled
@@ -911,7 +1039,15 @@ class Stage4RetryRuntime:
             logging.warning(
                 "[TF-PATCH-GATE] non-ready fix_pack blocks patch_revision; falling through to rewrite"
             )
-            owner.ctx.ui.log("   [TF-PATCH-GATE] non-ready fix_pack -> patch 차단, rewrite 경로 사용")
+            owner.ctx.ui.log(
+                "   [TF-PATCH-GATE] non-ready fix_pack -> patch 차단, rewrite 경로 사용",
+                stage="stage4",
+                component="retry_lane",
+                ep_num=ep_num,
+                round_num=round_num,
+                attempt_key=attempt_key,
+                event_kind="policy",
+            )
         return _RetryLaneRoutingPayload(
             prev_score=prev_score,
             fix_scope=fix_scope,

@@ -282,6 +282,41 @@ class TestBuildCommonContext:
         assert prompt.index("scene-breakdown") < prompt.index("ADVISORY-INTEGRATED")
         assert "CARRYOVER-CEILING" in prompt
 
+    def test_main_prompt_includes_early_authority_preface_with_chain_link_and_full_text(self):
+        prompt = build_chief_writer_main_prompt(
+            ep_num=5,
+            dna_instruction="dna",
+            purism_section="purism",
+            world_origin_constraint_section="origin",
+            feedback_section="feedback",
+            constraint_section="constraint",
+            future_guard_section="future",
+            past_guard_section="past",
+            writer_core_section="writer-core",
+            hud_anomaly_section="hud-anomaly",
+            scene_breakdown="scene-breakdown",
+            prev_digest="PREV-DIGEST",
+            prev_ending="PREV-ENDING",
+            hud_report="HUD",
+            high_density_hud_section="hd-hud",
+            hud_trend_section="hud-trend",
+            npc_equipment_section="npc-equip",
+            npc_frequency_section="npc-freq",
+            arc_doc="arc",
+            core_identity_desire="desire",
+            style_guide="style",
+            common_rules="common-rules",
+            writing_guidelines="guidelines",
+            chain_link_section="CHAIN-LINK",
+            prev_manuscripts_section="PREV-FULL-TEXT",
+            carryover_ceiling_section="CARRYOVER-CEILING",
+        )
+
+        assert "Read This Authority First" in prompt
+        assert "chain_link" in prompt
+        assert "prior manuscript full-text" in prompt
+        assert prompt.index("Read This Authority First") < prompt.index("feedback")
+
 
 class TestDigestAndGuards:
     def test_generate_episode_digest_authority_moved_to_context_packets(self):
