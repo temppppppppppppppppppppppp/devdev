@@ -1,0 +1,36 @@
+{
+  "version": "0.1.0-draft",
+  "gates": [
+    {
+      "gate_id": "G_REF_01",
+      "stage": "reference_selection",
+      "rule": "selected cards include slug, track, handoff_label, and contamination review"
+    },
+    {
+      "gate_id": "G_PRE_01",
+      "stage": "preprocess",
+      "rule": "phase0_ready_snapshot.manual_audit_pass must be true"
+    },
+    {
+      "gate_id": "G_PLAN_01",
+      "stage": "planning",
+      "rule": "phase0_design schema pass"
+    },
+    {
+      "gate_id": "G_TR_01",
+      "stage": "production",
+      "rule": "TR schema pass and sequential_run_status coherent"
+    },
+    {
+      "gate_id": "G_BI_01",
+      "stage": "bi",
+      "rule": "BI schema pass and build hashes recorded"
+    },
+    {
+      "gate_id": "G_REL_01",
+      "stage": "release",
+      "rule": "release_gate publish_allowed must be true"
+    }
+  ]
+}
+

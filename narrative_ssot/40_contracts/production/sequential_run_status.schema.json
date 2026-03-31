@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "narrative_ssot/production/sequential_run_status.schema.json",
+  "title": "sequential_run_status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "work_id",
+    "run_class",
+    "last_sequential_block_pass",
+    "next_unit_type",
+    "next_block_id",
+    "manual_audit_ready",
+    "resume_basis",
+    "updated_at",
+    "notes"
+  ],
+  "properties": {
+    "work_id": {
+      "type": "string"
+    },
+    "run_class": {
+      "type": "string"
+    },
+    "last_sequential_block_pass": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "next_unit_type": {
+      "type": "string"
+    },
+    "next_block_id": {
+      "type": "string"
+    },
+    "manual_audit_ready": {
+      "type": "boolean"
+    },
+    "resume_basis": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}
+
