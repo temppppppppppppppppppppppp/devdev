@@ -1,0 +1,502 @@
+[모니터 시작] 2026-03-05 14:51:20 KST
+
+=== [14:51:20 KST] #1회 체크 ===
+로그: 291줄 (+291)
+[2026-03-05 14:50:46] [INFO] [UI]       ⚓ Arc 2-3 고유 명사 앵커링 완료.
+[2026-03-05 14:50:46] [INFO] [UI]    🧶 Arc 2-3 인과율 용접 완료.
+[2026-03-05 14:50:46] [INFO] [UI]       ⏳ [Preflight] 병렬 분석 시작 (arc_drive + preflight + constraint)...
+[2026-03-05 14:51:04] [INFO] [UI]       ✅ [Preflight] arc_drive 완료
+[2026-03-05 14:51:04] [INFO] [UI]       ✅ [Preflight] preflight 완료
+[2026-03-05 14:51:04] [INFO] [UI]       ✅ [Preflight] constraint 완료
+[2026-03-05 14:51:04] [INFO] [UI]    🧠 [Arc 1] 전술 설계 중 (시도 1/10)...
+[2026-03-05 14:51:04] [INFO] [UI]       ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료
+[2026-03-05 14:51:04] [INFO] [UI]       🧠 [V51+V55.2] Analyst 지능 향상 + Constitutional 주입 완료
+[2026-03-05 14:51:04] [INFO] [UI]       🎯 [V60.77] FourPhase-Director 대면 1/5
+원고 파일: 0개
+
+=== [14:55:51 KST] 체크 ===
+로그 총 줄수: 575 (+337)
+[2026-03-05 14:54:52] [INFO] [UI]       ✅ [Preflight] preflight 완료
+[2026-03-05 14:54:52] [INFO] [UI]       ✅ [Preflight] constraint 완료
+[2026-03-05 14:54:52] [INFO] [root] ✅ [V66.1] arc_drive + preflight + constraint 병렬 완료
+[2026-03-05 14:54:52] [INFO] [UI]       🔒 [V49.4] Arc 2 제약 조건 주입됨
+[2026-03-05 14:54:52] [INFO] [UI]       ⏳ [StateExtractor] 누적 상태 추출 중...
+[2026-03-05 14:54:52] [INFO] [root]  [V62.5] StateExtractor 캐시: 1/1 Arc 캐시 히트 (LLM 0회만 호출)
+[2026-03-05 14:54:52] [INFO] [UI]       ✅ [StateExtractor] 누적 상태 추출 완료
+[2026-03-05 14:54:52] [INFO] [UI]       📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료
+[2026-03-05 14:54:52] [INFO] [UI]    🧠 [Arc 2] 전술 설계 중 (시도 1/10)...
+[2026-03-05 14:54:52] [INFO] [UI]       ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료
+[2026-03-05 14:54:52] [INFO] [UI]       🧠 [V51+V55.2] Analyst 지능 향상 + Constitutional 주입 완료
+[2026-03-05 14:54:52] [WARNING] [root] 
+[2026-03-05 14:54:52] [INFO] [root] [V60.36] Arc 2 생성 시작 (attempt 1)
+[2026-03-05 14:54:52] [INFO] [root] ✅ [Constraints] 제약 블록 생성 완료 (3961자)
+[2026-03-05 14:54:52] [INFO] [UI]       🎯 [V60.77] FourPhase-Director 대면 1/5
+[2026-03-05 14:54:52] [INFO] [root]  [Phase 1] 제약 수집 중... (이전 Arc 1개)
+[2026-03-05 14:55:18] [INFO] [root]  [V67] FourPhase prev_context 확장: 1개 Arc 전술서 (3,155자)
+[2026-03-05 14:55:18] [DEBUG] [root] [SilentPass:Agent] call_start agent=ArcEnsembleGenerator model=gemini-2.5-pro prompt_len=33380
+[2026-03-05 14:55:18] [DEBUG] [root] [SilentPass:Agent] call_start agent=ArcEnsembleGenerator model=gemini-2.5-pro prompt_len=33366
+[2026-03-05 14:55:18] [DEBUG] [root] [SilentPass:Agent] call_start agent=ArcEnsembleGenerator model=gemini-2.5-pro prompt_len=33360
+생성된 원고 수: 0
+
+=== [14:56:22 KST] #2회 체크 ===
+로그: 575줄 (+284)
+[2026-03-05 14:54:52] [INFO] [UI]       ✅ [Preflight] preflight 완료
+[2026-03-05 14:54:52] [INFO] [UI]       ✅ [Preflight] constraint 완료
+[2026-03-05 14:54:52] [INFO] [UI]       🔒 [V49.4] Arc 2 제약 조건 주입됨
+[2026-03-05 14:54:52] [INFO] [UI]       ⏳ [StateExtractor] 누적 상태 추출 중...
+[2026-03-05 14:54:52] [INFO] [UI]       ✅ [StateExtractor] 누적 상태 추출 완료
+[2026-03-05 14:54:52] [INFO] [UI]       📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료
+[2026-03-05 14:54:52] [INFO] [UI]    🧠 [Arc 2] 전술 설계 중 (시도 1/10)...
+[2026-03-05 14:54:52] [INFO] [UI]       ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료
+[2026-03-05 14:54:52] [INFO] [UI]       🧠 [V51+V55.2] Analyst 지능 향상 + Constitutional 주입 완료
+[2026-03-05 14:54:52] [INFO] [UI]       🎯 [V60.77] FourPhase-Director 대면 1/5
+원고 파일: 0개
+
+=== [15:00:51 KST] 체크 ===
+로그 총 줄수: 873 (+298)
+[2026-03-05 14:59:18] [INFO] [UI]       ✅ [Preflight] constraint 완료
+[2026-03-05 14:59:18] [INFO] [root] ✅ [V66.1] arc_drive + preflight + constraint 병렬 완료
+[2026-03-05 14:59:18] [INFO] [UI]       🔒 [V49.4] Arc 3 제약 조건 주입됨
+[2026-03-05 14:59:18] [INFO] [UI]       ⏳ [StateExtractor] 누적 상태 추출 중...
+[2026-03-05 14:59:18] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/2 Arc 캐시 히트 (LLM 0회만 호출)
+[2026-03-05 14:59:18] [INFO] [UI]       ✅ [StateExtractor] 누적 상태 추출 완료
+[2026-03-05 14:59:18] [INFO] [UI]       📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료
+[2026-03-05 14:59:18] [INFO] [UI]    🧠 [Arc 3] 전술 설계 중 (시도 1/10)...
+[2026-03-05 14:59:18] [INFO] [UI]       📖 [LM-G] 서사 구조 컨텍스트 주입 완료
+[2026-03-05 14:59:18] [INFO] [UI]       ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료
+[2026-03-05 14:59:18] [INFO] [UI]       🧠 [V51+V55.2] Analyst 지능 향상 + Constitutional 주입 완료
+[2026-03-05 14:59:18] [WARNING] [root] 
+[2026-03-05 14:59:18] [INFO] [root] [V60.36] Arc 3 생성 시작 (attempt 1)
+[2026-03-05 14:59:18] [INFO] [root] ✅ [Constraints] 제약 블록 생성 완료 (4272자)
+[2026-03-05 14:59:18] [INFO] [UI]       🎯 [V60.77] FourPhase-Director 대면 1/5
+[2026-03-05 14:59:18] [INFO] [root]  [Phase 1] 제약 수집 중... (이전 Arc 2개)
+[2026-03-05 14:59:52] [INFO] [root]  [V67] FourPhase prev_context 확장: 2개 Arc 전술서 (7,035자)
+[2026-03-05 14:59:52] [DEBUG] [root] [SilentPass:Agent] call_start agent=ArcEnsembleGenerator model=gemini-2.5-pro prompt_len=38123
+[2026-03-05 14:59:52] [DEBUG] [root] [SilentPass:Agent] call_start agent=ArcEnsembleGenerator model=gemini-2.5-pro prompt_len=38109
+[2026-03-05 14:59:52] [DEBUG] [root] [SilentPass:Agent] call_start agent=ArcEnsembleGenerator model=gemini-2.5-pro prompt_len=38103
+생성된 원고 수: 0
+
+=== [15:01:23 KST] #3회 체크 ===
+로그: 917줄 (+342)
+[2026-03-05 14:59:18] [INFO] [UI]       🎯 [V60.77] FourPhase-Director 대면 1/5
+원고 파일: 0개
+
+=== [15:05:52 KST] 체크 ===
+로그 총 줄수: 1130 (+257)
+In conclusion, I'm issuing a "PASS_WITH_FIX" verdict. The document is strong. The pacing is excellent. The character work is consistent. Continuity with previous arcs is smooth.
+The ONLY issue is the unrealized profit percentage in Episode 9. My recommendation is a minor fix. Change the dialogue in Episode 9 so it's consistent with the ~20% figure from Arc 2. We can go inplace (correct the text). Something like "unrealized profit is well over 20%" or something along those lines.
+[2026-03-05 15:02:57] [INFO] [UI]       ?�� [TF-32-V] PASS_WITH_FIX patch #1/3 (fix: In Episode 9, modify Park Sung-ho's dialogue. Change '벌써 미실현 수익만 40%에 육박합니다.' (u)
+[2026-03-05 15:02:57] [DEBUG] [root] [SilentPass:Agent] call_start agent=ArcEnsembleGenerator model=gemini-2.5-pro prompt_len=10301
+[2026-03-05 15:03:44] [DEBUG] [root] [SilentPass:Agent] call_success agent=ArcEnsembleGenerator model=gemini-2.5-pro response_len=9280
+[2026-03-05 15:03:44] [DEBUG] [root] [TF-28:Thinking] agent=ArcEnsembleGenerator thinking_len=2885
+[2026-03-05 15:03:44] [INFO] [root] ✅ [TF-23] Arc 3 in-place 수정 완료
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [root]  [Director] PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [root]  [SC-Skip] Clear PASS (score=100 > ambiguous_upper=60)
+[2026-03-05 15:04:42] [INFO] [root] ✅ [Director/Arc] 모순·일관성 이상 없음
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [root]  [Plans] Arc txt 파일 3개 저장 완료
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:04:42] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/3 Arc 캐시 히트 (LLM 1회만 호출)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+생성된 원고 수: 0
+
+=== [15:06:24 KST] #4회 체크 ===
+로그: 1130줄 (+213)
+[2026-03-05 15:02:57] [INFO] [UI]       ?�� [TF-32-V] PASS_WITH_FIX patch #1/3 (fix: In Episode 9, modify Park Sung-ho's dialogue. Change '벌써 미실현 수익만 40%에 육박합니다.' (u)
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+원고 파일: 0개
+
+=== [15:10:53 KST] 체크 ===
+로그 총 줄수: 1130 (+0)
+In conclusion, I'm issuing a "PASS_WITH_FIX" verdict. The document is strong. The pacing is excellent. The character work is consistent. Continuity with previous arcs is smooth.
+The ONLY issue is the unrealized profit percentage in Episode 9. My recommendation is a minor fix. Change the dialogue in Episode 9 so it's consistent with the ~20% figure from Arc 2. We can go inplace (correct the text). Something like "unrealized profit is well over 20%" or something along those lines.
+[2026-03-05 15:02:57] [INFO] [UI]       ?�� [TF-32-V] PASS_WITH_FIX patch #1/3 (fix: In Episode 9, modify Park Sung-ho's dialogue. Change '벌써 미실현 수익만 40%에 육박합니다.' (u)
+[2026-03-05 15:02:57] [DEBUG] [root] [SilentPass:Agent] call_start agent=ArcEnsembleGenerator model=gemini-2.5-pro prompt_len=10301
+[2026-03-05 15:03:44] [DEBUG] [root] [SilentPass:Agent] call_success agent=ArcEnsembleGenerator model=gemini-2.5-pro response_len=9280
+[2026-03-05 15:03:44] [DEBUG] [root] [TF-28:Thinking] agent=ArcEnsembleGenerator thinking_len=2885
+[2026-03-05 15:03:44] [INFO] [root] ✅ [TF-23] Arc 3 in-place 수정 완료
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [root]  [Director] PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [root]  [SC-Skip] Clear PASS (score=100 > ambiguous_upper=60)
+[2026-03-05 15:04:42] [INFO] [root] ✅ [Director/Arc] 모순·일관성 이상 없음
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [root]  [Plans] Arc txt 파일 3개 저장 완료
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:04:42] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/3 Arc 캐시 히트 (LLM 1회만 호출)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+생성된 원고 수: 0
+
+=== [15:11:25 KST] #5회 체크 ===
+로그: 1130줄 (+0)
+[2026-03-05 15:02:57] [INFO] [UI]       ?�� [TF-32-V] PASS_WITH_FIX patch #1/3 (fix: In Episode 9, modify Park Sung-ho's dialogue. Change '벌써 미실현 수익만 40%에 육박합니다.' (u)
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+원고 파일: 0개
+
+=== [15:15:54 KST] 체크 ===
+로그 총 줄수: 1137 (+7)
+[2026-03-05 15:03:44] [DEBUG] [root] [SilentPass:Agent] call_success agent=ArcEnsembleGenerator model=gemini-2.5-pro response_len=9280
+[2026-03-05 15:03:44] [DEBUG] [root] [TF-28:Thinking] agent=ArcEnsembleGenerator thinking_len=2885
+[2026-03-05 15:03:44] [INFO] [root] ✅ [TF-23] Arc 3 in-place 수정 완료
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [root]  [Director] PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [root]  [SC-Skip] Clear PASS (score=100 > ambiguous_upper=60)
+[2026-03-05 15:04:42] [INFO] [root] ✅ [Director/Arc] 모순·일관성 이상 없음
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [root]  [Plans] Arc txt 파일 3개 저장 완료
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:04:42] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/3 Arc 캐시 히트 (LLM 1회만 호출)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [root]  [DB] 제 0화 15대 지표 트래커 박제 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+생성된 원고 수: 0
+
+=== [15:16:27 KST] #6회 체크 ===
+로그: 1137줄 (+7)
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+원고 파일: 0개
+
+=== [15:20:54 KST] 체크 ===
+로그 총 줄수: 1137 (+0)
+[2026-03-05 15:03:44] [DEBUG] [root] [SilentPass:Agent] call_success agent=ArcEnsembleGenerator model=gemini-2.5-pro response_len=9280
+[2026-03-05 15:03:44] [DEBUG] [root] [TF-28:Thinking] agent=ArcEnsembleGenerator thinking_len=2885
+[2026-03-05 15:03:44] [INFO] [root] ✅ [TF-23] Arc 3 in-place 수정 완료
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [root]  [Director] PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [root]  [SC-Skip] Clear PASS (score=100 > ambiguous_upper=60)
+[2026-03-05 15:04:42] [INFO] [root] ✅ [Director/Arc] 모순·일관성 이상 없음
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [root]  [Plans] Arc txt 파일 3개 저장 완료
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:04:42] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/3 Arc 캐시 히트 (LLM 1회만 호출)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [root]  [DB] 제 0화 15대 지표 트래커 박제 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+생성된 원고 수: 0
+
+=== [15:21:29 KST] #7회 체크 ===
+로그: 1137줄 (+0)
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+원고 파일: 0개
+
+=== [15:25:55 KST] 체크 ===
+로그 총 줄수: 1137 (+0)
+[2026-03-05 15:03:44] [DEBUG] [root] [SilentPass:Agent] call_success agent=ArcEnsembleGenerator model=gemini-2.5-pro response_len=9280
+[2026-03-05 15:03:44] [DEBUG] [root] [TF-28:Thinking] agent=ArcEnsembleGenerator thinking_len=2885
+[2026-03-05 15:03:44] [INFO] [root] ✅ [TF-23] Arc 3 in-place 수정 완료
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [root]  [Director] PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [root]  [SC-Skip] Clear PASS (score=100 > ambiguous_upper=60)
+[2026-03-05 15:04:42] [INFO] [root] ✅ [Director/Arc] 모순·일관성 이상 없음
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [root]  [Plans] Arc txt 파일 3개 저장 완료
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:04:42] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/3 Arc 캐시 히트 (LLM 1회만 호출)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [root]  [DB] 제 0화 15대 지표 트래커 박제 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+생성된 원고 수: 0
+
+=== [15:26:31 KST] #8회 체크 ===
+로그: 1137줄 (+0)
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+원고 파일: 0개
+
+=== [15:30:56 KST] 체크 ===
+로그 총 줄수: 1137 (+0)
+[2026-03-05 15:03:44] [DEBUG] [root] [SilentPass:Agent] call_success agent=ArcEnsembleGenerator model=gemini-2.5-pro response_len=9280
+[2026-03-05 15:03:44] [DEBUG] [root] [TF-28:Thinking] agent=ArcEnsembleGenerator thinking_len=2885
+[2026-03-05 15:03:44] [INFO] [root] ✅ [TF-23] Arc 3 in-place 수정 완료
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [root]  [Director] PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [root]  [SC-Skip] Clear PASS (score=100 > ambiguous_upper=60)
+[2026-03-05 15:04:42] [INFO] [root] ✅ [Director/Arc] 모순·일관성 이상 없음
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [root]  [Plans] Arc txt 파일 3개 저장 완료
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:04:42] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/3 Arc 캐시 히트 (LLM 1회만 호출)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [root]  [DB] 제 0화 15대 지표 트래커 박제 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+생성된 원고 수: 0
+
+=== [15:31:33 KST] #9회 체크 ===
+로그: 1137줄 (+0)
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+원고 파일: 0개
+
+=== [15:35:57 KST] 체크 ===
+로그 총 줄수: 1137 (+0)
+[2026-03-05 15:03:44] [DEBUG] [root] [SilentPass:Agent] call_success agent=ArcEnsembleGenerator model=gemini-2.5-pro response_len=9280
+[2026-03-05 15:03:44] [DEBUG] [root] [TF-28:Thinking] agent=ArcEnsembleGenerator thinking_len=2885
+[2026-03-05 15:03:44] [INFO] [root] ✅ [TF-23] Arc 3 in-place 수정 완료
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [root]  [Director] PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [root]  [SC-Skip] Clear PASS (score=100 > ambiguous_upper=60)
+[2026-03-05 15:04:42] [INFO] [root] ✅ [Director/Arc] 모순·일관성 이상 없음
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [root]  [Plans] Arc txt 파일 3개 저장 완료
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:04:42] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/3 Arc 캐시 히트 (LLM 1회만 호출)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [root]  [DB] 제 0화 15대 지표 트래커 박제 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+생성된 원고 수: 0
+
+=== [15:36:35 KST] #10회 체크 ===
+로그: 1137줄 (+0)
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+원고 파일: 0개
+
+=== [15:40:57 KST] 체크 ===
+로그 총 줄수: 1137 (+0)
+[2026-03-05 15:03:44] [DEBUG] [root] [SilentPass:Agent] call_success agent=ArcEnsembleGenerator model=gemini-2.5-pro response_len=9280
+[2026-03-05 15:03:44] [DEBUG] [root] [TF-28:Thinking] agent=ArcEnsembleGenerator thinking_len=2885
+[2026-03-05 15:03:44] [INFO] [root] ✅ [TF-23] Arc 3 in-place 수정 완료
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [root]  [Director] PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [root]  [SC-Skip] Clear PASS (score=100 > ambiguous_upper=60)
+[2026-03-05 15:04:42] [INFO] [root] ✅ [Director/Arc] 모순·일관성 이상 없음
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [root]  [Plans] Arc txt 파일 3개 저장 완료
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:04:42] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/3 Arc 캐시 히트 (LLM 1회만 호출)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [root]  [DB] 제 0화 15대 지표 트래커 박제 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+생성된 원고 수: 0
+
+=== [15:41:37 KST] #11회 체크 ===
+로그: 1137줄 (+0)
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+원고 파일: 0개
+
+=== [15:45:58 KST] 체크 ===
+로그 총 줄수: 1137 (+0)
+[2026-03-05 15:03:44] [DEBUG] [root] [SilentPass:Agent] call_success agent=ArcEnsembleGenerator model=gemini-2.5-pro response_len=9280
+[2026-03-05 15:03:44] [DEBUG] [root] [TF-28:Thinking] agent=ArcEnsembleGenerator thinking_len=2885
+[2026-03-05 15:03:44] [INFO] [root] ✅ [TF-23] Arc 3 in-place 수정 완료
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [root]  [Director] PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [root]  [SC-Skip] Clear PASS (score=100 > ambiguous_upper=60)
+[2026-03-05 15:04:42] [INFO] [root] ✅ [Director/Arc] 모순·일관성 이상 없음
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [root]  [Plans] Arc txt 파일 3개 저장 완료
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:04:42] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/3 Arc 캐시 히트 (LLM 1회만 호출)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [root]  [DB] 제 0화 15대 지표 트래커 박제 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+생성된 원고 수: 0
+
+=== [15:46:40 KST] #12회 체크 ===
+로그: 1137줄 (+0)
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+원고 파일: 0개
+
+=== [15:50:59 KST] 체크 ===
+로그 총 줄수: 1137 (+0)
+[2026-03-05 15:03:44] [DEBUG] [root] [SilentPass:Agent] call_success agent=ArcEnsembleGenerator model=gemini-2.5-pro response_len=9280
+[2026-03-05 15:03:44] [DEBUG] [root] [TF-28:Thinking] agent=ArcEnsembleGenerator thinking_len=2885
+[2026-03-05 15:03:44] [INFO] [root] ✅ [TF-23] Arc 3 in-place 수정 완료
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [root]  [Director] PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [root]  [SC-Skip] Clear PASS (score=100 > ambiguous_upper=60)
+[2026-03-05 15:04:42] [INFO] [root] ✅ [Director/Arc] 모순·일관성 이상 없음
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [root]  [Plans] Arc txt 파일 3개 저장 완료
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:04:42] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/3 Arc 캐시 히트 (LLM 1회만 호출)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [root]  [DB] 제 0화 15대 지표 트래커 박제 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+생성된 원고 수: 0
+
+=== [15:51:42 KST] #13회 체크 ===
+로그: 1137줄 (+0)
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+원고 파일: 0개
+
+=== [15:56:00 KST] 체크 ===
+로그 총 줄수: 1137 (+0)
+[2026-03-05 15:03:44] [DEBUG] [root] [SilentPass:Agent] call_success agent=ArcEnsembleGenerator model=gemini-2.5-pro response_len=9280
+[2026-03-05 15:03:44] [DEBUG] [root] [TF-28:Thinking] agent=ArcEnsembleGenerator thinking_len=2885
+[2026-03-05 15:03:44] [INFO] [root] ✅ [TF-23] Arc 3 in-place 수정 완료
+[2026-03-05 15:03:44] [INFO] [UI]       ?�� [TF-38] Director ?�심??#1 ?�출 �?..
+[2026-03-05 15:04:42] [INFO] [root]  [Director] PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [root]  [SC-Skip] Clear PASS (score=100 > ambiguous_upper=60)
+[2026-03-05 15:04:42] [INFO] [root] ✅ [Director/Arc] 모순·일관성 이상 없음
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [root]  [Plans] Arc txt 파일 3개 저장 완료
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:04:42] [INFO] [root]  [V62.5] StateExtractor 캐시: 2/3 Arc 캐시 히트 (LLM 1회만 호출)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [root]  [DB] 제 0화 15대 지표 트래커 박제 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+생성된 원고 수: 0
+
+=== [15:56:44 KST] #14회 체크 ===
+로그: 1137줄 (+0)
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [TF-32-V] ?�심??#1: PASS (score=100)
+[2026-03-05 15:04:42] [INFO] [UI]       ??[TF-32-V] Arc ?�정 ?�료 ??PASS ?�정
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [Equipment Sync] Arc 3 ?�작 ?��??????�전 Arc 종료 ?��??�으�??�기??(5�??�이??
+[2026-03-05 15:04:42] [INFO] [UI]       ?�� [V49.4] ConstraintDB ?�데?�트 ?�료 (�?3�?Arc)
+[2026-03-05 15:05:13] [INFO] [UI]       ? [V60.25] Arc 3 finalized - failure memory cleared
+[2026-03-05 15:05:13] [INFO] [UI] ✅ 배치(1~3) 욕망 엔진 이식 및 용접 완료.
+[2026-03-05 15:05:13] [INFO] [UI] ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+[2026-03-05 15:14:15] [INFO] [UI] [System] VecMemory 연결 해제 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 커밋 완료
+[2026-03-05 15:14:15] [INFO] [UI] [System] DB 연결 안전하게 해제됨
+원고 파일: 0개
+[모니터 종료] 16:00 KST 도달
+
+=== [16:01:46 KST] 모니터 종료 (16:00 KST 도달) ===
+[완료] 16:01:46 KST

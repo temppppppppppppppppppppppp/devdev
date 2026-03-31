@@ -1,0 +1,89 @@
+{
+  "tag": "stage2_complete",
+  "timestamp": "2026-03-30 08:31:54",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 22,
+  "counts": {
+    "v60_10_state_extracted": 6,
+    "v60_25_auto_correct": 8,
+    "field_repair": 3,
+    "db_commit": 5
+  },
+  "latest_event_type": "v60_10_state_extracted",
+  "recent_events": [
+    {
+      "type": "v60_25_auto_correct",
+      "message": "arc auto-corrected"
+    },
+    {
+      "type": "field_repair",
+      "message": "hybrid_composition default injected"
+    },
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "v60_10_state_extracted",
+      "message": "StateExtractor generated context"
+    },
+    {
+      "type": "v60_25_auto_correct",
+      "message": "arc auto-corrected"
+    },
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "v60_10_state_extracted",
+      "message": "StateExtractor generated context"
+    },
+    {
+      "type": "v60_25_auto_correct",
+      "message": "arc auto-corrected"
+    },
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "v60_10_state_extracted",
+      "message": "StateExtractor generated context"
+    }
+  ],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth."
+  },
+  "proof_digest": {
+    "available": false,
+    "status": "unavailable",
+    "artifacts": {
+      "db_available": true,
+      "session_decisions_exists": true,
+      "ui_events_jsonl_exists": true,
+      "pass_rate_monitor_exists": true,
+      "episode_production_exists": false,
+      "runtime_audit_jsonl_exists": true,
+      "ui_events_db_available": true,
+      "ui_events_count": 1136,
+      "ui_event_coverage_status": "ok"
+    },
+    "stages": {},
+    "session_lineage": {
+      "plain_log_token": "20260330_073846",
+      "structured_session_id": "20260330_073847",
+      "status": "split_mapped"
+    }
+  }
+}
