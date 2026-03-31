@@ -1,0 +1,14 @@
+{
+  "_schema_version": "template",
+  "MasterBible": {
+    "ProjectData": {},
+    "CoreIdentity": {},
+    "plot_roadmap": [],
+    "FinanceHUD": {}
+  },
+  "_build_meta": {
+    "phase0_hash": "",
+    "tr_hash": ""
+  }
+}
+

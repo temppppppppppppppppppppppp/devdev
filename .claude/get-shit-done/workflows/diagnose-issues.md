@@ -81,7 +81,7 @@ This runs in parallel - all gaps investigated simultaneously.
 **Load agent skills:**
 
 ```bash
-AGENT_SKILLS_DEBUGGER=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-debugger 2>/dev/null)
+AGENT_SKILLS_DEBUGGER=$(node "C:/Users/wjjo/Desktop/글도비/.claude/get-shit-done/bin/gsd-tools.cjs" agent-skills gsd-debugger 2>/dev/null)
 ```
 
 **Spawn debug agents in parallel:**
@@ -170,7 +170,7 @@ Update status in frontmatter to "diagnosed".
 
 Commit the updated UAT.md:
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs({phase_num}): add root causes from diagnosis" --files ".planning/phases/XX-name/{phase_num}-UAT.md"
+node "C:/Users/wjjo/Desktop/글도비/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs({phase_num}): add root causes from diagnosis" --files ".planning/phases/XX-name/{phase_num}-UAT.md"
 ```
 </step>
 

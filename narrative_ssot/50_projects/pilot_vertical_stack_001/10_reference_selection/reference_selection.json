@@ -1,0 +1,38 @@
+{
+  "work_id": "pilot_vertical_stack_001",
+  "selection_date": "2026-03-31",
+  "selected_cards": [
+    {
+      "card_slug": "yeonbong_1jo_sinipsawon",
+      "track": "A",
+      "handoff_label": "READY",
+      "selection_reason": "Default pilot opening card for modern business-power. Useful for overperforming rookie entry, fast recognition, and office-to-corporate opening design.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    },
+    {
+      "card_slug": "sinheung_jaebeol",
+      "track": "A",
+      "handoff_label": "sinheung_jaebeol_A",
+      "selection_reason": "Default pilot authority-display card. Useful for result-first opening, power demonstration, and business-model reveal without requiring humiliation-first structure.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    },
+    {
+      "card_slug": "yeonbong_1jo_sinipsawon",
+      "track": "B",
+      "handoff_label": "READY",
+      "selection_reason": "Default pilot growth card for PE meritocracy, global validation chain, and industry-level scaling after the opening win.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    },
+    {
+      "card_slug": "jusigui_sin",
+      "track": "B",
+      "handoff_label": "READY",
+      "selection_reason": "Default pilot institutional-capture card. Useful for information-to-reputation-to-institution route and long-horizon tycoon path design.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    }
+  ]
+}
