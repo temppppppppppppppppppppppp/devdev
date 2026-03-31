@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "narrative_ssot/release/release_gate.schema.json",
+  "title": "release_gate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "work_id",
+    "phase0_pass",
+    "tr_pass",
+    "bi_pass",
+    "cross_stage_sync_pass",
+    "publish_allowed",
+    "blocking_reasons"
+  ],
+  "properties": {
+    "work_id": {
+      "type": "string"
+    },
+    "phase0_pass": {
+      "type": "boolean"
+    },
+    "tr_pass": {
+      "type": "boolean"
+    },
+    "bi_pass": {
+      "type": "boolean"
+    },
+    "cross_stage_sync_pass": {
+      "type": "boolean"
+    },
+    "publish_allowed": {
+      "type": "boolean"
+    },
+    "blocking_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
+

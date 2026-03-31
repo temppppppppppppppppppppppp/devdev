@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "narrative_ssot/preprocess/source_manifest.schema.json",
+  "title": "source_manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "work_identity",
+    "canonical_sources",
+    "reference_only_sources",
+    "core_materials",
+    "npc_pool",
+    "crisis_pool",
+    "hard_constraints",
+    "do_not_fake",
+    "manual_audit_note"
+  ],
+  "properties": {
+    "work_identity": {
+      "type": "object"
+    },
+    "canonical_sources": {
+      "type": "array"
+    },
+    "reference_only_sources": {
+      "type": "array"
+    },
+    "core_materials": {
+      "type": "array"
+    },
+    "npc_pool": {
+      "type": "array"
+    },
+    "crisis_pool": {
+      "type": "array"
+    },
+    "hard_constraints": {
+      "type": "array"
+    },
+    "do_not_fake": {
+      "type": "array"
+    },
+    "manual_audit_note": {
+      "type": "string"
+    }
+  }
+}
+
