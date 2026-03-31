@@ -1,0 +1,8 @@
+{"timestamp": "2026-03-05 13:17:43", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_end_state 위치 동기화: '서울 강남, SW인베스트먼트 오피스' → '서울 강남, SW인베스트먼트 명의로 계약한 15평짜리 텅 빈 오피스. 창밖으로 보이는 도시의 야경.'"]}}
+{"timestamp": "2026-03-05 13:18:24", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-05 13:18:54", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 4}}
+{"timestamp": "2026-03-05 13:21:58", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 부상 수정: '없음' → '정상'", "arc_end_state 위치 동기화: '서울 강남, SW인베스트먼트 오피스. 책상 두 개가 놓여 있고, 한시우와 이진아가 함께 시장을 분석하고 있다.' → '한미증권 VIP 라운지 출입구. 한시우는 막 문을 열고 나가고 있으며, 그의 등 뒤로 박성호 PB가 굳은 채 서서 통화가 끊긴 휴대폰 화면을 멍하니 바라보고 있다.'"]}}
+{"timestamp": "2026-03-05 13:22:50", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-05 13:23:22", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 6}}
+{"timestamp": "2026-03-05 13:26:52", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["arc_end_state 위치 동기화: '서울 강남, SW인베스트먼트 오피스' → '서울 강남구 역삼동, 고층 오피스텔 35층의 12평짜리 원룸 오피스. 책상 위에는 듀얼 모니터 3대와 블룸버그 터미널이 놓여 있고, 창밖으로는 서울의 야경이 펼쳐져 있다.'"]}}
+{"timestamp": "2026-03-05 13:29:08", "type": "arc_design_failed", "message": "max retries exhausted", "data": {"arc_no": 3, "batch_start": 0, "batch_end": 3}}

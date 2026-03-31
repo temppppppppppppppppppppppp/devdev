@@ -1,0 +1,15 @@
+{"type": "validation", "timestamp": "2026-03-05T17:46:07.709704", "ep_num": 1, "stage": 2, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T17:52:35.705924", "ep_num": 2, "stage": 2, "decision": "PASS", "score": 90, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T17:57:46.755006", "ep_num": 3, "stage": 2, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:03:21.864679", "ep_num": 1, "stage": 3, "decision": "PASS", "score": 90, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:04:44.978472", "ep_num": 2, "stage": 3, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:06:14.367350", "ep_num": 3, "stage": 3, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:07:41.318078", "ep_num": 4, "stage": 3, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:09:42.670313", "ep_num": 5, "stage": 3, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:11:09.712848", "ep_num": 6, "stage": 3, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:12:35.578110", "ep_num": 7, "stage": 3, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:14:05.249325", "ep_num": 8, "stage": 3, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:16:14.939065", "ep_num": 9, "stage": 3, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:18:03.641729", "ep_num": 10, "stage": 3, "decision": "PASS", "score": 98, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:19:28.272097", "ep_num": 11, "stage": 3, "decision": "PASS", "score": 100, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-03-05T18:20:57.362548", "ep_num": 12, "stage": 3, "decision": "PASS", "score": 99, "violations": [], "warnings": 0}
