@@ -1290,6 +1290,13 @@ class Stage4InterviewRound:
             "fix_scope": previous_attempt.get("fix_scope", ""),
             # [DCM-T3] Preserve authoritative Director scope separate from derived retry scope
             "authoritative_fix_scope": previous_attempt.get("authoritative_fix_scope", ""),
+            "attempt_key": previous_attempt.get("attempt_key", ""),
+            "candidate_key": previous_attempt.get("candidate_key", ""),
+            "content_hash": previous_attempt.get("content_hash", ""),
+            "artifact_path": previous_attempt.get("artifact_path", ""),
+            "selection_candidate_key": previous_attempt.get("selection_candidate_key", ""),
+            "selection_content_hash": previous_attempt.get("selection_content_hash", ""),
+            "selection_artifact_path": previous_attempt.get("selection_artifact_path", ""),
             "fix_scope_reasoning": str(previous_attempt.get("fix_scope_reasoning", "") or ""),
             "open_review": str(previous_attempt.get("open_review", "") or ""),
             "reject_bucket": previous_attempt.get("reject_bucket", ""),
@@ -1298,6 +1305,7 @@ class Stage4InterviewRound:
             "rejection_reason": str(previous_attempt.get("rejection_reason", "") or ""),
             "action_items": list(previous_attempt.get("action_items", []) or []),
             "contradiction_types": list(previous_attempt.get("contradiction_types", []) or []),
+            "retry_budget_axes": dict(previous_attempt.get("retry_budget_axes", {}) or {}),
         }
         contradiction_details = Stage4InterviewRound._compact_contradiction_detail_lines(
             previous_attempt.get("contradiction_details"),
@@ -2051,21 +2059,88 @@ class Stage4InterviewRound:
             # [Lane2-G2] PASS_WITH_FIX with blank/invalid fix_scope cannot run the repair loop.
             # Gate it to REJECT so the loop is not entered with an unresolved scope contract.
             if final_verdict == "PASS_WITH_FIX":
+                _is_advisory_escalation = bool(director_result.get("strong_advisory_escalation"))
                 _g2_basis = (
                     "strong_advisory_escalation_no_scope"
-                    if director_result.get("strong_advisory_escalation")
+                    if _is_advisory_escalation
                     else "fix_scope_contract_violation"
                 )
                 final_verdict = "REJECT"
                 director_result["final_verdict"] = "REJECT"
                 director_result["verdict"] = "REJECT"
                 director_result["gate_basis"] = _g2_basis
+                # [Lane2-G2a] Advisory escalation REJECT must carry actionable fix_scope
+                # so downstream reject guidance produces meaningful retry direction
+                # instead of a blank-scope loop (C-1 seam fix).
+                if _is_advisory_escalation:
+                    director_result["fix_scope"] = "partial"
+                    director_result["repair_scope"] = "partial"
+                    _advisory_classes = sorted(
+                        director_result.get("strong_advisory_escalation", {}).get("triggered_by", [])
+                    )
+                    _advisory_reason = (
+                        f"[Lane2-G2a] Advisory escalation (classes={','.join(_advisory_classes)}) "
+                        "requires non-local rewrite; fix_scope widened to partial"
+                    )
+                    _existing_reasoning = str(director_result.get("fix_scope_reasoning", "") or "").strip()
+                    director_result["fix_scope_reasoning"] = (
+                        f"{_existing_reasoning}\n{_advisory_reason}".strip()
+                        if _existing_reasoning
+                        else _advisory_reason
+                    )
                 logging.warning(
                     "[Stage4Gate] PASS_WITH_FIX → REJECT: repair blocked, fix_scope invalid"
                     " (gate_basis=%s type=%s scope=%r)",
                     _g2_basis,
                     _vtype,
                     authoritative_fix_scope,
+                )
+
+        # [Lane2-G2b] Strong advisory escalation may only stay PASS_WITH_FIX when the
+        # result is truly local-fixable: fix_scope=inplace and fix_pack contract ready.
+        if final_verdict == "PASS_WITH_FIX" and isinstance(director_result.get("strong_advisory_escalation"), dict):
+            _runtime_fix_scope = str(director_result.get("fix_scope") or authoritative_fix_scope or "").strip().lower()
+            _fix_pack_contract = self._evaluate_fix_pack_contract(director_result.get("fix_pack"))
+            _local_contract_ready = _runtime_fix_scope == "inplace" and bool(_fix_pack_contract.get("ready"))
+            if not _local_contract_ready:
+                final_verdict = "REJECT"
+                director_result["final_verdict"] = "REJECT"
+                director_result["verdict"] = "REJECT"
+                director_result["gate_basis"] = "strong_advisory_escalation_non_local_fix"
+                _widened_scope = _runtime_fix_scope if _runtime_fix_scope in {"partial", "full"} else "partial"
+                director_result["fix_scope"] = _widened_scope
+                director_result["repair_scope"] = _widened_scope
+                _contract_reason = (
+                    str(_fix_pack_contract.get("reason", "") or "non_local_fix_scope")
+                    if _runtime_fix_scope == "inplace"
+                    else "non_local_fix_scope"
+                )
+                _contract_message = self._pass_with_fix_contract_message(_contract_reason)
+                _reason_line = (
+                    "[Lane2-G2b] Strong advisory escalation requires a ready local fix contract; "
+                    f"routed to REJECT ({_contract_message}, scope={_widened_scope})"
+                )
+                _existing_reasoning = str(director_result.get("fix_scope_reasoning", "") or "").strip()
+                director_result["fix_scope_reasoning"] = (
+                    f"{_existing_reasoning}\n{_reason_line}".strip()
+                    if _existing_reasoning
+                    else _reason_line
+                )
+                director_result.setdefault("strong_advisory_escalation", {}).update(
+                    {
+                        "requires_local_fix_contract": True,
+                        "local_fix_contract": {
+                            "ready": bool(_fix_pack_contract.get("ready")),
+                            "reason": _contract_reason,
+                            "fix_scope": _runtime_fix_scope,
+                        },
+                    }
+                )
+                logging.warning(
+                    "[Stage4Gate] strong advisory escalation forced REJECT: local fix contract invalid"
+                    " (scope=%s reason=%s)",
+                    _runtime_fix_scope or "<blank>",
+                    _contract_reason,
                 )
 
         return director_result
@@ -2096,6 +2171,9 @@ class Stage4InterviewRound:
         normalized = self._normalize_director_gate_semantics(director_result)
         if not normalized:
             return {}
+        _authoritative_scope = str(normalized.get("authoritative_fix_scope", "") or "").strip().lower()
+        _runtime_scope = str(normalized.get("fix_scope", "") or "").strip().lower()
+        _verdict_layers = self._build_verdict_layers_payload(normalized)
         payload: dict[str, object] = {
             "director_verdict": str(normalized.get("director_verdict", "") or ""),
             "final_verdict": str(normalized.get("final_verdict", "") or ""),
@@ -2105,16 +2183,15 @@ class Stage4InterviewRound:
             "scope_origin": {
                 "fix_scope": (
                     "runtime_widened"
-                    if str(normalized.get("authoritative_fix_scope", "") or "").strip()
-                    and str(normalized.get("fix_scope", "") or "").strip()
-                    and str(normalized.get("authoritative_fix_scope", "") or "").strip().lower()
-                    != str(normalized.get("fix_scope", "") or "").strip().lower()
+                    if _runtime_scope and _runtime_scope != _authoritative_scope
                     else "director_authoritative"
                 ),
                 "authoritative_fix_scope": "director_authoritative",
                 "repair_scope": "runtime_lane",
             },
         }
+        if _verdict_layers:
+            payload["verdict_layers"] = _verdict_layers
         # [DCM-T3] Surface authoritative fix_scope violation in gate semantics evidence
         violation = normalized.get("authoritative_fix_scope_violation")
         if isinstance(violation, dict):
@@ -2123,6 +2200,27 @@ class Stage4InterviewRound:
         if isinstance(escalation, dict):
             payload["strong_advisory_escalation"] = escalation
         return payload
+
+    @staticmethod
+    def _build_verdict_layers_payload(normalized: dict | None) -> dict[str, object]:
+        if not isinstance(normalized, dict) or not normalized:
+            return {}
+
+        director_verdict = str(normalized.get("director_verdict", "") or "").strip().upper()
+        final_verdict = str(normalized.get("final_verdict", "") or "").strip().upper()
+        director_quality_passed = director_verdict in {"PASS", "PASS_WITH_FIX"}
+        downstream_override_applied = bool(
+            director_verdict and final_verdict and director_verdict != final_verdict
+        )
+        primary_failure_layer = "none"
+        if final_verdict == "REJECT":
+            primary_failure_layer = "downstream_gate" if director_quality_passed else "director_quality"
+
+        return {
+            "director_quality_passed": director_quality_passed,
+            "downstream_override_applied": downstream_override_applied,
+            "primary_failure_layer": primary_failure_layer,
+        }
 
     def _setup_writing_directive(
         self,
@@ -2399,6 +2497,7 @@ class Stage4InterviewRound:
             style_guide=style_guide,
             blueprint=blueprint,
             common_writer_kwargs=writer_kwargs,
+            arc_num=round_ctx.arc_data.get("arc_no", 0),
         )
 
         try:
@@ -3999,6 +4098,10 @@ class Stage4InterviewRound:
                 gate_basis="post_select_conflict",
                 repair_scope="full",
             )
+            # [C-2 seam fix] Post-select conflict must also stamp fix_scope="full"
+            # on director_result so downstream _build_reject_guidance_payload reads
+            # the correct scope instead of the pre-downgrade value.
+            director_result["fix_scope"] = "full"
             # [TF-49/TF-3] A-3 다운그레이드 시 error_category를 구체적으로 설정
             # → V75-D/V75-B 에스컬레이션 체인 트리거 (Blueprint 자동 수정)
             _has_continuity = any("Continuity" in c for c in _post_select_conflicts)
@@ -4576,6 +4679,7 @@ class Stage4InterviewRound:
         style_guide,
         blueprint,
         common_writer_kwargs: dict,
+        arc_num: int = 0,
     ) -> tuple[list[dict], bool, bool, int, str | None]:
         return self.retry_runtime.generate_candidates(
             round_num=round_num,
@@ -4586,6 +4690,7 @@ class Stage4InterviewRound:
             style_guide=style_guide,
             blueprint=blueprint,
             common_writer_kwargs=common_writer_kwargs,
+            arc_num=arc_num,
         )
 
     def _resolve_npc_profiles(self, arc_data) -> dict:
@@ -5019,52 +5124,111 @@ class Stage4InterviewRound:
             logging.warning("[Phase4-Gate] TruthGate advisory \uc2e4\ud328 (\ube44\uce58\uba85): %s", str(_tg_err)[:80])
         return []
 
+    @staticmethod
+    def _extract_npc_drift_attr_value(raw) -> str:
+        if isinstance(raw, dict):
+            raw = raw.get("value", raw)
+        return str(raw or "").strip()
+
+    def _build_npc_drift_snapshots(self, base_snapshots: dict | None) -> dict:
+        """Build a read-only advisory view with fresher runtime role signals."""
+        merged = copy.deepcopy(base_snapshots or {})
+        _npc_reg = getattr(getattr(self.ctx, "state_tracker", None), "npc_registry", {}) or {}
+        if not isinstance(_npc_reg, dict):
+            return merged
+
+        for _name, _npc_info in _npc_reg.items():
+            if not _name or not isinstance(_npc_info, dict):
+                continue
+            _snap = merged.setdefault(
+                _name,
+                {
+                    "role": "",
+                    "role_at_intro": "",
+                    "authoritative_role": "",
+                    "authoritative_role_source": "",
+                    "first_seen_ep": 0,
+                    "known_attrs": {},
+                },
+            )
+            _known_attrs = _snap.setdefault("known_attrs", {})
+            _existing_position = self._extract_npc_drift_attr_value(_known_attrs.get("position"))
+            _registry_position = str(_npc_info.get("position", "") or "").strip()
+            _registry_role = str(
+                _npc_info.get("role")
+                or _npc_info.get("public_role")
+                or _npc_info.get("job")
+                or ""
+            ).strip()
+
+            if _registry_position and not _existing_position:
+                _known_attrs["position"] = {"value": _registry_position, "prev": "", "changed_ep": 0}
+            if _registry_role and not str(_snap.get("role", "") or "").strip():
+                _snap["role"] = _registry_role
+
+            _existing_authoritative_role = str(_snap.get("authoritative_role", "") or "").strip()
+            _existing_authority_source = str(_snap.get("authoritative_role_source", "") or "").strip()
+            if _registry_position and (
+                not _existing_authoritative_role or _existing_authority_source in {"", "role", "role_at_intro"}
+            ):
+                _snap["authoritative_role"] = _registry_position
+                _snap["authoritative_role_source"] = "state_tracker.position"
+            elif _registry_role and (
+                not _existing_authoritative_role or _existing_authority_source in {"", "role_at_intro"}
+            ):
+                _snap["authoritative_role"] = _registry_role
+                _snap["authoritative_role_source"] = "state_tracker.role"
+
+        return merged
+
     def _advisory_npc_drift(self, candidates: list[dict], validation_results: list[dict], next_ep: int) -> list[str]:
         """[TF-50] NpcDriftAdvisor — 원고 내 NPC 속성 표류 advisory."""
         try:
             from modules.core.npc_drift_advisor import NpcDriftAdvisor as _NpcDriftAdvisor
 
             _ws = getattr(self.ctx, "world_state", None)
+            _base_npc_snaps = {}
             if _ws and hasattr(_ws, "get_npc_role_snapshot"):
-                _npc_snaps = _ws.get_npc_role_snapshot() or {}
-                if _npc_snaps:
-                    _drift_advisor = _NpcDriftAdvisor(llm_ask=self._truth_gate_llm_ask)
-                    _drift_all = []
-                    for _ci, _cand in enumerate(candidates):
-                        _ms = _cand.get("manuscript", "")
-                        if not _ms:
-                            continue
-                        _drifts = _drift_advisor.check(
-                            manuscript=_ms,
-                            npc_snapshots=_npc_snaps,
-                            ep_num=next_ep,
-                            max_npcs=8,
+                _base_npc_snaps = _ws.get_npc_role_snapshot() or {}
+            _npc_snaps = self._build_npc_drift_snapshots(_base_npc_snaps)
+            if _npc_snaps:
+                _drift_advisor = _NpcDriftAdvisor(llm_ask=self._truth_gate_llm_ask)
+                _drift_all = []
+                for _ci, _cand in enumerate(candidates):
+                    _ms = _cand.get("manuscript", "")
+                    if not _ms:
+                        continue
+                    _drifts = _drift_advisor.check(
+                        manuscript=_ms,
+                        npc_snapshots=_npc_snaps,
+                        ep_num=next_ep,
+                        max_npcs=8,
+                    )
+                    if _drifts:
+                        for _d in _drifts:
+                            _d["_cand_idx"] = _ci
+                        _drift_all.extend(_drifts)
+                        if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
+                            validation_results[_ci].setdefault("npc_drift_warnings", _drifts)
+                if _drift_all:
+                    _drift_lines = [
+                        "[NpcDriftAdvisor \u2014 NPC \uc18d\uc131 \ud45c\ub958 \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
+                    ]
+                    for _d in _drift_all:
+                        _cl = (
+                            ["A", "B", "C"][_d.get("_cand_idx", 0)]
+                            if _d.get("_cand_idx", 0) < 3
+                            else str(_d.get("_cand_idx", 0) + 1)
                         )
-                        if _drifts:
-                            for _d in _drifts:
-                                _d["_cand_idx"] = _ci
-                            _drift_all.extend(_drifts)
-                            if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
-                                validation_results[_ci].setdefault("npc_drift_warnings", _drifts)
-                    if _drift_all:
-                        _drift_lines = [
-                            "[NpcDriftAdvisor \u2014 NPC \uc18d\uc131 \ud45c\ub958 \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
-                        ]
-                        for _d in _drift_all:
-                            _cl = (
-                                ["A", "B", "C"][_d.get("_cand_idx", 0)]
-                                if _d.get("_cand_idx", 0) < 3
-                                else str(_d.get("_cand_idx", 0) + 1)
-                            )
-                            _drift_lines.append(
-                                f"- [\ud6c4\ubcf4 {_cl}][MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
-                                f"\uae30\ub300='{_d.get('expected', '')}' \u2192 \uc6d0\uace0='{_d.get('found_in_ms', '')}'"
-                            )
-                        logging.info(
-                            "[NpcDriftAdvisor\u2192Director] %d\uac74 \ud45c\ub958 \uac10\uc9c0 \uc804\ub2ec",
-                            len(_drift_all),
+                        _drift_lines.append(
+                            f"- [\ud6c4\ubcf4 {_cl}][MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
+                            f"\uae30\ub300='{_d.get('expected', '')}' \u2192 \uc6d0\uace0='{_d.get('found_in_ms', '')}'"
                         )
-                        return ["\n".join(_drift_lines)]
+                    logging.info(
+                        "[NpcDriftAdvisor\u2192Director] %d\uac74 \ud45c\ub958 \uac10\uc9c0 \uc804\ub2ec",
+                        len(_drift_all),
+                    )
+                    return ["\n".join(_drift_lines)]
         except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _drift_err:
             logging.warning("[LM-B] NpcDriftAdvisor \uc2e4\ud328 (\ube44\uce58\uba85): %s", str(_drift_err)[:80])
         return []
@@ -5846,6 +6010,13 @@ class Stage4InterviewRound:
             _strong_advisory = _gate_semantics.get("strong_advisory_escalation")
             if isinstance(_strong_advisory, dict):
                 entry["strong_advisory_escalation"] = _strong_advisory
+            _verdict_layers = _gate_semantics.get("verdict_layers")
+            if isinstance(_verdict_layers, dict):
+                entry["verdict_layers"] = _verdict_layers
+                entry["downstream_override_applied"] = bool(
+                    _verdict_layers.get("downstream_override_applied", False)
+                )
+                entry["primary_failure_layer"] = str(_verdict_layers.get("primary_failure_layer", "") or "")
             # [SSS-T1] Scope origin metadata — distinguishes semantic layers in operator evidence
             entry["scope_origin"] = {
                 "authoritative_fix_scope": "director_authoritative",
@@ -5948,6 +6119,7 @@ class Stage4InterviewRound:
         artifact_meta: dict[str, str],
     ) -> dict:
         _gate_semantics, _fix_pack, _retry_budget_axes = self._extract_stage4_advisory_contract_payloads(advisory_flags)
+        _verdict_layers = _gate_semantics.get("verdict_layers") if isinstance(_gate_semantics.get("verdict_layers"), dict) else {}
         payload = {
             "stage": 4,
             "episode": episode,
@@ -5976,6 +6148,8 @@ class Stage4InterviewRound:
             "candidate_key": artifact_meta["candidate_key"],
             "content_hash": artifact_meta["content_hash"],
             "artifact_path": artifact_meta["artifact_path"],
+            "downstream_override_applied": bool(_verdict_layers.get("downstream_override_applied", False)),
+            "primary_failure_layer": str(_verdict_layers.get("primary_failure_layer", "") or ""),
         }
         _strong_advisory = _gate_semantics.get("strong_advisory_escalation")
         if isinstance(_strong_advisory, dict):
@@ -6014,6 +6188,16 @@ class Stage4InterviewRound:
     ) -> dict:
         _adv = self._resolve_stage4_db_attempt_advisory_flags(advisory_flags)
         _model = self._resolve_stage4_db_attempt_model(model)
+        _gate_semantics = (
+            dict(_adv.get("gate_semantics") or {})
+            if isinstance(_adv, dict) and isinstance(_adv.get("gate_semantics"), dict)
+            else {}
+        )
+        _verdict_layers = (
+            dict(_gate_semantics.get("verdict_layers") or {})
+            if isinstance(_gate_semantics.get("verdict_layers"), dict)
+            else {}
+        )
         return {
             "stage": 4,
             "verdict": verdict or ("PASS" if success else "REJECT"),
@@ -6044,6 +6228,9 @@ class Stage4InterviewRound:
             "is_patch": is_patch,
             "is_patch_fallback": is_patch_fallback,
             "patch_strategy": patch_strategy or None,
+            "director_quality_passed": bool(_verdict_layers.get("director_quality_passed", False)),
+            "downstream_override_applied": bool(_verdict_layers.get("downstream_override_applied", False)),
+            "primary_failure_layer": str(_verdict_layers.get("primary_failure_layer", "") or ""),
         }
 
     def _build_stage4_attempt_prelude(

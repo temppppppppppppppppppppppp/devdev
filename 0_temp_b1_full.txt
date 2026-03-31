@@ -1,0 +1,87 @@
+{
+  "block_id": "Block 1",
+  "title": "묻힌 보고서",
+  "content": {
+    "context": "2025년 3월 중순. 한일유통 본사 9층 대회의실, 분기 실적 보고 회의. 한시혁은 2주간 야근해서 만든 SCM 비용 절감 보고서를 들고 앉아 있다. 물류센터 3곳의 운영 비용 데이터를 직접 뽑아서, 센터별 물동량 대비 인건비와 배송 단가의 비효율 구간을 정리한 자료다. 3년차다. 이 자리에서 한 번도 이름이 불린 적이 없다. 그의 이름이 불릴 차례가 오기도 전에 MD사업부장 장현태가 마이크를 잡는다. '경영기획이 현장을 알아?' 회의실이 웃음으로 채워지고, 팀장 오세진은 시혁 쪽을 보지도 않는다. 회의가 끝나자 오세진이 복도에서 말한다. '네 자료는 참고만 했다고 해.' 3년간 시혁의 모든 공은 이런 식으로 증발했다. 오늘도.",
+    "event_villain": "장현태는 시혁의 보고서 내용이 아니라 그 보고서가 통과되었을 때 MD사업부의 숨겨진 비용 구조가 비교 대상에 오르는 것을 차단한다. 오세진은 본능적으로 시혁이 전무에게 직접 보고하는 상황 자체를 막는다. 두 사람 모두 시혁에게 악의가 있다기보다, 자기 이득과 위치를 지키는 합리적 행동이다.",
+    "solution": "이번 블록에서 시혁은 아직 감각이 발현되지 않았다. 아무것도 하지 못한다. 보고서가 묻히고, 팀장이 공을 가져가고, 시혁은 자리로 돌아와 화면을 끈다. 이 블록은 3년간 반복된 패턴의 마지막 반복이다.",
+    "reward": "없다. 이 블록은 opening humiliation이다. 보상은 다음 블록부터 시작된다. 단, 독자는 이 굴욕이 얼마 뒤 뒤집힐 것을 예감하고 기다린다."
+  },
+  "stakes": "시혁이 이 패턴에서 벗어나지 못하면 3년차 말단으로 남은 직장 생활이 그대로 굳는다. 동시에 장현태가 막은 SCM 보고서 안에는 MD사업부의 비용 구조를 건드릴 수 있는 숫자가 들어 있다.",
+  "power_shift": {
+    "protagonist": "Lv1 자료작성권. 남이 시킨 자료를 만드는 사람. 이름이 한 번도 불린 적 없는 투명인간.",
+    "antagonist": "장현태는 사업부 방어에 성공. 오세진은 팀 내 위계를 유지."
+  },
+  "relationship_delta": [
+    {
+      "target": "오세진(팀장)",
+      "before": "조용히 일 시키면 되는 팀 막내",
+      "after": "이번에도 공을 가져왔으니 당분간 쓸모 있는 팀 막내"
+    },
+    {
+      "target": "장현태(MD사업부장)",
+      "before": "이름도 모르는 경영기획팀 사원",
+      "after": "성가신 보고서를 쓴 이름 모를 사원 — 하지만 이미 잊어버림"
+    }
+  ],
+  "foreshadow": [
+    "시혁의 SCM 보고서에 담긴 물류 비용 데이터는 Block 5-7에서 물류센터 통합안의 허점을 읽는 데 쓰인다.",
+    "장현태가 '현장을 알아?'로 자른 이유는 보고서 내용이 아니라 MD사업부 숨긴 비용이 비교 대상에 오르는 것을 막기 위해서다. 이 동기는 Block 6에서 밝혀진다.",
+    "오세진이 공을 가져가는 패턴은 Block 4에서 본격 견제로 전환되고 Block 37-40에서 자멸로 회수된다."
+  ],
+  "callback": [],
+  "emotional_beat": {
+    "type": "humiliation",
+    "intensity": 8
+  },
+  "tension_level": 6,
+  "pov_character": "한시혁",
+  "location": {
+    "place": "한일유통 본사 9층 대회의실 / 경영기획팀 사무실",
+    "type": "본사"
+  },
+  "time_span": {
+    "duration": "1일",
+    "in_story_time": "2025년 3월 중순"
+  },
+  "genre_ext": {
+    "type": "investment",
+    "capital_before": "Lv1 자료작성권",
+    "capital_after": "Lv1 자료작성권",
+    "capital_delta": "변동 없음",
+    "profit_loss": "변동 없음",
+    "method": "해당 없음 — 시혁이 아직 감각 미발현. 기존 패턴의 마지막 반복.",
+    "investment_type": "해당 없음",
+    "deal_type": "해당 없음 — opening humiliation",
+    "leverage_used": [],
+    "opponent": {
+      "name": "장현태 / 오세진",
+      "type": "조직 위계",
+      "weakness_exploited": "해당 없음 — 시혁이 이 블록에서는 아무 레버리지도 없다"
+    },
+    "historical_event": {
+      "name": null,
+      "year": null,
+      "how_exploited": null
+    },
+    "time_pressure": "분기 실적 보고 주기 — 다음 분기까지 같은 패턴이 반복될 수 있다",
+    "knowledge_used": "해당 없음",
+    "risk_level": "무위험 (잃을 것이 없는 상태)",
+    "business_sector": "경영기획 / SCM",
+    "section_rotation": "ARC-01 검진 다음 날",
+    "success_pattern": "해당 없음 — 이 블록은 실패/굴욕 블록이다",
+    "special_ability": {
+      "has_ability": false,
+      "ability_type": null,
+      "ability_name": null,
+      "ability_source": null,
+      "ability_used_for": null
+    }
+  },
+  "regression_ext": {
+    "is_regressor": false,
+    "regression_type": null,
+    "execution_doctrine": "아직 없음 — 시혁은 아직 기존 패턴 안에 있다."
+  },
+  "block_no": 1
+}

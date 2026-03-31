@@ -2,24 +2,23 @@
 [B-1-1] Stage4 Post-Processor — PASS 후처리 및 세션 종료 로직 분리
 """
 
-import json
 import logging
 import os
 import re
-from contextlib import nullcontext as _nullcontext
 from pathlib import Path
 
-from modules.core.genre_schema_builder import is_wuxia
-from modules.core.inventory_state import compute_inventory_count_deltas, normalize_inventory_counts
 from modules.core.metrics_collector import get_metrics_collector
-from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime
 from modules.core.project_support import resolve_project_pov_contract
 from modules.core.quality_signal_metrics import compute_quality_signal_bundle, extract_warning_count
 from modules.core.soft_failure import report_soft_failure, resolve_project_log_dir
+from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime
 
 
 class Stage4PostProcessor:
     """[B-1-1] Stage4 PASS 후처리 전담 모듈"""
+
+    _SCENE_HEADER_LINE_RE = re.compile(r"(?m)^\s*#{1,6}\s*씬\s*\d+\s*[:\-].*$")  # utf8-hygiene: allow-line -- regex uses literal ? token safely for scene-header normalization
+    _STANDALONE_STAGE_CUE_RE = re.compile(r"(?m)^\s*\[([^\[\]\n]{1,160})\]\s*$")
 
     _PRESSURE_STOPWORDS = {
         "다음",
@@ -128,6 +127,44 @@ class Stage4PostProcessor:
             logging.warning("[TF-C10] %s save returned False: %s", label, error)
             self.ctx.ui.log(f"   ⚠️ [TF-C10] {label} save 실패: {error}")
             raise RuntimeError(f"{label}.save failed: {error}")
+
+    @classmethod
+    def _is_stage_cue_line(cls, inner: str) -> bool:
+        if not isinstance(inner, str):
+            return False
+        normalized = re.sub(r"\s+", " ", inner).strip()
+        if not normalized:
+            return False
+        cue_tokens = ("년", "월", "장소", "시간", "배경", "/", ",")
+        return any(token in normalized for token in cue_tokens)
+
+    @classmethod
+    def _normalize_reader_facing_manuscript(cls, manuscript: str) -> str:
+        """Strip internal scene scaffolding from final reader-facing artifacts."""
+        if not isinstance(manuscript, str) or not manuscript.strip():
+            return str(manuscript or "")
+
+        normalized = manuscript.replace("\r\n", "\n").replace("\r", "\n")
+        scene_index = 0
+
+        def _replace_scene_header(_match) -> str:
+            nonlocal scene_index
+            scene_index += 1
+            return "" if scene_index == 1 else "\n\n***\n\n"
+
+        normalized = cls._SCENE_HEADER_LINE_RE.sub(_replace_scene_header, normalized)
+
+        def _replace_stage_cue(match) -> str:
+            inner = re.sub(r"\s+", " ", match.group(1)).strip()
+            if not cls._is_stage_cue_line(inner):
+                return match.group(0)
+            if inner.endswith((".", "!", "?", "…", "”", "\"")):
+                return inner
+            return inner + "."
+
+        normalized = cls._STANDALONE_STAGE_CUE_RE.sub(_replace_stage_cue, normalized)
+        normalized = re.sub(r"\n{3,}", "\n\n", normalized).strip()
+        return normalized
 
     @staticmethod
     def _normalize_karma_entry(entry) -> dict | None:
@@ -900,6 +937,7 @@ class Stage4PostProcessor:
             _quality_labels = final_state_updates.get("_director_quality_labels")
             if isinstance(_quality_labels, dict):
                 final_state_updates = {k: v for k, v in final_state_updates.items() if k != "_director_quality_labels"}
+        final_manuscript = self._normalize_reader_facing_manuscript(final_manuscript)
 
         # DB 저장 (HUD보다 먼저 — DB 실패 시 HUD 오염 방지) [Sweep56]
         # [P0-D1/D4] lock 보호 + 원자적 트랜잭션으로 부분 저장 방지

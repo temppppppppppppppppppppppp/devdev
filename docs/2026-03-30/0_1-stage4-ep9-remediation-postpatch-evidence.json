@@ -1,0 +1,182 @@
+{
+  "date": "2026-03-30",
+  "scope": "Stage4 EP9 remediation post-patch bounded survey",
+  "baseline_commit": "229b85c655c32366818c2278462b51f3ad490913",
+  "baseline_dirty_summary": "dirty: tracked changes in 0_temp.txt, Stage 4 runtime/test/docs, project 0_1 logs/db, blueprint_0008; untracked 2026-03-30 docs/scripts/artifacts and tests/test_stage4_ep9_remediation.py",
+  "source_docs": [
+    "docs/2026-03-30/0_1-stage4-ep9-failure-root-cause-bounded-survey.md",
+    "docs/2026-03-30/0_1-stage4-ep9-remediation-execution-ssot.md"
+  ],
+  "file_hashes": [
+    {
+      "path": "modules/core/world_state.py",
+      "sha256_16": "495dc938661d2e20",
+      "bytes": 73361,
+      "utf8_ok": true
+    },
+    {
+      "path": "modules/core/npc_drift_advisor.py",
+      "sha256_16": "d492c049f261dcd1",
+      "bytes": 8526,
+      "utf8_ok": true
+    },
+    {
+      "path": "modules/core/stage4_interview_round.py",
+      "sha256_16": "a398bdb0ecb056dd",
+      "bytes": 283833,
+      "utf8_ok": true
+    },
+    {
+      "path": "modules/core/stage4_retry_runtime.py",
+      "sha256_16": "e8146dfd64314aaa",
+      "bytes": 46372,
+      "utf8_ok": true
+    },
+    {
+      "path": "modules/core/stage4_outcome_runtime.py",
+      "sha256_16": "6d0fc8b6cc703d01",
+      "bytes": 44030,
+      "utf8_ok": true
+    },
+    {
+      "path": "tests/test_stage4_ep9_remediation.py",
+      "sha256_16": "4eda90029a34cd41",
+      "bytes": 6420,
+      "utf8_ok": true
+    }
+  ],
+  "static_patch_surface": {
+    "authoritative_role_helper_line": 49,
+    "world_state_snapshot_line": 1358,
+    "npc_drift_snapshot_overlay_line": 5098,
+    "npc_drift_consumer_line": 5149,
+    "npc_drift_prompt_line": 104,
+    "npc_drift_prompt_batch_line": 129
+  },
+  "retry_observability_counts": [
+    {
+      "path": "modules/core/stage4_retry_runtime.py",
+      "ui_log_calls": 19,
+      "with_stage_ep": 2,
+      "without_stage_ep": 17,
+      "bare_lines": [
+        138,
+        287,
+        344,
+        370,
+        384,
+        669,
+        673,
+        754,
+        776,
+        817,
+        964,
+        983,
+        1028,
+        1047,
+        1088,
+        1101,
+        1123
+      ]
+    },
+    {
+      "path": "modules/core/stage4_outcome_runtime.py",
+      "ui_log_calls": 9,
+      "with_stage_ep": 3,
+      "without_stage_ep": 6,
+      "bare_lines": [
+        94,
+        225,
+        271,
+        360,
+        737,
+        796
+      ]
+    }
+  ],
+  "persisted_runtime_state": {
+    "world_state_anchor_exists": true,
+    "world_state_updated_at": "2026-03-30 09:55:58",
+    "park_seongho_present_in_anchor": false,
+    "ep9_attempt_artifact_dir_exists": true,
+    "ep9_attempt_dirs": [
+      "attempt_01",
+      "attempt_02",
+      "attempt_03",
+      "attempt_04",
+      "attempt_05",
+      "attempt_06"
+    ],
+    "ep9_attempt_count": 6
+  },
+  "ui_events_latest_markers": {
+    "TF-4": {
+      "stage": null,
+      "ep_num": null,
+      "ts": "2026-03-30T20:08:13",
+      "message_ascii": "   [TF-4] patch_targets \\uc5f0\\uc18d \\ubd80\\uc7ac \\u2192 full rewrite\\ub85c \\uc804\\ud658"
+    },
+    "TF-PATCH-GATE": {
+      "stage": null,
+      "ep_num": null,
+      "ts": "2026-03-30T19:38:24",
+      "message_ascii": "   [TF-PATCH-GATE] non-ready fix_pack -> patch \\ucc28\\ub2e8, rewrite \\uacbd\\ub85c \\uc0ac\\uc6a9"
+    },
+    "QR-7": {
+      "stage": null,
+      "ep_num": null,
+      "ts": "2026-03-30T19:48:41",
+      "message_ascii": "   \\u26a0\\ufe0f [QR-7] [\\u26a0\\ufe0f \\uc810\\uc218 \\ud558\\ub77d \\ucd94\\uc138] \\ucd5c\\uadfc \\uc810\\uc218\\uac00 98\\u219296\\u219295\\ub85c 3\\uc5f0\\uc18d \\ud558\\ub77d\\ud588\\uc2b5\\ub2c8\\ub2e4. \\ud604\\uc7ac \\uc218\\uc815 \\ub8e8\\ud504\\ub85c\\ub294 \\uc218\\ub834\\ud558\\uc9c0 \\uc54a\\uace0 \\uc788\\uc2b5\\ub2c8\\ub2e4. fix_scope\\ub97c rewrite \\uc774\\uc0c1\\uc73c\\ub85c \\ub113\\ud788\\uac70\\ub098 Blueprint/Arc \\uad6c\\uc870\\ub97c \\uc7ac\\uac80\\ud1a0\\ud558\\uc138\\uc694."
+    }
+  },
+  "residual_followups": {
+    "truth_gate_stale_role_line": 358,
+    "long_term_anchor_intro_role_lines": [
+      1406,
+      1416
+    ],
+    "retry_patch_reaudit_unattributed_lines": [
+      669,
+      673
+    ],
+    "outcome_repeat_advisory_unattributed_lines": [
+      737,
+      796
+    ]
+  },
+  "verification": [
+    {
+      "command": "py_compile touched files",
+      "result": "pass"
+    },
+    {
+      "command": "python scripts/check_utf8_hygiene.py touched files",
+      "result": "pass"
+    },
+    {
+      "command": "pytest tests/test_stage4_ep9_remediation.py -q",
+      "result": "6 passed"
+    },
+    {
+      "command": "pytest tests/test_npc_drift_advisor.py tests/test_lmi_known_attrs_sync.py -q",
+      "result": "41 passed"
+    },
+    {
+      "command": "pytest tests/test_stage4_interview_round.py -q -k \"resolve_retry_lane_routing or npc_drift_returns_all_items_without_truncation\"",
+      "result": "3 passed, 231 deselected"
+    },
+    {
+      "command": "pytest tests/test_stage4_orchestrator.py -q -k \"apply_reject_score_trend_advisory or analyze_reject_round\"",
+      "result": "6 passed, 149 deselected"
+    },
+    {
+      "command": "pytest tests/test_stage4_lane2_binding_contract.py tests/test_stage4_advisory_escalation_seam.py -q",
+      "result": "44 passed"
+    },
+    {
+      "command": "ruff check touched files",
+      "result": "pass"
+    }
+  ],
+  "confidence": 0.96
+}

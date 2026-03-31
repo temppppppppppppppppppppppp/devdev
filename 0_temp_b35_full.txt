@@ -1,0 +1,78 @@
+{
+  "block_id": "Block 35",
+  "title": "야근의 무게",
+  "content": {
+    "context": "Quiet block. 시혁은 세 가지를 동시에 돌리고 있다. 물류 재설계 TF 실행, MD 자체 감사 지원, 경영기획팀 주 2일 병행. 체력이 한계다. 편의점 저녁이 반복되고, TF룸 소파 낮잠이 길어진다. 어느 날 새벽 데이터를 보다가 한 줄을 두 번 읽었는데 같은 숫자인지 다른 숫자인지 분간이 안 됐다. 감각이 흐려지는 것인지 단순 피로인지 구분이 안 된다. 시혁은 서랍에서 건강검진 결과지를 꺼내 본다. '정밀검사 요망.' 7개월 전. 아직 안 받았다.",
+    "event_villain": "직접 적대 행동 없음. 시혁의 내적 갈등 블록.",
+    "solution": "시혁은 정밀검사를 예약한다. 2주 뒤. 감각이 뭔지 모르지만, 건강부터 확인해야 한다는 판단.",
+    "reward": "정밀검사 예약. 시혁이 자기 자신을 돌보기로 한 첫 번째 결정. 독자에게 감각의 정체에 대한 기대감을 다시 건다."
+  },
+  "stakes": "체력 한계가 감각 저하로 이어지면 시혁의 핵심 우위가 약해진다. 정밀검사 결과가 감각과 연관될 수 있다.",
+  "power_shift": {
+    "protagonist": "체력 한계 + 정밀검사 예약. 자기 관리의 시작.",
+    "antagonist": "해당 없음."
+  },
+  "relationship_delta": [],
+  "foreshadow": [
+    "정밀검사 예약은 Block 65에서 결과가 돌아오는 복선.",
+    "감각 흐려짐은 Block 37에서 오세진 최후 견제 대응 시 오판 가능성의 복선."
+  ],
+  "callback": [
+    "Block 2, 15, 25, 32에서 반복된 '정밀검사 요망'이 마침내 행동(예약)으로 전환.",
+    "Block 13에서 시작된 병행 근무의 체력 부채가 누적 한계에 도달."
+  ],
+  "emotional_beat": {
+    "type": "vulnerability",
+    "intensity": 5
+  },
+  "tension_level": 3,
+  "pov_character": "한시혁",
+  "location": {
+    "place": "한일유통 12층 TF룸 / 편의점 / 병원 예약",
+    "type": "본사 / 일상"
+  },
+  "time_span": {
+    "duration": "1주",
+    "in_story_time": "2025년 11월 초"
+  },
+  "genre_ext": {
+    "type": "investment",
+    "capital_before": "Lv5 예산 발언권 + 감사 지속 승인 + 장현태 불안 감지 + 감각 조건 이해",
+    "capital_after": "Lv5 예산 발언권 + 체력 부채 심화 + 정밀검사 예약",
+    "capital_delta": "체력 부채 (부채) + 자기 관리 시작 (소득)",
+    "profit_loss": "체력 소모 vs 정밀검사 예약",
+    "method": "체력 한계 인정 + 정밀검사 예약.",
+    "investment_type": "자기 관리",
+    "deal_type": "해당 없음 — quiet block",
+    "leverage_used": [],
+    "opponent": {
+      "name": "해당 없음",
+      "type": "내적 갈등",
+      "weakness_exploited": "해당 없음"
+    },
+    "historical_event": {
+      "name": null,
+      "year": null,
+      "how_exploited": null
+    },
+    "time_pressure": "정밀검사 2주 뒤",
+    "knowledge_used": "해당 없음",
+    "risk_level": "무위험",
+    "business_sector": "일상",
+    "section_rotation": "ARC-04 감각의 흔들림",
+    "success_pattern": "자기 자신도 관리해야 할 자산이다.",
+    "special_ability": {
+      "has_ability": true,
+      "ability_type": "감각",
+      "ability_name": "조직 역학 조감",
+      "ability_source": "건강검진 이후 발현 (원인 불명)",
+      "ability_used_for": "이 블록에서 감각이 흐려지는 것인지 피로인지 불분명. 한계 체감."
+    }
+  },
+  "regression_ext": {
+    "is_regressor": false,
+    "regression_type": null,
+    "execution_doctrine": "무기를 쓰려면 먼저 몸이 버텨야 한다."
+  },
+  "block_no": 35
+}

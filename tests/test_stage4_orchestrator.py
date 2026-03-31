@@ -2325,6 +2325,62 @@ class TestHandleRoundOutcomeRetryPathology:
         orch._apply_v75b_blueprint_regeneration.assert_called_once()
         assert result is regen_result
 
+    def test_apply_retry_repair_escalation_reroutes_repeated_qr7_plateau_to_full_rewrite(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        orch._apply_v75d_inplace_repair = MagicMock()
+        previous_attempt = {
+            "score": 88,
+            "fix_scope": "partial",
+            "repair_scope": "partial",
+            "reject_bucket": "post_select_conflict",
+            "error_category": "POST_SELECT_CONFLICT",
+            "fix_scope_reasoning": "narrow patch",
+            "plateau_detected": True,
+            "provisional_pass_downgrade": True,
+            "retry_budget_axes": {"repair": "patch_revision", "strategy": "patch"},
+        }
+        fingerprint = runtime.build_retry_pathology_payload(
+            ep_num=1,
+            round_num=0,
+            previous_attempt=previous_attempt,
+        )["pathology_fingerprint"]
+
+        result = runtime.apply_retry_repair_escalation(
+            round_ctx=minimal_round_ctx,
+            next_ep=1,
+            interview_round=0,
+            director_feedback="retry feedback",
+            previous_attempt=previous_attempt,
+            logic_error_streak=1,
+            inplace_attempted=False,
+            blueprint_regenerated=False,
+            tf29_advisory="",
+            dominant_contradiction="timeline",
+            pathology_counts={fingerprint: 1},
+            pathology_repeat_emitted=set(),
+        )
+
+        orch._apply_v75d_inplace_repair.assert_not_called()
+        assert result.round_ctx is minimal_round_ctx
+        assert result.previous_attempt["fix_scope"] == "full"
+        assert result.previous_attempt["repair_scope"] == "full"
+        assert result.previous_attempt["retry_budget_axes"]["repair"] == "rewrite_regenerate"
+        assert result.previous_attempt["qr7_contract"]["mode"] == "rewrite_reroute"
+        assert result.previous_attempt["qr7_contract"]["repeat_count"] == 2
+        assert result.director_feedback.startswith("[QR-7 escalation]")
+        qr7_call = next(
+            call
+            for call in orch._ctx.ui.log.call_args_list
+            if call.args and "repeated plateau -> local retry" in call.args[0]
+        )
+        assert qr7_call.kwargs["event_kind"] == "policy"
+        assert qr7_call.kwargs["attempt_key"] == "s4:ep1:arc1:a1"
+
     def test_handle_reject_round_result_escalates_ifc_quality_issue_into_v75d_candidate(
         self,
         orch_with_ctx,

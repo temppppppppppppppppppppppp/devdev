@@ -1,0 +1,169 @@
+=== B31: 감사 지원 ===
+  emotional_beat: tactical_setup (6)
+  tension: 6
+  deal_type: 감사 전략 설계 + 데이터 요청 배치
+  opponent: 장현태
+  weakness: 원본과 정리본을 동시에 요청하면 수정 흔적이 드러난다
+  location: 한일유통 감사 지원 회의실 / 12층 TF룸
+  duration: 수일
+  capital_before: Lv5 예산 발언권 + 자체 감사 참여 + 프로젝트 오너십 추가 (감사 지원 TF)
+  capital_after: Lv5 예산 발언권 + 감사 방향 설계권 + 원본-정리본 동시 요청 전술
+  bundle_chars: 668
+  foreshadow_count: 2
+  callback_count: 2
+  rel_delta_count: 1
+  method: 감사 데이터 요청 순서를 전략적으로 배치 + 원본-정리본 동시 요청 설계.
+  success_pattern: 감사의 순서 자체가 무기다. 적이 대응할 시간을 빼앗는다.
+
+=== B32: 읽히지 않는 회의 ===
+  emotional_beat: limit_exposure (8)
+  tension: 7
+  deal_type: 감사 회의 (부분 실패) + 서면 요청 세분화
+  opponent: MD 경영관리실장 (장현태 방패)
+  weakness: 해당 없음 — 이 블록에서 시혁의 감각이 무력화됨
+  location: 한일유통 감사 회의실 / 12층 TF룸
+  duration: 1일
+  capital_before: Lv5 예산 발언권 + 감사 방향 설계권 + 원본-정리본 동시 요청 전술
+  capital_after: Lv5 예산 발언권 + 감각 한계 인식 + 절차적 보완 전략
+  bundle_chars: 847
+  foreshadow_count: 3
+  callback_count: 2
+  rel_delta_count: 1
+  method: 감각이 안 통하는 상대 앞에서 실패를 인정하고, 서면 요청 세분화라는 절차적 보완으로 전환.
+  success_pattern: 감각이 안 통할 때 인정하고, 다른 무기로 보완한다. 만능인 척 하지 않는다.
+
+=== B33: 서면의 틈 ===
+  emotional_beat: recovery (6)
+  tension: 6
+  deal_type: 서면 분석 + 감사 보고서 업데이트
+  opponent: MD 경영관리실장
+  weakness: 항목이 세분화되면 모든 숫자의 정합성을 맞추기 어렵다
+  location: 한일유통 감사 지원 회의실
+  duration: 수일
+  capital_before: Lv5 예산 발언권 + 감각 한계 인식 + 절차적 보완 전략
+  capital_after: Lv5 예산 발언권 + 서면 숫자 불일치 증거 + 감각+실무 복합 전략
+  bundle_chars: 523
+  foreshadow_count: 2
+  callback_count: 2
+  rel_delta_count: 1
+  method: 세분화된 서면 요청에서 숫자 불일치를 포착. 감사 보고서에 기재.
+  success_pattern: 감각이 안 통할 때 숫자가 통한다. 절차와 데이터로 보완한다.
+
+=== B34: 감사 중간 보고 ===
+  emotional_beat: pressure_point (7)
+  tension: 7
+  deal_type: 감사 중간 보고 + 지속 승인
+  opponent: 장현태
+  weakness: 장현태 본인은 감정이 있는 사람이라 불안이 읽힌다
+  location: 한일유통 대표이사 회의실
+  duration: 반나절
+  capital_before: Lv5 예산 발언권 + 서면 숫자 불일치 증거 + 감각+실무 복합 전략
+  capital_after: Lv5 예산 발언권 + 감사 지속 승인 + 장현태 불안 감지 + 감각 조건 이해
+  bundle_chars: 814
+  foreshadow_count: 2
+  callback_count: 2
+  rel_delta_count: 2
+  method: 서정민 주관 보고 + 시혁 데이터 설계. 장현태 불안을 감각으로 포착.
+  success_pattern: 뒤에서 설계하고 앞에서 다른 사람이 말한다. 감각의 한계를 이해하고 쓸 수 있는 곳에서만 쓴다.
+
+=== B35: 야근의 무게 ===
+  emotional_beat: vulnerability (5)
+  tension: 3
+  deal_type: 해당 없음 — quiet block
+  opponent: 해당 없음
+  weakness: 해당 없음
+  location: 한일유통 12층 TF룸 / 편의점 / 병원 예약
+  duration: 1주
+  capital_before: Lv5 예산 발언권 + 감사 지속 승인 + 장현태 불안 감지 + 감각 조건 이해
+  capital_after: Lv5 예산 발언권 + 체력 부채 심화 + 정밀검사 예약
+  bundle_chars: 457
+  foreshadow_count: 2
+  callback_count: 2
+  rel_delta_count: 0
+  method: 체력 한계 인정 + 정밀검사 예약.
+  success_pattern: 자기 자신도 관리해야 할 자산이다.
+
+=== B36: 팀장의 줄 ===
+  emotional_beat: calculation (6)
+  tension: 7
+  deal_type: 인사 라인 방어 준비
+  opponent: 오세진
+  weakness: 가중치를 바꿔도 원본 문서의 기여자 이름은 바꿀 수 없다
+  location: 한일유통 경영기획팀 사무실 / 인사팀 회의록 열람실
+  duration: 3일
+  capital_before: Lv5 예산 발언권 + 체력 부채 심화 + 정밀검사 예약
+  capital_after: Lv5 예산 발언권 + 인사 시즌 진입 + 오세진 견제 구도 감지 + 기여 문서 목록 수집
+  bundle_chars: 948
+  foreshadow_count: 2
+  callback_count: 2
+  rel_delta_count: 1
+  method: 인사 가중치 변경 역추적 + 프로젝트별 기여 이력 문서 수집.
+  success_pattern: 적이 제도를 바꿔도 원본은 남는다. 원본을 먼저 수집한다.
+
+=== B37: 평가의 벽 ===
+  emotional_beat: frustration (7)
+  tension: 8
+  deal_type: 평가 희석 방어
+  opponent: 오세진
+  weakness: 오세진의 코멘트는 팀장 관점일 뿐이다. 외부 협업 파트너의 증언은 팀장이 통제할 수 없다.
+  location: 한일유통 경영기획팀 사무실 / 인사팀 평가서 시스템
+  duration: 1주
+  capital_before: Lv5 예산 발언권 + 인사 시즌 진입 + 오세진 견제 구도 감지 + 기여 문서 목록 수집
+  capital_after: Lv5 예산 발언권 + S등급 진입 차단 상태 + 서정민 확인서 1건
+  bundle_chars: 915
+  foreshadow_count: 2
+  callback_count: 2
+  rel_delta_count: 2
+  method: 감사 협업 파트너에게 기여 확인서를 요청해 외부 증언 확보.
+  success_pattern: 이번에는 졌다. 하지만 외부 증인은 확보했다.
+
+=== B38: 한 장의 증명 ===
+  emotional_beat: counterattack (8)
+  tension: 8
+  deal_type: 성과 증명서 제출
+  opponent: 오세진
+  weakness: 오세진의 견제는 인사위원 점심 라인에 의존했지만, 전무의 직접 개입은 인사위원보다 상위 권한이다
+  location: 한일유통 전무실 / HR팀장 사무실
+  duration: 3일
+  capital_before: Lv5 예산 발언권 + S등급 진입 차단 상태 + 서정민 확인서 1건
+  capital_after: Lv5 예산 발언권 + 전무 직접 확인 + HR팀장 인지 + S등급 가능성 재개
+  bundle_chars: 765
+  foreshadow_count: 2
+  callback_count: 2
+  rel_delta_count: 2
+  method: 프로젝트별 before-after 증명서를 전무와 HR에 동시 제출하여 오세진 견제를 우회.
+  success_pattern: 감각이 아니라 문서와 타이밍으로 이겼다.
+
+=== B39: 떨어지는 줄 ===
+  emotional_beat: quiet_resolution (5)
+  tension: 5
+  deal_type: 해당 없음 — 자연 와해 관찰
+  opponent: 오세진
+  weakness: 오세진의 네트워크는 실적이 아니라 점심 라인에 의존했다. 상위 권한이 개입하자 점심 라인은 의미를 잃었다.
+  location: 한일유통 경영기획팀 사무실 / 사내 식당 (회식)
+  duration: 1주
+  capital_before: Lv5 예산 발언권 + 전무 직접 확인 + HR팀장 인지 + S등급 가능성 재개
+  capital_after: Lv5 예산 발언권 + 오세진 네트워크 와해 진행 + 팀 내 실질 중심 이동 시작
+  bundle_chars: 825
+  foreshadow_count: 2
+  callback_count: 2
+  rel_delta_count: 2
+  method: 아무것도 하지 않음. 전무 개입 이후의 자연스러운 파급 효과를 관찰.
+  success_pattern: 적의 네트워크가 스스로 무너지는 것을 지켜본다. 가장 좋은 반격은 가끔 아무것도 안 하는 것이다.
+
+=== B40: 연말 인사 S ===
+  emotional_beat: validation (9)
+  tension: 4
+  deal_type: 인사평가 확정
+  opponent: 해당 없음
+  weakness: 해당 없음
+  location: 한일유통 인사팀 / 경영기획팀 사무실 / TF룸
+  duration: 1일
+  capital_before: Lv5 예산 발언권 + 오세진 네트워크 와해 진행 + 팀 내 실질 중심 이동 시작
+  capital_after: Lv6 TF 실권 + S등급 + 경영기획팀 실질 리더 + 전무 직보 + 자기 라인 형성 가능
+  bundle_chars: 818
+  foreshadow_count: 2
+  callback_count: 2
+  rel_delta_count: 3
+  method: 해당 없음 — 보상 블록. 앞선 블록들의 축적이 인사 결과로 확정된 것.
+  success_pattern: 3년간의 투명인간이 S등급을 받았다. 인사평가 결과지에 이름이 남는 것이 조직에서 가장 확실한 증명이다.

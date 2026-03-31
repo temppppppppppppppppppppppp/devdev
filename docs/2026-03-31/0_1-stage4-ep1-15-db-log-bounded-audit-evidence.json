@@ -1,0 +1,149 @@
+{
+  "doc": "docs/2026-03-31/0_1-stage4-ep1-15-db-log-bounded-audit.md",
+  "status": "final",
+  "confidence": 0.96,
+  "baseline_commit": "229b85c655c32366818c2278462b51f3ad490913",
+  "sources": {
+    "db": "projects/0_1/project_data.db",
+    "logs": [
+      "projects/0_1/logs/episode_production.jsonl",
+      "projects/0_1/logs/session/decisions.jsonl",
+      "projects/0_1/logs/session/ui_events.jsonl",
+      "projects/0_1/logs/quality_metrics.jsonl",
+      "projects/0_1/logs/runtime_audit.jsonl",
+      "projects/0_1/logs/pass_rate_monitor.json"
+    ],
+    "artifacts": "projects/0_1/logs/artifacts/stage4/ep_0001..ep_0015",
+    "drafts": "projects/0_1/drafts/ep_0001.txt .. ep_0015.txt"
+  },
+  "core_findings": {
+    "stage4_rows_total": 52,
+    "stage4_rows_ep1_7": 9,
+    "stage4_rows_ep8_15": 43,
+    "rejects_ep1_7": 2,
+    "rejects_ep8_15": 35,
+    "director_to_final": {
+      "PASS->PASS": 17,
+      "PASS_WITH_FIX->PASS_WITH_FIX": 11,
+      "PASS->REJECT": 18,
+      "PASS->PASS_WITH_FIX": 2,
+      "REJECT->REJECT": 3,
+      "DISMISS->DISMISS": 1
+    },
+    "gate_basis_counts": {
+      "director_primary_pass": 17,
+      "director_primary_pass_with_fix": 11,
+      "strong_advisory_escalation_non_local_fix": 11,
+      "pass_with_fix_contract_missing_patch_targets": 7,
+      "director_primary_reject": 3,
+      "strong_advisory_escalation": 2,
+      "continuity_firewall": 1
+    },
+    "strong_advisory_triggers": {
+      "npc_drift": 13,
+      "flashback+npc_drift": 5,
+      "flashback": 2
+    },
+    "duplicate_attempt_num_groups": [
+      {
+        "ep_num": 8,
+        "attempt_num": 1,
+        "row_count": 3
+      },
+      {
+        "ep_num": 8,
+        "attempt_num": 2,
+        "row_count": 2
+      },
+      {
+        "ep_num": 8,
+        "attempt_num": 3,
+        "row_count": 2
+      },
+      {
+        "ep_num": 9,
+        "attempt_num": 1,
+        "row_count": 2
+      }
+    ],
+    "session_reuse_examples": {
+      "ep8": [
+        "20260330_161047",
+        "20260330_182051",
+        "20260330_183133"
+      ],
+      "ep9": [
+        "20260330_193026",
+        "20260330_231345"
+      ]
+    },
+    "ui_events": {
+      "rows_scanned": 2099,
+      "null_stage": 0,
+      "null_ep_num": 0,
+      "retry_lane_rows": 9,
+      "retry_lane_null_attempt_key": 9
+    },
+    "sink_drift": {
+      "episode_production_rows_scanned": 107,
+      "episode_production_rows_missing_attempt_key_and_final_verdict": 55,
+      "runtime_audit_ep_key_drift": true,
+      "pass_rate_monitor_retry_depth_collapsed": true,
+      "quality_metrics_gate_family_weak": true
+    },
+    "hash_truth": {
+      "pass_artifact_vs_stage_attempt_hash_mismatch": 0,
+      "draft_vs_stage_attempt_hash_mismatch": 15,
+      "draft_mismatch_reason": "draft files prepend an episode title/header wrapper"
+    },
+    "verdict_layer_persistence": {
+      "director_selections_with_gate_semantics": 52,
+      "director_selections_with_verdict_layers": 0,
+      "stage_attempts_with_gate_semantics": 52,
+      "stage_attempts_with_verdict_layers": 0,
+      "episode_production_contains_downstream_override_applied": false,
+      "episode_production_contains_primary_failure_layer": false
+    },
+    "stage4_cost_examples": {
+      "ep8": {
+        "calls": 140,
+        "cost_usd": 3.183,
+        "max_prompt_chars": 48581
+      },
+      "ep9": {
+        "calls": 92,
+        "cost_usd": 2.397,
+        "max_prompt_chars": 53972
+      },
+      "ep13": {
+        "calls": 86,
+        "cost_usd": 2.836,
+        "max_prompt_chars": 77601
+      },
+      "ep15": {
+        "calls": 69,
+        "cost_usd": 2.199,
+        "max_prompt_chars": 89528
+      }
+    }
+  },
+  "sql_queries": [
+    {
+      "purpose": "Full Stage 4 timeline with joined verdict sinks",
+      "query": "SELECT sa.ep_num, sa.ts, sa.session_id, sa.attempt_num, sa.attempt_key, sa.verdict AS stage_verdict, sa.initial_verdict, sa.score AS stage_score, ds.round_num, ds.verdict AS director_verdict, ds.score AS director_score, ds.pre_firewall_score, ds.firewall_triggered, ds.firewall_reason, json_extract(sa.advisory_flags, '$.gate_semantics.gate_basis') AS gate_basis, json_extract(sa.advisory_flags, '$.gate_semantics.director_verdict') AS payload_director_verdict, json_extract(sa.advisory_flags, '$.gate_semantics.final_verdict') AS payload_final_verdict, sa.fix_scope, sa.reject_reason FROM stage_attempts sa LEFT JOIN director_selections ds ON ds.stage = sa.stage AND ds.ep_num = sa.ep_num AND ds.attempt_key = sa.attempt_key WHERE sa.stage = 4 AND sa.ep_num BETWEEN 1 AND 15 ORDER BY sa.ep_num, sa.ts;"
+    },
+    {
+      "purpose": "PASS to REJECT override finder",
+      "query": "SELECT sa.ep_num, sa.ts, sa.attempt_num, sa.attempt_key, ds.verdict AS director_selections_verdict, json_extract(sa.advisory_flags, '$.gate_semantics.director_verdict') AS payload_director_verdict, json_extract(sa.advisory_flags, '$.gate_semantics.final_verdict') AS payload_final_verdict, sa.verdict AS stage_attempts_verdict, sa.score, sa.reject_reason FROM stage_attempts sa JOIN director_selections ds ON ds.stage = sa.stage AND ds.ep_num = sa.ep_num AND ds.attempt_key = sa.attempt_key WHERE sa.stage = 4 AND sa.ep_num BETWEEN 1 AND 15 AND sa.verdict = 'REJECT' AND (ds.verdict IN ('PASS', 'PASS_WITH_FIX') OR json_extract(sa.advisory_flags, '$.gate_semantics.director_verdict') IN ('PASS', 'PASS_WITH_FIX')) ORDER BY sa.ep_num, sa.ts;"
+    },
+    {
+      "purpose": "Duplicate attempt_num groups across sessions",
+      "query": "SELECT ep_num, attempt_num, COUNT(*) AS row_count, GROUP_CONCAT(DISTINCT session_id) AS session_ids, GROUP_CONCAT(attempt_key) AS attempt_keys FROM stage_attempts WHERE stage = 4 AND ep_num BETWEEN 1 AND 15 GROUP BY ep_num, attempt_num HAVING COUNT(*) > 1 ORDER BY ep_num, attempt_num;"
+    }
+  ],
+  "open_questions": [
+    "Why live EP1-15 sinks still do not show verdict_layers despite current code intending to persist them.",
+    "Whether late npc_drift and flashback advisories are true positives or residual false positives.",
+    "Whether attempt_raw_rationale sink mismatch should be treated as a separate observability repair wave."
+  ]
+}

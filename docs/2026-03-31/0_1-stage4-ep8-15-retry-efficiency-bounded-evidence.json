@@ -1,0 +1,340 @@
+{
+  "meta": {
+    "work_id": "0_1",
+    "scope": "stage4_ep8_15_retry_efficiency",
+    "generated_on": "2026-03-31",
+    "confidence": 0.96
+  },
+  "related_docs": [
+    "docs/2026-03-31/0_1-stage4-ep1-15-db-log-bounded-audit.md",
+    "docs/2026-03-31/0_1-stage4-ep10-15-residual-gate-observability-deep-dive-survey.md",
+    "docs/2026-03-31/0_1-stage4-cw-first-pass-false-miss-remediation-postpatch-bounded-survey.md"
+  ],
+  "code_anchors": {
+    "qr7_advisory_only": "modules/core/stage4_outcome_runtime.py:672-699",
+    "retry_lane_patch_gate_and_tf4": "modules/core/stage4_retry_runtime.py:858-928"
+  },
+  "attempt_volume": {
+    "ep1_7_total_attempt_rows": 9,
+    "ep1_7_mean_attempt_rows": 1.2857142857142858,
+    "ep8_15_total_attempt_rows": 43,
+    "ep8_15_mean_attempt_rows": 5.375,
+    "pass_depth_by_row_order": [
+      {
+        "ep_num": 8,
+        "chronological_attempt_rows": 9,
+        "pass_depth_by_row_order": 9
+      },
+      {
+        "ep_num": 9,
+        "chronological_attempt_rows": 7,
+        "pass_depth_by_row_order": 7
+      },
+      {
+        "ep_num": 10,
+        "chronological_attempt_rows": 5,
+        "pass_depth_by_row_order": 5
+      },
+      {
+        "ep_num": 11,
+        "chronological_attempt_rows": 5,
+        "pass_depth_by_row_order": 5
+      },
+      {
+        "ep_num": 12,
+        "chronological_attempt_rows": 2,
+        "pass_depth_by_row_order": 2
+      },
+      {
+        "ep_num": 13,
+        "chronological_attempt_rows": 6,
+        "pass_depth_by_row_order": 6
+      },
+      {
+        "ep_num": 14,
+        "chronological_attempt_rows": 4,
+        "pass_depth_by_row_order": 4
+      },
+      {
+        "ep_num": 15,
+        "chronological_attempt_rows": 5,
+        "pass_depth_by_row_order": 5
+      }
+    ]
+  },
+  "downstream_churn": {
+    "reject_rows_ep8_15": 35,
+    "reject_after_nonreject_director": 31,
+    "share": 0.886,
+    "director_to_final_mapping_stage_attempts_ep8_15": {
+      "PASS->REJECT": 23,
+      "PASS_WITH_FIX->REJECT": 8,
+      "PASS->PASS": 8,
+      "REJECT->REJECT": 3,
+      "DISMISS->DISMISS": 1
+    },
+    "first_stage4_rows": {
+      "episodes": 8,
+      "first_rows_reject_after_nonreject_director": 7,
+      "details": [
+        {
+          "ep_num": 8,
+          "attempt_key": "s4:ep8:arc2:a1:20260330_161047",
+          "row_verdict": "REJECT",
+          "director_verdict": "PASS",
+          "gate_basis": "pass_with_fix_contract_missing_patch_targets"
+        },
+        {
+          "ep_num": 9,
+          "attempt_key": "s4:ep9:arc2:a1:20260330_193026",
+          "row_verdict": "REJECT",
+          "director_verdict": "PASS",
+          "gate_basis": "strong_advisory_escalation_non_local_fix"
+        },
+        {
+          "ep_num": 10,
+          "attempt_key": "s4:ep10:arc3:a1:20260330_231345",
+          "row_verdict": "REJECT",
+          "director_verdict": "PASS",
+          "gate_basis": "strong_advisory_escalation_non_local_fix"
+        },
+        {
+          "ep_num": 11,
+          "attempt_key": "s4:ep11:arc3:a1:20260330_231345",
+          "row_verdict": "REJECT",
+          "director_verdict": "REJECT",
+          "gate_basis": "director_primary_reject"
+        },
+        {
+          "ep_num": 12,
+          "attempt_key": "s4:ep12:arc3:a1:20260330_231345",
+          "row_verdict": "REJECT",
+          "director_verdict": "PASS_WITH_FIX",
+          "gate_basis": "post_select_conflict"
+        },
+        {
+          "ep_num": 13,
+          "attempt_key": "s4:ep13:arc3:a1:20260330_231345",
+          "row_verdict": "REJECT",
+          "director_verdict": "PASS_WITH_FIX",
+          "gate_basis": "post_select_conflict"
+        },
+        {
+          "ep_num": 14,
+          "attempt_key": "s4:ep14:arc3:a1:20260330_231345",
+          "row_verdict": "REJECT",
+          "director_verdict": "PASS",
+          "gate_basis": "strong_advisory_escalation_non_local_fix"
+        },
+        {
+          "ep_num": 15,
+          "attempt_key": "s4:ep15:arc4:a1:20260330_231345",
+          "row_verdict": "REJECT",
+          "director_verdict": "PASS_WITH_FIX",
+          "gate_basis": "post_select_conflict"
+        }
+      ]
+    }
+  },
+  "stage4_gate_basis_counts_ep8_15": {
+    "pass_with_fix_contract_missing_patch_targets": 7,
+    "director_primary_pass_with_fix": 9,
+    "director_primary_pass": 10,
+    "strong_advisory_escalation_non_local_fix": 11,
+    "continuity_firewall": 1,
+    "director_primary_reject": 3,
+    "strong_advisory_escalation": 2
+  },
+  "reselection": {
+    "per_episode_share": [
+      {
+        "ep_num": 8,
+        "attempt_rows": 9,
+        "repeated_hash_attempts": 4,
+        "repeated_hash_share": 0.444,
+        "repeated_candidate_attempts": 8,
+        "repeated_candidate_share": 0.889
+      },
+      {
+        "ep_num": 9,
+        "attempt_rows": 7,
+        "repeated_hash_attempts": 4,
+        "repeated_hash_share": 0.571,
+        "repeated_candidate_attempts": 4,
+        "repeated_candidate_share": 0.571
+      },
+      {
+        "ep_num": 10,
+        "attempt_rows": 5,
+        "repeated_hash_attempts": 0,
+        "repeated_hash_share": 0.0,
+        "repeated_candidate_attempts": 2,
+        "repeated_candidate_share": 0.4
+      },
+      {
+        "ep_num": 11,
+        "attempt_rows": 5,
+        "repeated_hash_attempts": 2,
+        "repeated_hash_share": 0.4,
+        "repeated_candidate_attempts": 3,
+        "repeated_candidate_share": 0.6
+      },
+      {
+        "ep_num": 12,
+        "attempt_rows": 2,
+        "repeated_hash_attempts": 0,
+        "repeated_hash_share": 0.0,
+        "repeated_candidate_attempts": 0,
+        "repeated_candidate_share": 0.0
+      },
+      {
+        "ep_num": 13,
+        "attempt_rows": 6,
+        "repeated_hash_attempts": 2,
+        "repeated_hash_share": 0.333,
+        "repeated_candidate_attempts": 2,
+        "repeated_candidate_share": 0.333
+      },
+      {
+        "ep_num": 14,
+        "attempt_rows": 4,
+        "repeated_hash_attempts": 2,
+        "repeated_hash_share": 0.5,
+        "repeated_candidate_attempts": 0,
+        "repeated_candidate_share": 0.0
+      },
+      {
+        "ep_num": 15,
+        "attempt_rows": 5,
+        "repeated_hash_attempts": 0,
+        "repeated_hash_share": 0.0,
+        "repeated_candidate_attempts": 2,
+        "repeated_candidate_share": 0.4
+      }
+    ],
+    "final_pass_same_hash_as_prior_reject": [
+      {
+        "ep_num": 8,
+        "pass_attempt_key": "s4:ep8:arc2:a3:20260330_183133",
+        "prior_reject_attempt_key": "s4:ep8:arc2:a2:20260330_183133"
+      },
+      {
+        "ep_num": 11,
+        "pass_attempt_key": "s4:ep11:arc3:a5:20260330_231345",
+        "prior_reject_attempt_key": "s4:ep11:arc3:a4:20260330_231345"
+      },
+      {
+        "ep_num": 13,
+        "pass_attempt_key": "s4:ep13:arc3:a6:20260330_231345",
+        "prior_reject_attempt_key": "s4:ep13:arc3:a5:20260330_231345"
+      },
+      {
+        "ep_num": 14,
+        "pass_attempt_key": "s4:ep14:arc3:a4:20260330_231345",
+        "prior_reject_attempt_key": "s4:ep14:arc3:a3:20260330_231345"
+      }
+    ]
+  },
+  "early_stop": {
+    "qr7_events": [
+      {
+        "ep_num": 13,
+        "line_anchor": "projects/0_1/logs/session/ui_events.jsonl:4765",
+        "later_stage4_attempt_rows_after_qr7": 2
+      },
+      {
+        "ep_num": 15,
+        "line_anchor": "projects/0_1/logs/session/ui_events.jsonl:5277",
+        "later_stage4_attempt_rows_after_qr7": 2
+      }
+    ],
+    "tf_patch_gate_events_ep10_15": [
+      "projects/0_1/logs/session/ui_events.jsonl:3918",
+      "projects/0_1/logs/session/ui_events.jsonl:4353",
+      "projects/0_1/logs/session/ui_events.jsonl:4659",
+      "projects/0_1/logs/session/ui_events.jsonl:4769",
+      "projects/0_1/logs/session/ui_events.jsonl:4944",
+      "projects/0_1/logs/session/ui_events.jsonl:5222",
+      "projects/0_1/logs/session/ui_events.jsonl:5330"
+    ],
+    "tf4_examples_prior_sessions": [
+      "projects/0_1/logs/session/ui_events.jsonl:2374",
+      "projects/0_1/logs/session/ui_events.jsonl:3443"
+    ]
+  },
+  "llm_cost_and_models": {
+    "total_cost_usd_ep8_15": 20.82324567,
+    "chief_writer": {
+      "models": [
+        "gemini-3.1-pro-preview"
+      ],
+      "call_ct": 252,
+      "total_cost_usd": 11.8997525
+    },
+    "director": {
+      "models": [
+        "gemini-3.1-pro-preview"
+      ],
+      "call_ct": 367,
+      "total_cost_usd": 5.07188325
+    },
+    "per_episode_total_cost": [
+      {
+        "ep_num": 8,
+        "llm_calls": 147,
+        "total_cost_usd": 3.4921392,
+        "attempt_rows": 9,
+        "cost_per_attempt_row": 0.388015
+      },
+      {
+        "ep_num": 9,
+        "llm_calls": 97,
+        "total_cost_usd": 2.7067858,
+        "attempt_rows": 7,
+        "cost_per_attempt_row": 0.386684
+      },
+      {
+        "ep_num": 10,
+        "llm_calls": 95,
+        "total_cost_usd": 2.860607,
+        "attempt_rows": 5,
+        "cost_per_attempt_row": 0.572121
+      },
+      {
+        "ep_num": 11,
+        "llm_calls": 64,
+        "total_cost_usd": 2.02488235,
+        "attempt_rows": 5,
+        "cost_per_attempt_row": 0.404976
+      },
+      {
+        "ep_num": 12,
+        "llm_calls": 38,
+        "total_cost_usd": 1.237531275,
+        "attempt_rows": 2,
+        "cost_per_attempt_row": 0.618766
+      },
+      {
+        "ep_num": 13,
+        "llm_calls": 90,
+        "total_cost_usd": 3.1654128249999998,
+        "attempt_rows": 6,
+        "cost_per_attempt_row": 0.527569
+      },
+      {
+        "ep_num": 14,
+        "llm_calls": 67,
+        "total_cost_usd": 1.9487671,
+        "attempt_rows": 4,
+        "cost_per_attempt_row": 0.487192
+      },
+      {
+        "ep_num": 15,
+        "llm_calls": 94,
+        "total_cost_usd": 3.38712012,
+        "attempt_rows": 5,
+        "cost_per_attempt_row": 0.677424
+      }
+    ]
+  }
+}

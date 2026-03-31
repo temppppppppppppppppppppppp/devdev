@@ -76,6 +76,16 @@ def _base_pwf_result(**overrides) -> dict:
     return base
 
 
+def _ready_local_fix_pack() -> dict:
+    return {
+        "patch_targets": ["씬 2 첫 통화 문장"],
+        "must_fix": ["박성호의 소속 호칭을 SW인베스트먼트 전담 PB로 바로잡을 것"],
+        "do_not_regress": ["EP7 엔딩 연속성 유지"],
+        "success_condition": "국소 문장 보정 후 NPC role drift가 사라진다",
+        "target_kind": "local_sentence",
+    }
+
+
 # ── [Lane2-G1] plain PASS escalation ──────────────────────────────────────────
 
 class TestStrongAdvisoryEscalation:
@@ -252,7 +262,20 @@ class TestStrongAdvisoryChainToReject:
         assert result["strong_advisory_escalation"]["source_verdict"] == "PASS"
 
     def test_pass_with_strong_advisory_and_valid_fix_scope_is_pwf_not_reject(self):
-        """G1 escalates PASS → PASS_WITH_FIX; G2 does NOT fire if fix_scope is valid."""
+        """Strong advisory may stay PASS_WITH_FIX only when a ready local fix contract exists."""
+        ir = _make_ir(advisory_summary={"npc_drift": 1})
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack=_ready_local_fix_pack(),
+            )
+        )
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        assert result["verdict"] == "PASS_WITH_FIX"
+
+    def test_pass_with_strong_advisory_and_partial_scope_is_reject(self):
+        """Non-local scope must not survive as PASS_WITH_FIX under strong advisory escalation."""
         ir = _make_ir(advisory_summary={"npc_drift": 1})
         result = ir._normalize_director_gate_semantics(
             _base_pass_result(
@@ -260,8 +283,24 @@ class TestStrongAdvisoryChainToReject:
                 fix_scope="partial",
             )
         )
-        assert result["final_verdict"] == "PASS_WITH_FIX"
-        assert result["verdict"] == "PASS_WITH_FIX"
+        assert result["final_verdict"] == "REJECT"
+        assert result["gate_basis"] == "strong_advisory_escalation_non_local_fix"
+        assert result["fix_scope"] == "partial"
+
+    def test_pass_with_strong_advisory_and_empty_local_fix_pack_is_reject(self):
+        """Inplace scope without a ready fix_pack must fail closed before PASS_WITH_FIX loop entry."""
+        ir = _make_ir(advisory_summary={"flashback": 1})
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={},
+            )
+        )
+        assert result["final_verdict"] == "REJECT"
+        assert result["gate_basis"] == "strong_advisory_escalation_non_local_fix"
+        assert result["fix_scope"] == "partial"
+        assert result["strong_advisory_escalation"]["local_fix_contract"]["reason"] == "missing_fix_pack"
 
     def test_idempotent_second_call_does_not_re_escalate(self):
         """Calling _normalize_director_gate_semantics twice on the same result is idempotent."""
