@@ -48,11 +48,19 @@ ENSEMBLE_ARC_PROMPT: |
 
   {constraint_block}
 
-  ### [이전 Arc 상태 - 반드시 계승]
-  {prev_arc_context}
+  ### [Context Priority Contract]
+  1. `prohibition_summary` and `{constraint_block}` are absolute.
+  2. `Current Block DNA` and `Current Block Event Guard` define what this block may do.
+  3. `Previous Arc Context` is carryover reference and must not override 1-2.
 
-  ### [현재 블록 DNA]
+  ### [Current Block DNA]
   {curr_block}
+
+  ### [Current Block Event Guard]
+  {block_event_guard}
+
+  ### [Previous Arc Context - carryover reference]
+  {prev_arc_context}
 
   {pacing_signal_guide}
 
@@ -65,8 +73,6 @@ ENSEMBLE_ARC_PROMPT: |
   - 감정 설명만 반복하거나 준비 동작만 늘어놓지 말고, 각 화마다 최소 1개의 의미 있는 변화(상태/압박/관계/회수)를 만들어라.
 
   - 블록 시작 시 이전 블록 reward를 context의 출발점으로 사용하라. "상황 재설명"은 최소화(3문장 이내)하고, 새로운 사건으로 즉시 전환하라.
-
-  {block_event_guard}
 
   {genre_ext_guide}
 
@@ -291,18 +297,23 @@ BLUEPRINT_GENERATION_PROMPT: |
   {protagonist_instructions}
   ╚══════════════════════════════════════════════════════════════╝
 
-  ### [Arc 전술서 - 이번 화 핵심]
-  {arc_focus}
+  ### [Context Priority Contract]
+  1. `Constraint Stack` outranks arc-mission prose.
+  2. `Arc Mission` outranks previous-truth archive.
+  3. `Previous Truth And Archive` outranks HUD convenience state.
 
-  ### [제약 조건]
+  ### [Constraint Stack / 제약 조건]
   {constraints}
+
+  ### [Arc Mission / 이번 화 핵심]
+  {arc_focus}
 
   {strategy_directive}
 
-  ### [이전 화 정보]
+  ### [Previous Truth And Archive]
   {prev_info}
 
-  ### [V60.95 고밀도 HUD - 주인공 상태]
+  ### [HUD Convenience State]
   {hud_context}
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
