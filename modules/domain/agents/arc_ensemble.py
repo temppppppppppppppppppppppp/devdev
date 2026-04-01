@@ -109,6 +109,73 @@ def _build_block_event_guard(curr_block: dict | None, max_field_len: int = 260) 
     )
 
 
+def _format_curr_block_authority(curr_block: dict | None, max_field_len: int = 220) -> str:
+    """Current-block DNA를 raw JSON 대신 hierarchy-friendly packet으로 정리한다."""
+    if not isinstance(curr_block, dict):
+        return "{}"
+
+    def _stringify(value: object, *, max_chars: int = max_field_len) -> str:
+        if value is None:
+            return ""
+        if isinstance(value, (dict, list)):
+            raw = json.dumps(value, ensure_ascii=False)
+        else:
+            raw = str(value)
+        text = re.sub(r"\s+", " ", raw).strip()
+        if not text:
+            return ""
+        return _fit_arc_prompt_context(text, max_chars) if len(text) > max_chars else text
+
+    content = curr_block.get("content")
+    if not isinstance(content, dict):
+        content = {}
+
+    lines: list[str] = [
+        "[Context Priority Contract]",
+        "CURRENT BLOCK DNA > BLOCK EVENT GUARD > PREVIOUS ARC CONTEXT > OPTIONAL EXTENSIONS",
+        "",
+        "[Current Block Authority Packet]",
+    ]
+
+    for label, raw in (
+        ("block_id", curr_block.get("block_id")),
+        ("title", curr_block.get("title")),
+        ("ep_count", curr_block.get("ep_count")),
+    ):
+        text = _stringify(raw, max_chars=120)
+        if text:
+            lines.append(f"- {label}: {text}")
+
+    premise = _stringify(content.get("context") or curr_block.get("context"), max_chars=320)
+    if premise:
+        lines.append(f"- block_premise: {premise}")
+
+    metadata_lines = []
+    for label, raw in (
+        ("block_theme", curr_block.get("block_theme")),
+        ("emotional_beat", curr_block.get("emotional_beat")),
+        ("tension_level", curr_block.get("tension_level")),
+        ("foreshadow", curr_block.get("foreshadow")),
+        ("callback", curr_block.get("callback")),
+    ):
+        text = _stringify(raw)
+        if text:
+            metadata_lines.append(f"- {label}: {text}")
+    if metadata_lines:
+        lines.append("")
+        lines.append("[Current Block Metadata]")
+        lines.extend(metadata_lines)
+
+    genre_ext = curr_block.get("genre_ext") or (curr_block.get("raw_data") or {}).get("genre_ext")
+    genre_ext_text = _stringify(genre_ext, max_chars=320)
+    if genre_ext_text:
+        lines.append("")
+        lines.append("[Genre Extension Targets]")
+        lines.append(f"- genre_ext: {genre_ext_text}")
+
+    return "\n".join(lines)
+
+
 def _fit_arc_prompt_context(value: object, max_chars: int, *, head_ratio: float = 0.55) -> str:
     raw = str(value or "")
     if len(raw) <= max_chars:
@@ -923,6 +990,7 @@ class ArcEnsembleGenerator(BaseAgent):
             "genre_ext_guide": "",
             "extended_block_guide": "",
             "block_event_guard": _build_block_event_guard(curr_block),
+            "curr_block_authority": _format_curr_block_authority(curr_block),
         }
 
         if isinstance(curr_block, dict):
@@ -1015,7 +1083,7 @@ class ArcEnsembleGenerator(BaseAgent):
             "prohibition_summary": self._escape_braces(prompt_context["prohibition_summary"]),
             "protagonist_name": self._escape_braces(protagonist_name),
             "protagonist_instructions": self._escape_braces(prompt_context["protagonist_instructions"]),
-            "curr_block": self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
+            "curr_block": self._escape_braces(prompt_context["curr_block_authority"]),
             "pacing_signal_guide": self._escape_braces(pacing_signal_guide or ""),
             "block_event_guard": self._escape_braces(prompt_context["block_event_guard"]),
             "genre_ext_guide": self._escape_braces(prompt_context["genre_ext_guide"]),

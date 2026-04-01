@@ -5,11 +5,8 @@ Tranche A: Authority re-banding in blueprint_ensemble._format_constraints()
 Tranche B: Scene-specificity + scenario-density prevalidation in unified_blueprint_validator
 """
 
-import re
-
 from modules.domain.agents.blueprint_ensemble import BlueprintEnsembleGenerator
 from modules.domain.agents.unified_blueprint_validator import UnifiedBlueprintValidator
-
 
 # ============================================================
 # Helpers
@@ -126,16 +123,16 @@ class TestAuthorityBanding:
         assert cont_idx >= 0
         assert loc_idx > cont_idx
 
-    def test_advisory_band_with_arc_summary(self):
+    def test_hard_constraint_band_with_arc_summary(self):
         block = {
             "arc_constraint_summary": "테스트 Arc 요약",
         }
         ens = _make_ensemble()
         result = ens._format_constraints(block, genre="wuxia")
-        advisory_idx = result.find("ADVISORY")
+        hard_idx = result.find("HARD CONSTRAINT")
         summary_idx = result.find("테스트 Arc 요약")
-        assert advisory_idx >= 0
-        assert summary_idx > advisory_idx
+        assert hard_idx >= 0
+        assert summary_idx > hard_idx
 
     def test_full_band_ordering(self):
         """All 4 bands appear in correct order: IMMUTABLE > HARD > CONTINUITY > ADVISORY."""
@@ -147,6 +144,7 @@ class TestAuthorityBanding:
             "must_focus": {"key_events": ["비급 탈환"]},
             "continuity": {"location": "남궁세가 후원"},
             "arc_constraint_summary": "Arc 1 요약",
+            "state_changes_summary": "Arc state summary",
         }
         ens = _make_ensemble()
         result = ens._format_constraints(block, genre="wuxia")

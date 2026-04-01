@@ -1,0 +1,129 @@
+{
+  "topic": "0_0-stage2-stage3-context-hierarchy-bounded-survey",
+  "date": "2026-04-01",
+  "baseline_commit": "fd1707372bd7eb8ad23a5d4506ef556e3f72cc51",
+  "baseline_dirty_summary": [
+    "0_temp.txt modified",
+    "docs/temp execution mirrors dirty",
+    "Stage2/3 remediation code already landed in workspace",
+    "0_0 runtime logs/db/artifacts dirty"
+  ],
+  "stage2_code": {
+    "constraint_envelope": {
+      "path": "modules/domain/agents/four_phase_arc_runtime.py",
+      "lines": [718, 737],
+      "summary": "Stage2 full_constraint_block is a joined string of preflight, compiled hard constraints, negative examples, and self-check."
+    },
+    "prev_context_root": {
+      "path": "modules/domain/agents/four_phase_arc_generator.py",
+      "lines": [1225, 1236],
+      "summary": "Stage2 prev_arc_context is assembled as carryover -> execution -> quality -> advisory/history."
+    },
+    "carryover_block": {
+      "path": "modules/domain/agents/four_phase_arc_generator.py",
+      "lines": [1239, 1290],
+      "summary": "Direct prior arc end-state is lifted as mandatory carryover."
+    },
+    "execution_block": {
+      "path": "modules/domain/agents/four_phase_arc_generator.py",
+      "lines": [1292, 1392],
+      "summary": "DB execution truth explicitly outranks arc plan in Stage2 previous-context payload."
+    },
+    "advisory_history_block": {
+      "path": "modules/domain/agents/four_phase_arc_generator.py",
+      "lines": [1508, 1604],
+      "summary": "World/preflight/state_changes plus up to 200K previous tactical-doc history appended in advisory tail."
+    },
+    "prompt_bundle": {
+      "path": "modules/domain/agents/arc_ensemble.py",
+      "lines": [972, 1045],
+      "summary": "Stage2 prompt injects prohibition_summary, raw curr_block JSON, constraint_block, prev_arc_context."
+    },
+    "prohibition_summary": {
+      "path": "modules/domain/agents/arc_ensemble.py",
+      "lines": [1422, 1465],
+      "summary": "Top-of-prompt prohibition summary extracts only a small subset from prev_arc_context and constraint_block."
+    },
+    "prompt_template": {
+      "path": "config/prompts/ensemble.yaml",
+      "lines": [4, 60],
+      "summary": "Stage2 prompt places prohibition_summary first, then constraint_block, prev_arc_context, curr_block."
+    }
+  },
+  "stage3_code": {
+    "constraint_compile": {
+      "path": "modules/domain/agents/blueprint_constraint_compiler.py",
+      "lines": [44, 136],
+      "summary": "Stage3 compiler builds structured constraint_block with must_focus, stop_line, continuity, inherited_state, arc constraint summary, state changes summary, immutable fact and capital packets."
+    },
+    "unused_formatter": {
+      "path": "modules/domain/agents/blueprint_constraint_compiler.py",
+      "lines": [138, 275],
+      "summary": "compile_to_prompt defines a layered prompt format, but no runtime consumer calls it."
+    },
+    "runtime_constraint_resolution": {
+      "path": "modules/domain/agents/three_phase_blueprint_runtime.py",
+      "lines": [247, 286],
+      "summary": "Runtime compiles constraint_block once and reuses it across retries."
+    },
+    "runtime_use_sites": {
+      "path": "modules/domain/agents/three_phase_blueprint_runtime.py",
+      "lines": [1444, 1516],
+      "summary": "Same constraint_block is passed into Stage3 generation and validation."
+    },
+    "context_assembly": {
+      "path": "modules/domain/agents/blueprint_ensemble.py",
+      "lines": [301, 325],
+      "summary": "Stage3 shared context is concatenated as arc_focus + constraints_str + prev_info + hud_context."
+    },
+    "prompt_bundle": {
+      "path": "modules/domain/agents/blueprint_ensemble.py",
+      "lines": [692, 760],
+      "summary": "Prompt order is arc_focus, constraints, strategy directive, prev_info, HUD, POV."
+    },
+    "banded_constraints": {
+      "path": "modules/domain/agents/blueprint_ensemble.py",
+      "lines": [898, 1091],
+      "summary": "Actual Stage3 consumer explicitly bands IMMUTABLE > HARD CONSTRAINT > EXPECTED CONTINUITY > ADVISORY."
+    },
+    "prev_info_expanded": {
+      "path": "modules/domain/agents/blueprint_ensemble.py",
+      "lines": [1362, 1414],
+      "summary": "Previous blueprint full text and previous manuscripts can each expand up to 400K chars, risking payload-mass flattening."
+    },
+    "prompt_template": {
+      "path": "config/prompts/ensemble.yaml",
+      "lines": [264, 306],
+      "summary": "Stage3 prompt adds scene-authority and anti-HUD guards at the top before arc_focus and constraints."
+    },
+    "validator_binding": {
+      "path": "modules/domain/agents/unified_blueprint_validator.py",
+      "lines": [972, 1057],
+      "summary": "Validation side consumes constraint_block structurally and checks tactical semantic fidelity, fact lock, continuity, capital drift, and timeline."
+    }
+  },
+  "artifact_truth": {
+    "stage2_arc_002": {
+      "path": "projects/0_0/logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json",
+      "constraint_summary_excerpt": "Absolute-ban text focused on already-owned item reacquisition.",
+      "semantic_carryover": {},
+      "episode_details_shape": "five entries, one short detail string each",
+      "state_constraints_shape": {
+        "arc_start_state_keys": ["equipment", "injuries", "location"],
+        "arc_end_state_keys": ["equipment", "injuries", "location"]
+      }
+    },
+    "stage2_arc_002_txt": {
+      "path": "projects/0_0/plans/arcs/arc_002.txt",
+      "summary": "Tactical_doc carries most of the real narrative intent and financial detail for ep5~9."
+    },
+    "stage3_original_ep5": {
+      "path": "projects/0_0/plans/blueprints/blueprint_0005.txt",
+      "summary": "Original blueprint invented intrusion and physical-threat subplot absent from stage2 episode_details and constraint summary."
+    }
+  },
+  "repo_wide_fact": {
+    "compile_to_prompt_references": 1,
+    "compile_to_prompt_search": "rg -n \"compile_to_prompt\\(\" -S modules"
+  }
+}

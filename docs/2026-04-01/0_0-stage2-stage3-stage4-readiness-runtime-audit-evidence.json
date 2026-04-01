@@ -1,0 +1,100 @@
+{
+  "date": "2026-04-01",
+  "lane": "0_0-stage2-stage3-stage4-readiness-remediation",
+  "confidence": 0.96,
+  "canary": {
+    "project": "canary_0_0_stage3_arc2_readiness_r3",
+    "prepared_from": "0_0",
+    "mode": "stage3_only",
+    "from_ep": 5,
+    "target_ep": 9,
+    "session_id": "20260401_075815",
+    "summary_path": "projects/canary_0_0_stage3_arc2_readiness_r3/logs/stage3_canary_summary.json",
+    "hard_gates_status": "pass",
+    "sink_alignment_status": "ok"
+  },
+  "runtime_proof": {
+    "partial_stage3_canary_supported": true,
+    "stage3_final_pass_eps": [
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "blueprint_db_count": 9,
+    "blueprint_file_count": 9
+  },
+  "residual_blockers": [
+    {
+      "ep_num": 5,
+      "kind": "off_arc_physical_intrusion",
+      "source_stage2": "projects/0_0/logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json",
+      "source_stage3": "projects/canary_0_0_stage3_arc2_readiness_r3/plans/blueprints/blueprint_0005.txt",
+      "note": "Stage2 tactical doc calls for PB leverage-order scene, but fresh Stage3 blueprint still invents drunk intruder / physical confrontation."
+    },
+    {
+      "ep_num": 5,
+      "kind": "fact_lock_institution",
+      "source_stage3": "projects/canary_0_0_stage3_arc2_readiness_r3/logs/artifacts/stage3/ep_0005/attempt_01/final_blueprint__emotion_focused.json",
+      "note": "Python warnings still include fact_lock_institution while Director final verdict remains PASS."
+    },
+    {
+      "ep_num": 5,
+      "kind": "arc_timeline",
+      "source_stage3": "projects/canary_0_0_stage3_arc2_readiness_r3/logs/artifacts/stage3/ep_0005/attempt_01/final_blueprint__emotion_focused.json",
+      "note": "Python warnings still include arc_timeline while Director final verdict remains PASS."
+    }
+  ],
+  "db_rows": [
+    {
+      "ep_num": 5,
+      "attempt_num": 1,
+      "verdict": "PASS",
+      "score": 85,
+      "attempt_key": "s3:ep5:arc2:a1:20260401_075815",
+      "selection_reason": "Arc 핵심 사건을 충실히 반영했으나, 기관명 오류가 존재하여 국소 수정이 필요함.",
+      "fix_scope": "inplace"
+    },
+    {
+      "ep_num": 6,
+      "attempt_num": 10,
+      "verdict": "PASS",
+      "score": 90,
+      "attempt_key": "s3:ep6:arc2:a10:20260401_075815",
+      "selection_reason": "금융물의 긴장감을 잘 살렸으며, Arc 지시사항을 완벽히 반영한 안정적인 전개",
+      "fix_scope": "inplace"
+    },
+    {
+      "ep_num": 7,
+      "attempt_num": 1,
+      "verdict": "PASS",
+      "score": 95,
+      "attempt_key": "s3:ep7:arc2:a1:20260401_075815",
+      "selection_reason": "Arc 전술서를 완벽히 이행하며 이전 화와의 연속성이 매우 뛰어남.",
+      "fix_scope": "inplace"
+    },
+    {
+      "ep_num": 8,
+      "attempt_num": 2,
+      "verdict": "PASS",
+      "score": 95,
+      "attempt_key": "s3:ep8:arc2:a2:20260401_075815",
+      "selection_reason": "score strong (95.0)",
+      "fix_scope": ""
+    },
+    {
+      "ep_num": 9,
+      "attempt_num": 1,
+      "verdict": "PASS",
+      "score": 95,
+      "attempt_key": "s3:ep9:arc2:a1:20260401_075815",
+      "selection_reason": "Arc 전술서를 완벽히 반영하며 장르적 긴장감을 잘 살림.",
+      "fix_scope": "inplace"
+    }
+  ],
+  "verdict": {
+    "structural_runtime_proof": "pass",
+    "stage4_readiness_closure": "fail",
+    "stage4_pause_should_remain": true
+  }
