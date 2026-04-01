@@ -1,0 +1,19 @@
+{
+  "_schema_version": "business_trend_slice_schema.v1",
+  "schema_path": "narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/business_trend_slice/business_slice_schema.json",
+  "purpose": "Material-side slice for modern business / office-power / chaebol-adjacent trends from KR serial platforms.",
+  "authority_note": "Python only filters and formats transparent signals. Final relevance and concept judgment stay on the LLM side.",
+  "entry_fields": {
+    "business_relevance_score": "positive exact-match score minus noise penalty",
+    "business_buckets": "matched lanes such as chaebol_power / office_operator / money_game / industry_scale / media_ip_business",
+    "positive_matches": "transparent include-side keyword hits grouped by bucket",
+    "negative_matches": "transparent noise-side keyword hits grouped by bucket",
+    "title_direct_hits": "strong direct packaging words seen in the title itself"
+  },
+  "work_fields": {
+    "surface_count": "how many platform surfaces repeated this work in the slice",
+    "max_business_relevance_score": "best entry-level score across duplicated surfaces",
+    "avg_business_relevance_score": "mean score across duplicated surfaces",
+    "surface_labels": "which screens surfaced the work"
+  }
+}

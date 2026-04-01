@@ -1,0 +1,489 @@
+{
+  "_schema_version": "platform_cue_rollup.v1",
+  "cue_counts_by_platform": {
+    "naver_series": [
+      {
+        "cue": "천재",
+        "count": 59
+      },
+      {
+        "cue": "회귀",
+        "count": 32
+      },
+      {
+        "cue": "탑",
+        "count": 16
+      },
+      {
+        "cue": "귀환",
+        "count": 16
+      },
+      {
+        "cue": "미국",
+        "count": 12
+      },
+      {
+        "cue": "재벌",
+        "count": 11
+      },
+      {
+        "cue": "망나니",
+        "count": 10
+      },
+      {
+        "cue": "감정사",
+        "count": 9
+      },
+      {
+        "cue": "돈",
+        "count": 9
+      },
+      {
+        "cue": "무당",
+        "count": 9
+      },
+      {
+        "cue": "헌터",
+        "count": 9
+      },
+      {
+        "cue": "게임",
+        "count": 8
+      },
+      {
+        "cue": "변호사",
+        "count": 7
+      },
+      {
+        "cue": "반도체",
+        "count": 6
+      },
+      {
+        "cue": "계약",
+        "count": 5
+      },
+      {
+        "cue": "각성",
+        "count": 5
+      },
+      {
+        "cue": "의사",
+        "count": 5
+      },
+      {
+        "cue": "배우",
+        "count": 4
+      },
+      {
+        "cue": "AI",
+        "count": 4
+      },
+      {
+        "cue": "코인",
+        "count": 3
+      },
+      {
+        "cue": "판타지",
+        "count": 3
+      },
+      {
+        "cue": "로또",
+        "count": 3
+      },
+      {
+        "cue": "독재자",
+        "count": 2
+      },
+      {
+        "cue": "아포칼립스",
+        "count": 2
+      },
+      {
+        "cue": "투자",
+        "count": 2
+      },
+      {
+        "cue": "작곡",
+        "count": 1
+      },
+      {
+        "cue": "회사",
+        "count": 1
+      }
+    ],
+    "__all__": [
+      {
+        "cue": "천재",
+        "count": 179
+      },
+      {
+        "cue": "회귀",
+        "count": 76
+      },
+      {
+        "cue": "탑",
+        "count": 43
+      },
+      {
+        "cue": "귀환",
+        "count": 38
+      },
+      {
+        "cue": "재벌",
+        "count": 34
+      },
+      {
+        "cue": "헌터",
+        "count": 29
+      },
+      {
+        "cue": "돈",
+        "count": 28
+      },
+      {
+        "cue": "미국",
+        "count": 24
+      },
+      {
+        "cue": "각성",
+        "count": 23
+      },
+      {
+        "cue": "의사",
+        "count": 19
+      },
+      {
+        "cue": "배우",
+        "count": 18
+      },
+      {
+        "cue": "게임",
+        "count": 16
+      },
+      {
+        "cue": "회사",
+        "count": 16
+      },
+      {
+        "cue": "망나니",
+        "count": 16
+      },
+      {
+        "cue": "계약",
+        "count": 15
+      },
+      {
+        "cue": "무당",
+        "count": 15
+      },
+      {
+        "cue": "감정사",
+        "count": 14
+      },
+      {
+        "cue": "아포칼립스",
+        "count": 14
+      },
+      {
+        "cue": "변호사",
+        "count": 13
+      },
+      {
+        "cue": "디렉터",
+        "count": 10
+      },
+      {
+        "cue": "OTT",
+        "count": 10
+      },
+      {
+        "cue": "투자",
+        "count": 8
+      },
+      {
+        "cue": "코인",
+        "count": 7
+      },
+      {
+        "cue": "반도체",
+        "count": 7
+      },
+      {
+        "cue": "AI",
+        "count": 6
+      },
+      {
+        "cue": "판타지",
+        "count": 6
+      },
+      {
+        "cue": "작곡",
+        "count": 5
+      },
+      {
+        "cue": "로또",
+        "count": 5
+      },
+      {
+        "cue": "독재자",
+        "count": 3
+      },
+      {
+        "cue": "탑스타",
+        "count": 3
+      },
+      {
+        "cue": "대기업",
+        "count": 3
+      },
+      {
+        "cue": "상태창",
+        "count": 3
+      },
+      {
+        "cue": "공무원",
+        "count": 2
+      },
+      {
+        "cue": "중동",
+        "count": 1
+      },
+      {
+        "cue": "빅테크",
+        "count": 1
+      },
+      {
+        "cue": "후계자",
+        "count": 1
+      }
+    ],
+    "munpia": [
+      {
+        "cue": "천재",
+        "count": 55
+      },
+      {
+        "cue": "회귀",
+        "count": 22
+      },
+      {
+        "cue": "재벌",
+        "count": 20
+      },
+      {
+        "cue": "각성",
+        "count": 15
+      },
+      {
+        "cue": "탑",
+        "count": 15
+      },
+      {
+        "cue": "헌터",
+        "count": 13
+      },
+      {
+        "cue": "귀환",
+        "count": 12
+      },
+      {
+        "cue": "아포칼립스",
+        "count": 12
+      },
+      {
+        "cue": "미국",
+        "count": 11
+      },
+      {
+        "cue": "돈",
+        "count": 10
+      },
+      {
+        "cue": "회사",
+        "count": 9
+      },
+      {
+        "cue": "의사",
+        "count": 5
+      },
+      {
+        "cue": "감정사",
+        "count": 5
+      },
+      {
+        "cue": "배우",
+        "count": 5
+      },
+      {
+        "cue": "무당",
+        "count": 4
+      },
+      {
+        "cue": "게임",
+        "count": 4
+      },
+      {
+        "cue": "코인",
+        "count": 4
+      },
+      {
+        "cue": "탑스타",
+        "count": 3
+      },
+      {
+        "cue": "투자",
+        "count": 3
+      },
+      {
+        "cue": "대기업",
+        "count": 3
+      },
+      {
+        "cue": "상태창",
+        "count": 3
+      },
+      {
+        "cue": "변호사",
+        "count": 2
+      },
+      {
+        "cue": "로또",
+        "count": 2
+      },
+      {
+        "cue": "판타지",
+        "count": 2
+      },
+      {
+        "cue": "공무원",
+        "count": 2
+      },
+      {
+        "cue": "AI",
+        "count": 2
+      },
+      {
+        "cue": "망나니",
+        "count": 1
+      },
+      {
+        "cue": "중동",
+        "count": 1
+      },
+      {
+        "cue": "독재자",
+        "count": 1
+      },
+      {
+        "cue": "빅테크",
+        "count": 1
+      },
+      {
+        "cue": "계약",
+        "count": 1
+      },
+      {
+        "cue": "작곡",
+        "count": 1
+      },
+      {
+        "cue": "후계자",
+        "count": 1
+      },
+      {
+        "cue": "반도체",
+        "count": 1
+      }
+    ],
+    "kakaopage": [
+      {
+        "cue": "천재",
+        "count": 65
+      },
+      {
+        "cue": "회귀",
+        "count": 22
+      },
+      {
+        "cue": "탑",
+        "count": 12
+      },
+      {
+        "cue": "디렉터",
+        "count": 10
+      },
+      {
+        "cue": "OTT",
+        "count": 10
+      },
+      {
+        "cue": "귀환",
+        "count": 10
+      },
+      {
+        "cue": "계약",
+        "count": 9
+      },
+      {
+        "cue": "돈",
+        "count": 9
+      },
+      {
+        "cue": "의사",
+        "count": 9
+      },
+      {
+        "cue": "배우",
+        "count": 9
+      },
+      {
+        "cue": "헌터",
+        "count": 7
+      },
+      {
+        "cue": "회사",
+        "count": 6
+      },
+      {
+        "cue": "망나니",
+        "count": 5
+      },
+      {
+        "cue": "변호사",
+        "count": 4
+      },
+      {
+        "cue": "게임",
+        "count": 4
+      },
+      {
+        "cue": "투자",
+        "count": 3
+      },
+      {
+        "cue": "재벌",
+        "count": 3
+      },
+      {
+        "cue": "각성",
+        "count": 3
+      },
+      {
+        "cue": "작곡",
+        "count": 3
+      },
+      {
+        "cue": "무당",
+        "count": 2
+      },
+      {
+        "cue": "미국",
+        "count": 1
+      },
+      {
+        "cue": "판타지",
+        "count": 1
+      }
+    ]
+  }
+}

@@ -1,0 +1,1933 @@
+{
+  "_schema_version": "platform_title_token_rollup.v1",
+  "top_tokens_by_platform": {
+    "naver_series": [
+      {
+        "token": "독점",
+        "count": 404
+      },
+      {
+        "token": "단행본",
+        "count": 110
+      },
+      {
+        "token": "선공개",
+        "count": 60
+      },
+      {
+        "token": "bl",
+        "count": 54
+      },
+      {
+        "token": "천재",
+        "count": 44
+      },
+      {
+        "token": "되었다",
+        "count": 40
+      },
+      {
+        "token": "무료연재",
+        "count": 33
+      },
+      {
+        "token": "잘함",
+        "count": 19
+      },
+      {
+        "token": "너무",
+        "count": 18
+      },
+      {
+        "token": "미국",
+        "count": 12
+      },
+      {
+        "token": "돌아왔다",
+        "count": 11
+      },
+      {
+        "token": "스캔들",
+        "count": 10
+      },
+      {
+        "token": "살아가는",
+        "count": 10
+      },
+      {
+        "token": "회귀",
+        "count": 10
+      },
+      {
+        "token": "숨김",
+        "count": 10
+      },
+      {
+        "token": "외전",
+        "count": 9
+      },
+      {
+        "token": "결혼",
+        "count": 9
+      },
+      {
+        "token": "친구",
+        "count": 9
+      },
+      {
+        "token": "내가",
+        "count": 9
+      },
+      {
+        "token": "취업",
+        "count": 9
+      },
+      {
+        "token": "오빠",
+        "count": 9
+      },
+      {
+        "token": "버린",
+        "count": 9
+      },
+      {
+        "token": "쉽다",
+        "count": 9
+      },
+      {
+        "token": "있다",
+        "count": 9
+      },
+      {
+        "token": "천재가",
+        "count": 9
+      },
+      {
+        "token": "회귀한",
+        "count": 8
+      },
+      {
+        "token": "없는",
+        "count": 8
+      },
+      {
+        "token": "시골에서",
+        "count": 8
+      },
+      {
+        "token": "올드카",
+        "count": 8
+      },
+      {
+        "token": "복원으로",
+        "count": 8
+      },
+      {
+        "token": "대박",
+        "count": 8
+      },
+      {
+        "token": "착각",
+        "count": 8
+      },
+      {
+        "token": "당했다",
+        "count": 8
+      },
+      {
+        "token": "마탑",
+        "count": 8
+      },
+      {
+        "token": "위한",
+        "count": 8
+      },
+      {
+        "token": "돈이",
+        "count": 7
+      },
+      {
+        "token": "삽화본",
+        "count": 7
+      },
+      {
+        "token": "시한부",
+        "count": 7
+      },
+      {
+        "token": "삼국지",
+        "count": 7
+      },
+      {
+        "token": "집착한다",
+        "count": 7
+      },
+      {
+        "token": "연애",
+        "count": 7
+      },
+      {
+        "token": "나의",
+        "count": 7
+      },
+      {
+        "token": "내게",
+        "count": 7
+      },
+      {
+        "token": "남편에게",
+        "count": 7
+      },
+      {
+        "token": "잊어야",
+        "count": 7
+      },
+      {
+        "token": "말할",
+        "count": 7
+      },
+      {
+        "token": "유물",
+        "count": 7
+      },
+      {
+        "token": "감정사로",
+        "count": 7
+      },
+      {
+        "token": "빙의의",
+        "count": 7
+      },
+      {
+        "token": "대가가",
+        "count": 7
+      },
+      {
+        "token": "사기라뇨",
+        "count": 7
+      },
+      {
+        "token": "막내가",
+        "count": 7
+      },
+      {
+        "token": "있는",
+        "count": 7
+      },
+      {
+        "token": "살아남기",
+        "count": 7
+      },
+      {
+        "token": "물리학을",
+        "count": 7
+      },
+      {
+        "token": "메이커가",
+        "count": 7
+      },
+      {
+        "token": "화산귀환",
+        "count": 7
+      },
+      {
+        "token": "초월급",
+        "count": 7
+      },
+      {
+        "token": "헌터",
+        "count": 7
+      },
+      {
+        "token": "나쁜",
+        "count": 6
+      },
+      {
+        "token": "미친",
+        "count": 6
+      },
+      {
+        "token": "아카데미",
+        "count": 6
+      },
+      {
+        "token": "망나니",
+        "count": 6
+      },
+      {
+        "token": "버그",
+        "count": 6
+      },
+      {
+        "token": "수집가의",
+        "count": 6
+      },
+      {
+        "token": "목표는",
+        "count": 6
+      },
+      {
+        "token": "해피엔딩입니다",
+        "count": 6
+      },
+      {
+        "token": "신성",
+        "count": 6
+      },
+      {
+        "token": "명가",
+        "count": 6
+      },
+      {
+        "token": "쓸모",
+        "count": 6
+      },
+      {
+        "token": "애정",
+        "count": 6
+      },
+      {
+        "token": "얻었다",
+        "count": 6
+      },
+      {
+        "token": "사는",
+        "count": 6
+      },
+      {
+        "token": "얼굴",
+        "count": 6
+      },
+      {
+        "token": "아역이",
+        "count": 6
+      },
+      {
+        "token": "연기를",
+        "count": 6
+      },
+      {
+        "token": "나노",
+        "count": 6
+      },
+      {
+        "token": "왕국으로",
+        "count": 6
+      },
+      {
+        "token": "반도체",
+        "count": 6
+      },
+      {
+        "token": "재벌",
+        "count": 6
+      },
+      {
+        "token": "더럽혀",
+        "count": 6
+      },
+      {
+        "token": "마땅할",
+        "count": 6
+      },
+      {
+        "token": "왕비여",
+        "count": 6
+      },
+      {
+        "token": "삼남매는",
+        "count": 6
+      },
+      {
+        "token": "놀면서",
+        "count": 6
+      },
+      {
+        "token": "무당파를",
+        "count": 6
+      },
+      {
+        "token": "세웠다",
+        "count": 6
+      },
+      {
+        "token": "혼자",
+        "count": 6
+      },
+      {
+        "token": "만렙",
+        "count": 6
+      },
+      {
+        "token": "버렸다",
+        "count": 6
+      },
+      {
+        "token": "괴물",
+        "count": 6
+      },
+      {
+        "token": "아니고",
+        "count": 6
+      },
+      {
+        "token": "변호사입니다",
+        "count": 6
+      },
+      {
+        "token": "국왕전하를",
+        "count": 6
+      },
+      {
+        "token": "단정한",
+        "count": 6
+      },
+      {
+        "token": "교본",
+        "count": 6
+      },
+      {
+        "token": "이세계",
+        "count": 6
+      },
+      {
+        "token": "비서",
+        "count": 5
+      },
+      {
+        "token": "나를",
+        "count": 5
+      },
+      {
+        "token": "s급",
+        "count": 5
+      },
+      {
+        "token": "번째",
+        "count": 5
+      },
+      {
+        "token": "거짓말",
+        "count": 5
+      },
+      {
+        "token": "사랑",
+        "count": 5
+      },
+      {
+        "token": "배덕한",
+        "count": 5
+      },
+      {
+        "token": "원수",
+        "count": 5
+      },
+      {
+        "token": "순정",
+        "count": 5
+      },
+      {
+        "token": "되다",
+        "count": 5
+      },
+      {
+        "token": "네가",
+        "count": 5
+      },
+      {
+        "token": "게임",
+        "count": 5
+      },
+      {
+        "token": "마법사",
+        "count": 5
+      },
+      {
+        "token": "순수한",
+        "count": 5
+      },
+      {
+        "token": "동거생활",
+        "count": 5
+      },
+      {
+        "token": "재벌집",
+        "count": 5
+      },
+      {
+        "token": "맏며느리",
+        "count": 5
+      },
+      {
+        "token": "베이비",
+        "count": 5
+      },
+      {
+        "token": "폭군",
+        "count": 5
+      },
+      {
+        "token": "공작님과",
+        "count": 5
+      },
+      {
+        "token": "이러면",
+        "count": 5
+      },
+      {
+        "token": "되는",
+        "count": 5
+      },
+      {
+        "token": "알지만",
+        "count": 5
+      }
+    ],
+    "__all__": [
+      {
+        "token": "독점",
+        "count": 404
+      },
+      {
+        "token": "단행본",
+        "count": 132
+      },
+      {
+        "token": "천재",
+        "count": 125
+      },
+      {
+        "token": "되었다",
+        "count": 82
+      },
+      {
+        "token": "너무",
+        "count": 61
+      },
+      {
+        "token": "선공개",
+        "count": 60
+      },
+      {
+        "token": "bl",
+        "count": 54
+      },
+      {
+        "token": "잘함",
+        "count": 39
+      },
+      {
+        "token": "19세",
+        "count": 35
+      },
+      {
+        "token": "완전판",
+        "count": 35
+      },
+      {
+        "token": "무료연재",
+        "count": 33
+      },
+      {
+        "token": "쉽다",
+        "count": 23
+      },
+      {
+        "token": "숨김",
+        "count": 23
+      },
+      {
+        "token": "역대급",
+        "count": 23
+      },
+      {
+        "token": "회귀한",
+        "count": 21
+      },
+      {
+        "token": "회귀",
+        "count": 21
+      },
+      {
+        "token": "나를",
+        "count": 20
+      },
+      {
+        "token": "미국",
+        "count": 20
+      },
+      {
+        "token": "삼국지",
+        "count": 19
+      },
+      {
+        "token": "살아남기",
+        "count": 19
+      },
+      {
+        "token": "미친",
+        "count": 18
+      },
+      {
+        "token": "살아가는",
+        "count": 18
+      },
+      {
+        "token": "내가",
+        "count": 16
+      },
+      {
+        "token": "얻었다",
+        "count": 16
+      },
+      {
+        "token": "라이어",
+        "count": 16
+      },
+      {
+        "token": "liar",
+        "count": 16
+      },
+      {
+        "token": "돌아왔다",
+        "count": 15
+      },
+      {
+        "token": "ex급",
+        "count": 15
+      },
+      {
+        "token": "만렙",
+        "count": 15
+      },
+      {
+        "token": "초월급",
+        "count": 15
+      },
+      {
+        "token": "결혼",
+        "count": 14
+      },
+      {
+        "token": "내게",
+        "count": 14
+      },
+      {
+        "token": "생활",
+        "count": 14
+      },
+      {
+        "token": "힘을",
+        "count": 14
+      },
+      {
+        "token": "스트리밍",
+        "count": 14
+      },
+      {
+        "token": "돈이",
+        "count": 13
+      },
+      {
+        "token": "천재가",
+        "count": 13
+      },
+      {
+        "token": "재벌",
+        "count": 13
+      },
+      {
+        "token": "씹어먹는",
+        "count": 13
+      },
+      {
+        "token": "전능의",
+        "count": 12
+      },
+      {
+        "token": "연애",
+        "count": 12
+      },
+      {
+        "token": "스캔들",
+        "count": 12
+      },
+      {
+        "token": "오빠",
+        "count": 12
+      },
+      {
+        "token": "혼자",
+        "count": 12
+      },
+      {
+        "token": "헌터",
+        "count": 12
+      },
+      {
+        "token": "위한",
+        "count": 12
+      },
+      {
+        "token": "천재의",
+        "count": 12
+      },
+      {
+        "token": "집착한다",
+        "count": 11
+      },
+      {
+        "token": "하녀",
+        "count": 11
+      },
+      {
+        "token": "게임",
+        "count": 11
+      },
+      {
+        "token": "사는",
+        "count": 11
+      },
+      {
+        "token": "마법사",
+        "count": 11
+      },
+      {
+        "token": "없다",
+        "count": 11
+      },
+      {
+        "token": "검은머리",
+        "count": 10
+      },
+      {
+        "token": "망한",
+        "count": 10
+      },
+      {
+        "token": "버린",
+        "count": 10
+      },
+      {
+        "token": "재앙급",
+        "count": 10
+      },
+      {
+        "token": "괴물",
+        "count": 10
+      },
+      {
+        "token": "이번",
+        "count": 10
+      },
+      {
+        "token": "하드캐리",
+        "count": 10
+      },
+      {
+        "token": "ott",
+        "count": 10
+      },
+      {
+        "token": "디렉터",
+        "count": 10
+      },
+      {
+        "token": "다시",
+        "count": 10
+      },
+      {
+        "token": "외전",
+        "count": 9
+      },
+      {
+        "token": "미쳤다",
+        "count": 9
+      },
+      {
+        "token": "s급",
+        "count": 9
+      },
+      {
+        "token": "시한부",
+        "count": 9
+      },
+      {
+        "token": "친구",
+        "count": 9
+      },
+      {
+        "token": "뿐인데",
+        "count": 9
+      },
+      {
+        "token": "취업",
+        "count": 9
+      },
+      {
+        "token": "나의",
+        "count": 9
+      },
+      {
+        "token": "없는",
+        "count": 9
+      },
+      {
+        "token": "대박",
+        "count": 9
+      },
+      {
+        "token": "마법사로",
+        "count": 9
+      },
+      {
+        "token": "있다",
+        "count": 9
+      },
+      {
+        "token": "망나니",
+        "count": 9
+      },
+      {
+        "token": "착각",
+        "count": 9
+      },
+      {
+        "token": "당했다",
+        "count": 9
+      },
+      {
+        "token": "있는",
+        "count": 9
+      },
+      {
+        "token": "되는",
+        "count": 9
+      },
+      {
+        "token": "귀환한",
+        "count": 9
+      },
+      {
+        "token": "귀환",
+        "count": 9
+      },
+      {
+        "token": "생은",
+        "count": 9
+      },
+      {
+        "token": "숨기고",
+        "count": 9
+      },
+      {
+        "token": "즐기는",
+        "count": 9
+      },
+      {
+        "token": "평화로운",
+        "count": 9
+      },
+      {
+        "token": "소드마스터",
+        "count": 8
+      },
+      {
+        "token": "아기",
+        "count": 8
+      },
+      {
+        "token": "아카데미",
+        "count": 8
+      },
+      {
+        "token": "계약",
+        "count": 8
+      },
+      {
+        "token": "시골에서",
+        "count": 8
+      },
+      {
+        "token": "올드카",
+        "count": 8
+      },
+      {
+        "token": "복원으로",
+        "count": 8
+      },
+      {
+        "token": "유물",
+        "count": 8
+      },
+      {
+        "token": "막내가",
+        "count": 8
+      },
+      {
+        "token": "마탑",
+        "count": 8
+      },
+      {
+        "token": "재벌집",
+        "count": 8
+      },
+      {
+        "token": "세상에서",
+        "count": 8
+      },
+      {
+        "token": "나만",
+        "count": 8
+      },
+      {
+        "token": "이세계",
+        "count": 8
+      },
+      {
+        "token": "가문의",
+        "count": 8
+      },
+      {
+        "token": "공모전",
+        "count": 8
+      },
+      {
+        "token": "젤리외계인이",
+        "count": 8
+      },
+      {
+        "token": "구해줄게",
+        "count": 8
+      },
+      {
+        "token": "and",
+        "count": 8
+      },
+      {
+        "token": "삽화본",
+        "count": 7
+      },
+      {
+        "token": "나쁜",
+        "count": 7
+      },
+      {
+        "token": "북부",
+        "count": 7
+      },
+      {
+        "token": "변호사",
+        "count": 7
+      },
+      {
+        "token": "막내아들",
+        "count": 7
+      },
+      {
+        "token": "남편에게",
+        "count": 7
+      },
+      {
+        "token": "잊어야",
+        "count": 7
+      },
+      {
+        "token": "말할",
+        "count": 7
+      },
+      {
+        "token": "되다",
+        "count": 7
+      },
+      {
+        "token": "감정사로",
+        "count": 7
+      },
+      {
+        "token": "버그",
+        "count": 7
+      },
+      {
+        "token": "빙의의",
+        "count": 7
+      },
+      {
+        "token": "대가가",
+        "count": 7
+      },
+      {
+        "token": "사기라뇨",
+        "count": 7
+      },
+      {
+        "token": "쓸모",
+        "count": 7
+      }
+    ],
+    "munpia": [
+      {
+        "token": "천재",
+        "count": 37
+      },
+      {
+        "token": "되었다",
+        "count": 24
+      },
+      {
+        "token": "너무",
+        "count": 21
+      },
+      {
+        "token": "잘함",
+        "count": 13
+      },
+      {
+        "token": "쉽다",
+        "count": 12
+      },
+      {
+        "token": "삼국지",
+        "count": 12
+      },
+      {
+        "token": "ex급",
+        "count": 9
+      },
+      {
+        "token": "회귀한",
+        "count": 9
+      },
+      {
+        "token": "숨김",
+        "count": 8
+      },
+      {
+        "token": "공모전",
+        "count": 8
+      },
+      {
+        "token": "귀환한",
+        "count": 7
+      },
+      {
+        "token": "재벌",
+        "count": 7
+      },
+      {
+        "token": "미국",
+        "count": 7
+      },
+      {
+        "token": "회귀",
+        "count": 6
+      },
+      {
+        "token": "혼자",
+        "count": 6
+      },
+      {
+        "token": "전능의",
+        "count": 6
+      },
+      {
+        "token": "망한",
+        "count": 6
+      },
+      {
+        "token": "없다",
+        "count": 6
+      },
+      {
+        "token": "미친",
+        "count": 5
+      },
+      {
+        "token": "저작권료가",
+        "count": 5
+      },
+      {
+        "token": "000",
+        "count": 5
+      },
+      {
+        "token": "무한",
+        "count": 5
+      },
+      {
+        "token": "내가",
+        "count": 5
+      },
+      {
+        "token": "라이프",
+        "count": 5
+      },
+      {
+        "token": "살아남기",
+        "count": 5
+      },
+      {
+        "token": "돈이",
+        "count": 5
+      },
+      {
+        "token": "헌터",
+        "count": 5
+      },
+      {
+        "token": "조선",
+        "count": 5
+      },
+      {
+        "token": "미쳤다",
+        "count": 5
+      },
+      {
+        "token": "천재가",
+        "count": 4
+      },
+      {
+        "token": "삼촌은",
+        "count": 4
+      },
+      {
+        "token": "재앙급",
+        "count": 4
+      },
+      {
+        "token": "괴물",
+        "count": 4
+      },
+      {
+        "token": "산다",
+        "count": 4
+      },
+      {
+        "token": "힘을",
+        "count": 4
+      },
+      {
+        "token": "검은머리",
+        "count": 4
+      },
+      {
+        "token": "얻었다",
+        "count": 4
+      },
+      {
+        "token": "능력을",
+        "count": 4
+      },
+      {
+        "token": "생김",
+        "count": 4
+      },
+      {
+        "token": "퇴사",
+        "count": 4
+      },
+      {
+        "token": "방출당한",
+        "count": 4
+      },
+      {
+        "token": "역대급",
+        "count": 4
+      },
+      {
+        "token": "힐링",
+        "count": 4
+      },
+      {
+        "token": "인생역전",
+        "count": 4
+      },
+      {
+        "token": "스킬",
+        "count": 4
+      },
+      {
+        "token": "계속",
+        "count": 3
+      },
+      {
+        "token": "마법사",
+        "count": 3
+      },
+      {
+        "token": "일을",
+        "count": 3
+      },
+      {
+        "token": "재벌가",
+        "count": 3
+      },
+      {
+        "token": "각성함",
+        "count": 3
+      },
+      {
+        "token": "sss급",
+        "count": 3
+      },
+      {
+        "token": "게임",
+        "count": 3
+      },
+      {
+        "token": "쏟아짐",
+        "count": 3
+      },
+      {
+        "token": "보는",
+        "count": 3
+      },
+      {
+        "token": "초월급",
+        "count": 3
+      },
+      {
+        "token": "각성",
+        "count": 3
+      },
+      {
+        "token": "쉬움",
+        "count": 3
+      },
+      {
+        "token": "세계",
+        "count": 3
+      },
+      {
+        "token": "등반",
+        "count": 3
+      },
+      {
+        "token": "착각당했다",
+        "count": 3
+      },
+      {
+        "token": "사냥꾼",
+        "count": 3
+      },
+      {
+        "token": "만렙",
+        "count": 3
+      },
+      {
+        "token": "감정사",
+        "count": 3
+      },
+      {
+        "token": "아포칼립스의",
+        "count": 3
+      },
+      {
+        "token": "회사원이",
+        "count": 3
+      },
+      {
+        "token": "은퇴한",
+        "count": 3
+      },
+      {
+        "token": "살아가는",
+        "count": 3
+      },
+      {
+        "token": "지옥에서",
+        "count": 3
+      },
+      {
+        "token": "아포칼립스",
+        "count": 3
+      },
+      {
+        "token": "돌아왔다",
+        "count": 3
+      },
+      {
+        "token": "s급",
+        "count": 3
+      },
+      {
+        "token": "가문의",
+        "count": 3
+      },
+      {
+        "token": "싶다",
+        "count": 3
+      },
+      {
+        "token": "바바리안",
+        "count": 3
+      },
+      {
+        "token": "폭군",
+        "count": 2
+      },
+      {
+        "token": "헌터로",
+        "count": 2
+      },
+      {
+        "token": "미국에서",
+        "count": 2
+      },
+      {
+        "token": "개발했더니",
+        "count": 2
+      },
+      {
+        "token": "변호사",
+        "count": 2
+      },
+      {
+        "token": "전역",
+        "count": 2
+      },
+      {
+        "token": "바람난",
+        "count": 2
+      },
+      {
+        "token": "꿈에서",
+        "count": 2
+      },
+      {
+        "token": "로또",
+        "count": 2
+      },
+      {
+        "token": "씹어먹는",
+        "count": 2
+      },
+      {
+        "token": "의사",
+        "count": 2
+      },
+      {
+        "token": "아포칼립스에서",
+        "count": 2
+      },
+      {
+        "token": "절대",
+        "count": 2
+      },
+      {
+        "token": "각성했다",
+        "count": 2
+      },
+      {
+        "token": "딸깍",
+        "count": 2
+      },
+      {
+        "token": "사는",
+        "count": 2
+      },
+      {
+        "token": "먹는다",
+        "count": 2
+      },
+      {
+        "token": "뿐인데",
+        "count": 2
+      },
+      {
+        "token": "전생",
+        "count": 2
+      },
+      {
+        "token": "특수부대",
+        "count": 2
+      },
+      {
+        "token": "중세",
+        "count": 2
+      },
+      {
+        "token": "능력으로",
+        "count": 2
+      },
+      {
+        "token": "방구석",
+        "count": 2
+      },
+      {
+        "token": "상태창이",
+        "count": 2
+      },
+      {
+        "token": "무림에",
+        "count": 2
+      },
+      {
+        "token": "집착함",
+        "count": 2
+      },
+      {
+        "token": "멸망한",
+        "count": 2
+      },
+      {
+        "token": "소드마스터",
+        "count": 2
+      },
+      {
+        "token": "감정사가",
+        "count": 2
+      },
+      {
+        "token": "제발",
+        "count": 2
+      },
+      {
+        "token": "깡촌의",
+        "count": 2
+      },
+      {
+        "token": "되어서",
+        "count": 2
+      },
+      {
+        "token": "보물",
+        "count": 2
+      },
+      {
+        "token": "엔지니어가",
+        "count": 2
+      },
+      {
+        "token": "유물을",
+        "count": 2
+      },
+      {
+        "token": "합니다",
+        "count": 2
+      },
+      {
+        "token": "용병의",
+        "count": 2
+      },
+      {
+        "token": "삼촌이",
+        "count": 2
+      },
+      {
+        "token": "농사",
+        "count": 2
+      },
+      {
+        "token": "헌터가",
+        "count": 2
+      },
+      {
+        "token": "잘생겨졌더니",
+        "count": 2
+      },
+      {
+        "token": "전신",
+        "count": 2
+      },
+      {
+        "token": "선협에서",
+        "count": 2
+      },
+      {
+        "token": "맞고",
+        "count": 2
+      },
+      {
+        "token": "nba",
+        "count": 2
+      },
+      {
+        "token": "용병",
+        "count": 2
+      }
+    ],
+    "kakaopage": [
+      {
+        "token": "천재",
+        "count": 44
+      },
+      {
+        "token": "19세",
+        "count": 35
+      },
+      {
+        "token": "완전판",
+        "count": 35
+      },
+      {
+        "token": "너무",
+        "count": 22
+      },
+      {
+        "token": "단행본",
+        "count": 22
+      },
+      {
+        "token": "역대급",
+        "count": 18
+      },
+      {
+        "token": "되었다",
+        "count": 18
+      },
+      {
+        "token": "라이어",
+        "count": 16
+      },
+      {
+        "token": "liar",
+        "count": 16
+      },
+      {
+        "token": "나를",
+        "count": 14
+      },
+      {
+        "token": "스트리밍",
+        "count": 13
+      },
+      {
+        "token": "씹어먹는",
+        "count": 11
+      },
+      {
+        "token": "생활",
+        "count": 11
+      },
+      {
+        "token": "천재의",
+        "count": 10
+      },
+      {
+        "token": "하드캐리",
+        "count": 10
+      },
+      {
+        "token": "ott",
+        "count": 10
+      },
+      {
+        "token": "디렉터",
+        "count": 10
+      },
+      {
+        "token": "다시",
+        "count": 10
+      },
+      {
+        "token": "힘을",
+        "count": 9
+      },
+      {
+        "token": "숨기고",
+        "count": 9
+      },
+      {
+        "token": "즐기는",
+        "count": 9
+      },
+      {
+        "token": "평화로운",
+        "count": 9
+      },
+      {
+        "token": "하녀",
+        "count": 9
+      },
+      {
+        "token": "귀환",
+        "count": 8
+      },
+      {
+        "token": "젤리외계인이",
+        "count": 8
+      },
+      {
+        "token": "구해줄게",
+        "count": 8
+      },
+      {
+        "token": "and",
+        "count": 8
+      },
+      {
+        "token": "이번",
+        "count": 7
+      },
+      {
+        "token": "생은",
+        "count": 7
+      },
+      {
+        "token": "응급",
+        "count": 7
+      },
+      {
+        "token": "잘함",
+        "count": 7
+      },
+      {
+        "token": "살아남기",
+        "count": 7
+      },
+      {
+        "token": "아기",
+        "count": 7
+      },
+      {
+        "token": "미친",
+        "count": 7
+      },
+      {
+        "token": "만렙",
+        "count": 6
+      },
+      {
+        "token": "편집자의",
+        "count": 6
+      },
+      {
+        "token": "생존수칙",
+        "count": 6
+      },
+      {
+        "token": "의원",
+        "count": 6
+      },
+      {
+        "token": "살다",
+        "count": 6
+      },
+      {
+        "token": "내게",
+        "count": 6
+      },
+      {
+        "token": "얻었다",
+        "count": 6
+      },
+      {
+        "token": "랭커의",
+        "count": 5
+      },
+      {
+        "token": "환생자의",
+        "count": 5
+      },
+      {
+        "token": "막내아들",
+        "count": 5
+      },
+      {
+        "token": "되겠습니다",
+        "count": 5
+      },
+      {
+        "token": "회귀",
+        "count": 5
+      },
+      {
+        "token": "짝사랑이",
+        "count": 5
+      },
+      {
+        "token": "재밌어서",
+        "count": 5
+      },
+      {
+        "token": "곤란하다",
+        "count": 5
+      },
+      {
+        "token": "무림에서",
+        "count": 5
+      },
+      {
+        "token": "완결",
+        "count": 5
+      },
+      {
+        "token": "가문의",
+        "count": 5
+      },
+      {
+        "token": "숨김",
+        "count": 5
+      },
+      {
+        "token": "연애",
+        "count": 5
+      },
+      {
+        "token": "천하제일",
+        "count": 5
+      },
+      {
+        "token": "신마대제",
+        "count": 5
+      },
+      {
+        "token": "절대독마",
+        "count": 5
+      },
+      {
+        "token": "마법학교",
+        "count": 5
+      },
+      {
+        "token": "마법사로",
+        "count": 5
+      },
+      {
+        "token": "살아가는",
+        "count": 5
+      },
+      {
+        "token": "계약직",
+        "count": 5
+      },
+      {
+        "token": "아빠를",
+        "count": 5
+      },
+      {
+        "token": "ex급",
+        "count": 5
+      },
+      {
+        "token": "결혼",
+        "count": 5
+      },
+      {
+        "token": "초월급",
+        "count": 5
+      },
+      {
+        "token": "탑을",
+        "count": 5
+      },
+      {
+        "token": "은해상단",
+        "count": 4
+      },
+      {
+        "token": "1년차",
+        "count": 4
+      },
+      {
+        "token": "매니저",
+        "count": 4
+      },
+      {
+        "token": "변경백",
+        "count": 4
+      },
+      {
+        "token": "서자는",
+        "count": 4
+      },
+      {
+        "token": "황제였다",
+        "count": 4
+      },
+      {
+        "token": "본능",
+        "count": 4
+      },
+      {
+        "token": "궁수의",
+        "count": 4
+      },
+      {
+        "token": "우주대스타",
+        "count": 4
+      },
+      {
+        "token": "회귀자",
+        "count": 4
+      },
+      {
+        "token": "멱살",
+        "count": 4
+      },
+      {
+        "token": "잡고",
+        "count": 4
+      },
+      {
+        "token": "데뷔합니다",
+        "count": 4
+      },
+      {
+        "token": "한의사",
+        "count": 4
+      },
+      {
+        "token": "돌아왔습니다",
+        "count": 4
+      },
+      {
+        "token": "위한",
+        "count": 4
+      },
+      {
+        "token": "씹어먹음",
+        "count": 4
+      },
+      {
+        "token": "뿐인데",
+        "count": 4
+      },
+      {
+        "token": "이혼",
+        "count": 4
+      },
+      {
+        "token": "변호사",
+        "count": 4
+      },
+      {
+        "token": "조선에",
+        "count": 4
+      },
+      {
+        "token": "모두",
+        "count": 4
+      },
+      {
+        "token": "너의",
+        "count": 4
+      },
+      {
+        "token": "윙맨에게",
+        "count": 4
+      },
+      {
+        "token": "천마등선",
+        "count": 4
+      },
+      {
+        "token": "대사형",
+        "count": 4
+      },
+      {
+        "token": "템빨",
+        "count": 4
+      },
+      {
+        "token": "대장장이가",
+        "count": 4
+      },
+      {
+        "token": "악녀는",
+        "count": 4
+      },
+      {
+        "token": "백만장자",
+        "count": 4
+      },
+      {
+        "token": "해결사",
+        "count": 4
+      },
+      {
+        "token": "후작",
+        "count": 4
+      },
+      {
+        "token": "군의관이",
+        "count": 4
+      },
+      {
+        "token": "대공비를",
+        "count": 4
+      },
+      {
+        "token": "환생한",
+        "count": 4
+      },
+      {
+        "token": "나만",
+        "count": 4
+      },
+      {
+        "token": "탑이",
+        "count": 4
+      },
+      {
+        "token": "개다",
+        "count": 4
+      },
+      {
+        "token": "광공이",
+        "count": 4
+      },
+      {
+        "token": "오작교로",
+        "count": 4
+      },
+      {
+        "token": "쓰려고",
+        "count": 4
+      },
+      {
+        "token": "한다",
+        "count": 4
+      },
+      {
+        "token": "건강한",
+        "count": 4
+      },
+      {
+        "token": "회귀한",
+        "count": 4
+      },
+      {
+        "token": "제약회사",
+        "count": 4
+      },
+      {
+        "token": "회장님은",
+        "count": 4
+      },
+      {
+        "token": "천마의",
+        "count": 4
+      },
+      {
+        "token": "강함",
+        "count": 4
+      },
+      {
+        "token": "공녀님",
+        "count": 4
+      },
+      {
+        "token": "황제가",
+        "count": 4
+      },
+      {
+        "token": "자꾸",
+        "count": 4
+      },
+      {
+        "token": "울리려",
+        "count": 4
+      },
+      {
+        "token": "든다",
+        "count": 4
+      },
+      {
+        "token": "마법사",
+        "count": 3
+      }
+    ]
+  }
+}

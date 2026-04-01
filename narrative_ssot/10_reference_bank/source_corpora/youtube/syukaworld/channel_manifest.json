@@ -1,0 +1,30 @@
+{
+  "_schema_version": "youtube_channel_corpus.v1",
+  "channel_slug": "syukaworld",
+  "channel_url": "https://www.youtube.com/@syukaworld",
+  "generated_at_utc": "2026-04-01T05:01:21.110286+00:00",
+  "channel": {
+    "title": "슈카월드",
+    "channel_id": "UCsJ6RuBiTVWRX156FVbeaGg",
+    "description": "각종 문의 : ad@syukafriends.com으로 부탁드립니다.\n저널리즘을 지키는 채널이 되겠습니다.\n감사합니다.\n\n",
+    "vanity_channel_url": "http://www.youtube.com/@syukaworld",
+    "rss_url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCsJ6RuBiTVWRX156FVbeaGg"
+  },
+  "tabs": [
+    "videos",
+    "streams"
+  ],
+  "langs": [
+    "ko"
+  ],
+  "indexed_video_count": 2215,
+  "paths": {
+    "raw_root": "narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld/raw",
+    "video_index_path": "narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld/video_index.json"
+  },
+  "notes": [
+    "Python collection only; downstream story judgment stays on the LLM side.",
+    "Channel crawling uses YouTube page metadata plus yt-dlp per-video raw artifact capture.",
+    "Subtitle availability depends on per-video auto-caption availability and YouTube rate limits."
+  ]
+}

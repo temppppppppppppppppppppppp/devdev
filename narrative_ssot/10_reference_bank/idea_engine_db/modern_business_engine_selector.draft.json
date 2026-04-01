@@ -1,0 +1,302 @@
+{
+  "_schema_version": "idea_engine_selector.draft.v0",
+  "updated_at": "2026-04-01",
+  "status": "draft",
+  "source_db": "C:/Users/wjjo/Desktop/글도비/narrative_ssot/10_reference_bank/idea_engine_db/modern_business_idea_engine_db.draft.json",
+  "purpose": "Turn seed engines into reusable retrieval presets and concept mix recipes for modern business / chaebol ideation.",
+  "selection_presets": [
+    {
+      "preset_id": "SEL-001",
+      "name": "reader_backstab_first",
+      "user_intent": "초반 1~3화에서 독자 뒤통수를 치는 정보 바깥의 정보가 필요할 때",
+      "must_include_engine_ids": [
+        "ENG-002"
+      ],
+      "should_include_engine_ids": [
+        "ENG-006",
+        "ENG-008"
+      ],
+      "avoid_engine_ids": [
+        "ENG-007"
+      ],
+      "sector_bias": [
+        "물류",
+        "유통",
+        "장례",
+        "산업가스",
+        "보세창고"
+      ],
+      "promise_to_reader": "남들이 안 보는 진짜 돈줄을 주인공만 먼저 본다.",
+      "danger_if_overused": "설명만 길어지고 장면이 약해질 수 있으니 작은 정보 한 방으로 큰 판을 뒤집게 설계한다."
+    },
+    {
+      "preset_id": "SEL-002",
+      "name": "chaebol_exterior_and_scale",
+      "user_intent": "재벌이 되었다는 감각과 스케일을 초반부터 체감시키고 싶을 때",
+      "must_include_engine_ids": [
+        "ENG-004"
+      ],
+      "should_include_engine_ids": [
+        "ENG-005",
+        "ENG-006"
+      ],
+      "avoid_engine_ids": [],
+      "sector_bias": [
+        "호텔",
+        "면세",
+        "항공",
+        "오너가 후계",
+        "생활밀착 계열사"
+      ],
+      "promise_to_reader": "회의 자료보다 먼저 비서, 수행, 직보, 동선, 대접의 변화로 재벌 권력이 체감된다.",
+      "danger_if_overused": "외피만 화려하고 사업 엔진이 비면 허세로 보일 수 있으니 1화 안에서 실익을 보여준다."
+    },
+    {
+      "preset_id": "SEL-003",
+      "name": "institutional_domination",
+      "user_intent": "법, 규제, 감사, 인허가 같은 제도 권력으로 상대를 박살내는 맛이 필요할 때",
+      "must_include_engine_ids": [
+        "ENG-001"
+      ],
+      "should_include_engine_ids": [
+        "ENG-006",
+        "ENG-004"
+      ],
+      "avoid_engine_ids": [],
+      "sector_bias": [
+        "인허가",
+        "환경규제",
+        "세관",
+        "준법감시",
+        "공항/항만"
+      ],
+      "promise_to_reader": "폭력이 아니라 합법적 권한으로 강자를 공개 굴욕시킨다.",
+      "danger_if_overused": "문서놀이처럼 보일 수 있으니 반드시 목격자, 공개 망신, 다음 권한 보상을 붙인다."
+    },
+    {
+      "preset_id": "SEL-004",
+      "name": "sensory_superiority_fast_money",
+      "user_intent": "멋 있는 감각형 edge와 빠른 돈맛을 동시에 붙이고 싶을 때",
+      "must_include_engine_ids": [
+        "ENG-003"
+      ],
+      "should_include_engine_ids": [
+        "ENG-005"
+      ],
+      "avoid_engine_ids": [],
+      "sector_bias": [
+        "반도체",
+        "감정",
+        "품질검사",
+        "첨단소재",
+        "테크 재벌"
+      ],
+      "promise_to_reader": "주인공이 답을 찾는 순간 자체가 멋있고, 그 멋이 바로 거대한 보상으로 연결된다.",
+      "danger_if_overused": "만능 천재처럼 보일 수 있으니 감각 발동 조건과 실패 조건을 남겨둔다."
+    },
+    {
+      "preset_id": "SEL-005",
+      "name": "octopus_group_expansion",
+      "user_intent": "여러 섹터를 돌아가며 먹는 문어발 재벌 그룹 확장형이 필요할 때",
+      "must_include_engine_ids": [
+        "ENG-005"
+      ],
+      "should_include_engine_ids": [
+        "ENG-002",
+        "ENG-004",
+        "ENG-006"
+      ],
+      "avoid_engine_ids": [],
+      "sector_bias": [
+        "생활인프라",
+        "지방중견그룹",
+        "물류+장례+돌봄",
+        "유틸리티",
+        "서비스 복합"
+      ],
+      "promise_to_reader": "한 업종의 승리가 다음 업종 먹이사슬의 씨앗이 된다.",
+      "danger_if_overused": "섹터만 늘고 그룹 방식이 없으면 산만해지므로 공통 확장 논리를 1개 고정한다."
+    },
+    {
+      "preset_id": "SEL-006",
+      "name": "double_life_sleeper",
+      "user_intent": "밑바닥 을의 일상을 유지한 채 비밀리에 판을 키우는 서사가 필요할 때",
+      "must_include_engine_ids": [
+        "ENG-007"
+      ],
+      "should_include_engine_ids": [
+        "ENG-008",
+        "ENG-002"
+      ],
+      "avoid_engine_ids": [
+        "ENG-004"
+      ],
+      "sector_bias": [
+        "중간관리자",
+        "회사원",
+        "점포관리",
+        "실물자산",
+        "숨은 지분"
+      ],
+      "promise_to_reader": "겉으론 계속 무시당하지만, 실은 아무도 모르는 판을 이미 굴리고 있다.",
+      "danger_if_overused": "질질 끌면 답답해지니 1화~5화 안에 최소 한 번은 비밀 우위가 실질 보상으로 드러나야 한다."
+    }
+  ],
+  "concept_recipes": [
+    {
+      "recipe_id": "REC-001",
+      "working_label": "장례 이후 제국",
+      "one_line_core": "재벌가에서 버려진 장례 계열사를 떠안은 후계자가 사망 후 72시간 동선, 보험금, 상속 분쟁, 유품 처리까지 한 줄로 묶어 죽음 이후의 현금흐름을 전부 먹는다.",
+      "sector_combo": [
+        "장례",
+        "상속",
+        "보험",
+        "유품정리",
+        "시니어케어"
+      ],
+      "engine_mix": [
+        "ENG-002",
+        "ENG-004",
+        "ENG-006"
+      ],
+      "fit_presets": [
+        "SEL-001",
+        "SEL-002",
+        "SEL-005"
+      ],
+      "early_backstab": "독자는 장례식장을 떠올리는데, 주인공은 실제 돈이 빈소가 아니라 사망 직후 서류·보험·가족 분쟁 동선에 몰린다는 걸 먼저 까버린다.",
+      "power_curve": "생활형 계열사 -> 지역 장례망 -> 보험/법무/상속 조정권 -> 전국 사후정산 제국",
+      "why_it_feels_new": "재벌물이 잘 안 가는 섹터인데도 돈, 권력, 감정, 가족전이 한 번에 붙는다.",
+      "contamination_guard": "병원물이나 순수 휴먼드라마로 흘리지 말고 항상 '사후 동선 장악'을 핵심 권력축으로 둔다."
+    },
+    {
+      "recipe_id": "REC-002",
+      "working_label": "항만 회랑 후계자",
+      "one_line_core": "승계전에서 밀린 재벌 3세가 동아프리카 적자 물류 자회사로 쫓겨났다가 항만, 보세창고, 철도, 내륙 연료공급을 한 줄로 묶어 대륙 물류목줄을 쥔다.",
+      "sector_combo": [
+        "항만",
+        "보세창고",
+        "철도",
+        "연료공급",
+        "내륙물류"
+      ],
+      "engine_mix": [
+        "ENG-002",
+        "ENG-005",
+        "ENG-006"
+      ],
+      "fit_presets": [
+        "SEL-001",
+        "SEL-005"
+      ],
+      "early_backstab": "독자는 광산이나 항만 운영권을 볼 텐데, 주인공은 선석 슬롯과 야드 체류시간, 통관 우선권이 진짜 돈줄이라고 먼저 본다.",
+      "power_curve": "적자 물류법인 -> 회랑 병목 장악 -> 현지 정부/광산/은행이 거치는 관문 -> 대륙 인프라 플랫폼",
+      "why_it_feels_new": "아프리카라는 그림과 재벌 후계 구도가 붙으면서도 핵심은 자원전이 아니라 회랑 통행세다.",
+      "contamination_guard": "광산왕 서사로 좁히지 말고, 항상 '길을 먹는다'는 관점으로 유지한다."
+    },
+    {
+      "recipe_id": "REC-003",
+      "working_label": "산업가스 황태자",
+      "one_line_core": "다들 공기장사라 비웃는 산업가스 계열사에 떨어진 후계자가 반도체, 병원, 제철소를 멈출 수 있는 연속공급 권리를 손에 넣어 한국 제조업의 숨통을 쥔다.",
+      "sector_combo": [
+        "산업가스",
+        "반도체",
+        "병원 공급",
+        "제철",
+        "유틸리티"
+      ],
+      "engine_mix": [
+        "ENG-001",
+        "ENG-002",
+        "ENG-005"
+      ],
+      "fit_presets": [
+        "SEL-001",
+        "SEL-003",
+        "SEL-005"
+      ],
+      "early_backstab": "독자는 가스통 회사를 보는데, 주인공은 공장과 병원을 멈출 수 있는 '연속공급 계약'이 진짜 제국의 목줄이라고 먼저 본다.",
+      "power_curve": "적자 유틸리티 계열사 -> 핵심 고객 공급망 장악 -> 공급 중단 리스크를 협상력으로 전환 -> 산업 심장부 장악",
+      "why_it_feels_new": "눈에 안 보이는 필수재라서 독자가 모르는 정보 바깥의 정보가 초반에 강하게 먹힌다.",
+      "contamination_guard": "기술 설명 과잉을 피하고, 공급이 끊기면 누가 무릎 꿇는지에 초점을 둔다."
+    },
+    {
+      "recipe_id": "REC-004",
+      "working_label": "공항 밤의 제국",
+      "one_line_core": "가문에서 내쫓긴 후계자가 국제공항 슬롯, VIP 의전, 전용기 정비, 면세, 귀빈 금융을 묶어 왕족과 재벌의 하늘길과 밤길을 동시에 장악한다.",
+      "sector_combo": [
+        "공항 슬롯",
+        "전용기 정비",
+        "VIP 의전",
+        "면세",
+        "귀빈 금융"
+      ],
+      "engine_mix": [
+        "ENG-004",
+        "ENG-005",
+        "ENG-006"
+      ],
+      "fit_presets": [
+        "SEL-002",
+        "SEL-005"
+      ],
+      "early_backstab": "독자는 항공사나 카지노를 상상하지만, 주인공은 슬롯과 정비, 귀빈 동선이 실제 권력자의 움직임을 묶는다는 걸 먼저 보여준다.",
+      "power_curve": "의전/정비 자회사 -> VIP 동선 장악 -> 왕족·정치인·재벌의 비밀 이동권 장악 -> 국제 협상 플랫폼",
+      "why_it_feels_new": "멋과 재벌 외피, 글로벌 냄새가 강하고 섹터 간 연결이 자연스럽다.",
+      "contamination_guard": "단순 화려함에 기대지 말고, 이동을 통제하는 것이 곧 권력이라는 구조를 분명히 한다."
+    },
+    {
+      "recipe_id": "REC-005",
+      "working_label": "데이터센터 전력 관문",
+      "one_line_core": "본가에서 버린 적자 전력 계열사로 좌천된 재벌 3세가 AI 붐 직전 데이터센터의 전력, 냉각, 부지 인허가를 한 손에 묶어 인터넷의 국경을 먹는다.",
+      "sector_combo": [
+        "데이터센터",
+        "전력",
+        "냉각",
+        "부지 인허가",
+        "해저케이블 상륙지"
+      ],
+      "engine_mix": [
+        "ENG-001",
+        "ENG-003",
+        "ENG-004"
+      ],
+      "fit_presets": [
+        "SEL-002",
+        "SEL-003",
+        "SEL-004"
+      ],
+      "early_backstab": "독자는 AI와 서버를 보는데, 주인공은 전력 계약과 냉각, 랜딩스테이션이 진짜 병목이라는 걸 먼저 본다.",
+      "power_curve": "버려진 전력 계열사 -> 데이터센터 허브화 -> 상륙지/전력/부지 삼중 관문 장악 -> 국가급 디지털 통행세",
+      "why_it_feels_new": "트렌디하면서도 독자가 모르는 진짜 병목이 분명해 초반 뒤통수 포인트가 강하다.",
+      "contamination_guard": "기술 덕후물로 흐르지 말고, 항상 누가 주인공의 부지를 밟고 지나가야 하는지에 집중한다."
+    },
+    {
+      "recipe_id": "REC-006",
+      "working_label": "문어발 생활 인프라 그룹",
+      "one_line_core": "다들 촌스럽고 더럽다고 무시한 계열사만 떠맡던 재벌 막내가 장례, 폐기물, 이사, 보관, 급식, 청소, 시니어케어를 차례로 묶어 한국 생활 인프라를 먹는다.",
+      "sector_combo": [
+        "장례",
+        "폐기물",
+        "이사/보관",
+        "급식",
+        "청소",
+        "시니어케어"
+      ],
+      "engine_mix": [
+        "ENG-002",
+        "ENG-004",
+        "ENG-005",
+        "ENG-006"
+      ],
+      "fit_presets": [
+        "SEL-002",
+        "SEL-005"
+      ],
+      "early_backstab": "독자는 듣자마자 후진 업종 묶음으로 생각하지만, 주인공은 사람이 사는 데서 죽을 때까지 빠지지 않는 필수 동선을 먼저 본다.",
+      "power_curve": "버려진 생활밀착 계열사 -> 지역 생활 인프라 점유 -> 지자체/병원/보험/물류 결속 -> 전국 생활 플랫폼 재벌",
+      "why_it_feels_new": "멋이 없는 섹터처럼 보이는데, 실제론 가장 더럽고 강한 현금흐름 문어발이 된다.",
+      "contamination_guard": "복지물이나 휴먼물로 흐르지 말고, 생활 인프라 통제권을 재벌 권력으로 연결한다."
+    }
+  ]
+}

@@ -1,0 +1,7489 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 7590,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "자, 여러분 안녕하세요"
+    } ]
+  }, {
+    "tStartMs": 8700,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "자, 요즘 주식시장이 너무나 정신이 없습니다"
+    } ]
+  }, {
+    "tStartMs": 11470,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "아주 위아래로 현란하게 움직이고 있는데"
+    } ]
+  }, {
+    "tStartMs": 13940,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "그래서 오늘은 제가 특별히"
+    } ]
+  }, {
+    "tStartMs": 15580,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "주제를 한번 만들어봤습니다"
+    } ]
+  }, {
+    "tStartMs": 17030,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "지금은 어떤 투자를 해야 되나?"
+    } ]
+  }, {
+    "tStartMs": 18960,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "라는 주제로 갖고 왔습니다"
+    } ]
+  }, {
+    "tStartMs": 21120,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "자, 제가 이 주제를 갖고 온 거는"
+    } ]
+  }, {
+    "tStartMs": 22840,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "또 이유가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 24210,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "요즘에 저희 직원들이"
+    } ]
+  }, {
+    "tStartMs": 26680,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "밤만 되면 주식 문의를"
+    } ]
+  }, {
+    "tStartMs": 28680,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "예전보다 훨씬 더 많이 하는 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 30120,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "정말 부쩍 늘어났는데"
+    } ]
+  }, {
+    "tStartMs": 31890,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "왼쪽에 보면"
+    } ]
+  }, {
+    "tStartMs": 32570,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "요즘에 골방 슈카쌤"
+    } ]
+  }, {
+    "tStartMs": 33850,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "그래서 저희 서브 채널"
+    } ]
+  }, {
+    "tStartMs": 35220,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "머니코믹스에서"
+    } ]
+  }, {
+    "tStartMs": 36250,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "이런 거 몰래 몰래 찍어서"
+    } ]
+  }, {
+    "tStartMs": 37940,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "올리고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 38980,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "제가 뭐 사실 저거 찍으려고 말하는 건 아닌데"
+    } ]
+  }, {
+    "tStartMs": 40760,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "요즘에 너무"
+    } ]
+  }, {
+    "tStartMs": 41640,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "주식 문의가 많아 가지고"
+    } ]
+  }, {
+    "tStartMs": 43190,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "얘기를 자주 하고 있죠"
+    } ]
+  }, {
+    "tStartMs": 44470,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "직원들의 주식 문의는"
+    } ]
+  }, {
+    "tStartMs": 45640,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "대부분 이래요"
+    } ]
+  }, {
+    "tStartMs": 46770,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "지금 이렇게 흔들리는 시장에서"
+    } ]
+  }, {
+    "tStartMs": 49140,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "많이 들고 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 50020,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "본인은 많이 들고 있고"
+    } ]
+  }, {
+    "tStartMs": 51060,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "인생에 베팅을 했어요"
+    } ]
+  }, {
+    "tStartMs": 52440,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "자, 그래서"
+    } ]
+  }, {
+    "tStartMs": 53510,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "손절해야 됩니까?"
+    } ]
+  }, {
+    "tStartMs": 55130,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "아니면 더 삽니까?"
+    } ]
+  }, {
+    "tStartMs": 56550,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "이 질문이 지난 일주일간"
+    } ]
+  }, {
+    "tStartMs": 58740,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "여러 명의 직원분한테서"
+    } ]
+  }, {
+    "tStartMs": 60810,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "정말 많이 왔는데"
+    } ]
+  }, {
+    "tStartMs": 62020,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "사실은 이게 우리 개미의 모습이라고 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 64630,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "지금 워낙 흔들리고 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 66350,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "저가 매수를 해야 되냐?"
+    } ]
+  }, {
+    "tStartMs": 68110,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "인생 베팅을 해야 되냐?"
+    } ]
+  }, {
+    "tStartMs": 69250,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "여기서 놓치면 못 살 것 같지 않냐?"
+    } ]
+  }, {
+    "tStartMs": 71210,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "이런 문제 굉장히 많이 늘어났죠"
+    } ]
+  }, {
+    "tStartMs": 73430,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "게다가 우리 친구들은"
+    } ]
+  }, {
+    "tStartMs": 75140,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "대부분 20대 후반에서"
+    } ]
+  }, {
+    "tStartMs": 76250,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "30대 초반이다 보니까"
+    } ]
+  }, {
+    "tStartMs": 77930,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "또 투자 목적도 연금처럼"
+    } ]
+  }, {
+    "tStartMs": 79780,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "아니면 퇴직연금처럼"
+    } ]
+  }, {
+    "tStartMs": 80890,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "10년, 20년 뒤에 보겠다"
+    } ]
+  }, {
+    "tStartMs": 82190,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "이런 장기 투자가 아니라"
+    } ]
+  }, {
+    "tStartMs": 83610,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "대부분 제가 보기에는"
+    } ]
+  }, {
+    "tStartMs": 85270,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "굉장히 단타 목적의"
+    } ]
+  }, {
+    "tStartMs": 86550,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "짧으면 2, 3일도 될 수 있고"
+    } ]
+  }, {
+    "tStartMs": 88110,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "하루도 될 수 있고"
+    } ]
+  }, {
+    "tStartMs": 89300,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "길게 봐도 몇 달 정도 보는"
+    } ]
+  }, {
+    "tStartMs": 91130,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "그런 목적을 가진 투자자들이죠"
+    } ]
+  }, {
+    "tStartMs": 92940,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "자 그러면 지금같이 혼란한 시장에서"
+    } ]
+  }, {
+    "tStartMs": 95450,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "어떻게 투자를 해야 될까요?"
+    } ]
+  }, {
+    "tStartMs": 98080,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "물론 저도 정답은 모르는데"
+    } ]
+  }, {
+    "tStartMs": 99370,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "일단 제 생각만"
+    } ]
+  }, {
+    "tStartMs": 100270,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "살짝 말씀드리도록 하겠습니다"
+    } ]
+  }, {
+    "tStartMs": 101800,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "우리 친구들은 주로 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 103660,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "아니 작년에 상승장인데"
+    } ]
+  }, {
+    "tStartMs": 105460,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "왜 그동안 안 담고"
+    } ]
+  }, {
+    "tStartMs": 106580,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "여기서 이렇게 고민하세요?"
+    } ]
+  }, {
+    "tStartMs": 107590,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "라고 제가 물어보니까"
+    } ]
+  }, {
+    "tStartMs": 108810,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "대부분 답이 이겁니다"
+    } ]
+  }, {
+    "tStartMs": 109900,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "작년 상승장에서"
+    } ]
+  }, {
+    "tStartMs": 111370,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "제대로 못 담았다"
+    } ]
+  }, {
+    "tStartMs": 113240,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "이게 너무 가파르게 올라가다 보니까"
+    } ]
+  }, {
+    "tStartMs": 115410,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "무서워서"
+    } ]
+  }, {
+    "tStartMs": 116520,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "타이밍을 못 잡고"
+    } ]
+  }, {
+    "tStartMs": 117730,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "이때에 충분한 소득을 거두지 못했다"
+    } ]
+  }, {
+    "tStartMs": 120120,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "그래서 소위 포모가 왔다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 122390,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "야 나 없이 가는 게"
+    } ]
+  }, {
+    "tStartMs": 123280,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "너무나 불안했는데"
+    } ]
+  }, {
+    "tStartMs": 125150,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "마침 조정이 왔으니까"
+    } ]
+  }, {
+    "tStartMs": 127060,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "여기서 한번 인생 베팅을 하는 게 어떻습니까?"
+    } ]
+  }, {
+    "tStartMs": 129900,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "어떻게 생각하십니까?"
+    } ]
+  }, {
+    "tStartMs": 130980,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "라고 저한테 한 분이 아니라"
+    } ]
+  }, {
+    "tStartMs": 133040,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "진짜 여러 분이 물어봤습니다"
+    } ]
+  }, {
+    "tStartMs": 135390,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "자 어떻게 생각하십니까 여러분?"
+    } ]
+  }, {
+    "tStartMs": 136850,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "물론 답은 없어요"
+    } ]
+  }, {
+    "tStartMs": 137830,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "답이 없는 문제인데"
+    } ]
+  }, {
+    "tStartMs": 139000,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "어느 정도 조정이 왔잖아요"
+    } ]
+  }, {
+    "tStartMs": 140070,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "한 6,300 정도 하다가"
+    } ]
+  }, {
+    "tStartMs": 141850,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "한 5,300?"
+    } ]
+  }, {
+    "tStartMs": 142570,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "한 5,500 정도가 왔단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 144370,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "지금 밀려갔고 그러면"
+    } ]
+  }, {
+    "tStartMs": 146150,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "어쨌건 500포인트에서"
+    } ]
+  }, {
+    "tStartMs": 147360,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "1,000포인트 정도 조정이 왔으니까"
+    } ]
+  }, {
+    "tStartMs": 148850,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "한 10에서 15%"
+    } ]
+  }, {
+    "tStartMs": 149710,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "정도 조정이 온 거죠"
+    } ]
+  }, {
+    "tStartMs": 151050,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "자, 풀로 담고"
+    } ]
+  }, {
+    "tStartMs": 152520,
+    "dDurationMs": 5430,
+    "segs": [ {
+      "utf8": "인생 베팅을 가야 할까요?"
+    } ]
+  }, {
+    "tStartMs": 157950,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "이렇게도 물어봤어요"
+    } ]
+  }, {
+    "tStartMs": 158970,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "작년에서 올해까지는 내내 상승장이었는데"
+    } ]
+  }, {
+    "tStartMs": 162170,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "아니 그때"
+    } ]
+  }, {
+    "tStartMs": 162910,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "사라 그럴 때는 그렇게 안 사더니"
+    } ]
+  }, {
+    "tStartMs": 164870,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "지금은 누가 봐도 횡보나 하락장인데"
+    } ]
+  }, {
+    "tStartMs": 167760,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "갑자기 왜 지금이냐?"
+    } ]
+  }, {
+    "tStartMs": 168800,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "그때 이렇게 대답하더라고요"
+    } ]
+  }, {
+    "tStartMs": 170290,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "조정이 오기를 기다린 겁니다"
+    } ]
+  }, {
+    "tStartMs": 172050,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "아니 이렇게 무섭게 올라오는 걸"
+    } ]
+  }, {
+    "tStartMs": 173450,
+    "dDurationMs": 320,
+    "segs": [ {
+      "utf8": "어떻게"
+    } ]
+  }, {
+    "tStartMs": 173770,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "조정이 왔으니까"
+    } ]
+  }, {
+    "tStartMs": 174790,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "지금 인생 베팅을"
+    } ]
+  }, {
+    "tStartMs": 176040,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "하냐 안하냐 물어보는 거잖아요"
+    } ]
+  }, {
+    "tStartMs": 177770,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "라고 이야기를 하시더라고요"
+    } ]
+  }, {
+    "tStartMs": 180650,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "자, 이 상황에서 어떻게 해야 될까요"
+    } ]
+  }, {
+    "tStartMs": 182600,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "제가 사실 이 주제는"
+    } ]
+  }, {
+    "tStartMs": 183460,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "라이브 때 하려고 그랬어요"
+    } ]
+  }, {
+    "tStartMs": 184580,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "라이브 때 하려고 그랬는데"
+    } ]
+  }, {
+    "tStartMs": 185870,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "마침 저희 회의할 때"
+    } ]
+  }, {
+    "tStartMs": 187060,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "이 주제를 말하니까"
+    } ]
+  }, {
+    "tStartMs": 187840,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "저희 마케터가"
+    } ]
+  }, {
+    "tStartMs": 188660,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "카카오페이 증권에서"
+    } ]
+  }, {
+    "tStartMs": 189960,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "굉장히 비슷한 얘기를 하시던데"
+    } ]
+  }, {
+    "tStartMs": 191960,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "이걸 광고 영상 할 때"
+    } ]
+  }, {
+    "tStartMs": 193010,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "같이 말씀하시면 어떻겠습니까"
+    } ]
+  }, {
+    "tStartMs": 194490,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "이런 얘기를 하더라고요"
+    } ]
+  }, {
+    "tStartMs": 195500,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "제가 미리 말씀드리겠습니다"
+    } ]
+  }, {
+    "tStartMs": 197130,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "저 뒷부분에"
+    } ]
+  }, {
+    "tStartMs": 198200,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "카카오페이 증권의 주식 모으기라는 서비스를"
+    } ]
+  }, {
+    "tStartMs": 200850,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "한번 소개해드릴 겁니다"
+    } ]
+  }, {
+    "tStartMs": 202390,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "이 내용은 그런 거예요"
+    } ]
+  }, {
+    "tStartMs": 203610,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "언제 집중 매수를 해야 되고"
+    } ]
+  }, {
+    "tStartMs": 205020,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "언제 분할 매수"
+    } ]
+  }, {
+    "tStartMs": 206470,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "적립식 매수를 해야 되는가"
+    } ]
+  }, {
+    "tStartMs": 208120,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "여기에 대한 이야기를 한번"
+    } ]
+  }, {
+    "tStartMs": 209810,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "말씀드리도록 하겠습니다"
+    } ]
+  }, {
+    "tStartMs": 211890,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "우선 작년에 삼성증권에서"
+    } ]
+  }, {
+    "tStartMs": 214620,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "개인 투자자를 분석한"
+    } ]
+  }, {
+    "tStartMs": 215720,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "레포트가 하나 나왔었습니다"
+    } ]
+  }, {
+    "tStartMs": 217170,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "아마 보신 분도 있을 텐데"
+    } ]
+  }, {
+    "tStartMs": 218570,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "굉장히 인상적인 레포트였어요"
+    } ]
+  }, {
+    "tStartMs": 220520,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "여러분도 누구나 보실 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 221970,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "제목은 개인 투자자의"
+    } ]
+  }, {
+    "tStartMs": 223320,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "역추세 추종 전략이라는 레포트입니다"
+    } ]
+  }, {
+    "tStartMs": 225450,
+    "dDurationMs": 3050,
+    "segs": [ {
+      "utf8": "한마디로 투자자는 추세 추종을 하지 않고"
+    } ]
+  }, {
+    "tStartMs": 228500,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "역추세 추종을 하더라!"
+    } ]
+  }, {
+    "tStartMs": 230360,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "라는 내용의 레포트입니다"
+    } ]
+  }, {
+    "tStartMs": 231960,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "물론 이 레포트는"
+    } ]
+  }, {
+    "tStartMs": 232790,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "레버리지나 인버스에 대한"
+    } ]
+  }, {
+    "tStartMs": 233940,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "조사를 한 레포트인데"
+    } ]
+  }, {
+    "tStartMs": 235270,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "제가 보기에는 일반적으로도"
+    } ]
+  }, {
+    "tStartMs": 236390,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "어느 정도"
+    } ]
+  }, {
+    "tStartMs": 237020,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "설득력이 있는 내용 같아요"
+    } ]
+  }, {
+    "tStartMs": 238490,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "내용은 이렇습니다"
+    } ]
+  }, {
+    "tStartMs": 239600,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "개인 투자자들은"
+    } ]
+  }, {
+    "tStartMs": 240660,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "ETF 가격이 오르면"
+    } ]
+  }, {
+    "tStartMs": 242410,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "순매도 하고"
+    } ]
+  }, {
+    "tStartMs": 243410,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "가격이 내리면"
+    } ]
+  }, {
+    "tStartMs": 244480,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "순매수하는 경향이 있다"
+    } ]
+  }, {
+    "tStartMs": 246720,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "그렇게 생각하십니까?"
+    } ]
+  }, {
+    "tStartMs": 247640,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "아래쪽에 있는 차트를 보면"
+    } ]
+  }, {
+    "tStartMs": 249220,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "파란색이 ETF 가격입니다"
+    } ]
+  }, {
+    "tStartMs": 251210,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "ETF 가격이 올라가니까"
+    } ]
+  }, {
+    "tStartMs": 252610,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "이 빨간색"
+    } ]
+  }, {
+    "tStartMs": 253970,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "개인의 순매수가 감소합니다"
+    } ]
+  }, {
+    "tStartMs": 256400,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "순매도를 해요"
+    } ]
+  }, {
+    "tStartMs": 257640,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "그러니까 한마디로 주가가 올라가면"
+    } ]
+  }, {
+    "tStartMs": 259530,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "개인은 판다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 261680,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "ETF 기준으로"
+    } ]
+  }, {
+    "tStartMs": 262860,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "이게 코덱스 레버리지 ETF입니다"
+    } ]
+  }, {
+    "tStartMs": 264780,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "옆에는 코스닥 150 레버리지 ETF인데"
+    } ]
+  }, {
+    "tStartMs": 267500,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "역시 보면"
+    } ]
+  }, {
+    "tStartMs": 268140,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "이 가격과 개인의 순매수가"
+    } ]
+  }, {
+    "tStartMs": 270570,
+    "dDurationMs": 3210,
+    "segs": [ {
+      "utf8": "굉장히 데칼코마니를 이루고 있다는 걸 볼 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 273780,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "이게 우리의 상식과는 약간 배치가 되죠"
+    } ]
+  }, {
+    "tStartMs": 275980,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "아니 ETF 가격이 쭉 오르면"
+    } ]
+  }, {
+    "tStartMs": 278140,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "상승 추세라는 거니까"
+    } ]
+  }, {
+    "tStartMs": 279890,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "당연히 개인도 순매수로 쭉 따라가고"
+    } ]
+  }, {
+    "tStartMs": 282330,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "ETF 가격이 내려오면"
+    } ]
+  }, {
+    "tStartMs": 283890,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "이게 하락 추세라는 거니까"
+    } ]
+  }, {
+    "tStartMs": 285560,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "개인들이 당연히 순매도로"
+    } ]
+  }, {
+    "tStartMs": 287110,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "이렇게"
+    } ]
+  }, {
+    "tStartMs": 287800,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "대응을 할 것 같았는데"
+    } ]
+  }, {
+    "tStartMs": 289680,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "자, 그런데 이 개인투자자들"
+    } ]
+  }, {
+    "tStartMs": 290830,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "물론 레버리지나 인버스 ETF이긴 하지만"
+    } ]
+  }, {
+    "tStartMs": 292780,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "개인투자자들의 모습은 그렇지 않고"
+    } ]
+  }, {
+    "tStartMs": 294620,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "오히려 반대로"
+    } ]
+  }, {
+    "tStartMs": 296110,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "추세와 반대로"
+    } ]
+  }, {
+    "tStartMs": 297070,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "가는 경향이 있다라는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 299250,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "이게 보면 인버스에서는 특히"
+    } ]
+  }, {
+    "tStartMs": 300880,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "그 모습이 더 강렬하게 나오는데"
+    } ]
+  }, {
+    "tStartMs": 303250,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "아래에 있는 차트는"
+    } ]
+  }, {
+    "tStartMs": 304240,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "인버스 ETF입니다"
+    } ]
+  }, {
+    "tStartMs": 305750,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "파란색이 내려가면"
+    } ]
+  }, {
+    "tStartMs": 307130,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "시장이 상승한다는 뜻이죠"
+    } ]
+  }, {
+    "tStartMs": 308720,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "시장이 상승하니까"
+    } ]
+  }, {
+    "tStartMs": 310340,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "개인들은 인버스, 숏이죠"
+    } ]
+  }, {
+    "tStartMs": 312120,
+    "dDurationMs": 4180,
+    "segs": [ {
+      "utf8": "오히려 매도 베팅이 늘어난다는 걸 의미합니다"
+    } ]
+  }, {
+    "tStartMs": 316300,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "시장이 상승을 하면"
+    } ]
+  }, {
+    "tStartMs": 317810,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "매도 베팅이 줄어들 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 319550,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "아니라는 거죠"
+    } ]
+  }, {
+    "tStartMs": 320240,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "오히려 늘어난다는 거고"
+    } ]
+  }, {
+    "tStartMs": 321620,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "인버스 2배 ETF를 보면"
+    } ]
+  }, {
+    "tStartMs": 322880,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "한마디로 곱버스죠"
+    } ]
+  }, {
+    "tStartMs": 323990,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "곱버스 같은 경우도"
+    } ]
+  }, {
+    "tStartMs": 324970,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "ETF 가격이 내려가면"
+    } ]
+  }, {
+    "tStartMs": 326170,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "그러니까 지수가 상승하니까"
+    } ]
+  }, {
+    "tStartMs": 328330,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "개인의 곱버스 순매수량이"
+    } ]
+  }, {
+    "tStartMs": 330390,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "굉장히 크게 급증하는 걸 볼 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 333170,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "그러니까 역시 추세와는 반대로"
+    } ]
+  }, {
+    "tStartMs": 334900,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "추세는 올라가는데"
+    } ]
+  }, {
+    "tStartMs": 336430,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "이 하락 베팅이 굉장히 기하급수적으로"
+    } ]
+  }, {
+    "tStartMs": 338840,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "늘어난다는 걸 볼 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 340850,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "이런 추세는 우리나라 ETF뿐만 아니라"
+    } ]
+  }, {
+    "tStartMs": 343600,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "국내 투자자들이 해외 ETF에서도"
+    } ]
+  }, {
+    "tStartMs": 345810,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "굉장히 동일한 매매 패턴을 보였습니다"
+    } ]
+  }, {
+    "tStartMs": 348400,
+    "dDurationMs": 610,
+    "segs": [ {
+      "utf8": "왼쪽에 있는 건"
+    } ]
+  }, {
+    "tStartMs": 349010,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "반도체 3배 레버리지 ETF인데"
+    } ]
+  }, {
+    "tStartMs": 351240,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "역시 시장이 내려가면"
+    } ]
+  }, {
+    "tStartMs": 352980,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "개인의 순매수는 늘었고요"
+    } ]
+  }, {
+    "tStartMs": 354300,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "시장이 올라가면"
+    } ]
+  }, {
+    "tStartMs": 355400,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "개인의 순매수는 줄었습니다"
+    } ]
+  }, {
+    "tStartMs": 356860,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "와"
+    } ]
+  }, {
+    "tStartMs": 357740,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "이렇게 데칼코마니로"
+    } ]
+  }, {
+    "tStartMs": 359860,
+    "dDurationMs": 440,
+    "segs": [ {
+      "utf8": "되는 것도"
+    } ]
+  }, {
+    "tStartMs": 360300,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "굉장히 신기한데"
+    } ]
+  }, {
+    "tStartMs": 361910,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "QQQ 3배 레버리지 ETF도 똑같아요"
+    } ]
+  }, {
+    "tStartMs": 364280,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "가격이 올라가면"
+    } ]
+  }, {
+    "tStartMs": 365480,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "사람들은 팔고 가격이 내려가면"
+    } ]
+  }, {
+    "tStartMs": 367620,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "사람들은 산다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 371120,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "개인 투자자들 같은 경우에는"
+    } ]
+  }, {
+    "tStartMs": 372650,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "추세 추종보다는"
+    } ]
+  }, {
+    "tStartMs": 373560,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "역추세를 추종하는 분들이"
+    } ]
+  }, {
+    "tStartMs": 374740,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "굉장히 많다라는 걸 볼 수 있는"
+    } ]
+  }, {
+    "tStartMs": 376670,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "자료가 아닌가 생각이 됩니다"
+    } ]
+  }, {
+    "tStartMs": 378260,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "그런데 제가 지금까지 말씀드렸지만"
+    } ]
+  }, {
+    "tStartMs": 380090,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "우리가 투자하는 방법에는"
+    } ]
+  }, {
+    "tStartMs": 381320,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "크게 봐서 추세 추종이 있고"
+    } ]
+  }, {
+    "tStartMs": 382690,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "역추세 추종이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 384250,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "이게 소위 트렌드 팔로잉이죠"
+    } ]
+  }, {
+    "tStartMs": 385720,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "시장이 이렇게 올라가면"
+    } ]
+  }, {
+    "tStartMs": 387430,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "상승장에서는 보통 매수랍니까"
+    } ]
+  }, {
+    "tStartMs": 389550,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "매도랍니까?"
+    } ]
+  }, {
+    "tStartMs": 391120,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "상승장에서는"
+    } ]
+  }, {
+    "tStartMs": 392320,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "우리가 생각하기엔"
+    } ]
+  }, {
+    "tStartMs": 393240,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "보통 매수를 해야겠죠"
+    } ]
+  }, {
+    "tStartMs": 394740,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "아닌가요?"
+    } ]
+  }, {
+    "tStartMs": 397740,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "정답은 없습니다"
+    } ]
+  }, {
+    "tStartMs": 398520,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "정답은 없는데"
+    } ]
+  }, {
+    "tStartMs": 399960,
+    "dDurationMs": 3590,
+    "segs": [ {
+      "utf8": "제 생각에는 상승장에서는 매수를 하고"
+    } ]
+  }, {
+    "tStartMs": 403550,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "추세적인 상승장을 의미합니다"
+    } ]
+  }, {
+    "tStartMs": 405350,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "추세적인 하락장에서는"
+    } ]
+  }, {
+    "tStartMs": 406840,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "매도로 대응을 하는 게"
+    } ]
+  }, {
+    "tStartMs": 409210,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "대부분 추세 추종자들이잖아요"
+    } ]
+  }, {
+    "tStartMs": 411190,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "저 같은 쫄보"
+    } ]
+  }, {
+    "tStartMs": 412060,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "쫄보 투자자들은 보통 이렇게"
+    } ]
+  }, {
+    "tStartMs": 413280,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "추세를 따라서 투자를 하는데"
+    } ]
+  }, {
+    "tStartMs": 415160,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "많은 개인 분들은"
+    } ]
+  }, {
+    "tStartMs": 416550,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "역추세 추종"
+    } ]
+  }, {
+    "tStartMs": 417490,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "추세를 반대로"
+    } ]
+  }, {
+    "tStartMs": 418770,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "상승장에서는 매도를 노리고"
+    } ]
+  }, {
+    "tStartMs": 421370,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "하락장에서는"
+    } ]
+  }, {
+    "tStartMs": 422810,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "매수를 노린다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 424710,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "이게 뭐 요즘 표현으로 쓰면"
+    } ]
+  }, {
+    "tStartMs": 425940,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "소위 뭐 역베팅, 역베"
+    } ]
+  }, {
+    "tStartMs": 427700,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "뭐 이런 표현 쓰잖아요"
+    } ]
+  }, {
+    "tStartMs": 428820,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "상승이 쭉 올라가니까 높이 갔으니까"
+    } ]
+  }, {
+    "tStartMs": 430460,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "떨어지는 것도"
+    } ]
+  }, {
+    "tStartMs": 431210,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "굉장히 많이 떨어질 거야"
+    } ]
+  }, {
+    "tStartMs": 432530,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "하락장이 깊으니까"
+    } ]
+  }, {
+    "tStartMs": 433490,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "굉장히 싸게 살 수 있어"
+    } ]
+  }, {
+    "tStartMs": 434880,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "그래서 반등을 하면"
+    } ]
+  }, {
+    "tStartMs": 435620,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "난 대박이야"
+    } ]
+  }, {
+    "tStartMs": 436680,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "이렇게 접근하는 게"
+    } ]
+  }, {
+    "tStartMs": 438090,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "소위 역추세 추종입니다"
+    } ]
+  }, {
+    "tStartMs": 440430,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "그러면 추세 추종을 해야 됩니까?"
+    } ]
+  }, {
+    "tStartMs": 442280,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "역추세 추종을 해야 됩니까?"
+    } ]
+  }, {
+    "tStartMs": 443980,
+    "dDurationMs": 3270,
+    "segs": [ {
+      "utf8": "물론 이 간단한 대답도 정답은 없는데"
+    } ]
+  }, {
+    "tStartMs": 447250,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "시장 상황에 따라 맞춰가야겠죠"
+    } ]
+  }, {
+    "tStartMs": 449210,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "저는 이렇게 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 450930,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "일단 가장 중요한 거는"
+    } ]
+  }, {
+    "tStartMs": 452330,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "시장 상황에 맞춰봐야 되니까"
+    } ]
+  }, {
+    "tStartMs": 454110,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "시장을 알아야겠죠"
+    } ]
+  }, {
+    "tStartMs": 455750,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "시장의 흐름"
+    } ]
+  }, {
+    "tStartMs": 457010,
+    "dDurationMs": 560,
+    "segs": [ {
+      "utf8": "흐름이라고 하면"
+    } ]
+  }, {
+    "tStartMs": 457570,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "굉장히 어렵게 생각하지만"
+    } ]
+  }, {
+    "tStartMs": 458540,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "가장 간단하게 얘기해서"
+    } ]
+  }, {
+    "tStartMs": 459790,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "지금이 상승 추세냐"
+    } ]
+  }, {
+    "tStartMs": 461400,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "횡보 추세냐"
+    } ]
+  }, {
+    "tStartMs": 462500,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "하락 추세냐"
+    } ]
+  }, {
+    "tStartMs": 464120,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "이것만 판단하고 접근을 해도"
+    } ]
+  }, {
+    "tStartMs": 466610,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "기본적으로 저는 진짜 개인 투자자 중에서"
+    } ]
+  }, {
+    "tStartMs": 468570,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "상위 50%에 들어간다고 보면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 470770,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "차트를 보고 뭐를 보고"
+    } ]
+  }, {
+    "tStartMs": 471950,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "굉장히 어려운 걸 일단 떠나서"
+    } ]
+  }, {
+    "tStartMs": 473760,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "간단하게 지금이 상승 추세입니까?"
+    } ]
+  }, {
+    "tStartMs": 476450,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "횡보할 때입니까?"
+    } ]
+  }, {
+    "tStartMs": 477720,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "제가 하락할 때입니까?"
+    } ]
+  }, {
+    "tStartMs": 479180,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "이것만 알고 접근을 해도"
+    } ]
+  }, {
+    "tStartMs": 480660,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "진짜 상위 50%는 된다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 482710,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "그럼 먼저 만약에 지금 시장이 상승 추세다"
+    } ]
+  }, {
+    "tStartMs": 485530,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "자 그럼 어떻게 해야 될까요?"
+    } ]
+  }, {
+    "tStartMs": 487140,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "가장 쉬운 거 상승 추세라는 판단하면"
+    } ]
+  }, {
+    "tStartMs": 489440,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "가장 쉬운 거"
+    } ]
+  }, {
+    "tStartMs": 490200,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "당연히  사는 거겠죠"
+    } ]
+  }, {
+    "tStartMs": 493080,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "상승장에서 가장 쉬운 거는"
+    } ]
+  }, {
+    "tStartMs": 495660,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "사는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 497090,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "일명 추세 추종 전략을 하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 499030,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "왜냐면 결대로 치는 게"
+    } ]
+  }, {
+    "tStartMs": 499990,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "가장 쉽잖아요"
+    } ]
+  }, {
+    "tStartMs": 500760,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "이렇게 쭉 올라갈 때"
+    } ]
+  }, {
+    "tStartMs": 501840,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "이건 나스닥 차트입니다"
+    } ]
+  }, {
+    "tStartMs": 503320,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "쭉 올라갈 때는"
+    } ]
+  }, {
+    "tStartMs": 504530,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "롱을 추세 추종하는 게"
+    } ]
+  }, {
+    "tStartMs": 505940,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "당연히 가장 쉽습니다"
+    } ]
+  }, {
+    "tStartMs": 507140,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "그래서 우리가"
+    } ]
+  }, {
+    "tStartMs": 507940,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "굉장히 강한 상승장일 때는"
+    } ]
+  }, {
+    "tStartMs": 509550,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "이런 짤 많이 나오죠"
+    } ]
+  }, {
+    "tStartMs": 510740,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "희대의 명짤"
+    } ]
+  }, {
+    "tStartMs": 511880,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "설명할 시간이 없어"
+    } ]
+  }, {
+    "tStartMs": 513050,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "어서 타!"
+    } ]
+  }, {
+    "tStartMs": 514050,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "하는 게"
+    } ]
+  }, {
+    "tStartMs": 515490,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "이게 상승 추세니까 나오는 짤이지 않겠습니까?"
+    } ]
+  }, {
+    "tStartMs": 518030,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "일단 추세가 상승이니까"
+    } ]
+  }, {
+    "tStartMs": 519790,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "설명할 시간이 없다고"
+    } ]
+  }, {
+    "tStartMs": 521570,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "일단 추세 추종을 해라"
+    } ]
+  }, {
+    "tStartMs": 522940,
+    "dDurationMs": 3130,
+    "segs": [ {
+      "utf8": "그러니까 이제 이런 짤이 나오는 거죠"
+    } ]
+  }, {
+    "tStartMs": 526070,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "제가 이거 직원들이 질문했을 때"
+    } ]
+  }, {
+    "tStartMs": 528150,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "쇼츠로도 하나 나온 게 있었는데"
+    } ]
+  }, {
+    "tStartMs": 530200,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "개미가 못 버는 이유"
+    } ]
+  }, {
+    "tStartMs": 531260,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "뭐 이렇게 나왔는데"
+    } ]
+  }, {
+    "tStartMs": 532140,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "못 버는 게 아니라"
+    } ]
+  }, {
+    "tStartMs": 533210,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "저렇게 상승이 쭉 상승 추세가 되면"
+    } ]
+  }, {
+    "tStartMs": 535980,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "여러분들이 좋아하시는"
+    } ]
+  }, {
+    "tStartMs": 537320,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "집중 매수"
+    } ]
+  }, {
+    "tStartMs": 538360,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "이것도 이제 상승 추세에서는 가능합니다"
+    } ]
+  }, {
+    "tStartMs": 541190,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "이게 무슨 말이냐?"
+    } ]
+  }, {
+    "tStartMs": 542230,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "쇼츠도 있는데"
+    } ]
+  }, {
+    "tStartMs": 543310,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "한번 가서 보시고"
+    } ]
+  }, {
+    "tStartMs": 544690,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "상승 추세는"
+    } ]
+  }, {
+    "tStartMs": 545810,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "당연한 거겠지만"
+    } ]
+  }, {
+    "tStartMs": 546760,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "최대 위험을 짊어진 투자자들이"
+    } ]
+  }, {
+    "tStartMs": 549060,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "각광을 받습니다"
+    } ]
+  }, {
+    "tStartMs": 550810,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "올라가는 시장에서는"
+    } ]
+  }, {
+    "tStartMs": 552080,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "여러번 나눠 산 것보다"
+    } ]
+  }, {
+    "tStartMs": 553310,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "한 종목, 두 종목"
+    } ]
+  }, {
+    "tStartMs": 554230,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "집중 투자하는 사람들이 많이 벌잖아요"
+    } ]
+  }, {
+    "tStartMs": 555760,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "그들이 왕처럼 보이는 때예요"
+    } ]
+  }, {
+    "tStartMs": 557710,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "그리고 집중 투자를 할 수 있는 때죠"
+    } ]
+  }, {
+    "tStartMs": 559980,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "저게 상승 추세라는 게"
+    } ]
+  }, {
+    "tStartMs": 561270,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "여러분들이 판단이 됐으면"
+    } ]
+  }, {
+    "tStartMs": 562980,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "그리고 권해드리진 않지만"
+    } ]
+  }, {
+    "tStartMs": 564600,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "정말 여러분들이 준비가 돼 있으면"
+    } ]
+  }, {
+    "tStartMs": 566630,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "일괄 매수 전략도 가능합니다"
+    } ]
+  }, {
+    "tStartMs": 568490,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "분할 매수가 아니라"
+    } ]
+  }, {
+    "tStartMs": 569290,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "일괄 매수도 할 수 있는 시장은"
+    } ]
+  }, {
+    "tStartMs": 571280,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "당연히 올라가는 시장이겠죠"
+    } ]
+  }, {
+    "tStartMs": 573140,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "그리고 이런 시장에서는"
+    } ]
+  }, {
+    "tStartMs": 574610,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "내가 가진 돈보다 더 많이 투자하는"
+    } ]
+  }, {
+    "tStartMs": 576030,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "레버리지 투자"
+    } ]
+  }, {
+    "tStartMs": 576840,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "이런 것들도 위험을 많이 짊어지니까"
+    } ]
+  }, {
+    "tStartMs": 578810,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "올라가기만 하면"
+    } ]
+  }, {
+    "tStartMs": 579610,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "역시 각광을 받고"
+    } ]
+  }, {
+    "tStartMs": 580690,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "칭송을 받는 그런 시장이 됩니다"
+    } ]
+  }, {
+    "tStartMs": 582880,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "그리고 또 상승 시장에서는 특징이 있는데"
+    } ]
+  }, {
+    "tStartMs": 585020,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "분할 매수, 분산 투자"
+    } ]
+  }, {
+    "tStartMs": 586720,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "포트폴리오 구성"
+    } ]
+  }, {
+    "tStartMs": 587920,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "이런 거 하면 또 조롱을 받아요"
+    } ]
+  }, {
+    "tStartMs": 589940,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "왜냐하면 분할 매수나"
+    } ]
+  }, {
+    "tStartMs": 590970,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "포트폴리오 구성 이런 것들은"
+    } ]
+  }, {
+    "tStartMs": 592760,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "최고의 수익률을 위한 전략이 아니라"
+    } ]
+  }, {
+    "tStartMs": 594360,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "위험을 막기 위한 전략입니다"
+    } ]
+  }, {
+    "tStartMs": 596140,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "상승을 하나 어느 순간에"
+    } ]
+  }, {
+    "tStartMs": 597380,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "빠질 때를 대비하는 전략이죠"
+    } ]
+  }, {
+    "tStartMs": 600020,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "당연히 보험료를 내는 것처럼"
+    } ]
+  }, {
+    "tStartMs": 602160,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "수익률이 약간 희석되게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 604210,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "그래서 올라가는 시장에서는"
+    } ]
+  }, {
+    "tStartMs": 605530,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "이렇게 위험을 분산한 투자"
+    } ]
+  }, {
+    "tStartMs": 606980,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "위험을 나누는 투자 같은 경우는"
+    } ]
+  }, {
+    "tStartMs": 608490,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "경시되거나 아니면 뭐 하려고"
+    } ]
+  }, {
+    "tStartMs": 610100,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "포트폴리오를 하냐?"
+    } ]
+  }, {
+    "tStartMs": 611080,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "집중 투자를 해야지"
+    } ]
+  }, {
+    "tStartMs": 612040,
+    "dDurationMs": 3090,
+    "segs": [ {
+      "utf8": "이런 얘기가 많이 나오는 시장이 됩니다"
+    } ]
+  }, {
+    "tStartMs": 615130,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "하지만 여러분들이 해보셔서 알겠지만"
+    } ]
+  }, {
+    "tStartMs": 617300,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "집중투자, 일괄 매수는"
+    } ]
+  }, {
+    "tStartMs": 618850,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "상당히 어려운 전략입니다"
+    } ]
+  }, {
+    "tStartMs": 620500,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "그리고 또 개인의 가장 큰 문제가"
+    } ]
+  }, {
+    "tStartMs": 622390,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "이 집중투자 일괄 매수라고 하지만"
+    } ]
+  }, {
+    "tStartMs": 624230,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "처음에는 불안하니까 못 사고"
+    } ]
+  }, {
+    "tStartMs": 625650,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "나중에는 점점점 많이 사서"
+    } ]
+  }, {
+    "tStartMs": 627990,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "포지션이 커지는 경향이 있어요"
+    } ]
+  }, {
+    "tStartMs": 630290,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "이게 소위 가분투자입니다"
+    } ]
+  }, {
+    "tStartMs": 631940,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "맨 위에서 지금까지 쭉 올라가는 걸"
+    } ]
+  }, {
+    "tStartMs": 634460,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "계속 롱으로 접근해 왔는데"
+    } ]
+  }, {
+    "tStartMs": 636340,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "위에서 조금만 밀려도"
+    } ]
+  }, {
+    "tStartMs": 637770,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "이 높은"
+    } ]
+  }, {
+    "tStartMs": 638950,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "그동안 올라와서"
+    } ]
+  }, {
+    "tStartMs": 639780,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "번거를 다 잃는 경우가 태반입니다"
+    } ]
+  }, {
+    "tStartMs": 642470,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "왜냐하면 아래선 조금 들고 있고"
+    } ]
+  }, {
+    "tStartMs": 643870,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "위에서는 확신이 있어서"
+    } ]
+  }, {
+    "tStartMs": 645260,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "굉장히 많이 사서"
+    } ]
+  }, {
+    "tStartMs": 647050,
+    "dDurationMs": 3030,
+    "segs": [ {
+      "utf8": "처음에는 50만원, 100만원, 200만원 들다가"
+    } ]
+  }, {
+    "tStartMs": 650080,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "오 진짜 올라가네"
+    } ]
+  }, {
+    "tStartMs": 650930,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "마지막엔 에이 모르겠다"
+    } ]
+  }, {
+    "tStartMs": 652050,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "3천만 원!"
+    } ]
+  }, {
+    "tStartMs": 652900,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "뭐 이래갖고"
+    } ]
+  }, {
+    "tStartMs": 653580,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "조금만 밀려도 하락한"
+    } ]
+  }, {
+    "tStartMs": 655170,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "이런 어려움을 겪는 시장이기도 한데"
+    } ]
+  }, {
+    "tStartMs": 657420,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "그래서 이게 상승 추세라고 판단이 되면"
+    } ]
+  }, {
+    "tStartMs": 659360,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "물론 일괄 매수 중점에서 가능하지만"
+    } ]
+  }, {
+    "tStartMs": 661350,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "꼭 주의할 것은"
+    } ]
+  }, {
+    "tStartMs": 662210,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "가분수 투자가 되지 않게"
+    } ]
+  }, {
+    "tStartMs": 663910,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "상당히 유의해야 합니다"
+    } ]
+  }, {
+    "tStartMs": 665780,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "제 개인 생각이에요"
+    } ]
+  }, {
+    "tStartMs": 666640,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "정말 개인 생각인데"
+    } ]
+  }, {
+    "tStartMs": 668060,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "처음에 그래서 좀 용기를 내야 되는"
+    } ]
+  }, {
+    "tStartMs": 669880,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "시작 금액을 좀 크게 해야 되는"
+    } ]
+  }, {
+    "tStartMs": 671550,
+    "dDurationMs": 670,
+    "segs": [ {
+      "utf8": "아 이거 어렵죠"
+    } ]
+  }, {
+    "tStartMs": 672220,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "이게 정말 어려운데"
+    } ]
+  }, {
+    "tStartMs": 673300,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "그리고 스트레스 받는 걸 견뎌내야 되는"
+    } ]
+  }, {
+    "tStartMs": 675330,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "그런 힘이 좀 필요한 시기죠"
+    } ]
+  }, {
+    "tStartMs": 677520,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "그래서 이런 상승 추세에서는"
+    } ]
+  }, {
+    "tStartMs": 678700,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "사실은 모두가 행복할 수 있어요"
+    } ]
+  }, {
+    "tStartMs": 680730,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "분할 매수를 하건"
+    } ]
+  }, {
+    "tStartMs": 681770,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "지금처럼 집중 매수를 하건"
+    } ]
+  }, {
+    "tStartMs": 682860,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "어쨌건 수익율이 나기 때문에"
+    } ]
+  }, {
+    "tStartMs": 684070,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "모두가 행복한 시장이 됩니다"
+    } ]
+  }, {
+    "tStartMs": 685880,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "하지만 상승장만 있는 건 아니죠"
+    } ]
+  }, {
+    "tStartMs": 687600,
+    "dDurationMs": 2660,
+    "segs": [ {
+      "utf8": "횡보추세에서는 어떤 전략을 써야 될까요?"
+    } ]
+  }, {
+    "tStartMs": 690260,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "횡보추세에서 가장 유력한 전략은"
+    } ]
+  }, {
+    "tStartMs": 692130,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "당연히 저가 매수, 고가 매도입니다"
+    } ]
+  }, {
+    "tStartMs": 694630,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "밀리면 사고 올라가면 팔고"
+    } ]
+  }, {
+    "tStartMs": 696160,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "밀리면 사고 올라가면 팔고"
+    } ]
+  }, {
+    "tStartMs": 697330,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "야 너무 쉽다"
+    } ]
+  }, {
+    "tStartMs": 698260,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "이렇게 하면 돈을 법니다"
+    } ]
+  }, {
+    "tStartMs": 699800,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "내려오면 사고 올라가면 팔고"
+    } ]
+  }, {
+    "tStartMs": 701200,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "물론 제일 먼저 중요한 게 뭡니까?"
+    } ]
+  }, {
+    "tStartMs": 702920,
+    "dDurationMs": 3230,
+    "segs": [ {
+      "utf8": "지금이 횡보추세라는 걸 판단을 해야죠"
+    } ]
+  }, {
+    "tStartMs": 706150,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "저가 매수, 고가 매도"
+    } ]
+  }, {
+    "tStartMs": 707060,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "저가 매수, 고가 매도"
+    } ]
+  }, {
+    "tStartMs": 708030,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "그럼 어디가 저가고, 어디가 고가입니까?"
+    } ]
+  }, {
+    "tStartMs": 710040,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "이걸 알기 어렵죠"
+    } ]
+  }, {
+    "tStartMs": 711200,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "그래서 제가 항상"
+    } ]
+  }, {
+    "tStartMs": 712440,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "예전에 얘기했던 게 뭡니까?"
+    } ]
+  }, {
+    "tStartMs": 714130,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "옛날 영상들 보면 많이 나오는데"
+    } ]
+  }, {
+    "tStartMs": 716100,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "소위 포트폴리오 리밸런싱으로 대응하면"
+    } ]
+  }, {
+    "tStartMs": 718540,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "횡보장에서는 수익률이 굉장히 좋다"
+    } ]
+  }, {
+    "tStartMs": 721150,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "가격이 올라가면"
+    } ]
+  }, {
+    "tStartMs": 722000,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "포트폴리오 위험자산 비중이 높아지니까"
+    } ]
+  }, {
+    "tStartMs": 724010,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "자연스럽게 줄일 수 있고"
+    } ]
+  }, {
+    "tStartMs": 725330,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "고가 매도를 할 수 있고"
+    } ]
+  }, {
+    "tStartMs": 726590,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "가격이 내려가면"
+    } ]
+  }, {
+    "tStartMs": 727590,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "포트폴리오 위험자산 비중이 줄어드니까"
+    } ]
+  }, {
+    "tStartMs": 729330,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "더 사야 되니까"
+    } ]
+  }, {
+    "tStartMs": 730330,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "저가 매수로 대응할 수 있다"
+    } ]
+  }, {
+    "tStartMs": 732030,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "그래서 전 세계 모든 연기금들이"
+    } ]
+  }, {
+    "tStartMs": 733800,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "포트폴리오 리밸런싱으로 대응한다"
+    } ]
+  }, {
+    "tStartMs": 735950,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "라는 거를 여러 번 말씀드렸어요"
+    } ]
+  }, {
+    "tStartMs": 738310,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "물론 포트폴리오 리밸런싱"
+    } ]
+  }, {
+    "tStartMs": 739670,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "이런 게 쭉 상승하는 추세적 상승장에서는"
+    } ]
+  }, {
+    "tStartMs": 742200,
+    "dDurationMs": 550,
+    "segs": [ {
+      "utf8": "야, 뭐 하려고"
+    } ]
+  }, {
+    "tStartMs": 742750,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "내가 위에서 팔아"
+    } ]
+  }, {
+    "tStartMs": 743380,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "더 먹어야지 하기 때문에"
+    } ]
+  }, {
+    "tStartMs": 745130,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "아까 말씀드린 경시될 수 있지만"
+    } ]
+  }, {
+    "tStartMs": 746910,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "횡보추세에서는 굉장히 유력한 전략입니다"
+    } ]
+  }, {
+    "tStartMs": 749430,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "그리고 생각을 해보면"
+    } ]
+  }, {
+    "tStartMs": 750390,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "우리나라 주식시장은"
+    } ]
+  }, {
+    "tStartMs": 751890,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "별명이 뭐예요 옛날에"
+    } ]
+  }, {
+    "tStartMs": 752980,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "요즘은 아니지만"
+    } ]
+  }, {
+    "tStartMs": 753860,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "박스피죠 우리나라 주식시장의"
+    } ]
+  }, {
+    "tStartMs": 755820,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "굉장히 큰 특징은 횡보가 깁니다"
+    } ]
+  }, {
+    "tStartMs": 757970,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "예전에 10년씩 횡보였어요"
+    } ]
+  }, {
+    "tStartMs": 759540,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "2008년에서 2020년 보세요"
+    } ]
+  }, {
+    "tStartMs": 761270,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "거의 10년을 횡보합니다"
+    } ]
+  }, {
+    "tStartMs": 762610,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "그리고 지금이야 급등기니까"
+    } ]
+  }, {
+    "tStartMs": 764400,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "우리가 그런 생각을 안 하지만"
+    } ]
+  }, {
+    "tStartMs": 765830,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "언제든지 긴 횡보를 할 수 있는"
+    } ]
+  }, {
+    "tStartMs": 767930,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "시장이라고 보시면 됩니다 왜?"
+    } ]
+  }, {
+    "tStartMs": 769790,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "미국 시장과는 다르게"
+    } ]
+  }, {
+    "tStartMs": 770710,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "자금의 한계가 있으니까"
+    } ]
+  }, {
+    "tStartMs": 772350,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "쭉 올라가면"
+    } ]
+  }, {
+    "tStartMs": 773000,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "그걸 소화하는 시간이"
+    } ]
+  }, {
+    "tStartMs": 774240,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "꽤 길게 걸릴 수 있죠"
+    } ]
+  }, {
+    "tStartMs": 775080,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "그래서 이런 횡보 시장이라고 판단되면"
+    } ]
+  }, {
+    "tStartMs": 777010,
+    "dDurationMs": 3170,
+    "segs": [ {
+      "utf8": "포트폴리오 리밸런싱 대응이 굉장히 유력하다"
+    } ]
+  }, {
+    "tStartMs": 780180,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "왜냐하면 저런 횡보 시장에 갔을 때"
+    } ]
+  }, {
+    "tStartMs": 781950,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "여러분들이 손실을 굉장히 많이 보게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 784070,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "왜 많이 보냐?"
+    } ]
+  }, {
+    "tStartMs": 784730,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "이렇게 하기 때문에 그래요"
+    } ]
+  }, {
+    "tStartMs": 786250,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "올라가면 사고"
+    } ]
+  }, {
+    "tStartMs": 787860,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "내려가면 팔고"
+    } ]
+  }, {
+    "tStartMs": 788810,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "어머 손절"
+    } ]
+  }, {
+    "tStartMs": 790090,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "그럼 또 올라가죠"
+    } ]
+  }, {
+    "tStartMs": 790890,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "사고 내려오면 팔고"
+    } ]
+  }, {
+    "tStartMs": 792120,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "어머 손절"
+    } ]
+  }, {
+    "tStartMs": 793450,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "또 올라가면 사고 내려가면 팝니다"
+    } ]
+  }, {
+    "tStartMs": 796250,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "횡보시장에서 이거 걸리면"
+    } ]
+  }, {
+    "tStartMs": 798540,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "돈이 다 녹아버려요"
+    } ]
+  }, {
+    "tStartMs": 799770,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "다시는 주식시장을 안 하죠"
+    } ]
+  }, {
+    "tStartMs": 801220,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "그럼 횡보가 끝나고"
+    } ]
+  }, {
+    "tStartMs": 802130,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "어느 순간에"
+    } ]
+  }, {
+    "tStartMs": 803220,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "급등기가 오면"
+    } ]
+  }, {
+    "tStartMs": 804330,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "영원히 안 사기 때문에"
+    } ]
+  }, {
+    "tStartMs": 805290,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "포모가 옵니다"
+    } ]
+  }, {
+    "tStartMs": 806790,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "그래서 아까 얘기했지만"
+    } ]
+  }, {
+    "tStartMs": 808700,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "우리가 집중투자를 아무 때나 하면 안 되는 게"
+    } ]
+  }, {
+    "tStartMs": 810760,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "횡보시장에 집중투자한다 그러면"
+    } ]
+  }, {
+    "tStartMs": 812800,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "가격이 좀 올라가서 샀는데"
+    } ]
+  }, {
+    "tStartMs": 814070,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "내려가면 손실이 크기 때문에"
+    } ]
+  }, {
+    "tStartMs": 815670,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "버티지 못하고"
+    } ]
+  }, {
+    "tStartMs": 816310,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "손절을 해요"
+    } ]
+  }, {
+    "tStartMs": 817200,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "올라가면 또 사지만"
+    } ]
+  }, {
+    "tStartMs": 818240,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "역시 버티지 못하고"
+    } ]
+  }, {
+    "tStartMs": 819210,
+    "dDurationMs": 510,
+    "segs": [ {
+      "utf8": "손절을 하고"
+    } ]
+  }, {
+    "tStartMs": 819720,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "이렇게 반복되면서 손실이 쌓입니다"
+    } ]
+  }, {
+    "tStartMs": 822610,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "횡보시장에서는 이익을 누적을 해야 되는데"
+    } ]
+  }, {
+    "tStartMs": 824890,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "역시 저가 매도에서"
+    } ]
+  }, {
+    "tStartMs": 825740,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "고가 매도 전략이 굉장히 잘 통하는 시장이다"
+    } ]
+  }, {
+    "tStartMs": 828080,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "라는 걸 알 수 있죠"
+    } ]
+  }, {
+    "tStartMs": 828930,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "포트폴리오 리밸런싱 방법은"
+    } ]
+  }, {
+    "tStartMs": 830650,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "제가 예전에 많이 설명해 드렸으니까"
+    } ]
+  }, {
+    "tStartMs": 832290,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "옛날 영상을 보시길 추천드립니다"
+    } ]
+  }, {
+    "tStartMs": 833900,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "자 그러면"
+    } ]
+  }, {
+    "tStartMs": 834880,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "그래 상승 추세에서는"
+    } ]
+  }, {
+    "tStartMs": 835890,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "추세를 따라서"
+    } ]
+  }, {
+    "tStartMs": 836700,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "트렌드 팔로잉을 하고"
+    } ]
+  }, {
+    "tStartMs": 838240,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "횡보 추세에서는 저가 매도에서"
+    } ]
+  }, {
+    "tStartMs": 839770,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "고가 매도로 대응을 하려는"
+    } ]
+  }, {
+    "tStartMs": 841330,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "나의 전략을 세우고"
+    } ]
+  }, {
+    "tStartMs": 842430,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "그럼 하락 추세에서는"
+    } ]
+  }, {
+    "tStartMs": 843980,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "어떤 전략을 세울 거냐?"
+    } ]
+  }, {
+    "tStartMs": 845710,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "이것도 물론 여러 가지가 있는데요"
+    } ]
+  }, {
+    "tStartMs": 847220,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "1번, 숏을 때린다"
+    } ]
+  }, {
+    "tStartMs": 849350,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "숏을 친다 그러죠"
+    } ]
+  }, {
+    "tStartMs": 850790,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "내려가면 먹는"
+    } ]
+  }, {
+    "tStartMs": 852490,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "숏 베팅을 한다"
+    } ]
+  }, {
+    "tStartMs": 853570,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "뭐 공매도를 하건"
+    } ]
+  }, {
+    "tStartMs": 854670,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "선물 숏을 하건"
+    } ]
+  }, {
+    "tStartMs": 855800,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "하여튼 숏 베팅을 때리는 방법이 있죠"
+    } ]
+  }, {
+    "tStartMs": 857750,
+    "dDurationMs": 620,
+    "segs": [ {
+      "utf8": "그리고 2번"
+    } ]
+  }, {
+    "tStartMs": 858370,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "이 하락하는 와중에도"
+    } ]
+  }, {
+    "tStartMs": 860210,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "바이 더 딥, 바닥을 잡아서"
+    } ]
+  }, {
+    "tStartMs": 862420,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "추세 역전을 노린다"
+    } ]
+  }, {
+    "tStartMs": 863590,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "매수 관점 접근한다"
+    } ]
+  }, {
+    "tStartMs": 865400,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "이게 두 번째입니다"
+    } ]
+  }, {
+    "tStartMs": 866080,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "한번 여러분 생각해보세요"
+    } ]
+  }, {
+    "tStartMs": 867530,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "어떤 게 가장 좋은 전략이지?"
+    } ]
+  }, {
+    "tStartMs": 869750,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "아까 말씀드렸지만 정답은 없습니다"
+    } ]
+  }, {
+    "tStartMs": 871640,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "3번 내려가는 시장에서는"
+    } ]
+  }, {
+    "tStartMs": 873980,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "분할 매수로 대응한다"
+    } ]
+  }, {
+    "tStartMs": 875820,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "그리고 4번 에이 모르겠다"
+    } ]
+  }, {
+    "tStartMs": 877070,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "하락 추세까지 내가 주식을 해야겠냐?"
+    } ]
+  }, {
+    "tStartMs": 879670,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "쉰다"
+    } ]
+  }, {
+    "tStartMs": 881210,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "이런 전략들이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 883090,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "어떤 게 좋아 보이십니까?"
+    } ]
+  }, {
+    "tStartMs": 885700,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "저는 개인적으로 그렇게 생각해요"
+    } ]
+  }, {
+    "tStartMs": 887640,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "숏을 쳐서 숏을 때려서"
+    } ]
+  }, {
+    "tStartMs": 890310,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "선물 매도건 공매도건"
+    } ]
+  }, {
+    "tStartMs": 891870,
+    "dDurationMs": 3410,
+    "segs": [ {
+      "utf8": "이 하락장에서 버시는 분들은 고수입니다"
+    } ]
+  }, {
+    "tStartMs": 895280,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "그리고 자기가 숏에 맞아야 돼요"
+    } ]
+  }, {
+    "tStartMs": 897290,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "소위 숏돌이라고 부르죠, 우리가"
+    } ]
+  }, {
+    "tStartMs": 899180,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "왜냐하면 숏은 굉장히 가파르고"
+    } ]
+  }, {
+    "tStartMs": 901260,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "굉장히 날카로워요"
+    } ]
+  }, {
+    "tStartMs": 902380,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "그리고 숏이 오는 시장은"
+    } ]
+  }, {
+    "tStartMs": 903800,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "하락 추세는 변동성이 엄청납니다"
+    } ]
+  }, {
+    "tStartMs": 906080,
+    "dDurationMs": 670,
+    "segs": [ {
+      "utf8": "요즘 시장 보세요"
+    } ]
+  }, {
+    "tStartMs": 906750,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "하루에 5%씩 움직여요"
+    } ]
+  }, {
+    "tStartMs": 908470,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "내가 시장을 매도를 쳐놓고"
+    } ]
+  }, {
+    "tStartMs": 911240,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "이거를 버틸 수 있냐?"
+    } ]
+  }, {
+    "tStartMs": 912370,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "아, 이건 쉽지 않은 일이에요"
+    } ]
+  }, {
+    "tStartMs": 914470,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "그리고 롱은 길고 숏은 짧습니다"
+    } ]
+  }, {
+    "tStartMs": 917090,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "잘못 숏패팅을 하면"
+    } ]
+  }, {
+    "tStartMs": 918770,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "이 긴 긴 롱 시장에서"
+    } ]
+  }, {
+    "tStartMs": 920990,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "다 손절이 나가버릴 수가 있어요"
+    } ]
+  }, {
+    "tStartMs": 922710,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "타이밍을 정확하게 맞춰야 되죠"
+    } ]
+  }, {
+    "tStartMs": 924820,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "그래서 작게 숏을 치는 건 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 927130,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "강력한 숏 베팅으로 돈을 많이 버는 분들은"
+    } ]
+  }, {
+    "tStartMs": 929600,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "진짜 고수거나"
+    } ]
+  }, {
+    "tStartMs": 930510,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "아니면 시장에서 아웃될 가능성이 굉장히 높습니다"
+    } ]
+  }, {
+    "tStartMs": 933070,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "그래서 굉장히 어려운 투자 방법이다"
+    } ]
+  }, {
+    "tStartMs": 935160,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "그러니까 일반 개인들이 하기에"
+    } ]
+  }, {
+    "tStartMs": 937180,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "굉장히 쉽지 않죠"
+    } ]
+  }, {
+    "tStartMs": 938060,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "이건 고수만이 해야 되고"
+    } ]
+  }, {
+    "tStartMs": 939890,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "저는 추천을 하지는 않는 그런 방법입니다"
+    } ]
+  }, {
+    "tStartMs": 942520,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "2번 롱을 잡는다"
+    } ]
+  }, {
+    "tStartMs": 944600,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "이게 소위 개인들이"
+    } ]
+  }, {
+    "tStartMs": 945330,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "가장 많이 하는 방법입니다"
+    } ]
+  }, {
+    "tStartMs": 947010,
+    "dDurationMs": 3060,
+    "segs": [ {
+      "utf8": "하락 추세인데 롱을 잡아요 신기하죠?"
+    } ]
+  }, {
+    "tStartMs": 950070,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "하락 추세인데"
+    } ]
+  }, {
+    "tStartMs": 951770,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "왜 롱을 잡냐?"
+    } ]
+  }, {
+    "tStartMs": 953140,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "그 이유는 있어요"
+    } ]
+  }, {
+    "tStartMs": 954190,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "하락 추세니까 변동성이 큽니다"
+    } ]
+  }, {
+    "tStartMs": 955760,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "하루하루 봉이 크기 때문에"
+    } ]
+  }, {
+    "tStartMs": 957190,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "쭉쭉 빠지니까"
+    } ]
+  }, {
+    "tStartMs": 958660,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "여기서 반등만 하면"
+    } ]
+  }, {
+    "tStartMs": 959730,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "굉장히 반등봉도 크죠"
+    } ]
+  }, {
+    "tStartMs": 961790,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "그러다 보니까"
+    } ]
+  }, {
+    "tStartMs": 962740,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "이게 하이리스크 하이리턴이에요"
+    } ]
+  }, {
+    "tStartMs": 964740,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "그래서 이 하락 추세에서도"
+    } ]
+  }, {
+    "tStartMs": 966810,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "매수 관점, 롱 관점으로"
+    } ]
+  }, {
+    "tStartMs": 968460,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "여기서 말하는 롱이라는 거는"
+    } ]
+  }, {
+    "tStartMs": 969830,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "굉장히 크게 아주 세게"
+    } ]
+  }, {
+    "tStartMs": 971750,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "어느 순간에 집중 투자해서"
+    } ]
+  }, {
+    "tStartMs": 973460,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "롱을 잡는 거를 의미합니다"
+    } ]
+  }, {
+    "tStartMs": 974840,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "이 매수 접근을 하는 분이 있는데"
+    } ]
+  }, {
+    "tStartMs": 977120,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "제 경험상 이것도 어렵습니다"
+    } ]
+  }, {
+    "tStartMs": 979230,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "왜냐하면 상승 추세에서"
+    } ]
+  }, {
+    "tStartMs": 981420,
+    "dDurationMs": 3050,
+    "segs": [ {
+      "utf8": "소위 말해 롱 매수적 관점을 하는 건 쉽죠"
+    } ]
+  }, {
+    "tStartMs": 984470,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "그거는 뭐 그냥 대충 아무 때나 잡아도"
+    } ]
+  }, {
+    "tStartMs": 986510,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "조금만 있으면 올라가는 시장이잖아요"
+    } ]
+  }, {
+    "tStartMs": 988830,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "그러니까 물이 오른쪽으로 흐를 때는"
+    } ]
+  }, {
+    "tStartMs": 991360,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "뭐 오른쪽으로 베팅하는 건 어렵지 않죠"
+    } ]
+  }, {
+    "tStartMs": 993320,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "근데 물이 왼쪽으로 흐르고 있는데"
+    } ]
+  }, {
+    "tStartMs": 995250,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "나는 오른쪽으로 베팅을 하는 한마디로"
+    } ]
+  }, {
+    "tStartMs": 996920,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "하락 추세에서 롱을 잡는 거는"
+    } ]
+  }, {
+    "tStartMs": 999310,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "이것도 정말 쉽지 않습니다"
+    } ]
+  }, {
+    "tStartMs": 1000750,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "왜냐면 기본적으로 시장의 방향이"
+    } ]
+  }, {
+    "tStartMs": 1002890,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "아래잖아요"
+    } ]
+  }, {
+    "tStartMs": 1004400,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "근데 나는 반대로 잡는 거란 말입니다"
+    } ]
+  }, {
+    "tStartMs": 1006060,
+    "dDurationMs": 3270,
+    "segs": [ {
+      "utf8": "타이밍을 내가 기가 막히게 맞춰야겠죠"
+    } ]
+  }, {
+    "tStartMs": 1009330,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "기가 막히게 맞추고"
+    } ]
+  }, {
+    "tStartMs": 1010900,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "또 맞췄다고 해도"
+    } ]
+  }, {
+    "tStartMs": 1011960,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "그 다음날에 또 빠질 수 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1013550,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "하락 추세니까"
+    } ]
+  }, {
+    "tStartMs": 1014910,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "내가 차익 실현하고 나오는 것도"
+    } ]
+  }, {
+    "tStartMs": 1016280,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "진짜 기민하게 빨라야 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1019010,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "또 그렇다고 여긴 진짜 바닥이야"
+    } ]
+  }, {
+    "tStartMs": 1020570,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "찐찐찐찐 바닥이야 해서"
+    } ]
+  }, {
+    "tStartMs": 1022450,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "굉장히 큰 금액을 들어가면"
+    } ]
+  }, {
+    "tStartMs": 1024030,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "바이 더 딥 한 거죠"
+    } ]
+  }, {
+    "tStartMs": 1025090,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "큰 금액을 들어갔을 때"
+    } ]
+  }, {
+    "tStartMs": 1026410,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "이 하락 추세가 끝나지 않고"
+    } ]
+  }, {
+    "tStartMs": 1027530,
+    "dDurationMs": 420,
+    "segs": [ {
+      "utf8": "밀렸을 때"
+    } ]
+  }, {
+    "tStartMs": 1027950,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "과연 버틸 수 있냐"
+    } ]
+  }, {
+    "tStartMs": 1030320,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "이 문제를 생각했을 때"
+    } ]
+  }, {
+    "tStartMs": 1031640,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "역시 강력한 롱으로 대응하는 것도"
+    } ]
+  }, {
+    "tStartMs": 1033880,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "굉장히 쉽지 않은 전략이라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1036440,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "물론 저 바닥에서"
+    } ]
+  }, {
+    "tStartMs": 1037970,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "정말 이만큼 아주 크게 롱을 잡으면"
+    } ]
+  }, {
+    "tStartMs": 1040320,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "수익률은 최고겠죠"
+    } ]
+  }, {
+    "tStartMs": 1041300,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "수익률은 최고인데"
+    } ]
+  }, {
+    "tStartMs": 1042420,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "리스크 관리가 정말 힘들죠"
+    } ]
+  }, {
+    "tStartMs": 1044190,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "그래서 하락시장에서 가장 많이 대응하는"
+    } ]
+  }, {
+    "tStartMs": 1046180,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "가장 쉽게 대응하는 방법은 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 1047810,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "당연히 분할 매수입니다"
+    } ]
+  }, {
+    "tStartMs": 1050520,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "올라가는 시장에서도"
+    } ]
+  }, {
+    "tStartMs": 1051950,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "분할 매수로 물론 할 수 있죠"
+    } ]
+  }, {
+    "tStartMs": 1053460,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "올라가는 시장에서"
+    } ]
+  }, {
+    "tStartMs": 1054280,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "근데 분할 매수로 계속 접근을 하면"
+    } ]
+  }, {
+    "tStartMs": 1056550,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "남들은 많이 먹는데"
+    } ]
+  }, {
+    "tStartMs": 1057510,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "나는 조금 먹지?"
+    } ]
+  }, {
+    "tStartMs": 1058290,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "라는 그럼 또 포모가 올 수 있죠"
+    } ]
+  }, {
+    "tStartMs": 1060050,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "물론 수익률이 낮으니까"
+    } ]
+  }, {
+    "tStartMs": 1061330,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "훌륭한 투자인데"
+    } ]
+  }, {
+    "tStartMs": 1062480,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "그럼에도 불구하고"
+    } ]
+  }, {
+    "tStartMs": 1063400,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "아래서 조금 많이 살 걸"
+    } ]
+  }, {
+    "tStartMs": 1064820,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "아래서 조금 집중 투자해볼 걸"
+    } ]
+  }, {
+    "tStartMs": 1066420,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "이런 생각들이 많이 드는 거고"
+    } ]
+  }, {
+    "tStartMs": 1068580,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "다만 하락 시장에서는"
+    } ]
+  }, {
+    "tStartMs": 1070380,
+    "dDurationMs": 3560,
+    "segs": [ {
+      "utf8": "분할 매수가 굉장히 유력한 방법이 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1073940,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "왜냐하면 하락이 영원하진 않잖아요"
+    } ]
+  }, {
+    "tStartMs": 1076800,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "우리는 그렇게 생각하죠"
+    } ]
+  }, {
+    "tStartMs": 1077770,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "일본처럼 20년, 30년"
+    } ]
+  }, {
+    "tStartMs": 1079470,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "하락이 올 거라고 생각하진 않습니다"
+    } ]
+  }, {
+    "tStartMs": 1081490,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "일본의"
+    } ]
+  }, {
+    "tStartMs": 1082190,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "일본과 같은 잃어버린"
+    } ]
+  }, {
+    "tStartMs": 1083880,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "30년이 온다고 생각하지 않는 한"
+    } ]
+  }, {
+    "tStartMs": 1085910,
+    "dDurationMs": 2970,
+    "segs": [ {
+      "utf8": "언젠가는 시장이 전환이 돼서"
+    } ]
+  }, {
+    "tStartMs": 1088880,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "다시 상승할 거니까"
+    } ]
+  }, {
+    "tStartMs": 1090260,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "내가 분할 매수로 쭉 대응을 하면"
+    } ]
+  }, {
+    "tStartMs": 1092370,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "내 평단을 자연스럽게 낮출 수 있고"
+    } ]
+  }, {
+    "tStartMs": 1094300,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "올라갈 때"
+    } ]
+  }, {
+    "tStartMs": 1095000,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "아래에서 많이 산 꼴이 되니까"
+    } ]
+  }, {
+    "tStartMs": 1096980,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "높은 수익을 거둘 수 있는"
+    } ]
+  }, {
+    "tStartMs": 1098200,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "가장 쉬운 방법이다라는"
+    } ]
+  }, {
+    "tStartMs": 1099460,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "생각이 들죠"
+    } ]
+  }, {
+    "tStartMs": 1100440,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "그래서 분할 매수가"
+    } ]
+  }, {
+    "tStartMs": 1101870,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "가장 위력을 발휘하는 게"
+    } ]
+  }, {
+    "tStartMs": 1103420,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "대표적인 하락 추세장이 되겠습니다"
+    } ]
+  }, {
+    "tStartMs": 1105540,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "물론 4번 쉰다"
+    } ]
+  }, {
+    "tStartMs": 1106950,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "이것도 아주 좋은 방법입니다"
+    } ]
+  }, {
+    "tStartMs": 1109350,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "아주 좋은 방법"
+    } ]
+  }, {
+    "tStartMs": 1110360,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "제가 옛날에 트레이딩 사업부에 있을 때"
+    } ]
+  }, {
+    "tStartMs": 1112220,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "팀장님한테 그렇게 배웠어요"
+    } ]
+  }, {
+    "tStartMs": 1113750,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "전쟁에 나가 싸울 때는"
+    } ]
+  }, {
+    "tStartMs": 1115190,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "하나만 해라"
+    } ]
+  }, {
+    "tStartMs": 1116640,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "칼로 찌르든지"
+    } ]
+  }, {
+    "tStartMs": 1118530,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "방패로 막던지"
+    } ]
+  }, {
+    "tStartMs": 1120330,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "이게 무슨 말이냐?"
+    } ]
+  }, {
+    "tStartMs": 1121450,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "너가 롱으로"
+    } ]
+  }, {
+    "tStartMs": 1122240,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "너가 매수로 돈을 벌 생각을 하면"
+    } ]
+  }, {
+    "tStartMs": 1124270,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "숏장이 오면 방패로 막아라"
+    } ]
+  }, {
+    "tStartMs": 1126350,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "손실을 막는 것만으로도"
+    } ]
+  }, {
+    "tStartMs": 1128030,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "너는 충분히 네 역할을 했다"
+    } ]
+  }, {
+    "tStartMs": 1129920,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "한마디로 쉬거나 분할 매수하거나"
+    } ]
+  }, {
+    "tStartMs": 1132660,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "그런 뜻이죠"
+    } ]
+  }, {
+    "tStartMs": 1133560,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "손실만 막아도 충분하다"
+    } ]
+  }, {
+    "tStartMs": 1135670,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "반대로 너는 칼로 찌르려 갔는데"
+    } ]
+  }, {
+    "tStartMs": 1138040,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "숏장이 온다고 방패로까지 때리려고 하면"
+    } ]
+  }, {
+    "tStartMs": 1140350,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "손이 어긋난다"
+    } ]
+  }, {
+    "tStartMs": 1141960,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "이게 무슨 말입니까?"
+    } ]
+  }, {
+    "tStartMs": 1142650,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "내려갈 때"
+    } ]
+  }, {
+    "tStartMs": 1143510,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "스텝이 꼬여서"
+    } ]
+  }, {
+    "tStartMs": 1144500,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "올라가면 사고 내려가면 팔고"
+    } ]
+  }, {
+    "tStartMs": 1145910,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "올라가면 사고 내려가면 팔고"
+    } ]
+  }, {
+    "tStartMs": 1147290,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "하락장에서는 이렇게 손이 꼬이면"
+    } ]
+  }, {
+    "tStartMs": 1149090,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "손실이 누적이 될 수 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1150910,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "그래서 하락세는 그만큼 어려우니까"
+    } ]
+  }, {
+    "tStartMs": 1152910,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "저 주름을 다 펴서 먹으려고 생각을 하면"
+    } ]
+  }, {
+    "tStartMs": 1155420,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "굉장히 어렵습니다"
+    } ]
+  }, {
+    "tStartMs": 1156200,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "물론 봉이 커서 욕심이 나요"
+    } ]
+  }, {
+    "tStartMs": 1157930,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "요즘 시장 보세요"
+    } ]
+  }, {
+    "tStartMs": 1158920,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "하루에 5%씩 움직이잖아요"
+    } ]
+  }, {
+    "tStartMs": 1160100,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "봉이 얼마나 커요"
+    } ]
+  }, {
+    "tStartMs": 1160800,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "욕심이 나는 거 알겠는데"
+    } ]
+  }, {
+    "tStartMs": 1162160,
+    "dDurationMs": 470,
+    "segs": [ {
+      "utf8": "올라갈 때"
+    } ]
+  }, {
+    "tStartMs": 1162630,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "5%"
+    } ]
+  }, {
+    "tStartMs": 1163530,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "안 살 수 없다 하면"
+    } ]
+  }, {
+    "tStartMs": 1164550,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "그 다음날 7% 빠져요"
+    } ]
+  }, {
+    "tStartMs": 1165590,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "7%"
+    } ]
+  }, {
+    "tStartMs": 1167170,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "손질 안 할 수 없다"
+    } ]
+  }, {
+    "tStartMs": 1167900,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "그럼 그 다음날 5%, 6% 올라"
+    } ]
+  }, {
+    "tStartMs": 1169530,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "그러니까 저 주름을 다 펴서 먹으려는 게"
+    } ]
+  }, {
+    "tStartMs": 1172150,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "대단히 x3 어렵다"
+    } ]
+  }, {
+    "tStartMs": 1174620,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "생각보다 어렵기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1176340,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "하락 추세에서는 개인들 입장에서"
+    } ]
+  }, {
+    "tStartMs": 1178180,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "저는 분할 매수로 대응하던가"
+    } ]
+  }, {
+    "tStartMs": 1180300,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "아니면 좀 쉬다가"
+    } ]
+  }, {
+    "tStartMs": 1181450,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "나중에 좀 완만한"
+    } ]
+  }, {
+    "tStartMs": 1182410,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "하락 추세가 완만해질 때"
+    } ]
+  }, {
+    "tStartMs": 1184020,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "그때 분할 매수하던가"
+    } ]
+  }, {
+    "tStartMs": 1185530,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "저런 게 가장 좋지 않나"
+    } ]
+  }, {
+    "tStartMs": 1187020,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "개인적으로 정말 생각을 합니다"
+    } ]
+  }, {
+    "tStartMs": 1188600,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "방금 말씀드렸지만"
+    } ]
+  }, {
+    "tStartMs": 1189840,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "하락 추세에서 숏으로 수익을 내겠다?"
+    } ]
+  }, {
+    "tStartMs": 1192290,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "숏은 시간 제한이 있는 투자에 가깝습니다"
+    } ]
+  }, {
+    "tStartMs": 1195160,
+    "dDurationMs": 510,
+    "segs": [ {
+      "utf8": "다 말씀드렸죠"
+    } ]
+  }, {
+    "tStartMs": 1195670,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "숏은 짧고 날카롭게 오고"
+    } ]
+  }, {
+    "tStartMs": 1198160,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "수익이 높을 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 1199360,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "하락장에 길게 이어지는 경우는"
+    } ]
+  }, {
+    "tStartMs": 1200870,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "잘 없기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1202010,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "어느 순간 상승장으로 전환이 되니까"
+    } ]
+  }, {
+    "tStartMs": 1204050,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "시간 제한이 있는 투자에 가깝다"
+    } ]
+  }, {
+    "tStartMs": 1206070,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "우리는 시간 제한이 없을 때도"
+    } ]
+  }, {
+    "tStartMs": 1207660,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "돈을 잘 못 버는데"
+    } ]
+  }, {
+    "tStartMs": 1208810,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "시간 제한이 있으면"
+    } ]
+  }, {
+    "tStartMs": 1210160,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "돈을 벌기 더 어렵겠죠"
+    } ]
+  }, {
+    "tStartMs": 1211550,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "일반적으로 타임어택을"
+    } ]
+  }, {
+    "tStartMs": 1212770,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "안 해도 어려운데"
+    } ]
+  }, {
+    "tStartMs": 1213910,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "타임어택이 있는 게임을 하려니까"
+    } ]
+  }, {
+    "tStartMs": 1215840,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "굉장히 좀 어려운 방법이지 않나 생각이 되고요"
+    } ]
+  }, {
+    "tStartMs": 1218630,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "자 그리고 아예 그냥 텅 비우고"
+    } ]
+  }, {
+    "tStartMs": 1220380,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "주식 다 비우고"
+    } ]
+  }, {
+    "tStartMs": 1221170,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "하락장에서 쉬는 게 제일 좋지 않냐"
+    } ]
+  }, {
+    "tStartMs": 1223000,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "그것도 어렵습니다"
+    } ]
+  }, {
+    "tStartMs": 1223900,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "생각보다 쉽지 않아요"
+    } ]
+  }, {
+    "tStartMs": 1224890,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "왜냐하면 이게 있어요"
+    } ]
+  }, {
+    "tStartMs": 1226360,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "과연 너가 비울 수 있을까?"
+    } ]
+  }, {
+    "tStartMs": 1228730,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "하락장이 온다고"
+    } ]
+  }, {
+    "tStartMs": 1229700,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "내가 지금 주식을 다 비우고"
+    } ]
+  }, {
+    "tStartMs": 1231530,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "마음 놓고 쉴 수 있을까?"
+    } ]
+  }, {
+    "tStartMs": 1233210,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "왜냐면 하락장이 이렇게 빠져주면"
+    } ]
+  }, {
+    "tStartMs": 1234760,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "얼마나 좋아요"
+    } ]
+  }, {
+    "tStartMs": 1236010,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "다 비우고 쉬지"
+    } ]
+  }, {
+    "tStartMs": 1237270,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "근데 이렇게 안 빠진단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 1238610,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "어떻게 빠집니까 요즘에"
+    } ]
+  }, {
+    "tStartMs": 1240250,
+    "dDurationMs": 3350,
+    "segs": [ {
+      "utf8": "이렇게 이렇게 이렇게 빠진단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 1243600,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "7%"
+    } ]
+  }, {
+    "tStartMs": 1245300,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "-5%, 8%"
+    } ]
+  }, {
+    "tStartMs": 1247640,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "심지어 10%"
+    } ]
+  }, {
+    "tStartMs": 1248570,
+    "dDurationMs": 540,
+    "segs": [ {
+      "utf8": "이렇게 올라요"
+    } ]
+  }, {
+    "tStartMs": 1249110,
+    "dDurationMs": 430,
+    "segs": [ {
+      "utf8": "오를 때"
+    } ]
+  }, {
+    "tStartMs": 1249540,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "그냥 이렇게 나 빼고 올라가면 어떻게 되냐"
+    } ]
+  }, {
+    "tStartMs": 1252310,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "하락장이 금방 끝나고"
+    } ]
+  }, {
+    "tStartMs": 1253620,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "이렇게 V자 반등하는데"
+    } ]
+  }, {
+    "tStartMs": 1254990,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "나는 없으면 어떻게 되냐"
+    } ]
+  }, {
+    "tStartMs": 1256080,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "이 불안감이 너무나 크단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 1258570,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "포지션이 없는 것도 불안한 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1260900,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "주식을 하게 되면"
+    } ]
+  }, {
+    "tStartMs": 1261600,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "그렇게 돼요"
+    } ]
+  }, {
+    "tStartMs": 1262360,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "포모가 굉장히 강하게 올 수 있죠"
+    } ]
+  }, {
+    "tStartMs": 1264330,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "그래서 빨간 장대양봉이 설 때마다"
+    } ]
+  }, {
+    "tStartMs": 1266110,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "내 마음이 정말"
+    } ]
+  }, {
+    "tStartMs": 1267550,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "비우는 것도 쉽지 않다"
+    } ]
+  }, {
+    "tStartMs": 1269350,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "비우는 것도 훈련입니다"
+    } ]
+  }, {
+    "tStartMs": 1271080,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "그리고 아까 말씀드린"
+    } ]
+  }, {
+    "tStartMs": 1272190,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "바이더 딥"
+    } ]
+  }, {
+    "tStartMs": 1272850,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "풀파워 저가 매수"
+    } ]
+  }, {
+    "tStartMs": 1274370,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "이거는 완전 바닥에서"
+    } ]
+  }, {
+    "tStartMs": 1276100,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "완전 바닥 변곡점에서"
+    } ]
+  }, {
+    "tStartMs": 1277670,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "사려는 그 욕망"
+    } ]
+  }, {
+    "tStartMs": 1279870,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "이거는 진짜 롱으로 접근하든"
+    } ]
+  }, {
+    "tStartMs": 1282220,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "숏으로 접근하든"
+    } ]
+  }, {
+    "tStartMs": 1283190,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "손절이 정말 나가기 쉽습니다"
+    } ]
+  }, {
+    "tStartMs": 1284800,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "하락장에서 정말 인생을 건 베팅"
+    } ]
+  }, {
+    "tStartMs": 1286690,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "집중 투자 저가 매수라는 거는"
+    } ]
+  }, {
+    "tStartMs": 1288780,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "요즘 보셔서 알잖아요"
+    } ]
+  }, {
+    "tStartMs": 1289950,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "버티기가 너무 쉽지 않다"
+    } ]
+  }, {
+    "tStartMs": 1291540,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "그런 건 상승 추세에서 하는 게"
+    } ]
+  }, {
+    "tStartMs": 1293370,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "좀 더 쉽다"
+    } ]
+  }, {
+    "tStartMs": 1294660,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "이게 손절이 너무 쉽게 나갈 수 있죠"
+    } ]
+  }, {
+    "tStartMs": 1297300,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "그래서 제가 옛날에 한 번 말했던"
+    } ]
+  }, {
+    "tStartMs": 1299240,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "이게 짤로 돌더라고요"
+    } ]
+  }, {
+    "tStartMs": 1300700,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "이 하락장에서"
+    } ]
+  }, {
+    "tStartMs": 1301950,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "어떻게 대응해야 되냐"
+    } ]
+  }, {
+    "tStartMs": 1303310,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "대응해야 하나?"
+    } ]
+  }, {
+    "tStartMs": 1304190,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "너가 효율적으로 대응할 수 있을까?"
+    } ]
+  }, {
+    "tStartMs": 1306100,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "라고 썼던 이 장면이 짤로 돌던데"
+    } ]
+  }, {
+    "tStartMs": 1308660,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "그만큼 하락장에서"
+    } ]
+  }, {
+    "tStartMs": 1310070,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "이 소위 변곡점을 찾아서"
+    } ]
+  }, {
+    "tStartMs": 1311860,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "집중 매수를 하는 거"
+    } ]
+  }, {
+    "tStartMs": 1313630,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "대단히 어려운 일입니다"
+    } ]
+  }, {
+    "tStartMs": 1314940,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "이게 그렇게 어렵기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1316280,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "그래서 이제 효율적으로 대응할 수 있을까?"
+    } ]
+  }, {
+    "tStartMs": 1318080,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "그런 말을 했다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1319160,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "그래서 방금 말씀드렸지만"
+    } ]
+  }, {
+    "tStartMs": 1320370,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "하락 추세에서 가장 쉬운 투자 방법은"
+    } ]
+  }, {
+    "tStartMs": 1322690,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "당연히 분할 매수와"
+    } ]
+  }, {
+    "tStartMs": 1324180,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "적립식 투자입니다"
+    } ]
+  }, {
+    "tStartMs": 1325640,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "가장 쉽죠, 가장 쉽고"
+    } ]
+  }, {
+    "tStartMs": 1327400,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "하락장에서 누구나 할 수 있는 방법이고"
+    } ]
+  }, {
+    "tStartMs": 1329710,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "하락을 해도"
+    } ]
+  }, {
+    "tStartMs": 1330370,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "내 마음이 편하다"
+    } ]
+  }, {
+    "tStartMs": 1331980,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "그리고 분할 매수 적립식 투자의 위력이"
+    } ]
+  }, {
+    "tStartMs": 1334120,
+    "dDurationMs": 2660,
+    "segs": [ {
+      "utf8": "가장 많이 보이는 때가 하락장입니다"
+    } ]
+  }, {
+    "tStartMs": 1336780,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "상승장에서는"
+    } ]
+  }, {
+    "tStartMs": 1337880,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "분할 매수 적립식 투자가"
+    } ]
+  }, {
+    "tStartMs": 1339470,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "그렇게 위협적이지 않죠"
+    } ]
+  }, {
+    "tStartMs": 1341620,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "물론 안전하고 좋은 투자 방법이고"
+    } ]
+  }, {
+    "tStartMs": 1343580,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "누구나에게 추천하는데"
+    } ]
+  }, {
+    "tStartMs": 1345040,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "상승장에서는 아깝잖아"
+    } ]
+  }, {
+    "tStartMs": 1346480,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "그게 그렇게 생각해요"
+    } ]
+  }, {
+    "tStartMs": 1347670,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "본인이 그렇게 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 1348650,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "아유 조금 더 많이 살걸"
+    } ]
+  }, {
+    "tStartMs": 1349690,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "왜 나 안샀나"
+    } ]
+  }, {
+    "tStartMs": 1350460,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "아유 이날 샀으면 더 많이 벌었는데"
+    } ]
+  }, {
+    "tStartMs": 1352390,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "나중에 사니까"
+    } ]
+  }, {
+    "tStartMs": 1353080,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "가격이 더 올랐네"
+    } ]
+  }, {
+    "tStartMs": 1354080,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "뭐 이런 생각을 한단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 1355320,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "그래서 분할 매수 적립자에"
+    } ]
+  }, {
+    "tStartMs": 1356380,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "가장 적합한 게 하락장이거나"
+    } ]
+  }, {
+    "tStartMs": 1358500,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "굉장히 변동성 큰 횡보장이 되겠죠"
+    } ]
+  }, {
+    "tStartMs": 1361050,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "매수 매수 매수 내려오면 더 좋아"
+    } ]
+  }, {
+    "tStartMs": 1362930,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "매수, 내려오면 더 좋아 매수"
+    } ]
+  }, {
+    "tStartMs": 1364740,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "계속 매수이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1366170,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "주기적으로 매수하다 보면"
+    } ]
+  }, {
+    "tStartMs": 1367600,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "언젠가는 시장은 상승한다"
+    } ]
+  }, {
+    "tStartMs": 1369310,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "우리 그런 믿음이 있죠"
+    } ]
+  }, {
+    "tStartMs": 1370580,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "그랬을 때 아래서 샀던 게"
+    } ]
+  }, {
+    "tStartMs": 1372510,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "고스란히 다"
+    } ]
+  }, {
+    "tStartMs": 1373460,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "수익으로 간다라는 믿음이 있는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1376150,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "그리고 심지어 동일한 금액으로"
+    } ]
+  }, {
+    "tStartMs": 1377750,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "계속 사게 되면"
+    } ]
+  }, {
+    "tStartMs": 1378810,
+    "dDurationMs": 460,
+    "segs": [ {
+      "utf8": "예를 들면"
+    } ]
+  }, {
+    "tStartMs": 1379270,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "10만 원씩 매일 산다 그래도"
+    } ]
+  }, {
+    "tStartMs": 1381330,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "저 위에서는 삼성전자 10만 원이었지만"
+    } ]
+  }, {
+    "tStartMs": 1383050,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "아래 오면 5만 원이잖아요"
+    } ]
+  }, {
+    "tStartMs": 1384400,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "위에서는 한 주 사고"
+    } ]
+  }, {
+    "tStartMs": 1385430,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "아래에서는 두 주 살 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1387050,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "같은 금액을 산다"
+    } ]
+  }, {
+    "tStartMs": 1387990,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "그래도 가격이 내려올 때마다"
+    } ]
+  }, {
+    "tStartMs": 1389640,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "더 많이 사는 효과가 생기죠"
+    } ]
+  }, {
+    "tStartMs": 1391450,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "나중에 상승장이 되면"
+    } ]
+  }, {
+    "tStartMs": 1392670,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "그게 복리효과처럼 굉장히 커져서"
+    } ]
+  }, {
+    "tStartMs": 1395110,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "내 단가가 굉장히 내려가는"
+    } ]
+  }, {
+    "tStartMs": 1396580,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "그런 효과를 볼 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1397880,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "그리고 많은 사람들이 생각하는"
+    } ]
+  }, {
+    "tStartMs": 1399860,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "이거"
+    } ]
+  }, {
+    "tStartMs": 1400550,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "저 아래 발끝에서 사겠다"
+    } ]
+  }, {
+    "tStartMs": 1403350,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "그건 정말 힘들고요"
+    } ]
+  }, {
+    "tStartMs": 1404250,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "그건 마치 저 끝에서"
+    } ]
+  }, {
+    "tStartMs": 1405820,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "맨 꼭지점에서 팔겠다라는 것과 비슷한데"
+    } ]
+  }, {
+    "tStartMs": 1408400,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "이거 맨 꼭지점에서"
+    } ]
+  }, {
+    "tStartMs": 1409600,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "파는 것도 대단히 어렵습니다"
+    } ]
+  }, {
+    "tStartMs": 1410840,
+    "dDurationMs": 30,
+    "segs": [ {
+      "utf8": "왜?"
+    } ]
+  }, {
+    "tStartMs": 1410870,
+    "dDurationMs": 3380,
+    "segs": [ {
+      "utf8": "맨 꼭지점에서는 안 팔아요"
+    } ]
+  }, {
+    "tStartMs": 1414250,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "이렇게 오르는 시장에서"
+    } ]
+  }, {
+    "tStartMs": 1415690,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "맨 꼭지점에서는 안 팝니다"
+    } ]
+  }, {
+    "tStartMs": 1417560,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "어디까지 갈 줄 알고"
+    } ]
+  }, {
+    "tStartMs": 1418460,
+    "dDurationMs": 590,
+    "segs": [ {
+      "utf8": "여기서 팔아요"
+    } ]
+  }, {
+    "tStartMs": 1419050,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "언제 팝니까?"
+    } ]
+  }, {
+    "tStartMs": 1420020,
+    "dDurationMs": 520,
+    "segs": [ {
+      "utf8": "꺾이는 걸"
+    } ]
+  }, {
+    "tStartMs": 1420540,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "보고 팔게 돼 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1421710,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "사람이라면"
+    } ]
+  }, {
+    "tStartMs": 1422740,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "5%, 10% 떨어지니까"
+    } ]
+  }, {
+    "tStartMs": 1423870,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "상승 추세가 끝났나 보다"
+    } ]
+  }, {
+    "tStartMs": 1425230,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "하고 파는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1426240,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "하락도 마찬가지예요"
+    } ]
+  }, {
+    "tStartMs": 1427390,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "이 끝에 살 수 있냐?"
+    } ]
+  }, {
+    "tStartMs": 1429210,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "못 사죠"
+    } ]
+  }, {
+    "tStartMs": 1429840,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "조금은 살 수 있지"
+    } ]
+  }, {
+    "tStartMs": 1430600,
+    "dDurationMs": 320,
+    "segs": [ {
+      "utf8": "조금은"
+    } ]
+  }, {
+    "tStartMs": 1430920,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "근데 여기서 내 전재산을 다 넣고"
+    } ]
+  }, {
+    "tStartMs": 1432810,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "정말 집중 매수를 할 수 있냐?"
+    } ]
+  }, {
+    "tStartMs": 1434420,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "그거는 투자의 신"
+    } ]
+  }, {
+    "tStartMs": 1436100,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "또는 비스트"
+    } ]
+  }, {
+    "tStartMs": 1437780,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "여기는 거의 야수"
+    } ]
+  }, {
+    "tStartMs": 1439240,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "아니 왜냐하면 이 오른쪽이 없는 거잖아요"
+    } ]
+  }, {
+    "tStartMs": 1441730,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "지금 이게 있지만"
+    } ]
+  }, {
+    "tStartMs": 1442540,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "이 오른쪽이 없는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1443890,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "이게 없을 때"
+    } ]
+  }, {
+    "tStartMs": 1445490,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "여기서 어느 점인지 알고"
+    } ]
+  }, {
+    "tStartMs": 1447700,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "내 인생을 걸 수 있겠어요"
+    } ]
+  }, {
+    "tStartMs": 1448710,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "그게 어렵기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1450010,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "끝에 지점에서"
+    } ]
+  }, {
+    "tStartMs": 1450770,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "굉장히 집중 매수를 하는 건 대단히 어렵다"
+    } ]
+  }, {
+    "tStartMs": 1452760,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "그래서 더 쉬운 건"
+    } ]
+  }, {
+    "tStartMs": 1454070,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "분할 매수로 접근을 하다가"
+    } ]
+  }, {
+    "tStartMs": 1456400,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "시장이 꺾였다"
+    } ]
+  }, {
+    "tStartMs": 1457940,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "상승 추세로 전환이 됐다"
+    } ]
+  }, {
+    "tStartMs": 1459230,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "예를 들면 5%, 10% 올라갔다"
+    } ]
+  }, {
+    "tStartMs": 1460670,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "그리고 그동안 분할 매수에서 한 게 있으니까"
+    } ]
+  }, {
+    "tStartMs": 1463130,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "당연히 평단이 낮겠죠"
+    } ]
+  }, {
+    "tStartMs": 1465020,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "그리고 올라갈 때"
+    } ]
+  }, {
+    "tStartMs": 1467160,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "준비가 돼 있고"
+    } ]
+  }, {
+    "tStartMs": 1467760,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "자기가 공부가 잘 돼 있으면"
+    } ]
+  }, {
+    "tStartMs": 1469330,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "집중 매수나 일괄 매수로"
+    } ]
+  }, {
+    "tStartMs": 1470840,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "전환할 수도 있는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1472420,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "그냥 쭉 분할 매수로 접근하는 것도"
+    } ]
+  }, {
+    "tStartMs": 1474360,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "굉장히 좋은 방법이지만"
+    } ]
+  }, {
+    "tStartMs": 1476200,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "그래서 제가 드리고 싶은 말씀은"
+    } ]
+  }, {
+    "tStartMs": 1477540,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "길게 드렸지만"
+    } ]
+  }, {
+    "tStartMs": 1478750,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "투자에는 정답이 없고"
+    } ]
+  }, {
+    "tStartMs": 1480310,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "어떤 전략이라도 시장에 따라 다르다"
+    } ]
+  }, {
+    "tStartMs": 1482760,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "시장의 추세가"
+    } ]
+  }, {
+    "tStartMs": 1483930,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "상승 추세냐, 횡보 추세냐"
+    } ]
+  }, {
+    "tStartMs": 1485940,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "하락 추세냐"
+    } ]
+  }, {
+    "tStartMs": 1486840,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "이것만 알고 대응을 하더라도"
+    } ]
+  }, {
+    "tStartMs": 1488060,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "굉장히 훌륭한 투자를"
+    } ]
+  }, {
+    "tStartMs": 1489200,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "할 수 있지 않을까 생각을 합니다"
+    } ]
+  }, {
+    "tStartMs": 1491390,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "그래서 많은 분들이"
+    } ]
+  }, {
+    "tStartMs": 1492500,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "가끔 야 자금이 적은데"
+    } ]
+  }, {
+    "tStartMs": 1493560,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "어떻게 포트폴리오를 하냐"
+    } ]
+  }, {
+    "tStartMs": 1494800,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "야 포트폴리오 리밸런싱"
+    } ]
+  }, {
+    "tStartMs": 1495850,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "답답한 걸 언제 하냐"
+    } ]
+  }, {
+    "tStartMs": 1496960,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "무조건 일괄 매수"
+    } ]
+  }, {
+    "tStartMs": 1497940,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "집중 매수를 해야지"
+    } ]
+  }, {
+    "tStartMs": 1499420,
+    "dDurationMs": 340,
+    "segs": [ {
+      "utf8": "아니다"
+    } ]
+  }, {
+    "tStartMs": 1499760,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "일괄 매수 집중 매수하면"
+    } ]
+  }, {
+    "tStartMs": 1500980,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "위험이 너무 크다"
+    } ]
+  }, {
+    "tStartMs": 1501580,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "분할 매수해야지"
+    } ]
+  }, {
+    "tStartMs": 1502870,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "뭐가 맞는 거냐"
+    } ]
+  }, {
+    "tStartMs": 1503810,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "둘 다 맞죠"
+    } ]
+  }, {
+    "tStartMs": 1504980,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "왜?"
+    } ]
+  }, {
+    "tStartMs": 1505750,
+    "dDurationMs": 3350,
+    "segs": [ {
+      "utf8": "시장에 맞는 전략을 선택해야겠죠"
+    } ]
+  }, {
+    "tStartMs": 1509100,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "이건 뭐 제 혜안이나"
+    } ]
+  }, {
+    "tStartMs": 1510480,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "저만의 의견이 아니라"
+    } ]
+  }, {
+    "tStartMs": 1511850,
+    "dDurationMs": 480,
+    "segs": [ {
+      "utf8": "당연한"
+    } ]
+  }, {
+    "tStartMs": 1512330,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "정말 교과에 나와 있는"
+    } ]
+  }, {
+    "tStartMs": 1514200,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "분할 매수를 하는 이유"
+    } ]
+  }, {
+    "tStartMs": 1516120,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "당연히 시장이 빠질 때"
+    } ]
+  }, {
+    "tStartMs": 1517540,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "단가를 낮추고"
+    } ]
+  }, {
+    "tStartMs": 1518250,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "리스크를 낮추기 위해서"
+    } ]
+  }, {
+    "tStartMs": 1520080,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "집중 투자를 해야 될 때"
+    } ]
+  }, {
+    "tStartMs": 1521240,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "당연히 상승량에서"
+    } ]
+  }, {
+    "tStartMs": 1522970,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "횡보장이 오면"
+    } ]
+  }, {
+    "tStartMs": 1524050,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "당연히 저가매도로 고가매도로 대응을 한다"
+    } ]
+  }, {
+    "tStartMs": 1526900,
+    "dDurationMs": 3420,
+    "segs": [ {
+      "utf8": "이게 물론 어렵죠"
+    } ]
+  }, {
+    "tStartMs": 1530320,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "물론 말은 쉽지만"
+    } ]
+  }, {
+    "tStartMs": 1531550,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "그걸 판단하는 게 어렵지만"
+    } ]
+  }, {
+    "tStartMs": 1533280,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "내 마음속에 이런 원칙만 갖고 있어도"
+    } ]
+  }, {
+    "tStartMs": 1535990,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "내가 언제 집중적으로 투자하겠고"
+    } ]
+  }, {
+    "tStartMs": 1537690,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "내가 언제 리스크 관리하겠구나라는 것을"
+    } ]
+  }, {
+    "tStartMs": 1539920,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "조금 가지고 갈 수 있지 않나 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 1541850,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "다시 돌아오겠습니다"
+    } ]
+  }, {
+    "tStartMs": 1543100,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "지금 코스피 차트 영상을 찍고 있는 지금은"
+    } ]
+  }, {
+    "tStartMs": 1545560,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "이런 모습을 보이고 있거든요"
+    } ]
+  }, {
+    "tStartMs": 1547320,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "왼쪽은 누가 봐도"
+    } ]
+  }, {
+    "tStartMs": 1548640,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "작년에서부터 지금까지는 상승장이었어요"
+    } ]
+  }, {
+    "tStartMs": 1550810,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "다시 돌아오겠습니다"
+    } ]
+  }, {
+    "tStartMs": 1551900,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "지금은 무슨 장입니까?"
+    } ]
+  }, {
+    "tStartMs": 1554050,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "저도 모르겠어요"
+    } ]
+  }, {
+    "tStartMs": 1555210,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "어렵지만"
+    } ]
+  }, {
+    "tStartMs": 1556050,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "일단 상승 같지는 않죠"
+    } ]
+  }, {
+    "tStartMs": 1557500,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "상승으로 돌아서겠죠"
+    } ]
+  }, {
+    "tStartMs": 1559300,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "곧 돌아서겠지만"
+    } ]
+  }, {
+    "tStartMs": 1560380,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "아직 본격적인 상승은 아니니까"
+    } ]
+  }, {
+    "tStartMs": 1562370,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "횡보장 또는 하락장 초입일 수도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1565290,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "그럼 당연히 제일 쉬운 거는"
+    } ]
+  }, {
+    "tStartMs": 1566740,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "풀베팅보다는"
+    } ]
+  }, {
+    "tStartMs": 1567810,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "인생을 건 베팅을 여기서 한다?"
+    } ]
+  }, {
+    "tStartMs": 1569970,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "정말 쉽지 않아요"
+    } ]
+  }, {
+    "tStartMs": 1571700,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "정말 운이 잘 따라주면"
+    } ]
+  }, {
+    "tStartMs": 1573160,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "큰 돈을 벌 수 있겠지만"
+    } ]
+  }, {
+    "tStartMs": 1574380,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "리스크 관리가 정말 잘 안 되죠"
+    } ]
+  }, {
+    "tStartMs": 1576070,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "분할 매수로 접근하는 게"
+    } ]
+  }, {
+    "tStartMs": 1577210,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "가장 쉽지 않나 생각을 하고"
+    } ]
+  }, {
+    "tStartMs": 1578790,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "리스크 관리가 잘 안 되는 건 이유가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1580460,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "저렇게 하락장이나"
+    } ]
+  }, {
+    "tStartMs": 1581660,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "아니면 하락형 횡보장이 되면"
+    } ]
+  }, {
+    "tStartMs": 1583490,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "변동성이 엄청납니다"
+    } ]
+  }, {
+    "tStartMs": 1584940,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "요즘 코스피 200"
+    } ]
+  }, {
+    "tStartMs": 1585710,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "변동성 지수는 사상 최고 수준입니다"
+    } ]
+  }, {
+    "tStartMs": 1588120,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "한국판 빅스라고 불리거든요"
+    } ]
+  }, {
+    "tStartMs": 1589920,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "변동성 지수"
+    } ]
+  }, {
+    "tStartMs": 1590860,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "이게 어디까지 올라갔냐"
+    } ]
+  }, {
+    "tStartMs": 1591840,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "코로나 때보다"
+    } ]
+  }, {
+    "tStartMs": 1592560,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "지금이 변동성 지수가 더 높아요"
+    } ]
+  }, {
+    "tStartMs": 1594830,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "금융위기급의 변동성 지수가 아닌가"
+    } ]
+  }, {
+    "tStartMs": 1596670,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "생각할 정도로"
+    } ]
+  }, {
+    "tStartMs": 1597550,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "사상 최고 수준입니다"
+    } ]
+  }, {
+    "tStartMs": 1599000,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "이거는 미국 시장도 마찬가지예요"
+    } ]
+  }, {
+    "tStartMs": 1600760,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "미국 시장도 요즘 보면"
+    } ]
+  }, {
+    "tStartMs": 1602280,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "공포 탐욕지수라고 부르죠"
+    } ]
+  }, {
+    "tStartMs": 1603800,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "CNN이 발표하는데"
+    } ]
+  }, {
+    "tStartMs": 1605210,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "요즘 극심한 공포에 가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1607530,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "그만큼 변동성도 크고"
+    } ]
+  }, {
+    "tStartMs": 1609330,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "미국 시장도 공포로 가득 차 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1611710,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "공포로 가득 차 있으니까"
+    } ]
+  }, {
+    "tStartMs": 1612910,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "하락장이 오니까"
+    } ]
+  }, {
+    "tStartMs": 1613690,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "우리한테 언젠가 기회가 오지 않을까"
+    } ]
+  }, {
+    "tStartMs": 1615350,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "저도 그렇게 생각해요"
+    } ]
+  }, {
+    "tStartMs": 1616320,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "다만 언제 올지 모르기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1618180,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "지금 풀베팅하는 건 좀 어렵고"
+    } ]
+  }, {
+    "tStartMs": 1620400,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "역시 분할매수로 접근하는 게"
+    } ]
+  }, {
+    "tStartMs": 1622020,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "지금은 가장 좋지 않나"
+    } ]
+  }, {
+    "tStartMs": 1623320,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "개인적으로 그렇게 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 1624790,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "그래서"
+    } ]
+  }, {
+    "tStartMs": 1625670,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "원래는 전 이걸 라이브 하려고 그랬는데"
+    } ]
+  }, {
+    "tStartMs": 1627480,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "제가 이런 주제를 준비하고 있다고 얘기를 들으니까"
+    } ]
+  }, {
+    "tStartMs": 1630070,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "카카오페이 증권에서"
+    } ]
+  }, {
+    "tStartMs": 1631350,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "본인들의 서비스와"
+    } ]
+  }, {
+    "tStartMs": 1632600,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "굉장히 맞는 것 같다"
+    } ]
+  }, {
+    "tStartMs": 1634230,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "이거 카카오페이증권에"
+    } ]
+  }, {
+    "tStartMs": 1635560,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "주식 모으기 서비스를"
+    } ]
+  }, {
+    "tStartMs": 1636370,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "좀 뒤에 붙여주시면 안 돼요?"
+    } ]
+  }, {
+    "tStartMs": 1637550,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "라고 요청이 왔어요"
+    } ]
+  }, {
+    "tStartMs": 1638580,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "그렇게 해서 놀랍게도"
+    } ]
+  }, {
+    "tStartMs": 1639680,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "이 투자 방법을 얘기하는"
+    } ]
+  }, {
+    "tStartMs": 1640830,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "이 영상에"
+    } ]
+  }, {
+    "tStartMs": 1641810,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "소위 광고가 붙었습니다"
+    } ]
+  }, {
+    "tStartMs": 1643480,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "잠깐 잠깐 소개를 드릴 텐데"
+    } ]
+  }, {
+    "tStartMs": 1645150,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "카카오페이증권에"
+    } ]
+  }, {
+    "tStartMs": 1646060,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "주식 모기라는 서비스가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1648490,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "역시 분할 매수"
+    } ]
+  }, {
+    "tStartMs": 1649880,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "적립식 매수를 가장 쉽게 만들어주는"
+    } ]
+  }, {
+    "tStartMs": 1652350,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "서비스라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1653720,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "이름만 딱 봐도 아시겠지만"
+    } ]
+  }, {
+    "tStartMs": 1654820,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "선택한 주식을"
+    } ]
+  }, {
+    "tStartMs": 1656020,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "정기적으로 구매할 수 있게 만들어준"
+    } ]
+  }, {
+    "tStartMs": 1657980,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "서비스라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1659440,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "여러분들이 매월, 매주, 아니면 매일"
+    } ]
+  }, {
+    "tStartMs": 1661750,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "특정 날짜를 지정하거나 하면"
+    } ]
+  }, {
+    "tStartMs": 1663370,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "그 날짜가 되면"
+    } ]
+  }, {
+    "tStartMs": 1664420,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "자동적으로 주식이 사지게"
+    } ]
+  }, {
+    "tStartMs": 1666340,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "내가 신경을 안 쓰더라도"
+    } ]
+  }, {
+    "tStartMs": 1667680,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "주식을 사서 모을 수 있게 만들어 놓은"
+    } ]
+  }, {
+    "tStartMs": 1669320,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "그런 서비스입니다"
+    } ]
+  }, {
+    "tStartMs": 1670250,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "최소 1,000원에서"
+    } ]
+  }, {
+    "tStartMs": 1671050,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "최대 1억 원까지인데"
+    } ]
+  }, {
+    "tStartMs": 1672890,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "주식 모기를 최대 1억 원을 하시는 분은"
+    } ]
+  }, {
+    "tStartMs": 1675470,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "굉장히 큰 손 아니면"
+    } ]
+  }, {
+    "tStartMs": 1676430,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "잘 없을 것 같고"
+    } ]
+  }, {
+    "tStartMs": 1677590,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "우리가 소액이라도"
+    } ]
+  }, {
+    "tStartMs": 1679010,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "예를 들면"
+    } ]
+  }, {
+    "tStartMs": 1679670,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "커피 한 잔 4,000원이라도"
+    } ]
+  }, {
+    "tStartMs": 1681140,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "아니면 그 주에 5만 원이라도"
+    } ]
+  }, {
+    "tStartMs": 1683410,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "이런 식으로 분할 매수"
+    } ]
+  }, {
+    "tStartMs": 1684330,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "적립식 매수를 쭉 할 수 있게 만들어 놓은 거죠"
+    } ]
+  }, {
+    "tStartMs": 1686700,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "자 그럼 이렇게 횡보하거나"
+    } ]
+  }, {
+    "tStartMs": 1687870,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "이렇게 하락할 때"
+    } ]
+  }, {
+    "tStartMs": 1688930,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "내가 점점점점 많이 사게 되면"
+    } ]
+  }, {
+    "tStartMs": 1690500,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "올라갈 때"
+    } ]
+  }, {
+    "tStartMs": 1691560,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "높은 수익률을 기대할 수 있는"
+    } ]
+  }, {
+    "tStartMs": 1693050,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "그런 전략이라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1694560,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "방금 소개 드렸지만"
+    } ]
+  }, {
+    "tStartMs": 1695520,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "이 카카오페이증권의 주식 모으기 서비스는"
+    } ]
+  }, {
+    "tStartMs": 1697870,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "원하는 종목과 주문 주기를 설정할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1700740,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "금액 또는 수량 단위도 선택할 수 있고요"
+    } ]
+  }, {
+    "tStartMs": 1703260,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "그리고 해당 날짜가 됐는데"
+    } ]
+  }, {
+    "tStartMs": 1705100,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "제가 계좌에 돈을 넣는 걸 깜빡 까먹었네요"
+    } ]
+  }, {
+    "tStartMs": 1707310,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "계좌에 구매 잔액이 부족하면"
+    } ]
+  }, {
+    "tStartMs": 1709260,
+    "dDurationMs": 3380,
+    "segs": [ {
+      "utf8": "최대 200만 원까지 자동으로 계좌이체가 되게"
+    } ]
+  }, {
+    "tStartMs": 1712640,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "자동으로 충전되게 설정할 수도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1715230,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "해외 주식 같은 경우는"
+    } ]
+  }, {
+    "tStartMs": 1716310,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "그 날짜가 되면"
+    } ]
+  }, {
+    "tStartMs": 1717210,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "자동으로 환전해서"
+    } ]
+  }, {
+    "tStartMs": 1718500,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "해외 주식을 살 수 있게"
+    } ]
+  }, {
+    "tStartMs": 1719520,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "그렇게 만들어져 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1720830,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "그리고 잘 모았는데"
+    } ]
+  }, {
+    "tStartMs": 1722620,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "아까 횡보 시장에서는"
+    } ]
+  }, {
+    "tStartMs": 1724190,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "저가 매수,  고가 매도"
+    } ]
+  }, {
+    "tStartMs": 1725170,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "저가 매수, 고가 매도 하면 좋다며요"
+    } ]
+  }, {
+    "tStartMs": 1727030,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "그럼 아래서는 샀는데"
+    } ]
+  }, {
+    "tStartMs": 1728690,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "위에서 언제 팔지 모르겠어요"
+    } ]
+  }, {
+    "tStartMs": 1730670,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "제가 시간이 없어서"
+    } ]
+  }, {
+    "tStartMs": 1732010,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "저가 매수, 고가 매도를"
+    } ]
+  }, {
+    "tStartMs": 1732960,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "잘 할 수 있을지 모르겠습니다"
+    } ]
+  }, {
+    "tStartMs": 1734360,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "이런 분들을 위해서"
+    } ]
+  }, {
+    "tStartMs": 1735670,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "횡보 시장에서 굉장히 유력한 전략이죠"
+    } ]
+  }, {
+    "tStartMs": 1738460,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "내가 산 주식에"
+    } ]
+  }, {
+    "tStartMs": 1739800,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "일정 수익률 기준을 설정해 두면"
+    } ]
+  }, {
+    "tStartMs": 1741630,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "예를 들면"
+    } ]
+  }, {
+    "tStartMs": 1742230,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "10% 올라가면 팔아주세요"
+    } ]
+  }, {
+    "tStartMs": 1744610,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "15% 올라가면 팔아주세요"
+    } ]
+  }, {
+    "tStartMs": 1746740,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "이런 걸 설정해 놓으면"
+    } ]
+  }, {
+    "tStartMs": 1748020,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "내가 쭉 내려갈 때"
+    } ]
+  }, {
+    "tStartMs": 1749950,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "분할 매수를 하다가"
+    } ]
+  }, {
+    "tStartMs": 1751110,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "올라가면 자동으로"
+    } ]
+  }, {
+    "tStartMs": 1752860,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "원하는 수량 만큼 판매가 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1754930,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "저가 매수, 고가 매도를 하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1756870,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "횡보시장이라고 여러분들이 판단했으니까"
+    } ]
+  }, {
+    "tStartMs": 1759000,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "주식이 또 내려가면 또 삽니다"
+    } ]
+  }, {
+    "tStartMs": 1761280,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "쭉 분할 매수를 하다가"
+    } ]
+  }, {
+    "tStartMs": 1763310,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "또 올라가면"
+    } ]
+  }, {
+    "tStartMs": 1764430,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "수익률 기준에 따라서"
+    } ]
+  }, {
+    "tStartMs": 1765660,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "타이밍을 놓치지 않고"
+    } ]
+  }, {
+    "tStartMs": 1766840,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "알아서 팔아주니까"
+    } ]
+  }, {
+    "tStartMs": 1768120,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "자동으로 저가 매수, 고가 매도를 하게 되는"
+    } ]
+  }, {
+    "tStartMs": 1770870,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "대응도 가능한 서비스라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1773190,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "특히 가장 좋은 거는"
+    } ]
+  }, {
+    "tStartMs": 1774230,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "열심히 일하는 내가"
+    } ]
+  }, {
+    "tStartMs": 1775630,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "매번 주식 어플을 쳐다보면서"
+    } ]
+  }, {
+    "tStartMs": 1777280,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "언제 살까?"
+    } ]
+  }, {
+    "tStartMs": 1778100,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "지금 저가 매수 할까?"
+    } ]
+  }, {
+    "tStartMs": 1779220,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "아 지금 고가 매수 할까?"
+    } ]
+  }, {
+    "tStartMs": 1780290,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "지금 사야 되나?"
+    } ]
+  }, {
+    "tStartMs": 1781240,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "이런 고민을 할 필요 없이"
+    } ]
+  }, {
+    "tStartMs": 1782530,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "자동으로 적립식 매수를 할 수 있다는 한마디로"
+    } ]
+  }, {
+    "tStartMs": 1784780,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "아침 시간에 화장실에 가서"
+    } ]
+  }, {
+    "tStartMs": 1786710,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "남몰이 할 필요가 없다는"
+    } ]
+  }, {
+    "tStartMs": 1788650,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "그런 최대 장점이 있겠죠"
+    } ]
+  }, {
+    "tStartMs": 1789970,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "또 그리고 분할 매수"
+    } ]
+  }, {
+    "tStartMs": 1791170,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "적립식 매수를 추천하는 건"
+    } ]
+  }, {
+    "tStartMs": 1792660,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "당연하겠지만"
+    } ]
+  }, {
+    "tStartMs": 1793720,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "주식 초보자들에게 친화적입니다"
+    } ]
+  }, {
+    "tStartMs": 1796410,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "아까 뭐 집중 투자"
+    } ]
+  }, {
+    "tStartMs": 1797700,
+    "dDurationMs": 560,
+    "segs": [ {
+      "utf8": "일괄 투자"
+    } ]
+  }, {
+    "tStartMs": 1798260,
+    "dDurationMs": 670,
+    "segs": [ {
+      "utf8": "이런 얘기를 했는데"
+    } ]
+  }, {
+    "tStartMs": 1798930,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "그건 정말 어려운 투자죠"
+    } ]
+  }, {
+    "tStartMs": 1800720,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "준비도 돼 있고"
+    } ]
+  }, {
+    "tStartMs": 1801490,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "공부도 많이 되고"
+    } ]
+  }, {
+    "tStartMs": 1802740,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "내가 스트레스를 감당할 준비가 돼 있는"
+    } ]
+  }, {
+    "tStartMs": 1804980,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "중수 이상"
+    } ]
+  }, {
+    "tStartMs": 1805660,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "거의 고수라고 생각되는 분들이 하는 거고"
+    } ]
+  }, {
+    "tStartMs": 1808620,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "그것도 어지간하면 상승 추세에서"
+    } ]
+  }, {
+    "tStartMs": 1811200,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "그런데 지금 이렇게 분할 매수는"
+    } ]
+  }, {
+    "tStartMs": 1812780,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "소액을 계속 나눠서 투자하기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1814350,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "당연히 위험을 분산할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1816420,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "장기 투자도 가능하고"
+    } ]
+  }, {
+    "tStartMs": 1817900,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "실제로 작년 같은 상승장이 오면"
+    } ]
+  }, {
+    "tStartMs": 1820440,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "높은 수익률도 가능하죠"
+    } ]
+  }, {
+    "tStartMs": 1821980,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "자 그리고 내가 잠시"
+    } ]
+  }, {
+    "tStartMs": 1823200,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "모으기를 끄고 싶다"
+    } ]
+  }, {
+    "tStartMs": 1824170,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "그럼 언제든지 온・오프가 가능합니다"
+    } ]
+  }, {
+    "tStartMs": 1826490,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "한 번 설정하면"
+    } ]
+  }, {
+    "tStartMs": 1827330,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "몇 개월간 계속해야 돼요"
+    } ]
+  }, {
+    "tStartMs": 1828210,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "그런 거 없습니다"
+    } ]
+  }, {
+    "tStartMs": 1829190,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "잠깐 끌 수도 있으니까"
+    } ]
+  }, {
+    "tStartMs": 1830680,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "주린이도 가능하고"
+    } ]
+  }, {
+    "tStartMs": 1832080,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "아니면 하락 추세에서"
+    } ]
+  }, {
+    "tStartMs": 1832920,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "잠깐 쉬고 있는 투자자들도"
+    } ]
+  }, {
+    "tStartMs": 1834600,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "저가 매수하기에 유리한 전략이 아닐까 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 1837270,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "자, 그래서 오늘 주제는 다 끝났는데"
+    } ]
+  }, {
+    "tStartMs": 1839470,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "마지막으로 하나만 더 소개시켜드리면"
+    } ]
+  }, {
+    "tStartMs": 1841720,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "카카오페이 증권에는"
+    } ]
+  }, {
+    "tStartMs": 1842780,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "펀드 동전 모으기라는 것도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1845390,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "이건 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 1846180,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "여러분들이 카카오페이로"
+    } ]
+  }, {
+    "tStartMs": 1847290,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "온・오프라인 결제하잖아요"
+    } ]
+  }, {
+    "tStartMs": 1848830,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "그럼 이제 100원 단위가 생깁니다"
+    } ]
+  }, {
+    "tStartMs": 1850420,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "천 원 미만 자투리 금액이 생겼을 때"
+    } ]
+  }, {
+    "tStartMs": 1852530,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "여러분들이 미리 지정한 펀드에"
+    } ]
+  }, {
+    "tStartMs": 1854220,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "투자할 수 있는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1855980,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "아, 이건 아주 꼼꼼한 사람들이 많이"
+    } ]
+  }, {
+    "tStartMs": 1858030,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "하는 전략이라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1859630,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "500원, 600원, 700원, 800원이 생겼을 때"
+    } ]
+  }, {
+    "tStartMs": 1862210,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "그 동전을"
+    } ]
+  }, {
+    "tStartMs": 1862990,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "내가 신경 안 써도 알아서"
+    } ]
+  }, {
+    "tStartMs": 1864350,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "펀드로 계속 사게 만들어주는"
+    } ]
+  }, {
+    "tStartMs": 1866610,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "그런 서비스라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1868090,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "정말 재테크의 끝판왕이 아닌가 생각되는데"
+    } ]
+  }, {
+    "tStartMs": 1870300,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "우리가 일반적으로 귀찮아서"
+    } ]
+  }, {
+    "tStartMs": 1871640,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "이런 걸 잘 못하잖아요"
+    } ]
+  }, {
+    "tStartMs": 1872760,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "근데 동전이 생길 때마다"
+    } ]
+  }, {
+    "tStartMs": 1874270,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "계속적으로 펀드를 모아주는"
+    } ]
+  }, {
+    "tStartMs": 1875950,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "서비스라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1877140,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "그리고 제가 이건 진짜"
+    } ]
+  }, {
+    "tStartMs": 1878130,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "개인적으로 드리고 싶은 말인데"
+    } ]
+  }, {
+    "tStartMs": 1879710,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "펀드도 장점이 많은 상품입니다"
+    } ]
+  }, {
+    "tStartMs": 1882010,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "근데 우리나라에서"
+    } ]
+  }, {
+    "tStartMs": 1882960,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "과거에 펀드가"
+    } ]
+  }, {
+    "tStartMs": 1884150,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "금융위기 때"
+    } ]
+  }, {
+    "tStartMs": 1885170,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "펀드로 손실을 본 분들이 너무 많아서"
+    } ]
+  }, {
+    "tStartMs": 1887380,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "펀드에 대한 트라우마가"
+    } ]
+  }, {
+    "tStartMs": 1888450,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "아직도 좀 많이 남아있어요"
+    } ]
+  }, {
+    "tStartMs": 1889520,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "그래서 개인분들이 펀드보다는"
+    } ]
+  }, {
+    "tStartMs": 1891170,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "ETF를 많이 하시는데"
+    } ]
+  }, {
+    "tStartMs": 1892370,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "ETF도 펀드입니다"
+    } ]
+  }, {
+    "tStartMs": 1893530,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "ETF는 패시브 펀드에 가깝고"
+    } ]
+  }, {
+    "tStartMs": 1895460,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "펀드매니저들이 액티브하게 움직이는 펀드죠"
+    } ]
+  }, {
+    "tStartMs": 1897840,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "펀드 종류가 워낙 많은데"
+    } ]
+  }, {
+    "tStartMs": 1899480,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "동전 모기 같은 경우에는"
+    } ]
+  }, {
+    "tStartMs": 1900460,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "장기 분산 투자 효과도 있고"
+    } ]
+  }, {
+    "tStartMs": 1902140,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "연금 절세 계좌 혜택도 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1904150,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "펀드도 잘 고르면"
+    } ]
+  }, {
+    "tStartMs": 1905660,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "장점이 많은 상품이지 않나"
+    } ]
+  }, {
+    "tStartMs": 1907180,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "제가 펀드매니저였으니까"
+    } ]
+  }, {
+    "tStartMs": 1908190,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "펀드매니저였으니까"
+    } ]
+  }, {
+    "tStartMs": 1909400,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "잠깐 변명 조금만 드리고요"
+    } ]
+  }, {
+    "tStartMs": 1911310,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "그리고 카카오페이 증권으로"
+    } ]
+  }, {
+    "tStartMs": 1913120,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "결제할 때마다"
+    } ]
+  }, {
+    "tStartMs": 1914150,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "부담없이 마치 돼지 저금통처럼"
+    } ]
+  }, {
+    "tStartMs": 1915790,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "이게 소위 돼지저금통 투자입니다"
+    } ]
+  }, {
+    "tStartMs": 1917430,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "돼지저금통처럼 짜투리 동전"
+    } ]
+  }, {
+    "tStartMs": 1919190,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "800원, 700원, 500원 결제할 때마다"
+    } ]
+  }, {
+    "tStartMs": 1921180,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "계속 계속 계속"
+    } ]
+  }, {
+    "tStartMs": 1922530,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "펀드에 투자를 하기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1924350,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "신경 쓰지 않아도"
+    } ]
+  }, {
+    "tStartMs": 1925200,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "꾸준하게 모을 수 있지 않나 생각이 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1927680,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "아, 물론 굳이 동전으로만 해야 되나요?"
+    } ]
+  }, {
+    "tStartMs": 1929690,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "아 그렇진 않습니다"
+    } ]
+  }, {
+    "tStartMs": 1930800,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "이 원하는 펀드 종목에"
+    } ]
+  }, {
+    "tStartMs": 1932110,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "금액과 주기를  크게 설정할 수도 있어요"
+    } ]
+  }, {
+    "tStartMs": 1933560,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "아, 나는 뭐 한 5만원"
+    } ]
+  }, {
+    "tStartMs": 1934890,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "뭐 이 정도는 해야지 하면"
+    } ]
+  }, {
+    "tStartMs": 1935970,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "굉장히 크게 설정해서도"
+    } ]
+  }, {
+    "tStartMs": 1937690,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "모을 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1938980,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "그래서 오늘은 제가 시장에 따른 투자 전략"
+    } ]
+  }, {
+    "tStartMs": 1941630,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "정말 기초적인 얘기를 좀 드렸는데요"
+    } ]
+  }, {
+    "tStartMs": 1944120,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "제가 지금까지 말씀드린 게"
+    } ]
+  }, {
+    "tStartMs": 1945630,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "물론 다 정답은 아니겠죠"
+    } ]
+  }, {
+    "tStartMs": 1946990,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "시장은 항상 카멜레온처럼 변화하고"
+    } ]
+  }, {
+    "tStartMs": 1949710,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "언제 어떻게 될지 모르는"
+    } ]
+  }, {
+    "tStartMs": 1950870,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "마치 살아있는 생물과 같잖아요"
+    } ]
+  }, {
+    "tStartMs": 1952630,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "다만 우리가 시장 상황에 맞는"
+    } ]
+  }, {
+    "tStartMs": 1954670,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "적절한 투자 전략을 사용하는 게"
+    } ]
+  }, {
+    "tStartMs": 1956540,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "불측의 피해를 막고"
+    } ]
+  }, {
+    "tStartMs": 1957830,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "가장 효과적인 수익률을"
+    } ]
+  }, {
+    "tStartMs": 1959040,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "올릴 수 있지 않나 생각이 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1961170,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "그래서 오늘 제가 이 투자 전략을"
+    } ]
+  }, {
+    "tStartMs": 1962700,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "잠깐 제 개인 생각을 말씀드리는데"
+    } ]
+  }, {
+    "tStartMs": 1965370,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "또 광고를 붙여주신"
+    } ]
+  }, {
+    "tStartMs": 1966330,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "카카오페이증권에게 다시 한번"
+    } ]
+  }, {
+    "tStartMs": 1967940,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "감사하다는 말씀을 드리고요"
+    } ]
+  }, {
+    "tStartMs": 1969510,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "카카오페이증권에 있는 주식 모으기 서비스"
+    } ]
+  }, {
+    "tStartMs": 1971730,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "아니면 펀드 동전 모으기 서비스"
+    } ]
+  }, {
+    "tStartMs": 1973220,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "언제든지 사용할 수 있고"
+    } ]
+  }, {
+    "tStartMs": 1974620,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "적립식 매수로 대응이 가능하고"
+    } ]
+  }, {
+    "tStartMs": 1976500,
+    "dDurationMs": 580,
+    "segs": [ {
+      "utf8": "또 부담 없이"
+    } ]
+  }, {
+    "tStartMs": 1977080,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "천천히 조금씩 초보자에서부터"
+    } ]
+  }, {
+    "tStartMs": 1979090,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "아니면 지금 하락장을 피하고 있는 투자자까지"
+    } ]
+  }, {
+    "tStartMs": 1981270,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "누구나 쉽게 접근할 수 있는"
+    } ]
+  }, {
+    "tStartMs": 1983250,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "투자가 아닌가 생각됩니다"
+    } ]
+  }, {
+    "tStartMs": 1984710,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "또 가장 중요한 건"
+    } ]
+  }, {
+    "tStartMs": 1985920,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "쉽죠"
+    } ]
+  }, {
+    "tStartMs": 1986970,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "쉽고, 스트레스 적고"
+    } ]
+  }, {
+    "tStartMs": 1988630,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "시간이 지나서 상승장에 가면"
+    } ]
+  }, {
+    "tStartMs": 1990140,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "수익률도 나오는"
+    } ]
+  }, {
+    "tStartMs": 1991020,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "아마 좋은 투자 방법이 아닐까 생각해 봅니다"
+    } ]
+  }, {
+    "tStartMs": 1993510,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "이 변동성이 큰 시장에서"
+    } ]
+  }, {
+    "tStartMs": 1995020,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "너무 스트레스를 받지 마시고"
+    } ]
+  }, {
+    "tStartMs": 1996380,
+    "dDurationMs": 3110,
+    "segs": [ {
+      "utf8": "항상 좋은 성과가 있기를 기원해 보겠습니다"
+    } ]
+  } ]
+}

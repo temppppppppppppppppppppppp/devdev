@@ -1,0 +1,4291 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 7620,
+    "dDurationMs": 3840,
+    "segs": [ {
+      "utf8": "두 번째 주제는 터미네이터를 만들어도 되는가"
+    } ]
+  }, {
+    "tStartMs": 11460,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "제목 멋있습니다"
+    } ]
+  }, {
+    "tStartMs": 12660,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "장난 아니죠?"
+    } ]
+  }, {
+    "tStartMs": 13520,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "터미네이터 만들어도 됩니까? 안 됩니까?"
+    } ]
+  }, {
+    "tStartMs": 17020,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "이게 무슨 얘기입니까?"
+    } ]
+  }, {
+    "tStartMs": 18120,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "비슷한 사건이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 20060,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "여러분 아마 뉴스에서 많이 보셨을 거예요"
+    } ]
+  }, {
+    "tStartMs": 22200,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "AI 스타트업 앤트로픽이"
+    } ]
+  }, {
+    "tStartMs": 24170,
+    "dDurationMs": 3830,
+    "segs": [ {
+      "utf8": "미국 국방부의 요청을 거부하는 일이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 28000,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "참고로 앤트로픽은 미국 기업입니다"
+    } ]
+  }, {
+    "tStartMs": 30210,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "앤트로픽이 뭐라고 얘기했냐?"
+    } ]
+  }, {
+    "tStartMs": 31340,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 32470,
+    "dDurationMs": 4150,
+    "segs": [ {
+      "utf8": "우리는 양심상 미 국방부의 요구에 응할 수 없다"
+    } ]
+  }, {
+    "tStartMs": 36620,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "와 세다"
+    } ]
+  }, {
+    "tStartMs": 38180,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "세다 세다"
+    } ]
+  }, {
+    "tStartMs": 39110,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "야 국방부가 뭔가를 요청을 했는데"
+    } ]
+  }, {
+    "tStartMs": 41570,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "양심 때문에 거절을 했어"
+    } ]
+  }, {
+    "tStartMs": 43860,
+    "dDurationMs": 3220,
+    "segs": [ {
+      "utf8": "근데 지금 미 국방부가 어떤 곳입니까?"
+    } ]
+  }, {
+    "tStartMs": 47080,
+    "dDurationMs": 4460,
+    "segs": [ {
+      "utf8": "트럼프 대통령과 헤그세스 전쟁부 장관이 이끄는 말 그대로 막강파워"
+    } ]
+  }, {
+    "tStartMs": 51540,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "지금 이란 하고 전쟁하고 있잖아요"
+    } ]
+  }, {
+    "tStartMs": 53410,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "그런 곳이 뭔가 요청을 했는데"
+    } ]
+  }, {
+    "tStartMs": 55520,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "일개 기업이 양심상"
+    } ]
+  }, {
+    "tStartMs": 57340,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "우리는 이거를 응할 수 없다라고 거부한 거죠"
+    } ]
+  }, {
+    "tStartMs": 60290,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "자 그러면 어떤 일이 일어났는지"
+    } ]
+  }, {
+    "tStartMs": 62390,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "한번 알아보도록 하겠습니다"
+    } ]
+  }, {
+    "tStartMs": 64260,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "미국 펜타곤은 이미 꽤 오래전부터"
+    } ]
+  }, {
+    "tStartMs": 66550,
+    "dDurationMs": 3740,
+    "segs": [ {
+      "utf8": "작년부터 AI 기업 앤트로픽의 안전장치"
+    } ]
+  }, {
+    "tStartMs": 70290,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "우리가 가드레일이라고 부릅니다"
+    } ]
+  }, {
+    "tStartMs": 71900,
+    "dDurationMs": 3990,
+    "segs": [ {
+      "utf8": "이 안전장치를 해제할 것을 요구해오고 있었어요"
+    } ]
+  }, {
+    "tStartMs": 75890,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "앤트로픽의 인공지능 도구"
+    } ]
+  }, {
+    "tStartMs": 77460,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "AI 도구의 안전장치를 해제하라"
+    } ]
+  }, {
+    "tStartMs": 80160,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "안전장치가 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 81720,
+    "dDurationMs": 3170,
+    "segs": [ {
+      "utf8": "한마디로 이거는 안 돼 라고 막아놓은 거예요"
+    } ]
+  }, {
+    "tStartMs": 84890,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "이건 안 돼"
+    } ]
+  }, {
+    "tStartMs": 85860,
+    "dDurationMs": 440,
+    "segs": [ {
+      "utf8": "예를 들면"
+    } ]
+  }, {
+    "tStartMs": 86300,
+    "dDurationMs": 4180,
+    "segs": [ {
+      "utf8": "여러분들도 가끔 19금 뭘 치잖아요 AI에"
+    } ]
+  }, {
+    "tStartMs": 90480,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "그럼 걔가 안 됩니다"
+    } ]
+  }, {
+    "tStartMs": 91650,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "무슨 무슨 요건에 의해서 이건 안 됩니다"
+    } ]
+  }, {
+    "tStartMs": 94990,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "아니면 실제 인물의 사진을 넣고 하려고 하면 안 된다고 떠요"
+    } ]
+  }, {
+    "tStartMs": 98490,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "저작권 어쩌고 그러면서"
+    } ]
+  }, {
+    "tStartMs": 99770,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "그런데 펜타곤은 우린 정부야 군대잖아"
+    } ]
+  }, {
+    "tStartMs": 102520,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "그런 안전장치를 해제해라"
+    } ]
+  }, {
+    "tStartMs": 104290,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "라고 요구한 겁니다"
+    } ]
+  }, {
+    "tStartMs": 105940,
+    "dDurationMs": 560,
+    "segs": [ {
+      "utf8": "예를 들면"
+    } ]
+  }, {
+    "tStartMs": 106500,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "펜타곤이 이런 예시를 들어요"
+    } ]
+  }, {
+    "tStartMs": 107700,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "이게 실제로 펜타곤이 든 예시입니다"
+    } ]
+  }, {
+    "tStartMs": 109340,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "적의 미사일이 날아오고 있을 때"
+    } ]
+  }, {
+    "tStartMs": 111230,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "AI 안전장치가 갑자기 손을 딱 돌더니"
+    } ]
+  }, {
+    "tStartMs": 114020,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "어허 지금 그 버튼을 누르면 안 됩니다"
+    } ]
+  }, {
+    "tStartMs": 116370,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "우리 가드레일은 그걸 하면 안 되게 해요"
+    } ]
+  }, {
+    "tStartMs": 118370,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "하면 어떡하냐"
+    } ]
+  }, {
+    "tStartMs": 119850,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "AI 안전장치를 풀어라"
+    } ]
+  }, {
+    "tStartMs": 121870,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "그거는 사람이 결정해야지"
+    } ]
+  }, {
+    "tStartMs": 123370,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "AI가 막으면 어떡해"
+    } ]
+  }, {
+    "tStartMs": 125120,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "우리가 결정할게 풀어"
+    } ]
+  }, {
+    "tStartMs": 126370,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "라고 요구를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 127890,
+    "dDurationMs": 5580,
+    "segs": [ {
+      "utf8": "그리고 펜타곤은 당연히 해제해 줄 걸로 생각을 했대요 처음에"
+    } ]
+  }, {
+    "tStartMs": 133470,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "내가 누군데?"
+    } ]
+  }, {
+    "tStartMs": 134150,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "내가 미국 국방부 펜타곤"
+    } ]
+  }, {
+    "tStartMs": 136320,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "야 그거 해제해"
+    } ]
+  }, {
+    "tStartMs": 137230,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "내일까지 가져와"
+    } ]
+  }, {
+    "tStartMs": 138130,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "가져올 줄 알았어"
+    } ]
+  }, {
+    "tStartMs": 139740,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "그리고 앤트로픽한테 자상하게"
+    } ]
+  }, {
+    "tStartMs": 142060,
+    "dDurationMs": 3120,
+    "segs": [ {
+      "utf8": "여러 가지 가상의 시나리오도 제시했다 그럽니다"
+    } ]
+  }, {
+    "tStartMs": 145180,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "아래는 이제 제가 쓴 거예요"
+    } ]
+  }, {
+    "tStartMs": 146810,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "예를 들면 미국 트럼프 대통령이"
+    } ]
+  }, {
+    "tStartMs": 148940,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "핵무기 발사 코드를 딱 눌렀더니"
+    } ]
+  }, {
+    "tStartMs": 150880,
+    "dDurationMs": 3480,
+    "segs": [ {
+      "utf8": "AI가 \"안 됩니다\" 라고 하면은"
+    } ]
+  }, {
+    "tStartMs": 154360,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "야 뭐 이따위 놈이 다 있어"
+    } ]
+  }, {
+    "tStartMs": 156070,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "아니야 내가 미국 대통령 야"
+    } ]
+  }, {
+    "tStartMs": 157760,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "\"핵무기 전쟁 때문에 안 됩니다\""
+    } ]
+  }, {
+    "tStartMs": 159680,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "이럴 수 있잖아요"
+    } ]
+  }, {
+    "tStartMs": 160450,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "그러니까 이런 시나리오를 예시하면서"
+    } ]
+  }, {
+    "tStartMs": 162660,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "그런 가드레일이 있으면 안 된다"
+    } ]
+  }, {
+    "tStartMs": 164760,
+    "dDurationMs": 3080,
+    "segs": [ {
+      "utf8": "자 풀어와 라고 얘기를 했다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 167840,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "풀어올 거로 생각을 했대요"
+    } ]
+  }, {
+    "tStartMs": 169510,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "그런데 앤트로픽이 뭐라고 답변했냐"
+    } ]
+  }, {
+    "tStartMs": 171900,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "이렇게 답변했답니다"
+    } ]
+  }, {
+    "tStartMs": 173690,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "그런 상황이 있으면"
+    } ]
+  }, {
+    "tStartMs": 174910,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "우리한테 요청해라"
+    } ]
+  }, {
+    "tStartMs": 177020,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "이게 무슨 말입니까?"
+    } ]
+  }, {
+    "tStartMs": 178490,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "트럼프 대통령이 누르다가"
+    } ]
+  }, {
+    "tStartMs": 179610,
+    "dDurationMs": 2760,
+    "segs": [ {
+      "utf8": "AI가 \"안 됩니다\" 그러면 우리한테 연락을 해"
+    } ]
+  }, {
+    "tStartMs": 182370,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "그럼 우리가 보고 풀어줄게"
+    } ]
+  }, {
+    "tStartMs": 185010,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "근데 말이 이상하잖아요"
+    } ]
+  }, {
+    "tStartMs": 186500,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "미국 대통령이 누르는데 안 된다 그랬는데"
+    } ]
+  }, {
+    "tStartMs": 188130,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "앤트로픽이 본 다음에 눌러도 되나"
+    } ]
+  }, {
+    "tStartMs": 190910,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "자기들이 트럼프가 제정신인가"
+    } ]
+  }, {
+    "tStartMs": 192940,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "이걸 자기들이 보겠다는 것과 비슷하기 때문에"
+    } ]
+  }, {
+    "tStartMs": 195520,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "이 펜타곤 입장이"
+    } ]
+  }, {
+    "tStartMs": 196300,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "미국 국방부 입장에서 뭐 말도 안 되는 소리야"
+    } ]
+  }, {
+    "tStartMs": 198580,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "국방부 장관이 눌러 그랬는데"
+    } ]
+  }, {
+    "tStartMs": 200050,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "AI가 싫어 그러면"
+    } ]
+  }, {
+    "tStartMs": 201220,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "왜 안 되지?"
+    } ]
+  }, {
+    "tStartMs": 202300,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "앤트로픽에 전화해봐"
+    } ]
+  }, {
+    "tStartMs": 203060,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "그러면 우리 이런 상황이어서 누르려고 하는데요"
+    } ]
+  }, {
+    "tStartMs": 205980,
+    "dDurationMs": 610,
+    "segs": [ {
+      "utf8": "눌러도 될까요?"
+    } ]
+  }, {
+    "tStartMs": 206590,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "이거 해달라는 거니까"
+    } ]
+  }, {
+    "tStartMs": 208530,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "이게 말도 안 된다라고"
+    } ]
+  }, {
+    "tStartMs": 210070,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "미국 펜타곤이 얘기를 해요"
+    } ]
+  }, {
+    "tStartMs": 211360,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "그래서 아까 그런 예시를 든 거예요"
+    } ]
+  }, {
+    "tStartMs": 212520,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "미사일이 날아오고 있는데"
+    } ]
+  }, {
+    "tStartMs": 213990,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "지금 우리가 앤트로픽에 전화를 걸어야겠냐"
+    } ]
+  }, {
+    "tStartMs": 215730,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "되냐 안 되냐고"
+    } ]
+  }, {
+    "tStartMs": 216640,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "물론 앤트로픽 관계자들은"
+    } ]
+  }, {
+    "tStartMs": 218690,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "매번 회사에 연락해야 되는 건 아니야"
+    } ]
+  }, {
+    "tStartMs": 220810,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "펜타곤이 얘기하는 건 거짓이야"
+    } ]
+  }, {
+    "tStartMs": 222400,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "라고 얘기를 했다고 하는데"
+    } ]
+  }, {
+    "tStartMs": 223670,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "그렇게 급박한 경우가 뭐가 있다고 하는데"
+    } ]
+  }, {
+    "tStartMs": 225760,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "하여튼 국방부 입장에서는"
+    } ]
+  }, {
+    "tStartMs": 227520,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "엄청나게 당황스러웠죠"
+    } ]
+  }, {
+    "tStartMs": 229110,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "그래서 처음엔 좋게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 231310,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "2월 24일 날 이 헤그세스와 아모데이"
+    } ]
+  }, {
+    "tStartMs": 234060,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "아모데이가 아까 전에 이 사람입니다"
+    } ]
+  }, {
+    "tStartMs": 236120,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "다리오 아모데이"
+    } ]
+  }, {
+    "tStartMs": 237020,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "이 앤트로픽의 창업자이자 CEO예요"
+    } ]
+  }, {
+    "tStartMs": 239060,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "현재 대표인데"
+    } ]
+  }, {
+    "tStartMs": 239930,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "둘이 회동을 하면서"
+    } ]
+  }, {
+    "tStartMs": 241030,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "이렇게 얘기했다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 242190,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "앤트로픽의 AI 도구를"
+    } ]
+  }, {
+    "tStartMs": 243530,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "법적 한도에서"
+    } ]
+  }, {
+    "tStartMs": 244650,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "자, 우리가 법을 넘기는 한도는 안 쓸게, 오케이"
+    } ]
+  }, {
+    "tStartMs": 247490,
+    "dDurationMs": 4540,
+    "segs": [ {
+      "utf8": "법적 한도에서 우리가 마음대로 사용할 수 있는 전권을 내놓으세요"
+    } ]
+  }, {
+    "tStartMs": 252030,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "당연한 거 아닙니까"
+    } ]
+  }, {
+    "tStartMs": 253060,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "내가 누르면 발사가 돼야지"
+    } ]
+  }, {
+    "tStartMs": 254930,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "너희한테 물어보고 어떻게 해"
+    } ]
+  }, {
+    "tStartMs": 256490,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "우리 법을 지킬 테니까"
+    } ]
+  }, {
+    "tStartMs": 257580,
+    "dDurationMs": 3090,
+    "segs": [ {
+      "utf8": "그런 한도에서 사용할 수 있는 전권을 내놓으세요"
+    } ]
+  }, {
+    "tStartMs": 260670,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "라고 얘기를 했죠"
+    } ]
+  }, {
+    "tStartMs": 262200,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "그리고 혹시 모르니까"
+    } ]
+  }, {
+    "tStartMs": 263160,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "너희가 지난번에 안 된다고 했다고 하니까"
+    } ]
+  }, {
+    "tStartMs": 265320,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "굳이 말하는 건데"
+    } ]
+  }, {
+    "tStartMs": 266370,
+    "dDurationMs": 4340,
+    "segs": [ {
+      "utf8": "2월 27일 오후 5시 1분까지 너희가 물러서지 않으면"
+    } ]
+  }, {
+    "tStartMs": 270710,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "너희는 큰일 날 거야"
+    } ]
+  }, {
+    "tStartMs": 272310,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "어떻게 큰일 나냐"
+    } ]
+  }, {
+    "tStartMs": 273600,
+    "dDurationMs": 3370,
+    "segs": [ {
+      "utf8": "국방생산법이라는 거를 우리는 적용을 할 건데"
+    } ]
+  }, {
+    "tStartMs": 276970,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "이게 발동을 하면"
+    } ]
+  }, {
+    "tStartMs": 278140,
+    "dDurationMs": 3850,
+    "segs": [ {
+      "utf8": "너희는 조건 없이 AI 도구를 제공해야 될 거야"
+    } ]
+  }, {
+    "tStartMs": 281990,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "제공해야 될 거야"
+    } ]
+  }, {
+    "tStartMs": 282980,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "국방생산법이 있어"
+    } ]
+  }, {
+    "tStartMs": 285090,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "국방생산법이라는 게 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 287100,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "무려 한국전쟁 당시에 생긴 법이라고 하는데"
+    } ]
+  }, {
+    "tStartMs": 289630,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "한국전쟁 때 쓰이려고"
+    } ]
+  }, {
+    "tStartMs": 291200,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "금속 공작기계 이런 것들을 기업 보고 내놓으라 그러니까"
+    } ]
+  }, {
+    "tStartMs": 293710,
+    "dDurationMs": 3350,
+    "segs": [ {
+      "utf8": "기업들이 우리 물건 만드느라고 포탄 지금 안 되겠는데요"
+    } ]
+  }, {
+    "tStartMs": 297060,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "그런 기업들을 떼찌떼찌하기 위해서"
+    } ]
+  }, {
+    "tStartMs": 298910,
+    "dDurationMs": 3090,
+    "segs": [ {
+      "utf8": "전쟁 물자 조달을 위해서 만들어진 법입니다"
+    } ]
+  }, {
+    "tStartMs": 302000,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "우리 지금 가전제품 만들고 돈 벌어야 되는데"
+    } ]
+  }, {
+    "tStartMs": 304370,
+    "dDurationMs": 2930,
+    "segs": [ {
+      "utf8": "어허 저리가 하고 치운 다음에 탱크 만들고"
+    } ]
+  }, {
+    "tStartMs": 307300,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "뭐 포탄 만들고 이런 거죠"
+    } ]
+  }, {
+    "tStartMs": 309480,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "그래서 너희가 만약에"
+    } ]
+  }, {
+    "tStartMs": 310670,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "2월 27일까지 OK를 안 날리면"
+    } ]
+  }, {
+    "tStartMs": 312870,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "DPA를 활용해서"
+    } ]
+  }, {
+    "tStartMs": 314510,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "강제로 열게 해줄게"
+    } ]
+  }, {
+    "tStartMs": 316750,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "이 법을 얘기했다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 318320,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "물론 이게 잘 이번에 통하지 않았던 이유가 있어요"
+    } ]
+  }, {
+    "tStartMs": 321180,
+    "dDurationMs": 3210,
+    "segs": [ {
+      "utf8": "금속과 공작기계는 펜타곤 요원들이 가서"
+    } ]
+  }, {
+    "tStartMs": 324390,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "야 총알을 만들어 그럼 만드는 거잖아"
+    } ]
+  }, {
+    "tStartMs": 327260,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "전자레인지 만들고 있다가"
+    } ]
+  }, {
+    "tStartMs": 328260,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "치워 그럼 치워야 되잖아"
+    } ]
+  }, {
+    "tStartMs": 329960,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "근데 AI는 가드레일 치워봐"
+    } ]
+  }, {
+    "tStartMs": 332010,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "그러면 어떻게 치워야 돼?"
+    } ]
+  }, {
+    "tStartMs": 334500,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "국방부 요원들이 온 다음에"
+    } ]
+  }, {
+    "tStartMs": 336490,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "야 이걸 아오"
+    } ]
+  }, {
+    "tStartMs": 337560,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "이거 어떻게 치우냐 이거?"
+    } ]
+  }, {
+    "tStartMs": 339310,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "뭘 바꿔야 되냐 이거?"
+    } ]
+  }, {
+    "tStartMs": 341310,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "아 좀 치워봐"
+    } ]
+  }, {
+    "tStartMs": 342130,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "그럼 얘네들이 안 치우면"
+    } ]
+  }, {
+    "tStartMs": 342880,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "답이 없는 거야"
+    } ]
+  }, {
+    "tStartMs": 344040,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "그래서 강제를 하고 싶긴 한데"
+    } ]
+  }, {
+    "tStartMs": 346740,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "어떻게 강제해야 되냐"
+    } ]
+  }, {
+    "tStartMs": 348590,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "이게 쉽지 않죠"
+    } ]
+  }, {
+    "tStartMs": 349810,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "이게 뭐 소프트웨어 기업"
+    } ]
+  }, {
+    "tStartMs": 350640,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "게다가 AI잖아"
+    } ]
+  }, {
+    "tStartMs": 351380,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "얼마나 복잡하겠어"
+    } ]
+  }, {
+    "tStartMs": 352580,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "뭐를 어떻게 바꿔야 되나"
+    } ]
+  }, {
+    "tStartMs": 354950,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "이게 걸려있는 거죠"
+    } ]
+  }, {
+    "tStartMs": 356850,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "그래서 처음에 이런 얘기를 하다가"
+    } ]
+  }, {
+    "tStartMs": 358180,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "너무 어이가 없으니까"
+    } ]
+  }, {
+    "tStartMs": 359030,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "펜타곤이 뭐라고 얘기를 했냐"
+    } ]
+  }, {
+    "tStartMs": 360750,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "최후 통첩에 너희가 응하지 않을 경우에"
+    } ]
+  }, {
+    "tStartMs": 363430,
+    "dDurationMs": 4320,
+    "segs": [ {
+      "utf8": "펜타곤은 너희를 공급망 리스크 기업으로 지정을 하고"
+    } ]
+  }, {
+    "tStartMs": 367750,
+    "dDurationMs": 4290,
+    "segs": [ {
+      "utf8": "향후 모든 국방 관련 사업을 금지하겠다라고 발표합니다"
+    } ]
+  }, {
+    "tStartMs": 372040,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "공급망 리스크 기업이라는 건 뭐냐면은"
+    } ]
+  }, {
+    "tStartMs": 374390,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "예를 들면 그런 거"
+    } ]
+  }, {
+    "tStartMs": 375040,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "뭐 중국의 화웨이 같은 데가"
+    } ]
+  }, {
+    "tStartMs": 376650,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "백도어 깔 수 있다고 미국에서 쫓겨났잖아요"
+    } ]
+  }, {
+    "tStartMs": 379130,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "그게 공급망 리스크 기업입니다"
+    } ]
+  }, {
+    "tStartMs": 381090,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "아니면 어떤 기업들이"
+    } ]
+  }, {
+    "tStartMs": 382050,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "예를 들면 뭐 이란의 기업"
+    } ]
+  }, {
+    "tStartMs": 383170,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "뭐 파키스탄의 기업 이런 데가"
+    } ]
+  }, {
+    "tStartMs": 384720,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "미국에서 뭐 하려고 그러면 안 돼"
+    } ]
+  }, {
+    "tStartMs": 386380,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "너희는 위험 기업이야"
+    } ]
+  }, {
+    "tStartMs": 388030,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "위험 기업으로 지정을 하는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 389890,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "대표적으로 중국의 CCTV 기업들"
+    } ]
+  }, {
+    "tStartMs": 392440,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "뭐 이런 데들이 지정이 되죠"
+    } ]
+  }, {
+    "tStartMs": 394210,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "근데 자국 AI 기업 앤트로픽을"
+    } ]
+  }, {
+    "tStartMs": 396890,
+    "dDurationMs": 3010,
+    "segs": [ {
+      "utf8": "공급망 위험 기업으로 지정을 할 수 있다는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 399900,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "역사상 자국 기업을 적으로 돌려서"
+    } ]
+  }, {
+    "tStartMs": 402760,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "공급망에 배제시킨 경우는 없다 그럽니다"
+    } ]
+  }, {
+    "tStartMs": 405560,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "보통 적국 대상으로 이걸 많이 하지"
+    } ]
+  }, {
+    "tStartMs": 407400,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "중국, 러시아 이런 기업들이 많이 하는데"
+    } ]
+  }, {
+    "tStartMs": 409570,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "협박을 했어요"
+    } ]
+  }, {
+    "tStartMs": 410860,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "게다가 앤트로픽이 이 협박에"
+    } ]
+  }, {
+    "tStartMs": 413690,
+    "dDurationMs": 3550,
+    "segs": [ {
+      "utf8": "대부분 국방부의 요구에 응할 거다라고 생각을 했어요"
+    } ]
+  }, {
+    "tStartMs": 417240,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "아니 그럴 수밖에 없는 게"
+    } ]
+  }, {
+    "tStartMs": 418280,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "앤트로픽은 미국에서도 국방 안보 영역과"
+    } ]
+  }, {
+    "tStartMs": 420810,
+    "dDurationMs": 2760,
+    "segs": [ {
+      "utf8": "가장 일을 많이 하는 기업 중에 하나입니다"
+    } ]
+  }, {
+    "tStartMs": 423570,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "팔란티어와 함께"
+    } ]
+  }, {
+    "tStartMs": 425050,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "지금 현재 AI 플랫폼에서는"
+    } ]
+  }, {
+    "tStartMs": 427080,
+    "dDurationMs": 3470,
+    "segs": [ {
+      "utf8": "국방부와 일을 가장 많이 하는 투탑에 가깝다라는 평가를 많이 들어요"
+    } ]
+  }, {
+    "tStartMs": 430550,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "최근에 많이 올랐어요"
+    } ]
+  }, {
+    "tStartMs": 431590,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "물론 팔란티어가 압도적이긴 한데"
+    } ]
+  }, {
+    "tStartMs": 433500,
+    "dDurationMs": 3320,
+    "segs": [ {
+      "utf8": "기밀 네트워크에 활발하게 이용되는 유일한 AI 기업"
+    } ]
+  }, {
+    "tStartMs": 436820,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "이런 평가도 받고"
+    } ]
+  }, {
+    "tStartMs": 437950,
+    "dDurationMs": 4290,
+    "segs": [ {
+      "utf8": "앤트로픽은 작년에 미국 국방부와 2억 달러 계약도 체결했습니다"
+    } ]
+  }, {
+    "tStartMs": 442240,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "아직 막 매출이 발생한 건 아닌데"
+    } ]
+  }, {
+    "tStartMs": 444140,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "또 민간 매출에 비하면 매우 작지만"
+    } ]
+  }, {
+    "tStartMs": 445840,
+    "dDurationMs": 3760,
+    "segs": [ {
+      "utf8": "지금 앤트로픽의 AI 시스템이 나오는 말에 따르면"
+    } ]
+  }, {
+    "tStartMs": 449600,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "마두로 체포 작전에서 사용됐다"
+    } ]
+  }, {
+    "tStartMs": 451540,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "심지어 이번 이란 공격에도 사용됐다"
+    } ]
+  }, {
+    "tStartMs": 454060,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "이런 내용들이 나오고 있어요"
+    } ]
+  }, {
+    "tStartMs": 455500,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "그러니까 앤트로픽의 저 AI 시스템이"
+    } ]
+  }, {
+    "tStartMs": 457180,
+    "dDurationMs": 4400,
+    "segs": [ {
+      "utf8": "미국 국방부 내에서 굉장히 높게 평가를 받는다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 461580,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "실제로 높게 평가받고"
+    } ]
+  }, {
+    "tStartMs": 462550,
+    "dDurationMs": 4160,
+    "segs": [ {
+      "utf8": "저 헤그세스 전쟁부 장관도 대단히 훌륭하다라고 얘기를 했다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 466710,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "현장 직원들의 반응도 좋다"
+    } ]
+  }, {
+    "tStartMs": 468260,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "쉽고 신뢰성이 높다"
+    } ]
+  }, {
+    "tStartMs": 470400,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "그래서 이 국방부가 앤트로픽에 대해서"
+    } ]
+  }, {
+    "tStartMs": 472290,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "저렇게까지 얘기하는 건"
+    } ]
+  }, {
+    "tStartMs": 473840,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "오히려 이 앤트로픽에 얼마나 의존하고 있는지를"
+    } ]
+  }, {
+    "tStartMs": 476700,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "드러내는 게 아니냐라는 말도 많아요"
+    } ]
+  }, {
+    "tStartMs": 478690,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "대충 별 다른 기업이 아니었으면"
+    } ]
+  }, {
+    "tStartMs": 480540,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "예를 들면 슈카친구들 같았으면 줘 그랬는데"
+    } ]
+  }, {
+    "tStartMs": 482700,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "슈카가 싫어 양심상 줄 수 없어"
+    } ]
+  }, {
+    "tStartMs": 484850,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "뭐야 저리 가요"
+    } ]
+  }, {
+    "tStartMs": 486410,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "하고 딴 데랑 하면 되는데"
+    } ]
+  }, {
+    "tStartMs": 487870,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "뭔데? 뭔데?"
+    } ]
+  }, {
+    "tStartMs": 489440,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "어차피 네 거 안 써"
+    } ]
+  }, {
+    "tStartMs": 490590,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "이상한 소리하고 있어"
+    } ]
+  }, {
+    "tStartMs": 491510,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "저리 가 워히 워히"
+    } ]
+  }, {
+    "tStartMs": 493090,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "가라고 소금 뿌리면 되는데"
+    } ]
+  }, {
+    "tStartMs": 494610,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "이 앤트로픽 거는 그게 잘 안 되죠"
+    } ]
+  }, {
+    "tStartMs": 496860,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "대체가 잘 안 되고"
+    } ]
+  }, {
+    "tStartMs": 497690,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "현재 제일 좋다는 평가를 받으니까"
+    } ]
+  }, {
+    "tStartMs": 499640,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "아쉬우니까 쓰고는 싶은데"
+    } ]
+  }, {
+    "tStartMs": 501980,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "저 친구들이 버티니까"
+    } ]
+  }, {
+    "tStartMs": 503490,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "저렇게 협박을 한다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 505700,
+    "dDurationMs": 460,
+    "segs": [ {
+      "utf8": "그렇기 때문에"
+    } ]
+  }, {
+    "tStartMs": 506160,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "이번에 만약에 펜타곤의 요청을 거절하면"
+    } ]
+  }, {
+    "tStartMs": 508900,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "2억 달러 국방부 계약 날아가고"
+    } ]
+  }, {
+    "tStartMs": 510530,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "그게 문제가 아니라"
+    } ]
+  }, {
+    "tStartMs": 511650,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "아예 미국 서플라이 체인"
+    } ]
+  }, {
+    "tStartMs": 513810,
+    "dDurationMs": 3850,
+    "segs": [ {
+      "utf8": "미국 AI 공급망에서 제거될 수도 있죠"
+    } ]
+  }, {
+    "tStartMs": 517660,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "이게 가능하냐"
+    } ]
+  }, {
+    "tStartMs": 518840,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "법적으로 가능하냐 안 가능하냐를 떠나서"
+    } ]
+  }, {
+    "tStartMs": 521430,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "이건 정치잖아요"
+    } ]
+  }, {
+    "tStartMs": 524080,
+    "dDurationMs": 5060,
+    "segs": [ {
+      "utf8": "정치가 기업이나 어떤 시스템, 어떤 대상을 타깃으로 삼으면"
+    } ]
+  }, {
+    "tStartMs": 529140,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "우리나라 그룹 회장님들이"
+    } ]
+  }, {
+    "tStartMs": 531200,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "왜 국회에 나가서 그렇게"
+    } ]
+  }, {
+    "tStartMs": 532680,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "이거 열심히 잘"
+    } ]
+  }, {
+    "tStartMs": 534270,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "물론 대한민국 국민이니까"
+    } ]
+  }, {
+    "tStartMs": 535460,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "당연한 의무이기 때문에 그렇긴 하지만"
+    } ]
+  }, {
+    "tStartMs": 537790,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "아무리 잘 나가는 기업이라도"
+    } ]
+  }, {
+    "tStartMs": 539190,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "정치 앞에서는"
+    } ]
+  }, {
+    "tStartMs": 542320,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "다시 하도록 하겠습니다"
+    } ]
+  }, {
+    "tStartMs": 543320,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "예... 그"
+    } ]
+  }, {
+    "tStartMs": 544830,
+    "dDurationMs": 4190,
+    "segs": [ {
+      "utf8": "당연히 기업이 국민의 대표인 정치 앞에서는 얘기를 잘 해야죠"
+    } ]
+  }, {
+    "tStartMs": 549020,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "얘기를 잘하고 말이야"
+    } ]
+  }, {
+    "tStartMs": 550330,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "국민의 대표인데"
+    } ]
+  }, {
+    "tStartMs": 551180,
+    "dDurationMs": 3150,
+    "segs": [ {
+      "utf8": "잘 좀 이렇게 사업을 해나가야 되는데"
+    } ]
+  }, {
+    "tStartMs": 554330,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "그게 안 될 수 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 556130,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "앤트로픽 같은 경우는"
+    } ]
+  }, {
+    "tStartMs": 557060,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "정말 트럼프 대통령이라고 하면"
+    } ]
+  }, {
+    "tStartMs": 558260,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "지금 가장 위세가 등등한 그런 상황인데"
+    } ]
+  }, {
+    "tStartMs": 560980,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "여기에 대해서 대답을 해야되는"
+    } ]
+  }, {
+    "tStartMs": 562660,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "그런 상황에 놓여있다고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 565300,
+    "dDurationMs": 3980,
+    "segs": [ {
+      "utf8": "게다가 미국 국방부는 앤트로픽과 마지막 최종 회담을 하기 전에"
+    } ]
+  }, {
+    "tStartMs": 569280,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "xAI 그록의 xAI와 계약을 맺었고요"
+    } ]
+  }, {
+    "tStartMs": 571720,
+    "dDurationMs": 3210,
+    "segs": [ {
+      "utf8": "오픈AI와도 계약을 맺을 것 같다라는 얘기를"
+    } ]
+  }, {
+    "tStartMs": 574930,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "앤트로픽에 얘기했다 그럽니다"
+    } ]
+  }, {
+    "tStartMs": 576800,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "너희가 아니어도"
+    } ]
+  }, {
+    "tStartMs": 578120,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "우리 딴 데랑 맺을 거야"
+    } ]
+  }, {
+    "tStartMs": 579150,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "딴 데는 다 오케이 할 것 같아"
+    } ]
+  }, {
+    "tStartMs": 580830,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "너희도 오케이 해야지"
+    } ]
+  }, {
+    "tStartMs": 581840,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "이런 압박 수위를 높였다고 해요"
+    } ]
+  }, {
+    "tStartMs": 583680,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "그리고 국방부의 발표가 있는 그날"
+    } ]
+  }, {
+    "tStartMs": 586260,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "그날 앤트로픽은 새로운 정책도 발표합니다"
+    } ]
+  }, {
+    "tStartMs": 588010,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "2월 24일 마지노선이 다가온 날"
+    } ]
+  }, {
+    "tStartMs": 590320,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "이렇게 얘기를 해요"
+    } ]
+  }, {
+    "tStartMs": 591390,
+    "dDurationMs": 4170,
+    "segs": [ {
+      "utf8": "우리는 우리의 대표적인 안전 약속 중에 하나를 완화하겠다"
+    } ]
+  }, {
+    "tStartMs": 595560,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "그래서 이게 나올 때만 해도"
+    } ]
+  }, {
+    "tStartMs": 596840,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "아, 좀 굽히고 들어가는구나"
+    } ]
+  }, {
+    "tStartMs": 598750,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "뭔가 합의가 되겠구나"
+    } ]
+  }, {
+    "tStartMs": 599920,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "미국 국방부와"
+    } ]
+  }, {
+    "tStartMs": 601330,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "뭐를 완화했냐?"
+    } ]
+  }, {
+    "tStartMs": 602500,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "이렇게 얘기를 합니다"
+    } ]
+  }, {
+    "tStartMs": 603590,
+    "dDurationMs": 3430,
+    "segs": [ {
+      "utf8": "절대적인 중단 공약을 후퇴시켰어요"
+    } ]
+  }, {
+    "tStartMs": 607020,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "일정 수준이 넘지 않으면 배포하지 않겠다"
+    } ]
+  }, {
+    "tStartMs": 609690,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "옛날에는 이거였는데"
+    } ]
+  }, {
+    "tStartMs": 610770,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "보호 조치가 충분하지 않으면"
+    } ]
+  }, {
+    "tStartMs": 611920,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "AI 배포하지 않을 거야"
+    } ]
+  }, {
+    "tStartMs": 613340,
+    "dDurationMs": 3640,
+    "segs": [ {
+      "utf8": "지금은 필요하면 좀 지연하겠다"
+    } ]
+  }, {
+    "tStartMs": 616980,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "조금 천천히 배포하겠다"
+    } ]
+  }, {
+    "tStartMs": 618690,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "약간 후퇴시켰고"
+    } ]
+  }, {
+    "tStartMs": 620380,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "또 옛날에는 우리는 안전 기준이 절대 기준을 넘지 않으면"
+    } ]
+  }, {
+    "tStartMs": 623110,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "배포를 안 하겠다 라고 했는데"
+    } ]
+  }, {
+    "tStartMs": 625830,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "선두권 경쟁사와 비슷하게 맞추겠다"
+    } ]
+  }, {
+    "tStartMs": 628420,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "이렇게 뒤로 좀 후퇴했어요"
+    } ]
+  }, {
+    "tStartMs": 630200,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "이번에 발표한 내용이 앤트로픽이"
+    } ]
+  }, {
+    "tStartMs": 631700,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "아 그래서 저 정도로 오케이"
+    } ]
+  }, {
+    "tStartMs": 633600,
+    "dDurationMs": 3680,
+    "segs": [ {
+      "utf8": "그 정도로 절대적 공약도 후퇴하고 기준 낮췄기 때문에"
+    } ]
+  }, {
+    "tStartMs": 637280,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "미국 국방부와 이제 뭔가 잘 되겠구나"
+    } ]
+  }, {
+    "tStartMs": 639330,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "라고 생각을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 640820,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "2월 24일까지는"
+    } ]
+  }, {
+    "tStartMs": 642530,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "근데 마감일이 2월 27일인가 그랬죠"
+    } ]
+  }, {
+    "tStartMs": 644250,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "하루 전일 2월 26일 날"
+    } ]
+  }, {
+    "tStartMs": 646240,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "시장을 뒤흔드는 발표가 하나 나오는데"
+    } ]
+  }, {
+    "tStartMs": 648140,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "저 다리오 아모데이 창업자가"
+    } ]
+  }, {
+    "tStartMs": 650580,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "본인의 사이트에 성명을 발표합니다"
+    } ]
+  }, {
+    "tStartMs": 652760,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "그게 아래에 있는 거예요"
+    } ]
+  }, {
+    "tStartMs": 653810,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "가면 물론 영어입니다"
+    } ]
+  }, {
+    "tStartMs": 654680,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "제가 지금 한국말을 써 놔서 그래요"
+    } ]
+  }, {
+    "tStartMs": 656360,
+    "dDurationMs": 3950,
+    "segs": [ {
+      "utf8": "다리오 아모데이가 국방부와의 논의에 대해 성명을 발표한다"
+    } ]
+  }, {
+    "tStartMs": 660310,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "국방부의 논의에 관한 다리오 아모데이의 성명"
+    } ]
+  }, {
+    "tStartMs": 662680,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "여기까지만 보면은"
+    } ]
+  }, {
+    "tStartMs": 663930,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "우리가 좋은 합의를 했고"
+    } ]
+  }, {
+    "tStartMs": 665530,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "국방부한테 이렇게 양보를 받았고"
+    } ]
+  }, {
+    "tStartMs": 667010,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "이렇게 하기로 했습니다"
+    } ]
+  }, {
+    "tStartMs": 668080,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "미국 화이팅!"
+    } ]
+  }, {
+    "tStartMs": 668830,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "뭐 이렇게 하고 끝날 줄 알았는데"
+    } ]
+  }, {
+    "tStartMs": 670910,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "내용이 이렇게 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 672500,
+    "dDurationMs": 3040,
+    "segs": [ {
+      "utf8": "저는 미국과 다른 민주주의 국가들을 방어하고"
+    } ]
+  }, {
+    "tStartMs": 675540,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "독재적인 적들을 물리치기 위해서"
+    } ]
+  }, {
+    "tStartMs": 677380,
+    "dDurationMs": 3530,
+    "segs": [ {
+      "utf8": "인공지능을 사용하는 것이 매우 중요하다고 굳게 믿습니다"
+    } ]
+  }, {
+    "tStartMs": 680910,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "그렇기 때문에 앤트로픽은 지금까지"
+    } ]
+  }, {
+    "tStartMs": 683040,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "미국 국방부와 정보기관의"
+    } ]
+  }, {
+    "tStartMs": 684900,
+    "dDurationMs": 3220,
+    "segs": [ {
+      "utf8": "자사 AI 모델을 적극적으로 배포해왔습니다"
+    } ]
+  }, {
+    "tStartMs": 688120,
+    "dDurationMs": 3210,
+    "segs": [ {
+      "utf8": "왜냐하면 독재자들과 싸우는 거니까요"
+    } ]
+  }, {
+    "tStartMs": 691330,
+    "dDurationMs": 3040,
+    "segs": [ {
+      "utf8": "그래서 우리는 우리의 이익에 반하는 경우에도"
+    } ]
+  }, {
+    "tStartMs": 694370,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "미국 정부와 협력해왔습니다"
+    } ]
+  }, {
+    "tStartMs": 696280,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "우리는 중국 공산당과 연계된 기업들이"
+    } ]
+  }, {
+    "tStartMs": 698730,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "클로드 사용을 못하게 차단했고"
+    } ]
+  }, {
+    "tStartMs": 700700,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "그것 때문에 수억 달러 손실도 감수했습니다"
+    } ]
+  }, {
+    "tStartMs": 702990,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "클로드를 악용하려던 중국 공산당"
+    } ]
+  }, {
+    "tStartMs": 705200,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "그런 지원의 사이버 공격도 막았고"
+    } ]
+  }, {
+    "tStartMs": 707100,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "또 이 강력한 칩 수출 통제"
+    } ]
+  }, {
+    "tStartMs": 709380,
+    "dDurationMs": 3780,
+    "segs": [ {
+      "utf8": "중국으로 엔비디아의 가장 좋은 칩을 수출하는 걸 열어주는 거"
+    } ]
+  }, {
+    "tStartMs": 713160,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "그런 걸 막자고 강력하게 얘기를 했어요"
+    } ]
+  }, {
+    "tStartMs": 716120,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "그런 걸 풀어야 본인들은 돈을 벌지만"
+    } ]
+  }, {
+    "tStartMs": 718230,
+    "dDurationMs": 3630,
+    "segs": [ {
+      "utf8": "우리는 돈보다는 더 중요한 게 있다고 생각을 해왔기 때문이죠"
+    } ]
+  }, {
+    "tStartMs": 721860,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "그리고 앤트로픽은 군사적 결정은"
+    } ]
+  }, {
+    "tStartMs": 724960,
+    "dDurationMs": 3310,
+    "segs": [ {
+      "utf8": "민간 기업이 아닌 미 국방부가 내린다는 것을 잘 알고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 728270,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "국방부가 버튼 누를 때마다 너희한테 물어봐야 되냐"
+    } ]
+  }, {
+    "tStartMs": 731150,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "그게 말이 안 되는 걸 잘 알고 있어요"
+    } ]
+  }, {
+    "tStartMs": 733210,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "그래서 우리는 특정 군사 작전에 대해서"
+    } ]
+  }, {
+    "tStartMs": 734740,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "이의를 제기한 적도 없고"
+    } ]
+  }, {
+    "tStartMs": 736170,
+    "dDurationMs": 3330,
+    "segs": [ {
+      "utf8": "임의적으로 국방부가 사용한다고 하는 기술의 사용을"
+    } ]
+  }, {
+    "tStartMs": 739500,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "제한하려는 시도를 한 적도 없습니다"
+    } ]
+  }, {
+    "tStartMs": 741490,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "우리한테 물어보고"
+    } ]
+  }, {
+    "tStartMs": 742500,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "버튼을 누르거나 그러지 않아도 됩니다"
+    } ]
+  }, {
+    "tStartMs": 744880,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "하지만 우리가 우려하는 게 하나 있어요"
+    } ]
+  }, {
+    "tStartMs": 746720,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "그건 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 747740,
+    "dDurationMs": 5270,
+    "segs": [ {
+      "utf8": "AI가 민주주의 가치를 훼손할 우려가 있다고 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 753010,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "특정한 경우에는"
+    } ]
+  }, {
+    "tStartMs": 754340,
+    "dDurationMs": 4220,
+    "segs": [ {
+      "utf8": "AI가 민주주의를 지키고 독재자들을 막기 위한 방법으로 쓰이는 건"
+    } ]
+  }, {
+    "tStartMs": 758560,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "너무나 좋기 때문에"
+    } ]
+  }, {
+    "tStartMs": 759890,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "우리는 손실을 감수하고도 우리 AI를 제공했지만"
+    } ]
+  }, {
+    "tStartMs": 762730,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "어떤 경우에는 민주주의를 지키는 게 아니라"
+    } ]
+  }, {
+    "tStartMs": 764970,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "오히려 훼손할 수도 있다고 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 767720,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "두 가지 예시를 드리겠습니다"
+    } ]
+  }, {
+    "tStartMs": 769050,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "첫 번째 예시는 바로 AI가"
+    } ]
+  }, {
+    "tStartMs": 771540,
+    "dDurationMs": 3120,
+    "segs": [ {
+      "utf8": "대규모 국내 감시에 사용되는 경우이고"
+    } ]
+  }, {
+    "tStartMs": 774660,
+    "dDurationMs": 3890,
+    "segs": [ {
+      "utf8": "두 번째는 완전 자율 무기가 도입되는 경우입니다"
+    } ]
+  }, {
+    "tStartMs": 778550,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "우리는 이 두 가지에 반대합니다"
+    } ]
+  }, {
+    "tStartMs": 780860,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "그리고 결정적으로"
+    } ]
+  }, {
+    "tStartMs": 782690,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "이번에 전쟁부가 요구했던"
+    } ]
+  }, {
+    "tStartMs": 785140,
+    "dDurationMs": 3880,
+    "segs": [ {
+      "utf8": "그 내용에 이 두 가지가 들어가면 안 됩니다"
+    } ]
+  }, {
+    "tStartMs": 790310,
+    "dDurationMs": 3870,
+    "segs": [ {
+      "utf8": "지금도 포함되어서는 안 된다고 믿습니다"
+    } ]
+  }, {
+    "tStartMs": 794180,
+    "dDurationMs": 3470,
+    "segs": [ {
+      "utf8": "대규모 국내 감시에 AI를 사용한다는 말은 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 797650,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "바로 이거죠"
+    } ]
+  }, {
+    "tStartMs": 798650,
+    "dDurationMs": 3450,
+    "segs": [ {
+      "utf8": "우리가 흔히 아는 CCTV 쫙 깐 다음에"
+    } ]
+  }, {
+    "tStartMs": 802100,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "누가 어디에 있고 뭔 짓을 하는지"
+    } ]
+  }, {
+    "tStartMs": 804020,
+    "dDurationMs": 3600,
+    "segs": [ {
+      "utf8": "완벽하게 감시하는 AI 기반 대규모 감시는"
+    } ]
+  }, {
+    "tStartMs": 807620,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "우리의 기본적 자유에"
+    } ]
+  }, {
+    "tStartMs": 809170,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "심각한 위협을 가할 것이고"
+    } ]
+  }, {
+    "tStartMs": 811350,
+    "dDurationMs": 3430,
+    "segs": [ {
+      "utf8": "민주적 가치와 양립할 수 없습니다"
+    } ]
+  }, {
+    "tStartMs": 814780,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "굉장히 강한 얘기죠"
+    } ]
+  }, {
+    "tStartMs": 816470,
+    "dDurationMs": 4170,
+    "segs": [ {
+      "utf8": "한마디로 앤트로픽은 개인에 대한 AI 감시를 배격합니다"
+    } ]
+  }, {
+    "tStartMs": 820640,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "지금도 정부는 미국인의 이동 경로나"
+    } ]
+  }, {
+    "tStartMs": 822500,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "웹브라우징 기록"
+    } ]
+  }, {
+    "tStartMs": 823570,
+    "dDurationMs": 3770,
+    "segs": [ {
+      "utf8": "사회적 관계 등에 대한 상세 정보를 구매하거나 볼 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 827340,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "이러한 관행은 사생활 침해 우려를 야기하고"
+    } ]
+  }, {
+    "tStartMs": 829810,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "지금도 의회에서"
+    } ]
+  }, {
+    "tStartMs": 830760,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "초당적인 반발을 불러일으키고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 833110,
+    "dDurationMs": 3320,
+    "segs": [ {
+      "utf8": "그런데 앤트로픽은 강력한 AI를 만약에 활용을 하면"
+    } ]
+  }, {
+    "tStartMs": 836430,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "이렇게 흩어져 있는 데이터를"
+    } ]
+  }, {
+    "tStartMs": 837770,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "자동으로 대규모로 종합해서"
+    } ]
+  }, {
+    "tStartMs": 839720,
+    "dDurationMs": 5120,
+    "segs": [ {
+      "utf8": "개인의 삶에 대한 포괄적인 그림을 만들어낼 수 있게 해줄 겁니다"
+    } ]
+  }, {
+    "tStartMs": 844840,
+    "dDurationMs": 3860,
+    "segs": [ {
+      "utf8": "정부가 개인에 대해 모든 것을 감시하고 알 수 있게 될 것이고"
+    } ]
+  }, {
+    "tStartMs": 848700,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "정부에 반대하는 이들에 대해서"
+    } ]
+  }, {
+    "tStartMs": 850690,
+    "dDurationMs": 3720,
+    "segs": [ {
+      "utf8": "AI 감시로 획득한 정보로 협박을 할 수 있겠죠"
+    } ]
+  }, {
+    "tStartMs": 854410,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "아니면 뭔가 약점을 잡거나"
+    } ]
+  }, {
+    "tStartMs": 856030,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "이건 곧 빅브라더가 될 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 858580,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "그래서 AI 감시를 배격한다는 말이고요"
+    } ]
+  }, {
+    "tStartMs": 861090,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "두 번째"
+    } ]
+  }, {
+    "tStartMs": 862040,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "완전 자율 무기에 한해서는"
+    } ]
+  }, {
+    "tStartMs": 863900,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "AI를 사용하게 하면 안 됩니다"
+    } ]
+  }, {
+    "tStartMs": 865880,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "현재 기준으로 최첨단 AI 시스템이라도"
+    } ]
+  }, {
+    "tStartMs": 868500,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "완전 자율 무기를 구동할 만큼"
+    } ]
+  }, {
+    "tStartMs": 870370,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "신뢰할 수는 없습니다"
+    } ]
+  }, {
+    "tStartMs": 871780,
+    "dDurationMs": 4650,
+    "segs": [ {
+      "utf8": "우리는 미군과 미국인을 위협에 빠뜨리는 제품을 제공할 수는 없어요"
+    } ]
+  }, {
+    "tStartMs": 876430,
+    "dDurationMs": 4460,
+    "segs": [ {
+      "utf8": "현재 완전 자율 무기의 판단력을 믿을 수 있냐"
+    } ]
+  }, {
+    "tStartMs": 880890,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "적절한 안전장치가 함께 배치되어야 하는데"
+    } ]
+  }, {
+    "tStartMs": 883850,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "현재까지 그런 안전장치는 존재하지 않는다"
+    } ]
+  }, {
+    "tStartMs": 886400,
+    "dDurationMs": 570,
+    "segs": [ {
+      "utf8": "AI가"
+    } ]
+  }, {
+    "tStartMs": 886970,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "\"쏘세요\" 그런다고 쏴야 되냐"
+    } ]
+  }, {
+    "tStartMs": 889540,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "\"저들은 적입니다\""
+    } ]
+  }, {
+    "tStartMs": 891080,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "진짜 적일 거냐"
+    } ]
+  }, {
+    "tStartMs": 892410,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "이 판단력에 오류가 있을 수 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 895180,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "인간과 다른 판단을 할 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 897220,
+    "dDurationMs": 3740,
+    "segs": [ {
+      "utf8": "완전 자율 무기의 판단력은 믿을 수 없다는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 900960,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "그런데 현재 미국 전쟁부"
+    } ]
+  }, {
+    "tStartMs": 903130,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "미국 국방부 요청은"
+    } ]
+  }, {
+    "tStartMs": 904430,
+    "dDurationMs": 2940,
+    "segs": [ {
+      "utf8": "이 두 가지 금기를 용인하라는 것과 같습니다"
+    } ]
+  }, {
+    "tStartMs": 907370,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "전쟁부는 모든 합법적 사용에 동의하고"
+    } ]
+  }, {
+    "tStartMs": 909910,
+    "dDurationMs": 4650,
+    "segs": [ {
+      "utf8": "안전장치를 제거하는 AI 기업하고만 계약하겠다고 밝혔습니다"
+    } ]
+  }, {
+    "tStartMs": 914560,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "이 안전장치를 유지할 경우에는"
+    } ]
+  }, {
+    "tStartMs": 916480,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "AI를 막기 위해, 폭주를 막기 위한"
+    } ]
+  }, {
+    "tStartMs": 918550,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "가드레일을 유지할 경우에는"
+    } ]
+  }, {
+    "tStartMs": 920150,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "시스템에서 배제하겠다고 위협하고 있죠"
+    } ]
+  }, {
+    "tStartMs": 923650,
+    "dDurationMs": 3490,
+    "segs": [ {
+      "utf8": "그런데 여기서 저 아모데이의 엄청난 말이 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 928160,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "이런 위협에도 불구하고"
+    } ]
+  }, {
+    "tStartMs": 929530,
+    "dDurationMs": 3250,
+    "segs": [ {
+      "utf8": "우리가 시스템에서 추방될 수 있다는 위협에도 불구하고"
+    } ]
+  }, {
+    "tStartMs": 932780,
+    "dDurationMs": 3120,
+    "segs": [ {
+      "utf8": "우리는 입장을 바꾸지 않겠습니다"
+    } ]
+  }, {
+    "tStartMs": 935900,
+    "dDurationMs": 4320,
+    "segs": [ {
+      "utf8": "우리는 양심상 그들의 요구에 응할 수 없습니다"
+    } ]
+  }, {
+    "tStartMs": 940220,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "이게 맨 처음에 나왔던 그 멘트입니다"
+    } ]
+  }, {
+    "tStartMs": 942140,
+    "dDurationMs": 4100,
+    "segs": [ {
+      "utf8": "우리는 양심상 미 국방부의 요구에 응할 수 없다"
+    } ]
+  }, {
+    "tStartMs": 946240,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "디데이를 하루 남기고"
+    } ]
+  }, {
+    "tStartMs": 947330,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "이걸 성명을 발표했어요 기업이"
+    } ]
+  }, {
+    "tStartMs": 949850,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "우리는 그거를"
+    } ]
+  }, {
+    "tStartMs": 951050,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "너희들이 이 AI 도구를"
+    } ]
+  }, {
+    "tStartMs": 953160,
+    "dDurationMs": 3260,
+    "segs": [ {
+      "utf8": "국내 시민에 대한 대규모 감시에 사용하는 것"
+    } ]
+  }, {
+    "tStartMs": 956420,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "그리고 완전한 자율 무기에 사용하는 것"
+    } ]
+  }, {
+    "tStartMs": 959160,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "이 두 가지를 제외하지 않으면"
+    } ]
+  }, {
+    "tStartMs": 961540,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "우리는 미국 국방부의 가드레일"
+    } ]
+  }, {
+    "tStartMs": 964120,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "안전장치 제거 요구에 응할 수 없다"
+    } ]
+  }, {
+    "tStartMs": 967040,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "라고 얘기를 한 거죠"
+    } ]
+  }, {
+    "tStartMs": 968960,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "정말 대단한 일이라고 생각하는 게"
+    } ]
+  }, {
+    "tStartMs": 970440,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "이 앤트로픽은 작은 기업이 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 972840,
+    "dDurationMs": 2760,
+    "segs": [ {
+      "utf8": "비상장 기업 평가가치가 현재 550조예요"
+    } ]
+  }, {
+    "tStartMs": 975600,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "점점점 올라가고"
+    } ]
+  }, {
+    "tStartMs": 976920,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "아마 천조는 그냥 가지 않을까라고 생각될 정도로"
+    } ]
+  }, {
+    "tStartMs": 979610,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "요즘에 가장 잘 나가는, 가장 핫한 기업입니다"
+    } ]
+  }, {
+    "tStartMs": 982110,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "클로드 평가가 요즘에 미쳐 돌아가고 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 984670,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "가장 핫한 기업이라고 할 수 있고"
+    } ]
+  }, {
+    "tStartMs": 986180,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "그런데 앤트로픽이 왜 미국 국방부에"
+    } ]
+  }, {
+    "tStartMs": 988370,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "저렇게 갑자기 이념적 얘기를 내세우면서"
+    } ]
+  }, {
+    "tStartMs": 990530,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "양심상 거부를 했냐?"
+    } ]
+  }, {
+    "tStartMs": 991860,
+    "dDurationMs": 3440,
+    "segs": [ {
+      "utf8": "그거는 사실은 앤트로픽의 설립 이유를 봐야 돼요"
+    } ]
+  }, {
+    "tStartMs": 996320,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "설립 철학과 설립 목적과 설립 이유가"
+    } ]
+  }, {
+    "tStartMs": 999210,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "사실 그런 기업이긴 합니다"
+    } ]
+  }, {
+    "tStartMs": 1000820,
+    "dDurationMs": 3620,
+    "segs": [ {
+      "utf8": "물론 그렇다고 저런 결정을 내릴 수 있냐는 건 완전 다른 문제고"
+    } ]
+  }, {
+    "tStartMs": 1004440,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "대단한 결단이긴 하지만"
+    } ]
+  }, {
+    "tStartMs": 1005640,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "설립 철학은 그래요"
+    } ]
+  }, {
+    "tStartMs": 1006650,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "왜냐하면 2021년 앤트로픽이 설립됐는데"
+    } ]
+  }, {
+    "tStartMs": 1009110,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "공동 창업자 7인이 모두 오픈AI 출신이에요"
+    } ]
+  }, {
+    "tStartMs": 1012450,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "오픈AI는 원래 뭡니까?"
+    } ]
+  }, {
+    "tStartMs": 1014290,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "안전한 AI"
+    } ]
+  }, {
+    "tStartMs": 1015480,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "비영리 법인이었죠"
+    } ]
+  }, {
+    "tStartMs": 1017370,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "머스크도 비영리 법인이니까 출자했다"
+    } ]
+  }, {
+    "tStartMs": 1019820,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "그런 얘기를 하잖아요"
+    } ]
+  }, {
+    "tStartMs": 1020880,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "근데 그거를 버리고"
+    } ]
+  }, {
+    "tStartMs": 1022630,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "영리 법인으로 완전히 돌면서"
+    } ]
+  }, {
+    "tStartMs": 1024720,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "엄청나게 빠른 속도로"
+    } ]
+  }, {
+    "tStartMs": 1025870,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "AI를 개발하는 회사로 바뀝니다"
+    } ]
+  }, {
+    "tStartMs": 1028410,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "그러니까 이 아모데이와 공동 창업자들이"
+    } ]
+  }, {
+    "tStartMs": 1030850,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "오픈AI를 뛰쳐나와요"
+    } ]
+  }, {
+    "tStartMs": 1033030,
+    "dDurationMs": 3450,
+    "segs": [ {
+      "utf8": "그리고 인공지능의 안전에 대해서 굉장히 강조합니다"
+    } ]
+  }, {
+    "tStartMs": 1036480,
+    "dDurationMs": 4940,
+    "segs": [ {
+      "utf8": "안전한 AI를 만들겠다라고 설립된 데가 앤트로픽이라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1041420,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "철학은 그래요 철학은"
+    } ]
+  }, {
+    "tStartMs": 1043350,
+    "dDurationMs": 4120,
+    "segs": [ {
+      "utf8": "저 아모데이가 뉴욕타임스와 팟캐스트를 했는데"
+    } ]
+  }, {
+    "tStartMs": 1047470,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "거기서 이런 얘기를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1049300,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "AI의 군사적 오용 가능성을 강조했는데"
+    } ]
+  }, {
+    "tStartMs": 1052000,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "이렇게 얘기를 합니다"
+    } ]
+  }, {
+    "tStartMs": 1053630,
+    "dDurationMs": 3370,
+    "segs": [ {
+      "utf8": "우리 군 체계의 헌법적 보호장치는"
+    } ]
+  }, {
+    "tStartMs": 1057000,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "자기는 그렇게 바란다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1058010,
+    "dDurationMs": 5800,
+    "segs": [ {
+      "utf8": "헌법적 보호장치는 불법 명령을 거부할 인간이 있다는 전제 위에 존재한다"
+    } ]
+  }, {
+    "tStartMs": 1065160,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "위에서 누가 불법적인 명령을 내려"
+    } ]
+  }, {
+    "tStartMs": 1067960,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "뭐 쏴, 뭐 발사해, 누굴 죽여"
+    } ]
+  }, {
+    "tStartMs": 1070430,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "하지만 인간은 그걸 거부할 수가 있죠"
+    } ]
+  }, {
+    "tStartMs": 1074140,
+    "dDurationMs": 3380,
+    "segs": [ {
+      "utf8": "그게 헌법적 보호장치라고 생각한다는 겁니다 본인은"
+    } ]
+  }, {
+    "tStartMs": 1077520,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "근데 이게 AI면"
+    } ]
+  }, {
+    "tStartMs": 1079100,
+    "dDurationMs": 3770,
+    "segs": [ {
+      "utf8": "헌법적 보호장치가 없어지는 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 1082870,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "AI가 그걸 거부할까?"
+    } ]
+  }, {
+    "tStartMs": 1084900,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "AI한테 모든 권한을 줬을 때"
+    } ]
+  }, {
+    "tStartMs": 1086890,
+    "dDurationMs": 3150,
+    "segs": [ {
+      "utf8": "위에서 누군가가 불법적인 명령을 내렸을 때"
+    } ]
+  }, {
+    "tStartMs": 1090040,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "AI는 거부할 수 있을까?"
+    } ]
+  }, {
+    "tStartMs": 1092060,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "완전 자율 무기에는"
+    } ]
+  }, {
+    "tStartMs": 1093210,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "그런 보호장치가 반드시 존재한다고 볼 수 있을까?"
+    } ]
+  }, {
+    "tStartMs": 1097280,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "라는 얘기를 하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1098800,
+    "dDurationMs": 3690,
+    "segs": [ {
+      "utf8": "그 화살구가 적이 아닌 우리를 향하게 된다면"
+    } ]
+  }, {
+    "tStartMs": 1102490,
+    "dDurationMs": 2930,
+    "segs": [ {
+      "utf8": "AI는 어떤 판단을 할 것이냐"
+    } ]
+  }, {
+    "tStartMs": 1105420,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "그래서 아모데이는 이렇게 얘기합니다"
+    } ]
+  }, {
+    "tStartMs": 1106790,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "우리는 어떤 의미에서는"
+    } ]
+  }, {
+    "tStartMs": 1108610,
+    "dDurationMs": 2910,
+    "segs": [ {
+      "utf8": "AI로부터 보호받아야 하는 존재다"
+    } ]
+  }, {
+    "tStartMs": 1111520,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "안전장치를 풀면 어떤 결과가 있을지"
+    } ]
+  }, {
+    "tStartMs": 1114620,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "알 수 없다는 거고요"
+    } ]
+  }, {
+    "tStartMs": 1115900,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "그래서 이것도 신문에 나온 얘기인데"
+    } ]
+  }, {
+    "tStartMs": 1118210,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "아모데이와 그의 팀은"
+    } ]
+  }, {
+    "tStartMs": 1119530,
+    "dDurationMs": 3750,
+    "segs": [ {
+      "utf8": "자신들이 역사의 올바른 편에 서 있다고 생각한다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1123280,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "우리가 올바른 편에 있는 거야"
+    } ]
+  }, {
+    "tStartMs": 1124500,
+    "dDurationMs": 3090,
+    "segs": [ {
+      "utf8": "지금 여기서 물러나면 안 돼"
+    } ]
+  }, {
+    "tStartMs": 1127590,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "물론 이것도 있어요"
+    } ]
+  }, {
+    "tStartMs": 1128420,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "저 아모데이라는 사람은"
+    } ]
+  }, {
+    "tStartMs": 1130000,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "전통적인 민주당 지지자입니다"
+    } ]
+  }, {
+    "tStartMs": 1132220,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "왜냐하면 미국에서는 자기가 누구 지지하는지"
+    } ]
+  }, {
+    "tStartMs": 1134090,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "공개적으로 얘기하잖아요"
+    } ]
+  }, {
+    "tStartMs": 1135440,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "아모데이는 2024년 대선에서"
+    } ]
+  }, {
+    "tStartMs": 1136500,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "카멀라 해리스를 공개 지지했어요"
+    } ]
+  }, {
+    "tStartMs": 1138380,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "트럼프에 대한 반감을 숨기지 않은 인물이긴 합니다"
+    } ]
+  }, {
+    "tStartMs": 1141280,
+    "dDurationMs": 3410,
+    "segs": [ {
+      "utf8": "그런데 본인은 정치적 성향과 기업적 결정은 별개다"
+    } ]
+  }, {
+    "tStartMs": 1144690,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "라고 말해온 인물이라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1147070,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "자 그래서 놀랍게도"
+    } ]
+  }, {
+    "tStartMs": 1148310,
+    "dDurationMs": 3180,
+    "segs": [ {
+      "utf8": "앤트로픽이 국방부의 최후 통첩을 거부했어요"
+    } ]
+  }, {
+    "tStartMs": 1151490,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "그 다음에 어떤 일이 일어났냐"
+    } ]
+  }, {
+    "tStartMs": 1153200,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "헤그세스 전쟁부 장관은"
+    } ]
+  }, {
+    "tStartMs": 1154740,
+    "dDurationMs": 3580,
+    "segs": [ {
+      "utf8": "즉시 앤트로픽을 공급망 위험 기업으로 지정했습니다"
+    } ]
+  }, {
+    "tStartMs": 1158320,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "앤트로픽은 위선적이고 오만하며"
+    } ]
+  }, {
+    "tStartMs": 1160340,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "미국 군대를 굴복시키려고 한다"
+    } ]
+  }, {
+    "tStartMs": 1162450,
+    "dDurationMs": 2940,
+    "segs": [ {
+      "utf8": "즉시 공급망에서 퇴출하라"
+    } ]
+  }, {
+    "tStartMs": 1165390,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "그리고 한 발 더 나아가서"
+    } ]
+  }, {
+    "tStartMs": 1167130,
+    "dDurationMs": 4590,
+    "segs": [ {
+      "utf8": "미국 군대와 거래하는 모든 계약업체, 모든 공급업체, 모든 파트너는"
+    } ]
+  }, {
+    "tStartMs": 1171720,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "앞으로 앤트로픽과는"
+    } ]
+  }, {
+    "tStartMs": 1172910,
+    "dDurationMs": 3410,
+    "segs": [ {
+      "utf8": "어떠한 상업적 활동도 할 수 없다"
+    } ]
+  }, {
+    "tStartMs": 1176320,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "미국의 군인들은"
+    } ]
+  }, {
+    "tStartMs": 1177370,
+    "dDurationMs": 4390,
+    "segs": [ {
+      "utf8": "결코 거대 기술의 이념적 변덕의 인질로 잡혀있지 않을 것이다"
+    } ]
+  }, {
+    "tStartMs": 1181760,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "이 결정은 최종적이다"
+    } ]
+  }, {
+    "tStartMs": 1183610,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "하고 사실상 앤트로픽의 퇴출"
+    } ]
+  }, {
+    "tStartMs": 1185930,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "국방부 관련이지만 퇴출을 발표를 했고요"
+    } ]
+  }, {
+    "tStartMs": 1189270,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "여기까지만 하면"
+    } ]
+  }, {
+    "tStartMs": 1190480,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "그래도 국방 관련 사업을"
+    } ]
+  }, {
+    "tStartMs": 1191890,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "앤트로픽이 못하겠구나라고 생각할 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 1194750,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "트럼프 대통령이 가만히 있지 않았습니다"
+    } ]
+  }, {
+    "tStartMs": 1196730,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "트럼프 대통령은 모든 미국의 연방기관들은"
+    } ]
+  }, {
+    "tStartMs": 1199530,
+    "dDurationMs": 4570,
+    "segs": [ {
+      "utf8": "즉시 앤트로픽의 사용을 중단하라라고 명령을 내렸고요"
+    } ]
+  }, {
+    "tStartMs": 1204100,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "본인의 SNS를 통해서"
+    } ]
+  }, {
+    "tStartMs": 1205300,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1206780,
+    "dDurationMs": 3330,
+    "segs": [ {
+      "utf8": "미국은 급진 좌파 성향의 깨어있는 기업이"
+    } ]
+  }, {
+    "tStartMs": 1210110,
+    "dDurationMs": 3780,
+    "segs": [ {
+      "utf8": "우리의 군대가 전쟁에서 싸우고 승리하는 방식을 좌우하도록"
+    } ]
+  }, {
+    "tStartMs": 1213890,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "결코 용납하지 않을 것이다"
+    } ]
+  }, {
+    "tStartMs": 1215300,
+    "dDurationMs": 3870,
+    "segs": [ {
+      "utf8": "그 방식은 최고 사령관인 저에게 있다"
+    } ]
+  }, {
+    "tStartMs": 1219170,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "또 이렇게 얘기했죠"
+    } ]
+  }, {
+    "tStartMs": 1220290,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "앤트로픽의 좌파 광신도들은"
+    } ]
+  }, {
+    "tStartMs": 1222110,
+    "dDurationMs": 4240,
+    "segs": [ {
+      "utf8": "국방부를 압박하고 헌법이 아닌 자신들의 계약 조건을 따르도록 강요하는"
+    } ]
+  }, {
+    "tStartMs": 1226350,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "치명적인 실수를 저질렀다"
+    } ]
+  }, {
+    "tStartMs": 1228700,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "하지만"
+    } ]
+  }, {
+    "tStartMs": 1229980,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "우리는 그 기술이 필요하지도 않고 원하지도 않으며"
+    } ]
+  }, {
+    "tStartMs": 1232900,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "다시는 앤트로픽과 거래하지 않을 것이다"
+    } ]
+  }, {
+    "tStartMs": 1235790,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "우리의 운명은 앤트로픽이 결정할 수 없다"
+    } ]
+  }, {
+    "tStartMs": 1238230,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "우리의 운명은 우리가 결정하고"
+    } ]
+  }, {
+    "tStartMs": 1239790,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "현실 감각이라고 눈곱만큼도 없고"
+    } ]
+  }, {
+    "tStartMs": 1241890,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "통제에 불능한 급진 좌파 AI 회사나"
+    } ]
+  }, {
+    "tStartMs": 1244790,
+    "dDurationMs": 3030,
+    "segs": [ {
+      "utf8": "아니면 그런 사람들이 결정할 수 있는 문제가 아니다"
+    } ]
+  }, {
+    "tStartMs": 1247820,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "앞으로 앤트로픽은 미국 정부와"
+    } ]
+  }, {
+    "tStartMs": 1249750,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "그 어떤 상업적 활동도 할 수 없다"
+    } ]
+  }, {
+    "tStartMs": 1252640,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "라고 발표를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1254980,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "엄청나게 강한 발표라고 할 수 있고"
+    } ]
+  }, {
+    "tStartMs": 1257180,
+    "dDurationMs": 3220,
+    "segs": [ {
+      "utf8": "물론 민간에서 일반 미국 국민들을 대상으로"
+    } ]
+  }, {
+    "tStartMs": 1260400,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "시민들을 대상으로 하는"
+    } ]
+  }, {
+    "tStartMs": 1261850,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "그런 상업적 활동까지 막을 수는 없겠지만"
+    } ]
+  }, {
+    "tStartMs": 1263560,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "일단 정부하고의 거의 대부분"
+    } ]
+  }, {
+    "tStartMs": 1265660,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "정치야 정치"
+    } ]
+  }, {
+    "tStartMs": 1266810,
+    "dDurationMs": 3180,
+    "segs": [ {
+      "utf8": "정치는 이게 뭐 양보할 수 있는 일이 아니기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1269990,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "사실상 끊겼다고 할 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 1271880,
+    "dDurationMs": 3640,
+    "segs": [ {
+      "utf8": "이 상황에서 앤트로픽은 당일 다시 성명을 발표합니다"
+    } ]
+  }, {
+    "tStartMs": 1276360,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "어? 굽혔나?"
+    } ]
+  }, {
+    "tStartMs": 1277550,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "하고 봤더니"
+    } ]
+  }, {
+    "tStartMs": 1279350,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "오늘 오전  피트 헤그세스 미 국방장관은"
+    } ]
+  }, {
+    "tStartMs": 1281750,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "앤트로픽사를 공급망 위험 기업으로 지정하도록"
+    } ]
+  }, {
+    "tStartMs": 1284150,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "국방부에 지시했다고 밝혔다"
+    } ]
+  }, {
+    "tStartMs": 1286270,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "성명을 다시 냈어요"
+    } ]
+  }, {
+    "tStartMs": 1287120,
+    "dDurationMs": 450,
+    "segs": [ {
+      "utf8": "두 번째 성명"
+    } ]
+  }, {
+    "tStartMs": 1287570,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "두 번째 성명"
+    } ]
+  }, {
+    "tStartMs": 1288560,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "오 그러면 이제 좀 봐달라고"
+    } ]
+  }, {
+    "tStartMs": 1290820,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "뭔가 아 좀 진작 봐달라고"
+    } ]
+  }, {
+    "tStartMs": 1293470,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "내용을 보면 이렇게 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 1295220,
+    "dDurationMs": 3610,
+    "segs": [ {
+      "utf8": "앤트로픽은 국방부의 어떠한 협박이나 처벌에도"
+    } ]
+  }, {
+    "tStartMs": 1298830,
+    "dDurationMs": 3270,
+    "segs": [ {
+      "utf8": "대규모 국내 감시 또는 완전 자율 무기에 대한"
+    } ]
+  }, {
+    "tStartMs": 1302100,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "우리의 입장을 바꾸지 않을 것이다"
+    } ]
+  }, {
+    "tStartMs": 1304130,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "와이씨 진짜 노빠꾸네"
+    } ]
+  }, {
+    "tStartMs": 1306720,
+    "dDurationMs": 3850,
+    "segs": [ {
+      "utf8": "어떠한 협박이나 처벌에도 우리는 입장을 바꾸지 않을 것이다"
+    } ]
+  }, {
+    "tStartMs": 1310570,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "아 됐어 안 해"
+    } ]
+  }, {
+    "tStartMs": 1311650,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "안 하면 되지"
+    } ]
+  }, {
+    "tStartMs": 1313220,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "뭐 꺼져 이거죠 꺼져"
+    } ]
+  }, {
+    "tStartMs": 1314600,
+    "dDurationMs": 460,
+    "segs": [ {
+      "utf8": "안 해"
+    } ]
+  }, {
+    "tStartMs": 1315060,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "너희랑 장사 안 해"
+    } ]
+  }, {
+    "tStartMs": 1316720,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "와 진짜 뭐 강하다고 할 수 있고"
+    } ]
+  }, {
+    "tStartMs": 1319580,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "앤트로픽은 이러한 지정이"
+    } ]
+  }, {
+    "tStartMs": 1320790,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "법적으로 부당할 뿐만 아니라"
+    } ]
+  }, {
+    "tStartMs": 1322250,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "정부와 협상하는 모든 미국 기업에 대한"
+    } ]
+  }, {
+    "tStartMs": 1324310,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "위험한 선례를 남길 것이라고 생각한다"
+    } ]
+  }, {
+    "tStartMs": 1326400,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "우리는 공급망 위험 지적에 대해서"
+    } ]
+  }, {
+    "tStartMs": 1328030,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "법적 소송을 제기할 것이다"
+    } ]
+  }, {
+    "tStartMs": 1330370,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "그리고 헤그세스 전쟁부 장관"
+    } ]
+  }, {
+    "tStartMs": 1332350,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "장관의 주장에는 법적 권한도 없다"
+    } ]
+  }, {
+    "tStartMs": 1335170,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "장관은 군과 거래하는"
+    } ]
+  }, {
+    "tStartMs": 1336430,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "모든 기업이 앤트로픽과 거래하는 것을 제한하겠다고 말했으나"
+    } ]
+  }, {
+    "tStartMs": 1339390,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "이러한 발언은 법적 권한이 없다"
+    } ]
+  }, {
+    "tStartMs": 1341700,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "법적으로는 공급망 위험지정은"
+    } ]
+  }, {
+    "tStartMs": 1343560,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "국방부와 앤트로픽의 관계를 지정하는 거지"
+    } ]
+  }, {
+    "tStartMs": 1346070,
+    "dDurationMs": 4730,
+    "segs": [ {
+      "utf8": "왜 우리가 국방부와 거래하는 다른 기업과 거래하는 것까지 막냐?"
+    } ]
+  }, {
+    "tStartMs": 1350800,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "그건 법적 권한이 없는 거야"
+    } ]
+  }, {
+    "tStartMs": 1352600,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "물론 이 기업이"
+    } ]
+  }, {
+    "tStartMs": 1353990,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "우리와 거래하는 기업이"
+    } ]
+  }, {
+    "tStartMs": 1354890,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "국방부와 일하는 프로젝트에"
+    } ]
+  }, {
+    "tStartMs": 1356400,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "우리가 들어가는 건 문제가 되겠지"
+    } ]
+  }, {
+    "tStartMs": 1357970,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "하지만 그게 아니고"
+    } ]
+  }, {
+    "tStartMs": 1359160,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "그냥 다른 기업과 거래하는 걸"
+    } ]
+  }, {
+    "tStartMs": 1360500,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "왜 미 국방부가 법적 권한도 없는 주제에"
+    } ]
+  }, {
+    "tStartMs": 1363140,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "이래라 저래라 하냐?"
+    } ]
+  }, {
+    "tStartMs": 1364100,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "우리는 소송을 제기할 것이다"
+    } ]
+  }, {
+    "tStartMs": 1366020,
+    "dDurationMs": 3090,
+    "segs": [ {
+      "utf8": "라고 머리를 들이... 받았는데"
+    } ]
+  }, {
+    "tStartMs": 1369110,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "정말 머리를 들이받았다고 할 수 있고"
+    } ]
+  }, {
+    "tStartMs": 1371170,
+    "dDurationMs": 3190,
+    "segs": [ {
+      "utf8": "마지막으로 우리를 지지해주신 모든 분에게 깊은 감사드립니다"
+    } ]
+  }, {
+    "tStartMs": 1374360,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "며칠 동안 지지를 표명해주신 사용자 여러분"
+    } ]
+  }, {
+    "tStartMs": 1376270,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "업계 동료 깊이 감사드립니다"
+    } ]
+  }, {
+    "tStartMs": 1378450,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "물러서지 않겠습니다"
+    } ]
+  }, {
+    "tStartMs": 1379470,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "이렇게 얘기하면서"
+    } ]
+  }, {
+    "tStartMs": 1380670,
+    "dDurationMs": 3170,
+    "segs": [ {
+      "utf8": "정말 뭐 노빠꾸 발표가 끝났다고 할 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 1383840,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "그런데 아까 잠깐 나왔지만"
+    } ]
+  }, {
+    "tStartMs": 1385860,
+    "dDurationMs": 2970,
+    "segs": [ {
+      "utf8": "모든 기업이 국방부 요청을 거절한 것은 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 1388830,
+    "dDurationMs": 2760,
+    "segs": [ {
+      "utf8": "오픈AI는 미 국방부와 기밀 네트워크에"
+    } ]
+  }, {
+    "tStartMs": 1391590,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "자사 모델을 배포하는 데 합의했습니다"
+    } ]
+  }, {
+    "tStartMs": 1394620,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "그럼 오픈AI는"
+    } ]
+  }, {
+    "tStartMs": 1395660,
+    "dDurationMs": 4320,
+    "segs": [ {
+      "utf8": "아까 전에 대규모 감시, 완전 자율적 AI 결정권"
+    } ]
+  }, {
+    "tStartMs": 1399980,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "이걸 다 오케이 한 겁니까?"
+    } ]
+  }, {
+    "tStartMs": 1401810,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "샘 올트먼이 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1404100,
+    "dDurationMs": 3230,
+    "segs": [ {
+      "utf8": "우리는 국내 대규모 감시 금지와 자율 무기 시스템에 대한"
+    } ]
+  }, {
+    "tStartMs": 1407330,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "인간의 책임을 요구했다"
+    } ]
+  }, {
+    "tStartMs": 1409250,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "어?"
+    } ]
+  }, {
+    "tStartMs": 1410220,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "그거 안 돼서 앤트로픽은 거래 안 했는데"
+    } ]
+  }, {
+    "tStartMs": 1412810,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "미 국방부는 이 원칙에 동의하고"
+    } ]
+  }, {
+    "tStartMs": 1414780,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "합의서에 포함시켜준 걸 오케이 했다"
+    } ]
+  }, {
+    "tStartMs": 1417810,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "해주던데?"
+    } ]
+  }, {
+    "tStartMs": 1419940,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "잠깐만"
+    } ]
+  }, {
+    "tStartMs": 1420790,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "누구는 해주고 누구나 안 해주는 건가?"
+    } ]
+  }, {
+    "tStartMs": 1422940,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "취재 내용을 보면 이렇게 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 1424830,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "시한 마감을 앞두고"
+    } ]
+  }, {
+    "tStartMs": 1426440,
+    "dDurationMs": 3450,
+    "segs": [ {
+      "utf8": "미 국방부가 어느 정도 양보책을 내놨긴 내놓은 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 1429890,
+    "dDurationMs": 4280,
+    "segs": [ {
+      "utf8": "펜타곤은 대량 감시 무기 및 자율 무기를 제한하는 연방법과"
+    } ]
+  }, {
+    "tStartMs": 1434170,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "군 내부 정책을 서면으로 인정해줄게"
+    } ]
+  }, {
+    "tStartMs": 1437120,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "라고 제안했다라고 펜타곤이 얘기를 했어요"
+    } ]
+  }, {
+    "tStartMs": 1439770,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "원하는 거 서면으로 인정해줄게"
+    } ]
+  }, {
+    "tStartMs": 1442310,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "근데 앤트로픽은 왜 안 했냐?"
+    } ]
+  }, {
+    "tStartMs": 1444000,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "앤트로픽은 이렇게 얘기합니다"
+    } ]
+  }, {
+    "tStartMs": 1445910,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "그 새로운 제안은"
+    } ]
+  }, {
+    "tStartMs": 1448070,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "어지러운 법률 용어로 가득 차있어서"
+    } ]
+  }, {
+    "tStartMs": 1450750,
+    "dDurationMs": 4190,
+    "segs": [ {
+      "utf8": "언제든지 안전장치를 무시할 수 있도록 사실상 허용하고 있다"
+    } ]
+  }, {
+    "tStartMs": 1455980,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "그러니까 뭘 많이 써놨는데"
+    } ]
+  }, {
+    "tStartMs": 1457060,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "안 될 것 같지만"
+    } ]
+  }, {
+    "tStartMs": 1458740,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "누구의 판단으로 될 수 있다"
+    } ]
+  }, {
+    "tStartMs": 1460330,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "이런 게 있었겠죠"
+    } ]
+  }, {
+    "tStartMs": 1461140,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "안 보더라도"
+    } ]
+  }, {
+    "tStartMs": 1461920,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "흔히 말하는 법적으로"
+    } ]
+  }, {
+    "tStartMs": 1463620,
+    "dDurationMs": 4180,
+    "segs": [ {
+      "utf8": "특정한 상황에서는 아니면 이럴 수도 있고 저럴 수도 있지만"
+    } ]
+  }, {
+    "tStartMs": 1467800,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "지금은 아니지만 나중에는 될 수 있다"
+    } ]
+  }, {
+    "tStartMs": 1469520,
+    "dDurationMs": 570,
+    "segs": [ {
+      "utf8": "이런 식으로 하여튼"
+    } ]
+  }, {
+    "tStartMs": 1470090,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "뭔가 자기들 마음에 안 든 모양이야"
+    } ]
+  }, {
+    "tStartMs": 1472200,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "언제든지 무시할 수 있도록 표현했을 뿐이지"
+    } ]
+  }, {
+    "tStartMs": 1474660,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "그거는 자기들의 요구사항을 들어준 게 아니다"
+    } ]
+  }, {
+    "tStartMs": 1477340,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "라고 얘기를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1479230,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "그런데 미 국방부 차관이"
+    } ]
+  }, {
+    "tStartMs": 1481410,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "앤트로픽을 맹렬히 비난하면서"
+    } ]
+  }, {
+    "tStartMs": 1482970,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "얼마 전에 SNS에 올렸는데"
+    } ]
+  }, {
+    "tStartMs": 1484440,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 1485720,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "아모데이는 미군을 개인적으로 통제하려는 목적이 있다"
+    } ]
+  }, {
+    "tStartMs": 1488680,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "국가의 안전을 위협에 빠트리는 것"
+    } ]
+  }, {
+    "tStartMs": 1490430,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "이런 거를 개의치 않아"
+    } ]
+  }, {
+    "tStartMs": 1491910,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "전혀 애국적인 모습을 보여주지 않고 있어"
+    } ]
+  }, {
+    "tStartMs": 1494120,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "그리고 마지막 줄이 핵심인데"
+    } ]
+  }, {
+    "tStartMs": 1495250,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1496370,
+    "dDurationMs": 4420,
+    "segs": [ {
+      "utf8": "어느 정도는 군대가 옳은 일을 할 거라고 믿어야 된다"
+    } ]
+  }, {
+    "tStartMs": 1500790,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "미군을 믿어"
+    } ]
+  }, {
+    "tStartMs": 1501900,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "미국 국방부를 믿고"
+    } ]
+  }, {
+    "tStartMs": 1503460,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "옳은 일을 할 거라고 믿어야지"
+    } ]
+  }, {
+    "tStartMs": 1504990,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "야 너희들은 못 믿겠으니까"
+    } ]
+  }, {
+    "tStartMs": 1506880,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "하나하나 뭐 이걸 완벽하게 못할 거야"
+    } ]
+  }, {
+    "tStartMs": 1508980,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "라고 박으라고 하는데"
+    } ]
+  }, {
+    "tStartMs": 1510150,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "그렇게 유연성 없게 어떻게 만드냐"
+    } ]
+  }, {
+    "tStartMs": 1512720,
+    "dDurationMs": 2930,
+    "segs": [ {
+      "utf8": "군대가 옳은 일을 할 거라고 믿어라라고 적었는데"
+    } ]
+  }, {
+    "tStartMs": 1515650,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "이걸 못 믿으니까 거절을 한 게 아닌가 개인적으로는"
+    } ]
+  }, {
+    "tStartMs": 1518750,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "물론 뭐 조항을 봐야겠지만"
+    } ]
+  }, {
+    "tStartMs": 1520490,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "조항이 바깥으로 나오는 건 아니니까"
+    } ]
+  }, {
+    "tStartMs": 1522300,
+    "dDurationMs": 3120,
+    "segs": [ {
+      "utf8": "그래서 아마 이견이 있었지 않나 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1525420,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "블룸버그는 이 사건에 대해서 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1527580,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "이건 단순한 계약 분쟁이 아니다"
+    } ]
+  }, {
+    "tStartMs": 1530220,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "AI 전쟁의 경계선에 있는 사건이다"
+    } ]
+  }, {
+    "tStartMs": 1533660,
+    "dDurationMs": 2970,
+    "segs": [ {
+      "utf8": "이 사건에서 우리한테 얘기하는 질문은 이거다"
+    } ]
+  }, {
+    "tStartMs": 1536630,
+    "dDurationMs": 3810,
+    "segs": [ {
+      "utf8": "AI가 전쟁에서 어디까지 쓰일 수 있는지"
+    } ]
+  }, {
+    "tStartMs": 1540440,
+    "dDurationMs": 3260,
+    "segs": [ {
+      "utf8": "그거를 어디까지 열어줘야 할지"
+    } ]
+  }, {
+    "tStartMs": 1543700,
+    "dDurationMs": 3280,
+    "segs": [ {
+      "utf8": "그거를 특정 개인이나 조직에게 열어줘야 할지"
+    } ]
+  }, {
+    "tStartMs": 1548400,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "이제 곧 우리가 답해야 될 핵심 질문들이"
+    } ]
+  }, {
+    "tStartMs": 1551260,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "겉으로 불거져 나오면서"
+    } ]
+  }, {
+    "tStartMs": 1552790,
+    "dDurationMs": 4340,
+    "segs": [ {
+      "utf8": "이런 계약 분쟁으로 이어진 게 아니냐라는 얘기를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1557130,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "무시무시한 시대죠"
+    } ]
+  }, {
+    "tStartMs": 1558160,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "무시무시한 시대고"
+    } ]
+  }, {
+    "tStartMs": 1559640,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "앤트로픽 말하는 거는"
+    } ]
+  }, {
+    "tStartMs": 1561120,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "저렇게 자기의 옳고 그름을 떠나서"
+    } ]
+  }, {
+    "tStartMs": 1563240,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "맞고 틀리고 떠나서"
+    } ]
+  }, {
+    "tStartMs": 1565340,
+    "dDurationMs": 3880,
+    "segs": [ {
+      "utf8": "철학이 있다고 정부의 압박, 국방부의 압박"
+    } ]
+  }, {
+    "tStartMs": 1569220,
+    "dDurationMs": 4580,
+    "segs": [ {
+      "utf8": "트럼프 대통령의 압박을 맞받아 치는 건 정말 쉽지 않은데"
+    } ]
+  }, {
+    "tStartMs": 1573800,
+    "dDurationMs": 5500,
+    "segs": [ {
+      "utf8": "진짜 옳고 그름을 떠나서 보통 사람이 아니구나라는 생각이 절로 듭니다"
+    } ]
+  } ]
+}
