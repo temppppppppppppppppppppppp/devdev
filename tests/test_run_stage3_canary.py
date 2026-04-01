@@ -196,3 +196,47 @@ def test_parse_args_full():
     assert args.command == "full"
     assert args.target_ep == 8
     assert args.force
+
+
+def test_prepare_stage3_canary_project_allows_partial_from_ep(tmp_path):
+    from modules.core import stage4_canary_tools
+
+    source = tmp_path / "source_project"
+    target = tmp_path / "target_project"
+    source.mkdir()
+
+    with (
+        patch.object(stage4_canary_tools.shutil, "copytree") as copytree,
+        patch.object(stage4_canary_tools, "reset_stage3_outputs", return_value={"from_ep": 5}) as reset_outputs,
+        patch.object(stage4_canary_tools, "_write_json") as write_json,
+    ):
+        payload = stage4_canary_tools.prepare_stage3_canary_project(source, target, from_ep=5, force=False)
+
+    copytree.assert_called_once_with(source, target)
+    reset_outputs.assert_called_once_with(target, from_ep=5)
+    write_json.assert_called_once()
+    assert payload["from_ep"] == 5
+
+
+def test_reset_stage3_outputs_allows_partial_from_ep(tmp_path):
+    from modules.core import stage4_canary_tools
+
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+    db_path = project_root / "project_data.db"
+    db_path.write_text("", encoding="utf-8")
+
+    fake_db = MagicMock()
+    with (
+        patch.object(stage4_canary_tools, "DBManager", return_value=fake_db),
+        patch.object(stage4_canary_tools, "_collect_stage3_cleanup_impact", return_value={"stage3_attempts": 4}) as impact,
+        patch.object(stage4_canary_tools, "_delete_stage3_db_outputs") as delete_outputs,
+        patch.object(stage4_canary_tools, "_clear_stage3_files", return_value={"blueprint_files_removed": 4}) as clear_files,
+    ):
+        payload = stage4_canary_tools.reset_stage3_outputs(project_root, from_ep=5)
+
+    impact.assert_called_once_with(fake_db, from_ep=5)
+    delete_outputs.assert_called_once_with(fake_db, from_ep=5)
+    clear_files.assert_called_once_with(project_root, from_ep=5)
+    fake_db.close.assert_called_once()
+    assert payload["from_ep"] == 5

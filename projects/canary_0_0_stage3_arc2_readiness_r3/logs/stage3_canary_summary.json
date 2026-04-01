@@ -1,0 +1,251 @@
+{
+  "summary_role": "stage3_only_canary",
+  "project": "canary_0_0_stage3_arc2_readiness_r3",
+  "project_locator": "projects/canary_0_0_stage3_arc2_readiness_r3",
+  "project_root": "C:\\Users\\User\\Desktop\\글도비\\projects\\canary_0_0_stage3_arc2_readiness_r3",
+  "target_ep": 9,
+  "prepared_from": "0_0",
+  "latest_session_id": "20260401_075815",
+  "stage3_attempts": 9,
+  "blueprint_db_count": 9,
+  "blueprint_ep_nums": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "blueprint_file_count": 9,
+  "blueprint_files": [
+    "blueprint_0001.txt",
+    "blueprint_0002.txt",
+    "blueprint_0003.txt",
+    "blueprint_0004.txt",
+    "blueprint_0005.txt",
+    "blueprint_0006.txt",
+    "blueprint_0007.txt",
+    "blueprint_0008.txt",
+    "blueprint_0009.txt"
+  ],
+  "attempt_detail": [
+    {
+      "ep_num": 1,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "all_verdicts": [
+        "PASS"
+      ]
+    },
+    {
+      "ep_num": 2,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 90,
+      "all_verdicts": [
+        "PASS"
+      ]
+    },
+    {
+      "ep_num": 3,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "all_verdicts": [
+        "PASS"
+      ]
+    },
+    {
+      "ep_num": 4,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 93,
+      "all_verdicts": [
+        "PASS"
+      ]
+    },
+    {
+      "ep_num": 5,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 85,
+      "all_verdicts": [
+        "PASS"
+      ]
+    },
+    {
+      "ep_num": 6,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 90,
+      "all_verdicts": [
+        "PASS"
+      ]
+    },
+    {
+      "ep_num": 7,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "all_verdicts": [
+        "PASS"
+      ]
+    },
+    {
+      "ep_num": 8,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "all_verdicts": [
+        "PASS"
+      ]
+    },
+    {
+      "ep_num": 9,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "all_verdicts": [
+        "PASS"
+      ]
+    }
+  ],
+  "episode_telemetry": [
+    {
+      "ep_num": 1,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "llm_call_count": 7,
+      "total_duration_ms": 285818,
+      "total_cost_usd": 0.247216
+    },
+    {
+      "ep_num": 2,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 90,
+      "llm_call_count": 7,
+      "total_duration_ms": 316645,
+      "total_cost_usd": 0.273811
+    },
+    {
+      "ep_num": 3,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "llm_call_count": 18,
+      "total_duration_ms": 1021612,
+      "total_cost_usd": 0.68792
+    },
+    {
+      "ep_num": 4,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 93,
+      "llm_call_count": 7,
+      "total_duration_ms": 418799,
+      "total_cost_usd": 0.303878
+    },
+    {
+      "ep_num": 5,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 85,
+      "llm_call_count": 33,
+      "total_duration_ms": 1438538,
+      "total_cost_usd": 1.213944
+    },
+    {
+      "ep_num": 6,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 90,
+      "llm_call_count": 74,
+      "total_duration_ms": 2818819,
+      "total_cost_usd": 2.608718
+    },
+    {
+      "ep_num": 7,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "llm_call_count": 13,
+      "total_duration_ms": 636526,
+      "total_cost_usd": 0.722959
+    },
+    {
+      "ep_num": 8,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "llm_call_count": 16,
+      "total_duration_ms": 651529,
+      "total_cost_usd": 0.718518
+    },
+    {
+      "ep_num": 9,
+      "attempt_count": 1,
+      "final_verdict": "PASS",
+      "final_score": 95,
+      "llm_call_count": 8,
+      "total_duration_ms": 411395,
+      "total_cost_usd": 0.635529
+    }
+  ],
+  "sink_alignment_summary": {
+    "stage": 3,
+    "session_filter": "20260401_075815",
+    "attempts_considered": 5,
+    "coverage": {
+      "stage_attempts": 5,
+      "pass_rate_monitor": 5,
+      "director_selections": 5,
+      "episode_production": 0,
+      "session_decisions": 5
+    },
+    "complete_final_attempts": 5,
+    "director_lifecycle_attempts": 0,
+    "complete_lifecycle_attempts": 0,
+    "final_sink_missing": {},
+    "lifecycle_sink_missing": {},
+    "lifecycle_missing_in_final_sinks": {},
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [],
+    "repair_scope_mismatches": [],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [],
+    "selection_reason_mismatches": [],
+    "verdict_reason_mismatches": [],
+    "fix_scope_mismatches": [],
+    "gate_repair_metadata_missing": [],
+    "rationale_metadata_missing": [],
+    "artifact_missing_files": [],
+    "selection_companion_pre_final_rows": [],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {},
+    "session_scoped_attempts": 5,
+    "legacy_key_attempts": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "ok"
+  },
+  "hard_gates": {
+    "status": "pass",
+    "errors": [],
+    "warnings": []
+  }
+}

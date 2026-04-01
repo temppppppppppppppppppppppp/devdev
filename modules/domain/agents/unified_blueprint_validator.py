@@ -25,6 +25,7 @@ import logging
 import re
 
 from modules.core.constants import AIModels, Stage2Limits
+from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _get_agent_default_model
 
@@ -49,7 +50,46 @@ _STOP_LINE_COMMON_TOKENS = {
     "이후",
     "화",
 }
-_BINDING_PREVALIDATION_CATEGORIES = {"scene_completeness", "arc_timeline", "capital_unit"}
+_BINDING_PREVALIDATION_CATEGORIES = {
+    "scene_completeness",
+    "arc_timeline",
+    "capital_unit",
+    "opening_anchor",
+    "mission_clarity",
+    "timeline_specificity",
+    "protagonist_state",
+    "fact_lock_institution",
+    "tactical_semantic_fidelity",
+}
+_TACTICAL_INTRUSION_ENTRY_MARKERS = (
+    "취객",
+    "난입",
+    "들이닥",
+    "무단침입",
+    "괴한",
+    "습격",
+    "침입자",
+    "철문",
+    "그림자",
+    "심부름센터",
+    "직원",
+)
+_TACTICAL_INTRUSION_CONFLICT_MARKERS = (
+    "멱살",
+    "결박",
+    "제압",
+    "처리",
+    "대응",
+    "차단",
+    "쫓아낸",
+    "도망치",
+    "위협",
+    "협박",
+    "박살",
+    "쇠파이프",
+    "쇠지렛대",
+    "군화",
+)
 
 
 def _safe_int(value, default=0):
@@ -179,7 +219,7 @@ class UnifiedBlueprintValidator:
         fix_scope_reasoning: str,
     ) -> tuple[str, str, str, str, str, list[dict]]:
         binding_issues = self._collect_binding_prevalidation_issues(issues)
-        if verdict != "PASS" or not binding_issues:
+        if verdict == "REJECT" or not binding_issues:
             return verdict, feedback, verdict_reason, fix_scope, fix_scope_reasoning, binding_issues
 
         snippets = [
@@ -195,7 +235,8 @@ class UnifiedBlueprintValidator:
         merged_scope_reasoning = str(
             fix_scope_reasoning or "Binding Python prevalidation invariants require bounded repair before plain PASS."
         )
-        return "PASS_WITH_FIX", merged_feedback, merged_reason, merged_scope, merged_scope_reasoning, binding_issues
+        merged_verdict = "PASS_WITH_FIX" if verdict in {"PASS", "PASS_WITH_WARNING"} else verdict
+        return merged_verdict, merged_feedback, merged_reason, merged_scope, merged_scope_reasoning, binding_issues
 
     @staticmethod
     def _extract_stop_line_clauses(text: str) -> list[str]:
@@ -1007,6 +1048,21 @@ class UnifiedBlueprintValidator:
             )
         )
         issues.extend(
+            self._collect_tactical_semantic_fidelity_issues(
+                blueprint=blueprint,
+                integrated=integrated,
+                arc_data=arc_data,
+                constraint_block=constraint_block,
+            )
+        )
+        issues.extend(
+            self._collect_stage4_readiness_contract_issues(
+                blueprint=blueprint,
+                scenes=scenes,
+                scene_count=scene_count,
+            )
+        )
+        issues.extend(
             self._collect_scenario_density_issues(
                 integrated=integrated,
                 scenes=scenes,
@@ -1470,6 +1526,119 @@ class UnifiedBlueprintValidator:
             }
         ]
 
+    def _collect_stage4_readiness_contract_issues(
+        self,
+        *,
+        blueprint: dict,
+        scenes,
+        scene_count: int,
+    ) -> list[dict]:
+        """Flag missing Stage4-readiness contract fields before Director compare."""
+        issues: list[dict] = []
+
+        first_scene = None
+        if isinstance(scenes, dict):
+            candidate = scenes.get("scene_1")
+            if isinstance(candidate, dict):
+                first_scene = candidate
+            else:
+                for scene_value in scenes.values():
+                    if isinstance(scene_value, dict):
+                        first_scene = scene_value
+                        break
+        elif isinstance(scenes, list):
+            for scene_value in scenes:
+                if isinstance(scene_value, dict):
+                    first_scene = scene_value
+                    break
+
+        start_location = str(blueprint.get("start_location", "") or blueprint.get("location", "") or "").strip()
+        time_flow = str(blueprint.get("time_flow", "") or "").strip()
+        first_title = str((first_scene or {}).get("title", "") or "").strip()
+        first_location = str((first_scene or {}).get("location", "") or "").strip()
+        opening_missing: list[str] = []
+        if not start_location:
+            opening_missing.append("start_location")
+        if not time_flow:
+            opening_missing.append("time_flow")
+        if scene_count > 0 and not first_title:
+            opening_missing.append("scene_1.title")
+        if scene_count > 0 and not first_location:
+            opening_missing.append("scene_1.location")
+        if opening_missing:
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "opening_anchor",
+                    "issue": f"opening anchor 계약 누락: {', '.join(opening_missing)}",
+                    "evidence": f"missing_fields={opening_missing}",
+                    "fix_hint": "start_location, time_flow, scene_1.title, scene_1.location을 구조적으로 채우기",
+                }
+            )
+
+        core_tension = str(blueprint.get("core_tension", "") or "").strip()
+        expected_ending = str(blueprint.get("expected_ending", "") or blueprint.get("ending_hook", "") or "").strip()
+        target_beat = str(blueprint.get("target_beat", "") or "").strip()
+        if max(len(core_tension), len(expected_ending), len(target_beat)) < 8:
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "mission_clarity",
+                    "issue": "episode mission 불명확: core_tension/expected_ending/target_beat가 모두 약하거나 비어 있음",
+                    "evidence": "missing_mission_contract=true",
+                    "fix_hint": "이번 화 핵심 갈등과 도착점을 core_tension 또는 expected_ending에 명시",
+                }
+            )
+
+        ending_state = blueprint.get("ending_state", {})
+        ending_timeline = ""
+        if isinstance(ending_state, dict):
+            raw_timeline = ending_state.get("timeline", {})
+            if isinstance(raw_timeline, dict):
+                ending_timeline = str(
+                    raw_timeline.get("표현") or raw_timeline.get("expression") or raw_timeline.get("text") or ""
+                ).strip()
+            else:
+                ending_timeline = str(raw_timeline or "").strip()
+        timeline_specific = bool(
+            re.search(r"\d{4}년|\d{1,2}월|오전|오후|새벽|아침|점심|저녁|밤|심야|중순|초|말", time_flow)
+        )
+        if not timeline_specific and not ending_timeline:
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "timeline_specificity",
+                    "issue": "timeline specificity 부족: time_flow가 모호하고 ending_state.timeline도 비어 있음",
+                    "evidence": f"time_flow={time_flow!r}, ending_timeline={ending_timeline!r}",
+                    "fix_hint": "time_flow 또는 ending_state.timeline에 구체적 시간대를 명시",
+                }
+            )
+
+        protagonist_state = blueprint.get("protagonist_state", {})
+        informative_slots = 0
+        if isinstance(protagonist_state, dict):
+            for value in protagonist_state.values():
+                if isinstance(value, str) and value.strip():
+                    informative_slots += 1
+                elif isinstance(value, list) and any(str(item or "").strip() for item in value):
+                    informative_slots += 1
+                elif isinstance(value, dict) and value:
+                    informative_slots += 1
+                elif value not in ("", None, [], {}):
+                    informative_slots += 1
+        if informative_slots == 0:
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "protagonist_state",
+                    "issue": "protagonist_state 비어 있음: 현재 주인공 상태가 구조적으로 전달되지 않음",
+                    "evidence": "informative_slots=0",
+                    "fix_hint": "mood, injuries, equipment, objective 등 현재 상태를 최소 1개 이상 명시",
+                }
+            )
+
+        return issues
+
     @staticmethod
     def _parse_timeline_point(raw, *, pick: str) -> tuple[int, int] | None:
         if isinstance(raw, dict):
@@ -1526,6 +1695,72 @@ class UnifiedBlueprintValidator:
                 "issue": f"ending_state.timeline 불일치: blueprint '{bp_expr}' vs arc '{arc_expr}'",
                 "evidence": f"blueprint_timeline={bp_end}, arc_timeline={arc_end}",
                 "fix_hint": "ending_state.timeline과 time_flow를 arc state_changes.timeline 종료 시점에 맞추기",
+            }
+        ]
+
+    def _collect_tactical_semantic_fidelity_issues(
+        self,
+        *,
+        blueprint: dict,
+        integrated: str,
+        arc_data: dict | None,
+        constraint_block: dict,
+    ) -> list[dict]:
+        """Flag unauthorized physical-threat/action invention that is absent from current episode tactical authority."""
+        if not integrated:
+            return []
+
+        ep_num = _safe_int(blueprint.get("ep_num") or blueprint.get("episode_number"), 0)
+        must_focus = constraint_block.get("must_focus", {}) if isinstance(constraint_block, dict) else {}
+        tactical_excerpt = str(must_focus.get("content", "") or "").strip() if isinstance(must_focus, dict) else ""
+        if not tactical_excerpt and isinstance(arc_data, dict) and ep_num > 0:
+            tactical_excerpt = extract_episode_tactical(
+                arc_data.get("tactical_doc", ""),
+                ep_num,
+                episode_details=arc_data.get("episode_details"),
+                fallback_full=False,
+            ).strip()
+        if not tactical_excerpt:
+            return []
+
+        tactical_lower = tactical_excerpt.lower()
+        if any(marker in tactical_lower for marker in _TACTICAL_INTRUSION_ENTRY_MARKERS) and any(
+            marker in tactical_lower for marker in _TACTICAL_INTRUSION_CONFLICT_MARKERS
+        ):
+            return []
+
+        scene_parts: list[str] = []
+        for scene in self._iter_scene_entries(blueprint.get("scene_breakdown", {})):
+            if not isinstance(scene, dict):
+                continue
+            for key in ("title", "summary", "goal", "description", "location"):
+                value = str(scene.get(key, "") or "").strip()
+                if value:
+                    scene_parts.append(value)
+            key_events = scene.get("key_events", [])
+            if isinstance(key_events, list):
+                scene_parts.extend(str(item).strip() for item in key_events if str(item).strip())
+
+        combined_lower = "\n".join([integrated, *scene_parts]).lower()
+        entry_hits = [marker for marker in _TACTICAL_INTRUSION_ENTRY_MARKERS if marker in combined_lower]
+        conflict_hits = [marker for marker in _TACTICAL_INTRUSION_CONFLICT_MARKERS if marker in combined_lower]
+        if not entry_hits or not conflict_hits:
+            return []
+
+        entry_summary = ", ".join(entry_hits[:3])
+        conflict_summary = ", ".join(conflict_hits[:3])
+        return [
+            {
+                "severity": "CRITICAL",
+                "category": "tactical_semantic_fidelity",
+                "issue": (
+                    "episode tactical authority에 없는 물리 위협/난입 이벤트가 blueprint에 새로 삽입됨"
+                ),
+                "evidence": (
+                    f"entry_markers={entry_summary}; conflict_markers={conflict_summary}; "
+                    f"tactical_excerpt={tactical_excerpt[:120]}"
+                ),
+                "fix_hint": "현재 화 tactical authority에 없는 난입/괴한/물리 충돌 이벤트를 제거하고 지정된 핵심 사건 축으로 정렬",
             }
         ]
 

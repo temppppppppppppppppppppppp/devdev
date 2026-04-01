@@ -1,14 +1,23 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-03-31T07:35:48.699627+00:00",
+  "generated_at": "2026-04-01T01:33:45.327361+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 2,
+  "active_item_count": 3,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
-    "canonical_path": "docs/2026-03-31/active-temp-execution-roadmap.md",
+    "canonical_path": "docs/2026-04-01/active-temp-execution-roadmap.md",
     "status": "active"
   },
   "items": [
+    {
+      "topic": "0_0-stage2-stage3-stage4-readiness-remediation",
+      "temp_path": "docs/temp/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-01/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md",
+      "status": "completed",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
     {
       "topic": "frontier-lag-soak-canary-wave1",
       "temp_path": "docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md",

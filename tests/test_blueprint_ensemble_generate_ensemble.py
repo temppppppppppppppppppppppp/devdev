@@ -156,6 +156,59 @@ def test_build_blueprint_prompt_bundle_uses_cache_stub_and_full_fallback():
     assert "HUD_PAYLOAD" in fallback
 
 
+def test_prepare_blueprint_ensemble_context_caches_constraints_before_arc_focus():
+    agent = _make_agent()
+    captured = {}
+
+    def _capture_cache(**kwargs):
+        captured["content"] = kwargs["content"]
+        return {"cache_name": "cache/bp"}
+
+    agent._resolve_blueprint_arc_focus = MagicMock(return_value="ARC_FOCUS_PAYLOAD")
+    agent._resolve_blueprint_ensemble_genre = MagicMock(return_value=GenreTypes.WUXIA)
+    agent._format_constraints = MagicMock(return_value="CONSTRAINTS_PAYLOAD")
+    agent._format_prev_info_expanded = MagicMock(return_value="PREV_INFO_PAYLOAD")
+    agent._build_hud_context = MagicMock(return_value="HUD_PAYLOAD")
+    agent._get_or_create_context_cache = MagicMock(side_effect=_capture_cache)
+
+    result = agent._prepare_blueprint_ensemble_context(
+        ep_num=11,
+        arc_data={},
+        constraint_block={},
+        prev_blueprint=None,
+        prev_blueprints=None,
+        prev_manuscripts_text="",
+        state_tracker=None,
+    )
+
+    shared_context = captured["content"]
+    assert shared_context.index("CONSTRAINTS_PAYLOAD") < shared_context.index("ARC_FOCUS_PAYLOAD")
+    assert result["cache_name"] == "cache/bp"
+
+
+def test_build_blueprint_prompt_bundle_places_constraints_before_arc_mission():
+    agent = _make_agent()
+
+    prompt, fallback = agent._build_blueprint_prompt_bundle(
+        ep_num=11,
+        arc_focus="ARC_FOCUS_PAYLOAD",
+        constraints_str="CONSTRAINTS_PAYLOAD",
+        prev_info="PREV_INFO_PAYLOAD",
+        strategy={"display": "action", "directive": "directive"},
+        protagonist_name="hero",
+        protagonist_instructions="do the thing",
+        extra_directive="",
+        hud_context="HUD_PAYLOAD",
+        pov_constraint="POV_CONSTRAINT",
+        reader_feedback="",
+        cache_name="",
+    )
+
+    assert prompt.index("### [Constraint Stack / 제약 조건]") < prompt.index("### [Arc Mission / 이번 화 핵심]")
+    assert prompt.index("### [Previous Truth And Archive]") < prompt.index("### [HUD Convenience State]")
+    assert fallback == prompt
+
+
 def test_request_blueprint_generation_rejects_missing_required_fields():
     agent = _make_agent()
     agent._ask_with_cached_context = MagicMock(return_value='{"scene_breakdown": []}')
@@ -303,6 +356,18 @@ class TestBlueprintTemporalCarryover:
         continuity = compiler._extract_continuity(prev_bp)
 
         assert continuity["time_context"] == "2006-01-17 저녁"
+
+    def test_format_prev_info_expanded_marks_truth_tiers(self):
+        agent = _make_agent()
+        prev_bp = {"ending_hook": "late call", "end_location": "office"}
+        previous_blueprints = [{"ep_num": 1, "title": "pilot", "scene_breakdown": {}}]
+
+        result = agent._format_prev_info_expanded(prev_bp, previous_blueprints, "manuscript ending")
+
+        assert "[Context Tier 1 - Direct Previous Episode Truth]" in result
+        assert "[Context Tier 2 - Structured Previous Blueprint Carryover]" in result
+        assert "[Context Tier 3 - Manuscript Ending Truth]" in result
+        assert "[Context Tier 4 - Archive Appendix / lower priority than Tier 1-3]" in result
 
 
 def test_blueprint_generation_prompt_contains_stage3_anti_contamination_contract():
