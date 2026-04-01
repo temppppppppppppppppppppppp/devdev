@@ -1,0 +1,169 @@
+{
+  "evidence_role": "stage34_context_normalization_runtime_canary_evidence",
+  "canary_project": "canary_0_0_stage34_arc2_ctxnorm_r1",
+  "canary_session_id_stage3": "20260401_103911",
+  "canary_session_id_stage4": "",
+  "timestamp": "2026-04-01T12:33:43",
+  "summary_path": "projects/canary_0_0_stage34_arc2_ctxnorm_r1/logs/stage34_canary_summary.json",
+  "scope": {
+    "arc": 2,
+    "from_ep": 5,
+    "target_ep": 9,
+    "baseline_project": "projects/0_0",
+    "canary_project": "projects/canary_0_0_stage34_arc2_ctxnorm_r1",
+    "allow_partial_from": 5
+  },
+
+  "stage3_evidence": {
+    "session_id": "20260401_103911",
+    "sink_alignment_status": "ok",
+    "attempts_finalized": 5,
+    "attempts": [
+      {
+        "ep": 5,
+        "arc": 2,
+        "attempt_num": 4,
+        "strategy": "dialogue_focused",
+        "verdict": "PASS",
+        "duration_ms": 739135,
+        "token_cost": 0.820055,
+        "attempt_key": "s3:ep5:arc2:a4:20260401_103911",
+        "content_hash": "f3a1c475caecc567fbeda9dba6ba53569b60d2e7f43e540dbfc842b644399f4d",
+        "artifact": "logs/artifacts/stage3/ep_0005/attempt_04/final_blueprint__dialogue_focused.json"
+      },
+      {
+        "ep": 6,
+        "arc": 2,
+        "attempt_num": 1,
+        "strategy": "dialogue_focused",
+        "verdict": "PASS",
+        "duration_ms": 175747,
+        "token_cost": 0.334442,
+        "attempt_key": "s3:ep6:arc2:a1:20260401_103911",
+        "content_hash": "33efd8b351a36e06674bc999b8d424616df2ca79593dbd77a4f3b97bbc8eacf6",
+        "artifact": "logs/artifacts/stage3/ep_0006/attempt_01/final_blueprint__dialogue_focused.json"
+      },
+      {
+        "ep": 7,
+        "arc": 2,
+        "attempt_num": 1,
+        "strategy": "emotion_focused",
+        "verdict": "PASS",
+        "duration_ms": 98605,
+        "token_cost": 0.305973,
+        "attempt_key": "s3:ep7:arc2:a1:20260401_103911",
+        "content_hash": "223df39cb72b183ac85b24844d39b4c87e17f7f772985ba0f9b094f0399c8802",
+        "artifact": "logs/artifacts/stage3/ep_0007/attempt_01/final_blueprint__emotion_focused.json"
+      },
+      {
+        "ep": 8,
+        "arc": 2,
+        "attempt_num": 10,
+        "strategy": "dialogue_focused",
+        "verdict": "PASS",
+        "duration_ms": 1627111,
+        "token_cost": 2.016733,
+        "attempt_key": "s3:ep8:arc2:a10:20260401_103911",
+        "content_hash": "a3e3d535550e87b76e389a593bdbb42452265c3ddf0dfef444bd01254503f34f",
+        "artifact": "logs/artifacts/stage3/ep_0008/attempt_10/final_blueprint__dialogue_focused.json",
+        "note": "10 attempts consumed; binding prevalidation caught and corrected 기관명 오류 (한미증권→신성증권)"
+      },
+      {
+        "ep": 9,
+        "arc": 2,
+        "attempt_num": 1,
+        "strategy": "dialogue_focused",
+        "verdict": "PASS",
+        "duration_ms": 83832,
+        "token_cost": 0.347345,
+        "attempt_key": "s3:ep9:arc2:a1:20260401_103911",
+        "content_hash": "0505ac7ff7c30e424e79a76346b705e83fd7c38a2e9646f1fa9a988e27aa7f6d",
+        "artifact": "logs/artifacts/stage3/ep_0009/attempt_01/final_blueprint__dialogue_focused.json"
+      }
+    ],
+    "narrative_intrusion_check": {
+      "ep5_integrated_scenario_clean": true,
+      "ep5_scenes_clean": true,
+      "ep5_python_warnings_tactical_semantic_fidelity_critical": true,
+      "ep5_tactical_warning_source": "python_prevalidate triggered by prohibition keywords in arc_constraint_summary text; narrative content confirmed clean",
+      "ep7_director_rejected_off_arc_candidate": true,
+      "ep7_director_rejection_reason": "후보3 거절: 괴한 난입 off-arc beat 발명"
+    },
+    "ep8_binding_prevalidation_note": "binding prevalidation caught 기관명 오류; corrected inplace before final PASS"
+  },
+
+  "stage4_evidence": {
+    "stage4_attempts_finalized": 0,
+    "director_lifecycle_attempts_total": 12,
+    "ep1_lifecycle_rows": 2,
+    "ep1_lifecycle_note": "ep1 pre-existed from baseline (ep_0001.txt); 2 lifecycle rows from 20260331 session lack episode_production coverage",
+    "ep2_director_rows": 10,
+    "ep2_max_rounds_exhausted": true,
+    "ep2_round_summary": {
+      "R1": {"gate_basis": "post_select_conflict", "director_verdict": "PASS_WITH_FIX", "score": 85, "reason": "이전 화 엔딩 대사와의 중복 서술 (루프 현상); 직함 오류(지점장)"},
+      "R2": {"gate_basis": "post_select_conflict", "director_verdict": "PASS_WITH_FIX", "score": 95, "reason": "씬 2 HUD 묘사 누락"},
+      "R3": {"gate_basis": "post_select_conflict", "score": 95},
+      "R4": {"gate_basis": "strong_advisory_escalation_non_local_fix", "score": 96},
+      "R5": {"gate_basis": "strong_advisory_escalation_non_local_fix", "score": 100},
+      "R6": {"gate_basis": "strong_advisory_escalation_non_local_fix", "score": 96},
+      "R7": {"gate_basis": "post_select_conflict", "score": 96},
+      "R8": {"gate_basis": "post_select_conflict", "score": 93, "reason": "이면지 보관 위치 설정 오류"},
+      "R9": {"gate_basis": "strong_advisory_escalation_non_local_fix", "score": 96, "reason": "2006년 시대 배경 오류 (신조어 뇌피셜)"},
+      "R10": {"gate_basis": "post_select_conflict", "score": 96, "final_round": true, "not_finalized": true}
+    },
+    "gate_basis_distribution": {
+      "post_select_conflict": 6,
+      "strong_advisory_escalation_non_local_fix": 4
+    },
+    "root_cause_classification": "strong_advisory_escalation_loop_ep2",
+    "root_cause_detail": "ep2 exhausted 10 Director rounds. Gate basis alternated between post_select_conflict and strong_advisory_escalation_non_local_fix. Advisory system repeatedly required non-local full rewrites (full repair_scope). Max rounds reached at PASS_WITH_FIX(96) without finalization. Primary escalation drivers were dialogue continuity issues and time-period setting errors, not context normalization seams.",
+    "context_normalization_regression": false,
+    "note": "ep2 Stage4 failure is not a Tranche D regression. The advisory escalation loop pre-dates ctxnorm changes. Context normalization affects Stage2→Stage3 prompt hierarchy, not Stage4 advisory escalation behavior. Stage4 remains paused per SSOT guardrails."
+  },
+
+  "hard_gates": {
+    "status": "fail",
+    "errors": [
+      "draft_count_mismatch:1!=9",
+      "runtime_tag_not_complete:stage3_complete",
+      "lifecycle_sink_missing",
+      "lifecycle_missing_in_final_sinks",
+      "artifact_metadata_missing"
+    ],
+    "warnings": [
+      "selection_candidate_key_mismatches",
+      "sink_alignment_status:warn",
+      "patch_trace_not_exercised"
+    ],
+    "hard_gate_failure_attribution": "All hard gate failures are attributable to Stage4 not finalizing any episode. Stage3 hard gate surfaces are clean."
+  },
+
+  "multi_stage_proof_scope": {
+    "status": "fail",
+    "stage3_live_generation_path": "covered",
+    "stage4_live_generation_path": "covered",
+    "stage2_live_generation_path": "uncovered",
+    "errors": ["stage4_session_missing", "stage4_current_session_status:warn"],
+    "note": "Stage4 session not captured as complete because no episode was finalized. Stage3 proof is solid."
+  },
+
+  "tranche_verification": {
+    "tranche_a_arc_constraint_summary_hard_constraint": "verified_static_prior_sessions",
+    "tranche_b_stage4_readiness_prevalidation": "verified_runtime_ep5_tactical_semantic_fidelity_fired",
+    "tranche_d_stage2_curr_block_authority_packet": "verified_static_prior_sessions",
+    "tranche_d_stage3_constraint_first_ordering": "verified_runtime_ep5_9_all_pass",
+    "tranche_d_stage3_prev_info_4tier": "verified_static_prior_sessions",
+    "stage4_runtime_tranche_d_coverage": "incomplete_ep2_blocked_by_advisory_escalation"
+  },
+
+  "parent_lane_verdict": "partial",
+  "stage3_sub_verdict": "closure_candidate",
+  "stage4_sub_verdict": "blocked_upstream_advisory_escalation_loop",
+  "stage4_resume_recommendation": "defer_pending_ep2_advisory_escalation_investigation",
+  "open_items": [
+    "ep2 Stage4 advisory escalation loop: strong_advisory_escalation_non_local_fix cycling 4+ rounds is unusual; root cause analysis needed before Stage4 resume",
+    "ep8 Stage3 took 10 attempts: binding prevalidation correction worked but 기관명 correction loop should be checked",
+    "ep5 python_warnings tactical_semantic_fidelity CRITICAL: validator is firing; confirm whether this is prohibition-text false positive or residual content issue in future Stage3-only canary",
+    "Tranche C residuals still deferred: retry authority preservation, must_not_erase contract, Stage2 schema normalization"
+  ]
+}
