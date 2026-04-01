@@ -1,8 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-01T01:33:45.327361+00:00",
+  "generated_at": "2026-04-01T08:14:11.298745+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 3,
+  "active_item_count": 4,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
     "canonical_path": "docs/2026-04-01/active-temp-execution-roadmap.md",
@@ -13,6 +13,15 @@
       "topic": "0_0-stage2-stage3-stage4-readiness-remediation",
       "temp_path": "docs/temp/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-01/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md",
+      "status": "blocked",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "0_0-stage4-ep2-advisory-escalation-loop-remediation",
+      "temp_path": "docs/temp/0_0-stage4-ep2-advisory-escalation-loop-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-01/0_0-stage4-ep2-advisory-escalation-loop-remediation-execution-ssot.md",
       "status": "completed",
       "depends_on": [],
       "mirror_present": true,
