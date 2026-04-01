@@ -91,7 +91,7 @@ def _merge_storage_only_state_change_families(*, base_state_changes, final_state
 class Stage4PostPassRuntime:
     """Bounded runtime authority for Stage 4 post-pass settlement."""
 
-    def __init__(self, owner: "Stage4PostProcessor") -> None:
+    def __init__(self, owner: Stage4PostProcessor) -> None:
         self.owner = owner
         self.ctx = owner.ctx
 
@@ -110,6 +110,9 @@ class Stage4PostPassRuntime:
 
     def _build_active_pressure_vectors(self, blueprint):
         return self.owner._build_active_pressure_vectors(blueprint)
+
+    def _filter_active_pressure_vectors_by_manuscript(self, vectors, final_manuscript):
+        return self.owner._filter_active_pressure_vectors_by_manuscript(vectors, final_manuscript)
 
     def _normalize_active_pressure_vectors(self, vectors):
         return self.owner._normalize_active_pressure_vectors(vectors)
@@ -453,6 +456,10 @@ class Stage4PostPassRuntime:
             logging.warning("[SilentPass:V75] State-Text 검증 모듈 실패: %s", stv_err)
 
         active_pressure_vectors = self._build_active_pressure_vectors(blueprint)
+        active_pressure_vectors = self._filter_active_pressure_vectors_by_manuscript(
+            active_pressure_vectors,
+            final_manuscript,
+        )
         pressure_vectors_changed = prev_pressure_vectors != active_pressure_vectors
         if active_pressure_vectors or pressure_vectors_changed:
             if not isinstance(actual_truth, dict):
@@ -1380,8 +1387,8 @@ class Stage4PostPassRuntime:
                 logging.warning("[Phase 3-5C] NPC 과잉 등장 감지 실패 (비차단): %s", _npc_err)
 
         try:
-            from modules.validation.threshold_helper import _threshold
             from modules.core.repetition_guard import RepetitionGuard
+            from modules.validation.threshold_helper import _threshold
 
             _cr_enabled = _threshold("cross_episode_repetition.enabled", True)
             if _cr_enabled:

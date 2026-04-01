@@ -6621,6 +6621,84 @@ class TestLane2DirectorSemantics:
         assert payload.previous_attempt["conflict_contract"]["contract_type"] == "post_select_conflict"
         assert payload.previous_attempt["reuse_contract"]["mode"] == "best_manuscript_baseline"
 
+    def test_post_select_conflict_snapshot_preserves_bounded_fix_pack_hints(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._collect_validation_warning_lines = MagicMock(return_value=["warn-a"])
+        ir._inherit_attempt_history = MagicMock(return_value=[{"old": True}])
+        ir._set_retry_budget_axes = MagicMock(return_value={"repair": "rewrite_regenerate"})
+
+        payload = ir.reject_runtime._build_reject_retry_snapshot(
+            director_result={
+                "selected_candidate": {
+                    "manuscript": "candidate manuscript",
+                    "strategy_name": "balanced",
+                },
+                "selection_reason": "best candidate because proper noun continuity almost landed",
+                "verdict_reason": "needs final continuity repair",
+                "director_verdict": "PASS_WITH_FIX",
+                "final_verdict": "REJECT",
+                "gate_basis": "post_select_conflict",
+                "repair_scope": "full",
+                "pre_firewall_score": 92,
+                "consistency_checklist": {"rule": "keep"},
+                "state_updates": {"hud": "snapshot"},
+                "open_review": "rename institution only",
+                "contradiction_types": ["proper_noun"],
+                "contradiction_details": ["detail-1"],
+                "firewall_triggered": True,
+                "firewall_reason": "firewall",
+            },
+            selected="A",
+            director_feedback="conflict-first reject feedback",
+            action_items=["rename institution anchor"],
+            score=44,
+            validation_results=[{}],
+            reject_bucket="post_select_conflict",
+            tot_used=True,
+            mad_used=False,
+            resolved_fix_scope="full",
+            resolved_fix_scope_reasoning="conflict-first rewrite",
+            resolved_fix_pack={
+                "patch_targets": ["기관명 표기 문장"],
+                "must_fix": ["기관명을 이전 화 canonical 표기로 교체"],
+                "do_not_regress": ["opening continuity 유지"],
+                "success_condition": "proper noun continuity resolved",
+                "target_kind": "entity_ref",
+            },
+            error_category="LOGIC_ERROR",
+            feedback_provenance={
+                "director_feedback_text": "director note",
+                "runtime_advisory": "runtime digest",
+                "retry_directives": "retry directives",
+            },
+            previous_attempt={
+                "old": True,
+                "provisional_pass_downgrade": True,
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "conflicts": [
+                        {
+                            "conflict_type": "continuity",
+                            "conflict_detail": "scene overlap conflict",
+                            "source_episode": "",
+                            "expected_truth": "scene overlap conflict",
+                        }
+                    ],
+                },
+                "reuse_contract": {
+                    "mode": "best_manuscript_baseline",
+                    "baseline_field": "best_manuscript",
+                    "conflict_field": "conflict_contract",
+                    "preserve_rationale": True,
+                },
+            },
+            round_num=0,
+        )
+
+        assert payload.previous_attempt["fix_pack"]["patch_targets"] == ["기관명 표기 문장"]
+        assert payload.previous_attempt["post_select_fix_pack_preserved"] is True
+
     def test_build_reject_guidance_payload_applies_inplace_gate_and_mad_hint(self):
         ctx = _make_ctx()
         mad_module = MagicMock()
@@ -6676,6 +6754,52 @@ class TestLane2DirectorSemantics:
         assert payload.mad_used is True
         assert payload.tot_used is False
         mad_module.deliberate.assert_called_once()
+
+    def test_build_reject_guidance_payload_preserves_bounded_post_select_fix_pack(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_retry_feedback_provenance = MagicMock(
+            return_value={
+                "merged_feedback": "[Continuity Conflict] proper noun mismatch",
+                "director_feedback_text": "director note",
+                "runtime_advisory": "",
+                "retry_directives": "",
+            }
+        )
+        ir._classify_reject_bucket = MagicMock(return_value="constraint_violation")
+        ir._is_continuity_replay_reject = MagicMock(return_value=False)
+
+        payload = ir.reject_runtime._build_reject_guidance_payload(
+            director_result={
+                "selected_candidate": {"manuscript": "candidate manuscript"},
+                "feedback": {"issues": ["proper noun mismatch"]},
+                "action_items": ["rename institution anchor"],
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "director local repair",
+                "gate_basis": "post_select_conflict",
+                "fix_pack": {
+                    "patch_targets": ["기관명 표기 문장"],
+                    "must_fix": ["기관명을 이전 화 canonical 표기로 교체"],
+                    "do_not_regress": ["opening continuity 유지"],
+                    "success_condition": "proper noun continuity resolved",
+                    "target_kind": "entity_ref",
+                },
+            },
+            director_feedback="initial reject",
+            validation_results=[_validation_result()],
+            selected="A",
+            round_num=0,
+            blueprint={"episode": 1},
+            prev_manuscript="previous manuscript",
+            tot_used=False,
+            mad_used=False,
+            error_category="LOGIC_ERROR",
+        )
+
+        assert payload.reject_bucket == "post_select_conflict"
+        assert payload.resolved_fix_scope == "full"
+        assert payload.resolved_fix_pack["patch_targets"] == ["기관명 표기 문장"]
+        assert "TF-F1" in payload.resolved_fix_scope_reasoning
 
     def test_record_reject_attempt_artifact_builds_reject_attempt_payload(self):
         ctx = _make_ctx()
@@ -8863,6 +8987,74 @@ class TestScopeSinkSemantics:
         assert previous_attempt["scope_origin"]["fix_scope"] == "post_select_conflict_override"
         assert previous_attempt["scope_origin"]["authoritative_fix_scope"] == "director_authoritative"
         assert previous_attempt["scope_origin"]["repair_scope"] == "runtime_lane"
+
+    def test_post_select_conflict_preserves_contradiction_subtype_contract(self):
+        """Post-select downgrade should retain contradiction subtype/detail and bounded local-fix hint."""
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 4
+        round_ctx.prev_manuscripts_text = "prev manuscript"
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {
+            "decision": "CONFLICT",
+            "summary": "institution mismatch",
+        }
+
+        verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+            verdict="PASS",
+            next_ep=4,
+            round_num=2,
+            round_ctx=round_ctx,
+            final_manuscript="candidate manuscript",
+            final_state_updates={},
+            director_result={
+                "director_verdict": "PASS_WITH_FIX",
+                "final_verdict": "PASS_WITH_FIX",
+                "selected": "A",
+                "selected_candidate": {"strategy_name": "balanced", "manuscript": "candidate manuscript"},
+                "fix_scope": "inplace",
+                "selection_reason": "best candidate because proper noun continuity almost landed",
+                "verdict_reason": "needs local institution rename",
+                "repair_scope": "inplace",
+                "score_breakdown": {},
+                "consistency_checklist": {},
+                "open_review": "rename institution only",
+                "fix_pack": {
+                    "patch_targets": ["replace institution anchor"],
+                    "must_fix": ["rename institution to canonical anchor"],
+                    "do_not_regress": ["keep timeline stable"],
+                    "success_condition": "institution continuity restored",
+                    "target_kind": "entity_ref",
+                },
+                "action_items": ["rename institution anchor"],
+                "contradiction_types": ["proper_noun"],
+                "contradiction_details": [
+                    {
+                        "severity": "CRITICAL",
+                        "type": "proper_noun",
+                        "current_violation": "institution mismatch",
+                        "fix_suggestion": "rename institution anchor",
+                    }
+                ],
+            },
+            director_feedback="initial feedback",
+            score=92,
+            error_category="",
+            previous_attempt={},
+            stage4_spinner=MagicMock(),
+            director_memory_context="",
+        )
+
+        assert verdict == "REJECT"
+        assert previous_attempt["contradiction_types"] == ["proper_noun"]
+        assert previous_attempt["conflict_contract"]["contract_type"] == "post_select_conflict"
+        assert previous_attempt["conflict_contract"]["contradiction_types"] == ["proper_noun"]
+        assert previous_attempt["conflict_contract"]["bounded_local_fix_hint"] is True
+        assert previous_attempt["conflict_contract"]["target_kind"] == "entity_ref"
+        assert any(
+            "institution mismatch" in item
+            for item in previous_attempt["conflict_contract"]["contradiction_details"]
+        )
 
 
 def test_post_select_conflict_logs_detail_to_ui_sink():

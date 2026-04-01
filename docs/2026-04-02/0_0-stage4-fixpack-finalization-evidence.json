@@ -1,0 +1,134 @@
+{
+  "date": "2026-04-02",
+  "status": "final",
+  "confidence": 0.96,
+  "lane": "0_0-stage4-fixpack-finalization",
+  "runtime_source": "projects/canary_0_0_stage34_arc2_entitypost_r1",
+  "ep3_runtime_pattern": {
+    "gate_basis": "strong_advisory_escalation_non_local_fix",
+    "rounds": [
+      {
+        "round": 0,
+        "director_verdict": "PASS",
+        "final_verdict": "REJECT",
+        "score": 95,
+        "fix_pack": {
+          "patch_targets": [],
+          "must_fix": [],
+          "do_not_regress": [
+            "현재의 완벽한 수치 계산(WTI 30% 상승, 3배 레버리지, 90% 수익률) 및 이전 화와의 매끄러운 연결 상태 유지"
+          ],
+          "success_condition": "수정 불필요, 현재 상태 유지",
+          "target_kind": "local_phrase"
+        },
+        "strong_advisory_triggered_by": [
+          "npc_drift"
+        ],
+        "local_fix_contract_reason": "missing_patch_targets"
+      },
+      {
+        "round": 1,
+        "director_verdict": "PASS",
+        "final_verdict": "REJECT",
+        "score": 96,
+        "local_fix_contract_reason": "missing_patch_targets"
+      },
+      {
+        "round": 2,
+        "director_verdict": "PASS",
+        "final_verdict": "REJECT",
+        "score": 95,
+        "local_fix_contract_reason": "missing_patch_targets"
+      },
+      {
+        "round": 3,
+        "director_verdict": "PASS",
+        "final_verdict": "REJECT",
+        "score": 96,
+        "local_fix_contract_reason": "missing_patch_targets"
+      },
+      {
+        "round": 4,
+        "director_verdict": "PASS",
+        "final_verdict": "REJECT",
+        "score": 95,
+        "gate_basis": "patch_reaudit_fail",
+        "fix_pack": {
+          "patch_targets": [
+            "현찰로 이체하죠"
+          ],
+          "target_kind": "local_phrase"
+        }
+      },
+      {
+        "round": 5,
+        "director_verdict": "PASS",
+        "final_verdict": "PASS",
+        "score": 90
+      }
+    ]
+  },
+  "ep4_runtime_pattern": {
+    "rounds": [
+      {
+        "round": 0,
+        "gate_basis": "continuity_firewall",
+        "director_verdict": "REJECT",
+        "final_verdict": "REJECT",
+        "score": 44,
+        "fix_pack_ready_at_episode_log": true,
+        "patch_targets": [
+          "여의도 신성증권 본사 브이아이피 접견실",
+          "신성증권 여의도 지점장 최동욱",
+          "최동욱은",
+          "최 지점장님",
+          "신성증권 에이치티에스"
+        ]
+      },
+      {
+        "round": 1,
+        "gate_basis": "post_select_conflict",
+        "director_verdict": "PASS_WITH_FIX",
+        "final_verdict": "REJECT",
+        "score": 92,
+        "fix_pack_ready_at_episode_log": true,
+        "patch_targets": [
+          "영업일 기준 3일 뒤. 오전 일찍 관할 등기소에서 'SW인베스트먼트'의 법인 등기부등본 원본을 수령한 한시우는 지체 없이 여의도로 향했다.",
+          "SW인베스트먼트 법인 등기부등본, 그리고 20억 원의 잔고 증명서입니다."
+        ]
+      }
+    ],
+    "runtime_pathology": [
+      {
+        "round": 1,
+        "pathology_fingerprint": "post_select_conflict|contradiction:고유명사|continuity_firewall|fix_pack:missing_fix_pack"
+      },
+      {
+        "round": 2,
+        "pathology_fingerprint": "post_select_conflict|contradiction:타임라인|fix_pack:missing_fix_pack"
+      }
+    ]
+  },
+  "code_anchors": {
+    "runtime_escalation_gate": "modules/core/stage4_interview_round.py:2216-2273",
+    "fix_pack_contract_eval": "modules/core/stage4_interview_round.py:1908-1925",
+    "fix_pack_payload_build": "modules/core/stage4_interview_round.py:1967-1984",
+    "post_select_snapshot_blank": "modules/core/stage4_reject_runtime.py:377-392",
+    "director_fix_pack_prompt_contract": [
+      "config/prompts/director.yaml:104-105",
+      "config/prompts/director.yaml:250-253",
+      "config/prompts/director.yaml:437-438",
+      "config/prompts/director.yaml:583-586"
+    ]
+  },
+  "bounded_conclusion": {
+    "dominant_blocker": "Stage4 finalization contract",
+    "branch_1": "runtime strong-advisory escalation creates a local-fix obligation without actionable patch_targets",
+    "branch_2": "post-select conflict retry snapshot drops structured fix-pack and later surfaces as missing_fix_pack",
+    "not_the_blocker": [
+      "Stage2 hierarchy",
+      "Stage3 context normalization",
+      "original Flashback false-positive loop"
+    ]
+  }
+}
