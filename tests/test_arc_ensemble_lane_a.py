@@ -109,3 +109,70 @@ def test_apply_ensemble_metadata_strips_transient_scoring_fields():
     assert meta["total_candidates"] == 1
     assert "_score" not in scored_candidates[0]
     assert "_issues" not in scored_candidates[1]
+
+
+def test_build_single_arc_generation_context_uses_structured_current_block_authority_packet():
+    agent = _make_agent()
+
+    prompt_context = agent._build_single_arc_generation_context(
+        curr_block={
+            "block_id": "block_02",
+            "title": "Branch Office Pressure",
+            "ep_count": 3,
+            "content": {"context": "The protagonist enters the branch office and faces pressure."},
+            "block_theme": "escalation",
+            "foreshadow": "a missing ledger",
+        },
+        prev_arc_context="previous context",
+        constraint_block="constraint block",
+        protagonist_config=None,
+        entity_registry=None,
+        genre="investment",
+    )
+
+    packet = prompt_context["curr_block_authority"]
+    assert "CURRENT BLOCK DNA > BLOCK EVENT GUARD > PREVIOUS ARC CONTEXT > OPTIONAL EXTENSIONS" in packet
+    assert '"title"' not in packet
+    assert "- title: Branch Office Pressure" in packet
+    assert "- block_premise: The protagonist enters the branch office and faces pressure." in packet
+
+
+def test_arc_prompt_places_current_block_before_previous_arc_context():
+    agent = _make_agent()
+    prompt_context = agent._build_single_arc_generation_context(
+        curr_block={
+            "block_id": "block_02",
+            "title": "Branch Office Pressure",
+            "content": {"context": "The protagonist enters the branch office."},
+        },
+        prev_arc_context="PREV_ARC_CONTEXT",
+        constraint_block="CONSTRAINT_BLOCK",
+        protagonist_config=None,
+        entity_registry=None,
+        genre="investment",
+    )
+
+    prompt, _ = agent._build_single_arc_prompt_bundle(
+        strategy={"name": "balanced", "focus": "focus", "style": "style"},
+        prompt_context=prompt_context,
+        constraint_block="CONSTRAINT_BLOCK",
+        prev_arc_context="PREV_ARC_CONTEXT",
+        curr_block={"title": "Branch Office Pressure"},
+        pacing_signal_guide="",
+        vol_strategy="",
+        assets={},
+        merged_feedback="",
+        protagonist_name="Hero",
+        genre="investment",
+        arc_no=2,
+        ep_start=5,
+        ep_end=7,
+        cache_name="",
+    )
+
+    block_idx = prompt.index("### [Current Block DNA]")
+    guard_idx = prompt.index("### [Current Block Event Guard]")
+    prev_idx = prompt.index("### [Previous Arc Context - carryover reference]")
+
+    assert block_idx < prev_idx
+    assert guard_idx < prev_idx

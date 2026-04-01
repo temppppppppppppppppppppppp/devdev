@@ -322,7 +322,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         except Exception as exc:
             logging.debug("[BPEnsemble] work retrieval contract 로드 실패: %s", exc)
 
-        shared_context = f"{arc_focus or ''}\n\n{constraints_str or ''}\n\n{prev_info or ''}\n\n{hud_context or ''}"
+        shared_context = f"{constraints_str or ''}\n\n{arc_focus or ''}\n\n{prev_info or ''}\n\n{hud_context or ''}"
         cache_info = self._get_or_create_context_cache(
             cache_type="blueprint_ensemble",
             content=shared_context,
@@ -956,6 +956,15 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     f"이번 화에서 소비하거나 언급하면 즉시 REJECT ***"
                 )
 
+        arc_summary = constraint_block.get("arc_constraint_summary")
+        if arc_summary:
+            hard_lines.append("[Arc 제약 - MUST NOT DRIFT]")
+            if isinstance(arc_summary, str):
+                hard_lines.append(f"  {_fit_compact_context(arc_summary, 500)}")
+            elif isinstance(arc_summary, dict):
+                for key, value in list(arc_summary.items())[:10]:
+                    hard_lines.append(f"  {key}: {_fit_compact_context(value, 100)}")
+
         # ── Band 3: EXPECTED CONTINUITY (계승 필수, 불일치 시 경고) ──
         continuity_lines: list[str] = []
 
@@ -1011,15 +1020,6 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # ── Band 4: ADVISORY (참고용, 필수 아님) ──
         advisory_lines: list[str] = []
-
-        arc_summary = constraint_block.get("arc_constraint_summary")
-        if arc_summary:
-            advisory_lines.append("[Arc 제약 요약]")
-            if isinstance(arc_summary, str):
-                advisory_lines.append(f"  {_fit_compact_context(arc_summary, 500)}")
-            elif isinstance(arc_summary, dict):
-                for key, value in list(arc_summary.items())[:10]:
-                    advisory_lines.append(f"  {key}: {_fit_compact_context(value, 100)}")
 
         sc_summary = constraint_block.get("state_changes_summary")
         if sc_summary:
@@ -1367,11 +1367,12 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # ── 직전 Blueprint 상세 (필수 계승) ──
         direct_prev = self._format_prev_info(prev_blueprint)
+        sections.append("[Context Tier 1 - Direct Previous Episode Truth]")
         sections.append(direct_prev)
 
         # ── [V67] 이전 Blueprint 전문 (최대 30개) ──
         if prev_blueprints and len(prev_blueprints) > 0:
-            bp_lines = []
+            bp_lines = ["[Context Tier 2 - Structured Previous Blueprint Carryover]"]
             bp_lines.append(f"\n[V67] ═══ 이전 Blueprint 전문 ({len(prev_blueprints)}개) ═══")
             bp_lines.append("이전 에피소드의 구조화된 계승 정보입니다. 모순되는 내용을 절대 생성하지 마세요.")
             for bp in prev_blueprints:
@@ -1389,6 +1390,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # ── [pre-rerun] 직전 원고 말미 → 시간 진실 소스 ──
         if prev_manuscripts_text:
+            sections.append("[Context Tier 3 - Manuscript Ending Truth]")
             ending_excerpt = prev_manuscripts_text.strip()[-800:]
             sections.append(
                 "\n[pre-rerun] ═══ 직전 원고 실제 종료 상황 (원고 기준 — Blueprint 메타데이터보다 우선) ═══\n"
@@ -1400,6 +1402,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         # ── [V67] 이전 원고 전문 ──
         if prev_manuscripts_text:
             ms_section = (
+                "\n[Context Tier 4 - Archive Appendix / lower priority than Tier 1-3]\n"
                 f"\n[V67] ═══ 이전 원고 전문 ═══\n"
                 f"아래는 이전 에피소드의 최종 원고입니다. 이 내용과 모순되는 Blueprint를 절대 생성하지 마세요.\n"
                 f"특히: 사망한 캐릭터 재등장, 이미 일어난 이벤트 반복, 위치/시간 불연속에 주의하세요.\n\n"

@@ -1,0 +1,8 @@
+{"timestamp": "2026-03-31 17:08:14", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_end_state 위치 동기화: '알 수 없음' → '서울 강남구 이면도로에 위치한 SW인베스트먼트 임시 사무실 (원룸 오피스텔), HTS가 켜진 모니터 앞'"]}}
+{"timestamp": "2026-03-31 17:09:29", "type": "field_repair", "message": "hybrid_composition missing", "data": {"arc_idx": 1}}
+{"timestamp": "2026-03-31 17:09:29", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-31 17:10:00", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 3}}
+{"timestamp": "2026-03-31 17:15:06", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["[PATCH-B] 이전 Arc 소지품 소멸: ['SW인베스트먼트 법인 등기부등본, 해외 선물 거래용 법인 계좌 보안카드(OTP), 20억 원이 찍힌 은행 잔고 증명서'] (처분/폐기 사유 미기재)", "시작 위치 수정: '이전 Arc 종료 위치' → '서울 강남구 이면도로에 위치한 SW인베스트먼트 임시 사무실 (원룸 오피스텔), HTS가 켜진 모니터 앞'", "시작 부상 수정: '' → '없음'", "arc_end_state 위치 동기화: '알 수 없음' → '서울 여의도 SW인베스트먼트 대표 집무실'"]}}
+{"timestamp": "2026-03-31 17:18:34", "type": "field_repair", "message": "hybrid_composition default injected", "data": {"arc_no": 2}}
+{"timestamp": "2026-03-31 17:18:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-31 17:19:03", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 5}}
