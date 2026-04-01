@@ -160,6 +160,35 @@ def _build_post_select_conflict_contract(conflicts: list[str] | None) -> dict[st
     }
 
 
+def _emit_stage4_ui_log(
+    ui,
+    message: str,
+    *,
+    component: str,
+    event_kind: str,
+    level: str = "warning",
+    ep_num: int | None = None,
+    round_num: int | None = None,
+    meta: dict[str, object] | None = None,
+) -> None:
+    logger = getattr(ui, "log", None)
+    if not callable(logger):
+        return
+    kwargs: dict[str, object] = {
+        "stage": "stage4",
+        "component": component,
+        "event_kind": event_kind,
+        "level": level,
+    }
+    if ep_num is not None:
+        kwargs["ep_num"] = ep_num
+    if round_num is not None:
+        kwargs["round_num"] = round_num
+    if meta:
+        kwargs["meta"] = meta
+    logger(message, **kwargs)
+
+
 @dataclass
 class _GenerationPhaseResult:
     candidates: list[dict]
@@ -2094,6 +2123,18 @@ class Stage4InterviewRound:
                 "[Stage4Gate] strong advisory escalation: PASS → PASS_WITH_FIX (classes=%s)",
                 ",".join(_triggered),
             )
+            _emit_stage4_ui_log(
+                self.ctx.ui,
+                f"   [Stage4Gate] strong advisory escalation: PASS → PASS_WITH_FIX ({', '.join(_triggered)})",
+                component="director_gate",
+                event_kind="policy",
+                meta={
+                    "gate_basis": "strong_advisory_escalation",
+                    "source_verdict": "PASS",
+                    "final_verdict": "PASS_WITH_FIX",
+                    "triggered_by": list(_triggered),
+                },
+            )
 
         # [DCM-T2] Authoritative fix_scope contract validation
         _normalized_authoritative_scope = authoritative_fix_scope.lower()
@@ -2155,6 +2196,20 @@ class Stage4InterviewRound:
                     _vtype,
                     authoritative_fix_scope,
                 )
+                _emit_stage4_ui_log(
+                    self.ctx.ui,
+                    "   [Stage4Gate] PASS_WITH_FIX → REJECT: repair blocked, fix_scope invalid",
+                    component="director_gate",
+                    event_kind="policy",
+                    meta={
+                        "gate_basis": _g2_basis,
+                        "violation_type": _vtype,
+                        "authoritative_fix_scope": authoritative_fix_scope,
+                        "triggered_by": list(
+                            director_result.get("strong_advisory_escalation", {}).get("triggered_by", [])
+                        ),
+                    },
+                )
 
         # [Lane2-G2b] Strong advisory escalation may only stay PASS_WITH_FIX when the
         # result is truly local-fixable: fix_scope=inplace and fix_pack contract ready.
@@ -2201,6 +2256,20 @@ class Stage4InterviewRound:
                     " (scope=%s reason=%s)",
                     _runtime_fix_scope or "<blank>",
                     _contract_reason,
+                )
+                _emit_stage4_ui_log(
+                    self.ctx.ui,
+                    "   [Stage4Gate] strong advisory escalation forced REJECT: local fix contract invalid",
+                    component="director_gate",
+                    event_kind="policy",
+                    meta={
+                        "gate_basis": "strong_advisory_escalation_non_local_fix",
+                        "triggered_by": list(
+                            director_result.get("strong_advisory_escalation", {}).get("triggered_by", [])
+                        ),
+                        "fix_scope": _runtime_fix_scope,
+                        "contract_reason": _contract_reason,
+                    },
                 )
 
         return director_result
@@ -4165,9 +4234,33 @@ class Stage4InterviewRound:
                     _conflict_types.append("history")
                 else:
                     _conflict_types.append("check_error")
-            self.ctx.ui.log(
+            for _conflict_detail, _conflict_type in zip(_post_select_conflicts, _conflict_types):
+                _emit_stage4_ui_log(
+                    self.ctx.ui,
+                    f"   [TF-3 detail] {_conflict_detail}",
+                    component="post_select_validation",
+                    event_kind="detail",
+                    ep_num=next_ep,
+                    round_num=round_num,
+                    meta={
+                        "conflict_type": _conflict_type,
+                        "conflict_detail": _conflict_detail,
+                        "conflict_count": len(_post_select_conflicts),
+                    },
+                )
+            _emit_stage4_ui_log(
+                self.ctx.ui,
                 f"   [TF-3] Provisional PASS → REJECT downgrade: "
-                f"{len(_post_select_conflicts)} post-select conflicts ({', '.join(_conflict_types)})"
+                f"{len(_post_select_conflicts)} post-select conflicts ({', '.join(_conflict_types)})",
+                component="post_select_validation",
+                event_kind="policy",
+                ep_num=next_ep,
+                round_num=round_num,
+                meta={
+                    "conflict_types": list(_conflict_types),
+                    "conflict_count": len(_post_select_conflicts),
+                    "conflict_details": list(_post_select_conflicts),
+                },
             )
             verdict = "REJECT"
             director_result = self._apply_director_gate_update(

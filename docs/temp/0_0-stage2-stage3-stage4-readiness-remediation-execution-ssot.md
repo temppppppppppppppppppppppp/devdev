@@ -1,7 +1,7 @@
 # 0_0 Stage2-Stage3 Stage4-Readiness Remediation Execution SSOT
 
 Date: 2026-04-01
-Status: partially_realized (tranche A/B landed, semantic-fidelity child closed, context-normalization tranche landed under static validation; Stage4 still paused)
+Status: partial — Stage3 closure candidate confirmed via ctxnorm_r1 canary runtime; Stage4 blocked by ep2 advisory escalation loop (separate issue, not Tranche D regression); Stage4 still paused
 Canonical Path: `docs/2026-04-01/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md`
 Commit State:
@@ -334,3 +334,32 @@ Pass 3, execution and readability:
 - context-normalization work is intentionally bounded to prompt/handoff structure, not schema redesign
 
 Confidence: `96%`
+
+## 17. Context Normalization Runtime Validation Update (ctxnorm_r1 canary)
+
+Canary: `canary_0_0_stage34_arc2_ctxnorm_r1`
+Session (Stage3): `20260401_103911`
+Audit doc: `docs/2026-04-01/0_0-stage2-stage3-stage4-readiness-context-normalization-runtime-closure-audit.md`
+Evidence: `docs/2026-04-01/0_0-stage2-stage3-stage4-readiness-context-normalization-runtime-closure-evidence.json`
+
+What ctxnorm_r1 proved:
+
+- Stage3 ep5-9: all 5 PASS, current-session sink alignment `ok`
+- ep5 narrative content clean (no off-arc intrusion in integrated_scenario/scenes)
+- ep7 Director rejected off-arc 괴한 난입 candidate (semantic fidelity filter at Director level working)
+- ep8 binding prevalidation caught 기관명 오류 and corrected inplace
+- Tranche D Stage3 runtime verified
+
+What ctxnorm_r1 did not close:
+
+- Stage4 ep2 exhausted 10 rounds without finalization
+- Root cause: `strong_advisory_escalation_non_local_fix` cycling loop — separate issue, not Tranche D regression
+- Stage4 advisory escalation loop for ep2 needs separate investigation before Stage4 resume
+
+Operational conclusion:
+
+- Stage3 sub-verdict: `closure_candidate`
+- Stage4 sub-verdict: `blocked_upstream_advisory_escalation_loop`
+- Parent lane verdict: `partial`
+- keep Stage4 paused
+- open items: ep2 advisory loop investigation, ep5 tactical_semantic_fidelity CRITICAL confirmation, ep8 attempt-loop cost profiling

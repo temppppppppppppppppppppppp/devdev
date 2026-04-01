@@ -268,3 +268,22 @@ class TestManuscriptSnippets:
         )
         assert len(result) == 1
         assert result[0]["check"] == "flashback_contamination"
+
+    def test_prompt_includes_device_overinference_guardrail(self):
+        captured = []
+
+        def _capture(prompt):
+            captured.append(prompt)
+            return "[]"
+
+        verifier = FlashbackVerifier(llm_ask=_capture)
+        verifier.check(
+            "A" * 100 + "회상 속에서 폴더폰을 접으며 화면의 버튼을 눌렀다." + "B" * 100,
+            ep_num=2,
+            reference_context="이전 화에서도 폴더폰을 접어 주머니에 넣었다.",
+        )
+
+        assert captured
+        prompt = captured[0]
+        assert "휴대전화/폴더폰" in prompt
+        assert "스마트폰·터치스크린으로 과추론하지 마세요" in prompt
