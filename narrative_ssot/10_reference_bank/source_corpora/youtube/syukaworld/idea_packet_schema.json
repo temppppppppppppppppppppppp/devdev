@@ -1,0 +1,17 @@
+{
+  "_schema_version": "youtube_idea_packet_schema.v1",
+  "schema_path": "narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld/idea_packet_schema.json",
+  "purpose": "LLM-side extraction target for turning economic video evidence into modern business / chaebol ideation seeds.",
+  "authority_note": "Collection stays on Python; extraction judgment and concept selection stay on the LLM side.",
+  "packet_fields": {
+    "surface_issue": "영상 표면 주제가 무엇인지 짧게 요약",
+    "hidden_structure_outside_information": "표면 주제 뒤에 숨은 진짜 구조/권력선/돈줄",
+    "real_bottleneck_or_corridor": "반드시 지나가야 하는 관문, 병목, 회랑 후보",
+    "chaebolizable_sector": "재벌물/기업물로 전환하기 좋은 섹터나 계열사 포지션",
+    "power_fantasy_translation": "독자 대리만족으로 바꾸면 무엇이 되는지",
+    "early_backstab_scene": "1~3화 초반 뒤통수 장면의 한 줄 구상",
+    "octopus_group_expansion_path": "문어발식으로 다음 계열사나 인접 섹터를 어떻게 붙일지",
+    "must_not_literal_copy": "원본 영상 표현이나 사례를 그대로 베끼면 안 되는 요소",
+    "confidence": "low / medium / high"
+  }
+}

@@ -1,0 +1,327 @@
+{
+  "_schema_version": "idea_engine_db.draft.v0",
+  "updated_at": "2026-04-01",
+  "status": "draft",
+  "scope": [
+    "modern_business",
+    "chaebol",
+    "office_power",
+    "investment_tycoon"
+  ],
+  "authority_note": "Scaffold-only draft. Seed entries are derived from audited reference cards and are meant for recombination, not direct copying.",
+  "source_authority": {
+    "reference_manifest": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/reference_card_manifest.json",
+    "reference_cards_root": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards",
+    "selection_rule": "Use only audited/pass cards as seed sources. Treat entries as engine abstractions, not as plot templates."
+  },
+  "retrieval_contract": {
+    "primary_query_axes": [
+      "hidden_information_outside_information",
+      "reader_backstab_point",
+      "core_power_fantasy",
+      "early_spike_pattern",
+      "suitable_retargets",
+      "must_not_copy"
+    ],
+    "must_not_use_as_direct_copy": true,
+    "engine_entry_count": 8
+  },
+  "field_guide": {
+    "engine_name": "재사용 가능한 엔진 이름",
+    "hidden_information_outside_information": "독자가 보지 못하는 진짜 돈줄/권력줄/판 뒤의 정보",
+    "reader_backstab_point": "초반에 독자 뒤통수를 치는 장면적 포인트",
+    "core_power_fantasy": "이 엔진이 실제로 주는 대리만족의 종류",
+    "early_spike_pattern": "1~5화 안에서 가장 먼저 폭발시키는 방식",
+    "suitable_retargets": "다른 섹터/재벌물로 옮길 때 잘 붙는 방향",
+    "must_not_copy": "직접 차용하면 오염/표절 인식이 강해지는 요소"
+  },
+  "entries": [
+    {
+      "engine_id": "ENG-001",
+      "engine_name": "제도 권한 공개 굴욕 엔진",
+      "source_cards": [
+        {
+          "slug": "guksecheong_mangnani",
+          "track": "A",
+          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/guksecheong_mangnani_A.md"
+        }
+      ],
+      "query_tags": [
+        "authority",
+        "institutional_power",
+        "public_humiliation",
+        "numbers_as_proof",
+        "promotion_ticket"
+      ],
+      "hidden_information_outside_information": "독자가 예상하는 힘은 폭력이나 빽이 아니라, 제도적 권한이 발동되는 정확한 순간과 숫자 증거 공개 순서다.",
+      "reader_backstab_point": "상대 안방에 들어가 숫자 증거를 공개하고, 목격자 앞에서 합법적으로 무릎 꿇린다.",
+      "core_power_fantasy": "강자를 불법이 아니라 제도 안에서 제압하고, 그 승리가 곧 다음 더 큰 전장에 입장할 자격이 되는 쾌감.",
+      "early_spike_pattern": "상대 안방 진입 -> 숫자 증거 공개 -> 공개 굴욕 -> 상급 라인 발탁",
+      "suitable_retargets": [
+        "감사권",
+        "인허가권",
+        "규제조사권",
+        "준법감시",
+        "리스크관리"
+      ],
+      "must_not_copy": [
+        "국세청 7급 세무직 직업 설정",
+        "부담부증여 등 구체 세무기법",
+        "세무서/검찰 고유 조직과 인명"
+      ],
+      "notes": "초반 보상은 돈보다 '다음 싸움의 입장권'으로 설계해야 엔진 힘이 산다.",
+      "confidence": "high"
+    },
+    {
+      "engine_id": "ENG-002",
+      "engine_name": "작은 조정으로 판을 뒤집는 상업 사이다 엔진",
+      "source_cards": [
+        {
+          "slug": "daehanminguk_absolute_jaebeol",
+          "track": "A",
+          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/daehanminguk_absolute_jaebeol_A.md"
+        }
+      ],
+      "query_tags": [
+        "commercial_reversal",
+        "small_adjustment_big_upside",
+        "result_not_words",
+        "trust_gain",
+        "merchant_instinct"
+      ],
+      "hidden_information_outside_information": "겉으로는 사소한 운영 변경처럼 보이지만, 실제로는 매출 구조를 뒤집는 보이지 않는 상업 레버리지가 숨어 있다.",
+      "reader_backstab_point": "남들은 아무도 중요하게 안 본 미세 조정 하나가 매출과 위상을 동시에 역전시킨다.",
+      "core_power_fantasy": "말이 아니라 결과 하나로 신임을 먹고, 작은 눈썰미가 큰 돈줄이 되는 상업 재능의 쾌감.",
+      "early_spike_pattern": "하찮아 보이는 운영 변경 제안 -> 빠른 매출 반전 -> 고자질 없이 결과로 인정 획득",
+      "suitable_retargets": [
+        "유통",
+        "리테일",
+        "프랜차이즈",
+        "물류센터 운영",
+        "호텔/식음"
+      ],
+      "must_not_copy": [
+        "일제강점기 신분 구조 전체",
+        "나카무라/리에 데릴사위 서사",
+        "불멸자 시스템 텍스트"
+      ],
+      "notes": "초반 1화~3화에서 '주인공만 진짜 돈줄을 본다'는 감각을 주는 seed engine으로 유용하다.",
+      "confidence": "high"
+    },
+    {
+      "engine_id": "ENG-003",
+      "engine_name": "감각 드라마화 + 초압축 보상 엔진",
+      "source_cards": [
+        {
+          "slug": "yeonbong_1jo_sinipsawon",
+          "track": "A",
+          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/yeonbong_1jo_sinipsawon_A.md"
+        }
+      ],
+      "query_tags": [
+        "sensory_edge",
+        "compressed_reward",
+        "cash_vs_equity",
+        "judgement_superiority",
+        "idea_generation"
+      ],
+      "hidden_information_outside_information": "핵심은 정보 우위 자체보다, 그 정보가 발동하는 순간을 독자가 청각·시각·촉각으로 체감하게 만드는 연출이다.",
+      "reader_backstab_point": "남들은 설명을 들으려 하는데, 주인공은 이미 감각적으로 답을 잡고 소품 하나로 즉시 증명해 버린다.",
+      "core_power_fantasy": "능력 발동의 짜릿함과, 그 결과가 곧바로 초거대 보상으로 이어지는 속도감 있는 성취 쾌감.",
+      "early_spike_pattern": "소품 단위 능력 증명 -> 신뢰 획득 -> 현금/지분 선택으로 판단력 우위 각인 -> 3화 내 초거대 보상",
+      "suitable_retargets": [
+        "특허",
+        "반도체",
+        "품질검사",
+        "신기술 개발",
+        "명품 감정/위조 판별"
+      ],
+      "must_not_copy": [
+        "스티브 잡스 실명 등장",
+        "타이거펀드/삼진전자/GL그룹 고유 설정",
+        "외환위기 배경과 동일한 복리 루트",
+        "루틴 집착 캐릭터성을 그대로 복제"
+      ],
+      "notes": "새 기획안에서 '정보 바깥의 정보'보다 '그걸 어떻게 멋있게 보여주나'가 필요할 때 호출 가치가 높다.",
+      "confidence": "high"
+    },
+    {
+      "engine_id": "ENG-004",
+      "engine_name": "실패의 역순 + 재벌 외피 가시화 엔진",
+      "source_cards": [
+        {
+          "slug": "jaebeol_saenghwal_girokbu",
+          "track": "A",
+          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/jaebeol_saenghwal_girokbu_A.md"
+        }
+      ],
+      "query_tags": [
+        "failure_reverse_order",
+        "chaebol_exterior",
+        "first_day_decision",
+        "lifestyle_power",
+        "visible_scale"
+      ],
+      "hidden_information_outside_information": "진짜 정보는 미래 성공이 아니라 '어떻게 망했는가의 역순'이며, 그 지식이 첫날 결단의 명분이 된다.",
+      "reader_backstab_point": "독자는 회귀 후 큰 사업부터 손댈 줄 아는데, 주인공은 생활/의전/스캔들/비서 배정 같은 외피부터 재벌 권력을 체감시키며 첫 칼을 꽂는다.",
+      "core_power_fantasy": "재벌 권력이 회의실 발표가 아니라 일상과 의전 체계에서 바로 드러나는 체감형 지배력.",
+      "early_spike_pattern": "2단 추락 확인 -> 회귀 -> 첫날 결단 -> 의전/비서/라인 변화로 스케일 즉시 가시화",
+      "suitable_retargets": [
+        "후계자물",
+        "재벌가 귀환물",
+        "생활밀착 재벌물",
+        "호텔/유통/서비스 재벌"
+      ],
+      "must_not_copy": [
+        "배달의 겨레 등 직접 패러디 브랜드",
+        "대현그룹/이건수 등 고유 고명사",
+        "동일한 스캔들 역전 장면과 어조"
+      ],
+      "notes": "거대한 사업보다 '재벌이 되었다'는 감각을 초반에 빠르게 체감시키는 데 강한 엔진.",
+      "confidence": "high"
+    },
+    {
+      "engine_id": "ENG-005",
+      "engine_name": "수익 전액 재투자 복리 엔진",
+      "source_cards": [
+        {
+          "slug": "dokshik_jaebeol3se",
+          "track": "A",
+          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/dokshik_jaebeol3se_A.md"
+        }
+      ],
+      "query_tags": [
+        "compounding",
+        "all_in_reinvestment",
+        "micro_saida",
+        "single_emotional_anchor",
+        "global_escalation"
+      ],
+      "hidden_information_outside_information": "독자가 보는 것은 투자 성공이지만, 실제 핵심은 소비 없는 전액 재투자와 단일 정서 앵커가 만들어 내는 압축 성장 구조다.",
+      "reader_backstab_point": "작은 감별 사이다로 능력을 보여준 직후, 주인공이 번 돈을 전부 다음 판의 씨앗으로 던져 버리며 규모를 급격히 점프시킨다.",
+      "core_power_fantasy": "돈을 쓰는 재미보다 돈이 또 다른 권력을 부르는 속도전의 쾌감.",
+      "early_spike_pattern": "마이크로 사이다 -> 첫 수익 확보 -> 소비 생략 -> 전액 재투자 -> 해외 확장 발판",
+      "suitable_retargets": [
+        "투자 재벌",
+        "글로벌 자원전",
+        "사모펀드 후계자",
+        "리스크 헤지형 후계자물"
+      ],
+      "must_not_copy": [
+        "신상명세서 능력 열람 포맷",
+        "실존 왕실/퀀트펀드/거물 실명",
+        "걸프전/파운드 공매도 등 동일 역사 이벤트 연쇄"
+      ],
+      "notes": "새 기획안에서 돈맛과 스케일 에스컬레이션이 부족할 때 붙이기 좋은 엔진.",
+      "confidence": "high"
+    },
+    {
+      "engine_id": "ENG-006",
+      "engine_name": "보이지 않는 하층 정보망 엔진",
+      "source_cards": [
+        {
+          "slug": "geomeunmeori_american_jaebeol",
+          "track": "A",
+          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/geomeunmeori_american_jaebeol_A.md"
+        }
+      ],
+      "query_tags": [
+        "invisible_intel_network",
+        "reverse_scouting",
+        "platform_building",
+        "power_reversal",
+        "street_level_information"
+      ],
+      "hidden_information_outside_information": "상층 인맥보다 먼저, 하층부와 비가시 직군이 흘리는 생활 정보가 진짜 판세를 좌우한다.",
+      "reader_backstab_point": "권력자는 주인공을 스카웃하려 오지만, 주인공이 오히려 그들을 자기 플랫폼 안으로 편입시켜 버린다.",
+      "core_power_fantasy": "가장 밑바닥의 눈과 귀를 모아 더 큰 권력자보다 먼저 판을 읽고, 갑을 역전시키는 쾌감.",
+      "early_spike_pattern": "저비용 정보원 확보 -> 가족/측근 생사 직결 문제 해결 -> 권력자 역제안 거절 후 조건 역제시",
+      "suitable_retargets": [
+        "재벌 본사 정보전",
+        "항만/공항/카지노",
+        "건설 현장",
+        "유통센터",
+        "병원/장례"
+      ],
+      "must_not_copy": [
+        "존 토리오/알 카포네 등 실존 인물 접점",
+        "1900년대 마피아 계층 언어",
+        "이민 1세대 공동체와 독립운동 맥락"
+      ],
+      "notes": "문어발 재벌물에서 '정보 바깥의 정보'를 초반부터 보여주기 좋은 seed engine.",
+      "confidence": "high"
+    },
+    {
+      "engine_id": "ENG-007",
+      "engine_name": "갑작스러운 자산 확보 후 이중 생활 엔진",
+      "source_cards": [
+        {
+          "slug": "gim_daerineun_byeorakbuja",
+          "track": "A",
+          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/gim_daerineun_byeorakbuja_A.md"
+        }
+      ],
+      "query_tags": [
+        "double_life",
+        "sudden_money",
+        "stay_method",
+        "extreme_underdog",
+        "real_asset_transition"
+      ],
+      "hidden_information_outside_information": "진짜 재미는 벼락부자 자체가 아니라, 돈이 생겨도 일상 전장과 조직 내 을의 위치를 당장 버리지 못하는 긴장이다.",
+      "reader_backstab_point": "독자는 곧바로 인생 역전할 줄 아는데, 주인공은 회사에서 계속 깨지면서도 새 돈줄을 비밀리에 굴린다.",
+      "core_power_fantasy": "밑바닥 을의 생활을 유지한 채 비밀 자산을 키우며 판을 뒤집는 은밀한 우위의 쾌감.",
+      "early_spike_pattern": "극한 결핍 각인 -> 비밀 자산 확보 -> 직장 생활 유지 -> 실물 자산 첫 매입으로 다음 확장선 개시",
+      "suitable_retargets": [
+        "부동산",
+        "가상자산 대체 자산",
+        "비상장 지분",
+        "골동/명품",
+        "장외권리"
+      ],
+      "must_not_copy": [
+        "비츠코인 124억 발견 기믹",
+        "린이지/군터 서버 고유 설정",
+        "외식 프랜차이즈 슈퍼바이저 직업 설정을 그대로 차용"
+      ],
+      "notes": "새 기획안에서 초반 결핍과 이후 돈맛이 따로 놀 때 중간 교량으로 붙이기 좋다.",
+      "confidence": "medium"
+    },
+    {
+      "engine_id": "ENG-008",
+      "engine_name": "물리 오브젝트 잠복 정보 엔진",
+      "source_cards": [
+        {
+          "slug": "jusigui_sin",
+          "track": "A",
+          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/jusigui_sin_A.md"
+        }
+      ],
+      "query_tags": [
+        "physical_information_device",
+        "beginner_realism",
+        "family_recovery_motive",
+        "discovered_information",
+        "hold_tension"
+      ],
+      "hidden_information_outside_information": "진짜 치트는 거대한 예언이 아니라, 아무도 안 보던 낡은 물리 오브젝트 안에 숨어 있는 결정적 정보다.",
+      "reader_backstab_point": "주인공은 업계 내부자도 아닌데, 남들이 버린 물건에서 판 전체를 뒤집는 정보의 입구를 찾아낸다.",
+      "core_power_fantasy": "루저였던 인물이 남들도 접근 가능한 세계에서 오직 자기만 진짜 힌트를 읽어내는 발견형 우위의 쾌감.",
+      "early_spike_pattern": "가족 피해/빚 동기 확인 -> 낡은 오브젝트에서 정보 발견 -> 초보자 현실 묘사 -> 뚝심 홀드로 첫 증명",
+      "suitable_retargets": [
+        "낡은 계약서",
+        "오래된 장부",
+        "망한 계열사 자료실",
+        "폐쇄된 공장 로그북",
+        "누락된 감사 메모"
+      ],
+      "must_not_copy": [
+        "도서관 책 여백 예언 메커니즘을 동일한 형태로 사용",
+        "동일 종목명과 수치 인용",
+        "작전주/부회장 피해 구도를 그대로 재연"
+      ],
+      "notes": "미래지식 회귀 없이도 '정보 바깥의 정보'를 주는 드문 엔진이라 보관 가치가 높다.",
+      "confidence": "high"
+    }
+  ]
+}

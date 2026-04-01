@@ -1,11 +1,37 @@
 {
   "work_id": "gatekeeper_heir",
   "run_class": "sequential_production",
-  "last_sequential_block_pass": 20,
-  "next_unit_type": "block",
-  "next_block_id": "Block 021",
+  "last_sequential_block_pass": 70,
+  "next_unit_type": "complete",
+  "next_block_id": null,
   "manual_audit_ready": true,
-  "resume_basis": "manual_audit_pass",
-  "updated_at": "2026-03-31T00:00:00+09:00",
-  "notes": "ARC-01 전체 감리 PASS. ARC-02 Block 011-020 수동 감리 PASS. ARC-02 완료. 다음 재개 지점은 ARC-03 Block 021."
+  "production_complete": true,
+  "production_ready": true,
+  "bi_complete": true,
+  "shipment_gate": {
+    "date": "2026-04-01",
+    "verdict": "PASS",
+    "avg_bundle_chars": 1256,
+    "opponent_unique": 48,
+    "deal_type_unique": 57
+  },
+  "bi_audit": {
+    "date": "2026-04-01",
+    "verdict": "PASS",
+    "pass_1_utf8": "OK",
+    "pass_2_roadmap": "OK",
+    "pass_3_protagonist": "OK",
+    "pass_4_npc_deceased": "OK",
+    "pass_5_foreshadow": "OK"
+  },
+  "ten_block_audit_history": [
+    {"range": "Block 001-010", "verdict": "PASS"},
+    {"range": "Block 011-020", "verdict": "PASS", "audit_date": "2026-03-31"},
+    {"range": "Block 021-030", "verdict": "PASS", "audit_date": "2026-04-01"},
+    {"range": "Block 031-040", "verdict": "PASS", "audit_date": "2026-04-01"},
+    {"range": "Block 041-050", "verdict": "PASS", "audit_date": "2026-04-01"},
+    {"range": "Block 051-060", "verdict": "PASS", "audit_date": "2026-04-01"},
+    {"range": "Block 061-070", "verdict": "PASS", "audit_date": "2026-04-01"}
+  ],
+  "notes": "TR 70블록 + BI 생산 완료. 전 단계 PASS. TR 출고 게이트 PASS. BI 5-Pass 감리 PASS. 파이프라인 완결."
 }

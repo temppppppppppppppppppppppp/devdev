@@ -1,0 +1,890 @@
+{
+  "_schema_version": "business_trend_slice_rollup.v1",
+  "input_corpus": "narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/platform_trends.sqlite3",
+  "entry_count": 116,
+  "work_count": 98,
+  "entry_counts_by_platform": {
+    "kakaopage": 26,
+    "munpia": 68,
+    "naver_series": 22
+  },
+  "work_counts_by_platform": {
+    "kakaopage": 14,
+    "munpia": 68,
+    "naver_series": 16
+  },
+  "entry_bucket_counts": {
+    "__all__": [
+      {
+        "bucket": "office_operator",
+        "count": 41
+      },
+      {
+        "bucket": "chaebol_power",
+        "count": 38
+      },
+      {
+        "bucket": "industry_scale",
+        "count": 29
+      },
+      {
+        "bucket": "money_game",
+        "count": 27
+      },
+      {
+        "bucket": "media_ip_business",
+        "count": 23
+      },
+      {
+        "bucket": "global_scale",
+        "count": 14
+      }
+    ],
+    "kakaopage": [
+      {
+        "bucket": "media_ip_business",
+        "count": 12
+      },
+      {
+        "bucket": "office_operator",
+        "count": 8
+      },
+      {
+        "bucket": "chaebol_power",
+        "count": 6
+      },
+      {
+        "bucket": "industry_scale",
+        "count": 4
+      },
+      {
+        "bucket": "money_game",
+        "count": 4
+      }
+    ],
+    "munpia": [
+      {
+        "bucket": "chaebol_power",
+        "count": 24
+      },
+      {
+        "bucket": "office_operator",
+        "count": 22
+      },
+      {
+        "bucket": "industry_scale",
+        "count": 18
+      },
+      {
+        "bucket": "money_game",
+        "count": 14
+      },
+      {
+        "bucket": "global_scale",
+        "count": 8
+      },
+      {
+        "bucket": "media_ip_business",
+        "count": 8
+      }
+    ],
+    "naver_series": [
+      {
+        "bucket": "office_operator",
+        "count": 11
+      },
+      {
+        "bucket": "money_game",
+        "count": 9
+      },
+      {
+        "bucket": "chaebol_power",
+        "count": 8
+      },
+      {
+        "bucket": "industry_scale",
+        "count": 7
+      },
+      {
+        "bucket": "global_scale",
+        "count": 6
+      },
+      {
+        "bucket": "media_ip_business",
+        "count": 3
+      }
+    ]
+  },
+  "work_bucket_counts": {
+    "__all__": [
+      {
+        "bucket": "office_operator",
+        "count": 37
+      },
+      {
+        "bucket": "chaebol_power",
+        "count": 30
+      },
+      {
+        "bucket": "money_game",
+        "count": 26
+      },
+      {
+        "bucket": "industry_scale",
+        "count": 21
+      },
+      {
+        "bucket": "media_ip_business",
+        "count": 14
+      },
+      {
+        "bucket": "global_scale",
+        "count": 9
+      }
+    ],
+    "kakaopage": [
+      {
+        "bucket": "office_operator",
+        "count": 5
+      },
+      {
+        "bucket": "money_game",
+        "count": 4
+      },
+      {
+        "bucket": "chaebol_power",
+        "count": 3
+      },
+      {
+        "bucket": "media_ip_business",
+        "count": 3
+      },
+      {
+        "bucket": "industry_scale",
+        "count": 1
+      }
+    ],
+    "munpia": [
+      {
+        "bucket": "chaebol_power",
+        "count": 24
+      },
+      {
+        "bucket": "office_operator",
+        "count": 22
+      },
+      {
+        "bucket": "industry_scale",
+        "count": 18
+      },
+      {
+        "bucket": "money_game",
+        "count": 14
+      },
+      {
+        "bucket": "global_scale",
+        "count": 8
+      },
+      {
+        "bucket": "media_ip_business",
+        "count": 8
+      }
+    ],
+    "naver_series": [
+      {
+        "bucket": "office_operator",
+        "count": 10
+      },
+      {
+        "bucket": "money_game",
+        "count": 8
+      },
+      {
+        "bucket": "chaebol_power",
+        "count": 3
+      },
+      {
+        "bucket": "media_ip_business",
+        "count": 3
+      },
+      {
+        "bucket": "industry_scale",
+        "count": 2
+      },
+      {
+        "bucket": "global_scale",
+        "count": 1
+      }
+    ]
+  },
+  "top_positive_keywords": [
+    {
+      "keyword": "재벌",
+      "count": 81
+    },
+    {
+      "keyword": "현대판타지",
+      "count": 64
+    },
+    {
+      "keyword": "사원",
+      "count": 33
+    },
+    {
+      "keyword": "회사",
+      "count": 30
+    },
+    {
+      "keyword": "ott",
+      "count": 30
+    },
+    {
+      "keyword": "디렉터",
+      "count": 30
+    },
+    {
+      "keyword": "저작권료",
+      "count": 25
+    },
+    {
+      "keyword": "회사원",
+      "count": 24
+    },
+    {
+      "keyword": "투자",
+      "count": 24
+    },
+    {
+      "keyword": "현판",
+      "count": 22
+    },
+    {
+      "keyword": "반도체",
+      "count": 21
+    },
+    {
+      "keyword": "미국",
+      "count": 18
+    },
+    {
+      "keyword": "회장",
+      "count": 18
+    },
+    {
+      "keyword": "감정사",
+      "count": 15
+    },
+    {
+      "keyword": "변호사",
+      "count": 12
+    },
+    {
+      "keyword": "제약회사",
+      "count": 10
+    },
+    {
+      "keyword": "돈이 미쳤",
+      "count": 10
+    },
+    {
+      "keyword": "대리",
+      "count": 9
+    },
+    {
+      "keyword": "대기업",
+      "count": 9
+    },
+    {
+      "keyword": "엔지니어",
+      "count": 9
+    },
+    {
+      "keyword": "세계",
+      "count": 8
+    },
+    {
+      "keyword": "재벌가",
+      "count": 8
+    },
+    {
+      "keyword": "로또",
+      "count": 8
+    },
+    {
+      "keyword": "코인",
+      "count": 8
+    },
+    {
+      "keyword": "ai",
+      "count": 7
+    },
+    {
+      "keyword": "ceo",
+      "count": 6
+    },
+    {
+      "keyword": "작곡",
+      "count": 6
+    },
+    {
+      "keyword": "드라마",
+      "count": 6
+    },
+    {
+      "keyword": "프로듀서",
+      "count": 6
+    },
+    {
+      "keyword": "계좌",
+      "count": 5
+    },
+    {
+      "keyword": "말단",
+      "count": 4
+    },
+    {
+      "keyword": "건설",
+      "count": 4
+    },
+    {
+      "keyword": "돈 복사",
+      "count": 4
+    },
+    {
+      "keyword": "주식",
+      "count": 4
+    },
+    {
+      "keyword": "부장",
+      "count": 4
+    },
+    {
+      "keyword": "연예",
+      "count": 4
+    },
+    {
+      "keyword": "본부",
+      "count": 3
+    },
+    {
+      "keyword": "재무",
+      "count": 3
+    },
+    {
+      "keyword": "sf",
+      "count": 3
+    },
+    {
+      "keyword": "오너",
+      "count": 3
+    },
+    {
+      "keyword": "게임 개발",
+      "count": 3
+    },
+    {
+      "keyword": "마트",
+      "count": 3
+    },
+    {
+      "keyword": "후계자",
+      "count": 3
+    },
+    {
+      "keyword": "감사",
+      "count": 3
+    },
+    {
+      "keyword": "팀장",
+      "count": 3
+    },
+    {
+      "keyword": "인세",
+      "count": 3
+    },
+    {
+      "keyword": "출판사",
+      "count": 3
+    },
+    {
+      "keyword": "공무원",
+      "count": 3
+    },
+    {
+      "keyword": "빅테크",
+      "count": 3
+    },
+    {
+      "keyword": "수익률",
+      "count": 3
+    },
+    {
+      "keyword": "그룹",
+      "count": 3
+    },
+    {
+      "keyword": "오너 일가",
+      "count": 2
+    },
+    {
+      "keyword": "돈을",
+      "count": 2
+    },
+    {
+      "keyword": "에너지",
+      "count": 2
+    },
+    {
+      "keyword": "재벌집",
+      "count": 2
+    },
+    {
+      "keyword": "협회장",
+      "count": 2
+    },
+    {
+      "keyword": "국정원",
+      "count": 2
+    },
+    {
+      "keyword": "부업",
+      "count": 2
+    },
+    {
+      "keyword": "방산",
+      "count": 2
+    },
+    {
+      "keyword": "자산",
+      "count": 2
+    },
+    {
+      "keyword": "pd",
+      "count": 2
+    },
+    {
+      "keyword": "스트리밍",
+      "count": 2
+    },
+    {
+      "keyword": "재무본부",
+      "count": 1
+    },
+    {
+      "keyword": "증권",
+      "count": 1
+    },
+    {
+      "keyword": "펀드",
+      "count": 1
+    },
+    {
+      "keyword": "프로젝트",
+      "count": 1
+    },
+    {
+      "keyword": "직장",
+      "count": 1
+    },
+    {
+      "keyword": "사장",
+      "count": 1
+    }
+  ],
+  "top_title_direct_keywords": [
+    {
+      "keyword": "재벌",
+      "count": 27
+    },
+    {
+      "keyword": "사원",
+      "count": 11
+    },
+    {
+      "keyword": "ott",
+      "count": 10
+    },
+    {
+      "keyword": "디렉터",
+      "count": 10
+    },
+    {
+      "keyword": "회사원",
+      "count": 8
+    },
+    {
+      "keyword": "반도체",
+      "count": 7
+    },
+    {
+      "keyword": "투자",
+      "count": 7
+    },
+    {
+      "keyword": "회장",
+      "count": 6
+    },
+    {
+      "keyword": "저작권료",
+      "count": 5
+    },
+    {
+      "keyword": "대기업",
+      "count": 3
+    },
+    {
+      "keyword": "대리",
+      "count": 3
+    },
+    {
+      "keyword": "ceo",
+      "count": 2
+    },
+    {
+      "keyword": "본부",
+      "count": 1
+    },
+    {
+      "keyword": "재무",
+      "count": 1
+    },
+    {
+      "keyword": "재무본부",
+      "count": 1
+    },
+    {
+      "keyword": "오너",
+      "count": 1
+    },
+    {
+      "keyword": "마트",
+      "count": 1
+    },
+    {
+      "keyword": "후계자",
+      "count": 1
+    },
+    {
+      "keyword": "감사",
+      "count": 1
+    },
+    {
+      "keyword": "팀장",
+      "count": 1
+    },
+    {
+      "keyword": "계좌",
+      "count": 1
+    },
+    {
+      "keyword": "주식",
+      "count": 1
+    },
+    {
+      "keyword": "빅테크",
+      "count": 1
+    },
+    {
+      "keyword": "수익률",
+      "count": 1
+    },
+    {
+      "keyword": "그룹",
+      "count": 1
+    }
+  ],
+  "top_works_by_surface_coverage": [
+    {
+      "platform": "kakaopage",
+      "title": "OTT 씹어먹는 천재 디렉터",
+      "surface_count": 10,
+      "max_business_relevance_score": 22,
+      "business_buckets": [
+        "media_ip_business"
+      ]
+    },
+    {
+      "platform": "naver_series",
+      "title": "나노 왕국으로 반도체 재벌 [독점]",
+      "surface_count": 6,
+      "max_business_relevance_score": 16,
+      "business_buckets": [
+        "chaebol_power",
+        "global_scale",
+        "industry_scale"
+      ]
+    },
+    {
+      "platform": "kakaopage",
+      "title": "제약회사 회장님은 절대독마",
+      "surface_count": 4,
+      "max_business_relevance_score": 20,
+      "business_buckets": [
+        "chaebol_power",
+        "industry_scale",
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "naver_series",
+      "title": "좌천당했더니 돈이 미쳤다",
+      "surface_count": 2,
+      "max_business_relevance_score": 15,
+      "business_buckets": [
+        "money_game",
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "대기업 재무본부, 남대리는 계산 중",
+      "surface_count": 1,
+      "max_business_relevance_score": 46,
+      "business_buckets": [
+        "industry_scale",
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "과거로 온 미래 회사원이 세계정복",
+      "surface_count": 1,
+      "max_business_relevance_score": 33,
+      "business_buckets": [
+        "global_scale",
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "곧 망할 대기업의 오너 일가가 되었다",
+      "surface_count": 1,
+      "max_business_relevance_score": 31,
+      "business_buckets": [
+        "chaebol_power",
+        "industry_scale"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "반도체 대기업이 죽고 못사는 엔지니어가 되었다",
+      "surface_count": 1,
+      "max_business_relevance_score": 30,
+      "business_buckets": [
+        "industry_scale",
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "kakaopage",
+      "title": "일본 여자 사귀고 대박 난 회사원",
+      "surface_count": 1,
+      "max_business_relevance_score": 29,
+      "business_buckets": [
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "kakaopage",
+      "title": "회사원이 퇴마를 잘함",
+      "surface_count": 1,
+      "max_business_relevance_score": 29,
+      "business_buckets": [
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "운명을 보는 회사원",
+      "surface_count": 1,
+      "max_business_relevance_score": 29,
+      "business_buckets": [
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "위기 감지 능력으로 역대급 회사원",
+      "surface_count": 1,
+      "max_business_relevance_score": 29,
+      "business_buckets": [
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "naver_series",
+      "title": "말단 사원이 너무 유능함",
+      "surface_count": 1,
+      "max_business_relevance_score": 29,
+      "business_buckets": [
+        "money_game",
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "미국에서 게임 개발했더니 저작권료가 쏟아짐",
+      "surface_count": 1,
+      "max_business_relevance_score": 28,
+      "business_buckets": [
+        "global_scale",
+        "industry_scale",
+        "media_ip_business"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "회귀 후 미국 마트 CEO가 되었다",
+      "surface_count": 1,
+      "max_business_relevance_score": 28,
+      "business_buckets": [
+        "chaebol_power",
+        "global_scale",
+        "industry_scale"
+      ]
+    },
+    {
+      "platform": "naver_series",
+      "title": "삼국지 - 회사원이 눈치를 보면 생기는 일",
+      "surface_count": 1,
+      "max_business_relevance_score": 28,
+      "business_buckets": [
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "돈을 미친 듯 쓸어 담는 재벌가 망나니",
+      "surface_count": 1,
+      "max_business_relevance_score": 27,
+      "business_buckets": [
+        "chaebol_power",
+        "money_game"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "미국에서 작곡했더니 저작권료가 쏟아짐",
+      "surface_count": 1,
+      "max_business_relevance_score": 27,
+      "business_buckets": [
+        "global_scale",
+        "industry_scale",
+        "media_ip_business"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "재벌 후계자는 망하고 싶어",
+      "surface_count": 1,
+      "max_business_relevance_score": 26,
+      "business_buckets": [
+        "chaebol_power"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "제약회사 회장님은 절대독마",
+      "surface_count": 1,
+      "max_business_relevance_score": 26,
+      "business_buckets": [
+        "chaebol_power",
+        "industry_scale",
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "재벌 떡잎 줍는 천재투자가",
+      "surface_count": 1,
+      "max_business_relevance_score": 25,
+      "business_buckets": [
+        "chaebol_power",
+        "money_game"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "회사원이 천재 마법사임",
+      "surface_count": 1,
+      "max_business_relevance_score": 24,
+      "business_buckets": [
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "백수, 벼락 맞고 에너지 재벌",
+      "surface_count": 1,
+      "max_business_relevance_score": 23,
+      "business_buckets": [
+        "chaebol_power",
+        "industry_scale"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "삼국지 : 회사원이 눈치를 보면 생기는 일",
+      "surface_count": 1,
+      "max_business_relevance_score": 23,
+      "business_buckets": [
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "naver_series",
+      "title": "감사팀장이 일을 너무 잘함 [무료연재]",
+      "surface_count": 1,
+      "max_business_relevance_score": 23,
+      "business_buckets": [
+        "office_operator"
+      ]
+    },
+    {
+      "platform": "kakaopage",
+      "title": "재벌집 만렙 아들",
+      "surface_count": 1,
+      "max_business_relevance_score": 22,
+      "business_buckets": [
+        "chaebol_power"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "삼대한의사는 재벌가 비밀 명의",
+      "surface_count": 1,
+      "max_business_relevance_score": 22,
+      "business_buckets": [
+        "chaebol_power"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "재벌가 쌍둥이 동생은 참지 않는다",
+      "surface_count": 1,
+      "max_business_relevance_score": 22,
+      "business_buckets": [
+        "chaebol_power"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "재벌가에 천재가 입양 되었다",
+      "surface_count": 1,
+      "max_business_relevance_score": 22,
+      "business_buckets": [
+        "chaebol_power"
+      ]
+    },
+    {
+      "platform": "munpia",
+      "title": "나 혼자 미래 공법으로 건설 재벌",
+      "surface_count": 1,
+      "max_business_relevance_score": 21,
+      "business_buckets": [
+        "chaebol_power",
+        "industry_scale"
+      ]
+    }
+  ]
+}
