@@ -1,0 +1,175 @@
+{
+  "topic": "0_0-stage2-stage3-stage4-readiness-parallel",
+  "date": "2026-03-31",
+  "baseline_commit": "fd1707372bd7eb8ad23a5d4506ef556e3f72cc51",
+  "dirty_summary": "0_0 live runtime logs/db/artifacts dirty; 0_temp console scratch dirty; lane draft docs untracked",
+  "stage4_status_for_investigation": "paused_by_operator",
+  "source_master_order": "docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-master-order.md",
+  "source_lane_docs": [
+    "docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-lane1-stage2-authority-draft.md",
+    "docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-lane2-stage3-transform-validator-draft.md",
+    "docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-lane3-artifact-truth-vertical-slice-draft.md",
+    "docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-lane4-stage4-intake-readiness-draft.md"
+  ],
+  "lane_verdicts": {
+    "stage2_authority": "stage2-fragile",
+    "stage3_transform_validator": "stage3-fragile",
+    "artifact_truth_vertical_slice": "artifact-fragile",
+    "stage4_intake_readiness": "intake-fragile"
+  },
+  "direct_rechecks": {
+    "stage2_arc_drive_schema_drift": {
+      "files": [
+        "projects/0_0/logs/artifacts/stage2/arc_001/attempt_01/final_arc__creative.json",
+        "projects/0_0/logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json"
+      ],
+      "arc_001_narrative_drive_keys": [
+        "active_villainy",
+        "callback_integration",
+        "core_motivation",
+        "core_scene_ratio",
+        "emotional_arc",
+        "foreshadowing_expansion",
+        "mission_objective",
+        "narrative_tension",
+        "protagonist_desire",
+        "short_term_commercial_goal",
+        "short_term_reward",
+        "stakes_escalation"
+      ],
+      "arc_002_narrative_drive_keys": [
+        "active_villainy",
+        "current_arc_objective",
+        "long_term_objective",
+        "mission",
+        "protagonist_lack_summary"
+      ],
+      "interpretation": "Stage 2 authority is content-rich but schema-unstable"
+    },
+    "stage3_authority_demotion": {
+      "file": "modules/domain/agents/blueprint_ensemble.py",
+      "evidence": [
+        {
+          "line": 902,
+          "text": "IMMUTABLE > HARD CONSTRAINT > EXPECTED CONTINUITY > ADVISORY"
+        },
+        {
+          "line": 1012,
+          "text": "Band 4: ADVISORY"
+        }
+      ],
+      "interpretation": "Stage 2 prohibition material is treated as weak advisory at generation time"
+    },
+    "stage3_validator_binding_scope": {
+      "file": "modules/domain/agents/unified_blueprint_validator.py",
+      "line": 52,
+      "binding_prevalidation_categories": [
+        "scene_completeness",
+        "arc_timeline",
+        "capital_unit"
+      ],
+      "interpretation": "Binding coverage is too narrow for full Stage4-readiness"
+    },
+    "arc2_ep5_contract_violation": {
+      "stage2_source": "projects/0_0/logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json",
+      "stage3_blueprint": "projects/0_0/logs/artifacts/stage3/ep_0005/attempt_06/final_blueprint__action_focused.json",
+      "stage2_excerpt_summary": "financial call with 박성호 PB, WTI 6월물, 15억 leverage order",
+      "stage3_inserted_content": [
+        "불량배 intrusion",
+        "physical confrontation",
+        "new threat beat after position build"
+      ],
+      "interpretation": "Stage 3 fabricated narrative content not authorized by the Stage 2 arc source"
+    },
+    "stage4_fail_open_preflight": {
+      "file": "modules/core/stage4_orchestrator.py",
+      "evidence": [
+        {
+          "lines": "719-723",
+          "summary": "preflight explicitly documented as fail-open"
+        },
+        {
+          "lines": "904-916",
+          "summary": "non-truly-failed results are passed through"
+        }
+      ],
+      "interpretation": "Stage 4 intake is structurally sound but not a hard upstream blocker"
+    },
+    "ifc_negative_constraint_gap": {
+      "code_file": "modules/core/stage4_immutable_fact_contract.py",
+      "artifact_files": [
+        "projects/0_0/logs/artifacts/stage3/ep_0001/attempt_01/final_blueprint__action_focused.json",
+        "projects/0_0/logs/artifacts/stage3/ep_0002/attempt_01/final_blueprint__emotion_focused.json",
+        "projects/0_0/logs/artifacts/stage3/ep_0005/attempt_06/final_blueprint__action_focused.json",
+        "projects/0_0/logs/artifacts/stage3/ep_0006/attempt_09/final_blueprint__dialogue_focused.json",
+        "projects/0_0/logs/artifacts/stage3/ep_0008/attempt_01/final_blueprint__dialogue_focused.json"
+      ],
+      "code_lines": {
+        "must_materialize_default": 252,
+        "must_not_erase_default": 253
+      },
+      "artifact_counts": {
+        "ep_0001": {
+          "must_materialize_missing": "5/5",
+          "must_not_erase_missing": "5/5"
+        },
+        "ep_0002": {
+          "must_materialize_missing": "5/5",
+          "must_not_erase_missing": "5/5"
+        },
+        "ep_0005": {
+          "must_materialize_missing": "5/5",
+          "must_not_erase_missing": "5/5"
+        },
+        "ep_0006": {
+          "must_materialize_missing": "5/5",
+          "must_not_erase_missing": "5/5"
+        },
+        "ep_0008": {
+          "must_materialize_missing": "5/5",
+          "must_not_erase_missing": "5/5"
+        }
+      }
+    }
+  },
+  "episode_readiness": [
+    {
+      "ep": 1,
+      "verdict": "ready",
+      "notes": "Stage 2 strong, Stage 3 strong, Stage 4 manuscript follows blueprint"
+    },
+    {
+      "ep": 2,
+      "verdict": "ready_with_conflict_risk",
+      "notes": "structure coherent, but later downstream conflict handling already became relevant"
+    },
+    {
+      "ep": 5,
+      "verdict": "not_ready",
+      "notes": "fabricated violence, institution drift, timeline issue"
+    },
+    {
+      "ep": 6,
+      "verdict": "not_ready",
+      "notes": "high-attempt churn and residual contamination"
+    },
+    {
+      "ep": 8,
+      "verdict": "fragile",
+      "notes": "cleaner structure than ep5/6, but Arc 2 narrative-truth risk remains"
+    }
+  ],
+  "primary_cause_ranking": [
+    "Stage 3 generation fidelity failure to Stage 2 authority",
+    "Stage 3 validator blind spots and non-blocking behavior",
+    "Stage 3 retry authority drift",
+    "Stage 4 fail-open intake plus IFC contract gaps",
+    "Stage 2 schema instability"
+  ],
+  "execution_implication": {
+    "new_execution_ssot_justified": true,
+    "recommended_focus": "Stage 2/3 Stage4-readiness remediation with Stage 3 generation fidelity and validator hardening as the primary lane",
+    "stage4_should_remain_paused_for_this_lane": true
+  },
+  "confidence": 0.96
+}

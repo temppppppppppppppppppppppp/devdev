@@ -1,0 +1,125 @@
+{
+  "tag": "stage3_complete",
+  "timestamp": "2026-04-01 09:32:00",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 10,
+  "counts": {
+    "db_commit": 5,
+    "blueprint_success": 5
+  },
+  "latest_event_type": "blueprint_success",
+  "recent_events": [
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "blueprint_success",
+      "message": "ep_5_blueprint_generated"
+    },
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "blueprint_success",
+      "message": "ep_6_blueprint_generated"
+    },
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "blueprint_success",
+      "message": "ep_7_blueprint_generated"
+    },
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "blueprint_success",
+      "message": "ep_8_blueprint_generated"
+    },
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "blueprint_success",
+      "message": "ep_9_blueprint_generated"
+    }
+  ],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth."
+  },
+  "proof_digest": {
+    "available": true,
+    "status": "warn",
+    "artifacts": {
+      "db_available": true,
+      "session_decisions_exists": true,
+      "ui_events_jsonl_exists": true,
+      "pass_rate_monitor_exists": true,
+      "episode_production_exists": false,
+      "runtime_audit_jsonl_exists": true,
+      "ui_events_db_available": true,
+      "ui_events_count": 800,
+      "ui_event_coverage_status": "ok"
+    },
+    "stages": {
+      "stage3": {
+        "status": "warn",
+        "attempts_considered": 9,
+        "complete_final_attempts": 5,
+        "complete_lifecycle_attempts": 0,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 9,
+        "coverage": {
+          "stage_attempts": 9,
+          "pass_rate_monitor": 5,
+          "director_selections": 9,
+          "episode_production": 0,
+          "session_decisions": 5
+        },
+        "issue_counts": {
+          "final_sink_missing": 8
+        }
+      },
+      "stage4": {
+        "status": "warn",
+        "attempts_considered": 2,
+        "complete_final_attempts": 0,
+        "complete_lifecycle_attempts": 0,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 2,
+        "coverage": {
+          "stage_attempts": 0,
+          "pass_rate_monitor": 0,
+          "director_selections": 2,
+          "episode_production": 0,
+          "session_decisions": 0
+        },
+        "issue_counts": {
+          "lifecycle_sink_missing": 2,
+          "lifecycle_missing_in_final_sinks": 4
+        }
+      }
+    },
+    "session_lineage": {
+      "plain_log_token": "20260401_090504",
+      "structured_session_id": "20260401_090504",
+      "status": "unified"
+    }
+  }
+}
