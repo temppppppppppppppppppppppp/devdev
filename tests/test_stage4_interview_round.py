@@ -8863,3 +8863,56 @@ class TestScopeSinkSemantics:
         assert previous_attempt["scope_origin"]["fix_scope"] == "post_select_conflict_override"
         assert previous_attempt["scope_origin"]["authoritative_fix_scope"] == "director_authoritative"
         assert previous_attempt["scope_origin"]["repair_scope"] == "runtime_lane"
+
+
+def test_post_select_conflict_logs_detail_to_ui_sink():
+    ctx = _make_ctx()
+    ir = Stage4InterviewRound(ctx)
+    round_ctx = _make_round_ctx()
+    round_ctx.next_ep = 3
+    round_ctx.prev_manuscripts_text = "정답 이전 원고\n이전 원고"
+    ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {
+        "decision": "CONFLICT",
+        "summary": "location mismatch",
+    }
+
+    verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+        verdict="PASS",
+        next_ep=3,
+        round_num=1,
+        round_ctx=round_ctx,
+        final_manuscript="원고 텍스트",
+        final_state_updates={},
+        director_result={
+            "director_verdict": "PASS",
+            "final_verdict": "PASS",
+            "selected": "A",
+            "selected_candidate": {"strategy_name": "tension", "manuscript": "원고"},
+            "fix_scope": "partial",
+            "selection_reason": "best candidate",
+            "verdict_reason": "pass before post-select",
+            "repair_scope": "partial",
+            "score_breakdown": {},
+            "consistency_checklist": {},
+            "open_review": "review",
+            "fix_pack": {"patch_targets": ["target"]},
+            "action_items": ["fix it"],
+        },
+        director_feedback="initial feedback",
+        score=95,
+        error_category="",
+        previous_attempt={},
+        stage4_spinner=MagicMock(),
+        director_memory_context="",
+    )
+
+    assert verdict == "REJECT"
+    detail_calls = [
+        call
+        for call in ctx.ui.log.call_args_list
+        if call.kwargs.get("component") == "post_select_validation"
+        and call.kwargs.get("event_kind") == "detail"
+    ]
+    assert detail_calls
+    assert any("location mismatch" in call.args[0] for call in detail_calls if call.args)
+    assert any(call.kwargs.get("meta", {}).get("conflict_type") == "continuity" for call in detail_calls)

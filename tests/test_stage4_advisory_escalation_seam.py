@@ -471,3 +471,50 @@ class TestPostSelectConflictRetryRouting:
         )
         assert not routing.use_patch
         assert routing.fix_scope == "full"
+
+
+class TestAdvisoryEscalationObservability:
+    def test_escalation_logs_triggered_families_to_ui_sink(self):
+        ir = _make_ir(advisory_summary={"flashback": 1, "truth_gate": 1})
+
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack=_ready_local_fix_pack(),
+            )
+        )
+
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        policy_calls = [
+            call
+            for call in ir.ctx.ui.log.call_args_list
+            if call.kwargs.get("component") == "director_gate"
+            and call.kwargs.get("event_kind") == "policy"
+        ]
+        assert policy_calls
+        assert any(call.kwargs.get("meta", {}).get("triggered_by") == ["flashback", "truth_gate"] for call in policy_calls)
+
+    def test_non_local_fix_reject_logs_contract_reason(self):
+        ir = _make_ir(advisory_summary={"flashback": 1})
+
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={},
+            )
+        )
+
+        assert result["final_verdict"] == "REJECT"
+        policy_calls = [
+            call
+            for call in ir.ctx.ui.log.call_args_list
+            if call.kwargs.get("component") == "director_gate"
+            and call.kwargs.get("event_kind") == "policy"
+        ]
+        assert any(
+            call.kwargs.get("meta", {}).get("gate_basis") == "strong_advisory_escalation_non_local_fix"
+            and call.kwargs.get("meta", {}).get("contract_reason") == "missing_fix_pack"
+            for call in policy_calls
+        )
