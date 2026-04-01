@@ -445,6 +445,54 @@ class Stage4PostProcessor:
                 raw_vectors.append({"source": key, "text": value.strip()})
         return cls._normalize_active_pressure_vectors(raw_vectors)
 
+    @classmethod
+    def _filter_active_pressure_vectors_by_manuscript(
+        cls,
+        vectors: list[dict],
+        final_manuscript: str | None,
+    ) -> list[dict]:
+        if not vectors:
+            return []
+
+        manuscript_tail = str(final_manuscript or "").strip()[-1200:]
+        if not manuscript_tail:
+            return []
+
+        normalized_tail = re.sub(r"[^0-9A-Za-z가-힣]+", "", manuscript_tail).lower()
+        filtered: list[dict] = []
+        for vector in vectors:
+            if not isinstance(vector, dict):
+                continue
+
+            text = str(vector.get("text") or "").strip()
+            if not text:
+                continue
+            if text in manuscript_tail:
+                filtered.append(vector)
+                continue
+
+            normalized_text = re.sub(r"[^0-9A-Za-z가-힣]+", "", text).lower()
+            if len(normalized_text) >= 8 and normalized_text in normalized_tail:
+                filtered.append(vector)
+                continue
+
+            cue_terms = vector.get("cue_terms", [])
+            normalized_terms: list[str] = []
+            if isinstance(cue_terms, list):
+                for cue in cue_terms:
+                    normalized = cls._normalize_pressure_cue(cue)
+                    if normalized and normalized not in normalized_terms:
+                        normalized_terms.append(normalized)
+            if not normalized_terms:
+                normalized_terms = cls._extract_pressure_cue_terms(text)
+
+            matched_terms = [term for term in normalized_terms if term in normalized_tail]
+            required_matches = 2 if len(normalized_terms) >= 2 else 1
+            if len(matched_terms) >= required_matches:
+                filtered.append(vector)
+
+        return filtered
+
     # ------------------------------------------------------------------
     # [V73] 확정 원고 기준 자본금 역동기화
     # ------------------------------------------------------------------

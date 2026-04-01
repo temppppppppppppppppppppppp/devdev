@@ -1,0 +1,152 @@
+{
+  "survey_type": "bounded_static_survey",
+  "date": "2026-04-02",
+  "lane": "0_0-stage4-post-select-continuity-seam",
+  "status": "final",
+  "confidence": 0.96,
+  "scope": "Residual Stage4 ep4 post_select_conflict / continuity seam after fix-pack finalization code landed; no fresh canary evidence used.",
+  "source_docs": [
+    "docs/2026-04-02/0_0-stage4-canonical-entity-postselect-runtime-closure-audit.md",
+    "docs/2026-04-02/0_0-stage4-canonical-entity-postselect-runtime-closure-evidence.json",
+    "docs/2026-04-02/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md",
+    "docs/2026-04-02/0_0-stage4-fixpack-finalization-post-implementation-audit.md"
+  ],
+  "artifact_truth": {
+    "ep4_attempt01_selected": {
+      "path": "projects/canary_0_0_stage34_arc2_entitypost_r1/logs/artifacts/stage4/ep_0004/attempt_01/rejected_best__A.txt",
+      "hits": [
+        {
+          "line": 47,
+          "text": "3일 뒤, 여의도 신성증권 본사 브이아이피 접견실."
+        },
+        {
+          "line": 49,
+          "text": "신성증권 여의도 지점장 최동욱"
+        },
+        {
+          "line": 91,
+          "text": "신성증권 에이치티에스 화면"
+        }
+      ]
+    },
+    "ep4_attempt02_selected": {
+      "path": "projects/canary_0_0_stage34_arc2_entitypost_r1/logs/artifacts/stage4/ep_0004/attempt_02/selected_before_fix__C.txt",
+      "hits": [
+        {
+          "line": 55,
+          "text": "영업일 기준 3일 뒤."
+        },
+        {
+          "line": 57,
+          "text": "한미증권 본사 VIP 접견실"
+        },
+        {
+          "line": 59,
+          "text": "한미증권 박 지점장"
+        },
+        {
+          "line": 128,
+          "text": "HUD 시스템에서 붉은색 경고등"
+        }
+      ]
+    },
+    "ep4_attempt01_patched_blueprint": {
+      "path": "projects/canary_0_0_stage34_arc2_entitypost_r1/logs/artifacts/stage4/ep_0004/attempt_01/patched_blueprint_after_fix__V75-D_blueprint_inplace.json",
+      "hits": [
+        {
+          "line": 67,
+          "text": "ending_hook retains intrusion / shadow entry"
+        },
+        {
+          "line": 79,
+          "text": "integrated_scenario retains HUD warning and intrusion"
+        },
+        {
+          "line": 178,
+          "text": "HUD system warning in scene events"
+        }
+      ]
+    }
+  },
+  "metadata_truth": {
+    "runtime_pathology_signals": [
+      {
+        "path": "projects/canary_0_0_stage34_arc2_entitypost_r1/logs/runtime_audit.jsonl",
+        "line": 19,
+        "fingerprint": "post_select_conflict|contradiction:고유명사|continuity_firewall|fix_pack:missing_fix_pack"
+      },
+      {
+        "path": "projects/canary_0_0_stage34_arc2_entitypost_r1/logs/runtime_audit.jsonl",
+        "line": 21,
+        "fingerprint": "post_select_conflict|contradiction:타임라인|fix_pack:missing_fix_pack"
+      }
+    ],
+    "code_anchors": [
+      {
+        "path": "modules/core/stage4_interview_round.py",
+        "line": 127,
+        "detail": "_build_post_select_conflict_contract only serializes continuity/history/check_error plus freeform detail"
+      },
+      {
+        "path": "modules/core/stage4_interview_round.py",
+        "line": 4343,
+        "detail": "_run_post_select_checks downgrades provisional PASS to reject_bucket=post_select_conflict and repair_scope=full"
+      },
+      {
+        "path": "modules/core/stage4_reject_runtime.py",
+        "line": 539,
+        "detail": "reject_bucket promoted from gate_basis when post_select_conflict"
+      },
+      {
+        "path": "modules/core/stage4_reject_runtime.py",
+        "line": 605,
+        "detail": "post_select_conflict forces full rewrite semantics while bounded fix-pack preservation is selectively applied"
+      }
+    ],
+    "test_anchors": [
+      {
+        "path": "tests/test_v75c_contradiction_firewall.py",
+        "line": 326,
+        "detail": "timeline contradiction is represented as a typed contradiction"
+      },
+      {
+        "path": "tests/test_v75c_contradiction_firewall.py",
+        "line": 402,
+        "detail": "고유명사 contradiction is represented as a typed contradiction and can be fixable"
+      },
+      {
+        "path": "tests/test_stage4_advisory_escalation_seam.py",
+        "line": 338,
+        "detail": "post_select_conflict scope propagation forces full scope downstream"
+      },
+      {
+        "path": "tests/test_stage4_interview_round.py",
+        "line": 6624,
+        "detail": "bounded post-select fix-pack hints can now be preserved in snapshots"
+      },
+      {
+        "path": "tests/test_stage4_interview_round.py",
+        "line": 8992,
+        "detail": "post_select conflict detail is logged to the UI sink"
+      }
+    ]
+  },
+  "narrative_truth": {
+    "ep4_attempt01": [
+      "Real proper-noun/entity drift exists in the manuscript itself.",
+      "The candidate still says 신성증권 / 최동욱 and pushes the meeting to 3일 뒤."
+    ],
+    "ep4_attempt02": [
+      "Institution/person anchor is improved to 한미증권 / 박 지점장.",
+      "But the manuscript still contains 영업일 기준 3일 뒤 and explicit HUD system language."
+    ],
+    "implication": "The seam is not a pure false positive. The manuscript path still carries real contradiction families, but the final-round contract flattens them too aggressively."
+  },
+  "hard_conclusions": [
+    "ep4 post-select downgrade operated on manuscripts with real contradiction content, not a clean artifact path.",
+    "Stage4 already knows more precise contradiction subtypes earlier in the pipeline than the post-select conflict contract preserves.",
+    "The residual seam is contract precision loss across the final-round continuity downgrade boundary.",
+    "The landed fix-pack finalization tranche addresses observability and hint preservation, but not contradiction subtype preservation."
+  ],
+  "next_action_if_needed": "If another non-runtime bounded wave is opened before any future canary, target Stage4 post-select contradiction subtype / continuity contract normalization instead of reopening Stage2/3."
+}

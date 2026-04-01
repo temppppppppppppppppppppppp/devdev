@@ -124,7 +124,14 @@ def _sanitize_writer_blueprint_payload(value: object) -> object:
     return value
 
 
-def _build_post_select_conflict_contract(conflicts: list[str] | None) -> dict[str, object]:
+def _build_post_select_conflict_contract(
+    conflicts: list[str] | None,
+    *,
+    contradiction_types: list[str] | None = None,
+    contradiction_details: list[str] | None = None,
+    bounded_local_fix_hint: bool = False,
+    target_kind: str = "",
+) -> dict[str, object]:
     entries: list[dict[str, str]] = []
     if not isinstance(conflicts, list):
         return {}
@@ -153,11 +160,31 @@ def _build_post_select_conflict_contract(conflicts: list[str] | None) -> dict[st
     if not entries:
         return {}
 
-    return {
+    contract: dict[str, object] = {
         "contract_type": "post_select_conflict",
         "mode": "rewrite_with_best_manuscript_reuse",
         "conflicts": entries,
     }
+    normalized_contradiction_types: list[str] = []
+    for item in contradiction_types or []:
+        token = str(item or "").strip()
+        if token and token not in normalized_contradiction_types:
+            normalized_contradiction_types.append(token)
+    if normalized_contradiction_types:
+        contract["contradiction_types"] = normalized_contradiction_types
+    normalized_contradiction_details: list[str] = []
+    for item in contradiction_details or []:
+        line = str(item or "").strip()
+        if line and line not in normalized_contradiction_details:
+            normalized_contradiction_details.append(line)
+    if normalized_contradiction_details:
+        contract["contradiction_details"] = normalized_contradiction_details
+    normalized_target_kind = str(target_kind or "").strip().lower()
+    if normalized_target_kind:
+        contract["target_kind"] = normalized_target_kind
+    if bounded_local_fix_hint:
+        contract["bounded_local_fix_hint"] = True
+    return contract
 
 
 def _emit_stage4_ui_log(
@@ -1983,6 +2010,79 @@ class Stage4InterviewRound:
             payload["target_kinds"] = list(fix_pack.get("target_kinds") or [])[:4]
         return payload
 
+    @classmethod
+    def _backfill_strong_advisory_fix_pack(cls, director_result: dict | None) -> dict:
+        if not isinstance(director_result, dict):
+            return {}
+        escalation = director_result.get("strong_advisory_escalation")
+        if not isinstance(escalation, dict):
+            return cls._normalize_fix_pack(director_result.get("fix_pack"))
+        fix_pack = cls._normalize_fix_pack(director_result.get("fix_pack"))
+        if not fix_pack:
+            return {}
+        target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
+        if target_kind not in {"entity_ref", "local_phrase", "local_sentence"}:
+            return fix_pack
+        triggered = [
+            str(item).strip().lower()
+            for item in (escalation.get("triggered_by") or [])
+            if str(item).strip()
+        ]
+        if not triggered:
+            return fix_pack
+        templates = {
+            "truth_gate": (
+                "정합성 충돌 문장",
+                "정합성 충돌을 일으킨 문장을 canonical truth에 맞게 국소 수정",
+            ),
+            "npc_drift": (
+                "NPC 역할/관계 서술 문장",
+                "NPC 역할 또는 관계 표현을 canonical truth에 맞게 국소 수정",
+            ),
+            "rel_drift": (
+                "관계 프레이밍 문장",
+                "인물 간 관계 프레이밍을 canonical relation truth에 맞게 국소 수정",
+            ),
+            "flashback": (
+                "회상/기억 서술 문장",
+                "회상 또는 기억 서술을 prior authority와 맞게 국소 수정",
+            ),
+            "info_paradox": (
+                "정보 상태 충돌 문장",
+                "정보 상태 충돌을 일으킨 문장을 canonical information state에 맞게 국소 수정",
+            ),
+        }
+        changed = False
+        if not fix_pack.get("patch_targets"):
+            patch_targets: list[str] = []
+            for key in triggered:
+                label = str(templates.get(key, ("", ""))[0] or "").strip()
+                if label and label not in patch_targets:
+                    patch_targets.append(label)
+            if patch_targets:
+                fix_pack["patch_targets"] = patch_targets[:3]
+                changed = True
+        if not fix_pack.get("must_fix"):
+            must_fix: list[str] = []
+            for key in triggered:
+                instruction = str(templates.get(key, ("", ""))[1] or "").strip()
+                if instruction and instruction not in must_fix:
+                    must_fix.append(instruction)
+            if must_fix:
+                fix_pack["must_fix"] = must_fix[:4]
+                changed = True
+        if changed:
+            evidence_marker = f"runtime strong advisory backfill: {', '.join(triggered)}"
+            existing_summary = str(fix_pack.get("evidence_summary", "") or "").strip()
+            if evidence_marker not in existing_summary:
+                fix_pack["evidence_summary"] = (
+                    f"{existing_summary}; {evidence_marker}" if existing_summary else evidence_marker
+                )
+            escalation["local_fix_contract_backfilled"] = True
+            escalation["backfilled_from"] = list(triggered)
+            escalation["backfill_target_kind"] = target_kind
+        return fix_pack
+
     def _enforce_pass_with_fix_contract(self, director_result: dict | None) -> dict:
         normalized = self._normalize_director_gate_semantics(director_result)
         if not normalized:
@@ -2214,6 +2314,7 @@ class Stage4InterviewRound:
         # [Lane2-G2b] Strong advisory escalation may only stay PASS_WITH_FIX when the
         # result is truly local-fixable: fix_scope=inplace and fix_pack contract ready.
         if final_verdict == "PASS_WITH_FIX" and isinstance(director_result.get("strong_advisory_escalation"), dict):
+            director_result["fix_pack"] = self._backfill_strong_advisory_fix_pack(director_result)
             _runtime_fix_scope = str(director_result.get("fix_scope") or authoritative_fix_scope or "").strip().lower()
             _fix_pack_contract = self._evaluate_fix_pack_contract(director_result.get("fix_pack"))
             _local_contract_ready = _runtime_fix_scope == "inplace" and bool(_fix_pack_contract.get("ready"))
@@ -4295,7 +4396,44 @@ class Stage4InterviewRound:
             _selection_reason = director_result.get("selection_reason", "") if isinstance(director_result, dict) else ""
             _verdict_reason = director_result.get("verdict_reason", "") if isinstance(director_result, dict) else ""
             _post_select_fix_scope = "full"
-            _conflict_contract = _build_post_select_conflict_contract(_post_select_conflicts)
+            _existing_contradiction_types: list[str] = []
+            for item in director_result.get("contradiction_types", []) if isinstance(director_result, dict) else []:
+                token = str(item or "").strip()
+                if token and token not in _existing_contradiction_types:
+                    _existing_contradiction_types.append(token)
+            _raw_contradiction_details = (
+                list(director_result.get("contradiction_details", []) or [])
+                if isinstance(director_result, dict)
+                else []
+            )
+            _compact_contradiction_details = self._compact_contradiction_detail_lines(
+                _raw_contradiction_details,
+                max_items=None,
+                line_limit=160,
+            )
+            if not _compact_contradiction_details:
+                _compact_contradiction_details = [str(item or "").strip() for item in _post_select_conflicts if str(item or "").strip()]
+            _post_select_fix_pack_contract = self._evaluate_fix_pack_contract(
+                director_result.get("fix_pack") if isinstance(director_result, dict) else {}
+            )
+            _normalized_post_select_fix_pack = _post_select_fix_pack_contract.get("fix_pack", {})
+            _bounded_local_fix_hint = bool(_post_select_fix_pack_contract.get("ready"))
+            _conflict_contract = _build_post_select_conflict_contract(
+                _post_select_conflicts,
+                contradiction_types=_existing_contradiction_types,
+                contradiction_details=_compact_contradiction_details,
+                bounded_local_fix_hint=_bounded_local_fix_hint,
+                target_kind=str(_normalized_post_select_fix_pack.get("target_kind", "") or ""),
+            )
+            if isinstance(director_result, dict):
+                if _existing_contradiction_types:
+                    director_result["contradiction_types"] = list(_existing_contradiction_types)
+                elif _conflict_types:
+                    director_result["contradiction_types"] = list(dict.fromkeys(_conflict_types))
+                if _raw_contradiction_details:
+                    director_result["contradiction_details"] = list(_raw_contradiction_details)
+                elif _compact_contradiction_details:
+                    director_result["contradiction_details"] = list(_compact_contradiction_details)
             previous_attempt = {
                 "best_manuscript": final_manuscript,
                 "state_updates": final_state_updates,
@@ -4331,6 +4469,14 @@ class Stage4InterviewRound:
                 else [],
                 "prior_attempts": self._inherit_attempt_history(previous_attempt),
             }
+            if _existing_contradiction_types:
+                previous_attempt["contradiction_types"] = list(_existing_contradiction_types)
+            elif _conflict_types:
+                previous_attempt["contradiction_types"] = list(dict.fromkeys(_conflict_types))
+            if _raw_contradiction_details:
+                previous_attempt["contradiction_details"] = list(_raw_contradiction_details)
+            elif _compact_contradiction_details:
+                previous_attempt["contradiction_details"] = list(_compact_contradiction_details)
             if _conflict_contract:
                 previous_attempt["conflict_contract"] = _conflict_contract
             previous_attempt["reuse_contract"] = {

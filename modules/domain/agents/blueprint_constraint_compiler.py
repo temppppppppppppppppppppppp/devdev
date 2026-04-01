@@ -644,14 +644,15 @@ class BlueprintConstraintCompiler:
         _inst_re = re.compile(
             r"([\w가-힣A-Za-z]{2,15}(?:" + "|".join(re.escape(s) for s in _inst_suffixes_ordered) + r"))"
         )
-        institution_names: set[str] = set()
+        manuscript_institution_names: set[str] = set()
+        blueprint_institution_names: set[str] = set()
 
         # 6a. From manuscript text
         if ms_text:
             for m in _inst_re.finditer(ms_text):
                 name = m.group(1).strip()
                 if len(name) >= 4:
-                    institution_names.add(name)
+                    manuscript_institution_names.add(name)
 
         # 6b. From prev_blueprint scene locations + end_location + ending_state
         _bp_texts_for_inst: list[str] = []
@@ -671,8 +672,9 @@ class BlueprintConstraintCompiler:
             for m in _inst_re.finditer(text_chunk):
                 name = m.group(1).strip()
                 if len(name) >= 4:
-                    institution_names.add(name)
+                    blueprint_institution_names.add(name)
 
+        institution_names = manuscript_institution_names or blueprint_institution_names
         for inst_name in sorted(institution_names)[:4]:
             anchors.append({
                 "category": "기관",

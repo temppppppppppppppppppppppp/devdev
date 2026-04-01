@@ -779,6 +779,9 @@ class TestProcessPassResult:
         pp.post_pass_runtime._build_active_pressure_vectors = MagicMock(
             return_value=[{"text": "pressure vector", "source": "ending_hook"}]
         )
+        pp.post_pass_runtime._filter_active_pressure_vectors_by_manuscript = MagicMock(
+            return_value=[{"text": "pressure vector", "source": "ending_hook"}]
+        )
 
         result = pp.post_pass_runtime._apply_state_text_and_pressure_vectors(
             actual_truth={"location": "gate"},
@@ -792,6 +795,22 @@ class TestProcessPassResult:
         assert result["active_pressure_vectors"] == [{"text": "pressure vector", "source": "ending_hook"}]
         assert result["pressure_vectors_changed"] is True
         assert result["actual_truth"]["active_pressure_vectors"] == [{"text": "pressure vector", "source": "ending_hook"}]
+
+    def test_apply_state_text_and_pressure_vectors_clears_unsupported_pressure_vectors(self):
+        pp = self._make_pp()
+
+        result = pp.post_pass_runtime._apply_state_text_and_pressure_vectors(
+            actual_truth={"location": "gate"},
+            final_manuscript="강민철은 계약서를 접어 재킷 안주머니에 넣고 자리에서 일어섰다. 그는 PB의 시선을 피하지 않았다.",
+            genre_type="investment",
+            critical_keys=["gate"],
+            blueprint={"ending_hook": "정체불명의 그림자가 들이닥치기 시작했다."},
+            prev_pressure_vectors=[{"text": "정체불명의 그림자가 들이닥치기 시작했다.", "source": "ending_hook"}],
+        )
+
+        assert result["active_pressure_vectors"] == []
+        assert result["pressure_vectors_changed"] is True
+        assert result["actual_truth"]["active_pressure_vectors"] == []
 
     def test_persist_manager_delta_outputs_saves_bible_and_delegates_side_effect_sinks(self):
         pp = self._make_pp()
@@ -1280,7 +1299,7 @@ class TestProcessPassResult:
 
         result = pp.process_pass_result(
             next_ep=4,
-            final_manuscript="독기가 아직 가시지 않았다. 복도 끝의 발소리가 더 가까워졌다. " * 120,
+            final_manuscript="독이 퍼지기 시작했다. 해독제가 필요하다. 흑풍회의 추격대가 문 앞에 도착했다. " * 120,
             final_title="테스트",
             final_state_updates={},
             blueprint={
@@ -1307,6 +1326,56 @@ class TestProcessPassResult:
         assert ws_changes["active_pressure_vectors"][1]["text"] == "흑풍회의 추격대가 문 앞에 도착했다."
 
         pp.ctx.fact_ledger.update_from_state_changes.assert_not_called()
+
+    def test_process_pass_result_clears_unsupported_pressure_vectors_from_persistence(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.current_project.latest_state = {
+            "actual_truth": {
+                "active_pressure_vectors": [{"text": "정체불명의 그림자가 들이닥치기 시작했다.", "source": "ending_hook"}]
+            }
+        }
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "new_lore": {},
+            "knowledge_map_updates": {},
+            "recovered_seeds": [],
+            "state_updates": {},
+            "causal_links": [],
+        }
+
+        pp.ctx.world_state = MagicMock()
+        pp.ctx.world_state._state = {}
+        pp.ctx.fact_ledger = MagicMock()
+        pp.ctx.fact_ledger._ledger = {}
+        pp.ctx.fact_ledger.get_stats.return_value = {"characters": 0, "items": 0}
+
+        result = pp.process_pass_result(
+            next_ep=4,
+            final_manuscript="강민철은 계약서를 접어 재킷 안주머니에 넣고 자리에서 일어섰다. 그는 PB의 시선을 피하지 않았다. " * 40,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={
+                "scene_breakdown": [],
+                "ending_hook": "정체불명의 그림자가 들이닥치기 시작했다.",
+                "cliffhanger": "철문 손잡이가 거칠게 돌아가기 시작했다.",
+            },
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+
+        saved_state_log = pp.ctx.current_project.db.save_state_log_with_summary.call_args.args[1]
+        assert saved_state_log["actual_truth"]["active_pressure_vectors"] == []
+        assert saved_state_log["active_pressure_vectors"] == []
+
+        saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
+        assert saved_bible["state_changes"]["active_pressure_vectors"] == []
+
+        ws_changes = pp.ctx.world_state.update_from_state_changes.call_args.args[1]
+        assert ws_changes["active_pressure_vectors"] == []
 
 
     def test_process_pass_result_normalizes_martial_arts_before_stv_and_persistence(self, tmp_path):

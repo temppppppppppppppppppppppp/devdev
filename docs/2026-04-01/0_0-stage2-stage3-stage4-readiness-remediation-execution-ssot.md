@@ -1,7 +1,7 @@
 # 0_0 Stage2-Stage3 Stage4-Readiness Remediation Execution SSOT
 
 Date: 2026-04-01
-Status: partial — Stage3 closure candidate confirmed via ctxnorm_r1 canary runtime; Stage4 blocked by ep2 advisory escalation loop (separate issue, not Tranche D regression); Stage4 still paused
+Status: blocked — Stage2/3 structural improvement is runtime-visible, but Stage4 remains blocked by unresolved finalization seams (ep3 strong-advisory fix-pack + ep4 post-select continuity); Stage4 still paused
 Canonical Path: `docs/2026-04-01/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md`
 Commit State:
@@ -363,3 +363,28 @@ Operational conclusion:
 - Parent lane verdict: `partial`
 - keep Stage4 paused
 - open items: ep2 advisory loop investigation, ep5 tactical_semantic_fidelity CRITICAL confirmation, ep8 attempt-loop cost profiling
+
+## 18. Runtime Continuation Update (entitypost_r1 canary)
+
+Canary: `canary_0_0_stage34_arc2_entitypost_r1`
+Audit doc: `docs/2026-04-02/0_0-stage4-canonical-entity-postselect-runtime-closure-audit.md`
+Evidence: `docs/2026-04-02/0_0-stage4-canonical-entity-postselect-runtime-closure-evidence.json`
+
+What the later canary changed:
+
+- `Stage3 ep5-9` all passed again in live generation
+- `ep2` advanced past the prior advisory-loop blocker and reached `PASS`
+- `Flashback` did not reappear in the current Stage4 path
+
+What remains blocked:
+
+- `ep3` repeatedly degraded under `strong_advisory_escalation_non_local_fix` with empty `patch_targets`
+- `ep4` degraded under `continuity_firewall/post_select_conflict` around proper nouns and timeline continuity
+- `stage34_canary_summary.json` ended with Stage4 proof status `fail/warn`, not closure
+
+Updated operating conclusion:
+
+- Stage2 is not the current blocker
+- Stage3 is no longer the dominant blocker in the latest canary
+- Parent lane is now blocked specifically by Stage4 finalization seams
+- do not reopen Stage2/3 hierarchy work before the next bounded Stage4 follow-up is handled

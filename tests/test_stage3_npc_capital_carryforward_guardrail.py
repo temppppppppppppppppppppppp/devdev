@@ -114,6 +114,53 @@ class TestInstitutionFactLockAnchor:
         assert len(inst_anchors) <= 4
 
 
+    def test_manuscript_institution_outranks_conflicting_blueprint_institution(self):
+        bp = {
+            "end_location": "한미증권 본점",
+            "scene_breakdown": {"scene_1": {"location": "한미증권 PB센터"}},
+            "ending_state": {"location_detail": "한미증권 VIP 라운지"},
+        }
+        result = BlueprintConstraintCompiler._build_fact_lock_packet(
+            prev_blueprint=bp,
+            prev_manuscript_ending="김도진은 HMC투자증권 VVIP PB센터에서 미팅을 마치고 자리에서 일어섰다.",
+            arc_data={},
+            ep_num=4,
+        )
+
+        names = " ".join(a["fact"] for a in result.get("anchors", []) if a["category"] == "기관")
+        assert "HMC투자증권" in names
+        assert "한미증권" not in names
+
+    def test_compiled_fact_lock_prefers_manuscript_truth_for_validator(self):
+        bp = {
+            "end_location": "한미증권 본점",
+            "scene_breakdown": {"scene_1": {"location": "한미증권 PB센터"}},
+            "ending_state": {"location_detail": "한미증권 VIP 라운지"},
+        }
+        packet = BlueprintConstraintCompiler._build_fact_lock_packet(
+            prev_blueprint=bp,
+            prev_manuscript_ending="김도진은 HMC투자증권 VVIP PB센터에서 미팅을 마치고 자리에서 일어섰다.",
+            arc_data={},
+            ep_num=4,
+        )
+
+        no_issue = UnifiedBlueprintValidator._collect_fact_lock_drift_issues(
+            blueprint={},
+            integrated="김도진은 HMC투자증권 VVIP PB센터에서 다시 강민철과 마주 앉았다.",
+            constraint_block={"fact_lock_packet": packet},
+        )
+        assert [i for i in no_issue if i["category"] == "fact_lock_institution"] == []
+
+        yes_issue = UnifiedBlueprintValidator._collect_fact_lock_drift_issues(
+            blueprint={},
+            integrated="김도진은 한미증권 PB센터에서 박성호를 다시 만났다.",
+            constraint_block={"fact_lock_packet": packet},
+        )
+        inst_issues = [i for i in yes_issue if i["category"] == "fact_lock_institution"]
+        assert len(inst_issues) >= 1
+        assert "한미증권" in inst_issues[0]["issue"]
+
+
 # ============================================================
 # Tranche B: Capital Carry-Forward Fallback Extraction
 # ============================================================
