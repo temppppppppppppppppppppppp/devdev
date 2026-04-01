@@ -59,6 +59,22 @@ class Stage4RejectRuntime:
             "다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요."
         )
 
+    @staticmethod
+    def _should_preserve_post_select_fix_pack(fix_pack: dict | None) -> bool:
+        if not isinstance(fix_pack, dict):
+            return False
+        patch_targets = [str(item).strip() for item in (fix_pack.get("patch_targets") or []) if str(item).strip()]
+        if not patch_targets:
+            return False
+        target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
+        if target_kind not in {"entity_ref", "local_phrase", "local_sentence"}:
+            return False
+        return bool(
+            fix_pack.get("must_fix")
+            or str(fix_pack.get("success_condition", "") or "").strip()
+            or fix_pack.get("do_not_regress")
+        )
+
     def handle_reject(
         self,
         *,
@@ -374,6 +390,11 @@ class Stage4RejectRuntime:
             downgraded_score = int(downgraded_score)
         except (ValueError, TypeError):
             downgraded_score = int(score or 0)
+        preserve_bounded_post_select_fix_pack = (
+            reject_bucket == "post_select_conflict"
+            and resolved_fix_scope == "full"
+            and self._should_preserve_post_select_fix_pack(snapshot_fix_pack)
+        )
         preserve_downgraded_pass_rationale = (
             reject_bucket == "post_select_conflict"
             and resolved_fix_scope == "full"
@@ -389,7 +410,7 @@ class Stage4RejectRuntime:
                 _rationale_blanked_by = "runtime_post_select_conflict_elision"
             snapshot_verdict_reason = director_feedback
             snapshot_rejection_reason = director_feedback
-            snapshot_fix_pack = {}
+            snapshot_fix_pack = owner._normalize_fix_pack(snapshot_fix_pack) if preserve_bounded_post_select_fix_pack else {}
         candidate_key = build_candidate_key(
             label=str(selected or ""),
             strategy=str(selected_strategy_key or ""),
@@ -447,6 +468,8 @@ class Stage4RejectRuntime:
         reuse_contract = (previous_attempt or {}).get("reuse_contract")
         if isinstance(reuse_contract, dict) and reuse_contract:
             reject_attempt["reuse_contract"] = dict(reuse_contract)
+        if preserve_bounded_post_select_fix_pack:
+            reject_attempt["post_select_fix_pack_preserved"] = True
         # [SSS-T3] Rationale elision marker
         if _rationale_blanked_by:
             reject_attempt["rationale_blanked_by"] = _rationale_blanked_by
@@ -580,8 +603,9 @@ class Stage4RejectRuntime:
             logging.debug("[IFC] violation classification non-blocking error: %s", exc)
 
         if reject_bucket == "post_select_conflict":
+            preserve_bounded_post_select_fix_pack = self._should_preserve_post_select_fix_pack(resolved_fix_pack)
             resolved_fix_scope = "full"
-            resolved_fix_pack = {}
+            resolved_fix_pack = owner._normalize_fix_pack(resolved_fix_pack) if preserve_bounded_post_select_fix_pack else {}
             conflict_notice = self._conflict_first_retry_notice()
             if conflict_notice not in director_feedback:
                 director_feedback = conflict_notice + "\n" + director_feedback
@@ -590,6 +614,16 @@ class Stage4RejectRuntime:
                 if resolved_fix_scope_reasoning
                 else conflict_notice
             )
+            if preserve_bounded_post_select_fix_pack:
+                preserve_notice = (
+                    "[TF-F1] bounded post-select fix hints preserved for continuity-guided rewrite trace"
+                )
+                if preserve_notice not in resolved_fix_scope_reasoning:
+                    resolved_fix_scope_reasoning = (
+                        f"{resolved_fix_scope_reasoning}\n{preserve_notice}".strip()
+                        if resolved_fix_scope_reasoning
+                        else preserve_notice
+                    )
 
         if resolved_fix_scope == "inplace":
             fix_pack_contract = owner._evaluate_fix_pack_contract(resolved_fix_pack)

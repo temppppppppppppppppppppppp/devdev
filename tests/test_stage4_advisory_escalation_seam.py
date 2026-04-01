@@ -263,6 +263,48 @@ class TestAdvisoryEscalationHappyPathRegression:
         assert result["final_verdict"] == "PASS_WITH_FIX"
         assert result["verdict"] == "PASS_WITH_FIX"
 
+    def test_pass_with_strong_advisory_backfills_local_fix_contract(self):
+        """Runtime strong advisory may backfill a bounded local fix contract for local targets."""
+        ir = _make_ir(advisory_summary={"npc_drift": 1})
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={
+                    "patch_targets": [],
+                    "must_fix": [],
+                    "do_not_regress": ["EP7 opening carryover 유지"],
+                    "success_condition": "NPC drift 경고가 사라진다",
+                    "target_kind": "local_phrase",
+                },
+            )
+        )
+
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        assert result["fix_pack"]["patch_targets"] == ["NPC 역할/관계 서술 문장"]
+        assert result["fix_pack"]["must_fix"] == ["NPC 역할 또는 관계 표현을 canonical truth에 맞게 국소 수정"]
+        assert result["strong_advisory_escalation"]["local_fix_contract_backfilled"] is True
+
+    def test_strong_advisory_backfill_does_not_widen_scene_model_targets(self):
+        """scene_model targets stay non-local even if strong advisory is backfilled."""
+        ir = _make_ir(advisory_summary={"npc_drift": 1})
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={
+                    "patch_targets": [],
+                    "must_fix": [],
+                    "do_not_regress": ["scene flow 유지"],
+                    "success_condition": "scene-level rewrite",
+                    "target_kind": "scene_model",
+                },
+            )
+        )
+
+        assert result["final_verdict"] == "REJECT"
+        assert result["gate_basis"] == "strong_advisory_escalation_non_local_fix"
+
     def test_plain_pass_without_advisory_unaffected(self):
         """Plain PASS with no advisory must stay PASS."""
         ir = _make_ir(advisory_summary={})
