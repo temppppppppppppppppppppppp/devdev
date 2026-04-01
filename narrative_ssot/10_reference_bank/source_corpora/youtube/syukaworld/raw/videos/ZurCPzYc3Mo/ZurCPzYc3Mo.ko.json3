@@ -1,0 +1,7369 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 7650,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "자, 첫 번째 주제 좀 무겁습니다"
+    } ]
+  }, {
+    "tStartMs": 9330,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "아 오늘 전쟁 얘기가 많네"
+    } ]
+  }, {
+    "tStartMs": 10880,
+    "dDurationMs": 3390,
+    "segs": [ {
+      "utf8": "멕시코가 마약과의 전쟁을 다시 시작했다"
+    } ]
+  }, {
+    "tStartMs": 14270,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "오늘 첫 번째 주제가 되겠습니다"
+    } ]
+  }, {
+    "tStartMs": 16810,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "시작부터 아주 무시무시한 얘기죠"
+    } ]
+  }, {
+    "tStartMs": 19370,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "자 어쩔 수 없어요"
+    } ]
+  }, {
+    "tStartMs": 20240,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "세계에서 벌어지는 중요한 일이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 22250,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "멕시코 마약 전쟁을 한번 다뤄보도록 하겠습니다"
+    } ]
+  }, {
+    "tStartMs": 25130,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "자 이 주제를 왜 하냐"
+    } ]
+  }, {
+    "tStartMs": 26690,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "뭐 다들 아시겠지만"
+    } ]
+  }, {
+    "tStartMs": 27930,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "최근에 멕시코에서는"
+    } ]
+  }, {
+    "tStartMs": 29380,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "전국적인 소요사태가 발생했습니다"
+    } ]
+  }, {
+    "tStartMs": 31960,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "20개 주 이상에서"
+    } ]
+  }, {
+    "tStartMs": 33400,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "멕시코 카르텔들이"
+    } ]
+  }, {
+    "tStartMs": 34430,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "지금 멕시코 군대와 싸우고"
+    } ]
+  }, {
+    "tStartMs": 36450,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "총을 난사하고"
+    } ]
+  }, {
+    "tStartMs": 37770,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "이런 뉴스들이 계속 나오고 있죠"
+    } ]
+  }, {
+    "tStartMs": 39360,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "이게 왜 소요사태가 발생했냐?"
+    } ]
+  }, {
+    "tStartMs": 41410,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "보시면 알겠지만"
+    } ]
+  }, {
+    "tStartMs": 42740,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "멕시코 군대가"
+    } ]
+  }, {
+    "tStartMs": 44150,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "멕시코의 엘 멘초 라고 불리는"
+    } ]
+  }, {
+    "tStartMs": 46480,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "마약왕을 사살했습니다"
+    } ]
+  }, {
+    "tStartMs": 48870,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "그래서 자기들 보스가 죽으니까"
+    } ]
+  }, {
+    "tStartMs": 51100,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "들고 일어난 건데"
+    } ]
+  }, {
+    "tStartMs": 52580,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "물론 우리들 생각에"
+    } ]
+  }, {
+    "tStartMs": 53530,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "아니 조직 범죄의 보스가 죽으면"
+    } ]
+  }, {
+    "tStartMs": 56490,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "도망을 가야지"
+    } ]
+  }, {
+    "tStartMs": 57700,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "어떻게 들고 일어나서 군대와 싸우냐?"
+    } ]
+  }, {
+    "tStartMs": 60000,
+    "dDurationMs": 3110,
+    "segs": [ {
+      "utf8": "그건 이제 한국적인 생각이고"
+    } ]
+  }, {
+    "tStartMs": 63110,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "우리나라 한국 사람들은 그렇게 생각하죠"
+    } ]
+  }, {
+    "tStartMs": 64970,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "아니 보스가 죽고"
+    } ]
+  }, {
+    "tStartMs": 66210,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "군대가 총을 쏘고 있는데"
+    } ]
+  }, {
+    "tStartMs": 67690,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "도망가야지 어떻게 덤비냐?"
+    } ]
+  }, {
+    "tStartMs": 69910,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "이제 좀 말씀드리겠지만"
+    } ]
+  }, {
+    "tStartMs": 71330,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "멕시코 카르텔은 사실상"
+    } ]
+  }, {
+    "tStartMs": 73410,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "큰 데는"
+    } ]
+  }, {
+    "tStartMs": 74270,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "거의 군벌이라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 75950,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "군벌, 자기만의 사병"
+    } ]
+  }, {
+    "tStartMs": 78360,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "사적 군대 조직을 갖추고 있는"
+    } ]
+  }, {
+    "tStartMs": 80490,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "그런 거기 때문에"
+    } ]
+  }, {
+    "tStartMs": 81700,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "군벌과 군벌의 싸움?"
+    } ]
+  }, {
+    "tStartMs": 83710,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "군벌과 나라의 싸움?"
+    } ]
+  }, {
+    "tStartMs": 85260,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "약간 이렇게 보면 돼요"
+    } ]
+  }, {
+    "tStartMs": 86620,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "그래서 전국적인 폭력사태"
+    } ]
+  }, {
+    "tStartMs": 88660,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "전국적인 소요사태가 발생했다는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 91070,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "멕시코가 30개가 넘는 주가 있는데"
+    } ]
+  }, {
+    "tStartMs": 93650,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "20개 주 이상에서"
+    } ]
+  }, {
+    "tStartMs": 95100,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "마약 카르텔이 놀랍게도"
+    } ]
+  }, {
+    "tStartMs": 96810,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "정부를 보복하고"
+    } ]
+  }, {
+    "tStartMs": 98310,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "시민들에게 총을 난사하고 있고"
+    } ]
+  }, {
+    "tStartMs": 100220,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "가게와 주유소가 불타고"
+    } ]
+  }, {
+    "tStartMs": 101860,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "주요 도로가 막혔다"
+    } ]
+  }, {
+    "tStartMs": 103010,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "현재까지 사망자가 60명이 넘었다 그러는데"
+    } ]
+  }, {
+    "tStartMs": 105180,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "비공식 사망자는 아마 훨씬 더 많을 겁니다"
+    } ]
+  }, {
+    "tStartMs": 107360,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "현재 멕시코 정부는"
+    } ]
+  }, {
+    "tStartMs": 108380,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "1만 명 이상의 군대를 투입해서"
+    } ]
+  }, {
+    "tStartMs": 110480,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "마약 카르텔과 사실상의"
+    } ]
+  }, {
+    "tStartMs": 112920,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "전쟁이라 그래야 되나?"
+    } ]
+  }, {
+    "tStartMs": 114040,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "소요사태를 막는"
+    } ]
+  }, {
+    "tStartMs": 115230,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "그런 걸 하고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 116580,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "멕시코에서는 가장 참혹한 날 중에 하나다 라고"
+    } ]
+  }, {
+    "tStartMs": 119250,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "멕시코 아마 현대 역사에"
+    } ]
+  }, {
+    "tStartMs": 120770,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "기록되지 않을까 할 정도로"
+    } ]
+  }, {
+    "tStartMs": 122340,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "강한 소요사태가 발생되고 있다는 건데요"
+    } ]
+  }, {
+    "tStartMs": 124970,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "이번에 사살된 인물"
+    } ]
+  }, {
+    "tStartMs": 127060,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "마약왕이라고 불리는"
+    } ]
+  }, {
+    "tStartMs": 128110,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "워낙 마약왕이라고 불리던 사람들은 많았지만"
+    } ]
+  }, {
+    "tStartMs": 130750,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "멕시코 마약 카르텔의 수장"
+    } ]
+  }, {
+    "tStartMs": 132480,
+    "dDurationMs": 3030,
+    "segs": [ {
+      "utf8": "멕시코에서 가장 큰 마약 카르텔의 보스가"
+    } ]
+  }, {
+    "tStartMs": 135510,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "이번에 사살된 겁니다"
+    } ]
+  }, {
+    "tStartMs": 137210,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "현재 멕시코에서"
+    } ]
+  }, {
+    "tStartMs": 138010,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "가장 큰 마약 카르텔은"
+    } ]
+  }, {
+    "tStartMs": 139590,
+    "dDurationMs": 3260,
+    "segs": [ {
+      "utf8": "이름이 할리스코 신세대 카르텔이에요"
+    } ]
+  }, {
+    "tStartMs": 142850,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "CJNG라고 불립니다"
+    } ]
+  }, {
+    "tStartMs": 145030,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "여기 두 목이"
+    } ]
+  }, {
+    "tStartMs": 146390,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "공식 이름은 따로 있는데"
+    } ]
+  }, {
+    "tStartMs": 147520,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "위에 있죠"
+    } ]
+  }, {
+    "tStartMs": 148440,
+    "dDurationMs": 3240,
+    "segs": [ {
+      "utf8": "네메시오 루벤 오세게라 세르반테스"
+    } ]
+  }, {
+    "tStartMs": 151680,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "이게 본인 이름이고"
+    } ]
+  }, {
+    "tStartMs": 152890,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "일명 엘 멘초라고 불린대요"
+    } ]
+  }, {
+    "tStartMs": 154800,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "왼쪽에 있는 사람입니다"
+    } ]
+  }, {
+    "tStartMs": 156280,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "엘 멘초를 사살해서"
+    } ]
+  }, {
+    "tStartMs": 158000,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "이런 소요 사태가 일어났다고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 159650,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "물론 여러분들 보시면"
+    } ]
+  }, {
+    "tStartMs": 160740,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "카르텔의 이름이"
+    } ]
+  }, {
+    "tStartMs": 161550,
+    "dDurationMs": 3660,
+    "segs": [ {
+      "utf8": "뭔가 할리스코 신세대 카르텔"
+    } ]
+  }, {
+    "tStartMs": 165210,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "이게 도대체 어떻게 지어진 이름이냐라고"
+    } ]
+  }, {
+    "tStartMs": 167230,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "생각할 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 168250,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "제가 뒤에 간단하게 말씀드리겠습니다"
+    } ]
+  }, {
+    "tStartMs": 170390,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "이게 앞에 할리스코가 지명이에요"
+    } ]
+  }, {
+    "tStartMs": 172900,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "그러니까 우리로 치면"
+    } ]
+  }, {
+    "tStartMs": 174170,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "우리로 치면 뭐라고 해야 되지?"
+    } ]
+  }, {
+    "tStartMs": 176880,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "대전 불주먹 카르텔?"
+    } ]
+  }, {
+    "tStartMs": 178830,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "강릉 오방떡 카르텔?"
+    } ]
+  }, {
+    "tStartMs": 180370,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "뭐 그런 겁니다"
+    } ]
+  }, {
+    "tStartMs": 181340,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "앞에가 지명이에요, 지명"
+    } ]
+  }, {
+    "tStartMs": 183090,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "도시거나 주이거나"
+    } ]
+  }, {
+    "tStartMs": 184110,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "대부분 앞에 그런 이름이 붙습니다"
+    } ]
+  }, {
+    "tStartMs": 186300,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "왜냐하면 얘들이 자기들 거점으로 삼는 곳이"
+    } ]
+  }, {
+    "tStartMs": 188840,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "대부분 어떤 주거나"
+    } ]
+  }, {
+    "tStartMs": 190020,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "어떤 도시거나 그래요"
+    } ]
+  }, {
+    "tStartMs": 191320,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "거기 이름을 붙인다고 볼 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 193540,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "할리스코 신세대 카르텔은 누구냐?"
+    } ]
+  }, {
+    "tStartMs": 195780,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "현재 멕시코 내의 카르텔 중에서"
+    } ]
+  }, {
+    "tStartMs": 197910,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "가장 강력한, 가장 큰"
+    } ]
+  }, {
+    "tStartMs": 200190,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "범죄 조직으로 불립니다"
+    } ]
+  }, {
+    "tStartMs": 201340,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "조직원 수가 몇 만을 넘는다라는"
+    } ]
+  }, {
+    "tStartMs": 203060,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "말이 나오고 있어요"
+    } ]
+  }, {
+    "tStartMs": 204420,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "그래서 이 앞에 있는 CJNG가 약자입니다"
+    } ]
+  }, {
+    "tStartMs": 207280,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "뒤에는"
+    } ]
+  }, {
+    "tStartMs": 208530,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "스페인어인가?"
+    } ]
+  }, {
+    "tStartMs": 209300,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "뭐 그러겠죠 약자고"
+    } ]
+  }, {
+    "tStartMs": 210400,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "CJNG부터 할리스코 이렇게 부르는데"
+    } ]
+  }, {
+    "tStartMs": 212660,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "이번에 사살된 엘 맨초라는 사람은"
+    } ]
+  }, {
+    "tStartMs": 214850,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "저 CJNG를 만든"
+    } ]
+  }, {
+    "tStartMs": 216660,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "장본인이면서"
+    } ]
+  }, {
+    "tStartMs": 218000,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "동시에 보스인 사람입니다"
+    } ]
+  }, {
+    "tStartMs": 219520,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "아까 이름 말씀드렸죠"
+    } ]
+  }, {
+    "tStartMs": 220770,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "네메시오 오세게라 세르반테스"
+    } ]
+  }, {
+    "tStartMs": 222810,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "일명 엘 맨초"
+    } ]
+  }, {
+    "tStartMs": 224260,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "뭐 당연하겠지만"
+    } ]
+  }, {
+    "tStartMs": 225510,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "미국에서도 굉장히 오랜 기간"
+    } ]
+  }, {
+    "tStartMs": 227600,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "지명 수배되어 있던 인물이에요"
+    } ]
+  }, {
+    "tStartMs": 229380,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "이미 2024년에 현상금이"
+    } ]
+  }, {
+    "tStartMs": 231390,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "1,500만 달러였던 인물입니다"
+    } ]
+  }, {
+    "tStartMs": 233200,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "대충 200억"
+    } ]
+  }, {
+    "tStartMs": 234320,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "만약에 여러분들이 멕시코에 가서"
+    } ]
+  }, {
+    "tStartMs": 235850,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "이 사람이 죽기 전에"
+    } ]
+  }, {
+    "tStartMs": 237440,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "엘 멘초를 사살하거나"
+    } ]
+  }, {
+    "tStartMs": 238960,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "엘 멘초를 잡아왔다"
+    } ]
+  }, {
+    "tStartMs": 240190,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "그럼 200억을 받을 수 있어요"
+    } ]
+  }, {
+    "tStartMs": 242260,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "물론 잡다가 실패했다"
+    } ]
+  }, {
+    "tStartMs": 244160,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "그러면... 어..."
+    } ]
+  }, {
+    "tStartMs": 245950,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "그러면 큰 어려움이 있을 겁니다"
+    } ]
+  }, {
+    "tStartMs": 248500,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "그래서 큰 어려움 때문에"
+    } ]
+  }, {
+    "tStartMs": 249720,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "지금까지 오랜 기간 잡히지 않았는데"
+    } ]
+  }, {
+    "tStartMs": 252170,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "현상금이 200억인 인물이었다고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 254730,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "미국 국무부는 이 사람을 도망자라고 규정했습니다"
+    } ]
+  }, {
+    "tStartMs": 257440,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "왜 도망자냐?"
+    } ]
+  }, {
+    "tStartMs": 258820,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "저 엘 멘초라는 사람은"
+    } ]
+  }, {
+    "tStartMs": 260250,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "이미 과거 미국에서도"
+    } ]
+  }, {
+    "tStartMs": 261890,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "오래 살았고"
+    } ]
+  }, {
+    "tStartMs": 262920,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "미국에서 여러 차례"
+    } ]
+  }, {
+    "tStartMs": 264450,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "미국 교도소를 왔다 갔다"
+    } ]
+  }, {
+    "tStartMs": 265850,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "한 적이 있어요"
+    } ]
+  }, {
+    "tStartMs": 267010,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "대부분 마약 유통 혐의"
+    } ]
+  }, {
+    "tStartMs": 269340,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "캘리포니아주나 멕시코 가까운"
+    } ]
+  }, {
+    "tStartMs": 271390,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "그런 주에 마약을 유통하다가"
+    } ]
+  }, {
+    "tStartMs": 273030,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "미국 감옥에서 많이 잡혔습니다"
+    } ]
+  }, {
+    "tStartMs": 274690,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "미국 교도소에서 3년을 복역했고"
+    } ]
+  }, {
+    "tStartMs": 276590,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "머그샷도 여러 번 찍혔어요"
+    } ]
+  }, {
+    "tStartMs": 278450,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "이건 아마 89년도일 거고"
+    } ]
+  }, {
+    "tStartMs": 280530,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "86년도 것도 있고"
+    } ]
+  }, {
+    "tStartMs": 281600,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "94년도 것도 있고 그렇습니다"
+    } ]
+  }, {
+    "tStartMs": 283640,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "그렇기 때문에 미국에서 그렇게 있다가"
+    } ]
+  }, {
+    "tStartMs": 285570,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "멕시코로 도망을 간 거죠"
+    } ]
+  }, {
+    "tStartMs": 286870,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "추방이 된 건데"
+    } ]
+  }, {
+    "tStartMs": 288080,
+    "dDurationMs": 2420,
+    "segs": [ {
+      "utf8": "멕시코로 추방된 다음에 뭘 했냐?"
+    } ]
+  }, {
+    "tStartMs": 290500,
+    "dDurationMs": 4190,
+    "segs": [ {
+      "utf8": "놀랍게도 경찰을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 294690,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "그래서 저희가 멕시코를"
+    } ]
+  }, {
+    "tStartMs": 296400,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "이해하려고 하면 안 됩니다"
+    } ]
+  }, {
+    "tStartMs": 297700,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "마약 그걸 하다가"
+    } ]
+  }, {
+    "tStartMs": 298740,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "미국에서 범죄 혐의"
+    } ]
+  }, {
+    "tStartMs": 299930,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "이런 걸로 추방이 된 다음에"
+    } ]
+  }, {
+    "tStartMs": 301270,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "멕시코로 들어와서 경찰이 되죠"
+    } ]
+  }, {
+    "tStartMs": 302790,
+    "dDurationMs": 620,
+    "segs": [ {
+      "utf8": "그래서 아까 말한"
+    } ]
+  }, {
+    "tStartMs": 303410,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "서부 할리스코주에서"
+    } ]
+  }, {
+    "tStartMs": 304920,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "경찰관으로 근무하게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 306990,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "하지만 마약 밀매"
+    } ]
+  }, {
+    "tStartMs": 307820,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "이런 걸 오래 했었기 때문에"
+    } ]
+  }, {
+    "tStartMs": 309190,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "당연히 카르텔에 몸을 계속 담고 왔었고요"
+    } ]
+  }, {
+    "tStartMs": 311650,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "그리고 자신의 카르텔"
+    } ]
+  }, {
+    "tStartMs": 312880,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "자신의 파벌을 만들게 되죠"
+    } ]
+  }, {
+    "tStartMs": 314560,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "그리고 그 당시에 있었던"
+    } ]
+  }, {
+    "tStartMs": 315470,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "거대 카르텔 아래"
+    } ]
+  }, {
+    "tStartMs": 317250,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "들어가면서"
+    } ]
+  }, {
+    "tStartMs": 318040,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "서서히 힘을 키우게 된 게"
+    } ]
+  }, {
+    "tStartMs": 319620,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "엘 멘초라는 인물이라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 321950,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "자 그러면 저 엘 멘초가"
+    } ]
+  }, {
+    "tStartMs": 323340,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "본인의 카르텔"
+    } ]
+  }, {
+    "tStartMs": 324420,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "할리스코 신세대 카르텔을 어떻게 만들었는지"
+    } ]
+  }, {
+    "tStartMs": 326310,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "말씀을 드려야 될 텐데"
+    } ]
+  }, {
+    "tStartMs": 327560,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "이 이야기를 하기 위해서는"
+    } ]
+  }, {
+    "tStartMs": 328740,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "조금 거슬러 올라가요"
+    } ]
+  }, {
+    "tStartMs": 329980,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "아주 옛날에 슈카월드에서 한번 했었습니다"
+    } ]
+  }, {
+    "tStartMs": 332420,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "나르코스 영화 소개하면서 한번 했었는데"
+    } ]
+  }, {
+    "tStartMs": 334890,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "다시 잠깐만 해보면"
+    } ]
+  }, {
+    "tStartMs": 336230,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "이 멕시코의 마야 카르텔이라는 걸"
+    } ]
+  }, {
+    "tStartMs": 338480,
+    "dDurationMs": 2930,
+    "segs": [ {
+      "utf8": "만든 원조 같은 남자가 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 341410,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "그 전에도 물론 멕시코는"
+    } ]
+  }, {
+    "tStartMs": 342510,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "범죄 조직이 있었는데"
+    } ]
+  }, {
+    "tStartMs": 344070,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "그거를 지금처럼 미국으로 밀수해서"
+    } ]
+  }, {
+    "tStartMs": 346770,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "큰 돈을 벌어들이는"
+    } ]
+  }, {
+    "tStartMs": 348390,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "미국으로 가는 길을 닦은 사람이라고"
+    } ]
+  }, {
+    "tStartMs": 350140,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "보통 불리죠"
+    } ]
+  }, {
+    "tStartMs": 351070,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "멕시코의 마약 카르텔의 뭐라 그래야 하지"
+    } ]
+  }, {
+    "tStartMs": 353230,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "창시자라고 해야 되나?"
+    } ]
+  }, {
+    "tStartMs": 354170,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "지금 같은 모습의"
+    } ]
+  }, {
+    "tStartMs": 355390,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "원조 마약왕이라고 불리는"
+    } ]
+  }, {
+    "tStartMs": 356700,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "펠릭스 가야르도라는 사람이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 358740,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "알 필요는 없어요"
+    } ]
+  }, {
+    "tStartMs": 359930,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "이런 사람이 있다"
+    } ]
+  }, {
+    "tStartMs": 361090,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "이런 사람이 처음"
+    } ]
+  }, {
+    "tStartMs": 362080,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "멕시코 마약 카르텔을 시작했다고 보시면 되고"
+    } ]
+  }, {
+    "tStartMs": 364290,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "역시 놀랍지 않게"
+    } ]
+  }, {
+    "tStartMs": 365820,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "멕시코 연방 경찰 출신입니다"
+    } ]
+  }, {
+    "tStartMs": 368610,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "그리고 시날로아"
+    } ]
+  }, {
+    "tStartMs": 369700,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "이게 주 이름이에요"
+    } ]
+  }, {
+    "tStartMs": 370580,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "멕시코 왼쪽에 있는 주 이름인데"
+    } ]
+  }, {
+    "tStartMs": 372500,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "태평양 쪽에"
+    } ]
+  }, {
+    "tStartMs": 373660,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "시날로아라는 데"
+    } ]
+  }, {
+    "tStartMs": 374850,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "주지사의 경호원으로도 일했습니다"
+    } ]
+  }, {
+    "tStartMs": 376890,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "그러다가 원래 마약은"
+    } ]
+  }, {
+    "tStartMs": 378660,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "마약 조직은 콜롬비아에 원래 많았죠"
+    } ]
+  }, {
+    "tStartMs": 380420,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "그래서 나르코스 이런 거 보면"
+    } ]
+  }, {
+    "tStartMs": 382020,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "콜롬비아 마약 대부"
+    } ]
+  }, {
+    "tStartMs": 383200,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "이런 사람들이 나오잖아요"
+    } ]
+  }, {
+    "tStartMs": 384420,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "주로 콜롬비아가 했었는데"
+    } ]
+  }, {
+    "tStartMs": 386100,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "콜롬비아 마약 조직과 손잡고"
+    } ]
+  }, {
+    "tStartMs": 387940,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "그 당시 대마초 위주였던"
+    } ]
+  }, {
+    "tStartMs": 389150,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "멕시코 마약계를"
+    } ]
+  }, {
+    "tStartMs": 390140,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "코카인 위주로 바꾸게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 391800,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "그래서 이 사람이 만들었던"
+    } ]
+  }, {
+    "tStartMs": 393350,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "멕시코 카르텔의 원조가"
+    } ]
+  }, {
+    "tStartMs": 395020,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "과달라하라 카르텔이라고 해요"
+    } ]
+  }, {
+    "tStartMs": 397410,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "왜 과달라하라 카르텔이냐?"
+    } ]
+  }, {
+    "tStartMs": 400270,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "도시 이름입니다"
+    } ]
+  }, {
+    "tStartMs": 401670,
+    "dDurationMs": 3840,
+    "segs": [ {
+      "utf8": "과달라하는 할리스코라는 주에 있는 도시에요"
+    } ]
+  }, {
+    "tStartMs": 405510,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "도시권 인구가 거의 500만명에 달합니다"
+    } ]
+  }, {
+    "tStartMs": 407850,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "멕시코 제2의 도시에요"
+    } ]
+  }, {
+    "tStartMs": 409570,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "우리로 치면"
+    } ]
+  }, {
+    "tStartMs": 410550,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "부산 자갈치파"
+    } ]
+  }, {
+    "tStartMs": 411630,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "뭐 그런 거죠"
+    } ]
+  }, {
+    "tStartMs": 412430,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "부산 소주파"
+    } ]
+  }, {
+    "tStartMs": 413810,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "뭐라고 해야 되지?"
+    } ]
+  }, {
+    "tStartMs": 414810,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "하여튼 앞에가 도시 이름이야"
+    } ]
+  }, {
+    "tStartMs": 416640,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "과달라하라가 도시 이름이기"
+    } ]
+  }, {
+    "tStartMs": 418020,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "때문에 과달라하라 카르텔은"
+    } ]
+  }, {
+    "tStartMs": 420210,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "부산 카르텔"
+    } ]
+  }, {
+    "tStartMs": 420940,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "이런 것과 비슷하다고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 422660,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "본인이 활약하던"
+    } ]
+  }, {
+    "tStartMs": 423840,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "도시 이름을 지어서"
+    } ]
+  }, {
+    "tStartMs": 424870,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "범죄 조직에 이름을 졌는데"
+    } ]
+  }, {
+    "tStartMs": 427190,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "그러면 저 과달라라는 카르텔이"
+    } ]
+  }, {
+    "tStartMs": 429150,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "점점점 세력을 키워서"
+    } ]
+  }, {
+    "tStartMs": 430580,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "사실상 멕시코 전역을 장악합니다"
+    } ]
+  }, {
+    "tStartMs": 433050,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "그런 어떤 마약 밀매를 전문으로 하는 카르텔이"
+    } ]
+  }, {
+    "tStartMs": 435520,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "그 당시에는 없던 시기니까"
+    } ]
+  }, {
+    "tStartMs": 437130,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "근데 왜 몰락하냐?"
+    } ]
+  }, {
+    "tStartMs": 438680,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "영화 보시면 너무나 잘 나오는데"
+    } ]
+  }, {
+    "tStartMs": 440750,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "넷플릭스 시리즈"
+    } ]
+  }, {
+    "tStartMs": 442020,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "나르코스 멕시코라는 넷플릭스가 있어요"
+    } ]
+  }, {
+    "tStartMs": 444810,
+    "dDurationMs": 3010,
+    "segs": [ {
+      "utf8": "옛날 나르코스는 콜롬비아 쪽 얘기가 많고"
+    } ]
+  }, {
+    "tStartMs": 447820,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "멕시코 시리즈 보면"
+    } ]
+  }, {
+    "tStartMs": 449010,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "오른쪽에 있는 이 인물로 나오는 게"
+    } ]
+  }, {
+    "tStartMs": 450800,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "방금 전에 제가 말씀드렸던"
+    } ]
+  }, {
+    "tStartMs": 452120,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "가야르도라는 인물입니다"
+    } ]
+  }, {
+    "tStartMs": 453510,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "자, 그러면 저 조직이"
+    } ]
+  }, {
+    "tStartMs": 455140,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "과달라하라, 과달라하라 카르텔이"
+    } ]
+  }, {
+    "tStartMs": 457310,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "왜 어려움을 겪냐"
+    } ]
+  }, {
+    "tStartMs": 458820,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "아주 유명한 사건이 있는데요"
+    } ]
+  }, {
+    "tStartMs": 460190,
+    "dDurationMs": 360,
+    "segs": [ {
+      "utf8": "이거 아마"
+    } ]
+  }, {
+    "tStartMs": 460550,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "여러분들 아마"
+    } ]
+  }, {
+    "tStartMs": 461610,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "유튜브 영상 같은 데서"
+    } ]
+  }, {
+    "tStartMs": 462460,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "많이 나왔을 거예요"
+    } ]
+  }, {
+    "tStartMs": 463530,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "책으로도 많이 나왔고"
+    } ]
+  }, {
+    "tStartMs": 465060,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "이걸로 썰 푼 분도 굉장히 많고"
+    } ]
+  }, {
+    "tStartMs": 467580,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "1980년대"
+    } ]
+  }, {
+    "tStartMs": 468600,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "미국 마약 단속국 DEA라고 있죠"
+    } ]
+  }, {
+    "tStartMs": 471010,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "여기서 있던 사람이"
+    } ]
+  }, {
+    "tStartMs": 472580,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "멕시코에서 활동을 합니다"
+    } ]
+  }, {
+    "tStartMs": 474310,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "멕시코에서 계속 미국으로 코카인 올라오고"
+    } ]
+  }, {
+    "tStartMs": 476500,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "마약 올라오니까"
+    } ]
+  }, {
+    "tStartMs": 477530,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "거기 있는 걸 막으려고"
+    } ]
+  }, {
+    "tStartMs": 478890,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "이 카마레나 라는 요원이"
+    } ]
+  }, {
+    "tStartMs": 480490,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "멕시코에서 활동을 해요"
+    } ]
+  }, {
+    "tStartMs": 481920,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "그래서 아주 성공적이어서"
+    } ]
+  }, {
+    "tStartMs": 483100,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "멕시코에 있던 마약밭"
+    } ]
+  }, {
+    "tStartMs": 484770,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "코카인 재배 밭 이런 데 날립니다"
+    } ]
+  }, {
+    "tStartMs": 486620,
+    "dDurationMs": 3220,
+    "segs": [ {
+      "utf8": "그러니까 마약 카르텔이 그걸 참지 못하고"
+    } ]
+  }, {
+    "tStartMs": 489840,
+    "dDurationMs": 3240,
+    "segs": [ {
+      "utf8": "미국 연방 마약단속국위원을 잡아다가"
+    } ]
+  }, {
+    "tStartMs": 493080,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "고문살인하는 일이 발생해요"
+    } ]
+  }, {
+    "tStartMs": 495470,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "이때는 몰랐죠, 이들이"
+    } ]
+  }, {
+    "tStartMs": 497440,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "미국의 요원을 잡아다 죽이면"
+    } ]
+  }, {
+    "tStartMs": 499700,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "어떤 일이 일어났는지"
+    } ]
+  }, {
+    "tStartMs": 500710,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "잘 몰랐던 때예요"
+    } ]
+  }, {
+    "tStartMs": 502150,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "그런데 잡아다가 화를 참지 못하고"
+    } ]
+  }, {
+    "tStartMs": 504150,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "굉장히 잔인하게 죽였다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 506350,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "나중에 시체가 나오는데"
+    } ]
+  }, {
+    "tStartMs": 507800,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "너무나 잔인했다"
+    } ]
+  }, {
+    "tStartMs": 508600,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "이런 말이 많기 때문에"
+    } ]
+  }, {
+    "tStartMs": 509630,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "미국이 열받았죠"
+    } ]
+  }, {
+    "tStartMs": 510850,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "그래서 미국 마약단속국이 열받아서"
+    } ]
+  }, {
+    "tStartMs": 512980,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "이 조직을 거의 날려버리는데"
+    } ]
+  }, {
+    "tStartMs": 514780,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "이때 가야르도가 미국에 체포됩니다"
+    } ]
+  }, {
+    "tStartMs": 517520,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "아까 이 사람"
+    } ]
+  }, {
+    "tStartMs": 518520,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "앙헬 펠릭스 가야르도"
+    } ]
+  }, {
+    "tStartMs": 520270,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "1946년생이에요"
+    } ]
+  }, {
+    "tStartMs": 521890,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "지금 80세 정도 됐죠, 나이가"
+    } ]
+  }, {
+    "tStartMs": 523820,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "40년형을 받고"
+    } ]
+  }, {
+    "tStartMs": 525060,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "아직 미국 감옥에 살아있습니다"
+    } ]
+  }, {
+    "tStartMs": 527230,
+    "dDurationMs": 590,
+    "segs": [ {
+      "utf8": "이 사람"
+    } ]
+  }, {
+    "tStartMs": 527820,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "살아있어요, 살아있어요"
+    } ]
+  }, {
+    "tStartMs": 528930,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "죽지 않았어"
+    } ]
+  }, {
+    "tStartMs": 529910,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "장수하고 있는데"
+    } ]
+  }, {
+    "tStartMs": 531220,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "그래서 미국의 어떤 분노를 산 다음에"
+    } ]
+  }, {
+    "tStartMs": 533950,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "저 카르텔이 붕괴하게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 536090,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "그래서 가야르도는 열심히 도망쳐 다녔는데"
+    } ]
+  }, {
+    "tStartMs": 538060,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "체포되기 직전에"
+    } ]
+  }, {
+    "tStartMs": 539520,
+    "dDurationMs": 3020,
+    "segs": [ {
+      "utf8": "자신의 마약 카르텔을 분할해서 나눠줘요"
+    } ]
+  }, {
+    "tStartMs": 542540,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "친척과 부하들에게"
+    } ]
+  }, {
+    "tStartMs": 544290,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "이 어떤 데, 어떤 데"
+    } ]
+  }, {
+    "tStartMs": 546170,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "어떤 지역, 어떤 지역, 지역으로 나눕니다"
+    } ]
+  }, {
+    "tStartMs": 548820,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "그리고 이것이 현재"
+    } ]
+  }, {
+    "tStartMs": 549930,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "멕시코 마약 카르텔의 원료라고"
+    } ]
+  }, {
+    "tStartMs": 551930,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "얘기를 많이 해요"
+    } ]
+  }, {
+    "tStartMs": 552960,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "대부분이 아까 말씀드렸지만"
+    } ]
+  }, {
+    "tStartMs": 554400,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "지역이나 도시별로 분할해요"
+    } ]
+  }, {
+    "tStartMs": 556180,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "그래서 멕시코 마약 카르텔은"
+    } ]
+  }, {
+    "tStartMs": 557350,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "이름 앞에 지역이나 도시가 붙어요"
+    } ]
+  }, {
+    "tStartMs": 559650,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "지금 여기 나오는 시날로아"
+    } ]
+  }, {
+    "tStartMs": 560960,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "티에라 이런 것들도"
+    } ]
+  }, {
+    "tStartMs": 562430,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "전부 다 도시나 지역 이름입니다"
+    } ]
+  }, {
+    "tStartMs": 564530,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "그래서 저 카르텔이"
+    } ]
+  }, {
+    "tStartMs": 566340,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "왜 이렇게 이름을 못 외우겠냐"
+    } ]
+  }, {
+    "tStartMs": 567560,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "과달라하라"
+    } ]
+  }, {
+    "tStartMs": 569180,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "이름 한번 헷갈리네 과달라하라"
+    } ]
+  }, {
+    "tStartMs": 571410,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "카르텔이 분할이 되면서"
+    } ]
+  }, {
+    "tStartMs": 573440,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "대빵은 미국가서 40년형을 받았고"
+    } ]
+  }, {
+    "tStartMs": 575570,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "이걸 나눠가져갔는데"
+    } ]
+  }, {
+    "tStartMs": 576590,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "초기에는 멕시코 마약 카르텔들이"
+    } ]
+  }, {
+    "tStartMs": 578370,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "주로 어디서 번성하냐면"
+    } ]
+  }, {
+    "tStartMs": 580110,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "당연히 미국 국경지대에 있습니다"
+    } ]
+  }, {
+    "tStartMs": 582150,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "티우하나라고 불리는"
+    } ]
+  }, {
+    "tStartMs": 583610,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "여기는 지역 이름인데"
+    } ]
+  }, {
+    "tStartMs": 584800,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "티우하나 카르텔"
+    } ]
+  }, {
+    "tStartMs": 585630,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "뭐 이렇게 부르죠"
+    } ]
+  }, {
+    "tStartMs": 586430,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "후아레스라는 거죠"
+    } ]
+  }, {
+    "tStartMs": 587400,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "여기 지역 이름입니다"
+    } ]
+  }, {
+    "tStartMs": 588710,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "미국 국경지역에 딱 있죠?"
+    } ]
+  }, {
+    "tStartMs": 590220,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "이 두 군데가 가장 번성했다고 해요"
+    } ]
+  }, {
+    "tStartMs": 592350,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "마약 밀매 같은 걸"
+    } ]
+  }, {
+    "tStartMs": 593220,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "돈을 가장 많이 벌었겠죠"
+    } ]
+  }, {
+    "tStartMs": 594690,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "국경을 왔다 갔다 넘어가면서"
+    } ]
+  }, {
+    "tStartMs": 596220,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "그런데 시간이 지나면서"
+    } ]
+  }, {
+    "tStartMs": 598670,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "90년대 들어서"
+    } ]
+  }, {
+    "tStartMs": 599750,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "여러분들 들어보신 분들이 많을 겁니다"
+    } ]
+  }, {
+    "tStartMs": 601700,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "지금 현재도 멕시코에서"
+    } ]
+  }, {
+    "tStartMs": 602670,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "가장 힘이 센 카르텔 중에 하나라고 불리는"
+    } ]
+  }, {
+    "tStartMs": 604980,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "소위 시날로아 카르텔이라는 게 등장을 해요"
+    } ]
+  }, {
+    "tStartMs": 607290,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "시날로아라는 데는"
+    } ]
+  }, {
+    "tStartMs": 608330,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "여기"
+    } ]
+  }, {
+    "tStartMs": 609210,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "멕시코의 주명입니다 주명"
+    } ]
+  }, {
+    "tStartMs": 611500,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "그러니까 우리 우치면"
+    } ]
+  }, {
+    "tStartMs": 612520,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "우리 우치고 죄송한데"
+    } ]
+  }, {
+    "tStartMs": 613790,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "충남 카르텔이나 강원도 카르텔"
+    } ]
+  }, {
+    "tStartMs": 615790,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "이렇게 새긴 거예요"
+    } ]
+  }, {
+    "tStartMs": 616760,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "그래서 얘네들이 자기들도"
+    } ]
+  }, {
+    "tStartMs": 618140,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "미국으로 마약을 팔고 싶은데 가려면"
+    } ]
+  }, {
+    "tStartMs": 620510,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "여길 지나야 되잖아"
+    } ]
+  }, {
+    "tStartMs": 621980,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "'티우하나'라는 둥 '후아레스'라는 둥"
+    } ]
+  }, {
+    "tStartMs": 624100,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "얘들이 자꾸 막어"
+    } ]
+  }, {
+    "tStartMs": 625230,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "그래서 얘들하고"
+    } ]
+  }, {
+    "tStartMs": 626190,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "전쟁을 펼칩니다"
+    } ]
+  }, {
+    "tStartMs": 627730,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "처음에 태어난 뿌리는 같았지만"
+    } ]
+  }, {
+    "tStartMs": 630060,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "어쨌건 자기들도 돈을 벌어야 되는데"
+    } ]
+  }, {
+    "tStartMs": 631660,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "'야 우리한테 주고 가'"
+    } ]
+  }, {
+    "tStartMs": 632970,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "뭐 이딴 소리 하니까"
+    } ]
+  }, {
+    "tStartMs": 634330,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "위하고 싸움을 벌여요"
+    } ]
+  }, {
+    "tStartMs": 635620,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "그래서 치열한 마약 카르텔 간"
+    } ]
+  }, {
+    "tStartMs": 637420,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "전쟁이 펼쳐집니다"
+    } ]
+  }, {
+    "tStartMs": 638880,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "이때 이 시날로아라는 데가"
+    } ]
+  }, {
+    "tStartMs": 640890,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "굉장히 세력을 불리는데"
+    } ]
+  }, {
+    "tStartMs": 643020,
+    "dDurationMs": 3210,
+    "segs": [ {
+      "utf8": "그래서 여러분들이 볼 법한 인물이 등장을 합니다"
+    } ]
+  }, {
+    "tStartMs": 646230,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "마약왕 중에서"
+    } ]
+  }, {
+    "tStartMs": 647000,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "사실은 인지도가"
+    } ]
+  }, {
+    "tStartMs": 647910,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "가장 높은 인물 중에 하나인"
+    } ]
+  }, {
+    "tStartMs": 649520,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "엘 차포"
+    } ]
+  }, {
+    "tStartMs": 650690,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "호아킨 구스만이라는 사람이"
+    } ]
+  }, {
+    "tStartMs": 652820,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "그때 시날로아 카르텔의 두목이었어요"
+    } ]
+  }, {
+    "tStartMs": 655320,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "최근에 잡힌 인물인데"
+    } ]
+  }, {
+    "tStartMs": 656820,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "이 탈옥으로도 유명해요"
+    } ]
+  }, {
+    "tStartMs": 658450,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "최악의 마약왕"
+    } ]
+  }, {
+    "tStartMs": 659690,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "무슨 탈옥하는 마약왕"
+    } ]
+  }, {
+    "tStartMs": 660980,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "이런 걸로 유튜브 가면 영상 많은데"
+    } ]
+  }, {
+    "tStartMs": 662710,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "그 사람이 이 사람입니다"
+    } ]
+  }, {
+    "tStartMs": 664040,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "유튜브에 영상이 많은 건 이유가 있어요"
+    } ]
+  }, {
+    "tStartMs": 666220,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "오른쪽 위가 감옥이고"
+    } ]
+  }, {
+    "tStartMs": 667520,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "왼쪽이 도망가는 곳이에요"
+    } ]
+  }, {
+    "tStartMs": 669410,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "이 감옥에서 땅을 파서"
+    } ]
+  }, {
+    "tStartMs": 671530,
+    "dDurationMs": 2930,
+    "segs": [ {
+      "utf8": "1KM에 가까운 지하 터널을 뚫은 다음에"
+    } ]
+  }, {
+    "tStartMs": 674460,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "이 위로 올라와서"
+    } ]
+  }, {
+    "tStartMs": 675370,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "도망가는 걸로 유명합니다"
+    } ]
+  }, {
+    "tStartMs": 676940,
+    "dDurationMs": 3060,
+    "segs": [ {
+      "utf8": "와 1KM를 정말 어렵게 걸었겠군요"
+    } ]
+  }, {
+    "tStartMs": 680000,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "이 마약왕이잖아요"
+    } ]
+  }, {
+    "tStartMs": 681410,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "돈이 많으니까"
+    } ]
+  }, {
+    "tStartMs": 682540,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "탈옥용 지하 땅굴에 이렇게 레일이 있었다"
+    } ]
+  }, {
+    "tStartMs": 685000,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "그래요 광산 아니냐"
+    } ]
+  }, {
+    "tStartMs": 687310,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "광산?"
+    } ]
+  }, {
+    "tStartMs": 688980,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "오토바이 같은 게 있었대요"
+    } ]
+  }, {
+    "tStartMs": 689940,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "전동 오토바이"
+    } ]
+  }, {
+    "tStartMs": 690660,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "그리고 이런 레일을 깔아서"
+    } ]
+  }, {
+    "tStartMs": 693130,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "1KM를 타고 왔다 갔다고 하는데"
+    } ]
+  }, {
+    "tStartMs": 695300,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "여기가 나온 곳이라고 합니다"
+    } ]
+  }, {
+    "tStartMs": 696610,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "이렇게 위에서 나온 거죠 걸어 나와서"
+    } ]
+  }, {
+    "tStartMs": 698650,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "무려 탈옥을 두 번이나 했던"
+    } ]
+  }, {
+    "tStartMs": 700190,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "그런 인물로 유명하죠"
+    } ]
+  }, {
+    "tStartMs": 701730,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "아마 이 사진 보신 분 많을 거예요"
+    } ]
+  }, {
+    "tStartMs": 703580,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "엘 차포, 호아킨 구스만"
+    } ]
+  }, {
+    "tStartMs": 705000,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "워낙 유명한 사람이었는데"
+    } ]
+  }, {
+    "tStartMs": 706540,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "이게 미국에 잡힌 모습입니다"
+    } ]
+  }, {
+    "tStartMs": 708540,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "잡혀서 미국으로 갔어요"
+    } ]
+  }, {
+    "tStartMs": 709840,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "그럼 지금은 못 잡고 있냐?"
+    } ]
+  }, {
+    "tStartMs": 711410,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "아니요"
+    } ]
+  }, {
+    "tStartMs": 712050,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "잡혀서 다시 탈옥을 했다는 거지"
+    } ]
+  }, {
+    "tStartMs": 714100,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "다시 안 잡혔다는 게 아니에요"
+    } ]
+  }, {
+    "tStartMs": 715540,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "저 사람이 아마 그거죠"
+    } ]
+  }, {
+    "tStartMs": 716930,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "자기 영화 찍고 싶어서"
+    } ]
+  }, {
+    "tStartMs": 718110,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "뭐 하다가 잡혔다는 사람"
+    } ]
+  }, {
+    "tStartMs": 719400,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "하여튼 그래서 결국 잡혔는데"
+    } ]
+  }, {
+    "tStartMs": 721260,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "현재 어딨냐?"
+    } ]
+  }, {
+    "tStartMs": 722240,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "아주 유명한"
+    } ]
+  }, {
+    "tStartMs": 723140,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "여러분 많이 들어보셨을 겁니다"
+    } ]
+  }, {
+    "tStartMs": 724860,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "미국에서 가장 가혹하다고 불리는"
+    } ]
+  }, {
+    "tStartMs": 726810,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "ADX 플로렌스 교도소"
+    } ]
+  }, {
+    "tStartMs": 728540,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "많이 들어보셨죠?"
+    } ]
+  }, {
+    "tStartMs": 729830,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "유나바머, 옛날에 유명했습니다"
+    } ]
+  }, {
+    "tStartMs": 731510,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "미국 대학교에 폭탄 보내가지고"
+    } ]
+  }, {
+    "tStartMs": 733220,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "사람 폭탄으로 죽이고 했던"
+    } ]
+  }, {
+    "tStartMs": 734990,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "그런 정말 최악의 살인자"
+    } ]
+  }, {
+    "tStartMs": 736670,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "마약 두목"
+    } ]
+  }, {
+    "tStartMs": 737540,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "테러리스트 이런 사람들이"
+    } ]
+  }, {
+    "tStartMs": 738730,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "감금된다고 불리는"
+    } ]
+  }, {
+    "tStartMs": 739970,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "사막 한가운데에 있는"
+    } ]
+  }, {
+    "tStartMs": 741200,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "저 플로렌스 교도소에 들어가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 743510,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "여기서 종신형을 받고"
+    } ]
+  }, {
+    "tStartMs": 745040,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "복역 중이에요"
+    } ]
+  }, {
+    "tStartMs": 746270,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "들어가면 미쳐버리는 감옥으로 유명하죠"
+    } ]
+  }, {
+    "tStartMs": 748510,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "깨끗한 지옥 이런 표현도 많이 있고"
+    } ]
+  }, {
+    "tStartMs": 750500,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "완벽한 고립, 무기한 독방"
+    } ]
+  }, {
+    "tStartMs": 752830,
+    "dDurationMs": 2980,
+    "segs": [ {
+      "utf8": "24시간은 거의 독방 생활을 한다고 하는데"
+    } ]
+  }, {
+    "tStartMs": 755810,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "창도 이만큼 밖에 없는 곳으로 유명하죠"
+    } ]
+  }, {
+    "tStartMs": 757960,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "바깥을 절대 보지 못하고"
+    } ]
+  }, {
+    "tStartMs": 759830,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "이거 유튜브에 가시면"
+    } ]
+  }, {
+    "tStartMs": 761220,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "다큐멘터리도 많이 있어요"
+    } ]
+  }, {
+    "tStartMs": 762780,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "저기가 어떤 곳인지"
+    } ]
+  }, {
+    "tStartMs": 764160,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "그쵸 뭐 한 달에 몇 시간"
+    } ]
+  }, {
+    "tStartMs": 765470,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "산책하는 요기 산책하는 것도"
+    } ]
+  }, {
+    "tStartMs": 767110,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "몇 시간 없는"
+    } ]
+  }, {
+    "tStartMs": 768070,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "말 그대로 적막 속에서"
+    } ]
+  }, {
+    "tStartMs": 769880,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "혼자 영원히 있어야 되는"
+    } ]
+  }, {
+    "tStartMs": 771360,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "그런 교도소에 종신형을 받고"
+    } ]
+  }, {
+    "tStartMs": 773310,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "복역 중입니다"
+    } ]
+  }, {
+    "tStartMs": 774020,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "아예 살아있어요"
+    } ]
+  }, {
+    "tStartMs": 775270,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "그래서 저 시날로아 카르텔이라는 데가"
+    } ]
+  }, {
+    "tStartMs": 777650,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "엘 차포는 체포가 됐지만"
+    } ]
+  }, {
+    "tStartMs": 779040,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "어쨌건 멕시코에서"
+    } ]
+  }, {
+    "tStartMs": 780450,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "가장 덩치가 큰"
+    } ]
+  }, {
+    "tStartMs": 782360,
+    "dDurationMs": 450,
+    "segs": [ {
+      "utf8": "카르텔로"
+    } ]
+  }, {
+    "tStartMs": 782810,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "점점점점 확장을 합니다"
+    } ]
+  }, {
+    "tStartMs": 784310,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "그런데 워낙 복잡해요"
+    } ]
+  }, {
+    "tStartMs": 786170,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "여기서부터는 저도 잘 모르겠어요"
+    } ]
+  }, {
+    "tStartMs": 787420,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "워낙 많은 카르텔들이 흥망성쇄를 거치는데"
+    } ]
+  }, {
+    "tStartMs": 789850,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "그중에서 우리나라에서 유명한 거 좀 말씀드리면"
+    } ]
+  }, {
+    "tStartMs": 792320,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "걸프 카르텔이라는 데도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 793980,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "왜 걸프냐?"
+    } ]
+  }, {
+    "tStartMs": 794840,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "여기가 옛날에 멕시코만"
+    } ]
+  }, {
+    "tStartMs": 796280,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "걸프 그렇게 불렀잖아요"
+    } ]
+  }, {
+    "tStartMs": 797770,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "지금은 아메리카만이라고"
+    } ]
+  }, {
+    "tStartMs": 798950,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "트럼프가 주장을 하지만"
+    } ]
+  }, {
+    "tStartMs": 800860,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "이 걸프 카르텔은 여기서 활약을 했어요"
+    } ]
+  }, {
+    "tStartMs": 803820,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "왜냐하면 여기도 또 미국하고 경계이긴 합니다"
+    } ]
+  }, {
+    "tStartMs": 806020,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "미국 국경지대니까"
+    } ]
+  }, {
+    "tStartMs": 807130,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "그런데 여기 두목이 사망하는 일이 발생을 해요"
+    } ]
+  }, {
+    "tStartMs": 809450,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "그래서 저 걸프 카르텔이라는 데가"
+    } ]
+  }, {
+    "tStartMs": 810730,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "극심한 내전에 빠집니다"
+    } ]
+  }, {
+    "tStartMs": 812560,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "그럼 이 얘기를 왜 하냐?"
+    } ]
+  }, {
+    "tStartMs": 813950,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "이때부터 저 카르탈 간의 전쟁이"
+    } ]
+  }, {
+    "tStartMs": 816650,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "양상이 좀 바뀌어요"
+    } ]
+  }, {
+    "tStartMs": 818040,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "왜냐하면 저 걸프 카르텔이라는 데가"
+    } ]
+  }, {
+    "tStartMs": 820290,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "자기들 내전에"
+    } ]
+  }, {
+    "tStartMs": 821460,
+    "dDurationMs": 3030,
+    "segs": [ {
+      "utf8": "멕시코 특수부대 출신들을 기용하게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 824490,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "여기서 은퇴하고 나왔거나"
+    } ]
+  }, {
+    "tStartMs": 825950,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "마음에 안 들어서"
+    } ]
+  }, {
+    "tStartMs": 826710,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "한 마디로 군인을 기용해요, 군인을"
+    } ]
+  }, {
+    "tStartMs": 828750,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "카르텔 간의 전쟁에서"
+    } ]
+  }, {
+    "tStartMs": 830650,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "그래서 그때 고용한 조직이"
+    } ]
+  }, {
+    "tStartMs": 832290,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "이렇게 아래 써있죠"
+    } ]
+  }, {
+    "tStartMs": 833540,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "어디서 들어보셨던 분 있을 거예요"
+    } ]
+  }, {
+    "tStartMs": 834700,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "'로스 세타스'라는 조직이 됩니다"
+    } ]
+  }, {
+    "tStartMs": 836750,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "굉장히 잔인한 걸로 유명했던"
+    } ]
+  }, {
+    "tStartMs": 839240,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "그런 조직이 돼서"
+    } ]
+  }, {
+    "tStartMs": 840380,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "특수부대 출신들을 고용을 해서"
+    } ]
+  }, {
+    "tStartMs": 841900,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "한마디로 그전까지는"
+    } ]
+  }, {
+    "tStartMs": 843490,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "그냥 갱단 간에"
+    } ]
+  }, {
+    "tStartMs": 844400,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "그냥 뭐 카르텔 간의 전투였다면"
+    } ]
+  }, {
+    "tStartMs": 846220,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "이제부터 거의 전쟁이 되는 거죠"
+    } ]
+  }, {
+    "tStartMs": 847900,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "저들을 불러들임으로써"
+    } ]
+  }, {
+    "tStartMs": 849540,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "그리고 이 로스 세타스라는 조직이"
+    } ]
+  }, {
+    "tStartMs": 851880,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "이 걸프 카르텔의 내전에 들어가니까"
+    } ]
+  }, {
+    "tStartMs": 854140,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "옆에서 보고 있던"
+    } ]
+  }, {
+    "tStartMs": 855240,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "가장 컸던 시날로아 카르텔이"
+    } ]
+  }, {
+    "tStartMs": 857360,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "개입을 합니다"
+    } ]
+  }, {
+    "tStartMs": 858710,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "왜냐하면 이 로스세타스라는 데가"
+    } ]
+  }, {
+    "tStartMs": 860120,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "덩치가 커지면서"
+    } ]
+  }, {
+    "tStartMs": 861510,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "이 걸프를 날리고"
+    } ]
+  }, {
+    "tStartMs": 862760,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "자기네들이 다 먹자"
+    } ]
+  }, {
+    "tStartMs": 863870,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "이런 식으로 가거든요"
+    } ]
+  }, {
+    "tStartMs": 865250,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "옆에 있던 시날로아 카르텔이"
+    } ]
+  }, {
+    "tStartMs": 866940,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "걸프 카르텔의 편을 듭니다"
+    } ]
+  }, {
+    "tStartMs": 868990,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "역시 전문 킬러들을 고용하고"
+    } ]
+  }, {
+    "tStartMs": 871080,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "군인들을 고용해요"
+    } ]
+  }, {
+    "tStartMs": 872220,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "그래서 굉장히 이 전쟁이 확대되죠"
+    } ]
+  }, {
+    "tStartMs": 875040,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "이때부터 우리가 봤던"
+    } ]
+  }, {
+    "tStartMs": 876710,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "미사일 쏘는 것 같은"
+    } ]
+  }, {
+    "tStartMs": 878030,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "기관총 난사하고"
+    } ]
+  }, {
+    "tStartMs": 879510,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "완전 특수부대 옷을 입고"
+    } ]
+  }, {
+    "tStartMs": 880980,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "저게 전쟁이냐?"
+    } ]
+  }, {
+    "tStartMs": 882010,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "갱단 간의 싸움이냐? 라는 말을 듣는"
+    } ]
+  }, {
+    "tStartMs": 884570,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "굉장히 잔혹하고 잔인한 복수"
+    } ]
+  }, {
+    "tStartMs": 886450,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "이런 게 펼쳐집니다"
+    } ]
+  }, {
+    "tStartMs": 888110,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "그리고 저 로스세타스라는"
+    } ]
+  }, {
+    "tStartMs": 889560,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "내가 초반에 승승장구하죠"
+    } ]
+  }, {
+    "tStartMs": 890860,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "왜냐면 전문적인 군인이잖아요"
+    } ]
+  }, {
+    "tStartMs": 892840,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "싸우는 법을 배운 특수부대원 출신들이야"
+    } ]
+  }, {
+    "tStartMs": 895430,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "그러니까 안 된단 말이야"
+    } ]
+  }, {
+    "tStartMs": 896620,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "처음에 다 날아가"
+    } ]
+  }, {
+    "tStartMs": 897750,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "그래서 저 시날로아가"
+    } ]
+  }, {
+    "tStartMs": 899300,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "자신들의 하부조직이라고 불리는"
+    } ]
+  }, {
+    "tStartMs": 901570,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "할리스코라는 데를"
+    } ]
+  }, {
+    "tStartMs": 902580,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "자신들의 전담부대로 데리고 옵니다"
+    } ]
+  }, {
+    "tStartMs": 904990,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "할리스코가 이 아래에 있는 데라고 했죠"
+    } ]
+  }, {
+    "tStartMs": 906740,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "얘들을 데려와요"
+    } ]
+  }, {
+    "tStartMs": 907870,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "그래서 섬의 시날로아 카르텔"
+    } ]
+  }, {
+    "tStartMs": 909430,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "아래에 있는 조직이"
+    } ]
+  }, {
+    "tStartMs": 910680,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "저 할리스코 카르텔이었습니다"
+    } ]
+  }, {
+    "tStartMs": 912670,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "원래 이름은 로스세타스를 죽이자"
+    } ]
+  }, {
+    "tStartMs": 914850,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "그래서 마타 제타스라고 불렸다고 해요"
+    } ]
+  }, {
+    "tStartMs": 917150,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "약간 별명 같은 거죠"
+    } ]
+  }, {
+    "tStartMs": 918450,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "이 로스세타스에 대응하기 위해서"
+    } ]
+  }, {
+    "tStartMs": 919940,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "데리고 온 애들이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 921370,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "그리고 이들이 결국에는"
+    } ]
+  }, {
+    "tStartMs": 922840,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "저 로스세타스라는 카르텔과"
+    } ]
+  }, {
+    "tStartMs": 924970,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "오랜 전투 끝에"
+    } ]
+  }, {
+    "tStartMs": 926820,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "뭐 완전히 없어지진 않았어요"
+    } ]
+  }, {
+    "tStartMs": 927870,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "얘들이 완전히 없어지진 않았지만"
+    } ]
+  }, {
+    "tStartMs": 929220,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "승리 선언을 하고"
+    } ]
+  }, {
+    "tStartMs": 930310,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "2018년"
+    } ]
+  }, {
+    "tStartMs": 931140,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "이 할리스코 카르텔이"
+    } ]
+  }, {
+    "tStartMs": 932450,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "독립을 하게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 933730,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "그래서 저 할리스코 카르텔을"
+    } ]
+  }, {
+    "tStartMs": 935060,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "그때 이끌었던 사람이 누구냐?"
+    } ]
+  }, {
+    "tStartMs": 937060,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "바로 오늘의 주제이자"
+    } ]
+  }, {
+    "tStartMs": 938740,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "이번에 사살됐다고 말하는"
+    } ]
+  }, {
+    "tStartMs": 940210,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "엘 맨초입니다"
+    } ]
+  }, {
+    "tStartMs": 941920,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "할리스코 신세대 카르텔은"
+    } ]
+  }, {
+    "tStartMs": 943720,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "이제 등치가 좀 커졌잖아요"
+    } ]
+  }, {
+    "tStartMs": 945270,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "그리고 그때 시날로아의 보스였던"
+    } ]
+  }, {
+    "tStartMs": 946820,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "엘 차포 구스만"
+    } ]
+  }, {
+    "tStartMs": 947790,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "아까 전에 땅굴 파고 간 사람"
+    } ]
+  }, {
+    "tStartMs": 949880,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "이 사람이 체포돼요"
+    } ]
+  }, {
+    "tStartMs": 951270,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "시날로아가 약화되죠"
+    } ]
+  }, {
+    "tStartMs": 952790,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "그래서 반대로 자신들의"
+    } ]
+  }, {
+    "tStartMs": 954770,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "보스였던 주군이었던"
+    } ]
+  }, {
+    "tStartMs": 956410,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "시날로아 카르텔을 공격을 합니다"
+    } ]
+  }, {
+    "tStartMs": 958230,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "자기들이 먹겠다고"
+    } ]
+  }, {
+    "tStartMs": 959400,
+    "dDurationMs": 4130,
+    "segs": [ {
+      "utf8": "그래서 현재 멕시코 최대 카르텔까지 승승장구하죠"
+    } ]
+  }, {
+    "tStartMs": 963530,
+    "dDurationMs": 3320,
+    "segs": [ {
+      "utf8": "그 보스가 엘 맨초 라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 966850,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "중간에 약간 뭐 이거 이건 있지만"
+    } ]
+  }, {
+    "tStartMs": 968630,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "대충 넘어간 데 있지만"
+    } ]
+  }, {
+    "tStartMs": 969750,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "대충 흐름은 그래요"
+    } ]
+  }, {
+    "tStartMs": 970790,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "대충 흐름은 그런데"
+    } ]
+  }, {
+    "tStartMs": 972130,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "2024년에 추가적으로 조금만 말씀드리면"
+    } ]
+  }, {
+    "tStartMs": 974260,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "최근에 벌어진 일이어서"
+    } ]
+  }, {
+    "tStartMs": 975860,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "저 시날로아에"
+    } ]
+  }, {
+    "tStartMs": 977170,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "이 엘 차포가 잡힌 다음에"
+    } ]
+  }, {
+    "tStartMs": 978760,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "엘 차포하고 사실 손잡고"
+    } ]
+  }, {
+    "tStartMs": 980530,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "저 시날로아를 이끌던 인물이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 982460,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "그 왼쪽에 있는"
+    } ]
+  }, {
+    "tStartMs": 983280,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "엘 마요라는 사람이에요"
+    } ]
+  }, {
+    "tStartMs": 985600,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "엘 차포가 체포돼서"
+    } ]
+  }, {
+    "tStartMs": 987430,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "미국으로 가면서"
+    } ]
+  }, {
+    "tStartMs": 988620,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "시날로아의 다음 보스를 맡았어요"
+    } ]
+  }, {
+    "tStartMs": 990860,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "뭐가 문제냐?"
+    } ]
+  }, {
+    "tStartMs": 991920,
+    "dDurationMs": 670,
+    "segs": [ {
+      "utf8": "문제가 있었어요"
+    } ]
+  }, {
+    "tStartMs": 992590,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "뭐가 문제냐면"
+    } ]
+  }, {
+    "tStartMs": 993980,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "권력은 나눠 가질 수 없는데"
+    } ]
+  }, {
+    "tStartMs": 996180,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "그래도 둘 간에는 어떤 유대관계가 있었나 봐"
+    } ]
+  }, {
+    "tStartMs": 999130,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "좀 뭐 친분이 있었고"
+    } ]
+  }, {
+    "tStartMs": 1000220,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "그래서 둘이 시날로아를 이끄는데"
+    } ]
+  }, {
+    "tStartMs": 1002080,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "문제가 없었는데"
+    } ]
+  }, {
+    "tStartMs": 1003350,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "옆에 있던 엘 차포가 잡혀서"
+    } ]
+  }, {
+    "tStartMs": 1004820,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "감옥에 갔단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 1006110,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "그래서 이 엘 마요가 시날로아를 이끄는데"
+    } ]
+  }, {
+    "tStartMs": 1008380,
+    "dDurationMs": 3840,
+    "segs": [ {
+      "utf8": "문제는 엘 차포에게 아들들이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 1012220,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "이 아들들은 아빠가 잡히니까"
+    } ]
+  }, {
+    "tStartMs": 1014470,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "우리가 멀리서는 알 수 없지만"
+    } ]
+  }, {
+    "tStartMs": 1015800,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "뉴스만을 보면"
+    } ]
+  }, {
+    "tStartMs": 1016890,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "아빠가 잡히니까"
+    } ]
+  }, {
+    "tStartMs": 1017880,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "자기들이 이 조직을 좀"
+    } ]
+  }, {
+    "tStartMs": 1020290,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "후루룩 하고 싶은"
+    } ]
+  }, {
+    "tStartMs": 1021120,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "그런 생각이 있었던 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 1022630,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "근데 이 엘 마요라는 사람이"
+    } ]
+  }, {
+    "tStartMs": 1024540,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "눈에 걸리잖아요"
+    } ]
+  }, {
+    "tStartMs": 1025930,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "그래서 어떻게 했냐?"
+    } ]
+  }, {
+    "tStartMs": 1026580,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "이 엘 차포의 아들들이"
+    } ]
+  }, {
+    "tStartMs": 1028240,
+    "dDurationMs": 3820,
+    "segs": [ {
+      "utf8": "이 엘 마요라는 사람을 함정수사에 빠뜨립니다"
+    } ]
+  }, {
+    "tStartMs": 1032060,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "한마디로 미국과 어떻게 손을 잡고"
+    } ]
+  }, {
+    "tStartMs": 1034870,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "미국 텍사스로 이 엘 마요를 보내"
+    } ]
+  }, {
+    "tStartMs": 1037600,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "뭐라고 속였대요"
+    } ]
+  }, {
+    "tStartMs": 1038600,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "거기에 자기들이 하는 새로운 사업"
+    } ]
+  }, {
+    "tStartMs": 1040500,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "무슨 모델이 있고"
+    } ]
+  }, {
+    "tStartMs": 1041590,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "어쩌고 이러면서"
+    } ]
+  }, {
+    "tStartMs": 1042310,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "속여서 이 사람이 갑니다"
+    } ]
+  }, {
+    "tStartMs": 1043990,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "갔다가 여기 미국 텍사스에서 체포돼요"
+    } ]
+  }, {
+    "tStartMs": 1046250,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "이게 2024년이에요"
+    } ]
+  }, {
+    "tStartMs": 1047840,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "당시 보스였습니다"
+    } ]
+  }, {
+    "tStartMs": 1049130,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "당시 보스인데"
+    } ]
+  }, {
+    "tStartMs": 1050440,
+    "dDurationMs": 2940,
+    "segs": [ {
+      "utf8": "그 전 보스의 아들들이 배신을 한 거죠"
+    } ]
+  }, {
+    "tStartMs": 1053380,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "물론 그렇게 알려져 있어요"
+    } ]
+  }, {
+    "tStartMs": 1054990,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "저 엘 마요라는 사람이 그렇게 주장을 하니까"
+    } ]
+  }, {
+    "tStartMs": 1057320,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "그리고 실제로 이 엘차프의 아들들도"
+    } ]
+  }, {
+    "tStartMs": 1059250,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "미국 텍사스에 같이 갔던 거는 맞고"
+    } ]
+  }, {
+    "tStartMs": 1061370,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "그래서 전 보스의 아들이 배신해서"
+    } ]
+  }, {
+    "tStartMs": 1062980,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "결국에 잡혀갑니다"
+    } ]
+  }, {
+    "tStartMs": 1064960,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "근데 잡혀가는 걸로 끝난 거 아니죠?"
+    } ]
+  }, {
+    "tStartMs": 1066750,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "그럼 어떻게 돼요?"
+    } ]
+  }, {
+    "tStartMs": 1067810,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "이 전 1대 보스라고 해야 되나?"
+    } ]
+  }, {
+    "tStartMs": 1069920,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "엘 차포의 아들들과"
+    } ]
+  }, {
+    "tStartMs": 1071750,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "그리고 이 엘 마요가 잡혔으니까"
+    } ]
+  }, {
+    "tStartMs": 1073160,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "반대로 엘 마요도 후계자가 있을 거예요"
+    } ]
+  }, {
+    "tStartMs": 1075870,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "그럼 어떻게 되겠습니까?"
+    } ]
+  }, {
+    "tStartMs": 1077230,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "위가 날라가서"
+    } ]
+  }, {
+    "tStartMs": 1078170,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "얘네들이 다 먹자라고"
+    } ]
+  }, {
+    "tStartMs": 1079730,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "엘 마요를 보내니까"
+    } ]
+  }, {
+    "tStartMs": 1080880,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "엘 마요를 따르던 사람들이"
+    } ]
+  }, {
+    "tStartMs": 1082470,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "이게 또 반발하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1084040,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "복잡합니다"
+    } ]
+  }, {
+    "tStartMs": 1084980,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "그래서 결국에는 양대의 보스였던"
+    } ]
+  }, {
+    "tStartMs": 1087850,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "엘 차포와 엘 마요를 따르는 사람들이"
+    } ]
+  }, {
+    "tStartMs": 1090440,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "역시 전쟁을 시작합니다"
+    } ]
+  }, {
+    "tStartMs": 1093250,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "그래서 시날로아는 지금도 내전이고"
+    } ]
+  }, {
+    "tStartMs": 1095680,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "저 할리스코 카르텔과는"
+    } ]
+  }, {
+    "tStartMs": 1097010,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "여전히 전쟁을 하고 있고"
+    } ]
+  }, {
+    "tStartMs": 1098700,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "한마디로 개판 5분 전으로 싸우다 보니까"
+    } ]
+  }, {
+    "tStartMs": 1101340,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "죽음이 난무하고"
+    } ]
+  }, {
+    "tStartMs": 1102820,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "엄청나게 잔인하고"
+    } ]
+  }, {
+    "tStartMs": 1103990,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "상대편으로 가면 안 되니까"
+    } ]
+  }, {
+    "tStartMs": 1105200,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "배신 못하게"
+    } ]
+  }, {
+    "tStartMs": 1106110,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "이런 전쟁이 펼쳐지고 있는 게"
+    } ]
+  }, {
+    "tStartMs": 1107890,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "멕시코의 오늘이라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1110040,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "지금 얘기했던"
+    } ]
+  }, {
+    "tStartMs": 1111090,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "저 할리스코 카르텔이라는 데는"
+    } ]
+  }, {
+    "tStartMs": 1112700,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "말만 딱 들어도"
+    } ]
+  }, {
+    "tStartMs": 1114200,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "이 로스 세타스라는 전직"
+    } ]
+  }, {
+    "tStartMs": 1116190,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "어떻게 보면 참목한 킬러들하고 싸우던"
+    } ]
+  }, {
+    "tStartMs": 1118440,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "조직이었기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1119430,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "대단히 잔인하고"
+    } ]
+  }, {
+    "tStartMs": 1121320,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "대단히 무자비하고"
+    } ]
+  }, {
+    "tStartMs": 1122850,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "엄청난 활동력"
+    } ]
+  }, {
+    "tStartMs": 1124210,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "이제 그런 걸로 유명합니다"
+    } ]
+  }, {
+    "tStartMs": 1125460,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "예를 들면은"
+    } ]
+  }, {
+    "tStartMs": 1126370,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "할리스코 카르텔이"
+    } ]
+  }, {
+    "tStartMs": 1127710,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "2020년에 자기네 나라"
+    } ]
+  }, {
+    "tStartMs": 1130010,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "수도죠 수도"
+    } ]
+  }, {
+    "tStartMs": 1131040,
+    "dDurationMs": 3970,
+    "segs": [ {
+      "utf8": "멕시코시티의 경찰청장 암살을 시도했어요"
+    } ]
+  }, {
+    "tStartMs": 1135010,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "경찰청장이 차를 타고 가는데"
+    } ]
+  }, {
+    "tStartMs": 1136670,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "여기다 수류탄을 던지고"
+    } ]
+  }, {
+    "tStartMs": 1137750,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "소총을 난사한 일이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 1139110,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "이게 그 차이예요"
+    } ]
+  }, {
+    "tStartMs": 1140290,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "따다다다다 쐈어요"
+    } ]
+  }, {
+    "tStartMs": 1141730,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "뭐 얘들이 시장도 막 암살하고 하니까"
+    } ]
+  }, {
+    "tStartMs": 1143690,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "근데 경찰청장을 암살을 시도했어요"
+    } ]
+  }, {
+    "tStartMs": 1145970,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "근데 그때"
+    } ]
+  }, {
+    "tStartMs": 1146930,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "멕시코시티의 경찰청장이 죽지 않았습니다"
+    } ]
+  }, {
+    "tStartMs": 1149630,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "죽지 않아서"
+    } ]
+  }, {
+    "tStartMs": 1150370,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "지금 뭐가 됐냐"
+    } ]
+  }, {
+    "tStartMs": 1151500,
+    "dDurationMs": 3650,
+    "segs": [ {
+      "utf8": "현 멕시코 최고 치한 책임자가 됐어요"
+    } ]
+  }, {
+    "tStartMs": 1155150,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "셰인바움이 현재 멕시코의 대통령인데"
+    } ]
+  }, {
+    "tStartMs": 1157530,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "셰인바움이 가장 신뢰하는"
+    } ]
+  }, {
+    "tStartMs": 1159540,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "측근이 됐어요"
+    } ]
+  }, {
+    "tStartMs": 1160350,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "왜?"
+    } ]
+  }, {
+    "tStartMs": 1161430,
+    "dDurationMs": 3870,
+    "segs": [ {
+      "utf8": "멕시코는 카르텔하고 정치인들 간의"
+    } ]
+  }, {
+    "tStartMs": 1165300,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "뇌물, 유착"
+    } ]
+  }, {
+    "tStartMs": 1166650,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "당연히 이런 게 있겠죠"
+    } ]
+  }, {
+    "tStartMs": 1167650,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "누가 보더라도"
+    } ]
+  }, {
+    "tStartMs": 1168740,
+    "dDurationMs": 670,
+    "segs": [ {
+      "utf8": "누가 밀어주고"
+    } ]
+  }, {
+    "tStartMs": 1169410,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "그런 게 있을 거 아니에요"
+    } ]
+  }, {
+    "tStartMs": 1170350,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "믿지를 못해"
+    } ]
+  }, {
+    "tStartMs": 1171840,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "잘 믿지 못하겠죠"
+    } ]
+  }, {
+    "tStartMs": 1172740,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "저 사람이 배신할지"
+    } ]
+  }, {
+    "tStartMs": 1174120,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "아니면 카르텔하고 손잡고 있는지"
+    } ]
+  }, {
+    "tStartMs": 1176030,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "이런 거 알 수 없는데"
+    } ]
+  }, {
+    "tStartMs": 1177370,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "현재 이 멕시코 국가안보부 장관은"
+    } ]
+  }, {
+    "tStartMs": 1180290,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "그 할리스코 카르텔한테"
+    } ]
+  }, {
+    "tStartMs": 1181800,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "총질을 당한 사람"
+    } ]
+  }, {
+    "tStartMs": 1183430,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "암살을 당할 뻔한 사람"
+    } ]
+  }, {
+    "tStartMs": 1185050,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "수류탄을 맞았던 인물이야 살았지만"
+    } ]
+  }, {
+    "tStartMs": 1187460,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "그러니까 당연히 믿음이 가죠"
+    } ]
+  }, {
+    "tStartMs": 1190210,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "최소한 할리스코하고는 손을 안 잡았겠구나"
+    } ]
+  }, {
+    "tStartMs": 1193110,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "다른 데하고 손을 잡을지 모르겠지만"
+    } ]
+  }, {
+    "tStartMs": 1194790,
+    "dDurationMs": 3530,
+    "segs": [ {
+      "utf8": "최소한 멕시코 제1 카르텔하고는 원수죠"
+    } ]
+  }, {
+    "tStartMs": 1198320,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "자기한테 총격을 했던 사람인데"
+    } ]
+  }, {
+    "tStartMs": 1200090,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "뭐 그 뿐만 아니겠지만"
+    } ]
+  }, {
+    "tStartMs": 1201320,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "어쨌건 안보부 장관이 됐어"
+    } ]
+  }, {
+    "tStartMs": 1203130,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "국가 안보부 장관입니다"
+    } ]
+  }, {
+    "tStartMs": 1204700,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "아마 배신할 일은 없지 않을까라고 생각하니까"
+    } ]
+  }, {
+    "tStartMs": 1206740,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "신뢰가 높지 않나"
+    } ]
+  }, {
+    "tStartMs": 1207440,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "개인적으로 생각하고"
+    } ]
+  }, {
+    "tStartMs": 1208570,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "그리고 이제 저 할리스코 카르텔,"
+    } ]
+  }, {
+    "tStartMs": 1210700,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "멕시코 카르텔들은 펜타닐에 손을 뻗죠"
+    } ]
+  }, {
+    "tStartMs": 1213260,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "중국에서 원료를 수입해서"
+    } ]
+  }, {
+    "tStartMs": 1215120,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "미국으로 펜타닐을 올리고 하다 보니까"
+    } ]
+  }, {
+    "tStartMs": 1217110,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "미국이 굉장히 예민해지고"
+    } ]
+  }, {
+    "tStartMs": 1218310,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "펜타닐에 대해서"
+    } ]
+  }, {
+    "tStartMs": 1219340,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "굉장히 강력한 압박이 들어옵니다"
+    } ]
+  }, {
+    "tStartMs": 1221220,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "그렇기 때문에 저 멕시코 마약 카르텔들도"
+    } ]
+  }, {
+    "tStartMs": 1223930,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "요즘에 아시아..."
+    } ]
+  }, {
+    "tStartMs": 1225200,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "이거를 아시아 본 떴다고 하면 뭐하고"
+    } ]
+  }, {
+    "tStartMs": 1227250,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "아시아에서 많이 하는 걸 해요"
+    } ]
+  }, {
+    "tStartMs": 1228820,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "소위 말해 얘네들도 캄보디아처럼"
+    } ]
+  }, {
+    "tStartMs": 1230790,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "피싱 사기, 온라인 사기로"
+    } ]
+  }, {
+    "tStartMs": 1232500,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "이동을 많이 합니다"
+    } ]
+  }, {
+    "tStartMs": 1234000,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "훨씬 어떻게 보면"
+    } ]
+  }, {
+    "tStartMs": 1235780,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "자기네들 딴에는 안전한 거죠"
+    } ]
+  }, {
+    "tStartMs": 1237820,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "마약 나르다가"
+    } ]
+  }, {
+    "tStartMs": 1238450,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "막 총 맞고 할 수 있으니까"
+    } ]
+  }, {
+    "tStartMs": 1240120,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "피싱 사기, 온라인 사기,"
+    } ]
+  }, {
+    "tStartMs": 1241850,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "로맨스 스캠 이런 짓을 해요"
+    } ]
+  }, {
+    "tStartMs": 1243530,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "누굴 대상으로?"
+    } ]
+  }, {
+    "tStartMs": 1244680,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "미국인 노인을 대상으로"
+    } ]
+  }, {
+    "tStartMs": 1245950,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "얼마 전에도 굉장히 큰 미국인 노인 대상으로"
+    } ]
+  }, {
+    "tStartMs": 1248540,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "한 부동산 사기 사건이 있었어요"
+    } ]
+  }, {
+    "tStartMs": 1250330,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "스캠 사건이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 1251720,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "미국에서는 이제 더 열받는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1253640,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "게다가 뭐 캄보디아에서도 그런 일 있었잖아요"
+    } ]
+  }, {
+    "tStartMs": 1256500,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "과자 광고 보고 찾아오면은"
+    } ]
+  }, {
+    "tStartMs": 1258120,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "보이스 피싱을 하는 사람으로 만들던지"
+    } ]
+  }, {
+    "tStartMs": 1260270,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "자기들한테 덤비면 죽이고 그랬죠"
+    } ]
+  }, {
+    "tStartMs": 1262840,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "근데 여기는 마약 카르텔이란 말이에요"
+    } ]
+  }, {
+    "tStartMs": 1264580,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "더 끔찍한 짓을 많이 합니다"
+    } ]
+  }, {
+    "tStartMs": 1266240,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "저 부동산 광고를 보고 찾아온 사람들을"
+    } ]
+  }, {
+    "tStartMs": 1268670,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "살해하고"
+    } ]
+  }, {
+    "tStartMs": 1269770,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "암매장하고 일자리 줄게 하고"
+    } ]
+  }, {
+    "tStartMs": 1271340,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "데려온 사람들한테 보이스피싱 켜고"
+    } ]
+  }, {
+    "tStartMs": 1273380,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "그러다가 역시 살해하고"
+    } ]
+  }, {
+    "tStartMs": 1274710,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "이런 일들을 많이 하죠"
+    } ]
+  }, {
+    "tStartMs": 1276610,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "그런데 원래 맨 처음에 사건으로 돌아오면"
+    } ]
+  }, {
+    "tStartMs": 1279220,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "저 엘 멘초라는 사람은 어떻게 잡혔냐?"
+    } ]
+  }, {
+    "tStartMs": 1282110,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "당연히 이런 모습이 아니라고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1283770,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "이건 젊었을 때 사진이고"
+    } ]
+  }, {
+    "tStartMs": 1285310,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "지금은 나이가 좀 있죠?"
+    } ]
+  }, {
+    "tStartMs": 1286770,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "사진이 없었죠"
+    } ]
+  }, {
+    "tStartMs": 1287600,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "저 엘 멘초는"
+    } ]
+  }, {
+    "tStartMs": 1288320,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "미국과 멕시코 정부를 거치면서"
+    } ]
+  }, {
+    "tStartMs": 1290060,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "여러 차례 체포를 피했기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1291590,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "사실상 무적의 인물"
+    } ]
+  }, {
+    "tStartMs": 1293060,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "안 잡히는 인물로"
+    } ]
+  }, {
+    "tStartMs": 1294560,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "여겨졌다고 하는데"
+    } ]
+  }, {
+    "tStartMs": 1295930,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "예를 들면"
+    } ]
+  }, {
+    "tStartMs": 1296780,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "2015년 10년 전에도 한번"
+    } ]
+  }, {
+    "tStartMs": 1298420,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "생포작전을 펼쳤다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1300000,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "잡으려고 생포건 사살이건"
+    } ]
+  }, {
+    "tStartMs": 1301700,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "그때 무장한 카르텔이 잡으러 온"
+    } ]
+  }, {
+    "tStartMs": 1304070,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "군용 헬리콥터에"
+    } ]
+  }, {
+    "tStartMs": 1305460,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "이걸 날렸어요"
+    } ]
+  }, {
+    "tStartMs": 1307260,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "이 로켓발사기죠"
+    } ]
+  }, {
+    "tStartMs": 1308400,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "한마디로 뭐 바주카포 같은"
+    } ]
+  }, {
+    "tStartMs": 1309650,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "걸 날렸다고 보면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1310900,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "군용 헬리콥터가 격추되는 일이 있었어요"
+    } ]
+  }, {
+    "tStartMs": 1313800,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "카르텔 보스 잡으러 갔다가"
+    } ]
+  }, {
+    "tStartMs": 1315670,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "헬기가 미사일에 떨어지는"
+    } ]
+  }, {
+    "tStartMs": 1317300,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "이런 말도 안 되는 일이 있었기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1319490,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "굉장히 어렵죠"
+    } ]
+  }, {
+    "tStartMs": 1320620,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "그리고 앞서 말씀드렸지만"
+    } ]
+  }, {
+    "tStartMs": 1322100,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "저런 초대형 카르텔들은"
+    } ]
+  }, {
+    "tStartMs": 1323650,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "사실상 군대 수준으로 무장하고 있다"
+    } ]
+  }, {
+    "tStartMs": 1325740,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "장갑차가 있다"
+    } ]
+  }, {
+    "tStartMs": 1327000,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "군벌에 가깝다"
+    } ]
+  }, {
+    "tStartMs": 1328230,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "미사일도 있다"
+    } ]
+  }, {
+    "tStartMs": 1329200,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "이 정도로 보시면 될 것 같고"
+    } ]
+  }, {
+    "tStartMs": 1330670,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "특히 얘들이 사용하는 탄약이라고"
+    } ]
+  }, {
+    "tStartMs": 1332470,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "이번에 올라온 사진이 있는데"
+    } ]
+  }, {
+    "tStartMs": 1334170,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "50구경"
+    } ]
+  }, {
+    "tStartMs": 1335580,
+    "dDurationMs": 3180,
+    "segs": [ {
+      "utf8": "이건 뭐 날아가는 헬기 잡는 그런 거죠"
+    } ]
+  }, {
+    "tStartMs": 1338760,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "장갑차 뚫을 것 같은"
+    } ]
+  }, {
+    "tStartMs": 1340160,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "59경 총기"
+    } ]
+  }, {
+    "tStartMs": 1341380,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "이런 걸 쓰다 보니까"
+    } ]
+  }, {
+    "tStartMs": 1342960,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "군대로도 제압이 쉽지 않은 그런 상황이죠"
+    } ]
+  }, {
+    "tStartMs": 1345320,
+    "dDurationMs": 3160,
+    "segs": [ {
+      "utf8": "그러면 이번에 어떻게 잡았냐"
+    } ]
+  }, {
+    "tStartMs": 1348480,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "지난 일요일에 발생했는데"
+    } ]
+  }, {
+    "tStartMs": 1350050,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "일요일에 발생한 그의 사살은"
+    } ]
+  }, {
+    "tStartMs": 1351270,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "적어도 10년 만에"
+    } ]
+  }, {
+    "tStartMs": 1352500,
+    "dDurationMs": 3150,
+    "segs": [ {
+      "utf8": "멕시코에서 벌어진 최대 규모의 안보 작전이다"
+    } ]
+  }, {
+    "tStartMs": 1355650,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "이번에 멕시코가 마약왕 엘멘토를"
+    } ]
+  }, {
+    "tStartMs": 1358220,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "사살할 수 있었던 데는"
+    } ]
+  }, {
+    "tStartMs": 1359880,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "당연하겠지만"
+    } ]
+  }, {
+    "tStartMs": 1361000,
+    "dDurationMs": 3060,
+    "segs": [ {
+      "utf8": "미국에 결정적인 정보 제공이 있었다"
+    } ]
+  }, {
+    "tStartMs": 1364060,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "라는 말이 있어요"
+    } ]
+  }, {
+    "tStartMs": 1365080,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "미국이 찍어주고"
+    } ]
+  }, {
+    "tStartMs": 1366130,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "야 죽여! 라고"
+    } ]
+  }, {
+    "tStartMs": 1367970,
+    "dDurationMs": 3360,
+    "segs": [ {
+      "utf8": "여기야! 라고 알려줬다는 말이 많습니다"
+    } ]
+  }, {
+    "tStartMs": 1371330,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "실제로 미국 백악관 대변인이 나와서"
+    } ]
+  }, {
+    "tStartMs": 1373290,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "한 말이"
+    } ]
+  }, {
+    "tStartMs": 1374100,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "우리가 마약 카리스텔 네트워크를 해체하기 위해서"
+    } ]
+  }, {
+    "tStartMs": 1376960,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "미국이 최대한 많은 정보를 줬고"
+    } ]
+  }, {
+    "tStartMs": 1379010,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "멕시코가 움직여서"
+    } ]
+  }, {
+    "tStartMs": 1380040,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "마약 카르텔 보스를 처리할 수 있었다"
+    } ]
+  }, {
+    "tStartMs": 1382340,
+    "dDurationMs": 3270,
+    "segs": [ {
+      "utf8": "라고 공식적으로 발표를 합니다"
+    } ]
+  }, {
+    "tStartMs": 1385610,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "왜냐하면 멕시코는 사실 그동안"
+    } ]
+  }, {
+    "tStartMs": 1387480,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "마약 카르텔 보스는"
+    } ]
+  }, {
+    "tStartMs": 1388390,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "손을 잘 안 댔어요"
+    } ]
+  }, {
+    "tStartMs": 1389990,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "손을 대면 전쟁이잖아"
+    } ]
+  }, {
+    "tStartMs": 1391690,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "더 많은 사람들이 죽이니까"
+    } ]
+  }, {
+    "tStartMs": 1393350,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "눈 감아주고 갔는데"
+    } ]
+  }, {
+    "tStartMs": 1394710,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "미국이 요구를 하니까"
+    } ]
+  }, {
+    "tStartMs": 1396630,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "멕시코 입장에서는"
+    } ]
+  }, {
+    "tStartMs": 1397870,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "울며 겨자먹기로 가서"
+    } ]
+  }, {
+    "tStartMs": 1399110,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "사살을 했다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1400200,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "하지만 그럼에도 불구하고"
+    } ]
+  }, {
+    "tStartMs": 1401250,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "어떻게 찾았냐 미국은"
+    } ]
+  }, {
+    "tStartMs": 1402780,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "이번에는 비교적 사살된 이유가"
+    } ]
+  }, {
+    "tStartMs": 1404460,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "자세하게 좀 나왔는데"
+    } ]
+  }, {
+    "tStartMs": 1406020,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "이렇게 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 1406980,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "미국 정보기관은"
+    } ]
+  }, {
+    "tStartMs": 1408200,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "저 엘 맨초의 연인 중"
+    } ]
+  }, {
+    "tStartMs": 1409950,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "한 명의 측근에 대해서"
+    } ]
+  }, {
+    "tStartMs": 1412120,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "정보를 알아낼 수 있었다"
+    } ]
+  }, {
+    "tStartMs": 1413860,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "마약왕이니까 연인이 여러 명 있었겠죠"
+    } ]
+  }, {
+    "tStartMs": 1415900,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "그러니까 뭐 애인이라 그래야 되나?"
+    } ]
+  }, {
+    "tStartMs": 1417360,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "저 애인 중 한 명의 측근을 포섭을 해서"
+    } ]
+  }, {
+    "tStartMs": 1419730,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "그 측근이"
+    } ]
+  }, {
+    "tStartMs": 1420730,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "그 애인이 어디로 가는지를"
+    } ]
+  }, {
+    "tStartMs": 1422440,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "알려줬다 그럽니다"
+    } ]
+  }, {
+    "tStartMs": 1424130,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "애인이 어느 건물로 들어가는 걸 알려줬다"
+    } ]
+  }, {
+    "tStartMs": 1426770,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "그래서 마약왕이 자신의 여자친구라고 해야 되나?"
+    } ]
+  }, {
+    "tStartMs": 1429660,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "연인을 만나러 들어가다가"
+    } ]
+  }, {
+    "tStartMs": 1431260,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "경호원들과 총격전 끝에"
+    } ]
+  }, {
+    "tStartMs": 1432820,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "현장에서 사살된 것으로 알려져 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1435420,
+    "dDurationMs": 3350,
+    "segs": [ {
+      "utf8": "한마디로 굉장히 많이 정보를 잘 관리했겠지만"
+    } ]
+  }, {
+    "tStartMs": 1438770,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "결국에는 연인을 만나러 갔다가"
+    } ]
+  }, {
+    "tStartMs": 1440740,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "정보가 새서"
+    } ]
+  }, {
+    "tStartMs": 1441920,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "사살됐다고 알려져 있고요"
+    } ]
+  }, {
+    "tStartMs": 1443420,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "그런데 우리가 멕시코의 입장을 생각을 해보면"
+    } ]
+  }, {
+    "tStartMs": 1446760,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "저 그냥 마약왕"
+    } ]
+  }, {
+    "tStartMs": 1447910,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "마약 보스를 사살하는 작전은"
+    } ]
+  }, {
+    "tStartMs": 1450340,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "여러분들이 생각을 해도"
+    } ]
+  }, {
+    "tStartMs": 1451740,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "당연히 일시적이겠죠"
+    } ]
+  }, {
+    "tStartMs": 1454110,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "아니 새로운 리더가 등장을 할 거 아니에요"
+    } ]
+  }, {
+    "tStartMs": 1456200,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "게다가 아까 전에"
+    } ]
+  }, {
+    "tStartMs": 1457250,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "시날로아 카르텔에서 잠깐 말씀드렸지만"
+    } ]
+  }, {
+    "tStartMs": 1459310,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "보스가 있을 때는"
+    } ]
+  }, {
+    "tStartMs": 1460280,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "그래도 안정적이야"
+    } ]
+  }, {
+    "tStartMs": 1461940,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "보스 말을 들으면 되니까"
+    } ]
+  }, {
+    "tStartMs": 1462960,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "근데 보스가 죽어"
+    } ]
+  }, {
+    "tStartMs": 1464190,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "그럼 그 아래에 있는 사람들이"
+    } ]
+  }, {
+    "tStartMs": 1465440,
+    "dDurationMs": 620,
+    "segs": [ {
+      "utf8": "내가 보스 x2"
+    } ]
+  }, {
+    "tStartMs": 1466060,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "내가 보스, 내가 보스"
+    } ]
+  }, {
+    "tStartMs": 1467040,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "내전이 펼쳐지잖아"
+    } ]
+  }, {
+    "tStartMs": 1468670,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "아까 전에 엘 마요하고"
+    } ]
+  }, {
+    "tStartMs": 1470230,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "엘 모시기하고"
+    } ]
+  }, {
+    "tStartMs": 1471560,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "아들들이 싸우고"
+    } ]
+  }, {
+    "tStartMs": 1472440,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "이런 게 펼쳐진단 말이야"
+    } ]
+  }, {
+    "tStartMs": 1473550,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "그럼 전쟁이 나"
+    } ]
+  }, {
+    "tStartMs": 1474930,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "그래서 오히려 폭력적인 소요사태가 더 강해진다"
+    } ]
+  }, {
+    "tStartMs": 1478330,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "더군다나 끝나면"
+    } ]
+  }, {
+    "tStartMs": 1479620,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "새로운 보스가 등장을 하더라"
+    } ]
+  }, {
+    "tStartMs": 1481640,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "뭐야 다시 되돌아온 거 아니야"
+    } ]
+  }, {
+    "tStartMs": 1483310,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "사람만 더 많이 죽고"
+    } ]
+  }, {
+    "tStartMs": 1484820,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "그래서 멕시코에서는"
+    } ]
+  }, {
+    "tStartMs": 1485910,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "이미 오래전부터 이걸 해본 다음에"
+    } ]
+  }, {
+    "tStartMs": 1488390,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "이게 악순환이구나"
+    } ]
+  }, {
+    "tStartMs": 1489820,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "두목이 사망할 때마다"
+    } ]
+  }, {
+    "tStartMs": 1491130,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "정부 군대하고 더 많이 싸우고"
+    } ]
+  }, {
+    "tStartMs": 1493450,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "또 그 공백을 메우기 위해서"
+    } ]
+  }, {
+    "tStartMs": 1494780,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "피비린내 나는 내부전"
+    } ]
+  }, {
+    "tStartMs": 1496140,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "내전이 펼쳐지고 하니까"
+    } ]
+  }, {
+    "tStartMs": 1497580,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "이거 안 되겠다"
+    } ]
+  }, {
+    "tStartMs": 1499340,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "이런 생각을 많이 한다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1500810,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "그리고 오늘 제가 말씀드린"
+    } ]
+  }, {
+    "tStartMs": 1502490,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "이번 주에 쭉 있었던"
+    } ]
+  }, {
+    "tStartMs": 1503670,
+    "dDurationMs": 3420,
+    "segs": [ {
+      "utf8": "멕시코의 굉장히 전국적인 소요사태도 마찬가지죠"
+    } ]
+  }, {
+    "tStartMs": 1507090,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "할리스코 보스를 죽이니까"
+    } ]
+  }, {
+    "tStartMs": 1508930,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "그 조직원들이"
+    } ]
+  }, {
+    "tStartMs": 1510020,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "난동을 피우는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1511370,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "차량, 상점, 은행에 불을 지르고"
+    } ]
+  }, {
+    "tStartMs": 1513300,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "250개 도로를 봉쇄하고"
+    } ]
+  }, {
+    "tStartMs": 1515650,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "이런 거를 지금 한다고 볼 수 있고"
+    } ]
+  }, {
+    "tStartMs": 1517950,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "그래서 멕시코는 과거에"
+    } ]
+  }, {
+    "tStartMs": 1519480,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "이걸 몇 번 해봤는데"
+    } ]
+  }, {
+    "tStartMs": 1521170,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "20년에도 해봤다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1522940,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "칼데론이라는 대통령이 있던 시절에"
+    } ]
+  }, {
+    "tStartMs": 1525100,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "멕시코 카르텔과"
+    } ]
+  }, {
+    "tStartMs": 1526430,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "전쟁을 선포했어요"
+    } ]
+  }, {
+    "tStartMs": 1527730,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "군사 작전을 합니다"
+    } ]
+  }, {
+    "tStartMs": 1529240,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "조폭과의 전쟁 비슷하죠"
+    } ]
+  }, {
+    "tStartMs": 1530270,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "카르텔과의 전쟁"
+    } ]
+  }, {
+    "tStartMs": 1531520,
+    "dDurationMs": 3130,
+    "segs": [ {
+      "utf8": "근데 오히려 멕시코 살인률이 급등하더라"
+    } ]
+  }, {
+    "tStartMs": 1534650,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "뭐 바뀌는 게 없더라"
+    } ]
+  }, {
+    "tStartMs": 1536010,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "이러다 안 되겠다"
+    } ]
+  }, {
+    "tStartMs": 1536830,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "그래서 불렛보다는 허그"
+    } ]
+  }, {
+    "tStartMs": 1538990,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "총알보다는 포옹 정책으로"
+    } ]
+  }, {
+    "tStartMs": 1540570,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "정책을 바꾸게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1541960,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "게다가 지금 와서"
+    } ]
+  }, {
+    "tStartMs": 1543170,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "최근에 와서 알려진 건"
+    } ]
+  }, {
+    "tStartMs": 1544590,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "20년 전에 했던"
+    } ]
+  }, {
+    "tStartMs": 1545450,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "멕시코 카르텔에 대한 군사작전"
+    } ]
+  }, {
+    "tStartMs": 1547560,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "그거 이제 보니까"
+    } ]
+  }, {
+    "tStartMs": 1548870,
+    "dDurationMs": 3420,
+    "segs": [ {
+      "utf8": "다 카르텔끼리 짜고 친 거다"
+    } ]
+  }, {
+    "tStartMs": 1552290,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "무슨 소리입니까?"
+    } ]
+  }, {
+    "tStartMs": 1553040,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "2006년에 저 칼데론 대통령이"
+    } ]
+  }, {
+    "tStartMs": 1555140,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "카르텔 소탕을 위하여"
+    } ]
+  }, {
+    "tStartMs": 1556440,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "군사작전을 시작했는데"
+    } ]
+  }, {
+    "tStartMs": 1558180,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "지금 와서 보니까"
+    } ]
+  }, {
+    "tStartMs": 1559410,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "이 안보장관이 돈을 뒤로 먹고"
+    } ]
+  }, {
+    "tStartMs": 1561820,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "시날로아 카르텔과 결탁해서"
+    } ]
+  }, {
+    "tStartMs": 1563670,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "외부 경쟁 조직들을"
+    } ]
+  }, {
+    "tStartMs": 1565380,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "군대를 활용해서 제거했다"
+    } ]
+  }, {
+    "tStartMs": 1567810,
+    "dDurationMs": 4090,
+    "segs": [ {
+      "utf8": "그 카르텔과 카르텔의 전쟁이었는데"
+    } ]
+  }, {
+    "tStartMs": 1571900,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "안보장관과 결탁을 해서"
+    } ]
+  }, {
+    "tStartMs": 1573160,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "뇌물을 먹이고"
+    } ]
+  }, {
+    "tStartMs": 1574220,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "군대가 이쪽 카르텔"
+    } ]
+  }, {
+    "tStartMs": 1575290,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "특정 카르텔을 치게 만들었다"
+    } ]
+  }, {
+    "tStartMs": 1577360,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "라는 내용들이 나오고 있죠"
+    } ]
+  }, {
+    "tStartMs": 1579060,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "그러니까 정치하고도 너무나 깊숙이 연결되어 있고"
+    } ]
+  }, {
+    "tStartMs": 1581980,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "저 뇌물 주고받고 하는 게"
+    } ]
+  }, {
+    "tStartMs": 1583630,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "청탁이 너무 만연하니까"
+    } ]
+  }, {
+    "tStartMs": 1585440,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "전쟁을 하는 것도 쉽지 않았죠"
+    } ]
+  }, {
+    "tStartMs": 1587820,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "그래서 저 이후부터"
+    } ]
+  }, {
+    "tStartMs": 1588860,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "예전에 한 번 했었죠"
+    } ]
+  }, {
+    "tStartMs": 1590000,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "멕시코 정부는 마약 카르텔과"
+    } ]
+  }, {
+    "tStartMs": 1591790,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "집적적인 충돌을 피해오는 게"
+    } ]
+  }, {
+    "tStartMs": 1594420,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "전통적인 전략이 됐습니다"
+    } ]
+  }, {
+    "tStartMs": 1596030,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "여기 나오죠"
+    } ]
+  }, {
+    "tStartMs": 1596810,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "Hugs not bullets"
+    } ]
+  }, {
+    "tStartMs": 1598690,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "총알보단 포옹"
+    } ]
+  }, {
+    "tStartMs": 1600450,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "총알로 대응하지 말고"
+    } ]
+  }, {
+    "tStartMs": 1602630,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "포옹하자"
+    } ]
+  }, {
+    "tStartMs": 1603380,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "안고 가자"
+    } ]
+  }, {
+    "tStartMs": 1604560,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "우리 같이 잘해보자"
+    } ]
+  }, {
+    "tStartMs": 1605920,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "이런 안보 정책을 쭉 이어왔고"
+    } ]
+  }, {
+    "tStartMs": 1607920,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "오른쪽에 있는 게"
+    } ]
+  }, {
+    "tStartMs": 1609110,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "안드레스라고 불리는"
+    } ]
+  }, {
+    "tStartMs": 1610140,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "오브라도르 전임 멕시코 대통령입니다"
+    } ]
+  }, {
+    "tStartMs": 1612110,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "왼쪽이 셰인바움 현 멕시코 대통령이에요"
+    } ]
+  }, {
+    "tStartMs": 1614910,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "둘은 사제지간이죠"
+    } ]
+  }, {
+    "tStartMs": 1616220,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "한몸과 다름없기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1617890,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "지금도 포옹 정책을 계속"
+    } ]
+  }, {
+    "tStartMs": 1619340,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "이어나갔다고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1620740,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "이거 어디서 알 수 있냐면"
+    } ]
+  }, {
+    "tStartMs": 1621790,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "얼마 전에 클라우디아 셰인바움"
+    } ]
+  }, {
+    "tStartMs": 1623210,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "멕시코 대통령이 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 1625260,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "무엇보다 가장 중요한 것은"
+    } ]
+  }, {
+    "tStartMs": 1626850,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "마약 카르텔과의 전쟁이 다시는"
+    } ]
+  }, {
+    "tStartMs": 1628770,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "일어나지 않을 것이라는 점입니다"
+    } ]
+  }, {
+    "tStartMs": 1631290,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "우리는 과거처럼"
+    } ]
+  }, {
+    "tStartMs": 1632350,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "사법 절차를 거치지 않은 처형이"
+    } ]
+  }, {
+    "tStartMs": 1634430,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "많이 일어나는"
+    } ]
+  }, {
+    "tStartMs": 1635260,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "이런 사태를 원하지 않아요"
+    } ]
+  }, {
+    "tStartMs": 1637260,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "그래서 마약과의 전쟁으로 돌아가는 것은"
+    } ]
+  }, {
+    "tStartMs": 1640030,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "멕시코의 선택사항이 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 1642230,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "그것은 법의 테두리 밖에 있는 일입니다"
+    } ]
+  }, {
+    "tStartMs": 1644480,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "한국인으로서는"
+    } ]
+  }, {
+    "tStartMs": 1645130,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "전혀 이해할 수 없는 상황이죠"
+    } ]
+  }, {
+    "tStartMs": 1647530,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "마약 카르텔을 날리고"
+    } ]
+  }, {
+    "tStartMs": 1648830,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "치안을 안정해야 되는데"
+    } ]
+  }, {
+    "tStartMs": 1650400,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "멕시코에서는 그게 아닌 거죠"
+    } ]
+  }, {
+    "tStartMs": 1651810,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "법을 지키고 포옹으로 가자"
+    } ]
+  }, {
+    "tStartMs": 1654270,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "마약 카르텔은 법 테두리 밖에 있는 일이야"
+    } ]
+  }, {
+    "tStartMs": 1656260,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "마약과의 전쟁으로 돌아가는 것은"
+    } ]
+  }, {
+    "tStartMs": 1657820,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "선택사항이 아니야"
+    } ]
+  }, {
+    "tStartMs": 1659150,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "라고 얘기를 하게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1660570,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "예전 같으면 멕시코 내부 일이니까"
+    } ]
+  }, {
+    "tStartMs": 1663410,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "이게 쭉 가겠죠"
+    } ]
+  }, {
+    "tStartMs": 1665310,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "물론 정부의 포옹 정책이"
+    } ]
+  }, {
+    "tStartMs": 1667820,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "잘 됐냐"
+    } ]
+  }, {
+    "tStartMs": 1668810,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "아무런 문제 없이 흘러갔냐"
+    } ]
+  }, {
+    "tStartMs": 1670400,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "셰인바움 멕시코 대통령이"
+    } ]
+  }, {
+    "tStartMs": 1671530,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "취임한 지 13개월 지났는데요"
+    } ]
+  }, {
+    "tStartMs": 1673240,
+    "dDurationMs": 3560,
+    "segs": [ {
+      "utf8": "그동안 살해된 멕시코 시장의 수만 9명입니다"
+    } ]
+  }, {
+    "tStartMs": 1676800,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "이제 정부 뿐만 아니라"
+    } ]
+  }, {
+    "tStartMs": 1678610,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "선거에도 저 카르텔이 뛰어들죠"
+    } ]
+  }, {
+    "tStartMs": 1681250,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "아보카도 얘기 때도 했었죠"
+    } ]
+  }, {
+    "tStartMs": 1682520,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "아보카도 이런 것도"
+    } ]
+  }, {
+    "tStartMs": 1683650,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "갱들의 전쟁 때문에"
+    } ]
+  }, {
+    "tStartMs": 1685100,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "가격이 춤을 추고"
+    } ]
+  }, {
+    "tStartMs": 1686480,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "그리고 방금 말씀드렸지만"
+    } ]
+  }, {
+    "tStartMs": 1688060,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "예전에 멕시코 내부일 때는"
+    } ]
+  }, {
+    "tStartMs": 1689530,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "그래도 죽이 되건 밥이 되건"
+    } ]
+  }, {
+    "tStartMs": 1690910,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "지들끼리 알아서 한다는데 라고 생각을 했죠"
+    } ]
+  }, {
+    "tStartMs": 1693130,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "그래서 가능할 수 있었어요"
+    } ]
+  }, {
+    "tStartMs": 1694130,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "포옹 정책이"
+    } ]
+  }, {
+    "tStartMs": 1695000,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "하지만 이젠 안 될 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1696930,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "왜일까요?"
+    } ]
+  }, {
+    "tStartMs": 1698510,
+    "dDurationMs": 3840,
+    "segs": [ {
+      "utf8": "최근에 모든 걸 뒤집어 엎는 인물이 있으니"
+    } ]
+  }, {
+    "tStartMs": 1702350,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "트럼프 대통령이 등장합니다"
+    } ]
+  }, {
+    "tStartMs": 1704670,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "뭐라고 얘기합니까?"
+    } ]
+  }, {
+    "tStartMs": 1705880,
+    "dDurationMs": 4650,
+    "segs": [ {
+      "utf8": "멕시코 정부는 마약 카르텔을 소탕해야 될 거다"
+    } ]
+  }, {
+    "tStartMs": 1710530,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "만약에 못하면"
+    } ]
+  }, {
+    "tStartMs": 1712030,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "우리가 뭔가 해야 될 거야"
+    } ]
+  }, {
+    "tStartMs": 1713840,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "심지어 뭐라고 했겠습니까?"
+    } ]
+  }, {
+    "tStartMs": 1715020,
+    "dDurationMs": 3110,
+    "segs": [ {
+      "utf8": "멕시코로 군대를 보낼 수 있다"
+    } ]
+  }, {
+    "tStartMs": 1718130,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "게다가 멕시코는 서반구죠"
+    } ]
+  }, {
+    "tStartMs": 1720830,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "멕시코는 서반구에 있어요"
+    } ]
+  }, {
+    "tStartMs": 1722490,
+    "dDurationMs": 620,
+    "segs": [ {
+      "utf8": "위에는 캐나다,"
+    } ]
+  }, {
+    "tStartMs": 1723110,
+    "dDurationMs": 620,
+    "segs": [ {
+      "utf8": "아래는 멕시코야"
+    } ]
+  }, {
+    "tStartMs": 1723730,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "이게 사실상"
+    } ]
+  }, {
+    "tStartMs": 1724770,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "자기네 홈 랜드라고 불리는 게"
+    } ]
+  }, {
+    "tStartMs": 1726290,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "지금 트럼프 정부의 스탠스입니다"
+    } ]
+  }, {
+    "tStartMs": 1728850,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "자기네들한테 펜타닐을 보내서"
+    } ]
+  }, {
+    "tStartMs": 1731070,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "지금 그게 국가 비상사태라고 관세를 매기잖아"
+    } ]
+  }, {
+    "tStartMs": 1733800,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "그게 국가 비상사태야 지금"
+    } ]
+  }, {
+    "tStartMs": 1735810,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "물론 캐나다는"
+    } ]
+  }, {
+    "tStartMs": 1736520,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "캐나다 정부가 뭘 하려고 그러니까"
+    } ]
+  }, {
+    "tStartMs": 1738160,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "어떻게 할 수 없는데"
+    } ]
+  }, {
+    "tStartMs": 1739550,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "멕시코는 정부가 마약 카르텔을 건드릴 수 없어"
+    } ]
+  }, {
+    "tStartMs": 1741980,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "이거는 안 되죠"
+    } ]
+  }, {
+    "tStartMs": 1743440,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "트럼프 행정부 입장에서는"
+    } ]
+  }, {
+    "tStartMs": 1744560,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "말이 안 된단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 1746130,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "실제로 멕시코에 군대를 보낼 수 있다"
+    } ]
+  }, {
+    "tStartMs": 1748760,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "우리는 뭔가 할 수 있다"
+    } ]
+  }, {
+    "tStartMs": 1749930,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "그리고 얼마 전에"
+    } ]
+  }, {
+    "tStartMs": 1750530,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "이런 내용이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1751690,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "남쪽에서 배로 미국에 마약 보내던"
+    } ]
+  }, {
+    "tStartMs": 1754570,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "그 조그만 보트 같은 거를"
+    } ]
+  }, {
+    "tStartMs": 1756140,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "미국 함대가 날려버리잖아요"
+    } ]
+  }, {
+    "tStartMs": 1758420,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "많이 보셨죠? 뉴스에서"
+    } ]
+  }, {
+    "tStartMs": 1759890,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "비행기가 쭉 가다가"
+    } ]
+  }, {
+    "tStartMs": 1760740,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "어, 아래에 배 보입니다"
+    } ]
+  }, {
+    "tStartMs": 1761640,
+    "dDurationMs": 450,
+    "segs": [ {
+      "utf8": "배 보입니다"
+    } ]
+  }, {
+    "tStartMs": 1762090,
+    "dDurationMs": 440,
+    "segs": [ {
+      "utf8": "그럼 뭐야?"
+    } ]
+  }, {
+    "tStartMs": 1762530,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "그러면 어 마약 나르는 것 같습니다"
+    } ]
+  }, {
+    "tStartMs": 1764440,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "그럼 쏴버려 하잖아"
+    } ]
+  }, {
+    "tStartMs": 1766030,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "그래서 그걸 쏴버려"
+    } ]
+  }, {
+    "tStartMs": 1767390,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "심지어 빵 터트리면"
+    } ]
+  }, {
+    "tStartMs": 1768590,
+    "dDurationMs": 560,
+    "segs": [ {
+      "utf8": "제대로 안 터져요"
+    } ]
+  }, {
+    "tStartMs": 1769150,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "확인사살도 합니다"
+    } ]
+  }, {
+    "tStartMs": 1770220,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "미국 의회에서도 이걸로 말이 많았어요"
+    } ]
+  }, {
+    "tStartMs": 1771860,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "이건 초법적인 사형 아니냐"
+    } ]
+  }, {
+    "tStartMs": 1773650,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "말이 많긴 한데"
+    } ]
+  }, {
+    "tStartMs": 1774470,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "어쨌건 그런 일도 했어요"
+    } ]
+  }, {
+    "tStartMs": 1775800,
+    "dDurationMs": 590,
+    "segs": [ {
+      "utf8": "그렇기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1776390,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "트럼프 대통령이 이렇게 얘기했죠"
+    } ]
+  }, {
+    "tStartMs": 1777370,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "이제 수상 마약은 90% 차단했다"
+    } ]
+  }, {
+    "tStartMs": 1779990,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "이제 수상으로 마약 갖고 들어오면"
+    } ]
+  }, {
+    "tStartMs": 1781540,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "우리는 묻고 따지지도 않고"
+    } ]
+  }, {
+    "tStartMs": 1782910,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "쏴버린다"
+    } ]
+  }, {
+    "tStartMs": 1784050,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "폭파시켜버린다"
+    } ]
+  }, {
+    "tStartMs": 1785230,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "그래서 이번에는"
+    } ]
+  }, {
+    "tStartMs": 1786150,
+    "dDurationMs": 3390,
+    "segs": [ {
+      "utf8": "이제 육상 카르텔을 공격할 차례다"
+    } ]
+  }, {
+    "tStartMs": 1789540,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "이런 말을 했어요"
+    } ]
+  }, {
+    "tStartMs": 1790410,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "육상 카르텔은 어디입니까?"
+    } ]
+  }, {
+    "tStartMs": 1792040,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "물론 남미에 있는 그런 데도 있지만"
+    } ]
+  }, {
+    "tStartMs": 1793960,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "콜롬비아 그런 데도 있겠지만"
+    } ]
+  }, {
+    "tStartMs": 1795520,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "눈앞에 보이는 건"
+    } ]
+  }, {
+    "tStartMs": 1796250,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "멕시코일 수밖에 없어요"
+    } ]
+  }, {
+    "tStartMs": 1797840,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "그러니까 한마디로 멕시코 정부가"
+    } ]
+  }, {
+    "tStartMs": 1799230,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "마약 카르텔과의 전쟁을"
+    } ]
+  }, {
+    "tStartMs": 1800450,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "그동안은 총알 대신 포옹 이랬는데"
+    } ]
+  }, {
+    "tStartMs": 1803270,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "포옹 자꾸 하다가는 위에서"
+    } ]
+  }, {
+    "tStartMs": 1804960,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "거대한 슈퍼 파워가 내려와서"
+    } ]
+  }, {
+    "tStartMs": 1807820,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "뭐를 할지"
+    } ]
+  }, {
+    "tStartMs": 1809150,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "모르는 상황이 됐고"
+    } ]
+  }, {
+    "tStartMs": 1810700,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "여기에 대해서 일론 머스크도"
+    } ]
+  }, {
+    "tStartMs": 1812180,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "이런 얘기를 했었습니다"
+    } ]
+  }, {
+    "tStartMs": 1813230,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "저 셰인바움은"
+    } ]
+  }, {
+    "tStartMs": 1814360,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "카르텔 보스들이"
+    } ]
+  }, {
+    "tStartMs": 1815330,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "시키는 대로 말하고 있을 뿐이다"
+    } ]
+  }, {
+    "tStartMs": 1817170,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "이게 2월달 얘기예요"
+    } ]
+  }, {
+    "tStartMs": 1819000,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "카르텔 보스의 편을 들고 있다"
+    } ]
+  }, {
+    "tStartMs": 1821020,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "그들한테 두면 안 된다"
+    } ]
+  }, {
+    "tStartMs": 1823140,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "게다가 셰인바움 멕시코 정부가"
+    } ]
+  }, {
+    "tStartMs": 1825600,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "아무것도 안 하면"
+    } ]
+  }, {
+    "tStartMs": 1826330,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "어떻게 될 수 있습니까?"
+    } ]
+  }, {
+    "tStartMs": 1828540,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "이렇게 될 수 있죠"
+    } ]
+  }, {
+    "tStartMs": 1830580,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "지금까지는 그냥 말로 협박인 줄 알았는데"
+    } ]
+  }, {
+    "tStartMs": 1833170,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "아래 베네수엘라를 보니까"
+    } ]
+  }, {
+    "tStartMs": 1835340,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "말로 몇 번 하다가"
+    } ]
+  }, {
+    "tStartMs": 1836730,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "이란을 봐도 그렇고"
+    } ]
+  }, {
+    "tStartMs": 1838380,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "공중에서 뭐가 와"
+    } ]
+  }, {
+    "tStartMs": 1840250,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "뭐가 내려서 생포하더니"
+    } ]
+  }, {
+    "tStartMs": 1842450,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "자기네 나라로 데려갔어"
+    } ]
+  }, {
+    "tStartMs": 1843950,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "아니면 폭탄으로 죽여버리고 그러잖아"
+    } ]
+  }, {
+    "tStartMs": 1846390,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "당연히 멕시코 정부 입장에서는"
+    } ]
+  }, {
+    "tStartMs": 1848260,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "계속 뭐를 안 할 수가 없지 않습니까"
+    } ]
+  }, {
+    "tStartMs": 1851130,
+    "dDurationMs": 360,
+    "segs": [ {
+      "utf8": "제 생각에"
+    } ]
+  }, {
+    "tStartMs": 1851490,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "아니면 뭐 관세가"
+    } ]
+  }, {
+    "tStartMs": 1852750,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "물론 뭐 두 나라 간"
+    } ]
+  }, {
+    "tStartMs": 1853630,
+    "dDurationMs": 670,
+    "segs": [ {
+      "utf8": "FTA가 있지만"
+    } ]
+  }, {
+    "tStartMs": 1854300,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "깨버릴 수도 있죠"
+    } ]
+  }, {
+    "tStartMs": 1854960,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "뭐 트럼프가 그런 거 신경 쓴 사람 아니니까"
+    } ]
+  }, {
+    "tStartMs": 1857110,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "너희가 말을 안 들으면"
+    } ]
+  }, {
+    "tStartMs": 1858720,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "당연히 관세 100%"
+    } ]
+  }, {
+    "tStartMs": 1860070,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "맨날 하는"
+    } ]
+  }, {
+    "tStartMs": 1860800,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "아니면 심지어"
+    } ]
+  }, {
+    "tStartMs": 1861900,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "뭐 군사 작전을"
+    } ]
+  }, {
+    "tStartMs": 1862670,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "펼칠 수도 있는 상황이 되다 보니까"
+    } ]
+  }, {
+    "tStartMs": 1864720,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "물론 셰인바움 대통령은 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1867200,
+    "dDurationMs": 3070,
+    "segs": [ {
+      "utf8": "내정 개입을 단호히 거부한다"
+    } ]
+  }, {
+    "tStartMs": 1870270,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "단호히 거부해"
+    } ]
+  }, {
+    "tStartMs": 1871520,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "어... 하지만"
+    } ]
+  }, {
+    "tStartMs": 1874260,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "그 마약 카르텔은"
+    } ]
+  }, {
+    "tStartMs": 1875520,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "내가 알아서 할게"
+    } ]
+  }, {
+    "tStartMs": 1876360,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "공격을 안 할 수가 없죠"
+    } ]
+  }, {
+    "tStartMs": 1878960,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "제가 보기엔 사실상 공격을 안 할 수가 없어요"
+    } ]
+  }, {
+    "tStartMs": 1881470,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "단호히 거부는 하지만"
+    } ]
+  }, {
+    "tStartMs": 1882720,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "너무 단호히 거부했다간"
+    } ]
+  }, {
+    "tStartMs": 1884280,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "마두로가 걱정이 되기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1886500,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "어쩔 수 없는 상황이라는 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1888270,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "결국에 멕시코 최대의 카르텔 보스를"
+    } ]
+  }, {
+    "tStartMs": 1890920,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "미국이 여기"
+    } ]
+  }, {
+    "tStartMs": 1892340,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "죽여!"
+    } ]
+  }, {
+    "tStartMs": 1893280,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "이거 알려줬죠 사실상"
+    } ]
+  }, {
+    "tStartMs": 1894730,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "가서 사살하는 것으로써"
+    } ]
+  }, {
+    "tStartMs": 1896330,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "지금 분위기로는 관용정책에서"
+    } ]
+  }, {
+    "tStartMs": 1898770,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "전환이 돼서"
+    } ]
+  }, {
+    "tStartMs": 1899740,
+    "dDurationMs": 3190,
+    "segs": [ {
+      "utf8": "카르텔과의 전쟁으로 나아갈 수 있냐"
+    } ]
+  }, {
+    "tStartMs": 1902930,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "트럼프 대통령이 아직 3년 남았죠"
+    } ]
+  }, {
+    "tStartMs": 1905750,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "나아가야 될 것 같긴 해"
+    } ]
+  }, {
+    "tStartMs": 1907570,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "지금 1년밖에 안 지났는데"
+    } ]
+  }, {
+    "tStartMs": 1908540,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "놀랍게도 1년밖에 안 지났습니다"
+    } ]
+  }, {
+    "tStartMs": 1910470,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "마지막 1년이면 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 1911700,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "놀랍게도 1년밖에 안 지났기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1913890,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "물론 재선을 했기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1915080,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "3선은 없지 않냐"
+    } ]
+  }, {
+    "tStartMs": 1917030,
+    "dDurationMs": 3440,
+    "segs": [ {
+      "utf8": "당연히 상식적으로 3선이 없을 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 1920470,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "모른다는 건 좀 이상하지만"
+    } ]
+  }, {
+    "tStartMs": 1922230,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "자꾸 본인께서는"
+    } ]
+  }, {
+    "tStartMs": 1923620,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "가능할 수도 있지 않냐는 식으로"
+    } ]
+  }, {
+    "tStartMs": 1925260,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "말하기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1926550,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "그래서 현재 지금 마약 카르텔"
+    } ]
+  }, {
+    "tStartMs": 1928330,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "할리스코의 보스를 죽인다면"
+    } ]
+  }, {
+    "tStartMs": 1930030,
+    "dDurationMs": 3090,
+    "segs": [ {
+      "utf8": "이제 이전 정부 시절의 관용적인 포옹 정책과는"
+    } ]
+  }, {
+    "tStartMs": 1933120,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "단절을 하는 게 아니냐라는"
+    } ]
+  }, {
+    "tStartMs": 1934630,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "얘기가 많이 나왔죠"
+    } ]
+  }, {
+    "tStartMs": 1936440,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "그러면은 멕시코 카르텔 입장에서"
+    } ]
+  }, {
+    "tStartMs": 1938010,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "어떻게 해야 됩니까?"
+    } ]
+  }, {
+    "tStartMs": 1939180,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "정부가 미국의 압력 때문에"
+    } ]
+  }, {
+    "tStartMs": 1941290,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "자기들한테 뭘 한대"
+    } ]
+  }, {
+    "tStartMs": 1943130,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "그래서 이번에 멕시코에서 일어난"
+    } ]
+  }, {
+    "tStartMs": 1945100,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "전국적인 마약 카르텔의 소요는"
+    } ]
+  }, {
+    "tStartMs": 1947350,
+    "dDurationMs": 3020,
+    "segs": [ {
+      "utf8": "사실 정부에 대한 경고로 해석할 수도 있어요"
+    } ]
+  }, {
+    "tStartMs": 1950370,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "군인들한테 막 현상금 걸고"
+    } ]
+  }, {
+    "tStartMs": 1951850,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "아까 전에 막"
+    } ]
+  }, {
+    "tStartMs": 1952800,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "도로에서 뭐 하고 왜 그러느냐?"
+    } ]
+  }, {
+    "tStartMs": 1955470,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "자기들끼리 보스 정하면 됐지"
+    } ]
+  }, {
+    "tStartMs": 1957410,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "이거는 포옹이냐 전쟁이냐"
+    } ]
+  }, {
+    "tStartMs": 1959330,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "멕시코가 기로에 서 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1961150,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "자기들도 어떤"
+    } ]
+  }, {
+    "tStartMs": 1962380,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "메시지를 내야죠"
+    } ]
+  }, {
+    "tStartMs": 1963540,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "정부가 우리에 대해서 전쟁을 하면"
+    } ]
+  }, {
+    "tStartMs": 1965720,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "우리는 이렇게 할 거야"
+    } ]
+  }, {
+    "tStartMs": 1967790,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "도로를 막고"
+    } ]
+  }, {
+    "tStartMs": 1968510,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "은행에 불을 지르고"
+    } ]
+  }, {
+    "tStartMs": 1970130,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "사람들을 못 나오게 하고"
+    } ]
+  }, {
+    "tStartMs": 1971740,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "총질을 하고 군인을 죽이고"
+    } ]
+  }, {
+    "tStartMs": 1973920,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "그런 걸 할 수 있다는"
+    } ]
+  }, {
+    "tStartMs": 1975360,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "아마 이런 것 때문에"
+    } ]
+  }, {
+    "tStartMs": 1976700,
+    "dDurationMs": 3310,
+    "segs": [ {
+      "utf8": "더 강하게 소요 사태를 일으키는 게 아닌가"
+    } ]
+  }, {
+    "tStartMs": 1980010,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "라는 내용이 많이 나오고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1982640,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "그래서 기로에 선 거죠"
+    } ]
+  }, {
+    "tStartMs": 1984380,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "포옹이냐 전쟁이냐"
+    } ]
+  }, {
+    "tStartMs": 1985530,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "멕시코는 기로에 섰는데"
+    } ]
+  }, {
+    "tStartMs": 1987030,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "얘기는 여기서 끝이긴 한데"
+    } ]
+  }, {
+    "tStartMs": 1988320,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "우리도 약간 걱정되는 건 있어요"
+    } ]
+  }, {
+    "tStartMs": 1989710,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "뭐가 있냐?"
+    } ]
+  }, {
+    "tStartMs": 1990620,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "멕시코가 이번 6월"
+    } ]
+  }, {
+    "tStartMs": 1992340,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "월드컵 개최지입니다"
+    } ]
+  }, {
+    "tStartMs": 1994210,
+    "dDurationMs": 3280,
+    "segs": [ {
+      "utf8": "물론 여러 나라가 같이 개최하기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1997490,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "우리나라 국가대표팀이"
+    } ]
+  }, {
+    "tStartMs": 1998810,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "멕시코에 안 가면 되긴 하거든요"
+    } ]
+  }, {
+    "tStartMs": 2000230,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "6월이니까"
+    } ]
+  }, {
+    "tStartMs": 2000880,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "4개월 남았습니다"
+    } ]
+  }, {
+    "tStartMs": 2003080,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "하필 대한민국은"
+    } ]
+  }, {
+    "tStartMs": 2004770,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "아까 얘기가 나온 과달라하라"
+    } ]
+  }, {
+    "tStartMs": 2006830,
+    "dDurationMs": 2980,
+    "segs": [ {
+      "utf8": "모든 멕시코 카르텔의 시초라고 불리는"
+    } ]
+  }, {
+    "tStartMs": 2009810,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "그 지역이죠"
+    } ]
+  }, {
+    "tStartMs": 2010750,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "그 카르텔이 이 이름을 땄죠"
+    } ]
+  }, {
+    "tStartMs": 2012290,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "과달라하라에서 두 경기합니다"
+    } ]
+  }, {
+    "tStartMs": 2014780,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "게다가 멕시코랑이야"
+    } ]
+  }, {
+    "tStartMs": 2015730,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "아씨"
+    } ]
+  }, {
+    "tStartMs": 2016800,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "하필 또 멕시코라고 하냐"
+    } ]
+  }, {
+    "tStartMs": 2017980,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "2차전이 멕시코야"
+    } ]
+  }, {
+    "tStartMs": 2019630,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "3차전도 위에 있는"
+    } ]
+  }, {
+    "tStartMs": 2021900,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "몬테레이에서입니다"
+    } ]
+  }, {
+    "tStartMs": 2022880,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "국경 도시죠"
+    } ]
+  }, {
+    "tStartMs": 2024400,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "우리가 A조이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 2025330,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "모든 세 경기를 다 멕시코에서 치뤄요"
+    } ]
+  }, {
+    "tStartMs": 2028130,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "물론 설마 우리나라 국가대표팀한테"
+    } ]
+  }, {
+    "tStartMs": 2030230,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "무슨 해를 끼치거나"
+    } ]
+  }, {
+    "tStartMs": 2031190,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "그런 일은 없겠지만"
+    } ]
+  }, {
+    "tStartMs": 2032750,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "어쩔 건 큰 경기를 하는데"
+    } ]
+  }, {
+    "tStartMs": 2034210,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "저렇게 카르텔들이 총질을 하고 있는"
+    } ]
+  }, {
+    "tStartMs": 2035990,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "그런 치안이 안 좋은 상황이니까"
+    } ]
+  }, {
+    "tStartMs": 2038040,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "물론 셰인바움 대통령은"
+    } ]
+  }, {
+    "tStartMs": 2039420,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "전혀 걱정할 필요 없다"
+    } ]
+  }, {
+    "tStartMs": 2041090,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "모든 것이 보장돼 있다"
+    } ]
+  }, {
+    "tStartMs": 2042720,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "아무런 위험도 없다"
+    } ]
+  }, {
+    "tStartMs": 2045620,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "멕시코하고 2차전"
+    } ]
+  }, {
+    "tStartMs": 2047350,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "우리가 너무 대승을 해버리면"
+    } ]
+  }, {
+    "tStartMs": 2049810,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "관중들이 흥분할 수도 있죠"
+    } ]
+  }, {
+    "tStartMs": 2051470,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "예를 들면"
+    } ]
+  }, {
+    "tStartMs": 2052830,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "브라질 모처럼 7대1, 7대0"
+    } ]
+  }, {
+    "tStartMs": 2055460,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "이렇게 이겨버리면"
+    } ]
+  }, {
+    "tStartMs": 2056750,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "관중들이 흥분할 수도 있잖아"
+    } ]
+  }, {
+    "tStartMs": 2058780,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "7대 0, 8대 0"
+    } ]
+  }, {
+    "tStartMs": 2059990,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "그래서 5대 0 이하로"
+    } ]
+  }, {
+    "tStartMs": 2061790,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "이기자 5대0 이하로"
+    } ]
+  }, {
+    "tStartMs": 2063060,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "좀 불안하니까"
+    } ]
+  }, {
+    "tStartMs": 2064260,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "7대 0하면 어떡해"
+    } ]
+  }, {
+    "tStartMs": 2065710,
+    "dDurationMs": 3360,
+    "segs": [ {
+      "utf8": "5대 0 아니, 한 골도 주자"
+    } ]
+  }, {
+    "tStartMs": 2069070,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "골 주고 5대 1 정도면 충분하지 않을까?"
+    } ]
+  }, {
+    "tStartMs": 2071330,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "이렇게 생각이 됩니다"
+    } ]
+  }, {
+    "tStartMs": 2073120,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "국제축구연맹 피파 회장은 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 2075340,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "매우 안심된다"
+    } ]
+  }, {
+    "tStartMs": 2076690,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "걱정하지 마라"
+    } ]
+  }, {
+    "tStartMs": 2079500,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "걱정은 안 되는데"
+    } ]
+  }, {
+    "tStartMs": 2080620,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "걱정 안 되는데"
+    } ]
+  }, {
+    "tStartMs": 2081840,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "그때 가서 이제 좀 많이 가라앉아 있겠죠"
+    } ]
+  }, {
+    "tStartMs": 2083780,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "그래서 큰 걱정은 안 되긴 하는데"
+    } ]
+  }, {
+    "tStartMs": 2086130,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "너무 크게 이기지 말고"
+    } ]
+  }, {
+    "tStartMs": 2088850,
+    "dDurationMs": 3180,
+    "segs": [ {
+      "utf8": "한 5대 0 정도로만 해서"
+    } ]
+  }, {
+    "tStartMs": 2092030,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "승승장구해서"
+    } ]
+  }, {
+    "tStartMs": 2093220,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "16강 8강 가면 되니까"
+    } ]
+  }, {
+    "tStartMs": 2094940,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "그런 모습을 보이기를"
+    } ]
+  }, {
+    "tStartMs": 2096330,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "한번 기원해 보겠습니다"
+    } ]
+  } ]
+}

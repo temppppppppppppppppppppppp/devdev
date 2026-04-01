@@ -1,0 +1,6325 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 7970,
+    "dDurationMs": 3490,
+    "segs": [ {
+      "utf8": "세 번째 주제는 엡스타인 얘기를 또 가져왔습니다"
+    } ]
+  }, {
+    "tStartMs": 11460,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "왜냐하면 조금 이따가 나오겠지만"
+    } ]
+  }, {
+    "tStartMs": 13600,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "클린턴 전 대통령이"
+    } ]
+  }, {
+    "tStartMs": 15010,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "이번에 미국 의회에 출석해서"
+    } ]
+  }, {
+    "tStartMs": 17150,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "엡스타인에 대한 증언을 했어요"
+    } ]
+  }, {
+    "tStartMs": 19330,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "무슨 얘기를 했을까요?"
+    } ]
+  }, {
+    "tStartMs": 20550,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "엡스타인이 누군지는 다 아시죠, 이제?"
+    } ]
+  }, {
+    "tStartMs": 22780,
+    "dDurationMs": 4200,
+    "segs": [ {
+      "utf8": "옛날에 굉장히 미성년자 여성들을 납치해갖고"
+    } ]
+  }, {
+    "tStartMs": 26980,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "유력 정치인이나"
+    } ]
+  }, {
+    "tStartMs": 27970,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "미국에 힘이 있는 사람들한테"
+    } ]
+  }, {
+    "tStartMs": 29890,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "성매매를 했다"
+    } ]
+  }, {
+    "tStartMs": 31000,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "이랬던 엡스타인 파일이 있던"
+    } ]
+  }, {
+    "tStartMs": 32820,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "그 사람이잖아요"
+    } ]
+  }, {
+    "tStartMs": 34000,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "이미 죽었죠"
+    } ]
+  }, {
+    "tStartMs": 34870,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "자살했다고"
+    } ]
+  }, {
+    "tStartMs": 35530,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "자살을 당했는지 했는지 모르겠지만"
+    } ]
+  }, {
+    "tStartMs": 37790,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "지금 죽은 엡스타인이"
+    } ]
+  }, {
+    "tStartMs": 39130,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "산 트럼프를 열심히 따라가고 있는데"
+    } ]
+  }, {
+    "tStartMs": 41610,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "그 와중에"
+    } ]
+  }, {
+    "tStartMs": 42520,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "빌 클린턴 전 대통령이 증언을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 45260,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "뭐라고 했는지"
+    } ]
+  }, {
+    "tStartMs": 46400,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "저랑 같이 한번 알아보도록 하겠습니다"
+    } ]
+  }, {
+    "tStartMs": 48360,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "지난 1월 30일 날"
+    } ]
+  }, {
+    "tStartMs": 49480,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "미국 법무부는"
+    } ]
+  }, {
+    "tStartMs": 50380,
+    "dDurationMs": 3440,
+    "segs": [ {
+      "utf8": "드디어 엡스타인 파일을 전격적으로 공개했습니다"
+    } ]
+  }, {
+    "tStartMs": 53820,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "무려 300만 페이지 이상의 문서와"
+    } ]
+  }, {
+    "tStartMs": 55820,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "영상도 수천 개"
+    } ]
+  }, {
+    "tStartMs": 57500,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "이미지도 장난 아니야"
+    } ]
+  }, {
+    "tStartMs": 58660,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "제가 가서 다 보려고 했는데"
+    } ]
+  }, {
+    "tStartMs": 60240,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "300만 페이지라는 말에 안 봤습니다"
+    } ]
+  }, {
+    "tStartMs": 63580,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "여러분들 다 볼 수 있어요"
+    } ]
+  }, {
+    "tStartMs": 64830,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "공개되어 있고요"
+    } ]
+  }, {
+    "tStartMs": 66000,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "저는 영상만 볼래요"
+    } ]
+  }, {
+    "tStartMs": 67550,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "영상은 2천 개 있습니다"
+    } ]
+  }, {
+    "tStartMs": 69630,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "이미지는 18만 장이"
+    } ]
+  }, {
+    "tStartMs": 71650,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "이거 다 보려면"
+    } ]
+  }, {
+    "tStartMs": 72960,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "말도 안 되는 숫자라고 할 수 있고"
+    } ]
+  }, {
+    "tStartMs": 74620,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "또 피해자들의 신원 보호를 위해서"
+    } ]
+  }, {
+    "tStartMs": 76220,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "자료가 굉장히 많이 삭제돼 있어요"
+    } ]
+  }, {
+    "tStartMs": 78180,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "까맣게 나와요 까맣게"
+    } ]
+  }, {
+    "tStartMs": 79610,
+    "dDurationMs": 3140,
+    "segs": [ {
+      "utf8": "오른쪽에 있는 이 여성이 길레인 맥스웰이라고 하는"
+    } ]
+  }, {
+    "tStartMs": 82750,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "지금 감옥에 있는 여성입니다"
+    } ]
+  }, {
+    "tStartMs": 84040,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "왼쪽이 엡스타인인데"
+    } ]
+  }, {
+    "tStartMs": 85210,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "엡스타인은 연인이라고 불리는 사람이죠"
+    } ]
+  }, {
+    "tStartMs": 87070,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "이 사람 얼굴은 널리 알려졌으니까"
+    } ]
+  }, {
+    "tStartMs": 88900,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "이 사람 얼굴은 나오는데"
+    } ]
+  }, {
+    "tStartMs": 89940,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "다른 여성들의 이미지는"
+    } ]
+  }, {
+    "tStartMs": 91100,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "대부분 검게 가려져 있습니다"
+    } ]
+  }, {
+    "tStartMs": 92850,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "예를 들면 이렇게 돼 있는 페이지가 많아요"
+    } ]
+  }, {
+    "tStartMs": 95390,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "필터링이 돼 있는 페이지가"
+    } ]
+  }, {
+    "tStartMs": 96920,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "뭐 몇백 페이지가 넘는다고 해요"
+    } ]
+  }, {
+    "tStartMs": 98520,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "중간에 갑자기 까맣게 돼 있고"
+    } ]
+  }, {
+    "tStartMs": 99800,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "갑자기 안 보이고"
+    } ]
+  }, {
+    "tStartMs": 100580,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "몇십 페이지가"
+    } ]
+  }, {
+    "tStartMs": 101510,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "완전히 필터링이 돼 있고"
+    } ]
+  }, {
+    "tStartMs": 103000,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "이런 엡스타인 파일이 일단 공개가 됐는데"
+    } ]
+  }, {
+    "tStartMs": 105500,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "가장 비중 있게 나온 사진은"
+    } ]
+  }, {
+    "tStartMs": 107260,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "역시 빌 클린턴"
+    } ]
+  }, {
+    "tStartMs": 108350,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "전 대통령이었습니다"
+    } ]
+  }, {
+    "tStartMs": 109960,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "미국 국무부도"
+    } ]
+  }, {
+    "tStartMs": 110710,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "가장 앞서서 얘기한 게"
+    } ]
+  }, {
+    "tStartMs": 112550,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "빌 클린턴 전 대통령이에요"
+    } ]
+  }, {
+    "tStartMs": 114590,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "왜 그렇냐면"
+    } ]
+  }, {
+    "tStartMs": 115620,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "금 미국 정부는 공화당인데"
+    } ]
+  }, {
+    "tStartMs": 117530,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "빌 클린턴은 민주당 전 대통령이죠"
+    } ]
+  }, {
+    "tStartMs": 120830,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "어른의 사정이 있지 않을까라고"
+    } ]
+  }, {
+    "tStartMs": 122660,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "개인적으로 생각하는데"
+    } ]
+  }, {
+    "tStartMs": 123800,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "하여튼 가장 많이 나오고"
+    } ]
+  }, {
+    "tStartMs": 125560,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "가장 많이 언급되고"
+    } ]
+  }, {
+    "tStartMs": 126450,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "사진도 많이 나와있는 게"
+    } ]
+  }, {
+    "tStartMs": 127720,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "빌 클린턴 전 대통령이라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 130550,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "그러면 지금 살아있는 권력인"
+    } ]
+  }, {
+    "tStartMs": 132520,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "트럼프 대통령에 대한 내용은요?"
+    } ]
+  }, {
+    "tStartMs": 134370,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "그거는 아마 트럼프 대통령이"
+    } ]
+  }, {
+    "tStartMs": 136870,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "엡스타인과 별로 안 친해셨던 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 139320,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "과거에는 친분이 두터웠던 것으로 알려져 있는데"
+    } ]
+  }, {
+    "tStartMs": 141890,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "지금은 아마 안 친하신 것 같아"
+    } ]
+  }, {
+    "tStartMs": 143860,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "과거에도 별 게 없었던 것 같아"
+    } ]
+  }, {
+    "tStartMs": 145440,
+    "dDurationMs": 5530,
+    "segs": [ {
+      "utf8": "트럼프에 대한 언급이 거의 없었다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 150970,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "나중에 어른이 되시면"
+    } ]
+  }, {
+    "tStartMs": 152300,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "그 이유를 알 수 있지 않을까 생각하는데"
+    } ]
+  }, {
+    "tStartMs": 154510,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "사람들이 아니 내가 어른이 아니어서"
+    } ]
+  }, {
+    "tStartMs": 156430,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "그 이유를 안 말해주는 거냐라고 항의를 했더니"
+    } ]
+  }, {
+    "tStartMs": 159060,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "미 법무부 차관이 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 160940,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "우리는 트럼프 대통령을 보호하지 않았다"
+    } ]
+  }, {
+    "tStartMs": 163780,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "자료가 없었을 뿐이야"
+    } ]
+  }, {
+    "tStartMs": 165340,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "없어서 안 보여준 걸"
+    } ]
+  }, {
+    "tStartMs": 166260,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "뭐 어떻게 해"
+    } ]
+  }, {
+    "tStartMs": 166950,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "우리는 법령을 준수했다"
+    } ]
+  }, {
+    "tStartMs": 168610,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "트럼프 대통령이 무결점하시고"
+    } ]
+  }, {
+    "tStartMs": 170120,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "그거 없어가지고 말이야"
+    } ]
+  }, {
+    "tStartMs": 171180,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "클린턴만 주르륵 나오고"
+    } ]
+  }, {
+    "tStartMs": 172430,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "트럼프가 없었던 걸"
+    } ]
+  }, {
+    "tStartMs": 173680,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "뭐 어떡하란 말이냐"
+    } ]
+  }, {
+    "tStartMs": 174690,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "물론 이 문서들을 우리가 보여준다고 해도"
+    } ]
+  }, {
+    "tStartMs": 177230,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "너희의 갈증이 해소되지 않을 건 알아"
+    } ]
+  }, {
+    "tStartMs": 179180,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "하지만"
+    } ]
+  }, {
+    "tStartMs": 179820,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "이게 전부다"
+    } ]
+  }, {
+    "tStartMs": 180610,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "라고 얘기를 했고요"
+    } ]
+  }, {
+    "tStartMs": 182000,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "실제로 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 183010,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "우리는 엡스타인에 대한"
+    } ]
+  }, {
+    "tStartMs": 184370,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "숨기는 자료가 더 이상 없다"
+    } ]
+  }, {
+    "tStartMs": 186750,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "아 있긴 있어"
+    } ]
+  }, {
+    "tStartMs": 187670,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "근데 그건 법률 때문에"
+    } ]
+  }, {
+    "tStartMs": 189780,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "트럼프 때문이 아니라"
+    } ]
+  }, {
+    "tStartMs": 191210,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "피해자들의 얼굴"
+    } ]
+  }, {
+    "tStartMs": 192290,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "피해자들의 증언"
+    } ]
+  }, {
+    "tStartMs": 193550,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "피해자들을 어떻게 보면 보호하고"
+    } ]
+  }, {
+    "tStartMs": 196220,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "더 큰 피해를 막기 위한 법률 때문에"
+    } ]
+  }, {
+    "tStartMs": 198660,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "공개하지 못하는 거지"
+    } ]
+  }, {
+    "tStartMs": 200050,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "극비 문서에 트럼프가 나와서 그런 거 없어"
+    } ]
+  }, {
+    "tStartMs": 202550,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "그런 거 없다라고 발표를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 205060,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "물론 요거 발표할 때"
+    } ]
+  }, {
+    "tStartMs": 206040,
+    "dDurationMs": 540,
+    "segs": [ {
+      "utf8": "딱 보니까"
+    } ]
+  }, {
+    "tStartMs": 206580,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "아니 몇 개 삭제됐네?"
+    } ]
+  }, {
+    "tStartMs": 208800,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "라고 또 누가 물어봤어요"
+    } ]
+  }, {
+    "tStartMs": 210700,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "물론 요거 물어본 데"
+    } ]
+  }, {
+    "tStartMs": 211500,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "발표한 거긴 한데"
+    } ]
+  }, {
+    "tStartMs": 212430,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "삭제됐네? 그랬더니"
+    } ]
+  }, {
+    "tStartMs": 213550,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "아, 그거는 아까 얘기했잖아"
+    } ]
+  }, {
+    "tStartMs": 215660,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "뭐라고요?"
+    } ]
+  }, {
+    "tStartMs": 216540,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "피해자들의 신원 노출"
+    } ]
+  }, {
+    "tStartMs": 218530,
+    "dDurationMs": 590,
+    "segs": [ {
+      "utf8": "피해자들의"
+    } ]
+  }, {
+    "tStartMs": 219120,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "또 다른 제2차, 3차 피해를 막기 위해서"
+    } ]
+  }, {
+    "tStartMs": 221740,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "어쩔 수 없이"
+    } ]
+  }, {
+    "tStartMs": 222660,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "문서 삭제의 결정을 한 거지"
+    } ]
+  }, {
+    "tStartMs": 225010,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "절대 트럼프 대통령의"
+    } ]
+  }, {
+    "tStartMs": 226080,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "압력에 따른 건 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 227760,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "라고 얘기를 했어요"
+    } ]
+  }, {
+    "tStartMs": 229380,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "그래서 트럼프 대통령이 대한 내용이"
+    } ]
+  }, {
+    "tStartMs": 230890,
+    "dDurationMs": 570,
+    "segs": [ {
+      "utf8": "별 게 없구나"
+    } ]
+  }, {
+    "tStartMs": 231460,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "그래서 트럼프 대통령이 한마디 하셨습니다"
+    } ]
+  }, {
+    "tStartMs": 233820,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "거 봐"
+    } ]
+  }, {
+    "tStartMs": 234800,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "내가 공개하지 말자고 했잖아"
+    } ]
+  }, {
+    "tStartMs": 237570,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "나는 빌 클린턴의 사진이"
+    } ]
+  }, {
+    "tStartMs": 239180,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "공개되는 게 싫어서 그랬어"
+    } ]
+  }, {
+    "tStartMs": 241240,
+    "dDurationMs": 2910,
+    "segs": [ {
+      "utf8": "아니 저렇게 그 여자 말이야"
+    } ]
+  }, {
+    "tStartMs": 244150,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "무릎에 올려놓고"
+    } ]
+  }, {
+    "tStartMs": 245290,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "이런 사진 이런 거"
+    } ]
+  }, {
+    "tStartMs": 246460,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "아휴 이 양반이 왜 그런지 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 248790,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "나는 저 양반의 저런 게 나오는 게 싫었어"
+    } ]
+  }, {
+    "tStartMs": 251710,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "다른 사람의 사진이 공개되는 게"
+    } ]
+  }, {
+    "tStartMs": 253730,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "그래도 살아야지"
+    } ]
+  }, {
+    "tStartMs": 255080,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "지금 대통령까지 한 양반을"
+    } ]
+  }, {
+    "tStartMs": 256230,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "저렇게 만들면 되겠어?"
+    } ]
+  }, {
+    "tStartMs": 257230,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "나는 그런 게 싫어서 그러는데"
+    } ]
+  }, {
+    "tStartMs": 258520,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "참 내 마음도 모르고"
+    } ]
+  }, {
+    "tStartMs": 259730,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "계속 뭐라 그래서"
+    } ]
+  }, {
+    "tStartMs": 260990,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "어쩔 수 없이 공개하는데"
+    } ]
+  }, {
+    "tStartMs": 262340,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "정말 끔찍한 일이 아닌가 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 265220,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "그리고 저 엡스타인 자꾸 얘기하는 사람들은"
+    } ]
+  }, {
+    "tStartMs": 267970,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "내 업적을 가리려고"
+    } ]
+  }, {
+    "tStartMs": 269660,
+    "dDurationMs": 550,
+    "segs": [ {
+      "utf8": "내가 다른 게"
+    } ]
+  }, {
+    "tStartMs": 270210,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "이렇게 성공하고"
+    } ]
+  }, {
+    "tStartMs": 270990,
+    "dDurationMs": 290,
+    "segs": [ {
+      "utf8": "이렇게"
+    } ]
+  }, {
+    "tStartMs": 271280,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "메이크 아메리카 그레이트 어게인했는데"
+    } ]
+  }, {
+    "tStartMs": 272980,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "손가락질 할 게 없으니까"
+    } ]
+  }, {
+    "tStartMs": 273850,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "그 쓸데없는 꼬다리 잡는 거 아니야"
+    } ]
+  }, {
+    "tStartMs": 275300,
+    "dDurationMs": 300,
+    "segs": [ {
+      "utf8": "꼬다리"
+    } ]
+  }, {
+    "tStartMs": 275600,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "핑계 잡는 거잖아"
+    } ]
+  }, {
+    "tStartMs": 276780,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "그래서 많은 공화당원이 분노하고 있어"
+    } ]
+  }, {
+    "tStartMs": 279680,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "그런 게 아니었으면"
+    } ]
+  }, {
+    "tStartMs": 280340,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "엄청난 성과, 승리"
+    } ]
+  }, {
+    "tStartMs": 282380,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "뭐 그레이트"
+    } ]
+  }, {
+    "tStartMs": 283210,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "뭐 이런 걸 얘기해야 되는데"
+    } ]
+  }, {
+    "tStartMs": 284450,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "그저 아직도 뭐 엡스타인 파일"
+    } ]
+  }, {
+    "tStartMs": 286020,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "엡스타인 파일"
+    } ]
+  }, {
+    "tStartMs": 286780,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "아휴 답답해요"
+    } ]
+  }, {
+    "tStartMs": 288450,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "내가 답답하지만"
+    } ]
+  }, {
+    "tStartMs": 289300,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "그래서 보여는 줬다"
+    } ]
+  }, {
+    "tStartMs": 290440,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "보여는 줬어"
+    } ]
+  }, {
+    "tStartMs": 291290,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "참 답답해요"
+    } ]
+  }, {
+    "tStartMs": 292180,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "네, 참 클린턴 대통령 미안합니다"
+    } ]
+  }, {
+    "tStartMs": 294530,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "그랬더니"
+    } ]
+  }, {
+    "tStartMs": 295420,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "클린턴이 뭐라 그랬냐"
+    } ]
+  }, {
+    "tStartMs": 296330,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 297440,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "무슨 소리 하는 거야"
+    } ]
+  }, {
+    "tStartMs": 298810,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "야 그냥 다 까"
+    } ]
+  }, {
+    "tStartMs": 300010,
+    "dDurationMs": 410,
+    "segs": [ {
+      "utf8": "야 까"
+    } ]
+  }, {
+    "tStartMs": 300420,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "다 공개해"
+    } ]
+  }, {
+    "tStartMs": 301260,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "우리는 보호 필요하지 않아"
+    } ]
+  }, {
+    "tStartMs": 302880,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "뭘 우리를 위해서"
+    } ]
+  }, {
+    "tStartMs": 303870,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "가리지 마"
+    } ]
+  }, {
+    "tStartMs": 304650,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "야, 다 가리지 말고"
+    } ]
+  }, {
+    "tStartMs": 305890,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "풀 오픈하자"
+    } ]
+  }, {
+    "tStartMs": 306840,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "야, 안 되겠다"
+    } ]
+  }, {
+    "tStartMs": 307750,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "야, 안 되겠다"
+    } ]
+  }, {
+    "tStartMs": 308670,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "캐삭방 가자"
+    } ]
+  }, {
+    "tStartMs": 309400,
+    "dDurationMs": 520,
+    "segs": [ {
+      "utf8": "캐삭방"
+    } ]
+  }, {
+    "tStartMs": 309920,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "캐삭방이면 안 되지"
+    } ]
+  }, {
+    "tStartMs": 311310,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "채널 삭방이라고 하면"
+    } ]
+  }, {
+    "tStartMs": 312970,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "좀 저렴한 표현이에요"
+    } ]
+  }, {
+    "tStartMs": 313570,
+    "dDurationMs": 430,
+    "segs": [ {
+      "utf8": "죄송합니다"
+    } ]
+  }, {
+    "tStartMs": 314000,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "저렴한 표현으로는 그런데"
+    } ]
+  }, {
+    "tStartMs": 315490,
+    "dDurationMs": 550,
+    "segs": [ {
+      "utf8": "게임하다 보면"
+    } ]
+  }, {
+    "tStartMs": 316040,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "그런 게 있습니다"
+    } ]
+  }, {
+    "tStartMs": 317090,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "캐릭터 삭제하고 이런 게 있는데"
+    } ]
+  }, {
+    "tStartMs": 318560,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "우리는 그런 거 필요하잖아요"
+    } ]
+  }, {
+    "tStartMs": 320000,
+    "dDurationMs": 520,
+    "segs": [ {
+      "utf8": "다 공개해"
+    } ]
+  }, {
+    "tStartMs": 320520,
+    "dDurationMs": 410,
+    "segs": [ {
+      "utf8": "다 공개해"
+    } ]
+  }, {
+    "tStartMs": 320930,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "무슨 우리 핑계를 내"
+    } ]
+  }, {
+    "tStartMs": 322100,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "말도 안 되는 소리 하지 마라"
+    } ]
+  }, {
+    "tStartMs": 323750,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "라고 또 화를 내셨죠"
+    } ]
+  }, {
+    "tStartMs": 325500,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "그러다 보니까 클린턴이 계속 화를   내니까"
+    } ]
+  }, {
+    "tStartMs": 327740,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "그러면 미국 하원에서는"
+    } ]
+  }, {
+    "tStartMs": 329320,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "이런 요청을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 330770,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "빌 클린턴, 힐러리 클린턴 부부"
+    } ]
+  }, {
+    "tStartMs": 332810,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "너희가 할 말 있으면"
+    } ]
+  }, {
+    "tStartMs": 333810,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "미 하원에 나와서"
+    } ]
+  }, {
+    "tStartMs": 335190,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "엡스타인 관련 증언을 해라"
+    } ]
+  }, {
+    "tStartMs": 337730,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "연방 하원 감독위원회에 출석해서"
+    } ]
+  }, {
+    "tStartMs": 339710,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "엡스타인 관련 증언을 해라"
+    } ]
+  }, {
+    "tStartMs": 341440,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "자신 있으면 나와"
+    } ]
+  }, {
+    "tStartMs": 342230,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "뭐 트럼프 대통령이 얘기할 거 있다면"
+    } ]
+  }, {
+    "tStartMs": 343720,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "와서 얘기를 해"
+    } ]
+  }, {
+    "tStartMs": 344910,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "이미 한 6개월 전부터"
+    } ]
+  }, {
+    "tStartMs": 345980,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "이걸 요청하고 있었어요"
+    } ]
+  }, {
+    "tStartMs": 347420,
+    "dDurationMs": 3220,
+    "segs": [ {
+      "utf8": "그런데 연방 하원 감독위원회라는 데가"
+    } ]
+  }, {
+    "tStartMs": 350640,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "지금 공화당 하원위원이"
+    } ]
+  }, {
+    "tStartMs": 352540,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "감독위원회 장을 하고 있고"
+    } ]
+  }, {
+    "tStartMs": 354130,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "공화당 위원들이 대세를 잡고"
+    } ]
+  }, {
+    "tStartMs": 355500,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "있는 위원회라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 356980,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "그렇다 보니까"
+    } ]
+  }, {
+    "tStartMs": 358270,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "클린턴 대통령 부부는"
+    } ]
+  }, {
+    "tStartMs": 359610,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "수개월간"
+    } ]
+  }, {
+    "tStartMs": 360830,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "하원 감독위원회 요청을 거부했어요"
+    } ]
+  }, {
+    "tStartMs": 362880,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 364250,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "모든 사람은 어떤 결과가 따르더라도"
+    } ]
+  }, {
+    "tStartMs": 366300,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "원칙, 그리고 국민들을 위해"
+    } ]
+  }, {
+    "tStartMs": 367640,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "싸울 준비가 된 때를"
+    } ]
+  }, {
+    "tStartMs": 368770,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "스스로 결정할 수 있다"
+    } ]
+  }, {
+    "tStartMs": 370240,
+    "dDurationMs": 3030,
+    "segs": [ {
+      "utf8": "우리는 지금 싸울 준비를 할 때다"
+    } ]
+  }, {
+    "tStartMs": 373270,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "왜냐하면 지금 우리를 부른 하원"
+    } ]
+  }, {
+    "tStartMs": 375490,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "감독위원회장"
+    } ]
+  }, {
+    "tStartMs": 376910,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "제임스 코머입니다"
+    } ]
+  }, {
+    "tStartMs": 377720,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "이름이"
+    } ]
+  }, {
+    "tStartMs": 378360,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "그 사람은 써있죠?"
+    } ]
+  }, {
+    "tStartMs": 379900,
+    "dDurationMs": 3450,
+    "segs": [ {
+      "utf8": "엡스타인 파일 공개안에 찬성하지도 않은 사람이야"
+    } ]
+  }, {
+    "tStartMs": 383350,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "그리고 가장 잘 아는 이들"
+    } ]
+  }, {
+    "tStartMs": 385500,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "트럼프 같은 대통령"
+    } ]
+  }, {
+    "tStartMs": 386770,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "너희 대통령한테 물어봐야 되는데"
+    } ]
+  }, {
+    "tStartMs": 388360,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "그런 거 물어보지도 않아"
+    } ]
+  }, {
+    "tStartMs": 389880,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "그리고 가장 모르는 본인들"
+    } ]
+  }, {
+    "tStartMs": 392020,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "클린턴 부부"
+    } ]
+  }, {
+    "tStartMs": 392680,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "우리한테 최대한의 것을 물어보고 있어"
+    } ]
+  }, {
+    "tStartMs": 394720,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "이거는 정치적인 설계일 뿐이야"
+    } ]
+  }, {
+    "tStartMs": 397240,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "진실과 정의를 실현하는데"
+    } ]
+  }, {
+    "tStartMs": 398440,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "아무런 도움이 안 돼"
+    } ]
+  }, {
+    "tStartMs": 399310,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "단지 우리를 투옥시키기 위해서"
+    } ]
+  }, {
+    "tStartMs": 401690,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "감옥에 보내려는 너희들의 술책"
+    } ]
+  }, {
+    "tStartMs": 403650,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "다 파악이 됐다"
+    } ]
+  }, {
+    "tStartMs": 404610,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "그래서 우리는 출석하지 않겠다"
+    } ]
+  }, {
+    "tStartMs": 406540,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "대신에 우리는 이미"
+    } ]
+  }, {
+    "tStartMs": 407610,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "자세한 진술서를 제출했어"
+    } ]
+  }, {
+    "tStartMs": 409750,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "너희의 소환장은"
+    } ]
+  }, {
+    "tStartMs": 411240,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "트럼프 대통령의 지시에 따라서"
+    } ]
+  }, {
+    "tStartMs": 412830,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "관심을 트럼프 대통령에서"
+    } ]
+  }, {
+    "tStartMs": 414790,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "빌 클린턴으로 바꾸려는"
+    } ]
+  }, {
+    "tStartMs": 417100,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "술책에 불과한 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 418480,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "그렇기 때문에"
+    } ]
+  }, {
+    "tStartMs": 419160,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "우리는 하원감독위원회에"
+    } ]
+  }, {
+    "tStartMs": 421010,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "출석하지 않겠다라고 얘기를 한 거죠"
+    } ]
+  }, {
+    "tStartMs": 423650,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "물론 공화당 감독위원장은"
+    } ]
+  }, {
+    "tStartMs": 425840,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 426770,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "너희가 출석하지 않으면"
+    } ]
+  }, {
+    "tStartMs": 428220,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "의회 모독죄로 기소하겠다"
+    } ]
+  }, {
+    "tStartMs": 430910,
+    "dDurationMs": 580,
+    "segs": [ {
+      "utf8": "할 말이 있다며?"
+    } ]
+  }, {
+    "tStartMs": 431490,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "그리고 우리는 출석장을 보냈어"
+    } ]
+  }, {
+    "tStartMs": 433280,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "그런데 너희가 의회의 요청에 응하지 않아?"
+    } ]
+  }, {
+    "tStartMs": 435960,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "의회를 모독한 거야"
+    } ]
+  }, {
+    "tStartMs": 437170,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "즉각 기소할 것이다"
+    } ]
+  }, {
+    "tStartMs": 438590,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "라고 얘기를 했고요"
+    } ]
+  }, {
+    "tStartMs": 439990,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "실제로 클린턴 부부에 대한"
+    } ]
+  }, {
+    "tStartMs": 441850,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "의회의 모독죄 처벌이"
+    } ]
+  }, {
+    "tStartMs": 443110,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "하원 안건으로 상정됩니다"
+    } ]
+  }, {
+    "tStartMs": 445120,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "통과될 가능성이 높았어요"
+    } ]
+  }, {
+    "tStartMs": 446680,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "왜냐하면 민주당 내에서도"
+    } ]
+  }, {
+    "tStartMs": 447610,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "출석하는 사람이 많았거든"
+    } ]
+  }, {
+    "tStartMs": 449050,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "그래서 의회의 모독죄가 될 것 같으니까"
+    } ]
+  }, {
+    "tStartMs": 450780,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "클린턴 부부가 전격적으로 감독위원회에 나와서"
+    } ]
+  }, {
+    "tStartMs": 453500,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "증언하겠다 얘기한 거야"
+    } ]
+  }, {
+    "tStartMs": 454800,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "다만 조건이 있어요"
+    } ]
+  }, {
+    "tStartMs": 456210,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "질문과 증언을 모두 공개해라"
+    } ]
+  }, {
+    "tStartMs": 458840,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "감독위원회는 비공개를 요청했어요"
+    } ]
+  }, {
+    "tStartMs": 460970,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "너희를 위해서 비공개 해줄게 그랬더니"
+    } ]
+  }, {
+    "tStartMs": 463360,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "무슨 소리?"
+    } ]
+  }, {
+    "tStartMs": 464400,
+    "dDurationMs": 360,
+    "segs": [ {
+      "utf8": "너희들이"
+    } ]
+  }, {
+    "tStartMs": 464760,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "어디만 잘라서 올릴지 어떻게 알아?"
+    } ]
+  }, {
+    "tStartMs": 466970,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "풀 스크린으로 다 내라"
+    } ]
+  }, {
+    "tStartMs": 468900,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "너희들이 이거 하지 말고"
+    } ]
+  }, {
+    "tStartMs": 469810,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "악마의 편집 하지 말고"
+    } ]
+  }, {
+    "tStartMs": 471010,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "어? 어?"
+    } ]
+  }, {
+    "tStartMs": 472130,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "슈카가 많이 당하는 거 있죠?"
+    } ]
+  }, {
+    "tStartMs": 473240,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "그거 하지 말고"
+    } ]
+  }, {
+    "tStartMs": 474260,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "풀로 다 보여줘"
+    } ]
+  }, {
+    "tStartMs": 475530,
+    "dDurationMs": 440,
+    "segs": [ {
+      "utf8": "라고 해서"
+    } ]
+  }, {
+    "tStartMs": 475970,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "이번에 놀랍게도 풀 내용이 다 공개됐습니다"
+    } ]
+  }, {
+    "tStartMs": 478860,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "그래서 여러분도 가서 볼 수 있어요"
+    } ]
+  }, {
+    "tStartMs": 481340,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "역사상 최초로 본인의 의사에 반해서"
+    } ]
+  }, {
+    "tStartMs": 483680,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "의회에서 증언하게 된 전 대통령이"
+    } ]
+  }, {
+    "tStartMs": 485890,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "클린턴 대통령이 됐습니다"
+    } ]
+  }, {
+    "tStartMs": 487650,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "두 사람의 증언영상"
+    } ]
+  }, {
+    "tStartMs": 488680,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "각각 따로 했어요"
+    } ]
+  }, {
+    "tStartMs": 489700,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "2월 26일날에"
+    } ]
+  }, {
+    "tStartMs": 490930,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "빌 클린턴"
+    } ]
+  }, {
+    "tStartMs": 491570,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "2월 27일날에 힐러리 클린턴인데"
+    } ]
+  }, {
+    "tStartMs": 494110,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "4시간 반이야"
+    } ]
+  }, {
+    "tStartMs": 496260,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "보실 분은 보십시오"
+    } ]
+  }, {
+    "tStartMs": 498470,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "4시간 반 동안"
+    } ]
+  }, {
+    "tStartMs": 499330,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "연세가 80 되시거든요"
+    } ]
+  }, {
+    "tStartMs": 501380,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "어르신의 말을 합치면 9시간입니다"
+    } ]
+  }, {
+    "tStartMs": 503620,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "보실 분은 가서 보셔도 되는데"
+    } ]
+  }, {
+    "tStartMs": 505250,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "추천드리진 않습니다"
+    } ]
+  }, {
+    "tStartMs": 507250,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "일단 먼저 힐러리를 하겠습니다"
+    } ]
+  }, {
+    "tStartMs": 509540,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "힐러리 클린턴은 결론적으로 말하면"
+    } ]
+  }, {
+    "tStartMs": 511760,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "이렇게 얘기를 했어요"
+    } ]
+  }, {
+    "tStartMs": 513340,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "나를 왜 불렀는지 모르겠다"
+    } ]
+  }, {
+    "tStartMs": 514870,
+    "dDurationMs": 3460,
+    "segs": [ {
+      "utf8": "아니 내가 만난 적도 없어요"
+    } ]
+  }, {
+    "tStartMs": 518330,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "엡스타인 내가 본 적이 없어"
+    } ]
+  }, {
+    "tStartMs": 520640,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "만나본 적도 없는 사람에 대해서"
+    } ]
+  }, {
+    "tStartMs": 522270,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "질문을 내가 어떻게 해야 되는 거야"
+    } ]
+  }, {
+    "tStartMs": 523580,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "도대체 나를 왜 부른 거야 모른다니까"
+    } ]
+  }, {
+    "tStartMs": 525660,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "아니 모르는데"
+    } ]
+  }, {
+    "tStartMs": 526730,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "그럼 어떡해"
+    } ]
+  }, {
+    "tStartMs": 528480,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "이건 마치 결혼식장에 왜 안 왔습니까"
+    } ]
+  }, {
+    "tStartMs": 530200,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "아니 초대가 안 됐으니까"
+    } ]
+  }, {
+    "tStartMs": 531950,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "아니 누군지도 모르는데"
+    } ]
+  }, {
+    "tStartMs": 533760,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "계속 이 얘기를 합니다"
+    } ]
+  }, {
+    "tStartMs": 534530,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "같은 말을 몇 번이나 반복하는지 모르겠다"
+    } ]
+  }, {
+    "tStartMs": 536580,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "이게 도대체 무슨 의미가 있냐"
+    } ]
+  }, {
+    "tStartMs": 538110,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "아니 모른다니까? 몰라"
+    } ]
+  }, {
+    "tStartMs": 540320,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "그러니까 한 여성 하원"
+    } ]
+  }, {
+    "tStartMs": 541820,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "공화당 하원 의원은 이 질문을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 543460,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "여성 의원인데"
+    } ]
+  }, {
+    "tStartMs": 544590,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "혹시 힐러리 씨"
+    } ]
+  }, {
+    "tStartMs": 545860,
+    "dDurationMs": 570,
+    "segs": [ {
+      "utf8": "왜요? 그랬더니"
+    } ]
+  }, {
+    "tStartMs": 546430,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "남편이 젊은 여성들에게"
+    } ]
+  }, {
+    "tStartMs": 548060,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "마사지를 받는 사진이 나왔어요"
+    } ]
+  }, {
+    "tStartMs": 549750,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "기분이 어땠습니까?"
+    } ]
+  }, {
+    "tStartMs": 550600,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "이렇게 물어봤어요 그랬더니"
+    } ]
+  }, {
+    "tStartMs": 552190,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "아니 본인에게 물어봐 본인에게"
+    } ]
+  }, {
+    "tStartMs": 554960,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "먼저 나왔거든요, 힐러리가"
+    } ]
+  }, {
+    "tStartMs": 557080,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "내일 남편 나오잖아"
+    } ]
+  }, {
+    "tStartMs": 558090,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "아 클린,"
+    } ]
+  }, {
+    "tStartMs": 559190,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "자기도 클린턴이구나"
+    } ]
+  }, {
+    "tStartMs": 560250,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "빌한테 물어봐 빌한테"
+    } ]
+  }, {
+    "tStartMs": 561580,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "왜 나한테 물어봐"
+    } ]
+  }, {
+    "tStartMs": 562850,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "아니 현장이 없었어"
+    } ]
+  }, {
+    "tStartMs": 564060,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "아니 알지도 못한다니까?"
+    } ]
+  }, {
+    "tStartMs": 565720,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "뭐 그런 질문 같지 않은 걸"
+    } ]
+  }, {
+    "tStartMs": 567650,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "또 한 의원이"
+    } ]
+  }, {
+    "tStartMs": 568530,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "이런 질문을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 569900,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "피자 게이트는 어떻게 생각하십니까?"
+    } ]
+  }, {
+    "tStartMs": 572570,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "얼마나 내용이 없었으면"
+    } ]
+  }, {
+    "tStartMs": 573720,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "이게 메인 타이틀로 뽑혔어요"
+    } ]
+  }, {
+    "tStartMs": 575900,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "피자 게이트는 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 577370,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "조금 이따 보여드리겠지만"
+    } ]
+  }, {
+    "tStartMs": 578460,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "음모론입니다, 음모론"
+    } ]
+  }, {
+    "tStartMs": 579970,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "정말 황당한 음모론인데"
+    } ]
+  }, {
+    "tStartMs": 582000,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "그러니까 힐러리가 웃으면서"
+    } ]
+  }, {
+    "tStartMs": 583480,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 584470,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "나는 여기 올 때"
+    } ]
+  }, {
+    "tStartMs": 585430,
+    "dDurationMs": 3190,
+    "segs": [ {
+      "utf8": "정말 흥미로운 질문들이 많이 나올 거라고 생각했다"
+    } ]
+  }, {
+    "tStartMs": 588620,
+    "dDurationMs": 3440,
+    "segs": [ {
+      "utf8": "그런데 피자 게이트를 물어볼 줄 몰랐다"
+    } ]
+  }, {
+    "tStartMs": 592060,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "국회의원에서 국회의원들이 나한테"
+    } ]
+  }, {
+    "tStartMs": 594180,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "음모론을 물어볼지는 정말 몰랐다"
+    } ]
+  }, {
+    "tStartMs": 597140,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "라고 얘기했는데"
+    } ]
+  }, {
+    "tStartMs": 598050,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "피자게이트는 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 599740,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "굳이 나왔으니까"
+    } ]
+  }, {
+    "tStartMs": 600880,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "내용은 이런 내용입니다"
+    } ]
+  }, {
+    "tStartMs": 602360,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "이거 굉장히"
+    } ]
+  }, {
+    "tStartMs": 603310,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "마가 쪽에서 많이 얘기하는 내용이에요"
+    } ]
+  }, {
+    "tStartMs": 604800,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "음모론으로"
+    } ]
+  }, {
+    "tStartMs": 606260,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "민주당 최고위층 인사들이 연루된"
+    } ]
+  }, {
+    "tStartMs": 609150,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "소아성애 조직이 있다"
+    } ]
+  }, {
+    "tStartMs": 612110,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "소아성애자라고 그러죠"
+    } ]
+  }, {
+    "tStartMs": 613500,
+    "dDurationMs": 380,
+    "segs": [ {
+      "utf8": "범죄죠, 범죄"
+    } ]
+  }, {
+    "tStartMs": 613880,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "이 범죄를 저지르는 조직이 있는데"
+    } ]
+  }, {
+    "tStartMs": 615910,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "그 조직이"
+    } ]
+  }, {
+    "tStartMs": 616800,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "워싱턴의 한 피자 가게를"
+    } ]
+  }, {
+    "tStartMs": 618550,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "거점으로 활동하고 있어"
+    } ]
+  }, {
+    "tStartMs": 620340,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "라는 루머입니다"
+    } ]
+  }, {
+    "tStartMs": 621730,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "그래서 피자게이트예요"
+    } ]
+  }, {
+    "tStartMs": 623460,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "근데 갑자기 왜 워싱턴에"
+    } ]
+  }, {
+    "tStartMs": 624930,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "한 피자 가게가 거점이 됐냐?"
+    } ]
+  }, {
+    "tStartMs": 627230,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "그 이유가 있어요"
+    } ]
+  }, {
+    "tStartMs": 628630,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "2016년에"
+    } ]
+  }, {
+    "tStartMs": 629710,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "힐러리 캠프의"
+    } ]
+  }, {
+    "tStartMs": 630650,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "선거대책위원장의 이메일이 털렸습니다"
+    } ]
+  }, {
+    "tStartMs": 633470,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "근데 그 이메일에"
+    } ]
+  }, {
+    "tStartMs": 634400,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "피자, 치즈 이런 내용들이 나와요"
+    } ]
+  }, {
+    "tStartMs": 636960,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "피자 뭐 먹을래?"
+    } ]
+  }, {
+    "tStartMs": 638250,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "치즈 많은 거 있어,"
+    } ]
+  }, {
+    "tStartMs": 639030,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "치즈 많은 거"
+    } ]
+  }, {
+    "tStartMs": 639840,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "치즈 듬뿍으로"
+    } ]
+  }, {
+    "tStartMs": 641270,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "너 피자 좋아?"
+    } ]
+  }, {
+    "tStartMs": 642030,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "그래서 피자, 치즈가 여러 번 등장해"
+    } ]
+  }, {
+    "tStartMs": 643860,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "그랬더니 이거 갖고 가서"
+    } ]
+  }, {
+    "tStartMs": 645270,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "커뮤니티에서 커뮤니티에서"
+    } ]
+  }, {
+    "tStartMs": 647380,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "공격을 해야 되잖아, 공격을"
+    } ]
+  }, {
+    "tStartMs": 649100,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "이쪽은 왼쪽이니까"
+    } ]
+  }, {
+    "tStartMs": 650340,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "오른쪽 커뮤니티가 공격을 했겠죠"
+    } ]
+  }, {
+    "tStartMs": 651750,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "이거 봐라"
+    } ]
+  }, {
+    "tStartMs": 652380,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "피자, 치즈가 많이 나오는 거"
+    } ]
+  }, {
+    "tStartMs": 654060,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "이거 일부러 하는 거야"
+    } ]
+  }, {
+    "tStartMs": 655600,
+    "dDurationMs": 3150,
+    "segs": [ {
+      "utf8": "이거는 소아 성매매를 위한 암호가 확실해"
+    } ]
+  }, {
+    "tStartMs": 658750,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "그럼 얘들이 피자, 치즈 어디서 사 먹었는지 볼까?"
+    } ]
+  }, {
+    "tStartMs": 660820,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "가서 봤더니"
+    } ]
+  }, {
+    "tStartMs": 661920,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "워싱턴에 한 피자 가게"
+    } ]
+  }, {
+    "tStartMs": 663220,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "그 가게가 이 가게입니다"
+    } ]
+  }, {
+    "tStartMs": 664890,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "피자 코멧이라고 읽어야 되나?"
+    } ]
+  }, {
+    "tStartMs": 666880,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "이 가게인데 여기야"
+    } ]
+  }, {
+    "tStartMs": 668700,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "시킨 게 나왔어"
+    } ]
+  }, {
+    "tStartMs": 669770,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "영수증이 나가지고 나왔어"
+    } ]
+  }, {
+    "tStartMs": 670840,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "이메일이 나왔어 가보자"
+    } ]
+  }, {
+    "tStartMs": 672110,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "이 앞에서 막 시위대가 등장을 해요"
+    } ]
+  }, {
+    "tStartMs": 673830,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "막 시위를 하고"
+    } ]
+  }, {
+    "tStartMs": 674460,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "심지어"
+    } ]
+  }, {
+    "tStartMs": 675510,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "이 가게에 총을 들고 온 사람이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 677700,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "총을 발사도 했어요"
+    } ]
+  }, {
+    "tStartMs": 679090,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "왜 발사했냐? 구출하겠다"
+    } ]
+  }, {
+    "tStartMs": 681600,
+    "dDurationMs": 3160,
+    "segs": [ {
+      "utf8": "지하실에 납치된 소아들을 구출하겠다"
+    } ]
+  }, {
+    "tStartMs": 684760,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "총을 들고 가서"
+    } ]
+  }, {
+    "tStartMs": 685880,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "발사한 사건이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 687530,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "그래서 시위대가 여기에 진입도 했어요"
+    } ]
+  }, {
+    "tStartMs": 690330,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "피자 가게에 진입을 하고"
+    } ]
+  }, {
+    "tStartMs": 691660,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "피자 가게에 주인이 있잖아요"
+    } ]
+  }, {
+    "tStartMs": 692780,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "그 주인이 인터뷰를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 694420,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "뭐하는 짓이야"
+    } ]
+  }, {
+    "tStartMs": 695150,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "우리 가게에는 지하실이 없어요"
+    } ]
+  }, {
+    "tStartMs": 697260,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "지하실이 없는데"
+    } ]
+  }, {
+    "tStartMs": 698120,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "지하실에 납치된 소아들이 어디 있겠어"
+    } ]
+  }, {
+    "tStartMs": 699960,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "지하실이 없어!"
+    } ]
+  }, {
+    "tStartMs": 701140,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "없다니까!"
+    } ]
+  }, {
+    "tStartMs": 702060,
+    "dDurationMs": 3330,
+    "segs": [ {
+      "utf8": "뭐 이랬던 어떻게 보면 해프닝인데"
+    } ]
+  }, {
+    "tStartMs": 705390,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "총까지 발사했기 때문에"
+    } ]
+  }, {
+    "tStartMs": 706300,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "굉장히 이게 확산됐고"
+    } ]
+  }, {
+    "tStartMs": 707900,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "이게 피자 게이트예요"
+    } ]
+  }, {
+    "tStartMs": 708700,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "피자 게이트"
+    } ]
+  }, {
+    "tStartMs": 709460,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "아직도 이 음모론이 많아요"
+    } ]
+  }, {
+    "tStartMs": 711660,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "실제는 뭐가 있었다"
+    } ]
+  }, {
+    "tStartMs": 713220,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "옆집에 있던 지하실이 어떻게 있건"
+    } ]
+  }, {
+    "tStartMs": 715430,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "실제는 있었다라는 게"
+    } ]
+  }, {
+    "tStartMs": 716970,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "음모론이 있는데"
+    } ]
+  }, {
+    "tStartMs": 718220,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "그러다 보니까"
+    } ]
+  }, {
+    "tStartMs": 719140,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "이게 힐러리 캠프 때에서 일어난 일이잖아요"
+    } ]
+  }, {
+    "tStartMs": 721370,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "힐러리가 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 723310,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "피자게이트는 완전히 지어낸 얘기고"
+    } ]
+  }, {
+    "tStartMs": 724930,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "덕분에 한 젊은이가"
+    } ]
+  }, {
+    "tStartMs": 725810,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "그 가게에 총기를 들고 와서"
+    } ]
+  }, {
+    "tStartMs": 727070,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "발사하는 일이 있었다"
+    } ]
+  }, {
+    "tStartMs": 728600,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "날조된 사건인데"
+    } ]
+  }, {
+    "tStartMs": 729730,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "국회에서 국회의원들이"
+    } ]
+  }, {
+    "tStartMs": 730700,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "그런 음모론을 질문하는 것을"
+    } ]
+  }, {
+    "tStartMs": 732510,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "나는 믿을 수 없다"
+    } ]
+  }, {
+    "tStartMs": 733530,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "이거 뭐 하는 거냐"
+    } ]
+  }, {
+    "tStartMs": 734500,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "그리고 증언이 끝나고 기자회견할 때"
+    } ]
+  }, {
+    "tStartMs": 737080,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "힐러리가 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 739220,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "4시간 반 너무 시간이 아깝다"
+    } ]
+  }, {
+    "tStartMs": 741930,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "다신 하고 싶지 않아"
+    } ]
+  }, {
+    "tStartMs": 743340,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "피자 게이트 얘기하고"
+    } ]
+  }, {
+    "tStartMs": 744880,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "나한테 못 본 거 물어보고"
+    } ]
+  }, {
+    "tStartMs": 746580,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "아니 오늘 하루를 더 생산적으로 보낼 수 있었는데"
+    } ]
+  }, {
+    "tStartMs": 748890,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "지금 연세도 많으세요"
+    } ]
+  }, {
+    "tStartMs": 750270,
+    "dDurationMs": 500,
+    "segs": [ {
+      "utf8": "연세도 많아"
+    } ]
+  }, {
+    "tStartMs": 750770,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "아니 하루하루가 소중한데"
+    } ]
+  }, {
+    "tStartMs": 751880,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "지금 뭐 하는 짓이요?"
+    } ]
+  }, {
+    "tStartMs": 752850,
+    "dDurationMs": 2660,
+    "segs": [ {
+      "utf8": "4시간 반 너무 시간이 아깝다"
+    } ]
+  }, {
+    "tStartMs": 755510,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "나 왜 부른 거냐 도대체"
+    } ]
+  }, {
+    "tStartMs": 757770,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "아 답답하다"
+    } ]
+  }, {
+    "tStartMs": 758730,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "하고 인터뷰를 하시고"
+    } ]
+  }, {
+    "tStartMs": 759910,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "기자회견하고 떠나셨습니다"
+    } ]
+  }, {
+    "tStartMs": 762020,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "그리고 그 다음날 하이라이트죠"
+    } ]
+  }, {
+    "tStartMs": 764420,
+    "dDurationMs": 3290,
+    "segs": [ {
+      "utf8": "남편 빌 클린턴의 의외의 증언이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 767710,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "빌 클린턴의 증언은 역시 4시간 반인데"
+    } ]
+  }, {
+    "tStartMs": 770400,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "요약하자면 그거예요"
+    } ]
+  }, {
+    "tStartMs": 771790,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "나는 엡스타인을 만났다"
+    } ]
+  }, {
+    "tStartMs": 773760,
+    "dDurationMs": 2760,
+    "segs": [ {
+      "utf8": "힐러리는 나는 안 만났어 몰라 이거고요"
+    } ]
+  }, {
+    "tStartMs": 776520,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "빌 클린턴은 나는 만났어"
+    } ]
+  }, {
+    "tStartMs": 778490,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "하지만 몰라"
+    } ]
+  }, {
+    "tStartMs": 779740,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "가 요약본입니다"
+    } ]
+  }, {
+    "tStartMs": 781720,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "자, 이것만 아시면 사실 돼요"
+    } ]
+  }, {
+    "tStartMs": 783150,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "그가 무슨 짓을 하는지"
+    } ]
+  }, {
+    "tStartMs": 784550,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "나는 전혀 몰랐다"
+    } ]
+  }, {
+    "tStartMs": 786230,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "그리고"
+    } ]
+  }, {
+    "tStartMs": 786860,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "나한테 성매매했다 이런 사람들"
+    } ]
+  }, {
+    "tStartMs": 788880,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "나는 어떤 성적 행위도 없었다"
+    } ]
+  }, {
+    "tStartMs": 791560,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "엡스타인이 소개해준 여성들이나 소녀들과"
+    } ]
+  }, {
+    "tStartMs": 793950,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "어떤 성적 행위도 없었고"
+    } ]
+  }, {
+    "tStartMs": 795520,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "엡스타인 개인 섬  을 방문한 적도 없고"
+    } ]
+  }, {
+    "tStartMs": 797540,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "어떤 성행위도 목격한 적이 없다"
+    } ]
+  }, {
+    "tStartMs": 799900,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "만약에 내가 그걸 알았다면"
+    } ]
+  }, {
+    "tStartMs": 801550,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "내가 그때 직접 신고했을 거야"
+    } ]
+  }, {
+    "tStartMs": 803990,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "그의 비행기에 타지도 않았을 거야"
+    } ]
+  }, {
+    "tStartMs": 805760,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "그의 범죄에 대한 정의를 요구하는데"
+    } ]
+  }, {
+    "tStartMs": 807410,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "내가 앞장섰을 거야"
+    } ]
+  }, {
+    "tStartMs": 808630,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "나는 몰랐어"
+    } ]
+  }, {
+    "tStartMs": 810080,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "그냥 알던 사람이었을 뿐이야"
+    } ]
+  }, {
+    "tStartMs": 811710,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "라고 얘기를 했죠"
+    } ]
+  }, {
+    "tStartMs": 812980,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "그랬더니 공화당 의원들이 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 815200,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "그러면 이 사진은 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 817080,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "엡스타인 파일 중에서"
+    } ]
+  }, {
+    "tStartMs": 818070,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "얼굴이 가려진 한 여성과"
+    } ]
+  }, {
+    "tStartMs": 820060,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "이 온수욕조에 누워있는"
+    } ]
+  }, {
+    "tStartMs": 821540,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "이 사진 빼박 아니요?"
+    } ]
+  }, {
+    "tStartMs": 823260,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "이거 무슨 사진이냐?"
+    } ]
+  }, {
+    "tStartMs": 824510,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "라고 물어보니까"
+    } ]
+  }, {
+    "tStartMs": 825710,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "클린턴한테 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 827220,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "이거는 아시아 순방"
+    } ]
+  }, {
+    "tStartMs": 829160,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "마지막 날에"
+    } ]
+  }, {
+    "tStartMs": 830130,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "브루나이에서 찍힌 사진"
+    } ]
+  }, {
+    "tStartMs": 832130,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "여기가 이렇게 찍어서 그렇지"
+    } ]
+  }, {
+    "tStartMs": 834020,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "넓게 보면"
+    } ]
+  }, {
+    "tStartMs": 835040,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "좀 이따가 보여드리겠습니다"
+    } ]
+  }, {
+    "tStartMs": 836220,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "이런 모습인데"
+    } ]
+  }, {
+    "tStartMs": 837180,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "사실 이런 모습도   좀 이상하죠"
+    } ]
+  }, {
+    "tStartMs": 838530,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "이게 길레인 맥스웰이에요"
+    } ]
+  }, {
+    "tStartMs": 840090,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "브루나이 술탄이 제공해준 호텔에 묵었고"
+    } ]
+  }, {
+    "tStartMs": 842880,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "그 수영장일 뿐이야"
+    } ]
+  }, {
+    "tStartMs": 844700,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "라고 얘기를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 846470,
+    "dDurationMs": 3250,
+    "segs": [ {
+      "utf8": "그리고 이 수영장에는 혼자가 아니었다"
+    } ]
+  }, {
+    "tStartMs": 849720,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "사진을 이렇게 찍어서 그렇지"
+    } ]
+  }, {
+    "tStartMs": 851300,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "당시 클린턴은"
+    } ]
+  }, {
+    "tStartMs": 852820,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "글로벌 이니셔티브라는"
+    } ]
+  }, {
+    "tStartMs": 854020,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "자신의 어떤 재단에"
+    } ]
+  }, {
+    "tStartMs": 855610,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "기부할 후원자를 찾기 위해서"
+    } ]
+  }, {
+    "tStartMs": 856620,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "브루나이에 왔고"
+    } ]
+  }, {
+    "tStartMs": 857730,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "길레인 맥스웰은"
+    } ]
+  }, {
+    "tStartMs": 858950,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "이 글로벌 이니셔티브 담당관이었어"
+    } ]
+  }, {
+    "tStartMs": 861280,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "그래서 같이 온 거고"
+    } ]
+  }, {
+    "tStartMs": 862490,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "옆에 있는 이 사람은 누굽니까"
+    } ]
+  }, {
+    "tStartMs": 863690,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "그랬더니"
+    } ]
+  }, {
+    "tStartMs": 864400,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "몰라"
+    } ]
+  }, {
+    "tStartMs": 865380,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "난 이 여성을 몰라"
+    } ]
+  }, {
+    "tStartMs": 866740,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "그냥 오니까 있던 사람이야"
+    } ]
+  }, {
+    "tStartMs": 868560,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "그리고 이 여성과"
+    } ]
+  }, {
+    "tStartMs": 869260,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "어떤 성행위를 한 적도 없어"
+    } ]
+  }, {
+    "tStartMs": 870970,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "그리고 이 사진에는 안 나왔지만"
+    } ]
+  }, {
+    "tStartMs": 872560,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "경호원도 옆에 원래 서 있었다"
+    } ]
+  }, {
+    "tStartMs": 874440,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "그리고 다른 사람들도"
+    } ]
+  }, {
+    "tStartMs": 875340,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "수영하는 사람이 있었는데"
+    } ]
+  }, {
+    "tStartMs": 876530,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "사진을 이렇게 찍어서"
+    } ]
+  }, {
+    "tStartMs": 878520,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "마치 나와 뭐가 있는 것처럼 보인 거다"
+    } ]
+  }, {
+    "tStartMs": 880750,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "라고 얘기를 했죠"
+    } ]
+  }, {
+    "tStartMs": 882100,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "내가 공화당 위원이"
+    } ]
+  }, {
+    "tStartMs": 883020,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "그러면 이건 어떠냐"
+    } ]
+  }, {
+    "tStartMs": 884930,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "이건 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 885940,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "오른쪽에 있는 여성이"
+    } ]
+  }, {
+    "tStartMs": 886680,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "이제 엡스타인 피해자라고 불리는 여성입니다"
+    } ]
+  }, {
+    "tStartMs": 888900,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "생존해 계시는 분이에요"
+    } ]
+  }, {
+    "tStartMs": 890160,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "얼굴도 다 공개된 분인데"
+    } ]
+  }, {
+    "tStartMs": 891760,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "엡스타인 피해자에게"
+    } ]
+  }, {
+    "tStartMs": 892660,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "마사지를 받는 사진이 있는데"
+    } ]
+  }, {
+    "tStartMs": 893880,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "이건 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 894720,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "이건 공항 라운지에서"
+    } ]
+  }, {
+    "tStartMs": 896920,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "옷을 다 입고 있잖아"
+    } ]
+  }, {
+    "tStartMs": 897680,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "그냥 친하니까 마사지를 받은 것 뿐이야"
+    } ]
+  }, {
+    "tStartMs": 900000,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "이 사람 이름이 숀테라 그러는데"
+    } ]
+  }, {
+    "tStartMs": 901790,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "이 사람이 나한테 피해 사실을 말해줬으면"
+    } ]
+  }, {
+    "tStartMs": 903790,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "참 좋았을 텐데"
+    } ]
+  }, {
+    "tStartMs": 904920,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "왜냐면 나랑 친했어"
+    } ]
+  }, {
+    "tStartMs": 906130,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "사랑하고 그런 이성으로가 아니라"
+    } ]
+  }, {
+    "tStartMs": 908000,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "내가 좋아하던 사람인데"
+    } ]
+  }, {
+    "tStartMs": 908970,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "나한테 얘기해줬으면"
+    } ]
+  }, {
+    "tStartMs": 909900,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "내가 도와줬을 때"
+    } ]
+  }, {
+    "tStartMs": 910670,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "나는 그 사실을 몰랐다"
+    } ]
+  }, {
+    "tStartMs": 912090,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "이렇게 얘기를 했고"
+    } ]
+  }, {
+    "tStartMs": 913250,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "그러면 이렇게 질문했습니다"
+    } ]
+  }, {
+    "tStartMs": 914760,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "그럼 엡스타인은 왜 만났냐 도대체"
+    } ]
+  }, {
+    "tStartMs": 916620,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "클린턴 대통령이 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 917740,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "엡스타인은 정보를 원했어"
+    } ]
+  }, {
+    "tStartMs": 919020,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "내가 정치 및 경제에 대해서"
+    } ]
+  }, {
+    "tStartMs": 920660,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "한 시간씩 얘기해주면"
+    } ]
+  }, {
+    "tStartMs": 921830,
+    "dDurationMs": 470,
+    "segs": [ {
+      "utf8": "대신에"
+    } ]
+  }, {
+    "tStartMs": 922300,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "개인 비행기를 탈 수 있게 해준다고 그랬어"
+    } ]
+  }, {
+    "tStartMs": 924370,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "그래서 비행기를 타기 위해서 한 것일 뿐이다"
+    } ]
+  }, {
+    "tStartMs": 926600,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "몇 차례 방문했고"
+    } ]
+  }, {
+    "tStartMs": 927760,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "그 다음부터 만나지 않았다"
+    } ]
+  }, {
+    "tStartMs": 929710,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "혹시 트럼프하고 관련된 뭐가 있습니까?"
+    } ]
+  }, {
+    "tStartMs": 932100,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "라고 얘기를 했더니"
+    } ]
+  }, {
+    "tStartMs": 933150,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "20년 전에"
+    } ]
+  }, {
+    "tStartMs": 934250,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "자기가 골프 칠 때"
+    } ]
+  }, {
+    "tStartMs": 935130,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "트럼프가 엡스타인을 언급한 적이 있다"
+    } ]
+  }, {
+    "tStartMs": 937340,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "이렇게 얘기했대요"
+    } ]
+  }, {
+    "tStartMs": 938030,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "엡스타인가 나는"
+    } ]
+  }, {
+    "tStartMs": 938690,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "지난 몇 년 동안 좋은 시간을 보냈어"
+    } ]
+  }, {
+    "tStartMs": 940460,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "하지만 부동산 거래 때문에"
+    } ]
+  }, {
+    "tStartMs": 941940,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "마라라고 아마 그 거래일 텐데"
+    } ]
+  }, {
+    "tStartMs": 943530,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "트럼프가 샀죠"
+    } ]
+  }, {
+    "tStartMs": 944310,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "엡스타인이 사고 싶었는데"
+    } ]
+  }, {
+    "tStartMs": 945460,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "그 거래 때문에 사이가 틀어졌어"
+    } ]
+  }, {
+    "tStartMs": 947200,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "라고 말한 걸 들은 게 전부다"
+    } ]
+  }, {
+    "tStartMs": 948790,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "그 이상은 뭐가 있는지"
+    } ]
+  }, {
+    "tStartMs": 950030,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "나는 잘 모르겠다"
+    } ]
+  }, {
+    "tStartMs": 951520,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "라고 얘기를 했고요"
+    } ]
+  }, {
+    "tStartMs": 952530,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "그리고 마지막에 이런 얘기를 합니다"
+    } ]
+  }, {
+    "tStartMs": 954050,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "그런데 다 좋아"
+    } ]
+  }, {
+    "tStartMs": 955010,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "다 좋은데"
+    } ]
+  }, {
+    "tStartMs": 956000,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "나는 그렇다고 쳐도"
+    } ]
+  }, {
+    "tStartMs": 957540,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "와이프는 왜 부른 거냐"
+    } ]
+  }, {
+    "tStartMs": 959430,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "아니 힐러리는 엡스타인이랑"
+    } ]
+  }, {
+    "tStartMs": 960580,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "아무런 관련이 없어"
+    } ]
+  }, {
+    "tStartMs": 961950,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "도대체 왜 부른 거야"
+    } ]
+  }, {
+    "tStartMs": 963180,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "니들이 정치적인 의도 때문에"
+    } ]
+  }, {
+    "tStartMs": 964460,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "망신을 주려고 그냥 부른 거 아니야"
+    } ]
+  }, {
+    "tStartMs": 965950,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "아니 도대체"
+    } ]
+  }, {
+    "tStartMs": 966770,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "내가 온 것까지는 이해가 돼"
+    } ]
+  }, {
+    "tStartMs": 967700,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "도대체 왜 물은 거냐?"
+    } ]
+  }, {
+    "tStartMs": 968800,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "라고 항의를 하시면서"
+    } ]
+  }, {
+    "tStartMs": 971240,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "4시간 반 동안 상당히 지루한"
+    } ]
+  }, {
+    "tStartMs": 973820,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "국회 증언을 마무리했습니다"
+    } ]
+  }, {
+    "tStartMs": 975780,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "자, 저런 내용들이 나왔고요"
+    } ]
+  }, {
+    "tStartMs": 977170,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "그리고"
+    } ]
+  }, {
+    "tStartMs": 977810,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "엡스타인의 파일에 언급된 남자는"
+    } ]
+  }, {
+    "tStartMs": 979780,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "클린턴뿐이 아니었습니다"
+    } ]
+  }, {
+    "tStartMs": 980830,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "또 아주 유명한 사람들이"
+    } ]
+  }, {
+    "tStartMs": 981950,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "정말 많이 나왔는데"
+    } ]
+  }, {
+    "tStartMs": 982740,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "몇 명 보여드릴게요"
+    } ]
+  }, {
+    "tStartMs": 984110,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "우리한테 가장 익숙한 사람"
+    } ]
+  }, {
+    "tStartMs": 986110,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "현 미국 상무장관"
+    } ]
+  }, {
+    "tStartMs": 987340,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "하워드 러트닉도"
+    } ]
+  }, {
+    "tStartMs": 988920,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "엡스타인 파일에 언급이 나왔어요"
+    } ]
+  }, {
+    "tStartMs": 990810,
+    "dDurationMs": 3040,
+    "segs": [ {
+      "utf8": "무려 250건 이상이 등장을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 993850,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "그런데, 러트닉은 여기에 대해서"
+    } ]
+  }, {
+    "tStartMs": 995790,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "작년 10월에 얘기한 적이 있어요"
+    } ]
+  }, {
+    "tStartMs": 997260,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "뭐라고 얘기했냐?"
+    } ]
+  }, {
+    "tStartMs": 998250,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "2005년에 잠깐 만난 적이 있는데"
+    } ]
+  }, {
+    "tStartMs": 1000700,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "그 이후에는 만난 적이 없다"
+    } ]
+  }, {
+    "tStartMs": 1002250,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "왜냐하면 2005년에 엡스타인이"
+    } ]
+  }, {
+    "tStartMs": 1004300,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "자신의 집을 보여주겠다고"
+    } ]
+  }, {
+    "tStartMs": 1006050,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "나와 내 아내를 초대했어"
+    } ]
+  }, {
+    "tStartMs": 1008300,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "같이 부부가 갔는데"
+    } ]
+  }, {
+    "tStartMs": 1010210,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "이 엡스타인이 버릇없게"
+    } ]
+  }, {
+    "tStartMs": 1012030,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "여성들과 성관계를 암시하는"
+    } ]
+  }, {
+    "tStartMs": 1013530,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "그런 야한 말을 자기한테 계속했어"
+    } ]
+  }, {
+    "tStartMs": 1015290,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "그래서 우리 부부가"
+    } ]
+  }, {
+    "tStartMs": 1016440,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "기분이 굉장히 상해서"
+    } ]
+  }, {
+    "tStartMs": 1017950,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "바로 연락을 끊었다"
+    } ]
+  }, {
+    "tStartMs": 1019620,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "아내와 저는 그런 역겨운 사람과는"
+    } ]
+  }, {
+    "tStartMs": 1021790,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "같은 공간에 있지 않겠다고"
+    } ]
+  }, {
+    "tStartMs": 1022950,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "그때 딱 결정을 했기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1024540,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "2005년 이후에 만나 적이 없어요"
+    } ]
+  }, {
+    "tStartMs": 1026340,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "라고 이야기를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1028140,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "근데 그 이후에"
+    } ]
+  }, {
+    "tStartMs": 1029500,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "엡스타인 파일이 공개됐잖아요"
+    } ]
+  }, {
+    "tStartMs": 1031200,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "공개될 때 날짜를 딱 보니까"
+    } ]
+  }, {
+    "tStartMs": 1033900,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "2012년에"
+    } ]
+  }, {
+    "tStartMs": 1035760,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "둘이 이메일을 왔다 갔다 하면서"
+    } ]
+  }, {
+    "tStartMs": 1037250,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "만났다는 그 내용이 나왔어요"
+    } ]
+  }, {
+    "tStartMs": 1039740,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "2005년 이후에는 만난 적이 없다더니"
+    } ]
+  }, {
+    "tStartMs": 1042210,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "보낸 날짜는"
+    } ]
+  }, {
+    "tStartMs": 1043080,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "2012년 12월 19일이네요"
+    } ]
+  }, {
+    "tStartMs": 1045450,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "이거 어떻게 된 겁니까?"
+    } ]
+  }, {
+    "tStartMs": 1046690,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "2012년은 이미 엡스타인이"
+    } ]
+  }, {
+    "tStartMs": 1049000,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "성매매 알선 혐의로"
+    } ]
+  }, {
+    "tStartMs": 1049980,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "이미 감옥에 갔다 온"
+    } ]
+  }, {
+    "tStartMs": 1051140,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "유죄 판결을 받은 그 시점입니다"
+    } ]
+  }, {
+    "tStartMs": 1053310,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "한마디로 러트닉이 어떻게 됐건"
+    } ]
+  }, {
+    "tStartMs": 1055380,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "맞지 않는 얘기를 한 거죠"
+    } ]
+  }, {
+    "tStartMs": 1056850,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "이것 때문에"
+    } ]
+  }, {
+    "tStartMs": 1058000,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "2월 10일 러트닉 장관이"
+    } ]
+  }, {
+    "tStartMs": 1059700,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "상원 청문회에 나가게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1062270,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "2월 10일 상원 청문회에서"
+    } ]
+  }, {
+    "tStartMs": 1063980,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "다시 엡스타인에 대해"
+    } ]
+  }, {
+    "tStartMs": 1065660,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "증언을 했어야 했어요"
+    } ]
+  }, {
+    "tStartMs": 1067180,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "여기 나온 국회의원들이 물었죠"
+    } ]
+  }, {
+    "tStartMs": 1068590,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "아니 장관"
+    } ]
+  }, {
+    "tStartMs": 1070110,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "어떻게 된 겁니까? 만났어요?"
+    } ]
+  }, {
+    "tStartMs": 1072060,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "안 만났어요?"
+    } ]
+  }, {
+    "tStartMs": 1073500,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "그랬더니 러트닉 장관이"
+    } ]
+  }, {
+    "tStartMs": 1075440,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "정말 울 것 같은 표정으로"
+    } ]
+  }, {
+    "tStartMs": 1076590,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1077740,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "만났어요"
+    } ]
+  }, {
+    "tStartMs": 1078680,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "만났긴 만났어요"
+    } ]
+  }, {
+    "tStartMs": 1080310,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "2012년에 그 가족과 함께"
+    } ]
+  }, {
+    "tStartMs": 1082170,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "잠깐 잠깐 점심 식사했어요"
+    } ]
+  }, {
+    "tStartMs": 1084140,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "점심 식사"
+    } ]
+  }, {
+    "tStartMs": 1085400,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "혼자 간 거 아니야"
+    } ]
+  }, {
+    "tStartMs": 1086560,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "섬에 갔어요? 갔어요"
+    } ]
+  }, {
+    "tStartMs": 1088130,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "만났어요? 만났어요"
+    } ]
+  }, {
+    "tStartMs": 1089640,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "밥 먹었어요? 먹었어요"
+    } ]
+  }, {
+    "tStartMs": 1091160,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "근데 아니, 들어봐"
+    } ]
+  }, {
+    "tStartMs": 1092600,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "아내와 자녀, 유모,"
+    } ]
+  }, {
+    "tStartMs": 1094320,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "그리고 다른 가족들도 다 함께 갔어요"
+    } ]
+  }, {
+    "tStartMs": 1096300,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "그 섬에 나만 간 거 아니야"
+    } ]
+  }, {
+    "tStartMs": 1097280,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "2시간? 2시간"
+    } ]
+  }, {
+    "tStartMs": 1098320,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "밥만 딱 먹고"
+    } ]
+  }, {
+    "tStartMs": 1099240,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "딱 먹고 다 왔어요"
+    } ]
+  }, {
+    "tStartMs": 1100360,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "여러분 생각하시는"
+    } ]
+  }, {
+    "tStartMs": 1101180,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "그런 이상한 자리 아니었습니다"
+    } ]
+  }, {
+    "tStartMs": 1103300,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "그러면서 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 1104100,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "저는 엡스타인과 아무 관계가 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 1106610,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "저는 숨길 것이 없어요"
+    } ]
+  }, {
+    "tStartMs": 1107760,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "어떤 관계든"
+    } ]
+  }, {
+    "tStartMs": 1108660,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "14년 동안 3번 봤어요"
+    } ]
+  }, {
+    "tStartMs": 1110130,
+    "dDurationMs": 590,
+    "segs": [ {
+      "utf8": "3번 본 게"
+    } ]
+  }, {
+    "tStartMs": 1110720,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "밥 한 끼 먹은 게 전부인데"
+    } ]
+  }, {
+    "tStartMs": 1112260,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "너무나 억울합니다"
+    } ]
+  }, {
+    "tStartMs": 1113480,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "그리고 저도 엡스타인 파일 나올 때"
+    } ]
+  }, {
+    "tStartMs": 1116260,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "제 이름이 엡스타인 파일에 나와서"
+    } ]
+  }, {
+    "tStartMs": 1117520,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "깜짝 놀랐습니다"
+    } ]
+  }, {
+    "tStartMs": 1119030,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "저도 다른 사람들처럼 검색을 해봤어요"
+    } ]
+  }, {
+    "tStartMs": 1121180,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "하워드 러트닉"
+    } ]
+  }, {
+    "tStartMs": 1122370,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "혹시 나왔을까 봐"
+    } ]
+  }, {
+    "tStartMs": 1123420,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "근데 나왔네"
+    } ]
+  }, {
+    "tStartMs": 1124630,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "250번이네?"
+    } ]
+  }, {
+    "tStartMs": 1125410,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "말이 안 돼"
+    } ]
+  }, {
+    "tStartMs": 1126230,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "3번밖에 안 나왔는데"
+    } ]
+  }, {
+    "tStartMs": 1127230,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "왜 내 이름이 그렇게 많이 있습니까?"
+    } ]
+  }, {
+    "tStartMs": 1128350,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "말이 안 돼"
+    } ]
+  }, {
+    "tStartMs": 1129380,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "억울합니다"
+    } ]
+  }, {
+    "tStartMs": 1130460,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "있어 가지고 저도 깜짝 놀랐습니다"
+    } ]
+  }, {
+    "tStartMs": 1132810,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "저도"
+    } ]
+  }, {
+    "tStartMs": 1133720,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "라고 상원에서 증언을 했죠"
+    } ]
+  }, {
+    "tStartMs": 1135260,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "하지만 끝이 아니라"
+    } ]
+  }, {
+    "tStartMs": 1136700,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "지금 클린턴이 하원에 나왔기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1138800,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "하원 감독위원회에서 다시 한 번"
+    } ]
+  }, {
+    "tStartMs": 1140540,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "러트닉 장관을 불렀습니다"
+    } ]
+  }, {
+    "tStartMs": 1142240,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "이건 아직 안 했어요"
+    } ]
+  }, {
+    "tStartMs": 1143330,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "3월에 다시 할 예정입니다"
+    } ]
+  }, {
+    "tStartMs": 1145390,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "다시 의회에 출석해서"
+    } ]
+  }, {
+    "tStartMs": 1147270,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "다시 증언을 해야 되는데"
+    } ]
+  }, {
+    "tStartMs": 1149010,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "공화당 감독위원회가 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 1150310,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "러트닉 장관은"
+    } ]
+  }, {
+    "tStartMs": 1151280,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "하원에 다시 적극적으로 나와서"
+    } ]
+  }, {
+    "tStartMs": 1152650,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "증언하기로 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1153730,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "다른 사람들도 어서 나와서"
+    } ]
+  }, {
+    "tStartMs": 1155880,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "증언하기 바랍니다"
+    } ]
+  }, {
+    "tStartMs": 1157000,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "클린턴 대통령 부부가 끝이 아니에요"
+    } ]
+  }, {
+    "tStartMs": 1159010,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "러트닉 장관도 있고"
+    } ]
+  }, {
+    "tStartMs": 1159990,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "그리고 그 뒤에"
+    } ]
+  }, {
+    "tStartMs": 1160940,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "또 다른 사람들이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1162410,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "지금 코머"
+    } ]
+  }, {
+    "tStartMs": 1163070,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "제임스 코머가 얘기한"
+    } ]
+  }, {
+    "tStartMs": 1164040,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "또 다른 사람들은 누구냐?"
+    } ]
+  }, {
+    "tStartMs": 1165970,
+    "dDurationMs": 3440,
+    "segs": [ {
+      "utf8": "가장 대표적인 사람이 빌게이츠입니다"
+    } ]
+  }, {
+    "tStartMs": 1169410,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "하원감독위원회에 나와서 얘기해달라고"
+    } ]
+  }, {
+    "tStartMs": 1171990,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "7명한테 서한을 보냈다"
+    } ]
+  }, {
+    "tStartMs": 1173540,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "7명 이름이 다 나와있어요"
+    } ]
+  }, {
+    "tStartMs": 1175230,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "그 중에 한 명이"
+    } ]
+  }, {
+    "tStartMs": 1176260,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "빌게이츠입니다"
+    } ]
+  }, {
+    "tStartMs": 1177660,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "빌게이츠씨가"
+    } ]
+  }, {
+    "tStartMs": 1178780,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "하원감독위원회에 나와서"
+    } ]
+  }, {
+    "tStartMs": 1180300,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "증언을 할지 안 할지는 모르겠어요"
+    } ]
+  }, {
+    "tStartMs": 1181800,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "하여튼 서한은 가있는 상황입니다"
+    } ]
+  }, {
+    "tStartMs": 1184310,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "그러면 빌게이츠씨는 또 갑자기"
+    } ]
+  }, {
+    "tStartMs": 1185760,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "엡스타인 파일에 뭐가 연관이 있냐"
+    } ]
+  }, {
+    "tStartMs": 1188350,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "엡스타인 파일에"
+    } ]
+  }, {
+    "tStartMs": 1189590,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "빌게이츠 사진이 나오죠"
+    } ]
+  }, {
+    "tStartMs": 1191290,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "내용들도 여러 개가 나와요"
+    } ]
+  }, {
+    "tStartMs": 1192770,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "이거에 대해서 빌게이츠가 인터뷰를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1195590,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 1196890,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "내가 저지른 실수를 인해"
+    } ]
+  }, {
+    "tStartMs": 1198130,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "이 일에 휘말리게 된 사람들에 대해"
+    } ]
+  }, {
+    "tStartMs": 1199770,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "사과드립니다"
+    } ]
+  }, {
+    "tStartMs": 1200790,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "저는 엡스타인과 시간을 보냈고"
+    } ]
+  }, {
+    "tStartMs": 1202410,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "빌게이츠 재단 임원들을 회의에 참석시켰습니다"
+    } ]
+  }, {
+    "tStartMs": 1204870,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "이것은 명백한 실수입니다"
+    } ]
+  }, {
+    "tStartMs": 1207760,
+    "dDurationMs": 3440,
+    "segs": [ {
+      "utf8": "저는 엡스타인과 2014년까지 계속 만났습니다"
+    } ]
+  }, {
+    "tStartMs": 1211200,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "이미 성매매 알선 혐의로"
+    } ]
+  }, {
+    "tStartMs": 1212540,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "유죄를 인정한 시점이죠"
+    } ]
+  }, {
+    "tStartMs": 1214270,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "왜냐하면 엡스타인은"
+    } ]
+  }, {
+    "tStartMs": 1215810,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "많은 억만장자를 알고 있었어요"
+    } ]
+  }, {
+    "tStartMs": 1217760,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "저는 제가 운영하는 기금 마련에"
+    } ]
+  }, {
+    "tStartMs": 1219330,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "도움이 된다고 생각했습니다"
+    } ]
+  }, {
+    "tStartMs": 1221090,
+    "dDurationMs": 3150,
+    "segs": [ {
+      "utf8": "그러나 이건 명백히 잘못된 생각입니다"
+    } ]
+  }, {
+    "tStartMs": 1224240,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "하지만"
+    } ]
+  }, {
+    "tStartMs": 1225040,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "저는 불법적인 일을 하진 않았습니다"
+    } ]
+  }, {
+    "tStartMs": 1227140,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "그의 범죄에 가담하진 않았어요"
+    } ]
+  }, {
+    "tStartMs": 1229030,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "불법적인 일을 하지도 않았고"
+    } ]
+  }, {
+    "tStartMs": 1230710,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "보지도 못했습니다"
+    } ]
+  }, {
+    "tStartMs": 1231830,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "그리고 분명히 말하지만"
+    } ]
+  }, {
+    "tStartMs": 1233090,
+    "dDurationMs": 560,
+    "segs": [ {
+      "utf8": "저는 엡스타인의"
+    } ]
+  }, {
+    "tStartMs": 1233650,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "피해 여성들과"
+    } ]
+  }, {
+    "tStartMs": 1234600,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "시간을 보낸 적이 없습니다"
+    } ]
+  }, {
+    "tStartMs": 1236090,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "그 여성들과"
+    } ]
+  }, {
+    "tStartMs": 1237070,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "어떤 성적인 활동을 하지 않았습니다"
+    } ]
+  }, {
+    "tStartMs": 1238880,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "하지만!"
+    } ]
+  }, {
+    "tStartMs": 1240260,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "이게 또 뉴스에 튀어나왔죠"
+    } ]
+  }, {
+    "tStartMs": 1241230,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "하지만!"
+    } ]
+  }, {
+    "tStartMs": 1242270,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "저는 외도를 한 적이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1244050,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "고백하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1244960,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "한 명은 브릿지 대회에서 만난 러시아 선수였고"
+    } ]
+  }, {
+    "tStartMs": 1247160,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "이 사람이라고 얘기를 많이 해요"
+    } ]
+  }, {
+    "tStartMs": 1248890,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "한 명은 러시아 핵 물리학자였습니다"
+    } ]
+  }, {
+    "tStartMs": 1251250,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "엡스타인은 이 사실을 알고"
+    } ]
+  }, {
+    "tStartMs": 1253010,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "나를 협박했습니다"
+    } ]
+  }, {
+    "tStartMs": 1255300,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "그리고 엡스타인 파일에"
+    } ]
+  }, {
+    "tStartMs": 1256530,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "이런 내용들이 나왔죠"
+    } ]
+  }, {
+    "tStartMs": 1258300,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "그래서 이거는 맞는 내용이다"
+    } ]
+  }, {
+    "tStartMs": 1260250,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "그거는 내가 과거에 그런 적이 있었다"
+    } ]
+  }, {
+    "tStartMs": 1262230,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "라고 인정을 했고요"
+    } ]
+  }, {
+    "tStartMs": 1264130,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "이거를 들은"
+    } ]
+  }, {
+    "tStartMs": 1264900,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "빌 게이츠의 전부인"
+    } ]
+  }, {
+    "tStartMs": 1265980,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "멜린다 게이츠"
+    } ]
+  }, {
+    "tStartMs": 1266880,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "2021년에 이혼했죠"
+    } ]
+  }, {
+    "tStartMs": 1268230,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "역시 팟캐스트에 나와서"
+    } ]
+  }, {
+    "tStartMs": 1269610,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "입장을 밝혔어요"
+    } ]
+  }, {
+    "tStartMs": 1270520,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1271760,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "빌의 얘기를 들으면서"
+    } ]
+  }, {
+    "tStartMs": 1272770,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "결혼생활의 고통스러운 기억들이 되살아왔습니다"
+    } ]
+  }, {
+    "tStartMs": 1275570,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "믿을 수 없을 만큼 슬픕니다"
+    } ]
+  }, {
+    "tStartMs": 1277640,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "전남편을 포함해 모든 의문점은 해소되어야 합니다"
+    } ]
+  }, {
+    "tStartMs": 1280350,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "그리고 저는 현재"
+    } ]
+  }, {
+    "tStartMs": 1281120,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "이 모든 추악한 일에서"
+    } ]
+  }, {
+    "tStartMs": 1282170,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "벗어나게 되어"
+    } ]
+  }, {
+    "tStartMs": 1282800,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "정말 기쁩니다"
+    } ]
+  }, {
+    "tStartMs": 1284130,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "라고 얘기를 했고요"
+    } ]
+  }, {
+    "tStartMs": 1285360,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "또 저 엡스타인 파일에"
+    } ]
+  }, {
+    "tStartMs": 1286830,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "루머로 많이 도는 이 내용이 나와요"
+    } ]
+  }, {
+    "tStartMs": 1289460,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "러시아 여성들 때문에"
+    } ]
+  }, {
+    "tStartMs": 1290450,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "빌 게이츠가 성병에 걸렸고"
+    } ]
+  }, {
+    "tStartMs": 1292580,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "이걸 숨기려고"
+    } ]
+  }, {
+    "tStartMs": 1293440,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "뭐 이런저런 일을 했다라는 내용이 나오는데"
+    } ]
+  }, {
+    "tStartMs": 1295720,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "빌게이츠 대변인은"
+    } ]
+  }, {
+    "tStartMs": 1296580,
+    "dDurationMs": 430,
+    "segs": [ {
+      "utf8": "이 주장을"
+    } ]
+  }, {
+    "tStartMs": 1297010,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "완전히 터무니없는 일이라고 일축했습니다"
+    } ]
+  }, {
+    "tStartMs": 1299300,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "이거는 엡스타인이 만들어낸 자작극이다"
+    } ]
+  }, {
+    "tStartMs": 1302080,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "게이츠 본인도 해당 내용은"
+    } ]
+  }, {
+    "tStartMs": 1303750,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "거짓이라고 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1304900,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "그런 일은 없다"
+    } ]
+  }, {
+    "tStartMs": 1305940,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "저 메일은 발송되지도 않았고"
+    } ]
+  }, {
+    "tStartMs": 1307520,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "엡스타인이 그냥 썼을 뿐이지"
+    } ]
+  }, {
+    "tStartMs": 1309400,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "이런 거는 없다라고 일축을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1311700,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "그리고 빌게이츠가 공식적으로 사과를 했어요"
+    } ]
+  }, {
+    "tStartMs": 1314580,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "그와 함께 보낸 매 순간이 후회스럽습니다"
+    } ]
+  }, {
+    "tStartMs": 1317130,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "제가 그랬던 것에 대해서 사과드립니다"
+    } ]
+  }, {
+    "tStartMs": 1319560,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "라고 얘기를 했고요"
+    } ]
+  }, {
+    "tStartMs": 1320510,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "그리고 오늘 제가 다 갖고 오지 않은데"
+    } ]
+  }, {
+    "tStartMs": 1321670,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "너무나 많은 사람들의 이름이 등장합니다"
+    } ]
+  }, {
+    "tStartMs": 1323670,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "예를 들면 정말 놀라운 사람만 보여드리면"
+    } ]
+  }, {
+    "tStartMs": 1326030,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "무안마드 빌 살만"
+    } ]
+  }, {
+    "tStartMs": 1327660,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "사우디 왕세자하고"
+    } ]
+  }, {
+    "tStartMs": 1328720,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "찍은 사진도 나왔다고 해요"
+    } ]
+  }, {
+    "tStartMs": 1331390,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "전 처음에 이게 AI가 아닌가?"
+    } ]
+  }, {
+    "tStartMs": 1333910,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "전 지금도 이거 AI를 의심하고 있거든요"
+    } ]
+  }, {
+    "tStartMs": 1336130,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "근데 이게 타임즈인가에 나왔던데?"
+    } ]
+  }, {
+    "tStartMs": 1338590,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "빌 살만하고"
+    } ]
+  }, {
+    "tStartMs": 1340200,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "찍은 사진이 있다고? 당시에?"
+    } ]
+  }, {
+    "tStartMs": 1342670,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "이거 아무리 봐도 AI인데 이거?"
+    } ]
+  }, {
+    "tStartMs": 1345200,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "너무 뚜렷해"
+    } ]
+  }, {
+    "tStartMs": 1346700,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "너무 환하게 웃거든요"
+    } ]
+  }, {
+    "tStartMs": 1348190,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "제가 낚였는지"
+    } ]
+  }, {
+    "tStartMs": 1349220,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "그 기자가 낚였는지"
+    } ]
+  }, {
+    "tStartMs": 1350590,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "한번 보도록 하겠습니다"
+    } ]
+  }, {
+    "tStartMs": 1352180,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "자 그리고 또 나온 인물들"
+    } ]
+  }, {
+    "tStartMs": 1353850,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "구글 창업자 세르게이 브린"
+    } ]
+  }, {
+    "tStartMs": 1355860,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "버진 그룹 창업자 루처드 브랜슨"
+    } ]
+  }, {
+    "tStartMs": 1357970,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "이런 사람들의 사진들도 많이 공개되고요"
+    } ]
+  }, {
+    "tStartMs": 1360400,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "노르웨이 왕세자비"
+    } ]
+  }, {
+    "tStartMs": 1361940,
+    "dDurationMs": 3210,
+    "segs": [ {
+      "utf8": "메텟 마릿이라는 분도 등장을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1365150,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "2012년에 노르웨이 왕세자비는 이메일에서"
+    } ]
+  }, {
+    "tStartMs": 1366910,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "엡스타인을 스위트하트라고 불렀어요"
+    } ]
+  }, {
+    "tStartMs": 1369030,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "어... 이걸 뭐라 그래야 되죠?"
+    } ]
+  }, {
+    "tStartMs": 1371590,
+    "dDurationMs": 470,
+    "segs": [ {
+      "utf8": "스위트하트"
+    } ]
+  }, {
+    "tStartMs": 1372060,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "그러니까 그..."
+    } ]
+  }, {
+    "tStartMs": 1372770,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "자기야? 애기야?"
+    } ]
+  }, {
+    "tStartMs": 1374660,
+    "dDurationMs": 460,
+    "segs": [ {
+      "utf8": "이래야 되나?"
+    } ]
+  }, {
+    "tStartMs": 1375120,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "자기야 애기야?"
+    } ]
+  }, {
+    "tStartMs": 1376070,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "하여튼 뭐 캔디야? 사탕아?"
+    } ]
+  }, {
+    "tStartMs": 1378140,
+    "dDurationMs": 440,
+    "segs": [ {
+      "utf8": "뭐 이런 거잖아"
+    } ]
+  }, {
+    "tStartMs": 1378580,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "우리로 치면"
+    } ]
+  }, {
+    "tStartMs": 1379610,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "매우 매력적인 사람이라고 부른 이메일이"
+    } ]
+  }, {
+    "tStartMs": 1381470,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "이번에 발견이 됐는데"
+    } ]
+  }, {
+    "tStartMs": 1383490,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "왕세자비가 공식 사과하는"
+    } ]
+  }, {
+    "tStartMs": 1385360,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "그런 일도 있었고요"
+    } ]
+  }, {
+    "tStartMs": 1386400,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "마지막으로 가장 충격적인 사진이 나온 건"
+    } ]
+  }, {
+    "tStartMs": 1388670,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "역시 영국의 앤드루 왕자였습니다"
+    } ]
+  }, {
+    "tStartMs": 1391560,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "국왕 찰스의 동생"
+    } ]
+  }, {
+    "tStartMs": 1393150,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "앤드루가 신원 미상의"
+    } ]
+  }, {
+    "tStartMs": 1394140,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "여성 위에 무릎을 꿇고 있는 모습이"
+    } ]
+  }, {
+    "tStartMs": 1396300,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "공개가 됐죠"
+    } ]
+  }, {
+    "tStartMs": 1397820,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "이 사진이 공개되기 이전에"
+    } ]
+  }, {
+    "tStartMs": 1399760,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "이미 영국 왕실은"
+    } ]
+  }, {
+    "tStartMs": 1400930,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "앤드루 왕자의 칭호를 박탈한 상태였습니다"
+    } ]
+  }, {
+    "tStartMs": 1403400,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "이미 왕자가 아니에요!"
+    } ]
+  }, {
+    "tStartMs": 1404860,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "그냥 앤드루입니다"
+    } ]
+  }, {
+    "tStartMs": 1406370,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "그리고 귀족도 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 1407580,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "현재"
+    } ]
+  }, {
+    "tStartMs": 1408300,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "평민이에요"
+    } ]
+  }, {
+    "tStartMs": 1409430,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "앤드류 마운트배튼 윈저"
+    } ]
+  }, {
+    "tStartMs": 1411040,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "이름입니다"
+    } ]
+  }, {
+    "tStartMs": 1411880,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "왕자, 공작 뭐 이런 칭호는"
+    } ]
+  }, {
+    "tStartMs": 1414090,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "다 박탈이 됐고요"
+    } ]
+  }, {
+    "tStartMs": 1415640,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "옛날에 한번 보여드렸지만"
+    } ]
+  }, {
+    "tStartMs": 1416800,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "이미 이 사건 전에"
+    } ]
+  }, {
+    "tStartMs": 1417790,
+    "dDurationMs": 2660,
+    "segs": [ {
+      "utf8": "살던 집에서도 쫓겨났어요"
+    } ]
+  }, {
+    "tStartMs": 1420450,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "로열 롯지라고 불리는"
+    } ]
+  }, {
+    "tStartMs": 1421540,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "엄청난 대저택이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1423130,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "영국 왕실이 사는"
+    } ]
+  }, {
+    "tStartMs": 1424460,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "여기에서 쫓겨나서"
+    } ]
+  }, {
+    "tStartMs": 1425390,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "더 작은 거처로 옮겨 살라는 명령을"
+    } ]
+  }, {
+    "tStartMs": 1427680,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "이미 받은 상태입니다"
+    } ]
+  }, {
+    "tStartMs": 1429640,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "하지만 저 엡스타인 파일이 나오기 전까지는"
+    } ]
+  }, {
+    "tStartMs": 1432270,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "아직까지도 여전히"
+    } ]
+  }, {
+    "tStartMs": 1433790,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "로얄 롯지라는 곳에 살고 있었어요"
+    } ]
+  }, {
+    "tStartMs": 1435860,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "왜냐하면 퇴거해서 이동할"
+    } ]
+  }, {
+    "tStartMs": 1437680,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "그 집이 공사를 하고 있어"
+    } ]
+  }, {
+    "tStartMs": 1439380,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "그래서 그 공사가"
+    } ]
+  }, {
+    "tStartMs": 1440090,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "몇 달 후에나 완성이 될 거기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1441930,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "그동안은 여기에서 계속 살게 해서"
+    } ]
+  }, {
+    "tStartMs": 1443530,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "여전히 호화로운 궁전에 살고 있는 게"
+    } ]
+  }, {
+    "tStartMs": 1446070,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "앤드루라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1447740,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "예전에 한 번 했지만"
+    } ]
+  }, {
+    "tStartMs": 1448520,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "앤드루는 2010년에"
+    } ]
+  }, {
+    "tStartMs": 1449830,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "성매매로 복역이 끝난 엡스타인을 만나고"
+    } ]
+  }, {
+    "tStartMs": 1451840,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "사진을 찍힌 적이 있어요"
+    } ]
+  }, {
+    "tStartMs": 1453470,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "이 사진이 굉장히 유명한 사진인데"
+    } ]
+  }, {
+    "tStartMs": 1455260,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "왜 만난 거야?"
+    } ]
+  }, {
+    "tStartMs": 1456370,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "그랬더니 그때 앤드루가 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1458010,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "나는 엡스타인에게 가서"
+    } ]
+  }, {
+    "tStartMs": 1458860,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "이 얘기를 하고 싶었다"
+    } ]
+  }, {
+    "tStartMs": 1460040,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "우리의 우정이 끝났다"
+    } ]
+  }, {
+    "tStartMs": 1461760,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "너 같은 놈하고"
+    } ]
+  }, {
+    "tStartMs": 1462440,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "이제 상종을 안 해"
+    } ]
+  }, {
+    "tStartMs": 1463570,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "그 얘기를 하려고 만난 거다"
+    } ]
+  }, {
+    "tStartMs": 1465820,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "실제로 BBC하고 인터뷰할 때"
+    } ]
+  }, {
+    "tStartMs": 1467130,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "그런 얘기를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1468170,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "전화로 얘기할 수도 있었지만"
+    } ]
+  }, {
+    "tStartMs": 1469660,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "전화로 얘기하는 건"
+    } ]
+  }, {
+    "tStartMs": 1470760,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "겁쟁이 같은 방식이었어"
+    } ]
+  }, {
+    "tStartMs": 1472370,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "나는 직접 얼굴을 만나고"
+    } ]
+  }, {
+    "tStartMs": 1473770,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "그한테 강하게 얘기하고 싶었어"
+    } ]
+  }, {
+    "tStartMs": 1475230,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "야 이 쓰레기 같은 놈아"
+    } ]
+  }, {
+    "tStartMs": 1476140,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "나는 너랑 상종도 하기 싫어"
+    } ]
+  }, {
+    "tStartMs": 1478130,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "너랑 만날 시간이 후회돼 라고 하는 게"
+    } ]
+  }, {
+    "tStartMs": 1480290,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "남자다운 방법이 아닌가"
+    } ]
+  }, {
+    "tStartMs": 1481420,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "생각을 했다 그랬는데"
+    } ]
+  }, {
+    "tStartMs": 1483710,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "이번 엡스타임 파일에는 뭐라고 나오냐"
+    } ]
+  }, {
+    "tStartMs": 1485730,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "이렇게 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 1487560,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "우리는 한 배를 탄 처지인 것 같으니"
+    } ]
+  }, {
+    "tStartMs": 1490020,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "함께 이 상황을 이겨내보자"
+    } ]
+  }, {
+    "tStartMs": 1491830,
+    "dDurationMs": 3740,
+    "segs": [ {
+      "utf8": "가장 딱 걸린 사람 중에 한 명이"
+    } ]
+  }, {
+    "tStartMs": 1495570,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "이제 앤드루라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1497810,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "너랑 상종도 안 해!"
+    } ]
+  }, {
+    "tStartMs": 1498990,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "라고 얘기를 한 줄 알았는데"
+    } ]
+  }, {
+    "tStartMs": 1500110,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "메일 내용은 야야야야야"
+    } ]
+  }, {
+    "tStartMs": 1501390,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "야 한 배다, 한 배"
+    } ]
+  }, {
+    "tStartMs": 1502600,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "이거 큰일 났다, 큰일 났다"
+    } ]
+  }, {
+    "tStartMs": 1504380,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "잘해보자!"
+    } ]
+  }, {
+    "tStartMs": 1505210,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "라고 얘기를 했다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1508130,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "게다가 이번에 앤드루하고"
+    } ]
+  }, {
+    "tStartMs": 1509510,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "엡스타인의 메일 내용을 보면"
+    } ]
+  }, {
+    "tStartMs": 1511240,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "이런 내용들이 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 1512250,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "엡스타인은 이렇게 얘기해요"
+    } ]
+  }, {
+    "tStartMs": 1513620,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "저녁 식사를 같이 할 만한 친구가 있어"
+    } ]
+  }, {
+    "tStartMs": 1515190,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "이름은 이리나야"
+    } ]
+  }, {
+    "tStartMs": 1516150,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "런던에 언제 갈 거야"
+    } ]
+  }, {
+    "tStartMs": 1517080,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "그때 앤드류가 좋아!"
+    } ]
+  }, {
+    "tStartMs": 1518400,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "그녀를 만날 수 있으면 좋겠어"
+    } ]
+  }, {
+    "tStartMs": 1519460,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "메일 주소 알려줘"
+    } ]
+  }, {
+    "tStartMs": 1520830,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "그랬더니"
+    } ]
+  }, {
+    "tStartMs": 1522030,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "엡스타인이 26살 러시아 출신이고"
+    } ]
+  }, {
+    "tStartMs": 1524530,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "똑똑하고 믿을만 하다"
+    } ]
+  }, {
+    "tStartMs": 1525680,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "그리고 당신의 메일 주소를 알고 있다"
+    } ]
+  }, {
+    "tStartMs": 1527620,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "뭐 이렇게 서로의 메일을 받은 게"
+    } ]
+  }, {
+    "tStartMs": 1530180,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "고스란히 나왔기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1531900,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "딱 걸렸다고 할 수 있고"
+    } ]
+  }, {
+    "tStartMs": 1533670,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "앤드루 같은 경우는"
+    } ]
+  }, {
+    "tStartMs": 1534450,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "또 그냥 조용히 있어야 되는데"
+    } ]
+  }, {
+    "tStartMs": 1535580,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "저기 발표된 다음에"
+    } ]
+  }, {
+    "tStartMs": 1536840,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "말을 타고"
+    } ]
+  }, {
+    "tStartMs": 1537520,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "산책을 하는 모습이"
+    } ]
+  }, {
+    "tStartMs": 1538580,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "언론에 잡혔어요"
+    } ]
+  }, {
+    "tStartMs": 1539350,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "파파라치가 찍었어"
+    } ]
+  }, {
+    "tStartMs": 1540810,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "아까 제가 말한 로얄 롯지"
+    } ]
+  }, {
+    "tStartMs": 1541920,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "윈저에 있는 30개 방"
+    } ]
+  }, {
+    "tStartMs": 1543470,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "웅장한 저택에서"
+    } ]
+  }, {
+    "tStartMs": 1544970,
+    "dDurationMs": 450,
+    "segs": [ {
+      "utf8": "말을 타고"
+    } ]
+  }, {
+    "tStartMs": 1545420,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "다그닥다그닥 하고 나오는 모습이 잡혔죠"
+    } ]
+  }, {
+    "tStartMs": 1547300,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "안 그래도"
+    } ]
+  }, {
+    "tStartMs": 1548300,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "여론이 안 좋은데"
+    } ]
+  }, {
+    "tStartMs": 1549360,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "지금 당당하게 어쩌라고 하면서"
+    } ]
+  }, {
+    "tStartMs": 1551730,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "말 타고 있는 모습이 나온 다음에"
+    } ]
+  }, {
+    "tStartMs": 1553320,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "언론에 쫙 나오고"
+    } ]
+  }, {
+    "tStartMs": 1554130,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "여론이 안 좋아지니까"
+    } ]
+  }, {
+    "tStartMs": 1556620,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "바로 그 다음날"
+    } ]
+  }, {
+    "tStartMs": 1557640,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "갑자기 영국 왕실이 차 하나 보내고"
+    } ]
+  }, {
+    "tStartMs": 1560350,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "야 타"
+    } ]
+  }, {
+    "tStartMs": 1561370,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "해서 태운 다음에"
+    } ]
+  }, {
+    "tStartMs": 1562470,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "어디로 갔어요"
+    } ]
+  }, {
+    "tStartMs": 1563840,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "동부 외딴 지역에"
+    } ]
+  }, {
+    "tStartMs": 1565170,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "어디 농가 주택으로 갔다는 말이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1567460,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "함부로 좀"
+    } ]
+  }, {
+    "tStartMs": 1569830,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "자숙하고 있어야 되는데"
+    } ]
+  }, {
+    "tStartMs": 1570930,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "나와서 사진 찍히고"
+    } ]
+  }, {
+    "tStartMs": 1571770,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "막 그러니까"
+    } ]
+  }, {
+    "tStartMs": 1572670,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "태워갖고 보내버린"
+    } ]
+  }, {
+    "tStartMs": 1574690,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "그런 일이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 1575840,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "지금 앤드루 같은 경우도"
+    } ]
+  }, {
+    "tStartMs": 1576960,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "아까 말한 공화당 감독위원장"
+    } ]
+  }, {
+    "tStartMs": 1578690,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "존 커머가"
+    } ]
+  }, {
+    "tStartMs": 1579670,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "미국 국회에 나와서"
+    } ]
+  }, {
+    "tStartMs": 1581190,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "증언을 하라라고 얘기한 상태인데"
+    } ]
+  }, {
+    "tStartMs": 1583290,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "실제 나올지는 모르겠어요"
+    } ]
+  }, {
+    "tStartMs": 1585830,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "마지막으로"
+    } ]
+  }, {
+    "tStartMs": 1586490,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "여러분들이 관심 있어 할 만한"
+    } ]
+  }, {
+    "tStartMs": 1587940,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "사람을 보면"
+    } ]
+  }, {
+    "tStartMs": 1588870,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "일론 머스크의 이름도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1590570,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "거의 뭐 마법의 상자야"
+    } ]
+  }, {
+    "tStartMs": 1592190,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "없는 이름이 없어"
+    } ]
+  }, {
+    "tStartMs": 1593770,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "치면 다 나와"
+    } ]
+  }, {
+    "tStartMs": 1595150,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "저커버그 이름도 있어요"
+    } ]
+  }, {
+    "tStartMs": 1596740,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "대충 치면 나와"
+    } ]
+  }, {
+    "tStartMs": 1597630,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "대충 치면"
+    } ]
+  }, {
+    "tStartMs": 1598380,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "머스크는 왜 나오냐"
+    } ]
+  }, {
+    "tStartMs": 1600090,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "머스크가 엡스타인의 개인섬을 방문해서"
+    } ]
+  }, {
+    "tStartMs": 1602910,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "이런 걸 해보자"
+    } ]
+  }, {
+    "tStartMs": 1603820,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "라는 이메일들이 나와요"
+    } ]
+  }, {
+    "tStartMs": 1604860,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "하지만 이메일에 따르면"
+    } ]
+  }, {
+    "tStartMs": 1606120,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "방문 계획은 모두 취소된 걸로 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 1608390,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "머스크는 이렇게 얘기를 했어요"
+    } ]
+  }, {
+    "tStartMs": 1609820,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "나는 가지 않았다"
+    } ]
+  }, {
+    "tStartMs": 1611680,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "나는 가지 않았다"
+    } ]
+  }, {
+    "tStartMs": 1612480,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "왜냐하면 초대에 감사하지만"
+    } ]
+  }, {
+    "tStartMs": 1614610,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "그 섬에서의 경험은"
+    } ]
+  }, {
+    "tStartMs": 1615680,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "내가 찾고 있는 거랑 반대입니다"
+    } ]
+  }, {
+    "tStartMs": 1617050,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "라는 내용이 나오거든요"
+    } ]
+  }, {
+    "tStartMs": 1618380,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "나는 2012년에 메일을"
+    } ]
+  }, {
+    "tStartMs": 1620030,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "보낸 건 맞지만"
+    } ]
+  }, {
+    "tStartMs": 1620970,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "가지 않았다"
+    } ]
+  }, {
+    "tStartMs": 1622410,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "물론 어떤 이메일에 따르면"
+    } ]
+  }, {
+    "tStartMs": 1625270,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "카리브의 어디 바에서 술자리를 함께하자"
+    } ]
+  }, {
+    "tStartMs": 1628370,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "초대까지가 나와"
+    } ]
+  }, {
+    "tStartMs": 1629910,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "머스크는 안 갔다고 주장을 해"
+    } ]
+  }, {
+    "tStartMs": 1631650,
+    "dDurationMs": 2990,
+    "segs": [ {
+      "utf8": "만나는지 불분명하다는 내용이 많죠"
+    } ]
+  }, {
+    "tStartMs": 1634640,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "그래서 머스크가 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1636930,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "그와 주고받은 일부 이메일 때문에"
+    } ]
+  }, {
+    "tStartMs": 1638730,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "오해를 불러일으키고"
+    } ]
+  }, {
+    "tStartMs": 1639930,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "비판자들이 내 이름을 더럽히는 데"
+    } ]
+  }, {
+    "tStartMs": 1642100,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "사용할 수 있다는 걸 잘 알고 있다"
+    } ]
+  }, {
+    "tStartMs": 1643760,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "하지만 나는 안 갔다"
+    } ]
+  }, {
+    "tStartMs": 1646360,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "엡스타인 파일 공개를"
+    } ]
+  }, {
+    "tStartMs": 1647310,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "나보다 더 적극적으로"
+    } ]
+  }, {
+    "tStartMs": 1648480,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "강력하게 추진한 사람은 없으며"
+    } ]
+  }, {
+    "tStartMs": 1650140,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "공개가 되어 너무 기쁘다"
+    } ]
+  }, {
+    "tStartMs": 1651960,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "나는 엡스타인과 거의 교류하지 않았고"
+    } ]
+  }, {
+    "tStartMs": 1653930,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "그의 섬에 가거나"
+    } ]
+  }, {
+    "tStartMs": 1654940,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "그의 전용기를, 이름도 그러네"
+    } ]
+  }, {
+    "tStartMs": 1656970,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "그의 전용기를 타라는"
+    } ]
+  }, {
+    "tStartMs": 1658180,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "반복된 초대를 거절한 사람이다"
+    } ]
+  }, {
+    "tStartMs": 1660260,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "나는 절대 간 일이 없다"
+    } ]
+  }, {
+    "tStartMs": 1661890,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "라고 얘기를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1663650,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "결론적으로 지금 쭉 얘기 드렸는데"
+    } ]
+  }, {
+    "tStartMs": 1665910,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "죽은 엡스타인이 산 트럼프를"
+    } ]
+  }, {
+    "tStartMs": 1667520,
+    "dDurationMs": 3470,
+    "segs": [ {
+      "utf8": "지금까지도 따라가고 있어요"
+    } ]
+  }, {
+    "tStartMs": 1670990,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "저는 그냥 한자로 적어놓은 건데"
+    } ]
+  }, {
+    "tStartMs": 1672300,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "죽은 엡스타인이"
+    } ]
+  }, {
+    "tStartMs": 1674860,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "생럼프"
+    } ]
+  }, {
+    "tStartMs": 1675860,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "살아있는 트럼프를"
+    } ]
+  }, {
+    "tStartMs": 1676960,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "마치 유령처럼 따라다니고 있는 게"
+    } ]
+  }, {
+    "tStartMs": 1679060,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "지금 미국의 모습이지 않을까 생각합니다"
+    } ]
+  } ]
+}
