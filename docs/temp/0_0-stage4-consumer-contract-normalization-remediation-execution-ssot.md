@@ -1,15 +1,16 @@
 # 0_0 Stage4 Consumer-Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (aggregate Stage4 wave active; child NpcDrift relation-tag lane code-landed, runtime proof pending)
+Status: partially_realized (aggregate Stage4 wave active; flashback continuity child lane code-landed, runtime proof pending)
 Canonical Path: `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `09a7b478c2a2c16d708cc041aaa6e194278e7f9b`
 - Baseline Dirty Summary: `dirty: active Stage4 docs/code/test deltas, prepared canary targets, temp roadmap/queue active`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `NpcDrift relation-tag child lane code-landed; aggregate Stage4 consumer-contract runtime proof still pending`
+- Resume Drift Summary: `fresh full run elevated flashback continuity local-fix as the immediate child seam; aggregate Stage4 consumer-contract runtime proof still pending`
 Source Survey Docs:
+- `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-post-select-continuity-seam-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-fixpack-finalization-bounded-survey.md`
@@ -17,6 +18,7 @@ Source Survey Docs:
 - `docs/2026-04-01/0_0-stage4-canonical-entity-postselect-bounded-survey.md`
 - `docs/2026-04-01/0_0-stage4-ep2-advisory-escalation-loop-bounded-survey.md`
 Evidence Artifacts:
+- `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-evidence.json`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-evidence.json`
 - `docs/2026-04-02/0_0-stage4-post-select-continuity-seam-evidence.json`
 - `docs/2026-04-02/0_0-stage4-fixpack-finalization-evidence.json`
@@ -54,7 +56,8 @@ This wave is not a global Stage4 redesign. It is an aggregate contract-normaliza
 - `canonical entity postselect` improved post-pass pressure/state truth alignment
 - `fixpack finalization` improved backfill/preservation
 - `post-select continuity contract` improved contradiction subtype persistence
-- `NpcDrift relation-tag` survey isolated the next live ep2 blocker but is not yet realized
+- the contaminated Stage4-only ep2 canary isolated a real `NpcDrift relation-tag` seam, but that path is no longer the highest-authority immediate blocker
+- the fresh full run is now the higher-authority runtime source, and it elevated `Flashback continuity contradiction -> local-fix synthesis` as the immediate child seam
 - The remaining issue is no longer “add one more local fix.” It is “normalize how Stage4 consumes, reclassifies, and persists truth.”
 
 ## 3. Scope
@@ -107,6 +110,7 @@ Primary debt inventory for this wave:
 
 ### Class A. Primary realization now
 
+- Flashback continuity local-fix normalization
 - NpcDrift relation-tag semantic/local-fix normalization
 - post-select bounded-repair contract normalization
 - fix-pack provenance and routing normalization
@@ -160,6 +164,7 @@ Substrate already landed:
 - `0_0-stage4-canonical-entity-postselect-remediation`
 - `0_0-stage4-fixpack-finalization-remediation`
 - `0_0-stage4-post-select-continuity-contract-normalization-remediation`
+- `0_0-stage4-flashback-continuity-localfix-remediation`
 
 This new execution SSOT should be read as:
 
@@ -261,6 +266,8 @@ Goal:
   - keep the temp mirror as the new aggregate Stage4 contract-normalization lane until explicit realization or replacement
 - roadmap dependency:
   - this lane becomes the new highest-level Stage4 contract wave
+  - the immediate active child seam is now `0_0-stage4-flashback-continuity-localfix-remediation`
+  - `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` remains the next bounded child seam below it
   - existing Stage4 partial lanes remain below it as substrate
 
 ## 13. Validation and Closure Hooks

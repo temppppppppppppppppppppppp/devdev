@@ -172,6 +172,35 @@ class TestIntegration:
         assert item["severity"] == "MAJOR"
         assert item["check"] == "flashback_contamination"
 
+    def test_check_preserves_optional_local_fix_metadata(self):
+        response = json.dumps(
+            [
+                {
+                    "marker": "과거의",
+                    "issue": "과거에는 멈추지 않았는데 회상에서는 현관 앞에서 멈춘다",
+                    "referenced_context": "1화: 발걸음은 멈추지 않았다",
+                    "contradiction_subtype": "movement",
+                    "local_fixable": True,
+                    "patch_anchor": "회상 장면 동선 서술 문장",
+                    "expected_truth": "과거에는 멈추지 않고 현관을 향했다",
+                    "local_fix_hint": "멈춤/동선 묘사를 prior truth에 맞게 국소 수정",
+                    "target_kind": "local_sentence",
+                }
+            ],
+            ensure_ascii=False,
+        )
+        verifier = FlashbackVerifier(llm_ask=lambda _: response)
+        ms = "A" * 100 + "과거의 그는 현관 앞에서 멈춰 섰다." + "B" * 100
+        result = verifier.check(ms, ep_num=2, reference_context="1화: 발걸음은 멈추지 않았다")
+        assert len(result) == 1
+        item = result[0]
+        assert item["contradiction_subtype"] == "movement"
+        assert item["local_fixable"] is True
+        assert item["patch_anchor"] == "회상 장면 동선 서술 문장"
+        assert item["expected_truth"] == "과거에는 멈추지 않고 현관을 향했다"
+        assert item["local_fix_hint"] == "멈춤/동선 묘사를 prior truth에 맞게 국소 수정"
+        assert item["target_kind"] == "local_sentence"
+
 
 # ═══════════════════════════════════════════════════════════════
 # [LM-H] ManuscriptSnippets 테스트
@@ -287,3 +316,23 @@ class TestManuscriptSnippets:
         prompt = captured[0]
         assert "휴대전화/폴더폰" in prompt
         assert "스마트폰·터치스크린으로 과추론하지 마세요" in prompt
+
+    def test_prompt_requests_local_fix_metadata_fields(self):
+        captured = []
+
+        def _capture(prompt):
+            captured.append(prompt)
+            return "[]"
+
+        verifier = FlashbackVerifier(llm_ask=_capture)
+        verifier.check(
+            "A" * 100 + "과거의 그는 문 앞에서 멈췄다." + "B" * 100,
+            ep_num=2,
+            reference_context="1화: 발걸음은 멈추지 않았다",
+        )
+
+        assert captured
+        prompt = captured[0]
+        assert "contradiction_subtype" in prompt
+        assert "local_fixable" in prompt
+        assert "patch_anchor" in prompt
