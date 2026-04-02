@@ -23,7 +23,9 @@
       "mutates_project_state": true,
       "tests": [
         "tests/test_run_stage4_canary.py",
-        "tests/test_run_stage34_canary.py"
+        "tests/test_run_stage34_canary.py",
+        "tests/test_run_stage3_canary.py",
+        "tests/test_run_stage34_ep_demo_canary.py"
       ],
       "scripts": [
         "scripts/e2e_menu_smoke.ps1",
@@ -38,7 +40,9 @@
       "tests": [],
       "scripts": [
         "scripts/run_stage4_canary.py",
-        "scripts/run_stage34_canary.py"
+        "scripts/run_stage34_canary.py",
+        "scripts/run_stage3_canary.py",
+        "scripts/run_stage34_ep_demo_canary.py"
       ]
     }
   },
@@ -54,13 +58,17 @@
     "focused_mutation": [
       "tests/test_run_stage4_canary.py",
       "tests/test_run_stage34_canary.py",
+      "tests/test_run_stage3_canary.py",
+      "tests/test_run_stage34_ep_demo_canary.py",
       "scripts/run_stage2_smoke.py",
       "scripts/run_stage3_smoke.py",
       "scripts/run_stage4_smoke.py"
     ],
     "full_canary_proof": [
       "scripts/run_stage4_canary.py",
-      "scripts/run_stage34_canary.py"
+      "scripts/run_stage34_canary.py",
+      "scripts/run_stage3_canary.py",
+      "scripts/run_stage34_ep_demo_canary.py"
     ]
   }
 }

@@ -1,17 +1,18 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-01
-Status: active (3-pass audited, Stage4 consumer-contract aggregate active; flashback continuity child lane code-landed, runtime proof pending)
+Status: active (3-pass audited, single-episode Stage34 demo utility code-landed; Stage4 consumer-contract aggregate still active)
 Canonical Path: `docs/2026-04-01/active-temp-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `fd1707372bd7eb8ad23a5d4506ef556e3f72cc51`
 Baseline Dirty Summary: `dirty: 0_0 runtime logs/db/artifacts active; legacy temp queue mirrors present; 2026-03-31 0_0 survey docs untracked`
-Resume Commit: `09a7b478c2a2c16d708cc041aaa6e194278e7f9b`
-Resume Drift Summary: `fresh full run elevated flashback continuity local-fix ahead of contaminated Stage4-only ep2 interpretations; aggregate Stage4 consumer stack reordered accordingly`
+Resume Commit: `c32717ffc511389636c65edf2845bef6113b97c3`
+Resume Drift Summary: `operator-directed demo prep added a single-episode Stage34 runner ahead of broader closure work; aggregate Stage4 consumer stack remains active underneath`
 Supersedes:
 - `docs/2026-03-31/active-temp-execution-roadmap.md`
 
 Queue Snapshot:
+- `docs/temp/0_0-stage34-ep2-single-episode-demo-canary-execution-ssot.md`
 - `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md`
@@ -30,22 +31,27 @@ Queue Snapshot:
 
 This roadmap is the active controller for the current `docs/temp/` execution queue.
 
-This refresh inserts the new aggregate Stage4 consumer-contract lane ahead of the prior Stage4/runtime items:
+This refresh inserts the new single-episode Stage34 demo utility ahead of the broader closure stack:
 
-1. `0_0-stage4-consumer-contract-normalization-remediation` (new highest priority aggregate Stage4 wave)
-2. `0_0-stage4-flashback-continuity-localfix-remediation` (new direct child lane; fresh full run isolated this as the higher-authority immediate blocker)
-3. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` (secondary bounded child lane; real seam remains, but contaminated Stage4-only evidence no longer outranks fresh full run)
-4. `0_0-stage4-post-select-continuity-contract-normalization-remediation` (partial substrate; solved subtype persistence but not the broader consumer contract family)
-5. `0_0-stage4-fixpack-finalization-remediation` (partial substrate; solved missing-fix-pack flattening but not the broader consumer contract family)
-6. `0_0-stage4-canonical-entity-postselect-remediation` (partial substrate; moved the blocker forward but did not close Stage4)
-7. `0_0-stage2-stage3-stage4-readiness-remediation` (blocked; Stage4 still not closure-ready)
-8. `0_0-stage4-ep2-advisory-escalation-loop-remediation` (partial substrate; Flashback FP suppression landed, but fresh full run exposed a real flashback continuity local-fix gap)
-9. `0_0-stage234-cross-stage-contract-normalization-remediation` (parked future wave; long-term shared contract substrate)
-10. `0_0-stage3-contract-tightening-remediation` (new parked future wave; static survey-backed, explicit canary proof pending)
-11. `0_0-stage2-contract-normalization-remediation` (parked future wave; survey-backed, below active Stage4 seams and below the nearer Stage3 future wave)
+1. `0_0-stage34-ep2-single-episode-demo-canary` (new highest priority operator-directed demo utility; frozen ep1 authority + fresh ep2 blueprint/draft only)
+2. `0_0-stage4-consumer-contract-normalization-remediation` (aggregate Stage4 wave)
+3. `0_0-stage4-flashback-continuity-localfix-remediation` (direct child lane; fresh full run isolated this as the higher-authority immediate blocker)
+4. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` (secondary bounded child lane; real seam remains, but contaminated Stage4-only evidence no longer outranks fresh full run)
+5. `0_0-stage4-post-select-continuity-contract-normalization-remediation` (partial substrate; solved subtype persistence but not the broader consumer contract family)
+6. `0_0-stage4-fixpack-finalization-remediation` (partial substrate; solved missing-fix-pack flattening but not the broader consumer contract family)
+7. `0_0-stage4-canonical-entity-postselect-remediation` (partial substrate; moved the blocker forward but did not close Stage4)
+8. `0_0-stage2-stage3-stage4-readiness-remediation` (blocked; Stage4 still not closure-ready)
+9. `0_0-stage4-ep2-advisory-escalation-loop-remediation` (partial substrate; Flashback FP suppression landed, but fresh full run exposed a real flashback continuity local-fix gap)
+10. `0_0-stage234-cross-stage-contract-normalization-remediation` (parked future wave; long-term shared contract substrate)
+11. `0_0-stage3-contract-tightening-remediation` (parked future wave; static survey-backed, explicit canary proof pending)
+12. `0_0-stage2-contract-normalization-remediation` (parked future wave; survey-backed, below active Stage4 seams and below the nearer Stage3 future wave)
 
 The new lane outranks all other items because:
 
+- the operator now needs `ep1 frozen + ep2 regenerated` demo proof rather than arc-frontier closure proof
+- `run_stage34_canary.py` cannot stop at `ep2` because it is arc-frontier bound
+- `Stage4-only canary` remains non-authoritative because blueprint baseline contamination has been proven
+- the new runner is a bounded utility, not a replacement for the broader Stage4 closure stack
 - the latest global Stage4 consumer-finalization survey showed the dominant residual blocker is broader than any one existing Stage4 seam
 - the contaminated Stage4-only ep2 canary isolated one real Stage4 child seam inside that broader family: `NpcDrift relation_to_protag` compressed-tag drift plus missing local-fix synthesis
 - the later fresh full run is higher-authority runtime evidence and elevated `Flashback continuity contradiction -> local-fix synthesis` ahead of the contaminated Stage4-only interpretation
@@ -60,6 +66,7 @@ The new lane outranks all other items because:
 
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
+| `0_0-stage34-ep2-single-episode-demo-canary` | `docs/2026-04-02/0_0-stage34-ep2-single-episode-demo-canary-execution-ssot.md` | `docs/temp/0_0-stage34-ep2-single-episode-demo-canary-execution-ssot.md` | partial | operator-directed demo utility; code landed; static validation pending runtime demo proof |
 | `0_0-stage4-consumer-contract-normalization-remediation` | `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md` | partial | aggregate Stage4 contract wave active; flashback child lane code-landed, runtime proof pending |
 | `0_0-stage4-flashback-continuity-localfix-remediation` | `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md` | partial | code landed; static validation closed; fresh full run isolated this as the immediate child seam |
 | `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` | `docs/2026-04-02/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md` | partial | code landed; static validation closed; ep2 runtime proof still pending |
@@ -76,6 +83,7 @@ The new lane outranks all other items because:
 
 ## 3. Dependency Notes
 
+- `0_0-stage34-ep2-single-episode-demo-canary` is a temporary operator-directed utility lane. It depends on the existing Stage4 consumer-contract substrate but does not replace any closure lane.
 - `0_0-stage4-consumer-contract-normalization-remediation` is now the aggregate Stage4 contract wave and the highest-level dependency for any parent-lane advancement.
 - `0_0-stage4-flashback-continuity-localfix-remediation` is now the immediate live child seam under the aggregate Stage4 wave because the fresh full run is higher-authority runtime evidence than the contaminated Stage4-only ep2 canary.
 - `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` remains the next bounded child seam under the aggregate Stage4 wave because the contaminated Stage4-only ep2 canary still isolated a real contract gap there.
@@ -93,37 +101,53 @@ The new lane outranks all other items because:
 
 ## 4. Execution Order
 
-1. `0_0-stage4-consumer-contract-normalization-remediation`
-2. `0_0-stage4-flashback-continuity-localfix-remediation`
-3. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation`
-4. `0_0-stage4-post-select-continuity-contract-normalization-remediation`
-5. `0_0-stage4-fixpack-finalization-remediation`
-6. `0_0-stage4-canonical-entity-postselect-remediation`
-7. `0_0-stage2-stage3-stage4-readiness-remediation`
-8. `0_0-stage4-ep2-advisory-escalation-loop-remediation`
-9. `0_0-stage234-cross-stage-contract-normalization-remediation`
-10. `0_0-stage3-contract-tightening-remediation`
-11. `0_0-stage2-contract-normalization-remediation`
-12. `frontier-lag-soak-canary-wave1`
-13. `npc-martial-state-substrate-wave1`
+1. `0_0-stage34-ep2-single-episode-demo-canary`
+2. `0_0-stage4-consumer-contract-normalization-remediation`
+3. `0_0-stage4-flashback-continuity-localfix-remediation`
+4. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation`
+5. `0_0-stage4-post-select-continuity-contract-normalization-remediation`
+6. `0_0-stage4-fixpack-finalization-remediation`
+7. `0_0-stage4-canonical-entity-postselect-remediation`
+8. `0_0-stage2-stage3-stage4-readiness-remediation`
+9. `0_0-stage4-ep2-advisory-escalation-loop-remediation`
+10. `0_0-stage234-cross-stage-contract-normalization-remediation`
+11. `0_0-stage3-contract-tightening-remediation`
+12. `0_0-stage2-contract-normalization-remediation`
+13. `frontier-lag-soak-canary-wave1`
+14. `npc-martial-state-substrate-wave1`
 
 Order rationale:
 
-- priority 1 is the new aggregate Stage4 consumer-contract wave because the latest survey proved the residual blocker is broader than any one existing Stage4 patch lane
-- priority 2 is the new Flashback continuity child lane because the fresh full run is the highest-authority current runtime evidence
-- priority 3 is the NpcDrift relation-tag child lane because the contaminated Stage4-only ep2 canary still isolated a real secondary seam
-- priority 4 is the post-select continuity-contract substrate lane
-- priority 5 is the fix-pack/finalization substrate lane
-- priority 6 is the canonical-entity/postselect substrate lane
-- priority 7 is the parent upstream lane, still blocked specifically by unresolved Stage4 seams
-- priority 8 is the already-landed ep2 advisory substrate lane
-- priority 9 is the new parked cross-stage contract substrate wave, justified by the completed matrix survey but still below active Stage4 work
-- priority 10 is the parked Stage3 future wave, closer to current evidence than the Stage2 future wave but still not active
-- priority 11 is the parked Stage2 future wave
-- priority 12 remains a parked soak lane
-- priority 13 remains blocked and cannot outrank an executable lane
+- priority 1 is the new single-episode demo utility because the operator explicitly needs fast `ep2` proof without frontier cost
+- priority 2 is the aggregate Stage4 consumer-contract wave because the latest survey proved the residual blocker is broader than any one existing Stage4 patch lane
+- priority 3 is the Flashback continuity child lane because the fresh full run is the highest-authority current runtime evidence
+- priority 4 is the NpcDrift relation-tag child lane because the contaminated Stage4-only ep2 canary still isolated a real secondary seam
+- priority 5 is the post-select continuity-contract substrate lane
+- priority 6 is the fix-pack/finalization substrate lane
+- priority 7 is the canonical-entity/postselect substrate lane
+- priority 8 is the parent upstream lane, still blocked specifically by unresolved Stage4 seams
+- priority 9 is the already-landed ep2 advisory substrate lane
+- priority 10 is the parked cross-stage contract substrate wave, justified by the completed matrix survey but still below active Stage4 work
+- priority 11 is the parked Stage3 future wave, closer to current evidence than the Stage2 future wave but still not active
+- priority 12 is the parked Stage2 future wave
+- priority 13 remains a parked soak lane
+- priority 14 remains blocked and cannot outrank an executable lane
 
 ## 5. Per-Item Status Ledger
+
+### 0_0-stage34-ep2-single-episode-demo-canary
+
+- execution SSOT: `partially_realized`
+- primary seams:
+  - `run_stage34_canary.py` cannot stop at `ep2`
+  - `Stage4-only canary` is non-authoritative after blueprint contamination audit
+  - demo needs `frozen ep1 authority + fresh ep2 regeneration` as a bounded utility
+- next action:
+  - keep this lane bounded to demo proof
+  - do not treat it as Stage4 closure proof
+  - runtime demo proof remains pending
+- temp cleanup action:
+  - remove mirror after demo runtime proof is captured or the utility is superseded
 
 ### 0_0-stage4-consumer-contract-normalization-remediation
 
@@ -321,6 +345,7 @@ Order rationale:
 ### Pass 1. Structure and Scope
 
 - queue inventory updated to include the new aggregate Stage4 contract lane
+- queue inventory updated again to include the new single-episode demo utility ahead of broader closure work
 - new Flashback continuity child lane added directly under the aggregate Stage4 lane
 - NpcDrift child lane kept directly below it as the next bounded seam
 - existing Stage4 lanes kept as substrate rather than removed
@@ -329,15 +354,16 @@ Order rationale:
 ### Pass 2. Evidence and Consistency
 
 - canonical and temp paths for the new aggregate lane verified against filesystem
+- canonical and temp paths for the new single-episode demo lane verified against filesystem
 - ordering is consistent with the latest Stage4 consumer-finalization survey and the latest ep2 bounded canary failure
 - parked/blocked legacy items remain unchanged
 
 ### Pass 3. Execution and Readability
 
 - per-item status ledger updated with concrete next actions
-- dependency chain is explicit: aggregate Stage4 contract wave -> Flashback child lane -> NpcDrift child lane -> substrate lanes -> parent readiness -> later runtime proof -> Stage4 resume decision
+- dependency chain is explicit: demo utility -> aggregate Stage4 contract wave -> Flashback child lane -> NpcDrift child lane -> substrate lanes -> parent readiness -> later runtime proof -> Stage4 resume decision
 - new parked Stage2 future wave inserted without disturbing active Stage4 order
 - new parked Stage3 future wave inserted ahead of the Stage2 future wave without disturbing active Stage4 order
-- no overreach: canary not promoted, Stage4 resume not declared
+- no overreach: demo utility not promoted to closure proof, Stage4 resume not declared
 
 Confidence: `96%`
