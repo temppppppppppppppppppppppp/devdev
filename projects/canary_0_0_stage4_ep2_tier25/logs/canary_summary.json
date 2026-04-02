@@ -1,0 +1,801 @@
+{
+  "project": "canary_0_0_stage4_ep2_tier25",
+  "project_locator": "projects/canary_0_0_stage4_ep2_tier25",
+  "project_root": "C:\\Users\\User\\Desktop\\글도비\\projects\\canary_0_0_stage4_ep2_tier25",
+  "target_ep": 2,
+  "prepared_from": "0_0",
+  "latest_session_id": "",
+  "draft_count": 1,
+  "draft_files": [
+    "ep_0001.txt"
+  ],
+  "runtime_audit_tag": "",
+  "runtime_audit_summary": {},
+  "stage4_attempts": 0,
+  "director_stage4_rows": 11,
+  "pass_rate_monitor_exists": true,
+  "patch_trace_summary": {},
+  "stage3_sink_alignment_summary": {
+    "stage": 3,
+    "session_filter": "",
+    "attempts_considered": 9,
+    "coverage": {
+      "stage_attempts": 9,
+      "pass_rate_monitor": 0,
+      "director_selections": 9,
+      "episode_production": 0,
+      "session_decisions": 0
+    },
+    "complete_final_attempts": 0,
+    "director_lifecycle_attempts": 0,
+    "complete_lifecycle_attempts": 0,
+    "final_sink_missing": {
+      "pass_rate_monitor": {
+        "count": 9,
+        "examples": [
+          "s3:ep1:arc1:a1:20260331_170355",
+          "s3:ep2:arc1:a1:20260331_170355",
+          "s3:ep3:arc1:a4:20260331_170355",
+          "s3:ep4:arc1:a1:20260331_170355",
+          "s3:ep5:arc2:a6:20260331_170355"
+        ]
+      },
+      "session_decisions": {
+        "count": 9,
+        "examples": [
+          "s3:ep1:arc1:a1:20260331_170355",
+          "s3:ep2:arc1:a1:20260331_170355",
+          "s3:ep3:arc1:a4:20260331_170355",
+          "s3:ep4:arc1:a1:20260331_170355",
+          "s3:ep5:arc2:a6:20260331_170355"
+        ]
+      }
+    },
+    "lifecycle_sink_missing": {},
+    "lifecycle_missing_in_final_sinks": {},
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [],
+    "repair_scope_mismatches": [],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [],
+    "selection_reason_mismatches": [],
+    "verdict_reason_mismatches": [],
+    "fix_scope_mismatches": [],
+    "gate_repair_metadata_missing": [],
+    "rationale_metadata_missing": [],
+    "artifact_missing_files": [
+      {
+        "attempt_key": "s3:ep1:arc1:a1:20260331_170355",
+        "sink": "stage_attempts",
+        "artifact_path": "logs/artifacts/stage3/ep_0001/attempt_01/final_blueprint__action_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep2:arc1:a1:20260331_170355",
+        "sink": "stage_attempts",
+        "artifact_path": "logs/artifacts/stage3/ep_0002/attempt_01/final_blueprint__emotion_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep3:arc1:a4:20260331_170355",
+        "sink": "stage_attempts",
+        "artifact_path": "logs/artifacts/stage3/ep_0003/attempt_04/final_blueprint__emotion_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep4:arc1:a1:20260331_170355",
+        "sink": "stage_attempts",
+        "artifact_path": "logs/artifacts/stage3/ep_0004/attempt_01/final_blueprint__action_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep5:arc2:a6:20260331_170355",
+        "sink": "stage_attempts",
+        "artifact_path": "logs/artifacts/stage3/ep_0005/attempt_06/final_blueprint__action_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep6:arc2:a9:20260331_170355",
+        "sink": "stage_attempts",
+        "artifact_path": "logs/artifacts/stage3/ep_0006/attempt_09/final_blueprint__dialogue_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep7:arc2:a2:20260331_170355",
+        "sink": "stage_attempts",
+        "artifact_path": "logs/artifacts/stage3/ep_0007/attempt_02/final_blueprint__dialogue_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep8:arc2:a1:20260331_170355",
+        "sink": "stage_attempts",
+        "artifact_path": "logs/artifacts/stage3/ep_0008/attempt_01/final_blueprint__dialogue_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep9:arc2:a1:20260331_170355",
+        "sink": "stage_attempts",
+        "artifact_path": "logs/artifacts/stage3/ep_0009/attempt_01/final_blueprint__action_focused.json"
+      }
+    ],
+    "selection_companion_pre_final_rows": [],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {},
+    "session_scoped_attempts": 9,
+    "legacy_key_attempts": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "warn"
+  },
+  "sink_alignment_summary": {
+    "stage": 4,
+    "session_filter": "",
+    "attempts_considered": 11,
+    "coverage": {
+      "stage_attempts": 0,
+      "pass_rate_monitor": 0,
+      "director_selections": 11,
+      "episode_production": 10,
+      "session_decisions": 0
+    },
+    "complete_final_attempts": 0,
+    "director_lifecycle_attempts": 11,
+    "complete_lifecycle_attempts": 10,
+    "final_sink_missing": {},
+    "lifecycle_sink_missing": {
+      "episode_production": {
+        "count": 1,
+        "examples": [
+          "s4:ep1:arc1:a1:20260331_170355"
+        ]
+      }
+    },
+    "lifecycle_missing_in_final_sinks": {
+      "stage_attempts": {
+        "count": 11,
+        "examples": [
+          "s4:ep1:arc1:a1:20260331_170355",
+          "s4:ep2:arc1:a10:20260402_082211",
+          "s4:ep2:arc1:a1:20260402_082211",
+          "s4:ep2:arc1:a2:20260402_082211",
+          "s4:ep2:arc1:a3:20260402_082211"
+        ]
+      },
+      "pass_rate_monitor": {
+        "count": 11,
+        "examples": [
+          "s4:ep1:arc1:a1:20260331_170355",
+          "s4:ep2:arc1:a10:20260402_082211",
+          "s4:ep2:arc1:a1:20260402_082211",
+          "s4:ep2:arc1:a2:20260402_082211",
+          "s4:ep2:arc1:a3:20260402_082211"
+        ]
+      }
+    },
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [
+      {
+        "attempt_key": "s4:ep2:arc1:a4:20260402_082211",
+        "episode_production": "post_select_conflict",
+        "director_selections": "director_primary_pass"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a9:20260402_082211",
+        "episode_production": "post_select_conflict",
+        "director_selections": "director_primary_pass"
+      }
+    ],
+    "repair_scope_mismatches": [
+      {
+        "attempt_key": "s4:ep2:arc1:a4:20260402_082211",
+        "episode_production": "full",
+        "director_selections": "inplace"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a9:20260402_082211",
+        "episode_production": "full",
+        "director_selections": "inplace"
+      }
+    ],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [
+      {
+        "attempt_key": "s4:ep2:arc1:a10:20260402_082211",
+        "director_selections": "A|긴장감 + 반전 강조",
+        "episode_production": "A|tension"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260402_082211",
+        "director_selections": "C|긴장감 + 반전 강조",
+        "episode_production": "C|tension"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260402_082211",
+        "director_selections": "A|긴장감 + 반전 강조",
+        "episode_production": "A|tension"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a3:20260402_082211",
+        "director_selections": "B|균형 전략",
+        "episode_production": "B|balanced"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a4:20260402_082211",
+        "director_selections": "A|긴장감 + 반전 강조",
+        "episode_production": "A|tension"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a5:20260402_082211",
+        "director_selections": "B|긴장감 + 반전 강조",
+        "episode_production": "B|tension"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a8:20260402_082211",
+        "director_selections": "A|긴장감 + 반전 강조",
+        "episode_production": "A|tension"
+      }
+    ],
+    "content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [
+      {
+        "attempt_key": "s4:ep2:arc1:a10:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a3:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a4:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a5:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a6:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a7:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a8:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a9:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      }
+    ],
+    "selection_reason_mismatches": [],
+    "verdict_reason_mismatches": [],
+    "fix_scope_mismatches": [],
+    "gate_repair_metadata_missing": [
+      {
+        "attempt_key": "s4:ep2:arc1:a10:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a10:20260402_082211",
+        "field": "fix_pack_target_kind",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a10:20260402_082211",
+        "field": "fix_pack_patch_targets",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260402_082211",
+        "field": "fix_pack_target_kind",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260402_082211",
+        "field": "fix_pack_patch_targets",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a3:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a4:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a5:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      }
+    ],
+    "rationale_metadata_missing": [],
+    "artifact_missing_files": [],
+    "selection_companion_pre_final_rows": [],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {
+      "status": "missing",
+      "final_authority_sink": "stage_attempts",
+      "selection_role": "historical_companion",
+      "rows_considered": 0,
+      "aligned_selection_rows": 0,
+      "pre_final_selection_rows": 0,
+      "missing_selection_rows": 0,
+      "note": "Stage 4 final authority resolves from stage_attempts. director_selections remains companion review history and may point to pre-final artifacts."
+    },
+    "session_scoped_attempts": 11,
+    "legacy_key_attempts": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "warn"
+  },
+  "current_session_sink_alignment_summary": {
+    "stage": 4,
+    "session_filter": "",
+    "attempts_considered": 11,
+    "coverage": {
+      "stage_attempts": 0,
+      "pass_rate_monitor": 0,
+      "director_selections": 11,
+      "episode_production": 10,
+      "session_decisions": 0
+    },
+    "complete_final_attempts": 0,
+    "director_lifecycle_attempts": 11,
+    "complete_lifecycle_attempts": 10,
+    "final_sink_missing": {},
+    "lifecycle_sink_missing": {
+      "episode_production": {
+        "count": 1,
+        "examples": [
+          "s4:ep1:arc1:a1:20260331_170355"
+        ]
+      }
+    },
+    "lifecycle_missing_in_final_sinks": {
+      "stage_attempts": {
+        "count": 11,
+        "examples": [
+          "s4:ep1:arc1:a1:20260331_170355",
+          "s4:ep2:arc1:a10:20260402_082211",
+          "s4:ep2:arc1:a1:20260402_082211",
+          "s4:ep2:arc1:a2:20260402_082211",
+          "s4:ep2:arc1:a3:20260402_082211"
+        ]
+      },
+      "pass_rate_monitor": {
+        "count": 11,
+        "examples": [
+          "s4:ep1:arc1:a1:20260331_170355",
+          "s4:ep2:arc1:a10:20260402_082211",
+          "s4:ep2:arc1:a1:20260402_082211",
+          "s4:ep2:arc1:a2:20260402_082211",
+          "s4:ep2:arc1:a3:20260402_082211"
+        ]
+      }
+    },
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [
+      {
+        "attempt_key": "s4:ep2:arc1:a4:20260402_082211",
+        "episode_production": "post_select_conflict",
+        "director_selections": "director_primary_pass"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a9:20260402_082211",
+        "episode_production": "post_select_conflict",
+        "director_selections": "director_primary_pass"
+      }
+    ],
+    "repair_scope_mismatches": [
+      {
+        "attempt_key": "s4:ep2:arc1:a4:20260402_082211",
+        "episode_production": "full",
+        "director_selections": "inplace"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a9:20260402_082211",
+        "episode_production": "full",
+        "director_selections": "inplace"
+      }
+    ],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [
+      {
+        "attempt_key": "s4:ep2:arc1:a10:20260402_082211",
+        "director_selections": "A|긴장감 + 반전 강조",
+        "episode_production": "A|tension"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260402_082211",
+        "director_selections": "C|긴장감 + 반전 강조",
+        "episode_production": "C|tension"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260402_082211",
+        "director_selections": "A|긴장감 + 반전 강조",
+        "episode_production": "A|tension"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a3:20260402_082211",
+        "director_selections": "B|균형 전략",
+        "episode_production": "B|balanced"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a4:20260402_082211",
+        "director_selections": "A|긴장감 + 반전 강조",
+        "episode_production": "A|tension"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a5:20260402_082211",
+        "director_selections": "B|긴장감 + 반전 강조",
+        "episode_production": "B|tension"
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a8:20260402_082211",
+        "director_selections": "A|긴장감 + 반전 강조",
+        "episode_production": "A|tension"
+      }
+    ],
+    "content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [
+      {
+        "attempt_key": "s4:ep2:arc1:a10:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a3:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a4:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a5:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a6:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a7:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a8:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a9:20260402_082211",
+        "field": "artifact_path",
+        "sinks": [
+          "episode_production"
+        ]
+      }
+    ],
+    "selection_reason_mismatches": [],
+    "verdict_reason_mismatches": [],
+    "fix_scope_mismatches": [],
+    "gate_repair_metadata_missing": [
+      {
+        "attempt_key": "s4:ep2:arc1:a10:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a10:20260402_082211",
+        "field": "fix_pack_target_kind",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a10:20260402_082211",
+        "field": "fix_pack_patch_targets",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260402_082211",
+        "field": "fix_pack_target_kind",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260402_082211",
+        "field": "fix_pack_patch_targets",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a3:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a4:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a5:20260402_082211",
+        "field": "director_verdict",
+        "sinks": [
+          "episode_production"
+        ]
+      }
+    ],
+    "rationale_metadata_missing": [],
+    "artifact_missing_files": [],
+    "selection_companion_pre_final_rows": [],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {
+      "status": "missing",
+      "final_authority_sink": "stage_attempts",
+      "selection_role": "historical_companion",
+      "rows_considered": 0,
+      "aligned_selection_rows": 0,
+      "pre_final_selection_rows": 0,
+      "missing_selection_rows": 0,
+      "note": "Stage 4 final authority resolves from stage_attempts. director_selections remains companion review history and may point to pre-final artifacts."
+    },
+    "session_scoped_attempts": 11,
+    "legacy_key_attempts": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "warn"
+  },
+  "final_authority_contract_summary": {
+    "status": "missing",
+    "final_authority_sink": "stage_attempts",
+    "selection_role": "historical_companion",
+    "rows_considered": 0,
+    "aligned_selection_rows": 0,
+    "pre_final_selection_rows": 0,
+    "missing_selection_rows": 0,
+    "note": "Stage 4 final authority resolves from stage_attempts. director_selections remains companion review history and may point to pre-final artifacts."
+  },
+  "rationale_contract_summary": {
+    "status": "ok",
+    "required_fields": [
+      "selection_reason",
+      "verdict_reason",
+      "open_review",
+      "fix_scope_reasoning",
+      "runtime_advisory",
+      "retry_directives"
+    ],
+    "missing_columns": [],
+    "stage4_row_count": 0,
+    "retry_required_row_count": 0,
+    "field_nonempty_counts": {
+      "selection_reason": 0,
+      "verdict_reason": 0,
+      "open_review": 0,
+      "fix_scope_reasoning": 0,
+      "runtime_advisory": 0,
+      "retry_directives": 0
+    },
+    "rows_missing_selection_reason": [],
+    "rows_missing_verdict_reason": [],
+    "rows_missing_retry_context": []
+  },
+  "companion_audit_summary": {
+    "status": "ok",
+    "latest_session_id": "",
+    "row_count": 0,
+    "required_stage_attempt_fields": [
+      "attempt_key",
+      "candidate_key",
+      "content_hash",
+      "artifact_path",
+      "selection_reason",
+      "verdict_reason"
+    ],
+    "rows_missing_required_fields": [],
+    "director_companion_rows": 11,
+    "director_rationale_available": 0,
+    "note": "Same-run stage_attempt provenance/rationale fields must stand on their own; director_selections is companion evidence only."
+  },
+  "proof_scope_summary": {
+    "summary_role": "stage4_live_canary_with_stage3_sink_probe",
+    "backend_wide_proof": false,
+    "scope_status": "partial_multi_stage_probe",
+    "stage4_live_context_regression": "covered",
+    "stage4_sink_alignment_status": "warn",
+    "stage3_sink_probe_status": "warn",
+    "rationale_contract_status": "ok",
+    "covered_surfaces": [
+      "stage4_live_context_path",
+      "stage4_sink_alignment",
+      "stage4_rationale_contract",
+      "stage3_sink_alignment_probe"
+    ],
+    "uncovered_surfaces": [
+      "stage3_live_generation_path",
+      "backend_wide_multi_stage_runtime"
+    ],
+    "notes": [
+      "This canary is not a backend-wide proof net.",
+      "Stage 3 is observed via sink alignment only; it does not rerun live Stage 3 generation."
+    ],
+    "observability_contract": {
+      "stage3_sink_alignment_observed": true,
+      "stage4_sink_alignment_observed": true,
+      "stage4_rationale_contract_observed": true
+    }
+  },
+  "proof_record_summary": {
+    "classification": "current",
+    "proof_origin": "current_workspace_refresh",
+    "project_locator": "projects/canary_0_0_stage4_ep2_tier25",
+    "summary_path": "logs/canary_summary.json",
+    "companion_audit_path": "logs/canary_companion_audit.json",
+    "latest_session_id": "",
+    "refreshed_at": "2026-04-02T09:29:48"
+  },
+  "hard_gates": {
+    "status": "fail",
+    "errors": [
+      "draft_count_mismatch:1!=2",
+      "lifecycle_sink_missing",
+      "lifecycle_missing_in_final_sinks",
+      "artifact_metadata_missing"
+    ],
+    "warnings": [
+      "runtime_audit_summary_missing",
+      "selection_candidate_key_mismatches",
+      "sink_alignment_status:warn",
+      "patch_trace_not_exercised"
+    ]
+  }
+}

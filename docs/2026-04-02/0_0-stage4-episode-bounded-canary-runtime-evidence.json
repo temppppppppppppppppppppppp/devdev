@@ -1,0 +1,183 @@
+{
+  "meta": {
+    "generated_at": "2026-04-02T09:10:00",
+    "baseline_commit": "c5c5180b",
+    "order_type": "stage4-only-bounded-canary",
+    "model_tier": "gemini-2.5-pro",
+    "scope": "ep2 only (ep3/ep4 not executed — operator abort after R7 REJECT loop)"
+  },
+  "ep2": {
+    "canary_project": "canary_0_0_stage4_ep2_tier25",
+    "terminal_state": "completed_all_reject",
+    "rounds_executed": 11,
+    "rounds_max": 10,
+    "finalized": false,
+    "hard_gates": "fail",
+    "hard_gate_errors": ["draft_count_mismatch:1!=2", "lifecycle_sink_missing", "lifecycle_missing_in_final_sinks", "artifact_metadata_missing"],
+    "decisions": [
+      {
+        "round": 0,
+        "result": "REJECT",
+        "score": 96,
+        "director_verdict": "PASS",
+        "initial_verdict": "REJECT",
+        "gate_basis": "strong_advisory_escalation_non_local_fix",
+        "firewall_triggered": false,
+        "selected_candidate": "C",
+        "dominant_advisory": ["StyleSignal", "NpcDrift", "Flashback"]
+      },
+      {
+        "round": 1,
+        "result": "REJECT",
+        "score": 44,
+        "director_verdict": "REJECT",
+        "initial_verdict": "REJECT",
+        "gate_basis": "continuity_firewall",
+        "firewall_triggered": true,
+        "selected_candidate": "A",
+        "dominant_advisory": ["StyleSignal", "NpcDrift", "Flashback"]
+      },
+      {
+        "round": 2,
+        "result": "REJECT",
+        "score": 96,
+        "director_verdict": "PASS",
+        "initial_verdict": "REJECT",
+        "gate_basis": "strong_advisory_escalation_non_local_fix",
+        "firewall_triggered": false,
+        "selected_candidate": "B",
+        "dominant_advisory": ["StyleSignal", "NpcDrift", "Flashback"],
+        "note": "Director open_review explicitly dismissed FlashbackVerifier '몇 달 전' finding"
+      },
+      {
+        "round": 3,
+        "result": "REJECT",
+        "score": 96,
+        "director_verdict": "PASS",
+        "initial_verdict": "PASS",
+        "gate_basis": "post_select_conflict",
+        "firewall_triggered": false,
+        "selected_candidate": "A",
+        "dominant_advisory": ["StyleSignal", "NpcDrift"]
+      },
+      {
+        "round": 4,
+        "result": "REJECT",
+        "score": 94,
+        "director_verdict": "PASS",
+        "initial_verdict": "REJECT",
+        "gate_basis": "strong_advisory_escalation_non_local_fix",
+        "firewall_triggered": false,
+        "selected_candidate": "B",
+        "dominant_advisory": ["StyleSignal", "NpcDrift"]
+      },
+      {
+        "round": 5,
+        "result": "REJECT",
+        "score": 96,
+        "director_verdict": "PASS",
+        "initial_verdict": "REJECT",
+        "gate_basis": "strong_advisory_escalation_non_local_fix",
+        "firewall_triggered": false,
+        "selected_candidate": "C",
+        "dominant_advisory": ["StyleSignal", "NpcDrift"]
+      },
+      {
+        "round": 6,
+        "result": "REJECT",
+        "score": 92,
+        "director_verdict": "PASS",
+        "initial_verdict": "REJECT",
+        "gate_basis": "strong_advisory_escalation_non_local_fix",
+        "firewall_triggered": false,
+        "selected_candidate": "C",
+        "dominant_advisory": ["StyleSignal", "NpcDrift"]
+      },
+      {
+        "round": 7,
+        "result": "REJECT",
+        "score": 98,
+        "director_verdict": "PASS",
+        "gate_basis": "strong_advisory_escalation_non_local_fix",
+        "firewall_triggered": false
+      },
+      {
+        "round": 8,
+        "result": "REJECT",
+        "score": 98,
+        "director_verdict": "PASS",
+        "gate_basis": "post_select_conflict",
+        "firewall_triggered": false
+      },
+      {
+        "round": 9,
+        "result": "REJECT",
+        "score": 44,
+        "director_verdict": "REJECT",
+        "gate_basis": "continuity_firewall",
+        "firewall_triggered": true
+      },
+      {
+        "round": "9_clip",
+        "result": "WOULD_CLIP",
+        "score": 0,
+        "note": "max round reached, no finalization"
+      }
+    ],
+    "gate_distribution": {
+      "strong_advisory_escalation_non_local_fix": 7,
+      "continuity_firewall": 2,
+      "post_select_conflict": 2
+    },
+    "director_pass_rate": "8/10 (Director wanted PASS in 8 of 10 substantive rounds)",
+    "flashback_verifier": {
+      "fired_rounds": [0, 1, 2],
+      "silent_rounds": [3, 4, 5, 6],
+      "director_dismissed": true,
+      "dominant": false,
+      "note": "FlashbackVerifier fired in R0-R2 (DDP anachronism + '몇 달 전' temporal), Director explicitly dismissed in R2 open_review. Silent from R3 onward. NOT the rejection cause."
+    },
+    "npc_drift_persistence": {
+      "entity": "한정호",
+      "expected": "집착100/오해-80",
+      "observed_patterns": [
+        "아버지의 무관심",
+        "아버지. 주인공 한시우의 아버지이자 SW그룹 회장",
+        "도구적이고 계산적인 관계",
+        "체스말로 여기고 무관심하고 도구 취급"
+      ],
+      "locally_fixable": false,
+      "root_cause": "NPC registry relation_to_protag '집착100/오해-80' is a compressed tag that LLM-generated prose cannot reproduce verbatim — local patch contract requires exact match or structured hint, neither available"
+    },
+    "score_trajectory": [96, 44, 96, 96, 94, 96, 92, 98, 98, 44],
+    "quality_signals": {
+      "length_compliance": "intermittent — ranged from 3607 to 5829 chars across rounds (target 5000)",
+      "dialogue_ratio": "persistent deficit — 8-15% vs target 30%",
+      "scene_structure": "improving — MAD scene headers appeared from R6",
+      "v66_continuity_warning": "persistent — all rounds showed prior-episode continuity gap"
+    },
+    "timestamps": {
+      "prepare": "2026-04-02T08:22:01",
+      "first_decision": "2026-04-02T08:28:00",
+      "last_decision": "2026-04-02T09:05:06",
+      "completed": "2026-04-02T09:29:48",
+      "total_runtime_minutes": 68
+    }
+  },
+  "ep3": {
+    "canary_project": null,
+    "terminal_state": "not_executed",
+    "reason": "operator abort after ep2 failure — cost constraint"
+  },
+  "ep4": {
+    "canary_project": null,
+    "terminal_state": "not_executed",
+    "reason": "operator abort after ep2 failure — cost constraint"
+  },
+  "prior_survey_references": {
+    "ep2_advisory_escalation_ssot": "docs/2026-04-01/0_0-stage4-ep2-advisory-escalation-loop-remediation-execution-ssot.md",
+    "fixpack_finalization_ssot": "docs/2026-04-02/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md",
+    "entity_postselect_ssot": "docs/2026-04-01/0_0-stage4-canonical-entity-postselect-remediation-execution-ssot.md",
+    "post_select_continuity_ssot": "docs/2026-04-02/0_0-stage4-post-select-continuity-contract-normalization-remediation-execution-ssot.md"
+  }
+}

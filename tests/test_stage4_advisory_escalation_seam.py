@@ -285,6 +285,39 @@ class TestAdvisoryEscalationHappyPathRegression:
         assert result["fix_pack"]["must_fix"] == ["NPC 역할 또는 관계 표현을 canonical truth에 맞게 국소 수정"]
         assert result["strong_advisory_escalation"]["local_fix_contract_backfilled"] is True
 
+    def test_pass_with_relation_tag_npc_drift_synthesizes_local_fix_contract_from_zero(self):
+        """NpcDrift relation-tag subtype may synthesize a zero-to-local fix contract."""
+        ir = _make_ir(advisory_summary={"npc_drift": 1})
+        ir._last_advisory_metadata = {
+            "npc_drift": [
+                {
+                    "npc": "한정호",
+                    "field": "relation_to_protag",
+                    "expected": "집착100/오해-80",
+                    "found_in_ms": "한정호는 주인공을 별다른 감정 없는 거래 상대로만 여겼다",
+                    "drift_subtype": "relation_tag_semantic",
+                    "target_kind": "local_phrase",
+                    "expected_relation_axes": ["집착100", "오해-80"],
+                    "_cand_idx": 0,
+                }
+            ]
+        }
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                selected="A",
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={},
+            )
+        )
+
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        assert result["fix_pack"]["target_kind"] == "local_phrase"
+        assert "한정호" in result["fix_pack"]["patch_targets"][0]
+        assert "압축 관계 태그" in result["fix_pack"]["must_fix"][0]
+        assert result["strong_advisory_escalation"]["local_fix_contract_backfilled"] is True
+        assert result["strong_advisory_escalation"]["backfilled_from"] == ["npc_drift_relation_tag_semantic"]
+
     def test_strong_advisory_backfill_does_not_widen_scene_model_targets(self):
         """scene_model targets stay non-local even if strong advisory is backfilled."""
         ir = _make_ir(advisory_summary={"npc_drift": 1})
