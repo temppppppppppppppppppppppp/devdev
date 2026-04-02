@@ -23,6 +23,7 @@ FOCUSED_MUTATION_TESTS = (
     "tests/test_run_stage4_canary.py",
     "tests/test_run_stage34_canary.py",
     "tests/test_run_stage3_canary.py",
+    "tests/test_run_stage34_ep_demo_canary.py",
 )
 
 FOCUSED_MUTATION_SCRIPTS = (
@@ -36,6 +37,7 @@ FULL_CANARY_PROOF_SCRIPTS = (
     "scripts/run_stage4_canary.py",
     "scripts/run_stage34_canary.py",
     "scripts/run_stage3_canary.py",
+    "scripts/run_stage34_ep_demo_canary.py",
 )
 
 RECOMMENDED_VALIDATION_SUBSETS = {
@@ -51,6 +53,7 @@ RECOMMENDED_VALIDATION_SUBSETS = {
         "tests/test_run_stage4_canary.py",
         "tests/test_run_stage34_canary.py",
         "tests/test_run_stage3_canary.py",
+        "tests/test_run_stage34_ep_demo_canary.py",
         "scripts/run_stage2_smoke.py",
         "scripts/run_stage3_smoke.py",
         "scripts/run_stage4_smoke.py",
@@ -59,6 +62,7 @@ RECOMMENDED_VALIDATION_SUBSETS = {
         "scripts/run_stage4_canary.py",
         "scripts/run_stage34_canary.py",
         "scripts/run_stage3_canary.py",
+        "scripts/run_stage34_ep_demo_canary.py",
     ),
 }
 
