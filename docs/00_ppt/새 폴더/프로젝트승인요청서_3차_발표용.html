@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글도비 운영 전환 발표 - AI 생산 구조 브리프</title>
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --bg: #f3efe7;
+            --ink: #17324d;
+            --muted: #5f6b78;
+            --line: #d4ccbf;
+            --surface: rgba(255, 255, 255, 0.9);
+            --accent: #ba6b2d;
+            --accent-soft: #efe1d4;
+            --navy-soft: #e5edf5;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 48px 28px;
+            background:
+                radial-gradient(circle at top right, rgba(186, 107, 45, 0.12), transparent 26%),
+                linear-gradient(180deg, #f7f3eb 0%, #ede6da 100%);
+            color: var(--ink);
+            font-family: "Segoe UI Variable Text", "Malgun Gothic", sans-serif;
+        }
+        .wrap {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .panel {
+            background: var(--surface);
+            border: 1px solid rgba(23, 50, 77, 0.08);
+            border-radius: 22px;
+            padding: 28px;
+            box-shadow: 0 18px 40px rgba(23, 50, 77, 0.08);
+            backdrop-filter: blur(12px);
+        }
+        .eyebrow {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: var(--navy-soft);
+            color: var(--ink);
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            margin-bottom: 14px;
+        }
+        h1 {
+            margin: 0 0 10px;
+            font-size: 2.55rem;
+            line-height: 1.1;
+            letter-spacing: -0.04em;
+        }
+        .lede {
+            margin: 0 0 18px;
+            color: var(--muted);
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+        .ask {
+            background: linear-gradient(135deg, rgba(23, 50, 77, 0.97), rgba(33, 65, 96, 0.92));
+            color: #fff;
+            border-radius: 18px;
+            padding: 18px 20px;
+            font-size: 0.98rem;
+            line-height: 1.65;
+        }
+        .ask strong {
+            color: #f6d2b2;
+        }
+        .meta-card {
+            display: grid;
+            gap: 14px;
+        }
+        .meta-box {
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.74);
+        }
+        .meta-box h2 {
+            margin: 0 0 8px;
+            font-size: 0.86rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .meta-box p {
+            margin: 0;
+            font-size: 1.02rem;
+            line-height: 1.55;
+        }
+        .preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .slide-card {
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 18px 18px 16px;
+            background: rgba(255, 255, 255, 0.76);
+            min-height: 132px;
+        }
+        .slide-num {
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }
+        .slide-card h3 {
+            margin: 0 0 8px;
+            font-size: 1.06rem;
+            letter-spacing: -0.02em;
+        }
+        .slide-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.55;
+            font-size: 0.92rem;
+        }
+        .actions {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+        }
+        .helper {
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 0.92rem;
+        }
+        button {
+            border: none;
+            border-radius: 16px;
+            padding: 18px 28px;
+            background: linear-gradient(135deg, #17324d, #ba6b2d);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: 0.01em;
+            box-shadow: 0 12px 26px rgba(23, 50, 77, 0.18);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 34px rgba(23, 50, 77, 0.22);
+        }
+        button:active {
+            transform: translateY(0);
+            opacity: 0.96;
+        }
+        @media (max-width: 840px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+            .actions {
+                grid-template-columns: 1fr;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <section class="hero">
+            <div class="panel">
+                <div class="eyebrow">PPT Generator</div>
+                <h1>글도비 운영 전환 발표<br>AI 생산 구조 브리프</h1>
+                <p class="lede">
+                    인간 집필 공정을 AI 생산 공정으로 치환하려는 목적과,
+                    그 목적이 사업·기술·보안 측면에서 무엇을 뜻하는지 한 번에 설명하는 버전이다.
+                </p>
+                <div class="ask">
+                    <strong>핵심 메시지:</strong>
+                    글도비의 목표는 PD와 작가의 집필·편집 루프를 AI로 대체하고,
+                    최종적으로 인간을 생산 공정에서 배제하는 것이다.
+                </div>
+            </div>
+
+            <div class="meta-card">
+                <div class="meta-box">
+                    <h2>구성</h2>
+                    <p>총 8장. 목표, 파이프라인, 재무 구조, 기술 현황, 보안 이슈를 직선적으로 정리했다.</p>
+                </div>
+                <div class="meta-box">
+                    <h2>톤</h2>
+                    <p>의도를 흐리지 않고, “인간 배제”를 목표로 둔 구조 전환이라는 점을 전면에 둔다.</p>
+                </div>
+                <div class="meta-box">
+                    <h2>출력</h2>
+                    <p>브라우저에서 열고 버튼을 누르면 `.pptx`가 바로 내려받아진다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="eyebrow">Slides</div>
+            <div class="preview" id="slide-preview"></div>
+
+            <div class="actions">
+                <div class="helper">
+                    파일을 브라우저에서 연 뒤 <strong>Download .pptx</strong>를 누르면 된다.
+                    다운로드 파일명은 `Geuldobi_AI_Production_Briefing.pptx`다.
+                </div>
+                <button onclick="generatePPT()">Download .pptx</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+    const SLIDES = [
+        {
+            title: '무엇을 대체하려는가',
+            note: '글도비는 보조 도구가 아니라 PD와 작가의 생산 공정 자체를 겨냥한다.'
+        },
+        {
+            title: '목표 구조와 현재 상태',
+            note: '지향은 인간 배제이고, 현재는 drift 때문에 과도기라는 점을 분리해서 설명한다.'
+        },
+        {
+            title: '생산 파이프라인',
+            note: 'Stage 0-2-3-4를 거치며 AI가 기획, 설계, 원고 생산, 평가를 수행한다.'
+        },
+        {
+            title: '왜 사업 구조가 바뀌는가',
+            note: '선인세, RS, IP 통제, 생산량 스케일이 인간 구조와 어떻게 달라지는지 보여 준다.'
+        },
+        {
+            title: '인간 포트폴리오도 안전하지 않다',
+            note: '인간 작가 구조도 이미 미회수와 편차가 큰 시장이라는 점을 숫자로 제시한다.'
+        },
+        {
+            title: '3,000만 원을 어떻게 볼 것인가',
+            note: '매출 약속이 아니라 손실 상한이 고정된 포트폴리오 실험으로 본다.'
+        },
+        {
+            title: '기술적으로 어디까지 왔는가',
+            note: 'AI가 쓰고 AI가 평가하는 구조가 이미 어느 수준까지 작동하는지 보여 준다.'
+        },
+        {
+            title: '운영 전환 전에 잠가야 할 것',
+            note: '보안 이슈와 함께 오늘 무엇을 판단해 달라는 자리인지 마무리한다.'
+        }
+    ];
+
+    function renderPreview() {
+        const root = document.getElementById('slide-preview');
+        root.innerHTML = SLIDES.map((slide, index) => `
+            <article class="slide-card">
+                <div class="slide-num">${String(index + 1).padStart(2, '0')}</div>
+                <h3>${slide.title}</h3>
+                <p>${slide.note}</p>
+            </article>
+        `).join('');
+    }
+
+    function generatePPT() {
+        const pptx = new PptxGenJS();
+        pptx.layout = 'LAYOUT_WIDE';
+        pptx.author = 'Codex';
+        pptx.company = '글도비';
+        pptx.subject = '글도비 운영 전환 발표용 AI 생산 구조 브리프';
+        pptx.title = '글도비 운영 전환 발표';
+        pptx.lang = 'ko-KR';
+
+        const C = {
+            paper: 'F7F3EB',
+            paperAlt: 'EFE6D8',
+            white: 'FFFFFF',
+            ink: '17324D',
+            muted: '5F6B78',
+            line: 'D6CCBE',
+            navy: '17324D',
+            navySoft: 'E6EDF4',
+            accent: 'BA6B2D',
+            accentSoft: 'F1E2D4',
+            green: '2F6B4F',
+            greenSoft: 'E5F0E8',
+            red: '9E4438',
+            redSoft: 'F5E4DF'
+        };
+
+        const FONT = {
+            body: 'Malgun Gothic'
+        };
+
+        function addChrome(slide, title, subtitle, page, total) {
+            slide.background = { color: C.paper };
+            slide.addShape(pptx.ShapeType.rect, {
+                x: 0, y: 0, w: 13.333, h: 0.28,
+                line: { color: C.navy, pt: 0 },
+                fill: { color: C.navy }
+            });
+            slide.addText(title, {
+                x: 0.6, y: 0.48, w: 8.7, h: 0.45,
+                fontFace: FONT.body, fontSize: 24, bold: true, color: C.ink
+            });
+            if (subtitle) {
+                slide.addText(subtitle, {
+                    x: 0.6, y: 0.96, w: 8.8, h: 0.28,
+                    fontFace: FONT.body, fontSize: 10.5, color: C.muted
+                });
+            }
+            slide.addText(`${page}/${total}`, {
+                x: 12.1, y: 0.52, w: 0.55, h: 0.24,
+                fontFace: FONT.body, fontSize: 10, color: C.muted, align: 'right'
+            });
+        }
+
+        function cell(text, extra = {}) {
+            return {
+                text,
+                options: {
+                    fontFace: FONT.body,
+                    fontSize: 10.5,
+                    color: C.ink,
+                    fill: C.white,
+                    border: { type: 'solid', color: C.line, pt: 1 },
+                    margin: 0.06,
+                    valign: 'mid',
+                    ...extra
+                }
+            };
+        }
+
+        function header(text) {
+            return cell(text, {
+                bold: true,
+                color: C.white,
+                fill: C.navy,
+                align: 'center'
+            });
+        }
+
+        function addTable(slide, rows, options) {
+            slide.addTable(rows, {
+                fontFace: FONT.body,
+                fontSize: 10.5,
+                color: C.ink,
+                border: { type: 'solid', color: C.line, pt: 1 },
+                margin: 0.06,
+                ...options
+            });
+        }
+
+        function addCallout(slide, text, x, y, w, h, tone = 'navy') {
+            const fill = tone === 'accent' ? C.accentSoft : tone === 'green' ? C.greenSoft : C.navySoft;
+            const line = tone === 'accent' ? C.accent : tone === 'green' ? C.green : C.navy;
+            slide.addShape(pptx.ShapeType.roundRect, {
+                x, y, w, h,
+                rectRadius: 0.08,
+                line: { color: line, pt: 1.25 },
+                fill: { color: fill }
+            });
+            slide.addText(text, {
+                x: x + 0.16, y: y + 0.12, w: w - 0.32, h: h - 0.2,
+                fontFace: FONT.body, fontSize: 11.5, color: C.ink, bold: true, valign: 'mid'
+            });
+        }
+
+        const total = 8;
+        let slide;
+
+        // Slide 1
+        slide = pptx.addSlide();
+        addChrome(slide, '무엇을 대체하려는가', '글도비는 보조 도구가 아니라 인간 집필 구조 자체를 겨냥한다', 1, total);
+        slide.addText('핵심 선언', {
+            x: 0.6, y: 1.45, w: 2.4, h: 0.28,
+            fontFace: FONT.body, fontSize: 12, color: C.accent, bold: true
+        });
+        slide.addShape(pptx.ShapeType.roundRect, {
+            x: 0.6, y: 1.78, w: 12.0, h: 1.2,
+            line: { color: C.navy, pt: 1.2 },
+            fill: { color: C.white }
+        });
+        slide.addText('글도비의 목표는 PD와 작가의 집필 루프, 그리고 집필 후 편집 루프를 AI로 대체하는 것이다.\n최종 지향점은 인간을 생산 공정에서 배제하는 것이다.', {
+            x: 0.85, y: 2.02, w: 11.5, h: 0.72,
+            fontFace: FONT.body, fontSize: 18, bold: true, color: C.ink, align: 'center', valign: 'mid'
+        });
+        addTable(slide, [
+            [header('대체 대상'), header('기존 구조'), header('글도비 지향')],
+            [cell('집필 루프', { bold: true }), cell('PD와 작가가 기획과 집필을 나눈다'), cell('AI가 기획 조건을 읽고 원고를 생산한다', { bold: true, align: 'center' })],
+            [cell('편집 루프', { bold: true }), cell('인간 편집자가 검토하고 수정 지시를 준다'), cell('AI가 평가하고 수정 루프를 다시 돌린다', { bold: true, align: 'center' })],
+            [cell('품질 판정', { bold: true }), cell('인간이 최종 승인한다'), cell('AI가 판정을 맡고 인간은 과도기에만 남는다', { bold: true, align: 'center' })],
+            [cell('생산 확장', { bold: true }), cell('사람 수와 일정이 병목이 된다'), cell('API 예산과 운영 효율이 병목이 된다', { bold: true, align: 'center' })]
+        ], {
+            x: 0.6, y: 3.35, w: 12.0, h: 2.25
+        });
+        addCallout(slide, '핵심은 인간 보조가 아니라 인간 치환이다. 발표에서 이 목적을 흐리면 글도비의 존재 이유가 사라진다.', 0.6, 6.05, 12.0, 0.72, 'accent');
+
+        // Slide 2
+        slide = pptx.addSlide();
+        addChrome(slide, '목표 구조와 현재 상태', '지향은 인간 배제이고, 현재는 drift 때문에 과도기라는 점을 분리해서 본다', 2, total);
+        addTable(slide, [
+            [header('축'), header('최종 지향'), header('현재 상태')],
+            [cell('집필', { bold: true }), cell('AI가 기획안을 바탕으로 글을 쓴다', { bold: true, align: 'center' }), cell('초안 생산은 이미 AI가 담당 가능하다')],
+            [cell('평가', { bold: true }), cell('AI가 품질을 판정하고 수정 루프를 돌린다', { bold: true, align: 'center' }), cell('drift 때문에 human-in-the-loop가 아직 남아 있다')],
+            [cell('운영', { bold: true }), cell('회사 시스템이 생산과 로그를 통제한다', { bold: true, align: 'center' }), cell('Director와 운영자가 과도기 보정 역할을 맡는다')],
+            [cell('결론', { bold: true }), cell('인간 배제', { bold: true, color: C.accent, align: 'center' }), cell('현재는 완전 무인이 아니라 무인화로 가는 과도기다')]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.05
+        });
+        addCallout(slide, '의도를 숨길 필요는 없다. 지금 단계의 정확한 표현은 “인간 배제를 지향하지만, 현재는 drift 때문에 인간이 일부 남아 있는 상태”다.', 0.6, 5.72, 12.0, 1.02, 'green');
+
+        // Slide 3
+        slide = pptx.addSlide();
+        addChrome(slide, '생산 파이프라인', 'Stage 0-2-3-4를 거치며 AI가 설계, 생산, 평가를 수행한다', 3, total);
+        addTable(slide, [
+            [header('Stage'), header('입력'), header('출력'), header('역할')],
+            [cell('전처리', { bold: true }), cell('기획안'), cell('TR / BI JSON', { bold: true, align: 'center' }), cell('작품의 씨앗을 데이터 구조로 고정한다')],
+            [cell('Stage 0', { bold: true }), cell('TR / BI JSON'), cell('Bible + 장르/시점/문체 설정', { bold: true, align: 'center' }), cell('세계관과 작품 규칙을 정의한다')],
+            [cell('Stage 2', { bold: true }), cell('Bible'), cell('Arc', { bold: true, align: 'center' }), cell('2~6화 단위 이야기 배분을 설계한다')],
+            [cell('Stage 3', { bold: true }), cell('Arc'), cell('Blueprint', { bold: true, align: 'center' }), cell('화별 스켈레톤을 만든다')],
+            [cell('Stage 4', { bold: true }), cell('Blueprint'), cell('Manuscript', { bold: true, align: 'center' }), cell('실제 원고를 생성하고 심사한다')]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.45,
+            colW: [1.3, 2.5, 2.8, 5.4]
+        });
+        addCallout(slide, '중요한 건 단계가 많다는 사실이 아니라, 각 단계에 판정 게이트와 수정 루프가 붙어 있다는 점이다. 글도비는 단발 생성이 아니라 생산 라인이다.', 0.6, 6.0, 12.0, 0.78, 'accent');
+
+        // Slide 4
+        slide = pptx.addSlide();
+        addChrome(slide, '왜 사업 구조가 바뀌는가', '핵심은 품질 보조가 아니라 선인세, RS, IP 통제, 생산 스케일의 재편이다', 4, total);
+        addTable(slide, [
+            [header('비교 항목'), header('인간 포트폴리오'), header('글도비 운영'), header('의미')],
+            [cell('선인세'), cell('작품별로 선지급이 필요하다'), cell('선인세가 없다', { bold: true, color: C.green, align: 'center' }), cell('작가 섭외를 위한 선투입 비용이 빠진다')],
+            [cell('RS'), cell('매출 발생 후에도 배분이 계속 붙는다'), cell('RS가 없다', { bold: true, color: C.green, align: 'center' }), cell('성과가 나도 회사 밖으로 빠지는 몫이 줄어든다')],
+            [cell('IP 통제'), cell('권리와 협의 구조가 분산될 수 있다'), cell('IP 통제가 가능하다', { bold: true, color: C.green, align: 'center' }), cell('자산화와 후속 활용의 통제권이 높다')],
+            [cell('생산 병목'), cell('작품 수가 늘수록 사람 수와 일정이 병목이 된다'), cell('API 예산과 운영 효율이 병목이 된다', { bold: true, color: C.green, align: 'center' }), cell('생산량이 인력보다 시스템 예산에 연동된다')],
+            [cell('비용 구조'), cell('고정 인건비 + 선인세 + RS'), cell('API 중심 변동비', { bold: true, color: C.green, align: 'center' }), cell('비용 구조 자체가 다르게 설계된다')]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.65
+        });
+        addCallout(slide, '즉 글도비는 “작가를 더 잘 돕는 도구”가 아니라, 인간 집필 구조를 API 비용 중심 구조로 갈아타게 만드는 인프라다.', 0.6, 6.22, 12.0, 0.58, 'green');
+
+        // Slide 5
+        slide = pptx.addSlide();
+        addChrome(slide, '인간 포트폴리오도 안전하지 않다', 'AI 비용만 과하게 위험해 보이는 착시는 인간 시장의 편차를 빼고 보기 때문에 생긴다', 5, total);
+        addTable(slide, [
+            [header('관찰'), header('숫자'), header('뜻')],
+            [cell('작품당 12개월 합산 P50', { bold: true }), cell('1,327만 원', { bold: true, align: 'center' }), cell('인간 시장 중앙값도 절대적으로 높은 수준은 아니다')],
+            [cell('하위 50% 매출 점유율', { bold: true }), cell('5.9%', { bold: true, color: C.red, align: 'center' }), cell('절반의 작품이 전체 매출의 5.9%만 차지한다')],
+            [cell('12개월 1,000만 미만 작품 수', { bold: true }), cell('74/160작품 (46%)', { bold: true, align: 'center' }), cell('절반 가까이가 12개월 1,000만 미만이다')],
+            [cell('선인세 500만 + 작가 몫 70% 미회수', { bold: true }), cell('60/160작품 (38%)', { bold: true, color: C.red, align: 'center' }), cell('인간 포트폴리오도 선인세 미회수 위험이 적지 않다')],
+            [cell('핵심 해석', { bold: true }), cell('인간도 원래 안전하지 않다', { bold: true, color: C.accent, align: 'center' }), cell('AI 운영비만 유독 위험하다고 보면 비교 기준이 왜곡된다')]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.55
+        });
+        addCallout(slide, '이 슬라이드의 요지는 인간보다 AI가 무조건 낫다는 주장이 아니라, 인간 구조 역시 이미 미회수와 편차가 큰 시장이라는 점을 먼저 인정하자는 것이다.', 0.6, 6.08, 12.0, 0.72, 'accent');
+
+        // Slide 6
+        slide = pptx.addSlide();
+        addChrome(slide, '3,000만 원을 어떻게 볼 것인가', '매출 약속이 아니라 손실 상한이 고정된 포트폴리오 실험으로 읽는 게 맞다', 6, total);
+        addTable(slide, [
+            [header('기준'), header('숫자'), header('해석')],
+            [cell('이번 단계 손실 상한', { bold: true }), cell('최대 3,000만 원', { bold: true, color: C.accent, align: 'center' }), cell('잃을 수 있는 최대 금액을 먼저 고정한다')],
+            [cell('보수 최소선', { bold: true }), cell('7작품', { bold: true, align: 'center' }), cell('P25 기준으로 3,000만 원을 넘기는 구간이다')],
+            [cell('권고 기준선', { bold: true }), cell('10작품 / 회수 확률 91.7%', { bold: true, color: C.green, align: 'center' }), cell('같은 비용으로 포트폴리오 효과를 설명하기 좋은 구간이다')],
+            [cell('고확률 기준선', { bold: true }), cell('12작품 / 회수 확률 96.1%', { bold: true, color: C.green, align: 'center' }), cell('손실 가능성을 더 낮추는 구간이다')],
+            [cell('인간 작가 대안', { bold: true }), cell('6작품 × 선인세 500만', { bold: true, align: 'center' }), cell('작품 수가 줄고 RS가 붙는 구조라 포트폴리오 이점이 작아진다')]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.45
+        });
+        addCallout(slide, '핵심은 “얼마 벌겠다”가 아니라 “최대 얼마까지 잃을 수 있고, 그 돈으로 인간 구조 대신 AI 구조를 검증할 가치가 있느냐”다.', 0.6, 6.0, 12.0, 0.78, 'green');
+
+        // Slide 7
+        slide = pptx.addSlide();
+        addChrome(slide, '기술적으로 어디까지 왔는가', 'AI가 쓰고 AI가 평가하는 구조는 이미 어느 수준까지는 작동하고 있다', 7, total);
+        addTable(slide, [
+            [header('항목'), header('현재 상태'), header('의미')],
+            [cell('파이프라인', { bold: true }), cell('Stage 0 → 2 → 3 → 4 완성', { bold: true, align: 'center' }), cell('기획, 설계, 원고 생산이 계층 구조로 분리되어 있다')],
+            [cell('실 생산 검증', { bold: true }), cell('투자물·무협 14개 에피소드 무인 연속 생산 확인', { bold: true, align: 'center' }), cell('end-to-end 운용이 완전히 가정 단계는 아니다')],
+            [cell('테스트', { bold: true }), cell('3,170개 케이스 통과', { bold: true, color: C.green, align: 'center' }), cell('코드 레벨 검증 표면이 충분히 크다')],
+            [cell('전문화', { bold: true }), cell('47개 LLM 에이전트 / 10개 장르 지원', { bold: true, align: 'center' }), cell('집필 보조가 아니라 운영 시스템 형태다')],
+            [cell('품질 통제', { bold: true }), cell('6-Tier 검증 + 7단계 Advisory Chain', { bold: true, align: 'center' }), cell('AI가 쓰고 AI가 평가하는 구조를 지탱하는 장치다')]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.55
+        });
+        addCallout(slide, '정리하면 글도비는 “나중에 만들 시스템”이 아니라 이미 돌아가는 구조다. 지금 남아 있는 문제는 존재 여부가 아니라 drift와 하드닝 수준이다.', 0.6, 6.08, 12.0, 0.72, 'accent');
+
+        // Slide 8
+        slide = pptx.addSlide();
+        addChrome(slide, '운영 전환 전에 잠가야 할 것', '보안 이슈는 부가 논점이 아니라 회사 체계 전환 전에 잠가야 할 control plane 문제다', 8, total);
+        addTable(slide, [
+            [header('리스크'), header('현재 포인트'), header('대응 방향')],
+            [cell('Localhost bridge', { bold: true }), cell('bridge 인증과 권한 범위가 약하면 내부 운영형이어도 노출면이 된다'), cell('로컬 IPC 또는 세션 토큰 기반으로 한정한다', { bold: true, align: 'center' })],
+            [cell('WebSocket', { bold: true }), cell('전역 이벤트 노출은 다른 실행과 로그를 섞을 수 있다'), cell('run_id 또는 세션 단위로 scope를 분리한다', { bold: true, align: 'center' })],
+            [cell('자격증명', { bold: true }), cell('settings.json 평문 키 저장은 로컬 탈취면을 넓힌다'), cell('credential store 또는 service account로 옮긴다', { bold: true, align: 'center' })],
+            [cell('운영 단말', { bold: true }), cell('원고, 판정 사유, 로그가 남기 때문에 단말 통제가 약하면 그대로 노출된다'), cell('계정 분리, 디스크 암호화, 최소 로그 보관으로 잠근다', { bold: true, align: 'center' })]
+        ], {
+            x: 0.6, y: 1.45, w: 12.0, h: 4.25
+        });
+        addCallout(slide, '오늘의 판단 포인트는 셋이다. 인간 집필 구조를 AI 생산 구조로 치환할 것인지, 3,000만 원 상한 안에서 이를 검증할 것인지, 그리고 그 전에 control plane 보안을 잠글 것인지다.', 0.6, 5.82, 12.0, 0.98, 'green');
+
+        pptx.writeFile({ fileName: 'Geuldobi_AI_Production_Briefing.pptx' });
+    }
+
+    renderPreview();
+    </script>
+</body>
+</html>
