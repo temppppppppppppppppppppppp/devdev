@@ -1,0 +1,185 @@
+{
+  "document_type": "bounded_survey_evidence",
+  "topic": "0_0 stage234 cross-stage vocabulary and source-of-truth matrix",
+  "date": "2026-04-02",
+  "baseline_commit": "c5c5180bd3493bced341e21f29abb754a163de56",
+  "baseline_dirty_summary": [
+    "config/models.yaml modified",
+    "active/temp roadmap mirrors modified",
+    "docs/temp/queue-state.json modified",
+    "canary_0_0_stage34_arc2_fixpack_r1 runtime artifacts modified",
+    "stage2/stage3/stage4 survey bundles and matrix lane drafts untracked"
+  ],
+  "source_lane_docs": [
+    "docs/2026-04-02/0_0-stage234-vocab-matrix-lane1-term-inventory-draft.md",
+    "docs/2026-04-02/0_0-stage234-vocab-matrix-lane2-owner-strength-draft.md",
+    "docs/2026-04-02/0_0-stage234-vocab-matrix-lane3-transport-drift-draft.md",
+    "docs/2026-04-02/0_0-stage234-vocab-matrix-lane4-vertical-slice-draft.md"
+  ],
+  "related_baselines": [
+    "docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md",
+    "docs/2026-04-02/0_0-stage3-static-global-bounded-survey.md",
+    "docs/2026-04-02/0_0-stage4-consumer-finalization-global-bounded-survey.md"
+  ],
+  "hard_conclusions": [
+    "The system is cross-stage-vocabulary-drift heavy rather than missing concepts outright.",
+    "The most expensive boundary is Stage3->Stage4 because constraint hierarchy is lost and Stage4 rebuilds authority independently.",
+    "Stage4 has the worst owner split: final_state_updates, actual_truth, and world_state persist overlapping truth without one explicit reconciliation owner.",
+    "fix_scope is a multi-owner concept split across Director, Validator, and InterviewRound/runtime.",
+    "Several Stage2 fields die too early at the Stage2->Stage3 boundary.",
+    "The evidence supports contract normalization first, owner consolidation second, and Stage3 compiler/substep compression as a long-term direction."
+  ],
+  "shared_canonical_vocabulary_first": {
+    "authority_strength_family": [
+      "IMMUTABLE",
+      "HARD CONSTRAINT",
+      "MISSION",
+      "CARRYOVER",
+      "ADVISORY"
+    ],
+    "episode_mission_family": [
+      "tactical_doc",
+      "arc_focus",
+      "arc_tactical"
+    ],
+    "post_finalization_truth_family": [
+      "final_state_updates",
+      "actual_truth",
+      "world_state"
+    ],
+    "repair_contract_family": [
+      "fix_pack",
+      "fix_scope",
+      "authoritative_fix_scope",
+      "repair_scope",
+      "post_select_conflict"
+    ]
+  },
+  "stage4_terms_to_enter_shared_matrix_now": [
+    "fix_pack",
+    "fix_scope",
+    "authoritative_fix_scope",
+    "post_select_conflict",
+    "final_state_updates",
+    "actual_truth",
+    "world_state",
+    "active_pressure_vectors"
+  ],
+  "major_cost_mismatches": [
+    {
+      "concept": "constraint_summary family",
+      "path": [
+        "Stage2.constraint_summary",
+        "Stage3.arc_constraint_summary",
+        "Stage4 Tier-0 hard prohibition prose"
+      ],
+      "drift_type": [
+        "rename",
+        "strength inversion",
+        "structure-to-prose"
+      ]
+    },
+    {
+      "concept": "episode mission family",
+      "path": [
+        "Stage2.tactical_doc",
+        "Stage3.arc_focus",
+        "Stage4.arc_tactical"
+      ],
+      "drift_type": [
+        "rename",
+        "repackaging"
+      ]
+    },
+    {
+      "concept": "episode truth family",
+      "path": [
+        "Stage2.state_changes",
+        "Stage3.state_changes_summary",
+        "Stage4.final_state_updates",
+        "Stage4.actual_truth",
+        "Stage4.world_state"
+      ],
+      "drift_type": [
+        "compression",
+        "owner split",
+        "rename"
+      ]
+    }
+  ],
+  "dead_or_low_signal_stage2_fields": [
+    "beat_sequence",
+    "hybrid_composition",
+    "semantic_carryover",
+    "status_shadow",
+    "vol_strategy",
+    "episode_details"
+  ],
+  "highest_cost_boundary": {
+    "boundary": "Stage3->Stage4",
+    "reason": "Stage3 constraint hierarchy does not survive as machine-readable contract; Stage4 rebuilds authority from persistent stores and prose blocks."
+  },
+  "key_owner_collisions": [
+    {
+      "concept": "fix_scope",
+      "owners": [
+        "Director",
+        "Validator",
+        "InterviewRound/runtime"
+      ],
+      "evidence": [
+        "docs/2026-04-02/0_0-stage234-vocab-matrix-lane2-owner-strength-draft.md",
+        "docs/2026-04-02/0_0-stage234-vocab-matrix-lane4-vertical-slice-draft.md"
+      ]
+    },
+    {
+      "concept": "post-pass state truth",
+      "owners": [
+        "Director.final_state_updates",
+        "Manager.actual_truth",
+        "Python.world_state"
+      ],
+      "evidence": [
+        "docs/2026-04-02/0_0-stage234-vocab-matrix-lane2-owner-strength-draft.md",
+        "docs/2026-04-02/0_0-stage234-vocab-matrix-lane3-transport-drift-draft.md",
+        "docs/2026-04-02/0_0-stage234-vocab-matrix-lane4-vertical-slice-draft.md"
+      ]
+    },
+    {
+      "concept": "active_pressure_vectors",
+      "owners": [
+        "blueprint-derived Python builder",
+        "Manager actual_truth carrier"
+      ],
+      "evidence": [
+        "docs/2026-04-02/0_0-stage234-vocab-matrix-lane2-owner-strength-draft.md",
+        "docs/2026-04-02/0_0-stage234-vocab-matrix-lane3-transport-drift-draft.md"
+      ]
+    }
+  ],
+  "representative_vertical_slices": [
+    {
+      "slice": "0_0 main ep2",
+      "proof": "live runtime shows fix_scope, authoritative_fix_scope, and repair_scope split for one repair-routing concept"
+    },
+    {
+      "slice": "0_0 main ep5/ep6",
+      "proof": "gate_semantics and fix_pack degrade under retry pressure, removing structure when it is most needed"
+    },
+    {
+      "slice": "canary_0_0_stage34_arc2_fixpack_r1 ep2/ep3",
+      "proof": "scope_origin and compound pathology fingerprints explicitly encode the split-truth/vocabulary gap"
+    },
+    {
+      "slice": "0_1 canary ep9/ep13",
+      "proof": "cross-project vocabulary shape is stable enough to treat this as substrate-level rather than project-local"
+    }
+  ],
+  "long_term_direction": [
+    "contract normalization",
+    "owner consolidation",
+    "Stage3 compiler/substep compression"
+  ],
+  "survey_verdict": "matrix-needed-now",
+  "confidence": 0.96
+}

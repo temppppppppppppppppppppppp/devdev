@@ -8393,6 +8393,45 @@ class TestOperatorParityAdvisoryFullSurface:
         # Verify no truncation on found_in_ms
         assert long_found in joined
 
+    def test_npc_drift_persists_structured_relation_tag_metadata(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        drift_mock = MagicMock()
+        drift_mock.check.return_value = [
+            {
+                "npc": "한정호",
+                "field": "relation_to_protag",
+                "expected": "집착100/오해-80",
+                "found_in_ms": "한정호는 주인공을 무덤덤한 거래 상대로만 대했다",
+                "drift_subtype": "relation_tag_semantic",
+                "target_kind": "local_phrase",
+                "expected_relation_axes": ["집착100", "오해-80"],
+            }
+        ]
+
+        ws_mock = MagicMock()
+        ws_mock.get_npc_role_snapshot.return_value = {"한정호": {}}
+        ctx.world_state = ws_mock
+
+        with patch(
+            "modules.core.npc_drift_advisor.NpcDriftAdvisor",
+            return_value=drift_mock,
+        ):
+            result = ir._advisory_npc_drift(
+                candidates=[{"manuscript": "원고"}],
+                validation_results=[{}],
+                next_ep=2,
+            )
+
+        assert result
+        cached = ir._last_advisory_metadata["npc_drift"][0]
+        assert cached["npc"] == "한정호"
+        assert cached["drift_subtype"] == "relation_tag_semantic"
+        assert cached["target_kind"] == "local_phrase"
+        assert cached["_cand_idx"] == 0
+        assert cached["expected_relation_axes"] == ["집착100", "오해-80"]
+
     def test_numeric_consistency_returns_all_items_full_text(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)

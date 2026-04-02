@@ -162,6 +162,21 @@ class TestFormatting:
         text = advisor._format_snapshot_for_prompt(sample_snapshots, ["이무영"])
         assert "weapon=창" in text
 
+    def test_relation_tag_attr_is_annotated_as_semantic_packet(self):
+        advisor = NpcDriftAdvisor()
+        snapshots = {
+            "한정호": {
+                "role_at_intro": "PB",
+                "first_seen_ep": 2,
+                "known_attrs": {"relation_to_protag": {"value": "집착100/오해-80", "changed_ep": 2}},
+            }
+        }
+
+        text = advisor._format_snapshot_for_prompt(snapshots, ["한정호"])
+
+        assert "집착100/오해-80" in text
+        assert "압축 관계 태그" in text
+
     def test_check_caps_target_count_at_eight(self):
         captured = {}
 
@@ -180,6 +195,28 @@ class TestFormatting:
         advisor.check(manuscript, snaps, ep_num=10)
 
         assert len(captured["targets"]) == 8
+
+
+class TestSemanticSubtypeMetadata:
+    def test_parse_relation_tag_drift_adds_local_fix_metadata(self):
+        response = json.dumps(
+            [
+                {
+                    "npc": "한정호",
+                    "field": "relation_to_protag",
+                    "expected": "집착100/오해-80",
+                    "found_in_ms": "한정호는 주인공을 별다른 감정 없는 거래 상대로만 대했다",
+                }
+            ],
+            ensure_ascii=False,
+        )
+
+        result = NpcDriftAdvisor._parse_llm_response(response, ep_num=2)
+
+        assert result[0]["drift_subtype"] == "relation_tag_semantic"
+        assert result[0]["target_kind"] == "local_phrase"
+        assert result[0]["expected_relation_axes"] == ["집착100", "오해-80"]
+        assert "literal 숫자/태그 재현은 요구하지 않는다" in result[0]["semantic_local_fix_hint"]
 
 
 # ═══════════════════════════════════════════════════════════════
