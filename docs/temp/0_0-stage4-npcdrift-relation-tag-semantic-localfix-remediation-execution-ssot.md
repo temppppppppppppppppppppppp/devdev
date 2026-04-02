@@ -8,7 +8,7 @@ Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: models config changed, active Stage4 docs/tests/code deltas, temp roadmap/queue active, 2026-04-02 survey bundles present`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `relation-tag semantic bridge and zero-to-local fix synthesis landed; runtime proof still pending`
+- Resume Drift Summary: `relation-tag semantic bridge and zero-to-local fix synthesis landed; runtime proof still pending, but fresh full run elevated flashback continuity as the higher-authority immediate child seam`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-npcdrift-relation-tag-local-fix-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-episode-bounded-canary-runtime-audit.md`
@@ -30,7 +30,7 @@ The next bounded Stage4 lane should target one concrete ep2 blocker:
 - `NpcDriftAdvisor` compares manuscript prose against that compressed expectation without a semantic-expansion bridge
 - when drift escalates, runtime cannot synthesize a fresh local `fix_pack` from advisory-only relation-tag evidence
 
-This is not a Stage2 issue, not a Stage3 issue, and no longer a FlashbackVerifier issue.
+This is not a Stage2 issue, not a Stage3 issue, and no longer the highest-authority immediate Stage4 blocker after the fresh full run.
 
 It is a bounded `Stage4 NpcDrift semantic-equivalence + local-fix contract` lane.
 
@@ -161,10 +161,10 @@ Goal:
 
 - temp status: `partial`
 - cleanup condition:
-  - keep the temp mirror while this remains the direct active child lane under the aggregate Stage4 consumer-contract wave
+  - keep the temp mirror while this remains an active bounded child lane under the aggregate Stage4 consumer-contract wave
 - roadmap dependency:
-  - this lane sits directly under `0_0-stage4-consumer-contract-normalization-remediation`
-  - it should execute before the older Stage4 substrate closure attempts because the latest canary isolated it as the live dominant blocker
+  - this lane now sits below `0_0-stage4-flashback-continuity-localfix-remediation` under `0_0-stage4-consumer-contract-normalization-remediation`
+  - it remains a live secondary Stage4 child seam because the contaminated Stage4-only canary still isolated a real bounded NpcDrift contract gap
 
 ## 9. 3-Pass Audit Record
 

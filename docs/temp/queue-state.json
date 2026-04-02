@@ -1,8 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-02T00:47:00.378654+00:00",
+  "generated_at": "2026-04-02T04:03:09.263260+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 12,
+  "active_item_count": 13,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
     "canonical_path": "docs/2026-04-01/active-temp-execution-roadmap.md",
@@ -76,6 +76,15 @@
       "topic": "0_0-stage4-fixpack-finalization-remediation",
       "temp_path": "docs/temp/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-02/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md",
+      "status": "completed",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "0_0-stage4-flashback-continuity-localfix-remediation",
+      "temp_path": "docs/temp/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md",
       "status": "completed",
       "depends_on": [],
       "mirror_present": true,

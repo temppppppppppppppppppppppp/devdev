@@ -139,11 +139,17 @@ class FlashbackVerifier:
             "같은 기기를 다른 표현으로 지칭한 경우(예: 휴대전화/폴더폰, 화면의 버튼/통화 버튼)는 그 자체만으로 모순이 아닙니다.\n"
             "구형 폴더폰도 화면과 물리 버튼을 함께 가질 수 있으므로, '화면의 버튼' 같은 표현만으로 스마트폰·터치스크린으로 과추론하지 마세요.\n"
             "기기 유형이나 물리 구조 변경은 본문에 명시적 근거가 있을 때만 모순으로 판정하세요.\n"
+            "가능하면 각 항목에 contradiction_subtype(location/movement/facing/dialogue/timeline/other)를 붙이세요.\n"
+            "local_fixable는 회상 장면 내부의 한두 문장 또는 짧은 구절을 고치면 정합성이 회복되는 경우에만 true로 두세요.\n"
+            "patch_anchor는 수정 대상 문장을 짧게 가리키는 표현으로, expected_truth는 prior authority가 기대하는 사실을 짧게 적으세요.\n"
+            "local_fix_hint는 국소 수정 지시를 한 줄로 적으세요.\n"
             "사실 관계가 틀린 회상만 지적하세요.\n\n"
             f"{formatted}\n\n"
             f"현재 {ep_num}화입니다.\n"
             "반드시 JSON 배열로만 답하세요. 오염이 없으면 빈 배열 []을 반환하세요.\n"
-            '형식: [{"marker": "해당 마커", "issue": "문제 설명", "referenced_context": "근거가 된 과거 맥락 발췌"}]\n'
+            '형식: [{"marker": "해당 마커", "issue": "문제 설명", "referenced_context": "근거가 된 과거 맥락 발췌", '
+            '"contradiction_subtype": "movement", "local_fixable": true, "patch_anchor": "회상 장면 동선 서술 문장", '
+            '"expected_truth": "과거에는 멈추지 않고 현관을 향했다", "local_fix_hint": "회상 장면의 멈춤/동선 묘사를 prior truth에 맞게 국소 수정"}]\n'
         )
 
         try:
@@ -154,6 +160,20 @@ class FlashbackVerifier:
         except Exception as e:
             logger.warning("[LM-E] FlashbackVerifier LLM 호출 실패 (비치명): %s", str(e)[:80])
             return []
+
+    @staticmethod
+    def _normalize_optional_bool(value):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)) and value in {0, 1}:
+            return bool(value)
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"true", "yes", "1"}:
+                return True
+            if normalized in {"false", "no", "0"}:
+                return False
+        return None
 
     @staticmethod
     def _parse_llm_response(response, ep_num=0):
@@ -187,15 +207,32 @@ class FlashbackVerifier:
             if not marker:
                 continue
             issue = item.get("issue", "")
-            results.append(
-                {
-                    "marker": marker,
-                    "issue": issue,
-                    "referenced_context": item.get("referenced_context", ""),
-                    "severity": "MAJOR",
-                    "check": "flashback_contamination",
-                    "text": f"[회상 오염] '{marker}': {issue}" if issue else f"[회상 오염] '{marker}'",
-                }
-            )
+            payload = {
+                "marker": marker,
+                "issue": issue,
+                "referenced_context": item.get("referenced_context", ""),
+                "severity": "MAJOR",
+                "check": "flashback_contamination",
+                "text": f"[회상 오염] '{marker}': {issue}" if issue else f"[회상 오염] '{marker}'",
+            }
+            contradiction_subtype = str(item.get("contradiction_subtype", "") or "").strip().lower()
+            if contradiction_subtype:
+                payload["contradiction_subtype"] = contradiction_subtype
+            local_fixable = FlashbackVerifier._normalize_optional_bool(item.get("local_fixable"))
+            if local_fixable is not None:
+                payload["local_fixable"] = local_fixable
+            patch_anchor = str(item.get("patch_anchor", "") or "").strip()
+            if patch_anchor:
+                payload["patch_anchor"] = patch_anchor
+            expected_truth = str(item.get("expected_truth", "") or "").strip()
+            if expected_truth:
+                payload["expected_truth"] = expected_truth
+            local_fix_hint = str(item.get("local_fix_hint", "") or "").strip()
+            if local_fix_hint:
+                payload["local_fix_hint"] = local_fix_hint
+            target_kind = str(item.get("target_kind", "") or "").strip()
+            if target_kind in {"local_phrase", "local_sentence"}:
+                payload["target_kind"] = target_kind
+            results.append(payload)
 
         return results
