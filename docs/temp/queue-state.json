@@ -1,14 +1,23 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-01T21:35:19.697356+00:00",
+  "generated_at": "2026-04-02T00:47:00.378654+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 7,
+  "active_item_count": 12,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
     "canonical_path": "docs/2026-04-01/active-temp-execution-roadmap.md",
     "status": "active"
   },
   "items": [
+    {
+      "topic": "0_0-stage2-contract-normalization-remediation",
+      "temp_path": "docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md",
+      "status": "in_progress",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
     {
       "topic": "0_0-stage2-stage3-stage4-readiness-remediation",
       "temp_path": "docs/temp/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md",
@@ -19,10 +28,37 @@
       "canonical_present": true
     },
     {
+      "topic": "0_0-stage234-cross-stage-contract-normalization-remediation",
+      "temp_path": "docs/temp/0_0-stage234-cross-stage-contract-normalization-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/0_0-stage234-cross-stage-contract-normalization-remediation-execution-ssot.md",
+      "status": "in_progress",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "0_0-stage3-contract-tightening-remediation",
+      "temp_path": "docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
       "topic": "0_0-stage4-canonical-entity-postselect-remediation",
       "temp_path": "docs/temp/0_0-stage4-canonical-entity-postselect-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-01/0_0-stage4-canonical-entity-postselect-remediation-execution-ssot.md",
       "status": "completed",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "0_0-stage4-consumer-contract-normalization-remediation",
+      "temp_path": "docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md",
+      "status": "in_progress",
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -40,6 +76,15 @@
       "topic": "0_0-stage4-fixpack-finalization-remediation",
       "temp_path": "docs/temp/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-02/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md",
+      "status": "completed",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation",
+      "temp_path": "docs/temp/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md",
       "status": "completed",
       "depends_on": [],
       "mirror_present": true,

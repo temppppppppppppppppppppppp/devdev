@@ -35,18 +35,18 @@ providers:
     # Prefix convention: "anthropic-vertex:claude-sonnet-4-6"
 
 agents:
-  analyst: "gemini-3.1-pro-preview"
+  analyst: "gemini-2.5-pro"
   manager: "gemini-2.5-flash"
-  chief_writer: "gemini-3.1-pro-preview"
-  blueprint_ensemble: "gemini-3.1-pro-preview"
-  three_phase_blueprint_generator: "gemini-3.1-pro-preview"
-  state_locked_arc_generator: "gemini-3.1-pro-preview"
+  chief_writer: "gemini-2.5-pro"
+  blueprint_ensemble: "gemini-2.5-pro"
+  three_phase_blueprint_generator: "gemini-2.5-pro"
+  state_locked_arc_generator: "gemini-2.5-pro"
   block_enricher: "gemini-2.5-flash"
   preflight_checker: "gemini-2.5-flash"
   state_extractor: "gemini-2.5-flash"
-  four_phase_arc_generator: "gemini-3.1-pro-preview"
-  continuity_inspector: "gemini-3.1-pro-preview"
-  director: "gemini-3.1-pro-preview"
+  four_phase_arc_generator: "gemini-2.5-pro"
+  continuity_inspector: "gemini-2.5-pro"
+  director: "gemini-2.5-pro"
   arc_corrector: "gemini-2.5-flash"
   arc_critic: "gemini-2.5-flash"
   consensus_validator: "gemini-2.5-flash"
@@ -68,14 +68,14 @@ fallback_chain:
 sub_components:
   four_phase_arc_generator:
     preflight: "gemini-2.5-flash"
-    ensemble: "gemini-3.1-pro-preview"
+    ensemble: "gemini-2.5-pro"
     validator: "gemini-2.5-flash"
   three_phase_blueprint_generator:
-    ensemble: "gemini-3.1-pro-preview"
+    ensemble: "gemini-2.5-pro"
     validator: "gemini-2.5-flash"
 
 # role_constants remain Gemini to limit blast radius outside the core agent map.
 role_constants:
-  pro_main: "gemini-3.1-pro-preview"
+  pro_main: "gemini-2.5-pro"
   flash_main: "gemini-2.5-flash"
-  emergency: "gemini-3.1-pro-preview"
+  emergency: "gemini-2.5-pro"

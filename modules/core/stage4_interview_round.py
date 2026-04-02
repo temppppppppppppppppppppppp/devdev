@@ -365,6 +365,7 @@ class Stage4InterviewRound:
         self.time_warnings = []
         self._last_advisory_summary = {}
         self._last_advisory_details: list[str] = []
+        self._last_advisory_metadata: dict[str, list[dict]] = {}
         self._last_retry_budget_axes: dict[str, str] = {}
         self._consecutive_empty_patches: int = 0  # [IFC] track consecutive empty patch rounds
         self.director_runtime = Stage4DirectorRuntime(self)
@@ -2010,17 +2011,108 @@ class Stage4InterviewRound:
             payload["target_kinds"] = list(fix_pack.get("target_kinds") or [])[:4]
         return payload
 
-    @classmethod
-    def _backfill_strong_advisory_fix_pack(cls, director_result: dict | None) -> dict:
+    @staticmethod
+    def _selected_candidate_index_for_fix_contract(director_result: dict | None) -> int | None:
+        if not isinstance(director_result, dict):
+            return None
+        selected = str(director_result.get("selected", "") or "").strip().upper()
+        if selected in {"A", "B", "C"}:
+            return ord(selected) - ord("A")
+        if selected.isdigit():
+            index = int(selected) - 1
+            return index if index >= 0 else None
+        return None
+
+    def _build_npc_drift_relation_tag_fix_pack(self, director_result: dict | None) -> dict:
+        if not isinstance(director_result, dict):
+            return {}
+        metadata = getattr(self, "_last_advisory_metadata", None) or {}
+        drift_items = metadata.get("npc_drift") or []
+        if not isinstance(drift_items, list) or not drift_items:
+            return {}
+        selected_idx = self._selected_candidate_index_for_fix_contract(director_result)
+        relevant: list[dict] = []
+        for item in drift_items:
+            if not isinstance(item, dict):
+                continue
+            if str(item.get("drift_subtype", "") or "").strip() != "relation_tag_semantic":
+                continue
+            cand_idx = item.get("_cand_idx")
+            if selected_idx is not None and cand_idx not in {None, selected_idx}:
+                continue
+            relevant.append(item)
+        if not relevant:
+            return {}
+
+        npc_labels: list[str] = []
+        axis_labels: list[str] = []
+        for item in relevant:
+            npc = str(item.get("npc", "") or "").strip()
+            if npc and npc not in npc_labels:
+                npc_labels.append(npc)
+            axes = [str(axis).strip() for axis in (item.get("expected_relation_axes") or []) if str(axis).strip()]
+            if npc and axes:
+                label = f"{npc}:{'/'.join(axes)}"
+                if label not in axis_labels:
+                    axis_labels.append(label)
+
+        target_suffix = f" ({', '.join(npc_labels[:2])})" if npc_labels else ""
+        evidence_summary = "runtime npc_drift relation-tag semantic backfill"
+        if axis_labels:
+            evidence_summary = f"{evidence_summary}: {'; '.join(axis_labels[:2])}"
+        return {
+            "patch_targets": [f"NPC relation_to_protag 관계 프레이밍 문장{target_suffix}"],
+            "must_fix": [
+                "relation_to_protag 압축 관계 태그와 의미적으로 어긋난 관계 표현을 canonical relation framing에 맞게 국소 수정"
+            ],
+            "do_not_regress": [
+                "압축 관계 태그 숫자/토큰을 원고에 그대로 삽입하지 말고 prose 의미 정렬만 수행"
+            ],
+            "success_condition": "NpcDrift relation_to_protag 경고가 사라지고 관계 프레이밍이 canonical relation tag 축과 의미적으로 합치한다",
+            "target_kind": "local_phrase",
+            "evidence_summary": evidence_summary,
+        }
+
+    def _backfill_strong_advisory_fix_pack(self, director_result: dict | None) -> dict:
         if not isinstance(director_result, dict):
             return {}
         escalation = director_result.get("strong_advisory_escalation")
         if not isinstance(escalation, dict):
-            return cls._normalize_fix_pack(director_result.get("fix_pack"))
-        fix_pack = cls._normalize_fix_pack(director_result.get("fix_pack"))
+            return self._normalize_fix_pack(director_result.get("fix_pack"))
+        fix_pack = self._normalize_fix_pack(director_result.get("fix_pack"))
+        target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
+        semantic_fix_pack = self._build_npc_drift_relation_tag_fix_pack(director_result)
+        if not fix_pack and semantic_fix_pack:
+            escalation["local_fix_contract_backfilled"] = True
+            escalation["backfilled_from"] = ["npc_drift_relation_tag_semantic"]
+            escalation["backfill_target_kind"] = semantic_fix_pack.get("target_kind", "")
+            return semantic_fix_pack
         if not fix_pack:
             return {}
-        target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
+        if target_kind == "scene_model":
+            return fix_pack
+        changed = False
+        if semantic_fix_pack:
+            if not fix_pack.get("target_kind"):
+                fix_pack["target_kind"] = semantic_fix_pack.get("target_kind", "")
+                target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
+                changed = True
+            if target_kind in {"entity_ref", "local_phrase", "local_sentence"}:
+                for key in ("patch_targets", "must_fix", "do_not_regress"):
+                    if not fix_pack.get(key) and semantic_fix_pack.get(key):
+                        fix_pack[key] = list(semantic_fix_pack.get(key) or [])
+                        changed = True
+                if not fix_pack.get("success_condition") and semantic_fix_pack.get("success_condition"):
+                    fix_pack["success_condition"] = str(semantic_fix_pack.get("success_condition", "") or "")
+                    changed = True
+                if semantic_fix_pack.get("evidence_summary"):
+                    existing_summary = str(fix_pack.get("evidence_summary", "") or "").strip()
+                    semantic_summary = str(semantic_fix_pack.get("evidence_summary", "") or "").strip()
+                    if semantic_summary and semantic_summary not in existing_summary:
+                        fix_pack["evidence_summary"] = (
+                            f"{existing_summary}; {semantic_summary}" if existing_summary else semantic_summary
+                        )
+                        changed = True
         if target_kind not in {"entity_ref", "local_phrase", "local_sentence"}:
             return fix_pack
         triggered = [
@@ -2052,7 +2144,6 @@ class Stage4InterviewRound:
                 "정보 상태 충돌을 일으킨 문장을 canonical information state에 맞게 국소 수정",
             ),
         }
-        changed = False
         if not fix_pack.get("patch_targets"):
             patch_targets: list[str] = []
             for key in triggered:
@@ -3062,6 +3153,7 @@ class Stage4InterviewRound:
         self._round_start_ts = time.monotonic()
         self._last_advisory_summary = {}
         self._last_advisory_details = []
+        self._last_advisory_metadata = {}
         self._last_strategy_budget = "full"
         self._last_strategy_count = 0
         self._capture_round_metrics_baseline()
@@ -5525,6 +5617,7 @@ class Stage4InterviewRound:
                         for _d in _drifts:
                             _d["_cand_idx"] = _ci
                         _drift_all.extend(_drifts)
+                        self._last_advisory_metadata.setdefault("npc_drift", []).extend(copy.deepcopy(_drifts))
                         if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
                             validation_results[_ci].setdefault("npc_drift_warnings", _drifts)
                 if _drift_all:

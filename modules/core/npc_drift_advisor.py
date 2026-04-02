@@ -15,6 +15,49 @@ logger = logging.getLogger(__name__)
 
 # 일반 명사 / 호칭 — NPC 이름 매칭에서 제외
 _EXCLUDE_WORDS = frozenset(["주인공", "적", "자신", "상대", "아군", "동료", "스승", "제자", "장로", "문주"])
+_RELATION_TAG_SPLIT_RE = re.compile(r"\s*/\s*")
+_RELATION_TAG_TOKEN_RE = re.compile(r"^[A-Za-z가-힣_]+[+-]{0,1}\d+$")
+
+
+def _extract_relation_tag_tokens(raw_value: object) -> list[str]:
+    text = str(raw_value or "").strip()
+    if not text or "/" not in text:
+        return []
+    tokens = [token.strip() for token in _RELATION_TAG_SPLIT_RE.split(text) if token.strip()]
+    if len(tokens) < 2:
+        return []
+    if not all(_RELATION_TAG_TOKEN_RE.fullmatch(token) for token in tokens):
+        return []
+    return tokens
+
+
+def _format_relation_attr_value_for_prompt(field: str, raw_value: object) -> str:
+    value = str(raw_value or "").strip()
+    if str(field or "").strip() != "relation_to_protag":
+        return value
+    tokens = _extract_relation_tag_tokens(value)
+    if not tokens:
+        return value
+    return (
+        f"{value} [압축 관계 태그; literal 숫자/태그 일치를 요구하지 말고 "
+        f"{', '.join(tokens)} 축과 부합하는 관계 프레이밍만 보라]"
+    )
+
+
+def _build_relation_tag_warning_metadata(field: object, expected: object) -> dict[str, object]:
+    normalized_field = str(field or "").strip()
+    tokens = _extract_relation_tag_tokens(expected)
+    if normalized_field != "relation_to_protag" or not tokens:
+        return {}
+    return {
+        "drift_subtype": "relation_tag_semantic",
+        "target_kind": "local_phrase",
+        "expected_relation_axes": tokens,
+        "semantic_local_fix_hint": (
+            "relation_to_protag 압축 관계 태그와 어긋난 관계 프레이밍만 국소 수정하고 "
+            "literal 숫자/태그 재현은 요구하지 않는다"
+        ),
+    }
 
 
 class NpcDriftAdvisor:
@@ -121,7 +164,7 @@ class NpcDriftAdvisor:
                 attr_strs = []
                 for k, v in list(known.items())[:12]:
                     val = v.get("value", v) if isinstance(v, dict) else str(v)
-                    attr_strs.append(f"{k}={val}")
+                    attr_strs.append(f"{k}={_format_relation_attr_value_for_prompt(k, val)}")
                 parts.append(f"속성: {', '.join(attr_strs)}")
             lines.append(" / ".join(parts))
         return "\n".join(lines)
@@ -139,6 +182,8 @@ class NpcDriftAdvisor:
             "부상 상태(injury), 현재 위치(location), 영구 부상(permanent_injuries), "
             "지식시대(knowledge_era), 전문영역(expertise_domain), 비밀 인지(secrets_known), "
             "이중 정체(dual_identity) 등.\n"
+            "relation_to_protag가 '집착100/오해-80'처럼 압축 관계 태그로 주어지면 "
+            "literal 숫자/태그 재현은 요구하지 말고, 관계 프레이밍이 그 축과 명백히 반대일 때만 표류로 지적하세요.\n"
             "서사적 변화(성장·부상·전직 등 작중 이유가 있는 변화)는 표류가 아닙니다.\n"
             "설명 없이 속성이 바뀐 것만 지적하세요.\n\n"
             f"[NPC authoritative 속성]\n{snapshot_text}\n\n"
@@ -200,5 +245,8 @@ class NpcDriftAdvisor:
                     "text": f"[NPC 표류] {npc}: {field} (원고: {found})" if found else f"[NPC 표류] {npc}: {field}",
                 }
             )
+            metadata = _build_relation_tag_warning_metadata(field, item.get("expected", ""))
+            if metadata:
+                results[-1].update(metadata)
 
         return results

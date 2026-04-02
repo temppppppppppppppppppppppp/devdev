@@ -1,0 +1,83 @@
+{
+  "document_type": "bounded_survey_evidence",
+  "topic": "0_0 stage4 npcdrift relation tag local fix seam",
+  "date": "2026-04-02",
+  "baseline_commit": "c5c5180bd3493bced341e21f29abb754a163de56",
+  "runtime_anchor_docs": [
+    "docs/2026-04-02/0_0-stage4-episode-bounded-canary-runtime-audit.md",
+    "docs/2026-04-02/0_0-stage4-episode-bounded-canary-runtime-evidence.json"
+  ],
+  "hard_conclusions": [
+    "The compressed relation tag originates from Stage4 post-pass relationship synthesis, not from prompt accident.",
+    "NpcDrift compares manuscript prose against authoritative snapshots that include the raw compressed relation_to_protag tag, without a semantic-expansion layer.",
+    "All NpcDrift advisories are treated as tier-2 strong advisories with no relation-tag subtype split.",
+    "Strong-advisory fix-pack backfill cannot synthesize a fresh local fix_pack when director_result.fix_pack is empty.",
+    "The ep2 canary failure pattern matches this code path exactly: raw tag -> NpcDrift -> strong advisory escalation -> no local fix contract -> REJECT."
+  ],
+  "runtime_evidence": {
+    "ep2_rounds": 7,
+    "director_pass_rounds": 6,
+    "gate_distribution": {
+      "strong_advisory_escalation_non_local_fix": 5,
+      "continuity_firewall": 1,
+      "post_select_conflict": 1
+    },
+    "flashback": {
+      "resolved_as_dominant_blocker": true,
+      "detail": "Flashback fired only in R0-R2 and was explicitly dismissed by Director; silent from R3 onward."
+    },
+    "npc_drift": {
+      "entity": "한정호",
+      "expected_relation_tag": "집착100/오해-80",
+      "dominant_blocker": true
+    }
+  },
+  "code_evidence": {
+    "compressed_tag_generation": [
+      "modules/core/stage4_post_pass_runtime.py:691",
+      "modules/core/stage4_post_pass_runtime.py:694"
+    ],
+    "world_state_authoritative_storage": [
+      "modules/core/world_state.py:236",
+      "modules/core/world_state.py:246",
+      "modules/core/world_state.py:337"
+    ],
+    "npc_drift_prompt_path": [
+      "modules/core/npc_drift_advisor.py:30",
+      "modules/core/npc_drift_advisor.py:104",
+      "modules/core/npc_drift_advisor.py:138",
+      "modules/core/npc_drift_advisor.py:160"
+    ],
+    "stage4_npc_drift_advisory_path": [
+      "modules/core/stage4_interview_round.py:5445",
+      "modules/core/stage4_interview_round.py:5450",
+      "modules/core/stage4_interview_round.py:5501"
+    ],
+    "strong_advisory_classification_and_gate": [
+      "modules/core/stage4_interview_round.py:1698",
+      "modules/core/stage4_interview_round.py:1702",
+      "modules/core/stage4_interview_round.py:1935",
+      "modules/core/stage4_interview_round.py:2014",
+      "modules/core/stage4_interview_round.py:2209",
+      "modules/core/stage4_interview_round.py:2325"
+    ]
+  },
+  "root_cause_chain": [
+    "Stage4 post-pass converts karma_matrix into compressed relationship tag",
+    "world_state stores that tag as authoritative relation_to_protag",
+    "NpcDriftAdvisor asks the LLM to compare manuscript prose against that raw authoritative value",
+    "Stage4 treats NpcDrift as strong tier-2 advisory",
+    "strong-advisory repair contract evaluation requires a ready local fix_pack",
+    "backfill logic cannot synthesize a new fix_pack when none exists",
+    "gate basis becomes strong_advisory_escalation_non_local_fix"
+  ],
+  "bounded_future_wave": {
+    "suggested_topic": "0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation",
+    "scope": [
+      "relation_to_protag compressed-tag subtype handling",
+      "npc_drift subtype-aware strong-advisory policy",
+      "zero-to-local-fix synthesis for this subtype only"
+    ]
+  },
+  "confidence": 0.96
+}
