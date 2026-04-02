@@ -1,0 +1,198 @@
+{
+  "generated_at": "2026-04-02T00:02:47.126439+00:00",
+  "title": "매지컬 써전(강산)",
+  "title_dir_name": "매지컬 써전(강산)",
+  "source_title_dir": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)",
+  "ssot_dir": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고",
+  "ssot_rule": "prefer-largest-epub-subdir",
+  "episode_source_dir": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\epub",
+  "episode_source_rule": "prefer-explicit-epub-subdir",
+  "total_ssot_epubs": 494,
+  "current_episode_min": 1,
+  "current_episode_max": 494,
+  "episode_count_mismatch_note": "bibliography says total 452 episodes, but current canonical EPUB set runs to 494 episodes",
+  "sample_count": 10,
+  "sample_strategy": "opening-anchor(1,2,3)+spread(min_later_episode=10)",
+  "bibliography_source": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\기타\\매지컬 써전(2020년) 서지정보.txt",
+  "bibliography": {
+    "title": null,
+    "author": "강산(江山)",
+    "isbn": "979-11-369-0835-3/9791136908353/",
+    "total_episodes": 452,
+    "free_episodes": "25화(1권)",
+    "description": "최고의 써전이라 칭송받는 외과의사 차성 무조건 살려야 한다는 강박만큼이나 경이로운 수술 실력과 환자 생존률을 자랑한다. 그러던 어느 날, 사고로 의식을 잃은 그는 다른 세계에서 눈을 뜨게 되는데....... 마력으로 사람을 치유하는 세계에서도 차성의 활약은 이어진다!",
+    "raw_excerpt": "매지컬 써전 isbn 979-11-369-0835-3/9791136908353/\n작품 소개 :\n최고의 써전이라 칭송받는 외과의사 차성\n무조건 살려야 한다는 강박만큼이나 경이로운 수술 실력과 환자 생존률을 자랑한다.\n그러던 어느 날, 사고로 의식을 잃은 그는 다른 세계에서 눈을 뜨게 되는데.......\n마력으로 사람을 치유하는 세계에서도 차성의 활약은 이어진다!\n작가명: 강산(江山)\n총 452화\n무료 25화(1권)"
+  },
+  "samples": [
+    {
+      "episode": 1,
+      "reason": "opening-anchor",
+      "source_epub": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\epub\\매지컬 써전_0001.epub",
+      "source_epub_name": "매지컬 써전_0001.epub",
+      "output_file": "samples/ep0001.txt",
+      "char_count": 3686,
+      "line_count": 181,
+      "text_hash": "294c91dbdb446cb9fffb1721d0aa8612a7018461ed50c9384a118e6a3ebc8ac8",
+      "content_entries": [
+        "OEBPS/Text/chapter_1.xhtml"
+      ],
+      "skipped_entries": [
+        "OEBPS/Text/coverpage.xhtml:empty",
+        "OEBPS/Text/copyright.xhtml:probable-front-matter"
+      ]
+    },
+    {
+      "episode": 2,
+      "reason": "opening-anchor",
+      "source_epub": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\epub\\매지컬 써전_0002.epub",
+      "source_epub_name": "매지컬 써전_0002.epub",
+      "output_file": "samples/ep0002.txt",
+      "char_count": 3863,
+      "line_count": 219,
+      "text_hash": "3d4ef9f21bae712e98c920a24fd61f009fc880fdb5d5d1fdc08d44cc0af26243",
+      "content_entries": [
+        "OEBPS/Text/chapter_1.xhtml"
+      ],
+      "skipped_entries": [
+        "OEBPS/Text/coverpage.xhtml:empty",
+        "OEBPS/Text/copyright.xhtml:probable-front-matter"
+      ]
+    },
+    {
+      "episode": 3,
+      "reason": "opening-anchor",
+      "source_epub": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\epub\\매지컬 써전_0003.epub",
+      "source_epub_name": "매지컬 써전_0003.epub",
+      "output_file": "samples/ep0003.txt",
+      "char_count": 3859,
+      "line_count": 205,
+      "text_hash": "8accaaa14b34af74e811e524102fae079f6e5b47940e59038714bf64c50c445a",
+      "content_entries": [
+        "OEBPS/Text/chapter_1.xhtml"
+      ],
+      "skipped_entries": [
+        "OEBPS/Text/coverpage.xhtml:empty",
+        "OEBPS/Text/copyright.xhtml:probable-front-matter"
+      ]
+    },
+    {
+      "episode": 10,
+      "reason": "spread-sample",
+      "source_epub": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\epub\\매지컬 써전_0010.epub",
+      "source_epub_name": "매지컬 써전_0010.epub",
+      "output_file": "samples/ep0010.txt",
+      "char_count": 3805,
+      "line_count": 195,
+      "text_hash": "37705589cfdbe6b4dfe018a4720ae03958511e0ce81a76f5d27785eafaecd034",
+      "content_entries": [
+        "OEBPS/Text/chapter_1.xhtml"
+      ],
+      "skipped_entries": [
+        "OEBPS/Text/coverpage.xhtml:empty",
+        "OEBPS/Text/copyright.xhtml:probable-front-matter"
+      ]
+    },
+    {
+      "episode": 91,
+      "reason": "spread-sample",
+      "source_epub": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\epub\\매지컬 써전_0091.epub",
+      "source_epub_name": "매지컬 써전_0091.epub",
+      "output_file": "samples/ep0091.txt",
+      "char_count": 4927,
+      "line_count": 277,
+      "text_hash": "f3b1f8a42b631b4c978bce8ba3395507678964a4fa6afbbb75fb2093ac544583",
+      "content_entries": [
+        "OEBPS/Text/chapter_1.xhtml"
+      ],
+      "skipped_entries": [
+        "OEBPS/Text/coverpage.xhtml:empty",
+        "OEBPS/Text/copyright.xhtml:probable-front-matter"
+      ]
+    },
+    {
+      "episode": 171,
+      "reason": "spread-sample",
+      "source_epub": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\epub\\매지컬 써전_0171.epub",
+      "source_epub_name": "매지컬 써전_0171.epub",
+      "output_file": "samples/ep0171.txt",
+      "char_count": 5813,
+      "line_count": 325,
+      "text_hash": "723cc67e632688b049725edc7de845ce53f8268a39cfc0d3a5fd53a5a3aef14f",
+      "content_entries": [
+        "OEBPS/Text/chapter_1.xhtml"
+      ],
+      "skipped_entries": [
+        "OEBPS/Text/coverpage.xhtml:empty",
+        "OEBPS/Text/copyright.xhtml:probable-front-matter"
+      ]
+    },
+    {
+      "episode": 252,
+      "reason": "spread-sample",
+      "source_epub": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\epub\\매지컬 써전_0252.epub",
+      "source_epub_name": "매지컬 써전_0252.epub",
+      "output_file": "samples/ep0252.txt",
+      "char_count": 5450,
+      "line_count": 295,
+      "text_hash": "872bd7b95be200ae396759c8b1d9cfcb0fdc95ddbf685bbab797ba64cc1ffd5f",
+      "content_entries": [
+        "OEBPS/Text/chapter_1.xhtml"
+      ],
+      "skipped_entries": [
+        "OEBPS/Text/coverpage.xhtml:empty",
+        "OEBPS/Text/copyright.xhtml:probable-front-matter"
+      ]
+    },
+    {
+      "episode": 333,
+      "reason": "spread-sample",
+      "source_epub": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\epub\\매지컬 써전_0333.epub",
+      "source_epub_name": "매지컬 써전_0333.epub",
+      "output_file": "samples/ep0333.txt",
+      "char_count": 6057,
+      "line_count": 449,
+      "text_hash": "ab084bd14b1656c6c16c8485b07a4cf6aba38d237527b9c374928cb58248a995",
+      "content_entries": [
+        "OEBPS/Text/chapter_1.xhtml"
+      ],
+      "skipped_entries": [
+        "OEBPS/Text/coverpage.xhtml:empty",
+        "OEBPS/Text/copyright.xhtml:probable-front-matter"
+      ]
+    },
+    {
+      "episode": 413,
+      "reason": "spread-sample",
+      "source_epub": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\epub\\매지컬 써전_0413.epub",
+      "source_epub_name": "매지컬 써전_0413.epub",
+      "output_file": "samples/ep0413.txt",
+      "char_count": 5019,
+      "line_count": 365,
+      "text_hash": "1a1a0d51e13b34d8c74a9fd3bd1e150851cf05f3dfcca83be2ab392285173900",
+      "content_entries": [
+        "OEBPS/Text/chapter_1.xhtml"
+      ],
+      "skipped_entries": [
+        "OEBPS/Text/coverpage.xhtml:empty",
+        "OEBPS/Text/copyright.xhtml:probable-front-matter"
+      ]
+    },
+    {
+      "episode": 494,
+      "reason": "spread-sample",
+      "source_epub": "\\\\172.16.10.120\\소설사업부\\판무팀_ssot\\02_연재\\매지컬 써전(강산)\\1_원고\\epub\\매지컬 써전_0494.epub",
+      "source_epub_name": "매지컬 써전_0494.epub",
+      "output_file": "samples/ep0494.txt",
+      "char_count": 5939,
+      "line_count": 443,
+      "text_hash": "339b968353ec1bf47d1dde08307f4299d85858cf12e587299462eaf472a51cf7",
+      "content_entries": [
+        "OEBPS/Text/chapter_1.xhtml"
+      ],
+      "skipped_entries": [
+        "OEBPS/Text/coverpage.xhtml:empty",
+        "OEBPS/Text/copyright.xhtml:probable-front-matter"
+      ]
+    }
+  ]
+}
