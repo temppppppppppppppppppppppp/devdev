@@ -3,7 +3,6 @@ from pathlib import Path
 
 from scripts import regression_validation_tiers as tiers
 
-
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = json.loads(
     (ROOT / "docs/implementation/regression-validation-tier-contract-v1.json").read_text(encoding="utf-8")
@@ -25,8 +24,10 @@ def test_mutation_boundaries_are_labeled_on_smoke_and_canary_entrypoints():
         "scripts/run_stage2_smoke.py": 'VALIDATION_TIER = FOCUSED_MUTATION',
         "scripts/run_stage3_smoke.py": 'VALIDATION_TIER = FOCUSED_MUTATION',
         "scripts/run_stage4_smoke.py": 'VALIDATION_TIER = FOCUSED_MUTATION',
+        "scripts/run_stage3_canary.py": 'VALIDATION_TIER = FULL_CANARY_PROOF',
         "scripts/run_stage4_canary.py": 'VALIDATION_TIER = FULL_CANARY_PROOF',
         "scripts/run_stage34_canary.py": 'VALIDATION_TIER = FULL_CANARY_PROOF',
+        "scripts/run_stage34_ep_demo_canary.py": 'VALIDATION_TIER = FULL_CANARY_PROOF',
         "scripts/e2e_menu_smoke.ps1": "Validation tier: focused_mutation",
     }
 
