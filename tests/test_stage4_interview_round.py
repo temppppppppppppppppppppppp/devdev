@@ -8517,6 +8517,45 @@ class TestOperatorParityAdvisoryFullSurface:
         assert "marker_7" in joined
         assert long_issue in joined
 
+    def test_advisory_flashback_persists_structured_metadata(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        fb_mock = MagicMock()
+        fb_mock.detect_flashbacks.return_value = [{"text": "flashback_0"}]
+        fb_mock.check.return_value = [
+            {
+                "marker": "과거의",
+                "issue": "과거에는 멈추지 않았는데 회상에서는 멈춘다",
+                "contradiction_subtype": "movement",
+                "local_fixable": True,
+                "patch_anchor": "회상 장면 동선 서술 문장",
+                "expected_truth": "1화: 발걸음은 멈추지 않았다",
+            }
+        ]
+
+        memory_mock = MagicMock()
+        memory_mock.retrieve_high_res_context.return_value = "[제 1화] context"
+        memory_mock.fetch_manuscript_snippet.return_value = "snippet"
+        ctx.memory = memory_mock
+
+        with patch(
+            "modules.core.flashback_verifier.FlashbackVerifier",
+            return_value=fb_mock,
+        ):
+            result = ir._advisory_flashback(
+                candidates=[{"manuscript": "원고"}],
+                next_ep=6,
+            )
+
+        assert result
+        assert "flashback" in ir._last_advisory_metadata
+        item = ir._last_advisory_metadata["flashback"][0]
+        assert item["contradiction_subtype"] == "movement"
+        assert item["local_fixable"] is True
+        assert item["patch_anchor"] == "회상 장면 동선 서술 문장"
+        assert item["_cand_idx"] == 0
+
     def test_info_paradox_returns_all_items_full_text(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)

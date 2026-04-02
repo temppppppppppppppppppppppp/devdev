@@ -1,0 +1,75 @@
+{
+  "scope": "Fresh-run-discovered Stage4 ep2 flashback continuity contradiction plus missing local-fix-contract seam",
+  "baseline_commit": "5ef5f7ab2f2bbd36c2e8168cfd6d9b096caadc0f",
+  "baseline_dirty_summary": "dirty: 0_temp.txt modified, 0_tempdd.tz untracked",
+  "runtime_watch_evidence": [
+    {
+      "source": "0_temp.txt",
+      "lines": [865, 876],
+      "detail": "Round 7 advisory body is dominated by FlashbackVerifier continuity contradictions, not device-type inference."
+    },
+    {
+      "source": "0_temp.txt",
+      "lines": [886, 893],
+      "detail": "Director PASS(98) is downgraded by strong_advisory_escalation_non_local_fix."
+    },
+    {
+      "source": "0_temp.txt",
+      "lines": [931, 931],
+      "detail": "TF-PATCH-GATE reports non-ready fix_pack and routes the round into rewrite."
+    }
+  ],
+  "artifact_truth": [
+    {
+      "source": "projects/0_0/drafts/ep_0001.txt",
+      "lines": [91, 99],
+      "detail": "Episode 1 authoritative manuscript places the protagonist outside the study, using the phone in the corridor after leaving the study."
+    },
+    {
+      "source": "projects/0_0/plans/blueprints/blueprint_0002.txt",
+      "lines": [7, 7],
+      "detail": "Episode 2 blueprint starts with the phone call in the study-front corridor and preserves the immediate carryover."
+    }
+  ],
+  "code_findings": [
+    {
+      "path": "modules/core/flashback_verifier.py",
+      "lines": [45, 67],
+      "detail": "FlashbackVerifier returns only flat advisory items from check()."
+    },
+    {
+      "path": "modules/core/flashback_verifier.py",
+      "lines": [182, 199],
+      "detail": "Parsed payload keeps marker/issue/referenced_context/severity/check/text only; no local-fix metadata exists."
+    },
+    {
+      "path": "modules/core/stage4_interview_round.py",
+      "lines": [5674, 5736],
+      "detail": "_advisory_flashback converts FlashbackVerifier output into freeform advisory lines and does not persist structured metadata in _last_advisory_metadata."
+    },
+    {
+      "path": "modules/core/stage4_interview_round.py",
+      "lines": [2407, 2465],
+      "detail": "Strong advisory escalation requires a ready local fix contract; missing ready fix_pack forces strong_advisory_escalation_non_local_fix."
+    },
+    {
+      "path": "modules/core/stage4_interview_round.py",
+      "lines": [2076, 2175],
+      "detail": "Existing backfill logic has NpcDrift-specialized synthesis and generic fill-in templates, but no Flashback-specific zero-to-local fix synthesis path."
+    }
+  ],
+  "root_cause_chain": [
+    "Fresh run produces real flashback continuity contradictions against prior manuscript truth.",
+    "Flashback advisory is emitted as freeform text only.",
+    "Stage4 escalates Flashback as a tier-2 strong advisory.",
+    "No structured flashback metadata survives into fix_pack synthesis.",
+    "fix_pack remains missing or non-ready.",
+    "Stage4 downgrades PASS/PASS_WITH_FIX into strong_advisory_escalation_non_local_fix and reroutes to rewrite."
+  ],
+  "bounded_patch_points": [
+    "flashback_verifier.py: prompt + parser can emit optional subtype/local-fix metadata",
+    "stage4_interview_round.py:_advisory_flashback can persist structured metadata per candidate",
+    "stage4_interview_round.py:_backfill_strong_advisory_fix_pack can synthesize a bounded flashback local fix contract from zero"
+  ],
+  "next_lane": "0_0-stage4-flashback-continuity-localfix-remediation"
+}

@@ -2073,6 +2073,127 @@ class Stage4InterviewRound:
             "evidence_summary": evidence_summary,
         }
 
+    @staticmethod
+    def _infer_flashback_contradiction_subtype(item: dict | None) -> str:
+        if not isinstance(item, dict):
+            return ""
+        explicit = str(item.get("contradiction_subtype", "") or "").strip().lower()
+        if explicit in {"location", "movement", "facing", "dialogue", "timeline", "other"}:
+            return explicit
+        text = " ".join(
+            str(item.get(key, "") or "")
+            for key in ("issue", "patch_anchor", "expected_truth", "local_fix_hint", "referenced_context")
+        )
+        if any(token in text for token in ("현관문", "서재", "복도", "장소", "목적지")):
+            return "location"
+        if any(token in text for token in ("발걸음", "멈추", "따라", "향하", "걸어", "뒤돌아", "나아")):
+            return "movement"
+        if any(token in text for token in ("정면", "등 뒤", "마주", "대면", "내려다")):
+            return "facing"
+        if any(token in text for token in ("대답", "목소리", "말", "대화", "천천히 생각해보겠다")):
+            return "dialogue"
+        if any(token in text for token in ("직후", "이후", "먼저", "나중", "타임라인")):
+            return "timeline"
+        return "other"
+
+    def _build_flashback_continuity_fix_pack(self, director_result: dict | None) -> dict:
+        if not isinstance(director_result, dict):
+            return {}
+        metadata = getattr(self, "_last_advisory_metadata", None) or {}
+        flashback_items = metadata.get("flashback") or []
+        if not isinstance(flashback_items, list) or not flashback_items:
+            return {}
+        selected_idx = self._selected_candidate_index_for_fix_contract(director_result)
+        relevant: list[dict] = []
+        for item in flashback_items:
+            if not isinstance(item, dict):
+                continue
+            cand_idx = item.get("_cand_idx")
+            if selected_idx is not None and cand_idx not in {None, selected_idx}:
+                continue
+            local_fixable = item.get("local_fixable")
+            subtype = self._infer_flashback_contradiction_subtype(item)
+            if isinstance(local_fixable, bool):
+                if not local_fixable:
+                    continue
+            elif subtype not in {"location", "movement", "facing", "dialogue", "timeline"}:
+                continue
+            relevant.append(item)
+        if not relevant:
+            return {}
+
+        patch_targets: list[str] = []
+        must_fix: list[str] = []
+        do_not_regress: list[str] = []
+        subtype_labels: list[str] = []
+        target_kind = "local_sentence"
+        target_templates = {
+            "location": (
+                "회상 장면 장소/목적지 서술 문장",
+                "회상 장면의 장소 또는 목적지 묘사를 prior manuscript truth에 맞게 국소 수정",
+                "prior manuscript에 없는 회상 장소/목적지를 새로 추가하지 말 것",
+            ),
+            "movement": (
+                "회상 장면 동선/멈춤 서술 문장",
+                "회상 장면의 동선 또는 멈춤 여부를 prior manuscript truth에 맞게 국소 수정",
+                "prior manuscript의 동선/멈춤 여부를 뒤집는 새 행동을 추가하지 말 것",
+            ),
+            "facing": (
+                "회상 장면 대면/시선 서술 문장",
+                "회상 장면의 대면 여부와 시선 관계를 prior manuscript truth에 맞게 국소 수정",
+                "prior manuscript에 없는 대면/시선 전환을 추가하지 말 것",
+            ),
+            "dialogue": (
+                "회상 장면 대사/응답 서술 문장",
+                "회상 장면의 대사 또는 응답 내용을 prior manuscript truth에 맞게 국소 수정",
+                "prior manuscript에 없는 새 발화를 회상 장면에 추가하지 말 것",
+            ),
+            "timeline": (
+                "회상 장면 순서/타이밍 서술 문장",
+                "회상 장면의 순서와 타이밍 묘사를 prior manuscript truth에 맞게 국소 수정",
+                "prior manuscript의 사건 순서를 뒤집는 새 회상 전개를 추가하지 말 것",
+            ),
+            "other": (
+                "회상 장면 핵심 서술 문장",
+                "회상 장면의 핵심 사실 묘사를 prior manuscript truth에 맞게 국소 수정",
+                "prior manuscript에 없는 핵심 사실을 회상 장면에 추가하지 말 것",
+            ),
+        }
+        for item in relevant:
+            subtype = self._infer_flashback_contradiction_subtype(item)
+            if subtype and subtype not in subtype_labels:
+                subtype_labels.append(subtype)
+            item_target_kind = str(item.get("target_kind", "") or "").strip()
+            if item_target_kind in {"local_phrase", "local_sentence"}:
+                target_kind = item_target_kind
+            patch_anchor = str(item.get("patch_anchor", "") or "").strip()
+            marker = str(item.get("marker", "") or "").strip()
+            default_target, default_fix, default_guard = target_templates.get(subtype or "other", target_templates["other"])
+            target_label = patch_anchor or (f"{default_target} ('{marker}')" if marker else default_target)
+            if target_label and target_label not in patch_targets:
+                patch_targets.append(target_label)
+            if default_fix not in must_fix:
+                must_fix.append(default_fix)
+            expected_truth = str(item.get("expected_truth", "") or item.get("referenced_context", "") or "").strip()
+            if expected_truth:
+                guard_line = f"prior truth: {expected_truth}"
+            else:
+                guard_line = default_guard
+            if guard_line and guard_line not in do_not_regress:
+                do_not_regress.append(guard_line)
+
+        evidence_summary = "runtime flashback continuity backfill"
+        if subtype_labels:
+            evidence_summary = f"{evidence_summary}: {', '.join(subtype_labels[:3])}"
+        return {
+            "patch_targets": patch_targets[:3],
+            "must_fix": must_fix[:4],
+            "do_not_regress": do_not_regress[:4],
+            "success_condition": "FlashbackVerifier 경고가 사라지고 회상 continuity가 prior manuscript truth와 합치한다",
+            "target_kind": target_kind,
+            "evidence_summary": evidence_summary,
+        }
+
     def _backfill_strong_advisory_fix_pack(self, director_result: dict | None) -> dict:
         if not isinstance(director_result, dict):
             return {}
@@ -2080,31 +2201,49 @@ class Stage4InterviewRound:
         if not isinstance(escalation, dict):
             return self._normalize_fix_pack(director_result.get("fix_pack"))
         fix_pack = self._normalize_fix_pack(director_result.get("fix_pack"))
+        triggered = [
+            str(item).strip().lower()
+            for item in (escalation.get("triggered_by") or [])
+            if str(item).strip()
+        ]
         target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
-        semantic_fix_pack = self._build_npc_drift_relation_tag_fix_pack(director_result)
+        semantic_fix_pack = self._build_npc_drift_relation_tag_fix_pack(director_result) if "npc_drift" in triggered else {}
+        flashback_fix_pack = (
+            self._build_flashback_continuity_fix_pack(director_result) if "flashback" in triggered else {}
+        )
         if not fix_pack and semantic_fix_pack:
             escalation["local_fix_contract_backfilled"] = True
             escalation["backfilled_from"] = ["npc_drift_relation_tag_semantic"]
             escalation["backfill_target_kind"] = semantic_fix_pack.get("target_kind", "")
             return semantic_fix_pack
+        if not fix_pack and flashback_fix_pack:
+            escalation["local_fix_contract_backfilled"] = True
+            escalation["backfilled_from"] = ["flashback_continuity_localfix"]
+            escalation["backfill_target_kind"] = flashback_fix_pack.get("target_kind", "")
+            return flashback_fix_pack
         if not fix_pack:
             return {}
         if target_kind == "scene_model":
             return fix_pack
         changed = False
+        specialized_sources: list[str] = []
         if semantic_fix_pack:
+            semantic_changed = False
             if not fix_pack.get("target_kind"):
                 fix_pack["target_kind"] = semantic_fix_pack.get("target_kind", "")
                 target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
                 changed = True
+                semantic_changed = True
             if target_kind in {"entity_ref", "local_phrase", "local_sentence"}:
                 for key in ("patch_targets", "must_fix", "do_not_regress"):
                     if not fix_pack.get(key) and semantic_fix_pack.get(key):
                         fix_pack[key] = list(semantic_fix_pack.get(key) or [])
                         changed = True
+                        semantic_changed = True
                 if not fix_pack.get("success_condition") and semantic_fix_pack.get("success_condition"):
                     fix_pack["success_condition"] = str(semantic_fix_pack.get("success_condition", "") or "")
                     changed = True
+                    semantic_changed = True
                 if semantic_fix_pack.get("evidence_summary"):
                     existing_summary = str(fix_pack.get("evidence_summary", "") or "").strip()
                     semantic_summary = str(semantic_fix_pack.get("evidence_summary", "") or "").strip()
@@ -2113,13 +2252,39 @@ class Stage4InterviewRound:
                             f"{existing_summary}; {semantic_summary}" if existing_summary else semantic_summary
                         )
                         changed = True
+                        semantic_changed = True
+            if semantic_changed and "npc_drift_relation_tag_semantic" not in specialized_sources:
+                specialized_sources.append("npc_drift_relation_tag_semantic")
+        if flashback_fix_pack:
+            flashback_changed = False
+            if not fix_pack.get("target_kind"):
+                fix_pack["target_kind"] = flashback_fix_pack.get("target_kind", "")
+                target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
+                changed = True
+                flashback_changed = True
+            if target_kind in {"entity_ref", "local_phrase", "local_sentence"}:
+                for key in ("patch_targets", "must_fix", "do_not_regress"):
+                    if not fix_pack.get(key) and flashback_fix_pack.get(key):
+                        fix_pack[key] = list(flashback_fix_pack.get(key) or [])
+                        changed = True
+                        flashback_changed = True
+                if not fix_pack.get("success_condition") and flashback_fix_pack.get("success_condition"):
+                    fix_pack["success_condition"] = str(flashback_fix_pack.get("success_condition", "") or "")
+                    changed = True
+                    flashback_changed = True
+                if flashback_fix_pack.get("evidence_summary"):
+                    existing_summary = str(fix_pack.get("evidence_summary", "") or "").strip()
+                    flashback_summary = str(flashback_fix_pack.get("evidence_summary", "") or "").strip()
+                    if flashback_summary and flashback_summary not in existing_summary:
+                        fix_pack["evidence_summary"] = (
+                            f"{existing_summary}; {flashback_summary}" if existing_summary else flashback_summary
+                        )
+                        changed = True
+                        flashback_changed = True
+            if flashback_changed and "flashback_continuity_localfix" not in specialized_sources:
+                specialized_sources.append("flashback_continuity_localfix")
         if target_kind not in {"entity_ref", "local_phrase", "local_sentence"}:
             return fix_pack
-        triggered = [
-            str(item).strip().lower()
-            for item in (escalation.get("triggered_by") or [])
-            if str(item).strip()
-        ]
         if not triggered:
             return fix_pack
         templates = {
@@ -2170,7 +2335,7 @@ class Stage4InterviewRound:
                     f"{existing_summary}; {evidence_marker}" if existing_summary else evidence_marker
                 )
             escalation["local_fix_contract_backfilled"] = True
-            escalation["backfilled_from"] = list(triggered)
+            escalation["backfilled_from"] = specialized_sources or list(triggered)
             escalation["backfill_target_kind"] = target_kind
         return fix_pack
 
@@ -5716,6 +5881,7 @@ class Stage4InterviewRound:
                 if _fb_warns:
                     for _fw in _fb_warns:
                         _fw["_cand_idx"] = _ci
+                    self._last_advisory_metadata.setdefault("flashback", []).extend(copy.deepcopy(_fb_warns))
                     _fb_all.extend(_fb_warns)
             if _fb_all:
                 _fb_lines = [
