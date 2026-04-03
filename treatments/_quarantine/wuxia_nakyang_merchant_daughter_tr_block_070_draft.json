@@ -1,13 +1,6 @@
 {
-  "_meta": {
-    "work_id": "wuxia_nakyang_merchant_daughter",
-    "family": "wuxguide",
-    "sub_profile": "merchant_wuxia_profile",
-    "title": "낙양상단 막내딸의 장부",
-    "total_blocks": 70,
-    "last_produced_block": 40,
-    "production_date": "2026-03-24"
-  },
+  "_schema": "tr.v1",
+  "_total_blocks": 40,
   "blocks": [
     {
       "block_id": "Block 1",
@@ -46,7 +39,10 @@
         "연회장 구석의 검은 옷 여인(흑풍방 밀정) — 소연이 장부를 추적하기 시작했다는 정보가 흑풍방에 전달. Block 5에서 자금 도착지 확인, Block 13에서 암살 시도로 귀결"
       ],
       "callback": [],
-      "emotional_beat": {"type": "revelation", "intensity": 7},
+      "emotional_beat": {
+        "type": "revelation",
+        "intensity": 7
+      },
       "tension_level": 7,
       "location": {
         "place": "낙양 금의상단 본부 — 대연회장 및 상단주 서재",
@@ -61,8 +57,12 @@
         "realm_after": "산원(算員) 입문",
         "internal_energy_before": "거래 규모 0냥 / 영향력: 상단 내 발언권 없음",
         "internal_energy_after": "거래 규모 가시권 1만 냥 / 영향력: 전체 장부 열람권 (대관급 접근)",
-        "martial_arts_acquired": ["장부술 Lv.1 — 단일 장부 위조 간파. 수치 흐름을 따라 유출 경로 추적 가능"],
-        "martial_arts_used": ["장부술 Lv.1 — 10년치 장부의 수수료·매입단가·호송비 세 경로 위조 적발"],
+        "martial_arts_acquired": [
+          "장부술 Lv.1 — 단일 장부 위조 간파. 수치 흐름을 따라 유출 경로 추적 가능"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.1 — 10년치 장부의 수수료·매입단가·호송비 세 경로 위조 적발"
+        ],
         "injury_status": {
           "current": "정상",
           "change": "변동 없음"
@@ -86,10 +86,19 @@
         },
         "strategy": "연회장에서 전체 공개가 아닌 수치 증거만 제시하여, 내부 배신자의 증거 인멸을 방지하면서 아버지의 신뢰를 확보. 최종 도착지는 확정 후 공개하는 신중한 접근",
         "success_pattern": "부분 성공 — 유출 사실 폭로와 조사 권한 획득에는 성공했으나, 최종 도착지 미확정, 큰오빠의 의심스러운 반응, 흑풍방 밀정에게 노출이라는 세 가지 위험 요소가 동시에 발생",
-        "leverage_used": ["장부술 Lv.1(단일 장부 위조 간파)", "10년치 장부 데이터(10대 축적)", "아버지와의 혈연 신뢰", "어머니의 주판(정서적 지지)"],
+        "leverage_used": [
+          "장부술 Lv.1(단일 장부 위조 간파)",
+          "10년치 장부 데이터(10대 축적)",
+          "아버지와의 혈연 신뢰",
+          "어머니의 주판(정서적 지지)"
+        ],
         "martial_domain": "상단 내부",
-        "active_domains": ["장부 분석", "상단 내부 조사"]
-      }
+        "active_domains": [
+          "장부 분석",
+          "상단 내부 조사"
+        ]
+      },
+      "block_no": 1
     },
     {
       "block_id": "Block 2",
@@ -134,7 +143,10 @@
       "callback": [
         "Block 1에서 큰오빠의 하얗게 변한 얼굴 → 이번 블록에서 회피+떨리는 손+위험한 일 대신 처리 제안으로 의혹 심화"
       ],
-      "emotional_beat": {"type": "confrontation", "intensity": 6},
+      "emotional_beat": {
+        "type": "confrontation",
+        "intensity": 6
+      },
       "tension_level": 6,
       "location": {
         "place": "금의상단 주거관 — 중정, 큰오빠 서재, 상단주 서재",
@@ -150,7 +162,9 @@
         "internal_energy_before": "거래 규모 가시권 1만 냥 / 영향력: 전체 장부 열람권",
         "internal_energy_after": "거래 규모 가시권 1만 냥 / 영향력: 전체 장부 열람권 + 호위 무력 확보",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.1 — 큰오빠 반응에서 심리적 단서 추출(떨리는 손, 회피 패턴)"],
+        "martial_arts_used": [
+          "장부술 Lv.1 — 큰오빠 반응에서 심리적 단서 추출(떨리는 손, 회피 패턴)"
+        ],
         "injury_status": {
           "current": "정상",
           "change": "변동 없음"
@@ -174,10 +188,19 @@
         },
         "strategy": "직접 추궁 대신 관찰+시험 방식. 큰오빠에게 서쪽 거래처 장부를 요청하여 반응을 보고 연루 여부 판단",
         "success_pattern": "부분 성공 — 셋째 오빠 지지와 검무 확보는 성과이나, 큰오빠 시험 결과는 아직 미확인",
-        "leverage_used": ["장부술 Lv.1(심리적 단서 추출)", "아버지의 권위(검무 배치)", "셋째 오빠와의 혈연 신뢰"],
+        "leverage_used": [
+          "장부술 Lv.1(심리적 단서 추출)",
+          "아버지의 권위(검무 배치)",
+          "셋째 오빠와의 혈연 신뢰"
+        ],
         "martial_domain": "상단 내부",
-        "active_domains": ["가문 정치", "상단 내부 조사", "호위 편성"]
-      }
+        "active_domains": [
+          "가문 정치",
+          "상단 내부 조사",
+          "호위 편성"
+        ]
+      },
+      "block_no": 2
     },
     {
       "block_id": "Block 3",
@@ -212,7 +235,10 @@
       "callback": [
         "Block 1에서 홍매가 주판을 건네준 유일한 사람 → 이번 블록에서 정보원으로 격상. 신뢰의 근거가 어린 시절부터의 유대"
       ],
-      "emotional_beat": {"type": "warmth", "intensity": 4},
+      "emotional_beat": {
+        "type": "warmth",
+        "intensity": 4
+      },
       "tension_level": 3,
       "location": {
         "place": "금의상단 본부 — 소연의 방, 후원(後園) 매화나무 아래",
@@ -252,10 +278,18 @@
         },
         "strategy": "홍매에게 무작위 소문 수집이 아닌 특정 대상(큰오빠 외출, 이 노인 행방, 서쪽 거래처) 관찰을 체계적으로 요청",
         "success_pattern": "성공 — 정보 채널 구축 완료. 세 가지 유의미한 소문(큰오빠 보름 외출, 이 노인 은퇴, 흑풍방 근처 마차 목격) 확보",
-        "leverage_used": ["홍매와의 어린 시절 유대", "시녀 네트워크의 상단 전역 접근성", "장부 분석에서 파생된 관찰 대상 목록"],
+        "leverage_used": [
+          "홍매와의 어린 시절 유대",
+          "시녀 네트워크의 상단 전역 접근성",
+          "장부 분석에서 파생된 관찰 대상 목록"
+        ],
         "martial_domain": "상단 내부",
-        "active_domains": ["정보 수집", "장부 분석"]
-      }
+        "active_domains": [
+          "정보 수집",
+          "장부 분석"
+        ]
+      },
+      "block_no": 3
     },
     {
       "block_id": "Block 4",
@@ -291,7 +325,10 @@
       "callback": [
         "Block 1에서 소연이 '돈은 사라지지 않습니다. 흐를 뿐이죠'라고 말한 것 → 이번 블록에서 세 갈래 강물이 하나의 바다로 흘러가는 비유로 장부술 시각화. 연회장의 직관이 분석 방법론으로 성숙"
       ],
-      "emotional_beat": {"type": "immersion", "intensity": 6},
+      "emotional_beat": {
+        "type": "immersion",
+        "intensity": 6
+      },
       "tension_level": 5,
       "location": {
         "place": "금의상단 본부 — 지하 장부 보관고",
@@ -306,8 +343,13 @@
         "realm_after": "산원(算員) 완성 근접",
         "internal_energy_before": "거래 규모 가시권 1만 냥 / 영향력: 장부 열람권 + 호위 + 정보 네트워크",
         "internal_energy_after": "거래 규모 가시권 1만 냥 / 영향력: 유출 경로 3개 확정 + 유출 총액 30만 냥 추정",
-        "martial_arts_acquired": ["장부술 Lv.2 — 다중 장부 교차 분석. 여러 장부를 동시에 펼쳐 거래처별 추이를 교차 대조하는 능력"],
-        "martial_arts_used": ["장부술 Lv.1(단일 장부 위조 간파)", "장부술 Lv.2(다중 장부 교차 분석 — 이번 블록에서 습득 즉시 사용)"],
+        "martial_arts_acquired": [
+          "장부술 Lv.2 — 다중 장부 교차 분석. 여러 장부를 동시에 펼쳐 거래처별 추이를 교차 대조하는 능력"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.1(단일 장부 위조 간파)",
+          "장부술 Lv.2(다중 장부 교차 분석 — 이번 블록에서 습득 즉시 사용)"
+        ],
         "injury_status": {
           "current": "정상 (다만 한 달간 수면 부족으로 안색이 나빠짐)",
           "change": "신체 부상 없음. 장기 수면 부족은 서사적 소모"
@@ -331,10 +373,19 @@
         },
         "strategy": "감정을 배제하고 순수 수치 분석에 집중. 월 단위 재분류로 시간 패턴 추출. 세 유출 경로를 개별이 아닌 통합 흐름으로 추적",
         "success_pattern": "성공 — 3개 유출 경로와 3개 전장 확정. 그러나 최종 도착지(전장 이후)는 미확인이고, 유출범이 직계 가족일 수 있다는 새로운 부담 발생",
-        "leverage_used": ["장부술 Lv.2(다중 교차 분석)", "10대 축적 장부 데이터", "약왕곡 시세 비교(넷째 오빠 경로 간접 활용)", "호위대 인사 기록(셋째 오빠 경로 간접 활용)"],
+        "leverage_used": [
+          "장부술 Lv.2(다중 교차 분석)",
+          "10대 축적 장부 데이터",
+          "약왕곡 시세 비교(넷째 오빠 경로 간접 활용)",
+          "호위대 인사 기록(셋째 오빠 경로 간접 활용)"
+        ],
         "martial_domain": "상단 내부",
-        "active_domains": ["장부 분석", "상단 내부 조사"]
-      }
+        "active_domains": [
+          "장부 분석",
+          "상단 내부 조사"
+        ]
+      },
+      "block_no": 4
     },
     {
       "block_id": "Block 5",
@@ -371,7 +422,10 @@
         "Block 1에서 '자금의 최종 도착지 — 사파' 암시 → 이번 블록에서 흑풍방 연결 확정",
         "Block 1에서 연회장 구석의 검은 옷 여인(밀정) → 이번 블록에서 골목의 검은 옷 사내로 감시 실체화"
       ],
-      "emotional_beat": {"type": "dread", "intensity": 7},
+      "emotional_beat": {
+        "type": "dread",
+        "intensity": 7
+      },
       "tension_level": 7,
       "location": {
         "place": "낙양 시내 — 전장가(錢莊街), 통보전장·복래전장·만금전장",
@@ -386,8 +440,13 @@
         "realm_after": "산원(算員) 완성",
         "internal_energy_before": "거래 규모 가시권 1만 냥 / 영향력: 유출 경로 3개 확정",
         "internal_energy_after": "거래 규모 가시권 1만 냥 / 영향력: 유출 도착지(흑풍방) 확정. 상단 존망 수준의 정보 보유",
-        "martial_arts_acquired": ["장부술 Lv.3 — 다중 장부 동시 분석 완성. 전장 간 자금 흐름 추적, 수취인 패턴 분석, 심부름꾼 동일성 판별까지 가능"],
-        "martial_arts_used": ["장부술 Lv.2(다중 교차 분석)", "장부술 Lv.3(전장 기록 추적+수취인 패턴 분석 — 이번 블록에서 습득 즉시 사용)"],
+        "martial_arts_acquired": [
+          "장부술 Lv.3 — 다중 장부 동시 분석 완성. 전장 간 자금 흐름 추적, 수취인 패턴 분석, 심부름꾼 동일성 판별까지 가능"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.2(다중 교차 분석)",
+          "장부술 Lv.3(전장 기록 추적+수취인 패턴 분석 — 이번 블록에서 습득 즉시 사용)"
+        ],
         "injury_status": {
           "current": "정상 (수면 부족 지속)",
           "change": "변동 없음"
@@ -411,10 +470,20 @@
         },
         "strategy": "남장으로 위장 후 금의상단 명의로 전장 장부 열람. 최소한의 질문(심부름꾼 외모)으로 핵심 정보 추출. 감시자 발견 후 즉각 추적 대신 정보 비대칭 유지 선택",
         "success_pattern": "성공 — 흑풍방 연결 확정. 그러나 감시자에게 노출이라는 새로운 위험 발생. 정보적 승리와 물리적 위험이 동시에 상승",
-        "leverage_used": ["장부술 Lv.3(전장 기록 추적)", "금의상단 명의(전장 접근 권한)", "검무의 호위(물리적 안전)", "남장(신분 위장)"],
+        "leverage_used": [
+          "장부술 Lv.3(전장 기록 추적)",
+          "금의상단 명의(전장 접근 권한)",
+          "검무의 호위(물리적 안전)",
+          "남장(신분 위장)"
+        ],
         "martial_domain": "상단 외부 — 낙양 시내 전장가",
-        "active_domains": ["자금 추적", "현장 조사", "위장 활동"]
-      }
+        "active_domains": [
+          "자금 추적",
+          "현장 조사",
+          "위장 활동"
+        ]
+      },
+      "block_no": 5
     },
     {
       "block_id": "Block 6",
@@ -450,7 +519,10 @@
         "Block 4에서 확정한 세 유출 경로 중 ③호송비 유령 인건비 경로 → 이번 블록에서 마 포두 매수로 차단 완료",
         "Block 5에서 '우리가 무엇을 아는지 그들이 모르게 해야 해요' 전략 → 이번 블록에서 '조용히' 차단하는 방식으로 실행"
       ],
-      "emotional_beat": {"type": "determination", "intensity": 5},
+      "emotional_beat": {
+        "type": "determination",
+        "intensity": 5
+      },
       "tension_level": 6,
       "location": {
         "place": "낙양 외곽 마을 — 길목 객잔 '쌍교루(雙橋樓)'",
@@ -466,19 +538,46 @@
         "internal_energy_before": "거래 규모 가시권 1만 냥 / 영향력: 흑풍방 연결 확정",
         "internal_energy_after": "거래 규모 가시권 1만 냥 / 영향력: 첫 경로 차단(월 500냥) + 내부 증인 확보",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.3(호위 인건비 장부와 실제 명단 불일치 지적)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "자금 유출 조사 특명 수임자", "change": "셋째 오빠의 실전 참여로 가문 내 동맹 실질화"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "무명", "after": "무명. 그러나 마 포두 매수가 흑풍방에 알려지면 상황 급변"},
+        "martial_arts_used": [
+          "장부술 Lv.3(호위 인건비 장부와 실제 명단 불일치 지적)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "자금 유출 조사 특명 수임자",
+          "change": "셋째 오빠의 실전 참여로 가문 내 동맹 실질화"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "무명",
+          "after": "무명. 그러나 마 포두 매수가 흑풍방에 알려지면 상황 급변"
+        },
         "action_type": "거래 차단 — 중간 거래상 매수로 첫 유출 경로 차단",
-        "opponent": {"name": "마 포두(호송 중간 거래상) — 말단 실행자", "sect_or_faction": "금의상단 외주 (흑풍방 강제 협력)", "weakness_exploited": "마 포두가 주범이 아닌 말단이라는 점. 가족 안전이 최대 약점이며, 관부 고발 위협과 안전 보장 이중 압박"},
+        "opponent": {
+          "name": "마 포두(호송 중간 거래상) — 말단 실행자",
+          "sect_or_faction": "금의상단 외주 (흑풍방 강제 협력)",
+          "weakness_exploited": "마 포두가 주범이 아닌 말단이라는 점. 가족 안전이 최대 약점이며, 관부 고발 위협과 안전 보장 이중 압박"
+        },
         "strategy": "양자택일 협상 — 협력하면 안전 보장, 거부하면 관부 고발. 말단의 공포를 읽고 가족 피신이라는 안전 장치를 먼저 제공",
         "success_pattern": "성공 — 첫 경로 차단 + 증인 확보. 그러나 전체의 20%에 불과하며 흑풍방 반응은 아직 미발생",
-        "leverage_used": ["장부 증거(불일치 데이터)", "관부 고발 위협", "셋째 오빠의 호위력(가족 피신)", "검무의 무언의 위압"],
+        "leverage_used": [
+          "장부 증거(불일치 데이터)",
+          "관부 고발 위협",
+          "셋째 오빠의 호위력(가족 피신)",
+          "검무의 무언의 위압"
+        ],
         "martial_domain": "상단 외부 — 낙양 외곽",
-        "active_domains": ["거래 차단", "협상", "증인 확보"]
-      }
+        "active_domains": [
+          "거래 차단",
+          "협상",
+          "증인 확보"
+        ]
+      },
+      "block_no": 6
     },
     {
       "block_id": "Block 7",
@@ -514,7 +613,10 @@
         "Block 6에서 마 포두 매수(첫 경로 차단) → 이번 블록에서 흑풍방의 보복으로 귀결. 뱀의 꿈틀댐이 현실이 됨",
         "Block 5에서 골목의 감시자 → 이번 블록에서 직접적 물리 공격으로 escalation"
       ],
-      "emotional_beat": {"type": "crisis", "intensity": 8},
+      "emotional_beat": {
+        "type": "crisis",
+        "intensity": 8
+      },
       "tension_level": 8,
       "location": {
         "place": "낙양 교외 — 금의상단 약재 창고 인근 관도(官道)",
@@ -530,19 +632,43 @@
         "internal_energy_before": "거래 규모 가시권 1만 냥 / 영향력: 첫 경로 차단 + 증인 확보",
         "internal_energy_after": "거래 규모 가시권 8천 냥 / 영향력: 약재 거래처 3곳 훼손으로 네트워크 축소",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.3(거래처 이상 탐지 — 약재 상인 미출근 패턴에서 이상 감지)"],
-        "injury_status": {"current": "정상 (정신적 충격 — 첫 생명 위협 경험)", "change": "신체 부상 없음. 손이 떨리는 정신적 외상"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "자금 유출 조사 특명 수임자", "change": "약재 거래처 3곳 훼손. 상단 사업 기반 일부 손상"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "무명", "after": "무명. 흑풍방 내부에서 '금의상단이 반응하기 시작했다'는 인식 확산"},
+        "martial_arts_used": [
+          "장부술 Lv.3(거래처 이상 탐지 — 약재 상인 미출근 패턴에서 이상 감지)"
+        ],
+        "injury_status": {
+          "current": "정상 (정신적 충격 — 첫 생명 위협 경험)",
+          "change": "신체 부상 없음. 손이 떨리는 정신적 외상"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "자금 유출 조사 특명 수임자",
+          "change": "약재 거래처 3곳 훼손. 상단 사업 기반 일부 손상"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "무명",
+          "after": "무명. 흑풍방 내부에서 '금의상단이 반응하기 시작했다'는 인식 확산"
+        },
         "action_type": "호위 전투 — 흑풍방 하수인의 거래처 위협 및 마차 습격 방어",
-        "opponent": {"name": "흑풍방 하수인 4명 (삼류 수준)", "sect_or_faction": "사파 흑풍방 말단", "weakness_exploited": "소연이 마차 안에 있다는 것을 모르고 화물만 노림. 검무의 예상 외 전투력에 대한 정보 부재"},
+        "opponent": {
+          "name": "흑풍방 하수인 4명 (삼류 수준)",
+          "sect_or_faction": "사파 흑풍방 말단",
+          "weakness_exploited": "소연이 마차 안에 있다는 것을 모르고 화물만 노림. 검무의 예상 외 전투력에 대한 정보 부재"
+        },
         "strategy": "전략 부재 — 예상치 못한 습격에 수동 대응. 검무의 전투력에 의존. 소연은 무력적으로 무방비",
         "success_pattern": "패배 — 소연과 마차는 지켰으나, 거래처 3곳 훼손이라는 실질적 피해 발생. 흑풍방의 간접 공격(거래처 위협)을 막지 못함",
-        "leverage_used": ["검무의 전투력", "마차 내부라는 은폐(상대가 소연의 존재를 모름)"],
+        "leverage_used": [
+          "검무의 전투력",
+          "마차 내부라는 은폐(상대가 소연의 존재를 모름)"
+        ],
         "martial_domain": "상단 외부 — 낙양 교외 관도",
-        "active_domains": ["호위 방어", "거래처 방어(실패)"]
-      }
+        "active_domains": [
+          "호위 방어",
+          "거래처 방어(실패)"
+        ]
+      },
+      "block_no": 7
     },
     {
       "block_id": "Block 8",
@@ -578,7 +704,10 @@
         "Block 5에서 '얼굴에 칼자국이 있는 거구' → 이번 블록에서 도오(刀五)로 정체 확인",
         "Block 7에서 '암흑가 정보가 필요하다'는 깨달음 → 이번 블록에서 서문경 영입으로 실행"
       ],
-      "emotional_beat": {"type": "expansion", "intensity": 5},
+      "emotional_beat": {
+        "type": "expansion",
+        "intensity": 5
+      },
       "tension_level": 5,
       "location": {
         "place": "낙양 암시장 — 합법 시장 뒤편 골목의 서문경 노점",
@@ -593,20 +722,48 @@
         "realm_after": "장방(帳房) 입문",
         "internal_energy_before": "거래 규모 가시권 8천 냥 / 영향력: 약재 거래처 훼손",
         "internal_energy_after": "거래 규모 가시권 8천 냥 / 영향력: 삼중 정보 체계(장부+시녀+서문경) 확보. 월 50냥 정보 비용 발생",
-        "martial_arts_acquired": ["장부술 → 정보 교차 활용 기초: 장부 데이터를 암흑가 정보와 교차하여 적대 세력의 구조를 파악하는 능력의 시작"],
-        "martial_arts_used": ["장부술 Lv.3(세 유출 경로 데이터를 서문경에게 제시하여 교환 가치 증명)"],
-        "injury_status": {"current": "정상 (Block 7의 정신적 충격에서 회복 중)", "change": "정신적 충격 회복. 목적 의식으로 공포를 대체"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "자금 유출 조사 특명 수임자", "change": "서문경이라는 외부 협력자 확보. 상단의 정보 역량 확장"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "무명", "after": "암시장에서 '금의상단 막내가 정보를 사러 왔다'는 소문. 소규모 파문"},
+        "martial_arts_acquired": [
+          "장부술 → 정보 교차 활용 기초: 장부 데이터를 암흑가 정보와 교차하여 적대 세력의 구조를 파악하는 능력의 시작"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.3(세 유출 경로 데이터를 서문경에게 제시하여 교환 가치 증명)"
+        ],
+        "injury_status": {
+          "current": "정상 (Block 7의 정신적 충격에서 회복 중)",
+          "change": "정신적 충격 회복. 목적 의식으로 공포를 대체"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "자금 유출 조사 특명 수임자",
+          "change": "서문경이라는 외부 협력자 확보. 상단의 정보 역량 확장"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "무명",
+          "after": "암시장에서 '금의상단 막내가 정보를 사러 왔다'는 소문. 소규모 파문"
+        },
         "action_type": "인물 영입 — 암흑가 정보상 서문경 계약",
-        "opponent": {"name": "없음 (영입 블록)", "sect_or_faction": "N/A", "weakness_exploited": "N/A"},
+        "opponent": {
+          "name": "없음 (영입 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "N/A"
+        },
         "strategy": "정보의 가치를 먼저 증명(세 유출 경로 공개)하여 서문경의 신뢰와 흥미를 확보. 월정보료+거래처 등록이라는 실질적 대가 제시",
         "success_pattern": "성공 — 서문경 영입 완료. 풍만리·도오 정보 획득. 그러나 서문경의 진짜 동기는 미확인",
-        "leverage_used": ["장부 분석 결과(세 유출 경로)", "금의상단 거래처 등록이라는 신용 보증", "아버지의 과거 인연"],
+        "leverage_used": [
+          "장부 분석 결과(세 유출 경로)",
+          "금의상단 거래처 등록이라는 신용 보증",
+          "아버지의 과거 인연"
+        ],
         "martial_domain": "암흑가 접점 — 낙양 암시장",
-        "active_domains": ["정보 확보", "인물 영입", "암흑가 접점 구축"]
-      }
+        "active_domains": [
+          "정보 확보",
+          "인물 영입",
+          "암흑가 접점 구축"
+        ]
+      },
+      "block_no": 8
     },
     {
       "block_id": "Block 9",
@@ -642,7 +799,10 @@
         "Block 7에서 거래처 3곳 훼손 → 이번 블록에서 새 거래처 2곳 확보로 복구+개선",
         "Block 4에서 '약재 매입가 7% 부풀리기' 발견 → 이번 블록에서 시세대로 거래하여 4% 비용 절감 실현"
       ],
-      "emotional_beat": {"type": "tactical_thrill", "intensity": 7},
+      "emotional_beat": {
+        "type": "tactical_thrill",
+        "intensity": 7
+      },
       "tension_level": 6,
       "location": {
         "place": "개봉(開封) 시전(市廛) 거리 — 약재 도매상가",
@@ -657,20 +817,49 @@
         "realm_after": "장방(帳房)",
         "internal_energy_before": "거래 규모 가시권 8천 냥 / 영향력: 삼중 정보 체계",
         "internal_energy_after": "거래 규모 1만2천 냥 / 영향력: 개봉 시전 직접 거래선 2곳 확보. 소연의 이름 회자 시작",
-        "martial_arts_acquired": ["상업 비무 기초 — 시세 암기+즉석 대조, 단가 대신 총량 보장 전략. 장부술을 실전 협상에 적용하는 첫 단계"],
-        "martial_arts_used": ["장부술 Lv.3(약왕곡 시세 대조)", "상업 비무 기초(가격 협상+총량 보장 역제안)"],
-        "injury_status": {"current": "정상", "change": "Block 7 정신적 충격에서 완전 회복. 협상 성공으로 자신감 회복"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "자금 유출 조사 수임자 + 거래 협상 담당(첫 독립 거래)", "change": "소연이 상단 대외 거래에 직접 참여하기 시작. 상단 내 역할 확장"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "무명", "after": "개봉 시전에서 '금의상단 막내딸이 장부 들고 직접 나왔다'는 소문. 소규모이지만 최초의 외부 인지"},
+        "martial_arts_acquired": [
+          "상업 비무 기초 — 시세 암기+즉석 대조, 단가 대신 총량 보장 전략. 장부술을 실전 협상에 적용하는 첫 단계"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.3(약왕곡 시세 대조)",
+          "상업 비무 기초(가격 협상+총량 보장 역제안)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "Block 7 정신적 충격에서 완전 회복. 협상 성공으로 자신감 회복"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "자금 유출 조사 수임자 + 거래 협상 담당(첫 독립 거래)",
+          "change": "소연이 상단 대외 거래에 직접 참여하기 시작. 상단 내 역할 확장"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "무명",
+          "after": "개봉 시전에서 '금의상단 막내딸이 장부 들고 직접 나왔다'는 소문. 소규모이지만 최초의 외부 인지"
+        },
         "action_type": "상업 비무 — 약재 도매상과의 첫 직접 가격 협상",
-        "opponent": {"name": "주 사장(朱掌櫃/개봉 약재 도매상) + 경쟁 상단 중개인", "sect_or_faction": "개봉 시전 독립 상인 + 경쟁 상단", "weakness_exploited": "주 사장의 매입가가 시세보다 12% 높다는 것을 즉석 간파. 총량 보장이라는 대안 제시로 단가 양보를 유도"},
+        "opponent": {
+          "name": "주 사장(朱掌櫃/개봉 약재 도매상) + 경쟁 상단 중개인",
+          "sect_or_faction": "개봉 시전 독립 상인 + 경쟁 상단",
+          "weakness_exploited": "주 사장의 매입가가 시세보다 12% 높다는 것을 즉석 간파. 총량 보장이라는 대안 제시로 단가 양보를 유도"
+        },
         "strategy": "장부술로 시세를 정확히 파악한 뒤, 가격 인하+총량 보장이라는 상호 이익 구조 제안. 상대를 '이기는 것'이 아니라 '이기게 해주면서 우리도 이기는' 협상",
         "success_pattern": "완전 성공 — 2곳 계약, 매입가 4% 절감, 거래 규모 확장",
-        "leverage_used": ["장부술 Lv.3(약왕곡 시세 암기)", "금의상단의 브랜드 가치(대량 구매 보장)", "서문경의 경쟁 상단 배후 정보"],
+        "leverage_used": [
+          "장부술 Lv.3(약왕곡 시세 암기)",
+          "금의상단의 브랜드 가치(대량 구매 보장)",
+          "서문경의 경쟁 상단 배후 정보"
+        ],
         "martial_domain": "상단 외부 — 개봉 시전",
-        "active_domains": ["거래 협상", "상업 비무", "거래처 확보"]
-      }
+        "active_domains": [
+          "거래 협상",
+          "상업 비무",
+          "거래처 확보"
+        ]
+      },
+      "block_no": 9
     },
     {
       "block_id": "Block 10",
@@ -707,7 +896,10 @@
         "Block 9에서 개봉 시전 소문 → 이번 블록에서 백란이 소문을 듣고 찾아옴",
         "Block 1에서 '5대 상단이 무림 경제의 80%를 장악' 설정 → 이번 블록에서 소연이 '우리가 싸우면 나머지 20%가 웃습니다'로 활용"
       ],
-      "emotional_beat": {"type": "rivalry", "intensity": 6},
+      "emotional_beat": {
+        "type": "rivalry",
+        "intensity": 6
+      },
       "tension_level": 5,
       "location": {
         "place": "금의상단 본부 — 귀빈 객실",
@@ -723,19 +915,46 @@
         "internal_energy_before": "거래 규모 1만2천 냥 / 영향력: 개봉 시전 소문",
         "internal_energy_after": "거래 규모 1만2천 냥 / 영향력: 백란(5대 상단 2위)과의 대면으로 5대 상단 경쟁 구도 진입. 소연이 '상단 간 외교'의 세계에 첫 발",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.3(백란이 제시한 거래선 대행 조건의 실질 의미를 즉석 분석)", "상업 비무 기초(종속 거부+경쟁 유지라는 역제안)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "자금 유출 조사 수임자 + 대외 거래 담당", "change": "백씨상단과의 관계 설정(경쟁적 공존). 5대 상단 외교 레이어에 첫 진입"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "개봉 시전 소문", "after": "백란이 '재미있군'이라고 평가. 5대 상단 2위가 인정한 첫 대면 — 소규모이지만 상단 세계에서의 존재감 시작"},
+        "martial_arts_used": [
+          "장부술 Lv.3(백란이 제시한 거래선 대행 조건의 실질 의미를 즉석 분석)",
+          "상업 비무 기초(종속 거부+경쟁 유지라는 역제안)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "자금 유출 조사 수임자 + 대외 거래 담당",
+          "change": "백씨상단과의 관계 설정(경쟁적 공존). 5대 상단 외교 레이어에 첫 진입"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "개봉 시전 소문",
+          "after": "백란이 '재미있군'이라고 평가. 5대 상단 2위가 인정한 첫 대면 — 소규모이지만 상단 세계에서의 존재감 시작"
+        },
         "action_type": "라이벌 대면 — 백씨상단 여주인 백란과의 첫 면담 및 관계 설정",
-        "opponent": {"name": "백란(白蘭/백씨상단 여주인) — 라이벌", "sect_or_faction": "백씨상단(5대 상단 2위)", "weakness_exploited": "백란의 제안(거래선 대행)이 실은 금의상단 약재 유통 종속을 의미한다는 것을 간파. 종속 거부로 대등한 관계 확립"},
+        "opponent": {
+          "name": "백란(白蘭/백씨상단 여주인) — 라이벌",
+          "sect_or_faction": "백씨상단(5대 상단 2위)",
+          "weakness_exploited": "백란의 제안(거래선 대행)이 실은 금의상단 약재 유통 종속을 의미한다는 것을 간파. 종속 거부로 대등한 관계 확립"
+        },
         "strategy": "종속 거절 후 경쟁적 공존 역제안. '5대 상단이 싸우면 20%가 웃는다'는 논리로 상호 불가침 프레임 설정. 백란의 경쟁 의지를 존중하면서도 자존심을 지키는 외교적 균형",
         "success_pattern": "부분 성공 — 대등한 관계 설정에 성공했으나, 백란은 시장에서의 경쟁을 예고. 잠재적 적이자 잠재적 동맹",
-        "leverage_used": ["장부술(종속 조건 분석)", "금의상단의 규모(5대 상단 1위)", "소연의 직접 협상 경험(개봉 시전)", "5대 상단 체제라는 구조적 논리"],
+        "leverage_used": [
+          "장부술(종속 조건 분석)",
+          "금의상단의 규모(5대 상단 1위)",
+          "소연의 직접 협상 경험(개봉 시전)",
+          "5대 상단 체제라는 구조적 논리"
+        ],
         "martial_domain": "상단 외교",
-        "active_domains": ["상단 간 외교", "라이벌 관계 설정"]
-      }
+        "active_domains": [
+          "상단 간 외교",
+          "라이벌 관계 설정"
+        ]
+      },
+      "block_no": 10
     },
     {
       "block_id": "Block 11",
@@ -770,7 +989,10 @@
       "callback": [
         "Block 4에서 '여러 장부를 동시에 펼치면 세 갈래 강물' → 이번 블록에서 다섯 줄기의 업종 간 그물로 확장. 장부술 시각화의 심화"
       ],
-      "emotional_beat": {"type": "enlightenment", "intensity": 5},
+      "emotional_beat": {
+        "type": "enlightenment",
+        "intensity": 5
+      },
       "tension_level": 3,
       "location": {
         "place": "금의상단 본부 — 지하 장부 보관고 (깊은 곳)",
@@ -785,20 +1007,48 @@
         "realm_after": "장방(帳房)",
         "internal_energy_before": "거래 규모 1만2천 냥 / 영향력: 5대 상단 외교 진입",
         "internal_energy_after": "거래 규모 1만2천 냥 / 영향력: 업종간 교차 분석으로 무림 경제 일부 조감 시작",
-        "martial_arts_acquired": ["장부술 Lv.5 — 업종간 교차 분석. 무기·약재·비단·정보·호송 5개 업종의 장부를 동시에 읽고 상호 연관성을 파악하는 능력"],
-        "martial_arts_used": ["장부술 Lv.3(기존)", "장부술 Lv.5(업종간 교차 분석 — 이번 블록 습득 즉시)"],
-        "injury_status": {"current": "수면 부족 심화 (3일 연속 보관고)", "change": "신체 부상 없음. 장기 수면 부족 누적"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "자금 유출 조사 수임자 + 대외 거래 담당", "change": "변동 없음"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "백란이 인정한 수준", "after": "변동 없음 (내부 성장)"},
+        "martial_arts_acquired": [
+          "장부술 Lv.5 — 업종간 교차 분석. 무기·약재·비단·정보·호송 5개 업종의 장부를 동시에 읽고 상호 연관성을 파악하는 능력"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.3(기존)",
+          "장부술 Lv.5(업종간 교차 분석 — 이번 블록 습득 즉시)"
+        ],
+        "injury_status": {
+          "current": "수면 부족 심화 (3일 연속 보관고)",
+          "change": "신체 부상 없음. 장기 수면 부족 누적"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "자금 유출 조사 수임자 + 대외 거래 담당",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "백란이 인정한 수준",
+          "after": "변동 없음 (내부 성장)"
+        },
         "action_type": "수련/분석 — 업종간 교차 분석 능력 도약",
-        "opponent": {"name": "없음 (수련 블록)", "sect_or_faction": "N/A", "weakness_exploited": "N/A"},
+        "opponent": {
+          "name": "없음 (수련 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "N/A"
+        },
         "strategy": "기존 단일 업종 분석에서 벗어나 5개 업종 동시 분석. 숫자 뒤의 전략을 읽는 단계로 진화",
         "success_pattern": "성공 — 장부술 질적 도약 + 외부 세력 흔적 발견. 그러나 증거 부족으로 행동 불가",
-        "leverage_used": ["10대 축적 장부 데이터", "장부술 Lv.3(기존 분석 능력)", "3일간의 집중 몰입"],
+        "leverage_used": [
+          "10대 축적 장부 데이터",
+          "장부술 Lv.3(기존 분석 능력)",
+          "3일간의 집중 몰입"
+        ],
         "martial_domain": "상단 내부",
-        "active_domains": ["장부 분석", "업종간 교차 분석"]
-      }
+        "active_domains": [
+          "장부 분석",
+          "업종간 교차 분석"
+        ]
+      },
+      "block_no": 11
     },
     {
       "block_id": "Block 12",
@@ -835,7 +1085,10 @@
         "Block 11에서 무기 거래 감소 추세 발견 → 이번 블록에서 무당파 직거래로 무기 유통 반격 시작",
         "Block 9에서 확립한 상업 비무 기초(시세 대조+대안 제시) → 이번 블록에서 무당파 집사 대상으로 동일 전략 적용(8% 절감 증명)"
       ],
-      "emotional_beat": {"type": "anticipation", "intensity": 6},
+      "emotional_beat": {
+        "type": "anticipation",
+        "intensity": 6
+      },
       "tension_level": 4,
       "location": {
         "place": "무당산(武當山) — 외산 객사 및 집사 접견실",
@@ -851,19 +1104,47 @@
         "internal_energy_before": "거래 규모 1만2천 냥 / 영향력: 업종간 교차 분석",
         "internal_energy_after": "거래 규모 1만5천 냥 / 영향력: 무당파 시범 계약(검 50자루) + 독고진(정파 접점)",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.5(무당파 무기 중간상 수수료 8% 과다 증명)", "상업 비무 기초(시세 대조+총량 보장 제안)"],
-        "injury_status": {"current": "정상 (수면 부족에서 여행 중 회복)", "change": "수면 부족 회복"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "대외 거래 담당", "change": "무당파와 시범 계약. 정파 5대 문파와의 첫 직거래 루트 개설"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "백란이 인정", "after": "무당파 집사가 장부술에 감탄. 독고진이 호감 표시. 정파 내 미약한 인지도 시작"},
+        "martial_arts_used": [
+          "장부술 Lv.5(무당파 무기 중간상 수수료 8% 과다 증명)",
+          "상업 비무 기초(시세 대조+총량 보장 제안)"
+        ],
+        "injury_status": {
+          "current": "정상 (수면 부족에서 여행 중 회복)",
+          "change": "수면 부족 회복"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "대외 거래 담당",
+          "change": "무당파와 시범 계약. 정파 5대 문파와의 첫 직거래 루트 개설"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "백란이 인정",
+          "after": "무당파 집사가 장부술에 감탄. 독고진이 호감 표시. 정파 내 미약한 인지도 시작"
+        },
         "action_type": "무기 조달 계약 — 무당파와 정파 5대 문파 최초 직거래",
-        "opponent": {"name": "무당파 외문 제자(신분 장벽) + 무기 중간상(기존 거래 관행)", "sect_or_faction": "무당파(정파)", "weakness_exploited": "기존 무기 중간상의 8% 과다 수수료를 장부 증거로 간파. 직거래 시 비용 절감을 수치로 증명"},
+        "opponent": {
+          "name": "무당파 외문 제자(신분 장벽) + 무기 중간상(기존 거래 관행)",
+          "sect_or_faction": "무당파(정파)",
+          "weakness_exploited": "기존 무기 중간상의 8% 과다 수수료를 장부 증거로 간파. 직거래 시 비용 절감을 수치로 증명"
+        },
         "strategy": "독고진이라는 내부 접점을 통해 면담 기회 확보. 장부 증거(5년 시세 대조표)로 집사를 설득. 시범 계약으로 위험을 최소화하면서 관계 구축",
         "success_pattern": "성공 — 시범 계약 체결 + 정파 접점(독고진) 확보. 규모는 작으나 상징적 돌파",
-        "leverage_used": ["장부술 Lv.5(시세 대조)", "금의상단의 대량 조달 능력", "독고진의 추천(내부 접점)", "서문경의 무당파 파벌 브리핑"],
+        "leverage_used": [
+          "장부술 Lv.5(시세 대조)",
+          "금의상단의 대량 조달 능력",
+          "독고진의 추천(내부 접점)",
+          "서문경의 무당파 파벌 브리핑"
+        ],
         "martial_domain": "정파 무림 — 무당산",
-        "active_domains": ["무기 조달", "정파 외교", "거래 협상"]
-      }
+        "active_domains": [
+          "무기 조달",
+          "정파 외교",
+          "거래 협상"
+        ]
+      },
+      "block_no": 12
     },
     {
       "block_id": "Block 13",
@@ -901,7 +1182,10 @@
         "Block 5에서 골목 감시자 → Block 7 하수인 습격 → 이번 블록에서 정예 자객 매복으로 위협 수준 3단계 상승",
         "Block 1에서 흑풍방 밀정이 소연을 인지 → 이번 블록에서 직접적 암살 시도로 귀결"
       ],
-      "emotional_beat": {"type": "devastation", "intensity": 9},
+      "emotional_beat": {
+        "type": "devastation",
+        "intensity": 9
+      },
       "tension_level": 9,
       "location": {
         "place": "낙양-개봉 간 관도 — 청풍협(淸風峽) 구간",
@@ -917,19 +1201,44 @@
         "internal_energy_before": "거래 규모 1만5천 냥 / 영향력: 무당파 시범 계약",
         "internal_energy_after": "거래 규모 8천 냥으로 급락 / 영향력: 약재 네트워크 절반 붕괴. 남은 거래처 이탈 위험",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.5(흑풍방의 약재 유통 의존도를 즉석 분석하여 자객에게 외침 — 시간 벌기)"],
-        "injury_status": {"current": "정상 (소연 본인은 무상)", "change": "검무: 좌측 어깨 칼상(경미). 1~2주 회복 필요"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "대외 거래 담당", "change": "약재 거래 네트워크 절반 붕괴. 거래처 상인 1명 사망, 2명 행방불명"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "무당파 접점 확보", "after": "'금의상단 거래처가 살해당했다'는 소문이 상인 사회에 퍼짐. 금의상단 거래가 위험하다는 인식 확산"},
+        "martial_arts_used": [
+          "장부술 Lv.5(흑풍방의 약재 유통 의존도를 즉석 분석하여 자객에게 외침 — 시간 벌기)"
+        ],
+        "injury_status": {
+          "current": "정상 (소연 본인은 무상)",
+          "change": "검무: 좌측 어깨 칼상(경미). 1~2주 회복 필요"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "대외 거래 담당",
+          "change": "약재 거래 네트워크 절반 붕괴. 거래처 상인 1명 사망, 2명 행방불명"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "무당파 접점 확보",
+          "after": "'금의상단 거래처가 살해당했다'는 소문이 상인 사회에 퍼짐. 금의상단 거래가 위험하다는 인식 확산"
+        },
         "action_type": "호위 전투 — 흑풍방 정예 자객 6명의 매복 습격 방어",
-        "opponent": {"name": "흑풍방(黑風幫) 정예 자객 6명 (이류 수준)", "sect_or_faction": "사파 흑풍방", "weakness_exploited": "소연이 흑풍방의 약재 유통 의존도를 외침으로 자객의 순간적 판단 혼란 유발. 검무의 예상 외 전투력(일류 초입)으로 수적 열세를 상쇄"},
+        "opponent": {
+          "name": "흑풍방(黑風幫) 정예 자객 6명 (이류 수준)",
+          "sect_or_faction": "사파 흑풍방",
+          "weakness_exploited": "소연이 흑풍방의 약재 유통 의존도를 외침으로 자객의 순간적 판단 혼란 유발. 검무의 예상 외 전투력(일류 초입)으로 수적 열세를 상쇄"
+        },
         "strategy": "전략 부재 — 매복 습격에 수동 대응. 소연의 정보 기반 외침으로 시간 벌기 + 검무의 전투력 의존",
         "success_pattern": "패배 — 소연·검무 생존은 성공이나, 거래처 상인 피해(1명 사망, 2명 실종), 네트워크 절반 붕괴는 실질적 패배",
-        "leverage_used": ["장부술(흑풍방 약재 의존도 분석)", "검무의 전투력", "서문경의 마차 내 보호"],
+        "leverage_used": [
+          "장부술(흑풍방 약재 의존도 분석)",
+          "검무의 전투력",
+          "서문경의 마차 내 보호"
+        ],
         "martial_domain": "상단 외부 — 관도 협곡",
-        "active_domains": ["호위 방어", "생존"]
-      }
+        "active_domains": [
+          "호위 방어",
+          "생존"
+        ]
+      },
+      "block_no": 13
     },
     {
       "block_id": "Block 14",
@@ -965,7 +1274,10 @@
         "Block 13에서 거래 네트워크 절반 붕괴 → 이번 블록에서 약왕곡 직거래로 복구 시작",
         "Block 9에서 확립한 '총량 보장 전략' → 이번 블록에서 약왕곡 약재상에게 안정적 대량 구매 약속으로 재적용"
       ],
-      "emotional_beat": {"type": "tactical_thrill", "intensity": 7},
+      "emotional_beat": {
+        "type": "tactical_thrill",
+        "intensity": 7
+      },
       "tension_level": 6,
       "location": {
         "place": "촉산 약왕곡(藥王谷) — 반기 약재 경매장",
@@ -980,20 +1292,50 @@
         "realm_after": "장방(帳房) 완성 근접",
         "internal_energy_before": "거래 규모 8천 냥 / 영향력: 네트워크 절반 붕괴",
         "internal_energy_after": "거래 규모 1만1천 냥 / 영향력: 약왕곡 직거래 2곳 + 지황 30근(무당파 납품 잠재가치)",
-        "martial_arts_acquired": ["경매 분석술 — 입찰 패턴, 상인 표정, 멈추는 금액대를 장부처럼 읽어 숨겨진 가치를 발굴하는 능력"],
-        "martial_arts_used": ["장부술 Lv.5(잡약재 묶음 내 지황 가치 분석)", "경매 분석술(입찰 패턴 읽기)", "상업 비무 기초(안정 구매 약속으로 직거래 확보)"],
-        "injury_status": {"current": "정상", "change": "검무: 좌측 어깨 회복 중(경미)"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "대외 거래 담당", "change": "약왕곡 직거래 루트 확보. 약재 유통 복구 시작"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "거래 위험 소문 확산", "after": "약왕곡에서 '3천 냥으로 알짜를 뽑아간 금의상단 막내' 소문. 상인 사회에서 장부술에 대한 경외 시작"},
+        "martial_arts_acquired": [
+          "경매 분석술 — 입찰 패턴, 상인 표정, 멈추는 금액대를 장부처럼 읽어 숨겨진 가치를 발굴하는 능력"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.5(잡약재 묶음 내 지황 가치 분석)",
+          "경매 분석술(입찰 패턴 읽기)",
+          "상업 비무 기초(안정 구매 약속으로 직거래 확보)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "검무: 좌측 어깨 회복 중(경미)"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "대외 거래 담당",
+          "change": "약왕곡 직거래 루트 확보. 약재 유통 복구 시작"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "거래 위험 소문 확산",
+          "after": "약왕곡에서 '3천 냥으로 알짜를 뽑아간 금의상단 막내' 소문. 상인 사회에서 장부술에 대한 경외 시작"
+        },
         "action_type": "약재 경매 — 약왕곡 반기 경매에서 열세 자금으로 실질 가치 확보",
-        "opponent": {"name": "백란 대리인 + 동래·남해상단 (경매 경쟁자)", "sect_or_faction": "5대 상단 경쟁", "weakness_exploited": "대형 상단들이 간판 약재(천년 하수오)에만 집중하여 2등급 잡약재 묶음의 숨겨진 가치(지황 30근)를 간과한 점"},
+        "opponent": {
+          "name": "백란 대리인 + 동래·남해상단 (경매 경쟁자)",
+          "sect_or_faction": "5대 상단 경쟁",
+          "weakness_exploited": "대형 상단들이 간판 약재(천년 하수오)에만 집중하여 2등급 잡약재 묶음의 숨겨진 가치(지황 30근)를 간과한 점"
+        },
         "strategy": "간판 약재 포기 → 남들이 무시하는 묶음에서 숨겨진 가치 발굴 → 남은 자금으로 소규모 직거래 확보. '비싸게 사는 것'이 아니라 '남이 못 보는 것을 보는 것'이 진짜 경매 전략",
         "success_pattern": "완전 성공 — 3천 냥으로 1만 냥 이상 가치를 뽑아냄. 약재 유통 복구의 전환점",
-        "leverage_used": ["장부술 Lv.5(지황 시세 분석)", "약왕곡 약재 구성 사전 조사(서문경)", "금의상단의 안정 구매 약속(신용)"],
+        "leverage_used": [
+          "장부술 Lv.5(지황 시세 분석)",
+          "약왕곡 약재 구성 사전 조사(서문경)",
+          "금의상단의 안정 구매 약속(신용)"
+        ],
         "martial_domain": "상단 외부 — 촉산 약왕곡",
-        "active_domains": ["약재 경매", "직거래 확보", "가치 발굴"]
-      }
+        "active_domains": [
+          "약재 경매",
+          "직거래 확보",
+          "가치 발굴"
+        ]
+      },
+      "block_no": 14
     },
     {
       "block_id": "Block 15",
@@ -1030,7 +1372,10 @@
         "Block 1의 큰오빠 하얗게 변한 얼굴 → Block 2의 떨리는 손 → 이번 블록에서 흑풍방 서신 발견으로 의혹 결정적 심화",
         "Block 6의 마 포두 '위에서 시킨 것' → 이번 블록의 큰오빠 서신과 연결 가능성 부상"
       ],
-      "emotional_beat": {"type": "menace", "intensity": 8},
+      "emotional_beat": {
+        "type": "menace",
+        "intensity": 8
+      },
       "tension_level": 8,
       "location": {
         "place": "금의상단 본부 — 귀빈 객실 (조태사 접견) + 큰오빠 서재 (서신 발견)",
@@ -1045,20 +1390,49 @@
         "realm_after": "장방(帳房) 완성",
         "internal_energy_before": "거래 규모 1만1천 냥 / 영향력: 약왕곡 직거래 확보",
         "internal_energy_after": "거래 규모 1만1천 냥 / 영향력: 관부 접점 발생(위험+기회). 큰오빠 서신으로 내부 불안 극대화",
-        "martial_arts_acquired": ["관부 대응술 기초 — 관부의 요구 범위를 분석하고, 정보 노출을 최소화하면서 형식적 순응을 유지하는 기술"],
-        "martial_arts_used": ["장부술 Lv.5(관부 요구 범위 분석)", "관부 대응술 기초(시간 벌기+범위 확인)"],
-        "injury_status": {"current": "정상", "change": "검무: 좌측 어깨 회복 완료"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "대외 거래 + 관부 대응 담당", "change": "관부(조태사)와의 공식 접점 발생. 약재 장부 제출 의무"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "약왕곡 소문", "after": "관부가 금의상단을 주시하고 있다는 사실이 상인 사회에 퍼짐. 긍정과 부정 양면"},
+        "martial_arts_acquired": [
+          "관부 대응술 기초 — 관부의 요구 범위를 분석하고, 정보 노출을 최소화하면서 형식적 순응을 유지하는 기술"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.5(관부 요구 범위 분석)",
+          "관부 대응술 기초(시간 벌기+범위 확인)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "검무: 좌측 어깨 회복 완료"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "대외 거래 + 관부 대응 담당",
+          "change": "관부(조태사)와의 공식 접점 발생. 약재 장부 제출 의무"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "약왕곡 소문",
+          "after": "관부가 금의상단을 주시하고 있다는 사실이 상인 사회에 퍼짐. 긍정과 부정 양면"
+        },
         "action_type": "관부 외교 — 조태사의 장부 제출 요구 대응 및 시간 벌기",
-        "opponent": {"name": "조태사(趙太師/관부 태사)", "sect_or_faction": "관부(官府)", "weakness_exploited": "조태사의 요구가 '전수 조사'가 아닌 '약재 거래만'이라는 점 — 범위 제한을 활용하여 유출 흔적이 적은 장부만 제출 가능"},
+        "opponent": {
+          "name": "조태사(趙太師/관부 태사)",
+          "sect_or_faction": "관부(官府)",
+          "weakness_exploited": "조태사의 요구가 '전수 조사'가 아닌 '약재 거래만'이라는 점 — 범위 제한을 활용하여 유출 흔적이 적은 장부만 제출 가능"
+        },
         "strategy": "형식적 순응 + 범위 확인 + 시간 벌기. 조태사의 진짜 의도를 파악하면서 관부를 적으로 만들지 않는 균형",
         "success_pattern": "부분 성공 — 시간 벌기에 성공했으나, 관부라는 새 전선 개설. 큰오빠 서신 발견이라는 내부 충격 동시 발생",
-        "leverage_used": ["장부술(요구 범위 분석)", "금의상단의 성실 납세 기록", "소연의 순발력(아버지 대신 대응)"],
+        "leverage_used": [
+          "장부술(요구 범위 분석)",
+          "금의상단의 성실 납세 기록",
+          "소연의 순발력(아버지 대신 대응)"
+        ],
         "martial_domain": "관부 접점",
-        "active_domains": ["관부 대응", "장부 정리", "내부 조사"]
-      }
+        "active_domains": [
+          "관부 대응",
+          "장부 정리",
+          "내부 조사"
+        ]
+      },
+      "block_no": 15
     },
     {
       "block_id": "Block 16",
@@ -1094,7 +1468,10 @@
         "Block 10에서 백란의 '시장에서 만나면 봐주지 않겠다' → 이번 블록에서 실행",
         "Block 11에서 무기 거래 감소+약재 매입 증가 패턴 → 이번 블록에서 백란의 사전 잠식이었음이 확정"
       ],
-      "emotional_beat": {"type": "urgency", "intensity": 7},
+      "emotional_beat": {
+        "type": "urgency",
+        "intensity": 7
+      },
       "tension_level": 7,
       "location": {
         "place": "낙양 금의상단 본부 — 전략 회의실 + 개봉 시전 정보(서신)",
@@ -1109,20 +1486,50 @@
         "realm_after": "대관(大管) 입문 전",
         "internal_energy_before": "거래 규모 1만1천 냥 / 영향력: 관부 접점+약왕곡 직거래",
         "internal_energy_after": "거래 규모 9천 냥 (비단 포기로 감소) / 영향력: 특수약재+무기 집중. 비단 30% 상실",
-        "martial_arts_acquired": ["전장 선택 전략 — 모든 전선에서 싸우지 않고 이길 수 있는 전선만 골라 집중하는 전략적 사고"],
-        "martial_arts_used": ["장부술 Lv.5(백씨상단 자금 구조 분석)", "전장 선택 전략(비단 포기+특수약재 집중)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 담당", "change": "비단 시장 후퇴. 특수 약재+무기 집중으로 사업 구조 재편"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "관부 주시 소문", "after": "'금의상단이 비단에서 손을 뗐다' 소문. 약해졌다는 인식 vs 전략적 후퇴라는 양면 평가"},
+        "martial_arts_acquired": [
+          "전장 선택 전략 — 모든 전선에서 싸우지 않고 이길 수 있는 전선만 골라 집중하는 전략적 사고"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.5(백씨상단 자금 구조 분석)",
+          "전장 선택 전략(비단 포기+특수약재 집중)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 담당",
+          "change": "비단 시장 후퇴. 특수 약재+무기 집중으로 사업 구조 재편"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "관부 주시 소문",
+          "after": "'금의상단이 비단에서 손을 뗐다' 소문. 약해졌다는 인식 vs 전략적 후퇴라는 양면 평가"
+        },
         "action_type": "전략 재편 — 백란의 가격 전쟁에 대한 비대칭 대응",
-        "opponent": {"name": "백란(白蘭/백씨상단) — 가격 전쟁", "sect_or_faction": "백씨상단", "weakness_exploited": "백란의 가격 전쟁이 범용 시장(비단+범용약재)에 집중되어, 특수 약재와 무기 직거래 영역은 공격 불가한 점"},
+        "opponent": {
+          "name": "백란(白蘭/백씨상단) — 가격 전쟁",
+          "sect_or_faction": "백씨상단",
+          "weakness_exploited": "백란의 가격 전쟁이 범용 시장(비단+범용약재)에 집중되어, 특수 약재와 무기 직거래 영역은 공격 불가한 점"
+        },
         "strategy": "정면 가격 대결 회피. 비단 포기+특수약재·무기 집중이라는 전장 전환. '같은 판에서 더 싸게'가 아니라 '다른 판을 만들어서 이기는' 전략",
         "success_pattern": "전략적 성공 — 소모전 회피에 성공. 그러나 비단 시장 상실이라는 대가",
-        "leverage_used": ["장부술(시장 구조 분석)", "서문경(백씨상단 자금 조달 정보)", "무당파 계약(특수 약재 납품 기반)", "약왕곡 직거래(특수 약재 확보)"],
+        "leverage_used": [
+          "장부술(시장 구조 분석)",
+          "서문경(백씨상단 자금 조달 정보)",
+          "무당파 계약(특수 약재 납품 기반)",
+          "약왕곡 직거래(특수 약재 확보)"
+        ],
         "martial_domain": "상단 전략",
-        "active_domains": ["전략 재편", "특수 약재 집중", "가격 전쟁 대응"]
-      }
+        "active_domains": [
+          "전략 재편",
+          "특수 약재 집중",
+          "가격 전쟁 대응"
+        ]
+      },
+      "block_no": 16
     },
     {
       "block_id": "Block 17",
@@ -1158,7 +1565,10 @@
         "Block 14의 약왕곡 지황 30근 → 이번 블록에서 무당파 긴급 납품으로 현금화. 당시의 '800냥 묶음에서 1천5백 냥을 뽑아낸' 판단이 생존을 좌우",
         "Block 15의 조태사 → 이번 블록에서 세금 30% 인상으로 두 번째 수"
       ],
-      "emotional_beat": {"type": "suffocation", "intensity": 6},
+      "emotional_beat": {
+        "type": "suffocation",
+        "intensity": 6
+      },
       "tension_level": 7,
       "location": {
         "place": "낙양 관부 출장소 — 세금 분납 요청 면담",
@@ -1174,19 +1584,48 @@
         "internal_energy_before": "거래 규모 9천 냥 / 영향력: 비단 포기 후 특수약재+무기 집중",
         "internal_energy_after": "거래 규모 1만 냥 (지황 납품 1천5백 냥 확보로 소폭 회복) / 영향력: 세금 분납 유예 + 무당파 납품 실적",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.5(세금 인상의 현금 흐름 영향 분석)", "관부 대응술(분납 요청)", "상업 비무(지황 긴급 납품 협상)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 담당", "change": "세금 분납 유예 확보. 둘째 오빠 합류. 가족 내 동맹 강화"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "비단 시장 후퇴 소문", "after": "세금 인상이 5대 상단 모두에 해당되면서, 금의상단만의 문제가 아닌 구조적 문제로 인식 전환"},
+        "martial_arts_used": [
+          "장부술 Lv.5(세금 인상의 현금 흐름 영향 분석)",
+          "관부 대응술(분납 요청)",
+          "상업 비무(지황 긴급 납품 협상)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 담당",
+          "change": "세금 분납 유예 확보. 둘째 오빠 합류. 가족 내 동맹 강화"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "비단 시장 후퇴 소문",
+          "after": "세금 인상이 5대 상단 모두에 해당되면서, 금의상단만의 문제가 아닌 구조적 문제로 인식 전환"
+        },
         "action_type": "생존 전략 — 세금 인상+가격 전쟁 이중 압박 대응",
-        "opponent": {"name": "조태사(세금 인상) + 백란(가격 전쟁 지속)", "sect_or_faction": "관부+백씨상단", "weakness_exploited": "관부의 세금 인상이 5대 상단 '전체'에 적용된다는 점 — 백란도 동일 부담을 진다. 시간이 금의상단 편"},
+        "opponent": {
+          "name": "조태사(세금 인상) + 백란(가격 전쟁 지속)",
+          "sect_or_faction": "관부+백씨상단",
+          "weakness_exploited": "관부의 세금 인상이 5대 상단 '전체'에 적용된다는 점 — 백란도 동일 부담을 진다. 시간이 금의상단 편"
+        },
         "strategy": "세금 분납으로 시간 벌기 + 지황 납품으로 조기 현금 확보 + 백란도 세금에 시달린다는 정보 확인으로 '버티기 전략' 확립",
         "success_pattern": "부분 성공 — 당장의 현금 위기는 넘겼으나, 분납 유예 만료 시 다시 위기. 근본 해결 아닌 시간 벌기",
-        "leverage_used": ["지황 30근(약왕곡 확보분)", "무당파 납품 관계", "관부 분납 제도", "서문경(백씨상단 세금 상황 조사)"],
+        "leverage_used": [
+          "지황 30근(약왕곡 확보분)",
+          "무당파 납품 관계",
+          "관부 분납 제도",
+          "서문경(백씨상단 세금 상황 조사)"
+        ],
         "martial_domain": "관부+상단 전략",
-        "active_domains": ["세금 대응", "약재 납품", "전략 수립"]
-      }
+        "active_domains": [
+          "세금 대응",
+          "약재 납품",
+          "전략 수립"
+        ]
+      },
+      "block_no": 17
     },
     {
       "block_id": "Block 18",
@@ -1223,7 +1662,10 @@
         "Block 14의 약왕곡 약재 확보 → 이번 블록에서 거란 교역의 수출품으로 활용",
         "Block 16에서 '전장 자체를 바꾸는' 전략 → 이번 블록에서 아예 '시장 자체를 바꿈'(중원→해외)으로 한 단계 더 확장"
       ],
-      "emotional_beat": {"type": "adventure", "intensity": 5},
+      "emotional_beat": {
+        "type": "adventure",
+        "intensity": 5
+      },
       "tension_level": 4,
       "location": {
         "place": "북방 요(遼) 접경 — 거란 교역소",
@@ -1238,20 +1680,51 @@
         "realm_after": "대관(大管) 입문",
         "internal_energy_before": "거래 규모 1만 냥 / 영향력: 세금 분납+무당파 납품",
         "internal_energy_after": "거래 규모 2만5천 냥 / 영향력: 거란 정기 교역 라인 + 철광 500근 확보",
-        "martial_arts_acquired": ["장부술 Lv.7 — 시장 흐름 예측. 두 경제권의 가격 차이를 분석하고 교차 교역으로 이익을 극대화하는 능력"],
-        "martial_arts_used": ["장부술 Lv.5(거란·중원 약재·철광 시세 비교)", "장부술 Lv.7(교차 교역 이익 설계)", "상업 비무(물물교환 협상)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략+대외 거래+해외 교역 담당", "change": "금의상단 최초 해외 교역 라인 개설. 사업 영역이 중원을 넘어 확장"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "세금 인상 속 생존 전략", "after": "거란 교역 소문이 퍼지면 금의상단의 시야가 다름을 인지시킬 수 있음 (아직 비밀)"},
+        "martial_arts_acquired": [
+          "장부술 Lv.7 — 시장 흐름 예측. 두 경제권의 가격 차이를 분석하고 교차 교역으로 이익을 극대화하는 능력"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.5(거란·중원 약재·철광 시세 비교)",
+          "장부술 Lv.7(교차 교역 이익 설계)",
+          "상업 비무(물물교환 협상)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략+대외 거래+해외 교역 담당",
+          "change": "금의상단 최초 해외 교역 라인 개설. 사업 영역이 중원을 넘어 확장"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "세금 인상 속 생존 전략",
+          "after": "거란 교역 소문이 퍼지면 금의상단의 시야가 다름을 인지시킬 수 있음 (아직 비밀)"
+        },
         "action_type": "해외 교역 — 거란과 최초 정기 교역 라인 개설",
-        "opponent": {"name": "거란 교역 문화의 장벽 (적대자 아닌 문화적 장애물)", "sect_or_faction": "거란 교역소", "weakness_exploited": "중원 상인의 기존 불공정 거래에 대한 거란 측 불만을 역이용 — '양쪽 모두 이득'이라는 프레임으로 신뢰 확보"},
+        "opponent": {
+          "name": "거란 교역 문화의 장벽 (적대자 아닌 문화적 장애물)",
+          "sect_or_faction": "거란 교역소",
+          "weakness_exploited": "중원 상인의 기존 불공정 거래에 대한 거란 측 불만을 역이용 — '양쪽 모두 이득'이라는 프레임으로 신뢰 확보"
+        },
         "strategy": "비단(거란에 과잉) 대신 약재(거란에 부족)를 수출품으로 선택. 가격 차이를 이용한 물물교환으로 양측 모두 이익 구조 설계",
         "success_pattern": "완전 성공 — 정기 교역 라인 + 철광 확보 + 거란 상인 신뢰 획득",
-        "leverage_used": ["약왕곡 약재(거란 부족 품목)", "장부술 Lv.7(교차 시세 분석)", "둘째 오빠의 거란 인맥(아율달)", "금의상단의 대량 교역 능력"],
+        "leverage_used": [
+          "약왕곡 약재(거란 부족 품목)",
+          "장부술 Lv.7(교차 시세 분석)",
+          "둘째 오빠의 거란 인맥(아율달)",
+          "금의상단의 대량 교역 능력"
+        ],
         "martial_domain": "해외 교역 — 북방 요(遼)",
-        "active_domains": ["해외 교역", "물물교환", "무역로 개척"]
-      }
+        "active_domains": [
+          "해외 교역",
+          "물물교환",
+          "무역로 개척"
+        ]
+      },
+      "block_no": 18
     },
     {
       "block_id": "Block 19",
@@ -1287,7 +1760,10 @@
         "Block 13의 정예 자객 6명 → 이번 블록에서 12명 규모로 에스컬레이션. 흑풍방의 위협 수준 최고조",
         "Block 6의 마 포두 매수(첫 경로 차단) → 경로 차단이 효과를 보고 있기에 흑풍방이 필사적"
       ],
-      "emotional_beat": {"type": "crisis", "intensity": 8},
+      "emotional_beat": {
+        "type": "crisis",
+        "intensity": 8
+      },
       "tension_level": 9,
       "location": {
         "place": "낙양 북방 3일 거리 — 황하(黃河) 남안 관도",
@@ -1303,19 +1779,44 @@
         "internal_energy_before": "거래 규모 2만5천 냥 / 영향력: 거란 교역 라인",
         "internal_energy_after": "거래 규모 2만5천 냥 / 영향력: 철광 500근 무사 확보. 그러나 호위대장 부상으로 무력 약화",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.7(습격의 의미 분석 — 흑풍방 필사적=차단 효과 증명)"],
-        "injury_status": {"current": "정상 (소연 무상)", "change": "하삼재: 왼팔 중상(힘줄 손상), 2개월 회복. 호위대 1명 경상"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략+대외 거래+해외 교역", "change": "호위대장 하삼재 부상으로 무력 체계 약화"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "거란 교역(비밀)", "after": "'금의상단 마차가 또 습격당했다' 소문. '위험한 상단' 이미지 강화"},
+        "martial_arts_used": [
+          "장부술 Lv.7(습격의 의미 분석 — 흑풍방 필사적=차단 효과 증명)"
+        ],
+        "injury_status": {
+          "current": "정상 (소연 무상)",
+          "change": "하삼재: 왼팔 중상(힘줄 손상), 2개월 회복. 호위대 1명 경상"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략+대외 거래+해외 교역",
+          "change": "호위대장 하삼재 부상으로 무력 체계 약화"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "거란 교역(비밀)",
+          "after": "'금의상단 마차가 또 습격당했다' 소문. '위험한 상단' 이미지 강화"
+        },
         "action_type": "호위 전투 — 흑풍방 습격대 12명과의 마차 행렬 방어전",
-        "opponent": {"name": "흑풍방 습격대 12명", "sect_or_faction": "사파 흑풍방", "weakness_exploited": "흑풍방 습격대가 검무+하삼재의 전투력을 과소평가. 12명 중 8명 사망이라는 대가"},
+        "opponent": {
+          "name": "흑풍방 습격대 12명",
+          "sect_or_faction": "사파 흑풍방",
+          "weakness_exploited": "흑풍방 습격대가 검무+하삼재의 전투력을 과소평가. 12명 중 8명 사망이라는 대가"
+        },
         "strategy": "전략 부재 — 매복에 수동 대응. 검무+하삼재+호위대의 전투력에 의존",
         "success_pattern": "패배 — 철광은 지켰으나 하삼재 중상이라는 실질적 패배. 인명 피해",
-        "leverage_used": ["검무의 전투력(3명 단독 제압)", "하삼재의 전투력(부상 중 2명 제압)", "호위대 5명"],
+        "leverage_used": [
+          "검무의 전투력(3명 단독 제압)",
+          "하삼재의 전투력(부상 중 2명 제압)",
+          "호위대 5명"
+        ],
         "martial_domain": "상단 외부 — 북방 관도",
-        "active_domains": ["호위 방어", "생존"]
-      }
+        "active_domains": [
+          "호위 방어",
+          "생존"
+        ]
+      },
+      "block_no": 19
     },
     {
       "block_id": "Block 20",
@@ -1351,7 +1852,10 @@
         "Block 16의 가격 전쟁 개시 → 이번 블록에서 4개월 만에 백란 후퇴. '버틴 자가 이긴다'",
         "Block 6의 마 포두 매수(경로① 차단) → 이번 블록에서 경로② 차단으로 60% 달성. 단계적 차단 전략의 성과"
       ],
-      "emotional_beat": {"type": "triumph", "intensity": 7},
+      "emotional_beat": {
+        "type": "triumph",
+        "intensity": 7
+      },
       "tension_level": 5,
       "location": {
         "place": "낙양 금의상단 본부 — 소연의 방 (전략 정리) + 서신 수취",
@@ -1366,20 +1870,55 @@
         "realm_after": "대관(大管)",
         "internal_energy_before": "거래 규모 2만5천 냥 / 영향력: 거란 교역+무력 약화",
         "internal_energy_after": "거래 규모 5만 냥 / 영향력: 가격 전쟁 승리 + 유출 60% 차단 + 거란 교역 안정화",
-        "martial_arts_acquired": ["전략적 자원 통제 기초 — 복수 전선을 동시에 관리하면서 '이길 수 있는 전선 선택+자금줄 차단+새 수입원 확보'를 병행하는 능력"],
-        "martial_arts_used": ["장부술 Lv.7(시장 흐름 예측)", "전장 선택 전략", "상업 비무(50곳 재계약 협상)", "전략적 자원 통제"],
-        "injury_status": {"current": "정상", "change": "하삼재: 회복 중(1개월 경과, 잔여 1개월)"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "가격 전쟁 승리로 상단 내 소연의 위상 확립. 사실상의 전략 총괄자"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "위험한 상단 이미지", "after": "가격 전쟁에서 백씨상단을 이긴 금의상단 막내딸. '주판으로 싸워 이겼다'는 소문이 5대 상단 사이에서 회자"},
+        "martial_arts_acquired": [
+          "전략적 자원 통제 기초 — 복수 전선을 동시에 관리하면서 '이길 수 있는 전선 선택+자금줄 차단+새 수입원 확보'를 병행하는 능력"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.7(시장 흐름 예측)",
+          "전장 선택 전략",
+          "상업 비무(50곳 재계약 협상)",
+          "전략적 자원 통제"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "하삼재: 회복 중(1개월 경과, 잔여 1개월)"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "가격 전쟁 승리로 상단 내 소연의 위상 확립. 사실상의 전략 총괄자"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "위험한 상단 이미지",
+          "after": "가격 전쟁에서 백씨상단을 이긴 금의상단 막내딸. '주판으로 싸워 이겼다'는 소문이 5대 상단 사이에서 회자"
+        },
         "action_type": "전략 총결산 — 가격 전쟁 승리 + 유출 경로 60% 차단",
-        "opponent": {"name": "백란(가격 전쟁) + 흑풍방(자금 유출)", "sect_or_faction": "백씨상단+흑풍방", "weakness_exploited": "백란의 가격 전쟁이 금의상단의 전장 전환(비단 포기→특수약재+무기+거란)으로 무력화. 흑풍방의 유출 경로가 투명한 재계약으로 차단"},
+        "opponent": {
+          "name": "백란(가격 전쟁) + 흑풍방(자금 유출)",
+          "sect_or_faction": "백씨상단+흑풍방",
+          "weakness_exploited": "백란의 가격 전쟁이 금의상단의 전장 전환(비단 포기→특수약재+무기+거란)으로 무력화. 흑풍방의 유출 경로가 투명한 재계약으로 차단"
+        },
         "strategy": "가격 전쟁: 정면 대결 대신 전장 전환. 흑풍방: 50곳 거래처 전면 재계약으로 수수료 조작 경로 차단. 두 전선을 각각 다른 방식으로 동시 대응",
         "success_pattern": "성공 — 가격 전쟁 승리(백란 후퇴) + 유출 60% 차단. ARC-02의 핵심 성과. 그러나 유출 경로③ 미차단+세금 유예 만료+셋째 오빠 부상 회복 중이라는 잔여 과제",
-        "leverage_used": ["장부술 Lv.7", "전장 선택 전략", "거란 교역(우회 수입)", "무당파 계약(특수 약재 납품)", "서문경(백씨상단 재무 정보)", "홍매(거래처 재계약 의향 파악)"],
+        "leverage_used": [
+          "장부술 Lv.7",
+          "전장 선택 전략",
+          "거란 교역(우회 수입)",
+          "무당파 계약(특수 약재 납품)",
+          "서문경(백씨상단 재무 정보)",
+          "홍매(거래처 재계약 의향 파악)"
+        ],
         "martial_domain": "상단 전략 총괄",
-        "active_domains": ["가격 전쟁 대응", "유출 차단", "거래처 재계약", "전략 총괄"]
-      }
+        "active_domains": [
+          "가격 전쟁 대응",
+          "유출 차단",
+          "거래처 재계약",
+          "전략 총괄"
+        ]
+      },
+      "block_no": 20
     },
     {
       "block_id": "Block 21",
@@ -1416,7 +1955,10 @@
         "Block 12에서 독고진의 '숫자로 사람을 설득하는 건 처음' → 이번 블록에서 직접 찾아올 만큼 소연에 대한 관심 심화",
         "Block 18에서 거란 철광 확보 → 이번 블록에서 '원료부터 확보하여 맞춤 무기' 구상의 재료로 활용"
       ],
-      "emotional_beat": {"type": "warmth", "intensity": 4},
+      "emotional_beat": {
+        "type": "warmth",
+        "intensity": 4
+      },
       "tension_level": 2,
       "location": {
         "place": "금의상단 본부 — 후원(後園) 매화나무 아래",
@@ -1432,19 +1974,45 @@
         "internal_energy_before": "거래 규모 5만 냥 / 영향력: 가격 전쟁 승리 + 유출 60% 차단",
         "internal_energy_after": "거래 규모 5만 냥 / 영향력: 독고진(정파 인맥) 개인적 친분 + 맞춤 무기 모델 구상",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.7(무기 품질과 원료의 상관관계 분석 — 검신 강도 12% 차이)"],
-        "injury_status": {"current": "정상", "change": "하삼재: 왼팔 회복 거의 완료(잔여 2주)"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "독고진과의 개인적 친분으로 무당파 관계 심화"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "주판으로 이긴 상단 막내딸", "after": "무당파 제자가 직접 방문할 정도로 정파 내 인지도 상승"},
+        "martial_arts_used": [
+          "장부술 Lv.7(무기 품질과 원료의 상관관계 분석 — 검신 강도 12% 차이)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "하삼재: 왼팔 회복 거의 완료(잔여 2주)"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "독고진과의 개인적 친분으로 무당파 관계 심화"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "주판으로 이긴 상단 막내딸",
+          "after": "무당파 제자가 직접 방문할 정도로 정파 내 인지도 상승"
+        },
         "action_type": "외교/관계 — 독고진과의 개인적 친분 형성 및 맞춤 무기 모델 논의",
-        "opponent": {"name": "없음 (조용한 블록)", "sect_or_faction": "N/A", "weakness_exploited": "N/A"},
+        "opponent": {
+          "name": "없음 (조용한 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "N/A"
+        },
         "strategy": "거래 상대를 넘어 개인적 유대를 형성. 무당파 검법 정보 확보로 맞춤 무기 모델의 기술적 기반 마련",
         "success_pattern": "성공 — 독고진 친분 확보 + 맞춤 무기 모델 구상 + 로맨스 시작",
-        "leverage_used": ["거란 철광(원료 확보 증명)", "장부술(무기 품질 분석)", "후원 매화(편안한 분위기 조성)"],
+        "leverage_used": [
+          "거란 철광(원료 확보 증명)",
+          "장부술(무기 품질 분석)",
+          "후원 매화(편안한 분위기 조성)"
+        ],
         "martial_domain": "정파 외교",
-        "active_domains": ["정파 관계", "무기 조달 기획", "개인적 유대"]
-      }
+        "active_domains": [
+          "정파 관계",
+          "무기 조달 기획",
+          "개인적 유대"
+        ]
+      },
+      "block_no": 21
     },
     {
       "block_id": "Block 22",
@@ -1480,7 +2048,10 @@
         "Block 8에서 서문경 영입 시 '정보의 가치를 판단하게' → 이번 블록에서 서문경의 정보가 상단을 살리는 수준으로 가치 증명",
         "Block 20에서 50곳 재계약 → 이번 블록에서 재계약을 넘어 '직접 고용'으로 구조 개혁 레벨 업"
       ],
-      "emotional_beat": {"type": "insight", "intensity": 6},
+      "emotional_beat": {
+        "type": "insight",
+        "intensity": 6
+      },
       "tension_level": 6,
       "location": {
         "place": "낙양 암시장 — 서문경의 비밀 거점 (차 노점 뒤편 지하실)",
@@ -1495,20 +2066,50 @@
         "realm_after": "대관(大管)",
         "internal_energy_before": "거래 규모 5만 냥 / 영향력: 독고진 친분+맞춤 무기 구상",
         "internal_energy_after": "거래 규모 5만 냥 / 영향력: 풍만리 계획 사전 입수 + 중간상 직접 고용 전략 수립",
-        "martial_arts_acquired": ["정보 교차 검증 — 서문경(외부)+홍매(내부) 이중 정보원의 교차 검증 시스템 확립"],
-        "martial_arts_used": ["장부술 Lv.7(풍만리 계획의 경제적 영향 즉시 계산)", "정보 교차 검증(서문경+홍매 이중 확인)"],
-        "injury_status": {"current": "정상", "change": "하삼재: 왼팔 회복 완료"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "중간상 직접 고용이라는 사업 구조 개혁 착수"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "정파 인지도 상승", "after": "변동 없음 (내부 전략 단계)"},
+        "martial_arts_acquired": [
+          "정보 교차 검증 — 서문경(외부)+홍매(내부) 이중 정보원의 교차 검증 시스템 확립"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.7(풍만리 계획의 경제적 영향 즉시 계산)",
+          "정보 교차 검증(서문경+홍매 이중 확인)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "하삼재: 왼팔 회복 완료"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "중간상 직접 고용이라는 사업 구조 개혁 착수"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "정파 인지도 상승",
+          "after": "변동 없음 (내부 전략 단계)"
+        },
         "action_type": "정보 전략 — 흑풍방 내부 정보 입수 및 선제 대응 설계",
-        "opponent": {"name": "풍만리(馮萬里/흑풍방 방주) — 간접 대결", "sect_or_faction": "사파 흑풍방", "weakness_exploited": "풍만리의 계획(중간상 매수/협박)을 사전에 파악하여, 중간상 자체를 금의상단 직원으로 전환함으로써 매수 대상을 소멸시키는 전략"},
+        "opponent": {
+          "name": "풍만리(馮萬里/흑풍방 방주) — 간접 대결",
+          "sect_or_faction": "사파 흑풍방",
+          "weakness_exploited": "풍만리의 계획(중간상 매수/협박)을 사전에 파악하여, 중간상 자체를 금의상단 직원으로 전환함으로써 매수 대상을 소멸시키는 전략"
+        },
         "strategy": "서문경의 정보로 풍만리의 계획을 사전 입수 → 중간상 직접 고용으로 매수 대상 자체를 제거 → 시간 경쟁에서 풍만리보다 먼저 행동",
         "success_pattern": "성공 — 전략 수립 완료. 실행은 다음 블록들에서",
-        "leverage_used": ["서문경(흑풍방 내부 정보)", "홍매(내부 교차 검증)", "장부술(경제적 영향 분석)", "Block 20의 재계약 경험"],
+        "leverage_used": [
+          "서문경(흑풍방 내부 정보)",
+          "홍매(내부 교차 검증)",
+          "장부술(경제적 영향 분석)",
+          "Block 20의 재계약 경험"
+        ],
         "martial_domain": "정보전",
-        "active_domains": ["정보 분석", "사업 구조 개혁", "선제 대응"]
-      }
+        "active_domains": [
+          "정보 분석",
+          "사업 구조 개혁",
+          "선제 대응"
+        ]
+      },
+      "block_no": 22
     },
     {
       "block_id": "Block 23",
@@ -1545,7 +2146,10 @@
         "Block 1의 큰오빠 하얗게 변한 얼굴 → Block 2 떨리는 손 → Block 15 흑풍방 서신 → 이번 블록에서 매입가 승인 서류로 퍼즐 완성",
         "Block 6의 마 포두 '위에서 시킨 것' → 이번 블록에서 '위'가 큰오빠였음이 확정(그러나 큰오빠 위의 더 큰 '위'가 있을 가능성)"
       ],
-      "emotional_beat": {"type": "betrayal", "intensity": 9},
+      "emotional_beat": {
+        "type": "betrayal",
+        "intensity": 9
+      },
       "tension_level": 9,
       "location": {
         "place": "금의상단 본부 — 큰오빠 서재 + 아버지 서재",
@@ -1561,19 +2165,45 @@
         "internal_energy_before": "거래 규모 5만 냥 / 영향력: 정보 전략 확립",
         "internal_energy_after": "거래 규모 3만 냥으로 급락 / 영향력: 큰오빠 관리 서쪽 거래처 20% 중단. 가문 내분으로 상단 내부 결속 약화",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.7(매입가 승인 서류에서 큰오빠 연결 확정)"],
-        "injury_status": {"current": "정상 (정신적 타격 — 가족 배신감)", "change": "신체 무상이나 심리적 충격"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "가문 내분 폭발. 큰오빠 추방론 대두. 서쪽 거래처 혼란"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "정파 인지도", "after": "'금의상단 내부에 문제가 있다'는 소문이 슬슬 새어나감"},
+        "martial_arts_used": [
+          "장부술 Lv.7(매입가 승인 서류에서 큰오빠 연결 확정)"
+        ],
+        "injury_status": {
+          "current": "정상 (정신적 타격 — 가족 배신감)",
+          "change": "신체 무상이나 심리적 충격"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "가문 내분 폭발. 큰오빠 추방론 대두. 서쪽 거래처 혼란"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "정파 인지도",
+          "after": "'금의상단 내부에 문제가 있다'는 소문이 슬슬 새어나감"
+        },
         "action_type": "가문 정치 — 큰오빠 추궁 및 가문 내분 폭발",
-        "opponent": {"name": "하대경(큰오빠) — 유출 연루 확정", "sect_or_faction": "금의상단 내부", "weakness_exploited": "매입가 승인 서류라는 결정적 증거. 큰오빠가 부인할 수 없는 문서적 증거"},
+        "opponent": {
+          "name": "하대경(큰오빠) — 유출 연루 확정",
+          "sect_or_faction": "금의상단 내부",
+          "weakness_exploited": "매입가 승인 서류라는 결정적 증거. 큰오빠가 부인할 수 없는 문서적 증거"
+        },
         "strategy": "증거 기반 직접 추궁. 흑풍방 서신+매입가 승인 서류 동시 제시. 감정적 호소('너도 사파 편이야?')와 분석적 추궁의 혼재",
         "success_pattern": "패배 — 유출 연결은 확정했으나, 큰오빠의 진짜 동기를 알아내지 못함. 가문 내분+거래 급락이라는 대가",
-        "leverage_used": ["흑풍방 인장 서신(Block 15)", "매입가 승인 서류", "장부술(서류 분석)"],
+        "leverage_used": [
+          "흑풍방 인장 서신(Block 15)",
+          "매입가 승인 서류",
+          "장부술(서류 분석)"
+        ],
         "martial_domain": "상단 내부 — 가문 정치",
-        "active_domains": ["가문 정치", "내부 조사", "위기 관리"]
-      }
+        "active_domains": [
+          "가문 정치",
+          "내부 조사",
+          "위기 관리"
+        ]
+      },
+      "block_no": 23
     },
     {
       "block_id": "Block 24",
@@ -1609,7 +2239,10 @@
         "Block 11에서 업종간 교차 분석 → 이번 블록에서 세력 간 교차 분석으로 한 차원 상승",
         "Block 23의 가문 내분 → 이번 블록에서 분노를 분석으로 전환. 감정적 타격이 지적 도약의 촉매"
       ],
-      "emotional_beat": {"type": "resolve", "intensity": 6},
+      "emotional_beat": {
+        "type": "resolve",
+        "intensity": 6
+      },
       "tension_level": 5,
       "location": {
         "place": "금의상단 본부 — 지하 장부 보관고 (최심부)",
@@ -1624,20 +2257,50 @@
         "realm_after": "대관(大管) 완성",
         "internal_energy_before": "거래 규모 3만 냥 / 영향력: 가문 내분으로 급락",
         "internal_energy_after": "거래 규모 3만 냥 / 영향력: 세력 관계 분석 능력 확보. 무림 경제 구조 조감 시작. 조태사 가설 수립",
-        "martial_arts_acquired": ["장부술 Lv.9 — 세력 관계 분석. 복수 세력의 자금 흐름과 의존 관계를 입체적으로 파악. 세력 관계도(금맥도 전신) 작성 능력"],
-        "martial_arts_used": ["장부술 Lv.7(기존)", "장부술 Lv.9(세력 관계 분석 — 이번 블록 습득 즉시)"],
-        "injury_status": {"current": "수면 부족+정신적 스트레스 (가문 내분)", "change": "Block 23의 심리 충격에서 분노→분석으로 전환. 수면 부족은 지속"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "큰오빠 격리 상태. 내부 결속 약화 지속"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "내부 문제 소문", "after": "변동 없음 (내부 성장)"},
+        "martial_arts_acquired": [
+          "장부술 Lv.9 — 세력 관계 분석. 복수 세력의 자금 흐름과 의존 관계를 입체적으로 파악. 세력 관계도(금맥도 전신) 작성 능력"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.7(기존)",
+          "장부술 Lv.9(세력 관계 분석 — 이번 블록 습득 즉시)"
+        ],
+        "injury_status": {
+          "current": "수면 부족+정신적 스트레스 (가문 내분)",
+          "change": "Block 23의 심리 충격에서 분노→분석으로 전환. 수면 부족은 지속"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "큰오빠 격리 상태. 내부 결속 약화 지속"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "내부 문제 소문",
+          "after": "변동 없음 (내부 성장)"
+        },
         "action_type": "수련/분석 — 분노를 추동력으로 세력 관계 분석 도약",
-        "opponent": {"name": "없음 (수련 블록 — 내면의 분노와 싸움)", "sect_or_faction": "N/A", "weakness_exploited": "N/A"},
+        "opponent": {
+          "name": "없음 (수련 블록 — 내면의 분노와 싸움)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "N/A"
+        },
         "strategy": "감정을 분석에 집중. 금의상단 시점을 벗어나 복수 세력(흑풍방·관부·경쟁상단)의 장부를 동시에 읽고 상호 관계를 매핑",
         "success_pattern": "성공 — 대관 완성 + 세력 관계도 작성 + 조태사 가설 수립",
-        "leverage_used": ["서문경의 외부 거래 기록", "약왕곡 시세 변동 기록", "관부 세금 징수 기록", "분노(추동력)"],
+        "leverage_used": [
+          "서문경의 외부 거래 기록",
+          "약왕곡 시세 변동 기록",
+          "관부 세금 징수 기록",
+          "분노(추동력)"
+        ],
         "martial_domain": "상단 내부 — 분석",
-        "active_domains": ["세력 분석", "장부술 수련", "전략 수립"]
-      }
+        "active_domains": [
+          "세력 분석",
+          "장부술 수련",
+          "전략 수립"
+        ]
+      },
+      "block_no": 24
     },
     {
       "block_id": "Block 25",
@@ -1673,7 +2336,10 @@
         "Block 14에서 '남들이 못 보는 것을 보는 것이 진짜 경매 전략' → 이번 블록에서 '경매 자체를 우회하는 것이 더 높은 전략'으로 레벨 업",
         "Block 16에서 '전장을 바꾸는 전략' → 이번 블록에서 '제도를 설계하는 전략'으로 한 차원 더 상승"
       ],
-      "emotional_beat": {"type": "tactical_thrill", "intensity": 8},
+      "emotional_beat": {
+        "type": "tactical_thrill",
+        "intensity": 8
+      },
       "tension_level": 7,
       "location": {
         "place": "촉산 약왕곡(藥王谷) — 분기 대경매장 + 곡주 별실",
@@ -1688,20 +2354,51 @@
         "realm_after": "재신(財神) 입문 전",
         "internal_energy_before": "거래 규모 3만 냥 / 영향력: 세력 관계도 + 조태사 가설",
         "internal_energy_after": "거래 규모 5만 냥 (약왕곡 선납 + 거란 교역 안정) / 영향력: 약왕곡 우선 배정 + 백란과 재대결",
-        "martial_arts_acquired": ["제도 설계 — 기존 경매/독점 구조를 우회하여 선납 기반 우선 배정이라는 새로운 거래 제도를 직접 설계하는 능력"],
-        "martial_arts_used": ["장부술 Lv.9(약왕곡 재무 구조 분석 — 경매보다 선납이 매력적인 이유)", "전장 선택 전략(경매 정면 대결 회피)", "제도 설계(선납 우선 배정 구조 창안)"],
-        "injury_status": {"current": "정상 (Block 24의 수면 부족에서 여행 중 회복)", "change": "정상 복귀"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "약왕곡 선납 계약으로 약재 직거래 구조 강화. 중간상 의존도 추가 감소"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "내부 문제 소문", "after": "약왕곡에서 '금의상단 막내가 곡주와 별도 면담을 했다'는 소문. '경매에서 안 사고도 약재를 확보하는 여자'라는 평판"},
+        "martial_arts_acquired": [
+          "제도 설계 — 기존 경매/독점 구조를 우회하여 선납 기반 우선 배정이라는 새로운 거래 제도를 직접 설계하는 능력"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.9(약왕곡 재무 구조 분석 — 경매보다 선납이 매력적인 이유)",
+          "전장 선택 전략(경매 정면 대결 회피)",
+          "제도 설계(선납 우선 배정 구조 창안)"
+        ],
+        "injury_status": {
+          "current": "정상 (Block 24의 수면 부족에서 여행 중 회복)",
+          "change": "정상 복귀"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "약왕곡 선납 계약으로 약재 직거래 구조 강화. 중간상 의존도 추가 감소"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "내부 문제 소문",
+          "after": "약왕곡에서 '금의상단 막내가 곡주와 별도 면담을 했다'는 소문. '경매에서 안 사고도 약재를 확보하는 여자'라는 평판"
+        },
         "action_type": "약재 경매/제도 설계 — 독점 유통권 경매를 우회하여 선납 기반 우선 배정 확보",
-        "opponent": {"name": "백란(白蘭) + 동래·남해상단 (경매 경쟁자)", "sect_or_faction": "5대 상단 경쟁", "weakness_exploited": "경매 낙찰자의 대금 연체가 약왕곡의 만성 문제라는 점. 안정 선납이 약왕곡 곡주에게 더 매력적"},
+        "opponent": {
+          "name": "백란(白蘭) + 동래·남해상단 (경매 경쟁자)",
+          "sect_or_faction": "5대 상단 경쟁",
+          "weakness_exploited": "경매 낙찰자의 대금 연체가 약왕곡의 만성 문제라는 점. 안정 선납이 약왕곡 곡주에게 더 매력적"
+        },
         "strategy": "경매 정면 대결 포기 → 곡주 별도 면담 → 선납+우선 배정이라는 경매 대안 구조 제안. '같은 것을 더 싸게 사는 것'이 아니라 '같은 것을 다른 방식으로 확보하는 것'",
         "success_pattern": "전략적 성공 — 백란이 유통권을 가져갔으나, 소연은 1만 냥 미만으로 동등한 실질 이익 확보",
-        "leverage_used": ["장부술 Lv.9(약왕곡 재무 구조)", "서문경(곡주 성격+연체 이력 정보)", "거란 교역 수익(선납 자금)", "Block 14에서 쌓은 약왕곡 관계"],
+        "leverage_used": [
+          "장부술 Lv.9(약왕곡 재무 구조)",
+          "서문경(곡주 성격+연체 이력 정보)",
+          "거란 교역 수익(선납 자금)",
+          "Block 14에서 쌓은 약왕곡 관계"
+        ],
         "martial_domain": "상단 외부 — 촉산 약왕곡",
-        "active_domains": ["약재 경매", "제도 설계", "거래 구조 혁신"]
-      }
+        "active_domains": [
+          "약재 경매",
+          "제도 설계",
+          "거래 구조 혁신"
+        ]
+      },
+      "block_no": 25
     },
     {
       "block_id": "Block 26",
@@ -1737,7 +2434,10 @@
         "Block 18의 거란 철광 확보 → 이번 블록에서 무기 경매의 핵심 무기로 활용",
         "Block 21의 독고진 친분 → 이번 블록에서 무당파 지정 거래 지지로 전환"
       ],
-      "emotional_beat": {"type": "ambition", "intensity": 6},
+      "emotional_beat": {
+        "type": "ambition",
+        "intensity": 6
+      },
       "tension_level": 6,
       "location": {
         "place": "개봉(開封) 시전 — 무기상가 경매장",
@@ -1753,19 +2453,47 @@
         "internal_energy_before": "거래 규모 5만 냥 / 영향력: 약왕곡 선납",
         "internal_energy_after": "거래 규모 7만 냥 / 영향력: 무기 유통 절반(무당파 지정) + 약재 우선 배정",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.9(무기 시장 구조 분석+수직 통합 모델 설계)", "상업 비무(경매 입찰+지정 거래 활용)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "무기 유통 절반 확보. 약재+무기 양 축 기반 확립"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "약왕곡 선납 소문", "after": "'무당파가 금의상단을 지정했다'는 소문이 정파 전체에 퍼짐. 소연의 이름이 정파 문파 사이에서 본격 회자"},
+        "martial_arts_used": [
+          "장부술 Lv.9(무기 시장 구조 분석+수직 통합 모델 설계)",
+          "상업 비무(경매 입찰+지정 거래 활용)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "무기 유통 절반 확보. 약재+무기 양 축 기반 확립"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "약왕곡 선납 소문",
+          "after": "'무당파가 금의상단을 지정했다'는 소문이 정파 전체에 퍼짐. 소연의 이름이 정파 문파 사이에서 본격 회자"
+        },
         "action_type": "무기 경매 — 무기 유통권 경쟁 및 무당파 지정 거래 확보",
-        "opponent": {"name": "장철(張鐵/천무상회 회주)", "sect_or_faction": "천무상회(무기 전문)", "weakness_exploited": "10년간 독점에 안주하여 맞춤 서비스를 제공하지 않은 점. 금의상단의 수직 통합(원료→맞춤 설계)이 차별화"},
+        "opponent": {
+          "name": "장철(張鐵/천무상회 회주)",
+          "sect_or_faction": "천무상회(무기 전문)",
+          "weakness_exploited": "10년간 독점에 안주하여 맞춤 서비스를 제공하지 않은 점. 금의상단의 수직 통합(원료→맞춤 설계)이 차별화"
+        },
         "strategy": "가격 경쟁 대신 수직 통합 모델(거란 철광+맞춤 설계+무당파 지지)로 차별화. 경매 자체의 승패보다 무당파 지정 거래 확보에 집중",
         "success_pattern": "전략적 성공 — 경매는 장철 낙찰이나, 무당파 물량(25%) 확보. 실질적 절반 달성",
-        "leverage_used": ["거란 철광(원료)", "독고진(무당파 지지)", "무당파 시범 계약 실적", "장부술(시장 구조 분석)"],
+        "leverage_used": [
+          "거란 철광(원료)",
+          "독고진(무당파 지지)",
+          "무당파 시범 계약 실적",
+          "장부술(시장 구조 분석)"
+        ],
         "martial_domain": "상단 외부 — 개봉 무기상가",
-        "active_domains": ["무기 경매", "수직 통합", "정파 외교"]
-      }
+        "active_domains": [
+          "무기 경매",
+          "수직 통합",
+          "정파 외교"
+        ]
+      },
+      "block_no": 26
     },
     {
       "block_id": "Block 27",
@@ -1802,7 +2530,10 @@
         "Block 2에서 검무가 검 자루에 기름칠 → 이번 블록에서 달빛 아래 진짜 검법 공개. 그동안 숨겨왔던 실력",
         "Block 1에서 어머니의 주판 첫 등장 → 이번 블록에서 '검 같은 것'이라는 소연의 정의. 주판의 상징적 의미 심화"
       ],
-      "emotional_beat": {"type": "vulnerability", "intensity": 5},
+      "emotional_beat": {
+        "type": "vulnerability",
+        "intensity": 5
+      },
       "tension_level": 2,
       "location": {
         "place": "금의상단 본부 — 후원(後園) 매화나무 아래, 달빛",
@@ -1819,18 +2550,40 @@
         "internal_energy_after": "거래 규모 7만 냥 / 영향력: 변동 없음 (감정적 회복 블록)",
         "martial_arts_acquired": [],
         "martial_arts_used": [],
-        "injury_status": {"current": "정상 (정서적 회복)", "change": "가문 내분의 정서적 스트레스 일부 해소"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "변동 없음"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "무당파 지정 소문", "after": "변동 없음"},
+        "injury_status": {
+          "current": "정상 (정서적 회복)",
+          "change": "가문 내분의 정서적 스트레스 일부 해소"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "무당파 지정 소문",
+          "after": "변동 없음"
+        },
         "action_type": "감정 교류 — 검무와의 달빛 아래 대화. 과거 공유",
-        "opponent": {"name": "없음 (감정 블록)", "sect_or_faction": "N/A", "weakness_exploited": "N/A"},
+        "opponent": {
+          "name": "없음 (감정 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "N/A"
+        },
         "strategy": "N/A (전략 블록 아닌 감정 블록)",
         "success_pattern": "성공 — 정서적 유대 형성. 검무의 과거 단편 확보",
-        "leverage_used": ["어머니의 주판(감정적 매개)", "후원 매화나무(공유 공간)"],
+        "leverage_used": [
+          "어머니의 주판(감정적 매개)",
+          "후원 매화나무(공유 공간)"
+        ],
         "martial_domain": "개인",
-        "active_domains": ["감정 교류", "정서 회복"]
-      }
+        "active_domains": [
+          "감정 교류",
+          "정서 회복"
+        ]
+      },
+      "block_no": 27
     },
     {
       "block_id": "Block 28",
@@ -1866,7 +2619,10 @@
         "Block 13의 진 행상 사망 → 이번 블록에서 진 행상 아내의 방문으로 죄책감 직면",
         "Block 13의 '신용 기반 거래 시스템' 구상 → 이번 블록에서 보호 기금이라는 구체적 제도로 발전"
       ],
-      "emotional_beat": {"type": "introspection", "intensity": 4},
+      "emotional_beat": {
+        "type": "introspection",
+        "intensity": 4
+      },
       "tension_level": 3,
       "location": {
         "place": "금의상단 본부 — 소연의 방 + 접견실 (진 행상 아내 면담)",
@@ -1883,18 +2639,42 @@
         "internal_energy_after": "거래 규모 7만 냥 (보호 기금 3% 적립 시작으로 가용 현금 소폭 감소) / 영향력: 보호 기금으로 거래처 신뢰 강화",
         "martial_arts_acquired": [],
         "martial_arts_used": [],
-        "injury_status": {"current": "정상", "change": "하삼재: 왼팔 회복 거의 완료"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "거래처 보호 기금 설립. 상단 운영에 도덕적 차원 추가"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "무당파 지정 소문", "after": "'금의상단이 거래처 보호 기금을 만들었다'는 소문. 상인 사회에서 긍정적 평가"},
+        "injury_status": {
+          "current": "정상",
+          "change": "하삼재: 왼팔 회복 거의 완료"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "거래처 보호 기금 설립. 상단 운영에 도덕적 차원 추가"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "무당파 지정 소문",
+          "after": "'금의상단이 거래처 보호 기금을 만들었다'는 소문. 상인 사회에서 긍정적 평가"
+        },
         "action_type": "내면 성장 — 상업적 도덕 체계 확립 및 보호 기금 설립",
-        "opponent": {"name": "없음 (내면 블록)", "sect_or_faction": "N/A", "weakness_exploited": "N/A"},
+        "opponent": {
+          "name": "없음 (내면 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "N/A"
+        },
         "strategy": "N/A (내면 블록)",
         "success_pattern": "성공 — 도덕적 성장 + 보호 기금 설립",
-        "leverage_used": ["진 행상 아내와의 만남(촉매)", "홍매의 위로", "어머니의 주판(성찰 매개)"],
+        "leverage_used": [
+          "진 행상 아내와의 만남(촉매)",
+          "홍매의 위로",
+          "어머니의 주판(성찰 매개)"
+        ],
         "martial_domain": "개인/상단 제도",
-        "active_domains": ["내면 성찰", "제도 설계", "거래처 관리"]
-      }
+        "active_domains": [
+          "내면 성찰",
+          "제도 설계",
+          "거래처 관리"
+        ]
+      },
+      "block_no": 28
     },
     {
       "block_id": "Block 29",
@@ -1931,7 +2711,10 @@
         "Block 12의 무당파 '상인은 내산에 들어올 수 없다' → 이번 블록에서 소림의 '여자 상인이 무림에 끼어드냐'로 편견 에스컬레이션",
         "Block 16의 '전장을 바꾸는 전략' → 이번 블록에서 '고객을 바꾸는 전략'(정파→사파)으로 변주"
       ],
-      "emotional_beat": {"type": "humiliation", "intensity": 8},
+      "emotional_beat": {
+        "type": "humiliation",
+        "intensity": 8
+      },
       "tension_level": 7,
       "location": {
         "place": "숭산(嵩山) 소림사 — 외래인 접견실 + 소림사 밖 계단",
@@ -1947,19 +2730,43 @@
         "internal_energy_before": "거래 규모 7만 냥 / 영향력: 무기+약재 기반",
         "internal_energy_after": "거래 규모 5만 냥으로 감소 (정파 확장 실패로 잠재 매출 감소) / 영향력: 정파 4개 문파 관망. 영향력 반토막",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.9(소림사 재무 구조 분석 — 사용했으나 제시 기회조차 없었음)"],
-        "injury_status": {"current": "정상 (정신적 타격 — 모욕감)", "change": "신체 무상이나 자존심 훼손"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "정파 확장 실패. 사파 거래 개시 결정"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "무당파 지정 소문", "after": "'소림에서 거부당한 금의상단 막내딸' 소문이 정파 사이에 퍼짐. 부정적 영향. 그러나 일부에서는 '법해가 너무했다'는 동정론도"},
+        "martial_arts_used": [
+          "장부술 Lv.9(소림사 재무 구조 분석 — 사용했으나 제시 기회조차 없었음)"
+        ],
+        "injury_status": {
+          "current": "정상 (정신적 타격 — 모욕감)",
+          "change": "신체 무상이나 자존심 훼손"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "정파 확장 실패. 사파 거래 개시 결정"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "무당파 지정 소문",
+          "after": "'소림에서 거부당한 금의상단 막내딸' 소문이 정파 사이에 퍼짐. 부정적 영향. 그러나 일부에서는 '법해가 너무했다'는 동정론도"
+        },
         "action_type": "정파 외교 실패 — 소림사 계약 시도 거부",
-        "opponent": {"name": "법해(法海/소림사 보수파 장로)", "sect_or_faction": "소림사(정파)", "weakness_exploited": "약점 공략 불가 — 법해의 편견은 논리가 아닌 감정이므로 장부 증거로 설득 불가"},
+        "opponent": {
+          "name": "법해(法海/소림사 보수파 장로)",
+          "sect_or_faction": "소림사(정파)",
+          "weakness_exploited": "약점 공략 불가 — 법해의 편견은 논리가 아닌 감정이므로 장부 증거로 설득 불가"
+        },
         "strategy": "무당파 실적+거란 철광 샘플로 설득 시도 → 법해의 편견에 의해 설명 기회조차 차단 → 정면 대결 포기, 전장 전환(정파→사파) 결정",
         "success_pattern": "패배 — 소림 거부 + 정파 확장 좌절. 그러나 패배가 새로운 전략(사파 거래) 촉발",
-        "leverage_used": ["무당파 실적(제시 기회 없었음)", "거란 철광 샘플(제시 기회 없었음)"],
+        "leverage_used": [
+          "무당파 실적(제시 기회 없었음)",
+          "거란 철광 샘플(제시 기회 없었음)"
+        ],
         "martial_domain": "정파 무림 — 소림사",
-        "active_domains": ["정파 외교(실패)", "전략 전환"]
-      }
+        "active_domains": [
+          "정파 외교(실패)",
+          "전략 전환"
+        ]
+      },
+      "block_no": 29
     },
     {
       "block_id": "Block 30",
@@ -1995,7 +2802,10 @@
         "Block 29의 소림 거부('여자 상인이 무림에 끼어드냐') → 이번 블록에서 '그렇다면 사파에서 한다'는 전략 전환으로 응답",
         "Block 16의 '전장을 바꾸는 전략' → Block 29의 '고객을 바꾸는 전략' → 이번 블록의 '시장 자체를 재정의하는 전략'으로 3단계 진화"
       ],
-      "emotional_beat": {"type": "defiance", "intensity": 7},
+      "emotional_beat": {
+        "type": "defiance",
+        "intensity": 7
+      },
       "tension_level": 6,
       "location": {
         "place": "낙양 암시장 — 서문경 거점 + 독수채 연락책 면담 장소",
@@ -2010,20 +2820,51 @@
         "realm_after": "재신(財神) 입문",
         "internal_energy_before": "거래 규모 5만 냥 / 영향력: 정파 확장 실패",
         "internal_energy_after": "거래 규모 10만 냥 / 영향력: 중립 상인 선언 + 사파 2개 조직 계약 + 정파(무당파) 유지. 무림 경제의 중립축",
-        "martial_arts_acquired": ["장부술 Lv.11 — 전략적 자원 통제. 정파·사파 양 시장을 동시에 관리하며, 어느 쪽에도 종속되지 않는 중립적 거래 구조를 운영하는 능력"],
-        "martial_arts_used": ["장부술 Lv.9(사파 시장 규모·수요 분석)", "전장 전환 전략(정파→사파)", "제도 설계(중립 상인 선언이라는 시장 포지셔닝)"],
-        "injury_status": {"current": "정상", "change": "Block 29의 정신적 타격에서 '분노→행동'으로 전환"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "중립 상인 선언. 정파 상단에서 무림 경제 중립축으로 포지션 전환"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "소림 거부 소문(부정적)", "after": "중립 상인 선언이 무림에 퍼짐. 정파 보수파는 '사파 동조', 사파는 '환영', 중립 상인들은 '파격적'이라는 삼중 반응. 소연의 이름이 무림 전체에 알려지는 전환점"},
+        "martial_arts_acquired": [
+          "장부술 Lv.11 — 전략적 자원 통제. 정파·사파 양 시장을 동시에 관리하며, 어느 쪽에도 종속되지 않는 중립적 거래 구조를 운영하는 능력"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.9(사파 시장 규모·수요 분석)",
+          "전장 전환 전략(정파→사파)",
+          "제도 설계(중립 상인 선언이라는 시장 포지셔닝)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "Block 29의 정신적 타격에서 '분노→행동'으로 전환"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "중립 상인 선언. 정파 상단에서 무림 경제 중립축으로 포지션 전환"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "소림 거부 소문(부정적)",
+          "after": "중립 상인 선언이 무림에 퍼짐. 정파 보수파는 '사파 동조', 사파는 '환영', 중립 상인들은 '파격적'이라는 삼중 반응. 소연의 이름이 무림 전체에 알려지는 전환점"
+        },
         "action_type": "전략 전환 — 중립 상인 선언 + 사파 거래 개시",
-        "opponent": {"name": "정파 보수파(구조적 적대) + 무림 관행(정사 구분)", "sect_or_faction": "무림 전체", "weakness_exploited": "사파도 무기·약재가 필요하지만 정파 상단이 거래하지 않았다는 공백. 소연이 이 공백을 채움"},
+        "opponent": {
+          "name": "정파 보수파(구조적 적대) + 무림 관행(정사 구분)",
+          "sect_or_faction": "무림 전체",
+          "weakness_exploited": "사파도 무기·약재가 필요하지만 정파 상단이 거래하지 않았다는 공백. 소연이 이 공백을 채움"
+        },
         "strategy": "정파 거부를 '정파 의존 탈피'의 계기로 전환. 사파 거래+중립 선언으로 시장 자체를 재정의. '정파/사파'가 아니라 '고객/비고객'으로 분류",
         "success_pattern": "성공 — 사파 2개 조직 계약 + 중립 선언 + 거래 규모 2배 증가. ARC-03의 핵심 전략적 전환",
-        "leverage_used": ["서문경(사파 연락 중개)", "약왕곡 직거래(사파에도 공급 가능한 약재)", "거란 철광(무기 원료)", "소연의 배짱(중립 선언)"],
+        "leverage_used": [
+          "서문경(사파 연락 중개)",
+          "약왕곡 직거래(사파에도 공급 가능한 약재)",
+          "거란 철광(무기 원료)",
+          "소연의 배짱(중립 선언)"
+        ],
         "martial_domain": "사파+중립",
-        "active_domains": ["사파 거래", "중립 상인 선언", "시장 재정의"]
-      }
+        "active_domains": [
+          "사파 거래",
+          "중립 상인 선언",
+          "시장 재정의"
+        ]
+      },
+      "block_no": 30
     },
     {
       "block_id": "Block 31",
@@ -2060,7 +2901,10 @@
         "Block 18의 거란 교역(첫 해외 루트) → 이번 블록에서 서역(두 번째 해외 루트)으로 확장. 해외 교역 전략의 계통적 발전",
         "Block 13의 '신용 기반 거래 시스템' 구상 → 이번 블록에서 서역 교역 어음이라는 국제적 신용 시스템을 학습"
       ],
-      "emotional_beat": {"type": "adventure", "intensity": 5},
+      "emotional_beat": {
+        "type": "adventure",
+        "intensity": 5
+      },
       "tension_level": 4,
       "location": {
         "place": "서역 실크로드 교역소 — 중원-서역 접경의 국제 교역 허브",
@@ -2075,20 +2919,50 @@
         "realm_after": "재신(財神)",
         "internal_energy_before": "거래 규모 10만 냥 / 영향력: 중립 상인 + 정파(무당)+사파(독수채·혈의문)",
         "internal_energy_after": "거래 규모 15만 냥 / 영향력: 서역 교역 루트 + 관부 관할 밖 자산 + 교역 어음 지식",
-        "martial_arts_acquired": ["국제 교역 기초 — 서역 교역 관습(선물 프로토콜), 교역 어음 시스템, 문화 간 신용 구축 방법"],
-        "martial_arts_used": ["장부술 Lv.11(서역·중원 가격 차이 분석)", "국제 교역 기초(선물 제공+관계 구축)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄 + 해외 교역 담당", "change": "서역 교역 루트 개설. 해외 자산 확보 시작"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "중립 상인 선언", "after": "'금의상단 막내가 서역까지 갔다'는 소문. 5대 상단 중 최초의 실크로드 교역 시도"},
+        "martial_arts_acquired": [
+          "국제 교역 기초 — 서역 교역 관습(선물 프로토콜), 교역 어음 시스템, 문화 간 신용 구축 방법"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.11(서역·중원 가격 차이 분석)",
+          "국제 교역 기초(선물 제공+관계 구축)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄 + 해외 교역 담당",
+          "change": "서역 교역 루트 개설. 해외 자산 확보 시작"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "중립 상인 선언",
+          "after": "'금의상단 막내가 서역까지 갔다'는 소문. 5대 상단 중 최초의 실크로드 교역 시도"
+        },
         "action_type": "해외 교역 — 서역 실크로드 교역 루트 개설",
-        "opponent": {"name": "서역 신용 장벽 (문화적 장애물)", "sect_or_faction": "서역 교역소", "weakness_exploited": "서역에서 중원 약재가 '동방의 비약'으로 귀하다는 점. 중원 비단은 과잉이나 약재는 희소"},
+        "opponent": {
+          "name": "서역 신용 장벽 (문화적 장애물)",
+          "sect_or_faction": "서역 교역소",
+          "weakness_exploited": "서역에서 중원 약재가 '동방의 비약'으로 귀하다는 점. 중원 비단은 과잉이나 약재는 희소"
+        },
         "strategy": "서역 관습(선물 프로토콜)을 사전 학습하여 적용. 비단 대신 약재라는 차별화 수출품 선택. 교역 어음 시스템 학습으로 장기 교역 기반 마련",
         "success_pattern": "완전 성공 — 서역 교역 루트 + 알리 접점 + 교역 어음 지식 + 관부 우회 자산",
-        "leverage_used": ["약왕곡 약재(서역 희소품)", "거란 철광 샘플", "서문경(서역 관습 브리핑)", "둘째 오빠(무역 경험)"],
+        "leverage_used": [
+          "약왕곡 약재(서역 희소품)",
+          "거란 철광 샘플",
+          "서문경(서역 관습 브리핑)",
+          "둘째 오빠(무역 경험)"
+        ],
         "martial_domain": "해외 — 서역 실크로드",
-        "active_domains": ["해외 교역", "국제 신용 구축", "교역 어음 학습"]
-      }
+        "active_domains": [
+          "해외 교역",
+          "국제 신용 구축",
+          "교역 어음 학습"
+        ]
+      },
+      "block_no": 31
     },
     {
       "block_id": "Block 32",
@@ -2125,7 +2999,10 @@
         "Block 5에서 소연이 처음으로 전장(錢莊)을 방문한 것 → 이번 블록에서 전장 체계를 넘어 서역 어음 시스템을 학습. 금융 이해의 국제적 확장",
         "Block 1에서 어머니의 주판 첫 등장 → 이번 블록에서 서역 계산판과 나란히 놓이는 장면. 주판의 상징성이 '어머니의 유물'에서 '동서양 상업의 교차점'으로 확장"
       ],
-      "emotional_beat": {"type": "growth", "intensity": 4},
+      "emotional_beat": {
+        "type": "growth",
+        "intensity": 4
+      },
       "tension_level": 2,
       "location": {
         "place": "서역 실크로드 교역소 — 알리의 천막 내 장부실",
@@ -2140,20 +3017,49 @@
         "realm_after": "재신(財神)",
         "internal_energy_before": "거래 규모 15만 냥 / 영향력: 서역 교역 루트",
         "internal_energy_after": "거래 규모 15만 냥 / 영향력: 동서 융합 신용 프레임 + 서역 계산판 + 세계적 시야",
-        "martial_arts_acquired": ["동서 융합 신용 분석 — 서역 어음 시스템(신용 등급·국제 유통·할인)과 중원 장부술(거래 패턴·결제 이력)을 결합한 새로운 분석 프레임"],
-        "martial_arts_used": ["장부술 Lv.11(서역 어음 기록 분석)", "동서 융합 신용 분석(초안 작성 — 습득 즉시)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "변동 없음"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "서역 교역 소문", "after": "변동 없음 (내부 성장)"},
+        "martial_arts_acquired": [
+          "동서 융합 신용 분석 — 서역 어음 시스템(신용 등급·국제 유통·할인)과 중원 장부술(거래 패턴·결제 이력)을 결합한 새로운 분석 프레임"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.11(서역 어음 기록 분석)",
+          "동서 융합 신용 분석(초안 작성 — 습득 즉시)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "서역 교역 소문",
+          "after": "변동 없음 (내부 성장)"
+        },
         "action_type": "학습/수련 — 서역 어음 시스템 학습 및 동서 융합 프레임 개발",
-        "opponent": {"name": "없음 (조용한 블록 — 학습)", "sect_or_faction": "N/A", "weakness_exploited": "N/A"},
+        "opponent": {
+          "name": "없음 (조용한 블록 — 학습)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "N/A"
+        },
         "strategy": "서역 체류를 최대한 활용하여 어음 시스템을 체계적으로 학습. 알리와의 지적 교류를 통해 중원 장부술과 서역 시스템의 융합점 탐색",
         "success_pattern": "성공 — 동서 융합 프레임 초안 완성 + 서역 계산판 확보",
-        "leverage_used": ["알리와의 관계(지적 동반자)", "주판(중원 분석 도구)", "서역 어음 기록(학습 자료)"],
+        "leverage_used": [
+          "알리와의 관계(지적 동반자)",
+          "주판(중원 분석 도구)",
+          "서역 어음 기록(학습 자료)"
+        ],
         "martial_domain": "해외 — 서역",
-        "active_domains": ["학습", "프레임 개발", "국제 신용 연구"]
-      }
+        "active_domains": [
+          "학습",
+          "프레임 개발",
+          "국제 신용 연구"
+        ]
+      },
+      "block_no": 32
     },
     {
       "block_id": "Block 33",
@@ -2189,7 +3095,10 @@
         "Block 31에서 알리와 관계 구축 → 이번 블록에서 알리의 이름이 생존을 결정짓는 '신용'으로 작동",
         "Block 7의 '칼 앞에 장부는 무력하다' 깨달음 → 이번 블록에서 '신용이 칼보다 강할 수 있다'로 반전"
       ],
-      "emotional_beat": {"type": "peril", "intensity": 7},
+      "emotional_beat": {
+        "type": "peril",
+        "intensity": 7
+      },
       "tension_level": 8,
       "location": {
         "place": "서역-중원 간 사막 관도 — 실크로드 사막 구간",
@@ -2205,19 +3114,48 @@
         "internal_energy_before": "거래 규모 15만 냥 / 영향력: 동서 융합 프레임",
         "internal_energy_after": "거래 규모 15만 냥 (물품 1/4 손실이나 잔여 3/4의 중원 시세가 높아 실질 감소 미미) / 영향력: 서역 물품 무사 확보",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["기초 서역어(알리에게 배운 것)", "알리의 교역 계약서(신용 증명)", "교섭 기술(통행세 1/4 양보)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "전략 총괄", "change": "서역 물품 확보. 귀환 중"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "서역 교역 소문", "after": "변동 없음 (사막 내부 사건)"},
+        "martial_arts_used": [
+          "기초 서역어(알리에게 배운 것)",
+          "알리의 교역 계약서(신용 증명)",
+          "교섭 기술(통행세 1/4 양보)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "전략 총괄",
+          "change": "서역 물품 확보. 귀환 중"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "서역 교역 소문",
+          "after": "변동 없음 (사막 내부 사건)"
+        },
         "action_type": "위기 교섭 — 서역 도적 20명 포위 상황에서 비전투적 해결",
-        "opponent": {"name": "서역 사막 도적 20여 명", "sect_or_faction": "서역 도적 (비정규)", "weakness_exploited": "알리의 이름(신용)이 도적에게도 영향력이 있다는 점. 도적도 알리와의 관계(보호비)를 유지하고 싶어함"},
+        "opponent": {
+          "name": "서역 사막 도적 20여 명",
+          "sect_or_faction": "서역 도적 (비정규)",
+          "weakness_exploited": "알리의 이름(신용)이 도적에게도 영향력이 있다는 점. 도적도 알리와의 관계(보호비)를 유지하고 싶어함"
+        },
         "strategy": "전투 회피 → 알리의 이름+교역 계약서로 신용 증명 → 물건 1/4 통행세 양보로 타협. 생존과 물품 보전의 최적 균형",
         "success_pattern": "성공 — 전투 없이 물품 3/4 보전 + 전원 무사. 물건 1/4 손실은 수용 가능한 대가",
-        "leverage_used": ["알리의 이름(서역 신용)", "교역 계약서(인장 증명)", "기초 서역어", "교섭 판단력"],
+        "leverage_used": [
+          "알리의 이름(서역 신용)",
+          "교역 계약서(인장 증명)",
+          "기초 서역어",
+          "교섭 판단력"
+        ],
         "martial_domain": "해외 — 서역 사막",
-        "active_domains": ["위기 교섭", "생존", "호위"]
-      }
+        "active_domains": [
+          "위기 교섭",
+          "생존",
+          "호위"
+        ]
+      },
+      "block_no": 33
     },
     {
       "block_id": "Block 34",
@@ -2254,7 +3192,10 @@
         "Block 15의 조태사 첫 등장 → Block 17 세금 인상 → 이번 블록에서 자산 동결+아버지 퇴진 강요. 조태사의 에스컬레이션 3단계",
         "Block 31에서 서역 자산(관부 관할 밖) 확보 → 이번 블록에서 유일한 자유 자산으로 즉시 활용"
       ],
-      "emotional_beat": {"type": "devastation", "intensity": 9},
+      "emotional_beat": {
+        "type": "devastation",
+        "intensity": 9
+      },
       "tension_level": 9,
       "location": {
         "place": "금의상단 본부 — 대전(大殿)",
@@ -2270,19 +3211,45 @@
         "internal_energy_before": "거래 규모 15만 냥 / 영향력: 서역 물품+동서 프레임",
         "internal_energy_after": "거래 규모 8만 냥으로 급락 (자산 동결 해제 후에도 관부 감시로 중원 사업 위축) / 영향력: 상단주 직함이나 실권 반쪽. 서역 자산이 유일한 자유 자산",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["장부술 Lv.11(원로들 앞에서 상단 실적 증거 제시로 반발 무력화)"],
-        "injury_status": {"current": "정상 (극심한 정서적 스트레스)", "change": "아버지 은퇴라는 정서적 타격"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "상단주 (실질)", "change": "아버지 은퇴. 소연 상단주 취임. 관부 특별 감시 하에 운영"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "서역 교역 소문", "after": "'금의상단 상단주가 19세 막내딸로 바뀌었다'는 소문이 무림 전체에 퍼짐. 놀라움·경멸·동정·호기심 혼재"},
+        "martial_arts_used": [
+          "장부술 Lv.11(원로들 앞에서 상단 실적 증거 제시로 반발 무력화)"
+        ],
+        "injury_status": {
+          "current": "정상 (극심한 정서적 스트레스)",
+          "change": "아버지 은퇴라는 정서적 타격"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "상단주 (실질)",
+          "change": "아버지 은퇴. 소연 상단주 취임. 관부 특별 감시 하에 운영"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "서역 교역 소문",
+          "after": "'금의상단 상단주가 19세 막내딸로 바뀌었다'는 소문이 무림 전체에 퍼짐. 놀라움·경멸·동정·호기심 혼재"
+        },
         "action_type": "가문 정치 — 아버지 은퇴 수용 + 상단주 취임 + 원로 반발 대응",
-        "opponent": {"name": "조태사(趙太師) — 자산 동결 + 아버지 퇴진 강요", "sect_or_faction": "관부(官府)", "weakness_exploited": "자산 동결 해제가 아버지 은퇴와 교환이라는 조태사의 거래를 수용할 수밖에 없는 상황. 약점 공략 불가 — 수동적 대응"},
+        "opponent": {
+          "name": "조태사(趙太師) — 자산 동결 + 아버지 퇴진 강요",
+          "sect_or_faction": "관부(官府)",
+          "weakness_exploited": "자산 동결 해제가 아버지 은퇴와 교환이라는 조태사의 거래를 수용할 수밖에 없는 상황. 약점 공략 불가 — 수동적 대응"
+        },
         "strategy": "불가항력 수용. 아버지의 은퇴를 받아들이되, 서역 자산(관할 밖)으로 우회 자산 유지. 원로 반발은 장부 실적으로 무력화",
         "success_pattern": "패배 — 아버지 은퇴+관부 감시+거래 규모 급락. 상단주 취임은 대가가 아닌 짐",
-        "leverage_used": ["장부술(상단 실적 증거)", "서역 자산(관할 밖)", "형제 지지(둘째·셋째 오빠)"],
+        "leverage_used": [
+          "장부술(상단 실적 증거)",
+          "서역 자산(관할 밖)",
+          "형제 지지(둘째·셋째 오빠)"
+        ],
         "martial_domain": "상단 내부 — 권력 이양",
-        "active_domains": ["상단 운영", "관부 대응", "내부 결속"]
-      }
+        "active_domains": [
+          "상단 운영",
+          "관부 대응",
+          "내부 결속"
+        ]
+      },
+      "block_no": 34
     },
     {
       "block_id": "Block 35",
@@ -2319,7 +3286,10 @@
         "Block 15의 조태사 첫 등장 → Block 17 세금 → Block 34 자산 동결 → 이번 블록에서 '전부 하나의 대계획'이었음이 확정",
         "Block 24에서 '조태사가 금의상단을 의도적으로 겨냥한다는 가설' → 이번 블록에서 가설이 확정되고 범위가 5대 상단 전체로 확장"
       ],
-      "emotional_beat": {"type": "shock", "intensity": 8},
+      "emotional_beat": {
+        "type": "shock",
+        "intensity": 8
+      },
       "tension_level": 8,
       "location": {
         "place": "서문경의 비밀 거점 — 낙양 암시장 지하 2층",
@@ -2334,20 +3304,50 @@
         "realm_after": "재신(財神)",
         "internal_energy_before": "거래 규모 8만 냥 / 영향력: 상단주이나 관부 감시 하",
         "internal_energy_after": "거래 규모 8만 냥 / 영향력: 조태사 야망 파악 + 5대 상단 연합 전략 수립. 정보적 우위 확보",
-        "martial_arts_acquired": ["무림 정세 분석 — 관부·상단·사파·정파의 세력 균형을 종합적으로 파악하고, 각 세력의 장기 전략을 예측하는 능력"],
-        "martial_arts_used": ["장부술 Lv.11(세력 관계도에 조태사 야망 추가)", "무림 정세 분석(조태사의 대계획 구조 파악)"],
-        "injury_status": {"current": "정상 (정서적 스트레스 지속)", "change": "아버지 은퇴의 진짜 이유(조태사 협박)를 알게 됨으로써 분노 추가"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "상단주", "change": "5대 상단 연합 전략 착수. 상단의 목표가 '생존'에서 '무림 경제 질서 수호'로 격상"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "19세 상단주 소문", "after": "변동 없음 (내부 전략 단계). 그러나 조태사의 야망 정보를 활용하면 무림 전체의 판도를 바꿀 수 있는 위치에 섬"},
+        "martial_arts_acquired": [
+          "무림 정세 분석 — 관부·상단·사파·정파의 세력 균형을 종합적으로 파악하고, 각 세력의 장기 전략을 예측하는 능력"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.11(세력 관계도에 조태사 야망 추가)",
+          "무림 정세 분석(조태사의 대계획 구조 파악)"
+        ],
+        "injury_status": {
+          "current": "정상 (정서적 스트레스 지속)",
+          "change": "아버지 은퇴의 진짜 이유(조태사 협박)를 알게 됨으로써 분노 추가"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "상단주",
+          "change": "5대 상단 연합 전략 착수. 상단의 목표가 '생존'에서 '무림 경제 질서 수호'로 격상"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "19세 상단주 소문",
+          "after": "변동 없음 (내부 전략 단계). 그러나 조태사의 야망 정보를 활용하면 무림 전체의 판도를 바꿀 수 있는 위치에 섬"
+        },
         "action_type": "정보 분석 — 조태사의 5대 상단 흡수 야망 파악 및 연합 전략 수립",
-        "opponent": {"name": "조태사(趙太師) — 5대 상단 관부 흡수 야망", "sect_or_faction": "관부(官府)", "weakness_exploited": "조태사가 '각개격파' 전략을 쓰고 있다는 것을 파악. 5대 상단이 연합하면 각개격파가 불가능. 조태사의 약점은 '동시에 모든 상단을 제압할 힘은 없다'는 점"},
+        "opponent": {
+          "name": "조태사(趙太師) — 5대 상단 관부 흡수 야망",
+          "sect_or_faction": "관부(官府)",
+          "weakness_exploited": "조태사가 '각개격파' 전략을 쓰고 있다는 것을 파악. 5대 상단이 연합하면 각개격파가 불가능. 조태사의 약점은 '동시에 모든 상단을 제압할 힘은 없다'는 점"
+        },
         "strategy": "정보적 우위(조태사가 모르는 사이에 야망을 파악)를 활용하여, 5대 상단 연합이라는 조태사의 각개격파 전략에 대한 정면 대응책 수립. 첫 연합 대상: 백란",
         "success_pattern": "성공 — 조태사 야망 파악 + 연합 전략 수립. 그러나 연합 실현은 아직 미확인",
-        "leverage_used": ["서문경(최대 정보)", "세력 관계도(Block 24)", "장부술 Lv.11", "Block 24의 조태사 가설(이번에 확정)"],
+        "leverage_used": [
+          "서문경(최대 정보)",
+          "세력 관계도(Block 24)",
+          "장부술 Lv.11",
+          "Block 24의 조태사 가설(이번에 확정)"
+        ],
         "martial_domain": "정보전 — 무림 정세",
-        "active_domains": ["정보 분석", "전략 수립", "무림 정세 파악"]
-      }
+        "active_domains": [
+          "정보 분석",
+          "전략 수립",
+          "무림 정세 파악"
+        ]
+      },
+      "block_no": 35
     },
     {
       "block_id": "Block 36",
@@ -2384,7 +3384,10 @@
         "Block 29의 '여자 상인이 무림에 끼어드냐' → 이번 블록에서 법해가 침묵. 숫자가 편견을 이김",
         "Block 6의 첫 경로 차단 → Block 20 60% → 이번 블록에서 100% 완전 차단. 10블록에 걸친 단계적 차단 완료"
       ],
-      "emotional_beat": {"type": "triumph", "intensity": 7},
+      "emotional_beat": {
+        "type": "triumph",
+        "intensity": 7
+      },
       "tension_level": 6,
       "location": {
         "place": "개봉(開封) 시전 — 5대 상단 분기 회의장",
@@ -2399,20 +3402,56 @@
         "realm_after": "재신(財神) 완성",
         "internal_energy_before": "거래 규모 8만 냥 / 영향력: 조태사 야망 파악",
         "internal_energy_after": "거래 규모 30만 냥 / 영향력: 5대 문파 일괄 계약 + 흑풍방 자금 100% 차단 + 백란과 공동 행동",
-        "martial_arts_acquired": ["상단 간 연합 외교 — 복수 상단을 공동 목표(관부 대항)로 묶어 협력을 이끌어내는 능력"],
-        "martial_arts_used": ["장부술 Lv.11(조태사 야망의 상단별 영향도 분석)", "무림 정세 분석", "상단 연합 외교", "상업 비무(5대 문파 일괄 계약 협상)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "상단주", "change": "5대 문파 계약. 백씨상단과 공동 행동. 흑풍방 자금 100% 차단. 상단 위상 최고조"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "19세 상단주 소문", "after": "'5대 문파를 일괄 계약한 금의상단 막내딸'이 무림 전체에 회자. 경외+경계 양면"},
+        "martial_arts_acquired": [
+          "상단 간 연합 외교 — 복수 상단을 공동 목표(관부 대항)로 묶어 협력을 이끌어내는 능력"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.11(조태사 야망의 상단별 영향도 분석)",
+          "무림 정세 분석",
+          "상단 연합 외교",
+          "상업 비무(5대 문파 일괄 계약 협상)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "상단주",
+          "change": "5대 문파 계약. 백씨상단과 공동 행동. 흑풍방 자금 100% 차단. 상단 위상 최고조"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "19세 상단주 소문",
+          "after": "'5대 문파를 일괄 계약한 금의상단 막내딸'이 무림 전체에 회자. 경외+경계 양면"
+        },
         "action_type": "상단 연합+문파 계약 — 5대 상단 회의에서 조태사 야망 공유 + 5대 문파 일괄 계약",
-        "opponent": {"name": "동래·서량상단(관망/반대) + 법해(소림 보수파)", "sect_or_faction": "5대 상단+소림사", "weakness_exploited": "조태사의 야망이 모든 상단에 위협이라는 공동 위기. 가격 유리+공급 안정이 법해의 편견까지 침묵시킴"},
+        "opponent": {
+          "name": "동래·서량상단(관망/반대) + 법해(소림 보수파)",
+          "sect_or_faction": "5대 상단+소림사",
+          "weakness_exploited": "조태사의 야망이 모든 상단에 위협이라는 공동 위기. 가격 유리+공급 안정이 법해의 편견까지 침묵시킴"
+        },
         "strategy": "조태사 야망 정보를 공유하여 공동 위기 의식 조성 → 5대 문파 일괄 계약이라는 구체적 공동 행동 제안 → 거란 철광+약왕곡 약재라는 실질 공급력으로 뒷받침",
         "success_pattern": "완전 성공 — 5대 문파 계약 + 흑풍방 차단 100% + 백란 공동 행동. ARC-04 최대 성과",
-        "leverage_used": ["조태사 야망 정보", "거란 철광", "약왕곡 선납 약재", "무당파 실적", "독고진 지지", "백란 공동 행동", "장부술 분석 증거"],
+        "leverage_used": [
+          "조태사 야망 정보",
+          "거란 철광",
+          "약왕곡 선납 약재",
+          "무당파 실적",
+          "독고진 지지",
+          "백란 공동 행동",
+          "장부술 분석 증거"
+        ],
         "martial_domain": "상단 외교 — 5대 상단 회의",
-        "active_domains": ["상단 연합", "문파 계약", "흑풍방 차단", "관부 대항"]
-      }
+        "active_domains": [
+          "상단 연합",
+          "문파 계약",
+          "흑풍방 차단",
+          "관부 대항"
+        ]
+      },
+      "block_no": 36
     },
     {
       "block_id": "Block 37",
@@ -2448,7 +3487,10 @@
         "Block 15에서 '정본과 관부 제출용 구분' 판단 → 이번 블록에서 실전 검증 통과",
         "Block 36의 5대 문파 계약 성공 → 이번 블록에서 조태사의 즉각 보복(감사 파견)"
       ],
-      "emotional_beat": {"type": "tension", "intensity": 6},
+      "emotional_beat": {
+        "type": "tension",
+        "intensity": 6
+      },
       "tension_level": 7,
       "location": {
         "place": "금의상단 본부 — 장부 보관고 + 비밀 보관고(소연만 아는 장소)",
@@ -2463,20 +3505,51 @@
         "realm_after": "재신(財神) 완성",
         "internal_energy_before": "거래 규모 30만 냥 / 영향력: 5대 문파 계약",
         "internal_energy_after": "거래 규모 30만 냥 / 영향력: 관부 감사 무사 통과. 이중 장부 체계 검증",
-        "martial_arts_acquired": ["장부 방어술 — 이중 장부 체계를 유지하면서 관부 감사에 정합적으로 대응하는 기술"],
-        "martial_arts_used": ["장부술 Lv.11(이중 장부 정합성 유지)", "장부 방어술(감사관 질문 대응)", "관부 대응술(기술적 사실로 회피)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "상단주", "change": "관부 감사 통과. 특별 감시 유지되나 실질 위협 감소"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "5대 문파 계약", "after": "'관부 감사도 무사히 넘긴 금의상단 막내' — 상인 사회에서 경외 상승"},
+        "martial_arts_acquired": [
+          "장부 방어술 — 이중 장부 체계를 유지하면서 관부 감사에 정합적으로 대응하는 기술"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.11(이중 장부 정합성 유지)",
+          "장부 방어술(감사관 질문 대응)",
+          "관부 대응술(기술적 사실로 회피)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "상단주",
+          "change": "관부 감사 통과. 특별 감시 유지되나 실질 위협 감소"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "5대 문파 계약",
+          "after": "'관부 감사도 무사히 넘긴 금의상단 막내' — 상인 사회에서 경외 상승"
+        },
         "action_type": "장부 방어 — 관부 감사 대응 및 이중 장부 체계 실전 검증",
-        "opponent": {"name": "관부 감사관 3명 (조태사 파견)", "sect_or_faction": "관부", "weakness_exploited": "물물교환의 화폐 환산 시점 차이라는 기술적 논리로 총량 차이를 설명. 감사관이 반박할 수 없는 정합적 장부"},
+        "opponent": {
+          "name": "관부 감사관 3명 (조태사 파견)",
+          "sect_or_faction": "관부",
+          "weakness_exploited": "물물교환의 화폐 환산 시점 차이라는 기술적 논리로 총량 차이를 설명. 감사관이 반박할 수 없는 정합적 장부"
+        },
         "strategy": "이중 장부 체계(공식+비밀) 유지. 관부 제출용은 정합적으로 준비. 비밀 장부는 물리적으로 이전. 감사관 질문에 기술적 사실로 대응",
         "success_pattern": "성공 — 감사 통과. '특이사항 없음' 보고서. 이중 장부 체계 첫 검증",
-        "leverage_used": ["이중 장부 체계", "홍매(감사관 실시간 감시)", "검무(비밀 보관고 이전 호위)", "장부술(정합성 유지)"],
+        "leverage_used": [
+          "이중 장부 체계",
+          "홍매(감사관 실시간 감시)",
+          "검무(비밀 보관고 이전 호위)",
+          "장부술(정합성 유지)"
+        ],
         "martial_domain": "관부 대응",
-        "active_domains": ["장부 방어", "관부 감사 대응", "정보 보안"]
-      }
+        "active_domains": [
+          "장부 방어",
+          "관부 감사 대응",
+          "정보 보안"
+        ]
+      },
+      "block_no": 37
     },
     {
       "block_id": "Block 38",
@@ -2513,7 +3586,10 @@
         "Block 2에서 큰오빠에게 설치한 '서쪽 거래처 장부 시험' → 이번 블록에서 서문경에게 '남해상단 합병 가짜 정보 시험'. 동일 방법론의 반복 적용",
         "Block 8에서 서문경 영입 시 '전직 도적치고 너무 유능' → 이번 블록에서 '관부와 접촉할 정도로 범위가 넓은 남자'로 의혹 심화"
       ],
-      "emotional_beat": {"type": "unease", "intensity": 5},
+      "emotional_beat": {
+        "type": "unease",
+        "intensity": 5
+      },
       "tension_level": 5,
       "location": {
         "place": "낙양 시내 — 관부 출장소 근처 차관(茶館) + 금의상단 소연의 방",
@@ -2529,19 +3605,46 @@
         "internal_energy_before": "거래 규모 30만 냥 / 영향력: 감사 통과",
         "internal_energy_after": "거래 규모 30만 냥 / 영향력: 서문경 의혹 부상이나 정보망 유지",
         "martial_arts_acquired": [],
-        "martial_arts_used": ["인물 검증 방법론(가짜 정보 시험)", "정보 교차 검증(홍매 관찰+시험 결과)"],
-        "injury_status": {"current": "정상", "change": "변동 없음"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "상단주", "change": "변동 없음"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "감사 통과 소문", "after": "변동 없음"},
+        "martial_arts_used": [
+          "인물 검증 방법론(가짜 정보 시험)",
+          "정보 교차 검증(홍매 관찰+시험 결과)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "상단주",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "감사 통과 소문",
+          "after": "변동 없음"
+        },
         "action_type": "내부 검증 — 서문경의 관부 접촉 의혹 조사",
-        "opponent": {"name": "서문경(의혹 대상) — 아직 적인지 불명", "sect_or_faction": "미상", "weakness_exploited": "가짜 정보 시험으로 서문경이 관부에 정보를 넘기는지 확인 시도. 결과 불확정"},
+        "opponent": {
+          "name": "서문경(의혹 대상) — 아직 적인지 불명",
+          "sect_or_faction": "미상",
+          "weakness_exploited": "가짜 정보 시험으로 서문경이 관부에 정보를 넘기는지 확인 시도. 결과 불확정"
+        },
         "strategy": "직접 추궁 대신 가짜 정보 시험. 결과를 관찰한 뒤 판단 유보. 서문경을 적으로 돌리지 않으면서 감시 유지",
         "success_pattern": "불확정 — 가짜 정보가 관부에 도달하지 않았으나, 서문경의 관부 접촉 이유는 미해명",
-        "leverage_used": ["홍매(서문경 감시)", "가짜 정보(남해상단 합병)", "인물 검증 방법론"],
+        "leverage_used": [
+          "홍매(서문경 감시)",
+          "가짜 정보(남해상단 합병)",
+          "인물 검증 방법론"
+        ],
         "martial_domain": "내부 보안",
-        "active_domains": ["내부 검증", "정보 보안", "인물 감시"]
-      }
+        "active_domains": [
+          "내부 검증",
+          "정보 보안",
+          "인물 감시"
+        ]
+      },
+      "block_no": 38
     },
     {
       "block_id": "Block 39",
@@ -2579,7 +3682,10 @@
         "Block 32의 서역 교역 어음 시스템 학습 → 이번 블록에서 금맥도의 '신뢰축' 설계에 활용",
         "Block 1에서 어머니의 주판 첫 등장 → 이번 블록에서 금맥도의 핵심 인터페이스로 확정"
       ],
-      "emotional_beat": {"type": "revelation", "intensity": 7},
+      "emotional_beat": {
+        "type": "revelation",
+        "intensity": 7
+      },
       "tension_level": 4,
       "location": {
         "place": "금의상단 본부 — 소연의 방",
@@ -2594,20 +3700,52 @@
         "realm_after": "재신(財神)→상성(商聖) 과도기",
         "internal_energy_before": "거래 규모 30만 냥 / 영향력: 서문경 의혹 유보",
         "internal_energy_after": "거래 규모 30만 냥 / 영향력: 금맥도 초기형 완성. 천하 재화 흐름 시각화. 조태사 비밀 자금 가설",
-        "martial_arts_acquired": ["금맥도 초기형 — 천하 재화의 흐름을 주판+종이 위에 시각화하는 최초의 도구. 교역 노드·자금 흐름·신용 등급·세력 의존 관계를 3차원(시간·규모·신뢰)으로 매핑"],
-        "martial_arts_used": ["장부술 Lv.11", "세력 관계 분석", "서역 어음 시스템(신뢰축)", "어머니의 주판(인터페이스)"],
-        "injury_status": {"current": "수면 부족 (새벽까지 작업)", "change": "정서적으로는 도약감으로 고양"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "상단주", "change": "금맥도라는 전략 도구 확보. 상단의 전략 역량 질적 도약"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "5대 문파 계약+감사 통과", "after": "변동 없음 (내부 도약)"},
+        "martial_arts_acquired": [
+          "금맥도 초기형 — 천하 재화의 흐름을 주판+종이 위에 시각화하는 최초의 도구. 교역 노드·자금 흐름·신용 등급·세력 의존 관계를 3차원(시간·규모·신뢰)으로 매핑"
+        ],
+        "martial_arts_used": [
+          "장부술 Lv.11",
+          "세력 관계 분석",
+          "서역 어음 시스템(신뢰축)",
+          "어머니의 주판(인터페이스)"
+        ],
+        "injury_status": {
+          "current": "수면 부족 (새벽까지 작업)",
+          "change": "정서적으로는 도약감으로 고양"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "상단주",
+          "change": "금맥도라는 전략 도구 확보. 상단의 전략 역량 질적 도약"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "5대 문파 계약+감사 통과",
+          "after": "변동 없음 (내부 도약)"
+        },
         "action_type": "수련/창조 — 금맥도(金脈圖) 초기형 완성",
-        "opponent": {"name": "없음 (창조 블록)", "sect_or_faction": "N/A", "weakness_exploited": "N/A"},
+        "opponent": {
+          "name": "없음 (창조 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "N/A"
+        },
         "strategy": "세력 관계도+서역 어음+어머니 주판의 삼중 결합. 기존 2차원 분석을 3차원(시간·규모·신뢰)으로 확장",
         "success_pattern": "성공 — 금맥도 초기형 완성 + 조태사 비밀 자금 가설",
-        "leverage_used": ["세력 관계도(Block 24)", "서역 어음 시스템(Block 32)", "어머니의 주판", "모든 거래 데이터(5대 문파+거란+서역+사파)"],
+        "leverage_used": [
+          "세력 관계도(Block 24)",
+          "서역 어음 시스템(Block 32)",
+          "어머니의 주판",
+          "모든 거래 데이터(5대 문파+거란+서역+사파)"
+        ],
         "martial_domain": "분석/창조",
-        "active_domains": ["금맥도 개발", "전략 분석", "장부술 수련"]
-      }
+        "active_domains": [
+          "금맥도 개발",
+          "전략 분석",
+          "장부술 수련"
+        ]
+      },
+      "block_no": 39
     },
     {
       "block_id": "Block 40",
@@ -2644,7 +3782,10 @@
         "Block 1의 큰오빠 하얗게 변한 얼굴(공포) → Block 2 떨리는 손(협박의 긴장) → Block 15 흑풍방 서신(강제 협조 증거) → Block 23 추궁('너도 사파 편이야?') → 이번 블록에서 모든 복선 완전 회수. 배신→희생 반전",
         "Block 6의 마 포두 '위에서 시킨 것' → 이번 블록에서 '위'가 풍만리(외부)→큰오빠(내부 강제 협조자)의 구조로 완전 해명"
       ],
-      "emotional_beat": {"type": "catharsis", "intensity": 10},
+      "emotional_beat": {
+        "type": "catharsis",
+        "intensity": 10
+      },
       "tension_level": 6,
       "location": {
         "place": "금의상단 본부 — 소연의 방 + 아버지의 전 서재",
@@ -2661,18 +3802,50 @@
         "internal_energy_after": "거래 규모 30만 냥 / 영향력: 가문 결속 최고조 + 큰오빠 복귀 + 풍만리 제거 결의. 금의상단의 내부 역량이 외형 규모 이상으로 강화",
         "martial_arts_acquired": [],
         "martial_arts_used": [],
-        "injury_status": {"current": "정상 (감정적 카타르시스 — 정서적 회복)", "change": "Block 23 이후의 가족 상처가 치유. 정서적 최고점"},
-        "faction_status": {"affiliation": "금의상단(錦衣商團)", "rank": "상단주", "change": "큰오빠 격리 해제. 가문 전원 결속. 내부 역량 최고조"},
-        "kill_count": 0, "spare_count": 0,
-        "jianghu_reputation": {"before": "5대 문파 계약+감사 통과", "after": "'금의상단 내부 문제가 해결됐다'는 소문. 상단 안정화 인식"},
+        "injury_status": {
+          "current": "정상 (감정적 카타르시스 — 정서적 회복)",
+          "change": "Block 23 이후의 가족 상처가 치유. 정서적 최고점"
+        },
+        "faction_status": {
+          "affiliation": "금의상단(錦衣商團)",
+          "rank": "상단주",
+          "change": "큰오빠 격리 해제. 가문 전원 결속. 내부 역량 최고조"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "5대 문파 계약+감사 통과",
+          "after": "'금의상단 내부 문제가 해결됐다'는 소문. 상단 안정화 인식"
+        },
         "action_type": "가문 화해 — 큰오빠의 진실 공개와 가문 결속 회복",
-        "opponent": {"name": "풍만리(馮萬里/흑풍방 방주) — 10년 전 납치의 주범으로 확정", "sect_or_faction": "사파 흑풍방", "weakness_exploited": "N/A (이번 블록은 감동 블록이므로 직접 대결 없음). 그러나 풍만리에 대한 모든 증거가 축적 완료"},
+        "opponent": {
+          "name": "풍만리(馮萬里/흑풍방 방주) — 10년 전 납치의 주범으로 확정",
+          "sect_or_faction": "사파 흑풍방",
+          "weakness_exploited": "N/A (이번 블록은 감동 블록이므로 직접 대결 없음). 그러나 풍만리에 대한 모든 증거가 축적 완료"
+        },
         "strategy": "N/A (감동 블록. 전략이 아닌 감정이 핵심)",
         "success_pattern": "완전 성공 — 가문 화해 + 내부 결속 최고조 + 시리즈 최대 감동. ARC-04 종결의 감정적 정점",
-        "leverage_used": ["큰오빠의 용기(자발적 고백)", "소연의 용서와 사랑", "가족의 유대"],
+        "leverage_used": [
+          "큰오빠의 용기(자발적 고백)",
+          "소연의 용서와 사랑",
+          "가족의 유대"
+        ],
         "martial_domain": "가문",
-        "active_domains": ["가문 화해", "내부 결속"]
-      }
+        "active_domains": [
+          "가문 화해",
+          "내부 결속"
+        ]
+      },
+      "block_no": 40
     }
-  ]
+  ],
+  "_meta": {
+    "work_id": "wuxia_nakyang_merchant_daughter",
+    "family": "wuxguide",
+    "sub_profile": "merchant_wuxia_profile",
+    "title": "낙양상단 막내딸의 장부",
+    "total_blocks": 70,
+    "last_produced_block": 40,
+    "production_date": "2026-03-24"
+  }
 }

@@ -33,7 +33,9 @@
       "regression_point": {
         "return_year": 2006,
         "return_context": "사업/승계 의사결정 직전"
-      }
+      },
+      "pov": "3인칭",
+      "external_pov_insert_policy": "제한적 허용"
     },
     "FinanceHUD": {
       "_description": "투자/경영물 HUD - 자산·영향력·네트워크 추적",
@@ -443,7 +445,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "결함을 고치는 척하면서 결함 문서와 시험순서를 자기 통제권으로 바꾼다."
-        }
+        },
+        "block_no": 1
       },
       {
         "block_id": "Block 2",
@@ -563,7 +566,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "결함을 고치는 척하면서 결함 문서와 시험순서를 자기 통제권으로 바꾼다."
-        }
+        },
+        "block_no": 2
       },
       {
         "block_id": "Block 3",
@@ -687,7 +691,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "결함을 고치는 척하면서 결함 문서와 시험순서를 자기 통제권으로 바꾼다."
-        }
+        },
+        "block_no": 3
       },
       {
         "block_id": "Block 4",
@@ -811,7 +816,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "결함을 고치는 척하면서 결함 문서와 시험순서를 자기 통제권으로 바꾼다."
-        }
+        },
+        "block_no": 4
       },
       {
         "block_id": "Block 5",
@@ -930,7 +936,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "결함을 고치는 척하면서 결함 문서와 시험순서를 자기 통제권으로 바꾼다."
-        }
+        },
+        "block_no": 5
       },
       {
         "block_id": "Block 6",
@@ -1054,7 +1061,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "결함을 고치는 척하면서 결함 문서와 시험순서를 자기 통제권으로 바꾼다."
-        }
+        },
+        "block_no": 6
       },
       {
         "block_id": "Block 7",
@@ -1174,7 +1182,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "결함을 고치는 척하면서 결함 문서와 시험순서를 자기 통제권으로 바꾼다."
-        }
+        },
+        "block_no": 7
       },
       {
         "block_id": "Block 8",
@@ -1294,7 +1303,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "결함을 고치는 척하면서 결함 문서와 시험순서를 자기 통제권으로 바꾼다."
-        }
+        },
+        "block_no": 8
       },
       {
         "block_id": "Block 9",
@@ -1419,7 +1429,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "결함을 고치는 척하면서 결함 문서와 시험순서를 자기 통제권으로 바꾼다."
-        }
+        },
+        "block_no": 9
       },
       {
         "block_id": "Block 10",
@@ -1539,7 +1550,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "결함을 고치는 척하면서 결함 문서와 시험순서를 자기 통제권으로 바꾼다."
-        }
+        },
+        "block_no": 10
       },
       {
         "block_id": "Block 11",
@@ -1658,7 +1670,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "시험권에 돈줄을 붙여야 진짜 병목이 된다는 원칙으로 움직인다."
-        }
+        },
+        "block_no": 11
       },
       {
         "block_id": "Block 12",
@@ -1782,7 +1795,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "시험권에 돈줄을 붙여야 진짜 병목이 된다는 원칙으로 움직인다."
-        }
+        },
+        "block_no": 12
       },
       {
         "block_id": "Block 13",
@@ -1901,7 +1915,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "시험권에 돈줄을 붙여야 진짜 병목이 된다는 원칙으로 움직인다."
-        }
+        },
+        "block_no": 13
       },
       {
         "block_id": "Block 14",
@@ -2020,7 +2035,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "시험권에 돈줄을 붙여야 진짜 병목이 된다는 원칙으로 움직인다."
-        }
+        },
+        "block_no": 14
       },
       {
         "block_id": "Block 15",
@@ -2144,7 +2160,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "시험권에 돈줄을 붙여야 진짜 병목이 된다는 원칙으로 움직인다."
-        }
+        },
+        "block_no": 15
       },
       {
         "block_id": "Block 16",
@@ -2268,7 +2285,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "시험권에 돈줄을 붙여야 진짜 병목이 된다는 원칙으로 움직인다."
-        }
+        },
+        "block_no": 16
       },
       {
         "block_id": "Block 17",
@@ -2387,7 +2405,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "시험권에 돈줄을 붙여야 진짜 병목이 된다는 원칙으로 움직인다."
-        }
+        },
+        "block_no": 17
       },
       {
         "block_id": "Block 18",
@@ -2512,7 +2531,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "시험권에 돈줄을 붙여야 진짜 병목이 된다는 원칙으로 움직인다."
-        }
+        },
+        "block_no": 18
       },
       {
         "block_id": "Block 19",
@@ -2632,7 +2652,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "시험권에 돈줄을 붙여야 진짜 병목이 된다는 원칙으로 움직인다."
-        }
+        },
+        "block_no": 19
       },
       {
         "block_id": "Block 20",
@@ -2752,7 +2773,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "시험권에 돈줄을 붙여야 진짜 병목이 된다는 원칙으로 움직인다."
-        }
+        },
+        "block_no": 20
       },
       {
         "block_id": "Block 21",
@@ -2876,7 +2898,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "입찰보다 공급선과 서버 권한을 먼저 먹어야 다음 판이 내 것이다."
-        }
+        },
+        "block_no": 21
       },
       {
         "block_id": "Block 22",
@@ -2996,7 +3019,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "입찰보다 공급선과 서버 권한을 먼저 먹어야 다음 판이 내 것이다."
-        }
+        },
+        "block_no": 22
       },
       {
         "block_id": "Block 23",
@@ -3121,7 +3145,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "입찰보다 공급선과 서버 권한을 먼저 먹어야 다음 판이 내 것이다."
-        }
+        },
+        "block_no": 23
       },
       {
         "block_id": "Block 24",
@@ -3246,7 +3271,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "입찰보다 공급선과 서버 권한을 먼저 먹어야 다음 판이 내 것이다."
-        }
+        },
+        "block_no": 24
       },
       {
         "block_id": "Block 25",
@@ -3365,7 +3391,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "입찰보다 공급선과 서버 권한을 먼저 먹어야 다음 판이 내 것이다."
-        }
+        },
+        "block_no": 25
       },
       {
         "block_id": "Block 26",
@@ -3484,7 +3511,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "입찰보다 공급선과 서버 권한을 먼저 먹어야 다음 판이 내 것이다."
-        }
+        },
+        "block_no": 26
       },
       {
         "block_id": "Block 27",
@@ -3608,7 +3636,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "입찰보다 공급선과 서버 권한을 먼저 먹어야 다음 판이 내 것이다."
-        }
+        },
+        "block_no": 27
       },
       {
         "block_id": "Block 28",
@@ -3727,7 +3756,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "입찰보다 공급선과 서버 권한을 먼저 먹어야 다음 판이 내 것이다."
-        }
+        },
+        "block_no": 28
       },
       {
         "block_id": "Block 29",
@@ -3846,7 +3876,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "입찰보다 공급선과 서버 권한을 먼저 먹어야 다음 판이 내 것이다."
-        }
+        },
+        "block_no": 29
       },
       {
         "block_id": "Block 30",
@@ -3972,7 +4003,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "입찰보다 공급선과 서버 권한을 먼저 먹어야 다음 판이 내 것이다."
-        }
+        },
+        "block_no": 30
       },
       {
         "block_id": "Block 31",
@@ -4091,7 +4123,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "국내 사고와 해외 실사를 하나의 증거 체인으로 묶어야 판이 뒤집힌다."
-        }
+        },
+        "block_no": 31
       },
       {
         "block_id": "Block 32",
@@ -4211,7 +4244,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "국내 사고와 해외 실사를 하나의 증거 체인으로 묶어야 판이 뒤집힌다."
-        }
+        },
+        "block_no": 32
       },
       {
         "block_id": "Block 33",
@@ -4336,7 +4370,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "국내 사고와 해외 실사를 하나의 증거 체인으로 묶어야 판이 뒤집힌다."
-        }
+        },
+        "block_no": 33
       },
       {
         "block_id": "Block 34",
@@ -4461,7 +4496,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "국내 사고와 해외 실사를 하나의 증거 체인으로 묶어야 판이 뒤집힌다."
-        }
+        },
+        "block_no": 34
       },
       {
         "block_id": "Block 35",
@@ -4581,7 +4617,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "국내 사고와 해외 실사를 하나의 증거 체인으로 묶어야 판이 뒤집힌다."
-        }
+        },
+        "block_no": 35
       },
       {
         "block_id": "Block 36",
@@ -4705,7 +4742,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "국내 사고와 해외 실사를 하나의 증거 체인으로 묶어야 판이 뒤집힌다."
-        }
+        },
+        "block_no": 36
       },
       {
         "block_id": "Block 37",
@@ -4824,7 +4862,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "국내 사고와 해외 실사를 하나의 증거 체인으로 묶어야 판이 뒤집힌다."
-        }
+        },
+        "block_no": 37
       },
       {
         "block_id": "Block 38",
@@ -4943,7 +4982,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "국내 사고와 해외 실사를 하나의 증거 체인으로 묶어야 판이 뒤집힌다."
-        }
+        },
+        "block_no": 38
       },
       {
         "block_id": "Block 39",
@@ -5069,7 +5109,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "국내 사고와 해외 실사를 하나의 증거 체인으로 묶어야 판이 뒤집힌다."
-        }
+        },
+        "block_no": 39
       },
       {
         "block_id": "Block 40",
@@ -5188,7 +5229,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "국내 사고와 해외 실사를 하나의 증거 체인으로 묶어야 판이 뒤집힌다."
-        }
+        },
+        "block_no": 40
       },
       {
         "block_id": "Block 41",
@@ -5309,7 +5351,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "수출은 계약 순간이 아니라 정비·금융·표준이 같이 묶일 때 비로소 내 것이 된다."
-        }
+        },
+        "block_no": 41
       },
       {
         "block_id": "Block 42",
@@ -5433,7 +5476,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "수출은 계약 순간이 아니라 정비·금융·표준이 같이 묶일 때 비로소 내 것이 된다."
-        }
+        },
+        "block_no": 42
       },
       {
         "block_id": "Block 43",
@@ -5552,7 +5596,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "수출은 계약 순간이 아니라 정비·금융·표준이 같이 묶일 때 비로소 내 것이 된다."
-        }
+        },
+        "block_no": 43
       },
       {
         "block_id": "Block 44",
@@ -5672,7 +5717,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "수출은 계약 순간이 아니라 정비·금융·표준이 같이 묶일 때 비로소 내 것이 된다."
-        }
+        },
+        "block_no": 44
       },
       {
         "block_id": "Block 45",
@@ -5796,7 +5842,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "수출은 계약 순간이 아니라 정비·금융·표준이 같이 묶일 때 비로소 내 것이 된다."
-        }
+        },
+        "block_no": 45
       },
       {
         "block_id": "Block 46",
@@ -5915,7 +5962,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "수출은 계약 순간이 아니라 정비·금융·표준이 같이 묶일 때 비로소 내 것이 된다."
-        }
+        },
+        "block_no": 46
       },
       {
         "block_id": "Block 47",
@@ -6040,7 +6088,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "수출은 계약 순간이 아니라 정비·금융·표준이 같이 묶일 때 비로소 내 것이 된다."
-        }
+        },
+        "block_no": 47
       },
       {
         "block_id": "Block 48",
@@ -6164,7 +6213,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "수출은 계약 순간이 아니라 정비·금융·표준이 같이 묶일 때 비로소 내 것이 된다."
-        }
+        },
+        "block_no": 48
       },
       {
         "block_id": "Block 49",
@@ -6284,7 +6334,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "수출은 계약 순간이 아니라 정비·금융·표준이 같이 묶일 때 비로소 내 것이 된다."
-        }
+        },
+        "block_no": 49
       },
       {
         "block_id": "Block 50",
@@ -6404,7 +6455,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "수출은 계약 순간이 아니라 정비·금융·표준이 같이 묶일 때 비로소 내 것이 된다."
-        }
+        },
+        "block_no": 50
       },
       {
         "block_id": "Block 51",
@@ -6528,7 +6580,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "허가를 기다리는 대신 허가 없이도 굴러가는 구조를 미리 완성한다."
-        }
+        },
+        "block_no": 51
       },
       {
         "block_id": "Block 52",
@@ -6648,7 +6701,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "허가를 기다리는 대신 허가 없이도 굴러가는 구조를 미리 완성한다."
-        }
+        },
+        "block_no": 52
       },
       {
         "block_id": "Block 53",
@@ -6767,7 +6821,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "허가를 기다리는 대신 허가 없이도 굴러가는 구조를 미리 완성한다."
-        }
+        },
+        "block_no": 53
       },
       {
         "block_id": "Block 54",
@@ -6891,7 +6946,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "허가를 기다리는 대신 허가 없이도 굴러가는 구조를 미리 완성한다."
-        }
+        },
+        "block_no": 54
       },
       {
         "block_id": "Block 55",
@@ -7016,7 +7072,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "허가를 기다리는 대신 허가 없이도 굴러가는 구조를 미리 완성한다."
-        }
+        },
+        "block_no": 55
       },
       {
         "block_id": "Block 56",
@@ -7135,7 +7192,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "허가를 기다리는 대신 허가 없이도 굴러가는 구조를 미리 완성한다."
-        }
+        },
+        "block_no": 56
       },
       {
         "block_id": "Block 57",
@@ -7259,7 +7317,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "허가를 기다리는 대신 허가 없이도 굴러가는 구조를 미리 완성한다."
-        }
+        },
+        "block_no": 57
       },
       {
         "block_id": "Block 58",
@@ -7379,7 +7438,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "허가를 기다리는 대신 허가 없이도 굴러가는 구조를 미리 완성한다."
-        }
+        },
+        "block_no": 58
       },
       {
         "block_id": "Block 59",
@@ -7498,7 +7558,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "허가를 기다리는 대신 허가 없이도 굴러가는 구조를 미리 완성한다."
-        }
+        },
+        "block_no": 59
       },
       {
         "block_id": "Block 60",
@@ -7624,7 +7685,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "허가를 기다리는 대신 허가 없이도 굴러가는 구조를 미리 완성한다."
-        }
+        },
+        "block_no": 60
       },
       {
         "block_id": "Block 61",
@@ -7743,7 +7805,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "폭로는 복수용이 아니라 차기 규격과 공급선 재편 명분이 돼야 한다."
-        }
+        },
+        "block_no": 61
       },
       {
         "block_id": "Block 62",
@@ -7862,7 +7925,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "폭로는 복수용이 아니라 차기 규격과 공급선 재편 명분이 돼야 한다."
-        }
+        },
+        "block_no": 62
       },
       {
         "block_id": "Block 63",
@@ -7987,7 +8051,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "폭로는 복수용이 아니라 차기 규격과 공급선 재편 명분이 돼야 한다."
-        }
+        },
+        "block_no": 63
       },
       {
         "block_id": "Block 64",
@@ -8107,7 +8172,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "폭로는 복수용이 아니라 차기 규격과 공급선 재편 명분이 돼야 한다."
-        }
+        },
+        "block_no": 64
       },
       {
         "block_id": "Block 65",
@@ -8226,7 +8292,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "폭로는 복수용이 아니라 차기 규격과 공급선 재편 명분이 돼야 한다."
-        }
+        },
+        "block_no": 65
       },
       {
         "block_id": "Block 66",
@@ -8351,7 +8418,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "폭로는 복수용이 아니라 차기 규격과 공급선 재편 명분이 돼야 한다."
-        }
+        },
+        "block_no": 66
       },
       {
         "block_id": "Block 67",
@@ -8471,7 +8539,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "폭로는 복수용이 아니라 차기 규격과 공급선 재편 명분이 돼야 한다."
-        }
+        },
+        "block_no": 67
       },
       {
         "block_id": "Block 68",
@@ -8591,7 +8660,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "폭로는 복수용이 아니라 차기 규격과 공급선 재편 명분이 돼야 한다."
-        }
+        },
+        "block_no": 68
       },
       {
         "block_id": "Block 69",
@@ -8715,7 +8785,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "폭로는 복수용이 아니라 차기 규격과 공급선 재편 명분이 돼야 한다."
-        }
+        },
+        "block_no": 69
       },
       {
         "block_id": "Block 70",
@@ -8832,7 +8903,8 @@
           "single_heir_policy": "사람이 아니라 병목과 규격을 상속 가능한 자산으로 본다.",
           "incarnation_type": "회귀자",
           "execution_doctrine": "폭로는 복수용이 아니라 차기 규격과 공급선 재편 명분이 돼야 한다."
-        }
+        },
+        "block_no": 70
       }
     ]
   }

@@ -1,4 +1,6 @@
 {
+  "_schema": "tr.v1",
+  "_total_blocks": 70,
   "blocks": [
     {
       "block_id": "Block 1",
@@ -100,7 +102,8 @@
         "single_heir_policy": "재벌 3세 막내이지만 실권 없음. 형들이 경영권을 다투는 동안 준서는 그룹 밖에서 독립 자산을 쌓는다. 가문 돈은 절대 쓰지 않는다.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 항상 3개 섹터를 동시에 굴려 기득권이 대응할 수 없는 속도로 먹는다. Block 1에서는 첫 섹터(코인/주식) 진입만 완료."
-      }
+      },
+      "block_no": 1
     },
     {
       "block_id": "Block 2",
@@ -205,7 +208,8 @@
         "single_heir_policy": "6억 전액이 가문 밖 자력 수익. 이준혁·이준민·이철호 누구도 이 돈의 존재를 모른다. 재벌 막내의 첫 독립 자산.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 코인 수익을 확보하자마자 다음 수(주식)로 넘어간다. 쉬는 시간은 없다. 매도 직후 이미 다음 화면을 보고 있다."
-      }
+      },
+      "block_no": 2
     },
     {
       "block_id": "Block 3",
@@ -317,7 +321,8 @@
         "single_heir_policy": "JSR인베스트먼트는 준서 100% 지분. 제국그룹과 자본·지배구조상 무관. 형들이 알아도 간섭할 근거가 없는 완전 독립 법인.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 법인을 세우자마자 첫 투자를 실행하고, 수익 확인 직후 다음 타깃으로 넘어간다. '만들고-돌리고-넘어간다'의 리듬이 정착되기 시작했다."
-      }
+      },
+      "block_no": 3
     },
     {
       "block_id": "Block 4",
@@ -424,7 +429,8 @@
         "single_heir_policy": "법인 자산 전액 자력 축적. 가문 자금 미사용 원칙 유지.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 주식 매수와 엔젤 투자를 동시에 진행. 하나의 자산 클래스에 안주하지 않고 항상 다음 레이어를 준비."
-      }
+      },
+      "block_no": 4
     },
     {
       "block_id": "Block 5",
@@ -530,7 +536,8 @@
         "single_heir_policy": "80억을 잃었지만 가문에 손 벌리지 않았다. 8.5억으로 버틴다. 원칙 유지.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 그러나 이번 패배로 '무모하게 빠르게'에서 '정확하게 빠르게'로 교정이 일어났다. 속도는 유지하되 헷지를 추가한다."
-      }
+      },
+      "block_no": 5
     },
     {
       "block_id": "Block 6",
@@ -642,7 +649,8 @@
         "single_heir_policy": "3억 투자도 법인 자금. 가문 자금 미사용.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — HBM 현물이 오르는 동안 쉬지 않고 다음 섹터(반도체/AI)의 네트워크를 까는 중. 돈이 불어나는 것과 판이 넓어지는 것을 동시에 진행."
-      }
+      },
+      "block_no": 6
     },
     {
       "block_id": "Block 7",
@@ -753,7 +761,8 @@
         "single_heir_policy": "3.3억 손실도 자력으로 감당. 가문 도움 미요청.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 사기 정리를 하면서도 HBM 현물은 유지하고, 오승아 접점을 만들었다. 한 번에 한 가지만 하지 않는다."
-      }
+      },
+      "block_no": 7
     },
     {
       "block_id": "Block 8",
@@ -860,7 +869,8 @@
         "single_heir_policy": "60억 전액 자력. 가문 무관.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 주식 시장에서 완전히 나온 즉시 다음 판(코인 공매도)을 준비. 현금을 들고 쉬는 시간은 없다."
-      }
+      },
+      "block_no": 8
     },
     {
       "block_id": "Block 9",
@@ -967,7 +977,8 @@
         "single_heir_policy": "370억 자력. 가문 무관.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 공매도 청산 직후 반도체 팹리스 인수 대상 리스트를 이미 보고 있다. 코인/주식은 졸업이고, 다음은 실물 섹터."
-      }
+      },
+      "block_no": 9
     },
     {
       "block_id": "Block 10",
@@ -1075,7 +1086,8 @@
         "single_heir_policy": "2,000억 자력. 가문 자금 0원 사용. 원칙 완수.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 코인/주식 완성. 즉시 반도체 + 바이오 듀얼 섹터 진입. 3개 동시 롤링 시스템 본격 가동 임박. '다음.'"
-      }
+      },
+      "block_no": 10
     },
     {
       "block_id": "Block 11",
@@ -1187,7 +1199,8 @@
         "single_heir_policy": "1,000억 인수 전액 자력. 가문 무관.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 팹리스 인수 완료 즉시 CTO 스카우트와 바이오 M&A 탐색을 동시 진행."
-      }
+      },
+      "block_no": 11
     },
     {
       "block_id": "Block 12",
@@ -1299,7 +1312,8 @@
         "single_heir_policy": "김태석 영입비 전액 법인 자금.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — CTO 취임 발표 당일 바이오 재무 분석을 검토하고 있다."
-      }
+      },
+      "block_no": 12
     },
     {
       "block_id": "Block 13",
@@ -1411,7 +1425,8 @@
         "single_heir_policy": "350억 해외 투자도 법인 자금.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 대만 출장에서 돌아오는 비행기에서 바이오 M&A를 검토 중. 한 번에 한 가지만 하지 않는다."
-      }
+      },
+      "block_no": 13
     },
     {
       "block_id": "Block 14",
@@ -1524,7 +1539,8 @@
         "single_heir_policy": "가문 자금 미사용. 형 전화에 '나중에'로 일축.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 납품 계약 체결 당일 바이오 M&A 서류를 검토하고 있다."
-      }
+      },
+      "block_no": 14
     },
     {
       "block_id": "Block 15",
@@ -1634,7 +1650,8 @@
         "single_heir_policy": "유지.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 재벌이 준서를 분석하는 동안 준서는 이미 다음 섹터를 실사하고 있다."
-      }
+      },
+      "block_no": 15
     },
     {
       "block_id": "Block 16",
@@ -1746,7 +1763,8 @@
         "single_heir_policy": "500억 투자도 법인 자금.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 바이오 계약 서명 당일 코스닥 상장 주관사 미팅이 잡혀 있다."
-      }
+      },
+      "block_no": 16
     },
     {
       "block_id": "Block 17",
@@ -1858,7 +1876,8 @@
         "single_heir_policy": "가문 자금 미사용.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 상장 당일 부동산 DC 계약서를 보고 있다."
-      }
+      },
+      "block_no": 17
     },
     {
       "block_id": "Block 18",
@@ -1969,7 +1988,8 @@
         "single_heir_policy": "유지.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 엔지니어 이탈 대응 중에도 바이오 임상 진행 상황을 모니터링하고 있다."
-      }
+      },
+      "block_no": 18
     },
     {
       "block_id": "Block 19",
@@ -2075,7 +2095,8 @@
         "single_heir_policy": "가문 돈 미사용 원칙 재확인.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 형과의 대면 직후 부동산 DC 부지 계약을 잡는다."
-      }
+      },
+      "block_no": 19
     },
     {
       "block_id": "Block 20",
@@ -2187,7 +2208,8 @@
         "single_heir_policy": "4조 전액 자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 반도체 완성. 즉시 3개 동시 롤링 가동. '다음.'"
-      }
+      },
+      "block_no": 20
     },
     {
       "block_id": "Block 21",
@@ -2294,7 +2316,8 @@
         "single_heir_policy": "가문 자금 미사용. PF도 법인+주식 담보.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 토지 계약 당일 온코젠 임상 보고서를 받는다."
-      }
+      },
+      "block_no": 21
     },
     {
       "block_id": "Block 22",
@@ -2406,7 +2429,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 라이선스 아웃 계약 서명 당일 DC 건설 일정을 잡고 있다."
-      }
+      },
+      "block_no": 22
     },
     {
       "block_id": "Block 23",
@@ -2513,7 +2537,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 리츠 설립 당일 LLM 스타트업 미팅이 잡혀 있다."
-      }
+      },
+      "block_no": 23
     },
     {
       "block_id": "Block 24",
@@ -2620,7 +2645,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — AI 투자 계약 당일 엣지칩 인수 대상 리스트를 정하윤에게 요청."
-      }
+      },
+      "block_no": 24
     },
     {
       "block_id": "Block 25",
@@ -2725,7 +2751,8 @@
         "single_heir_policy": "유지.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 재벌이 회의하는 동안 준서는 실리콘밸리로 날아가고 있다."
-      }
+      },
+      "block_no": 25
     },
     {
       "block_id": "Block 26",
@@ -2832,7 +2859,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — EdgeMind 인수 계약 서명 직후 리츠 상장 일정을 확인."
-      }
+      },
+      "block_no": 26
     },
     {
       "block_id": "Block 27",
@@ -2939,7 +2967,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 27
     },
     {
       "block_id": "Block 28",
@@ -3043,7 +3072,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 28
     },
     {
       "block_id": "Block 29",
@@ -3150,7 +3180,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — PF 인수 완료 직후 AI 펀드 첫 투자를 검토."
-      }
+      },
+      "block_no": 29
     },
     {
       "block_id": "Block 30",
@@ -3257,7 +3288,8 @@
         "single_heir_policy": "12조 자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — '다음.'"
-      }
+      },
+      "block_no": 30
     },
     {
       "block_id": "Block 31",
@@ -3364,7 +3396,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 31
     },
     {
       "block_id": "Block 32",
@@ -3469,7 +3502,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 32
     },
     {
       "block_id": "Block 33",
@@ -3573,7 +3607,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 33
     },
     {
       "block_id": "Block 34",
@@ -3677,7 +3712,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 34
     },
     {
       "block_id": "Block 35",
@@ -3780,7 +3816,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 35
     },
     {
       "block_id": "Block 36",
@@ -3877,7 +3914,8 @@
         "single_heir_policy": "유지.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 36
     },
     {
       "block_id": "Block 37",
@@ -3983,7 +4021,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — '다음.'"
-      }
+      },
+      "block_no": 37
     },
     {
       "block_id": "Block 38",
@@ -4090,7 +4129,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 38
     },
     {
       "block_id": "Block 39",
@@ -4195,7 +4235,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 39
     },
     {
       "block_id": "Block 40",
@@ -4299,7 +4340,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 40
     },
     {
       "block_id": "Block 41",
@@ -4403,7 +4445,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 41
     },
     {
       "block_id": "Block 42",
@@ -4508,7 +4551,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 42
     },
     {
       "block_id": "Block 43",
@@ -4615,7 +4659,8 @@
         "single_heir_policy": "35조 자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — '다음.'"
-      }
+      },
+      "block_no": 43
     },
     {
       "block_id": "Block 44",
@@ -4718,7 +4763,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 44
     },
     {
       "block_id": "Block 45",
@@ -4822,7 +4868,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 45
     },
     {
       "block_id": "Block 46",
@@ -4928,7 +4975,8 @@
         "single_heir_policy": "유지.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 46
     },
     {
       "block_id": "Block 47",
@@ -5031,7 +5079,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 47
     },
     {
       "block_id": "Block 48",
@@ -5133,7 +5182,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 48
     },
     {
       "block_id": "Block 49",
@@ -5229,7 +5279,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 49
     },
     {
       "block_id": "Block 50",
@@ -5343,7 +5394,8 @@
         "single_heir_policy": "45조 전액 자력. 입원 중에도 가문에 연락하지 않았다.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 입원 중에도 태블릿으로 계약을 마감했다. 이것은 '멈추지 않는다'의 증거이자 '멈출 수 없다'의 경고."
-      }
+      },
+      "block_no": 50
     },
     {
       "block_id": "Block 51",
@@ -5446,7 +5498,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 51
     },
     {
       "block_id": "Block 52",
@@ -5548,7 +5601,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 52
     },
     {
       "block_id": "Block 53",
@@ -5651,7 +5705,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 53
     },
     {
       "block_id": "Block 54",
@@ -5761,7 +5816,8 @@
         "single_heir_policy": "60조 자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — '다음.' 이번엔 다르다."
-      }
+      },
+      "block_no": 54
     },
     {
       "block_id": "Block 55",
@@ -5865,7 +5921,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 55
     },
     {
       "block_id": "Block 56",
@@ -5963,7 +6020,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 56
     },
     {
       "block_id": "Block 57",
@@ -6067,7 +6125,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 막히면 돌아간다."
-      }
+      },
+      "block_no": 57
     },
     {
       "block_id": "Block 58",
@@ -6177,7 +6236,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 형을 보내고 바로 다음 서류를 편다."
-      }
+      },
+      "block_no": 58
     },
     {
       "block_id": "Block 59",
@@ -6273,7 +6333,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 59
     },
     {
       "block_id": "Block 60",
@@ -6370,7 +6431,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 60
     },
     {
       "block_id": "Block 61",
@@ -6473,7 +6535,8 @@
         "single_heir_policy": "자력.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 61
     },
     {
       "block_id": "Block 62",
@@ -6599,7 +6662,8 @@
         "single_heir_policy": "동맹 10조는 대출/투자 구조(CB + 메자닌). 가문 자금은 여전히 0원 사용. 원칙 유지.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 쓰러지기 전 마지막 행동이 전화번호 3개를 순서대로 띄운 것. 의식이 끊겨도 시스템은 돌아간다."
-      }
+      },
+      "block_no": 62
     },
     {
       "block_id": "Block 63",
@@ -6702,7 +6766,8 @@
         "single_heir_policy": "자력+동맹.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 63
     },
     {
       "block_id": "Block 64",
@@ -6806,7 +6871,8 @@
         "single_heir_policy": "동맹 대출.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 64
     },
     {
       "block_id": "Block 65",
@@ -6922,7 +6988,8 @@
         "single_heir_policy": "역스퀴즈 비용 전액 자력 + 동맹 자금(대출 구조). 가문 자금 0원.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 이번엔 '혼자'가 아니라 '시스템'으로. 준서는 감독하고 정하윤이 실행했다. 12년 전 혼자 0.36 BTC를 산 남자가 이제 팀으로 움직인다."
-      }
+      },
+      "block_no": 65
     },
     {
       "block_id": "Block 66",
@@ -7033,7 +7100,8 @@
         "single_heir_policy": "자력+형 위임.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — '정리하겠습니다.'"
-      }
+      },
+      "block_no": 66
     },
     {
       "block_id": "Block 67",
@@ -7130,7 +7198,8 @@
         "single_heir_policy": "제국 자금+J캐피탈.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 67
     },
     {
       "block_id": "Block 68",
@@ -7227,7 +7296,8 @@
         "single_heir_policy": "J제국.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 68
     },
     {
       "block_id": "Block 69",
@@ -7323,7 +7393,8 @@
         "single_heir_policy": "J제국.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고."
-      }
+      },
+      "block_no": 69
     },
     {
       "block_id": "Block 70",
@@ -7438,7 +7509,8 @@
         "single_heir_policy": "J제국홀딩스. 217조. 전액 자력(+ 동맹 투자 구조). 가문 자금은 여전히 0원 사용. 원칙 완수.",
         "incarnation_type": "회귀자",
         "execution_doctrine": "세 개씩. 쉬지 않고. — 12년간 지켜온 독트린. '다음 섹터.'라고 말하는 것은 여전히 같다. 하지만 이번에는 하나가 다르다 — 최다은에게 문자를 보냈다. 효율 밖의 행동. 이준서에게 일어나고 있는 가장 작고 가장 큰 변화."
-      }
+      },
+      "block_no": 70
     }
   ]
 }
