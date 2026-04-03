@@ -1,5 +1,0 @@
-{"timestamp": "2026-03-05 11:17:59", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_end_state 위치 동기화: '서울 여의도 한미증권 VIP룸' → '서울 강남구 테헤란로, 막 계약을 마친 5평짜리 공유 오피스. 창문 너머로 보이는 거대한 증권사 빌딩이 그의 목표를 상징한다.'"]}}
-{"timestamp": "2026-03-05 11:18:38", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-03-05 11:19:07", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 4}}
-{"timestamp": "2026-03-05 11:21:43", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '서울 강남구 테헤란로, 막 계약을 마친 5평짜리 공유 오피스' → '서울 강남구 테헤란로, 막 계약을 마친 5평짜리 공유 오피스. 창문 너머로 보이는 거대한 증권사 빌딩이 그의 목표를 상징한다.'", "arc_end_state 위치 동기화: '서울 강남구 테헤란로, 5평짜리 공유 오피스 (이전 준비 중)' → '강남 테헤란로에 막 계약한 SW인베스트먼트의 텅 빈 사무실. 페인트 냄새가 채 가시지 않은 공간 중앙에 놓인 책상 위, 최신형 컴퓨터 모니터 3대가 불을 밝히고 있다.'"]}}
-{"timestamp": "2026-03-05 11:23:59", "type": "arc_design_failed", "message": "max retries exhausted", "data": {"arc_no": 2, "batch_start": 0, "batch_end": 3}}

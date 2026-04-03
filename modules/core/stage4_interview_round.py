@@ -2147,6 +2147,8 @@ class Stage4InterviewRound:
 
         npc_labels: list[str] = []
         axis_labels: list[str] = []
+        direction_labels: list[str] = []
+        relation_label_kinds: set[str] = set()
         for item in relevant:
             npc = str(item.get("npc", "") or "").strip()
             if npc and npc not in npc_labels:
@@ -2156,20 +2158,46 @@ class Stage4InterviewRound:
                 label = f"{npc}:{'/'.join(axes)}"
                 if label not in axis_labels:
                     axis_labels.append(label)
+            direction_label = str(item.get("relation_direction_label", "") or "").strip()
+            if direction_label and direction_label not in direction_labels:
+                direction_labels.append(direction_label)
+            relation_label_kind = str(item.get("relation_label_kind", "") or "").strip()
+            if relation_label_kind:
+                relation_label_kinds.add(relation_label_kind)
 
         target_suffix = f" ({', '.join(npc_labels[:2])})" if npc_labels else ""
         evidence_summary = "runtime npc_drift relation-tag semantic backfill"
-        if axis_labels:
-            evidence_summary = f"{evidence_summary}: {'; '.join(axis_labels[:2])}"
+        evidence_labels = list(axis_labels[:2])
+        for label in direction_labels:
+            if label not in evidence_labels:
+                evidence_labels.append(label)
+        if evidence_labels:
+            evidence_summary = f"{evidence_summary}: {'; '.join(evidence_labels[:2])}"
+        if "plain_directional" in relation_label_kinds:
+            must_fix = [
+                "relation_to_protag 방향성과 canonical relation semantics에 어긋난 관계 표현을 국소 수정"
+            ]
+            do_not_regress = [
+                "평문 관계 태그를 literal 뒤집기로 해석하지 말고 canonical direction 의미 정렬만 수행"
+            ]
+            success_condition = (
+                "NpcDrift relation_to_protag 경고가 사라지고 관계 프레이밍이 canonical direction과 의미적으로 합치한다"
+            )
+        else:
+            must_fix = [
+                "relation_to_protag 압축 관계 태그와 의미적으로 어긋난 관계 표현을 canonical relation framing에 맞게 국소 수정"
+            ]
+            do_not_regress = [
+                "압축 관계 태그 숫자/토큰을 원고에 그대로 삽입하지 말고 prose 의미 정렬만 수행"
+            ]
+            success_condition = (
+                "NpcDrift relation_to_protag 경고가 사라지고 관계 프레이밍이 canonical relation tag 축과 의미적으로 합치한다"
+            )
         return {
             "patch_targets": [f"NPC relation_to_protag 관계 프레이밍 문장{target_suffix}"],
-            "must_fix": [
-                "relation_to_protag 압축 관계 태그와 의미적으로 어긋난 관계 표현을 canonical relation framing에 맞게 국소 수정"
-            ],
-            "do_not_regress": [
-                "압축 관계 태그 숫자/토큰을 원고에 그대로 삽입하지 말고 prose 의미 정렬만 수행"
-            ],
-            "success_condition": "NpcDrift relation_to_protag 경고가 사라지고 관계 프레이밍이 canonical relation tag 축과 의미적으로 합치한다",
+            "must_fix": must_fix,
+            "do_not_regress": do_not_regress,
+            "success_condition": success_condition,
             "target_kind": "local_phrase",
             "subtype": "relation_tag_semantic",
             "evidence_summary": evidence_summary,

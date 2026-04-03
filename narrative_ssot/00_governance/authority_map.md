@@ -6,9 +6,9 @@ Date: 2026-03-31
 ## Current Authority
 
 - reference card inventory:
-  `docs/실물기반 사각지대 테스트/few-shot-bank/reference_card_manifest.json`
+  `material_ssot/10_research/20_fewshot_bank/reference_card_manifest.json`
 - reference card content:
-  `docs/실물기반 사각지대 테스트/few-shot-bank/cards/`
+  `material_ssot/10_research/20_fewshot_bank/cards/`
 - preprocess live artifacts:
   `treatments/preprocess/{work_id}/`
 - phase0 live artifacts:

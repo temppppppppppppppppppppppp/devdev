@@ -11,13 +11,13 @@
     {
       "id": "cs_01",
       "label": "컨셉기획_인턴빙의CEO.md",
-      "path": "전처리_ssot/기획안/컨셉기획_인턴빙의CEO.md",
+      "path": "material_ssot/20_pitch/intake/legacy_import/20260320/컨셉기획_인턴빙의CEO.md",
       "role": "작품 설계 정본. 세계관, 캐릭터, 적대자 변천사, 자본 곡선, 복선 아크, 감정 곡선, deal_type 분포, regression_ext 전량 포함"
     },
     {
       "id": "cs_02",
       "label": "failed_future_ceo_intern_onboarding_prompt.md",
-      "path": "전처리_ssot/기획안/failed_future_ceo_intern_onboarding_prompt.md",
+      "path": "material_ssot/20_pitch/intake/legacy_import/supporting/20260320/failed_future_ceo_intern_onboarding_prompt.md",
       "role": "세션 시작 프롬프트 + 핵심 원칙(이득 중심/자기중심/대리만족 우선/선점·지배·통제권 우선) 확정"
     }
   ],

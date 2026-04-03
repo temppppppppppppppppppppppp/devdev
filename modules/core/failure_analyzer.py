@@ -95,6 +95,8 @@ class FailureAnalyzer:
                         row = json.loads(line)
                     except (TypeError, ValueError, json.JSONDecodeError):
                         continue
+                    if not self._is_alignment_authoritative_episode_production_row(row):
+                        continue
                     try:
                         score = int(row.get("final_score", row.get("score", 0)) or 0)
                     except (TypeError, ValueError):
@@ -111,6 +113,35 @@ class FailureAnalyzer:
             logging.debug("[FailureAnalyzer] episode_production load failed: %s", _e)
             return []
         return entries
+
+    @staticmethod
+    def _is_episode_production_lifecycle_only_row(row: dict) -> bool:
+        event = str((row or {}).get("event", "") or "").strip().upper()
+        return event in {"STAGE4_RETRY_PATHOLOGY", "STAGE4_RETRY_PATHOLOGY_REPEAT"}
+
+    @classmethod
+    def _is_alignment_authoritative_episode_production_row(cls, row: dict) -> bool:
+        if not isinstance(row, dict):
+            return False
+
+        stage_label = str(row.get("stage", "") or "").strip().lower()
+        if stage_label == "stage4_control":
+            return False
+
+        decision_type = str(row.get("decision_type", "") or "").strip().lower()
+        if decision_type and decision_type != "manuscript":
+            return False
+
+        event = str(row.get("event", "") or "").strip().upper()
+        if not event:
+            return True
+        if cls._is_episode_production_lifecycle_only_row(row):
+            return True
+        if event.startswith("V75-"):
+            return False
+        if event.startswith("STAGE4_"):
+            return False
+        return True
 
     def _load_pass_rate_monitor_entries(self, stage: int | None = None) -> list[dict]:
         """pass_rate_monitor.json loader for cross-sink alignment checks."""
@@ -638,21 +669,25 @@ class FailureAnalyzer:
             patch_trace = row.get("patch_trace", {}) or {}
             if not isinstance(patch_trace, dict):
                 patch_trace = {}
+            lifecycle_only = self._is_episode_production_lifecycle_only_row(row)
             episode_production[attempt_key] = {
                 "initial_verdict": str(row.get("initial_verdict", row.get("verdict", "")) or ""),
                 "final_verdict": str(row.get("final_verdict", row.get("verdict", "")) or ""),
-                "final_score": self._coerce_int(row.get("final_score", row.get("score", 0))),
+                "final_score": None if lifecycle_only else self._coerce_int(row.get("final_score", row.get("score", 0))),
                 "patch_strategy": str(patch_trace.get("patch_strategy", "") or ""),
-                "candidate_key": str(row.get("candidate_key", "") or "").strip(),
-                "content_hash": str(row.get("content_hash", "") or "").strip(),
-                "artifact_path": str(row.get("artifact_path", "") or "").strip(),
+                "candidate_key": "" if lifecycle_only else str(row.get("candidate_key", "") or "").strip(),
+                "content_hash": "" if lifecycle_only else str(row.get("content_hash", "") or "").strip(),
+                "artifact_path": "" if lifecycle_only else str(row.get("artifact_path", "") or "").strip(),
                 "selection_reason": str(row.get("selection_reason", row.get("reason", "")) or "").strip(),
                 "verdict_reason": str(
                     row.get("verdict_reason", row.get("reason", row.get("selection_reason", ""))) or ""
                 ).strip(),
-                "selection_candidate_key": str(
-                    row.get("selection_candidate_key", row.get("candidate_key", "")) or ""
-                ).strip(),
+                "selection_candidate_key": (
+                    ""
+                    if lifecycle_only
+                    else str(row.get("selection_candidate_key", row.get("candidate_key", "")) or "").strip()
+                ),
+                "final_sink_authoritative": not lifecycle_only,
                 **self._extract_gate_repair_bundle(
                     director_verdict=row.get("director_verdict"),
                     gate_basis=row.get("gate_basis"),
@@ -708,7 +743,7 @@ class FailureAnalyzer:
         session_decisions: dict[str, dict],
         episode_production: dict[str, dict],
     ) -> tuple[set[str], set[str], set[str]]:
-        final_union = set(stage_attempts) | set(pass_rate_monitor)
+        final_union = set(stage_attempts)
         if include_session_decisions:
             final_union |= set(session_decisions)
         lifecycle_union: set[str] = set()
@@ -731,7 +766,6 @@ class FailureAnalyzer:
     ) -> tuple[dict[str, dict], dict[str, dict], dict[str, dict]]:
         final_missing = {
             "stage_attempts": FailureAnalyzer._compact_examples(list(final_union - set(stage_attempts))),
-            "pass_rate_monitor": FailureAnalyzer._compact_examples(list(final_union - set(pass_rate_monitor))),
         }
         if include_session_decisions:
             final_missing["session_decisions"] = FailureAnalyzer._compact_examples(
@@ -753,9 +787,6 @@ class FailureAnalyzer:
             lifecycle_missing = {key: value for key, value in lifecycle_missing.items() if value}
             lifecycle_missing_in_final = {
                 "stage_attempts": FailureAnalyzer._compact_examples(list(lifecycle_union - set(stage_attempts))),
-                "pass_rate_monitor": FailureAnalyzer._compact_examples(
-                    list(lifecycle_union - set(pass_rate_monitor))
-                ),
             }
             lifecycle_missing_in_final = {
                 key: value for key, value in lifecycle_missing_in_final.items() if value
@@ -834,7 +865,11 @@ class FailureAnalyzer:
             final_scores["stage_attempts"] = stage_attempts[attempt_key]["final_score"]
         if attempt_key in session_decisions and session_decisions[attempt_key]["final_score"] is not None:
             final_scores["session_decisions"] = session_decisions[attempt_key]["final_score"]
-        if attempt_key in episode_production and episode_production[attempt_key]["final_score"] is not None:
+        if (
+            attempt_key in episode_production
+            and episode_production[attempt_key].get("final_sink_authoritative", True)
+            and episode_production[attempt_key]["final_score"] is not None
+        ):
             final_scores["episode_production"] = episode_production[attempt_key]["final_score"]
         if len(set(final_scores.values())) > 1:
             results["final_score_mismatches"].append({"attempt_key": attempt_key, **final_scores})
@@ -1015,11 +1050,12 @@ class FailureAnalyzer:
                 "artifact_path": session_decisions[attempt_key]["artifact_path"],
             }
         if attempt_key in episode_production:
-            final_artifact_fields["episode_production"] = {
-                "candidate_key": episode_production[attempt_key]["candidate_key"],
-                "content_hash": episode_production[attempt_key]["content_hash"],
-                "artifact_path": episode_production[attempt_key]["artifact_path"],
-            }
+            if episode_production[attempt_key].get("final_sink_authoritative", True):
+                final_artifact_fields["episode_production"] = {
+                    "candidate_key": episode_production[attempt_key]["candidate_key"],
+                    "content_hash": episode_production[attempt_key]["content_hash"],
+                    "artifact_path": episode_production[attempt_key]["artifact_path"],
+                }
 
         if final_artifact_fields:
             for field_name, result_key in (
@@ -1239,9 +1275,7 @@ class FailureAnalyzer:
         session_scoped_attempts = sum(
             1 for attempt_key in attempts_considered if self._attempt_key_has_session_scope(attempt_key)
         )
-        complete_final_attempts = sum(
-            1 for attempt_key in final_union if attempt_key in stage_attempts and attempt_key in pass_rate_monitor
-        )
+        complete_final_attempts = sum(1 for attempt_key in final_union if attempt_key in stage_attempts)
         complete_lifecycle_attempts = sum(
             1
             for attempt_key in lifecycle_union

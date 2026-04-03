@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from modules.core.stage0_handoff import canonicalize_treatment_payload
 from modules.narrative_router.harness_digest import load_harness_digest, render_harness_digest_lines
 
 BLOCK_REF_RE = re.compile(r"Block\s*(\d+)", re.IGNORECASE)
@@ -165,7 +166,7 @@ def build_canonical_treatment_payload(data: Any, *, schema: str = "tr.v1") -> An
 
 def write_json(path: Path, data: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = build_canonical_treatment_payload(data)
+    payload, _warnings = canonicalize_treatment_payload(data)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 

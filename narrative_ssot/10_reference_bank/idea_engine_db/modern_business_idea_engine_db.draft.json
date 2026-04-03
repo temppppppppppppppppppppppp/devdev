@@ -10,8 +10,8 @@
   ],
   "authority_note": "Scaffold-only draft. Seed entries are derived from audited reference cards and are meant for recombination, not direct copying.",
   "source_authority": {
-    "reference_manifest": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/reference_card_manifest.json",
-    "reference_cards_root": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards",
+    "reference_manifest": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/reference_card_manifest.json",
+    "reference_cards_root": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards",
     "selection_rule": "Use only audited/pass cards as seed sources. Treat entries as engine abstractions, not as plot templates."
   },
   "retrieval_contract": {
@@ -52,7 +52,7 @@
         {
           "slug": "guksecheong_mangnani",
           "track": "A",
-          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/guksecheong_mangnani_A.md"
+          "path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/guksecheong_mangnani_A.md"
         }
       ],
       "query_tags": [
@@ -88,7 +88,7 @@
         {
           "slug": "daehanminguk_absolute_jaebeol",
           "track": "A",
-          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/daehanminguk_absolute_jaebeol_A.md"
+          "path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/daehanminguk_absolute_jaebeol_A.md"
         }
       ],
       "query_tags": [
@@ -124,7 +124,7 @@
         {
           "slug": "yeonbong_1jo_sinipsawon",
           "track": "A",
-          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/yeonbong_1jo_sinipsawon_A.md"
+          "path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/yeonbong_1jo_sinipsawon_A.md"
         }
       ],
       "query_tags": [
@@ -161,7 +161,7 @@
         {
           "slug": "jaebeol_saenghwal_girokbu",
           "track": "A",
-          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/jaebeol_saenghwal_girokbu_A.md"
+          "path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/jaebeol_saenghwal_girokbu_A.md"
         }
       ],
       "query_tags": [
@@ -196,7 +196,7 @@
         {
           "slug": "dokshik_jaebeol3se",
           "track": "A",
-          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/dokshik_jaebeol3se_A.md"
+          "path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/dokshik_jaebeol3se_A.md"
         }
       ],
       "query_tags": [
@@ -231,7 +231,7 @@
         {
           "slug": "geomeunmeori_american_jaebeol",
           "track": "A",
-          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/geomeunmeori_american_jaebeol_A.md"
+          "path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/geomeunmeori_american_jaebeol_A.md"
         }
       ],
       "query_tags": [
@@ -267,7 +267,7 @@
         {
           "slug": "gim_daerineun_byeorakbuja",
           "track": "A",
-          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/gim_daerineun_byeorakbuja_A.md"
+          "path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_byeorakbuja_A.md"
         }
       ],
       "query_tags": [
@@ -303,7 +303,7 @@
         {
           "slug": "jusigui_sin",
           "track": "A",
-          "path": "C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/jusigui_sin_A.md"
+          "path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/jusigui_sin_A.md"
         }
       ],
       "query_tags": [

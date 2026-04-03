@@ -6,7 +6,7 @@
     "secondary_profile": ""
   },
   "canonical_sources": [
-    "전처리_ssot/기획안/20260320/컨셉기획_042_무협_낙양상단막내딸.md — 정본 기획안, QA B등급 통과, P2 정합성 수정 5건 반영 완료"
+    "material_ssot/20_pitch/intake/legacy_import/20260320/컨셉기획_042_무협_낙양상단막내딸.md — migrated pitch payload, 정본 기획안, QA B등급 통과, P2 정합성 수정 5건 반영 완료"
   ],
   "reference_only_sources": [
     "docs/wuxguide/martial_hud_example.json — MartialHUD 스키마 구조 참고용, 서사/설정 미참고",

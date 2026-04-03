@@ -11,11 +11,11 @@ Date: 2026-03-31
 
 현재 authoritative manifest:
 
-- `C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/reference_card_manifest.json`
+- `C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/reference_card_manifest.json`
 
 현재 authoritative card root:
 
-- `C:/Users/wjjo/Desktop/글도비/docs/실물기반 사각지대 테스트/few-shot-bank/cards/`
+- `C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/`
 
-향후 cutover 전까지 authoritative source는 계속 legacy few-shot bank다.
+2026-04-03 Wave 1 이후 authoritative source는 `material_ssot` research few-shot root다.
 이 문서는 mirror 관계를 설명하는 pointer 역할을 수행한다.

@@ -323,6 +323,45 @@ class TestAdvisoryEscalationHappyPathRegression:
         assert result["fix_pack"]["provenance"] == "runtime_synthesized"
         assert result["fix_pack"]["provenance_sources"] == ["npc_drift_relation_tag_semantic"]
 
+    def test_pass_with_plaintext_relation_tag_npc_drift_synthesizes_local_fix_contract_from_zero(self):
+        ir = _make_ir(advisory_summary={"npc_drift": 1})
+        ir._last_advisory_metadata = {
+            "npc_drift": [
+                {
+                    "npc": "한태민",
+                    "field": "relation_to_protag",
+                    "expected": "오해 대상",
+                    "found_in_ms": "한태민은 주인공을 오해하지만 주인공은 그의 판단 착오를 이용한다",
+                    "drift_subtype": "relation_tag_semantic",
+                    "target_kind": "local_phrase",
+                    "expected_relation_label": "오해 대상",
+                    "expected_relation_axes": ["오해 대상", "NPC가 주인공을 오해함"],
+                    "relation_label_kind": "plain_directional",
+                    "relation_direction": "npc_misunderstands_protag",
+                    "relation_direction_label": "NPC가 주인공을 오해함",
+                    "_cand_idx": 0,
+                }
+            ]
+        }
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                selected="A",
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={},
+            )
+        )
+
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        assert result["fix_pack"]["target_kind"] == "local_phrase"
+        assert "한태민" in result["fix_pack"]["patch_targets"][0]
+        assert "canonical relation semantics" in result["fix_pack"]["must_fix"][0]
+        assert "canonical direction" in result["fix_pack"]["do_not_regress"][0]
+        assert result["strong_advisory_escalation"]["local_fix_contract_backfilled"] is True
+        assert result["strong_advisory_escalation"]["backfilled_from"] == ["npc_drift_relation_tag_semantic"]
+        assert result["fix_pack"]["provenance"] == "runtime_synthesized"
+        assert result["fix_pack"]["provenance_sources"] == ["npc_drift_relation_tag_semantic"]
+
     def test_pass_with_flashback_contradiction_synthesizes_local_fix_contract_from_zero(self):
         """Flashback local continuity contradictions may synthesize a zero-to-local fix contract."""
         ir = _make_ir(advisory_summary={"flashback": 1})

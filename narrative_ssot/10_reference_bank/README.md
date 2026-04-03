@@ -14,7 +14,7 @@ V0.1에서는 아직 실제 reference bank를 이 폴더로 완전 이관하지 
 
 현재 authoritative 경로:
 
-- `docs/실물기반 사각지대 테스트/few-shot-bank/`
+- `material_ssot/10_research/20_fewshot_bank/`
 
 현재 mirror 경로:
 

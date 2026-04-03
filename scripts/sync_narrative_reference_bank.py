@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Sync legacy few-shot reference assets into narrative_ssot mirror paths.
+"""Sync canonical research few-shot assets into narrative_ssot mirror paths.
 
 This script copies the current authoritative reference manifest and all saved
 card markdown files into `narrative_ssot/10_reference_bank/` as UTF-8 text.
 
-Authoritative source remains the legacy few-shot bank until cutover.
+Authoritative source is the research-stage few-shot root under `material_ssot`.
 
 Usage:
     python -X utf8 scripts/sync_narrative_reference_bank.py
@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_ROOT = ROOT / "docs" / "실물기반 사각지대 테스트" / "few-shot-bank"
+SOURCE_ROOT = ROOT / "material_ssot" / "10_research" / "20_fewshot_bank"
 SOURCE_CARDS = SOURCE_ROOT / "cards"
 SOURCE_MANIFEST = SOURCE_ROOT / "reference_card_manifest.json"
 
@@ -75,7 +75,7 @@ def main() -> int:
         "synced_at_utc": datetime.now(timezone.utc).isoformat(),
         "card_count": len(card_files),
         "notes": [
-            "legacy few-shot bank remains authoritative until explicit cutover",
+            "material_ssot research few-shot bank is authoritative after Wave 1 cutover",
             "narrative_ssot mirror is for new structure adoption and traceability"
         ]
     }

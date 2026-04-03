@@ -21,7 +21,7 @@ Execution Rule: IDE 2가 `Phase 0` 관련 작업을 처리 중이므로 본 문�
 
 - `전처리_ssot` = Stage 0 운영 허브
 - `docs/narrative-router` = family 진입 라우터
-- `docs/실물기반 사각지대 테스트/few-shot-bank` = reference/few-shot authoritative source
+- `material_ssot/10_research/10_reference_profiles`, `material_ssot/10_research/20_fewshot_bank` = reference/few-shot authoritative source
 - `treatments/`, `bible/` = live 산출물
 - `narrative_ssot` = pilot용 scaffold, 아직 canonical 아님
 - `docs/temp` = 실행 큐, 구조 SSOT가 아니라 운영 queue mirror
@@ -33,7 +33,7 @@ Execution Rule: IDE 2가 `Phase 0` 관련 작업을 처리 중이므로 본 문�
 대표 중복 축은 아래와 같다.
 
 - 기획안: `전처리_ssot/기획안` vs `전처리_ssot/docs/10_pitches`
-- reference bank: `docs/실물기반 사각지대 테스트/few-shot-bank` vs `narrative_ssot/10_reference_bank`
+- reference bank: `material_ssot/10_research/20_fewshot_bank` vs `narrative_ssot/10_reference_bank`
 - 하네스: `docs/narrative-router + family harness` vs `narrative_ssot/30_harness`
 - 산출물 경로: live output은 `treatments/`, `bible/`인데 scaffold에도 동일 의미 경로가 준비돼 있음
 
@@ -41,7 +41,8 @@ Execution Rule: IDE 2가 `Phase 0` 관련 작업을 처리 중이므로 본 문�
 
 현 시점 임시 해석은 아래로 둔다.
 
-- 리서치 원본: `docs/실물기반 사각지대 테스트`
+- 리서치 stage root: `material_ssot/10_research`
+- 리서치 raw 잔여 루트: `docs/실물기반 사각지대 테스트`
 - 기획안 허브: `전처리_ssot/docs/10_pitches`
 - legacy 기획안 묶음: `전처리_ssot/기획안`
 - Stage 0 운영 허브: `전처리_ssot`

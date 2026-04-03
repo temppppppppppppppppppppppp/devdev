@@ -93,6 +93,26 @@ class TestDialogueRatio:
         assert any(item.severity == CheckSeverity.WARNING for item in items)
         assert any("스타일 목표 40%" in item.message for item in items)
 
+    def test_zero_dialogue_target_respects_narration_style(self, checker):
+        ms = "가" * 2000
+
+        items = checker._check_dialogue_ratio(ms, {"style_dialogue_ratio_target": 0.0})
+
+        assert items
+        assert not any(item.severity == CheckSeverity.FAIL for item in items)
+        assert any(item.severity == CheckSeverity.PASS for item in items)
+        assert any("스타일 목표 0%" in item.message for item in items)
+
+    def test_zero_dialogue_target_warns_only_when_dialogue_exceeds_soft_cap(self, checker):
+        narrative = "가" * 1300
+        dialogue = '"{}" '.format("나" * 40) * 10
+        ms = narrative + dialogue
+
+        items = checker._check_dialogue_ratio(ms, {"style_dialogue_ratio_target": 0.0})
+
+        assert any(item.severity == CheckSeverity.WARNING for item in items)
+        assert any("스타일 목표 0%" in item.message for item in items)
+
 
 # ─── _measure_scene_reflection ──────────────────────
 

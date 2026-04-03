@@ -18,9 +18,12 @@ if str(ROOT) not in sys.path:
 from modules.core.project_support import default_external_pov_insert_policy, normalize_external_pov_insert_policy
 from modules.core.response_schemas import (  # noqa: E402 - entrypoint path bootstrap must precede imports
     validate_bible_structure,
-    validate_treatment_structure,
 )
-from modules.core.stage0_handoff import build_plot_roadmap_from_treatment
+from modules.core.stage0_handoff import (
+    build_plot_roadmap_from_treatment,
+    canonicalize_bible_payload,
+    canonicalize_treatment_payload,
+)
 
 # Keep runtime detection broad without embedding hygiene-triggering literals directly in source.
 GARBLED_TOKENS = ("?" * 3, "\\ufffd", chr(0xFFFD))
@@ -546,10 +549,8 @@ def main() -> int:
 
     phase0 = load_json(args.phase0)
     draft_raw = load_json(args.draft)
-    treatment_blocks = build_plot_roadmap_from_treatment(draft_raw)
-
-    tr_valid, tr_errors, _tr_warnings = validate_treatment_structure(treatment_blocks)
-    require(tr_valid, f"Treatment draft validation failed: {tr_errors}")
+    canonical_treatment, tr_warnings = canonicalize_treatment_payload(draft_raw)
+    treatment_blocks = canonical_treatment["blocks"]
     require(isinstance(treatment_blocks, list) and len(treatment_blocks) == 70, "Treatment draft must contain 70 blocks")
     require(isinstance(phase0, dict), "Phase0 payload must be a dict")
     require("project" in phase0 and "setting" in phase0 and "protagonist" in phase0 and "phase0_design" in phase0, "Phase0 payload is missing required sections")
@@ -566,6 +567,7 @@ def main() -> int:
     }
     payload["setting"]["protagonist"] = phase0["protagonist"]
     bible = build_bible(payload, treatment_blocks)
+    bible, canonical_warnings = canonicalize_bible_payload(bible, treatment=canonical_treatment)
 
     valid, errors, warnings = validate_bible_structure(bible)
     require(valid, f"Bible validation failed: {errors}")
@@ -589,8 +591,9 @@ def main() -> int:
     args.output.write_text(serialized + "\n", encoding="utf-8")
 
     print(f"[OK] BI generated: {args.output}")
-    if warnings:
-        print(f"[WARN] Bible warnings: {warnings}")
+    all_warnings = [*tr_warnings, *warnings, *canonical_warnings]
+    if all_warnings:
+        print(f"[WARN] Bible warnings: {all_warnings}")
     print("[OK] plot_roadmap hash synchronized with draft")
     return 0
 
