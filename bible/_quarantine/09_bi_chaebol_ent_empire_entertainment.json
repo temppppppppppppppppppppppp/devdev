@@ -45,7 +45,9 @@
         "month": "2009년 8월 말",
         "age": 28,
         "context": "부친이 던져 준 적자 엔터 자회사 세령컬처웍스를 1년 안에 살려야 하는 상황"
-      }
+      },
+      "pov": "3인칭",
+      "external_pov_insert_policy": "제한적 허용"
     },
     "FinanceHUD": {
       "_description": "엔터 타이쿤 전용 HUD - 동원 가능 자본, 인재 축, 사업축, 지배력 추적",
@@ -1396,7 +1398,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "숫자가 아니라 먼저 사람의 터질 타이밍을 찾고, 그 사람에게 맞는 판을 깐다."
-        }
+        },
+        "block_no": 1
       },
       {
         "block_id": "Block 2",
@@ -1493,7 +1496,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "버려진 재능의 현재 가치보다 다음 자리의 폭발력을 먼저 본다."
-        }
+        },
+        "block_no": 2
       },
       {
         "block_id": "Block 3",
@@ -1585,7 +1589,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "감각은 현장에서 돈으로 증명되어야 의미가 있다."
-        }
+        },
+        "block_no": 3
       },
       {
         "block_id": "Block 4",
@@ -1677,7 +1682,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "맞는 사람을 찾는 것과 그 사람을 지켜내는 것은 다른 문제다."
-        }
+        },
+        "block_no": 4
       },
       {
         "block_id": "Block 5",
@@ -1769,7 +1775,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "실패는 끝이 아니라 누가 판을 뒤집었는지 찾는 출발점이다."
-        }
+        },
+        "block_no": 5
       },
       {
         "block_id": "Block 6",
@@ -1861,7 +1868,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람이 남아야 감각도 다음 판을 만든다."
-        }
+        },
+        "block_no": 6
       },
       {
         "block_id": "Block 7",
@@ -1954,7 +1962,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "개별 능력을 나열하지 말고, 함께 있을 때 더 크게 보이는 순서를 만든다."
-        }
+        },
+        "block_no": 7
       },
       {
         "block_id": "Block 8",
@@ -2046,7 +2055,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "중요한 건 원래 자리보다 지금 가장 잘 터질 자리다."
-        }
+        },
+        "block_no": 8
       },
       {
         "block_id": "Block 9",
@@ -2139,7 +2149,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "반응이 왔다고 바로 승리로 계산하지 말고, 돈이 붙는 순간까지 냉정하게 보류한다."
-        }
+        },
+        "block_no": 9
       },
       {
         "block_id": "Block 10",
@@ -2241,7 +2252,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "한 번의 대박보다 여러 가능성을 묶어 회사가 계속 가야 할 이유를 만든다."
-        }
+        },
+        "block_no": 10
       },
       {
         "block_id": "Block 11",
@@ -2333,7 +2345,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람을 다시 세울 때는 동정이 아니라 지금 시장이 원하는 얼굴로 다시 소개해야 한다."
-        }
+        },
+        "block_no": 11
       },
       {
         "block_id": "Block 12",
@@ -2424,7 +2437,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "재능을 키우는 일은 응원보다 먼저, 무너지는 방식을 알아채고 통제하는 일이다."
-        }
+        },
+        "block_no": 12
       },
       {
         "block_id": "Block 13",
@@ -2515,7 +2529,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "작품 전체를 팔기 전에 먼저 사람 하나를 이야기로 만들어야 한다."
-        }
+        },
+        "block_no": 13
       },
       {
         "block_id": "Block 14",
@@ -2606,7 +2621,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "엔터 회사의 미래는 같은 업계 안이 아니라, 아직 아무도 스타로 보지 않는 사람에게서 열린다."
-        }
+        },
+        "block_no": 14
       },
       {
         "block_id": "Block 15",
@@ -2697,7 +2713,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "잘하는 사람을 모으는 것과 기억되는 팀을 만드는 일은 다르다."
-        }
+        },
+        "block_no": 15
       },
       {
         "block_id": "Block 16",
@@ -2788,7 +2805,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "맞는 사람을 찾았다고 끝이 아니다. 그 사람에게 닿는 길까지 지켜야 한다."
-        }
+        },
+        "block_no": 16
       },
       {
         "block_id": "Block 17",
@@ -2880,7 +2898,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "길이 막히면 더 세게 밀지 말고, 돈과 사람이 숨 쉴 다른 통로를 먼저 연다."
-        }
+        },
+        "block_no": 17
       },
       {
         "block_id": "Block 18",
@@ -2971,7 +2990,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람을 보는 눈이 맞아도, 그 눈이 살아남을 룰은 따로 계산해야 한다."
-        }
+        },
+        "block_no": 18
       },
       {
         "block_id": "Block 19",
@@ -3062,7 +3082,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "스타 한 명을 띄우는 것에서 끝내지 말고, 그 사람이 속한 회사 이름까지 함께 기억되게 만든다."
-        }
+        },
+        "block_no": 19
       },
       {
         "block_id": "Block 20",
@@ -3154,7 +3175,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "회사를 살릴 때는 한 사람의 승리보다, 여러 가능성을 한 장의 이유로 묶는 능력이 필요하다."
-        }
+        },
+        "block_no": 20
       },
       {
         "block_id": "Block 21",
@@ -3246,7 +3268,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "감각이 맞다는 걸 증명하려면, 그 감각이 반복될 규칙부터 만들어야 한다."
-        }
+        },
+        "block_no": 21
       },
       {
         "block_id": "Block 22",
@@ -3337,7 +3360,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "누가 막는지 모르면 계속 당한다. 먼저 사람 뒤의 구조를 읽어야 한다."
-        }
+        },
+        "block_no": 22
       },
       {
         "block_id": "Block 23",
@@ -3428,7 +3452,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "반응과 승리는 다르다. 판을 쥔 쪽이 문을 열지 않으면 화제는 돈이 되지 않는다."
-        }
+        },
+        "block_no": 23
       },
       {
         "block_id": "Block 24",
@@ -3519,7 +3544,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "문이 닫히면 두드리지 말고, 팬이 먼저 모일 다른 길부터 만든다."
-        }
+        },
+        "block_no": 24
       },
       {
         "block_id": "Block 25",
@@ -3610,7 +3636,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "팀은 좋은 사람 모음이 아니라 역할이 맞물리는 구조물이다."
-        }
+        },
+        "block_no": 25
       },
       {
         "block_id": "Block 26",
@@ -3701,7 +3728,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "가장 빛나는 카드일수록, 그 빛이 누구를 태우는지도 같이 봐야 한다."
-        }
+        },
+        "block_no": 26
       },
       {
         "block_id": "Block 27",
@@ -3792,7 +3820,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "스타 하나를 살렸다면, 그 이름이 회사 전체 값을 올리게 만들어야 한다."
-        }
+        },
+        "block_no": 27
       },
       {
         "block_id": "Block 28",
@@ -3882,7 +3911,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "스타를 찾는 사람에서 끝나지 말고, 스타가 버틸 회사를 만드는 사람으로 남는다."
-        }
+        },
+        "block_no": 28
       },
       {
         "block_id": "Block 29",
@@ -3973,7 +4003,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "발굴이 끝이 아니다. 본 재능을 지켜 내는 구조까지 가져야 진짜 회사가 된다."
-        }
+        },
+        "block_no": 29
       },
       {
         "block_id": "Block 30",
@@ -4064,7 +4095,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "작은 회사는 남이 만든 룰에서 정면승부하지 말고, 자기 카드들을 묶어 다른 게임을 만들어야 한다."
-        }
+        },
+        "block_no": 30
       },
       {
         "block_id": "Block 31",
@@ -4155,7 +4187,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "스타는 방송국이 아니라 반복해서 찾아오게 만드는 접점에서 만들어진다."
-        }
+        },
+        "block_no": 31
       },
       {
         "block_id": "Block 32",
@@ -4246,7 +4279,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "한 번 뜨는 장면을 만들지 말고, 계속 소비되는 형식을 먼저 만든다."
-        }
+        },
+        "block_no": 32
       },
       {
         "block_id": "Block 33",
@@ -4337,7 +4371,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람을 스타로 만드는 건 직업이 아니라, 카메라 앞에서 무엇이 살아나는지 보는 일이다."
-        }
+        },
+        "block_no": 33
       },
       {
         "block_id": "Block 34",
@@ -4428,7 +4463,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "남의 플랫폼 위에서 자란 성공은 문이 닫히는 순간 가장 먼저 무너진다."
-        }
+        },
+        "block_no": 34
       },
       {
         "block_id": "Block 35",
@@ -4519,7 +4555,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "한 군데에서 크게 터지는 것보다, 여러 곳에서 계속 닿는 구조가 오래 남는다."
-        }
+        },
+        "block_no": 35
       },
       {
         "block_id": "Block 36",
@@ -4610,7 +4647,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "팬을 모으는 것보다 더 중요한 건, 그 팬이 매일 돌아오게 만드는 습관을 만드는 일이다."
-        }
+        },
+        "block_no": 36
       },
       {
         "block_id": "Block 37",
@@ -4701,7 +4739,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "숨기는 순간 지고, 정면으로 받는 순간 서사가 된다."
-        }
+        },
+        "block_no": 37
       },
       {
         "block_id": "Block 38",
@@ -4791,7 +4830,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람들이 좋아하는 건 한 명이 아니라, 그 한 명이 속한 세계 전체가 되어야 오래 간다."
-        }
+        },
+        "block_no": 38
       },
       {
         "block_id": "Block 39",
@@ -4882,7 +4922,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "성장은 자유가 아니다. 통제권을 못 쥐면 커질수록 더 쉽게 빼앗긴다."
-        }
+        },
+        "block_no": 39
       },
       {
         "block_id": "Block 40",
@@ -4973,7 +5014,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "방송을 허락받으려 하지 말고, 소비자가 먼저 반응하는 시장의 접점을 설계한다."
-        }
+        },
+        "block_no": 40
       },
       {
         "block_id": "Block 41",
@@ -5064,7 +5106,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사업의 다음 축은 익숙한 업계 안보다, 아직 아무도 스타라고 부르지 않는 사람에게서 나온다."
-        }
+        },
+        "block_no": 41
       },
       {
         "block_id": "Block 42",
@@ -5154,7 +5197,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람을 바꾸지 말고, 그 사람의 결이 가장 잘 보이는 환경부터 만든다."
-        }
+        },
+        "block_no": 42
       },
       {
         "block_id": "Block 43",
@@ -5245,7 +5289,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "강한 개인은 시작점일 뿐이다. 오래 가는 브랜드는 결국 구조를 가진 팀으로 완성된다."
-        }
+        },
+        "block_no": 43
       },
       {
         "block_id": "Block 44",
@@ -5335,7 +5380,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "상처를 끝까지 남겨 두지 말고, 말할 수 있을 때 회사의 무기로 바꾼다."
-        }
+        },
+        "block_no": 44
       },
       {
         "block_id": "Block 45",
@@ -5425,7 +5471,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "화제가 붙은 사람은 화면 안에만 두지 말고, 공간과 상품으로 확장해 손에 잡히는 IP로 만든다."
-        }
+        },
+        "block_no": 45
       },
       {
         "block_id": "Block 46",
@@ -5515,7 +5562,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "팬을 숫자로 보되 조회 수가 아니라 반복 행동으로 읽어야 진짜 사업이 된다."
-        }
+        },
+        "block_no": 46
       },
       {
         "block_id": "Block 47",
@@ -5606,7 +5654,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "브랜드는 키우는 것보다 망가지지 않게 지키는 쪽이 더 어렵고 더 비싸다."
-        }
+        },
+        "block_no": 47
       },
       {
         "block_id": "Block 48",
@@ -5696,7 +5745,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사고가 너무 깔끔하면 사람 하나보다 뒤의 숫자 흐름부터 의심한다."
-        }
+        },
+        "block_no": 48
       },
       {
         "block_id": "Block 49",
@@ -5786,7 +5836,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "크게 벌기보다 오래 남는 구조를 먼저 만들면, 큰 돈은 그 뒤에 따라온다."
-        }
+        },
+        "block_no": 49
       },
       {
         "block_id": "Block 50",
@@ -5877,7 +5928,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사업을 늘리는 것보다 중요한 건, 늘어난 사업들을 하나의 힘으로 묶는 언어를 갖는 일이다."
-        }
+        },
+        "block_no": 50
       },
       {
         "block_id": "Block 51",
@@ -5967,7 +6019,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "국내에서 인정받고 나가는 시대를 기다리지 말고, 처음부터 세계가 바로 느끼는 무드를 만든다."
-        }
+        },
+        "block_no": 51
       },
       {
         "block_id": "Block 52",
@@ -6057,7 +6110,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "설명이 늦어도 무드가 먼저 먹히면, 계약은 그 다음에 붙일 수 있다."
-        }
+        },
+        "block_no": 52
       },
       {
         "block_id": "Block 53",
@@ -6147,7 +6201,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "반응이 커질수록 사람도 같이 흔들린다. 성공의 속도만큼 내부 압력도 관리해야 한다."
-        }
+        },
+        "block_no": 53
       },
       {
         "block_id": "Block 54",
@@ -6238,7 +6293,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "놓친 카드에 흔들리기보다, 손에 있는 카드의 색을 더 선명하게 만든다."
-        }
+        },
+        "block_no": 54
       },
       {
         "block_id": "Block 55",
@@ -6328,7 +6384,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "성공이 보여도 그 성공의 조건을 읽지 못하면, 이긴 순간부터 진다."
-        }
+        },
+        "block_no": 55
       },
       {
         "block_id": "Block 56",
@@ -6418,7 +6475,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "성공을 만든 방식이 사람을 부수기 시작하면, 그 순간부터 방식 자체를 고쳐야 한다."
-        }
+        },
+        "block_no": 56
       },
       {
         "block_id": "Block 57",
@@ -6508,7 +6566,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "국경은 달라도 팬이 반복해서 돌아오는 방식은 비슷하다. 그 행동을 먼저 쥐어야 세계에서 남는다."
-        }
+        },
+        "block_no": 57
       },
       {
         "block_id": "Block 58",
@@ -6598,7 +6657,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "에이스를 지킨다는 건 무조건 감싸는 게 아니라, 그 에이스가 부술 수 있는 범위까지 줄이는 일이다."
-        }
+        },
+        "block_no": 58
       },
       {
         "block_id": "Block 59",
@@ -6688,7 +6748,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "더 크게 가는 것보다, 같이 간 사람을 부수지 않고 더 오래 가는 쪽을 택한다."
-        }
+        },
+        "block_no": 59
       },
       {
         "block_id": "Block 60",
@@ -6778,7 +6839,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "세계에서 남으려면 무대 하나가 아니라, 그 무대를 계속 반복시킬 구조를 먼저 만들어야 한다."
-        }
+        },
+        "block_no": 60
       },
       {
         "block_id": "Block 61",
@@ -6868,7 +6930,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "가장 취약한 순간은 실패 직후가 아니라, 모두가 축하하는 직후다."
-        }
+        },
+        "block_no": 61
       },
       {
         "block_id": "Block 62",
@@ -6959,7 +7022,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "권력전에서는 먼저 이기기보다, 누가 어떤 논리로 빼앗으려는지부터 정확히 읽는다."
-        }
+        },
+        "block_no": 62
       },
       {
         "block_id": "Block 63",
@@ -7049,7 +7113,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "사람을 키운다고 권력까지 따라오진 않는다. 구조를 못 쥐면 가장 큰 성공도 빼앗긴다."
-        }
+        },
+        "block_no": 63
       },
       {
         "block_id": "Block 64",
@@ -7139,7 +7204,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "권력을 잃어도 사람이 남으면 아직 끝난 게 아니다."
-        }
+        },
+        "block_no": 64
       },
       {
         "block_id": "Block 65",
@@ -7229,7 +7295,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "권력을 빼앗겼다면 법보다 먼저 시장과 사람의 감각에서 주도권을 되찾는다."
-        }
+        },
+        "block_no": 65
       },
       {
         "block_id": "Block 66",
@@ -7319,7 +7386,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "상대가 숫자로 숨었다면, 결국 그 숫자 자체를 증언하게 만들어야 한다."
-        }
+        },
+        "block_no": 66
       },
       {
         "block_id": "Block 67",
@@ -7409,7 +7477,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "이기는 것보다, 무엇을 남기는 승리인지 먼저 정한다."
-        }
+        },
+        "block_no": 67
       },
       {
         "block_id": "Block 68",
@@ -7499,7 +7568,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "증거를 갖고 있어도 한 번에 못 터뜨리면 약하다. 시장과 여론이 동시에 반응할 순간에 던진다."
-        }
+        },
+        "block_no": 68
       },
       {
         "block_id": "Block 69",
@@ -7589,7 +7659,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "스타를 키우는 것보다 더 큰 힘은, 그 스타를 보려는 사람들의 입구를 직접 쥐는 일이다."
-        }
+        },
+        "block_no": 69
       },
       {
         "block_id": "Block 70",
@@ -7677,7 +7748,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "최종 승리는 인정받는 게 아니라, 남들이 결국 따라 하게 되는 구조를 만드는 것이다."
-        }
+        },
+        "block_no": 70
       }
     ]
   }

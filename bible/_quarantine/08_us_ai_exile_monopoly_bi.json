@@ -33,7 +33,9 @@
       "regression_point": {
         "return_year": 2006,
         "return_context": "사업/승계 의사결정 직전"
-      }
+      },
+      "pov": "3인칭",
+      "external_pov_insert_policy": "제한적 허용"
     },
     "FinanceHUD": {
       "_description": "투자/경영물 HUD - 자산·영향력·네트워크 추적",
@@ -406,7 +408,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 1
       },
       {
         "block_id": "Block 2",
@@ -498,7 +501,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 2
       },
       {
         "block_id": "Block 3",
@@ -596,7 +600,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 3
       },
       {
         "block_id": "Block 4",
@@ -693,7 +698,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 4
       },
       {
         "block_id": "Block 5",
@@ -790,7 +796,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 5
       },
       {
         "block_id": "Block 6",
@@ -887,7 +894,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 6
       },
       {
         "block_id": "Block 7",
@@ -984,7 +992,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 7
       },
       {
         "block_id": "Block 8",
@@ -1086,7 +1095,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 8
       },
       {
         "block_id": "Block 9",
@@ -1184,7 +1194,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 9
       },
       {
         "block_id": "Block 10",
@@ -1286,7 +1297,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 10
       },
       {
         "block_id": "Block 11",
@@ -1383,7 +1395,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 11
       },
       {
         "block_id": "Block 12",
@@ -1480,7 +1493,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 12
       },
       {
         "block_id": "Block 13",
@@ -1584,7 +1598,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 13
       },
       {
         "block_id": "Block 14",
@@ -1681,7 +1696,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 14
       },
       {
         "block_id": "Block 15",
@@ -1778,7 +1794,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 15
       },
       {
         "block_id": "Block 16",
@@ -1880,7 +1897,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 16
       },
       {
         "block_id": "Block 17",
@@ -1978,7 +1996,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 17
       },
       {
         "block_id": "Block 18",
@@ -2082,7 +2101,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 18
       },
       {
         "block_id": "Block 19",
@@ -2179,7 +2199,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 19
       },
       {
         "block_id": "Block 20",
@@ -2281,7 +2302,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 20
       },
       {
         "block_id": "Block 21",
@@ -2379,7 +2401,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 21
       },
       {
         "block_id": "Block 22",
@@ -2476,7 +2499,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 22
       },
       {
         "block_id": "Block 23",
@@ -2578,7 +2602,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 23
       },
       {
         "block_id": "Block 24",
@@ -2680,7 +2705,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 24
       },
       {
         "block_id": "Block 25",
@@ -2777,7 +2803,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 25
       },
       {
         "block_id": "Block 26",
@@ -2874,7 +2901,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 26
       },
       {
         "block_id": "Block 27",
@@ -2971,7 +2999,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 27
       },
       {
         "block_id": "Block 28",
@@ -3073,7 +3102,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 28
       },
       {
         "block_id": "Block 29",
@@ -3172,7 +3202,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 29
       },
       {
         "block_id": "Block 30",
@@ -3274,7 +3305,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 30
       },
       {
         "block_id": "Block 31",
@@ -3372,7 +3404,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 31
       },
       {
         "block_id": "Block 32",
@@ -3469,7 +3502,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 32
       },
       {
         "block_id": "Block 33",
@@ -3571,7 +3605,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 33
       },
       {
         "block_id": "Block 34",
@@ -3673,7 +3708,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 34
       },
       {
         "block_id": "Block 35",
@@ -3772,7 +3808,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 35
       },
       {
         "block_id": "Block 36",
@@ -3869,7 +3906,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 36
       },
       {
         "block_id": "Block 37",
@@ -3968,7 +4006,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 37
       },
       {
         "block_id": "Block 38",
@@ -4070,7 +4109,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 38
       },
       {
         "block_id": "Block 39",
@@ -4169,7 +4209,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 39
       },
       {
         "block_id": "Block 40",
@@ -4271,7 +4312,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 40
       },
       {
         "block_id": "Block 41",
@@ -4370,7 +4412,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 41
       },
       {
         "block_id": "Block 42",
@@ -4469,7 +4512,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 42
       },
       {
         "block_id": "Block 43",
@@ -4571,7 +4615,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 43
       },
       {
         "block_id": "Block 44",
@@ -4668,7 +4713,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 44
       },
       {
         "block_id": "Block 45",
@@ -4765,7 +4811,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 45
       },
       {
         "block_id": "Block 46",
@@ -4867,7 +4914,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 46
       },
       {
         "block_id": "Block 47",
@@ -4966,7 +5014,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 47
       },
       {
         "block_id": "Block 48",
@@ -5068,7 +5117,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 48
       },
       {
         "block_id": "Block 49",
@@ -5167,7 +5217,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 49
       },
       {
         "block_id": "Block 50",
@@ -5269,7 +5320,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 50
       },
       {
         "block_id": "Block 51",
@@ -5366,7 +5418,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 51
       },
       {
         "block_id": "Block 52",
@@ -5463,7 +5516,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 52
       },
       {
         "block_id": "Block 53",
@@ -5565,7 +5619,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 53
       },
       {
         "block_id": "Block 54",
@@ -5662,7 +5717,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 54
       },
       {
         "block_id": "Block 55",
@@ -5764,7 +5820,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 55
       },
       {
         "block_id": "Block 56",
@@ -5861,7 +5918,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 56
       },
       {
         "block_id": "Block 57",
@@ -5958,7 +6016,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 57
       },
       {
         "block_id": "Block 58",
@@ -6060,7 +6119,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 58
       },
       {
         "block_id": "Block 59",
@@ -6157,7 +6217,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 59
       },
       {
         "block_id": "Block 60",
@@ -6261,7 +6322,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 60
       },
       {
         "block_id": "Block 61",
@@ -6358,7 +6420,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 61
       },
       {
         "block_id": "Block 62",
@@ -6456,7 +6519,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 62
       },
       {
         "block_id": "Block 63",
@@ -6560,7 +6624,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 63
       },
       {
         "block_id": "Block 64",
@@ -6662,7 +6727,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 64
       },
       {
         "block_id": "Block 65",
@@ -6760,7 +6826,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 65
       },
       {
         "block_id": "Block 66",
@@ -6858,7 +6925,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 66
       },
       {
         "block_id": "Block 67",
@@ -6955,7 +7023,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 67
       },
       {
         "block_id": "Block 68",
@@ -7060,7 +7129,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 68
       },
       {
         "block_id": "Block 69",
@@ -7157,7 +7227,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 69
       },
       {
         "block_id": "Block 70",
@@ -7257,7 +7328,8 @@
           "is_regressor": false,
           "regression_type": null,
           "execution_doctrine": "모델을 공짜로 풀지 않고, 남이 움직일수록 사용료가 쌓이는 병목부터 잠근다."
-        }
+        },
+        "block_no": 70
       }
     ]
   }
