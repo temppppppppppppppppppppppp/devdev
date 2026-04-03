@@ -10,7 +10,11 @@ from copy import deepcopy
 
 from google.genai import types
 
-from modules.core.stage0_handoff import resolve_treatment_block_sequence
+from modules.core.stage0_handoff import (
+    RUNTIME_PROTAGONIST_KEYS,
+    resolve_treatment_block_sequence,
+    validate_plot_roadmap_entries,
+)
 from modules.core.llm_schema import schema_to_dict, to_gemini_schema
 
 # =================================================================
@@ -828,6 +832,67 @@ def validate_bible_structure(bible_data: dict) -> tuple:
     return is_valid, errors, warnings
 
 
+def validate_bible_canonical_structure(bible_data: dict) -> tuple:
+    """
+    Canonical BI contract validation.
+
+    Unlike validate_bible_structure(), this checks the raw input against the
+    stricter canonical BI shape instead of accepting legacy-compatible forms.
+    """
+    errors = []
+    warnings = []
+
+    if not isinstance(bible_data, dict):
+        return False, ["Bible 데이터가 dict 형식이 아닙니다"], []
+
+    if "MasterBible" not in bible_data:
+        errors.append("Canonical BI requires MasterBible wrapper")
+        return False, errors, warnings
+
+    master_bible = bible_data.get("MasterBible")
+    if not isinstance(master_bible, dict):
+        errors.append("MasterBible가 dict 형식이 아닙니다")
+        return False, errors, warnings
+
+    project_data = master_bible.get("ProjectData")
+    if not isinstance(project_data, dict):
+        errors.append("ProjectData 필드가 누락되었거나 dict 형식이 아닙니다")
+    else:
+        meta_info = project_data.get("MetaInfo")
+        if not isinstance(meta_info, dict):
+            errors.append("ProjectData.MetaInfo 필드가 누락되었거나 dict 형식이 아닙니다")
+        elif "title" not in meta_info:
+            errors.append("ProjectData.MetaInfo.title 필드가 누락되었습니다")
+
+        core_identity = project_data.get("CoreIdentity")
+        if not isinstance(core_identity, dict):
+            errors.append("ProjectData.CoreIdentity 필드가 누락되었거나 dict 형식이 아닙니다")
+        elif not core_identity.get("protagonist"):
+            errors.append("ProjectData.CoreIdentity.protagonist 필드가 누락되었습니다")
+
+    protagonist_config = master_bible.get("protagonist_config")
+    if not isinstance(protagonist_config, dict):
+        errors.append("Canonical BI requires MasterBible.protagonist_config dict")
+    else:
+        for key in RUNTIME_PROTAGONIST_KEYS:
+            if not protagonist_config.get(key):
+                errors.append(f"Canonical BI requires protagonist_config.{key}")
+
+    if "plot_roadmap" not in master_bible:
+        errors.append("Canonical BI requires MasterBible.plot_roadmap")
+    else:
+        roadmap = master_bible.get("plot_roadmap")
+        if not isinstance(roadmap, list):
+            errors.append("MasterBible.plot_roadmap이 list 형식이 아닙니다")
+        elif not roadmap:
+            errors.append("Canonical BI requires non-empty MasterBible.plot_roadmap")
+        else:
+            for issue in validate_plot_roadmap_entries(roadmap):
+                errors.append(f"Canonical BI plot_roadmap issue: {issue}")
+
+    return len(errors) == 0, errors, warnings
+
+
 def validate_treatment_structure(treatment_data) -> tuple:
     """
     [V49.3] Treatment 파일 구조 검증
@@ -872,6 +937,41 @@ def validate_treatment_structure(treatment_data) -> tuple:
 
     is_valid = len(errors) == 0
     return is_valid, errors, warnings
+
+
+def validate_treatment_canonical_structure(treatment_data) -> tuple:
+    """
+    Canonical TR contract validation.
+
+    Raw list and dict.treatments inputs remain compatibility-valid through
+    validate_treatment_structure(), but canonical validation requires the
+    dict.blocks wrapper and Stage2-ready block entries.
+    """
+    errors = []
+    warnings = []
+
+    if not isinstance(treatment_data, dict):
+        return False, ["Canonical TR requires dict wrapper with blocks"], []
+
+    blocks = treatment_data.get("blocks")
+    if not isinstance(blocks, list):
+        return False, ["Canonical TR requires blocks list"], []
+    if len(blocks) == 0:
+        return False, ["Canonical TR requires non-empty blocks list"], []
+
+    compat_valid, compat_errors, compat_warnings = validate_treatment_structure(treatment_data)
+    if not compat_valid:
+        errors.extend(compat_errors)
+    warnings.extend(compat_warnings)
+
+    total_blocks = treatment_data.get("_total_blocks")
+    if isinstance(total_blocks, int) and total_blocks != len(blocks):
+        errors.append(f"Canonical TR _total_blocks mismatch: expected {len(blocks)}, got {total_blocks}")
+
+    for issue in validate_plot_roadmap_entries(blocks):
+        errors.append(f"Canonical TR block issue: {issue}")
+
+    return len(errors) == 0, errors, warnings
 
 
 def validate_phase0_files(bible_data: dict, treatment_data: list) -> tuple:
