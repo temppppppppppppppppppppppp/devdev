@@ -1,7 +1,7 @@
 # 0_0 Stage4 Consumer-Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (aggregate Stage4 wave active; flashback continuity child lane code-landed, runtime proof pending)
+Status: partially_realized (aggregate Stage4 wave active; flashback continuity child lane, fix-pack provenance tranche, post-pass state owner-boundary tranche, and intake authority protection tranche code-landed, runtime proof pending)
 Canonical Path: `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Commit State:
@@ -118,7 +118,6 @@ Primary debt inventory for this wave:
 
 ### Class B. Residual but related
 
-- intake tier0 protection against prose-budget flattening
 - operator-facing provenance exposure for synthesized vs authoritative repair contracts
 
 ### Class C. Explicitly deferred outside this lane
@@ -208,6 +207,15 @@ Acceptance shape:
 - runtime-synthesized repair obligations are clearly distinguishable from Director-authored ones
 - local-fixable advisories do not fail closed merely because provenance or patch-target packaging is coarse
 
+Realization update (2026-04-02):
+
+- `stage4_interview_round.py` now stamps `fix_pack.provenance` as one of `director_authored`, `runtime_backfilled`, or `runtime_synthesized`
+- provenance survives `fix_pack` normalization, payload export, and operator-visible fix feedback text
+- `stage4_retry_runtime.py` now treats bounded `runtime_backfilled` / `runtime_synthesized` local fix-packs as `patch_revision` candidates instead of silently treating them like Director-authored inplace orders
+- `stage4_reject_runtime.py` now persists `fix_pack_origin` so retry evidence can distinguish `runtime_generated_prefers_patch` from `director_authored_allows_inplace`
+- focused static validation is closed; runtime proof remains deferred
+- touched hotspot note: `_normalize_director_gate_semantics` remains a pre-existing `220 LOC` legacy hotspot, but this tranche did not introduce a new `180+ LOC` function
+
 ### Tranche 3. Post-Pass State Owner Boundary Normalization
 
 Goal:
@@ -225,11 +233,40 @@ Acceptance shape:
 - fallback from Manager truth to Director truth is visible rather than silent
 - blueprint-derived overlays like `active_pressure_vectors` do not masquerade as Manager-owned truth without provenance
 
-### Tranche 4. Focused Regression Closure
+Realization update (2026-04-02):
+
+- `stage4_post_pass_runtime.py` now builds and persists `state_truth_owner_contract` alongside `episode_bible.state_changes` and `state_log`
+- the contract explicitly marks:
+  - `actual_truth_surface` as `manager_actual_truth` or `director_state_updates_fallback`
+  - `final_state_updates` as Director-owned
+  - `inventory_counts` / `relationship_changes` as runtime storage overlays
+  - `npc_martial_state_changes` as arc-state world-only storage
+  - `active_pressure_vectors` as `runtime_blueprint_overlay` with `blueprint_filtered_by_manuscript` provenance
+- focused static validation is closed; runtime proof remains deferred
+
+### Tranche 4. Intake Authority Protection
 
 Goal:
 
-- add only the regressions needed to lock the contracts above
+- preserve Stage2/3 work-identity authority as a tier-0 Stage4 intake packet instead of letting it collapse into budget-sensitive prose
+
+Primary targets:
+
+- `stage4_context_builder.py`
+- `chief_writer_context.py`
+
+Acceptance shape:
+
+- Stage4 work identity (`tracking_slots`, `mandatory_scene_engines`, registry cues, linked authority entities, active constraint spine) survives as an explicit tier-0 authority packet
+- Chief Writer hard canon sees that packet before softer reference/context sections
+- the authority packet remains bounded and does not expand Stage4 into a second Stage2/3 prose layer
+
+Realization update (2026-04-02):
+
+- `stage4_context_builder.py` now injects `[Stage4 Work Identity Authority]` into the tier-0 mandatory stack before the softer work-slot summary layer
+- the packet carries bounded work-focus fields (`tracking_slots`, `mandatory_scene_engines`, `registry_profiles`) plus linked authority entities and active constraint spine
+- `chief_writer_context.py` now re-surfaces that packet at the head of `writer_hard_canon_section` instead of leaving it buried inside generic `mandatory_context`
+- focused static validation is closed; runtime proof remains deferred
 
 ## 9. Acceptance Criteria
 

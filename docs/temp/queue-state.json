@@ -1,8 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-02T05:20:24.550219+00:00",
+  "generated_at": "2026-04-02T12:18:44.405695+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 14,
+  "active_item_count": 18,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
     "canonical_path": "docs/2026-04-01/active-temp-execution-roadmap.md",
@@ -41,6 +41,15 @@
       "temp_path": "docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md",
       "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "0_0-stage3-opening-transition-contract-normalization-remediation",
+      "temp_path": "docs/temp/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md",
+      "status": "in_progress",
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -118,6 +127,15 @@
       "canonical_present": true
     },
     {
+      "topic": "0_0-stage4-repair-contract-normalization-remediation",
+      "temp_path": "docs/temp/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
       "topic": "frontier-lag-soak-canary-wave1",
       "temp_path": "docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md",
       "canonical_path": "docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md",
@@ -131,6 +149,24 @@
       "temp_path": "docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md",
       "canonical_path": "docs/2026-03-27/npc-martial-state-substrate-wave1-execution-ssot.md",
       "status": "blocked",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "stage0-bi-tr-production-harness-normalization-remediation",
+      "temp_path": "docs/temp/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md",
+      "status": "pending",
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "stage0-treatment-enrich-retirement-remediation",
+      "temp_path": "docs/temp/stage0-treatment-enrich-retirement-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/stage0-treatment-enrich-retirement-remediation-execution-ssot.md",
+      "status": "pending",
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true

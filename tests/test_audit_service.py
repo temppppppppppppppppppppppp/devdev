@@ -382,6 +382,33 @@ class TestWriteAuditSummary:
         finally:
             db.close()
 
+    def test_compact_sink_alignment_summary_counts_gate_repair_contract_issues(self, svc):
+        compact = svc._compact_sink_alignment_summary(
+            {
+                "status": "warn",
+                "attempts_considered": 1,
+                "complete_final_attempts": 1,
+                "complete_lifecycle_attempts": 1,
+                "legacy_key_attempts": 0,
+                "session_scoped_attempts": 1,
+                "coverage": {"stage_attempts": 1},
+                "repair_contract_subtype_mismatches": [{"attempt_key": "a1"}],
+                "repair_contract_provenance_mismatches": [{"attempt_key": "a1"}],
+                "scope_authority_fix_scope_mismatches": [{"attempt_key": "a1"}],
+                "scope_authority_authoritative_fix_scope_mismatches": [{"attempt_key": "a1"}],
+                "scope_authority_widened_mismatches": [{"attempt_key": "a1"}],
+                "gate_repair_metadata_missing": [{"attempt_key": "a1", "field": "repair_contract_subtype"}],
+            }
+        )
+
+        assert compact["status"] == "warn"
+        assert compact["issue_counts"]["repair_contract_subtype_mismatches"] == 1
+        assert compact["issue_counts"]["repair_contract_provenance_mismatches"] == 1
+        assert compact["issue_counts"]["scope_authority_fix_scope_mismatches"] == 1
+        assert compact["issue_counts"]["scope_authority_authoritative_fix_scope_mismatches"] == 1
+        assert compact["issue_counts"]["scope_authority_widened_mismatches"] == 1
+        assert compact["issue_counts"]["gate_repair_metadata_missing"] == 1
+
     def test_write_summary_proof_digest_uses_committed_snapshot_only(self, runtime_audit, tmp_project):
         db = DBManager(tmp_project.root / "project_data.db")
         try:

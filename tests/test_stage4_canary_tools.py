@@ -215,6 +215,21 @@ def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
             artifact_path="logs/artifacts/stage4/ep_0001/attempt_01/manuscript__best.txt",
             selection_reason="best candidate",
             verdict_reason="director pass",
+            advisory_flags={
+                "repair_contract": {
+                    "subtype": "opening_spatial_continuity",
+                    "provenance": "runtime_synthesized",
+                },
+                "scope_authority": {
+                    "fix_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "scope_origin": "director_authored",
+                    "widened": False,
+                },
+                "gate_semantics": {
+                    "repair_scope": "targeted_opening_patch",
+                },
+            },
         )
     finally:
         db.close()
@@ -238,6 +253,17 @@ def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
     assert summary["final_authority_contract_summary"]["final_authority_sink"] == "stage_attempts"
     assert summary["proof_scope_summary"]["backend_wide_proof"] is False
     assert summary["proof_scope_summary"]["stage3_sink_probe_status"] == "missing"
+    assert summary["gate_repair_summary"]["repair_contract"]["subtype"] == "opening_spatial_continuity"
+    assert summary["gate_repair_summary"]["scope_authority"]["authoritative_fix_scope"] == "inplace"
+    assert summary["gate_repair_surface_summary"]["status"] == "ok"
+    assert summary["gate_repair_surface_summary"]["repair_contract_subtype"] == "opening_spatial_continuity"
+    assert summary["gate_repair_surface_summary"]["repair_contract_provenance"] == "runtime_synthesized"
+    assert summary["gate_repair_surface_summary"]["fix_scope"] == "partial"
+    assert summary["gate_repair_surface_summary"]["authoritative_fix_scope"] == "inplace"
+    assert summary["gate_repair_surface_summary"]["scope_origin"] == "director_authored"
+    assert summary["gate_repair_surface_summary"]["widened"] is False
+    assert summary["gate_repair_surface_summary"]["mismatch_scope"] == "current_session"
+    assert summary["gate_repair_surface_summary"]["mismatch_counts"]["repair_contract_subtype_mismatches"] == 0
     assert summary["rationale_contract_summary"]["status"] == "ok"
     assert summary["rationale_contract_summary"]["field_nonempty_counts"]["selection_reason"] == 1
     assert summary["hard_gates"]["status"] == "fail"

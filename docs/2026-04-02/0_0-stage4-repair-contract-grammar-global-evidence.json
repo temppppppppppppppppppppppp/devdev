@@ -1,0 +1,243 @@
+{
+  "meta": {
+    "type": "raw_evidence",
+    "date": "2026-04-02",
+    "baseline_commit": "aaf495d6",
+    "survey_scope": "Stage4 repair-contract grammar global bounded survey",
+    "lanes": [
+      "advisory_detector_emission",
+      "interview_retry_reject_routing",
+      "post_select_finalization",
+      "existing_docs",
+      "runtime_evidence"
+    ]
+  },
+
+  "lane1_detector_emission": {
+    "flashback_verifier": {
+      "file": "modules/core/flashback_verifier.py",
+      "always_emitted": {
+        "marker": {"type": "str", "source": "LLM", "line": "~206"},
+        "issue": {"type": "str", "source": "LLM", "line": "~209"},
+        "referenced_context": {"type": "str", "source": "LLM", "line": "~213"},
+        "severity": {"type": "str", "value": "MAJOR", "source": "hardcoded", "line": "~214"},
+        "check": {"type": "str", "value": "flashback_contamination", "source": "hardcoded", "line": "~215"},
+        "text": {"type": "str", "source": "derived_from_marker_issue", "line": "~216"}
+      },
+      "conditionally_emitted": {
+        "contradiction_subtype": {"type": "str", "source": "LLM", "line": "~218", "condition": "present_and_non_empty", "normalized": "lowercase"},
+        "local_fixable": {"type": "bool", "source": "LLM", "line": "~221", "condition": "normalizes_to_bool_via_helper"},
+        "patch_anchor": {"type": "str", "source": "LLM", "line": "~224", "condition": "present_and_non_empty"},
+        "expected_truth": {"type": "str", "source": "LLM", "line": "~227", "condition": "present_and_non_empty"},
+        "local_fix_hint": {"type": "str", "source": "LLM", "line": "~230", "condition": "present_and_non_empty"},
+        "target_kind": {"type": "str", "source": "LLM", "line": "~233", "condition": "value_in_whitelist", "whitelist": ["local_phrase", "local_sentence"]}
+      },
+      "not_emitted_from_candidate_list": [
+        "family", "subtype", "patch_targets", "must_fix", "fix_scope",
+        "authoritative_fix_scope", "provenance", "conflict_contract",
+        "contradiction_types", "contradiction_details"
+      ]
+    },
+
+    "npc_drift_advisor": {
+      "file": "modules/core/npc_drift_advisor.py",
+      "always_emitted": {
+        "npc": {"type": "str", "source": "LLM", "line": "~239"},
+        "field": {"type": "str", "source": "LLM", "line": "~240"},
+        "expected": {"type": "str", "source": "LLM", "line": "~241"},
+        "found_in_ms": {"type": "str", "source": "LLM", "line": "~242"},
+        "severity": {"type": "str", "value": "MAJOR", "source": "hardcoded", "line": "~243"},
+        "check": {"type": "str", "value": "npc_drift", "source": "hardcoded", "line": "~244"},
+        "text": {"type": "str", "source": "derived_from_npc_field_found", "line": "~245"}
+      },
+      "conditionally_emitted": {
+        "drift_subtype": {"type": "str", "value": "relation_tag_semantic", "source": "hardcoded", "line": "~53", "condition": "field_is_relation_to_protag_with_valid_tokens"},
+        "target_kind": {"type": "str", "value": "local_phrase", "source": "hardcoded", "line": "~54", "condition": "same_as_drift_subtype"},
+        "expected_relation_axes": {"type": "list_str", "source": "derived_from_relation_tag_tokens", "line": "~55"},
+        "semantic_local_fix_hint": {"type": "str", "source": "derived_template", "line": "~56-59"}
+      },
+      "not_emitted_from_candidate_list": [
+        "family", "subtype", "expected_truth", "patch_anchor", "local_fixable",
+        "local_fix_hint", "patch_targets", "must_fix", "fix_scope",
+        "authoritative_fix_scope", "provenance", "conflict_contract",
+        "contradiction_types", "contradiction_details"
+      ]
+    },
+
+    "stage4_immutable_fact_contract": {
+      "file": "modules/core/stage4_immutable_fact_contract.py",
+      "role": "infrastructure_only",
+      "emits_repair_fields": false,
+      "provides": [
+        "violation_family_classification",
+        "escalation_decision_logic",
+        "actor_reference_normalization"
+      ]
+    }
+  },
+
+  "lane2_interview_routing": {
+    "stage4_interview_round": {
+      "file": "modules/core/stage4_interview_round.py",
+      "fields_consumed_from_detector": [
+        "marker", "issue", "referenced_context", "contradiction_subtype",
+        "local_fixable", "patch_anchor", "expected_truth", "local_fix_hint",
+        "target_kind", "drift_subtype"
+      ],
+      "fields_created": {
+        "conflict_contract": {
+          "type": "dict", "line": "~127-187",
+          "inner_fields": ["contract_type", "mode", "conflicts", "contradiction_types", "contradiction_details", "bounded_local_fix_hint", "target_kind"],
+          "condition": "post_select_conflict_detected"
+        },
+        "fix_pack_fields": {
+          "patch_targets": {"type": "list_str", "line": "~1940,2055", "mandatory_for_ready": true, "backfill_line": "~2382"},
+          "must_fix": {"type": "list_str", "line": "~1941,2056", "mandatory_for_ready": true, "backfill_line": "~2391"},
+          "do_not_regress": {"type": "list_str", "line": "~1942,2057", "mandatory_for_ready": true},
+          "success_condition": {"type": "str", "line": "~1943,2058", "mandatory_for_ready": true},
+          "evidence_summary": {"type": "str", "line": "~1944,2062", "mandatory_for_ready": false}
+        },
+        "provenance": {"type": "str", "line": "~1931,1945", "values": ["director_authored", "runtime_synthesized", "runtime_backfilled"]},
+        "provenance_sources": {"type": "list_str", "line": "~1932,1948"},
+        "fix_scope": {"type": "str", "line": "~2010", "values": ["inplace", "partial", "full"], "routing_gate": "inplace_required_for_PASS_WITH_FIX"},
+        "authoritative_fix_scope": {"type": "str", "line": "~2496", "values": ["inplace", "partial", "full"], "violation_on_blank_or_invalid": true},
+        "strong_advisory_escalation": {"type": "dict", "line": "~2543", "inner_fields": ["source_verdict", "escalated_to", "triggered_by"]}
+      },
+      "fields_normalized": {
+        "target_kind": {"from": "detector_singular_or_plural", "to": "validated_enum", "valid_set": ["entity_ref", "local_phrase", "local_sentence"], "line": "~1957-2004"},
+        "contradiction_subtype_inferred": {"from": "text_heuristics", "to": "subtype_enum", "values": ["location", "movement", "facing", "dialogue", "timeline", "other"], "line": "~2140-2154"}
+      },
+      "critical_gates": [
+        {"field": "local_fixable", "gate": "false_excludes_from_fix_pack", "line": "~2173"},
+        {"field": "target_kind", "gate": "scene_model_rejects_contract", "line": "~2002"},
+        {"field": "fix_scope", "gate": "inplace_required_for_PASS_WITH_FIX", "line": "~2012"},
+        {"field": "authoritative_fix_scope", "gate": "blank_or_invalid_blocks_PASS_WITH_FIX", "line": "~2588"}
+      ]
+    },
+
+    "stage4_retry_runtime": {
+      "file": "modules/core/stage4_retry_runtime.py",
+      "fields_consumed": [
+        "conflict_contract", "contradiction_types", "target_kind",
+        "fix_scope", "provenance", "patch_targets", "fix_pack_reason",
+        "reject_bucket", "retry_family"
+      ],
+      "validation_gates": [
+        {"field": "fix_scope", "must_be": "inplace", "line": "~130"},
+        {"field": "provenance", "must_be_in": ["runtime_backfilled", "runtime_synthesized"], "line": "~135", "effect": "prefers_patch_route"},
+        {"field": "target_kind", "must_be_in": ["entity_ref", "local_phrase", "local_sentence"], "line": "~137"},
+        {"field": "contradiction_types", "must_subset": ["continuity", "timeline", "movement", "location", "facing", "dialogue"], "line": "~176"}
+      ]
+    },
+
+    "stage4_reject_runtime": {
+      "file": "modules/core/stage4_reject_runtime.py",
+      "fields_created": {
+        "resolved_fix_scope": {"type": "str", "line": "~371,561", "transforms": "director_fix_scope_with_runtime_escalation"},
+        "resolved_fix_scope_reasoning": {"type": "str", "line": "~371", "accumulates_justification": true},
+        "resolved_fix_pack": {"type": "dict", "line": "~372", "conditionally_preserved_or_cleared": true},
+        "fix_pack_origin": {"type": "dict", "line": "~485-493", "inner_fields": ["provenance", "provenance_sources", "routing_contract"]},
+        "scope_origin": {"type": "dict", "line": "~494-503", "tracks": "which_layer_set_each_scope_value"},
+        "retry_budget_axes": {"type": "dict", "line": "~509-515", "axes": ["repair", "strategy", "escalation", "guidance"]}
+      },
+      "scope_escalation_transforms": [
+        {"from": "inplace", "to": "partial", "condition": "violation_family_detected_empty_patch_targets", "line": "~606"},
+        {"from": "any", "to": "full", "condition": "post_select_conflict", "line": "~624"},
+        {"from": "inplace", "to": "partial", "condition": "inplace_without_ready_contract", "line": "~648"}
+      ]
+    }
+  },
+
+  "lane3_post_select_finalization": {
+    "stage4_post_pass_runtime": {
+      "file": "modules/core/stage4_post_pass_runtime.py",
+      "repair_contract_fields_present": {
+        "state_truth_owner_contract": {
+          "type": "dict", "line": "~103-174",
+          "inner_fields": ["contract_version", "actual_truth_primary_owner", "actual_truth_fallback_used", "field_families", "actual_truth_fallback_reason"],
+          "sinks": ["episode_bible_db", "state_log_db"]
+        }
+      },
+      "candidate_grammar_fields_absent": [
+        "family", "subtype", "expected_truth", "patch_anchor", "local_fixable",
+        "local_fix_hint", "target_kind", "patch_targets", "must_fix", "fix_scope",
+        "authoritative_fix_scope", "conflict_contract", "contradiction_types",
+        "contradiction_details", "provenance"
+      ],
+      "note": "Post-pass operates in a separate grammar domain. Repair-contract fields from interview/reject do NOT propagate here."
+    },
+    "stage4_post_processor": {
+      "file": "modules/core/stage4_post_processor.py",
+      "repair_contract_fields_present": false,
+      "note": "Final formatting and artifact persistence. No repair grammar fields observed."
+    }
+  },
+
+  "lane4_operator_visible_sink": {
+    "runtime_evidence_contract": {
+      "fields_that_survive_to_operator_json": [
+        "round", "mode", "candidates", "selected", "score",
+        "initial_verdict", "gate", "final_verdict", "post_fix_verdict",
+        "dominant_blocker", "blockers", "advisory_warnings",
+        "tf29_triggered", "v75d_patch_triggered", "post_blueprint_patch"
+      ],
+      "fields_that_do_NOT_survive": [
+        "family", "subtype", "expected_truth", "patch_anchor", "local_fixable",
+        "local_fix_hint", "target_kind", "patch_targets", "must_fix", "fix_scope",
+        "authoritative_fix_scope", "provenance", "conflict_contract",
+        "contradiction_types", "contradiction_details",
+        "resolved_fix_scope", "fix_pack_origin", "scope_origin", "retry_budget_axes",
+        "strong_advisory_escalation", "do_not_regress", "success_condition", "evidence_summary"
+      ],
+      "naming_inconsistency": {
+        "focused_bounded_canary": "final_verdict",
+        "demo_run": "verdict",
+        "note": "Same semantic concept, different field names across evidence files"
+      }
+    }
+  },
+
+  "lane5_naming_fragmentation": {
+    "subtype_variants": {
+      "flashback_verifier": "contradiction_subtype",
+      "npc_drift_advisor": "drift_subtype",
+      "interview_round_normalization": "subtype (inferred from contradiction_subtype)",
+      "conflict_contract": "contradiction_types (list, not single)",
+      "note": "4 different names for semantically parallel concepts"
+    },
+    "expected_value_variants": {
+      "flashback_verifier": "expected_truth",
+      "npc_drift_advisor": "expected",
+      "conflict_contract_inner": "expected_truth (extracted from detail text)",
+      "note": "2 different field names for same concept"
+    },
+    "fix_hint_variants": {
+      "flashback_verifier": "local_fix_hint",
+      "npc_drift_advisor": "semantic_local_fix_hint",
+      "conflict_contract": "bounded_local_fix_hint",
+      "note": "3 different names for same concept"
+    },
+    "scope_variants": {
+      "interview_round": "fix_scope",
+      "interview_round_authority": "authoritative_fix_scope",
+      "reject_runtime": "resolved_fix_scope",
+      "reject_runtime_copy": "repair_scope",
+      "note": "4 scope field names with different authority levels"
+    }
+  },
+
+  "cross_cut_summary": {
+    "total_unique_field_names_observed": 52,
+    "fields_shared_across_2_or_more_modules": [
+      "severity", "check", "text", "target_kind",
+      "patch_targets", "must_fix", "fix_scope", "provenance",
+      "contradiction_types", "contradiction_details", "conflict_contract"
+    ],
+    "fields_unique_to_single_module": [
+      "marker", "issue", "referenced_context", "npc", "field", "expected",
+      "found_in_ms", "drift_subtype", "expected_relation_axes",
+      "semantic_local_fix_hint", "resolved_fix_scope", "scope_origin",
+      "fix_pack_origin", "retry_budget_axes", "state_truth_owner_contract"
+    ]
+  }
+}

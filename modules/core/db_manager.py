@@ -2865,6 +2865,12 @@ class DBManager:
         fix_pack = advisory_flags.get("fix_pack")
         if not isinstance(fix_pack, dict):
             fix_pack = {}
+        repair_contract = advisory_flags.get("repair_contract")
+        if not isinstance(repair_contract, dict):
+            repair_contract = {}
+        scope_authority = advisory_flags.get("scope_authority")
+        if not isinstance(scope_authority, dict):
+            scope_authority = {}
         retry_budget_axes = advisory_flags.get("retry_budget_axes")
         if not isinstance(retry_budget_axes, dict):
             retry_budget_axes = {}
@@ -2885,7 +2891,11 @@ class DBManager:
             "director_verdict": str(gate_semantics.get("director_verdict") or "").strip(),
             "gate_basis": str(gate_semantics.get("gate_basis") or "").strip(),
             "repair_scope": str(gate_semantics.get("repair_scope") or "").strip(),
+            "fix_scope": str(scope_authority.get("fix_scope") or "").strip(),
+            "authoritative_fix_scope": str(scope_authority.get("authoritative_fix_scope") or "").strip(),
             "fix_pack": fix_pack,
+            "repair_contract": repair_contract,
+            "scope_authority": scope_authority,
             "retry_budget_axes": retry_budget_axes,
             "final_authority_sink": "stage_attempts",
         }

@@ -483,6 +483,19 @@ def test_quality_dashboard_endpoint_surfaces_gate_repair_summary(tmp_path, monke
             "success_condition": "Only the two approved location labels should change.",
             "target_kind": "entity_ref",
         },
+        "repair_contract": {
+            "subtype": "opening_spatial_continuity",
+            "provenance": "runtime_synthesized",
+            "fix_scope": "partial",
+            "repair_scope": "inplace",
+        },
+        "scope_authority": {
+            "fix_scope": "partial",
+            "repair_scope": "inplace",
+            "authoritative_fix_scope": "inplace",
+            "scope_origin": "runtime_lane",
+            "widened": False,
+        },
         "retry_budget_axes": {"round": 1, "repair": 1, "guidance": 0},
     }
     try:
@@ -556,15 +569,31 @@ def test_quality_dashboard_endpoint_surfaces_gate_repair_summary(tmp_path, monke
     assert data["gate_repair_summary"]["director_verdict"] == "PASS_WITH_FIX"
     assert data["gate_repair_summary"]["gate_basis"] == "bounded_local_repair"
     assert data["gate_repair_summary"]["repair_scope"] == "inplace"
+    assert data["gate_repair_summary"]["fix_scope"] == "partial"
+    assert data["gate_repair_summary"]["authoritative_fix_scope"] == "inplace"
     assert data["gate_repair_summary"]["fix_pack"]["patch_targets"] == [
         "opening_location_name",
         "ending_location_name",
     ]
+    assert data["gate_repair_summary"]["repair_contract"] == {
+        "subtype": "opening_spatial_continuity",
+        "provenance": "runtime_synthesized",
+        "fix_scope": "partial",
+        "repair_scope": "inplace",
+    }
+    assert data["gate_repair_summary"]["scope_authority"] == {
+        "fix_scope": "partial",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": "runtime_lane",
+        "widened": False,
+    }
     assert data["gate_repair_summary"]["retry_budget_axes"] == {"round": 1, "repair": 1, "guidance": 0}
     assert data["gate_repair_summary"]["authority"]["final_authority_sink"] == "stage_attempts"
     assert data["gate_repair_summary"]["authority"]["selection_role"] == "historical_companion"
     assert data["result_summary"]["gate_repair"]["director_verdict"] == "PASS_WITH_FIX"
     assert data["result_summary"]["gate_repair"]["fix_pack"]["target_kind"] == "entity_ref"
+    assert data["result_summary"]["gate_repair"]["repair_contract"]["subtype"] == "opening_spatial_continuity"
 
 
 def test_quality_dashboard_endpoint_surfaces_config_authority_summary(tmp_path, monkeypatch):

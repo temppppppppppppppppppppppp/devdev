@@ -125,6 +125,68 @@ class TestBuildCommonContext:
         assert result == "prompt"
         builder.context_packets.build_common_context_packets.assert_called_once()
 
+    def test_build_common_context_promotes_stage4_work_identity_authority_into_hard_canon(self):
+        host = _make_host()
+        builder = ChiefWriterContextBuilder(host)
+
+        with patch("modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt") as mock_prompt:
+            result = builder.build_common_context(
+                ep_num=5,
+                blueprint={"scene_breakdown": {}, "integrated_scenario": ""},
+                prev_manuscript="",
+                hud_report="HUD",
+                arc_doc="arc",
+                master_bible=host.context.master_bible,
+                style_guide="style",
+                director_feedback="feedback",
+                failure_constraints="constraints",
+                reference_anchor_prompt="REFERENCE-ANCHOR",
+                mandatory_context=(
+                    "[Stage4 Work Identity Authority]\n"
+                    "- tracking_slots MUST survive into scene execution: lead actor line\n\n"
+                    "[Extra Mandatory]\nrest"
+                ),
+                world_state_summary="WORLD-STATE",
+            )
+
+        assert result == "prompt"
+        hard_canon = mock_prompt.call_args.kwargs["writer_hard_canon_section"]
+        assert hard_canon.startswith("[Stage4 Work Identity Authority]")
+        assert hard_canon.index("[Stage4 Work Identity Authority]") < hard_canon.index("WORLD-STATE")
+        assert hard_canon.index("WORLD-STATE") < hard_canon.index("REFERENCE-ANCHOR")
+
+    def test_build_common_context_promotes_stage4_opening_scene_authority_into_hard_canon(self):
+        host = _make_host()
+        builder = ChiefWriterContextBuilder(host)
+
+        with patch("modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt") as mock_prompt:
+            result = builder.build_common_context(
+                ep_num=2,
+                blueprint={"scene_breakdown": {}, "integrated_scenario": ""},
+                prev_manuscript="",
+                hud_report="HUD",
+                arc_doc="arc",
+                master_bible=host.context.master_bible,
+                style_guide="style",
+                director_feedback="feedback",
+                failure_constraints="constraints",
+                reference_anchor_prompt="REFERENCE-ANCHOR",
+                mandatory_context=(
+                    "[Stage4 Opening Scene Authority]\n"
+                    "- opening start_location MUST be preserved: 서재 앞 복도\n\n"
+                    "[Stage4 Work Identity Authority]\n"
+                    "- tracking_slots MUST survive into scene execution: lead actor line\n\n"
+                    "[Extra Mandatory]\nrest"
+                ),
+                world_state_summary="WORLD-STATE",
+            )
+
+        assert result == "prompt"
+        hard_canon = mock_prompt.call_args.kwargs["writer_hard_canon_section"]
+        assert hard_canon.startswith("[Stage4 Opening Scene Authority]")
+        assert hard_canon.index("[Stage4 Opening Scene Authority]") < hard_canon.index("[Stage4 Work Identity Authority]")
+        assert hard_canon.index("[Stage4 Work Identity Authority]") < hard_canon.index("WORLD-STATE")
+
     def test_extract_blueprint_sections_includes_integrated_scenario_and_hook(self):
         builder = ChiefWriterContextBuilder(_make_host())
 
@@ -249,6 +311,8 @@ class TestBuildCommonContext:
 
         assert prompt.index("OPENING-ANCHOR") < prompt.index("PREV-DIGEST")
         assert "Blueprint의 시작 장소/시간이 직전 화 종료 상태보다 우선한다." in prompt
+        assert "전환 문장 또는 장면 전환 마커 `* * *`" in prompt
+        assert "전환 신호 없이 새 방, 차량 내부, 외부 이동 경로, 더 늦은 시간대로 바로 점프하지 마라." in prompt
 
     def test_main_prompt_marks_integrated_scenario_as_advisory_and_applies_precedence(self):
         prompt = build_chief_writer_main_prompt(
@@ -658,6 +722,18 @@ class TestIFCPacketInputWiring:
         # world_state_summary should not contaminate the fact_ledger lane
         # "문파 긴장도" is not a committed-state keyword, so no committed facts
         assert "문파 긴장도" not in section or "확정 상태" not in section
+
+    def test_ifc_surfaces_prev_ending_bridge_inside_opening_anchor(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+        section = builder._build_immutable_fact_section(
+            blueprint={"start_location": "서재 앞 복도", "scene_breakdown": {}},
+            prev_manuscript="서재 앞 복도에서 현관 쪽으로 발을 옮겼다.",
+            world_state_summary="",
+            chain_link_section="",
+            prev_digest="",
+        )
+        assert "직전 화 종료 브리지" in section
+        assert "현관 쪽으로 발을 옮겼다" in section
 
     def test_ifc_uses_stage4_ctx_fallback(self):
         """[Wave1-A] Falls back to host._stage4_ctx.fact_ledger when context has none."""

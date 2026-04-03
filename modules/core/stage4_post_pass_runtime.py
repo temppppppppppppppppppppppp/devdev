@@ -88,6 +88,92 @@ def _merge_storage_only_state_change_families(*, base_state_changes, final_state
     return merged_state_changes
 
 
+def _normalize_state_truth_field_names(raw_state: object) -> list[str]:
+    if not isinstance(raw_state, dict):
+        return []
+    fields: list[str] = []
+    for key in raw_state.keys():
+        name = str(key or "").strip()
+        if not name or name.startswith("_") or name in fields:
+            continue
+        fields.append(name)
+    return sorted(fields)
+
+
+def _build_state_truth_owner_contract(
+    *,
+    actual_truth,
+    final_state_updates,
+    curr_inventory_counts,
+    inventory_count_deltas,
+    relationship_changes,
+    active_pressure_vectors,
+    arc_data,
+) -> dict:
+    manager_fields = _normalize_state_truth_field_names(actual_truth)
+    director_fields = _normalize_state_truth_field_names(final_state_updates)
+    actual_truth_primary_owner = "none"
+    if manager_fields:
+        actual_truth_primary_owner = "manager_actual_truth"
+    elif director_fields:
+        actual_truth_primary_owner = "director_state_updates_fallback"
+
+    field_families: dict[str, dict[str, object]] = {
+        "actual_truth_surface": {
+            "owner": actual_truth_primary_owner,
+            "surfaces": ["episode_bible.state_changes", "state_log.actual_truth"],
+            "fields": manager_fields or director_fields,
+        }
+    }
+    if director_fields:
+        field_families["final_state_updates"] = {
+            "owner": "director_state_updates",
+            "surfaces": ["world_state_changes", "fact_ledger_changes"],
+            "fields": director_fields,
+        }
+    if curr_inventory_counts or inventory_count_deltas:
+        field_families["inventory_counts"] = {
+            "owner": "runtime_storage_overlay",
+            "surfaces": ["state_log", "world_state", "fact_ledger"],
+            "fields": ["inventory_counts", "inventory_count_deltas"],
+        }
+    if relationship_changes:
+        field_families["relationship_changes"] = {
+            "owner": "runtime_storage_overlay",
+            "surfaces": ["state_log", "world_state", "fact_ledger", "episode_bible"],
+            "fields": ["relationship_changes"],
+        }
+    arc_state_changes = arc_data.get("state_changes") if isinstance(arc_data, dict) else {}
+    if isinstance(arc_state_changes, dict) and arc_state_changes.get("npc_martial_state_changes"):
+        field_families["npc_martial_state_changes"] = {
+            "owner": "arc_state_changes_world_only",
+            "surfaces": ["world_state", "episode_bible.state_changes"],
+            "fields": ["npc_martial_state_changes"],
+        }
+    if active_pressure_vectors:
+        field_families["active_pressure_vectors"] = {
+            "owner": "runtime_blueprint_overlay",
+            "surfaces": [
+                "state_log.active_pressure_vectors",
+                "state_log.actual_truth.active_pressure_vectors",
+                "world_state",
+                "episode_bible",
+            ],
+            "fields": ["active_pressure_vectors"],
+            "provenance": "blueprint_filtered_by_manuscript",
+        }
+
+    contract = {
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "actual_truth_primary_owner": actual_truth_primary_owner,
+        "actual_truth_fallback_used": bool(not manager_fields and director_fields),
+        "field_families": field_families,
+    }
+    if not manager_fields and director_fields:
+        contract["actual_truth_fallback_reason"] = "manager_actual_truth_empty"
+    return contract
+
+
 class Stage4PostPassRuntime:
     """Bounded runtime authority for Stage 4 post-pass settlement."""
 
@@ -748,6 +834,15 @@ class Stage4PostPassRuntime:
             final_state_updates=final_state_updates,
             arc_data=arc_data,
         )
+        state_truth_owner_contract = _build_state_truth_owner_contract(
+            actual_truth=actual_truth,
+            final_state_updates=final_state_updates,
+            curr_inventory_counts=curr_inventory_counts,
+            inventory_count_deltas=inventory_count_deltas,
+            relationship_changes=relationship_changes,
+            active_pressure_vectors=active_pressure_vectors,
+            arc_data=arc_data,
+        )
         bible_delta = {
             "new_items": all_new_items,
             "lost_items": lost_items_from_equip,
@@ -762,6 +857,7 @@ class Stage4PostPassRuntime:
             "knowledge_map": knowledge_map,
             "inventory_counts": curr_inventory_counts,
             "inventory_count_deltas": inventory_count_deltas,
+            "state_truth_owner_contract": state_truth_owner_contract,
         }
         if active_pressure_vectors or pressure_vectors_changed:
             bible_delta["active_pressure_vectors"] = list(active_pressure_vectors)
@@ -799,6 +895,7 @@ class Stage4PostPassRuntime:
             active_pressure_vectors=active_pressure_vectors,
             pressure_vectors_changed=pressure_vectors_changed,
             all_new_items=all_new_items,
+            state_truth_owner_contract=state_truth_owner_contract,
         )
         self._persist_karma_status(karma_matrix=karma_matrix, next_ep=next_ep)
         self._log_manager_delta_summary(
@@ -898,6 +995,7 @@ class Stage4PostPassRuntime:
         active_pressure_vectors,
         pressure_vectors_changed: bool,
         all_new_items: list,
+        state_truth_owner_contract: dict | None,
     ) -> None:
         should_persist_state_log = any(
             [
@@ -924,6 +1022,7 @@ class Stage4PostPassRuntime:
             "inventory_count_deltas": inventory_count_deltas,
             "relationship_changes": relationship_changes,
             "active_pressure_vectors": list(active_pressure_vectors),
+            "state_truth_owner_contract": dict(state_truth_owner_contract or {}),
         }
         try:
             summary = f"제{next_ep}화 정산: {', '.join(all_new_items[:3]) if all_new_items else '변화없음'}"
