@@ -670,3 +670,62 @@ def test_build_stage3_canary_summary_includes_episode_telemetry(tmp_path):
     assert telem[0]["llm_call_count"] == 1
     assert telem[0]["total_duration_ms"] == 12000
     assert telem[0]["total_cost_usd"] == 0.005
+    # [TM-1] legacy rows without timing decomposition → 0 (not missing)
+    assert telem[0]["total_api_elapsed_ms"] == 0
+    assert telem[0]["total_retries"] == 0
+    assert telem[0]["total_continuations"] == 0
+
+
+def test_stage3_episode_telemetry_timing_decomposition(tmp_path):
+    """TM-1: telemetry distinguishes ask wall-clock from raw API elapsed."""
+    from modules.core.stage4_canary_tools import build_stage3_canary_summary
+
+    root = tmp_path / "stage3_tm1"
+    _make_project_root(root)
+    db = DBManager(root / "project_data.db")
+    try:
+        db.save_anchor("genre_info", {"type": "wuxia", "name": "wuxia"})
+        db.save_blueprint(1, {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "bp"}]})
+        db.save_stage_attempt(
+            stage=3, verdict="PASS", ep_num=1, attempt_num=1,
+            score=90, session_id="sess", attempt_key="s3:1:1:1:sess",
+        )
+        # Call 1: normal ask, 1 retry, 2 continuations
+        # duration_ms=25000 (wall clock), api_elapsed_ms=8000 (raw API)
+        db.save_llm_call(
+            session_id="sess", stage=3, ep_num=1,
+            agent_name="ChiefWriter", model="gemini-2.5-pro",
+            prompt_chars=5000, response_chars=3000,
+            duration_ms=25000, success=True,
+            api_elapsed_ms=8000, retry_count=1, continuation_count=2,
+        )
+        # Call 2: cached context, 0 retries, 0 continuations
+        # duration_ms=5000 (includes API_DELAY), api_elapsed_ms=3000 (raw API)
+        db.save_llm_call(
+            session_id="sess", stage=3, ep_num=1,
+            agent_name="ChiefWriter", model="gemini-2.5-pro",
+            prompt_chars=2000, response_chars=1500,
+            duration_ms=5000, success=True, context_tag="cached_context",
+            api_elapsed_ms=3000, retry_count=0, continuation_count=0,
+        )
+    finally:
+        db.close()
+    (root / "logs" / "stage3_canary_prep.json").write_text(
+        '{"source_project": "base"}', encoding="utf-8",
+    )
+
+    summary = build_stage3_canary_summary(root, target_ep=1)
+    telem = summary["episode_telemetry"]
+    assert len(telem) == 1
+    ep1 = telem[0]
+
+    # Wall-clock sum: 25000 + 5000 = 30000
+    assert ep1["total_duration_ms"] == 30000
+    # Raw API sum: 8000 + 3000 = 11000 — NOT 30000
+    assert ep1["total_api_elapsed_ms"] == 11000
+    # Retries: 1 + 0 = 1
+    assert ep1["total_retries"] == 1
+    # Continuations: 2 + 0 = 2
+    assert ep1["total_continuations"] == 2
+    # The gap (30000 - 11000 = 19000ms) is orchestration overhead, NOT "API hang"
+    assert ep1["total_duration_ms"] - ep1["total_api_elapsed_ms"] == 19000

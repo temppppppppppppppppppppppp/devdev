@@ -288,6 +288,62 @@ def test_save_llm_call_persists_token_and_cost_fields(db):
     assert row["total_cost_usd"] == pytest.approx(0.0123)
 
 
+def test_save_llm_call_persists_timing_decomposition_fields(db):
+    """TM-1: timing decomposition columns are persisted correctly."""
+    db.save_llm_call(
+        agent_name="chief_writer",
+        model="gemini-2.5-pro",
+        prompt_chars=100,
+        response_chars=200,
+        duration_ms=25000,
+        success=True,
+        session_id="sess-tm1",
+        api_elapsed_ms=8000,
+        retry_count=2,
+        continuation_count=1,
+    )
+
+    row = db.cursor.execute(
+        """
+        SELECT duration_ms, api_elapsed_ms, retry_count, continuation_count
+        FROM llm_calls
+        WHERE session_id = 'sess-tm1'
+        """
+    ).fetchone()
+
+    # duration_ms = ask wall clock (includes retries, sleeps, overhead)
+    assert row["duration_ms"] == 25000
+    # api_elapsed_ms = raw API RTT only
+    assert row["api_elapsed_ms"] == 8000
+    assert row["retry_count"] == 2
+    assert row["continuation_count"] == 1
+
+
+def test_save_llm_call_timing_decomposition_defaults_to_null(db):
+    """TM-1: legacy callers without timing decomposition → NULL columns."""
+    db.save_llm_call(
+        agent_name="chief_writer",
+        model="gemini-2.5-pro",
+        prompt_chars=100,
+        response_chars=200,
+        duration_ms=5000,
+        success=True,
+        session_id="sess-legacy",
+    )
+
+    row = db.cursor.execute(
+        """
+        SELECT api_elapsed_ms, retry_count, continuation_count
+        FROM llm_calls
+        WHERE session_id = 'sess-legacy'
+        """
+    ).fetchone()
+
+    assert row["api_elapsed_ms"] is None
+    assert row["retry_count"] is None
+    assert row["continuation_count"] is None
+
+
 def test_runtime_telemetry_writes_are_blocked_after_begin_shutdown(db):
     db.begin_shutdown()
 
