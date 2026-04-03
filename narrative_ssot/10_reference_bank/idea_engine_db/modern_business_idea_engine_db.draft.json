@@ -1,6 +1,6 @@
 {
   "_schema_version": "idea_engine_db.draft.v0",
-  "updated_at": "2026-04-01",
+  "updated_at": "2026-04-03",
   "status": "draft",
   "scope": [
     "modern_business",
@@ -35,6 +35,15 @@
     "suitable_retargets": "다른 섹터/재벌물로 옮길 때 잘 붙는 방향",
     "must_not_copy": "직접 차용하면 오염/표절 인식이 강해지는 요소"
   },
+  "expansion_banks": [
+    {
+      "bank_id": "CAND-BANK-2026-04-03",
+      "path": "C:/Users/wjjo/Desktop/글도비_process/narrative_ssot/10_reference_bank/idea_engine_db/modern_business_candidate_engine_bank.draft.json",
+      "status": "draft",
+      "entry_count": 100,
+      "note": "Separated candidate bank for mined engines. Keep curated ENG-001~008 stable for selector presets until promotion."
+    }
+  ],
   "entries": [
     {
       "engine_id": "ENG-001",
