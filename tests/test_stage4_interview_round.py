@@ -512,6 +512,8 @@ class TestInterviewRoundHelpers:
         feedback = ir._extract_fix_feedback(
             {
                 "fix_pack": {
+                    "provenance": "runtime_backfilled",
+                    "provenance_sources": ["flashback_continuity_localfix", "post_select_conflict"],
                     "patch_targets": [f"slot_{idx}" for idx in range(7)],
                     "must_fix": [f"must-fix-{idx}" for idx in range(6)],
                     "do_not_regress": [f"guard-{idx}" for idx in range(6)],
@@ -526,8 +528,34 @@ class TestInterviewRoundHelpers:
         assert "slot_6" in feedback
         assert "must-fix-5" in feedback
         assert "guard-5" in feedback
+        assert "provenance=runtime_backfilled" in feedback
+        assert "provenance_sources=flashback_continuity_localfix, post_select_conflict" in feedback
         assert "action-6" in feedback
         assert "issue-5" in feedback
+
+    def test_build_fix_pack_payload_preserves_provenance_fields(self):
+        ir = Stage4InterviewRound(_make_ctx())
+
+        payload = ir._build_fix_pack_payload(
+            {
+                "fix_pack": {
+                    "patch_targets": ["ending_sentence"],
+                    "must_fix": ["ending consistency"],
+                    "do_not_regress": ["tone"],
+                    "success_condition": "ending contradiction disappears",
+                    "target_kind": "local_sentence",
+                    "subtype": "movement",
+                    "subtypes": ["movement", "location"],
+                    "provenance": "runtime_synthesized",
+                    "provenance_sources": ["flashback_continuity_localfix"],
+                }
+            }
+        )
+
+        assert payload["subtype"] == "movement"
+        assert payload["subtypes"] == ["movement", "location"]
+        assert payload["provenance"] == "runtime_synthesized"
+        assert payload["provenance_sources"] == ["flashback_continuity_localfix"]
 
     def test_advisory_style_signals_reports_runtime_core_gaps(self):
         ctx = _make_ctx()
@@ -2312,7 +2340,7 @@ class TestRecordS4Attempt:
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
 
-        gate_semantics, fix_pack, retry_budget_axes = ir._extract_stage4_advisory_contract_payloads(
+        gate_semantics, fix_pack, repair_contract, retry_budget_axes = ir._extract_stage4_advisory_contract_payloads(
             {
                 "gate_semantics": {"director_verdict": "PASS_WITH_FIX"},
                 "fix_pack": ["not-a-dict"],
@@ -2322,6 +2350,7 @@ class TestRecordS4Attempt:
 
         assert gate_semantics == {"director_verdict": "PASS_WITH_FIX"}
         assert fix_pack == {}
+        assert repair_contract == {}
         assert retry_budget_axes == {"round": 1}
 
     def test_build_stage4_pass_rate_attempt_payload_extracts_gate_semantics(self):
@@ -2353,7 +2382,19 @@ class TestRecordS4Attempt:
                         "triggered_by": ["truth_gate"],
                     },
                 },
-                "fix_pack": {"must_fix": ["repair ending"]},
+                "fix_pack": {
+                    "must_fix": ["repair ending"],
+                    "target_kind": "local_sentence",
+                    "subtype": "movement",
+                    "provenance": "runtime_synthesized",
+                },
+                "repair_contract": {
+                    "subtype": "movement",
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "target_kind": "local_sentence",
+                    "provenance": "runtime_synthesized",
+                },
                 "retry_budget_axes": {"round": 1, "repair": 1, "guidance": 0},
             },
             patch_strategy="patch_with_feedback",
@@ -2372,8 +2413,18 @@ class TestRecordS4Attempt:
         assert payload["director_verdict"] == "PASS_WITH_FIX"
         assert payload["gate_basis"] == "bounded_local_repair"
         assert payload["repair_scope"] == "inplace"
+        assert payload["fix_scope"] == "inplace"
+        assert payload["authoritative_fix_scope"] == ""
         assert payload["strong_advisory_escalation"]["triggered_by"] == ["truth_gate"]
-        assert payload["fix_pack"] == {"must_fix": ["repair ending"]}
+        assert payload["fix_pack"]["must_fix"] == ["repair ending"]
+        assert payload["fix_pack"]["provenance"] == "runtime_synthesized"
+        assert payload["repair_contract"]["subtype"] == "movement"
+        assert payload["repair_contract"]["provenance"] == "runtime_synthesized"
+        assert payload["scope_authority"] == {
+            "fix_scope": "inplace",
+            "repair_scope": "inplace",
+            "widened": False,
+        }
         assert payload["retry_budget_axes"] == {"round": 1, "repair": 1, "guidance": 0}
         assert payload["candidate_key"] == "A|balanced"
         assert payload["artifact_path"] == "logs/final.txt"
@@ -2472,6 +2523,24 @@ class TestRecordS4Attempt:
                 "authoritative_fix_scope": "director_authoritative",
                 "repair_scope": "runtime_lane",
             },
+            repair_contract={
+                "subtype": "movement",
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "provenance": "runtime_synthesized",
+            },
+            scope_authority={
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "",
+                "scope_origin": {
+                    "fix_scope": "director_authoritative",
+                    "authoritative_fix_scope": "director_authoritative",
+                    "repair_scope": "runtime_lane",
+                },
+                "authoritative_fix_scope_violation": {"type": "blank_authoritative_fix_scope"},
+                "widened": False,
+            },
         )
 
         kwargs = ctx.session_logger.log_decision.call_args.kwargs
@@ -2484,6 +2553,24 @@ class TestRecordS4Attempt:
             "fix_scope": "director_authoritative",
             "authoritative_fix_scope": "director_authoritative",
             "repair_scope": "runtime_lane",
+        }
+        assert kwargs["repair_contract"] == {
+            "subtype": "movement",
+            "fix_scope": "partial",
+            "repair_scope": "partial",
+            "provenance": "runtime_synthesized",
+        }
+        assert kwargs["scope_authority"] == {
+            "fix_scope": "partial",
+            "repair_scope": "partial",
+            "authoritative_fix_scope": "",
+            "scope_origin": {
+                "fix_scope": "director_authoritative",
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            },
+            "authoritative_fix_scope_violation": {"type": "blank_authoritative_fix_scope"},
+            "widened": False,
         }
 
     def test_record_stage4_pass_rate_attempt_uses_prelude_payload(self):
@@ -3059,6 +3146,35 @@ class TestRecordS4Attempt:
         assert payload.use_inplace is False
         assert payload.use_patch is False
 
+    def test_resolve_retry_lane_routing_allows_bounded_flashback_patch_for_full_post_select_conflict(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._resolve_retry_lane_routing(
+            previous_attempt={
+                "score": "96",
+                "fix_scope": "full",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "tension",
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "bounded_local_fix_hint": True,
+                    "contradiction_types": ["continuity"],
+                },
+                "fix_pack": {
+                    **_local_fix_pack("flashback_line", target_kind="local_sentence"),
+                    "evidence_summary": "runtime flashback continuity backfill: movement",
+                },
+            },
+            prev_manuscript="original manuscript",
+            round_num=4,
+        )
+
+        assert payload.reject_bucket == "post_select_conflict"
+        assert payload.use_inplace is False
+        assert payload.use_patch is True
+        assert payload.force_patch is False
+
     def test_build_retry_regenerate_kwargs_reduces_strategy_budget_for_constraint_violation(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -3272,6 +3388,48 @@ class TestRecordS4Attempt:
         assert asp_manuscript is None
         round_ctx.chief_writer.patch_with_feedback.assert_not_called()
         round_ctx.chief_writer.regenerate_with_feedback.assert_called_once()
+        round_ctx.chief_writer.inplace_patch.assert_not_called()
+
+    def test_post_select_conflict_uses_patch_when_bounded_flashback_fix_pack_preserved(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.patch_with_feedback.return_value = [_candidate()]
+        round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
+
+        candidates, is_patch, patch_fallback, prev_score, asp_manuscript = ir._generate_candidates(
+            round_num=4,
+            chief_writer=round_ctx.chief_writer,
+            director_feedback="fix flashback continuity only",
+            previous_attempt={
+                "score": 96,
+                "best_manuscript": "original manuscript",
+                "fix_scope": "full",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "tension",
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "bounded_local_fix_hint": True,
+                    "contradiction_types": ["continuity"],
+                },
+                "fix_pack": {
+                    **_local_fix_pack("flashback_line", target_kind="local_sentence"),
+                    "evidence_summary": "runtime flashback continuity backfill: movement",
+                },
+            },
+            prev_manuscript="original manuscript",
+            style_guide="",
+            blueprint={},
+            common_writer_kwargs={},
+        )
+
+        assert candidates == round_ctx.chief_writer.patch_with_feedback.return_value
+        assert is_patch is True
+        assert patch_fallback is False
+        assert prev_score == 96
+        assert asp_manuscript is None
+        round_ctx.chief_writer.patch_with_feedback.assert_called_once()
+        round_ctx.chief_writer.regenerate_with_feedback.assert_not_called()
         round_ctx.chief_writer.inplace_patch.assert_not_called()
 
     def test_pass_with_fix_without_fix_pack_downgrades_before_inplace(self):
@@ -5799,7 +5957,15 @@ class TestLane2DirectorSemantics:
             "director_verdict": "PASS_WITH_FIX",
             "final_verdict": "REJECT",
             "gate_basis": "quality_floor_fail",
+            "fix_scope": "partial",
+            "authoritative_fix_scope": "inplace",
             "repair_scope": "partial",
+            "fix_pack": {
+                "must_fix": ["tighten ending"],
+                "target_kind": "local_sentence",
+                "subtype": "movement",
+                "provenance": "director_authored",
+            },
             "score": 44,
             "selection_reason": "best candidate",
             "verdict_reason": "quality floor fail",
@@ -5821,6 +5987,21 @@ class TestLane2DirectorSemantics:
         assert gate_semantics["director_verdict"] == "PASS_WITH_FIX"
         assert gate_semantics["final_verdict"] == "REJECT"
         assert gate_semantics["gate_basis"] == "quality_floor_fail"
+        repair_contract = kw["advisory_warnings"]["repair_contract"]
+        assert repair_contract["subtype"] == "movement"
+        assert repair_contract["fix_scope"] == "partial"
+        assert repair_contract["provenance"] == "director_authored"
+        assert kw["advisory_warnings"]["scope_authority"] == {
+            "fix_scope": "partial",
+            "repair_scope": "partial",
+            "authoritative_fix_scope": "inplace",
+            "scope_origin": {
+                "fix_scope": "runtime_widened",
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            },
+            "widened": True,
+        }
         assert gate_semantics["repair_scope"] == "partial"
 
     def test_save_director_selection_persists_raw_advisory_payload_bundle(self):
@@ -6465,7 +6646,12 @@ class TestLane2DirectorSemantics:
             mad_used=False,
             resolved_fix_scope="partial",
             resolved_fix_scope_reasoning="continuity replay",
-            resolved_fix_pack={"must_fix": ["ending"]},
+            resolved_fix_pack={
+                "must_fix": ["ending"],
+                "target_kind": "local_sentence",
+                "provenance": "runtime_synthesized",
+                "provenance_sources": ["flashback_continuity_localfix"],
+            },
             error_category="LOGIC_ERROR",
             feedback_provenance={
                 "director_feedback_text": "director note",
@@ -6494,6 +6680,37 @@ class TestLane2DirectorSemantics:
         assert payload.previous_attempt["retry_directives"] == "retry directives"
         assert payload.previous_attempt["prior_attempts"] == [{"old": True}]
         assert payload.previous_attempt["retry_budget_axes"] == {"repair": "patch_revision"}
+        assert payload.previous_attempt["fix_pack"]["provenance"] == "runtime_synthesized"
+        assert payload.previous_attempt["fix_pack"]["provenance_sources"] == ["flashback_continuity_localfix"]
+        assert payload.previous_attempt["fix_pack_origin"] == {
+            "provenance": "runtime_synthesized",
+            "provenance_sources": ["flashback_continuity_localfix"],
+            "routing_contract": "runtime_generated_prefers_patch",
+        }
+        assert payload.previous_attempt["scope_authority"] == {
+            "fix_scope": "partial",
+            "repair_scope": "partial",
+            "scope_origin": {
+                "fix_scope": "runtime_widened",
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            },
+            "authoritative_fix_scope_violation": {"type": "blank_authoritative_fix_scope"},
+            "widened": True,
+        }
+        assert payload.previous_attempt["repair_contract"] == {
+            "subtype": "scene_overlap",
+            "fix_scope": "partial",
+            "repair_scope": "partial",
+            "scope_origin": {
+                "fix_scope": "runtime_widened",
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            },
+            "provenance": "runtime_synthesized",
+            "provenance_sources": ["flashback_continuity_localfix"],
+            "target_kind": "local_sentence",
+        }
 
     def test_retry_pathology_payload_separates_authoritative_and_derived_fix_scope(self):
         from modules.core.stage4_outcome_runtime import Stage4OutcomeRuntime
@@ -8156,7 +8373,15 @@ class TestLane2DirectorSemantics:
                     "director_verdict": "PASS_WITH_FIX",
                     "final_verdict": "REJECT",
                     "gate_basis": "quality_floor_fail",
+                    "fix_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
                     "repair_scope": "partial",
+                    "fix_pack": {
+                        "must_fix": ["tighten ending"],
+                        "target_kind": "local_sentence",
+                        "subtype": "movement",
+                        "provenance": "director_authored",
+                    },
                     "score": 83,
                     "selected": "A",
                     "selection_reason": "best candidate",
@@ -8185,6 +8410,27 @@ class TestLane2DirectorSemantics:
         assert payload["final_verdict"] == "REJECT"
         assert payload["gate_basis"] == "quality_floor_fail"
         assert payload["repair_scope"] == "partial"
+        assert payload["fix_scope"] == "partial"
+        assert payload["authoritative_fix_scope"] == "inplace"
+        assert payload["repair_contract"]["subtype"] == "movement"
+        assert payload["repair_contract"]["fix_scope"] == "partial"
+        assert payload["repair_contract"]["provenance"] == "director_authored"
+        assert payload["scope_authority"] == {
+            "fix_scope": "partial",
+            "repair_scope": "partial",
+            "authoritative_fix_scope": "inplace",
+            "scope_origin": {
+                "fix_scope": "runtime_widened",
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            },
+            "widened": True,
+        }
+        assert payload["scope_origin"] == {
+            "fix_scope": "runtime_widened",
+            "authoritative_fix_scope": "director_authoritative",
+            "repair_scope": "runtime_lane",
+        }
 
 
 def test_director_sc5_budget_preserves_recent_tail_context():
@@ -9065,6 +9311,17 @@ class TestScopeSinkSemantics:
         assert previous_attempt["scope_origin"]["fix_scope"] == "post_select_conflict_override"
         assert previous_attempt["scope_origin"]["authoritative_fix_scope"] == "director_authoritative"
         assert previous_attempt["scope_origin"]["repair_scope"] == "runtime_lane"
+        assert previous_attempt["scope_authority"] == {
+            "fix_scope": "full",
+            "repair_scope": "full",
+            "authoritative_fix_scope": "full",
+            "scope_origin": {
+                "fix_scope": "post_select_conflict_override",
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            },
+            "widened": True,
+        }
 
     def test_post_select_conflict_preserves_contradiction_subtype_contract(self):
         """Post-select downgrade should retain contradiction subtype/detail and bounded local-fix hint."""
@@ -9129,6 +9386,19 @@ class TestScopeSinkSemantics:
         assert previous_attempt["conflict_contract"]["contradiction_types"] == ["proper_noun"]
         assert previous_attempt["conflict_contract"]["bounded_local_fix_hint"] is True
         assert previous_attempt["conflict_contract"]["target_kind"] == "entity_ref"
+        assert previous_attempt["repair_contract"] == {
+            "subtype": "proper_noun",
+            "fix_scope": "full",
+            "repair_scope": "full",
+            "authoritative_fix_scope": "full",
+            "scope_origin": {
+                "fix_scope": "post_select_conflict_override",
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            },
+            "provenance": "director_authored",
+            "target_kind": "entity_ref",
+        }
         assert any(
             "institution mismatch" in item
             for item in previous_attempt["conflict_contract"]["contradiction_details"]

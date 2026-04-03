@@ -1,0 +1,176 @@
+{
+  "date": "2026-04-02",
+  "topic": "stage0_bible_generation_dna_sync_stage2_consume",
+  "baseline_commit": "aaf495d6",
+  "baseline_dirty_summary": "Workspace dirty; active Stage4 consumer-contract changes and demo canary artifacts present during bounded survey.",
+  "scope": {
+    "included": [
+      "scripts/build_bi_from_phase0_and_tr.py",
+      "scripts/build_wuxia_bi_from_phase0_and_tr.py",
+      "scripts/build_narrative_bi.py",
+      "modules/core/project_manager.py",
+      "modules/core/stage0_handoff.py",
+      "modules/core/stage01_helpers.py",
+      "modules/core/stage2_orchestrator.py",
+      "modules/core/stage2_preflight.py",
+      "modules/domain/agents/arc_ensemble.py",
+      "root bible artifacts under bible/0_bi_*.json"
+    ],
+    "excluded": [
+      "live canary execution",
+      "code patching",
+      "execution SSOT creation"
+    ]
+  },
+  "code_evidence": {
+    "blockguide_builder_contract": {
+      "path": "scripts/build_bi_from_phase0_and_tr.py",
+      "lines": "386-505",
+      "facts": [
+        "Current builder emits MasterBible.protagonist_config.",
+        "Current builder emits MasterBible.plot_roadmap from treatment_blocks.",
+        "Main path later enforces plot_roadmap hash equality against treatment draft."
+      ]
+    },
+    "wuxia_builder_contract": {
+      "path": "scripts/build_wuxia_bi_from_phase0_and_tr.py",
+      "lines": "616-690",
+      "facts": [
+        "Current wuxia builder emits MasterBible.plot_roadmap from treatment_blocks.",
+        "Narrative BI generation is family-routed rather than single-builder."
+      ]
+    },
+    "narrative_router_bi_wrapper": {
+      "path": "scripts/build_narrative_bi.py",
+      "facts": [
+        "Router delegates to family-specific builder_script rather than owning BI shape itself."
+      ]
+    },
+    "legacy_dna_sync": {
+      "path": "modules/core/project_manager.py",
+      "lines": "801-870",
+      "facts": [
+        "force_sync_v25_dna loads bible file and treatment file.",
+        "force_sync_v25_dna rebuilds plot_roadmap from treatment.",
+        "force_sync_v25_dna overwrites master_bible['plot_roadmap'] and saves the bible anchor to DB."
+      ]
+    },
+    "handoff_backfill_gate": {
+      "path": "modules/core/stage0_handoff.py",
+      "lines": "81-83, 179-227",
+      "facts": [
+        "build_plot_roadmap_from_treatment is a flat normalization of treatment blocks.",
+        "validate_plot_roadmap_entries checks Stage2-consumer-backed payload classes.",
+        "ensure_plot_roadmap reuses existing roadmap or backfills from treatment/saved arcs."
+      ]
+    },
+    "stage0_persist_gate": {
+      "path": "modules/core/stage01_helpers.py",
+      "lines": "177-178, 716-761",
+      "facts": [
+        "Legacy Stage0 menu path explicitly runs force_sync_v25_dna.",
+        "Extended Stage0 persistence path also runs ensure_plot_roadmap before saving bible anchor."
+      ]
+    },
+    "stage2_consumer_entry": {
+      "path": "modules/core/stage2_orchestrator.py",
+      "lines": "284-307",
+      "facts": [
+        "Stage2 loads the bible anchor from DB when needed.",
+        "Stage2 reads MasterBible.plot_roadmap as arcs_source.",
+        "Stage2 hard-gates on plot_roadmap readiness."
+      ]
+    },
+    "stage2_secondary_consumer": {
+      "path": "modules/core/stage2_preflight.py",
+      "lines": "470-488",
+      "facts": [
+        "Stage2 preflight separately reads protagonist_config for runtime guidance."
+      ]
+    },
+    "stage2_arc_runtime_shape": {
+      "path": "modules/domain/agents/arc_ensemble.py",
+      "facts": [
+        "Stage2 Arc generation centers on tactical_doc/state_constraints/state_changes, not raw BI prose as-is."
+      ]
+    }
+  },
+  "artifact_evidence": {
+    "root_bi_scan": {
+      "root_pattern": "bible/0_bi_*.json",
+      "total": 4,
+      "with_plot_roadmap": 2,
+      "with_protagonist_config": 2,
+      "rows": [
+        {
+          "file": "0_bi_chaebol_ent_empire.json",
+          "has_plot_roadmap": true,
+          "has_protagonist_config": true,
+          "master_bible_top_level_key_count": 12
+        },
+        {
+          "file": "0_bi_gatekeeper_heir.json",
+          "has_plot_roadmap": false,
+          "has_protagonist_config": false,
+          "master_bible_top_level_key_count": 8
+        },
+        {
+          "file": "0_bi_office_checkup_next_day.json",
+          "has_plot_roadmap": false,
+          "has_protagonist_config": false,
+          "master_bible_top_level_key_count": 4
+        },
+        {
+          "file": "0_bi_wuxia_heavenly_physician.json",
+          "has_plot_roadmap": true,
+          "has_protagonist_config": true,
+          "master_bible_top_level_key_count": 12
+        }
+      ]
+    },
+    "sample_bi_gatekeeper_heir": {
+      "file": "bible/0_bi_gatekeeper_heir.json",
+      "utf8_decode_ok": true,
+      "md5": "4537522e48e19a6fe1f631691b10d4c4",
+      "has_plot_roadmap": false,
+      "has_protagonist_config": false,
+      "master_bible_keys": [
+        "CapitalCurve",
+        "FinanceHUD",
+        "ForeshadowMap",
+        "NPCTimeline",
+        "OpponentTransition",
+        "ProjectData",
+        "Seeds",
+        "WorldState"
+      ]
+    },
+    "sample_treatment_gatekeeper_heir": {
+      "file": "treatments/gatekeeper_heir_tr_block_070_draft.json",
+      "block_count": 70,
+      "first_block_keys": [
+        "block_id",
+        "block_no",
+        "callback",
+        "content",
+        "emotional_beat",
+        "foreshadow",
+        "genre_ext",
+        "location",
+        "pov_character",
+        "power_shift",
+        "regression_ext",
+        "relationship_delta",
+        "stakes",
+        "tension_level",
+        "time_span",
+        "title"
+      ]
+    }
+  },
+  "provisional_verdict": {
+    "summary": "The dominant Stage0 risk is not a single recent builder regression. It is split truth between heterogeneous BI file vintages and runtime DNA/handoff sync that normalizes Stage2-critical fields into the DB bible anchor.",
+    "severity": "high",
+    "next_action_candidate": "bounded survey only complete; if realization is opened later, target source-of-truth normalization between BI file, treatment, and bible DB anchor"
+  }
+}

@@ -688,6 +688,81 @@ class Stage4Orchestrator:
             return f"{reverse}\n\n[Stage4 원문 피드백]\n{direct}"
         return reverse or direct
 
+    @staticmethod
+    def _build_v75d_blueprint_patch_contract(
+        *,
+        round_ctx: _RoundContext,
+        director_feedback: str,
+        previous_attempt: dict | None,
+    ) -> str:
+        feedback_parts: list[str] = []
+        for value in (
+            director_feedback,
+            (previous_attempt or {}).get("rejection_reason", ""),
+            (previous_attempt or {}).get("open_review", ""),
+            ((previous_attempt or {}).get("feedback_provenance", {}) or {}).get("runtime_advisory", ""),
+        ):
+            text = str(value or "").strip()
+            if text:
+                feedback_parts.append(text)
+
+        fix_pack = (previous_attempt or {}).get("fix_pack", {}) if isinstance(previous_attempt, dict) else {}
+        if isinstance(fix_pack, dict):
+            feedback_parts.extend(str(item or "").strip() for item in fix_pack.get("must_fix", []) if str(item or "").strip())
+            feedback_parts.extend(
+                str(item or "").strip() for item in fix_pack.get("do_not_regress", []) if str(item or "").strip()
+            )
+            success_condition = str(fix_pack.get("success_condition", "") or "").strip()
+            if success_condition:
+                feedback_parts.append(success_condition)
+
+        combined_feedback = "\n".join(part for part in feedback_parts if part).lower()
+        opening_signals = ("continuity", "연속성", "시작 장소", "start location", "전화 통화", "서재 앞 복도", "현관")
+        replay_signals = ("flashback", "회상", "replay", "재연", "과거의", "continuity replay")
+        numeric_signals = ("20억", "22억", "수치", "신탁 자산", "현금화 금액", "페널티")
+        if not any(signal in combined_feedback for signal in (*opening_signals, *replay_signals, *numeric_signals)):
+            return ""
+
+        blueprint = round_ctx.blueprint if isinstance(round_ctx.blueprint, dict) else {}
+        scene_1 = blueprint.get("scene_breakdown", {}).get("scene_1", {})
+        start_location = str(blueprint.get("start_location", "") or scene_1.get("location", "") or "").strip()
+        time_flow = str(blueprint.get("time_flow", "") or "").strip()
+        prev_ending_excerpt = smart_truncate(str(round_ctx.prev_ending or "").strip(), max_chars=220, head_chars=140)
+        chain_link_excerpt = smart_truncate(
+            str(round_ctx.chain_link_section or "").strip(),
+            max_chars=220,
+            head_chars=140,
+        )
+
+        lines = [
+            "[V75-D correction contract]",
+            "- opening continuity를 고칠 때는 top-level opening field와 scene_breakdown.scene_1 field를 함께 수정하세요.",
+            "- start_location, time_flow, scene_breakdown.scene_1.location, scene_breakdown.scene_1.summary, scene_breakdown.scene_1.key_events를 서로 일치시키세요.",
+        ]
+        if start_location:
+            lines.append(
+                f"- authoritative opening location은 '{start_location}'입니다. 다른 장소로 바꾸려면 scene_1 내부에 explicit transition을 먼저 기입하세요."
+            )
+        if time_flow:
+            lines.append(f"- authoritative opening time marker는 '{time_flow}'입니다. 시간 점프가 있으면 scene_1 summary와 key_events에 명시하세요.")
+        if any(signal in combined_feedback for signal in replay_signals):
+            lines.extend(
+                [
+                    "- EP1에서 이미 완료된 전화/행동을 EP2 opening에서 회상·재연 장면으로 다시 쓰지 마세요.",
+                    "- EP2 opening은 직전 장면의 후속 비트 또는 explicit transition으로 시작해야 하며, 이전 장면의 핵심 이벤트를 새 장면으로 재상연하면 안 됩니다.",
+                    "- 라운지, 차량 내부, 도로 관찰, 현관 박차고 나감 같은 새 공간/행동은 scene_1에서 explicit transition 없이 먼저 등장시키지 마세요.",
+                ]
+            )
+        if any(signal in combined_feedback for signal in numeric_signals):
+            lines.append(
+                "- 수치 연속성을 고칠 때는 integrated_scenario, scene_1.summary, scene_1.key_events, expected_ending의 숫자 표현을 함께 갱신하고 stale value를 남기지 마세요."
+            )
+        if prev_ending_excerpt:
+            lines.append(f"- 직전 화 ending authority excerpt: {prev_ending_excerpt}")
+        if chain_link_excerpt:
+            lines.append(f"- chain_link carryover excerpt: {chain_link_excerpt}")
+        return "\n".join(lines).strip()
+
     # ═══════════════════════════════════════════════════════════════════════
     # [LM-A-1] Bible → world_laws 자동 등록 (최초 1회)
     # ═══════════════════════════════════════════════════════════════════════
@@ -1905,6 +1980,13 @@ JSON으로 출력:
             director_feedback,
             reverse_feedback_43,
         )
+        correction_contract = self._build_v75d_blueprint_patch_contract(
+            round_ctx=round_ctx,
+            director_feedback=blueprint_feedback,
+            previous_attempt=previous_attempt,
+        )
+        if correction_contract and correction_contract not in blueprint_feedback:
+            blueprint_feedback = f"{blueprint_feedback}\n\n{correction_contract}".strip()
         return bp_agent._inplace_patch_blueprint(
             original_blueprint=round_ctx.blueprint,
             director_feedback=blueprint_feedback,

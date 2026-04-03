@@ -2443,6 +2443,69 @@ class TestHandleRoundOutcomeRetryPathology:
         assert result.previous_attempt["escalated"] is True
         assert result.inplace_attempted is True
 
+    def test_handle_reject_round_result_escalates_opening_continuity_quality_issue_into_v75d_candidate(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        orch.get_stage4_policy_int = MagicMock(
+            side_effect=lambda *path, default: {
+                "quality_risk_inplace_threshold": 1,
+                "default_inplace_threshold": 2,
+                "blueprint_regeneration_after_inplace_streak": 4,
+            }.get(path[-1], default)
+        )
+        escalated = SimpleNamespace(
+            round_ctx=dataclasses.replace(minimal_round_ctx, blueprint={"patched": True}),
+            director_feedback="continuity escalated",
+            previous_attempt={"score": 50, "reject_bucket": "quality_issue", "escalated": True},
+            logic_error_streak=0,
+            inplace_attempted=True,
+            blueprint_regenerated=False,
+        )
+        orch._apply_v75d_inplace_repair = MagicMock(return_value=escalated)
+        round_result = SimpleNamespace(
+            director_feedback="retry feedback",
+            previous_attempt={
+                "score": 50,
+                "reject_bucket": "quality_issue",
+                "error_category": "QUALITY_ISSUE",
+                "contradiction_types": ["space_continuity", "opening_diversity"],
+                "open_review": "EP1 ending duplication in EP2 opening creates spatial continuity drift.",
+                "fix_scope_reasoning": "opening continuity mismatch remains unresolved",
+            },
+        )
+
+        result = runtime.handle_reject_round_result(
+            round_ctx=minimal_round_ctx,
+            round_result=round_result,
+            next_ep=1,
+            interview_round=0,
+            max_rounds=5,
+            logic_error_streak=1,
+            inplace_attempted=False,
+            blueprint_regenerated=False,
+            prev_reject_bucket="quality_issue",
+            bucket_streak=1,
+            prev_dominant_contradiction="",
+            contradiction_type_streak=0,
+            score_history=[50],
+            plateau_advisory_emitted=False,
+            tf29_advisory_emitted=False,
+            pathology_counts={},
+            pathology_repeat_emitted=set(),
+        )
+
+        orch._apply_v75d_inplace_repair.assert_called_once()
+        assert result.round_ctx == escalated.round_ctx
+        assert result.director_feedback == "continuity escalated"
+        assert result.previous_attempt["escalated"] is True
+        assert result.inplace_attempted is True
+
     def test_handle_reject_round_result_keeps_plain_quality_issue_outside_v75d_candidate(
         self,
         orch_with_ctx,
@@ -2894,6 +2957,41 @@ class TestHandleRoundOutcomeRetryPathology:
         assert result.logic_error_streak == 2
         assert result.prev_reject_bucket == "quality_issue"
 
+    def test_analyze_reject_round_treats_opening_continuity_quality_issue_as_logic_like_failure(
+        self,
+        orch_with_ctx,
+    ):
+        from types import SimpleNamespace
+
+        runtime = orch_with_ctx.outcome_runtime
+        round_result = SimpleNamespace(error_category="QUALITY_ISSUE")
+        previous_attempt = {
+            "score": 50,
+            "reject_bucket": "quality_issue",
+            "error_category": "QUALITY_ISSUE",
+            "contradiction_types": ["space_continuity", "opening_diversity"],
+            "open_review": "EP1 ending duplication in EP2 opening creates spatial continuity drift.",
+            "fix_scope_reasoning": "opening continuity mismatch remains unresolved",
+        }
+
+        result = runtime.analyze_reject_round(
+            round_result=round_result,
+            director_feedback="base feedback",
+            previous_attempt=previous_attempt,
+            logic_error_streak=1,
+            prev_reject_bucket="quality_issue",
+            bucket_streak=1,
+            prev_dominant_contradiction="",
+            contradiction_type_streak=0,
+            score_history=[50],
+            plateau_advisory_emitted=False,
+            tf29_advisory_emitted=False,
+            blueprint_regenerated=False,
+        )
+
+        assert result.logic_error_streak == 2
+        assert result.prev_reject_bucket == "quality_issue"
+
     def test_analyze_reject_round_keeps_plain_quality_issue_outside_logic_like_failure(
         self,
         orch_with_ctx,
@@ -3104,6 +3202,56 @@ class TestHandleRoundOutcomeRetryPathology:
             ep_num=1,
             arc_data=minimal_round_ctx.arc_data,
         )
+
+    def test_request_v75d_inplace_blueprint_patch_appends_opening_replay_correction_contract(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        orch = orch_with_ctx
+        bp_agent = MagicMock()
+        bp_agent._inplace_patch_blueprint.return_value = {"patched": True}
+        orch._ctx.agents["three_phase_bp"] = bp_agent
+        orch._build_stage4_to_3_reverse_feedback = MagicMock(return_value="[S4->S3] hint")
+        orch._merge_blueprint_feedback = MagicMock(return_value="merged blueprint feedback\ncontinuity replay\nflashback")
+        minimal_round_ctx = dataclasses.replace(
+            minimal_round_ctx,
+            blueprint={
+                "start_location": "본가 저택 서재 앞 복도",
+                "time_flow": "오전",
+                "scene_breakdown": {
+                    "scene_1": {
+                        "location": "본가 저택 서재 앞 복도",
+                        "summary": "통화 직후 후속 비트",
+                        "key_events": ["통화 마무리"],
+                    }
+                },
+            },
+            prev_ending="한시우가 본가 저택 서재 앞 복도에서 박성호와의 통화를 마무리했다.",
+            chain_link_section="pending_actions: PB 반응 확인 후 이동한다.",
+        )
+
+        orch._request_v75d_inplace_blueprint_patch(
+            round_ctx=minimal_round_ctx,
+            next_ep=2,
+            director_feedback="director feedback",
+            previous_attempt={
+                "fix_pack": {
+                    "must_fix": [
+                        "EP2 opening에서 EP1 통화 장면을 회상처럼 재연하지 말고 직후 비트로 이어갈 것.",
+                        "신탁 자산 20억 원 기준으로 수치를 정합하게 맞출 것.",
+                    ],
+                    "success_condition": "scene_1 summary와 key_events가 직전 화 후속 비트로 정렬되면 성공",
+                }
+            },
+        )
+
+        patch_feedback = bp_agent._inplace_patch_blueprint.call_args.kwargs["director_feedback"]
+        assert "[V75-D correction contract]" in patch_feedback
+        assert "scene_breakdown.scene_1.summary" in patch_feedback
+        assert "EP1에서 이미 완료된 전화/행동을 EP2 opening에서 회상·재연 장면으로 다시 쓰지 마세요." in patch_feedback
+        assert "authoritative opening location은 '본가 저택 서재 앞 복도'" in patch_feedback
+        assert "integrated_scenario, scene_1.summary, scene_1.key_events, expected_ending" in patch_feedback
 
     def test_apply_v75d_patch_success_captures_artifact_and_returns_reset_payload(
         self,

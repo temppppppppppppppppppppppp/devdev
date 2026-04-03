@@ -1,0 +1,38 @@
+{
+  "session_start": "2026-04-02T18:39:15.452157",
+  "last_updated": "2026-04-02T18:49:06.078646",
+  "total_records": 1,
+  "records": [
+    {
+      "timestamp": "2026-04-02T18:49:06.067097",
+      "stage": 3,
+      "episode": 2,
+      "arc": 1,
+      "attempt_num": 2,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 541392,
+      "token_cost": 0.385502,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep2:arc1:a2:20260402_183914",
+      "final_verdict": "PASS",
+      "director_verdict": "",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_pack": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "emotion_focused",
+      "content_hash": "dcbb81d5b76ce228ab30eef6a625c6e45888023f5d43110d0672ab6a1cee590a",
+      "artifact_path": "logs/artifacts/stage3/ep_0002/attempt_02/final_blueprint__emotion_focused.json"
+    }
+  ]
+}

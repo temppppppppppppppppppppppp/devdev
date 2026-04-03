@@ -1,0 +1,91 @@
+{
+  "canary_id": "canary_0_0_stage34_ep2_focus_r5",
+  "order_type": "ep2-focused bounded Stage34 canary r5",
+  "date": "2026-04-03",
+  "source_project": "0_0",
+  "target_project": "canary_0_0_stage34_ep2_focus_r5",
+  "frozen_authority_ep": 1,
+  "regen_blueprint_ep": 2,
+  "regen_draft_ep": 2,
+
+  "timeline": {
+    "prepare_start": "2026-04-03T09:02:28",
+    "run_start": "2026-04-03T09:02:40",
+    "run_kill_by_user": "~2026-04-03T10:05:00",
+    "total_wall_clock_min": 60,
+    "api_delay_note": "ChiefWriter context cache call ~40min socket blocking at R1"
+  },
+
+  "stage3_result": {
+    "verdict": "PASS",
+    "ep2_blueprint_score": 98,
+    "strategy": "action_focused"
+  },
+
+  "stage4_result": {
+    "verdict": "FAILED",
+    "rounds_completed": 1,
+    "rounds_total_max": 10,
+    "interrupted_at_round": 2,
+    "interrupted_by": "user_kill",
+    "interrupted_at_stage": "R2 advisory complete, Director LLM pending"
+  },
+
+  "round_detail": [
+    {
+      "round": 1,
+      "mode": "full_ensemble",
+      "candidates": 3,
+      "selected": "B",
+      "score": 44,
+      "gate": "continuity_firewall",
+      "final_verdict": "REJECT",
+      "flashback_major_count": 3,
+      "flashback_major_candidates": ["A", "B", "C"],
+      "a4_continuity_replay_detected": true,
+      "start_contract_violations": 2
+    }
+  ],
+
+  "new_feature_observations": {
+    "a4_continuity_replay": {
+      "detected": true,
+      "message": "직전 화와 충돌하는 frontier/연속성 신호가 방화벽 REJECT로 재발",
+      "effect": "Detection working, but LLM still generates flashback content"
+    },
+    "completed_event_replay_suppression": {
+      "llm_level_effective": false,
+      "note": "R1 all 3 candidates still generated flashback scenes — suppression not reaching LLM generation"
+    },
+    "explicit_transition_signal": {
+      "observed": false,
+      "reason": "R1 REJECT, no passing manuscript to inspect"
+    },
+    "asterisk_separator_compliance": {
+      "observed": false,
+      "reason": "same"
+    },
+    "v75d_v2": {
+      "triggered": false,
+      "reason": "Only 1 round completed, needs 2 consecutive LOGIC_ERROR"
+    }
+  },
+
+  "comparison_vs_r4": {
+    "r1_score": "44 vs 44 (identical)",
+    "r1_gate": "continuity_firewall (identical)",
+    "r1_flashback_pattern": "3/3 MAJOR (identical)",
+    "blueprint_score": "98 vs 95 (+3)",
+    "new_detection": "A-4 continuity replay (new in r5)",
+    "api_performance": "similar degradation"
+  },
+
+  "api_incident": {
+    "type": "context_cache_socket_blocking",
+    "component": "ChiefWriter ensemble gemini-3.1-pro-preview",
+    "duration_min": 40,
+    "pattern": "3rd consecutive session (r3/r4/r5) with same symptom"
+  },
+
+  "confidence": 0.95
+}

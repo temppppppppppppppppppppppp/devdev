@@ -1599,7 +1599,11 @@ def _build_gate_repair_summary(snapshot: dict | None) -> dict[str, Any]:
         "director_verdict": None,
         "gate_basis": None,
         "repair_scope": None,
+        "fix_scope": None,
+        "authoritative_fix_scope": None,
         "fix_pack": {},
+        "repair_contract": {},
+        "scope_authority": {},
         "retry_budget_axes": {},
         "authority": {
             "final_authority_sink": "",
@@ -1624,7 +1628,15 @@ def _build_gate_repair_summary(snapshot: dict | None) -> dict[str, Any]:
             "director_verdict": str(snapshot.get("director_verdict") or "").strip() or None,
             "gate_basis": str(snapshot.get("gate_basis") or "").strip() or None,
             "repair_scope": str(snapshot.get("repair_scope") or "").strip() or None,
+            "fix_scope": str(snapshot.get("fix_scope") or "").strip() or None,
+            "authoritative_fix_scope": str(snapshot.get("authoritative_fix_scope") or "").strip() or None,
             "fix_pack": dict(fix_pack) if isinstance(fix_pack, dict) else {},
+            "repair_contract": dict(snapshot.get("repair_contract") or {})
+            if isinstance(snapshot.get("repair_contract"), dict)
+            else {},
+            "scope_authority": dict(snapshot.get("scope_authority") or {})
+            if isinstance(snapshot.get("scope_authority"), dict)
+            else {},
             "retry_budget_axes": dict(retry_budget_axes) if isinstance(retry_budget_axes, dict) else {},
             "authority": {
                 "final_authority_sink": str(snapshot.get("final_authority_sink") or "").strip(),
