@@ -22,9 +22,12 @@ if str(SCRIPTS_DIR) not in sys.path:
 from tr_batch_harness import compute_treatment_metrics  # noqa: E402 - entrypoint path bootstrap must precede imports
 
 from modules.core.response_schemas import (  # noqa: E402 - entrypoint path bootstrap must precede imports
+    validate_bible_canonical_structure,
     validate_bible_structure,
+    validate_treatment_canonical_structure,
     validate_treatment_structure,
 )
+from modules.core.stage0_handoff import normalize_bible_to_canonical_view, normalize_treatment_to_canonical_view
 
 GARBLED_RE = re.compile(r"\?{2,}|�|\ufffd")
 FOREIGN_TOKENS = [
@@ -44,6 +47,14 @@ def load_json(path: Path) -> Any:
 
 def stable_hash(value: Any) -> str:
     return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def preview_messages(messages: list[str], *, limit: int = 3) -> str:
+    if not messages:
+        return ""
+    preview = messages[:limit]
+    suffix = f" ... (+{len(messages) - limit} more)" if len(messages) > limit else ""
+    return " | ".join(preview) + suffix
 
 
 def parse_eok(raw: Any) -> int | None:
@@ -156,6 +167,20 @@ def main() -> int:
 
     draft_valid, draft_errors, draft_warnings = validate_treatment_structure(draft)
     bi_valid, bi_errors, bi_warnings = validate_bible_structure(bi)
+    draft_canonical_valid, draft_canonical_errors, draft_canonical_warnings = validate_treatment_canonical_structure(draft)
+    bi_canonical_valid, bi_canonical_errors, bi_canonical_warnings = validate_bible_canonical_structure(bi)
+    normalized_draft, draft_normalization_warnings = normalize_treatment_to_canonical_view(draft)
+    normalized_bi, bi_normalization_warnings = normalize_bible_to_canonical_view(bi, treatment=draft)
+    (
+        normalized_draft_canonical_valid,
+        normalized_draft_canonical_errors,
+        normalized_draft_canonical_warnings,
+    ) = validate_treatment_canonical_structure(normalized_draft)
+    (
+        normalized_bi_canonical_valid,
+        normalized_bi_canonical_errors,
+        normalized_bi_canonical_warnings,
+    ) = validate_bible_canonical_structure(normalized_bi)
     source_metrics = compute_treatment_metrics(draft)
 
     mb = bi["MasterBible"]
@@ -296,6 +321,44 @@ def main() -> int:
     report_lines.append(f"- hard_gate_failures: {source_metrics['hard_gate_failures']}")
     report_lines.append(f"- window_10_opponent_unique_counts: {source_metrics['window_10_opponent_unique_counts']}")
     report_lines.append("")
+    report_lines.append("## Canonical Contract")
+    report_lines.append(f"- raw_bi_canonical_contract: {'PASS' if bi_canonical_valid else 'FAIL'}")
+    report_lines.append(f"- raw_tr_canonical_contract: {'PASS' if draft_canonical_valid else 'FAIL'}")
+    report_lines.append(
+        f"- raw_pair_canonical_contract: {'PASS' if (bi_canonical_valid and draft_canonical_valid) else 'FAIL'}"
+    )
+    report_lines.append(f"- normalized_bi_canonical_view: {'PASS' if normalized_bi_canonical_valid else 'FAIL'}")
+    report_lines.append(f"- normalized_tr_canonical_view: {'PASS' if normalized_draft_canonical_valid else 'FAIL'}")
+    report_lines.append(
+        f"- normalized_pair_canonical_view: {'PASS' if (normalized_bi_canonical_valid and normalized_draft_canonical_valid) else 'FAIL'}"
+    )
+    if bi_canonical_errors:
+        report_lines.append(
+            f"- raw_bi_canonical_errors[{len(bi_canonical_errors)}]: {preview_messages(bi_canonical_errors)}"
+        )
+    if draft_canonical_errors:
+        report_lines.append(
+            f"- raw_tr_canonical_errors[{len(draft_canonical_errors)}]: {preview_messages(draft_canonical_errors)}"
+        )
+    if bi_normalization_warnings:
+        report_lines.append(
+            f"- bi_normalization_warnings[{len(bi_normalization_warnings)}]: {preview_messages(bi_normalization_warnings)}"
+        )
+    if draft_normalization_warnings:
+        report_lines.append(
+            f"- tr_normalization_warnings[{len(draft_normalization_warnings)}]: {preview_messages(draft_normalization_warnings)}"
+        )
+    if normalized_bi_canonical_errors:
+        report_lines.append(
+            f"- normalized_bi_canonical_errors[{len(normalized_bi_canonical_errors)}]: "
+            f"{preview_messages(normalized_bi_canonical_errors)}"
+        )
+    if normalized_draft_canonical_errors:
+        report_lines.append(
+            f"- normalized_tr_canonical_errors[{len(normalized_draft_canonical_errors)}]: "
+            f"{preview_messages(normalized_draft_canonical_errors)}"
+        )
+    report_lines.append("")
 
     for pass_name, label, checks in passes:
         pass_ok = all(checks.values())
@@ -321,6 +384,14 @@ def main() -> int:
         report_lines.append(f"- bi_errors: {bi_errors}")
     if bi_warnings:
         report_lines.append(f"- bi_warnings: {bi_warnings}")
+    if draft_canonical_warnings:
+        report_lines.append(f"- draft_canonical_warnings: {draft_canonical_warnings}")
+    if bi_canonical_warnings:
+        report_lines.append(f"- bi_canonical_warnings: {bi_canonical_warnings}")
+    if normalized_draft_canonical_warnings:
+        report_lines.append(f"- normalized_draft_canonical_warnings: {normalized_draft_canonical_warnings}")
+    if normalized_bi_canonical_warnings:
+        report_lines.append(f"- normalized_bi_canonical_warnings: {normalized_bi_canonical_warnings}")
     if garbled_matches:
         report_lines.append(f"- garbled_matches: {garbled_matches[:20]}")
     if foreign_hits:
