@@ -8,10 +8,10 @@ import time
 from pathlib import Path
 
 import yaml
-from google import genai
 from google.genai import types
 
 from modules.core.constants import ContextLimits, smart_truncate  # [TF-25-04] validation.yaml SSOT
+from modules.core.google_client_factory import build_google_genai_client, load_google_api_keys
 from modules.core.llm_provider import LLMRequest, LLMResponse
 from modules.core.llm_router import get_shared_llm_router
 from modules.core.models_config import (
@@ -22,6 +22,7 @@ from modules.core.models_config import (
 from modules.core.models_config import (
     DEFAULT_MODEL_FALLBACK_CHAIN as _MODELS_CONFIG_FALLBACK_CHAIN,
 )
+from modules.core.provider_mode import strip_vertex_prefix
 from modules.validation.threshold_helper import _threshold
 
 # [V44] 에스케이프 유틸리티 임포트
@@ -201,23 +202,32 @@ class BaseAgent:
 
     @classmethod
     def _init_api_keys(cls) -> None:
-        """환경변수에서 모든 API 키 로드 (GOOGLE_API_KEY, _2, _3, ...)"""
+        """환경변수에서 현재 Google provider mode에 맞는 API 키를 로드한다."""
         # [TF-XC-05] check-then-act를 _rotation_lock 안으로 이동 (TOCTOU 방지)
         with cls._rotation_lock:
             if cls._keys_initialized:
                 return
             cls._keys_initialized = True
-            keys = []
-            primary = os.getenv("GOOGLE_API_KEY")
-            if primary:
-                keys.append(primary)
-            for i in range(2, 10):
-                k = os.getenv(f"GOOGLE_API_KEY_{i}")
-                if k:
-                    keys.append(k)
-            cls._api_keys = keys
+            cls._api_keys = load_google_api_keys()
+            keys = cls._api_keys
             if len(keys) > 1:
                 logging.info(f" [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
+
+    @classmethod
+    def refresh_runtime_provider_state(cls) -> None:
+        """프로젝트 env 재로딩 뒤 Google provider 관련 class 상태를 리셋한다."""
+        with cls._rotation_lock:
+            cls._keys_initialized = False
+            cls._current_key_idx = 0
+            cls._key_rotation_pending = False
+            cls._last_rotation_time = 0
+            cls._rotation_count = 0
+            cls._api_keys = []
+            cls.MODEL_FALLBACK_CHAIN = _get_model_fallback_chain()
+        with cls._quota_lock:
+            cls._quota_exhausted_models.clear()
+        with cls._cache_lock:
+            cls._context_caches.clear()
 
     @classmethod
     def _try_rotate_key(cls):
@@ -257,7 +267,7 @@ class BaseAgent:
         # Client 생성은 lock 밖에서 (네트워크 IO 포함하므로)
         # 단, key index/key 값은 lock 내에서 캡처해두었으므로 TOCTOU 안전
         try:
-            new_client = genai.Client(api_key=new_key)
+            new_client = build_google_genai_client(api_key=new_key)
         except Exception as create_err:
             with cls._rotation_lock:
                 cls._current_key_idx = old_idx
@@ -2175,7 +2185,7 @@ class BaseAgent:
 
             # [V69.1] Gemini API 시그니처 변경 대응: config 파라미터 사용
             cache = self.client.caches.create(
-                model=self.primary_model,
+                model=strip_vertex_prefix(self.primary_model),
                 config=types.CreateCachedContentConfig(
                     contents=[{"role": "user", "parts": [{"text": content}]}],
                     ttl=f"{ttl_seconds}s",

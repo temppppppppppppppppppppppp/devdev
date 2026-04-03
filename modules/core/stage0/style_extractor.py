@@ -10,7 +10,6 @@ Style Extractor V2 - 문체 DNA 추출기
 import hashlib
 import json
 import logging
-import os
 import re
 import shutil
 import time
@@ -18,6 +17,7 @@ from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any
 
+from modules.core.google_client_factory import build_google_genai_client
 from modules.core.llm_generate import generate_content_via_router
 from modules.core.project_support import normalize_external_pov_insert_policy
 from modules.core.runtime_paths import resolve_engine_root, resolve_workspace_root
@@ -515,7 +515,8 @@ class StyleExtractor:
 
         # Phase 4: LLM 심층 분석
         qualitative = {}
-        if self.client or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"):
+        self._ensure_client()
+        if self.client:
             self._report_progress("[4/5] LLM 심층 분석...", phase=4)
             qualitative = self._deep_llm_analysis(drafts)
             if not isinstance(qualitative, dict):
@@ -1143,11 +1144,7 @@ JSON만 출력하세요.
         if self.client:
             return
         try:
-            from google import genai
-
-            api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-            if api_key:
-                self.client = genai.Client(api_key=api_key)
+            self.client = build_google_genai_client()
         except (ImportError, ValueError, RuntimeError) as e:  # [LM-Tier TF-A] 치명 예외(MemoryError 등) 전파
             logging.debug("[StyleExtractor] LLM init fail (%s): %s", type(e).__name__, e)
 

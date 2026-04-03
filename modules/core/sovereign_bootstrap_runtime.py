@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from modules.core.constants import AIModels
+from modules.core.google_client_factory import resolve_google_provider_mode
 from modules.core.llm_generate import generate_content_via_router
+from modules.core.provider_mode import VERTEX_AI_MODE
 
 if TYPE_CHECKING:
     from main_a import SovereignApp
@@ -300,7 +302,8 @@ class SovereignBootstrapRuntime:
         try:
             from modules.core.semantic_plot_guard import SemanticPlotGuard
 
-            owner.semantic_plot_guard = SemanticPlotGuard(api_key=os.getenv("GOOGLE_API_KEY", ""))
+            api_key = "" if resolve_google_provider_mode() == VERTEX_AI_MODE else os.getenv("GOOGLE_API_KEY", "")
+            owner.semantic_plot_guard = SemanticPlotGuard(api_key=api_key)
             if owner.semantic_plot_guard._client:
                 owner.ui.log("   📊 [V66] SemanticPlotGuard 초기화 완료 (임베딩 모드)")
             else:

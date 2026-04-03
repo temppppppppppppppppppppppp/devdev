@@ -15,21 +15,56 @@ from modules.core.providers.vertex_provider import VertexAIProvider
 from modules.core.response_schemas import DIRECTOR_AUDIT_SCHEMA
 
 
-def test_repo_models_yaml_defaults_to_gemini_direct_core_roles():
+@pytest.fixture(autouse=True)
+def _clear_provider_mode_env(monkeypatch):
+    monkeypatch.delenv("GEULDOBI_PROVIDER_MODE", raising=False)
+
+
+def test_repo_models_yaml_reflects_canonical_vertex_core_roles():
     payload = load_models_yaml()
 
     assert payload["providers"]["anthropic"]["enabled"] is False
+    assert payload["providers"]["vertex_ai"]["enabled"] is True
+    assert payload["agents"]["analyst"] == "vertexai:gemini-2.5-pro"
+    assert payload["agents"]["chief_writer"] == "vertexai:gemini-3.1-pro-preview"
+    assert payload["agents"]["director"] == "vertexai:gemini-2.5-pro"
+    assert payload["fallback_chain"]["claude-sonnet-4-6"] == "vertexai:gemini-3.1-pro-preview"
+    assert payload["fallback_chain"]["claude-sonnet-4-20250514"] == "vertexai:gemini-3.1-pro-preview"
+
+
+def test_load_models_yaml_rewrites_to_gemini_direct_when_env_forced(monkeypatch):
+    monkeypatch.setenv("GEULDOBI_PROVIDER_MODE", "gemini_direct")
+
+    payload = load_models_yaml()
+
     assert payload["providers"]["vertex_ai"]["enabled"] is False
-    assert payload["agents"]["analyst"] == "gemini-3.1-pro-preview"
+    assert payload["agents"]["analyst"] == "gemini-2.5-pro"
     assert payload["agents"]["chief_writer"] == "gemini-3.1-pro-preview"
-    assert payload["agents"]["director"] == "gemini-3.1-pro-preview"
+    assert payload["agents"]["director"] == "gemini-2.5-pro"
     assert payload["fallback_chain"]["claude-sonnet-4-6"] == "gemini-3.1-pro-preview"
-    assert payload["fallback_chain"]["claude-sonnet-4-20250514"] == "gemini-3.1-pro-preview"
 
 
 def test_router_resolves_gemini_models():
     router = LLMProviderRouter()
     provider = router.get_provider_for_model("gemini-2.5-pro")
+    assert provider.provider_name == "gemini"
+
+
+def test_router_forces_vertex_provider_for_bare_gemini_when_env_forced(monkeypatch):
+    monkeypatch.setenv("GEULDOBI_PROVIDER_MODE", "vertex_ai")
+    router = LLMProviderRouter()
+
+    provider = router.get_provider_for_model("gemini-2.5-pro")
+
+    assert provider.provider_name == "vertex_ai"
+
+
+def test_router_forces_gemini_provider_for_vertex_prefixed_model_when_env_forced(monkeypatch):
+    monkeypatch.setenv("GEULDOBI_PROVIDER_MODE", "gemini_direct")
+    router = LLMProviderRouter()
+
+    provider = router.get_provider_for_model("vertexai:gemini-2.5-pro")
+
     assert provider.provider_name == "gemini"
 
 

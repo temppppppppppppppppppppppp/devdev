@@ -6,13 +6,13 @@ Story Expander - 컨셉 → Bible + Treatment 생성
 
 import json
 import logging
-import os
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from modules.core.constants import AIModels, GenreTypes, smart_truncate
+from modules.core.google_client_factory import build_google_genai_client
 from modules.core.llm_generate import generate_content_via_router
 from modules.core.stage0_handoff import ensure_plot_roadmap
 
@@ -55,11 +55,7 @@ class StoryExpander:
         if self.client:
             return
         try:
-            from google import genai
-
-            api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-            if api_key:
-                self.client = genai.Client(api_key=api_key)
+            self.client = build_google_genai_client()
         except (ImportError, ValueError, RuntimeError) as _e:  # [V64.P4] LLM client init failure
             logging.warning("[StoryExpander] LLM 초기화 실패 (비차단): %s", _e)
 

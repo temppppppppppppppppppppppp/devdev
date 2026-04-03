@@ -1,32 +1,34 @@
 # 0_0 Stage4 Flashback Continuity LocalFix Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (code landed, static validation closed, runtime proof pending)
+Status: partially_realized (code landed, static validation closed, fresh full-run positive proof captured; residual replay/repetition warning and final-sink closure still open)
 Canonical Path: `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `5ef5f7ab2f2bbd36c2e8168cfd6d9b096caadc0f`
 - Baseline Dirty Summary: `dirty: 0_temp.txt modified, 0_tempdd.tz untracked`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `structured flashback metadata persistence and zero-to-local fix synthesis landed; static validation closed; runtime proof pending`
+- Resume Drift Summary: `structured flashback metadata persistence and zero-to-local fix synthesis landed; static validation closed; fresh full-run proof in projects/00_20260403 now shows ep2 can PASS, but replay/repetition warning evidence and final-sink gaps remain`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 - `docs/2026-04-01/0_0-stage4-ep2-advisory-escalation-loop-remediation-execution-ssot.md`
+- `docs/2026-04-03/0_0-stage34-ep2-fresh-run-post-run-merge-audit.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-evidence.json`
+- `docs/2026-04-03/0_0-stage34-ep2-fresh-run-post-run-merge-evidence.json`
 Parent Lane:
 - `0_0-stage4-consumer-contract-normalization-remediation`
 - `0_0-stage2-stage3-stage4-readiness-remediation`
 
 ## 1. Answer First
 
-The current fresh-run ep2 blocker is a bounded Stage4 seam:
+The fresh full run changed the status of this seam:
 
-- real flashback continuity contradictions are being detected correctly
-- but Stage4 cannot synthesize a bounded local fix contract from Flashback advisory-only evidence
+- Stage4 can now get `ep2` through a bounded `PASS_WITH_FIX -> inplace patch -> PASS` path
+- but replay/repetition warning evidence still survives the final ep2 opening and the final-sink proof surfaces are still incomplete
 
-This lane should therefore realize one concrete contract:
+This lane therefore remains justified as one bounded residual contract:
 
 `Flashback continuity contradiction -> structured metadata -> bounded local fix_pack`
 
@@ -175,6 +177,6 @@ Pass 3, execution and readability:
 - tranches are code-owner aligned and bounded
 - operator consequence is clear: structured flashback metadata plus local-fix synthesis
 - focused static validation is closed
-- runtime proof is explicitly deferred
+- runtime proof is now partially captured, but closure is still deferred because residual replay/repetition warning evidence remains
 
 Confidence: `96%`

@@ -7,7 +7,6 @@ Arc/Blueprint는 스킵, 원고 직접 참조 방식
 
 import json
 import logging
-import os
 import re
 import time
 from datetime import datetime
@@ -15,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from modules.core.constants import AIModels, GenreTypes, VolumeSettings, smart_truncate
+from modules.core.google_client_factory import build_google_genai_client
 from modules.core.llm_generate import generate_content_via_router
 
 from .preset_registry import PresetRegistry
@@ -60,11 +60,7 @@ class ReverseExpander:
         if self.client:
             return
         try:
-            from google import genai
-
-            api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-            if api_key:
-                self.client = genai.Client(api_key=api_key)
+            self.client = build_google_genai_client()
         except (ImportError, ValueError, RuntimeError) as e:  # [TF-30-5]
             logging.debug("[ReverseExpander] LLM init fail: %s", e)
 
@@ -522,14 +518,13 @@ JSON:
 
                 if hasattr(ctx, "db") and ctx.db and hasattr(ctx.db, "conn") and ctx.db.conn:
                     memory = VecMemory(
-                        api_key=os.getenv("GOOGLE_API_KEY", ""),
                         conn=ctx.db.conn,
                         lock=getattr(ctx.db, "_lock", None),
                     )
                 else:
                     vec_db_path = ctx.paths.memory / "vec_memory.db"
                     ctx.paths.memory.mkdir(parents=True, exist_ok=True)
-                    memory = VecMemory(db_path=vec_db_path, api_key=os.getenv("GOOGLE_API_KEY", ""))
+                    memory = VecMemory(db_path=vec_db_path)
             except Exception as e:
                 logging.warning(f"[!] VecMemory 초기화 실패: {e}")
                 return 0

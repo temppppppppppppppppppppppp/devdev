@@ -5,6 +5,8 @@ from pathlib import Path
 
 import yaml
 
+from modules.core.provider_mode import apply_provider_mode_to_models_payload, get_env_provider_mode
+
 # Runtime fallback SSOT.
 # `config/models.yaml` is authoritative when present, and these defaults are the
 # only inline mirrors code should rely on when the YAML is absent or incomplete.
@@ -55,7 +57,7 @@ def resolve_models_yaml_path() -> Path:
     return Path(__file__).resolve().parents[2] / "config" / "models.yaml"
 
 
-def load_models_yaml(*, path: Path | None = None) -> dict:
+def load_models_yaml(*, path: Path | None = None, apply_provider_mode: bool = True) -> dict:
     """Load the canonical repo-root models config."""
 
     config_path = path or resolve_models_yaml_path()
@@ -64,6 +66,8 @@ def load_models_yaml(*, path: Path | None = None) -> dict:
             with open(config_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
             if isinstance(data, dict):
+                if apply_provider_mode:
+                    return apply_provider_mode_to_models_payload(data, get_env_provider_mode())
                 return data
     except (OSError, yaml.YAMLError):
         pass

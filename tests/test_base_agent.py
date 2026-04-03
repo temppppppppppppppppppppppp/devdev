@@ -41,6 +41,46 @@ def agent():
     return BaseAgent(context=context, client=client, model_tier="gemini-2.5-flash")
 
 
+def test_base_agent_init_api_keys_uses_vertex_keys_when_mode_forced(monkeypatch):
+    monkeypatch.setenv("GEULDOBI_PROVIDER_MODE", "vertex_ai")
+    monkeypatch.setenv("VERTEX_API_KEY", "vertex-key-1")
+    monkeypatch.setenv("VERTEX_API_KEY_2", "vertex-key-2")
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY_2", raising=False)
+
+    BaseAgent.refresh_runtime_provider_state()
+    BaseAgent._init_api_keys()
+
+    assert BaseAgent._api_keys == ["vertex-key-1", "vertex-key-2"]
+    BaseAgent.refresh_runtime_provider_state()
+
+
+def test_refresh_runtime_provider_state_resets_provider_state(monkeypatch):
+    original_chain_loader = base_agent_module._get_model_fallback_chain
+    monkeypatch.setattr(base_agent_module, "_get_model_fallback_chain", lambda: {"gemini-2.5-pro": "gemini-2.5-flash"})
+    monkeypatch.setattr(BaseAgent, "_keys_initialized", True, raising=False)
+    monkeypatch.setattr(BaseAgent, "_current_key_idx", 4, raising=False)
+    monkeypatch.setattr(BaseAgent, "_key_rotation_pending", True, raising=False)
+    monkeypatch.setattr(BaseAgent, "_last_rotation_time", 123.0, raising=False)
+    monkeypatch.setattr(BaseAgent, "_rotation_count", 3, raising=False)
+    monkeypatch.setattr(BaseAgent, "_api_keys", ["stale-key"], raising=False)
+    monkeypatch.setattr(BaseAgent, "_quota_exhausted_models", {"gemini-2.5-pro": 999}, raising=False)
+    monkeypatch.setattr(BaseAgent, "_context_caches", {"cache": {"name": "stale"}}, raising=False)
+
+    BaseAgent.refresh_runtime_provider_state()
+
+    assert BaseAgent._keys_initialized is False
+    assert BaseAgent._current_key_idx == 0
+    assert BaseAgent._key_rotation_pending is False
+    assert BaseAgent._last_rotation_time == 0
+    assert BaseAgent._rotation_count == 0
+    assert BaseAgent._api_keys == []
+    assert BaseAgent._quota_exhausted_models == {}
+    assert BaseAgent._context_caches == {}
+    assert BaseAgent.MODEL_FALLBACK_CHAIN == {"gemini-2.5-pro": "gemini-2.5-flash"}
+    BaseAgent.MODEL_FALLBACK_CHAIN = original_chain_loader()
+
+
 class TestResolveLoggingDb:
     def test_resolve_logging_db_supports_di_direct_and_none_context(self):
         client = MagicMock()

@@ -5,6 +5,10 @@ from unittest.mock import MagicMock, patch
 import scripts.run_stage4_canary as canary_script
 
 
+def setup_function():
+    canary_script.os.environ.pop("GEULDOBI_PROVIDER_MODE", None)
+
+
 def test_run_canary_saves_and_flushes_before_analyze():
     app = SimpleNamespace(
         _get_int_input=None,
@@ -68,7 +72,7 @@ def test_run_canary_without_genre_raises():
             raise AssertionError("expected RuntimeError for missing genre")
 
 
-def test_run_canary_default_provider_mode_scrubs_non_gemini_env(monkeypatch):
+def test_run_canary_gemini_direct_provider_mode_scrubs_non_gemini_env(monkeypatch):
     app = SimpleNamespace(
         _get_int_input=None,
         _stage_4_v2_chief_writer=MagicMock(),
@@ -102,7 +106,7 @@ def test_run_canary_default_provider_mode_scrubs_non_gemini_env(monkeypatch):
         patch.object(canary_script, "_boot_app", side_effect=fake_boot),
         patch.object(canary_script, "analyze_canary", return_value={"hard_gates": {"status": "pass"}}),
     ):
-        canary_script.run_canary("00_test_06", target_ep=4)
+        canary_script.run_canary("00_test_06", target_ep=4, provider_mode="gemini_direct")
 
     assert canary_script.os.environ["ANTHROPIC_API_KEY"] == "sk-ant"
     assert canary_script.os.environ["CLAUDE_API"] == "sk-claude"
@@ -141,6 +145,67 @@ def test_run_canary_ambient_provider_mode_preserves_non_gemini_env(monkeypatch):
 
     assert canary_script.os.environ["ANTHROPIC_API_KEY"] == "sk-ant"
     assert "GEULDOBI_PROVIDER_MODE" not in canary_script.os.environ
+
+
+def test_run_canary_vertex_provider_mode_preserves_vertex_env(monkeypatch):
+    app = SimpleNamespace(
+        _get_int_input=None,
+        _stage_4_v2_chief_writer=MagicMock(),
+        pass_rate_monitor=MagicMock(),
+        _flush_audit_buffer=MagicMock(),
+        memory=None,
+        current_project=SimpleNamespace(db=MagicMock()),
+    )
+    app.current_project.db.conn = MagicMock()
+    app.current_project.db.close = MagicMock()
+
+    monkeypatch.setenv("VERTEX_API_KEY", "vk")
+    monkeypatch.setenv("VERTEX_PROJECT_ID", "proj")
+
+    def fake_boot(*_args, **_kwargs):
+        assert canary_script.os.environ["VERTEX_API_KEY"] == "vk"
+        assert canary_script.os.environ["VERTEX_PROJECT_ID"] == "proj"
+        assert canary_script.os.environ["GEULDOBI_PROVIDER_MODE"] == "vertex_ai"
+        return app
+
+    with (
+        patch.object(canary_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
+        patch.object(canary_script, "_boot_app", side_effect=fake_boot),
+        patch.object(canary_script, "analyze_canary", return_value={"hard_gates": {"status": "pass"}}),
+    ):
+        canary_script.run_canary("00_test_06", target_ep=4, provider_mode="vertex_ai")
+
+    assert canary_script.os.environ["VERTEX_API_KEY"] == "vk"
+    assert canary_script.os.environ["VERTEX_PROJECT_ID"] == "proj"
+    assert "GEULDOBI_PROVIDER_MODE" not in canary_script.os.environ
+
+
+def test_run_canary_restores_inherited_provider_mode(monkeypatch):
+    app = SimpleNamespace(
+        _get_int_input=None,
+        _stage_4_v2_chief_writer=MagicMock(),
+        pass_rate_monitor=MagicMock(),
+        _flush_audit_buffer=MagicMock(),
+        memory=None,
+        current_project=SimpleNamespace(db=MagicMock()),
+    )
+    app.current_project.db.conn = MagicMock()
+    app.current_project.db.close = MagicMock()
+
+    monkeypatch.setenv("GEULDOBI_PROVIDER_MODE", "vertex_ai")
+
+    def fake_boot(*_args, **_kwargs):
+        assert canary_script.os.environ["GEULDOBI_PROVIDER_MODE"] == "vertex_ai"
+        return app
+
+    with (
+        patch.object(canary_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
+        patch.object(canary_script, "_boot_app", side_effect=fake_boot),
+        patch.object(canary_script, "analyze_canary", return_value={"hard_gates": {"status": "pass"}}),
+    ):
+        canary_script.run_canary("00_test_06", target_ep=4)
+
+    assert canary_script.os.environ["GEULDOBI_PROVIDER_MODE"] == "vertex_ai"
 
 
 def test_analyze_canary_writes_summary_and_companion_audit(tmp_path):

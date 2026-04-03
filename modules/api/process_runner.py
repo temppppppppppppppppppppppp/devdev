@@ -35,6 +35,13 @@ from modules.api.control_plane_contract import (
     AUTHORITY_ROLE_COMPANION_SNAPSHOT,
     MODE_B_KEYS,
 )
+from modules.core.provider_mode import (
+    AMBIENT_MODE,
+    GEMINI_DIRECT_MODE,
+    PROVIDER_MODE_ENV,
+    VERTEX_AI_MODE,
+    normalize_provider_mode,
+)
 from modules.core.runtime_paths import (
     resolve_engine_root,
     resolve_project_dir,
@@ -92,8 +99,9 @@ _STAGE0_STYLE_ANALYSIS_SUB_KEY = "6"
 _PROMPT_DETECT_TIMEOUT = 0.5
 _RUNTIME_TAIL_LINES = 8
 _RUNTIME_STDERR_DECODE_POLICY = "utf-8-replace"
-_DEFAULT_PROVIDER_MODE = "gemini_direct"
-_AMBIENT_PROVIDER_MODE = "ambient"
+_DEFAULT_PROVIDER_MODE = GEMINI_DIRECT_MODE
+_AMBIENT_PROVIDER_MODE = AMBIENT_MODE
+_VERTEX_PROVIDER_MODE = VERTEX_AI_MODE
 _NON_GEMINI_PROVIDER_ENV_KEYS = (
     "ANTHROPIC_API_KEY",
     "CLAUDE_API",
@@ -216,8 +224,13 @@ def _load_stored_project_genre_type(project_name: str | None) -> str | None:
 
 
 def _resolve_provider_mode(inputs: dict | None) -> str:
-    requested = str((inputs or {}).get("provider_mode") or _DEFAULT_PROVIDER_MODE).strip().lower()
-    return requested if requested == _AMBIENT_PROVIDER_MODE else _DEFAULT_PROVIDER_MODE
+    requested = normalize_provider_mode((inputs or {}).get("provider_mode"), default="")
+    if requested:
+        return requested
+    inherited = normalize_provider_mode(os.getenv(PROVIDER_MODE_ENV), default="")
+    if inherited:
+        return inherited
+    return _AMBIENT_PROVIDER_MODE
 
 
 def _should_inject_boot_genre_confirm(inputs: dict | None) -> bool:
@@ -809,9 +822,9 @@ class ProcessRunner:
 
         inputs = inputs or {}
         provider_mode = _resolve_provider_mode(inputs)
-        env["GEULDOBI_PROVIDER_MODE"] = provider_mode
+        env[PROVIDER_MODE_ENV] = provider_mode
 
-        if provider_mode != _AMBIENT_PROVIDER_MODE:
+        if provider_mode == _DEFAULT_PROVIDER_MODE:
             for env_key in _NON_GEMINI_PROVIDER_ENV_KEYS:
                 env.pop(env_key, None)
 
@@ -829,7 +842,7 @@ class ProcessRunner:
         if inputs.get("slack_webhook"):
             env["SLACK_WEBHOOK_URL"] = inputs["slack_webhook"]
 
-        if provider_mode == _AMBIENT_PROVIDER_MODE:
+        if provider_mode in (_AMBIENT_PROVIDER_MODE, _VERTEX_PROVIDER_MODE):
             # Vertex / Claude / OpenAI passthrough is opt-in only.
             for env_key, input_key in (
                 ("VERTEX_API_KEY", "vertex_api_key"),

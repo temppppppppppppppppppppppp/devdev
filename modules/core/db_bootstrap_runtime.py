@@ -528,6 +528,9 @@ class DBBootstrapRuntime:
                 ("is_patch", "INTEGER DEFAULT 0"),
                 ("is_patch_fallback", "INTEGER DEFAULT 0"),
                 ("patch_strategy", "TEXT"),
+                ("director_quality_passed", "INTEGER DEFAULT 0"),
+                ("downstream_override_applied", "INTEGER DEFAULT 0"),
+                ("primary_failure_layer", "TEXT"),
             ),
             log_label="stage_attempts",
         )

@@ -405,6 +405,8 @@ class TestRenderPacketForCW:
             "carryover pending_actions to resolve before new thread or explicitly transition away: "
             "전화를 받기, 현관으로 이동하기"
         ) in rendered
+        assert "다른 장소/시간 또는 다른 시점 opening이 필요하면" in rendered
+        assert "무전환으로 덮어쓰거나, 직전 화에서 이미 끝난 행동을 opening에서 다시 재연하면 즉시 불합격." in rendered
 
 
 # ── render_violation_summary ─────────────────────────────────────

@@ -2655,7 +2655,8 @@ class DBManager:
         sql = (
             "SELECT stage, ep_num, arc_num, attempt_num, attempt_key, verdict, score, failure_category, reject_reason, "
             "advisory_flags, prompt_version, fix_scope, candidate_key, content_hash, artifact_path, selection_reason, "
-            "verdict_reason, open_review, fix_scope_reasoning, runtime_advisory, retry_directives "
+            "verdict_reason, open_review, fix_scope_reasoning, runtime_advisory, retry_directives, "
+            "director_quality_passed, downstream_override_applied, primary_failure_layer "
             f"FROM stage_attempts WHERE arc_num = ? AND stage IN ({placeholders})"
         )
         params: list = [arc_num, *stages]
@@ -2841,7 +2842,10 @@ class DBManager:
                    advisory_flags,
                    selection_reason,
                    verdict_reason,
-                   open_review
+                   open_review,
+                   director_quality_passed,
+                   downstream_override_applied,
+                   primary_failure_layer
             FROM stage_attempts
             WHERE {' AND '.join(where_parts)}
             ORDER BY id DESC
@@ -2898,6 +2902,9 @@ class DBManager:
             "scope_authority": scope_authority,
             "retry_budget_axes": retry_budget_axes,
             "final_authority_sink": "stage_attempts",
+            "director_quality_passed": bool(item.get("director_quality_passed", False)),
+            "downstream_override_applied": bool(item.get("downstream_override_applied", False)),
+            "primary_failure_layer": str(item.get("primary_failure_layer") or "").strip(),
         }
 
         authority_rows = self.get_stage4_final_authority_rows(limit=1, session_id=session_id or None)
@@ -3053,6 +3060,9 @@ class DBManager:
         is_patch: bool = False,
         is_patch_fallback: bool = False,
         patch_strategy: str | None = None,
+        director_quality_passed: bool = False,
+        downstream_override_applied: bool = False,
+        primary_failure_layer: str | None = None,
     ) -> bool:
         """[Log-2] Save one stage attempt record in non-blocking mode."""
         nested = False
@@ -3078,8 +3088,9 @@ class DBManager:
                         fix_scope, model, duration_ms, advisory_flags, attempt_key, generation_method, prompt_version,
                         candidate_key, content_hash, artifact_path, selection_reason, verdict_reason, open_review,
                         fix_scope_reasoning, runtime_advisory, retry_directives,
-                        initial_verdict, score_breakdown, is_patch, is_patch_fallback, patch_strategy)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        initial_verdict, score_breakdown, is_patch, is_patch_fallback, patch_strategy,
+                        director_quality_passed, downstream_override_applied, primary_failure_layer)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -3112,6 +3123,9 @@ class DBManager:
                         1 if is_patch else 0,
                         1 if is_patch_fallback else 0,
                         patch_strategy,
+                        1 if director_quality_passed else 0,
+                        1 if downstream_override_applied else 0,
+                        primary_failure_layer,
                     ),
                 )
                 if not nested:

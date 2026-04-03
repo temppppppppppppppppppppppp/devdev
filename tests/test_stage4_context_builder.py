@@ -2305,7 +2305,9 @@ class TestBuildMandatoryContext:
 
         text = result["mandatory_context"]
         assert "[Stage4 Opening Scene Authority]" in text
-        assert "opening start_location MUST be preserved: 서재 앞 복도" in text
+        assert "default opening start_location anchor: 서재 앞 복도" in text
+        assert "default opening scene_1.location anchor: 현관 방향 복도" in text
+        assert "default opening time_flow anchor: 직후" in text
         assert "opening carryover location to honor or explicitly transition from: 서재 앞 복도" in text
         assert "opening carryover time_marker to honor or explicitly advance from: 직후" in text
         assert (
@@ -2313,8 +2315,9 @@ class TestBuildMandatoryContext:
             "전화를 받기, 현관으로 이동하기"
         ) in text
         assert "do not replay a completed prior-episode event in the opening." in text
-        assert "use either an explicit transition sentence or a scene-break marker `* * *` first." in text
-        assert "the first 1-2 sentences after it must state the changed location, time, or action state." in text
+        assert "use an explicit transition sentence or `* * *` first." in text
+        assert "after `* * *`, state the changed location, time, or action within the next 1-2 sentences." in text
+        assert "alternate openings are allowed only with an explicit transition/cut and immediate state declaration." in text
         assert text.index("[Stage4 Opening Scene Authority]") < text.index("[Stage4 Work Identity Authority]")
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")

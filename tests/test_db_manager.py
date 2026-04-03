@@ -781,6 +781,9 @@ def test_get_latest_stage4_gate_repair_snapshot_surfaces_repair_contract_and_sco
             },
             "retry_budget_axes": {"repair": "patch_revision"},
         },
+        director_quality_passed=True,
+        downstream_override_applied=True,
+        primary_failure_layer="downstream_gate",
     )
 
     row = db.get_latest_stage4_gate_repair_snapshot(session_id="sess-gate")
@@ -810,6 +813,9 @@ def test_get_latest_stage4_gate_repair_snapshot_surfaces_repair_contract_and_sco
     }
     assert row["retry_budget_axes"] == {"repair": "patch_revision"}
     assert row["final_authority_sink"] == "stage_attempts"
+    assert row["director_quality_passed"] is True
+    assert row["downstream_override_applied"] is True
+    assert row["primary_failure_layer"] == "downstream_gate"
 
 
 def test_save_director_selection_persists_director_thinking(db):
@@ -862,13 +868,17 @@ def test_save_stage_attempt_persists_max_retention_stage4_fields(db):
         is_patch=True,
         is_patch_fallback=False,
         patch_strategy="inplace_patch_structural",
+        director_quality_passed=True,
+        downstream_override_applied=True,
+        primary_failure_layer="downstream_gate",
     )
 
     row = db.conn.execute(
         """
         SELECT failure_category, selection_reason, verdict_reason, open_review,
                fix_scope_reasoning, runtime_advisory, retry_directives,
-               initial_verdict, score_breakdown, is_patch, is_patch_fallback, patch_strategy
+               initial_verdict, score_breakdown, is_patch, is_patch_fallback, patch_strategy,
+               director_quality_passed, downstream_override_applied, primary_failure_layer
         FROM stage_attempts
         WHERE attempt_key = 's4:ep7:arc1:a3'
         """
@@ -887,6 +897,9 @@ def test_save_stage_attempt_persists_max_retention_stage4_fields(db):
     assert row["is_patch"] == 1
     assert row["is_patch_fallback"] == 0
     assert row["patch_strategy"] == "inplace_patch_structural"
+    assert row["director_quality_passed"] == 1
+    assert row["downstream_override_applied"] == 1
+    assert row["primary_failure_layer"] == "downstream_gate"
 
 
 def test_attempt_raw_rationale_round_trip(db):

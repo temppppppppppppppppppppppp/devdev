@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from modules.core.llm_provider import LLMRequest, LLMResponse
+from modules.core.provider_mode import strip_vertex_prefix
 
 
 class GeminiProvider:
@@ -10,7 +11,7 @@ class GeminiProvider:
 
     def generate(self, *, client: Any, request: LLMRequest) -> LLMResponse:
         raw = client.models.generate_content(
-            model=request.model,
+            model=strip_vertex_prefix(request.model),
             contents=request.contents,
             config=request.config,
         )
