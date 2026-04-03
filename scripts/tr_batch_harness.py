@@ -144,9 +144,29 @@ def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def build_canonical_treatment_payload(data: Any, *, schema: str = "tr.v1") -> Any:
+    if not isinstance(data, list):
+        return data
+
+    blocks: list[dict[str, Any]] = []
+    for index, block in enumerate(data, start=1):
+        if not isinstance(block, dict):
+            continue
+        entry = copy.deepcopy(block)
+        entry["block_no"] = parse_block_no(entry.get("block_no")) or parse_block_no(entry.get("block_id")) or index
+        blocks.append(entry)
+
+    return {
+        "_schema": schema,
+        "_total_blocks": len(blocks),
+        "blocks": blocks,
+    }
+
+
 def write_json(path: Path, data: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    payload = build_canonical_treatment_payload(data)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def normalize_tail(text: Any, length: int = 20) -> str:
@@ -268,7 +288,8 @@ def has_recognition_signal(block: dict[str, Any]) -> bool:
     return any(RECOGNITION_RE.search(as_text(text)) for text in candidates)
 
 
-def compute_treatment_metrics(blocks: list[dict[str, Any]]) -> dict[str, Any]:
+def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
+    blocks = extract_blocks(blocks)
     if not blocks:
         return {
             "block_count": 0,

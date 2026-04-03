@@ -105,6 +105,17 @@ def preview_messages(messages: list[str], *, limit: int = 3) -> str:
     return " | ".join(preview) + suffix
 
 
+def extract_treatment_blocks(payload: Any) -> list[dict[str, Any]]:
+    if isinstance(payload, list):
+        return [block for block in payload if isinstance(block, dict)]
+    if isinstance(payload, dict):
+        for key in ("blocks", "treatments"):
+            value = payload.get(key)
+            if isinstance(value, list):
+                return [block for block in value if isinstance(block, dict)]
+    return []
+
+
 def compute_canonical_contract_status(tr: Any, bi: dict[str, Any]) -> tuple[dict[str, bool], list[str]]:
     raw_tr_valid, raw_tr_errors, raw_tr_warnings = validate_treatment_canonical_structure(tr)
     raw_bi_valid, raw_bi_errors, raw_bi_warnings = validate_bible_canonical_structure(bi)
@@ -175,6 +186,7 @@ def audit_pair(key: str, tag: str) -> PairAudit:
     bi_path = get_bi_path(tag)
 
     tr = json.loads(tr_path.read_text(encoding="utf-8"))
+    tr_blocks = extract_treatment_blocks(tr)
     bi = json.loads(bi_path.read_text(encoding="utf-8"))
     mb = bi.get("MasterBible", {})
     roadmap = mb.get("plot_roadmap", [])
@@ -187,29 +199,29 @@ def audit_pair(key: str, tag: str) -> PairAudit:
     if tr_errors:
         notes.append(f"TR schema errors: {len(tr_errors)}")
 
-    checks["tr_len_70"] = isinstance(tr, list) and len(tr) == 70
+    checks["tr_len_70"] = len(tr_blocks) == 70
     checks["tr_block_id_seq"] = all(
         isinstance(b, dict) and b.get("block_id") == f"Block {i}"
-        for i, b in enumerate(tr, start=1)
+        for i, b in enumerate(tr_blocks, start=1)
     )
 
-    povs = {b.get("pov_character") for b in tr if isinstance(b, dict)}
+    povs = {b.get("pov_character") for b in tr_blocks if isinstance(b, dict)}
     checks["tr_single_pov"] = len(povs) == 1 and all(isinstance(p, str) and p.strip() for p in povs)
 
     checks["tr_time_format"] = all(
         bool(TIME_RE.search(str((b.get("time_span") or {}).get("in_story_time", ""))))
-        for b in tr
+        for b in tr_blocks
         if isinstance(b, dict)
     )
 
     checks["tr_content_fields"] = all(
         isinstance(b.get("content"), dict)
         and all(k in b["content"] and isinstance(b["content"][k], str) and b["content"][k].strip() for k in ["context", "event_villain", "solution", "reward"])
-        for b in tr
+        for b in tr_blocks
         if isinstance(b, dict)
     )
 
-    whole_tr = json.dumps(tr, ensure_ascii=False)
+    whole_tr = json.dumps(tr_blocks, ensure_ascii=False)
     checks["tr_no_banned_tokens"] = no_banned_tokens(whole_tr)
 
     before_vals: list[int] = []
@@ -218,7 +230,7 @@ def audit_pair(key: str, tag: str) -> PairAudit:
     intra_ok = True
     inter_ok = True
     prev_after: int | None = None
-    for b in tr:
+    for b in tr_blocks:
         g = b.get("genre_ext", {}) if isinstance(b, dict) else {}
         before = parse_eok(g.get("capital_before"))
         after = parse_eok(g.get("capital_after"))
@@ -236,11 +248,11 @@ def audit_pair(key: str, tag: str) -> PairAudit:
     checks["tr_capital_intra_ok"] = intra_ok
     checks["tr_capital_inter_ok"] = inter_ok
 
-    contexts = [b["content"]["context"] for b in tr if isinstance(b, dict)]
-    villains = [b["content"]["event_villain"] for b in tr if isinstance(b, dict)]
-    solutions = [b["content"]["solution"] for b in tr if isinstance(b, dict)]
-    stakes = [str(b.get("stakes", "")) for b in tr if isinstance(b, dict)]
-    ppro = [str((b.get("power_shift") or {}).get("protagonist", "")) for b in tr if isinstance(b, dict)]
+    contexts = [b["content"]["context"] for b in tr_blocks if isinstance(b, dict)]
+    villains = [b["content"]["event_villain"] for b in tr_blocks if isinstance(b, dict)]
+    solutions = [b["content"]["solution"] for b in tr_blocks if isinstance(b, dict)]
+    stakes = [str(b.get("stakes", "")) for b in tr_blocks if isinstance(b, dict)]
+    ppro = [str((b.get("power_shift") or {}).get("protagonist", "")) for b in tr_blocks if isinstance(b, dict)]
 
     checks["tr_context_diversity"] = uniq_ratio(contexts) >= 0.90
     checks["tr_villain_diversity"] = uniq_ratio(villains) >= 0.80
@@ -259,16 +271,21 @@ def audit_pair(key: str, tag: str) -> PairAudit:
     checks["bi_plot_roadmap_70"] = isinstance(roadmap, list) and len(roadmap) == 70
     checks["bi_no_banned_tokens"] = no_banned_tokens(json.dumps(bi, ensure_ascii=False))
 
-    tr_first_pro = tr[0].get("pov_character", "") if tr else ""
-    tr_reg = str((tr[0].get("regression_ext") or {}).get("regression_type", "")) if tr else ""
+    tr_first_pro = tr_blocks[0].get("pov_character", "") if tr_blocks else ""
+    tr_reg = str((tr_blocks[0].get("regression_ext") or {}).get("regression_type", "")) if tr_blocks else ""
     bi_inc = str(mb.get("protagonist_config", {}).get("incarnation_type", ""))
     checks["cross_protagonist_match"] = tr_first_pro == core_pro
     checks["cross_regression_match"] = (("회귀" in tr_reg) and ("회귀" in bi_inc)) or (("빙의" in tr_reg) and ("빙의" in bi_inc))
 
-    tr_hash = hashlib.sha256(json.dumps(tr, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+    tr_hash = hashlib.sha256(json.dumps(tr_blocks, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
     rr_hash = hashlib.sha256(json.dumps(roadmap, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
     checks["cross_roadmap_hash_equal"] = tr_hash == rr_hash
-    checks["cross_edge_title_match"] = bool(tr) and bool(roadmap) and tr[0].get("title") == roadmap[0].get("title") and tr[-1].get("title") == roadmap[-1].get("title")
+    checks["cross_edge_title_match"] = (
+        bool(tr_blocks)
+        and bool(roadmap)
+        and tr_blocks[0].get("title") == roadmap[0].get("title")
+        and tr_blocks[-1].get("title") == roadmap[-1].get("title")
+    )
     canonical_checks, canonical_notes = compute_canonical_contract_status(tr, bi)
 
     passed = sum(1 for v in checks.values() if v)
