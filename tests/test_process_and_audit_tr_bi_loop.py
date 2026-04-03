@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts.process_and_audit_tr_bi_loop import PairAudit, compute_canonical_contract_status, write_report
+from scripts.process_and_audit_tr_bi_loop import (
+    PairAudit,
+    compute_canonical_contract_status,
+    extract_treatment_blocks,
+    write_report,
+)
 
 
 def _full_content(label: str) -> dict:
@@ -83,3 +88,16 @@ def test_write_report_includes_canonical_contract_section(tmp_path: Path):
     assert "- raw_pair_canonical_contract: FAIL" in report
     assert "- normalized_pair_canonical_view: OK" in report
     assert "- canonical_note: raw_tr_canonical_errors[1]: Canonical TR requires dict wrapper with blocks" in report
+
+
+def test_extract_treatment_blocks_accepts_canonical_wrapper():
+    blocks = extract_treatment_blocks(
+        {
+            "_schema": "tr.v1",
+            "_total_blocks": 1,
+            "blocks": [{"block_id": "Block 1", "title": "블록 1", "content": _full_content("본편")}],
+        }
+    )
+
+    assert len(blocks) == 1
+    assert blocks[0]["block_id"] == "Block 1"
