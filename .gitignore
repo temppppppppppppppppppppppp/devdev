@@ -32,6 +32,7 @@ nul
 _*.py
 _*.txt
 *.log
+.planning/ide_operating_mode.local.md
 recent_diff*.txt
 temp_inspect.txt
 test_results_new.xml

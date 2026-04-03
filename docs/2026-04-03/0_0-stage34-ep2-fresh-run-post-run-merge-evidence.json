@@ -1,0 +1,105 @@
+{
+  "project": "projects/00_20260403",
+  "run_scope": "fresh full run through Stage4 target ep2",
+  "runtime_terminal_state": {
+    "runtime_audit_summary_path": "projects/00_20260403/logs/runtime_audit_summary.json",
+    "tag": "shutdown_final",
+    "latest_event_type": "stage4_complete",
+    "timestamp": "2026-04-03 13:53:59",
+    "counts": {
+      "blueprint_success": 2,
+      "stage4_cove_runtime_advisory": 1,
+      "target_ep_reached": 1,
+      "stage4_complete": 1
+    }
+  },
+  "session_log_anchors": {
+    "path": "projects/00_20260403/logs/session_20260403_124523.log",
+    "ep2_completion_lines": [
+      2507,
+      2509,
+      2511,
+      2514
+    ],
+    "shutdown_lines": [
+      2583,
+      2596
+    ],
+    "residual_warning_lines": [
+      2505,
+      2506
+    ]
+  },
+  "stage4_ep2_persistence": {
+    "director_selection": {
+      "table": "director_selections",
+      "id": 5,
+      "stage": 4,
+      "ep_num": 2,
+      "verdict": "PASS_WITH_FIX",
+      "score": 91,
+      "attempt_key": "s4:ep2:arc1:a1:20260403_124527",
+      "artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/selected_before_fix__A.txt"
+    },
+    "episode_production_final_row": {
+      "path": "projects/00_20260403/logs/episode_production.jsonl",
+      "attempt_key": "s4:ep2:arc1:a1:20260403_124527",
+      "director_verdict": "PASS_WITH_FIX",
+      "final_verdict": "PASS",
+      "final_score": 90,
+      "artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/patched_after_fix__A_InPlace.txt",
+      "selection_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/selected_before_fix__A.txt",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "repair_contract_provenance": "director_authored"
+    },
+    "stage4_stage_attempt_rows": 0
+  },
+  "artifacts": {
+    "blueprint_ep2": "projects/00_20260403/plans/blueprints/blueprint_0002.txt",
+    "selected_before_fix_ep2": "projects/00_20260403/logs/artifacts/stage4/ep_0002/attempt_01/selected_before_fix__A.txt",
+    "patched_after_fix_ep2": "projects/00_20260403/logs/artifacts/stage4/ep_0002/attempt_01/patched_after_fix__A_InPlace.txt",
+    "final_draft_ep2": "projects/00_20260403/drafts/ep_0002.txt",
+    "ep1_reference": "projects/00_20260403/logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__A.txt"
+  },
+  "opening_contract_observation": {
+    "blueprint_scene1_location": "재벌가 본가 다이닝 룸",
+    "blueprint_scene1_summary": "아버지와의 독대를 요청하는 직접 후속 비트",
+    "explicit_undeclared_jump_observed": false,
+    "cross_episode_repetition_warning_present": true,
+    "repeated_phrases": [
+      "죽음의 문턱에서 겪었던 절박함이 벼려낸",
+      "고개를 든 한시우는 한정호 회장을 똑바로 마주 보았다",
+      "어리광이나 패배감에 젖어 있던 과거의 눈빛은 온데간데없었다"
+    ],
+    "ep1_anchor": "projects/00_20260403/logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__A.txt:111",
+    "ep2_anchor": "projects/00_20260403/drafts/ep_0002.txt:5"
+  },
+  "stage4_canary_summary_readonly": {
+    "helper_interpretation_only": true,
+    "hard_gates": {
+      "status": "fail",
+      "errors": [
+        "runtime_tag_not_complete:shutdown_final",
+        "lifecycle_missing_in_final_sinks"
+      ],
+      "warnings": [
+        "sink_alignment_status:warn"
+      ]
+    },
+    "proof_scope_summary": {
+      "scope_status": "partial_multi_stage_probe",
+      "stage4_sink_alignment_status": "warn",
+      "stage3_sink_probe_status": "ok",
+      "rationale_contract_status": "ok"
+    },
+    "final_authority_contract_summary": {
+      "status": "missing",
+      "final_authority_sink": "stage_attempts"
+    },
+    "gate_repair_surface_summary": {
+      "status": "missing"
+    }
+  }
+}

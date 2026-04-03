@@ -245,7 +245,7 @@ class TestBuildEnv:
         # 빈 값이 주입되지 않았는지만 확인
         assert env.get("SLACK_WEBHOOK_URL") is None
 
-    def test_default_provider_mode_scrubs_non_gemini_env(self, monkeypatch):
+    def test_gemini_direct_provider_mode_scrubs_non_gemini_env(self, monkeypatch):
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant")
         monkeypatch.setenv("CLAUDE_API", "sk-claude")
         monkeypatch.setenv("VERTEX_API_KEY", "vk")
@@ -255,7 +255,7 @@ class TestBuildEnv:
         monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
 
         runner = ProcessRunner()
-        env = runner._build_env({})
+        env = runner._build_env({"provider_mode": "gemini_direct"})
 
         assert env["GEULDOBI_PROVIDER_MODE"] == "gemini_direct"
         for key in (
@@ -268,6 +268,24 @@ class TestBuildEnv:
             "OPENAI_API_KEY",
         ):
             assert key not in env
+
+    def test_default_provider_mode_inherits_ambient_when_unset(self, monkeypatch):
+        monkeypatch.setenv("VERTEX_API_KEY", "vk")
+        monkeypatch.delenv("GEULDOBI_PROVIDER_MODE", raising=False)
+
+        runner = ProcessRunner()
+        env = runner._build_env({})
+
+        assert env["GEULDOBI_PROVIDER_MODE"] == "ambient"
+        assert env["VERTEX_API_KEY"] == "vk"
+
+    def test_env_provider_mode_is_inherited_when_inputs_absent(self, monkeypatch):
+        monkeypatch.setenv("GEULDOBI_PROVIDER_MODE", "vertex_ai")
+
+        runner = ProcessRunner()
+        env = runner._build_env({})
+
+        assert env["GEULDOBI_PROVIDER_MODE"] == "vertex_ai"
 
     def test_ambient_provider_mode_preserves_non_gemini_passthrough(self):
         runner = ProcessRunner()
@@ -291,6 +309,22 @@ class TestBuildEnv:
         assert env["VERTEX_LOCATION"] == "us-central1"
         assert env["GOOGLE_APPLICATION_CREDENTIALS"] == "/tmp/sa.json"
         assert env["OPENAI_API_KEY"] == "sk-openai"
+
+    def test_vertex_provider_mode_preserves_vertex_passthrough(self):
+        runner = ProcessRunner()
+        env = runner._build_env(
+            {
+                "provider_mode": "vertex_ai",
+                "vertex_api_key": "vk-123",
+                "vertex_project_id": "my-proj",
+                "vertex_location": "us-central1",
+            }
+        )
+
+        assert env["GEULDOBI_PROVIDER_MODE"] == "vertex_ai"
+        assert env["VERTEX_API_KEY"] == "vk-123"
+        assert env["VERTEX_PROJECT_ID"] == "my-proj"
+        assert env["VERTEX_LOCATION"] == "us-central1"
 
 
 class TestPathResolution:

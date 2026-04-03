@@ -1,13 +1,13 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-01
-Status: active (3-pass audited, single-episode Stage34 demo utility code-landed; Stage4 consumer-contract aggregate still active)
+Status: active (3-pass re-audited 2026-04-03; latest r5 runtime confirms the Stage4 opening/flashback seam remains active; bounded opening-authority alignment now sits under the aggregate Stage4 consumer wave)
 Canonical Path: `docs/2026-04-01/active-temp-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `fd1707372bd7eb8ad23a5d4506ef556e3f72cc51`
 Baseline Dirty Summary: `dirty: 0_0 runtime logs/db/artifacts active; legacy temp queue mirrors present; 2026-03-31 0_0 survey docs untracked`
-Resume Commit: `c32717ffc511389636c65edf2845bef6113b97c3`
-Resume Drift Summary: `operator-directed demo prep added a single-episode Stage34 runner ahead of broader closure work; aggregate Stage4 consumer stack remains active underneath`
+Resume Commit: `0dd825f19d729aff544ca69f8887aab4e88778eb`
+Resume Drift Summary: `2026-04-03 r4+r5 bounded canary evidence plus the ep2 continuity handoff re-audit confirm Stage4 remains the active owner; the immediate guardrail is declared transition / replay suppression, not a same-location hard lock`
 Supersedes:
 - `docs/2026-03-31/active-temp-execution-roadmap.md`
 
@@ -185,11 +185,13 @@ Order rationale:
   - post-select bounded-repair flattening
   - post-pass split truth across `final_state_updates`, `actual_truth`, and `world_state`
 - next action:
-  - keep Stage4 paused
-  - treat the new Flashback continuity local-fix lane as the immediate active child seam
+  - keep Stage4 paused for broad resume claims
+  - record the `projects/00_20260403` fresh full run as positive proof that `ep2` can now reach `PASS` through bounded inplace correction
+  - keep the Flashback continuity local-fix lane as the immediate active child seam, but no longer frame it as `runtime proof absent`
   - treat the NpcDrift relation-tag lane as the next bounded child seam
-  - treat existing Stage4 partial lanes as substrate
-  - do not start realization from this document until explicit operator direction
+  - keep opening-authority alignment bounded to declared transition / replay-suppression enforcement without converting the ep2 local-fix into a global same-location hard lock
+  - treat Stage4 final-authority / final-sink normalization as the next bounded consumer-side subtask after the post-run merge audit, because the fresh PASS path still leaves `stage_attempts` / gate-repair surfaces incomplete
+  - keep the parked Stage3 opening-transition lane deferred unless later runtime evidence shifts the owner boundary
 - temp cleanup action:
   - keep mirror while this remains the aggregate Stage4 contract lane; remove only on explicit closure or replacement
 
@@ -204,7 +206,9 @@ Order rationale:
 - next action:
   - keep Stage4 paused
   - treat this as the immediate active child seam under the aggregate Stage4 wave
-  - runtime proof still pending; do not treat contaminated Stage4-only ep2 canary as closure evidence
+  - do not treat this seam as license for unconditional same-location opening locks; declared transitions and allowed alternate openings remain valid
+  - fresh full run runtime proof is now captured via `projects/00_20260403`, but do not close this lane yet because cross-episode repetition warning evidence still survives the PASS path
+  - do not treat the earlier contaminated Stage4-only ep2 canary as closure evidence
 - temp cleanup action:
   - do not remove mirror until code landed, focused static validation, and later runtime proof all close
 

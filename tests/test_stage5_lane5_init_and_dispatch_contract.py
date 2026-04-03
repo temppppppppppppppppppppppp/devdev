@@ -211,7 +211,7 @@ class TestBootInitSlots:
 
         monkeypatch.setattr(logger_module, "init_logger", MagicMock())
         monkeypatch.setattr(main_a, "StudioVisualizer", lambda: SimpleNamespace(log=MagicMock()))
-        monkeypatch.setattr(main_a, "genai", SimpleNamespace(Client=lambda api_key=None: SimpleNamespace()))
+        monkeypatch.setattr(main_a, "build_google_genai_client", lambda: SimpleNamespace())
         monkeypatch.setattr(main_a, "StudioSystem", lambda api_client=None: SimpleNamespace(api_client=api_client))
         monkeypatch.setattr(main_a, "PromptBuilder", lambda app=None: MagicMock())
         monkeypatch.setattr(main_a, "FeedbackSystem", lambda: MagicMock())
@@ -234,7 +234,7 @@ class TestBootInitSlots:
 
         monkeypatch.setattr(logger_module, "init_logger", MagicMock())
         monkeypatch.setattr(main_a, "StudioVisualizer", lambda: SimpleNamespace(log=MagicMock()))
-        monkeypatch.setattr(main_a, "genai", SimpleNamespace(Client=lambda api_key=None: SimpleNamespace()))
+        monkeypatch.setattr(main_a, "build_google_genai_client", lambda: SimpleNamespace())
         monkeypatch.setattr(main_a, "StudioSystem", lambda api_client=None: SimpleNamespace(api_client=api_client))
         monkeypatch.setattr(main_a, "PromptBuilder", lambda app=None: MagicMock())
         monkeypatch.setattr(main_a, "FeedbackSystem", lambda: MagicMock())

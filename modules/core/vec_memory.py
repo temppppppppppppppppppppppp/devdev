@@ -22,6 +22,9 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from pathlib import Path
 
+from modules.core.google_client_factory import build_google_genai_client, resolve_google_provider_mode
+from modules.core.provider_mode import VERTEX_AI_MODE
+
 # ── 임베딩 모델 설정 ────────────────────────────────────────
 EMBED_DIM = 3072  # gemini-embedding-001 기본 차원 (2025-12 이후 3072)
 EMBED_MODEL = "gemini-embedding-001"
@@ -36,7 +39,7 @@ except ImportError:
     _VEC_AVAILABLE = False
 
 try:
-    from google import genai
+    import google.genai  # noqa: F401
 
     _GENAI_AVAILABLE = True
 except ImportError:
@@ -59,7 +62,9 @@ class VecMemory:
 
     def __init__(self, db_path=None, api_key: str = "", *, ui_log=None, conn=None, lock=None) -> None:
         self._db_path = str(db_path) if db_path else ":memory:"
-        self._api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
+        provider_mode = resolve_google_provider_mode()
+        default_api_key = "" if provider_mode == VERTEX_AI_MODE else os.getenv("GOOGLE_API_KEY", "")
+        self._api_key = api_key or default_api_key
         self._ui_log = ui_log or (lambda msg: logging.getLogger("VecMemory").info("[VecMemory] %s", msg))
 
         # 상태 플래그
@@ -133,10 +138,16 @@ class VecMemory:
 
     def _init_genai(self) -> None:
         """Google genai 클라이언트 초기화"""
-        if not _GENAI_AVAILABLE or not self._api_key:
+        if not _GENAI_AVAILABLE:
+            return
+        provider_mode = resolve_google_provider_mode()
+        if not self._api_key and provider_mode != VERTEX_AI_MODE:
             return
         try:
-            self._genai_client = genai.Client(api_key=self._api_key)
+            self._genai_client = build_google_genai_client(
+                api_key=self._api_key or None,
+                provider_mode=provider_mode,
+            )
         except Exception as e:
             logging.warning(f"[VecMemory] genai 클라이언트 초기화 실패: {str(e)[:80]}")
 

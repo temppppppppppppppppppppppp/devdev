@@ -130,18 +130,19 @@ load_dotenv(override=True)  # Slack 알림용 환경변수 먼저 로드
 # [V65] 스피너 & 전역 콘솔 → modules/core/spinners.py로 이동 (순환 참조 해소)
 import re
 
-from google import genai
-
 import modules.core.spinners as _spinners_mod  # [V65] 플래그 동기화용
 from modules.core.constants import VolumeSettings
 from modules.core.feedback_system import FeedbackSystem  # [V64 P2-3]
+from modules.core.google_client_factory import build_google_genai_client
 from modules.core.llm_generate import generate_content_via_router
+from modules.core.llm_router import get_shared_llm_router
 from modules.core.logging_keys import resolve_logging_session_id
 from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비용 추적 시스템
 from modules.core.models_config import load_models_yaml
 from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 from modules.core.perf_timer import PerfTimer  # [V65] 파이프라인 성능 프로파일링
 from modules.core.prompt_builder import PromptBuilder  # [V64 P2-2]
+from modules.core.provider_mode import strip_vertex_prefix
 from modules.core.runtime_paths import resolve_project_dir, resolve_projects_root
 from modules.core.services.audit_service import AuditService  # [Phase 4B-1]
 from modules.core.services.project_service import ProjectService  # [Phase 4B-3]
@@ -372,7 +373,7 @@ class SovereignApp:
         from modules.core.sovereign_bootstrap_runtime import SovereignBootstrapRuntime
 
         init_logger()  # [TF-26] logs/session_*.log 듀얼 출력 활성화
-        self.sys = StudioSystem(api_client=genai.Client(api_key=os.getenv("GOOGLE_API_KEY")))
+        self.sys = StudioSystem(api_client=build_google_genai_client())
         self.memory = None
         self.agents = {}
         self.current_project = None
@@ -1235,16 +1236,13 @@ class SovereignApp:
         load_dotenv(project_env_path, override=True)
         self.ui.log(f"   🔑 [V60.37] 프로젝트별 API 키 로드: {project_env_path}")
 
-        new_api_key = os.getenv("GOOGLE_API_KEY")
-        if new_api_key:
-            self.sys = StudioSystem(api_client=genai.Client(api_key=new_api_key))
-            # [V61.9] 프로젝트별 멀티키 재초기화 (GOOGLE_API_KEY_2~9 반영)
-            from modules.domain.agents.base_agent import BaseAgent
+        self.sys = StudioSystem(api_client=build_google_genai_client())
+        # [V61.9] 프로젝트별 provider/env 재초기화
+        from modules.domain.agents.base_agent import BaseAgent
 
-            BaseAgent._keys_initialized = False
-            BaseAgent._current_key_idx = 0
-            BaseAgent._context_caches.clear()
-            BaseAgent._init_api_keys()
+        get_shared_llm_router(force_reload=True)
+        BaseAgent.refresh_runtime_provider_state()
+        BaseAgent._init_api_keys()
 
         return project_env_path
 
@@ -1367,7 +1365,6 @@ class SovereignApp:
 
         current_project.paths.memory.mkdir(parents=True, exist_ok=True)
         self.memory = VecMemory(
-            api_key=os.getenv("GOOGLE_API_KEY", ""),
             ui_log=self.ui.log,
             conn=current_project.db.conn,
             lock=current_project.db._lock,
@@ -1526,7 +1523,7 @@ class SovereignApp:
         self.ui.log(create_log or f"   ⚡ [{agent_label}] 신규 캐시 생성 중...")
         try:
             cache = self.sys.api_client.caches.create(
-                model=SovereignApp._fix_quad_cache_model_id(self, model_id),
+                model=SovereignApp._fix_quad_cache_model_id(self, strip_vertex_prefix(model_id)),
                 config=types.CreateCachedContentConfig(
                     display_name=display_name,
                     system_instruction=system_instruction,
@@ -1541,7 +1538,7 @@ class SovereignApp:
             cache_info[cache_key] = None
 
     def _fix_quad_cache_model_id(self, model_id: str) -> str:
-        return f"models/{model_id}" if not model_id.startswith("models/") else model_id
+        return strip_vertex_prefix(model_id)
 
     def _persist_quad_cache_metadata(self, cache_info: dict[str, Any]) -> bool:
         try:

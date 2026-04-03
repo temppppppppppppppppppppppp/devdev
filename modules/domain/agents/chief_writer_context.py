@@ -331,7 +331,13 @@ class ChiefWriterContextBuilder:
                 anchor_parts.append(f"- 첫 씬 제목/목표: {_s1_title}")
             if _s1_summary:
                 anchor_parts.append(f"- 첫 씬 요약: {_s1_summary[:200]}")
-            anchor_parts.append("⛔ 위 장소와 시간대를 변경하거나 다른 장소/시간에서 시작하면 즉시 불합격 처리된다.")
+            anchor_parts.append(
+                "다른 장소/시간 또는 다른 시점 opening이 필요하면 전환 문장이나 `* * *` 후 1~2문장 안에 "
+                "바뀐 장소/시간/행동 상태를 명시하고, 다른 시점이면 작품 POV 정책을 어기지 마라."
+            )
+            anchor_parts.append(
+                "⛔ 위 anchor를 무전환으로 덮어쓰거나 직전 화에서 이미 끝난 행동을 opening에서 다시 재연하면 즉시 불합격 처리된다."
+            )
             opening_anchor_section = "\n".join(anchor_parts)
 
         return scene_breakdown, integrated_scenario_advisory, ending_hook, opening_anchor_section

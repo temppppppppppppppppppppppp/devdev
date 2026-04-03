@@ -882,22 +882,25 @@ class Stage4ContextBuilder:
         ):
             return ""
 
-        lines = [
-            "[Stage4 Opening Scene Authority]",
-            "- opening scene continuity below is hard canon. Do not improvise a different movement path or camera reset.",
-            "- do not replay a completed prior-episode event in the opening. Continue its aftermath or explicitly transition away from it.",
-            "- if the opening changes location, dominant action, or time band, use either an explicit transition sentence or a scene-break marker `* * *` first.",
-            "- a scene-break marker alone is not enough: the first 1-2 sentences after it must state the changed location, time, or action state.",
-            "- without a transition signal, do not jump to a new room, vehicle, exterior route, or later time band.",
-        ]
+        lines = ["[Stage4 Opening Scene Authority]"]
         if opening_start_location:
-            lines.append(f"- opening start_location MUST be preserved: {opening_start_location}")
+            lines.append(f"- default opening start_location anchor: {opening_start_location}")
         if opening_scene_location and opening_scene_location != opening_start_location:
-            lines.append(f"- opening scene_1.location MUST be preserved: {opening_scene_location}")
+            lines.append(f"- default opening scene_1.location anchor: {opening_scene_location}")
         if opening_time_flow:
-            lines.append(f"- opening time_flow MUST stay aligned: {opening_time_flow}")
+            lines.append(f"- default opening time_flow anchor: {opening_time_flow}")
         if opening_scene_title:
             lines.append(f"- opening scene_1.title anchor: {opening_scene_title}")
+        lines.extend(
+            [
+                "- alternate openings are allowed only with an explicit transition/cut and immediate state declaration.",
+                "- opening scene continuity below is hard canon. Do not improvise a different movement path or camera reset.",
+                "- do not replay a completed prior-episode event in the opening. Continue its aftermath or explicitly transition away from it.",
+                "- if the opening changes location, dominant action, or time band, use an explicit transition sentence or `* * *` first.",
+                "- after `* * *`, state the changed location, time, or action within the next 1-2 sentences.",
+                "- without a transition signal, do not jump to a new room, vehicle, exterior route, or later time band.",
+            ]
+        )
         if prev_ending_excerpt:
             lines.append(f"- previous ending bridge to honor before new motion: {prev_ending_excerpt}")
         if carryover_cliffhanger:
@@ -1328,7 +1331,11 @@ class Stage4ContextBuilder:
         # [S4-P1-6] 압축 대상 목록을 루프 전 1회 캐시하여 O(n^2) → O(n) 개선
         compression_targets = tracker.get_compression_targets()
         compressor = ContextCompressor()
-        protected_prefix = "[작품 추적 슬롯 요약]"
+        protected_prefixes = (
+            "[작품 추적 슬롯 요약]",
+            "[Stage4 Opening Scene Authority]",
+            "[Stage4 Work Identity Authority]",
+        )
 
         def _used_chars() -> int:
             return sum(len(s) for s in sections)
@@ -1348,7 +1355,9 @@ class Stage4ContextBuilder:
             if idx not in seen:
                 target_indices.append(idx)
 
-        protected_indices = [idx for idx in target_indices if sections[idx].startswith(protected_prefix)]
+        protected_indices = [
+            idx for idx in target_indices if any(sections[idx].startswith(prefix) for prefix in protected_prefixes)
+        ]
         for idx in target_indices:
             if idx in protected_indices:
                 continue
@@ -1387,9 +1396,9 @@ class Stage4ContextBuilder:
                 if not changed:
                     return
 
-        # 1) 일반 섹션을 먼저 줄여 작품 슬롯 요약이 가능한 한 오래 살아남게 한다.
+        # 1) 일반 섹션을 먼저 줄여 opening/work-identity/작품 슬롯 authority가 가능한 한 오래 살아남게 한다.
         _trim_indices(regular_indices, label="[SC:TRIM]", min_chars=300, ratio=0.7, max_rounds=2)
-        # 2) 그래도 넘치면 작품 추적 슬롯만 완만하게 줄인다.
+        # 2) 그래도 넘치면 protected authority section만 완만하게 줄인다.
         _trim_indices(protected_indices, label="[SC:TRIM:PROTECTED]", min_chars=500, ratio=0.88, max_rounds=2)
         # 3) 여전히 넘치는 예외 상황에서만 비상 trim을 한 번 더 돈다.
         if _used_chars() > total_budget_chars:

@@ -1,14 +1,14 @@
 # 0_0 Stage4 Consumer-Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (aggregate Stage4 wave active; flashback continuity child lane, fix-pack provenance tranche, post-pass state owner-boundary tranche, and intake authority protection tranche code-landed, runtime proof pending)
+Status: partially_realized (aggregate Stage4 wave active; flashback continuity child lane, fix-pack provenance tranche, post-pass state owner-boundary tranche, and intake authority protection tranche code-landed; 2026-04-03 fresh full run produced positive ep2 PASS proof, but residual replay/repetition and final-sink gaps remain)
 Canonical Path: `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `09a7b478c2a2c16d708cc041aaa6e194278e7f9b`
 - Baseline Dirty Summary: `dirty: active Stage4 docs/code/test deltas, prepared canary targets, temp roadmap/queue active`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `fresh full run elevated flashback continuity local-fix as the immediate child seam; aggregate Stage4 consumer-contract runtime proof still pending`
+- Resume Commit: `0dd825f19d729aff544ca69f8887aab4e88778eb`
+- Resume Drift Summary: `2026-04-03 r4+r5 bounded canary evidence and handoff re-audit kept Stage4 as the active owner; later fresh full run in projects/00_20260403 proved ep2 can PASS through bounded inplace correction, but replay/repetition warning evidence and Stage4 final-sink gaps still block broad closure`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-bounded-survey.md`
@@ -17,6 +17,10 @@ Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-npcdrift-relation-tag-local-fix-bounded-survey.md`
 - `docs/2026-04-01/0_0-stage4-canonical-entity-postselect-bounded-survey.md`
 - `docs/2026-04-01/0_0-stage4-ep2-advisory-escalation-loop-bounded-survey.md`
+- `docs/2026-04-03/0_0-stage34-ep2-focused-bounded-canary-r4-audit.md`
+- `docs/2026-04-03/0_0-stage34-ep2-focused-bounded-canary-r5-audit.md`
+- `docs/2026-04-03/0_0-stage4-ep2-continuity-handoff-context.md`
+- `docs/2026-04-03/0_0-stage34-ep2-fresh-run-post-run-merge-audit.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-evidence.json`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-evidence.json`
@@ -25,6 +29,7 @@ Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage4-npcdrift-relation-tag-local-fix-evidence.json`
 - `docs/2026-04-01/0_0-stage4-canonical-entity-postselect-evidence.json`
 - `docs/2026-04-01/0_0-stage4-ep2-advisory-escalation-loop-evidence.json`
+- `docs/2026-04-03/0_0-stage34-ep2-fresh-run-post-run-merge-evidence.json`
 Side-Effect Coverage: covered
 Parent Lane:
 - `0_0-stage2-stage3-stage4-readiness-remediation`
@@ -58,6 +63,11 @@ This wave is not a global Stage4 redesign. It is an aggregate contract-normaliza
 - `post-select continuity contract` improved contradiction subtype persistence
 - the contaminated Stage4-only ep2 canary isolated a real `NpcDrift relation-tag` seam, but that path is no longer the highest-authority immediate blocker
 - the fresh full run is now the higher-authority runtime source, and it elevated `Flashback continuity contradiction -> local-fix synthesis` as the immediate child seam
+- the latest runtime picture is now split: `r5` is newest but API-limited, while `r4` remains the richest correction-path snapshot
+- current Stage4 opening-authority surfaces are internally inconsistent: the global contract allows explicit transitions, but some writer-facing opening-anchor surfaces still read like unconditional same-location/time hard locks
+- the correct fail-close rule is `undeclared replay/jump = reject`, not `location/time change itself = reject`
+- the fresh full run in `projects/00_20260403` now proves `ep2` can reach `PASS` through a bounded `PASS_WITH_FIX -> inplace patch -> PASS` path
+- that same run still logged `cross-episode repetition 3건`, and the final Stage4 path did not land complete final-authority rows in `stage_attempts`
 - The remaining issue is no longer “add one more local fix.” It is “normalize how Stage4 consumes, reclassifies, and persists truth.”
 
 ## 3. Scope
@@ -65,13 +75,14 @@ This wave is not a global Stage4 redesign. It is an aggregate contract-normaliza
 Included:
 
 - `modules/core/stage4_context_builder.py`
+- `modules/core/stage4_immutable_fact_contract.py`
 - `modules/core/stage4_interview_round.py`
 - `modules/core/stage4_reject_runtime.py`
 - `modules/core/stage4_post_processor.py`
 - `modules/core/stage4_post_pass_runtime.py`
 - `modules/core/stage4_retry_runtime.py`
 - `modules/domain/agents/chief_writer_context.py`
-- focused Stage4 contract regressions and queue/doc refresh
+- focused Stage4 contract regressions, immutable-fact/opening-authority alignment, and queue/doc refresh
 
 Excluded:
 
@@ -105,6 +116,7 @@ Primary debt inventory for this wave:
 3. fix-pack provenance and routing semantics are not normalized enough
 4. `final_state_updates` / `actual_truth` / `world_state` owner boundary is underspecified
 5. operator-visible truth, retry truth, and persisted truth can diverge by design without an explicit contract map
+6. opening-authority wording across Stage4 intake surfaces is inconsistent about whether declared transitions are allowed
 
 ## 5. Pass 2. Semantic Classification
 
@@ -253,6 +265,7 @@ Goal:
 Primary targets:
 
 - `stage4_context_builder.py`
+- `stage4_immutable_fact_contract.py`
 - `chief_writer_context.py`
 
 Acceptance shape:
@@ -268,11 +281,18 @@ Realization update (2026-04-02):
 - `chief_writer_context.py` now re-surfaces that packet at the head of `writer_hard_canon_section` instead of leaving it buried inside generic `mandatory_context`
 - focused static validation is closed; runtime proof remains deferred
 
+Revalidation update (2026-04-03):
+
+- latest `r5` runtime evidence reconfirms that the immediate opening failure still happens before correction-path convergence can be observed
+- the next bounded realization target is opening-authority alignment across `stage4_context_builder.py`, `stage4_immutable_fact_contract.py`, and `chief_writer_context.py`
+- the implementation guardrail is `declared transition contract`, not `same-location hard lock`; valid explicit transitions and POV-policy-compatible alternate openings remain allowed
+
 ## 9. Acceptance Criteria
 
 - Stage4 bounded contradiction types preserve enough subtype detail to support local repair where appropriate
 - fix-pack provenance is explicit enough that runtime-synthesized contracts are not indistinguishable from Director-authored contracts
 - `final_state_updates`, `actual_truth`, and `world_state` have a clearer owner/provenance boundary for high-risk field families
+- Stage4 opening-authority surfaces reject undeclared replay/jumps without treating declared transitions or POV-policy-compatible alternate openings as automatic drift
 - new Stage4 behavior stays bounded and does not reopen Stage2/3 hierarchy work
 - no new `180+ LOC` function is introduced
 
@@ -280,6 +300,9 @@ Realization update (2026-04-02):
 
 - targeted Stage4 interview/finalization regressions
 - targeted post-pass/state provenance regressions
+- `pytest tests/test_stage4_context_builder.py -k "opening" -q`
+- `pytest tests/test_chief_writer_context.py -k "opening" -q`
+- `pytest tests/test_stage4_immutable_fact_contract.py -k "opening or carryover" -q`
 - `python -m py_compile` on touched production modules
 - `ruff check` on touched files
 - targeted pytest shards only
@@ -295,6 +318,7 @@ Realization update (2026-04-02):
 - do not run a canary from this document
 - preserve Director final authority
 - treat existing narrower Stage4 lanes as substrate, not as contradictory authorities
+- do not encode the ep2 carryover local-fix into a global same-location or same-time hard lock
 
 ## 12. Temp Queue Notes
 
@@ -326,11 +350,13 @@ Pass 2, evidence and consistency:
 - used the new Stage4 consumer-finalization survey as primary authority
 - preserved lineage to the existing narrower Stage4 surveys and partial execution lanes
 - did not overclaim runtime closure
+- 2026-04-03 revalidation added the latest `r5` runtime audit and confirmed the active owner is still Stage4, not the parked Stage3 opening-transition lane
 
 Pass 3, execution and readability:
 
 - made substrate relationships explicit
 - separated bounded tranches by consumer contract family
 - kept canary and resume actions out of scope
+- clarified that the current bounded intake-authority subtask is declared-transition alignment rather than a global same-location lock
 
 Confidence: `96%`

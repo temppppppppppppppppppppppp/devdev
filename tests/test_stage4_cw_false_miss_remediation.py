@@ -89,6 +89,63 @@ def test_build_stage4_db_attempt_payload_surfaces_query_friendly_override_fields
     assert payload["primary_failure_layer"] == "downstream_gate"
 
 
+def test_stage4_db_attempt_payload_roundtrips_into_stage_attempts_sink(tmp_path):
+    from modules.core.db_manager import DBManager
+
+    ir = Stage4InterviewRound(_make_ctx())
+    payload = ir._build_stage4_db_attempt_payload(
+        episode=10,
+        round_num=0,
+        success=False,
+        score=96,
+        arc=1,
+        verdict="REJECT",
+        reject_reason="gate reject",
+        fix_scope="partial",
+        model="writer-model",
+        duration_ms=1200,
+        advisory_flags={
+            "gate_semantics": {
+                "director_verdict": "PASS",
+                "final_verdict": "REJECT",
+                "gate_basis": "strong_advisory_escalation_non_local_fix",
+                "verdict_layers": {
+                    "director_quality_passed": True,
+                    "downstream_override_applied": True,
+                    "primary_failure_layer": "downstream_gate",
+                },
+            }
+        },
+        session_id="sess-1",
+        attempt_key="attempt-1",
+        artifact_meta={"candidate_key": "A", "content_hash": "hash", "artifact_path": "artifact.txt"},
+        selection_reason="best",
+        verdict_reason="runtime gate",
+        open_review="",
+        fix_scope_reasoning="",
+        runtime_advisory="",
+        retry_directives="",
+    )
+
+    db = DBManager(tmp_path / "stage4_payload_roundtrip.db")
+    try:
+        assert db.save_stage_attempt(**payload) is True
+        row = db.conn.execute(
+            """
+            SELECT director_quality_passed, downstream_override_applied, primary_failure_layer
+            FROM stage_attempts
+            WHERE attempt_key = 'attempt-1'
+            """
+        ).fetchone()
+    finally:
+        db.close()
+
+    assert row is not None
+    assert row["director_quality_passed"] == 1
+    assert row["downstream_override_applied"] == 1
+    assert row["primary_failure_layer"] == "downstream_gate"
+
+
 def test_append_episode_log_persists_verdict_layers():
     ir = Stage4InterviewRound(_make_ctx())
     ir._round_start_ts = 0.0

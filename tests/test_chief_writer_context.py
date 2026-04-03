@@ -204,6 +204,28 @@ class TestBuildCommonContext:
         assert "요약/브리핑/HUD/상태창/시스템 문구" in integrated_advisory
         assert "문이 열린다" in ending_hook
 
+    def test_extract_blueprint_sections_opening_anchor_requires_declared_transition_not_same_place_lock(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+
+        _, _, _, opening_anchor = builder._extract_blueprint_sections(
+            {
+                "start_location": "서재 앞 복도",
+                "time_flow": "직후",
+                "scene_breakdown": {
+                    "scene_1": {
+                        "title": "복도에서 현관으로",
+                        "location": "현관 방향 복도",
+                        "summary": "직후 후속 비트",
+                    }
+                },
+            }
+        )
+
+        assert "다른 장소/시간 또는 다른 시점 opening이 필요하면" in opening_anchor
+        assert "작품 POV 정책을 어기지 마라." in opening_anchor
+        assert "직전 화에서 이미 끝난 행동을 opening에서 다시 재연하면 즉시 불합격" in opening_anchor
+        assert "다른 장소/시간에서 시작하면 즉시 불합격 처리된다." not in opening_anchor
+
     def test_build_character_voice_section_uses_stage4_fallback(self):
         host = _make_host()
         host.context.character_voice = None

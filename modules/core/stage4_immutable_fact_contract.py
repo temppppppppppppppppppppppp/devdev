@@ -569,7 +569,10 @@ def render_packet_for_cw(packet: ImmutableFactPacket) -> str:
                 "- carryover pending_actions to resolve before new thread or explicitly transition away: "
                 f"{packet.carryover_pending_actions}"
             )
-        lines.append("⛔ 위 장소/시간을 변경하면 즉시 불합격.")
+        lines.append(
+            "- 다른 장소/시간 또는 다른 시점 opening이 필요하면 전환 문장이나 `* * *` 후 1~2문장 안에 바뀐 장소/시간/행동 상태를 명시하세요."
+        )
+        lines.append("⛔ 위 anchor를 무전환으로 덮어쓰거나, 직전 화에서 이미 끝난 행동을 opening에서 다시 재연하면 즉시 불합격.")
         lines.append("")
 
     # Committed state facts

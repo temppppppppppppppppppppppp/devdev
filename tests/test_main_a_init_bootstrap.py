@@ -10,7 +10,7 @@ def test_init_core_runtime_state_binds_base_runtime(monkeypatch):
 
     monkeypatch.setattr(logger_module, "init_logger", MagicMock())
     monkeypatch.setattr(main_a, "StudioVisualizer", lambda: SimpleNamespace(log=MagicMock()))
-    monkeypatch.setattr(main_a.genai, "Client", lambda api_key=None: SimpleNamespace(api_key=api_key))
+    monkeypatch.setattr(main_a, "build_google_genai_client", lambda: SimpleNamespace(api_key="test-key"))
     monkeypatch.setattr(main_a, "StudioSystem", lambda api_client=None: SimpleNamespace(api_client=api_client))
     monkeypatch.setattr(main_a, "PromptBuilder", lambda app=None: ("prompt_builder", app))
     monkeypatch.setattr(main_a, "FeedbackSystem", lambda: "feedback_system")
