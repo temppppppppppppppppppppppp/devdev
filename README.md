@@ -1,5 +1,7 @@
 # 글도비
 
+Pipeline Order: `리서치 -> 기획안 -> Stage 0 preprocess -> Phase 0 design -> TR 생성 -> BI 생성 -> 글도비 파이프라인`
+
 > LLM 기반 장편 웹소설 자동 생성 워크스페이스.
 > CLI 런타임, Electron 데스크톱 앱, narrative pipeline 도구, 운영 감리 문서를 함께 포함한다.
 
