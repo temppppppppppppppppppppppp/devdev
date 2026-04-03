@@ -133,7 +133,7 @@ def resolve_style_dialogue_ratio_target(
     else:
         return None
 
-    if 0.0 < value < 1.0:
+    if 0.0 <= value < 1.0:
         return value
     return None
 

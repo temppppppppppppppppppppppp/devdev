@@ -1,0 +1,47 @@
+{
+  "utf8_hygiene_note": "utf8-hygiene: allow-file rationale: legitimate Sino-Korean title spelling appears in canonical wuxia title fields.",
+  "fact_lock_version": "material-fact-lock.v1",
+  "work_identity": {
+    "work_id": "wuxia_heavenly_physician",
+    "title": "천의무쌍(天醫武雙)",
+    "family": "wuxguide",
+    "primary_profile": "wuxia",
+    "secondary_profile": ""
+  },
+  "story_contract": {
+    "mode": [
+      "orthodox_wuxia",
+      "medical_wuxia",
+      "family_saga"
+    ],
+    "premise": "무공 자질 없는 명문 무가의 막내가 침술이 곧 무공으로 작동하는 의무일체를 개척해, 가문과 무림과 독역의 위기를 동시에 치료하며 천의의 경지에 도달한다.",
+    "theme_statement": "치료하는 손과 죽이는 손은 다르지 않으며, 진짜 의술은 세상을 살리기 위해 싸울 줄도 알아야 한다.",
+    "series_promise": "의술과 무공의 경계를 허물고, 침술이라는 하나의 시스템으로 성장과 전투와 감동을 함께 밀어붙이는 정통 의술 무협.",
+    "opening_order": [
+      "진가장 비무대회 날, 소백은 비무대 아래에서 부상자를 치료한다.",
+      "형 소풍이 중상을 입고 가문 의원도 손을 쓰지 못한다.",
+      "소백의 침에서 내공이 발현하며 의무일체가 첫 각성한다.",
+      "아버지는 그 침법이 200년 전 사라진 의무일체의 시초임을 직감한다."
+    ]
+  },
+  "immutable_people_states": {
+    "protagonist": "진소백은 무공 자질이 전무한 진가장 막내로 시작하지만 침술로 혈도를 자극하면 그것이 곧 무공으로 작동하는 의무일체의 소유자다.",
+    "family_secret": "소백의 어머니는 의무일체 마지막 전승자였고 소백에게 의맥을 이식한 뒤 사망했다.",
+    "core_enemy": "좌천명은 독역의 진짜 설계자이며 무림맹 권력 독점을 위해 독역을 이용한다.",
+    "core_support": "매화, 진소풍, 백무명, 엽천수는 소백의 성장과 감정축의 핵심 축이다."
+  },
+  "hard_constraints": [
+    "침술=무공의 양면성: 활침(치료)과 살침(전투)은 동일 기술 기반이다",
+    "경지 7단계(침의→천의)가 주인공의 성장 축이다",
+    "독역은 내공이 높을수록 치명적이라는 설정을 깨지 않는다",
+    "침술/경혈 명칭은 실제 경혈명(합곡, 족삼리 등)을 기반으로 변형한다. 임의 창작 금지",
+    "치료 장면은 진단→처방→시술→경과 순서를 유지한다",
+    "성장곡선은 비단조: 좌절 7회에서 내공/정확도가 하락한다",
+    "7대단원 x 10블록 = 70블록 구조. 시간 범위 약 11년(17세→28세)",
+    "의무일체의 금기 '사랑하는 자를 치료하지 마라'는 실은 천의 경지의 열쇠다"
+  ],
+  "source_evidence": [
+    "treatments/preprocess/wuxia_heavenly_physician/source_manifest.json",
+    "material_ssot/20_pitch/intake/legacy_import/20260320/컨셉기획_041_무협_천의무쌍.md"
+  ]
+}

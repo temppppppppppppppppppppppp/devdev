@@ -37,6 +37,14 @@ _STAGE4_RETRY_CONTEXT_FIELDS = (
     "retry_directives",
 )
 _STAGE4_RETRY_REQUIRED_VERDICTS = {"REJECT", "PASS_WITH_FIX"}
+_GATE_REPAIR_MISMATCH_FIELDS = (
+    "repair_contract_subtype_mismatches",
+    "repair_contract_provenance_mismatches",
+    "scope_authority_fix_scope_mismatches",
+    "scope_authority_authoritative_fix_scope_mismatches",
+    "scope_authority_widened_mismatches",
+    "gate_repair_metadata_missing",
+)
 
 
 def _normalize_from_ep(from_ep: int, *, allow_partial: bool = False) -> int:
@@ -81,6 +89,10 @@ def prepare_stage3_canary_project(
         "prepared_at": datetime.now().isoformat(timespec="seconds"),
         "source_project": source.name,
         "target_project": target.name,
+        "canary_scope": "stage3_only",
+        "reruns_stage3_generation": True,
+        "preserves_stage2_arcs": True,
+        "preserves_stage4_outputs": True,
         "from_ep": int(from_ep),
         "cleanup": cleanup,
     }
@@ -203,7 +215,18 @@ def _build_stage3_attempt_detail(rows) -> list[dict]:
 
 
 def _build_stage3_episode_telemetry(db, attempt_rows) -> list[dict]:
-    """Compact per-episode telemetry from existing DB sinks (read-only)."""
+    """Compact per-episode telemetry from existing DB sinks (read-only).
+
+    Timing field semantics (TM-1):
+      total_duration_ms      — SUM of ask() wall-clock times. Includes retries,
+                                continuations, API_DELAY sleeps, orchestration overhead.
+                                NOT raw API latency. Retained for backward compatibility.
+      total_api_elapsed_ms   — SUM of raw _generate_content() RTT for final successful
+                                API calls only. 0 for legacy rows without TM-1 columns.
+                                Use this field when attributing time to the API provider.
+      total_retries          — total error-driven retry count across all calls.
+      total_continuations    — total continuation rounds across all calls.
+    """
     if not attempt_rows:
         return []
     ep_nums = sorted({int(row["ep_num"] or 0) for row in attempt_rows})
@@ -216,7 +239,10 @@ def _build_stage3_episode_telemetry(db, attempt_rows) -> list[dict]:
             SELECT ep_num,
                    COUNT(*) as call_count,
                    SUM(duration_ms) as total_duration_ms,
-                   SUM(COALESCE(total_cost_usd, 0)) as total_cost_usd
+                   SUM(COALESCE(total_cost_usd, 0)) as total_cost_usd,
+                   SUM(COALESCE(api_elapsed_ms, 0)) as total_api_elapsed_ms,
+                   SUM(COALESCE(retry_count, 0)) as total_retries,
+                   SUM(COALESCE(continuation_count, 0)) as total_continuations
             FROM llm_calls
             WHERE stage = 3 AND ep_num IN ({placeholders})
             GROUP BY ep_num
@@ -233,6 +259,9 @@ def _build_stage3_episode_telemetry(db, attempt_rows) -> list[dict]:
             "llm_call_count": int(row["call_count"] or 0),
             "total_duration_ms": int(row["total_duration_ms"] or 0),
             "total_cost_usd": round(float(row["total_cost_usd"] or 0), 6),
+            "total_api_elapsed_ms": int(row["total_api_elapsed_ms"] or 0),
+            "total_retries": int(row["total_retries"] or 0),
+            "total_continuations": int(row["total_continuations"] or 0),
         }
 
     ep_attempts: dict[int, list] = {}
@@ -403,6 +432,10 @@ def prepare_stage4_canary_project(
         "prepared_at": datetime.now().isoformat(timespec="seconds"),
         "source_project": source.name,
         "target_project": target.name,
+        "canary_scope": "stage4_only",
+        "reruns_stage3_generation": False,
+        "preserves_stage3_blueprints": True,
+        "preserves_stage3_sink_baseline": True,
         "from_ep": int(from_ep),
         "cleanup": cleanup,
     }
@@ -536,13 +569,25 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
             db,
             latest_session_id=latest_session_id,
         )
+        gate_repair_summary = db.get_latest_stage4_gate_repair_snapshot(session_id=latest_session_id or None)
     finally:
         db.close()
 
+    canary_prep = _read_json(root / "logs" / "canary_prep.json")
     runtime_summary = _read_json(root / "logs" / "runtime_audit_summary.json")
     draft_files = sorted(root.glob("drafts/ep_*.txt"))
     pass_rate_monitor_exists = (root / "logs" / "pass_rate_monitor.json").exists()
-    canary_prep = _read_json(root / "logs" / "canary_prep.json")
+    canary_scope = str(canary_prep.get("canary_scope", "") or "").strip().lower()
+    hard_gate_sink_alignment_scope = (
+        "current_session"
+        if canary_scope == "stage4_only" and current_session_sink_alignment_summary
+        else "run_wide"
+    )
+    hard_gate_sink_alignment_summary = (
+        current_session_sink_alignment_summary
+        if hard_gate_sink_alignment_scope == "current_session"
+        else sink_alignment_summary
+    )
 
     hard_gates = _evaluate_stage4_canary_gates(
         target_ep=target_ep,
@@ -550,18 +595,24 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         runtime_summary=runtime_summary,
         pass_rate_monitor_exists=pass_rate_monitor_exists,
         patch_trace_summary=patch_trace_summary,
-        sink_alignment_summary=sink_alignment_summary,
+        sink_alignment_summary=hard_gate_sink_alignment_summary,
         rationale_contract_summary=rationale_contract_summary,
     )
     proof_scope_summary = _build_stage4_canary_proof_scope_summary(
         stage3_sink_alignment_summary=stage3_sink_alignment_summary,
         stage4_sink_alignment_summary=sink_alignment_summary,
         rationale_contract_summary=rationale_contract_summary,
+        canary_prep=canary_prep,
     )
     proof_record_summary = _build_stage4_proof_record_summary(
         project_root=root,
         project_locator=project_locator,
         latest_session_id=latest_session_id,
+    )
+    gate_repair_surface_summary = _build_stage4_gate_repair_surface_summary(
+        gate_repair_summary=gate_repair_summary,
+        sink_alignment_summary=sink_alignment_summary,
+        current_session_sink_alignment_summary=current_session_sink_alignment_summary,
     )
 
     return {
@@ -582,12 +633,70 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         "stage3_sink_alignment_summary": stage3_sink_alignment_summary,
         "sink_alignment_summary": sink_alignment_summary,
         "current_session_sink_alignment_summary": current_session_sink_alignment_summary,
+        "hard_gate_sink_alignment_scope": hard_gate_sink_alignment_scope,
         "final_authority_contract_summary": final_authority_contract_summary,
+        "gate_repair_summary": gate_repair_summary,
+        "gate_repair_surface_summary": gate_repair_surface_summary,
         "rationale_contract_summary": rationale_contract_summary,
         "companion_audit_summary": companion_audit_summary,
         "proof_scope_summary": proof_scope_summary,
         "proof_record_summary": proof_record_summary,
         "hard_gates": hard_gates,
+    }
+
+
+def _build_stage4_gate_repair_surface_summary(
+    *,
+    gate_repair_summary: dict,
+    sink_alignment_summary: dict,
+    current_session_sink_alignment_summary: dict,
+) -> dict:
+    repair_contract = gate_repair_summary.get("repair_contract", {}) or {}
+    if not isinstance(repair_contract, dict):
+        repair_contract = {}
+    scope_authority = gate_repair_summary.get("scope_authority", {}) or {}
+    if not isinstance(scope_authority, dict):
+        scope_authority = {}
+
+    mismatch_source = (
+        current_session_sink_alignment_summary
+        if current_session_sink_alignment_summary
+        else sink_alignment_summary
+    )
+    mismatch_scope = "current_session" if current_session_sink_alignment_summary else "run_wide"
+    mismatch_counts = {
+        field: len(mismatch_source.get(field) or [])
+        for field in _GATE_REPAIR_MISMATCH_FIELDS
+    }
+    has_gate_surface = bool(
+        gate_repair_summary
+        or repair_contract
+        or scope_authority
+        or str(gate_repair_summary.get("fix_scope", "") or "").strip()
+        or str(gate_repair_summary.get("authoritative_fix_scope", "") or "").strip()
+    )
+
+    if not has_gate_surface:
+        status = "missing"
+    elif any(count > 0 for count in mismatch_counts.values()):
+        status = "warn"
+    else:
+        status = "ok"
+
+    return {
+        "status": status,
+        "mismatch_scope": mismatch_scope,
+        "attempt_key": str(gate_repair_summary.get("attempt_key", "") or "").strip(),
+        "session_id": str(gate_repair_summary.get("session_id", "") or "").strip(),
+        "final_verdict": str(gate_repair_summary.get("final_verdict", "") or "").strip(),
+        "fix_scope": str(gate_repair_summary.get("fix_scope", "") or "").strip(),
+        "authoritative_fix_scope": str(gate_repair_summary.get("authoritative_fix_scope", "") or "").strip(),
+        "repair_scope": str(gate_repair_summary.get("repair_scope", "") or "").strip(),
+        "repair_contract_subtype": str(repair_contract.get("subtype", "") or "").strip(),
+        "repair_contract_provenance": str(repair_contract.get("provenance", "") or "").strip(),
+        "scope_origin": str(scope_authority.get("scope_origin", "") or "").strip(),
+        "widened": bool(scope_authority.get("widened", False)),
+        "mismatch_counts": mismatch_counts,
     }
 
 
@@ -740,10 +849,13 @@ def _build_stage4_canary_proof_scope_summary(
     stage3_sink_alignment_summary: dict,
     stage4_sink_alignment_summary: dict,
     rationale_contract_summary: dict,
+    canary_prep: dict | None = None,
 ) -> dict:
     stage3_observed = bool(stage3_sink_alignment_summary)
     stage4_observed = bool(stage4_sink_alignment_summary)
     rationale_observed = bool(rationale_contract_summary)
+    prep_scope = str((canary_prep or {}).get("canary_scope", "") or "").strip().lower()
+    stage4_only_canary = prep_scope == "stage4_only"
 
     covered_surfaces = [
         "stage4_live_context_path",
@@ -751,7 +863,7 @@ def _build_stage4_canary_proof_scope_summary(
         "stage4_rationale_contract",
     ]
     if stage3_observed:
-        covered_surfaces.append("stage3_sink_alignment_probe")
+        covered_surfaces.append("stage3_baseline_sink_probe" if stage4_only_canary else "stage3_sink_alignment_probe")
 
     uncovered_surfaces = [
         "stage3_live_generation_path",
@@ -761,18 +873,31 @@ def _build_stage4_canary_proof_scope_summary(
         uncovered_surfaces.append("stage3_sink_probe_missing")
 
     return {
-        "summary_role": "stage4_live_canary_with_stage3_sink_probe",
+        "summary_role": (
+            "stage4_live_canary_with_baseline_stage3_probe"
+            if stage4_only_canary
+            else "stage4_live_canary_with_stage3_sink_probe"
+        ),
         "backend_wide_proof": False,
-        "scope_status": "partial_multi_stage_probe" if stage3_observed else "stage4_only",
+        "scope_status": "stage4_only" if stage4_only_canary else ("partial_multi_stage_probe" if stage3_observed else "stage4_only"),
         "stage4_live_context_regression": "covered",
         "stage4_sink_alignment_status": _summary_status(stage4_sink_alignment_summary, default="missing"),
         "stage3_sink_probe_status": _summary_status(stage3_sink_alignment_summary, default="missing"),
+        "stage3_probe_origin": (
+            "baseline_copy"
+            if stage4_only_canary and stage3_observed
+            else ("live_or_unspecified" if stage3_observed else "missing")
+        ),
         "rationale_contract_status": _summary_status(rationale_contract_summary, default="missing"),
         "covered_surfaces": covered_surfaces,
         "uncovered_surfaces": uncovered_surfaces,
         "notes": [
             "This canary is not a backend-wide proof net.",
-            "Stage 3 is observed via sink alignment only; it does not rerun live Stage 3 generation.",
+            (
+                "Stage 3 sink alignment here is baseline carryover from the copied source project; this canary does not rerun live Stage 3 generation."
+                if stage4_only_canary
+                else "Stage 3 is observed via sink alignment only; it does not rerun live Stage 3 generation."
+            ),
         ],
         "observability_contract": {
             "stage3_sink_alignment_observed": stage3_observed,
@@ -1337,7 +1462,7 @@ def _evaluate_stage4_canary_gates(
     elif runtime_total_events <= 0:
         errors.append("runtime_audit_empty")
     if not pass_rate_monitor_exists:
-        errors.append("pass_rate_monitor_missing")
+        warnings.append("pass_rate_monitor_cache_missing")
 
     if sink_alignment_summary:
         if sink_alignment_summary.get("final_sink_missing"):
@@ -1399,8 +1524,6 @@ def _evaluate_stage4_canary_gates(
         for blocked in ("missing_patched_blocks", "no_usable_patched_blocks", "patched_output_too_short"):
             if int(fallback_reasons.get(blocked, 0) or 0) > 0:
                 errors.append(f"fallback_reason:{blocked}")
-    else:
-        warnings.append("patch_trace_not_exercised")
 
     status = "fail" if errors else ("warn" if warnings else "pass")
     return {

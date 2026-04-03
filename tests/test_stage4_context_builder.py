@@ -2224,6 +2224,103 @@ class TestBuildMandatoryContext:
         assert "talent_registry" in result["mandatory_context"]
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_promotes_work_identity_authority_packet(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["lead actor line"],
+            "mandatory_scene_engines": ["contract payoff"],
+            "registry_profiles": [
+                {"name": "talent_registry", "required_fields": ["name", "tier", "risk"], "purpose": "cast gating"},
+            ],
+        }
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=7,
+            arc_data={"arc_no": 1, "constraint_summary": "Keep the contract payoff attached to the actor line."},
+            arc_tactical="Preserve the actor line and pay it off in the negotiation.",
+            prev_text="previous manuscript body",
+            prev_ending="the deal remains unresolved",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={"summary": "The lead actor line is the active commercial spine."},
+        )
+
+        text = result["mandatory_context"]
+        assert "[Stage4 Work Identity Authority]" in text
+        assert "tracking_slots MUST survive into scene execution: lead actor line" in text
+        assert "mandatory_scene_engines MUST appear on-page: contract payoff" in text
+        assert "talent_registry" in text
+        assert text.index("[Stage4 Work Identity Authority]") < text.index("[작품 추적 슬롯 요약]")
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_promotes_opening_scene_authority_even_without_work_focus(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": [],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        ctx.current_project.db.load_anchor.return_value = {
+            "cliffhanger": "전화가 오기 직전 멈칫했다.",
+            "pending_actions": ["전화를 받기", "현관으로 이동하기"],
+            "location": "서재 앞 복도",
+            "time_marker": "직후",
+        }
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=2,
+            arc_data={"arc_no": 1, "constraint_summary": "Preserve EP1→EP2 opening continuity."},
+            arc_tactical="Carry the hallway-to-entrance motion forward without resetting space.",
+            prev_text="이전 화 원고",
+            prev_ending="서재 앞 복도에서 현관 쪽으로 발을 옮겼다.",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={
+                "start_location": "서재 앞 복도",
+                "time_flow": "직후",
+                "scene_breakdown": {
+                    "scene_1": {
+                        "title": "복도에서 현관으로",
+                        "location": "현관 방향 복도",
+                    }
+                },
+            },
+        )
+
+        text = result["mandatory_context"]
+        assert "[Stage4 Opening Scene Authority]" in text
+        assert "default opening start_location anchor: 서재 앞 복도" in text
+        assert "default opening scene_1.location anchor: 현관 방향 복도" in text
+        assert "default opening time_flow anchor: 직후" in text
+        assert "opening carryover location to honor or explicitly transition from: 서재 앞 복도" in text
+        assert "opening carryover time_marker to honor or explicitly advance from: 직후" in text
+        assert (
+            "opening carryover pending_actions to resolve before new thread or explicitly transition away: "
+            "전화를 받기, 현관으로 이동하기"
+        ) in text
+        assert "do not replay a completed prior-episode event in the opening." in text
+        assert "use an explicit transition sentence or `* * *` first." in text
+        assert "after `* * *`, state the changed location, time, or action within the next 1-2 sentences." in text
+        assert "alternate openings are allowed only with an explicit transition/cut and immediate state declaration." in text
+        assert text.index("[Stage4 Opening Scene Authority]") < text.index("[Stage4 Work Identity Authority]")
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_build_mandatory_context_injects_semantic_relation_slice_when_focus_requires_it(self, _mock_build):
         ctx = _make_ctx()
         ctx.quality_dashboard = MagicMock()

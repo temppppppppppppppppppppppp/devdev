@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from modules.core.stage4_orchestrator import Stage4Orchestrator
-from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime
+from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime, _build_state_truth_owner_contract
 from modules.core.stage4_post_processor import Stage4PostProcessor
 
 
@@ -843,9 +843,14 @@ class TestProcessPassResult:
         )
 
         assert result["meta_save_failed"] is False
+
         saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
         assert saved_bible["active_pressure_vectors"] == [{"text": "pressure vector", "source": "ending_hook"}]
         assert saved_bible["inventory_count_deltas"] == [{"name": "sword", "from": 1, "to": 2, "delta": 1}]
+        owner_contract = saved_bible["state_truth_owner_contract"]
+        assert owner_contract["actual_truth_primary_owner"] == "manager_actual_truth"
+        assert owner_contract["field_families"]["inventory_counts"]["owner"] == "runtime_storage_overlay"
+        assert owner_contract["field_families"]["active_pressure_vectors"]["owner"] == "runtime_blueprint_overlay"
         pp.post_pass_runtime._sync_world_state_positions.assert_called_once_with(
             next_ep=10,
             key_npcs=[{"name": "npc-a"}],
@@ -910,6 +915,8 @@ class TestProcessPassResult:
                 "techniques_learned": ["Storm Palm"],
             }
         ]
+        owner_contract = saved_bible["state_truth_owner_contract"]
+        assert owner_contract["field_families"]["npc_martial_state_changes"]["owner"] == "arc_state_changes_world_only"
 
     def test_overexposure_receives_empty_protagonist_name_when_callback_returns_none(self, tmp_path):
         pp = self._make_pp()
@@ -1316,6 +1323,10 @@ class TestProcessPassResult:
         assert result is True
 
         saved_state_log = pp.ctx.current_project.db.save_state_log_with_summary.call_args.args[1]
+        owner_contract = saved_state_log["state_truth_owner_contract"]
+        assert owner_contract["actual_truth_primary_owner"] == "manager_actual_truth"
+        assert owner_contract["field_families"]["active_pressure_vectors"]["owner"] == "runtime_blueprint_overlay"
+        assert owner_contract["field_families"]["active_pressure_vectors"]["provenance"] == "blueprint_filtered_by_manuscript"
         assert saved_state_log["actual_truth"]["active_pressure_vectors"][0]["source"] == "ending_hook"
         assert saved_state_log["active_pressure_vectors"][1]["text"] == "흑풍회의 추격대가 문 앞에 도착했다."
 
@@ -1709,6 +1720,25 @@ class TestRunPostEpisodeTasks:
 
         with patch("builtins.input", return_value=""):
             pp.run_post_episode_tasks()
+
+
+class TestStateTruthOwnerContract:
+    def test_marks_director_fallback_when_manager_truth_missing(self):
+        contract = _build_state_truth_owner_contract(
+            actual_truth={},
+            final_state_updates={"location": "archive", "_director_quality_labels": {"score": 95}},
+            curr_inventory_counts={},
+            inventory_count_deltas=[],
+            relationship_changes=[],
+            active_pressure_vectors=[],
+            arc_data={},
+        )
+
+        assert contract["actual_truth_primary_owner"] == "director_state_updates_fallback"
+        assert contract["actual_truth_fallback_used"] is True
+        assert contract["actual_truth_fallback_reason"] == "manager_actual_truth_empty"
+        assert contract["field_families"]["actual_truth_surface"]["fields"] == ["location"]
+        assert contract["field_families"]["final_state_updates"]["owner"] == "director_state_updates"
 
 
 class TestAtomicMetadataSave:

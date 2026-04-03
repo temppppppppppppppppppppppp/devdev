@@ -32,9 +32,16 @@ nul
 _*.py
 _*.txt
 *.log
+.planning/ide_operating_mode.local.md
 recent_diff*.txt
 temp_inspect.txt
 test_results_new.xml
+
+# === 이전 날짜별 작업 문서 아카이브 ===
+docs/이전/
+
+# === CSV 데이터 파일 ===
+*.csv
 
 # === DB/캐시 ===
 *.db-journal
@@ -93,7 +100,11 @@ tmp_*.py
 tmp_*.txt
 generate_*.py
 *.webp
-docs/2026-03-11/work_sales_review_60m.csv
-docs/2026-03-11/work_sales_raw_60m_male_only.csv
-docs/2026-03-11/work_sales_raw_60m.csv
 data/
+
+# === 테스트/카나리아/스트레스 프로젝트 (실험 데이터) ===
+projects/canary_*/
+projects/스트레스*/
+
+# === 임시 DB 파일 ===
+tmp_*.db

@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from modules.narrative_router import resolve_family_plugin, resolve_route
+from modules.narrative_router.router import resolve_family_plugin, resolve_route
 
 
 def build_command(*, harness_script: str, passthrough: list[str]) -> list[str]:

@@ -645,6 +645,12 @@ class Stage4OutcomeRuntime:
         ):
             return True
 
+        if self._is_continuity_quality_issue_logic_like(
+            error_category=error_category,
+            previous_attempt=previous_attempt,
+        ):
+            return True
+
         if not owner.get_stage4_policy_bool(
             "retry_escalation",
             "treat_post_select_conflict_as_logic_like",
@@ -677,6 +683,55 @@ class Stage4OutcomeRuntime:
             return False
 
         return bool(previous_attempt.get("plateau_detected", False))
+
+    @staticmethod
+    def _is_continuity_quality_issue_logic_like(
+        *,
+        error_category: str,
+        previous_attempt: dict,
+    ) -> bool:
+        if error_category != "QUALITY_ISSUE":
+            return False
+
+        reject_bucket = str(previous_attempt.get("reject_bucket", "") or "").strip()
+        if reject_bucket != "quality_issue":
+            return False
+
+        contradiction_types = {
+            str(item or "").strip().lower()
+            for item in (previous_attempt.get("contradiction_types") or [])
+            if str(item or "").strip()
+        }
+        continuity_types = {
+            "scene_overlap",
+            "event_ordering",
+            "space_continuity",
+            "timeline_arc_consistency",
+            "opening_diversity",
+        }
+        if contradiction_types.intersection(continuity_types):
+            return True
+
+        signal_text = "\n".join(
+            [
+                str(previous_attempt.get("fix_scope_reasoning", "") or ""),
+                str(previous_attempt.get("open_review", "") or ""),
+                str(previous_attempt.get("rejection_reason", "") or ""),
+                str(previous_attempt.get("firewall_reason", "") or ""),
+            ]
+        ).lower()
+        continuity_markers = (
+            "space continuity",
+            "opening continuity",
+            "opening duplication",
+            "continuity replay",
+            "flashback",
+            "직전 화",
+            "이전 화",
+            "오프닝",
+            "공간 연속성",
+        )
+        return any(marker in signal_text for marker in continuity_markers)
 
     def _apply_reject_score_trend_advisory(
         self,

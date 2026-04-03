@@ -218,6 +218,29 @@ class TestSemanticSubtypeMetadata:
         assert result[0]["expected_relation_axes"] == ["집착100", "오해-80"]
         assert "literal 숫자/태그 재현은 요구하지 않는다" in result[0]["semantic_local_fix_hint"]
 
+    def test_parse_plaintext_relation_tag_drift_adds_direction_metadata(self):
+        response = json.dumps(
+            [
+                {
+                    "npc": "한태민",
+                    "field": "relation_to_protag",
+                    "expected": "오해 대상",
+                    "found_in_ms": "한태민은 주인공을 오해하며 무시하지만 주인공은 그 의도를 정확히 읽는다",
+                }
+            ],
+            ensure_ascii=False,
+        )
+
+        result = NpcDriftAdvisor._parse_llm_response(response, ep_num=2)
+
+        assert result[0]["drift_subtype"] == "relation_tag_semantic"
+        assert result[0]["target_kind"] == "local_phrase"
+        assert result[0]["expected_relation_label"] == "오해 대상"
+        assert result[0]["expected_relation_axes"] == ["오해 대상", "NPC가 주인공을 오해함"]
+        assert result[0]["relation_label_kind"] == "plain_directional"
+        assert result[0]["relation_direction"] == "npc_misunderstands_protag"
+        assert "NPC가 주인공을 오해하는 관계" in result[0]["semantic_local_fix_hint"]
+
 
 # ═══════════════════════════════════════════════════════════════
 # EdgeCases 테스트

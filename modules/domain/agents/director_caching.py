@@ -7,6 +7,8 @@ Director God Object 분해의 첫 번째 단계.
 
 import logging
 
+from modules.core.provider_mode import strip_vertex_prefix
+
 from .base_agent import BaseAgent
 
 
@@ -128,7 +130,7 @@ class DirectorCachingManager:
             logging.info(f" [V60.88] 원고 캐시 생성 중... ({len(manuscripts_compiled)}화, {total_chars:,}자)")
 
             cache = self.client.caches.create(
-                model=self.primary_model,
+                model=strip_vertex_prefix(self.primary_model),
                 config=types.CreateCachedContentConfig(
                     display_name=f"MANUSCRIPT_HISTORY_EP{current_ep}",
                     system_instruction="원고 연속성 전문가 (Manuscript Continuity Expert)",

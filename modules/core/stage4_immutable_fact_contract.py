@@ -71,6 +71,10 @@ class ImmutableFactPacket:
     scene_1_title: str = ""
     scene_1_location: str = ""
     prev_ending_bridge: str = ""
+    carryover_cliffhanger: str = ""
+    carryover_pending_actions: str = ""
+    carryover_location: str = ""
+    carryover_time_marker: str = ""
 
     # 2. committed state facts
     committed_state_facts: list[str] = field(default_factory=list)
@@ -96,6 +100,12 @@ class ImmutableFactPacket:
         return not (
             self.start_location
             or self.start_time_flow
+            or self.scene_1_location
+            or self.prev_ending_bridge
+            or self.carryover_cliffhanger
+            or self.carryover_pending_actions
+            or self.carryover_location
+            or self.carryover_time_marker
             or self.committed_state_facts
             or self.completed_event_facts
             or self.scene_obligations
@@ -136,6 +146,7 @@ def build_packet(
 
     if prev_manuscript_ending:
         packet.prev_ending_bridge = prev_manuscript_ending[-500:]
+    _extract_chain_link_carryover(packet, chain_link_section)
 
     # ── 2. Committed state facts ─────────────────────────────────
     _extract_committed_state_facts(packet, world_state_summary, fact_ledger_summary)
@@ -156,6 +167,27 @@ def build_packet(
     _check_upstream_flags(packet, bp)
 
     return packet
+
+
+def _extract_chain_link_carryover(packet: ImmutableFactPacket, chain_link_section: str) -> None:
+    if not chain_link_section:
+        return
+    for raw_line in str(chain_link_section).splitlines():
+        line = raw_line.strip()
+        if not line.startswith("- carryover_"):
+            continue
+        key, _, value = line[2:].partition(":")
+        normalized_value = " ".join(str(value).split()).strip()
+        if not normalized_value:
+            continue
+        if key == "carryover_cliffhanger":
+            packet.carryover_cliffhanger = normalized_value
+        elif key == "carryover_pending_actions":
+            packet.carryover_pending_actions = normalized_value
+        elif key == "carryover_location":
+            packet.carryover_location = normalized_value
+        elif key == "carryover_time_marker":
+            packet.carryover_time_marker = normalized_value
 
 
 def _extract_committed_state_facts(
@@ -521,7 +553,26 @@ def render_packet_for_cw(packet: ImmutableFactPacket) -> str:
             lines.append(f"- 시간대: {packet.start_time_flow}")
         if packet.scene_1_title:
             lines.append(f"- 첫 씬 제목: {packet.scene_1_title}")
-        lines.append("⛔ 위 장소/시간을 변경하면 즉시 불합격.")
+        if packet.prev_ending_bridge:
+            bridge_excerpt = " ".join(str(packet.prev_ending_bridge).split())
+            if len(bridge_excerpt) > 260:
+                bridge_excerpt = bridge_excerpt[:257] + "..."
+            lines.append(f"- 직전 화 종료 브리지: {bridge_excerpt}")
+        if packet.carryover_cliffhanger:
+            lines.append(f"- carryover cliffhanger to resolve or explicitly transition from: {packet.carryover_cliffhanger}")
+        if packet.carryover_location:
+            lines.append(f"- carryover location to honor or explicitly transition from: {packet.carryover_location}")
+        if packet.carryover_time_marker:
+            lines.append(f"- carryover time_marker to honor or explicitly advance from: {packet.carryover_time_marker}")
+        if packet.carryover_pending_actions:
+            lines.append(
+                "- carryover pending_actions to resolve before new thread or explicitly transition away: "
+                f"{packet.carryover_pending_actions}"
+            )
+        lines.append(
+            "- 다른 장소/시간 또는 다른 시점 opening이 필요하면 전환 문장이나 `* * *` 후 1~2문장 안에 바뀐 장소/시간/행동 상태를 명시하세요."
+        )
+        lines.append("⛔ 위 anchor를 무전환으로 덮어쓰거나, 직전 화에서 이미 끝난 행동을 opening에서 다시 재연하면 즉시 불합격.")
         lines.append("")
 
     # Committed state facts

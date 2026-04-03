@@ -6,7 +6,6 @@ import json
 import logging
 import re
 
-from modules.core.constants import smart_truncate
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.hud_utils import get_hud_trend_safe as _get_hud_trend_safe_shared
 
@@ -19,7 +18,6 @@ except ImportError:
     PRIMITIVE_GUARD_AVAILABLE = False
 
 from .chief_writer_context_packets import ChiefWriterContextPackets
-
 from .chief_writer_prompts import (
     build_chief_writer_main_prompt,
     get_anti_trope_instructions,
@@ -57,6 +55,9 @@ _GENRE_CODE_ALIASES = {
     "alt_history": "alt_history",
     "alt history": "alt_history",
 }
+
+_STAGE4_WORK_IDENTITY_AUTHORITY_HEADER = "[Stage4 Work Identity Authority]"
+_STAGE4_OPENING_SCENE_AUTHORITY_HEADER = "[Stage4 Opening Scene Authority]"
 
 
 def _normalize_genre_alias_key(value: str) -> str:
@@ -330,7 +331,13 @@ class ChiefWriterContextBuilder:
                 anchor_parts.append(f"- 첫 씬 제목/목표: {_s1_title}")
             if _s1_summary:
                 anchor_parts.append(f"- 첫 씬 요약: {_s1_summary[:200]}")
-            anchor_parts.append("⛔ 위 장소와 시간대를 변경하거나 다른 장소/시간에서 시작하면 즉시 불합격 처리된다.")
+            anchor_parts.append(
+                "다른 장소/시간 또는 다른 시점 opening이 필요하면 전환 문장이나 `* * *` 후 1~2문장 안에 "
+                "바뀐 장소/시간/행동 상태를 명시하고, 다른 시점이면 작품 POV 정책을 어기지 마라."
+            )
+            anchor_parts.append(
+                "⛔ 위 anchor를 무전환으로 덮어쓰거나 직전 화에서 이미 끝난 행동을 opening에서 다시 재연하면 즉시 불합격 처리된다."
+            )
             opening_anchor_section = "\n".join(anchor_parts)
 
         return scene_breakdown, integrated_scenario_advisory, ending_hook, opening_anchor_section
@@ -508,6 +515,16 @@ class ChiefWriterContextBuilder:
         parts = [section.strip() for section in sections if section and section.strip()]
         return "\n\n".join(parts)
 
+    @staticmethod
+    def _extract_named_context_block(text: str, header: str) -> str:
+        if not text or not header:
+            return ""
+        try:
+            match = re.search(rf"({re.escape(header)}.*?)(?:\n\n(?=\[)|\Z)", str(text), flags=re.DOTALL)
+        except re.error:
+            return ""
+        return match.group(1).strip() if match else ""
+
     def _build_writer_core_sections(
         self,
         *,
@@ -521,7 +538,17 @@ class ChiefWriterContextBuilder:
         reflexion_prompt: str,
     ) -> tuple[str, str]:
         character_voice_section = self._build_character_voice_section(blueprint)
+        opening_scene_authority = self._extract_named_context_block(
+            mandatory_context,
+            _STAGE4_OPENING_SCENE_AUTHORITY_HEADER,
+        )
+        work_identity_authority = self._extract_named_context_block(
+            mandatory_context,
+            _STAGE4_WORK_IDENTITY_AUTHORITY_HEADER,
+        )
         hard_canon_section = self._join_writer_sections(
+            opening_scene_authority,
+            work_identity_authority,
             world_state_section,
             reference_anchor_prompt,
             mandatory_context,

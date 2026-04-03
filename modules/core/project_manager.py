@@ -815,7 +815,11 @@ class ProjectContext:
             with open(treatment_path, encoding="utf-8") as f:
                 treatment_data = json.load(f)
 
-            from modules.core.stage0_handoff import build_plot_roadmap_from_treatment
+            from modules.core.stage0_handoff import (
+                build_plot_roadmap_from_treatment,
+                canonicalize_bible_payload,
+                canonicalize_treatment_payload,
+            )
 
             # [V49.3] Phase 0 JSON 스키마 검증
             try:
@@ -851,19 +855,29 @@ class ProjectContext:
             except ImportError:
                 logging.warning(" [V49.3] 스키마 검증 모듈 로드 실패. 검증 없이 진행합니다.")
 
+            canonical_treatment, treatment_warnings = canonicalize_treatment_payload(treatment_data)
+            canonical_bible, bible_warnings = canonicalize_bible_payload(
+                bible_data,
+                treatment=canonical_treatment,
+            )
+            if treatment_warnings:
+                logging.info(" [DNA Injection] treatment canonicalization: %s", "; ".join(treatment_warnings[:5]))
+            if bible_warnings:
+                logging.info(" [DNA Injection] bible canonicalization: %s", "; ".join(bible_warnings[:5]))
+
             # 2. MasterBible 루트 확보 (포장지가 있든 없든 대응)
-            master_bible = bible_data.get("MasterBible", bible_data)
+            master_bible = canonical_bible.get("MasterBible", canonical_bible)
 
             # 3. 트리트먼트 블록을 plot_roadmap 규격으로 변환하여 주입
             # [V62.2] flat 구조: block_no + 원본 필드 전체 (중복 래핑 제거)
-            refined_roadmap = build_plot_roadmap_from_treatment(treatment_data)
+            refined_roadmap = build_plot_roadmap_from_treatment(canonical_treatment)
             if not refined_roadmap:
                 logging.warning(" [DNA Sync Error] canonical treatment normalization produced no roadmap entries")
                 return False
 
             # 4. 성경 객체에 최종 로드맵 결합
             master_bible["plot_roadmap"] = refined_roadmap
-            self.master_bible = {"MasterBible": master_bible}
+            self.master_bible = canonical_bible if isinstance(canonical_bible, dict) else {"MasterBible": master_bible}
 
             # 5. [핵심] SQLite DB에 'bible' 앵커로 전체 블록 강제 박제
             # 여기서 DBManager의 save_anchor를 호출함

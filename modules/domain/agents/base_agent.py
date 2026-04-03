@@ -8,10 +8,10 @@ import time
 from pathlib import Path
 
 import yaml
-from google import genai
 from google.genai import types
 
 from modules.core.constants import ContextLimits, smart_truncate  # [TF-25-04] validation.yaml SSOT
+from modules.core.google_client_factory import build_google_genai_client, load_google_api_keys
 from modules.core.llm_provider import LLMRequest, LLMResponse
 from modules.core.llm_router import get_shared_llm_router
 from modules.core.models_config import (
@@ -22,6 +22,7 @@ from modules.core.models_config import (
 from modules.core.models_config import (
     DEFAULT_MODEL_FALLBACK_CHAIN as _MODELS_CONFIG_FALLBACK_CHAIN,
 )
+from modules.core.provider_mode import strip_vertex_prefix
 from modules.validation.threshold_helper import _threshold
 
 # [V44] 에스케이프 유틸리티 임포트
@@ -201,23 +202,32 @@ class BaseAgent:
 
     @classmethod
     def _init_api_keys(cls) -> None:
-        """환경변수에서 모든 API 키 로드 (GOOGLE_API_KEY, _2, _3, ...)"""
+        """환경변수에서 현재 Google provider mode에 맞는 API 키를 로드한다."""
         # [TF-XC-05] check-then-act를 _rotation_lock 안으로 이동 (TOCTOU 방지)
         with cls._rotation_lock:
             if cls._keys_initialized:
                 return
             cls._keys_initialized = True
-            keys = []
-            primary = os.getenv("GOOGLE_API_KEY")
-            if primary:
-                keys.append(primary)
-            for i in range(2, 10):
-                k = os.getenv(f"GOOGLE_API_KEY_{i}")
-                if k:
-                    keys.append(k)
-            cls._api_keys = keys
+            cls._api_keys = load_google_api_keys()
+            keys = cls._api_keys
             if len(keys) > 1:
                 logging.info(f" [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
+
+    @classmethod
+    def refresh_runtime_provider_state(cls) -> None:
+        """프로젝트 env 재로딩 뒤 Google provider 관련 class 상태를 리셋한다."""
+        with cls._rotation_lock:
+            cls._keys_initialized = False
+            cls._current_key_idx = 0
+            cls._key_rotation_pending = False
+            cls._last_rotation_time = 0
+            cls._rotation_count = 0
+            cls._api_keys = []
+            cls.MODEL_FALLBACK_CHAIN = _get_model_fallback_chain()
+        with cls._quota_lock:
+            cls._quota_exhausted_models.clear()
+        with cls._cache_lock:
+            cls._context_caches.clear()
 
     @classmethod
     def _try_rotate_key(cls):
@@ -257,7 +267,7 @@ class BaseAgent:
         # Client 생성은 lock 밖에서 (네트워크 IO 포함하므로)
         # 단, key index/key 값은 lock 내에서 캡처해두었으므로 TOCTOU 안전
         try:
-            new_client = genai.Client(api_key=new_key)
+            new_client = build_google_genai_client(api_key=new_key)
         except Exception as create_err:
             with cls._rotation_lock:
                 cls._current_key_idx = old_idx
@@ -577,6 +587,10 @@ class BaseAgent:
         stage: int | None = None,
         ep_num: int | None = None,
         thinking_text: str | None = None,
+        # [TM-1] timing decomposition
+        api_elapsed_ms: int | None = None,
+        retry_count: int | None = None,
+        continuation_count: int | None = None,
     ) -> None:
         """Non-blocking DB write for LLM call telemetry."""
         try:
@@ -645,6 +659,9 @@ class BaseAgent:
                 prompt_snippet=_prompt_snippet,
                 response_snippet=_response_snippet,
                 thinking_snippet=_thinking_snippet,
+                api_elapsed_ms=api_elapsed_ms,
+                retry_count=retry_count,
+                continuation_count=continuation_count,
             )
         except Exception as _e:
             logging.debug("[llm_call_log] save failed: %s", _e)
@@ -678,6 +695,9 @@ class BaseAgent:
             max_rate_limit_retries = 3
             network_retry_count = 0
             thinking_text = ""
+            # [TM-1] timing decomposition tracking
+            error_retry_count = 0
+            last_api_elapsed_ms = 0
 
             attempt = 0
             ask_started_at = time.time()
@@ -687,6 +707,7 @@ class BaseAgent:
                     api_started_at = time.time()
                     response = self._generate_content(model=current_model, contents=current_prompt, config=config)
                     api_elapsed = time.time() - api_started_at
+                    last_api_elapsed_ms = int(api_elapsed * 1000)  # [TM-1]
                     if api_elapsed > 30:
                         self._operator_log(
                             f"[API] {self._agent_name} model={current_model} attempt={attempt} took {api_elapsed:.1f}s",
@@ -729,6 +750,7 @@ class BaseAgent:
                     quota_retry_count = error_result["quota_retry_count"]
 
                     if error_result["action"] == "continue":
+                        error_retry_count += 1  # [TM-1]
                         self._operator_log(
                             f"[API-ERR] {self._agent_name} continue (retry) model={error_result['current_model']}",
                             level="warning",
@@ -790,6 +812,9 @@ class BaseAgent:
                 temperature=temperature,
                 attempt=attempt,
                 ask_started_at=ask_started_at,
+                api_elapsed_ms=last_api_elapsed_ms,
+                retry_count=error_retry_count,
+                continuation_count=attempt,
             )
 
         except Exception as error:
@@ -804,6 +829,9 @@ class BaseAgent:
                 temperature=temperature,
                 response_schema=response_schema,
                 thinking_text=thinking_text,
+                api_elapsed_ms=last_api_elapsed_ms,
+                retry_count=error_retry_count,
+                continuation_count=attempt,
             )
 
     def _prepare_ask_prompt(self, *, prompt: str) -> dict:
@@ -867,6 +895,10 @@ class BaseAgent:
         temperature: float,
         attempt: int,
         ask_started_at: float,
+        # [TM-1] timing decomposition
+        api_elapsed_ms: int = 0,
+        retry_count: int = 0,
+        continuation_count: int = 0,
     ) -> str:
         total_elapsed = time.time() - ask_started_at
         if total_elapsed > 15:
@@ -927,6 +959,9 @@ class BaseAgent:
                 duration_ms=elapsed_ms,
                 success=True,
                 thinking_text=thinking_text,
+                api_elapsed_ms=api_elapsed_ms,
+                retry_count=retry_count,
+                continuation_count=continuation_count,
             )
         except Exception:
             pass
@@ -950,6 +985,10 @@ class BaseAgent:
         temperature: float,
         response_schema,
         thinking_text: str,
+        # [TM-1] timing decomposition
+        api_elapsed_ms: int = 0,
+        retry_count: int = 0,
+        continuation_count: int = 0,
     ) -> str:
         error_type = self._classify_error(error)
         self.last_error_type = error_type
@@ -1013,6 +1052,9 @@ class BaseAgent:
                 success=False,
                 error=error,
                 thinking_text=thinking_text,
+                api_elapsed_ms=api_elapsed_ms,
+                retry_count=retry_count,
+                continuation_count=continuation_count,
             )
         except Exception:
             pass
@@ -1502,6 +1544,7 @@ class BaseAgent:
             meta={"backup_model": self.backup_model, "error_type": error_type},
         )
         _backup_t0 = time.monotonic()
+        _backup_api_elapsed_ms = None  # [TM-1] set after successful API call
         try:
             # [FIX] 백업 모델용 별도 config
             backup_config_params = {
@@ -1527,7 +1570,9 @@ class BaseAgent:
             # [V60.99] API Rate Limit 예방 딜레이
             self._last_llm_usage = {}
             time.sleep(self.API_DELAY)
+            _backup_api_t0 = time.monotonic()  # [TM-1]
             res = self._generate_content(model=self.backup_model, contents=base_prompt, config=backup_config)
+            _backup_api_elapsed_ms = int((time.monotonic() - _backup_api_t0) * 1000)  # [TM-1]
             try:
                 backup_text = res.text if res.text else ""
             except (ValueError, AttributeError):
@@ -1543,6 +1588,9 @@ class BaseAgent:
                     duration_ms=int((time.monotonic() - _backup_t0) * 1000),
                     success=True,
                     context_tag="backup_recovery",
+                    api_elapsed_ms=_backup_api_elapsed_ms,
+                    retry_count=0,
+                    continuation_count=0,
                 )
             except Exception:
                 pass
@@ -1641,6 +1689,9 @@ class BaseAgent:
                     success=False,
                     error=e_inner,
                     context_tag="backup_recovery",
+                    api_elapsed_ms=_backup_api_elapsed_ms,
+                    retry_count=0,
+                    continuation_count=0,
                 )
             except Exception:
                 pass
@@ -2134,7 +2185,7 @@ class BaseAgent:
 
             # [V69.1] Gemini API 시그니처 변경 대응: config 파라미터 사용
             cache = self.client.caches.create(
-                model=self.primary_model,
+                model=strip_vertex_prefix(self.primary_model),
                 config=types.CreateCachedContentConfig(
                     contents=[{"role": "user", "parts": [{"text": content}]}],
                     ttl=f"{ttl_seconds}s",
@@ -2243,11 +2294,13 @@ class BaseAgent:
                 except Exception as e:
                     logging.debug(f"[SILENT] cached metrics startup: {e}")
             time.sleep(self.API_DELAY)
+            _cached_api_t0 = time.monotonic()  # [TM-1]
             response = self._generate_content(
                 model=self.primary_model,
                 contents=[{"role": "user", "parts": [{"text": wrapped_prompt}]}],
                 config=config,
             )
+            _cached_api_elapsed_ms = int((time.monotonic() - _cached_api_t0) * 1000)  # [TM-1]
 
             # [TF-28] thinking content 추출 (캐시 경로)
             self._last_thinking = ""  # [TF-28c] reset
@@ -2281,6 +2334,9 @@ class BaseAgent:
                     duration_ms=int((time.monotonic() - _cached_t0) * 1000),
                     success=True,
                     context_tag="cached_context",
+                    api_elapsed_ms=_cached_api_elapsed_ms,
+                    retry_count=0,
+                    continuation_count=0,
                 )
             except Exception:
                 pass
@@ -2324,6 +2380,9 @@ class BaseAgent:
                     success=False,
                     error=e,
                     context_tag="cached_context",
+                    api_elapsed_ms=_cached_api_elapsed_ms if "_cached_api_elapsed_ms" in locals() else None,
+                    retry_count=0,
+                    continuation_count=0,
                 )
             except Exception:
                 pass

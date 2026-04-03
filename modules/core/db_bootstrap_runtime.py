@@ -459,6 +459,11 @@ class DBBootstrapRuntime:
                 ("prompt_snippet", "TEXT"),
                 ("response_snippet", "TEXT"),
                 ("thinking_snippet", "TEXT"),
+                # [TM-1] timing decomposition — duration_ms = ask wall clock (compat),
+                # api_elapsed_ms = raw API RTT for the final successful _generate_content call
+                ("api_elapsed_ms", "INTEGER"),
+                ("retry_count", "INTEGER"),
+                ("continuation_count", "INTEGER"),
             ),
             log_label="llm_calls",
         )
@@ -523,6 +528,9 @@ class DBBootstrapRuntime:
                 ("is_patch", "INTEGER DEFAULT 0"),
                 ("is_patch_fallback", "INTEGER DEFAULT 0"),
                 ("patch_strategy", "TEXT"),
+                ("director_quality_passed", "INTEGER DEFAULT 0"),
+                ("downstream_override_applied", "INTEGER DEFAULT 0"),
+                ("primary_failure_layer", "TEXT"),
             ),
             log_label="stage_attempts",
         )

@@ -1,7 +1,7 @@
 {
   "version": "0.1.0-draft",
   "legacy_to_scaffold": {
-    "docs/실물기반 사각지대 테스트/few-shot-bank/reference_card_manifest.json": "narrative_ssot/10_reference_bank/reference_card_manifest.mirror.md",
+    "material_ssot/10_research/20_fewshot_bank/reference_card_manifest.json": "narrative_ssot/10_reference_bank/reference_card_manifest.mirror.md",
     "treatments/preprocess/{work_id}/source_manifest.json": "narrative_ssot/50_projects/{work_id}/20_preprocess/source_manifest.json",
     "treatments/{work_id}_phase0_design.json": "narrative_ssot/50_projects/{work_id}/30_planning/phase0_design.json",
     "treatments/{work_id}_tr_block_070_draft.json": "narrative_ssot/50_projects/{work_id}/40_production/tr_block_070_draft.json",

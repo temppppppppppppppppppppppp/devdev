@@ -1,4 +1,4 @@
-"""FailureAnalyzer success-pattern and quality-distribution tests."""
+﻿"""FailureAnalyzer success-pattern and quality-distribution tests."""
 
 import json
 
@@ -284,9 +284,9 @@ def test_failure_analyzer_build_sink_alignment_attempt_sets_respects_optional_si
         episode_production={"e": {}},
     )
 
-    assert final_union == {"a", "b"}
+    assert final_union == {"a"}
     assert lifecycle_union == {"c", "e"}
-    assert attempts_considered == {"a", "b", "c", "e"}
+    assert attempts_considered == {"a", "c", "e"}
 
 
 def test_failure_analyzer_collect_sink_alignment_missing_buckets_tracks_final_and_lifecycle_gaps():
@@ -305,7 +305,6 @@ def test_failure_analyzer_collect_sink_alignment_missing_buckets_tracks_final_an
 
     assert final_missing == {
         "stage_attempts": {"count": 1, "examples": ["b"]},
-        "pass_rate_monitor": {"count": 1, "examples": ["a"]},
         "session_decisions": {"count": 1, "examples": ["b"]},
     }
     assert lifecycle_missing == {
@@ -314,7 +313,6 @@ def test_failure_analyzer_collect_sink_alignment_missing_buckets_tracks_final_an
     }
     assert lifecycle_missing_in_final == {
         "stage_attempts": {"count": 2, "examples": ["b", "c"]},
-        "pass_rate_monitor": {"count": 1, "examples": ["c"]},
     }
 
 
@@ -335,6 +333,11 @@ def test_failure_analyzer_build_sink_alignment_summary_payload_marks_warn_and_co
                 "fix_pack_target_kind_mismatches",
                 "fix_pack_patch_targets_mismatches",
                 "retry_budget_axes_mismatches",
+                "repair_contract_subtype_mismatches",
+                "repair_contract_provenance_mismatches",
+                "scope_authority_fix_scope_mismatches",
+                "scope_authority_authoritative_fix_scope_mismatches",
+                "scope_authority_widened_mismatches",
                 "patch_strategy_mismatches",
                 "candidate_key_mismatches",
                 "selection_candidate_key_mismatches",
@@ -691,6 +694,16 @@ def test_failure_analyzer_sink_alignment_summary_tracks_gate_repair_contract_fie
                 "gate_basis": "bounded_local_repair",
                 "repair_scope": "inplace",
             },
+            "repair_contract": {
+                "subtype": "opening_spatial_continuity",
+                "provenance": "runtime_synthesized",
+            },
+            "scope_authority": {
+                "fix_scope": "local",
+                "authoritative_fix_scope": "inplace",
+                "scope_origin": "director_authored",
+                "widened": False,
+            },
             "fix_pack": {
                 "target_kind": "entity_ref",
                 "patch_targets": ["opening_location_name", "ending_location_name"],
@@ -748,6 +761,16 @@ def test_failure_analyzer_sink_alignment_summary_tracks_gate_repair_contract_fie
                             "director_verdict": "REJECT",
                             "gate_basis": "scene_rewrite",
                             "repair_scope": "full",
+                            "repair_contract": {
+                                "subtype": "scene_transition_conflict",
+                                "provenance": "director_authored",
+                            },
+                            "scope_authority": {
+                                "fix_scope": "full",
+                                "authoritative_fix_scope": "scene_rewrite",
+                                "scope_origin": "runtime_widened",
+                                "widened": True,
+                            },
                             "fix_pack": {
                                 "target_kind": "scene_model",
                                 "patch_targets": ["scene_model"],
@@ -789,10 +812,23 @@ def test_failure_analyzer_sink_alignment_summary_tracks_gate_repair_contract_fie
         assert any(item["attempt_key"] == mismatch_key for item in result["fix_pack_target_kind_mismatches"])
         assert any(item["attempt_key"] == mismatch_key for item in result["fix_pack_patch_targets_mismatches"])
         assert any(item["attempt_key"] == mismatch_key for item in result["retry_budget_axes_mismatches"])
+        assert any(item["attempt_key"] == mismatch_key for item in result["repair_contract_subtype_mismatches"])
+        assert any(item["attempt_key"] == mismatch_key for item in result["repair_contract_provenance_mismatches"])
+        assert any(item["attempt_key"] == mismatch_key for item in result["scope_authority_fix_scope_mismatches"])
+        assert any(
+            item["attempt_key"] == mismatch_key
+            for item in result["scope_authority_authoritative_fix_scope_mismatches"]
+        )
+        assert any(item["attempt_key"] == mismatch_key for item in result["scope_authority_widened_mismatches"])
 
         missing_entries = [item for item in result["gate_repair_metadata_missing"] if item["attempt_key"] == missing_key]
         assert any(item["field"] == "director_verdict" and "pass_rate_monitor" in item["sinks"] for item in missing_entries)
         assert any(item["field"] == "fix_pack_patch_targets" and "pass_rate_monitor" in item["sinks"] for item in missing_entries)
+        assert any(item["field"] == "repair_contract_subtype" and "pass_rate_monitor" in item["sinks"] for item in missing_entries)
+        assert any(
+            item["field"] == "scope_authority_authoritative_fix_scope" and "pass_rate_monitor" in item["sinks"]
+            for item in missing_entries
+        )
         assert not any(item["attempt_key"] == no_meta_key for item in result["gate_repair_metadata_missing"])
     finally:
         db.close()
@@ -1345,8 +1381,8 @@ def test_failure_analyzer_sink_alignment_summary_can_filter_to_latest_session(tm
         unfiltered = analyzer.sink_alignment_summary(stage=4)
         filtered = analyzer.sink_alignment_summary(stage=4, session_id="new_sess")
 
-        assert unfiltered["status"] == "warn"
-        assert unfiltered["final_sink_missing"]["pass_rate_monitor"]["count"] == 1
+        assert unfiltered["status"] == "ok"
+        assert unfiltered["final_sink_missing"] == {}
         assert filtered["status"] == "ok"
         assert filtered["session_filter"] == "new_sess"
         assert filtered["attempts_considered"] == 1
@@ -1354,6 +1390,290 @@ def test_failure_analyzer_sink_alignment_summary_can_filter_to_latest_session(tm
         assert filtered["coverage"]["pass_rate_monitor"] == 1
         assert filtered["coverage"]["director_selections"] == 1
         assert filtered["coverage"]["episode_production"] == 1
+    finally:
+        db.close()
+
+
+def test_sink_alignment_ignores_lifecycle_only_episode_production_rows_for_final_score_and_artifact_checks(tmp_path):
+    db = DBManager(tmp_path / "test_stage4_pathology_alignment.db")
+    try:
+        attempt_key = "s4:ep81:arc1:a1:sess_path"
+        artifact_path = "logs/artifacts/stage4/ep_0081/attempt_01/rejected_best__C_balanced.txt"
+        artifact_file = tmp_path / artifact_path
+        artifact_file.parent.mkdir(parents=True, exist_ok=True)
+        artifact_file.write_text("artifact", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="REJECT",
+            attempt_num=1,
+            ep_num=81,
+            arc_num=1,
+            score=44,
+            session_id="sess_path",
+            attempt_key=attempt_key,
+            candidate_key="C|balanced",
+            content_hash="hash-path",
+            artifact_path=artifact_path,
+            selection_reason="selection",
+            verdict_reason="reject",
+        )
+        db.save_director_selection(
+            ep_num=81,
+            round_num=1,
+            selected_label="C",
+            selected_strategy="balanced",
+            verdict="REJECT",
+            stage=4,
+            score=44,
+            attempt_key=attempt_key,
+            candidate_key="C|균형 전략",
+            content_hash="hash-path",
+            artifact_path="logs/artifacts/stage4/ep_0081/attempt_01/rejected_best__C.txt",
+            selection_reason="selection",
+            verdict_reason="reject",
+        )
+
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        (logs_dir / "episode_production.jsonl").write_text(
+            json.dumps(
+                {
+                    "event": "STAGE4_RETRY_PATHOLOGY",
+                    "ep": 81,
+                    "attempt_key": attempt_key,
+                    "result": "REJECT",
+                    "score": 99,
+                    "candidate_key": "C|balanced",
+                    "content_hash": "hash-path",
+                    "artifact_path": "",
+                    "selection_candidate_key": "C|balanced",
+                    "repair_contract": {"subtype": "수치"},
+                },
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer.sink_alignment_summary(stage=4, session_id="sess_path")
+
+        assert result["coverage"]["episode_production"] == 1
+        assert result["final_score_mismatches"] == []
+        assert result["artifact_metadata_missing"] == []
+        assert result["selection_candidate_key_mismatches"] == []
+    finally:
+        db.close()
+
+
+def test_sink_alignment_prefers_authoritative_episode_production_row_over_lifecycle_only_duplicate(tmp_path):
+    db = DBManager(tmp_path / "test_stage4_pathology_prefer_authoritative.db")
+    try:
+        attempt_key = "s4:ep82:arc1:a1:sess_path"
+        artifact_path = "logs/artifacts/stage4/ep_0082/attempt_01/rejected_best__C_balanced.txt"
+        artifact_file = tmp_path / artifact_path
+        artifact_file.parent.mkdir(parents=True, exist_ok=True)
+        artifact_file.write_text("artifact", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="REJECT",
+            attempt_num=1,
+            ep_num=82,
+            arc_num=1,
+            score=44,
+            session_id="sess_path",
+            attempt_key=attempt_key,
+            candidate_key="C|balanced",
+            content_hash="hash-path",
+            artifact_path=artifact_path,
+            selection_reason="selection",
+            verdict_reason="reject",
+            advisory_flags={
+                "gate_semantics": {
+                    "director_verdict": "REJECT",
+                    "gate_basis": "continuity_firewall",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "scope_origin": {
+                        "fix_scope": "director_authoritative",
+                        "authoritative_fix_scope": "director_authoritative",
+                        "repair_scope": "runtime_lane",
+                    },
+                },
+                "repair_contract": {
+                    "subtype": "수치",
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                },
+                "scope_authority": {
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": False,
+                },
+                "retry_budget_axes": {"repair": "rewrite_regenerate"},
+            },
+        )
+        db.save_director_selection(
+            ep_num=82,
+            round_num=1,
+            selected_label="C",
+            selected_strategy="balanced",
+            verdict="REJECT",
+            stage=4,
+            score=44,
+            attempt_key=attempt_key,
+            candidate_key="C|balanced",
+            content_hash="hash-path",
+            artifact_path="logs/artifacts/stage4/ep_0082/attempt_01/rejected_best__C.txt",
+            selection_reason="selection",
+            verdict_reason="reject",
+        )
+
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        authoritative_row = {
+            "ep": 82,
+            "attempt_key": attempt_key,
+            "verdict": "REJECT",
+            "initial_verdict": "REJECT",
+            "final_verdict": "REJECT",
+            "score": 44,
+            "director_verdict": "REJECT",
+            "gate_basis": "continuity_firewall",
+            "repair_scope": "inplace",
+            "fix_scope": "inplace",
+            "authoritative_fix_scope": "inplace",
+            "candidate_key": "C|balanced",
+            "content_hash": "hash-path",
+            "artifact_path": artifact_path,
+            "selection_candidate_key": "C|balanced",
+            "selection_reason": "selection",
+            "verdict_reason": "reject",
+            "repair_contract": {"subtype": "수치", "fix_scope": "inplace"},
+            "scope_authority": {
+                "fix_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+                "widened": False,
+            },
+            "flags": {"retry_budget_axes": {"repair": "rewrite_regenerate"}},
+            "patch_trace": {},
+        }
+        pathology_row = {
+            "event": "STAGE4_RETRY_PATHOLOGY",
+            "ep": 82,
+            "attempt_key": attempt_key,
+            "result": "REJECT",
+            "score": 99,
+            "candidate_key": "C|balanced",
+            "content_hash": "hash-path",
+            "artifact_path": "",
+            "selection_candidate_key": "C|balanced",
+            "repair_contract": {"subtype": "수치"},
+        }
+        (logs_dir / "episode_production.jsonl").write_text(
+            json.dumps(authoritative_row, ensure_ascii=False) + "\n" + json.dumps(pathology_row, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer.sink_alignment_summary(stage=4, session_id="sess_path")
+
+        assert result["coverage"]["episode_production"] == 1
+        missing_entries = [item for item in result["gate_repair_metadata_missing"] if item["attempt_key"] == attempt_key]
+        assert not any("episode_production" in item["sinks"] for item in missing_entries)
+        assert result["repair_contract_subtype_mismatches"] == []
+        assert result["scope_authority_authoritative_fix_scope_mismatches"] == []
+    finally:
+        db.close()
+
+
+def test_sink_alignment_backfills_stage_attempt_repair_contract_from_nested_gate_semantics(tmp_path):
+    db = DBManager(tmp_path / "test_stage4_nested_gate_repair_backfill.db")
+    try:
+        attempt_key = "s4:ep83:arc1:a1:sess_nested"
+        artifact_path = "logs/artifacts/stage4/ep_0083/attempt_01/rejected_best__A_balanced.txt"
+        artifact_file = tmp_path / artifact_path
+        artifact_file.parent.mkdir(parents=True, exist_ok=True)
+        artifact_file.write_text("artifact", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="REJECT",
+            attempt_num=1,
+            ep_num=83,
+            arc_num=1,
+            score=52,
+            session_id="sess_nested",
+            attempt_key=attempt_key,
+            candidate_key="A|balanced",
+            content_hash="hash-nested",
+            artifact_path=artifact_path,
+            selection_reason="selection",
+            verdict_reason="reject",
+            advisory_flags={
+                "gate_semantics": {
+                    "director_verdict": "REJECT",
+                    "gate_basis": "continuity_firewall",
+                    "repair_scope": "inplace",
+                    "repair_contract": {"subtype": "수치", "provenance": "gate_semantics"},
+                    "scope_authority": {
+                        "fix_scope": "inplace",
+                        "authoritative_fix_scope": "inplace",
+                        "widened": False,
+                    },
+                },
+                "repair_contract": {"fix_scope": "inplace"},
+                "scope_authority": {"fix_scope": "inplace"},
+            },
+        )
+
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        authoritative_row = {
+            "ep": 83,
+            "attempt_key": attempt_key,
+            "verdict": "REJECT",
+            "initial_verdict": "REJECT",
+            "final_verdict": "REJECT",
+            "score": 52,
+            "director_verdict": "REJECT",
+            "gate_basis": "continuity_firewall",
+            "repair_scope": "inplace",
+            "candidate_key": "A|balanced",
+            "content_hash": "hash-nested",
+            "artifact_path": artifact_path,
+            "selection_candidate_key": "A|balanced",
+            "selection_reason": "selection",
+            "verdict_reason": "reject",
+            "repair_contract": {"subtype": "수치", "provenance": "gate_semantics", "fix_scope": "inplace"},
+            "scope_authority": {
+                "fix_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+                "widened": False,
+            },
+            "patch_trace": {},
+        }
+        (logs_dir / "episode_production.jsonl").write_text(
+            json.dumps(authoritative_row, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer.sink_alignment_summary(stage=4, session_id="sess_nested")
+
+        missing_entries = [item for item in result["gate_repair_metadata_missing"] if item["attempt_key"] == attempt_key]
+        assert not any(
+            item["field"] == "repair_contract_subtype" and "stage_attempts" in item["sinks"] for item in missing_entries
+        )
+        assert not any(
+            item["field"] == "repair_contract_provenance" and "stage_attempts" in item["sinks"] for item in missing_entries
+        )
+        assert result["repair_contract_subtype_mismatches"] == []
+        assert result["repair_contract_provenance_mismatches"] == []
     finally:
         db.close()
 

@@ -20,7 +20,13 @@ SCRIPTS_DIR = ROOT / "scripts"
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
-from modules.core.response_schemas import validate_bible_structure, validate_treatment_structure
+from modules.core.response_schemas import (
+    validate_bible_canonical_structure,
+    validate_bible_structure,
+    validate_treatment_canonical_structure,
+    validate_treatment_structure,
+)
+from modules.core.stage0_handoff import normalize_bible_to_canonical_view, normalize_treatment_to_canonical_view
 from wuxia_tr_batch_harness import compute_treatment_metrics
 
 GARBLED_RE = re.compile(r"\?{3,}|\ufffd")
@@ -56,6 +62,14 @@ def load_json(path: Path) -> Any:
 
 def stable_hash(value: Any) -> str:
     return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def preview_messages(messages: list[str], *, limit: int = 3) -> str:
+    if not messages:
+        return ""
+    preview = messages[:limit]
+    suffix = f" ... (+{len(messages) - limit} more)" if len(messages) > limit else ""
+    return " | ".join(preview) + suffix
 
 
 def as_text(value: Any) -> str:
@@ -147,6 +161,7 @@ def report_lines(
     draft_path: Path,
     bi_path: Path,
     phase0: dict[str, Any],
+    draft_raw: Any,
     draft: list[dict[str, Any]],
     bi: dict[str, Any],
     draft_valid: bool,
@@ -184,6 +199,20 @@ def report_lines(
         expected_reputation = as_text(rep_raw)
     expected_enemy_pressure = as_text(ext_data.get("enemy_pressure"))
     block_meta_leaks = find_block_meta_leaks(master)
+    draft_canonical_valid, draft_canonical_errors, draft_canonical_warnings = validate_treatment_canonical_structure(draft_raw)
+    bi_canonical_valid, bi_canonical_errors, bi_canonical_warnings = validate_bible_canonical_structure(bi)
+    normalized_draft, draft_normalization_warnings = normalize_treatment_to_canonical_view(draft_raw)
+    normalized_bi, bi_normalization_warnings = normalize_bible_to_canonical_view(bi, treatment=draft_raw)
+    (
+        normalized_draft_canonical_valid,
+        normalized_draft_canonical_errors,
+        normalized_draft_canonical_warnings,
+    ) = validate_treatment_canonical_structure(normalized_draft)
+    (
+        normalized_bi_canonical_valid,
+        normalized_bi_canonical_errors,
+        normalized_bi_canonical_warnings,
+    ) = validate_bible_canonical_structure(normalized_bi)
 
     serialized = json.dumps(bi, ensure_ascii=False)
     title_seq_match = [block["title"] for block in roadmap] == [block["title"] for block in draft]
@@ -270,6 +299,42 @@ def report_lines(
         f"- bi: `{bi_path.as_posix()}`",
         "",
     ]
+    lines.append("## Canonical Contract")
+    lines.append(f"- raw_bi_canonical_contract: {'PASS' if bi_canonical_valid else 'FAIL'}")
+    lines.append(f"- raw_tr_canonical_contract: {'PASS' if draft_canonical_valid else 'FAIL'}")
+    lines.append(
+        f"- raw_pair_canonical_contract: {'PASS' if (bi_canonical_valid and draft_canonical_valid) else 'FAIL'}"
+    )
+    lines.append(f"- normalized_bi_canonical_view: {'PASS' if normalized_bi_canonical_valid else 'FAIL'}")
+    lines.append(f"- normalized_tr_canonical_view: {'PASS' if normalized_draft_canonical_valid else 'FAIL'}")
+    lines.append(
+        f"- normalized_pair_canonical_view: {'PASS' if (normalized_bi_canonical_valid and normalized_draft_canonical_valid) else 'FAIL'}"
+    )
+    if bi_canonical_errors:
+        lines.append(f"- raw_bi_canonical_errors[{len(bi_canonical_errors)}]: {preview_messages(bi_canonical_errors)}")
+    if draft_canonical_errors:
+        lines.append(
+            f"- raw_tr_canonical_errors[{len(draft_canonical_errors)}]: {preview_messages(draft_canonical_errors)}"
+        )
+    if bi_normalization_warnings:
+        lines.append(
+            f"- bi_normalization_warnings[{len(bi_normalization_warnings)}]: {preview_messages(bi_normalization_warnings)}"
+        )
+    if draft_normalization_warnings:
+        lines.append(
+            f"- tr_normalization_warnings[{len(draft_normalization_warnings)}]: {preview_messages(draft_normalization_warnings)}"
+        )
+    if normalized_bi_canonical_errors:
+        lines.append(
+            f"- normalized_bi_canonical_errors[{len(normalized_bi_canonical_errors)}]: "
+            f"{preview_messages(normalized_bi_canonical_errors)}"
+        )
+    if normalized_draft_canonical_errors:
+        lines.append(
+            f"- normalized_tr_canonical_errors[{len(normalized_draft_canonical_errors)}]: "
+            f"{preview_messages(normalized_draft_canonical_errors)}"
+        )
+    lines.append("")
     for pass_name, label, checks in passes:
         ok = all(checks.values())
         if not ok:
@@ -293,6 +358,14 @@ def report_lines(
         lines.append(f"- bi_errors: {bi_errors}")
     if bi_warnings:
         lines.append(f"- bi_warnings: {bi_warnings}")
+    if draft_canonical_warnings:
+        lines.append(f"- draft_canonical_warnings: {draft_canonical_warnings}")
+    if bi_canonical_warnings:
+        lines.append(f"- bi_canonical_warnings: {bi_canonical_warnings}")
+    if normalized_draft_canonical_warnings:
+        lines.append(f"- normalized_draft_canonical_warnings: {normalized_draft_canonical_warnings}")
+    if normalized_bi_canonical_warnings:
+        lines.append(f"- normalized_bi_canonical_warnings: {normalized_bi_canonical_warnings}")
     lines.append(f"- key_npcs_seen: {[entry['name'] for entry in key_npcs[:5]]}")
     lines.append(f"- treasures_count: {len(treasures)}")
     lines.append(f"- seeds_count: {len(seeds)}")
@@ -332,6 +405,7 @@ def main() -> int:
         draft_path=args.draft,
         bi_path=args.bi,
         phase0=phase0,
+        draft_raw=draft_raw,
         draft=draft,
         bi=bi,
         draft_valid=draft_valid,

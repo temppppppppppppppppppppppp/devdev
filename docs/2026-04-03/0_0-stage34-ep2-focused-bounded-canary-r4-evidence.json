@@ -1,0 +1,131 @@
+{
+  "canary_id": "canary_0_0_stage34_ep2_focus_r4",
+  "order_type": "ep2-focused bounded Stage34 canary r4",
+  "date": "2026-04-03",
+  "source_project": "0_0",
+  "target_project": "canary_0_0_stage34_ep2_focus_r4",
+  "frozen_authority_ep": 1,
+  "regen_blueprint_ep": 2,
+  "regen_draft_ep": 2,
+
+  "timeline": {
+    "prepare_start": "2026-04-03T07:53:56",
+    "prepare_complete": "2026-04-03T07:53:56",
+    "run_start": "2026-04-03T07:54:10",
+    "run_kill_by_user": "~2026-04-03T09:35:00",
+    "total_wall_clock_min": 100,
+    "effective_runtime_min": 90,
+    "api_delay_note": "Vertex AI Gemini large-context calls consistently ~10-25min socket blocking"
+  },
+
+  "stage3_result": {
+    "verdict": "PASS",
+    "ep2_blueprint_score": 95,
+    "ep2_blueprint_saved": true,
+    "ep1_blueprint_frozen": true,
+    "v75d_patched": true
+  },
+
+  "stage4_result": {
+    "verdict": "FAILED",
+    "ep2_draft_saved": false,
+    "ep2_draft_file_exists": false,
+    "rounds_completed": 3,
+    "rounds_total_max": 10,
+    "interrupted_at_round": 4,
+    "interrupted_by": "user_kill"
+  },
+
+  "round_detail": [
+    {
+      "round": 1,
+      "mode": "full_ensemble",
+      "candidates": 3,
+      "selected": "C",
+      "score": 44,
+      "initial_verdict": "REJECT",
+      "gate": "continuity_firewall",
+      "final_verdict": "REJECT",
+      "dominant_blocker": "3 candidates all flashback MAJOR",
+      "flashback_major_candidates": ["A", "B", "C"],
+      "logic_error_counted": true
+    },
+    {
+      "round": 2,
+      "mode": "full_rewrite",
+      "candidates": 3,
+      "selected": "B",
+      "score": 92,
+      "initial_verdict": "PASS_WITH_FIX",
+      "gate": "director_primary_pass_with_fix",
+      "post_select_conflict": true,
+      "tf3_downgrade": true,
+      "final_verdict": "REJECT",
+      "dominant_blocker": "TF-3 post-select continuity conflict (Director PASS but post-select REJECT)",
+      "director_fix_instruction": "Scene 1에 '본가 저택 서재 앞 복도' 장소 묘사 추가 + 대화 비율 30% 목표 보강",
+      "logic_error_counted": true
+    },
+    {
+      "round": 3,
+      "mode": "post_v75d_rewrite",
+      "candidates": 3,
+      "selected": "A",
+      "score": 44,
+      "initial_verdict": "REJECT",
+      "gate": "continuity_firewall",
+      "final_verdict": "REJECT",
+      "dominant_blocker": "Flashback MAJOR re-emerged in candidates A/C despite V75-D patch",
+      "flashback_major_candidates": ["A", "C"],
+      "flashback_clean_candidates": ["B"],
+      "tf29_triggered": true,
+      "tf29_reason": "post_select_conflict 3 consecutive"
+    }
+  ],
+
+  "v75d_observation": {
+    "triggered": true,
+    "trigger_condition": "LOGIC_ERROR 2 consecutive (R1 continuity_firewall + R2 TF-3 conflict)",
+    "trigger_timing": "after R2, before R3",
+    "patch_result": "success",
+    "post_patch_convergence": false,
+    "post_patch_round": 3,
+    "post_patch_score": 44,
+    "analysis": "V75-D patches opening location into blueprint but does not prevent flashback scene location/action contradictions"
+  },
+
+  "logic_error_classification": {
+    "observed": true,
+    "subtype": "opening_continuity_conflict",
+    "classified_as": "LOGIC_ERROR",
+    "v75d_trigger_met": true,
+    "note": "quality_issue → logic-like classification confirmed — R1 continuity_firewall + R2 TF-3 conflict both counted as LOGIC_ERROR"
+  },
+
+  "api_performance": {
+    "blueprint_threephase_hang": true,
+    "hang_duration_min": 25,
+    "round_avg_min": 25,
+    "vs_r2_round_avg_min": 7,
+    "degradation_factor": 3.5,
+    "note": "Vertex AI Gemini 2.5 Pro large-context + context-cache calls consistently socket-blocked"
+  },
+
+  "comparison": {
+    "vs_r2": {
+      "v75d_triggered": "NO → YES",
+      "logic_error_classification": "absent → confirmed",
+      "r2_best_score": "98 (R1) → 92 (R2 PASS_WITH_FIX)",
+      "director_pass_achieved": "NO → YES (R2, before TF-3 downgrade)",
+      "convergence": "NO → NO",
+      "api_speed": "normal → severely degraded"
+    },
+    "vs_demo_r2": {
+      "v75d_triggered_round": "R5 → R2",
+      "v75d_faster": true,
+      "post_patch_pass": "YES (R6) → NO (R3 still REJECT)",
+      "note": "V75-D triggered 3 rounds earlier but post-patch convergence not achieved in 1 round"
+    }
+  },
+
+  "confidence": 0.96
+}

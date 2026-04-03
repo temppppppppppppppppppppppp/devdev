@@ -1,32 +1,35 @@
 # 0_0 Stage4 Flashback Continuity LocalFix Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (code landed, static validation closed, runtime proof pending)
+Status: completed (code landed, static validation closed, and later runtime evidence shows the old replay/repetition wording survives only on a failed numeric pathology wrapper rather than the final-pass truth surfaces; this lane no longer fronts the active queue)
 Canonical Path: `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `5ef5f7ab2f2bbd36c2e8168cfd6d9b096caadc0f`
 - Baseline Dirty Summary: `dirty: 0_temp.txt modified, 0_tempdd.tz untracked`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `structured flashback metadata persistence and zero-to-local fix synthesis landed; static validation closed; runtime proof pending`
+- Resume Drift Summary: `structured flashback metadata persistence and zero-to-local fix synthesis landed; static validation closed; fresh full-run proof in projects/00_20260403 now shows ep2 can PASS, later Stage4 sinkproof/closure work closes the final-sink gap, and the merged numeric re-audit demotes replay wording from front-seam interpretation to a failed numeric pathology wrapper`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 - `docs/2026-04-01/0_0-stage4-ep2-advisory-escalation-loop-remediation-execution-ssot.md`
+- `docs/2026-04-03/0_0-stage34-ep2-fresh-run-post-run-merge-audit.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-evidence.json`
+- `docs/2026-04-03/0_0-stage34-ep2-fresh-run-post-run-merge-evidence.json`
 Parent Lane:
 - `0_0-stage4-consumer-contract-normalization-remediation`
 - `0_0-stage2-stage3-stage4-readiness-remediation`
 
 ## 1. Answer First
 
-The current fresh-run ep2 blocker is a bounded Stage4 seam:
+The later merged runtime evidence changed the status of this seam again:
 
-- real flashback continuity contradictions are being detected correctly
-- but Stage4 cannot synthesize a bounded local fix contract from Flashback advisory-only evidence
+- Stage4 can now get `ep2` through a bounded `PASS_WITH_FIX -> inplace patch -> PASS` path
+- the final PASS rows do not carry replay-specific final warnings
+- the remaining replay-style wording survives on a failed round that is typed as `contradiction_type = 수치`
 
-This lane should therefore realize one concrete contract:
+So this lane is no longer the next active blocker. It remains a completed bounded contract:
 
 `Flashback continuity contradiction -> structured metadata -> bounded local fix_pack`
 
@@ -150,12 +153,12 @@ Goal:
 
 ## 8. Temp Queue Notes
 
-- temp status: `partial`
+- temp status: `completed`
 - cleanup condition:
-  - keep the temp mirror while this remains an active child seam under the aggregate Stage4 consumer-contract wave
+  - remove the temp mirror on the next queue cleanup pass once the aggregate Stage4 consumer lane no longer needs it as an active child seam reference
 - roadmap dependency:
-  - this lane should sit directly under `0_0-stage4-consumer-contract-normalization-remediation`
-  - it should outrank the contaminated Stage4-only ep2 interpretation because the fresh full run is higher-authority evidence
+  - this lane now sits as completed runtime-positive substrate under `0_0-stage4-consumer-contract-normalization-remediation`
+  - it no longer outranks the newer numeric asset authority / carryover seam
 
 ## 9. 3-Pass Audit Record
 
@@ -166,8 +169,9 @@ Pass 1, structure and scope:
 
 Pass 2, evidence and consistency:
 
-- runtime watch evidence matches the fix-pack gate failure chain
-- artifact and code references support that this is a real continuity contradiction path
+- runtime watch evidence matches the landed fix-pack gate failure chain
+- artifact and code references support that this was a real continuity contradiction path
+- the later merged runtime evidence shows the surviving replay wording does not sit on the final-pass truth surfaces
 - lineage to the aggregate Stage4 contract wave is explicit
 
 Pass 3, execution and readability:
@@ -175,6 +179,6 @@ Pass 3, execution and readability:
 - tranches are code-owner aligned and bounded
 - operator consequence is clear: structured flashback metadata plus local-fix synthesis
 - focused static validation is closed
-- runtime proof is explicitly deferred
+- runtime proof is now sufficient to demote this lane from active residual blocker to completed runtime-positive substrate
 
 Confidence: `96%`

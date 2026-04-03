@@ -1,14 +1,14 @@
 # 0_0 Stage4 NpcDrift Relation-Tag Semantic LocalFix Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (code landed, static validation closed, runtime proof pending)
+Status: partially_realized (code landed, static validation closed, and bounded runtime positive proof captured; no longer the immediate active Stage4 blocker)
 Canonical Path: `docs/2026-04-02/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: models config changed, active Stage4 docs/tests/code deltas, temp roadmap/queue active, 2026-04-02 survey bundles present`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `relation-tag semantic bridge and zero-to-local fix synthesis landed; runtime proof still pending, but fresh full run elevated flashback continuity as the higher-authority immediate child seam`
+- Resume Drift Summary: `relation-tag semantic bridge and zero-to-local fix synthesis landed; the r2 Stage4-only sinkproof canary captured positive runtime proof and removed NpcDrift as the immediate live blocker, the later analyzer/readback backfill closed the metadata/sink hygiene gap, and the broader consumer wave now narrows to residual replay quality plus patch-trace observability`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-npcdrift-relation-tag-local-fix-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-episode-bounded-canary-runtime-audit.md`
@@ -30,9 +30,9 @@ The next bounded Stage4 lane should target one concrete ep2 blocker:
 - `NpcDriftAdvisor` compares manuscript prose against that compressed expectation without a semantic-expansion bridge
 - when drift escalates, runtime cannot synthesize a fresh local `fix_pack` from advisory-only relation-tag evidence
 
-This is not a Stage2 issue, not a Stage3 issue, and no longer the highest-authority immediate Stage4 blocker after the fresh full run.
+This is not a Stage2 issue, not a Stage3 issue, and no longer the highest-authority immediate Stage4 blocker after the `r2` Stage4-only sinkproof runtime proof.
 
-It is a bounded `Stage4 NpcDrift semantic-equivalence + local-fix contract` lane.
+It remains a bounded `Stage4 NpcDrift semantic-equivalence + local-fix contract` lane, but it now sits as a runtime-positive substrate/reference seam under the broader Stage4 consumer wave rather than the next live blocker.
 
 ## 2. Scope
 
@@ -161,10 +161,11 @@ Goal:
 
 - temp status: `partial`
 - cleanup condition:
-  - keep the temp mirror while this remains an active bounded child lane under the aggregate Stage4 consumer-contract wave
+  - keep the temp mirror while this remains a referenced bounded substrate lane under the aggregate Stage4 consumer-contract wave
 - roadmap dependency:
-  - this lane now sits below `0_0-stage4-flashback-continuity-localfix-remediation` under `0_0-stage4-consumer-contract-normalization-remediation`
-  - it remains a live secondary Stage4 child seam because the contaminated Stage4-only canary still isolated a real bounded NpcDrift contract gap
+  - this lane now sits below the aggregate Stage4 consumer wave as a runtime-positive substrate/reference seam
+  - `r2` Stage4-only sinkproof proved the lane is no longer the immediate live blocker
+  - the next bounded consumer-side follow-up is now replay/repetition plus patch-trace observability in the existing post-select, flashback, and fix-pack family
 
 ## 9. 3-Pass Audit Record
 
@@ -178,11 +179,12 @@ Pass 2, evidence and consistency:
 - runtime canary blocker matches the survey root-cause chain
 - code-path claims align with `world_state`, `post_pass`, `NpcDriftAdvisor`, and Stage4 escalation logic
 - lineage to the aggregate Stage4 contract wave is explicit
+- 2026-04-03 runtime closure update adds positive Stage4-only proof that the seam no longer blocks convergence in the current ep2 canary
 
 Pass 3, execution and readability:
 
 - tranches are subtype-bounded and code-owner aligned
 - operator consequence is clear: semantic bridge plus local-fix synthesis for one subtype
-- runtime proof is explicitly deferred
+- runtime proof is now explicitly captured as bounded positive evidence, while broad Stage4 closure remains deferred
 
 Confidence: `96%`

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 import re
 from typing import Any
+
+RUNTIME_PROTAGONIST_KEYS = ("world_origin", "incarnation_type", "pov", "external_pov_insert_policy")
 
 
 @dataclass
@@ -57,6 +60,76 @@ def resolve_treatment_block_sequence(treatment: Any) -> list[Any] | None:
     return next((blocks for blocks in candidate_lists if blocks), candidate_lists[0])
 
 
+def get_effective_bible_root(bible: Any) -> dict[str, Any]:
+    if not isinstance(bible, dict):
+        return {}
+    master = bible.get("MasterBible")
+    return master if isinstance(master, dict) else bible
+
+
+def _as_text(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value.strip()
+    return str(value).strip()
+
+
+def _normalize_contract_genre(raw_genre: str) -> str:
+    genre = _as_text(raw_genre).lower()
+    if "wuxia" in genre or "무협" in genre:
+        return "wuxia"
+    if "investment" in genre or "투자" in genre or "chaebol" in genre or "재벌" in genre:
+        return "investment"
+    return genre
+
+
+def _extract_contract_genre(bible: Any, *, explicit_hint: str = "") -> str:
+    if explicit_hint:
+        return explicit_hint
+
+    master = get_effective_bible_root(bible)
+    project_data = master.get("ProjectData", {}) if isinstance(master, dict) else {}
+    meta = project_data.get("MetaInfo", {}) if isinstance(project_data, dict) else {}
+    candidates = (
+        bible.get("_genre") if isinstance(bible, dict) else None,
+        meta.get("genre"),
+        meta.get("genre_archetype"),
+        meta.get("subgenre"),
+    )
+    for candidate in candidates:
+        text = _as_text(candidate)
+        if text:
+            return text
+    return ""
+
+
+def _infer_world_origin_and_incarnation(
+    protagonist_config: dict[str, Any],
+    *,
+    genre_hint: str,
+) -> tuple[str, str]:
+    world_origin = _as_text(protagonist_config.get("world_origin"))
+    incarnation_type = _as_text(protagonist_config.get("incarnation_type"))
+    if world_origin and incarnation_type:
+        return world_origin, incarnation_type
+
+    is_regressor = bool(protagonist_config.get("is_regressor"))
+    has_regression_marker = any(
+        protagonist_config.get(key)
+        for key in ("regression_origin", "regression_point", "regression_mechanic")
+    )
+    normalized_genre = _normalize_contract_genre(genre_hint)
+
+    if not world_origin:
+        world_origin = "원시인" if normalized_genre == "wuxia" else "현대인"
+
+    if not incarnation_type:
+        incarnation_type = "회귀자" if (is_regressor or has_regression_marker) else "일반"
+
+    return world_origin, incarnation_type
+
+
 def normalize_treatment_blocks(treatment: Any) -> list[dict[str, Any]]:
     blocks = resolve_treatment_block_sequence(treatment)
     if blocks is None:
@@ -78,9 +151,160 @@ def normalize_treatment_blocks(treatment: Any) -> list[dict[str, Any]]:
     return normalized
 
 
+def normalize_treatment_to_canonical_view(treatment: Any) -> tuple[dict[str, Any], list[str]]:
+    warnings: list[str] = []
+    blocks = normalize_treatment_blocks(treatment)
+
+    canonical: dict[str, Any] = {
+        "_schema": "tr.compat",
+        "_total_blocks": len(blocks),
+        "blocks": blocks,
+    }
+
+    if isinstance(treatment, list):
+        warnings.append("treatment uses raw list wrapper; canonical wrapper should be dict.blocks")
+        return canonical, warnings
+
+    if not isinstance(treatment, dict):
+        warnings.append(f"treatment is not dict/list ({type(treatment).__name__})")
+        return canonical, warnings
+
+    if "blocks" in treatment:
+        source_blocks = treatment.get("blocks")
+        if not isinstance(source_blocks, list):
+            warnings.append("treatment.blocks is not a list")
+    elif "treatments" in treatment:
+        warnings.append("treatment uses legacy treatments wrapper; canonical wrapper should be blocks")
+    else:
+        warnings.append("treatment wrapper missing blocks/treatments list")
+
+    for key, value in treatment.items():
+        if key in {"blocks", "treatments"}:
+            continue
+        canonical[key] = deepcopy(value)
+
+    if "_schema" not in canonical or not isinstance(canonical.get("_schema"), str) or not canonical["_schema"].strip():
+        canonical["_schema"] = "tr.compat"
+    canonical["_total_blocks"] = len(blocks)
+    canonical["blocks"] = blocks
+    return canonical, warnings
+
+
 def build_plot_roadmap_from_treatment(treatment: Any) -> list[dict[str, Any]]:
     """Normalize Stage 0 treatment blocks into the flat roadmap shape Stage 2 reads."""
     return normalize_treatment_blocks(treatment)
+
+
+def repair_runtime_protagonist_contract(
+    payload: dict[str, Any],
+    *,
+    genre_hint: str = "",
+    fallback_pov: str = "",
+    fallback_external_pov_insert_policy: str = "",
+) -> list[str]:
+    warnings: list[str] = []
+    master = get_effective_bible_root(payload)
+    protagonist = master.get("protagonist_config")
+    if protagonist is None or not isinstance(protagonist, dict):
+        master["protagonist_config"] = {}
+        protagonist = master["protagonist_config"]
+        warnings.append("created protagonist_config dict for BI canonicalization")
+
+    contract_genre = _normalize_contract_genre(_extract_contract_genre(payload, explicit_hint=genre_hint))
+    world_origin, incarnation_type = _infer_world_origin_and_incarnation(protagonist, genre_hint=contract_genre)
+    if not protagonist.get("world_origin") and world_origin:
+        protagonist["world_origin"] = world_origin
+        warnings.append(f"filled protagonist_config.world_origin='{world_origin}'")
+    if not protagonist.get("incarnation_type") and incarnation_type:
+        protagonist["incarnation_type"] = incarnation_type
+        warnings.append(f"filled protagonist_config.incarnation_type='{incarnation_type}'")
+
+    pov = _as_text(protagonist.get("pov")) or _as_text(fallback_pov) or "3인칭"
+    if not protagonist.get("pov"):
+        protagonist["pov"] = pov
+        if fallback_pov:
+            warnings.append(f"borrowed protagonist_config.pov fallback '{pov}'")
+        else:
+            warnings.append(f"filled protagonist_config.pov='{pov}'")
+
+    from modules.core.project_support import (
+        default_external_pov_insert_policy,
+        normalize_external_pov_insert_policy,
+    )
+
+    external_policy = (
+        _as_text(protagonist.get("external_pov_insert_policy"))
+        or _as_text(fallback_external_pov_insert_policy)
+    )
+    if not external_policy:
+        external_policy = default_external_pov_insert_policy(pov, genre=contract_genre)
+    external_policy = normalize_external_pov_insert_policy(
+        external_policy,
+        primary_pov=pov,
+        genre=contract_genre,
+    )
+    if not protagonist.get("external_pov_insert_policy"):
+        protagonist["external_pov_insert_policy"] = external_policy
+        if fallback_external_pov_insert_policy:
+            warnings.append("borrowed protagonist_config.external_pov_insert_policy fallback")
+        else:
+            warnings.append(
+                f"filled protagonist_config.external_pov_insert_policy='{external_policy}'"
+            )
+
+    return warnings
+
+
+def repair_bible_plot_roadmap(
+    payload: dict[str, Any],
+    *,
+    treatment: Any | None,
+    force_treatment_roadmap: bool = False,
+) -> list[str]:
+    if treatment is None:
+        return []
+
+    warnings: list[str] = []
+    master = get_effective_bible_root(payload)
+    current = master.get("plot_roadmap")
+    current_warnings = validate_plot_roadmap_entries(current) if current is not None else ["plot_roadmap missing"]
+
+    projected = build_plot_roadmap_from_treatment(treatment)
+    projected_warnings = validate_plot_roadmap_entries(projected)
+    if not projected:
+        return warnings
+
+    should_replace = force_treatment_roadmap
+    if not should_replace:
+        if not isinstance(current, list) or not current:
+            should_replace = True
+        elif current_warnings and len(projected_warnings) < len(current_warnings):
+            should_replace = True
+
+    if should_replace:
+        master["plot_roadmap"] = projected
+        if force_treatment_roadmap:
+            warnings.append("force-replaced plot_roadmap with treatment-projected canonical roadmap")
+        elif current_warnings:
+            warnings.append("replaced weak plot_roadmap with treatment-projected canonical roadmap")
+    return warnings
+
+
+def canonicalize_treatment_payload(
+    treatment: Any,
+    *,
+    schema: str = "tr.v1",
+) -> tuple[dict[str, Any], list[str]]:
+    payload, warnings = normalize_treatment_to_canonical_view(treatment)
+    payload["_schema"] = schema
+    payload["_total_blocks"] = len(payload.get("blocks", [])) if isinstance(payload.get("blocks"), list) else 0
+
+    from modules.core.response_schemas import validate_treatment_canonical_structure
+
+    valid, errors, _canonical_warnings = validate_treatment_canonical_structure(payload)
+    if not valid:
+        raise ValueError(f"canonical TR validation failed: {errors}")
+    return payload, warnings
 
 
 def build_plot_roadmap_from_saved_arcs(app: Any) -> list[dict[str, Any]]:
@@ -174,6 +398,119 @@ def _collect_stage2_payload_fragments(entry: dict[str, Any]) -> list[str]:
         _append_nonempty(parts, key_events)
 
     return parts
+
+
+def normalize_bible_to_canonical_view(
+    bible: Any,
+    *,
+    treatment: Any | None = None,
+) -> tuple[dict[str, Any], list[str]]:
+    warnings: list[str] = []
+
+    if not isinstance(bible, dict):
+        return {"MasterBible": {}}, [f"bible is not a dict ({type(bible).__name__})"]
+
+    top_level_metadata = {key: deepcopy(value) for key, value in bible.items() if isinstance(key, str) and key.startswith("_")}
+    master = bible.get("MasterBible")
+    if isinstance(master, dict):
+        canonical = deepcopy(bible)
+        master_root = canonical["MasterBible"]
+    else:
+        canonical = dict(top_level_metadata)
+        master_root = {key: deepcopy(value) for key, value in bible.items() if not (isinstance(key, str) and key.startswith("_"))}
+        canonical["MasterBible"] = master_root
+        warnings.append("MasterBible wrapper missing; wrapped root into canonical BI view")
+
+    if not isinstance(master_root, dict):
+        canonical["MasterBible"] = {}
+        return canonical, warnings + ["MasterBible is not a dict"]
+
+    project_data = master_root.get("ProjectData")
+    if isinstance(project_data, dict):
+        lifted_protagonist = project_data.get("protagonist_config")
+        if "protagonist_config" not in master_root and isinstance(lifted_protagonist, dict):
+            master_root["protagonist_config"] = deepcopy(lifted_protagonist)
+            warnings.append("lifted ProjectData.protagonist_config into MasterBible.protagonist_config")
+
+    protagonist_config = master_root.get("protagonist_config")
+    if protagonist_config is None:
+        master_root["protagonist_config"] = {}
+        protagonist_config = master_root["protagonist_config"]
+        warnings.append("protagonist_config missing at effective BI root")
+    elif not isinstance(protagonist_config, dict):
+        master_root["protagonist_config"] = {}
+        protagonist_config = master_root["protagonist_config"]
+        warnings.append("protagonist_config is not a dict at effective BI root")
+
+    runtime_missing = [key for key in RUNTIME_PROTAGONIST_KEYS if not protagonist_config.get(key)]
+    if runtime_missing:
+        warnings.append(f"runtime protagonist keys missing: {', '.join(runtime_missing)}")
+
+    root_sidecar = bible.get("plot_roadmap")
+    if "plot_roadmap" not in master_root and isinstance(root_sidecar, list):
+        master_root["plot_roadmap"] = normalize_treatment_blocks(root_sidecar)
+        warnings.append("lifted root-level plot_roadmap into MasterBible.plot_roadmap")
+    elif "plot_roadmap" in master_root:
+        master_root["plot_roadmap"] = normalize_treatment_blocks(master_root.get("plot_roadmap"))
+
+    if "plot_roadmap" not in master_root and treatment is not None:
+        projected = build_plot_roadmap_from_treatment(treatment)
+        if projected:
+            master_root["plot_roadmap"] = projected
+            warnings.append("projected plot_roadmap from treatment into canonical BI view")
+
+    if "plot_roadmap" not in master_root:
+        master_root["plot_roadmap"] = []
+        warnings.append("plot_roadmap missing at effective BI root")
+
+    return canonical, warnings
+
+
+def canonicalize_bible_payload(
+    bible: Any,
+    *,
+    treatment: Any | None = None,
+    force_treatment_roadmap: bool = False,
+    genre_hint: str = "",
+    fallback_pov: str = "",
+    fallback_external_pov_insert_policy: str = "",
+) -> tuple[dict[str, Any], list[str]]:
+    payload, warnings = normalize_bible_to_canonical_view(bible, treatment=treatment)
+    warnings.extend(
+        repair_runtime_protagonist_contract(
+            payload,
+            genre_hint=genre_hint,
+            fallback_pov=fallback_pov,
+            fallback_external_pov_insert_policy=fallback_external_pov_insert_policy,
+        )
+    )
+    warnings.extend(
+        repair_bible_plot_roadmap(
+            payload,
+            treatment=treatment,
+            force_treatment_roadmap=force_treatment_roadmap,
+        )
+    )
+
+    master = payload.get("MasterBible")
+    if isinstance(master, dict):
+        if "plot_roadmap" in payload and isinstance(master.get("plot_roadmap"), list):
+            payload.pop("plot_roadmap", None)
+            warnings.append("removed root-level plot_roadmap sidecar from canonical BI copy")
+
+        project_data = master.get("ProjectData")
+        if isinstance(project_data, dict) and "protagonist_config" in project_data and isinstance(
+            master.get("protagonist_config"), dict
+        ):
+            project_data.pop("protagonist_config", None)
+            warnings.append("removed ProjectData.protagonist_config sidecar from canonical BI copy")
+
+    from modules.core.response_schemas import validate_bible_canonical_structure
+
+    valid, errors, _canonical_warnings = validate_bible_canonical_structure(payload)
+    if not valid:
+        raise ValueError(f"canonical BI validation failed: {errors}")
+    return payload, warnings
 
 
 def validate_plot_roadmap_entries(roadmap: Any) -> list[str]:

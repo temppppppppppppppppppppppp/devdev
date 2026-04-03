@@ -33,7 +33,9 @@
       "regression_point": {
         "return_year": 2006,
         "return_context": "사업/승계 의사결정 직전"
-      }
+      },
+      "pov": "3인칭",
+      "external_pov_insert_policy": "제한적 허용"
     },
     "FinanceHUD": {
       "_description": "투자/경영물 HUD - 자산·영향력·네트워크 추적",
@@ -406,7 +408,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "상속보다 먼저 지출이 몰리는 뒤문을 선점한다."
-        }
+        },
+        "block_no": 1
       },
       {
         "block_id": "Block 2",
@@ -512,7 +515,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "상속보다 먼저 지출이 몰리는 뒤문을 선점한다."
-        }
+        },
+        "block_no": 2
       },
       {
         "block_id": "Block 3",
@@ -618,7 +622,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "상속보다 먼저 지출이 몰리는 뒤문을 선점한다."
-        }
+        },
+        "block_no": 3
       },
       {
         "block_id": "Block 4",
@@ -724,7 +729,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "상속보다 먼저 지출이 몰리는 뒤문을 선점한다."
-        }
+        },
+        "block_no": 4
       },
       {
         "block_id": "Block 5",
@@ -830,7 +836,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "상속보다 먼저 지출이 몰리는 뒤문을 선점한다."
-        }
+        },
+        "block_no": 5
       },
       {
         "block_id": "Block 6",
@@ -938,7 +945,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "상속보다 먼저 지출이 몰리는 뒤문을 선점한다."
-        }
+        },
+        "block_no": 6
       },
       {
         "block_id": "Block 7",
@@ -1046,7 +1054,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "상속보다 먼저 지출이 몰리는 뒤문을 선점한다."
-        }
+        },
+        "block_no": 7
       },
       {
         "block_id": "Block 8",
@@ -1152,7 +1161,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "상속보다 먼저 지출이 몰리는 뒤문을 선점한다."
-        }
+        },
+        "block_no": 8
       },
       {
         "block_id": "Block 9",
@@ -1258,7 +1268,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "상속보다 먼저 지출이 몰리는 뒤문을 선점한다."
-        }
+        },
+        "block_no": 9
       },
       {
         "block_id": "Block 10",
@@ -1366,7 +1377,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "상속보다 먼저 지출이 몰리는 뒤문을 선점한다."
-        }
+        },
+        "block_no": 10
       },
       {
         "block_id": "Block 11",
@@ -1472,7 +1484,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "화려한 객실이 아니라 뒤편 운영실에서 매일 새는 돈을 묶는다."
-        }
+        },
+        "block_no": 11
       },
       {
         "block_id": "Block 12",
@@ -1580,7 +1593,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "화려한 객실이 아니라 뒤편 운영실에서 매일 새는 돈을 묶는다."
-        }
+        },
+        "block_no": 12
       },
       {
         "block_id": "Block 13",
@@ -1686,7 +1700,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "화려한 객실이 아니라 뒤편 운영실에서 매일 새는 돈을 묶는다."
-        }
+        },
+        "block_no": 13
       },
       {
         "block_id": "Block 14",
@@ -1792,7 +1807,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "화려한 객실이 아니라 뒤편 운영실에서 매일 새는 돈을 묶는다."
-        }
+        },
+        "block_no": 14
       },
       {
         "block_id": "Block 15",
@@ -1898,7 +1914,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "화려한 객실이 아니라 뒤편 운영실에서 매일 새는 돈을 묶는다."
-        }
+        },
+        "block_no": 15
       },
       {
         "block_id": "Block 16",
@@ -2004,7 +2021,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "화려한 객실이 아니라 뒤편 운영실에서 매일 새는 돈을 묶는다."
-        }
+        },
+        "block_no": 16
       },
       {
         "block_id": "Block 17",
@@ -2110,7 +2128,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "화려한 객실이 아니라 뒤편 운영실에서 매일 새는 돈을 묶는다."
-        }
+        },
+        "block_no": 17
       },
       {
         "block_id": "Block 18",
@@ -2218,7 +2237,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "화려한 객실이 아니라 뒤편 운영실에서 매일 새는 돈을 묶는다."
-        }
+        },
+        "block_no": 18
       },
       {
         "block_id": "Block 19",
@@ -2324,7 +2344,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "화려한 객실이 아니라 뒤편 운영실에서 매일 새는 돈을 묶는다."
-        }
+        },
+        "block_no": 19
       },
       {
         "block_id": "Block 20",
@@ -2430,7 +2451,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "화려한 객실이 아니라 뒤편 운영실에서 매일 새는 돈을 묶는다."
-        }
+        },
+        "block_no": 20
       },
       {
         "block_id": "Block 21",
@@ -2536,7 +2558,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "밥과 쓰레기를 잡으면 생산라인의 숨통을 쥔다."
-        }
+        },
+        "block_no": 21
       },
       {
         "block_id": "Block 22",
@@ -2642,7 +2665,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "밥과 쓰레기를 잡으면 생산라인의 숨통을 쥔다."
-        }
+        },
+        "block_no": 22
       },
       {
         "block_id": "Block 23",
@@ -2748,7 +2772,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "밥과 쓰레기를 잡으면 생산라인의 숨통을 쥔다."
-        }
+        },
+        "block_no": 23
       },
       {
         "block_id": "Block 24",
@@ -2854,7 +2879,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "밥과 쓰레기를 잡으면 생산라인의 숨통을 쥔다."
-        }
+        },
+        "block_no": 24
       },
       {
         "block_id": "Block 25",
@@ -2960,7 +2986,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "밥과 쓰레기를 잡으면 생산라인의 숨통을 쥔다."
-        }
+        },
+        "block_no": 25
       },
       {
         "block_id": "Block 26",
@@ -3066,7 +3093,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "밥과 쓰레기를 잡으면 생산라인의 숨통을 쥔다."
-        }
+        },
+        "block_no": 26
       },
       {
         "block_id": "Block 27",
@@ -3172,7 +3200,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "밥과 쓰레기를 잡으면 생산라인의 숨통을 쥔다."
-        }
+        },
+        "block_no": 27
       },
       {
         "block_id": "Block 28",
@@ -3280,7 +3309,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "밥과 쓰레기를 잡으면 생산라인의 숨통을 쥔다."
-        }
+        },
+        "block_no": 28
       },
       {
         "block_id": "Block 29",
@@ -3386,7 +3416,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "밥과 쓰레기를 잡으면 생산라인의 숨통을 쥔다."
-        }
+        },
+        "block_no": 29
       },
       {
         "block_id": "Block 30",
@@ -3494,7 +3525,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "밥과 쓰레기를 잡으면 생산라인의 숨통을 쥔다."
-        }
+        },
+        "block_no": 30
       },
       {
         "block_id": "Block 31",
@@ -3600,7 +3632,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "위기일수록 화려한 본관보다 뒤편 필수 동선을 먼저 잡는다."
-        }
+        },
+        "block_no": 31
       },
       {
         "block_id": "Block 32",
@@ -3706,7 +3739,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "위기일수록 화려한 본관보다 뒤편 필수 동선을 먼저 잡는다."
-        }
+        },
+        "block_no": 32
       },
       {
         "block_id": "Block 33",
@@ -3812,7 +3846,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "위기일수록 화려한 본관보다 뒤편 필수 동선을 먼저 잡는다."
-        }
+        },
+        "block_no": 33
       },
       {
         "block_id": "Block 34",
@@ -3918,7 +3953,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "위기일수록 화려한 본관보다 뒤편 필수 동선을 먼저 잡는다."
-        }
+        },
+        "block_no": 34
       },
       {
         "block_id": "Block 35",
@@ -4024,7 +4060,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "위기일수록 화려한 본관보다 뒤편 필수 동선을 먼저 잡는다."
-        }
+        },
+        "block_no": 35
       },
       {
         "block_id": "Block 36",
@@ -4130,7 +4167,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "위기일수록 화려한 본관보다 뒤편 필수 동선을 먼저 잡는다."
-        }
+        },
+        "block_no": 36
       },
       {
         "block_id": "Block 37",
@@ -4236,7 +4274,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "위기일수록 화려한 본관보다 뒤편 필수 동선을 먼저 잡는다."
-        }
+        },
+        "block_no": 37
       },
       {
         "block_id": "Block 38",
@@ -4342,7 +4381,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "위기일수록 화려한 본관보다 뒤편 필수 동선을 먼저 잡는다."
-        }
+        },
+        "block_no": 38
       },
       {
         "block_id": "Block 39",
@@ -4450,7 +4490,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "위기일수록 화려한 본관보다 뒤편 필수 동선을 먼저 잡는다."
-        }
+        },
+        "block_no": 39
       },
       {
         "block_id": "Block 40",
@@ -4558,7 +4599,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "위기일수록 화려한 본관보다 뒤편 필수 동선을 먼저 잡는다."
-        }
+        },
+        "block_no": 40
       },
       {
         "block_id": "Block 41",
@@ -4664,7 +4706,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "사람이 일하기 전에 돈이 찍히는 표를 먼저 장악한다."
-        }
+        },
+        "block_no": 41
       },
       {
         "block_id": "Block 42",
@@ -4770,7 +4813,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "사람이 일하기 전에 돈이 찍히는 표를 먼저 장악한다."
-        }
+        },
+        "block_no": 42
       },
       {
         "block_id": "Block 43",
@@ -4876,7 +4920,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "사람이 일하기 전에 돈이 찍히는 표를 먼저 장악한다."
-        }
+        },
+        "block_no": 43
       },
       {
         "block_id": "Block 44",
@@ -4982,7 +5027,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "사람이 일하기 전에 돈이 찍히는 표를 먼저 장악한다."
-        }
+        },
+        "block_no": 44
       },
       {
         "block_id": "Block 45",
@@ -5088,7 +5134,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "사람이 일하기 전에 돈이 찍히는 표를 먼저 장악한다."
-        }
+        },
+        "block_no": 45
       },
       {
         "block_id": "Block 46",
@@ -5196,7 +5243,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "사람이 일하기 전에 돈이 찍히는 표를 먼저 장악한다."
-        }
+        },
+        "block_no": 46
       },
       {
         "block_id": "Block 47",
@@ -5304,7 +5352,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "사람이 일하기 전에 돈이 찍히는 표를 먼저 장악한다."
-        }
+        },
+        "block_no": 47
       },
       {
         "block_id": "Block 48",
@@ -5410,7 +5459,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "사람이 일하기 전에 돈이 찍히는 표를 먼저 장악한다."
-        }
+        },
+        "block_no": 48
       },
       {
         "block_id": "Block 49",
@@ -5516,7 +5566,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "사람이 일하기 전에 돈이 찍히는 표를 먼저 장악한다."
-        }
+        },
+        "block_no": 49
       },
       {
         "block_id": "Block 50",
@@ -5622,7 +5673,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "사람이 일하기 전에 돈이 찍히는 표를 먼저 장악한다."
-        }
+        },
+        "block_no": 50
       },
       {
         "block_id": "Block 51",
@@ -5728,7 +5780,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "지분을 사기 전에 먼저 월말 운전자금을 빌려준다."
-        }
+        },
+        "block_no": 51
       },
       {
         "block_id": "Block 52",
@@ -5834,7 +5887,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "지분을 사기 전에 먼저 월말 운전자금을 빌려준다."
-        }
+        },
+        "block_no": 52
       },
       {
         "block_id": "Block 53",
@@ -5940,7 +5994,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "지분을 사기 전에 먼저 월말 운전자금을 빌려준다."
-        }
+        },
+        "block_no": 53
       },
       {
         "block_id": "Block 54",
@@ -6046,7 +6101,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "지분을 사기 전에 먼저 월말 운전자금을 빌려준다."
-        }
+        },
+        "block_no": 54
       },
       {
         "block_id": "Block 55",
@@ -6152,7 +6208,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "지분을 사기 전에 먼저 월말 운전자금을 빌려준다."
-        }
+        },
+        "block_no": 55
       },
       {
         "block_id": "Block 56",
@@ -6260,7 +6317,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "지분을 사기 전에 먼저 월말 운전자금을 빌려준다."
-        }
+        },
+        "block_no": 56
       },
       {
         "block_id": "Block 57",
@@ -6366,7 +6424,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "지분을 사기 전에 먼저 월말 운전자금을 빌려준다."
-        }
+        },
+        "block_no": 57
       },
       {
         "block_id": "Block 58",
@@ -6472,7 +6531,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "지분을 사기 전에 먼저 월말 운전자금을 빌려준다."
-        }
+        },
+        "block_no": 58
       },
       {
         "block_id": "Block 59",
@@ -6578,7 +6638,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "지분을 사기 전에 먼저 월말 운전자금을 빌려준다."
-        }
+        },
+        "block_no": 59
       },
       {
         "block_id": "Block 60",
@@ -6684,7 +6745,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "지분을 사기 전에 먼저 월말 운전자금을 빌려준다."
-        }
+        },
+        "block_no": 60
       },
       {
         "block_id": "Block 61",
@@ -6790,7 +6852,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "주식을 빼앗기기 전에 먼저 숨통을 쥔다."
-        }
+        },
+        "block_no": 61
       },
       {
         "block_id": "Block 62",
@@ -6896,7 +6959,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "주식을 빼앗기기 전에 먼저 숨통을 쥔다."
-        }
+        },
+        "block_no": 62
       },
       {
         "block_id": "Block 63",
@@ -7004,7 +7068,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "주식을 빼앗기기 전에 먼저 숨통을 쥔다."
-        }
+        },
+        "block_no": 63
       },
       {
         "block_id": "Block 64",
@@ -7110,7 +7175,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "주식을 빼앗기기 전에 먼저 숨통을 쥔다."
-        }
+        },
+        "block_no": 64
       },
       {
         "block_id": "Block 65",
@@ -7216,7 +7282,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "주식을 빼앗기기 전에 먼저 숨통을 쥔다."
-        }
+        },
+        "block_no": 65
       },
       {
         "block_id": "Block 66",
@@ -7324,7 +7391,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "주식을 빼앗기기 전에 먼저 숨통을 쥔다."
-        }
+        },
+        "block_no": 66
       },
       {
         "block_id": "Block 67",
@@ -7432,7 +7500,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "주식을 빼앗기기 전에 먼저 숨통을 쥔다."
-        }
+        },
+        "block_no": 67
       },
       {
         "block_id": "Block 68",
@@ -7538,7 +7607,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "주식을 빼앗기기 전에 먼저 숨통을 쥔다."
-        }
+        },
+        "block_no": 68
       },
       {
         "block_id": "Block 69",
@@ -7644,7 +7714,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "주식을 빼앗기기 전에 먼저 숨통을 쥔다."
-        }
+        },
+        "block_no": 69
       },
       {
         "block_id": "Block 70",
@@ -7752,7 +7823,8 @@
           "single_heir_policy": "서른 살 전 순자산 100억 미달 시 상속 박탈",
           "incarnation_type": "회귀자",
           "execution_doctrine": "주식을 빼앗기기 전에 먼저 숨통을 쥔다."
-        }
+        },
+        "block_no": 70
       }
     ]
   }

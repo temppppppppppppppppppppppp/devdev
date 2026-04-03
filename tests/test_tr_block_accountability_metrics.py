@@ -369,6 +369,8 @@ def test_audit_bi_5pass_blocks_bi_handoff_when_source_tr_gate_fails(monkeypatch,
     report_text = report_path.read_text(encoding="utf-8")
 
     assert exit_code == 1
+    assert "- raw_pair_canonical_contract: FAIL" in report_text
+    assert "- normalized_pair_canonical_view: FAIL" in report_text
     assert "- source_tr_density_gate: FAIL" in report_text
     assert "- source_tr_callback_gate: FAIL" in report_text
     assert "- source_tr_section_rotation_gate: FAIL" in report_text

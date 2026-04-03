@@ -23,11 +23,14 @@ except ImportError:
     _NP_AVAILABLE = False
 
 try:
-    from google import genai
+    import google.genai  # noqa: F401
 
     _GENAI_AVAILABLE = True
 except ImportError:
     _GENAI_AVAILABLE = False
+
+from modules.core.google_client_factory import build_google_genai_client, resolve_google_provider_mode
+from modules.core.provider_mode import VERTEX_AI_MODE
 
 
 def _cosine_similarity(a: list, b: list) -> float:
@@ -57,7 +60,9 @@ class SemanticPlotGuard:
     EMBED_MODEL = "gemini-embedding-001"
 
     def __init__(self, api_key: str = ""):
-        self._api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
+        provider_mode = resolve_google_provider_mode()
+        default_api_key = "" if provider_mode == VERTEX_AI_MODE else os.getenv("GOOGLE_API_KEY", "")
+        self._api_key = api_key or default_api_key
         self._client = None
         self._resolved_embeddings: list[dict] = []  # [{"plot": str, "embedding": list}]
         self._resolved_keywords: list[dict] = []  # [C-1] 키워드 폴백 저장소
@@ -71,12 +76,18 @@ class SemanticPlotGuard:
 
     def _try_init_client(self) -> None:
         """[V64.P4-fix] Client 초기화 시도 (실패해도 다음 사용 시 재시도)"""
-        if self._client or not _GENAI_AVAILABLE or not self._api_key:
+        provider_mode = resolve_google_provider_mode()
+        if self._client or not _GENAI_AVAILABLE:
+            return
+        if not self._api_key and provider_mode != VERTEX_AI_MODE:
             return
         if self._retry_count > self._max_retries:
             return
         try:
-            self._client = genai.Client(api_key=self._api_key)
+            self._client = build_google_genai_client(
+                api_key=self._api_key or None,
+                provider_mode=provider_mode,
+            )
             self._init_done = True
             self._retry_count = 0
         except Exception as e:

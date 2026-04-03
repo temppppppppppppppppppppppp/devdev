@@ -69,15 +69,18 @@ def test_reload_project_environment_prefers_bound_project_dir(monkeypatch, tmp_p
     monkeypatch.setattr(BaseAgent, "_context_caches", {"stale": "value"}, raising=False)
     monkeypatch.setattr(BaseAgent, "_keys_initialized", True, raising=False)
     monkeypatch.setattr(BaseAgent, "_current_key_idx", 5, raising=False)
+    refresh_runtime_provider_state = MagicMock()
+    monkeypatch.setattr(BaseAgent, "refresh_runtime_provider_state", refresh_runtime_provider_state)
 
-    def fake_client(*, api_key):
-        return SimpleNamespace(api_key=api_key)
+    def fake_client():
+        return SimpleNamespace(api_key=os.getenv("GOOGLE_API_KEY"))
 
     class FakeStudioSystem:
         def __init__(self, api_client=None):
             self.api_client = api_client
 
-    monkeypatch.setattr(main_a.genai, "Client", fake_client)
+    monkeypatch.setattr(main_a, "build_google_genai_client", fake_client)
+    monkeypatch.setattr(main_a, "get_shared_llm_router", MagicMock())
     monkeypatch.setattr(main_a, "StudioSystem", FakeStudioSystem)
 
     app = _make_minimal_app()
@@ -87,10 +90,10 @@ def test_reload_project_environment_prefers_bound_project_dir(monkeypatch, tmp_p
 
     assert loaded_path == (project_dir / ".env").resolve()
     assert app.sys.api_client.api_key == "project-key"
-    assert BaseAgent._current_key_idx == 0
-    assert BaseAgent._context_caches == {}
     assert os.environ["GOOGLE_API_KEY"] == "project-key"
     assert os.environ["GOOGLE_API_KEY_2"] == "project-key-2"
+    main_a.get_shared_llm_router.assert_called_once_with(force_reload=True)
+    refresh_runtime_provider_state.assert_called_once()
     init_api_keys.assert_called_once()
 
 

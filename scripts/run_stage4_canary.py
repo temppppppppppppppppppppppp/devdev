@@ -22,6 +22,13 @@ from main_a import SovereignApp  # noqa: E402
 from modules.core.db_manager import DBManager  # noqa: E402
 from modules.core.llm_router import get_shared_llm_router  # noqa: E402
 from modules.core.pass_rate_monitor import PassRateMonitor  # noqa: E402
+from modules.core.provider_mode import (  # noqa: E402
+    AMBIENT_MODE,
+    GEMINI_DIRECT_MODE,
+    PROVIDER_MODE_ENV,
+    VERTEX_AI_MODE,
+    normalize_provider_mode,
+)
 from modules.core.stage4_canary_tools import (  # noqa: E402
     build_stage4_branch_inventory,
     build_stage4_canary_summary,
@@ -31,8 +38,9 @@ from scripts.regression_validation_tiers import FULL_CANARY_PROOF  # noqa: E402
 
 VALIDATION_TIER = FULL_CANARY_PROOF
 MUTATES_PROJECT_STATE = True
-DEFAULT_PROVIDER_MODE = "gemini_direct"
-AMBIENT_PROVIDER_MODE = "ambient"
+DEFAULT_PROVIDER_MODE = GEMINI_DIRECT_MODE
+AMBIENT_PROVIDER_MODE = AMBIENT_MODE
+VERTEX_PROVIDER_MODE = VERTEX_AI_MODE
 NON_GEMINI_PROVIDER_ENV_KEYS = (
     "ANTHROPIC_API_KEY",
     "CLAUDE_API",
@@ -59,7 +67,7 @@ def parse_args() -> argparse.Namespace:
     run = subparsers.add_parser("run", help="run Stage 4 on a prepared project")
     run.add_argument("--project", required=True)
     run.add_argument("--target-ep", type=int, default=4)
-    run.add_argument("--provider-mode", choices=(DEFAULT_PROVIDER_MODE, AMBIENT_PROVIDER_MODE), default=DEFAULT_PROVIDER_MODE)
+    run.add_argument("--provider-mode", choices=(DEFAULT_PROVIDER_MODE, AMBIENT_PROVIDER_MODE, VERTEX_PROVIDER_MODE))
 
     analyze = subparsers.add_parser("analyze", help="analyze an existing canary project")
     analyze.add_argument("--project", required=True)
@@ -77,7 +85,7 @@ def parse_args() -> argparse.Namespace:
     full.add_argument("--from-ep", type=int, default=1, help="reset Stage 4 outputs from this episode onward")
     full.add_argument("--target-ep", type=int, default=4)
     full.add_argument("--force", action="store_true")
-    full.add_argument("--provider-mode", choices=(DEFAULT_PROVIDER_MODE, AMBIENT_PROVIDER_MODE), default=DEFAULT_PROVIDER_MODE)
+    full.add_argument("--provider-mode", choices=(DEFAULT_PROVIDER_MODE, AMBIENT_PROVIDER_MODE, VERTEX_PROVIDER_MODE))
 
     return parser.parse_args()
 
@@ -119,17 +127,23 @@ def prepare_canary(source_project: str, target_project: str, *, from_ep: int, fo
 
 
 def _normalize_provider_mode(provider_mode: str | None) -> str:
-    normalized = str(provider_mode or DEFAULT_PROVIDER_MODE).strip().lower()
-    return normalized if normalized == AMBIENT_PROVIDER_MODE else DEFAULT_PROVIDER_MODE
+    requested = normalize_provider_mode(provider_mode, default="")
+    if requested:
+        return requested
+    inherited = normalize_provider_mode(os.getenv(PROVIDER_MODE_ENV), default="")
+    if inherited:
+        return inherited
+    return AMBIENT_PROVIDER_MODE
 
 
 @contextmanager
-def _provider_mode_env(provider_mode: str):
+def _provider_mode_env(provider_mode: str | None):
     normalized_mode = _normalize_provider_mode(provider_mode)
     backups = {key: os.environ.get(key) for key in NON_GEMINI_PROVIDER_ENV_KEYS}
-    os.environ["GEULDOBI_PROVIDER_MODE"] = normalized_mode
+    previous_provider_mode = os.environ.get(PROVIDER_MODE_ENV)
+    os.environ[PROVIDER_MODE_ENV] = normalized_mode
     try:
-        if normalized_mode != AMBIENT_PROVIDER_MODE:
+        if normalized_mode == DEFAULT_PROVIDER_MODE:
             for key in NON_GEMINI_PROVIDER_ENV_KEYS:
                 os.environ.pop(key, None)
         get_shared_llm_router(force_reload=True)
@@ -141,11 +155,14 @@ def _provider_mode_env(provider_mode: str):
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = previous
-        os.environ.pop("GEULDOBI_PROVIDER_MODE", None)
+        if previous_provider_mode is None:
+            os.environ.pop(PROVIDER_MODE_ENV, None)
+        else:
+            os.environ[PROVIDER_MODE_ENV] = previous_provider_mode
         get_shared_llm_router(force_reload=True)
 
 
-def run_canary(project_name: str, *, target_ep: int, provider_mode: str = DEFAULT_PROVIDER_MODE) -> dict:
+def run_canary(project_name: str, *, target_ep: int, provider_mode: str | None = None) -> dict:
     project_root = PROJECT_ROOT / "projects" / project_name
     selected_genre = _load_project_genre(project_root)
     if not selected_genre:

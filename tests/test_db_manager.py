@@ -288,6 +288,62 @@ def test_save_llm_call_persists_token_and_cost_fields(db):
     assert row["total_cost_usd"] == pytest.approx(0.0123)
 
 
+def test_save_llm_call_persists_timing_decomposition_fields(db):
+    """TM-1: timing decomposition columns are persisted correctly."""
+    db.save_llm_call(
+        agent_name="chief_writer",
+        model="gemini-2.5-pro",
+        prompt_chars=100,
+        response_chars=200,
+        duration_ms=25000,
+        success=True,
+        session_id="sess-tm1",
+        api_elapsed_ms=8000,
+        retry_count=2,
+        continuation_count=1,
+    )
+
+    row = db.cursor.execute(
+        """
+        SELECT duration_ms, api_elapsed_ms, retry_count, continuation_count
+        FROM llm_calls
+        WHERE session_id = 'sess-tm1'
+        """
+    ).fetchone()
+
+    # duration_ms = ask wall clock (includes retries, sleeps, overhead)
+    assert row["duration_ms"] == 25000
+    # api_elapsed_ms = raw API RTT only
+    assert row["api_elapsed_ms"] == 8000
+    assert row["retry_count"] == 2
+    assert row["continuation_count"] == 1
+
+
+def test_save_llm_call_timing_decomposition_defaults_to_null(db):
+    """TM-1: legacy callers without timing decomposition → NULL columns."""
+    db.save_llm_call(
+        agent_name="chief_writer",
+        model="gemini-2.5-pro",
+        prompt_chars=100,
+        response_chars=200,
+        duration_ms=5000,
+        success=True,
+        session_id="sess-legacy",
+    )
+
+    row = db.cursor.execute(
+        """
+        SELECT api_elapsed_ms, retry_count, continuation_count
+        FROM llm_calls
+        WHERE session_id = 'sess-legacy'
+        """
+    ).fetchone()
+
+    assert row["api_elapsed_ms"] is None
+    assert row["retry_count"] is None
+    assert row["continuation_count"] is None
+
+
 def test_runtime_telemetry_writes_are_blocked_after_begin_shutdown(db):
     db.begin_shutdown()
 
@@ -680,6 +736,88 @@ def test_save_stage_attempt_persists_rationale_fields(db):
     assert row["retry_directives"] == "keep the ending distinct"
 
 
+def test_get_latest_stage4_gate_repair_snapshot_surfaces_repair_contract_and_scope_authority(db):
+    db.save_stage_attempt(
+        stage=4,
+        verdict="REJECT",
+        attempt_num=3,
+        ep_num=7,
+        arc_num=2,
+        score=63,
+        session_id="sess-gate",
+        attempt_key="s4:ep7:arc2:a3:sess-gate",
+        candidate_key="A|balanced",
+        content_hash="hash-gate",
+        artifact_path="logs/artifacts/stage4/ep_0007/attempt_03/rejected_best__A_balanced.txt",
+        selection_reason="best candidate",
+        verdict_reason="continuity conflict",
+        open_review="review note",
+        advisory_flags={
+            "gate_semantics": {
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "bounded_local_repair",
+                "repair_scope": "partial",
+            },
+            "fix_pack": {
+                "target_kind": "local_sentence",
+                "must_fix": ["repair opening"],
+            },
+            "repair_contract": {
+                "subtype": "movement",
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "provenance": "runtime_synthesized",
+            },
+            "scope_authority": {
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "scope_origin": {
+                    "fix_scope": "runtime_widened",
+                    "authoritative_fix_scope": "director_authoritative",
+                    "repair_scope": "runtime_lane",
+                },
+                "widened": True,
+            },
+            "retry_budget_axes": {"repair": "patch_revision"},
+        },
+        director_quality_passed=True,
+        downstream_override_applied=True,
+        primary_failure_layer="downstream_gate",
+    )
+
+    row = db.get_latest_stage4_gate_repair_snapshot(session_id="sess-gate")
+
+    assert row["attempt_key"] == "s4:ep7:arc2:a3:sess-gate"
+    assert row["director_verdict"] == "PASS_WITH_FIX"
+    assert row["gate_basis"] == "bounded_local_repair"
+    assert row["repair_scope"] == "partial"
+    assert row["fix_scope"] == "partial"
+    assert row["authoritative_fix_scope"] == "inplace"
+    assert row["repair_contract"] == {
+        "subtype": "movement",
+        "fix_scope": "partial",
+        "repair_scope": "partial",
+        "provenance": "runtime_synthesized",
+    }
+    assert row["scope_authority"] == {
+        "fix_scope": "partial",
+        "repair_scope": "partial",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+            "fix_scope": "runtime_widened",
+            "authoritative_fix_scope": "director_authoritative",
+            "repair_scope": "runtime_lane",
+        },
+        "widened": True,
+    }
+    assert row["retry_budget_axes"] == {"repair": "patch_revision"}
+    assert row["final_authority_sink"] == "stage_attempts"
+    assert row["director_quality_passed"] is True
+    assert row["downstream_override_applied"] is True
+    assert row["primary_failure_layer"] == "downstream_gate"
+
+
 def test_save_director_selection_persists_director_thinking(db):
     db.save_director_selection(
         7,
@@ -730,13 +868,17 @@ def test_save_stage_attempt_persists_max_retention_stage4_fields(db):
         is_patch=True,
         is_patch_fallback=False,
         patch_strategy="inplace_patch_structural",
+        director_quality_passed=True,
+        downstream_override_applied=True,
+        primary_failure_layer="downstream_gate",
     )
 
     row = db.conn.execute(
         """
         SELECT failure_category, selection_reason, verdict_reason, open_review,
                fix_scope_reasoning, runtime_advisory, retry_directives,
-               initial_verdict, score_breakdown, is_patch, is_patch_fallback, patch_strategy
+               initial_verdict, score_breakdown, is_patch, is_patch_fallback, patch_strategy,
+               director_quality_passed, downstream_override_applied, primary_failure_layer
         FROM stage_attempts
         WHERE attempt_key = 's4:ep7:arc1:a3'
         """
@@ -755,6 +897,9 @@ def test_save_stage_attempt_persists_max_retention_stage4_fields(db):
     assert row["is_patch"] == 1
     assert row["is_patch_fallback"] == 0
     assert row["patch_strategy"] == "inplace_patch_structural"
+    assert row["director_quality_passed"] == 1
+    assert row["downstream_override_applied"] == 1
+    assert row["primary_failure_layer"] == "downstream_gate"
 
 
 def test_attempt_raw_rationale_round_trip(db):

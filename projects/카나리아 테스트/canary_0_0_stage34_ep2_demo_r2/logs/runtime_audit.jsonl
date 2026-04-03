@@ -1,0 +1,4 @@
+{"timestamp": "2026-04-02 14:30:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-02 14:30:02", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-02 18:10:31", "type": "blueprint_fail", "message": "ep_2_all_retries_exhausted", "data": {"ep_num": 2, "final_verdict": "FAILED"}}
+{"timestamp": "2026-04-02 18:10:31", "type": "stage4_complete", "message": "stage4 production completed", "data": {"target_ep": 2}}

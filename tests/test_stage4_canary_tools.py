@@ -67,6 +67,10 @@ def test_prepare_stage4_canary_project_copies_and_resets_stage4_only(tmp_path):
 
     assert result["source_project"] == "source_project"
     assert result["target_project"] == "target_project"
+    assert result["canary_scope"] == "stage4_only"
+    assert result["reruns_stage3_generation"] is False
+    assert result["preserves_stage3_blueprints"] is True
+    assert result["preserves_stage3_sink_baseline"] is True
     assert result["cleanup"]["db_impact"]["blueprints_kept"] == 1
 
     target_db = DBManager(target / "project_data.db")
@@ -215,6 +219,21 @@ def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
             artifact_path="logs/artifacts/stage4/ep_0001/attempt_01/manuscript__best.txt",
             selection_reason="best candidate",
             verdict_reason="director pass",
+            advisory_flags={
+                "repair_contract": {
+                    "subtype": "opening_spatial_continuity",
+                    "provenance": "runtime_synthesized",
+                },
+                "scope_authority": {
+                    "fix_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "scope_origin": "director_authored",
+                    "widened": False,
+                },
+                "gate_semantics": {
+                    "repair_scope": "targeted_opening_patch",
+                },
+            },
         )
     finally:
         db.close()
@@ -238,17 +257,41 @@ def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
     assert summary["final_authority_contract_summary"]["final_authority_sink"] == "stage_attempts"
     assert summary["proof_scope_summary"]["backend_wide_proof"] is False
     assert summary["proof_scope_summary"]["stage3_sink_probe_status"] == "missing"
+    assert summary["gate_repair_summary"]["repair_contract"]["subtype"] == "opening_spatial_continuity"
+    assert summary["gate_repair_summary"]["scope_authority"]["authoritative_fix_scope"] == "inplace"
+    assert summary["gate_repair_surface_summary"]["status"] == "ok"
+    assert summary["gate_repair_surface_summary"]["repair_contract_subtype"] == "opening_spatial_continuity"
+    assert summary["gate_repair_surface_summary"]["repair_contract_provenance"] == "runtime_synthesized"
+    assert summary["gate_repair_surface_summary"]["fix_scope"] == "partial"
+    assert summary["gate_repair_surface_summary"]["authoritative_fix_scope"] == "inplace"
+    assert summary["gate_repair_surface_summary"]["scope_origin"] == "director_authored"
+    assert summary["gate_repair_surface_summary"]["widened"] is False
+    assert summary["gate_repair_surface_summary"]["mismatch_scope"] == "current_session"
+    assert summary["gate_repair_surface_summary"]["mismatch_counts"]["repair_contract_subtype_mismatches"] == 0
     assert summary["rationale_contract_summary"]["status"] == "ok"
     assert summary["rationale_contract_summary"]["field_nonempty_counts"]["selection_reason"] == 1
-    assert summary["hard_gates"]["status"] == "fail"
-    assert "pass_rate_monitor_missing" in summary["hard_gates"]["errors"]
+    assert summary["hard_gates"]["status"] == "warn"
+    assert "pass_rate_monitor_cache_missing" in summary["hard_gates"]["warnings"]
     assert "stage4_retry_contract_not_exercised" in summary["hard_gates"]["warnings"]
-    assert "patch_trace_not_exercised" in summary["hard_gates"]["warnings"]
+    assert "patch_trace_not_exercised" not in summary["hard_gates"]["warnings"]
 
 
 def test_build_stage4_canary_summary_reports_stage3_probe_scope(tmp_path):
     project = tmp_path / "canary_project"
     _make_project_root(project)
+    (project / "logs" / "canary_prep.json").write_text(
+        json.dumps(
+            {
+                "source_project": "base",
+                "canary_scope": "stage4_only",
+                "reruns_stage3_generation": False,
+                "preserves_stage3_blueprints": True,
+                "preserves_stage3_sink_baseline": True,
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
 
     stage3_artifact_dir = project / "logs" / "artifacts" / "stage3" / "ep_0001" / "attempt_01"
     stage3_artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -377,10 +420,11 @@ def test_build_stage4_canary_summary_reports_stage3_probe_scope(tmp_path):
 
     assert summary["stage3_sink_alignment_summary"]["status"] == "ok"
     assert summary["stage3_sink_alignment_summary"]["coverage"]["session_decisions"] == 1
-    assert summary["proof_scope_summary"]["scope_status"] == "partial_multi_stage_probe"
+    assert summary["proof_scope_summary"]["scope_status"] == "stage4_only"
     assert summary["proof_scope_summary"]["backend_wide_proof"] is False
     assert summary["proof_scope_summary"]["stage3_sink_probe_status"] == "ok"
-    assert "stage3_sink_alignment_probe" in summary["proof_scope_summary"]["covered_surfaces"]
+    assert summary["proof_scope_summary"]["stage3_probe_origin"] == "baseline_copy"
+    assert "stage3_baseline_sink_probe" in summary["proof_scope_summary"]["covered_surfaces"]
     assert "stage3_live_generation_path" in summary["proof_scope_summary"]["uncovered_surfaces"]
 
 
@@ -644,3 +688,62 @@ def test_build_stage3_canary_summary_includes_episode_telemetry(tmp_path):
     assert telem[0]["llm_call_count"] == 1
     assert telem[0]["total_duration_ms"] == 12000
     assert telem[0]["total_cost_usd"] == 0.005
+    # [TM-1] legacy rows without timing decomposition → 0 (not missing)
+    assert telem[0]["total_api_elapsed_ms"] == 0
+    assert telem[0]["total_retries"] == 0
+    assert telem[0]["total_continuations"] == 0
+
+
+def test_stage3_episode_telemetry_timing_decomposition(tmp_path):
+    """TM-1: telemetry distinguishes ask wall-clock from raw API elapsed."""
+    from modules.core.stage4_canary_tools import build_stage3_canary_summary
+
+    root = tmp_path / "stage3_tm1"
+    _make_project_root(root)
+    db = DBManager(root / "project_data.db")
+    try:
+        db.save_anchor("genre_info", {"type": "wuxia", "name": "wuxia"})
+        db.save_blueprint(1, {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "bp"}]})
+        db.save_stage_attempt(
+            stage=3, verdict="PASS", ep_num=1, attempt_num=1,
+            score=90, session_id="sess", attempt_key="s3:1:1:1:sess",
+        )
+        # Call 1: normal ask, 1 retry, 2 continuations
+        # duration_ms=25000 (wall clock), api_elapsed_ms=8000 (raw API)
+        db.save_llm_call(
+            session_id="sess", stage=3, ep_num=1,
+            agent_name="ChiefWriter", model="gemini-2.5-pro",
+            prompt_chars=5000, response_chars=3000,
+            duration_ms=25000, success=True,
+            api_elapsed_ms=8000, retry_count=1, continuation_count=2,
+        )
+        # Call 2: cached context, 0 retries, 0 continuations
+        # duration_ms=5000 (includes API_DELAY), api_elapsed_ms=3000 (raw API)
+        db.save_llm_call(
+            session_id="sess", stage=3, ep_num=1,
+            agent_name="ChiefWriter", model="gemini-2.5-pro",
+            prompt_chars=2000, response_chars=1500,
+            duration_ms=5000, success=True, context_tag="cached_context",
+            api_elapsed_ms=3000, retry_count=0, continuation_count=0,
+        )
+    finally:
+        db.close()
+    (root / "logs" / "stage3_canary_prep.json").write_text(
+        '{"source_project": "base"}', encoding="utf-8",
+    )
+
+    summary = build_stage3_canary_summary(root, target_ep=1)
+    telem = summary["episode_telemetry"]
+    assert len(telem) == 1
+    ep1 = telem[0]
+
+    # Wall-clock sum: 25000 + 5000 = 30000
+    assert ep1["total_duration_ms"] == 30000
+    # Raw API sum: 8000 + 3000 = 11000 — NOT 30000
+    assert ep1["total_api_elapsed_ms"] == 11000
+    # Retries: 1 + 0 = 1
+    assert ep1["total_retries"] == 1
+    # Continuations: 2 + 0 = 2
+    assert ep1["total_continuations"] == 2
+    # The gap (30000 - 11000 = 19000ms) is orchestration overhead, NOT "API hang"
+    assert ep1["total_duration_ms"] - ep1["total_api_elapsed_ms"] == 19000

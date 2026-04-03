@@ -1,0 +1,167 @@
+{
+  "material_pack_version": "material-pack.v1",
+  "status": "bootstrap-normalized",
+  "work_identity": {
+    "work_id": "office_checkup_next_day",
+    "title": "검진 다음 날부터",
+    "family": "blockguide",
+    "primary_profile": "office_power_profile",
+    "secondary_profile": "business_growth_profile"
+  },
+  "supports": [
+    "pitch",
+    "stage0_preprocess",
+    "phase0_design"
+  ],
+  "source_inventory": {
+    "primary_documents": [
+      "treatments/preprocess/office_checkup_next_day/source_manifest.json",
+      "treatments/preprocess/office_checkup_next_day/material_bundle_summary.json",
+      "treatments/preprocess/office_checkup_next_day/profile_lock.json",
+      "treatments/preprocess/office_checkup_next_day/phase0_ready_snapshot.json",
+      "material_ssot/20_pitch/intake/legacy_import/20260330/컨셉기획_검진다음날부터.md"
+    ],
+    "reference_profiles": [
+      "material_ssot/10_research/10_reference_profiles/투자물_문체_정량_프로파일.md",
+      "material_ssot/10_research/10_reference_profiles/2026-03-30_modern_business_reference_master_order.md",
+      "material_ssot/10_research/10_reference_profiles/cliffhanger_pattern_taxonomy.md"
+    ],
+    "fewshot_assets": [
+      "material_ssot/10_research/20_fewshot_bank/투자물_현판.yaml",
+      "material_ssot/10_research/20_fewshot_bank/cards/geumsujeo_tujabaekseo_A.md",
+      "material_ssot/10_research/20_fewshot_bank/cards/geumsujeo_tujabaekseo_B.md",
+      "material_ssot/10_research/20_fewshot_bank/cards/yeonbong_1jo_sinipsawon_A.md",
+      "material_ssot/10_research/20_fewshot_bank/cards/yeonbong_1jo_sinipsawon_B.md"
+    ],
+    "raw_corpus_pinned": [],
+    "raw_corpus_policy": "deferred until later research waves"
+  },
+  "story_contract": {
+    "premise": "건강검진 다음 날부터 조직의 의사결정 구조가 읽히기 시작한 말단 사원이, 결재선과 프로젝트와 예산을 밑에서부터 장악해 올라간다.",
+    "theme_statement": "조직을 바꾸는 힘은 직급이 아니라, 흐름이 막히는 지점을 먼저 읽고 먼저 움직이는 데서 나온다.",
+    "series_promise": "유통사 결재선과 프로젝트와 예산과 인사 전장을 현실적인 톤으로 밀어붙이는 조직 권력 상승물.",
+    "opening_spike": "건강검진 직후 묻힌 SCM 보고서를 다른 경로로 전무에게 올려 첫 배석권을 따내고, Block 1에서 물류센터 통합 프로젝트를 멈추며 간판 폭발을 만든다."
+  },
+  "user_agreements": [
+    "남성향 직장물",
+    "조직장악",
+    "회귀/재벌/상속/상태창/시스템 금지",
+    "남성향 no-romance 기본값",
+    "protagonist-first, 둥기둥기 first",
+    "정보격차와 정보 은닉 유지",
+    "Block 1 안에 전사급 간판 폭발",
+    "성취 직후 체감형 보상 최소 3개 이상 즉시 부착",
+    "능력은 중반까지도 확정 설명하지 않음"
+  ],
+  "locked_facts": {
+    "hard_constraints": [
+      "회귀/재벌3세/상속/상태창/시스템/노골적 예지 금지",
+      "남성향 no-romance 기본값",
+      "protagonist-first, 둥기둥기 first",
+      "정보격차 필수, 정보 은닉 유지 (본인 미자각이 핵심 장치)",
+      "Block 1 안에 전사급 간판 폭발 장면 필수",
+      "성취 직후 체감형 보상 최소 3개 이상 즉시 부착",
+      "pure slice of life 금지, 고통 펌프 금지",
+      "능력을 확정적으로 설명하지 않음 — 중반까지 독자도 미확정"
+    ],
+    "immutable_people_states": [
+      "한시혁은 유통사 경영기획팀 3년차 말단이다.",
+      "건강검진 이후 조직 역학 조감 감각이 발화한다.",
+      "오세진은 부하 성과를 자기 이름으로 올리는 팀장이다.",
+      "장현태는 재고와 반품과 적자를 조직적으로 숨기는 MD사업부장이다."
+    ]
+  },
+  "domain_requirements": {
+    "battlefields": [
+      "결재선",
+      "프로젝트 오너십",
+      "예산 편성",
+      "인사평가",
+      "TF 구성",
+      "정보 접근권"
+    ],
+    "key_terms": [
+      "결재선",
+      "예산 전용 코드",
+      "공용 코드",
+      "CC 라인",
+      "물동량",
+      "외주 컨설팅 보고서",
+      "TF",
+      "B0~S 등급",
+      "상대평가 풀",
+      "배석권",
+      "상신권"
+    ],
+    "do_not_fake": [
+      "유통사 결재선과 예산 편성을 추상 권력전으로만 쓰지 말 것",
+      "물류센터 통합/재고 관리를 단순 숫자놀음으로 때우지 말 것",
+      "인사평가와 프로젝트 배정을 막연한 정치로 쓰지 말 것",
+      "MD사업부의 적자 은폐를 뭉뚱그리지 말 것"
+    ]
+  },
+  "seed_summary": {
+    "event_ladder": [
+      "SCM 보고서 반려",
+      "검진 후 재분석 성공",
+      "전무 직보",
+      "물류센터 통합 프로젝트 조작 데이터 발견",
+      "Block 1 spike와 보상 4종 발동",
+      "예산 편성 회의 발언권 획득",
+      "MD사업부 숨긴 적자 전면 노출"
+    ],
+    "reward_ladder": [
+      "배석권",
+      "상신권",
+      "예산 발언권",
+      "TF 실권",
+      "라인 선택권"
+    ],
+    "npc_anchors": [
+      "한시혁",
+      "오세진",
+      "장현태",
+      "전무",
+      "대표이사"
+    ],
+    "crisis_pool": [
+      "물류센터 통합 프로젝트 좌초 위기",
+      "MD사업부 숨겨진 적자 노출",
+      "팀장의 공 가로채기",
+      "인사평가 조작 시도",
+      "예산 전용 코드 회수 위기",
+      "외부 감사/실사",
+      "감각 흔들림"
+    ],
+    "scene_starters": [
+      "분기 실적 보고 회의",
+      "결재 상신 루프",
+      "프로젝트 TF 구성 회의",
+      "물류센터 현장 검증",
+      "MD사업부 회의",
+      "전사 메일 실명 보상"
+    ]
+  },
+  "gap_status": {
+    "safe_to_defer": [
+      "전무와 대표이사의 실명",
+      "유통사 사명과 세부 브랜드명",
+      "인사평가 세부 등급 커트라인",
+      "그룹 전략실/구조조정 라인 세부 호칭",
+      "Block 2-3 세부 에피소드 제목"
+    ],
+    "enrichment_needed_later": [
+      "유통사 예산 편성 샘플 안건",
+      "물류센터 통합 판단의 실무 계산 예시",
+      "MD 적자 은폐 수법의 실제 문서 패턴",
+      "외부 감사/실사 장면의 대표 질문지"
+    ],
+    "blocking_gaps": []
+  },
+  "readiness": {
+    "pitch_ready": true,
+    "stage0_ready": true,
+    "phase0_ready": true,
+    "notes": "현재 남은 갭은 enrichment 성격이며, opening humiliation과 Block 1 spike와 보상 구조는 이미 잠겨 있다."
+  }
+}

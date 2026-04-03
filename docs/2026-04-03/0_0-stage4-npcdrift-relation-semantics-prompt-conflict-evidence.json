@@ -1,0 +1,244 @@
+{
+  "survey_order": "docs/2026-04-03/0_0-stage4-npcdrift-relation-semantics-prompt-conflict-bounded-survey-order.md",
+  "baseline_commit": "ecd58d57943a91ad5b946077eeacba224f49641a",
+  "canary_project": "projects/canary_0_0_stage4_ep2_sinkproof_r1",
+  "source_project": "projects/00_20260403",
+  "collected_at": "2026-04-03",
+
+  "Q1_genre_binding": {
+    "question": "Is investment genre binding correct at source, prompt, and runtime?",
+    "verdict": "ruled_out",
+    "evidence": [
+      {
+        "source": "projects/canary_0_0_stage4_ep2_sinkproof_r1/plans/blueprints/blueprint_0002.txt",
+        "detail": "Blueprint scenes match investment/regressor setup: independence declaration, asset allocation (200억), OPEC/oil news for first trade setup. No genre misbinding observed."
+      },
+      {
+        "source": "projects/00_20260403/drafts/ep_0002.txt",
+        "detail": "Source manuscript is pure investment-regressor narrative: 재벌 3세 protagonist declares independence with 200억 seed capital, monitoring oil price news for first trade."
+      },
+      {
+        "source": "projects/00_20260403/stage0_output/style_guide.json",
+        "detail": "sample_sentences contain investment-domain vocabulary (공매도, 헤지펀드, 지분 인수, etc.). Genre is correctly bound."
+      }
+    ]
+  },
+
+  "Q2_director_free_review_vs_gate_mismatch": {
+    "question": "Why did Director free review treat NpcDrift as genre-compatible while final chain produced strong_advisory_escalation_non_local_fix and REJECT?",
+    "verdict": "confirmed_mismatch",
+    "round_evidence": [
+      {
+        "round": 0,
+        "director_source_verdict": "PASS",
+        "director_score": 98,
+        "gate_basis": "strong_advisory_escalation_non_local_fix",
+        "final_verdict": "REJECT",
+        "escalation": {
+          "source_verdict": "PASS",
+          "escalated_to": "PASS_WITH_FIX",
+          "triggered_by": ["npc_drift"],
+          "local_fix_contract": {"ready": false, "reason": "missing_fix_pack"}
+        }
+      },
+      {
+        "round": 1,
+        "director_score": 44,
+        "gate_basis": "continuity_firewall",
+        "final_verdict": "REJECT",
+        "note": "Contradiction Firewall: CRITICAL 1건 — FactLedger 1천만원 vs Blueprint 200억"
+      },
+      {
+        "round": 2,
+        "director_score": 82,
+        "gate_basis": "director_primary_reject",
+        "final_verdict": "REJECT",
+        "note": "Director primary reject — ep1 continuity collision"
+      },
+      {
+        "round": 3,
+        "director_source_verdict": "PASS",
+        "director_score": 97,
+        "gate_basis": "strong_advisory_escalation_non_local_fix",
+        "final_verdict": "REJECT",
+        "escalation": {
+          "source_verdict": "PASS",
+          "escalated_to": "PASS_WITH_FIX",
+          "triggered_by": ["npc_drift"],
+          "local_fix_contract": {"ready": false, "reason": "missing_fix_pack"}
+        }
+      },
+      {
+        "round": 4,
+        "director_source_verdict": "PASS",
+        "director_score": 98,
+        "gate_basis": "strong_advisory_escalation_non_local_fix",
+        "final_verdict": "REJECT",
+        "escalation": {
+          "source_verdict": "PASS",
+          "escalated_to": "PASS_WITH_FIX",
+          "triggered_by": ["npc_drift"],
+          "local_fix_contract": {"ready": false, "reason": "missing_fix_pack"}
+        }
+      }
+    ],
+    "summary": "Director gave PASS (scores 97-98) in 3 of 5 rounds. All 3 were overridden by strong_advisory_escalation_non_local_fix triggered by npc_drift. The gate cannot synthesize a local fix_pack from advisory data alone."
+  },
+
+  "Q3_relation_tag_semantics": {
+    "question": "Is the core problem compressed tag → no semantic bridge, or is 오해 대상 itself directionally wrong?",
+    "verdict": "directionally_ambiguous_label",
+    "evidence": [
+      {
+        "source": "canary_prep.json",
+        "detail": "All 4 NPCs (김 집사, 한정호, 한태민, 한태준) have relation_to_protag: '오해 대상'. This is a plain text label, NOT the compressed 집착100/오해-80 format from the 04-02 survey."
+      },
+      {
+        "source": "episode_production.jsonl line 2 warnings",
+        "npc": "한태민",
+        "expected": "오해 대상",
+        "found": "주인공이 한태민을 오해하는 것이 아니라, 한태민이 주인공을 오해하며 무시함. 주인공은 오히려 그의 오해를 인지하고 역이용함.",
+        "analysis": "NpcDrift LLM interprets '오해 대상' as 'protagonist misunderstands this NPC'. Manuscript shows the opposite: NPC misunderstands protagonist (regressor knows everything)."
+      },
+      {
+        "source": "episode_production.jsonl line 2 warnings",
+        "npc": "한태준",
+        "expected": "오해 대상",
+        "found": "주인공이 한태준을 오해하는 것이 아니라, 한태준이 주인공의 행동을 오해함. 주인공은 형들의 오해를 자신의 은폐막으로 여기며 상황을 명확히 파악하고 있음.",
+        "analysis": "Same directionality problem. '오해 대상' does not specify subject/object of misunderstanding."
+      },
+      {
+        "source": "episode_production.jsonl line 8 warnings",
+        "npc": "한정호",
+        "expected": "오해 대상",
+        "found": "주인공이 아버지를 오해하는 것이 아니라, 아버지가 주인공의 변화를 후계 구도 정리라는 실리적 측면에서만 이해하고 그의 진정한 의도를 오해하는 대상으로 묘사됨.",
+        "analysis": "In this regressor/investment setup, the protagonist has future knowledge and understands everyone. The NPCs are the ones who misunderstand the protagonist."
+      }
+    ],
+    "conclusion": "The problem is NOT the compressed numeric tag format (that was the 04-02 finding). Here the tag is plain text '오해 대상' but it is directionally ambiguous. It literally means 'target of misunderstanding' without specifying who misunderstands whom. In a regressor setup where the protagonist has 18 years of future knowledge, the protagonist correctly understands all NPCs while NPCs misunderstand the protagonist — the narratively correct direction. The NpcDrift LLM consistently misreads the direction."
+  },
+
+  "Q4_relation_to_protag_encoding": {
+    "question": "Does relation_to_protag encode protagonist→NPC, NPC→protagonist, either, or underspecified?",
+    "verdict": "underspecified_mixed",
+    "code_evidence": [
+      {
+        "source": "modules/core/npc_drift_advisor.py:177-192",
+        "detail": "NpcDrift prompt says '속성이 변한 경우만 지적' but does not specify directionality guidance for relation_to_protag. The LLM receives '오해 대상' and must infer direction."
+      },
+      {
+        "source": "modules/core/npc_drift_advisor.py:185-186",
+        "detail": "Compressed tag guidance exists for 집착100/오해-80 format: '관계 프레이밍이 그 축과 명백히 반대일 때만 표류로 지적'. But plain '오해 대상' doesn't trigger this path because _extract_relation_tag_tokens requires '/' separator."
+      },
+      {
+        "source": "modules/core/npc_drift_advisor.py:22-31",
+        "detail": "_extract_relation_tag_tokens returns [] for '오해 대상' because there is no '/' separator and it doesn't match the token regex. So the semantic expansion hint is never appended."
+      }
+    ],
+    "runtime_evidence": "In every round, the NpcDrift LLM interpreted '오해 대상' as 'protagonist misunderstands NPC' and flagged the manuscript for showing 'NPC misunderstands protagonist'. This interpretation is consistent across all 5 rounds, indicating the ambiguity is systematic, not random.",
+    "conclusion": "relation_to_protag encodes an underspecified tag. The field name suggests 'NPC's relation TO the protagonist' (NPC→protag direction), but '오해 대상' is parsed by the LLM as 'someone the protagonist misunderstands' (protag→NPC direction). The lack of explicit directionality metadata means different consumers interpret it differently."
+  },
+
+  "Q5_advisory_threshold_policy": {
+    "question": "Should this subtype stay strong advisory, become thresholded, or advisory-only?",
+    "verdict": "should_become_thresholded_or_advisory_only",
+    "evidence": [
+      {
+        "source": "modules/core/stage4_interview_round.py:2584-2594",
+        "detail": "All npc_drift advisories enter the _STRONG_ADVISORY_KEYS set. There is no subtype differentiation for relation_tag_semantic vs role drift vs injury drift."
+      },
+      {
+        "source": "5 round results",
+        "detail": "In 3/5 rounds, Director scored 97-98 (PASS) but was overridden by the advisory gate. The advisory is acting as a hard veto even when Director judges the manuscript as excellent."
+      }
+    ],
+    "recommendation": "For relation_to_protag drift when the tag is a plain non-numeric text label (not compressed quantitative), the advisory should be downgraded to advisory-only or thresholded. The current blanket strong-advisory policy causes false rejections when the semantic direction is ambiguous."
+  },
+
+  "Q6_dialogue_ratio_prompt_authority": {
+    "question": "Where does 대화 비율: 0% enter the ChiefWriter prompt, and is it authoritative?",
+    "verdict": "stale_fallback_conflict",
+    "evidence_chain": [
+      {
+        "step": 1,
+        "source": "projects/00_20260403/stage0_output/style_guide.json:9",
+        "detail": "dialogue_ratio: 0.0 — extracted from source material which is a pure narration investment novel with no dialogue."
+      },
+      {
+        "step": 2,
+        "source": "modules/core/project_support.py:136-138",
+        "detail": "resolve_style_dialogue_ratio_target returns None for value=0.0 because the guard 'if 0.0 < value < 1.0' excludes exactly 0.0."
+      },
+      {
+        "step": 3,
+        "source": "modules/core/pre_director_manuscript_checker.py:36,43",
+        "detail": "_resolve_dialogue_ratio_target falls back to 0.30 (30%) when style_dialogue_ratio_target is None or invalid."
+      },
+      {
+        "step": 4,
+        "source": "canary ui_events.jsonl seq 85-298",
+        "detail": "Every round in every candidate has '[PreCheck] 대화 비율 심각 부족: 10-13% (스타일 목표 30%)' warnings. This is because the system ignores the author's 0% dialogue style and enforces a 30% default."
+      }
+    ],
+    "root_cause": "The style guide correctly extracts dialogue_ratio=0.0 from the source material (pure narration style). But resolve_style_dialogue_ratio_target treats 0.0 as invalid and returns None. The PreCheck then falls back to 30% default and penalizes every manuscript for not having enough dialogue. This is a prompt authority conflict: the extracted style says '0% dialogue' but the runtime enforces '30% dialogue'.",
+    "is_primary_blocker": false,
+    "note": "This is NOT the primary rejection trigger — the gate_basis is always npc_drift or continuity, never dialogue_ratio. But it contributes persistent warnings, lowers confidence scores, and may amplify Director rejection tendency in rounds where Director does reject (rounds 1-2)."
+  },
+
+  "Q7_numeric_authority_independence": {
+    "question": "Are 1천만원 vs 200억 and timeline findings independent primary blockers or secondary contamination?",
+    "verdict": "secondary_contributor_not_independent_primary",
+    "evidence": [
+      {
+        "source": "canary ui_events.jsonl seq 59",
+        "detail": "TF49b preflight warning: '수치 정합성: 주인공의 총 자산이 1천만원(FactLedger)인데, Blueprint에서는 200억으로 언급되어 명백히 불가능한 자산 점프가 발생했습니다.'"
+      },
+      {
+        "source": "projects/00_20260403/drafts/ep_0002.txt:85-87",
+        "detail": "Source manuscript says '200억 원 정도의 자금이 마련됩니다' — this is a canonical plot element (inherited assets + trust + real estate = ~200억)."
+      },
+      {
+        "source": "blueprint_0002.txt:7",
+        "detail": "Blueprint mirrors source: '200억 정도 됩니다'. Blueprint correctly reflects source material."
+      },
+      {
+        "source": "round 1 gate_basis",
+        "detail": "Round 1 hits continuity_firewall with score 44 — likely triggered by the 1천만원/200억 contradiction."
+      },
+      {
+        "source": "rounds 3-4 Director behavior",
+        "detail": "Later rounds where Director correctly chose candidate C (which changed 200억→1천만원 to match FactLedger), Director scored 97-98 PASS — but was still overridden by npc_drift gate."
+      }
+    ],
+    "conclusion": "The 1천만원 vs 200억 discrepancy is a real FactLedger↔Blueprint contract violation (the FactLedger appears to be wrong, not the Blueprint/source). It contributed to round 1 continuity_firewall rejection. However, it is NOT an independent primary blocker — later rounds resolved it by adapting to FactLedger values, and those rounds were still rejected by the npc_drift gate. The numeric issue is a secondary contributor introduced before the relation-semantics failure path, not after."
+  },
+
+  "Q8_lane_absorption_or_split": {
+    "question": "Can the existing 0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation lane absorb this, or does evidence justify splitting?",
+    "verdict": "absorb_with_expansion",
+    "reasoning": [
+      "The 04-02 lane targeted compressed numeric tags (집착100/오해-80). This canary reveals a broader problem: plain text tags like '오해 대상' also cause false drift via directional ambiguity.",
+      "The fix_pack synthesis gap (missing_fix_pack → REJECT) is the same mechanism identified in the 04-02 survey.",
+      "The dialogue_ratio fallback is a separate code path (project_support.py + pre_director_manuscript_checker.py) that does not overlap with the NPC drift pipeline.",
+      "Recommendation: expand the existing lane to cover both compressed tags AND plain text directional tags. Add a separate bounded child lane for the dialogue_ratio 0.0 fallback bug."
+    ],
+    "recommended_lanes": [
+      {
+        "lane": "0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation (expanded)",
+        "scope": [
+          "relation_to_protag directionality metadata",
+          "NpcDrift prompt: explicit direction guidance for non-compressed tags",
+          "fix_pack zero-to-local-fix synthesis for relation_tag_semantic subtype",
+          "advisory threshold policy for directionally ambiguous tags"
+        ]
+      },
+      {
+        "lane": "0_0-stage4-dialogue-ratio-zero-fallback (new child)",
+        "scope": [
+          "resolve_style_dialogue_ratio_target: handle 0.0 as valid (author-intended zero dialogue)",
+          "pre_director_manuscript_checker: respect extracted 0% instead of defaulting to 30%"
+        ]
+      }
+    ]
+  }
+}

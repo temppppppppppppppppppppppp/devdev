@@ -1,13 +1,13 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-01
-Status: active (3-pass audited, single-episode Stage34 demo utility code-landed; Stage4 consumer-contract aggregate still active)
+Status: active (3-pass re-audited 2026-04-03; fresh full run plus r2 Stage4-only sinkproof confirm ep2 can PASS through Stage4, remove the hard final-sink failure interpretation, the later analyzer/readback backfill closes the metadata/sink hygiene gap, and the subsequent numeric authority re-audit shifts the next active Stage4 seam to asset carryover/authority mismatch rather than replay-first residuals)
 Canonical Path: `docs/2026-04-01/active-temp-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `fd1707372bd7eb8ad23a5d4506ef556e3f72cc51`
 Baseline Dirty Summary: `dirty: 0_0 runtime logs/db/artifacts active; legacy temp queue mirrors present; 2026-03-31 0_0 survey docs untracked`
-Resume Commit: `c32717ffc511389636c65edf2845bef6113b97c3`
-Resume Drift Summary: `operator-directed demo prep added a single-episode Stage34 runner ahead of broader closure work; aggregate Stage4 consumer stack remains active underneath`
+Resume Commit: `0dd825f19d729aff544ca69f8887aab4e88778eb`
+Resume Drift Summary: `2026-04-03 r4+r5 bounded canary evidence plus the ep2 continuity handoff re-audit kept Stage4 as the active owner; the later fresh full run proved ep2 PASS in full production, the r2 Stage4-only sinkproof canary landed authoritative Stage4 rows in stage_attempts, the later analyzer/readback backfill removed the residual gate-repair metadata gap, and the subsequent numeric authority re-audit moved the next seam to asset carryover/authority mismatch rather than replay-first residuals`
 Supersedes:
 - `docs/2026-03-31/active-temp-execution-roadmap.md`
 
@@ -21,9 +21,13 @@ Queue Snapshot:
 - `docs/temp/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage4-canonical-entity-postselect-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage4-ep2-advisory-escalation-loop-remediation-execution-ssot.md`
+- `docs/temp/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
+- `docs/temp/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
+- `docs/temp/stage0-treatment-enrich-retirement-remediation-execution-ssot.md`
+- `docs/temp/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
 - `docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md`
 - `docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md`
 
@@ -31,107 +35,126 @@ Queue Snapshot:
 
 This roadmap is the active controller for the current `docs/temp/` execution queue.
 
-This refresh inserts the new single-episode Stage34 demo utility ahead of the broader closure stack:
+This refresh folds in the `r2` Stage4-only sinkproof result plus the later analyzer/readback backfill and the numeric authority re-audit, and keeps the queue centered on the remaining bounded consumer seam:
 
-1. `0_0-stage34-ep2-single-episode-demo-canary` (new highest priority operator-directed demo utility; frozen ep1 authority + fresh ep2 blueprint/draft only)
-2. `0_0-stage4-consumer-contract-normalization-remediation` (aggregate Stage4 wave)
-3. `0_0-stage4-flashback-continuity-localfix-remediation` (direct child lane; fresh full run isolated this as the higher-authority immediate blocker)
-4. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` (secondary bounded child lane; real seam remains, but contaminated Stage4-only evidence no longer outranks fresh full run)
-5. `0_0-stage4-post-select-continuity-contract-normalization-remediation` (partial substrate; solved subtype persistence but not the broader consumer contract family)
-6. `0_0-stage4-fixpack-finalization-remediation` (partial substrate; solved missing-fix-pack flattening but not the broader consumer contract family)
+1. `0_0-stage4-consumer-contract-normalization-remediation` (aggregate Stage4 wave; PASS proof captured, residual seam narrowed)
+2. `0_0-stage4-post-select-continuity-contract-normalization-remediation` (continuity / contradiction-firewall substrate; now closer to the numeric carryover seam)
+3. `0_0-stage4-fixpack-finalization-remediation` (finalization substrate; still relevant to numeric contradiction routing/finalization hygiene)
+4. `0_0-stage4-repair-contract-normalization-remediation` (shared repair-contract grammar lane; useful substrate, not current blocker)
+5. `0_0-stage4-flashback-continuity-localfix-remediation` (completed runtime-positive substrate; no longer the front seam)
+6. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` (runtime-positive substrate lane; no longer the immediate live blocker)
 7. `0_0-stage4-canonical-entity-postselect-remediation` (partial substrate; moved the blocker forward but did not close Stage4)
 8. `0_0-stage2-stage3-stage4-readiness-remediation` (blocked; Stage4 still not closure-ready)
-9. `0_0-stage4-ep2-advisory-escalation-loop-remediation` (partial substrate; Flashback FP suppression landed, but fresh full run exposed a real flashback continuity local-fix gap)
-10. `0_0-stage234-cross-stage-contract-normalization-remediation` (parked future wave; long-term shared contract substrate)
-11. `0_0-stage3-contract-tightening-remediation` (parked future wave; static survey-backed, explicit canary proof pending)
-12. `0_0-stage2-contract-normalization-remediation` (parked future wave; survey-backed, below active Stage4 seams and below the nearer Stage3 future wave)
+9. `0_0-stage34-ep2-single-episode-demo-canary` (utility lane; current ep2 proof captured, keep bounded)
+10. `0_0-stage4-ep2-advisory-escalation-loop-remediation` (partial substrate; still useful, but no longer the front seam)
+11. `0_0-stage234-cross-stage-contract-normalization-remediation` (parked future wave; long-term shared contract substrate)
+12. `0_0-stage3-contract-tightening-remediation` (parked future wave; static survey-backed, explicit canary proof pending)
+13. `0_0-stage3-opening-transition-contract-normalization-remediation` (parked future wave; BP should eventually distinguish direct continuation vs explicit transition vs jump opening, but this is below current Stage4 runtime work)
+14. `0_0-stage2-contract-normalization-remediation` (parked future wave; survey-backed, below active Stage4 seams and below the nearer Stage3 future waves)
+15. `stage0-treatment-enrich-retirement-remediation` (parked future wave; optional Stage0 semantic-rewrite workaround retirement, below active runtime work and below Stage2/3 future waves)
+16. `stage0-bi-tr-production-harness-normalization-remediation` (parked future wave; Stage0 source-of-truth and dual-artifact production harness normalization, below active runtime work and below nearer Stage0/2/3 hygiene waves)
 
-The new lane outranks all other items because:
+This order now reflects the stronger runtime picture:
 
-- the operator now needs `ep1 frozen + ep2 regenerated` demo proof rather than arc-frontier closure proof
-- `run_stage34_canary.py` cannot stop at `ep2` because it is arc-frontier bound
-- `Stage4-only canary` remains non-authoritative because blueprint baseline contamination has been proven
-- the new runner is a bounded utility, not a replacement for the broader Stage4 closure stack
-- the latest global Stage4 consumer-finalization survey showed the dominant residual blocker is broader than any one existing Stage4 seam
-- the contaminated Stage4-only ep2 canary isolated one real Stage4 child seam inside that broader family: `NpcDrift relation_to_protag` compressed-tag drift plus missing local-fix synthesis
-- the later fresh full run is higher-authority runtime evidence and elevated `Flashback continuity contradiction -> local-fix synthesis` ahead of the contaminated Stage4-only interpretation
-- the remaining debt clusters into one aggregate family: intake prose flattening, finalization contract loss, and post-pass split truth
-- the parent upstream lane is now blocked by Stage4 finalization, not by Stage2/3 hierarchy
-- the existing Stage4 lanes produced useful substrate, but none alone closes the aggregate consumer-side contract family
-- the new cross-stage matrix survey proved a real long-term substrate wave is needed, but it remains parked behind the active Stage4 queue
+- the fresh full run plus `r2` sinkproof canary prove `ep2` can PASS through Stage4
+- the earlier sink hard-fail reading no longer governs the queue
+- the surviving active debt is numeric asset authority / carryover owner-boundary, not NPC false reject, patch-trace non-exercise, or missing final Stage4 rows
+- the Stage4 post-select / fixpack / repair-contract family now sits closest to the front of the queue as substrate for that numeric seam
+- flashback and NpcDrift remain runtime-positive substrate lanes, but neither is the current immediate blocker
+- the parent upstream lane is still blocked by Stage4 finalization, not by Stage2/3 hierarchy
 - the remaining legacy temp items were already `parked` or `blocked`
-- the new Stage3 and Stage2 future waves are intentionally parked and do not reorder the active Stage4 stack
+- the new Stage3 and Stage2 future waves remain intentionally parked
+- the Stage0 enrich path remains a temporary workaround retirement lane rather than active canonical path work
+- the Stage0 BI/TR production harness remains a long-term normalization lane rather than an immediate upstream blocker
 
 ## 2. Queue Inventory
 
 | Item | Canonical Path | Temp Path | Status | Notes |
 | --- | --- | --- | --- | --- |
-| `0_0-stage34-ep2-single-episode-demo-canary` | `docs/2026-04-02/0_0-stage34-ep2-single-episode-demo-canary-execution-ssot.md` | `docs/temp/0_0-stage34-ep2-single-episode-demo-canary-execution-ssot.md` | partial | operator-directed demo utility; code landed; static validation pending runtime demo proof |
-| `0_0-stage4-consumer-contract-normalization-remediation` | `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md` | partial | aggregate Stage4 contract wave active; flashback child lane code-landed, runtime proof pending |
-| `0_0-stage4-flashback-continuity-localfix-remediation` | `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md` | partial | code landed; static validation closed; fresh full run isolated this as the immediate child seam |
-| `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` | `docs/2026-04-02/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md` | partial | code landed; static validation closed; ep2 runtime proof still pending |
+| `0_0-stage34-ep2-single-episode-demo-canary` | `docs/2026-04-02/0_0-stage34-ep2-single-episode-demo-canary-execution-ssot.md` | `docs/temp/0_0-stage34-ep2-single-episode-demo-canary-execution-ssot.md` | partial | operator-directed demo utility; current ep2 proof captured; keep bounded and lower priority |
+| `0_0-stage4-consumer-contract-normalization-remediation` | `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md` | partial | aggregate Stage4 contract wave active; fresh full run plus r2 sinkproof captured positive runtime proof; remaining seam is numeric asset authority / carryover |
+| `0_0-stage4-flashback-continuity-localfix-remediation` | `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md` | completed | code landed; static validation closed; now a completed runtime-positive substrate lane rather than an active blocker |
+| `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` | `docs/2026-04-02/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md` | partial | code landed; static validation closed; bounded ep2 runtime positive proof captured |
 | `0_0-stage234-cross-stage-contract-normalization-remediation` | `docs/2026-04-02/0_0-stage234-cross-stage-contract-normalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage234-cross-stage-contract-normalization-remediation-execution-ssot.md` | parked | long-term shared vocabulary and source-of-truth substrate; survey-backed; held below active Stage4 work |
-| `0_0-stage4-post-select-continuity-contract-normalization-remediation` | `docs/2026-04-02/0_0-stage4-post-select-continuity-contract-normalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-post-select-continuity-contract-normalization-remediation-execution-ssot.md` | partial | code landed; static validation closed; runtime proof deferred |
-| `0_0-stage4-fixpack-finalization-remediation` | `docs/2026-04-02/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md` | partial | code landed; static validation closed; runtime proof deferred |
+| `0_0-stage4-post-select-continuity-contract-normalization-remediation` | `docs/2026-04-02/0_0-stage4-post-select-continuity-contract-normalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-post-select-continuity-contract-normalization-remediation-execution-ssot.md` | partial | code landed; static validation closed; now directly relevant to numeric carryover contradiction routing and continuity firewall interpretation |
+| `0_0-stage4-fixpack-finalization-remediation` | `docs/2026-04-02/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md` | partial | code landed; static validation closed; remains useful substrate, but patch-trace non-exercise no longer blocks closure |
 | `0_0-stage4-canonical-entity-postselect-remediation` | `docs/2026-04-01/0_0-stage4-canonical-entity-postselect-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-canonical-entity-postselect-remediation-execution-ssot.md` | partial | runtime partial proof captured; moved the blocker forward into Stage4 finalization |
 | `0_0-stage2-stage3-stage4-readiness-remediation` | `docs/2026-04-01/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md` | `docs/temp/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md` | blocked | Stage3 no longer dominant blocker; parent lane still blocked by unresolved Stage4 finalization seams |
 | `0_0-stage4-ep2-advisory-escalation-loop-remediation` | `docs/2026-04-01/0_0-stage4-ep2-advisory-escalation-loop-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-ep2-advisory-escalation-loop-remediation-execution-ssot.md` | partial | T1-T3 show positive runtime signal at ep2, but combined Stage4 closure still pending |
+| `0_0-stage4-repair-contract-normalization-remediation` | `docs/2026-04-02/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md` | partial | shared grammar, sink, and provenance normalization lane remains useful substrate, but the immediate metadata warn surface is now closed |
 | `0_0-stage3-contract-tightening-remediation` | `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md` | `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md` | parked | narrowed future wave; binding and semantic-handoff enforcement only; tier-2.5 canary prepared but not executed |
+| `0_0-stage3-opening-transition-contract-normalization-remediation` | `docs/2026-04-02/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md` | parked | opening transition type should eventually be structurally owned by blueprint contract, but this remains a deferred upstream refinement |
 | `0_0-stage2-contract-normalization-remediation` | `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md` | parked | narrowed future upstream wave; Stage2 packet extraction and keep-drop normalization only |
+| `stage0-treatment-enrich-retirement-remediation` | `docs/2026-04-02/stage0-treatment-enrich-retirement-remediation-execution-ssot.md` | `docs/temp/stage0-treatment-enrich-retirement-remediation-execution-ssot.md` | parked | Stage0 enrich is a temporary semantic-rewrite workaround, not a canonical pair-pass requirement; future retirement/quarantine lane only |
+| `stage0-bi-tr-production-harness-normalization-remediation` | `docs/2026-04-02/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md` | `docs/temp/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md` | parked | Stage0 BI/TR dual-artifact production and source-of-truth split normalization; long-term canonical material contract lane only |
 | `frontier-lag-soak-canary-wave1` | `docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md` | `docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md` | parked | non-critical soak lane |
 | `npc-martial-state-substrate-wave1` | `docs/2026-03-27/npc-martial-state-substrate-wave1-execution-ssot.md` | `docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md` | blocked | awaits fresh evidence and explicit reactivation |
 
 ## 3. Dependency Notes
 
-- `0_0-stage34-ep2-single-episode-demo-canary` is a temporary operator-directed utility lane. It depends on the existing Stage4 consumer-contract substrate but does not replace any closure lane.
+- `0_0-stage34-ep2-single-episode-demo-canary` is a temporary operator-directed utility lane. It already produced the bounded ep2 proof needed for this question and now sits below the active closure stack.
 - `0_0-stage4-consumer-contract-normalization-remediation` is now the aggregate Stage4 contract wave and the highest-level dependency for any parent-lane advancement.
-- `0_0-stage4-flashback-continuity-localfix-remediation` is now the immediate live child seam under the aggregate Stage4 wave because the fresh full run is higher-authority runtime evidence than the contaminated Stage4-only ep2 canary.
-- `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` remains the next bounded child seam under the aggregate Stage4 wave because the contaminated Stage4-only ep2 canary still isolated a real contract gap there.
+- `0_0-stage4-post-select-continuity-contract-normalization-remediation`, `0_0-stage4-fixpack-finalization-remediation`, and `0_0-stage4-repair-contract-normalization-remediation` are now the closest active substrates for the surviving numeric authority / carryover seam.
+- `0_0-stage4-repair-contract-normalization-remediation` remains useful shared substrate, but the immediate gate-repair metadata blocker is closed.
+- `0_0-stage4-flashback-continuity-localfix-remediation` is now a completed runtime-positive substrate lane rather than an active blocker.
+- `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` now sits as a runtime-positive substrate lane because r2 removed it as the immediate live blocker.
 - `0_0-stage234-cross-stage-contract-normalization-remediation` is a parked long-term substrate wave; it should not outrank active Stage4 work, but it now outranks ad hoc simplification discussion because the matrix survey proved the debt structure explicitly.
-- `0_0-stage4-post-select-continuity-contract-normalization-remediation` is now the direct active seam for advancing Stage4 beyond the residual ep4 final-round downgrade boundary.
-- `0_0-stage4-fixpack-finalization-remediation` remains substrate for this new lane.
+- `0_0-stage4-post-select-continuity-contract-normalization-remediation` remains a direct active seam for advancing Stage4 beyond numeric carryover contradiction loss.
+- `0_0-stage4-fixpack-finalization-remediation` remains substrate for later finalization grammar/trace work, but not the current blocker.
 - `0_0-stage4-canonical-entity-postselect-remediation` produced positive runtime signal but did not close; it now serves as substrate for the new finalization lane.
 - `0_0-stage2-stage3-stage4-readiness-remediation` is no longer waiting on upstream Stage3 normalization evidence; it is blocked by unresolved Stage4 finalization seams.
 - `0_0-stage4-ep2-advisory-escalation-loop-remediation` remains useful substrate and now has positive ep2 runtime signal, but it still cannot be closed independently of the broader Stage4 finalization outcome.
+- `0_0-stage4-repair-contract-normalization-remediation` should normalize shared naming, provenance, and sink visibility when the queue returns from residual quality/finalization work to grammar cleanup.
 - `0_0-stage3-contract-tightening-remediation` is intentionally parked; the immediate next artifact is a tier-2.5 canary proof, not execution realization.
+- `0_0-stage3-opening-transition-contract-normalization-remediation` is intentionally parked; it is a later blueprint-contract refinement for direct continuation vs explicit transition vs jump opening, not an active runtime blocker.
 - `0_0-stage2-contract-normalization-remediation` is intentionally parked; the immediate upstream action is Stage3 static survey, not Stage2 realization.
+- `stage0-treatment-enrich-retirement-remediation` is intentionally parked; Golden Canary pair pass does not depend on enrich, and this lane is long-term Stage0 hygiene rather than an active runtime blocker.
+- `stage0-bi-tr-production-harness-normalization-remediation` is intentionally parked; the underlying concern is real, but it is a long-term Stage0 source-of-truth refactor, not an active runtime blocker.
 - `0_0-stage3-semantic-fidelity-remediation` is closed via `docs/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-audit.md`.
 - `frontier-lag-soak-canary-wave1` stays parked; it is not a prerequisite for the active 0_0 lanes.
 - `npc-martial-state-substrate-wave1` stays blocked and does not constrain any active lane.
 
 ## 4. Execution Order
 
-1. `0_0-stage34-ep2-single-episode-demo-canary`
-2. `0_0-stage4-consumer-contract-normalization-remediation`
-3. `0_0-stage4-flashback-continuity-localfix-remediation`
-4. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation`
-5. `0_0-stage4-post-select-continuity-contract-normalization-remediation`
-6. `0_0-stage4-fixpack-finalization-remediation`
+1. `0_0-stage4-consumer-contract-normalization-remediation`
+2. `0_0-stage4-post-select-continuity-contract-normalization-remediation`
+3. `0_0-stage4-fixpack-finalization-remediation`
+4. `0_0-stage4-repair-contract-normalization-remediation`
+5. `0_0-stage4-flashback-continuity-localfix-remediation`
+6. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation`
 7. `0_0-stage4-canonical-entity-postselect-remediation`
 8. `0_0-stage2-stage3-stage4-readiness-remediation`
-9. `0_0-stage4-ep2-advisory-escalation-loop-remediation`
-10. `0_0-stage234-cross-stage-contract-normalization-remediation`
-11. `0_0-stage3-contract-tightening-remediation`
-12. `0_0-stage2-contract-normalization-remediation`
-13. `frontier-lag-soak-canary-wave1`
-14. `npc-martial-state-substrate-wave1`
+9. `0_0-stage34-ep2-single-episode-demo-canary`
+10. `0_0-stage4-ep2-advisory-escalation-loop-remediation`
+11. `0_0-stage234-cross-stage-contract-normalization-remediation`
+12. `0_0-stage3-contract-tightening-remediation`
+13. `0_0-stage3-opening-transition-contract-normalization-remediation`
+14. `0_0-stage2-contract-normalization-remediation`
+15. `stage0-treatment-enrich-retirement-remediation`
+16. `stage0-bi-tr-production-harness-normalization-remediation`
+17. `frontier-lag-soak-canary-wave1`
+18. `npc-martial-state-substrate-wave1`
 
 Order rationale:
 
-- priority 1 is the new single-episode demo utility because the operator explicitly needs fast `ep2` proof without frontier cost
-- priority 2 is the aggregate Stage4 consumer-contract wave because the latest survey proved the residual blocker is broader than any one existing Stage4 patch lane
-- priority 3 is the Flashback continuity child lane because the fresh full run is the highest-authority current runtime evidence
-- priority 4 is the NpcDrift relation-tag child lane because the contaminated Stage4-only ep2 canary still isolated a real secondary seam
-- priority 5 is the post-select continuity-contract substrate lane
-- priority 6 is the fix-pack/finalization substrate lane
+- priority 1 is the aggregate Stage4 consumer-contract wave because it now contains the surviving bounded seam after PASS proof capture
+- priority 2 is the post-select continuity-contract substrate lane because the next live contradiction surfaces through continuity-firewall style numeric conflict handling
+- priority 3 is the fix-pack/finalization substrate lane because numeric contradiction routing still depends on finalization/fix-pack packaging
+- priority 4 is the repair-contract grammar lane because scope/provenance clarity still matters for numeric carryover remediation
+- priority 5 is the Flashback continuity seam because it is now completed runtime-positive substrate, not the immediate blocker
+- priority 6 is the NpcDrift relation-tag seam because runtime positive proof was captured and it no longer blocks convergence
 - priority 7 is the canonical-entity/postselect substrate lane
 - priority 8 is the parent upstream lane, still blocked specifically by unresolved Stage4 seams
-- priority 9 is the already-landed ep2 advisory substrate lane
-- priority 10 is the parked cross-stage contract substrate wave, justified by the completed matrix survey but still below active Stage4 work
-- priority 11 is the parked Stage3 future wave, closer to current evidence than the Stage2 future wave but still not active
-- priority 12 is the parked Stage2 future wave
-- priority 13 remains a parked soak lane
-- priority 14 remains blocked and cannot outrank an executable lane
+- priority 9 is the single-episode demo utility, now demoted after it served the current proof question
+- priority 10 is the already-landed ep2 advisory substrate lane
+- priority 11 is the parked cross-stage contract substrate wave, justified by the completed matrix survey but still below active Stage4 work
+- priority 12 is the parked Stage3 future wave, closer to current evidence than the Stage2 future wave but still not active
+- priority 13 is the parked Stage3 opening-transition refinement wave; it is narrower than general Stage3 tightening and intentionally deferred below it
+- priority 14 is the parked Stage2 future wave
+- priority 15 is the parked Stage0 enrich retirement wave; it is real hygiene debt but not an active runtime blocker
+- priority 16 is the parked Stage0 BI/TR production harness normalization wave; it is a larger upstream refactor and remains below nearer hygiene lanes
+- priority 17 remains a parked soak lane
+- priority 18 remains blocked and cannot outrank an executable lane
 
 ## 5. Per-Item Status Ledger
 
@@ -145,7 +168,7 @@ Order rationale:
 - next action:
   - keep this lane bounded to demo proof
   - do not treat it as Stage4 closure proof
-  - runtime demo proof remains pending
+  - the current ep2 proof question is already served; keep this below the active closure stack
 - temp cleanup action:
   - remove mirror after demo runtime proof is captured or the utility is superseded
 
@@ -159,28 +182,31 @@ Order rationale:
   - post-select bounded-repair flattening
   - post-pass split truth across `final_state_updates`, `actual_truth`, and `world_state`
 - next action:
-  - keep Stage4 paused
-  - treat the new Flashback continuity local-fix lane as the immediate active child seam
-  - treat the NpcDrift relation-tag lane as the next bounded child seam
-  - treat existing Stage4 partial lanes as substrate
-  - do not start realization from this document until explicit operator direction
+  - keep Stage4 paused for broad resume claims
+  - record the `projects/00_20260403` fresh full run as positive proof that `ep2` can now reach `PASS` through bounded inplace correction
+  - record the `r2` Stage4-only sinkproof canary as positive proof that authoritative Stage4 rows now land in `stage_attempts`
+  - stop treating Flashback and NpcDrift as the immediate live blocker pair
+  - keep opening-authority alignment bounded to declared transition / replay-suppression enforcement without converting the ep2 local-fix into a global same-location hard lock
+  - treat numeric asset authority / carryover owner-boundary across the post-select, fix-pack, repair-contract, and carryover packet family as the next bounded consumer-side subtask
+  - keep the parked Stage3 opening-transition lane deferred unless later runtime evidence shifts the owner boundary
 - temp cleanup action:
   - keep mirror while this remains the aggregate Stage4 contract lane; remove only on explicit closure or replacement
 
 ### 0_0-stage4-flashback-continuity-localfix-remediation
 
 - bounded survey completed (2026-04-02)
-- execution SSOT: `partially_realized`
+- execution SSOT: `completed`
 - primary seams:
   - real flashback continuity contradictions are detected but flattened into advisory-only text
   - Flashback structured metadata was not retained across Stage4 fix-pack synthesis
   - locally repairable flashback contradictions could not synthesize bounded local fix contracts from zero
 - next action:
   - keep Stage4 paused
-  - treat this as the immediate active child seam under the aggregate Stage4 wave
-  - runtime proof still pending; do not treat contaminated Stage4-only ep2 canary as closure evidence
+  - treat this as completed runtime-positive substrate under the aggregate Stage4 wave, not an active blocker
+  - do not treat this seam as license for unconditional same-location opening locks; declared transitions and allowed alternate openings remain valid
+  - use the merged runtime evidence as closure backing for this lane's bounded contract, while keeping any broader replay wording below the new numeric carryover seam
 - temp cleanup action:
-  - do not remove mirror until code landed, focused static validation, and later runtime proof all close
+  - remove mirror on the next queue cleanup pass once the aggregate consumer lane no longer needs it as an active child reference
 
 ### 0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation
 
@@ -192,10 +218,11 @@ Order rationale:
   - advisory-only relation-tag drift cannot synthesize bounded local fix contracts from zero
 - next action:
   - keep Stage4 paused
-  - treat this as the next bounded child seam under the aggregate Stage4 wave after flashback continuity local-fix
+  - treat this as a runtime-positive substrate/reference seam under the aggregate Stage4 wave
+  - use the `r2` sinkproof canary as positive proof that this lane no longer blocks ep2 convergence
   - do not widen into broad NpcDrift rewrite before bounded realization is attempted
 - temp cleanup action:
-  - keep mirror while this remains the live secondary child seam; remove only on explicit closure or replacement
+  - keep mirror while this remains a referenced runtime-positive substrate lane; remove only on explicit closure or replacement
 
 ### 0_0-stage234-cross-stage-contract-normalization-remediation
 
@@ -222,7 +249,7 @@ Order rationale:
 - next action:
   - contract normalization code landed in Stage4
   - keep Stage4 paused
-  - defer runtime proof to a later focused canary/order
+  - treat this as one of the first bounded follow-up lanes for numeric carryover contradiction routing and continuity-firewall precision
 - temp cleanup action:
   - do not remove mirror until code lands, focused validation passes, and a later closure audit completes
 
@@ -237,7 +264,7 @@ Order rationale:
   - bounded Stage4 patch landed
   - focused static validation closed
   - keep Stage4 paused
-  - defer runtime proof to a later focused canary/order
+  - treat this as one of the first bounded follow-up lanes for numeric contradiction packaging, provenance, and finalization hygiene
 - temp cleanup action:
   - do not remove mirror until code lands, focused validation passes, and a later closure audit completes
 
@@ -280,10 +307,25 @@ Order rationale:
 - next action:
   - keep Stage4 paused
   - retain as substrate lane
-  - runtime signal is now positive on Flashback false-positive suppression, but the fresh full run exposed a separate flashback continuity local-fix seam
-  - still defer final closure until the flashback child seam, the NpcDrift child seam, and the broader Stage4 finalization seam are closed
+  - runtime signal is now positive on Flashback false-positive suppression
+  - keep this lane below the newer numeric asset authority / carryover seam
 - temp cleanup action:
   - do not remove mirror until combined closure audit completes
+
+### 0_0-stage4-repair-contract-normalization-remediation
+
+- survey/execution seed completed (2026-04-02)
+- execution SSOT: `partially_realized`
+- primary seams:
+  - shared naming and sink visibility for repair-contract metadata
+  - provenance persistence for repair/gate surfaces
+  - operator-visible scope-authority hygiene
+- next action:
+  - keep Stage4 paused
+  - treat this as a near-front follow-up lane after the consumer umbrella because numeric carryover remediation still depends on clear repair scope/provenance and operator-visible authority
+  - re-audit this execution SSOT against the current workspace state before implementation
+- temp cleanup action:
+  - keep mirror while this remains a queued metadata/sink follow-up lane; remove only on explicit closure or replacement
 
 ### 0_0-stage3-contract-tightening-remediation
 
@@ -301,6 +343,20 @@ Order rationale:
 - temp cleanup action:
   - keep mirror while this remains a parked future wave; remove only on explicit closure or replacement
 
+### 0_0-stage3-opening-transition-contract-normalization-remediation
+
+- execution SSOT: `parked`
+- primary seams:
+  - blueprint opening contract does not yet structurally distinguish direct continuation vs explicit transition vs jump opening
+  - Stage4 still has to infer too much opening movement/path semantics from prose and prior ending
+  - this is an upstream refinement, not the current direct runtime blocker
+- next action:
+  - do not activate now
+  - keep as context-only future wave
+  - revisit only after active Stage4 opening/runtime seams are reduced or explicit reprioritization occurs
+- temp cleanup action:
+  - keep mirror while this remains a parked future wave; remove only on explicit closure or replacement
+
 ### 0_0-stage2-contract-normalization-remediation
 
 - global Stage2 production-consumption survey completed (2026-04-02)
@@ -314,6 +370,38 @@ Order rationale:
   - keep as survey-backed future wave
   - keep this wave behind the nearer Stage3 future wave and the active Stage4 seams
   - revisit only after active Stage4 seams are reduced or explicit reprioritization occurs
+- temp cleanup action:
+  - keep mirror while this remains a parked future wave; remove only on explicit closure or replacement
+
+### stage0-treatment-enrich-retirement-remediation
+
+- Stage0 BI generation / DNA sync / Stage2 consume survey completed (2026-04-02)
+- execution SSOT: `parked`
+- primary seams:
+  - `enrich` is an optional semantic rewrite helper, not a canonical Stage0 pair-pass requirement
+  - legacy/manual Stage0 flow can still invoke it via opt-in prompt
+  - operator-facing contract does not yet demote it clearly enough to a non-canonical salvage utility
+- next action:
+  - do not activate now
+  - keep as Stage0 hygiene and retirement/quarantine future wave
+  - keep this wave below the parked Stage3 and Stage2 normalization waves
+  - revisit only after active Stage4 work is reduced or explicit reprioritization occurs
+- temp cleanup action:
+  - keep mirror while this remains a parked future wave; remove only on explicit closure or replacement
+
+### stage0-bi-tr-production-harness-normalization-remediation
+
+- Stage0 BI generation / DNA sync / Stage2 consume survey completed (2026-04-02)
+- execution SSOT: `parked`
+- primary seams:
+  - BI file / treatment / DB bible anchor split-truth
+  - dual-artifact production with unstable authoritative boundary
+  - Stage2 consume contract depends more on runtime handoff than raw artifact truth
+- next action:
+  - do not activate now
+  - keep as long-term Stage0 source-of-truth and production harness normalization wave
+  - keep this wave below the parked Stage0 enrich retirement lane and below the parked Stage3 and Stage2 normalization waves
+  - revisit only after active Stage4 work is reduced or explicit reprioritization occurs
 - temp cleanup action:
   - keep mirror while this remains a parked future wave; remove only on explicit closure or replacement
 

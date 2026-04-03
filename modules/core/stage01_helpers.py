@@ -27,6 +27,8 @@ from modules.core.project_support import (
 from modules.core.stage0_handoff import (
     build_plot_roadmap_from_saved_arcs,
     build_plot_roadmap_from_treatment,
+    canonicalize_bible_payload,
+    canonicalize_treatment_payload,
     ensure_plot_roadmap,
     validate_plot_roadmap_entries,
 )
@@ -711,10 +713,36 @@ class Stage01Helpers:
     ) -> None:
         """Shared Stage 0 persistence gate for fresh generation and extension."""
         bible_saved = False
+        canonical_treatment = None
+        if treatment:
+            try:
+                canonical_treatment, treatment_warnings = canonicalize_treatment_payload(treatment)
+                if treatment_warnings:
+                    logging.info(
+                        "[Stage0:HandoffContract] treatment canonicalization: %s",
+                        "; ".join(treatment_warnings[:5]),
+                    )
+            except Exception as e:
+                logging.warning(f"❌ Treatment canonicalization failed: {e}")
+                app.ui.log(f"❌ [Stage0 Gate] Treatment canonicalization failed: {e}")
+                if pause:
+                    Stage01Helpers._pause_with_ui(app)
+                return
+
         if bible:
             try:
-                status = ensure_plot_roadmap(app, bible, treatment)
-                strict_handoff = bool(treatment)
+                bible, bible_contract_warnings = canonicalize_bible_payload(
+                    bible,
+                    treatment=canonical_treatment or treatment,
+                )
+                if bible_contract_warnings:
+                    logging.info(
+                        "[Stage0:HandoffContract] BI canonicalization: %s",
+                        "; ".join(bible_contract_warnings[:5]),
+                    )
+
+                status = ensure_plot_roadmap(app, bible, canonical_treatment or treatment)
+                strict_handoff = bool(canonical_treatment or treatment)
                 if status.warnings:
                     logging.warning(
                         "[Stage0:HandoffContract] plot_roadmap not Stage 2 ready (%s): %s",
@@ -760,7 +788,7 @@ class Stage01Helpers:
                 try:
                     treatment_path = app.current_project.paths.root / treatment_filename
                     with open(treatment_path, "w", encoding="utf-8") as f:
-                        json.dump({"treatments": treatment}, f, ensure_ascii=False, indent=2)
+                        json.dump(canonical_treatment or treatment, f, ensure_ascii=False, indent=2)
                     app.ui.log(f"✅ Treatment 저장: {treatment_path}")
                 except Exception as e:
                     logging.warning(f"❌ Treatment 저장 실패: {e}")

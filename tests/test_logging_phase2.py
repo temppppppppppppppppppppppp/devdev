@@ -317,7 +317,15 @@ def test_legacy_logging_tables_receive_missing_columns_safely(tmp_path, caplog):
         stage_cols = {row["name"] for row in db.conn.execute("PRAGMA table_info(stage_attempts)").fetchall()}
 
         assert {"input_tokens", "output_tokens", "thinking_snippet", "total_cost_usd"} <= llm_cols
-        assert {"generation_method", "attempt_key", "selection_reason", "retry_directives"} <= stage_cols
+        assert {
+            "generation_method",
+            "attempt_key",
+            "selection_reason",
+            "retry_directives",
+            "director_quality_passed",
+            "downstream_override_applied",
+            "primary_failure_layer",
+        } <= stage_cols
 
         messages = [record.getMessage() for record in caplog.records]
         assert sum("llm_calls compatibility migration added columns" in message for message in messages) == 1

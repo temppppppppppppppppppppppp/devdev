@@ -2,6 +2,13 @@ from __future__ import annotations
 
 from modules.core.llm_provider import LLMProvider
 from modules.core.models_config import load_models_yaml, resolve_models_yaml_path
+from modules.core.provider_mode import (
+    GEMINI_DIRECT_MODE,
+    VERTEX_AI_MODE,
+    get_env_provider_mode,
+    is_gemini_model,
+    rewrite_google_model_for_mode,
+)
 from modules.core.providers.anthropic_provider import AnthropicProvider
 from modules.core.providers.anthropic_vertex_provider import AnthropicVertexProvider
 from modules.core.providers.gemini_provider import GeminiProvider
@@ -47,7 +54,13 @@ def _infer_provider_name_safe(model: str) -> str:
     :meth:`LLMProviderRouter.infer_provider_name` and
     :func:`resolve_provider_identity` both delegate here.
     """
-    normalized = (model or "").strip().lower()
+    rewritten_model = rewrite_google_model_for_mode(model, get_env_provider_mode())
+    normalized = (rewritten_model or model or "").strip().lower()
+    mode = get_env_provider_mode()
+    if mode == GEMINI_DIRECT_MODE and is_gemini_model(model):
+        return "gemini"
+    if mode == VERTEX_AI_MODE and is_gemini_model(model):
+        return "vertex_ai"
     if normalized.startswith(("anthropic-vertex:", "anthropic_vertex:")):
         return "anthropic_vertex"
     if normalized.startswith(("vertexai:", "vertex:", "vertex/")):

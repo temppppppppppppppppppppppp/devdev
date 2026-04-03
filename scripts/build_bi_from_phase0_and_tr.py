@@ -15,9 +15,14 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from modules.core.project_support import default_external_pov_insert_policy, normalize_external_pov_insert_policy
 from modules.core.response_schemas import (  # noqa: E402 - entrypoint path bootstrap must precede imports
     validate_bible_structure,
-    validate_treatment_structure,
+)
+from modules.core.stage0_handoff import (
+    build_plot_roadmap_from_treatment,
+    canonicalize_bible_payload,
+    canonicalize_treatment_payload,
 )
 
 # Keep runtime detection broad without embedding hygiene-triggering literals directly in source.
@@ -112,6 +117,30 @@ def derive_public_influence(protagonist: dict[str, Any]) -> str:
 def derive_risk_tolerance(protagonist: dict[str, Any]) -> str:
     weakness = as_text(protagonist.get("true_weakness"))
     return f"리스크를 감수하지만 '{weakness}' 때문에 과신과 불신이 동시에 흔들릴 수 있다."
+
+
+def resolve_runtime_identity(protagonist: dict[str, Any], project: dict[str, Any]) -> tuple[str, str]:
+    world_origin = as_text(protagonist.get("world_origin")) or "현대인"
+    incarnation_type = as_text(protagonist.get("incarnation_type")) or "회귀자"
+    return world_origin, incarnation_type
+
+
+def resolve_runtime_pov_contract(
+    protagonist: dict[str, Any],
+    setting: dict[str, Any],
+    project: dict[str, Any],
+) -> tuple[str, str]:
+    pov = as_text(protagonist.get("pov")) or as_text(setting.get("pov")) or as_text(project.get("pov")) or "3인칭"
+    external_policy = normalize_external_pov_insert_policy(
+        as_text(protagonist.get("external_pov_insert_policy"))
+        or as_text(setting.get("external_pov_insert_policy"))
+        or as_text(project.get("external_pov_insert_policy")),
+        primary_pov=pov,
+        genre=as_text(project.get("format")),
+    )
+    if not external_policy:
+        external_policy = default_external_pov_insert_policy(pov, genre=as_text(project.get("format")))
+    return pov, external_policy
 
 
 def build_portfolio_history(blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -358,6 +387,7 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
     project = phase0_payload["project"]
     setting_data = phase0_payload["setting"]
     protagonist = phase0_payload["protagonist"]
+    treatment_blocks = build_plot_roadmap_from_treatment(treatment_blocks)
     phase0 = normalize_phase0_design(phase0_payload["phase0_design"], treatment_blocks)
     first_block = treatment_blocks[0]
 
@@ -382,6 +412,8 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
     talent_name = derive_talent_name(protagonist)
     public_influence = derive_public_influence(protagonist)
     risk_tolerance = derive_risk_tolerance(protagonist)
+    world_origin, incarnation_type = resolve_runtime_identity(protagonist, project)
+    pov, external_pov_insert_policy = resolve_runtime_pov_contract(protagonist, setting_data, project)
 
     master_bible = {
         "ProjectData": {
@@ -408,8 +440,8 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
             },
         },
         "protagonist_config": {
-            "world_origin": protagonist["status"],
-            "incarnation_type": "회귀/사업 감각 강화",
+            "world_origin": world_origin,
+            "incarnation_type": incarnation_type,
             "special_talent": {
                 "name": talent_name,
                 "description": protagonist["true_strength"],
@@ -421,6 +453,8 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
                 "age": protagonist["age_at_start"],
                 "context": starter_context,
             },
+            "pov": pov,
+            "external_pov_insert_policy": external_pov_insert_policy,
         },
         "FinanceHUD": {
             "_description": "Business-Power HUD - 동원 가능 자본, 사업축, 지배력, 반복 현금흐름 추적",
@@ -515,11 +549,8 @@ def main() -> int:
 
     phase0 = load_json(args.phase0)
     draft_raw = load_json(args.draft)
-    # Support both wrapped {"blocks": [...]} and plain list formats
-    treatment_blocks = draft_raw["blocks"] if isinstance(draft_raw, dict) and "blocks" in draft_raw else draft_raw
-
-    tr_valid, tr_errors, _tr_warnings = validate_treatment_structure(treatment_blocks)
-    require(tr_valid, f"Treatment draft validation failed: {tr_errors}")
+    canonical_treatment, tr_warnings = canonicalize_treatment_payload(draft_raw)
+    treatment_blocks = canonical_treatment["blocks"]
     require(isinstance(treatment_blocks, list) and len(treatment_blocks) == 70, "Treatment draft must contain 70 blocks")
     require(isinstance(phase0, dict), "Phase0 payload must be a dict")
     require("project" in phase0 and "setting" in phase0 and "protagonist" in phase0 and "phase0_design" in phase0, "Phase0 payload is missing required sections")
@@ -536,6 +567,7 @@ def main() -> int:
     }
     payload["setting"]["protagonist"] = phase0["protagonist"]
     bible = build_bible(payload, treatment_blocks)
+    bible, canonical_warnings = canonicalize_bible_payload(bible, treatment=canonical_treatment)
 
     valid, errors, warnings = validate_bible_structure(bible)
     require(valid, f"Bible validation failed: {errors}")
@@ -559,8 +591,9 @@ def main() -> int:
     args.output.write_text(serialized + "\n", encoding="utf-8")
 
     print(f"[OK] BI generated: {args.output}")
-    if warnings:
-        print(f"[WARN] Bible warnings: {warnings}")
+    all_warnings = [*tr_warnings, *warnings, *canonical_warnings]
+    if all_warnings:
+        print(f"[WARN] Bible warnings: {all_warnings}")
     print("[OK] plot_roadmap hash synchronized with draft")
     return 0
 

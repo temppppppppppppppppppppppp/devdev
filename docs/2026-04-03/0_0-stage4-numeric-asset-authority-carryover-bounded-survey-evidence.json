@@ -1,0 +1,53 @@
+{
+  "full_run_project": "projects/00_20260403",
+  "canary_project": "projects/canary_0_0_stage4_ep2_sinkproof_r2",
+  "artifact_truth": {
+    "arc_001": {
+      "liquidation_total_text": "총 20억 3천만 원",
+      "personal_account_text": "2,000,000,000",
+      "later_cme_balance_text": "약 19억 7천만원"
+    },
+    "blueprint_0002": {
+      "asset_claim_text": "제 명의로 된 주식과 부동산, 합쳐서 200억 정도 됩니다."
+    },
+    "ep_0002": {
+      "asset_claim_text": "약 200억 원 정도의 자금이 마련됩니다."
+    }
+  },
+  "canary_fact_ledger": {
+    "capital": {
+      "value": 0.0,
+      "unit": "won",
+      "established_ep": 1
+    },
+    "total_assets": {
+      "value": 10000000.0,
+      "unit": "won",
+      "established_ep": 1
+    },
+    "summary_lines": [
+      "capital: 0.0 won (EP1 기준)",
+      "total_assets: 10000000.0 won (EP1 기준)"
+    ]
+  },
+  "stage4_runtime": {
+    "attempt_1": {
+      "gate_basis": "continuity_firewall",
+      "contradiction_type": "수치",
+      "selection_reason_theme": "주인공의 200억 자산 형성 과정"
+    },
+    "attempt_2": {
+      "final_verdict": "PASS",
+      "director_feedback_theme": "연속성 완벽 준수, 폴더폰 소유 상태 정확히 반영"
+    }
+  },
+  "canary_unit_verdict": {
+    "stage4_only_probe_valid": true,
+    "exclusive_stage4_owner_proof": false
+  },
+  "final_conclusion": {
+    "dominant_next_seam": "numeric_asset_authority_carryover_owner_boundary",
+    "flashback_front_seam": false,
+    "npcdrift_front_seam": false
+  }
+}

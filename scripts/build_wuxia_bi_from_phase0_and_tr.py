@@ -17,7 +17,13 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from modules.core.response_schemas import validate_bible_structure, validate_treatment_structure
+from modules.core.project_support import default_external_pov_insert_policy, normalize_external_pov_insert_policy
+from modules.core.response_schemas import validate_bible_structure
+from modules.core.stage0_handoff import (
+    build_plot_roadmap_from_treatment,
+    canonicalize_bible_payload,
+    canonicalize_treatment_payload,
+)
 
 GARBLED_TOKENS = ("\ufffd",)
 REQUIRED_PHASE0_SECTIONS = ("project", "setting", "protagonist", "phase0_design")
@@ -576,14 +582,73 @@ def build_key_npcs(project: dict[str, Any], protagonist: dict[str, Any], npc_tim
     return out
 
 
+def _map_incarnation_type(raw_value: str) -> str:
+    normalized = as_text(raw_value)
+    if not normalized or normalized.lower() in {"none", "일반"}:
+        return "일반"
+    if "빙의" in normalized:
+        return "빙의자"
+    if "환생" in normalized:
+        return "환생자"
+    if "회귀" in normalized:
+        return "회귀자"
+    return normalized
+
+
+def resolve_runtime_identity(
+    protagonist: dict[str, Any],
+    treatment_blocks: list[dict[str, Any]],
+) -> tuple[str, str]:
+    world_origin = as_text(protagonist.get("world_origin")) or "원시인"
+
+    explicit_incarnation = _map_incarnation_type(as_text(protagonist.get("incarnation_type")))
+    if explicit_incarnation != "일반":
+        return world_origin, explicit_incarnation
+
+    for block in treatment_blocks:
+        if not isinstance(block, dict):
+            continue
+        regression_ext = block.get("regression_ext")
+        if not isinstance(regression_ext, dict):
+            continue
+        if regression_ext.get("is_regressor") is True:
+            return world_origin, "회귀자"
+        mapped = _map_incarnation_type(as_text(regression_ext.get("regression_type")))
+        if mapped != "일반":
+            return world_origin, mapped
+
+    return world_origin, "일반"
+
+
+def resolve_runtime_pov_contract(
+    protagonist: dict[str, Any],
+    setting: dict[str, Any],
+    project: dict[str, Any],
+) -> tuple[str, str]:
+    pov = as_text(protagonist.get("pov")) or as_text(setting.get("pov")) or as_text(project.get("pov")) or "3인칭"
+    external_policy = normalize_external_pov_insert_policy(
+        as_text(protagonist.get("external_pov_insert_policy"))
+        or as_text(setting.get("external_pov_insert_policy"))
+        or as_text(project.get("external_pov_insert_policy")),
+        primary_pov=pov,
+        genre=first_text(project, "format", default=""),
+    )
+    if not external_policy:
+        external_policy = default_external_pov_insert_policy(pov, genre=first_text(project, "format", default=""))
+    return pov, external_policy
+
+
 def build_bible(phase0: dict[str, Any], treatment_blocks: list[dict[str, Any]]) -> dict[str, Any]:
     project = phase0["project"]
     setting = phase0["setting"]
     protagonist = phase0["protagonist"]
+    treatment_blocks = build_plot_roadmap_from_treatment(treatment_blocks)
     phase0_design = phase0["phase0_design"]
     faction_map = build_faction_map(protagonist, setting, phase0_design)
     treasures = build_treasures(protagonist, setting)
     snapshot = build_treatment_snapshot(treatment_blocks)
+    world_origin, incarnation_type = resolve_runtime_identity(protagonist, treatment_blocks)
+    pov, external_pov_insert_policy = resolve_runtime_pov_contract(protagonist, setting, project)
     seeds = [
         {
             "id": as_text(item.get("id")) or f"S-{index + 1:03d}",
@@ -636,6 +701,21 @@ def build_bible(phase0: dict[str, Any], treatment_blocks: list[dict[str, Any]]) 
                 "success_device": first_text(setting, "execution_doctrine", default="경지 상승과 문파 역전"),
                 "attitude": first_text(setting, "attitude", default="강호의 질서와 정면 충돌하는 무협 서사"),
             },
+        },
+        "protagonist_config": {
+            "world_origin": world_origin,
+            "incarnation_type": incarnation_type,
+            "pov": pov,
+            "external_pov_insert_policy": external_pov_insert_policy,
+            "name": first_text(protagonist, "name", default="주인공"),
+            "age_at_start": protagonist.get("age_at_start", ""),
+            "opening_status": first_text(protagonist, "status", default="강호의 인물"),
+            "initial_goal": first_text(protagonist, "initial_goal", default="생존"),
+            "mid_goal": first_text(protagonist, "mid_goal", default="성장"),
+            "final_goal": first_text(protagonist, "final_goal", default="돌파"),
+            "true_strength": first_text(protagonist, "true_strength", default="무공 재능"),
+            "true_weakness": first_text(protagonist, "true_weakness", default="미정"),
+            "combat_role": first_text(protagonist, "combat_role", default="무인"),
         },
         "MartialHUD": build_martial_hud(
             protagonist,
@@ -700,10 +780,8 @@ def main() -> int:
 
     phase0 = load_json(args.phase0)
     draft_raw = load_json(args.draft)
-    # Support both wrapped {"blocks": [...]} and plain list formats
-    treatment_blocks = draft_raw["blocks"] if isinstance(draft_raw, dict) and "blocks" in draft_raw else draft_raw
-    tr_valid, tr_errors, _tr_warnings = validate_treatment_structure(treatment_blocks)
-    require(tr_valid, f"Treatment draft validation failed: {tr_errors}")
+    canonical_treatment, tr_warnings = canonicalize_treatment_payload(draft_raw)
+    treatment_blocks = canonical_treatment["blocks"]
     require(isinstance(treatment_blocks, list) and len(treatment_blocks) == 70, "Treatment draft must contain 70 blocks")
     require(isinstance(phase0, dict), "Phase0 payload must be a dict")
     for section in REQUIRED_PHASE0_SECTIONS:
@@ -712,6 +790,7 @@ def main() -> int:
         require(field in phase0["phase0_design"], f"Phase0 design missing field: {field}")
 
     bible = build_bible(phase0, treatment_blocks)
+    bible, canonical_warnings = canonicalize_bible_payload(bible, treatment=canonical_treatment, genre_hint="wuxia")
     valid, errors, warnings = validate_bible_structure(bible)
     require(valid, f"Bible validation failed: {errors}")
     require(
@@ -731,8 +810,9 @@ def main() -> int:
     args.output.write_text(serialized + "\n", encoding="utf-8")
 
     print(f"[OK] Wuxia BI generated: {args.output}")
-    if warnings:
-        print(f"[WARN] Bible warnings: {warnings}")
+    all_warnings = [*tr_warnings, *warnings, *canonical_warnings]
+    if all_warnings:
+        print(f"[WARN] Bible warnings: {all_warnings}")
     return 0
 
 
