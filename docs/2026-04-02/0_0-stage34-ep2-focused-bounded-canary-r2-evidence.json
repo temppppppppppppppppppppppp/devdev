@@ -1,0 +1,210 @@
+{
+  "canary_id": "canary_0_0_stage34_ep2_focus_r2",
+  "order_type": "ep2-focused bounded Stage34 single-episode canary r2",
+  "date": "2026-04-02",
+  "source_project": "0_0",
+  "target_project": "canary_0_0_stage34_ep2_focus_r2",
+  "frozen_authority_ep": 1,
+  "regen_blueprint_ep": 2,
+  "regen_draft_ep": 2,
+
+  "timeline": {
+    "prepare_start": "2026-04-02T19:54:24",
+    "prepare_complete": "2026-04-02T19:54:24",
+    "run_start": "2026-04-02T19:54:34",
+    "run_kill_by_user": "~2026-04-02T20:55:00",
+    "analyze_complete": "2026-04-02T20:55:30",
+    "total_wall_clock_min": 60,
+    "effective_runtime_min": 55
+  },
+
+  "stage3_result": {
+    "verdict": "PASS",
+    "ep1_blueprint_score": 95,
+    "ep2_blueprint_score": 100,
+    "ep2_blueprint_file": "blueprint_0002.txt",
+    "ep2_blueprint_saved": true,
+    "ep1_blueprint_frozen": true,
+    "sink_alignment": "ok",
+    "hard_gates": "pass"
+  },
+
+  "stage4_result": {
+    "verdict": "FAILED",
+    "ep2_draft_saved": false,
+    "ep2_draft_file_exists": false,
+    "rounds_completed": 7,
+    "rounds_total_max": 10,
+    "interrupted_at_round": 8,
+    "interrupted_by": "user_kill",
+    "final_stage4_attempts_in_db": 0,
+    "director_stage4_selection_rows": 8,
+    "attempt_artifacts": ["attempt_01", "attempt_02", "attempt_03", "attempt_04", "attempt_05", "attempt_06", "attempt_07"],
+    "hard_gates": "fail",
+    "hard_gate_errors": [
+      "draft_count_mismatch:1!=2",
+      "runtime_tag_not_complete:stage3_complete"
+    ]
+  },
+
+  "round_detail": [
+    {
+      "round": 1,
+      "mode": "full_ensemble",
+      "candidates": 3,
+      "selected": "B",
+      "score": 98,
+      "initial_verdict": "PASS",
+      "gate": "strong_advisory_escalation",
+      "post_gate_verdict": "PASS_WITH_FIX",
+      "continuity_conflict": true,
+      "final_verdict": "REJECT",
+      "dominant_blocker": "TF-3 post-select continuity conflict + flashback MAJOR (2 candidates)"
+    },
+    {
+      "round": 2,
+      "mode": "patch_with_continuity_retry",
+      "candidates": 1,
+      "selected": "A",
+      "score": 83,
+      "initial_verdict": "REJECT",
+      "gate": "director_primary_reject",
+      "final_verdict": "REJECT",
+      "dominant_blocker": "EP1 ending duplication in EP2 opening"
+    },
+    {
+      "round": 3,
+      "mode": "TF-PATCH-GATE_rewrite_ASP",
+      "candidates": 3,
+      "selected": "A",
+      "score": 86,
+      "initial_verdict": "REJECT",
+      "gate": "director_primary_reject",
+      "final_verdict": "REJECT",
+      "dominant_blocker": "EP1 ending duplication + QR-7 plateau detected",
+      "flashback_major_count": 2,
+      "flashback_clean_candidates": ["A", "C"]
+    },
+    {
+      "round": 4,
+      "mode": "full_rewrite_ASP",
+      "candidates": 3,
+      "selected": "C",
+      "score": 82,
+      "initial_verdict": "REJECT",
+      "gate": "director_primary_reject",
+      "final_verdict": "REJECT",
+      "dominant_blocker": "EP1 ending duplication + TF-29 triggered",
+      "flashback_major_count": 3,
+      "flashback_clean_candidates": ["A"]
+    },
+    {
+      "round": 5,
+      "mode": "TF-PATCH-GATE_rewrite",
+      "candidates": 3,
+      "selected": "C",
+      "score": 86,
+      "initial_verdict": "REJECT",
+      "gate": "director_primary_reject",
+      "final_verdict": "REJECT",
+      "dominant_blocker": "EP1 ending duplication",
+      "flashback_major_count": 2,
+      "flashback_clean_candidates": ["B"]
+    },
+    {
+      "round": 6,
+      "mode": "TF-PATCH-GATE_rewrite_ASP",
+      "candidates": 3,
+      "selected": "C",
+      "score": 82,
+      "initial_verdict": "REJECT",
+      "gate": "director_primary_reject",
+      "final_verdict": "REJECT",
+      "dominant_blocker": "EP1 ending duplication",
+      "flashback_major_count": 3,
+      "flashback_clean_candidates": []
+    },
+    {
+      "round": 7,
+      "mode": "TF-PATCH-GATE_rewrite_ASP",
+      "candidates": 3,
+      "selected": "C",
+      "score": 44,
+      "initial_verdict": "REJECT",
+      "gate": "continuity_firewall",
+      "final_verdict": "REJECT",
+      "dominant_blocker": "Full continuity failure — score collapsed to 44"
+    }
+  ],
+
+  "new_hard_binding_features": {
+    "TF3_post_select_continuity_conflict": {
+      "triggered": true,
+      "first_trigger_round": 1,
+      "effect": "Director PASS(98) downgraded to REJECT"
+    },
+    "TF_PATCH_GATE": {
+      "triggered": true,
+      "trigger_rounds": [3, 4, 5, 6, 7],
+      "effect": "fix_pack not ready → patch blocked → forced full rewrite"
+    },
+    "PreCheck_starting_location_contract": {
+      "triggered": true,
+      "trigger_rounds": [3, 4, 5, 6],
+      "effect": "Detected 0/3 location tokens in opening 600 chars"
+    },
+    "QR7_plateau_detection": {
+      "triggered": true,
+      "trigger_round": 3,
+      "effect": "Score descent 98→83→86 detected, local retry blocked"
+    },
+    "TF29_constraint_violation": {
+      "triggered": true,
+      "trigger_round": 4,
+      "effect": "3 consecutive constraint-type REJECTs → blueprint-level problem warning"
+    },
+    "continuity_firewall": {
+      "triggered": true,
+      "trigger_round": 7,
+      "score": 44,
+      "effect": "Full continuity barrier activated"
+    },
+    "V75D_blueprint_inplace_patch": {
+      "triggered": false,
+      "note": "Not triggered despite continuity_firewall at R7. demo_r2 triggered at R5. Root cause: possibly score path or trigger condition difference"
+    }
+  },
+
+  "blocker_analysis": {
+    "primary_blocker": "flashback_spatial_continuity_plus_opening_duplication",
+    "description": "LLM이 EP1 결말(서재 앞 복도 전화 통화)을 EP2 도입부에 반복 재서술. Director가 7번 연속 '통화 끝난 직후부터 시작하라' 피드백 제공했으나 LLM이 교정에 실패",
+    "resolution_needed": "V75-D blueprint inplace patch 발동 조건 조사 또는 opening 장소 제약을 ChiefWriter 프롬프트에 하드코딩",
+    "strong_advisory_escalation_recurrence": true,
+    "same_root_cause_as_prior_runs": true
+  },
+
+  "comparison": {
+    "vs_r1": {
+      "detection_improvement": true,
+      "convergence_improvement": false,
+      "new_features_working": ["TF-3", "TF-PATCH-GATE", "PreCheck", "QR-7", "TF-29", "continuity_firewall"],
+      "r2_score_range": "44-98",
+      "r1_score_range": "64-98"
+    },
+    "vs_demo_r2": {
+      "ep2_pass": false,
+      "key_difference": "V75-D blueprint inplace patch triggered in demo_r2 R5 but not in focus_r2",
+      "rounds_to_pass": "N/A vs 6"
+    }
+  },
+
+  "artifact_references": {
+    "prep_log": "projects/canary_0_0_stage34_ep2_focus_r2/logs/stage34_ep_demo_canary_prep.json",
+    "summary_log": "projects/canary_0_0_stage34_ep2_focus_r2/logs/stage34_ep_demo_canary_summary.json",
+    "ep1_draft": "projects/canary_0_0_stage34_ep2_focus_r2/drafts/ep_0001.txt",
+    "blueprint_0002": "projects/canary_0_0_stage34_ep2_focus_r2/plans/blueprints/blueprint_0002.txt",
+    "attempt_artifacts": "projects/canary_0_0_stage34_ep2_focus_r2/logs/artifacts/stage4/ep_0002/"
+  },
+
+  "confidence": 0.96
+}

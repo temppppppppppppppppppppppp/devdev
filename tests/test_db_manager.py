@@ -680,6 +680,82 @@ def test_save_stage_attempt_persists_rationale_fields(db):
     assert row["retry_directives"] == "keep the ending distinct"
 
 
+def test_get_latest_stage4_gate_repair_snapshot_surfaces_repair_contract_and_scope_authority(db):
+    db.save_stage_attempt(
+        stage=4,
+        verdict="REJECT",
+        attempt_num=3,
+        ep_num=7,
+        arc_num=2,
+        score=63,
+        session_id="sess-gate",
+        attempt_key="s4:ep7:arc2:a3:sess-gate",
+        candidate_key="A|balanced",
+        content_hash="hash-gate",
+        artifact_path="logs/artifacts/stage4/ep_0007/attempt_03/rejected_best__A_balanced.txt",
+        selection_reason="best candidate",
+        verdict_reason="continuity conflict",
+        open_review="review note",
+        advisory_flags={
+            "gate_semantics": {
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "bounded_local_repair",
+                "repair_scope": "partial",
+            },
+            "fix_pack": {
+                "target_kind": "local_sentence",
+                "must_fix": ["repair opening"],
+            },
+            "repair_contract": {
+                "subtype": "movement",
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "provenance": "runtime_synthesized",
+            },
+            "scope_authority": {
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "scope_origin": {
+                    "fix_scope": "runtime_widened",
+                    "authoritative_fix_scope": "director_authoritative",
+                    "repair_scope": "runtime_lane",
+                },
+                "widened": True,
+            },
+            "retry_budget_axes": {"repair": "patch_revision"},
+        },
+    )
+
+    row = db.get_latest_stage4_gate_repair_snapshot(session_id="sess-gate")
+
+    assert row["attempt_key"] == "s4:ep7:arc2:a3:sess-gate"
+    assert row["director_verdict"] == "PASS_WITH_FIX"
+    assert row["gate_basis"] == "bounded_local_repair"
+    assert row["repair_scope"] == "partial"
+    assert row["fix_scope"] == "partial"
+    assert row["authoritative_fix_scope"] == "inplace"
+    assert row["repair_contract"] == {
+        "subtype": "movement",
+        "fix_scope": "partial",
+        "repair_scope": "partial",
+        "provenance": "runtime_synthesized",
+    }
+    assert row["scope_authority"] == {
+        "fix_scope": "partial",
+        "repair_scope": "partial",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+            "fix_scope": "runtime_widened",
+            "authoritative_fix_scope": "director_authoritative",
+            "repair_scope": "runtime_lane",
+        },
+        "widened": True,
+    }
+    assert row["retry_budget_axes"] == {"repair": "patch_revision"}
+    assert row["final_authority_sink"] == "stage_attempts"
+
+
 def test_save_director_selection_persists_director_thinking(db):
     db.save_director_selection(
         7,

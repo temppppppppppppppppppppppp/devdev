@@ -37,6 +37,14 @@ _STAGE4_RETRY_CONTEXT_FIELDS = (
     "retry_directives",
 )
 _STAGE4_RETRY_REQUIRED_VERDICTS = {"REJECT", "PASS_WITH_FIX"}
+_GATE_REPAIR_MISMATCH_FIELDS = (
+    "repair_contract_subtype_mismatches",
+    "repair_contract_provenance_mismatches",
+    "scope_authority_fix_scope_mismatches",
+    "scope_authority_authoritative_fix_scope_mismatches",
+    "scope_authority_widened_mismatches",
+    "gate_repair_metadata_missing",
+)
 
 
 def _normalize_from_ep(from_ep: int, *, allow_partial: bool = False) -> int:
@@ -536,6 +544,7 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
             db,
             latest_session_id=latest_session_id,
         )
+        gate_repair_summary = db.get_latest_stage4_gate_repair_snapshot(session_id=latest_session_id or None)
     finally:
         db.close()
 
@@ -563,6 +572,11 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         project_locator=project_locator,
         latest_session_id=latest_session_id,
     )
+    gate_repair_surface_summary = _build_stage4_gate_repair_surface_summary(
+        gate_repair_summary=gate_repair_summary,
+        sink_alignment_summary=sink_alignment_summary,
+        current_session_sink_alignment_summary=current_session_sink_alignment_summary,
+    )
 
     return {
         "project": root.name,
@@ -583,11 +597,68 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         "sink_alignment_summary": sink_alignment_summary,
         "current_session_sink_alignment_summary": current_session_sink_alignment_summary,
         "final_authority_contract_summary": final_authority_contract_summary,
+        "gate_repair_summary": gate_repair_summary,
+        "gate_repair_surface_summary": gate_repair_surface_summary,
         "rationale_contract_summary": rationale_contract_summary,
         "companion_audit_summary": companion_audit_summary,
         "proof_scope_summary": proof_scope_summary,
         "proof_record_summary": proof_record_summary,
         "hard_gates": hard_gates,
+    }
+
+
+def _build_stage4_gate_repair_surface_summary(
+    *,
+    gate_repair_summary: dict,
+    sink_alignment_summary: dict,
+    current_session_sink_alignment_summary: dict,
+) -> dict:
+    repair_contract = gate_repair_summary.get("repair_contract", {}) or {}
+    if not isinstance(repair_contract, dict):
+        repair_contract = {}
+    scope_authority = gate_repair_summary.get("scope_authority", {}) or {}
+    if not isinstance(scope_authority, dict):
+        scope_authority = {}
+
+    mismatch_source = (
+        current_session_sink_alignment_summary
+        if current_session_sink_alignment_summary
+        else sink_alignment_summary
+    )
+    mismatch_scope = "current_session" if current_session_sink_alignment_summary else "run_wide"
+    mismatch_counts = {
+        field: len(mismatch_source.get(field) or [])
+        for field in _GATE_REPAIR_MISMATCH_FIELDS
+    }
+    has_gate_surface = bool(
+        gate_repair_summary
+        or repair_contract
+        or scope_authority
+        or str(gate_repair_summary.get("fix_scope", "") or "").strip()
+        or str(gate_repair_summary.get("authoritative_fix_scope", "") or "").strip()
+    )
+
+    if not has_gate_surface:
+        status = "missing"
+    elif any(count > 0 for count in mismatch_counts.values()):
+        status = "warn"
+    else:
+        status = "ok"
+
+    return {
+        "status": status,
+        "mismatch_scope": mismatch_scope,
+        "attempt_key": str(gate_repair_summary.get("attempt_key", "") or "").strip(),
+        "session_id": str(gate_repair_summary.get("session_id", "") or "").strip(),
+        "final_verdict": str(gate_repair_summary.get("final_verdict", "") or "").strip(),
+        "fix_scope": str(gate_repair_summary.get("fix_scope", "") or "").strip(),
+        "authoritative_fix_scope": str(gate_repair_summary.get("authoritative_fix_scope", "") or "").strip(),
+        "repair_scope": str(gate_repair_summary.get("repair_scope", "") or "").strip(),
+        "repair_contract_subtype": str(repair_contract.get("subtype", "") or "").strip(),
+        "repair_contract_provenance": str(repair_contract.get("provenance", "") or "").strip(),
+        "scope_origin": str(scope_authority.get("scope_origin", "") or "").strip(),
+        "widened": bool(scope_authority.get("widened", False)),
+        "mismatch_counts": mismatch_counts,
     }
 
 

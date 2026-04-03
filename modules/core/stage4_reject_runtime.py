@@ -474,6 +474,23 @@ class Stage4RejectRuntime:
         if _rationale_blanked_by:
             reject_attempt["rationale_blanked_by"] = _rationale_blanked_by
         # [SSS-T1] Scope origin metadata — distinguishes semantic layers in operator evidence
+        fix_pack_provenance = ""
+        fix_pack_provenance_sources: list[str] = []
+        if isinstance(snapshot_fix_pack, dict) and snapshot_fix_pack:
+            fix_pack_provenance = str(snapshot_fix_pack.get("provenance", "") or "").strip().lower()
+            fix_pack_provenance_sources = [
+                str(item).strip() for item in (snapshot_fix_pack.get("provenance_sources") or []) if str(item).strip()
+            ]
+        if fix_pack_provenance:
+            reject_attempt["fix_pack_origin"] = {
+                "provenance": fix_pack_provenance,
+                "provenance_sources": fix_pack_provenance_sources,
+                "routing_contract": (
+                    "runtime_generated_prefers_patch"
+                    if fix_pack_provenance in {"runtime_backfilled", "runtime_synthesized"}
+                    else "director_authored_allows_inplace"
+                ),
+            }
         reject_attempt["scope_origin"] = {
             "fix_scope": (
                 "runtime_widened"
@@ -484,6 +501,27 @@ class Stage4RejectRuntime:
             "authoritative_fix_scope": "director_authoritative",
             "repair_scope": "runtime_lane",
         }
+        repair_contract = owner._build_repair_contract_payload_from_parts(
+            gate_semantics={
+                "repair_scope": str(reject_attempt.get("repair_scope", "") or ""),
+                "authoritative_fix_scope": str(reject_attempt.get("authoritative_fix_scope", "") or ""),
+                "scope_origin": dict(reject_attempt.get("scope_origin") or {}),
+            },
+            fix_pack=snapshot_fix_pack,
+            source=director_result,
+        )
+        if repair_contract:
+            reject_attempt["repair_contract"] = repair_contract
+        scope_authority = owner._build_scope_authority_payload_from_parts(
+            gate_semantics={
+                "repair_scope": str(reject_attempt.get("repair_scope", "") or ""),
+                "authoritative_fix_scope": str(reject_attempt.get("authoritative_fix_scope", "") or ""),
+                "scope_origin": dict(reject_attempt.get("scope_origin") or {}),
+            },
+            source=reject_attempt,
+        )
+        if scope_authority:
+            reject_attempt["scope_authority"] = scope_authority
         next_strategy_budget = (
             "reduced"
             if reject_bucket in {"quality_issue", "constraint_violation"} and resolved_fix_scope != "full"
@@ -1035,6 +1073,16 @@ class Stage4RejectRuntime:
             scope_origin=(
                 reject_logging.session_gate_semantics.get("scope_origin")
                 if isinstance(reject_logging.session_gate_semantics.get("scope_origin"), dict)
+                else None
+            ),
+            repair_contract=(
+                reject_logging.session_gate_semantics.get("repair_contract")
+                if isinstance(reject_logging.session_gate_semantics.get("repair_contract"), dict)
+                else None
+            ),
+            scope_authority=(
+                reject_logging.session_gate_semantics.get("scope_authority")
+                if isinstance(reject_logging.session_gate_semantics.get("scope_authority"), dict)
                 else None
             ),
         )

@@ -13,7 +13,7 @@ providers:
     sdk: "openai"
     api_key_env: "OPENAI_API_KEY"
   vertex_ai:
-    enabled: false
+    enabled: true
     sdk: "google-genai"
     auth_mode: "api_key"
     # auth_mode=api_key keeps Gemini Vertex Express mode isolated from project credentials.
@@ -35,47 +35,47 @@ providers:
     # Prefix convention: "anthropic-vertex:claude-sonnet-4-6"
 
 agents:
-  analyst: "gemini-2.5-pro"
-  manager: "gemini-2.5-flash"
-  chief_writer: "gemini-2.5-pro"
-  blueprint_ensemble: "gemini-2.5-pro"
-  three_phase_blueprint_generator: "gemini-2.5-pro"
-  state_locked_arc_generator: "gemini-2.5-pro"
-  block_enricher: "gemini-2.5-flash"
-  preflight_checker: "gemini-2.5-flash"
-  state_extractor: "gemini-2.5-flash"
-  four_phase_arc_generator: "gemini-2.5-pro"
-  continuity_inspector: "gemini-2.5-pro"
-  director: "gemini-2.5-pro"
-  arc_corrector: "gemini-2.5-flash"
-  arc_critic: "gemini-2.5-flash"
-  consensus_validator: "gemini-2.5-flash"
-  unified_arc_validator: "gemini-2.5-flash"
-  unified_blueprint_validator: "gemini-2.5-flash"
-  critic: "gemini-2.5-flash"
-  weaver: "gemini-2.5-flash"
-  writer: "gemini-2.5-flash"
+  analyst: "vertexai:gemini-2.5-pro"
+  manager: "vertexai:gemini-2.5-flash"
+  chief_writer: "vertexai:gemini-3.1-pro-preview"
+  blueprint_ensemble: "vertexai:gemini-2.5-pro"
+  three_phase_blueprint_generator: "vertexai:gemini-2.5-pro"
+  state_locked_arc_generator: "vertexai:gemini-2.5-pro"
+  block_enricher: "vertexai:gemini-2.5-flash"
+  preflight_checker: "vertexai:gemini-2.5-flash"
+  state_extractor: "vertexai:gemini-2.5-flash"
+  four_phase_arc_generator: "vertexai:gemini-2.5-pro"
+  continuity_inspector: "vertexai:gemini-2.5-pro"
+  director: "vertexai:gemini-2.5-pro"
+  arc_corrector: "vertexai:gemini-2.5-flash"
+  arc_critic: "vertexai:gemini-2.5-flash"
+  consensus_validator: "vertexai:gemini-2.5-flash"
+  unified_arc_validator: "vertexai:gemini-2.5-flash"
+  unified_blueprint_validator: "vertexai:gemini-2.5-flash"
+  critic: "vertexai:gemini-2.5-flash"
+  weaver: "vertexai:gemini-2.5-flash"
+  writer: "vertexai:gemini-2.5-flash"
 
 fallback_chain:
   "claude-opus-4-6": "claude-sonnet-4-6"
   "claude-opus-4-20250514": "claude-sonnet-4-20250514"
-  "claude-sonnet-4-6": "gemini-3.1-pro-preview"
-  "claude-sonnet-4-20250514": "gemini-3.1-pro-preview"
-  "gemini-3.1-pro-preview": "gemini-2.5-pro"
-  "gemini-2.5-pro": "gemini-2.5-flash"
-  "gemini-2.5-flash": "gemini-2.5-flash"
+  "claude-sonnet-4-6": "vertexai:gemini-3.1-pro-preview"
+  "claude-sonnet-4-20250514": "vertexai:gemini-3.1-pro-preview"
+  "vertexai:gemini-3.1-pro-preview": "vertexai:gemini-2.5-pro"
+  "vertexai:gemini-2.5-pro": "vertexai:gemini-2.5-flash"
+  "vertexai:gemini-2.5-flash": "vertexai:gemini-2.5-flash"
 
 sub_components:
   four_phase_arc_generator:
-    preflight: "gemini-2.5-flash"
-    ensemble: "gemini-2.5-pro"
-    validator: "gemini-2.5-flash"
+    preflight: "vertexai:gemini-2.5-flash"
+    ensemble: "vertexai:gemini-2.5-pro"
+    validator: "vertexai:gemini-2.5-flash"
   three_phase_blueprint_generator:
-    ensemble: "gemini-2.5-pro"
-    validator: "gemini-2.5-flash"
+    ensemble: "vertexai:gemini-2.5-pro"
+    validator: "vertexai:gemini-2.5-flash"
 
-# role_constants remain Gemini to limit blast radius outside the core agent map.
+# role_constants follow the same Vertex route so shared constants align with agent routing.
 role_constants:
-  pro_main: "gemini-2.5-pro"
-  flash_main: "gemini-2.5-flash"
-  emergency: "gemini-2.5-pro"
+  pro_main: "vertexai:gemini-2.5-pro"
+  flash_main: "vertexai:gemini-2.5-flash"
+  emergency: "vertexai:gemini-2.5-pro"

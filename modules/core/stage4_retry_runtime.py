@@ -104,6 +104,79 @@ class Stage4RetryRuntime:
             return ""
         return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
+    @staticmethod
+    def _extract_fix_pack_provenance_fields(
+        fix_pack_contract: dict[str, object] | None,
+    ) -> tuple[str, list[str], str]:
+        fix_pack = fix_pack_contract.get("fix_pack") if isinstance(fix_pack_contract, dict) else {}
+        if not isinstance(fix_pack, dict):
+            return "", [], ""
+        provenance = str(fix_pack.get("provenance", "") or "").strip().lower()
+        provenance_sources = [str(item).strip() for item in (fix_pack.get("provenance_sources") or []) if str(item).strip()]
+        target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
+        return provenance, provenance_sources, target_kind
+
+    @classmethod
+    def _should_prefer_patch_for_runtime_fix_pack(
+        cls,
+        *,
+        patch_enabled: bool,
+        prev_manuscript: str,
+        fix_scope: str,
+        fix_pack_contract: dict[str, object],
+    ) -> bool:
+        if not patch_enabled or not prev_manuscript:
+            return False
+        if str(fix_scope or "").strip().lower() != "inplace":
+            return False
+        if not bool(fix_pack_contract.get("ready")):
+            return False
+        provenance, _provenance_sources, target_kind = cls._extract_fix_pack_provenance_fields(fix_pack_contract)
+        if provenance not in {"runtime_backfilled", "runtime_synthesized"}:
+            return False
+        return target_kind in {"entity_ref", "local_phrase", "local_sentence"}
+
+    @staticmethod
+    def _should_allow_bounded_post_select_patch_retry(
+        previous_attempt: dict | None,
+        fix_pack_contract: dict[str, object],
+    ) -> bool:
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+        if not previous_attempt:
+            return False
+        if not bool(fix_pack_contract.get("ready")):
+            return False
+        if str(previous_attempt.get("reject_bucket", "") or "").strip() != "post_select_conflict":
+            return False
+        if str(previous_attempt.get("fix_scope", "") or "").strip() != "full":
+            return False
+
+        conflict_contract = previous_attempt.get("conflict_contract")
+        if not isinstance(conflict_contract, dict) or not conflict_contract:
+            return False
+        if not bool(conflict_contract.get("bounded_local_fix_hint")):
+            return False
+
+        fix_pack = fix_pack_contract.get("fix_pack")
+        if not isinstance(fix_pack, dict):
+            return False
+        target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
+        if target_kind not in {"entity_ref", "local_phrase", "local_sentence"}:
+            return False
+
+        evidence_summary = str(fix_pack.get("evidence_summary", "") or "").strip().lower()
+        if "flashback continuity backfill" in evidence_summary:
+            return True
+
+        contradiction_types = {
+            str(item or "").strip().lower()
+            for item in (conflict_contract.get("contradiction_types") or [])
+            if str(item or "").strip()
+        }
+        return bool(contradiction_types) and contradiction_types.issubset(
+            {"continuity", "timeline", "movement", "location", "facing", "dialogue"}
+        )
+
     def suppress_equivalent_retry_candidates(
         self,
         *,
@@ -997,6 +1070,76 @@ class Stage4RetryRuntime:
                 event_kind="policy",
             )
 
+        bounded_post_select_patch = (
+            patch_enabled
+            and prev_manuscript
+            and not _consecutive_empty_patch
+            and self._should_allow_bounded_post_select_patch_retry(previous_attempt, fix_pack_contract)
+        )
+        runtime_fix_pack_prefers_patch = (
+            not _consecutive_empty_patch
+            and not bounded_post_select_patch
+            and self._should_prefer_patch_for_runtime_fix_pack(
+                patch_enabled=patch_enabled,
+                prev_manuscript=prev_manuscript,
+                fix_scope=fix_scope,
+                fix_pack_contract=fix_pack_contract,
+            )
+        )
+        if bounded_post_select_patch:
+            repair_contract = owner._build_repair_contract_payload_from_parts(
+                gate_semantics={
+                    "repair_scope": str((previous_attempt or {}).get("repair_scope", fix_scope) or ""),
+                    "authoritative_fix_scope": str((previous_attempt or {}).get("authoritative_fix_scope", "") or ""),
+                    "scope_origin": dict((previous_attempt or {}).get("scope_origin") or {}),
+                },
+                fix_pack=fix_pack_contract.get("fix_pack") or {},
+                source=previous_attempt or {},
+            )
+            owner.ctx.ui.log(
+                "   [TF-F2] bounded post-select continuity patch retry 허용",
+                stage="stage4",
+                component="retry_lane",
+                ep_num=ep_num,
+                round_num=round_num,
+                attempt_key=attempt_key,
+                event_kind="policy",
+                meta={
+                    "reject_bucket": reject_bucket,
+                    "target_kind": str((fix_pack_contract.get("fix_pack") or {}).get("target_kind", "") or ""),
+                    "reason": "bounded_post_select_localfix",
+                    "repair_contract": repair_contract,
+                },
+            )
+        if runtime_fix_pack_prefers_patch:
+            provenance, provenance_sources, target_kind = self._extract_fix_pack_provenance_fields(fix_pack_contract)
+            repair_contract = owner._build_repair_contract_payload_from_parts(
+                gate_semantics={
+                    "repair_scope": str((previous_attempt or {}).get("repair_scope", fix_scope) or ""),
+                    "authoritative_fix_scope": str((previous_attempt or {}).get("authoritative_fix_scope", "") or ""),
+                    "scope_origin": dict((previous_attempt or {}).get("scope_origin") or {}),
+                },
+                fix_pack=fix_pack_contract.get("fix_pack") or {},
+                source=previous_attempt or {},
+            )
+            owner.ctx.ui.log(
+                "   [TF-FP1] runtime-generated local fix-pack -> patch_revision 우선",
+                stage="stage4",
+                component="retry_lane",
+                ep_num=ep_num,
+                round_num=round_num,
+                attempt_key=attempt_key,
+                event_kind="policy",
+                meta={
+                    "fix_scope": str(fix_scope or ""),
+                    "provenance": provenance,
+                    "provenance_sources": provenance_sources,
+                    "target_kind": target_kind,
+                    "reason": "runtime_generated_fix_pack_prefers_patch",
+                    "repair_contract": repair_contract,
+                },
+            )
+
         force_patch = (
             patch_enabled
             and prev_manuscript
@@ -1010,6 +1153,8 @@ class Stage4RetryRuntime:
             patch_enabled
             and prev_manuscript
             and not force_patch
+            and not bounded_post_select_patch
+            and not runtime_fix_pack_prefers_patch
             and not _consecutive_empty_patch  # [TF-4]
             and fix_scope == "inplace"
             and bool(fix_pack_contract.get("ready"))
@@ -1018,6 +1163,10 @@ class Stage4RetryRuntime:
             not _consecutive_empty_patch  # [TF-4]
             and bool(fix_pack_contract.get("ready"))
             and (
+                runtime_fix_pack_prefers_patch
+                or
+                bounded_post_select_patch
+                or
                 force_patch
                 or (
                     patch_enabled

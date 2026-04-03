@@ -22,17 +22,17 @@ import inspect
 import json
 import logging
 import re
-from typing import TYPE_CHECKING, Any, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
-from modules.core.constants import Stage2Limits, VolumeSettings, smart_truncate
+from modules.core.constants import Stage2Limits, smart_truncate
 from modules.core.context_advisor import (
     RetrievalSources,
     build_context_budget_ledger,
     build_context_observation,
 )
 from modules.core.context_compression import ContextCompressor
-from modules.core.stage4_context_packets import Stage4ContextPackets
 from modules.core.semantic_query_broker import SemanticQueryBroker
+from modules.core.stage4_context_packets import Stage4ContextPackets
 from modules.core.tactical_utils import extract_episode_tactical
 from modules.core.writer_prompt_builders import (
     _check_hud_anomalies as _detect_hud_anomalies,
@@ -46,6 +46,7 @@ from modules.core.writer_prompt_builders import (
 from modules.core.writer_prompt_builders import (
     build_mandatory_context as _build_writer_mandatory_context,
 )
+from modules.validation.threshold_helper import _threshold
 
 
 class WorkRetrievalFocusPayload(TypedDict, total=False):
@@ -119,8 +120,6 @@ class Stage4EpisodeStatePayload(TypedDict):
     world_state_summary: str
     recent_scene_keywords: list[dict[str, Any]]
 
-
-from modules.validation.threshold_helper import _threshold
 
 if TYPE_CHECKING:
     from modules.core.context_advisor import RetrievalPlan
@@ -829,6 +828,158 @@ class Stage4ContextBuilder:
             result = _fit_context_text(result, max_chars=max_chars)
         return result
 
+    def _build_work_identity_authority_packet(
+        self,
+        *,
+        focus: WorkRetrievalFocusPayload,
+        arc_data: dict | None,
+        blueprint: dict | None,
+        cp_entities: dict[str, list[str] | str] | None,
+        prev_ending: str = "",
+        chain_link_section: str = "",
+        max_chars: int = 1400,
+    ) -> str:
+        focus = focus if isinstance(focus, dict) else {}
+        tracking_slots = [str(x).strip() for x in (focus.get("tracking_slots") or []) if str(x).strip()]
+        scene_engines = [str(x).strip() for x in (focus.get("mandatory_scene_engines") or []) if str(x).strip()]
+        registry_profiles = [x for x in (focus.get("registry_profiles") or []) if isinstance(x, dict)]
+
+        blueprint = blueprint if isinstance(blueprint, dict) else {}
+        opening_start_location = str(blueprint.get("start_location", "") or blueprint.get("location", "") or "").strip()
+        opening_time_flow = str(blueprint.get("time_flow", "") or "").strip()
+        opening_scene_location = ""
+        opening_scene_title = ""
+        scenes = blueprint.get("scene_breakdown", {})
+        if isinstance(scenes, dict) and scenes:
+            scene_1 = scenes.get("scene_1") or next(iter(scenes.values()), {})
+            if isinstance(scene_1, dict):
+                opening_scene_location = str(scene_1.get("location", "") or "").strip()
+                opening_scene_title = str(scene_1.get("title", "") or "").strip()
+        prev_ending_excerpt = re.sub(r"\s+", " ", str(prev_ending or "").strip())
+        if len(prev_ending_excerpt) > 240:
+            prev_ending_excerpt = prev_ending_excerpt[:237] + "..."
+        carryover_fields = self._extract_chain_link_carryover_fields(chain_link_section)
+        carryover_cliffhanger = carryover_fields.get("cliffhanger", "")
+        carryover_pending_actions = carryover_fields.get("pending_actions", "")
+        carryover_location = carryover_fields.get("location", "")
+        carryover_time_marker = carryover_fields.get("time_marker", "")
+
+        if not any(
+            [
+                tracking_slots,
+                scene_engines,
+                registry_profiles,
+                opening_start_location,
+                opening_time_flow,
+                opening_scene_location,
+                opening_scene_title,
+                prev_ending_excerpt,
+                carryover_cliffhanger,
+                carryover_pending_actions,
+                carryover_location,
+                carryover_time_marker,
+            ]
+        ):
+            return ""
+
+        lines = [
+            "[Stage4 Opening Scene Authority]",
+            "- opening scene continuity below is hard canon. Do not improvise a different movement path or camera reset.",
+            "- do not replay a completed prior-episode event in the opening. Continue its aftermath or explicitly transition away from it.",
+            "- if the opening changes location, dominant action, or time band, use either an explicit transition sentence or a scene-break marker `* * *` first.",
+            "- a scene-break marker alone is not enough: the first 1-2 sentences after it must state the changed location, time, or action state.",
+            "- without a transition signal, do not jump to a new room, vehicle, exterior route, or later time band.",
+        ]
+        if opening_start_location:
+            lines.append(f"- opening start_location MUST be preserved: {opening_start_location}")
+        if opening_scene_location and opening_scene_location != opening_start_location:
+            lines.append(f"- opening scene_1.location MUST be preserved: {opening_scene_location}")
+        if opening_time_flow:
+            lines.append(f"- opening time_flow MUST stay aligned: {opening_time_flow}")
+        if opening_scene_title:
+            lines.append(f"- opening scene_1.title anchor: {opening_scene_title}")
+        if prev_ending_excerpt:
+            lines.append(f"- previous ending bridge to honor before new motion: {prev_ending_excerpt}")
+        if carryover_cliffhanger:
+            lines.append(f"- opening carryover cliffhanger to resolve or explicitly transition from: {carryover_cliffhanger}")
+        if carryover_location:
+            lines.append(f"- opening carryover location to honor or explicitly transition from: {carryover_location}")
+        if carryover_time_marker:
+            lines.append(f"- opening carryover time_marker to honor or explicitly advance from: {carryover_time_marker}")
+        if carryover_pending_actions:
+            lines.append(
+                "- opening carryover pending_actions to resolve before new thread or explicitly transition away: "
+                f"{carryover_pending_actions}"
+            )
+
+        lines.extend(
+            [
+                "",
+            "[Stage4 Work Identity Authority]",
+            "- below fields are hard intake authority, not soft advisory prose.",
+            ]
+        )
+        if tracking_slots:
+            lines.append(f"- tracking_slots MUST survive into scene execution: {', '.join(tracking_slots[:3])}")
+        if scene_engines:
+            lines.append(f"- mandatory_scene_engines MUST appear on-page: {', '.join(scene_engines[:3])}")
+        if registry_profiles:
+            rendered_profiles = []
+            for profile in registry_profiles[:2]:
+                name = str(profile.get("name", "") or "").strip()
+                fields = [str(x).strip() for x in (profile.get("required_fields") or []) if str(x).strip()]
+                purpose = str(profile.get("purpose", "") or "").strip()
+                if not name:
+                    continue
+                extras = []
+                if fields:
+                    extras.append(f"fields={', '.join(fields[:4])}")
+                if purpose:
+                    extras.append(f"purpose={purpose[:60]}")
+                rendered_profiles.append(name + (f" ({'; '.join(extras)})" if extras else ""))
+            if rendered_profiles:
+                lines.append(f"- registry_profiles to consult before invention: {', '.join(rendered_profiles)}")
+
+        if isinstance(cp_entities, dict):
+            linked_parts = []
+            for label, key, limit in (
+                ("NPC", "npcs", 4),
+                ("plot", "plots", 3),
+                ("item", "items", 3),
+                ("location", "locations", 2),
+            ):
+                values = [str(v).strip() for v in (cp_entities.get(key) or []) if str(v).strip()]
+                if values:
+                    linked_parts.append(f"{label}={', '.join(values[:limit])}")
+            if linked_parts:
+                lines.append(f"- linked authority entities: {' | '.join(linked_parts)}")
+
+        if isinstance(arc_data, dict):
+            constraint_summary = self._trim_summary_value(arc_data.get("constraint_summary", ""), 140)
+            if constraint_summary:
+                lines.append(f"- active constraint spine: {constraint_summary}")
+
+        result = "\n".join(lines)
+        if len(result) > max_chars:
+            result = _fit_context_text(result, max_chars=max_chars)
+        return result
+
+    @staticmethod
+    def _extract_chain_link_carryover_fields(chain_link_section: str) -> dict[str, str]:
+        if not chain_link_section:
+            return {}
+        fields: dict[str, str] = {}
+        for raw_line in str(chain_link_section).splitlines():
+            line = raw_line.strip()
+            if not line.startswith("- carryover_"):
+                continue
+            key, _, value = line[2:].partition(":")
+            normalized_key = key.replace("carryover_", "", 1).strip()
+            normalized_value = re.sub(r"\s+", " ", value).strip()
+            if normalized_key and normalized_value:
+                fields[normalized_key] = normalized_value
+        return fields
+
     @staticmethod
     def _describe_retrieval_coverage_warning(code: str) -> str:
         mapping = {
@@ -1416,6 +1567,22 @@ class Stage4ContextBuilder:
                 _cl_parts.append(f"- 현재 위치: {_cl_data['location']}")
             if _cl_data.get("time_marker"):
                 _cl_parts.append(f"- 작중 시간: {_cl_data['time_marker']}")
+            _carryover_parts = []
+            if _cl_data.get("cliffhanger"):
+                _carryover_parts.append(f"- carryover_cliffhanger: {_cl_data['cliffhanger']}")
+            if _cl_data.get("pending_actions"):
+                actions = _cl_data["pending_actions"]
+                if isinstance(actions, list):
+                    actions = ", ".join(str(a) for a in actions if str(a).strip())
+                _carryover_parts.append(f"- carryover_pending_actions: {actions}")
+            if _cl_data.get("location"):
+                _carryover_parts.append(f"- carryover_location: {_cl_data['location']}")
+            if _cl_data.get("time_marker"):
+                _carryover_parts.append(f"- carryover_time_marker: {_cl_data['time_marker']}")
+            if _carryover_parts:
+                _cl_parts.append("")
+                _cl_parts.append("### [ChainLink Carryover Contract]")
+                _cl_parts.extend(_carryover_parts)
             if len(_cl_parts) > 1:
                 return "\n".join(_cl_parts)
             return ""
@@ -1628,13 +1795,18 @@ class Stage4ContextBuilder:
         *,
         arc_data: dict,
         blueprint: dict | None,
+        prev_ending: str,
+        chain_link_section: str,
         cp_entities: dict[str, list[str] | str],
+        work_focus: WorkRetrievalFocusPayload,
         mandatory_context: str,
     ) -> list[str]:
         """Assemble tier-0 mandatory sections in stable insertion order."""
         # [Tier-0 injection stack] Final ordering after all insert(0, ...) calls:
-        #   canonical constraints (authority statement + NPC L0 + numeric L0)
+        #   NPC boundary block
+        #   > Stage4 work identity authority packet
         #   > continuity packet
+        #   > canonical constraints (authority statement + NPC L0 + numeric L0)
         #   > fact ledger summary
         #   > timeline summary
         #   > world state summary
@@ -1745,6 +1917,21 @@ class Stage4ContextBuilder:
                     )
             except Exception as continuity_err:
                 logging.warning("[CP] Continuity Packet 생성 실패 (비치명): %s", str(continuity_err)[:80])
+
+        try:
+            work_identity_authority = self._build_work_identity_authority_packet(
+                focus=work_focus,
+                arc_data=arc_data,
+                blueprint=blueprint,
+                cp_entities=cp_entities,
+                prev_ending=prev_ending,
+                chain_link_section=chain_link_section,
+            )
+            if work_identity_authority:
+                tier0_parts.insert(0, work_identity_authority)
+                logging.info("[WorkGuard] Stage4 work identity authority packet injected (%d chars)", len(work_identity_authority))
+        except Exception as work_identity_err:
+            logging.debug("[WorkGuard] Stage4 authority packet build failed (non-blocking): %s", work_identity_err)
 
         try:
             boundary_npcs = list(cp_entities.get("npcs") or [])
@@ -2180,9 +2367,6 @@ class Stage4ContextBuilder:
         item_acquisition_timeline = self.ctx.build_item_acquisition_timeline(next_ep - 1)
 
         chain_link_section = self.load_chain_link_section(next_ep)
-        if chain_link_section:
-            logging.info(f"[V68] 직전 화 연결고리 로드 완료 ({len(chain_link_section)}자)")
-
         world_state_summary = ""
         if self.ctx.world_state:
             try:
@@ -2425,6 +2609,7 @@ class Stage4ContextBuilder:
 
         mandatory_context = self._load_base_mandatory_context(next_ep=next_ep)
         seed = self._build_mandatory_context_seed(
+            next_ep=next_ep,
             arc_data=arc_data,
             arc_tactical=arc_tactical,
             prev_ending=prev_ending,
@@ -2518,6 +2703,7 @@ class Stage4ContextBuilder:
     def _build_mandatory_context_seed(
         self,
         *,
+        next_ep: int,
         arc_data: dict,
         arc_tactical: str,
         prev_ending: str,
@@ -2537,16 +2723,22 @@ class Stage4ContextBuilder:
             blueprint=blueprint,
             cp_entities=cp_entities,
         )
-        tier0_parts = self._build_tier0_mandatory_sections(
-            arc_data=arc_data,
-            blueprint=blueprint,
-            cp_entities=cp_entities,
-            mandatory_context=mandatory_context,
-        )
         slot_summary = self._build_work_identity_slot_summary(
             focus=work_focus,
             arc_data=arc_data,
             cp_entities=cp_entities,
+        )
+        chain_link_section = self.load_chain_link_section(next_ep)
+        if chain_link_section:
+            logging.info(f"[V68] 직전 화 연결고리 로드 완료 ({len(chain_link_section)}자)")
+        tier0_parts = self._build_tier0_mandatory_sections(
+            arc_data=arc_data,
+            blueprint=blueprint,
+            prev_ending=prev_ending,
+            chain_link_section=chain_link_section,
+            cp_entities=cp_entities,
+            work_focus=work_focus,
+            mandatory_context=mandatory_context,
         )
         return {
             "cp_entities": cp_entities,

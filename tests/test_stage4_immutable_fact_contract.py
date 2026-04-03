@@ -177,6 +177,20 @@ class TestBuildPacket:
         packet = build_packet(prev_digest=digest)
         assert len(packet.completed_event_facts) >= 4
 
+    def test_chain_link_carryover_fields_are_extracted(self):
+        chain = (
+            "### [ChainLink Carryover Contract]\n"
+            "- carryover_cliffhanger: 전화가 오기 직전 멈칫했다.\n"
+            "- carryover_pending_actions: 전화를 받기, 현관으로 이동하기\n"
+            "- carryover_location: 서재 앞 복도\n"
+            "- carryover_time_marker: 직후"
+        )
+        packet = build_packet(chain_link_section=chain)
+        assert packet.carryover_cliffhanger == "전화가 오기 직전 멈칫했다."
+        assert packet.carryover_pending_actions == "전화를 받기, 현관으로 이동하기"
+        assert packet.carryover_location == "서재 앞 복도"
+        assert packet.carryover_time_marker == "직후"
+
 
 # ── classify_violation_family ────────────────────────────────────
 
@@ -365,6 +379,32 @@ class TestRenderPacketForCW:
         )
         rendered = render_packet_for_cw(packet)
         assert "불완전" in rendered
+
+    def test_prev_ending_bridge_rendered_with_opening_anchor(self):
+        packet = ImmutableFactPacket(
+            start_location="서재 앞 복도",
+            prev_ending_bridge="서재 앞 복도에서 현관 쪽으로 발을 옮겼다.",
+        )
+        rendered = render_packet_for_cw(packet)
+        assert "직전 화 종료 브리지" in rendered
+        assert "현관 쪽으로 발을 옮겼다" in rendered
+
+    def test_chain_link_carryover_rendered_with_opening_anchor(self):
+        packet = ImmutableFactPacket(
+            start_location="서재 앞 복도",
+            carryover_cliffhanger="전화가 오기 직전 멈칫했다.",
+            carryover_pending_actions="전화를 받기, 현관으로 이동하기",
+            carryover_location="서재 앞 복도",
+            carryover_time_marker="직후",
+        )
+        rendered = render_packet_for_cw(packet)
+        assert "carryover cliffhanger to resolve or explicitly transition from: 전화가 오기 직전 멈칫했다." in rendered
+        assert "carryover location to honor or explicitly transition from: 서재 앞 복도" in rendered
+        assert "carryover time_marker to honor or explicitly advance from: 직후" in rendered
+        assert (
+            "carryover pending_actions to resolve before new thread or explicitly transition away: "
+            "전화를 받기, 현관으로 이동하기"
+        ) in rendered
 
 
 # ── render_violation_summary ─────────────────────────────────────

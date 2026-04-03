@@ -335,6 +335,11 @@ def test_failure_analyzer_build_sink_alignment_summary_payload_marks_warn_and_co
                 "fix_pack_target_kind_mismatches",
                 "fix_pack_patch_targets_mismatches",
                 "retry_budget_axes_mismatches",
+                "repair_contract_subtype_mismatches",
+                "repair_contract_provenance_mismatches",
+                "scope_authority_fix_scope_mismatches",
+                "scope_authority_authoritative_fix_scope_mismatches",
+                "scope_authority_widened_mismatches",
                 "patch_strategy_mismatches",
                 "candidate_key_mismatches",
                 "selection_candidate_key_mismatches",
@@ -691,6 +696,16 @@ def test_failure_analyzer_sink_alignment_summary_tracks_gate_repair_contract_fie
                 "gate_basis": "bounded_local_repair",
                 "repair_scope": "inplace",
             },
+            "repair_contract": {
+                "subtype": "opening_spatial_continuity",
+                "provenance": "runtime_synthesized",
+            },
+            "scope_authority": {
+                "fix_scope": "local",
+                "authoritative_fix_scope": "inplace",
+                "scope_origin": "director_authored",
+                "widened": False,
+            },
             "fix_pack": {
                 "target_kind": "entity_ref",
                 "patch_targets": ["opening_location_name", "ending_location_name"],
@@ -748,6 +763,16 @@ def test_failure_analyzer_sink_alignment_summary_tracks_gate_repair_contract_fie
                             "director_verdict": "REJECT",
                             "gate_basis": "scene_rewrite",
                             "repair_scope": "full",
+                            "repair_contract": {
+                                "subtype": "scene_transition_conflict",
+                                "provenance": "director_authored",
+                            },
+                            "scope_authority": {
+                                "fix_scope": "full",
+                                "authoritative_fix_scope": "scene_rewrite",
+                                "scope_origin": "runtime_widened",
+                                "widened": True,
+                            },
                             "fix_pack": {
                                 "target_kind": "scene_model",
                                 "patch_targets": ["scene_model"],
@@ -789,10 +814,23 @@ def test_failure_analyzer_sink_alignment_summary_tracks_gate_repair_contract_fie
         assert any(item["attempt_key"] == mismatch_key for item in result["fix_pack_target_kind_mismatches"])
         assert any(item["attempt_key"] == mismatch_key for item in result["fix_pack_patch_targets_mismatches"])
         assert any(item["attempt_key"] == mismatch_key for item in result["retry_budget_axes_mismatches"])
+        assert any(item["attempt_key"] == mismatch_key for item in result["repair_contract_subtype_mismatches"])
+        assert any(item["attempt_key"] == mismatch_key for item in result["repair_contract_provenance_mismatches"])
+        assert any(item["attempt_key"] == mismatch_key for item in result["scope_authority_fix_scope_mismatches"])
+        assert any(
+            item["attempt_key"] == mismatch_key
+            for item in result["scope_authority_authoritative_fix_scope_mismatches"]
+        )
+        assert any(item["attempt_key"] == mismatch_key for item in result["scope_authority_widened_mismatches"])
 
         missing_entries = [item for item in result["gate_repair_metadata_missing"] if item["attempt_key"] == missing_key]
         assert any(item["field"] == "director_verdict" and "pass_rate_monitor" in item["sinks"] for item in missing_entries)
         assert any(item["field"] == "fix_pack_patch_targets" and "pass_rate_monitor" in item["sinks"] for item in missing_entries)
+        assert any(item["field"] == "repair_contract_subtype" and "pass_rate_monitor" in item["sinks"] for item in missing_entries)
+        assert any(
+            item["field"] == "scope_authority_authoritative_fix_scope" and "pass_rate_monitor" in item["sinks"]
+            for item in missing_entries
+        )
         assert not any(item["attempt_key"] == no_meta_key for item in result["gate_repair_metadata_missing"])
     finally:
         db.close()
