@@ -47,6 +47,9 @@ class ConsumabilityReport:
     bible_canonical_valid: bool
     treatment_canonical_valid: bool
     pair_canonical_valid: bool
+    normalized_bible_canonical_valid: bool
+    normalized_treatment_canonical_valid: bool
+    normalized_pair_canonical_valid: bool
     canonical_block_count: int
     bible_errors: list[str] = field(default_factory=list)
     bible_warnings: list[str] = field(default_factory=list)
@@ -56,6 +59,10 @@ class ConsumabilityReport:
     bible_canonical_warnings: list[str] = field(default_factory=list)
     treatment_canonical_errors: list[str] = field(default_factory=list)
     treatment_canonical_warnings: list[str] = field(default_factory=list)
+    normalized_bible_canonical_errors: list[str] = field(default_factory=list)
+    normalized_bible_canonical_warnings: list[str] = field(default_factory=list)
+    normalized_treatment_canonical_errors: list[str] = field(default_factory=list)
+    normalized_treatment_canonical_warnings: list[str] = field(default_factory=list)
     bible_normalization_warnings: list[str] = field(default_factory=list)
     treatment_normalization_warnings: list[str] = field(default_factory=list)
     phase0_errors: list[str] = field(default_factory=list)
@@ -198,18 +205,29 @@ def inspect_pair(
     phase0_valid = False
     bible_canonical_valid = False
     treatment_canonical_valid = False
+    normalized_bible_canonical_valid = False
+    normalized_treatment_canonical_valid = False
+    normalized_bible_canonical_errors: list[str] = []
+    normalized_bible_canonical_warnings: list[str] = []
+    normalized_treatment_canonical_errors: list[str] = []
+    normalized_treatment_canonical_warnings: list[str] = []
 
     if bible_data is not None and not bible_errors:
         bible_valid, extra_errors, bible_warnings = validate_bible_structure(bible_data)
         bible_errors.extend(extra_errors)
         embedded_roadmap_warnings = _roadmap_warnings_for_bible(bible_data)
-        _canonical_bible, bible_normalization_warnings = normalize_bible_to_canonical_view(
+        canonical_bible, bible_normalization_warnings = normalize_bible_to_canonical_view(
             bible_data,
             treatment=treatment_data,
         )
         bible_canonical_valid, bible_canonical_errors, bible_canonical_warnings = validate_bible_canonical_structure(
             bible_data
         )
+        (
+            normalized_bible_canonical_valid,
+            normalized_bible_canonical_errors,
+            normalized_bible_canonical_warnings,
+        ) = validate_bible_canonical_structure(canonical_bible)
 
     if treatment_data is not None and not treatment_errors:
         treatment_valid, extra_errors, treatment_warnings = validate_treatment_structure(treatment_data)
@@ -217,12 +235,17 @@ def inspect_pair(
         canonical_roadmap = build_plot_roadmap_from_treatment(treatment_data)
         canonical_block_count = len(canonical_roadmap)
         canonical_roadmap_warnings = validate_plot_roadmap_entries(canonical_roadmap)
-        _canonical_treatment, treatment_normalization_warnings = normalize_treatment_to_canonical_view(treatment_data)
+        canonical_treatment, treatment_normalization_warnings = normalize_treatment_to_canonical_view(treatment_data)
         (
             treatment_canonical_valid,
             treatment_canonical_errors,
             treatment_canonical_warnings,
         ) = validate_treatment_canonical_structure(treatment_data)
+        (
+            normalized_treatment_canonical_valid,
+            normalized_treatment_canonical_errors,
+            normalized_treatment_canonical_warnings,
+        ) = validate_treatment_canonical_structure(canonical_treatment)
 
     if bible_data is not None and treatment_data is not None and not bible_load_error and not treatment_load_error:
         phase0_valid, phase_report = validate_phase0_files(bible_data, treatment_data)
@@ -265,7 +288,15 @@ def inspect_pair(
         and bible_canonical_valid
         and treatment_canonical_valid
     )
+    normalized_pair_canonical_valid = (
+        bible_path is not None
+        and treatment_path is not None
+        and phase0_valid
+        and normalized_bible_canonical_valid
+        and normalized_treatment_canonical_valid
+    )
     canonical_pair_status = "pass" if pair_canonical_valid else "fail"
+    normalized_canonical_pair_status = "pass" if normalized_pair_canonical_valid else "fail"
 
     return ConsumabilityReport(
         work_key=work_key,
@@ -278,6 +309,9 @@ def inspect_pair(
             "bi_canonical_contract": "pass" if bible_canonical_valid else "fail",
             "tr_canonical_contract": "pass" if treatment_canonical_valid else "fail",
             "pair_canonical_contract": canonical_pair_status,
+            "normalized_bi_canonical_view": "pass" if normalized_bible_canonical_valid else "fail",
+            "normalized_tr_canonical_view": "pass" if normalized_treatment_canonical_valid else "fail",
+            "normalized_pair_canonical_view": normalized_canonical_pair_status,
         },
         salvage_ready=pair_status == "pass",
         repair_needed=pair_status == "mixed",
@@ -287,6 +321,9 @@ def inspect_pair(
         bible_canonical_valid=bible_canonical_valid,
         treatment_canonical_valid=treatment_canonical_valid,
         pair_canonical_valid=pair_canonical_valid,
+        normalized_bible_canonical_valid=normalized_bible_canonical_valid,
+        normalized_treatment_canonical_valid=normalized_treatment_canonical_valid,
+        normalized_pair_canonical_valid=normalized_pair_canonical_valid,
         canonical_block_count=canonical_block_count,
         bible_errors=bible_errors,
         bible_warnings=bible_warnings,
@@ -296,6 +333,10 @@ def inspect_pair(
         bible_canonical_warnings=bible_canonical_warnings,
         treatment_canonical_errors=treatment_canonical_errors,
         treatment_canonical_warnings=treatment_canonical_warnings,
+        normalized_bible_canonical_errors=normalized_bible_canonical_errors,
+        normalized_bible_canonical_warnings=normalized_bible_canonical_warnings,
+        normalized_treatment_canonical_errors=normalized_treatment_canonical_errors,
+        normalized_treatment_canonical_warnings=normalized_treatment_canonical_warnings,
         bible_normalization_warnings=bible_normalization_warnings,
         treatment_normalization_warnings=treatment_normalization_warnings,
         phase0_errors=phase0_errors,
@@ -349,10 +390,11 @@ def _print_text_report(results: list[ConsumabilityReport]) -> None:
     repair_count = sum(1 for result in results if result.repair_needed)
     blocked_count = len(results) - salvage_count - repair_count
     canonical_pair_count = sum(1 for result in results if result.pair_canonical_valid)
+    normalized_canonical_pair_count = sum(1 for result in results if result.normalized_pair_canonical_valid)
     print(
         f"Scanned {len(results)} item(s) | salvage-ready={salvage_count} | "
         f"repair-needed={repair_count} | blocked={blocked_count} | "
-        f"canonical-pair={canonical_pair_count}"
+        f"canonical-pair={canonical_pair_count} | normalized-canonical-pair={normalized_canonical_pair_count}"
     )
     for result in results:
         verdicts = result.verdicts
@@ -361,6 +403,8 @@ def _print_text_report(results: list[ConsumabilityReport]) -> None:
             f"(tr={verdicts['tr_consumability']}, bi={verdicts['bi_standalone_roadmap_readiness']}) "
             f"| canonical={verdicts['pair_canonical_contract']} "
             f"(tr={verdicts['tr_canonical_contract']}, bi={verdicts['bi_canonical_contract']}) "
+            f"| normalized={verdicts['normalized_pair_canonical_view']} "
+            f"(tr={verdicts['normalized_tr_canonical_view']}, bi={verdicts['normalized_bi_canonical_view']}) "
             f"blocks={result.canonical_block_count}"
         )
         if result.notes:
@@ -378,6 +422,16 @@ def _print_text_report(results: list[ConsumabilityReport]) -> None:
             print(
                 f"  treatment_canonical_errors[{len(result.treatment_canonical_errors)}]: "
                 f"{_preview_messages(result.treatment_canonical_errors)}"
+            )
+        if result.normalized_bible_canonical_errors:
+            print(
+                f"  normalized_bible_canonical_errors[{len(result.normalized_bible_canonical_errors)}]: "
+                f"{_preview_messages(result.normalized_bible_canonical_errors)}"
+            )
+        if result.normalized_treatment_canonical_errors:
+            print(
+                f"  normalized_treatment_canonical_errors[{len(result.normalized_treatment_canonical_errors)}]: "
+                f"{_preview_messages(result.normalized_treatment_canonical_errors)}"
             )
         if result.bible_normalization_warnings:
             print(

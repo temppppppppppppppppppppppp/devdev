@@ -60,6 +60,9 @@ def test_inspect_pair_marks_pair_pass_when_tr_is_stage2_ready(tmp_path):
     assert result.canonical_block_count == 1
     assert result.bible_canonical_valid is False
     assert result.treatment_canonical_valid is False
+    assert result.normalized_bible_canonical_valid is False
+    assert result.normalized_treatment_canonical_valid is True
+    assert result.normalized_pair_canonical_valid is False
     assert result.runtime_protagonist_keys_missing == [
         "incarnation_type",
         "pov",
@@ -158,9 +161,13 @@ def test_inspect_pair_marks_canonical_pass_when_raw_bi_and_tr_are_canonical(tmp_
 
     assert result.verdicts["pair_consumability"] == "pass"
     assert result.verdicts["pair_canonical_contract"] == "pass"
+    assert result.verdicts["normalized_pair_canonical_view"] == "pass"
     assert result.bible_canonical_valid is True
     assert result.treatment_canonical_valid is True
     assert result.pair_canonical_valid is True
+    assert result.normalized_bible_canonical_valid is True
+    assert result.normalized_treatment_canonical_valid is True
+    assert result.normalized_pair_canonical_valid is True
     assert result.bible_canonical_errors == []
     assert result.treatment_canonical_errors == []
 
@@ -212,4 +219,6 @@ def test_text_report_includes_canonical_contract_status(capsys, tmp_path):
     out = capsys.readouterr().out
 
     assert "canonical-pair=1" in out
+    assert "normalized-canonical-pair=1" in out
     assert "canonical=pass (tr=pass, bi=pass)" in out
+    assert "normalized=pass (tr=pass, bi=pass)" in out

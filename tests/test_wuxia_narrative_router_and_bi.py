@@ -7,7 +7,7 @@ from pathlib import Path
 import modules.narrative_router.router as router_module
 import scripts.audit_wuxia_bi_5pass as audit_script
 import scripts.build_wuxia_bi_from_phase0_and_tr as build_script
-from modules.narrative_router import resolve_route
+from modules.narrative_router.router import resolve_route
 from scripts.wuxia_tr_batch_harness import compute_treatment_metrics
 
 
