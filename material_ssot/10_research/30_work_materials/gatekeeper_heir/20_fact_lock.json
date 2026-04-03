@@ -1,0 +1,47 @@
+{
+  "fact_lock_version": "material-fact-lock.v1",
+  "work_identity": {
+    "work_id": "gatekeeper_heir",
+    "title": "사람값이 보이는 후계자",
+    "family": "blockguide",
+    "primary_profile": "business_growth_profile",
+    "secondary_profile": "office_power_profile"
+  },
+  "story_contract": {
+    "mode": [
+      "modern_fantasy",
+      "corporate_power",
+      "regression"
+    ],
+    "premise": "서울대 합격 직후 회귀한 세원그룹 유일 손자가 사람과 자리의 배치 가치를 읽어, 소유 중심 재벌을 관문 중심 운영제국으로 바꾼다.",
+    "theme_statement": "회사를 모은 시대는 끝나고 흐름을 묶는 시대가 왔다.",
+    "series_promise": "구세대의 의리를 파괴하지 않고 시스템으로 구제하며, 각 섹터를 관문 사업으로 바꾸는 실전 경영물.",
+    "opening_order": [
+      "합격 직후 회장 독대에서 첫 딜 테이블 스파이크를 만든다.",
+      "첫 실전 무대는 매각 직전 계열사 세원정밀과 후공정 검사 라인이다.",
+      "공개 성과 증명은 딜 테이블 고평가 이후에 온다."
+    ]
+  },
+  "immutable_people_states": {
+    "protagonist": "강도윤은 세원그룹 유일 손자이며 사람의 능력치보다 가장 비싸지는 자리와 조합을 읽는 배치 조감 능력을 가진다.",
+    "father_state": "아버지는 opening 이전에 이미 사망해 있다.",
+    "grandfather_state": "강석명 회장은 손자를 아끼지만 곧바로 그룹을 넘기지 않는다.",
+    "successor_structure": "후계전 없이 유일 후계자가 실전으로 경영권을 증명하는 구조다."
+  },
+  "hard_constraints": [
+    "후계전 금지. 형제 간 지분 다툼이 아니라 유일 후계자의 실전 경영물이어야 한다.",
+    "아버지는 사망 상태이며, 그룹을 물려줄 사람은 손자인 강도윤 한 명뿐이다.",
+    "할아버지는 도윤을 좋아하지만 바로 그룹을 맡기지 않는다. 총애와 실권은 분리돼 있어야 한다.",
+    "시작 시점은 서울대 합격 직후다.",
+    "회귀 정보는 거시경제 달력 암기가 아니라 그룹 몰락 순서, 숨은 병목, 인재 배치 실패의 기억이어야 한다.",
+    "공신 세대는 악역화 금지. 명예로운 은퇴 설계를 통해 물러나게 해야 한다.",
+    "첫 스파이크는 딜 테이블에서의 고평가, 두 번째 스파이크는 공개적 성과 증명 순서여야 한다.",
+    "1-2블록마다 다른 섹터를 먹되, 앞 섹터가 다음 섹터의 입장권이 되는 구조를 유지해야 한다.",
+    "장기 목적은 세원그룹을 보이는 재벌에서 보이지 않는 관문 제국으로 바꾸는 것이다.",
+    "테마 문장은 끝까지 유지한다: 회사를 모은 시대는 끝나고 흐름을 묶는 시대가 왔다."
+  ],
+  "source_evidence": [
+    "treatments/preprocess/gatekeeper_heir/source_manifest.json",
+    "treatments/preprocess/gatekeeper_heir/profile_lock.json"
+  ]
+}

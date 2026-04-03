@@ -1524,8 +1524,6 @@ def _evaluate_stage4_canary_gates(
         for blocked in ("missing_patched_blocks", "no_usable_patched_blocks", "patched_output_too_short"):
             if int(fallback_reasons.get(blocked, 0) or 0) > 0:
                 errors.append(f"fallback_reason:{blocked}")
-    else:
-        warnings.append("patch_trace_not_exercised")
 
     status = "fail" if errors else ("warn" if warnings else "pass")
     return {

@@ -1,0 +1,191 @@
+{
+  "utf8_hygiene_note": "utf8-hygiene: allow-file rationale: legitimate Sino-Korean title spelling appears in canonical wuxia title fields.",
+  "material_pack_version": "material-pack.v1",
+  "status": "bootstrap-normalized",
+  "work_identity": {
+    "work_id": "wuxia_heavenly_physician",
+    "title": "천의무쌍(天醫武雙)",
+    "family": "wuxguide",
+    "primary_profile": "wuxia",
+    "secondary_profile": ""
+  },
+  "supports": [
+    "pitch",
+    "stage0_preprocess",
+    "phase0_design"
+  ],
+  "source_inventory": {
+    "primary_documents": [
+      "treatments/preprocess/wuxia_heavenly_physician/source_manifest.json",
+      "treatments/preprocess/wuxia_heavenly_physician/material_bundle_summary.json",
+      "treatments/preprocess/wuxia_heavenly_physician/profile_lock.json",
+      "treatments/preprocess/wuxia_heavenly_physician/phase0_ready_snapshot.json",
+      "material_ssot/20_pitch/intake/legacy_import/20260320/컨셉기획_041_무협_천의무쌍.md"
+    ],
+    "reference_profiles": [
+      "material_ssot/10_research/10_reference_profiles/무협_곤륜마협_문체프로파일.md",
+      "material_ssot/10_research/10_reference_profiles/무협_곤륜마협_클리프행어.md",
+      "material_ssot/10_research/10_reference_profiles/무협_곤륜마협_화간연결.md",
+      "material_ssot/10_research/10_reference_profiles/무협_파공검제_문체프로파일.md",
+      "material_ssot/10_research/10_reference_profiles/무협_파공검제_클리프행어.md",
+      "material_ssot/10_research/10_reference_profiles/무협_파공검제_화간연결.md"
+    ],
+    "fewshot_assets": [
+      "material_ssot/10_research/20_fewshot_bank/무협_곤륜마협.yaml",
+      "material_ssot/10_research/20_fewshot_bank/무협_파공검제.yaml",
+      "material_ssot/10_research/20_fewshot_bank/무협_자하검신.yaml",
+      "material_ssot/10_research/20_fewshot_bank/npc_dialogue_무협_곤륜마협.yaml",
+      "material_ssot/10_research/20_fewshot_bank/npc_dialogue_무협_파공검제.yaml"
+    ],
+    "raw_corpus_pinned": [],
+    "raw_corpus_policy": "deferred until later research waves"
+  },
+  "story_contract": {
+    "premise": "무공 자질 없는 명문 무가의 막내가 침술이 곧 무공으로 작동하는 의무일체를 개척해, 가문과 무림과 독역의 위기를 동시에 치료하며 천의의 경지에 도달한다.",
+    "theme_statement": "치료하는 손과 죽이는 손은 다르지 않으며, 진짜 의술은 세상을 살리기 위해 싸울 줄도 알아야 한다.",
+    "series_promise": "의술과 무공의 경계를 허물고, 침술이라는 하나의 시스템으로 성장과 전투와 감동을 함께 밀어붙이는 정통 의술 무협.",
+    "opening_spike": "비무대 아래의 의원이었던 소백이 형을 살리는 순간, 침끝에서 내공이 발현하며 의무일체의 존재가 드러난다."
+  },
+  "user_agreements": [
+    "정통 무협",
+    "세가물",
+    "의술 무협",
+    "침술=무공의 양면성",
+    "경지 7단계 성장축",
+    "독역은 내공이 높을수록 치명적",
+    "치료 장면은 진단-처방-시술-경과 순서 유지",
+    "성장곡선은 비단조이고 좌절 7회 포함",
+    "의무일체 금기는 천의 경지의 열쇠"
+  ],
+  "locked_facts": {
+    "hard_constraints": [
+      "침술=무공의 양면성: 활침(치료)과 살침(전투)은 동일 기술 기반이다",
+      "경지 7단계(침의→천의)가 주인공의 성장 축이다",
+      "독역은 내공이 높을수록 치명적이라는 설정을 깨지 않는다",
+      "침술/경혈 명칭은 실제 경혈명(합곡, 족삼리 등)을 기반으로 변형한다. 임의 창작 금지",
+      "치료 장면은 진단→처방→시술→경과 순서를 유지한다",
+      "성장곡선은 비단조: 좌절 7회에서 내공/정확도가 하락한다",
+      "7대단원 x 10블록 = 70블록 구조. 시간 범위 약 11년(17세→28세)",
+      "의무일체의 금기 '사랑하는 자를 치료하지 마라'는 실은 천의 경지의 열쇠다"
+    ],
+    "immutable_people_states": [
+      "진소백은 무공 자질 없는 진가장 막내에서 출발한다.",
+      "소백의 어머니는 의무일체 마지막 전승자였고 의맥 이식 뒤 사망했다.",
+      "좌천명은 독역의 진짜 설계자이자 최종 흑막이다.",
+      "매화와 진소풍과 백무명과 엽천수는 감정축과 성장축의 핵심이다."
+    ]
+  },
+  "domain_requirements": {
+    "battlefields": [
+      "가문 내부 갈등",
+      "사파 독문",
+      "무림맹 암부",
+      "마교 제3자",
+      "의술 비무",
+      "독역 치료 작전"
+    ],
+    "key_terms": [
+      "의무일체",
+      "활침",
+      "살침",
+      "칠성침법",
+      "독맥십이경",
+      "독역",
+      "흡독공",
+      "화독위공",
+      "약침",
+      "의맥",
+      "정의 침",
+      "침의->천의"
+    ],
+    "do_not_fake": [
+      "침술/경혈 명칭을 임의 창작하지 말 것",
+      "치료 장면을 한 줄 기적치료로 처리하지 말 것",
+      "독역의 확산 메커니즘을 흐리지 말 것",
+      "의술 비무를 단순 전투로 처리하지 말 것",
+      "약재 장면을 추상화하지 말 것"
+    ]
+  },
+  "seed_summary": {
+    "event_ladder": [
+      "형 소풍 중상과 의무일체 첫 각성",
+      "백무명 접촉",
+      "장로회 사술 규정",
+      "아버지 치료 실패",
+      "약침 개발",
+      "의선 대회 우승",
+      "과로 경맥 손상",
+      "스승 사망",
+      "살침 개안",
+      "큰형 전사",
+      "아버지와 화해",
+      "좌천명 함정",
+      "형 치료 딜레마",
+      "칠성침법 7침 실패",
+      "정의 침 깨달음",
+      "좌천명을 치료하며 승리",
+      "천의 완성"
+    ],
+    "growth_axes": [
+      "침술 정확도",
+      "치료 범위",
+      "내공량"
+    ],
+    "npc_anchors": [
+      "진소백",
+      "진무강",
+      "진소풍",
+      "백무명",
+      "매화",
+      "독왕 사마련",
+      "엽천수",
+      "진천웅",
+      "홍연",
+      "장풍래",
+      "좌천명"
+    ],
+    "crisis_pool": [
+      "가문 축출 위기",
+      "아버지 치료 실패",
+      "약고 습격",
+      "과로 경맥 손상",
+      "스승 상실",
+      "살침 내공 역류",
+      "큰형 전사",
+      "치료를 가장한 독 주입",
+      "형 치료 vs 최종전 딜레마",
+      "칠성침법 7침 실패"
+    ],
+    "scene_starters": [
+      "비무대 아래의 의원",
+      "치료 시퀀스 4단계",
+      "의술 비무",
+      "독역 확산",
+      "약재 쟁탈전",
+      "장로회와 가주 위계",
+      "치료로 승리하는 최종전"
+    ]
+  },
+  "gap_status": {
+    "safe_to_defer": [
+      "경혈 변형 규칙의 세부 표",
+      "약재 레시피의 완전한 표준 세트",
+      "독역 상세 메커니즘의 세부 문서",
+      "의술 비무 규칙의 세부 레퍼런스",
+      "일부 블록별 세부 전투 안무"
+    ],
+    "enrichment_needed_later": [
+      "경혈명 변형 규칙 예시",
+      "약재명과 배합 원리 샘플",
+      "독역 확산 경로와 해독 메커니즘 상세 표",
+      "서역/북방/남해 원정 파트 지역 디테일"
+    ],
+    "blocking_gaps": []
+  },
+  "readiness": {
+    "pitch_ready": true,
+    "stage0_ready": true,
+    "phase0_ready": true,
+    "notes": "현재 남은 갭은 TR-stage enrichment 성격이며, 70블록 구조와 적대자 변천과 감정축은 이미 잠겨 있다."
+  }
+}

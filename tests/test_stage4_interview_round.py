@@ -2438,6 +2438,56 @@ class TestRecordS4Attempt:
 
         assert resolved == {"continuity": ["keep timeline"]}
 
+    def test_resolve_stage4_db_attempt_advisory_flags_backfills_nested_gate_repair_contract(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        resolved = ir._resolve_stage4_db_attempt_advisory_flags(
+            {
+                "gate_semantics": {
+                    "director_verdict": "REJECT",
+                    "final_verdict": "REJECT",
+                    "gate_basis": "continuity_firewall",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "scope_origin": {
+                        "fix_scope": "director_authoritative",
+                        "authoritative_fix_scope": "director_authoritative",
+                        "repair_scope": "runtime_lane",
+                    },
+                    "repair_contract": {
+                        "subtype": "수치",
+                        "fix_scope": "inplace",
+                        "repair_scope": "inplace",
+                        "authoritative_fix_scope": "inplace",
+                        "scope_origin": {
+                            "fix_scope": "director_authoritative",
+                            "authoritative_fix_scope": "director_authoritative",
+                            "repair_scope": "runtime_lane",
+                        },
+                    },
+                    "scope_authority": {
+                        "fix_scope": "inplace",
+                        "repair_scope": "inplace",
+                        "authoritative_fix_scope": "inplace",
+                        "scope_origin": {
+                            "fix_scope": "director_authoritative",
+                            "authoritative_fix_scope": "director_authoritative",
+                            "repair_scope": "runtime_lane",
+                        },
+                        "widened": False,
+                    },
+                },
+                "fix_pack": {},
+                "retry_budget_axes": {"repair": "rewrite_regenerate"},
+            }
+        )
+
+        assert resolved["repair_contract"]["subtype"] == "수치"
+        assert resolved["repair_contract"]["fix_scope"] == "inplace"
+        assert resolved["scope_authority"]["authoritative_fix_scope"] == "inplace"
+        assert resolved["scope_authority"]["widened"] is False
+
     def test_resolve_stage4_db_attempt_model_uses_director_primary_model(self):
         ctx = _make_ctx()
         ctx.agents["director"].primary_model = "gemini-2.5-pro"

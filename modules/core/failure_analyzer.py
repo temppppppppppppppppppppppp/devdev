@@ -420,8 +420,22 @@ class FailureAnalyzer:
         gate_payload = cls._safe_dict(gate_semantics)
         fix_payload = cls._safe_dict(fix_pack)
         retry_payload = cls._safe_dict(retry_budget_axes)
-        repair_payload = cls._safe_dict(repair_contract)
-        scope_payload = cls._safe_dict(scope_authority)
+        nested_repair_payload = cls._safe_dict(gate_payload.get("repair_contract"))
+        repair_payload = {
+            **nested_repair_payload,
+            **cls._safe_dict(repair_contract),
+        }
+        scope_seed = cls._safe_dict(gate_payload.get("scope_authority"))
+        if not scope_seed:
+            scope_seed = {
+                key: gate_payload.get(key)
+                for key in ("fix_scope", "authoritative_fix_scope", "scope_origin", "widened")
+                if gate_payload.get(key) not in (None, "", [])
+            }
+        scope_payload = {
+            **scope_seed,
+            **cls._safe_dict(scope_authority),
+        }
         return {
             "director_verdict": str(gate_payload.get("director_verdict") or director_verdict or "").strip(),
             "gate_basis": str(gate_payload.get("gate_basis") or gate_basis or "").strip(),
@@ -670,7 +684,7 @@ class FailureAnalyzer:
             if not isinstance(patch_trace, dict):
                 patch_trace = {}
             lifecycle_only = self._is_episode_production_lifecycle_only_row(row)
-            episode_production[attempt_key] = {
+            entry = {
                 "initial_verdict": str(row.get("initial_verdict", row.get("verdict", "")) or ""),
                 "final_verdict": str(row.get("final_verdict", row.get("verdict", "")) or ""),
                 "final_score": None if lifecycle_only else self._coerce_int(row.get("final_score", row.get("score", 0))),
@@ -700,6 +714,15 @@ class FailureAnalyzer:
                     else {},
                 ),
             }
+            existing = episode_production.get(attempt_key)
+            if existing is not None:
+                existing_authoritative = bool(existing.get("final_sink_authoritative", True))
+                if existing_authoritative and lifecycle_only:
+                    continue
+                if not existing_authoritative and not lifecycle_only:
+                    episode_production[attempt_key] = entry
+                    continue
+            episode_production[attempt_key] = entry
         return episode_production
 
     def _load_final_authority_alignment_sink(

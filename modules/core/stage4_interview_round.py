@@ -7037,21 +7037,48 @@ class Stage4InterviewRound:
         _normalized = dict(_adv)
         _gate_semantics = dict(_normalized.get("gate_semantics") or {}) if isinstance(_normalized.get("gate_semantics"), dict) else {}
         _fix_pack = dict(_normalized.get("fix_pack") or {}) if isinstance(_normalized.get("fix_pack"), dict) else {}
-        if "repair_contract" not in _normalized:
-            _repair_contract = self._build_repair_contract_payload_from_parts(
-                gate_semantics=_gate_semantics,
-                fix_pack=_fix_pack,
-                source=_normalized,
-            )
-            if _repair_contract:
-                _normalized["repair_contract"] = _repair_contract
-        if "scope_authority" not in _normalized:
-            _scope_authority = self._build_scope_authority_payload_from_parts(
-                gate_semantics=_gate_semantics,
-                source=_normalized,
-            )
-            if _scope_authority:
-                _normalized["scope_authority"] = _scope_authority
+        _nested_repair_contract = (
+            dict(_gate_semantics.get("repair_contract") or {})
+            if isinstance(_gate_semantics.get("repair_contract"), dict)
+            else {}
+        )
+        _repair_contract = (
+            dict(_normalized.get("repair_contract") or {})
+            if isinstance(_normalized.get("repair_contract"), dict)
+            else {}
+        )
+        if not _repair_contract and _nested_repair_contract:
+            _repair_contract = dict(_nested_repair_contract)
+        _derived_repair_contract = self._build_repair_contract_payload_from_parts(
+            gate_semantics=_gate_semantics,
+            fix_pack=_fix_pack,
+            source={**_normalized, **_nested_repair_contract},
+        )
+        if _derived_repair_contract:
+            _repair_contract = {**_derived_repair_contract, **_repair_contract}
+        if _repair_contract:
+            _normalized["repair_contract"] = _repair_contract
+
+        _nested_scope_authority = (
+            dict(_gate_semantics.get("scope_authority") or {})
+            if isinstance(_gate_semantics.get("scope_authority"), dict)
+            else {}
+        )
+        _scope_authority = (
+            dict(_normalized.get("scope_authority") or {})
+            if isinstance(_normalized.get("scope_authority"), dict)
+            else {}
+        )
+        if not _scope_authority and _nested_scope_authority:
+            _scope_authority = dict(_nested_scope_authority)
+        _derived_scope_authority = self._build_scope_authority_payload_from_parts(
+            gate_semantics=_gate_semantics,
+            source={**_normalized, **_repair_contract},
+        )
+        if _derived_scope_authority:
+            _scope_authority = {**_derived_scope_authority, **_scope_authority}
+        if _scope_authority:
+            _normalized["scope_authority"] = _scope_authority
         return _normalized or None
 
     def _resolve_stage4_db_attempt_model(
