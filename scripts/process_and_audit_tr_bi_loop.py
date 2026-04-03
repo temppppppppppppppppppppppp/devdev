@@ -19,8 +19,14 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from modules.core.response_schemas import (  # noqa: E402 - entrypoint path bootstrap must precede imports
+    validate_bible_canonical_structure,
     validate_bible_structure,
+    validate_treatment_canonical_structure,
     validate_treatment_structure,
+)
+from modules.core.stage0_handoff import (  # noqa: E402 - entrypoint path bootstrap must precede imports
+    normalize_bible_to_canonical_view,
+    normalize_treatment_to_canonical_view,
 )
 
 TR_BI_PAIRS = [
@@ -47,6 +53,8 @@ class PairAudit:
     confidence: float
     checks: dict[str, bool]
     notes: list[str]
+    canonical_checks: dict[str, bool]
+    canonical_notes: list[str]
 
 
 def run_cmd(args: list[str]) -> None:
@@ -87,6 +95,79 @@ def uniq_ratio(items: list[str]) -> float:
 
 def no_banned_tokens(text: str) -> bool:
     return all(tok not in text for tok in BANNED_TOKENS)
+
+
+def preview_messages(messages: list[str], *, limit: int = 3) -> str:
+    if not messages:
+        return ""
+    preview = messages[:limit]
+    suffix = f" ... (+{len(messages) - limit} more)" if len(messages) > limit else ""
+    return " | ".join(preview) + suffix
+
+
+def compute_canonical_contract_status(tr: Any, bi: dict[str, Any]) -> tuple[dict[str, bool], list[str]]:
+    raw_tr_valid, raw_tr_errors, raw_tr_warnings = validate_treatment_canonical_structure(tr)
+    raw_bi_valid, raw_bi_errors, raw_bi_warnings = validate_bible_canonical_structure(bi)
+
+    normalized_tr, tr_normalization_warnings = normalize_treatment_to_canonical_view(tr)
+    normalized_bi, bi_normalization_warnings = normalize_bible_to_canonical_view(bi, treatment=tr)
+
+    normalized_tr_valid, normalized_tr_errors, normalized_tr_warnings = validate_treatment_canonical_structure(
+        normalized_tr
+    )
+    normalized_bi_valid, normalized_bi_errors, normalized_bi_warnings = validate_bible_canonical_structure(
+        normalized_bi
+    )
+
+    status = {
+        "raw_bi_canonical_contract": raw_bi_valid,
+        "raw_tr_canonical_contract": raw_tr_valid,
+        "raw_pair_canonical_contract": raw_bi_valid and raw_tr_valid,
+        "normalized_bi_canonical_view": normalized_bi_valid,
+        "normalized_tr_canonical_view": normalized_tr_valid,
+        "normalized_pair_canonical_view": normalized_bi_valid and normalized_tr_valid,
+    }
+
+    notes: list[str] = []
+    if raw_bi_errors:
+        notes.append(f"raw_bi_canonical_errors[{len(raw_bi_errors)}]: {preview_messages(raw_bi_errors)}")
+    if raw_tr_errors:
+        notes.append(f"raw_tr_canonical_errors[{len(raw_tr_errors)}]: {preview_messages(raw_tr_errors)}")
+    if bi_normalization_warnings:
+        notes.append(
+            f"bi_normalization_warnings[{len(bi_normalization_warnings)}]: "
+            f"{preview_messages(bi_normalization_warnings)}"
+        )
+    if tr_normalization_warnings:
+        notes.append(
+            f"tr_normalization_warnings[{len(tr_normalization_warnings)}]: "
+            f"{preview_messages(tr_normalization_warnings)}"
+        )
+    if normalized_bi_errors:
+        notes.append(
+            f"normalized_bi_canonical_errors[{len(normalized_bi_errors)}]: "
+            f"{preview_messages(normalized_bi_errors)}"
+        )
+    if normalized_tr_errors:
+        notes.append(
+            f"normalized_tr_canonical_errors[{len(normalized_tr_errors)}]: "
+            f"{preview_messages(normalized_tr_errors)}"
+        )
+    if raw_bi_warnings:
+        notes.append(f"raw_bi_canonical_warnings[{len(raw_bi_warnings)}]: {preview_messages(raw_bi_warnings)}")
+    if raw_tr_warnings:
+        notes.append(f"raw_tr_canonical_warnings[{len(raw_tr_warnings)}]: {preview_messages(raw_tr_warnings)}")
+    if normalized_bi_warnings:
+        notes.append(
+            f"normalized_bi_canonical_warnings[{len(normalized_bi_warnings)}]: "
+            f"{preview_messages(normalized_bi_warnings)}"
+        )
+    if normalized_tr_warnings:
+        notes.append(
+            f"normalized_tr_canonical_warnings[{len(normalized_tr_warnings)}]: "
+            f"{preview_messages(normalized_tr_warnings)}"
+        )
+    return status, notes
 
 
 def audit_pair(key: str, tag: str) -> PairAudit:
@@ -188,11 +269,20 @@ def audit_pair(key: str, tag: str) -> PairAudit:
     rr_hash = hashlib.sha256(json.dumps(roadmap, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
     checks["cross_roadmap_hash_equal"] = tr_hash == rr_hash
     checks["cross_edge_title_match"] = bool(tr) and bool(roadmap) and tr[0].get("title") == roadmap[0].get("title") and tr[-1].get("title") == roadmap[-1].get("title")
+    canonical_checks, canonical_notes = compute_canonical_contract_status(tr, bi)
 
     passed = sum(1 for v in checks.values() if v)
     total = len(checks)
     confidence = round((passed / total) * 100.0, 2)
-    return PairAudit(key=key, bi_name=bi_path.name, confidence=confidence, checks=checks, notes=notes)
+    return PairAudit(
+        key=key,
+        bi_name=bi_path.name,
+        confidence=confidence,
+        checks=checks,
+        notes=notes,
+        canonical_checks=canonical_checks,
+        canonical_notes=canonical_notes,
+    )
 
 
 def run_audit_round(round_no: int) -> tuple[float, list[PairAudit]]:
@@ -200,7 +290,9 @@ def run_audit_round(round_no: int) -> tuple[float, list[PairAudit]]:
     overall = round(mean(r.confidence for r in pair_results), 2)
     print(f"[Round {round_no}] overall confidence: {overall}%")
     for r in pair_results:
-        print(f"  - {r.key}: {r.confidence}% ({r.bi_name})")
+        raw_status = "PASS" if r.canonical_checks["raw_pair_canonical_contract"] else "FAIL"
+        normalized_status = "PASS" if r.canonical_checks["normalized_pair_canonical_view"] else "FAIL"
+        print(f"  - {r.key}: {r.confidence}% ({r.bi_name}) | canonical raw={raw_status} normalized={normalized_status}")
     return overall, pair_results
 
 
@@ -226,6 +318,12 @@ def write_report(
         for r in item["pairs"]:
             lines.append(f"### {r.key} ({r.bi_name})")
             lines.append(f"- confidence: {r.confidence}%")
+            lines.append("- canonical_contract:")
+            for k, v in r.canonical_checks.items():
+                lines.append(f"- {k}: {'OK' if v else 'FAIL'}")
+            if r.canonical_notes:
+                for note in r.canonical_notes:
+                    lines.append(f"- canonical_note: {note}")
             for k, v in r.checks.items():
                 lines.append(f"- {k}: {'OK' if v else 'FAIL'}")
             if r.notes:
