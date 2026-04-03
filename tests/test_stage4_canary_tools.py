@@ -67,6 +67,10 @@ def test_prepare_stage4_canary_project_copies_and_resets_stage4_only(tmp_path):
 
     assert result["source_project"] == "source_project"
     assert result["target_project"] == "target_project"
+    assert result["canary_scope"] == "stage4_only"
+    assert result["reruns_stage3_generation"] is False
+    assert result["preserves_stage3_blueprints"] is True
+    assert result["preserves_stage3_sink_baseline"] is True
     assert result["cleanup"]["db_impact"]["blueprints_kept"] == 1
 
     target_db = DBManager(target / "project_data.db")
@@ -266,8 +270,8 @@ def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
     assert summary["gate_repair_surface_summary"]["mismatch_counts"]["repair_contract_subtype_mismatches"] == 0
     assert summary["rationale_contract_summary"]["status"] == "ok"
     assert summary["rationale_contract_summary"]["field_nonempty_counts"]["selection_reason"] == 1
-    assert summary["hard_gates"]["status"] == "fail"
-    assert "pass_rate_monitor_missing" in summary["hard_gates"]["errors"]
+    assert summary["hard_gates"]["status"] == "warn"
+    assert "pass_rate_monitor_cache_missing" in summary["hard_gates"]["warnings"]
     assert "stage4_retry_contract_not_exercised" in summary["hard_gates"]["warnings"]
     assert "patch_trace_not_exercised" in summary["hard_gates"]["warnings"]
 
@@ -275,6 +279,19 @@ def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
 def test_build_stage4_canary_summary_reports_stage3_probe_scope(tmp_path):
     project = tmp_path / "canary_project"
     _make_project_root(project)
+    (project / "logs" / "canary_prep.json").write_text(
+        json.dumps(
+            {
+                "source_project": "base",
+                "canary_scope": "stage4_only",
+                "reruns_stage3_generation": False,
+                "preserves_stage3_blueprints": True,
+                "preserves_stage3_sink_baseline": True,
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
 
     stage3_artifact_dir = project / "logs" / "artifacts" / "stage3" / "ep_0001" / "attempt_01"
     stage3_artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -403,10 +420,11 @@ def test_build_stage4_canary_summary_reports_stage3_probe_scope(tmp_path):
 
     assert summary["stage3_sink_alignment_summary"]["status"] == "ok"
     assert summary["stage3_sink_alignment_summary"]["coverage"]["session_decisions"] == 1
-    assert summary["proof_scope_summary"]["scope_status"] == "partial_multi_stage_probe"
+    assert summary["proof_scope_summary"]["scope_status"] == "stage4_only"
     assert summary["proof_scope_summary"]["backend_wide_proof"] is False
     assert summary["proof_scope_summary"]["stage3_sink_probe_status"] == "ok"
-    assert "stage3_sink_alignment_probe" in summary["proof_scope_summary"]["covered_surfaces"]
+    assert summary["proof_scope_summary"]["stage3_probe_origin"] == "baseline_copy"
+    assert "stage3_baseline_sink_probe" in summary["proof_scope_summary"]["covered_surfaces"]
     assert "stage3_live_generation_path" in summary["proof_scope_summary"]["uncovered_surfaces"]
 
 

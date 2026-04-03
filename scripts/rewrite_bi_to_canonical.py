@@ -13,15 +13,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from modules.core.project_support import default_external_pov_insert_policy, normalize_external_pov_insert_policy
-from modules.core.response_schemas import validate_bible_canonical_structure
 from modules.core.stage0_handoff import (
     build_plot_roadmap_from_treatment,
+    canonicalize_bible_payload as shared_canonicalize_bible_payload,
     get_effective_bible_root,
-    normalize_bible_to_canonical_view,
     validate_plot_roadmap_entries,
 )
-
-RUNTIME_PROTAGONIST_KEYS = ("world_origin", "incarnation_type", "pov", "external_pov_insert_policy")
 
 
 def load_json(path: Path) -> Any:
@@ -234,30 +231,17 @@ def canonicalize_bible_payload(
     input_path: Path | None = None,
     force_treatment_roadmap: bool = False,
 ) -> tuple[dict[str, Any], list[str]]:
-    payload, warnings = normalize_bible_to_canonical_view(bible, treatment=treatment)
-    warnings.extend(_repair_runtime_protagonist_contract(payload, input_path=input_path))
-    warnings.extend(
-        _repair_plot_roadmap(
-            payload,
-            treatment=treatment,
-            force_treatment_roadmap=force_treatment_roadmap,
-        )
+    sibling_pov = sibling_external_policy = ""
+    if input_path is not None:
+        sibling_pov, sibling_external_policy = _discover_sibling_pov_contract(input_path)
+    return shared_canonicalize_bible_payload(
+        bible,
+        treatment=treatment,
+        force_treatment_roadmap=force_treatment_roadmap,
+        genre_hint=_extract_genre_hint(bible) if isinstance(bible, dict) else "",
+        fallback_pov=sibling_pov,
+        fallback_external_pov_insert_policy=sibling_external_policy,
     )
-    master = payload.get("MasterBible")
-    if isinstance(master, dict):
-        if "plot_roadmap" in payload and isinstance(master.get("plot_roadmap"), list):
-            payload.pop("plot_roadmap", None)
-            warnings.append("removed root-level plot_roadmap sidecar from canonical BI copy")
-
-        project_data = master.get("ProjectData")
-        if isinstance(project_data, dict) and "protagonist_config" in project_data and isinstance(master.get("protagonist_config"), dict):
-            project_data.pop("protagonist_config", None)
-            warnings.append("removed ProjectData.protagonist_config sidecar from canonical BI copy")
-
-    valid, errors, _warnings = validate_bible_canonical_structure(payload)
-    if not valid:
-        raise ValueError(f"canonical BI validation failed: {errors}")
-    return payload, warnings
 
 
 def derive_output_path(

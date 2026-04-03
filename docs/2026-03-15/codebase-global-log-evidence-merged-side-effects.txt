@@ -1,8 +1,0 @@
-<!-- [참고자료] -->
-file_writes	runtime_audit_summary.json; runtime_audit.jsonl; session/*.jsonl; episode_production.jsonl; artifacts; project_data.db; desktop settings/material/project files
-DB_writes	stage_attempts; director_selections; ui_events; llm_calls; anchors; quality labels; commits and rollbacks across app/stage/service layers
-JSONL_log_audit_sinks	plain session log; session ui_events/decisions/state_changes/llm_io JSONL; runtime audit JSONL; pass_rate_monitor.json; runtime_audit_summary.json
-console_UI_output	main_a.py prompt/log surfaces; UIService; StudioVisualizer; bridge/Desktop prompt lifecycle; shutdown/status output
-rollback_recovery_retry	interrupt/exception cleanup; prompt timeout/default handling; websocket reconnect; startup fallback; executor shutdown; DB rollback on sink failure
-cache_global_state	AuditService buffer; PromptBroker pending prompts; ProcessRunner tails; app-level current_project/session counters; renderer _backendConnected/_currentPrompt
-bootstrap_fallback_config	splash readiness polling; bridge fetch path; Electron handoff timers; backend URL discovery; control-plane contracts; UTF-8 hygiene guardrails

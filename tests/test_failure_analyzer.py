@@ -284,9 +284,9 @@ def test_failure_analyzer_build_sink_alignment_attempt_sets_respects_optional_si
         episode_production={"e": {}},
     )
 
-    assert final_union == {"a", "b"}
+    assert final_union == {"a"}
     assert lifecycle_union == {"c", "e"}
-    assert attempts_considered == {"a", "b", "c", "e"}
+    assert attempts_considered == {"a", "c", "e"}
 
 
 def test_failure_analyzer_collect_sink_alignment_missing_buckets_tracks_final_and_lifecycle_gaps():
@@ -305,7 +305,6 @@ def test_failure_analyzer_collect_sink_alignment_missing_buckets_tracks_final_an
 
     assert final_missing == {
         "stage_attempts": {"count": 1, "examples": ["b"]},
-        "pass_rate_monitor": {"count": 1, "examples": ["a"]},
         "session_decisions": {"count": 1, "examples": ["b"]},
     }
     assert lifecycle_missing == {
@@ -314,7 +313,6 @@ def test_failure_analyzer_collect_sink_alignment_missing_buckets_tracks_final_an
     }
     assert lifecycle_missing_in_final == {
         "stage_attempts": {"count": 2, "examples": ["b", "c"]},
-        "pass_rate_monitor": {"count": 1, "examples": ["c"]},
     }
 
 
@@ -1383,8 +1381,8 @@ def test_failure_analyzer_sink_alignment_summary_can_filter_to_latest_session(tm
         unfiltered = analyzer.sink_alignment_summary(stage=4)
         filtered = analyzer.sink_alignment_summary(stage=4, session_id="new_sess")
 
-        assert unfiltered["status"] == "warn"
-        assert unfiltered["final_sink_missing"]["pass_rate_monitor"]["count"] == 1
+        assert unfiltered["status"] == "ok"
+        assert unfiltered["final_sink_missing"] == {}
         assert filtered["status"] == "ok"
         assert filtered["session_filter"] == "new_sess"
         assert filtered["attempts_considered"] == 1
@@ -1392,6 +1390,79 @@ def test_failure_analyzer_sink_alignment_summary_can_filter_to_latest_session(tm
         assert filtered["coverage"]["pass_rate_monitor"] == 1
         assert filtered["coverage"]["director_selections"] == 1
         assert filtered["coverage"]["episode_production"] == 1
+    finally:
+        db.close()
+
+
+def test_sink_alignment_ignores_lifecycle_only_episode_production_rows_for_final_score_and_artifact_checks(tmp_path):
+    db = DBManager(tmp_path / "test_stage4_pathology_alignment.db")
+    try:
+        attempt_key = "s4:ep81:arc1:a1:sess_path"
+        artifact_path = "logs/artifacts/stage4/ep_0081/attempt_01/rejected_best__C_balanced.txt"
+        artifact_file = tmp_path / artifact_path
+        artifact_file.parent.mkdir(parents=True, exist_ok=True)
+        artifact_file.write_text("artifact", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="REJECT",
+            attempt_num=1,
+            ep_num=81,
+            arc_num=1,
+            score=44,
+            session_id="sess_path",
+            attempt_key=attempt_key,
+            candidate_key="C|balanced",
+            content_hash="hash-path",
+            artifact_path=artifact_path,
+            selection_reason="selection",
+            verdict_reason="reject",
+        )
+        db.save_director_selection(
+            ep_num=81,
+            round_num=1,
+            selected_label="C",
+            selected_strategy="balanced",
+            verdict="REJECT",
+            stage=4,
+            score=44,
+            attempt_key=attempt_key,
+            candidate_key="C|균형 전략",
+            content_hash="hash-path",
+            artifact_path="logs/artifacts/stage4/ep_0081/attempt_01/rejected_best__C.txt",
+            selection_reason="selection",
+            verdict_reason="reject",
+        )
+
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        (logs_dir / "episode_production.jsonl").write_text(
+            json.dumps(
+                {
+                    "event": "STAGE4_RETRY_PATHOLOGY",
+                    "ep": 81,
+                    "attempt_key": attempt_key,
+                    "result": "REJECT",
+                    "score": 99,
+                    "candidate_key": "C|balanced",
+                    "content_hash": "hash-path",
+                    "artifact_path": "",
+                    "selection_candidate_key": "C|balanced",
+                    "repair_contract": {"subtype": "수치"},
+                },
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer.sink_alignment_summary(stage=4, session_id="sess_path")
+
+        assert result["coverage"]["episode_production"] == 1
+        assert result["final_score_mismatches"] == []
+        assert result["artifact_metadata_missing"] == []
+        assert result["selection_candidate_key_mismatches"] == []
     finally:
         db.close()
 

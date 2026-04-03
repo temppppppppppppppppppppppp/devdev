@@ -18,8 +18,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from modules.core.project_support import default_external_pov_insert_policy, normalize_external_pov_insert_policy
-from modules.core.response_schemas import validate_bible_structure, validate_treatment_structure
-from modules.core.stage0_handoff import build_plot_roadmap_from_treatment
+from modules.core.response_schemas import validate_bible_structure
+from modules.core.stage0_handoff import (
+    build_plot_roadmap_from_treatment,
+    canonicalize_bible_payload,
+    canonicalize_treatment_payload,
+)
 
 GARBLED_TOKENS = ("\ufffd",)
 REQUIRED_PHASE0_SECTIONS = ("project", "setting", "protagonist", "phase0_design")
@@ -776,9 +780,8 @@ def main() -> int:
 
     phase0 = load_json(args.phase0)
     draft_raw = load_json(args.draft)
-    treatment_blocks = build_plot_roadmap_from_treatment(draft_raw)
-    tr_valid, tr_errors, _tr_warnings = validate_treatment_structure(treatment_blocks)
-    require(tr_valid, f"Treatment draft validation failed: {tr_errors}")
+    canonical_treatment, tr_warnings = canonicalize_treatment_payload(draft_raw)
+    treatment_blocks = canonical_treatment["blocks"]
     require(isinstance(treatment_blocks, list) and len(treatment_blocks) == 70, "Treatment draft must contain 70 blocks")
     require(isinstance(phase0, dict), "Phase0 payload must be a dict")
     for section in REQUIRED_PHASE0_SECTIONS:
@@ -787,6 +790,7 @@ def main() -> int:
         require(field in phase0["phase0_design"], f"Phase0 design missing field: {field}")
 
     bible = build_bible(phase0, treatment_blocks)
+    bible, canonical_warnings = canonicalize_bible_payload(bible, treatment=canonical_treatment, genre_hint="wuxia")
     valid, errors, warnings = validate_bible_structure(bible)
     require(valid, f"Bible validation failed: {errors}")
     require(
@@ -806,8 +810,9 @@ def main() -> int:
     args.output.write_text(serialized + "\n", encoding="utf-8")
 
     print(f"[OK] Wuxia BI generated: {args.output}")
-    if warnings:
-        print(f"[WARN] Bible warnings: {warnings}")
+    all_warnings = [*tr_warnings, *warnings, *canonical_warnings]
+    if all_warnings:
+        print(f"[WARN] Bible warnings: {all_warnings}")
     return 0
 
 

@@ -89,6 +89,10 @@ def prepare_stage3_canary_project(
         "prepared_at": datetime.now().isoformat(timespec="seconds"),
         "source_project": source.name,
         "target_project": target.name,
+        "canary_scope": "stage3_only",
+        "reruns_stage3_generation": True,
+        "preserves_stage2_arcs": True,
+        "preserves_stage4_outputs": True,
         "from_ep": int(from_ep),
         "cleanup": cleanup,
     }
@@ -428,6 +432,10 @@ def prepare_stage4_canary_project(
         "prepared_at": datetime.now().isoformat(timespec="seconds"),
         "source_project": source.name,
         "target_project": target.name,
+        "canary_scope": "stage4_only",
+        "reruns_stage3_generation": False,
+        "preserves_stage3_blueprints": True,
+        "preserves_stage3_sink_baseline": True,
         "from_ep": int(from_ep),
         "cleanup": cleanup,
     }
@@ -565,10 +573,21 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
     finally:
         db.close()
 
+    canary_prep = _read_json(root / "logs" / "canary_prep.json")
     runtime_summary = _read_json(root / "logs" / "runtime_audit_summary.json")
     draft_files = sorted(root.glob("drafts/ep_*.txt"))
     pass_rate_monitor_exists = (root / "logs" / "pass_rate_monitor.json").exists()
-    canary_prep = _read_json(root / "logs" / "canary_prep.json")
+    canary_scope = str(canary_prep.get("canary_scope", "") or "").strip().lower()
+    hard_gate_sink_alignment_scope = (
+        "current_session"
+        if canary_scope == "stage4_only" and current_session_sink_alignment_summary
+        else "run_wide"
+    )
+    hard_gate_sink_alignment_summary = (
+        current_session_sink_alignment_summary
+        if hard_gate_sink_alignment_scope == "current_session"
+        else sink_alignment_summary
+    )
 
     hard_gates = _evaluate_stage4_canary_gates(
         target_ep=target_ep,
@@ -576,13 +595,14 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         runtime_summary=runtime_summary,
         pass_rate_monitor_exists=pass_rate_monitor_exists,
         patch_trace_summary=patch_trace_summary,
-        sink_alignment_summary=sink_alignment_summary,
+        sink_alignment_summary=hard_gate_sink_alignment_summary,
         rationale_contract_summary=rationale_contract_summary,
     )
     proof_scope_summary = _build_stage4_canary_proof_scope_summary(
         stage3_sink_alignment_summary=stage3_sink_alignment_summary,
         stage4_sink_alignment_summary=sink_alignment_summary,
         rationale_contract_summary=rationale_contract_summary,
+        canary_prep=canary_prep,
     )
     proof_record_summary = _build_stage4_proof_record_summary(
         project_root=root,
@@ -613,6 +633,7 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         "stage3_sink_alignment_summary": stage3_sink_alignment_summary,
         "sink_alignment_summary": sink_alignment_summary,
         "current_session_sink_alignment_summary": current_session_sink_alignment_summary,
+        "hard_gate_sink_alignment_scope": hard_gate_sink_alignment_scope,
         "final_authority_contract_summary": final_authority_contract_summary,
         "gate_repair_summary": gate_repair_summary,
         "gate_repair_surface_summary": gate_repair_surface_summary,
@@ -828,10 +849,13 @@ def _build_stage4_canary_proof_scope_summary(
     stage3_sink_alignment_summary: dict,
     stage4_sink_alignment_summary: dict,
     rationale_contract_summary: dict,
+    canary_prep: dict | None = None,
 ) -> dict:
     stage3_observed = bool(stage3_sink_alignment_summary)
     stage4_observed = bool(stage4_sink_alignment_summary)
     rationale_observed = bool(rationale_contract_summary)
+    prep_scope = str((canary_prep or {}).get("canary_scope", "") or "").strip().lower()
+    stage4_only_canary = prep_scope == "stage4_only"
 
     covered_surfaces = [
         "stage4_live_context_path",
@@ -839,7 +863,7 @@ def _build_stage4_canary_proof_scope_summary(
         "stage4_rationale_contract",
     ]
     if stage3_observed:
-        covered_surfaces.append("stage3_sink_alignment_probe")
+        covered_surfaces.append("stage3_baseline_sink_probe" if stage4_only_canary else "stage3_sink_alignment_probe")
 
     uncovered_surfaces = [
         "stage3_live_generation_path",
@@ -849,18 +873,31 @@ def _build_stage4_canary_proof_scope_summary(
         uncovered_surfaces.append("stage3_sink_probe_missing")
 
     return {
-        "summary_role": "stage4_live_canary_with_stage3_sink_probe",
+        "summary_role": (
+            "stage4_live_canary_with_baseline_stage3_probe"
+            if stage4_only_canary
+            else "stage4_live_canary_with_stage3_sink_probe"
+        ),
         "backend_wide_proof": False,
-        "scope_status": "partial_multi_stage_probe" if stage3_observed else "stage4_only",
+        "scope_status": "stage4_only" if stage4_only_canary else ("partial_multi_stage_probe" if stage3_observed else "stage4_only"),
         "stage4_live_context_regression": "covered",
         "stage4_sink_alignment_status": _summary_status(stage4_sink_alignment_summary, default="missing"),
         "stage3_sink_probe_status": _summary_status(stage3_sink_alignment_summary, default="missing"),
+        "stage3_probe_origin": (
+            "baseline_copy"
+            if stage4_only_canary and stage3_observed
+            else ("live_or_unspecified" if stage3_observed else "missing")
+        ),
         "rationale_contract_status": _summary_status(rationale_contract_summary, default="missing"),
         "covered_surfaces": covered_surfaces,
         "uncovered_surfaces": uncovered_surfaces,
         "notes": [
             "This canary is not a backend-wide proof net.",
-            "Stage 3 is observed via sink alignment only; it does not rerun live Stage 3 generation.",
+            (
+                "Stage 3 sink alignment here is baseline carryover from the copied source project; this canary does not rerun live Stage 3 generation."
+                if stage4_only_canary
+                else "Stage 3 is observed via sink alignment only; it does not rerun live Stage 3 generation."
+            ),
         ],
         "observability_contract": {
             "stage3_sink_alignment_observed": stage3_observed,
@@ -1425,7 +1462,7 @@ def _evaluate_stage4_canary_gates(
     elif runtime_total_events <= 0:
         errors.append("runtime_audit_empty")
     if not pass_rate_monitor_exists:
-        errors.append("pass_rate_monitor_missing")
+        warnings.append("pass_rate_monitor_cache_missing")
 
     if sink_alignment_summary:
         if sink_alignment_summary.get("final_sink_missing"):

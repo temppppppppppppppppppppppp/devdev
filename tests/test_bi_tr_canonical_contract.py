@@ -3,6 +3,8 @@ from modules.core.response_schemas import (
     validate_treatment_canonical_structure,
 )
 from modules.core.stage0_handoff import (
+    canonicalize_bible_payload,
+    canonicalize_treatment_payload,
     normalize_bible_to_canonical_view,
     normalize_treatment_to_canonical_view,
 )
@@ -149,3 +151,39 @@ def test_validate_treatment_canonical_structure_requires_blocks_wrapper_and_bloc
     assert canonical_valid is True
     assert canonical_errors == []
     assert canonical_warnings == []
+
+
+def test_canonicalize_treatment_payload_promotes_tr_v1_contract():
+    payload, warnings = canonicalize_treatment_payload(
+        [{"block_id": "Block 4", "title": "블록 4", "content": _full_content("정규화")}]
+    )
+
+    assert payload["_schema"] == "tr.v1"
+    assert payload["_total_blocks"] == 1
+    assert payload["blocks"][0]["block_no"] == 4
+    assert any("raw list wrapper" in warning for warning in warnings)
+
+
+def test_canonicalize_bible_payload_repairs_runtime_contract_and_strips_sidecars():
+    legacy_bible = {
+        "_genre": "wuxia",
+        "MasterBible": {
+            "ProjectData": {
+                "MetaInfo": {"title": "테스트 작품"},
+                "CoreIdentity": {"protagonist": "주인공"},
+                "protagonist_config": {},
+            }
+        },
+        "plot_roadmap": [{"block_id": "Block 1", "title": "블록 1", "content": _full_content("본편")}],
+    }
+
+    payload, warnings = canonicalize_bible_payload(legacy_bible, genre_hint="wuxia")
+
+    protagonist = payload["MasterBible"]["protagonist_config"]
+    assert protagonist["world_origin"] == "원시인"
+    assert protagonist["incarnation_type"] == "일반"
+    assert protagonist["pov"] == "3인칭"
+    assert protagonist["external_pov_insert_policy"] == "제한적 허용"
+    assert "plot_roadmap" not in payload
+    assert "protagonist_config" not in payload["MasterBible"]["ProjectData"]
+    assert any("filled protagonist_config.world_origin='원시인'" in warning for warning in warnings)

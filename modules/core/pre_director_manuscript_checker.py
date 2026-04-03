@@ -38,7 +38,7 @@ class PreDirectorManuscriptChecker:
         raw_target = context.get("style_dialogue_ratio_target")
         if isinstance(raw_target, (int, float)):
             target = float(raw_target)
-            if 0.0 < target < 1.0:
+            if 0.0 <= target < 1.0:
                 return target
         return 0.30
 
@@ -72,6 +72,37 @@ class PreDirectorManuscriptChecker:
         min_dialogue = self.host.MANUSCRIPT_REQUIRED["dialogue"][0]
 
         ideal_dialogue_ratio = self._resolve_dialogue_ratio_target(context)
+        if ideal_dialogue_ratio <= 0.0:
+            if dialogue_ratio > 0.12:
+                excess_chars = int(dialogue_ratio * total_chars)
+                items.append(
+                    CheckItem(
+                        category=CheckCategory.STRUCTURE,
+                        name="대화 비율",
+                        passed=True,
+                        severity=CheckSeverity.WARNING,
+                        message=(
+                            f"대화 비율 높음: {dialogue_ratio:.0%} "
+                            f"(스타일 목표 {ideal_dialogue_ratio:.0%}) "
+                            f"→ 무대사/저대화 스타일 기준으로 대화 {excess_chars}자 축소 권장"
+                        ),
+                    )
+                )
+            else:
+                items.append(
+                    CheckItem(
+                        category=CheckCategory.STRUCTURE,
+                        name="대화/지문 비율",
+                        passed=True,
+                        severity=CheckSeverity.PASS,
+                        message=(
+                            f"대화/지문 비율 양호 (대화 {dialogue_ratio:.0%}, "
+                            f"지문 {narrative_ratio:.0%}, 스타일 목표 {ideal_dialogue_ratio:.0%})"
+                        ),
+                    )
+                )
+            return items
+
         lower_recommended = max(0.18, ideal_dialogue_ratio - 0.08)
         upper_recommended = min(0.55, ideal_dialogue_ratio + 0.12)
 

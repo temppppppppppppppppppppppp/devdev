@@ -1,6 +1,0 @@
-<!-- [참고자료] -->
-renderer_gate	geuldobi-desktop/src/index.html:6564,6655,7917 use _backendConnected while runKey goes through preload/main HTTP bridge
-prompt_concurrency	geuldobi-desktop/src/index.html:6189-6190 warns and ignores concurrent prompt_request while modules/api/prompt_broker.py tracks pending prompt ids per run
-reconnect_gap	index.html reconnect path refreshes summary but has no explicit active-run snapshot or pending-prompt replay contract
-startup_timeout_split	geuldobi-desktop/src/splash/splash.js uses AbortSignal.timeout(5000); geuldobi-desktop/src/main.js bridgeFetch has no explicit timeout; Electron main has fallback handoff logic
-contract_paths	docs/implementation/api-contract-v1.yaml, event-schema-v1.json, desktop-ipc-surface-contract-v1.json encode surfaces but not full reconnect/prompt replay policy

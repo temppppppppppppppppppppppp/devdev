@@ -50,7 +50,7 @@ def _preview_messages(messages: list[str], *, limit: int = 2) -> str:
     return " | ".join(preview) + suffix
 
 
-def emit_contract_summary(*, draft: Path, output: Path) -> None:
+def emit_contract_summary(*, draft: Path, output: Path):
     result = inspect_pair(bible_path=output, treatment_path=draft)
     verdicts = result.verdicts
     print(
@@ -70,6 +70,7 @@ def emit_contract_summary(*, draft: Path, output: Path) -> None:
         print(f"[CHECK] bible_normalization: {_preview_messages(result.bible_normalization_warnings)}")
     if result.treatment_normalization_warnings:
         print(f"[CHECK] treatment_normalization: {_preview_messages(result.treatment_normalization_warnings)}")
+    return result
 
 
 def main() -> int:
@@ -110,7 +111,10 @@ def main() -> int:
     result = subprocess.run(command, check=False)
     exit_code = int(result.returncode)
     if exit_code == 0 and args.output.is_file():
-        emit_contract_summary(draft=args.draft, output=args.output)
+        inspection = emit_contract_summary(draft=args.draft, output=args.output)
+        if inspection.verdicts.get("pair_canonical_contract") != "pass":
+            print("[ERROR] Routed BI build produced a non-canonical BI/TR pair; refusing success exit.")
+            return 1
     return exit_code
 
 

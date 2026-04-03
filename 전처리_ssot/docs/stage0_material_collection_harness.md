@@ -27,7 +27,7 @@
 2. `test_material/material_bank.db`와 관련 query 도구
 3. `test_material/json_outputs/`의 재료 팩
 4. repo 내부 유사 장르 샘플
-5. `docs/실물기반 사각지대 테스트/few-shot-bank/`의 카드화된 실물 레퍼런스
+5. `material_ssot/10_research/20_fewshot_bank/`의 카드화된 실물 레퍼런스
 6. `docs/실물기반 사각지대 테스트/원고/` 또는 사내 NAS 원고에서 추출한 실물 원고 레퍼런스
 7. 부족할 때만 외부 1차/공식 자료
 
@@ -94,9 +94,9 @@ Stage 0는 source를 읽는 단계이면서, 동시에 설계 연료를 추출�
 ### 3.1 저장 위치
 
 - raw 사본/메모: `docs/실물기반 사각지대 테스트/원고/`
-- 카드화 결과 루트: `docs/실물기반 사각지대 테스트/few-shot-bank/`
-- 카드 sink root: `docs/실물기반 사각지대 테스트/few-shot-bank/cards/`
-- 카드 collection manifest: `docs/실물기반 사각지대 테스트/few-shot-bank/reference_card_manifest.json`
+- 카드화 결과 루트: `material_ssot/10_research/20_fewshot_bank/`
+- 카드 sink root: `material_ssot/10_research/20_fewshot_bank/cards/`
+- 카드 collection manifest: `material_ssot/10_research/20_fewshot_bank/reference_card_manifest.json`
 - Stage 0 정식 출력물: 여전히 `treatments/preprocess/{work_id}/...`
 
 ### 3.2 Reference Card 저장 계약

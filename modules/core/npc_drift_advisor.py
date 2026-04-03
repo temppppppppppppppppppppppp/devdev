@@ -17,10 +17,30 @@ logger = logging.getLogger(__name__)
 _EXCLUDE_WORDS = frozenset(["주인공", "적", "자신", "상대", "아군", "동료", "스승", "제자", "장로", "문주"])
 _RELATION_TAG_SPLIT_RE = re.compile(r"\s*/\s*")
 _RELATION_TAG_TOKEN_RE = re.compile(r"^[A-Za-z가-힣_]+[+-]{0,1}\d+$")
+_RELATION_TAG_WHITESPACE_RE = re.compile(r"\s+")
+_RELATION_TAG_PLAIN_HINTS = {
+    "오해 대상": {
+        "expected_relation_axes": ["오해 대상", "NPC가 주인공을 오해함"],
+        "relation_direction": "npc_misunderstands_protag",
+        "relation_direction_label": "NPC가 주인공을 오해함",
+        "prompt_hint": (
+            "방향성 평문 관계 태그; '오해 대상'은 기본적으로 NPC가 주인공을 오해하거나 "
+            "잘못 판단하는 관계를 뜻한다. 주인공이 상대를 오해해야 한다는 literal 요구로 해석하지 말라"
+        ),
+        "semantic_local_fix_hint": (
+            "relation_to_protag '오해 대상'은 NPC가 주인공을 오해하는 관계로 해석하고 "
+            "canonical direction과 어긋난 관계 표현만 국소 수정한다"
+        ),
+    }
+}
+
+
+def _normalize_relation_tag_label(raw_value: object) -> str:
+    return _RELATION_TAG_WHITESPACE_RE.sub(" ", str(raw_value or "").strip())
 
 
 def _extract_relation_tag_tokens(raw_value: object) -> list[str]:
-    text = str(raw_value or "").strip()
+    text = _normalize_relation_tag_label(raw_value)
     if not text or "/" not in text:
         return []
     tokens = [token.strip() for token in _RELATION_TAG_SPLIT_RE.split(text) if token.strip()]
@@ -31,33 +51,71 @@ def _extract_relation_tag_tokens(raw_value: object) -> list[str]:
     return tokens
 
 
+def _build_relation_tag_semantics(raw_value: object) -> dict[str, object]:
+    value = _normalize_relation_tag_label(raw_value)
+    if not value:
+        return {}
+
+    tokens = _extract_relation_tag_tokens(value)
+    if tokens:
+        return {
+            "relation_label_kind": "compressed_axes",
+            "expected_relation_label": value,
+            "expected_relation_axes": tokens,
+            "prompt_hint": (
+                "압축 관계 태그; literal 숫자/태그 일치를 요구하지 말고 "
+                f"{', '.join(tokens)} 축과 부합하는 관계 프레이밍만 보라"
+            ),
+            "semantic_local_fix_hint": (
+                "relation_to_protag 압축 관계 태그와 어긋난 관계 프레이밍만 국소 수정하고 "
+                "literal 숫자/태그 재현은 요구하지 않는다"
+            ),
+        }
+
+    plain_hint = _RELATION_TAG_PLAIN_HINTS.get(value)
+    if not plain_hint:
+        return {}
+
+    semantics = dict(plain_hint)
+    semantics["relation_label_kind"] = "plain_directional"
+    semantics["expected_relation_label"] = value
+    semantics["expected_relation_axes"] = list(plain_hint.get("expected_relation_axes") or [])
+    return semantics
+
+
 def _format_relation_attr_value_for_prompt(field: str, raw_value: object) -> str:
-    value = str(raw_value or "").strip()
+    value = _normalize_relation_tag_label(raw_value)
     if str(field or "").strip() != "relation_to_protag":
         return value
-    tokens = _extract_relation_tag_tokens(value)
-    if not tokens:
+    semantics = _build_relation_tag_semantics(value)
+    if not semantics:
         return value
-    return (
-        f"{value} [압축 관계 태그; literal 숫자/태그 일치를 요구하지 말고 "
-        f"{', '.join(tokens)} 축과 부합하는 관계 프레이밍만 보라]"
-    )
+    prompt_hint = str(semantics.get("prompt_hint", "") or "").strip()
+    if not prompt_hint:
+        return value
+    return f"{value} [{prompt_hint}]"
 
 
 def _build_relation_tag_warning_metadata(field: object, expected: object) -> dict[str, object]:
     normalized_field = str(field or "").strip()
-    tokens = _extract_relation_tag_tokens(expected)
-    if normalized_field != "relation_to_protag" or not tokens:
+    semantics = _build_relation_tag_semantics(expected)
+    if normalized_field != "relation_to_protag" or not semantics:
         return {}
-    return {
+    metadata = {
         "drift_subtype": "relation_tag_semantic",
         "target_kind": "local_phrase",
-        "expected_relation_axes": tokens,
-        "semantic_local_fix_hint": (
-            "relation_to_protag 압축 관계 태그와 어긋난 관계 프레이밍만 국소 수정하고 "
-            "literal 숫자/태그 재현은 요구하지 않는다"
-        ),
+        "expected_relation_label": semantics.get("expected_relation_label", ""),
+        "expected_relation_axes": list(semantics.get("expected_relation_axes") or []),
+        "semantic_local_fix_hint": str(semantics.get("semantic_local_fix_hint", "") or "").strip(),
+        "relation_label_kind": str(semantics.get("relation_label_kind", "") or "").strip(),
     }
+    relation_direction = str(semantics.get("relation_direction", "") or "").strip()
+    if relation_direction:
+        metadata["relation_direction"] = relation_direction
+    relation_direction_label = str(semantics.get("relation_direction_label", "") or "").strip()
+    if relation_direction_label:
+        metadata["relation_direction_label"] = relation_direction_label
+    return metadata
 
 
 class NpcDriftAdvisor:
@@ -184,6 +242,7 @@ class NpcDriftAdvisor:
             "이중 정체(dual_identity) 등.\n"
             "relation_to_protag가 '집착100/오해-80'처럼 압축 관계 태그로 주어지면 "
             "literal 숫자/태그 재현은 요구하지 말고, 관계 프레이밍이 그 축과 명백히 반대일 때만 표류로 지적하세요.\n"
+            "relation_to_protag에 대괄호 의미/방향성 힌트가 붙어 있으면 그 힌트를 authoritative 해석으로 사용하세요.\n"
             "서사적 변화(성장·부상·전직 등 작중 이유가 있는 변화)는 표류가 아닙니다.\n"
             "설명 없이 속성이 바뀐 것만 지적하세요.\n\n"
             f"[NPC authoritative 속성]\n{snapshot_text}\n\n"

@@ -80,9 +80,9 @@
 - 예전 TR/BI
 - 다른 작품 샘플
 - material bank 조회 결과
-- `docs/실물기반 사각지대 테스트/few-shot-bank/cards/dokshik_jaebeol3se_A.md`
-- `docs/실물기반 사각지대 테스트/few-shot-bank/cards/gim_daerineun_byeorakbuja_B.md`
-- `docs/실물기반 사각지대 테스트/few-shot-bank/reference_card_manifest.json`에 등록된 카드 라벨
+- `material_ssot/10_research/20_fewshot_bank/cards/dokshik_jaebeol3se_A.md`
+- `material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_byeorakbuja_B.md`
+- `material_ssot/10_research/20_fewshot_bank/reference_card_manifest.json`에 등록된 카드 라벨
 - `Slim Reference Card v1 :: dokshik_jaebeol3se_A`
 
 주의:

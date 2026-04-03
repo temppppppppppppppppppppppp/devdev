@@ -11,8 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from modules.core.response_schemas import validate_treatment_canonical_structure
-from modules.core.stage0_handoff import normalize_treatment_to_canonical_view
+from modules.core.stage0_handoff import canonicalize_treatment_payload as shared_canonicalize_treatment_payload
 
 
 def load_json(path: Path) -> Any:
@@ -20,14 +19,7 @@ def load_json(path: Path) -> Any:
 
 
 def canonicalize_treatment_payload(treatment: Any) -> tuple[dict[str, Any], list[str]]:
-    payload, warnings = normalize_treatment_to_canonical_view(treatment)
-    payload["_schema"] = "tr.v1"
-    payload["_total_blocks"] = len(payload.get("blocks", [])) if isinstance(payload.get("blocks"), list) else 0
-
-    valid, errors, _warnings = validate_treatment_canonical_structure(payload)
-    if not valid:
-        raise ValueError(f"canonical TR validation failed: {errors}")
-    return payload, warnings
+    return shared_canonicalize_treatment_payload(treatment)
 
 
 def derive_output_path(
