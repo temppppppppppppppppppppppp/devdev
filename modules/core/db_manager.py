@@ -2951,8 +2951,23 @@ class DBManager:
         prompt_snippet: str | None = None,
         response_snippet: str | None = None,
         thinking_snippet: str | None = None,
+        # [TM-1] timing decomposition fields
+        api_elapsed_ms: int | None = None,
+        retry_count: int | None = None,
+        continuation_count: int | None = None,
     ) -> None:
-        """[Log-1] Save one LLM call record in non-blocking mode."""
+        """[Log-1] Save one LLM call record in non-blocking mode.
+
+        Timing semantics (TM-1):
+          duration_ms        — ask() wall clock from model-stack-build to finalization.
+                               Includes retries, continuations, API_DELAY sleeps, error handling.
+                               NOT raw API latency. Retained for backward compatibility.
+          api_elapsed_ms     — raw _generate_content() RTT for the final successful API call only.
+                               Excludes retries, continuations, sleeps, orchestration overhead.
+                               NULL for legacy rows or when no successful API call was made.
+          retry_count        — number of error-driven retries within a single ask() invocation.
+          continuation_count — number of continuation rounds (response overflow / finish_reason).
+        """
         try:
             if not self.accepts_runtime_telemetry_writes:
                 return
@@ -2971,8 +2986,9 @@ class DBManager:
                         prompt_chars, response_chars, duration_ms,
                         success, error_type, error_msg, verdict, context_tag,
                         input_tokens, output_tokens, cached_tokens, thinking_tokens, total_cost_usd,
-                        prompt_snippet, response_snippet, thinking_snippet)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        prompt_snippet, response_snippet, thinking_snippet,
+                        api_elapsed_ms, retry_count, continuation_count)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -2996,6 +3012,9 @@ class DBManager:
                         _prompt_snip,
                         _response_snip,
                         _thinking_snip,
+                        int(api_elapsed_ms) if api_elapsed_ms is not None else None,
+                        int(retry_count) if retry_count is not None else None,
+                        int(continuation_count) if continuation_count is not None else None,
                     ),
                 )
                 self.conn.commit()

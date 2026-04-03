@@ -577,6 +577,10 @@ class BaseAgent:
         stage: int | None = None,
         ep_num: int | None = None,
         thinking_text: str | None = None,
+        # [TM-1] timing decomposition
+        api_elapsed_ms: int | None = None,
+        retry_count: int | None = None,
+        continuation_count: int | None = None,
     ) -> None:
         """Non-blocking DB write for LLM call telemetry."""
         try:
@@ -645,6 +649,9 @@ class BaseAgent:
                 prompt_snippet=_prompt_snippet,
                 response_snippet=_response_snippet,
                 thinking_snippet=_thinking_snippet,
+                api_elapsed_ms=api_elapsed_ms,
+                retry_count=retry_count,
+                continuation_count=continuation_count,
             )
         except Exception as _e:
             logging.debug("[llm_call_log] save failed: %s", _e)
@@ -678,6 +685,9 @@ class BaseAgent:
             max_rate_limit_retries = 3
             network_retry_count = 0
             thinking_text = ""
+            # [TM-1] timing decomposition tracking
+            error_retry_count = 0
+            last_api_elapsed_ms = 0
 
             attempt = 0
             ask_started_at = time.time()
@@ -687,6 +697,7 @@ class BaseAgent:
                     api_started_at = time.time()
                     response = self._generate_content(model=current_model, contents=current_prompt, config=config)
                     api_elapsed = time.time() - api_started_at
+                    last_api_elapsed_ms = int(api_elapsed * 1000)  # [TM-1]
                     if api_elapsed > 30:
                         self._operator_log(
                             f"[API] {self._agent_name} model={current_model} attempt={attempt} took {api_elapsed:.1f}s",
@@ -729,6 +740,7 @@ class BaseAgent:
                     quota_retry_count = error_result["quota_retry_count"]
 
                     if error_result["action"] == "continue":
+                        error_retry_count += 1  # [TM-1]
                         self._operator_log(
                             f"[API-ERR] {self._agent_name} continue (retry) model={error_result['current_model']}",
                             level="warning",
@@ -790,6 +802,9 @@ class BaseAgent:
                 temperature=temperature,
                 attempt=attempt,
                 ask_started_at=ask_started_at,
+                api_elapsed_ms=last_api_elapsed_ms,
+                retry_count=error_retry_count,
+                continuation_count=attempt,
             )
 
         except Exception as error:
@@ -804,6 +819,9 @@ class BaseAgent:
                 temperature=temperature,
                 response_schema=response_schema,
                 thinking_text=thinking_text,
+                api_elapsed_ms=last_api_elapsed_ms,
+                retry_count=error_retry_count,
+                continuation_count=attempt,
             )
 
     def _prepare_ask_prompt(self, *, prompt: str) -> dict:
@@ -867,6 +885,10 @@ class BaseAgent:
         temperature: float,
         attempt: int,
         ask_started_at: float,
+        # [TM-1] timing decomposition
+        api_elapsed_ms: int = 0,
+        retry_count: int = 0,
+        continuation_count: int = 0,
     ) -> str:
         total_elapsed = time.time() - ask_started_at
         if total_elapsed > 15:
@@ -927,6 +949,9 @@ class BaseAgent:
                 duration_ms=elapsed_ms,
                 success=True,
                 thinking_text=thinking_text,
+                api_elapsed_ms=api_elapsed_ms,
+                retry_count=retry_count,
+                continuation_count=continuation_count,
             )
         except Exception:
             pass
@@ -950,6 +975,10 @@ class BaseAgent:
         temperature: float,
         response_schema,
         thinking_text: str,
+        # [TM-1] timing decomposition
+        api_elapsed_ms: int = 0,
+        retry_count: int = 0,
+        continuation_count: int = 0,
     ) -> str:
         error_type = self._classify_error(error)
         self.last_error_type = error_type
@@ -1013,6 +1042,9 @@ class BaseAgent:
                 success=False,
                 error=error,
                 thinking_text=thinking_text,
+                api_elapsed_ms=api_elapsed_ms,
+                retry_count=retry_count,
+                continuation_count=continuation_count,
             )
         except Exception:
             pass
@@ -1502,6 +1534,7 @@ class BaseAgent:
             meta={"backup_model": self.backup_model, "error_type": error_type},
         )
         _backup_t0 = time.monotonic()
+        _backup_api_elapsed_ms = None  # [TM-1] set after successful API call
         try:
             # [FIX] 백업 모델용 별도 config
             backup_config_params = {
@@ -1527,7 +1560,9 @@ class BaseAgent:
             # [V60.99] API Rate Limit 예방 딜레이
             self._last_llm_usage = {}
             time.sleep(self.API_DELAY)
+            _backup_api_t0 = time.monotonic()  # [TM-1]
             res = self._generate_content(model=self.backup_model, contents=base_prompt, config=backup_config)
+            _backup_api_elapsed_ms = int((time.monotonic() - _backup_api_t0) * 1000)  # [TM-1]
             try:
                 backup_text = res.text if res.text else ""
             except (ValueError, AttributeError):
@@ -1543,6 +1578,9 @@ class BaseAgent:
                     duration_ms=int((time.monotonic() - _backup_t0) * 1000),
                     success=True,
                     context_tag="backup_recovery",
+                    api_elapsed_ms=_backup_api_elapsed_ms,
+                    retry_count=0,
+                    continuation_count=0,
                 )
             except Exception:
                 pass
@@ -1641,6 +1679,9 @@ class BaseAgent:
                     success=False,
                     error=e_inner,
                     context_tag="backup_recovery",
+                    api_elapsed_ms=_backup_api_elapsed_ms,
+                    retry_count=0,
+                    continuation_count=0,
                 )
             except Exception:
                 pass
@@ -2243,11 +2284,13 @@ class BaseAgent:
                 except Exception as e:
                     logging.debug(f"[SILENT] cached metrics startup: {e}")
             time.sleep(self.API_DELAY)
+            _cached_api_t0 = time.monotonic()  # [TM-1]
             response = self._generate_content(
                 model=self.primary_model,
                 contents=[{"role": "user", "parts": [{"text": wrapped_prompt}]}],
                 config=config,
             )
+            _cached_api_elapsed_ms = int((time.monotonic() - _cached_api_t0) * 1000)  # [TM-1]
 
             # [TF-28] thinking content 추출 (캐시 경로)
             self._last_thinking = ""  # [TF-28c] reset
@@ -2281,6 +2324,9 @@ class BaseAgent:
                     duration_ms=int((time.monotonic() - _cached_t0) * 1000),
                     success=True,
                     context_tag="cached_context",
+                    api_elapsed_ms=_cached_api_elapsed_ms,
+                    retry_count=0,
+                    continuation_count=0,
                 )
             except Exception:
                 pass
@@ -2324,6 +2370,9 @@ class BaseAgent:
                     success=False,
                     error=e,
                     context_tag="cached_context",
+                    api_elapsed_ms=_cached_api_elapsed_ms if "_cached_api_elapsed_ms" in locals() else None,
+                    retry_count=0,
+                    continuation_count=0,
                 )
             except Exception:
                 pass

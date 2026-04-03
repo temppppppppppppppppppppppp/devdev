@@ -211,7 +211,18 @@ def _build_stage3_attempt_detail(rows) -> list[dict]:
 
 
 def _build_stage3_episode_telemetry(db, attempt_rows) -> list[dict]:
-    """Compact per-episode telemetry from existing DB sinks (read-only)."""
+    """Compact per-episode telemetry from existing DB sinks (read-only).
+
+    Timing field semantics (TM-1):
+      total_duration_ms      — SUM of ask() wall-clock times. Includes retries,
+                                continuations, API_DELAY sleeps, orchestration overhead.
+                                NOT raw API latency. Retained for backward compatibility.
+      total_api_elapsed_ms   — SUM of raw _generate_content() RTT for final successful
+                                API calls only. 0 for legacy rows without TM-1 columns.
+                                Use this field when attributing time to the API provider.
+      total_retries          — total error-driven retry count across all calls.
+      total_continuations    — total continuation rounds across all calls.
+    """
     if not attempt_rows:
         return []
     ep_nums = sorted({int(row["ep_num"] or 0) for row in attempt_rows})
@@ -224,7 +235,10 @@ def _build_stage3_episode_telemetry(db, attempt_rows) -> list[dict]:
             SELECT ep_num,
                    COUNT(*) as call_count,
                    SUM(duration_ms) as total_duration_ms,
-                   SUM(COALESCE(total_cost_usd, 0)) as total_cost_usd
+                   SUM(COALESCE(total_cost_usd, 0)) as total_cost_usd,
+                   SUM(COALESCE(api_elapsed_ms, 0)) as total_api_elapsed_ms,
+                   SUM(COALESCE(retry_count, 0)) as total_retries,
+                   SUM(COALESCE(continuation_count, 0)) as total_continuations
             FROM llm_calls
             WHERE stage = 3 AND ep_num IN ({placeholders})
             GROUP BY ep_num
@@ -241,6 +255,9 @@ def _build_stage3_episode_telemetry(db, attempt_rows) -> list[dict]:
             "llm_call_count": int(row["call_count"] or 0),
             "total_duration_ms": int(row["total_duration_ms"] or 0),
             "total_cost_usd": round(float(row["total_cost_usd"] or 0), 6),
+            "total_api_elapsed_ms": int(row["total_api_elapsed_ms"] or 0),
+            "total_retries": int(row["total_retries"] or 0),
+            "total_continuations": int(row["total_continuations"] or 0),
         }
 
     ep_attempts: dict[int, list] = {}
