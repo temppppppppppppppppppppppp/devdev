@@ -1,4 +1,4 @@
-"""FailureAnalyzer success-pattern and quality-distribution tests."""
+﻿"""FailureAnalyzer success-pattern and quality-distribution tests."""
 
 import json
 
@@ -1463,6 +1463,217 @@ def test_sink_alignment_ignores_lifecycle_only_episode_production_rows_for_final
         assert result["final_score_mismatches"] == []
         assert result["artifact_metadata_missing"] == []
         assert result["selection_candidate_key_mismatches"] == []
+    finally:
+        db.close()
+
+
+def test_sink_alignment_prefers_authoritative_episode_production_row_over_lifecycle_only_duplicate(tmp_path):
+    db = DBManager(tmp_path / "test_stage4_pathology_prefer_authoritative.db")
+    try:
+        attempt_key = "s4:ep82:arc1:a1:sess_path"
+        artifact_path = "logs/artifacts/stage4/ep_0082/attempt_01/rejected_best__C_balanced.txt"
+        artifact_file = tmp_path / artifact_path
+        artifact_file.parent.mkdir(parents=True, exist_ok=True)
+        artifact_file.write_text("artifact", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="REJECT",
+            attempt_num=1,
+            ep_num=82,
+            arc_num=1,
+            score=44,
+            session_id="sess_path",
+            attempt_key=attempt_key,
+            candidate_key="C|balanced",
+            content_hash="hash-path",
+            artifact_path=artifact_path,
+            selection_reason="selection",
+            verdict_reason="reject",
+            advisory_flags={
+                "gate_semantics": {
+                    "director_verdict": "REJECT",
+                    "gate_basis": "continuity_firewall",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "scope_origin": {
+                        "fix_scope": "director_authoritative",
+                        "authoritative_fix_scope": "director_authoritative",
+                        "repair_scope": "runtime_lane",
+                    },
+                },
+                "repair_contract": {
+                    "subtype": "수치",
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                },
+                "scope_authority": {
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": False,
+                },
+                "retry_budget_axes": {"repair": "rewrite_regenerate"},
+            },
+        )
+        db.save_director_selection(
+            ep_num=82,
+            round_num=1,
+            selected_label="C",
+            selected_strategy="balanced",
+            verdict="REJECT",
+            stage=4,
+            score=44,
+            attempt_key=attempt_key,
+            candidate_key="C|balanced",
+            content_hash="hash-path",
+            artifact_path="logs/artifacts/stage4/ep_0082/attempt_01/rejected_best__C.txt",
+            selection_reason="selection",
+            verdict_reason="reject",
+        )
+
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        authoritative_row = {
+            "ep": 82,
+            "attempt_key": attempt_key,
+            "verdict": "REJECT",
+            "initial_verdict": "REJECT",
+            "final_verdict": "REJECT",
+            "score": 44,
+            "director_verdict": "REJECT",
+            "gate_basis": "continuity_firewall",
+            "repair_scope": "inplace",
+            "fix_scope": "inplace",
+            "authoritative_fix_scope": "inplace",
+            "candidate_key": "C|balanced",
+            "content_hash": "hash-path",
+            "artifact_path": artifact_path,
+            "selection_candidate_key": "C|balanced",
+            "selection_reason": "selection",
+            "verdict_reason": "reject",
+            "repair_contract": {"subtype": "수치", "fix_scope": "inplace"},
+            "scope_authority": {
+                "fix_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+                "widened": False,
+            },
+            "flags": {"retry_budget_axes": {"repair": "rewrite_regenerate"}},
+            "patch_trace": {},
+        }
+        pathology_row = {
+            "event": "STAGE4_RETRY_PATHOLOGY",
+            "ep": 82,
+            "attempt_key": attempt_key,
+            "result": "REJECT",
+            "score": 99,
+            "candidate_key": "C|balanced",
+            "content_hash": "hash-path",
+            "artifact_path": "",
+            "selection_candidate_key": "C|balanced",
+            "repair_contract": {"subtype": "수치"},
+        }
+        (logs_dir / "episode_production.jsonl").write_text(
+            json.dumps(authoritative_row, ensure_ascii=False) + "\n" + json.dumps(pathology_row, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer.sink_alignment_summary(stage=4, session_id="sess_path")
+
+        assert result["coverage"]["episode_production"] == 1
+        missing_entries = [item for item in result["gate_repair_metadata_missing"] if item["attempt_key"] == attempt_key]
+        assert not any("episode_production" in item["sinks"] for item in missing_entries)
+        assert result["repair_contract_subtype_mismatches"] == []
+        assert result["scope_authority_authoritative_fix_scope_mismatches"] == []
+    finally:
+        db.close()
+
+
+def test_sink_alignment_backfills_stage_attempt_repair_contract_from_nested_gate_semantics(tmp_path):
+    db = DBManager(tmp_path / "test_stage4_nested_gate_repair_backfill.db")
+    try:
+        attempt_key = "s4:ep83:arc1:a1:sess_nested"
+        artifact_path = "logs/artifacts/stage4/ep_0083/attempt_01/rejected_best__A_balanced.txt"
+        artifact_file = tmp_path / artifact_path
+        artifact_file.parent.mkdir(parents=True, exist_ok=True)
+        artifact_file.write_text("artifact", encoding="utf-8")
+
+        db.save_stage_attempt(
+            stage=4,
+            verdict="REJECT",
+            attempt_num=1,
+            ep_num=83,
+            arc_num=1,
+            score=52,
+            session_id="sess_nested",
+            attempt_key=attempt_key,
+            candidate_key="A|balanced",
+            content_hash="hash-nested",
+            artifact_path=artifact_path,
+            selection_reason="selection",
+            verdict_reason="reject",
+            advisory_flags={
+                "gate_semantics": {
+                    "director_verdict": "REJECT",
+                    "gate_basis": "continuity_firewall",
+                    "repair_scope": "inplace",
+                    "repair_contract": {"subtype": "수치", "provenance": "gate_semantics"},
+                    "scope_authority": {
+                        "fix_scope": "inplace",
+                        "authoritative_fix_scope": "inplace",
+                        "widened": False,
+                    },
+                },
+                "repair_contract": {"fix_scope": "inplace"},
+                "scope_authority": {"fix_scope": "inplace"},
+            },
+        )
+
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        authoritative_row = {
+            "ep": 83,
+            "attempt_key": attempt_key,
+            "verdict": "REJECT",
+            "initial_verdict": "REJECT",
+            "final_verdict": "REJECT",
+            "score": 52,
+            "director_verdict": "REJECT",
+            "gate_basis": "continuity_firewall",
+            "repair_scope": "inplace",
+            "candidate_key": "A|balanced",
+            "content_hash": "hash-nested",
+            "artifact_path": artifact_path,
+            "selection_candidate_key": "A|balanced",
+            "selection_reason": "selection",
+            "verdict_reason": "reject",
+            "repair_contract": {"subtype": "수치", "provenance": "gate_semantics", "fix_scope": "inplace"},
+            "scope_authority": {
+                "fix_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+                "widened": False,
+            },
+            "patch_trace": {},
+        }
+        (logs_dir / "episode_production.jsonl").write_text(
+            json.dumps(authoritative_row, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer.sink_alignment_summary(stage=4, session_id="sess_nested")
+
+        missing_entries = [item for item in result["gate_repair_metadata_missing"] if item["attempt_key"] == attempt_key]
+        assert not any(
+            item["field"] == "repair_contract_subtype" and "stage_attempts" in item["sinks"] for item in missing_entries
+        )
+        assert not any(
+            item["field"] == "repair_contract_provenance" and "stage_attempts" in item["sinks"] for item in missing_entries
+        )
+        assert result["repair_contract_subtype_mismatches"] == []
+        assert result["repair_contract_provenance_mismatches"] == []
     finally:
         db.close()
 

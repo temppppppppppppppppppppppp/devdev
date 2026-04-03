@@ -4,7 +4,7 @@ Date: 2026-04-03
 Status: bootstrap design baseline
 Scope: material-side stage SSOT only
 Execution Rule: 본 문서는 구조 설계 정본이며 즉시 폴더 이동을 뜻하지 않는다. raw research bucket은 이번 웨이브에서 이동하지 않으며, 현재 확인된 deferred bucket은 `로직_리서치`다.
-Implementation Note: 2026-04-03 same-day bounded cutover로 legacy pitch payload bundle은 `material_ssot/20_pitch/intake/legacy_import/` 아래로 옮겼고, pitch-adjacent QA summaries는 `material_ssot/20_pitch/quarantine/`으로 분리했다. 같은 날 research Wave 1로 reference profiles와 few-shot bank도 `material_ssot/10_research/` 아래로 옮겼다. 이어서 work-level normalized research handoff를 위해 `material_ssot/10_research/30_work_materials/`를 열고 첫 `gatekeeper_heir` material pack을 bootstrap했다. raw corpus와 analysis 잔여물은 기존 `docs/실물기반 사각지대 테스트/`에 남겨 두었다.
+Implementation Note: 2026-04-03 same-day bounded cutover로 legacy pitch payload bundle은 `material_ssot/20_pitch/intake/legacy_import/` 아래로 옮겼고, pitch-adjacent QA summaries는 `material_ssot/20_pitch/quarantine/`으로 분리했다. 같은 날 research Wave 1로 reference profiles와 few-shot bank를 `material_ssot/10_research/` 아래로 옮겼다. 이어서 work-level normalized research handoff를 위해 `material_ssot/10_research/30_work_materials/`를 열고 bootstrap material packs를 만들었다. Research Wave 2로 long-form analysis reports를 `material_ssot/10_research/40_analysis/pattern_reports/`로 옮겼고, Research Wave 3로 bounded top-level corpus bundles를 `material_ssot/10_research/50_corpus_curated/`로 옮겼다. 현재 잔여 raw corpus는 주로 `docs/실물기반 사각지대 테스트/원고/titles/`에 남아 있다.
 
 ## 1. Purpose
 
@@ -50,7 +50,9 @@ Implementation Note: 2026-04-03 same-day bounded cutover로 legacy pitch payload
 - canonical reference profiles: `material_ssot/10_research/10_reference_profiles`
 - canonical few-shot bank: `material_ssot/10_research/20_fewshot_bank`
 - normalized work material packs: `material_ssot/10_research/30_work_materials`
-- residual raw corpus / analysis root: `docs/실물기반 사각지대 테스트`
+- canonical analysis reports: `material_ssot/10_research/40_analysis/pattern_reports`
+- canonical curated corpus bundles: `material_ssot/10_research/50_corpus_curated`
+- residual raw corpus root: `docs/실물기반 사각지대 테스트/원고/titles`
 - mirror / scaffold candidate: `narrative_ssot/10_reference_bank`
 - deferred raw logic research bucket: `로직_리서치`
 - any additional raw research bucket:
@@ -141,6 +143,10 @@ material_ssot/
         50_pattern_refs.md
         60_gap_log.md
         90_material_pack.json
+    40_analysis/
+      market_snapshots/
+      pattern_reports/
+    50_corpus_curated/
 
   20_pitch/
     README.md

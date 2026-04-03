@@ -1,0 +1,79 @@
+{
+  "project": "projects/canary_0_0_stage4_ep2_sinkproof_r2",
+  "prepared_from": "projects/00_20260403",
+  "run_scope": "stage4_only_canary_ep2_sinkproof_r2",
+  "session_id": "20260403_164841",
+  "runtime_terminal_state": {
+    "runtime_audit_tag": "stage4_complete",
+    "timestamp": "2026-04-03 17:09:31"
+  },
+  "stage4_scope": {
+    "scope_status": "stage4_only",
+    "stage3_probe_origin": "baseline_copy",
+    "stage4_live_context_regression": "covered",
+    "stage4_sink_alignment_status": "warn",
+    "rationale_contract_status": "ok"
+  },
+  "stage4_attempt_rows": [
+    {
+      "attempt_key": "s4:ep2:arc1:a1:20260403_164841",
+      "attempt_num": 1,
+      "verdict": "REJECT",
+      "score": 44,
+      "director_quality_passed": 0,
+      "downstream_override_applied": 0,
+      "primary_failure_layer": "director_quality"
+    },
+    {
+      "attempt_key": "s4:ep2:arc1:a2:20260403_164841",
+      "attempt_num": 2,
+      "verdict": "PASS",
+      "score": 92,
+      "director_quality_passed": 1,
+      "downstream_override_applied": 0,
+      "primary_failure_layer": "none"
+    }
+  ],
+  "hard_gates": {
+    "status": "pass",
+    "errors": [],
+    "warnings": [],
+    "hard_gate_sink_alignment_scope": "current_session"
+  },
+  "current_session_sink_alignment_summary": {
+    "attempts_considered": 2,
+    "complete_final_attempts": 2,
+    "complete_lifecycle_attempts": 2,
+    "final_sink_missing": {},
+    "lifecycle_sink_missing": {},
+    "lifecycle_missing_in_final_sinks": {},
+    "final_score_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "artifact_metadata_missing": [],
+    "rationale_metadata_missing": [],
+    "gate_repair_metadata_missing": [],
+    "status": "ok"
+  },
+  "final_authority_contract_summary": {
+    "status": "ok",
+    "final_authority_sink": "stage_attempts",
+    "selection_role": "historical_companion",
+    "rows_considered": 2,
+    "pre_final_selection_rows": 2,
+    "missing_selection_rows": 0
+  },
+  "gate_repair_surface_summary": {
+    "status": "ok",
+    "attempt_key": "s4:ep2:arc1:a2:20260403_164841",
+    "fix_scope": "inplace",
+    "authoritative_fix_scope": "inplace",
+    "repair_scope": "inplace",
+    "mismatch_counts": {
+      "gate_repair_metadata_missing": 0
+    }
+  },
+  "remaining_warn_surface": {
+    "gate_repair_metadata_missing_fields": [],
+    "patch_trace_summary": {}
+  }
+}

@@ -1,0 +1,73 @@
+# material_ssot
+
+Date: 2026-04-03
+Status: bootstrap slice
+Scope: material-side stage SSOT only
+
+`material_ssot` is the stage-axis SSOT for the material side order.
+
+Design baseline:
+
+- `docs/2026-04-03/material-side-order-ssot-design.md`
+
+Official stage chain:
+
+`리서치 -> 기획안 -> Stage 0 preprocess -> Phase 0 design -> TR 생성 -> BI 생성`
+
+Quick start read order:
+
+1. `00_governance/bootstrap-status.md`
+2. `00_governance/authority-map.md`
+3. `00_governance/stage-read-order.md`
+4. `00_governance/work-coverage-matrix.md`
+5. one bootstrap work chain under `30_stage0_preprocess/work-index/`
+
+This root does not replace:
+
+- `docs/narrative-router` as the family-axis router
+- system-track governance for the Geuldobi pipeline
+- live artifact paths such as `treatments/` and `bible/`
+
+Initial rule:
+
+- bootstrap the authority map, stage read order, and work index first
+- do not move existing raw research, preprocess, phase0, TR, or BI files in this wave
+- connect legacy paths by manifest and labeling first
+
+Current governance anchors:
+
+- `00_governance/authority-map.md`
+- `00_governance/stage-read-order.md`
+- `00_governance/legacy-map.md`
+- `00_governance/work-coverage-matrix.md`
+- `00_governance/bootstrap-status.md`
+
+Current path labels at a glance:
+
+- `material_ssot` = canonical stage root
+- `전처리_ssot` = legacy-active transition hub
+- `narrative_ssot` = scaffold
+- `material_ssot/10_research/10_reference_profiles` = canonical reference profiles
+- `material_ssot/10_research/20_fewshot_bank` = canonical few-shot bank
+- `docs/실물기반 사각지대 테스트` = legacy residual research corpus
+- `로직_리서치` = deferred non-move
+- `treatments/`, `bible/` = live outputs
+
+Bootstrap work set:
+
+- `gatekeeper_heir`
+- `office_checkup_next_day`
+- `wuxia_heavenly_physician`
+
+Current stage directories:
+
+- `00_governance`
+- `10_research`
+- `20_pitch`
+- `30_stage0_preprocess`
+- `40_phase0_design`
+- `50_tr`
+- `60_bi`
+- `90_migration`
+
+This bootstrap slice is commit-ready as a documentation-only change set.

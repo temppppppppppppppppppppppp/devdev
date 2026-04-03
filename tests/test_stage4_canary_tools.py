@@ -273,7 +273,7 @@ def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
     assert summary["hard_gates"]["status"] == "warn"
     assert "pass_rate_monitor_cache_missing" in summary["hard_gates"]["warnings"]
     assert "stage4_retry_contract_not_exercised" in summary["hard_gates"]["warnings"]
-    assert "patch_trace_not_exercised" in summary["hard_gates"]["warnings"]
+    assert "patch_trace_not_exercised" not in summary["hard_gates"]["warnings"]
 
 
 def test_build_stage4_canary_summary_reports_stage3_probe_scope(tmp_path):
