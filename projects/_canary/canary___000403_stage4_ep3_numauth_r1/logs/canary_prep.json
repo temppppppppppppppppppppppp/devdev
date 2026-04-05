@@ -1,0 +1,92 @@
+{
+  "prepared_at": "2026-04-04T11:11:49",
+  "source_project": "__000403",
+  "target_project": "_canary/canary___000403_stage4_ep3_numauth_r1",
+  "canary_scope": "stage4_only",
+  "reruns_stage3_generation": false,
+  "preserves_stage3_blueprints": true,
+  "preserves_stage3_sink_baseline": true,
+  "from_ep": 3,
+  "cleanup": {
+    "from_ep": 3,
+    "db_impact": {
+      "manuscripts": 0,
+      "state_logs": 0,
+      "episode_bibles": 0,
+      "causal_graph": 0,
+      "episode_meta": 0,
+      "episode_quality_labels": 0,
+      "stage4_attempts": 0,
+      "stage4_director_selections": 0,
+      "blueprints_kept": 1,
+      "orphan_chain_link_anchors": 0
+    },
+    "anchor_validation": {
+      "status": "ok",
+      "cleanup_status": "ok",
+      "minimum_truth_status": "ok",
+      "from_ep": 3,
+      "orphan_chain_links": [],
+      "fact_ledger_history_at_or_after": {},
+      "world_state_alive_npcs_at_or_after": [],
+      "world_state_active_items_at_or_after": [],
+      "world_state_last_updated_ep": 2,
+      "expected_minimum_world_state": {
+        "npc_names": [
+          "PB 김태형",
+          "가사도우미",
+          "김태형",
+          "한정호",
+          "한태민",
+          "한태준"
+        ],
+        "relationships": {
+          "PB 김태형": "목격자",
+          "가사도우미": "목격자",
+          "김태형": "목격자",
+          "한정호": "오해 대상",
+          "한태민": "오해 대상",
+          "한태준": "오해 대상"
+        },
+        "active_items": [
+          "몽블랑 만년필",
+          "백지",
+          "최고급 구스다운 이불",
+          "폴더폰"
+        ]
+      },
+      "actual_minimum_world_state": {
+        "npc_names": [
+          "PB 김태형",
+          "가사도우미",
+          "김태형",
+          "한정호",
+          "한태민",
+          "한태준"
+        ],
+        "relationships": {
+          "한정호": "오해 대상",
+          "한태준": "오해 대상",
+          "한태민": "오해 대상",
+          "가사도우미": "목격자",
+          "PB 김태형": "목격자",
+          "김태형": "목격자"
+        },
+        "active_items": [
+          "몽블랑 만년필",
+          "백지",
+          "최고급 구스다운 이불",
+          "폴더폰"
+        ]
+      },
+      "missing_world_state_npcs": [],
+      "missing_world_state_active_items": [],
+      "world_state_relationship_mismatches": []
+    },
+    "file_cleanup": {
+      "draft_files_removed": 0,
+      "log_entries_removed": 9,
+      "memory_entries_removed": 0
+    }
+  }
+}

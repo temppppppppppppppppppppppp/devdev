@@ -43,7 +43,7 @@ def test_run_stage34_ep_demo_canary_calls_stage3_then_stage4_and_analyzes():
     app._stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=2, skip_pause=True)
     app.pass_rate_monitor.save.assert_called_once()
     app._flush_audit_buffer.assert_called_once()
-    analyze.assert_called_once_with("demo_project", target_ep=2)
+    analyze.assert_called_once_with("_canary/demo_project", target_ep=2)
     assert result["multi_stage_proof_scope_summary"]["status"] == "pass"
 
 
@@ -64,11 +64,11 @@ def test_prepare_stage34_ep_demo_canary_writes_prep_metadata(tmp_path):
 
     prep.assert_called_once_with(
         tmp_path / "projects" / "src_project",
-        tmp_path / "projects" / "demo_target",
+        tmp_path / "projects" / "_canary" / "demo_target",
         from_ep=2,
         force=True,
     )
-    prep_path = tmp_path / "projects" / "demo_target" / "logs" / canary_script.PREP_LOG_NAME
+    prep_path = tmp_path / "projects" / "_canary" / "demo_target" / "logs" / canary_script.PREP_LOG_NAME
     saved = json.loads(prep_path.read_text(encoding="utf-8"))
     assert payload["mode"] == canary_script.MODE_NAME
     assert payload["frozen_authority_ep"] == 1

@@ -105,7 +105,7 @@ class DirectorQualityAuditor:
 
             return result
 
-        except (ValueError, KeyError, IndexError) as e:
+        except (TypeError, ValueError, KeyError, IndexError) as e:
             logging.warning(f" [V66] 장르 검증 오류: {e!s}")
             return {
                 "has_critical": False,

@@ -966,6 +966,41 @@ def test_quality_dashboard_endpoint_surfaces_quality_signal_snapshot(tmp_path, m
     assert snapshot["recent"][1]["quality_signals"]["ai_slop_score"] == 0.8
 
 
+def test_quality_dashboard_endpoint_surfaces_dominant_contradiction_type_in_episode_trend(tmp_path, monkeypatch):
+    monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
+    project_dir = tmp_path / "projects" / "demo"
+    project_dir.mkdir(parents=True)
+
+    dashboard = QualityDashboard(project_dir)
+    dashboard.record_validation(
+        ep_num=2,
+        result={
+            "decision": "REJECT",
+            "score": 74,
+            "violations": [
+                {
+                    "type": "director_reject",
+                    "subtype": "numeric_carryover_authority",
+                    "dominant_contradiction_type": "numeric_carryover_authority",
+                    "repair_contract": {"subtype": "numeric_carryover_authority", "fix_scope": "full"},
+                    "scope_authority": {"fix_scope": "full", "authoritative_fix_scope": "inplace"},
+                }
+            ],
+        },
+        stage=4,
+    )
+
+    response = asyncio.run(bridge_server.quality_dashboard_endpoint(project="demo", lookback=5))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["ok"] is True
+    trend_row = payload["data"]["episode_trend"][0]
+    assert trend_row["ep_num"] == 2
+    assert trend_row["decision"] == "REJECT"
+    assert trend_row["dominant_contradiction_type"] == "numeric_carryover_authority"
+
+
 def test_quality_dashboard_endpoint_surfaces_quality_dashboard_persistence_failure(tmp_path, monkeypatch):
     monkeypatch.setattr(bridge_server, "PROJECT_ROOT", tmp_path)
     project_dir = tmp_path / "projects" / "demo"

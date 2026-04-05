@@ -1,7 +1,7 @@
 # 0_0 Stage4 Post-Select Continuity Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (code landed, static validation closed; runtime proof deferred)
+Status: closed (fresh run runtime proof captured 2026-04-04; temp mirror cleanup eligible)
 Canonical Path: `docs/2026-04-02/0_0-stage4-post-select-continuity-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-post-select-continuity-contract-normalization-remediation-execution-ssot.md`
 Source Survey Docs:
@@ -146,3 +146,22 @@ Complexity note:
 
 - touched hotspot: `Stage4InterviewRound._run_post_select_checks()` remains a sink-boundary shell for final-round downgrade handling
 - no new `180+ LOC` production hotspot introduced by this tranche
+
+## 9. Closure Update (2026-04-04)
+
+Runtime proof captured:
+
+- `projects/__000403/logs/session/decisions.jsonl` recorded `s4:ep2:arc1:a4:20260403_224348` with `gate_basis=post_select_conflict`, `repair_scope=full`, `fix_pack.target_kind=local_sentence`, `repair_contract.subtype=아이템`, and widened `scope_authority`
+- `projects/__000403/logs/episode_production.jsonl` recorded the same attempt as `STAGE4_RETRY_PATHOLOGY` with `post_select_conflict|contradiction:아이템|fix_pack_ready`
+- the same fresh run later reached `s4:ep2:arc1:a9:20260403_224348` with final `PASS`
+
+Sink/readback verification:
+
+- local `FailureAnalyzer.sink_alignment_summary(stage=4, lookback=50, include_session_decisions=True)` shows `repair_contract_subtype_mismatches=[]`
+- the same readback shows `repair_contract_provenance_mismatches=[]`, `gate_repair_metadata_missing=[]`, and `selection_companion_missing_rows=[]`
+- remaining alignment warnings are limited to `director_selections` companion rows preserving pre-final semantics rather than loss in the authoritative Stage4 sinks
+
+Residual risk:
+
+- `projects/__000403/logs/runtime_audit_summary.json` still reports Stage4 `status=warn`, but the surviving counts are `gate_basis/fix_scope/repair_scope` companion-row mismatches and do not reopen this lane
+- parent follow-up remains under `0_0-stage4-consumer-contract-normalization-remediation`, with the next held seam still `numeric asset authority / carryover owner-boundary`

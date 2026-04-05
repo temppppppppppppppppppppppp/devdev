@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Callable
 
 from modules.core.constants import VolumeSettings
+from modules.core.fact_ledger import _format_number_basis_label
 
 if TYPE_CHECKING:
     from modules.core.stage4_context_builder import Stage4ContextBuilder
@@ -163,13 +164,15 @@ class Stage4ContextPackets:
                     unit = num_info.get("unit", "")
                     est_val = num_info.get("established_value", "")
                     est_ep = num_info.get("established_ep", "?")
-                    last_ep = num_info.get("last_ep", "?")
                     unit_str = f" {unit}" if unit else ""
+                    latest_basis = _format_number_basis_label(key_text, num_info)
 
                     if est_val != "" and str(est_val) != str(cur_val):
-                        num_lines.append(f"  {key_text}: {est_val}{unit_str}(ep{est_ep}) → {cur_val}{unit_str}(ep{last_ep})")
+                        num_lines.append(
+                            f"  {key_text}: {est_val}{unit_str}(ep{est_ep}) → {cur_val}{unit_str} ({latest_basis})"
+                        )
                     else:
-                        num_lines.append(f"  {key_text}: {cur_val}{unit_str} (ep{last_ep} 기준)")
+                        num_lines.append(f"  {key_text}: {cur_val}{unit_str} ({latest_basis})")
 
                     history = num_info.get("history", [])
                     if isinstance(history, list):
@@ -544,7 +547,8 @@ class Stage4ContextPackets:
                     continue
                 unit = str(info.get("unit", "") or "").strip()
                 unit_str = f" {unit}" if unit else ""
-                num_lines.append(f"  - {key}: {info.get('value', '?')}{unit_str} (ep{info.get('last_ep', '?')} 기준)")
+                basis = _format_number_basis_label(key, info)
+                num_lines.append(f"  - {key}: {info.get('value', '?')}{unit_str} ({basis})")
             if num_lines:
                 parts.append("[주요 수치 - CP 비포함]\n" + "\n".join(num_lines[:10]))
             if full_text:

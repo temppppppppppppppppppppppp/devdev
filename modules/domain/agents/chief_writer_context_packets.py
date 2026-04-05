@@ -62,6 +62,114 @@ class ChiefWriterContextPackets:
     def _build_hud_context(self, *args, **kwargs):
         return self.owner._build_hud_context(*args, **kwargs)
 
+    def _resolve_fact_ledger(self):
+        context_dict = getattr(self.context, "__dict__", {})
+        fact_ledger = context_dict.get("fact_ledger") if isinstance(context_dict, dict) else None
+        if fact_ledger is None:
+            stage4_ctx = None
+            host_dict = getattr(self.host, "__dict__", {})
+            if isinstance(host_dict, dict) and "_stage4_ctx" in host_dict:
+                stage4_ctx = host_dict.get("_stage4_ctx")
+            fact_ledger = getattr(stage4_ctx, "fact_ledger", None) if stage4_ctx is not None else None
+        return fact_ledger
+
+    def _fact_ledger_has_numeric_authority(self) -> bool:
+        fact_ledger = self._resolve_fact_ledger()
+        if fact_ledger is None:
+            return False
+
+        try:
+            canonical_getter = getattr(fact_ledger, "get_canonical_summary", None)
+            if callable(canonical_getter) and str(canonical_getter(max_chars=1200) or "").strip():
+                return True
+        except Exception:
+            logging.debug("[ChiefWriterContextPackets] canonical numeric authority probe failed", exc_info=True)
+
+        try:
+            numbers_getter = getattr(fact_ledger, "get_numbers", None)
+            if callable(numbers_getter):
+                numbers = numbers_getter()
+                if isinstance(numbers, dict) and numbers:
+                    return True
+        except Exception:
+            logging.debug("[ChiefWriterContextPackets] numeric authority probe via get_numbers failed", exc_info=True)
+
+        ledger = getattr(fact_ledger, "_ledger", None)
+        if isinstance(ledger, dict):
+            numbers = ledger.get("numbers", {})
+            if isinstance(numbers, dict) and numbers:
+                return True
+        return False
+
+    @staticmethod
+    def _is_financial_digest_line(line: str) -> bool:
+        text = str(line or "").strip().lower()
+        if not text:
+            return False
+        return any(
+            token in text
+            for token in (
+                "직전 원문 금융 언급",
+                "확정 자본",
+                "capital",
+                "total_assets",
+                "자본",
+                "자산",
+                "잔고",
+                "예수금",
+                "실탄",
+                "현금",
+            )
+        )
+
+    @staticmethod
+    def _is_carryover_baseline_scope(raw: object) -> bool:
+        return str(raw or "").strip().lower() == "carryover_baseline"
+
+    @staticmethod
+    def _normalize_numeric_authority_key(value: object) -> str:
+        return re.sub(r"[\s_]+", "", str(value or "")).lower()
+
+    @classmethod
+    def _is_numeric_carryover_key(cls, key: object) -> bool:
+        token = cls._normalize_numeric_authority_key(key)
+        if not token:
+            return False
+        return any(
+            marker in token
+            for marker in ("capital", "totalassets", "wealth", "asset", "assets", "cash", "balance", "networth")
+        )
+
+    def _collect_fact_ledger_carryover_numeric_lines(self, *, limit: int = 3) -> list[str]:
+        fact_ledger = self._resolve_fact_ledger()
+        if fact_ledger is None or not hasattr(fact_ledger, "get_numbers"):
+            return []
+
+        try:
+            numbers = fact_ledger.get_numbers() or {}
+        except Exception:
+            logging.debug("[ChiefWriterContextPackets] carryover numeric authority probe failed", exc_info=True)
+            return []
+        if not isinstance(numbers, dict):
+            return []
+
+        collected: list[str] = []
+        for key, info in numbers.items():
+            if not isinstance(info, dict):
+                continue
+            if not self._is_carryover_baseline_scope(info.get("authority_scope")):
+                continue
+            if not self._is_numeric_carryover_key(key):
+                continue
+            last_ep = info.get("last_ep", "?")
+            value = info.get("value", "?")
+            unit = str(info.get("unit", "") or "").strip()
+            unit_suffix = f" {unit}" if unit else ""
+            collected.append(f"{key}: {value}{unit_suffix} (EP{last_ep} carryover baseline)")
+            if len(collected) >= limit:
+                break
+        return collected
+
     def build_common_context_packets(
         self,
         *,
@@ -247,13 +355,21 @@ This is optional and should follow narrative flow first.
             digest_hits = [
                 line.strip()
                 for line in str(prev_digest or "").splitlines()
-                if any(token in line for token in ("확정 자본", "WTI", "원유", "계산", "타임라인", "소도구/장비 상태"))
+                if any(token in line for token in ("WTI", "원유", "계산", "타임라인", "소도구/장비 상태"))
             ]
             planning_lines.extend(item for item in digest_hits[:2] if item not in planning_lines)
         if planning_lines:
             lines.append("- 이미 on-page로 끝난 계획/계산/메모 단서:")
             lines.extend(f"  - {item}" for item in planning_lines[:3])
             lines.append("  - 위 계산·계획·메모를 이번 화에서 처음 완성한 것처럼 다시 쓰지 마라.")
+
+        carryover_numeric_lines = self._collect_fact_ledger_carryover_numeric_lines(limit=3)
+        if carryover_numeric_lines:
+            lines.append("- FactLedger carryover baseline numeric authority:")
+            lines.extend(f"  - {item}" for item in carryover_numeric_lines)
+            lines.append(
+                "  - 위 숫자는 직전 화에서 이어지는 persisted baseline이다. 더 큰 blueprint/arc 목표 숫자는 브리지 거래·청산·이체·펀딩이 on-page로 써지기 전까지 현재 확정 자산으로 승격하지 마라."
+            )
 
         generic_digest_lines = self._collect_generic_prev_digest_carryover_lines(prev_digest, limit=3)
         evidence_blocks = sum(bool(block) for block in (opening_evidence, note_evidence, planning_lines))
@@ -285,6 +401,8 @@ This is optional and should follow narrative flow first.
         for raw_line in str(prev_digest or "").splitlines():
             line = re.sub(r"^[\-\*\u2022]\s*", "", str(raw_line or "").strip()).strip()
             if not line or line in seen:
+                continue
+            if ChiefWriterContextPackets._is_financial_digest_line(line):
                 continue
             seen.add(line)
             collected.append(line)
@@ -445,8 +563,8 @@ This is optional and should follow narrative flow first.
             r"(\d[\d,.]*)\s*(?:억|만)\s*(?:원)?[의이가]?\s*(?:잔고|자본|현금|자산|실탄|예수금)",
         ]
         capital_mentions = self._collect_unique_compact_matches(manuscript, capital_patterns, 40, limit=3)
-        if capital_mentions:
-            digest_parts.append(f"확정 자본: {', '.join(capital_mentions)} (직전 화 원문 기준)")
+        if capital_mentions and not self._fact_ledger_has_numeric_authority():
+            digest_parts.append(f"직전 원문 금융 언급: {', '.join(capital_mentions)}")
 
         prop_patterns = [
             r"(수트|재킷|코트|상의|외투)[이가을를은는]?\s*"

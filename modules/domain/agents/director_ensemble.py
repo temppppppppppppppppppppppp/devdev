@@ -386,9 +386,64 @@ _FIXABLE_FIREWALL_TEXT_MARKERS = (
     "title drift",
 )
 
+_NUMERIC_CONTRADICTION_TYPE_TOKENS = {
+    "수치",
+    "numeric",
+    "금액",
+    "자본",
+    "자산",
+    "capital",
+    "balance",
+    "asset",
+}
+
+_NUMERIC_CARRYOVER_MARKERS = (
+    "factledger",
+    "fact ledger",
+    "carryover",
+    "authority",
+    "blueprint",
+    "resumed",
+    "ep1",
+    "ep2",
+    "직전 화",
+    "이전 화",
+    "원문 기준",
+)
+
+_NUMERIC_ASSET_MARKERS = (
+    "capital",
+    "total_assets",
+    "asset",
+    "liquidatable",
+    "자본",
+    "자산",
+    "잔고",
+    "예수금",
+    "실탄",
+    "현금",
+)
+
 
 def _normalize_firewall_token(value: object) -> str:
     return str(value or "").strip().lower().replace(" ", "").replace("_", "").replace("-", "").replace("/", "")
+
+
+def _derive_contradiction_type(detail: dict) -> str:
+    raw_type = str(detail.get("type", "") or "").strip() or "모순"
+    normalized_type = _normalize_firewall_token(raw_type)
+    if normalized_type not in _NUMERIC_CONTRADICTION_TYPE_TOKENS:
+        return raw_type
+
+    combined = " ".join(
+        str(detail.get(key, "") or "")
+        for key in ("type", "current_violation", "description", "expected_truth", "fix_suggestion")
+    ).lower()
+    if any(marker in combined for marker in _NUMERIC_CARRYOVER_MARKERS) and any(
+        marker in combined for marker in _NUMERIC_ASSET_MARKERS
+    ):
+        return "numeric_carryover_authority"
+    return raw_type
 
 
 def _normalize_contradiction_entries(raw: object) -> list[dict]:
@@ -397,13 +452,30 @@ def _normalize_contradiction_entries(raw: object) -> list[dict]:
     return [item for item in raw if isinstance(item, dict)]
 
 
+def _extract_contradiction_types(raw: object) -> list[str]:
+    if not isinstance(raw, list):
+        return []
+
+    contradiction_types: list[str] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        contradiction_types.append(_derive_contradiction_type(item))
+    return contradiction_types
+
+
 def _compact_contradiction_details(entries: list[dict], *, limit: int = 5) -> list[dict]:
     details: list[dict] = []
     for item in entries[:limit]:
         detail: dict[str, str] = {}
+        raw_type = str(item.get("type", "") or "").strip()
+        normalized_type = _derive_contradiction_type(item)
+        if normalized_type:
+            detail["type"] = normalized_type[:80]
+        if raw_type and normalized_type != raw_type:
+            detail["raw_type"] = raw_type[:80]
         for key, cap in (
             ("severity", 40),
-            ("type", 80),
             ("current_violation", 240),
             ("description", 240),
             ("expected_truth", 240),
@@ -633,15 +705,11 @@ def _build_stage4_ensemble_decision_payload(
         "numeric_consistency_review": state.numeric_consistency_review,
         "consistency_checklist": state.consistency_checklist,
         "contradiction_details": state.contradiction_details or [],
-        "contradiction_types": [
-            item.get("type", "")
-            for item in (
-                state.contradiction_check.get("found_contradictions", [])
-                if isinstance(state.contradiction_check, dict)
-                else []
-            )
-            if isinstance(item, dict)
-        ],
+        "contradiction_types": _extract_contradiction_types(
+            state.contradiction_check.get("found_contradictions", [])
+            if isinstance(state.contradiction_check, dict)
+            else []
+        ),
         "_director_thinking": thinking,
         "authoritative_fix_scope_violation": authoritative_fix_scope_violation,
     }
@@ -1163,6 +1231,10 @@ class DirectorEnsembleSelector:
         major_count = sum(
             1 for item in normalized_contradictions if str(item.get("severity", "")).upper() == "MAJOR"
         )
+        has_numeric_carryover_authority = any(
+            str(item.get("type", "") or "").strip() == "numeric_carryover_authority"
+            for item in (state.contradiction_details or [])
+        )
 
         if critical_count >= 1 or major_count >= 2:
             firewall_mode, fixable_reason = _classify_firewall_mode(
@@ -1190,7 +1262,10 @@ class DirectorEnsembleSelector:
                     )
             else:
                 state.firewall_triggered = True
-                if critical_count >= 1:
+                if has_numeric_carryover_authority:
+                    state.firewall_reason = "Contradiction Firewall: numeric carryover authority mismatch"
+                    logging.warning(f" [V75-C] {state.firewall_reason} → REJECT 강제")
+                elif critical_count >= 1:
                     state.firewall_reason = f"Contradiction Firewall: CRITICAL {critical_count}건"
                     logging.warning(f" [V75-C] {state.firewall_reason} → REJECT 강제")
                 else:

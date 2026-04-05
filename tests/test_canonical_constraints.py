@@ -42,6 +42,19 @@ def test_get_canonical_summary_with_numbers(tmp_path):
     assert "9000" in result
 
 
+def test_get_canonical_summary_marks_asset_numbers_as_carryover_baseline(tmp_path):
+    from modules.core.fact_ledger import FactLedger
+
+    db = _make_db(tmp_path)
+    fl = FactLedger(db)
+    fl.update_number("capital", 10_000_000, "won", 1)
+
+    result = fl.get_canonical_summary()
+
+    assert "capital" in result
+    assert "EP1 carryover baseline" in result
+
+
 def test_get_canonical_summary_max_chars(tmp_path):
     """max_chars 준수 확인."""
     from modules.core.fact_ledger import FactLedger
@@ -163,6 +176,9 @@ def test_direct_financial_scalars_sync_to_canonical_facts(tmp_path):
     facts = {fact["fact_key"]: fact for fact in db.get_canonical_facts(fact_type="numerical")}
     assert facts["capital"]["value"]["value"] == 2_000_000_000
     assert facts["capital"]["value"]["unit"] == "won"
+    assert facts["capital"]["value"]["authority_scope"] == "carryover_baseline"
     assert facts["total_assets"]["value"]["value"] == 2_300_000_000
+    assert facts["total_assets"]["value"]["authority_scope"] == "carryover_baseline"
     assert facts["wealth"]["value"]["value"] == 2_000_000_000
+    assert facts["wealth"]["value"]["authority_scope"] == "carryover_baseline"
     assert "market_insight" not in facts

@@ -187,6 +187,39 @@ class TestBuildCommonContext:
         assert hard_canon.index("[Stage4 Opening Scene Authority]") < hard_canon.index("[Stage4 Work Identity Authority]")
         assert hard_canon.index("[Stage4 Work Identity Authority]") < hard_canon.index("WORLD-STATE")
 
+    def test_build_common_context_promotes_stage4_numeric_carryover_authority_into_hard_canon(self):
+        host = _make_host()
+        builder = ChiefWriterContextBuilder(host)
+
+        with patch("modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt") as mock_prompt:
+            result = builder.build_common_context(
+                ep_num=2,
+                blueprint={"scene_breakdown": {}, "integrated_scenario": ""},
+                prev_manuscript="",
+                hud_report="HUD",
+                arc_doc="arc",
+                master_bible=host.context.master_bible,
+                style_guide="style",
+                director_feedback="feedback",
+                failure_constraints="constraints",
+                reference_anchor_prompt="REFERENCE-ANCHOR",
+                mandatory_context=(
+                    "[Stage4 Work Identity Authority]\n"
+                    "- tracking_slots MUST survive into scene execution: lead actor line\n\n"
+                    "[Stage4 Numeric Carryover Authority]\n"
+                    "- total_assets: 10000000 won (EP1 carryover baseline)\n"
+                    "- do not overwrite these baselines with arc or blueprint target numbers.\n\n"
+                    "[Extra Mandatory]\nrest"
+                ),
+                world_state_summary="WORLD-STATE",
+            )
+
+        assert result == "prompt"
+        hard_canon = mock_prompt.call_args.kwargs["writer_hard_canon_section"]
+        assert "[Stage4 Numeric Carryover Authority]" in hard_canon
+        assert hard_canon.index("[Stage4 Work Identity Authority]") < hard_canon.index("[Stage4 Numeric Carryover Authority]")
+        assert hard_canon.index("[Stage4 Numeric Carryover Authority]") < hard_canon.index("WORLD-STATE")
+
     def test_extract_blueprint_sections_includes_integrated_scenario_and_hook(self):
         builder = ChiefWriterContextBuilder(_make_host())
 
@@ -637,26 +670,26 @@ class TestFinancialDigest:
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "가" * 220 + "잔고 131억 원의 잔고 증명서를 꺼내 보였다."
         digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=10)
-        assert "확정 자본" in digest
+        assert "직전 원문 금융 언급" in digest
         assert "131억" in digest
 
     def test_digest_extracts_multiple_capitals(self):
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "가" * 220 + "자본금 80억에서 현금 57억으로 줄어들었다."
         digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=11)
-        assert "확정 자본" in digest
+        assert "직전 원문 금융 언급" in digest
 
     def test_digest_no_capital_for_non_financial(self):
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "가" * 220 + "검을 뽑아들었다. 내공이 폭발했다."
         digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=5)
-        assert "확정 자본" not in digest
+        assert "직전 원문 금융 언급" not in digest
 
     def test_digest_capital_with_comma_number(self):
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "가" * 220 + "예수금 1,500만 원이 남았다."
         digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=3)
-        assert "확정 자본" in digest
+        assert "직전 원문 금융 언급" in digest
         assert "1,500만" in digest
 
     def test_digest_reverse_pattern(self):
@@ -664,7 +697,16 @@ class TestFinancialDigest:
         builder = ChiefWriterContextBuilder(_make_host())
         manuscript = "가" * 220 + "80억의 자본을 투입했다."
         digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=7)
-        assert "확정 자본" in digest
+        assert "직전 원문 금융 언급" in digest
+
+    def test_digest_skips_financial_line_when_fact_ledger_numeric_authority_exists(self):
+        host = _make_host()
+        host.context.fact_ledger = MagicMock()
+        host.context.fact_ledger.get_canonical_summary.return_value = "[수치 제약 (L0)]\n- capital: 10000000 won"
+        builder = ChiefWriterContextBuilder(host)
+        manuscript = "가" * 220 + "잔고 131억 원의 잔고 증명서를 꺼내 보였다."
+        digest = builder.context_packets._generate_episode_digest(manuscript, ep_num=10)
+        assert "직전 원문 금융 언급" not in digest
 
 
 class TestIFCPacketInputWiring:
@@ -785,7 +827,7 @@ class TestIFCPacketInputWiring:
         section = builder.context_packets._build_stage4_carryover_ceiling_section(
             blueprint={"scene_breakdown": {"scene_1": {"goal": "다음 행동 결정"}}},
             prev_manuscript=prev_ms,
-            prev_digest="- 확정 자본: 20억\n- 소도구/장비 상태: 가죽 양장 노트",
+            prev_digest="- 직전 원문 금융 언급: 20억\n- 소도구/장비 상태: 가죽 양장 노트",
         )
 
         assert "Stage4 Carryover Ceiling" in section
@@ -793,3 +835,40 @@ class TestIFCPacketInputWiring:
         assert "노트" in section
         assert "다시 쓰지 마라" in section
         assert "대포폰" in section
+
+    def test_stage4_carryover_ceiling_does_not_promote_financial_digest_line_as_authority(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+        section = builder.context_packets._build_stage4_carryover_ceiling_section(
+            blueprint={"scene_breakdown": {"scene_1": {"goal": "keep moving"}}},
+            prev_manuscript="plain transition without matched keywords",
+            prev_digest="- 직전 원문 금융 언급: 20억\n- generic authority line one",
+        )
+
+        assert "prior digest authority reminders" in section
+        assert "generic authority line one" in section
+        assert "직전 원문 금융 언급" not in section
+
+    def test_stage4_carryover_ceiling_replaces_financial_digest_gap_with_fact_ledger_baseline(self):
+        host = _make_host()
+        host.context.fact_ledger = MagicMock()
+        host.context.fact_ledger.get_numbers.return_value = {
+            "total_assets": {
+                "value": 10000000,
+                "unit": "won",
+                "last_ep": 1,
+                "authority_scope": "carryover_baseline",
+            }
+        }
+        builder = ChiefWriterContextBuilder(host)
+
+        section = builder.context_packets._build_stage4_carryover_ceiling_section(
+            blueprint={"scene_breakdown": {"scene_1": {"goal": "asset jump"}}},
+            prev_manuscript="plain transition without matched keywords",
+            prev_digest="- 직전 원문 금융 언급: 200억\n- generic authority line one",
+        )
+
+        assert "FactLedger carryover baseline numeric authority" in section
+        assert "total_assets: 10000000 won (EP1 carryover baseline)" in section
+        assert "브리지 거래·청산·이체·펀딩" in section
+        assert "generic authority line one" in section
+        assert "직전 원문 금융 언급" not in section

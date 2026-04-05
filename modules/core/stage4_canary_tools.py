@@ -430,8 +430,8 @@ def prepare_stage4_canary_project(
     cleanup = reset_stage4_outputs(target, from_ep=from_ep)
     payload = {
         "prepared_at": datetime.now().isoformat(timespec="seconds"),
-        "source_project": source.name,
-        "target_project": target.name,
+        "source_project": _build_project_name(source),
+        "target_project": _build_project_name(target),
         "canary_scope": "stage4_only",
         "reruns_stage3_generation": False,
         "preserves_stage3_blueprints": True,
@@ -467,8 +467,8 @@ def prepare_stage34_canary_project(
     cleanup = reset_stage34_outputs(target, from_ep=from_ep)
     payload = {
         "prepared_at": datetime.now().isoformat(timespec="seconds"),
-        "source_project": source.name,
-        "target_project": target.name,
+        "source_project": _build_project_name(source),
+        "target_project": _build_project_name(target),
         "from_ep": int(from_ep),
         "cleanup": cleanup,
     }
@@ -589,6 +589,11 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         else sink_alignment_summary
     )
 
+    gate_repair_surface_summary = _build_stage4_gate_repair_surface_summary(
+        gate_repair_summary=gate_repair_summary,
+        sink_alignment_summary=sink_alignment_summary,
+        current_session_sink_alignment_summary=current_session_sink_alignment_summary,
+    )
     hard_gates = _evaluate_stage4_canary_gates(
         target_ep=target_ep,
         draft_count=len(draft_files),
@@ -597,6 +602,9 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         patch_trace_summary=patch_trace_summary,
         sink_alignment_summary=hard_gate_sink_alignment_summary,
         rationale_contract_summary=rationale_contract_summary,
+        final_authority_contract_summary=final_authority_contract_summary,
+        companion_audit_summary=companion_audit_summary,
+        gate_repair_surface_summary=gate_repair_surface_summary,
     )
     proof_scope_summary = _build_stage4_canary_proof_scope_summary(
         stage3_sink_alignment_summary=stage3_sink_alignment_summary,
@@ -608,11 +616,6 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         project_root=root,
         project_locator=project_locator,
         latest_session_id=latest_session_id,
-    )
-    gate_repair_surface_summary = _build_stage4_gate_repair_surface_summary(
-        gate_repair_summary=gate_repair_summary,
-        sink_alignment_summary=sink_alignment_summary,
-        current_session_sink_alignment_summary=current_session_sink_alignment_summary,
     )
 
     return {
@@ -1447,6 +1450,9 @@ def _evaluate_stage4_canary_gates(
     patch_trace_summary: dict,
     sink_alignment_summary: dict,
     rationale_contract_summary: dict,
+    final_authority_contract_summary: dict | None = None,
+    companion_audit_summary: dict | None = None,
+    gate_repair_surface_summary: dict | None = None,
 ) -> dict:
     errors: list[str] = []
     warnings: list[str] = []
@@ -1494,7 +1500,12 @@ def _evaluate_stage4_canary_gates(
         _sink_alignment_status = str(sink_alignment_summary.get("status", "") or "").strip()
         if _sink_alignment_status == "fail":
             errors.append(f"sink_alignment_status:{_sink_alignment_status}")
-        elif _sink_alignment_status not in ("", "ok"):
+        elif _sink_alignment_status not in ("", "ok") and _should_surface_stage4_sink_alignment_warn(
+            sink_alignment_summary=sink_alignment_summary,
+            final_authority_contract_summary=final_authority_contract_summary or {},
+            companion_audit_summary=companion_audit_summary or {},
+            gate_repair_surface_summary=gate_repair_surface_summary or {},
+        ):
             warnings.append(f"sink_alignment_status:{_sink_alignment_status}")
     else:
         errors.append("sink_alignment_summary_empty")
@@ -1533,6 +1544,36 @@ def _evaluate_stage4_canary_gates(
     }
 
 
+def _should_surface_stage4_sink_alignment_warn(
+    *,
+    sink_alignment_summary: dict,
+    final_authority_contract_summary: dict,
+    companion_audit_summary: dict,
+    gate_repair_surface_summary: dict,
+) -> bool:
+    if not sink_alignment_summary:
+        return False
+
+    if any(
+        sink_alignment_summary.get(field)
+        for field in (
+            "initial_verdict_mismatches",
+            "patch_strategy_mismatches",
+            "selection_candidate_key_mismatches",
+        )
+    ):
+        return True
+
+    if str((final_authority_contract_summary or {}).get("status", "") or "").strip() not in ("", "ok"):
+        return True
+    if str((companion_audit_summary or {}).get("status", "") or "").strip() not in ("", "ok"):
+        return True
+    if str((gate_repair_surface_summary or {}).get("status", "") or "").strip() not in ("", "ok"):
+        return True
+
+    return False
+
+
 def _format_stage4_attempt_locator(row) -> str:
     ep_num = int(row["ep_num"] or 0)
     attempt_num = int(row["attempt_num"] or 0)
@@ -1557,6 +1598,13 @@ def _build_project_locator(project_root: Path) -> str:
         return project_root.resolve().relative_to(_APP_ROOT).as_posix()
     except Exception:
         return str(project_root)
+
+
+def _build_project_name(project_root: Path) -> str:
+    try:
+        return project_root.resolve().relative_to((_APP_ROOT / "projects").resolve()).as_posix()
+    except Exception:
+        return project_root.name
 
 
 def _extract_ep_num(filename: str) -> int | None:

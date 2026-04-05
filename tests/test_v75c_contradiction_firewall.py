@@ -449,3 +449,69 @@ def test_fixable_firewall_promotes_local_name_drift_to_pass_with_fix():
     assert "Fixable Contradiction Firewall" in result["fix_scope_reasoning"]
     assert result["contradiction_details"][0]["type"] == "고유명사"
     assert any("이름 표기만 한진호로 통일" in item for item in result["action_items"])
+
+
+def test_numeric_carryover_authority_firewall_reason_is_specific():
+    from modules.domain.agents.director_ensemble import DirectorEnsembleSelector
+
+    class _FakeDirector:
+        _last_thinking = ""
+        MAX_CONTEXT_CHARS = 700_000
+
+        def __init__(self):
+            self._response = json.dumps(
+                {
+                    "selected": "A",
+                    "verdict": "PASS",
+                    "score": 96,
+                    "selection_reason": "best candidate",
+                    "feedback": {"issues": ["numeric carryover collision"]},
+                    "contradiction_check": {
+                        "found_contradictions": [
+                            {
+                                "severity": "CRITICAL",
+                                "type": "수치",
+                                "current_violation": "ep2 blueprint capital 200억 vs resumed FactLedger EP1 total_assets 10000000 carryover mismatch",
+                                "expected_truth": "carryover authority must respect resumed FactLedger until explicit override contract exists",
+                            }
+                        ]
+                    },
+                },
+                ensure_ascii=False,
+            )
+
+        def ask(self, prompt, temperature=0.1, thinking_level=None):
+            return self._response
+
+        def _extract_json_robust(self, response):
+            return json.loads(response)
+
+        def _escape_braces(self, text):
+            return str(text or "")
+
+        def apply_adaptive_decision(self, score, original_decision, arc_pos, total_eps, retry_count):
+            return {"decision": original_decision, "threshold_used": 45, "reason": ""}
+
+        def _operator_log(self, *_args, **_kwargs):
+            return None
+
+    selector = DirectorEnsembleSelector(_FakeDirector())
+    result = selector.select_and_judge_ensemble(
+        ep_num=5,
+        candidates=[
+            {
+                "strategy": "balanced",
+                "strategy_name": "balanced",
+                "manuscript": "가" * 5000,
+                "title": "title",
+                "state_updates": {},
+            }
+        ],
+        validation_results=[{"warnings": [], "focus_points": []}],
+        blueprint={"integrated_scenario": "scenario"},
+        previous_ending="ending",
+    )
+
+    assert result["verdict"] == "REJECT"
+    assert result["firewall_reason"] == "Contradiction Firewall: numeric carryover authority mismatch"
+    assert result["contradiction_types"] == ["numeric_carryover_authority"]

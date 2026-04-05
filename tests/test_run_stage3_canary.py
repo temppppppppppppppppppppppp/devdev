@@ -33,7 +33,7 @@ def test_run_stage3_canary_calls_stage3_only_and_analyzes():
     stage3_orch.stage_3_batch_blueprinting.assert_called_once_with(target_ep=4)
     app.pass_rate_monitor.save.assert_called_once()
     app._flush_audit_buffer.assert_called_once()
-    analyze.assert_called_once_with("test_s3_canary", target_ep=4)
+    analyze.assert_called_once_with("_canary/test_s3_canary", target_ep=4)
     assert result["hard_gates"]["status"] == "pass"
 
     # Stage 4 was never called

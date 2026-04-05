@@ -351,6 +351,26 @@ class TestInterviewRoundHelpers:
         assert "[FACT] [수치 불일치]" in provenance["merged_feedback"]
         assert "[COVERAGE] 관계 의미 질의가 빠졌다." in provenance["merged_feedback"]
 
+    def test_retry_feedback_provenance_tags_numeric_carryover_authority_warning(self):
+        ir = Stage4InterviewRound(_make_ctx())
+
+        provenance = ir._build_retry_feedback_provenance(
+            director_result={"feedback": {}},
+            director_feedback="",
+            selected_validation={
+                "numeric_consistency_warnings": [
+                    {
+                        "severity": "MAJOR",
+                        "category": "numeric_carryover_authority",
+                        "text": "[numeric carryover authority mismatch] 원고 '자산 200억' vs resumed FactLedger 'total_assets'=0.1억",
+                    }
+                ],
+            },
+            round_num=1,
+        )
+
+        assert "[FACT] [numeric_carryover_authority]" in provenance["merged_feedback"]
+
     def test_retry_feedback_provenance_preserves_full_validation_detail_without_caps(self):
         ir = Stage4InterviewRound(_make_ctx())
         long_truth_warning = "timeline mismatch " * 18
@@ -2488,6 +2508,49 @@ class TestRecordS4Attempt:
         assert resolved["scope_authority"]["authoritative_fix_scope"] == "inplace"
         assert resolved["scope_authority"]["widened"] is False
 
+    def test_resolve_stage4_db_attempt_advisory_flags_prefers_nested_gate_scope_over_stale_root(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        resolved = ir._resolve_stage4_db_attempt_advisory_flags(
+            {
+                "gate_semantics": {
+                    "director_verdict": "REJECT",
+                    "gate_basis": "continuity_firewall",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "partial",
+                    "repair_contract": {
+                        "subtype": "수학",
+                        "fix_scope": "partial",
+                        "repair_scope": "partial",
+                        "authoritative_fix_scope": "partial",
+                    },
+                    "scope_authority": {
+                        "fix_scope": "partial",
+                        "repair_scope": "partial",
+                        "authoritative_fix_scope": "partial",
+                        "widened": False,
+                    },
+                },
+                "repair_contract": {
+                    "subtype": "수학",
+                    "fix_scope": "full",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "partial",
+                },
+                "scope_authority": {
+                    "fix_scope": "full",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "partial",
+                    "widened": True,
+                },
+            }
+        )
+
+        assert resolved["repair_contract"]["fix_scope"] == "partial"
+        assert resolved["scope_authority"]["fix_scope"] == "partial"
+        assert resolved["scope_authority"]["widened"] is False
+
     def test_resolve_stage4_db_attempt_model_uses_director_primary_model(self):
         ctx = _make_ctx()
         ctx.agents["director"].primary_model = "gemini-2.5-pro"
@@ -3223,6 +3286,32 @@ class TestRecordS4Attempt:
         assert payload.reject_bucket == "post_select_conflict"
         assert payload.use_inplace is False
         assert payload.use_patch is True
+        assert payload.force_patch is False
+
+    def test_resolve_retry_lane_routing_allows_opening_action_continuity_patch(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._resolve_retry_lane_routing(
+            previous_attempt={
+                "score": "96",
+                "fix_scope": "full",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "tension",
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "bounded_local_fix_hint": True,
+                    "contradiction_types": ["opening_action_continuity"],
+                },
+                "fix_pack": _local_fix_pack("opening_turnback_line", target_kind="local_sentence"),
+            },
+            prev_manuscript="original manuscript",
+            round_num=4,
+        )
+
+        assert payload.reject_bucket == "post_select_conflict"
+        assert payload.use_patch is True
+        assert payload.use_inplace is False
         assert payload.force_patch is False
 
     def test_build_retry_regenerate_kwargs_reduces_strategy_budget_for_constraint_violation(self):
@@ -7074,8 +7163,13 @@ class TestLane2DirectorSemantics:
         round_ctx = _make_round_ctx()
         round_ctx.chief_writer.model_tier = "writer-model"
         ir._record_s4_attempt = MagicMock(return_value={"artifact_path": "reject.json"})
-        ir._build_gate_semantics_payload = MagicMock(return_value={"gate_basis": "consistency"})
-        ir._build_fix_pack_payload = MagicMock(return_value={"must_fix": ["anchor"]})
+        ir._build_gate_semantics_payload = MagicMock(
+            side_effect=lambda payload: {
+                "gate_basis": payload.get("gate_basis", "consistency"),
+                "repair_scope": payload.get("repair_scope", ""),
+            }
+        )
+        ir._build_fix_pack_payload = MagicMock(side_effect=lambda payload: dict(payload.get("fix_pack", {}) or {}))
         ir._last_advisory_summary = {"blocking": 1}
         ir._last_retry_budget_axes = {"repair": "patch_revision"}
 
@@ -7097,7 +7191,29 @@ class TestLane2DirectorSemantics:
                 "score_breakdown": {"consistency": 0},
             },
             candidate_key="A|balanced",
-            previous_attempt={"best_manuscript": "candidate manuscript"},
+            previous_attempt={
+                "best_manuscript": "candidate manuscript",
+                "gate_basis": "post_select_conflict",
+                "repair_scope": "full",
+                "fix_pack": {
+                    "patch_targets": ["opening_turnback_line"],
+                    "must_fix": ["오프닝 동선 반전을 직전 화 엔딩 기준으로 수정"],
+                    "target_kind": "local_sentence",
+                },
+                "scope_origin": {
+                    "fix_scope": "post_select_conflict_override",
+                    "authoritative_fix_scope": "director_authoritative",
+                    "repair_scope": "runtime_lane",
+                },
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "conflicts": [{"conflict_type": "continuity"}],
+                },
+                "reuse_contract": {
+                    "mode": "best_manuscript_baseline",
+                    "baseline_field": "best_manuscript",
+                },
+            },
             prev_manuscript="previous manuscript",
             feedback_provenance={
                 "runtime_advisory": "runtime digest",
@@ -7118,8 +7234,15 @@ class TestLane2DirectorSemantics:
         assert kwargs["retry_directives"] == "retry directives"
         assert kwargs["error_category"] == "LOGIC_ERROR"
         assert kwargs["reject_bucket"] == "post_select_conflict"
-        assert kwargs["advisory_flags"]["gate_semantics"] == {"gate_basis": "consistency"}
-        assert kwargs["advisory_flags"]["fix_pack"] == {"must_fix": ["anchor"]}
+        assert kwargs["advisory_flags"]["gate_semantics"]["gate_basis"] == "post_select_conflict"
+        assert kwargs["advisory_flags"]["gate_semantics"]["repair_scope"] == "full"
+        assert kwargs["advisory_flags"]["gate_semantics"]["scope_origin"]["fix_scope"] == "post_select_conflict_override"
+        assert (
+            kwargs["advisory_flags"]["gate_semantics"]["conflict_resolution_linkage"]["original_contract_type"]
+            == "post_select_conflict"
+        )
+        assert kwargs["advisory_flags"]["gate_semantics"]["reuse_contract"]["mode"] == "best_manuscript_baseline"
+        assert kwargs["advisory_flags"]["fix_pack"]["patch_targets"] == ["opening_turnback_line"]
         assert kwargs["advisory_flags"]["retry_budget_axes"] == {"repair": "patch_revision"}
 
     def test_record_reject_round_metrics_persists_cost_record_and_ui_log(self):
@@ -7168,6 +7291,14 @@ class TestLane2DirectorSemantics:
             director_feedback="reject feedback",
             score=52,
             round_num=1,
+            previous_attempt={
+                "contradiction_types": ["opening_action_continuity"],
+                "repair_contract": {"subtype": "opening_action_continuity", "repair_scope": "full"},
+                "scope_authority": {"authority_kind": "post_select_conflict"},
+                "scope_origin": {"fix_scope": "post_select_conflict_override"},
+                "fix_pack_reason": "bounded_continuity_patch",
+                "fix_pack_origin": {"source": "post_select_conflict"},
+            },
         )
 
         assert updated_feedback == "reject feedback\nadaptive injection"
@@ -7176,12 +7307,35 @@ class TestLane2DirectorSemantics:
             episode=3,
             arc=4,
             reason="post_select_conflict: reject feedback",
-            details={"bucket": "post_select_conflict", "score": 52, "round": 1},
+            details={
+                "bucket": "post_select_conflict",
+                "score": 52,
+                "round": 1,
+                "contradiction_types": ["opening_action_continuity"],
+                "dominant_contradiction_type": "opening_action_continuity",
+                "repair_contract": {"subtype": "opening_action_continuity", "repair_scope": "full"},
+                "scope_authority": {"authority_kind": "post_select_conflict"},
+                "scope_origin": {"fix_scope": "post_select_conflict_override"},
+                "fix_pack_reason": "bounded_continuity_patch",
+                "fix_pack_origin": {"source": "post_select_conflict"},
+            },
         )
         ctx.adaptive_manager.record_failure.assert_called_once_with(
             ep_num=3,
             agent="director",
-            error_info={"reason": "reject feedback", "bucket": "post_select_conflict"},
+            error_info={
+                "reason": "reject feedback",
+                "bucket": "post_select_conflict",
+                "score": 52,
+                "round": 1,
+                "contradiction_types": ["opening_action_continuity"],
+                "dominant_contradiction_type": "opening_action_continuity",
+                "repair_contract": {"subtype": "opening_action_continuity", "repair_scope": "full"},
+                "scope_authority": {"authority_kind": "post_select_conflict"},
+                "scope_origin": {"fix_scope": "post_select_conflict_override"},
+                "fix_pack_reason": "bounded_continuity_patch",
+                "fix_pack_origin": {"source": "post_select_conflict"},
+            },
             attempt=2,
         )
         ctx.adaptive_manager.get_injection_prompt.assert_called_once_with(
@@ -7193,7 +7347,15 @@ class TestLane2DirectorSemantics:
         assert dashboard_kwargs["ep_num"] == 3
         assert dashboard_kwargs["stage"] == 4
         assert dashboard_kwargs["result"]["decision"] == "REJECT"
-        assert "adaptive injection" in dashboard_kwargs["result"]["violations"][0]["description"]
+        violation = dashboard_kwargs["result"]["violations"][0]
+        assert "adaptive injection" in violation["description"]
+        assert violation["subtype"] == "opening_action_continuity"
+        assert violation["contradiction_types"] == ["opening_action_continuity"]
+        assert violation["repair_contract"] == {"subtype": "opening_action_continuity", "repair_scope": "full"}
+        assert violation["scope_authority"] == {"authority_kind": "post_select_conflict"}
+        assert violation["scope_origin"] == {"fix_scope": "post_select_conflict_override"}
+        assert violation["fix_pack_reason"] == "bounded_continuity_patch"
+        assert violation["fix_pack_origin"] == {"source": "post_select_conflict"}
 
     def test_append_pass_episode_log_routes_feedback_and_artifact_meta(self):
         from modules.core.stage4_interview_round import _PassResultLoggingPayload
@@ -8209,8 +8371,225 @@ class TestLane2DirectorSemantics:
         assert kwargs["fix_pack"] == {"must_fix": ["anchor"]}
         assert kwargs["runtime_advisory"] == "runtime digest"
         assert kwargs["retry_directives"] == "retry directives"
-        assert kwargs["firewall_triggered"] is True
-        assert kwargs["firewall_reason"] == "trace firewall"
+
+    def test_log_reject_session_decision_prefers_final_reject_scope_and_fix_pack(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_fix_pack_payload = MagicMock(side_effect=lambda source: dict(source.get("fix_pack") or {}))
+        ir._log_session_decision = MagicMock()
+        ir._last_retry_budget_axes = {"repair": "rewrite_regenerate"}
+
+        ir.reject_runtime._log_reject_session_decision(
+            next_ep=1,
+            round_num=0,
+            arc_num=1,
+            director_result={
+                "fix_scope": "partial",
+                "fix_pack": {"target_kind": "scene_model"},
+                "open_review": "director open review",
+                "action_items": ["director item"],
+                "firewall_triggered": False,
+                "firewall_reason": "",
+            },
+            trace_director_result={
+                "fix_scope": "partial",
+                "fix_pack": {"target_kind": "scene_model"},
+                "open_review": "trace open review",
+                "action_items": ["trace item"],
+                "firewall_triggered": False,
+                "firewall_reason": "",
+            },
+            final_verdict="REJECT",
+            final_score=44,
+            selected="A",
+            reason="fallback reason",
+            error_category="LOGIC_ERROR",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A"},
+            initial_verdict="REJECT",
+            initial_score=40,
+            reject_logging=_RejectLoggingPayload(
+                reject_bucket="post_select_conflict",
+                reject_artifact_meta={
+                    "candidate_key": "stage4|reject",
+                    "content_hash": "hash-r",
+                    "artifact_path": "reject.json",
+                },
+                session_selection_reason="selection",
+                session_verdict_reason="verdict",
+                session_runtime_advisory="runtime digest",
+                session_retry_directives="retry directives",
+                session_gate_semantics={
+                    "director_verdict": "REJECT",
+                    "gate_basis": "continuity_firewall",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "partial",
+                    "fix_pack": {},
+                    "repair_contract": {
+                        "subtype": "수학",
+                        "fix_scope": "full",
+                        "repair_scope": "partial",
+                        "authoritative_fix_scope": "partial",
+                    },
+                    "scope_authority": {
+                        "fix_scope": "full",
+                        "repair_scope": "partial",
+                        "authoritative_fix_scope": "partial",
+                        "widened": True,
+                    },
+                },
+                feedback_provenance={
+                    "director_feedback": "director said no",
+                    "runtime_advisory": "runtime digest",
+                    "retry_directives": "retry directives",
+                },
+            ),
+        )
+
+        kwargs = ir._log_session_decision.call_args.kwargs
+        assert kwargs["fix_scope"] == "full"
+        assert kwargs["repair_scope"] == "partial"
+        assert kwargs["fix_pack"] == {}
+
+    def test_finalize_reject_result_logs_episode_with_final_reject_scope_metadata(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._append_episode_log = MagicMock()
+        ir._log_round_outcome = MagicMock()
+        ir.reject_runtime._sync_reject_result_selection_rationale = MagicMock()
+        ir.reject_runtime._log_reject_session_decision = MagicMock()
+
+        reject_result = SimpleNamespace(
+            previous_attempt={
+                "attempt_key": "attempt-1",
+                "candidate_key": "stage4|reject",
+                "content_hash": "hash-r",
+                "artifact_path": "reject.json",
+                "selection_reason": "selection",
+                "verdict_reason": "verdict",
+                "fix_scope": "full",
+                "authoritative_fix_scope": "partial",
+                "repair_scope": "partial",
+                "fix_pack": {},
+                "repair_contract": {
+                    "subtype": "수학",
+                    "fix_scope": "full",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "partial",
+                },
+                "scope_authority": {
+                    "fix_scope": "full",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "partial",
+                    "widened": True,
+                },
+                "scope_origin": {
+                    "fix_scope": "runtime_widened",
+                    "authoritative_fix_scope": "director_authoritative",
+                    "repair_scope": "runtime_lane",
+                },
+                "firewall_triggered": True,
+                "firewall_reason": "trace firewall",
+                "reject_bucket": "post_select_conflict",
+                "runtime_advisory": "runtime digest",
+                "retry_directives": "retry later",
+            },
+            attempt_artifact_meta={
+                "candidate_key": "stage4|reject",
+                "content_hash": "hash-r",
+                "artifact_path": "reject.json",
+            },
+        )
+
+        ir.reject_runtime._build_reject_logging_payload = MagicMock(
+            return_value=_RejectLoggingPayload(
+                reject_bucket="post_select_conflict",
+                reject_artifact_meta={
+                    "candidate_key": "stage4|reject",
+                    "content_hash": "hash-r",
+                    "artifact_path": "reject.json",
+                },
+                session_selection_reason="selection",
+                session_verdict_reason="verdict",
+                session_runtime_advisory="runtime digest",
+                session_retry_directives="retry later",
+                session_gate_semantics={
+                    "director_verdict": "REJECT",
+                    "gate_basis": "continuity_firewall",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "partial",
+                    "fix_pack": {},
+                    "repair_contract": {
+                        "subtype": "수학",
+                        "fix_scope": "full",
+                        "repair_scope": "partial",
+                        "authoritative_fix_scope": "partial",
+                    },
+                    "scope_authority": {
+                        "fix_scope": "full",
+                        "repair_scope": "partial",
+                        "authoritative_fix_scope": "partial",
+                        "widened": True,
+                    },
+                    "scope_origin": {
+                        "fix_scope": "runtime_widened",
+                        "authoritative_fix_scope": "director_authoritative",
+                        "repair_scope": "runtime_lane",
+                    },
+                },
+                feedback_provenance={
+                    "director_feedback": "director said no",
+                    "runtime_advisory": "runtime digest",
+                    "retry_directives": "retry later",
+                },
+            )
+        )
+
+        ir.reject_runtime.finalize_reject_result(
+            reject_result=reject_result,
+            next_ep=1,
+            round_num=0,
+            round_ctx=_make_round_ctx(),
+            chief_writer=MagicMock(model_tier="gemini-2.5-pro"),
+            director_result={
+                "selection_reason": "best candidate",
+                "verdict_reason": "reject reason",
+                "fix_scope": "partial",
+                "fix_pack": {"target_kind": "scene_model"},
+                "open_review": "director review",
+                "action_items": ["tighten ending"],
+            },
+            trace_director_result={
+                "selection_reason": "trace selection",
+                "verdict_reason": "trace reason",
+                "fix_scope": "partial",
+                "fix_pack": {"target_kind": "scene_model"},
+                "open_review": "trace review",
+                "action_items": ["trace item"],
+            },
+            initial_verdict="REJECT",
+            initial_score=71,
+            final_verdict="REJECT",
+            final_score=44,
+            selected="A",
+            reason="fallback reason",
+            error_category="LOGIC_ERROR",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "sel.txt"},
+            validation_warnings=[],
+            is_patch=False,
+            is_patch_fallback=False,
+            trace_patch_trace={},
+            tot_used=False,
+            mad_used=False,
+            asp_manuscript="",
+        )
+
+        kwargs = ir._append_episode_log.call_args.kwargs
+        assert kwargs["director_result"]["fix_scope"] == "full"
+        assert kwargs["director_result"]["fix_pack"] == {}
+        assert kwargs["director_result"]["scope_authority"]["fix_scope"] == "full"
+        assert kwargs["director_result"]["authoritative_fix_scope"] == "partial"
 
     def test_build_round_outcome_trace_payload_prefers_trace_meta_and_collects_warnings(self):
         ctx = _make_ctx()
@@ -8255,6 +8634,17 @@ class TestLane2DirectorSemantics:
             "runtime_advisory": "runtime digest",
             "retry_directives": "retry later",
             "director_feedback_text": "director said no",
+            "scope_origin": {
+                "fix_scope": "post_select_conflict_override",
+                "authoritative_fix_scope": "director_authoritative",
+                "repair_scope": "runtime_lane",
+            },
+            "repair_contract": {"subtype": "opening_action_continuity", "fix_scope": "full"},
+            "conflict_contract": {
+                "contract_type": "post_select_conflict",
+                "conflicts": [{"conflict_type": "continuity"}, {"conflict_type": "history"}],
+            },
+            "reuse_contract": {"mode": "best_manuscript_baseline"},
         }
         reject_result.attempt_artifact_meta = {
             "candidate_key": "stage4|reject",
@@ -8284,6 +8674,265 @@ class TestLane2DirectorSemantics:
             "retry_directives": "retry later",
         }
         assert payload.session_gate_semantics["gate_basis"] == "continuity"
+        assert payload.session_gate_semantics["scope_origin"]["fix_scope"] == "post_select_conflict_override"
+        assert payload.session_gate_semantics["repair_contract"]["subtype"] == "opening_action_continuity"
+        assert payload.session_gate_semantics["conflict_resolution_linkage"]["conflict_count"] == 2
+        assert payload.session_gate_semantics["reuse_contract"]["mode"] == "best_manuscript_baseline"
+
+    def test_build_reject_logging_payload_adds_numeric_carryover_operator_notes(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_gate_semantics_payload = MagicMock(
+            return_value={
+                "director_verdict": "REJECT",
+                "gate_basis": "continuity",
+                "repair_scope": "full",
+            }
+        )
+        reject_result = MagicMock()
+        reject_result.previous_attempt = {
+            "reject_bucket": "quality_issue",
+            "runtime_advisory": "runtime digest",
+            "retry_directives": "retry later",
+            "director_feedback_text": "director said no",
+            "contradiction_types": ["numeric_carryover_authority"],
+            "repair_contract": {
+                "subtype": "numeric_carryover_authority",
+                "fix_scope": "full",
+                "authoritative_fix_scope": "partial",
+                "provenance": "runtime_synthesized",
+            },
+            "scope_authority": {
+                "fix_scope": "full",
+                "authoritative_fix_scope": "partial",
+                "widened": True,
+            },
+        }
+        reject_result.attempt_artifact_meta = {}
+
+        payload = ir.reject_runtime._build_reject_logging_payload(
+            reject_result=reject_result,
+            director_result={"selection_reason": "initial selection"},
+            trace_director_result={},
+            reason="fallback reason",
+        )
+
+        assert "[Numeric carryover authority]" in payload.session_runtime_advisory
+        assert "FactLedger carryover baseline remains the canonical numeric source" in payload.session_runtime_advisory
+        assert "Scope: runtime=full, authoritative=partial." in payload.session_runtime_advisory
+        assert "Provenance: runtime_synthesized." in payload.session_runtime_advisory
+        assert "[Numeric carryover authority]" in payload.session_retry_directives
+        assert "do not promote blueprint/manuscript future or liquidatable asset claims" in payload.session_retry_directives
+        assert payload.feedback_provenance["runtime_advisory"] == payload.session_runtime_advisory
+        assert payload.feedback_provenance["retry_directives"] == payload.session_retry_directives
+
+    def test_build_reject_logging_payload_adds_scope_authority_operator_notes(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_gate_semantics_payload = MagicMock(
+            return_value={
+                "director_verdict": "REJECT",
+                "gate_basis": "continuity",
+                "repair_scope": "full",
+            }
+        )
+        reject_result = MagicMock()
+        reject_result.previous_attempt = {
+            "reject_bucket": "quality_issue",
+            "runtime_advisory": "runtime digest",
+            "retry_directives": "retry later",
+            "director_feedback_text": "director said no",
+            "repair_contract": {
+                "subtype": "opening_action_continuity",
+                "fix_scope": "full",
+                "authoritative_fix_scope": "inplace",
+                "provenance": "runtime_synthesized",
+            },
+            "scope_authority": {
+                "fix_scope": "full",
+                "authoritative_fix_scope": "inplace",
+                "widened": True,
+            },
+            "scope_origin": {
+                "fix_scope": "runtime_widened",
+            },
+        }
+        reject_result.attempt_artifact_meta = {}
+
+        payload = ir.reject_runtime._build_reject_logging_payload(
+            reject_result=reject_result,
+            director_result={"selection_reason": "initial selection"},
+            trace_director_result={},
+            reason="fallback reason",
+        )
+
+        assert "[Repair scope authority]" in payload.session_runtime_advisory
+        assert "runtime scope widened from authoritative=inplace to runtime=full" in payload.session_runtime_advisory
+        assert "origin=runtime_widened" in payload.session_runtime_advisory
+        assert "provenance=runtime_synthesized" in payload.session_runtime_advisory
+        assert "[Repair scope authority]" in payload.session_retry_directives
+        assert "Preserve authoritative_fix_scope=inplace" in payload.session_retry_directives
+        assert payload.feedback_provenance["runtime_advisory"] == payload.session_runtime_advisory
+        assert payload.feedback_provenance["retry_directives"] == payload.session_retry_directives
+
+    def test_build_reject_logging_payload_synthesizes_explicit_non_local_fix_contract(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        reject_result = MagicMock()
+        reject_result.previous_attempt = {
+            "reject_bucket": "quality_issue",
+            "runtime_advisory": "runtime digest",
+            "retry_directives": "retry later",
+            "director_feedback_text": "director said no",
+            "gate_basis": "strong_advisory_escalation_non_local_fix",
+            "repair_scope": "partial",
+            "fix_scope": "partial",
+            "authoritative_fix_scope": "inplace",
+            "fix_pack": {},
+            "repair_contract": {
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+            },
+            "scope_authority": {
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "widened": True,
+            },
+            "strong_advisory_escalation": {
+                "triggered_by": ["npc_drift"],
+                "local_fix_contract": {
+                    "ready": False,
+                    "reason": "missing_fix_pack",
+                    "fix_scope": "inplace",
+                },
+            },
+        }
+        reject_result.attempt_artifact_meta = {}
+
+        payload = ir.reject_runtime._build_reject_logging_payload(
+            reject_result=reject_result,
+            director_result={"selection_reason": "initial selection"},
+            trace_director_result={},
+            reason="fallback reason",
+        )
+
+        fix_pack = payload.session_gate_semantics["fix_pack"]
+        assert fix_pack["target_kind"] == "scene_model"
+        assert fix_pack["provenance"] == "runtime_synthesized"
+        assert fix_pack["patch_targets"] == ["scene-model rewrite boundary"]
+        assert "broader rewrite contract" in fix_pack["evidence_summary"]
+        repair_contract = payload.session_gate_semantics["repair_contract"]
+        assert repair_contract["provenance"] == "runtime_synthesized"
+        assert repair_contract["target_kind"] == "scene_model"
+        assert payload.session_gate_semantics["fix_pack_origin"] == {
+            "provenance": "runtime_synthesized",
+            "provenance_sources": ["strong_advisory_non_local_fix", "npc_drift"],
+            "routing_contract": "runtime_generated_requires_rewrite",
+        }
+
+    def test_finalize_reject_result_synthesizes_explicit_non_local_fix_contract_in_episode_log(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._append_episode_log = MagicMock()
+        ir._log_round_outcome = MagicMock()
+        ir.reject_runtime._sync_reject_result_selection_rationale = MagicMock()
+        ir.reject_runtime._log_reject_session_decision = MagicMock()
+
+        reject_result = SimpleNamespace(
+            previous_attempt={
+                "attempt_key": "attempt-1",
+                "candidate_key": "stage4|reject",
+                "content_hash": "hash-r",
+                "artifact_path": "reject.json",
+                "selection_reason": "selection",
+                "verdict_reason": "verdict",
+                "gate_basis": "strong_advisory_escalation_non_local_fix",
+                "fix_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "repair_scope": "partial",
+                "fix_pack": {},
+                "repair_contract": {
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                },
+                "scope_authority": {
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": True,
+                },
+                "strong_advisory_escalation": {
+                    "triggered_by": ["npc_drift"],
+                    "local_fix_contract": {
+                        "ready": False,
+                        "reason": "missing_fix_pack",
+                        "fix_scope": "inplace",
+                    },
+                },
+                "runtime_advisory": "runtime digest",
+                "retry_directives": "retry later",
+                "reject_bucket": "quality_issue",
+            },
+            attempt_artifact_meta={
+                "candidate_key": "stage4|reject",
+                "content_hash": "hash-r",
+                "artifact_path": "reject.json",
+            },
+        )
+
+        ir.reject_runtime.finalize_reject_result(
+            reject_result=reject_result,
+            next_ep=1,
+            round_num=0,
+            round_ctx=_make_round_ctx(),
+            chief_writer=MagicMock(model_tier="gemini-2.5-pro"),
+            director_result={
+                "selection_reason": "best candidate",
+                "verdict_reason": "reject reason",
+                "fix_scope": "partial",
+                "gate_basis": "strong_advisory_escalation_non_local_fix",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "strong_advisory_escalation": {
+                    "triggered_by": ["npc_drift"],
+                    "local_fix_contract": {
+                        "ready": False,
+                        "reason": "missing_fix_pack",
+                        "fix_scope": "inplace",
+                    },
+                },
+                "open_review": "director review",
+                "action_items": ["tighten ending"],
+            },
+            trace_director_result={},
+            initial_verdict="REJECT",
+            initial_score=98,
+            final_verdict="REJECT",
+            final_score=98,
+            selected="A",
+            reason="fallback reason",
+            error_category="QUALITY_ISSUE",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A"},
+            validation_warnings=[],
+            is_patch=True,
+            is_patch_fallback=False,
+            trace_patch_trace={},
+            tot_used=False,
+            mad_used=False,
+            asp_manuscript="",
+        )
+
+        sink_source = ir._append_episode_log.call_args.kwargs["director_result"]
+        assert sink_source["fix_pack"]["target_kind"] == "scene_model"
+        assert sink_source["fix_pack"]["provenance"] == "runtime_synthesized"
+        assert sink_source["fix_pack_reason"] == "scene_model_target"
+        assert sink_source["repair_contract"]["provenance"] == "runtime_synthesized"
+        assert sink_source["repair_contract"]["target_kind"] == "scene_model"
+        assert sink_source["fix_pack_origin"]["routing_contract"] == "runtime_generated_requires_rewrite"
 
     def test_finalize_round_outcome_routes_reject_branch_with_trace_meta(self):
         ctx = _make_ctx()
@@ -8752,6 +9401,31 @@ class TestOperatorParityAdvisoryFullSurface:
         joined = result[0]
         assert joined.count("[NC-") == 15
         assert long_text in joined
+
+    def test_numeric_consistency_advisory_includes_category_tag(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        nc_mock = MagicMock()
+        nc_mock.check.return_value = [
+            {
+                "severity": "MAJOR",
+                "category": "numeric_carryover_authority",
+                "text": "[numeric carryover authority mismatch] 원고 '자산 200억' vs resumed FactLedger 'total_assets'=0.1억",
+            }
+        ]
+
+        with patch(
+            "modules.core.numeric_consistency_checker.NumericConsistencyChecker",
+            return_value=nc_mock,
+        ):
+            result = ir._advisory_numeric_consistency(
+                candidates=[{"manuscript": "원고", "state_updates": {}}],
+                validation_results=[{}],
+                next_ep=2,
+            )
+
+        assert "[numeric_carryover_authority]" in result[0]
 
     def test_relationship_drift_returns_all_items_full_text(self):
         ctx = _make_ctx()
@@ -9452,6 +10126,75 @@ class TestScopeSinkSemantics:
         assert any(
             "institution mismatch" in item
             for item in previous_attempt["conflict_contract"]["contradiction_details"]
+        )
+
+    def test_post_select_conflict_merges_opening_continuity_pin_metadata(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 2
+        round_ctx.prev_manuscripts_text = "prev manuscript"
+        round_ctx.blueprint = {
+            "integrated_scenario": "아버지 호출 이후 장면",
+            "_continuity_pins": [
+                {
+                    "type": "opening_action_continuity_pin",
+                    "before": "멈추지 않음",
+                    "expected": "직전 화 이탈 동선을 유지하거나 전환을 명시",
+                    "observed": "걸음을 멈춤, 몸을 돌림, 아버지를 마주 봄",
+                }
+            ],
+        }
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {
+            "decision": "CONFLICT",
+            "summary": "opening continuity mismatch",
+        }
+
+        verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+            verdict="PASS",
+            next_ep=2,
+            round_num=0,
+            round_ctx=round_ctx,
+            final_manuscript="candidate manuscript",
+            final_state_updates={},
+            director_result={
+                "director_verdict": "PASS",
+                "final_verdict": "PASS",
+                "selected_candidate": {"strategy_name": "balanced", "manuscript": "candidate manuscript"},
+                "score_breakdown": {},
+                "consistency_checklist": {},
+                "fix_pack": {},
+                "action_items": [],
+            },
+            director_feedback="initial feedback",
+            score=88,
+            error_category="",
+            previous_attempt={},
+            stage4_spinner=MagicMock(),
+            director_memory_context="",
+        )
+
+        assert verdict == "REJECT"
+        assert error_category == "POST_SELECT_CONTINUITY_CONFLICT"
+        assert "opening_action_continuity" in previous_attempt["contradiction_types"]
+        assert "opening_action_continuity" in previous_attempt["conflict_contract"]["contradiction_types"]
+        assert any(
+            "opening continuity pin" in item
+            for item in previous_attempt["conflict_contract"]["contradiction_details"]
+        )
+        assert "[Continuity Conflict]" in director_feedback
+
+    def test_opening_action_continuity_type_counts_as_continuity_replay_reject(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        assert ir._is_continuity_replay_reject(
+            director_result={
+                "firewall_triggered": True,
+                "contradiction_types": ["opening_action_continuity"],
+                "firewall_reason": "Contradiction Firewall: opening continuity mismatch",
+            },
+            director_feedback="",
         )
 
 

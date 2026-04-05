@@ -2,6 +2,7 @@
 Stage4 round-outcome governance runtime split.
 """
 
+import copy
 import logging
 from pathlib import Path
 from types import SimpleNamespace
@@ -708,6 +709,7 @@ class Stage4OutcomeRuntime:
             "space_continuity",
             "timeline_arc_consistency",
             "opening_diversity",
+            "opening_action_continuity",
         }
         if contradiction_types.intersection(continuity_types):
             return True
@@ -1090,6 +1092,7 @@ class Stage4OutcomeRuntime:
         previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
         fix_pack_contract = self._evaluate_retry_fix_pack_contract(previous_attempt)
         reject_bucket = str(previous_attempt.get("reject_bucket", "") or "").strip()
+        contradiction_types = self._pathology_contradiction_types(previous_attempt)
         contradiction_type = self._pathology_contradiction_type(previous_attempt)
         gate_basis = str(previous_attempt.get("gate_basis", "") or "").strip()
         fix_scope = str(previous_attempt.get("fix_scope", "") or "").strip()
@@ -1126,6 +1129,10 @@ class Stage4OutcomeRuntime:
         )
 
         fingerprint = "|".join(tag for tag in tags if tag) or "unclassified_retry_pathology"
+        fix_pack_reason = (
+            str(previous_attempt.get("fix_pack_reason", "") or "").strip()
+            or str(fix_pack_contract.get("reason", "") or "").strip()
+        )
         payload = {
             "ep": int(ep_num),  # [Lane4] normalized to authoritative ep key
             "round_num": int(round_num + 1),
@@ -1139,7 +1146,7 @@ class Stage4OutcomeRuntime:
             "error_category": error_category,
             "contradiction_type": contradiction_type,
             "fix_pack_ready": bool(fix_pack_contract.get("ready")),
-            "fix_pack_reason": str(fix_pack_contract.get("reason", "") or "").strip(),
+            "fix_pack_reason": fix_pack_reason,
             "provisional_pass_downgrade": provisional_pass_downgrade,
             "firewall_triggered": firewall_triggered,
             "cove_fail_closed": cove_fail_closed,
@@ -1149,6 +1156,26 @@ class Stage4OutcomeRuntime:
             "fix_scope_reasoning": fix_scope_reasoning,
             "open_review": open_review,
         }
+        if contradiction_types:
+            payload["contradiction_types"] = contradiction_types
+            payload["dominant_contradiction_type"] = contradiction_type or contradiction_types[0]
+        self._enrich_retry_pathology_payload(
+            payload=payload,
+            previous_attempt=previous_attempt,
+            fix_scope=fix_scope,
+            authoritative_fix_scope=authoritative_fix_scope,
+        )
+        return payload
+
+    @staticmethod
+    def _enrich_retry_pathology_payload(
+        *,
+        payload: dict[str, object],
+        previous_attempt: dict | None,
+        fix_scope: str,
+        authoritative_fix_scope: str,
+    ) -> None:
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
         attempt_key = str(previous_attempt.get("attempt_key", "") or "").strip()
         if attempt_key:
             payload["attempt_key"] = attempt_key
@@ -1167,7 +1194,11 @@ class Stage4OutcomeRuntime:
         # [SSS-T2] Persist reuse_contract to operator-facing sink
         reuse_contract_val = previous_attempt.get("reuse_contract")
         if isinstance(reuse_contract_val, dict) and reuse_contract_val:
-            payload["reuse_contract"] = reuse_contract_val
+            payload["reuse_contract"] = copy.deepcopy(reuse_contract_val)
+        for key in ("repair_contract", "scope_authority", "fix_pack_origin"):
+            value = previous_attempt.get(key)
+            if isinstance(value, dict) and value:
+                payload[key] = copy.deepcopy(value)
         # [SSS-T1] Scope origin metadata — distinguishes semantic layers in operator evidence
         existing_scope_origin = previous_attempt.get("scope_origin")
         if isinstance(existing_scope_origin, dict) and existing_scope_origin:
@@ -1196,7 +1227,6 @@ class Stage4OutcomeRuntime:
         _rationale_blanked = previous_attempt.get("rationale_blanked_by")
         if _rationale_blanked:
             payload["rationale_blanked_by"] = _rationale_blanked
-        return payload
 
     def emit_retry_pathology_signal(
         self,
@@ -1267,17 +1297,21 @@ class Stage4OutcomeRuntime:
             return {"ready": False, "reason": "contract_eval_failed", "fix_pack": {}}
 
     @staticmethod
-    def _pathology_contradiction_type(previous_attempt: dict | None) -> str:
+    def _pathology_contradiction_types(previous_attempt: dict | None) -> list[str]:
         previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
         contradiction_types = previous_attempt.get("contradiction_types") or []
-        if not isinstance(contradiction_types, list) or not contradiction_types:
+        if not isinstance(contradiction_types, list):
+            return []
+        return [key for item in contradiction_types if (key := str(item or "").strip())]
+
+    @staticmethod
+    def _pathology_contradiction_type(previous_attempt: dict | None) -> str:
+        contradiction_types = Stage4OutcomeRuntime._pathology_contradiction_types(previous_attempt)
+        if not contradiction_types:
             return ""
         counts: dict[str, int] = {}
         for item in contradiction_types:
-            key = str(item or "").strip()
-            if not key:
-                continue
-            counts[key] = counts.get(key, 0) + 1
+            counts[item] = counts.get(item, 0) + 1
         if not counts:
             return ""
         return max(counts.items(), key=lambda pair: pair[1])[0]

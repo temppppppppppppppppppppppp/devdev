@@ -455,6 +455,121 @@ class FailureAnalyzer:
             "scope_authority_widened": cls._safe_bool(scope_payload.get("widened")),
         }
 
+    @classmethod
+    def _merge_episode_production_gate_repair_entry(
+        cls,
+        authoritative_entry: dict[str, object],
+        lifecycle_entry: dict[str, object],
+    ) -> dict[str, object]:
+        """Blend lifecycle-only runtime scope into the authoritative episode_production row."""
+        merged = dict(authoritative_entry)
+        lifecycle_repair = cls._safe_dict(lifecycle_entry.get("repair_contract"))
+        authoritative_repair = cls._safe_dict(merged.get("repair_contract"))
+        if lifecycle_repair or authoritative_repair:
+            repair_contract = {**lifecycle_repair, **authoritative_repair}
+            merged["repair_contract"] = repair_contract
+            merged["repair_contract_subtype"] = cls._pick_repair_contract_subtype(repair_contract)
+            merged["repair_contract_provenance"] = str(
+                repair_contract.get("provenance")
+                or merged.get("repair_contract_provenance")
+                or lifecycle_entry.get("repair_contract_provenance")
+                or ""
+            ).strip()
+
+        for field_name in (
+            "director_verdict",
+            "gate_basis",
+            "repair_scope",
+            "fix_pack_target_kind",
+            "fix_pack_patch_targets",
+            "retry_budget_axes",
+        ):
+            if not cls._normalize_alignment_value(merged.get(field_name)):
+                candidate = lifecycle_entry.get(field_name)
+                if cls._normalize_alignment_value(candidate):
+                    merged[field_name] = candidate
+
+        lifecycle_scope = cls._safe_dict(lifecycle_entry.get("scope_authority"))
+        if lifecycle_scope:
+            merged["scope_authority"] = lifecycle_scope
+            merged["scope_authority_fix_scope"] = str(lifecycle_scope.get("fix_scope") or "").strip()
+            merged["scope_authority_authoritative_fix_scope"] = str(
+                lifecycle_scope.get("authoritative_fix_scope") or ""
+            ).strip()
+            merged["scope_authority_scope_origin"] = str(lifecycle_scope.get("scope_origin") or "").strip()
+            lifecycle_widened = cls._safe_bool(lifecycle_scope.get("widened"))
+            if lifecycle_widened is not None:
+                merged["scope_authority_widened"] = lifecycle_widened
+
+        return merged
+
+    @classmethod
+    def _backfill_stage_attempt_gate_repair_value(
+        cls,
+        field_name: str,
+        values_by_sink: dict[str, object],
+    ) -> dict[str, object]:
+        """Allow readback-only recovery for stage_attempt fields when other final sinks agree."""
+        if field_name not in {
+            "fix_pack_target_kind",
+            "fix_pack_patch_targets",
+            "repair_contract_subtype",
+            "repair_contract_provenance",
+        }:
+            return values_by_sink
+        if "stage_attempts" not in values_by_sink:
+            return values_by_sink
+        if cls._normalize_alignment_value(values_by_sink.get("stage_attempts")):
+            return values_by_sink
+
+        donor_order = ("session_decisions", "episode_production", "pass_rate_monitor")
+        donors: list[tuple[str, object]] = []
+        for sink_name in donor_order:
+            candidate = values_by_sink.get(sink_name)
+            normalized = cls._normalize_alignment_value(candidate)
+            if normalized:
+                donors.append((normalized, candidate))
+        if len({normalized for normalized, _ in donors}) != 1:
+            return values_by_sink
+
+        filled = dict(values_by_sink)
+        filled["stage_attempts"] = donors[0][1]
+        return filled
+
+    @classmethod
+    def _is_explicit_non_local_scene_model_gate_repair_entry(cls, entry: dict[str, object] | None) -> bool:
+        if not isinstance(entry, dict):
+            return False
+        gate_basis = str(entry.get("gate_basis") or "").strip()
+        if gate_basis != "strong_advisory_escalation_non_local_fix":
+            return False
+        repair_contract = cls._safe_dict(entry.get("repair_contract"))
+        target_kind = str(entry.get("fix_pack_target_kind") or repair_contract.get("target_kind") or "").strip()
+        return target_kind == "scene_model"
+
+    @classmethod
+    def _attempt_uses_explicit_non_local_scene_model_contract(
+        cls,
+        gate_repair_sinks: dict[str, dict[str, object]],
+    ) -> bool:
+        explicit_rows = [
+            payload
+            for payload in gate_repair_sinks.values()
+            if cls._is_explicit_non_local_scene_model_gate_repair_entry(payload)
+        ]
+        if not explicit_rows:
+            return False
+
+        for payload in gate_repair_sinks.values():
+            gate_basis = str(payload.get("gate_basis") or "").strip()
+            if gate_basis and gate_basis != "strong_advisory_escalation_non_local_fix":
+                return False
+            repair_contract = cls._safe_dict(payload.get("repair_contract"))
+            target_kind = str(payload.get("fix_pack_target_kind") or repair_contract.get("target_kind") or "").strip()
+            if target_kind and target_kind != "scene_model":
+                return False
+        return True
+
     def _artifact_file_exists(self, artifact_path: str) -> bool | None:
         normalized = str(artifact_path or "").strip()
         if not normalized or self.project_path is None:
@@ -718,6 +833,7 @@ class FailureAnalyzer:
             if existing is not None:
                 existing_authoritative = bool(existing.get("final_sink_authoritative", True))
                 if existing_authoritative and lifecycle_only:
+                    episode_production[attempt_key] = self._merge_episode_production_gate_repair_entry(existing, entry)
                     continue
                 if not existing_authoritative and not lifecycle_only:
                     episode_production[attempt_key] = entry
@@ -932,6 +1048,7 @@ class FailureAnalyzer:
         director_selections: dict[str, dict],
         session_decisions: dict[str, dict],
         episode_production: dict[str, dict],
+        authority_row: dict[str, object] | None = None,
     ) -> dict[str, list[dict]]:
         results = {
             "director_verdict_mismatches": [],
@@ -950,6 +1067,8 @@ class FailureAnalyzer:
         if stage != 4:
             return results
 
+        companion_status = str((authority_row or {}).get("selection_companion_status") or "").strip()
+        skip_director_selection = companion_status == "pre_final_candidate"
         gate_repair_sinks: dict[str, dict[str, object]] = {}
         if attempt_key in stage_attempts:
             gate_repair_sinks["stage_attempts"] = stage_attempts[attempt_key]
@@ -959,8 +1078,9 @@ class FailureAnalyzer:
             gate_repair_sinks["session_decisions"] = session_decisions[attempt_key]
         if attempt_key in episode_production:
             gate_repair_sinks["episode_production"] = episode_production[attempt_key]
-        if attempt_key in director_selections:
+        if attempt_key in director_selections and not skip_director_selection:
             gate_repair_sinks["director_selections"] = director_selections[attempt_key]
+        explicit_non_local_scene_model = self._attempt_uses_explicit_non_local_scene_model_contract(gate_repair_sinks)
 
         for field_name, result_key, sinks in (
             (
@@ -1024,7 +1144,10 @@ class FailureAnalyzer:
                 for sink in sinks
                 if sink in gate_repair_sinks
             }
+            values_by_sink = self._backfill_stage_attempt_gate_repair_value(field_name, values_by_sink)
             nonempty_values = self._nonempty_value_map(values_by_sink)
+            if field_name == "fix_pack_patch_targets" and explicit_non_local_scene_model:
+                continue
             if len(set(nonempty_values.values())) > 1:
                 results[result_key].append({"attempt_key": attempt_key, **nonempty_values})
             missing_sinks = self._missing_value_sinks(values_by_sink)
@@ -1043,6 +1166,7 @@ class FailureAnalyzer:
         director_selections: dict[str, dict],
         session_decisions: dict[str, dict],
         episode_production: dict[str, dict],
+        authority_row: dict[str, object] | None = None,
     ) -> dict[str, list[dict]]:
         results = {
             "candidate_key_mismatches": [],
@@ -1108,7 +1232,9 @@ class FailureAnalyzer:
                         {"attempt_key": attempt_key, "sink": sink_name, "artifact_path": artifact_path}
                     )
 
-        if attempt_key in director_selections and attempt_key in episode_production:
+        companion_status = str((authority_row or {}).get("selection_companion_status") or "").strip()
+        skip_director_selection = companion_status == "pre_final_candidate"
+        if attempt_key in director_selections and attempt_key in episode_production and not skip_director_selection:
             ds_candidate_key = str(director_selections[attempt_key]["candidate_key"] or "").strip()
             ep_candidate_key = str(episode_production[attempt_key]["selection_candidate_key"] or "").strip()
             if ds_candidate_key and ep_candidate_key and ds_candidate_key != ep_candidate_key:
@@ -1252,6 +1378,7 @@ class FailureAnalyzer:
                     director_selections=director_selections,
                     session_decisions=session_decisions,
                     episode_production=episode_production,
+                    authority_row=final_authority_by_attempt.get(attempt_key),
                 ),
                 self._collect_sink_alignment_artifact_results(
                     attempt_key=attempt_key,
@@ -1260,6 +1387,7 @@ class FailureAnalyzer:
                     director_selections=director_selections,
                     session_decisions=session_decisions,
                     episode_production=episode_production,
+                    authority_row=final_authority_by_attempt.get(attempt_key),
                 ),
                 self._collect_sink_alignment_rationale_results(
                     include_session_decisions=include_session_decisions,

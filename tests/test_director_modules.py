@@ -2263,6 +2263,21 @@ class TestDirectorAuditorOperatorParity:
 
         assert result["summary"] == f"장르 검증 실패: {long_error_msg}"
 
+    def test_genre_validation_type_error_degrades_instead_of_crashing(self, director):
+        """Genre validation TypeError should degrade instead of aborting the audit."""
+        guard_mock = MagicMock()
+        guard_mock.run_deep_validation.side_effect = TypeError(
+            "'in <string>' requires string as left operand, not dict"
+        )
+        director._auditor._d.guard = guard_mock
+
+        result = director._auditor._run_genre_specific_validation(
+            manuscript="원고", ep_num=1
+        )
+
+        assert result["degraded"] is True
+        assert "requires string as left operand" in result["summary"]
+
     def test_warning_violations_not_capped_at_5(self, director):
         """Warning violations list must show all items, not first 5."""
         auditor = director._auditor

@@ -143,6 +143,32 @@ class TestContradictionTypesInReturn:
 
         assert result["contradiction_types"] == ["사망"]
 
+    def test_numeric_carryover_authority_type_is_normalized(self):
+        director = _FakeDirector()
+        director._response = _make_ensemble_response(
+            contradictions=[
+                {
+                    "type": "수치",
+                    "severity": "CRITICAL",
+                    "current_violation": "ep2 blueprint capital 200억 vs resumed FactLedger EP1 total_assets 10000000 carryover mismatch",
+                    "expected_truth": "carryover authority must respect resumed FactLedger until explicit override contract exists",
+                }
+            ],
+            verdict="PASS",
+            score=90,
+        )
+        selector = DirectorEnsembleSelector(director)
+
+        result = selector.select_and_judge_ensemble(
+            ep_num=10,
+            candidates=_make_candidates(),
+            validation_results=[{"warnings": []}] * 3,
+            blueprint={"integrated_scenario": "시나리오"},
+            previous_ending="이전 엔딩",
+        )
+
+        assert result["contradiction_types"] == ["numeric_carryover_authority"]
+
 
 class TestContradictionTypesInPreviousAttempt:
     """REJECT 시 previous_attempt에 error_category + contradiction_types 저장 검증."""

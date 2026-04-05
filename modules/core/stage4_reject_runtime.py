@@ -75,6 +75,327 @@ class Stage4RejectRuntime:
             or fix_pack.get("do_not_regress")
         )
 
+    @staticmethod
+    def _merge_reject_sink_source(*, source: dict | None, previous_attempt: dict | None) -> dict:
+        merged = copy.deepcopy(source) if isinstance(source, dict) else {}
+        if not isinstance(previous_attempt, dict):
+            return merged
+
+        for key in (
+            "gate_basis",
+            "repair_scope",
+            "fix_scope",
+            "authoritative_fix_scope",
+            "fix_pack",
+            "repair_contract",
+            "scope_authority",
+            "scope_origin",
+            "fix_pack_origin",
+            "contradiction_types",
+            "contradiction_details",
+            "firewall_triggered",
+            "firewall_reason",
+            "authoritative_fix_scope_violation",
+            "strong_advisory_escalation",
+            "error_category",
+            "director_verdict",
+            "final_verdict",
+        ):
+            if key not in previous_attempt:
+                continue
+            value = previous_attempt.get(key)
+            merged[key] = copy.deepcopy(value) if isinstance(value, (dict, list)) else value
+        return merged
+
+    @staticmethod
+    def _enrich_reject_gate_semantics(
+        gate_semantics: dict[str, object] | None,
+        *,
+        previous_attempt: dict | None,
+    ) -> dict[str, object]:
+        enriched = copy.deepcopy(gate_semantics) if isinstance(gate_semantics, dict) else {}
+        if not isinstance(previous_attempt, dict):
+            return enriched
+
+        for key in ("fix_pack", "scope_origin", "repair_contract", "scope_authority", "fix_pack_origin"):
+            value = previous_attempt.get(key)
+            if isinstance(value, dict):
+                existing = enriched.get(key)
+                if isinstance(existing, dict):
+                    merged_value = copy.deepcopy(existing)
+                    merged_value.update(copy.deepcopy(value))
+                    if merged_value or key == "fix_pack":
+                        enriched[key] = merged_value
+                    continue
+                if value or key == "fix_pack":
+                    enriched[key] = copy.deepcopy(value)
+        if bool(previous_attempt.get("post_select_fix_pack_preserved")):
+            enriched["post_select_fix_pack_preserved"] = True
+
+        prior_conflict = previous_attempt.get("conflict_contract")
+        if isinstance(prior_conflict, dict) and prior_conflict:
+            enriched["conflict_resolution_linkage"] = {
+                "resolved_from": "prior_attempt_conflict",
+                "original_contract_type": str(prior_conflict.get("contract_type", "") or ""),
+                "conflict_count": len(prior_conflict.get("conflicts", []) or []),
+            }
+        prior_reuse = previous_attempt.get("reuse_contract")
+        if isinstance(prior_reuse, dict) and prior_reuse:
+            enriched["reuse_contract"] = copy.deepcopy(prior_reuse)
+        return enriched
+
+    def _build_reject_sink_source(
+        self,
+        *,
+        director_result: dict | None,
+        trace_director_result: dict | None,
+        previous_attempt: dict | None,
+    ) -> dict[str, object]:
+        base_source = trace_director_result if isinstance(trace_director_result, dict) else director_result
+        merged = self._merge_reject_sink_source(source=base_source, previous_attempt=previous_attempt)
+        return self._attach_explicit_non_local_fix_contract(merged)
+
+    def _build_explicit_non_local_fix_pack(
+        self,
+        *,
+        source: dict | None,
+        fix_pack: object,
+    ) -> dict[str, object]:
+        source = source if isinstance(source, dict) else {}
+        if self.owner._normalize_fix_pack(fix_pack):
+            return {}
+        gate_basis = str(source.get("gate_basis", "") or "").strip()
+        if gate_basis != "strong_advisory_escalation_non_local_fix":
+            return {}
+
+        escalation = source.get("strong_advisory_escalation")
+        escalation = escalation if isinstance(escalation, dict) else {}
+        local_fix_contract = escalation.get("local_fix_contract")
+        local_fix_contract = local_fix_contract if isinstance(local_fix_contract, dict) else {}
+        contract_reason = str(local_fix_contract.get("reason", "") or source.get("fix_pack_reason", "") or "").strip()
+        contract_message = self.owner._pass_with_fix_contract_message(contract_reason or "non_local_fix_scope")
+        runtime_scope = str(source.get("fix_scope") or source.get("repair_scope") or "partial").strip().lower() or "partial"
+        authoritative_scope = (
+            str(source.get("authoritative_fix_scope") or source.get("fix_scope") or "inplace").strip().lower()
+            or "inplace"
+        )
+        triggered_by = [
+            str(item).strip()
+            for item in list(escalation.get("triggered_by") or [])
+            if str(item).strip()
+        ]
+        evidence_parts = [
+            "Strong advisory escalation requires a broader rewrite contract; bounded local patching is not applicable.",
+            f"Contract reason: {contract_message}.",
+            f"Scope boundary: runtime={runtime_scope}, authoritative={authoritative_scope}.",
+        ]
+        if triggered_by:
+            evidence_parts.append(f"Triggered by: {', '.join(triggered_by[:3])}.")
+
+        return self.owner._stamp_fix_pack_provenance(
+            {
+                "patch_targets": ["scene-model rewrite boundary"],
+                "must_fix": ["Resolve the advisory at scene-model scope before retrying this manuscript."],
+                "do_not_regress": ["Do not reinterpret this broader rewrite requirement as a bounded local patch."],
+                "success_condition": (
+                    "The retry lane keeps an explicit non-local fix contract instead of missing fix-pack metadata."
+                ),
+                "target_kind": "scene_model",
+                "evidence_summary": " ".join(str(part).strip() for part in evidence_parts if str(part).strip()),
+            },
+            provenance="runtime_synthesized",
+            provenance_sources=["strong_advisory_non_local_fix", *triggered_by[:2]],
+        )
+
+    def _attach_explicit_non_local_fix_contract(self, source: dict | None) -> dict[str, object]:
+        attached = copy.deepcopy(source) if isinstance(source, dict) else {}
+        explicit_fix_pack = self._build_explicit_non_local_fix_pack(
+            source=attached,
+            fix_pack=attached.get("fix_pack"),
+        )
+        if not explicit_fix_pack:
+            return attached
+
+        attached["fix_pack"] = explicit_fix_pack
+        attached["fix_pack_reason"] = "scene_model_target"
+        repair_contract = attached.get("repair_contract")
+        repair_contract = copy.deepcopy(repair_contract) if isinstance(repair_contract, dict) else {}
+        if not str(repair_contract.get("provenance", "") or "").strip():
+            repair_contract["provenance"] = str(explicit_fix_pack.get("provenance", "") or "")
+        provenance_sources = list(explicit_fix_pack.get("provenance_sources") or [])[:4]
+        if provenance_sources and not repair_contract.get("provenance_sources"):
+            repair_contract["provenance_sources"] = provenance_sources
+        if not str(repair_contract.get("target_kind", "") or "").strip():
+            repair_contract["target_kind"] = str(explicit_fix_pack.get("target_kind", "") or "")
+        if repair_contract:
+            attached["repair_contract"] = repair_contract
+        if not isinstance(attached.get("fix_pack_origin"), dict) or not attached.get("fix_pack_origin"):
+            attached["fix_pack_origin"] = {
+                "provenance": str(explicit_fix_pack.get("provenance", "") or ""),
+                "provenance_sources": provenance_sources,
+                "routing_contract": "runtime_generated_requires_rewrite",
+            }
+        return attached
+
+    @staticmethod
+    def _build_reject_followup_contract(
+        *,
+        reject_bucket: str,
+        score: int,
+        round_num: int,
+        previous_attempt: dict | None,
+    ) -> dict[str, object]:
+        contract: dict[str, object] = {
+            "bucket": reject_bucket,
+            "score": score,
+            "round": round_num,
+        }
+        if not isinstance(previous_attempt, dict):
+            return contract
+
+        contradiction_types = [
+            str(item).strip()
+            for item in list(previous_attempt.get("contradiction_types") or [])
+            if str(item).strip()
+        ]
+        if contradiction_types:
+            contract["contradiction_types"] = contradiction_types
+            contract["dominant_contradiction_type"] = contradiction_types[0]
+
+        for key in ("repair_contract", "scope_authority", "scope_origin", "fix_pack_origin"):
+            value = previous_attempt.get(key)
+            if isinstance(value, dict) and value:
+                contract[key] = copy.deepcopy(value)
+
+        fix_pack_reason = str(previous_attempt.get("fix_pack_reason", "") or "").strip()
+        if fix_pack_reason:
+            contract["fix_pack_reason"] = fix_pack_reason
+        return contract
+
+    @staticmethod
+    def _append_operator_note(base_text: str, note: str) -> str:
+        base = str(base_text or "").strip()
+        note = str(note or "").strip()
+        if not note:
+            return base
+        if note in base:
+            return base
+        return f"{base}\n{note}".strip() if base else note
+
+    @staticmethod
+    def _build_numeric_carryover_operator_notes(previous_attempt: dict | None) -> tuple[str, str]:
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+        contradiction_types = [
+            str(item).strip()
+            for item in list(previous_attempt.get("contradiction_types") or [])
+            if str(item).strip()
+        ]
+        repair_contract = previous_attempt.get("repair_contract")
+        repair_contract = repair_contract if isinstance(repair_contract, dict) else {}
+        repair_subtype = str(repair_contract.get("subtype", "") or "").strip()
+        if repair_subtype != "numeric_carryover_authority" and "numeric_carryover_authority" not in contradiction_types:
+            return "", ""
+
+        scope_authority = previous_attempt.get("scope_authority")
+        scope_authority = scope_authority if isinstance(scope_authority, dict) else {}
+        runtime_scope = str(
+            scope_authority.get("fix_scope")
+            or repair_contract.get("fix_scope")
+            or previous_attempt.get("fix_scope", "")
+            or ""
+        ).strip()
+        authoritative_scope = str(
+            scope_authority.get("authoritative_fix_scope")
+            or repair_contract.get("authoritative_fix_scope")
+            or previous_attempt.get("authoritative_fix_scope", "")
+            or ""
+        ).strip()
+        scope_suffix = ""
+        if runtime_scope and authoritative_scope and runtime_scope != authoritative_scope:
+            scope_suffix = f" Scope: runtime={runtime_scope}, authoritative={authoritative_scope}."
+        elif runtime_scope:
+            scope_suffix = f" Scope: {runtime_scope}."
+        elif authoritative_scope:
+            scope_suffix = f" Scope: authoritative={authoritative_scope}."
+
+        fix_pack_origin = previous_attempt.get("fix_pack_origin")
+        fix_pack_origin = fix_pack_origin if isinstance(fix_pack_origin, dict) else {}
+        provenance = str(repair_contract.get("provenance", "") or fix_pack_origin.get("provenance", "") or "").strip()
+        provenance_suffix = f" Provenance: {provenance}." if provenance else ""
+
+        advisory = (
+            "[Numeric carryover authority] FactLedger carryover baseline remains the canonical numeric source "
+            "until an explicit carryover/state update replaces it."
+            f"{scope_suffix}{provenance_suffix}"
+        )
+        directives = (
+            "[Numeric carryover authority] Preserve the EP carryover baseline and do not promote "
+            "blueprint/manuscript future or liquidatable asset claims into current ledger truth "
+            "without an explicit transition."
+        )
+        return advisory, directives
+
+    @staticmethod
+    def _build_scope_authority_operator_notes(previous_attempt: dict | None) -> tuple[str, str]:
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+        scope_authority = previous_attempt.get("scope_authority")
+        scope_authority = scope_authority if isinstance(scope_authority, dict) else {}
+        repair_contract = previous_attempt.get("repair_contract")
+        repair_contract = repair_contract if isinstance(repair_contract, dict) else {}
+        scope_origin = previous_attempt.get("scope_origin")
+        scope_origin = scope_origin if isinstance(scope_origin, dict) else {}
+        runtime_scope = str(
+            scope_authority.get("fix_scope")
+            or repair_contract.get("fix_scope")
+            or previous_attempt.get("fix_scope", "")
+            or ""
+        ).strip()
+        authoritative_scope = str(
+            scope_authority.get("authoritative_fix_scope")
+            or repair_contract.get("authoritative_fix_scope")
+            or previous_attempt.get("authoritative_fix_scope", "")
+            or ""
+        ).strip()
+        provenance = str(repair_contract.get("provenance", "") or "").strip()
+        scope_origin_label = str(scope_origin.get("fix_scope", "") or "").strip()
+        widened = bool(scope_authority.get("widened"))
+        if not widened and runtime_scope and authoritative_scope:
+            widened = runtime_scope.lower() != authoritative_scope.lower()
+        if not any((authoritative_scope, provenance, widened)):
+            return "", ""
+
+        if widened and runtime_scope and authoritative_scope:
+            scope_phrase = (
+                f"runtime scope widened from authoritative={authoritative_scope} to runtime={runtime_scope}"
+            )
+        elif authoritative_scope and runtime_scope:
+            scope_phrase = f"runtime scope matches authoritative={authoritative_scope}"
+        elif authoritative_scope:
+            scope_phrase = f"authoritative scope={authoritative_scope}"
+        else:
+            scope_phrase = f"runtime scope={runtime_scope}"
+
+        extras: list[str] = []
+        if scope_origin_label:
+            extras.append(f"origin={scope_origin_label}")
+        if provenance:
+            extras.append(f"provenance={provenance}")
+        extra_suffix = f" ({', '.join(extras)})" if extras else ""
+        advisory = f"[Repair scope authority] {scope_phrase}.{extra_suffix}"
+        if widened and authoritative_scope:
+            directives = (
+                f"[Repair scope authority] Preserve authoritative_fix_scope={authoritative_scope} as the "
+                "Director-authored boundary even when runtime routing widens the active repair scope."
+            )
+        elif authoritative_scope:
+            directives = (
+                f"[Repair scope authority] Keep runtime repair scope aligned with "
+                f"authoritative_fix_scope={authoritative_scope} unless a later runtime contract widens it explicitly."
+            )
+        else:
+            directives = ""
+        return advisory, directives
+
     def handle_reject(
         self,
         *,
@@ -222,6 +543,7 @@ class Stage4RejectRuntime:
             director_feedback=director_feedback,
             score=score,
             round_num=round_num,
+            previous_attempt=previous_attempt,
         )
         return _InterviewRoundResult(
             verdict="REJECT",
@@ -261,6 +583,11 @@ class Stage4RejectRuntime:
         owner = self.owner
         selection_artifact_meta = normalize_artifact_meta(selection_artifact_meta or {})
         previous_attempt = getattr(reject_result, "previous_attempt", None)
+        sink_source = self._build_reject_sink_source(
+            director_result=director_result,
+            trace_director_result=trace_director_result if isinstance(trace_director_result, dict) else None,
+            previous_attempt=previous_attempt,
+        )
         if isinstance(previous_attempt, dict):
             for source_key, target_key in (
                 ("candidate_key", "selection_candidate_key"),
@@ -287,7 +614,7 @@ class Stage4RejectRuntime:
         owner._append_episode_log(
             ep_num=next_ep,
             round_num=round_num,
-            director_result=director_result,
+            director_result=sink_source,
             initial_verdict=initial_verdict,
             initial_score=initial_score,
             final_verdict=final_verdict,
@@ -411,6 +738,12 @@ class Stage4RejectRuntime:
             snapshot_verdict_reason = director_feedback
             snapshot_rejection_reason = director_feedback
             snapshot_fix_pack = owner._normalize_fix_pack(snapshot_fix_pack) if preserve_bounded_post_select_fix_pack else {}
+        explicit_non_local_fix_pack = self._build_explicit_non_local_fix_pack(
+            source=director_result,
+            fix_pack=snapshot_fix_pack,
+        )
+        if explicit_non_local_fix_pack:
+            snapshot_fix_pack = explicit_non_local_fix_pack
         candidate_key = build_candidate_key(
             label=str(selected or ""),
             strategy=str(selected_strategy_key or ""),
@@ -790,8 +1123,15 @@ class Stage4RejectRuntime:
         director_feedback: str,
         score: int,
         round_num: int,
+        previous_attempt: dict | None = None,
     ) -> str:
         owner = self.owner
+        followup_contract = self._build_reject_followup_contract(
+            reject_bucket=reject_bucket,
+            score=score,
+            round_num=round_num,
+            previous_attempt=previous_attempt,
+        )
         try:
             failure_learner = getattr(owner.ctx, "failure_learner", None)
             if failure_learner is not None and hasattr(failure_learner, "record_failure"):
@@ -800,7 +1140,7 @@ class Stage4RejectRuntime:
                     episode=next_ep,
                     arc=arc_num,
                     reason=f"{reject_bucket}: {director_feedback}",
-                    details={"bucket": reject_bucket, "score": score, "round": round_num},
+                    details=copy.deepcopy(followup_contract),
                 )
         except Exception as failure_err:
             logging.debug(f"[TF7-P1-06] failure_learner Stage4 기록 실패 (비치명): {failure_err}")
@@ -811,7 +1151,10 @@ class Stage4RejectRuntime:
                 adaptive_mgr.record_failure(
                     ep_num=next_ep,
                     agent="director",
-                    error_info={"reason": director_feedback, "bucket": reject_bucket},
+                    error_info={
+                        "reason": director_feedback,
+                        **copy.deepcopy(followup_contract),
+                    },
                     attempt=round_num + 1,
                 )
                 if hasattr(adaptive_mgr, "get_injection_prompt"):
@@ -827,17 +1170,28 @@ class Stage4RejectRuntime:
 
         if getattr(owner.ctx, "quality_dashboard", None):
             try:
+                violation = {
+                    "type": "director_reject",
+                    "description": str(director_feedback),
+                }
+                if "dominant_contradiction_type" in followup_contract:
+                    violation["subtype"] = followup_contract["dominant_contradiction_type"]
+                for key in (
+                    "contradiction_types",
+                    "repair_contract",
+                    "scope_authority",
+                    "scope_origin",
+                    "fix_pack_reason",
+                    "fix_pack_origin",
+                ):
+                    if key in followup_contract:
+                        violation[key] = copy.deepcopy(followup_contract[key])
                 owner.ctx.quality_dashboard.record_validation(
                     ep_num=next_ep,
                     result={
                         "decision": "REJECT",
                         "score": score,
-                        "violations": [
-                            {
-                                "type": "director_reject",
-                                "description": str(director_feedback),
-                            }
-                        ],
+                        "violations": [violation],
                         "warnings": [],
                     },
                     stage=4,
@@ -869,6 +1223,36 @@ class Stage4RejectRuntime:
         error_category: str,
     ) -> dict:
         owner = self.owner
+        sink_source = self._build_reject_sink_source(
+            director_result=director_result,
+            trace_director_result=None,
+            previous_attempt=previous_attempt,
+        )
+        advisory_gate_semantics = self._enrich_reject_gate_semantics(
+            owner._build_gate_semantics_payload(sink_source),
+            previous_attempt=previous_attempt,
+        )
+        advisory_fix_pack = owner._build_fix_pack_payload(sink_source)
+        if advisory_fix_pack and not advisory_gate_semantics.get("fix_pack"):
+            advisory_gate_semantics["fix_pack"] = copy.deepcopy(advisory_fix_pack)
+        sink_fix_pack_origin = sink_source.get("fix_pack_origin")
+        if isinstance(sink_fix_pack_origin, dict) and sink_fix_pack_origin and not advisory_gate_semantics.get("fix_pack_origin"):
+            advisory_gate_semantics["fix_pack_origin"] = copy.deepcopy(sink_fix_pack_origin)
+        advisory_repair_contract = (
+            dict(advisory_gate_semantics.get("repair_contract") or {})
+            if isinstance(advisory_gate_semantics.get("repair_contract"), dict)
+            else {}
+        )
+        advisory_scope_authority = (
+            dict(advisory_gate_semantics.get("scope_authority") or {})
+            if isinstance(advisory_gate_semantics.get("scope_authority"), dict)
+            else {}
+        )
+        advisory_fix_pack_origin = (
+            dict(advisory_gate_semantics.get("fix_pack_origin") or {})
+            if isinstance(advisory_gate_semantics.get("fix_pack_origin"), dict)
+            else {}
+        )
         return owner._record_s4_attempt(
             episode=next_ep,
             round_num=round_num,
@@ -883,8 +1267,11 @@ class Stage4RejectRuntime:
             fix_scope=resolved_fix_scope,
             advisory_flags={
                 **(dict(getattr(owner, "_last_advisory_summary", None) or {})),
-                "gate_semantics": owner._build_gate_semantics_payload(director_result),
-                "fix_pack": owner._build_fix_pack_payload(director_result),
+                "gate_semantics": advisory_gate_semantics,
+                "fix_pack": advisory_fix_pack,
+                "repair_contract": advisory_repair_contract,
+                "scope_authority": advisory_scope_authority,
+                "fix_pack_origin": advisory_fix_pack_origin,
                 "retry_budget_axes": dict(getattr(owner, "_last_retry_budget_axes", {}) or {}),
             },
             model=getattr(getattr(round_ctx, "chief_writer", None), "model_tier", None),
@@ -945,6 +1332,11 @@ class Stage4RejectRuntime:
         previous_attempt = getattr(reject_result, "previous_attempt", None)
         if not isinstance(previous_attempt, dict):
             previous_attempt = {}
+        gate_source = self._build_reject_sink_source(
+            director_result=director_result,
+            trace_director_result=trace_director_result if isinstance(trace_director_result, dict) else None,
+            previous_attempt=previous_attempt,
+        )
         reject_bucket = str(previous_attempt.get("reject_bucket", "") or "")
         session_selection_reason = str(
             (
@@ -965,6 +1357,23 @@ class Stage4RejectRuntime:
         )
         session_runtime_advisory = str(previous_attempt.get("runtime_advisory", "") or "")
         session_retry_directives = str(previous_attempt.get("retry_directives", "") or "")
+        scope_runtime_note, scope_retry_note = self._build_scope_authority_operator_notes(previous_attempt)
+        session_runtime_advisory = self._append_operator_note(session_runtime_advisory, scope_runtime_note)
+        session_retry_directives = self._append_operator_note(session_retry_directives, scope_retry_note)
+        numeric_runtime_note, numeric_retry_note = self._build_numeric_carryover_operator_notes(previous_attempt)
+        session_runtime_advisory = self._append_operator_note(session_runtime_advisory, numeric_runtime_note)
+        session_retry_directives = self._append_operator_note(session_retry_directives, numeric_retry_note)
+        session_gate_semantics = self._enrich_reject_gate_semantics(
+            self.owner._build_gate_semantics_payload(gate_source),
+            previous_attempt=previous_attempt,
+        )
+        gate_fix_pack = self.owner._build_fix_pack_payload(gate_source)
+        if gate_fix_pack and not session_gate_semantics.get("fix_pack"):
+            session_gate_semantics["fix_pack"] = copy.deepcopy(gate_fix_pack)
+        gate_fix_pack_origin = gate_source.get("fix_pack_origin")
+        if isinstance(gate_fix_pack_origin, dict) and gate_fix_pack_origin and not session_gate_semantics.get("fix_pack_origin"):
+            session_gate_semantics["fix_pack_origin"] = copy.deepcopy(gate_fix_pack_origin)
+
         return _RejectLoggingPayload(
             reject_bucket=reject_bucket,
             reject_artifact_meta=normalize_artifact_meta(
@@ -974,9 +1383,7 @@ class Stage4RejectRuntime:
             session_verdict_reason=session_verdict_reason,
             session_runtime_advisory=session_runtime_advisory,
             session_retry_directives=session_retry_directives,
-            session_gate_semantics=self.owner._build_gate_semantics_payload(
-                trace_director_result if isinstance(trace_director_result, dict) else director_result
-            ),
+            session_gate_semantics=session_gate_semantics,
             feedback_provenance={
                 "director_feedback": str(previous_attempt.get("director_feedback_text", "") or ""),
                 "runtime_advisory": session_runtime_advisory,
@@ -1003,6 +1410,37 @@ class Stage4RejectRuntime:
         initial_score: int,
         reject_logging: _RejectLoggingPayload,
     ) -> None:
+        previous_attempt_override: dict[str, object] = {}
+        scope_authority = (
+            reject_logging.session_gate_semantics.get("scope_authority")
+            if isinstance(reject_logging.session_gate_semantics.get("scope_authority"), dict)
+            else None
+        )
+        if isinstance(scope_authority, dict) and scope_authority:
+            previous_attempt_override["scope_authority"] = copy.deepcopy(scope_authority)
+            fix_scope = str(scope_authority.get("fix_scope", "") or "").strip()
+            if fix_scope:
+                previous_attempt_override["fix_scope"] = fix_scope
+        authoritative_fix_scope = str(
+            reject_logging.session_gate_semantics.get("authoritative_fix_scope", "") or ""
+        ).strip()
+        if authoritative_fix_scope:
+            previous_attempt_override["authoritative_fix_scope"] = authoritative_fix_scope
+        repair_scope = str(reject_logging.session_gate_semantics.get("repair_scope", "") or "").strip()
+        if repair_scope:
+            previous_attempt_override["repair_scope"] = repair_scope
+        fix_pack_value = reject_logging.session_gate_semantics.get("fix_pack")
+        if isinstance(fix_pack_value, dict):
+            previous_attempt_override["fix_pack"] = copy.deepcopy(fix_pack_value)
+        for key in ("scope_origin", "repair_contract"):
+            value = reject_logging.session_gate_semantics.get(key)
+            if isinstance(value, dict) and value:
+                previous_attempt_override[key] = copy.deepcopy(value)
+        sink_source = self._build_reject_sink_source(
+            director_result=director_result,
+            trace_director_result=trace_director_result if isinstance(trace_director_result, dict) else None,
+            previous_attempt=previous_attempt_override,
+        )
         self.owner._log_session_decision(
             next_ep=next_ep,
             round_num=round_num,
@@ -1017,9 +1455,7 @@ class Stage4RejectRuntime:
                 else reason
             ),
             fix_scope=(
-                trace_director_result.get("fix_scope", "")
-                if isinstance(trace_director_result, dict)
-                else director_result.get("fix_scope", "")
+                str(sink_source.get("fix_scope", "") or "")
             ),
             open_review=(
                 trace_director_result.get("open_review", "")
@@ -1041,24 +1477,14 @@ class Stage4RejectRuntime:
             director_verdict=reject_logging.session_gate_semantics.get("director_verdict", ""),
             gate_basis=reject_logging.session_gate_semantics.get("gate_basis", ""),
             repair_scope=reject_logging.session_gate_semantics.get("repair_scope", ""),
-            fix_pack=self.owner._build_fix_pack_payload(
-                trace_director_result if isinstance(trace_director_result, dict) else director_result
-            ),
+            fix_pack=self.owner._build_fix_pack_payload(sink_source),
             retry_budget_axes=dict(getattr(self.owner, "_last_retry_budget_axes", {}) or {}),
             runtime_advisory=reject_logging.session_runtime_advisory,
             retry_directives=reject_logging.session_retry_directives,
             firewall_triggered=bool(
-
-                    trace_director_result.get("firewall_triggered")
-                    if isinstance(trace_director_result, dict)
-                    else director_result.get("firewall_triggered")
-
+                sink_source.get("firewall_triggered")
             ),
-            firewall_reason=(
-                trace_director_result.get("firewall_reason", "")
-                if isinstance(trace_director_result, dict)
-                else director_result.get("firewall_reason", "")
-            ),
+            firewall_reason=str(sink_source.get("firewall_reason", "") or ""),
             authoritative_fix_scope=str(
                 reject_logging.session_gate_semantics.get("authoritative_fix_scope", "") or ""
             ),

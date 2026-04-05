@@ -31,7 +31,7 @@ def test_run_canary_saves_and_flushes_before_analyze():
     app._stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=4)
     app.pass_rate_monitor.save.assert_called_once()
     app._flush_audit_buffer.assert_called_once()
-    analyze.assert_called_once_with("00_test_06", target_ep=4)
+    analyze.assert_called_once_with("_canary/00_test_06", target_ep=4)
     assert result["hard_gates"]["status"] == "pass"
 
 
@@ -56,7 +56,7 @@ def test_run_canary_bootstraps_missing_pass_rate_monitor():
     ):
         canary_script.run_canary("00_test_06", target_ep=4)
 
-    prm_cls.assert_called_once_with(canary_script.PROJECT_ROOT / "projects" / "00_test_06")
+    prm_cls.assert_called_once_with(canary_script.PROJECT_ROOT / "projects" / "_canary" / "00_test_06")
     assert app.pass_rate_monitor is monitor
     monitor.save.assert_called_once()
     app._stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=4)
@@ -206,6 +206,51 @@ def test_run_canary_restores_inherited_provider_mode(monkeypatch):
         canary_script.run_canary("00_test_06", target_ep=4)
 
     assert canary_script.os.environ["GEULDOBI_PROVIDER_MODE"] == "vertex_ai"
+
+
+def test_prepare_canary_routes_new_target_into_canary_root(tmp_path):
+    source_root = tmp_path / "projects" / "__000403"
+    source_root.mkdir(parents=True)
+
+    with (
+        patch.object(canary_script, "PROJECT_ROOT", tmp_path),
+        patch.object(canary_script, "prepare_stage4_canary_project", return_value={"ok": True}) as prepare,
+    ):
+        payload = canary_script.prepare_canary("__000403", "canary___000403_stage4_ep3_numauth_r3", from_ep=3, force=False)
+
+    assert payload == {"ok": True}
+    prepare.assert_called_once_with(
+        source_root.resolve(),
+        (tmp_path / "projects" / "_canary" / "canary___000403_stage4_ep3_numauth_r3").resolve(),
+        from_ep=3,
+        force=False,
+    )
+
+
+def test_run_canary_boots_nested_canary_project_name(tmp_path):
+    project_root = tmp_path / "projects" / "_canary" / "proof_refresh"
+    project_root.mkdir(parents=True)
+
+    app = SimpleNamespace(
+        _get_int_input=None,
+        _stage_4_v2_chief_writer=MagicMock(),
+        pass_rate_monitor=MagicMock(),
+        _flush_audit_buffer=MagicMock(),
+        memory=None,
+        current_project=SimpleNamespace(db=MagicMock()),
+    )
+    app.current_project.db.conn = MagicMock()
+    app.current_project.db.close = MagicMock()
+
+    with (
+        patch.object(canary_script, "PROJECT_ROOT", tmp_path),
+        patch.object(canary_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
+        patch.object(canary_script, "_boot_app", return_value=app) as boot,
+        patch.object(canary_script, "analyze_canary", return_value={"hard_gates": {"status": "pass"}}),
+    ):
+        canary_script.run_canary("proof_refresh", target_ep=4)
+
+    boot.assert_called_once_with("_canary/proof_refresh", {"type": "investment", "name": "investment"})
 
 
 def test_analyze_canary_writes_summary_and_companion_audit(tmp_path):

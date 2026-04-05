@@ -90,6 +90,66 @@ class TestDetectScoreRegression:
         required = {"is_regression", "severity", "delta", "baseline_avg", "recent_avg", "reason"}
         assert required.issubset(result.keys())
 
+    def test_record_validation_preserves_state_truth_owner_contract(self):
+        """validation record stores PASS-side owner contract metadata when provided."""
+        db = QualityDashboard(project_path=None)
+        contract = {
+            "field_families": {
+                "numeric_carryover_authority": {
+                    "owner": "fact_ledger_carryover_baseline",
+                    "fields": ["capital"],
+                }
+            }
+        }
+
+        record = db.record_validation(
+            ep_num=1,
+            result={
+                "decision": "PASS",
+                "score": 88,
+                "state_truth_owner_contract": contract,
+            },
+            stage=4,
+        )
+
+        assert record["state_truth_owner_contract"] == contract
+        assert db.validation_history[-1]["state_truth_owner_contract"] == contract
+
+    def test_record_validation_preserves_structured_violation_details(self):
+        db = QualityDashboard(project_path=None)
+
+        record = db.record_validation(
+            ep_num=2,
+            result={
+                "decision": "REJECT",
+                "score": 71,
+                "violations": [
+                    {
+                        "type": "director_reject",
+                        "subtype": "opening_action_continuity",
+                        "dominant_contradiction_type": "opening_action_continuity",
+                        "contradiction_types": ["opening_action_continuity", "continuity"],
+                        "repair_contract": {"subtype": "opening_action_continuity", "fix_scope": "full"},
+                        "scope_authority": {"fix_scope": "full", "authoritative_fix_scope": "inplace"},
+                        "fix_pack_reason": "post_select_conflict_override",
+                    }
+                ],
+            },
+            stage=4,
+        )
+
+        assert record["violations"] == ["director_reject"]
+        assert record["dominant_contradiction_type"] == "opening_action_continuity"
+        assert record["violation_details"][0]["subtype"] == "opening_action_continuity"
+        assert record["violation_details"][0]["repair_contract"] == {
+            "subtype": "opening_action_continuity",
+            "fix_scope": "full",
+        }
+        assert db.validation_history[-1]["violation_details"][0]["scope_authority"] == {
+            "fix_scope": "full",
+            "authoritative_fix_scope": "inplace",
+        }
+
     @patch("modules.validation.threshold_helper._threshold")
     def test_default_threshold_on_missing_yaml(self, mock_th):
         """_threshold가 기본값 반환 시에도 정상 동작."""

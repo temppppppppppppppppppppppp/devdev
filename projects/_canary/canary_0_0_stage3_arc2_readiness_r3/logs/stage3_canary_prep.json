@@ -1,0 +1,19 @@
+{
+  "prepared_at": "2026-04-01T07:58:14",
+  "source_project": "0_0",
+  "target_project": "_canary/canary_0_0_stage3_arc2_readiness_r3",
+  "from_ep": 5,
+  "cleanup": {
+    "from_ep": 5,
+    "db_impact": {
+      "blueprints": 5,
+      "stage3_attempts": 5,
+      "stage3_director_selections": 5
+    },
+    "file_cleanup": {
+      "blueprint_files_removed": 4,
+      "stage3_artifact_dirs_removed": 4,
+      "log_entries_removed": 9
+    }
+  }
+}

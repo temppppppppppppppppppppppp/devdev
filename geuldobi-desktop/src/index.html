@@ -3844,6 +3844,33 @@
         return `${minutes}:${seconds}`;
       }
 
+      function _resolveRuntimeStartTimestamp({ durationMs = null, startedAt = null, fallback = null } = {}) {
+        if (typeof durationMs === "number" && Number.isFinite(durationMs) && durationMs >= 0) {
+          return Date.now() - durationMs;
+        }
+        if (typeof startedAt === "string" && startedAt.trim()) {
+          const parsed = Date.parse(startedAt);
+          if (Number.isFinite(parsed)) {
+            return parsed;
+          }
+        }
+        return fallback;
+      }
+
+      function _syncRunStartedAtFromBridge(timing = {}, options = {}) {
+        const fallback = Object.prototype.hasOwnProperty.call(options, "fallback")
+          ? options.fallback
+          : officeState.runStartedAt;
+        const resolved = _resolveRuntimeStartTimestamp({
+          durationMs: timing?.durationMs,
+          startedAt: timing?.startedAt,
+          fallback,
+        });
+        if (typeof resolved === "number" && Number.isFinite(resolved)) {
+          officeState.runStartedAt = resolved;
+        }
+      }
+
       function getCurrentStageAgents() {
         return STAGE_AGENTS[officeState.currentStage] || [];
       }
@@ -6645,10 +6672,12 @@
       // 애니메이션이 실행되는 스테이지 (생산 공정만)
       const ANIMATED_STAGES = new Set(["stage_2", "stage_3", "stage_4", "one_stop", "one_stop_frontier_lag"]);
 
-      function startRunningLoop() {
+      function startRunningLoop(timing = {}) {
         officeState.isRunning = true;
         officeState.mode = "RUNNING";
-        officeState.runStartedAt = Date.now();
+        const fallbackStart = officeState.runStartedAt ?? Date.now();
+        officeState.runStartedAt = fallbackStart;
+        _syncRunStartedAtFromBridge(timing, { fallback: fallbackStart });
         setVerdictState(null, null);
         _currentPrompt = null;
         _pendingPromptQueue = [];
@@ -7594,6 +7623,10 @@
         const runtimeState = String(data.state || "idle");
         const action = _resolveActionFromRunKey(data.key);
         const subKey = data.sub_key || null;
+        const timing = {
+          startedAt: data.started_at,
+          durationMs: data.duration_ms,
+        };
 
         if (action) {
           const meta = resolveActionMeta(action, subKey);
@@ -7604,7 +7637,9 @@
 
         if (["starting", "running", "stopping"].includes(runtimeState)) {
           if (!officeState.isRunning) {
-            startRunningLoop();
+            startRunningLoop(timing);
+          } else {
+            _syncRunStartedAtFromBridge(timing);
           }
           const meta = action
             ? resolveActionMeta(action, subKey)
@@ -7749,7 +7784,7 @@
       function _handleWsEvent(ev) {
         switch (ev.type) {
           case "run_started":
-            startRunningLoop();
+            startRunningLoop({ startedAt: ev.payload.started_at, durationMs: ev.payload.duration_ms });
             syncAgentBaseline();
             appendLog(`[System] 실행 시작 (key: ${ev.payload.key})`, null, {
               agent: "manager",

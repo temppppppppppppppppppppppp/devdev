@@ -167,6 +167,11 @@ def test_renderer_control_plane_resync_contract_matches_source():
     assert "let _pendingPromptQueue = [];" in INDEX_HTML
     assert '[prompt] queueing concurrent prompt_request while dialog open' in INDEX_HTML
     assert 'pending_prompts' in BRIDGE_SERVER
+    assert "function _resolveRuntimeStartTimestamp({" in INDEX_HTML
+    assert "function _syncRunStartedAtFromBridge(timing = {}, options = {})" in INDEX_HTML
+    assert "durationMs: data.duration_ms" in INDEX_HTML
+    assert "startedAt: data.started_at" in INDEX_HTML
+    assert "startRunningLoop({ startedAt: ev.payload.started_at, durationMs: ev.payload.duration_ms });" in INDEX_HTML
 
 
 def test_renderer_bridge_async_failures_are_not_silent():

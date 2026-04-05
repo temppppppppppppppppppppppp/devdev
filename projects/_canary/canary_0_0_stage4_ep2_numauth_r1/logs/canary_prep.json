@@ -1,0 +1,92 @@
+{
+  "prepared_at": "2026-04-03T21:20:10",
+  "source_project": "00_00",
+  "target_project": "_canary/canary_0_0_stage4_ep2_numauth_r1",
+  "canary_scope": "stage4_only",
+  "reruns_stage3_generation": false,
+  "preserves_stage3_blueprints": true,
+  "preserves_stage3_sink_baseline": true,
+  "from_ep": 2,
+  "cleanup": {
+    "from_ep": 2,
+    "db_impact": {
+      "manuscripts": 0,
+      "state_logs": 0,
+      "episode_bibles": 0,
+      "causal_graph": 0,
+      "episode_meta": 0,
+      "episode_quality_labels": 0,
+      "stage4_attempts": 0,
+      "stage4_director_selections": 7,
+      "blueprints_kept": 2,
+      "orphan_chain_link_anchors": 0
+    },
+    "anchor_validation": {
+      "status": "ok",
+      "cleanup_status": "ok",
+      "minimum_truth_status": "ok",
+      "from_ep": 2,
+      "orphan_chain_links": [],
+      "fact_ledger_history_at_or_after": {},
+      "world_state_alive_npcs_at_or_after": [],
+      "world_state_active_items_at_or_after": [],
+      "world_state_last_updated_ep": 1,
+      "expected_minimum_world_state": {
+        "npc_names": [
+          "김 여사",
+          "김 여사 (한시우의 내면 변화와 미래 지식에 대해 오해)",
+          "김 여사 (한시우의 변화된 모습을 목격)",
+          "한시우 (회귀의 진실을 아는 유일한 자)",
+          "한정호",
+          "한정호 (한시우의 반항적인 행동을 목격)",
+          "한정호 (한시우의 진정한 의도와 능력에 대해 오해)",
+          "한태민",
+          "한태준"
+        ],
+        "relationships": {
+          "김 여사 (한시우의 내면 변화와 미래 지식에 대해 오해)": "오해 대상",
+          "김 여사 (한시우의 변화된 모습을 목격)": "목격자",
+          "한시우 (회귀의 진실을 아는 유일한 자)": "목격자",
+          "한정호 (한시우의 반항적인 행동을 목격)": "목격자",
+          "한정호 (한시우의 진정한 의도와 능력에 대해 오해)": "오해 대상"
+        },
+        "active_items": [
+          "낡은 가죽 지갑",
+          "투박한 구형 자동차 키"
+        ]
+      },
+      "actual_minimum_world_state": {
+        "npc_names": [
+          "김 여사",
+          "김 여사 (한시우의 내면 변화와 미래 지식에 대해 오해)",
+          "김 여사 (한시우의 변화된 모습을 목격)",
+          "한시우 (회귀의 진실을 아는 유일한 자)",
+          "한정호",
+          "한정호 (한시우의 반항적인 행동을 목격)",
+          "한정호 (한시우의 진정한 의도와 능력에 대해 오해)",
+          "한태민",
+          "한태준"
+        ],
+        "relationships": {
+          "한시우 (회귀의 진실을 아는 유일한 자)": "목격자",
+          "김 여사 (한시우의 변화된 모습을 목격)": "목격자",
+          "한정호 (한시우의 반항적인 행동을 목격)": "목격자",
+          "김 여사 (한시우의 내면 변화와 미래 지식에 대해 오해)": "오해 대상",
+          "한정호 (한시우의 진정한 의도와 능력에 대해 오해)": "오해 대상"
+        },
+        "active_items": [
+          "낡은 가죽 지갑",
+          "투박한 구형 자동차 키"
+        ]
+      },
+      "missing_world_state_npcs": [],
+      "missing_world_state_active_items": [],
+      "world_state_relationship_mismatches": []
+    },
+    "file_cleanup": {
+      "draft_files_removed": 0,
+      "log_entries_removed": 9,
+      "memory_entries_removed": 0
+    }
+  }
+}

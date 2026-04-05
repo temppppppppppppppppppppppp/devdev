@@ -5,6 +5,7 @@
 8개 검사: 숫자 추출 → FactLedger 교차 → 산술 일관성 → 직함 변경 → "처음" 이벤트 모순
           → 퍼센트 구성 검증(NC-2) → NPC 동명이인(NC-2) → 도입부 유사도(NC-2)
 """
+# utf8-hygiene: allow-file -- regex-heavy Korean numeric parser uses legitimate ? quantifiers and optional-particle patterns.
 
 from __future__ import annotations
 
@@ -199,14 +200,80 @@ class NumericConsistencyChecker:
 
     # FactLedger key ↔ 원고 키워드 동의어 맵
     _SYNONYM_MAP: dict[str, set[str]] = {
-        "잔고": {"자본금", "자본", "현금", "자산", "실탄", "예수금", "보유금", "운용금"},
-        "자본금": {"잔고", "자본", "현금", "자산", "실탄", "예수금", "보유금"},
+        "잔고": {
+            "자본금",
+            "자본",
+            "현금",
+            "자산",
+            "실탄",
+            "예수금",
+            "보유금",
+            "운용금",
+            "capital",
+            "cash",
+            "balance",
+            "total_assets",
+            "assets",
+            "wealth",
+            "net_worth",
+        },
+        "자본금": {
+            "잔고",
+            "자본",
+            "현금",
+            "자산",
+            "실탄",
+            "예수금",
+            "보유금",
+            "capital",
+            "cash",
+            "balance",
+            "total_assets",
+            "assets",
+            "wealth",
+            "net_worth",
+        },
+        "자산": {
+            "잔고",
+            "자본금",
+            "자본",
+            "현금",
+            "실탄",
+            "예수금",
+            "보유금",
+            "운용금",
+            "capital",
+            "cash",
+            "balance",
+            "total_assets",
+            "assets",
+            "wealth",
+            "net_worth",
+        },
         "포지션": {"투자금", "투자액", "투자 규모"},
         "수익": {"이익", "순이익", "영업이익", "순수익"},
         "원금": {"투자원금", "초기투자금"},
         "매출": {"매출액", "총매출"},
         "연봉": {"급여", "월급"},
         "부채": {"대출", "빚", "차입금"},
+    }
+    _ASSET_AUTHORITY_LABELS = {
+        "잔고",
+        "자본금",
+        "자본",
+        "현금",
+        "자산",
+        "실탄",
+        "예수금",
+        "보유금",
+        "운용금",
+        "capital",
+        "cash",
+        "balance",
+        "total_assets",
+        "assets",
+        "wealth",
+        "net_worth",
     }
 
     def __init__(
@@ -440,18 +507,119 @@ class NumericConsistencyChecker:
                 diff = abs(ext.value_eok - ledger_eok)
                 ratio = diff / abs(ledger_eok)
                 if ratio > tolerance:
-                    warnings.append(
-                        {
-                            "check": "FactLedger 교차",
-                            "severity": "MAJOR",
-                            "text": (
-                                f"[수치 불일치] 원고 '{ext.raw}' ({ext.value_eok:.1f}억) "
-                                f"vs FactLedger '{fl_key}'={ledger_eok:.1f}억 "
-                                f"(차이 {diff:.1f}억, {ratio:.0%})"
-                            ),
-                        }
+                    warning = self._build_fact_ledger_warning(
+                        ext=ext,
+                        fl_key=fl_key,
+                        fl_val=fl_val,
+                        ledger_eok=ledger_eok,
+                        diff=diff,
+                        ratio=ratio,
+                        ep_num=ep_num,
                     )
+                    warnings.append(warning)
         return warnings
+
+    @staticmethod
+    def _normalize_label_token(value: object) -> str:
+        return str(value or "").strip().lower().replace(" ", "").replace("_", "")
+
+    @classmethod
+    def _is_asset_authority_label(cls, label: object) -> bool:
+        token = cls._normalize_label_token(label)
+        if not token:
+            return False
+        return token in {cls._normalize_label_token(item) for item in cls._ASSET_AUTHORITY_LABELS}
+
+    @staticmethod
+    def _coerce_last_ep(raw: object, default: int) -> int:
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return default
+
+    @staticmethod
+    def _is_carryover_baseline_scope(raw: object) -> bool:
+        return str(raw or "").strip().lower() == "carryover_baseline"
+
+    @classmethod
+    def _format_ledger_basis(cls, fl_val: dict, last_ep: int) -> str:
+        if cls._is_carryover_baseline_scope(fl_val.get("authority_scope")):
+            return f"EP{last_ep} carryover baseline"
+        return f"EP{last_ep} 기준"
+
+    def _is_numeric_carryover_authority_mismatch(
+        self,
+        *,
+        ext: _ExtractedNumber,
+        fl_key: str,
+        fl_val: dict,
+        ledger_eok: float,
+        diff: float,
+        ep_num: int,
+    ) -> bool:
+        if not self._is_asset_authority_label(ext.context_label):
+            return False
+        if not self._is_asset_authority_label(fl_key):
+            return False
+
+        last_ep = self._coerce_last_ep(fl_val.get("last_ep"), ep_num)
+        if last_ep >= ep_num:
+            return False
+
+        manuscript_value = abs(ext.value_eok)
+        ledger_value = abs(ledger_eok)
+        high = max(manuscript_value, ledger_value)
+        low = min(manuscript_value, ledger_value)
+        if high < 20:
+            return False
+        if low <= 0.5:
+            return True
+        if low == 0:
+            return True
+        return (high / low) >= 10 and diff >= 20
+
+    def _build_fact_ledger_warning(
+        self,
+        *,
+        ext: _ExtractedNumber,
+        fl_key: str,
+        fl_val: dict,
+        ledger_eok: float,
+        diff: float,
+        ratio: float,
+        ep_num: int,
+    ) -> dict:
+        last_ep = self._coerce_last_ep(fl_val.get("last_ep"), ep_num)
+        ledger_basis = self._format_ledger_basis(fl_val, last_ep)
+        if self._is_numeric_carryover_authority_mismatch(
+            ext=ext,
+            fl_key=fl_key,
+            fl_val=fl_val,
+            ledger_eok=ledger_eok,
+            diff=diff,
+            ep_num=ep_num,
+        ):
+            return {
+                "check": "FactLedger 교차",
+                "severity": "MAJOR",
+                "category": "numeric_carryover_authority",
+                "contradiction_type": "numeric_carryover_authority",
+                "text": (
+                    f"[numeric carryover authority mismatch] 원고 '{ext.raw}' ({ext.value_eok:.1f}억) "
+                    f"vs resumed FactLedger '{fl_key}'={ledger_eok:.1f}억 ({ledger_basis}). "
+                    f"carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요"
+                ),
+            }
+
+        return {
+            "check": "FactLedger 교차",
+            "severity": "MAJOR",
+            "text": (
+                f"[수치 불일치] 원고 '{ext.raw}' ({ext.value_eok:.1f}억) "
+                f"vs FactLedger '{fl_key}'={ledger_eok:.1f}억 "
+                f"(차이 {diff:.1f}억, {ratio:.0%})"
+            ),
+        }
 
     def _label_matches(self, manuscript_label: str, ledger_key: str) -> bool:
         """원고 라벨과 FactLedger 키가 동의어인지 확인."""
@@ -486,6 +654,9 @@ class NumericConsistencyChecker:
         if "만" in unit:
             return num / 10000
         if "원" in unit and "억" not in unit and "만" not in unit:
+            return num / 1_0000_0000
+        # Some carryover-baseline rows are stored as raw KRW without a unit tag.
+        if not unit and abs(num) >= 1_0000_0000:
             return num / 1_0000_0000
         # 기본적으로 억 단위로 가정
         return num

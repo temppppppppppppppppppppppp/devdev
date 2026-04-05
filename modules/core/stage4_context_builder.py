@@ -48,6 +48,19 @@ from modules.core.writer_prompt_builders import (
 )
 from modules.validation.threshold_helper import _threshold
 
+_STAGE4_NUMERIC_CARRYOVER_AUTHORITY_HEADER = "[Stage4 Numeric Carryover Authority]"
+_CARRYOVER_BASELINE_SCOPE = "carryover_baseline"
+_NUMERIC_CARRYOVER_KEY_MARKERS = (
+    "capital",
+    "totalassets",
+    "wealth",
+    "asset",
+    "assets",
+    "cash",
+    "balance",
+    "networth",
+)
+
 
 class WorkRetrievalFocusPayload(TypedDict, total=False):
     tracking_slots: list[str]
@@ -837,7 +850,7 @@ class Stage4ContextBuilder:
         cp_entities: dict[str, list[str] | str] | None,
         prev_ending: str = "",
         chain_link_section: str = "",
-        max_chars: int = 1400,
+        max_chars: int = 2000,
     ) -> str:
         focus = focus if isinstance(focus, dict) else {}
         tracking_slots = [str(x).strip() for x in (focus.get("tracking_slots") or []) if str(x).strip()]
@@ -961,6 +974,96 @@ class Stage4ContextBuilder:
             constraint_summary = self._trim_summary_value(arc_data.get("constraint_summary", ""), 140)
             if constraint_summary:
                 lines.append(f"- active constraint spine: {constraint_summary}")
+
+        numeric_authority_block = self._build_numeric_carryover_authority_block(blueprint=blueprint)
+        if numeric_authority_block:
+            lines.extend(["", numeric_authority_block])
+
+        result = "\n".join(lines)
+        if len(result) > max_chars:
+            result = _fit_context_text(result, max_chars=max_chars)
+        return result
+
+    @staticmethod
+    def _normalize_numeric_authority_key(value: object) -> str:
+        return re.sub(r"[\s_]+", "", str(value or "")).lower()
+
+    @classmethod
+    def _is_numeric_carryover_key(cls, key: object) -> bool:
+        token = cls._normalize_numeric_authority_key(key)
+        if not token:
+            return False
+        return any(marker in token for marker in _NUMERIC_CARRYOVER_KEY_MARKERS)
+
+    @staticmethod
+    def _format_numeric_authority_basis(info: dict[str, Any]) -> str:
+        last_ep = info.get("last_ep", "?")
+        scope = str(info.get("authority_scope") or "").strip().lower()
+        if scope == _CARRYOVER_BASELINE_SCOPE:
+            return f"EP{last_ep} carryover baseline"
+        return f"EP{last_ep} basis"
+
+    def _build_numeric_carryover_authority_block(
+        self,
+        *,
+        blueprint: dict | None,
+        max_chars: int = 700,
+    ) -> str:
+        fact_ledger = getattr(self.ctx, "fact_ledger", None)
+        if fact_ledger is None or not hasattr(fact_ledger, "get_numbers"):
+            return ""
+
+        try:
+            numbers = fact_ledger.get_numbers() or {}
+        except Exception as exc:
+            logging.debug("[Stage4ContextBuilder] numeric carryover authority probe failed", exc_info=exc)
+            return ""
+        if not isinstance(numbers, dict) or not numbers:
+            return ""
+
+        authority_lines: list[str] = []
+        for key, info in numbers.items():
+            if not isinstance(info, dict):
+                continue
+            if str(info.get("authority_scope") or "").strip().lower() != _CARRYOVER_BASELINE_SCOPE:
+                continue
+            if not self._is_numeric_carryover_key(key):
+                continue
+            value = info.get("value", "?")
+            unit = str(info.get("unit", "") or "").strip()
+            unit_suffix = f" {unit}" if unit else ""
+            basis = self._format_numeric_authority_basis(info)
+            authority_lines.append(f"- {key}: {value}{unit_suffix} ({basis})")
+            if len(authority_lines) >= 3:
+                break
+
+        if not authority_lines:
+            return ""
+
+        blueprint_text = ""
+        if isinstance(blueprint, dict):
+            try:
+                blueprint_text = json.dumps(blueprint, ensure_ascii=False)
+            except TypeError:
+                blueprint_text = str(blueprint)
+        blueprint_mentions_assets = any(
+            token in blueprint_text.lower()
+            for token in ("capital", "asset", "assets", "wealth", "cash", "balance", "funding", "liquidat")
+        )
+
+        lines = [
+            _STAGE4_NUMERIC_CARRYOVER_AUTHORITY_HEADER,
+            "- asset-family FactLedger rows below are prior-episode carryover baselines, not automatic proof that later blueprint target numbers are already realized on-page.",
+            *authority_lines,
+            "- do not overwrite these baselines with arc or blueprint target numbers unless the manuscript explicitly shows the bridge transaction, liquidation, transfer, or funding event.",
+        ]
+        if blueprint_mentions_assets:
+            lines.append(
+                "- if blueprint asset numbers exceed the carryover baseline, treat them as pending claims or targets until the conversion path is written on-page."
+            )
+        lines.append(
+            "- when current-episode capital or total-assets rise above the carryover baseline, narrate how the number became current truth before reusing it as settled fact."
+        )
 
         result = "\n".join(lines)
         if len(result) > max_chars:
@@ -1335,6 +1438,7 @@ class Stage4ContextBuilder:
             "[작품 추적 슬롯 요약]",
             "[Stage4 Opening Scene Authority]",
             "[Stage4 Work Identity Authority]",
+            _STAGE4_NUMERIC_CARRYOVER_AUTHORITY_HEADER,
         )
 
         def _used_chars() -> int:
@@ -2415,6 +2519,8 @@ class Stage4ContextBuilder:
                 from modules.core.genre_hud_manager import FinanceHUDManager
 
                 if isinstance(self.ctx.sys.hud, FinanceHUDManager):
+                    if self._fact_ledger_has_numeric_authority():
+                        return episode_digest
                     hud_cap = self.ctx.sys.hud.pro_data.get("capital", "")
                     hud_total = self.ctx.sys.hud.pro_data.get("total_assets", "")
                     hud_parts = []
@@ -2432,6 +2538,34 @@ class Stage4ContextBuilder:
         except Exception as hud_err:
             logging.warning("[SilentPass:V74] HUD 스냅샷 주입 실패: %s", hud_err)
         return episode_digest
+
+    def _fact_ledger_has_numeric_authority(self) -> bool:
+        fact_ledger = getattr(self.ctx, "fact_ledger", None)
+        if fact_ledger is None:
+            return False
+
+        try:
+            canonical_getter = getattr(fact_ledger, "get_canonical_summary", None)
+            if callable(canonical_getter) and str(canonical_getter(max_chars=1200) or "").strip():
+                return True
+        except Exception:
+            logging.debug("[Stage4ContextBuilder] canonical numeric authority probe failed", exc_info=True)
+
+        try:
+            numbers_getter = getattr(fact_ledger, "get_numbers", None)
+            if callable(numbers_getter):
+                numbers = numbers_getter()
+                if isinstance(numbers, dict) and numbers:
+                    return True
+        except Exception:
+            logging.debug("[Stage4ContextBuilder] numeric authority probe via get_numbers failed", exc_info=True)
+
+        ledger = getattr(fact_ledger, "_ledger", None)
+        if isinstance(ledger, dict):
+            numbers = ledger.get("numbers", {})
+            if isinstance(numbers, dict) and numbers:
+                return True
+        return False
 
     # ── [NC-2 GAP-1] 씬 유사도 분석 유틸 ──────────────────────────
 

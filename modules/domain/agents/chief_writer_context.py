@@ -58,6 +58,7 @@ _GENRE_CODE_ALIASES = {
 
 _STAGE4_WORK_IDENTITY_AUTHORITY_HEADER = "[Stage4 Work Identity Authority]"
 _STAGE4_OPENING_SCENE_AUTHORITY_HEADER = "[Stage4 Opening Scene Authority]"
+_STAGE4_NUMERIC_CARRYOVER_AUTHORITY_HEADER = "[Stage4 Numeric Carryover Authority]"
 
 
 def _normalize_genre_alias_key(value: str) -> str:
@@ -546,9 +547,14 @@ class ChiefWriterContextBuilder:
             mandatory_context,
             _STAGE4_WORK_IDENTITY_AUTHORITY_HEADER,
         )
+        numeric_carryover_authority = self._extract_named_context_block(
+            mandatory_context,
+            _STAGE4_NUMERIC_CARRYOVER_AUTHORITY_HEADER,
+        )
         hard_canon_section = self._join_writer_sections(
             opening_scene_authority,
             work_identity_authority,
+            numeric_carryover_authority,
             world_state_section,
             reference_anchor_prompt,
             mandatory_context,
