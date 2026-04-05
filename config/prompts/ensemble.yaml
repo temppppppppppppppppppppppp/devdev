@@ -45,19 +45,36 @@ ENSEMBLE_ARC_PROMPT: |
   ⚠️ CRITICAL: tactical_doc 내용과 state_constraints는 반드시 일치해야 합니다!
   - 이전 Arc 종료 상태(위치·부상·소지품 등 모든 수치)는 tactical_doc에서도 동일하게 표현할 것
   - 부상 상태도 state_constraints.arc_start_state와 동일하게 표현
+  - tactical_doc 본문에 시스템 메타 용어 `Arc`, `Block`, `Stage`를 쓰지 마라
+  - `location`, `final_location`, `equipment`, `physical_inventory`는 짧은 canonical 라벨/아이템명만 허용한다
+  - 상태 필드에 장면 문장, 시계/날짜 설명, 배경 묘사, 쉼표로 길게 이어진 문단을 넣지 마라
 
   {constraint_block}
 
   ### [Context Priority Contract]
   1. `prohibition_summary` and `{constraint_block}` are absolute.
   2. `Current Block DNA` and `Current Block Event Guard` define what this block may do.
-  3. `Previous Arc Context` is carryover reference and must not override 1-2.
+  3. `Carryover Authority Packet`, when present, is the authoritative next-arc opening state.
+  4. `Previous Arc Context` is carryover reference and must not override 1-3.
 
   ### [Current Block DNA]
   {curr_block}
 
   ### [Current Block Event Guard]
   {block_event_guard}
+
+  ### [Carryover Authority Packet - authoritative next-arc opening state]
+  {carryover_authority_packet}
+  - If this packet exists, open the arc from this state first.
+  - `state_constraints.arc_start_state.location/equipment/injuries` must match this packet.
+  - `tactical_doc` opening must not contradict this packet. If freeform carryover memory conflicts, the packet wins.
+  - Items absent from this packet may appear only after explicit acquisition.
+
+  ### [Episode Mission Packet - canonical per-episode mission authority]
+  - `episode_details` is the canonical mission packet for episodes {ep_start}~{ep_end}.
+  - Emit one ordered `episode_details` entry per episode first, then expand it into `tactical_doc`.
+  - If `tactical_doc` and `episode_details` conflict, `episode_details` wins and prose must be rewritten.
+  - Each `details` array must contain at least one concrete beat with actor, pressure, or state change.
 
   ### [Previous Arc Context - carryover reference]
   {prev_arc_context}
@@ -103,7 +120,7 @@ ENSEMBLE_ARC_PROMPT: |
           "density_focus": "저자원 블록에서 무엇을 압축하고 무엇을 촘촘하게 전개할지 설명"
       }},
       "title": "Arc 제목",
-      "tactical_doc": "[V60.40] 각 화마다 시작/종료 상태 체크포인트 필수. 화당 500자 이상. '제 N화:' 형식으로 화별 명확 구분",
+      "tactical_doc": "[V60.40] 각 화마다 시작/종료 상태 체크포인트 필수. 화당 500자 이상. '제 N화:' 형식으로 화별 명확 구분. 시스템 메타 용어 Arc/Block/Stage 금지",
       "beat_sequence": ["제 N화: 구체적 사건 → 행동 → 반응 (제목이 아닌 서사 내용 기술)", ...],
       "hybrid_composition": {{
           "primary": "주 서사 패턴",
@@ -112,14 +129,14 @@ ENSEMBLE_ARC_PROMPT: |
       }},
       "state_constraints": {{
           "arc_start_state": {{
-              "location": "시작 위치 (이전 Arc 종료 위치와 동일해야 함)",
-              "equipment": ["소지품 (이전 Arc 종료 시 소지품과 동일)"],
+              "location": "시작 위치 (이전 Arc 종료 위치와 동일해야 함, 짧은 canonical 라벨만)",
+              "equipment": ["소지품 (이전 Arc 종료 시 소지품과 동일, 간결한 item name만)"],
               "injuries": "부상 상태 (이전 Arc 부상 계승)",
               {state_constraints_genre_field}
           }},
           "arc_end_state": {{
-              "location": "종료 위치",
-              "equipment": ["종료 시 소지품"],
+              "location": "종료 위치 (짧은 canonical 라벨, 문장 금지)",
+              "equipment": ["종료 시 소지품 (문장 금지, item name만)"],
               "injuries": "종료 시 부상",
               {state_constraints_genre_field}
           }},
@@ -229,10 +246,10 @@ ENSEMBLE_ARC_PROMPT: |
   }}
 
   ⚠️ [TF10] episode_details 작성 지침:
-  - episode_details는 tactical_doc과 beat_sequence 작성 완료 후, 그 내용에서 화별 핵심 사건을 추출하여 작성
-  - ep_num은 이 Arc의 각 화 번호 ({ep_start}~{ep_end})를 정수로, details는 최소 1개 이상의 사건 설명 문자열 배열
+  - episode_details는 사후 요약이 아니라 canonical mission packet이다. 먼저 화별 mission beats를 잡고 tactical_doc은 그 packet을 확장하라.
+  - ep_num은 이 Arc의 각 화 번호 ({ep_start}~{ep_end})를 정수로, details는 각 화마다 최소 1개 이상의 사건 설명 문자열 배열
   - 형식 예시: {{"ep_num": 4, "details": ["무림맹에서 장노와 조우 — 동맹 타진", "야간 수련 중 신체 기억 각성"]}}
-  - 해당 화에 실질적 사건이 없으면 빈 배열 [] 허용
+  - beat_sequence, episode_details, tactical_doc는 같은 mission truth를 가리켜야 하며 서로 다른 사건축을 만들면 안 된다
 
   ⚠️ [V61] state_changes 필수 작성:
   - timeline: Arc의 시작/종료 시점 필수 기록 (장르별 표현 사용)

@@ -28,10 +28,10 @@ from modules.validation.threshold_helper import _threshold
 from .arc_ensemble import ArcEnsembleGenerator
 from .base_agent import BaseAgent, _get_sub_component_models
 from .constraint_compiler import ConstraintCompiler
+from .four_phase_arc_runtime import FourPhaseArcRuntime
 from .negative_example_injector import NegativeExampleInjector
 from .preflight_checker import PreflightChecker
 from .unified_arc_validator import UnifiedArcValidator
-from .four_phase_arc_runtime import FourPhaseArcRuntime
 
 _NS3B_DIVERGENCE_THRESHOLD: float = _threshold("arc.ns3b_divergence_threshold", 0.30)
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
@@ -1285,6 +1285,21 @@ class FourPhaseArcGenerator(BaseAgent):
             lines.append(f"✅ 자본금: {capital or '미기재'}")
             lines.append(f"✅ 총자산: {total_assets or '미기재'}")
             lines.append(f"✅ 포지션: {portfolio or '미기재'}")
+        world_joint = str(joint.get("world_joint", "") or "").strip()
+        lines.append("[Carryover Authority Packet]")
+        lines.append(f"- next_arc_start_location: {final_location}")
+        lines.append(f"- next_arc_start_equipment: {final_equipment}")
+        lines.append(f"- next_arc_start_injuries: {final_injuries}")
+        if final_energy is not None:
+            lines.append(f"- next_arc_start_internal_energy: {final_energy}%")
+        if capital:
+            lines.append(f"- next_arc_start_capital: {capital}")
+        if total_assets:
+            lines.append(f"- next_arc_start_total_assets: {total_assets}")
+        if portfolio:
+            lines.append(f"- next_arc_start_portfolio_position: {portfolio}")
+        if world_joint:
+            lines.append(f"- carryover_world_joint: {world_joint}")
         lines.append("=" * 50)
         lines.append("")
         return lines

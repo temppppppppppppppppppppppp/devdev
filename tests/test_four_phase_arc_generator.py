@@ -435,6 +435,42 @@ def test_build_prev_context_carryover_lines_direct_helper_includes_financial_fie
     assert "포지션" in result
 
 
+def test_generate_prev_context_includes_carryover_authority_packet():
+    gen = FourPhaseArcGenerator.__new__(FourPhaseArcGenerator)
+    gen._genre = "investment"
+
+    prev_arcs = [
+        {
+            "arc_no": 2,
+            "state_constraints": {
+                "arc_end_state": {
+                    "location": "강남 대표실",
+                    "equipment": ["블랙베리 7100", "에콰도르 메모"],
+                    "injuries": "없음",
+                    "internal_energy": 100,
+                    "capital": "23억",
+                    "total_assets": "30억",
+                    "portfolio_position": "WTI long",
+                }
+            },
+            "joint_docs": {
+                "world_joint": "에콰도르 기사와 WTI 가격을 계속 추적 중",
+            },
+            "status_shadow": {},
+        }
+    ]
+
+    with patch.object(gen, "_load_execution_state", return_value=None):
+        result = gen._generate_prev_context(prev_arcs, preflight_result={})
+
+    assert "[Carryover Authority Packet]" in result
+    assert "- next_arc_start_location: 강남 대표실" in result
+    assert "- next_arc_start_equipment: ['블랙베리 7100', '에콰도르 메모']" in result
+    assert "- next_arc_start_capital: 23억" in result
+    assert "- next_arc_start_total_assets: 30억" in result
+    assert "- carryover_world_joint: 에콰도르 기사와 WTI 가격을 계속 추적 중" in result
+
+
 def test_extract_current_state_includes_financial_keys():
     """[TF-59] _extract_current_state()가 재무 키(capital/total_assets/portfolio_position) 포함."""
     from modules.domain.agents.constraint_compiler import ConstraintCompiler

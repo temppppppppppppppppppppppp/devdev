@@ -458,6 +458,52 @@ class TestRunFinalize:
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_finalize_syncs_joint_docs_inventory_from_arc_end_state_authority(
+        self,
+        _validate,
+        finalizer,
+        valid_refined_arc,
+    ):
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["joint_docs"]["physical_inventory"] = ["Ghost token"]
+        refined_arc["state_constraints"] = {
+            "arc_end_state": {"equipment": ["검", "부적"]},
+            "items_acquired": [],
+        }
+
+        kwargs = _make_finalize_kwargs(refined_arc)
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        saved_arc = kwargs["all_refined_arcs"][0]
+        assert saved_arc["joint_docs"]["physical_inventory"] == ["검", "부적"]
+        assert saved_arc["state_constraints"]["arc_end_state"]["equipment"] == ["검", "부적"]
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_finalize_syncs_joint_docs_final_location_from_arc_end_state_authority(
+        self,
+        _validate,
+        finalizer,
+        valid_refined_arc,
+    ):
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["joint_docs"]["final_location"] = "Yeouido Office"
+        refined_arc["state_constraints"] = {
+            "arc_end_state": {"location": "Gangnam HQ"},
+            "items_acquired": [],
+        }
+
+        kwargs = _make_finalize_kwargs(refined_arc)
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        saved_arc = kwargs["all_refined_arcs"][0]
+        assert saved_arc["joint_docs"]["final_location"] == "Gangnam HQ"
+        assert saved_arc["state_constraints"]["arc_end_state"]["location"] == "Gangnam HQ"
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_director_pass_records_arc_cost(self, _validate, finalizer, valid_refined_arc):
         collector = MagicMock()
         collector.session_id = "sess_test"

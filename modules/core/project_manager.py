@@ -287,6 +287,71 @@ class ProjectContext:
         # [V40.1] Blueprint txt 파일 저장
         self._save_blueprint_to_txt(ep_num, data)
 
+    @staticmethod
+    def _normalize_arc_export_list(values: Any) -> list[str]:
+        if isinstance(values, list):
+            return [str(item).strip() for item in values if str(item).strip()]
+        if isinstance(values, str):
+            stripped = values.strip()
+            return [stripped] if stripped else []
+        if values is None:
+            return []
+        text = str(values).strip()
+        return [text] if text else []
+
+    def _build_arc_authority_packet_lines(self, arc: dict) -> list[str]:
+        state_constraints = arc.get("state_constraints", {})
+        if not isinstance(state_constraints, dict):
+            state_constraints = {}
+        joint_docs = arc.get("joint_docs", {})
+        if not isinstance(joint_docs, dict):
+            joint_docs = {}
+
+        arc_start_state = state_constraints.get("arc_start_state", {})
+        if not isinstance(arc_start_state, dict):
+            arc_start_state = {}
+        arc_end_state = state_constraints.get("arc_end_state", {})
+        if not isinstance(arc_end_state, dict):
+            arc_end_state = {}
+
+        start_location = str(arc_start_state.get("location", "") or "").strip()
+        start_equipment = self._normalize_arc_export_list(arc_start_state.get("equipment", []))
+        end_location = str(arc_end_state.get("location") or joint_docs.get("final_location") or "").strip()
+        end_equipment = self._normalize_arc_export_list(arc_end_state.get("equipment", []))
+        if not end_equipment:
+            end_equipment = self._normalize_arc_export_list(joint_docs.get("physical_inventory", []))
+        items_acquired = self._normalize_arc_export_list(
+            state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", [])
+        )
+        items_consumed = self._normalize_arc_export_list(state_constraints.get("items_consumed", []))
+        world_joint = str(joint_docs.get("world_joint", "") or "").strip()
+
+        if not any(
+            (start_location, start_equipment, end_location, end_equipment, items_acquired, items_consumed, world_joint)
+        ):
+            return []
+
+        lines = [
+            "",
+            "[Carryover Authority Packet]",
+            f"{'-' * 40}",
+        ]
+        if start_location:
+            lines.append(f"- start_location: {start_location}")
+        if start_equipment:
+            lines.append(f"- start_equipment: {start_equipment}")
+        if end_location:
+            lines.append(f"- end_location: {end_location}")
+        if end_equipment:
+            lines.append(f"- end_equipment: {end_equipment}")
+        if items_acquired:
+            lines.append(f"- items_acquired: {items_acquired}")
+        if items_consumed:
+            lines.append(f"- items_consumed: {items_consumed}")
+        if world_joint:
+            lines.append(f"- world_joint: {world_joint}")
+        return lines
+
     def _render_arc_txt(self, arc: dict) -> str:
         lines = [
             f"{'=' * 60}",
@@ -315,6 +380,8 @@ class ProjectContext:
                     lines.append(f"Beat {i}: {beat}")
         elif isinstance(beat_seq, str):
             lines.append(beat_seq)
+
+        lines.extend(self._build_arc_authority_packet_lines(arc))
 
         seeds = arc.get("seed_injection", arc.get("seeds", []))
         if seeds:
