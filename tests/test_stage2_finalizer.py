@@ -17,6 +17,7 @@ from modules.core.stage2_finalizer import (
     Stage2Finalizer,
     _compute_inventory_carryover,
     _sync_first_episode_start_state_line,
+    _sync_stage2_end_location_contract,
 )
 
 
@@ -149,6 +150,73 @@ class TestCommitSemantics:
         assert hasattr(finalizer, "run_finalize")
         assert hasattr(finalizer, "_record_s2_pass_metrics")
         assert hasattr(finalizer, "_record_s2_reject_metrics")
+
+
+class TestDirectorAuditPreparation:
+    def test_prepare_audit_state_normalizes_entity_aliases_before_director(self, finalizer, valid_refined_arc):
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["tactical_doc"] = (
+            "WTI 원유 6월물 포지션을 정리하고 금 가격 차트를 보며 "
+            "SW인베스트먼트 오피스로 이동해 PDA를 확인한다."
+        )
+        refined_arc["joint_docs"]["final_location"] = "SW인베스트먼트 오피스"
+        refined_arc["joint_docs"]["physical_inventory"] = ["PDA"]
+        refined_arc["state_constraints"] = {
+            "arc_start_state": {
+                "location": "SW인베스트먼트 오피스",
+                "equipment": ["PDA"],
+            },
+            "arc_end_state": {
+                "location": "SW인베스트먼트 오피스",
+                "equipment": ["WTI 원유 6월물 메모"],
+            },
+            "items_acquired": [],
+        }
+        refined_arc["episode_details"] = [
+            {"ep_num": 1, "details": ["SW인베스트먼트 오피스에서 PDA를 열고 금 가격 차트를 확인한다."]}
+        ]
+
+        entity_registry = {
+            "locations": [{"name": "SW 인베스트먼트 임시 오피스텔"}],
+            "objects": [
+                {"name": "WTI 원유 선물 6월물"},
+                {"name": "금(XAU/USD) 10년 치 가격 차트"},
+                {"name": "개인용 PDA 단말기"},
+            ],
+        }
+
+        finalizer._build_stage2_director_story_context = MagicMock(return_value=("prev", "story"))
+        finalizer._audit_stage2_director = MagicMock(return_value=({"decision": "PASS", "score": 95}, 0, "PASS", 95))
+        finalizer._log_stage2_session_decision = MagicMock()
+
+        finalizer._prepare_stage2_finalize_audit_state(
+            refined_arc=refined_arc,
+            enriched_block={},
+            all_refined_arcs=[],
+            global_arc_no=3,
+            last_refined_context="prev context",
+            bible_root={"protagonist_config": {"name": "hero", "incarnation_type": "회귀자"}},
+            genre="investment",
+            protagonist_name="hero",
+            constraint_block="",
+            current_feedback="",
+            suspected_duplicates=[],
+            entity_registry_for_director=entity_registry,
+            draft_validator_passed=True,
+            consensus_passed=True,
+            attempt=1,
+            generation_method="four_phase",
+            constraint_db=None,
+        )
+
+        audited_arc = finalizer._audit_stage2_director.call_args.kwargs["refined_arc"]
+        assert "WTI 원유 선물 6월물" in audited_arc["tactical_doc"]
+        assert "금(XAU/USD) 10년 치 가격 차트" in audited_arc["tactical_doc"]
+        assert "SW 인베스트먼트 임시 오피스텔" in audited_arc["tactical_doc"]
+        assert "개인용 PDA 단말기" in audited_arc["tactical_doc"]
+        assert audited_arc["joint_docs"]["final_location"] == "SW 인베스트먼트 임시 오피스텔"
+        assert audited_arc["joint_docs"]["physical_inventory"] == ["개인용 PDA 단말기"]
+        finalizer.ctx.ui.log.assert_any_call("      🔧 [Entity Canonicalization] Director 심사 전 명칭 계약 동기화")
 
 
 class TestMetricsRecording:
@@ -501,6 +569,22 @@ class TestRunFinalize:
         saved_arc = kwargs["all_refined_arcs"][0]
         assert saved_arc["joint_docs"]["final_location"] == "Gangnam HQ"
         assert saved_arc["state_constraints"]["arc_end_state"]["location"] == "Gangnam HQ"
+
+    def test_sync_stage2_end_location_contract_collapses_verbose_scene_label(self):
+        refined_arc = {
+            "joint_docs": {
+                "final_location": "서울 강남, SW인베스트먼트 오피스, 아직 서류 상자와 모니터가 널린 임시 작업 공간"
+            },
+            "state_constraints": {"arc_end_state": {"location": ""}},
+        }
+
+        canonical_location, joint_changed, end_changed = _sync_stage2_end_location_contract(refined_arc)
+
+        assert canonical_location == "서울 강남, SW인베스트먼트 오피스"
+        assert joint_changed is True
+        assert end_changed is True
+        assert refined_arc["joint_docs"]["final_location"] == "서울 강남, SW인베스트먼트 오피스"
+        assert refined_arc["state_constraints"]["arc_end_state"]["location"] == "서울 강남, SW인베스트먼트 오피스"
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)

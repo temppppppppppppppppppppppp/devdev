@@ -15,6 +15,8 @@ from modules.core.constants import VolumeSettings
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.numeric_consistency_checker import NumericConsistencyChecker
+from modules.core.stage2_entity_contract import normalize_stage2_arc_entity_contract
+from modules.core.stage2_location_contract import collapse_stage2_location_label
 from modules.models.arc import StateChangesDict, validate_arc
 
 
@@ -143,6 +145,8 @@ def _render_start_state_field_value(value: object) -> str:
 
 def _replace_or_append_start_state_field(line: str, label: str, value: object) -> str:
     rendered = _render_start_state_field_value(value)
+    if label == "위치":
+        rendered = collapse_stage2_location_label(rendered) or rendered
     if not rendered:
         return line
 
@@ -334,12 +338,14 @@ def _sync_stage2_end_location_contract(refined_arc: dict) -> tuple[str, bool, bo
         joint_docs = {}
         refined_arc["joint_docs"] = joint_docs
 
-    end_location = str(arc_end_state.get("location") or "").strip()
-    final_location = str(joint_docs.get("final_location") or "").strip()
+    raw_end_location = str(arc_end_state.get("location") or "").strip()
+    raw_final_location = str(joint_docs.get("final_location") or "").strip()
+    end_location = collapse_stage2_location_label(raw_end_location)
+    final_location = collapse_stage2_location_label(raw_final_location)
     canonical_location = end_location or final_location
 
-    joint_changed = bool(canonical_location) and final_location != canonical_location
-    end_changed = bool(canonical_location) and end_location != canonical_location
+    joint_changed = bool(canonical_location) and raw_final_location != canonical_location
+    end_changed = bool(canonical_location) and raw_end_location != canonical_location
     if joint_changed:
         joint_docs["final_location"] = canonical_location
     if end_changed:
@@ -858,6 +864,13 @@ class Stage2Finalizer:
                 cdb_snapshot = constraint_db.snapshot()
             except Exception:
                 pass
+
+        refined_arc, entity_contract_changed = normalize_stage2_arc_entity_contract(
+            refined_arc,
+            entity_registry_for_director,
+        )
+        if entity_contract_changed:
+            self.ctx.ui.log("      🔧 [Entity Canonicalization] Director 심사 전 명칭 계약 동기화")
 
         if self.ctx.semantic_plot_guard:
             try:
@@ -2204,17 +2217,17 @@ class Stage2Finalizer:
 
         fix_scope = current_audit.get("fix_scope", "")
         if not fix_scope:
-            logging.warning("[PF-1] fix_scope ?꾨씫 ??local patch authority ?놁쓬, retry 寃쎈줈 ?꾩엫")
-            self.ctx.ui.log("      ?? [PF-1] fix_scope ?꾨씫 ??inplace 沅뚰븳 ?놁쓬, retry 寃쎈줈 ?꾩엫")
+            logging.warning("[PF-1] fix_scope 누락 → local patch authority 없음, retry 경로 위임")
+            self.ctx.ui.log("      🔀 [PF-1] fix_scope 누락 → inplace 권한 없음, retry 경로 위임")
             return None
         if fix_scope in ("partial", "full"):
-            self.ctx.ui.log(f"      ?? [TF-33] fix_scope={fix_scope!r} ??inplace 遺덇?, retry 寃쎈줈 ?꾩엫")
+            self.ctx.ui.log(f"      🔀 [TF-33] fix_scope={fix_scope!r} → inplace 불가, retry 경로 위임")
             return None
 
         fix_instr = current_audit.get("re_slice_instruction", "")
         self.ctx.ui.log(f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{fix_i + 1}/{max_fix} (fix: {fix_instr!s})")
         if not (four_phase and hasattr(four_phase, "_inplace_patch_arc")):
-            logging.warning("[TF-32-V] four_phase ?먯씠?꾪듃 誘몃벑濡???REJECT")
+            logging.warning("[TF-32-V] four_phase 에이전트 미등록 → REJECT")
             return None
 
         try:
@@ -2224,10 +2237,10 @@ class Stage2Finalizer:
                 arc_no=global_arc_no,
             )
         except (RuntimeError, ValueError, OSError):
-            logging.exception("[TF-32-V] inplace_patch_arc ?덉쇅")
+            logging.exception("[TF-32-V] inplace_patch_arc 예외")
             return None
         if not patched:
-            logging.warning("[TF-32-V] patch ?ㅽ뙣 ??REJECT")
+            logging.warning("[TF-32-V] patch 실패 → REJECT")
             return None
 
         patch_guard_signals = self._collect_arc_patch_guard_signals(
@@ -2247,7 +2260,7 @@ class Stage2Finalizer:
                 global_arc_no,
                 signal_codes,
             )
-            self.ctx.ui.log(f"      ?좑툘 [S2-ArcSignals] attempt={fix_i + 1} codes={signal_codes or 'n/a'}")
+            self.ctx.ui.log(f"      ⚠️ [S2-ArcSignals] attempt={fix_i + 1} codes={signal_codes or 'n/a'}")
             if callable(getattr(self.ctx, "audit_event", None)):
                 self.ctx.audit_event(
                     "patch_guard_signal",
@@ -2295,12 +2308,12 @@ class Stage2Finalizer:
                 patch_pressure["max_ratio"] = round(float(max_ratio), 4)
                 patch_pressure["attempt"] = fix_i + 1
                 logging.warning(
-                    "[F-2] InPlace Arc 蹂寃?鍮꾩쑉 %.1f%% > %.0f%% (S2)",
+                    "[F-2] InPlace Arc 변경 비율 %.1f%% > %.0f%% (S2)",
                     change_ratio * 100,
                     max_ratio * 100,
                 )
         except Exception as exc:
-            logging.debug("[S2-Finalizer] change_ratio 怨꾩궛 ?ㅽ뙣: %s", exc)
+            logging.debug("[S2-Finalizer] change_ratio 계산 실패: %s", exc)
 
         if fix_instr:
             applied_patches.append(str(fix_instr))
@@ -2331,21 +2344,21 @@ class Stage2Finalizer:
         if isinstance(current_audit.get("patch_pressure"), dict) and current_audit["patch_pressure"].get("exceeded"):
             patch_pressure = dict(current_audit.get("patch_pressure") or {})
             patch_ctx += (
-                "\n\n[F-2 advisory ??high Arc patch pressure]\n"
+                "\n\n[F-2 advisory — high Arc patch pressure]\n"
                 f"change_ratio={float(patch_pressure.get('change_ratio', 0.0)):.1%}, "
                 f"threshold={float(patch_pressure.get('max_ratio', 0.0)):.0%}, "
                 f"attempt={int(patch_pressure.get('attempt', fix_i + 1))}\n"
-                "??local Arc patch??援?냼 ?섏젙 踰붿쐞瑜??섏뼱?????덉뒿?덈떎. "
-                "援ъ“ ?쇨??깃낵 蹂寃??뺣떦?깆씠 異⑸텇?섎㈃ PASS瑜??덉슜?????덉?留? "
-                "愿묐쾾???ъ옉?깆쿂??蹂댁씠硫?PASS_WITH_FIX ?먮뒗 REJECT瑜??좎??섏꽭??"
+                "이 local Arc patch는 국소 수정 범위를 넘어설 수 있습니다. "
+                "구조 일관성과 변경 정당성이 충분하면 PASS를 허용할 수 있지만, "
+                "광범위 재작성처럼 보이면 PASS_WITH_FIX 또는 REJECT를 유지하세요."
             )
         if applied_patches:
             patch_lines = "\n".join(f"- {patch}" for patch in applied_patches)
             patch_ctx += (
-                "\n\n[PASS_WITH_FIX ?ъ떖?????대? ?곸슜???⑥튂]\n"
+                "\n\n[PASS_WITH_FIX 재심사 — 이미 적용된 패치]\n"
                 f"{patch_lines}\n"
-                "????ぉ? tactical_doc???대? 諛섏쁺?섏뿀?듬땲?? "
-                "curr_block 臾몄꽌?먯꽌 ?숈씪 ?ㅻ쪟媛 蹂댁뿬??tactical_doc?먯꽌 ?섏젙?섏뿀?쇰㈃ ?뱀씤?섏꽭??"
+                "위 항목은 tactical_doc에 이미 반영되었습니다. "
+                "curr_block 문서에서 동일 오류가 보여도 tactical_doc에서 수정되었으면 승인하세요."
             )
         return (story_context or "") + patch_ctx
 
@@ -2384,10 +2397,10 @@ class Stage2Finalizer:
             patch_pressure = audit.setdefault("patch_pressure", {})
             patch_pressure["director_advisory_only"] = True
             patch_pressure["cleared_verdict"] = "PASS"
-            self.ctx.ui.log("      ?좑툘 [TF-32-V] Patch pressure exceeded -> advisory only, PASS ?좎?")
+            self.ctx.ui.log("      ⚠️ [TF-32-V] Patch pressure exceeded -> advisory only, PASS 유지")
         else:
             audit["decision"] = "PASS"
-            self.ctx.ui.log("      ??[TF-32-V] Arc ?섏젙 ?꾨즺 ??PASS ?뺤젙")
+            self.ctx.ui.log("      ✅ [TF-32-V] Arc 수정 완료 → PASS 확정")
         return {"refined_arc": refined_arc, "audit": audit, "decision": decision, "score": score}
 
     def _finalize_stage2_pass_fix_reject(
@@ -2412,7 +2425,7 @@ class Stage2Finalizer:
             except (ValueError, TypeError):
                 patch_fix_score = score
             audit["score"] = patch_fix_score
-            self.ctx.ui.log(f"      ?뱢 [PF-3] PASS_WITH_FIX ?뚯쭊 ???⑥튂蹂?梨꾪깮 (score={patch_fix_score})")
+            self.ctx.ui.log(f"      📈 [PF-3] PASS_WITH_FIX 소진 → 패치본 채택 (score={patch_fix_score})")
             score = patch_fix_score
         last_fix_scope = current_audit.get("fix_scope", "")
         if last_fix_scope:
@@ -2424,9 +2437,9 @@ class Stage2Finalizer:
             audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
         if isinstance(current_audit.get("patch_guard_signals"), dict):
             audit["patch_guard_signals"] = deepcopy(current_audit["patch_guard_signals"])
-        audit["reason"] = (audit.get("reason", "") or "") + f"\n[TF-32-V] PASS_WITH_FIX ?섏젙 {max_fix}????誘명빐寃???REJECT"
-        audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "吏?곸궗??誘명빐寃????ъ꽕怨??꾩슂"
-        self.ctx.ui.log("      ??[TF-32-V] ?섏젙 ?ㅽ뙣 ??REJECT ?꾪솚")
+        audit["reason"] = (audit.get("reason", "") or "") + f"\n[TF-32-V] PASS_WITH_FIX 수정 {max_fix}회 내 미해결 → REJECT"
+        audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "지적사항 미해결 — 재설계 필요"
+        self.ctx.ui.log("      ❌ [TF-32-V] 수정 실패 → REJECT 전환")
         return {"refined_arc": refined_arc, "audit": audit, "decision": decision, "score": score}
 
     def _run_stage2_pass_with_fix_loop(
@@ -3226,9 +3239,9 @@ class Stage2Finalizer:
                         director_thinking=str(audit.get("_director_thinking", "") or ""),
                     )
                 except Exception as director_selection_err:
-                    logging.debug("[director_selections] Stage2 REJECT 湲곕줉 ?ㅽ뙣: %s", director_selection_err)
+                    logging.debug("[director_selections] Stage2 REJECT 기록 실패: %s", director_selection_err)
         except Exception as stage_attempt_err:
-            logging.debug("[stage_attempts] Stage2 REJECT 湲곕줉 ?ㅽ뙣 (鍮꾩감??: %s", stage_attempt_err)
+            logging.debug("[stage_attempts] Stage2 REJECT 기록 실패 (비치명): %s", stage_attempt_err)
 
     def _save_stage2_reject_cost_record(
         self,

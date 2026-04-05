@@ -66,6 +66,20 @@ def test_sync_final_location_preserves_pure_location():
     assert corrected["state_constraints"]["arc_end_state"]["location"] == "여의도 IFC 오피스"
 
 
+def test_sync_final_location_collapses_scene_prose_to_canonical_label():
+    corrector = ArcAutoCorrector()
+    arc = {
+        "joint_docs": {
+            "final_location": "서울 강남, SW인베스트먼트 오피스, 아직 페인트 냄새가 남은 텅 빈 회의실과 모니터가 켜진 임시 작업 공간"
+        },
+        "state_constraints": {"arc_end_state": {"location": ""}},
+    }
+
+    corrected = corrector._sync_final_location(arc)
+
+    assert corrected["state_constraints"]["arc_end_state"]["location"] == "서울 강남, SW인베스트먼트 오피스"
+
+
 def test_strip_wuxia_fields_investment():
     corrector = ArcAutoCorrector()
     arc = {

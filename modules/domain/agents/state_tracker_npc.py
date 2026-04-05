@@ -15,6 +15,44 @@ import time
 from modules.core.constants import AIModels  # [TF-9B] 모델 SSOT
 from modules.core.llm_generate import generate_content_via_router
 
+_JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.IGNORECASE | re.DOTALL)
+
+
+def _parse_llm_json_payload(raw_text: str) -> object:
+    """Parse mildly wrapped LLM JSON payloads without changing caller semantics."""
+    text = raw_text.strip()
+    if not text:
+        raise ValueError("empty JSON payload")
+
+    candidates: list[str] = [text]
+    for match in _JSON_FENCE_RE.finditer(text):
+        fenced = match.group(1).strip()
+        if fenced:
+            candidates.append(fenced)
+
+    first_obj = text.find("{")
+    last_obj = text.rfind("}")
+    if 0 <= first_obj < last_obj:
+        candidates.append(text[first_obj : last_obj + 1].strip())
+
+    first_arr = text.find("[")
+    last_arr = text.rfind("]")
+    if 0 <= first_arr < last_arr:
+        candidates.append(text[first_arr : last_arr + 1].strip())
+
+    seen: set[str] = set()
+    last_error: Exception | None = None
+    for candidate in candidates:
+        if not candidate or candidate in seen:
+            continue
+        seen.add(candidate)
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError as exc:
+            last_error = exc
+
+    raise ValueError("invalid JSON payload") from last_error
+
 # ═══════════════════════════════════════════════════════════════
 # [V66.1] C-2: Module-level compiled regex patterns
 #  메서드 내부 re.compile 호출을 모듈 상수로 이동 (~25ms/Arc 절감)
@@ -789,7 +827,14 @@ class StateTrackerNPC:
                         logging.warning("[XC-002] NPC LLM 검증 응답 없음 → fail-closed: []")
                         return []
 
-                    result = json.loads(_resp_text)
+                    try:
+                        result = _parse_llm_json_payload(_resp_text)
+                    except ValueError:
+                        if attempt == 0:
+                            logging.debug("[XC-002] NPC LLM 검증 응답 형식 오류, 1회 재시도")
+                            continue
+                        logging.warning("[XC-002] NPC LLM 검증 응답 형식 오류 → fail-closed: []")
+                        return []
                     if isinstance(result, list):
                         verified = [name for name in result if isinstance(name, str) and name in candidates]
                         filtered = set(candidates) - set(verified)
@@ -2239,7 +2284,11 @@ class StateTrackerNPC:
             if not _resp_text:
                 logging.info(" [V69] NPC 정리 LLM 응답 비어있음, 건너뜀")
                 return []
-            result = json.loads(_resp_text)
+            try:
+                result = _parse_llm_json_payload(_resp_text)
+            except ValueError:
+                logging.info(" [V69] NPC 정리 LLM 응답 형식 오류, 건너뜀")
+                return []
             remove_list = []
             if isinstance(result, dict):
                 remove_list = result.get("remove", [])
