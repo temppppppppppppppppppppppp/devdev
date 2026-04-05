@@ -506,6 +506,83 @@ def test_evaluate_candidate_penalizes_non_wuxia_state_noise():
     assert any("non-wuxia state noise" in issue for issue in issues)
 
 
+def test_evaluate_candidate_penalizes_implicit_non_wuxia_recovery_opening():
+    agent = _make_agent()
+    agent._genre = "investment"
+    candidate = _base_candidate(
+        ep_start=4,
+        ep_end=6,
+        tactical_doc=(
+            "Episode 4: After six weeks of waiting and accumulated stress, he had time to recover over time "
+            "before returning to the trading desk. "
+            "Episode 5: He returns to the market with a sharper plan. "
+            "Episode 6: He closes the arc at the same office. "
+        )
+        + ("x" * 1800),
+        episode_details=[
+            {"ep_num": 4, "details": ["He says the waiting period helped him recover a little."]},
+            {"ep_num": 5, "details": ["He returns to the market."]},
+            {"ep_num": 6, "details": ["He closes the arc."]},
+        ],
+        joint_docs={"final_location": "B", "physical_inventory": [], "world_joint": ""},
+        state_constraints={
+            "arc_start_state": {"location": "A", "equipment": []},
+            "arc_end_state": {"location": "B", "equipment": []},
+            "items_acquired": [],
+            "items_consumed": [],
+        },
+    )
+
+    score, issues = agent._evaluate_candidate(
+        candidate,
+        prev_arc_context="서사 시작점",
+        constraint_block="",
+        prev_equipment=None,
+        forbidden_items=[],
+    )
+
+    assert score < 100
+    assert "opening recovery beat too implicit for non-wuxia carryover fatigue" in issues
+
+
+def test_evaluate_candidate_accepts_explicit_non_wuxia_recovery_opening():
+    agent = _make_agent()
+    agent._genre = "investment"
+    candidate = _base_candidate(
+        ep_start=4,
+        ep_end=6,
+        tactical_doc=(
+            "Episode 4: After six weeks of waiting and accumulated stress, he takes a shower, eats, "
+            "and sleeps before returning to the trading desk. "
+            "Episode 5: He returns to the market with a sharper plan. "
+            "Episode 6: He closes the arc at the same office. "
+        )
+        + ("x" * 1800),
+        episode_details=[
+            {"ep_num": 4, "details": ["He showers, eats, and sleeps before work resumes."]},
+            {"ep_num": 5, "details": ["He returns to the market."]},
+            {"ep_num": 6, "details": ["He closes the arc."]},
+        ],
+        joint_docs={"final_location": "B", "physical_inventory": [], "world_joint": ""},
+        state_constraints={
+            "arc_start_state": {"location": "A", "equipment": []},
+            "arc_end_state": {"location": "B", "equipment": []},
+            "items_acquired": [],
+            "items_consumed": [],
+        },
+    )
+
+    score, issues = agent._evaluate_candidate(
+        candidate,
+        prev_arc_context="서사 시작점",
+        constraint_block="",
+        prev_equipment=None,
+        forbidden_items=[],
+    )
+
+    assert "opening recovery beat too implicit for non-wuxia carryover fatigue" not in issues
+
+
 def test_evaluate_candidate_penalizes_investment_arithmetic_boundary_mismatch():
     agent = _make_agent()
     agent._genre = "investment"
