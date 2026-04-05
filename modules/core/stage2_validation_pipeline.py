@@ -471,6 +471,26 @@ class Stage2ValidationPipeline:
                             "arc auto-corrected",
                             {"arc_no": global_arc_no, "corrections": corrections[:5]},
                         )
+                    ui_log = getattr(getattr(self.ctx, "ui", None), "log", None)
+                    if callable(ui_log):
+                        correction_summary = []
+                        for correction in corrections[:3]:
+                            if isinstance(correction, dict):
+                                label = (
+                                    correction.get("change_summary")
+                                    or correction.get("summary")
+                                    or correction.get("category")
+                                    or correction.get("field")
+                                    or "unknown"
+                                )
+                            else:
+                                label = str(correction)
+                            correction_summary.append(str(label))
+                        suffix = " ..." if len(corrections) > 3 else ""
+                        ui_log(
+                            f"      [S2-OBS] Auto-correct arc {global_arc_no}: "
+                            f"{', '.join(correction_summary)}{suffix}"
+                        )
             except (RuntimeError, ValueError, TypeError) as ac_err:
                 if callable(getattr(self.ctx, "audit_event", None)):
                     self.ctx.audit_event("v60_25_auto_correct_error", str(ac_err)[:100])

@@ -6,6 +6,8 @@ Pure 메서드(Writer 가이드 등)는 app 참조 없이 동작,
 App-dependent 메서드(벡터 검색, DB 조회 등)는 self._app으로 접근.
 """
 
+# utf8-hygiene: allow-file -- regex-heavy Korean grant-pattern literals are intentional in this builder.
+
 import json
 import logging
 import re
@@ -584,6 +586,13 @@ class PromptBuilder:
                         "items_tracked": len(cumulative_state.get("inventory", {}).get("current_items", [])),
                     },
                 )
+                ui_log = getattr(getattr(self._app, "ui", None), "log", None)
+                if callable(ui_log):
+                    items_tracked = len(cumulative_state.get("inventory", {}).get("current_items", []))
+                    ui_log(
+                        "      [S2-OBS] StateExtractor context ready "
+                        f"(arc_count={arc_count}, items_tracked={items_tracked})"
+                    )
 
                 return self._decorate_arc_context_for_target(constraint_prompt, current_arc_no)
 

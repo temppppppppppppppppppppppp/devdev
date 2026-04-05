@@ -8,14 +8,16 @@ Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2 survey docs and lane drafts untracked`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Drift Summary: `2026-04-05 bounded `00_0405` survey added fresh Stage2 evidence: selected packet truth can diverge from final arc txt on location/item carryover, while high-signal correction and retrieval evidence remains hidden in audit/quality sinks; lane remains parked and queue order unchanged`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
 - `docs/2026-04-01/0_0-stage2-stage3-context-hierarchy-bounded-survey.md`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-bounded-survey.md`
+- `docs/2026-04-05/00_0405-stage2-artifact-truth-observability-bounded-survey.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-evidence.json`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-evidence.json`
+- `docs/2026-04-05/00_0405-stage2-artifact-truth-observability-evidence.json`
 Side-Effect Coverage: covered
 
 ## 1. Intent
@@ -37,6 +39,8 @@ This execution SSOT exists because the latest survey already proved:
 - `beat_sequence` and `hybrid_composition` are effectively dropped at the `Stage2 -> Stage3` boundary.
 - `semantic_carryover` behaves like a dead or low-signal field in current practice.
 - The first clearly visible narrative drift still appears in `Stage3`, not inside Stage2 artifacts themselves.
+- Fresh `00_0405` evidence shows a second Stage2-local symptom: selected Stage2 packet truth can diverge from final arc txt truth on bounded location/item carryover even when the business-state spine stays coherent.
+- Fresh `00_0405` evidence also shows that key Stage2 correction and retrieval facts are fragmented across `runtime_audit.jsonl` and `quality_metrics.jsonl` instead of being operator-visible in the console.
 
 ## 3. Scope
 
@@ -47,6 +51,8 @@ Included:
 - bounded Stage2 mission-authority packet extraction and emission surfaces
 - bounded Stage2-owned alias/export normalization at the Stage2 emission boundary
 - bounded keep-or-drop normalization for Stage2-owned low-signal fields
+- bounded Stage2 packet-to-txt round-trip normalization for carryover-relevant location/item/state fields
+- bounded operator-visible observability for high-signal Stage2 auto-correct and retrieval facts
 - regression coverage for Stage2 packet meaning and field survival
 
 Excluded:
@@ -65,6 +71,12 @@ Primary Stage2 authority owners:
 
 - `ArcEnsembleGenerator` and related Stage2 prompt/packet builders
 - Stage2 artifact emission under `projects/*/plans/` and Stage2 log artifacts
+- Secondary observability owners for later bounded realization:
+  - `modules/core/stage2_validation_pipeline.py`
+  - `modules/core/stage2_preflight.py`
+  - `modules/core/quality_dashboard.py`
+  - `modules/core/services/audit_service.py`
+  - `modules/core/session_logger.py`
 
 Primary debt inventory for this wave:
 
@@ -72,6 +84,8 @@ Primary debt inventory for this wave:
 2. weak or thin structured bridge fields
 3. Stage2-owned fields without explicit keep-or-drop policy
 4. Stage2 emission aliases that blur the real canonical packet owner
+5. selected Stage2 packet truth not always round-tripping cleanly into final arc txt truth
+6. high-signal Stage2 correction and retrieval evidence hidden from operator-visible console flow
 
 ## 5. Pass 2. Semantic Classification
 
@@ -104,10 +118,12 @@ Primary debt inventory for this wave:
   - not applicable for this bounded future wave
 
 - JSONL / log / audit sinks:
-  - packet field names and summary rendering may change in future surveys and audits
+- packet field names and summary rendering may change in future surveys and audits
+- bounded Stage2 observability facts may be mirrored into operator-visible UI logs in a future realization wave
 
 - console / UI / operator output:
   - Stage2 authority packet logging may become more explicit
+  - Stage2 auto-correct and retrieval emptiness may become operator-visible instead of sink-only
 
 - rollback / recovery / retry:
   - not primary in this lane
@@ -155,13 +171,26 @@ Realization direction:
   - `hybrid_composition`
   - `semantic_carryover`
 
+### Tranche 4. Bounded Observability Surfacing
+
+Goal:
+
+- stop hiding the strongest Stage2 correction and retrieval facts in audit-only or quality-only sinks
+
+Realization direction:
+
+- mirror high-signal Stage2 auto-correct summaries into operator-visible console/UI flow
+- surface empty retrieval/context coverage as an explicit Stage2 warning rather than silent absence
+- optionally surface `StateExtractor` tracked-item counts when they materially help operator understanding
+
 ## 8. Execution Tranches
 
 1. Stage2 mission packet normalization
 2. Stage2-owned packet alias normalization
 3. dead-field keep-or-drop cleanup
-4. bounded regression coverage
-5. later runtime proof only after explicit reactivation
+4. bounded observability surfacing
+5. bounded regression coverage
+6. later runtime proof only after explicit reactivation
 
 ## 9. Acceptance Criteria
 
@@ -169,6 +198,8 @@ Realization direction:
 - Stage2 exports a stronger canonical mission packet or equivalent structured authority owner
 - Stage2-owned field aliases no longer obscure which packet is canonical at emission time
 - `beat_sequence`, `hybrid_composition`, and `semantic_carryover` each have an explicit keep-or-drop policy
+- selected Stage2 packet truth and final arc txt truth no longer diverge on bounded carryover location/item/state fields without explicit policy
+- high-signal Stage2 auto-correct and retrieval-emptiness facts are no longer completely hidden from operator-visible console flow
 - no new `180+ LOC` function is introduced
 
 ## 10. Verification Plan
@@ -225,3 +256,99 @@ Pass 3, execution and readability:
 - kept tranches upstream-only and implementable rather than architectural-only
 
 Confidence: `96%`
+
+## 15. 2026-04-05 Evidence Appendix: `00_0405`
+
+This appendix does not reactivate the lane and does not change roadmap order.
+
+It records fresh bounded evidence that sharpens the parked Stage2 problem statement.
+
+### 15.1 Artifact truth
+
+The `00_0405` survey shows that selected Stage2 packet truth and final arc txt truth can diverge before Stage3 ever consumes the artifact.
+
+- `arc_002.txt` ends in the Yeouido SOHO office while the selected Stage2 artifact for arc 2 already ends in the Gangnam representative office.
+- `arc_003.txt` starts in the Gangnam representative office, which means the next arc already follows packet truth that the prior txt did not fully round-trip.
+- `arc_004` selected packet start-state still carries the Ecuador memo while the final txt start-state drops it.
+
+This is not a business-state collapse.
+
+The same survey shows the numeric/business spine remains broadly coherent:
+
+- about `2.0B KRW` foundation
+- about `2.3B KRW` after arc 2
+- about `3.0B KRW` after arc 3
+- about `4.5B KRW` after arc 4
+
+So the new bounded reading is:
+
+- `Stage2 content-sufficient but packet-to-txt round-trip inconsistent`
+
+### 15.2 Observability
+
+The same survey shows that the strongest Stage2 reasons are fragmented across sinks:
+
+- `ui_events.jsonl` exposes PASS envelopes, deterministic carryover, and state/equipment sync
+- `runtime_audit.jsonl` alone exposes high-signal auto-correct reasons such as genre-field removal, `[PATCH-B]` item disappearance repair, and location rewrites
+- `quality_metrics.jsonl` alone exposes retrieval emptiness such as `work_focus_present=false` and `vector_context_chars=0`
+
+This means the operator console can confirm that Stage2 synchronization happened, but often cannot see why the system had to repair the arc or that retrieval/context coverage was effectively empty.
+
+### 15.3 Owner impact
+
+The appendix confirms the original parked lane and enriches its owner map.
+
+Primary owner family remains:
+
+- `modules/domain/agents/arc_ensemble.py`
+- `config/prompts/ensemble.yaml`
+
+Newly evidenced secondary owner family for the same parked future wave:
+
+- `modules/core/stage2_validation_pipeline.py`
+- `modules/core/stage2_preflight.py`
+- `modules/core/quality_dashboard.py`
+- `modules/core/services/audit_service.py`
+- `modules/core/session_logger.py`
+
+### 15.4 Queue-safe conclusion
+
+The `00_0405` evidence enriches this parked SSOT. It does not justify:
+
+- changing `parked` status
+- changing roadmap priority
+- promoting Stage2 above the active Stage4 queue
+- activating realization tranches in the same turn
+
+## 16. 2026-04-05 Bounded Realization Update: Observability Surfacing
+
+This bounded realization update was executed only because the operator explicitly overrode queue order for a narrow Stage2 implementation slice.
+
+Queue semantics remain unchanged:
+
+- status stays `parked`
+- roadmap priority stays unchanged
+- this does not promote the full Stage2 lane above active Stage4 work
+
+Landed bounded slice:
+
+- `modules/core/stage2_validation_pipeline.py`
+  - mirrors high-signal auto-correct summaries into operator-visible `ui.log`
+- `modules/core/stage2_preflight.py`
+  - emits an explicit Stage2 retrieval-empty warning when vector context is empty instead of staying silent
+- `modules/core/prompt_builder.py`
+  - surfaces `StateExtractor` item-count summary into operator-visible `ui.log`
+
+Bounded verification completed:
+
+- `pytest tests/test_stage2_validation_pipeline.py -k "auto_correct_pressure or auto_correct_summary"`
+- `pytest tests/test_stage2_preflight.py -k "build_stage2_vector_context_legacy_path_prepends_slot_summary_and_fact_ledger or build_stage2_vector_context_logs_when_retrieval_is_empty"`
+- `pytest tests/test_prompt_builder.py -k "app_bound_path_uses_state_extractor_and_audit or app_bound_path_logs_items_tracked_summary"`
+- `python -m py_compile modules/core/stage2_validation_pipeline.py modules/core/stage2_preflight.py modules/core/prompt_builder.py`
+- `ruff check modules/core/stage2_validation_pipeline.py modules/core/stage2_preflight.py modules/core/prompt_builder.py tests/test_stage2_validation_pipeline.py tests/test_stage2_preflight.py tests/test_prompt_builder.py`
+- `python scripts/check_utf8_hygiene.py modules/core/stage2_validation_pipeline.py modules/core/stage2_preflight.py modules/core/prompt_builder.py tests/test_stage2_validation_pipeline.py tests/test_stage2_preflight.py tests/test_prompt_builder.py`
+
+Bounded implementation verdict:
+
+- `Tranche 4. Bounded Observability Surfacing` is now partially realized
+- packet-to-txt round-trip normalization and broader Stage2 contract normalization remain future-wave work

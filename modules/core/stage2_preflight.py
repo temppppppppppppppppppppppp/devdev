@@ -1195,6 +1195,15 @@ class Stage2PreflightAnalysis:
                 budget_ledger=stage2_budget_ledger,
             ),
         )
+        if not s2_vector_ctx:
+            ui_log = getattr(getattr(self.ctx, "ui", None), "log", None)
+            if callable(ui_log):
+                tracking_slots = len((work_focus or {}).get("tracking_slots", []) or [])
+                scene_engines = len((work_focus or {}).get("mandatory_scene_engines", []) or [])
+                ui_log(
+                    "      [S2-OBS] Stage2 retrieval empty "
+                    f"(chars=0, slots={tracking_slots}, scene_engines={scene_engines})"
+                )
         if s2_vector_ctx:
             self.ctx.ui.log(f"      🔎 [TF-38] 벡터 검색 완료 ({len(s2_vector_ctx):,}자)")
         return s2_vector_ctx
