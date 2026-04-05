@@ -1,6 +1,6 @@
 # Work Coverage Matrix
 
-Date: 2026-04-03
+Date: 2026-04-05
 Status: active bounded matrix
 Scope: current representative bounded work coverage inside `material_ssot`
 
@@ -8,7 +8,7 @@ Scope: current representative bounded work coverage inside `material_ssot`
 
 | work_id | family | research manifest | pitch anchor | Stage0 manifest | Phase0 manifest | TR manifest | BI manifest | key gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `gatekeeper_heir` | `blockguide` | yes | yes | yes | yes | yes | yes | standalone pitch file not yet pinned |
+| `gatekeeper_heir` | `blockguide` | yes | yes | yes | yes | yes | yes | later enrichment only |
 | `office_checkup_next_day` | `blockguide` | yes | yes | yes | yes | yes | yes | raw research path not yet pinned |
 | `wuxia_heavenly_physician` | `wuxguide` | yes | yes | yes | yes | yes | yes | root phase0 live file not yet materialized |
 
@@ -16,7 +16,7 @@ Scope: current representative bounded work coverage inside `material_ssot`
 
 ### gatekeeper_heir
 
-- pitch currently resolves through source-manifest-backed user agreements
+- canonical pitch now exists at `material_ssot/20_pitch/canon/gatekeeper_heir.md`
 - Phase0, TR, and BI all exist as live artifacts
 
 ### office_checkup_next_day

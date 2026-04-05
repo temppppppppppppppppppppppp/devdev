@@ -41,6 +41,7 @@ REQUIRED_PATHS = (
     "material_ssot/00_governance/work-coverage-matrix.md",
     "material_ssot/90_migration/pending-cuts.md",
     "material_ssot/10_research/source-map.md",
+    "material_ssot/20_pitch/pitch-philosophy.md",
     "material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/README.md",
     "material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/collection_status.json",
     "material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/business_trend_slice/README.md",
@@ -67,6 +68,7 @@ ACTIVE_PATH_SCOPE = (
     "material_ssot/10_research/20_fewshot_bank",
     "material_ssot/10_research/40_analysis/source_corpora",
     "material_ssot/10_research/50_corpus_curated",
+    "material_ssot/20_pitch/pitch-philosophy.md",
     "material_ssot/20_pitch/canon",
     "material_ssot/30_stage0_preprocess",
     "material_ssot/40_phase0_design",
@@ -98,6 +100,7 @@ ACTIVE_AUTHORITY_SCOPE = (
     "material_ssot/10_research/20_fewshot_bank",
     "material_ssot/10_research/40_analysis/source_corpora",
     "material_ssot/10_research/50_corpus_curated",
+    "material_ssot/20_pitch/pitch-philosophy.md",
     "material_ssot/20_pitch/canon",
     "material_ssot/30_stage0_preprocess",
     "material_ssot/40_phase0_design",
@@ -158,10 +161,19 @@ TEXT_RULES = (
     TextRule(
         "material_ssot/00_governance/work-coverage-matrix.md",
         required=(
-            "| `gatekeeper_heir` | `blockguide` | yes | yes | yes | yes | yes | yes | standalone pitch file not yet pinned |",
+            "| `gatekeeper_heir` | `blockguide` | yes | yes | yes | yes | yes | yes | later enrichment only |",
             "| `office_checkup_next_day` | `blockguide` | yes | yes | yes | yes | yes | yes | raw research path not yet pinned |",
             "| `wuxia_heavenly_physician` | `wuxguide` | yes | yes | yes | yes | yes | yes | root phase0 live file not yet materialized |",
             "- bounded work-chain validation now runs through `python -X utf8 scripts/validate_material_ssot.py`",
+        ),
+    ),
+    TextRule(
+        "material_ssot/20_pitch/pitch-philosophy.md",
+        required=(
+            "Status: active",
+            "- default operating mode is `single`",
+            "- the protagonist must want something concrete now",
+            "Do not promote a pitch as canonical if any of these are missing or vague:",
         ),
     ),
     TextRule(
