@@ -1,6 +1,6 @@
 # Bootstrap Status
 
-Date: 2026-04-03
+Date: 2026-04-05
 Status: active bounded status
 Scope: commit-ready summary for the current `material_ssot` slice
 
@@ -22,6 +22,8 @@ Scope: commit-ready summary for the current `material_ssot` slice
   - `material_ssot/10_research/30_work_materials/office_checkup_next_day/90_material_pack.json`
   - `material_ssot/10_research/30_work_materials/wuxia_heavenly_physician/90_material_pack.json`
 - legacy pitch bundle payloads are moved under `material_ssot/20_pitch/intake/legacy_import`
+- canonical pitch philosophy now exists at `material_ssot/20_pitch/pitch-philosophy.md`
+- first full canonical pitch exemplar now exists at `material_ssot/20_pitch/canon/gatekeeper_heir.md`
 - pitch-adjacent QA summaries are isolated under `material_ssot/20_pitch/quarantine`
 - `narrative_ssot/10_reference_bank` now operates as a cards mirror plus archive residue shell, not as research authority
 - bounded machine validation now exists at `python -X utf8 scripts/validate_material_ssot.py`
@@ -45,7 +47,6 @@ Scope: commit-ready summary for the current `material_ssot` slice
 ## 3. Current Gaps
 
 - representative work coverage is still bounded to three works
-- `gatekeeper_heir`: standalone pitch file is not yet pinned in the transition hubs
 - `office_checkup_next_day`: work-level raw research path is not yet pinned
 - `wuxia_heavenly_physician`: root phase0 live file is not yet materialized
 - all three normalized packs still keep raw corpus pinning deferred
@@ -57,7 +58,7 @@ Scope: commit-ready summary for the current `material_ssot` slice
 - family-axis routing is still isolated under `docs/narrative-router`
 - legacy-active, scaffold, mirror, and deferred paths are labeled before any cutover
 - research reference profiles and few-shot cards now have one canonical stage root under `material_ssot/10_research`
-- `gatekeeper_heir` can now be read from a normalized research pack instead of only preprocess artifacts
+- `gatekeeper_heir` can now be read from a normalized research pack and a canonical pitch exemplar instead of only preprocess artifacts
 - `office_checkup_next_day` and `wuxia_heavenly_physician` can now also be read from normalized research packs
 - active pitch references now point to `material_ssot/20_pitch` paths instead of the old payload bundle
 - representative work manifests still connect the current live chain without relocating production artifacts

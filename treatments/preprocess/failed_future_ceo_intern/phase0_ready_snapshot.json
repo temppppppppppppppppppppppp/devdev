@@ -1,33 +1,15 @@
 {
-  "work_id": "failed_future_ceo_intern",
-  "title": "망한 미래의 CEO가 인턴으로 빙의했다",
-  "stage0_artifacts": {
-    "source_manifest": "treatments/preprocess/failed_future_ceo_intern/source_manifest.json",
-    "profile_lock": "treatments/preprocess/failed_future_ceo_intern/profile_lock.json",
-    "material_bundle_summary": "treatments/preprocess/failed_future_ceo_intern/material_bundle_summary.json",
-    "phase0_ready_snapshot": "treatments/preprocess/failed_future_ceo_intern/phase0_ready_snapshot.json"
-  },
-  "profile_summary": {
-    "primary_profile": "office_power_profile",
-    "secondary_profile": "business_growth_profile",
-    "rationale": "주 전장 = 조직 권력전(인턴→CEO 승진 라인, KPI/예산/결재선/인사권). 부 전장 = 기업 성장/M&A/자본시장(시총 곡선, 적대적 M&A 방어, JV, 지분 매집)"
-  },
-  "canonical_source_count": 2,
-  "core_material_count": 10,
-  "npc_count": 12,
-  "crisis_count": 12,
-  "do_not_fake_count": 6,
-  "go_checklist": {
-    "canonical_sources_separated": true,
-    "core_materials_actionable": true,
-    "npc_pool_connected_to_arena": true,
-    "crisis_pool_connected_to_arena": true,
-    "do_not_fake_clear": true,
-    "manual_audit_note_present": true,
-    "profile_lock_clear": true,
-    "utf8_parseable": true
-  },
-  "manual_audit_note": "Stage 0 전처리 산출물 4개 작성 완료. 기획안이 블록 단위로 매우 상세하게 확정되어 있어, core_materials·npc_pool·crisis_pool·복선 아크·자본 곡선·deal_type 분포가 모두 Phase 0에 즉시 투입 가능. gap은 반도체 공정 세부 수치와 M&A/JV 계약 뼈대 수치이며, 이는 production 진입 후 블록 단위로 보강 예정. do_not_fake 6항목이 명확하여 추상화 방지 가드가 잡혀 있음.",
+  "identity_locked": true,
+  "profile_locked": true,
+  "material_sufficient": true,
   "manual_audit_pass": true,
-  "audit_timestamp": "2026-03-24T00:00:00+09:00"
+  "remaining_risks": [
+    "반도체 팹 수율/공정 노드/불량률 세부 수치 미확정 — production 진입 후 블록 단위 보강",
+    "JV/라이선싱 계약서 뼈대 수치(지분 비율/기술 이전 범위/탈퇴 조건) 미확정 — 상상으로 때우면 안 됨, TR 단계 확정 필요",
+    "위임장 대결 실제 주주 수/위임장 비율/공개매수 가격 세부치 미확정 — TR 단계 확정 필요",
+    "AI 반도체 전환 기술 로드맵 세부 스펙 미확정 — production 진입 후 보강",
+    "노정숙 이사회 의장/대표이사/전무 실명, 창업주 유언장 조항 구체 문구 미확정 — Phase 0 설계 중 확정",
+    "대단원 2~7 세부 에피소드 제목 및 deal_type 각 건 계약 샘플 미설계 — Phase 0/TR 단계 구체화",
+    "업스트림 material_ssot/10_research/30_work_materials/failed_future_ceo_intern/90_material_pack.json 미생성 — 상위 research pack 부재 상태"
+  ]
 }

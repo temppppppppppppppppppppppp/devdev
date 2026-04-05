@@ -7,7 +7,7 @@ Status: bootstrap manifest
 ## 1. Stage Snapshot
 
 - research: normalized work-level material pack present
-- pitch: work-level pitch mapping deferred in this wave
+- pitch: mapped through `material_ssot/20_pitch/canon/gatekeeper_heir.md`
 - stage0 preprocess: present
 - phase0 design: present
 - TR: present
@@ -31,6 +31,7 @@ Status: bootstrap manifest
 - primary profile: `business_growth_profile`
 - secondary profile: `office_power_profile`
 - research-stage normalized material pack is now available for upstream handoff
+- canonical pitch now exists as a full work-level pitch doc under `material_ssot/20_pitch/canon`
 - preprocess readiness: strong enough to hand off directly into Phase 0
 - canonical status: current live TR and BI are treated as canonical outputs
 

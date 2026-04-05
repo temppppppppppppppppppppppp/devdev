@@ -59,6 +59,14 @@ Current representative work set:
 - `office_checkup_next_day`
 - `wuxia_heavenly_physician`
 
+Large artifact write rule:
+
+- do not attempt one-shot overwrite for large live artifacts such as `phase0_design`, `tr_block_070_draft`, or `BI` JSON files
+- keep the current bounded execution unit as the write unit; do not widen it just because the target file is large
+- maintain parseable JSON on disk after each bounded save step
+- if a file is too large for a stable single save, write it incrementally by the current bounded unit and verify the file still parses before continuing
+- for `TR`, this never overrides family production rules: block is the base execution unit, and 70-block or 10-block batch generation remains forbidden
+
 Current stage directories:
 
 - `00_governance`
