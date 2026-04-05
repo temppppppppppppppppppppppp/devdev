@@ -7,10 +7,13 @@ from __future__ import annotations
 import json
 import logging
 from contextlib import nullcontext as _nullcontext
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.inventory_state import compute_inventory_count_deltas, normalize_inventory_counts
+from modules.core.jsonl_io import append_jsonl_record
+from modules.core.soft_failure import resolve_project_log_dir
 
 if TYPE_CHECKING:
     from modules.core.stage4_post_processor import Stage4PostProcessor
@@ -100,6 +103,29 @@ def _normalize_state_truth_field_names(raw_state: object) -> list[str]:
     return sorted(fields)
 
 
+def _collect_fact_ledger_carryover_authority_fields(fact_ledger) -> list[str]:
+    if fact_ledger is None or not hasattr(fact_ledger, "get_numbers"):
+        return []
+    try:
+        numbers = fact_ledger.get_numbers()
+    except Exception:
+        return []
+    if not isinstance(numbers, dict):
+        return []
+
+    fields: list[str] = []
+    for key, info in numbers.items():
+        if not isinstance(info, dict):
+            continue
+        if str(info.get("authority_scope", "") or "").strip() != "carryover_baseline":
+            continue
+        field_name = str(key or "").strip()
+        if not field_name or field_name in fields:
+            continue
+        fields.append(field_name)
+    return sorted(fields)
+
+
 def _build_state_truth_owner_contract(
     *,
     actual_truth,
@@ -109,6 +135,7 @@ def _build_state_truth_owner_contract(
     relationship_changes,
     active_pressure_vectors,
     arc_data,
+    fact_ledger_carryover_fields: list[str] | None = None,
 ) -> dict:
     manager_fields = _normalize_state_truth_field_names(actual_truth)
     director_fields = _normalize_state_truth_field_names(final_state_updates)
@@ -162,6 +189,21 @@ def _build_state_truth_owner_contract(
             "fields": ["active_pressure_vectors"],
             "provenance": "blueprint_filtered_by_manuscript",
         }
+    carryover_fields = [
+        str(item).strip() for item in (fact_ledger_carryover_fields or []) if str(item).strip()
+    ]
+    if carryover_fields:
+        field_families["numeric_carryover_authority"] = {
+            "owner": "fact_ledger_carryover_baseline",
+            "surfaces": [
+                "fact_ledger",
+                "episode_bible.state_truth_owner_contract",
+                "state_log.state_truth_owner_contract",
+            ],
+            "fields": carryover_fields[:6],
+            "authority_scope": "carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+        }
 
     contract = {
         "contract_version": "stage4_state_truth_owner_contract_v1",
@@ -172,6 +214,39 @@ def _build_state_truth_owner_contract(
     if not manager_fields and director_fields:
         contract["actual_truth_fallback_reason"] = "manager_actual_truth_empty"
     return contract
+
+
+def _build_numeric_carryover_authority_visibility(state_truth_owner_contract: dict | None) -> dict[str, object]:
+    contract = state_truth_owner_contract if isinstance(state_truth_owner_contract, dict) else {}
+    families = contract.get("field_families")
+    families = families if isinstance(families, dict) else {}
+    carryover_family = families.get("numeric_carryover_authority")
+    carryover_family = carryover_family if isinstance(carryover_family, dict) else {}
+    carryover_fields = [
+        str(item).strip() for item in list(carryover_family.get("fields") or []) if str(item).strip()
+    ]
+    if not carryover_fields:
+        return {}
+
+    owner = str(carryover_family.get("owner", "") or "").strip()
+    authority_scope = str(carryover_family.get("authority_scope", "") or "").strip() or "carryover_baseline"
+    provenance = str(carryover_family.get("provenance", "") or "").strip()
+    provenance_suffix = f" ({provenance})" if provenance else ""
+    ui_note = ", ".join(carryover_fields[:4]) + f" [{authority_scope}]{provenance_suffix}"
+    operator_note = (
+        f"{owner or 'numeric_carryover_authority'} owns {', '.join(carryover_fields[:4])} "
+        f"[{authority_scope}]"
+    )
+    if provenance:
+        operator_note += f" ({provenance})"
+    return {
+        "owner": owner,
+        "fields": carryover_fields,
+        "authority_scope": authority_scope,
+        "provenance": provenance,
+        "ui_note": ui_note,
+        "operator_note": operator_note,
+    }
 
 
 class Stage4PostPassRuntime:
@@ -386,6 +461,7 @@ class Stage4PostPassRuntime:
         """
         bible_delta = None
         actual_truth = {}
+        state_truth_owner_contract: dict[str, object] = {}
         _meta_save_failed = False
 
         try:
@@ -485,6 +561,7 @@ class Stage4PostPassRuntime:
                 reveal_list=reveal_list,
             )
             bible_delta = persist_payload["bible_delta"]
+            state_truth_owner_contract = dict(persist_payload.get("state_truth_owner_contract") or {})
             _meta_save_failed = persist_payload["meta_save_failed"]
 
         except Exception as bible_err:
@@ -496,6 +573,7 @@ class Stage4PostPassRuntime:
         return {
             "bible_delta": bible_delta,
             "actual_truth": actual_truth,
+            "state_truth_owner_contract": state_truth_owner_contract,
             "meta_save_failed": _meta_save_failed,
         }
 
@@ -842,6 +920,9 @@ class Stage4PostPassRuntime:
             relationship_changes=relationship_changes,
             active_pressure_vectors=active_pressure_vectors,
             arc_data=arc_data,
+            fact_ledger_carryover_fields=_collect_fact_ledger_carryover_authority_fields(
+                getattr(self.ctx, "fact_ledger", None)
+            ),
         )
         bible_delta = {
             "new_items": all_new_items,
@@ -907,9 +988,17 @@ class Stage4PostPassRuntime:
             active_pressure_vectors=active_pressure_vectors,
             reveal_list=reveal_list,
         )
+        self._log_numeric_carryover_authority_summary(
+            state_truth_owner_contract=state_truth_owner_contract,
+        )
+        self._emit_post_pass_contract_signal(
+            next_ep=next_ep,
+            state_truth_owner_contract=state_truth_owner_contract,
+        )
 
         return {
             "bible_delta": bible_delta,
+            "state_truth_owner_contract": state_truth_owner_contract,
             "meta_save_failed": meta_save_failed,
         }
 
@@ -1074,6 +1163,53 @@ class Stage4PostPassRuntime:
                 self.ctx.ui.log(f"      • 복선 회수: {', '.join(reveal_list[:3])}")
         else:
             self.ctx.ui.log("   📖 Episode Bible 저장 완료 (변화 없음)")
+
+    def _log_numeric_carryover_authority_summary(self, *, state_truth_owner_contract: dict | None) -> None:
+        visibility = _build_numeric_carryover_authority_visibility(state_truth_owner_contract)
+        ui_note = str(visibility.get("ui_note", "") or "").strip()
+        if not ui_note:
+            return
+        self.ctx.ui.log("      [numeric carryover authority] " + ui_note)
+
+    def _emit_post_pass_contract_signal(self, *, next_ep: int, state_truth_owner_contract: dict | None) -> None:
+        contract = state_truth_owner_contract if isinstance(state_truth_owner_contract, dict) else {}
+        if not contract:
+            return
+
+        families = contract.get("field_families")
+        families = families if isinstance(families, dict) else {}
+        carryover_family = families.get("numeric_carryover_authority")
+        carryover_family = dict(carryover_family) if isinstance(carryover_family, dict) else {}
+        carryover_summary = _build_numeric_carryover_authority_visibility(contract)
+        entry = {
+            "event": "STAGE4_POST_PASS_CONTRACT",
+            "ep": int(next_ep),
+            "actual_truth_primary_owner": str(contract.get("actual_truth_primary_owner", "") or ""),
+            "numeric_carryover_authority": carryover_family,
+            "numeric_carryover_summary": carryover_summary,
+            "state_truth_owner_contract": dict(contract),
+        }
+
+        current_project = getattr(self.ctx, "current_project", None)
+        logs_dir = resolve_project_log_dir(current_project)
+        if logs_dir is None:
+            project_name = getattr(current_project, "name", None)
+            if not isinstance(project_name, str) or not project_name.strip() or "MagicMock" in project_name:
+                project_name = "_unknown_project"
+            logs_dir = Path("projects") / project_name / "logs"
+        try:
+            Path(logs_dir).mkdir(parents=True, exist_ok=True)
+            append_jsonl_record(Path(logs_dir) / "episode_production.jsonl", entry)
+        except Exception as signal_err:
+            logging.warning("[Stage4PostPass] post-pass contract signal skipped: %s", signal_err)
+
+        audit_event = getattr(self.ctx, "audit_event", None)
+        if callable(audit_event):
+            audit_event(
+                "stage4_post_pass_contract_signal",
+                "stage4 post-pass contract persisted",
+                dict(entry),
+            )
 
     def _build_atomic_state_payloads(self, *, final_state_updates, bible_delta):
         inventory_payload = {}
@@ -1384,6 +1520,7 @@ class Stage4PostPassRuntime:
         final_state_updates,
         quality_labels=None,
         quality_signals=None,
+        state_truth_owner_contract=None,
     ) -> None:
         if not self.ctx.quality_dashboard:
             return
@@ -1417,6 +1554,7 @@ class Stage4PostPassRuntime:
                     "decision": "PASS",
                     "score": _stage4_score,
                     "quality_signals": quality_signals or {},
+                    "state_truth_owner_contract": dict(state_truth_owner_contract or {}),
                 },
                 stage=4,
             )
@@ -1532,6 +1670,7 @@ class Stage4PostPassRuntime:
         final_state_updates,
         quality_labels=None,
         quality_signals=None,
+        state_truth_owner_contract=None,
         detect_npc_overexposure_fn,
         detect_cross_episode_repetition_fn,
         v50_modules_available,
@@ -1548,6 +1687,7 @@ class Stage4PostPassRuntime:
             final_state_updates=final_state_updates,
             quality_labels=quality_labels,
             quality_signals=quality_signals,
+            state_truth_owner_contract=state_truth_owner_contract,
         )
         self._run_post_pass_npc_and_repetition_guards(
             next_ep=next_ep,

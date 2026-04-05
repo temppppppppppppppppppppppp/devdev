@@ -216,6 +216,14 @@ def test_update_number_established_value_set():
     assert ledger._ledger["numbers"]["재산"]["established_value"] == 100
 
 
+def test_update_number_marks_asset_numbers_as_carryover_baseline():
+    ledger = FactLedger(_EmptyStubDB())
+    ledger.update_number("자본금", 100, "원", 1)
+
+    entry = ledger.get_number("자본금")
+    assert entry["authority_scope"] == "carryover_baseline"
+
+
 def test_save_sets_degraded_contract_on_failure():
     ledger = FactLedger(_BrokenSaveDB())
 
@@ -290,7 +298,7 @@ def test_summarize_fact_ledger_numbers_block_reads_numbers_schema():
 
     assert "[팩트 원장 핵심 수치]" in text
     assert "자본금" in text
-    assert "1억 원 (ep1) -> 10억 원 (ep12)" in text
+    assert "1억 원 (ep1) -> 10억 원 (ep12 carryover baseline)" in text
 
 
 def test_to_summary_includes_section_truncation_counters():

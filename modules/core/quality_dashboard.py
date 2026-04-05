@@ -124,6 +124,72 @@ class QualityDashboard:
             if len(scores) > self._max_stage_scores:
                 self.stage_stats[stage]["scores"] = scores[-self._max_stage_scores :]
 
+    @staticmethod
+    def _normalize_validation_violations(raw_violations: object) -> tuple[list[str], list[dict[str, Any]], str]:
+        if not isinstance(raw_violations, list):
+            return [], [], ""
+
+        violations: list[str] = []
+        violation_details: list[dict[str, Any]] = []
+        dominant_contradiction_type = ""
+        for item in raw_violations:
+            if isinstance(item, dict):
+                label = str(
+                    item.get("type")
+                    or item.get("subtype")
+                    or item.get("dominant_contradiction_type")
+                    or "structured_violation"
+                ).strip()
+                if label:
+                    violations.append(label)
+
+                detail: dict[str, Any] = {}
+                for key in (
+                    "type",
+                    "subtype",
+                    "contradiction_types",
+                    "dominant_contradiction_type",
+                    "repair_contract",
+                    "scope_authority",
+                    "scope_origin",
+                    "fix_scope",
+                    "authoritative_fix_scope",
+                    "authoritative_fix_scope_violation",
+                    "fix_pack_reason",
+                    "fix_pack_origin",
+                    "description",
+                ):
+                    value = item.get(key)
+                    if isinstance(value, dict):
+                        if value:
+                            detail[key] = dict(value)
+                    elif isinstance(value, list):
+                        values = [str(entry).strip() for entry in value if str(entry).strip()]
+                        if values:
+                            detail[key] = values
+                    elif str(value or "").strip():
+                        detail[key] = str(value).strip()
+                if label and "type" not in detail:
+                    detail["type"] = label
+                if detail:
+                    violation_details.append(detail)
+
+                if not dominant_contradiction_type:
+                    dominant_contradiction_type = str(
+                        detail.get("dominant_contradiction_type")
+                        or detail.get("subtype")
+                        or label
+                    ).strip()
+            else:
+                label = str(item or "").strip()
+                if label:
+                    violations.append(label)
+                    violation_details.append({"type": label})
+                    if not dominant_contradiction_type:
+                        dominant_contradiction_type = label
+
+        return violations, violation_details, dominant_contradiction_type
+
     def record_validation(self, ep_num: int, result: dict, stage: int = 4):
         """
         검증 결과 기록
@@ -133,6 +199,9 @@ class QualityDashboard:
             result: 검증 결과 (decision, score, violations 등)
             stage: 스테이지 번호 (2, 3, 4)
         """
+        violations, violation_details, dominant_contradiction_type = self._normalize_validation_violations(
+            result.get("violations", [])
+        )
         record = {
             "type": "validation",
             "timestamp": datetime.now().isoformat(),
@@ -140,12 +209,14 @@ class QualityDashboard:
             "stage": stage,
             "decision": result.get("decision", "UNKNOWN"),
             "score": result.get("score", 0),
-            "violations": [
-                v.get("type") if isinstance(v, dict) else str(v) for v in result.get("violations", [])
-            ],  # [V70] str 타입 방어
+            "violations": violations,
+            "violation_details": violation_details,
             "warnings": len(result.get("warnings", [])),
             "quality_signals": result.get("quality_signals", {}) or {},
+            "state_truth_owner_contract": dict(result.get("state_truth_owner_contract") or {}),
         }
+        if dominant_contradiction_type:
+            record["dominant_contradiction_type"] = dominant_contradiction_type
 
         self._process_record(record)
         self._save_record(record)
@@ -463,6 +534,7 @@ class QualityDashboard:
                     "decision": record.get("decision", "UNKNOWN"),
                     "coverage": coverage,
                     "violations": len(record.get("violations", [])),
+                    "dominant_contradiction_type": str(record.get("dominant_contradiction_type", "") or ""),
                 }
             )
 

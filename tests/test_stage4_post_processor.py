@@ -312,6 +312,7 @@ class TestProcessPassResult:
             return_value={
                 "bible_delta": {"relationship_changes": []},
                 "actual_truth": {"location": "gate"},
+                "state_truth_owner_contract": {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}},
                 "meta_save_failed": True,
             }
         )
@@ -333,7 +334,11 @@ class TestProcessPassResult:
             v50_modules_available=False,
         )
 
-        assert result == {"actual_truth": {"location": "gate"}, "meta_save_failed": True}
+        assert result == {
+            "actual_truth": {"location": "gate"},
+            "state_truth_owner_contract": {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}},
+            "meta_save_failed": True,
+        }
         pp.ctx.current_project.db.save_anchor.assert_called_once_with("chain_link_6", {"cliffhanger": "next hook"})
         pp.post_pass_runtime._save_world_state_atomic.assert_called_once_with(
             next_ep=6,
@@ -341,6 +346,10 @@ class TestProcessPassResult:
             bible_delta={"relationship_changes": []},
         )
         pp.post_pass_runtime._run_post_pass_advisories.assert_called_once()
+        assert (
+            pp.post_pass_runtime._run_post_pass_advisories.call_args.kwargs["state_truth_owner_contract"]
+            == {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}}
+        )
 
     def test_finalize_pass_result_session_saves_costs_and_flushes(self):
         pp = self._make_pp()
@@ -419,10 +428,25 @@ class TestProcessPassResult:
             final_state_updates={"director_score": 92},
             quality_labels={"score": 94},
             quality_signals={"ced_score": 0.7},
+            state_truth_owner_contract={
+                "field_families": {
+                    "numeric_carryover_authority": {
+                        "fields": ["capital", "total_assets"],
+                    }
+                }
+            },
         )
 
         pp.ctx.quality_dashboard.record_blueprint_coverage.assert_called_once()
         pp.ctx.quality_dashboard.record_validation.assert_called_once()
+        record_kwargs = pp.ctx.quality_dashboard.record_validation.call_args.kwargs
+        assert record_kwargs["result"]["state_truth_owner_contract"] == {
+            "field_families": {
+                "numeric_carryover_authority": {
+                    "fields": ["capital", "total_assets"],
+                }
+            }
+        }
         log_calls = [str(call.args[0]) for call in pp.ctx.ui.log.call_args_list if call.args]
         assert any("품질 회귀" in text for text in log_calls)
 
@@ -675,7 +699,11 @@ class TestProcessPassResult:
             }
         )
         pp.post_pass_runtime._persist_manager_delta_outputs = MagicMock(
-            return_value={"bible_delta": {"state_changes": {}}, "meta_save_failed": False}
+            return_value={
+                "bible_delta": {"state_changes": {}},
+                "state_truth_owner_contract": {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}},
+                "meta_save_failed": False,
+            }
         )
 
         result = pp.post_pass_runtime._collect_manager_and_build_delta(
@@ -695,6 +723,9 @@ class TestProcessPassResult:
 
         assert result["meta_save_failed"] is False
         assert result["bible_delta"] == {"state_changes": {}}
+        assert result["state_truth_owner_contract"] == {
+            "field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}
+        }
         assert set(pp.post_pass_runtime._persist_manager_delta_outputs.call_args.kwargs["all_new_items"]) == {
             "Cloud Step",
             "Heavenly Blade",
@@ -819,6 +850,13 @@ class TestProcessPassResult:
         pp.post_pass_runtime._persist_manager_state_log = MagicMock()
         pp.post_pass_runtime._persist_karma_status = MagicMock()
         pp.post_pass_runtime._log_manager_delta_summary = MagicMock()
+        pp.post_pass_runtime._emit_post_pass_contract_signal = MagicMock()
+        pp.ctx.fact_ledger = MagicMock()
+        pp.ctx.fact_ledger.get_numbers.return_value = {
+            "capital": {"value": 1000000000, "unit": "won", "authority_scope": "carryover_baseline"},
+            "total_assets": {"value": 2000000000, "unit": "won", "authority_scope": "carryover_baseline"},
+            "debt": {"value": 0, "unit": "won", "authority_scope": "runtime_overlay"},
+        }
 
         result = pp.post_pass_runtime._persist_manager_delta_outputs(
             next_ep=10,
@@ -851,6 +889,19 @@ class TestProcessPassResult:
         assert owner_contract["actual_truth_primary_owner"] == "manager_actual_truth"
         assert owner_contract["field_families"]["inventory_counts"]["owner"] == "runtime_storage_overlay"
         assert owner_contract["field_families"]["active_pressure_vectors"]["owner"] == "runtime_blueprint_overlay"
+        assert owner_contract["field_families"]["numeric_carryover_authority"] == {
+            "owner": "fact_ledger_carryover_baseline",
+            "surfaces": [
+                "fact_ledger",
+                "episode_bible.state_truth_owner_contract",
+                "state_log.state_truth_owner_contract",
+            ],
+            "fields": ["capital", "total_assets"],
+            "authority_scope": "carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+        }
+        state_log_contract = pp.post_pass_runtime._persist_manager_state_log.call_args.kwargs["state_truth_owner_contract"]
+        assert state_log_contract["field_families"]["numeric_carryover_authority"]["fields"] == ["capital", "total_assets"]
         pp.post_pass_runtime._sync_world_state_positions.assert_called_once_with(
             next_ep=10,
             key_npcs=[{"name": "npc-a"}],
@@ -862,6 +913,73 @@ class TestProcessPassResult:
         pp.post_pass_runtime._persist_manager_state_log.assert_called_once()
         pp.post_pass_runtime._persist_karma_status.assert_called_once()
         pp.post_pass_runtime._log_manager_delta_summary.assert_called_once()
+        pp.post_pass_runtime._emit_post_pass_contract_signal.assert_called_once_with(
+            next_ep=10,
+            state_truth_owner_contract=owner_contract,
+        )
+
+    def test_log_numeric_carryover_authority_summary_emits_ui_note(self):
+        pp = self._make_pp()
+
+        pp.post_pass_runtime._log_numeric_carryover_authority_summary(
+            state_truth_owner_contract={
+                "field_families": {
+                    "numeric_carryover_authority": {
+                        "fields": ["capital", "total_assets"],
+                        "authority_scope": "carryover_baseline",
+                        "provenance": "fact_ledger_authority_scope",
+                    }
+                }
+            }
+        )
+
+        pp.ctx.ui.log.assert_any_call(
+            "      [numeric carryover authority] capital, total_assets [carryover_baseline] (fact_ledger_authority_scope)"
+        )
+
+    def test_emit_post_pass_contract_signal_persists_jsonl_and_audit(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.audit_event = MagicMock()
+        pp.ctx.current_project.name = "postpass-demo"
+        pp.ctx.current_project.paths = type("Paths", (), {"root": tmp_path})()
+
+        pp.post_pass_runtime._emit_post_pass_contract_signal(
+            next_ep=4,
+            state_truth_owner_contract={
+                "actual_truth_primary_owner": "manager_actual_truth",
+                "field_families": {
+                    "numeric_carryover_authority": {
+                        "fields": ["capital", "total_assets"],
+                        "authority_scope": "carryover_baseline",
+                        "provenance": "fact_ledger_authority_scope",
+                    }
+                },
+            },
+        )
+
+        log_path = tmp_path / "logs" / "episode_production.jsonl"
+        rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        contract_rows = [row for row in rows if row.get("event") == "STAGE4_POST_PASS_CONTRACT"]
+        assert len(contract_rows) == 1
+        assert contract_rows[0]["ep"] == 4
+        assert contract_rows[0]["numeric_carryover_authority"]["fields"] == ["capital", "total_assets"]
+        assert contract_rows[0]["numeric_carryover_summary"] == {
+            "owner": "",
+            "fields": ["capital", "total_assets"],
+            "authority_scope": "carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "ui_note": "capital, total_assets [carryover_baseline] (fact_ledger_authority_scope)",
+            "operator_note": (
+                "numeric_carryover_authority owns capital, total_assets "
+                "[carryover_baseline] (fact_ledger_authority_scope)"
+            ),
+        }
+        assert contract_rows[0]["state_truth_owner_contract"]["actual_truth_primary_owner"] == "manager_actual_truth"
+        pp.ctx.audit_event.assert_any_call(
+            "stage4_post_pass_contract_signal",
+            "stage4 post-pass contract persisted",
+            contract_rows[0],
+        )
 
     def test_persist_manager_delta_outputs_merges_npc_martial_state_changes_from_arc_data(self):
         pp = self._make_pp()
@@ -1070,6 +1188,7 @@ class TestProcessPassResult:
         assert record_kwargs["ep_num"] == 7
         assert record_kwargs["stage"] == 4
         assert record_kwargs["result"]["decision"] == "PASS"
+        assert "state_truth_owner_contract" in record_kwargs["result"]
 
     def test_records_quality_signals_on_dashboard_validation(self, tmp_path):
         pp = self._make_pp()
@@ -1740,6 +1859,30 @@ class TestStateTruthOwnerContract:
         assert contract["field_families"]["actual_truth_surface"]["fields"] == ["location"]
         assert contract["field_families"]["final_state_updates"]["owner"] == "director_state_updates"
 
+    def test_marks_fact_ledger_carryover_numeric_authority_family(self):
+        contract = _build_state_truth_owner_contract(
+            actual_truth={"location": "archive"},
+            final_state_updates={},
+            curr_inventory_counts={},
+            inventory_count_deltas=[],
+            relationship_changes=[],
+            active_pressure_vectors=[],
+            arc_data={},
+            fact_ledger_carryover_fields=["capital", "total_assets"],
+        )
+
+        assert contract["field_families"]["numeric_carryover_authority"] == {
+            "owner": "fact_ledger_carryover_baseline",
+            "surfaces": [
+                "fact_ledger",
+                "episode_bible.state_truth_owner_contract",
+                "state_log.state_truth_owner_contract",
+            ],
+            "fields": ["capital", "total_assets"],
+            "authority_scope": "carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+        }
+
 
 class TestAtomicMetadataSave:
     """[TF-C10] WorldState + FactLedger 원자적 저장 테스트"""
@@ -2051,7 +2194,12 @@ class TestAtomicMetadataSave:
         )
         pp.post_pass_runtime._memorize_and_validate = MagicMock()
         pp.post_pass_runtime._collect_manager_and_build_delta = MagicMock(
-            return_value={"bible_delta": {"relationship_changes": []}, "actual_truth": {}, "meta_save_failed": False}
+            return_value={
+                "bible_delta": {"relationship_changes": []},
+                "actual_truth": {},
+                "state_truth_owner_contract": {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}},
+                "meta_save_failed": False,
+            }
         )
         pp.post_pass_runtime._save_world_state_atomic = MagicMock()
         pp.post_pass_runtime._run_post_pass_advisories = MagicMock()

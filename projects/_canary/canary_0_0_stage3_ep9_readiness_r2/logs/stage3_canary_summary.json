@@ -1,0 +1,28 @@
+{
+  "summary_role": "stage3_only_canary",
+  "project": "canary_0_0_stage3_ep9_readiness_r2",
+  "project_locator": "projects/_canary/canary_0_0_stage3_ep9_readiness_r2",
+  "project_root": "C:\\Users\\User\\Desktop\\글도비\\projects\\_canary\\canary_0_0_stage3_ep9_readiness_r2",
+  "target_ep": 9,
+  "prepared_from": "0_0",
+  "latest_session_id": "",
+  "stage3_attempts": 0,
+  "blueprint_db_count": 0,
+  "blueprint_ep_nums": [],
+  "blueprint_file_count": 0,
+  "blueprint_files": [],
+  "attempt_detail": [],
+  "episode_telemetry": [],
+  "sink_alignment_summary": {},
+  "hard_gates": {
+    "status": "fail",
+    "errors": [
+      "blueprint_db_count_short:0<9",
+      "blueprint_file_count_short:0<9",
+      "no_stage3_attempts"
+    ],
+    "warnings": [
+      "sink_alignment_summary_empty"
+    ]
+  }
+}

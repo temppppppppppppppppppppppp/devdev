@@ -890,6 +890,7 @@ class Stage4PostProcessor:
             final_state_updates=final_state_updates,
             quality_labels=quality_labels,
             quality_signals=quality_signals,
+            state_truth_owner_contract=delta.get("state_truth_owner_contract", {}),
             detect_npc_overexposure_fn=detect_npc_overexposure_fn,
             detect_cross_episode_repetition_fn=detect_cross_episode_repetition_fn,
             v50_modules_available=v50_modules_available,
@@ -897,6 +898,7 @@ class Stage4PostProcessor:
 
         return {
             "actual_truth": delta["actual_truth"],
+            "state_truth_owner_contract": delta.get("state_truth_owner_contract", {}),
             "meta_save_failed": delta["meta_save_failed"],
         }
 

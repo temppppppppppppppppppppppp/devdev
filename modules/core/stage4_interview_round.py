@@ -187,6 +187,36 @@ def _build_post_select_conflict_contract(
     return contract
 
 
+def _extract_opening_continuity_pin_metadata(blueprint: dict | None) -> tuple[list[str], list[str]]:
+    if not isinstance(blueprint, dict):
+        return [], []
+
+    contradiction_types: list[str] = []
+    contradiction_details: list[str] = []
+    for item in blueprint.get("_continuity_pins") or []:
+        if not isinstance(item, dict):
+            continue
+        pin_type = str(item.get("type", "") or "").strip().lower()
+        if pin_type != "opening_action_continuity_pin":
+            continue
+        if "opening_action_continuity" not in contradiction_types:
+            contradiction_types.append("opening_action_continuity")
+        before = str(item.get("before", "") or "").strip()
+        expected = str(item.get("expected", "") or "").strip()
+        observed = str(item.get("observed", "") or "").strip()
+        detail_parts = ["opening continuity pin"]
+        if before:
+            detail_parts.append(f"previous={before}")
+        if expected:
+            detail_parts.append(f"expected={expected}")
+        if observed:
+            detail_parts.append(f"observed={observed}")
+        detail = " | ".join(detail_parts)
+        if detail not in contradiction_details:
+            contradiction_details.append(detail)
+    return contradiction_types, contradiction_details
+
+
 def _emit_stage4_ui_log(
     ui,
     message: str,
@@ -731,10 +761,13 @@ class Stage4InterviewRound:
         for warning in numeric_consistency_warnings:
             if isinstance(warning, dict):
                 text = str(warning.get("text", "") or "").strip()
+                category = str(warning.get("category") or warning.get("contradiction_type") or "").strip()
             else:
                 text = str(warning or "").strip()
+                category = ""
             if text:
-                lines.append(f"{prefix}[FACT] {text}")
+                category_prefix = f"[{category}] " if category else ""
+                lines.append(f"{prefix}[FACT] {category_prefix}{text}")
 
         coverage_warnings = list(validation_result.get("coverage_warnings") or [])
         if limit_per_key is not None:
@@ -947,6 +980,7 @@ class Stage4InterviewRound:
             "space_continuity",
             "timeline_arc_consistency",
             "opening_diversity",
+            "opening_action_continuity",
         }
         if contradiction_types.intersection(continuity_types):
             return True
@@ -2136,7 +2170,8 @@ class Stage4InterviewRound:
         for item in drift_items:
             if not isinstance(item, dict):
                 continue
-            if str(item.get("drift_subtype", "") or "").strip() != "relation_tag_semantic":
+            subtype = str(item.get("subtype", item.get("drift_subtype", "")) or "").strip().lower()
+            if subtype != "relation_tag_semantic":
                 continue
             cand_idx = item.get("_cand_idx")
             if selected_idx is not None and cand_idx not in {None, selected_idx}:
@@ -2207,7 +2242,7 @@ class Stage4InterviewRound:
     def _infer_flashback_contradiction_subtype(item: dict | None) -> str:
         if not isinstance(item, dict):
             return ""
-        explicit = str(item.get("contradiction_subtype", "") or "").strip().lower()
+        explicit = str(item.get("subtype", item.get("contradiction_subtype", "")) or "").strip().lower()
         if explicit in {"location", "movement", "facing", "dialogue", "timeline", "other"}:
             return explicit
         text = " ".join(
@@ -4989,6 +5024,12 @@ class Stage4InterviewRound:
                 token = str(item or "").strip()
                 if token and token not in _existing_contradiction_types:
                     _existing_contradiction_types.append(token)
+            _pin_contradiction_types, _pin_contradiction_details = (
+                _extract_opening_continuity_pin_metadata(round_ctx.blueprint) if _has_continuity else ([], [])
+            )
+            for token in _pin_contradiction_types:
+                if token not in _existing_contradiction_types:
+                    _existing_contradiction_types.append(token)
             _raw_contradiction_details = (
                 list(director_result.get("contradiction_details", []) or [])
                 if isinstance(director_result, dict)
@@ -4999,6 +5040,9 @@ class Stage4InterviewRound:
                 max_items=None,
                 line_limit=160,
             )
+            for line in _pin_contradiction_details:
+                if line not in _compact_contradiction_details:
+                    _compact_contradiction_details.append(line)
             if not _compact_contradiction_details:
                 _compact_contradiction_details = [str(item or "").strip() for item in _post_select_conflicts if str(item or "").strip()]
             _post_select_fix_pack_contract = self._evaluate_fix_pack_contract(
@@ -6461,7 +6505,9 @@ class Stage4InterviewRound:
                         else str(_w.get("_cand_idx", 0) + 1)
                     )
                     _sev = _w.get("severity", "MAJOR")
-                    _nc_lines.append(f"- [NC-{_wi}][후보 {_cl}][{_sev}] {_w.get('text', '')}")
+                    _category = str(_w.get("category") or _w.get("contradiction_type") or "").strip()
+                    _category_tag = f"[{_category}]" if _category else ""
+                    _nc_lines.append(f"- [NC-{_wi}][후보 {_cl}][{_sev}]{_category_tag} {_w.get('text', '')}")
                 logging.info(
                     "[NumericConsistency→Director] %d건 수치 정합성 경고",
                     len(_nc_all),
@@ -7047,6 +7093,8 @@ class Stage4InterviewRound:
             if isinstance(_normalized.get("repair_contract"), dict)
             else {}
         )
+        if _nested_repair_contract:
+            _repair_contract = {**_repair_contract, **_nested_repair_contract}
         if not _repair_contract and _nested_repair_contract:
             _repair_contract = dict(_nested_repair_contract)
         _derived_repair_contract = self._build_repair_contract_payload_from_parts(
@@ -7055,7 +7103,7 @@ class Stage4InterviewRound:
             source={**_normalized, **_nested_repair_contract},
         )
         if _derived_repair_contract:
-            _repair_contract = {**_derived_repair_contract, **_repair_contract}
+            _repair_contract = {**_repair_contract, **_derived_repair_contract}
         if _repair_contract:
             _normalized["repair_contract"] = _repair_contract
 
@@ -7069,6 +7117,8 @@ class Stage4InterviewRound:
             if isinstance(_normalized.get("scope_authority"), dict)
             else {}
         )
+        if _nested_scope_authority:
+            _scope_authority = {**_scope_authority, **_nested_scope_authority}
         if not _scope_authority and _nested_scope_authority:
             _scope_authority = dict(_nested_scope_authority)
         _derived_scope_authority = self._build_scope_authority_payload_from_parts(
@@ -7076,7 +7126,7 @@ class Stage4InterviewRound:
             source={**_normalized, **_repair_contract},
         )
         if _derived_scope_authority:
-            _scope_authority = {**_derived_scope_authority, **_scope_authority}
+            _scope_authority = {**_scope_authority, **_derived_scope_authority}
         if _scope_authority:
             _normalized["scope_authority"] = _scope_authority
         return _normalized or None

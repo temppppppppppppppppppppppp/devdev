@@ -16,7 +16,8 @@ from .base_guard import BaseGuard
 
 _logger = logging.getLogger(__name__)
 
-_SENTENCE_SPLIT = re.compile(r"[.!?。]+\s*")
+_SENTENCE_SPLIT = re.compile(r"[.!?。]+\s*")  # utf8-hygiene: allow-line rationale: regex intentionally mixes ? with ideographic full stop.
+_STYLE_TEXT_KEYS = ("pattern", "expression", "text", "value")
 
 
 class StyleGuard(BaseGuard):
@@ -32,8 +33,8 @@ class StyleGuard(BaseGuard):
         self.ALLOWED_TERMS = base_guard.ALLOWED_TERMS
         self.MANDATORY_CONCEPTS = base_guard.MANDATORY_CONCEPTS
 
-        self._anti_ai = [p for p in (style_guide.anti_ai_patterns or []) if len(p) >= 4]
-        self._forbidden_expr = [e for e in (style_guide.forbidden_expressions or []) if len(e) >= 2]
+        self._anti_ai = self._normalize_style_entries(style_guide.anti_ai_patterns, min_length=4)
+        self._forbidden_expr = self._normalize_style_entries(style_guide.forbidden_expressions, min_length=2)
         self._target_sentence_length = style_guide.sentence_length or "medium"
 
         _logger.info(
@@ -42,6 +43,35 @@ class StyleGuard(BaseGuard):
             len(self._forbidden_expr),
             self._target_sentence_length,
         )
+
+    def _normalize_style_entries(self, raw_entries: Any, min_length: int) -> list[str]:
+        normalized: list[str] = []
+        dropped = 0
+
+        for raw_entry in raw_entries or []:
+            phrase = self._extract_style_phrase(raw_entry)
+            if phrase and len(phrase) >= min_length:
+                normalized.append(phrase)
+                continue
+            if not phrase and raw_entry not in (None, ""):
+                dropped += 1
+
+        if dropped:
+            _logger.warning("[D-3] StyleGuard ignored %d malformed style entries", dropped)
+
+        return normalized
+
+    def _extract_style_phrase(self, raw_entry: Any) -> str:
+        if isinstance(raw_entry, str):
+            return raw_entry.strip()
+
+        if isinstance(raw_entry, dict):
+            for key in _STYLE_TEXT_KEYS:
+                value = raw_entry.get(key)
+                if isinstance(value, str):
+                    return value.strip()
+
+        return ""
 
     def get_genre_name(self) -> str:
         base_name = self._base.get_genre_name()

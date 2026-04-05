@@ -174,7 +174,15 @@ class Stage4RetryRuntime:
             if str(item or "").strip()
         }
         return bool(contradiction_types) and contradiction_types.issubset(
-            {"continuity", "timeline", "movement", "location", "facing", "dialogue"}
+            {
+                "continuity",
+                "timeline",
+                "movement",
+                "location",
+                "facing",
+                "dialogue",
+                "opening_action_continuity",
+            }
         )
 
     def suppress_equivalent_retry_candidates(

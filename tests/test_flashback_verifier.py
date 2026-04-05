@@ -195,6 +195,7 @@ class TestIntegration:
         assert len(result) == 1
         item = result[0]
         assert item["contradiction_subtype"] == "movement"
+        assert item["subtype"] == "movement"
         assert item["local_fixable"] is True
         assert item["patch_anchor"] == "회상 장면 동선 서술 문장"
         assert item["expected_truth"] == "과거에는 멈추지 않고 현관을 향했다"
@@ -205,6 +206,31 @@ class TestIntegration:
 # ═══════════════════════════════════════════════════════════════
 # [LM-H] ManuscriptSnippets 테스트
 # ═══════════════════════════════════════════════════════════════
+
+
+def test_parse_accepts_canonical_subtype_field():
+    response = json.dumps(
+        [
+            {
+                "marker": "flashback",
+                "issue": "The flashback stops the protagonist even though the prior episode kept them moving.",
+                "referenced_context": "ep1: the protagonist kept walking without stopping",
+                "subtype": "movement",
+                "local_fixable": True,
+                "patch_anchor": "flashback movement sentence",
+                "expected_truth": "the protagonist kept walking without stopping",
+                "local_fix_hint": "Align the flashback movement beat with prior truth.",
+                "target_kind": "local_sentence",
+            }
+        ],
+        ensure_ascii=False,
+    )
+    result = FlashbackVerifier._parse_llm_response(response, ep_num=2)
+    assert len(result) == 1
+    item = result[0]
+    assert item["subtype"] == "movement"
+    assert item["contradiction_subtype"] == "movement"
+    assert item["patch_anchor"] == "flashback movement sentence"
 
 
 class TestManuscriptSnippets:

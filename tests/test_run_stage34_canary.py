@@ -39,7 +39,7 @@ def test_run_stage34_canary_uses_frontier_lag_and_analyzes():
     app._one_stop_pipeline_frontier_lag.assert_called_once_with()
     app.pass_rate_monitor.save.assert_called_once()
     app._flush_audit_buffer.assert_called_once()
-    analyze.assert_called_once_with("00_test_02", target_ep=4)
+    analyze.assert_called_once_with("_canary/00_test_02", target_ep=4)
     assert result["multi_stage_proof_scope_summary"]["status"] == "pass"
 
 

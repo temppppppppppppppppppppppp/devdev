@@ -247,6 +247,30 @@ class TestSemanticSubtypeMetadata:
 # ═══════════════════════════════════════════════════════════════
 
 
+    def test_parse_relation_tag_drift_emits_canonical_repair_fields(self):
+        response = json.dumps(
+            [
+                {
+                    "npc": "NpcA",
+                    "field": "relation_to_protag",
+                    "expected": "ally100/misread-80",
+                    "found_in_ms": "NpcA treats the protagonist like a trusted ally with no suspicion.",
+                }
+            ],
+            ensure_ascii=False,
+        )
+
+        result = NpcDriftAdvisor._parse_llm_response(response, ep_num=2)
+
+        assert result[0]["drift_subtype"] == "relation_tag_semantic"
+        assert result[0]["subtype"] == "relation_tag_semantic"
+        assert result[0]["target_kind"] == "local_phrase"
+        assert result[0]["fix_scope"] == "inplace"
+        assert result[0]["local_fixable"] is True
+        assert result[0]["expected_truth"] == "ally100/misread-80"
+        assert result[0]["local_fix_hint"] == result[0]["semantic_local_fix_hint"]
+
+
 class TestEdgeCases:
     def test_empty_manuscript(self, sample_snapshots):
         advisor = NpcDriftAdvisor(llm_ask=lambda _: "[]")

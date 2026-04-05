@@ -486,6 +486,31 @@ class TestPrepareEpisodeContext:
         assert "1000냥" in result
         assert "2500냥" in result
 
+    def test_build_episode_digest_skips_finance_hud_snapshot_when_fact_ledger_is_authoritative(self):
+        ctx = _make_ctx()
+
+        class DummyFinanceHUD:
+            def __init__(self):
+                self.pro_data = {"capital": "1000냥", "total_assets": "2500냥"}
+
+        ctx.sys.hud = DummyFinanceHUD()
+        ctx.fact_ledger = MagicMock()
+        ctx.fact_ledger.get_canonical_summary.return_value = "[수치 제약 (L0)]\n- capital: 10000000 won (EP1 기준)"
+        cb = Stage4ContextBuilder(ctx)
+        chief_writer = MagicMock()
+        chief_writer._generate_episode_digest.return_value = "digest body"
+
+        with patch("modules.core.genre_hud_manager.FinanceHUDManager", DummyFinanceHUD):
+            result = cb._build_episode_digest(
+                prev_text="previous manuscript",
+                next_ep=5,
+                chief_writer=chief_writer,
+            )
+
+        assert result == "digest body"
+        assert "HUD 확정 자본" not in result
+        assert "HUD 총자산" not in result
+
     def test_returns_all_keys(self):
         ctx = _make_ctx()
         ctx.current_project.db.get_manuscript.return_value = {"content": "이전 화 내용 " * 40}
@@ -2259,6 +2284,51 @@ class TestBuildMandatoryContext:
         assert "mandatory_scene_engines MUST appear on-page: contract payoff" in text
         assert "talent_registry" in text
         assert text.index("[Stage4 Work Identity Authority]") < text.index("[작품 추적 슬롯 요약]")
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_promotes_numeric_carryover_authority_packet(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["lead actor line"],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        ctx.fact_ledger = MagicMock()
+        ctx.fact_ledger.get_numbers.return_value = {
+            "total_assets": {
+                "value": 10000000,
+                "unit": "won",
+                "last_ep": 1,
+                "authority_scope": "carryover_baseline",
+            }
+        }
+        ctx.fact_ledger.get_canonical_summary.return_value = "[Canonical Number]"
+        ctx.fact_ledger.to_summary.return_value = ""
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=2,
+            arc_data={"arc_no": 1},
+            arc_tactical="Bridge prior numbers into the next episode.",
+            prev_text="previous manuscript body",
+            prev_ending="the liquidation remains unresolved",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={"summary": "A larger capital stack appears after liquidation."},
+        )
+
+        text = result["mandatory_context"]
+        assert "[Stage4 Numeric Carryover Authority]" in text
+        assert "total_assets: 10000000 won (EP1 carryover baseline)" in text
+        assert "do not overwrite these baselines with arc or blueprint target numbers" in text
+        assert text.index("[Stage4 Numeric Carryover Authority]") < text.index("[작품 추적 슬롯 요약]")
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_build_mandatory_context_promotes_opening_scene_authority_even_without_work_focus(self, _mock_build):

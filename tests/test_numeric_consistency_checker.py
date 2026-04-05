@@ -121,6 +121,41 @@ class TestFactLedgerCross:
         # 60억 vs 자본금 80억 → MAJOR (synonyms match)
         assert len(fl_warns) >= 1
 
+    def test_carryover_authority_warning_for_stale_huge_asset_gap(self):
+        fl = MagicMock()
+        fl.get_numbers.return_value = {
+            "total_assets": {
+                "value": 10_000_000,
+                "unit": "원",
+                "last_ep": 1,
+                "authority_scope": "carryover_baseline",
+            },
+        }
+        checker = NumericConsistencyChecker(fact_ledger=fl)
+        warns = checker.check("자산 200억을 굴리고 있다.", ep_num=2)
+        fl_warns = [w for w in warns if w["check"] == "FactLedger 교차"]
+        assert len(fl_warns) == 1
+        assert fl_warns[0]["category"] == "numeric_carryover_authority"
+        assert fl_warns[0]["contradiction_type"] == "numeric_carryover_authority"
+        assert "EP1 carryover baseline" in fl_warns[0]["text"]
+
+    def test_carryover_authority_warning_formats_unitless_raw_krw_as_eok(self):
+        fl = MagicMock()
+        fl.get_numbers.return_value = {
+            "capital": {
+                "value": 2_150_000_000,
+                "unit": "",
+                "last_ep": 2,
+                "authority_scope": "carryover_baseline",
+            },
+        }
+        checker = NumericConsistencyChecker(fact_ledger=fl)
+        warns = checker.check("자본금 200억을 확보했다.", ep_num=3)
+
+        fl_warns = [w for w in warns if w["check"] == "FactLedger 교차"]
+        assert len(fl_warns) == 1
+        assert "capital'=21.5억" in fl_warns[0]["text"]
+
 
 # ── 3. 산술 일관성 ──────────────────────────────────────────────
 

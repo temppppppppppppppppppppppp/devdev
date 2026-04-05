@@ -2381,6 +2381,51 @@ class TestHandleRoundOutcomeRetryPathology:
         assert qr7_call.kwargs["event_kind"] == "policy"
         assert qr7_call.kwargs["attempt_key"] == "s4:ep1:arc1:a1"
 
+    def test_build_retry_pathology_payload_preserves_typed_contract_metadata(
+        self,
+        orch_with_ctx,
+    ):
+        runtime = orch_with_ctx.outcome_runtime
+        previous_attempt = {
+            "score": 83,
+            "reject_bucket": "post_select_conflict",
+            "gate_basis": "director_primary_reject",
+            "fix_scope": "partial",
+            "authoritative_fix_scope": "partial",
+            "repair_scope": "partial",
+            "error_category": "POST_SELECT_CONFLICT",
+            "retry_pathology_source": "post_select_conflict",
+            "contradiction_types": [
+                "numeric_carryover_authority",
+                "numeric_carryover_authority",
+                "opening_action_continuity",
+            ],
+            "fix_pack_reason": "runtime_synthesized",
+            "repair_contract": {"subtype": "numeric_carryover_authority", "mode": "bounded_patch"},
+            "scope_authority": {"fix_scope": "director_authoritative"},
+            "scope_origin": {"fix_scope": "runtime_widened"},
+            "fix_pack_origin": {"source": "post_select_conflict"},
+        }
+
+        payload = runtime.build_retry_pathology_payload(
+            ep_num=2,
+            round_num=1,
+            previous_attempt=previous_attempt,
+        )
+
+        assert payload["contradiction_type"] == "numeric_carryover_authority"
+        assert payload["dominant_contradiction_type"] == "numeric_carryover_authority"
+        assert payload["contradiction_types"] == [
+            "numeric_carryover_authority",
+            "numeric_carryover_authority",
+            "opening_action_continuity",
+        ]
+        assert payload["fix_pack_reason"] == "runtime_synthesized"
+        assert payload["repair_contract"] == {"subtype": "numeric_carryover_authority", "mode": "bounded_patch"}
+        assert payload["scope_authority"] == {"fix_scope": "director_authoritative"}
+        assert payload["scope_origin"]["fix_scope"] == "runtime_widened"
+        assert payload["fix_pack_origin"] == {"source": "post_select_conflict"}
+
     def test_handle_reject_round_result_escalates_ifc_quality_issue_into_v75d_candidate(
         self,
         orch_with_ctx,
@@ -2474,7 +2519,7 @@ class TestHandleRoundOutcomeRetryPathology:
                 "score": 50,
                 "reject_bucket": "quality_issue",
                 "error_category": "QUALITY_ISSUE",
-                "contradiction_types": ["space_continuity", "opening_diversity"],
+                "contradiction_types": ["opening_action_continuity"],
                 "open_review": "EP1 ending duplication in EP2 opening creates spatial continuity drift.",
                 "fix_scope_reasoning": "opening continuity mismatch remains unresolved",
             },
@@ -2969,7 +3014,7 @@ class TestHandleRoundOutcomeRetryPathology:
             "score": 50,
             "reject_bucket": "quality_issue",
             "error_category": "QUALITY_ISSUE",
-            "contradiction_types": ["space_continuity", "opening_diversity"],
+            "contradiction_types": ["opening_action_continuity"],
             "open_review": "EP1 ending duplication in EP2 opening creates spatial continuity drift.",
             "fix_scope_reasoning": "opening continuity mismatch remains unresolved",
         }

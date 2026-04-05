@@ -362,6 +362,37 @@ class TestAdvisoryEscalationHappyPathRegression:
         assert result["fix_pack"]["provenance"] == "runtime_synthesized"
         assert result["fix_pack"]["provenance_sources"] == ["npc_drift_relation_tag_semantic"]
 
+    def test_pass_with_relation_tag_npc_drift_subtype_alias_synthesizes_local_fix_contract(self):
+        ir = _make_ir(advisory_summary={"npc_drift": 1})
+        ir._last_advisory_metadata = {
+            "npc_drift": [
+                {
+                    "npc": "NpcA",
+                    "field": "relation_to_protag",
+                    "expected": "ally100/misread-80",
+                    "expected_truth": "ally100/misread-80",
+                    "found_in_ms": "NpcA treats the protagonist like a trusted ally with no suspicion.",
+                    "subtype": "relation_tag_semantic",
+                    "target_kind": "local_phrase",
+                    "expected_relation_axes": ["ally100", "misread-80"],
+                    "_cand_idx": 0,
+                }
+            ]
+        }
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                selected="A",
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={},
+            )
+        )
+
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        assert result["fix_pack"]["target_kind"] == "local_phrase"
+        assert result["strong_advisory_escalation"]["backfilled_from"] == ["npc_drift_relation_tag_semantic"]
+        assert result["fix_pack"]["provenance_sources"] == ["npc_drift_relation_tag_semantic"]
+
     def test_pass_with_flashback_contradiction_synthesizes_local_fix_contract_from_zero(self):
         """Flashback local continuity contradictions may synthesize a zero-to-local fix contract."""
         ir = _make_ir(advisory_summary={"flashback": 1})
@@ -395,6 +426,36 @@ class TestAdvisoryEscalationHappyPathRegression:
         assert result["strong_advisory_escalation"]["local_fix_contract_backfilled"] is True
         assert result["strong_advisory_escalation"]["backfilled_from"] == ["flashback_continuity_localfix"]
         assert result["fix_pack"]["provenance"] == "runtime_synthesized"
+        assert result["fix_pack"]["provenance_sources"] == ["flashback_continuity_localfix"]
+
+    def test_pass_with_flashback_subtype_alias_synthesizes_local_fix_contract(self):
+        ir = _make_ir(advisory_summary={"flashback": 1})
+        ir._last_advisory_metadata = {
+            "flashback": [
+                {
+                    "marker": "flashback",
+                    "issue": "Prior truth says the protagonist kept moving, but the flashback stops them at the door.",
+                    "referenced_context": "ep1: the protagonist kept walking without stopping",
+                    "subtype": "movement",
+                    "local_fixable": True,
+                    "patch_anchor": "flashback movement sentence",
+                    "expected_truth": "the protagonist kept walking without stopping",
+                    "_cand_idx": 0,
+                }
+            ]
+        }
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                selected="A",
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={},
+            )
+        )
+
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        assert result["fix_pack"]["patch_targets"] == ["flashback movement sentence"]
+        assert result["strong_advisory_escalation"]["backfilled_from"] == ["flashback_continuity_localfix"]
         assert result["fix_pack"]["provenance_sources"] == ["flashback_continuity_localfix"]
 
     def test_nonlocal_flashback_contradiction_stays_reject(self):

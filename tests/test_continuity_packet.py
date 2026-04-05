@@ -501,6 +501,28 @@ class TestCondensedSummaries:
         assert "명성" in summary
         assert "자본금" not in summary
 
+    def test_condensed_fact_ledger_summary_marks_asset_numbers_as_carryover_baseline(self):
+        ctx = _make_ctx()
+        ctx.fact_ledger = _make_fact_ledger(
+            {
+                "last_updated_ep": 12,
+                "characters": {},
+                "items": {},
+                "numbers": {
+                    "자본금": {"value": "10억", "unit": "원", "last_ep": 12},
+                    "명성": {"value": "A급", "unit": "", "last_ep": 12},
+                },
+            }
+        )
+        builder = Stage4ContextBuilder(ctx)
+
+        summary = builder.context_packets.build_condensed_fact_ledger_summary(
+            {"npcs": [], "items": [], "plots": [], "locations": [], "_full_text": "carryover probe"}
+        )
+
+        assert "자본금: 10억 원 (ep12 carryover baseline)" in summary
+        assert "명성: A급 (ep12 기준)" in summary
+
 
 class TestMandatoryContextContinuityPacket:
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")

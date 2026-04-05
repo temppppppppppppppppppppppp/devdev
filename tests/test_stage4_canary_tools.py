@@ -598,6 +598,42 @@ def test_evaluate_stage4_canary_gates_treats_metadata_only_sink_warn_as_warning(
     assert "patch_strategy_mismatches" not in gates["errors"]
 
 
+def test_evaluate_stage4_canary_gates_ignores_companion_only_sink_warn_when_authority_surfaces_are_clean():
+    gates = _evaluate_stage4_canary_gates(
+        target_ep=1,
+        draft_count=1,
+        runtime_summary={"tag": "stage4_complete", "total_events": 1},
+        pass_rate_monitor_exists=True,
+        patch_trace_summary={},
+        sink_alignment_summary={
+            "status": "warn",
+            "final_sink_missing": {},
+            "lifecycle_sink_missing": {},
+            "lifecycle_missing_in_final_sinks": {},
+            "initial_verdict_mismatches": [],
+            "patch_strategy_mismatches": [],
+            "selection_candidate_key_mismatches": [],
+            "legacy_key_attempts": 0,
+            "selection_companion_pre_final_rows": [{"attempt_key": "s4:ep3:arc1:a2:sess"}],
+        },
+        rationale_contract_summary={
+            "status": "ok",
+            "missing_columns": [],
+            "rows_missing_selection_reason": [],
+            "rows_missing_verdict_reason": [],
+            "rows_missing_retry_context": [],
+            "stage4_row_count": 0,
+            "retry_required_row_count": 0,
+        },
+        final_authority_contract_summary={"status": "ok"},
+        companion_audit_summary={"status": "ok"},
+        gate_repair_surface_summary={"status": "ok"},
+    )
+
+    assert gates["status"] == "pass"
+    assert "sink_alignment_status:warn" not in gates["warnings"]
+
+
 def test_build_stage4_branch_inventory_tracks_pass_patch_and_retry_coverage(tmp_path):
     pass_project = tmp_path / "pass_project"
     patch_project = tmp_path / "patch_project"

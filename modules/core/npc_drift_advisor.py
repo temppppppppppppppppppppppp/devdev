@@ -101,12 +101,19 @@ def _build_relation_tag_warning_metadata(field: object, expected: object) -> dic
     semantics = _build_relation_tag_semantics(expected)
     if normalized_field != "relation_to_protag" or not semantics:
         return {}
+    expected_relation_label = str(semantics.get("expected_relation_label", "") or "").strip()
+    semantic_local_fix_hint = str(semantics.get("semantic_local_fix_hint", "") or "").strip()
     metadata = {
         "drift_subtype": "relation_tag_semantic",
+        "subtype": "relation_tag_semantic",
         "target_kind": "local_phrase",
-        "expected_relation_label": semantics.get("expected_relation_label", ""),
+        "fix_scope": "inplace",
+        "local_fixable": True,
+        "expected_relation_label": expected_relation_label,
         "expected_relation_axes": list(semantics.get("expected_relation_axes") or []),
-        "semantic_local_fix_hint": str(semantics.get("semantic_local_fix_hint", "") or "").strip(),
+        "expected_truth": expected_relation_label,
+        "semantic_local_fix_hint": semantic_local_fix_hint,
+        "local_fix_hint": semantic_local_fix_hint,
         "relation_label_kind": str(semantics.get("relation_label_kind", "") or "").strip(),
     }
     relation_direction = str(semantics.get("relation_direction", "") or "").strip()
@@ -298,6 +305,7 @@ class NpcDriftAdvisor:
                     "npc": npc,
                     "field": field,
                     "expected": item.get("expected", ""),
+                    "expected_truth": item.get("expected", ""),
                     "found_in_ms": found,
                     "severity": "MAJOR",
                     "check": "npc_drift",

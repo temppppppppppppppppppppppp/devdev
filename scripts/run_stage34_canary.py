@@ -27,6 +27,7 @@ from modules.core.stage4_canary_tools import (  # noqa: E402
     latest_session_id_from_rows,
     prepare_stage34_canary_project,
 )
+from scripts.canary_path_utils import project_name_from_path, resolve_workspace_project_dir  # noqa: E402
 from scripts.regression_validation_tiers import FULL_CANARY_PROOF  # noqa: E402
 
 VALIDATION_TIER = FULL_CANARY_PROOF
@@ -87,18 +88,19 @@ def main() -> int:
 
 
 def prepare_canary(source_project: str, target_project: str, *, from_ep: int, force: bool) -> dict:
-    source_root = PROJECT_ROOT / "projects" / source_project
-    target_root = PROJECT_ROOT / "projects" / target_project
+    source_root = resolve_workspace_project_dir(PROJECT_ROOT, source_project, prefer_canary=False, require_exists=True)
+    target_root = resolve_workspace_project_dir(PROJECT_ROOT, target_project, prefer_canary=True, require_exists=False)
     return prepare_stage34_canary_project(source_root, target_root, from_ep=from_ep, force=force)
 
 
 def run_canary(project_name: str, *, target_ep: int) -> dict:
-    project_root = PROJECT_ROOT / "projects" / project_name
+    project_root = resolve_workspace_project_dir(PROJECT_ROOT, project_name, prefer_canary=True, require_exists=True)
+    runtime_project_name = project_name_from_path(PROJECT_ROOT, project_root)
     selected_genre = _load_project_genre(project_root)
     if not selected_genre:
-        raise RuntimeError(f"genre_info anchor missing or invalid for {project_name}")
+        raise RuntimeError(f"genre_info anchor missing or invalid for {runtime_project_name}")
 
-    app = _boot_app(project_name, selected_genre)
+    app = _boot_app(runtime_project_name, selected_genre)
     try:
         _ensure_pass_rate_monitor(app, project_root)
         app._get_int_input = lambda *args, **kwargs: kwargs.get("default", 1)
@@ -114,11 +116,11 @@ def run_canary(project_name: str, *, target_ep: int) -> dict:
     finally:
         _close_app_handles(app)
 
-    return analyze_canary(project_name, target_ep=target_ep)
+    return analyze_canary(runtime_project_name, target_ep=target_ep)
 
 
 def analyze_canary(project_name: str, *, target_ep: int) -> dict:
-    project_root = PROJECT_ROOT / "projects" / project_name
+    project_root = resolve_workspace_project_dir(PROJECT_ROOT, project_name, prefer_canary=True, require_exists=True)
     stage4_summary = build_stage4_canary_summary(project_root, target_ep=target_ep)
 
     db = DBManager(project_root / "project_data.db")

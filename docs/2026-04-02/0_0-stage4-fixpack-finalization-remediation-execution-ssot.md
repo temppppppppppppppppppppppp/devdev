@@ -1,7 +1,7 @@
 # 0_0 Stage4 FixPack Finalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (code landed, static validation closed; runtime proof deferred)
+Status: closed (fresh run runtime proof captured 2026-04-04; temp mirror cleanup eligible)
 Canonical Path: `docs/2026-04-02/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-fixpack-finalization-remediation-execution-ssot.md`
 Source Survey Docs:
@@ -149,3 +149,22 @@ Complexity note:
 - touched hotspot: `Stage4InterviewRound._normalize_director_gate_semantics()` remains a bounded shell; new semantic logic was extracted into `_backfill_strong_advisory_fix_pack()`
 - touched sink boundary: `Stage4RejectRuntime._build_reject_guidance_payload()` and `_build_reject_retry_snapshot()`
 - no new `180+ LOC` production hotspot introduced by this tranche
+
+## 9. Closure Update (2026-04-04)
+
+Runtime proof captured:
+
+- `projects/__000403/logs/session/decisions.jsonl` recorded `s4:ep2:arc1:a8:20260403_224348` with `gate_basis=patch_reaudit_fail`, `repair_scope=partial`, `fix_pack.target_kind=local_sentence`, `fix_pack.subtype=facing`, and `repair_contract.provenance=runtime_synthesized`
+- `projects/__000403/logs/episode_production.jsonl` recorded the same attempt as `STAGE4_RETRY_PATHOLOGY` with `quality_issue|fix_pack_ready`
+- the same fresh run later reached `s4:ep2:arc1:a9:20260403_224348` with final `PASS`
+
+Sink/readback verification:
+
+- local `FailureAnalyzer.sink_alignment_summary(stage=4, lookback=50, include_session_decisions=True)` shows `repair_contract_subtype_mismatches=[]`
+- the same readback shows `repair_contract_provenance_mismatches=[]`, `gate_repair_metadata_missing=[]`, and `selection_companion_missing_rows=[]`
+- authoritative Stage4 sinks preserve the runtime-synthesized local fix contract; the remaining warn surface is limited to `director_selections` companion rows
+
+Residual risk:
+
+- `projects/__000403/logs/runtime_audit_summary.json` still reports Stage4 `status=warn`, but the surviving mismatch counts reflect companion review history rather than lost fix-pack/finalization payloads in the authoritative sinks
+- parent follow-up remains under `0_0-stage4-consumer-contract-normalization-remediation`, with the next held seam still `numeric asset authority / carryover owner-boundary`

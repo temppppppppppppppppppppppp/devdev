@@ -16,6 +16,24 @@ from modules.models.arc import StateChangesDict
 
 _logger = logging.getLogger(__name__)
 _DIRECT_FINANCIAL_FACT_KEYS = ("capital", "total_assets", "wealth")
+_CARRYOVER_BASELINE_SCOPE = "carryover_baseline"
+_CARRYOVER_BASELINE_KEY_MARKERS = (
+    "capital",
+    "total_assets",
+    "wealth",
+    "asset",
+    "assets",
+    "cash",
+    "balance",
+    "networth",
+    "자산",
+    "재산",
+    "자본",
+    "순자산",
+    "잔고",
+    "현금",
+    "보유액",
+)
 _KOREAN_UNIT_MAP = (
     ("조", 1e12),
     ("억", 1e8),
@@ -73,6 +91,43 @@ def _build_truncation_suffix(total: int, shown: int, *, unit: str = "개") -> st
     return ""
 
 
+def _normalize_fact_key(value: object) -> str:
+    return re.sub(r"[\s_]+", "", str(value or "")).lower()
+
+
+def _is_carryover_baseline_number_key(key: object) -> bool:
+    token = _normalize_fact_key(key)
+    if not token:
+        return False
+    return any(marker in token for marker in _CARRYOVER_BASELINE_KEY_MARKERS)
+
+
+def _resolve_number_authority_scope(key: object, info: dict | None) -> str:
+    if isinstance(info, dict):
+        scope = str(info.get("authority_scope") or "").strip()
+        if scope:
+            return scope
+    if _is_carryover_baseline_number_key(key):
+        return _CARRYOVER_BASELINE_SCOPE
+    return ""
+
+
+def _ensure_number_authority_scope(key: object, info: dict | None) -> str:
+    scope = _resolve_number_authority_scope(key, info)
+    if scope and isinstance(info, dict):
+        info["authority_scope"] = scope
+    return scope
+
+
+def _format_number_basis_label(key: object, info: dict | None, *, upper_ep: bool = False) -> str:
+    ep = info.get("last_ep", "?") if isinstance(info, dict) else "?"
+    ep_token = "EP" if upper_ep else "ep"
+    scope = _ensure_number_authority_scope(key, info)
+    if scope == _CARRYOVER_BASELINE_SCOPE:
+        return f"{ep_token}{ep} carryover baseline"
+    return f"{ep_token}{ep} 기준"
+
+
 def summarize_fact_ledger_numbers_block(
     ledger: dict | None,
     *,
@@ -104,15 +159,15 @@ def summarize_fact_ledger_numbers_block(
         value = info.get("value", "?")
         unit = str(info.get("unit", "") or "").strip()
         unit_str = f" {unit}" if unit else ""
-        last_ep = info.get("last_ep", "?")
         established_value = info.get("established_value", "")
         established_ep = info.get("established_ep", "?")
+        latest_basis = _format_number_basis_label(key, info)
         if established_value not in ("", None) and str(established_value) != str(value):
             lines.append(
-                f"- {key}: {established_value}{unit_str} (ep{established_ep}) -> {value}{unit_str} (ep{last_ep})"
+                f"- {key}: {established_value}{unit_str} (ep{established_ep}) -> {value}{unit_str} ({latest_basis})"
             )
         else:
-            lines.append(f"- {key}: {value}{unit_str} (ep{last_ep} 기준)")
+            lines.append(f"- {key}: {value}{unit_str} ({latest_basis})")
     return "\n".join(lines)
 
 
@@ -151,6 +206,9 @@ class FactLedger:
                 for key, default_val in defaults.items():
                     if key not in raw:
                         raw[key] = default_val
+                for number_key, number_info in (raw.get("numbers") or {}).items():
+                    if isinstance(number_info, dict):
+                        _ensure_number_authority_scope(number_key, number_info)
                 self._degraded = False
                 self._degraded_reason = ""
                 return raw
@@ -435,6 +493,7 @@ class FactLedger:
         entry["last_ep"] = ep_num
         entry.setdefault("established_ep", ep_num)
         entry.setdefault("established_value", value)  # [P0-2] 초기값 영구 보존
+        _ensure_number_authority_scope(key, entry)
         if note:
             entry["history"].append(f"ep{ep_num}: {note}")
         elif old_val != value:
@@ -443,10 +502,13 @@ class FactLedger:
         # [Phase1-L0] DB sync — canonical_facts 테이블에 수치 팩트 동기화
         if getattr(self, "db", None):
             try:
+                payload = {"value": value, "unit": unit}
+                if entry.get("authority_scope"):
+                    payload["authority_scope"] = entry["authority_scope"]
                 self.db.upsert_canonical_fact(
                     fact_key=key,
                     fact_type="numerical",
-                    value={"value": value, "unit": unit},
+                    value=payload,
                     first_ep=first_ep,
                     last_ep=ep_num,
                 )
@@ -750,7 +812,8 @@ class FactLedger:
                     continue
                 unit = info.get("unit", "")
                 unit_str = f" {unit}" if unit else ""
-                parts.append(f"  - {key}: {info.get('value', '?')}{unit_str} (ep{info.get('last_ep', '?')} 기준)")
+                basis = _format_number_basis_label(key, info)
+                parts.append(f"  - {key}: {info.get('value', '?')}{unit_str} ({basis})")
 
         result = "\n".join(parts)
         if len(result) > max_chars:
@@ -763,11 +826,18 @@ class FactLedger:
 
     def get_number(self, key: str) -> dict | None:
         """특정 수치 팩트 조회."""
-        return self._ledger.get("numbers", {}).get(key)
+        info = self._ledger.get("numbers", {}).get(key)
+        if isinstance(info, dict):
+            _ensure_number_authority_scope(key, info)
+        return info
 
     def get_numbers(self) -> dict:
         """전체 수치 팩트 딕셔너리 반환."""
-        return dict(self._ledger.get("numbers", {}))
+        numbers = self._ledger.get("numbers", {})
+        for key, info in numbers.items():
+            if isinstance(info, dict):
+                _ensure_number_authority_scope(key, info)
+        return dict(numbers)
 
     def get_canonical_summary(self, max_chars: int = 5000) -> str:
         """[Phase1-L0] 수치 팩트 압축 요약 — L0 고정 주입용."""
@@ -780,9 +850,9 @@ class FactLedger:
                 continue
             val = v.get("value", "?")
             unit = v.get("unit", "")
-            ep = v.get("last_ep", "?")
             unit_str = f" {unit}" if unit else ""
-            lines.append(f"- {k}: {val}{unit_str} (EP{ep} 기준)")
+            basis = _format_number_basis_label(k, v, upper_ep=True)
+            lines.append(f"- {k}: {val}{unit_str} ({basis})")
         return "\n".join(lines)[:max_chars]
 
     def get_character(self, name: str) -> dict | None:

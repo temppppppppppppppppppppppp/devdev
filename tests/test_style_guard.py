@@ -221,3 +221,35 @@ class TestStyleGuardDelegation:
         sg = MockStyleGuide()
         guard = StyleGuard(base, sg)
         assert guard.get_impossible_actions() == []
+
+
+class TestStyleGuardMalformedEntries:
+    def test_normalizes_dict_backed_style_entries(self):
+        from modules.core.genre_guards.style_guard import StyleGuard
+
+        base = MockBaseGuard()
+        sg = MockStyleGuide(
+            anti_ai_patterns=[{"pattern": "그의 눈동자가 흔들렸다"}, {"ignored": {"nested": "x"}}],
+            forbidden_expressions=[{"expression": "한편으로는"}, {"value": ["bad"]}],
+        )
+        guard = StyleGuard(base, sg)
+
+        assert guard._anti_ai == ["그의 눈동자가 흔들렸다"]
+        assert guard._forbidden_expr == ["한편으로는"]
+
+    def test_malformed_style_entries_do_not_crash_validation(self):
+        from modules.core.genre_guards.style_guard import StyleGuard
+
+        base = MockBaseGuard()
+        sg = MockStyleGuide(
+            anti_ai_patterns=[{"pattern": "그의 눈동자가 흔들렸다"}, {"oops": {"nested": "x"}}, ["bad"]],
+            forbidden_expressions=[{"expression": "한편으로는"}, {"text": ["bad"]}],
+        )
+        guard = StyleGuard(base, sg)
+
+        result = guard.run_deep_validation("그의 눈동자가 흔들렸다. 그는 한편으로는 기뻤다.")
+
+        anti_ai = [v for v in result["violations"] if v["type"] == "style_anti_ai"]
+        forbidden = [v for v in result["violations"] if v["type"] == "style_forbidden_expression"]
+        assert len(anti_ai) == 1
+        assert len(forbidden) == 1

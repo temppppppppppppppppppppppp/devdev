@@ -25,6 +25,31 @@ _QUOTED_TOKEN_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"『([^』\n]{2,40})』"),
 )
 
+_FATHER_CALL_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"아버지"),
+    re.compile(r"회장"),
+    re.compile(r"어디\s+가느냐"),
+)
+
+_NONSTOP_EXIT_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"멈추지\s+않"),
+    re.compile(r"걸음(?:을)?\s+멈추지\s+않"),
+    re.compile(r"현관문(?:을)?\s+향해\s+나아"),
+    re.compile(r"등\s*뒤로\s+흘려보냈"),
+    re.compile(r"손잡이(?:를)?\s+단단히\s+움켜쥐"),
+    re.compile(r"외면했"),
+    re.compile(r"무시했"),
+)
+
+_OPENING_REVERSAL_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"걸음(?:을)?\s+멈췄"), "걸음을 멈춤"),
+    (re.compile(r"몸을\s+돌"), "몸을 돌림"),
+    (re.compile(r"마주\s+보"), "아버지를 마주 봄"),
+    (re.compile(r"서재(?:로)?\s+와라"), "서재 호출"),
+    (re.compile(r"서재(?:를)?\s+향해"), "서재 이동"),
+    (re.compile(r"뒤를\s+따라"), "아버지 뒤를 따름"),
+)
+
 
 def _coerce_text(value: Any) -> str:
     if isinstance(value, str):
@@ -89,13 +114,29 @@ def _replace_in_structure(node: Any, replacements: dict[str, str]) -> Any:
     return node
 
 
+def _find_first_match_surface(text: str, patterns: tuple[re.Pattern[str], ...]) -> str:
+    for regex in patterns:
+        match = regex.search(text or "")
+        if match:
+            return match.group(0)
+    return ""
+
+
+def _collect_reversal_surfaces(text: str) -> list[str]:
+    surfaces: list[str] = []
+    for regex, label in _OPENING_REVERSAL_PATTERNS:
+        if regex.search(text or "") and label not in surfaces:
+            surfaces.append(label)
+    return surfaces
+
+
 def apply_continuity_pins(
     blueprint: dict[str, Any],
     *,
     previous_published_text: str = "",
     arc_tactical_text: str = "",
 ) -> dict[str, Any]:
-    """Patch only exact-name and elapsed-time drift using deterministic sources."""
+    """Patch deterministic handoff drift using previous text and arc cues."""
     if not isinstance(blueprint, dict):
         return {"blueprint": blueprint, "changes": [], "unresolved": []}
 
@@ -140,6 +181,23 @@ def apply_continuity_pins(
                 "type": "elapsed_time_pin",
                 "before": blueprint_time_surface,
                 "after": source_time_surface,
+            }
+        )
+
+    prev_tail = _coerce_text(previous_published_text)[-2000:]
+    blueprint_head = blueprint_text[:4000]
+    nonstop_surface = _find_first_match_surface(prev_tail, _NONSTOP_EXIT_PATTERNS)
+    father_surface_prev = _find_first_match_surface(prev_tail, _FATHER_CALL_PATTERNS)
+    father_surface_opening = _find_first_match_surface(blueprint_head, _FATHER_CALL_PATTERNS)
+    opening_reversal_surfaces = _collect_reversal_surfaces(blueprint_head)
+    if nonstop_surface and father_surface_prev and father_surface_opening and len(opening_reversal_surfaces) >= 2:
+        changes.append(
+            {
+                "type": "opening_action_continuity_pin",
+                "before": nonstop_surface,
+                "after": "explicit transition or continued exit",
+                "expected": "직전 화 엔딩에서 이미 이어진 이탈 동선을 유지하거나 재진입/전환을 명시해야 함",
+                "observed": ", ".join(opening_reversal_surfaces[:3]),
             }
         )
 

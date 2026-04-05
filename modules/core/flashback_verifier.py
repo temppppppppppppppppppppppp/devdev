@@ -215,9 +215,12 @@ class FlashbackVerifier:
                 "check": "flashback_contamination",
                 "text": f"[회상 오염] '{marker}': {issue}" if issue else f"[회상 오염] '{marker}'",
             }
-            contradiction_subtype = str(item.get("contradiction_subtype", "") or "").strip().lower()
+            contradiction_subtype = str(
+                item.get("subtype", item.get("contradiction_subtype", "")) or ""
+            ).strip().lower()
             if contradiction_subtype:
                 payload["contradiction_subtype"] = contradiction_subtype
+                payload["subtype"] = contradiction_subtype
             local_fixable = FlashbackVerifier._normalize_optional_bool(item.get("local_fixable"))
             if local_fixable is not None:
                 payload["local_fixable"] = local_fixable
