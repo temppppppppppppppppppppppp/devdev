@@ -1,0 +1,368 @@
+{
+  "work_id": "pantech_cyworld_reborn",
+  "title": "벽돌 더미 속 미래 지도",
+  "genre": "investment",
+  "genre_profile": "investment_market_profile",
+  "secondary_profile": "tech_startup_profile",
+  "time_anchor": "2006-01",
+  "protagonist": {
+    "name": "윤도현",
+    "position": "세림그룹 오너 3세, 프론티어 원 대표 (전생: 2024년 겨울 서울 임대 오피스텔 고독사, 유통 계열사 전전하다 쫓겨난 오너 3세)",
+    "core_desire": "팬택의 제조 역량과 싸이월드의 일촌 그래프를 단일 모바일 생태계로 묶어, 첫 화면·계정·결제·인증·데이터센터·유통이 자기를 거치지 않으면 움직이지 않는 상태를 만든다. 아이폰 쇼크 이전에 한국형 모바일 생태계를 선점하고, 디지털 계열 분리와 지배구조 재편으로 세림그룹 승계 한 축을 손 안으로 옮긴다.",
+    "starting_capital": "2006~2024 한국 IT 흥망 거시 타임라인 지식 + 팬택 벽돌 더미 결말, 싸이월드 모바일 전환 실패 타이밍, 통신사 포털 붕괴 시점, 아이폰/앱 장터/SNS 대전 향방 + 개인 보유 주식 담보 180억 + 회장 실험 예산 170억 = 350억 전시 자금",
+    "starting_deficit": "오너 3세 한량 후보 포지션, 그룹 자금선은 차우진 CFO와 감사위원회가 봉쇄, 개인 책임 조건 CB로만 움직임, 거시 타임라인은 선명하지만 미시 인물 반응·정치 변수·나비효과는 예측 불가, 회귀 지식이 정확할수록 주변 의심(suspicion_pressure) 누적",
+    "ability": {
+      "name": "2006~2024 한국 IT 거시 타임라인 지식",
+      "mechanism": "팬택 전환권 밸류 바닥 시점, 싸이월드 모바일 전환권 놓친 분기, 312종 단말 충돌 로그의 인증 반격 포인트, 코엑스 공개 시연 규격 충돌 타이밍, 사진·관계 데이터 폭증 후 저장 병목 시점, 통신사 포털 하청 구조 붕괴 타이밍, 아이폰 쇼크 이후 앱 장터 재편 순서를 거시 수준에서 기억한다.",
+      "limitation": "① 거시 타임라인은 선명하지만 개별 인물의 미시 반응·정치 변수·나비효과 변형은 예측 불가, ② 아직 일어나지 않은 사건 세부를 지나치게 정확히 말할수록 suspicion_pressure 누적, ③ 슬립업(slip_up)과 죽음 플래그(death_flag)가 에스컬레이션 스케줄대로 쌓임"
+    }
+  },
+  "company_state": {
+    "group": "세림그룹 — 백화점·건설·유통 전통 계열 + 디지털 SPC '프론티어 원' (신설)",
+    "business": "반도체 소재/장비 아닌 모바일 단말(팬택) + 소셜 그래프(싸이월드) + 도토리 결제 + 앱 장터 + 첫 화면 통합 생태계 구축",
+    "governance": "창업주 윤재문 회장 직할 + 차우진 CFO의 감사위원회 라인 + 형제(윤태선 큰형, 윤태민 차남) 승계 경쟁축. 디지털 계열은 초기 프론티어 원 SPC 안에 격리.",
+    "hidden_problem": "전통 계열 결재선이 디지털 투자안을 안건에도 올리지 않으려 함, 통신사 규격 파편화와 통신사 구매 연합이 팬택 단말 의사결정권 잠식, 싸이월드 경영진이 현재 매출 방어에 묶여 모바일 전환권 놓치기 직전"
+  },
+  "regression_ext": {
+    "regression_type": "회귀",
+    "is_regressor": true,
+    "regression_hint": "2024년 겨울 임대 오피스텔 고독사 직전에 본 '팬택 벽돌 더미' 뉴스와 싸이월드 모바일 미끄러짐이 2006년 첫 그룹 전략회의 유리창에 겹쳐 보인다.",
+    "execution_doctrine": "금융 액션(CB/채권/ABS) 선점 → 제품 전환(터치 UI/첫 화면/앱 장터) 입증 → 인증 병목 돌파(통신사 규격/품질검증/심의) → 첫 화면·계정·결제 장악 → 디지털 계열 분리·지배구조 재편 순차. 회귀 지식은 숫자·회의록·로그·계약 뼈대로 환전된 뒤에만 장면에 등장.",
+    "slip_up_schedule": {
+      "arc_01_02": "5블록당 1회 — 아직 공개 안 된 통신사 보조금 조정 시점·싸이월드 모바일 전환권 밸류를 지나치게 정확히 짚음",
+      "arc_03_04": "3블록당 1회 — 아직 발생 안 한 코엑스 시연 규격 충돌·사진 저장 병목 시점을 미리 경고",
+      "arc_05_06": "3블록당 1회 — 해외 SNS 압박·아시아 확장 타이밍을 경험자처럼 말함",
+      "arc_07": "2블록당 1회 — 한유리·정민석·한예린급 인물이 패턴을 인지하기 시작"
+    },
+    "death_flag_schedule": {
+      "arc_01": "전생에서 조용히 물러서 잃었던 개인 책임 조건 CB 승인 장면이 그대로 재현 — 이번엔 350억을 걸 것인가",
+      "arc_02_03": "전생에 팬택 단말 포기·싸이월드 모바일 전환권 방치했던 순간과 동일한 결정 요구",
+      "arc_04_05": "전생에서 놓쳤던 데이터센터 증설·디지털 계열 분리 타이밍 재현",
+      "arc_06_07": "전생 파산 직전의 지배구조 재편 보드 구성 재현 — 이번엔 다른 결말"
+    }
+  },
+  "arcs": [
+    {
+      "arc_id": "ARC-01", "arc_title": "벽돌 더미의 지도 — 프론티어 원 설립과 결합 선언", "blocks": "Block 01-10",
+      "objective": "프론티어 원 SPC 설립 + 개인 책임 조건 CB 350억 승인 + 팬택 전환권 매입 + 싸이월드 모바일 전환권 협상 라이선싱/JV + 통신사 보조금 회의록을 카드화해 디지털 계열 분리 단초 확보",
+      "entry_state": "오너 3세 한량 후보, 개인 책임 조건 CB 0, 프론티어 원 미설립, 팬택·싸이월드 접근 불가",
+      "exit_state": "프론티어 원 SPC 설립 완료, CB 350억 전시 자금, 팬택 이사회 배석권, 싸이월드 모바일 전환권 협상 라이선싱/JV 체결, 첫 디지털 계열 분리 논의 개시",
+      "capital_range": "프론티어 원 자본 0 → 1,030억 상당(350억 현금 + 팬택 CB 포지션 + 싸이월드 전환권)",
+      "primary_opponent": "차우진 CFO + 세림그룹 감사위원회 — 디지털 투자안을 '도련님 유행어'로 일축, 자금선·회계 문구로 봉쇄",
+      "secondary_opponent": "통신사 구매 연합 + 통신사 규격 파편화 — 팬택 단말 의사결정권 잠식, 규격 충돌로 인증 자체를 병목화",
+      "weakness_pool": [
+        "차우진은 IT를 '해외 거인에게 먹힐 소모품'으로만 보아 단말+소셜+결제 결합의 현금흐름 구조를 숫자로 반박당하면 안건 봉쇄 논리가 깨진다",
+        "감사위원회는 '개인 책임 조건'이라는 자기희생 프레임 앞에서 정면 반대 명분을 잃는다",
+        "통신사 구매 연합은 단말 단가·보조금 회의록을 카드로 내밀면 단말-결제-계정 결합 시나리오에 대한 대응 로드맵이 없어 반응이 늦다"
+      ],
+      "defeat_blocks": [
+        {"block": 4, "type": "희망 연결", "visible_loss": "첫 팬택 이사회 배석 시도에서 이사진 냉대 + 프론티어 원 공식 투자 거절, 시각 체감 '도련님 변덕' 프레임 확산", "hidden_gain": "이사진의 실제 관심사(단가·채권단·브리지 자금)가 노출 — 개인 책임 조건 CB 설계의 각도 확보"},
+        {"block": 7, "type": "피로스", "visible_loss": "싸이월드 경영진이 현재 매출 방어로 모바일 전환권을 단기 라이선싱만 허락, 도토리 결제 흐름 완전 개방 실패", "hidden_gain": "한유리가 현재 매출 방어 라인과 충돌하며 모바일 전환 설계자로 돌아서는 첫 장면 + 일촌 그래프 샘플 접근권 확보"}
+      ],
+      "foreshadow_plant": [
+        {"block": 1, "content": "윤재문 회장이 '휴대폰과 인터넷 서비스는 해외 거인에게 먹힐 소모품'이라고 못 박는 장면 — 후반 지배구조 재편에서 회장이 전향하는 순간의 대비 축", "payoff_block": 62},
+        {"block": 2, "content": "오세라가 꺼낸 팬택 터치 UI 프로토타입 — 첫 화면·앱 장터 장악의 제품 원점", "payoff_block": 25},
+        {"block": 3, "content": "한유리의 '도토리 결제는 게임머니가 아니라 계정 결제 흐름' 첫 언급", "payoff_block": 34},
+        {"block": 5, "content": "차우진이 특별감사 예고 카드를 처음 꺼냄 — 자금 동결 공세의 첫 복선", "payoff_block": 17},
+        {"block": 8, "content": "가산 품질검증센터 박기태가 312종 단말 충돌 로그 더미를 언급", "payoff_block": 15},
+        {"block": 9, "content": "통신사 보조금 회의록 한 줄이 부실 자산 인수 가격 하한선을 노출", "payoff_block": 21}
+      ]
+    },
+    {
+      "arc_id": "ARC-02", "arc_title": "인증 병목의 반격 — 312종 충돌 로그와 베타폰 재구성", "blocks": "Block 11-20",
+      "objective": "코엑스 공개 시연 규격 충돌 돌파 + 가산 품질검증센터 충돌 로그를 인증 반격 카드로 전환 + 베타폰 재구성 공개 + 차우진 특별감사 1차 방어 + 정보통신부 심의 + 감사위원회 같은 주 돌파",
+      "entry_state": "프론티어 원 350억 + 팬택 CB 포지션 + 싸이월드 전환권 1차 라이선싱",
+      "exit_state": "베타폰 1차 공개 성공, 통신사 인증 1건 통과, 차우진 특별감사 1차 기각, 부실 자산 인수(팬택 공급망 채권) 완결, 디지털 계열 독립 분리 논의 테이블 진입",
+      "capital_range": "프론티어 원 1,030억 → 1,760억 (ABS 1차 발행 + 공급망 채권 지분 평가익)",
+      "primary_opponent": "차우진 CFO 특별감사 + 감사위원회 — 자금 동결과 회계 문구로 프로젝트 질식",
+      "secondary_opponent": "통신사 규격 파편화 + 정보통신부 심의 라인 — 베타폰 인증 자체를 위험 프로젝트로 낙인",
+      "weakness_pool": [
+        "차우진의 특별감사는 '개인 책임 조건 CB'이므로 감사 근거가 세림그룹 본체 자금 유출이 아니라 개인 담보 소진이라는 점에서 명분이 약하다",
+        "통신사 규격 파편화는 312종 충돌 로그를 통합 테스트 라인(가산 품질검증센터)이 먼저 쥐면 오히려 인증 반격 카드로 뒤집힌다",
+        "정보통신부 심의는 통신사 포털 하청 구조의 정책 피해를 공개 증거로 제시하면 심의 프레임이 '소비자 보호'로 이동한다"
+      ],
+      "defeat_blocks": [
+        {"block": 13, "type": "희망 연결", "visible_loss": "코엑스 공개 시연이 통신사별 규격 충돌로 중단, 기술 신뢰 타격 + 프론티어 원 시장 명분 일시 상실", "hidden_gain": "312종 단말 충돌 로그의 패턴이 공개 장면에 노출되며, 박기태 품질검증센터와의 가산 테스트 라인 독점 계약 명분 확보"},
+        {"block": 17, "type": "피로스", "visible_loss": "차우진 특별감사로 프론티어 원 일부 자금선 일시 동결 + ABS 발행 일정 연기", "hidden_gain": "감사 대응 과정에서 감사위원회 내부 파벌(전통 계열 vs 중립파) 균열 포착 + 정민석 구조조정실장의 채권단 정보 접근선 확보"}
+      ],
+      "foreshadow_plant": [
+        {"block": 11, "content": "정민석이 채권단 회의록에서 팬택 공급망 채권의 숨은 지분 조항을 언급", "payoff_block": 24},
+        {"block": 14, "content": "베타폰 시제작 라인에서 터치 UI 응답 지연 패턴 — 후반 2세대 소셜폰 센서 설계로 연결", "payoff_block": 38},
+        {"block": 16, "content": "한유리가 일촌 그래프를 모바일 주소록으로 변환하는 첫 스케치", "payoff_block": 28},
+        {"block": 18, "content": "백수현 하드웨어 커뮤니티의 베타폰 체감 리뷰가 통신사 포털 외부 여론을 움직이는 첫 증거", "payoff_block": 31},
+        {"block": 19, "content": "윤태선 큰형이 사익 편취 프레임의 1차 기자 간담회 예고", "payoff_block": 27}
+      ]
+    },
+    {
+      "arc_id": "ARC-03", "arc_title": "첫 화면 전쟁 — 앱 장터와 대중 유통 진입", "blocks": "Block 21-30",
+      "objective": "통신사 포털 바깥에 '첫 화면' 선점 + 앱 장터 기술사용권 확보 + 한빛전자마트 대중 유통 계약 + 디지털 계열 분리 1차 승인 + 사진 클라우드 저장 병목 예방 진입",
+      "entry_state": "베타폰 1차 공개 성공, 통신사 인증 1건, ABS 1차 발행",
+      "exit_state": "앱 장터 기술사용권 확보, 한빛전자마트 대중 유통 체험존 오픈, 디지털 계열 분리 1차 이사회 승인, 중부데이터센터 증설권 가계약",
+      "capital_range": "프론티어 원 1,560억 → 2,620억 (앱 장터 라이선스 선수금 + 대중 유통 예약 매출)",
+      "primary_opponent": "통신사 포털 연합 + 통신 담합 라인 — 첫 화면 지배권 방어, 학생 데이터요금 차별로 싸이월드 모바일 접근 차단",
+      "secondary_opponent": "윤태선 큰형 + 윤태민 차남 — 사익 편취 프레임 공개 역공 + 차명 자금줄로 형제파 후견선 구축",
+      "weakness_pool": [
+        "통신사 포털은 자체 앱 생태계가 없어 팬택 단말의 첫 화면·앱 장터 결합에 대한 즉각 대응 제품이 없다",
+        "통신 담합 라인은 공정위 예비조사가 개시되면 학생 요금 차별 논리가 정책 여론에 역풍을 맞는다",
+        "형제파 후견선은 차명 자금줄에 의존하므로 포렌식 추적이 가능한 순간 사익 편취 프레임이 역으로 되돌아온다"
+      ],
+      "defeat_blocks": [
+        {"block": 23, "type": "예측-전환", "visible_loss": "통신사 포털이 싸이월드 모바일 접속을 학생 요금제에서 차별화 — 초기 사용자 증가 둔화", "hidden_gain": "요금 차별 증거가 공정위 예비조사의 1차 단서로 축적 + 백수현 커뮤니티 여론전 발화점 확보"},
+        {"block": 27, "type": "희망 연결", "visible_loss": "윤태선 기자 간담회로 사익 편취 프레임 공개, 시장 신뢰 일시 타격", "hidden_gain": "형제파 차명 자금줄의 경리 라인이 노출 — 정민석 포렌식 루프 가동 명분 확보"}
+      ],
+      "foreshadow_plant": [
+        {"block": 22, "content": "서도진 중부데이터센터 대표의 서버/스토리지 스펙 초안 — 후반 가족 건강 클라우드로 연결", "payoff_block": 55},
+        {"block": 25, "content": "오세라가 터치 UI를 2세대 소셜폰 센서 구조로 확장하는 스케치", "payoff_block": 38},
+        {"block": 26, "content": "김재복 한빛전자마트가 베타폰 예약률 급등 보고 — 대중 유통 대량 전환 타이밍", "payoff_block": 32},
+        {"block": 28, "content": "한유리의 일촌 그래프 기반 모바일 주소록 베타 공개", "payoff_block": 34},
+        {"block": 29, "content": "마키노 레이 일본 디지털 음원 유통사 이사와의 첫 비공식 접촉", "payoff_block": 44}
+      ]
+    },
+    {
+      "arc_id": "ARC-04", "arc_title": "2세대 결합 — 가족 계정과 카메라 JV, 담합 본조사", "blocks": "Block 31-40",
+      "objective": "2세대 소셜폰 시제품 공개 + 카메라 센서 JV 체결 + 가족 안심 영상 베타 출시 + 통신 담합 본조사 점화 + 형제파 마지막 후견선 차단",
+      "entry_state": "첫 화면 1차 장악, 앱 장터 라이선스, 중부데이터센터 증설권 가계약",
+      "exit_state": "2세대 소셜폰 시제품 공개, 카메라 센서 JV 체결, 가족 안심 구독권 베타 2만 세대, 담합 본조사 개시, 형제파 차명 자금줄 1차 절단",
+      "capital_range": "프론티어 원 2,620억 → 3,780억 (JV 선급금 + 구독권 선매출 + ABS 2차 발행)",
+      "primary_opponent": "통신사 담합 연합 + 포털 본사 — 2세대 소셜폰 표준화 방해, 학생 요금 역프레임",
+      "secondary_opponent": "형제파 후견선 (윤태선·윤태민 + 차명 자금 파트너) — 마지막 자금줄로 전통 계열 이사회 매수 시도",
+      "weakness_pool": [
+        "통신 담합 연합은 본조사 단계에서 내부 증거 제공자에게 감면 프레임이 열려 연대가 깨진다",
+        "포털 본사는 2세대 소셜폰 표준(카메라 센서+가족 계정)의 제품 대응안이 없어 방어 광고비만 증가한다",
+        "형제파 차명 자금은 포렌식 레포트 1건에 전체 후견선이 흔들릴 만큼 집중된 경리 구조다"
+      ],
+      "defeat_blocks": [
+        {"block": 34, "type": "피로스", "visible_loss": "가족 안심 영상 베타 서비스 저장 병목으로 일시 장애 + 커뮤니티 조롱", "hidden_gain": "서도진 중부데이터센터와의 증설 본계약 명분 + 가족 계정 결합 구조의 실제 병목 수치 확보"},
+        {"block": 38, "type": "희망 연결", "visible_loss": "2세대 소셜폰 시제품 1차 공개에서 카메라 센서 JV 파트너의 요구 조건 충돌, 공개 일정 지연", "hidden_gain": "JV 계약 뼈대가 재구성되며 기술 이전 범위·탈퇴 조건을 주인공 측에 유리하게 변경"}
+      ],
+      "foreshadow_plant": [
+        {"block": 32, "content": "한빛전자마트 대중 유통 매출이 백화점 본점을 처음 초과 — 전통 계열 결재선 균열의 신호", "payoff_block": 52},
+        {"block": 35, "content": "정민석이 형제파 차명 자금 흐름의 해외 계좌 연결점을 포착", "payoff_block": 47},
+        {"block": 37, "content": "박기태 품질검증센터가 카메라 센서 인증 절차를 글로벌 규격 대응으로 확장", "payoff_block": 48},
+        {"block": 39, "content": "오세라가 실버형 파생모델 IoT 센서 구조를 도출 — 후반 공공 돌봄 연동의 원점", "payoff_block": 55}
+      ]
+    },
+    {
+      "arc_id": "ARC-05", "arc_title": "아시아 출격 — 일본 디지털 유통과 공공 연동", "blocks": "Block 41-50",
+      "objective": "일본 디지털 음원·영상 유통 JV 체결 + 아시아 통합 출시 + 병원·보험 연동 시범 + 펌웨어 라이선싱 수출 + 형제파 잔여 자금줄 차단",
+      "entry_state": "2세대 소셜폰 시장 진입, 담합 본조사, 가족 안심 구독권 베타",
+      "exit_state": "일본 디지털 유통 JV 체결, 아시아 3국 동시 출시, 병원·보험 연동 시범 2건, 펌웨어 라이선싱 수출 계약, 형제파 잔여 자금줄 완전 차단",
+      "capital_range": "프론티어 원 3,780억 → 4,540억 (순감소 블록 2건 포함 — 방어 비용 + 출시일 혼선 대응)",
+      "primary_opponent": "해외 SNS 플랫폼 압박 + 포털 본사 출시일 혼선 공작 — 아시아 출시 시점 역공작",
+      "secondary_opponent": "형제파 잔여 자금줄 (해외 차명 계좌) + 전통 계열 이사회 보수파 — 디지털 계열 완전 분리 저지",
+      "weakness_pool": [
+        "해외 SNS 플랫폼은 한국형 일촌 그래프+가족 계정 결합에 대응할 지역 특화 제품이 없어 초기 접속 경쟁에서 밀린다",
+        "포털 본사의 출시일 혼선 공작은 마키노 레이 일본 유통선을 통해 역정보로 되돌아온다",
+        "형제파 해외 차명 자금은 일본 현지 회계 공조 채널이 열리는 순간 완전 노출된다"
+      ],
+      "defeat_blocks": [
+        {"block": 43, "type": "희망 연결", "visible_loss": "아시아 통합 출시 1차 일정에서 해외 SNS 카피 서비스 선점 보도 — 시장 여론 '한국판 카피' 프레임 일시 확산", "hidden_gain": "카피 서비스의 기능 공백이 공개되며 팬택 단말+일촌 그래프+도토리 결제 통합의 차별화 축이 오히려 강조됨"},
+        {"block": 47, "type": "피로스", "visible_loss": "형제파 마지막 후견선 차단 과정에서 전통 계열 이사 2명 이탈 + 디지털 계열 분리 1차 표결 실패", "hidden_gain": "이탈 이사 2명의 배후 자금 추적선이 해외 차명 계좌로 연결 — 최종 디지털 계열 분리 표결 명분 확보"}
+      ],
+      "foreshadow_plant": [
+        {"block": 42, "content": "한유리가 일촌 그래프를 생활계정(가족·건강·돌봄)으로 확장하는 프레임 전환", "payoff_block": 55},
+        {"block": 44, "content": "마키노 레이와의 일본 디지털 유통 JV 초안", "payoff_block": 58},
+        {"block": 46, "content": "박기태 가산 테스트 라인이 병원·보험 연동 기기 인증을 글로벌 규격으로 확장", "payoff_block": 56},
+        {"block": 49, "content": "서도진 중부데이터센터 엣지 노드 구조의 도시 단위 스케일업 초안", "payoff_block": 60}
+      ]
+    },
+    {
+      "arc_id": "ARC-06", "arc_title": "생활 인프라 — 스마트시티와 정책 채택", "blocks": "Block 51-60",
+      "objective": "지자체 통합 돌봄망 입찰 수주 + 가족 건강 클라우드 런칭 + 도시 엣지센터 표준 채택 + 분기 가이던스 상향 + 기업가치 재평가 보고서 가동",
+      "entry_state": "아시아 3국 출시, 병원·보험 연동 시범, 펌웨어 라이선싱 수출",
+      "exit_state": "지자체 2곳 통합 돌봄망 수주, 가족 건강 클라우드 가입 40만 세대, 도시 엣지센터 표준 정책협의체 채택, 분기 가이던스 상향 + 기업가치 재평가 보고서 1차 발행",
+      "capital_range": "프론티어 원 4,540억 → 6,060억 (공공 입찰 수주 + 구독권 스케일업)",
+      "primary_opponent": "지자체 경쟁 입찰 연합 + 공공 데이터 감사 공세 — 프론티어 원 독점 우려 프레임",
+      "secondary_opponent": "형제파 장외지분 매집 + 차우진 CFO 잔류 감사 라인 — 승계 공세 재점화",
+      "weakness_pool": [
+        "지자체 경쟁 입찰 연합은 기존 공공 SI 사업자들로, 단말+센서+계정 결합 운영 경험이 없어 총체 운영 제안서에서 밀린다",
+        "공공 데이터 감사는 가족 건강 클라우드의 데이터 주권·동의 절차 설계가 투명하면 프레임 공세가 약화된다",
+        "형제파 장외지분 매집은 한가 지분 방어 블록과 국민연금 연대가 가동되면 매집 단가가 급등해 자금 한도에 부딪힌다"
+      ],
+      "defeat_blocks": [
+        {"block": 53, "type": "희망 연결", "visible_loss": "공공 데이터 감사 공세 1차 — 가족 건강 클라우드 일시 가입 차단, 시총 -2조 일시 하락", "hidden_gain": "감사 대응 과정에서 데이터 주권 설계 문서가 정책협의체 표준 후보로 격상 + 국민연금 연대 명분 확보"},
+        {"block": 57, "type": "피로스", "visible_loss": "지자체 1차 입찰에서 경쟁 연합이 가격 덤핑 — 수주 1건 실패, 방어 비용 증가", "hidden_gain": "경쟁 연합의 운영 비용 구조가 노출 — 2차 입찰에서 총체 운영 제안서로 역전 명분 확보"}
+      ],
+      "foreshadow_plant": [
+        {"block": 52, "content": "한빛전자마트 매출이 세림그룹 백화점 전체를 역전 — 전통 계열 결재선 전향의 첫 증거", "payoff_block": 62},
+        {"block": 55, "content": "가족 건강 클라우드 + 실버형 IoT 센서가 도시 단위 스케일업으로 결합", "payoff_block": 60},
+        {"block": 58, "content": "마키노 레이 일본 유통선이 아시아 공동운영 계약의 브리지 파트너로 확정", "payoff_block": 65},
+        {"block": 59, "content": "창업주 윤재문 회장이 처음으로 디지털 계열을 '그룹의 새 뿌리'로 언급", "payoff_block": 62}
+      ]
+    },
+    {
+      "arc_id": "ARC-07", "arc_title": "승계 완결 — 지배구조 재편과 새 그룹 선포", "blocks": "Block 61-70",
+      "objective": "형제파 장외지분 매집전 방어 + 디지털 계열 공식 분리 + 아시아 공동운영 계약 체결 + 지배구조 재편 합의 + 새 그룹 비전 선포(생활계정 질서)",
+      "entry_state": "도시 엣지센터 표준 채택, 가족 건강 클라우드 40만 세대, 아시아 3국 출시",
+      "exit_state": "디지털 계열 공식 분리 완료, 형제파 장외지분 방어 성공, 아시아 공동운영 계약 체결, 지배구조 재편 합의 통과, 생활계정 그룹 공식 선포",
+      "capital_range": "프론티어 원 6,060억 → 7,790억 (기업가치 재평가 + 지배구조 재편 프리미엄)",
+      "primary_opponent": "형제파 장외지분 매집전 (윤태선+윤태민+잔여 차명 파트너) + 승계 이사회 최종 공세",
+      "secondary_opponent": "해외 SNS/플랫폼 복합 압박 + CFO 잔류 감사 라인 — 재평가 보고서 흠집 내기 + 아시아 공동운영 계약 방해",
+      "weakness_pool": [
+        "형제파 장외지분 매집전은 한가 지분 방어 블록 + 국민연금 연대 + 한빛전자마트/중부데이터센터 우호지분 + 정책협의체 표준 채택 실적 앞에서 단가가 감당 불가",
+        "승계 이사회 최종 공세는 '생활계정 그룹 실적'이라는 숫자 자체가 논쟁을 무의미하게 만든다",
+        "해외 SNS/플랫폼 복합 압박은 아시아 공동운영 계약이 정책협의체 공식 채택과 묶여 있어 지역 시장 이탈 비용을 감당 못 한다"
+      ],
+      "defeat_blocks": [
+        {"block": 63, "type": "희망 연결", "visible_loss": "형제파 장외지분 매집 1차 공세로 우호지분 일부 이탈, 기업가치 재평가 보고서 공개 일정 연기", "hidden_gain": "이탈 우호지분의 배후 계약 조건이 노출 — 잔여 차명 파트너의 일본 현지 법인 연결선 확보"},
+        {"block": 66, "type": "예측-전환", "visible_loss": "승계 이사회 공세로 디지털 계열 공식 분리 표결 1차 보류, 시총 일시 하락", "hidden_gain": "보류 과정에서 회장 윤재문의 공식 전향 발언 확보 + 한빛전자마트/중부데이터센터 매출 역전 데이터가 이사회 의제로 상정"}
+      ],
+      "foreshadow_plant": [
+        {"block": 62, "content": "윤재문 회장이 Block 1의 '해외 거인에게 먹힐 소모품' 발언을 스스로 철회 — 생활계정 그룹 공식 인정", "payoff_block": 62},
+        {"block": 65, "content": "마키노 레이 일본 유통선과 아시아 공동운영 계약 체결", "payoff_block": 65},
+        {"block": 68, "content": "차우진 CFO가 감사 라인을 내려놓고 재평가 보고서의 숫자만 인정", "payoff_block": 68},
+        {"block": 70, "content": "생활계정 그룹 공식 선포 — 팬택 단말 + 싸이월드 관계 그래프가 도시 운영판·아시아 공동운영·가족 안심 구독권까지 하나의 질서로 봉합", "payoff_block": 70}
+      ]
+    }
+  ],
+  "opponent_transition_plan": {
+    "arc_01": {"primary": "차우진 CFO + 감사위원회", "secondary": "통신사 구매 연합 + 규격 파편화"},
+    "arc_02": {"primary": "차우진 특별감사 + 감사위원회", "secondary": "통신사 규격 파편화 + 정보통신부 심의"},
+    "arc_03": {"primary": "통신사 포털 연합 + 통신 담합", "secondary": "윤태선·윤태민 형제파 + 차명 자금"},
+    "arc_04": {"primary": "통신사 담합 연합 + 포털 본사", "secondary": "형제파 후견선 + 차명 자금 파트너"},
+    "arc_05": {"primary": "해외 SNS 플랫폼 + 포털 출시일 혼선", "secondary": "형제파 해외 차명 자금 + 전통 계열 보수파"},
+    "arc_06": {"primary": "지자체 경쟁 입찰 연합 + 공공 데이터 감사", "secondary": "형제파 장외지분 매집 + 차우진 잔류 감사"},
+    "arc_07": {"primary": "형제파 장외지분 매집 + 승계 이사회 최종 공세", "secondary": "해외 SNS/플랫폼 복합 압박 + CFO 잔류 감사"},
+    "unique_opponents": 9,
+    "unique_opponent_list": ["차우진 CFO", "감사위원회", "통신사 구매 연합/규격 파편화", "통신사 포털 연합", "통신 담합 연합", "윤태선 큰형", "윤태민 차남", "해외 SNS/플랫폼 압박", "지자체 공공 입찰 연합"],
+    "max_single_opponent_share": "차우진 CFO 4/7 arcs = 57% — 단, ARC-01은 안건 봉쇄, ARC-02는 특별감사, ARC-06은 잔류 감사, ARC-07은 최종 공세로 전장·weakness·front가 모두 다르므로 허용. 형제파는 ARC-03·04·05·07 4회 재등장이지만 매번 자금줄·자산 매집 프레임이 달라짐."
+  },
+  "capital_curve": {
+    "arc_01": "프론티어 원 0 → 1,030억 (CB 350억 + 팬택 CB 포지션 + 싸이월드 전환권 평가익)",
+    "arc_02": "1,030억 → 1,760억 (ABS 1차 발행 + 공급망 채권 지분 평가익)",
+    "arc_03": "1,560억 → 2,620억 (앱 장터 라이선스 선수금 + 대중 유통 예약 매출, Block 23·27 순감소 포함)",
+    "arc_04": "2,620억 → 3,780억 (JV 선급금 + 가족 안심 구독권 선매출 + ABS 2차 발행, Block 34·38 순감소 포함)",
+    "arc_05": "3,780억 → 4,540억 (아시아 JV + 펌웨어 라이선싱, Block 43·47 순감소 포함)",
+    "arc_06": "4,540억 → 6,060억 (공공 입찰 수주 + 구독권 스케일업, Block 53·57 순감소 포함)",
+    "arc_07": "6,060억 → 7,790억 (기업가치 재평가 + 지배구조 재편 프리미엄, Block 63·66 순감소 포함)",
+    "decline_blocks": [4, 7, 13, 17, 23, 27, 34, 38, 43, 47, 53, 57, 63, 66],
+    "decline_count": 14
+  },
+  "catharsis_ledger": [
+    {
+      "humiliation": "오너 3세 한량이 첫 그룹 전략회의에서 '도련님 유행어'로 일축됨 + 디지털 투자안 안건에서 삭제",
+      "perpetrator": "차우진 CFO + 세림그룹 승계위원회",
+      "humiliation_block": 1,
+      "payback_method": "개인 책임 조건 CB 350억으로 팬택+싸이월드 결합권을 같은 주에 쥐고, 차우진이 '숫자만큼은 틀리지 않았다'고 실무 자료 접근권을 허용",
+      "payback_block": 10,
+      "multiplier": "5배",
+      "reminder_blocks": [4, 7]
+    },
+    {
+      "humiliation": "코엑스 공개 시연이 통신사 규격 충돌로 중단, '벽돌 더미'로 조롱 반복",
+      "perpetrator": "통신사 구매 연합 + 규격 파편화",
+      "humiliation_block": 13,
+      "payback_method": "312종 충돌 로그를 가산 품질검증센터 독점 계약으로 묶고, 베타폰 재구성 공개로 통신사 인증 1건 통과 + 정보통신부 심의 프레임 역전",
+      "payback_block": 20,
+      "multiplier": "7배",
+      "reminder_blocks": [15, 17]
+    },
+    {
+      "humiliation": "차우진 특별감사로 프론티어 원 자금선 일시 동결, '도련님 놀음' 프레임 재확산",
+      "perpetrator": "차우진 CFO + 감사위원회",
+      "humiliation_block": 17,
+      "payback_method": "감사 대응 중 발견한 감사위원회 파벌 균열로 디지털 계열 분리 1차 이사회 승인 + ABS 2차 발행 통과",
+      "payback_block": 30,
+      "multiplier": "8배",
+      "reminder_blocks": [19, 23]
+    },
+    {
+      "humiliation": "윤태선 큰형 기자 간담회로 '사익 편취' 프레임 공개, 시장 신뢰 일시 타격",
+      "perpetrator": "형제파 (윤태선+윤태민) + 차명 자금 파트너",
+      "humiliation_block": 27,
+      "payback_method": "차명 자금줄 포렌식 추적 + 해외 현지 회계 공조로 형제파 후견선 1차 절단 + 마지막 자금줄 완전 차단",
+      "payback_block": 47,
+      "multiplier": "10배+",
+      "reminder_blocks": [32, 35, 39]
+    },
+    {
+      "humiliation": "아시아 출시에서 해외 SNS 카피 서비스 선점 보도 — '한국판 카피' 프레임",
+      "perpetrator": "해외 SNS/플랫폼 + 포털 출시일 혼선 공작",
+      "humiliation_block": 43,
+      "payback_method": "마키노 레이 일본 유통선 + 가족 건강 클라우드 + 도시 엣지센터 표준 정책협의체 채택으로 아시아 공동운영 계약 체결",
+      "payback_block": 65,
+      "multiplier": "12배",
+      "reminder_blocks": [46, 52, 58]
+    },
+    {
+      "humiliation": "형제파 장외지분 매집 공세로 우호지분 이탈 + 재평가 보고서 공개 연기",
+      "perpetrator": "형제파 장외지분 매집전 + 승계 이사회",
+      "humiliation_block": 63,
+      "payback_method": "한가 지분 방어 블록 + 국민연금 연대 + 한빛전자마트/중부데이터센터 매출 역전 데이터 + 회장 공식 전향 발언으로 디지털 계열 공식 분리 통과 + 생활계정 그룹 선포",
+      "payback_block": 70,
+      "multiplier": "10배+",
+      "reminder_blocks": [66, 68]
+    }
+  ],
+  "information_ledger": [
+    {"info": "팬택 전환권 밸류 바닥 시점과 공급망 채권 지분 조항", "acquired_block": 1, "hint_blocks": [9, 11], "planned_use_block": 21, "value": "상"},
+    {"info": "싸이월드 모바일 전환권 놓친 분기와 도토리 결제 흐름의 계정 결제 가치", "acquired_block": 1, "hint_blocks": [3, 16], "planned_use_block": 28, "value": "상"},
+    {"info": "312종 단말 통신사 규격 충돌 로그 패턴", "acquired_block": 1, "hint_blocks": [8, 14], "planned_use_block": 15, "value": "상"},
+    {"info": "코엑스 공개 시연 규격 충돌 시점", "acquired_block": 1, "hint_blocks": [11], "planned_use_block": 13, "value": "상"},
+    {"info": "통신사 포털 하청 구조 붕괴 타이밍과 첫 화면 선점 포인트", "acquired_block": 1, "hint_blocks": [18, 22], "planned_use_block": 25, "value": "상"},
+    {"info": "사진·관계 데이터 폭증 후 저장 병목 시점", "acquired_block": 1, "hint_blocks": [22, 34], "planned_use_block": 34, "value": "상"},
+    {"info": "통신 담합 공정위 본조사 개시 분기", "acquired_block": 1, "hint_blocks": [23, 26], "planned_use_block": 37, "value": "상"},
+    {"info": "아이폰 쇼크 이후 앱 장터 재편 순서와 2세대 소셜폰 카메라 센서 표준화 포인트", "acquired_block": 1, "hint_blocks": [25, 37], "planned_use_block": 38, "value": "상"},
+    {"info": "형제파 차명 자금줄 해외 계좌 연결점", "acquired_block": 27, "hint_blocks": [35], "planned_use_block": 47, "value": "상"},
+    {"info": "해외 SNS 카피 서비스 출시 타이밍과 아시아 공동운영 브리지 포인트", "acquired_block": 29, "hint_blocks": [44], "planned_use_block": 65, "value": "상"},
+    {"info": "한가 지분 방어 블록과 국민연금 연대 가동 조건", "acquired_block": 53, "hint_blocks": [59], "planned_use_block": 70, "value": "상"},
+    {"info": "윤재문 회장 전향 가능 조건(한빛전자마트 매출 백화점 역전)", "acquired_block": 32, "hint_blocks": [52, 59], "planned_use_block": 62, "value": "상"}
+  ],
+  "deal_types": [
+    "전환사채(CB) 발행 (Block 1, 15, 30)",
+    "부실 자산 인수 (Block 9, 21, 24)",
+    "우호적 M&A (Block 6, 22)",
+    "기술 라이선싱 (Block 25, 46, 56)",
+    "조인트 벤처 (Block 7, 38, 44)",
+    "자산유동화(ABS) (Block 17, 30, 40)",
+    "규제 승인/인증 (Block 15, 20, 48)",
+    "주식 장외 매입 방어 (Block 27, 63, 66)",
+    "공급망 수직 통합 (Block 24, 42)",
+    "크로스보더 JV/수출 계약 (Block 44, 58, 65)",
+    "공공 입찰 수주 (Block 53, 57, 60)",
+    "구독권/반복 현금흐름 계약 (Block 34, 40, 55)",
+    "지배구조 재편/계열 분리 (Block 30, 47, 66, 70)"
+  ],
+  "emotional_curve": {
+    "arc_01": {"mood": "선언·각성", "beats": ["humiliation", "declaration", "deal_table", "alliance", "first_proof"], "quiet_block": 6},
+    "arc_02": {"mood": "파열·반격", "beats": ["public_failure", "evidence_flip", "audit_siege", "regulatory_turn", "pyrrhic_victory"], "quiet_block": 16},
+    "arc_03": {"mood": "선점·교란", "beats": ["escalation", "crowd_proof", "frame_attack", "counter_forensic", "market_breakthrough"], "quiet_block": 24},
+    "arc_04": {"mood": "결합·심문", "beats": ["product_jump", "storage_crisis", "jv_renegotiation", "antitrust_ignition", "family_cut"], "quiet_block": 33},
+    "arc_05": {"mood": "출격·피로", "beats": ["export", "copy_frame", "defection", "counter_bridge", "strategic_retreat"], "quiet_block": 45},
+    "arc_06": {"mood": "스케일업·감사", "beats": ["policy_adoption", "data_audit", "consortium_loss", "reveneration", "guidance_up"], "quiet_block": 54},
+    "arc_07": {"mood": "완결·선포", "beats": ["tender_war", "board_defense", "chairman_pivot", "grouprebirth", "proclamation"], "quiet_block": 67}
+  },
+  "items": [
+    "개인 주식 담보 증서", "개인 책임 조건 전환사채(CB)", "팬택 공급망 채권", "팬택 이사회 배석권",
+    "싸이월드 모바일 전환권 라이선스", "일촌 그래프 데이터 접근권", "도토리 결제 흐름 정산권",
+    "터치 UI 프로토타입", "베타폰 시제작 도면", "312종 기기 충돌 로그",
+    "통신사 보조금 회의록", "통신사 인증권", "정보통신부 심의 통과 문서",
+    "가산 품질검증센터 테스트 라인 독점권", "중부데이터센터 증설권", "저장 병목 해소 설비",
+    "앱 장터 기술사용권", "첫 화면 지배권", "생활계정 계정 체계",
+    "한빛전자마트 대중 유통 계약", "ABS 자산유동화증권", "카메라 센서 JV 계약",
+    "가족 안심 구독권", "가족 건강 클라우드 가입자 기반", "도시 엣지센터 표준 인증",
+    "아시아 공동운영 계약", "기업가치 재평가 보고서", "디지털 계열 분리 법인",
+    "한가 지분 방어 블록", "국민연금 우호지분 약정", "창업주 회장 전향 공식 발언"
+  ],
+  "metadata": {
+    "phase0_version": "1.0",
+    "created_date": "2026-04-05",
+    "source_pitch": "material_ssot/20_pitch/canon/pantech_cyworld_reborn.md",
+    "preprocess_dir": "treatments/preprocess/pantech_cyworld_reborn/",
+    "primary_profile": "investment_market_profile",
+    "secondary_profile": "tech_startup_profile",
+    "family": "blockguide",
+    "authority_precedence": [
+      "material_ssot/20_pitch/pitch-philosophy.md",
+      "material_ssot/20_pitch/canon/pantech_cyworld_reborn.md",
+      "treatments/preprocess/pantech_cyworld_reborn/source_manifest.json",
+      "treatments/preprocess/pantech_cyworld_reborn/material_bundle_summary.json",
+      "treatments/preprocess/pantech_cyworld_reborn/profile_lock.json",
+      "treatments/preprocess/pantech_cyworld_reborn/phase0_ready_snapshot.json"
+    ],
+    "consistency_reference_only": [
+      "treatments/_quarantine/07_pantech_cyworld_reborn_tr_block_070_draft.json",
+      "bible/_quarantine/07_pantech_cyworld_reborn_bi.json"
+    ]
+  }
+}
