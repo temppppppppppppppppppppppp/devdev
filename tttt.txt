@@ -1,0 +1,265 @@
+ python main_a.py
+[V61.3] Faulthandler 활성화 → crash_dump.log
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                  🎹 V40 SOVEREIGN COCKPIT                                   ┃
+┃                               Multi-Genre Production Factory                                ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                    🎹 V40 GENRE SELECTOR                                    ┃
+┃                                    장르별 전문 공정 선택                                    ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+📚 [V40 Multi-Genre Factory] 장르를 선택하십시오:
+
+      1. 무협 (Wuxia)
+         → 강호 배경, 내공/경지 시스템, 무림 세력
+
+      2. 헌터 (Hunter Fantasy)
+         → 현대 배경, 각성/던전 시스템, 길드
+
+      3. 투자 (Investment Fiction)
+         → 금융 배경, 자본/투자 시스템, 기업/시장
+
+      4. 판타지 (Fantasy)
+         → 이세계 배경, 마법/마나 시스템, 종족/길드
+
+      5. 작곡가 (Composer Fiction)
+         → 현대 배경, 음악 창작/산업 시스템, 작곡/프로듀싱
+
+      6. 요리 (Cooking Fiction)
+         → 현대 배경, 셰프 성장/식당 경영 시스템, 요리/미식
+
+      7. 대체역사 (Alt History)
+         → 조선 시대 배경, 관직/당파/신분 시스템, 궁중 정치
+
+      8. 배우물 (Actor Fiction)
+         → 현대 배경, 연예계/배우 성장 시스템, 오디션/촬영/시상식
+
+      9. 스포츠 (Sports Fiction)
+         → 현대 배경, 선수 성장/팀 스포츠 시스템, 경기/훈련
+
+      10. 의학 (Medical Fiction)
+         → 현대 배경, 의사 성장/병원 시스템, 수술/진료
+
+✏️ Choice (1.무협 / 2.헌터 / 3.투자 / 4.판타지 / 5.작곡가 / 6.요리 / 7.대체역사 / 8.배우물 / 
+9.스포츠 / 10.의학): 3
+   ✅ [투자 (Investment Fiction)] 전문 공정이 선택되었습니다.
+      📌 HUD 시스템: INVESTMENT
+      📦 프리셋 초기화: investment
+
+[Enter] 프로젝트 선택으로 이동
+    1. 00_00
+    2. 00_____
+    3. 0_0
+    4. 0_0_tmp_backup
+    5. 0_1
+    6. 0_1_arc4_fix_validation
+    7. 0_1_stage2_forward_consistency_canary
+    8. 0_1_stage3_ep5_canary
+    9. 0_1_stage4_ep4_canary
+    10. 0_1_stage4_ep4_canary_r2
+    11. 0_2
+    12. __000403
+    13. _unknown_project
+    14. canary_0_0_stage34_arc1_flashbackfix_r1
+    15. canary_0_0_stage34_arc2_ctxnorm_r1
+    16. canary_0_0_stage34_arc2_entitypost_r1
+    17. canary_0_0_stage34_arc2_ep2loop_r2
+    18. canary_0_0_stage34_arc2_fixpack_r1
+    19. canary_0_0_stage34_arc2_tier25_r1
+    20. canary_0_0_stage34_arc2_tier25_r2
+    21. canary_0_0_stage34_ep2_demo_r1
+    22. canary_0_0_stage34_ep2_demo_r2
+    23. canary_0_0_stage34_ep2_focus_r1
+    24. canary_0_0_stage34_ep2_focus_r2
+    25. canary_0_0_stage34_ep2_focus_r3
+    26. canary_0_0_stage34_ep2_focus_r4
+    27. canary_0_0_stage34_ep2_focus_r5
+    28. canary_0_0_stage3_arc2_readiness_r3
+    29. canary_0_0_stage3_arc2_semantic_r4
+    30. canary_0_0_stage3_arc2_semantic_r5
+    31. canary_0_0_stage3_ep9_readiness
+    32. canary_0_0_stage3_ep9_readiness_r2
+    33. canary_0_0_stage4_ep2_numauth_r1
+    34. canary_0_0_stage4_ep2_tier25
+    35. canary_0_1_stage34_ep14_cw_hierarchy
+    36. canary___000403_stage4_ep3_numauth_r1
+    37. canary___000403_stage4_ep3_numauth_r2
+    38. test_project
+    39. 기록용
+
+👉 Choice: 12
+      ✅ [TF7-P0-03] preset_registry DB에서 복원 완료
+      ✅ [투자 (Investment Fiction)] HUD 시스템 초기화 완료
+      🔍 [V61.3] HUD 호환성 체크: FinanceHUDManager
+         ✅ 필수 속성 모두 존재
+         ⚠️ 선택적 속성 누락 (정상): inventory (property), techniques (property), snapshot     
+(method), bulk_update (method)
+   🛡️ [투자 (Investment Fiction)] Guard 시스템 초기화 완료
+   ✅ [System] Vector DB integrity check complete.
+   ✅ [VecMemory] sqlite-vec 벡터 엔진 초기화 완료
+[V61.3] Faulthandler 활성화 → crash_dump.log
+      🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + ConstraintCompiler)  
+      🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight + Critic + 
+Consensus)
+      🔧 [V60.42] Arc Corrector 초기화 (MAJOR 이슈 부분 수정: 활성화)
+      ⚡ [V60.25] Stage 2 Optimizer 활성화 (StateSnapshot + AutoCorrector + 
+ConstraintAmplifier)
+      🎭 Director 장르 설정: investment
+      🎨 StyleGuard 래핑 완료 (문체 기반 검증 활성)
+      🛡️ Director Guard 연결 완료
+      ✍️ Writer Guard/Genre 연결 완료
+      ✅ V0128 검증 시스템 활성화
+      🔩 [V49.7] 트래커 초기화 완료: 복선 0개 관계 0개 파워 0개
+      📚 [V51.4] 실패 기록 8건 로드(DB)
+      📊 [V66] SemanticPlotGuard 초기화 완료 (임베딩 모드)
+      💓 [V60.26] 감정선 추적기 활성화
+      ⚡ [V60.26] 파워 스케일링 추적기 활성화
+      📊 [V60.26] 상태 변화 추적기 활성화
+      📦 [V60.26] 의미적 아이템 레지스트리 활성화
+      🎭 [V60.26] 캐릭터 음성 프로파일러 활성화
+      🔄 [V52.1] Self-Reflection Chain 활성화
+      🎯 [V52.3] Expert Mixture 활성화 (investment)
+      🔗 [V52.4] Cross-Agent Verifier 활성화
+      ⚖️ [V53.1] Dynamic Prompt Weighter 활성화
+      🔍 [V53.2] Chain-of-Verification 활성화
+      📊 [V53.3] Confidence Calibrator 활성화
+      ✅ [V53.4] Pre-Director Checklist 활성화
+      🌳 [V53.5] Tree of Thoughts 활성화 (Gemini 3)
+      ⚔️ [V53.6] Adversarial Self-Play 활성화
+      🗣️ [V53.7] Multi-Agent Deliberation 활성화
+      🔄 [V54.3] Adaptive Retry Manager 활성화 (FailureLearner 연동)
+      📜 [V55.2] Constitutional Checker 활성화
+      📝 [V55.3] Writer Template 활성화
+      📊 [V55.3] Pass Rate Monitor 활성화
+      📊 [V60] Quality Dashboard 활성화
+      🧭 [SC] Context Advisor 활성화
+      📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: investment)
+   ✅ [System] 모든 에이전트 안전하게 초기화 완료
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                 🎹 V40 SOVEREIGN PRODUCTION                                 ┃
+┃                    Genre: 투자 (Investment Fiction) | Project: __000403                     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+👇 Select Command:
+   0. Stage 0: Bible/역설계/스타일 추출 [✅]
+   1. Stage 1: Volume Strategy (선택) [⏭️ 스킵가능]
+   2. Stage 2: Arc Tactical Design (유동) [✅]
+   3. 📐 Stage 3: Episode Blueprinting (Batch Design)
+   4. 🚀 Stage 4: Sovereign Production (Writing)
+   5. Exit
+   6. 🔄 One-Stop: Arc-by-Arc 자동 파이프라인
+   7. 🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)
+   44. ⏪ [ROLLBACK] Stage 4 회차별 롤백 (Episode Rewind)
+   77. 🔥 [WIPE] 원고 생산 기록만 삭제 (Stage 4 초기화)
+   88. 🔥 [RESET] Stage 2 (Arcs) 초기화
+   99. ⏪ Stage 2 정밀 되감기 (Selective Rewind)
+
+   👉 Choice: 7
+   ──────────────────────────────────────────────────
+   📥 [Resume] 프로젝트: __000403
+      Arc 설계: 1개 완료
+      Blueprint: ep 3까지 완료
+      원고: ep 2까지 완료
+      예상 총 에피소드: 4
+   ──────────────────────────────────────────────────
+   
+════════════════════════════════════════════════════════════
+   🧭 [FrontierLag] One-Stop Frontier Lag
+      설계 frontier: 1 / 60 (추가 설계 가능: 59개)
+      현재 정렬: S3→3 (aligned) / S4→2 (aligned)
+      현재 증거: bp_max=3 / ms_max=2
+   ════════════════════════════════════════════════════════════
+
+👉 이번 실행에서 몇 개 Arc를 처리할까요? (1~59, 기본: 3): 2
+      🎯 [FrontierLag] 이번 실행 목표 Arc 수: 2
+      [FrontierLag] auto-selected default batch_size: 3 (remaining_design=59)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   🧭 [FrontierLag] Arc 2/60 frontier 전진 (1/2)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   📐 [Stage 2] Arc 2 설계 중...
+   🔞 [Stage 2] 0124 매니페스트 정합 엔진 및 멀티 공정 기동...
+   ⚠️ [Notice] Volume 전략이 없습니다. 기본값으로 Arc 단계를 진행합니다.
+   📝 [V42] 주인공 이름 락: 한시우
+   📤 현재 단계 완료: 1 / 60 아크
+   🔕 Tip: 결과를 직접 보기 위해 1~10개(권장 2개 내외) 진행을 권장합니다.
+   📝 [V49.4] ConstraintDB 초기화 완료 (기존 Arc: 1개)
+ ⠋ Batch 2~2 batch enrich  0s   [Batch] 2~2 range enrich start
+ ⠸ Batch 2~2 batch enrich  44s         [V60.10] StateExtractor: 1 arcs extracted
+         [Enrich] Block 2 task start
+ ⠹ Batch 2~2 LLM enrich in progress (0/1)...  1m 43s         [Enrich] Block 2 task done (1/1)
+         [Enrich Phase] Batch 2~2 completed: 59.0s (1 items)
+ ⠋ Arc 순차 설계 (총 1개)  0s         ⏳ [Preflight] 병렬 분석 시작 (arc_drive + preflight + constraint)...
+ ⠧ Arc 1/1 설계 중...  34s         ✅ [Preflight] arc_drive 완료
+ ⠋ Arc 1/1 설계 중...  48s         ✅ [Preflight] preflight 완료
+         ✅ [Preflight] constraint 완료
+         🔒 [V49.4] Arc 2 제약 조건 주입됨
+         ⏳ [StateExtractor] 누적 상태 추출 중...
+         ✅ [StateExtractor] 누적 상태 추출 완료
+         📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료
+         ⏳ [Stage 2] Arc 2 attempt 1/10: preflight/four-phase tactical generation 대기...     
+      🧠 [Arc 2] 전술 설계 중 (시도 1/10)...
+         ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료
+         🎯 [V60.77] FourPhase-Director 대면 1/5
+ ⠋ Arc 1/1 설계 중...  48s         🔎 [TF-38] 벡터 검색 완료 (66자)
+ ⠸ Arc 1/1 설계 중...  7m 2s
+ ⠹ Arc 2 · Arc 생성  6m 13s         ✅ [TF-38] Arc 생성 완료
+         🔎 [Stage 2] Arc 2 attempt 1: generation=four_phase · validation 진입
+ ⠇ Arc 1/1 설계 중...  7m 17s         ✅ [TF-38] Pre-Director 검증 완료 → Director 심사 대기
+         🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...
+ ⠴ Arc 1/1 설계 중...  8m 45s   
+      🎬 [Director] PASS (score=100)
+            모든 검수 항목을 통과함. Arc 1과의 상태 연속성, Arc 2 내부의 인과 관계, 수치 
+계산(레버리지 수익률), 인물 심리 변화, 사건 전개
+             속도 등 모든 면에서 논리적 무결성을 유지하고 있음. 특히, 각 회차별 사건 분절이    
+명확하고 인과적 전진이 뚜렷하여 서사적 완성도가 높음.
+         🔄 [V49.6] physical_inventory deterministic carryover 적용: ["책상 위에 놓인 삼성의   
+최신 폴더폰(SCH-V840), 방금 팩스로 수신한 'SW Investment'의 싱가포르 법인 등기부등본 사본,     
+그리고 20억 원의 잔고가 찍힌 은행 입출금 내역서.", '최신 폴더폰(SCH-V840)']
+         🔧 [Equipment Sync] Arc 2 시작 소지품 → 이전 Arc 종료 소지품으로 동기화 (4개 아이템)  
+         [V49.4] ConstraintDB 업데이트 완료 (총 2개 Arc)
+ ⠴ Arc 1/1 설계 중...  9m 34s         ✨ [V60.25] Arc 2 최종 성공 - 실패 메모리 클리어
+   ✅ 배치(2~2) 욕망 엔진 이식 및 용접 완료.                                                   
+   ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
+      ✅ [Stage 2] Arc 2 완료 (ep 5~8)
+      🧭 [FrontierLag] true_final=60, frontier=2, ep=5~8, S3→7 (backlog), S4→6 (backlog)
+      📌 [FrontierLag] bp_max=3 / ms_max=2
+
+   📐 [Stage 3] Blueprint frontier 동기화 (target <= ep 7)...
+         🌍 [V68] WorldStateManager 로드 완료 (제2화 기준)
+         📋 [V68] 팩트 원장 로드 완료 (제2화 기준, 인물 6명, 아이템 4개)
+   📂 [Detected] Blueprint 3화, 원고 2화까지 발견
+   📊 [V60.80] 현재 총 8화까지 설계가 가능합니다.
+
+════════════════════════════════════════════════════════════
+   🎯 [V60.80] Three Phase Blueprint Generator 시작
+      범위: 제4화 ~ 제7화 (4개)
+   ════════════════════════════════════════════════════════════
+
+         ⏳ Entity Registry 추출 중... (Arc 0, 첫 호출)
+         📋 [V61] Entity Registry 추출: 47개 엔티티
+
+   📐 제4화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
+ ⠋ 제4화  0s         ⏳ 제4화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제4화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=2, window=3, 
+semantic_ctx=3824자)
+ ⠸ 제4화 · Blueprint 생성  29m 40s         📊 제4화 Blueprint 결과: FAILED (score=95)
+         └─ 선택 전략: dialogue_focused
+         └─ Director 판정: Director validation error - retry required
+      ❌ 제4화 Blueprint 생성 실패                                                             
+         └─ REJECT 사유: score=95 | strategy=dialogue_focused | validate_verdict=REJECT | 
+issues=2
+         판정 근거: category=validation_issue | strategy=dialogue_focused | 
+observability=semantic_ctx_chars,semantic_ctx_sources,semantic_ctx_source_counts,advisor_path_u
+sed,planned_slots_count,provenance_ledger,budget_ledger
+
+════════════════════════════════════════════════════════════
+   📊 [V60.80] Stage 3 완료 통계
+      성공: 0개 | 실패: 1개
+      통과율: 33.3%
+   ════════════════════════════════════════════════════════════
+
+      ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: 1)
+   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2):
