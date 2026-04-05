@@ -169,6 +169,53 @@ class TestContradictionTypesInReturn:
 
         assert result["contradiction_types"] == ["numeric_carryover_authority"]
 
+    def test_numeric_carryover_authority_synthesizes_structured_repair_contract(self):
+        director = _FakeDirector()
+        director._response = _make_ensemble_response(
+            contradictions=[
+                {
+                    "type": "수치",
+                    "severity": "CRITICAL",
+                    "current_violation": "ep2 blueprint capital 200억 vs resumed FactLedger EP1 total_assets 10000000 carryover mismatch",
+                    "expected_truth": "carryover authority must respect resumed FactLedger until explicit override contract exists",
+                }
+            ],
+            verdict="PASS",
+            score=96,
+        )
+        selector = DirectorEnsembleSelector(director)
+
+        result = selector.select_and_judge_ensemble(
+            ep_num=10,
+            candidates=_make_candidates(),
+            validation_results=[{"warnings": []}] * 3,
+            blueprint={"integrated_scenario": "시나리오"},
+            previous_ending="이전 엔딩",
+        )
+
+        assert result["verdict"] == "REJECT"
+        assert result["fix_scope"] == "partial"
+        assert result["authoritative_fix_scope"] == "partial"
+        assert "carryover baseline as the canonical numeric source" in result["fix_scope_reasoning"]
+        assert result["fix_pack"]["subtype"] == "numeric_carryover_authority"
+        assert result["fix_pack"]["target_kind"] == "local_sentence"
+        assert result["fix_pack"]["provenance"] == "runtime_synthesized"
+        assert result["repair_contract"] == {
+            "subtype": "numeric_carryover_authority",
+            "fix_scope": "partial",
+            "repair_scope": "partial",
+            "authoritative_fix_scope": "partial",
+            "provenance": "runtime_synthesized",
+            "provenance_sources": ["director_firewall.numeric_carryover_authority"],
+            "target_kind": "local_sentence",
+        }
+        assert result["scope_authority"] == {
+            "fix_scope": "partial",
+            "repair_scope": "partial",
+            "authoritative_fix_scope": "partial",
+            "widened": False,
+        }
+
 
 class TestContradictionTypesInPreviousAttempt:
     """REJECT 시 previous_attempt에 error_category + contradiction_types 저장 검증."""

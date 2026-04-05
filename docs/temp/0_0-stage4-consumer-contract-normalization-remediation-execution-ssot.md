@@ -302,6 +302,13 @@ Runtime closure update (2026-04-03, `r2` sinkproof canary):
 - the later analyzer/readback backfill clears `gate_repair_metadata_missing`, and patch-trace non-exercise no longer counts as a closure-blocking hard-gate warning
 - this demotes both the flashback and NpcDrift child seams from immediate live blockers to residual/substrate lanes under the aggregate consumer wave
 
+Realization update (2026-04-05):
+
+- `director_ensemble.py` now promotes `numeric_carryover_authority` firewall hits into a structured Stage4 contract instead of leaving them as typed contradiction text only
+- the Director return payload now synthesizes `fix_pack`, `repair_contract`, and `scope_authority` with `target_kind=local_sentence`, `authoritative_fix_scope=partial`, and `provenance=runtime_synthesized` when carryover-baseline/current-asset authority splits are detected
+- this keeps the active numeric owner-boundary seam in the existing Stage4 consumer lane while also feeding the already-landed reject/retry/session sink wiring with a richer contract shape
+- targeted verification: `pytest tests/test_a4_failure_pattern.py -q`, `pytest tests/test_v75c_contradiction_firewall.py -q`, `pytest tests/test_stage4_interview_round.py -k "authoritative_fix_scope_metadata or numeric_carryover_operator_notes or stage4_db_attempt_payload" -q`, `ruff check`, `python -m py_compile`
+
 ## 9. Acceptance Criteria
 
 - Stage4 bounded contradiction types preserve enough subtype detail to support local repair where appropriate

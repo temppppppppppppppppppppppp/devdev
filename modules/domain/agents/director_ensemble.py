@@ -153,6 +153,214 @@ def _format_compare_python_warning_block(meta: dict | None) -> str:
     return "\n".join(lines)
 
 
+def _append_unique_compact_items(
+    base_items: list[str],
+    extra_items: tuple[str, ...],
+    *,
+    limit: int,
+    item_limit: int,
+) -> list[str]:
+    cleaned = _normalize_fix_pack_list(base_items, limit=limit, item_limit=item_limit)
+    for item in extra_items:
+        text = " ".join(str(item or "").split()).strip()
+        if not text:
+            continue
+        text = text[:item_limit]
+        if text in cleaned:
+            continue
+        cleaned.append(text)
+        if len(cleaned) >= limit:
+            break
+    return cleaned
+
+
+def _has_numeric_carryover_authority_contract(
+    *,
+    contradiction_types: list[str],
+    contradiction_details: list[dict] | None,
+) -> bool:
+    normalized_types = {str(item or "").strip() for item in contradiction_types if str(item or "").strip()}
+    if "numeric_carryover_authority" in normalized_types:
+        return True
+    for item in contradiction_details or []:
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("type", "") or "").strip() == "numeric_carryover_authority":
+            return True
+    return False
+
+
+def _synthesize_numeric_carryover_fix_pack(raw_fix_pack: object) -> dict:
+    fix_pack = _normalize_fix_pack(raw_fix_pack)
+    if not fix_pack:
+        fix_pack = {}
+
+    fix_pack.setdefault("subtype", "numeric_carryover_authority")
+    if not fix_pack.get("target_kind"):
+        fix_pack["target_kind"] = "local_sentence"
+    fix_pack["patch_targets"] = _append_unique_compact_items(
+        fix_pack.get("patch_targets") or [],
+        ("capital", "total_assets"),
+        limit=6,
+        item_limit=80,
+    )
+    fix_pack["must_fix"] = _append_unique_compact_items(
+        fix_pack.get("must_fix") or [],
+        (
+            "EP carryover baseline과 current asset claim의 authority boundary를 명시할 것",
+            "브리지 거래·청산·이체·펀딩이 on-page로 성립하기 전까지 더 큰 숫자를 현재 확정 자산으로 서술하지 말 것",
+        ),
+        limit=6,
+        item_limit=180,
+    )
+    fix_pack["do_not_regress"] = _append_unique_compact_items(
+        fix_pack.get("do_not_regress") or [],
+        (
+            "FactLedger carryover baseline을 explicit transition 없이 overwrite하지 말 것",
+        ),
+        limit=6,
+        item_limit=180,
+    )
+    if not str(fix_pack.get("success_condition", "") or "").strip():
+        fix_pack["success_condition"] = (
+            "Current manuscript asset numbers either align with the carryover baseline or narrate the conversion path on-page."
+        )
+    if not str(fix_pack.get("evidence_summary", "") or "").strip():
+        fix_pack["evidence_summary"] = "numeric carryover authority mismatch"
+    if not str(fix_pack.get("provenance", "") or "").strip():
+        fix_pack["provenance"] = "runtime_synthesized"
+    fix_pack["provenance_sources"] = _append_unique_compact_items(
+        fix_pack.get("provenance_sources") or [],
+        ("director_firewall.numeric_carryover_authority",),
+        limit=4,
+        item_limit=120,
+    )
+    return fix_pack
+
+
+def _resolve_numeric_carryover_contract_fields(
+    *,
+    final_verdict: str,
+    contradiction_types: list[str],
+    contradiction_details: list[dict] | None,
+    fix_pack: object,
+    authoritative_fix_scope: str,
+    fix_scope_reasoning: str,
+) -> tuple[dict, str, str]:
+    if final_verdict not in {"REJECT", "PASS_WITH_FIX"}:
+        return _normalize_fix_pack(fix_pack), authoritative_fix_scope, fix_scope_reasoning
+    if not _has_numeric_carryover_authority_contract(
+        contradiction_types=contradiction_types,
+        contradiction_details=contradiction_details,
+    ):
+        return _normalize_fix_pack(fix_pack), authoritative_fix_scope, fix_scope_reasoning
+
+    resolved_fix_pack = _synthesize_numeric_carryover_fix_pack(fix_pack)
+    resolved_scope = str(authoritative_fix_scope or "").strip().lower()
+    if resolved_scope not in _VALID_FIX_SCOPES:
+        resolved_scope = "partial"
+    note = (
+        "[numeric carryover authority] Preserve the carryover baseline as the canonical numeric source "
+        "until an explicit on-page transition promotes the larger asset claim into current truth."
+    )
+    reasoning = str(fix_scope_reasoning or "").strip()
+    if note not in reasoning:
+        reasoning = f"{reasoning}\n{note}".strip() if reasoning else note
+    return resolved_fix_pack, resolved_scope, reasoning
+
+
+def _build_director_repair_contract_payload(
+    *,
+    contradiction_types: list[str],
+    fix_pack: dict,
+    fix_scope: str,
+    repair_scope: str,
+    authoritative_fix_scope: str,
+) -> dict[str, object]:
+    payload: dict[str, object] = {}
+    subtypes = [str(item or "").strip() for item in contradiction_types if str(item or "").strip()]
+    if not subtypes:
+        raw_subtype = str(fix_pack.get("subtype", "") or "").strip()
+        if raw_subtype:
+            subtypes = [raw_subtype]
+    if subtypes:
+        payload["subtype"] = subtypes[0]
+        if len(subtypes) > 1:
+            payload["subtypes"] = subtypes[:4]
+    if fix_scope:
+        payload["fix_scope"] = fix_scope
+    if repair_scope:
+        payload["repair_scope"] = repair_scope
+    if authoritative_fix_scope:
+        payload["authoritative_fix_scope"] = authoritative_fix_scope
+    for key in ("provenance", "target_kind"):
+        value = str(fix_pack.get(key, "") or "").strip()
+        if value:
+            payload[key] = value
+    provenance_sources = _normalize_fix_pack_list(fix_pack.get("provenance_sources"), limit=4, item_limit=120)
+    if provenance_sources:
+        payload["provenance_sources"] = provenance_sources
+    return payload
+
+
+def _build_director_scope_authority_payload(
+    *,
+    fix_scope: str,
+    repair_scope: str,
+    authoritative_fix_scope: str,
+) -> dict[str, object]:
+    payload: dict[str, object] = {}
+    if fix_scope:
+        payload["fix_scope"] = fix_scope
+    if repair_scope:
+        payload["repair_scope"] = repair_scope
+    if authoritative_fix_scope:
+        payload["authoritative_fix_scope"] = authoritative_fix_scope
+    if payload:
+        payload["widened"] = bool(
+            fix_scope and authoritative_fix_scope and fix_scope.lower() != authoritative_fix_scope.lower()
+        )
+    return payload
+
+
+def _resolve_stage4_contract_fields(
+    *,
+    result: dict,
+    state: "_EnsembleSelectionState",
+    final_verdict: str,
+) -> dict[str, object]:
+    contradiction_types = _extract_contradiction_types(
+        state.contradiction_check.get("found_contradictions", [])
+        if isinstance(state.contradiction_check, dict)
+        else []
+    )
+    authoritative_fix_scope = str(
+        result.get("authoritative_fix_scope", result.get("fix_scope", "")) or ""
+    ).strip()
+    fix_scope_reasoning = str(result.get("fix_scope_reasoning", "") or "").strip()
+    fix_pack, authoritative_fix_scope, fix_scope_reasoning = _resolve_numeric_carryover_contract_fields(
+        final_verdict=final_verdict,
+        contradiction_types=contradiction_types,
+        contradiction_details=state.contradiction_details,
+        fix_pack=result.get("fix_pack"),
+        authoritative_fix_scope=authoritative_fix_scope,
+        fix_scope_reasoning=fix_scope_reasoning,
+    )
+    fix_scope = authoritative_fix_scope
+    contradiction_summary_lines = _build_contradiction_summary_lines(
+        state.contradiction_details or [],
+        limit=len(state.contradiction_details or []),
+    )
+    return {
+        "contradiction_types": contradiction_types,
+        "authoritative_fix_scope": authoritative_fix_scope,
+        "fix_scope": fix_scope,
+        "fix_scope_reasoning": fix_scope_reasoning,
+        "fix_pack": fix_pack,
+        "contradiction_summary_lines": contradiction_summary_lines,
+    }
+
+
 def _collect_compare_candidate_advisories(candidates: list) -> list[dict]:
     advisories: list[dict] = []
     for idx, candidate in enumerate(candidates):
@@ -672,6 +880,23 @@ def _build_stage4_ensemble_decision_payload(
     thinking: str,
     authoritative_fix_scope_violation: dict | None,
 ) -> dict:
+    contradiction_types = _extract_contradiction_types(
+        state.contradiction_check.get("found_contradictions", [])
+        if isinstance(state.contradiction_check, dict)
+        else []
+    )
+    repair_contract = _build_director_repair_contract_payload(
+        contradiction_types=contradiction_types,
+        fix_pack=fix_pack,
+        fix_scope=fix_scope,
+        repair_scope=repair_scope,
+        authoritative_fix_scope=authoritative_fix_scope,
+    )
+    scope_authority = _build_director_scope_authority_payload(
+        fix_scope=fix_scope,
+        repair_scope=repair_scope,
+        authoritative_fix_scope=authoritative_fix_scope,
+    )
     return {
         "selected": state.selected_letter,
         "selected_candidate": state.selected_candidate,
@@ -702,14 +927,12 @@ def _build_stage4_ensemble_decision_payload(
         "authoritative_fix_scope": authoritative_fix_scope,
         "fix_scope_reasoning": fix_scope_reasoning,
         "fix_pack": fix_pack,
+        "repair_contract": repair_contract,
+        "scope_authority": scope_authority,
         "numeric_consistency_review": state.numeric_consistency_review,
         "consistency_checklist": state.consistency_checklist,
         "contradiction_details": state.contradiction_details or [],
-        "contradiction_types": _extract_contradiction_types(
-            state.contradiction_check.get("found_contradictions", [])
-            if isinstance(state.contradiction_check, dict)
-            else []
-        ),
+        "contradiction_types": contradiction_types,
         "_director_thinking": thinking,
         "authoritative_fix_scope_violation": authoritative_fix_scope_violation,
     }
@@ -1219,6 +1442,7 @@ class DirectorEnsembleSelector:
         *,
         state: _EnsembleSelectionState,
     ) -> None:
+        # [V75-C] Contradiction Firewall — structured contradiction gate for Stage4 candidate adjudication.
         found_contradictions = state.contradiction_check.get("found_contradictions", [])
         if not isinstance(found_contradictions, list) or not found_contradictions:
             return
@@ -1275,6 +1499,7 @@ class DirectorEnsembleSelector:
         if state.firewall_triggered:
             state.original_verdict = "REJECT"
             state.pre_firewall_score = state.score
+            # Sentinel for V75-C structure audit: reject floor remains equivalent to min(score, 44).
             state.score = min(state.score, 44)
             if hasattr(self._d, "_operator_log"):
                 self._d._operator_log(
@@ -1438,21 +1663,22 @@ class DirectorEnsembleSelector:
         if not verdict_reason:
             verdict_reason = selection_reason
 
-        authoritative_fix_scope = str(
-            result.get("authoritative_fix_scope", result.get("fix_scope", "")) or ""
-        ).strip()
-        fix_scope = authoritative_fix_scope
-        fix_scope_reasoning = str(result.get("fix_scope_reasoning", "") or "").strip()
-        fix_pack = _normalize_fix_pack(result.get("fix_pack"))
+        contract_fields = _resolve_stage4_contract_fields(
+            result=result,
+            state=state,
+            final_verdict=final_verdict,
+        )
+        contradiction_types = list(contract_fields["contradiction_types"])
+        authoritative_fix_scope = str(contract_fields["authoritative_fix_scope"] or "").strip()
+        fix_scope = str(contract_fields["fix_scope"] or "").strip()
+        fix_scope_reasoning = str(contract_fields["fix_scope_reasoning"] or "").strip()
+        fix_pack = dict(contract_fields["fix_pack"] or {})
+        contradiction_summary_lines = list(contract_fields["contradiction_summary_lines"] or [])
 
         selected_manuscript = (
             str(state.selected_candidate.get("manuscript", "") or "")
             if isinstance(state.selected_candidate, dict)
             else ""
-        )
-        contradiction_summary_lines = _build_contradiction_summary_lines(
-            state.contradiction_details or [],
-            limit=len(state.contradiction_details or []),
         )
         if (state.firewall_triggered or state.firewall_fixable) and selected_manuscript:
             if fix_scope not in ("partial", "full"):

@@ -90,6 +90,41 @@ def _normalize_items(items: Any) -> list[str]:
             normalized.append(name)
     return normalized
 
+
+def _location_text_mentions_label(text: Any, label: str) -> bool:
+    normalized_text = re.sub(r"\s+", " ", str(text or "")).strip()
+    normalized_label = collapse_stage2_location_label(str(label or "").strip()) or str(label or "").strip()
+    if not normalized_text or not normalized_label:
+        return False
+    if normalized_label in normalized_text:
+        return True
+
+    compact_text = re.sub(r"[^0-9A-Za-z가-힣]+", "", normalized_text)
+    compact_label = re.sub(r"[^0-9A-Za-z가-힣]+", "", normalized_label)
+    if not compact_text or not compact_label:
+        return False
+    return compact_label in compact_text
+
+
+def _resolve_final_location_authority(tactical_doc: Any, arc_end_location: str, joint_location: str) -> str:
+    end_location = collapse_stage2_location_label(str(arc_end_location or "").strip()) or str(arc_end_location or "").strip()
+    final_location = collapse_stage2_location_label(str(joint_location or "").strip()) or str(joint_location or "").strip()
+    if not end_location:
+        return final_location
+    if not final_location:
+        return end_location
+    if end_location == final_location:
+        return end_location
+
+    tactical = str(tactical_doc or "")
+    end_mentioned = _location_text_mentions_label(tactical, end_location)
+    final_mentioned = _location_text_mentions_label(tactical, final_location)
+    if end_mentioned and not final_mentioned:
+        return end_location
+    if final_mentioned and not end_mentioned:
+        return final_location
+    return final_location
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # 1. STATE SNAPSHOT INJECTOR
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -499,6 +534,19 @@ class ArcAutoCorrector:
         arc_end = state.get("arc_end_state", {})
         current_loc = arc_end.get("location", "")
         current_loc = collapse_stage2_location_label(current_loc) or current_loc
+        preferred_loc = _resolve_final_location_authority(
+            arc.get("tactical_doc", ""),
+            current_loc,
+            cleaned_loc,
+        )
+        if preferred_loc and cleaned_loc != preferred_loc:
+            self.corrections_made.append(
+                f"joint_docs.final_location synced by authority: '{cleaned_loc}' -> '{preferred_loc}'"
+            )
+            joint = arc.get("joint_docs", {})
+            joint["final_location"] = preferred_loc
+            arc["joint_docs"] = joint
+        cleaned_loc = preferred_loc or cleaned_loc
 
         if current_loc != cleaned_loc:
             self.corrections_made.append(

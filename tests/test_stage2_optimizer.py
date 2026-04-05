@@ -80,6 +80,34 @@ def test_sync_final_location_collapses_scene_prose_to_canonical_label():
     assert corrected["state_constraints"]["arc_end_state"]["location"] == "서울 강남, SW인베스트먼트 오피스"
 
 
+def test_sync_final_location_prefers_arc_end_state_when_tactical_doc_supports_it():
+    corrector = ArcAutoCorrector()
+    arc = {
+        "tactical_doc": "The arc closes at Yeouido IFC after the desk conversation wraps.",
+        "joint_docs": {"final_location": "Gangnam HQ"},
+        "state_constraints": {"arc_end_state": {"location": "Yeouido IFC"}},
+    }
+
+    corrected = corrector._sync_final_location(arc)
+
+    assert corrected["state_constraints"]["arc_end_state"]["location"] == "Yeouido IFC"
+    assert corrected["joint_docs"]["final_location"] == "Yeouido IFC"
+
+
+def test_sync_final_location_prefers_joint_docs_when_tactical_doc_supports_joint_location():
+    corrector = ArcAutoCorrector()
+    arc = {
+        "tactical_doc": "He leaves the office and ends the arc at Gangnam HQ before midnight.",
+        "joint_docs": {"final_location": "Gangnam HQ"},
+        "state_constraints": {"arc_end_state": {"location": "Yeouido IFC"}},
+    }
+
+    corrected = corrector._sync_final_location(arc)
+
+    assert corrected["state_constraints"]["arc_end_state"]["location"] == "Gangnam HQ"
+    assert corrected["joint_docs"]["final_location"] == "Gangnam HQ"
+
+
 def test_strip_wuxia_fields_investment():
     corrector = ArcAutoCorrector()
     arc = {
