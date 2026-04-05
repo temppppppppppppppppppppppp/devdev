@@ -1,0 +1,24 @@
+{
+  "_schema_version": "youtube_channel_ingest_status.v1",
+  "channel_slug": "syukaworld",
+  "generated_at_utc": "2026-04-05T08:48:05.482632+00:00",
+  "indexed_video_count": 2215,
+  "artifact_summary": {
+    "caption_saved_count": 30,
+    "info_only_count": 0,
+    "skipped_existing_count": 0,
+    "failed_count": 0
+  },
+  "normalized_outputs": {
+    "db_path": "material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld/syukaworld.sqlite3",
+    "query_jsonl_path": "material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld/video_lookup.jsonl",
+    "transcript_jsonl_path": "material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld/transcript_documents.jsonl",
+    "fts_enabled": true,
+    "caption_saved_count": 30
+  },
+  "artifact_results_path": "material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld/artifact_results.json",
+  "notes": [
+    "Use the SQLite corpus for exact lookup and transcript search.",
+    "If failed_count > 0, rerun the same command; existing artifacts will be resumed/skipped."
+  ]
+}

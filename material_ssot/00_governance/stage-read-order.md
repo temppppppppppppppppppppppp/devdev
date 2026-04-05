@@ -1,7 +1,7 @@
 # Stage Read Order
 
 Date: 2026-04-03
-Status: active bootstrap read order
+Status: active bounded read order
 Scope: material-side stage progression only
 
 ## 1. Default Read Order
@@ -71,4 +71,4 @@ Scope: material-side stage progression only
 - family choice is still resolved by `docs/narrative-router`
 - system-track execution remains outside this root
 - this order governs stage progression only
-- work manifests are the preferred way to connect legacy and live paths during the bootstrap phase
+- work manifests are the preferred way to connect legacy and live paths during the current bounded slice

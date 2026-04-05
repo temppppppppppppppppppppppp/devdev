@@ -4,13 +4,14 @@
 > 작성일: 2026-03-12
 > 성격: 구조 개혁용 1차 기획 문서
 > 범위: `Phase 0 -> TR -> BI` 앞단에 놓이는 공통 전처리층 정의
+> Historical Note: 이 문서는 capture-time 배경 문서이며, 아래 경로 표기는 현재 절대경로 요구가 아니라 당시 진입점 기록이다.
 
 > 상태: **초기 설계 근거 / 개혁 배경 문서**
-> 현재 진실: `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\SSOT_stage0_preprocess_integrated_order.md`
+> 현재 진실: `전처리_ssot/docs/SSOT_stage0_preprocess_integrated_order.md`
 > 하위 진실:
-> - `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\stage0_source_manifest_harness.md`
-> - `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\stage0_profile_lock_harness.md`
-> - `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\stage0_material_collection_harness.md`
+> - `전처리_ssot/docs/stage0_source_manifest_harness.md`
+> - `전처리_ssot/docs/stage0_profile_lock_harness.md`
+> - `전처리_ssot/docs/stage0_material_collection_harness.md`
 > 이 문서는 더 이상 정식 SSOT가 아니라, 왜 이런 구조 개혁이 필요했는지 설명하는 배경 문서다.
 
 ## 1. 목적

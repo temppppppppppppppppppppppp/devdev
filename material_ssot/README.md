@@ -1,7 +1,7 @@
 # material_ssot
 
 Date: 2026-04-03
-Status: bootstrap slice
+Status: active bounded SSOT
 Scope: material-side stage SSOT only
 
 `material_ssot` is the stage-axis SSOT for the material side order.
@@ -20,7 +20,7 @@ Quick start read order:
 2. `00_governance/authority-map.md`
 3. `00_governance/stage-read-order.md`
 4. `00_governance/work-coverage-matrix.md`
-5. one bootstrap work chain under `30_stage0_preprocess/work-index/`
+5. one representative work chain under `30_stage0_preprocess/work-index/`
 
 This root does not replace:
 
@@ -28,9 +28,9 @@ This root does not replace:
 - system-track governance for the Geuldobi pipeline
 - live artifact paths such as `treatments/` and `bible/`
 
-Initial rule:
+Bounded-slice rule:
 
-- bootstrap the authority map, stage read order, and work index first
+- establish the authority map, stage read order, and work index first
 - do not move existing raw research, preprocess, phase0, TR, or BI files in this wave
 - connect legacy paths by manifest and labeling first
 
@@ -46,14 +46,14 @@ Current path labels at a glance:
 
 - `material_ssot` = canonical stage root
 - `전처리_ssot` = legacy-active transition hub
-- `narrative_ssot` = scaffold
+- `narrative_ssot` = scaffold plus mirror/archive shell
 - `material_ssot/10_research/10_reference_profiles` = canonical reference profiles
 - `material_ssot/10_research/20_fewshot_bank` = canonical few-shot bank
 - `docs/실물기반 사각지대 테스트` = legacy residual research corpus
 - `로직_리서치` = deferred non-move
 - `treatments/`, `bible/` = live outputs
 
-Bootstrap work set:
+Current representative work set:
 
 - `gatekeeper_heir`
 - `office_checkup_next_day`
@@ -70,4 +70,4 @@ Current stage directories:
 - `60_bi`
 - `90_migration`
 
-This bootstrap slice is commit-ready as a documentation-only change set.
+This bounded slice is commit-ready for active material-side SSOT operation.

@@ -1,9 +1,11 @@
 # Planning Candidate / Pre-Phase0 Spec Draft
 
 Date: 2026-04-03  
-Workspace: `C:\Users\wjjo\Desktop\글도비_process`  
+Workspace At Capture: `..\\글도비_process` on the original machine  
 Branch: `ops/process-standardization`  
 Status: draft save before 3-pass audit
+
+Historical Note: this draft preserves a capture-time process-worktree context and should not be read as the current workspace authority.
 
 ## 1. Role
 

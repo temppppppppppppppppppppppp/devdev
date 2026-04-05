@@ -22,9 +22,9 @@ The correct starting structure is a split-authority model, not a single-folder m
 
 ### 2.1 Canonical Decision
 
-- `C:\Users\wjjo\Desktop\수동_글도비` is the raw-corpus harbor and scratch workbench.
-- `C:\Users\wjjo\Desktop\글도비\전처리_ssot` is the canonical home for distilled labels, contracts, roadmaps, audits, and reusable genre packs.
-- `C:\Users\wjjo\Desktop\글도비\treatments\preprocess\{work_id}\` remains the work-specific handoff zone for actual `source_manifest`, `profile_lock`, `material_bundle_summary`, and `phase0_ready_snapshot`.
+- `manual raw-corpus workspace` is the raw-corpus harbor and scratch workbench.
+- `전처리_ssot` is the canonical home for distilled labels, contracts, roadmaps, audits, and reusable genre packs.
+- `treatments\preprocess\{work_id}\` remains the work-specific handoff zone for actual `source_manifest`, `profile_lock`, `material_bundle_summary`, and `phase0_ready_snapshot`.
 
 ### 2.2 Why This Is Better Than Either Extreme
 
@@ -412,7 +412,7 @@ If one of these is missing, later `TR/BI` reuse becomes lopsided.
 
 ### 7.1 Raw and Scratch Layer
 
-Recommended structure under `C:\Users\wjjo\Desktop\수동_글도비`:
+Recommended structure under `manual raw-corpus workspace`:
 
 ```text
 수동_글도비/
@@ -442,7 +442,7 @@ Rule:
 
 ### 7.2 Canonical Distillation Layer
 
-Recommended structure under `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\`:
+Recommended structure under `전처리_ssot\docs\20_db_and_materials\`:
 
 ```text
 materials/
@@ -500,7 +500,7 @@ samples/
       benchmark/
 ```
 
-Recommended structure under `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\`:
+Recommended structure under `전처리_ssot\docs\30_ops\`:
 
 ```text
 30_ops/

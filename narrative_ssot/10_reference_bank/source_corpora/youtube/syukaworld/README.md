@@ -3,6 +3,11 @@
 Status: scaffold draft  
 Date: 2026-04-01
 
+Transition note:
+- canonical root now lives at `material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld`
+- this `narrative_ssot` path is kept only as transition residue during the bounded cutover
+- rerun or refresh the corpus from the `material_ssot` root, not from here
+
 이 폴더는 `@syukaworld` 채널을 내부 아이디어 코퍼스로 다루기 위한 자리다.
 
 목표는 `영상 감상용 북마크`가 아니라 아래 3층을 고정하는 것이다.
@@ -23,7 +28,7 @@ Date: 2026-04-01
 python -X utf8 scripts/build_youtube_channel_corpus.py ^
   --channel-url https://www.youtube.com/@syukaworld ^
   --channel-slug syukaworld ^
-  --output-root narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld
+  --output-root material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld
 ```
 
 기본 산출물:
@@ -44,7 +49,7 @@ python -X utf8 scripts/build_youtube_channel_corpus.py ^
 python -X utf8 scripts/build_youtube_channel_corpus.py ^
   --channel-url https://www.youtube.com/@syukaworld ^
   --channel-slug syukaworld ^
-  --output-root narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld ^
+  --output-root material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld ^
   --use-existing-index ^
   --artifact-batch-size 50
 ```

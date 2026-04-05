@@ -15,7 +15,7 @@
 사용자가 작품명, `work_id`, 짧은 기획안, Bible 조각만 던져도 아래 순서를 먼저 수행한다.
 
 1. `SSOT_blockguide-integrated-order.md`를 **UTF-8로 먼저 읽는다.**
-2. 그다음 `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\SSOT_stage0_preprocess_integrated_order.md`를 읽는다.
+2. 그다음 `전처리_ssot\docs\SSOT_stage0_preprocess_integrated_order.md`를 읽는다.
 3. `treatments/preprocess/{work_id}/source_manifest.json`, `profile_lock.json`, `material_bundle_summary.json`, `phase0_ready_snapshot.json` 존재 여부를 확인한다.
 4. `phase0_ready_snapshot.manual_audit_pass != true`면 이 문서를 계속 읽지 말고 `Stage 0 preprocess`로 돌아간다.
 5. 그다음 이 문서를 **UTF-8로 읽는다.**
@@ -572,7 +572,7 @@ NPC와의 관계를 **신용 잔고** 개념으로 관리한다. 도움 = 적립
 | #   | 질문                                                                      | 실패 시                   |
 | --- | ------------------------------------------------------------------------- | ------------------------- |
 | 1   | 대단원 N+1의 **평균 판돈**이 대단원 N보다 크거나, 미래 가치가 제시되는가? | 정체 = 독자 지루          |
-| 2   | 70블록 기준 후반 30블록의 stakes가 전반 30블록보다 **체감상 큰가?**       | 아니면 줄거리 무게감 부재 |
+| 2   | 70블록 기준 후반 30블록의 stakes가 전반 30블록보다 **체감상 더 큰 편인가** | 아니면 줄거리 무게감 부재 |
 | 3   | 최종 블록(65~70)의 판돈이 **지금까지 쌓아온 전부**를 걸 수준인가?         | 아니면 최종전이 허무      |
 
 ### 11.5 금지: 에스컬레이션 위반
@@ -871,7 +871,7 @@ weakness:
 - 적대축/시대/사업축이 재설계되지 않으면 다음 단계가 무의미한 경우
 - 직전 설계 단위의 수동 감리 메모가 없는 경우
 - 사용자가 특정 단계만 따로 검토하겠다고 한 경우
-- UTF-8 파싱 실패 또는 한글 오염(`???`, `�`)이 발생한 경우
+- UTF-8 파싱 실패 또는 한글 오염(`triple-question placeholder`, `replacement character`)이 발생한 경우
 
 자동 진행 종료 조건:
 

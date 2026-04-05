@@ -1,0 +1,7015 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 7780,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "마지막 주제는 세계 1위 주식시장"
+    } ]
+  }, {
+    "tStartMs": 10000,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "이 얘기를 안 할 수 없죠"
+    } ]
+  }, {
+    "tStartMs": 11230,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "세계 1위 주식시장이 어디냐"
+    } ]
+  }, {
+    "tStartMs": 12760,
+    "dDurationMs": 3160,
+    "segs": [ {
+      "utf8": "당연히 대한민국의 코스피죠"
+    } ]
+  }, {
+    "tStartMs": 15920,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "왜냐하면 연초 4200"
+    } ]
+  }, {
+    "tStartMs": 17600,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "3월 초 6347"
+    } ]
+  }, {
+    "tStartMs": 19560,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "2100포인트를 올렸죠"
+    } ]
+  }, {
+    "tStartMs": 21090,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "연초 이후 상승률 50%"
+    } ]
+  }, {
+    "tStartMs": 22480,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "압도적인 세계 1위"
+    } ]
+  }, {
+    "tStartMs": 24280,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "코스피 좋습니다"
+    } ]
+  }, {
+    "tStartMs": 25610,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "세계 1위 주식시장은"
+    } ]
+  }, {
+    "tStartMs": 26470,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "당연히 코스피고요"
+    } ]
+  }, {
+    "tStartMs": 28220,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "또 1위 하나 또 있어요"
+    } ]
+  }, {
+    "tStartMs": 29620,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "그건 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 31190,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "이틀간 떨어진 거"
+    } ]
+  }, {
+    "tStartMs": 32360,
+    "dDurationMs": 3260,
+    "segs": [ {
+      "utf8": "7.24%, 12% 합쳐서 대충 20%"
+    } ]
+  }, {
+    "tStartMs": 35620,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "하락률도 압도적인"
+    } ]
+  }, {
+    "tStartMs": 37630,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "이거 하면 안 되는구나"
+    } ]
+  }, {
+    "tStartMs": 39540,
+    "dDurationMs": 5240,
+    "segs": [ {
+      "utf8": "하락률도 있냐 하락률도"
+    } ]
+  }, {
+    "tStartMs": 44780,
+    "dDurationMs": 3220,
+    "segs": [ {
+      "utf8": "이 12% 수요일 날 빠진 날"
+    } ]
+  }, {
+    "tStartMs": 48000,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "저 2일간 빠진 게"
+    } ]
+  }, {
+    "tStartMs": 50110,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "1150%가 빠졌거든요"
+    } ]
+  }, {
+    "tStartMs": 52280,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "3월 4일 수요일 날"
+    } ]
+  }, {
+    "tStartMs": 53910,
+    "dDurationMs": 3560,
+    "segs": [ {
+      "utf8": "698포인트가 빠졌어요"
+    } ]
+  }, {
+    "tStartMs": 57470,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "무슨 지수가 12%가 빠져"
+    } ]
+  }, {
+    "tStartMs": 59220,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "아니 이게 좀"
+    } ]
+  }, {
+    "tStartMs": 61240,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "형님들 너무 화끈하신 거 아닌가"
+    } ]
+  }, {
+    "tStartMs": 62870,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "7%도 화끈했는데"
+    } ]
+  }, {
+    "tStartMs": 64300,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "12%는"
+    } ]
+  }, {
+    "tStartMs": 65330,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "와... 커뮤니티 같은데"
+    } ]
+  }, {
+    "tStartMs": 67400,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "많이 돌던 짤이죠"
+    } ]
+  }, {
+    "tStartMs": 68510,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "외신들이 넋이 나갔다"
+    } ]
+  }, {
+    "tStartMs": 70210,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "니케이 -3.6%"
+    } ]
+  }, {
+    "tStartMs": 72010,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "중국 -1% , -2%"
+    } ]
+  }, {
+    "tStartMs": 73980,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "한국은 -12%"
+    } ]
+  }, {
+    "tStartMs": 76390,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "이게 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 78090,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "한국 시장이 멜트다운하고 있어요"
+    } ]
+  }, {
+    "tStartMs": 80590,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "녹아내리고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 82610,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "한 리서치 대표가"
+    } ]
+  }, {
+    "tStartMs": 83870,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "개인 포스팅한 것도"
+    } ]
+  }, {
+    "tStartMs": 84840,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "우리나라 언론들이 많이 가지고 오셨는데"
+    } ]
+  }, {
+    "tStartMs": 86480,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "이게 내용이 이렇게 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 88210,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "한국증시는 심약한 이들에겐"
+    } ]
+  }, {
+    "tStartMs": 90320,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "부적절한 곳입니다"
+    } ]
+  }, {
+    "tStartMs": 91910,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "초보는 발을 들이면 안 되는 서버예요"
+    } ]
+  }, {
+    "tStartMs": 94300,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "한국 서버는"
+    } ]
+  }, {
+    "tStartMs": 95370,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "어지간한 초보자들은 들어오면"
+    } ]
+  }, {
+    "tStartMs": 96930,
+    "dDurationMs": 3020,
+    "segs": [ {
+      "utf8": "심장박동수가 너무 늘어나기 때문에"
+    } ]
+  }, {
+    "tStartMs": 99950,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "좀 부적절할 수 있어요"
+    } ]
+  }, {
+    "tStartMs": 101250,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "한마디로 우리는 다 고수만 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 103620,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "여러분들 한국증시 하시잖아요"
+    } ]
+  }, {
+    "tStartMs": 105070,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "우리는 다 고수입니다"
+    } ]
+  }, {
+    "tStartMs": 106480,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "초보는 오지 못한다"
+    } ]
+  }, {
+    "tStartMs": 108660,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "전 초보인데요"
+    } ]
+  }, {
+    "tStartMs": 109260,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "알고 있어요"
+    } ]
+  }, {
+    "tStartMs": 110380,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "우리는 28년째"
+    } ]
+  }, {
+    "tStartMs": 113020,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "초보를 찾는 나라죠"
+    } ]
+  }, {
+    "tStartMs": 114740,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "옛날에는 헌터 초보만"
+    } ]
+  }, {
+    "tStartMs": 116240,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "요즘에는 투혼 초보만"
+    } ]
+  }, {
+    "tStartMs": 118050,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "아직도 초보를 찾는 곳이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 120750,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "여러분들이 초보인 건 알고 있어"
+    } ]
+  }, {
+    "tStartMs": 122800,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "한국 초보는 프로게이머도 가끔 이깁니다"
+    } ]
+  }, {
+    "tStartMs": 125570,
+    "dDurationMs": 3920,
+    "segs": [ {
+      "utf8": "여기는 은둔 고수의 나라"
+    } ]
+  }, {
+    "tStartMs": 129490,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "어줍지 않은 애들은 안 돼요"
+    } ]
+  }, {
+    "tStartMs": 131150,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "어줍지 않은 사람들 오지 마"
+    } ]
+  }, {
+    "tStartMs": 132970,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "그냥 즐기는 사람 오면 안 돼"
+    } ]
+  }, {
+    "tStartMs": 134520,
+    "dDurationMs": 3020,
+    "segs": [ {
+      "utf8": "여기는 심약한 이들은 발을 들여놓으면"
+    } ]
+  }, {
+    "tStartMs": 137540,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "안 되는 곳이라고 할 수 있고요"
+    } ]
+  }, {
+    "tStartMs": 139180,
+    "dDurationMs": 3710,
+    "segs": [ {
+      "utf8": "온갖 걸로 희롱을 당할 수 있는 서버입니다"
+    } ]
+  }, {
+    "tStartMs": 142890,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "무슨 뭐 파일런으로 이름 써놓고 막 그래"
+    } ]
+  }, {
+    "tStartMs": 144930,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "애들이 그냥 이기지 않고"
+    } ]
+  }, {
+    "tStartMs": 146850,
+    "dDurationMs": 3280,
+    "segs": [ {
+      "utf8": "별별 험한 꼴을 볼 수 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 150130,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "조심해야 되는 서버라고 할 수 있고"
+    } ]
+  }, {
+    "tStartMs": 151650,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "한국 서버를 좀 보면"
+    } ]
+  }, {
+    "tStartMs": 153400,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "저 아까 이스라엘 대표가 쓴 글이에요"
+    } ]
+  }, {
+    "tStartMs": 155810,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "한국 시장은 개인 투자자 중심이다"
+    } ]
+  }, {
+    "tStartMs": 158610,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "거래량의 최대 70%가"
+    } ]
+  }, {
+    "tStartMs": 160230,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "개인 투자자에 의해 이루어진다"
+    } ]
+  }, {
+    "tStartMs": 162480,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "미국과는 달라"
+    } ]
+  }, {
+    "tStartMs": 163610,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "미국은 개인 투자자의 비중이"
+    } ]
+  }, {
+    "tStartMs": 165190,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "20%에 불과해"
+    } ]
+  }, {
+    "tStartMs": 166610,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "기관들끼리 뭐라 하는 곳인데"
+    } ]
+  }, {
+    "tStartMs": 168350,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "한국은 안되지"
+    } ]
+  }, {
+    "tStartMs": 170050,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "한국은 기관, 프로게이머?"
+    } ]
+  }, {
+    "tStartMs": 172860,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "안돼 안돼 안돼"
+    } ]
+  }, {
+    "tStartMs": 174450,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "져"
+    } ]
+  }, {
+    "tStartMs": 176100,
+    "dDurationMs": 140,
+    "segs": [ {
+      "utf8": "져"
+    } ]
+  }, {
+    "tStartMs": 176240,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "이기긴 하는데"
+    } ]
+  }, {
+    "tStartMs": 177590,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "질 수 있어 질 수 있어"
+    } ]
+  }, {
+    "tStartMs": 178940,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "기관이고 프로게이머고 나발이고"
+    } ]
+  }, {
+    "tStartMs": 181390,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "와봐야 투혼 초보에게 져"
+    } ]
+  }, {
+    "tStartMs": 183710,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "놀랍죠?"
+    } ]
+  }, {
+    "tStartMs": 185090,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "저는 이 게임을 한 지"
+    } ]
+  }, {
+    "tStartMs": 186080,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "두 달밖에 안 됐어요 하는 애가"
+    } ]
+  }, {
+    "tStartMs": 187890,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "APM이 400이 나오는 서버예요"
+    } ]
+  }, {
+    "tStartMs": 189560,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "자, 그렇기 때문에"
+    } ]
+  }, {
+    "tStartMs": 190850,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "함부로 하면 안 돼요"
+    } ]
+  }, {
+    "tStartMs": 192230,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "초보를 빙자한 괴물을 들일 수 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 194620,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "함부로 하면 안 되고"
+    } ]
+  }, {
+    "tStartMs": 195900,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "그리고 한국에서 주로 거래량을 일으킨다는"
+    } ]
+  }, {
+    "tStartMs": 198710,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "70%의 개인 투자자들의 성향은"
+    } ]
+  }, {
+    "tStartMs": 201170,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "제가 보기엔 거의"
+    } ]
+  }, {
+    "tStartMs": 202230,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "미친나라입니다 미친나라"
+    } ]
+  }, {
+    "tStartMs": 203550,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "왜냐면"
+    } ]
+  }, {
+    "tStartMs": 204570,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "이게 아주 유명한 건데"
+    } ]
+  }, {
+    "tStartMs": 205950,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "수년간 한국은 계약 거래량 기준으로"
+    } ]
+  }, {
+    "tStartMs": 208190,
+    "dDurationMs": 3380,
+    "segs": [ {
+      "utf8": "미국보다 큰 세계 최대의 옵션 시장이었어요"
+    } ]
+  }, {
+    "tStartMs": 211570,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "주식 옵션"
+    } ]
+  }, {
+    "tStartMs": 212470,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "옵션을 미국보다 더 많이 하는 나라예요"
+    } ]
+  }, {
+    "tStartMs": 214110,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "물론 저 리서치 대표가 한 말은"
+    } ]
+  }, {
+    "tStartMs": 216720,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "약간 한국 시장을 몰라서 그래요"
+    } ]
+  }, {
+    "tStartMs": 218180,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "이거는 몇몇 기관들이"
+    } ]
+  }, {
+    "tStartMs": 220030,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "옛날에 한 10년 전에"
+    } ]
+  }, {
+    "tStartMs": 221470,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "거래량을 엄청 돌리던 때가 있었어요"
+    } ]
+  }, {
+    "tStartMs": 223530,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "혼자서 몇 조 이상을 하던"
+    } ]
+  }, {
+    "tStartMs": 225380,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "그런 사람들이 있었기 때문에"
+    } ]
+  }, {
+    "tStartMs": 226930,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "이런 일이 있었긴 하지만"
+    } ]
+  }, {
+    "tStartMs": 228420,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "그래서 실제로 미국보다 크지 않습니다"
+    } ]
+  }, {
+    "tStartMs": 229920,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "크지 않지만"
+    } ]
+  }, {
+    "tStartMs": 231370,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "그럼에도 불구하고"
+    } ]
+  }, {
+    "tStartMs": 232690,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "옵션 선물을 많이 하는"
+    } ]
+  }, {
+    "tStartMs": 234100,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "성향이 미쳤다고 할 수 있고요"
+    } ]
+  }, {
+    "tStartMs": 235510,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "제가 가장 인상 깊었던 말이 있는데"
+    } ]
+  }, {
+    "tStartMs": 237850,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "이 아저씨가 했던 말 중에"
+    } ]
+  }, {
+    "tStartMs": 239220,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "한국 시장은 랠리가 없어요"
+    } ]
+  }, {
+    "tStartMs": 242030,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "그럼 뭘 합니까?"
+    } ]
+  }, {
+    "tStartMs": 243340,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "더블이 있어요"
+    } ]
+  }, {
+    "tStartMs": 244640,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "랠리하지 않아 한국 시장은"
+    } ]
+  }, {
+    "tStartMs": 246100,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "두 배로 올라"
+    } ]
+  }, {
+    "tStartMs": 247030,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "한국 시장은 조정이 없어요"
+    } ]
+  }, {
+    "tStartMs": 249520,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "왜 조정이 없어요?"
+    } ]
+  }, {
+    "tStartMs": 250340,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "폭락이 있어요"
+    } ]
+  }, {
+    "tStartMs": 251520,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "야 나 이 말 듣고"
+    } ]
+  }, {
+    "tStartMs": 253990,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "They don't  rally,"
+    } ]
+  }, {
+    "tStartMs": 255620,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "they double이잖아요"
+    } ]
+  }, {
+    "tStartMs": 256940,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "이렇게 가지 않아요"
+    } ]
+  }, {
+    "tStartMs": 258150,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "한국은 오르면 2배야"
+    } ]
+  }, {
+    "tStartMs": 260320,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "오늘 바로 반영이야"
+    } ]
+  }, {
+    "tStartMs": 262070,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "조정하지 않아요"
+    } ]
+  }, {
+    "tStartMs": 263260,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "무슨 조정이야"
+    } ]
+  }, {
+    "tStartMs": 264190,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "어??? 빠질 것 같아"
+    } ]
+  }, {
+    "tStartMs": 265070,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "다 갖다 던져야죠?"
+    } ]
+  }, {
+    "tStartMs": 266320,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "-12%"
+    } ]
+  }, {
+    "tStartMs": 268140,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "어? 어? 끝났어?"
+    } ]
+  }, {
+    "tStartMs": 269320,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "플러스 12%"
+    } ]
+  }, {
+    "tStartMs": 271130,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "자 이게 한국 시장입니다"
+    } ]
+  }, {
+    "tStartMs": 273620,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "초보는 오면 안 돼"
+    } ]
+  }, {
+    "tStartMs": 275020,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "초보는 안 되지"
+    } ]
+  }, {
+    "tStartMs": 276000,
+    "dDurationMs": 3010,
+    "segs": [ {
+      "utf8": "어디에 지금 28년해도 초본데"
+    } ]
+  }, {
+    "tStartMs": 279010,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "야, 안 돼 안 돼 안 돼"
+    } ]
+  }, {
+    "tStartMs": 279720,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "초보는 오시지 마시고"
+    } ]
+  }, {
+    "tStartMs": 281240,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "한국은 랠리하지 않고 급등하고요"
+    } ]
+  }, {
+    "tStartMs": 283940,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "한국은 조정하지 않고 폭락합니다"
+    } ]
+  }, {
+    "tStartMs": 286790,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "그래서 당당히 얘기하셔도 돼요"
+    } ]
+  }, {
+    "tStartMs": 288860,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "코스피는 조정이 없습니다"
+    } ]
+  }, {
+    "tStartMs": 290560,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "우리 조정 안 해"
+    } ]
+  }, {
+    "tStartMs": 292010,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "안 빠진다는 소리야?"
+    } ]
+  }, {
+    "tStartMs": 293610,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "ㄴㄴ폭락한다고"
+    } ]
+  }, {
+    "tStartMs": 295040,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "빨리빨리 하자"
+    } ]
+  }, {
+    "tStartMs": 296180,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "조정을 천천히 하면 어떡해"
+    } ]
+  }, {
+    "tStartMs": 298020,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "다음 게임 해야 되는데"
+    } ]
+  }, {
+    "tStartMs": 299660,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "다음 게임 해야 되는데"
+    } ]
+  }, {
+    "tStartMs": 300570,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "질질질 끌면 어떡해"
+    } ]
+  }, {
+    "tStartMs": 302560,
+    "dDurationMs": 490,
+    "segs": [ {
+      "utf8": "빠른 치지"
+    } ]
+  }, {
+    "tStartMs": 303050,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "빠른 gg"
+    } ]
+  }, {
+    "tStartMs": 303840,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "빨리 치고 다음 거 하자"
+    } ]
+  }, {
+    "tStartMs": 305080,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "빨리 내려가야 다음에 오르지"
+    } ]
+  }, {
+    "tStartMs": 306980,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "지금 기다리고 있는데"
+    } ]
+  }, {
+    "tStartMs": 308250,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "빨리빨리 하지"
+    } ]
+  }, {
+    "tStartMs": 308940,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "조정하지 마"
+    } ]
+  }, {
+    "tStartMs": 309950,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "가! 10% 콜!"
+    } ]
+  }, {
+    "tStartMs": 311140,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "자 던질 사람은 던지고"
+    } ]
+  }, {
+    "tStartMs": 312460,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "다 던졌어요?"
+    } ]
+  }, {
+    "tStartMs": 313540,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "뭐 출발합니다"
+    } ]
+  }, {
+    "tStartMs": 314400,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "다음 게임 뭐 이렇게 한다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 316370,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "어... 그래요 뭐 기관들끼리 하면은"
+    } ]
+  }, {
+    "tStartMs": 318920,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "뭐 그쵸 아주 예민하게"
+    } ]
+  }, {
+    "tStartMs": 320930,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "칸칸이 쪼아가면서"
+    } ]
+  }, {
+    "tStartMs": 322230,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "한 2% 정도 빠지고"
+    } ]
+  }, {
+    "tStartMs": 324310,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "뭐 펀더멘탈 보고 뭐 보고 어?"
+    } ]
+  }, {
+    "tStartMs": 326550,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "한 2% 더 빠지고"
+    } ]
+  }, {
+    "tStartMs": 328110,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "뭐 들어가는 흐름 보고 뭐 보고"
+    } ]
+  }, {
+    "tStartMs": 330170,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "뭐 이렇게 하는데"
+    } ]
+  }, {
+    "tStartMs": 330810,
+    "dDurationMs": 3120,
+    "segs": [ {
+      "utf8": "그거 이제 프로 대 프로들 할 때나 얘기고"
+    } ]
+  }, {
+    "tStartMs": 333930,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "바둑 한 수 두고"
+    } ]
+  }, {
+    "tStartMs": 335000,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "30분 고민하는 건 프로고"
+    } ]
+  }, {
+    "tStartMs": 336820,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "야 우리는 여러분들 봐도"
+    } ]
+  }, {
+    "tStartMs": 338340,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "그 프로 있거든요"
+    } ]
+  }, {
+    "tStartMs": 339500,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "우리나라에도 모로 그런 데 있는데"
+    } ]
+  }, {
+    "tStartMs": 341090,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "한 수에 1분 이상 생각하면"
+    } ]
+  }, {
+    "tStartMs": 342690,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "상대방이 뭐라고 해요"
+    } ]
+  }, {
+    "tStartMs": 343880,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "야 빨리해라"
+    } ]
+  }, {
+    "tStartMs": 344770,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "그리고 우리는 30분, 1시간"
+    } ]
+  }, {
+    "tStartMs": 346370,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "시간 제한 이런 거 안 합니다"
+    } ]
+  }, {
+    "tStartMs": 347470,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "5분 한 판에 10분"
+    } ]
+  }, {
+    "tStartMs": 349310,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "뭐 이런 걸 두고 하기 때문에"
+    } ]
+  }, {
+    "tStartMs": 351220,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "아 빨리 빨리 빨리 빨리"
+    } ]
+  }, {
+    "tStartMs": 352420,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "야 문 설정해"
+    } ]
+  }, {
+    "tStartMs": 353210,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "포근아 졌어?"
+    } ]
+  }, {
+    "tStartMs": 354530,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "판 엎어 빨리 12%"
+    } ]
+  }, {
+    "tStartMs": 356150,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "뭐 요렇게 하는 게"
+    } ]
+  }, {
+    "tStartMs": 357700,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "이제 한국이라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 359660,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "자 그거 덕분에"
+    } ]
+  }, {
+    "tStartMs": 360880,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "멘탈이 나간 사람이 한 명 더 있는데요"
+    } ]
+  }, {
+    "tStartMs": 363140,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "그 누구라고는 안 하겠는데"
+    } ]
+  }, {
+    "tStartMs": 364670,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "음 제가 그 MWC 덕분에"
+    } ]
+  }, {
+    "tStartMs": 368010,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "스페인에 거의 당일치기로 갔다 왔습니다"
+    } ]
+  }, {
+    "tStartMs": 370280,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "이 앞에 오를 때 다 한국에 있었어요"
+    } ]
+  }, {
+    "tStartMs": 372740,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "한국에서 한 발자국도 나가지 않았습니다"
+    } ]
+  }, {
+    "tStartMs": 375420,
+    "dDurationMs": 5350,
+    "segs": [ {
+      "utf8": "딱 스페인 비행기 15시간 탄 그 날입니다"
+    } ]
+  }, {
+    "tStartMs": 380770,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "그리고 아침에 딱 켜니까"
+    } ]
+  }, {
+    "tStartMs": 382590,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "처음 본 숫자가"
+    } ]
+  }, {
+    "tStartMs": 383550,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "-10%였어요"
+    } ]
+  }, {
+    "tStartMs": 385780,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "농담 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 386960,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "그리고 한 8시간 정도"
+    } ]
+  }, {
+    "tStartMs": 388370,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "MWC 영상 찍을 걸 찍고"
+    } ]
+  }, {
+    "tStartMs": 390480,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "당일 밤에 도착해서"
+    } ]
+  }, {
+    "tStartMs": 392950,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "그 다음날 아침까지 자고"
+    } ]
+  }, {
+    "tStartMs": 394380,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "그 다음 8시간 찍고"
+    } ]
+  }, {
+    "tStartMs": 395900,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "당연히 비행기 타고 왔거든요"
+    } ]
+  }, {
+    "tStartMs": 397560,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "오후 비행기"
+    } ]
+  }, {
+    "tStartMs": 398440,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "그 비행기 타고 오면서 봤더니"
+    } ]
+  }, {
+    "tStartMs": 400770,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "-12%였어요"
+    } ]
+  }, {
+    "tStartMs": 402140,
+    "dDurationMs": 3700,
+    "segs": [ {
+      "utf8": "아니 이틀 출장 갔다 왔다고"
+    } ]
+  }, {
+    "tStartMs": 405840,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "이틀!!"
+    } ]
+  }, {
+    "tStartMs": 406660,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "이틀에 이러면 어떡해?"
+    } ]
+  }, {
+    "tStartMs": 408260,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "아니 뭐 조정을 하란 말이야"
+    } ]
+  }, {
+    "tStartMs": 409820,
+    "dDurationMs": 610,
+    "segs": [ {
+      "utf8": "조정을"
+    } ]
+  }, {
+    "tStartMs": 410430,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "왜 급락을 해"
+    } ]
+  }, {
+    "tStartMs": 411730,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "폭락을 하지 말고"
+    } ]
+  }, {
+    "tStartMs": 412510,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "조정을 해요 조정을"
+    } ]
+  }, {
+    "tStartMs": 414240,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "그리고 끝나니까"
+    } ]
+  }, {
+    "tStartMs": 414940,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "한국 돌아왔네"
+    } ]
+  }, {
+    "tStartMs": 418140,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "그리고 또 첫날 본 숫자가 이겁니다"
+    } ]
+  }, {
+    "tStartMs": 420040,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "삼전-15%"
+    } ]
+  }, {
+    "tStartMs": 421340,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "하이닉스 -15%"
+    } ]
+  }, {
+    "tStartMs": 422590,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "아 요건가?"
+    } ]
+  }, {
+    "tStartMs": 423720,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "요건가 왜 헷갈리네"
+    } ]
+  }, {
+    "tStartMs": 424900,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "7%, 6%, 10%"
+    } ]
+  }, {
+    "tStartMs": 426910,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "15%, 15%, 17%"
+    } ]
+  }, {
+    "tStartMs": 428880,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "딱 이틀을 저 2개 봤어요, 2개"
+    } ]
+  }, {
+    "tStartMs": 431520,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "그래서 이게 뭔가"
+    } ]
+  }, {
+    "tStartMs": 433380,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "뭐 시장이고 뭐고 지금 영상 찍어야 되는데"
+    } ]
+  }, {
+    "tStartMs": 435260,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "뭐 가서 막 MWC 인터뷰를 하니까"
+    } ]
+  }, {
+    "tStartMs": 437210,
+    "dDurationMs": 3470,
+    "segs": [ {
+      "utf8": "아 뭐야, 뭐 전쟁 생활 몰라 팔아"
+    } ]
+  }, {
+    "tStartMs": 440680,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "그리고 다음날 10%가 오르네?"
+    } ]
+  }, {
+    "tStartMs": 442890,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "야 이 시장 다음날"
+    } ]
+  }, {
+    "tStartMs": 445470,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "다음날 10%가 오르네?"
+    } ]
+  }, {
+    "tStartMs": 447460,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "이거 한국 온 날이야"
+    } ]
+  }, {
+    "tStartMs": 448200,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "한국 온 날"
+    } ]
+  }, {
+    "tStartMs": 449360,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "아니 잠깐만 잠깐만 저기요!"
+    } ]
+  }, {
+    "tStartMs": 452220,
+    "dDurationMs": 3020,
+    "segs": [ {
+      "utf8": "랠리를 하자고 더블을 하지 말고"
+    } ]
+  }, {
+    "tStartMs": 455240,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "아니 랠리를 해야지 랠리를"
+    } ]
+  }, {
+    "tStartMs": 457330,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "이렇게 아니 랠리를 해야지"
+    } ]
+  }, {
+    "tStartMs": 459290,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "뭐 도안이면 뭐여"
+    } ]
+  }, {
+    "tStartMs": 460420,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "이거 아니면 뭐여"
+    } ]
+  }, {
+    "tStartMs": 461970,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "그래서 28년을 이 게임을 해도"
+    } ]
+  }, {
+    "tStartMs": 464470,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "초보를 이길 수 없는 시장이다"
+    } ]
+  }, {
+    "tStartMs": 467070,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "스페인에서 일정 중에"
+    } ]
+  }, {
+    "tStartMs": 468140,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "팔고 다시 들어와서"
+    } ]
+  }, {
+    "tStartMs": 469790,
+    "dDurationMs": 3010,
+    "segs": [ {
+      "utf8": "아침에 켜보니까 +10%더라"
+    } ]
+  }, {
+    "tStartMs": 472800,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "네 하여튼 그런 시장입니다"
+    } ]
+  }, {
+    "tStartMs": 474050,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "그래서 심약한 이들이나"
+    } ]
+  }, {
+    "tStartMs": 476100,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "30년 이하 하신 분들은"
+    } ]
+  }, {
+    "tStartMs": 477900,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "이거 좀 접근하면 안 되는 시장이지 않을까"
+    } ]
+  }, {
+    "tStartMs": 479600,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "생각하기도 하고요"
+    } ]
+  }, {
+    "tStartMs": 480890,
+    "dDurationMs": 2420,
+    "segs": [ {
+      "utf8": "진짜 이번에 딱 그 말이 맞은 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 483310,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "한국 시장은 서서히 오르지 않는다"
+    } ]
+  }, {
+    "tStartMs": 485640,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "두 배로 오른다"
+    } ]
+  }, {
+    "tStartMs": 487260,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "우리는 레버리지로 오르죠"
+    } ]
+  }, {
+    "tStartMs": 488760,
+    "dDurationMs": 3180,
+    "segs": [ {
+      "utf8": "레버리지가 없으면 레버리지처럼 움직이면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 491940,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "자, 간단하죠?"
+    } ]
+  }, {
+    "tStartMs": 493250,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "2-3%"
+    } ]
+  }, {
+    "tStartMs": 494010,
+    "dDurationMs": 480,
+    "segs": [ {
+      "utf8": "너무 답답해"
+    } ]
+  }, {
+    "tStartMs": 494490,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "레버리지로 해야지"
+    } ]
+  }, {
+    "tStartMs": 495140,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "그럼 레버리지처럼"
+    } ]
+  }, {
+    "tStartMs": 496070,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "10%, 12% 오르면 돼요"
+    } ]
+  }, {
+    "tStartMs": 498000,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "자체의 레버리지를 만드는"
+    } ]
+  }, {
+    "tStartMs": 499900,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "그런 시장이라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 501730,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "그리고 이건 코스피잖아요"
+    } ]
+  }, {
+    "tStartMs": 503220,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "코스닥은"
+    } ]
+  }, {
+    "tStartMs": 505310,
+    "dDurationMs": 3610,
+    "segs": [ {
+      "utf8": "코스닥은 초보 중에서도"
+    } ]
+  }, {
+    "tStartMs": 508920,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "왕초보만 가야 되는 곳이에요"
+    } ]
+  }, {
+    "tStartMs": 510550,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "어지간한 프로게이머도 가면 안 되는 곳인데"
+    } ]
+  }, {
+    "tStartMs": 512640,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "3월 4일날 -14%인데"
+    } ]
+  }, {
+    "tStartMs": 514540,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "3월 5일날 +14%가 찍혔더라고요"
+    } ]
+  }, {
+    "tStartMs": 517500,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "지수가"
+    } ]
+  }, {
+    "tStartMs": 519160,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "지수가 x2"
+    } ]
+  }, {
+    "tStartMs": 520790,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "아니 이거는 개별 주식도"
+    } ]
+  }, {
+    "tStartMs": 522300,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "저렇게 움직이면 잡주라고 욕해요"
+    } ]
+  }, {
+    "tStartMs": 524660,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "옛날로 치면 상한가잖아"
+    } ]
+  }, {
+    "tStartMs": 525800,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "옛날 상한가가 15%야, 15%"
+    } ]
+  }, {
+    "tStartMs": 527730,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "무슨 하루에 14%가 빠지고"
+    } ]
+  }, {
+    "tStartMs": 529290,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "그 다음날 지수가 14% 올라"
+    } ]
+  }, {
+    "tStartMs": 530960,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "아니 게다가"
+    } ]
+  }, {
+    "tStartMs": 533280,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "이렇게 꼬리 만들고"
+    } ]
+  }, {
+    "tStartMs": 534150,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "이렇게 올려줘서"
+    } ]
+  }, {
+    "tStartMs": 535350,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "뭐 이렇게 시작을 하던가"
+    } ]
+  }, {
+    "tStartMs": 536190,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "이거 이거 저가로 끝내놓고"
+    } ]
+  }, {
+    "tStartMs": 538620,
+    "dDurationMs": 3240,
+    "segs": [ {
+      "utf8": "이거 손이 안 나갈 수가 없었을 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 541860,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "코스닥을 하는데"
+    } ]
+  }, {
+    "tStartMs": 542870,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "2평선 다 깨고"
+    } ]
+  }, {
+    "tStartMs": 544470,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "14%가 저가로 끝났어요"
+    } ]
+  }, {
+    "tStartMs": 545610,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "예를 들면 여러분들이 한다고 생각해봐"
+    } ]
+  }, {
+    "tStartMs": 548440,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "그리고 연초에는 막 900"
+    } ]
+  }, {
+    "tStartMs": 550630,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "몇 달 전에 800이었어"
+    } ]
+  }, {
+    "tStartMs": 551800,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "근데 아직도 거의 1000이야"
+    } ]
+  }, {
+    "tStartMs": 553440,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "이거 안 던질 수 있었을까?"
+    } ]
+  }, {
+    "tStartMs": 556440,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "야 시작을 보고 있었다면"
+    } ]
+  }, {
+    "tStartMs": 557980,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "저는 비행기에 있었지만"
+    } ]
+  }, {
+    "tStartMs": 560160,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "던지면"
+    } ]
+  }, {
+    "tStartMs": 561830,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "그 다음날 갭장을 해서 시작해서"
+    } ]
+  }, {
+    "tStartMs": 563920,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "14%로 끝나면"
+    } ]
+  }, {
+    "tStartMs": 565490,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "이거 진짜 멘탈이 붕괴될 수밖에 없는 시장이고"
+    } ]
+  }, {
+    "tStartMs": 568290,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "아래로 위로 다 깨질 수 있다"
+    } ]
+  }, {
+    "tStartMs": 570110,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "던졌더니 급등해"
+    } ]
+  }, {
+    "tStartMs": 572140,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "잡았더니 빠져"
+    } ]
+  }, {
+    "tStartMs": 573270,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "던졌더니 급등해"
+    } ]
+  }, {
+    "tStartMs": 574200,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "이거 반복할 수 있는 시장이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 576060,
+    "dDurationMs": 3260,
+    "segs": [ {
+      "utf8": "진짜로 참 대단한 시장이지 않나 생각되고"
+    } ]
+  }, {
+    "tStartMs": 579320,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "그리고 저는 드리고 싶은 말씀은 그겁니다"
+    } ]
+  }, {
+    "tStartMs": 581850,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "이 시장에서 큰 손실을 봤더라도"
+    } ]
+  }, {
+    "tStartMs": 583710,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "여러분의 탓이 아니다"
+    } ]
+  }, {
+    "tStartMs": 585330,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "못해서가 아니다"
+    } ]
+  }, {
+    "tStartMs": 586660,
+    "dDurationMs": 3590,
+    "segs": [ {
+      "utf8": "이거는 물론 고수는 아래서 잡았겠죠"
+    } ]
+  }, {
+    "tStartMs": 590250,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "아래서 못 잡았다 그래서"
+    } ]
+  }, {
+    "tStartMs": 591600,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "여러분들을 내가 못했다"
+    } ]
+  }, {
+    "tStartMs": 593480,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "아니면 여기저기 던졌을 거 아니에요"
+    } ]
+  }, {
+    "tStartMs": 595160,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "내려갈 때 팔아서"
+    } ]
+  }, {
+    "tStartMs": 596610,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "내가 손해를 봤다"
+    } ]
+  }, {
+    "tStartMs": 598590,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "그런 트레이딩은 솔직히 여러분의 잘못이 아니다"
+    } ]
+  }, {
+    "tStartMs": 601930,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "그렇게 생각하는 게 낫지 않을까 생각을 합니다"
+    } ]
+  }, {
+    "tStartMs": 604290,
+    "dDurationMs": 3770,
+    "segs": [ {
+      "utf8": "요즘 지난주는 딱 이 느낌이 났어요"
+    } ]
+  }, {
+    "tStartMs": 608060,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "이게 전국민 롤러코스터인데"
+    } ]
+  }, {
+    "tStartMs": 609650,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "옛날에 우리 스타할 때"
+    } ]
+  }, {
+    "tStartMs": 610810,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "유명한 거 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 612000,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "지상렬 선생님 죄송합니다"
+    } ]
+  }, {
+    "tStartMs": 613950,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "아주 유명한 거 있었어"
+    } ]
+  }, {
+    "tStartMs": 614930,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "코스피 초보만"
+    } ]
+  }, {
+    "tStartMs": 616050,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "안타면 지상렬"
+    } ]
+  }, {
+    "tStartMs": 616800,
+    "dDurationMs": 620,
+    "segs": [ {
+      "utf8": "이런 게 있었는데"
+    } ]
+  }, {
+    "tStartMs": 617420,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "아니 이게 적당히 해야지"
+    } ]
+  }, {
+    "tStartMs": 619680,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "적당히 해야지"
+    } ]
+  }, {
+    "tStartMs": 621220,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "진짜 대단하지 않나"
+    } ]
+  }, {
+    "tStartMs": 623520,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 624250,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "그래서 혹시라도 부득이 피해를 보시거나"
+    } ]
+  }, {
+    "tStartMs": 626560,
+    "dDurationMs": 550,
+    "segs": [ {
+      "utf8": "정말 큰"
+    } ]
+  }, {
+    "tStartMs": 627110,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "이게 잠이 안 오거든요"
+    } ]
+  }, {
+    "tStartMs": 627950,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "저런 거 한번 당하면"
+    } ]
+  }, {
+    "tStartMs": 629160,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "잠이 안 오는데"
+    } ]
+  }, {
+    "tStartMs": 630300,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "여러분의 탓이 아니다"
+    } ]
+  }, {
+    "tStartMs": 631290,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "대부분 이제 그랬다"
+    } ]
+  }, {
+    "tStartMs": 632670,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "대부분 그랬고"
+    } ]
+  }, {
+    "tStartMs": 633520,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "대부분 정신이 없는 시장이었으니까"
+    } ]
+  }, {
+    "tStartMs": 636340,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "다음에 조금 더 좋은 추적 판단을"
+    } ]
+  }, {
+    "tStartMs": 637920,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "할 수 있지 않을까 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 639680,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "그리고 3월 4일"
+    } ]
+  }, {
+    "tStartMs": 641230,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "코스피의 -12.06%는"
+    } ]
+  }, {
+    "tStartMs": 643590,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "역대 하락률 1위랍니다, 1위"
+    } ]
+  }, {
+    "tStartMs": 646430,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "9.11 테러보다 많이 빠졌어요"
+    } ]
+  }, {
+    "tStartMs": 648540,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "닷컴버블보다 많이 빠졌어요"
+    } ]
+  }, {
+    "tStartMs": 650510,
+    "dDurationMs": 3850,
+    "segs": [ {
+      "utf8": "심지어 리만 파산 코로나19보다 퍼센트가 높아요"
+    } ]
+  }, {
+    "tStartMs": 654360,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "그래서 이게 개인적으로는"
+    } ]
+  }, {
+    "tStartMs": 656330,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "말이 안 된다 말이 안 된다"
+    } ]
+  }, {
+    "tStartMs": 658140,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "아니 뭐 미국 이란이"
+    } ]
+  }, {
+    "tStartMs": 660330,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "물론 유가 뭐 그게 있지만"
+    } ]
+  }, {
+    "tStartMs": 661830,
+    "dDurationMs": 3240,
+    "segs": [ {
+      "utf8": "어떻게 리만 파산이나, 닷컴버블, 코로나19보다"
+    } ]
+  }, {
+    "tStartMs": 665070,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "많이... 빠지냐"
+    } ]
+  }, {
+    "tStartMs": 666850,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "물론 이게 펀더멘탈 때문이 아니라"
+    } ]
+  }, {
+    "tStartMs": 668580,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "쏠렸죠 쏠려서"
+    } ]
+  }, {
+    "tStartMs": 670080,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "이렇게 되니까"
+    } ]
+  }, {
+    "tStartMs": 671280,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "그 많은 자금들이 놀라서 던지다 보니까"
+    } ]
+  }, {
+    "tStartMs": 674080,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "아래로 쭉 빠진 거라는 건 알겠는데"
+    } ]
+  }, {
+    "tStartMs": 677040,
+    "dDurationMs": 3180,
+    "segs": [ {
+      "utf8": "그래도 역대 하락률 1위라는 게"
+    } ]
+  }, {
+    "tStartMs": 680220,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "그래서 이성적으로 못 던진 분들도"
+    } ]
+  }, {
+    "tStartMs": 681950,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "이해를 해요"
+    } ]
+  }, {
+    "tStartMs": 683080,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "이 정도는 아닌데라고 생각하고"
+    } ]
+  }, {
+    "tStartMs": 684450,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "이성적으로 못 던진 분도"
+    } ]
+  }, {
+    "tStartMs": 686050,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "여러분의 탓이 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 687300,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "여러분의 탓이 아니에요"
+    } ]
+  }, {
+    "tStartMs": 688590,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "이성적인 분들이라 오히려 더"
+    } ]
+  }, {
+    "tStartMs": 691320,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "대응을 잘 못할 수도 있지 않나"
+    } ]
+  }, {
+    "tStartMs": 692830,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 694020,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "1위가 미국 이란 전쟁이라는 게"
+    } ]
+  }, {
+    "tStartMs": 695860,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "상식적으로 좀 이해하기 힘들죠"
+    } ]
+  }, {
+    "tStartMs": 698430,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "게다가 최근 5일 하락률을 보면"
+    } ]
+  }, {
+    "tStartMs": 700570,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "미국 이란 전쟁이라면서"
+    } ]
+  }, {
+    "tStartMs": 702680,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "나스닥은 0.73%예요"
+    } ]
+  }, {
+    "tStartMs": 705220,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "물론 금요일에 들어가서"
+    } ]
+  }, {
+    "tStartMs": 706330,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "좀 더 빠졌을 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 707990,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "별로 안 빠졌어 뭐하며?"
+    } ]
+  }, {
+    "tStartMs": 710070,
+    "dDurationMs": 3490,
+    "segs": [ {
+      "utf8": "코스피는 나홀로 반등해서 10%입니다"
+    } ]
+  }, {
+    "tStartMs": 713560,
+    "dDurationMs": 4140,
+    "segs": [ {
+      "utf8": "일본도 호르무즈 봉쇄로 타격이 크다며? 3%"
+    } ]
+  }, {
+    "tStartMs": 717700,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "당사자들은 별 변덕없고"
+    } ]
+  }, {
+    "tStartMs": 719970,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "옆에서 구경하고 있던 대한민국만"
+    } ]
+  }, {
+    "tStartMs": 722510,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "쌍코피가 터졌는데"
+    } ]
+  }, {
+    "tStartMs": 724290,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "역시 너무 많이 급등하다 보니까"
+    } ]
+  }, {
+    "tStartMs": 726620,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "역시 그랬죠"
+    } ]
+  }, {
+    "tStartMs": 727390,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "물론 뭐 여러분들도 다 아시다시피"
+    } ]
+  }, {
+    "tStartMs": 729020,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "방금 얘기 드렸지만"
+    } ]
+  }, {
+    "tStartMs": 729870,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "1년 동안 엄청난 급등이 있었고"
+    } ]
+  }, {
+    "tStartMs": 731960,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "사실 뭐 한 150% 올렸다가"
+    } ]
+  }, {
+    "tStartMs": 734070,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "한 뭐 120% 빠지는 건"
+    } ]
+  }, {
+    "tStartMs": 735480,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "요거는 건전한 조정이다"
+    } ]
+  }, {
+    "tStartMs": 737170,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "물론 건전한 조정이죠"
+    } ]
+  }, {
+    "tStartMs": 738420,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "근데 무슨 건전한 조정을"
+    } ]
+  }, {
+    "tStartMs": 740000,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "이렇게 급하게 하냐고"
+    } ]
+  }, {
+    "tStartMs": 741490,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "건전한 폭락이지"
+    } ]
+  }, {
+    "tStartMs": 742930,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "폭락이 건전할 수 있냐"
+    } ]
+  }, {
+    "tStartMs": 744820,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "그건 잘 모르겠습니다"
+    } ]
+  }, {
+    "tStartMs": 745950,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "보통 건전한 조정인데"
+    } ]
+  }, {
+    "tStartMs": 747330,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "우리는 조정을 안 하니까"
+    } ]
+  }, {
+    "tStartMs": 748650,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "건전한 폭락을 하지"
+    } ]
+  }, {
+    "tStartMs": 749920,
+    "dDurationMs": 4130,
+    "segs": [ {
+      "utf8": "아니 무슨 자꾸 건전하게 폭락을 해"
+    } ]
+  }, {
+    "tStartMs": 754050,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "네, 그런 상황이고요"
+    } ]
+  }, {
+    "tStartMs": 755330,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "그럼 이제부터 숫자를 볼 텐데"
+    } ]
+  }, {
+    "tStartMs": 757290,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "최근 6개월"
+    } ]
+  }, {
+    "tStartMs": 758210,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "주식 신용 공여의"
+    } ]
+  }, {
+    "tStartMs": 759820,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "잔고 추이를 이제 보여드리겠습니다"
+    } ]
+  }, {
+    "tStartMs": 761770,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "신용 공여는"
+    } ]
+  }, {
+    "tStartMs": 762920,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "물어보시는 분 계시더라고요"
+    } ]
+  }, {
+    "tStartMs": 764660,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "돈을 빌린다는 소리예요"
+    } ]
+  }, {
+    "tStartMs": 765950,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "주식 신용 공여하면"
+    } ]
+  }, {
+    "tStartMs": 767740,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "주식을 사기 위해서"
+    } ]
+  }, {
+    "tStartMs": 768810,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "증권사한테 돈을 빌린 걸 얘기합니다"
+    } ]
+  }, {
+    "tStartMs": 771300,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "최근에 급락했잖아요"
+    } ]
+  }, {
+    "tStartMs": 772670,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "그럼 줄일 줄 알았거든?"
+    } ]
+  }, {
+    "tStartMs": 774390,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "물론 이게 당일날 것까지 다 포함된 건지"
+    } ]
+  }, {
+    "tStartMs": 776540,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "제가 정확히 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 779310,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "제 예상과 완전히 달라서"
+    } ]
+  }, {
+    "tStartMs": 782040,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "깜짝 놀랐어요"
+    } ]
+  }, {
+    "tStartMs": 783600,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "아니 이 정도 조정이면"
+    } ]
+  }, {
+    "tStartMs": 785370,
+    "dDurationMs": 3270,
+    "segs": [ {
+      "utf8": "빌리는 게 감소해야 되는 게 아닌가?"
+    } ]
+  }, {
+    "tStartMs": 788640,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "내가 이 고수들이 노는 판에"
+    } ]
+  }, {
+    "tStartMs": 790680,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "들어가기엔 너무 하수인가?"
+    } ]
+  }, {
+    "tStartMs": 794020,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "야 이 고수들의 수익길을 따라갈 수가 없어"
+    } ]
+  }, {
+    "tStartMs": 797220,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "아니 그 정도 했으면"
+    } ]
+  }, {
+    "tStartMs": 798980,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "일단 갚고"
+    } ]
+  }, {
+    "tStartMs": 800570,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "아닌가?"
+    } ]
+  }, {
+    "tStartMs": 801290,
+    "dDurationMs": 3490,
+    "segs": [ {
+      "utf8": "내가 너무 생각이 딱딱하게 굳어있나 봐"
+    } ]
+  }, {
+    "tStartMs": 804780,
+    "dDurationMs": 3430,
+    "segs": [ {
+      "utf8": "아니 그렇게 변동성이 크면 일단 갚고"
+    } ]
+  }, {
+    "tStartMs": 808210,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "뭐 그리고 이렇게 해서"
+    } ]
+  }, {
+    "tStartMs": 809130,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "신용공여 잔고가 돈을 빌린"
+    } ]
+  }, {
+    "tStartMs": 810920,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "잔고가 줄 줄 알았어요"
+    } ]
+  }, {
+    "tStartMs": 812490,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "근데 최근 6개월 사이에"
+    } ]
+  }, {
+    "tStartMs": 815000,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "11조 5천억이 증가했다"
+    } ]
+  }, {
+    "tStartMs": 816340,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "여기서부터 얘기입니다"
+    } ]
+  }, {
+    "tStartMs": 816990,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "2025년 9월에서 3월까지"
+    } ]
+  }, {
+    "tStartMs": 819360,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "11조 5천억"
+    } ]
+  }, {
+    "tStartMs": 820240,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "따서 갚겠다는 건데"
+    } ]
+  }, {
+    "tStartMs": 821780,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "아 그러네"
+    } ]
+  }, {
+    "tStartMs": 823060,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "이렇게 변동성이 좋을 때"
+    } ]
+  }, {
+    "tStartMs": 824240,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "따서 갚아야지"
+    } ]
+  }, {
+    "tStartMs": 825790,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "하루에 10%씩 먹는데"
+    } ]
+  }, {
+    "tStartMs": 827910,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "대형주 삼성전자, SK하이닉스 사도"
+    } ]
+  }, {
+    "tStartMs": 830060,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "15%를 먹어요"
+    } ]
+  }, {
+    "tStartMs": 831510,
+    "dDurationMs": 580,
+    "segs": [ {
+      "utf8": "그러네"
+    } ]
+  }, {
+    "tStartMs": 832090,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "야, 그러면 신용공여 이거 해봐야"
+    } ]
+  }, {
+    "tStartMs": 834100,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "금리 얼마 나온다고"
+    } ]
+  }, {
+    "tStartMs": 835900,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "1년이잖아 하루면 몇 배인데"
+    } ]
+  }, {
+    "tStartMs": 837790,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "따갚대를 하겠다?"
+    } ]
+  }, {
+    "tStartMs": 840100,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "이것이 한국 시장입니다"
+    } ]
+  }, {
+    "tStartMs": 841850,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "이것이 프로의 뺨을 때리는 초보들이"
+    } ]
+  }, {
+    "tStartMs": 844220,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "득실득실한 한국 시장이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 845990,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "무시무시해요 발을 들이면"
+    } ]
+  }, {
+    "tStartMs": 847870,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "험한 꼴을 볼 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 849470,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "게다가 아까 말씀드렸죠"
+    } ]
+  }, {
+    "tStartMs": 850540,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "최근 저 한 6개월치고"
+    } ]
+  }, {
+    "tStartMs": 852110,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "최근 며칠을 봤어요"
+    } ]
+  }, {
+    "tStartMs": 853500,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "그래도 올랐다가 빠졌다가"
+    } ]
+  }, {
+    "tStartMs": 854520,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "이렇게 빠졌다가 올랐다가 하니까"
+    } ]
+  }, {
+    "tStartMs": 856550,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "이 신용공여가 줄을 줄 알았거든요"
+    } ]
+  }, {
+    "tStartMs": 859360,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "3월 3일, 3월 4일, 3월 5일입니다"
+    } ]
+  }, {
+    "tStartMs": 861230,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "물론 이제..."
+    } ]
+  }, {
+    "tStartMs": 861980,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "월요일날 나와봐야겠죠"
+    } ]
+  }, {
+    "tStartMs": 863050,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "월요일날은 뭐 이렇게"
+    } ]
+  }, {
+    "tStartMs": 864300,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "급박하게 줄 수도 있는데"
+    } ]
+  }, {
+    "tStartMs": 866060,
+    "dDurationMs": 3540,
+    "segs": [ {
+      "utf8": "현재까지는 그 급등과 하락이 있었는데"
+    } ]
+  }, {
+    "tStartMs": 869600,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "신용공여가 늘었어"
+    } ]
+  }, {
+    "tStartMs": 873330,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "물론 월요일날이 빠지겠죠"
+    } ]
+  }, {
+    "tStartMs": 874870,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "월요일날 빠지지 않을까라고"
+    } ]
+  }, {
+    "tStartMs": 875960,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "개인적으로 생각을 하는데"
+    } ]
+  }, {
+    "tStartMs": 877330,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "월요일날이 급락이 반영되면서"
+    } ]
+  }, {
+    "tStartMs": 879410,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "빠지지 않을까 생각하는데"
+    } ]
+  }, {
+    "tStartMs": 880720,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "아무리 그래도 최근에 이게 느는 게 상식..."
+    } ]
+  }, {
+    "tStartMs": 883360,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "아 죄송합니다"
+    } ]
+  }, {
+    "tStartMs": 884480,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "상식이라 그러면 안 돼"
+    } ]
+  }, {
+    "tStartMs": 885580,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "전략의 세계에서"
+    } ]
+  }, {
+    "tStartMs": 886400,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "상식이 어디 있겠어요"
+    } ]
+  }, {
+    "tStartMs": 887900,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "전략을 그 상식을 깨는 전략으로"
+    } ]
+  }, {
+    "tStartMs": 890340,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "따서 갚으면 되니까"
+    } ]
+  }, {
+    "tStartMs": 891400,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "늘었다는 건데"
+    } ]
+  }, {
+    "tStartMs": 892380,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "와..."
+    } ]
+  }, {
+    "tStartMs": 894450,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "이게 참 대단하지 않나 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 896910,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "게다가 방금 말씀드렸죠?"
+    } ]
+  }, {
+    "tStartMs": 898320,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "주식이 급락했는데"
+    } ]
+  }, {
+    "tStartMs": 899740,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "일자로 보면 하루에"
+    } ]
+  }, {
+    "tStartMs": 901390,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "여기서 5천억씩 늘은 것 같아"
+    } ]
+  }, {
+    "tStartMs": 902910,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "이게 어떻게 반영될지 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 905410,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "그런데 아니 이런"
+    } ]
+  }, {
+    "tStartMs": 907190,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "-12%, +12%,"
+    } ]
+  }, {
+    "tStartMs": 908890,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "-7%"
+    } ]
+  }, {
+    "tStartMs": 909600,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "지수가 그러고 있는데"
+    } ]
+  }, {
+    "tStartMs": 910800,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "하루에 주식 신용 공여를"
+    } ]
+  }, {
+    "tStartMs": 912800,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "5천억을"
+    } ]
+  }, {
+    "tStartMs": 914220,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "초보만"
+    } ]
+  }, {
+    "tStartMs": 916240,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "코스피 초보만"
+    } ]
+  }, {
+    "tStartMs": 917500,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "초보를 데리고 왔는데"
+    } ]
+  }, {
+    "tStartMs": 919170,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "갑자기 뮤컨, 뮤탈 컨트롤을 하기 시작하더니"
+    } ]
+  }, {
+    "tStartMs": 921900,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "럭커 하나가 가시를 뻗으니까"
+    } ]
+  }, {
+    "tStartMs": 923760,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "마린을 상기하면서"
+    } ]
+  }, {
+    "tStartMs": 924990,
+    "dDurationMs": 2910,
+    "segs": [ {
+      "utf8": "한 마리를 잡는 곳이 코스피입니다"
+    } ]
+  }, {
+    "tStartMs": 927900,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "분명히 초보만 오라 그랬는데"
+    } ]
+  }, {
+    "tStartMs": 929730,
+    "dDurationMs": 2970,
+    "segs": [ {
+      "utf8": "얘가 갑자기 스팀팩을 빨더니"
+    } ]
+  }, {
+    "tStartMs": 932700,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "럭커의 가시를"
+    } ]
+  }, {
+    "tStartMs": 933440,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "이리 피하고 저리 피하고"
+    } ]
+  }, {
+    "tStartMs": 934940,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "농락을 하면서 잡더라"
+    } ]
+  }, {
+    "tStartMs": 937590,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "드랍쉽 컨트롤을 하고"
+    } ]
+  }, {
+    "tStartMs": 938900,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "아, 그런 게 아닌가 생각이 되고요"
+    } ]
+  }, {
+    "tStartMs": 941240,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "자 그리고 제가 공여까지는 이해를 했는데"
+    } ]
+  }, {
+    "tStartMs": 944020,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "이거는 진짜"
+    } ]
+  }, {
+    "tStartMs": 945430,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "진짜 이해를 못 하겠어요"
+    } ]
+  }, {
+    "tStartMs": 946830,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "주식 미수금이"
+    } ]
+  }, {
+    "tStartMs": 948480,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "1조 정도 됐거든요"
+    } ]
+  }, {
+    "tStartMs": 949320,
+    "dDurationMs": 470,
+    "segs": [ {
+      "utf8": "평상시에"
+    } ]
+  }, {
+    "tStartMs": 949790,
+    "dDurationMs": 2420,
+    "segs": [ {
+      "utf8": "2조가 됐습니다, 2조"
+    } ]
+  }, {
+    "tStartMs": 952210,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "역대 최대예요"
+    } ]
+  }, {
+    "tStartMs": 953860,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "하락하고 2일 만에 주식 미수가"
+    } ]
+  }, {
+    "tStartMs": 956140,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "난 줄어들 줄 알았어요"
+    } ]
+  }, {
+    "tStartMs": 958290,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "아니 줄어드는 게 맞는 거 아닌가 아닌가"
+    } ]
+  }, {
+    "tStartMs": 960050,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "이게 기회예요?"
+    } ]
+  }, {
+    "tStartMs": 961720,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "그치 이게 기회지"
+    } ]
+  }, {
+    "tStartMs": 963930,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "이게 기회지"
+    } ]
+  }, {
+    "tStartMs": 965460,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "스페인 비행기에서 던지는"
+    } ]
+  }, {
+    "tStartMs": 967620,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "하수가 문제인 거지"
+    } ]
+  }, {
+    "tStartMs": 969130,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "기회라고 생각하고 들어가는"
+    } ]
+  }, {
+    "tStartMs": 970820,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "저 야수 형님들의 담대하신"
+    } ]
+  }, {
+    "tStartMs": 973920,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "와... 그쵸?"
+    } ]
+  }, {
+    "tStartMs": 975630,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "그 마인드"
+    } ]
+  }, {
+    "tStartMs": 976800,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "저 듬직한 어깨"
+    } ]
+  }, {
+    "tStartMs": 979260,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "그분들의 담대하심을 따라갈 수가 없다"
+    } ]
+  }, {
+    "tStartMs": 981510,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "여기서 어떻게 미수를 해서"
+    } ]
+  }, {
+    "tStartMs": 983360,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "그것도 1조가 늘었어, 1조가"
+    } ]
+  }, {
+    "tStartMs": 985090,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "여기서 미수를 해서 저걸"
+    } ]
+  }, {
+    "tStartMs": 987930,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "참고로 그 혹시 미수하고"
+    } ]
+  }, {
+    "tStartMs": 989530,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "신용 공여하고 차이를 모르실까 봐"
+    } ]
+  }, {
+    "tStartMs": 991170,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "제가 잠깐 설명을 드리면"
+    } ]
+  }, {
+    "tStartMs": 993000,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "주식을 사려면"
+    } ]
+  }, {
+    "tStartMs": 994190,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "주식 계좌에 미리 현금을 예치해야 됩니다"
+    } ]
+  }, {
+    "tStartMs": 996000,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "당연하죠?"
+    } ]
+  }, {
+    "tStartMs": 997490,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "우리 직원들 중에 한 분은"
+    } ]
+  }, {
+    "tStartMs": 999820,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "주식을 사는데"
+    } ]
+  }, {
+    "tStartMs": 1000530,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "꼭 현금이 있어야 돼요?"
+    } ]
+  }, {
+    "tStartMs": 1001540,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "라고 질문하더라고요"
+    } ]
+  }, {
+    "tStartMs": 1002830,
+    "dDurationMs": 510,
+    "segs": [ {
+      "utf8": "주식을 사는데"
+    } ]
+  }, {
+    "tStartMs": 1003340,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "현금이 있어야지 그럼"
+    } ]
+  }, {
+    "tStartMs": 1004710,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "현금이 없으면 뭘로 사"
+    } ]
+  }, {
+    "tStartMs": 1006300,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "이걸 예수금이라고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1007480,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "현금을 넣는 걸"
+    } ]
+  }, {
+    "tStartMs": 1008720,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "예수금, 아시죠?"
+    } ]
+  }, {
+    "tStartMs": 1009840,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "예수금을 원하는 만큼"
+    } ]
+  }, {
+    "tStartMs": 1010780,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "주식을 살 수 없을 수 있어요"
+    } ]
+  }, {
+    "tStartMs": 1011760,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "나는 천만 원밖에 없어"
+    } ]
+  }, {
+    "tStartMs": 1013170,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "근데 삼성전자를 3천만 원 사고 싶네"
+    } ]
+  }, {
+    "tStartMs": 1015150,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "살 수 있냐?"
+    } ]
+  }, {
+    "tStartMs": 1016150,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "원래는 없죠"
+    } ]
+  }, {
+    "tStartMs": 1017810,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "살 수 있어요"
+    } ]
+  }, {
+    "tStartMs": 1018770,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "그게 미수입니다"
+    } ]
+  }, {
+    "tStartMs": 1020340,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "차액 3천만 원을 사고 싶은데"
+    } ]
+  }, {
+    "tStartMs": 1022350,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "천만 원밖에 없어요"
+    } ]
+  }, {
+    "tStartMs": 1023200,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "나 2천만 원을 빌려"
+    } ]
+  }, {
+    "tStartMs": 1025850,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "그게 미수예요"
+    } ]
+  }, {
+    "tStartMs": 1026880,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "그러니까 레버리지가 3배 가까이 되죠"
+    } ]
+  }, {
+    "tStartMs": 1028830,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "30%만 현금화하고"
+    } ]
+  }, {
+    "tStartMs": 1029830,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "나머지 70% 빌려야지"
+    } ]
+  }, {
+    "tStartMs": 1031350,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "그럼 주식 신용 공여하고는 뭐가 다르냐?"
+    } ]
+  }, {
+    "tStartMs": 1033540,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "공여는 주식을 담보로 보통 빌리니까"
+    } ]
+  }, {
+    "tStartMs": 1036380,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "담보 가치가 내려가기 전에"
+    } ]
+  }, {
+    "tStartMs": 1037190,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "꽤 길게 빌릴 수도 있죠"
+    } ]
+  }, {
+    "tStartMs": 1038690,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "주식 미수는 뭐냐면"
+    } ]
+  }, {
+    "tStartMs": 1040350,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "주식이라는 건 살 때"
+    } ]
+  }, {
+    "tStartMs": 1041470,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "주식 결제가"
+    } ]
+  }, {
+    "tStartMs": 1042420,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "D+2일 뒤에 결제가 일어납니다"
+    } ]
+  }, {
+    "tStartMs": 1044730,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "내가 주식을 3천만 원 살게 하면"
+    } ]
+  }, {
+    "tStartMs": 1046650,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "지금 결정한 다음에"
+    } ]
+  }, {
+    "tStartMs": 1047890,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "내일, 내일 모레 3천 원을 넣으면 돼요"
+    } ]
+  }, {
+    "tStartMs": 1050390,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "난 지금 천밖에 없어"
+    } ]
+  }, {
+    "tStartMs": 1051990,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "이틀 2천이 비네? 없네?"
+    } ]
+  }, {
+    "tStartMs": 1054180,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "이거 빌려주시면 이틀 뒤에"
+    } ]
+  }, {
+    "tStartMs": 1056100,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "3천 원으로 넣어서 드릴게요"
+    } ]
+  }, {
+    "tStartMs": 1058180,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "이틀 빌리는 거예요, 이틀"
+    } ]
+  }, {
+    "tStartMs": 1059740,
+    "dDurationMs": 4300,
+    "segs": [ {
+      "utf8": "그거를 레버리지를 치고 싶어서"
+    } ]
+  }, {
+    "tStartMs": 1064040,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "T+2일 동안"
+    } ]
+  }, {
+    "tStartMs": 1065150,
+    "dDurationMs": 3410,
+    "segs": [ {
+      "utf8": "이 증권사한테 이틀간 2천 빌리는 거거든요"
+    } ]
+  }, {
+    "tStartMs": 1068560,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "그러니까 2일짜리"
+    } ]
+  }, {
+    "tStartMs": 1069370,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "초단기 차입 레버리지 베팅입니다"
+    } ]
+  }, {
+    "tStartMs": 1072230,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "기가 막힌 상품이네"
+    } ]
+  }, {
+    "tStartMs": 1073720,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "기가 막힌 상품"
+    } ]
+  }, {
+    "tStartMs": 1074920,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "이틀 뒤에 갚아야 돼요"
+    } ]
+  }, {
+    "tStartMs": 1076860,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "어쨌건 갚아야 돼"
+    } ]
+  }, {
+    "tStartMs": 1078550,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "물론 이렇게 생각하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1080860,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "따서 갚으면 되지"
+    } ]
+  }, {
+    "tStartMs": 1082900,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "난 3천이 없는데"
+    } ]
+  }, {
+    "tStartMs": 1083780,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "에헤이 그거 샀잖아"
+    } ]
+  }, {
+    "tStartMs": 1085950,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "산 게 올라서"
+    } ]
+  }, {
+    "tStartMs": 1087100,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "따서 갚으면 되지"
+    } ]
+  }, {
+    "tStartMs": 1088210,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "뭘 걱정하는 거야"
+    } ]
+  }, {
+    "tStartMs": 1089420,
+    "dDurationMs": 260,
+    "segs": [ {
+      "utf8": "그렇죠"
+    } ]
+  }, {
+    "tStartMs": 1089680,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "내가 산 3천이"
+    } ]
+  }, {
+    "tStartMs": 1090990,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "그동안 3,300이 되면 되죠"
+    } ]
+  }, {
+    "tStartMs": 1093060,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "그럼 난 3,000 먹고"
+    } ]
+  }, {
+    "tStartMs": 1094530,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "갚으면 되는 거 아니야"
+    } ]
+  }, {
+    "tStartMs": 1096020,
+    "dDurationMs": 4640,
+    "segs": [ {
+      "utf8": "라는 이런 담대한 마음"
+    } ]
+  }, {
+    "tStartMs": 1100660,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "그 담대함을 갖지 못하는"
+    } ]
+  }, {
+    "tStartMs": 1102830,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "저 같은 사람들이"
+    } ]
+  }, {
+    "tStartMs": 1103940,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "저걸 걱정하는 건데"
+    } ]
+  }, {
+    "tStartMs": 1105310,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "그 3,000이 12%씩 빠지면"
+    } ]
+  }, {
+    "tStartMs": 1107240,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "예를 들면 2,500이 되면 어떻게 되냐"
+    } ]
+  }, {
+    "tStartMs": 1109340,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "나는 1,000밖에 없는데"
+    } ]
+  }, {
+    "tStartMs": 1111200,
+    "dDurationMs": 670,
+    "segs": [ {
+      "utf8": "나머지 돈을"
+    } ]
+  }, {
+    "tStartMs": 1111870,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "그렇죠 이거 도대체 얼마를 넣어야 되는 거야"
+    } ]
+  }, {
+    "tStartMs": 1114410,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "2,500을 넣어야 되잖아, 이제"
+    } ]
+  }, {
+    "tStartMs": 1116700,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "그런 생각을 하면 못하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1118650,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "한마디로 2일짜리"
+    } ]
+  }, {
+    "tStartMs": 1120170,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "차입 레버리지 베팅입니다"
+    } ]
+  }, {
+    "tStartMs": 1122030,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "3배짜리"
+    } ]
+  }, {
+    "tStartMs": 1123010,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "3배짜리"
+    } ]
+  }, {
+    "tStartMs": 1124030,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "2일간 3배짜리"
+    } ]
+  }, {
+    "tStartMs": 1126390,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "그래요"
+    } ]
+  }, {
+    "tStartMs": 1127150,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "그거를 2조원"
+    } ]
+  }, {
+    "tStartMs": 1129670,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "무조건 따는 판이라고?"
+    } ]
+  }, {
+    "tStartMs": 1131460,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "이게 무조건 따는 판이니까"
+    } ]
+  }, {
+    "tStartMs": 1133070,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "안 할 수가 없다?"
+    } ]
+  }, {
+    "tStartMs": 1135990,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "타짜의 나라인가?"
+    } ]
+  }, {
+    "tStartMs": 1137310,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "이게 무조건 따는 판이었습니까?"
+    } ]
+  }, {
+    "tStartMs": 1141180,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "거의 타짜인데?"
+    } ]
+  }, {
+    "tStartMs": 1143220,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "타짜가 그런 말을 하긴 하더라"
+    } ]
+  }, {
+    "tStartMs": 1144370,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "영화를 보면"
+    } ]
+  }, {
+    "tStartMs": 1145050,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "'야 이거는 안 들어갈 수 없는 판이요'"
+    } ]
+  }, {
+    "tStartMs": 1147190,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "하면서"
+    } ]
+  }, {
+    "tStartMs": 1148050,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "뭐 5천만 원짜리 20개"
+    } ]
+  }, {
+    "tStartMs": 1149890,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "10억 하면서 걸던데"
+    } ]
+  }, {
+    "tStartMs": 1152140,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "한 끗인가 그랬죠"
+    } ]
+  }, {
+    "tStartMs": 1153150,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "타짜에서"
+    } ]
+  }, {
+    "tStartMs": 1154120,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "그리고 어디선가 주섬주섬주섬"
+    } ]
+  }, {
+    "tStartMs": 1155470,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "가짜 돈 꺼내서 걸던데"
+    } ]
+  }, {
+    "tStartMs": 1156950,
+    "dDurationMs": 3030,
+    "segs": [ {
+      "utf8": "아 안 할 수 없는 판이었습니까?"
+    } ]
+  }, {
+    "tStartMs": 1159980,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "그래서 1조가 늘었다?"
+    } ]
+  }, {
+    "tStartMs": 1163130,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "저 같은 하수는"
+    } ]
+  }, {
+    "tStartMs": 1164920,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "하수는 이 게임 하기 힘들고..."
+    } ]
+  }, {
+    "tStartMs": 1166940,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "이거는 진짜 예상을 못했어요"
+    } ]
+  }, {
+    "tStartMs": 1168310,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "와 이게 올라가리라고는 상상을 못했는데"
+    } ]
+  }, {
+    "tStartMs": 1171200,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "그렇다고 하고요"
+    } ]
+  }, {
+    "tStartMs": 1172160,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "반대매매가 있으면 어떻게 되냐"
+    } ]
+  }, {
+    "tStartMs": 1174070,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "가격이 떨어져서"
+    } ]
+  }, {
+    "tStartMs": 1174960,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "억지로 여기 써있죠"
+    } ]
+  }, {
+    "tStartMs": 1176380,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "돈을 못 갚아서 강제청산되는 거"
+    } ]
+  }, {
+    "tStartMs": 1178180,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "반대매매가 늘긴 늘었어요"
+    } ]
+  }, {
+    "tStartMs": 1180160,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "10배"
+    } ]
+  }, {
+    "tStartMs": 1180980,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "777억이잖아"
+    } ]
+  }, {
+    "tStartMs": 1182590,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "10배로 늘었지만"
+    } ]
+  }, {
+    "tStartMs": 1184000,
+    "dDurationMs": 3170,
+    "segs": [ {
+      "utf8": "제 생각엔 그래도 아직도 빚투 규모에 비해서는"
+    } ]
+  }, {
+    "tStartMs": 1187170,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "좀 버티고 있는 것 같긴 해요"
+    } ]
+  }, {
+    "tStartMs": 1188840,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "이거 몇 천억 나올 줄 알았거든"
+    } ]
+  }, {
+    "tStartMs": 1190320,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "진짜 몇 천억 나올 줄 알았어요"
+    } ]
+  }, {
+    "tStartMs": 1191690,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "한 2천억, 3천억 나올 줄 알았어요"
+    } ]
+  }, {
+    "tStartMs": 1193060,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "12%씩 빠지니까"
+    } ]
+  }, {
+    "tStartMs": 1194910,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "근데 지금 3월 5일 기준으로는"
+    } ]
+  }, {
+    "tStartMs": 1196210,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "777억이 잡혔단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 1198110,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "물론 앞으로 더 나올 수도 있겠지만"
+    } ]
+  }, {
+    "tStartMs": 1199850,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "반대 매매금액이 커지지 않는 이유는"
+    } ]
+  }, {
+    "tStartMs": 1201650,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "제 생각에"
+    } ]
+  }, {
+    "tStartMs": 1202420,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "일단 이번에는"
+    } ]
+  }, {
+    "tStartMs": 1203860,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "대형주 위주의 투자를 많이 하셨다"
+    } ]
+  }, {
+    "tStartMs": 1205560,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "대형주 같은 경우에는"
+    } ]
+  }, {
+    "tStartMs": 1206420,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "담보 비율이 높죠"
+    } ]
+  }, {
+    "tStartMs": 1207570,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "대형주 유지에 투자를 많이 하신 게"
+    } ]
+  }, {
+    "tStartMs": 1209020,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "반도체가 워낙 잘 갔으니까"
+    } ]
+  }, {
+    "tStartMs": 1210440,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "이유가 아닌가 생각되고"
+    } ]
+  }, {
+    "tStartMs": 1211580,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "그리고 투자자 예탁금이 크게 작용했다"
+    } ]
+  }, {
+    "tStartMs": 1213960,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "사기 위해서 집 팔고 예금 깨고"
+    } ]
+  }, {
+    "tStartMs": 1216370,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "적금 깨고 해서"
+    } ]
+  }, {
+    "tStartMs": 1217720,
+    "dDurationMs": 3490,
+    "segs": [ {
+      "utf8": "대기한 자금들이 많았다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1221210,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "그래서 그걸로 커버하면서"
+    } ]
+  }, {
+    "tStartMs": 1224030,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "묻고 더블로 가는 판이잖아"
+    } ]
+  }, {
+    "tStartMs": 1225420,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "아, 표현이 이상한데"
+    } ]
+  }, {
+    "tStartMs": 1227440,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "도저히 묻고 더블로 가지 않고는"
+    } ]
+  }, {
+    "tStartMs": 1229570,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "버틸 수 없는 판이니까"
+    } ]
+  }, {
+    "tStartMs": 1230840,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "예를 들면 이거죠"
+    } ]
+  }, {
+    "tStartMs": 1232390,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "역대 최고 수준인"
+    } ]
+  }, {
+    "tStartMs": 1234620,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "131조 원의 투자자 예탁금이"
+    } ]
+  }, {
+    "tStartMs": 1236460,
+    "dDurationMs": 3760,
+    "segs": [ {
+      "utf8": "현재 주식시장 주식 계좌에 들어가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1240220,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "100조도 역대 최초로 넘긴 거였어요 이게"
+    } ]
+  }, {
+    "tStartMs": 1242590,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "이게 얼마입니까 이게"
+    } ]
+  }, {
+    "tStartMs": 1244290,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "올 초인가 그렇죠"
+    } ]
+  }, {
+    "tStartMs": 1245470,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "100조 넘긴 게 처음"
+    } ]
+  }, {
+    "tStartMs": 1246720,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "역대 최초로 100조를 넘겼다고 했는데"
+    } ]
+  }, {
+    "tStartMs": 1248670,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "그 짧은 사이에"
+    } ]
+  }, {
+    "tStartMs": 1250330,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "131조가 됐어요"
+    } ]
+  }, {
+    "tStartMs": 1251420,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "최근 10영업일 사이에"
+    } ]
+  }, {
+    "tStartMs": 1252690,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "32조원의"
+    } ]
+  }, {
+    "tStartMs": 1254210,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "새로운 물론 주식을 판 돈일 수도 있고"
+    } ]
+  }, {
+    "tStartMs": 1256480,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "주식을 판 돈이겠네"
+    } ]
+  }, {
+    "tStartMs": 1258020,
+    "dDurationMs": 3060,
+    "segs": [ {
+      "utf8": "하여튼 투자자 예탁금이 들어왔어"
+    } ]
+  }, {
+    "tStartMs": 1261080,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "마지막에 쬐끔 빠졌습니다"
+    } ]
+  }, {
+    "tStartMs": 1262570,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "쬐끔 1조"
+    } ]
+  }, {
+    "tStartMs": 1263870,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "130조원의 대기자금으로"
+    } ]
+  }, {
+    "tStartMs": 1266050,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "묻고 더블로 가시려고"
+    } ]
+  }, {
+    "tStartMs": 1268330,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "이 판은 도저히 피할 수 없는 판이지"
+    } ]
+  }, {
+    "tStartMs": 1270820,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "꼭 참여해야 되지 하고"
+    } ]
+  }, {
+    "tStartMs": 1272930,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "타짜의 나라가 아닌가 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 1274260,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "타짜의 나라"
+    } ]
+  }, {
+    "tStartMs": 1275890,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "팔아서 늘었으면"
+    } ]
+  }, {
+    "tStartMs": 1277820,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "빠져나오지 않을까 생각하는데"
+    } ]
+  }, {
+    "tStartMs": 1279170,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "아닌가?"
+    } ]
+  }, {
+    "tStartMs": 1280320,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "그래서 개인적으론"
+    } ]
+  }, {
+    "tStartMs": 1281470,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "앞으로의 방향이"
+    } ]
+  }, {
+    "tStartMs": 1282110,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "물론 당연히 중요하겠죠"
+    } ]
+  }, {
+    "tStartMs": 1283650,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "사상 최대 금액이"
+    } ]
+  }, {
+    "tStartMs": 1284870,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "신용공여, 미수, 예탁금"
+    } ]
+  }, {
+    "tStartMs": 1287560,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "장난 아니에요"
+    } ]
+  }, {
+    "tStartMs": 1289040,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "이런 시장 처음 봤어"
+    } ]
+  }, {
+    "tStartMs": 1290350,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "이렇게 하락이 크고"
+    } ]
+  }, {
+    "tStartMs": 1291200,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "이런 거 처음 봤는데"
+    } ]
+  }, {
+    "tStartMs": 1292230,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "이 정도로 전 국민 룰렛 돌리는"
+    } ]
+  }, {
+    "tStartMs": 1294860,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "이 느낌은"
+    } ]
+  }, {
+    "tStartMs": 1296220,
+    "dDurationMs": 2940,
+    "segs": [ {
+      "utf8": "신용공여 33조, 미수 2조"
+    } ]
+  }, {
+    "tStartMs": 1299160,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "빚투 금액이 물론 저게 다가 아니겠죠"
+    } ]
+  }, {
+    "tStartMs": 1301830,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "다른 데서 빌려서 하는 분들도 있을 거 아니야"
+    } ]
+  }, {
+    "tStartMs": 1303650,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "은행에서 빌리건 카드사에서 빌리건"
+    } ]
+  }, {
+    "tStartMs": 1306080,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "35조 원이 넘는"
+    } ]
+  }, {
+    "tStartMs": 1307970,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "지금... 돌아가고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1310180,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "그래서 누가 저한테"
+    } ]
+  }, {
+    "tStartMs": 1311210,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "그 말 한 분이 있어요"
+    } ]
+  }, {
+    "tStartMs": 1312160,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "아 왜 토요일날에 주식시장 안 하냐"
+    } ]
+  }, {
+    "tStartMs": 1315120,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "저 그 말 듣고"
+    } ]
+  }, {
+    "tStartMs": 1315770,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "이게 생각이 났어요"
+    } ]
+  }, {
+    "tStartMs": 1317080,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "판을 빨리 돌려야지"
+    } ]
+  }, {
+    "tStartMs": 1319010,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "딜러가 지금 말이야"
+    } ]
+  }, {
+    "tStartMs": 1319910,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "시간 끌고"
+    } ]
+  }, {
+    "tStartMs": 1320930,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "지금 궁금해 죽겠는데"
+    } ]
+  }, {
+    "tStartMs": 1321960,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "야 빨리 돌려봐"
+    } ]
+  }, {
+    "tStartMs": 1322800,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "빨리 야 판 돌려 판 돌려 쉬지 말고"
+    } ]
+  }, {
+    "tStartMs": 1324890,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "토요일날 왜 안 하는 거야"
+    } ]
+  }, {
+    "tStartMs": 1326630,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "빨리 빨리 돌려"
+    } ]
+  }, {
+    "tStartMs": 1327400,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "지금 내가 얼마 안 들어갔는데"
+    } ]
+  }, {
+    "tStartMs": 1329090,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "이 도파민이 없고 심심하잖아"
+    } ]
+  }, {
+    "tStartMs": 1330390,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "빨리 돌려라"
+    } ]
+  }, {
+    "tStartMs": 1332790,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "아 진짜 너무 센 게 아닌가"
+    } ]
+  }, {
+    "tStartMs": 1334960,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "개인적으로 생각하고"
+    } ]
+  }, {
+    "tStartMs": 1336220,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "블룸버그에 얼마 전에 난 기사에"
+    } ]
+  }, {
+    "tStartMs": 1337820,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "이런 게 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 1338750,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "한국인 인터뷰예요"
+    } ]
+  }, {
+    "tStartMs": 1339710,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "도파민을 사랑합니다"
+    } ]
+  }, {
+    "tStartMs": 1340680,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "이 인터뷰 하신 분 누굽니까?"
+    } ]
+  }, {
+    "tStartMs": 1342110,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "도파민을 사랑합니다"
+    } ]
+  }, {
+    "tStartMs": 1343160,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "우리 DNA에 새겨져 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1344900,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "라고 한국인인 인터뷰 하셨대요"
+    } ]
+  }, {
+    "tStartMs": 1346940,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "일부 미국 소재의 레버리지"
+    } ]
+  }, {
+    "tStartMs": 1348500,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "ETF의 최대 40%를 한국인들이 합니다"
+    } ]
+  }, {
+    "tStartMs": 1351170,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "위험천만한 암호화폐 거래량도"
+    } ]
+  }, {
+    "tStartMs": 1352930,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "한국인들이 등장한 다음에"
+    } ]
+  }, {
+    "tStartMs": 1354240,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "전례 없이 급증했습니다"
+    } ]
+  }, {
+    "tStartMs": 1356230,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "한국인들은 비트코인 변동성만으로는"
+    } ]
+  }, {
+    "tStartMs": 1359000,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "만족하지 못한다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1360640,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "한국의 암호화폐 거래소에서는"
+    } ]
+  }, {
+    "tStartMs": 1362250,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "알트코인, 즉 비트코인을 제외한 코인들의 거래량이"
+    } ]
+  }, {
+    "tStartMs": 1364820,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "전체 거래량의 80%를 차지합니다"
+    } ]
+  }, {
+    "tStartMs": 1367110,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "이거 진짜예요?"
+    } ]
+  }, {
+    "tStartMs": 1368020,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "이거 진짜야?"
+    } ]
+  }, {
+    "tStartMs": 1369020,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "한국을 제외한 글로벌 거래소들은"
+    } ]
+  }, {
+    "tStartMs": 1370790,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "비트코인과 이더리움이"
+    } ]
+  }, {
+    "tStartMs": 1371930,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "전체 거래량의 50%를 차지합니다"
+    } ]
+  }, {
+    "tStartMs": 1373800,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "비트코인과 이더리움만으로도"
+    } ]
+  }, {
+    "tStartMs": 1375460,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "이 변통성이 미쳤잖아요"
+    } ]
+  }, {
+    "tStartMs": 1377150,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "그걸로는 안 된다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1378240,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "그거 말고 알트코인"
+    } ]
+  }, {
+    "tStartMs": 1379680,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "10배"
+    } ]
+  }, {
+    "tStartMs": 1380990,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "뭐 이런 거"
+    } ]
+  }, {
+    "tStartMs": 1381760,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "알트코인 레버리지 몇 배"
+    } ]
+  }, {
+    "tStartMs": 1383840,
+    "dDurationMs": 510,
+    "segs": [ {
+      "utf8": "뭐 이런 것들"
+    } ]
+  }, {
+    "tStartMs": 1384350,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "블룸버그 기사에는 이렇게 나와요"
+    } ]
+  }, {
+    "tStartMs": 1387300,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "한국인들이 왜 그런 거냐"
+    } ]
+  }, {
+    "tStartMs": 1388700,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "도대체 왜 그러냐?"
+    } ]
+  }, {
+    "tStartMs": 1390520,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "이렇게 얘기하더라고요"
+    } ]
+  }, {
+    "tStartMs": 1391820,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "한국인들이 이 미친 위험을 무릅쓰는 이유는"
+    } ]
+  }, {
+    "tStartMs": 1394460,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "단 하나입니다"
+    } ]
+  }, {
+    "tStartMs": 1396150,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "내 집 마련"
+    } ]
+  }, {
+    "tStartMs": 1397820,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "그래요?"
+    } ]
+  }, {
+    "tStartMs": 1400530,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "이게 안 돼서?"
+    } ]
+  }, {
+    "tStartMs": 1401790,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "남들은 이걸로 돈 쫙쫙 벌고"
+    } ]
+  }, {
+    "tStartMs": 1404130,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "10억, 20억 올랐는데"
+    } ]
+  }, {
+    "tStartMs": 1405450,
+    "dDurationMs": 3510,
+    "segs": [ {
+      "utf8": "내 평생에도 10억, 20억 못 벌 것 같으니까?"
+    } ]
+  }, {
+    "tStartMs": 1408960,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "그렇게 소중하다는 근로 소득으로"
+    } ]
+  }, {
+    "tStartMs": 1410490,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "아무리 해도 자본 이득 못 따라가고"
+    } ]
+  }, {
+    "tStartMs": 1412870,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "가격 상승을 못 따라가니까"
+    } ]
+  }, {
+    "tStartMs": 1414690,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "그걸 따라가려면"
+    } ]
+  }, {
+    "tStartMs": 1416580,
+    "dDurationMs": 3390,
+    "segs": [ {
+      "utf8": "지금 열려있는 주식시장에서라도 따라가야 된다"
+    } ]
+  }, {
+    "tStartMs": 1419970,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "그래서 이 미친 위험을 무릅쓴다"
+    } ]
+  }, {
+    "tStartMs": 1423110,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "그렇습니까?"
+    } ]
+  }, {
+    "tStartMs": 1424830,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "한국인들이 쓰는 표현이 있다"
+    } ]
+  }, {
+    "tStartMs": 1426710,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "\"영끌\""
+    } ]
+  }, {
+    "tStartMs": 1428190,
+    "dDurationMs": 400,
+    "segs": [ {
+      "utf8": "왜?"
+    } ]
+  }, {
+    "tStartMs": 1428590,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "내 집 마련을 위한 사투에"
+    } ]
+  }, {
+    "tStartMs": 1430440,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "영혼까지 빌린다"
+    } ]
+  }, {
+    "tStartMs": 1432100,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "영혼까지 끌어서"
+    } ]
+  }, {
+    "tStartMs": 1433910,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "그걸 따라가려고"
+    } ]
+  }, {
+    "tStartMs": 1436110,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "안 따라가면 어떡해"
+    } ]
+  }, {
+    "tStartMs": 1437490,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "남들은 그걸로 다 벌었는데"
+    } ]
+  }, {
+    "tStartMs": 1439310,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "결혼도 못하고"
+    } ]
+  }, {
+    "tStartMs": 1440490,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "남들 부자될 때"
+    } ]
+  }, {
+    "tStartMs": 1441840,
+    "dDurationMs": 4720,
+    "segs": [ {
+      "utf8": "나는 월급으로 그걸 따라가라고?"
+    } ]
+  }, {
+    "tStartMs": 1446560,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "그래서 영혼까지 끈다"
+    } ]
+  }, {
+    "tStartMs": 1448900,
+    "dDurationMs": 4690,
+    "segs": [ {
+      "utf8": "그래서 한국인들의 영혼이자 정체성이자"
+    } ]
+  }, {
+    "tStartMs": 1453590,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "평생의 숙원이자 꿈이자"
+    } ]
+  }, {
+    "tStartMs": 1456230,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "한국인들의 삶과 투자"
+    } ]
+  }, {
+    "tStartMs": 1458350,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "그 모든 것"
+    } ]
+  }, {
+    "tStartMs": 1459820,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "우리를 괴롭히는 걸 수도 있어요 그래서"
+    } ]
+  }, {
+    "tStartMs": 1461860,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "말도 안 되는"
+    } ]
+  }, {
+    "tStartMs": 1463080,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "레버리지와 괴로운 거잖아요"
+    } ]
+  }, {
+    "tStartMs": 1464910,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "투자는 원래 괴로운 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1466260,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "그 모든 괴로움"
+    } ]
+  }, {
+    "tStartMs": 1467440,
+    "dDurationMs": 4210,
+    "segs": [ {
+      "utf8": "그 모든 공부, 수능, 의대"
+    } ]
+  }, {
+    "tStartMs": 1471650,
+    "dDurationMs": 2980,
+    "segs": [ {
+      "utf8": "대기업 취업, 레버리지 10배 투자"
+    } ]
+  }, {
+    "tStartMs": 1474630,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "우리의 모든 것"
+    } ]
+  }, {
+    "tStartMs": 1476670,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "...아파트?"
+    } ]
+  }, {
+    "tStartMs": 1477520,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "강남 아파트?"
+    } ]
+  }, {
+    "tStartMs": 1478530,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "뭐 그렇다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1480450,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "그렇습니까?"
+    } ]
+  }, {
+    "tStartMs": 1481970,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "이 블룸버 기사 계속 나오는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1483520,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "한국에서 투자는"
+    } ]
+  }, {
+    "tStartMs": 1485050,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "도박, 마치 오징어 게임처럼 여겨지는 경우가 많다"
+    } ]
+  }, {
+    "tStartMs": 1488450,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "장기 투자, 기관에 맡긴 투자"
+    } ]
+  }, {
+    "tStartMs": 1490190,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "이런 거는 안 한다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1491200,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "이런 거 안 해요"
+    } ]
+  }, {
+    "tStartMs": 1492000,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "초보 서버지만 그런 거 안 합니다"
+    } ]
+  }, {
+    "tStartMs": 1493440,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "우리는 사드론 그렇죠?"
+    } ]
+  }, {
+    "tStartMs": 1494960,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "아주 그냥 오징어 게임"
+    } ]
+  }, {
+    "tStartMs": 1496500,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "아니면 안 한다"
+    } ]
+  }, {
+    "tStartMs": 1497860,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "제가 예전에 어디 가서 강연하는데"
+    } ]
+  }, {
+    "tStartMs": 1499740,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "돈을 좀 분산 투자하세요"
+    } ]
+  }, {
+    "tStartMs": 1501260,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "뭐 연금처럼 잃지 않는 투자하세요"
+    } ]
+  }, {
+    "tStartMs": 1503080,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "그런 비판 엄청나게 듣습니다"
+    } ]
+  }, {
+    "tStartMs": 1504730,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "농담이 아니라"
+    } ]
+  }, {
+    "tStartMs": 1505890,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "뭐라고 얘기하냐?"
+    } ]
+  }, {
+    "tStartMs": 1507120,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "얼마 되지 않는 돈을 나눠서 투자하면 어떡해?"
+    } ]
+  }, {
+    "tStartMs": 1509430,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "라는 말을 많이 해요"
+    } ]
+  }, {
+    "tStartMs": 1511150,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "틀린 말은 아니죠"
+    } ]
+  }, {
+    "tStartMs": 1512120,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "종잣돈을 모을 때까지는"
+    } ]
+  }, {
+    "tStartMs": 1513160,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "좀 집중적으로 투자하는 게 필요할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1514840,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "특히 개인 입장에서는"
+    } ]
+  }, {
+    "tStartMs": 1516210,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "다섯 종목,  여섯 종목"
+    } ]
+  }, {
+    "tStartMs": 1517080,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "이렇게 집중적으로 해서"
+    } ]
+  }, {
+    "tStartMs": 1518240,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "기회가 왔을 때"
+    } ]
+  }, {
+    "tStartMs": 1518880,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "크게 투자해서"
+    } ]
+  }, {
+    "tStartMs": 1519970,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "그래야 수익률이 높아지는 건 맞는데"
+    } ]
+  }, {
+    "tStartMs": 1521560,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "항상 그러면 안 되죠"
+    } ]
+  }, {
+    "tStartMs": 1523100,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "항상 그러면 삼진 시켜"
+    } ]
+  }, {
+    "tStartMs": 1524160,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "공이 올 때마다 휘두르면 어떡해"
+    } ]
+  }, {
+    "tStartMs": 1525590,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "좋은 공에 휘둘러야지"
+    } ]
+  }, {
+    "tStartMs": 1527100,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "그래서 평상시에는 좀 나눠 있다가"
+    } ]
+  }, {
+    "tStartMs": 1529180,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "기회가 왔을 때"
+    } ]
+  }, {
+    "tStartMs": 1529930,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "집중 투자하고"
+    } ]
+  }, {
+    "tStartMs": 1530740,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "그다음에 좀 분산 투자하고 하는 얘기를 하는데"
+    } ]
+  }, {
+    "tStartMs": 1532770,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "분산 투자 얘기를 하면"
+    } ]
+  }, {
+    "tStartMs": 1534150,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "그렇게 하면 언제 부자돼요"
+    } ]
+  }, {
+    "tStartMs": 1535150,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "이 얘기가 나오니까"
+    } ]
+  }, {
+    "tStartMs": 1535940,
+    "dDurationMs": 3610,
+    "segs": [ {
+      "utf8": "그러니까 한마디로 몰아서"
+    } ]
+  }, {
+    "tStartMs": 1539550,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "오징어 게임입니까 그게?"
+    } ]
+  }, {
+    "tStartMs": 1541830,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "아래도 블룸버그 기사입니다"
+    } ]
+  }, {
+    "tStartMs": 1543330,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "상속도 없고"
+    } ]
+  }, {
+    "tStartMs": 1544990,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "그렇게라도 안 하면"
+    } ]
+  }, {
+    "tStartMs": 1546240,
+    "dDurationMs": 3650,
+    "segs": [ {
+      "utf8": "강남아파트는 꿈과 같은 이야기다"
+    } ]
+  }, {
+    "tStartMs": 1549890,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "아니면 어떻게 아파트를 사?"
+    } ]
+  }, {
+    "tStartMs": 1552680,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "월급 몇백 모아서 언제 사?"
+    } ]
+  }, {
+    "tStartMs": 1554910,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "30년, 20년이라는데"
+    } ]
+  }, {
+    "tStartMs": 1556610,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "라는 생각을... 한다는 거고"
+    } ]
+  }, {
+    "tStartMs": 1559560,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "결론적으로 이렇게 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 1560850,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "나만 뒤쳐진다는 불안감이"
+    } ]
+  }, {
+    "tStartMs": 1562330,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "만연한 사회에서는"
+    } ]
+  }, {
+    "tStartMs": 1563740,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "사람들은 위험성을 알면서도"
+    } ]
+  }, {
+    "tStartMs": 1565390,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "위험한 투자에 끌려 들어간다"
+    } ]
+  }, {
+    "tStartMs": 1567310,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "알지?"
+    } ]
+  }, {
+    "tStartMs": 1568890,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "미수하는 분들도"
+    } ]
+  }, {
+    "tStartMs": 1569800,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "그게 위험한 걸 몰라서 미수하겠나?"
+    } ]
+  }, {
+    "tStartMs": 1572340,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "레버리지 2배, 3배"
+    } ]
+  }, {
+    "tStartMs": 1573690,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "알트코인 하는 분들도 알죠?"
+    } ]
+  }, {
+    "tStartMs": 1575690,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "위험을 모르긴 뭘 몰라"
+    } ]
+  }, {
+    "tStartMs": 1577140,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "잘 알지?"
+    } ]
+  }, {
+    "tStartMs": 1578430,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "잘 알아요"
+    } ]
+  }, {
+    "tStartMs": 1579570,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "그래서 금융 교육이 필요하지만"
+    } ]
+  }, {
+    "tStartMs": 1581160,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "그분들은 사실 많이 알아요"
+    } ]
+  }, {
+    "tStartMs": 1582490,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "모르는 분들은 오히려 조심해서 하지"
+    } ]
+  }, {
+    "tStartMs": 1584770,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "잘 알아"
+    } ]
+  }, {
+    "tStartMs": 1585650,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "알지만 해야 되는 거야"
+    } ]
+  }, {
+    "tStartMs": 1587780,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "그분들 입장에선"
+    } ]
+  }, {
+    "tStartMs": 1588940,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "나만 뒤쳐진다는 불안감이"
+    } ]
+  }, {
+    "tStartMs": 1590870,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "만연한 사회"
+    } ]
+  }, {
+    "tStartMs": 1591760,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "그런 경우에 투자 중독에"
+    } ]
+  }, {
+    "tStartMs": 1593350,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "굴레에서 갇힌 것 같다라고"
+    } ]
+  }, {
+    "tStartMs": 1596070,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "기사가 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 1597170,
+    "dDurationMs": 530,
+    "segs": [ {
+      "utf8": "그래요?"
+    } ]
+  }, {
+    "tStartMs": 1597700,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "다시 돌아와서"
+    } ]
+  }, {
+    "tStartMs": 1600240,
+    "dDurationMs": 3430,
+    "segs": [ {
+      "utf8": "그럼 이번에 주식시장이 막 폭락했을 때"
+    } ]
+  }, {
+    "tStartMs": 1603670,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "우리는 어떻게 했냐?"
+    } ]
+  }, {
+    "tStartMs": 1604620,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "개인들은"
+    } ]
+  }, {
+    "tStartMs": 1605810,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "어떻게 했을 것 같습니까?"
+    } ]
+  }, {
+    "tStartMs": 1607250,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "팔았을까요?"
+    } ]
+  }, {
+    "tStartMs": 1609130,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "최근 5 영업일"
+    } ]
+  }, {
+    "tStartMs": 1610770,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "투자자별 순매수를 보면"
+    } ]
+  }, {
+    "tStartMs": 1612320,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "외국인은 16조를 던졌고"
+    } ]
+  }, {
+    "tStartMs": 1614560,
+    "dDurationMs": 3420,
+    "segs": [ {
+      "utf8": "개인은 17조를 긁었습니다"
+    } ]
+  }, {
+    "tStartMs": 1617980,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "쫙쫙 빠지고 반등하고"
+    } ]
+  }, {
+    "tStartMs": 1619680,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "이렇게 있죠"
+    } ]
+  }, {
+    "tStartMs": 1620470,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "최근 5 영업일간"
+    } ]
+  }, {
+    "tStartMs": 1622080,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "던진 건 외국인이고"
+    } ]
+  }, {
+    "tStartMs": 1623220,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "받은 건 우리야"
+    } ]
+  }, {
+    "tStartMs": 1624580,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "17조"
+    } ]
+  }, {
+    "tStartMs": 1625480,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "역대급입니다, 역대급"
+    } ]
+  }, {
+    "tStartMs": 1627270,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "얼마나 역대급이냐"
+    } ]
+  }, {
+    "tStartMs": 1628780,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "외국인 순매도가"
+    } ]
+  }, {
+    "tStartMs": 1630620,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "3월 3일 날 7조"
+    } ]
+  }, {
+    "tStartMs": 1632380,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "얘들이 진짜 기가"
+    } ]
+  }, {
+    "tStartMs": 1633380,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "전쟁이 터질 것 같을 때"
+    } ]
+  }, {
+    "tStartMs": 1634550,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "7조를 던졌어요"
+    } ]
+  }, {
+    "tStartMs": 1636040,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "이 고점에서"
+    } ]
+  }, {
+    "tStartMs": 1637520,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "전쟁이 터질 것 같아서 던졌겠죠 아무래도"
+    } ]
+  }, {
+    "tStartMs": 1639470,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "7조를 던졌고"
+    } ]
+  }, {
+    "tStartMs": 1640960,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "그 다음날 빠질 때"
+    } ]
+  }, {
+    "tStartMs": 1641750,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "5조를 던졌어요"
+    } ]
+  }, {
+    "tStartMs": 1643360,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "이날은 뭐 보합이었고"
+    } ]
+  }, {
+    "tStartMs": 1644990,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "이 위에서만 지금 몇 조입니까?"
+    } ]
+  }, {
+    "tStartMs": 1646510,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "3일에 14조를 던졌어요"
+    } ]
+  }, {
+    "tStartMs": 1648320,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "쭉 빠지는 동안"
+    } ]
+  }, {
+    "tStartMs": 1649250,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "개인들이 다 받았습니다"
+    } ]
+  }, {
+    "tStartMs": 1650680,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "물론 우리가 아래에서 받은 건 성공했어요 일단"
+    } ]
+  }, {
+    "tStartMs": 1652420,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "이렇게 가면 우리가 이기는 거야"
+    } ]
+  }, {
+    "tStartMs": 1654750,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "이렇게 가면 우리가 이기는데"
+    } ]
+  }, {
+    "tStartMs": 1656450,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "하루에 7조면 말도 안 되는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1658270,
+    "dDurationMs": 470,
+    "segs": [ {
+      "utf8": "제가 봤을 때"
+    } ]
+  }, {
+    "tStartMs": 1658740,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "거의 역대급으로 던졌는데"
+    } ]
+  }, {
+    "tStartMs": 1660280,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "하루에 2, 3조에도"
+    } ]
+  }, {
+    "tStartMs": 1661270,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "외국인 대량 매도인데"
+    } ]
+  }, {
+    "tStartMs": 1662680,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "7조면 말도 안 되는 매도라고 할 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 1665080,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "그걸 다 받아냈고요"
+    } ]
+  }, {
+    "tStartMs": 1666490,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "한 달로 보면"
+    } ]
+  }, {
+    "tStartMs": 1667820,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "지난 2월은"
+    } ]
+  }, {
+    "tStartMs": 1668890,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "한 달 기준으로 외국인이"
+    } ]
+  }, {
+    "tStartMs": 1670350,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "역대 최대 순매도를 한 달입니다"
+    } ]
+  }, {
+    "tStartMs": 1672590,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "한 달 기준으로"
+    } ]
+  }, {
+    "tStartMs": 1673920,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "3월 6일자 기준으로 한 달은"
+    } ]
+  }, {
+    "tStartMs": 1675720,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "외국인이 25조를 던졌어요"
+    } ]
+  }, {
+    "tStartMs": 1678460,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "개인과 기관이 받았는데"
+    } ]
+  }, {
+    "tStartMs": 1679720,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "이것도 ETF가 들어갔을 테니까"
+    } ]
+  }, {
+    "tStartMs": 1681310,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "사실상 개인이 거의 다 받았어요"
+    } ]
+  }, {
+    "tStartMs": 1684140,
+    "dDurationMs": 2930,
+    "segs": [ {
+      "utf8": "역대 최대 순매도와 역대 최대 순매수가"
+    } ]
+  }, {
+    "tStartMs": 1687070,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "완전히 쫘악 나뉘어왔습니다"
+    } ]
+  }, {
+    "tStartMs": 1689910,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "특히 2월 25일 날"
+    } ]
+  }, {
+    "tStartMs": 1691420,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "그 이후로 여기서부터 이제"
+    } ]
+  }, {
+    "tStartMs": 1693550,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "마지막 고점 찍고 폭락하죠"
+    } ]
+  }, {
+    "tStartMs": 1694940,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "그 이후로 완전히 갈리면서"
+    } ]
+  }, {
+    "tStartMs": 1697190,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "포지션이 갈리고 있고요"
+    } ]
+  }, {
+    "tStartMs": 1699040,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "애널리스트들 레포트를 제가 쫙 봤는데"
+    } ]
+  }, {
+    "tStartMs": 1701470,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "현재 애널리스트들의 대략적인 분위기는"
+    } ]
+  }, {
+    "tStartMs": 1703610,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "대부분이 저가 매수를 얘기를 많이 하시는 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 1705950,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "이런 내용들이 많이 있어요"
+    } ]
+  }, {
+    "tStartMs": 1707370,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "주가 하락에 트리거가 되었던"
+    } ]
+  }, {
+    "tStartMs": 1708640,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "이란 전쟁이 장기화되면서"
+    } ]
+  }, {
+    "tStartMs": 1710030,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "우리 경제에 큰 타격을 줄 가능성은"
+    } ]
+  }, {
+    "tStartMs": 1712030,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "낮다라고 보시는 분들이 많다"
+    } ]
+  }, {
+    "tStartMs": 1713840,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "반도체 팔리는 거"
+    } ]
+  }, {
+    "tStartMs": 1714660,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "어차피 팔리는 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 1716060,
+    "dDurationMs": 520,
+    "segs": [ {
+      "utf8": "그런 거죠"
+    } ]
+  }, {
+    "tStartMs": 1716580,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "지금 어차피 잘 되고 있는 상황에서"
+    } ]
+  }, {
+    "tStartMs": 1717810,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "잘 되는 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 1718690,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "이란 전쟁이 장기화되면서"
+    } ]
+  }, {
+    "tStartMs": 1720800,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "반도체가 안 팔리고"
+    } ]
+  }, {
+    "tStartMs": 1721970,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "그렇게까지 문제가 되지 않겠냐"
+    } ]
+  }, {
+    "tStartMs": 1723650,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "라는 분들이 대부분 많기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1725300,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "저가 매수로 접근하는 분들이 많아 보이고"
+    } ]
+  }, {
+    "tStartMs": 1727740,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "다만 문제는 가격이 오를 때도"
+    } ]
+  }, {
+    "tStartMs": 1729710,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "꼭 모든 경제가 좋아서 오른 것만은 아니죠"
+    } ]
+  }, {
+    "tStartMs": 1732230,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "기세라는 게 있으니까"
+    } ]
+  }, {
+    "tStartMs": 1733540,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "멀티플이 올라서 오르는 게 있는데"
+    } ]
+  }, {
+    "tStartMs": 1735620,
+    "dDurationMs": 3480,
+    "segs": [ {
+      "utf8": "멀티플이 줄어든다고 하면"
+    } ]
+  }, {
+    "tStartMs": 1739100,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "경제가 꼭 타격이 없더라도"
+    } ]
+  }, {
+    "tStartMs": 1741910,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "가격이라는 건 변동성이 있지 않나 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1744700,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "개인적으로는 그렇게 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 1746720,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "좀만 천천히 빠졌어도"
+    } ]
+  }, {
+    "tStartMs": 1747790,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "건강한 조정이라고 생각할 수 있지 않나"
+    } ]
+  }, {
+    "tStartMs": 1749780,
+    "dDurationMs": 620,
+    "segs": [ {
+      "utf8": "생각을 해요"
+    } ]
+  }, {
+    "tStartMs": 1750400,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "2,500에서 6,300을"
+    } ]
+  }, {
+    "tStartMs": 1752540,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "1년 만에 갔는데"
+    } ]
+  }, {
+    "tStartMs": 1754050,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "800 정도 빠진 거는"
+    } ]
+  }, {
+    "tStartMs": 1755180,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "사실 그럴 수 있지"
+    } ]
+  }, {
+    "tStartMs": 1756930,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "개인적으로는 그럴 수 있지"
+    } ]
+  }, {
+    "tStartMs": 1758430,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "길게 봐서는 엄청 먹었잖아요"
+    } ]
+  }, {
+    "tStartMs": 1760700,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "사실 이렇게 먹었기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1762750,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "800 정도는 그럴 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 1764430,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "아니 조종을 하랬지 급락을 하면 어떡해"
+    } ]
+  }, {
+    "tStartMs": 1766770,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "전 이게 오늘의 주제라고 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 1768760,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "건강한 조정은"
+    } ]
+  }, {
+    "tStartMs": 1769730,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "마음속으로 이미 준비하고 있었어"
+    } ]
+  }, {
+    "tStartMs": 1772100,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "건강한 조종은"
+    } ]
+  }, {
+    "tStartMs": 1773170,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "스페인 가기 전에도"
+    } ]
+  }, {
+    "tStartMs": 1774470,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "건강한 조정 오케이"
+    } ]
+  }, {
+    "tStartMs": 1775560,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "5000 초반 오케이 콜"
+    } ]
+  }, {
+    "tStartMs": 1777120,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "1000포인트까지도 오케이 콜"
+    } ]
+  }, {
+    "tStartMs": 1778980,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "근데 그건 건강한 조종이지"
+    } ]
+  }, {
+    "tStartMs": 1780660,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "건강한 급락은 아니었거든요"
+    } ]
+  }, {
+    "tStartMs": 1782270,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "12%씩 던지라는 건 아니었는데"
+    } ]
+  }, {
+    "tStartMs": 1785150,
+    "dDurationMs": 3550,
+    "segs": [ {
+      "utf8": "그래서 개인적으로도 조종 후의 반등을 생각하는데"
+    } ]
+  }, {
+    "tStartMs": 1788700,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "문제는 이제 다들 그렇지만"
+    } ]
+  }, {
+    "tStartMs": 1790140,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "조종의 깊이를 모른다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1791730,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "여기서 조종을 받을지"
+    } ]
+  }, {
+    "tStartMs": 1793320,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "여기서 받을지"
+    } ]
+  }, {
+    "tStartMs": 1794380,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "아니면 여기까지만 조종하고"
+    } ]
+  }, {
+    "tStartMs": 1795320,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "이제 진짜 쭉 가는 걸지"
+    } ]
+  }, {
+    "tStartMs": 1797610,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "그게 문제가 아닌지 생각하고"
+    } ]
+  }, {
+    "tStartMs": 1798680,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "현재 상황을 여러분 다 아시겠지만"
+    } ]
+  }, {
+    "tStartMs": 1800350,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "급락 후 일단 리바운드까지 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1803100,
+    "dDurationMs": 2660,
+    "segs": [ {
+      "utf8": "그래서 대단히 이거는 진짜"
+    } ]
+  }, {
+    "tStartMs": 1805760,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "진짜 어려운 시장이라고 생각해요 개인적으로는"
+    } ]
+  }, {
+    "tStartMs": 1807920,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "여기는 만약에 이때 없다 그래도"
+    } ]
+  }, {
+    "tStartMs": 1810430,
+    "dDurationMs": 3620,
+    "segs": [ {
+      "utf8": "1번은 누가 얘기를 해도 던지라고 얘기했을 거예요"
+    } ]
+  }, {
+    "tStartMs": 1814050,
+    "dDurationMs": 580,
+    "segs": [ {
+      "utf8": "누가 봐도"
+    } ]
+  }, {
+    "tStartMs": 1814630,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "폭락 첫째 날이니까"
+    } ]
+  }, {
+    "tStartMs": 1816280,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "여기 있는 여기 두 번째 날은"
+    } ]
+  }, {
+    "tStartMs": 1818450,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "던지라는 사람 반"
+    } ]
+  }, {
+    "tStartMs": 1819620,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "잡으라는 사람 반이었다고 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 1821690,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "왜냐면 저가로 끝났잖아요"
+    } ]
+  }, {
+    "tStartMs": 1823110,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "그리고 폭락이"
+    } ]
+  }, {
+    "tStartMs": 1823940,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "3일 갈지 2일 갈지 모르기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1826040,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "여기는 던질 수도 있고"
+    } ]
+  }, {
+    "tStartMs": 1826930,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "잡을 수도 있다"
+    } ]
+  }, {
+    "tStartMs": 1828230,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "그리고 그 다음 날에 빨간색 날은"
+    } ]
+  }, {
+    "tStartMs": 1829590,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "잡아라가 나왔겠죠"
+    } ]
+  }, {
+    "tStartMs": 1830670,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "여기는 잡아라"
+    } ]
+  }, {
+    "tStartMs": 1832540,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "그럼 그 다음 날에는 보합이었어요"
+    } ]
+  }, {
+    "tStartMs": 1833790,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "그럼 여기는 뭐냐? 여기는"
+    } ]
+  }, {
+    "tStartMs": 1836130,
+    "dDurationMs": 3120,
+    "segs": [ {
+      "utf8": "급락도 끝났고"
+    } ]
+  }, {
+    "tStartMs": 1839250,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "급락 끝난 다음에"
+    } ]
+  }, {
+    "tStartMs": 1840160,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "약간의 리바운드도 끝났어요"
+    } ]
+  }, {
+    "tStartMs": 1842370,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "그럼 이제 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 1844530,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "제가 초보가 확실합니다"
+    } ]
+  }, {
+    "tStartMs": 1847180,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "헌터 초보방에 들어와서 정신을 못 차리는데"
+    } ]
+  }, {
+    "tStartMs": 1849780,
+    "dDurationMs": 2660,
+    "segs": [ {
+      "utf8": "여기는 진짜 모르겠는 구간이다"
+    } ]
+  }, {
+    "tStartMs": 1852440,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "이건 진짜 알 수 없다"
+    } ]
+  }, {
+    "tStartMs": 1853570,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "언제나 알 수 없지만"
+    } ]
+  }, {
+    "tStartMs": 1854930,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "그래도 1번 구간에서는"
+    } ]
+  }, {
+    "tStartMs": 1857070,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "한 70%의 느낌으로"
+    } ]
+  }, {
+    "tStartMs": 1858410,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "던진 게 나을 것 같다"
+    } ]
+  }, {
+    "tStartMs": 1859830,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "2번 구간에서는 던질 수도 있고"
+    } ]
+  }, {
+    "tStartMs": 1861680,
+    "dDurationMs": 530,
+    "segs": [ {
+      "utf8": "잡을 수도 있다"
+    } ]
+  }, {
+    "tStartMs": 1862210,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "그래서 뭔가 근거가 있을 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 1863760,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "여기는 근거라는 게"
+    } ]
+  }, {
+    "tStartMs": 1865130,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "5,500 구간이잖아"
+    } ]
+  }, {
+    "tStartMs": 1867580,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "위로 봤을 때"
+    } ]
+  }, {
+    "tStartMs": 1868330,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "한 800포인트"
+    } ]
+  }, {
+    "tStartMs": 1869950,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "10% 정도의"
+    } ]
+  }, {
+    "tStartMs": 1871590,
+    "dDurationMs": 3190,
+    "segs": [ {
+      "utf8": "전고점 대비 룸이 있긴 한데"
+    } ]
+  }, {
+    "tStartMs": 1874780,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "정말 어려운 구간이지 않나 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1877220,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "차트가 이렇게 될 수도 있고"
+    } ]
+  }, {
+    "tStartMs": 1879110,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "이게 흔히 말하는 더블 봉이죠"
+    } ]
+  }, {
+    "tStartMs": 1880300,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "아니면 뭐 이렇게 됐다가"
+    } ]
+  }, {
+    "tStartMs": 1882310,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "뭐 이렇게 갈 수도 있고"
+    } ]
+  }, {
+    "tStartMs": 1883350,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "진짜 진짜 어려운 구간이다"
+    } ]
+  }, {
+    "tStartMs": 1884960,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "이거는 봐야 된다"
+    } ]
+  }, {
+    "tStartMs": 1885870,
+    "dDurationMs": 580,
+    "segs": [ {
+      "utf8": "어쩔 수 없다"
+    } ]
+  }, {
+    "tStartMs": 1886450,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "장보고 장군님을 찾을 수밖에 없다"
+    } ]
+  }, {
+    "tStartMs": 1888330,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "이거는 모든 트레이딩 사업부가"
+    } ]
+  }, {
+    "tStartMs": 1890100,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "내일 아침 회의가 분명히 그럴 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1891500,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "어떻게 생각하니?"
+    } ]
+  }, {
+    "tStartMs": 1892370,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "그러면 장보고 하시죠"
+    } ]
+  }, {
+    "tStartMs": 1894080,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "장보고 밖에 없어요 장보고 밖에"
+    } ]
+  }, {
+    "tStartMs": 1896350,
+    "dDurationMs": 2910,
+    "segs": [ {
+      "utf8": "여기서는 섣불리 얘기하기 정말 힘들지 않나"
+    } ]
+  }, {
+    "tStartMs": 1899260,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1900170,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "다만 그건 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1901880,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "저도 그렇고"
+    } ]
+  }, {
+    "tStartMs": 1902810,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "마음이 너무 급해지고 있어요"
+    } ]
+  }, {
+    "tStartMs": 1904810,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "제 개인 생각이에요"
+    } ]
+  }, {
+    "tStartMs": 1906160,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "오르는 것도 너무 빠르고"
+    } ]
+  }, {
+    "tStartMs": 1907470,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "조종도 너무 빠르니까"
+    } ]
+  }, {
+    "tStartMs": 1908890,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "랠리를 안 하고"
+    } ]
+  }, {
+    "tStartMs": 1909630,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "더블로 하고"
+    } ]
+  }, {
+    "tStartMs": 1910820,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "조종을 안 하고 폭락을 하는데"
+    } ]
+  }, {
+    "tStartMs": 1912830,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "이게 급할 수밖에 없는데"
+    } ]
+  }, {
+    "tStartMs": 1914430,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "포지션이 없어도 불안해"
+    } ]
+  }, {
+    "tStartMs": 1916310,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "가버릴까봐"
+    } ]
+  }, {
+    "tStartMs": 1917630,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "있어도 불안해"
+    } ]
+  }, {
+    "tStartMs": 1918880,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "폭락할까봐"
+    } ]
+  }, {
+    "tStartMs": 1920030,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "이게 마음이 급해"
+    } ]
+  }, {
+    "tStartMs": 1921780,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "마음이 급해 너무 급해"
+    } ]
+  }, {
+    "tStartMs": 1923220,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "너무 급해"
+    } ]
+  }, {
+    "tStartMs": 1924390,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "왜 토요일 일요일 날에는 장이 안 열리나"
+    } ]
+  }, {
+    "tStartMs": 1926780,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "지금 빨리 뭘 해야 되는데"
+    } ]
+  }, {
+    "tStartMs": 1928840,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "야 주식이라는 게"
+    } ]
+  }, {
+    "tStartMs": 1931040,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "다 이럴 것 같지는 않은데"
+    } ]
+  }, {
+    "tStartMs": 1932050,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "너무 마음이 저부터도 일단 급하고"
+    } ]
+  }, {
+    "tStartMs": 1934060,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "내일 아침 9시가 빨리 와서"
+    } ]
+  }, {
+    "tStartMs": 1935950,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "뭐라도 한 칼 해야 될 것 같은"
+    } ]
+  }, {
+    "tStartMs": 1937390,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "이 느낌"
+    } ]
+  }, {
+    "tStartMs": 1938590,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "멘탈 게임이니까"
+    } ]
+  }, {
+    "tStartMs": 1939810,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "이런 멘탈을 좀"
+    } ]
+  }, {
+    "tStartMs": 1940930,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "잡으셔야 되지 않을까 생각하고"
+    } ]
+  }, {
+    "tStartMs": 1942920,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "여유롭게 봐도"
+    } ]
+  }, {
+    "tStartMs": 1944080,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "올라갈 때 잡을 수 있지 않을까 생각하고"
+    } ]
+  }, {
+    "tStartMs": 1945980,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "여유롭게 쉽게 대응을 해도"
+    } ]
+  }, {
+    "tStartMs": 1947530,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "좀 이렇게 완만하게 하락을 하면은"
+    } ]
+  }, {
+    "tStartMs": 1949500,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "정리할 수 있지 않을까"
+    } ]
+  }, {
+    "tStartMs": 1950500,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "이렇게 한번 기대를 해 보겠습니다"
+    } ]
+  }, {
+    "tStartMs": 1952260,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "개인적으로는 아마 많은 사람들이"
+    } ]
+  }, {
+    "tStartMs": 1954520,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "이걸 생각하고 있을 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 1955730,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "130조가 의미하는 게"
+    } ]
+  }, {
+    "tStartMs": 1957600,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "이거일 거라고 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 1958840,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "여의도에는 아주 유명한 말이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1960080,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "특히 채권 바닥에 유명한 말이 있는데"
+    } ]
+  }, {
+    "tStartMs": 1962050,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "올해 채권 트레이딩 하시는 분이"
+    } ]
+  }, {
+    "tStartMs": 1964220,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "자기가 병에 걸려서"
+    } ]
+  }, {
+    "tStartMs": 1965320,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "마지막 쓰러지면서"
+    } ]
+  }, {
+    "tStartMs": 1966450,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "자기 아들에게 남겼다는"
+    } ]
+  }, {
+    "tStartMs": 1967970,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "아주 유명한 유언이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1969880,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "제가 예전에도 방송할 때"
+    } ]
+  }, {
+    "tStartMs": 1970850,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "이 얘기 몇 번 했어요"
+    } ]
+  }, {
+    "tStartMs": 1971650,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "그 유언이 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 1972690,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "바로 밀림 사자입니다"
+    } ]
+  }, {
+    "tStartMs": 1975330,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "음.. 밀림 사자가 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 1977500,
+    "dDurationMs": 3420,
+    "segs": [ {
+      "utf8": "옛날에 그 형님들만 아시는 유명한 만화가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1980920,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "이게 아마 일본 만화인가 그럴 텐데"
+    } ]
+  }, {
+    "tStartMs": 1982400,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "우리나라에 왔었죠"
+    } ]
+  }, {
+    "tStartMs": 1983580,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "밀림의 왕자 레오라고 있어요"
+    } ]
+  }, {
+    "tStartMs": 1985370,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "사자는 원래 밀림에 안 삽니다"
+    } ]
+  }, {
+    "tStartMs": 1987080,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "초원에 살지"
+    } ]
+  }, {
+    "tStartMs": 1988060,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "하여튼 밀림에 사자가 있었어요"
+    } ]
+  }, {
+    "tStartMs": 1989580,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "그래서 그 당시에 유명했던 말이"
+    } ]
+  }, {
+    "tStartMs": 1991210,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "밀림 사자였어요"
+    } ]
+  }, {
+    "tStartMs": 1993120,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "아주 유명한 말입니다"
+    } ]
+  }, {
+    "tStartMs": 1994490,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "마지막 유언이 내 유언은"
+    } ]
+  }, {
+    "tStartMs": 1996590,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "아들아 밀림 사자"
+    } ]
+  }, {
+    "tStartMs": 1998310,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "하고 이제 돌아가셨다는 아주 유명한 유언이 있는데"
+    } ]
+  }, {
+    "tStartMs": 2000770,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "그래서 아마 많은 분들이"
+    } ]
+  }, {
+    "tStartMs": 2003010,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "밀림 사자를"
+    } ]
+  }, {
+    "tStartMs": 2004430,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "대기하고 있는 자금들이 많은 게 아닌가"
+    } ]
+  }, {
+    "tStartMs": 2006170,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "아니면 이미 사자"
+    } ]
+  }, {
+    "tStartMs": 2007930,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "나는 이미 샀어"
+    } ]
+  }, {
+    "tStartMs": 2009130,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "이미 사자가 있을 게 아닌가 생각이 되는데"
+    } ]
+  }, {
+    "tStartMs": 2011570,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "시장이 호흡을 좀 가다듬고"
+    } ]
+  }, {
+    "tStartMs": 2013890,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "너무 이제 마음이"
+    } ]
+  }, {
+    "tStartMs": 2015730,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "롱도 숏도 마음이 급하니까"
+    } ]
+  }, {
+    "tStartMs": 2017860,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "조금 잦아들면"
+    } ]
+  }, {
+    "tStartMs": 2019500,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "방향이 좀 보이고"
+    } ]
+  }, {
+    "tStartMs": 2021140,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "조금 더 지금보다는 난이도가 너무 높은 시장이고"
+    } ]
+  }, {
+    "tStartMs": 2023590,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "난이도가 좀 쉬운 시장으로"
+    } ]
+  }, {
+    "tStartMs": 2025330,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "바뀌지 않을까 생각하고"
+    } ]
+  }, {
+    "tStartMs": 2026820,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "밀림사자 물론 또 그렇게 얘기하죠"
+    } ]
+  }, {
+    "tStartMs": 2029130,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "언제까지 밀림인가요?"
+    } ]
+  }, {
+    "tStartMs": 2031120,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "자꾸 얘기했죠?"
+    } ]
+  }, {
+    "tStartMs": 2032060,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "여기는 초보방입니다"
+    } ]
+  }, {
+    "tStartMs": 2033650,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "초보방이니까 그런 고수 질문은 하지 마시고요"
+    } ]
+  }, {
+    "tStartMs": 2036610,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "아니 초보방에서 그렇게"
+    } ]
+  }, {
+    "tStartMs": 2038070,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "어려운 질문을 하면 어떡해"
+    } ]
+  }, {
+    "tStartMs": 2039730,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "초보는 초보처럼 하는 거지"
+    } ]
+  }, {
+    "tStartMs": 2041990,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "오늘날에는 좋은 시장,"
+    } ]
+  }, {
+    "tStartMs": 2043310,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "빨간 양봉이 아주 그냥"
+    } ]
+  }, {
+    "tStartMs": 2044640,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "장대 불기둥이 쫙 올라서"
+    } ]
+  }, {
+    "tStartMs": 2047460,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "욕심 없이 초보니까"
+    } ]
+  }, {
+    "tStartMs": 2048990,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "한 8%만 오르기를 한번 기도해보겠습니다"
+    } ]
+  } ]
+}

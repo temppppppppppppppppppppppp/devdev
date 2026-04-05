@@ -4,6 +4,8 @@ Date: 2026-04-03
 Status: audit baseline
 Scope: `narrative_ssot/10_reference_bank`가 지금도 필요한지, 필요하다면 어떤 하위 영역이 왜 필요한지 판정한다
 
+Historical Note: this audit was written before the bounded `source_corpora` cutover completed. Old source-corpora path wording below is preserved as pre-cutover audit context, not as current authority.
+
 ## 1. Purpose
 
 `material_ssot/10_research/20_fewshot_bank`가 canonical few-shot bank로 올라온 뒤에도,
@@ -51,13 +53,13 @@ Scope: `narrative_ssot/10_reference_bank`가 지금도 필요한지, 필요하�
 확인된 코드 경로:
 
 - `scripts/build_business_trend_slice.py`
-  - input/output default가 `narrative_ssot/10_reference_bank/source_corpora/platform_trends/...`
+  - input/output default가 old narrative reference-bank platform-trend source-corpora lane
 - `scripts/build_platform_trend_corpus.py`
-  - output default가 `narrative_ssot/10_reference_bank/source_corpora/platform_trends/...`
+  - output default가 old narrative reference-bank platform-trend source-corpora lane
 - `scripts/build_youtube_channel_corpus.py`
-  - output default가 `narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld/...`
+  - output default가 old narrative reference-bank YouTube source-corpora lane
 - `scripts/export_youtube_idea_packets.py`
-  - DB input과 output default가 `narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld/...`
+  - DB input과 output default가 old narrative reference-bank YouTube source-corpora lane
 
 즉, `10_reference_bank` 전체를 지금 당장 retire할 수 없는 이유는 `cards mirror`가 아니라 `source_corpora` 때문이다.
 

@@ -21,12 +21,11 @@ from scripts.investment_corpus_support import (  # noqa: E402
 DEFAULT_TITLE_DIR = Path(r"\\172.16.10.120\소설사업부\판무팀_ssot\02_연재\매지컬 써전(강산)")
 DEFAULT_OUTPUT_ROOT = (
     ROOT
-    / "narrative_ssot"
-    / "10_reference_bank"
-    / "source_corpora"
-    / "nas_serials"
-    / "medical"
-    / "magical_surgeon_sample_corpus"
+    / "material_ssot"
+    / "10_research"
+    / "50_corpus_curated"
+    / "reference_samples"
+    / "medical_magical_surgeon_sample_corpus"
 )
 
 
@@ -45,7 +44,9 @@ class EpisodeSourceSelection:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build a small representative sample corpus from a NAS EPUB title directory.")
+    parser = argparse.ArgumentParser(
+        description="Build a small representative sample corpus from a NAS EPUB title directory."
+    )
     parser.add_argument(
         "--title-dir",
         default=str(DEFAULT_TITLE_DIR),
@@ -101,9 +102,15 @@ def parse_bibliography(text: str) -> dict[str, object]:
         match = re.search(pattern, normalized, re.IGNORECASE)
         return match.group(1).strip() if match else None
 
-    title = _search(r"(?:제목|작품명)\s*[:：]\s*(.+)")
-    author = _search(r"(?:작가명|작가)\s*[:：]\s*(.+)")
-    isbn = _search(r"isbn\s*[:：]?\s*([0-9\-\/]+)")
+    title = _search(
+        r"(?:제목|작품명)\s*[:：]\s*(.+)"
+    )  # utf8-hygiene: allow-line rationale: regex uses literal ? quantifier.
+    author = _search(
+        r"(?:작가명|작가)\s*[:：]\s*(.+)"
+    )  # utf8-hygiene: allow-line rationale: regex uses literal ? quantifier.
+    isbn = _search(
+        r"isbn\s*[:：]?\s*([0-9\-\/]+)"
+    )  # utf8-hygiene: allow-line rationale: regex uses literal ? quantifier.
     total_episodes = _search(r"총\s*(\d+)\s*화")
     free_episodes = _search(r"무료\s*([0-9\-~()권화 ]+)")
 
@@ -112,7 +119,9 @@ def parse_bibliography(text: str) -> dict[str, object]:
     for index, line in enumerate(compact_lines):
         if any(marker in line for marker in description_markers):
             for candidate in compact_lines[index + 1 :]:
-                if re.search(r"(?:작가명|작가|isbn|무료|총\s*\d+\s*화|가격|출간일|상품번호)\s*[:：]?", candidate, re.IGNORECASE):
+                if re.search(
+                    r"(?:작가명|작가|isbn|무료|총\s*\d+\s*화|가격|출간일|상품번호)\s*[:：]?", candidate, re.IGNORECASE
+                ):  # utf8-hygiene: allow-line rationale: regex uses literal ? quantifier.
                     break
                 description_lines.append(candidate)
             break
@@ -147,11 +156,15 @@ def resolve_episode_source_dir(selection_root: Path) -> EpisodeSourceSelection:
         return EpisodeSourceSelection(source_dir=child, rule="prefer-explicit-epub-subdir", epub_count=count)
 
     if direct_epubs:
-        return EpisodeSourceSelection(source_dir=selection_root, rule="prefer-direct-epub-root", epub_count=len(direct_epubs))
+        return EpisodeSourceSelection(
+            source_dir=selection_root, rule="prefer-direct-epub-root", epub_count=len(direct_epubs)
+        )
 
     if child_counts:
         child, count = max(child_counts, key=lambda item: (item[1], -len(item[0].name)))
-        return EpisodeSourceSelection(source_dir=child, rule="prefer-largest-epub-subdir-within-selection", epub_count=count)
+        return EpisodeSourceSelection(
+            source_dir=child, rule="prefer-largest-epub-subdir-within-selection", epub_count=count
+        )
 
     raise ValueError(f"no epub-bearing source dir found under: {selection_root}")
 
@@ -216,7 +229,9 @@ def plan_samples(epubs: list[Path], sample_count: int, min_later_episode: int) -
         used.add(anchor)
 
     needed = sample_count - len(selected)
-    later_pool = [(episode, path) for episode, path in episode_pairs if episode >= min_later_episode and episode not in used]
+    later_pool = [
+        (episode, path) for episode, path in episode_pairs if episode >= min_later_episode and episode not in used
+    ]
     fallback_pool = [(episode, path) for episode, path in episode_pairs if episode not in used]
     pool = later_pool if len(later_pool) >= needed else fallback_pool
 
@@ -270,10 +285,21 @@ def write_readme(output_root: Path, manifest: dict[str, object]) -> None:
             f"- note: {manifest['episode_count_mismatch_note']}",
         )
     for sample in manifest["samples"]:
-        lines.append(f"- ep{sample['episode']:04d}: `{sample['output_file']}` ({sample['reason']}, {sample['char_count']} chars)")
+        lines.append(
+            f"- ep{sample['episode']:04d}: `{sample['output_file']}` ({sample['reason']}, {sample['char_count']} chars)"
+        )
     lines.append("")
-    lines.append("This corpus is a first-pass medical reference pack built from the direct NAS medical title found in the 02_연재 slice.")
+    lines.append(
+        "This corpus is a first-pass medical reference pack built from the direct NAS medical title found in the 02_연재 slice."
+    )
     (output_root / "README.md").write_text("\n".join(lines), encoding="utf-8")
+
+
+def clear_stale_sample_exports(samples_dir: Path, planned_samples: list[PlannedSample]) -> None:
+    expected = {f"ep{sample.episode:04d}.txt" for sample in planned_samples}
+    for stale_file in samples_dir.glob("ep*.txt"):
+        if stale_file.name not in expected:
+            stale_file.unlink()
 
 
 def main() -> int:
@@ -297,6 +323,7 @@ def main() -> int:
     output_root.mkdir(parents=True, exist_ok=True)
     samples_dir = output_root / "samples"
     samples_dir.mkdir(parents=True, exist_ok=True)
+    clear_stale_sample_exports(samples_dir, planned_samples)
 
     bibliography_path = find_bibliography_text(title_dir)
     bibliography_text = decode_text_file(bibliography_path) if bibliography_path else ""
@@ -304,9 +331,7 @@ def main() -> int:
     bibliography_total = bibliography.get("total_episodes")
     mismatch_note = None
     if isinstance(bibliography_total, int) and bibliography_total != episode_numbers[-1]:
-        mismatch_note = (
-            f"bibliography says total {bibliography_total} episodes, but current canonical EPUB set runs to {episode_numbers[-1]} episodes"
-        )
+        mismatch_note = f"bibliography says total {bibliography_total} episodes, but current canonical EPUB set runs to {episode_numbers[-1]} episodes"
 
     sample_entries: list[dict[str, object]] = []
     for planned in planned_samples:

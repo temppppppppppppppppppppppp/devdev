@@ -3,8 +3,10 @@
 Status: legacy pointer
 Date: 2026-04-03
 
+Historical Note: this pointer exists only to preserve old human-facing links from the pre-cutover research layout.
+
 authoritative file moved to:
 
-- `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\10_reference_profiles\2026-03-30_modern_business_reference_master_order.md`
+- `material_ssot/10_research/10_reference_profiles/2026-03-30_modern_business_reference_master_order.md`
 
 read the new path first. this file exists only to keep old human-facing links from going dark during the research cutover.

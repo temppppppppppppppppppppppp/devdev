@@ -1,11 +1,15 @@
-# Three-IDE Operating Model Draft
+# Three-IDE Burst-Mode Draft
 
 Date: 2026-04-03
-Status: draft
-Scope: parallel IDE operation for Geuldobi runtime work, Stage0 material work, and planning-process standardization
+Status: draft burst-mode reference
+Scope: temporary parallel IDE burst mode for Geuldobi runtime work, Stage0 material work, and planning-process standardization
+
+Historical Note: this draft records a capture-time three-worktree recommendation. The worktree labels below are historical examples, not current required absolute paths. It does not replace the active `single IDE default` policy.
 
 ## 1. Decision Summary
 
+- default operating mode is `single`
+- `split_3ide` is an explicit burst mode, not a standing baseline
 - Use `1 main + 2 support` when parallel work is worth the coordination cost.
 - `IDE-1` owns the active queue, shared entrypoints, and final merge authority.
 - `IDE-2` owns `Stage0 -> BI/TR normalization + downstream material production`.
@@ -119,9 +123,9 @@ Shared-file rule:
 
 Recommended layout:
 
-- `IDE-1`: `C:\Users\wjjo\Desktop\글도비`
-- `IDE-2`: `C:\Users\wjjo\Desktop\글도비_stage0`
-- `IDE-3`: `C:\Users\wjjo\Desktop\글도비_process`
+- `IDE-1`: main runtime worktree at capture time
+- `IDE-2`: sibling Stage0 worktree at capture time
+- `IDE-3`: sibling planning-process worktree at capture time
 
 Recommended commands:
 
@@ -146,13 +150,14 @@ Recommended modes:
 
 - only `IDE-1` writes
 - `IDE-2` and `IDE-3` are closed or read-only
-- default mode for low-coordination work
+- canonical default mode
 
 ### `split_3ide`
 
 - `IDE-1`, `IDE-2`, and `IDE-3` all active
 - each IDE edits only its owned scope
 - separate worktrees are mandatory
+- use only for an explicit bounded burst
 
 ### `merge_only`
 
@@ -215,6 +220,7 @@ It is not a runtime contract and should not block work if stale.
 Start with this policy:
 
 - default mode: `single`
+- treat `single` as the normal resting state, not just the low-effort option
 - only switch to `split_3ide` when:
   - `IDE-1` has a real runtime bottleneck lane
   - `IDE-2` has independent Stage0 or BI/TR work

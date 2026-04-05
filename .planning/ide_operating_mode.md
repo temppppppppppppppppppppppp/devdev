@@ -1,18 +1,17 @@
 # IDE Operating Mode
 
 Status: shared lane map
-Last Updated: 2026-04-03
+Last Updated: 2026-04-05
 
 ## Current Mode
 
-- mode: `split_3ide`
-- parallel activation: `active`
+- mode: `single`
+- parallel activation: `inactive`
 - main owner: `IDE-1`
-- support owners:
-  - `IDE-2`
-  - `IDE-3`
+- support lanes: `reserved for burst mode only`
 
-Separate support worktrees now exist and are write-capable inside their owned lanes.
+Default operating assumption is `one main worktree + one main writer lane`.
+`split_3ide` is a temporary burst mode, not the baseline.
 `IDE-1` remains merge owner and shared-file lock owner.
 
 ## Stable Editor Assignment
@@ -28,19 +27,23 @@ Do not use a single mutable `current IDE` slot here.
 
 Quick reference:
 
+- `docs/implementation/single-ide-default-policy.md`
 - `docs/2026-04-03/three-ide-ownership-cut-sheet.md`
 
 ## Active Worktree Snapshot
 
 - `IDE-1` / `antigravity`
-  - path: `C:\Users\wjjo\Desktop\글도비`
-  - branch: `main`
+  - path: `.`
+  - branch: `ops/material-ssot-1ide-default`
+
+Reserved burst-mode lanes:
+
 - `IDE-2` / `vscode`
-  - path: `C:\Users\wjjo\Desktop\글도비_stage0`
-  - branch: `ops/stage0-bi-tr`
+  - activate only after an explicit `split_3ide` switch
+  - recommended path when active: `..\글도비_stage0`
 - `IDE-3` / `cursor`
-  - path: `C:\Users\wjjo\Desktop\글도비_process`
-  - branch: `ops/process-standardization`
+  - activate only after an explicit `split_3ide` switch
+  - recommended path when active: `..\글도비_process`
 
 ## Stable Lane Map
 
@@ -129,6 +132,7 @@ Locked by default:
 
 Before `split_3ide`:
 
+- confirm the current task really benefits from a temporary parallel burst
 - separate worktrees created
 - support branches created
 - file ownership written down
@@ -170,3 +174,4 @@ Recommended order:
 - This file is a lightweight shared operator memo.
 - It is not a runtime config file.
 - Keep stable ownership here and keep per-worktree mutable state in the local note.
+- If this file and the actual git state disagree, actual git state wins.

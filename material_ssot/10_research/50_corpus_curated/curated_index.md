@@ -27,6 +27,7 @@ Moved bundle set:
 - `판타지_환생했더니 정령군주` - 20 episodes
 - `헌터물_만렙 사냥꾼, 회귀하다` - 20 episodes
 - `헌터물_SSS급 블러드 헌터!` - 20 episodes
+- `reference_samples/medical_magical_surgeon_sample_corpus` - 10 representative NAS medical episodes
 
 Selection rule:
 

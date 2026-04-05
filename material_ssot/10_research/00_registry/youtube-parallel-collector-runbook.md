@@ -24,7 +24,7 @@ Scope: `crawl_youtube.py` 병렬 실행 시 operator note 정본
 ## 2. Preflight
 
 - 작업 디렉토리:
-  - `C:\Users\wjjo\Desktop\글도비`
+  - workspace root
 - main script:
   - `scripts/research_collectors/crawl_youtube.py`
 - current note:
@@ -35,49 +35,49 @@ Scope: `crawl_youtube.py` 병렬 실행 시 operator note 정본
 ### Terminal 1. 지식인미나니
 
 ```bash
-cd "C:/Users/wjjo/Desktop/글도비" && python -X utf8 scripts/research_collectors/crawl_youtube.py minani
+python -X utf8 scripts/research_collectors/crawl_youtube.py minani
 ```
 
 ### Terminal 2. 보다 BODA
 
 ```bash
-cd "C:/Users/wjjo/Desktop/글도비" && python -X utf8 scripts/research_collectors/crawl_youtube.py boda
+python -X utf8 scripts/research_collectors/crawl_youtube.py boda
 ```
 
 ### Terminal 3. 테크몽
 
 ```bash
-cd "C:/Users/wjjo/Desktop/글도비" && python -X utf8 scripts/research_collectors/crawl_youtube.py techmong
+python -X utf8 scripts/research_collectors/crawl_youtube.py techmong
 ```
 
 ### Terminal 4. 벌거벗은 세계사
 
 ```bash
-cd "C:/Users/wjjo/Desktop/글도비" && python -X utf8 scripts/research_collectors/crawl_youtube.py worldhistory
+python -X utf8 scripts/research_collectors/crawl_youtube.py worldhistory
 ```
 
 ### Terminal 5. EO
 
 ```bash
-cd "C:/Users/wjjo/Desktop/글도비" && python -X utf8 scripts/research_collectors/crawl_youtube.py eo
+python -X utf8 scripts/research_collectors/crawl_youtube.py eo
 ```
 
 ### Terminal 6. 체인지그라운드
 
 ```bash
-cd "C:/Users/wjjo/Desktop/글도비" && python -X utf8 scripts/research_collectors/crawl_youtube.py changeground
+python -X utf8 scripts/research_collectors/crawl_youtube.py changeground
 ```
 
 ### Terminal 7. 유맛
 
 ```bash
-cd "C:/Users/wjjo/Desktop/글도비" && python -X utf8 scripts/research_collectors/crawl_youtube.py yumat
+python -X utf8 scripts/research_collectors/crawl_youtube.py yumat
 ```
 
 ### Terminal 8. EBS 다큐
 
 ```bash
-cd "C:/Users/wjjo/Desktop/글도비" && python -X utf8 scripts/research_collectors/crawl_youtube.py ebsdocu
+python -X utf8 scripts/research_collectors/crawl_youtube.py ebsdocu
 ```
 
 주의:

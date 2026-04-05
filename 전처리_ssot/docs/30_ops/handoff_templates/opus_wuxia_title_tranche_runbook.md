@@ -34,13 +34,13 @@ Every step after step 1 should start in a fresh context.
 
 Opus must read these files in UTF-8 before writing anything:
 
-1. `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md`
-2. `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\genre_pack_registry.md`
-3. `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json`
+1. `전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md`
+2. `전처리_ssot\docs\30_ops\genre_pack_registry.md`
+3. `전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json`
 
 The audit run must also read:
 
-4. `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\audit_checklists\audit_checklist__genre_decomposition_title_tranche__v1.md`
+4. `전처리_ssot\docs\30_ops\audit_checklists\audit_checklist__genre_decomposition_title_tranche__v1.md`
 
 ## 4. First Target
 
@@ -49,7 +49,7 @@ Use only this first target:
 - `title_id`: `wuxia__title__gonryun_mahyeop`
 - `title_slug`: `gonryun_mahyeop`
 - title: `곤륜마협`
-- source root: `C:\Users\wjjo\Desktop\글도비\docs\실물기반 사각지대 테스트\원고\무협_곤륜마협`
+- source root: `docs\실물기반 사각지대 테스트\원고\무협_곤륜마협`
 
 Do not touch title two until the title-one tranche survives `pass1`, `pass2`, `pass3`, and adversarial review.
 
@@ -57,15 +57,15 @@ Do not touch title two until the title-one tranche survives `pass1`, `pass2`, `p
 
 Write title-local outputs only under these paths:
 
-- `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\genre_notes\wuxia\by_title\gonryun_mahyeop`
-- `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\scene_cards`
-- `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\block_cards`
-- `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\hook_payoff`
-- `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\voice`
+- `전처리_ssot\docs\20_db_and_materials\materials\genre_notes\wuxia\by_title\gonryun_mahyeop`
+- `전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\scene_cards`
+- `전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\block_cards`
+- `전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\hook_payoff`
+- `전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\voice`
 
 Audit outputs belong under:
 
-- `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\phase0_ready_reviews`
+- `전처리_ssot\docs\30_ops\phase0_ready_reviews`
 
 ## 6. Exact Execution Order
 
@@ -151,9 +151,9 @@ Hard rule:
 You are the operator for one bounded preprocessing unit only.
 
 Read these files in UTF-8 first:
-1. C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md
-2. C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\genre_pack_registry.md
-3. C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json
+1. 전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md
+2. 전처리_ssot\docs\30_ops\genre_pack_registry.md
+3. 전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json
 
 Then perform only this unit:
 - genre_family: wuxia
@@ -163,11 +163,11 @@ Then perform only this unit:
 - task type: first-pass structural segmentation only
 
 Source root:
-C:\Users\wjjo\Desktop\글도비\docs\실물기반 사각지대 테스트\원고\무협_곤륜마협
+docs\실물기반 사각지대 테스트\원고\무협_곤륜마협
 
 Write outputs only under:
-- C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\genre_notes\wuxia\by_title\gonryun_mahyeop
-- C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\scene_cards
+- 전처리_ssot\docs\20_db_and_materials\materials\genre_notes\wuxia\by_title\gonryun_mahyeop
+- 전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\scene_cards
 
 Required outputs for this run:
 1. episode segmentation note
@@ -197,9 +197,9 @@ Use this only after Run A and Run B both exist.
 You are the operator for one bounded preprocessing unit only.
 
 Read these files in UTF-8 first:
-1. C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md
-2. C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\genre_pack_registry.md
-3. C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json
+1. 전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md
+2. 전처리_ssot\docs\30_ops\genre_pack_registry.md
+3. 전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json
 
 Then read the existing shard outputs for:
 - wuxia__title__gonryun_mahyeop
@@ -211,11 +211,11 @@ Perform only this unit:
 - scope: 곤륜마협 ep001-020
 
 Write outputs only under:
-- C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\genre_notes\wuxia\by_title\gonryun_mahyeop
-- C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\scene_cards
-- C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\block_cards
-- C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\hook_payoff
-- C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\voice
+- 전처리_ssot\docs\20_db_and_materials\materials\genre_notes\wuxia\by_title\gonryun_mahyeop
+- 전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\scene_cards
+- 전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\block_cards
+- 전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\hook_payoff
+- 전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia\by_title\gonryun_mahyeop\voice
 
 Required outputs:
 1. title_registry__wuxia__gonryun_mahyeop.md
@@ -247,9 +247,9 @@ Stop after the title-tranche bundle is complete and report:
 You are the independent reviewer for one bounded preprocessing audit unit only.
 
 Read these files in UTF-8 first:
-1. C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md
-2. C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json
-3. C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\audit_checklists\audit_checklist__genre_decomposition_title_tranche__v1.md
+1. 전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md
+2. 전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json
+3. 전처리_ssot\docs\30_ops\audit_checklists\audit_checklist__genre_decomposition_title_tranche__v1.md
 
 Then read the completed title-tranche bundle for:
 - wuxia__title__gonryun_mahyeop
@@ -260,7 +260,7 @@ Perform only this unit:
 - scope: 곤륜마협 ep001-020 title-tranche bundle
 
 Write outputs only under:
-- C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\phase0_ready_reviews
+- 전처리_ssot\docs\30_ops\phase0_ready_reviews
 
 Required outputs:
 1. audit_checklist__gonryun_mahyeop_ep001-020__v1.md

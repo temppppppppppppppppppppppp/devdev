@@ -3,7 +3,7 @@
   "reference_image": "C:/Users/wjjo/Desktop/수동_글도비/d.png",
   "generation_model": "gemini-3-pro-image-preview",
   "judge_model": "gemini-2.5-pro",
-  "output_dir": "C:/Users/wjjo/Desktop/글도비/visual_lab/illustration_pipeline/outputs/d_ropan",
+  "output_dir": "visual_lab/illustration_pipeline/outputs/d_ropan",
   "variants": [
     {
       "name": "duchess_corridor",

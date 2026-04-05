@@ -2,7 +2,7 @@
   "_schema_version": "idea_engine_candidate_bank.draft.v0",
   "updated_at": "2026-04-03",
   "status": "draft",
-  "source_markdown": "C:/Users/wjjo/Desktop/글도비_process/docs/2026-04-03/modern-business-engine-candidate-bank-100.draft.md",
+  "source_markdown": "docs/2026-04-03/modern-business-engine-candidate-bank-100.draft.md",
   "integration_note": "JSON index for the 100-engine draft bank. Keep curated ENG-001~008 stable until 3-pass audit promotes survivors.",
   "clusters": [
     { "cluster_id": "CL-001", "name": "office_power", "count": 25, "description": "결재선, 직보, 승격, 인사, 감사, 운영 실권 중심 엔진군." },
@@ -22,42 +22,42 @@
       "source_bundle_id": "SB-001",
       "label": "platform packaging rollups",
       "paths": [
-        "C:/Users/wjjo/Desktop/글도비_process/narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/platform_cue_rollup.json",
-        "C:/Users/wjjo/Desktop/글도비_process/narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/platform_title_signal_rollup.json",
-        "C:/Users/wjjo/Desktop/글도비_process/narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/platform_title_token_rollup.json",
-        "C:/Users/wjjo/Desktop/글도비_process/narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/business_trend_slice/business_trend_rollup.json"
+        "material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/platform_cue_rollup.json",
+        "material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/platform_title_signal_rollup.json",
+        "material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/platform_title_token_rollup.json",
+        "material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/business_trend_slice/business_trend_rollup.json"
       ]
     },
     {
       "source_bundle_id": "SB-002",
       "label": "youtube corridor corpus",
       "paths": [
-        "C:/Users/wjjo/Desktop/글도비_process/narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld/README.md",
-        "C:/Users/wjjo/Desktop/글도비_process/narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld/video_lookup.jsonl",
-        "C:/Users/wjjo/Desktop/글도비_process/narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld/transcript_documents.jsonl"
+        "material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld/README.md",
+        "material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld/video_lookup.jsonl",
+        "material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld/transcript_documents.jsonl"
       ]
     },
     {
       "source_bundle_id": "SB-003",
       "label": "audited preprocess and local refs",
       "paths": [
-        "C:/Users/wjjo/Desktop/글도비_process/treatments/preprocess/office_checkup_next_day/source_manifest.json",
-        "C:/Users/wjjo/Desktop/글도비_process/treatments/preprocess/fallen_prince_buys_joseon/source_manifest.json",
-        "C:/Users/wjjo/Desktop/글도비_process/treatments/preprocess/pantech_cyworld_reborn/source_manifest.json",
-        "C:/Users/wjjo/Desktop/글도비_process/treatments/preprocess/empire_youngest_allsector/source_manifest.json",
-        "C:/Users/wjjo/Desktop/글도비_process/전처리_ssot/docs/20_db_and_materials/local_refs/project_refs/us_ai_exile_monopoly/top3_replanning_brief_for_tr_bi.md",
-        "C:/Users/wjjo/Desktop/글도비_process/narrative_ssot/10_reference_bank/cards"
+        "treatments/preprocess/office_checkup_next_day/source_manifest.json",
+        "treatments/preprocess/fallen_prince_buys_joseon/source_manifest.json",
+        "treatments/preprocess/pantech_cyworld_reborn/source_manifest.json",
+        "treatments/preprocess/empire_youngest_allsector/source_manifest.json",
+        "전처리_ssot/docs/20_db_and_materials/local_refs/project_refs/us_ai_exile_monopoly/top3_replanning_brief_for_tr_bi.md",
+        "narrative_ssot/10_reference_bank/cards"
       ]
     },
     {
       "source_bundle_id": "SB-004",
       "label": "process-local preprocess manifests",
       "paths": [
-        "C:/Users/wjjo/Desktop/글도비_process/treatments/preprocess/gatekeeper_heir/source_manifest.json",
-        "C:/Users/wjjo/Desktop/글도비_process/treatments/preprocess/chaebol_allowance_zero/source_manifest.json",
-        "C:/Users/wjjo/Desktop/글도비_process/treatments/preprocess/failed_future_ceo_intern/source_manifest.json",
-        "C:/Users/wjjo/Desktop/글도비_process/treatments/preprocess/defense_defect_engineer/source_manifest.json",
-        "C:/Users/wjjo/Desktop/글도비_process/treatments/preprocess/wallstreet_great_depression/source_manifest.json"
+        "treatments/preprocess/gatekeeper_heir/source_manifest.json",
+        "treatments/preprocess/chaebol_allowance_zero/source_manifest.json",
+        "treatments/preprocess/failed_future_ceo_intern/source_manifest.json",
+        "treatments/preprocess/defense_defect_engineer/source_manifest.json",
+        "treatments/preprocess/wallstreet_great_depression/source_manifest.json"
       ]
     }
   ],

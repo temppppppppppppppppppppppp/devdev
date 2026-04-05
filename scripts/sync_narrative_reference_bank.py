@@ -1,19 +1,21 @@
-# -*- coding: utf-8 -*-
-"""Sync canonical research few-shot assets into narrative_ssot mirror paths.
+"""Sync canonical research few-shot assets into the narrative reference-bank mirror shell.
 
 This script copies the current authoritative reference manifest and all saved
 card markdown files into `narrative_ssot/10_reference_bank/` as UTF-8 text.
+Its live scope is intentionally limited to `reference_card_manifest.json` and
+`cards/`; other `10_reference_bank` subdirectories are residue or pointer notes.
 
 Authoritative source is the research-stage few-shot root under `material_ssot`.
 
 Usage:
     python -X utf8 scripts/sync_narrative_reference_bank.py
 """
+
 from __future__ import annotations
 
 import json
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -72,12 +74,13 @@ def main() -> int:
         "authoritative_source": str(SOURCE_ROOT.relative_to(ROOT)).replace("\\", "/"),
         "mirrored_manifest": str(DEST_MANIFEST.relative_to(ROOT)).replace("\\", "/"),
         "mirrored_cards_root": str(DEST_CARDS.relative_to(ROOT)).replace("\\", "/"),
-        "synced_at_utc": datetime.now(timezone.utc).isoformat(),
+        "synced_at_utc": datetime.now(UTC).isoformat(),
         "card_count": len(card_files),
         "notes": [
             "material_ssot research few-shot bank is authoritative after Wave 1 cutover",
-            "narrative_ssot mirror is for new structure adoption and traceability"
-        ]
+            "narrative_ssot mirror is limited to cards plus manifest traceability",
+            "source_corpora, selection, and idea_engine_db are outside the live mirror scope",
+        ],
     }
     DEST_STATUS.write_text(json.dumps(status, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

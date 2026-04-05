@@ -8,7 +8,7 @@
 
 ## 1. SOURCE CHECK
 
-- folder_path: `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세`
+- folder_path: `material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세`
 - detected_work_title: `독식하는 재벌 3세` (폴더명 "재벌물_독식하는 재벌 3세" + ep001 본문 "나는 재벌 3세였다" / 태우그룹)
 - available_episode_range: ep001–ep050 (50화)
 - checkpoint_access: ep001 OK, ep010 OK, ep020 OK, ep030 OK, ep040 OK, ep050 OK

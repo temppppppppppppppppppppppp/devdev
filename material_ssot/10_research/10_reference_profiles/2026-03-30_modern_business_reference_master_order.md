@@ -28,9 +28,9 @@
 ## 1. 수집 Sink
 
 - card sink root:
-  - `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards`
+  - `material_ssot\10_research\20_fewshot_bank\cards`
 - collection manifest:
-  - `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json`
+  - `material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json`
 
 저장 규칙:
 
@@ -99,10 +99,10 @@ Codex audit 기본 체크:
 
 | 작품 | 트랙 | source scope | source path | output path |
 | --- | --- | --- | --- | --- |
-| 독식하는 재벌 3세 | A | `local_only` | `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세` | `...\cards\dokshik_jaebeol3se_A.md` |
-| 독식하는 재벌 3세 | B | `local_only` | `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세` | `...\cards\dokshik_jaebeol3se_B.md` |
-| 금수저 투자백서 | A | `local_only` | `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\50_corpus_curated\투자물_금수저 투자백서` | `...\cards\geumsujeo_tujabaekseo_A.md` |
-| 금수저 투자백서 | B | `local_only` | `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\50_corpus_curated\투자물_금수저 투자백서` | `...\cards\geumsujeo_tujabaekseo_B.md` |
+| 독식하는 재벌 3세 | A | `local_only` | `material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세` | `...\cards\dokshik_jaebeol3se_A.md` |
+| 독식하는 재벌 3세 | B | `local_only` | `material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세` | `...\cards\dokshik_jaebeol3se_B.md` |
+| 금수저 투자백서 | A | `local_only` | `material_ssot\10_research\50_corpus_curated\투자물_금수저 투자백서` | `...\cards\geumsujeo_tujabaekseo_A.md` |
+| 금수저 투자백서 | B | `local_only` | `material_ssot\10_research\50_corpus_curated\투자물_금수저 투자백서` | `...\cards\geumsujeo_tujabaekseo_B.md` |
 | 김 대리는 벼락부자 | A | `nas_only` | `\\172.16.10.120\소설사업부\판무팀_ssot\02_연재\김 대리는 벼락부자(글고래)\1_원고\epub` | `...\cards\gim_daerineun_byeorakbuja_A.md` |
 | 김 대리는 벼락부자 | B | `nas_only` | `\\172.16.10.120\소설사업부\판무팀_ssot\02_연재\김 대리는 벼락부자(글고래)\1_원고\epub` | `...\cards\gim_daerineun_byeorakbuja_B.md` |
 | 국세청 망나니 | A | `nas_only` | `\\172.16.10.120\소설사업부\판무팀_ssot\02_연재\국세청 망나니(동면거북이)\1_원고\기타\txt` | `...\cards\guksecheong_mangnani_A.md` |
@@ -117,7 +117,7 @@ Codex audit 기본 체크:
 ```text
 공통 저장 규칙:
 - save_target: {output_path}
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - source preflight PASS 시 manifest의 해당 entry status를 `source_checked`로 갱신하라.
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - self-audit PASS까지 끝나면 `audit_status = pass`, `status = audited`로 갱신하라.
@@ -150,7 +150,7 @@ Sonnet 4.6으로 작품별 A/B 카드를 돌릴 때는 아래 축약 런처를 �
 창작 금지. 기획안 제안 금지. 감상문 금지. 진행 보고 금지. 최종 답변만 출력.
 
 정본 기준 문서:
-C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\10_reference_profiles\2026-03-30_modern_business_reference_master_order.md
+material_ssot\10_research\10_reference_profiles\2026-03-30_modern_business_reference_master_order.md
 
 반드시 따를 섹션:
 - `## 1. 수집 Sink`
@@ -168,7 +168,7 @@ C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\10_reference_profiles\
 - `Master Reference Card v1` + `Slim Reference Card v1` 둘 다 필수.
 - 직접 저장 가능하면 `{output_path}`에 저장.
 - manifest:
-  - `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json`
+  - `material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json`
 - 직접 저장 불가면 wrapper 규칙으로만 반환.
 - 이번 턴은 `{work_title} / {track}`만 수행하고 다른 작품/다른 트랙은 건드리지 마라.
 
@@ -222,8 +222,8 @@ reason: {정확한 실패 사유}
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\dokshik_jaebeol3se_A.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\dokshik_jaebeol3se_A.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD dokshik_jaebeol3se_A ===
@@ -232,7 +232,7 @@ reason: {정확한 실패 사유}
 
 공통 소스 규칙:
 - source scope는 `local_only`다.
-- 이번 턴은 `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세`만 사용한다.
+- 이번 턴은 `material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세`만 사용한다.
 - 작품명이 1글자라도 다르면 즉시 FAIL이다.
 - 유사 제목 다른 작품을 대신 읽으면 전체 FAIL이다.
 - ep1/Block 1 접근 실패 시 추정/보간하지 말고 즉시 FAIL이다.
@@ -318,8 +318,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\dokshik_jaebeol3se_B.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\dokshik_jaebeol3se_B.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD dokshik_jaebeol3se_B ===
@@ -328,7 +328,7 @@ findings first.
 
 공통 소스 규칙:
 - source scope는 `local_only`다.
-- 이번 턴은 `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세`만 사용한다.
+- 이번 턴은 `material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세`만 사용한다.
 - 작품명이 1글자라도 다르면 즉시 FAIL이다.
 - 유사 제목 다른 작품을 대신 읽으면 전체 FAIL이다.
 - ep1/Block 1 접근 실패 시 추정/보간하지 말고 즉시 FAIL이다.
@@ -417,8 +417,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\geumsujeo_tujabaekseo_A.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\geumsujeo_tujabaekseo_A.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD geumsujeo_tujabaekseo_A ===
@@ -427,7 +427,7 @@ findings first.
 
 공통 소스 규칙:
 - source scope는 `local_only`다.
-- 이번 턴은 `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\50_corpus_curated\투자물_금수저 투자백서`만 사용한다.
+- 이번 턴은 `material_ssot\10_research\50_corpus_curated\투자물_금수저 투자백서`만 사용한다.
 - 작품명이 1글자라도 다르면 즉시 FAIL이다.
 - ep1/Block 1 접근 실패 시 추정/보간하지 말고 즉시 FAIL이다.
 
@@ -510,8 +510,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\geumsujeo_tujabaekseo_B.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\geumsujeo_tujabaekseo_B.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD geumsujeo_tujabaekseo_B ===
@@ -520,7 +520,7 @@ findings first.
 
 공통 소스 규칙:
 - source scope는 `local_only`다.
-- 이번 턴은 `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\50_corpus_curated\투자물_금수저 투자백서`만 사용한다.
+- 이번 턴은 `material_ssot\10_research\50_corpus_curated\투자물_금수저 투자백서`만 사용한다.
 - 작품명이 1글자라도 다르면 즉시 FAIL이다.
 - ep1/Block 1 접근 실패 시 추정/보간하지 말고 즉시 FAIL이다.
 
@@ -607,8 +607,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\gim_daerineun_byeorakbuja_A.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\gim_daerineun_byeorakbuja_A.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD gim_daerineun_byeorakbuja_A ===
@@ -704,8 +704,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\gim_daerineun_byeorakbuja_B.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\gim_daerineun_byeorakbuja_B.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD gim_daerineun_byeorakbuja_B ===
@@ -803,8 +803,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\guksecheong_mangnani_A.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\guksecheong_mangnani_A.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD guksecheong_mangnani_A ===
@@ -900,8 +900,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\guksecheong_mangnani_B.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\guksecheong_mangnani_B.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD guksecheong_mangnani_B ===
@@ -1000,8 +1000,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\daehanminguk_absolute_jaebeol_A.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\daehanminguk_absolute_jaebeol_A.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD daehanminguk_absolute_jaebeol_A ===
@@ -1044,8 +1044,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\daehanminguk_absolute_jaebeol_B.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\daehanminguk_absolute_jaebeol_B.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD daehanminguk_absolute_jaebeol_B ===
@@ -1093,8 +1093,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\sinheung_jaebeol_A.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\sinheung_jaebeol_A.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD sinheung_jaebeol_A ===
@@ -1137,8 +1137,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\sinheung_jaebeol_B.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\sinheung_jaebeol_B.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD sinheung_jaebeol_B ===
@@ -1186,8 +1186,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\jaebeol_saenghwal_girokbu_A.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\jaebeol_saenghwal_girokbu_A.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD jaebeol_saenghwal_girokbu_A ===
@@ -1230,8 +1230,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\jaebeol_saenghwal_girokbu_B.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\jaebeol_saenghwal_girokbu_B.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD jaebeol_saenghwal_girokbu_B ===
@@ -1279,8 +1279,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\gim_daerineun_insaengi_neomu_gabyeopda_A.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\gim_daerineun_insaengi_neomu_gabyeopda_A.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD gim_daerineun_insaengi_neomu_gabyeopda_A ===
@@ -1323,8 +1323,8 @@ findings first.
 창작 금지. 기획안 제안 금지.
 
 공통 저장 규칙:
-- save_target: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\cards\gim_daerineun_insaengi_neomu_gabyeopda_B.md
-- collection_manifest: C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
+- save_target: material_ssot\10_research\20_fewshot_bank\cards\gim_daerineun_insaengi_neomu_gabyeopda_B.md
+- collection_manifest: material_ssot\10_research\20_fewshot_bank\reference_card_manifest.json
 - 직접 저장 가능하면 save_target에 저장하고, manifest의 해당 entry status를 `saved`로 갱신하라.
 - 직접 저장 불가면 아래 wrapper로만 반환하라.
 - === BEGIN CARD gim_daerineun_insaengi_neomu_gabyeopda_B ===

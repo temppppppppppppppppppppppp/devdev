@@ -45,7 +45,7 @@
       "track": "A",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/주식의 신(유재무)/1_원고",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/jusigui_sin_A.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/jusigui_sin_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS txt source (기타/원고txt/); preflight PASS 2026-03-30; ep1·5·10 직접 확인; 추정/보간 없음; card saved 2026-03-30; re-audit 2026-03-30: `현대 현판 적용 분해` + `마지막 3줄` 보강 완료, 6/6 구조 계약 충족, audit PASS."
@@ -56,7 +56,7 @@
       "track": "B",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/주식의 신(유재무)/1_원고/epub",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/jusigui_sin_B.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/jusigui_sin_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; ep0001-ep0442(442화 완결) 확인; checkpoint 전수 접근; B track growth+tycoon; re-audit 2026-03-30: `Master Reference Card v1` 명시 헤딩 복구 + 전체 섹션 번호 정규화 완료, 6/6 구조 계약 충족, audit PASS."
@@ -66,8 +66,8 @@
       "slug": "dokshik_jaebeol3se",
       "track": "A",
       "source_scope": "local_only",
-      "source_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/50_corpus_curated/재벌물_독식하는 재벌 3세",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/dokshik_jaebeol3se_A.md",
+      "source_path": "material_ssot/10_research/50_corpus_curated/재벌물_독식하는 재벌 3세",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/dokshik_jaebeol3se_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "source preflight PASS 2026-03-30; ep001-050 available; card saved; re-audit 2026-03-30: `현대 현판 적용 분해` 섹션 보강 완료, 6/6 구조 계약 충족, audit PASS."
@@ -77,8 +77,8 @@
       "slug": "dokshik_jaebeol3se",
       "track": "B",
       "source_scope": "local_only",
-      "source_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/50_corpus_curated/재벌물_독식하는 재벌 3세",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/dokshik_jaebeol3se_B.md",
+      "source_path": "material_ssot/10_research/50_corpus_curated/재벌물_독식하는 재벌 3세",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/dokshik_jaebeol3se_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "source preflight PASS 2026-03-30; ep001-050 available; card saved; self-audit PASS 2026-03-30 (6/6 criteria met)"
@@ -88,8 +88,8 @@
       "slug": "geumsujeo_tujabaekseo",
       "track": "A",
       "source_scope": "local_only",
-      "source_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/50_corpus_curated/투자물_금수저 투자백서",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/geumsujeo_tujabaekseo_A.md",
+      "source_path": "material_ssot/10_research/50_corpus_curated/투자물_금수저 투자백서",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/geumsujeo_tujabaekseo_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "local cache preferred; card saved 2026-03-30; re-audit 2026-03-30: `현대 현판 적용 분해` 섹션 보강 완료, 6/6 구조 계약 충족, audit PASS."
@@ -99,8 +99,8 @@
       "slug": "geumsujeo_tujabaekseo",
       "track": "B",
       "source_scope": "local_only",
-      "source_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/50_corpus_curated/투자물_금수저 투자백서",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/geumsujeo_tujabaekseo_B.md",
+      "source_path": "material_ssot/10_research/50_corpus_curated/투자물_금수저 투자백서",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/geumsujeo_tujabaekseo_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "local cache preferred; source_checked→saved 2026-03-30; ep001-050 50ep; B track growth+tycoon; Codex audit PASS 2026-03-30: structure complete and slim handoff usable."
@@ -111,7 +111,7 @@
       "track": "A",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/김 대리는 벼락부자(글고래)/1_원고/epub",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_byeorakbuja_A.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_byeorakbuja_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; 127ep detected; card saved; re-audit 2026-03-30: `현대 현판 적용 분해` 섹션 보강 완료, 6/6 구조 계약 충족, audit PASS."
@@ -122,7 +122,7 @@
       "track": "B",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/김 대리는 벼락부자(글고래)/1_원고/epub",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_byeorakbuja_B.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_byeorakbuja_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "source preflight PASS 2026-03-30; NAS epub 1-127화; card saved 2026-03-30; self-audit PASS 2026-03-30"
@@ -133,7 +133,7 @@
       "track": "A",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/국세청 망나니(동면거북이)/1_원고/기타/txt",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/guksecheong_mangnani_A.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/guksecheong_mangnani_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS txt source; authority/power track. A card saved 2026-03-30. preflight PASS; 500ep detected; re-audit 2026-03-30: `현대 현판 적용 분해` 섹션 보강 완료, 6/6 구조 계약 충족, audit PASS."
@@ -144,7 +144,7 @@
       "track": "B",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/국세청 망나니(동면거북이)/1_원고/기타/txt",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/guksecheong_mangnani_B.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/guksecheong_mangnani_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS txt source; authority/power track. B card saved 2026-03-30. preflight PASS; 500ep detected; source_checked->saved. growth+tycoon+authority expansion axis. Codex audit PASS 2026-03-30: structure complete and slim handoff usable."
@@ -155,7 +155,7 @@
       "track": "A",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/연봉 1조 신입사원(서오)/1_원고",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/yeonbong_1jo_sinipsawon_A.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/yeonbong_1jo_sinipsawon_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS txt+epub source; preflight PASS 2026-03-30; txt #001-#188 + epub 0001-0446 (446화) 확인; ep1/5/10/20 직독 완료; card saved 2026-03-30; re-audit 2026-03-30: `현대 현판 적용 분해` 섹션 보강 완료, 6/6 구조 계약 충족, audit PASS."
@@ -166,7 +166,7 @@
       "track": "B",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/연봉 1조 신입사원(서오)/1_원고/epub",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/yeonbong_1jo_sinipsawon_B.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/yeonbong_1jo_sinipsawon_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; ep0001-ep0446 (446화) 확인; ep1/10/20/50/100/200/446 직독 완료; B 트랙 성장+거물화 축; card saved 2026-03-30; self-audit PASS 2026-03-30 (6/6 criteria met)"
@@ -177,7 +177,7 @@
       "track": "A",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/검은 머리 미국 대재벌!(흑곰작가)/1_원고",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/geomeunmeori_american_jaebeol_A.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/geomeunmeori_american_jaebeol_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS txt source; preflight PASS 2026-03-30; 220ep detected; ep1/5/10/20 직독 완료; A track 초반부+인맥레버리지; card saved 2026-03-30; source_checked->saved in one pass; re-audit 2026-03-30: `현대 현판 적용 분해` 섹션 보강 완료(바로이식 4항/변형후사용 3항/폐기 4항), 마지막 3줄 섹션 6번 재번호, 6/6 구조 계약 충족, audit PASS."
@@ -188,7 +188,7 @@
       "track": "B",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/검은 머리 미국 대재벌!(흑곰작가)/1_원고",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/geomeunmeori_american_jaebeol_B.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/geomeunmeori_american_jaebeol_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS source preflight PASS 2026-03-30; txt 001-220화 직접 확인(ep1/5/10/20/30/50/70/100/150/200/220); 1부(ep200 완결)+2부(ep201-220); card saved 2026-03-30; B track 성장+거물화축; Codex audit PASS 2026-03-30: structure complete and slim handoff usable."
@@ -199,7 +199,7 @@
       "track": "A",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/불행을 보는 재벌집 손자(유재무)/1_원고",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/bulhaengeul_boneun_jaebeoljip_sonja_A.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/bulhaengeul_boneun_jaebeoljip_sonja_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; epub 0001-0316(316화) 확인; ep1·5·10·20 직접 추출; 추정/보간 없음; card saved 2026-03-30; re-audit 2026-03-30: `현대 현판 적용 분해` 섹션 보강 완료, 6/6 구조 계약 충족, audit PASS."
@@ -210,7 +210,7 @@
       "track": "B",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/불행을 보는 재벌집 손자(유재무)/1_원고",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/bulhaengeul_boneun_jaebeoljip_sonja_B.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/bulhaengeul_boneun_jaebeoljip_sonja_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; ep1-316 available (epub 0001-0316), ep1-104 (hwp); ep1/10/20/30/40/50/100/200/316 직독 완료; B track 성장+거물화 축; card saved 2026-03-30; Codex audit PASS 2026-03-30: structure complete and slim handoff usable."
@@ -221,7 +221,7 @@
       "track": "A",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/대한민국 절대 재벌(백범(\u767d\u51e1))/1_원고",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/daehanminguk_absolute_jaebeol_A.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/daehanminguk_absolute_jaebeol_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS txt source (기타/txt/); preflight PASS 2026-03-30; 502화(0001~0502.txt) 직접 확인; ep1/5/10/20 직독 완료; 작품명 '대한민국 절대 재벌' 일치; 추정/보간 없음; card saved 2026-03-30; re-audit 2026-03-30: `현대 현판 적용 분해` 섹션 보강 완료(바로 이식 가능 4항/변형 후 사용 3항/폐기 5항), 마지막 3줄 섹션 6번 재번호, 6/6 구조 계약 충족, audit PASS."
@@ -232,7 +232,7 @@
       "track": "B",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/대한민국 절대 재벌(백범(\u767d\u51e1))/1_원고/epub",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/daehanminguk_absolute_jaebeol_B.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/daehanminguk_absolute_jaebeol_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; epub 0001-0502 (502화 완결) 확인; ep01(ref)·ep10·ep20·ep30·ep40·ep50·ep502(완결) 직독 완료; B track 성장+거물화 축; source_checked→saved→audited 2026-03-30; self-audit PASS (6/6 criteria)"
@@ -243,7 +243,7 @@
       "track": "A",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/신흥재벌(박재학)/1_원고",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/sinheung_jaebeol_A.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/sinheung_jaebeol_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; epub 신흥재벌_0001~0200+ 확인; ep1/5/10/20 직독 완료; re-audit 2026-03-30: `Master Reference Card v1` 명시 헤딩 복구 + `현대 현판 적용 분해` 섹션 보강 완료, 6/6 구조 계약 충족, audit PASS."
@@ -254,7 +254,7 @@
       "track": "B",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/신흥재벌(박재학)/1_원고/epub",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/sinheung_jaebeol_B.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/sinheung_jaebeol_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; epub 0001-0200 (200화 완결) 확인; ep10/20/30/40/50/200 직독 완료; B track 성장+사업확장+거물화 축; card saved 2026-03-30; self-audit PASS 2026-03-30 (10/10 criteria met)"
@@ -265,7 +265,7 @@
       "track": "A",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/재벌생활기록부(백범)/1_원고",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/jaebeol_saenghwal_girokbu_A.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/jaebeol_saenghwal_girokbu_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; epub 0001-0435 (435화) 확인; ep1/5/10/20/30 직접 추출; 추정/보간 없음; A track 초반부+생활밀착재벌외피; card saved 2026-03-30; re-audit 2026-03-30: `현대 현판 적용 분해` 섹션 보강 완료, 6/6 구조 계약 충족, audit PASS."
@@ -276,7 +276,7 @@
       "track": "B",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/재벌생활기록부(백범)/1_원고/epub",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/jaebeol_saenghwal_girokbu_B.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/jaebeol_saenghwal_girokbu_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; 재벌생활기록부_0001~0435.epub(435화) 직접 확인; ep10/20/30/40/50/435(last) 직독 완료; B track 성장+운영+거물화 축; card saved 2026-03-30; self-audit PASS 2026-03-30 (6/6 criteria met)"
@@ -287,7 +287,7 @@
       "track": "A",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/김 대리는 인생이 너무 가볍다(차라리)/1_원고",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_insaengi_neomu_gabyeopda_A.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_insaengi_neomu_gabyeopda_A.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; epub 0001-0103 확인(일부 결번 존재); ep1/5/10/20 직접 추출; 추정/보간 없음; A track 초반부+직장인 톤; card saved 2026-03-30; re-audit 2026-03-30: `현대 현판 적용 분해` 섹션 보강 완료, 6/6 구조 계약 충족, audit PASS."
@@ -298,7 +298,7 @@
       "track": "B",
       "source_scope": "nas_only",
       "source_path": "//172.16.10.120/소설사업부/판무팀_ssot/02_연재/김 대리는 인생이 너무 가볍다(차라리)/1_원고/epub",
-      "output_path": "C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_insaengi_neomu_gabyeopda_B.md",
+      "output_path": "material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_insaengi_neomu_gabyeopda_B.md",
       "status": "audited",
       "audit_status": "pass",
       "notes": "NAS epub source; preflight PASS 2026-03-30; epub 0001-0103 확인(결번 포함); ep10/20/30/40/49/103 직독 완료; B track 성장+현판확장축; card saved 2026-03-30; source_checked→saved; Codex audit PASS 2026-03-30: structure complete and slim handoff usable."

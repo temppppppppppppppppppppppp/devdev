@@ -1,27 +1,29 @@
 # Modern Business Engine Candidate Bank (100) Draft
 
 Date: 2026-04-03  
-Workspace: `C:\Users\wjjo\Desktop\글도비_process`  
+Workspace At Capture: `..\\글도비_process` on the original machine  
 Branch: `ops/process-standardization`  
 Status: draft save before 3-pass audit  
+
+Historical Note: this draft preserves a capture-time process-worktree context and should not be read as the current workspace authority.
 
 ## Scope
 
 - This file is a draft bank for `modern business / office power / chaebol` engine candidates.
 - It is intentionally saved as a separate bank instead of being merged directly into `modern_business_idea_engine_db.draft.json`.
 - Batches 1 to 3 freeze candidate mining already done from platform corpus, YouTube corridor material, and audited preprocess examples.
-- Batch 4 backfills the final 25 using only sources that actually exist inside `글도비_process`.
+- Batch 4 backfills the final 25 using only sources that actually existed inside the capture-time process worktree.
 - `test_material/` is not present in this worktree, so no `material_bank` sources were used for this save.
 
 ## Source Bundles Used
 
-- `narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/platform_cue_rollup.json`
-- `narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/platform_title_signal_rollup.json`
-- `narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/platform_title_token_rollup.json`
-- `narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/business_trend_slice/business_trend_rollup.json`
-- `narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld/README.md`
-- `narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld/video_lookup.jsonl`
-- `narrative_ssot/10_reference_bank/source_corpora/youtube/syukaworld/transcript_documents.jsonl`
+- `material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/platform_cue_rollup.json`
+- `material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/platform_title_signal_rollup.json`
+- `material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/platform_title_token_rollup.json`
+- `material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/business_trend_slice/business_trend_rollup.json`
+- `material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld/README.md`
+- `material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld/video_lookup.jsonl`
+- `material_ssot/10_research/40_analysis/source_corpora/youtube/syukaworld/transcript_documents.jsonl`
 - `narrative_ssot/10_reference_bank/cards/*.md`
 - `treatments/preprocess/*/source_manifest.json`
 - `treatments/preprocess/*/material_bundle_summary.json`

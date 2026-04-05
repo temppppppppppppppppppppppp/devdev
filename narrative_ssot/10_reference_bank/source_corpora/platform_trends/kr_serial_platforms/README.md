@@ -3,6 +3,11 @@
 Status: scaffold draft  
 Date: 2026-04-01
 
+Transition note:
+- canonical root now lives at `material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms`
+- this `narrative_ssot` path is kept only as transition residue during the bounded cutover
+- rerun or refresh the corpus from the `material_ssot` root, not from here
+
 이 폴더는 `카카오페이지 / 네이버 시리즈 / 문피아`의 공개 페이지에서 보이는
 제목, 카피, 신작면, 랭킹면, 프로모션면 신호를 모으는 코퍼스다.
 
@@ -22,7 +27,7 @@ Date: 2026-04-01
 
 ```text
 python -X utf8 scripts/build_platform_trend_corpus.py ^
-  --output-root narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms
+  --output-root material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms
 ```
 
 기본 산출물:

@@ -7,7 +7,7 @@
 > 선행 문서: `SSOT_blockguide-integrated-order.md`, `treatment-planning-harness.md`, `treatment-production-harness-v2.md`, `bi-production-harness-v1.md`
 
 > 상태: **경로 호환용 미러 문서**
-> 현재 진실: `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\stage0_material_collection_harness.md`
+> 현재 진실: `전처리_ssot\docs\stage0_material_collection_harness.md`
 > 역할: `docs/blockguide` 경로를 참조하는 오래된 오더와의 호환 유지
 
 ---

@@ -5,17 +5,17 @@ Date: 2026-03-31
 
 현재는 아래 경로에 mirror copy를 생성하는 방식으로 운용한다.
 
-- `C:/Users/wjjo/Desktop/글도비/narrative_ssot/10_reference_bank/reference_card_manifest.json`
-- `C:/Users/wjjo/Desktop/글도비/narrative_ssot/10_reference_bank/cards/`
-- `C:/Users/wjjo/Desktop/글도비/narrative_ssot/10_reference_bank/mirror_status.json`
+- `narrative_ssot/10_reference_bank/reference_card_manifest.json`
+- `narrative_ssot/10_reference_bank/cards/`
+- `narrative_ssot/10_reference_bank/mirror_status.json`
 
 현재 authoritative manifest:
 
-- `C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/reference_card_manifest.json`
+- `material_ssot/10_research/20_fewshot_bank/reference_card_manifest.json`
 
 현재 authoritative card root:
 
-- `C:/Users/wjjo/Desktop/글도비/material_ssot/10_research/20_fewshot_bank/cards/`
+- `material_ssot/10_research/20_fewshot_bank/cards/`
 
 2026-04-03 Wave 1 이후 authoritative source는 `material_ssot` research few-shot root다.
 이 문서는 mirror 관계를 설명하는 pointer 역할을 수행한다.

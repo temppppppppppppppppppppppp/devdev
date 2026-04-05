@@ -12,6 +12,7 @@ Status: active Wave 4 map
 - normalized work material packs: `material_ssot/10_research/30_work_materials`
 - promoted analysis snapshots: `material_ssot/10_research/40_analysis/market_snapshots`
 - canonical long-form analysis reports: `material_ssot/10_research/40_analysis/pattern_reports`
+- canonical reusable source corpora: `material_ssot/10_research/40_analysis/source_corpora`
 - canonical curated corpus bundles: `material_ssot/10_research/50_corpus_curated`
 - canonical longtail title corpus: `material_ssot/10_research/60_corpus_longtail`
 - promoted raw ingest bucket: `material_ssot/10_research/80_ingest_raw`
@@ -51,10 +52,20 @@ These paths remain readable but are no longer the canonical home for moved refer
 - `40_analysis/pattern_reports/분석결과_회차간_연결패턴_분석.md`
 - `40_analysis/pattern_reports/자하검신_ep051-100_분석.md`
 
+## 4A. Canonical Reusable Source Corpora
+
+- `40_analysis/source_corpora/platform_trends/kr_serial_platforms`
+- `40_analysis/source_corpora/youtube/syukaworld`
+- first bounded cutover in this lane repoints the platform-trend builders away from the old narrative reference-bank source-corpora platform-trend lane
+- second bounded cutover in this lane repoints the syukaworld builders away from the old narrative reference-bank source-corpora YouTube lane
+- old narrative reference-bank source-corpora lanes should now be treated as transition residue after the pointer/archive pass
+
 ## 5. Canonical Curated Corpus
 
 - `50_corpus_curated/curated_index.md`
 - `50_corpus_curated/`
+- `50_corpus_curated/reference_samples/medical_magical_surgeon_sample_corpus`
+- third bounded cutover in this lane repoints the NAS medical sample builder away from the old narrative reference-bank source-corpora NAS medical sample lane; fresh NAS rebuild validation remains cross-PC
 
 ## 6. Canonical Longtail Corpus
 
@@ -72,7 +83,7 @@ These paths remain readable but are no longer the canonical home for moved refer
   - pattern references
   - gap log
   - final `material_pack`
-- bootstrap normalized pack present:
+- representative bounded packs present:
   - `30_work_materials/gatekeeper_heir/90_material_pack.json`
   - `30_work_materials/office_checkup_next_day/90_material_pack.json`
   - `30_work_materials/wuxia_heavenly_physician/90_material_pack.json`

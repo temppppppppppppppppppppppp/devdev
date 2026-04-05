@@ -3,8 +3,8 @@
 > 인코딩: **UTF-8 only**
 > 작성일: 2026-03-12
 > 역할: 현대판타지 전 장르의 `Phase 0 -> TR -> BI` 앞단에 놓이는 **전처리 SSOT 엔트리**
-> 현재 진실: `C:\Users\wjjo\Desktop\글도비\전처리_ssot`
-> 사용자용 단일 로드맵: `C:\Users\wjjo\Desktop\글도비\전처리_ssot\README.md`
+> 현재 진실: `전처리_ssot`
+> 사용자용 단일 로드맵: `전처리_ssot\README.md`
 
 ---
 

@@ -1,8 +1,8 @@
 # Work Coverage Matrix
 
 Date: 2026-04-03
-Status: active bootstrap matrix
-Scope: current bootstrap work coverage inside `material_ssot`
+Status: active bounded matrix
+Scope: current representative bounded work coverage inside `material_ssot`
 
 ## 1. Coverage Table
 
@@ -30,7 +30,11 @@ Scope: current bootstrap work coverage inside `material_ssot`
 - phase0 currently resolves through `treatments/preprocess/wuxia_heavenly_physician/phase0_ready_snapshot.json`
 - TR and BI exist as live artifacts and both are currently canonical
 
-## 3. Rule
+## 3. Validation Note
+
+- bounded work-chain validation now runs through `python -X utf8 scripts/validate_material_ssot.py`
+
+## 4. Rule
 
 Do not expand the work set by default until one of these happens:
 

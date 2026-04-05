@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Build a reusable YouTube channel corpus for narrative ideation.
 
 This script stays on the collection side only.
@@ -9,6 +8,7 @@ It gathers:
 - per-video raw caption JSON3 when available
 - normalized SQLite / JSONL artifacts for later LLM-side ideation
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,36 +18,28 @@ import sqlite3
 import sys
 import time
 from collections import deque
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import requests
 
 try:
     from yt_dlp import YoutubeDL
     from yt_dlp.utils import DownloadError
-except Exception as exc:  # pragma: no cover - bounded import guard
-    raise SystemExit(
-        "yt-dlp is required. Install with: python -m pip install yt-dlp\n"
-        f"Import error: {exc}"
-    )
+except Exception:  # pragma: no cover - bounded import guard
+    YoutubeDL = None
+    DownloadError = RuntimeError
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_ROOT = (
-    ROOT
-    / "narrative_ssot"
-    / "10_reference_bank"
-    / "source_corpora"
-    / "youtube"
-    / "syukaworld"
+    ROOT / "material_ssot" / "10_research" / "40_analysis" / "source_corpora" / "youtube" / "syukaworld"
 )
 USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/135.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
 )
 
 
@@ -68,7 +60,7 @@ class ChannelConfig:
 
 
 def _now_utc() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _assert_within_workspace(path: Path) -> None:
@@ -356,6 +348,9 @@ def _download_video_artifacts(
     raw_root: Path,
     langs: list[str],
 ) -> dict[str, Any]:
+    if YoutubeDL is None:
+        raise SystemExit("yt-dlp is required for artifact fetches. Install with: python -m pip install yt-dlp")
+
     video_id = video["video_id"]
     video_dir = raw_root / "videos" / video_id
     video_dir.mkdir(parents=True, exist_ok=True)
@@ -366,9 +361,7 @@ def _download_video_artifacts(
             "video_id": video_id,
             "status": "skipped_existing",
             "info_path": str(info_path.relative_to(ROOT)).replace("\\", "/"),
-            "subtitle_paths": [
-                str(path.relative_to(ROOT)).replace("\\", "/") for path in subtitle_paths
-            ],
+            "subtitle_paths": [str(path.relative_to(ROOT)).replace("\\", "/") for path in subtitle_paths],
         }
 
     options = {
@@ -401,12 +394,8 @@ def _download_video_artifacts(
         "video_id": video_id,
         "status": status,
         "error": error_message,
-        "info_path": (
-            str(info_path.relative_to(ROOT)).replace("\\", "/") if info_path.is_file() else ""
-        ),
-        "subtitle_paths": [
-            str(path.relative_to(ROOT)).replace("\\", "/") for path in subtitle_paths
-        ],
+        "info_path": (str(info_path.relative_to(ROOT)).replace("\\", "/") if info_path.is_file() else ""),
+        "subtitle_paths": [str(path.relative_to(ROOT)).replace("\\", "/") for path in subtitle_paths],
     }
 
 
@@ -447,14 +436,8 @@ def scan_existing_artifacts(
             {
                 "video_id": video_id,
                 "status": status,
-                "info_path": (
-                    str(info_path.relative_to(ROOT)).replace("\\", "/")
-                    if info_path.is_file()
-                    else ""
-                ),
-                "subtitle_paths": [
-                    str(path.relative_to(ROOT)).replace("\\", "/") for path in subtitle_paths
-                ],
+                "info_path": (str(info_path.relative_to(ROOT)).replace("\\", "/") if info_path.is_file() else ""),
+                "subtitle_paths": [str(path.relative_to(ROOT)).replace("\\", "/") for path in subtitle_paths],
             }
         )
     return rows
@@ -665,9 +648,7 @@ def build_normalized_corpus(
             transcript_status = "caption_saved"
             caption_saved_count += 1
 
-        raw_info_rel = (
-            str(info_path.relative_to(ROOT)).replace("\\", "/") if info_path.is_file() else ""
-        )
+        raw_info_rel = str(info_path.relative_to(ROOT)).replace("\\", "/") if info_path.is_file() else ""
         row = {
             "video_id": video_id,
             "channel_slug": config.channel_slug,
@@ -946,9 +927,7 @@ def main(argv: list[str] | None = None) -> int:
     failure_count = sum(1 for row in artifact_results if row.get("status") == "failed")
     caption_saved_count = sum(1 for row in artifact_results if row.get("status") == "caption_saved")
     info_only_count = sum(1 for row in artifact_results if row.get("status") == "info_only")
-    skipped_existing_count = sum(
-        1 for row in artifact_results if row.get("status") == "skipped_existing"
-    )
+    skipped_existing_count = sum(1 for row in artifact_results if row.get("status") == "skipped_existing")
     _write_json(config.output_root / "artifact_results.json", artifact_results)
     _write_json(
         config.output_root / "ingest_status.json",
@@ -964,9 +943,9 @@ def main(argv: list[str] | None = None) -> int:
                 "failed_count": failure_count,
             },
             "normalized_outputs": normalized,
-            "artifact_results_path": str(
-                (config.output_root / "artifact_results.json").relative_to(ROOT)
-            ).replace("\\", "/"),
+            "artifact_results_path": str((config.output_root / "artifact_results.json").relative_to(ROOT)).replace(
+                "\\", "/"
+            ),
             "notes": [
                 "Use the SQLite corpus for exact lookup and transcript search.",
                 "If failed_count > 0, rerun the same command; existing artifacts will be resumed/skipped.",

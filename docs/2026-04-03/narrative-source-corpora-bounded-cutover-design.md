@@ -2,11 +2,13 @@
 
 Date: 2026-04-03
 Status: design baseline
-Scope: `narrative_ssot/10_reference_bank/source_corpora`를 `material_ssot` 쪽 canonical research lanes로 옮기기 위한 bounded cutover 설계를 고정한다
+Scope: old narrative reference-bank `source_corpora` lanes를 `material_ssot` 쪽 canonical research lanes로 옮기기 위한 bounded cutover 설계를 고정한다
+
+Historical Note: this design was written before the bounded cutover completed. `source_corpora` wording below refers to the capture-time residue lane, not to current authority.
 
 ## 1. Purpose
 
-`narrative_ssot/10_reference_bank` retirement blocker는 `cards mirror`가 아니라 `source_corpora`다.
+`narrative_ssot/10_reference_bank` retirement blocker는 `cards mirror`가 아니라 capture-time `source_corpora` lane이다.
 
 현재 여러 builder script가 이 경로를 직접 output/input root로 사용한다.
 그래서 이 경로를 갑자기 지우는 대신, `subtree intact` 원칙으로 새 canonical lane을 먼저 정해야 한다.
@@ -19,7 +21,7 @@ Scope: `narrative_ssot/10_reference_bank/source_corpora`를 `material_ssot` 쪽 
 
 ## 2. Current Footprint
 
-`narrative_ssot/10_reference_bank/source_corpora` 현재 주요 subtree:
+capture-time old narrative reference-bank `source_corpora` 주요 subtree:
 
 - `platform_trends/kr_serial_platforms`
   - public platform html raw
@@ -168,7 +170,7 @@ Scope: `narrative_ssot/10_reference_bank/source_corpora`를 `material_ssot` 쪽 
 
 이 설계가 실행되면:
 
-- `narrative_ssot/10_reference_bank/source_corpora`는 active sink 지위를 잃는다
+- old narrative reference-bank `source_corpora` root는 active sink 지위를 잃는다
 - `narrative_ssot/10_reference_bank`는 점점 `cards mirror + archive residue`로 축소된다
 - 이후 `10_reference_bank` keep/retire 판단이 훨씬 쉬워진다
 

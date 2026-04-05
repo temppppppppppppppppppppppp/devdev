@@ -2,7 +2,7 @@
 
 ## 1. SOURCE CHECK
 
-- folder_path: `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\50_corpus_curated\투자물_금수저 투자백서`
+- folder_path: `material_ssot\10_research\50_corpus_curated\투자물_금수저 투자백서`
 - detected_work_title: `금수저 투자백서`
 - available_episode_range: ep001–ep050 (50화)
 - final source scope 판정: **local_only PASS** — 허용 경로 내 txt 파일만 사용, 외부 소스 없음

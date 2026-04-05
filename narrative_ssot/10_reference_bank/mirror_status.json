@@ -3,10 +3,11 @@
   "authoritative_source": "material_ssot/10_research/20_fewshot_bank",
   "mirrored_manifest": "narrative_ssot/10_reference_bank/reference_card_manifest.json",
   "mirrored_cards_root": "narrative_ssot/10_reference_bank/cards",
-  "synced_at_utc": "2026-04-03T09:04:57.418273+00:00",
+  "synced_at_utc": "2026-04-05T09:20:05.223886+00:00",
   "card_count": 24,
   "notes": [
     "material_ssot research few-shot bank is authoritative after Wave 1 cutover",
-    "narrative_ssot mirror is for new structure adoption and traceability"
+    "narrative_ssot mirror is limited to cards plus manifest traceability",
+    "source_corpora, selection, and idea_engine_db are outside the live mirror scope"
   ]
 }

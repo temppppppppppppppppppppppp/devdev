@@ -1,0 +1,6385 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 7840,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "자, 첫 번째 주제는"
+    } ]
+  }, {
+    "tStartMs": 9380,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "평화와 핵 사이"
+    } ]
+  }, {
+    "tStartMs": 11480,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "아 뉴클리어입니다"
+    } ]
+  }, {
+    "tStartMs": 12460,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "저 핵은 헥헥헥이 아니라"
+    } ]
+  }, {
+    "tStartMs": 13720,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "뉴클리어인데"
+    } ]
+  }, {
+    "tStartMs": 14830,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "피스와 뉴클리어 웨펀 사이에"
+    } ]
+  }, {
+    "tStartMs": 17430,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "벌어지고 있는 일에 대해서"
+    } ]
+  }, {
+    "tStartMs": 19130,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "좀 알아보도록 하겠습니다"
+    } ]
+  }, {
+    "tStartMs": 20490,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "자, 이 얘기를 갑자기 왜 하냐"
+    } ]
+  }, {
+    "tStartMs": 22380,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "이번 달 13일에 독일에서는"
+    } ]
+  }, {
+    "tStartMs": 24530,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "세계 최대의 안보 포럼이라고 불리는"
+    } ]
+  }, {
+    "tStartMs": 26710,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "뮌헨 안보회의라는 게 열렸습니다"
+    } ]
+  }, {
+    "tStartMs": 29150,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "우리나라에서는 단신 처리됐기 때문에"
+    } ]
+  }, {
+    "tStartMs": 31690,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "이게 크게 안 나왔는데"
+    } ]
+  }, {
+    "tStartMs": 33130,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "미국이나 유럽에서는 굉장히 큰 회의입니다"
+    } ]
+  }, {
+    "tStartMs": 35710,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "우리가 다보스포럼은 알잖아요"
+    } ]
+  }, {
+    "tStartMs": 37260,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "다보스포럼 말 그대로 지도자들 모여서"
+    } ]
+  }, {
+    "tStartMs": 38870,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "경제, 미래, 비전 이런 걸 얘기하는 데고"
+    } ]
+  }, {
+    "tStartMs": 41150,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "여기는 안보에 대해서 얘기하는 거예요"
+    } ]
+  }, {
+    "tStartMs": 43080,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "안보계의 다보스포럼이라고 생각하시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 45960,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "세계 주요 안보 인사들이"
+    } ]
+  }, {
+    "tStartMs": 47180,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "대부분 다 모이고"
+    } ]
+  }, {
+    "tStartMs": 48130,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "1년에 한 번 모입니다"
+    } ]
+  }, {
+    "tStartMs": 49120,
+    "dDurationMs": 2760,
+    "segs": [ {
+      "utf8": "여기에는 유럽 정상들 대부분 오고요"
+    } ]
+  }, {
+    "tStartMs": 51880,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "미국에서는 이번에는"
+    } ]
+  }, {
+    "tStartMs": 53170,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "국무장관 마코 루비오가 왔어요"
+    } ]
+  }, {
+    "tStartMs": 54930,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "작년에는 JD 밴스가 왔던 곳이"
+    } ]
+  }, {
+    "tStartMs": 57060,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "바로 뮌헨 안보회의입니다"
+    } ]
+  }, {
+    "tStartMs": 58830,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "방금 제가 말씀드렸지만"
+    } ]
+  }, {
+    "tStartMs": 59770,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "안보계의 다보스포럼"
+    } ]
+  }, {
+    "tStartMs": 61410,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "나토 사무총장, 독일 총리"
+    } ]
+  }, {
+    "tStartMs": 63130,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "프랑스 대통령, 미국 국무장관"
+    } ]
+  }, {
+    "tStartMs": 65180,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "중국 외교부장관"
+    } ]
+  }, {
+    "tStartMs": 66080,
+    "dDurationMs": 3050,
+    "segs": [ {
+      "utf8": "이렇게 다 안보 관련 한자리 하시는 분들이"
+    } ]
+  }, {
+    "tStartMs": 69130,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "전부 다 모였다고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 71010,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "저는 그래도 이 뮌헨 안보회의를 모르겠는데요"
+    } ]
+  }, {
+    "tStartMs": 73570,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "여러분들은 사실 들어보셨어요"
+    } ]
+  }, {
+    "tStartMs": 75930,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "모른다고 생각할 뿐이지"
+    } ]
+  }, {
+    "tStartMs": 77390,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "언제 들어봤냐?"
+    } ]
+  }, {
+    "tStartMs": 78300,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "작년에 들어보셨습니다"
+    } ]
+  }, {
+    "tStartMs": 79500,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "작년에 미국 부통령 JD 밴스가"
+    } ]
+  }, {
+    "tStartMs": 82320,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "갑자기 뜬금 유럽에 가서"
+    } ]
+  }, {
+    "tStartMs": 84280,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "유럽 지도자들한테 떼찌떼찌를 날린 곳이"
+    } ]
+  }, {
+    "tStartMs": 86930,
+    "dDurationMs": 3070,
+    "segs": [ {
+      "utf8": "바로 2025년 뮌헨 안보회의였습니다"
+    } ]
+  }, {
+    "tStartMs": 90000,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "아마 기억나실 거예요"
+    } ]
+  }, {
+    "tStartMs": 91270,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "갑자기 대서양 건너편에 있는"
+    } ]
+  }, {
+    "tStartMs": 92760,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "그 나라의 부통령이 오더니"
+    } ]
+  }, {
+    "tStartMs": 94230,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "앞에 유럽 대통령들한테"
+    } ]
+  }, {
+    "tStartMs": 96350,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "거의 삿대질하면서"
+    } ]
+  }, {
+    "tStartMs": 98040,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "너가 이래서 못했고, 너가 저래서 못했고,"
+    } ]
+  }, {
+    "tStartMs": 100180,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "유럽 문명이 어떻게 된다는 둥"
+    } ]
+  }, {
+    "tStartMs": 102020,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "저랬다는 둥"
+    } ]
+  }, {
+    "tStartMs": 102930,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "혼쭐을 내신 적 있죠"
+    } ]
+  }, {
+    "tStartMs": 104260,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "그게 바로 2025년 뮌헨 안보회의였습니다"
+    } ]
+  }, {
+    "tStartMs": 107220,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "그로부터 벌써 1년이 지났다고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 109950,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "당시에 JD 밴스가 뭐라고 그랬냐"
+    } ]
+  }, {
+    "tStartMs": 112040,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "기억을 조금 되살려보면"
+    } ]
+  }, {
+    "tStartMs": 113160,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 114140,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "제가 유럽에 대해서"
+    } ]
+  }, {
+    "tStartMs": 115080,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "가장 우려하는 위협은"
+    } ]
+  }, {
+    "tStartMs": 116380,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "러시아나 중국이 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 118490,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "제가 우려하는 건"
+    } ]
+  }, {
+    "tStartMs": 119830,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "유럽이 가장 근본적인 가치에서"
+    } ]
+  }, {
+    "tStartMs": 122390,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "후퇴하고 있다는 거예요"
+    } ]
+  }, {
+    "tStartMs": 124090,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "유럽은 가치에서 밀리고 있어요"
+    } ]
+  }, {
+    "tStartMs": 126640,
+    "dDurationMs": 3470,
+    "segs": [ {
+      "utf8": "그동안 민주주의 수호라는 명분으로 포장해왔지만"
+    } ]
+  }, {
+    "tStartMs": 130110,
+    "dDurationMs": 3280,
+    "segs": [ {
+      "utf8": "과연 유럽이 높은 기준을 지키고 있는지"
+    } ]
+  }, {
+    "tStartMs": 133390,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "스스로 자문해봐야 됩니다"
+    } ]
+  }, {
+    "tStartMs": 135270,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "너희들은 후퇴하고 있어요"
+    } ]
+  }, {
+    "tStartMs": 136910,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "라고 얘기를 했었죠"
+    } ]
+  }, {
+    "tStartMs": 138560,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "조금 더 얘기를 이어 보면"
+    } ]
+  }, {
+    "tStartMs": 139890,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 140780,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "지금 현재 유럽에는 종교와"
+    } ]
+  }, {
+    "tStartMs": 143040,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "표현의 자유가 후퇴하고 있다"
+    } ]
+  }, {
+    "tStartMs": 145360,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "자, 보세요"
+    } ]
+  }, {
+    "tStartMs": 146180,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "EU에서는 자유롭게 뭐를 못 올려요"
+    } ]
+  }, {
+    "tStartMs": 148400,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "뭘 올리면 혐오 콘텐츠라고 막고"
+    } ]
+  }, {
+    "tStartMs": 151040,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "뭐를 올리면"
+    } ]
+  }, {
+    "tStartMs": 152140,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "소셜미디어를 차단하고"
+    } ]
+  }, {
+    "tStartMs": 153740,
+    "dDurationMs": 3060,
+    "segs": [ {
+      "utf8": "뭘 올리면 여성 혐오라고 시민들을 잡아가고"
+    } ]
+  }, {
+    "tStartMs": 156800,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "이게 말이 됩니까?"
+    } ]
+  }, {
+    "tStartMs": 157490,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "표현의 자유 어디 갔습니까?"
+    } ]
+  }, {
+    "tStartMs": 159480,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "라고 얘기를 했죠"
+    } ]
+  }, {
+    "tStartMs": 160530,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "왜냐하면 그때 EU에서 그런 게 있어요"
+    } ]
+  }, {
+    "tStartMs": 162570,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "이민자들에 대한 혐오 콘텐츠"
+    } ]
+  }, {
+    "tStartMs": 164160,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "아니면 이슬람에 대한 혐오 콘텐츠"
+    } ]
+  }, {
+    "tStartMs": 166430,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "여성에 대한 혐오 콘텐츠"
+    } ]
+  }, {
+    "tStartMs": 167790,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "이런 거 올리면"
+    } ]
+  }, {
+    "tStartMs": 168640,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "SNS를 막 막고 하던 때가 있었거든요"
+    } ]
+  }, {
+    "tStartMs": 170420,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "아니면 극우!"
+    } ]
+  }, {
+    "tStartMs": 171420,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "히틀러 같은"
+    } ]
+  }, {
+    "tStartMs": 172380,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "그런 거 올리면 막고 한다는"
+    } ]
+  }, {
+    "tStartMs": 173580,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "뉴스가 나왔을 때이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 174990,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "EU에서는 지금 표현의 자유가 후퇴하고 있다"
+    } ]
+  }, {
+    "tStartMs": 177730,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "영국에서도 마찬가지다"
+    } ]
+  }, {
+    "tStartMs": 178950,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "종교를 가진 영국인들의 자유가 위협받는다"
+    } ]
+  }, {
+    "tStartMs": 182020,
+    "dDurationMs": 2970,
+    "segs": [ {
+      "utf8": "이게 뭐 이민 온 이슬람 쪽 분들이"
+    } ]
+  }, {
+    "tStartMs": 184990,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "자유가 위협받는다는 소리가 아니라"
+    } ]
+  }, {
+    "tStartMs": 186890,
+    "dDurationMs": 2970,
+    "segs": [ {
+      "utf8": "놀랍게도 기독교인들의 자유를 의미합니다"
+    } ]
+  }, {
+    "tStartMs": 189860,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "자유롭게 예를 들면"
+    } ]
+  }, {
+    "tStartMs": 192170,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "제가 일부러 얘기는 그렇지만"
+    } ]
+  }, {
+    "tStartMs": 194070,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "이슬람을 비난하는 기독교인들의 자유"
+    } ]
+  }, {
+    "tStartMs": 196050,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "약간 이런 게 있어요"
+    } ]
+  }, {
+    "tStartMs": 197110,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "코란을 어떻게 한다든지"
+    } ]
+  }, {
+    "tStartMs": 199040,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "뭐 그런 거를 못하게 막으니까"
+    } ]
+  }, {
+    "tStartMs": 200580,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "자유가 위협받는 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 201790,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "유럽 전역에서는 표현의 자유가 후퇴하고 있다"
+    } ]
+  }, {
+    "tStartMs": 204330,
+    "dDurationMs": 3110,
+    "segs": [ {
+      "utf8": "라고 작년에 JD 밴스가 일침을 날렸죠"
+    } ]
+  }, {
+    "tStartMs": 207440,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "그리고 이런 말도 했었죠"
+    } ]
+  }, {
+    "tStartMs": 208680,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "지금 보니까 극우 지도자들이라고 하는 사람들이"
+    } ]
+  }, {
+    "tStartMs": 211290,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "이 뮌헨 안보 회의에 안 왔다"
+    } ]
+  }, {
+    "tStartMs": 213680,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "이건 부끄러운 일이야"
+    } ]
+  }, {
+    "tStartMs": 215550,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "여러분들이 모든 사람 의견에 동의할 필요는 없지만"
+    } ]
+  }, {
+    "tStartMs": 218100,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "정치 지도자들이 말이야"
+    } ]
+  }, {
+    "tStartMs": 219320,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "필요할 때는"
+    } ]
+  }, {
+    "tStartMs": 220350,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "유권자 집단을 대표한 사람이니까"
+    } ]
+  }, {
+    "tStartMs": 222260,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "불러야 되는 건 아니냐"
+    } ]
+  }, {
+    "tStartMs": 223640,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "왜 안 왔냐"
+    } ]
+  }, {
+    "tStartMs": 224360,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "라고 얘기를 했었죠"
+    } ]
+  }, {
+    "tStartMs": 226370,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "저기 그때 뭐 독일의 극우 뭐 있었잖아요"
+    } ]
+  }, {
+    "tStartMs": 228800,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "머스크가 참여해서"
+    } ]
+  }, {
+    "tStartMs": 230140,
+    "dDurationMs": 340,
+    "segs": [ {
+      "utf8": "그쵸"
+    } ]
+  }, {
+    "tStartMs": 230480,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "뭐라고 뭐라고 했다가"
+    } ]
+  }, {
+    "tStartMs": 231460,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "작년에 문제가 됐던"
+    } ]
+  }, {
+    "tStartMs": 232600,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "그런 극우 지도자들이 안 왔는데"
+    } ]
+  }, {
+    "tStartMs": 234550,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "그것도 상당히 불만이다"
+    } ]
+  }, {
+    "tStartMs": 236020,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "시민들의 목소리에 귀를 기울여라"
+    } ]
+  }, {
+    "tStartMs": 237880,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "그래야 민주적이라고 할 수 있지 않냐"
+    } ]
+  }, {
+    "tStartMs": 239690,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "라고 얘기를 했었습니다"
+    } ]
+  }, {
+    "tStartMs": 241550,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "마음에 들지 않더라도"
+    } ]
+  }, {
+    "tStartMs": 242560,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "여러분들은 국민들이 하는 말을 받아들여야 된다"
+    } ]
+  }, {
+    "tStartMs": 245260,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "국민들이 하는 말이 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 246390,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "EU의 이민자를 그만 받아라"
+    } ]
+  }, {
+    "tStartMs": 247870,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "이런 국민들이 하는 말을 왜 듣지 않냐"
+    } ]
+  }, {
+    "tStartMs": 249670,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "EU는 이민자가 크게 늘었고"
+    } ]
+  }, {
+    "tStartMs": 251270,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "그 결과 끔찍한 참상들이 일어나고 있는데"
+    } ]
+  }, {
+    "tStartMs": 253860,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "여러분들은 국민들이 하는 말에"
+    } ]
+  }, {
+    "tStartMs": 255330,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "여러분들이 동의하지 않더라도"
+    } ]
+  }, {
+    "tStartMs": 257060,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "기꺼이 받아들여야 한다"
+    } ]
+  }, {
+    "tStartMs": 258860,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "그리고 마지막으로 이런 얘기도 했었죠"
+    } ]
+  }, {
+    "tStartMs": 260650,
+    "dDurationMs": 3450,
+    "segs": [ {
+      "utf8": "미국은 그동안 그레타 툰베리가 얘기했던 것 때문에"
+    } ]
+  }, {
+    "tStartMs": 264100,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "10년간의 질책을 견뎌냈다"
+    } ]
+  }, {
+    "tStartMs": 266890,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "기후변화 이런 거 얘기했었죠"
+    } ]
+  }, {
+    "tStartMs": 268360,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "툰베리 누나가 석탄 쓰지 마라,"
+    } ]
+  }, {
+    "tStartMs": 270340,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "못 쓰지 마라,"
+    } ]
+  }, {
+    "tStartMs": 271070,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "가스 못 쓰지 마라"
+    } ]
+  }, {
+    "tStartMs": 272450,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "이러면서 10년간 질책을 견뎌냈는데"
+    } ]
+  }, {
+    "tStartMs": 274560,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "여러분들도 이제"
+    } ]
+  }, {
+    "tStartMs": 275580,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "일론 머스크의 몇 달 정도는"
+    } ]
+  }, {
+    "tStartMs": 277200,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "충분히 견뎌낼 수 있지 않냐"
+    } ]
+  }, {
+    "tStartMs": 279200,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "라고 얘기하셨는데"
+    } ]
+  }, {
+    "tStartMs": 281060,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "유럽 여러분들이 머스크 형이 조금"
+    } ]
+  }, {
+    "tStartMs": 283690,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "거시기 거시기 한 걸 하더라도"
+    } ]
+  }, {
+    "tStartMs": 285200,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "아니 우리는 그레타 툰베리 10년 견뎠는데"
+    } ]
+  }, {
+    "tStartMs": 287280,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "너희는 몇 달도 못 버텨?"
+    } ]
+  }, {
+    "tStartMs": 288850,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "라고 또 알침을 날려주셨죠"
+    } ]
+  }, {
+    "tStartMs": 291070,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "저런 얘기를 했기 때문에"
+    } ]
+  }, {
+    "tStartMs": 292260,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "기억을 더듬어 보면"
+    } ]
+  }, {
+    "tStartMs": 294050,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "2025년 뮌헨 안보회의에서는"
+    } ]
+  }, {
+    "tStartMs": 296270,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "적막만이 흘렀습니다"
+    } ]
+  }, {
+    "tStartMs": 297980,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "앞에서 JD밴스가 막 연설을 하는데"
+    } ]
+  }, {
+    "tStartMs": 300670,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "간간히 박수 소리는 났지만"
+    } ]
+  }, {
+    "tStartMs": 303130,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "조용했어요"
+    } ]
+  }, {
+    "tStartMs": 304280,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "가서 보십시오 조용해요"
+    } ]
+  }, {
+    "tStartMs": 306370,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "왜냐면 앞에도 다 유럽 지도자들이에요"
+    } ]
+  }, {
+    "tStartMs": 308390,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "지도자들"
+    } ]
+  }, {
+    "tStartMs": 309020,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "무슨 총리, 국방부 장관, 대통령"
+    } ]
+  }, {
+    "tStartMs": 312120,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "그런 분들 앉아있는데"
+    } ]
+  }, {
+    "tStartMs": 312920,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "앞에서 너희 잘못했고"
+    } ]
+  }, {
+    "tStartMs": 314710,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "너희 잘못했고 이렇게 얘기를 하니까"
+    } ]
+  }, {
+    "tStartMs": 316980,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "유럽식 민주주의에 대한 신랄한"
+    } ]
+  }, {
+    "tStartMs": 318390,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "비판 극우정당 제재가 더 위험하다"
+    } ]
+  }, {
+    "tStartMs": 321090,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "자유 어디갔냐"
+    } ]
+  }, {
+    "tStartMs": 321990,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "이런 발언"
+    } ]
+  }, {
+    "tStartMs": 322840,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "너희들이 이민을 못 막아서"
+    } ]
+  }, {
+    "tStartMs": 324030,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "유럽은 쇠퇴하고 있다"
+    } ]
+  }, {
+    "tStartMs": 325300,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "뭐 이런 말들 했던게"
+    } ]
+  }, {
+    "tStartMs": 326890,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "작년에 뮌헨안보 회의였습니다"
+    } ]
+  }, {
+    "tStartMs": 329130,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "그래서 작년에는 유럽이 솔직히 말해서"
+    } ]
+  }, {
+    "tStartMs": 331980,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "조금 당했죠"
+    } ]
+  }, {
+    "tStartMs": 333570,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "이럴 줄은 몰랐는데 와서 공격을 했단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 335810,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "제가 보기엔"
+    } ]
+  }, {
+    "tStartMs": 336740,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "이번에는 EU가 준비를 좀 했어"
+    } ]
+  }, {
+    "tStartMs": 338880,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "왜냐하면 이번 뮌헨 안보위원회에서는"
+    } ]
+  }, {
+    "tStartMs": 341500,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "포럼 개최에 앞서서"
+    } ]
+  }, {
+    "tStartMs": 342520,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "원래 발표되는 게 있는데"
+    } ]
+  }, {
+    "tStartMs": 343980,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "120쪽 분량의"
+    } ]
+  }, {
+    "tStartMs": 345160,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "사전 보고서를 발표했습니다"
+    } ]
+  }, {
+    "tStartMs": 347670,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "사전 보고서 제목이 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 348970,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "제목을 제가 아래 갖고 왔어요"
+    } ]
+  }, {
+    "tStartMs": 350320,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "여러분도 가서 보실 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 352030,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "PDF 때문에 누구나 볼 수 있어요"
+    } ]
+  }, {
+    "tStartMs": 354000,
+    "dDurationMs": 3130,
+    "segs": [ {
+      "utf8": "사전 보고서 제목은 언더 디스트럭션"
+    } ]
+  }, {
+    "tStartMs": 357130,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "우리나라 말로 하면"
+    } ]
+  }, {
+    "tStartMs": 358410,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "파괴중인 세계"
+    } ]
+  }, {
+    "tStartMs": 359840,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "파괴중이 사전 보고서 제목입니다"
+    } ]
+  }, {
+    "tStartMs": 362340,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "그러면 뭐가 파괴라는 거냐?"
+    } ]
+  }, {
+    "tStartMs": 364200,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "이 보고서는 시작을 이렇게 해요"
+    } ]
+  }, {
+    "tStartMs": 366090,
+    "dDurationMs": 3790,
+    "segs": [ {
+      "utf8": "세계는 파괴적인 정치의 시대로 접어들었다"
+    } ]
+  }, {
+    "tStartMs": 369880,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "뭐가 파괴적인 거냐?"
+    } ]
+  }, {
+    "tStartMs": 371430,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "말씀을 드릴 텐데"
+    } ]
+  }, {
+    "tStartMs": 372460,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "내용을 조금 더 이어가면"
+    } ]
+  }, {
+    "tStartMs": 373930,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "전 세계는 지금 파괴적인 정치의 시대로 접어들었고"
+    } ]
+  }, {
+    "tStartMs": 377030,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "신중한 개혁과 정책 수정보다는"
+    } ]
+  }, {
+    "tStartMs": 379160,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "전면적인 파괴가 대세가 되었다"
+    } ]
+  }, {
+    "tStartMs": 381700,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "이번 뮌헨 안보회의의 공식 보고서입니다"
+    } ]
+  }, {
+    "tStartMs": 384400,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "전면적인 파괴가 대세가 되었다는 거고"
+    } ]
+  }, {
+    "tStartMs": 386950,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "그럼 기존 질서를 부정하고"
+    } ]
+  }, {
+    "tStartMs": 388470,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "기존 질서를 파괴하는 게 누구냐?"
+    } ]
+  }, {
+    "tStartMs": 391040,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "당연하겠지만 당연한 건 아니죠"
+    } ]
+  }, {
+    "tStartMs": 392720,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "유럽이 이걸 대놓고 레포트로 냈으니까"
+    } ]
+  }, {
+    "tStartMs": 395430,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "기존 질서의 제약에서 벗어나"
+    } ]
+  }, {
+    "tStartMs": 397430,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "자국을 더 강하고"
+    } ]
+  }, {
+    "tStartMs": 398680,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "번영하게 만들겠다면서"
+    } ]
+  }, {
+    "tStartMs": 400070,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "기존 질서를 파괴하는 건"
+    } ]
+  }, {
+    "tStartMs": 401850,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "현 미국 행정부다"
+    } ]
+  }, {
+    "tStartMs": 403910,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "그 결과 1945년 이후"
+    } ]
+  }, {
+    "tStartMs": 406030,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "80년간 유지되던"
+    } ]
+  }, {
+    "tStartMs": 407130,
+    "dDurationMs": 3800,
+    "segs": [ {
+      "utf8": "미국이 주도하는 국제 질서는 이제 파괴되고 있다"
+    } ]
+  }, {
+    "tStartMs": 410930,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "그러면 이들이 왜 그러냐"
+    } ]
+  }, {
+    "tStartMs": 413030,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "이 보고서는 이렇게 얘기합니다"
+    } ]
+  }, {
+    "tStartMs": 414580,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "이들의 파괴적인 의제는"
+    } ]
+  }, {
+    "tStartMs": 416440,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "민주주의 제도의 성과에 대한"
+    } ]
+  }, {
+    "tStartMs": 418220,
+    "dDurationMs": 2940,
+    "segs": [ {
+      "utf8": "광범위한 환멸과 민주주의를 해봤지만"
+    } ]
+  }, {
+    "tStartMs": 421160,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "별로 성과가 없었던 것 같아"
+    } ]
+  }, {
+    "tStartMs": 423110,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "정치적 방향전환에 대한"
+    } ]
+  }, {
+    "tStartMs": 424490,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "만연한 불신에 기반을 두고 있다"
+    } ]
+  }, {
+    "tStartMs": 427170,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "자신들의 사회가 걸어온"
+    } ]
+  }, {
+    "tStartMs": 428370,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "자유주의적 궤도에 대한 분노"
+    } ]
+  }, {
+    "tStartMs": 430250,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "그리고 후회에 사로잡힌 이들은 더 강하고"
+    } ]
+  }, {
+    "tStartMs": 432350,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "번영하는 국가의 출현을 막는 것은"
+    } ]
+  }, {
+    "tStartMs": 434980,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "바로 지금까지 자기들이 만든"
+    } ]
+  }, {
+    "tStartMs": 436440,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "세계 질서라고 생각을 하고"
+    } ]
+  }, {
+    "tStartMs": 437970,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "그래서 그 구조들을 허물고자 한다"
+    } ]
+  }, {
+    "tStartMs": 440570,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "그 결과 놀랍게도 이제는"
+    } ]
+  }, {
+    "tStartMs": 442560,
+    "dDurationMs": 3020,
+    "segs": [ {
+      "utf8": "파괴자들이 존경받는 시대가 열렸다"
+    } ]
+  }, {
+    "tStartMs": 445580,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "불도저, 철거용 공"
+    } ]
+  }, {
+    "tStartMs": 447460,
+    "dDurationMs": 540,
+    "segs": [ {
+      "utf8": "이쪽"
+    } ]
+  }, {
+    "tStartMs": 448000,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "커다란 동그란 거"
+    } ]
+  }, {
+    "tStartMs": 449100,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "쾅 치는 거"
+    } ]
+  }, {
+    "tStartMs": 450640,
+    "dDurationMs": 3650,
+    "segs": [ {
+      "utf8": "그리고 전기톱을 휘둘러 대는 사람들이"
+    } ]
+  }, {
+    "tStartMs": 454290,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "존경받는 새로운 시대가 열렸다"
+    } ]
+  }, {
+    "tStartMs": 456020,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "제가 쓴 거 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 456990,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "여기 써있는데"
+    } ]
+  }, {
+    "tStartMs": 458270,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "전기톱을 휘둘러 대는 사람"
+    } ]
+  }, {
+    "tStartMs": 460460,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "옆에 사진은 없어요"
+    } ]
+  }, {
+    "tStartMs": 461620,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "제가 붙인 거예요"
+    } ]
+  }, {
+    "tStartMs": 463050,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "갑자기 떠오르는 사람"
+    } ]
+  }, {
+    "tStartMs": 463940,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "몇 명 있어서"
+    } ]
+  }, {
+    "tStartMs": 465600,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "그런 사람들이 존경받는"
+    } ]
+  }, {
+    "tStartMs": 466960,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "새로운 시대가 열렸고"
+    } ]
+  }, {
+    "tStartMs": 468390,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "그리고 무엇보다도 기존의 규칙과 제도에"
+    } ]
+  }, {
+    "tStartMs": 471060,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "과감히 도끼를 들이밀고"
+    } ]
+  }, {
+    "tStartMs": 472990,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "부수는 인물은"
+    } ]
+  }, {
+    "tStartMs": 473960,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "미국 대통령 도널드 트럼프다"
+    } ]
+  }, {
+    "tStartMs": 475940,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "라고 써있었습니다"
+    } ]
+  }, {
+    "tStartMs": 477970,
+    "dDurationMs": 670,
+    "segs": [ {
+      "utf8": "강하죠"
+    } ]
+  }, {
+    "tStartMs": 478640,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "그래서 결론적으로 원칙과 협력의 시대는 가고"
+    } ]
+  }, {
+    "tStartMs": 481510,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "거래와 사익의 시대가 왔다"
+    } ]
+  }, {
+    "tStartMs": 484000,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "이제 우리는 원칙에 입각한 협력보다는"
+    } ]
+  }, {
+    "tStartMs": 486320,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "거래적 합의, 그게 더 중요하고"
+    } ]
+  }, {
+    "tStartMs": 488350,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "공익보다는 사익이 중요하고"
+    } ]
+  }, {
+    "tStartMs": 490260,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "보편적 규범보다는"
+    } ]
+  }, {
+    "tStartMs": 491340,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "지역 패권국에 의해 좌우된"
+    } ]
+  }, {
+    "tStartMs": 492900,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "세상을 보게 될지도 모른다"
+    } ]
+  }, {
+    "tStartMs": 495020,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "그리고 이런 세상은 아이러니한데"
+    } ]
+  }, {
+    "tStartMs": 497230,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "왜냐하면"
+    } ]
+  }, {
+    "tStartMs": 498210,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "파괴적인 정치의 희망을 건 사람들에게는"
+    } ]
+  }, {
+    "tStartMs": 501090,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "아마 유리하지 않고"
+    } ]
+  }, {
+    "tStartMs": 502730,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "그들에게 표를 주고"
+    } ]
+  }, {
+    "tStartMs": 504260,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "기존 질서를 부셔, 파괴적인 뭐를 해"
+    } ]
+  }, {
+    "tStartMs": 507210,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "아메리카를 위대하게 만들어"
+    } ]
+  }, {
+    "tStartMs": 508790,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "라고 표를 준 사람들에게는"
+    } ]
+  }, {
+    "tStartMs": 510220,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "유리하지 않고"
+    } ]
+  }, {
+    "tStartMs": 511240,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "부유하고 권력 있는 사람들에게"
+    } ]
+  }, {
+    "tStartMs": 513350,
+    "dDurationMs": 4550,
+    "segs": [ {
+      "utf8": "유리할 것이다 라고 아주 공격적인 레포트를 발표했죠"
+    } ]
+  }, {
+    "tStartMs": 517900,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "그리고 이렇게 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 519560,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "JD 밴스와 미국은"
+    } ]
+  }, {
+    "tStartMs": 520740,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "1년 전 이 자리에 와서"
+    } ]
+  }, {
+    "tStartMs": 522110,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "20년 안에 유럽은 알아볼 수 없을 것이라고"
+    } ]
+  }, {
+    "tStartMs": 524400,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "경고했다"
+    } ]
+  }, {
+    "tStartMs": 525200,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "유럽의 문명 말살까지 경고했고"
+    } ]
+  }, {
+    "tStartMs": 527490,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "국가 정체성과 자존감 상실을 언급했고"
+    } ]
+  }, {
+    "tStartMs": 530270,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "현재 추세가 지속된다면"
+    } ]
+  }, {
+    "tStartMs": 531560,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "이민이 계속 들어오니까"
+    } ]
+  }, {
+    "tStartMs": 532650,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "너희들의 기존 가치를 다 잃어버릴 거야"
+    } ]
+  }, {
+    "tStartMs": 534550,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "누군지도 모르게 될 거야"
+    } ]
+  }, {
+    "tStartMs": 535940,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "20년 안에 유럽 대륙은"
+    } ]
+  }, {
+    "tStartMs": 537470,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "완전히 문명이 말살, 몰락할 거야"
+    } ]
+  }, {
+    "tStartMs": 540250,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "알아볼 수 없을 거야"
+    } ]
+  }, {
+    "tStartMs": 541360,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "라고 경고를 했죠"
+    } ]
+  }, {
+    "tStartMs": 543030,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "하지만 1년 뒤"
+    } ]
+  }, {
+    "tStartMs": 544230,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "유럽은 이렇게 말합니다"
+    } ]
+  }, {
+    "tStartMs": 546070,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "대부분의 유럽인에게 이제 미국은"
+    } ]
+  }, {
+    "tStartMs": 548380,
+    "dDurationMs": 4170,
+    "segs": [ {
+      "utf8": "오늘날 알아볼 수 없을 정도로 변했다"
+    } ]
+  }, {
+    "tStartMs": 552550,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "오래된 친구인 줄 알았는데"
+    } ]
+  }, {
+    "tStartMs": 554450,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "이젠 누군지 모르겠어"
+    } ]
+  }, {
+    "tStartMs": 555940,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "누군지 모르고"
+    } ]
+  }, {
+    "tStartMs": 557000,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "알아볼 수 없을 정도로 변했다"
+    } ]
+  }, {
+    "tStartMs": 559230,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "그리고 이게 신문에 대서특별됐는데"
+    } ]
+  }, {
+    "tStartMs": 561200,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "가장 논란이 많이 됐던 구절이에요"
+    } ]
+  }, {
+    "tStartMs": 563450,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "이번 뮌헨 레포트에서 이렇게 얘기를 합니다"
+    } ]
+  }, {
+    "tStartMs": 566140,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "특히 이들은 개방된 국경과"
+    } ]
+  }, {
+    "tStartMs": 568090,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "다문화주의, 성평등"
+    } ]
+  }, {
+    "tStartMs": 569570,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "그리고 더 넓은 의미의"
+    } ]
+  }, {
+    "tStartMs": 570950,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "자유주의적 국제주의에 대해서"
+    } ]
+  }, {
+    "tStartMs": 573310,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "경멸감을 드러낸다"
+    } ]
+  }, {
+    "tStartMs": 575510,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "그런 걸 하면 안 돼"
+    } ]
+  }, {
+    "tStartMs": 576770,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "지구촌, 글로벌"
+    } ]
+  }, {
+    "tStartMs": 578190,
+    "dDurationMs": 530,
+    "segs": [ {
+      "utf8": "뭐 그런 거"
+    } ]
+  }, {
+    "tStartMs": 578720,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "세계 자유무역"
+    } ]
+  }, {
+    "tStartMs": 579570,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "이런 거에 대한 경멸감을 드러낸다"
+    } ]
+  }, {
+    "tStartMs": 581600,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "이들은 이러한 것들이"
+    } ]
+  }, {
+    "tStartMs": 582490,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "자신들의 국가를"
+    } ]
+  }, {
+    "tStartMs": 583340,
+    "dDurationMs": 3650,
+    "segs": [ {
+      "utf8": "문명적 쇠퇴의 위험에 빠트린다고 주장한다 써있고"
+    } ]
+  }, {
+    "tStartMs": 586990,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "그래서 이들의 본질이 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 589850,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "대놓고 써왔어요 대놓고"
+    } ]
+  }, {
+    "tStartMs": 591040,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "와 유럽 쎄요 쎄"
+    } ]
+  }, {
+    "tStartMs": 592620,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "이렇게까지 쓸지 몰랐는데"
+    } ]
+  }, {
+    "tStartMs": 594430,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "이들은 소위 페미니즘 시기 이전에"
+    } ]
+  }, {
+    "tStartMs": 597170,
+    "dDurationMs": 2910,
+    "segs": [ {
+      "utf8": "백인 기독교 과거를 부활시키기 위한"
+    } ]
+  }, {
+    "tStartMs": 600080,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "문화전쟁을 시작한 거다"
+    } ]
+  }, {
+    "tStartMs": 602300,
+    "dDurationMs": 570,
+    "segs": [ {
+      "utf8": "잘못하면"
+    } ]
+  }, {
+    "tStartMs": 602870,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "인종적으로 들릴 수도 있는"
+    } ]
+  }, {
+    "tStartMs": 604020,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "굉장히 무서운 말입니다"
+    } ]
+  }, {
+    "tStartMs": 605520,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "기독교 그리고 백인을 위한 시대"
+    } ]
+  }, {
+    "tStartMs": 608000,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "그 과거 그때에 대한 향수"
+    } ]
+  }, {
+    "tStartMs": 609900,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "이거를 부활시키기 위한"
+    } ]
+  }, {
+    "tStartMs": 611420,
+    "dDurationMs": 360,
+    "segs": [ {
+      "utf8": "써있죠"
+    } ]
+  }, {
+    "tStartMs": 611780,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "컬처 워를 시작한 것과 같다"
+    } ]
+  }, {
+    "tStartMs": 614210,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "라고 유럽이 미국한테 얘기하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 616620,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "그래서 유럽은 거꾸로 생각한다"
+    } ]
+  }, {
+    "tStartMs": 618910,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "이제 유럽은"
+    } ]
+  }, {
+    "tStartMs": 619850,
+    "dDurationMs": 3190,
+    "segs": [ {
+      "utf8": "미국 민주주의의 몰락을 우려한다"
+    } ]
+  }, {
+    "tStartMs": 623040,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "유럽의 대부분은 미국이"
+    } ]
+  }, {
+    "tStartMs": 624920,
+    "dDurationMs": 2760,
+    "segs": [ {
+      "utf8": "경쟁적 권위주의로 몰락하지 않을까"
+    } ]
+  }, {
+    "tStartMs": 627680,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "점점 더 우려하고 있다"
+    } ]
+  }, {
+    "tStartMs": 629430,
+    "dDurationMs": 2930,
+    "segs": [ {
+      "utf8": "미국 민주주의가 과연 얼마나 회복력이 강한지"
+    } ]
+  }, {
+    "tStartMs": 632360,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "그거에 대해서도 의문을 품고 있어"
+    } ]
+  }, {
+    "tStartMs": 634360,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "여의가 오랫동안 누렸다는 자유주의"
+    } ]
+  }, {
+    "tStartMs": 636060,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "그리고 국제주의는"
+    } ]
+  }, {
+    "tStartMs": 637180,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "이제 비자유주의적"
+    } ]
+  }, {
+    "tStartMs": 638750,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "민족주의적 대안에 의해서"
+    } ]
+  }, {
+    "tStartMs": 641030,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "공개적으로 도전 받고 있다"
+    } ]
+  }, {
+    "tStartMs": 643140,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "그래서 어떻게 해야 되냐?"
+    } ]
+  }, {
+    "tStartMs": 644540,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "이게 요즘에 유럽이 미는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 647420,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "이런 불도조식 정치의 방관자로 남아있으면"
+    } ]
+  }, {
+    "tStartMs": 650020,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "결국 강대국의 정치에 휘둘리게 되고"
+    } ]
+  }, {
+    "tStartMs": 652520,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "소중히 여겨왔던 규칙과 제도가"
+    } ]
+  }, {
+    "tStartMs": 654410,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "폐허가 된다는 것을"
+    } ]
+  }, {
+    "tStartMs": 655520,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "우리는 알고 있다"
+    } ]
+  }, {
+    "tStartMs": 656530,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "그래서 파괴 정책의 최악의 형태를 억제하려면"
+    } ]
+  }, {
+    "tStartMs": 659080,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "이제 나서야 한다"
+    } ]
+  }, {
+    "tStartMs": 661240,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "무엇보다도 자체적인 역량 강화에"
+    } ]
+  }, {
+    "tStartMs": 663330,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "대대적으로 투자하고"
+    } ]
+  }, {
+    "tStartMs": 664450,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "더욱 긴밀한 협력을 통해서"
+    } ]
+  }, {
+    "tStartMs": 666380,
+    "dDurationMs": 3650,
+    "segs": [ {
+      "utf8": "하나로 뭉쳐야 한다는 얘기라는 거죠"
+    } ]
+  }, {
+    "tStartMs": 670030,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "미국이 이만한 덩치니까"
+    } ]
+  }, {
+    "tStartMs": 672000,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "이제 자기네들도 유럽도 하나로 뭉쳐서"
+    } ]
+  }, {
+    "tStartMs": 674510,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "최악의 파괴에 맞서자"
+    } ]
+  }, {
+    "tStartMs": 676860,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "그리고 이건 대단히 중요하다"
+    } ]
+  }, {
+    "tStartMs": 678570,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "왜냐하면 여기에"
+    } ]
+  }, {
+    "tStartMs": 680140,
+    "dDurationMs": 3030,
+    "segs": [ {
+      "utf8": "모든 것이 걸려있기 때문이다"
+    } ]
+  }, {
+    "tStartMs": 683170,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "파괴 정치에 반대하는 사람들이"
+    } ]
+  }, {
+    "tStartMs": 684900,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "필수적인 구조를 강화하고"
+    } ]
+  }, {
+    "tStartMs": 686360,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "스스로 과감한 건축가"
+    } ]
+  }, {
+    "tStartMs": 687990,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "과감하게 새로운 그림을 그려야 된다"
+    } ]
+  }, {
+    "tStartMs": 689480,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "왜냐하면 너무나 많은 것이 걸려있다"
+    } ]
+  }, {
+    "tStartMs": 691620,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "사실은 모든 것이 걸려있을 수도 있다"
+    } ]
+  }, {
+    "tStartMs": 694820,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "하면서 이제 보고서가 끝납니다"
+    } ]
+  }, {
+    "tStartMs": 695970,
+    "dDurationMs": 3580,
+    "segs": [ {
+      "utf8": "모든 것이 걸려있을 수도 있죠"
+    } ]
+  }, {
+    "tStartMs": 699550,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "전쟁이 있을 수도 있는 거니까"
+    } ]
+  }, {
+    "tStartMs": 701430,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "아니면 민주주의 가치가 위협받을 수도 있는 거고"
+    } ]
+  }, {
+    "tStartMs": 704020,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "미국은 전혀 그렇게 생각하지 않지만"
+    } ]
+  }, {
+    "tStartMs": 705910,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "유럽은 그렇게 느낀다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 707420,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "모든 것이 걸려있는 문화전쟁"
+    } ]
+  }, {
+    "tStartMs": 709410,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "아니면 실제로 전쟁이 시작될 수도 있다"
+    } ]
+  }, {
+    "tStartMs": 712230,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "라고 보고서가 마무리됩니다"
+    } ]
+  }, {
+    "tStartMs": 713900,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "그래서 이런 사전 보고서를 냈어요"
+    } ]
+  }, {
+    "tStartMs": 716290,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "그리고 독일 메르츠 총리가"
+    } ]
+  }, {
+    "tStartMs": 717980,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "개막 연설을 합니다"
+    } ]
+  }, {
+    "tStartMs": 719030,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "뮌헨에서 열렸죠"
+    } ]
+  }, {
+    "tStartMs": 720110,
+    "dDurationMs": 2970,
+    "segs": [ {
+      "utf8": "당연히 해당 국가의 총리가 연설을 했는데"
+    } ]
+  }, {
+    "tStartMs": 723080,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "시작하자마자 미국을 비난했어요"
+    } ]
+  }, {
+    "tStartMs": 725790,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "미국의 지도력은 도전을 받고 있으며"
+    } ]
+  }, {
+    "tStartMs": 727590,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "어쩌면 이미 상실되었을지도 모른다"
+    } ]
+  }, {
+    "tStartMs": 729780,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "이게"
+    } ]
+  }, {
+    "tStartMs": 730910,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "1년 전에만 해도"
+    } ]
+  }, {
+    "tStartMs": 731680,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "상상할 수 없었던 분위기입니다"
+    } ]
+  }, {
+    "tStartMs": 733960,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "저기는 사실은 자기들"
+    } ]
+  }, {
+    "tStartMs": 735450,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "나토 국가잖아요"
+    } ]
+  }, {
+    "tStartMs": 736190,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "자기들끼리 모여서"
+    } ]
+  }, {
+    "tStartMs": 737410,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "어화둥둥하면서"
+    } ]
+  }, {
+    "tStartMs": 738360,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "앞으로 안보 어떻게 할까"
+    } ]
+  }, {
+    "tStartMs": 739570,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "중국이 어떻다"
+    } ]
+  }, {
+    "tStartMs": 741060,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "러시아가 어떻다"
+    } ]
+  }, {
+    "tStartMs": 742010,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "보통 이런 얘기하는 자리입니다"
+    } ]
+  }, {
+    "tStartMs": 743640,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "매년 하는 거니까"
+    } ]
+  }, {
+    "tStartMs": 744950,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "중국의 위협, 러시아의 위협"
+    } ]
+  }, {
+    "tStartMs": 746750,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "중동의 안보가 어떻게 됐다"
+    } ]
+  }, {
+    "tStartMs": 748160,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "아프리카에서 쿠데타가 있다더라"
+    } ]
+  }, {
+    "tStartMs": 749620,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "뭐 이런 얘기를 해야 되는데"
+    } ]
+  }, {
+    "tStartMs": 750550,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "그런 얘기는 굉장히 들어가고"
+    } ]
+  }, {
+    "tStartMs": 753220,
+    "dDurationMs": 3370,
+    "segs": [ {
+      "utf8": "유럽과 전통의 어떤 동맹이었던"
+    } ]
+  }, {
+    "tStartMs": 756590,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "유럽과 미국"
+    } ]
+  }, {
+    "tStartMs": 757650,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "말 그대로 대서양 동맹의 양축이"
+    } ]
+  }, {
+    "tStartMs": 760370,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "서로에 대해서 비난을 쏟는"
+    } ]
+  }, {
+    "tStartMs": 761910,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "그런 모습을 보이고 있는 거죠"
+    } ]
+  }, {
+    "tStartMs": 763460,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "독일 총리가 또 이렇게 얘기했어"
+    } ]
+  }, {
+    "tStartMs": 764910,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "무시무시한 얘기인데"
+    } ]
+  }, {
+    "tStartMs": 766190,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "우리는 과거에서 깨달은 바가 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 768720,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "우리 독일은"
+    } ]
+  }, {
+    "tStartMs": 769840,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "힘이 곧 정의인 세상이"
+    } ]
+  }, {
+    "tStartMs": 771610,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "얼마나 암울한 곳인지 잘 알고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 774360,
+    "dDurationMs": 3380,
+    "segs": [ {
+      "utf8": "독일은 20세기에 먼저 그 길을 걸어봤고"
+    } ]
+  }, {
+    "tStartMs": 777740,
+    "dDurationMs": 3220,
+    "segs": [ {
+      "utf8": "결국 비참하고 끔찍한 최후를 맞이했습니다"
+    } ]
+  }, {
+    "tStartMs": 780960,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "그런데"
+    } ]
+  }, {
+    "tStartMs": 782090,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "미국인들이 지금 힘이고"
+    } ]
+  }, {
+    "tStartMs": 783870,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "정의인 길을"
+    } ]
+  }, {
+    "tStartMs": 785070,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "걸으려고 하는 거냐"
+    } ]
+  }, {
+    "tStartMs": 786790,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "우리가 먼저 걸어왔더니"
+    } ]
+  }, {
+    "tStartMs": 788200,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "비참하고 끔찍한 최후가 있었는데"
+    } ]
+  }, {
+    "tStartMs": 790730,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "그리고 너희가 그렇게 나오면"
+    } ]
+  }, {
+    "tStartMs": 792270,
+    "dDurationMs": 3190,
+    "segs": [ {
+      "utf8": "우리는 무력하게 굴지는 않을 거다"
+    } ]
+  }, {
+    "tStartMs": 795460,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "우리는 이 세상에서 무력하지 않습니다"
+    } ]
+  }, {
+    "tStartMs": 797840,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "독일은 무력한 나라가 아니에요"
+    } ]
+  }, {
+    "tStartMs": 799480,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "우리는 이제 새로운 문을 열고"
+    } ]
+  }, {
+    "tStartMs": 801070,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "새로운 기회를 잡을 것입니다"
+    } ]
+  }, {
+    "tStartMs": 803200,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "아까 그 뮌헨 레포트라는 게"
+    } ]
+  }, {
+    "tStartMs": 804750,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "사실은 독일 연구기관들이"
+    } ]
+  }, {
+    "tStartMs": 806510,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "힘을 모아서 낸 거니까"
+    } ]
+  }, {
+    "tStartMs": 807610,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "독일 뜻이라고 해도 과언이 아니죠"
+    } ]
+  }, {
+    "tStartMs": 809730,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "힘을 모아서"
+    } ]
+  }, {
+    "tStartMs": 810840,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "우리는 무언가 할 수 있고"
+    } ]
+  }, {
+    "tStartMs": 812570,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "새로운 기회를 잡을 거다"
+    } ]
+  }, {
+    "tStartMs": 815040,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "다른 나라가 이런 말하면 그럴 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 817190,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "독일이 그런 말을 하면"
+    } ]
+  }, {
+    "tStartMs": 818640,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "그쵸"
+    } ]
+  }, {
+    "tStartMs": 821000,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "너희는 새로운 기회를"
+    } ]
+  }, {
+    "tStartMs": 822810,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "너무 많이 잡으면 안 될 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 825660,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "예전에 두 번이나 잡았는데"
+    } ]
+  }, {
+    "tStartMs": 828110,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "조금 그런데"
+    } ]
+  }, {
+    "tStartMs": 828870,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "하여튼 독일 총리가 지금"
+    } ]
+  }, {
+    "tStartMs": 830440,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "이렇게 얘기를 했고요"
+    } ]
+  }, {
+    "tStartMs": 831550,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "그래서 모두의 관심 속에"
+    } ]
+  }, {
+    "tStartMs": 833560,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "올해는 JD 밴스가 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 835060,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "올해 JD 밴스가 나왔으면"
+    } ]
+  }, {
+    "tStartMs": 836350,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "진짜 완전 조금 나쁜 말이지만"
+    } ]
+  }, {
+    "tStartMs": 838860,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "꿀잼일 수도 있었는데"
+    } ]
+  }, {
+    "tStartMs": 840070,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "얼마나 서로 막 대립된 모습을 보였을까"
+    } ]
+  }, {
+    "tStartMs": 842870,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "올해는 JD 밴스가 안 왔어요"
+    } ]
+  }, {
+    "tStartMs": 844660,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "올해는 미국 국무장관"
+    } ]
+  }, {
+    "tStartMs": 845980,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "마르코 루비오가 왔습니다"
+    } ]
+  }, {
+    "tStartMs": 847550,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "근데 마르코 루비오는"
+    } ]
+  }, {
+    "tStartMs": 848410,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "훨씬 온화하게 얘기했어요 훨씬"
+    } ]
+  }, {
+    "tStartMs": 851270,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "굉장히 부드럽게"
+    } ]
+  }, {
+    "tStartMs": 852940,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "JD 밴스나 트럼프 대통령은"
+    } ]
+  }, {
+    "tStartMs": 854180,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "굉장히 막 세잖아"
+    } ]
+  }, {
+    "tStartMs": 855710,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "되게 부드럽게"
+    } ]
+  }, {
+    "tStartMs": 856590,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "우리는 유럽의 운명이"
+    } ]
+  }, {
+    "tStartMs": 857630,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "결코 우리의 운명과 무관하지 않다는 걸"
+    } ]
+  }, {
+    "tStartMs": 859420,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "잘 알고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 860910,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "우리의 운명은 언제나 여러분의"
+    } ]
+  }, {
+    "tStartMs": 862580,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "운명과 얽혀있을 겁니다"
+    } ]
+  }, {
+    "tStartMs": 864380,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "갑자기 손을 내밀는 듯한"
+    } ]
+  }, {
+    "tStartMs": 866610,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "이 온화한 말투"
+    } ]
+  }, {
+    "tStartMs": 869100,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "미국의 핵심은 대서양 동맹에서"
+    } ]
+  }, {
+    "tStartMs": 871230,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "철수하자는 게 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 873060,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "공동의 이익과 같이 더욱 지속적이고 견고하며"
+    } ]
+  }, {
+    "tStartMs": 875890,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "실질적인 기반 위에"
+    } ]
+  }, {
+    "tStartMs": 876930,
+    "dDurationMs": 3190,
+    "segs": [ {
+      "utf8": "우리의 파트너십을 구축하자는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 880120,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "많은 언론에서"
+    } ]
+  }, {
+    "tStartMs": 881400,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "대서양 시대의 종말이 아니냐"
+    } ]
+  }, {
+    "tStartMs": 883330,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "이런 표현을 쓰던데"
+    } ]
+  }, {
+    "tStartMs": 884700,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "이는 우리의 목표가 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 886730,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "우리의 고향은 서반구일지 모르지만"
+    } ]
+  }, {
+    "tStartMs": 889300,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "자기들이 서반구가 홈랜드라고 하니까"
+    } ]
+  }, {
+    "tStartMs": 891740,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "거기일지 모르지만"
+    } ]
+  }, {
+    "tStartMs": 892570,
+    "dDurationMs": 3410,
+    "segs": [ {
+      "utf8": "우리는 언제나 유럽의 자식일 겁니다 하면서"
+    } ]
+  }, {
+    "tStartMs": 895980,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "이렇게 쫙 가뜩이나 화나가지고"
+    } ]
+  }, {
+    "tStartMs": 898030,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "상대가 막 이러고 있는데"
+    } ]
+  }, {
+    "tStartMs": 899000,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "손을 쫙 내밀어주는 말을 했단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 901050,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "그래서 리뷰의 연설이 끝나자마자"
+    } ]
+  }, {
+    "tStartMs": 902820,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "과거 JD 베스트와는 다르게"
+    } ]
+  }, {
+    "tStartMs": 904660,
+    "dDurationMs": 3530,
+    "segs": [ {
+      "utf8": "기립박수"
+    } ]
+  }, {
+    "tStartMs": 908190,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "역시 형이야 이러면서"
+    } ]
+  }, {
+    "tStartMs": 910240,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "얼마나 그동안 긴장을 하고"
+    } ]
+  }, {
+    "tStartMs": 912320,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "자기들이 작년에 와서 때렸단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 914170,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "자기들도 이만한 펀치를 날려갖고"
+    } ]
+  }, {
+    "tStartMs": 916280,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "사실 긴장을 좀 하고 있겠죠?"
+    } ]
+  }, {
+    "tStartMs": 917790,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "먼저 연례 보고서 내면서"
+    } ]
+  }, {
+    "tStartMs": 919060,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "미국이 잘못하고"
+    } ]
+  }, {
+    "tStartMs": 920170,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "앞으로 그렇게 가면"
+    } ]
+  }, {
+    "tStartMs": 921250,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "민족주의적, 백인, 종교, 문화전쟁"
+    } ]
+  }, {
+    "tStartMs": 924020,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "막 이러고 있었는데"
+    } ]
+  }, {
+    "tStartMs": 924870,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "갑자기 미국 대표가 오르더니"
+    } ]
+  }, {
+    "tStartMs": 926910,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "좀 뭔가 이렇게 부드럽게 손을 내면서"
+    } ]
+  }, {
+    "tStartMs": 928720,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "나는 저희는 유럽의 자식입니다"
+    } ]
+  }, {
+    "tStartMs": 930810,
+    "dDurationMs": 2970,
+    "segs": [ {
+      "utf8": "Child of Europe 하니까 기립박수"
+    } ]
+  }, {
+    "tStartMs": 933780,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "일어서 있는 거 보이시죠?"
+    } ]
+  }, {
+    "tStartMs": 935430,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "작년에는 안 일어섰습니다"
+    } ]
+  }, {
+    "tStartMs": 936520,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "갑자기 일어서서 박수를 쳤던"
+    } ]
+  }, {
+    "tStartMs": 939260,
+    "dDurationMs": 570,
+    "segs": [ {
+      "utf8": "이런 일이"
+    } ]
+  }, {
+    "tStartMs": 939830,
+    "dDurationMs": 3050,
+    "segs": [ {
+      "utf8": "이번 뮌헨 안보회의에서 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 942880,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "유럽 입장에서는 정말 오랜만에"
+    } ]
+  }, {
+    "tStartMs": 944940,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "안도의 한숨을 내시는 게 아닌가 생각되고"
+    } ]
+  }, {
+    "tStartMs": 946820,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "유럽의 지도자들이 모두 다 찬사를 했어요"
+    } ]
+  }, {
+    "tStartMs": 949250,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "그리고 우르줄라 누님"
+    } ]
+  }, {
+    "tStartMs": 950590,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "유럽연합집행위원회 위원장이시죠"
+    } ]
+  }, {
+    "tStartMs": 952700,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "매우 안심했다"
+    } ]
+  }, {
+    "tStartMs": 954070,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "독일 외무장관 역시 진정한 파트너다"
+    } ]
+  }, {
+    "tStartMs": 957020,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "라고 하면서"
+    } ]
+  }, {
+    "tStartMs": 958110,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "서로 박수를 치고"
+    } ]
+  }, {
+    "tStartMs": 959340,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "악수를 나누는"
+    } ]
+  }, {
+    "tStartMs": 960430,
+    "dDurationMs": 3090,
+    "segs": [ {
+      "utf8": "그냥 마르코 루비오 국무장관이"
+    } ]
+  }, {
+    "tStartMs": 963520,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "외교까지 다 하시면 되지 않을까"
+    } ]
+  }, {
+    "tStartMs": 964830,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "이 정도면"
+    } ]
+  }, {
+    "tStartMs": 965760,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "생각할 정도로"
+    } ]
+  }, {
+    "tStartMs": 966650,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "굉장히 잘 끝났는데"
+    } ]
+  }, {
+    "tStartMs": 967920,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "물론 그렇다고 해서"
+    } ]
+  }, {
+    "tStartMs": 968920,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "많은 이들이 트럼프 행정의 전략이 바뀐 거냐"
+    } ]
+  }, {
+    "tStartMs": 971520,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "그렇게 생각하는 사람은 없죠"
+    } ]
+  }, {
+    "tStartMs": 972680,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "그렇게 생각하는 사람은 없지만"
+    } ]
+  }, {
+    "tStartMs": 974110,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "어쨌건 이번에는 굉장히 부드럽게 넘어갔습니다"
+    } ]
+  }, {
+    "tStartMs": 976860,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "방금 말씀드렸지만"
+    } ]
+  }, {
+    "tStartMs": 978430,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "연설은 굉장히 부드러웠지만"
+    } ]
+  }, {
+    "tStartMs": 979740,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "당연히 당장 변한 건 없습니다"
+    } ]
+  }, {
+    "tStartMs": 981730,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "지금 트럼프 행정부는 한마디로 미국이죠"
+    } ]
+  }, {
+    "tStartMs": 983860,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "미국은 기조가 이거죠"
+    } ]
+  }, {
+    "tStartMs": 985050,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "유럽의 방어는 이제"
+    } ]
+  }, {
+    "tStartMs": 986500,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "유럽이 해야 된다"
+    } ]
+  }, {
+    "tStartMs": 987850,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "기본적으로 이제 미국이 도와주지 않을 테니까"
+    } ]
+  }, {
+    "tStartMs": 990360,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "유럽이 해라"
+    } ]
+  }, {
+    "tStartMs": 991200,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "특히 전쟁부장관 피트 헤그세스"
+    } ]
+  }, {
+    "tStartMs": 993780,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "작년 12월에 이렇게 얘기했죠"
+    } ]
+  }, {
+    "tStartMs": 995520,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "우크라이나 무기 지원도"
+    } ]
+  }, {
+    "tStartMs": 996850,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "이제는 유럽이 해야 된다"
+    } ]
+  }, {
+    "tStartMs": 998650,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "왜 그걸 미국이 비용을 대나?"
+    } ]
+  }, {
+    "tStartMs": 1000480,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "향후 우크라이나에 제공될"
+    } ]
+  }, {
+    "tStartMs": 1001940,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "살상 아니면 비살상 무기 지원"
+    } ]
+  }, {
+    "tStartMs": 1004060,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "유럽이 부담해라"
+    } ]
+  }, {
+    "tStartMs": 1005390,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "라는 거를 요구를 하고 있죠"
+    } ]
+  }, {
+    "tStartMs": 1006850,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "그래서 폴란드 총리는"
+    } ]
+  }, {
+    "tStartMs": 1008990,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "이번 회의 때 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 1010270,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "유럽은 방위 투자를 확대해야 된다"
+    } ]
+  }, {
+    "tStartMs": 1012810,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "우리에게는 분명한 선택이 있는데"
+    } ]
+  }, {
+    "tStartMs": 1014350,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "1번 오늘 돈을 쓰느냐"
+    } ]
+  }, {
+    "tStartMs": 1016140,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "2번 내일 피를 흘리느냐"
+    } ]
+  }, {
+    "tStartMs": 1018500,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "이건 우크라이나 만의 문제는 아니다"
+    } ]
+  }, {
+    "tStartMs": 1020340,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "유럽 전체의 문제고"
+    } ]
+  }, {
+    "tStartMs": 1021980,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "나토 사무총장도 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1023960,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "러시아가 전쟁을 다시 유럽으로 가져왔다"
+    } ]
+  }, {
+    "tStartMs": 1026560,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "이제 우리는 우리의 조부모"
+    } ]
+  }, {
+    "tStartMs": 1028770,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "혹은 증조부모 세대가 겪었던"
+    } ]
+  }, {
+    "tStartMs": 1031110,
+    "dDurationMs": 3420,
+    "segs": [ {
+      "utf8": "세계적인 규모의 전쟁에 대비해야 된다"
+    } ]
+  }, {
+    "tStartMs": 1034530,
+    "dDurationMs": 3670,
+    "segs": [ {
+      "utf8": "이게 조부모나 증조부모가 겪었던 규모의"
+    } ]
+  }, {
+    "tStartMs": 1038200,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "전쟁이라는 건"
+    } ]
+  }, {
+    "tStartMs": 1039490,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "월드 워잖아요 월드 워"
+    } ]
+  }, {
+    "tStartMs": 1041650,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "그런 전쟁에 이제 우리는 대비해야 된다"
+    } ]
+  }, {
+    "tStartMs": 1044050,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "전쟁이 없던 시대는 끝났다"
+    } ]
+  }, {
+    "tStartMs": 1046190,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "라고 얘기를 하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1047820,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "이러면서 독일 뮌헨 안보회의가 마무리됐는데"
+    } ]
+  }, {
+    "tStartMs": 1049600,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "생각을 해보면"
+    } ]
+  }, {
+    "tStartMs": 1050490,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "2019년에 마크롱 대통령이"
+    } ]
+  }, {
+    "tStartMs": 1052210,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "이런 얘기를 한 적이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 1053350,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "이거는 축하할 때"
+    } ]
+  }, {
+    "tStartMs": 1054160,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "잠깐 기억이 안 나는데"
+    } ]
+  }, {
+    "tStartMs": 1056180,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "단신 처리됐어요"
+    } ]
+  }, {
+    "tStartMs": 1057470,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "그때 마크롱 대통령이"
+    } ]
+  }, {
+    "tStartMs": 1058570,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "한 잡지하고 인터뷰에서 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1060740,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "나토는 뇌사상태에 있다"
+    } ]
+  }, {
+    "tStartMs": 1063110,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "2019년이면 트럼프 대통령"
+    } ]
+  }, {
+    "tStartMs": 1064580,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "1기 때인데"
+    } ]
+  }, {
+    "tStartMs": 1066160,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "그땐 지금처럼 안 그랬는데"
+    } ]
+  }, {
+    "tStartMs": 1067420,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "벌써 나토는 뇌사상태에 있다"
+    } ]
+  }, {
+    "tStartMs": 1069970,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "이런 얘기를 했었죠"
+    } ]
+  }, {
+    "tStartMs": 1070670,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "그때 마크롱이 뭐라고 했었냐면"
+    } ]
+  }, {
+    "tStartMs": 1072930,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "우리는 언젠가 나토의 미래를 재평가해야 된다"
+    } ]
+  }, {
+    "tStartMs": 1075770,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "제 생각에 현재 우리가 목격하고 있는 거는"
+    } ]
+  }, {
+    "tStartMs": 1078560,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "나토의 뇌사상태야"
+    } ]
+  }, {
+    "tStartMs": 1079620,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "나토는 이미 힘이 빠졌어"
+    } ]
+  }, {
+    "tStartMs": 1081400,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "왜냐하면"
+    } ]
+  }, {
+    "tStartMs": 1082460,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "내가 그 당시 1기"
+    } ]
+  }, {
+    "tStartMs": 1084160,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "트럼프 대통령을 만나보니까"
+    } ]
+  }, {
+    "tStartMs": 1086340,
+    "dDurationMs": 3210,
+    "segs": [ {
+      "utf8": "유럽에 대해서 우리의 생각을 공유하지 않는"
+    } ]
+  }, {
+    "tStartMs": 1089550,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "최초의 미국 대통령인 것 같아"
+    } ]
+  }, {
+    "tStartMs": 1092050,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "내가 대화를 해봤더니"
+    } ]
+  }, {
+    "tStartMs": 1093180,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "어?"
+    } ]
+  }, {
+    "tStartMs": 1094070,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "유럽을 그렇게 친구처럼 생각하지 않아"
+    } ]
+  }, {
+    "tStartMs": 1096590,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "우리와 생각을 공유하지 않더라"
+    } ]
+  }, {
+    "tStartMs": 1098400,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "자 이제 나토는 아마 뇌사상태에 빠졌을 거다"
+    } ]
+  }, {
+    "tStartMs": 1100830,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "라고 마크롱이 얘기했었죠"
+    } ]
+  }, {
+    "tStartMs": 1102190,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "대단한 사람이에요"
+    } ]
+  }, {
+    "tStartMs": 1103170,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "1기 때 만나보고"
+    } ]
+  }, {
+    "tStartMs": 1104190,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "뭔가 깨달은 게 있었던 것 같아"
+    } ]
+  }, {
+    "tStartMs": 1106180,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "물론 당시의 기억을 되살려보면"
+    } ]
+  }, {
+    "tStartMs": 1108580,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "유럽 지도자들은 반응은 되게 시큰둥했어요"
+    } ]
+  }, {
+    "tStartMs": 1111200,
+    "dDurationMs": 610,
+    "segs": [ {
+      "utf8": "뭐 별다른"
+    } ]
+  }, {
+    "tStartMs": 1111810,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "수십 년간 지금 대서양 동맹이 이어졌고"
+    } ]
+  }, {
+    "tStartMs": 1114000,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "나토가 지금까지 있는데"
+    } ]
+  }, {
+    "tStartMs": 1115450,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "그거 미국 대통령이 한 명 바뀌었다고"
+    } ]
+  }, {
+    "tStartMs": 1116730,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "뭐가 어떻게 되겠냐?"
+    } ]
+  }, {
+    "tStartMs": 1117890,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "라고 무관심한 태도를 보였는데"
+    } ]
+  }, {
+    "tStartMs": 1120060,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "이제 트럼프 2기가 되니까"
+    } ]
+  }, {
+    "tStartMs": 1122100,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "냉전 종식 이후 처음으로 유럽 각국들은"
+    } ]
+  }, {
+    "tStartMs": 1124360,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "이제 스스로를 지켜야 됐고"
+    } ]
+  }, {
+    "tStartMs": 1126180,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "스스로를 지키려면"
+    } ]
+  }, {
+    "tStartMs": 1127010,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "어떻게 됩니까?"
+    } ]
+  }, {
+    "tStartMs": 1127870,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "재래식 무기만으로 안 되잖아요"
+    } ]
+  }, {
+    "tStartMs": 1129390,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "그래서 오늘의 주제를 고민하게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1131490,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "바로 유럽 각국은"
+    } ]
+  }, {
+    "tStartMs": 1133550,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "자체적인 핵 억지력 개발 방안을"
+    } ]
+  }, {
+    "tStartMs": 1136030,
+    "dDurationMs": 2660,
+    "segs": [ {
+      "utf8": "이제 본격적으로 논의하고 있다"
+    } ]
+  }, {
+    "tStartMs": 1138690,
+    "dDurationMs": 2970,
+    "segs": [ {
+      "utf8": "이게 아마 몇 년 내로 현실화될 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1141660,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "왜냐하면 이번 뮌헨 안보회의의"
+    } ]
+  }, {
+    "tStartMs": 1143890,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "또 다른 소주제가"
+    } ]
+  }, {
+    "tStartMs": 1145380,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "아젠다 중에 하나죠"
+    } ]
+  }, {
+    "tStartMs": 1146660,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "바로 이겁니다"
+    } ]
+  }, {
+    "tStartMs": 1148000,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "만능 해결책은 없다"
+    } ]
+  }, {
+    "tStartMs": 1150100,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "유럽의 뉴클리어 옵션,"
+    } ]
+  }, {
+    "tStartMs": 1152750,
+    "dDurationMs": 3230,
+    "segs": [ {
+      "utf8": "핵 선택지는 어떤 것이 있냐"
+    } ]
+  }, {
+    "tStartMs": 1155980,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "유럽의 핵 선택지"
+    } ]
+  }, {
+    "tStartMs": 1157820,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "유럽은 핵이 있습니까? 없습니까?"
+    } ]
+  }, {
+    "tStartMs": 1160510,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "유럽은 뉴클리어 웨폰이 있어요? 없어요?"
+    } ]
+  }, {
+    "tStartMs": 1163010,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "조금 헷갈릴 수 있어요"
+    } ]
+  }, {
+    "tStartMs": 1165510,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "유럽은 핵무기가 있죠"
+    } ]
+  }, {
+    "tStartMs": 1168320,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "근데 모두가 있지 않아요"
+    } ]
+  }, {
+    "tStartMs": 1169680,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "있는 나라가 있고, 없는 나라가 있어요"
+    } ]
+  }, {
+    "tStartMs": 1171080,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "누가 갖고 있어요?"
+    } ]
+  }, {
+    "tStartMs": 1172450,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "영국과 프랑스가 갖고 있어요"
+    } ]
+  }, {
+    "tStartMs": 1174770,
+    "dDurationMs": 3320,
+    "segs": [ {
+      "utf8": "영국과 프랑스는 유럽 내 유일한 핵 보유국입니다"
+    } ]
+  }, {
+    "tStartMs": 1178090,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "근데 유럽의 각국들이"
+    } ]
+  }, {
+    "tStartMs": 1179940,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "이제 우크라이나를 보니까"
+    } ]
+  }, {
+    "tStartMs": 1181810,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "우크라이나 옛날에 핵 보유국이었잖아요"
+    } ]
+  }, {
+    "tStartMs": 1183620,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "소련 시절에"
+    } ]
+  }, {
+    "tStartMs": 1184690,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "그랬다 핵무기 넘겨줬죠"
+    } ]
+  }, {
+    "tStartMs": 1186130,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "그리고 미국이나 아니면"
+    } ]
+  }, {
+    "tStartMs": 1187850,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "유럽 국가들한테 자국 안보 보장해준다"
+    } ]
+  }, {
+    "tStartMs": 1190460,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "이런 협약을 맺었지만"
+    } ]
+  }, {
+    "tStartMs": 1191550,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "아무런 소용이 없었죠"
+    } ]
+  }, {
+    "tStartMs": 1193000,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "핵이 없으니까"
+    } ]
+  }, {
+    "tStartMs": 1193680,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "저걸로 하는 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 1194820,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "이제는 프랑스와 영국 말고"
+    } ]
+  }, {
+    "tStartMs": 1197210,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "다른 유럽 국가들도"
+    } ]
+  }, {
+    "tStartMs": 1198640,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "핵을 가져야 되는 게 아닐까라는"
+    } ]
+  }, {
+    "tStartMs": 1200830,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "생각을 하게 된다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1202340,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "예를 들면 독일은 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1205070,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "독일 메르스 총리가 얘기한 건데"
+    } ]
+  }, {
+    "tStartMs": 1206530,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "이제 마크론 대통령과"
+    } ]
+  }, {
+    "tStartMs": 1207810,
+    "dDurationMs": 3070,
+    "segs": [ {
+      "utf8": "유럽의 핵 억지력에 대해서 논의했다"
+    } ]
+  }, {
+    "tStartMs": 1210880,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "공개적으로 얘기한 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1211770,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "독일이 공개적으로 핵무기에 대한"
+    } ]
+  }, {
+    "tStartMs": 1213910,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "대안을 검토하고 있다는 것을 밝혔고요"
+    } ]
+  }, {
+    "tStartMs": 1216470,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "실제로 얘기를 했어요"
+    } ]
+  }, {
+    "tStartMs": 1217420,
+    "dDurationMs": 2660,
+    "segs": [ {
+      "utf8": "독일은 나토가 제시한 틀 안에서"
+    } ]
+  }, {
+    "tStartMs": 1220080,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "핵 공유를 검토하고 있다"
+    } ]
+  }, {
+    "tStartMs": 1222340,
+    "dDurationMs": 2940,
+    "segs": [ {
+      "utf8": "다행히 핵 보유라고는 안 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1225280,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "핵무기를 내일까지 만들게"
+    } ]
+  }, {
+    "tStartMs": 1227030,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "라고는 안 했어요"
+    } ]
+  }, {
+    "tStartMs": 1228100,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "핵 공유라는 표현을 썼습니다"
+    } ]
+  }, {
+    "tStartMs": 1229560,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "핵 공유"
+    } ]
+  }, {
+    "tStartMs": 1230750,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "핵 공유는 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 1231630,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "아니 만들면 만들고"
+    } ]
+  }, {
+    "tStartMs": 1232690,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "없으면 없는 거지"
+    } ]
+  }, {
+    "tStartMs": 1233440,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "뭐를 공유하겠다는 거냐?"
+    } ]
+  }, {
+    "tStartMs": 1234850,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "아까 얘기했듯이"
+    } ]
+  }, {
+    "tStartMs": 1236200,
+    "dDurationMs": 3640,
+    "segs": [ {
+      "utf8": "프랑스와 영국이 만든 핵무기를 공유하겠다"
+    } ]
+  }, {
+    "tStartMs": 1239840,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "독일 영토 내에 프랑스와 영국으로부터"
+    } ]
+  }, {
+    "tStartMs": 1242250,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "핵무기를 배치받겠다는 말입니다"
+    } ]
+  }, {
+    "tStartMs": 1245070,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "아직은 자체 핵무기를 개발할 가능성은"
+    } ]
+  }, {
+    "tStartMs": 1247280,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "일단 배제했어요"
+    } ]
+  }, {
+    "tStartMs": 1249190,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "아무리 시대가 변해도"
+    } ]
+  }, {
+    "tStartMs": 1251050,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "독일이 과거 역사에서 한 그게 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1254000,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "자체 핵무기를 개발한다는 건 쉽지 않죠"
+    } ]
+  }, {
+    "tStartMs": 1255950,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "자체 핵무기를 개발하지 않을 거지만"
+    } ]
+  }, {
+    "tStartMs": 1257430,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "대신 프랑스와 영국으로부터"
+    } ]
+  }, {
+    "tStartMs": 1259110,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "핵무기를 배치받을 수 있다"
+    } ]
+  }, {
+    "tStartMs": 1261570,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "실제로 프랑스 마크론 대통령은"
+    } ]
+  }, {
+    "tStartMs": 1263420,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "유럽 각국에"
+    } ]
+  }, {
+    "tStartMs": 1264230,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "프랑스가 핵 우산을 제공할 수 있다고"
+    } ]
+  }, {
+    "tStartMs": 1267060,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "이야기를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1267710,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "작년에 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 1268550,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "유럽의 나머지 국가들에 대해서"
+    } ]
+  }, {
+    "tStartMs": 1270090,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "지금 미국이 동맹에 대해서"
+    } ]
+  }, {
+    "tStartMs": 1271560,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "핵우산을 씌우는 나라들이 있잖아요"
+    } ]
+  }, {
+    "tStartMs": 1273850,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "프랑스가 유럽 각국에 대해서"
+    } ]
+  }, {
+    "tStartMs": 1276170,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "핵 우산을 제공하겠다"
+    } ]
+  }, {
+    "tStartMs": 1277870,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "핵 우산"
+    } ]
+  }, {
+    "tStartMs": 1278500,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "핵무기를 배치함으로써"
+    } ]
+  }, {
+    "tStartMs": 1280260,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "공격받지 않는 옵션이라는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1282350,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "그걸 제공하겠다 그랬는데"
+    } ]
+  }, {
+    "tStartMs": 1284120,
+    "dDurationMs": 3230,
+    "segs": [ {
+      "utf8": "물론 미국이나 러시아가 갖고 있는 핵탄두는"
+    } ]
+  }, {
+    "tStartMs": 1287350,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "5,000발이 넘죠"
+    } ]
+  }, {
+    "tStartMs": 1288750,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "실제로 실전 배치된 것도 1,600발,"
+    } ]
+  }, {
+    "tStartMs": 1290660,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "1,700발 한다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1292240,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "프랑스와 영국은 합쳐서"
+    } ]
+  }, {
+    "tStartMs": 1293530,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "한 400개 정도 있다고 해요"
+    } ]
+  }, {
+    "tStartMs": 1295430,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "북한 50개 뭐냐 이거?"
+    } ]
+  }, {
+    "tStartMs": 1296740,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "북한도 50개 있다고 하는 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 1298660,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "현재까지는 정확한 건 아니지만"
+    } ]
+  }, {
+    "tStartMs": 1300760,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "그래서 아직은 프랑스하고"
+    } ]
+  }, {
+    "tStartMs": 1302310,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "영국이 핵무기가 대단히 많은 건 아닌데"
+    } ]
+  }, {
+    "tStartMs": 1304690,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "많지는 않지만"
+    } ]
+  }, {
+    "tStartMs": 1305410,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "400개면 뭐..."
+    } ]
+  }, {
+    "tStartMs": 1306880,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "사실은 400개를 들고 있다고 하는데"
+    } ]
+  }, {
+    "tStartMs": 1308860,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "누가 그 나라를 쳐들어가기"
+    } ]
+  }, {
+    "tStartMs": 1309810,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "굉장히 힘들겠죠"
+    } ]
+  }, {
+    "tStartMs": 1310900,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "그래서 본인들 뿐만 아니라"
+    } ]
+  }, {
+    "tStartMs": 1312160,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "나토에 속해 있는 유럽 각국에 대해서"
+    } ]
+  }, {
+    "tStartMs": 1314040,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "프랑스나 영국이 특히 프랑스죠"
+    } ]
+  }, {
+    "tStartMs": 1316470,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "핵우산을 제공할 가능성이"
+    } ]
+  }, {
+    "tStartMs": 1317870,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "굉장히 높아 보이고"
+    } ]
+  }, {
+    "tStartMs": 1319180,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "폴란드 대통령도 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1321440,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "아예 자기를"
+    } ]
+  }, {
+    "tStartMs": 1322540,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "폴란드의 핵 프로젝트 참여를"
+    } ]
+  }, {
+    "tStartMs": 1324260,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "강력하게 지지하는 사람이라고 표현했어요"
+    } ]
+  }, {
+    "tStartMs": 1327130,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "폴란드 대통령입니다"
+    } ]
+  }, {
+    "tStartMs": 1328780,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "한마디로 폴란드는 핵무기가 필요하다"
+    } ]
+  }, {
+    "tStartMs": 1331550,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "폴란드는 핵 잠재력에 기반한"
+    } ]
+  }, {
+    "tStartMs": 1333390,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "안보 전략을 개발해야 된다"
+    } ]
+  }, {
+    "tStartMs": 1334910,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "물론 폴란드 내에서도"
+    } ]
+  }, {
+    "tStartMs": 1335970,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "이거에 대해서 설왕설래가 많아요"
+    } ]
+  }, {
+    "tStartMs": 1337990,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "진짜 핵무기를 만들어서"
+    } ]
+  }, {
+    "tStartMs": 1339090,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "배치를 해야 되는지 안 돼야 되는지"
+    } ]
+  }, {
+    "tStartMs": 1341010,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "야당에서 굉장히 공격을 하고 있는데"
+    } ]
+  }, {
+    "tStartMs": 1342700,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "어쨌건 대통령 본인은"
+    } ]
+  }, {
+    "tStartMs": 1344540,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "핵무기가 필요하다라고"
+    } ]
+  }, {
+    "tStartMs": 1345690,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "얘기하고 있는 것과 비슷하고"
+    } ]
+  }, {
+    "tStartMs": 1347170,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "폴란드 같은 경우에는"
+    } ]
+  }, {
+    "tStartMs": 1348060,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "우리나라에서 탱크를 사는 걸"
+    } ]
+  }, {
+    "tStartMs": 1349370,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "딱 보면 알 수 있듯이"
+    } ]
+  }, {
+    "tStartMs": 1350460,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "우크라이나 바로 옆에 있잖아요"
+    } ]
+  }, {
+    "tStartMs": 1352160,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "또 과거 세계전쟁에서도"
+    } ]
+  }, {
+    "tStartMs": 1353750,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "가장 큰 피해를 봤죠"
+    } ]
+  }, {
+    "tStartMs": 1355270,
+    "dDurationMs": 3960,
+    "segs": [ {
+      "utf8": "독일과 러시아 사이에 껴있어"
+    } ]
+  }, {
+    "tStartMs": 1359230,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "그러니까 조금 위치가 무섭죠?"
+    } ]
+  }, {
+    "tStartMs": 1361180,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "이쪽은 러시아인데"
+    } ]
+  }, {
+    "tStartMs": 1363230,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "이쪽은 독일이야"
+    } ]
+  }, {
+    "tStartMs": 1364190,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "물론 벨라루스 이런 게 있지만"
+    } ]
+  }, {
+    "tStartMs": 1366250,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "자기 바로 옆에 있는 나라"
+    } ]
+  }, {
+    "tStartMs": 1367570,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "우크라이나 보니까"
+    } ]
+  }, {
+    "tStartMs": 1368430,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "지금 4년째 전쟁하고 있거든요"
+    } ]
+  }, {
+    "tStartMs": 1370920,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "그러니까 대단히 불안하겠죠"
+    } ]
+  }, {
+    "tStartMs": 1373570,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "우리는 무력 충돌의 국경"
+    } ]
+  }, {
+    "tStartMs": 1375070,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "바로 옆에 위치한 나라고"
+    } ]
+  }, {
+    "tStartMs": 1376650,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "공격적이고 제국주의적인"
+    } ]
+  }, {
+    "tStartMs": 1378520,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "러시아 연방이"
+    } ]
+  }, {
+    "tStartMs": 1379830,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "폴란드에 대해서"
+    } ]
+  }, {
+    "tStartMs": 1380550,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "어떤 태도를 취하고 있는지 잘 알고 있다"
+    } ]
+  }, {
+    "tStartMs": 1383190,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "그래서 핵 잠재력 개발"
+    } ]
+  }, {
+    "tStartMs": 1385210,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "핵 안보에 대해서"
+    } ]
+  }, {
+    "tStartMs": 1386120,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "굉장히 관심이 높다"
+    } ]
+  }, {
+    "tStartMs": 1387710,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "라고 표명을 했죠"
+    } ]
+  }, {
+    "tStartMs": 1389500,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "자 이렇게 되면은"
+    } ]
+  }, {
+    "tStartMs": 1390540,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "아마 유럽에서도"
+    } ]
+  }, {
+    "tStartMs": 1391690,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "핵우산이 됐건 핵공유가 됐건"
+    } ]
+  }, {
+    "tStartMs": 1393390,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "핵에 대한 이야기가"
+    } ]
+  }, {
+    "tStartMs": 1394780,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "왜냐면은 돈이 없잖아"
+    } ]
+  }, {
+    "tStartMs": 1396750,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "사실은 막 돈을 많이 써서"
+    } ]
+  }, {
+    "tStartMs": 1398010,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "막 재래식 무기 막 짓고"
+    } ]
+  }, {
+    "tStartMs": 1399120,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "뭔가 안보력을 높이면 좋은데"
+    } ]
+  }, {
+    "tStartMs": 1400530,
+    "dDurationMs": 3010,
+    "segs": [ {
+      "utf8": "가장 저렴하게 미국이 빠져나간다고 했을 때"
+    } ]
+  }, {
+    "tStartMs": 1403540,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "가장 저렴하게 안보를 보장해주시는 게 뭡니까?"
+    } ]
+  }, {
+    "tStartMs": 1406290,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "소위 말해"
+    } ]
+  }, {
+    "tStartMs": 1407210,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "비대칭적 무기"
+    } ]
+  }, {
+    "tStartMs": 1407980,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "뭐 이렇게 부르잖아"
+    } ]
+  }, {
+    "tStartMs": 1409060,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "북한이 왜 핵무기에 목숨 걸고 있는지를 보면은"
+    } ]
+  }, {
+    "tStartMs": 1411760,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "유럽 같은 경우도"
+    } ]
+  }, {
+    "tStartMs": 1412970,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "가장 저렴하게라고 하면"
+    } ]
+  }, {
+    "tStartMs": 1413830,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "말이 좀 이상하긴 한데"
+    } ]
+  }, {
+    "tStartMs": 1415160,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "미국이 빠져나간다"
+    } ]
+  }, {
+    "tStartMs": 1416100,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "그러니까 더 이상"
+    } ]
+  }, {
+    "tStartMs": 1417410,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "미국이 핵무기에 기댈 수만은"
+    } ]
+  }, {
+    "tStartMs": 1418530,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "없다는 생각을 많이 하는 것 같고"
+    } ]
+  }, {
+    "tStartMs": 1419920,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "아마 핵무기에 대한 관심이"
+    } ]
+  }, {
+    "tStartMs": 1421850,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "높아지지 않을까 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1423390,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "자 그리고 우리로 돌아오면"
+    } ]
+  }, {
+    "tStartMs": 1425340,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "우리도 좀 떨리죠"
+    } ]
+  }, {
+    "tStartMs": 1427300,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "안 그래도 핵무기가 저렇게 되고 있는데"
+    } ]
+  }, {
+    "tStartMs": 1428790,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "우리 옆 나라는 이번에 누가 이겼습니까?"
+    } ]
+  }, {
+    "tStartMs": 1431200,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "다카이치의 자민당이 지난 2월 초에 있었던"
+    } ]
+  }, {
+    "tStartMs": 1433950,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "일본 51회 중의원 총선거"
+    } ]
+  }, {
+    "tStartMs": 1436080,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "슈카월드에서 했었죠?"
+    } ]
+  }, {
+    "tStartMs": 1437010,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "압승 거뒀습니다, 압승"
+    } ]
+  }, {
+    "tStartMs": 1438460,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "316석"
+    } ]
+  }, {
+    "tStartMs": 1440250,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "사상 최대의 압승"
+    } ]
+  }, {
+    "tStartMs": 1441930,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "얼마나 큰 압승이냐?"
+    } ]
+  }, {
+    "tStartMs": 1443460,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "465석 중에 316석을 얻은 거예요"
+    } ]
+  }, {
+    "tStartMs": 1446210,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "전체 의석의 68%를 한 당이 가져갔습니다"
+    } ]
+  }, {
+    "tStartMs": 1449550,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "이게 얼마나 큰 거냐"
+    } ]
+  }, {
+    "tStartMs": 1451030,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "일본 역사상"
+    } ]
+  }, {
+    "tStartMs": 1452630,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "지금 현재 다카이치의 자민당이"
+    } ]
+  }, {
+    "tStartMs": 1454710,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "최대의 의석수입니다"
+    } ]
+  }, {
+    "tStartMs": 1456310,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "단일 정당 기준으로"
+    } ]
+  }, {
+    "tStartMs": 1457700,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "67.96%"
+    } ]
+  }, {
+    "tStartMs": 1459490,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "일본 역사상 단일 정당이"
+    } ]
+  }, {
+    "tStartMs": 1461600,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "의석수 비중이 가장 높은 게"
+    } ]
+  }, {
+    "tStartMs": 1463270,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "현재 다카이치의 자민당입니다"
+    } ]
+  }, {
+    "tStartMs": 1465060,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "힘이 가장 세다"
+    } ]
+  }, {
+    "tStartMs": 1465960,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "그렇게 얘기하기는 쉽지 않지만"
+    } ]
+  }, {
+    "tStartMs": 1467830,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "다카이치가"
+    } ]
+  }, {
+    "tStartMs": 1468530,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "아베 정도 이상까지는 아직 아니니까"
+    } ]
+  }, {
+    "tStartMs": 1470560,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "그렇다고 하더라도"
+    } ]
+  }, {
+    "tStartMs": 1471340,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "어쨌건 가장 강력한"
+    } ]
+  }, {
+    "tStartMs": 1472530,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "지지를 받고 있는 건 사실인 것 같고요"
+    } ]
+  }, {
+    "tStartMs": 1474530,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "그리고 지금 일본유신회하고 연정을 하고 있죠"
+    } ]
+  }, {
+    "tStartMs": 1476810,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "유신회하고 합치면"
+    } ]
+  }, {
+    "tStartMs": 1478280,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "352석을 차지하고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1480450,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "465석 중에서"
+    } ]
+  }, {
+    "tStartMs": 1482830,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "352석이 연정"
+    } ]
+  }, {
+    "tStartMs": 1484440,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "그러니까 연합 정권이 가지고 있어요, 75.7%"
+    } ]
+  }, {
+    "tStartMs": 1487130,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "4분의 3입니다, 4분의 3"
+    } ]
+  }, {
+    "tStartMs": 1488800,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "3분의 2만 넘어도"
+    } ]
+  }, {
+    "tStartMs": 1489850,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "거의 모든 걸 혼자 할 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 1491760,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "4분의 3을 갖고 있는"
+    } ]
+  }, {
+    "tStartMs": 1492880,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "압도적인 승리를 거뒀고요"
+    } ]
+  }, {
+    "tStartMs": 1494550,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "예전에 한 번 했지만"
+    } ]
+  }, {
+    "tStartMs": 1495490,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "그래서 일본의 자민당은"
+    } ]
+  }, {
+    "tStartMs": 1497470,
+    "dDurationMs": 3010,
+    "segs": [ {
+      "utf8": "단독 개헌 발의가 가능합니다"
+    } ]
+  }, {
+    "tStartMs": 1500480,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "그때 했었죠"
+    } ]
+  }, {
+    "tStartMs": 1501110,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "233석을 넘은 단독 과반이다"
+    } ]
+  }, {
+    "tStartMs": 1502880,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "244석을 넘으면"
+    } ]
+  }, {
+    "tStartMs": 1503950,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "모든 상임위원장 확보가 가능하다"
+    } ]
+  }, {
+    "tStartMs": 1505350,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "261석을 넘으면 모든 위원장도 확보하고"
+    } ]
+  }, {
+    "tStartMs": 1507780,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "위원수도 과반이다"
+    } ]
+  }, {
+    "tStartMs": 1508820,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "이걸 다 넘고"
+    } ]
+  }, {
+    "tStartMs": 1509810,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "310석의 단독 개헌이었는데"
+    } ]
+  }, {
+    "tStartMs": 1511810,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "310석도 넘었어요"
+    } ]
+  }, {
+    "tStartMs": 1513430,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "사실 일본 유신도 필요 없어"
+    } ]
+  }, {
+    "tStartMs": 1515510,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "별로 필요 없어"
+    } ]
+  }, {
+    "tStartMs": 1516670,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "그래서 일본 유신회가"
+    } ]
+  }, {
+    "tStartMs": 1517910,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "약간 옛날에 비해서"
+    } ]
+  }, {
+    "tStartMs": 1518840,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "좀 기가 내려갔어요"
+    } ]
+  }, {
+    "tStartMs": 1520080,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "상대가 좀 없을 때"
+    } ]
+  }, {
+    "tStartMs": 1521380,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "나랑 같이 안 하면"
+    } ]
+  }, {
+    "tStartMs": 1522400,
+    "dDurationMs": 530,
+    "segs": [ {
+      "utf8": "넌 안 된다"
+    } ]
+  }, {
+    "tStartMs": 1522930,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "이게 됐는데"
+    } ]
+  }, {
+    "tStartMs": 1523690,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "상대가 너무 세져서"
+    } ]
+  }, {
+    "tStartMs": 1525140,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "조금 거시기했죠"
+    } ]
+  }, {
+    "tStartMs": 1526070,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "거시기해지긴 했는데"
+    } ]
+  }, {
+    "tStartMs": 1526960,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "그러면 이런 상황에서"
+    } ]
+  }, {
+    "tStartMs": 1528690,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "선거 전에 다카이치 총리는"
+    } ]
+  }, {
+    "tStartMs": 1530560,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "3월달에 개헌안을 내겠다"
+    } ]
+  }, {
+    "tStartMs": 1532060,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "이런 얘기를 했었거든요"
+    } ]
+  }, {
+    "tStartMs": 1533980,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "그게 통과가 될지 모르지만"
+    } ]
+  }, {
+    "tStartMs": 1535440,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "또 개헌을 하면은"
+    } ]
+  }, {
+    "tStartMs": 1536490,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "국민투표도 해야 되잖아요"
+    } ]
+  }, {
+    "tStartMs": 1537950,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "아마 평화헌법 개헌을 하지 않을까"
+    } ]
+  }, {
+    "tStartMs": 1540600,
+    "dDurationMs": 3730,
+    "segs": [ {
+      "utf8": "전쟁 가는 국가로 진입하지 않을까라고 생각하는 게"
+    } ]
+  }, {
+    "tStartMs": 1544330,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "대다수의 생각인 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 1545480,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "실제로 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1546680,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "조금이라도 빨리 개정안을 발의하고"
+    } ]
+  }, {
+    "tStartMs": 1549030,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "국민투표로 이어질 수 있는"
+    } ]
+  }, {
+    "tStartMs": 1550390,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "환경을 조성할 수 있도록"
+    } ]
+  }, {
+    "tStartMs": 1552040,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "끈기있게 노력해 나가겠다"
+    } ]
+  }, {
+    "tStartMs": 1553710,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "한마디로 헌법개정을 시도하지 않을까"
+    } ]
+  }, {
+    "tStartMs": 1556040,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "그리고 지금의 굉장히"
+    } ]
+  }, {
+    "tStartMs": 1557360,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "지지도가 높기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1558850,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "일본도 전쟁 가능 국가로 갈 수 있고"
+    } ]
+  }, {
+    "tStartMs": 1562250,
+    "dDurationMs": 2420,
+    "segs": [ {
+      "utf8": "유럽도 그렇게 핵 이야기를 하고 있고"
+    } ]
+  }, {
+    "tStartMs": 1564670,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "미국과 러시아는 핵 감축을 탈퇴했고"
+    } ]
+  }, {
+    "tStartMs": 1566810,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "중국은 중국대로"
+    } ]
+  }, {
+    "tStartMs": 1568700,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "굉장히 확대하고 있는 상황이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1571230,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "정말 쉽지 않은 시대가"
+    } ]
+  }, {
+    "tStartMs": 1572640,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "시기가 지나가고 있지 않나 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1574430,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "그리고 마지막으로"
+    } ]
+  }, {
+    "tStartMs": 1575310,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "물론 이런 상황에서"
+    } ]
+  }, {
+    "tStartMs": 1576730,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "세계의 평화를 위한 기구는 없냐?"
+    } ]
+  }, {
+    "tStartMs": 1578780,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "있죠?"
+    } ]
+  }, {
+    "tStartMs": 1579720,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "이것도 슈카월드에 나왔습니다"
+    } ]
+  }, {
+    "tStartMs": 1581060,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "트럼프 대통령이 설립한"
+    } ]
+  }, {
+    "tStartMs": 1582260,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "평화위원회가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1584120,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "기억 안 나신다고요?"
+    } ]
+  }, {
+    "tStartMs": 1585560,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "이거 이거 이거"
+    } ]
+  }, {
+    "tStartMs": 1586780,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "기억나시죠 이거?"
+    } ]
+  }, {
+    "tStartMs": 1587940,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "유엔을 대신해서"
+    } ]
+  }, {
+    "tStartMs": 1589950,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "내가 뭐시기를 해보겠다라고 한"
+    } ]
+  }, {
+    "tStartMs": 1591710,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "보드 오브 피스"
+    } ]
+  }, {
+    "tStartMs": 1593410,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "평화위원회가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1595100,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "평화위원회는 참고로"
+    } ]
+  }, {
+    "tStartMs": 1597120,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "트럼프 대통령이"
+    } ]
+  }, {
+    "tStartMs": 1597990,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "영구 위원장인가 그럴 거예요"
+    } ]
+  }, {
+    "tStartMs": 1600520,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "종신직이셔 종신직이어서"
+    } ]
+  }, {
+    "tStartMs": 1602500,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "미국 대통령을 그만둬도 뭐"
+    } ]
+  }, {
+    "tStartMs": 1604440,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "하시지 않을까라는 생각이 드는"
+    } ]
+  }, {
+    "tStartMs": 1605830,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "바로 그 평화위원회인데"
+    } ]
+  }, {
+    "tStartMs": 1607050,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "2월 20일날"
+    } ]
+  }, {
+    "tStartMs": 1608190,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "평화위원회의 첫 번째 회의가 열렸습니다"
+    } ]
+  }, {
+    "tStartMs": 1610540,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "물론 많은 서방 국가들이"
+    } ]
+  }, {
+    "tStartMs": 1612740,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "정식 회원국으로 가입을 안 했는데"
+    } ]
+  }, {
+    "tStartMs": 1614750,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "그래도 대부분 옵서버로는 참석을 했어요"
+    } ]
+  }, {
+    "tStartMs": 1617220,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "우리나라도 여기 옵서버로 참석했습니다"
+    } ]
+  }, {
+    "tStartMs": 1619730,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "영국, 유럽연합, 오스트리아 다 왔어요"
+    } ]
+  }, {
+    "tStartMs": 1621990,
+    "dDurationMs": 670,
+    "segs": [ {
+      "utf8": "독일까지"
+    } ]
+  }, {
+    "tStartMs": 1622660,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "쫙 일단은 왔어"
+    } ]
+  }, {
+    "tStartMs": 1624290,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "안 가긴 그렇잖아"
+    } ]
+  }, {
+    "tStartMs": 1625600,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "정식 회원국은 좀 그렇더라도"
+    } ]
+  }, {
+    "tStartMs": 1627580,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "미국이 여기서 뭘 하겠다는데"
+    } ]
+  }, {
+    "tStartMs": 1628940,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "거기 안 가긴 그러니까"
+    } ]
+  }, {
+    "tStartMs": 1629960,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "다 가서"
+    } ]
+  }, {
+    "tStartMs": 1630940,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "많은 나라들이 참석을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1633020,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "물론 평화위원회라는 게"
+    } ]
+  }, {
+    "tStartMs": 1634660,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "기본적으로는 원래는"
+    } ]
+  }, {
+    "tStartMs": 1636630,
+    "dDurationMs": 2420,
+    "segs": [ {
+      "utf8": "가자지구를 평화롭게 만들자는데"
+    } ]
+  }, {
+    "tStartMs": 1639050,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "출발한 곳이죠"
+    } ]
+  }, {
+    "tStartMs": 1640170,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "이스라엘 가자지구"
+    } ]
+  }, {
+    "tStartMs": 1641550,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "실제로 트럼프 대통령이"
+    } ]
+  }, {
+    "tStartMs": 1642550,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "여기 와서"
+    } ]
+  }, {
+    "tStartMs": 1643230,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "가자지구 구호활동에"
+    } ]
+  }, {
+    "tStartMs": 1644340,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "많은 분들이 70억 달러를 냈군요"
+    } ]
+  }, {
+    "tStartMs": 1646170,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "미국도 100억 달러를 내겠습니다"
+    } ]
+  }, {
+    "tStartMs": 1648000,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "라고 얘기를 했는데"
+    } ]
+  }, {
+    "tStartMs": 1649150,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "실제는 낼지 모르겠고요"
+    } ]
+  }, {
+    "tStartMs": 1650420,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "그래서 가자지구를 위해"
+    } ]
+  }, {
+    "tStartMs": 1651190,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "최선을 다하겠다"
+    } ]
+  }, {
+    "tStartMs": 1652010,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "이렇게 밝혔어요"
+    } ]
+  }, {
+    "tStartMs": 1653210,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "그런데 이 회의에서"
+    } ]
+  }, {
+    "tStartMs": 1654980,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "가장 크게 이슈가 된 게 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1656700,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "여러분들 뉴스에서"
+    } ]
+  }, {
+    "tStartMs": 1657870,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "이 뉴스는 많이 보셨을 거예요"
+    } ]
+  }, {
+    "tStartMs": 1659130,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "바로 이 발언입니다"
+    } ]
+  }, {
+    "tStartMs": 1661390,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "이란과의 협상이 지금 잘 진행이 되고 있지만"
+    } ]
+  }, {
+    "tStartMs": 1664890,
+    "dDurationMs": 410,
+    "segs": [ {
+      "utf8": "이란이"
+    } ]
+  }, {
+    "tStartMs": 1665300,
+    "dDurationMs": 2420,
+    "segs": [ {
+      "utf8": "의미 있는 합의에 도달하지 않으면"
+    } ]
+  }, {
+    "tStartMs": 1667720,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "나쁜 일이 일어날 것이다"
+    } ]
+  }, {
+    "tStartMs": 1670270,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "어떤 나쁜 일을 얘기하는 겁니까?"
+    } ]
+  }, {
+    "tStartMs": 1672440,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "나쁜 일이라는 게"
+    } ]
+  }, {
+    "tStartMs": 1673490,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "그랬더니 트럼프 대통령이 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1674890,
+    "dDurationMs": 3120,
+    "segs": [ {
+      "utf8": "앞으로 열흘 정도 지나면 알게 될 것이다"
+    } ]
+  }, {
+    "tStartMs": 1678010,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "심지어 얼마 전에는"
+    } ]
+  }, {
+    "tStartMs": 1680160,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "24시간 얘기도 하고 있어요"
+    } ]
+  }, {
+    "tStartMs": 1682340,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "24시간 정도 지나면 알게 될 거야"
+    } ]
+  }, {
+    "tStartMs": 1684450,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "열흘이면 거의 이번 주 내거든요"
+    } ]
+  }, {
+    "tStartMs": 1687290,
+    "dDurationMs": 2940,
+    "segs": [ {
+      "utf8": "다음 주 초에 뭘 알게 될 수도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1690230,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "지금 현재가 어떤 상황이냐"
+    } ]
+  }, {
+    "tStartMs": 1691710,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "미국이"
+    } ]
+  }, {
+    "tStartMs": 1692610,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "이란에 있는 페르시아만에"
+    } ]
+  }, {
+    "tStartMs": 1694250,
+    "dDurationMs": 3450,
+    "segs": [ {
+      "utf8": "현재 항공모함 두 척을 배치해 놓은 상황입니다"
+    } ]
+  }, {
+    "tStartMs": 1697700,
+    "dDurationMs": 4170,
+    "segs": [ {
+      "utf8": "전투기, 공중급유기, 방대한 병력을 중동에 배치했다"
+    } ]
+  }, {
+    "tStartMs": 1701870,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "지금 현재 미국이 배치한 병력의 규모는"
+    } ]
+  }, {
+    "tStartMs": 1704580,
+    "dDurationMs": 3080,
+    "segs": [ {
+      "utf8": "이라크전 이후로 최대의 병력이라고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1707660,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "미국이 이라크 침공을 했던 게"
+    } ]
+  }, {
+    "tStartMs": 1708890,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "언제입니까? 2003년인데"
+    } ]
+  }, {
+    "tStartMs": 1710590,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "그때 이후로 최대의 병력을"
+    } ]
+  }, {
+    "tStartMs": 1712700,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "이란을 겨냥해서"
+    } ]
+  }, {
+    "tStartMs": 1713980,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "중동에 배치했다고 하고요"
+    } ]
+  }, {
+    "tStartMs": 1715530,
+    "dDurationMs": 3490,
+    "segs": [ {
+      "utf8": "그리고 이란은 갑자기 러시아와 손잡고"
+    } ]
+  }, {
+    "tStartMs": 1719020,
+    "dDurationMs": 3040,
+    "segs": [ {
+      "utf8": "저 아라비아만에서 군사훈련을 시작했어요"
+    } ]
+  }, {
+    "tStartMs": 1722060,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "그래서 러시아의 초기함이"
+    } ]
+  }, {
+    "tStartMs": 1723460,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "지금 이란 항구"
+    } ]
+  }, {
+    "tStartMs": 1725570,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "해군 항구죠"
+    } ]
+  }, {
+    "tStartMs": 1726660,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "거기에 정박해 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1728470,
+    "dDurationMs": 3810,
+    "segs": [ {
+      "utf8": "지금 미국에 항공모함 2대가 있는데"
+    } ]
+  }, {
+    "tStartMs": 1732280,
+    "dDurationMs": 2990,
+    "segs": [ {
+      "utf8": "러시아 전투함이 초기함이지만"
+    } ]
+  }, {
+    "tStartMs": 1735270,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "거기에 갔다는 게"
+    } ]
+  }, {
+    "tStartMs": 1737290,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "잘못해서 발살해서"
+    } ]
+  }, {
+    "tStartMs": 1739600,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "러시아가 엮여버릴 수도 있죠"
+    } ]
+  }, {
+    "tStartMs": 1742230,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "그래서 왜 지금 가냐 그랬더니"
+    } ]
+  }, {
+    "tStartMs": 1744130,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "러시아 크렘린 궁은 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1745650,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "그건 미국 때문이 아니다"
+    } ]
+  }, {
+    "tStartMs": 1747190,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "아주 오래전부터 계획된 훈련이야"
+    } ]
+  }, {
+    "tStartMs": 1749010,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "사전에 조율된 거니까"
+    } ]
+  }, {
+    "tStartMs": 1750470,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "이번을 노리고 들어간 건 아니야"
+    } ]
+  }, {
+    "tStartMs": 1752480,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "라고 얘기했지만"
+    } ]
+  }, {
+    "tStartMs": 1753110,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "굉장히 일촉즉발의 상황인 건 맞는 것 같고"
+    } ]
+  }, {
+    "tStartMs": 1755460,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "많은 분들은"
+    } ]
+  }, {
+    "tStartMs": 1757020,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "사실상 트럼프 대통령과"
+    } ]
+  }, {
+    "tStartMs": 1759430,
+    "dDurationMs": 3390,
+    "segs": [ {
+      "utf8": "미국과 이스라엘의 이란 공격이"
+    } ]
+  }, {
+    "tStartMs": 1762820,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "카운트다운에 들어간 게 아니냐"
+    } ]
+  }, {
+    "tStartMs": 1764400,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "이런 얘기를 지금 많이 하죠"
+    } ]
+  }, {
+    "tStartMs": 1766330,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "물론 많은 사람들은"
+    } ]
+  }, {
+    "tStartMs": 1767410,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "아니 보드 오브 피스면"
+    } ]
+  }, {
+    "tStartMs": 1769240,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "평화위원회잖아"
+    } ]
+  }, {
+    "tStartMs": 1770520,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "평화위원회에서 선전포고를 하는 겁니까?"
+    } ]
+  }, {
+    "tStartMs": 1773220,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "라고 물어봤더니"
+    } ]
+  }, {
+    "tStartMs": 1774540,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "이렇게 답하셨습니다"
+    } ]
+  }, {
+    "tStartMs": 1775750,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "아니야 아니야 아니야"
+    } ]
+  }, {
+    "tStartMs": 1777190,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "이란은 나와서"
+    } ]
+  }, {
+    "tStartMs": 1778800,
+    "dDurationMs": 3150,
+    "segs": [ {
+      "utf8": "미국과 함께 평화의 길에 동참하면 돼"
+    } ]
+  }, {
+    "tStartMs": 1781950,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "안 나오는 거잖아"
+    } ]
+  }, {
+    "tStartMs": 1783700,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "그 자국민 학살이나 하고"
+    } ]
+  }, {
+    "tStartMs": 1785800,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "3000명 이상"
+    } ]
+  }, {
+    "tStartMs": 1786560,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "공식 3000명이"
+    } ]
+  }, {
+    "tStartMs": 1787760,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "이번에 이란 시위로"
+    } ]
+  }, {
+    "tStartMs": 1789000,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "사망을 했는데"
+    } ]
+  }, {
+    "tStartMs": 1789710,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "비공식으로는"
+    } ]
+  }, {
+    "tStartMs": 1790750,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "몇 만을 얘기를 하는 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 1792260,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "굉장히 많은 사람들이 죽곤 했는데"
+    } ]
+  }, {
+    "tStartMs": 1793890,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "아니 그러지 말고 나와서"
+    } ]
+  }, {
+    "tStartMs": 1795150,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "평화의 길에 동참하면 되는 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 1797500,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "평화의 길은 뭡니까"
+    } ]
+  }, {
+    "tStartMs": 1798800,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "여러 가지 요구사항이 있는데"
+    } ]
+  }, {
+    "tStartMs": 1799750,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "가장 큰 건"
+    } ]
+  }, {
+    "tStartMs": 1800710,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "바로 핵무기를 포기해라"
+    } ]
+  }, {
+    "tStartMs": 1803670,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "그들은 핵무기를 가질 수 없어요"
+    } ]
+  }, {
+    "tStartMs": 1804940,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "단순한 문제입니다"
+    } ]
+  }, {
+    "tStartMs": 1806270,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "핵무기를 가진다면"
+    } ]
+  }, {
+    "tStartMs": 1807130,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "중동에 평화는 있을 수 없습니다"
+    } ]
+  }, {
+    "tStartMs": 1808860,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "핵무기를 포기하고"
+    } ]
+  }, {
+    "tStartMs": 1809950,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "완전 포기하고 나온다면"
+    } ]
+  }, {
+    "tStartMs": 1812060,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "우리는 협상을 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1814110,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "라는 스탠스이긴 한데"
+    } ]
+  }, {
+    "tStartMs": 1816670,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "과연 핵무기를 이란이 포기할지"
+    } ]
+  }, {
+    "tStartMs": 1818330,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "이런 강한 스탠스를"
+    } ]
+  }, {
+    "tStartMs": 1822360,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "우리 이쪽은 안 보내고"
+    } ]
+  }, {
+    "tStartMs": 1824450,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "그 이란한테만 그러는 게"
+    } ]
+  }, {
+    "tStartMs": 1827060,
+    "dDurationMs": 3240,
+    "segs": [ {
+      "utf8": "이스라엘이 세긴 세다"
+    } ]
+  }, {
+    "tStartMs": 1830300,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "이런 생각이 저는 약간 들었고"
+    } ]
+  }, {
+    "tStartMs": 1832340,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "그리고 만약에 전쟁이"
+    } ]
+  }, {
+    "tStartMs": 1834400,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "미국과 이란 또는 이스라엘과"
+    } ]
+  }, {
+    "tStartMs": 1835840,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "이란의 전쟁이 현실화되면"
+    } ]
+  }, {
+    "tStartMs": 1837510,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "이란은 뭘 할까?"
+    } ]
+  }, {
+    "tStartMs": 1838820,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "많은 사람들이 얘기하는 건"
+    } ]
+  }, {
+    "tStartMs": 1839820,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "바로 이겁니다"
+    } ]
+  }, {
+    "tStartMs": 1841410,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "여기가 어디냐면"
+    } ]
+  }, {
+    "tStartMs": 1842480,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "호르무즈 해협 다 아시죠?"
+    } ]
+  }, {
+    "tStartMs": 1843810,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "이렇게"
+    } ]
+  }, {
+    "tStartMs": 1845340,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "인도양에서 이렇게 아라비아만으로 들어가는"
+    } ]
+  }, {
+    "tStartMs": 1847940,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "좁아지는 데 있죠, 여기?"
+    } ]
+  }, {
+    "tStartMs": 1849240,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "여기가 호르무즈 해협인데"
+    } ]
+  }, {
+    "tStartMs": 1850300,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "여기를 이란이 봉쇄할 수 있다"
+    } ]
+  }, {
+    "tStartMs": 1853140,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "여기다가 미사일 같은 거"
+    } ]
+  }, {
+    "tStartMs": 1854470,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "포 같은 걸 두면"
+    } ]
+  }, {
+    "tStartMs": 1855810,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "유조선이 못 통과하잖아요"
+    } ]
+  }, {
+    "tStartMs": 1856970,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "얘들이 쏘니까 통과할 때"
+    } ]
+  }, {
+    "tStartMs": 1858830,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "만약에 저 호르무즈 해협이 봉쇄되면"
+    } ]
+  }, {
+    "tStartMs": 1860900,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "전세계 해상 석유 물동량의 25%가 막힌다"
+    } ]
+  }, {
+    "tStartMs": 1863620,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "특히 일본과 한국의 석유가 막힙니다"
+    } ]
+  }, {
+    "tStartMs": 1867120,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "우리나라하고 일본이 여기서 이렇게 해서"
+    } ]
+  }, {
+    "tStartMs": 1869220,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "이렇게 오잖아요"
+    } ]
+  }, {
+    "tStartMs": 1870430,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "60% 넘게가 일로 온다고"
+    } ]
+  }, {
+    "tStartMs": 1872190,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "제가 알고 있거든요"
+    } ]
+  }, {
+    "tStartMs": 1873170,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "그럼 여기가 막히면"
+    } ]
+  }, {
+    "tStartMs": 1874730,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "아시아 쪽 석유끼리 막히는 거기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1876880,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "유가가 엄청나게 오를 수가 있죠"
+    } ]
+  }, {
+    "tStartMs": 1879630,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "그래서 뭐 우리 입장을 떠나서"
+    } ]
+  }, {
+    "tStartMs": 1881470,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "전쟁이 안 일어나는 게"
+    } ]
+  }, {
+    "tStartMs": 1882810,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "지금 최선의 상황인데"
+    } ]
+  }, {
+    "tStartMs": 1884430,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "이란 쪽에서는 신정정치"
+    } ]
+  }, {
+    "tStartMs": 1886580,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "거기에 불만을 갖고 있는"
+    } ]
+  }, {
+    "tStartMs": 1887690,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "이란 국민들이 많기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1889150,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "거기를 이제 물러나게 하려는"
+    } ]
+  }, {
+    "tStartMs": 1890620,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "거기에는 또 열망도 굉장히 많더라고요"
+    } ]
+  }, {
+    "tStartMs": 1893240,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "그래서 이란 분을 한번 만나봤는데"
+    } ]
+  }, {
+    "tStartMs": 1894580,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "이런 얘기를 하더라고요"
+    } ]
+  }, {
+    "tStartMs": 1895240,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "차라리 전쟁이 일어나서"
+    } ]
+  }, {
+    "tStartMs": 1896510,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "정권이 바뀌었으면 좋겠다라고"
+    } ]
+  }, {
+    "tStartMs": 1898350,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "얘기를 할 정도로"
+    } ]
+  }, {
+    "tStartMs": 1899470,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "이란에서 굉장히 혼란한 상황이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1901700,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "그런 상황도 이제 잘 해결해야 되지 않을까"
+    } ]
+  }, {
+    "tStartMs": 1903090,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1904170,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "결론적으로 평화위원회 의장입니다"
+    } ]
+  }, {
+    "tStartMs": 1906340,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "종신의장인데"
+    } ]
+  }, {
+    "tStartMs": 1908190,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "평화를 만들어낼지"
+    } ]
+  }, {
+    "tStartMs": 1909640,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "아니면 이제 전쟁을 만들어낼지"
+    } ]
+  }, {
+    "tStartMs": 1912380,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "쉽지 않은 트럼프 임기 동안"
+    } ]
+  }, {
+    "tStartMs": 1913850,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "이제 1년 지났습니다"
+    } ]
+  }, {
+    "tStartMs": 1914980,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "1년 지났는데"
+    } ]
+  }, {
+    "tStartMs": 1916600,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "3년 남았죠"
+    } ]
+  }, {
+    "tStartMs": 1917600,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "3년은 정말 쉽지 않은 기간이"
+    } ]
+  }, {
+    "tStartMs": 1919520,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "될 수 있지 않을까"
+    } ]
+  }, {
+    "tStartMs": 1920640,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "생각을 합니다"
+    } ]
+  } ]
+}

@@ -1,6 +1,6 @@
 # Work Index
 
-This directory now holds bootstrap work manifests for Phase 0 design.
+This directory now holds representative work manifests for Phase 0 design.
 
 Rules:
 

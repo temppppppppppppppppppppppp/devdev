@@ -3,6 +3,11 @@
 Status: draft scaffold  
 Date: 2026-04-01
 
+Transition note:
+- canonical root now lives at `material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/business_trend_slice`
+- this `narrative_ssot` path is kept only as transition residue during the bounded cutover
+- rerun or refresh the slice from the `material_ssot` root, not from here
+
 이 폴더는 `kr_serial_platforms` 전체 코퍼스에서
 `현대판타지 기업물 / 오피스 파워 / 재벌 / 투자 / 산업 운영 / 미디어사업`
 쪽에 가까운 작품만 다시 잘라낸 material-side 슬라이스다.
@@ -18,8 +23,8 @@ Date: 2026-04-01
 
 ```text
 python -X utf8 scripts/build_business_trend_slice.py ^
-  --input-db narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/platform_trends.sqlite3 ^
-  --output-root narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms/business_trend_slice
+  --input-db material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/platform_trends.sqlite3 ^
+  --output-root material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/business_trend_slice
 ```
 
 기본 산출물:
@@ -47,4 +52,4 @@ python -X utf8 scripts/build_business_trend_slice.py ^
 
 - `source_manifest`용 현대판타지 기업물 후보군 압축
 - 플랫폼별 제목 포장 비교
-- `idea_engine_db`에 business-power seed 추가
+- modern-business ideation draft bank에 business-power seed 추가

@@ -1,6 +1,6 @@
 # Work Index
 
-This directory now holds bootstrap work manifests for BI.
+This directory now holds representative work manifests for BI.
 
 Rules:
 

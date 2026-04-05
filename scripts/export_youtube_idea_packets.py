@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Export captioned YouTube videos into LLM-ready idea packets.
 
 This script does not judge idea quality.
@@ -9,6 +8,7 @@ It packages already collected evidence so an LLM can later extract:
 - chaebolizable leverage
 - early backstab scene candidates
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,12 +18,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB = (
     ROOT
-    / "narrative_ssot"
-    / "10_reference_bank"
+    / "material_ssot"
+    / "10_research"
+    / "40_analysis"
     / "source_corpora"
     / "youtube"
     / "syukaworld"
@@ -31,8 +31,9 @@ DEFAULT_DB = (
 )
 DEFAULT_OUTPUT = (
     ROOT
-    / "narrative_ssot"
-    / "10_reference_bank"
+    / "material_ssot"
+    / "10_research"
+    / "40_analysis"
     / "source_corpora"
     / "youtube"
     / "syukaworld"
@@ -40,8 +41,9 @@ DEFAULT_OUTPUT = (
 )
 DEFAULT_SCHEMA_OUTPUT = (
     ROOT
-    / "narrative_ssot"
-    / "10_reference_bank"
+    / "material_ssot"
+    / "10_research"
+    / "40_analysis"
     / "source_corpora"
     / "youtube"
     / "syukaworld"
@@ -76,8 +78,8 @@ def _build_schema(schema_path: Path) -> dict[str, Any]:
             "early_backstab_scene": "1~3화 초반 뒤통수 장면의 한 줄 구상",
             "octopus_group_expansion_path": "문어발식으로 다음 계열사나 인접 섹터를 어떻게 붙일지",
             "must_not_literal_copy": "원본 영상 표현이나 사례를 그대로 베끼면 안 되는 요소",
-            "confidence": "low / medium / high"
-        }
+            "confidence": "low / medium / high",
+        },
     }
 
 
@@ -107,15 +109,19 @@ def _resolve(path: Path) -> Path:
 
 
 def _query_rows(conn: sqlite3.Connection, order: str, limit: int, min_chars: int) -> list[sqlite3.Row]:
-    order_sql = """
+    order_sql = (
+        """
         CASE WHEN upload_date IS NOT NULL AND upload_date != '' THEN upload_date ELSE '' END DESC,
         CASE WHEN timestamp IS NOT NULL THEN timestamp ELSE 0 END DESC,
         crawl_position ASC
-    """ if order == "recent" else """
+    """
+        if order == "recent"
+        else """
         CASE WHEN upload_date IS NOT NULL AND upload_date != '' THEN upload_date ELSE '99999999' END ASC,
         CASE WHEN timestamp IS NOT NULL THEN timestamp ELSE 9999999999 END ASC,
         crawl_position ASC
     """
+    )
     query = f"""
         SELECT
             video_id, channel_slug, channel_title, title, url,
@@ -168,8 +174,8 @@ def _packet_from_row(row: sqlite3.Row, schema_ref: str) -> dict[str, Any]:
             "early_backstab_scene": "",
             "octopus_group_expansion_path": "",
             "must_not_literal_copy": [],
-            "confidence": ""
-        }
+            "confidence": "",
+        },
     }
 
 

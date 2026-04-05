@@ -1,0 +1,12 @@
+{
+  "_schema_version": "business_trend_slice_status.v1",
+  "input_db": "material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/platform_trends.sqlite3",
+  "output_root": "material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/business_trend_slice",
+  "entry_count": 116,
+  "work_count": 98,
+  "notes": [
+    "Slice uses transparent keyword scoring only.",
+    "Positive/negative keyword groups are declared in the script and written through to JSONL/SQLite.",
+    "Final concept judgment stays on the LLM side."
+  ]
+}

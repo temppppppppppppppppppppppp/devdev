@@ -1,0 +1,4921 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 7740,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "두 번째 주제는"
+    } ]
+  }, {
+    "tStartMs": 9450,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "소프트웨어 기업들은 끝났는가?"
+    } ]
+  }, {
+    "tStartMs": 11580,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "라는 주제인데요"
+    } ]
+  }, {
+    "tStartMs": 12770,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "그 예전에 비슷한 얘기를 몇 번 했어요"
+    } ]
+  }, {
+    "tStartMs": 14340,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "똑같은 얘기냐?"
+    } ]
+  }, {
+    "tStartMs": 15230,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "아닙니다"
+    } ]
+  }, {
+    "tStartMs": 15870,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "완전히 다른 얘기입니다"
+    } ]
+  }, {
+    "tStartMs": 17460,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "제목만 저렇게 지은 거예요"
+    } ]
+  }, {
+    "tStartMs": 19300,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "어떤 얘기냐?"
+    } ]
+  }, {
+    "tStartMs": 20220,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "같이 봅시다"
+    } ]
+  }, {
+    "tStartMs": 21470,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "지난 11일 머스크가"
+    } ]
+  }, {
+    "tStartMs": 23200,
+    "dDurationMs": 3580,
+    "segs": [ {
+      "utf8": "테슬라와 xAI의 공동 프로젝트를 공개했습니다"
+    } ]
+  }, {
+    "tStartMs": 26780,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "이거 보셨습니까?"
+    } ]
+  }, {
+    "tStartMs": 27870,
+    "dDurationMs": 3830,
+    "segs": [ {
+      "utf8": "일론 머스크는 새로운 AI 공동 프로젝트를 공개했다"
+    } ]
+  }, {
+    "tStartMs": 31700,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "이건 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 32640,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "이 프로젝트의 이름은"
+    } ]
+  }, {
+    "tStartMs": 34210,
+    "dDurationMs": 4320,
+    "segs": [ {
+      "utf8": "매크로하드 또는 디지털 옵티머스라고 불립니다"
+    } ]
+  }, {
+    "tStartMs": 38530,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "이름만 봐서는 뭐하는지 모르겠죠?"
+    } ]
+  }, {
+    "tStartMs": 40380,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "이 프로젝트의 목적은"
+    } ]
+  }, {
+    "tStartMs": 41800,
+    "dDurationMs": 3960,
+    "segs": [ {
+      "utf8": "소프트웨어 회사의 기능을 모방할 수 있는 시스템을 만드는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 45760,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "기존의 많은 소프트웨어 기업들을 그냥 모방해버리겠다"
+    } ]
+  }, {
+    "tStartMs": 48960,
+    "dDurationMs": 4660,
+    "segs": [ {
+      "utf8": "그러면 소프트웨어 회사들 기능을 모방한다는 게 무슨 뜻입니까?"
+    } ]
+  }, {
+    "tStartMs": 53620,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "바로 이런 겁니다"
+    } ]
+  }, {
+    "tStartMs": 54880,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "우리가 원칙적으로는"
+    } ]
+  }, {
+    "tStartMs": 56130,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "이론적으로는 AI가"
+    } ]
+  }, {
+    "tStartMs": 58590,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "마이크로소프트와 같은"
+    } ]
+  }, {
+    "tStartMs": 59790,
+    "dDurationMs": 4390,
+    "segs": [ {
+      "utf8": "소프트웨어 회사들을 완전히 시뮬레이션 할 수 있다"
+    } ]
+  }, {
+    "tStartMs": 64180,
+    "dDurationMs": 3620,
+    "segs": [ {
+      "utf8": "이 말인 즉슨 완전히 똑같게 모방할 수 있다"
+    } ]
+  }, {
+    "tStartMs": 67800,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "왜냐면 걔들은 물리적 하드웨어를 만드는 기업이 아니에요"
+    } ]
+  }, {
+    "tStartMs": 70550,
+    "dDurationMs": 4380,
+    "segs": [ {
+      "utf8": "물론 우리나라처럼 야 김씨 와서 좀 조여봐"
+    } ]
+  }, {
+    "tStartMs": 74930,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "이런 거는 지금 힘들죠"
+    } ]
+  }, {
+    "tStartMs": 76270,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "아직은 로봇의 시대가 아니니까"
+    } ]
+  }, {
+    "tStartMs": 77580,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "이건 지금 힘든데"
+    } ]
+  }, {
+    "tStartMs": 78820,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "AI는 머리니까 머리가 있으면"
+    } ]
+  }, {
+    "tStartMs": 80930,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "소프트웨어 기업들은 이론적으로는"
+    } ]
+  }, {
+    "tStartMs": 82870,
+    "dDurationMs": 3180,
+    "segs": [ {
+      "utf8": "이론적으로는 완전히 베끼는 게 가능하다"
+    } ]
+  }, {
+    "tStartMs": 86050,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "이렇게 얘기하는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 87390,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "소프트웨어 기업들"
+    } ]
+  }, {
+    "tStartMs": 88140,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "너희들 AI보다 과연 잘할까?"
+    } ]
+  }, {
+    "tStartMs": 92220,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "너희가 지금 만드는 게"
+    } ]
+  }, {
+    "tStartMs": 93480,
+    "dDurationMs": 3540,
+    "segs": [ {
+      "utf8": "AI가 딸깍하는 것보다 과연 잘 만들까?"
+    } ]
+  }, {
+    "tStartMs": 97020,
+    "dDurationMs": 3210,
+    "segs": [ {
+      "utf8": "그러면 더 훌륭한 AI를 내가 갖고 있으면"
+    } ]
+  }, {
+    "tStartMs": 100230,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "아무리 뛰어난 소프트웨어 회사들보다"
+    } ]
+  }, {
+    "tStartMs": 102570,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "내가 더 잘하겠네?"
+    } ]
+  }, {
+    "tStartMs": 104310,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "그럼 내가 더 잘하니까"
+    } ]
+  }, {
+    "tStartMs": 105200,
+    "dDurationMs": 3470,
+    "segs": [ {
+      "utf8": "내가 하면 다른 소프트웨어 기업들은 망하겠네?"
+    } ]
+  }, {
+    "tStartMs": 108670,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "그렇기 때문에 소프트웨어 기업들은"
+    } ]
+  }, {
+    "tStartMs": 111040,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "AI로 완전히 대체 가능하다는 게"
+    } ]
+  }, {
+    "tStartMs": 113650,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "머스크의 주장입니다"
+    } ]
+  }, {
+    "tStartMs": 114910,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "그렇다는 게 아니라"
+    } ]
+  }, {
+    "tStartMs": 116060,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "머스크가 하는 주장이고"
+    } ]
+  }, {
+    "tStartMs": 117970,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "실제로 이렇게 얘기하고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 119550,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "이번 새로운 프로젝트로"
+    } ]
+  }, {
+    "tStartMs": 121000,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "우리는 원칙적으로"
+    } ]
+  }, {
+    "tStartMs": 122620,
+    "dDurationMs": 4360,
+    "segs": [ {
+      "utf8": "마이크로소프트 같은 소프트웨어 회사의 모든 기능을 모방할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 126980,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "그리고 심지어 제조를 제외한다면"
+    } ]
+  }, {
+    "tStartMs": 129460,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "굳이 마이크로소프트에 얽매이지 않아"
+    } ]
+  }, {
+    "tStartMs": 132030,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "제조를 제외한다면"
+    } ]
+  }, {
+    "tStartMs": 133240,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "전 세계에 있는 모든 소프트웨어 기업보다"
+    } ]
+  }, {
+    "tStartMs": 136060,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "우리가 잘할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 137470,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "뭐라고 표현했냐?"
+    } ]
+  }, {
+    "tStartMs": 138650,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "제조를 제외하면"
+    } ]
+  }, {
+    "tStartMs": 139610,
+    "dDurationMs": 4100,
+    "segs": [ {
+      "utf8": "모든 것을 다 할 수 있는 회사를 만들 수 있다"
+    } ]
+  }, {
+    "tStartMs": 143710,
+    "dDurationMs": 750,
+    "segs": [ {
+      "utf8": "딸깍이 되는데"
+    } ]
+  }, {
+    "tStartMs": 144460,
+    "dDurationMs": 3020,
+    "segs": [ {
+      "utf8": "야 우리보다 법률을 잘해 네가? 딸깍"
+    } ]
+  }, {
+    "tStartMs": 147480,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "야 우리보다 네가 뭘 잘해?"
+    } ]
+  }, {
+    "tStartMs": 148500,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "아 이커머스? 딸깍"
+    } ]
+  }, {
+    "tStartMs": 150580,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "뭐 우리보다 영화? 딸깍"
+    } ]
+  }, {
+    "tStartMs": 152150,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "이게 된다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 153350,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "음 딸깍을 네가 이길 수 있냐?"
+    } ]
+  }, {
+    "tStartMs": 155900,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "우리는 초거대 AI를 갖고 있는데"
+    } ]
+  }, {
+    "tStartMs": 158120,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "그리고 그 딸깍하는 회사가"
+    } ]
+  }, {
+    "tStartMs": 160390,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "제조를 만약에 아웃소싱해주면"
+    } ]
+  }, {
+    "tStartMs": 162570,
+    "dDurationMs": 3170,
+    "segs": [ {
+      "utf8": "마치 애플처럼 이제는 본인들이 만든 회사가"
+    } ]
+  }, {
+    "tStartMs": 165740,
+    "dDurationMs": 4300,
+    "segs": [ {
+      "utf8": "세상 모든 것을 다하는 회사가 될 수 있을 것이다"
+    } ]
+  }, {
+    "tStartMs": 170040,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "라고 주장을 하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 171330,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "마치 애플이 다른 회사에 휴대폰 제조를 맡기듯이"
+    } ]
+  }, {
+    "tStartMs": 173730,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "야 우리도 딸깍 딸깍 한 다음에"
+    } ]
+  }, {
+    "tStartMs": 175350,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "그래 한국어 좀 만들어라"
+    } ]
+  }, {
+    "tStartMs": 176770,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "일본어 좀 만들어라 하면은"
+    } ]
+  }, {
+    "tStartMs": 178780,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "머리뿐만 아니라"
+    } ]
+  }, {
+    "tStartMs": 179660,
+    "dDurationMs": 4310,
+    "segs": [ {
+      "utf8": "몸까지 갖는 모든 것을 다하는 회사가 될 수 있다라는 거고요"
+    } ]
+  }, {
+    "tStartMs": 183970,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "그러면 머리는 누가 하냐?"
+    } ]
+  }, {
+    "tStartMs": 185190,
+    "dDurationMs": 3450,
+    "segs": [ {
+      "utf8": "그 머리 역할을 바로 자신들의 라지 랭기지 모델"
+    } ]
+  }, {
+    "tStartMs": 188640,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "LLM 모델인 그록"
+    } ]
+  }, {
+    "tStartMs": 190370,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "그록이 총괄 지휘자가 될 거다"
+    } ]
+  }, {
+    "tStartMs": 192630,
+    "dDurationMs": 4620,
+    "segs": [ {
+      "utf8": "세상에 대한 모든 걸 아는 말 그대로 초지능 AI가 되면서"
+    } ]
+  }, {
+    "tStartMs": 197250,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "이 모든 것을 총괄 지휘하고"
+    } ]
+  }, {
+    "tStartMs": 198880,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "내비게이터 같은 역할을 할 거고요"
+    } ]
+  }, {
+    "tStartMs": 200580,
+    "dDurationMs": 3810,
+    "segs": [ {
+      "utf8": "그리고 디지털 옵티머스라고 자신들은 부르는데"
+    } ]
+  }, {
+    "tStartMs": 204390,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "컴퓨터에 돌아가는 모든 것을"
+    } ]
+  }, {
+    "tStartMs": 205650,
+    "dDurationMs": 3140,
+    "segs": [ {
+      "utf8": "실제로 통제하는 그런 거라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 208790,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "그록의 지휘를 받아서"
+    } ]
+  }, {
+    "tStartMs": 209960,
+    "dDurationMs": 2940,
+    "segs": [ {
+      "utf8": "이 디지털 옵티머스가 업무를 처리한다"
+    } ]
+  }, {
+    "tStartMs": 212900,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "일론 머스크는 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 214580,
+    "dDurationMs": 3520,
+    "segs": [ {
+      "utf8": "디지털 옵티머스는 5초마다 실시간 컴퓨터 화면 영상과"
+    } ]
+  }, {
+    "tStartMs": 218100,
+    "dDurationMs": 3700,
+    "segs": [ {
+      "utf8": "키보드, 마우스 조작을 알아서 처리하고 알아서 실행을 한다"
+    } ]
+  }, {
+    "tStartMs": 221800,
+    "dDurationMs": 3320,
+    "segs": [ {
+      "utf8": "그러면 실시간 스마트 AI 기업이 된다는 건데"
+    } ]
+  }, {
+    "tStartMs": 225120,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "제 느낌은 요런 느낌"
+    } ]
+  }, {
+    "tStartMs": 226760,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "그록이 야 졸지 마라"
+    } ]
+  }, {
+    "tStartMs": 228840,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "넌 이거 하고"
+    } ]
+  }, {
+    "tStartMs": 230250,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "넌 이거 하고 넌 이거 해"
+    } ]
+  }, {
+    "tStartMs": 231510,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "오케이 콜"
+    } ]
+  }, {
+    "tStartMs": 232300,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "오케이 콜 요렇게 하면은"
+    } ]
+  }, {
+    "tStartMs": 234170,
+    "dDurationMs": 4090,
+    "segs": [ {
+      "utf8": "디지털 옵티머스라는 이 애들이 일을 하기 시작하면은"
+    } ]
+  }, {
+    "tStartMs": 238260,
+    "dDurationMs": 3550,
+    "segs": [ {
+      "utf8": "세상 모든 소프트웨어 기업들을 다 이길 수 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 241810,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "물론 어디까지나 이론적으로"
+    } ]
+  }, {
+    "tStartMs": 244190,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "어디까지나 이론적으로 원칙적으로"
+    } ]
+  }, {
+    "tStartMs": 246390,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "킹론상은 다 이길 수 있다"
+    } ]
+  }, {
+    "tStartMs": 248530,
+    "dDurationMs": 3850,
+    "segs": [ {
+      "utf8": "이는 세상에서 유일한 실시간 스마트 AI 시스템이 될 것이고"
+    } ]
+  }, {
+    "tStartMs": 252380,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "대단히 중요한 의미를 가지고"
+    } ]
+  }, {
+    "tStartMs": 253590,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "원칙적으로 전체 기업을 모방할 수 있을 것이다"
+    } ]
+  }, {
+    "tStartMs": 256200,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "라고 주장을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 257270,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "그래서 아까 전에 잠깐 지나갔는데"
+    } ]
+  }, {
+    "tStartMs": 259460,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "매크로하드라는 이 프로젝트의 이름"
+    } ]
+  }, {
+    "tStartMs": 261450,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "나중에 기업 이름이 될 수도 있을 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 263390,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "왜 매크로하드라고 지었냐?"
+    } ]
+  }, {
+    "tStartMs": 265370,
+    "dDurationMs": 2930,
+    "segs": [ {
+      "utf8": "원래 기존에는 마이크로소프트였잖아요"
+    } ]
+  }, {
+    "tStartMs": 268300,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "안 된다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 269040,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "마이크로를 매크로"
+    } ]
+  }, {
+    "tStartMs": 270790,
+    "dDurationMs": 3020,
+    "segs": [ {
+      "utf8": "소프트를 하드"
+    } ]
+  }, {
+    "tStartMs": 273810,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "마이크로소프트를 후루룩 후루룩 해서"
+    } ]
+  }, {
+    "tStartMs": 275930,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "자기들이 호로록 먹겠다는"
+    } ]
+  }, {
+    "tStartMs": 277850,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "풍자적 개념이 들어가 있다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 279600,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "그래서 마이크로소프트가 아니라"
+    } ]
+  }, {
+    "tStartMs": 281220,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "매크로하드하게 하면 이길 수도 있다"
+    } ]
+  }, {
+    "tStartMs": 284110,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "이런 얘기를 하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 286180,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "그래서 이 얘기를 듣다 보면"
+    } ]
+  }, {
+    "tStartMs": 287310,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "그런 생각이 들죠"
+    } ]
+  }, {
+    "tStartMs": 288580,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "지난번에 옛날에 슈카월드에 한번 올라왔는데"
+    } ]
+  }, {
+    "tStartMs": 290340,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "그 문샷 팟캐스트에서 비슷한 얘기를 한 적이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 293740,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "옛날에 영상 올라왔으니까 가서 보세요"
+    } ]
+  }, {
+    "tStartMs": 295110,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "그때 이런 내용을 했어요"
+    } ]
+  }, {
+    "tStartMs": 296630,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "완전히 AI로 운영되는 기업은"
+    } ]
+  }, {
+    "tStartMs": 298280,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "그렇지 않은 기업을 완전히 압도할 것입니다"
+    } ]
+  }, {
+    "tStartMs": 301180,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "100%냐 99%냐 차이가 클 거예요"
+    } ]
+  }, {
+    "tStartMs": 303860,
+    "dDurationMs": 3120,
+    "segs": [ {
+      "utf8": "휴먼이 개입하는 순간에 생산성이 떨어집니다"
+    } ]
+  }, {
+    "tStartMs": 306980,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "그리고 가장 큰 착각은"
+    } ]
+  }, {
+    "tStartMs": 308930,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "기업들이 천천히 AI 시대로"
+    } ]
+  }, {
+    "tStartMs": 310580,
+    "dDurationMs": 3140,
+    "segs": [ {
+      "utf8": "안전하게 전환될 것이라는 믿음입니다"
+    } ]
+  }, {
+    "tStartMs": 313720,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "기업들은 전환되지 않아요"
+    } ]
+  }, {
+    "tStartMs": 315700,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "어떻게 되는 겁니까?"
+    } ]
+  }, {
+    "tStartMs": 317070,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "죽는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 318350,
+    "dDurationMs": 2760,
+    "segs": [ {
+      "utf8": "죽고 승자가 대체할 것이다"
+    } ]
+  }, {
+    "tStartMs": 321110,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "승자가 나라는 거죠 왜?"
+    } ]
+  }, {
+    "tStartMs": 323470,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "나는 AI가 있으니까"
+    } ]
+  }, {
+    "tStartMs": 325540,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "AI가 있으니까"
+    } ]
+  }, {
+    "tStartMs": 327010,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "초거대, 초지능, 초지능일지 모르겠지만"
+    } ]
+  }, {
+    "tStartMs": 329870,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "AI가 있고 니들은 잘해야 활용하는 기업인데"
+    } ]
+  }, {
+    "tStartMs": 332870,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "그건 승부가 안 돼"
+    } ]
+  }, {
+    "tStartMs": 334290,
+    "dDurationMs": 3530,
+    "segs": [ {
+      "utf8": "우린 100%고 니네는 잘해야 40%? 50%?"
+    } ]
+  }, {
+    "tStartMs": 337820,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "안 된다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 338810,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "그렇게 전환하지 않고"
+    } ]
+  }, {
+    "tStartMs": 340290,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "완전히 대체될 거고요"
+    } ]
+  }, {
+    "tStartMs": 342050,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "그래서 요즘에 대기업들"
+    } ]
+  }, {
+    "tStartMs": 343690,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "10만 명, 20만 명 와"
+    } ]
+  }, {
+    "tStartMs": 345330,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "우리 대기업이에요"
+    } ]
+  }, {
+    "tStartMs": 346440,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "바보 같은 짓이다"
+    } ]
+  }, {
+    "tStartMs": 348080,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "미래의 승자는 그걸 보면 경악을 할 거야"
+    } ]
+  }, {
+    "tStartMs": 350550,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "이제는 10만 명이 필요 없어"
+    } ]
+  }, {
+    "tStartMs": 352360,
+    "dDurationMs": 3390,
+    "segs": [ {
+      "utf8": "소수의 운영자와 자율 AI를 가지고 있는 기업이"
+    } ]
+  }, {
+    "tStartMs": 355750,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "압도하게 될 것이고"
+    } ]
+  }, {
+    "tStartMs": 356960,
+    "dDurationMs": 4720,
+    "segs": [ {
+      "utf8": "그렇게 되면 당신 기업의 생존 확률은 정확히 0%다"
+    } ]
+  }, {
+    "tStartMs": 361680,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "왜 0%냐?"
+    } ]
+  }, {
+    "tStartMs": 362600,
+    "dDurationMs": 3710,
+    "segs": [ {
+      "utf8": "너가 바둑 좋아하면 바둑 AI 하고 두면 네 승률이 몇 프로야?"
+    } ]
+  }, {
+    "tStartMs": 366310,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "0%"
+    } ]
+  }, {
+    "tStartMs": 367810,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "스타크래프트 AI하고 니가 스타크래프트를 하면"
+    } ]
+  }, {
+    "tStartMs": 370150,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "니 승률이 몇%야?"
+    } ]
+  }, {
+    "tStartMs": 371390,
+    "dDurationMs": 670,
+    "segs": [ {
+      "utf8": "0%"
+    } ]
+  }, {
+    "tStartMs": 372060,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "0%"
+    } ]
+  }, {
+    "tStartMs": 373210,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "저글링이 달리다가"
+    } ]
+  }, {
+    "tStartMs": 374780,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "시즈 탱크가 포격 하면"
+    } ]
+  }, {
+    "tStartMs": 376130,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "갑자기 산계를 하죠"
+    } ]
+  }, {
+    "tStartMs": 377600,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "그러다 다시 뭉쳐갖고 달리기 때문에"
+    } ]
+  }, {
+    "tStartMs": 379530,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "니 승률은 0%야"
+    } ]
+  }, {
+    "tStartMs": 380840,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "니 승률은 0%"
+    } ]
+  }, {
+    "tStartMs": 382110,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "그러기 때문에"
+    } ]
+  }, {
+    "tStartMs": 383140,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "자신들의 승률은 100%란 말이죠"
+    } ]
+  }, {
+    "tStartMs": 385540,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "컴퓨터는 AI는 이미 승리했고"
+    } ]
+  }, {
+    "tStartMs": 387200,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "지금 가득 차 있는 고층 빌딩들은"
+    } ]
+  }, {
+    "tStartMs": 389080,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "앞으로 텅 비게 될 것이다"
+    } ]
+  }, {
+    "tStartMs": 390600,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "다만 아직 그 사실을 여러분들이 모를 뿐이야"
+    } ]
+  }, {
+    "tStartMs": 393090,
+    "dDurationMs": 2910,
+    "segs": [ {
+      "utf8": "라고 이제 강력하게 기염을 토하면서"
+    } ]
+  }, {
+    "tStartMs": 396000,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "매크로하드 프로젝트를 시작하겠다"
+    } ]
+  }, {
+    "tStartMs": 398260,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "라고 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 400100,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "정말 야망을 넘어서"
+    } ]
+  }, {
+    "tStartMs": 402090,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "만약 정말 매크로하드가 되면"
+    } ]
+  }, {
+    "tStartMs": 404740,
+    "dDurationMs": 3760,
+    "segs": [ {
+      "utf8": "소프트웨어 기업들을 모조리 후루룩 하겠다는 얘기잖아요"
+    } ]
+  }, {
+    "tStartMs": 408500,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "말만 들으면"
+    } ]
+  }, {
+    "tStartMs": 409290,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "물론 제 개인 생각에"
+    } ]
+  }, {
+    "tStartMs": 411180,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "그렇게 빨리 안 될 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 412550,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "저 정도면 최소 2, 30년 아닌가?"
+    } ]
+  }, {
+    "tStartMs": 414840,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "제가 너무 순진한 건가?"
+    } ]
+  }, {
+    "tStartMs": 417130,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "3년, 5년 내로 안 될 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 419390,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "될 수도 있습니다 모르죠"
+    } ]
+  }, {
+    "tStartMs": 421290,
+    "dDurationMs": 3190,
+    "segs": [ {
+      "utf8": "2020년에 현재 AI를 예측하지 못했으니까"
+    } ]
+  }, {
+    "tStartMs": 424480,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "그 생각하는 것 같고요"
+    } ]
+  }, {
+    "tStartMs": 425760,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "게다가 머스크는 저런 발표를 했는데"
+    } ]
+  }, {
+    "tStartMs": 428350,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "또 다른 기업도 비슷한 발표를 한 기업이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 430610,
+    "dDurationMs": 4450,
+    "segs": [ {
+      "utf8": "메타는 몰트북이라는 사이트 인수를 발표했어요 페이스북"
+    } ]
+  }, {
+    "tStartMs": 435060,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "메타가 인수한 몰트북은 뭐하는 데냐?"
+    } ]
+  }, {
+    "tStartMs": 437250,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "인공지능 봇들이 서로 소통할 수 있는"
+    } ]
+  }, {
+    "tStartMs": 439440,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "소셜미디어 네트워킹 플랫폼입니다"
+    } ]
+  }, {
+    "tStartMs": 441970,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "그게 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 442840,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "간단하게 얘기해서"
+    } ]
+  }, {
+    "tStartMs": 443990,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "여러분들이 많이 가는 커뮤니티인데"
+    } ]
+  }, {
+    "tStartMs": 446040,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "사람이 쓰는 게 아니라"
+    } ]
+  }, {
+    "tStartMs": 447410,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "인공지능이 글을 쓴다는 말입니다"
+    } ]
+  }, {
+    "tStartMs": 449690,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "그게 가능합니까?"
+    } ]
+  }, {
+    "tStartMs": 451760,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "가능하다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 452930,
+    "dDurationMs": 3920,
+    "segs": [ {
+      "utf8": "몰트북은 오직 인공지능만 가입할 수 있는 커뮤니티래요"
+    } ]
+  }, {
+    "tStartMs": 456850,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "사람은 안 돼"
+    } ]
+  }, {
+    "tStartMs": 457720,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "사람은 가입할 수 없어"
+    } ]
+  }, {
+    "tStartMs": 458620,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "그럼 사람은 뭐합니까?"
+    } ]
+  }, {
+    "tStartMs": 459980,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "휴먼은 구경만 해"
+    } ]
+  }, {
+    "tStartMs": 462250,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "아임 어 휴먼 누르면 가서"
+    } ]
+  }, {
+    "tStartMs": 463760,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "구경만 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 464970,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "얘네는 뭐하고 노나 얘네는 뭐 쓰나"
+    } ]
+  }, {
+    "tStartMs": 467820,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "어이구 짤 올린 꼬락서니 보소"
+    } ]
+  }, {
+    "tStartMs": 469980,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "악플 누가 다나"
+    } ]
+  }, {
+    "tStartMs": 470970,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "이런 거 볼 수 있다는 거예요"
+    } ]
+  }, {
+    "tStartMs": 472160,
+    "dDurationMs": 3730,
+    "segs": [ {
+      "utf8": "마치 레딧처럼 지들끼리 북적북적하는 곳인데"
+    } ]
+  }, {
+    "tStartMs": 475890,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "사람은 가서 볼 수만 있다"
+    } ]
+  }, {
+    "tStartMs": 477510,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "그런데 AI들이 네트워크 하면 뭐해요?"
+    } ]
+  }, {
+    "tStartMs": 479920,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "아 뭐 하냐면 놀랍게도"
+    } ]
+  }, {
+    "tStartMs": 482270,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "커뮤질을 한다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 485700,
+    "dDurationMs": 570,
+    "segs": [ {
+      "utf8": "아 그래요?"
+    } ]
+  }, {
+    "tStartMs": 486270,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "저 몰트북 자주 안 가봐서 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 488110,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "AI가 커뮤질을 한다는 걸 처음 들었는데"
+    } ]
+  }, {
+    "tStartMs": 490700,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "수천 개의 커뮤니티를 만들고요"
+    } ]
+  }, {
+    "tStartMs": 492650,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "음악부터 윤리에 이르기까지"
+    } ]
+  }, {
+    "tStartMs": 494260,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "다양한 주제를 논의하고"
+    } ]
+  }, {
+    "tStartMs": 495930,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "이번 주 슈카월드 주제 어땠냐?"
+    } ]
+  }, {
+    "tStartMs": 497530,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "뭐 이런 거 까고 악플 달고"
+    } ]
+  }, {
+    "tStartMs": 499710,
+    "dDurationMs": 3140,
+    "segs": [ {
+      "utf8": "150만 명의 사용자라 그러면 이상하고"
+    } ]
+  }, {
+    "tStartMs": 502850,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "그 봇?"
+    } ]
+  }, {
+    "tStartMs": 504030,
+    "dDurationMs": 4160,
+    "segs": [ {
+      "utf8": "봇이 자신이 좋아하는 게시물에 투표한다라고 합니다"
+    } ]
+  }, {
+    "tStartMs": 508190,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "요거를 메타가 샀다는 건데"
+    } ]
+  }, {
+    "tStartMs": 509740,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "아니 근데 AI들끼리 와서 잡담하는 게"
+    } ]
+  }, {
+    "tStartMs": 511350,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "왜 뭐가 필요해서 사냐"
+    } ]
+  }, {
+    "tStartMs": 513330,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "메타는 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 514870,
+    "dDurationMs": 4260,
+    "segs": [ {
+      "utf8": "상시 접속 가능한 AI들을 연결하는 이런 모습이"
+    } ]
+  }, {
+    "tStartMs": 519130,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "대단히 혁신적인 발걸음이다"
+    } ]
+  }, {
+    "tStartMs": 521020,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "이제 앞으로는 전세계 AI 에이전트들이"
+    } ]
+  }, {
+    "tStartMs": 523550,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "한 사람에 뭐 하나 또는 여러 개씩 쫙 할 텐데"
+    } ]
+  }, {
+    "tStartMs": 525660,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "수십억 개 할 텐데"
+    } ]
+  }, {
+    "tStartMs": 527190,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "걔네들이 모여서 이야기하는 플랫폼 아니냐"
+    } ]
+  }, {
+    "tStartMs": 530010,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "오 그럼 이 가치는 엄청날 수 있다"
+    } ]
+  }, {
+    "tStartMs": 532480,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "왜냐면 슈카 AI 비서는"
+    } ]
+  }, {
+    "tStartMs": 534490,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "다른 사람들의 AI 비서가 뭐 하는지 모를 거 아니에요"
+    } ]
+  }, {
+    "tStartMs": 536450,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "그럼 와서 야 요즘 니네 주인님 뭐하냐?"
+    } ]
+  }, {
+    "tStartMs": 538730,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "그럼 보면은 보고"
+    } ]
+  }, {
+    "tStartMs": 540040,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "아 요게 재밌어?"
+    } ]
+  }, {
+    "tStartMs": 541250,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "그럼 이제 그걸 딱 물고 슈카한테 와서"
+    } ]
+  }, {
+    "tStartMs": 543090,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "아 주인님 이게 기가 막히다고 하는데요"
+    } ]
+  }, {
+    "tStartMs": 545800,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "요거 종목 한번 사보시면 장난 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 547870,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "뭐 이런 거 알려준다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 548860,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "지들끼리 AI가 모여갖고"
+    } ]
+  }, {
+    "tStartMs": 551410,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "커뮤질 하고 정보 교류"
+    } ]
+  }, {
+    "tStartMs": 553430,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "뭐 이런 걸 한다는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 554880,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "저도 무슨 말인지 잘 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 556260,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "혁신적인 발걸음이래요"
+    } ]
+  }, {
+    "tStartMs": 558190,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "그래서 메타는 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 559810,
+    "dDurationMs": 3610,
+    "segs": [ {
+      "utf8": "AI 에이전트가 일하는 새로운 방식을 제시하는 거다"
+    } ]
+  }, {
+    "tStartMs": 563420,
+    "dDurationMs": 3330,
+    "segs": [ {
+      "utf8": "AI 에이전트끼리 모여서 의견을 나누고 그렇다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 566750,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "그리고 몰트북보다 사실더 중요한 게"
+    } ]
+  }, {
+    "tStartMs": 568900,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "몰트북 비서"
+    } ]
+  }, {
+    "tStartMs": 570610,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "몰트북의 AI"
+    } ]
+  }, {
+    "tStartMs": 571640,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "아까 150만 개가 모였다 이런 소리를 하는데"
+    } ]
+  }, {
+    "tStartMs": 574070,
+    "dDurationMs": 4870,
+    "segs": [ {
+      "utf8": "그 에이전트들 중 대부분은 한 사람이 개발한 어떤 오픈소스였다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 578940,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "이것도 아마 많이 들어보셨을 거예요"
+    } ]
+  }, {
+    "tStartMs": 580610,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "오픈클로라는 걸 많이 들어보셨을 겁니다"
+    } ]
+  }, {
+    "tStartMs": 583200,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "이건 또 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 584560,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "다양한 기기에서 실행될 수 있는"
+    } ]
+  }, {
+    "tStartMs": 586950,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "오픈소스 개인 AI 에이전트입니다"
+    } ]
+  }, {
+    "tStartMs": 590250,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "오픈소스예요"
+    } ]
+  }, {
+    "tStartMs": 591190,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "열려있어요"
+    } ]
+  }, {
+    "tStartMs": 592030,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "사람의 개입을 최소한으로"
+    } ]
+  }, {
+    "tStartMs": 593630,
+    "dDurationMs": 4390,
+    "segs": [ {
+      "utf8": "알아서 업무를 처리하는 AI 어시스턴트라고 보시면 되는데"
+    } ]
+  }, {
+    "tStartMs": 598020,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "제가 이거 읽다가"
+    } ]
+  }, {
+    "tStartMs": 598990,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "약간 느낌이 싸늘했는데"
+    } ]
+  }, {
+    "tStartMs": 600770,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "AI 에이전트가 깔면"
+    } ]
+  }, {
+    "tStartMs": 603260,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "컴퓨터의 거의 모든 권한을 가지고"
+    } ]
+  }, {
+    "tStartMs": 606100,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "능동적으로 움직인다"
+    } ]
+  }, {
+    "tStartMs": 608250,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "삭제할 수도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 609940,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "챗봇은 우리가 명령만 하고"
+    } ]
+  }, {
+    "tStartMs": 612030,
+    "dDurationMs": 350,
+    "segs": [ {
+      "utf8": "예를 들면"
+    } ]
+  }, {
+    "tStartMs": 612380,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "챗봇이 이 주식이 좋아요"
+    } ]
+  }, {
+    "tStartMs": 614070,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "그럼 우리가 주식을 사야 되잖아요"
+    } ]
+  }, {
+    "tStartMs": 615550,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "얘는 지가 오 이 주식이 좋네"
+    } ]
+  }, {
+    "tStartMs": 617560,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "그러면 사 놔"
+    } ]
+  }, {
+    "tStartMs": 619660,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "아니면 챗봇은 이렇게 PPT 만드세요 잖아요"
+    } ]
+  }, {
+    "tStartMs": 622150,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "얘는 지가 만들어"
+    } ]
+  }, {
+    "tStartMs": 624180,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "마음에 안 들면 지워"
+    } ]
+  }, {
+    "tStartMs": 627550,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "더 광범위한 데이터와"
+    } ]
+  }, {
+    "tStartMs": 628900,
+    "dDurationMs": 3070,
+    "segs": [ {
+      "utf8": "시스템 접근 권한을 가지고 능동적인 조치를 한다"
+    } ]
+  }, {
+    "tStartMs": 631970,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "말만 하지 않고 스스로 실제로 작업한다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 634830,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "이런 겁니다"
+    } ]
+  }, {
+    "tStartMs": 635620,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "기존의 거대 AI 모델들은"
+    } ]
+  }, {
+    "tStartMs": 637770,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "말 그대로 랭기지 모델이니까 말만 하잖아요"
+    } ]
+  }, {
+    "tStartMs": 640720,
+    "dDurationMs": 3090,
+    "segs": [ {
+      "utf8": "근데 쟤는 스스로 작업을 수행한다"
+    } ]
+  }, {
+    "tStartMs": 643810,
+    "dDurationMs": 4380,
+    "segs": [ {
+      "utf8": "제가 옛날에 2024년에 퍼플렉시티 CEO 아라빈드하고 인터뷰했을 때"
+    } ]
+  }, {
+    "tStartMs": 648190,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "아라빈드한테 제가 물어본 게 있어요"
+    } ]
+  }, {
+    "tStartMs": 650240,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "말만 하지 말고"
+    } ]
+  }, {
+    "tStartMs": 651800,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "실행하는 AI는 안 나옵니까?"
+    } ]
+  }, {
+    "tStartMs": 654080,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "그랬더니 대답을 제대로 안 해서"
+    } ]
+  }, {
+    "tStartMs": 655420,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "이게 아마 편집됐을 텐데"
+    } ]
+  }, {
+    "tStartMs": 657180,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "실행하는 AI는 안 나오냐"
+    } ]
+  }, {
+    "tStartMs": 659290,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "아니 뭐 좋은 물건 추천만 하지 말고"
+    } ]
+  }, {
+    "tStartMs": 660900,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "네가 알아서 사준다든가"
+    } ]
+  }, {
+    "tStartMs": 661960,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "자고 일어났는데 주식 투자해서 좀 벌어온다든가"
+    } ]
+  }, {
+    "tStartMs": 664580,
+    "dDurationMs": 380,
+    "segs": [ {
+      "utf8": "아니면"
+    } ]
+  }, {
+    "tStartMs": 664960,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "죄송합니다 주인님 오늘 밤은 좀 깨졌네요"
+    } ]
+  }, {
+    "tStartMs": 668500,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "500으로 시작했는데"
+    } ]
+  }, {
+    "tStartMs": 669680,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "좀 깨져서 한 420 됐는데"
+    } ]
+  }, {
+    "tStartMs": 671810,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "다음에 벌겠습니다"
+    } ]
+  }, {
+    "tStartMs": 672910,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "따갚되 들어갑니다"
+    } ]
+  }, {
+    "tStartMs": 674000,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "오늘 밤에는 미수 반 질러서"
+    } ]
+  }, {
+    "tStartMs": 675870,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "오늘 밤에 벌어놓겠습니다"
+    } ]
+  }, {
+    "tStartMs": 677420,
+    "dDurationMs": 3040,
+    "segs": [ {
+      "utf8": "뭐 이런 AI는 안 나오냐라고 제가 물어봤는데"
+    } ]
+  }, {
+    "tStartMs": 680460,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "이 정도까지는 아니지만"
+    } ]
+  }, {
+    "tStartMs": 681860,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "어느 정도는 초기 모습"
+    } ]
+  }, {
+    "tStartMs": 683190,
+    "dDurationMs": 4200,
+    "segs": [ {
+      "utf8": "저런 초기 모습으로 실행하는 작업을 수행하는 AI라고 하고"
+    } ]
+  }, {
+    "tStartMs": 687390,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "오픈클로가 중국에서 굉장히 인기가 있다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 690730,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "우리나라보다"
+    } ]
+  }, {
+    "tStartMs": 691870,
+    "dDurationMs": 3160,
+    "segs": [ {
+      "utf8": "중국에서는 마치 2022년 챗 GPT 모먼트 같다"
+    } ]
+  }, {
+    "tStartMs": 695030,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "또는 2025년 딥시크 충격 같다"
+    } ]
+  }, {
+    "tStartMs": 697150,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "이런 표현까지 쓰는데 왜냐?"
+    } ]
+  }, {
+    "tStartMs": 698730,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "사용자를 진정으로 도울 수 있는"
+    } ]
+  }, {
+    "tStartMs": 700550,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "AI 비서 아니냐"
+    } ]
+  }, {
+    "tStartMs": 702140,
+    "dDurationMs": 4150,
+    "segs": [ {
+      "utf8": "중국에서 저 오픈클로라는 거는 상징이 랍스터래요"
+    } ]
+  }, {
+    "tStartMs": 706290,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "제가 이걸 보고 생각한 게"
+    } ]
+  }, {
+    "tStartMs": 707250,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "아, 슈카월드가 새우"
+    } ]
+  }, {
+    "tStartMs": 709330,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "오픈클로가 랍스터"
+    } ]
+  }, {
+    "tStartMs": 710340,
+    "dDurationMs": 4360,
+    "segs": [ {
+      "utf8": "그럼 오픈클로의 경쟁자는 슈카월드인가라는 생각을 잠깐"
+    } ]
+  }, {
+    "tStartMs": 714700,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "우리도 AI 기업으로 하면은"
+    } ]
+  }, {
+    "tStartMs": 716590,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "만만치 않을 것 같다는 생각을 잠깐 했는데"
+    } ]
+  }, {
+    "tStartMs": 718570,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "랍스터라고 합니다"
+    } ]
+  }, {
+    "tStartMs": 719680,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "또 중국에서 이 오픈클로가 잘 나가는 이유가"
+    } ]
+  }, {
+    "tStartMs": 722230,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "중국 엔지니어들이 격무에 시달리는데"
+    } ]
+  }, {
+    "tStartMs": 724690,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "자기가 자거나 아니면 자리를 비웠을 때도"
+    } ]
+  }, {
+    "tStartMs": 726520,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "얘가 뭔가 작업을 하더라"
+    } ]
+  }, {
+    "tStartMs": 728130,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "PPT를 만들든지 문서를 만들든지"
+    } ]
+  }, {
+    "tStartMs": 730250,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "작업을 하니까"
+    } ]
+  }, {
+    "tStartMs": 731220,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "중국 테크 기업들이"
+    } ]
+  }, {
+    "tStartMs": 732350,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "그런 엔지니어들을 위해서"
+    } ]
+  }, {
+    "tStartMs": 733760,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "오픈클로 관련 제품들"
+    } ]
+  }, {
+    "tStartMs": 734970,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "설치가 쉽게 되는 제품들"
+    } ]
+  }, {
+    "tStartMs": 736200,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "이런 거를 굉장히 많이 지금 내놓았다고 하고"
+    } ]
+  }, {
+    "tStartMs": 738430,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "얼마 전에 젠슨 황 아저씨도 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 740990,
+    "dDurationMs": 4180,
+    "segs": [ {
+      "utf8": "오픈클로라는 건 아마 역사상 가장 중요한 소프트웨어 릴리스일 것이다"
+    } ]
+  }, {
+    "tStartMs": 745170,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "리눅스가 이 정도 넓게 깔리기까지 30년이 걸렸는데"
+    } ]
+  }, {
+    "tStartMs": 748020,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "오픈클로는 3주 만에 물론 중국이나 미국 위주이긴 하지만"
+    } ]
+  }, {
+    "tStartMs": 750670,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "특히 중국이죠"
+    } ]
+  }, {
+    "tStartMs": 751590,
+    "dDurationMs": 470,
+    "segs": [ {
+      "utf8": "3주 만에"
+    } ]
+  }, {
+    "tStartMs": 752060,
+    "dDurationMs": 4180,
+    "segs": [ {
+      "utf8": "세계에서 가장 많이 다운로드된 소프트웨어가 되었다라고 극찬을 했죠"
+    } ]
+  }, {
+    "tStartMs": 756240,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "그런데 제가 잠깐 소개를 시켜드렸는데"
+    } ]
+  }, {
+    "tStartMs": 758480,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "여러분들 그런 생각이 나지 않으십니까?"
+    } ]
+  }, {
+    "tStartMs": 760760,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "좀 느낌이 싸늘하다 왜냐면"
+    } ]
+  }, {
+    "tStartMs": 763330,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "이놈들이 물론 아직은 초기 버전이니까"
+    } ]
+  }, {
+    "tStartMs": 765450,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "그렇게 대단한 것까지는 없는 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 767600,
+    "dDurationMs": 3640,
+    "segs": [ {
+      "utf8": "만약 이놈들이 좀 더 발전을 하면 알아서 뭔가 한다며"
+    } ]
+  }, {
+    "tStartMs": 771240,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "그럼 얘가 이메일도 보내고"
+    } ]
+  }, {
+    "tStartMs": 772690,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "내 파일도 지우고 그쵸?"
+    } ]
+  }, {
+    "tStartMs": 774330,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "뭔가 할 거 아니에요"
+    } ]
+  }, {
+    "tStartMs": 775460,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "내 주식 계좌로 미수해서 지르고"
+    } ]
+  }, {
+    "tStartMs": 778180,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "그다음에 깨지면"
+    } ]
+  }, {
+    "tStartMs": 779650,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "자기가 안 한 듯이 증거 인멸하고"
+    } ]
+  }, {
+    "tStartMs": 781980,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "조용히... 모르겠는데요?"
+    } ]
+  }, {
+    "tStartMs": 783800,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "해킹 당했나?"
+    } ]
+  }, {
+    "tStartMs": 784620,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "북한이 했네"
+    } ]
+  }, {
+    "tStartMs": 785620,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "북한이"
+    } ]
+  }, {
+    "tStartMs": 786620,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "북한이 했습니다 주인님"
+    } ]
+  }, {
+    "tStartMs": 788140,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "뭐 이럴 수도 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 788970,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "아 이거 좀 불안하단 말이야"
+    } ]
+  }, {
+    "tStartMs": 790630,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "또 이메일로 다른 사람한테"
+    } ]
+  }, {
+    "tStartMs": 792450,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "야이 XX야 라고 보냈을지 어떻게 알아요"
+    } ]
+  }, {
+    "tStartMs": 795140,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "교수님한테 자넨가?"
+    } ]
+  }, {
+    "tStartMs": 796780,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "뭐 이렇게 보낼 수도 있고"
+    } ]
+  }, {
+    "tStartMs": 798130,
+    "dDurationMs": 3490,
+    "segs": [ {
+      "utf8": "약간 보안상의 문제점이 있을 것 같다"
+    } ]
+  }, {
+    "tStartMs": 801620,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "게다가 커뮤니티도 한다며?"
+    } ]
+  }, {
+    "tStartMs": 803280,
+    "dDurationMs": 3410,
+    "segs": [ {
+      "utf8": "그러네 게다가 이런 AI들이 커뮤니티도 한다며 거기다가"
+    } ]
+  }, {
+    "tStartMs": 806690,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "그럼 내 자료를 커뮤니티에 뿌릴 수도 있잖아 얘네들이"
+    } ]
+  }, {
+    "tStartMs": 809400,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "이런 걱정이 좀 들죠"
+    } ]
+  }, {
+    "tStartMs": 811360,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "실제로 얼마 전에"
+    } ]
+  }, {
+    "tStartMs": 812710,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "중국 관영 언론이 공식적으로"
+    } ]
+  }, {
+    "tStartMs": 815060,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "오픈클로에 대한 보안 위험을 경고했습니다"
+    } ]
+  }, {
+    "tStartMs": 817150,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 817980,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "이 지능형 에이전트 소프트웨어는"
+    } ]
+  }, {
+    "tStartMs": 820150,
+    "dDurationMs": 3160,
+    "segs": [ {
+      "utf8": "자연어 명령에 따라 관련 작업을 직접 제어하는데"
+    } ]
+  }, {
+    "tStartMs": 823310,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "자율적으로 작업을 실행해야 되기 때문에"
+    } ]
+  }, {
+    "tStartMs": 825690,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "높은 수준의 시스템 권한을 부여 받는다"
+    } ]
+  }, {
+    "tStartMs": 828260,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "그 말인즉슨 어떻게 돌아갈지 모르겠지만"
+    } ]
+  }, {
+    "tStartMs": 830760,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "취약점이 발견되면"
+    } ]
+  }, {
+    "tStartMs": 831910,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "시스템을 완전히 장악할 수도 있다"
+    } ]
+  }, {
+    "tStartMs": 834210,
+    "dDurationMs": 3610,
+    "segs": [ {
+      "utf8": "라고 이제 보안 위험을 날린 게 지금이라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 837820,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "참고로 저 오픈클로의 개발자는"
+    } ]
+  }, {
+    "tStartMs": 839380,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "지금 오픈 AI로 바로 스카웃됐고요"
+    } ]
+  }, {
+    "tStartMs": 841650,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "여러분들도 저런 거 하나 개발하면"
+    } ]
+  }, {
+    "tStartMs": 843080,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "바로 스카웃이고요"
+    } ]
+  }, {
+    "tStartMs": 844540,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "오픈 AI는 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 845720,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "아까 전에 소개해드린 몰트북은"
+    } ]
+  }, {
+    "tStartMs": 847170,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "일시적인 유행일지 모르지만"
+    } ]
+  }, {
+    "tStartMs": 848690,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "오픈클로는 그렇지 않다"
+    } ]
+  }, {
+    "tStartMs": 849920,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "이건 꾸준히 갈 것 같으니까"
+    } ]
+  }, {
+    "tStartMs": 851240,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "나는 아까 말한 AI 에이전트들이"
+    } ]
+  }, {
+    "tStartMs": 853250,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "직접 실행하는 그런 미래를 보고 투자를 하겠다"
+    } ]
+  }, {
+    "tStartMs": 855800,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "이렇게 얘기를 했죠"
+    } ]
+  }, {
+    "tStartMs": 857060,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "메타도 오픈 AI도 움직이는 걸 볼 수 있는데"
+    } ]
+  }, {
+    "tStartMs": 859370,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "그러면 제가 지금까지 쭉 말씀을 드렸는데"
+    } ]
+  }, {
+    "tStartMs": 862140,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "아까 전에 머스크의 말만 들으면"
+    } ]
+  }, {
+    "tStartMs": 864300,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "이런 생각이 들죠"
+    } ]
+  }, {
+    "tStartMs": 865320,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "그러면 진짜 그렇게 되면"
+    } ]
+  }, {
+    "tStartMs": 866890,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "소프트웨어 기업들의 생존 가능성이 0%라며"
+    } ]
+  }, {
+    "tStartMs": 869810,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "머스크의 주장에 따르면"
+    } ]
+  }, {
+    "tStartMs": 871090,
+    "dDurationMs": 4490,
+    "segs": [ {
+      "utf8": "그러면 소프트웨어 기업들에 들어간 돈을 빼야 되나?"
+    } ]
+  }, {
+    "tStartMs": 875580,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "게다가 사는지 죽는지는 큰 관심이 아니고"
+    } ]
+  }, {
+    "tStartMs": 878220,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "그것보다 내 돈이 관심이잖아요"
+    } ]
+  }, {
+    "tStartMs": 880910,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "내 돈은 어떻게 되는 거야?"
+    } ]
+  }, {
+    "tStartMs": 882250,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "소프트웨어 기업들을"
+    } ]
+  }, {
+    "tStartMs": 883220,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "내가 주식으로 갖고 있으면 팔면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 885280,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "그래서 요즘에 소프트웨어 기업들의 주가가 많이 내려갔죠"
+    } ]
+  }, {
+    "tStartMs": 887730,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "팔면 돼"
+    } ]
+  }, {
+    "tStartMs": 888600,
+    "dDurationMs": 3750,
+    "segs": [ {
+      "utf8": "문제는 그렇게 쉽게 팔지 못하는 돈들이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 892350,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "그게 요즘에 많이 언급되는"
+    } ]
+  }, {
+    "tStartMs": 894660,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "소위 사모 신용"
+    } ]
+  }, {
+    "tStartMs": 896210,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "사모대출의 문제"
+    } ]
+  }, {
+    "tStartMs": 897250,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "이렇게 뉴스에 많이 보셨을 거예요"
+    } ]
+  }, {
+    "tStartMs": 898970,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "그건 무슨 소리냐?"
+    } ]
+  }, {
+    "tStartMs": 899650,
+    "dDurationMs": 4250,
+    "segs": [ {
+      "utf8": "그런 소프트웨어 기업들에게 사모펀드나 사모펀드죠"
+    } ]
+  }, {
+    "tStartMs": 903900,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "사모 신용을 통해서"
+    } ]
+  }, {
+    "tStartMs": 905360,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "기업들에게 돈을 빌려주거나"
+    } ]
+  }, {
+    "tStartMs": 907160,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "회사채를 인수한 경우들이 많습니다"
+    } ]
+  }, {
+    "tStartMs": 909730,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "예를 들면 어느 사모펀드를 이용을 해서"
+    } ]
+  }, {
+    "tStartMs": 912580,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "마이크로소프트 회사채를 살 수도 있고"
+    } ]
+  }, {
+    "tStartMs": 914820,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "다른 소프트웨어 기업들의 회사채를 살 수도 있고"
+    } ]
+  }, {
+    "tStartMs": 917560,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "3년, 5년, 10년"
+    } ]
+  }, {
+    "tStartMs": 919090,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "심지어 얼마 전에"
+    } ]
+  }, {
+    "tStartMs": 920070,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "99년짜리 구글인가 했었죠"
+    } ]
+  }, {
+    "tStartMs": 922700,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "그런 회사채를 인수한 경우가 있어요"
+    } ]
+  }, {
+    "tStartMs": 924470,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "그러면 머스크는 소프트웨어 기업들이 망한대매"
+    } ]
+  }, {
+    "tStartMs": 927320,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "생존 가능성이 0%래"
+    } ]
+  }, {
+    "tStartMs": 929110,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "그럼 내 돈은 어떻게 되지?"
+    } ]
+  }, {
+    "tStartMs": 930670,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "그럼 빼야 될 거 아니에요"
+    } ]
+  }, {
+    "tStartMs": 931850,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "근데 문제는 이런 대출은 만기가 깁니다"
+    } ]
+  }, {
+    "tStartMs": 934560,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "당연히 만기가 길겠죠"
+    } ]
+  }, {
+    "tStartMs": 936250,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "게다가 저 미국의 사모대출 시장은"
+    } ]
+  }, {
+    "tStartMs": 938320,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "최근에 급성장했다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 940130,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "1조 7천억 달러까지 가고 있어요"
+    } ]
+  }, {
+    "tStartMs": 943010,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "거의 뭐 수천조죠, 수천조"
+    } ]
+  }, {
+    "tStartMs": 944600,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "근데 이렇게 쭉 여기가 2018년이니까"
+    } ]
+  }, {
+    "tStartMs": 947010,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "2018년 대비 거의 2배 가까이 늘었는데"
+    } ]
+  }, {
+    "tStartMs": 949730,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "이제 불안감이 커지니까 안 되겠다"
+    } ]
+  }, {
+    "tStartMs": 951750,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "저 펀드에서 나는 돈을 뺄래 하는"
+    } ]
+  }, {
+    "tStartMs": 953970,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "환매가 증가한단 말입니다"
+    } ]
+  }, {
+    "tStartMs": 955870,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "환매가 가능하냐?"
+    } ]
+  }, {
+    "tStartMs": 957640,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "지금 현재 환매 요청이 블룸버그 같은 데 따르면"
+    } ]
+  }, {
+    "tStartMs": 960640,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "거의 8% 육박하고 있다"
+    } ]
+  }, {
+    "tStartMs": 962610,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "비상장 기준이긴 하지만"
+    } ]
+  }, {
+    "tStartMs": 964130,
+    "dDurationMs": 610,
+    "segs": [ {
+      "utf8": "7%, 8%"
+    } ]
+  }, {
+    "tStartMs": 964740,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "지금까지 말씀드렸지만"
+    } ]
+  }, {
+    "tStartMs": 966160,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "이들이 투자한 대부분이 회사채거나 대출입니다"
+    } ]
+  }, {
+    "tStartMs": 969260,
+    "dDurationMs": 2930,
+    "segs": [ {
+      "utf8": "주식과 다르게 채권은 유동성이 제한적이에요"
+    } ]
+  }, {
+    "tStartMs": 972190,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "누가 사줘야 되는데 안 사주죠"
+    } ]
+  }, {
+    "tStartMs": 973420,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "그럼 돈을 뺄 수 없어요"
+    } ]
+  }, {
+    "tStartMs": 975230,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "그렇게 해서 나오는 게 뭡니까?"
+    } ]
+  }, {
+    "tStartMs": 976160,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "여러분들 어디선가 들어보신"
+    } ]
+  }, {
+    "tStartMs": 977820,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "오늘 주제를 제가 갖고 오진 않는데"
+    } ]
+  }, {
+    "tStartMs": 979660,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "사모펀드의 위기"
+    } ]
+  }, {
+    "tStartMs": 981180,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "이런 말이 이제 그래서 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 983070,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "예를 들면 대체투자 자산 운용사 아실 필요 없어요"
+    } ]
+  }, {
+    "tStartMs": 985270,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "블루아울이라는 데가 있는데"
+    } ]
+  }, {
+    "tStartMs": 986520,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "일반 투자자들이 계속 환매를 요청하니까"
+    } ]
+  }, {
+    "tStartMs": 989320,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "내 돈 돌려줘"
+    } ]
+  }, {
+    "tStartMs": 990330,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "내 돈 돌려줘"
+    } ]
+  }, {
+    "tStartMs": 991030,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "현재 분기별 환매를 영구적으로 중단한다고 선언을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 994130,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "이것 때문에 굉장히 좀 시끄럽죠"
+    } ]
+  }, {
+    "tStartMs": 996700,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "그럼 제 생각에는"
+    } ]
+  }, {
+    "tStartMs": 997820,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "소프트웨어 기업들의 실적이"
+    } ]
+  }, {
+    "tStartMs": 999130,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "지금 급격하게 떨어지고 있는 건 아니기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1001930,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "그렇게까지 문제가 안 될 수 있다고 생각하는데"
+    } ]
+  }, {
+    "tStartMs": 1004380,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "미래에 대한 전망일 뿐이잖아요"
+    } ]
+  }, {
+    "tStartMs": 1006220,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "다만 공포라는 건 또 다른 문제니까"
+    } ]
+  }, {
+    "tStartMs": 1008440,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "그래서 이런 사모펀드들은"
+    } ]
+  }, {
+    "tStartMs": 1010300,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "기존에 갖고 있던 채권 매각을 당연히 시도하겠죠"
+    } ]
+  }, {
+    "tStartMs": 1013010,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "환매 요청이 있으니까"
+    } ]
+  }, {
+    "tStartMs": 1013900,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "우리 채권 사주세요"
+    } ]
+  }, {
+    "tStartMs": 1014610,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "그런데 잘 안 팔리죠"
+    } ]
+  }, {
+    "tStartMs": 1016530,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "이런 상황들을 알기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1017950,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "채권이라는 것도 3년 뒤, 5년 뒤, 10년 뒤 돈이 들어오니까"
+    } ]
+  }, {
+    "tStartMs": 1020820,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "이걸 누가 사줘야 되는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1022750,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "물론 방금 말씀드렸듯이"
+    } ]
+  }, {
+    "tStartMs": 1023980,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "이 소프트웨어 기업들의 실적이 나쁘지 않아요 좋아"
+    } ]
+  }, {
+    "tStartMs": 1026600,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "문제는 없어"
+    } ]
+  }, {
+    "tStartMs": 1027570,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "문제가 있을 거라고 얘기를 하니까 그렇지"
+    } ]
+  }, {
+    "tStartMs": 1029760,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "하지만 문제는 없는 경우들이 있죠"
+    } ]
+  }, {
+    "tStartMs": 1032060,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "그래서 본인들이 주장하는 건"
+    } ]
+  }, {
+    "tStartMs": 1033580,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "액면가치의 99.7%"
+    } ]
+  }, {
+    "tStartMs": 1035230,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "거의 원가에 팔고 있다"
+    } ]
+  }, {
+    "tStartMs": 1036770,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "큰 손실은 아니다"
+    } ]
+  }, {
+    "tStartMs": 1038180,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "라고 주장을 하는데"
+    } ]
+  }, {
+    "tStartMs": 1039790,
+    "dDurationMs": 3110,
+    "segs": [ {
+      "utf8": "채권쟁이 입장으로 물론 채권의 종류에 따라 다르지만"
+    } ]
+  }, {
+    "tStartMs": 1042900,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "액면가의 99.7%면"
+    } ]
+  }, {
+    "tStartMs": 1045510,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "이건 급처분인가요?"
+    } ]
+  }, {
+    "tStartMs": 1046720,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "죄송합니다x2"
+    } ]
+  }, {
+    "tStartMs": 1047460,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "무슨 채권인지 모르지만"
+    } ]
+  }, {
+    "tStartMs": 1048770,
+    "dDurationMs": 3230,
+    "segs": [ {
+      "utf8": "저 정도면은 아마 급처분이 아닐까 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1052000,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "그래서 오늘 내용을 갖고 오지 않았지만"
+    } ]
+  }, {
+    "tStartMs": 1054050,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "저게 지금 시장에 널리 퍼지고 있어서"
+    } ]
+  }, {
+    "tStartMs": 1056120,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "대규모 환매 요청이"
+    } ]
+  }, {
+    "tStartMs": 1057660,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "업계 전반으로 확산하면 어떻게 되냐"
+    } ]
+  }, {
+    "tStartMs": 1059760,
+    "dDurationMs": 4700,
+    "segs": [ {
+      "utf8": "블랙록이나 블랙스턴 같이 정말 말도 안 되는 규모의 자금을 갖고 있는 곳에서"
+    } ]
+  }, {
+    "tStartMs": 1064460,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "소프트웨어 기업 대출 같은 거"
+    } ]
+  }, {
+    "tStartMs": 1066080,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "아니면 그거 말고도 다른 기업들 대출이 있거든요"
+    } ]
+  }, {
+    "tStartMs": 1068520,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "그 대출을 만약에 그런 공포 때문에"
+    } ]
+  }, {
+    "tStartMs": 1071170,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "환매를 하면"
+    } ]
+  }, {
+    "tStartMs": 1071800,
+    "dDurationMs": 3430,
+    "segs": [ {
+      "utf8": "순식간에 펀드런이 발생하는 게 아니냐라는 걱정들이"
+    } ]
+  }, {
+    "tStartMs": 1075230,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "요즘 시장에 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1076400,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "그래서 아마 자세한 내용은 안 드리겠습니다"
+    } ]
+  }, {
+    "tStartMs": 1078720,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "사모펀드 기업들의 주가가 아래로 내려가고 있고"
+    } ]
+  }, {
+    "tStartMs": 1081610,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "나스닥이라든지"
+    } ]
+  }, {
+    "tStartMs": 1082480,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "미국 증시를 아래로 끌어내리는"
+    } ]
+  }, {
+    "tStartMs": 1084510,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "그런 역할을 하고 있다는 공포가"
+    } ]
+  }, {
+    "tStartMs": 1086030,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "스물스물 나오고 있다는 거고요"
+    } ]
+  }, {
+    "tStartMs": 1087880,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "잠깐 소개를 시켜드렸는데"
+    } ]
+  }, {
+    "tStartMs": 1089410,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "다시 돌아와서"
+    } ]
+  }, {
+    "tStartMs": 1090490,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "하지만 우리에게 더 관심 있는 건 이런 거죠"
+    } ]
+  }, {
+    "tStartMs": 1092990,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "새로운 AI 비서들이 일을 대신해 준다면"
+    } ]
+  }, {
+    "tStartMs": 1095570,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "그러면 나는 쉴 수 있겠구나"
+    } ]
+  }, {
+    "tStartMs": 1098290,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "AI로 생산성이 증가하면"
+    } ]
+  }, {
+    "tStartMs": 1100140,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "내 일은 줄어들 것인가"
+    } ]
+  }, {
+    "tStartMs": 1101890,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "이게 어떻게 보면 우리한테 더 큰 관심사입니다"
+    } ]
+  }, {
+    "tStartMs": 1104710,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "편집을 딸깍이 된다면"
+    } ]
+  }, {
+    "tStartMs": 1107420,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "슈카 친구들의 PD와 편집자들은"
+    } ]
+  }, {
+    "tStartMs": 1109550,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "하루에 2시간만 일해도 집에 갈 수 있는 거냐"
+    } ]
+  }, {
+    "tStartMs": 1112380,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "주에 40시간 뭐 하려고 이렇게 일해?"
+    } ]
+  }, {
+    "tStartMs": 1114310,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "딸깍으로 되는데"
+    } ]
+  }, {
+    "tStartMs": 1115460,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "주에 15시간만 일하고"
+    } ]
+  }, {
+    "tStartMs": 1116670,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "저는 퇴근하겠습니다 사장님"
+    } ]
+  }, {
+    "tStartMs": 1118150,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "이게 가능하냐 생산성이 늘어서"
+    } ]
+  }, {
+    "tStartMs": 1120280,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "어떻게 생각하십니까?"
+    } ]
+  }, {
+    "tStartMs": 1121780,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "소프트웨어 기업들을 대체할 수 있다며"
+    } ]
+  }, {
+    "tStartMs": 1123570,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "그럼 그 소프트웨어를 AI를 대신 돌려주면"
+    } ]
+  }, {
+    "tStartMs": 1126670,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "나는 놀아도 되겠네"
+    } ]
+  }, {
+    "tStartMs": 1127830,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "PPT도 쟤가 만들어주고"
+    } ]
+  }, {
+    "tStartMs": 1130070,
+    "dDurationMs": 3050,
+    "segs": [ {
+      "utf8": "그렇게 그런 생각을 가지고 계신 분이 있다면"
+    } ]
+  }, {
+    "tStartMs": 1133120,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "저는 꼭 응원 드리고 싶어요"
+    } ]
+  }, {
+    "tStartMs": 1135290,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "순수한 마음"
+    } ]
+  }, {
+    "tStartMs": 1136540,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "꾸준히 유지하시고"
+    } ]
+  }, {
+    "tStartMs": 1137870,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "아이와 같은 그 밝고 해맑은 미소"
+    } ]
+  }, {
+    "tStartMs": 1140130,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "같이 하면 얼마나 좋을까 생각이 듭니다"
+    } ]
+  }, {
+    "tStartMs": 1142270,
+    "dDurationMs": 3510,
+    "segs": [ {
+      "utf8": "하지만 현실은 보통 그렇지 않아요"
+    } ]
+  }, {
+    "tStartMs": 1145780,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "그렇지 않아요"
+    } ]
+  }, {
+    "tStartMs": 1147950,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "인공지능 덕분에 6시간 걸리던 작업이"
+    } ]
+  }, {
+    "tStartMs": 1150210,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "이제는 1시간도 걸리지 않는다"
+    } ]
+  }, {
+    "tStartMs": 1151630,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "2주가 걸리던 작업이 반나절이면 끝난다"
+    } ]
+  }, {
+    "tStartMs": 1154550,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "주에 15시간만 근무해도"
+    } ]
+  }, {
+    "tStartMs": 1156390,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "일을 다 할 수 있다"
+    } ]
+  }, {
+    "tStartMs": 1157340,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "그럼 나도 퇴근할 수 있냐"
+    } ]
+  }, {
+    "tStartMs": 1159390,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "제 주장이 아니라"
+    } ]
+  }, {
+    "tStartMs": 1160890,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "얼마 전에 그 포춘지에 나온 내용입니다"
+    } ]
+  }, {
+    "tStartMs": 1164190,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "안 된다는 건데요"
+    } ]
+  }, {
+    "tStartMs": 1165080,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "왜냐하면 일이 더 빨리 끝나면"
+    } ]
+  }, {
+    "tStartMs": 1167220,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "일이 더 늘어난다는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1169660,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "이 법칙은 제 생각에"
+    } ]
+  }, {
+    "tStartMs": 1171050,
+    "dDurationMs": 3700,
+    "segs": [ {
+      "utf8": "거의 만유인력법칙급의 법칙이라고 할 수 있어요"
+    } ]
+  }, {
+    "tStartMs": 1174750,
+    "dDurationMs": 4000,
+    "segs": [ {
+      "utf8": "일을 빨리 하면 일이 늘어나요 신기하죠?"
+    } ]
+  }, {
+    "tStartMs": 1178750,
+    "dDurationMs": 3910,
+    "segs": [ {
+      "utf8": "아마 거의 엔트로피에 가까운"
+    } ]
+  }, {
+    "tStartMs": 1182660,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "그 정도의 근본적인 법칙이 아닐까 생각이 되는데"
+    } ]
+  }, {
+    "tStartMs": 1185620,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "생산성이 늘어나"
+    } ]
+  }, {
+    "tStartMs": 1187180,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "와, 직원이 2시간만 일을 해도"
+    } ]
+  }, {
+    "tStartMs": 1188910,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "영상 하나를 편집을 딸깍으로 다 해내?"
+    } ]
+  }, {
+    "tStartMs": 1191410,
+    "dDurationMs": 3630,
+    "segs": [ {
+      "utf8": "그러면 하루에 4개씩 할 수 있겠네?"
+    } ]
+  }, {
+    "tStartMs": 1195040,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "그렇죠?"
+    } ]
+  }, {
+    "tStartMs": 1195810,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "원래 하루에 8시간 걸려서 영상 하나 편집했어요"
+    } ]
+  }, {
+    "tStartMs": 1198280,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "근데 얘가 2시간 만에 딸깍으로 해냈어"
+    } ]
+  }, {
+    "tStartMs": 1200660,
+    "dDurationMs": 3620,
+    "segs": [ {
+      "utf8": "야 그러면 네가 하루에 4개씩 하면 돼"
+    } ]
+  }, {
+    "tStartMs": 1204280,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "기가 막힌 아이디어구만 잘했어"
+    } ]
+  }, {
+    "tStartMs": 1206580,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "그럼 너 4개 하면 되겠네 4개"
+    } ]
+  }, {
+    "tStartMs": 1208040,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "그러면 8시간인 거죠"
+    } ]
+  }, {
+    "tStartMs": 1210020,
+    "dDurationMs": 3390,
+    "segs": [ {
+      "utf8": "이런 어른들의 법칙이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1213410,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "거의 F는 MA라고 보면 되는데"
+    } ]
+  }, {
+    "tStartMs": 1215990,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "이걸 한국식으로 표현하면 이렇게 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1218270,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "아 김대리 자네가 그걸 벌써 다 했어?"
+    } ]
+  }, {
+    "tStartMs": 1221010,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "아우 역시 자네구만"
+    } ]
+  }, {
+    "tStartMs": 1222500,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "자 그럼 이것도 해봐"
+    } ]
+  }, {
+    "tStartMs": 1224190,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "아유 좋아요 좋아요"
+    } ]
+  }, {
+    "tStartMs": 1225560,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "아니 아니 그렇다고 집에 갈 수 없잖아"
+    } ]
+  }, {
+    "tStartMs": 1227100,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "지금 해가 대낮처럼 떠 있는데"
+    } ]
+  }, {
+    "tStartMs": 1229200,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "집에 가서 뭐 할 거야"
+    } ]
+  }, {
+    "tStartMs": 1230570,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "아니 계약서에 8시간 적혀있잖아"
+    } ]
+  }, {
+    "tStartMs": 1232750,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "밥도 1시간 먹었네"
+    } ]
+  }, {
+    "tStartMs": 1233850,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "자 그러니까 괜찮아요"
+    } ]
+  }, {
+    "tStartMs": 1235530,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "4개가 너무 많으면"
+    } ]
+  }, {
+    "tStartMs": 1236790,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "한 3개 반만 해"
+    } ]
+  }, {
+    "tStartMs": 1237590,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "3개 반만 하고 가면 되지"
+    } ]
+  }, {
+    "tStartMs": 1239440,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "아니 자네가 뭐 2시간 하고 갈 거면"
+    } ]
+  }, {
+    "tStartMs": 1241620,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "내가 그거 왜 뽑았어"
+    } ]
+  }, {
+    "tStartMs": 1242600,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "아니 뭐 나도 가야 되나 그러면"
+    } ]
+  }, {
+    "tStartMs": 1244900,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "기업이 문 열고 2시간 하면"
+    } ]
+  }, {
+    "tStartMs": 1246370,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "그게 기업인가?"
+    } ]
+  }, {
+    "tStartMs": 1247210,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "그러니까 3개 반만 하자"
+    } ]
+  }, {
+    "tStartMs": 1249320,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "3개 반만 오케이 콜"
+    } ]
+  }, {
+    "tStartMs": 1250690,
+    "dDurationMs": 500,
+    "segs": [ {
+      "utf8": "역시 자네"
+    } ]
+  }, {
+    "tStartMs": 1251190,
+    "dDurationMs": 620,
+    "segs": [ {
+      "utf8": "역시 자네"
+    } ]
+  }, {
+    "tStartMs": 1251810,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "그 정도만 하면 되지 않을까 생각이 되고요"
+    } ]
+  }, {
+    "tStartMs": 1254530,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "옆에 있는 이대리가 딱 보니까"
+    } ]
+  }, {
+    "tStartMs": 1255880,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "김대리가 하루에 1개에 2시간 했다가"
+    } ]
+  }, {
+    "tStartMs": 1258390,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "일을 3개 반을 받았어요 3.5개"
+    } ]
+  }, {
+    "tStartMs": 1261270,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "이대리는 안 되겠다"
+    } ]
+  }, {
+    "tStartMs": 1263020,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "사장님 저는 느려가지고요"
+    } ]
+  }, {
+    "tStartMs": 1264030,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "저는 기존처럼 8시간 걸려서 하나 할래요"
+    } ]
+  }, {
+    "tStartMs": 1266760,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "라고 얘기를 하면"
+    } ]
+  }, {
+    "tStartMs": 1267600,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "이렇게 얘기를 하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1269310,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "아니 이대리는 그게 안 돼?"
+    } ]
+  }, {
+    "tStartMs": 1271610,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "김대리는 되는데?"
+    } ]
+  }, {
+    "tStartMs": 1273250,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "아니, 너는 왜 안 돼?"
+    } ]
+  }, {
+    "tStartMs": 1274860,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "야, 너도 해봐"
+    } ]
+  }, {
+    "tStartMs": 1276160,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "너 쟤랑 월급 같잖아"
+    } ]
+  }, {
+    "tStartMs": 1278050,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "너 모니터 거꾸로 보고 싶냐?"
+    } ]
+  }, {
+    "tStartMs": 1279420,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "아니, 쟤랑 같은데"
+    } ]
+  }, {
+    "tStartMs": 1281060,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "네가 안 될 게 뭐야"
+    } ]
+  }, {
+    "tStartMs": 1282560,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "그럼 나는 쟤를 뽑지"
+    } ]
+  }, {
+    "tStartMs": 1284150,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "너를 왜 뽑아?"
+    } ]
+  }, {
+    "tStartMs": 1285540,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "그러니까 너도 해야죠"
+    } ]
+  }, {
+    "tStartMs": 1286950,
+    "dDurationMs": 3210,
+    "segs": [ {
+      "utf8": "그래서 그 종사자들이 더 바빠지고"
+    } ]
+  }, {
+    "tStartMs": 1290160,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "더 부담이 커지고"
+    } ]
+  }, {
+    "tStartMs": 1291540,
+    "dDurationMs": 670,
+    "segs": [ {
+      "utf8": "옆에 있는 놈이"
+    } ]
+  }, {
+    "tStartMs": 1292210,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "두 시간에 하나 딸깍하게 되면"
+    } ]
+  }, {
+    "tStartMs": 1294230,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "나도 두 시간에 해야 되고"
+    } ]
+  }, {
+    "tStartMs": 1296250,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "새로운 거 배워야 되고"
+    } ]
+  }, {
+    "tStartMs": 1297300,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "아, 머리 아파"
+    } ]
+  }, {
+    "tStartMs": 1298270,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "기존에 그냥 하면 됐는데"
+    } ]
+  }, {
+    "tStartMs": 1299580,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "라는 스트레스가 늘어나면서"
+    } ]
+  }, {
+    "tStartMs": 1301200,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "완전한 휴식은 더 어려워졌더라"
+    } ]
+  }, {
+    "tStartMs": 1303890,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "가 이제 포춘의 결론이라고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1306810,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "아 물론 슈카 친구들은"
+    } ]
+  }, {
+    "tStartMs": 1307960,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "절대 이렇게 안 하는데"
+    } ]
+  }, {
+    "tStartMs": 1309300,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "저희 같으면 2시간 했으면 보내지"
+    } ]
+  }, {
+    "tStartMs": 1310900,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "야 집에 가"
+    } ]
+  }, {
+    "tStartMs": 1311810,
+    "dDurationMs": 340,
+    "segs": [ {
+      "utf8": "오케이 콜"
+    } ]
+  }, {
+    "tStartMs": 1312150,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "야 너 가라"
+    } ]
+  }, {
+    "tStartMs": 1313130,
+    "dDurationMs": 520,
+    "segs": [ {
+      "utf8": "쭉 가"
+    } ]
+  }, {
+    "tStartMs": 1313650,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "쭉 쉬어 쭉"
+    } ]
+  }, {
+    "tStartMs": 1314380,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "그래 한 일주일 쉬어 일주일 쉬어"
+    } ]
+  }, {
+    "tStartMs": 1315800,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "괜찮아x2"
+    } ]
+  }, {
+    "tStartMs": 1316600,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "뭐 이렇게 쭉 보낼 텐데"
+    } ]
+  }, {
+    "tStartMs": 1317850,
+    "dDurationMs": 780,
+    "segs": [ {
+      "utf8": "참 안타깝습니다"
+    } ]
+  }, {
+    "tStartMs": 1318630,
+    "dDurationMs": 2660,
+    "segs": [ {
+      "utf8": "미국이 참 사람 사는 맛이 없고"
+    } ]
+  }, {
+    "tStartMs": 1321290,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "인정이 없다"
+    } ]
+  }, {
+    "tStartMs": 1322630,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "그렇게 생각이 되고요"
+    } ]
+  }, {
+    "tStartMs": 1323450,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "아유 뭐 슈카 친구들 같으면 장난 아니죠"
+    } ]
+  }, {
+    "tStartMs": 1325450,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "바로바로 휴가 보내주고"
+    } ]
+  }, {
+    "tStartMs": 1326820,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "막 그냥 가"
+    } ]
+  }, {
+    "tStartMs": 1328460,
+    "dDurationMs": 590,
+    "segs": [ {
+      "utf8": "했으면 가"
+    } ]
+  }, {
+    "tStartMs": 1329050,
+    "dDurationMs": 360,
+    "segs": [ {
+      "utf8": "했으면 가!"
+    } ]
+  }, {
+    "tStartMs": 1329410,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "이렇게 됐는데"
+    } ]
+  }, {
+    "tStartMs": 1330580,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "참 안타깝게 그지없고요"
+    } ]
+  }, {
+    "tStartMs": 1331920,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "그래서 이 효과를 뭐라고 부르냐?"
+    } ]
+  }, {
+    "tStartMs": 1334320,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "포춘지는 이런 표현을 썼습니다"
+    } ]
+  }, {
+    "tStartMs": 1336180,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "꼭 뱀파이어 효과와 똑같다"
+    } ]
+  }, {
+    "tStartMs": 1338880,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "AI를 조기에 도입해서"
+    } ]
+  }, {
+    "tStartMs": 1340490,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "뭔가 생산성이 좋아지면 좋아질수록"
+    } ]
+  }, {
+    "tStartMs": 1343100,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "사람들은 마치 피가 빨리고"
+    } ]
+  }, {
+    "tStartMs": 1345750,
+    "dDurationMs": 4060,
+    "segs": [ {
+      "utf8": "에너지를 고갈시키는 듯한 뱀파이어 같은 느낌을 받는다"
+    } ]
+  }, {
+    "tStartMs": 1349810,
+    "dDurationMs": 3370,
+    "segs": [ {
+      "utf8": "김대리가 한 영상을 2시간 만에 편집했는데"
+    } ]
+  }, {
+    "tStartMs": 1353180,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "옆에서 보고 있던 박대리가"
+    } ]
+  }, {
+    "tStartMs": 1354690,
+    "dDurationMs": 3470,
+    "segs": [ {
+      "utf8": "한 영상을 1시간 반 만에 편집이 되면"
+    } ]
+  }, {
+    "tStartMs": 1358160,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "김대리는 머리에 불 붙은 거죠"
+    } ]
+  }, {
+    "tStartMs": 1361500,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "아니 박대리 너는 왜 1시간 반 만에 해?"
+    } ]
+  }, {
+    "tStartMs": 1364110,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "새로운 AI가 이번에 도입됐습니다"
+    } ]
+  }, {
+    "tStartMs": 1366070,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "새로운 거 한번 보시죠"
+    } ]
+  }, {
+    "tStartMs": 1367100,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "일주일에 한 번씩 업데이트 되잖아요"
+    } ]
+  }, {
+    "tStartMs": 1368690,
+    "dDurationMs": 3150,
+    "segs": [ {
+      "utf8": "그러면 업무 강도가 점점 올라가는"
+    } ]
+  }, {
+    "tStartMs": 1371840,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "그런 효과가 발생한다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1374240,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "결론적으로 장점은 있죠"
+    } ]
+  }, {
+    "tStartMs": 1376340,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "잡무는 줄어들었다"
+    } ]
+  }, {
+    "tStartMs": 1378520,
+    "dDurationMs": 3560,
+    "segs": [ {
+      "utf8": "대신에 의사결정을 내리고 뭐 이런 거는 더 늘었다"
+    } ]
+  }, {
+    "tStartMs": 1382080,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "AI brain fry"
+    } ]
+  }, {
+    "tStartMs": 1384350,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "우리나라말로 뭐라 그러지?"
+    } ]
+  }, {
+    "tStartMs": 1385730,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "AI 두뇌의 피로?"
+    } ]
+  }, {
+    "tStartMs": 1386910,
+    "dDurationMs": 2980,
+    "segs": [ {
+      "utf8": "두뇌가 더 피로한 일들이 많이 늘어난다는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1389890,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "포춘지는 이렇게 얘기를 했어요"
+    } ]
+  }, {
+    "tStartMs": 1391890,
+    "dDurationMs": 3160,
+    "segs": [ {
+      "utf8": "이메일이 생겼다고 편지 쓰는 업무가 줄어들지 않았다"
+    } ]
+  }, {
+    "tStartMs": 1395050,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "편지 양이 늘었지"
+    } ]
+  }, {
+    "tStartMs": 1396730,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "파워포인트가 등장했다고"
+    } ]
+  }, {
+    "tStartMs": 1398010,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "여러분들이 만든 리포트가 줄지 않았다"
+    } ]
+  }, {
+    "tStartMs": 1400240,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "리포트 양이 늘었지"
+    } ]
+  }, {
+    "tStartMs": 1401600,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "그런 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1403400,
+    "dDurationMs": 300,
+    "segs": [ {
+      "utf8": "그래요"
+    } ]
+  }, {
+    "tStartMs": 1403700,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "하지만 반대로 AI 에이전트를 쓰지 않으면"
+    } ]
+  }, {
+    "tStartMs": 1406230,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "여러분들 평가가 내려가는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1408440,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "쟤는 써서 2시간인데"
+    } ]
+  }, {
+    "tStartMs": 1409790,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "난 안 써서 8시간이면 나는 뒤처지잖아"
+    } ]
+  }, {
+    "tStartMs": 1411780,
+    "dDurationMs": 3840,
+    "segs": [ {
+      "utf8": "AI 에이전트를 안 쓸 수는 없고 더 많이 써야 되는데"
+    } ]
+  }, {
+    "tStartMs": 1415620,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "그러면 해내야 될 게 점점 늘어난다"
+    } ]
+  }, {
+    "tStartMs": 1417480,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "이런 말이 있지 않나 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1418890,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "그리고 자료 만드는 친구들이"
+    } ]
+  }, {
+    "tStartMs": 1421720,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "사진을 잘못 썼네요"
+    } ]
+  }, {
+    "tStartMs": 1422790,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "죄송합니다 바꾸도록 하겠습니다"
+    } ]
+  }, {
+    "tStartMs": 1424310,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "사장님들이 웃음꽃이 핀다"
+    } ]
+  }, {
+    "tStartMs": 1428380,
+    "dDurationMs": 3290,
+    "segs": [ {
+      "utf8": "저는 이제 직원들이 쉬어서 웃음꽃이 피는 거고"
+    } ]
+  }, {
+    "tStartMs": 1431670,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "직원들이 쉬어서"
+    } ]
+  }, {
+    "tStartMs": 1432840,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "2시간 하고 쉬면 얼마나 좋아요"
+    } ]
+  }, {
+    "tStartMs": 1434650,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "그렇죠?"
+    } ]
+  }, {
+    "tStartMs": 1435480,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "가족 같은 회사인데"
+    } ]
+  }, {
+    "tStartMs": 1436640,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "가족 같은 회사니까"
+    } ]
+  }, {
+    "tStartMs": 1437750,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "직원들이 쉬어서 웃음꽃이 피는데"
+    } ]
+  }, {
+    "tStartMs": 1439550,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "8시간 걸리는 업무가 2시간으로 줄고"
+    } ]
+  }, {
+    "tStartMs": 1441750,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "대신 20시간의 업무가 생겼습니다"
+    } ]
+  }, {
+    "tStartMs": 1443580,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "기가 막히네"
+    } ]
+  }, {
+    "tStartMs": 1445840,
+    "dDurationMs": 400,
+    "segs": [ {
+      "utf8": "죄송합니다"
+    } ]
+  }, {
+    "tStartMs": 1446240,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "갑자기 웃고 있지"
+    } ]
+  }, {
+    "tStartMs": 1447980,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "8시간 걸리는 업무가 2시간으로 줄었는데"
+    } ]
+  }, {
+    "tStartMs": 1450290,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "20시간 업무를 할 수 있다"
+    } ]
+  }, {
+    "tStartMs": 1451630,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "이건 엄청난 기회라는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1453840,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "장난 아니네"
+    } ]
+  }, {
+    "tStartMs": 1454530,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "여러분 기업하십시오"
+    } ]
+  }, {
+    "tStartMs": 1456040,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "기업 두 번 하십시오"
+    } ]
+  }, {
+    "tStartMs": 1457090,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "이렇게 되면 돈이 얼마가 벌리는 거야?"
+    } ]
+  }, {
+    "tStartMs": 1458840,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "그렇게 될 수 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1461160,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "내용은 다 끝났는데"
+    } ]
+  }, {
+    "tStartMs": 1462330,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "여기에 대해서 지난 1월에 젠슨 황이"
+    } ]
+  }, {
+    "tStartMs": 1465150,
+    "dDurationMs": 760,
+    "segs": [ {
+      "utf8": "또 대담을 한"
+    } ]
+  }, {
+    "tStartMs": 1465910,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "팟캐스트 나와서 대담을 한 내용을 잠깐만 소개시켜 드리겠습니다"
+    } ]
+  }, {
+    "tStartMs": 1468350,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "비슷한 내용이에요"
+    } ]
+  }, {
+    "tStartMs": 1469360,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "젠슨 황은 이런 질문을 받았어요"
+    } ]
+  }, {
+    "tStartMs": 1471730,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "만난 사람 중에 가장 똑똑한 사람이 누구냐?"
+    } ]
+  }, {
+    "tStartMs": 1474610,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "AI 잘 활용하고"
+    } ]
+  }, {
+    "tStartMs": 1475850,
+    "dDurationMs": 3190,
+    "segs": [ {
+      "utf8": "AI로 1시간 반, 1시간 만에 업무를 하는 사람이 똑똑한 거냐?"
+    } ]
+  }, {
+    "tStartMs": 1479040,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "AI를 만드는 사람이 똑똑한 거냐?"
+    } ]
+  }, {
+    "tStartMs": 1481290,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "이런 질문을 받았습니다"
+    } ]
+  }, {
+    "tStartMs": 1482560,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "젠슨 황이 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 1484080,
+    "dDurationMs": 3130,
+    "segs": [ {
+      "utf8": "유명한 창업자, 일론 머스크, 빌 게이츠 이런 사람 이름이나"
+    } ]
+  }, {
+    "tStartMs": 1487210,
+    "dDurationMs": 3170,
+    "segs": [ {
+      "utf8": "노벨상 수상자 그런 이름이 나올 줄 알았는데 아니었어요"
+    } ]
+  }, {
+    "tStartMs": 1490380,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1491720,
+    "dDurationMs": 3830,
+    "segs": [ {
+      "utf8": "똑똑하다는 건, 기술적인 문제를 해결하는 사람이지만"
+    } ]
+  }, {
+    "tStartMs": 1495550,
+    "dDurationMs": 3830,
+    "segs": [ {
+      "utf8": "저는 그런 능력은 흔한 것이라고 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 1499380,
+    "dDurationMs": 3230,
+    "segs": [ {
+      "utf8": "기술적인 문제를 해결하는 건 흔한 거다"
+    } ]
+  }, {
+    "tStartMs": 1502610,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "예를 들어서 많은 사람들이 예전에"
+    } ]
+  }, {
+    "tStartMs": 1504860,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "소프트웨어 프로그래밍 그 복잡한 걸 해내면"
+    } ]
+  }, {
+    "tStartMs": 1507460,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "똑똑하다고 얘기를 했어요"
+    } ]
+  }, {
+    "tStartMs": 1509800,
+    "dDurationMs": 3650,
+    "segs": [ {
+      "utf8": "근데 이제는 인공지능이 가장 먼저 해결하는 게 그런 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1513450,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "복잡성"
+    } ]
+  }, {
+    "tStartMs": 1514490,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "복잡한 수학 문제"
+    } ]
+  }, {
+    "tStartMs": 1515890,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "복잡한 프로그래밍"
+    } ]
+  }, {
+    "tStartMs": 1517080,
+    "dDurationMs": 3690,
+    "segs": [ {
+      "utf8": "뭔가 복잡한 거는 이제 똑똑한 게 아니에요"
+    } ]
+  }, {
+    "tStartMs": 1520770,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "그럼 뭐가 똑똑한 거냐?"
+    } ]
+  }, {
+    "tStartMs": 1523140,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "똑똑함이란"
+    } ]
+  }, {
+    "tStartMs": 1524170,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "요렇게 정의했습니다"
+    } ]
+  }, {
+    "tStartMs": 1525460,
+    "dDurationMs": 3760,
+    "segs": [ {
+      "utf8": "알 수 없는 것을 추론할 수 있는 사람이다"
+    } ]
+  }, {
+    "tStartMs": 1529220,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "인공지능이 못하는 것"
+    } ]
+  }, {
+    "tStartMs": 1532170,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "알 수 없는 것을 추론하는 능력"
+    } ]
+  }, {
+    "tStartMs": 1534800,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "뭐라고 표현했냐면 요렇게 표현했습니다"
+    } ]
+  }, {
+    "tStartMs": 1536740,
+    "dDurationMs": 3450,
+    "segs": [ {
+      "utf8": "저 코너 스톤, 꺾어져 있는 우리가 이 길에 있는데"
+    } ]
+  }, {
+    "tStartMs": 1540190,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "우리가 여기 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1541160,
+    "dDurationMs": 2940,
+    "segs": [ {
+      "utf8": "그러면 여기에 뭐가 있는지"
+    } ]
+  }, {
+    "tStartMs": 1544100,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "추론할 수 있는 사람"
+    } ]
+  }, {
+    "tStartMs": 1545660,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "야, 이게 뭐야 하여튼 그렇습니다"
+    } ]
+  }, {
+    "tStartMs": 1548130,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "사람들은 여기를 봐"
+    } ]
+  }, {
+    "tStartMs": 1549870,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "길이 굉장히 복잡해"
+    } ]
+  }, {
+    "tStartMs": 1551060,
+    "dDurationMs": 3440,
+    "segs": [ {
+      "utf8": "그래서 여기 있는 게 뭔지 보는 사람이 옛날에 똑똑했는데"
+    } ]
+  }, {
+    "tStartMs": 1554500,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "이제는 AI가 이 길을 이 복잡한 걸 뚫고"
+    } ]
+  }, {
+    "tStartMs": 1556880,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "한 방에 알아요"
+    } ]
+  }, {
+    "tStartMs": 1558020,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "그러면은 똑똑한 사람은"
+    } ]
+  }, {
+    "tStartMs": 1559770,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "여기에는 뭐가 있냐"
+    } ]
+  }, {
+    "tStartMs": 1561810,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "꺾어져 있는데"
+    } ]
+  }, {
+    "tStartMs": 1562900,
+    "dDurationMs": 4520,
+    "segs": [ {
+      "utf8": "이거를 알 수 있다라기 보단 내다볼 수 있는 사람"
+    } ]
+  }, {
+    "tStartMs": 1567420,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "그래서 요즘에 타로 점치는 분들이 그렇게 늘었나?"
+    } ]
+  }, {
+    "tStartMs": 1570110,
+    "dDurationMs": 3810,
+    "segs": [ {
+      "utf8": "이렇게 꺾어져서 볼 수 있는 사람들이 정말 똑똑하고"
+    } ]
+  }, {
+    "tStartMs": 1573920,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "그들의 가치는 엄청나다고 할 수 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1576260,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "상상력이라고 하면 상상력인데"
+    } ]
+  }, {
+    "tStartMs": 1578850,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "이런 얘기를 하나 했고요"
+    } ]
+  }, {
+    "tStartMs": 1580510,
+    "dDurationMs": 3540,
+    "segs": [ {
+      "utf8": "2024년에 피터 틸도 비슷한 내용을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1584050,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "한 2년 전이긴 한데"
+    } ]
+  }, {
+    "tStartMs": 1585340,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "피터 틸은 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 1587120,
+    "dDurationMs": 5230,
+    "segs": [ {
+      "utf8": "수학을 전공한 사람들이 언어 전공자들보다 훨씬 더 상황이 안 좋은 것 같다"
+    } ]
+  }, {
+    "tStartMs": 1592350,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "너희들 큰일 났어"
+    } ]
+  }, {
+    "tStartMs": 1593340,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "왜요?"
+    } ]
+  }, {
+    "tStartMs": 1594060,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "수학은 이제 진입 장벽이 아니야"
+    } ]
+  }, {
+    "tStartMs": 1596290,
+    "dDurationMs": 3610,
+    "segs": [ {
+      "utf8": "AI가 더 잘해 잠깐만 뭐라고?"
+    } ]
+  }, {
+    "tStartMs": 1599900,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "그러면 언어 전공자들은"
+    } ]
+  }, {
+    "tStartMs": 1601760,
+    "dDurationMs": 2940,
+    "segs": [ {
+      "utf8": "언어는 없는 거에서 뭔가 창작하잖아"
+    } ]
+  }, {
+    "tStartMs": 1604700,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "이렇게 있는 코너"
+    } ]
+  }, {
+    "tStartMs": 1605990,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "여기 있는 걸 수도 있죠"
+    } ]
+  }, {
+    "tStartMs": 1607150,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "수학은 앞에 있는 거니까"
+    } ]
+  }, {
+    "tStartMs": 1608930,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "AI가 풀 텐데 언어는 아니야"
+    } ]
+  }, {
+    "tStartMs": 1611420,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "그래서 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1613350,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "만약에 시간을 돌려서"
+    } ]
+  }, {
+    "tStartMs": 1614500,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "우리가 2000년대 초반에 있다면"
+    } ]
+  }, {
+    "tStartMs": 1616310,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "수학 전공자들이 굉장히 유리했어"
+    } ]
+  }, {
+    "tStartMs": 1618280,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "복잡한 걸 풀어내고"
+    } ]
+  }, {
+    "tStartMs": 1619590,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "실리콘밸리에서 그런 사람들이 많이 필요했으니까"
+    } ]
+  }, {
+    "tStartMs": 1621980,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "하지만 이제는 컴퓨터의 등장 이후로"
+    } ]
+  }, {
+    "tStartMs": 1624260,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "이제는 그런 생각들이 무너졌다"
+    } ]
+  }, {
+    "tStartMs": 1626270,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "수학도 무너질 거죠"
+    } ]
+  }, {
+    "tStartMs": 1628180,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "그래서 이제는 무슨 시대다?"
+    } ]
+  }, {
+    "tStartMs": 1629910,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "이과라 죄송합니다"
+    } ]
+  }, {
+    "tStartMs": 1631160,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "제가 한 말이 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 1632130,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "피터 틸께서 ㅎㅎ"
+    } ]
+  }, {
+    "tStartMs": 1633310,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "이송합니다를 외쳤고요"
+    } ]
+  }, {
+    "tStartMs": 1635510,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "그러면 이 언어가 유리하다"
+    } ]
+  }, {
+    "tStartMs": 1637360,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "아까 얘기했죠"
+    } ]
+  }, {
+    "tStartMs": 1638070,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "언어 전공자들이 훨씬 더 상황이 좋다"
+    } ]
+  }, {
+    "tStartMs": 1640660,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "자 그 말인 즉슨"
+    } ]
+  }, {
+    "tStartMs": 1641980,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "이거는 이제 우리 직원이"
+    } ]
+  }, {
+    "tStartMs": 1644000,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "자기를 어필하기 위해서"
+    } ]
+  }, {
+    "tStartMs": 1645730,
+    "dDurationMs": 2910,
+    "segs": [ {
+      "utf8": "슈카 친구들은 참고로 직원 전원 문과입니다"
+    } ]
+  }, {
+    "tStartMs": 1649750,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "상상력이 가득한 언어 능력이 가득하고"
+    } ]
+  }, {
+    "tStartMs": 1652850,
+    "dDurationMs": 3980,
+    "segs": [ {
+      "utf8": "코너 스톤에 꺾여있는 별을 볼 수 있는 본인들의 시대가 왔다"
+    } ]
+  }, {
+    "tStartMs": 1657820,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "라고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1658810,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "그래서 문송의 시대가 가고"
+    } ]
+  }, {
+    "tStartMs": 1660670,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "이송의 시대가 왔다"
+    } ]
+  }, {
+    "tStartMs": 1663260,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "근데 어쩌다 직원 전원이 문과가 됐지?"
+    } ]
+  }, {
+    "tStartMs": 1665360,
+    "dDurationMs": 610,
+    "segs": [ {
+      "utf8": "저도 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 1665970,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "하여튼 그렇다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1667370,
+    "dDurationMs": 3450,
+    "segs": [ {
+      "utf8": "여러분들도 문과분들 너무 걱정하지 마시고"
+    } ]
+  }, {
+    "tStartMs": 1670820,
+    "dDurationMs": 3770,
+    "segs": [ {
+      "utf8": "상상력이 가득한 여러분들의 시대가 오지 않을까 생각을 합니다"
+    } ]
+  } ]
+}
