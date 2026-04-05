@@ -27,7 +27,7 @@ Role:
 - define current canonical stage paths
 - define what remains legacy, mirror, scaffold, or deferred
 - define how a reader should traverse the material-side order without mixing family routing and system routing
-- show which bootstrap works are already connected end-to-end
+- show which representative works are already connected end-to-end
 - show which gaps remain before a later cutover wave
 
-This directory should remain documentation-first during the bootstrap phase.
+This directory should remain documentation-first during the current bounded slice.

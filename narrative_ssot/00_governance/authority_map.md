@@ -1,7 +1,7 @@
 # Authority Map
 
-Status: scaffold draft
-Date: 2026-03-31
+Status: active scaffold map
+Date: 2026-04-05
 
 ## Current Authority
 
@@ -36,3 +36,6 @@ cutover 이후 목표 canonical 후보:
 - pilot 작품만 `narrative_ssot/50_projects/{work_id}/`를 우선 실험할 수 있다.
 - `narrative_ssot/10_reference_bank/reference_card_manifest.json`와
   `narrative_ssot/10_reference_bank/cards/`는 mirror copy다.
+- `narrative_ssot/10_reference_bank/selection/`은 shared sink가 아니라 pointer note다.
+- `narrative_ssot/10_reference_bank/idea_engine_db/`는 draft archive residue다.
+- old reference-bank `source_corpora` root는 transition residue다.

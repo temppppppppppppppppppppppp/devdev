@@ -1,6 +1,6 @@
 # Canon
 
-This directory now stores bootstrap work-level pitch anchor notes.
+This directory now stores representative work-level pitch anchor notes.
 
 Rules:
 

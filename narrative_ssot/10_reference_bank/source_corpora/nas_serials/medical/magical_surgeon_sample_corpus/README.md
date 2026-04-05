@@ -1,5 +1,10 @@
 # 매지컬 써전(강산) Sample Corpus
 
+Transition note:
+- canonical root now lives at `material_ssot/10_research/50_corpus_curated/reference_samples/medical_magical_surgeon_sample_corpus`
+- this `narrative_ssot` path is kept only as transition residue during the bounded cutover
+- rerun or refresh the corpus from the `material_ssot` root, not from here
+
 - built_at: 2026-04-02T00:02:47.126439+00:00
 - source_title_dir: `\\172.16.10.120\소설사업부\판무팀_ssot\02_연재\매지컬 써전(강산)`
 - ssot_dir: `\\172.16.10.120\소설사업부\판무팀_ssot\02_연재\매지컬 써전(강산)\1_원고`
@@ -11,7 +16,7 @@
 
 ## Bibliography
 
-- author: 강산(江山)
+- author: 강산(江山) <!-- utf8-hygiene: allow-line rationale: legitimate mixed-script pen name in archival bibliography. -->
 - isbn: 979-11-369-0835-3/9791136908353/
 - total_episodes: 452
 - free_episodes: 25화(1권)

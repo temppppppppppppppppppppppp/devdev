@@ -65,12 +65,12 @@ Each registry entry must state:
 - `genre_family`: `wuxia`
 - `lane_phase`: `pilot_active`
 - `current_tranche_id`: `wuxia__t1__2026-03-20`
-- `current_manifest_path`: `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json`
-- `canonical_genre_root`: `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\genre_notes\wuxia`
-- `canonical_scene_root`: `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia`
-- `sample_root`: `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\samples\golden\wuxia`
-- `source_corpus_root`: `C:\Users\wjjo\Desktop\글도비\docs\실물기반 사각지대 테스트\원고`
-- `work_specific_handoff_target`: `C:\Users\wjjo\Desktop\글도비\treatments\preprocess\{work_id}`
+- `current_manifest_path`: `전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json`
+- `canonical_genre_root`: `전처리_ssot\docs\20_db_and_materials\materials\genre_notes\wuxia`
+- `canonical_scene_root`: `전처리_ssot\docs\20_db_and_materials\materials\scene_bank\wuxia`
+- `sample_root`: `전처리_ssot\docs\20_db_and_materials\samples\golden\wuxia`
+- `source_corpus_root`: `docs\실물기반 사각지대 테스트\원고`
+- `work_specific_handoff_target`: `treatments\preprocess\{work_id}`
 - `active_title_count`: `3`
 - `reserve_title_count`: `1`
 - `next_gate`: first title tranche must finish segmentation shard 1, segmentation shard 2, tranche merge, pass1, pass2, pass3, and adversarial review before title two starts
@@ -83,11 +83,11 @@ Each registry entry must state:
 - `lane_phase`: `queued_pending_manifest`
 - `current_tranche_id`: none
 - `current_manifest_path`: none
-- `canonical_genre_root`: `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\genre_notes\modern_fantasy_business_power`
-- `canonical_scene_root`: `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\materials\scene_bank\modern_fantasy_business_power`
-- `sample_root`: `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\20_db_and_materials\samples\golden\modern_fantasy_business_power`
+- `canonical_genre_root`: `전처리_ssot\docs\20_db_and_materials\materials\genre_notes\modern_fantasy_business_power`
+- `canonical_scene_root`: `전처리_ssot\docs\20_db_and_materials\materials\scene_bank\modern_fantasy_business_power`
+- `sample_root`: `전처리_ssot\docs\20_db_and_materials\samples\golden\modern_fantasy_business_power`
 - `source_corpus_root`: pending corpus validation
-- `work_specific_handoff_target`: `C:\Users\wjjo\Desktop\글도비\treatments\preprocess\{work_id}`
+- `work_specific_handoff_target`: `treatments\preprocess\{work_id}`
 - `active_title_count`: `0`
 - `reserve_title_count`: `0`
 - `next_gate`: verify available real-manuscript corpus, write tranche manifest, then start the first `10 + 10` episode pilot title

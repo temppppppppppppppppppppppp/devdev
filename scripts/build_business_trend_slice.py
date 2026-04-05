@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Build a business-only trend slice from the broader KR serial platform corpus.
 
 Collection / formatting only:
@@ -11,6 +10,7 @@ LLM-side work happens later:
 - turning the slice into source manifests or concept engines
 - judging idea quality, novelty, or market fit
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,16 +18,16 @@ import json
 import re
 import sqlite3
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 from typing import Any
-
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT_DB = (
     ROOT
-    / "narrative_ssot"
-    / "10_reference_bank"
+    / "material_ssot"
+    / "10_research"
+    / "40_analysis"
     / "source_corpora"
     / "platform_trends"
     / "kr_serial_platforms"
@@ -35,8 +35,9 @@ DEFAULT_INPUT_DB = (
 )
 DEFAULT_OUTPUT_ROOT = (
     ROOT
-    / "narrative_ssot"
-    / "10_reference_bank"
+    / "material_ssot"
+    / "10_research"
+    / "40_analysis"
     / "source_corpora"
     / "platform_trends"
     / "kr_serial_platforms"
@@ -350,7 +351,9 @@ def _score_row(row: sqlite3.Row) -> dict[str, Any]:
     creator = row["creator"] or ""
     title_norm = _normalize_text(title)
     intro_norm = _normalize_text(intro)
-    meta_norm = _normalize_text(" ".join([title, row["title_raw"] or "", intro, genre, subcategory, creator, " ".join(badges)]))
+    meta_norm = _normalize_text(
+        " ".join([title, row["title_raw"] or "", intro, genre, subcategory, creator, " ".join(badges)])
+    )
     genre_norm = _normalize_text(f"{genre} {subcategory}")
 
     positive_matches: dict[str, list[str]] = {}
@@ -384,8 +387,7 @@ def _score_row(row: sqlite3.Row) -> dict[str, Any]:
         positive_score += len(title_direct_hits) * 4
 
     title_bucket_hits = {
-        bucket: _collect_matches(title_norm, config["keywords"])
-        for bucket, config in POSITIVE_BUCKETS.items()
+        bucket: _collect_matches(title_norm, config["keywords"]) for bucket, config in POSITIVE_BUCKETS.items()
     }
     title_bucket_hits = {bucket: hits for bucket, hits in title_bucket_hits.items() if hits}
     title_positive_bucket_count = sum(
@@ -394,9 +396,7 @@ def _score_row(row: sqlite3.Row) -> dict[str, Any]:
         if title_bucket_hits.get(bucket)
     )
     if title_bucket_hits:
-        positive_matches["title_bucket_hits"] = {
-            bucket: hits for bucket, hits in title_bucket_hits.items()
-        }
+        positive_matches["title_bucket_hits"] = {bucket: hits for bucket, hits in title_bucket_hits.items()}
 
     adjacent_hits = sorted({keyword for keyword in ADJACENT_INCLUDE_KEYWORDS if keyword in meta_norm})
     if adjacent_hits:
@@ -429,17 +429,9 @@ def _score_row(row: sqlite3.Row) -> dict[str, Any]:
             and (core_bucket_hits >= 1 or len(title_direct_hits) >= 1)
             and not is_romance_dominant
             and not is_fantasy_dominant
-            and (
-                not lacks_title_business_signal
-                or "현대판타지" in genre_norm
-                or "현판" in genre_norm
-            )
+            and (not lacks_title_business_signal or "현대판타지" in genre_norm or "현판" in genre_norm)
         )
-        or (
-            len(title_direct_hits) >= 2
-            and relevance_score >= 4
-            and not is_romance_dominant
-        )
+        or (len(title_direct_hits) >= 2 and relevance_score >= 4 and not is_romance_dominant)
     )
 
     if "romance_noise" in negative_matches and "현대판타지" not in genre_norm and "현판" not in genre_norm:
@@ -449,7 +441,14 @@ def _score_row(row: sqlite3.Row) -> dict[str, Any]:
 
     business_buckets = sorted(
         bucket
-        for bucket in ("chaebol_power", "office_operator", "money_game", "industry_scale", "media_ip_business", "global_scale")
+        for bucket in (
+            "chaebol_power",
+            "office_operator",
+            "money_game",
+            "industry_scale",
+            "media_ip_business",
+            "global_scale",
+        )
         if positive_matches.get(bucket)
     )
     if not business_buckets and positive_matches.get("adjacent_operator"):
@@ -618,11 +617,7 @@ def _build_rollup(entries: list[dict[str, Any]], works: list[dict[str, Any]]) ->
     def _bucket_view(counter: Counter[tuple[str, str]]) -> dict[str, list[dict[str, Any]]]:
         by_platform: dict[str, list[dict[str, Any]]] = {}
         for platform in sorted({platform for platform, _ in counter.keys()}):
-            rows = [
-                {"bucket": bucket, "count": count}
-                for (plat, bucket), count in counter.items()
-                if plat == platform
-            ]
+            rows = [{"bucket": bucket, "count": count} for (plat, bucket), count in counter.items() if plat == platform]
             rows.sort(key=lambda item: (-item["count"], item["bucket"]))
             by_platform[platform] = rows
         return by_platform
@@ -648,12 +643,10 @@ def _build_rollup(entries: list[dict[str, Any]], works: list[dict[str, Any]]) ->
         "entry_bucket_counts": _bucket_view(bucket_entry_counts),
         "work_bucket_counts": _bucket_view(bucket_work_counts),
         "top_positive_keywords": [
-            {"keyword": keyword, "count": count}
-            for keyword, count in keyword_counts.most_common(80)
+            {"keyword": keyword, "count": count} for keyword, count in keyword_counts.most_common(80)
         ],
         "top_title_direct_keywords": [
-            {"keyword": keyword, "count": count}
-            for keyword, count in direct_keyword_counts.most_common(40)
+            {"keyword": keyword, "count": count} for keyword, count in direct_keyword_counts.most_common(40)
         ],
         "top_works_by_surface_coverage": top_works,
     }

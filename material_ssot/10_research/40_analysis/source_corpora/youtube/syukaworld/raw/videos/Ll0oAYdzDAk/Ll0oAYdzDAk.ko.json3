@@ -1,0 +1,5527 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 7710,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "자, 오늘의 메인 주제 첫 번째"
+    } ]
+  }, {
+    "tStartMs": 9540,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "BTS의 귀환입니다"
+    } ]
+  }, {
+    "tStartMs": 11170,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "(박수)"
+    } ]
+  }, {
+    "tStartMs": 14310,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "방탄소년단이 돌아왔다"
+    } ]
+  }, {
+    "tStartMs": 16290,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "자 BTS의 귀환"
+    } ]
+  }, {
+    "tStartMs": 17910,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "온 나라가 떠들썩한"
+    } ]
+  }, {
+    "tStartMs": 19310,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "이 정도 한 그룹이 컴백한 걸로"
+    } ]
+  }, {
+    "tStartMs": 22270,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "이 정도 떠들썩한 거는"
+    } ]
+  }, {
+    "tStartMs": 23730,
+    "dDurationMs": 3560,
+    "segs": [ {
+      "utf8": "제 개인적으로 서태지 이후에 최고가 아닐까?"
+    } ]
+  }, {
+    "tStartMs": 27290,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "옛날 서태지 시절은"
+    } ]
+  }, {
+    "tStartMs": 29090,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "서태지와 아이들이"
+    } ]
+  }, {
+    "tStartMs": 31080,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "하여가가 2집 앨범인가?"
+    } ]
+  }, {
+    "tStartMs": 32950,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "그런 거 낼 때 난리였어요"
+    } ]
+  }, {
+    "tStartMs": 34400,
+    "dDurationMs": 490,
+    "segs": [ {
+      "utf8": "난리였어"
+    } ]
+  }, {
+    "tStartMs": 34890,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "제가 아직도 기억이 나는데"
+    } ]
+  }, {
+    "tStartMs": 36210,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "2집, 3집 낼 때"
+    } ]
+  }, {
+    "tStartMs": 37180,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "아주 그냥 온 나라가 들썩들썩했거든?"
+    } ]
+  }, {
+    "tStartMs": 39790,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "9시 뉴스에도 막 대대적으로 나오고 그랬는데"
+    } ]
+  }, {
+    "tStartMs": 41720,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "그 이후로"
+    } ]
+  }, {
+    "tStartMs": 42910,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "최고 수준의 컴백이 아닐까라고"
+    } ]
+  }, {
+    "tStartMs": 45620,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "개인적으로는 진짜 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 47050,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "이 정도로 이슈가 되는"
+    } ]
+  }, {
+    "tStartMs": 48850,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "그룹의 귀환은 그때 이후로"
+    } ]
+  }, {
+    "tStartMs": 50260,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "처음이지 않나 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 51620,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "여러분들 모두 아시겠지만"
+    } ]
+  }, {
+    "tStartMs": 52860,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "지난 21일"
+    } ]
+  }, {
+    "tStartMs": 53820,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "광화문에서 드디어"
+    } ]
+  }, {
+    "tStartMs": 54850,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "BTS 컴백 콘서트가 열렸습니다"
+    } ]
+  }, {
+    "tStartMs": 57340,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "BTS가 이번 주 토요일"
+    } ]
+  }, {
+    "tStartMs": 58200,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "3월 21일 서울 광화문 광장에서"
+    } ]
+  }, {
+    "tStartMs": 59770,
+    "dDurationMs": 3460,
+    "segs": [ {
+      "utf8": "글로벌 라이브 스트리밍으로 무대에 복귀합니다"
+    } ]
+  }, {
+    "tStartMs": 63230,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "이것 때문에 일단 금요일부터"
+    } ]
+  }, {
+    "tStartMs": 65380,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "광화문 일대에는 통제가 시작되었다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 68110,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "제가 아는 분이 아무 생각 없이"
+    } ]
+  }, {
+    "tStartMs": 70720,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "모르셨대"
+    } ]
+  }, {
+    "tStartMs": 71790,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "이걸 모르시고 저기에 갔다가"
+    } ]
+  }, {
+    "tStartMs": 73980,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "어? 뭐지?"
+    } ]
+  }, {
+    "tStartMs": 75110,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "왜 이렇게 경찰이 많지?"
+    } ]
+  }, {
+    "tStartMs": 76710,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "시위하나?"
+    } ]
+  }, {
+    "tStartMs": 77420,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "이런 생각을 했대요, 시위하나?"
+    } ]
+  }, {
+    "tStartMs": 78970,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "시위가 아니라"
+    } ]
+  }, {
+    "tStartMs": 80100,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "도로 통제가 있었고요"
+    } ]
+  }, {
+    "tStartMs": 81610,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "안전관리를 위해서"
+    } ]
+  }, {
+    "tStartMs": 82920,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "당일에는 안전 인력만 8200명"
+    } ]
+  }, {
+    "tStartMs": 85700,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "소방당국 3,400명"
+    } ]
+  }, {
+    "tStartMs": 87390,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "소방차 102대"
+    } ]
+  }, {
+    "tStartMs": 88760,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "총 1만 5천 명이 투입된다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 92260,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "왜냐하면 2002년 월드컵 당시"
+    } ]
+  }, {
+    "tStartMs": 95210,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "우리가 광화문에 모였던 인파가"
+    } ]
+  }, {
+    "tStartMs": 97520,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "25만입니다"
+    } ]
+  }, {
+    "tStartMs": 99180,
+    "dDurationMs": 3960,
+    "segs": [ {
+      "utf8": "이때는 인생에 다시 없는 순간이 아닐까 생각되는데"
+    } ]
+  }, {
+    "tStartMs": 103140,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "저도 봤죠"
+    } ]
+  }, {
+    "tStartMs": 103910,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "저는 광화문에 못 가고"
+    } ]
+  }, {
+    "tStartMs": 105560,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "녹두거리에서 보고 있었는데"
+    } ]
+  }, {
+    "tStartMs": 107330,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "제가 들었던 일화 중에서"
+    } ]
+  }, {
+    "tStartMs": 109090,
+    "dDurationMs": 3310,
+    "segs": [ {
+      "utf8": "그때도 여기서 결혼식을 했다는 분이 있었대요"
+    } ]
+  }, {
+    "tStartMs": 112400,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "뉴스만 기억이 나"
+    } ]
+  }, {
+    "tStartMs": 113600,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "결혼식을 했는데"
+    } ]
+  }, {
+    "tStartMs": 114490,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "끝나고 나올 수 없었다"
+    } ]
+  }, {
+    "tStartMs": 116440,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "나올 수 없었다라는"
+    } ]
+  }, {
+    "tStartMs": 117770,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "그런 전설적인 얘기가"
+    } ]
+  }, {
+    "tStartMs": 119440,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "나오던 시절입니다"
+    } ]
+  }, {
+    "tStartMs": 120850,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "또 많은 분들이 궁금해했죠"
+    } ]
+  }, {
+    "tStartMs": 122380,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "이 가운데 있는 분은"
+    } ]
+  }, {
+    "tStartMs": 123720,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "화장실이 급하면 어떻게 되는 걸까?"
+    } ]
+  }, {
+    "tStartMs": 126330,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "라는 놀라운 궁금증"
+    } ]
+  }, {
+    "tStartMs": 128070,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "저도 그 문제에 대한 답은"
+    } ]
+  }, {
+    "tStartMs": 129260,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "아직 찾지 못했습니다"
+    } ]
+  }, {
+    "tStartMs": 130460,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "이... 여기 있는데"
+    } ]
+  }, {
+    "tStartMs": 131710,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "화장실이 급하면 어디로 가야 되며"
+    } ]
+  }, {
+    "tStartMs": 134190,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "이 근처 어떤 건물이고"
+    } ]
+  }, {
+    "tStartMs": 136100,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "화장실을 열었을까?"
+    } ]
+  }, {
+    "tStartMs": 137420,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "이런 인파인데? 라는 걱정이 들던 시기죠"
+    } ]
+  }, {
+    "tStartMs": 140140,
+    "dDurationMs": 2420,
+    "segs": [ {
+      "utf8": "그때가 25만이라고 했는데"
+    } ]
+  }, {
+    "tStartMs": 142560,
+    "dDurationMs": 2970,
+    "segs": [ {
+      "utf8": "경찰은 이번 BTS 컴백 무대를 앞두고"
+    } ]
+  }, {
+    "tStartMs": 145530,
+    "dDurationMs": 3280,
+    "segs": [ {
+      "utf8": "최대 26만이라는 얘기를 했었어요"
+    } ]
+  }, {
+    "tStartMs": 148810,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "그러면 월드컵 공연보다"
+    } ]
+  }, {
+    "tStartMs": 151580,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "더 많은 인파가 몰릴 수 있으니까"
+    } ]
+  }, {
+    "tStartMs": 153720,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "이거 잘못하면 사고지 않습니까?"
+    } ]
+  }, {
+    "tStartMs": 155270,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "정말 긴장감마저"
+    } ]
+  }, {
+    "tStartMs": 156610,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "광화문 거리에 쫙 돌아왔다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 159300,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "이것 때문에"
+    } ]
+  }, {
+    "tStartMs": 160360,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "문화체육관광부는"
+    } ]
+  }, {
+    "tStartMs": 161600,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "공연장을 대상으로"
+    } ]
+  }, {
+    "tStartMs": 162840,
+    "dDurationMs": 3050,
+    "segs": [ {
+      "utf8": "처음으로 재난위기경보를 발령했어요"
+    } ]
+  }, {
+    "tStartMs": 165890,
+    "dDurationMs": 3040,
+    "segs": [ {
+      "utf8": "재난위기경보주의단계를 발령한 거죠"
+    } ]
+  }, {
+    "tStartMs": 168930,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "굉장히 많은 사람이 몰리면"
+    } ]
+  }, {
+    "tStartMs": 170050,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "어떤 사고가 발생할 수 있으니까"
+    } ]
+  }, {
+    "tStartMs": 171920,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "일단 주의해라 발령을 했고요"
+    } ]
+  }, {
+    "tStartMs": 174770,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "가신 분들은 다 아시겠지만"
+    } ]
+  }, {
+    "tStartMs": 176440,
+    "dDurationMs": 3370,
+    "segs": [ {
+      "utf8": "광화문 콘서트는 전석 무료로 진행되었다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 179810,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "예매 수수료는 있었다고 하지만"
+    } ]
+  }, {
+    "tStartMs": 181540,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "저는 이번에 가서 보지는 못했는데"
+    } ]
+  }, {
+    "tStartMs": 183610,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "무대 상황을 보면"
+    } ]
+  }, {
+    "tStartMs": 184980,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "맨 앞에 여기 무대가 있는 거고"
+    } ]
+  }, {
+    "tStartMs": 187810,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "이렇게 앉아있는 좌석들이"
+    } ]
+  }, {
+    "tStartMs": 189600,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "쫙 광화문에 있고"
+    } ]
+  }, {
+    "tStartMs": 191360,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "중간중간에"
+    } ]
+  }, {
+    "tStartMs": 192050,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "아홉 개 대형 스크린이 설치돼서"
+    } ]
+  }, {
+    "tStartMs": 194070,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "공연 실황을 중계한 걸로 알려져 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 196840,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "그리고 어제였죠"
+    } ]
+  }, {
+    "tStartMs": 197950,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "BTS 공연 결과는"
+    } ]
+  }, {
+    "tStartMs": 199900,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "실제 인파는 일단 25만까지는"
+    } ]
+  }, {
+    "tStartMs": 202490,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "안 갔던 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 203620,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "인파관리 시스템에 따르면"
+    } ]
+  }, {
+    "tStartMs": 204920,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "한 6만 2천 명 아니냐"
+    } ]
+  }, {
+    "tStartMs": 206500,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "적게 보는 데는"
+    } ]
+  }, {
+    "tStartMs": 207420,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "4만 명까지도 보는 것 같고"
+    } ]
+  }, {
+    "tStartMs": 209210,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "하여튼 25만까지는 아니었던 것 같다"
+    } ]
+  }, {
+    "tStartMs": 211710,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "그래서 커다란 사고 없이"
+    } ]
+  }, {
+    "tStartMs": 212890,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "무사히 마무리되지 않았나 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 215020,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "하이브는 이번 공연이 끝난 다음에"
+    } ]
+  }, {
+    "tStartMs": 217080,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "감사와 송구하다는 입장문을"
+    } ]
+  }, {
+    "tStartMs": 218750,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "동시에 넣어서 입장문을 게시했습니다"
+    } ]
+  }, {
+    "tStartMs": 220740,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "내용을 쭉 보면"
+    } ]
+  }, {
+    "tStartMs": 221820,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "광화문 일대 시민 여러분과"
+    } ]
+  }, {
+    "tStartMs": 223180,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "인근 상해 직장인 방문객 여러분께"
+    } ]
+  }, {
+    "tStartMs": 225090,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "죄송하다는 말씀과"
+    } ]
+  }, {
+    "tStartMs": 226120,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "감사 인사를 같이 드립니다"
+    } ]
+  }, {
+    "tStartMs": 227610,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "전세계가 주목하는 공연이다 보니까"
+    } ]
+  }, {
+    "tStartMs": 229250,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "교통 건물 통제"
+    } ]
+  }, {
+    "tStartMs": 230590,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "이런 것들에서"
+    } ]
+  }, {
+    "tStartMs": 231470,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "시민 여러분에게 불편을 끼쳐드렸는데"
+    } ]
+  }, {
+    "tStartMs": 233580,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "개개인의 일정과 일상에 불편을 겪으셔서"
+    } ]
+  }, {
+    "tStartMs": 235280,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "여러분께 송구한 마음을 전합니다"
+    } ]
+  }, {
+    "tStartMs": 237190,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "라고 입장문을 게시했죠"
+    } ]
+  }, {
+    "tStartMs": 239580,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "자 그래서 어떻게 됐건"
+    } ]
+  }, {
+    "tStartMs": 241320,
+    "dDurationMs": 3220,
+    "segs": [ {
+      "utf8": "BTS의 광화문 공연이 일단락이 됐습니다"
+    } ]
+  }, {
+    "tStartMs": 244540,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "자 이번에 BTS가 낸"
+    } ]
+  }, {
+    "tStartMs": 245890,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "새 앨범 제목은 아리랑입니다"
+    } ]
+  }, {
+    "tStartMs": 248340,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "그리고 멤버들이 어느덧 군복무 기간이"
+    } ]
+  }, {
+    "tStartMs": 250590,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "모두 다 끝났다고 해요"
+    } ]
+  }, {
+    "tStartMs": 252230,
+    "dDurationMs": 410,
+    "segs": [ {
+      "utf8": "빠르죠"
+    } ]
+  }, {
+    "tStartMs": 252640,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "세월 참 빠르다고 생각되는데"
+    } ]
+  }, {
+    "tStartMs": 254020,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "전원 군복무를 마치고"
+    } ]
+  }, {
+    "tStartMs": 255330,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "6년 만에 정규 앨범"
+    } ]
+  }, {
+    "tStartMs": 256660,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "3년 9개월 만에"
+    } ]
+  }, {
+    "tStartMs": 258080,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "완전체 앨범을 냈다 그러는데"
+    } ]
+  }, {
+    "tStartMs": 260290,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "이번 정규 5집의 선주문이"
+    } ]
+  }, {
+    "tStartMs": 262100,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "현재 406만 장 정도라고 합니다"
+    } ]
+  }, {
+    "tStartMs": 264700,
+    "dDurationMs": 420,
+    "segs": [ {
+      "utf8": "어마어마하죠?"
+    } ]
+  }, {
+    "tStartMs": 265120,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "400만 장"
+    } ]
+  }, {
+    "tStartMs": 266140,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "최종적으로 600만 장 이상이"
+    } ]
+  }, {
+    "tStartMs": 268270,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "팔리지 않을까라는 기대를 한다고 해요"
+    } ]
+  }, {
+    "tStartMs": 270400,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "엄청난 규모라고 할 수 있고"
+    } ]
+  }, {
+    "tStartMs": 271940,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "그리고 이번 광화문 오프닝"
+    } ]
+  }, {
+    "tStartMs": 273990,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "무대가 끝난 다음에"
+    } ]
+  }, {
+    "tStartMs": 275580,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "정말 끝도 없는 월드 콘서트"
+    } ]
+  }, {
+    "tStartMs": 277960,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "투어가 예정되어 있습니다"
+    } ]
+  }, {
+    "tStartMs": 279580,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "이게 다가 아니에요"
+    } ]
+  }, {
+    "tStartMs": 280990,
+    "dDurationMs": 610,
+    "segs": [ {
+      "utf8": "너무 많아서"
+    } ]
+  }, {
+    "tStartMs": 281600,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "제가 더 안 갖고 왔어요"
+    } ]
+  }, {
+    "tStartMs": 283100,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "보면은 9일, 11일"
+    } ]
+  }, {
+    "tStartMs": 284110,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "12일, 17일, 18일, 25일"
+    } ]
+  }, {
+    "tStartMs": 286320,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "26일, 28일, 5월 2일"
+    } ]
+  }, {
+    "tStartMs": 288600,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "3일, 7일, 8일"
+    } ]
+  }, {
+    "tStartMs": 290020,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "거의 뭐 이동 빼면은"
+    } ]
+  }, {
+    "tStartMs": 291380,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "2, 3일에 한 번 꼴로"
+    } ]
+  }, {
+    "tStartMs": 292340,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "월드 콘서트를 쫙 해야 됩니다"
+    } ]
+  }, {
+    "tStartMs": 294430,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "고양에 있다가 도쿄에 갔다"
+    } ]
+  }, {
+    "tStartMs": 295960,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "멕시코 시티에 갔다, 스탠포드에 갔다"
+    } ]
+  }, {
+    "tStartMs": 297790,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "라스베가스에 갔다, 부산에 갔다"
+    } ]
+  }, {
+    "tStartMs": 299580,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "마드리드에 갔다, 브리셀에 갔다"
+    } ]
+  }, {
+    "tStartMs": 301170,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "런던에 갔다, 뮌휀에 갔다"
+    } ]
+  }, {
+    "tStartMs": 302750,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "파리에 갔다 이걸 쭉 해야 돼요"
+    } ]
+  }, {
+    "tStartMs": 305540,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "정말 끝도 없는 월드 콘서트 일정인데"
+    } ]
+  }, {
+    "tStartMs": 308140,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "이번 BTS 월드 투어는"
+    } ]
+  }, {
+    "tStartMs": 310210,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "23개국, 35개 도시 82회차"
+    } ]
+  }, {
+    "tStartMs": 313550,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "공연이 현재까지 확정이 돼 있어요"
+    } ]
+  }, {
+    "tStartMs": 316510,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "내년 3월까지니까, 82회차입니다"
+    } ]
+  }, {
+    "tStartMs": 319150,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "1회 공연당 5만에서"
+    } ]
+  }, {
+    "tStartMs": 320640,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "최대 7만 명의 관객이 올 것으로 전망이 되고"
+    } ]
+  }, {
+    "tStartMs": 323440,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "만약에 82회차가 전부 매진하면"
+    } ]
+  }, {
+    "tStartMs": 325680,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "대충 5만으로 계산해도"
+    } ]
+  }, {
+    "tStartMs": 327200,
+    "dDurationMs": 4220,
+    "segs": [ {
+      "utf8": "500만 명 이상의 관중이 올 걸로 예상이 되죠"
+    } ]
+  }, {
+    "tStartMs": 331420,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "근데 물론 이렇게 보면"
+    } ]
+  }, {
+    "tStartMs": 333180,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "와 이 일정이"
+    } ]
+  }, {
+    "tStartMs": 334240,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "이거 너무한 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 335430,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "이게 진짜 2-3일에 하나씩"
+    } ]
+  }, {
+    "tStartMs": 337380,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "도시를 옮겨가면서"
+    } ]
+  }, {
+    "tStartMs": 338790,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "1년 동안 하는 겁니다"
+    } ]
+  }, {
+    "tStartMs": 339640,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "1년 동안"
+    } ]
+  }, {
+    "tStartMs": 340320,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "1년도 넘죠"
+    } ]
+  }, {
+    "tStartMs": 341190,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "그걸 계속해야 되는데"
+    } ]
+  }, {
+    "tStartMs": 342580,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "너무 일정이 빡빡한 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 344540,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "멤버들의 건강도 그렇고"
+    } ]
+  }, {
+    "tStartMs": 345770,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "좀 무리하는 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 347100,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "일주일에 한 번"
+    } ]
+  }, {
+    "tStartMs": 347990,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "또는 두 번 이상의 공연을"
+    } ]
+  }, {
+    "tStartMs": 349360,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "계속해서 소화해야 하니까"
+    } ]
+  }, {
+    "tStartMs": 351140,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "왜 그러냐"
+    } ]
+  }, {
+    "tStartMs": 352440,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "왜 그러냐면"
+    } ]
+  }, {
+    "tStartMs": 353820,
+    "dDurationMs": 1490,
+    "segs": [ {
+      "utf8": "최근에 가수들의 시장"
+    } ]
+  }, {
+    "tStartMs": 355310,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "아티스트들의 시장은"
+    } ]
+  }, {
+    "tStartMs": 356620,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "콘서트가 아티스트 수입의"
+    } ]
+  }, {
+    "tStartMs": 358050,
+    "dDurationMs": 3050,
+    "segs": [ {
+      "utf8": "최소 70%를 차지한다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 361100,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "이제는 스트리밍만으로는 돈이 잘 안 돼"
+    } ]
+  }, {
+    "tStartMs": 363830,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "앨범 판매도 저렇게 막 백만 장"
+    } ]
+  }, {
+    "tStartMs": 365370,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "수백만 장 하니까"
+    } ]
+  }, {
+    "tStartMs": 366690,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "그나마 수익이 되는 거지"
+    } ]
+  }, {
+    "tStartMs": 367960,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "이제는 콘서트가 되는 아티스트들과"
+    } ]
+  }, {
+    "tStartMs": 370150,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "글로벌 콘서트가 안 되는"
+    } ]
+  }, {
+    "tStartMs": 371290,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "아티스트들의 수입이 엄청나게 차이가 나는데"
+    } ]
+  }, {
+    "tStartMs": 374140,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "게다가 최근에 글로벌 공연"
+    } ]
+  }, {
+    "tStartMs": 376310,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "티켓 가격은 미쳤습니다"
+    } ]
+  }, {
+    "tStartMs": 378560,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "2023년 기준으로 상위 10개"
+    } ]
+  }, {
+    "tStartMs": 380280,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "투어 평균 가격이 153달러인데"
+    } ]
+  }, {
+    "tStartMs": 382810,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "그중에서도 탑3에 들어가는"
+    } ]
+  }, {
+    "tStartMs": 384950,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "그런 가수들은"
+    } ]
+  }, {
+    "tStartMs": 386160,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "공식 티켓 가격이"
+    } ]
+  }, {
+    "tStartMs": 387080,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "거의 200달러가 넘어요"
+    } ]
+  }, {
+    "tStartMs": 388740,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "아까 전에 한 공연당 몇 명이 온다고요?"
+    } ]
+  }, {
+    "tStartMs": 390570,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "5만 명"
+    } ]
+  }, {
+    "tStartMs": 392410,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "거의 잠실 주경기장 같은 데서 하기 때문에"
+    } ]
+  }, {
+    "tStartMs": 394800,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "5만이 와"
+    } ]
+  }, {
+    "tStartMs": 396030,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "근데 평균 가격이 200달러야"
+    } ]
+  }, {
+    "tStartMs": 398840,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "그러면은 계산이 됩니까?"
+    } ]
+  }, {
+    "tStartMs": 401110,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "아까 말씀드린 BTS 월드투어는"
+    } ]
+  }, {
+    "tStartMs": 402900,
+    "dDurationMs": 590,
+    "segs": [ {
+      "utf8": "예약이 열리는"
+    } ]
+  }, {
+    "tStartMs": 403490,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "6월까지는 일단 매진이에요"
+    } ]
+  }, {
+    "tStartMs": 405000,
+    "dDurationMs": 3030,
+    "segs": [ {
+      "utf8": "표 한 장당 20만 원이라고 가정을 해도"
+    } ]
+  }, {
+    "tStartMs": 408030,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "이거 20만 원이면 얼마입니까?"
+    } ]
+  }, {
+    "tStartMs": 409460,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "150달러?"
+    } ]
+  }, {
+    "tStartMs": 410350,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "뭐 이 정도로 가정을 해도"
+    } ]
+  }, {
+    "tStartMs": 411910,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "표 가격만 20만 원 곱하기 500만 원을 하면"
+    } ]
+  }, {
+    "tStartMs": 414370,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "매출이 1조 원입니다"
+    } ]
+  }, {
+    "tStartMs": 416400,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "아까 500만 명 온다며"
+    } ]
+  }, {
+    "tStartMs": 417870,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "대충 80회 가정을 했을 때"
+    } ]
+  }, {
+    "tStartMs": 420000,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "자 그리고"
+    } ]
+  }, {
+    "tStartMs": 421100,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "블룸버그도 BTS 월드투어에 따른 수익을"
+    } ]
+  }, {
+    "tStartMs": 423790,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "8억 달러로 전망했어요"
+    } ]
+  }, {
+    "tStartMs": 425380,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "티켓 및 상품 판매 수익이"
+    } ]
+  }, {
+    "tStartMs": 426540,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "8억 달러 정도 될 것이다"
+    } ]
+  }, {
+    "tStartMs": 428070,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "근데 이건"
+    } ]
+  }, {
+    "tStartMs": 429020,
+    "dDurationMs": 3330,
+    "segs": [ {
+      "utf8": "확정된 공연 일정만 계산한 겁니다"
+    } ]
+  }, {
+    "tStartMs": 432350,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "블룸버그도 스스로 썼어요"
+    } ]
+  }, {
+    "tStartMs": 433560,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "이 수치는 보수적인 추정치다"
+    } ]
+  }, {
+    "tStartMs": 435680,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "왜냐?"
+    } ]
+  }, {
+    "tStartMs": 437540,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "아직 월드투어의 모든 일정이 공개된 게 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 440420,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "지금은 2027년 3월까지만 나와있어요"
+    } ]
+  }, {
+    "tStartMs": 443520,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "1년치만 나와있어"
+    } ]
+  }, {
+    "tStartMs": 445080,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "1년하고 끝나는 게 아니냐?"
+    } ]
+  }, {
+    "tStartMs": 446620,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "뒤에 더 있을 수 있다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 448220,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "공식 발표는 안 됐는데"
+    } ]
+  }, {
+    "tStartMs": 449590,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "일본과 중동 일정이 추가 발표될 예정이다"
+    } ]
+  }, {
+    "tStartMs": 452360,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "그럼 이제 더 붙는 거야"
+    } ]
+  }, {
+    "tStartMs": 453420,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "평균 가격 20만 원이"
+    } ]
+  }, {
+    "tStartMs": 455980,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "5만 명이니까"
+    } ]
+  }, {
+    "tStartMs": 457280,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "이게 대체 얼마야?"
+    } ]
+  }, {
+    "tStartMs": 457930,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "계산도 안 되는데"
+    } ]
+  }, {
+    "tStartMs": 459620,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "그 정도 되는 공연들이"
+    } ]
+  }, {
+    "tStartMs": 460710,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "앞으로 더 붙을 수 있죠"
+    } ]
+  }, {
+    "tStartMs": 462360,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "모든 일정이 공개된 게 아니기 때문에"
+    } ]
+  }, {
+    "tStartMs": 464330,
+    "dDurationMs": 860,
+    "segs": [ {
+      "utf8": "보수적으로 해도"
+    } ]
+  }, {
+    "tStartMs": 465190,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "1조 원이 훌쩍 넘는"
+    } ]
+  }, {
+    "tStartMs": 466670,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "1조 4, 5천억이 넘는 정도"
+    } ]
+  }, {
+    "tStartMs": 468630,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "표 수익이 예상이 되고요"
+    } ]
+  }, {
+    "tStartMs": 470940,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "이거 IBK 증권에서"
+    } ]
+  }, {
+    "tStartMs": 472550,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "BTS 노믹스라고"
+    } ]
+  }, {
+    "tStartMs": 473710,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "김유혁 연구위원님이 레포트를 낸 게 있는데"
+    } ]
+  }, {
+    "tStartMs": 476260,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "여기서는 BTS 월드투어 매출액을"
+    } ]
+  }, {
+    "tStartMs": 478370,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "2.9조로 전망했어요"
+    } ]
+  }, {
+    "tStartMs": 481070,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "총 모객수는 600만 명을 넘을 것이다"
+    } ]
+  }, {
+    "tStartMs": 483390,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "내년까지, 2027년까지"
+    } ]
+  }, {
+    "tStartMs": 485920,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "총 매출액은 2.9조"
+    } ]
+  }, {
+    "tStartMs": 487400,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "거의 3조 원에 육박할 것이다"
+    } ]
+  }, {
+    "tStartMs": 489410,
+    "dDurationMs": 2650,
+    "segs": [ {
+      "utf8": "일단 이 레프트에 나온 계산은 이렇습니다"
+    } ]
+  }, {
+    "tStartMs": 492060,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "평균 티켓 가격이"
+    } ]
+  }, {
+    "tStartMs": 493410,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "30만 원에 달할 것"
+    } ]
+  }, {
+    "tStartMs": 494940,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "한국이나 일본은 20만 원 중반대인데"
+    } ]
+  }, {
+    "tStartMs": 497510,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "북미, 유럽으로 넘어가면"
+    } ]
+  }, {
+    "tStartMs": 498890,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "맥스가 60만 원으로 돼 있다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 501270,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "30만 원, 40만 원 표가 많아"
+    } ]
+  }, {
+    "tStartMs": 503060,
+    "dDurationMs": 500,
+    "segs": [ {
+      "utf8": "그렇다 보니까"
+    } ]
+  }, {
+    "tStartMs": 503560,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "평균으로 하면"
+    } ]
+  }, {
+    "tStartMs": 504810,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "거의 30만 원에 근접하지 않겠냐"
+    } ]
+  }, {
+    "tStartMs": 507010,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "2X만 원이 될 것 같고"
+    } ]
+  }, {
+    "tStartMs": 508510,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "500만 명만 해도"
+    } ]
+  }, {
+    "tStartMs": 509420,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "표 가격이 일단 1초 5천억이다"
+    } ]
+  }, {
+    "tStartMs": 512420,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "BTS 굿즈 매출은 얼마를 예상합니까?"
+    } ]
+  }, {
+    "tStartMs": 515230,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "IBK 증권은"
+    } ]
+  }, {
+    "tStartMs": 516540,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "8,400억을 전망했어요"
+    } ]
+  }, {
+    "tStartMs": 518750,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "굿즈만 팔아도 8,400억입니다"
+    } ]
+  }, {
+    "tStartMs": 521950,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "슈카월드 굿즈"
+    } ]
+  }, {
+    "tStartMs": 522930,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "저기 재고 남은 거 있거든요"
+    } ]
+  }, {
+    "tStartMs": 525600,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "우리는 그거 만들었는데"
+    } ]
+  }, {
+    "tStartMs": 526510,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "재고 남았는데"
+    } ]
+  }, {
+    "tStartMs": 528300,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "굿즈 매출이 8,400억"
+    } ]
+  }, {
+    "tStartMs": 530460,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "이걸 어떻게 계산했냐?"
+    } ]
+  }, {
+    "tStartMs": 531460,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "보니까 600만 명이"
+    } ]
+  }, {
+    "tStartMs": 533120,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "오프라인 공연으로 올 텐데"
+    } ]
+  }, {
+    "tStartMs": 534380,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "인당 14만 원씩"
+    } ]
+  }, {
+    "tStartMs": 536250,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "굿즈를 살 걸로 가정한다"
+    } ]
+  }, {
+    "tStartMs": 538500,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "공식 굿즈라고는 하지만"
+    } ]
+  }, {
+    "tStartMs": 540170,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "그렇게 많이 삽니까?"
+    } ]
+  }, {
+    "tStartMs": 541350,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "라는 의문이 들 수 있죠"
+    } ]
+  }, {
+    "tStartMs": 542590,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "이건 사실 이유가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 544290,
+    "dDurationMs": 3540,
+    "segs": [ {
+      "utf8": "왜냐하면 저런 콘서트에 많이 가보신 분들 알겠지만"
+    } ]
+  }, {
+    "tStartMs": 547830,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "저런 어떤 유명한 아이돌 그룹들은"
+    } ]
+  }, {
+    "tStartMs": 550140,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "공식 응원봉과 크래들"
+    } ]
+  }, {
+    "tStartMs": 552410,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "이런 것들이 있어요"
+    } ]
+  }, {
+    "tStartMs": 553390,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "공식 세트가 있어요"
+    } ]
+  }, {
+    "tStartMs": 554410,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "공식 세트"
+    } ]
+  }, {
+    "tStartMs": 555660,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "그 응원봉도"
+    } ]
+  }, {
+    "tStartMs": 556670,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "색깔이 다 달라요"
+    } ]
+  }, {
+    "tStartMs": 558400,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "각자의 디자인이 있죠"
+    } ]
+  }, {
+    "tStartMs": 560450,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "어지간한 그룹들이 다 있어요"
+    } ]
+  }, {
+    "tStartMs": 561740,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "글로벌 그룹들은 다 있는데"
+    } ]
+  }, {
+    "tStartMs": 563170,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "게다가 이게 놀랍게도 세대가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 565730,
+    "dDurationMs": 2940,
+    "segs": [ {
+      "utf8": "1세대, 2세대, 3세대, 4세대가 있어요"
+    } ]
+  }, {
+    "tStartMs": 568670,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "세대가 바뀌면 바꿔줘야 돼"
+    } ]
+  }, {
+    "tStartMs": 571030,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "참고로 BTS 공식 응원봉과 크레들의"
+    } ]
+  }, {
+    "tStartMs": 572860,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "한국 가격은 74,000원인데요"
+    } ]
+  }, {
+    "tStartMs": 574820,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "49,000원, 25,000원 하죠"
+    } ]
+  }, {
+    "tStartMs": 577740,
+    "dDurationMs": 790,
+    "segs": [ {
+      "utf8": "물론 품절입니다"
+    } ]
+  }, {
+    "tStartMs": 578530,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "제가 어제 봤는데"
+    } ]
+  }, {
+    "tStartMs": 579230,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "어제까지는 품절이었어요"
+    } ]
+  }, {
+    "tStartMs": 580820,
+    "dDurationMs": 2420,
+    "segs": [ {
+      "utf8": "그러면 아니 아무리 공식 응원봉이어도"
+    } ]
+  }, {
+    "tStartMs": 583240,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "저거 그냥 전 안 들고 보러 가면 안 될까요?"
+    } ]
+  }, {
+    "tStartMs": 585410,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "라고 생각할 수 있죠"
+    } ]
+  }, {
+    "tStartMs": 586530,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "근데 요즘 응원봉은"
+    } ]
+  }, {
+    "tStartMs": 587810,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "여러분들이 생각하는"
+    } ]
+  }, {
+    "tStartMs": 588660,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "그런 그냥 흔드는 게 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 590580,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "무슨 말이냐"
+    } ]
+  }, {
+    "tStartMs": 592030,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "이미 하이브는 옛날부터"
+    } ]
+  }, {
+    "tStartMs": 593150,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "요즘 다 이렇게 하는데"
+    } ]
+  }, {
+    "tStartMs": 594430,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "독자 개발한"
+    } ]
+  }, {
+    "tStartMs": 595340,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "응원봉 제어 시스템을 운영 중입니다"
+    } ]
+  }, {
+    "tStartMs": 597950,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "이 말인즉슨 내가 들고 있는 응원봉이"
+    } ]
+  }, {
+    "tStartMs": 600640,
+    "dDurationMs": 3080,
+    "segs": [ {
+      "utf8": "중앙에서 실시간으로 일괄 통제해"
+    } ]
+  }, {
+    "tStartMs": 603720,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "그러니까 내 휴대전화 앱과 응원봉이"
+    } ]
+  }, {
+    "tStartMs": 605510,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "연동이 돼서 들고 있으면은"
+    } ]
+  }, {
+    "tStartMs": 607640,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "알아서 뭐 글자가 써지고"
+    } ]
+  }, {
+    "tStartMs": 609260,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "알아서 뭐가 되고"
+    } ]
+  }, {
+    "tStartMs": 610230,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "뭐 이런거죠 예를 들면"
+    } ]
+  }, {
+    "tStartMs": 611260,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "중앙에서 껐다켰다"
+    } ]
+  }, {
+    "tStartMs": 612550,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "껐다켰다 DJ처럼"
+    } ]
+  }, {
+    "tStartMs": 613990,
+    "dDurationMs": 3480,
+    "segs": [ {
+      "utf8": "이런 응원봉 제어 시스템을 운영한다 그래요"
+    } ]
+  }, {
+    "tStartMs": 617470,
+    "dDurationMs": 3120,
+    "segs": [ {
+      "utf8": "아 구형 구세대 응원봉 들고 가면 안되나요?"
+    } ]
+  }, {
+    "tStartMs": 620590,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "되죠, 되는데"
+    } ]
+  }, {
+    "tStartMs": 622400,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "1세대, 2세대, 3세대, 4세대 있잖아요"
+    } ]
+  }, {
+    "tStartMs": 625280,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "이 세대가 바뀌면"
+    } ]
+  }, {
+    "tStartMs": 626590,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "시간이 지나면"
+    } ]
+  }, {
+    "tStartMs": 627780,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "9세대 응원봉은"
+    } ]
+  }, {
+    "tStartMs": 629350,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "무선연동 지원에서 빠집니다"
+    } ]
+  }, {
+    "tStartMs": 631910,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "빠져요"
+    } ]
+  }, {
+    "tStartMs": 632830,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "이번 BTS 공연 같은 경우에는"
+    } ]
+  }, {
+    "tStartMs": 634500,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "5월 28일 라스베가스 공연까지만"
+    } ]
+  }, {
+    "tStartMs": 636870,
+    "dDurationMs": 3320,
+    "segs": [ {
+      "utf8": "기존 3세대 응원봉이 무선연동이 돼요"
+    } ]
+  }, {
+    "tStartMs": 640190,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "6월 우리나라 돌아오죠"
+    } ]
+  }, {
+    "tStartMs": 641340,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "6월 부산 공연부터는"
+    } ]
+  }, {
+    "tStartMs": 642930,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "4세대 신규 응원봉만"
+    } ]
+  }, {
+    "tStartMs": 644860,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "무선연동을 지원합니다"
+    } ]
+  }, {
+    "tStartMs": 646540,
+    "dDurationMs": 560,
+    "segs": [ {
+      "utf8": "다시 사야 돼"
+    } ]
+  }, {
+    "tStartMs": 647100,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "여기에서 같이"
+    } ]
+  }, {
+    "tStartMs": 649850,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "호흡하면서"
+    } ]
+  }, {
+    "tStartMs": 651070,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "같이 즐기고"
+    } ]
+  }, {
+    "tStartMs": 652370,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "우리 BTS 형님들"
+    } ]
+  }, {
+    "tStartMs": 653710,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "오빠들과 같이 즐기려면"
+    } ]
+  }, {
+    "tStartMs": 655330,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "이거 이제 새로운 4세대"
+    } ]
+  }, {
+    "tStartMs": 657070,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "그래서 응원봉을 들고 가야 되는데"
+    } ]
+  }, {
+    "tStartMs": 658550,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "근데 지금 매진이잖아요"
+    } ]
+  }, {
+    "tStartMs": 659850,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "그래서 공연을 앞두고"
+    } ]
+  }, {
+    "tStartMs": 661150,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "응원봉 되팔이 가격이"
+    } ]
+  }, {
+    "tStartMs": 662590,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "제가 본 건 20만 원까지 있었더라고요"
+    } ]
+  }, {
+    "tStartMs": 664690,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "20만 원"
+    } ]
+  }, {
+    "tStartMs": 665710,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "기사에 따르면 30만 원도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 667770,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "아까 7만 원짜리를 지금"
+    } ]
+  }, {
+    "tStartMs": 669220,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "되팔이를 몇 배에 하고 있고"
+    } ]
+  }, {
+    "tStartMs": 671780,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "그리고 미국에서는"
+    } ]
+  }, {
+    "tStartMs": 673020,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "가격이 더 비쌉니다"
+    } ]
+  }, {
+    "tStartMs": 675070,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "표값도 비싸고"
+    } ]
+  }, {
+    "tStartMs": 676220,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "응원봉 가격도 달라요"
+    } ]
+  }, {
+    "tStartMs": 677950,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "응원봉 크레딧세트가"
+    } ]
+  }, {
+    "tStartMs": 678920,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "미국엔 최대 14만원이라고 해요"
+    } ]
+  }, {
+    "tStartMs": 680540,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "그럼 얘네 뭐 되팔이 하면"
+    } ]
+  }, {
+    "tStartMs": 681580,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "이거 막 50만원 60만원 가겠죠?"
+    } ]
+  }, {
+    "tStartMs": 683360,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "그런게 역시 엄청난 굿즈"
+    } ]
+  }, {
+    "tStartMs": 685840,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "매출이 예상이 된다고 하고"
+    } ]
+  }, {
+    "tStartMs": 687930,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "그리고"
+    } ]
+  }, {
+    "tStartMs": 688670,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "이번 BTS 광화문 공연은"
+    } ]
+  }, {
+    "tStartMs": 690310,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "넷플릭스가 독점 중계권을 따냈습니다"
+    } ]
+  }, {
+    "tStartMs": 693080,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "3월 21일 넷플릭스 단독 생중계됐죠"
+    } ]
+  }, {
+    "tStartMs": 695620,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "그래서 우리나라 지상파에서는"
+    } ]
+  }, {
+    "tStartMs": 697160,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "공연 모습이 나오지 않았어요"
+    } ]
+  }, {
+    "tStartMs": 698930,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "잠깐 나오죠, 잠깐"
+    } ]
+  }, {
+    "tStartMs": 700510,
+    "dDurationMs": 3310,
+    "segs": [ {
+      "utf8": "참고로 넷플릭스 공식 유튜브 채널이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 703820,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "거기 들어가보시면 알겠지만"
+    } ]
+  }, {
+    "tStartMs": 705470,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "7시간 전부터 라이브 카운트다운을 했어요"
+    } ]
+  }, {
+    "tStartMs": 708770,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "이렇게 계속 돌아갑니다"
+    } ]
+  }, {
+    "tStartMs": 710280,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "6시 59분, 6시 58분"
+    } ]
+  }, {
+    "tStartMs": 712000,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "전 세계 수많은 BTS 팬들이"
+    } ]
+  }, {
+    "tStartMs": 713650,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "옆에서 막 기대감을 치면서"
+    } ]
+  }, {
+    "tStartMs": 715350,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "채팅하고 쫙 올라가고"
+    } ]
+  }, {
+    "tStartMs": 716500,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "무려 7시간을 했어요"
+    } ]
+  }, {
+    "tStartMs": 718230,
+    "dDurationMs": 3170,
+    "segs": [ {
+      "utf8": "그리고 마지막 시작 13초 전까지"
+    } ]
+  }, {
+    "tStartMs": 721400,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "숫자가 막 돌아가다가"
+    } ]
+  }, {
+    "tStartMs": 722590,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "13초를 남기고"
+    } ]
+  }, {
+    "tStartMs": 723780,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "이렇게 확 사라져요"
+    } ]
+  }, {
+    "tStartMs": 725150,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "와 드디어 시작하나 보다"
+    } ]
+  }, {
+    "tStartMs": 726560,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "했을 때"
+    } ]
+  }, {
+    "tStartMs": 727820,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "BTS 멤버들이 등장을 해서"
+    } ]
+  }, {
+    "tStartMs": 730300,
+    "dDurationMs": 2630,
+    "segs": [ {
+      "utf8": "와 5, 4, 3 합니다"
+    } ]
+  }, {
+    "tStartMs": 732930,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "옆에서 막 채팅 올라가고"
+    } ]
+  }, {
+    "tStartMs": 734560,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "와 드디어 시작한다"
+    } ]
+  }, {
+    "tStartMs": 736530,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "라고 할 때"
+    } ]
+  }, {
+    "tStartMs": 737470,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "우리 랩몬 형님이"
+    } ]
+  }, {
+    "tStartMs": 739290,
+    "dDurationMs": 630,
+    "segs": [ {
+      "utf8": "갑자기 나와서"
+    } ]
+  }, {
+    "tStartMs": 739920,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "갑자기 가다가"
+    } ]
+  }, {
+    "tStartMs": 741220,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "공연하러 가다가 쏙 들어와서 말씀을 하세요"
+    } ]
+  }, {
+    "tStartMs": 743440,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "여기서 뭐해요?"
+    } ]
+  }, {
+    "tStartMs": 744340,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "라이브 보러 가야지"
+    } ]
+  }, {
+    "tStartMs": 745440,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "넷플릭스 켜요"
+    } ]
+  }, {
+    "tStartMs": 747030,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "그리고 그 다음 화면이"
+    } ]
+  }, {
+    "tStartMs": 749040,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "이렇게 나왔죠"
+    } ]
+  }, {
+    "tStartMs": 749910,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "BTS 컴백 라이브는 오직 넷플릭스에서"
+    } ]
+  }, {
+    "tStartMs": 752780,
+    "dDurationMs": 2660,
+    "segs": [ {
+      "utf8": "컴백 라이브 아리랑"
+    } ]
+  }, {
+    "tStartMs": 755440,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "Watch it now"
+    } ]
+  }, {
+    "tStartMs": 756810,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "이렇게 되어있는데"
+    } ]
+  }, {
+    "tStartMs": 757730,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "그래서 이게 뭐냐면"
+    } ]
+  }, {
+    "tStartMs": 760260,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "이게 무슨 말이냐면"
+    } ]
+  }, {
+    "tStartMs": 761370,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "저긴 유튜브 채널이잖아요"
+    } ]
+  }, {
+    "tStartMs": 762720,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "넷플릭스 공식 채널이라고 해도"
+    } ]
+  }, {
+    "tStartMs": 764330,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "BTS 공연은"
+    } ]
+  }, {
+    "tStartMs": 765430,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "유튜브에서 볼 수 없습니다"
+    } ]
+  }, {
+    "tStartMs": 767150,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "볼 수 없었죠"
+    } ]
+  }, {
+    "tStartMs": 768090,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "지상파나 유튜브에서 볼 수 없었어요"
+    } ]
+  }, {
+    "tStartMs": 769750,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "그러니까 여기까지 봤으면"
+    } ]
+  }, {
+    "tStartMs": 771080,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "7시간 그거 지났으니까"
+    } ]
+  }, {
+    "tStartMs": 772650,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "이제 넷플릭스를 켜라"
+    } ]
+  }, {
+    "tStartMs": 775150,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "넷플릭스에서만 볼 수 있었어요"
+    } ]
+  }, {
+    "tStartMs": 776890,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "그래서 저 7시간 저기 켜있고요"
+    } ]
+  }, {
+    "tStartMs": 778850,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "자 그런 일이 있었고"
+    } ]
+  }, {
+    "tStartMs": 780360,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "넷플릭스는 언론 매체가"
+    } ]
+  }, {
+    "tStartMs": 782000,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "콘서트 전체를 생중계하는 걸"
+    } ]
+  }, {
+    "tStartMs": 783440,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "당연히 금지했습니다"
+    } ]
+  }, {
+    "tStartMs": 784900,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "방송사도 행사 게시 후"
+    } ]
+  }, {
+    "tStartMs": 786280,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "단 10분만 촬영할 수 있었고요"
+    } ]
+  }, {
+    "tStartMs": 788120,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "영상 게시도 최대 5개"
+    } ]
+  }, {
+    "tStartMs": 790340,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "각 클립의 길이도"
+    } ]
+  }, {
+    "tStartMs": 791270,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "최대 1분 이상으로 막았어요"
+    } ]
+  }, {
+    "tStartMs": 793580,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "가이드라인이 굉장히 엄격했고"
+    } ]
+  }, {
+    "tStartMs": 796200,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "그것 때문에 넷플릭스 지침이 좀 엄격해서"
+    } ]
+  }, {
+    "tStartMs": 799010,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "한국영상기자협회가 성명까지 냈어요"
+    } ]
+  }, {
+    "tStartMs": 801460,
+    "dDurationMs": 2910,
+    "segs": [ {
+      "utf8": "광화문에서 하면서"
+    } ]
+  }, {
+    "tStartMs": 804370,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "공연장을 빌려서 하면 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 806140,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "광화문이라는 데서 하는데"
+    } ]
+  }, {
+    "tStartMs": 808130,
+    "dDurationMs": 3680,
+    "segs": [ {
+      "utf8": "상징적인 공간의 성격과 언론의 권리가 있는데"
+    } ]
+  }, {
+    "tStartMs": 811810,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "이거 좀 과한 거 아니냐라는"
+    } ]
+  }, {
+    "tStartMs": 813230,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "성명까지 냈던 그런 일이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 815400,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "하지만 넷플릭스는 단호했죠"
+    } ]
+  }, {
+    "tStartMs": 817270,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "왜냐하면"
+    } ]
+  }, {
+    "tStartMs": 817960,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "캐데헌의 맛을 봤기 때문에"
+    } ]
+  }, {
+    "tStartMs": 819850,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "캐데헌이 대박난 걸 봤기 때문에"
+    } ]
+  }, {
+    "tStartMs": 821540,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "BTS 광화문 공연은 넷플릭스 통해서"
+    } ]
+  }, {
+    "tStartMs": 824130,
+    "dDurationMs": 2210,
+    "segs": [ {
+      "utf8": "190개국에서 동시에"
+    } ]
+  }, {
+    "tStartMs": 826340,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "일괄 라이브 송출이 됐습니다"
+    } ]
+  }, {
+    "tStartMs": 828350,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "그리고 넷플릭스는 여기서 끝난 게 아니라"
+    } ]
+  }, {
+    "tStartMs": 830520,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "BTS 리턴의 과정을 담은"
+    } ]
+  }, {
+    "tStartMs": 832650,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "다큐멘터리 BTS 더 리턴"
+    } ]
+  }, {
+    "tStartMs": 834820,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "3월 27일 날 단독 공개됩니다"
+    } ]
+  }, {
+    "tStartMs": 837500,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "BTS를 통해서"
+    } ]
+  }, {
+    "tStartMs": 838680,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "제2의 캐데헌 효과를 강하게 누리겠다"
+    } ]
+  }, {
+    "tStartMs": 841420,
+    "dDurationMs": 3090,
+    "segs": [ {
+      "utf8": "이 정도면 BTS 단독 공연 생중계"
+    } ]
+  }, {
+    "tStartMs": 844510,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "아예 다큐멘터리까지 단독 공개"
+    } ]
+  }, {
+    "tStartMs": 847200,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "도대체 얼마를 줬을까?"
+    } ]
+  }, {
+    "tStartMs": 850300,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "넷플릭스가 BTS한테"
+    } ]
+  }, {
+    "tStartMs": 852020,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "하이브한테 얼마를 줬을까?"
+    } ]
+  }, {
+    "tStartMs": 855120,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "궁금하지 않으십니까?"
+    } ]
+  }, {
+    "tStartMs": 856510,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "이번 BTS 공연 단독 중계를 위해서"
+    } ]
+  }, {
+    "tStartMs": 858290,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "넷플릭스가 지불한 비용은"
+    } ]
+  }, {
+    "tStartMs": 859930,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "알려지지 않고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 861190,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "얼마를 지불했는지 밝히지 않았어요"
+    } ]
+  }, {
+    "tStartMs": 863200,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "옛날에 2019년에"
+    } ]
+  }, {
+    "tStartMs": 864590,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "비욘세와 세 번의 패키지 중계를 했을 때"
+    } ]
+  }, {
+    "tStartMs": 866410,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "6천만 달러를 낸 적이 있었습니다"
+    } ]
+  }, {
+    "tStartMs": 868990,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "900억, 900억인데"
+    } ]
+  }, {
+    "tStartMs": 870870,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "이 정도는 아닐 것 같고"
+    } ]
+  }, {
+    "tStartMs": 872180,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "이거 미국에서 하는 거였으니까"
+    } ]
+  }, {
+    "tStartMs": 874240,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "저 다큐멘터리까지 하면"
+    } ]
+  }, {
+    "tStartMs": 875830,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "최소 수백억일 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 877620,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "이번 BTS 공연의 IP는"
+    } ]
+  }, {
+    "tStartMs": 879020,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "넷플릭스가 아닌"
+    } ]
+  }, {
+    "tStartMs": 879670,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "하이브가 갖는 것으로 알려지고 있어요"
+    } ]
+  }, {
+    "tStartMs": 881920,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "그렇게 치면"
+    } ]
+  }, {
+    "tStartMs": 882950,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "IP를 하이브가 갖는 대신에"
+    } ]
+  }, {
+    "tStartMs": 884460,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "가격을 좀 낮추지 않았을까"
+    } ]
+  }, {
+    "tStartMs": 885910,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "생각이 되지만"
+    } ]
+  }, {
+    "tStartMs": 886880,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "어쨌건 100억 단위의 돈이 아닐까라고"
+    } ]
+  }, {
+    "tStartMs": 889570,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "개인적으로 추정해"
+    } ]
+  }, {
+    "tStartMs": 890850,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "상상은 저는 그렇게 하고"
+    } ]
+  }, {
+    "tStartMs": 892460,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "그래서 이번에 넷플릭스가"
+    } ]
+  }, {
+    "tStartMs": 894070,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "BTS 라이브 전에"
+    } ]
+  }, {
+    "tStartMs": 895430,
+    "dDurationMs": 2270,
+    "segs": [ {
+      "utf8": "이 넷플릭스 담당자들이 인터뷰를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 897700,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "이번 라이브 이벤트는"
+    } ]
+  }, {
+    "tStartMs": 898850,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "결코 놓쳐서는 안 되는"
+    } ]
+  }, {
+    "tStartMs": 900530,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "엄청난 순간임이 명백합니다"
+    } ]
+  }, {
+    "tStartMs": 903240,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "돈 많이 쓰셨거든요"
+    } ]
+  }, {
+    "tStartMs": 904440,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "돈 많이 쓰셨거든요"
+    } ]
+  }, {
+    "tStartMs": 905680,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "그리고 올해 넷플릭스가"
+    } ]
+  }, {
+    "tStartMs": 907200,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "여러 가지 라이브 이벤트를 하는데"
+    } ]
+  }, {
+    "tStartMs": 909070,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "가장 큰 라이브 이벤트가"
+    } ]
+  }, {
+    "tStartMs": 910680,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "이번 방탄소년단의 무대입니다"
+    } ]
+  }, {
+    "tStartMs": 913360,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "이번 공연은"
+    } ]
+  }, {
+    "tStartMs": 914230,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "넷플릭스가 K컬처에 대해서"
+    } ]
+  }, {
+    "tStartMs": 916010,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "얼마나 큰 신뢰를 가졌는지"
+    } ]
+  }, {
+    "tStartMs": 917890,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "보여주는 일입니다"
+    } ]
+  }, {
+    "tStartMs": 918940,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "라고 얘기를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 920220,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "아주 크게 거셨다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 922190,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "여러분 다 아시겠지만"
+    } ]
+  }, {
+    "tStartMs": 922990,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "넷플릭스는 최근에"
+    } ]
+  }, {
+    "tStartMs": 924250,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "라이브 이벤트에"
+    } ]
+  }, {
+    "tStartMs": 925050,
+    "dDurationMs": 3210,
+    "segs": [ {
+      "utf8": "엄청난 돈과 시간을 투자하고 있습니다"
+    } ]
+  }, {
+    "tStartMs": 928260,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "넷플릭스가 최근에 라이브를 뭐 했다고요?"
+    } ]
+  }, {
+    "tStartMs": 930260,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "저는 기억이 안 나는데요"
+    } ]
+  }, {
+    "tStartMs": 931630,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "기억이 나실 겁니다"
+    } ]
+  }, {
+    "tStartMs": 932870,
+    "dDurationMs": 2930,
+    "segs": [ {
+      "utf8": "대표적으로 WBC가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 935800,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "우리나라에서는 지상파에서 WBC를 방송했죠"
+    } ]
+  }, {
+    "tStartMs": 938490,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "야구, 야구"
+    } ]
+  }, {
+    "tStartMs": 939390,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "일본에서는 WBC 독점 중계권을"
+    } ]
+  }, {
+    "tStartMs": 942220,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "넷플릭스가 가져갔습니다"
+    } ]
+  }, {
+    "tStartMs": 944290,
+    "dDurationMs": 4320,
+    "segs": [ {
+      "utf8": "넷플릭스가 일본 WBC를 독점 중개하는 비용으로"
+    } ]
+  }, {
+    "tStartMs": 948610,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "약 100억엔 이상을 제시했다고 알려져 있는데"
+    } ]
+  }, {
+    "tStartMs": 951190,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "1,500억 이상을 낸 걸로 알려지고 있어요"
+    } ]
+  }, {
+    "tStartMs": 954080,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "이게 왜냐하면 이유가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 956190,
+    "dDurationMs": 3170,
+    "segs": [ {
+      "utf8": "일본은 말 그대로 야구가 국기인 나라잖아요"
+    } ]
+  }, {
+    "tStartMs": 959360,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "야구에 미친 나라이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 961170,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "게다가 최근에 5번의 WBC 중에서"
+    } ]
+  }, {
+    "tStartMs": 964120,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "월드 베이스볼 클래식 중에서"
+    } ]
+  }, {
+    "tStartMs": 965580,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "무려 3번을 일본이 우승했어요"
+    } ]
+  }, {
+    "tStartMs": 968150,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "우승, 우승, 4강, 4강, 우승"
+    } ]
+  }, {
+    "tStartMs": 970160,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "넷플릭스 입장에서는"
+    } ]
+  }, {
+    "tStartMs": 971450,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "최소 4강이다"
+    } ]
+  }, {
+    "tStartMs": 973020,
+    "dDurationMs": 540,
+    "segs": [ {
+      "utf8": "최소 4강"
+    } ]
+  }, {
+    "tStartMs": 973560,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "돈은 무조건 뽑을 수 있다!"
+    } ]
+  }, {
+    "tStartMs": 975910,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "라고 생각을 했죠"
+    } ]
+  }, {
+    "tStartMs": 977770,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "그리고 2023년 일본이 우승했을 때"
+    } ]
+  }, {
+    "tStartMs": 980450,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "시청률이 얼마가 나왔냐?"
+    } ]
+  }, {
+    "tStartMs": 982490,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "40%가 나왔어요 40%"
+    } ]
+  }, {
+    "tStartMs": 985020,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "와..."
+    } ]
+  }, {
+    "tStartMs": 985980,
+    "dDurationMs": 3880,
+    "segs": [ {
+      "utf8": "우리나라가 40% 이상 시청률이 마지막 나온 게"
+    } ]
+  }, {
+    "tStartMs": 989860,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "제가 언제인지 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 991550,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "물론 당연히 유튜브 시절"
+    } ]
+  }, {
+    "tStartMs": 993070,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "이전에 2007년, 2008년"
+    } ]
+  }, {
+    "tStartMs": 994380,
+    "dDurationMs": 1090,
+    "segs": [ {
+      "utf8": "2000년대 초반에 있었죠"
+    } ]
+  }, {
+    "tStartMs": 995470,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "그때 드라마에서 40%가 나왔으니까"
+    } ]
+  }, {
+    "tStartMs": 997570,
+    "dDurationMs": 2370,
+    "segs": [ {
+      "utf8": "근데 이제는 유튜브 시대가 열린 다음에"
+    } ]
+  }, {
+    "tStartMs": 999940,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "40% 시청률이란 건 말도 안 되는데"
+    } ]
+  }, {
+    "tStartMs": 1002270,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "요즘에 지상파가 잘 나오면"
+    } ]
+  }, {
+    "tStartMs": 1003420,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "5%, 7%, 8%거든요"
+    } ]
+  }, {
+    "tStartMs": 1005090,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "40%면"
+    } ]
+  }, {
+    "tStartMs": 1006610,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "대박 중에 대박이고"
+    } ]
+  }, {
+    "tStartMs": 1007950,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "7경기를 했잖아요"
+    } ]
+  }, {
+    "tStartMs": 1009220,
+    "dDurationMs": 3140,
+    "segs": [ {
+      "utf8": "총 시청자 수가 9,400만 명이 넘었다"
+    } ]
+  }, {
+    "tStartMs": 1012360,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "대박이 났다는 거죠, 한마디로"
+    } ]
+  }, {
+    "tStartMs": 1014040,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "이걸 보고 들어갔고"
+    } ]
+  }, {
+    "tStartMs": 1015120,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "게다가 이번 WBC에는"
+    } ]
+  }, {
+    "tStartMs": 1016700,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "일본 최고의 스포츠 스타"
+    } ]
+  }, {
+    "tStartMs": 1018990,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "오타니 쇼에이가 출전했습니다"
+    } ]
+  }, {
+    "tStartMs": 1021010,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "현재 미국 메이저리그"
+    } ]
+  }, {
+    "tStartMs": 1022120,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "4회 MVP예요"
+    } ]
+  }, {
+    "tStartMs": 1023940,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "게다가 2025년"
+    } ]
+  }, {
+    "tStartMs": 1024930,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "작년 메이저리그 월드시리즈 MVP"
+    } ]
+  }, {
+    "tStartMs": 1026940,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "야마모토 요시노부"
+    } ]
+  }, {
+    "tStartMs": 1028350,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "이런 작년 시리즈 3승했죠"
+    } ]
+  }, {
+    "tStartMs": 1030110,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "한마디로 일본에서"
+    } ]
+  }, {
+    "tStartMs": 1031150,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "가장 유명한 스타들이 다 나왔어"
+    } ]
+  }, {
+    "tStartMs": 1033630,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "오타니 쇼헤이라는 선수는"
+    } ]
+  }, {
+    "tStartMs": 1035540,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "일본 공항에 내리자마자"
+    } ]
+  }, {
+    "tStartMs": 1037150,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "얼굴이 이만하게 박혀있습니다"
+    } ]
+  }, {
+    "tStartMs": 1038910,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "이만하게"
+    } ]
+  }, {
+    "tStartMs": 1040080,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "전 일본을"
+    } ]
+  }, {
+    "tStartMs": 1041090,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "한 번인가밖에 안 가봤지만"
+    } ]
+  }, {
+    "tStartMs": 1042760,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "고개를 돌리면 여기도 오타니야"
+    } ]
+  }, {
+    "tStartMs": 1044290,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "고개를 돌리면 저기도 오타니야"
+    } ]
+  }, {
+    "tStartMs": 1045560,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "이 정도 되는 사람이기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1047620,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "거의 우리나라 박지성 선수"
+    } ]
+  }, {
+    "tStartMs": 1049160,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "최고 전성기보다도"
+    } ]
+  }, {
+    "tStartMs": 1050890,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "저 나라에서는 아마 인지도가"
+    } ]
+  }, {
+    "tStartMs": 1052160,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "있지 않을까 생각합니다"
+    } ]
+  }, {
+    "tStartMs": 1053110,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "저런 스타들이 쫙 나왔죠"
+    } ]
+  }, {
+    "tStartMs": 1054340,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "그래서 이걸 기점으로"
+    } ]
+  }, {
+    "tStartMs": 1056440,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "크게 한번 올라가 보겠다"
+    } ]
+  }, {
+    "tStartMs": 1058180,
+    "dDurationMs": 2420,
+    "segs": [ {
+      "utf8": "일본 내 입지를 한번 제대로 다져보겠다"
+    } ]
+  }, {
+    "tStartMs": 1060600,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "일본의 야구의 인기가 엄청나니까"
+    } ]
+  }, {
+    "tStartMs": 1062760,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "우리가 그걸 활용해서"
+    } ]
+  }, {
+    "tStartMs": 1063660,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "넷플릭스가 큰 돈 쓰더라도"
+    } ]
+  }, {
+    "tStartMs": 1065200,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "한번 쭉 치고 올라가 보자!"
+    } ]
+  }, {
+    "tStartMs": 1067070,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "라는 계획이 있었다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1068690,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "그래서 WBC 오픈까지는"
+    } ]
+  }, {
+    "tStartMs": 1070570,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "분위기가 아주 좋았죠"
+    } ]
+  }, {
+    "tStartMs": 1071490,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "일본이 조별 리그에서 승승장구하고"
+    } ]
+  }, {
+    "tStartMs": 1073650,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "넷플릭스 다운로드스가 5배가 증가했다"
+    } ]
+  }, {
+    "tStartMs": 1076210,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "쭉쭉 좋았어!"
+    } ]
+  }, {
+    "tStartMs": 1077290,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "이대로 결승까지!"
+    } ]
+  }, {
+    "tStartMs": 1079550,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "라고 했는데"
+    } ]
+  }, {
+    "tStartMs": 1081280,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "8강에서"
+    } ]
+  }, {
+    "tStartMs": 1083540,
+    "dDurationMs": 4530,
+    "segs": [ {
+      "utf8": "팔강에서 베네수엘라에 졌는데"
+    } ]
+  }, {
+    "tStartMs": 1088070,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "여기에 많은 사람들이"
+    } ]
+  }, {
+    "tStartMs": 1089620,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "쇼크다"
+    } ]
+  }, {
+    "tStartMs": 1090620,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "그렇게 나오던데"
+    } ]
+  }, {
+    "tStartMs": 1091390,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "베네수엘라의 멤버를 보면"
+    } ]
+  }, {
+    "tStartMs": 1093380,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "쇼크까지는 아니고"
+    } ]
+  }, {
+    "tStartMs": 1095120,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "베네수엘라 멤버들이"
+    } ]
+  }, {
+    "tStartMs": 1096800,
+    "dDurationMs": 3600,
+    "segs": [ {
+      "utf8": "거의 메이저리그 올스타급 멤버들입니다"
+    } ]
+  }, {
+    "tStartMs": 1100400,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "저는 또 이제 메이저리그 좋아하니까"
+    } ]
+  }, {
+    "tStartMs": 1102370,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "거기 멤버들도 장난 아니거든요"
+    } ]
+  }, {
+    "tStartMs": 1104830,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "질 수 있었어"
+    } ]
+  }, {
+    "tStartMs": 1106230,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "충분히 질 수 있었는데"
+    } ]
+  }, {
+    "tStartMs": 1107560,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "제가 보기에는 55:45"
+    } ]
+  }, {
+    "tStartMs": 1109500,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "물론 일본이 국가대항전이 워낙 세니까"
+    } ]
+  }, {
+    "tStartMs": 1111840,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "팀전에 워낙 세서"
+    } ]
+  }, {
+    "tStartMs": 1113370,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "우승, 우승, 4강"
+    } ]
+  }, {
+    "tStartMs": 1114280,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "뭐 4강 뭐 이정도 했으니까"
+    } ]
+  }, {
+    "tStartMs": 1115930,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "그것까지 감안해줘도"
+    } ]
+  }, {
+    "tStartMs": 1117330,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "5대 5 이상은 아닐 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 1118800,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "하여튼 졌죠"
+    } ]
+  }, {
+    "tStartMs": 1119800,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "처음으로 4강에 진출 실패했고"
+    } ]
+  }, {
+    "tStartMs": 1122140,
+    "dDurationMs": 3920,
+    "segs": [ {
+      "utf8": "디펜딩 챔피언이 충격의 탈락을 거둬서"
+    } ]
+  }, {
+    "tStartMs": 1126060,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "어쨌건 넷플릭스 입장에서는"
+    } ]
+  }, {
+    "tStartMs": 1128020,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "야야 잠깐만 결승까지 가서"
+    } ]
+  }, {
+    "tStartMs": 1130020,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "우승했으면 대박이고"
+    } ]
+  }, {
+    "tStartMs": 1132030,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "안타깝게 져도"
+    } ]
+  }, {
+    "tStartMs": 1133040,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "미국하고 싸워서 지는 거니까"
+    } ]
+  }, {
+    "tStartMs": 1134360,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "괜찮았는데"
+    } ]
+  }, {
+    "tStartMs": 1135900,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "8강에서 라는 좀 그런 일이 있었고요"
+    } ]
+  }, {
+    "tStartMs": 1138620,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "물론 이걸 보던 드럼프 대통령은"
+    } ]
+  }, {
+    "tStartMs": 1140670,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "갑자기 숟가락을 올렸죠"
+    } ]
+  }, {
+    "tStartMs": 1142420,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "뜬금없이"
+    } ]
+  }, {
+    "tStartMs": 1143530,
+    "dDurationMs": 3600,
+    "segs": [ {
+      "utf8": "베네수엘라에 51번째 주를 제안했다"
+    } ]
+  }, {
+    "tStartMs": 1147130,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "준결승에서 베네수엘라가 승리한다면"
+    } ]
+  }, {
+    "tStartMs": 1148830,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1149840,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "오 정말 베네수엘라 훌륭하네요"
+    } ]
+  }, {
+    "tStartMs": 1152000,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "최근 베네수엘라에"
+    } ]
+  }, {
+    "tStartMs": 1153000,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "아주 좋은 일들이 계속 생기고 있어요"
+    } ]
+  }, {
+    "tStartMs": 1155350,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "이 마법같은 일들은"
+    } ]
+  }, {
+    "tStartMs": 1156730,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "도대체 왜 생기는 걸까요?"
+    } ]
+  }, {
+    "tStartMs": 1158750,
+    "dDurationMs": 3940,
+    "segs": [ {
+      "utf8": "혹시 제가 마두로 해서 생기는 거 아닐까요?"
+    } ]
+  }, {
+    "tStartMs": 1162690,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "베네수엘라 대통령이 예전엔 마두로였는데"
+    } ]
+  }, {
+    "tStartMs": 1165400,
+    "dDurationMs": 2420,
+    "segs": [ {
+      "utf8": "지금은 사실 다른 대통령이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1167820,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "그 임시 대통령이 있지만"
+    } ]
+  }, {
+    "tStartMs": 1169520,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "사실상 누가 후룩후룩하고 있으니까"
+    } ]
+  }, {
+    "tStartMs": 1171570,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "이런 좋은 일이 생기는 거 아니겠습니까?"
+    } ]
+  }, {
+    "tStartMs": 1173970,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "미국의 51번째 주주"
+    } ]
+  }, {
+    "tStartMs": 1175940,
+    "dDurationMs": 2560,
+    "segs": [ {
+      "utf8": "어떻습니까? 라고"
+    } ]
+  }, {
+    "tStartMs": 1178500,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "소셜트루스에 올렸죠"
+    } ]
+  }, {
+    "tStartMs": 1180120,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "이렇게 올린 건 또 이유가 있는 게"
+    } ]
+  }, {
+    "tStartMs": 1181970,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "베네수엘라의 결승 상대가 미국이었습니다"
+    } ]
+  }, {
+    "tStartMs": 1184850,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "일명 마두로 더비"
+    } ]
+  }, {
+    "tStartMs": 1187040,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "자기가 대통령을 잡아온 나라와"
+    } ]
+  }, {
+    "tStartMs": 1189470,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "야구 결승을 해요"
+    } ]
+  }, {
+    "tStartMs": 1191460,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "참고로 베네수엘라가"
+    } ]
+  }, {
+    "tStartMs": 1192800,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "9회 초에 득점을 하면서"
+    } ]
+  }, {
+    "tStartMs": 1194420,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "3대 2로 승리했습니다"
+    } ]
+  }, {
+    "tStartMs": 1196220,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "베네수엘라가 이겼어요"
+    } ]
+  }, {
+    "tStartMs": 1197770,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "그래서 베네수엘라가 우승했습니다"
+    } ]
+  }, {
+    "tStartMs": 1200480,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "베네수엘라가 사상 처음으로"
+    } ]
+  }, {
+    "tStartMs": 1201920,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "월드 베이스볼 클래식에서 우승했고"
+    } ]
+  }, {
+    "tStartMs": 1204200,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "베네수엘라는 우승한 직후에"
+    } ]
+  }, {
+    "tStartMs": 1205610,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "나라 전체가"
+    } ]
+  }, {
+    "tStartMs": 1206670,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "축제의 장으로 바뀌었다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1208510,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "심지어 지금 델시 로드리게스"
+    } ]
+  }, {
+    "tStartMs": 1210180,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "베네수엘라 대통령 권한대행이"
+    } ]
+  }, {
+    "tStartMs": 1212000,
+    "dDurationMs": 2760,
+    "segs": [ {
+      "utf8": "그날을 국가 경축일로 선포했어요"
+    } ]
+  }, {
+    "tStartMs": 1214760,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "좋아도 얼마나 좋으면"
+    } ]
+  }, {
+    "tStartMs": 1216260,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "잠깐만 우리나라도"
+    } ]
+  }, {
+    "tStartMs": 1217390,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "월드컵 4강 갔을 때"
+    } ]
+  }, {
+    "tStartMs": 1218530,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "국가경축일은 안 했던 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 1220700,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "필수 인력을 제외한 모든 근로자가"
+    } ]
+  }, {
+    "tStartMs": 1222590,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "쉬는 임시 공휴일이 됐습니다"
+    } ]
+  }, {
+    "tStartMs": 1225280,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "얼마나 좋았으면"
+    } ]
+  }, {
+    "tStartMs": 1226630,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "얼마나 좋았으면"
+    } ]
+  }, {
+    "tStartMs": 1227900,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "우리나라 4강 간 날"
+    } ]
+  }, {
+    "tStartMs": 1228830,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "임시 공휴일 했나?"
+    } ]
+  }, {
+    "tStartMs": 1230230,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "아, 제가 기억이 가물가물하네요"
+    } ]
+  }, {
+    "tStartMs": 1231940,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "국가 경축일은 아니었던 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 1233770,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "지금 뭐 얼쑤얼쑤"
+    } ]
+  }, {
+    "tStartMs": 1235300,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "난리가 났다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1236860,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "그리고 베네수엘라가 미국에서 이기니까"
+    } ]
+  }, {
+    "tStartMs": 1239210,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "트럼프 대통령이 졌잖아요"
+    } ]
+  }, {
+    "tStartMs": 1240440,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "하지만 사실상 내 꺼죠"
+    } ]
+  }, {
+    "tStartMs": 1242390,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "그래서 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1243810,
+    "dDurationMs": 3870,
+    "segs": [ {
+      "utf8": "베네수엘라의 51번째 주 승격을 축하드립니다"
+    } ]
+  }, {
+    "tStartMs": 1250220,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "결승전 끝난 다음에 올린 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1251810,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "스테이트후드!"
+    } ]
+  }, {
+    "tStartMs": 1252740,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "Congratulations!"
+    } ]
+  }, {
+    "tStartMs": 1253510,
+    "dDurationMs": 3510,
+    "segs": [ {
+      "utf8": "자네는 51번째 주가 될 자격이 있구만!"
+    } ]
+  }, {
+    "tStartMs": 1257020,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "이겨서 네가 획득했어!"
+    } ]
+  }, {
+    "tStartMs": 1258880,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "니네 힘으로 획득했으니까"
+    } ]
+  }, {
+    "tStartMs": 1260690,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "51번째 주"
+    } ]
+  }, {
+    "tStartMs": 1261460,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "아까 델시 로드리게스는"
+    } ]
+  }, {
+    "tStartMs": 1262520,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "이제 앞으로 주지사"
+    } ]
+  }, {
+    "tStartMs": 1264240,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "거버너라고 불러야겠죠?"
+    } ]
+  }, {
+    "tStartMs": 1265470,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "델시 거버너 수고했어요"
+    } ]
+  }, {
+    "tStartMs": 1267330,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "바로 주 승격으로 확 올라갔다는"
+    } ]
+  }, {
+    "tStartMs": 1269760,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "이런 SNS를 알렸는데"
+    } ]
+  }, {
+    "tStartMs": 1271630,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "공식적으로 뭐가 진행되는 건"
+    } ]
+  }, {
+    "tStartMs": 1272680,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "아직 없는 것 같습니다"
+    } ]
+  }, {
+    "tStartMs": 1274370,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "자 그리고 넷플릭스 입장에서는"
+    } ]
+  }, {
+    "tStartMs": 1276210,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "어쨌건 안타까운 결과를 맞이했는데"
+    } ]
+  }, {
+    "tStartMs": 1278640,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "덕분에 현재 일본에서는"
+    } ]
+  }, {
+    "tStartMs": 1280230,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "넷플릭스 해지 열풍이 불고 있다고 한다"
+    } ]
+  }, {
+    "tStartMs": 1282910,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "아니 근데 8강에서 떨어진 게"
+    } ]
+  }, {
+    "tStartMs": 1285200,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "넷플릭스 때문은 아닌데"
+    } ]
+  }, {
+    "tStartMs": 1287310,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "물론 화풀이할 때"
+    } ]
+  }, {
+    "tStartMs": 1288680,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "좀 필요하고"
+    } ]
+  }, {
+    "tStartMs": 1289720,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "볼 건 다 봤으니까"
+    } ]
+  }, {
+    "tStartMs": 1290680,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "이제 그만하자라는 뜻이 될 수도 있죠"
+    } ]
+  }, {
+    "tStartMs": 1292630,
+    "dDurationMs": 2790,
+    "segs": [ {
+      "utf8": "넷플릭스 해지 인증글이 잇따르고 있다"
+    } ]
+  }, {
+    "tStartMs": 1295420,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "한마디로 잘 안 됐어요"
+    } ]
+  }, {
+    "tStartMs": 1296710,
+    "dDurationMs": 680,
+    "segs": [ {
+      "utf8": "그렇다 보니까"
+    } ]
+  }, {
+    "tStartMs": 1297390,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "이번 BTS 광화문 공연과"
+    } ]
+  }, {
+    "tStartMs": 1299770,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "BTS 라이브, BTS 리턴에"
+    } ]
+  }, {
+    "tStartMs": 1302310,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "넷플릭스가 더 크게"
+    } ]
+  }, {
+    "tStartMs": 1304160,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "이제 걸 수밖에 없는"
+    } ]
+  }, {
+    "tStartMs": 1305240,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "그런 상황이 아니었나 생각이 듭니다"
+    } ]
+  }, {
+    "tStartMs": 1306880,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "일본은 WBC에 걸었고"
+    } ]
+  }, {
+    "tStartMs": 1309010,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "코레아는 이제 BTS"
+    } ]
+  }, {
+    "tStartMs": 1310480,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "월드로는 BTS에 걸은 거죠"
+    } ]
+  }, {
+    "tStartMs": 1313010,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "참고로 넷플릭스가"
+    } ]
+  }, {
+    "tStartMs": 1314610,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "이런 글로벌 라이브 시장에서"
+    } ]
+  }, {
+    "tStartMs": 1316640,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "여러 가지를 했는데"
+    } ]
+  }, {
+    "tStartMs": 1317900,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "여러분들 기억 나시는 거"
+    } ]
+  }, {
+    "tStartMs": 1318840,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "몇 가지만 얘기 드리면"
+    } ]
+  }, {
+    "tStartMs": 1319750,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "이것도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1321020,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "1월에 타이페이 101"
+    } ]
+  }, {
+    "tStartMs": 1323270,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "그 엄청난 빌딩 있죠"
+    } ]
+  }, {
+    "tStartMs": 1324810,
+    "dDurationMs": 3160,
+    "segs": [ {
+      "utf8": "그 빌딩을 알렉스 호놀드라는 등반가가"
+    } ]
+  }, {
+    "tStartMs": 1327970,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "로프 없이"
+    } ]
+  }, {
+    "tStartMs": 1329210,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "안전장비 아무것도 없이"
+    } ]
+  }, {
+    "tStartMs": 1330770,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "실시간으로 올라가는 거를"
+    } ]
+  }, {
+    "tStartMs": 1332700,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "라이브로 보신 분들이 있을 겁니다"
+    } ]
+  }, {
+    "tStartMs": 1333940,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "이거 넷플릭스 단독 생중계였어요"
+    } ]
+  }, {
+    "tStartMs": 1336270,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "이런 거 합니다"
+    } ]
+  }, {
+    "tStartMs": 1337450,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "저는 또 이런 유튜브 보면서"
+    } ]
+  }, {
+    "tStartMs": 1339300,
+    "dDurationMs": 520,
+    "segs": [ {
+      "utf8": "좋아하는 게"
+    } ]
+  }, {
+    "tStartMs": 1339820,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "주로"
+    } ]
+  }, {
+    "tStartMs": 1341420,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "이걸 프리 솔로라고 하거든요"
+    } ]
+  }, {
+    "tStartMs": 1342760,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "프리 솔로 하는 거"
+    } ]
+  }, {
+    "tStartMs": 1343960,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "이런 거 넷플릭스 영상 많이 나왔잖아요"
+    } ]
+  }, {
+    "tStartMs": 1345430,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "이것도 재밌어 해서"
+    } ]
+  }, {
+    "tStartMs": 1346310,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "프리 솔로 영상들 많이 봤는데"
+    } ]
+  }, {
+    "tStartMs": 1348080,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "참고로 저 알렉스 호놀드라는 아저씨는"
+    } ]
+  }, {
+    "tStartMs": 1350680,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "저 분야에서는"
+    } ]
+  }, {
+    "tStartMs": 1351930,
+    "dDurationMs": 740,
+    "segs": [ {
+      "utf8": "너무나 유명한 분이죠"
+    } ]
+  }, {
+    "tStartMs": 1352670,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "너무나 유명한 분"
+    } ]
+  }, {
+    "tStartMs": 1353860,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "2017년 높이 900M의"
+    } ]
+  }, {
+    "tStartMs": 1356200,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "엘 캐피탄을 맨손으로 올라갔다"
+    } ]
+  }, {
+    "tStartMs": 1358930,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "내셔널 그래픽에 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1360320,
+    "dDurationMs": 4040,
+    "segs": [ {
+      "utf8": "이렇게 해서 맨손으로"
+    } ]
+  }, {
+    "tStartMs": 1364360,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "올라갑니다"
+    } ]
+  }, {
+    "tStartMs": 1365300,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "아무런 보호장비나 로프 없이"
+    } ]
+  }, {
+    "tStartMs": 1366770,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "맨손으로 오르는 프리솔로인데"
+    } ]
+  }, {
+    "tStartMs": 1368650,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "유명한 프리솔로 하시는 분들이 있는데"
+    } ]
+  }, {
+    "tStartMs": 1370430,
+    "dDurationMs": 3020,
+    "segs": [ {
+      "utf8": "대부분 돌아가시는 경우가 많습니다 저거는"
+    } ]
+  }, {
+    "tStartMs": 1373450,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "하면 안 돼요"
+    } ]
+  }, {
+    "tStartMs": 1374370,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "진짜 하면 안 되는 게"
+    } ]
+  }, {
+    "tStartMs": 1375770,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "이거는 놓치면"
+    } ]
+  }, {
+    "tStartMs": 1377300,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "사망하는 스포츠라고 해야 되나?"
+    } ]
+  }, {
+    "tStartMs": 1379290,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "놓치면 사망하기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1380270,
+    "dDurationMs": 570,
+    "segs": [ {
+      "utf8": "100% 사망이죠"
+    } ]
+  }, {
+    "tStartMs": 1380840,
+    "dDurationMs": 420,
+    "segs": [ {
+      "utf8": "100% 사망"
+    } ]
+  }, {
+    "tStartMs": 1381260,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "이거 900M예요, 900M"
+    } ]
+  }, {
+    "tStartMs": 1382500,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "이거 맨손으로 올라갑니다"
+    } ]
+  }, {
+    "tStartMs": 1384030,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "가서 보시면 영상이 있는데"
+    } ]
+  }, {
+    "tStartMs": 1385670,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "어지간한 담력으로는"
+    } ]
+  }, {
+    "tStartMs": 1386650,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "계속 쳐다보는 것도 쉽지 않고"
+    } ]
+  }, {
+    "tStartMs": 1389500,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "이 프리 솔로 하다가"
+    } ]
+  }, {
+    "tStartMs": 1390750,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "사망하신 분들이 너무나 많기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1393080,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "근데 알렉스 호놀드도"
+    } ]
+  }, {
+    "tStartMs": 1393800,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "저분은 살아계십니다"
+    } ]
+  }, {
+    "tStartMs": 1394720,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "지금까지 살아가시고"
+    } ]
+  }, {
+    "tStartMs": 1396110,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "저 900M 엘 캐피탄을"
+    } ]
+  }, {
+    "tStartMs": 1397590,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "프리 솔로 한 사람이"
+    } ]
+  }, {
+    "tStartMs": 1398510,
+    "dDurationMs": 540,
+    "segs": [ {
+      "utf8": "제가 알기로"
+    } ]
+  }, {
+    "tStartMs": 1399050,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "아마 지금까지"
+    } ]
+  }, {
+    "tStartMs": 1399890,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "유일한 사람으로 알고 있어요"
+    } ]
+  }, {
+    "tStartMs": 1402200,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "그렇기 때문에 사실은"
+    } ]
+  }, {
+    "tStartMs": 1403780,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "로프 없이"
+    } ]
+  }, {
+    "tStartMs": 1404930,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "실시간으로 그냥 안전장비"
+    } ]
+  }, {
+    "tStartMs": 1406880,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "없이 빌딩을 오르는 거잖아요"
+    } ]
+  }, {
+    "tStartMs": 1408690,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "그래서 많은 사람들은"
+    } ]
+  }, {
+    "tStartMs": 1409420,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "야, 이 미친 이벤트 아니냐"
+    } ]
+  }, {
+    "tStartMs": 1411220,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "라고 얘기를 했는데"
+    } ]
+  }, {
+    "tStartMs": 1412440,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "이 알렉스 호놀드라는"
+    } ]
+  }, {
+    "tStartMs": 1413510,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "인물을 아는 사람들은"
+    } ]
+  }, {
+    "tStartMs": 1415270,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "이거 오르다가 올라가는 거여서"
+    } ]
+  }, {
+    "tStartMs": 1417170,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "이거 이거 이거"
+    } ]
+  }, {
+    "tStartMs": 1418620,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "이거 오르다가"
+    } ]
+  }, {
+    "tStartMs": 1419660,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "이거를 올라가는 거니까"
+    } ]
+  }, {
+    "tStartMs": 1421860,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "상대적으로 훨씬 안전하지 않냐라는"
+    } ]
+  }, {
+    "tStartMs": 1423800,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "마음에 안도는 했죠"
+    } ]
+  }, {
+    "tStartMs": 1424860,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "하여튼 그럼에도 불구하고"
+    } ]
+  }, {
+    "tStartMs": 1426340,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "저걸 실시간으로 라이브로 보니까"
+    } ]
+  }, {
+    "tStartMs": 1428280,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "가슴 떨릴 수밖에 없었고"
+    } ]
+  }, {
+    "tStartMs": 1429740,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "참고로 이 호놀드 아저씨는"
+    } ]
+  }, {
+    "tStartMs": 1431040,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "가끔 유튜버들 불러서"
+    } ]
+  }, {
+    "tStartMs": 1433890,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "프리솔로 합니다"
+    } ]
+  }, {
+    "tStartMs": 1435250,
+    "dDurationMs": 390,
+    "segs": [ {
+      "utf8": "어디더라?"
+    } ]
+  }, {
+    "tStartMs": 1435640,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "몇백만 유튜버하고 프리솔로 하는 걸"
+    } ]
+  }, {
+    "tStartMs": 1437370,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "제가 봤는데"
+    } ]
+  }, {
+    "tStartMs": 1438010,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "이런 데로 올라가는 건 아니지만"
+    } ]
+  }, {
+    "tStartMs": 1439690,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "절벽을 올라요"
+    } ]
+  }, {
+    "tStartMs": 1440790,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "개인적으로 그거 따라가는"
+    } ]
+  }, {
+    "tStartMs": 1441960,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "유튜버도 와 이거 미친놈 아닌가?"
+    } ]
+  }, {
+    "tStartMs": 1443560,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "라고 생각이 들었는데 하더라고"
+    } ]
+  }, {
+    "tStartMs": 1445090,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "여긴 아니지만"
+    } ]
+  }, {
+    "tStartMs": 1445930,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "이걸 하더라고"
+    } ]
+  }, {
+    "tStartMs": 1446880,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "그 유튜버도 이제"
+    } ]
+  }, {
+    "tStartMs": 1447590,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "꽤나 등산하신 분인 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 1449010,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "아... 안 하지"
+    } ]
+  }, {
+    "tStartMs": 1450410,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "절대 못 하지"
+    } ]
+  }, {
+    "tStartMs": 1451130,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "저거는 100억 줘도 안 해"
+    } ]
+  }, {
+    "tStartMs": 1452400,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "100억 줘도"
+    } ]
+  }, {
+    "tStartMs": 1453600,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "참고로 이분을 잘 모르시는 분들이 있을 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 1455550,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "그... 건드리지 마세요"
+    } ]
+  }, {
+    "tStartMs": 1457140,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "쉬고 있어요"
+    } ]
+  }, {
+    "tStartMs": 1458030,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "라는 짤 많이 보셨죠"
+    } ]
+  }, {
+    "tStartMs": 1459390,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "요 분입니다"
+    } ]
+  }, {
+    "tStartMs": 1460450,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "참고로 진짜 쉬고 있는 거예요"
+    } ]
+  }, {
+    "tStartMs": 1463150,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "가끔 요렇게 사이에다가"
+    } ]
+  }, {
+    "tStartMs": 1464710,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "무릎 끼고 쉽니다"
+    } ]
+  }, {
+    "tStartMs": 1466140,
+    "dDurationMs": 690,
+    "segs": [ {
+      "utf8": "요거 올라가다가"
+    } ]
+  }, {
+    "tStartMs": 1466830,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "뭐 무릎 끼고 쉬고"
+    } ]
+  }, {
+    "tStartMs": 1467770,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "뭐 이렇게 팔꿈치 끼고 쉬고 막 그래요"
+    } ]
+  }, {
+    "tStartMs": 1470200,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "요거 쉬는 장면은 맞는데"
+    } ]
+  }, {
+    "tStartMs": 1471990,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "하여튼 뭐 그렇다고 하고"
+    } ]
+  }, {
+    "tStartMs": 1473500,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "저 넷플릭스가 라이브 할 때 당시"
+    } ]
+  }, {
+    "tStartMs": 1475530,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "저 타이페이 101 올라갈 때는"
+    } ]
+  }, {
+    "tStartMs": 1477270,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "10초 딜레이가 있었다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1479170,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "혹시 모르니까"
+    } ]
+  }, {
+    "tStartMs": 1480150,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "혹시 사고 나면 어떡해"
+    } ]
+  }, {
+    "tStartMs": 1481650,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "라이브로 전 세계 사람들이 보고 있는데"
+    } ]
+  }, {
+    "tStartMs": 1483990,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "사고 나면 안 되니까"
+    } ]
+  }, {
+    "tStartMs": 1486170,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "10초 지연이 적용돼 있었다고 해요"
+    } ]
+  }, {
+    "tStartMs": 1487960,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "만약에 사고가 나면"
+    } ]
+  }, {
+    "tStartMs": 1488920,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "이제 송출을 안 하려고"
+    } ]
+  }, {
+    "tStartMs": 1491030,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "필요시 송출을 중단할 예정인데"
+    } ]
+  }, {
+    "tStartMs": 1492810,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "그럴 일은 없었고"
+    } ]
+  }, {
+    "tStartMs": 1494260,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "스포 정말 죄송하지만"
+    } ]
+  }, {
+    "tStartMs": 1495960,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "스포 조금 드리면"
+    } ]
+  }, {
+    "tStartMs": 1497240,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "가볍게 성공하셨습니다"
+    } ]
+  }, {
+    "tStartMs": 1499050,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "아주 가볍게"
+    } ]
+  }, {
+    "tStartMs": 1500390,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "그런 절벽 올라가다"
+    } ]
+  }, {
+    "tStartMs": 1501350,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "올라가셨기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1502370,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "아주 쉽게 올라가셔서"
+    } ]
+  }, {
+    "tStartMs": 1503650,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "뿌이뿌이 하면서"
+    } ]
+  }, {
+    "tStartMs": 1504640,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "셀카 찍고 내려오셨어요"
+    } ]
+  }, {
+    "tStartMs": 1506280,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "그 외에도 넷플릭스 라이브가"
+    } ]
+  }, {
+    "tStartMs": 1507920,
+    "dDurationMs": 3230,
+    "segs": [ {
+      "utf8": "작년에 마이크 타이슨과 유튜버가 싸운 거"
+    } ]
+  }, {
+    "tStartMs": 1511150,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "아니면은 올해 9월에"
+    } ]
+  }, {
+    "tStartMs": 1513040,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "메이웨더와 파퀴아오가"
+    } ]
+  }, {
+    "tStartMs": 1514510,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "다시 2차전을 합니다"
+    } ]
+  }, {
+    "tStartMs": 1516070,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "둘 다 은퇴한 프로복서죠"
+    } ]
+  }, {
+    "tStartMs": 1518370,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "나이도 40대 중반이세요"
+    } ]
+  }, {
+    "tStartMs": 1520480,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "개인적으로는"
+    } ]
+  }, {
+    "tStartMs": 1521730,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "40대 중반 아저씨들을 모셔가지고"
+    } ]
+  }, {
+    "tStartMs": 1524300,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "다시 2차전을 메이웨더 파키아오를 하는데"
+    } ]
+  }, {
+    "tStartMs": 1526770,
+    "dDurationMs": 1840,
+    "segs": [ {
+      "utf8": "이분들이 1차전 때도"
+    } ]
+  }, {
+    "tStartMs": 1528610,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "뭐 썩... 그랬거든요 사실"
+    } ]
+  }, {
+    "tStartMs": 1531530,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "뭐 1차전 때도"
+    } ]
+  }, {
+    "tStartMs": 1532530,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "그냥 판정으로 갔기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1534680,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "나이까지 더 드셔서"
+    } ]
+  }, {
+    "tStartMs": 1535590,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "뭔가 화끈하진 않을 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 1537340,
+    "dDurationMs": 510,
+    "segs": [ {
+      "utf8": "모르죠"
+    } ]
+  }, {
+    "tStartMs": 1537850,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "뭐 이제 잃을 거 없으니까"
+    } ]
+  }, {
+    "tStartMs": 1538750,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "더 화끈하게 할지 모르지만"
+    } ]
+  }, {
+    "tStartMs": 1540350,
+    "dDurationMs": 580,
+    "segs": [ {
+      "utf8": "9월 11일 날"
+    } ]
+  }, {
+    "tStartMs": 1540930,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "2차전 라이브도"
+    } ]
+  }, {
+    "tStartMs": 1541890,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "확정이 돼 있다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1544090,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "자, 다시 돌아와서"
+    } ]
+  }, {
+    "tStartMs": 1545240,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "어쨌건 이번 BTS 광화문 공연은"
+    } ]
+  }, {
+    "tStartMs": 1547780,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "다행히 큰 사고 없이"
+    } ]
+  }, {
+    "tStartMs": 1549020,
+    "dDurationMs": 930,
+    "segs": [ {
+      "utf8": "이제 마무리 되었습니다"
+    } ]
+  }, {
+    "tStartMs": 1549950,
+    "dDurationMs": 2420,
+    "segs": [ {
+      "utf8": "정말 많은 경찰 여러분들과 공무원들의"
+    } ]
+  }, {
+    "tStartMs": 1552370,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "노고의 결과가 아닌가 생각되는데"
+    } ]
+  }, {
+    "tStartMs": 1554250,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "마지막으로 이 광화문은 최근에"
+    } ]
+  }, {
+    "tStartMs": 1556250,
+    "dDurationMs": 1320,
+    "segs": [ {
+      "utf8": "변화를 꾀하고 있다고 해요"
+    } ]
+  }, {
+    "tStartMs": 1557570,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 1558880,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "코엑스와 명동, 해운대에 이어서"
+    } ]
+  }, {
+    "tStartMs": 1560380,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "광화문에서도"
+    } ]
+  }, {
+    "tStartMs": 1561540,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "옥외 광고의 새 시대를 열겠다"
+    } ]
+  }, {
+    "tStartMs": 1563940,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "정부의 계획입니다"
+    } ]
+  }, {
+    "tStartMs": 1565180,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "옥외 광고의 새 시대는 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 1567180,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "한국판 타임스퀘어"
+    } ]
+  }, {
+    "tStartMs": 1569630,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "광화문 스퀘어를 만들겠다"
+    } ]
+  }, {
+    "tStartMs": 1571940,
+    "dDurationMs": 1080,
+    "segs": [ {
+      "utf8": "라는 계획이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1573020,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "이게 광화문 삼거리잖아요"
+    } ]
+  }, {
+    "tStartMs": 1574500,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "광화문 삼거리 가신 분 알겠지만"
+    } ]
+  }, {
+    "tStartMs": 1576260,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "옆에 굉장히"
+    } ]
+  }, {
+    "tStartMs": 1577420,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "커다란 화면들이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1578770,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "지금도"
+    } ]
+  }, {
+    "tStartMs": 1579570,
+    "dDurationMs": 3560,
+    "segs": [ {
+      "utf8": "근데 그것보다 훨씬 더 많은 화면을 만들어서"
+    } ]
+  }, {
+    "tStartMs": 1583130,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "미국 뉴욕의 타임스퀘어 보면은"
+    } ]
+  }, {
+    "tStartMs": 1584940,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "막 전광파들이 미친듯이 붙어있죠"
+    } ]
+  }, {
+    "tStartMs": 1587460,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "제가 일본 오사카 도톤보리는 안 가봤는데"
+    } ]
+  }, {
+    "tStartMs": 1589480,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "거기 뭐 많은 뭐 이런"
+    } ]
+  }, {
+    "tStartMs": 1590940,
+    "dDurationMs": 1010,
+    "segs": [ {
+      "utf8": "전광판들이 붙여있으니까"
+    } ]
+  }, {
+    "tStartMs": 1591950,
+    "dDurationMs": 770,
+    "segs": [ {
+      "utf8": "이것처럼"
+    } ]
+  }, {
+    "tStartMs": 1592720,
+    "dDurationMs": 560,
+    "segs": [ {
+      "utf8": "쫙 붙여서"
+    } ]
+  }, {
+    "tStartMs": 1593280,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "한국판 광화문 스퀘어를 만들자"
+    } ]
+  }, {
+    "tStartMs": 1595500,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "이런 프로젝트가 있다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1597930,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "그래서 이렇게"
+    } ]
+  }, {
+    "tStartMs": 1599070,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "대형 광고판이"
+    } ]
+  }, {
+    "tStartMs": 1600430,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "하나 둘 설치될 예정이다"
+    } ]
+  }, {
+    "tStartMs": 1602790,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "다른 말로 하면은"
+    } ]
+  }, {
+    "tStartMs": 1603730,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "이 주변에 빌딩이 있는"
+    } ]
+  }, {
+    "tStartMs": 1605510,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "빌딩주분들은"
+    } ]
+  }, {
+    "tStartMs": 1606870,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "대박이 난 게 아닌가"
+    } ]
+  }, {
+    "tStartMs": 1607870,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "이거 하나에 얼마일까요"
+    } ]
+  }, {
+    "tStartMs": 1610120,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "빌딩 가격 많이 오르지 않을까 생각이 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1612170,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "외벽에 엄청나게 큰"
+    } ]
+  }, {
+    "tStartMs": 1613580,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "전광판을 쭉 설치해서"
+    } ]
+  }, {
+    "tStartMs": 1615680,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "K타임스퀘어"
+    } ]
+  }, {
+    "tStartMs": 1617220,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "광화문 광장"
+    } ]
+  }, {
+    "tStartMs": 1618670,
+    "dDurationMs": 830,
+    "segs": [ {
+      "utf8": "전세계 사람들이"
+    } ]
+  }, {
+    "tStartMs": 1619500,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "모두 즐길 수 있는"
+    } ]
+  }, {
+    "tStartMs": 1620690,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "공간이 되지 않을까"
+    } ]
+  }, {
+    "tStartMs": 1621790,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "한번 기대해 보겠습니다"
+    } ]
+  } ]
+}

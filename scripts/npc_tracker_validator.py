@@ -6,16 +6,15 @@ NPC 추적표 ↔ draft JSON 교차 검증 스크립트
 """
 
 import json
-import sys
-import os
 import re
-from pathlib import Path
+import sys
 from difflib import SequenceMatcher
+from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
-BASE = Path(r"C:\Users\wjjo\Desktop\글도비")
+BASE = Path(__file__).resolve().parents[1]
 TREATMENTS = BASE / "treatments"
 DOCS = BASE / "전처리_ssot" / "docs" / "20260324"
 
@@ -60,7 +59,7 @@ def get_npc_final_states(draft_path: Path, cutoff: int) -> dict:
     draft JSON에서 cutoff 블록까지의 각 NPC 최종 상태를 추출.
     returns: {npc_name: {"after": str, "last_block": str, "block_num": int}}
     """
-    with open(draft_path, "r", encoding="utf-8") as f:
+    with open(draft_path, encoding="utf-8") as f:
         data = json.load(f)
 
     # Handle both [blocks] and {"blocks": [blocks]} formats
@@ -93,7 +92,7 @@ def extract_tracker_npcs(tracker_path: Path) -> dict:
     if not tracker_path.exists():
         return {}
 
-    with open(tracker_path, "r", encoding="utf-8") as f:
+    with open(tracker_path, encoding="utf-8") as f:
         content = f.read()
 
     npcs = {}
@@ -101,20 +100,20 @@ def extract_tracker_npcs(tracker_path: Path) -> dict:
     patterns = [
         # 미완성작: ### NPC이름 — 역할\n- **Block N after**: 상태값
         re.compile(
-            r"###\s+(.+?)\s*(?:—|─|-)\s*.+?\n"
-            r".*?\*\*Block \d+ after\*\*:\s*(.+?)(?:\n|$)",
+            r"###\s+(.+?)\s*(?:—|─|-)\s*.+?\n",  # utf8-hygiene: allow-line rationale: regex uses literal ? quantifiers with Korean tracker headings.
+            r".*?\*\*Block \d+ after\*\*:\s*(.+?)(?:\n|$)",  # utf8-hygiene: allow-line rationale: regex uses literal ? quantifiers for tracker capture groups.
             re.DOTALL,
         ),
         # 완성작: ### NPC이름 — 역할\n- **최종 상태**: 상태값
         re.compile(
-            r"###\s+(.+?)\s*(?:—|─|-)\s*.+?\n"
-            r".*?\*\*최종 상태\*\*:\s*(.+?)(?:\n|$)",
+            r"###\s+(.+?)\s*(?:—|─|-)\s*.+?\n",  # utf8-hygiene: allow-line rationale: regex uses literal ? quantifiers with Korean tracker headings.
+            r".*?\*\*최종 상태\*\*:\s*(.+?)(?:\n|$)",  # utf8-hygiene: allow-line rationale: regex uses literal ? quantifiers for tracker capture groups.
             re.DOTALL,
         ),
         # 완성작 대안: ### NPC이름 — 역할\n- **최종 블록**: Block N\n- **최종 상태**: 상태값
         re.compile(
-            r"###\s+(.+?)\s*(?:—|─|-)\s*.+?\n"
-            r".*?\*\*최종 블록\*\*:.+?\n.*?\*\*최종 상태\*\*:\s*(.+?)(?:\n|$)",
+            r"###\s+(.+?)\s*(?:—|─|-)\s*.+?\n",  # utf8-hygiene: allow-line rationale: regex uses literal ? quantifiers with Korean tracker headings.
+            r".*?\*\*최종 블록\*\*:.+?\n.*?\*\*최종 상태\*\*:\s*(.+?)(?:\n|$)",  # utf8-hygiene: allow-line rationale: regex uses literal ? quantifiers for tracker capture groups.
             re.DOTALL,
         ),
         # 테이블 기반 추출: | NPC이름 | Block N after 값 |
@@ -199,20 +198,19 @@ def validate_work(work_id: str, config: dict) -> dict:
             else:
                 result["mismatches"].append(entry)
         else:
-            result["missing_in_tracker"].append({
-                "npc": draft_name,
-                "last_block": draft_state["last_block"],
-                "draft_after": draft_state["after"][:80],
-            })
+            result["missing_in_tracker"].append(
+                {
+                    "npc": draft_name,
+                    "last_block": draft_state["last_block"],
+                    "draft_after": draft_state["after"][:80],
+                }
+            )
 
     # 추적표에만 있고 draft에 없는 NPC
     for t_name in tracker_npcs:
         if t_name not in matched_tracker_names:
             # Draft 이름과 부분 매치 시도
-            found = any(
-                t_name == d or t_name in d or d in t_name
-                for d in draft_npcs
-            )
+            found = any(t_name == d or t_name in d or d in t_name for d in draft_npcs)
             if not found:
                 result["extra_in_tracker"].append({"npc": t_name})
 
@@ -224,7 +222,7 @@ def format_report(results: list[dict]) -> str:
     lines = [
         "# NPC 추적표 교차 검증 리포트",
         "",
-        f"> 검증 일시: 2026-03-25",
+        "> 검증 일시: 2026-03-25",
         f"> 검증 대상: {len(results)}개 작품",
         "",
         "---",
@@ -256,8 +254,8 @@ def format_report(results: list[dict]) -> str:
         total = n_match + n_mismatch + n_missing
         rate = (n_match / total * 100) if total > 0 else 0
 
-        lines.append(f"| 항목 | 수 |")
-        lines.append(f"|------|-----|")
+        lines.append("| 항목 | 수 |")
+        lines.append("|------|-----|")
         lines.append(f"| 일치 (유사도 ≥ 0.5) | {n_match} |")
         lines.append(f"| 불일치 (유사도 < 0.5) | {n_mismatch} |")
         lines.append(f"| 추적표 누락 (draft에만 존재) | {n_missing} |")
@@ -293,8 +291,8 @@ def format_report(results: list[dict]) -> str:
     grand_rate = (total_match / grand_total * 100) if grand_total > 0 else 0
     lines.append("## 종합 결과")
     lines.append("")
-    lines.append(f"| 항목 | 전체 |")
-    lines.append(f"|------|------|")
+    lines.append("| 항목 | 전체 |")
+    lines.append("|------|------|")
     lines.append(f"| 총 NPC 검증 수 | {grand_total} |")
     lines.append(f"| 일치 | {total_match} |")
     lines.append(f"| 불일치 | {total_mismatch} |")

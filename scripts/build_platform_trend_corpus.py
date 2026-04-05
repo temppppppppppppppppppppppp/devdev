@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Build a public-platform trend corpus for Korean serial novel platforms.
 
 Collection only:
@@ -12,6 +11,7 @@ LLM-side work happens later:
 - deciding what is trend vs. noise
 - converting platform packaging into usable concept engines
 """
+
 from __future__ import annotations
 
 import argparse
@@ -29,20 +29,18 @@ from urllib.parse import parse_qs, urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_ROOT = (
     ROOT
-    / "narrative_ssot"
-    / "10_reference_bank"
+    / "material_ssot"
+    / "10_research"
+    / "40_analysis"
     / "source_corpora"
     / "platform_trends"
     / "kr_serial_platforms"
 )
 USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/135.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
 )
 HEADERS = {"User-Agent": USER_AGENT}
 KAKAO_MENU_UID = 10011
@@ -184,7 +182,9 @@ def _save_raw_html(config: CrawlConfig, *, platform: str, surface_id: str, html:
     return str(raw_path.relative_to(ROOT)).replace("\\", "/")
 
 
-def _fetch(session: requests.Session, config: CrawlConfig, *, platform: str, surface_id: str, url: str) -> tuple[str, str]:
+def _fetch(
+    session: requests.Session, config: CrawlConfig, *, platform: str, surface_id: str, url: str
+) -> tuple[str, str]:
     response = session.get(url, timeout=30)
     response.raise_for_status()
     html = response.text
@@ -195,16 +195,32 @@ def _fetch(session: requests.Session, config: CrawlConfig, *, platform: str, sur
     return html, raw_rel
 
 
-def _naver_list_entry(card: Any, *, platform: str, surface_id: str, surface_label: str, source_url: str, rank_in_surface: int) -> dict[str, Any]:
+def _naver_list_entry(
+    card: Any, *, platform: str, surface_id: str, surface_label: str, source_url: str, rank_in_surface: int
+) -> dict[str, Any]:
     link = card.select_one("h3 a[href]") or card.select_one("a.pic[href]")
     href = link.get("href", "") if link else ""
     full_url = urljoin("https://series.naver.com", href)
     title_text = link.get_text(" ", strip=True) if link else ""
-    badges = [_clean_text(node.get_text(" ", strip=True)) for node in card.select("h3 em, a.pic em.ico, a.pic em.sticker") if _clean_text(node.get_text(" ", strip=True))]
+    badges = [
+        _clean_text(node.get_text(" ", strip=True))
+        for node in card.select("h3 em, a.pic em.ico, a.pic em.sticker")
+        if _clean_text(node.get_text(" ", strip=True))
+    ]
     info = card.select_one("p.info")
-    author = _clean_text(info.select_one(".author").get_text(" ", strip=True)) if info and info.select_one(".author") else ""
-    score = _clean_text(info.select_one(".score_num").get_text(" ", strip=True)) if info and info.select_one(".score_num") else ""
-    free_info = _clean_text(info.select_one(".free_info").get_text(" ", strip=True)) if info and info.select_one(".free_info") else ""
+    author = (
+        _clean_text(info.select_one(".author").get_text(" ", strip=True)) if info and info.select_one(".author") else ""
+    )
+    score = (
+        _clean_text(info.select_one(".score_num").get_text(" ", strip=True))
+        if info and info.select_one(".score_num")
+        else ""
+    )
+    free_info = (
+        _clean_text(info.select_one(".free_info").get_text(" ", strip=True))
+        if info and info.select_one(".free_info")
+        else ""
+    )
     info_text = _clean_text(info.get_text(" ", strip=True)) if info else ""
     date_match = re.search(r"\d{4}\.\d{2}\.\d{2}\.", info_text)
     date_text = date_match.group(0) if date_match else ""
@@ -235,7 +251,9 @@ def _naver_list_entry(card: Any, *, platform: str, surface_id: str, surface_labe
     }
 
 
-def _parse_naver_recent_like(html: str, *, surface_id: str, surface_label: str, source_url: str) -> list[dict[str, Any]]:
+def _parse_naver_recent_like(
+    html: str, *, surface_id: str, surface_label: str, source_url: str
+) -> list[dict[str, Any]]:
     soup = BeautifulSoup(html, "html.parser")
     cards = soup.select("ul.lst_list li")
     rows: list[dict[str, Any]] = []
@@ -262,12 +280,32 @@ def _parse_naver_top100(html: str, *, source_url: str, surface_id: str, surface_
             continue
         href = title_link.get("href", "")
         full_url = urljoin("https://series.naver.com", href)
-        badges = [_clean_text(node.get_text(" ", strip=True)) for node in card.select("h3 em, a.pic em.ico, a.pic em.sticker") if _clean_text(node.get_text(" ", strip=True))]
+        badges = [
+            _clean_text(node.get_text(" ", strip=True))
+            for node in card.select("h3 em, a.pic em.ico, a.pic em.sticker")
+            if _clean_text(node.get_text(" ", strip=True))
+        ]
         info = card.select_one(".comic_cont p.info")
-        author = _clean_text(info.select_one(".author").get_text(" ", strip=True)) if info and info.select_one(".author") else ""
-        score = _clean_text(info.select_one(".score_num").get_text(" ", strip=True)) if info and info.select_one(".score_num") else ""
-        genre = _clean_text(info.select_one(".genre").get_text(" ", strip=True)) if info and info.select_one(".genre") else ""
-        rank_text = _clean_text(card.select_one(".top_num").get_text(" ", strip=True)) if card.select_one(".top_num") else str(index)
+        author = (
+            _clean_text(info.select_one(".author").get_text(" ", strip=True))
+            if info and info.select_one(".author")
+            else ""
+        )
+        score = (
+            _clean_text(info.select_one(".score_num").get_text(" ", strip=True))
+            if info and info.select_one(".score_num")
+            else ""
+        )
+        genre = (
+            _clean_text(info.select_one(".genre").get_text(" ", strip=True))
+            if info and info.select_one(".genre")
+            else ""
+        )
+        rank_text = (
+            _clean_text(card.select_one(".top_num").get_text(" ", strip=True))
+            if card.select_one(".top_num")
+            else str(index)
+        )
         rows.append(
             {
                 "platform": "naver_series",
@@ -355,7 +393,9 @@ def build_naver_surfaces(config: CrawlConfig) -> list[dict[str, Any]]:
     return surfaces
 
 
-def _munpia_card_entry(card: Any, *, surface_id: str, surface_label: str, source_url: str, rank_in_surface: int, entry_type: str) -> dict[str, Any] | None:
+def _munpia_card_entry(
+    card: Any, *, surface_id: str, surface_label: str, source_url: str, rank_in_surface: int, entry_type: str
+) -> dict[str, Any] | None:
     title_node = card.select_one(".novel-title")
     if not title_node:
         title_node = card.select_one(".title strong")
@@ -368,9 +408,25 @@ def _munpia_card_entry(card: Any, *, surface_id: str, surface_label: str, source
     elif card.select_one("a[href]"):
         href = card.select_one("a[href]").get("href", "")
     full_url = urljoin("https://novel.munpia.com", href)
-    genre = _clean_text(card.select_one(".novel-genre").get_text(" ", strip=True)) if card.select_one(".novel-genre") else _clean_text(card.select_one(".genre").get_text(" ", strip=True)) if card.select_one(".genre") else ""
-    author = _clean_text(card.select_one(".novel-author").get_text(" ", strip=True)) if card.select_one(".novel-author") else _clean_text(card.select_one(".author").get_text(" ", strip=True)) if card.select_one(".author") else ""
-    rank_text = _clean_text(card.select_one(".rank-num").get_text(" ", strip=True)) if card.select_one(".rank-num") else str(rank_in_surface)
+    genre = (
+        _clean_text(card.select_one(".novel-genre").get_text(" ", strip=True))
+        if card.select_one(".novel-genre")
+        else _clean_text(card.select_one(".genre").get_text(" ", strip=True))
+        if card.select_one(".genre")
+        else ""
+    )
+    author = (
+        _clean_text(card.select_one(".novel-author").get_text(" ", strip=True))
+        if card.select_one(".novel-author")
+        else _clean_text(card.select_one(".author").get_text(" ", strip=True))
+        if card.select_one(".author")
+        else ""
+    )
+    rank_text = (
+        _clean_text(card.select_one(".rank-num").get_text(" ", strip=True))
+        if card.select_one(".rank-num")
+        else str(rank_in_surface)
+    )
     product_id_match = re.search(r"/(\d+)$", href)
     return {
         "platform": "munpia",
@@ -473,14 +529,24 @@ def _parse_munpia_best(html: str, *, source_url: str, surface_id: str, surface_l
     return rows
 
 
-def _parse_munpia_event_list(html: str, *, source_url: str, surface_id: str, surface_label: str) -> list[dict[str, Any]]:
+def _parse_munpia_event_list(
+    html: str, *, source_url: str, surface_id: str, surface_label: str
+) -> list[dict[str, Any]]:
     soup = BeautifulSoup(html, "html.parser")
     rows: list[dict[str, Any]] = []
     for index, card in enumerate(soup.select(".event-list"), start=1):
-        title = _clean_text(card.select_one(".event-title").get_text(" ", strip=True)) if card.select_one(".event-title") else ""
+        title = (
+            _clean_text(card.select_one(".event-title").get_text(" ", strip=True))
+            if card.select_one(".event-title")
+            else ""
+        )
         if not title:
             continue
-        desc = _clean_text(card.select_one(".event-discript").get_text(" ", strip=True)) if card.select_one(".event-discript") else ""
+        desc = (
+            _clean_text(card.select_one(".event-discript").get_text(" ", strip=True))
+            if card.select_one(".event-discript")
+            else ""
+        )
         href = card.select_one("a[href]").get("href", "") if card.select_one("a[href]") else ""
         rows.append(
             {
@@ -746,7 +812,9 @@ def _parser_dispatch(parser_name: str):
     }[parser_name]
 
 
-def _collect_entries(session: requests.Session, config: CrawlConfig) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def _collect_entries(
+    session: requests.Session, config: CrawlConfig
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     surfaces = build_naver_surfaces(config) + build_munpia_surfaces() + build_kakao_surfaces(session, config)
     surface_rows: list[dict[str, Any]] = []
     entry_rows: list[dict[str, Any]] = []

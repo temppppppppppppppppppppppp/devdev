@@ -1,0 +1,15 @@
+{
+  "_schema_version": "platform_trend_collection_status.v1",
+  "surface_count": 61,
+  "entry_count": 2106,
+  "entry_count_by_platform": {
+    "naver_series": 942,
+    "munpia": 444,
+    "kakaopage": 720
+  },
+  "db_path": "material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms/platform_trends.sqlite3",
+  "notes": [
+    "Counts reflect visible public HTML / embedded JSON only.",
+    "Rollups are exact-count helpers, not qualitative trend judgments."
+  ]
+}

@@ -90,10 +90,10 @@
 
 정식 전처리 SSOT 경로:
 
-- `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\SSOT_stage0_preprocess_integrated_order.md`
-- `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\stage0_source_manifest_harness.md`
-- `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\stage0_profile_lock_harness.md`
-- `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\stage0_material_collection_harness.md`
+- `전처리_ssot\docs\SSOT_stage0_preprocess_integrated_order.md`
+- `전처리_ssot\docs\stage0_source_manifest_harness.md`
+- `전처리_ssot\docs\stage0_profile_lock_harness.md`
+- `전처리_ssot\docs\stage0_material_collection_harness.md`
 
 원칙:
 
@@ -124,7 +124,7 @@
 하네스 관련 작업은 아래 순서로 문서를 읽는다.
 
 1. 현재 문서 `SSOT_blockguide-integrated-order.md`
-2. `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\SSOT_stage0_preprocess_integrated_order.md`
+2. `전처리_ssot\docs\SSOT_stage0_preprocess_integrated_order.md`
 3. `treatment-planning-harness.md`
 4. `treatment-production-harness-v2.md`
 5. `bi-production-harness-v1.md`
@@ -202,7 +202,7 @@
 ## 3. 특정 기획안이 들어왔을 때의 자동 오더
 
 사용자가 특정 기획안, 작품명, `work_id`를 던지면 아래 순서를 기본값으로 실행한다.
-기본 문서 경로는 `C:\Users\wjjo\Desktop\글도비\docs\blockguide`, 전처리 경로는 `C:\Users\wjjo\Desktop\글도비\전처리_ssot`다.
+기본 문서 경로는 `docs\blockguide`, 전처리 경로는 `전처리_ssot`다.
 
 1. 현재 문서와 `전처리_ssot/SSOT_stage0_preprocess_integrated_order.md`를 UTF-8로 연다.
 2. 현재 작품의 전처리 산출물 4개, `phase0_design`, `TR draft`, `BI`, 감리 보고서 존재 여부를 확인한다.

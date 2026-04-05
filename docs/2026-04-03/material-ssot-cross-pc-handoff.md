@@ -4,6 +4,8 @@ Date: 2026-04-03
 Status: handoff baseline
 Scope: 다른 PC에서 `material_ssot` / `research` / `narrative_ssot` 정리 작업을 안전하게 이어받기 위한 현재 컨텍스트를 한 장으로 고정한다
 
+Historical Note: this handoff was captured before the bounded `source_corpora` cutover and before the mirror/archive-shell wording was finalized. Old narrative reference-bank source-corpora mentions below are pre-cutover evidence, not current authority.
+
 ## 1. Read This First
 
 새 PC에서 이 작업을 이어받을 때는 아래 순서로 열면 된다.
@@ -146,7 +148,7 @@ Scope: 다른 PC에서 `material_ssot` / `research` / `narrative_ssot` 정리 �
 - `scripts/build_youtube_channel_corpus.py`
 - `scripts/export_youtube_idea_packets.py`
 
-이 스크립트들이 아직 `narrative_ssot/10_reference_bank/source_corpora/...`를 default root로 쓴다.
+이 스크립트들이 아직 old narrative reference-bank source-corpora lanes를 default root로 쓴다.
 
 그래서 다음 execution은 `source_corpora` subtree cutover여야 한다.
 
@@ -167,7 +169,7 @@ Scope: 다른 PC에서 `material_ssot` / `research` / `narrative_ssot` 정리 �
 1. `material_ssot/10_research/40_analysis/source_corpora/platform_trends/kr_serial_platforms`를 canonical lane으로 선언
 2. `scripts/build_platform_trend_corpus.py` default output root 전환
 3. `scripts/build_business_trend_slice.py` default input/output root 전환
-4. `narrative_ssot/10_reference_bank/source_corpora/platform_trends/kr_serial_platforms` subtree move
+4. old narrative reference-bank platform-trend source-corpora subtree move
 5. old path pointer화
 6. stale reference sweep
 7. UTF-8 hygiene + targeted smoke validation
@@ -209,7 +211,7 @@ Scope: 다른 PC에서 `material_ssot` / `research` / `narrative_ssot` 정리 �
 - `material_ssot`
 - `docs/2026-04-03/` 관련 정리 문서
 - `docs/실물기반 사각지대 테스트/` pointer/provenance shell
-- `narrative_ssot/10_reference_bank/source_corpora`
+- old narrative reference-bank source-corpora root
 - related builder scripts
 
 ## 10. Do Not Do First

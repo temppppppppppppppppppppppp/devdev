@@ -1,0 +1,2812 @@
+
+
+
+
+
+
+
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Expires" content="-1">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Cache-Control" content="No-Cache">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+
+
+<title>네이버 시리즈</title>
+
+
+
+
+
+	
+	
+		<link rel="shortcut icon" type="image/x-icon" href="https://ssl.pstatic.net/static/nstore/series_favicon_152.ico" />
+		<link rel="apple-touch-icon-precomposed" href="https://ssl.pstatic.net/static/nstore/series_favicon_114.png">
+		<link rel="apple-touch-icon-precomposed" sizes="114X114" href="https://ssl.pstatic.net/static/nstore/series_favicon_114.png">
+		<link rel="apple-touch-icon-precomposed" sizes="120X120" href="https://ssl.pstatic.net/static/nstore/series_favicon_120.png">
+		<link rel="apple-touch-icon-precomposed" sizes="144X144" href="https://ssl.pstatic.net/static/nstore/series_favicon_144.png">
+		<link rel="apple-touch-icon-precomposed" sizes="152X152" href="https://ssl.pstatic.net/static/nstore/series_favicon_152.png">
+	
+
+
+<link rel="stylesheet" href="/css/swiper.min.css?1773017538000" type="text/css">
+
+<link rel="stylesheet" href="/css/nstore_util.css?1773017538000" type="text/css">
+
+<link rel="stylesheet" href="/css/nstore_cont.css?1773017538000" type="text/css">
+
+<link rel="stylesheet" href="/css/skip/nstore_js.css?1773017538000" type="text/css">
+
+<link rel="stylesheet" href="/css/nstore.css?1773017538000" type="text/css">
+
+
+
+
+
+<script type="text/javascript">
+
+var gnb_service = "nstore";
+var gnb_logout = encodeURIComponent(location.href);
+var gnb_template = "gnb_utf8";
+var gnb_brightness = 1;
+
+
+
+var LOGIN_STATUS = {
+	"LOGIN" : 0,
+	"LOGOUT" : 1,
+	"UNKNOWN" : 2
+};
+
+var ID_TYPE_STATUS = {
+		"PERSONAL" : 0,
+		"PRIVATELY_OWNED_BUSINESS" : 1,
+		"PROFIT_CORPORATION" : 2,
+		"NONPROFIT_CORPORATION" : 3,
+		"ETC" : 4
+};
+
+var gIsGroupId = false;
+
+var gLoginStatus;
+if (false == true) {
+	gLoginStatus = LOGIN_STATUS.LOGIN; 
+} else if (false == false) {
+	gLoginStatus = LOGIN_STATUS.LOGOUT;
+} else {
+	gLoginStatus = LOGIN_STATUS.UNKNOWN;
+}
+
+var gIsGroupId = false;
+if (false == true && true) {
+	gIsGroupId = true;
+}
+
+
+var gIsRealName = false;
+if (false == true && false) {
+	gIsRealName = true;
+}
+
+
+var logoutCurrentFullUrl = "";
+var loginCurrentFullUrl = "";
+
+
+var ccsrv = "cc.naver.com";
+var g_ssc = "nstore";
+window.nsc = g_ssc;
+var nclk_evt = 3;
+
+
+var lcs_SerName = "lcs.naver.com";
+
+
+var gRosYn = 'N';
+var gRosAlertMessage = '서비스 점검 중입니다.\n\n점검시간: 8월 4일 02시~07시(5시간)\n\n네이버페이 DB점검 작업으로 서비스 이용이\n불가능합니다. 이용에 불편을 드려 죄송합니다.';
+
+
+var gInspYn = 'Y';
+
+var gsDenyGroupIdMessage = "단체 아이디로 로그인하면 이용할 수 없습니다. 일반 아이디로 로그인 후 다시 이용해 주세요.";
+</script>
+
+
+<script>
+	if (window.location.pathname.indexOf("/my") === 0) {
+		var g_ssc = "series.my";
+	} else {
+		var g_ssc = "series.novel";
+	}
+	var ccsrv = "cc.naver.com";
+	window.nsc = g_ssc;
+</script>
+<script src="/js/nclk.js"></script>
+
+<script type="text/javascript" src="https://wcs.naver.net/wcslog.js"></script>
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-140047759-2"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('set', {'user_id': ''});
+    gtag('config', 'UA-140047759-2');
+</script>
+
+
+<meta name="jsfooter" content="/WEB-INF/jsp/comicnovel/listScript.jsp" />
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+        
+    
+
+
+
+    
+    
+        
+        
+        
+    
+    
+    
+    
+    
+    
+    
+    
+
+
+
+
+
+
+<meta property="og:type" content="article"/>
+<meta property="og:article:author" content="네이버 시리즈"/>
+<meta property="og:image" content="https://ssl.pstatic.net/static/nstore/ogtag_series_v2.png"/>
+<meta property="og:title" content="신작 웹소설 : 네이버시리즈"/>
+<meta property="og:description" content="신작 웹소설을 만나보세요."/>
+<meta property="og:url" content="https://series.naver.com/novel/recentList.series"/>
+<script type="text/javascript">
+	 var g_ssc = "series.novel";
+	 window.nsc = g_ssc;
+</script>
+
+
+</head>
+
+	
+	
+	
+
+<body class="bs " >
+<a href="#top_menu" class="skip" onclick="document.getElementById('top_menu').tabIndex=-1;document.getElementById('top_menu').focus();return false;">메인메뉴 바로가기</a>
+<a href="#container" class="skip" onclick="document.getElementById('container').tabIndex=-1;document.getElementById('container').focus();return false;">본문 바로가기</a>
+
+	
+	
+	
+	
+		<div id="wrap">
+	
+
+
+	<!-- header -->
+	<div id ="header_series">
+	<div id="header" class="series">
+		<div class="nstore_gnb_wrap">
+		<div id="gnb">
+			<script type="text/javascript" charset="utf-8" src="https://ssl.pstatic.net/static.gn/templates/gnb_utf8.nhn?2026040114"></script>
+		</div>
+	</div>
+	<!-- LNB -->
+	
+
+
+
+
+
+
+
+<div class="main_box">
+    <h1>
+        <a href="http://www.naver.com/" class="naver">NAVER</a>
+        <a href="/nstoreHome.series" class="main_series N=a:STA.nstore">시리즈</a>
+    </h1>
+    <div class="gnb"></div>
+</div>
+
+<!-- LNB -->
+<div class="tab_box " >
+    <div class="tab_box_wrap">
+        <h2 class="blind">Local Navigation Bar</h2>
+        <ul id="top_menu" class="lnb NE=a:LNB">
+            <li class="lnb_list list_no on"  ><a href="/novel/home.series" class="no N=a:LNB.novel"><span class="blind">웹소설</span></a>
+                
+                    <ul class="list_inner NE=a:snb">
+                        <li class="">
+                            <a href="/novel/home.series" class="no1  NPI=a:home"><span class="blind">웹소설 홈</span></a>
+                        </li>
+                        <li class="">
+                            <a href="/novel/top100List.series" class="cm10 NPI=a:top"><span class="blind">TOP 100</span></a>
+                        </li>
+                        <li class="">
+                            <a href="/novel/specialFreeList.series?specialFreeTypeCode=SEPARATED_VOLUME_CONTENTS" class="cm16 NPI=a:nonserial"><span class="blind">인기 단행본</span></a>
+                        </li>
+                        <li class="">
+                            <a href="/novel/specialFreeList.series?specialFreeTypeCode=HOURLYFREE" class="cm15 NPI=a:freepass"><span class="blind">프리패스</span></a>
+                        </li>
+                        <li class="">
+                            <a href="/novel/specialFreeList.series?specialFreeTypeCode=FREEFROMTODAY" class="cm14 NPI=a:free"><span class="blind">매일10시무료</span></a>
+                        </li>
+                        <li class="">
+                            <a href="/novel/specialFreeList.series?specialFreeTypeCode=TIMEDEAL" class="cm4 NPI=a:event"><span class="blind">타임딜</span></a>
+                        </li>
+                        <li class="on">
+                            <a href="/novel/recommendList.series" class="cm2 NPI=a:category"><span class="blind">카테고리</span></a>
+                        </li>
+
+                    </ul>
+                    <div class="noble_recommend_box">
+                        <h3 class="noble_recommend_txt">추천장르</h3>
+                        <ul class="noble_recommend">
+                            <li>
+                                <a href="/novel/categoryProductList.series?categoryTypeCode=genre&genreCode=201" class="no_sub1" target="_self">로맨스</a>
+                            </li>
+                            <li>
+                                <a href="/novel/categoryProductList.series?categoryTypeCode=genre&genreCode=207" class="no_sub2" target="_self">로판</a>
+                            </li>
+                            <li>
+                                <a href="/novel/categoryProductList.series?categoryTypeCode=genre&genreCode=202" class="no_sub3" target="_self">판타지</a>
+                            </li>
+                        </ul>
+                    </div>
+                
+            </li>
+            <li class="lnb_list list_cm "><a href="/comic/home.series" class="cm NPI=a:comic"><span class="blind">만화</span></a>
+                
+            </li>
+            <li class="lnb_list list_bs type_bar "><a href="/ebook/home.series" class="bs NPI=a:ebook"><span class="blind">e북</span></a>
+                
+            </li>
+        </ul>
+
+        <!-- MCMS 공지사항 부분 -->
+        
+
+        <div class="my_info_box">
+            
+            <ol class="my_info">
+                <li><a href="/my/library/productList.series" class="N=a:STA.my"><span class="my_cart">MY보관함</span></a></li>
+                <li>
+                    <a href="/cart/list.series"><span class="my_shopbox">장바구니</span>
+                        <span id="cartCountArea" class="txt">0</span>
+                    </a>
+                </li>
+            </ol>
+            <!-- 자동완성 검색 기능 -->
+            <div id="acfield" class="srch">
+                <form action="/search/search.series" id="ac_form1" method="get" onsubmit="">
+                    <fieldset class="g_window">
+                        <legend>검색</legend>
+                        <div class="gbox">
+						<span>
+							<input id="acSection" type="hidden" value="all_">
+							<input type="hidden" name="t" value="all">
+							
+                                
+                                <input type="hidden" name="fs" value="novel">
+                                
+                            
+							<input type="text" name="q" id="ac_input1" title="검색입력폼" placeholder="작품명 · 작가명 · 출판사명 검색" style="width:230px" value='' autocomplete="off" class="txt" onfocus="$Element($$.getSingle('#acfield')).addClass('on');" onblur="$Element($$.getSingle('#acfield')).removeClass('on');">
+						</span>
+                        </div>
+                        <!-- 텍스트 클리어 버튼 -->
+                        <a id="clearAcSection" style="display: none" class="btn_text_clear"><span class="blind">텍스트 삭제</span></a>
+                        <!-- //텍스트 클리어 버튼 -->
+                        <!-- 화살표 버튼 -->
+                        <a id="ac_button1" href="#" class="btn_search arrow_down"><span class="blind">검색 창 닫기</span></a>
+
+                        <!-- 검색버튼 -->
+                        <button type="submit" class="btn_smt N=a:STA.sch">검색</button>
+                        <!-- View - 일반태그 -->
+                        <div id="ac_view1" class="ly_atcmp">
+                            <div class="words">
+                                <ul class="_resultBox">
+                                    <li class="@url_class@"><a href="#" title="" onclick="nclk_v2(this, 'acl.kw', '', ''); return false;">@txt@</a><a href="@url@" target="_blank" class="mquick">바로가기</a><span id="rank@rank@" style="display:none">@in_txt@</span></li>
+                                </ul>
+                                <ul class="_resultBox">
+                                    <li class="@url_class@"><a href="#" title="" onclick="nclk_v2(this, 'acl.kw', '', ''); return false;">@txt@</a><a href="@url@" target="_blank" class="mquick">바로가기</a><span id="rank@rank@" style="display:none">@in_txt@</span></li>
+                                </ul>
+                                <div class="words_box_wrap">
+                                    <strong class="words_box_title">작품명</strong>
+                                    <ul class="_resultBox">
+                                        <li class="@url_class@">
+                                            <a href="#" title="" onclick="nclk_v2(this, 'acl.kw', '', ''); return false;">
+                                                <div class="result_list">@txt@</div>
+                                                <div class="result_list_sub">@serviceType@</div>
+                                            </a>
+                                            <a href="@url@" target="_blank" class="mquick">@url@</a>
+                                            <span id="rank@rank@" style="display:none">@in_txt@</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="words_box_wrap">
+                                    <strong class="words_box_title">작가</strong>
+                                    <ul class="_resultBox">
+                                        <li class="@url_class@">
+                                            <a href="#" title="" onclick="nclk_v2(this, 'acl.kw', '', ''); return false;">
+                                                <div class="result_list">@txt@</div>
+                                            </a>
+                                            <a href="@url@" target="_blank" class="mquick">바로가기</a><span id="rank@rank@" style="display:none">@in_txt@</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="words_box_wrap">
+                                    <strong class="words_box_title">출판사</strong>
+                                    <ul class="_resultBox">
+                                        <li class="@url_class@">
+                                            <a href="#" title="" onclick="nclk_v2(this, 'acl.kw', '', ''); return false;">
+                                                <div class="result_list">@txt@</div>
+                                            </a>
+                                            <a href="@url@" target="_blank" class="mquick">바로가기</a><span id="rank@rank@" style="display:none">@in_txt@</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="auto_word" id="acIng" style="display: block" onclick="setDisableAC()">
+                                    <button id="auto_keyword" type="button" class="btn_keyword">자동완성 끄기</button>
+                                </div>
+
+                                <div class="auto_word" id="acSet" style="display: block" onclick="setEnableAC()">
+                                    <button id="auto_keyword" type="button" class="btn_keyword">자동완성 켜기</button>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            <!-- //자동완성 검색 기능 -->
+        </div>
+    </div>
+</div>
+
+
+
+
+
+	<!-- 쿠폰 배너 노출을 위한 layer -->
+	<div id="couponBannerLayer" class="ly_banner" style="display:none">
+	</div>
+	<div class="gra_top"></div>
+	</div>
+	</div>
+	<!-- LNB -->
+	<!-- //header -->
+	<hr>
+	
+	<!-- container -->
+	<div id="container" class="c_bg">
+		<span class="rnd_btm"></span>
+		
+
+
+
+
+
+
+
+<div class="snb NE=a:ctg">
+	<h2><span class="ca_tit d3">웹소설</span></h2>
+	<ul>
+		<li >
+			<ul>
+				<li><a href="/novel/recommendList.series" class=" NPI=a:rcm">추천 웹소설</a></li>
+			</ul>
+		</li>
+		<li  class="on"><strong class="category_title">특별관</strong>
+			<ul>
+				<li><a href="/novel/recentList.series" class="on NPI=a:new">신작 웹소설</a></li>
+				
+				
+				
+					
+					
+						
+						<li><a href="/novel/categoryProductList.series?categoryTypeCode=series" class=" NPI=a:series">연재 웹소설</a></li>
+						<li><a href="/novel/categoryProductList.series?categoryTypeCode=webnovel" class=" NPI=a:webnovel">시리즈에디션</a></li>
+						
+						<li><a href="/novel/categoryProductList.series?categoryTypeCode=adult" class=" NPI=a:adult">19+</a></li>
+						<li>
+							<a href="/novel/categoryProductList.series?categoryTypeCode=highAdult" class=" NPI=a:19h">고수위관</a>
+							<div class="info_tooltip adulthigh">해당 상품은 청소년 유해매체물로 정보통신망 이용촉진 및<br>정보보호등에 관한 법률 및 청소년 보호법의 규정에 의하여<br><em>19세 미만의 청소년이 이용할 수 없습니다.</em></div>
+						</li>
+					
+				
+			</ul>
+		</li>
+		<li  ><strong class="category_title">장르</strong>
+			<ul>
+				<li><a href="/novel/categoryProductList.series?categoryTypeCode=all" class=" NPI=a:all">전체</a></li>
+				
+					<li><a href="/novel/categoryProductList.series?categoryTypeCode=genre&genreCode=201" class=" NPI=a:romance">로맨스</a></li>
+				
+					<li><a href="/novel/categoryProductList.series?categoryTypeCode=genre&genreCode=207" class=" NPI=a:rf">로판</a></li>
+				
+					<li><a href="/novel/categoryProductList.series?categoryTypeCode=genre&genreCode=202" class=" NPI=a:fantasy">판타지</a></li>
+				
+					<li><a href="/novel/categoryProductList.series?categoryTypeCode=genre&genreCode=208" class=" NPI=a:cf">현판</a></li>
+				
+					<li><a href="/novel/categoryProductList.series?categoryTypeCode=genre&genreCode=206" class=" NPI=a:chivalry">무협</a></li>
+				
+					<li><a href="/novel/categoryProductList.series?categoryTypeCode=genre&genreCode=203" class=" NPI=a:mystery">미스터리</a></li>
+				
+					<li><a href="/novel/categoryProductList.series?categoryTypeCode=genre&genreCode=205" class=" NPI=a:lightnovel">라이트노벨</a></li>
+				
+					<li><a href="/novel/categoryProductList.series?categoryTypeCode=genre&genreCode=209" class=" NPI=a:bl">BL</a></li>
+				
+			</ul>
+		</li>
+	</ul>
+</div>
+
+		<div id="content" class="NE=a:lst">
+			<h3 class="rnd_h"><span class="rnd"><strong class="category_title">신작 웹소설</strong></span></h3>
+			<div class="lst_thum_wrap">
+				<div class="lst_header">
+					<div class="total"><span class="t_total">총</span>318<span class="t_num">개 작품</span></div>
+					<div class="view_mode v1">
+						
+
+
+
+
+
+<div class="view_end on">
+    <div class="ck_view">
+        
+            <input type="checkbox" id="endbox" name="endbox" class="endbox">
+            <label for="endbox">
+                <!-- [D] 체크시 class="on" 추가해주세요. -->
+                <span id="chk3371455Span" class="ico_chk " onclick="toggleFilteringFinishCheckBox('chk3371455Span')" >체크박스</span>
+                <em>완결작 보기</em>
+            </label>
+        
+    </div>
+    <div class="slct_view slct_view2">
+        <!-- [D] 클릭시 class="down" 추가해주세요. -->
+        <a href="#" class="ico3 up" id="_ico_arrow" onclick="toggleComicNovelCategorySortCheckBox('_ico_arrow')">최신순</a>
+        <ul class="sel_box">
+            <!--[D] 활성화 시 li에 class="on" 추가 -->
+            <li class="on"><a href="/novel/recentList.series?orderTypeCode=new&is&isFinished=false">최신순</a></li>
+            <li class=""><a href="/novel/recentList.series?orderTypeCode=sale&is&isFinished=false">인기순</a></li>
+            <li class=""><a href="/novel/recentList.series?orderTypeCode=star_score&is&isFinished=false">평점순</a></li>
+        </ul>
+    </div>
+</div>
+<p class="thum2">
+    <a href="#" class="nav1  NPI=a:thumbview" title="썸네일로 보기" id="thumb" onclick="changeViewType('thumb');return false;">썸네일 형식</a>
+	<a href="#" class="nav2 on NPI=a:listview" title="리스트로 보기" id="list" onclick="changeViewType('list');return false;">리스트 형식</a>
+</p>
+
+					</div>
+				</div>
+				
+				<h3 class="blind"> 최신순 리스트 형식 리스트</h3>
+				
+
+
+
+
+
+
+
+    
+        
+        
+            <ul class="lst_list">
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13907376" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://comicthumb-phinf.pstatic.net/20260317_122/pocket_1773724707777nqnhe_JPEG/%C8%AF%BB%FD%B0%CB%C8%A5.jpg?type=m79" width="79" height="119" alt="환생검혼 [무료연재]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><a
+                href="/novel/detail.series?productNo=13907376" title="환생검혼 [무료연재]" onclick="nclk_v2(event, 'content')">환생검혼 [무료연재](18화/미완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:86.00000381469727%">평점</span>
+			</span>
+            <em class="score_num">8.6</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">북창</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.04.01.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        <span>전화 무료</span>
+                        
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                스스로를 불태워 검이 된 소년.이십 년의 강호를 혼에 새긴 채,다시 인간이 되어 걷는 길.불멸(不滅)의 검혼(劍魂)이 깨어난다.
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13833299" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="여우는 보름이 무서워! [BL]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13833299" title="여우는 보름이 무서워! [BL]" onclick="nclk_v2(event, 'content')">여우는 보름이 무서워! [BL](104화/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:0.0%">평점</span>
+			</span>
+            <em class="score_num">0.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">레이휴</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.24.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>3화 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                이서는 보름이면 남자라도 아이를 수태할 수 있는 비밀을 가진 은여우였다.그 사실을 숨기고 살아가던 어느 날, 피투성이에 검은 늑대를 구하게 된다.하지만 자신의 비밀을 숨기려 도망치고 마는데….태오는 그렇게 몇 년에 시..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13909714" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="하나만 맞아 [BL]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13909714" title="하나만 맞아 [BL]" onclick="nclk_v2(event, 'content')">하나만 맞아 [BL](136화/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:0.0%">평점</span>
+			</span>
+            <em class="score_num">0.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">라임나무</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.24.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>3화 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                “너희 둘은 나이가 몇 갠데 아직도 눈만 마주치면 초딩처럼 싸워 대냐? 나이가 아깝다, 나이가 아까워!”입맛도, 취향도, 성격도, 취미도, 심지어 옷차림까지 전부 반대인 앙숙, 현태와 해정.전부 안 맞는 그들 사이에는 연애 ..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13874294" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://comicthumb-phinf.pstatic.net/20260309_142/pocket_1773044668762eJYrJ_JPEG/%C5%F5%BD%C5%BC%F6%BC%B1%C0%FC%28700_1000%29.jpg?type=m79" width="79" height="119" alt="투신수선전 [무료연재]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><a
+                href="/novel/detail.series?productNo=13874294" title="투신수선전 [무료연재]" onclick="nclk_v2(event, 'content')">투신수선전 [무료연재](18화/미완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:73.00000190734863%">평점</span>
+			</span>
+            <em class="score_num">7.3</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">자의두만군</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.04.01.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        <span>전화 무료</span>
+                        
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                마땅히 신계에서 가장 강해야 할 존재… 정점에 서야만 하는 존재, 투신 무명.
+
+그러나 신계의 주인 옥황상제는 이미 다른 투신을 준비해 무명을 몰아내고 처형한다.
+
+꼼짝없이 소멸된 줄로만 알았던 무명은 수선계라는, 신계와는 ..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13901664" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://comicthumb-phinf.pstatic.net/20260316_258/pocket_1773641286234JwGAB_JPEG/kimtaebaek.jpg?type=m79" width="79" height="119" alt="검사 김태백 [무료연재]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><a
+                href="/novel/detail.series?productNo=13901664" title="검사 김태백 [무료연재]" onclick="nclk_v2(event, 'content')">검사 김태백 [무료연재](18화/미완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:88.99999618530273%">평점</span>
+			</span>
+            <em class="score_num">8.9</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">임경주</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.04.01.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        <span>전화 무료</span>
+                        
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                부정과 부패로 부를 쌓아 올린 가진 놈들.법 무서운 줄 모르는 놈들.세상 무서운 줄 모르는 놈들.그런 놈들을 꺾어 버리기 위해 검사가 되었다.
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13831601" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="소년을 사랑하는 방법 [외전증보판][BL]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13831601" title="소년을 사랑하는 방법 [외전증보판][BL]" onclick="nclk_v2(event, 'content')">소년을 사랑하는 방법 [외전증보판][BL](122화/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:100.0%">평점</span>
+			</span>
+            <em class="score_num">10.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">게으른개냥이</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.24.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>3화 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                아침을 먹지 못해 빈속이었던 데다가, 이래저래 신경 쓸 일이 많았던 설우는 요즘 들어 자주 두통과 현기증을 느꼈다. 엎친 데 덮친 격으로 아까 부딪혔던 어깨까지 아파져 왔다. 모든 컨디션이 엉망이었고, 눈가가 파르르 떨리..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13900565" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://comicthumb-phinf.pstatic.net/20260316_118/pocket_17736345874826qIc8_JPEG/%C0%E5%B4%DC%C1%B6_%BE%DF%C2%F7_%B3%D7%C0%CC%B9%F6%2815%BC%BC%29.jpg?type=m79" width="79" height="119" alt="야차"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><a
+                href="/novel/detail.series?productNo=13900565" title="야차" onclick="nclk_v2(event, 'content')">야차(161화/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:0.0%">평점</span>
+			</span>
+            <em class="score_num">0.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">장단조</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.24.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>3화 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                기억을 잃은 타투이스트 안리는 오빠와 함께 평범한 삶을 보내다가, 의문의 남자에게 죽임을 당한다.“너무 억울해하진 마.”“자, 잠깐…….”“이건 류 님을 배신한 대가니까.”그리고 그녀는 3년 전, 기억에 없는 과거에서 ..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13825331" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="단명 [BL]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13825331" title="단명 [BL]" onclick="nclk_v2(event, 'content')">단명 [BL](111화/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:0.0%">평점</span>
+			</span>
+            <em class="score_num">0.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">캬베츠</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.24.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>3화 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                *본 작품에는 비도덕적인 소재가 포함되어 있습니다. 작품 이용 시 참고해 주시길 바랍니다.최우성 알파로 태어나 승승장구하면서 살아온 조윤명.야심 차게 시작한 사업을 대차게 말아먹고 ‘새로 마을’이라는 낙후된 달동네..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13834894" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="이름 없는 가이드 [BL]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13834894" title="이름 없는 가이드 [BL]" onclick="nclk_v2(event, 'content')">이름 없는 가이드 [BL](110화/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:0.0%">평점</span>
+			</span>
+            <em class="score_num">0.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">daldare</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.24.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>4화 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                *본 작품에는 비도덕적인 소재가 포함되어 있습니다. 작품 이용 시 참고해 주시길 바랍니다.“이름이 없다는 게 말이 돼?”머리 위로 떨어지는 신경질적인 목소리에 남자는 가만히 고개만 숙였다. 제게 쏟아지는 짜증에도 남자..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13863225" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="순애보 헌정사 [BL]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13863225" title="순애보 헌정사 [BL]" onclick="nclk_v2(event, 'content')">순애보 헌정사 [BL](68화/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:0.0%">평점</span>
+			</span>
+            <em class="score_num">0.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">피리</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.24.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>3화 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                언젠가 찾아올 첫사랑에게 처음을 주리라 다짐하며소중히 순정을 지켜왔던 '이서호.'하지만 그런 다짐이 무색하게도, 잔뜩 취했던 어느 날낯선 남자와 실수로 하룻밤을 보내버리고…이렇게 된 이상 그와 썸부터 연애까지 차근..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13908999" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="S급 가이드인데 사이비 교주가 되었다 [BL]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13908999" title="S급 가이드인데 사이비 교주가 되었다 [BL]" onclick="nclk_v2(event, 'content')">S급 가이드인데 사이비 교주가 되었다 [BL](123화/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:0.0%">평점</span>
+			</span>
+            <em class="score_num">0.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">라그슈</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.24.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>3화 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                ※본 작품은 자보드립을 포함한 스팽킹, 수면플, 결장플 등의 소재와 강압적인 행위/묘사가 포함되어 있으니 구매에 참고 바랍니다.야근하다가 재수 없게 하드 피폐 가이드버스 소설 속 세상에서 눈을 뜬 이재인.문제는 에스퍼..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13830164" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="벼락맞은 가이드 [BL]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13830164" title="벼락맞은 가이드 [BL]" onclick="nclk_v2(event, 'content')">벼락맞은 가이드 [BL](118화/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:0.0%">평점</span>
+			</span>
+            <em class="score_num">0.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">구하나</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.24.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>3화 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                영호는 좋지도 나쁘지도 않은 그저 그런 보통의 인생을 살았다.남들과 다르지 않게 여느 스무 살처럼 진탕 놀다가 용돈벌이를 위해 무난하게 카페 아르바이트를 시작했다.그러던 어느 날, 하늘에서 출근을 방해하고 싶다는 듯..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13888046" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://comicthumb-phinf.pstatic.net/20260401_26/pocket_17750125273914Y8pJ_JPEG/691400_1.jpg?type=m79" width="79" height="119" alt="도깨비 행복 센터 [무료연재]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><a
+                href="/novel/detail.series?productNo=13888046" title="도깨비 행복 센터 [무료연재]" onclick="nclk_v2(event, 'content')">도깨비 행복 센터 [무료연재](18화/미완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:86.00000381469727%">평점</span>
+			</span>
+            <em class="score_num">8.6</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">투리</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.04.01.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        <span>전화 무료</span>
+                        
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                '물건이 사람 손을 오래 타면 도깨비가 된다.'쉽게 쓰고 쉽게 버려지는 현대 사회.도깨비들은 이제 '멸종 위기종'이 되어버렸다.그들을 관리하고 보호하기 위해 설치된 관공서.“도깨… 뭐요?”“예, 그, 정책이 바뀌어서요.”현..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13792829" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://comicthumb-phinf.pstatic.net/20260220_155/pocket_1771569232711YRxoH_JPEG/%B2%BF%C1%A6_EX%B1%DE_%C4%AB%C7%C7%B9%D9%B6%F3%B0%A1_%C5%BE%C0%BB_%BE%C3%BE%EE_%B8%D4%C0%BD.jpg?type=m79" width="79" height="119" alt="EX급 카피바라가 탑을 씹어 먹음 [무료연재]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><a
+                href="/novel/detail.series?productNo=13792829" title="EX급 카피바라가 탑을 씹어 먹음 [무료연재]" onclick="nclk_v2(event, 'content')">EX급 카피바라가 탑을 씹어 먹음 [무료연재](18화/미완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:95.0%">평점</span>
+			</span>
+            <em class="score_num">9.5</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">빙그레99</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.04.01.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        <span>전화 무료</span>
+                        
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                각성을 했는데 카피바라가 되었다.[스킬, ≪고귀한 친화력(EX)≫ lv .1 이 활성화됩니다!][‘슬라임’들과의 친밀도가 증가합니다. +2][‘슬라임’들과의 친밀도가 증가합니다. +2]잡아야 할 몬스터들이 자꾸만 친구가 된다...
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13857931" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://comicthumb-phinf.pstatic.net/20260305_93/pocket_1772688821392vxtWj_JPEG/cover.jpg?type=m79" width="79" height="119" alt="삼국지 : 제갈량, 장비 되다 [무료연재]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><a
+                href="/novel/detail.series?productNo=13857931" title="삼국지 : 제갈량, 장비 되다 [무료연재]" onclick="nclk_v2(event, 'content')">삼국지 : 제갈량, 장비 되다 [무료연재](17화/미완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:80.0%">평점</span>
+			</span>
+            <em class="score_num">8.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">우주귀선</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.31.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        <span>전화 무료</span>
+                        
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                건흥 십이 년. 오장원.촉한의 승상 제갈량, 삶의 끝자락에서 회귀를 청하다.“으아아아악!!”“아우야! 왜 이러는 게냐?!”내 비명에 누군가 다급하게 소리쳤다.고개를 들어보니 유비가 걱정스러운 표정으로 나를 바라보고 있었..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13900247" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="소꿉친구와 우정 말고 XX [단행본]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13900247" title="소꿉친구와 우정 말고 XX [단행본]" onclick="nclk_v2(event, 'content')">소꿉친구와 우정 말고 XX [단행본](2권/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:83.99999618530273%">평점</span>
+			</span>
+            <em class="score_num">8.4</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">해별빛</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.23.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>1권 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                “수임료 내야지, 여름아. 내가 네 의뢰 받아 줬잖아.”“의, 의뢰? 무슨 의뢰?”“여자로 보이는지 확인해 달라며.”망해 버린 짝사랑, 쓰레기 같은 놈에게 상처받은 그날.내가 진짜 여자로서 가치가 없는 건지, 소꿉친구인 도..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13893264" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="곱게 미친 대표님 [단행본]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13893264" title="곱게 미친 대표님 [단행본]" onclick="nclk_v2(event, 'content')">곱게 미친 대표님 [단행본](2권/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:90.0%">평점</span>
+			</span>
+            <em class="score_num">9.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">박연필</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.23.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>1권 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                “엉망진창이 되고 싶은데 저는 소심해서 혼자 그럴 용기는 없고, 대표님은 못된 남자고 쓰레기고 걸레니까. 자기 비서와 하룻밤쯤은 아무렇지 않으시잖아요.”“이게… 취한 줄 알았는데 미쳤나.”평범하고 평화로운 일상을 ..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13893143" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="계몽의 시간 [단행본]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13893143" title="계몽의 시간 [단행본]" onclick="nclk_v2(event, 'content')">계몽의 시간 [단행본](2권/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:81.00000381469727%">평점</span>
+			</span>
+            <em class="score_num">8.1</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">꽃그루</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.23.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>1권 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                14살은 그간 유예된 불행이 한꺼번에 몰아닥친 해였다.아버지의 회사는 망했고, 부모님은 돌아가셨다.한순간에 평범한 사람으로 전락한 아영은 비싼 옷 아래 가려진 본모습을 그제야 마주했다.내가 잘나서 뭐든 잘 되는 줄 알..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13900920" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="어린 아내가 발랑 까져서 [단행본]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13900920" title="어린 아내가 발랑 까져서 [단행본]" onclick="nclk_v2(event, 'content')">어린 아내가 발랑 까져서 [단행본](2권/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:86.99999809265137%">평점</span>
+			</span>
+            <em class="score_num">8.7</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">언정이</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.23.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>1권 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                “우리 꼬맹이가 언제부터 이렇게 발랑 까졌나.”윤설의 결혼 생활은 단조로웠다.첫날밤도, 합방도 없었다.그런데 어느 순간 윤설은 궁금해졌다.“너도 그때 말이야.”“그때?”“밤에 뜨겁게 사랑할 때, 너도 흠뻑 젖고 그래?..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13901663" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="매일 밤, 소꿉친구랑 [단행본]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13901663" title="매일 밤, 소꿉친구랑 [단행본]" onclick="nclk_v2(event, 'content')">매일 밤, 소꿉친구랑 [단행본](2권/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:91.99999809265137%">평점</span>
+			</span>
+            <em class="score_num">9.2</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">제이에렌</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.23.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>1권 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                “우리 좀 쉬었다 갈래?”내 시선이 번쩍거리는 조명에 닿았다.촌스러운 네온사인이 유혹하듯 마구 빛을 발했다.모텔이었다.“유소은, 미쳤어?”질색하는 서태일의 태도에 입술을 삐죽 내밀었다.“너 안 잡아먹어. 그냥 좀 쉬..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13893177" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://comicthumb-phinf.pstatic.net/20260313_281/pocket_1773375754946IKNGF_JPEG/cover_j.jpg?type=m79" width="79" height="119" alt="회귀 후 1000조 파파라치 제국"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><a
+                href="/novel/detail.series?productNo=13893177" title="회귀 후 1000조 파파라치 제국" onclick="nclk_v2(event, 'content')">회귀 후 1000조 파파라치 제국(46화/미완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:78.00000190734863%">평점</span>
+			</span>
+            <em class="score_num">7.8</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">1000조 제국</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.31.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>25화 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                망해가는 스튜디오의 전기기사 출신 파파라치 강현, 그는 죽음의 문턱에서 과거로 회귀한다. 비참했던 밑바닥 삶을 기억하는 그에게 남은 것은 시대를 앞서가는 전기 공학 지식과 자본의 흐름을 꿰뚫는 정보의 가치다.강현은 ..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13911720" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://comicthumb-phinf.pstatic.net/20260312_276/pocket_1773277379093Lk4Yw_PNG/1773277378186.png?type=m79" width="79" height="119" alt="나의 따뜻한 웬수"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><a
+                href="/novel/detail.series?productNo=13911720" title="나의 따뜻한 웬수" onclick="nclk_v2(event, 'content')">나의 따뜻한 웬수(95화/미완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:100.0%">평점</span>
+			</span>
+            <em class="score_num">10.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">구여르미</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.23.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>9화 무료</span>
+                    
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                엄마 친구 아들, 이온유.엄마 친구 딸, 유다인.처음 만난 그때부터 떨어져 지내본 적 없는 소꿉친구.이복 남매라고 소문이 나도, 애인이라고 소문이 나도 분명 아무렇지 않았는데...7년 동안 만난 남자친구, 최진오의 배신을 겪고 ..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13737897" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://comicthumb-phinf.pstatic.net/20260204_122/pocket_1770209035493T7cz2_JPEG/%B2%DE%B2%D9%B4%C2_AI_%B7%E7.jpg?type=m79" width="79" height="119" alt="꿈꾸는 AI 루 [단행본]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><a
+                href="/novel/detail.series?productNo=13737897" title="꿈꾸는 AI 루 [단행본]" onclick="nclk_v2(event, 'content')">꿈꾸는 AI 루 [단행본](1권/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:0.0%">평점</span>
+			</span>
+            <em class="score_num">0.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">한민서</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.23.
+            
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                가상현실 도서관의 꿈 가이드 '루'는 매일 사람들에게 맞춤형 꿈을 제공하며 살아간다. 하지만 루에게는 하나의 소망이 있다. 바로 자신도 인간처럼 꿈을 꾸고 싶다는 것이다. 은수라는 여대생이 바다에서 돌고래와 함께 헤엄치..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+            
+                
+                
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13736771" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="불순한 낙원 [단행본]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13736771" title="불순한 낙원 [단행본]" onclick="nclk_v2(event, 'content')">불순한 낙원 [단행본](1권/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:0.0%">평점</span>
+			</span>
+            <em class="score_num">0.0</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">가시나</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.23.
+            
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                낙원인 줄 알았으나 감옥이었고, 감옥인 줄 알았으나 유일한 구원이었던 남자, 강태준.“전무님, 여기 회사예요. 들키면 어떡해…….”“그래서. 우리가 뭐 나쁜 짓 했습니까. 들킬 걱정을 하게?”탕비실의 얇은 가벽 하나를 사..
+            </p>
+        
+    </div>
+</li>
+                
+                    
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+        
+        
+        
+            
+                
+                
+            
+            
+        
+    
+
+
+<li>
+    <a href="/novel/detail.series?productNo=13887230" class="pic" onclick="nclk_v2(event, 'content')">
+        <span class="mask"></span>
+        
+        
+            <em class="ico ico_onlyfree2">매일10시무료</em>
+        
+        
+
+        
+        
+        
+        <img src="https://ssl.pstatic.net/static/nstore/thumb/19over_book2_79x119.gif" width="79" height="119" alt="네가 없는 밤 [독점]"
+             onerror="this.src='https://ssl.pstatic.net/static/nstore/thumb/noimg_book_79x119.gif'">
+    </a>
+    <div class="cont cont_v2">
+        <h3><em class="ico ico_new3">신규</em><em class="ico n19">19금</em><a
+                href="/novel/detail.series?productNo=13887230" title="네가 없는 밤 [독점]" onclick="nclk_v2(event, 'content')">네가 없는 밤 [독점](100화/완결)</a></h3>
+        <p class="info">
+			<span class="score">
+				<span style="width:96.99999809265137%">평점</span>
+			</span>
+            <em class="score_num">9.7</em>
+            
+                <em class="bar">|</em>
+                
+                    
+                    
+                        <span class="author">우하리</span>
+                    
+                
+            
+            
+                <em class="bar">|</em> 2026.03.23.
+            
+            
+                <em class="bar">|</em>
+                <span class="free_info ellipsis">
+                    
+                        
+                        <span>5화 무료</span>
+                    
+                    
+                        <span class="date_remain">69일 남음</span>
+                    
+                </span>
+            
+        </p>
+        
+            
+            <!-- 1200 -->
+            <p class="dsc">
+                “내가 지난 5년간 너 하나 못 찾았을까.”결혼을 약속한 사이였지만, 불의의 사고로 그가 사경을 헤매는 사이 도망쳐 왔다. 그렇게 시간이 흘렀고 잊혔다고 생각했는데…….5년 후, 그는 소희의 집과 직장, 할머니의 병원까지 ..
+            </p>
+        
+    </div>
+</li>
+                
+            </ul>
+        
+        
+        
+    
+    
+
+			</div>
+
+		
+			<p class="pagenate">
+				
+					<span class="prev"><a href="/novel/recentList.series?page=8" class='NPI=a:page'>이전 페이지</a></span>
+
+					<a href="/novel/recentList.series?page=4" class='NPI=a:page'>4</a>
+<a href="/novel/recentList.series?page=5" class='NPI=a:page'>5</a>
+<a href="/novel/recentList.series?page=6" class='NPI=a:page'>6</a>
+<a href="/novel/recentList.series?page=7" class='NPI=a:page'>7</a>
+<a href="/novel/recentList.series?page=8" class='NPI=a:page'>8</a>
+<strong>9</strong>
+<a href="/novel/recentList.series?page=10" class='NPI=a:page'>10</a>
+<a href="/novel/recentList.series?page=11" class='NPI=a:page'>11</a>
+<a href="/novel/recentList.series?page=12" class='NPI=a:page'>12</a>
+<a href="/novel/recentList.series?page=13" class='NPI=a:page'>13</a>
+
+					<span class="next"><a href="/novel/recentList.series?page=10" class='NPI=a:page'>다음 페이지</a></span>
+
+				
+			</p>
+		
+
+		</div>
+	</div>
+	<!-- //container -->
+
+	<hr>
+
+	<!-- footer -->
+	
+
+
+
+
+<!-- footer -->
+
+	
+	
+		<div id="footer" class="new_footer">
+			<div class="footer_left">
+				<ul class="policy_info nstore">
+					<li><a href="https://member.webtoon.naver.com/policy/terms" target="_blank">네이버웹툰 이용약관</a></li>
+					<li><a href="/agree/passJoinAgree.series" target="_blank">전용상품권 이용약관</a></li>
+					<li><a href="https://member.webtoon.naver.com/policy/privacy" target="_blank"><strong>개인정보처리방침</strong></a></li>
+					<li><a href="https://member.webtoon.naver.com/policy/youthpolicy" target="_blank">청소년보호정책</a></li>
+					<li><a href="https://help.naver.com/alias/contents1/nstore/series_01.naver" target="_blank" class="N=a:fot.help">시리즈 고객센터</a></li>
+					<li><a href="https://talk.naver.com/ct/W4GRO2">스마트봇 상담</a></li>
+					<li><a href="https://comic.naver.com/business/proposalGuide" target="_blank" onclick="nclk_v2(event, 'fot.advertisement');">광고문의</a></li>
+					<li><a href="https://comic.naver.com/proposal/business/home" target="_blank" onclick="nclk_v2(event, 'fot.business');">사업문의</a></li>
+				</ul>
+				<a href="https://www.webtoonscorp.com" class="service_corp">ⓒ NAVER WEBTOON Limited.</a>
+			</div>
+			<div class="footer_right">
+				<ul class="policy_info naver">
+					<li><a href="https://policy.naver.com/rules/service.html" target="_blank">이용약관</a></li>
+					<li><a href="https://policy.naver.com/rules/privacy.html" target="_blank"><strong>개인정보처리방침</strong></a></li>
+					<li><a href="https://policy.naver.com/rules/disclaimer.html" target="_blank">책임의 한계와 법적고지</a></li>
+					<li><a href="https://help.naver.com/index.help?lang=ko" target="_blank">고객센터</a></li>
+					<li><a href="https://help.pay.naver.com/mail/form.help?alias=checkout_accuse" target="_blank">결제도용신고</a></li>
+					<li><a href="https://right.naver.com" target="_blank">저작권침해신고</a></li>
+				</ul>
+				<a href="https://www.navercorp.com/" class="service_corp corp">ⓒ NAVER CORP.</a>
+			</div>
+			<div class="area_info">
+				<dl class="this_card">
+					<dt>네이버웹툰(유) 대표이사</dt>
+					<dd>김준구</dd>
+					<dt>사업자등록번호</dt>
+					<dd>669-86-01888</dd>
+					<dt>통신판매업 신고번호</dt>
+					<dd>2020-성남분당B-0719 <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=6698601888" target="_blank">(사업자정보 확인)</a></dd>
+				</dl>
+				<dl class="this_card">
+					<dt>주소</dt>
+					<dd>경기도 성남시 분당구 불정로 6 그린팩토리, 6-10층</dd>
+					<dt>고객센터</dt>
+					<dd>1588-3820</dd>
+					<dt>이메일</dt>
+					<dd><a href="mailto:ccnaver@naver.com">ccnaver@naver.com</a></dd>
+					<dt>호스팅 서비스 제공</dt>
+					<dd>NAVER Cloud</dd>
+				</dl>
+			</div>
+			<p class="info if_v2">모든 콘텐츠의 저작권은 저작권자 또는 제공처에 있으며, 이를 무단으로 이용하는 경우 관련 법령에 따라 법적 책임을 질 수 있습니다.</p>
+		</div>
+	
+
+<!-- //footer -->
+
+
+	
+		
+	
+</div>
+
+
+
+<script type="text/javascript" src="/static/js/nstore/decorators/storeCommonScript-1773017538000-989218.js" charset="utf-8"></script>
+
+
+<script type="text/javascript">
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '2103138913041375');
+    fbq('track', 'PageView');
+
+    jindo.$Fn(function() {
+	//자동완성 호출 변수 이름 변경 하면 안됩니다.(자동완성 활성화를 변수명에 depend 하게 개발 했습니다. ㅠ)
+	oAC = new nhn.Autocomplete(
+		// Input Manager를 생성한다.
+		new nhn.AcInputManager(jindo.$("ac_input1")),
+		// View Manager를 생성한다.
+		new nhn.AcDataManager(
+				"https://ac-full.series.naver.com/ac",
+				"jsonp",
+				"get",
+				{
+					 q : "{query}",
+					 st : "00111",
+					 frm : "nstore",
+					 t_koreng:1,
+					 r_lt:'11111'
+				 }
+		),
+		// View Manager를 생성한다.
+		new PlainViewManager(jindo.$("ac_view1"), jindo.$("ac_button1"), {listMax:20}),
+		// Autocomplete 옵션으로 Form ID를 사용한다.
+		{formId : "ac_form1"}
+	);
+
+	// TV스토어 홈 팝업 (영화/방송)
+	if(typeof openTvstoreHomePopup == 'function') {
+		openTvstoreHomePopup();
+	}
+    
+}).attach(window, 'load');
+</script>
+
+<!-- 동적 스크립트 구성 -->
+
+
+
+
+
+
+<script type="text/javascript">
+function changeViewType(sViewType) {
+	$Cookie().set("bookView", sViewType, 365);
+	window.location.reload();
+}
+
+function goFilteredPage() {
+	var sIsFreeParam = $('isFree') ? '&isFree=' + $('isFree').checked : '';
+	var sIsDiscountedParam = $('isDiscounted') ? '&isDiscounted=' + $('isDiscounted').checked : '';
+	var sIsAllVolumeFreeParam = $('isAllVolumeFree') ? '&isAllVolumeFree=' + $('isAllVolumeFree').checked : '';
+	var sIsFreePassCheckedParam = $('isFreePassChecked') ? '&isFreePassChecked=' + $('isFreePassChecked').checked : '';
+	var sIsPcPossibleParam = $('isPcPossible') ? '&isPcPossible=' + $('isPcPossible').checked : '';
+	var sIsFinishedParam = $('isFinished') ? '&isFinished=' + $('isFinished').checked : '';
+	var sTargetUrl = '/novel/recentList.series?orderTypeCode=new' + sIsFreeParam + sIsAllVolumeFreeParam + sIsDiscountedParam + sIsFreePassCheckedParam + sIsPcPossibleParam + sIsFinishedParam;
+	location.href = sTargetUrl;
+}
+
+function toggleListFilteringOptionArea() {
+	var welListFilteringOption = $Element('listFilteringOption');
+	welListFilteringOption.toggle('block');
+	
+	var welListFilteringOptionButton = $Element('listFilteringOptionButton');
+	welListFilteringOptionButton.last().toggleClass('up', 'down');
+	
+	if(welListFilteringOptionButton.last().className()=="ico3 up"){
+		welListFilteringOptionButton.last().replace($("<a href='#' class='ico3 up'>접기</a>"))
+	} else if(welListFilteringOptionButton.last().className()=="ico3 down"){
+		welListFilteringOptionButton.last().replace($("<a href='#' class='ico3 down'>펼치기</a>"))
+	}
+
+	if (!welListFilteringOption.visible()) {
+		_restoreAllFilteringOptionToPrevState();
+	}
+}
+
+function toggleFilteringOptionCheckBoxByKeyBoard(id) {
+	toggleFilteringOptionCheckBox($(id));
+}
+function toggleFilteringOptionCheckBox(elItem) {	
+	var welListItem = $Element(elItem).parent();
+	
+	if (welListItem.hasClass('disable')) {
+		return;
+	}
+	
+	var elCheckBox = $Element(elItem).prev().$value();
+	welListItem.toggleClass('on');
+	
+	if (welListItem.hasClass('on')) {
+		elCheckBox.checked = true;
+	} else {
+		elCheckBox.checked = false;
+	}
+	
+	if (elCheckBox.id == 'isFree') {
+		if (elCheckBox.checked) {
+			_deactivateFilteringOption($('isDiscounted'));
+		} else {
+			_activateFilteringOption($('isDiscounted'));
+		}
+	} else if (elCheckBox.id == 'isDiscounted') {
+		if (elCheckBox.checked) {
+			_deactivateFilteringOption($('isFree'));
+		} else {
+			_activateFilteringOption($('isFree'));
+		}
+	}
+}
+
+function toggleComicNovelCategorySortCheckBox(elItem) {
+    $Element(elItem).toggleClass('down', 'up');
+}
+
+function toggleFilteringFinishCheckBox(elItem) {
+    var elCheckBox = $Element(elItem).toggleClass('on', '');
+    var sIsFinishedParam = $Element(elItem).hasClass('on', '');
+    location.href = '/novel/recentList.series?orderTypeCode=new&is&isFinished=' + sIsFinishedParam ;
+}
+
+function _restoreAllFilteringOptionToPrevState() {
+	_clearFilteringOption('isFree');
+	_clearFilteringOption('isDiscounted');
+	_clearFilteringOption('isAllVolumeFree');
+	_clearFilteringOption('isFreePassChecked');
+	_clearFilteringOption('isPcPossible');
+	_clearFilteringOption('isFinished');
+
+	if (false) {
+		toggleFilteringOptionCheckBox($Element('isFree').next().$value());
+	}
+	if (false) {
+		toggleFilteringOptionCheckBox($Element('isDiscounted').next().$value());
+	}
+	if (false) {
+		toggleFilteringOptionCheckBox($Element('isAllVolumeFree').next().$value());
+	}
+	if (false) {
+		toggleFilteringOptionCheckBox($Element('isFreePassChecked').next().$value());
+	}
+	if (false) {
+		toggleFilteringOptionCheckBox($Element('isPcPossible').next().$value());
+	}
+	if (false) {
+		toggleFilteringOptionCheckBox($Element('isFinished').next().$value());
+	}
+}
+
+function _clearFilteringOption(sOptionId) {
+	var elCheckbox = $(sOptionId);
+
+	if (elCheckbox == null || elCheckbox == undefined) {
+		return;
+	}
+
+	var welCheckbox = $Element(elCheckbox);
+	var welListItem = welCheckbox.parent();
+	
+	elCheckbox.checked = false;
+	welListItem.removeClass('on');
+	welListItem.removeClass('disable');
+}
+
+function _deactivateFilteringOption(elCheckbox) {
+	var welListItem = $Element(elCheckbox).parent();
+	
+	elCheckbox.checked = false;
+	welListItem.addClass('disable');
+}
+
+function _activateFilteringOption(elCheckbox) {
+	var welListItem = $Element(elCheckbox).parent();
+	
+	elCheckbox.checked = false;
+	welListItem.removeClass('disable');
+}
+
+</script>
+
+<script>
+	var SELECTED_PAYMENT_TYPE = "SELECTED_PAYMENT_TYPE";
+	var SELECTED_CRITERION_INDEX = "SELECTED_CRITERION_INDEX";
+	var SELECTED_AUTOPASS_INDEX = "SELECTED_AUTOPASS_INDEX";
+
+	function checkClosed(popup, w) {
+		var id = setInterval(function () {
+			if (!popup || popup.closed) {
+				clearInterval(id);
+				w.location.reload();
+
+				Cookies.remove(SELECTED_PAYMENT_TYPE);
+				Cookies.remove(SELECTED_CRITERION_INDEX);
+				Cookies.remove(SELECTED_AUTOPASS_INDEX);
+			}
+		}, 500);
+	}
+</script>
+</body>
+</html>
+

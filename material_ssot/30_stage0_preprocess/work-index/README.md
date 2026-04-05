@@ -1,8 +1,8 @@
 # Work Index
 
-This directory now holds the first bootstrap work manifests.
+This directory now holds the first representative work manifests.
 
-Bootstrap rule:
+Representative-slice rule:
 
 - one manifest per `work_id`
 - anchor the manifest at Stage 0 preprocess

@@ -1,12 +1,16 @@
-# Three-IDE Ownership Cut Sheet
+# Three-IDE Burst-Mode Ownership Cut Sheet
 
 Date: 2026-04-03
-Status: operator short form
-Scope: one-page ownership and merge rules for `antigravity`, `vscode`, and `cursor`
+Status: operator short form for burst mode
+Scope: one-page ownership and merge rules for `antigravity`, `vscode`, and `cursor` when `split_3ide` is explicitly enabled
+
+Historical Note: this cut sheet was captured while the three-IDE split was still being standardized. Worktree wording below is capture-time guidance, not a current absolute-path requirement. It does not make three-IDE mode the default.
 
 ## 1. Default Read
 
-- if all three IDEs are still opening `C:\Users\wjjo\Desktop\글도비`, this is still effectively `single` mode
+- default operating assumption is still `single`
+- use this sheet only after an explicit switch into `split_3ide`
+- if all three IDEs are still opening the same main worktree, this is still effectively `single` mode
 - true parallel write mode starts only after separate `git worktree` paths exist
 - until then, use this as a lane map, not as proof that support IDEs are write-safe
 

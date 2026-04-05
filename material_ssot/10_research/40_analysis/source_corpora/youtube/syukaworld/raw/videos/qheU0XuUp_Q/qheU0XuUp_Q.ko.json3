@@ -1,0 +1,4423 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 7810,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "첫 번째 주제는 재미없는 것부터 합시다 재미없는 거"
+    } ]
+  }, {
+    "tStartMs": 10500,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "그건 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 11640,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "또 시작했다"
+    } ]
+  }, {
+    "tStartMs": 12950,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "무역법 301조에 의해서"
+    } ]
+  }, {
+    "tStartMs": 15560,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "관세 시즌2가 다시 시작됐다"
+    } ]
+  }, {
+    "tStartMs": 18370,
+    "dDurationMs": 2710,
+    "segs": [ {
+      "utf8": "오늘의 첫째 주제가 되겠습니다"
+    } ]
+  }, {
+    "tStartMs": 21080,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "오늘도 등장하시는 우리 트럼프 아저씨께서"
+    } ]
+  }, {
+    "tStartMs": 23690,
+    "dDurationMs": 410,
+    "segs": [ {
+      "utf8": "트럼프"
+    } ]
+  }, {
+    "tStartMs": 24100,
+    "dDurationMs": 2990,
+    "segs": [ {
+      "utf8": "트황상님께서 다시 관세를 시작하셨습니다"
+    } ]
+  }, {
+    "tStartMs": 27090,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "이게 어떤 내용이냐?"
+    } ]
+  }, {
+    "tStartMs": 28160,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "3월 11일"
+    } ]
+  }, {
+    "tStartMs": 29380,
+    "dDurationMs": 4410,
+    "segs": [ {
+      "utf8": "미국 무역대표부는 무역법 301조 조사를 개시하겠다라고"
+    } ]
+  }, {
+    "tStartMs": 33790,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "공식적으로 발표했습니다"
+    } ]
+  }, {
+    "tStartMs": 35750,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "제이미슨 그리어 미국 무역부 대표는"
+    } ]
+  }, {
+    "tStartMs": 37910,
+    "dDurationMs": 4540,
+    "segs": [ {
+      "utf8": "제조업 부분의 구조적 과잉 생산과 여러 국가들의 그런 불공정한 행위"
+    } ]
+  }, {
+    "tStartMs": 42450,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "불공정한 정책, 불공정한 관행 때문에"
+    } ]
+  }, {
+    "tStartMs": 44900,
+    "dDurationMs": 3510,
+    "segs": [ {
+      "utf8": "301조에 의한 조사 개시를 발표한다라고 시작을 했습니다"
+    } ]
+  }, {
+    "tStartMs": 48410,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "무역법 301조가 뭐냐?"
+    } ]
+  }, {
+    "tStartMs": 51100,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "무역법은 되게 옛날 법이에요"
+    } ]
+  }, {
+    "tStartMs": 53090,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "1974년에 무역법 301조가 개정이 됩니다"
+    } ]
+  }, {
+    "tStartMs": 55940,
+    "dDurationMs": 960,
+    "segs": [ {
+      "utf8": "내용은 이래요"
+    } ]
+  }, {
+    "tStartMs": 56900,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "미국 상거래에 영향을 미치는"
+    } ]
+  }, {
+    "tStartMs": 58560,
+    "dDurationMs": 3700,
+    "segs": [ {
+      "utf8": "불공정한 외국 관행을 다루기 위해 마련된 법"
+    } ]
+  }, {
+    "tStartMs": 62260,
+    "dDurationMs": 3150,
+    "segs": [ {
+      "utf8": "그러니까 누군가 상대 국가가 불공정해"
+    } ]
+  }, {
+    "tStartMs": 65410,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "미국에 부담을 줘"
+    } ]
+  }, {
+    "tStartMs": 66530,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "그리고 불합리해"
+    } ]
+  }, {
+    "tStartMs": 67770,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "차별적으로 미국 기업을 대우해"
+    } ]
+  }, {
+    "tStartMs": 70020,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "이런 외국 정부의 관행에 대해서"
+    } ]
+  }, {
+    "tStartMs": 72280,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "페널티를 주면서"
+    } ]
+  }, {
+    "tStartMs": 73490,
+    "dDurationMs": 3250,
+    "segs": [ {
+      "utf8": "대응하는 데 사용하는 법이다라고 보시면 되겠습니다"
+    } ]
+  }, {
+    "tStartMs": 76740,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "여러분들이 많이 들어보신"
+    } ]
+  }, {
+    "tStartMs": 77990,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "슈퍼 301조 그거랑 같은 거냐?"
+    } ]
+  }, {
+    "tStartMs": 79930,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "그거랑 다른 겁니다"
+    } ]
+  }, {
+    "tStartMs": 82260,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "같지만 달라요"
+    } ]
+  }, {
+    "tStartMs": 83720,
+    "dDurationMs": 650,
+    "segs": [ {
+      "utf8": "이게 무슨 소리냐?"
+    } ]
+  }, {
+    "tStartMs": 84370,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "슈퍼 301조는"
+    } ]
+  }, {
+    "tStartMs": 86020,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "법안의 뿌리는 같아"
+    } ]
+  }, {
+    "tStartMs": 87000,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "근데 더 큰 거"
+    } ]
+  }, {
+    "tStartMs": 87940,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "권한은 더 큰 거고"
+    } ]
+  }, {
+    "tStartMs": 89200,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "실제 안에 있는 코어 같은 게"
+    } ]
+  }, {
+    "tStartMs": 90560,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "이 무역법 301조라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 93250,
+    "dDurationMs": 2830,
+    "segs": [ {
+      "utf8": "적용 범위와 강제성에서 큰 차이가 있다고 해요"
+    } ]
+  }, {
+    "tStartMs": 96080,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "무역법 301조는 상설 조항입니다"
+    } ]
+  }, {
+    "tStartMs": 99180,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "그대로 법에 그냥 써 있는 조항이고"
+    } ]
+  }, {
+    "tStartMs": 101340,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "특정 품목도 가능해"
+    } ]
+  }, {
+    "tStartMs": 102780,
+    "dDurationMs": 3650,
+    "segs": [ {
+      "utf8": "우리가 얘기하는 슈퍼 301조는 국가를 찍어"
+    } ]
+  }, {
+    "tStartMs": 106430,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "저놈이 못된 놈이야"
+    } ]
+  }, {
+    "tStartMs": 107730,
+    "dDurationMs": 3250,
+    "segs": [ {
+      "utf8": "그럼 그놈을 아주 주리대로 후드려 패는 게"
+    } ]
+  }, {
+    "tStartMs": 110980,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "슈퍼 301조입니다"
+    } ]
+  }, {
+    "tStartMs": 111980,
+    "dDurationMs": 1940,
+    "segs": [ {
+      "utf8": "그래서 앞에 슈퍼가 붙었잖아요"
+    } ]
+  }, {
+    "tStartMs": 113920,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "그냥 301조가 아니라"
+    } ]
+  }, {
+    "tStartMs": 115330,
+    "dDurationMs": 1510,
+    "segs": [ {
+      "utf8": "슈퍼한 301조다"
+    } ]
+  }, {
+    "tStartMs": 116840,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "이게 어디에 썼냐면"
+    } ]
+  }, {
+    "tStartMs": 118550,
+    "dDurationMs": 3470,
+    "segs": [ {
+      "utf8": "우리나라 사람들은 슈퍼 301조에 굉장히 익숙해"
+    } ]
+  }, {
+    "tStartMs": 122020,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "왜냐하면 우리 옆 나라"
+    } ]
+  }, {
+    "tStartMs": 123250,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "일본이 반도체 두들겨 맞을 때"
+    } ]
+  }, {
+    "tStartMs": 125200,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "미국한테 슈퍼 301조로 어퍼컷을 맞았거든요"
+    } ]
+  }, {
+    "tStartMs": 128020,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "그래서 쭉 뻗어서"
+    } ]
+  }, {
+    "tStartMs": 129650,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "그다음에 우리나라 반도체가"
+    } ]
+  }, {
+    "tStartMs": 131030,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "쭉쭉쭉 되면서 세계를 제패했는데"
+    } ]
+  }, {
+    "tStartMs": 132980,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "일본이 미국에 두들겨 맞을 때 썼던 게"
+    } ]
+  }, {
+    "tStartMs": 135260,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "슈퍼 301조입니다"
+    } ]
+  }, {
+    "tStartMs": 136500,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "그때 슈퍼 301조, 슈퍼 301조"
+    } ]
+  }, {
+    "tStartMs": 138200,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "1980년대 후반에서 90년대 초반일 거예요"
+    } ]
+  }, {
+    "tStartMs": 140600,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "우리나라에 굉장히 많이 그 이야기가 나오면서"
+    } ]
+  }, {
+    "tStartMs": 143090,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "슈퍼 301조 다들 잘 알고 있죠"
+    } ]
+  }, {
+    "tStartMs": 145390,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "약간의 차이가 있다"
+    } ]
+  }, {
+    "tStartMs": 146630,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "자 그러면 이번에 무역법 301조에 의한"
+    } ]
+  }, {
+    "tStartMs": 149450,
+    "dDurationMs": 3130,
+    "segs": [ {
+      "utf8": "새로운 관세 시즌 2 어느 국가들이 대상이냐"
+    } ]
+  }, {
+    "tStartMs": 152580,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "뭔가 불공정한 그런 국가들이 대상이라며"
+    } ]
+  }, {
+    "tStartMs": 155020,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "내용을 보면 이렇게 나옵니다"
+    } ]
+  }, {
+    "tStartMs": 156560,
+    "dDurationMs": 3630,
+    "segs": [ {
+      "utf8": "이번 301조에 의한 불공정 거래 조사 대상 국가는"
+    } ]
+  }, {
+    "tStartMs": 160190,
+    "dDurationMs": 3860,
+    "segs": [ {
+      "utf8": "중국, EU, 인도, 일본, 멕시코, 베트남"
+    } ]
+  }, {
+    "tStartMs": 164050,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "그리고 한국이 있습니다"
+    } ]
+  }, {
+    "tStartMs": 166040,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "총 16개국을 꼽았어요"
+    } ]
+  }, {
+    "tStartMs": 168910,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "빠졌으면 좋은데"
+    } ]
+  }, {
+    "tStartMs": 170260,
+    "dDurationMs": 880,
+    "segs": [ {
+      "utf8": "또 들어갔네요"
+    } ]
+  }, {
+    "tStartMs": 171140,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "미국과 뭔가 불공정한 국가가"
+    } ]
+  }, {
+    "tStartMs": 173200,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "중국까지는 이해가 되는데"
+    } ]
+  }, {
+    "tStartMs": 174910,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "EU, 일본, 한국"
+    } ]
+  }, {
+    "tStartMs": 176540,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "이런 나라들이 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 178040,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "그래서 어떻게 됐건 들어갔습니다"
+    } ]
+  }, {
+    "tStartMs": 179770,
+    "dDurationMs": 420,
+    "segs": [ {
+      "utf8": "어떻게 됐건"
+    } ]
+  }, {
+    "tStartMs": 180190,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "한국도 들어갔다고 할 수 있고요"
+    } ]
+  }, {
+    "tStartMs": 182410,
+    "dDurationMs": 3030,
+    "segs": [ {
+      "utf8": "자 그러면 어쨌건 이 301조라는 걸로"
+    } ]
+  }, {
+    "tStartMs": 185440,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "조사를 하겠다는 거니까"
+    } ]
+  }, {
+    "tStartMs": 187030,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "동맹들이잖아요 대부분"
+    } ]
+  }, {
+    "tStartMs": 188380,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "동맹들은 뭐 그렇게 또 조사를 하냐"
+    } ]
+  }, {
+    "tStartMs": 190460,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "그 이유가 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 191480,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "갑자기 이거는 다들 아시겠지만"
+    } ]
+  }, {
+    "tStartMs": 193580,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "이유가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 194430,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "지난 2월 20일 날, 슈카월드 주제였죠"
+    } ]
+  }, {
+    "tStartMs": 196680,
+    "dDurationMs": 850,
+    "segs": [ {
+      "utf8": "미국 대법원이"
+    } ]
+  }, {
+    "tStartMs": 197530,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "트럼프 대통령의 상호 관세에 대해서"
+    } ]
+  }, {
+    "tStartMs": 199560,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "위헌 판결을 내렸습니다"
+    } ]
+  }, {
+    "tStartMs": 201340,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "상호 관세는 위헌이야"
+    } ]
+  }, {
+    "tStartMs": 202910,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "매기면 안 돼"
+    } ]
+  }, {
+    "tStartMs": 203890,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "그래서 우리가 얼핏 생각하기에"
+    } ]
+  }, {
+    "tStartMs": 204830,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "그럼 0%라는 생각을 하죠"
+    } ]
+  }, {
+    "tStartMs": 207650,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "위헌이잖아요"
+    } ]
+  }, {
+    "tStartMs": 208990,
+    "dDurationMs": 3390,
+    "segs": [ {
+      "utf8": "15%인지 25%인지 그거 위헌이라는 거니까"
+    } ]
+  }, {
+    "tStartMs": 212380,
+    "dDurationMs": 3680,
+    "segs": [ {
+      "utf8": "그러면 0%인가 하는 이런 발칙한 생각을 하죠"
+    } ]
+  }, {
+    "tStartMs": 216060,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "이런 발칙한 생각을 하기 때문에"
+    } ]
+  }, {
+    "tStartMs": 217670,
+    "dDurationMs": 5430,
+    "segs": [ {
+      "utf8": "그래서 이번에 301조로 동맹들을 조사하겠다고 생각하시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 223100,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "대법원 판결, 관세 위헌 판결이 나오니까"
+    } ]
+  }, {
+    "tStartMs": 225670,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "많은 기업들이 내 돈 돌려주나 해서"
+    } ]
+  }, {
+    "tStartMs": 228000,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "관세 환급을 신청을 했어요"
+    } ]
+  }, {
+    "tStartMs": 230250,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "실제로 100개 이상의 기업들이"
+    } ]
+  }, {
+    "tStartMs": 231600,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "새로운 소송을 제기했고"
+    } ]
+  }, {
+    "tStartMs": 233170,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "판결 이전까지 포함되면"
+    } ]
+  }, {
+    "tStartMs": 234630,
+    "dDurationMs": 3430,
+    "segs": [ {
+      "utf8": "지금 미국에서 관세 환급해주세요라고 소송이 난 게"
+    } ]
+  }, {
+    "tStartMs": 238060,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "2천 건 정도가 된다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 240030,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "쫘악 늘어났어요"
+    } ]
+  }, {
+    "tStartMs": 241880,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "그러니까 트럼프 행정부 입장에서는"
+    } ]
+  }, {
+    "tStartMs": 244010,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "만약 관세가 0% 되거나 하면"
+    } ]
+  }, {
+    "tStartMs": 245750,
+    "dDurationMs": 3270,
+    "segs": [ {
+      "utf8": "진짜 잘못하면 돌려줘야 될 위험이 있는 거죠"
+    } ]
+  }, {
+    "tStartMs": 249020,
+    "dDurationMs": 2660,
+    "segs": [ {
+      "utf8": "그리고 게다가 이 2천 건도 아직은 약과입니다"
+    } ]
+  }, {
+    "tStartMs": 251680,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "왜냐하면 수입한 업체들이 다 걸 거 아니야"
+    } ]
+  }, {
+    "tStartMs": 254780,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "1,700억 달러네 2,000억 달러네"
+    } ]
+  }, {
+    "tStartMs": 256910,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "이런 얘기를 하고 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 258440,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "그거를 다 소송을 걸면"
+    } ]
+  }, {
+    "tStartMs": 259900,
+    "dDurationMs": 3710,
+    "segs": [ {
+      "utf8": "정말 미국에서 엄청난 규모의 소송이 일어날 수도 있죠"
+    } ]
+  }, {
+    "tStartMs": 263610,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "그리고 기업이 문제가 아니라"
+    } ]
+  }, {
+    "tStartMs": 265040,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "아까 제가 말씀드렸지만"
+    } ]
+  }, {
+    "tStartMs": 266660,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "그 몇몇 국가들이 제가 누구라고는 얘기는 안 하겠는데"
+    } ]
+  }, {
+    "tStartMs": 268950,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "그 몇몇 국가들이"
+    } ]
+  }, {
+    "tStartMs": 270690,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "무효인가..? 이런 얘기를 한단 말이에요"
+    } ]
+  }, {
+    "tStartMs": 272710,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "잠깐만 대법원이 그 위헌이면"
+    } ]
+  }, {
+    "tStartMs": 274830,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "그게 무효..."
+    } ]
+  }, {
+    "tStartMs": 276510,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "아니 무효를 하고 싶어서가 아니라"
+    } ]
+  }, {
+    "tStartMs": 278800,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "궁금해서x2"
+    } ]
+  }, {
+    "tStartMs": 280830,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "궁금하잖아요"
+    } ]
+  }, {
+    "tStartMs": 282030,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "내일부터 얼마인지"
+    } ]
+  }, {
+    "tStartMs": 283100,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "전화기를 딱 들어서 죄송한데"
+    } ]
+  }, {
+    "tStartMs": 285400,
+    "dDurationMs": 970,
+    "segs": [ {
+      "utf8": "excuse me, sir"
+    } ]
+  }, {
+    "tStartMs": 286370,
+    "dDurationMs": 3900,
+    "segs": [ {
+      "utf8": "혹시 제로 퍼센트..? 이렇게 질문을 하니까"
+    } ]
+  }, {
+    "tStartMs": 290270,
+    "dDurationMs": 3110,
+    "segs": [ {
+      "utf8": "궁금하지만 불충한 의문을 가지게 되기 때문에"
+    } ]
+  }, {
+    "tStartMs": 293380,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "이런 국가들이 0%라고 주장하지 못하게"
+    } ]
+  }, {
+    "tStartMs": 296160,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "뭔가 만들어야겠죠"
+    } ]
+  }, {
+    "tStartMs": 297500,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "그래서 중국, EU, 일본, 멕시코, 베트남"
+    } ]
+  }, {
+    "tStartMs": 299860,
+    "dDurationMs": 3860,
+    "segs": [ {
+      "utf8": "그리고 한국 같은 16개 국가들은 뭔가 불공정해"
+    } ]
+  }, {
+    "tStartMs": 303720,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "원래 그것 때문에 상호 관세를 했어"
+    } ]
+  }, {
+    "tStartMs": 305730,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "근데 그게 어떤 다른 법 때문에 불법이라고 하니까"
+    } ]
+  }, {
+    "tStartMs": 308410,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "위헌이라고 하니까"
+    } ]
+  }, {
+    "tStartMs": 309470,
+    "dDurationMs": 4240,
+    "segs": [ {
+      "utf8": "새로운 법으로 새로운 관세를 매기겠다라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 313710,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "그래서 저 위헌 판결이 나오자마자"
+    } ]
+  }, {
+    "tStartMs": 315620,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "지난번에 보셨겠지만"
+    } ]
+  }, {
+    "tStartMs": 316780,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "일단 무역법 122조라는 거를 기준으로"
+    } ]
+  }, {
+    "tStartMs": 319530,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "수입품에 10% 관세를 매겨놨죠"
+    } ]
+  }, {
+    "tStartMs": 321640,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "그래서 우리가 지금 10% 할증이에요"
+    } ]
+  }, {
+    "tStartMs": 323490,
+    "dDurationMs": 2340,
+    "segs": [ {
+      "utf8": "중간에 15%를 올리네 마네 하고 있는데"
+    } ]
+  }, {
+    "tStartMs": 325830,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "적용이 됐는지는 모르겠습니다"
+    } ]
+  }, {
+    "tStartMs": 327430,
+    "dDurationMs": 3390,
+    "segs": [ {
+      "utf8": "문제는 이 10% 할증이 150일 한시적이죠"
+    } ]
+  }, {
+    "tStartMs": 330820,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "7월까지야"
+    } ]
+  }, {
+    "tStartMs": 332390,
+    "dDurationMs": 3230,
+    "segs": [ {
+      "utf8": "그럼 또 이제 몇몇 국가들이 7월 넘으면"
+    } ]
+  }, {
+    "tStartMs": 335620,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "그럼 0%"
+    } ]
+  }, {
+    "tStartMs": 337510,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "다시 요런 또 질문을 하니까"
+    } ]
+  }, {
+    "tStartMs": 339480,
+    "dDurationMs": 3070,
+    "segs": [ {
+      "utf8": "그냥 7월 넘어도 15% 쭉 가면 되는데"
+    } ]
+  }, {
+    "tStartMs": 342550,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "또 혹시 7월 24일 넘으면 0% 아닌가"
+    } ]
+  }, {
+    "tStartMs": 345060,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "이런 생각을 하기 때문에"
+    } ]
+  }, {
+    "tStartMs": 346610,
+    "dDurationMs": 3180,
+    "segs": [ {
+      "utf8": "이번에 301조로 아예 확실하게 못을 박겠다라고"
+    } ]
+  }, {
+    "tStartMs": 349790,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "얘기한 거라고 보시면 되고요"
+    } ]
+  }, {
+    "tStartMs": 351290,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "그리고 트럼프 대통령 입장에서는 이렇게 생각하겠죠"
+    } ]
+  }, {
+    "tStartMs": 353740,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "이 모든 고생은 뭐 때문입니까?"
+    } ]
+  }, {
+    "tStartMs": 355940,
+    "dDurationMs": 3570,
+    "segs": [ {
+      "utf8": "대법원이 상호 관세를 위헌 판결을 해서잖아"
+    } ]
+  }, {
+    "tStartMs": 359510,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "위헌 판결을 안 했으면"
+    } ]
+  }, {
+    "tStartMs": 361120,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "그냥 15% 하고"
+    } ]
+  }, {
+    "tStartMs": 362770,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "그동안 얼마나 관세협정도 하고"
+    } ]
+  }, {
+    "tStartMs": 365050,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "EU하고도 관세협정 맺고"
+    } ]
+  }, {
+    "tStartMs": 366530,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "일본은 5천 5백억 달러 낸다 그러고"
+    } ]
+  }, {
+    "tStartMs": 368610,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "대한민국은 3천 5백억 달러 낸다 그러고"
+    } ]
+  }, {
+    "tStartMs": 370240,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "쭉쭉쭉쭉 빨았는데"
+    } ]
+  }, {
+    "tStartMs": 371830,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "아니 대법원이 위헌 판결을 해서"
+    } ]
+  }, {
+    "tStartMs": 373160,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "이 고생을 다시 하게 생겼죠"
+    } ]
+  }, {
+    "tStartMs": 374880,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "그래서 굉장히 항의를 많이 했습니다"
+    } ]
+  }, {
+    "tStartMs": 377040,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "트럼프 대통령이"
+    } ]
+  }, {
+    "tStartMs": 378020,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "미국 연방대법원은 그동안 수년 동안, 수십 년 동안"
+    } ]
+  }, {
+    "tStartMs": 380820,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "미국을 착취해온 국가들 몇몇 국가들"
+    } ]
+  }, {
+    "tStartMs": 383500,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "그리고 그런 기업들에게"
+    } ]
+  }, {
+    "tStartMs": 384740,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "다시 수천억 달러가 돌아가는 결과를 초래한 것이다"
+    } ]
+  }, {
+    "tStartMs": 387620,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "이건 다 대법원 때문이야"
+    } ]
+  }, {
+    "tStartMs": 389060,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "그래서 뭐를 요구했냐 최근에"
+    } ]
+  }, {
+    "tStartMs": 391260,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "딱 한번 기회를 더 줄게"
+    } ]
+  }, {
+    "tStartMs": 393490,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "무슨 기회?"
+    } ]
+  }, {
+    "tStartMs": 394210,
+    "dDurationMs": 3340,
+    "segs": [ {
+      "utf8": "혹시 재판결 가능합니까?"
+    } ]
+  }, {
+    "tStartMs": 397550,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "위헌 판결 난 거를"
+    } ]
+  }, {
+    "tStartMs": 398740,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "이거 뭐라 그래? 재심리?"
+    } ]
+  }, {
+    "tStartMs": 400900,
+    "dDurationMs": 2550,
+    "segs": [ {
+      "utf8": "너희들이 실수했다고 생각하면"
+    } ]
+  }, {
+    "tStartMs": 403450,
+    "dDurationMs": 910,
+    "segs": [ {
+      "utf8": "기회 한 번 더 줄게"
+    } ]
+  }, {
+    "tStartMs": 404360,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "다시 모여서 한 번 재심리나 재판결 해봐"
+    } ]
+  }, {
+    "tStartMs": 407460,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "아니 지금 다른 기업들이"
+    } ]
+  }, {
+    "tStartMs": 409330,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "지금 좋아하고 난리치고 춤추고 수천억 달러 벌고"
+    } ]
+  }, {
+    "tStartMs": 411840,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "미국이 엄청난 손해를 입고 있잖아요"
+    } ]
+  }, {
+    "tStartMs": 414620,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "극도로 실망스러운 이런 판결의 결과"
+    } ]
+  }, {
+    "tStartMs": 417310,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "미국이 어려워지고 세계적으로"
+    } ]
+  }, {
+    "tStartMs": 419200,
+    "dDurationMs": 2890,
+    "segs": [ {
+      "utf8": "부당한 정말 유례없는 부당한 횡재를 하고 있으니까"
+    } ]
+  }, {
+    "tStartMs": 422090,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "너희들이 다시 생각할 기회 한 번 더 주겠다"
+    } ]
+  }, {
+    "tStartMs": 424310,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "그 저스티스들 대법관들 모여서"
+    } ]
+  }, {
+    "tStartMs": 426760,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "재심리 재판결 가능합니까?"
+    } ]
+  }, {
+    "tStartMs": 429070,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "라고 물어봤습니다"
+    } ]
+  }, {
+    "tStartMs": 430880,
+    "dDurationMs": 2530,
+    "segs": [ {
+      "utf8": "물론 지금까지 결과는"
+    } ]
+  }, {
+    "tStartMs": 433410,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "안 될 것 같아요"
+    } ]
+  }, {
+    "tStartMs": 435210,
+    "dDurationMs": 3390,
+    "segs": [ {
+      "utf8": "대법관들에게 판결 재심리를 촉구하고 있으나"
+    } ]
+  }, {
+    "tStartMs": 438600,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "대법원이 이러한 요청을 수용하는 경우는 거의 없다"
+    } ]
+  }, {
+    "tStartMs": 442100,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "이걸 수용할 수도 있나?"
+    } ]
+  }, {
+    "tStartMs": 443400,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "대법원이 땅땅 친 거를 재심리?"
+    } ]
+  }, {
+    "tStartMs": 445980,
+    "dDurationMs": 620,
+    "segs": [ {
+      "utf8": "모르겠습니다"
+    } ]
+  }, {
+    "tStartMs": 446600,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "저도 법을 잘 몰라서"
+    } ]
+  }, {
+    "tStartMs": 448100,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "하는 경우가 있는지 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 449970,
+    "dDurationMs": 730,
+    "segs": [ {
+      "utf8": "실제로 요구를 했죠"
+    } ]
+  }, {
+    "tStartMs": 450700,
+    "dDurationMs": 560,
+    "segs": [ {
+      "utf8": "앞에 있는 분들이"
+    } ]
+  }, {
+    "tStartMs": 451260,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "대법관 저스티스들입니다"
+    } ]
+  }, {
+    "tStartMs": 452990,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "지금 거절을 한 것 같고요"
+    } ]
+  }, {
+    "tStartMs": 455040,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "아마 안 될 것 같아"
+    } ]
+  }, {
+    "tStartMs": 455850,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "그래서 트럼프 대통령은"
+    } ]
+  }, {
+    "tStartMs": 457050,
+    "dDurationMs": 3370,
+    "segs": [ {
+      "utf8": "그러면 7월까지 지금 임시적으로 관세를 매겼으니까"
+    } ]
+  }, {
+    "tStartMs": 460420,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "시간을 끌어야 될 거 아니에요"
+    } ]
+  }, {
+    "tStartMs": 461520,
+    "dDurationMs": 620,
+    "segs": [ {
+      "utf8": "그 뒤에는"
+    } ]
+  }, {
+    "tStartMs": 462140,
+    "dDurationMs": 4820,
+    "segs": [ {
+      "utf8": "항소법원에 절차를 90일간 추가로 중단해 줄 것을 요구했습니다"
+    } ]
+  }, {
+    "tStartMs": 466960,
+    "dDurationMs": 2240,
+    "segs": [ {
+      "utf8": "시간을 끌어야 새로운 관세를 매길 거 아니에요"
+    } ]
+  }, {
+    "tStartMs": 469200,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "새로운 법률에 의해서"
+    } ]
+  }, {
+    "tStartMs": 470430,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "무역법 301조 같은 것도 적용하려면 시간이 걸리니까"
+    } ]
+  }, {
+    "tStartMs": 473530,
+    "dDurationMs": 3370,
+    "segs": [ {
+      "utf8": "항소법원아 90일 좀 연기해라 라고 했는데"
+    } ]
+  }, {
+    "tStartMs": 476900,
+    "dDurationMs": 4060,
+    "segs": [ {
+      "utf8": "항소법원이 싫어 라고 대답했어요"
+    } ]
+  }, {
+    "tStartMs": 480960,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "법원이 세긴 세"
+    } ]
+  }, {
+    "tStartMs": 482120,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "트럼프 행정부의 요청을 기각했다"
+    } ]
+  }, {
+    "tStartMs": 484960,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "싫어요 라고 해서"
+    } ]
+  }, {
+    "tStartMs": 486380,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "그것도 안 될 것 같고 급하잖아요 그럼"
+    } ]
+  }, {
+    "tStartMs": 489180,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "7월 24일까지인데 7월달까지인데 급하니까"
+    } ]
+  }, {
+    "tStartMs": 492050,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "빠르게 지금 처리한 게"
+    } ]
+  }, {
+    "tStartMs": 493880,
+    "dDurationMs": 1370,
+    "segs": [ {
+      "utf8": "관세율을 유지하기 위해서"
+    } ]
+  }, {
+    "tStartMs": 495250,
+    "dDurationMs": 3150,
+    "segs": [ {
+      "utf8": "오늘의 주제인 무역법 301조를 급하게 동원했다"
+    } ]
+  }, {
+    "tStartMs": 498400,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 499500,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "미 재무부 장관이 이렇게 얘기했죠"
+    } ]
+  }, {
+    "tStartMs": 501090,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "관세율이 5개월 내"
+    } ]
+  }, {
+    "tStartMs": 502510,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "5개월 내라고 한 건 간단합니다 7월까지니까"
+    } ]
+  }, {
+    "tStartMs": 505120,
+    "dDurationMs": 4640,
+    "segs": [ {
+      "utf8": "이전 수준으로 상호 관세 수준으로 돌아올 것이라고 확신한다라고 한 거죠"
+    } ]
+  }, {
+    "tStartMs": 509760,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "그러면서 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 511260,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "7월 이후에 다른 엉뚱한 거 기대하지 마"
+    } ]
+  }, {
+    "tStartMs": 514080,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "자꾸 이상한 거 기대하고 말이야"
+    } ]
+  }, {
+    "tStartMs": 516060,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "관세를 부과하기 위해서"
+    } ]
+  }, {
+    "tStartMs": 517220,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "사용하는 수단들은 많아"
+    } ]
+  }, {
+    "tStartMs": 519080,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "그러니까 너희들한테 붙인 관세는"
+    } ]
+  }, {
+    "tStartMs": 521050,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "법이 중요하지 않아"
+    } ]
+  }, {
+    "tStartMs": 522720,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "그냥 숫자가 중요해"
+    } ]
+  }, {
+    "tStartMs": 523660,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "15% 하면 15%인 거야"
+    } ]
+  }, {
+    "tStartMs": 525400,
+    "dDurationMs": 3550,
+    "segs": [ {
+      "utf8": "20% 하면 20%인 거지 법은 이제 그 다음에 붙이면 되는 거지"
+    } ]
+  }, {
+    "tStartMs": 528950,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "매우 광범위하고 강력해"
+    } ]
+  }, {
+    "tStartMs": 530840,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "절차가 절차가 조금 있는 것 뿐이니까"
+    } ]
+  }, {
+    "tStartMs": 533270,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "뒤에 혹시 무효 0% 아니에요?"
+    } ]
+  }, {
+    "tStartMs": 535630,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "라는 그런 질문"
+    } ]
+  }, {
+    "tStartMs": 536770,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "대단히 실례하고 무례할 수 있는 거죠"
+    } ]
+  }, {
+    "tStartMs": 539370,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "그러니까 그런 거 물어보지 마라"
+    } ]
+  }, {
+    "tStartMs": 540760,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "라고 얘기를 하셨습니다"
+    } ]
+  }, {
+    "tStartMs": 542910,
+    "dDurationMs": 1930,
+    "segs": [ {
+      "utf8": "그러면 어쨌든 무역법 301조로"
+    } ]
+  }, {
+    "tStartMs": 544840,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "우리나라를 조사한다고 하니까"
+    } ]
+  }, {
+    "tStartMs": 546790,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "궁금증이 들죠"
+    } ]
+  }, {
+    "tStartMs": 547990,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "뭔가 미국과 부당한"
+    } ]
+  }, {
+    "tStartMs": 549650,
+    "dDurationMs": 3430,
+    "segs": [ {
+      "utf8": "정당하지 않은 거래를 했어야 301조가 적용이 되는데"
+    } ]
+  }, {
+    "tStartMs": 553080,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "그럼 우리가 미국과 어떤"
+    } ]
+  }, {
+    "tStartMs": 554670,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "정당하지 않은 거래를 했다는 거냐"
+    } ]
+  }, {
+    "tStartMs": 557250,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "뭐 덤핑한 적도 있는 것 같지 않고"
+    } ]
+  }, {
+    "tStartMs": 559630,
+    "dDurationMs": 2130,
+    "segs": [ {
+      "utf8": "아니면 무슨 부당한 거래를 했죠?"
+    } ]
+  }, {
+    "tStartMs": 561760,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "뭐 있어야 될 거 아니에요"
+    } ]
+  }, {
+    "tStartMs": 562630,
+    "dDurationMs": 3740,
+    "segs": [ {
+      "utf8": "펜타닐을 했건 아니면 적절하지 않은 뭔가를 했건"
+    } ]
+  }, {
+    "tStartMs": 566370,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "그랬더니 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 567940,
+    "dDurationMs": 3360,
+    "segs": [ {
+      "utf8": "미국이 보기에 아주 정당하지 않은 거래를 했는데 그건 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 571300,
+    "dDurationMs": 5960,
+    "segs": [ {
+      "utf8": "미국은 과잉 생산 능력과 생산 문제를 미국에게 전가하는 다른 나라들에게"
+    } ]
+  }, {
+    "tStartMs": 577260,
+    "dDurationMs": 3540,
+    "segs": [ {
+      "utf8": "더 이상 산업 기반을 희생시키지 않을 것이다"
+    } ]
+  }, {
+    "tStartMs": 580800,
+    "dDurationMs": 2360,
+    "segs": [ {
+      "utf8": "너희의 문제는 뭐라는 겁니까?"
+    } ]
+  }, {
+    "tStartMs": 583160,
+    "dDurationMs": 1550,
+    "segs": [ {
+      "utf8": "지금 301조의 대상인"
+    } ]
+  }, {
+    "tStartMs": 584710,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "그 나라들 너희의 문제는"
+    } ]
+  }, {
+    "tStartMs": 586070,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "바로 너희가 과잉 생산해서"
+    } ]
+  }, {
+    "tStartMs": 589020,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "그걸 미국에 수출하는 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 590910,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "아니, 국내 소비량만큼만 생산을 하면 될 텐데"
+    } ]
+  }, {
+    "tStartMs": 594210,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "그걸 많이 생산하는 그 이유"
+    } ]
+  }, {
+    "tStartMs": 596190,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "미국에 그거 팔아먹으려는 거 아니요?"
+    } ]
+  }, {
+    "tStartMs": 598580,
+    "dDurationMs": 1270,
+    "segs": [ {
+      "utf8": "그런 과잉 생산은"
+    } ]
+  }, {
+    "tStartMs": 599850,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "미국 국내 생산을 위축시키고"
+    } ]
+  }, {
+    "tStartMs": 601770,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "미국 제조업 투자를 저해하는 거예요"
+    } ]
+  }, {
+    "tStartMs": 603750,
+    "dDurationMs": 3940,
+    "segs": [ {
+      "utf8": "국내 소비량보다 많은 상품 생산할 이유가 있어요, 없어요?"
+    } ]
+  }, {
+    "tStartMs": 607690,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "물론 있죠"
+    } ]
+  }, {
+    "tStartMs": 608990,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "물론 있지"
+    } ]
+  }, {
+    "tStartMs": 610380,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "말하니까 이상한데?"
+    } ]
+  }, {
+    "tStartMs": 611080,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "물론 있지"
+    } ]
+  }, {
+    "tStartMs": 611920,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "사준다는 나라들이 있으면"
+    } ]
+  }, {
+    "tStartMs": 613420,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "거기에 맞춰서 하는 거지"
+    } ]
+  }, {
+    "tStartMs": 615040,
+    "dDurationMs": 3780,
+    "segs": [ {
+      "utf8": "국내 소비량만큼만 생산하면 수출은 못하잖아"
+    } ]
+  }, {
+    "tStartMs": 618820,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "하여튼 무슨 말인지 모르겠지만"
+    } ]
+  }, {
+    "tStartMs": 620580,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "이런 과잉 생산해서"
+    } ]
+  }, {
+    "tStartMs": 622000,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "미국에 수출하는 게 부당하다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 623770,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "정당하지 않다는 거고"
+    } ]
+  }, {
+    "tStartMs": 625360,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "이 나라 16개 국에 대해서"
+    } ]
+  }, {
+    "tStartMs": 627180,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "하나하나 이유를 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 628890,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "예를 들면 대표적으로"
+    } ]
+  }, {
+    "tStartMs": 629810,
+    "dDurationMs": 1380,
+    "segs": [ {
+      "utf8": "우리나라는 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 631190,
+    "dDurationMs": 3410,
+    "segs": [ {
+      "utf8": "한국은 구조적 과잉 생산 능력을 가지고 있고"
+    } ]
+  }, {
+    "tStartMs": 634600,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "그를 통해서"
+    } ]
+  }, {
+    "tStartMs": 635200,
+    "dDurationMs": 3680,
+    "segs": [ {
+      "utf8": "미국에 대규모 무역 흑자를 내고 있는 나라예요"
+    } ]
+  }, {
+    "tStartMs": 638880,
+    "dDurationMs": 3010,
+    "segs": [ {
+      "utf8": "전자장비, 자동차, 기계, 철강, 선박"
+    } ]
+  }, {
+    "tStartMs": 641890,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "이런 상품 무역에서"
+    } ]
+  }, {
+    "tStartMs": 643280,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "이건 완전 구조적인 거예요"
+    } ]
+  }, {
+    "tStartMs": 644510,
+    "dDurationMs": 1030,
+    "segs": [ {
+      "utf8": "과잉 생산을 많이"
+    } ]
+  }, {
+    "tStartMs": 645540,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "그 다음에 그걸 미국에 막 팔아서"
+    } ]
+  }, {
+    "tStartMs": 647190,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "흑자를 내고 있는 게 아니냐"
+    } ]
+  }, {
+    "tStartMs": 648370,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "이거 아주 문제가 있는 나라다"
+    } ]
+  }, {
+    "tStartMs": 650130,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "라고 얘기를 하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 652000,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "그러면서 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 653410,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "한국은 구조적 과잉 생산을 통해서"
+    } ]
+  }, {
+    "tStartMs": 655610,
+    "dDurationMs": 1260,
+    "segs": [ {
+      "utf8": "몇 년 전만 해도"
+    } ]
+  }, {
+    "tStartMs": 656870,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "한국의 무역 흑자가"
+    } ]
+  }, {
+    "tStartMs": 658160,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "미국과의 무역 흑자가 적자였어"
+    } ]
+  }, {
+    "tStartMs": 660390,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "100억 달러 적자였는데"
+    } ]
+  }, {
+    "tStartMs": 661820,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "2024년에 갑자기 늘어서"
+    } ]
+  }, {
+    "tStartMs": 663630,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "520억 달러 흑자가 되는 거야"
+    } ]
+  }, {
+    "tStartMs": 665210,
+    "dDurationMs": 3870,
+    "segs": [ {
+      "utf8": "이건 구조적으로 과잉 생산을 막 미국에 떨어넘기는 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 669080,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "라고 말씀을 하시는 거죠"
+    } ]
+  }, {
+    "tStartMs": 670900,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "그런데 조금 말씀 중에 죄송한데"
+    } ]
+  }, {
+    "tStartMs": 673510,
+    "dDurationMs": 3570,
+    "segs": [ {
+      "utf8": "사실 우리는 거의 매년 무역 흑자였고"
+    } ]
+  }, {
+    "tStartMs": 677080,
+    "dDurationMs": 870,
+    "segs": [ {
+      "utf8": "유가 급등하고"
+    } ]
+  }, {
+    "tStartMs": 677950,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "코로나 직후에 쭉 올랐다가 빠질 때 중국 부진하고"
+    } ]
+  }, {
+    "tStartMs": 680630,
+    "dDurationMs": 2750,
+    "segs": [ {
+      "utf8": "그때 잠깐 정말 잠깐 적자냈고"
+    } ]
+  }, {
+    "tStartMs": 683380,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "계속 흑자예요"
+    } ]
+  }, {
+    "tStartMs": 685030,
+    "dDurationMs": 660,
+    "segs": [ {
+      "utf8": "계속 흑자"
+    } ]
+  }, {
+    "tStartMs": 685690,
+    "dDurationMs": 2850,
+    "segs": [ {
+      "utf8": "우리는 원래 구조적으로 무역 흑자인 나라인데"
+    } ]
+  }, {
+    "tStartMs": 688540,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "수출 위주 국가다 보니까"
+    } ]
+  }, {
+    "tStartMs": 689790,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "중개 무역도 많이 하고"
+    } ]
+  }, {
+    "tStartMs": 691320,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "하지만 어쨌건 미국 입장에서는"
+    } ]
+  }, {
+    "tStartMs": 693050,
+    "dDurationMs": 2910,
+    "segs": [ {
+      "utf8": "적자가 갑자기 흑자로 전환되고 이런 거 보면"
+    } ]
+  }, {
+    "tStartMs": 695960,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "뭔가 문제가 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 698220,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "그리고 미국 무역부가 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 700570,
+    "dDurationMs": 3210,
+    "segs": [ {
+      "utf8": "한국 정부도 과잉 생산이라고 인정했다"
+    } ]
+  }, {
+    "tStartMs": 703780,
+    "dDurationMs": 1650,
+    "segs": [ {
+      "utf8": "뭘..? 봤더니"
+    } ]
+  }, {
+    "tStartMs": 705430,
+    "dDurationMs": 5370,
+    "segs": [ {
+      "utf8": "한국 정부 또한 석유화학 분야의 설비 감축 필요성을 인정한 바 있다"
+    } ]
+  }, {
+    "tStartMs": 710800,
+    "dDurationMs": 2720,
+    "segs": [ {
+      "utf8": "아 그건 우리가 과잉 생산이 아니라"
+    } ]
+  }, {
+    "tStartMs": 713520,
+    "dDurationMs": 3660,
+    "segs": [ {
+      "utf8": "저 옆 나라가 저 중국이 자꾸 이렇게 물량 싸게 나와서"
+    } ]
+  }, {
+    "tStartMs": 717180,
+    "dDurationMs": 3060,
+    "segs": [ {
+      "utf8": "석화산업이 어려워서 구조조정 하겠다는 거지"
+    } ]
+  }, {
+    "tStartMs": 720240,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "과잉 생산이라서 설비 감축 뭐 그건 아닌데"
+    } ]
+  }, {
+    "tStartMs": 722910,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "라고 뭐 이야기를 해봐야 뭐 소용은 없지만"
+    } ]
+  }, {
+    "tStartMs": 725020,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "하여튼 뭐 그런 거죠"
+    } ]
+  }, {
+    "tStartMs": 726420,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "그러니까 석화시설 감축하지"
+    } ]
+  }, {
+    "tStartMs": 728400,
+    "dDurationMs": 1110,
+    "segs": [ {
+      "utf8": "자동차도 감축하고"
+    } ]
+  }, {
+    "tStartMs": 729510,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "기계도 감축하고"
+    } ]
+  }, {
+    "tStartMs": 730690,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "어 반도체는... 반도체는 안 되는데"
+    } ]
+  }, {
+    "tStartMs": 733260,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "하여튼 뭐 그래야지 자꾸 이렇게 많이 생산해서 말이야"
+    } ]
+  }, {
+    "tStartMs": 736040,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "미국에 팔고 그러면 문제가 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 738820,
+    "dDurationMs": 1480,
+    "segs": [ {
+      "utf8": "일본은 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 740300,
+    "dDurationMs": 990,
+    "segs": [ {
+      "utf8": "일본 봐라 일본"
+    } ]
+  }, {
+    "tStartMs": 741290,
+    "dDurationMs": 2680,
+    "segs": [ {
+      "utf8": "일본도 굉장히 구조적으로 문제가 있는 나라야"
+    } ]
+  }, {
+    "tStartMs": 743970,
+    "dDurationMs": 640,
+    "segs": [ {
+      "utf8": "이거 보세요"
+    } ]
+  }, {
+    "tStartMs": 744610,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "왜 과잉 생산이냐?"
+    } ]
+  }, {
+    "tStartMs": 745760,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "일본은 이익을 내지 못하면서도"
+    } ]
+  }, {
+    "tStartMs": 747570,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "계속 운영되는 기업이 많아"
+    } ]
+  }, {
+    "tStartMs": 749400,
+    "dDurationMs": 1290,
+    "segs": [ {
+      "utf8": "이거 왜 그러겠어?"
+    } ]
+  }, {
+    "tStartMs": 750690,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "살려주는 거 아니여? 죽여야지?"
+    } ]
+  }, {
+    "tStartMs": 752420,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "이 좀비 기업들이"
+    } ]
+  }, {
+    "tStartMs": 753620,
+    "dDurationMs": 2590,
+    "segs": [ {
+      "utf8": "일본의 과잉 생산을 보여주는 증거야"
+    } ]
+  }, {
+    "tStartMs": 756210,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "이거 이거 이거 정부가 이거 보조금 주고"
+    } ]
+  }, {
+    "tStartMs": 758230,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "대출이자 이렇게 해주고"
+    } ]
+  }, {
+    "tStartMs": 759330,
+    "dDurationMs": 2190,
+    "segs": [ {
+      "utf8": "저렇게 해주고 저렇게 해주고 해서 살려갖고"
+    } ]
+  }, {
+    "tStartMs": 761520,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "이런 애들이 생산하는 게 과잉돼서 많으니까"
+    } ]
+  }, {
+    "tStartMs": 763670,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "그게 싼 가격으로 미국에 흘러 들어가서"
+    } ]
+  }, {
+    "tStartMs": 766240,
+    "dDurationMs": 2070,
+    "segs": [ {
+      "utf8": "미국이 이거 무역 적자 나고 그러는 거 아닙니까?"
+    } ]
+  }, {
+    "tStartMs": 768310,
+    "dDurationMs": 2150,
+    "segs": [ {
+      "utf8": "그러니까 일본은 이 좀비 기업들"
+    } ]
+  }, {
+    "tStartMs": 770460,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "이게 문제가 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 772330,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "16개 국가 다 했습니다"
+    } ]
+  }, {
+    "tStartMs": 773550,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "몇 개 더 보여드리면 노르웨이"
+    } ]
+  }, {
+    "tStartMs": 774890,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "아 그 나라?"
+    } ]
+  }, {
+    "tStartMs": 775790,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "그 나라도 문제가 있지"
+    } ]
+  }, {
+    "tStartMs": 776740,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "그 나라는 연어가 문제야"
+    } ]
+  }, {
+    "tStartMs": 779030,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "해산물을 너무 과잉 생산하고 있어"
+    } ]
+  }, {
+    "tStartMs": 781210,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "노르웨이 해산물의 미국 수출은"
+    } ]
+  }, {
+    "tStartMs": 783100,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "2025년 사상 최고치를 경신했는데"
+    } ]
+  }, {
+    "tStartMs": 785570,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "180억 달러를 미국에 팔더만"
+    } ]
+  }, {
+    "tStartMs": 787490,
+    "dDurationMs": 1820,
+    "segs": [ {
+      "utf8": "아니 그렇게 과잉 생산해서 되는 거냐?"
+    } ]
+  }, {
+    "tStartMs": 789310,
+    "dDurationMs": 2920,
+    "segs": [ {
+      "utf8": "적절하게 생산해 적절하게 응?"
+    } ]
+  }, {
+    "tStartMs": 792230,
+    "dDurationMs": 3230,
+    "segs": [ {
+      "utf8": "근데 연어는 미국 사람들이 먹은 거잖아"
+    } ]
+  }, {
+    "tStartMs": 795460,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "그럼 뭐 미국 분들이 좀 덜 먹든가"
+    } ]
+  }, {
+    "tStartMs": 797930,
+    "dDurationMs": 570,
+    "segs": [ {
+      "utf8": "아니 죄송합니다"
+    } ]
+  }, {
+    "tStartMs": 798500,
+    "dDurationMs": 2620,
+    "segs": [ {
+      "utf8": "아니 뭐 좀 덜 먹으시면 될 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 801120,
+    "dDurationMs": 2690,
+    "segs": [ {
+      "utf8": "덜 먹고 미국에서 나온 연어"
+    } ]
+  }, {
+    "tStartMs": 803810,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "신토불이 연어를 먹으면 되는데"
+    } ]
+  }, {
+    "tStartMs": 805620,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "그 노르웨이가 과잉 생산해서"
+    } ]
+  }, {
+    "tStartMs": 807020,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "싸게 싸게 하다 보니까"
+    } ]
+  }, {
+    "tStartMs": 808600,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "신토불이 연어를 안 먹고"
+    } ]
+  }, {
+    "tStartMs": 810360,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "그 노르웨이 연어를 먹게 된다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 812000,
+    "dDurationMs": 2080,
+    "segs": [ {
+      "utf8": "이제 그런 문제점이 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 814080,
+    "dDurationMs": 3550,
+    "segs": [ {
+      "utf8": "무역법 301조로 한번 떼찌 떼찌 해보겠다라고"
+    } ]
+  }, {
+    "tStartMs": 817630,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "이야기하고 있는 거라고 보시면 될 것 같습니다"
+    } ]
+  }, {
+    "tStartMs": 819980,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "그런데 제 개인적인 생각에"
+    } ]
+  }, {
+    "tStartMs": 822160,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "진짜 개인적인 생각인데"
+    } ]
+  }, {
+    "tStartMs": 823950,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "타국의 과잉 생산이"
+    } ]
+  }, {
+    "tStartMs": 825630,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "미국의 무역 적자의 주 원인이다"
+    } ]
+  }, {
+    "tStartMs": 827740,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "불공정하다 이런 거죠"
+    } ]
+  }, {
+    "tStartMs": 829660,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "이걸 어떻게 생각하냐"
+    } ]
+  }, {
+    "tStartMs": 831550,
+    "dDurationMs": 3190,
+    "segs": [ {
+      "utf8": "저는 덤핑, 아니면 보조금 이런 걸 제외하면"
+    } ]
+  }, {
+    "tStartMs": 834740,
+    "dDurationMs": 1890,
+    "segs": [ {
+      "utf8": "솔직히 처음 들어봤는데"
+    } ]
+  }, {
+    "tStartMs": 836630,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "제가 가방끈이 짧아서"
+    } ]
+  }, {
+    "tStartMs": 838210,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "타국의 과잉 생산이"
+    } ]
+  }, {
+    "tStartMs": 840390,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "다른 나라 무역 적자의 원인이다"
+    } ]
+  }, {
+    "tStartMs": 842820,
+    "dDurationMs": 1020,
+    "segs": [ {
+      "utf8": "하여튼 처음 들어봤습니다"
+    } ]
+  }, {
+    "tStartMs": 843840,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "무슨 논리인지 처음 들어봤는데"
+    } ]
+  }, {
+    "tStartMs": 845240,
+    "dDurationMs": 2180,
+    "segs": [ {
+      "utf8": "아마 교수님들이 의견을 주지 않을까 생각하고"
+    } ]
+  }, {
+    "tStartMs": 847420,
+    "dDurationMs": 5000,
+    "segs": [ {
+      "utf8": "근데 제 의견은 모든 나라가 밀어내기식 수출을 하는 거는 아닌 것 같고"
+    } ]
+  }, {
+    "tStartMs": 852420,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "특히 여기서 얘기하는 EU, 일본, 한국"
+    } ]
+  }, {
+    "tStartMs": 855230,
+    "dDurationMs": 5540,
+    "segs": [ {
+      "utf8": "다른 나라들이 밀어내기식 과잉 생산된 거를 싸게 미국으로"
+    } ]
+  }, {
+    "tStartMs": 860770,
+    "dDurationMs": 1920,
+    "segs": [ {
+      "utf8": "그건 아닌 것 같고"
+    } ]
+  }, {
+    "tStartMs": 862690,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "개인 생각입니다"
+    } ]
+  }, {
+    "tStartMs": 863940,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "그리고 누군가가 수입해가면"
+    } ]
+  }, {
+    "tStartMs": 865720,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "부족한 부분을 당연히 생산하는데"
+    } ]
+  }, {
+    "tStartMs": 867430,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "그럼 당연히 많이 생산해야죠"
+    } ]
+  }, {
+    "tStartMs": 869950,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "많이 생산해야지"
+    } ]
+  }, {
+    "tStartMs": 871230,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "아니 국내 내수 수요만큼만 생산하면"
+    } ]
+  }, {
+    "tStartMs": 873640,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "수출하지 말라는 말과 똑같잖아요"
+    } ]
+  }, {
+    "tStartMs": 875800,
+    "dDurationMs": 2170,
+    "segs": [ {
+      "utf8": "당연히 수출하려면 조금 더 생산해서"
+    } ]
+  }, {
+    "tStartMs": 877970,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "그걸 수출하는 건데"
+    } ]
+  }, {
+    "tStartMs": 879490,
+    "dDurationMs": 3330,
+    "segs": [ {
+      "utf8": "아니면 뭐 미국이 사가지 않으면 안 되죠"
+    } ]
+  }, {
+    "tStartMs": 882820,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "하여튼 뭐 그런 거고요"
+    } ]
+  }, {
+    "tStartMs": 884290,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "타국의 낮은 가격이"
+    } ]
+  }, {
+    "tStartMs": 885510,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "아마 제 생각에 자국 제조업의 기반을 무너뜨린다"
+    } ]
+  }, {
+    "tStartMs": 888320,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "이렇게 보는 것 같긴 해요"
+    } ]
+  }, {
+    "tStartMs": 889840,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "타국의 가격이 낮으니까"
+    } ]
+  }, {
+    "tStartMs": 891410,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "미국의 제조업 기반이 어려운 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 893270,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "그리고 미국보다 인건비가 싼 나라"
+    } ]
+  }, {
+    "tStartMs": 895060,
+    "dDurationMs": 2640,
+    "segs": [ {
+      "utf8": "이런 나라에서 자꾸 싸게 만들고 덤핑하고"
+    } ]
+  }, {
+    "tStartMs": 897700,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "과잉 생산해서 저렴하게 내려와서"
+    } ]
+  }, {
+    "tStartMs": 899490,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "미국에 불공정 무역이다"
+    } ]
+  }, {
+    "tStartMs": 900730,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "라고 생각하는 것 같은데"
+    } ]
+  }, {
+    "tStartMs": 902350,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "기본 입장이"
+    } ]
+  }, {
+    "tStartMs": 903060,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "근데 그렇게 따지면 사실은 미국은 전세계 모든 나라와"
+    } ]
+  }, {
+    "tStartMs": 905460,
+    "dDurationMs": 3390,
+    "segs": [ {
+      "utf8": "불공정 무역을 할 수밖에 없는 것 아닌가라는 생각이 듭니다"
+    } ]
+  }, {
+    "tStartMs": 908850,
+    "dDurationMs": 3420,
+    "segs": [ {
+      "utf8": "왜냐하면 미국보다 임금이 비싼 나라가 어디 있겠어"
+    } ]
+  }, {
+    "tStartMs": 912270,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "이 나라 8만 달러예요"
+    } ]
+  }, {
+    "tStartMs": 913370,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "8만 달러"
+    } ]
+  }, {
+    "tStartMs": 914410,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "8만 5천도 넘는데"
+    } ]
+  }, {
+    "tStartMs": 915910,
+    "dDurationMs": 3030,
+    "segs": [ {
+      "utf8": "가장 1인당 GDP가 비싼데"
+    } ]
+  }, {
+    "tStartMs": 918940,
+    "dDurationMs": 2960,
+    "segs": [ {
+      "utf8": "그 가격 차이가 불공정 무역이라고 하면"
+    } ]
+  }, {
+    "tStartMs": 921900,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "쉽지 않죠"
+    } ]
+  }, {
+    "tStartMs": 922740,
+    "dDurationMs": 2120,
+    "segs": [ {
+      "utf8": "그래서 이런 생각 때문에 아마"
+    } ]
+  }, {
+    "tStartMs": 924860,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "작년 초에 미국 해방의 날에"
+    } ]
+  }, {
+    "tStartMs": 927260,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "지속적인 무역 적자를 막겠다"
+    } ]
+  }, {
+    "tStartMs": 928780,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "그게 무슨 말입니까?"
+    } ]
+  }, {
+    "tStartMs": 929990,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "그렇게 가격을 낮추고 과잉 생산해서"
+    } ]
+  }, {
+    "tStartMs": 932020,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "미국으로 싸게 넘어오는 걸 막겠다"
+    } ]
+  }, {
+    "tStartMs": 934020,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "그래서 관세를 매겼잖아요"
+    } ]
+  }, {
+    "tStartMs": 935240,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "그래서 관세라는 걸 잘 생각해보면"
+    } ]
+  }, {
+    "tStartMs": 937440,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "미국으로 들어오는 싼 물건에"
+    } ]
+  }, {
+    "tStartMs": 939240,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "정부가 세금을 더 붙여서"
+    } ]
+  }, {
+    "tStartMs": 940950,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "미국 내 가격과 비슷하게"
+    } ]
+  }, {
+    "tStartMs": 942530,
+    "dDurationMs": 2230,
+    "segs": [ {
+      "utf8": "비싸게 만드는 정책입니다"
+    } ]
+  }, {
+    "tStartMs": 944760,
+    "dDurationMs": 3150,
+    "segs": [ {
+      "utf8": "물론 그거를 이제 한국 기업들, 일본 기업들이 부담해서"
+    } ]
+  }, {
+    "tStartMs": 947910,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "가격이 올라가는지"
+    } ]
+  }, {
+    "tStartMs": 949490,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "트럼프 행정부가 주장하듯이"
+    } ]
+  }, {
+    "tStartMs": 950910,
+    "dDurationMs": 2670,
+    "segs": [ {
+      "utf8": "아니면 미국 소비자가 비싸게 사는지는 모르겠지만"
+    } ]
+  }, {
+    "tStartMs": 953580,
+    "dDurationMs": 2320,
+    "segs": [ {
+      "utf8": "어쨌건 비싸게 만드는 정책이죠"
+    } ]
+  }, {
+    "tStartMs": 955900,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "세금을 더 매기는 거니까"
+    } ]
+  }, {
+    "tStartMs": 957590,
+    "dDurationMs": 1250,
+    "segs": [ {
+      "utf8": "싸지진 않을 거 아니에요"
+    } ]
+  }, {
+    "tStartMs": 958840,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "싼 물건에 세금을 더 붙여서 비싸게 만들면"
+    } ]
+  }, {
+    "tStartMs": 962140,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "미국 제조업들과 가격이 같아지니까"
+    } ]
+  }, {
+    "tStartMs": 964230,
+    "dDurationMs": 1560,
+    "segs": [ {
+      "utf8": "미국 제조업에 붐이 온다"
+    } ]
+  }, {
+    "tStartMs": 965790,
+    "dDurationMs": 3660,
+    "segs": [ {
+      "utf8": "이런 생각이지 않을까 생각을 하는데"
+    } ]
+  }, {
+    "tStartMs": 969450,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "그리고 또 이것도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 971460,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "지금은 상품 분야만 얘기하는데"
+    } ]
+  }, {
+    "tStartMs": 973520,
+    "dDurationMs": 3630,
+    "segs": [ {
+      "utf8": "서비스 분야는 미국이 전 세계 압도적인 강국이거든요"
+    } ]
+  }, {
+    "tStartMs": 977150,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "물론 여행도 그렇고"
+    } ]
+  }, {
+    "tStartMs": 978720,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "빅테크들 서비스 완전 휩쓸고 있잖아요"
+    } ]
+  }, {
+    "tStartMs": 981670,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "유럽에서 플랫폼 기업들은 다 미국 기업인데"
+    } ]
+  }, {
+    "tStartMs": 984480,
+    "dDurationMs": 6020,
+    "segs": [ {
+      "utf8": "전부 서비스, 메타, 구글, 유튜브, 아마존, 마이크로소프트"
+    } ]
+  }, {
+    "tStartMs": 990500,
+    "dDurationMs": 1860,
+    "segs": [ {
+      "utf8": "전부 미국이 압도적인 강국인데"
+    } ]
+  }, {
+    "tStartMs": 992360,
+    "dDurationMs": 950,
+    "segs": [ {
+      "utf8": "그럼 전 세계는"
+    } ]
+  }, {
+    "tStartMs": 993310,
+    "dDurationMs": 3680,
+    "segs": [ {
+      "utf8": "미국의 불공정 서비스 무역 때문에 피해를 보고 있는 거니까"
+    } ]
+  }, {
+    "tStartMs": 996990,
+    "dDurationMs": 3890,
+    "segs": [ {
+      "utf8": "그 빅테크들을 떼찌하면 안 되겠죠?"
+    } ]
+  }, {
+    "tStartMs": 1000880,
+    "dDurationMs": 2760,
+    "segs": [ {
+      "utf8": "저는 유튜버니까 거기를 떼찌하면"
+    } ]
+  }, {
+    "tStartMs": 1003640,
+    "dDurationMs": 3620,
+    "segs": [ {
+      "utf8": "어... 그... 제가 문제가 생길 수 있기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1007260,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "그러면 안 되겠지만"
+    } ]
+  }, {
+    "tStartMs": 1008980,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "서비스 분야하고 상품 분야하고"
+    } ]
+  }, {
+    "tStartMs": 1010680,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "만약에 동일한 시점을 보면은"
+    } ]
+  }, {
+    "tStartMs": 1012260,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "그러면은 뭐 미국도 301조에"
+    } ]
+  }, {
+    "tStartMs": 1015100,
+    "dDurationMs": 1740,
+    "segs": [ {
+      "utf8": "걸려고 하면x2"
+    } ]
+  }, {
+    "tStartMs": 1016840,
+    "dDurationMs": 1190,
+    "segs": [ {
+      "utf8": "이런 생각이 약간 들죠"
+    } ]
+  }, {
+    "tStartMs": 1018030,
+    "dDurationMs": 2580,
+    "segs": [ {
+      "utf8": "물론 이렇게 불평불만을 토로하는"
+    } ]
+  }, {
+    "tStartMs": 1020610,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "저 같은 그런 유튜버들이 있으니까"
+    } ]
+  }, {
+    "tStartMs": 1022560,
+    "dDurationMs": 840,
+    "segs": [ {
+      "utf8": "그러면 안 되죠"
+    } ]
+  }, {
+    "tStartMs": 1023400,
+    "dDurationMs": 1150,
+    "segs": [ {
+      "utf8": "그래서 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1024550,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "자꾸 그런 식으로 하나하나 토 달면"
+    } ]
+  }, {
+    "tStartMs": 1027030,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "추가적인 301조 조사도 예상하고 있다"
+    } ]
+  }, {
+    "tStartMs": 1029900,
+    "dDurationMs": 1040,
+    "segs": [ {
+      "utf8": "추가적인 건 뭐냐"
+    } ]
+  }, {
+    "tStartMs": 1030940,
+    "dDurationMs": 2840,
+    "segs": [ {
+      "utf8": "디지털 서비스에 세금 매기는 국가들"
+    } ]
+  }, {
+    "tStartMs": 1033780,
+    "dDurationMs": 1730,
+    "segs": [ {
+      "utf8": "자꾸 유튜브에 세금 매기고"
+    } ]
+  }, {
+    "tStartMs": 1035510,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "뭐에 세금 매기고"
+    } ]
+  }, {
+    "tStartMs": 1036640,
+    "dDurationMs": 1780,
+    "segs": [ {
+      "utf8": "그런 거 공정하지 않을 수 있다"
+    } ]
+  }, {
+    "tStartMs": 1038420,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "의약품 가격, 수산물 시장 접근"
+    } ]
+  }, {
+    "tStartMs": 1040460,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "쌀 시장 막아놓은 몇몇 나라들"
+    } ]
+  }, {
+    "tStartMs": 1042500,
+    "dDurationMs": 1160,
+    "segs": [ {
+      "utf8": "누구라고는 안 하지만"
+    } ]
+  }, {
+    "tStartMs": 1043660,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "뭐 한국이나 일본 등등"
+    } ]
+  }, {
+    "tStartMs": 1045420,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "그런 나라들 이거 불공정한 거죠"
+    } ]
+  }, {
+    "tStartMs": 1047190,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "그러니까 자꾸 하나하나 따지고 들면"
+    } ]
+  }, {
+    "tStartMs": 1049570,
+    "dDurationMs": 2250,
+    "segs": [ {
+      "utf8": "우리도 걸고 넘어갈 수 있다는 거고요"
+    } ]
+  }, {
+    "tStartMs": 1051820,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "자 그리고 한국을 콕 집어서 얘기한 것도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1054020,
+    "dDurationMs": 3540,
+    "segs": [ {
+      "utf8": "아마 한국은 좀 조용히 있는 게 좋지 않을까 생각한다"
+    } ]
+  }, {
+    "tStartMs": 1057560,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "왜냐하면 301조 조사는"
+    } ]
+  }, {
+    "tStartMs": 1059590,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "미국 기업에 불리하거나 차별적인지"
+    } ]
+  }, {
+    "tStartMs": 1062320,
+    "dDurationMs": 2290,
+    "segs": [ {
+      "utf8": "그리고 미국의 무역에 제한을 주는지"
+    } ]
+  }, {
+    "tStartMs": 1064610,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "여부도 판단할 수 있다"
+    } ]
+  }, {
+    "tStartMs": 1066140,
+    "dDurationMs": 3760,
+    "segs": [ {
+      "utf8": "근데 이게 왜 우리가 미국 기업에 불리하거나 차별적인 점"
+    } ]
+  }, {
+    "tStartMs": 1069900,
+    "dDurationMs": 2770,
+    "segs": [ {
+      "utf8": "아 그거는 그 지난번에 한 번 나왔지만"
+    } ]
+  }, {
+    "tStartMs": 1074750,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "조용히 있어야 될 수도 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1077150,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "조용히 있어야 될 수도"
+    } ]
+  }, {
+    "tStartMs": 1078940,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "쿠팡의 미국 내 투자자들이"
+    } ]
+  }, {
+    "tStartMs": 1080250,
+    "dDurationMs": 3570,
+    "segs": [ {
+      "utf8": "미국 무역대표부에 조사를 요청한 근거조항이다"
+    } ]
+  }, {
+    "tStartMs": 1083820,
+    "dDurationMs": 1340,
+    "segs": [ {
+      "utf8": "그러니까 미국 기업에"
+    } ]
+  }, {
+    "tStartMs": 1085160,
+    "dDurationMs": 5760,
+    "segs": [ {
+      "utf8": "불합리한 차별을 했다는 거에 걸고 들어가면 걸릴 수도 있다는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1090920,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "무슨 말인지 알겠고요"
+    } ]
+  }, {
+    "tStartMs": 1092540,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "그리고 엊그제는 이런 얘기도 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1094530,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "미국 무역대표부는 강제 노동에 대해서도"
+    } ]
+  }, {
+    "tStartMs": 1097270,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "301조 조사에 착수하겠다"
+    } ]
+  }, {
+    "tStartMs": 1100070,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "아까 전에 과잉 생산"
+    } ]
+  }, {
+    "tStartMs": 1101870,
+    "dDurationMs": 2160,
+    "segs": [ {
+      "utf8": "이런 것도 적절하게 한 것도 아니고"
+    } ]
+  }, {
+    "tStartMs": 1104030,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "강제 노동으로 싸게 생산해서"
+    } ]
+  }, {
+    "tStartMs": 1106130,
+    "dDurationMs": 2020,
+    "segs": [ {
+      "utf8": "상품을 만들어서 그걸 자꾸 미국에 파는 거야"
+    } ]
+  }, {
+    "tStartMs": 1108150,
+    "dDurationMs": 2380,
+    "segs": [ {
+      "utf8": "이게 얼마나 불합리하고 차별적인 겁니까?"
+    } ]
+  }, {
+    "tStartMs": 1110530,
+    "dDurationMs": 2470,
+    "segs": [ {
+      "utf8": "그러다 보니까 미국 기업들에 자꾸 부담을 줘"
+    } ]
+  }, {
+    "tStartMs": 1113000,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "자꾸 8시, 9시, 10시에 야근시키고 말이야"
+    } ]
+  }, {
+    "tStartMs": 1115540,
+    "dDurationMs": 1060,
+    "segs": [ {
+      "utf8": "집에 안 보내고"
+    } ]
+  }, {
+    "tStartMs": 1116600,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "무슨 구로의 등대라는 둥"
+    } ]
+  }, {
+    "tStartMs": 1118500,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "그러면서 강제 노동"
+    } ]
+  }, {
+    "tStartMs": 1120350,
+    "dDurationMs": 1630,
+    "segs": [ {
+      "utf8": "불이 꺼지지 않는 빌딩"
+    } ]
+  }, {
+    "tStartMs": 1121980,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "조사를 하겠다는 건데요"
+    } ]
+  }, {
+    "tStartMs": 1123990,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1124880,
+    "dDurationMs": 3880,
+    "segs": [ {
+      "utf8": "강제 노동으로 인건비를 저렴하게 한 나라들 때문에"
+    } ]
+  }, {
+    "tStartMs": 1128760,
+    "dDurationMs": 1750,
+    "segs": [ {
+      "utf8": "미국 노동자와 기업들이"
+    } ]
+  }, {
+    "tStartMs": 1130510,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "많은 피해를 입고 있다"
+    } ]
+  }, {
+    "tStartMs": 1132280,
+    "dDurationMs": 2950,
+    "segs": [ {
+      "utf8": "인위적인 비용 우위를 확보하는 거다"
+    } ]
+  }, {
+    "tStartMs": 1135230,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "이런 나라들을 조사하겠다"
+    } ]
+  }, {
+    "tStartMs": 1136760,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "그런 나라가 어딘데요?"
+    } ]
+  }, {
+    "tStartMs": 1137890,
+    "dDurationMs": 1530,
+    "segs": [ {
+      "utf8": "강제 노동 대상국은"
+    } ]
+  }, {
+    "tStartMs": 1139420,
+    "dDurationMs": 1210,
+    "segs": [ {
+      "utf8": "이번에 딱 집어서 얘기했는데"
+    } ]
+  }, {
+    "tStartMs": 1140630,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "무려 60개국을 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1143230,
+    "dDurationMs": 6210,
+    "segs": [ {
+      "utf8": "그중에서도 EU, 호주, 캐나다, 영국, 일본, 한국"
+    } ]
+  }, {
+    "tStartMs": 1149440,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "근데 위에 있는 나라들은"
+    } ]
+  }, {
+    "tStartMs": 1150790,
+    "dDurationMs": 2430,
+    "segs": [ {
+      "utf8": "정말 정말 죄송한 표현인데"
+    } ]
+  }, {
+    "tStartMs": 1153220,
+    "dDurationMs": 2820,
+    "segs": [ {
+      "utf8": "걔네 몇 시간 일 안 하던데"
+    } ]
+  }, {
+    "tStartMs": 1156040,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "호주, 캐나다, 영국"
+    } ]
+  }, {
+    "tStartMs": 1158090,
+    "dDurationMs": 1330,
+    "segs": [ {
+      "utf8": "조사를 한다는 거니까"
+    } ]
+  }, {
+    "tStartMs": 1159420,
+    "dDurationMs": 1540,
+    "segs": [ {
+      "utf8": "그 나라가 그렇다는 게 아니라"
+    } ]
+  }, {
+    "tStartMs": 1160960,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "조사를 한다는 거니까"
+    } ]
+  }, {
+    "tStartMs": 1162430,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "중국도 들어가 있습니다"
+    } ]
+  }, {
+    "tStartMs": 1163790,
+    "dDurationMs": 4320,
+    "segs": [ {
+      "utf8": "그래서 아마 여기는 우리가 직접 타깃은 아닌 것 같고"
+    } ]
+  }, {
+    "tStartMs": 1168110,
+    "dDurationMs": 2730,
+    "segs": [ {
+      "utf8": "개중에 몇몇 나라들 타깃으로 하는 게 아닌가"
+    } ]
+  }, {
+    "tStartMs": 1170840,
+    "dDurationMs": 2390,
+    "segs": [ {
+      "utf8": "특히 사실상 미국과 무역을 규모 있게 하는"
+    } ]
+  }, {
+    "tStartMs": 1173230,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "거의 모든 나라를 다 집었잖아요"
+    } ]
+  }, {
+    "tStartMs": 1175140,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "아마 관세를 매기려면"
+    } ]
+  }, {
+    "tStartMs": 1176440,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "뭔가 근거가 필요하니까"
+    } ]
+  }, {
+    "tStartMs": 1177680,
+    "dDurationMs": 1680,
+    "segs": [ {
+      "utf8": "그 근거를 만드는 작업이 아닌가"
+    } ]
+  }, {
+    "tStartMs": 1179360,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "라고 생각을 개인적으로 하고 있고"
+    } ]
+  }, {
+    "tStartMs": 1181270,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "그래서 이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1182160,
+    "dDurationMs": 890,
+    "segs": [ {
+      "utf8": "이 모든 것 중에"
+    } ]
+  }, {
+    "tStartMs": 1183050,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "제가 좀 여러 개 얘기했잖아요"
+    } ]
+  }, {
+    "tStartMs": 1184230,
+    "dDurationMs": 2090,
+    "segs": [ {
+      "utf8": "이 모든 것 중에 하나만 걸려도"
+    } ]
+  }, {
+    "tStartMs": 1186320,
+    "dDurationMs": 1870,
+    "segs": [ {
+      "utf8": "301조 대상입니다"
+    } ]
+  }, {
+    "tStartMs": 1188190,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "지금 뭐 과잉 생산, 강제 노동"
+    } ]
+  }, {
+    "tStartMs": 1190710,
+    "dDurationMs": 4620,
+    "segs": [ {
+      "utf8": "무슨 뭐 쌀, 불공정한 거래, 미국 기업 차별 등등등등등"
+    } ]
+  }, {
+    "tStartMs": 1195330,
+    "dDurationMs": 720,
+    "segs": [ {
+      "utf8": "여러 가지 있잖아요"
+    } ]
+  }, {
+    "tStartMs": 1196050,
+    "dDurationMs": 1620,
+    "segs": [ {
+      "utf8": "그 모든 것 중에 걸리면"
+    } ]
+  }, {
+    "tStartMs": 1197670,
+    "dDurationMs": 1130,
+    "segs": [ {
+      "utf8": "301조 대상이니까"
+    } ]
+  }, {
+    "tStartMs": 1198800,
+    "dDurationMs": 3430,
+    "segs": [ {
+      "utf8": "국가별 추가 301조 조사도 예상하고 있다"
+    } ]
+  }, {
+    "tStartMs": 1202230,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "걸려면... 걸리는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1203650,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "걸리면 걸리는 거기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1205440,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "그냥 뭐 새로운 관세"
+    } ]
+  }, {
+    "tStartMs": 1207390,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "기존 관세를 무효화된 거를"
+    } ]
+  }, {
+    "tStartMs": 1209450,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "다시 유효화로 만들고 싶구나라고"
+    } ]
+  }, {
+    "tStartMs": 1211490,
+    "dDurationMs": 1580,
+    "segs": [ {
+      "utf8": "생각하면 되지 않나 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1213070,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "개인적으로 그런 생각을 해요"
+    } ]
+  }, {
+    "tStartMs": 1213890,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "차라리 그럴 바에 그냥 기존 상호 관세를"
+    } ]
+  }, {
+    "tStartMs": 1216770,
+    "dDurationMs": 3990,
+    "segs": [ {
+      "utf8": "미국 법에 근거는 없는지 모르겠는데"
+    } ]
+  }, {
+    "tStartMs": 1220760,
+    "dDurationMs": 1120,
+    "segs": [ {
+      "utf8": "결국에 하겠다는 거잖아요"
+    } ]
+  }, {
+    "tStartMs": 1221880,
+    "dDurationMs": 520,
+    "segs": [ {
+      "utf8": "어떻게 됐건 간에"
+    } ]
+  }, {
+    "tStartMs": 1222400,
+    "dDurationMs": 1470,
+    "segs": [ {
+      "utf8": "어떻게 됐건 간에 하겠다는 거니까"
+    } ]
+  }, {
+    "tStartMs": 1223870,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "그냥 기존 상호 관세 하는 게"
+    } ]
+  }, {
+    "tStartMs": 1227170,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "아니면 자꾸 뭐 이거 하니까"
+    } ]
+  }, {
+    "tStartMs": 1229180,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "그런 생각도 약간 들고요"
+    } ]
+  }, {
+    "tStartMs": 1230350,
+    "dDurationMs": 4150,
+    "segs": [ {
+      "utf8": "실제로 이번에 우리나라 산업통상부 통상교섭 본부장님이"
+    } ]
+  }, {
+    "tStartMs": 1234500,
+    "dDurationMs": 1170,
+    "segs": [ {
+      "utf8": "이렇게 얘기했습니다"
+    } ]
+  }, {
+    "tStartMs": 1235670,
+    "dDurationMs": 1410,
+    "segs": [ {
+      "utf8": "미국 정부하고 얘기를 해보니까"
+    } ]
+  }, {
+    "tStartMs": 1237080,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "미국 정부의 뜻은"
+    } ]
+  }, {
+    "tStartMs": 1238430,
+    "dDurationMs": 1910,
+    "segs": [ {
+      "utf8": "위헌 판결 이전 수준으로"
+    } ]
+  }, {
+    "tStartMs": 1240340,
+    "dDurationMs": 3140,
+    "segs": [ {
+      "utf8": "관세를 복원하기 위해 301조를 활용하는 거 아니냐"
+    } ]
+  }, {
+    "tStartMs": 1243480,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "그런 구상을 여러 차례 설명했다"
+    } ]
+  }, {
+    "tStartMs": 1245430,
+    "dDurationMs": 3770,
+    "segs": [ {
+      "utf8": "그러니까 아마 기존 관세가 유지되지 않을까 생각한다고 얘기를 했습니다"
+    } ]
+  }, {
+    "tStartMs": 1249200,
+    "dDurationMs": 3540,
+    "segs": [ {
+      "utf8": "그래서 우리도 그러면 거기에 맞게 대응을 해야 되기 때문에"
+    } ]
+  }, {
+    "tStartMs": 1252740,
+    "dDurationMs": 1790,
+    "segs": [ {
+      "utf8": "얼마 전에 지난주에"
+    } ]
+  }, {
+    "tStartMs": 1254530,
+    "dDurationMs": 3590,
+    "segs": [ {
+      "utf8": "한미전략적특별법이 국회를 통과했습니다"
+    } ]
+  }, {
+    "tStartMs": 1258120,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "이건 무슨 법이냐"
+    } ]
+  }, {
+    "tStartMs": 1259300,
+    "dDurationMs": 3420,
+    "segs": [ {
+      "utf8": "한미 간 관세협정 이행을 위한 특별법이라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1263010,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "우리가 이제 미국과 관세협정을 맺었잖아요"
+    } ]
+  }, {
+    "tStartMs": 1265420,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "3,500억 달러 미국 투자하겠다"
+    } ]
+  }, {
+    "tStartMs": 1267870,
+    "dDurationMs": 2780,
+    "segs": [ {
+      "utf8": "거기에 근거를 만드는 법이라고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1270650,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "빠르게 통과를 시켰는데"
+    } ]
+  }, {
+    "tStartMs": 1271850,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "3,500억 달러 투자할 테니까"
+    } ]
+  }, {
+    "tStartMs": 1273820,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "뭐 301조 그런 거 하지 말고"
+    } ]
+  }, {
+    "tStartMs": 1275340,
+    "dDurationMs": 2040,
+    "segs": [ {
+      "utf8": "그냥 기존에 뭐 약속했던 15% 오케이"
+    } ]
+  }, {
+    "tStartMs": 1277380,
+    "dDurationMs": 1180,
+    "segs": [ {
+      "utf8": "3,500달러 오케이"
+    } ]
+  }, {
+    "tStartMs": 1278560,
+    "dDurationMs": 1070,
+    "segs": [ {
+      "utf8": "그냥 그대로 가자"
+    } ]
+  }, {
+    "tStartMs": 1279630,
+    "dDurationMs": 2860,
+    "segs": [ {
+      "utf8": "라고 국회에서 통과했다고 보시면 되고요"
+    } ]
+  }, {
+    "tStartMs": 1282490,
+    "dDurationMs": 810,
+    "segs": [ {
+      "utf8": "제 생각입니다"
+    } ]
+  }, {
+    "tStartMs": 1283300,
+    "dDurationMs": 940,
+    "segs": [ {
+      "utf8": "아마 그렇게 생각하시니까"
+    } ]
+  }, {
+    "tStartMs": 1284240,
+    "dDurationMs": 1770,
+    "segs": [ {
+      "utf8": "통과되지 않을까 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1286010,
+    "dDurationMs": 1450,
+    "segs": [ {
+      "utf8": "물론 뭐 또 다른 변수가 있다면"
+    } ]
+  }, {
+    "tStartMs": 1287460,
+    "dDurationMs": 1760,
+    "segs": [ {
+      "utf8": "미국과 협상을 다시 하시겠죠"
+    } ]
+  }, {
+    "tStartMs": 1289220,
+    "dDurationMs": 2490,
+    "segs": [ {
+      "utf8": "이 한미전략적특별법은 트럼프 대통령이"
+    } ]
+  }, {
+    "tStartMs": 1291710,
+    "dDurationMs": 3810,
+    "segs": [ {
+      "utf8": "우리나라가 미국과의 무역협정 비준에 충분히 속도를 내지 않았다"
+    } ]
+  }, {
+    "tStartMs": 1295520,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "그러면서 관세를 다시 25%로 올리겠다"
+    } ]
+  }, {
+    "tStartMs": 1298020,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "이렇게 이야기한 적이 있었죠"
+    } ]
+  }, {
+    "tStartMs": 1299320,
+    "dDurationMs": 2030,
+    "segs": [ {
+      "utf8": "바로 그 법이 관세협정 체결한 다음에"
+    } ]
+  }, {
+    "tStartMs": 1301350,
+    "dDurationMs": 3450,
+    "segs": [ {
+      "utf8": "4개월 만에 통과했다고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1304800,
+    "dDurationMs": 1990,
+    "segs": [ {
+      "utf8": "우리나라 산업통상부 장관이"
+    } ]
+  }, {
+    "tStartMs": 1306790,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "미 상무부 장관을 만나고"
+    } ]
+  }, {
+    "tStartMs": 1308210,
+    "dDurationMs": 2350,
+    "segs": [ {
+      "utf8": "귀국한 자리에서 이렇게 말씀하셨어요"
+    } ]
+  }, {
+    "tStartMs": 1310560,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "지금처럼 한국에서 그 법이 통과되면"
+    } ]
+  }, {
+    "tStartMs": 1312870,
+    "dDurationMs": 3170,
+    "segs": [ {
+      "utf8": "아마 새로운 관세 인상, 25%라든지"
+    } ]
+  }, {
+    "tStartMs": 1316040,
+    "dDurationMs": 3120,
+    "segs": [ {
+      "utf8": "아니면 정말 301조를 활용해서 뭘 막 때려잡는"
+    } ]
+  }, {
+    "tStartMs": 1319160,
+    "dDurationMs": 3320,
+    "segs": [ {
+      "utf8": "그런 것은 없을 거다라는 이야기와 반응을 들었다"
+    } ]
+  }, {
+    "tStartMs": 1322480,
+    "dDurationMs": 1670,
+    "segs": [ {
+      "utf8": "물론 미국이 하도 자주 입장을 바꾸니까"
+    } ]
+  }, {
+    "tStartMs": 1324150,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "정확하게는 알 수 없지만"
+    } ]
+  }, {
+    "tStartMs": 1325390,
+    "dDurationMs": 1830,
+    "segs": [ {
+      "utf8": "기존 협정을 잘 이행하면은"
+    } ]
+  }, {
+    "tStartMs": 1327220,
+    "dDurationMs": 3680,
+    "segs": [ {
+      "utf8": "아마 특별한 제재는 없을 것으로 기대하는 게 아니냐라고 생각이 되고요"
+    } ]
+  }, {
+    "tStartMs": 1330900,
+    "dDurationMs": 2980,
+    "segs": [ {
+      "utf8": "이번에 통과된 대미투자특별법의 내용을 보면"
+    } ]
+  }, {
+    "tStartMs": 1333880,
+    "dDurationMs": 3050,
+    "segs": [ {
+      "utf8": "지난번에 우리가 협약을 맺은 한미업무협약에 따라서"
+    } ]
+  }, {
+    "tStartMs": 1336930,
+    "dDurationMs": 3550,
+    "segs": [ {
+      "utf8": "3,500억 달러 규모의 대미투자 시행을 실행하는"
+    } ]
+  }, {
+    "tStartMs": 1340480,
+    "dDurationMs": 3490,
+    "segs": [ {
+      "utf8": "한미전략투자공사를 설립합니다"
+    } ]
+  }, {
+    "tStartMs": 1343970,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "법이 통과가 됐으니까"
+    } ]
+  }, {
+    "tStartMs": 1345280,
+    "dDurationMs": 3600,
+    "segs": [ {
+      "utf8": "한미전략투자공사라는 공사가 설립이 되고요"
+    } ]
+  }, {
+    "tStartMs": 1348880,
+    "dDurationMs": 1390,
+    "segs": [ {
+      "utf8": "그리고 그 공사 안에"
+    } ]
+  }, {
+    "tStartMs": 1350270,
+    "dDurationMs": 3240,
+    "segs": [ {
+      "utf8": "한미전략투자기금이 설치될 예정입니다"
+    } ]
+  }, {
+    "tStartMs": 1353510,
+    "dDurationMs": 1610,
+    "segs": [ {
+      "utf8": "아마 곧 설치가 될 거예요"
+    } ]
+  }, {
+    "tStartMs": 1355120,
+    "dDurationMs": 2110,
+    "segs": [ {
+      "utf8": "이 공사의 자본금은 2조 원이고요"
+    } ]
+  }, {
+    "tStartMs": 1357230,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "정부가 전액으로 출자하고"
+    } ]
+  }, {
+    "tStartMs": 1358940,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "3,500억 달러니까"
+    } ]
+  }, {
+    "tStartMs": 1360640,
+    "dDurationMs": 1310,
+    "segs": [ {
+      "utf8": "이거 얼마입니까 이제?"
+    } ]
+  }, {
+    "tStartMs": 1361950,
+    "dDurationMs": 4560,
+    "segs": [ {
+      "utf8": "거의 450조, 500조 가까운 돈을 기금으로 모아야겠죠"
+    } ]
+  }, {
+    "tStartMs": 1366510,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "공사가 출연하고"
+    } ]
+  }, {
+    "tStartMs": 1367740,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "위탁 자산, 전략 채권 이런 거를 발행하는"
+    } ]
+  }, {
+    "tStartMs": 1370140,
+    "dDurationMs": 3600,
+    "segs": [ {
+      "utf8": "조성한 자금으로 서서히 이 전략 투자 기금을 통해서"
+    } ]
+  }, {
+    "tStartMs": 1373740,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "3,500억 달러를 미국에 투자해야 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1376610,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "투자가 시작이 되는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1378010,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "얼마가 나가냐"
+    } ]
+  }, {
+    "tStartMs": 1379230,
+    "dDurationMs": 3440,
+    "segs": [ {
+      "utf8": "앞으로 매년 최대 200억 달러 30조"
+    } ]
+  }, {
+    "tStartMs": 1382670,
+    "dDurationMs": 3740,
+    "segs": [ {
+      "utf8": "20년 기한의 투자가 시작된다고 보시면 됩니다"
+    } ]
+  }, {
+    "tStartMs": 1386410,
+    "dDurationMs": 1050,
+    "segs": [ {
+      "utf8": "법이 통과됐으니까"
+    } ]
+  }, {
+    "tStartMs": 1387460,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "투자가 시작되겠죠"
+    } ]
+  }, {
+    "tStartMs": 1388860,
+    "dDurationMs": 1420,
+    "segs": [ {
+      "utf8": "환율에 따라 다르겠지만"
+    } ]
+  }, {
+    "tStartMs": 1390280,
+    "dDurationMs": 2410,
+    "segs": [ {
+      "utf8": "연에 최대 30조 20년이고요"
+    } ]
+  }, {
+    "tStartMs": 1392690,
+    "dDurationMs": 1960,
+    "segs": [ {
+      "utf8": "이 혹시 우리가 막 투자를 하다가"
+    } ]
+  }, {
+    "tStartMs": 1394650,
+    "dDurationMs": 1460,
+    "segs": [ {
+      "utf8": "중간에 사업이 어려워졌어"
+    } ]
+  }, {
+    "tStartMs": 1396110,
+    "dDurationMs": 1430,
+    "segs": [ {
+      "utf8": "투자 원리금 회수가 어려워"
+    } ]
+  }, {
+    "tStartMs": 1397540,
+    "dDurationMs": 2010,
+    "segs": [ {
+      "utf8": "그러면은 그 어려운 만큼"
+    } ]
+  }, {
+    "tStartMs": 1399550,
+    "dDurationMs": 4280,
+    "segs": [ {
+      "utf8": "현금 흐름의 새로운 투자의 분배 비율 조정을 할 수 있게 만들겠다라는"
+    } ]
+  }, {
+    "tStartMs": 1403830,
+    "dDurationMs": 1230,
+    "segs": [ {
+      "utf8": "그런 협의가 있다고 하고요"
+    } ]
+  }, {
+    "tStartMs": 1405060,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "상업적 합리성을 확보를 원칙으로 하되"
+    } ]
+  }, {
+    "tStartMs": 1407660,
+    "dDurationMs": 2480,
+    "segs": [ {
+      "utf8": "국익에 부합하는 방향으로 추진된다라는 걸"
+    } ]
+  }, {
+    "tStartMs": 1410140,
+    "dDurationMs": 2060,
+    "segs": [ {
+      "utf8": "법률에 명시가 돼 있다고 합니다"
+    } ]
+  }, {
+    "tStartMs": 1412200,
+    "dDurationMs": 2050,
+    "segs": [ {
+      "utf8": "물론 우리나라 법률에 명시가 돼 있지만"
+    } ]
+  }, {
+    "tStartMs": 1414250,
+    "dDurationMs": 2510,
+    "segs": [ {
+      "utf8": "미국이 이렇게 생각할지 잘 모르겠어요"
+    } ]
+  }, {
+    "tStartMs": 1416760,
+    "dDurationMs": 350,
+    "segs": [ {
+      "utf8": "그렇죠"
+    } ]
+  }, {
+    "tStartMs": 1417110,
+    "dDurationMs": 4380,
+    "segs": [ {
+      "utf8": "미국이 상업적으로 합리성 있는 데에 투자를 어떻게 됐건"
+    } ]
+  }, {
+    "tStartMs": 1421490,
+    "dDurationMs": 1570,
+    "segs": [ {
+      "utf8": "거기서 용인해야 될 테니까"
+    } ]
+  }, {
+    "tStartMs": 1423060,
+    "dDurationMs": 3530,
+    "segs": [ {
+      "utf8": "이 협의가 잘 되는 게 가장 중요하지 않나 생각이 되고"
+    } ]
+  }, {
+    "tStartMs": 1426590,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "그래서 이 특별법이 통과된 다음에"
+    } ]
+  }, {
+    "tStartMs": 1428280,
+    "dDurationMs": 1280,
+    "segs": [ {
+      "utf8": "여러분들 뉴스를 보셨겠지만"
+    } ]
+  }, {
+    "tStartMs": 1429560,
+    "dDurationMs": 2880,
+    "segs": [ {
+      "utf8": "지금 워싱턴에서 우리나라 총리하고 밴스 부통령"
+    } ]
+  }, {
+    "tStartMs": 1432440,
+    "dDurationMs": 1140,
+    "segs": [ {
+      "utf8": "트럼프 대통령 만나고 있죠"
+    } ]
+  }, {
+    "tStartMs": 1433580,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "우리가 이렇게 대미 특별법 통과를 했으니까"
+    } ]
+  }, {
+    "tStartMs": 1436190,
+    "dDurationMs": 2540,
+    "segs": [ {
+      "utf8": "301조 봐줘 오케이"
+    } ]
+  }, {
+    "tStartMs": 1438730,
+    "dDurationMs": 710,
+    "segs": [ {
+      "utf8": "넘겨줘x2"
+    } ]
+  }, {
+    "tStartMs": 1439440,
+    "dDurationMs": 2140,
+    "segs": [ {
+      "utf8": "투자 합의 이행했잖아, 했잖아"
+    } ]
+  }, {
+    "tStartMs": 1441580,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "기존대로 가자 오케이"
+    } ]
+  }, {
+    "tStartMs": 1443170,
+    "dDurationMs": 2610,
+    "segs": [ {
+      "utf8": "양국 긴밀히 소통 20년간 30조 콜! 하고"
+    } ]
+  }, {
+    "tStartMs": 1445780,
+    "dDurationMs": 1810,
+    "segs": [ {
+      "utf8": "이렇게 악수를 하고"
+    } ]
+  }, {
+    "tStartMs": 1447590,
+    "dDurationMs": 2280,
+    "segs": [ {
+      "utf8": "문제가 없이 지나가야 되지 않나 생각이 되고요"
+    } ]
+  }, {
+    "tStartMs": 1449870,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "우리나라만 그런 거 아닙니다"
+    } ]
+  }, {
+    "tStartMs": 1451090,
+    "dDurationMs": 4140,
+    "segs": [ {
+      "utf8": "일본은 지난번에 이미 360억 달러의 1차 투자를 발표했는데"
+    } ]
+  }, {
+    "tStartMs": 1455230,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "이번에 2차 대미 투자를 발표했어요"
+    } ]
+  }, {
+    "tStartMs": 1458100,
+    "dDurationMs": 920,
+    "segs": [ {
+      "utf8": "일본은 더 빠릅니다"
+    } ]
+  }, {
+    "tStartMs": 1459020,
+    "dDurationMs": 1440,
+    "segs": [ {
+      "utf8": "우리는 이제 기금 만들고 있잖아요"
+    } ]
+  }, {
+    "tStartMs": 1460460,
+    "dDurationMs": 820,
+    "segs": [ {
+      "utf8": "공사 만들고"
+    } ]
+  }, {
+    "tStartMs": 1461280,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "얘네는 1,000억 달러 규모"
+    } ]
+  }, {
+    "tStartMs": 1463280,
+    "dDurationMs": 2740,
+    "segs": [ {
+      "utf8": "그러니까 150조 규모의 2차 프로젝트를"
+    } ]
+  }, {
+    "tStartMs": 1466020,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "이번에 발표할 예정입니다"
+    } ]
+  }, {
+    "tStartMs": 1468020,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "아직은 공식 발표는 안 했어요"
+    } ]
+  }, {
+    "tStartMs": 1469820,
+    "dDurationMs": 2980,
+    "segs": [ {
+      "utf8": "왜냐하면 곧 일본 총리하고 트럼프 대통령이"
+    } ]
+  }, {
+    "tStartMs": 1472800,
+    "dDurationMs": 1970,
+    "segs": [ {
+      "utf8": "3월 아마 말 정도에"
+    } ]
+  }, {
+    "tStartMs": 1474770,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "정상회담을 하는 걸로 알고 있어요"
+    } ]
+  }, {
+    "tStartMs": 1476070,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "아마 거기서 공식적으로 발표하지 않을까 생각하는데"
+    } ]
+  }, {
+    "tStartMs": 1478880,
+    "dDurationMs": 1880,
+    "segs": [ {
+      "utf8": "5,500억 달러 중에 1,000억 달러"
+    } ]
+  }, {
+    "tStartMs": 1480760,
+    "dDurationMs": 3370,
+    "segs": [ {
+      "utf8": "1,360억 달러를 이미 투자하겠다라고 얘기한 것과 똑같습니다"
+    } ]
+  }, {
+    "tStartMs": 1484130,
+    "dDurationMs": 2910,
+    "segs": [ {
+      "utf8": "거의 20% 이상이 투자를 실행을 하는 거죠"
+    } ]
+  }, {
+    "tStartMs": 1487040,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "이번에 발표한 일본의 1,000억 달러 규모의 투자 중에서"
+    } ]
+  }, {
+    "tStartMs": 1489540,
+    "dDurationMs": 2520,
+    "segs": [ {
+      "utf8": "가장 큰 것은 원전 사업입니다"
+    } ]
+  }, {
+    "tStartMs": 1492060,
+    "dDurationMs": 4840,
+    "segs": [ {
+      "utf8": "미국에 총 10개에 가까운 원자로 건설 사업을 논의 중이다"
+    } ]
+  }, {
+    "tStartMs": 1497930,
+    "dDurationMs": 1690,
+    "segs": [ {
+      "utf8": "웨스팅하우스 얘가 미국 기업이죠"
+    } ]
+  }, {
+    "tStartMs": 1499620,
+    "dDurationMs": 1950,
+    "segs": [ {
+      "utf8": "미국 웨스팅하우스하고 손잡고"
+    } ]
+  }, {
+    "tStartMs": 1501570,
+    "dDurationMs": 1350,
+    "segs": [ {
+      "utf8": "일본이 투자금을 내겠죠"
+    } ]
+  }, {
+    "tStartMs": 1502920,
+    "dDurationMs": 980,
+    "segs": [ {
+      "utf8": "1,000억 달러라고 하니까"
+    } ]
+  }, {
+    "tStartMs": 1503900,
+    "dDurationMs": 2260,
+    "segs": [ {
+      "utf8": "거의 150조 가까운 돈을 투자해서"
+    } ]
+  }, {
+    "tStartMs": 1506160,
+    "dDurationMs": 2570,
+    "segs": [ {
+      "utf8": "원자로 또는 소형 모듈 원자로 SMR이라고 부르는 거예요"
+    } ]
+  }, {
+    "tStartMs": 1508730,
+    "dDurationMs": 3910,
+    "segs": [ {
+      "utf8": "이거를 10개 가까이를 미국에 만드는 투자를 시작하겠다"
+    } ]
+  }, {
+    "tStartMs": 1512640,
+    "dDurationMs": 1720,
+    "segs": [ {
+      "utf8": "여기에는 미쓰비시나 도시바"
+    } ]
+  }, {
+    "tStartMs": 1514360,
+    "dDurationMs": 3800,
+    "segs": [ {
+      "utf8": "이런 일본 기업들이 참여하겠다라고 발표될 예정입니다"
+    } ]
+  }, {
+    "tStartMs": 1518160,
+    "dDurationMs": 1220,
+    "segs": [ {
+      "utf8": "그리고 원전 말고도"
+    } ]
+  }, {
+    "tStartMs": 1519380,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "LCD, OLED, 구리 프로젝트"
+    } ]
+  }, {
+    "tStartMs": 1521820,
+    "dDurationMs": 2220,
+    "segs": [ {
+      "utf8": "150조니까 다양한 프로젝트들에"
+    } ]
+  }, {
+    "tStartMs": 1524040,
+    "dDurationMs": 2440,
+    "segs": [ {
+      "utf8": "지금 일본은 참여하겠다라고 얘기를 했고요"
+    } ]
+  }, {
+    "tStartMs": 1526480,
+    "dDurationMs": 1520,
+    "segs": [ {
+      "utf8": "블룸버그는 이렇게 얘기했어요"
+    } ]
+  }, {
+    "tStartMs": 1528000,
+    "dDurationMs": 2450,
+    "segs": [ {
+      "utf8": "한국이나 일본을 딱 보면"
+    } ]
+  }, {
+    "tStartMs": 1530450,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "이렇게 생각하는 것 같다"
+    } ]
+  }, {
+    "tStartMs": 1531750,
+    "dDurationMs": 2330,
+    "segs": [ {
+      "utf8": "어떤 형태로든 트럼프 관세는"
+    } ]
+  }, {
+    "tStartMs": 1534080,
+    "dDurationMs": 2870,
+    "segs": [ {
+      "utf8": "계속될 가능성이 높다는 점을 감안해서"
+    } ]
+  }, {
+    "tStartMs": 1536950,
+    "dDurationMs": 3660,
+    "segs": [ {
+      "utf8": "미국과의 합의 사항을 이행하는 게 그냥 낫겠다"
+    } ]
+  }, {
+    "tStartMs": 1540610,
+    "dDurationMs": 1850,
+    "segs": [ {
+      "utf8": "라고 판단하고 있는 게 아니냐"
+    } ]
+  }, {
+    "tStartMs": 1542460,
+    "dDurationMs": 2460,
+    "segs": [ {
+      "utf8": "여기서 괜히 전화기 들어서 무효"
+    } ]
+  }, {
+    "tStartMs": 1544920,
+    "dDurationMs": 2310,
+    "segs": [ {
+      "utf8": "0%...?"
+    } ]
+  }, {
+    "tStartMs": 1547230,
+    "dDurationMs": 1980,
+    "segs": [ {
+      "utf8": "뭐 이런 것보다 아직 3년 남았죠"
+    } ]
+  }, {
+    "tStartMs": 1549210,
+    "dDurationMs": 1360,
+    "segs": [ {
+      "utf8": "1년밖에 안 지났습니다"
+    } ]
+  }, {
+    "tStartMs": 1550570,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "1년밖에 안 지났으니까"
+    } ]
+  }, {
+    "tStartMs": 1551970,
+    "dDurationMs": 2810,
+    "segs": [ {
+      "utf8": "어떤 형태로든 걸면 걸리는 거니까"
+    } ]
+  }, {
+    "tStartMs": 1554780,
+    "dDurationMs": 1710,
+    "segs": [ {
+      "utf8": "당분간은 계속될 것 같구나"
+    } ]
+  }, {
+    "tStartMs": 1556490,
+    "dDurationMs": 1590,
+    "segs": [ {
+      "utf8": "일단 뭐 하던 거나 하자라고"
+    } ]
+  }, {
+    "tStartMs": 1558080,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "이행하는 게 낫지 않냐라고"
+    } ]
+  }, {
+    "tStartMs": 1559780,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "판단하지 않았나라고 보는 거고"
+    } ]
+  }, {
+    "tStartMs": 1561420,
+    "dDurationMs": 1660,
+    "segs": [ {
+      "utf8": "지금 트럼프 대통령은"
+    } ]
+  }, {
+    "tStartMs": 1563080,
+    "dDurationMs": 1240,
+    "segs": [ {
+      "utf8": "미일 정상회담"
+    } ]
+  }, {
+    "tStartMs": 1564320,
+    "dDurationMs": 2970,
+    "segs": [ {
+      "utf8": "미중, 방중이 예정됐다 그러는데"
+    } ]
+  }, {
+    "tStartMs": 1567290,
+    "dDurationMs": 1640,
+    "segs": [ {
+      "utf8": "중국과의 무역 협상"
+    } ]
+  }, {
+    "tStartMs": 1568930,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "이게 아마 3월 말 정도 되면 대충 윤곽이 나오겠죠"
+    } ]
+  }, {
+    "tStartMs": 1571630,
+    "dDurationMs": 4850,
+    "segs": [ {
+      "utf8": "이게 또 가장 핫한 주제가 되지 않을까 생각을 합니다"
+    } ]
+  } ]
+}

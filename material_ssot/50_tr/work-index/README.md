@@ -1,6 +1,6 @@
 # Work Index
 
-This directory now holds bootstrap work manifests for TR.
+This directory now holds representative work manifests for TR.
 
 Rules:
 

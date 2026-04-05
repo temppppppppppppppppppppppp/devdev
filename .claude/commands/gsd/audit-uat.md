@@ -12,7 +12,7 @@ Scan all phases for pending, skipped, blocked, and human_needed UAT items. Cross
 </objective>
 
 <execution_context>
-@C:/Users/wjjo/Desktop/글도비/.claude/get-shit-done/workflows/audit-uat.md
+@./.claude/get-shit-done/workflows/audit-uat.md
 </execution_context>
 
 <context>

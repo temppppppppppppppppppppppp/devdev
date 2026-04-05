@@ -1,8 +1,8 @@
 # Legacy Map
 
 Date: 2026-04-03
-Status: active bootstrap map
-Scope: path labeling during the material_ssot bootstrap phase
+Status: active bounded map
+Scope: path labeling during the current bounded material_ssot slice
 
 ## 1. Label Meanings
 
@@ -45,11 +45,11 @@ Scope: path labeling during the material_ssot bootstrap phase
 | `treatments/preprocess/` | `live-output` | current preprocess live artifact root |
 | `treatments/` | `live-output` | current Phase 0 and TR live artifact root |
 | `bible/` | `live-output` | current BI live artifact root |
-| `narrative_ssot/10_reference_bank` | `mirror` | reference bank mirror, not the primary authority |
+| `narrative_ssot/10_reference_bank` | `mirror` | cards mirror plus archive residue shell, not the primary authority |
 | `narrative_ssot` | `scaffold` | future-structure candidate and pilot scaffold |
 | `로직_리서치` | `deferred-non-move` | explicitly left in place for a later research wave |
 
-## 3. Bootstrap Rule
+## 3. Bounded Rule
 
 Do not cut over a path only because it is labeled here.
 

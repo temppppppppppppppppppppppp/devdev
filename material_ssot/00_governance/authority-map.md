@@ -1,7 +1,7 @@
 # Authority Map
 
 Date: 2026-04-03
-Status: active bootstrap map
+Status: active bounded map
 Scope: material-side stage authority only
 
 This document answers one operational question:
@@ -27,12 +27,12 @@ This map does not replace family routing. `docs/narrative-router` remains the fa
 | --- | --- | --- |
 | Stage axis | `material_ssot` | material-side stage SSOT |
 | Family axis | `docs/narrative-router` | family routing and family harness entry |
-| Reference scaffold axis | `narrative_ssot` | scaffold and future-structure candidate |
+| Reference scaffold axis | `narrative_ssot` | scaffold plus cards mirror and archive residue shell |
 | Live output axis | `treatments/`, `bible/` | live narrative artifacts |
 
-## 3. Bootstrap Work Set
+## 3. Representative Work Set
 
-The first work manifests in this wave are anchored on:
+The representative work manifests in this bounded slice are anchored on:
 
 - `gatekeeper_heir`
 - `office_checkup_next_day`
@@ -42,7 +42,7 @@ These works were chosen because they already have stable live preprocess, TR, an
 
 ## 4. Operating Rule
 
-When a path question comes up during the bootstrap phase, resolve it in this order:
+When a path question comes up during the current bounded slice, resolve it in this order:
 
 1. stage SSOT root
 2. current authoritative path for that stage

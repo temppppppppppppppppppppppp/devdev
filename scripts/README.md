@@ -4,7 +4,7 @@ Operator-facing utility scripts. Not imported by production runtime.
 
 ## Categories
 
-- **ops governance**: `ops_validator.py`, `sync_temp_queue_state.py`, `build_execution_roadmap.py`, `populate_process_health_scorecard.py`, `generate_evidence_manifest.py`, `validate_deep_global_survey_bundle.py`, `run_stale_reference_sweep.py`
+- **ops governance**: `ops_validator.py`, `sync_temp_queue_state.py`, `build_execution_roadmap.py`, `populate_process_health_scorecard.py`, `generate_evidence_manifest.py`, `validate_deep_global_survey_bundle.py`, `run_stale_reference_sweep.py`, `validate_material_ssot.py`, `validate_claude_local_paths.py`
 - **UTF-8 hygiene**: `check_utf8_hygiene.py`, `mojibake_global_survey.py`
 - **narrative pipeline**: `narrative_router.py`, `narrative_tr_batch.py`, `build_narrative_bi.py`, `audit_narrative_bi.py`, `build_bi_from_phase0_and_tr.py`, `build_wuxia_bi_from_phase0_and_tr.py`, `audit_bi_5pass.py`, `audit_wuxia_bi_5pass.py`, `generate_tr_bibles.py`, `create_narrative_project_scaffold.py`, `sync_narrative_reference_bank.py`
 - **data/corpus build**: `build_investment_*.py`, `build_chaebol_*.py`, `build_fallen_prince_*.py`, `build_title_style_control_dataset.py`, `extract_manuscript_samples.py`
@@ -16,6 +16,8 @@ Operator-facing utility scripts. Not imported by production runtime.
 | Task | Script |
 | --- | --- |
 | Validate temp queue + governance | `python scripts/ops_validator.py` |
+| Validate bounded `material_ssot` authority, representative work coverage, corpus metadata, and stale-path invariants | `python -X utf8 scripts/validate_material_ssot.py` |
+| Validate `.claude` local-path portability for active GSD docs | `python -X utf8 scripts/validate_claude_local_paths.py` |
 | Materialize temp queue state | `python scripts/sync_temp_queue_state.py` |
 | Check UTF-8 hygiene | `python scripts/check_utf8_hygiene.py <files>` |
 | Build execution roadmap | `python scripts/build_execution_roadmap.py` |

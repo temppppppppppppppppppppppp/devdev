@@ -19,9 +19,9 @@ Use this before using the runbook.
 
 Primary companion files:
 
-1. `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md`
-2. `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\genre_pack_registry.md`
-3. `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\handoff_templates\opus_wuxia_title_tranche_runbook.md`
+1. `전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md`
+2. `전처리_ssot\docs\30_ops\genre_pack_registry.md`
+3. `전처리_ssot\docs\30_ops\handoff_templates\opus_wuxia_title_tranche_runbook.md`
 
 ## 2. What You Are Actually Doing
 
@@ -141,9 +141,9 @@ until the first title survives the full audit sequence.
 
 In file form, those are:
 
-1. `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md`
-2. `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\genre_pack_registry.md`
-3. `C:\Users\wjjo\Desktop\글도비\전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json`
+1. `전처리_ssot\docs\30_ops\genre_decomposition_base_roadmap.md`
+2. `전처리_ssot\docs\30_ops\genre_pack_registry.md`
+3. `전처리_ssot\docs\30_ops\tranche_manifests\tranche_manifest__wuxia__t1__2026-03-20.json`
 
 ### 7.2 What To Attach For Each Step
 

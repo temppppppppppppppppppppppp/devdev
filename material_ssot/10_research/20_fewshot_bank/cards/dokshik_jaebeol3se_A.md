@@ -4,7 +4,7 @@
 
 ## 1. SOURCE CHECK
 
-- **folder_path**: `C:\Users\wjjo\Desktop\글도비\material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세`
+- **folder_path**: `material_ssot\10_research\50_corpus_curated\재벌물_독식하는 재벌 3세`
 - **detected_work_title**: 독식하는 재벌 3세 (폴더명 `재벌물_독식하는 재벌 3세`에서 장르태그 제거 후 일치 확인)
 - **available_episode_range**: ep001 ~ ep050 (총 50화)
 - **ep1_file_name**: ep001.txt

@@ -2,7 +2,7 @@
   "_schema_version": "idea_engine_selector.draft.v0",
   "updated_at": "2026-04-01",
   "status": "draft",
-  "source_db": "C:/Users/wjjo/Desktop/글도비/narrative_ssot/10_reference_bank/idea_engine_db/modern_business_idea_engine_db.draft.json",
+  "source_db": "narrative_ssot/10_reference_bank/idea_engine_db/modern_business_idea_engine_db.draft.json",
   "purpose": "Turn seed engines into reusable retrieval presets and concept mix recipes for modern business / chaebol ideation.",
   "selection_presets": [
     {

@@ -16,10 +16,10 @@
 work_id는 `defense_defect_engineer`로 고정한다.
 
 먼저 아래 문서들을 UTF-8 기준으로 읽고, 이 문서들을 SSOT로 삼아 작업을 시작하라.
-- `C:\Users\wjjo\Desktop\글도비\docs\blockguide\treatment-planning-harness.md`
-- `C:\Users\wjjo\Desktop\글도비\docs\blockguide\treatment-production-harness-v2.md`
-- `C:\Users\wjjo\Desktop\글도비\docs\blockguide\bi-production-harness-v1.md`
-- `C:\Users\wjjo\Desktop\글도비\docs\2026-03-10\top3_replanning_brief_for_tr_bi.md`
+- `docs\blockguide\treatment-planning-harness.md`
+- `docs\blockguide\treatment-production-harness-v2.md`
+- `docs\blockguide\bi-production-harness-v1.md`
+- `docs\2026-03-10\top3_replanning_brief_for_tr_bi.md`
 
 위 문서 기준으로 `결함이 보이는 방산 엔지니어`의 해당 섹션을 찾아, 그 기획을 기반으로 자동 진행하라.
 
@@ -37,12 +37,12 @@ work_id는 `defense_defect_engineer`로 고정한다.
 - 컨텍스트 compaction이 발생해도 멈추지 말고, SSOT 파일을 다시 UTF-8로 열어 자동 재개하라.
 - 강제 정지 게이트가 발생할 때만 멈춰라.
 - 모든 파일 입출력과 감리는 UTF-8 only로 처리하라.
-- `???`, `??`, `�`가 나오면 인코딩 오염으로 보고 즉시 중단 후 재생성하라.
+- `triple-question placeholder`, `double-question placeholder`, `replacement character`가 나오면 인코딩 오염으로 보고 즉시 중단 후 재생성하라.
 
 산출물 경로는 아래처럼 고정한다.
-- Phase 0: `C:\Users\wjjo\Desktop\글도비\treatments\defense_defect_engineer_phase0_design.json`
-- TR draft: `C:\Users\wjjo\Desktop\글도비\treatments\defense_defect_engineer_tr_block_070_draft.json`
-- BI: `C:\Users\wjjo\Desktop\글도비\bible\0_bi_defense_defect_engineer.json`
+- Phase 0: `treatments\defense_defect_engineer_phase0_design.json`
+- TR draft: `treatments\defense_defect_engineer_tr_block_070_draft.json`
+- BI: `bible\0_bi_defense_defect_engineer.json`
 
 시작 순서는 아래와 같다.
 1. 하네스 문서와 기획 문서를 UTF-8로 읽고 요약 확인
@@ -64,11 +64,11 @@ work_id는 `defense_defect_engineer`로 고정한다.
 작품명은 `결함이 보이는 방산 엔지니어`, work_id는 `defense_defect_engineer`이다.
 
 아래 문서를 UTF-8 기준으로 읽어라.
-- `C:\Users\wjjo\Desktop\글도비\docs\blockguide\treatment-planning-harness.md`
-- `C:\Users\wjjo\Desktop\글도비\docs\2026-03-10\top3_replanning_brief_for_tr_bi.md`
+- `docs\blockguide\treatment-planning-harness.md`
+- `docs\2026-03-10\top3_replanning_brief_for_tr_bi.md`
 
 위 문서를 SSOT로 삼아 이 작품의 Phase 0 설계만 진행하라.
-출력은 `C:\Users\wjjo\Desktop\글도비\treatments\defense_defect_engineer_phase0_design.json`에 UTF-8로 저장하라.
+출력은 `treatments\defense_defect_engineer_phase0_design.json`에 UTF-8로 저장하라.
 아직 TR과 BI는 만들지 말고, Phase 0가 끝나면 멈춰라.
 ```
 
@@ -80,11 +80,11 @@ work_id는 `defense_defect_engineer`로 고정한다.
 작품명은 `결함이 보이는 방산 엔지니어`, work_id는 `defense_defect_engineer`이다.
 
 아래 문서를 UTF-8 기준으로 읽어라.
-- `C:\Users\wjjo\Desktop\글도비\docs\blockguide\treatment-production-harness-v2.md`
-- `C:\Users\wjjo\Desktop\글도비\treatments\defense_defect_engineer_phase0_design.json`
+- `docs\blockguide\treatment-production-harness-v2.md`
+- `treatments\defense_defect_engineer_phase0_design.json`
 
 위 문서를 SSOT로 삼아 TR 70블록을 자동 진행으로 끝까지 생산하라.
-출력은 `C:\Users\wjjo\Desktop\글도비\treatments\defense_defect_engineer_tr_block_070_draft.json`에 UTF-8로 저장하라.
+출력은 `treatments\defense_defect_engineer_tr_block_070_draft.json`에 UTF-8로 저장하라.
 컨텍스트 compaction이 발생해도 직전 SSOT를 다시 열고 자동 재개하라.
 TR 3-pass 감리까지 끝내고 멈춰라. BI는 아직 만들지 말라.
 ```
@@ -97,13 +97,13 @@ TR 3-pass 감리까지 끝내고 멈춰라. BI는 아직 만들지 말라.
 작품명은 `결함이 보이는 방산 엔지니어`, work_id는 `defense_defect_engineer`이다.
 
 아래 문서를 UTF-8 기준으로 읽어라.
-- `C:\Users\wjjo\Desktop\글도비\docs\blockguide\treatment-production-harness-v2.md`
-- `C:\Users\wjjo\Desktop\글도비\docs\blockguide\bi-production-harness-v1.md`
-- `C:\Users\wjjo\Desktop\글도비\treatments\defense_defect_engineer_phase0_design.json`
-- `C:\Users\wjjo\Desktop\글도비\treatments\defense_defect_engineer_tr_block_070_draft.json`
+- `docs\blockguide\treatment-production-harness-v2.md`
+- `docs\blockguide\bi-production-harness-v1.md`
+- `treatments\defense_defect_engineer_phase0_design.json`
+- `treatments\defense_defect_engineer_tr_block_070_draft.json`
 
 위 문서를 SSOT로 삼아 BI를 생성하라.
-출력은 `C:\Users\wjjo\Desktop\글도비\bible\0_bi_defense_defect_engineer.json`에 UTF-8로 저장하라.
+출력은 `bible\0_bi_defense_defect_engineer.json`에 UTF-8로 저장하라.
 `plot_roadmap`는 창작하지 말고 TR draft에서 동기화하라.
 BI 5-pass 감리 또는 최소 3-pass 정합성 감리까지 끝내고 결과를 보고하라.
 ```
@@ -119,19 +119,19 @@ BI 5-pass 감리 또는 최소 3-pass 정합성 감리까지 끝내고 결과를
 work_id: `defense_defect_engineer`
 
 SSOT 후보:
-- `C:\Users\wjjo\Desktop\글도비\docs\blockguide\treatment-planning-harness.md`
-- `C:\Users\wjjo\Desktop\글도비\docs\blockguide\treatment-production-harness-v2.md`
-- `C:\Users\wjjo\Desktop\글도비\docs\blockguide\bi-production-harness-v1.md`
-- `C:\Users\wjjo\Desktop\글도비\docs\2026-03-10\top3_replanning_brief_for_tr_bi.md`
-- `C:\Users\wjjo\Desktop\글도비\treatments\defense_defect_engineer_phase0_design.json`
-- `C:\Users\wjjo\Desktop\글도비\treatments\defense_defect_engineer_tr_block_070_draft.json`
-- `C:\Users\wjjo\Desktop\글도비\bible\0_bi_defense_defect_engineer.json`
+- `docs\blockguide\treatment-planning-harness.md`
+- `docs\blockguide\treatment-production-harness-v2.md`
+- `docs\blockguide\bi-production-harness-v1.md`
+- `docs\2026-03-10\top3_replanning_brief_for_tr_bi.md`
+- `treatments\defense_defect_engineer_phase0_design.json`
+- `treatments\defense_defect_engineer_tr_block_070_draft.json`
+- `bible\0_bi_defense_defect_engineer.json`
 
 복구 순서:
 1. 어떤 산출물이 이미 존재하는지 UTF-8로 확인
 2. 가장 최신의 정상 SSOT를 기준으로 현재 단계를 판정
 3. auto-run 기본값으로 다음 미완료 단계부터 재개
-4. `???`, `??`, `�`, UTF-8 파싱 실패가 보이면 손상으로 간주하고 재생성
+4. `triple-question placeholder`, `double-question placeholder`, `replacement character`, UTF-8 파싱 실패가 보이면 손상으로 간주하고 재생성
 
 지금 상태를 먼저 판정한 뒤, 다음 미완료 단계부터 자동 진행하라.
 ```
@@ -143,7 +143,7 @@ SSOT 후보:
 정말 짧게만 치고 싶으면 이 한 줄도 가능하다.
 
 ```text
-`결함이 보이는 방산 엔지니어`를 `defense_defect_engineer`로 진행한다. `C:\Users\wjjo\Desktop\글도비\docs\blockguide\treatment-planning-harness.md`, `C:\Users\wjjo\Desktop\글도비\docs\blockguide\treatment-production-harness-v2.md`, `C:\Users\wjjo\Desktop\글도비\docs\blockguide\bi-production-harness-v1.md`, `C:\Users\wjjo\Desktop\글도비\docs\2026-03-10\top3_replanning_brief_for_tr_bi.md`를 UTF-8로 읽고 SSOT로 삼아 auto-run 기본값으로 `Phase 0 -> TR -> 감리 -> BI -> 감리`를 끝까지 순차 진행하라. compaction이 나도 멈추지 말고 SSOT 재오픈 후 재개하라. 모든 출력은 UTF-8 only로 저장하고 `???`, `??`, `�`가 나오면 중단 후 재생성하라.
+`결함이 보이는 방산 엔지니어`를 `defense_defect_engineer`로 진행한다. `docs\blockguide\treatment-planning-harness.md`, `docs\blockguide\treatment-production-harness-v2.md`, `docs\blockguide\bi-production-harness-v1.md`, `docs\2026-03-10\top3_replanning_brief_for_tr_bi.md`를 UTF-8로 읽고 SSOT로 삼아 auto-run 기본값으로 `Phase 0 -> TR -> 감리 -> BI -> 감리`를 끝까지 순차 진행하라. compaction이 나도 멈추지 말고 SSOT 재오픈 후 재개하라. 모든 출력은 UTF-8 only로 저장하고 `triple-question placeholder`, `double-question placeholder`, `replacement character`가 나오면 중단 후 재생성하라.
 ```
 
 ---

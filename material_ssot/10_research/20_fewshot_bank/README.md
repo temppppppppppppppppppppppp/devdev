@@ -4,7 +4,7 @@ Role:
 
 - canonical home for the research-stage few-shot bank
 - own the saved card sink, card manifest, and collection index
-- feed mirror sync into `narrative_ssot/10_reference_bank`
+- feed cards-manifest mirror sync into `narrative_ssot/10_reference_bank`
 
 Current note:
 
