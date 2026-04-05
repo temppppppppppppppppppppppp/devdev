@@ -439,3 +439,114 @@ def test_evaluate_candidate_penalizes_verbose_state_field_blob():
 
     assert score < 100
     assert any("short canonical label" in issue or "sentence-style inventory blob" in issue for issue in issues)
+
+
+def test_evaluate_candidate_penalizes_verbose_start_location_label():
+    agent = _make_agent()
+    agent._genre = "investment"
+    candidate = _base_candidate(
+        ep_start=4,
+        ep_end=6,
+        episode_details=[
+            {"ep_num": 4, "details": ["첫 화 사건"]},
+            {"ep_num": 5, "details": ["둘째 화 사건"]},
+            {"ep_num": 6, "details": ["셋째 화 사건"]},
+        ],
+        state_constraints={
+            "arc_start_state": {
+                "location": "서울 강남, SW인베스트먼트 오피스, 아직 페인트 냄새가 남은 임시 작업 공간",
+                "equipment": [],
+            },
+            "arc_end_state": {"location": "강남 HQ", "equipment": []},
+            "items_acquired": [],
+            "items_consumed": [],
+        },
+    )
+
+    score, issues = agent._evaluate_candidate(
+        candidate,
+        prev_arc_context="서사 시작점",
+        constraint_block="",
+        prev_equipment=None,
+        forbidden_items=[],
+    )
+
+    assert score < 100
+    assert "arc_start_state.location must be a short canonical label" in issues
+
+
+def test_evaluate_candidate_penalizes_non_wuxia_state_noise():
+    agent = _make_agent()
+    agent._genre = "investment"
+    candidate = _base_candidate(
+        ep_start=4,
+        ep_end=6,
+        episode_details=[
+            {"ep_num": 4, "details": ["첫 화 사건"]},
+            {"ep_num": 5, "details": ["둘째 화 사건"]},
+            {"ep_num": 6, "details": ["셋째 화 사건"]},
+        ],
+        state_constraints={
+            "arc_start_state": {"location": "여의도 HQ", "equipment": [], "internal_energy": 100},
+            "arc_end_state": {"location": "강남 HQ", "equipment": [], "realm": "후천"},
+            "items_acquired": [],
+            "items_consumed": [],
+        },
+    )
+
+    score, issues = agent._evaluate_candidate(
+        candidate,
+        prev_arc_context="서사 시작점",
+        constraint_block="",
+        prev_equipment=None,
+        forbidden_items=[],
+    )
+
+    assert score < 100
+    assert any("non-wuxia state noise" in issue for issue in issues)
+
+
+def test_evaluate_candidate_penalizes_investment_arithmetic_boundary_mismatch():
+    agent = _make_agent()
+    agent._genre = "investment"
+    candidate = _base_candidate(
+        arc_no=3,
+        ep_start=11,
+        ep_end=13,
+        episode_details=[
+            {"ep_num": 11, "details": ["유가 포지션을 점검한다."]},
+            {"ep_num": 12, "details": ["차익 일부를 실현한다."]},
+            {"ep_num": 13, "details": ["총자산 30억을 확인한다."]},
+        ],
+        state_constraints={
+            "arc_start_state": {"location": "Gangnam HQ", "equipment": [], "total_assets": "28억"},
+            "arc_end_state": {
+                "location": "Gangnam HQ",
+                "equipment": [],
+                "capital": "17억 5천만원",
+                "total_assets": "30억",
+            },
+            "investment_calc": {
+                "transactions": [],
+                "final_cash": "17억 5천만원",
+                "final_total_assets": "30억",
+            },
+            "items_acquired": [],
+            "items_consumed": [],
+        },
+    )
+
+    score, issues = agent._evaluate_candidate(
+        candidate,
+        prev_arc_context=(
+            "[Carryover Authority Packet]\n"
+            "- next_arc_start_capital: 17억 5천만원\n"
+            "- next_arc_start_total_assets: 23억\n"
+        ),
+        constraint_block="",
+        prev_equipment=None,
+        forbidden_items=[],
+    )
+
+    assert score < 100
+    assert any("investment arithmetic warning:" in issue for issue in issues)

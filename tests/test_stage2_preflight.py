@@ -498,6 +498,139 @@ class TestPreflightArcAnalysis:
             "      [S2-OBS] Stage2 retrieval empty (chars=0, slots=0, scene_engines=0)"
         )
 
+    def test_resolve_work_retrieval_focus_returns_fallback_when_guard_missing(self, preflight):
+        preflight.ctx.sys = None
+
+        result = preflight._resolve_work_retrieval_focus(
+            {
+                "block_theme": "유가 급등을 이용한 자산 불리기",
+                "constraint_summary": "소꿉친구와의 관계 복구가 필요하다",
+                "plot_suspension": ["PB 박성호와의 신뢰 회복"],
+                "episode_details": [
+                    {"ep_num": 4, "details": ["PB 박성호를 설득해 원유 익절 타이밍을 잡는다."]}
+                ],
+            },
+            current_vol_strategy={"strategy_doc": "단기 유가 변동을 활용한 포지션 정리"},
+        )
+
+        assert result["tracking_slots"] == ["유가 급등을 이용한 자산 불리기", "PB 박성호와의 신뢰 회복"]
+        assert result["mandatory_scene_engines"][0].startswith("EP4:")
+
+    def test_resolve_work_retrieval_focus_uses_raw_block_metadata_when_mission_packet_missing(self, preflight):
+        preflight.ctx.sys = None
+
+        result = preflight._resolve_work_retrieval_focus(
+            {
+                "content": {
+                    "context": "2006년 1월 초, 한시우는 강남 사무실에서 원유 진입 시점을 계산한다.",
+                    "event_villain": "PB 박성호는 아직 막내의 선언을 재롱으로 본다.",
+                    "solution": "해외 선물 계좌와 법인 구조를 먼저 잠근다.",
+                    "reward": "20억 운용 준비와 초기 법인 설립이 완료된다.",
+                },
+                "stakes": "이번 선언이 실패하면 회귀 지식도 모두 무의미해진다.",
+                "foreshadow": ["이란 핵 이슈 재점화", "WTI 랠리 초입"],
+                "relationship_delta": [
+                    {"target": "박성호", "after": "경계", "trigger": "막내의 돌연한 선언"}
+                ],
+                "time_span": {"in_story_time": "2006년 1월 초", "duration": "3일"},
+                "location": {"place": "서울 강남 대표실", "type": "실내"},
+                "genre_ext": {
+                    "method": "원자재 트레이딩 준비",
+                    "time_pressure": "이란 핵 이슈 전 포지션 진입 준비",
+                },
+            },
+            current_vol_strategy={"strategy_doc": "원유 진입 전 계좌와 법인을 먼저 잠근다."},
+        )
+
+        assert result["tracking_slots"]
+        assert "이번 선언이 실패하면 회귀 지식도 모두 무의미해진다." in result["tracking_slots"]
+        assert result["mandatory_scene_engines"]
+        assert any("원유 진입 시점" in item for item in result["mandatory_scene_engines"])
+
+    def test_build_stage2_vector_context_uses_fallback_work_focus_summary_when_guard_returns_empty(self, preflight):
+        preflight.ctx.memory = MagicMock()
+        preflight.ctx.memory.retrieve_high_res_context.return_value = ""
+        preflight.ctx.sys = MagicMock()
+        preflight.ctx.sys.guard = MagicMock()
+        preflight.ctx.sys.guard.select_retrieval_focus.return_value = {}
+        preflight._build_fact_ledger_context = MagicMock(return_value="")
+        preflight._record_retrieval_observation = MagicMock()
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return False
+            if key == "smart_retrieval.stage2_enabled":
+                return False
+            if key == "context.vector_max_results_s2":
+                return 8
+            return default
+
+        with patch("modules.core.stage2_preflight._threshold", side_effect=threshold_side_effect):
+            result = preflight._build_stage2_vector_context(
+                global_arc_no=1,
+                current_ep_start=3,
+                enriched_block={
+                    "block_theme": "유가 급등",
+                    "constraint_summary": "여의도 사무실에서 다음 거래를 준비한다",
+                    "episode_details": [{"ep_num": 4, "details": ["PB를 만나 다음 거래 조건을 조율한다."]}],
+                    "joint_docs": {},
+                    "status_shadow": {},
+                },
+                current_vol_strategy={"strategy_doc": "단기 포지션 정리"},
+                protagonist_name="hero",
+            )
+
+        assert result.startswith("[작품 추적 슬롯 요약]")
+        observation = preflight._record_retrieval_observation.call_args.kwargs["observation"]
+        assert observation["work_focus_present"] is True
+        assert observation["work_slot_summary_included"] is True
+        assert observation["tracking_slots_count"] >= 1
+
+    def test_build_stage2_vector_context_uses_raw_block_fallback_when_guard_returns_empty(self, preflight):
+        preflight.ctx.memory = MagicMock()
+        preflight.ctx.memory.retrieve_high_res_context.return_value = ""
+        preflight.ctx.sys = MagicMock()
+        preflight.ctx.sys.guard = MagicMock()
+        preflight.ctx.sys.guard.select_retrieval_focus.return_value = {}
+        preflight._build_fact_ledger_context = MagicMock(return_value="")
+        preflight._record_retrieval_observation = MagicMock()
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return False
+            if key == "smart_retrieval.stage2_enabled":
+                return False
+            if key == "context.vector_max_results_s2":
+                return 8
+            return default
+
+        with patch("modules.core.stage2_preflight._threshold", side_effect=threshold_side_effect):
+            result = preflight._build_stage2_vector_context(
+                global_arc_no=2,
+                current_ep_start=6,
+                enriched_block={
+                    "content": {
+                        "context": "여의도 사무실에서 다음 원유 트레이드 타이밍을 계산한다.",
+                        "event_villain": "PB는 여전히 막내의 판단을 의심한다.",
+                    },
+                    "stakes": "이번 타이밍을 놓치면 첫 수익 증명이 무너진다.",
+                    "foreshadow": ["에콰도르 변수", "유가 급등 시작"],
+                    "relationship_delta": [{"target": "박성호", "after": "경계"}],
+                    "time_span": {"in_story_time": "2006년 2월 초"},
+                    "location": {"place": "여의도 사무실", "type": "실내"},
+                    "joint_docs": {},
+                    "status_shadow": {},
+                },
+                current_vol_strategy={"strategy_doc": "원유 진입 직전 리스크를 정리한다."},
+                protagonist_name="hero",
+            )
+
+        assert result.startswith("[작품 추적 슬롯 요약]")
+        observation = preflight._record_retrieval_observation.call_args.kwargs["observation"]
+        assert observation["work_focus_present"] is True
+        assert observation["tracking_slots_count"] >= 1
+        assert observation["scene_engines_count"] >= 1
+
     def test_apply_postpass_state_change_fixes_merges_relationship_delta_and_timeline(self, preflight):
         refined_arc = {
             "state_changes": {},

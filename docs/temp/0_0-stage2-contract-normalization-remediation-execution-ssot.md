@@ -563,3 +563,207 @@ Bounded implementation verdict:
 
 - Stage2 acceptance and post-pass sinks now speak the same mission/carryover contract vocabulary as the earlier generation-boundary slices
 - the remaining Stage2 pressure is now more cleanly upstream: retrieval emptiness, generation quality, and broader readiness normalization
+
+## 22. 2026-04-05 Bounded Realization Update: Work-Focus Fallback Recovery
+
+This bounded realization update was executed because fresh-run evidence still showed repeated `Stage2 retrieval empty (chars=0, slots=0, scene_engines=0)` rows, which meant the `work_focus` source itself was often collapsing to `{}` before retrieval planning.
+
+Queue semantics remain unchanged:
+
+- status stays `parked`
+- roadmap priority stays unchanged
+- this does not promote the full Stage2 lane above active Stage4 work
+
+Landed bounded slice:
+
+- `modules/core/stage2_preflight.py`
+  - when `sys.guard.select_retrieval_focus()` is unavailable, throws, or returns an effectively empty payload, Stage2 now derives a bounded fallback `work_focus`
+  - fallback inputs are limited to existing Stage2 authority surfaces:
+    - `block_theme`
+    - `plot_suspension`
+    - `episode_details`
+    - `constraint_summary`
+    - bounded `tactical_doc` / `arc_tactical` lines
+    - bounded `current_vol_strategy.strategy_doc`
+  - fallback output stays narrow:
+    - `tracking_slots`
+    - `mandatory_scene_engines`
+    - empty `registry_profiles`
+  - this raises the floor for Stage2 retrieval planning without overriding the normal guard-owned path when that path returns a real focus packet
+
+Bounded verification completed:
+
+- `pytest tests/test_stage2_preflight.py -k "fallback_work_focus or retrieval_is_empty or legacy_path_prepends_slot_summary or advisor_plan_dispatches_vec_and_npc_sources or work_focus_relation_slice_included" -q`
+- `python -m py_compile modules/core/stage2_preflight.py tests/test_stage2_preflight.py`
+- `python scripts/check_utf8_hygiene.py modules/core/stage2_preflight.py tests/test_stage2_preflight.py`
+
+Complexity recount:
+
+- `_normalize_work_focus_phrase`: `8 LOC`
+- `_build_fallback_work_retrieval_focus`: `52 LOC`
+- `_resolve_work_retrieval_focus`: `28 LOC`
+- `_build_stage2_vector_context`: remains below the `180+ LOC` guardrail
+
+Bounded implementation verdict:
+
+- broader Stage2 readiness normalization still remains future-wave work
+- but Stage2 no longer needs a healthy guard response to avoid the degenerate `work_focus={}` floor case
+
+## 23. 2026-04-05 Bounded Realization Update: Raw-Block Work-Focus Recovery
+
+Fresh-run evidence narrowed the remaining `work_focus={}` floor to a live-path mismatch between preflight input shape and the earlier fallback assumptions.
+
+- authoritative evidence from `0000000000_0405` still showed:
+  - `Stage2 retrieval empty (chars=0, slots=0, scene_engines=0)` in console/UI
+  - `work_focus_present=false`, `tracking_slots_count=0`, `scene_engines_count=0` in `quality_metrics`
+- root cause:
+  - Stage2 preflight receives the pre-generation `enriched_block`, not the final arc artifact
+  - `Analyst.enrich_raw_block_async()` preserves the raw treatment block and only appends newly introduced fields
+  - therefore the earlier fallback's reliance on `episode_details` / `constraint_summary` was still too final-artifact-shaped for the live preflight path
+
+Queue semantics remain unchanged:
+
+- status stays `parked`
+- roadmap priority stays unchanged
+- this does not promote the full Stage2 lane above active Stage4 work
+
+Landed bounded slice:
+
+- `modules/core/stage2_preflight.py`
+  - `_compose_work_focus_text()` now includes raw treatment-block authority surfaces, not only final-arc-like fields
+  - `_build_fallback_work_retrieval_focus()` now derives bounded `tracking_slots` / `mandatory_scene_engines` from raw block metadata when the guard path is absent or empty
+  - the new raw-block fallback reads only already-authoritative Stage2 inputs:
+    - `content.context`
+    - `content.event_villain`
+    - `content.solution`
+    - `content.reward`
+    - `stakes`
+    - `foreshadow`
+    - `callback`
+    - `relationship_delta`
+    - `time_span`
+    - `location`
+    - bounded `genre_ext` fields
+  - this keeps the fallback narrow while matching the actual preflight input shape seen in live Stage2
+
+Bounded verification completed:
+
+- `pytest tests/test_stage2_preflight.py -k "fallback_work_focus or retrieval_is_empty or raw_block_fallback or legacy_path_prepends_slot_summary or advisor_plan_dispatches_vec_and_npc_sources or work_focus_relation_slice_included" -q`
+- `python -m py_compile modules/core/stage2_preflight.py tests/test_stage2_preflight.py`
+
+Complexity recount:
+
+- `_build_raw_block_focus_candidates`: `54 LOC`
+- `_compose_work_focus_text`: remains below the `120+ LOC` watch band
+- `_build_fallback_work_retrieval_focus`: remains below the `120+ LOC` watch band
+- `_build_stage2_vector_context`: remains below the `180+ LOC` guardrail
+
+Bounded implementation verdict:
+
+- Stage2 still is not closure-ready
+- retrieval-empty and broader generation/readiness pressure remain future-wave work
+- but the live-path mismatch between raw `enriched_block` shape and work-focus fallback has now been explicitly addressed
+
+## 24. 2026-04-05 Bounded Realization Update: Location Label Canonicalization Pressure
+
+The latest `0000000000_0405` fresh run improved Stage2 verdict stability and restored non-empty retrieval planning, but the authoritative operator sinks still showed repeat Stage2 auto-correct pressure on every arc.
+
+- authoritative evidence from `0000000000_0405` showed:
+  - `PASS`, `PASS`, `PASS_WITH_FIX -> PASS`
+  - `work_focus_present=true`, `tracking_slots_count=3`, `scene_engines_count=2`
+  - remaining auto-correct families:
+    - verbose sentence-style `arc_start_state.location`
+    - verbose `joint_docs.final_location` / `arc_end_state.location`
+    - non-wuxia `internal_energy` leakage in structured state packets
+- root cause narrowed to two owners:
+  - `ArcEnsembleGenerator` still under-penalized verbose start-location labels and non-wuxia state noise during candidate selection
+  - Stage2 sync paths still allowed long scene-prose locations to remain the final authority label when a candidate slipped through
+
+Queue semantics remain unchanged:
+
+- status stays `parked`
+- roadmap priority stays unchanged
+- this does not promote the full Stage2 lane above active Stage4 work
+
+Landed bounded slice:
+
+- `modules/core/stage2_location_contract.py`
+  - added a shared `collapse_stage2_location_label()` helper and `is_verbose_stage2_location_label()` detector for Stage2 state fields
+- `modules/domain/agents/arc_ensemble.py`
+  - `arc_start_state.location` sentence-style prose now counts as a state-contract vocabulary issue
+  - non-wuxia `internal_energy` / `realm` / `qi_nature` / `martial_arts` leakage in `arc_start_state` / `arc_end_state` now incurs candidate penalties
+- `modules/core/stage2_optimizer.py`
+  - start/end location sync now collapses verbose scene prose to a shorter canonical label before authority sync
+- `modules/core/stage2_finalizer.py`
+  - `joint_docs.final_location` / `arc_end_state.location` sync now canonicalizes the final saved location label
+  - first-episode start-state line sync now writes the same short location label into `tactical_doc`
+
+Bounded verification completed:
+
+- `pytest tests/test_stage2_optimizer.py -q`
+- `pytest tests/test_arc_ensemble_lane_a.py -q`
+- `pytest tests/test_stage2_finalizer.py -k "final_location_from_arc_end_state_authority or sync_stage2_end_location_contract_collapses_verbose_scene_label" -q`
+
+Complexity recount:
+
+- `collapse_stage2_location_label`: `30 LOC`
+- `_collect_state_contract_vocabulary_issues`: remains below the `120+ LOC` watch band
+- `_sync_stage2_end_location_contract`: remains below the `120+ LOC` watch band
+- no touched production function crossed the `180+ LOC` guardrail
+
+Bounded implementation verdict:
+
+- Stage2 still is not closure-ready
+- retrieval-empty is no longer the front blocker in this lane
+- the remaining Stage2 pressure is now narrower:
+  - generation/finalizer location vocabulary drift
+  - minor numeric phrasing pressure
+  - future-wave dead-field/readiness cleanup
+
+## 25. 2026-04-05 Bounded Realization Update: Arc 3 Entity/Numeric Gate Hardening
+
+The latest `0000000000_0405` Stage2 fresh run narrowed the remaining front blocker to `Arc 3`.
+
+- authoritative failure evidence showed two recurring families:
+  - entity naming drift at Director audit:
+    - `WTI 원유 6월물` vs canonical `WTI 원유 선물 6월물`
+    - `금 가격 차트` / `금 시세 차트` vs canonical `금(XAU/USD) 10년 치 가격 차트`
+    - `SW인베스트먼트 오피스` vs canonical `SW 인베스트먼트 임시 오피스텔`
+    - `PDA` vs canonical `개인용 PDA 단말기`
+  - numeric continuity drift during candidate selection:
+    - start total-assets mismatch against carryover packet
+    - `investment_calc.final_cash` / `final_total_assets` combinations that do not respect carryover arithmetic
+
+Landed bounded slice:
+
+- `modules/core/stage2_entity_contract.py`
+  - added Stage2 entity alias normalization helpers for Director-bound arc payloads
+  - explicit alias coverage now includes whitespace/no-whitespace location variants such as `SW인베스트먼트 오피스`
+- `modules/core/stage2_finalizer.py`
+  - `_prepare_stage2_finalize_audit_state` now canonicalizes `tactical_doc`, `joint_docs`, `state_constraints`, and `episode_details` against the Director entity registry before audit
+  - this is a pre-audit shell hardening slice, not a new truth source
+- `modules/domain/agents/arc_ensemble.py`
+  - candidate scoring now demotes investment arithmetic boundary mismatches before Director selection
+  - arithmetic scoring was extracted into `_score_candidate_contract_health` so `_evaluate_candidate` remains below the `180+ LOC` guardrail
+
+Bounded verification completed:
+
+- `pytest tests/test_arc_ensemble_lane_a.py -k "investment_arithmetic_boundary_mismatch or non_wuxia_state_noise" -q`
+- `pytest tests/test_stage2_finalizer.py -k "prepare_audit_state_normalizes_entity_aliases_before_director" -q`
+- `python -m py_compile modules/domain/agents/arc_ensemble.py modules/core/stage2_finalizer.py modules/core/stage2_entity_contract.py`
+
+Complexity recount:
+
+- `_score_candidate_contract_health`: `63 LOC` (`semantic core`)
+- `_collect_investment_arithmetic_issues`: `30 LOC`
+- `_evaluate_candidate`: `165 LOC` after extraction (`bounded shell`; `175 -> 203 -> 165` within this tranche, so no net `180+` crossing remains)
+- `_prepare_stage2_finalize_audit_state`: `1116 LOC`, still an existing large `bounded shell`; this tranche added pre-audit canonicalization only and did not create a new high-risk band entry
+
+Bounded implementation verdict:
+
+- Stage2 still is not closure-ready
+- `retrieval/work_focus` is no longer the front blocker in this lane
+- the immediate blocker set is now narrower:
+  - Arc 3 entity alias drift that must be verified on the next fresh run
+  - Arc 3 numeric continuity phrasing/arithmetic drift
+  - future-wave dead-field/readiness cleanup

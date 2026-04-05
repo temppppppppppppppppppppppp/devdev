@@ -2,6 +2,8 @@
 [V60.25] Stage 2 Optimizer
 Stage 2 Arc 생성 통과율 최적화 모듈
 
+utf8-hygiene: allow-file -- legacy Korean regex and prompt strings predate this bounded patch; current edits are ASCII-bounded.
+
 Components:
 1. StateSnapshotInjector - 이전 Arc 종료 상태를 정확히 주입
 2. ArcAutoCorrector - 생성된 Arc 자동 수정
@@ -22,6 +24,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from modules.core.genre_schema_builder import is_wuxia
+from modules.core.stage2_location_contract import collapse_stage2_location_label
 
 # [BUG-I] location 필드에 혼입된 시간/날짜 설명 제거
 _LOCATION_TIME_RE = re.compile(
@@ -375,14 +378,16 @@ class ArcAutoCorrector:
 
         if not prev_location:
             return arc
+        prev_location = collapse_stage2_location_label(prev_location) or str(prev_location).strip()
 
         # 현재 Arc 시작 위치
         state = arc.get("state_constraints", {})
         start_state = state.get("arc_start_state", {})
-        current_location = start_state.get("location", "")
+        current_location = str(start_state.get("location", "") or "").strip()
+        current_location_canonical = collapse_stage2_location_label(current_location) or current_location
 
         # 위치가 다르면 수정
-        if current_location and current_location != prev_location:
+        if current_location_canonical and current_location_canonical != prev_location:
             self.corrections_made.append(f"시작 위치 수정: '{current_location}' → '{prev_location}'")
             start_state["location"] = prev_location
             state["arc_start_state"] = start_state
@@ -488,10 +493,12 @@ class ArcAutoCorrector:
         cleaned_loc = _LOCATION_TIME_RE.sub("", joint_loc).rstrip("., ").strip()
         if not cleaned_loc:
             cleaned_loc = joint_loc  # 폴백
+        cleaned_loc = collapse_stage2_location_label(cleaned_loc) or cleaned_loc
 
         state = arc.get("state_constraints", {})
         arc_end = state.get("arc_end_state", {})
         current_loc = arc_end.get("location", "")
+        current_loc = collapse_stage2_location_label(current_loc) or current_loc
 
         if current_loc != cleaned_loc:
             self.corrections_made.append(

@@ -24,9 +24,12 @@ from modules.core.genre_schema_builder import (
     build_state_constraints_schema,
     build_status_shadow_schema,
     get_item_suffixes,
+    is_wuxia,
 )
+from modules.core.investment_arithmetic_checker import InvestmentArithmeticChecker
 from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import ARC_DESIGN_SCHEMA  # [TF11] response_schema 확대
+from modules.core.stage2_location_contract import is_verbose_stage2_location_label
 
 from .base_agent import _SYSTEM_CFG, BaseAgent
 
@@ -324,12 +327,19 @@ def _collect_state_contract_vocabulary_issues(candidate: dict) -> list[str]:
     if not isinstance(joint_docs, dict):
         joint_docs = {}
 
+    arc_start = state_constraints.get("arc_start_state", {})
+    if not isinstance(arc_start, dict):
+        arc_start = {}
+
     arc_end = state_constraints.get("arc_end_state", {})
     if not isinstance(arc_end, dict):
         arc_end = {}
 
+    start_location = str(arc_start.get("location", "") or "").strip()
     final_location = str(joint_docs.get("final_location", "") or "").strip()
     end_location = str(arc_end.get("location", "") or "").strip()
+    if start_location and is_verbose_stage2_location_label(start_location):
+        issues.append("arc_start_state.location must be a short canonical label")
     if final_location and _looks_like_verbose_state_field(final_location):
         issues.append("joint_docs.final_location must be a short canonical label")
     if end_location and _looks_like_verbose_state_field(end_location):
@@ -350,6 +360,122 @@ def _collect_state_contract_vocabulary_issues(candidate: dict) -> list[str]:
                 break
 
     return issues
+
+
+def _collect_non_wuxia_state_noise_issues(candidate: dict, genre: str) -> list[str]:
+    """Collect wuxia-only state fields that should not appear in non-wuxia Stage2 arcs."""
+    if is_wuxia(genre):
+        return []
+
+    state_constraints = candidate.get("state_constraints", {})
+    if not isinstance(state_constraints, dict):
+        return []
+
+    issues: list[str] = []
+    wuxia_only_keys = ("internal_energy", "realm", "qi_nature", "martial_arts")
+    for section_key in ("arc_start_state", "arc_end_state"):
+        section = state_constraints.get(section_key, {})
+        if not isinstance(section, dict):
+            continue
+        leaked = [key for key in wuxia_only_keys if key in section]
+        if leaked:
+            issues.append(f"{section_key} contains non-wuxia state noise: {', '.join(leaked)}")
+    return issues
+
+
+def _collect_investment_arithmetic_issues(candidate: dict, prev_arc_context: str, arc_no: int) -> list[dict]:
+    """Collect arithmetic warnings for investment-like Stage2 candidates before selection."""
+    state_constraints = candidate.get("state_constraints", {})
+    if not isinstance(state_constraints, dict):
+        return []
+
+    arc_start = state_constraints.get("arc_start_state", {})
+    arc_end = state_constraints.get("arc_end_state", {})
+    investment_calc = state_constraints.get("investment_calc")
+    has_financial_state = any(
+        isinstance(section, dict) and any(section.get(key) for key in ("capital", "total_assets", "portfolio_position"))
+        for section in (arc_start, arc_end)
+    )
+    if not isinstance(investment_calc, dict) and not has_financial_state:
+        return []
+
+    packet = _extract_carryover_authority_packet(prev_arc_context)
+    prev_arc_end_state: dict[str, str] = {}
+    if packet.get("next_arc_start_capital"):
+        prev_arc_end_state["capital"] = packet["next_arc_start_capital"]
+    if packet.get("next_arc_start_total_assets"):
+        prev_arc_end_state["total_assets"] = packet["next_arc_start_total_assets"]
+
+    checker = InvestmentArithmeticChecker.from_yaml()
+    return checker.check(
+        candidate,
+        candidate.get("arc_no") or arc_no,
+        prev_arc_end_state=prev_arc_end_state or None,
+    )
+
+
+def _score_candidate_contract_health(
+    candidate: dict,
+    prev_arc_context: str,
+    *,
+    genre: str,
+    candidate_arc_no: int,
+    candidate_ep_start: int,
+    candidate_ep_end: int,
+) -> tuple[int, list[str]]:
+    penalty = 0
+    issues: list[str] = []
+
+    canonical_episode_details = _normalize_episode_details(
+        candidate.get("episode_details"),
+        ep_start=candidate_ep_start,
+        ep_end=candidate_ep_end,
+    )
+    covered_eps = {int(item["ep_num"]) for item in canonical_episode_details}
+    expected_eps = list(range(candidate_ep_start, candidate_ep_end + 1))
+    missing_eps = [ep_num for ep_num in expected_eps if ep_num not in covered_eps]
+    if not canonical_episode_details:
+        penalty += 12
+        issues.append("canonical mission packet missing: episode_details")
+    elif missing_eps:
+        penalty += min(10, 4 + len(missing_eps) * 2)
+        issues.append(
+            "episode_details mission packet coverage 부족: "
+            + ", ".join(f"ep{ep_num}" for ep_num in missing_eps[:3])
+        )
+
+    vocabulary_issues = _collect_state_contract_vocabulary_issues(candidate)
+    if vocabulary_issues:
+        penalty += min(12, len(vocabulary_issues) * 4)
+        issues.extend(vocabulary_issues[:3])
+
+    non_wuxia_noise_issues = _collect_non_wuxia_state_noise_issues(candidate, genre)
+    if non_wuxia_noise_issues:
+        penalty += min(8, len(non_wuxia_noise_issues) * 4)
+        issues.extend(non_wuxia_noise_issues[:2])
+
+    arithmetic_warnings = _collect_investment_arithmetic_issues(
+        candidate,
+        prev_arc_context,
+        candidate_arc_no or candidate_ep_start,
+    )
+    if arithmetic_warnings:
+        arithmetic_penalty = 0
+        for warning in arithmetic_warnings:
+            severity = str(warning.get("severity", "") or "").upper()
+            if severity == "CRITICAL":
+                arithmetic_penalty += 10
+            elif severity == "MAJOR":
+                arithmetic_penalty += 6
+            else:
+                arithmetic_penalty += 3
+        penalty += min(18, arithmetic_penalty)
+        issues.extend(
+            f"investment arithmetic warning: {smart_truncate(str(warning.get('text', '')), max_chars=120)}"
+            for warning in arithmetic_warnings[:2]
+        )
+
+    return penalty, issues
 
 
 def _extract_forbidden_items(constraint_block: str) -> list[str]:
@@ -1581,6 +1707,7 @@ class ArcEnsembleGenerator(BaseAgent):
         """
         score = 100
         issues = []
+        candidate_arc_no = _coerce_episode_number(candidate.get("arc_no"), 0)
         candidate_ep_count = self._resolve_candidate_ep_count(candidate, Stage2Limits.DEFAULT_EP_COUNT)
         candidate_ep_start = _coerce_episode_number(candidate.get("ep_start"), 1)
         candidate_ep_end = candidate_ep_start + candidate_ep_count - 1
@@ -1593,27 +1720,16 @@ class ArcEnsembleGenerator(BaseAgent):
                 score -= 4
                 issues.append(f"필수 필드 누락: {field}")
 
-        canonical_episode_details = _normalize_episode_details(
-            candidate.get("episode_details"),
-            ep_start=candidate_ep_start,
-            ep_end=candidate_ep_end,
+        contract_penalty, contract_issues = _score_candidate_contract_health(
+            candidate,
+            prev_arc_context,
+            genre=getattr(self, "_genre", ""),
+            candidate_arc_no=candidate_arc_no,
+            candidate_ep_start=candidate_ep_start,
+            candidate_ep_end=candidate_ep_end,
         )
-        covered_eps = {int(item["ep_num"]) for item in canonical_episode_details}
-        expected_eps = list(range(candidate_ep_start, candidate_ep_end + 1))
-        missing_eps = [ep_num for ep_num in expected_eps if ep_num not in covered_eps]
-        if not canonical_episode_details:
-            score -= 12
-            issues.append("canonical mission packet missing: episode_details")
-        elif missing_eps:
-            score -= min(10, 4 + len(missing_eps) * 2)
-            issues.append(
-                "episode_details mission packet coverage 부족: "
-                + ", ".join(f"ep{ep_num}" for ep_num in missing_eps[:3])
-            )
-        vocabulary_issues = _collect_state_contract_vocabulary_issues(candidate)
-        if vocabulary_issues:
-            score -= min(12, len(vocabulary_issues) * 4)
-            issues.extend(vocabulary_issues[:3])
+        score -= contract_penalty
+        issues.extend(contract_issues)
 
         # 2. 제약 조건 준수 (30점)
         if constraint_block or forbidden_items or candidate.get("_forbidden_items"):

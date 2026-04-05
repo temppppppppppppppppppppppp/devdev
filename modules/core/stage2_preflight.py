@@ -545,8 +545,166 @@ class Stage2PreflightAnalysis:
             if strategy_doc:
                 parts.append(strategy_doc[:400])
 
+        raw_focus_candidates = self._build_raw_block_focus_candidates(enriched_block)
+        parts.extend(raw_focus_candidates["tracking_slots"])
+        parts.extend(raw_focus_candidates["scene_engines"])
+
         combined = "\n".join(part for part in parts if part)
         return combined[:1800]
+
+    def _build_raw_block_focus_candidates(self, enriched_block: dict | None) -> dict[str, list[str]]:
+        if not isinstance(enriched_block, dict):
+            return {"tracking_slots": [], "scene_engines": []}
+
+        tracking_slots: list[str] = []
+        scene_engines: list[str] = []
+
+        def _append_unique(bucket: list[str], value: object, *, max_chars: int = 96) -> None:
+            text = self._normalize_work_focus_phrase(value, max_chars=max_chars)
+            if text and text not in bucket:
+                bucket.append(text)
+
+        for key in ("stakes", "block_theme", "constraint_summary"):
+            _append_unique(tracking_slots, enriched_block.get(key, ""), max_chars=88)
+
+        for list_key in ("foreshadow", "callback", "plot_suspension"):
+            values = enriched_block.get(list_key)
+            if not isinstance(values, list):
+                continue
+            for item in values[:2]:
+                _append_unique(tracking_slots, item, max_chars=88)
+
+        relationship_delta = enriched_block.get("relationship_delta")
+        if isinstance(relationship_delta, list):
+            for relation in relationship_delta[:2]:
+                if not isinstance(relation, dict):
+                    continue
+                target = str(relation.get("target", "") or "").strip()
+                after = str(relation.get("after", "") or "").strip()
+                trigger = str(relation.get("trigger", "") or "").strip()
+                summary = " / ".join(part for part in (target, after or trigger) if part)
+                _append_unique(tracking_slots, summary, max_chars=88)
+
+        content = enriched_block.get("content")
+        if isinstance(content, dict):
+            for key in ("context", "event_villain", "solution", "reward"):
+                _append_unique(scene_engines, content.get(key, ""), max_chars=96)
+        elif isinstance(content, str):
+            _append_unique(scene_engines, content, max_chars=96)
+
+        location = enriched_block.get("location")
+        if isinstance(location, dict):
+            place = str(location.get("place", "") or "").strip()
+            location_type = str(location.get("type", "") or "").strip()
+            _append_unique(scene_engines, " / ".join(part for part in (place, location_type) if part), max_chars=88)
+
+        time_span = enriched_block.get("time_span")
+        if isinstance(time_span, dict):
+            in_story_time = str(time_span.get("in_story_time", "") or "").strip()
+            duration = str(time_span.get("duration", "") or "").strip()
+            _append_unique(scene_engines, " / ".join(part for part in (in_story_time, duration) if part), max_chars=88)
+
+        power_shift = enriched_block.get("power_shift")
+        if isinstance(power_shift, dict):
+            for key in ("protagonist", "antagonist"):
+                _append_unique(scene_engines, power_shift.get(key, ""), max_chars=96)
+
+        genre_ext = enriched_block.get("genre_ext")
+        if isinstance(genre_ext, dict):
+            for key in ("method", "time_pressure", "knowledge_used", "risk_level", "business_sector"):
+                value = genre_ext.get(key)
+                if value in (None, ""):
+                    continue
+                _append_unique(scene_engines, f"{key}: {value}", max_chars=96)
+
+        return {
+            "tracking_slots": tracking_slots[:4],
+            "scene_engines": scene_engines[:6],
+        }
+
+    @staticmethod
+    def _normalize_work_focus_phrase(value: object, *, max_chars: int = 96) -> str:
+        text = re.sub(r"\s+", " ", str(value or "").strip())
+        text = re.sub(r"^[\-\*\d\.\)\(]+", "", text).strip()
+        if not text:
+            return ""
+        if len(text) <= max_chars:
+            return text
+        return text[: max_chars - 3].rstrip() + "..."
+
+    def _build_fallback_work_retrieval_focus(
+        self,
+        enriched_block: dict | None,
+        *,
+        current_vol_strategy: dict | None = None,
+    ) -> dict[str, object]:
+        if not isinstance(enriched_block, dict):
+            return {}
+
+        tracking_slots: list[str] = []
+        scene_engines: list[str] = []
+
+        def _append_unique(bucket: list[str], value: object, *, max_chars: int = 96) -> None:
+            text = self._normalize_work_focus_phrase(value, max_chars=max_chars)
+            if text and text not in bucket:
+                bucket.append(text)
+
+        _append_unique(tracking_slots, enriched_block.get("block_theme", ""), max_chars=72)
+
+        for item in (enriched_block.get("plot_suspension", []) or [])[:2]:
+            _append_unique(tracking_slots, item, max_chars=88)
+
+        for detail in (enriched_block.get("episode_details", []) or [])[:2]:
+            if not isinstance(detail, dict):
+                continue
+            ep_num = detail.get("ep_num")
+            prefix = f"EP{ep_num}: " if isinstance(ep_num, int) else ""
+            for line in (detail.get("details", []) or [])[:2]:
+                _append_unique(scene_engines, prefix + str(line or ""), max_chars=96)
+                if len(scene_engines) >= 2:
+                    break
+            if len(scene_engines) >= 2:
+                break
+
+        _append_unique(scene_engines, enriched_block.get("constraint_summary", ""), max_chars=96)
+
+        if len(scene_engines) < 2:
+            for key in ("tactical_doc", "arc_tactical"):
+                text = str(enriched_block.get(key, "") or "").strip()
+                if not text:
+                    continue
+                for line in text.splitlines():
+                    stripped = line.strip()
+                    if not stripped or stripped.startswith("["):
+                        continue
+                    _append_unique(scene_engines, stripped, max_chars=96)
+                    if len(scene_engines) >= 2:
+                        break
+                if len(scene_engines) >= 2:
+                    break
+
+        raw_focus_candidates = self._build_raw_block_focus_candidates(enriched_block)
+        for item in raw_focus_candidates["tracking_slots"]:
+            if len(tracking_slots) >= 3:
+                break
+            _append_unique(tracking_slots, item, max_chars=88)
+
+        for item in raw_focus_candidates["scene_engines"]:
+            if len(scene_engines) >= 2:
+                break
+            _append_unique(scene_engines, item, max_chars=96)
+
+        if isinstance(current_vol_strategy, dict):
+            _append_unique(scene_engines, current_vol_strategy.get("strategy_doc", ""), max_chars=96)
+
+        if not any((tracking_slots, scene_engines)):
+            return {}
+
+        return {
+            "tracking_slots": tracking_slots[:3],
+            "mandatory_scene_engines": scene_engines[:2],
+            "registry_profiles": [],
+        }
 
     def _resolve_work_retrieval_focus(
         self,
@@ -555,20 +713,36 @@ class Stage2PreflightAnalysis:
         current_vol_strategy: dict | None = None,
     ) -> dict[str, object]:
         guard = getattr(getattr(self.ctx, "sys", None), "guard", None)
+        fallback_focus = self._build_fallback_work_retrieval_focus(
+            enriched_block,
+            current_vol_strategy=current_vol_strategy,
+        )
         if not guard or not hasattr(guard, "select_retrieval_focus"):
-            return {}
+            return fallback_focus
 
         focus_text = self._compose_work_focus_text(enriched_block, current_vol_strategy=current_vol_strategy)
         if not focus_text:
-            return {}
+            return fallback_focus
 
         try:
             focus = guard.select_retrieval_focus(stage="block", focus_text=focus_text)
         except Exception as focus_err:
             logging.debug("[Stage2Preflight] work_focus 선택 실패 (비치명): %s", focus_err)
-            return {}
+            return fallback_focus
 
-        return focus if isinstance(focus, dict) else {}
+        if not isinstance(focus, dict):
+            return fallback_focus
+
+        if any(
+            [
+                focus.get("tracking_slots"),
+                focus.get("mandatory_scene_engines"),
+                focus.get("registry_profiles"),
+            ]
+        ):
+            return focus
+
+        return fallback_focus
 
     def _build_work_identity_slot_summary(
         self,
