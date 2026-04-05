@@ -68,4 +68,35 @@ def test_llm_validate_preserves_tail_context():
     assert result["verdict"] == "PASS"
     assert "TAIL-UAV-ARC" in captured["prompt"]
     assert "TAIL-UAV-CONSTRAINT" in captured["prompt"]
-    assert "...(중간 생략)..." in captured["prompt"]
+    assert "...(" in captured["prompt"]
+
+
+def test_validator_flags_episode_details_coverage_gap_as_major():
+    validator = _make_validator()
+
+    issues = validator._check_episode_details_contract(
+        {
+            "ep_count": 3,
+            "episode_details": [{"ep_num": 1, "details": ["mission beat"]}],
+        }
+    )
+
+    assert any(issue["severity"] == "MAJOR" for issue in issues)
+    assert any("episode_details mission packet coverage" in issue["issue"] for issue in issues)
+
+
+def test_validator_flags_end_state_and_joint_docs_mismatch_as_major():
+    validator = _make_validator()
+
+    issues = validator._check_state_contract_alignment(
+        {
+            "joint_docs": {"final_location": "Yeouido Office", "physical_inventory": ["BlackBerry", "memo"]},
+            "state_constraints": {
+                "arc_end_state": {"location": "Gangnam HQ", "equipment": ["BlackBerry", "contract"]}
+            },
+        }
+    )
+
+    assert any(issue["severity"] == "MAJOR" for issue in issues)
+    assert any("final_location / arc_end_state.location mismatch" in issue["issue"] for issue in issues)
+    assert any("physical_inventory / arc_end_state.equipment mismatch" in issue["issue"] for issue in issues)

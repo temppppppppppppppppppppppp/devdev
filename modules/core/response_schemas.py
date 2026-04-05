@@ -10,12 +10,12 @@ from copy import deepcopy
 
 from google.genai import types
 
+from modules.core.llm_schema import schema_to_dict, to_gemini_schema
 from modules.core.stage0_handoff import (
     RUNTIME_PROTAGONIST_KEYS,
     resolve_treatment_block_sequence,
     validate_plot_roadmap_entries,
 )
-from modules.core.llm_schema import schema_to_dict, to_gemini_schema
 
 # =================================================================
 # V0128 Validation Schemas
@@ -237,8 +237,15 @@ CHARACTER_LOGIC_SCHEMA = types.Schema(
 ARC_STATE_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
-        "location": types.Schema(type=types.Type.STRING),
-        "equipment": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+        "location": types.Schema(
+            type=types.Type.STRING,
+            description="짧은 canonical 위치 라벨만 허용. 장면 문장/시간 설명/서술형 문단 금지.",
+        ),
+        "equipment": types.Schema(
+            type=types.Type.ARRAY,
+            description="주인공이 실제 소지한 핵심 물품명 배열. 문장형 설명/배경 묘사 금지.",
+            items=types.Schema(type=types.Type.STRING),
+        ),
         "injuries": types.Schema(type=types.Type.STRING, enum=["없음", "정상", "경상", "중상", "위독"]),
         "internal_energy": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
         # [TF-59] 재무 상태 연속성 (투자물 등 비무협 장르용, optional)
@@ -380,8 +387,15 @@ ARC_DESIGN_SCHEMA = types.Schema(
         "joint_docs": types.Schema(
             type=types.Type.OBJECT,
             properties={
-                "final_location": types.Schema(type=types.Type.STRING),
-                "physical_inventory": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+                "final_location": types.Schema(
+                    type=types.Type.STRING,
+                    description="arc_end_state.location과 같은 짧은 종료 위치 라벨. 서술형 문장 금지.",
+                ),
+                "physical_inventory": types.Schema(
+                    type=types.Type.ARRAY,
+                    description="arc_end_state.equipment와 같은 canonical 종료 소지품 배열.",
+                    items=types.Schema(type=types.Type.STRING),
+                ),
                 "world_joint": types.Schema(type=types.Type.STRING),
             },
             required=["final_location", "physical_inventory", "world_joint"],
@@ -504,11 +518,24 @@ ARC_DESIGN_SCHEMA = types.Schema(
         # [TF10-1-2] 화별 사건 인덱스 (선택 필드 — required에 추가하지 않음)
         "episode_details": types.Schema(
             type=types.Type.ARRAY,
+            description=(
+                "Arc의 canonical mission packet. 가능하면 ep_start~ep_end 각 화마다 1개 entry를 두고, "
+                "tactical_doc은 이 packet을 확장하되 모순되면 안 된다."
+            ),
             items=types.Schema(
                 type=types.Type.OBJECT,
                 properties={
-                    "ep_num": types.Schema(type=types.Type.INTEGER),
-                    "details": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+                    "ep_num": types.Schema(
+                        type=types.Type.INTEGER,
+                        description="이 Arc 내부 화 번호. ep_start~ep_end 범위의 정수.",
+                    ),
+                    "details": types.Schema(
+                        type=types.Type.ARRAY,
+                        description=(
+                            "해당 화의 핵심 mission beats. 장소-인물-사건 또는 행동-압박-결과 형식의 짧은 문자열 배열."
+                        ),
+                        items=types.Schema(type=types.Type.STRING),
+                    ),
                 },
                 required=["ep_num", "details"],
             ),

@@ -352,3 +352,214 @@ Bounded implementation verdict:
 
 - `Tranche 4. Bounded Observability Surfacing` is now partially realized
 - packet-to-txt round-trip normalization and broader Stage2 contract normalization remain future-wave work
+
+## 17. 2026-04-05 Bounded Realization Update: Arc Export Carryover Authority Surfacing
+
+This bounded realization update was executed only because the operator explicitly overrode queue order for another narrow Stage2 implementation slice.
+
+Queue semantics remain unchanged:
+
+- status stays `parked`
+- roadmap priority stays unchanged
+- this does not promote the full Stage2 lane above active Stage4 work
+
+Landed bounded slice:
+
+- `modules/core/project_manager.py`
+  - `plans/arcs/*.txt` export now mirrors a `[Carryover Authority Packet]` block instead of relying on `tactical_doc` prose alone
+  - export prefers `state_constraints.arc_end_state.location/equipment` and only falls back to `joint_docs.final_location/physical_inventory` when the structured end-state is absent
+  - export now surfaces bounded carryover-relevant start/end location, start/end equipment, acquired items, consumed items, and `world_joint`
+
+Bounded verification completed:
+
+- `pytest tests/test_project_manager_arc_storage.py -q`
+- `python -m py_compile modules/core/project_manager.py tests/test_project_manager_arc_storage.py`
+- `ruff check modules/core/project_manager.py tests/test_project_manager_arc_storage.py`
+- `python scripts/check_utf8_hygiene.py modules/core/project_manager.py tests/test_project_manager_arc_storage.py`
+
+Complexity recount:
+
+- `ProjectContext._normalize_arc_export_list`: `11 LOC`
+- `ProjectContext._build_arc_authority_packet_lines`: `53 LOC`
+- `ProjectContext._render_arc_txt`: `47 LOC`
+
+Bounded implementation verdict:
+
+- export-side packet-to-txt truth surfacing is now partially realized
+- prompt-side and generator-side round-trip normalization remain future-wave work
+
+## 18. 2026-04-05 Bounded Realization Update: Generation Carryover Authority Prompt Normalization
+
+This bounded realization update was executed only because the operator explicitly overrode queue order for another narrow Stage2 implementation slice after a fresh run confirmed that the new observability/export patches were live but retrieval-empty and auto-correct pressure still remained visible in real Stage2 logs.
+
+Queue semantics remain unchanged:
+
+- status stays `parked`
+- roadmap priority stays unchanged
+- this does not promote the full Stage2 lane above active Stage4 work
+
+Landed bounded slice:
+
+- `modules/domain/agents/four_phase_arc_generator.py`
+  - `_generate_prev_context()` now emits a structured `[Carryover Authority Packet]` block inside previous-arc context
+  - the packet mirrors `next_arc_start_location`, `next_arc_start_equipment`, `next_arc_start_injuries`, bounded finance carryover, and `carryover_world_joint`
+- `modules/domain/agents/arc_ensemble.py`
+  - prompt assembly now extracts and injects the carryover packet as its own prompt section instead of relying only on freeform previous-arc prose
+  - prohibition summary and candidate evaluation now prefer the packet over loose `위치`/`소지품` regex fallback when judging opening-state continuity
+- `config/prompts/ensemble.yaml`
+  - `Carryover Authority Packet` is now explicitly ranked above generic `Previous Arc Context`
+  - the prompt now instructs the model to open the arc from that packet and to block unearned item appearance unless explicitly acquired
+
+Bounded verification completed:
+
+- `pytest tests/test_arc_ensemble_lane_a.py -q`
+- `pytest tests/test_four_phase_arc_generator.py -k "carryover_authority_packet or generate_prev_context_includes_financial_fields or build_prev_context_carryover_lines_direct_helper_includes_financial_fields" -q`
+- `pytest tests/test_prompt_loader.py -k "ensemble_yaml_loads" -q`
+- `python -m py_compile modules/domain/agents/arc_ensemble.py modules/domain/agents/four_phase_arc_generator.py`
+- `python scripts/check_utf8_hygiene.py modules/domain/agents/arc_ensemble.py modules/domain/agents/four_phase_arc_generator.py config/prompts/ensemble.yaml tests/test_arc_ensemble_lane_a.py tests/test_four_phase_arc_generator.py`
+
+Complexity recount:
+
+- `_extract_carryover_authority_packet`: `28 LOC`
+- `_normalize_carryover_packet_list`: `23 LOC`
+- `_render_carryover_authority_packet`: `29 LOC`
+- `ArcEnsembleGenerator._evaluate_candidate`: `157 LOC`
+- `FourPhaseArcGenerator._build_prev_context_carryover_lines`: `68 LOC`
+
+Bounded implementation verdict:
+
+- prompt-side carryover authority normalization is now partially realized
+- Stage2 still remains retrieval-empty in the observed fresh run, so broader generation quality/readiness normalization remains future-wave work
+
+## 19. 2026-04-05 Bounded Realization Update: Mission Authority Extraction via Episode Details
+
+This bounded realization update was executed only because the operator explicitly overrode queue order for another narrow Stage2 implementation slice after the carryover/export patches were already verified in fresh-run evidence.
+
+Queue semantics remain unchanged:
+
+- status stays `parked`
+- roadmap priority stays unchanged
+- this does not promote the full Stage2 lane above active Stage4 work
+
+Landed bounded slice:
+
+- `modules/core/response_schemas.py`
+  - `episode_details` is now described as the canonical per-episode mission packet rather than a weak optional summary
+- `config/prompts/ensemble.yaml`
+  - prompt contract now explicitly says `episode_details` wins over conflicting prose and must cover every episode in the arc range
+- `modules/domain/agents/arc_ensemble.py`
+  - generation finalization now backfills canonical `episode_details` from existing `episode_details`, `beat_sequence`, and bounded `tactical_doc` headers in that priority order
+  - candidate scoring now penalizes missing or incomplete `episode_details` mission coverage instead of treating `tactical_doc` prose alone as sufficient
+
+Bounded verification completed:
+
+- `pytest tests/test_arc_ensemble_lane_a.py -q`
+- `pytest tests/test_prompt_loader.py -k "ensemble_yaml_loads" -q`
+- `python -m py_compile modules/core/response_schemas.py modules/domain/agents/arc_ensemble.py`
+- `ruff check modules/core/response_schemas.py modules/domain/agents/arc_ensemble.py tests/test_arc_ensemble_lane_a.py`
+- `python scripts/check_utf8_hygiene.py modules/core/response_schemas.py modules/domain/agents/arc_ensemble.py config/prompts/ensemble.yaml tests/test_arc_ensemble_lane_a.py`
+
+Complexity recount:
+
+- `_normalize_episode_detail_lines`: `14 LOC`
+- `_normalize_episode_details`: `31 LOC`
+- `_extract_episode_detail_map_from_beats`: `25 LOC`
+- `_extract_episode_detail_map_from_tactical_doc`: `20 LOC`
+- `_build_canonical_episode_details`: `20 LOC`
+- `ArcEnsembleGenerator._ensure_required_fields`: stays below `120 LOC`
+- `ArcEnsembleGenerator._evaluate_candidate`: remains below the `180+ LOC` guardrail
+
+Bounded implementation verdict:
+
+- `Tranche 1. Mission Authority Extraction` is now partially realized through `episode_details` promotion instead of a brand-new Stage2 packet family
+- Stage2 still has broader vocabulary/dead-field/readiness work remaining, but mission truth no longer depends on `tactical_doc` prose alone in the generation path
+
+## 20. 2026-04-05 Bounded Realization Update: Contract Vocabulary Normalization at Generation Boundary
+
+This bounded realization update was executed only because fresh-run evidence still showed repetitive Stage2 auto-correct pressure on `tactical_doc` meta vocabulary, verbose state-field blobs, and `joint_docs` readback drift even after the carryover/mission-authority slices had landed.
+
+Queue semantics remain unchanged:
+
+- status stays `parked`
+- roadmap priority stays unchanged
+- this does not promote the full Stage2 lane above active Stage4 work
+
+Landed bounded slice:
+
+- `modules/core/response_schemas.py`
+  - `location`, `equipment`, `joint_docs.final_location`, and `joint_docs.physical_inventory` now explicitly describe short canonical labels instead of sentence-style prose
+- `config/prompts/ensemble.yaml`
+  - generation prompt now bans `Arc/Block/Stage` meta terms inside `tactical_doc`
+  - prompt now states that `location/final_location/equipment/physical_inventory` must remain compact canonical fields, not descriptive scene sentences
+- `modules/domain/agents/arc_ensemble.py`
+  - candidate scoring now penalizes meta-vocabulary leakage, verbose location labels, sentence-style inventory blobs, and `joint_docs.final_location / arc_end_state.location` mismatch
+  - finalization now backfills `joint_docs.final_location` from `arc_end_state.location` and `joint_docs.physical_inventory` from `arc_end_state.equipment` when the joint surface is empty
+
+Bounded verification completed:
+
+- `pytest tests/test_arc_ensemble_lane_a.py -q`
+- `pytest tests/test_prompt_loader.py -k "ensemble_yaml_loads" -q`
+- `python -m py_compile modules/core/response_schemas.py modules/domain/agents/arc_ensemble.py`
+- `ruff check modules/core/response_schemas.py modules/domain/agents/arc_ensemble.py tests/test_arc_ensemble_lane_a.py`
+- `python scripts/check_utf8_hygiene.py modules/core/response_schemas.py modules/domain/agents/arc_ensemble.py config/prompts/ensemble.yaml tests/test_arc_ensemble_lane_a.py`
+
+Complexity recount:
+
+- `_normalize_state_contract_list`: `17 LOC`
+- `_looks_like_verbose_state_field`: `10 LOC`
+- `_collect_state_contract_vocabulary_issues`: `33 LOC`
+- `ArcEnsembleGenerator._ensure_required_fields`: remains below `140 LOC`
+- `ArcEnsembleGenerator._evaluate_candidate`: remains below the `180+ LOC` guardrail
+
+Bounded implementation verdict:
+
+- `Tranche 2. Contract Vocabulary Normalization` is now partially realized at the Stage2 generation boundary
+- broader readiness normalization and dead-field keep/drop decisions still remain future-wave work
+
+## 21. 2026-04-05 Bounded Realization Update: Validator and Finalizer Contract Alignment
+
+This bounded realization update was executed only because the operator explicitly asked to maximize Stage2 implementation before the next fresh run after the generation-boundary slices had already landed.
+
+Queue semantics remain unchanged:
+
+- status stays `parked`
+- roadmap priority stays unchanged
+- this does not promote the full Stage2 lane above active Stage4 work
+
+Landed bounded slice:
+
+- `modules/domain/agents/unified_arc_validator.py`
+  - Python-side validation now treats `episode_details` as a real mission-authority contract rather than a type-only optional field
+  - validation now emits `MAJOR` structure/continuity issues when:
+    - `episode_details` coverage is thinner than `ep_count`
+    - `episode_details[*].details` is empty
+    - `joint_docs.final_location` and `arc_end_state.location` diverge
+    - `joint_docs.physical_inventory` and `arc_end_state.equipment` diverge
+    - end-state location/inventory fields degrade into sentence-style blobs
+- `modules/core/stage2_finalizer.py`
+  - finalizer now aligns `joint_docs.physical_inventory` and `arc_end_state.equipment` to one canonical end-inventory truth before persistence
+  - finalizer now aligns `joint_docs.final_location` and `arc_end_state.location` to one canonical end-location truth before persistence
+  - this reduces packet-to-txt/export drift by making end-state authority explicit at the post-pass sink instead of leaving stale split fields alive
+
+Bounded verification completed:
+
+- `pytest tests/test_unified_arc_validator.py -q`
+- `pytest tests/test_tf10_episode_details.py -k "validator" -q`
+- `pytest tests/test_stage2_finalizer.py -k "syncs_start_equipment or inventory_from_arc_end_state_authority or final_location_from_arc_end_state_authority" -q`
+- `python -m py_compile modules/domain/agents/unified_arc_validator.py modules/core/stage2_finalizer.py tests/test_unified_arc_validator.py tests/test_stage2_finalizer.py`
+- `ruff check modules/domain/agents/unified_arc_validator.py modules/core/stage2_finalizer.py tests/test_unified_arc_validator.py tests/test_stage2_finalizer.py`
+- `python scripts/check_utf8_hygiene.py modules/domain/agents/unified_arc_validator.py modules/core/stage2_finalizer.py tests/test_unified_arc_validator.py tests/test_stage2_finalizer.py`
+
+Complexity recount:
+
+- `_check_episode_details_contract`: `45 LOC`
+- `_check_state_contract_alignment`: `78 LOC`
+- `_python_validate`: `30 LOC`
+- `_sync_stage2_end_state_inventory_contract`: `46 LOC`
+- `_sync_stage2_end_location_contract`: `32 LOC`
+- `_finalize_stage2_pass_arc_preparation`: `88 LOC`
+
+Bounded implementation verdict:
+
+- Stage2 acceptance and post-pass sinks now speak the same mission/carryover contract vocabulary as the earlier generation-boundary slices
+- the remaining Stage2 pressure is now more cleanly upstream: retrieval emptiness, generation quality, and broader readiness normalization

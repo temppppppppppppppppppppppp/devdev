@@ -11,6 +11,7 @@ Strategy:
 Cost: ~3x single generation (but higher pass rate)
 """
 
+import ast
 import json
 import logging
 import re
@@ -43,6 +44,312 @@ _ITEM_SUFFIX_GROUP = "|".join(sorted((re.escape(s) for s in _ITEM_SUFFIXES_ALL),
 _FORBIDDEN_ITEM_RE = re.compile(rf"([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s]{{0,30}}(?:{_ITEM_SUFFIX_GROUP}))")  # utf8-hygiene: allow-line regex quantifier
 _ARC_MIN_EP_COUNT = 2
 _ARC_MAX_EP_COUNT = 6
+
+
+def _extract_carryover_authority_packet(prev_arc_context: str) -> dict[str, str]:
+    """Extract the carryover authority packet block from prev-arc context."""
+    if not isinstance(prev_arc_context, str) or "[Carryover Authority Packet]" not in prev_arc_context:
+        return {}
+
+    packet: dict[str, str] = {}
+    in_packet = False
+    for raw_line in prev_arc_context.splitlines():
+        line = raw_line.strip()
+        if line == "[Carryover Authority Packet]":
+            in_packet = True
+            continue
+        if not in_packet:
+            continue
+        if not line:
+            if packet:
+                break
+            continue
+        if line.startswith("[") or line.startswith("###") or line.startswith("="):
+            break
+        if not line.startswith("- "):
+            continue
+        key, sep, value = line[2:].partition(":")
+        if sep and key.strip() and value.strip():
+            packet[key.strip()] = value.strip()
+    return packet
+
+
+def _normalize_carryover_packet_list(raw_value: object) -> list[str]:
+    """Normalize packet list values written as Python or JSON-like literals."""
+    if isinstance(raw_value, list):
+        return [str(item).strip() for item in raw_value if str(item).strip()]
+
+    text = str(raw_value or "").strip()
+    if not text:
+        return []
+
+    try:
+        parsed = ast.literal_eval(text)
+    except (SyntaxError, ValueError):
+        parsed = None
+
+    if isinstance(parsed, list):
+        return [str(item).strip() for item in parsed if str(item).strip()]
+
+    trimmed = text.strip("[]")
+    if not trimmed:
+        return []
+    return [part.strip().strip("'\"") for part in trimmed.split(",") if part.strip().strip("'\"")]
+
+
+def _render_carryover_authority_packet(prev_arc_context: str) -> str:
+    """Render a stable packet block for prompt injection and prompt tests."""
+    packet = _extract_carryover_authority_packet(prev_arc_context)
+    if not packet:
+        return ""
+
+    ordered_keys = [
+        "next_arc_start_location",
+        "next_arc_start_equipment",
+        "next_arc_start_injuries",
+        "next_arc_start_internal_energy",
+        "next_arc_start_capital",
+        "next_arc_start_total_assets",
+        "next_arc_start_portfolio_position",
+        "carryover_world_joint",
+    ]
+    lines = ["[Carryover Authority Packet]"]
+    emitted: set[str] = set()
+    for key in ordered_keys:
+        value = packet.get(key)
+        if value:
+            lines.append(f"- {key}: {value}")
+            emitted.add(key)
+    for key, value in packet.items():
+        if key not in emitted:
+            lines.append(f"- {key}: {value}")
+    return "\n".join(lines)
+
+
+def _normalize_episode_detail_lines(raw_value: object) -> list[str]:
+    """Normalize detail lines into a compact, non-empty string list."""
+    if isinstance(raw_value, str):
+        raw_items = [raw_value]
+    elif isinstance(raw_value, list):
+        raw_items = raw_value
+    else:
+        return []
+
+    lines: list[str] = []
+    for raw_item in raw_items:
+        text = re.sub(r"\s+", " ", str(raw_item or "")).strip().strip("-•*")
+        if text:
+            lines.append(text)
+    return lines[:5]
+
+
+def _normalize_episode_details(
+    raw_value: object,
+    *,
+    ep_start: int | None = None,
+    ep_end: int | None = None,
+) -> list[dict[str, object]]:
+    """Normalize episode_details into a sorted, per-episode mission packet."""
+    if not isinstance(raw_value, list):
+        return []
+
+    normalized: list[dict[str, object]] = []
+    seen_eps: set[int] = set()
+    for raw_item in raw_value:
+        if not isinstance(raw_item, dict):
+            continue
+        raw_ep_num = raw_item.get("ep_num")
+        try:
+            ep_num = int(raw_ep_num)
+        except (TypeError, ValueError):
+            continue
+        if ep_start is not None and ep_num < ep_start:
+            continue
+        if ep_end is not None and ep_num > ep_end:
+            continue
+        details = _normalize_episode_detail_lines(raw_item.get("details"))
+        if not details or ep_num in seen_eps:
+            continue
+        seen_eps.add(ep_num)
+        normalized.append({"ep_num": ep_num, "details": details})
+
+    normalized.sort(key=lambda item: int(item["ep_num"]))
+    return normalized
+
+
+def _extract_episode_detail_map_from_beats(
+    beat_sequence: object,
+    *,
+    ep_start: int,
+    ep_end: int,
+) -> dict[int, list[str]]:
+    """Derive per-episode mission lines from beat_sequence when episode_details are missing."""
+    if isinstance(beat_sequence, list):
+        raw_beats = beat_sequence
+    elif isinstance(beat_sequence, str):
+        raw_beats = [line for line in beat_sequence.splitlines() if str(line).strip()]
+    else:
+        raw_beats = []
+
+    beat_map: dict[int, list[str]] = {}
+    for idx, ep_num in enumerate(range(ep_start, ep_end + 1)):
+        if idx >= len(raw_beats):
+            break
+        raw_item = raw_beats[idx]
+        if isinstance(raw_item, dict):
+            for key in ("details", "summary", "content", "beat", "title", "event"):
+                details = _normalize_episode_detail_lines(raw_item.get(key))
+                if details:
+                    beat_map[ep_num] = details
+                    break
+            continue
+        details = _normalize_episode_detail_lines(raw_item)
+        if details:
+            beat_map[ep_num] = details
+    return beat_map
+
+
+def _extract_episode_detail_map_from_tactical_doc(
+    tactical_doc: object,
+    *,
+    ep_start: int,
+    ep_end: int,
+) -> dict[int, list[str]]:
+    """Extract a bounded per-episode mission map from tactical_doc headers."""
+    text = str(tactical_doc or "")
+    if not text:
+        return {}
+
+    header_re = re.compile(
+        r"(?:^|\n)\s*(?:\[)?제\s*(\d+)\s*화[^\n:：\]]*(?:[:：\]-]\s*|\]\s*)([^\n]+)"  # utf8-hygiene: allow-line regex header markers
+    )
+    detail_map: dict[int, list[str]] = {}
+    for match in header_re.finditer(text):
+        try:
+            ep_num = int(match.group(1))
+        except (TypeError, ValueError):
+            continue
+        if ep_num < ep_start or ep_num > ep_end or ep_num in detail_map:
+            continue
+        details = _normalize_episode_detail_lines(match.group(2))
+        if details:
+            detail_map[ep_num] = details
+    return detail_map
+
+
+def _build_canonical_episode_details(result: dict, *, ep_start: int, ep_end: int) -> list[dict[str, object]]:
+    """Build the canonical mission packet, preferring explicit episode_details and bounded fallbacks."""
+    canonical_map: dict[int, list[str]] = {
+        int(item["ep_num"]): list(item["details"])
+        for item in _normalize_episode_details(result.get("episode_details"), ep_start=ep_start, ep_end=ep_end)
+    }
+    beat_map = _extract_episode_detail_map_from_beats(result.get("beat_sequence"), ep_start=ep_start, ep_end=ep_end)
+    tactical_map = _extract_episode_detail_map_from_tactical_doc(
+        result.get("tactical_doc", ""),
+        ep_start=ep_start,
+        ep_end=ep_end,
+    )
+
+    for ep_num in range(ep_start, ep_end + 1):
+        if ep_num in canonical_map:
+            continue
+        if ep_num in beat_map:
+            canonical_map[ep_num] = beat_map[ep_num]
+            continue
+        if ep_num in tactical_map:
+            canonical_map[ep_num] = tactical_map[ep_num]
+
+    return [{"ep_num": ep_num, "details": canonical_map[ep_num]} for ep_num in sorted(canonical_map)]
+
+
+def _coerce_episode_number(value: object, default: int) -> int:
+    """Coerce episode numbers without applying arc-size bounds."""
+    if isinstance(value, bool):
+        value = default
+    if isinstance(value, str):
+        match = re.search(r"(\d+)", value)
+        value = int(match.group(1)) if match else default
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        value = default
+    return max(1, value)
+
+
+def _normalize_state_contract_list(raw_value: object) -> list[str]:
+    """Normalize state/joint inventory arrays into compact string lists."""
+    if isinstance(raw_value, list):
+        raw_items = raw_value
+    elif isinstance(raw_value, str):
+        raw_items = [chunk.strip() for chunk in re.split(r"[,/]", raw_value) if chunk.strip()]
+    else:
+        return []
+
+    normalized: list[str] = []
+    for raw_item in raw_items:
+        if isinstance(raw_item, dict):
+            text = raw_item.get("name") or raw_item.get("item") or raw_item.get("value") or ""
+        else:
+            text = str(raw_item or "")
+        text = re.sub(r"\s+", " ", text).strip()
+        if text:
+            normalized.append(text)
+    return normalized[:20]
+
+
+def _looks_like_verbose_state_field(text: object, *, max_chars: int = 80) -> bool:
+    """Detect sentence-like state field payloads that should be compact labels instead."""
+    normalized = re.sub(r"\s+", " ", str(text or "")).strip()
+    if not normalized:
+        return False
+    if len(normalized) > max_chars:
+        return True
+    if any(token in normalized for token in (".", "!", "?", "시계는", "창밖", "냄새")):
+        return True
+    return normalized.count(",") >= 2
+
+
+def _collect_state_contract_vocabulary_issues(candidate: dict) -> list[str]:
+    """Collect Stage2 state-field vocabulary issues that should be solved at generation time."""
+    issues: list[str] = []
+    tactical = str(candidate.get("tactical_doc", "") or "")
+    if re.search(r"\b(?:Arc|Block|Stage)\b", tactical):
+        issues.append("tactical_doc meta vocabulary leak: Arc/Block/Stage")
+
+    state_constraints = candidate.get("state_constraints", {})
+    if not isinstance(state_constraints, dict):
+        return issues
+
+    joint_docs = candidate.get("joint_docs", {})
+    if not isinstance(joint_docs, dict):
+        joint_docs = {}
+
+    arc_end = state_constraints.get("arc_end_state", {})
+    if not isinstance(arc_end, dict):
+        arc_end = {}
+
+    final_location = str(joint_docs.get("final_location", "") or "").strip()
+    end_location = str(arc_end.get("location", "") or "").strip()
+    if final_location and _looks_like_verbose_state_field(final_location):
+        issues.append("joint_docs.final_location must be a short canonical label")
+    if end_location and _looks_like_verbose_state_field(end_location):
+        issues.append("arc_end_state.location must be a short canonical label")
+    if final_location and end_location and final_location != end_location:
+        if final_location not in end_location and end_location not in final_location:
+            issues.append("joint_docs.final_location / arc_end_state.location mismatch")
+
+    inventory_fields = [
+        ("arc_start_state.equipment", (state_constraints.get("arc_start_state", {}) or {}).get("equipment", [])),
+        ("arc_end_state.equipment", arc_end.get("equipment", [])),
+        ("joint_docs.physical_inventory", joint_docs.get("physical_inventory", [])),
+    ]
+    for label, raw_items in inventory_fields:
+        for item in _normalize_state_contract_list(raw_items)[:5]:
+            if _looks_like_verbose_state_field(item):
+                issues.append(f"{label} contains sentence-style inventory blob")
+                break
+
+    return issues
 
 
 def _extract_forbidden_items(constraint_block: str) -> list[str]:
@@ -991,6 +1298,7 @@ class ArcEnsembleGenerator(BaseAgent):
             "extended_block_guide": "",
             "block_event_guard": _build_block_event_guard(curr_block),
             "curr_block_authority": _format_curr_block_authority(curr_block),
+            "carryover_authority_packet": _render_carryover_authority_packet(prev_arc_context),
         }
 
         if isinstance(curr_block, dict):
@@ -1086,6 +1394,9 @@ class ArcEnsembleGenerator(BaseAgent):
             "curr_block": self._escape_braces(prompt_context["curr_block_authority"]),
             "pacing_signal_guide": self._escape_braces(pacing_signal_guide or ""),
             "block_event_guard": self._escape_braces(prompt_context["block_event_guard"]),
+            "carryover_authority_packet": self._escape_braces(
+                prompt_context["carryover_authority_packet"] or "(first arc or no explicit carryover packet)"
+            ),
             "genre_ext_guide": self._escape_braces(prompt_context["genre_ext_guide"]),
             "extended_block_guide": self._escape_braces(prompt_context["extended_block_guide"]),
             "vol_strategy": self._escape_braces(vol_strategy_prompt),
@@ -1270,6 +1581,9 @@ class ArcEnsembleGenerator(BaseAgent):
         """
         score = 100
         issues = []
+        candidate_ep_count = self._resolve_candidate_ep_count(candidate, Stage2Limits.DEFAULT_EP_COUNT)
+        candidate_ep_start = _coerce_episode_number(candidate.get("ep_start"), 1)
+        candidate_ep_end = candidate_ep_start + candidate_ep_count - 1
 
         # 1. 필수 필드 완성도 (20점)
         # [V61] state_changes 추가
@@ -1278,6 +1592,28 @@ class ArcEnsembleGenerator(BaseAgent):
             if field not in candidate or not candidate[field]:
                 score -= 4
                 issues.append(f"필수 필드 누락: {field}")
+
+        canonical_episode_details = _normalize_episode_details(
+            candidate.get("episode_details"),
+            ep_start=candidate_ep_start,
+            ep_end=candidate_ep_end,
+        )
+        covered_eps = {int(item["ep_num"]) for item in canonical_episode_details}
+        expected_eps = list(range(candidate_ep_start, candidate_ep_end + 1))
+        missing_eps = [ep_num for ep_num in expected_eps if ep_num not in covered_eps]
+        if not canonical_episode_details:
+            score -= 12
+            issues.append("canonical mission packet missing: episode_details")
+        elif missing_eps:
+            score -= min(10, 4 + len(missing_eps) * 2)
+            issues.append(
+                "episode_details mission packet coverage 부족: "
+                + ", ".join(f"ep{ep_num}" for ep_num in missing_eps[:3])
+            )
+        vocabulary_issues = _collect_state_contract_vocabulary_issues(candidate)
+        if vocabulary_issues:
+            score -= min(12, len(vocabulary_issues) * 4)
+            issues.extend(vocabulary_issues[:3])
 
         # 2. 제약 조건 준수 (30점)
         if constraint_block or forbidden_items or candidate.get("_forbidden_items"):
@@ -1325,7 +1661,16 @@ class ArcEnsembleGenerator(BaseAgent):
         if (prev_arc_context and prev_arc_context != "서사 시작점") or prev_equipment or candidate.get("_prev_equipment"):
             # 시작 위치 검사
             start_state = candidate.get("state_constraints", {}).get("arc_start_state", {})
-            if isinstance(prev_arc_context, str) and "위치" in prev_arc_context:
+            carryover_packet = _extract_carryover_authority_packet(prev_arc_context)
+            packet_location = str(carryover_packet.get("next_arc_start_location", "") or "").strip()
+            if packet_location:
+                curr_loc = start_state.get("location", "")
+                if curr_loc and packet_location not in curr_loc and curr_loc not in packet_location:
+                    score -= 12
+                    issues.append(
+                        f"carryover authority 시작 위치 불일치: expected={packet_location}, 현재={curr_loc}"
+                    )
+            elif isinstance(prev_arc_context, str) and "위치" in prev_arc_context:
                 prev_loc_match = re.search(r"위치[:\]]\s*([가-힣\w\s]+)", prev_arc_context)
                 if prev_loc_match:
                     prev_loc = prev_loc_match.group(1).strip()[:20]
@@ -1345,13 +1690,21 @@ class ArcEnsembleGenerator(BaseAgent):
             if _prev_structured:
                 prev_equipment_items = [str(item).strip() for item in _prev_structured if str(item).strip()]
 
+            if not prev_equipment_items:
+                prev_equipment_items = _normalize_carryover_packet_list(
+                    carryover_packet.get("next_arc_start_equipment", [])
+                )
+
             # Tier 3: 문자열 컨텍스트 폴백
             if not prev_equipment_items and isinstance(prev_arc_context, str) and "소지품" in prev_arc_context:
                 prev_inv_match = re.search(r"소지품[:\]]\s*([^\n]+)", prev_arc_context)
                 if prev_inv_match:
                     prev_equipment_items = [x.strip() for x in prev_inv_match.group(1).split(",") if x.strip()]
 
-            if prev_equipment_items and curr_equip:
+            if prev_equipment_items and not curr_equip:
+                score -= 10
+                issues.append("carryover authority 시작 소지품 누락")
+            elif prev_equipment_items and curr_equip:
                 for item in prev_equipment_items[:5]:
                     if not any(item in str(ce) or str(ce) in item for ce in curr_equip):
                         score -= 5
@@ -1362,32 +1715,25 @@ class ArcEnsembleGenerator(BaseAgent):
         # [V60.37] 타입 안전성
         if not isinstance(tactical, str):
             tactical = str(tactical) if tactical else ""
-        ep_count = candidate.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
-        # [Sweep44] LLM이 문자열 반환 시 int 변환 (TypeError 방지)
-        if not isinstance(ep_count, int):
-            try:
-                ep_count = int(ep_count)
-            except (ValueError, TypeError):
-                ep_count = Stage2Limits.DEFAULT_EP_COUNT
-        min_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 3화=1500자, 4화=2000자, 6화=3000자
-        recommended_length = ep_count * 600  # 권장: 화당 600자
+        min_length = candidate_ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 3화=1500자, 4화=2000자, 6화=3000자
+        recommended_length = candidate_ep_count * 600  # 권장: 화당 600자
         if len(tactical) < min_length:
             score -= 40  # 최소 기준 미달은 사실상 실격
             issues.append(
-                f"[CRITICAL] tactical_doc 분량 심각 부족: {len(tactical)}자 (최소 {min_length}자, ep_count={ep_count})"
+                f"[CRITICAL] tactical_doc 분량 심각 부족: {len(tactical)}자 (최소 {min_length}자, ep_count={candidate_ep_count})"
             )
         elif len(tactical) < recommended_length:
             score -= 10
             issues.append(f"tactical_doc 분량 미흡: {len(tactical)}자 (권장 {recommended_length}자)")
-        elif len(tactical) < ep_count * 700:
+        elif len(tactical) < candidate_ep_count * 700:
             score -= 5
             issues.append(f"tactical_doc 분량 보통: {len(tactical)}자")
 
-        # 화수별 구분 검사 (ep_count는 상단에서 이미 int 변환됨)
+        # 화수별 구분 검사
         ep_mentions = len(re.findall(r"제\s*\d+\s*화", tactical))
-        if ep_mentions < ep_count:
+        if ep_mentions < candidate_ep_count:
             score -= 5
-            issues.append(f"화수 구분 부족: {ep_mentions}/{ep_count}")
+            issues.append(f"화수 구분 부족: {ep_mentions}/{candidate_ep_count}")
 
         return max(0, score), issues
 
@@ -1401,6 +1747,7 @@ class ArcEnsembleGenerator(BaseAgent):
             result["ep_end"] = ep_end
         if "ep_count" not in result:
             result["ep_count"] = ep_end - ep_start + 1
+        result["episode_details"] = _build_canonical_episode_details(result, ep_start=ep_start, ep_end=ep_end)
 
         # [Sweep47] 타입도 검증 — LLM이 list/string 반환 시 AttributeError 방지
         if "state_constraints" not in result or not isinstance(result["state_constraints"], dict):
@@ -1413,6 +1760,29 @@ class ArcEnsembleGenerator(BaseAgent):
 
         if "joint_docs" not in result:
             result["joint_docs"] = {"final_location": "알 수 없음", "physical_inventory": [], "world_joint": ""}
+        joint_docs = result["joint_docs"] if isinstance(result.get("joint_docs"), dict) else {}
+        state_constraints = result["state_constraints"] if isinstance(result.get("state_constraints"), dict) else {}
+        arc_start_state = state_constraints.get("arc_start_state", {}) if isinstance(state_constraints, dict) else {}
+        arc_end_state = state_constraints.get("arc_end_state", {}) if isinstance(state_constraints, dict) else {}
+        if isinstance(arc_start_state, dict):
+            arc_start_state["equipment"] = _normalize_state_contract_list(arc_start_state.get("equipment", []))
+            state_constraints["arc_start_state"] = arc_start_state
+        if isinstance(arc_end_state, dict):
+            arc_end_state["equipment"] = _normalize_state_contract_list(arc_end_state.get("equipment", []))
+            state_constraints["arc_end_state"] = arc_end_state
+        joint_inventory = _normalize_state_contract_list(joint_docs.get("physical_inventory", []))
+        if not joint_inventory and isinstance(arc_end_state, dict):
+            joint_inventory = list(arc_end_state.get("equipment", []) or [])
+        joint_docs["physical_inventory"] = joint_inventory
+        end_location = re.sub(r"\s+", " ", str((arc_end_state or {}).get("location", "") or "")).strip()
+        joint_location = re.sub(r"\s+", " ", str(joint_docs.get("final_location", "") or "")).strip()
+        if not joint_location and end_location:
+            joint_docs["final_location"] = end_location
+        elif not end_location and joint_location and isinstance(arc_end_state, dict):
+            arc_end_state["location"] = joint_location
+            state_constraints["arc_end_state"] = arc_end_state
+        result["joint_docs"] = joint_docs
+        result["state_constraints"] = state_constraints
 
         if "status_shadow" not in result:
             result["status_shadow"] = {
@@ -1494,9 +1864,22 @@ class ArcEnsembleGenerator(BaseAgent):
         프롬프트 최상단에 배치하여 LLM이 절대 무시할 수 없도록 함
         """
         lines = []
+        carryover_packet = _extract_carryover_authority_packet(prev_arc_context)
+        carryover_location = str(carryover_packet.get("next_arc_start_location", "") or "").strip()
+        carryover_equipment = _normalize_carryover_packet_list(carryover_packet.get("next_arc_start_equipment", []))
+        carryover_injuries = str(carryover_packet.get("next_arc_start_injuries", "") or "").strip()
+        carryover_energy = str(carryover_packet.get("next_arc_start_internal_energy", "") or "").strip()
 
         # 1. 시작 상태 추출 (prev_arc_context에서)
         if prev_arc_context:
+            if carryover_location:
+                lines.append(f"✅ 시작 위치: {carryover_location} (Carryover Authority Packet 기준으로 시작해야 함!)")
+            if carryover_equipment:
+                lines.append(f"✅ 시작 소지품: {carryover_equipment} (Carryover Authority Packet 기준으로 계승!)")
+            if carryover_injuries:
+                lines.append(f"✅ 시작 부상: {carryover_injuries} (Carryover Authority Packet 기준으로 시작!)")
+            if carryover_energy:
+                lines.append(f"✅ 시작 내공: {carryover_energy} (Carryover Authority Packet 기준으로 시작!)")
             # 내공 추출
             energy_match = re.search(r"내공[:\s]*(\d+)%", prev_arc_context)
             if energy_match:

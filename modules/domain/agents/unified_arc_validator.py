@@ -105,6 +105,39 @@ UNIFIED_VALIDATION_PROMPT = """
 """
 
 
+def _normalize_state_contract_list(raw_value: object) -> list[str]:
+    """Normalize Stage2 state fields into compact string lists for validator checks."""
+    if isinstance(raw_value, list):
+        raw_items = raw_value
+    elif isinstance(raw_value, str):
+        raw_items = [chunk.strip() for chunk in re.split(r"[,/]", raw_value) if chunk.strip()]
+    else:
+        return []
+
+    normalized: list[str] = []
+    for raw_item in raw_items:
+        if isinstance(raw_item, dict):
+            text = raw_item.get("name") or raw_item.get("item") or raw_item.get("value") or ""
+        else:
+            text = str(raw_item or "")
+        text = re.sub(r"\s+", " ", text).strip()
+        if text:
+            normalized.append(text)
+    return normalized[:20]
+
+
+def _looks_like_verbose_state_field(text: object, *, max_chars: int = 80) -> bool:
+    """Detect sentence-style state fields that should remain compact labels."""
+    normalized = re.sub(r"\s+", " ", str(text or "")).strip()
+    if not normalized:
+        return False
+    if len(normalized) > max_chars:
+        return True
+    if any(token in normalized for token in (".", "!", "?", "시계는", "창밖", "풍경")):
+        return True
+    return normalized.count(",") >= 2
+
+
 class UnifiedArcValidator(BaseAgent):
     """
     [V60.75] 통합 Arc 검증기
@@ -226,8 +259,8 @@ class UnifiedArcValidator(BaseAgent):
                     "severity": "CRITICAL",
                     "category": "npc_death",
                     "issue": f"💀 죽은 NPC 등장: '{v.get('npc_name', '?')}'",
-                    "evidence": f"Arc {v.get('death_arc', '?')}에서 사망, Arc {arc_no}에서 다시 등장",
-                    "fix_hint": f"'{v.get('npc_name', '?')}'을(를) 등장시키지 마세요 (사망 NPC)",
+                    "evidence": f"Arc {v.get('death_arc', 'unknown')}에서 사망, Arc {arc_no}에서 다시 등장",
+                    "fix_hint": f"'{v.get('npc_name', 'unknown')}'을(를) 등장시키지 마세요 (사망 NPC)",
                 }
             )
             logging.warning(f" [V60.94] REJECT: 죽은 NPC '{v.get('npc_name')}' 등장!")
@@ -241,7 +274,7 @@ class UnifiedArcValidator(BaseAgent):
                     "category": "npc_change",
                     "issue": f"⚠️ NPC {change_type} 변경: '{change.get('npc_name', '?')}'",
                     "evidence": change.get("reason", ""),
-                    "fix_hint": f"'{change.get('npc_name', '?')}'의 {change_type} 변경에 대한 정당화 사유 필요 (습득, 성장 등)",
+                    "fix_hint": f"'{change.get('npc_name', 'unknown')}'의 {change_type} 변경에 대한 정당화 사유 필요 (습득, 성장 등)",
                 }
             )
             logging.warning(f" [V60.95] WARNING: NPC '{change.get('npc_name')}' {change_type} 변경 감지")
@@ -502,7 +535,7 @@ class UnifiedArcValidator(BaseAgent):
                         "severity": "MAJOR",
                         "category": "resolved_plot",
                         "issue": f"완결된 플롯 재등장 의심: '{plot_name}'",
-                        "evidence": f"Arc {resolved.get('arc_no', '?')}에서 완결: {resolved.get('resolution', '')}",
+                        "evidence": f"Arc {resolved.get('arc_no', 'unknown')}에서 완결: {resolved.get('resolution', '')}",
                         "fix_hint": f"'{plot_name}'은 이미 해결된 사건입니다. 새로운 갈등을 설계하세요.",
                     }
                 )
@@ -525,7 +558,7 @@ class UnifiedArcValidator(BaseAgent):
                     "severity": "WARNING",
                     "category": "entity_consistency",
                     "issue": f"엔티티 명칭 불일치: '{ew.get('entity', '')}' vs '{ew.get('variant', '')}'",
-                    "evidence": f"'{ew.get('entity', '')}' (Arc {ew.get('first_arc', '?')}에서 등록)과 유사",
+                    "evidence": f"'{ew.get('entity', '')}' (Arc {ew.get('first_arc', 'unknown')}에서 등록)과 유사",
                     "fix_hint": f"'{ew.get('entity', '')}'로 통일하세요.",
                 }
             )
@@ -565,6 +598,131 @@ class UnifiedArcValidator(BaseAgent):
                 )
         return issues
 
+    def _check_episode_details_contract(self, arc: dict) -> list[dict]:
+        """Check whether episode_details is dense enough to serve as the mission packet."""
+        issues = []
+        ep_details = arc.get("episode_details")
+        if not isinstance(ep_details, list) or not ep_details:
+            return issues
+
+        try:
+            ep_count = int(arc.get("ep_count", 0) or 0)
+        except (TypeError, ValueError):
+            ep_count = 0
+
+        valid_entries = [
+            item
+            for item in ep_details
+            if isinstance(item, dict) and isinstance(item.get("ep_num"), int)
+        ]
+        if ep_count > 0 and len(valid_entries) < ep_count:
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "structure",
+                    "issue": f"episode_details mission packet coverage 부족: {len(valid_entries)}개 < {ep_count}개",
+                    "evidence": f"covered_ep_nums={[item.get('ep_num') for item in valid_entries]}",
+                    "fix_hint": "episode_details에 각 화별 핵심 사건을 구조화하십시오.",
+                }
+            )
+
+        missing_details = []
+        for item in valid_entries:
+            details = item.get("details")
+            if not isinstance(details, list) or not any(str(detail or "").strip() for detail in details):
+                missing_details.append(item.get("ep_num"))
+        if missing_details:
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "structure",
+                    "issue": "episode_details details 누락",
+                    "evidence": f"missing_details_ep_nums={missing_details}",
+                    "fix_hint": "각 episode_details 항목에 핵심 사건 detail을 채우십시오.",
+                }
+            )
+
+        return issues
+
+    def _check_state_contract_alignment(self, arc: dict) -> list[dict]:
+        """Check whether end-state and joint-doc fields expose the same carryover truth."""
+        issues = []
+        state_constraints = arc.get("state_constraints", {})
+        if not isinstance(state_constraints, dict):
+            return issues
+
+        joint_docs = arc.get("joint_docs", {})
+        if not isinstance(joint_docs, dict):
+            joint_docs = {}
+
+        arc_end = state_constraints.get("arc_end_state", {})
+        if not isinstance(arc_end, dict):
+            arc_end = {}
+
+        final_location = str(joint_docs.get("final_location", "") or "").strip()
+        end_location = str(arc_end.get("location", "") or "").strip()
+        if final_location and _looks_like_verbose_state_field(final_location):
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "structure",
+                    "issue": "joint_docs.final_location must stay a short canonical label",
+                    "evidence": final_location[:120],
+                    "fix_hint": "final_location에는 문장형 묘사 대신 짧은 위치 라벨만 남기십시오.",
+                }
+            )
+        if end_location and _looks_like_verbose_state_field(end_location):
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "structure",
+                    "issue": "arc_end_state.location must stay a short canonical label",
+                    "evidence": end_location[:120],
+                    "fix_hint": "arc_end_state.location에는 문장형 묘사 대신 짧은 위치 라벨만 남기십시오.",
+                }
+            )
+        if final_location and end_location and final_location != end_location:
+            if final_location not in end_location and end_location not in final_location:
+                issues.append(
+                    {
+                        "severity": "MAJOR",
+                        "category": "continuity",
+                        "issue": "joint_docs.final_location / arc_end_state.location mismatch",
+                        "evidence": f"joint_docs={final_location} | arc_end_state={end_location}",
+                        "fix_hint": "joint_docs.final_location과 arc_end_state.location을 같은 canonical value로 맞추십시오.",
+                    }
+                )
+
+        joint_inventory = _normalize_state_contract_list(joint_docs.get("physical_inventory", []))
+        end_inventory = _normalize_state_contract_list(arc_end.get("equipment", []))
+        for label, items in (
+            ("joint_docs.physical_inventory", joint_inventory),
+            ("arc_end_state.equipment", end_inventory),
+        ):
+            if any(_looks_like_verbose_state_field(item) for item in items[:5]):
+                issues.append(
+                    {
+                        "severity": "MAJOR",
+                        "category": "structure",
+                        "issue": f"{label} contains sentence-style inventory blob",
+                        "evidence": str(items[:3]),
+                        "fix_hint": f"{label}에는 짧은 아이템 라벨만 남기십시오.",
+                    }
+                )
+
+        if joint_inventory and end_inventory and joint_inventory != end_inventory:
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "continuity",
+                    "issue": "joint_docs.physical_inventory / arc_end_state.equipment mismatch",
+                    "evidence": f"joint_docs={joint_inventory[:5]} | arc_end_state={end_inventory[:5]}",
+                    "fix_hint": "joint_docs.physical_inventory와 arc_end_state.equipment를 같은 carryover truth로 맞추십시오.",
+                }
+            )
+
+        return issues
+
     def _python_validate(
         self,
         arc: dict,
@@ -584,6 +742,8 @@ class UnifiedArcValidator(BaseAgent):
         issues.extend(self._check_resolved_plots(arc, state_tracker))
         issues.extend(self._check_entity_consistency(arc, state_tracker))
         issues.extend(self._check_episode_details_type(arc))
+        issues.extend(self._check_episode_details_contract(arc))
+        issues.extend(self._check_state_contract_alignment(arc))
 
         has_critical = any(i["severity"] == "CRITICAL" for i in issues)
         critical_items = [i["issue"] for i in issues if i["severity"] == "CRITICAL"]

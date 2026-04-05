@@ -269,6 +269,88 @@ def _compute_inventory_carryover(prev_inventory: Any, consumed: Any, acquired: A
     return inherited
 
 
+def _sync_stage2_end_state_inventory_contract(
+    refined_arc: dict,
+    prev_arc: dict | None,
+) -> tuple[list[Any], bool, bool]:
+    """Align arc_end_state.equipment and joint_docs.physical_inventory to one end-inventory truth."""
+    state_constraints = refined_arc.get("state_constraints", {})
+    if not isinstance(state_constraints, dict):
+        state_constraints = {}
+        refined_arc["state_constraints"] = state_constraints
+
+    arc_end_state = state_constraints.get("arc_end_state", {})
+    if not isinstance(arc_end_state, dict):
+        arc_end_state = {}
+        state_constraints["arc_end_state"] = arc_end_state
+
+    joint_docs = refined_arc.get("joint_docs", {})
+    if not isinstance(joint_docs, dict):
+        joint_docs = {}
+        refined_arc["joint_docs"] = joint_docs
+
+    end_inventory = _coerce_inventory_items(arc_end_state.get("equipment", []))
+    joint_inventory = _coerce_inventory_items(joint_docs.get("physical_inventory", []))
+
+    canonical_inventory = end_inventory
+    if not canonical_inventory and prev_arc:
+        prev_joint = prev_arc.get("joint_docs", {}) or {}
+        curr_status = refined_arc.get("status_shadow", {}) or {}
+        canonical_inventory = _compute_inventory_carryover(
+            prev_joint.get("physical_inventory", []),
+            curr_status.get("item_consumption", []),
+            state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", []),
+        )
+    if not canonical_inventory:
+        canonical_inventory = joint_inventory
+
+    joint_changed = joint_inventory != canonical_inventory
+    end_changed = end_inventory != canonical_inventory
+    if joint_changed:
+        joint_docs["physical_inventory"] = canonical_inventory
+    if end_changed:
+        arc_end_state["equipment"] = canonical_inventory
+
+    state_constraints["arc_end_state"] = arc_end_state
+    refined_arc["state_constraints"] = state_constraints
+    refined_arc["joint_docs"] = joint_docs
+    return canonical_inventory, joint_changed, end_changed
+
+
+def _sync_stage2_end_location_contract(refined_arc: dict) -> tuple[str, bool, bool]:
+    """Align arc_end_state.location and joint_docs.final_location to the same canonical location."""
+    state_constraints = refined_arc.get("state_constraints", {})
+    if not isinstance(state_constraints, dict):
+        state_constraints = {}
+        refined_arc["state_constraints"] = state_constraints
+
+    arc_end_state = state_constraints.get("arc_end_state", {})
+    if not isinstance(arc_end_state, dict):
+        arc_end_state = {}
+        state_constraints["arc_end_state"] = arc_end_state
+
+    joint_docs = refined_arc.get("joint_docs", {})
+    if not isinstance(joint_docs, dict):
+        joint_docs = {}
+        refined_arc["joint_docs"] = joint_docs
+
+    end_location = str(arc_end_state.get("location") or "").strip()
+    final_location = str(joint_docs.get("final_location") or "").strip()
+    canonical_location = end_location or final_location
+
+    joint_changed = bool(canonical_location) and final_location != canonical_location
+    end_changed = bool(canonical_location) and end_location != canonical_location
+    if joint_changed:
+        joint_docs["final_location"] = canonical_location
+    if end_changed:
+        arc_end_state["location"] = canonical_location
+
+    state_constraints["arc_end_state"] = arc_end_state
+    refined_arc["state_constraints"] = state_constraints
+    refined_arc["joint_docs"] = joint_docs
+    return canonical_location, joint_changed, end_changed
+
+
 class Stage2PassPreparationResult(TypedDict):
     action: Literal["retry", "continue"]
     current_feedback: NotRequired[str]
@@ -1202,6 +1284,26 @@ class Stage2Finalizer:
                 )
         elif curr_inventory != curr_joint.get("physical_inventory", []):
             refined_arc["joint_docs"]["physical_inventory"] = curr_inventory
+
+        canonical_end_inventory, joint_inventory_changed, end_inventory_changed = _sync_stage2_end_state_inventory_contract(
+            refined_arc,
+            all_refined_arcs[-1] if all_refined_arcs else None,
+        )
+        if joint_inventory_changed and not all_refined_arcs:
+            self.ctx.ui.log(
+                f"      🔧 [End Inventory Sync] Arc {global_arc_no} joint_docs 종료 소지품 → "
+                f"state_constraints 기준으로 동기화 ({len(canonical_end_inventory)}개 아이템)"
+            )
+        if end_inventory_changed:
+            self.ctx.ui.log(f"      🔧 [End Equipment Sync] Arc {global_arc_no} 종료 소지품 상태 동기화")
+
+        canonical_end_location, joint_location_changed, end_location_changed = _sync_stage2_end_location_contract(
+            refined_arc
+        )
+        if joint_location_changed or end_location_changed:
+            self.ctx.ui.log(
+                f"      🔧 [End Location Sync] Arc {global_arc_no} 종료 위치 → {canonical_end_location or '위치 미정'}"
+            )
 
         if not refined_arc.get("status_shadow"):
             self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] status_shadow 누락 - 기본값 주입")
