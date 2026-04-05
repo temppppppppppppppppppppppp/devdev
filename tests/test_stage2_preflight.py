@@ -467,6 +467,37 @@ class TestPreflightArcAnalysis:
         assert observation["work_slot_summary_included"] is True
         assert observation["vector_context_chars"] == len(result)
 
+    def test_build_stage2_vector_context_logs_when_retrieval_is_empty(self, preflight):
+        preflight.ctx.memory = MagicMock()
+        preflight.ctx.memory.retrieve_high_res_context.return_value = ""
+        preflight._resolve_work_retrieval_focus = MagicMock(return_value={})
+        preflight._build_work_identity_slot_summary = MagicMock(return_value="")
+        preflight._build_fact_ledger_context = MagicMock(return_value="")
+        preflight._record_retrieval_observation = MagicMock()
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return False
+            if key == "smart_retrieval.stage2_enabled":
+                return False
+            if key == "context.vector_max_results_s2":
+                return 8
+            return default
+
+        with patch("modules.core.stage2_preflight._threshold", side_effect=threshold_side_effect):
+            result = preflight._build_stage2_vector_context(
+                global_arc_no=1,
+                current_ep_start=3,
+                enriched_block={"block_theme": "theme", "joint_docs": {}, "status_shadow": {}},
+                current_vol_strategy={"strategy_doc": "doc"},
+                protagonist_name="hero",
+            )
+
+        assert result == ""
+        preflight.ctx.ui.log.assert_any_call(
+            "      [S2-OBS] Stage2 retrieval empty (chars=0, slots=0, scene_engines=0)"
+        )
+
     def test_apply_postpass_state_change_fixes_merges_relationship_delta_and_timeline(self, preflight):
         refined_arc = {
             "state_changes": {},

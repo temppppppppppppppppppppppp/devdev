@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from modules.core.stage2_orchestrator import Stage2Orchestrator
 from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
+from modules.core.stage2_orchestrator import Stage2Orchestrator
 from modules.core.stage2_validation_pipeline import Stage2ValidationPipeline
 
 
@@ -285,6 +285,27 @@ class TestRunValidation:
         assert len(pressure) == 1
         assert "threshold=3" in pressure[0]["message"]
         assert "continuity" in pressure[0]["message"]
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_auto_correct_summary_is_mirrored_to_ui_log(self, pipeline, valid_refined_arc):
+        pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        pipeline.ctx.stage2_optimizer = MagicMock()
+        pipeline.ctx.stage2_optimizer.post_process_arc.return_value = (
+            valid_refined_arc,
+            [
+                {"category": "continuity", "change_summary": "fix continuity"},
+                {"category": "numbers", "change_summary": "fix numbers"},
+                {"category": "entity", "change_summary": "fix entity"},
+            ],
+        )
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = pipeline.run_validation(**kwargs)
+
+        assert result["action"] == "proceed"
+        pipeline.ctx.ui.log.assert_any_call(
+            "      [S2-OBS] Auto-correct arc 1: fix continuity, fix numbers, fix entity"
+        )
 
     def test_consensus_reject_becomes_advisory(self, pipeline, valid_refined_arc):
         """[TF-25-08] Consensus REJECT → advisory로 전환."""

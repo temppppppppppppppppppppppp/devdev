@@ -1,0 +1,154 @@
+{
+  "project": "projects/00_0405",
+  "investigation_scope": "stage2_artifact_truth_and_observability",
+  "stage1_bypass_treated_as_defect": false,
+  "artifact_truth": {
+    "arc2_arc3_location_round_trip": {
+      "arc2_text_end_location": {
+        "path": "projects/00_0405/plans/arcs/arc_002.txt",
+        "line": 83,
+        "value": "Seoul Yeouido SW Investment SOHO office"
+      },
+      "arc2_selected_artifact_end_location": {
+        "path": "projects/00_0405/logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json",
+        "line": 251,
+        "value": "Seoul Gangnam-gu Teheran-ro SW Investment representative office"
+      },
+      "arc3_text_start_location": {
+        "path": "projects/00_0405/plans/arcs/arc_003.txt",
+        "line": 16,
+        "value": "Seoul Gangnam-gu Teheran-ro SW Investment representative office"
+      },
+      "finding": "selected Stage2 state moved to Gangnam before the human-readable arc txt fully round-tripped"
+    },
+    "arc4_item_carryover_round_trip": {
+      "arc3_text_has_ecuador_memo": {
+        "path": "projects/00_0405/plans/arcs/arc_003.txt",
+        "line": 18,
+        "value": true
+      },
+      "arc4_selected_artifact_start_has_ecuador_memo": {
+        "path": "projects/00_0405/logs/artifacts/stage2/arc_004/attempt_01/final_arc__balanced.json",
+        "line": 267,
+        "value": true
+      },
+      "arc4_text_start_has_ecuador_memo": {
+        "path": "projects/00_0405/plans/arcs/arc_004.txt",
+        "line": 18,
+        "value": false
+      },
+      "finding": "selected artifact and txt start state diverge on memo carryover"
+    },
+    "numeric_spine": {
+      "arc1_seed_capital": {
+        "path": "projects/00_0405/plans/arcs/arc_001.txt",
+        "line": 74,
+        "value": "about 2.0B KRW cash secured"
+      },
+      "arc2_selected_total_assets": {
+        "path": "projects/00_0405/logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json",
+        "line": 253,
+        "value": "23B KRW including unrealized gain"
+      },
+      "arc3_text_total_assets": {
+        "path": "projects/00_0405/plans/arcs/arc_003.txt",
+        "line": 75,
+        "value": "30B KRW"
+      },
+      "arc4_text_total_assets": {
+        "path": "projects/00_0405/plans/arcs/arc_004.txt",
+        "line": 87,
+        "value": "45B KRW"
+      },
+      "finding": "numeric state spine is broadly coherent even where round-trip packaging is not"
+    }
+  },
+  "observability_truth": {
+    "console_visible_stage2_sync": [
+      {
+        "path": "projects/00_0405/logs/session/ui_events.jsonl",
+        "line": 270,
+        "value": "physical_inventory deterministic carryover applied"
+      },
+      {
+        "path": "projects/00_0405/logs/session/ui_events.jsonl",
+        "line": 271,
+        "value": "equipment sync"
+      },
+      {
+        "path": "projects/00_0405/logs/session/ui_events.jsonl",
+        "line": 272,
+        "value": "state sync"
+      }
+    ],
+    "auto_correct_details_hidden_from_console": {
+      "owner": {
+        "path": "modules/core/stage2_validation_pipeline.py",
+        "line": 468
+      },
+      "audit_only_examples": [
+        {
+          "path": "projects/00_0405/logs/runtime_audit.jsonl",
+          "line": 1,
+          "value": "genre-field removal, item patch, location rewrite"
+        },
+        {
+          "path": "projects/00_0405/logs/runtime_audit.jsonl",
+          "line": 10,
+          "value": "location rewrite and late-stage packet normalization"
+        }
+      ],
+      "finding": "console exposes sync effects but not the full correction reasons"
+    },
+    "retrieval_observation_hidden_from_console": {
+      "owner": {
+        "path": "modules/core/stage2_preflight.py",
+        "line": 1179
+      },
+      "sink_owner": {
+        "path": "modules/core/quality_dashboard.py",
+        "line": 271
+      },
+      "evidence": [
+        {
+          "path": "projects/00_0405/logs/quality_metrics.jsonl",
+          "line": 1,
+          "value": "work_focus_present=false, vector_context_chars=0, mandatory_context_chars=0"
+        },
+        {
+          "path": "projects/00_0405/logs/quality_metrics.jsonl",
+          "line": 4,
+          "value": "same zero-context pattern persists through later arcs"
+        }
+      ],
+      "finding": "operator console does not surface empty retrieval/context coverage"
+    },
+    "audit_service_role": {
+      "path": "modules/core/services/audit_service.py",
+      "line": 61,
+      "value": "audit_event appends to runtime audit buffer and file; not a console mirror"
+    },
+    "ui_events_authority_boundary": {
+      "path": "modules/core/session_logger.py",
+      "line": 12,
+      "value": "ui_events is optional best-effort telemetry and not authoritative truth"
+    }
+  },
+  "queue_alignment": {
+    "stage2_contract_normalization_ssot": {
+      "path": "docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md",
+      "line": 34,
+      "value": "Stage2 is content-sufficient but schema-fragile"
+    },
+    "stage2_stage3_stage4_readiness_ssot": {
+      "path": "docs/2026-04-01/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md",
+      "line": 39,
+      "value": "Stage2 is not the primary blocker"
+    }
+  },
+  "conclusion": {
+    "dominant_reading": "Stage2 passed, but artifact round-trip and observability are weak",
+    "best_owner_lane": "Stage2 contract normalization survey / future upstream wave",
+    "requires_immediate_stage2_execution_promotion": false
+  }
+}

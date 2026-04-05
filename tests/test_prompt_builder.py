@@ -494,6 +494,23 @@ class TestGenerateArcContextV60Bound:
         audit_payload = builder_with_mock_app._app._audit_event.call_args.args[2]
         assert audit_payload["target_arc_no"] == 2
 
+    def test_app_bound_path_logs_items_tracked_summary(self, builder_with_mock_app):
+        state_extractor = MagicMock()
+        state_extractor.extract_cumulative_state.return_value = {
+            "inventory": {"current_items": ["item-a", "item-b"]},
+        }
+        state_extractor.generate_constraint_prompt.return_value = "constraint prompt"
+        builder_with_mock_app._app.agents["state_extractor"] = state_extractor
+
+        builder_with_mock_app.generate_arc_context_v60(
+            [{"arc_no": 1, "joint_docs": {}, "status_shadow": {}, "state_constraints": {"arc_end_state": {}}}],
+            current_arc_no=2,
+        )
+
+        builder_with_mock_app._app.ui.log.assert_any_call(
+            "      [S2-OBS] StateExtractor context ready (arc_count=1, items_tracked=2)"
+        )
+
     def test_app_bound_path_uses_cache_on_repeat_call(self, builder_with_mock_app):
         state_extractor = MagicMock()
         state_extractor.extract_cumulative_state.return_value = {"inventory": {"current_items": []}}
