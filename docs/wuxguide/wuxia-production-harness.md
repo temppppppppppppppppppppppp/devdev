@@ -14,8 +14,9 @@
 > - 실제 생산 단위는 항상 **Block 1개**다.
 > - 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이다.
 > - 블록 완료 시마다 즉시 merge/save 하고, `Block 5`에서 반드시 정지한다.
-> - 번호 메타(`Block 3`, `B12`, `블록 7`)는 현재 validator 기준으로 `foreshadow` / `callback` 안에서만 허용한다.
-> - 다른 자연어 서사 필드로 새면 메타 오염으로 FAIL 처리한다.
+> - `Block / ARC / Phase / Stage` 번호 메타는 자연어 필드에서 전면 금지한다.
+> - `foreshadow` / `callback`도 자연어 의미만 적고, 구조 타깃은 `foreshadow_targets` / `callback_sources`에만 둔다.
+> - `section_rotation`, `arc_section`, `phase` 같은 라벨은 번호 없는 자연어 제목만 허용한다.
 
 ---
 
@@ -190,10 +191,10 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
 21. relationship_delta.after 복제 금지: 동일 문장이 다른 블록/다른 NPC에 3회 이상 반복이면 재작성.
 
 === 복선/밀도 금지 ===
-22. 블록 번호 본문 노출 금지: TR 블록의 **모든 텍스트 필드**에 "B숫자", "Block 숫자", "블록 숫자" 패턴 금지.
-    대상: content.*, stakes, power_shift.*, relationship_delta[].before/after,
-    foreshadow[].event, callback[].event, martial_ext.strategy/success_pattern.
-    foreshadow/callback의 블록 참조는 ref 필드에만 기입한다.
+22. 메타 번호 본문 노출 금지: TR 블록의 **모든 자연어 텍스트 필드**에 `B숫자`, `Block 숫자`, `블록 숫자`, `ARC-숫자`, `Phase 숫자`, `Stage 숫자` 패턴 금지.
+    대상: content.*, stakes, power_shift.*, relationship_delta[].before/after, foreshadow, callback, martial_ext.strategy/success_pattern.
+    복선/회수 구조 타깃은 `foreshadow_targets` / `callback_sources`에만 기입한다.
+    `section_rotation`/`arc_section`/`phase`는 번호 없는 자연어 라벨만 허용한다.
     이유: TR의 모든 텍스트가 downstream 원고 생성에 흐르므로 메타 번호의 작중 오염을 방지.
 23. 복선 실제 회수 의무: foreshadow에서 ref로 지목한 블록의 callback에 명시적으로 회수 문장 포함 필수.
 24. reward 재진술 금지: context를 시제만 바꿔 반복하면 무효.
@@ -516,8 +517,8 @@ Planning, BI handoff, 감리 단계에는 그대로 확장하지 않는다.
 | `stakes` | 필수 | 실패 시 잃는 것. 구체적이고 심각해야 함 |
 | `power_shift` | 필수 | 주인공과 적대자의 힘 균형 변화 |
 | `relationship_delta` | 필수 | NPC 관계 변화. 최소 2명 |
-| `foreshadow` | 필수 | 복선 심기. 객체 배열. ref=대상블록번호, event=서사적 서술(블록번호 노출 금지). 장기 복선 권장 |
-| `callback` | 조건부 | 이전 복선의 회수. 객체 배열. ref=원복선블록번호, event=서사적 회수 서술(블록번호 노출 금지). 해당 없으면 빈 배열 |
+| `foreshadow` | 필수 | 자연어 복선 심기 배열. 번호 메타는 금지하고, 대상 블록은 `foreshadow_targets`에 둔다 |
+| `callback` | 조건부 | 자연어 회수 배열. 번호 메타는 금지하고, 원복선 블록은 `callback_sources`에 둔다 |
 | `emotional_beat` | 필수 | 감정 비트와 강도 |
 | `tension_level` | 필수 | 긴장도 1~10 |
 | `location` | 필수 | 장소. place + detail |
@@ -614,8 +615,8 @@ def auto_correct_martial(blocks: list[dict], npc_tracker: dict) -> list[dict]:
 | `martial_ext.injury_status` | 부상 상태는 서사 판단 필요 |
 | `martial_ext.martial_arts_acquired` | 무공 습득은 서사 설계 영역 |
 | `stakes` | 손실 규모와 긴장도는 문맥 의존적 |
-| `foreshadow` | 객체 배열 (ref+event). 장기 복선 구조 판단 필요. event 텍스트에 블록번호 노출 금지 |
-| `callback` | 객체 배열 (ref+event). 구체 사건 회수 문장을 다시 써야 함. event 텍스트에 블록번호 노출 금지 |
+| `foreshadow` | 자연어 배열. 의미만 적고 번호 메타 금지. 구조 타깃은 `foreshadow_targets`로 분리 |
+| `callback` | 자연어 배열. 의미만 적고 번호 메타 금지. 구조 원본은 `callback_sources`로 분리 |
 
 ---
 
