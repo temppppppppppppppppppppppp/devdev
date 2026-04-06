@@ -1,6 +1,6 @@
 {
-  "tag": "stage2_complete",
-  "timestamp": "2026-04-06 18:49:25",
+  "tag": "shutdown_final",
+  "timestamp": "2026-04-06 18:58:54",
   "summary_role": "runtime_heartbeat_with_proof_digest",
   "total_events": 19,
   "counts": {
@@ -77,7 +77,7 @@
       "episode_production_exists": false,
       "runtime_audit_jsonl_exists": true,
       "ui_events_db_available": true,
-      "ui_events_count": 471,
+      "ui_events_count": 481,
       "ui_event_coverage_status": "ok"
     },
     "stages": {},

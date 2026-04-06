@@ -1,4 +1,4 @@
- python main_a.py
+python main_a.py
 [V61.3] Faulthandler 활성화 → crash_dump.log
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃                                                                  🎹 V40 SOVEREIGN COCKPIT                                                                  ┃
@@ -572,10 +572,6 @@ futures position including unrealized gains: 1.25B KRW'. The current breakdown o
          🔎 [Stage 2] Arc 5 attempt 1: generation=four_phase · validation 진입
          🔍 [TF-38] Pre-Director 검증 체인 시작
  ⠴ Arc 5/5 설계 중...  59m 27s         ✅ [TF-38] Pre-Director 검증 완료 → Director 심사 대기
-         🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...
- ⠸ Arc 5/5 설계 중...  60m 14s   
-      🎬 [Director] REJECT (score=40)
-            [V61] Entity 명칭 불일치 5건 발견
             🔧 수정지시: MAJOR 등급 불일치가 4건 발견되어 REJECT 처리합니다. Entity Registry와 arc 본문의 명칭을 일치시켜 주십시오. 1) '블랙베리'를 '블랙베리 8700'으로 수정하거나, 
 Registry를 '블랙베리'로 변경. 2) '법인 계좌'를 '법인 통장'으로 통일. 3) '후계 구도'를 '후계 다툼'으로 통일. 4) '서브프라임 모기지 시장'을 '서브프라임 모기지 연체율'로 수정하거나,  
 Registry의 개념 범위를 조정하십시오.
@@ -596,12 +592,106 @@ Registry의 개념 범위를 조정하십시오.
          🔍 [TF-38] Pre-Director 검증 체인 시작
  ⠇ Arc 5/5 설계 중...  66m 55s         ✅ [TF-38] Pre-Director 검증 완료 → Director 심사 대기
  ⠏ Arc 5/5 설계 중...  66m 55s         🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...
- ⠹ Arc 5/5 설계 중...  68m 40s   
+ ⠹ Arc 5/5 설계 중...  68m 40s
       🎬 [Director] PASS (score=100)
          [V49.4] ConstraintDB 업데이트 완료 (총 5개 Arc)
  ⠏ Arc 5/5 설계 중...  69m 20s         [S2-OBS] StateExtractor context ready (arc_count=5, items_tracked=8)
          ✨ [V60.25] Arc 5 최종 성공 - 실패 메모리 클리어
-   ✅ 배치(1~5) 욕망 엔진 이식 및 용접 완료.                                                                                                                                        
+   ✅ 배치(1~5) 욕망 엔진 이식 및 용접 완료.
    ✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.
 
 [Enter] 메뉴로 돌아가기
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                           🎹 V40 SOVEREIGN PRODUCTION                                                                            ┃
+┃                                                           Genre: 투자 (Investment Fiction) | Project: 01_투자물_골든_                                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+👇 Select Command:
+   0. Stage 0: Bible/역설계/스타일 추출 [✅]
+   1. Stage 1: Volume Strategy (선택) [⏭️ 스킵가능]
+   2. Stage 2: Arc Tactical Design (유동) [✅]
+   3. 📐 Stage 3: Episode Blueprinting (Batch Design)
+   4. 🚀 Stage 4: Sovereign Production (Writing)
+   5. Exit
+   6. 🔄 One-Stop: Arc-by-Arc 자동 파이프라인
+   7. 🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)
+   44. ⏪ [ROLLBACK] Stage 4 회차별 롤백 (Episode Rewind)
+   77. 🔥 [WIPE] 원고 생산 기록만 삭제 (Stage 4 초기화)
+   88. 🔥 [RESET] Stage 2 (Arcs) 초기화
+   99. ⏪ Stage 2 정밀 되감기 (Selective Rewind)
+
+   👉 Choice: 5
+   
+🛑 [System] 시스템 종료 시퀀스 가동...
+   
+============================================================
+  [V44] 글도비 성능 메트릭 리포트
+============================================================
+세션 ID: 20260406_173425
+실행 시간: 1:24:28.085188
+
+[호출 통계]
+- 총 호출: 80회
+- 성공: 79회 (98.8%)
+- 실패: 1회
+- 총 재시도: 0회
+
+[비용 통계]
+- 총 토큰: 1,899,098
+- 예상 비용: $4.4721 USD
+
+[에이전트별 통계]
+  Analyst:
+    - 호출: 9회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=50759ms, p50=48930ms, p90=56643ms
+  Weaver:
+    - 호출: 5회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=34577ms, p50=37104ms, p90=39118ms
+  ArcEnsembleGenerator:
+    - 호출: 21회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=104124ms, p50=103587ms, p90=117371ms
+  Director:
+    - 호출: 28회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=51480ms, p50=47636ms, p90=72800ms
+  StateExtractor:
+    - 호출: 5회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=41804ms, p50=41157ms, p90=46279ms
+  PreflightChecker:
+    - 호출: 10회 (성공률: 90.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=46323ms, p50=45204ms, p90=50864ms
+  PreflightChecker_Backup:
+    - 호출: 1회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=38474ms, p50=38474ms, p90=38474ms
+  UnifiedArcValidator:
+    - 호출: 1회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=27311ms, p50=27311ms, p90=27311ms
+
+[모델별 통계]
+  vertexai:gemini-2.5-pro:
+    - 토큰: 1,666,136 (in=1,406,028, out=260,108)
+    - 비용: $4.3013
+  vertexai:gemini-2.5-flash:
+    - 토큰: 232,962 (in=181,142, out=51,820)
+    - 비용: $0.1707
+============================================================
+   📊 [Metrics] 세션 메트릭 저장: C:\Users\wjjo\Desktop\글도비\projects\01_투자물_골든_\logs\metrics\metrics_20260406_173425.json
+   💾 [CostDB] Session 잔여 스코프 비용 저장: $0.0108 (1,904 tokens, 누적 총비용은 arc/episode 레코드 합산 참조)
+   📈 [PassRate] 통과율 기록 저장: 0건
+   ⚖️ [Director Bias] 유의미한 편향 경고 없음
+   📚 [V51.4] 실패 학습 기록 저장(DB): 0건
+   🎭 [V51.5] 캐릭터 음성 저장: 0명
+   🔮 [V51.6] 복선 저장: 0개 (회수율: 0%)
+   💓 [V60.26] 감정선 기록 저장: 0건
+   [System] VecMemory 연결 해제 완료
+   [System] DB 커밋 완료
+   [System] DB 연결 안전하게 해제됨
+   ✅ [System] 종료 완료
+PS C:\Users\wjjo\Desktop\글도비> 
