@@ -30,6 +30,8 @@
    - 5-Pass 감리
    - PASS/FAIL 보고 후 정지
 8. 하나라도 실패하면 다음 단계로 넘어가지 않는다.
+9. source TR과 BI 모두에서 `Block 3`, `B12`, `블록 7` 같은 번호 메타가 narrative prose 필드로 새면 FAIL이다.
+   - 현재 예외는 source TR의 `foreshadow` / `callback` 메타 앵커뿐이다.
 
 추가 해석:
 
@@ -386,6 +388,7 @@ BI 생성 전에 아래를 먼저 확인한다:
 - `TR draft` 블록 수 70
 - `TR draft` 첫 블록/마지막 블록 title 확인
 - source TR handoff gate 전 항목 PASS
+  - 특히 `diegetic_block_ref_zero = true` 확인
 
 ### 5.2 Phase 1: BI 최소 스켈레톤
 

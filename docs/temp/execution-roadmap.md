@@ -1,13 +1,13 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-01
-Status: active (3-pass re-audited 2026-04-06; fresh full run plus r2 Stage4-only sinkproof confirm ep2 can PASS through Stage4, bounded Stage4 P1 patches narrowed the front debt further, and the 2026-04-06 Stage2 persistence-authority revalidation plus targeted fix promoted Stage2 from parked future wave into the active queue directly behind the current Stage4 consumer/repair pair; no new P0 surfaced)
+Status: active (3-pass re-audited 2026-04-06; fresh full run plus r2 Stage4-only sinkproof confirm ep2 can PASS through Stage4, bounded Stage4 P1 patches narrowed the front debt further, and the Stage2 persistence-authority child tranche has now landed with focused Stage2 family validation while broader Stage2 debt remains queue-visible behind the current Stage4 consumer/repair pair; no new P0 surfaced)
 Canonical Path: `docs/2026-04-01/active-temp-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `fd1707372bd7eb8ad23a5d4506ef556e3f72cc51`
 Baseline Dirty Summary: `dirty: 0_0 runtime logs/db/artifacts active; legacy temp queue mirrors present; 2026-03-31 0_0 survey docs untracked`
-Resume Commit: `0d7c077a9e6f14575aba7fc509b836d218db610d`
-Resume Drift Summary: `2026-04-06 Opus global P0-P1 survey plus bounded Stage4 and Stage2 sink patches sharpened the queue: no new P0 surfaced, Stage4 consumer remains front on numeric carryover baseline-promotion/owner-boundary, Stage4 repair remains next on repair/readback phantom mismatch normalization, and Stage2 is now an active bounded tranche on `world_joint` / `status_shadow` persistence-authority preservation`
+Resume Commit: `5428daf989bb8dd91aa12f86a137d899596fed4a`
+Resume Drift Summary: `2026-04-06 Opus global P0-P1 survey plus bounded Stage4 and Stage2 sink work sharpened the queue: no new P0 surfaced, Stage4 consumer remains front on numeric carryover baseline-promotion/owner-boundary, Stage4 repair remains next on repair/readback phantom mismatch normalization, and the Stage2 persistence-authority child tranche is now landed and verification-backed across preflight/validation/finalizer while the broader Stage2 SSOT remains partial`
 Supersedes:
 - `docs/2026-03-31/active-temp-execution-roadmap.md`
 
@@ -33,7 +33,7 @@ Queue Snapshot:
 
 This roadmap is the active controller for the current `docs/temp/` execution queue.
 
-This refresh folds in the `r2` Stage4-only sinkproof result, the later analyzer/readback backfill, the numeric authority re-audit, the 2026-04-05 `Stage3 ep2 cutoff accepted` note, and the 2026-04-06 Stage2 persistence-authority promotion. The queue is now intentionally sorted as:
+This refresh folds in the `r2` Stage4-only sinkproof result, the later analyzer/readback backfill, the numeric authority re-audit, the 2026-04-05 `Stage3 ep2 cutoff accepted` note, the 2026-04-06 Stage2 persistence-authority promotion, and the later bounded Stage2 implementation/verification pass. The queue is now intentionally sorted as:
 
 1. active front-owner work (`Stage4 consumer` -> `Stage4 repair` -> `Stage2 persistence-authority` -> blocked parent readiness lane)
 2. parked future-wave work (`cross-stage`, `Stage3`, `Stage0`)
@@ -43,7 +43,7 @@ Working order:
 
 1. `0_0-stage4-consumer-contract-normalization-remediation` (aggregate Stage4 wave; PASS proof captured, residual seam narrowed to numeric carryover baseline-promotion / owner-boundary)
 2. `0_0-stage4-repair-contract-normalization-remediation` (shared repair-contract grammar lane; next open Stage4 substrate for repair/readback phantom mismatch normalization after the child-lane closures)
-3. `0_0-stage2-contract-normalization-remediation` (active bounded Stage2 tranche; promoted for `world_joint` / `status_shadow` persistence-authority preservation through validation/finalizer sinks)
+3. `0_0-stage2-contract-normalization-remediation` (verification-backed Stage2 residual lane; bounded `world_joint` / `status_shadow` persistence-authority child tranche has landed across preflight/validation/finalizer sinks, while broader Stage2 normalization remains deferred inside the same SSOT)
 4. `0_0-stage2-stage3-stage4-readiness-remediation` (blocked parent lane; do not reopen broad readiness/hierarchy work while Stage4 front seams and the promoted Stage2 persistence tranche remain open)
 5. `0_0-stage234-cross-stage-contract-normalization-remediation` (parked future wave; long-term shared contract substrate)
 6. `0_0-stage3-contract-tightening-remediation` (parked future wave; static survey-backed, explicit canary proof pending)
@@ -64,7 +64,7 @@ This order now reflects the stronger runtime picture:
 - the earlier sink hard-fail reading no longer governs the queue
 - the `__000403` fresh run closes the post-select continuity and fixpack-finalization child lanes with runtime proof rather than static-only confidence
 - the surviving active debt is numeric asset authority / carryover owner-boundary plus the still-open repair-contract grammar lane, not NPC false reject, patch-trace non-exercise, or missing final Stage4 rows
-- the 2026-04-06 global P0-P1 sweep found no new cross-pipeline P0; the live P1s remain the existing Stage4 front seams plus the now-promoted Stage2 persistence truth-loss tranche
+- the 2026-04-06 global P0-P1 sweep found no new cross-pipeline P0; the live P1 picture remains the existing Stage4 front seams plus residual Stage2 contract debt, but the bounded Stage2 persistence truth-loss child tranche itself is now landed and verification-backed
 - the Stage4 repair-contract family now sits closest to the front of the open queue as substrate for the residual Stage4 numeric seam
 - Stage2 now sits immediately behind the Stage4 pair because the validation/finalizer overwrite shells were revalidated and patched without needing a fresh run to prove existence
 - flashback and NpcDrift remain runtime-positive substrate lanes, but neither is the current immediate blocker
@@ -146,10 +146,10 @@ Order rationale:
 
 - priority 1 is the aggregate Stage4 consumer-contract wave because it now contains the surviving bounded seam after PASS proof capture
 - priority 2 is the repair-contract grammar lane because scope/provenance clarity and readback truth still matter for numeric carryover remediation after the post-select and fixpack child lanes closed
-- priority 3 is the newly promoted Stage2 persistence-authority tranche because a live P1 truth-loss shell remained in validation/finalizer sinks even after the earlier Stage2 slices landed
-- priority 4 is the parent upstream lane, still blocked specifically by the remaining Stage4 consumer-side seams plus the active Stage2 persistence tranche
-- priority 5 is the parked cross-stage contract substrate wave, justified by the completed matrix survey but still below active Stage4 and bounded Stage2 work
-- priority 6 is the parked Stage3 future wave, now below the promoted Stage2 tranche
+- priority 3 is the verification-backed Stage2 residual lane because the bounded persistence-authority child tranche has landed, but the broader Stage2 SSOT still holds deferred normalization and Golden follow-up debt
+- priority 4 is the parent upstream lane, still blocked specifically by the remaining Stage4 consumer-side seams plus the broader Stage2 residual queue item
+- priority 5 is the parked cross-stage contract substrate wave, justified by the completed matrix survey but still below active Stage4 and residual Stage2 work
+- priority 6 is the parked Stage3 future wave, now below the current Stage2 residual lane
 - priority 7 is the parked Stage3 opening-transition refinement wave; it is narrower than general Stage3 tightening and intentionally deferred below it
 - priority 8 is the parked Stage0 enrich retirement wave; it is real hygiene debt but not an active runtime blocker
 - priority 9 is the parked Stage0 BI/TR production harness normalization wave; it is a larger upstream refactor and remains below nearer hygiene lanes
@@ -369,14 +369,15 @@ Order rationale:
   - mission truth trapped in `tactical_doc` prose
   - Stage2-owned packet alias ambiguity at emission time
   - low-signal or dropped fields (`beat_sequence`, `hybrid_composition`, `semantic_carryover`)
-  - persistence-time overwrite of `joint_docs.world_joint` and `status_shadow`
+  - residual artifact-truth false closure and observability debt recorded in the Golden bounded survey
+  - broader Stage2 normalization remains open even though the bounded persistence-authority child tranche has landed
 - next action:
-  - keep the current bounded realization focused on truth-preserving validation/finalizer sink merges for `joint_docs.world_joint` / `status_shadow`
-  - keep this active tranche below the current Stage4 consumer/repair pair
-  - keep broader mission-authority, alias, dead-field, and readiness normalization deferred inside this SSOT
-  - reassess fresh-run impact after the next live run rather than widening the tranche first
+  - do not reopen the landed persistence-authority child tranche unless a fresh live run or new evidence reopens the seam
+  - keep this Stage2 item below the current Stage4 consumer/repair pair
+  - keep broader mission-authority, alias, dead-field, Golden artifact-truth, and observability follow-up work deferred inside this SSOT
+  - when Stage2 is reactivated, start from a fresh live-run impact check rather than widening from static debt alone
 - temp cleanup action:
-  - keep mirror while this remains an active bounded queue item; remove only on explicit closure or replacement
+  - keep mirror while this broader Stage2 SSOT remains partial; remove only on explicit closure or replacement
 
 ### stage0-treatment-enrich-retirement-remediation
 

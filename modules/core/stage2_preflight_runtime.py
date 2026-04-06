@@ -4,6 +4,7 @@ import json
 import logging
 from typing import TYPE_CHECKING
 
+from modules.core.stage2_contracts import merge_stage2_authoritative_packet
 from modules.core.stage2_preflight import (
     Stage2AnalystWeaponsPayload,
     Stage2ArcAnalysisContextPayload,
@@ -78,8 +79,14 @@ class Stage2PreflightRuntime:
             except Exception as exc:
                 logging.warning(f"[SilentPass:Stage2:ASP:Post] {exc!s:.120}")
 
-        refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
-        refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
+        refined_arc["joint_docs"] = merge_stage2_authoritative_packet(
+            refined_arc.get("joint_docs"),
+            enriched_block.get("joint_docs"),
+        )
+        refined_arc["status_shadow"] = merge_stage2_authoritative_packet(
+            refined_arc.get("status_shadow"),
+            enriched_block.get("status_shadow"),
+        )
         refined_arc = owner._apply_postpass_state_change_fixes(
             refined_arc=refined_arc,
             enriched_block=enriched_block,

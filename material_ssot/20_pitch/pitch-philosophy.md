@@ -103,11 +103,14 @@ Authority note:
 - defeat is allowed
 - but pain must stay growth-bearing, protective, or upward-pointing
 - the opening cannot teach the reader that helping, winning, or proving oneself mostly leads to punishment
+- in `medical` or adjacent professional lanes, a move may look sacrificial on the surface if it is actually a justified capture of responsibility backed by protocol, record, or clinical judgment
+- even there, rewardless saintly self-erasure is forbidden; the move must still produce evaluation revision, authority, case access, or the next gate
 
 ### 3.10 Contamination Guard
 
 - define what the work must not drift into
 - ban false substitutes such as romance filler, family melodrama, vibe-only victory, punishment pump, or fake domain shortcuts when they break the family promise
+- for medical lanes, do not flatten the work into tearful gratitude scenes, unpaid saint narratives, or overwork martyrdom without visible authority gain
 
 ## 4. Pre-Canon Selection Gate
 

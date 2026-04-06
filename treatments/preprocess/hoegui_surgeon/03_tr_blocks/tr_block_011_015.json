@@ -1,0 +1,251 @@
+{
+  "_schema": "tr.v1",
+  "_work_id": "hoegui_surgeon",
+  "_arc": "ARC-02",
+  "_arc_title": "M&M 회의록에 이름을 올리다",
+  "_block_range": "11-15",
+  "_note": "5-block cap batch. Block 11-15. 감리 후 Block 16-20 진행.",
+  "blocks": [
+    {
+      "block_id": "Block 11",
+      "block_no": 11,
+      "title": "컨퍼런스 발표자",
+      "content": {
+        "context": "2026년 6월. 주간 외과 컨퍼런스. 서동혁이 조영채 과장의 간문부 담관암 수술 케이스를 발표한다. R1이 컨퍼런스에서 발표하는 것 자체가 이 병원의 첫 사례다. 발표 프레임은 '수술 전 판독 소견이 접근법 선택에 기여한 사례'로, 조영채 과장이 직접 잡아 줬다.",
+        "event_villain": "발표가 시작되자 회의실 분위기가 미묘하다. 다른 교수들은 호기심과 불편함이 섞인 눈으로 본다. R1이 교수들 앞에서 수술 케이스를 해설하는 것은 위계의 경계를 건드린다. 강태준은 뒤쪽에 앉아 팔짱을 끼고 있다. 한정우 치프는 발표 직전에 서동혁에게 귓속말했다. '짧게 해. 반응 보고 빠져.'",
+        "solution": "서동혁은 감정을 빼고 데이터만 놓는다. CT 3D 재구성, 변이 혈관 주행, 표준 접근법 대비 대안 접근법의 차이, 수술 중 실제 해부학과의 일치도. 슬라이드 7장. 설명 4분. 자기 판독이 왜 맞았는지를 해설하지 않는다. 영상이 보여주도록 놔둔다. 발표가 끝나자 질문이 2개 들어온다. 하나는 '이 변이 패턴을 어떻게 사전에 인지했느냐'이고, 서동혁은 '3D 재구성에서 간동맥 분지 주행이 표준 도해와 달랐습니다'라고만 답한다.",
+        "reward": "발표 자체가 보상이다. R1이 교수들 앞에서 자기 이름으로 케이스를 발표하고, 질문에 답하고, 무사히 끝냈다. 아직 추가 권한은 없지만, '이 R1이 발표하는 것이 자연스러운 일'이라는 전례가 만들어졌다. 다음 발표는 더 쉬워진다."
+      },
+      "stakes": "첫 공식 발표가 실패하면 조영채 과장의 판단이 도마에 오르고, 발표권 자체가 회수될 수 있다. 성공하면 R1 발표가 전례가 된다.",
+      "power_shift": {
+        "protagonist": "컨퍼런스 발표를 무사히 마침. R1 발표의 전례 확립.",
+        "antagonist": "강태준은 발표를 지켜보며 이 R1이 자기 통제 밖에서 성장하고 있음을 재확인한다."
+      },
+      "relationship_delta": [
+        { "target": "강태준", "before": "서동혁을 경계의 대상으로 인식한 교수", "after": "R1이 컨퍼런스에서 발표하는 것을 지켜본 교수 — 통제 필요성을 느낌" },
+        { "target": "한정우", "before": "R1이 1st assist로 지명된 것에 복잡한 표정의 치프", "after": "'짧게 해'라고 충고한 치프 — 적대가 아니라 현실적 조언" }
+      ],
+      "foreshadow": [],
+      "callback": [],
+      "emotional_beat": { "type": "measured_debut", "intensity": 6 },
+      "tension_level": 6,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 컨퍼런스룸", "type": "공식 발표" },
+      "time_span": { "duration": "1시간", "in_story_time": "2026년 6월 초" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "과장의 1st Assist + 직보선 + 배정권 + 발표권",
+        "authority_after": "컨퍼런스 발표 전례를 가진 R1 (변화 미미, 전례 확립)",
+        "authority_delta": "+0.5",
+        "method": "데이터 중심 발표 4분. 자기 해설 최소화.",
+        "opponent": { "name": "없음 (직접 충돌 없음)", "type": "없음", "weakness_exploited": "없음" },
+        "medical_sector": "외과 컨퍼런스 발표",
+        "section_rotation": "ARC-02 — M&M 회의록에 이름을 올리다"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "없음 — 이 블록은 발표 실행", "accuracy": "해당 없음", "source": "해당 없음" },
+        "butterfly_effect": { "original_event": "1회차에서는 R1 시절 컨퍼런스 발표 기회가 없었다.", "changed_event": "발표권을 얻어 첫 공식 발표.", "ripple_effect": "R1 발표의 전례가 ARC-02 M&M 발표의 기반이 된다." },
+        "regression_hint": { "slip_up": "없음", "suspicion_from": "없음" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "자기를 해설하지 않는다. 영상이 보여주도록 놔둔다."
+      }
+    },
+    {
+      "block_id": "Block 12",
+      "block_no": 12,
+      "title": "강태준의 기준",
+      "content": {
+        "context": "컨퍼런스 발표 직후 주간. 강태준 교수가 외과 의국 회의에서 새 규칙을 제안한다. '레지던트의 수술 전 차트 판독 노트는 지도교수 사전 확인을 거친 뒤 정식 기록으로 남긴다.' 제안의 형식은 수련 교육 품질 관리.",
+        "event_villain": "강태준의 논리는 합리적이다. '미완성된 판독이 차트에 남으면 후속 의료진이 잘못된 정보를 참조할 위험이 있다. 레지던트는 학습 과정에 있으므로, 지도교수가 판독의 정확성을 확인한 뒤 기록하는 것이 환자 안전에 부합한다.' 이것은 서동혁을 직접 겨냥하지 않는다. 전체 레지던트에 적용되는 규칙이다. 하지만 실질적 효과는 명확하다 — 서동혁의 차트 기록이 강태준의 사전 승인 없이는 EMR에 남지 못한다.",
+        "solution": "서동혁은 회의에서 반대하지 않는다. 규칙 자체가 합리적이니까. 대신 조영채 과장의 직보선이 이미 열려 있다는 사실이 핵심이다. 직보선을 통해 과장에게 직접 올리는 판독은 '지도교수 사전 확인'의 범위에 들어가지 않는다 — 과장이 직접 요청한 소견이니까. 강태준의 규칙은 서동혁의 독립 차트 기록을 제한하지만, 과장 직보선 경유 판독은 건드리지 못한다.",
+        "reward": "이 블록에서 서동혁은 아무것도 얻지 않는다. 오히려 독립 차트 기록이라는 도구 하나가 제한됐다. 하지만 직보선이 살아 있으므로 엔진이 멈추지는 않는다. 강태준의 규칙은 서동혁의 성장을 늦출 수 있지만, 이미 열린 경로를 닫지는 못한다."
+      },
+      "stakes": "강태준의 규칙이 통과되면 서동혁의 독립 판독 기록 경로가 막힌다. 하지만 직보선이라는 우회 경로가 있다. 강태준이 직보선까지 건드리려면 과장과 정면충돌해야 한다.",
+      "power_shift": {
+        "protagonist": "독립 차트 기록 제한 (-1). 하지만 직보선 경유 판독은 유지.",
+        "antagonist": "강태준이 수련 규칙이라는 합법적 도구로 서동혁을 제어. 첫 합리적 반격."
+      },
+      "relationship_delta": [
+        { "target": "강태준", "before": "R1의 컨퍼런스 발표를 지켜보며 통제 필요성을 느낀 교수", "after": "수련 규칙으로 차트 기록 사전 승인 체계를 도입한 교수 — 합법적 통제 시작" }
+      ],
+      "foreshadow": [
+        { "id": "FS-05", "type": "seed", "description": "강태준의 '사전 승인' 규칙. 이 규칙이 Block 14에서 M&M 발표를 막으려는 수단으로 확장된다." }
+      ],
+      "callback": [
+        { "id": "FS-02", "type": "development", "description": "Block 10에서 심은 강태준의 경계가 구체적 행동(수련 규칙)으로 전환." }
+      ],
+      "emotional_beat": { "type": "structural_pressure", "intensity": 7 },
+      "tension_level": 7,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 의국 회의실", "type": "규칙 제정" },
+      "time_span": { "duration": "1시간", "in_story_time": "2026년 6월" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "컨퍼런스 발표 전례를 가진 R1",
+        "authority_after": "독립 차트 기록 제한된 R1 (직보선은 유지)",
+        "authority_delta": "-1",
+        "method": "강태준의 합리적 규칙 도입으로 독립 기록 경로 제한",
+        "opponent": { "name": "강태준", "type": "지도교수", "weakness_exploited": "없음 — 이번은 강태준이 이긴다" },
+        "medical_sector": "수련 교육 규칙",
+        "section_rotation": "ARC-02 — M&M 회의록에 이름을 올리다"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "전생에서도 병원 정치의 합법적 도구를 당했다. 정면 반박은 손해.", "accuracy": "상", "source": "전생 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 차트 기록 자체가 없어서 이런 규칙도 없었다.", "changed_event": "서동혁의 차트 기록이 유효해지자 강태준이 규칙으로 대응했다.", "ripple_effect": "직보선 우회 경로의 중요성이 올라간다." },
+        "regression_hint": { "slip_up": "반대 없이 규칙을 수용하는 28세의 차분함", "suspicion_from": "한정우 (미약)" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "합법적 도구에는 합법적 우회로."
+      }
+    },
+    {
+      "block_id": "Block 13",
+      "block_no": 13,
+      "title": "담관 변이",
+      "content": {
+        "context": "2026년 7월. 외과 M&M 컨퍼런스 안건 목록이 올라왔다. 박정민 교수의 담낭절제술 후 담관 손상 합병증 케이스가 포함되어 있다. 환자는 재수술이 필요한 상태다. 서동혁은 이 케이스의 수술 전 차트를 본다 — 직보선을 통해 조영채 과장이 미리 보여줬다.",
+        "event_villain": "서동혁이 CT를 재판독한다. 이 환자의 담관 해부학에는 변이가 있었다. 우측 간관이 총간관에 합류하는 위치가 표준 위치보다 낮고, 낭관과 겹치는 구간이 있다. 이 변이 패턴에서 표준 담낭절제 접근법은 담관 손상 위험이 높다. 서동혁은 30,000건 중 이 패턴을 11번 봤다. 3번은 담관 손상이었다. 문제는 — 이 판독을 수술 3일 전에 이미 직보선을 통해 차트 노트로 남겨 놓았다는 것이다. 강태준의 '사전 승인' 규칙 이전에 기록한 것이니까.",
+        "solution": "서동혁은 아무것도 하지 않는다. 기록은 이미 있다. M&M 안건에 올라온 이상 이 케이스는 컨퍼런스에서 리뷰된다. 서동혁의 차트 노트가 발견될 것인지는 아직 모른다 — 하지만 조영채 과장은 이 기록의 존재를 알고 있다.",
+        "reward": "이 블록에서는 아직 보상이 없다. 차트 기록이 M&M에서 확인되는 것은 Block 15다. 지금은 준비 완료 상태."
+      },
+      "stakes": "박정민 교수의 합병증은 M&M에서 리뷰될 것이다. 서동혁의 사전 차트 기록이 이 자리에서 확인되면, ARC-01의 단일 적중을 넘어 '반복 적중'이 M&M이라는 공식 문서에 올라간다.",
+      "power_shift": {
+        "protagonist": "M&M 안건에 올라온 케이스에 대해 사전 기록이 이미 존재. 카드 준비 완료.",
+        "antagonist": "박정민 교수는 아직 서동혁의 차트 기록을 모른다. 강태준도 이 특정 기록의 존재를 모른다."
+      },
+      "relationship_delta": [
+        { "target": "박정민", "before": "없음 (첫 등장 준비)", "after": "M&M 안건의 당사자 교수 — 아직 서동혁과 직접 접점 없음" },
+        { "target": "조영채", "before": "1st assist로 공식 지명한 과장", "after": "서동혁의 사전 기록 존재를 알고 있는 과장 — M&M에서 어떻게 쓸지 계산 중" }
+      ],
+      "foreshadow": [
+        { "id": "FS-06", "type": "seed", "description": "서동혁의 사전 차트 기록이 M&M에서 확인되면 박정민 교수와의 관계가 생긴다. Block 15에서 payoff." }
+      ],
+      "callback": [],
+      "emotional_beat": { "type": "quiet_preparation", "intensity": 5 },
+      "tension_level": 6,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 CT 리뷰실 → 직보선 경유 과장실", "type": "판독 준비" },
+      "time_span": { "duration": "2일", "in_story_time": "2026년 7월 초" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "독립 차트 기록 제한된 R1 (직보선 유지)",
+        "authority_after": "M&M 안건 케이스에 사전 기록을 가진 R1 (변화 없음, 카드 준비)",
+        "authority_delta": "0",
+        "method": "직보선 경유로 사전 차트 기록 남김. 강태준 규칙 이전 기록이므로 유효.",
+        "opponent": { "name": "박정민 (간접)", "type": "M&M 당사자 교수", "weakness_exploited": "담관 변이 패턴 미인지" },
+        "medical_sector": "담낭절제 합병증 판독",
+        "section_rotation": "ARC-02 — M&M 회의록에 이름을 올리다"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "담관 변이 패턴 11회 경험 중 3회 담관 손상", "accuracy": "상", "source": "전생 수술 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 이 케이스에 대한 사전 기록이 없었다.", "changed_event": "직보선 경유로 수술 3일 전 기록을 남겼다.", "ripple_effect": "M&M에서 기록이 확인되면 공식 문서에 이름이 올라간다." },
+        "regression_hint": { "slip_up": "없음", "suspicion_from": "없음" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "기록을 남기고 기다린다."
+      }
+    },
+    {
+      "block_id": "Block 14",
+      "block_no": 14,
+      "title": "강태준의 손",
+      "content": {
+        "context": "M&M 컨퍼런스 전날. 강태준이 발표 순서표를 확인한다. 서동혁이 발표자 명단에 들어 있다 — 조영채 과장이 박정민 교수 케이스의 판독 부분 발표를 서동혁에게 배정했기 때문이다. 강태준은 이것을 본다.",
+        "event_villain": "강태준은 지도교수 권한을 사용한다. M&M 발표 순서를 조정할 수 있는 것은 과장과 지도교수다. 강태준은 '이 케이스는 수술 중 변수 대응이 핵심이므로, 집도의인 박정민 교수가 직접 전 과정을 발표하는 것이 M&M 취지에 맞다'고 의견을 낸다. 서동혁의 판독 부분 발표를 빼려는 것이다. 논리적으로 틀리지 않다. M&M은 원래 집도의 중심 리뷰다.",
+        "solution": "서동혁은 직접 반격하지 않는다. 대신 조영채 과장이 움직인다. 조영채의 논리: '수술 전 판독과 수술 중 대응을 분리해서 보는 것이 학습 효과가 크다. 판독 부분은 별도 발표자가 맡는 것이 M&M 개선 시범 운영이다.' 이것은 과장 권한의 범위 안이다. 강태준은 과장에게 정면으로 반대하기 어렵다 — 과장의 수련 교육 방침이니까. 서동혁의 발표는 유지된다.",
+        "reward": "서동혁의 M&M 발표가 유지됐다. 하지만 이것은 조영채 과장의 방어 덕이다. 서동혁 자신의 권한이 아니라 조력자의 계산이 작동한 것. 이 블록의 진짜 의미는 — 강태준이 서동혁을 막기 위해 과장과 충돌하기 직전까지 갔다는 사실이다. 적대자의 압박 수위가 올라가고 있다."
+      },
+      "stakes": "M&M 발표가 막히면 Block 15의 회의록 기재도 불가능해진다. 강태준의 방해가 성공하면 서동혁의 권한 상승 경로가 ARC-02에서 정체된다.",
+      "power_shift": {
+        "protagonist": "발표는 유지됐지만 조영채의 방어에 의존. 자기 힘으로 지킨 것이 아님.",
+        "antagonist": "강태준의 반격이 '규칙'에서 '순서 조정'으로 확대. 과장과의 충돌 직전까지 감."
+      },
+      "relationship_delta": [
+        { "target": "강태준", "before": "수련 규칙으로 차트 기록 사전 승인 체계를 도입한 교수", "after": "M&M 발표 순서를 조정해 서동혁을 빼려 한 교수 — 과장에 의해 저지됨" },
+        { "target": "조영채", "before": "서동혁의 사전 기록 존재를 알고 있는 과장", "after": "강태준의 발표 순서 조정을 과장 권한으로 방어한 과장 — 서동혁에 대한 투자를 지킨 것" }
+      ],
+      "foreshadow": [],
+      "callback": [
+        { "id": "FS-05", "type": "development", "description": "Block 12에서 심은 강태준의 '사전 승인' 규칙이 M&M 발표 방해로 확장됐다." }
+      ],
+      "emotional_beat": { "type": "blocked_then_saved", "intensity": 7 },
+      "tension_level": 8,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 과장실 → 의국", "type": "발표 순서 조정" },
+      "time_span": { "duration": "반나절", "in_story_time": "2026년 7월, M&M 전날" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "M&M 안건 케이스에 사전 기록을 가진 R1",
+        "authority_after": "M&M 발표가 유지된 R1 (과장 방어에 의존)",
+        "authority_delta": "0 (유지)",
+        "method": "조영채 과장의 과장 권한 행사로 발표 순서 유지",
+        "opponent": { "name": "강태준", "type": "지도교수", "weakness_exploited": "과장 권한에 정면 반대하기 어려운 구조" },
+        "medical_sector": "M&M 컨퍼런스 순서 조정",
+        "section_rotation": "ARC-02 — M&M 회의록에 이름을 올리다"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "전생에서 교수 간 권한 충돌은 과장 결정으로 정리되는 패턴", "accuracy": "상", "source": "전생 병원 정치 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 M&M 발표 기회 자체가 없었다.", "changed_event": "발표 기회가 생겼고, 방해가 생겼고, 방어가 작동했다.", "ripple_effect": "Block 15의 M&M 발표가 가능해졌다." },
+        "regression_hint": { "slip_up": "없음 — 이 블록에서는 조영채가 움직인다", "suspicion_from": "없음" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "직접 싸우지 않는다. 이미 열린 경로의 주인이 싸우게 한다."
+      }
+    },
+    {
+      "block_id": "Block 15",
+      "block_no": 15,
+      "title": "발표 차례",
+      "content": {
+        "context": "M&M(사망·합병증) 컨퍼런스. 외과 교수 전원, 전임의, 시니어 레지던트가 참석하는 공식 회의. 박정민 교수의 담낭절제 후 담관 손상 합병증 케이스가 올라온다. 박정민 교수가 먼저 수술 전 판단, 수술 과정, 합병증 발생 경위를 발표한다. '수술 중 담관이 예상치 못한 위치에서 손상됐다. 변이 해부학이 원인이었다.'",
+        "event_villain": "박정민 교수의 발표가 끝나고, 참석 교수들이 '수술 중 변수'로 정리하려는 분위기다. 이런 변이는 누구에게나 일어날 수 있다는 공감대. 강태준도 그 방향으로 코멘트한다. '해부학적 변이는 사전 예측이 어려운 경우가 많습니다.'",
+        "solution": "서동혁의 발표 차례. 서동혁은 화면에 두 장을 띄운다. 하나는 수술 전 CT의 3D 재구성에서 담관 변이 주행을 표시한 영상. 다른 하나는 자기 차트 노트 — '우측 간관 합류부 저위 변이, 낭관 중첩 구간에서 담관 손상 우려' — 기록 날짜: 수술 3일 전. 회의실이 조용해진다. 조영채 과장이 말한다. '이 소견이 수술 전에 공유됐으면 접근법이 달랐을 거야.' 박정민 교수의 표정이 굳는다. 반박할 수 없다 — 기록이 먼저 맞았다.",
+        "reward": "M&M 회의록에 기재된다: 'R1 서동혁의 사전 판독이 합병증 예방 가능 소견으로 확인됨.' 이것은 개인 차트 노트가 아니다. M&M 회의록이라는 외과의 공식 문서에 서동혁의 이름과 판독이 올라간 것이다. '차트가 맞는 R1'에서 'M&M 회의록에 이름이 올라간 R1'로. 더 이상 '운이 좋았겠지'로 덮을 수 없다. 이것이 ARC-02의 핵심 보상이다."
+      },
+      "stakes": "M&M은 외과 전원이 참석하는 공식 회의이고, 회의록은 병원 기록으로 영구 보존된다. 여기에 판독이 기재되면 '개인의 관행'이 아니라 '문서화된 실력'이 된다. 이 기재가 이후 모든 권한 상승의 근거가 된다.",
+      "power_shift": {
+        "protagonist": "M&M 회의록에 이름 기재. 공식 문서에 판독력이 찍힘. ARC-02 핵심 도약.",
+        "antagonist": "강태준의 '사전 예측이 어렵다'는 코멘트가 기록에 의해 즉시 부정됐다. 박정민 교수는 반박 불가."
+      },
+      "relationship_delta": [
+        { "target": "박정민", "before": "M&M 안건의 당사자 교수 — 서동혁과 직접 접점 없음", "after": "M&M에서 서동혁의 사전 기록에 반박할 수 없었던 교수 — 불편함과 인정 사이" },
+        { "target": "강태준", "before": "M&M 발표 순서를 조정해 서동혁을 빼려 한 교수", "after": "'사전 예측이 어렵다'는 코멘트가 기록에 부정된 교수 — 공식 석상에서의 첫 실질적 패배" },
+        { "target": "조영채", "before": "강태준의 발표 순서 조정을 방어한 과장", "after": "'이 소견이 수술 전에 공유됐으면 접근법이 달랐을 거야' — 서동혁의 가치를 공식 석상에서 확인한 과장" }
+      ],
+      "foreshadow": [],
+      "callback": [
+        { "id": "FS-01", "type": "arc_extension", "description": "ARC-01의 차트 기록 무기화가 M&M이라는 상위 공식 문서로 격상됐다." },
+        { "id": "FS-06", "type": "payoff", "description": "Block 13에서 준비한 사전 기록이 M&M 회의록 기재로 회수됐다." }
+      ],
+      "emotional_beat": { "type": "public_vindication", "intensity": 9 },
+      "tension_level": 9,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 M&M 컨퍼런스룸", "type": "공식 회의 (최상위)" },
+      "time_span": { "duration": "1시간 30분", "in_story_time": "2026년 7월" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "M&M 발표가 유지된 R1",
+        "authority_after": "M&M 회의록에 이름이 올라간 R1",
+        "authority_delta": "+4 (ARC-02 핵심 도약)",
+        "method": "수술 3일 전 차트 기록 + CT 3D 재구성을 M&M에서 공개 → 회의록 기재",
+        "opponent": { "name": "박정민 / 강태준 (간접)", "type": "M&M 당사자 + 지도교수", "weakness_exploited": "담관 변이 미인지 + '사전 예측 어렵다'는 코멘트가 기록으로 부정됨" },
+        "medical_sector": "M&M 컨퍼런스",
+        "section_rotation": "ARC-02 — M&M 회의록에 이름을 올리다"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "담관 변이 패턴 11회 경험", "accuracy": "상", "source": "전생 수술 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 M&M에 이름이 올라간 적이 없다.", "changed_event": "공식 회의록에 판독력이 기재됐다.", "ripple_effect": "이 기재가 이후 사전 설계권, 협진 호출권, 펠로우 추천의 근거가 된다." },
+        "regression_hint": { "slip_up": "수술 3일 전에 이 변이를 정확하게 읽은 것. CT를 봤다고 하지만, 이 정확도는 경험이 없으면 불가능하다.", "suspicion_from": "박정민 교수 (미약 — '어떻게 이걸 수술 전에?'이라는 의문이 남지만, 기록 자체가 압도적이라 추궁보다 수용이 먼저)" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "기록이 먼저 맞았다. 그 한 줄이 M&M 회의록에 올라갔다. 이제 공식이다."
+      }
+    }
+  ]
+}

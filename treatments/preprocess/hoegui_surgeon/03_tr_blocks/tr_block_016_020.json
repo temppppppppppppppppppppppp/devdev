@@ -1,0 +1,246 @@
+{
+  "_schema": "tr.v1",
+  "_work_id": "hoegui_surgeon",
+  "_arc": "ARC-02",
+  "_arc_title": "M&M 회의록에 이름을 올리다",
+  "_block_range": "16-20",
+  "_note": "5-block cap batch. Block 16-20. ARC-02 종료. 감리 후 ARC-03 진행.",
+  "blocks": [
+    {
+      "block_id": "Block 16",
+      "block_no": 16,
+      "title": "회의록",
+      "content": {
+        "context": "M&M 컨퍼런스 다음 주. 회의록이 외과 전 교수에게 배포됐다. 'R1 서동혁의 사전 판독이 합병증 예방 가능 소견으로 확인됨'이라는 한 줄이 공식 기록으로 남았다. 이 회의록은 병원 감사, 수련 평가, 교수 심사에서 참조되는 문서다.",
+        "event_villain": "회의록이 돈 적은 파장은 조용하지만 넓다. 다른 교수들의 반응이 갈린다. 일부는 'R1 치고 대단하다'이고, 일부는 '교수 수술을 R1이 사후 검증하는 전례가 생겼다'는 불편함이다. 강태준은 후자의 감정을 대표한다. 이것은 개인 불쾌가 아니라 구조적 우려다 — R1의 차트 기록이 교수의 수술 판단을 사후 평가하는 선례가 만들어졌다.",
+        "solution": "서동혁은 회의록 배포 후에도 평소와 같다. 자기 성과를 언급하지 않고, 배정된 환자의 차트를 본다. 이 블록의 핵심은 서동혁의 행동이 아니라 주변의 변화다. 병동에서 간호사가 서동혁을 부르는 톤이 달라졌다. '서 선생님'이 아니라 '서 선생님, 이 환자 차트 좀 봐주실 수 있어요?'로. 간호사들은 M&M 회의록을 읽었다.",
+        "reward": "공식 보상은 없다. 하지만 비공식적으로 병동 내 서동혁의 위치가 바뀌었다. 간호사, 전공의, 타과 스태프가 이 R1을 다르게 대한다. 회의록 한 줄이 만든 인식 변화. 이것은 권한 토큰은 아니지만, 다음 권한이 열리기 위한 토양이다."
+      },
+      "stakes": "M&M 회의록의 파장이 서동혁에게 유리하게 작용할지, 교수 집단의 반발을 키울지가 갈리는 시점이다. 강태준이 이 불편함을 조직적 반격으로 전환하면 위험해진다.",
+      "power_shift": {
+        "protagonist": "M&M 회의록이 배포됨. 비공식 인식 변화 시작. 병동 내 대우가 달라짐.",
+        "antagonist": "강태준은 구조적 우려를 다음 반격의 논거로 다듬고 있다."
+      },
+      "relationship_delta": [
+        { "target": "강태준", "before": "'사전 예측이 어렵다'는 코멘트가 기록에 부정된 교수", "after": "R1이 교수 수술을 사후 검증하는 선례에 대한 구조적 우려를 다듬는 교수" },
+        { "target": "박정민", "before": "M&M에서 서동혁의 기록에 반박할 수 없었던 교수", "after": "회의록 배포 후 조용히 서동혁의 판독 방식을 관찰하기 시작한 교수" }
+      ],
+      "foreshadow": [],
+      "callback": [],
+      "emotional_beat": { "type": "quiet_ripple", "intensity": 5 },
+      "tension_level": 5,
+      "pov_character": "서동혁 + 병동 관찰",
+      "location": { "place": "외과 병동 → 의국", "type": "일상 변화" },
+      "time_span": { "duration": "1주", "in_story_time": "2026년 7월 중순" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "M&M 회의록에 이름이 올라간 R1",
+        "authority_after": "회의록 배포 후 비공식 인식 변화가 시작된 R1",
+        "authority_delta": "+0.5 (비공식)",
+        "method": "회의록 자체가 퍼지면서 인식이 바뀜. 서동혁은 아무것도 하지 않았다.",
+        "opponent": { "name": "없음 (직접 충돌 없음)", "type": "없음", "weakness_exploited": "없음" },
+        "medical_sector": "병동 내 인식 변화",
+        "section_rotation": "ARC-02 — M&M 회의록에 이름을 올리다"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "없음 — 이 블록은 주변 반응", "accuracy": "해당 없음", "source": "해당 없음" },
+        "butterfly_effect": { "original_event": "1회차에서는 이런 인식 변화가 없었다.", "changed_event": "M&M 기재가 병동 전체의 인식을 바꿨다.", "ripple_effect": "타과 협진 호출의 토양이 만들어진다." },
+        "regression_hint": { "slip_up": "없음", "suspicion_from": "없음" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "자기 성과를 언급하지 않는다. 기록이 대신 퍼진다."
+      }
+    },
+    {
+      "block_id": "Block 17",
+      "block_no": 17,
+      "title": "강태준의 반격",
+      "content": {
+        "context": "2026년 7월 말. 외과 의국 월례 회의. 강태준 교수가 정식 안건을 올린다. '레지던트 수련 과정에서의 판독 기록 및 공식 회의 발표 참여 기준 재검토.' 안건의 배경: 최근 M&M에서 R1이 교수 수술에 대한 사전 판독을 발표하고 회의록에 기재되는 선례가 생겼다.",
+        "event_villain": "강태준의 논거는 정교하다. '레지던트가 교수의 수술 판단을 사전에 부정하는 기록을 남기고, 이것이 M&M 회의록에 올라가는 것은 수련 체계의 근본을 훼손한다. 레지던트는 학습 과정에 있고, 교수의 판단은 수백 건의 경험에 기반한다. 한두 번의 적중으로 체계를 바꾸면 R1 전원이 교수 판단에 사전 이의를 제기하는 문화가 되고, 이는 수술장 안전을 위협한다.' 이것은 서동혁 개인 공격이 아니다. 수련 체계 전체의 문제로 프레임을 잡았다. 일부 교수가 고개를 끄덕인다.",
+        "solution": "서동혁은 의국 회의에서 발언하지 않는다. R1은 이 자리에서 발언권이 없다. 대신 조영채 과장이 대응한다. 조영채의 논거: '판독이 틀리면 무시하면 된다. 판독이 맞았는데 기록을 못 남기게 하면 환자가 위험해진다. M&M 회의록 기재는 사후 확인이지 사전 부정이 아니다. 기록이 맞았다는 사실을 삭제할 수는 없다.' 핵심: 조영채는 감화가 아니라 계산으로 방어한다. 이 R1의 판독을 막으면 자기 환자의 안전이 내려간다.",
+        "reward": "강태준의 안건은 보류된다. 즉각 폐기는 아니고, '수련교육위원회에서 추가 검토'로 넘어간다. 서동혁의 발표권과 차트 기록 경로는 당장 차단되지 않는다. 하지만 강태준이 수련교육위원회라는 상위 기구를 동원하려 한다는 신호가 남았다. 이것은 ARC-03 심사위 반격의 복선이다."
+      },
+      "stakes": "강태준의 안건이 통과되면 서동혁의 M&M 발표와 차트 기록이 구조적으로 제한된다. 현재 가진 권한 토큰 중 발표권과 기록권이 동시에 위협받는 최대 위기.",
+      "power_shift": {
+        "protagonist": "안건 보류로 즉각 위기는 넘김. 하지만 수련교육위 검토라는 다음 위협이 남음.",
+        "antagonist": "강태준의 반격이 개인 차원에서 제도 차원으로 격상. 수련교육위까지 끌어올림."
+      },
+      "relationship_delta": [
+        { "target": "강태준", "before": "구조적 우려를 다듬는 교수", "after": "의국 회의에서 정식 안건으로 반격하고 수련교육위까지 끌어올린 교수 — 제도적 수준의 적대" },
+        { "target": "조영채", "before": "강태준의 발표 순서 조정을 방어한 과장", "after": "의국 회의에서 강태준의 안건에 정면 대응한 과장 — 서동혁에 대한 투자를 공개적으로 지킨 것" }
+      ],
+      "foreshadow": [
+        { "id": "FS-07", "type": "seed", "description": "강태준이 수련교육위원회를 동원. ARC-03 Block 23에서 심사위를 통한 단독 집도 제한으로 발전." }
+      ],
+      "callback": [
+        { "id": "FS-05", "type": "escalation", "description": "Block 12의 사전 승인 규칙 → Block 14 발표 순서 조정 → Block 17 정식 안건 + 수련교육위. 강태준의 반격이 3단계로 에스컬레이션." }
+      ],
+      "emotional_beat": { "type": "institutional_siege", "intensity": 8 },
+      "tension_level": 9,
+      "pov_character": "서동혁 (관찰자) + 조영채 (대응자)",
+      "location": { "place": "외과 의국 회의실", "type": "제도적 대결" },
+      "time_span": { "duration": "2시간", "in_story_time": "2026년 7월 말" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "회의록 배포 후 비공식 인식 변화가 시작된 R1",
+        "authority_after": "안건 보류로 당장은 유지, 수련교육위 검토 위협 남음",
+        "authority_delta": "-0.5 (위협 잔존)",
+        "method": "조영채 과장의 계산 기반 방어로 안건 보류",
+        "opponent": { "name": "강태준", "type": "지도교수", "weakness_exploited": "'판독이 맞았는데 기록을 막으면 환자가 위험해진다'는 논리에 정면 반박 어려움" },
+        "medical_sector": "수련 체계 제도",
+        "section_rotation": "ARC-02 — M&M 회의록에 이름을 올리다"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "전생에서 병원 정치가 개인에서 위원회로 올라가면 대응이 어려워진다는 패턴", "accuracy": "상", "source": "전생 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 수련교육위가 서동혁과 무관했다.", "changed_event": "M&M 기재가 수련교육위 검토를 촉발했다.", "ripple_effect": "ARC-03에서 심사위 반격의 기반이 됨." },
+        "regression_hint": { "slip_up": "없음 — 이 블록에서는 발언하지 않는다", "suspicion_from": "없음" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "제도적 싸움에서는 입이 아니라 결과가 무기다."
+      }
+    },
+    {
+      "block_id": "Block 18",
+      "block_no": 18,
+      "title": "과장의 방어",
+      "content": {
+        "context": "의국 회의 이후. 조영채 과장이 서동혁을 과장실로 부른다. 강태준의 안건이 수련교육위로 넘어갔으므로, 조영채는 사전 대비를 한다.",
+        "event_villain": "조영채 과장은 서동혁에게 솔직하다. '강 교수 논리가 틀린 건 아니야. 수련 체계에서 R1이 교수를 검증하는 구조는 전례가 없고, 전례가 없는 것은 위험하다고 보는 사람이 많아.' 조영채는 서동혁을 감싸는 것이 아니다. 자기 판단의 근거를 지키는 것이다. '네 판독을 막으면 내 환자가 위험해진다. 그러니까 내가 지키는 거야. 착각하지 마.'",
+        "solution": "조영채 과장은 수련교육위 검토에 대비해 서동혁의 판독 적중 데이터를 정리한다. ARC-01에서의 변이 간동맥 적중, ARC-02에서의 담관 변이 적중, 그리고 그 사이에 직보선을 통해 서동혁이 사전 판독한 케이스들의 수술 결과 데이터. '네 판독이 적용된 수술의 합병증률이 유의미하게 낮다는 것을 숫자로 보여줘야 해. 감동이 아니라 데이터로.' 서동혁은 끄덕인다. 이것이 조영채 과장의 방어 방식이다 — 감화가 아니라 숫자.",
+        "reward": "서동혁의 판독 적중 데이터가 공식 정리된다. 이것은 즉각적 권한 토큰은 아니지만, 수련교육위에서의 방어 무기이자 이후 펠로우 추천, 조교수 심사에서의 핵심 근거가 될 자산이다."
+      },
+      "stakes": "데이터 정리가 안 되면 수련교육위에서 감정 논쟁이 되고, 감정 논쟁에서 R1은 이기기 어렵다. 데이터로 전환하면 적중률이라는 객관적 무기가 생긴다.",
+      "power_shift": {
+        "protagonist": "판독 적중 데이터가 공식 정리됨. 방어 자산 확보.",
+        "antagonist": "강태준은 수련교육위에서의 검토를 기다리며 다음 수를 준비한다."
+      },
+      "relationship_delta": [
+        { "target": "조영채", "before": "의국 회의에서 강태준에 정면 대응한 과장", "after": "'착각하지 마, 내가 지키는 건 내 판단이야' — 계산 기반 방어의 본질을 서동혁에게 직접 말한 과장" }
+      ],
+      "foreshadow": [],
+      "callback": [],
+      "emotional_beat": { "type": "pragmatic_alliance", "intensity": 6 },
+      "tension_level": 5,
+      "pov_character": "서동혁 + 조영채",
+      "location": { "place": "외과 과장실", "type": "전략 회의" },
+      "time_span": { "duration": "1시간", "in_story_time": "2026년 8월 초" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "안건 보류로 당장은 유지, 수련교육위 위협 남음",
+        "authority_after": "판독 적중 데이터가 공식 정리된 R1 (방어 자산)",
+        "authority_delta": "+0.5 (방어 자산)",
+        "method": "조영채 과장과 판독 적중 데이터 정리 — 감동이 아니라 숫자",
+        "opponent": { "name": "없음 (준비 블록)", "type": "없음", "weakness_exploited": "없음" },
+        "medical_sector": "데이터 정리 / 수련교육위 대비",
+        "section_rotation": "ARC-02 — M&M 회의록에 이름을 올리다"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "전생에서 병원 정치에 밀렸을 때 데이터가 아닌 감정으로 대응한 실수", "accuracy": "상", "source": "전생 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 데이터를 무기로 쓰지 못했다.", "changed_event": "이번에는 적중 데이터를 미리 정리한다.", "ripple_effect": "수련교육위, 펠로우 추천, 조교수 심사에서의 핵심 근거." },
+        "regression_hint": { "slip_up": "없음", "suspicion_from": "없음" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "감동이 아니라 숫자. 기억이 아니라 데이터."
+      }
+    },
+    {
+      "block_id": "Block 19",
+      "block_no": 19,
+      "title": "사전 설계권",
+      "content": {
+        "context": "2026년 8월 중순. 고난도 간절제 수술이 잡혔다. 조영채 과장이 직접 집도하는 케이스. 간정맥과 문맥 분지가 복잡하게 얽혀 있어 접근 경로 선택이 수술 성패를 가른다.",
+        "event_villain": "이 수술의 접근 경로를 결정하는 것은 통상적으로 집도의인 교수 본인이다. 하지만 조영채는 이번에 다르게 움직인다. 수술 5일 전, 서동혁에게 한 줄을 말한다. '네가 먼저 차트 보고 접근법 올려.'",
+        "solution": "서동혁이 CT를 분석하고 접근 경로를 설계한다. 간정맥 주행, 문맥 분지 변이, 종양 위치를 종합해 3가지 접근 옵션과 각각의 위험 혈관을 정리한다. 1번 옵션에 추천 표시를 달고 근거를 적는다. 조영채 과장에게 제출. 과장은 검토 후 1번 옵션을 수술 계획에 채택한다. 이것은 사실상 R1이 수술 계획의 사전 설계를 한 것이다.",
+        "reward": "수술 계획 사전 설계권. R1에게는 존재하지 않는 권한이 과장 재량으로 생겼다. '네가 먼저 차트 보고 접근법 올려'라는 과장의 한 줄이 이 권한의 근거다. 이것은 직보선, 배정권, 발표권을 넘어서는 실질적 수술 결정권의 시작이다."
+      },
+      "stakes": "사전 설계권이 실제로 주어지면 서동혁은 수술의 방향을 사전에 잡는 사람이 된다. 서열은 R1인데 수술 계획을 설계하는 위치. 강태준이 이것을 알면 ARC-03의 반격이 더 거세질 것이다.",
+      "power_shift": {
+        "protagonist": "수술 계획 사전 설계권 확보. 직보선→배정권→발표권→M&M 기재→사전 설계권. 권한 체인의 다음 단계.",
+        "antagonist": "강태준은 아직 이 권한의 구체적 내용을 모른다."
+      },
+      "relationship_delta": [
+        { "target": "조영채", "before": "'내가 지키는 건 내 판단이야' — 계산 기반 방어의 과장", "after": "'네가 먼저 차트 보고 접근법 올려' — 수술 계획 사전 설계를 R1에 위임한 과장" }
+      ],
+      "foreshadow": [],
+      "callback": [],
+      "emotional_beat": { "type": "quiet_authority", "intensity": 7 },
+      "tension_level": 5,
+      "pov_character": "서동혁",
+      "location": { "place": "CT 리뷰실 → 과장실", "type": "수술 계획 설계" },
+      "time_span": { "duration": "5일", "in_story_time": "2026년 8월 중순" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "판독 적중 데이터가 정리된 R1",
+        "authority_after": "수술 계획 사전 설계권을 가진 R1",
+        "authority_delta": "+3",
+        "method": "CT 분석 → 3옵션 접근 경로 제안 → 과장 채택",
+        "opponent": { "name": "없음", "type": "없음", "weakness_exploited": "없음" },
+        "medical_sector": "고난도 간절제 수술 계획",
+        "section_rotation": "ARC-02 — M&M 회의록에 이름을 올리다"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "간정맥+문맥 분지 복합 변이 케이스 — 전생에서 직접 집도 경험 20건 이상", "accuracy": "상", "source": "전생 수술 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 수술 계획에 관여할 기회가 없었다.", "changed_event": "사전 설계권이라는 전례 없는 권한이 생겼다.", "ripple_effect": "ARC-03에서 단독 집도 기회의 근거가 된다." },
+        "regression_hint": { "slip_up": "3가지 접근 옵션을 정리하는 속도와 정확도. 과장도 감탄보다는 '이건 경험이 아니면 안 나온다'는 의문.", "suspicion_from": "조영채 (중간 — 하지만 결과가 너무 좋아서 의문보다 활용이 먼저)" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "설계하되 설명하지 않는다. 옵션을 놓고 과장이 선택하게 한다."
+      }
+    },
+    {
+      "block_id": "Block 20",
+      "block_no": 20,
+      "title": "협진 호출",
+      "content": {
+        "context": "2026년 9월. 사전 설계권으로 진행한 간절제 수술이 성공했다. 합병증 없음, 출혈량 최소. 이 결과가 병원 내에 퍼지면서 서동혁의 판독에 대한 인식이 외과를 넘어 확산되기 시작한다.",
+        "event_villain": "소화기내과 펠로우 김수현이 외과에 연락한다. 간세포암 환자가 있는데, 수술 가능성을 판단해야 한다. CT에서 간문부 혈관 해부학이 복잡하고, 내과에서 수술 적합성을 판단하기 어려운 케이스다. 김수현의 요청: '외과에 그 레지던트 있잖아요, 차트 판독 잘한다는. 이 환자 CT 좀 먼저 봐줄 수 있어요?'",
+        "solution": "타과에서 R1을 지명해서 협진을 요청하는 것은 전례가 없다. 통상적으로 협진은 과장이나 교수에게 간다. 하지만 김수현은 M&M 회의록과 병동 내 인식 변화를 보고 직접 연락한 것이다. 서동혁은 조영채 과장에게 보고한 뒤, 과장의 승인을 받고 CT를 판독한다. 절차를 지킨다 — R1이 독단으로 타과 협진을 받으면 안 되니까. 판독 소견: 수술 가능, 단 문맥 우분지 변이 때문에 접근법 선택이 중요. 소견을 조영채 경유로 김수현에게 전달한다.",
+        "reward": "타과 협진 호출권의 시작. 소화기내과에서 외과 R1을 지명해서 차트를 보여 달라고 한 것. '차트가 맞는 R1'에서 '타과가 먼저 찾는 R1'로. ARC-02의 최종 보상은 M&M 회의록 기재 + 수술 계획 사전 설계권 + 타과 협진 호출권이다. 서열은 여전히 R1인데 실질적 영향력이 과를 넘어섰다."
+      },
+      "stakes": "타과 협진 호출이 실제로 이루어지면 서동혁의 판독이 외과 내부를 넘어 병원 전체로 확산되는 전환점이 된다. ARC-02의 마지막 도약.",
+      "power_shift": {
+        "protagonist": "타과 협진 호출 확보. ARC-02 목표 달성. M&M 기재 + 사전 설계권 + 협진 호출권.",
+        "antagonist": "강태준은 수련교육위 검토를 준비하면서 ARC-03의 반격을 다듬고 있다."
+      },
+      "relationship_delta": [
+        { "target": "김수현", "before": "없음 (첫 등장)", "after": "서동혁에게 직접 CT 판독을 요청한 소화기내과 펠로우 — 타과 협진 호출의 첫 번째 인물" },
+        { "target": "조영채", "before": "수술 계획 사전 설계를 R1에 위임한 과장", "after": "타과 협진까지 서동혁 경유로 처리하는 과장 — 서동혁의 판독이 과의 자산이 되기 시작" }
+      ],
+      "foreshadow": [
+        { "id": "FS-08", "type": "seed", "description": "김수현과의 협진 관계. 이후 내외과 협진 체계의 기반이 되며, ARC-04에서 간이식 케이스로 발전." }
+      ],
+      "callback": [
+        { "id": "FS-02", "type": "arc_status", "description": "Block 10에서 심은 강태준 경계가 ARC-02에서 규칙(B12)→순서 조정(B14)→정식 안건(B17)으로 에스컬레이션. ARC-03에서 심사위로 최종 확대 예고." }
+      ],
+      "emotional_beat": { "type": "cross_boundary", "intensity": 8 },
+      "tension_level": 6,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 CT 리뷰실 → 소화기내과 경유", "type": "타과 협진" },
+      "time_span": { "duration": "3일", "in_story_time": "2026년 9월" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "수술 계획 사전 설계권을 가진 R1",
+        "authority_after": "타과 협진 호출권을 가진 R1 (ARC-02 최종)",
+        "authority_delta": "+2 (ARC-02 총합: M&M 기재 +4, 사전 설계 +3, 협진 호출 +2 = +9, 강태준 반격 -2 = net +7)",
+        "method": "타과 펠로우의 직접 지명 → 과장 승인 경유 → CT 판독 소견 전달",
+        "opponent": { "name": "없음 (보상 블록)", "type": "없음", "weakness_exploited": "없음" },
+        "medical_sector": "소화기내과 협진 / 간세포암 수술 적합성",
+        "section_rotation": "ARC-02 — M&M 회의록에 이름을 올리다 (ARC 종료)"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "간세포암 수술 적합성 판단 — 전생에서 간암 수술 200건 이상", "accuracy": "상", "source": "전생 수술 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 타과에서 R1을 지명한 적이 없다.", "changed_event": "M&M 기재가 만든 인식 변화가 타과 협진 호출로 이어졌다.", "ripple_effect": "병원 전체에서 서동혁의 판독이 자산으로 인식되기 시작한다." },
+        "regression_hint": { "slip_up": "간세포암 수술 적합성에 대한 판독이 너무 정확하고 빠르다. 김수현은 놀라지만 '이 R1은 원래 이런 사람'이라고 받아들인다.", "suspicion_from": "김수현 (미약 — 의문보다 신뢰가 먼저)" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "절차를 지킨다. R1이 독단으로 타과 협진을 받으면 안 된다. 과장 경유. 그래야 권한이 제도 안에 남는다."
+      }
+    }
+  ]
+}

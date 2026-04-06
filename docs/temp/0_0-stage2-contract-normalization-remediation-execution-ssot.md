@@ -1,20 +1,21 @@
 # 0_0 Stage2 Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (2026-04-06 re-audited and promoted from parked after live validation/finalizer revalidation confirmed a still-live Stage2 persistence-authority seam; active bounded tranche is truth-preserving `joint_docs.world_joint` / `status_shadow` merge at Stage2 sinks while broader Stage2 normalization remains queued behind it)
+Status: partially_realized (2026-04-06 re-audited and promoted from parked after live validation/finalizer revalidation confirmed a still-live Stage2 persistence-authority seam; the bounded preflight/validation/finalizer persistence tranche has now landed and reads as a closure-candidate child tranche inside this SSOT, while broader Stage2 normalization remains queued behind it)
 Canonical Path: `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2 survey docs and lane drafts untracked`
-- Resume Commit: `0d7c077a9e6f14575aba7fc509b836d218db610d`
-- Resume Drift Summary: `2026-04-05 bounded Stage2 realization slices narrowed the lane, the 2026-04-06 global P0-P1 Opus survey confirmed two still-live Stage2 persistence seams, and current workspace revalidation in `stage2_validation_pipeline.py` plus `stage2_finalizer.py` proved the whole-object overwrite shell is still live; this SSOT is now promoted into an active bounded tranche directly behind the current Stage4 pair`
+- Resume Commit: `5428daf989bb8dd91aa12f86a137d899596fed4a`
+- Resume Drift Summary: `2026-04-05 bounded Stage2 realization slices narrowed the lane, the 2026-04-06 global P0-P1 Opus survey confirmed two still-live Stage2 persistence seams, the 2026-04-06 Golden bounded survey added one residual artifact-truth P1 plus abrupt-shutdown observability debt, and the current workspace then landed truth-preserving packet merges across `stage2_preflight_runtime.py`, `stage2_validation_pipeline.py`, `stage2_finalizer.py`, and `stage2_contracts.py` with focused Stage2 family regressions passing`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
 - `docs/2026-04-01/0_0-stage2-stage3-context-hierarchy-bounded-survey.md`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-bounded-survey.md`
 - `docs/2026-04-05/00_0405-stage2-artifact-truth-observability-bounded-survey.md`
 - `docs/2026-04-06/rol-global-terminal2-stage2-pipeline-p0p1.md`
+- `docs/2026-04-06/01_golden_stage2_p0_p3_bounded_survey.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-evidence.json`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-evidence.json`
@@ -29,7 +30,7 @@ This execution SSOT still exists because the latest survey plus current code rev
 
 - `Stage2` has a real problem
 - that problem is primarily `authority packaging / contract drift`, not missing narrative content
-- the sharpest still-live Stage2-local P1 is now the persistence-time overwrite of LLM-authored packet truth
+- the sharpest still-live Stage2-local P1 in the active queue is now the persistence-time overwrite of LLM-authored packet truth
 - therefore the immediate work is a bounded Stage2 sink fix, not a broad Stage2 architecture wave
 
 ## 2. Baseline Facts
@@ -43,12 +44,15 @@ This execution SSOT still exists because the latest survey plus current code rev
 - Fresh `00_0405` evidence shows a second Stage2-local symptom: selected Stage2 packet truth can diverge from final arc txt truth on bounded location/item carryover even when the business-state spine stays coherent.
 - Fresh `00_0405` evidence also shows that key Stage2 correction and retrieval facts are fragmented across `runtime_audit.jsonl` and `quality_metrics.jsonl` instead of being operator-visible in the console.
 - 2026-04-06 Opus revalidation proves the remaining Stage2-local high-severity seam is no longer just generic packet drift: `joint_docs.world_joint` and `status_shadow` can still be overwritten by `enriched_block` payloads at validation/finalization time before canonical persistence.
+- Fresh `01_golden` evidence confirms a residual Stage2-local contract mismatch: operator-visible cleanup can close falsely, with accepted artifacts still retaining `internal_energy` after console-level removal claims.
+- The same `01_golden` evidence also confirms that stale summary sinks and implicit `Arc 5` closure were observed under an abrupt IDE shutdown, so they remain bounded observability and abnormal-shutdown-tolerance debt rather than a queue-promotion trigger over the current persistence tranche.
 
 ## 3. Scope
 
 Included:
 
 - current active bounded owner set:
+  - `modules/core/stage2_preflight_runtime.py`
   - `modules/core/stage2_validation_pipeline.py`
   - `modules/core/stage2_finalizer.py`
   - `modules/core/stage2_contracts.py`
@@ -100,7 +104,7 @@ Primary debt inventory for this wave:
 
 ### Class A. Current active bounded tranche
 
-- truth-preserving merge at Stage2 validation/finalization sinks for `joint_docs.world_joint` and `status_shadow`
+- truth-preserving merge at Stage2 preflight/validation/finalization sinks for `joint_docs.world_joint` and `status_shadow`
 - explicit Stage2-owned fallback/backfill policy for `enriched_block` vs refined-arc packet truth
 
 ### Class B. Residual realization after the active tranche
@@ -838,6 +842,7 @@ Queue semantics now change:
 
 Active bounded owner set:
 
+- `modules/core/stage2_preflight_runtime.py`
 - `modules/core/stage2_validation_pipeline.py`
 - `modules/core/stage2_finalizer.py`
 - `modules/core/stage2_contracts.py`
@@ -852,3 +857,73 @@ Reprioritization note:
 
 - this promotion addresses a live P1 truth-loss seam, not the full broader Stage2 normalization backlog
 - broader mission-authority, alias, dead-field, and readiness work remains in this SSOT but outside the current bounded tranche
+
+## 28. 2026-04-06 Golden Survey Promotion: Residual Artifact-Truth P1 and Abrupt-Shutdown Debt
+
+The `01_golden` bounded survey is now promoted into this execution SSOT as supporting Stage2 evidence.
+
+It does not create a new execution document and does not widen the current active bounded tranche, but it does refine the residual Stage2 backlog that remains behind the active `joint_docs.world_joint` / `status_shadow` persistence wave.
+
+Queue semantics remain unchanged:
+
+- status stays `partially_realized`
+- the current active bounded tranche remains the Stage2 sink-side truth-preserving merge for `joint_docs.world_joint` and `status_shadow`
+- broader Stage2 normalization and observability debt remains queued behind that tranche
+
+Promoted residual findings:
+
+1. residual Stage2-local `P1`: console-level false closure on family-field cleanup
+   - accepted Golden `Arc 1`, `Arc 3`, and `Arc 4` artifacts still persisted `internal_energy` in `arc_start_state` and `arc_end_state` after `ui_events.jsonl` reported the field removed
+   - this confirms that non-wuxia field hygiene is not only a candidate-selection issue; operator-visible repair claims can still disagree with saved artifact bytes
+   - execution consequence: keep the broader Stage2 contract-normalization backlog open after the active persistence tranche, with explicit verification that future operator-visible repair claims match persisted artifact truth
+2. reclassified operational debt under abrupt shutdown
+   - the operator later confirmed the IDE was abruptly closed during `Arc 5`
+   - `pass_rate_monitor.json` and `runtime_audit_summary.json` staying stale, plus the lack of an explicit `Arc 5` interrupted marker, now read as abnormal-shutdown tolerance and observability gaps rather than proof of a normal-run persistence defect
+   - execution consequence: keep these items as future bounded observability and resume-hardening debt; they do not outrank the active persistence tranche
+3. candidate-only residual
+   - `power_changes` drift across accepted artifacts remains real but unpromoted until a consumer trace closes concrete downstream dependence
+
+Golden survey guardrail:
+
+- this appendix does not justify regenerating accepted Golden arcs
+- this appendix does not reclassify Stage2 as a narrative-content collapse
+- this appendix does not promote the broader Stage2 backlog above the active `Stage4 consumer` / `Stage4 repair` pair
+
+## 29. 2026-04-06 Bounded Realization Update: Persistence-Authority Tranche Landed
+
+The bounded `joint_docs.world_joint` / `status_shadow` persistence-authority tranche is now landed for the current Stage2 owner family.
+
+Landed owner set:
+
+- `modules/core/stage2_contracts.py`
+- `modules/core/stage2_preflight_runtime.py`
+- `modules/core/stage2_validation_pipeline.py`
+- `modules/core/stage2_finalizer.py`
+
+Landed behavior:
+
+- `merge_stage2_authoritative_packet()` now preserves non-empty refined-arc packet truth while backfilling only missing or empty fallback fields
+- Stage2 FourPhase PASS post-processing no longer performs whole-object overwrite of `joint_docs` / `status_shadow` from `enriched_block`
+- validation continuity PASS handling no longer drops existing authoritative `world_joint` when `corrected_joint_docs` is partial
+- finalizer persistence preparation continues to preserve authoritative packet truth while still allowing deterministic inventory/location authority syncs to run field-by-field
+
+Verification evidence:
+
+- `pytest tests/test_stage2_contracts.py tests/test_stage2_preflight.py tests/test_stage2_validation_pipeline.py tests/test_stage2_finalizer.py tests/test_stage2_finalizer_lane_e.py -q`
+  - result: `171 passed`
+- `python -m py_compile modules/core/stage2_contracts.py modules/core/stage2_preflight_runtime.py modules/core/stage2_validation_pipeline.py tests/test_stage2_contracts.py tests/test_stage2_preflight.py tests/test_stage2_validation_pipeline.py tests/test_stage2_finalizer.py`
+- `ruff check modules/core/stage2_contracts.py modules/core/stage2_preflight_runtime.py modules/core/stage2_validation_pipeline.py tests/test_stage2_contracts.py tests/test_stage2_preflight.py tests/test_stage2_validation_pipeline.py tests/test_stage2_finalizer.py`
+- `python scripts/check_utf8_hygiene.py modules/core/stage2_contracts.py modules/core/stage2_preflight_runtime.py modules/core/stage2_validation_pipeline.py tests/test_stage2_contracts.py tests/test_stage2_preflight.py tests/test_stage2_validation_pipeline.py tests/test_stage2_finalizer.py`
+
+Closure reading:
+
+- the immediate bounded Stage2 truth-loss seam that motivated the active tranche is now closure-candidate for the current owner set
+- this SSOT stays `partially_realized`, not `closed`, because it still carries deferred Stage2 normalization debt beyond the landed persistence child tranche
+- the temp execution mirror remains queued because the canonical SSOT still owns residual follow-up scope
+
+Residual risks and deferred scope:
+
+- residual artifact-truth false closure on non-wuxia family-field cleanup, as captured in `01_golden`
+- abnormal-shutdown observability and explicit interruption-marking debt, also captured in `01_golden`
+- broader mission-authority extraction, alias normalization, and dead-field keep-or-drop work
+- no fresh live run has yet been used to convert this bounded landing into a runtime closure audit

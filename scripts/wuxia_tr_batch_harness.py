@@ -21,6 +21,16 @@ from modules.core.stage0_handoff import canonicalize_treatment_payload
 from modules.narrative_router.harness_digest import load_harness_digest, render_harness_digest_lines
 
 BLOCK_REF_RE = re.compile(r"Block\s*(\d+)", re.IGNORECASE)
+META_REF_RE = re.compile(
+    r"(?<![A-Za-z])(?:" 
+    r"B\d{1,3}(?:\s*[~→\-]\s*B?\d{1,3})*|"
+    r"Block\s+\d{1,3}|블록\s*\d{1,3}|"
+    r"ARC[-\s]?\d{1,3}|Arc\s+\d{1,3}|아크\s*\d{1,3}|"
+    r"Phase\s+\d{1,3}|페이즈\s*\d{1,3}|"
+    r"Stage\s+\d{1,3}|스테이지\s*\d{1,3}"
+    r")(?:에서의|에서|와의|과의|와|과|보다|의|으로|로|은|는|이|가|를|을|에|도|만)?(?![A-Za-z])",
+    re.IGNORECASE,
+)
 TOKEN_RE = re.compile(r"\w+", re.UNICODE)
 KOREAN_RE = re.compile(r"[\uac00-\ud7a3]")
 LATIN_RE = re.compile(r"[A-Za-z]")
@@ -65,6 +75,22 @@ CODE_PATHS = (
     "genre_ext.opponent.weakness_exploited",
     "genre_ext.success_pattern",
     "regression_ext.execution_doctrine",
+)
+ALLOWED_META_PATH_PREFIXES = (
+    "block_id",
+    "arc_id",
+    "arc_no",
+    "phase_no",
+    "stage_no",
+    "foreshadow_targets",
+    "callback_sources",
+)
+LABEL_META_PATH_PREFIXES = (
+    "section_rotation",
+    "genre_ext.section_rotation",
+    "arc_section",
+    "phase",
+    "phase_label",
 )
 
 
@@ -223,6 +249,170 @@ def normalize_solution_stakes_signature(block: dict[str, Any]) -> str:
     return re.sub(r"\s+", " ", text).strip().lower()
 
 
+def normalize_text_signature(text: Any) -> str:
+    raw = as_text(text)
+    if not raw:
+        return ""
+    text = BLOCK_REF_RE.sub("[BLOCK]", raw)
+    text = re.sub(r"\d+", "[N]", text)
+    return re.sub(r"\s+", " ", text).strip().lower()
+
+
+def relation_target_signature(block: dict[str, Any]) -> tuple[str, ...]:
+    targets = {
+        as_text(relation.get("target"))
+        for relation in ensure_list(block.get("relationship_delta"))
+        if isinstance(relation, dict) and as_text(relation.get("target"))
+    }
+    return tuple(sorted(targets))
+
+
+def relation_before_signature(relation: dict[str, Any]) -> str:
+    return as_text(
+        relation.get("anchor_before")
+        or relation.get("continuity_anchor_before")
+        or relation.get("state_before")
+        or relation.get("before")
+    )
+
+
+def relation_after_signature(relation: dict[str, Any]) -> str:
+    return as_text(
+        relation.get("anchor_after")
+        or relation.get("continuity_anchor_after")
+        or relation.get("state_after")
+        or relation.get("after")
+    )
+
+
+def is_allowed_meta_path(path: str) -> bool:
+    for prefix in ALLOWED_META_PATH_PREFIXES:
+        if path == prefix or path.startswith(f"{prefix}[") or path.startswith(f"{prefix}."):
+            return True
+    return False
+
+
+def is_label_meta_path(path: str) -> bool:
+    for prefix in LABEL_META_PATH_PREFIXES:
+        if path == prefix or path.startswith(f"{prefix}[") or path.startswith(f"{prefix}.") or path.endswith(f".{prefix}"):
+            return True
+    return False
+
+
+def collect_meta_leaks(value: Any, *, path: str = "") -> list[tuple[str, str]]:
+    leaks: list[tuple[str, str]] = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            child_path = f"{path}.{key}" if path else key
+            leaks.extend(collect_meta_leaks(item, path=child_path))
+        return leaks
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            child_path = f"{path}[{index}]"
+            leaks.extend(collect_meta_leaks(item, path=child_path))
+        return leaks
+    if isinstance(value, str) and not is_allowed_meta_path(path) and META_REF_RE.search(value):
+        leaks.append((path, value.strip()))
+    return leaks
+
+
+def split_meta_leaks(leaks: list[tuple[str, str]]) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+    diegetic: list[tuple[str, str]] = []
+    label: list[tuple[str, str]] = []
+    for path, raw in leaks:
+        if is_label_meta_path(path):
+            label.append((path, raw))
+        else:
+            diegetic.append((path, raw))
+    return diegetic, label
+
+
+def extract_numeric_refs(value: Any) -> list[int]:
+    refs: list[int] = []
+    for item in ensure_list(value):
+        number = parse_block_no(item)
+        if number is not None and number not in refs:
+            refs.append(number)
+    return refs
+
+
+def extract_foreshadow_targets(block: dict[str, Any], seed: str = "") -> list[int]:
+    targets = extract_numeric_refs(block.get("foreshadow_targets"))
+    if targets:
+        return targets
+    return [int(match.group(1)) for match in BLOCK_REF_RE.finditer(seed)]
+
+
+def extract_callback_sources(block: dict[str, Any], text: str = "") -> list[int]:
+    sources = extract_numeric_refs(block.get("callback_sources"))
+    if sources:
+        return sources
+    return [int(match.group(1)) for match in BLOCK_REF_RE.finditer(text)]
+
+
+def compute_npc_continuity_mismatches(blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    state: dict[str, str] = {}
+    issues: list[dict[str, Any]] = []
+    for block in blocks:
+        block_no = parse_block_no(block.get("block_id")) or 0
+        for relation in ensure_list(block.get("relationship_delta")):
+            if not isinstance(relation, dict):
+                continue
+            target = as_text(relation.get("target"))
+            if not target:
+                continue
+            before_sig = relation_before_signature(relation)
+            after_sig = relation_after_signature(relation)
+            prev_sig = state.get(target, "")
+            if prev_sig and before_sig and before_sig != prev_sig:
+                issues.append(
+                    {
+                        "block_no": block_no,
+                        "target": target,
+                        "prev_after": prev_sig,
+                        "current_before": before_sig,
+                        "current_after": after_sig,
+                    }
+                )
+            if after_sig:
+                state[target] = after_sig
+    return issues
+
+
+def same_location_change_axes(prev_block: dict[str, Any], curr_block: dict[str, Any]) -> list[str]:
+    prev_place = as_text(get_nested(prev_block, "location.place"))
+    curr_place = as_text(get_nested(curr_block, "location.place"))
+    if not prev_place or prev_place != curr_place:
+        return []
+
+    changed: list[str] = []
+
+    if as_text(get_nested(prev_block, "emotional_beat.type")) != as_text(get_nested(curr_block, "emotional_beat.type")):
+        changed.append("scene_function_proxy")
+
+    prev_opp = (
+        as_text(get_nested(prev_block, "genre_ext.opponent.name")),
+        as_text(get_nested(prev_block, "genre_ext.opponent.weakness_exploited")),
+    )
+    curr_opp = (
+        as_text(get_nested(curr_block, "genre_ext.opponent.name")),
+        as_text(get_nested(curr_block, "genre_ext.opponent.weakness_exploited")),
+    )
+    if prev_opp != curr_opp:
+        changed.append("opponent/front")
+
+    if normalize_text_signature(get_nested(prev_block, "stakes")) != normalize_text_signature(get_nested(curr_block, "stakes")):
+        changed.append("stakes")
+
+    if relation_target_signature(prev_block) != relation_target_signature(curr_block):
+        changed.append("evaluator_proxy")
+
+    if as_text(get_nested(prev_block, "location.type")) != as_text(get_nested(curr_block, "location.type")):
+        changed.append("sub_location")
+
+    return changed
+
+
 def callback_matches(seed: str, callbacks: list[str]) -> bool:
     seed_tokens = token_set(seed)
     if not seed_tokens:
@@ -290,7 +480,7 @@ def build_npc_state(blocks: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
             target = as_text(relation.get("target"))
             if not target:
                 continue
-            state[target] = {"after": as_text(relation.get("after")), "last_block": block_no}
+            state[target] = {"after": relation_after_signature(relation), "last_block": block_no}
     return state
 
 
@@ -302,8 +492,7 @@ def build_due_foreshadows(blocks: list[dict[str, Any]]) -> dict[int, list[dict[s
             seed = as_text(text)
             if not seed:
                 continue
-            for match in BLOCK_REF_RE.finditer(seed):
-                target = int(match.group(1))
+            for target in extract_foreshadow_targets(block, seed):
                 due.setdefault(target, []).append({"plant_block": plant_no, "text": seed})
     return due
 
@@ -316,16 +505,23 @@ def build_open_foreshadow_ledger(blocks: list[dict[str, Any]]) -> list[dict[str,
             seed = as_text(text)
             if not seed:
                 continue
-            targets = [int(match.group(1)) for match in BLOCK_REF_RE.finditer(seed)]
+            targets = extract_foreshadow_targets(block, seed)
             callbacks: list[str] = []
+            resolved = False
             if targets:
                 for target in targets:
                     if 1 <= target <= len(blocks):
-                        callbacks.extend(as_text(item) for item in ensure_list(blocks[target - 1].get("callback")))
-            else:
+                        target_block = blocks[target - 1]
+                        callbacks.extend(as_text(item) for item in ensure_list(target_block.get("callback")))
+                        callback_sources = extract_callback_sources(target_block)
+                        if plant_no in callback_sources:
+                            resolved = True
+            if not targets and not resolved:
                 for later_block in blocks[plant_no:]:
                     callbacks.extend(as_text(item) for item in ensure_list(later_block.get("callback")))
-            if not callbacks or not callback_matches(seed, callbacks):
+            if not resolved and callbacks:
+                resolved = callback_matches(seed, callbacks)
+            if not resolved:
                 overdue = bool(targets) and any(target <= len(blocks) for target in targets)
                 ledger.append(
                     {
@@ -450,6 +646,16 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             "critical_thin_blocks": [],
             "thin_blocks": [],
             "short_stakes_blocks": [],
+            "same_location_clone_blocks": [],
+            "same_location_clone_count": 0,
+            "diegetic_meta_ref_examples": [],
+            "diegetic_meta_ref_count": 0,
+            "label_meta_ref_examples": [],
+            "label_meta_ref_count": 0,
+            "diegetic_block_ref_examples": [],
+            "diegetic_block_ref_count": 0,
+            "npc_continuity_mismatch_examples": [],
+            "npc_continuity_mismatch_count": 0,
             "martial_progress_blocks": [],
             "no_progress_blocks": [],
             "recognition_signal_blocks": 0,
@@ -466,9 +672,19 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
                 "top_weaknesses": [],
                 "solution_pattern_warnings": [],
                 "structural_gate_failures": [],
+                "same_location_clone_blocks": [],
+                "diegetic_meta_ref_examples": [],
+                "label_meta_ref_examples": [],
+                "diegetic_block_ref_examples": [],
+                "npc_continuity_mismatch_examples": [],
             },
         }
 
+    npc_continuity_mismatches = compute_npc_continuity_mismatches(blocks)
+    diegetic_meta_ref_examples: list[dict[str, Any]] = []
+    diegetic_meta_ref_count = 0
+    label_meta_ref_examples: list[dict[str, Any]] = []
+    label_meta_ref_count = 0
     opponent_names: list[str] = []
     weaknesses: list[str] = []
     solution_tails: list[str] = []
@@ -490,8 +706,19 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
     is_regressor_treatment = False
     foreshadow_total = 0
     callback_total = 0
+    same_location_clone_blocks: list[dict[str, Any]] = []
+    prev_block_for_location: dict[str, Any] | None = None
 
     for block_no, block in enumerate(blocks, start=1):
+        meta_leaks = collect_meta_leaks(block)
+        diegetic_meta_leaks, label_meta_leaks = split_meta_leaks(meta_leaks)
+        diegetic_meta_ref_count += len(diegetic_meta_leaks)
+        label_meta_ref_count += len(label_meta_leaks)
+        for path, raw in diegetic_meta_leaks[: max(0, 10 - len(diegetic_meta_ref_examples))]:
+            diegetic_meta_ref_examples.append({"block_no": block_no, "path": path, "text": raw})
+        for path, raw in label_meta_leaks[: max(0, 10 - len(label_meta_ref_examples))]:
+            label_meta_ref_examples.append({"block_no": block_no, "path": path, "text": raw})
+
         genre = (block.get("martial_ext") or block.get("genre_ext") or {}) if isinstance(block, dict) else {}
         content = block.get("content", {}) if isinstance(block, dict) else {}
         opponent = genre.get("opponent", {}) if isinstance(genre.get("opponent", {}), dict) else {}
@@ -544,6 +771,19 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         foreshadow_total += len([text for text in ensure_list(block.get("foreshadow")) if as_text(text)])
         callback_total += len([text for text in ensure_list(block.get("callback")) if as_text(text)])
 
+        if prev_block_for_location is not None:
+            changed_axes = same_location_change_axes(prev_block_for_location, block)
+            prev_place = as_text(get_nested(prev_block_for_location, "location.place"))
+            curr_place = as_text(get_nested(block, "location.place"))
+            if prev_place and prev_place == curr_place and len(changed_axes) < 2:
+                same_location_clone_blocks.append(
+                    {
+                        "block_no": block_no,
+                        "location": curr_place,
+                        "changed_axes": changed_axes,
+                    }
+                )
+
         realm_before = as_text(genre.get("realm_before"))
         realm_after = as_text(genre.get("realm_after"))
         energy_before = parse_energy(genre.get("internal_energy_before"))
@@ -574,6 +814,8 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             else:
                 recognition_gap_streak += 1
                 max_recognition_gap_streak = max(max_recognition_gap_streak, recognition_gap_streak)
+
+        prev_block_for_location = block
 
     opponent_counter = Counter(name for name in opponent_names if name and not is_blankish(name))
     weakness_counter = Counter(value for value in weaknesses if value and not is_blankish(value))
@@ -625,6 +867,9 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         "late_blank_opponent_ok": len(late_blank_opponent_blocks) <= 1,
         "normalized_solution_stakes_repeat_ok": normalized_solution_stakes_repeat_max <= 4,
         "martial_progress_ratio_ok": len(martial_progress_blocks) >= required_progress_blocks,
+        "diegetic_meta_ref_zero": diegetic_meta_ref_count == 0,
+        "label_meta_ref_zero": label_meta_ref_count == 0,
+        "diegetic_block_ref_zero": diegetic_meta_ref_count == 0,
     }
     if is_regressor_treatment:
         hard_gate_checks["regressor_recognition_count_ok"] = recognition_signal_blocks >= required_recognition_blocks
@@ -637,6 +882,14 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         pattern_warnings.append(
             f"top opponent {top_opponent_name} share is {round(top_opponent_repetition / len(blocks) * 100, 1)}%"
         )
+    if same_location_clone_blocks:
+        pattern_warnings.append(f"same-location under-differentiated reuse {len(same_location_clone_blocks)}회")
+    if diegetic_meta_ref_count:
+        pattern_warnings.append(f"diegetic meta leak {diegetic_meta_ref_count}건")
+    if label_meta_ref_count:
+        pattern_warnings.append(f"label meta leak {label_meta_ref_count}건")
+    if npc_continuity_mismatches:
+        pattern_warnings.append(f"npc continuity mismatch {len(npc_continuity_mismatches)}건")
     structural_gate_failures = [key for key, ok in hard_gate_checks.items() if not ok]
 
     return {
@@ -662,6 +915,16 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         "critical_thin_blocks": critical_thin_blocks,
         "thin_blocks": thin_blocks,
         "short_stakes_blocks": short_stakes_blocks,
+        "same_location_clone_blocks": same_location_clone_blocks,
+        "same_location_clone_count": len(same_location_clone_blocks),
+        "diegetic_meta_ref_examples": diegetic_meta_ref_examples,
+        "diegetic_meta_ref_count": diegetic_meta_ref_count,
+        "label_meta_ref_examples": label_meta_ref_examples,
+        "label_meta_ref_count": label_meta_ref_count,
+        "diegetic_block_ref_examples": diegetic_meta_ref_examples,
+        "diegetic_block_ref_count": diegetic_meta_ref_count,
+        "npc_continuity_mismatch_examples": npc_continuity_mismatches[:10],
+        "npc_continuity_mismatch_count": len(npc_continuity_mismatches),
         "martial_progress_blocks": martial_progress_blocks,
         "no_progress_blocks": no_progress_blocks,
         "recognition_signal_blocks": recognition_signal_blocks,
@@ -678,6 +941,11 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             "top_weaknesses": weakness_counter.most_common(3),
             "solution_pattern_warnings": pattern_warnings,
             "structural_gate_failures": structural_gate_failures,
+            "same_location_clone_blocks": same_location_clone_blocks,
+            "diegetic_meta_ref_examples": diegetic_meta_ref_examples,
+            "label_meta_ref_examples": label_meta_ref_examples,
+            "diegetic_block_ref_examples": diegetic_meta_ref_examples,
+            "npc_continuity_mismatch_examples": npc_continuity_mismatches[:10],
         },
     }
 
@@ -698,10 +966,18 @@ def prompt_json_skeleton(start: int, batch_size: int, protagonist: str) -> str:
             "antagonist": "How the opposing side status changes",
         },
         "relationship_delta": [
-            {"target": "NPC name", "before": "previous relation", "after": "new relation"}
+            {
+                "target": "NPC name",
+                "anchor_before": "previous state anchor",
+                "before": "previous relation",
+                "anchor_after": "new state anchor",
+                "after": "new relation"
+            }
         ],
-        "foreshadow": ["Seed for a later payoff"],
-        "callback": ["Payoff or echo of an earlier seed"],
+        "foreshadow": ["Natural-language seed for a later payoff"],
+        "foreshadow_targets": [start + 2],
+        "callback": ["Natural-language payoff or echo of an earlier seed"],
+        "callback_sources": [max(1, start - 1)],
         "emotional_beat": {"type": "resolve", "intensity": 7},
         "tension_level": 8,
         "pov_character": protagonist or "Protagonist",
@@ -799,6 +1075,11 @@ def build_prompt(
         "## Open Foreshadows",
         foreshadow_table(completed),
         "",
+        "## NPC Continuity Rule",
+        "- For recurring NPCs, write `anchor_before` / `anchor_after` inside relationship_delta.",
+        "- Natural-language `before` / `after` may vary, but anchors must chain from the previous anchor_after.",
+        "- If anchors are omitted, the harness treats the prose itself as continuity truth.",
+        "",
         *digest_lines,
         "",
         "## Rules",
@@ -809,6 +1090,9 @@ def build_prompt(
         "5. Do not use capital, deal, business-sector, or starter-company language.",
         "6. Opponent pressure must remain concrete, not generic.",
         "7. Callback lines must resolve or echo earlier seeds when due.",
+        "8. If the place repeats from the previous block, change at least two among scene function, opponent/front, stakes, relation targets, or sub-location.",
+        "9. `Block/ARC/Phase/Stage` 번호 메타는 자연어 필드에 금지. 복선/회수 번호는 `foreshadow_targets` / `callback_sources`에만 적을 것.",
+        "10. `section_rotation`, `arc_section`, `phase` 같은 라벨 필드는 번호 없이 자연어 제목만 적을 것.",
         "",
         "## Predeclare",
         *predeclare,
@@ -843,9 +1127,12 @@ def render_metrics_snapshot(metrics: dict[str, Any]) -> list[str]:
         f"- avg_solution_chars: {metrics.get('avg_solution_chars')}",
         f"- callback_ratio: {metrics.get('callback_ratio')}",
         f"- unresolved_foreshadow_count: {metrics.get('unresolved_foreshadow_count')}",
+        f"- diegetic_meta_ref_count: {metrics.get('diegetic_meta_ref_count')}",
+        f"- label_meta_ref_count: {metrics.get('label_meta_ref_count')}",
         f"- opponent_unique: {metrics.get('opponent_unique')}",
         f"- top_opponent_share: {metrics.get('top_opponent_share')}",
         f"- martial_progress_blocks: {len(metrics.get('martial_progress_blocks', []))}/{metrics.get('block_count', 0)}",
+        f"- same_location_clone_count: {metrics.get('same_location_clone_count')}",
         f"- hard_gate_failures: {metrics.get('hard_gate_failures', [])}",
         "",
     ]
@@ -865,6 +1152,7 @@ def validate_candidate(
     due_foreshadows = build_due_foreshadows(history_blocks)
     all_locations = [as_text(get_nested(block, "location.place")) for block in history_blocks]
     all_beats = [as_text(get_nested(block, "emotional_beat.type")) for block in history_blocks]
+    prev_block_for_location = history_blocks[-1] if history_blocks else None
     opponent_counter = Counter(
         as_text(get_nested(block, "genre_ext.opponent.name"))
         for block in history_blocks
@@ -949,23 +1237,32 @@ def validate_candidate(
             target = as_text(relation.get("target"))
             before_text = as_text(relation.get("before"))
             after_text = as_text(relation.get("after"))
-            if target and target in npc_state and before_text != as_text(npc_state[target]["after"]):
+            before_sig = relation_before_signature(relation)
+            after_sig = relation_after_signature(relation)
+            if target and target in npc_state and before_sig != as_text(npc_state[target]["after"]):
                 fixed = False
                 if autofix:
-                    relation["before"] = as_text(npc_state[target]["after"])
+                    if relation.get("anchor_before"):
+                        relation["anchor_before"] = as_text(npc_state[target]["after"])
+                        before_sig = as_text(npc_state[target]["after"])
+                    else:
+                        relation["before"] = as_text(npc_state[target]["after"])
+                        before_text = as_text(npc_state[target]["after"])
+                        before_sig = as_text(npc_state[target]["after"])
                     fixed = True
-                append_finding(findings, "P0", "REL-001", label, f"{target} relation.before does not match previous after.", fixed=fixed)
+                append_finding(findings, "P0", "REL-001", label, f"{target} relation.before/anchor_before does not match previous after/anchor_after.", fixed=fixed)
             if target and before_text == after_text:
                 append_finding(findings, "P1", "REL-002", label, f"{target} relationship does not change in this block.")
             if target:
-                npc_state[target] = {"after": after_text, "last_block": expected_no}
+                npc_state[target] = {"after": after_sig, "last_block": expected_no}
 
         callbacks = [as_text(item) for item in ensure_list(block.get("callback")) if as_text(item)]
+        callback_sources = extract_callback_sources(block)
         for due in due_foreshadows.get(expected_no, []):
             if not callbacks:
                 append_finding(findings, "P1", "FS-001", label, "A due foreshadow exists but callback is blank.")
                 continue
-            if not callback_matches(due["text"], callbacks):
+            if due["plant_block"] not in callback_sources and not callback_matches(due["text"], callbacks):
                 append_finding(findings, "P1", "FS-002", label, f"Due foreshadow not matched by callback: {truncate(due['text'], 48)}")
 
         for pattern in BANNED_TEMPLATE_RES:
@@ -980,6 +1277,25 @@ def validate_candidate(
             if GENERIC_CALLBACK_RE.search(item):
                 append_finding(findings, "P1", "CALL-001", label, "callback is too generic to prove continuity.")
 
+        meta_leaks = collect_meta_leaks(block)
+        diegetic_meta_leaks, label_meta_leaks = split_meta_leaks(meta_leaks)
+        for path, raw in diegetic_meta_leaks[:5]:
+            append_finding(
+                findings,
+                "P0",
+                "META-001",
+                label,
+                f"{path}에 Block/ARC/Phase/Stage 메타 참조가 새었다. 자연어 필드에서는 금지: {truncate(raw, 60)}",
+            )
+        for path, raw in label_meta_leaks[:5]:
+            append_finding(
+                findings,
+                "P0",
+                "META-002",
+                label,
+                f"{path} 라벨에 번호 메타가 들어 있다. section_rotation/arc_section/phase는 자연어 라벨만 허용: {truncate(raw, 60)}",
+            )
+
         beat_type = as_text(get_nested(block, "emotional_beat.type"))
         if beat_type and all_beats and beat_type == all_beats[-1]:
             append_finding(findings, "P2", "BEAT-001", label, f"emotional_beat.type repeated from previous block: {beat_type}")
@@ -989,8 +1305,20 @@ def validate_candidate(
         location = as_text(get_nested(block, "location.place"))
         if location and location in all_locations[-9:]:
             append_finding(findings, "P2", "LOC-001", label, f"location repeated within recent 10 blocks: {location}")
+        if prev_block_for_location is not None:
+            changed_axes = same_location_change_axes(prev_block_for_location, block)
+            prev_place = as_text(get_nested(prev_block_for_location, "location.place"))
+            if location and prev_place == location and len(changed_axes) < 2:
+                append_finding(
+                    findings,
+                    "P2",
+                    "LOC-002",
+                    label,
+                    f"same-location consecutive reuse lacks differentiation: {location} / changed={changed_axes or ['none']}",
+                )
         if location:
             all_locations.append(location)
+        prev_block_for_location = block
 
         language_values: list[tuple[str, str]] = [(path, as_text(get_nested(block, path))) for path in LANGUAGE_PATHS]
         for idx, item in enumerate(ensure_list(block.get("foreshadow"))):

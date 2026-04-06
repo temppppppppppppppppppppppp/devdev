@@ -30,19 +30,34 @@ from modules.core.stage0_handoff import normalize_bible_to_canonical_view, norma
 from wuxia_tr_batch_harness import compute_treatment_metrics
 
 GARBLED_RE = re.compile(r"\?{3,}|\ufffd")
-BLOCK_META_REF_RE = re.compile(
-    r"(?<![A-Za-z])(?:B\d{1,3}(?:\s*[~→\-]\s*B?\d{1,3})*|Block\s+\d{1,3}|블록\s*\d{1,3})(?:에서의|에서|와의|과의|와|과|보다|의|으로|로|은|는|이|가|를|을|에|도|만)?(?![A-Za-z])",
+META_REF_RE = re.compile(
+    r"(?<![A-Za-z])(?:" 
+    r"B\d{1,3}(?:\s*[~→\-]\s*B?\d{1,3})*|"
+    r"Block\s+\d{1,3}|블록\s*\d{1,3}|"
+    r"ARC[-\s]?\d{1,3}|Arc\s+\d{1,3}|아크\s*\d{1,3}|"
+    r"Phase\s+\d{1,3}|페이즈\s*\d{1,3}|"
+    r"Stage\s+\d{1,3}|스테이지\s*\d{1,3}"
+    r")(?:에서의|에서|와의|과의|와|과|보다|의|으로|로|은|는|이|가|를|을|에|도|만)?(?![A-Za-z])",
     re.IGNORECASE,
 )
-ALLOWED_BLOCK_META_KEYS = {
+ALLOWED_META_KEYS = {
     "block",
     "block_id",
     "ref",
+    "arc_id",
+    "arc_no",
+    "phase_no",
+    "stage_no",
     "recovery_block",
     "first_block",
     "last_confirmed_block",
     "block_acquired",
+    "foreshadow_targets",
+    "callback_sources",
+    "foreshadow_block",
+    "callback_block",
 }
+LABEL_META_KEYS = {"section_rotation", "arc_section", "phase", "phase_label"}
 MARTIAL_REQUIRED_FIELDS = (
     "name",
     "alias",
@@ -91,20 +106,25 @@ def parse_int(value: Any, default: int | None = None) -> int | None:
     return default
 
 
-def find_block_meta_leaks(value: Any, *, path: str = "", parent_key: str | None = None) -> list[tuple[str, str]]:
-    leaks: list[tuple[str, str]] = []
+def find_meta_leaks(value: Any, *, path: str = "", parent_key: str | None = None) -> dict[str, list[tuple[str, str]]]:
+    leaks = {"diegetic": [], "label": []}
     if isinstance(value, dict):
         for key, item in value.items():
             child_path = f"{path}.{key}" if path else key
-            leaks.extend(find_block_meta_leaks(item, path=child_path, parent_key=key))
+            child = find_meta_leaks(item, path=child_path, parent_key=key)
+            leaks["diegetic"].extend(child["diegetic"])
+            leaks["label"].extend(child["label"])
         return leaks
     if isinstance(value, list):
         for index, item in enumerate(value):
             child_path = f"{path}[{index}]"
-            leaks.extend(find_block_meta_leaks(item, path=child_path, parent_key=parent_key))
+            child = find_meta_leaks(item, path=child_path, parent_key=parent_key)
+            leaks["diegetic"].extend(child["diegetic"])
+            leaks["label"].extend(child["label"])
         return leaks
-    if isinstance(value, str) and parent_key not in ALLOWED_BLOCK_META_KEYS and BLOCK_META_REF_RE.search(value):
-        leaks.append((path, value.strip()))
+    if isinstance(value, str) and parent_key not in ALLOWED_META_KEYS and META_REF_RE.search(value):
+        bucket = "label" if parent_key in LABEL_META_KEYS else "diegetic"
+        leaks[bucket].append((path, value.strip()))
     return leaks
 
 
@@ -133,6 +153,11 @@ def build_source_tr_handoff_checks(
         "source_tr_enemy_pressure_gate": source_metrics.get("hard_gate_checks", {}).get("enemy_pressure_present", True),
         "source_tr_late_opponent_gate": source_metrics.get("hard_gate_checks", {}).get("late_blank_opponent_ok", True),
         "source_tr_solution_stakes_repeat_gate": source_metrics.get("hard_gate_checks", {}).get("normalized_solution_stakes_repeat_ok", True),
+        "source_tr_same_location_clone_gate": source_metrics.get("same_location_clone_count", 0) == 0,
+        "source_tr_meta_gate": source_metrics.get("hard_gate_checks", {}).get("diegetic_meta_ref_zero", True),
+        "source_tr_label_meta_gate": source_metrics.get("hard_gate_checks", {}).get("label_meta_ref_zero", True),
+        "source_tr_block_meta_gate": source_metrics.get("hard_gate_checks", {}).get("diegetic_block_ref_zero", True),
+        "source_tr_npc_continuity_gate": source_metrics.get("npc_continuity_mismatch_count", 0) == 0,
         "source_tr_martial_progress_gate": source_metrics.get("hard_gate_checks", {}).get("martial_progress_ratio_ok", True),
         "source_tr_opponent_diversity_gate": source_metrics.get("opponent_unique", 0) >= 8 and source_metrics.get("top_opponent_share", 100.0) <= 30.0,
         "source_tr_weakness_repeat_gate": source_metrics.get("top_weakness_repetition", 999) < 4,
@@ -198,7 +223,9 @@ def report_lines(
     else:
         expected_reputation = as_text(rep_raw)
     expected_enemy_pressure = as_text(ext_data.get("enemy_pressure"))
-    block_meta_leaks = find_block_meta_leaks(master)
+    meta_leaks = find_meta_leaks(master)
+    diegetic_meta_leaks = meta_leaks["diegetic"]
+    label_meta_leaks = meta_leaks["label"]
     draft_canonical_valid, draft_canonical_errors, draft_canonical_warnings = validate_treatment_canonical_structure(draft_raw)
     bi_canonical_valid, bi_canonical_errors, bi_canonical_warnings = validate_bible_canonical_structure(bi)
     normalized_draft, draft_normalization_warnings = normalize_treatment_to_canonical_view(draft_raw)
@@ -250,7 +277,8 @@ def report_lines(
             {
                 "utf8_json_parse": True,
                 "garbled_token_zero": garbled_free,
-                "block_meta_text_zero": len(block_meta_leaks) == 0,
+                "diegetic_meta_text_zero": len(diegetic_meta_leaks) == 0,
+                "label_meta_text_zero": len(label_meta_leaks) == 0,
                 "draft_schema_valid": draft_valid,
             },
         ),
@@ -372,14 +400,24 @@ def report_lines(
     lines.append(f"- source_tr_hard_gate_failures: {source_metrics.get('hard_gate_failures', [])}")
     lines.append(f"- source_tr_callback_ratio: {source_metrics.get('callback_ratio')}")
     lines.append(f"- source_tr_martial_progress_blocks: {len(source_metrics.get('martial_progress_blocks', []))}/{source_metrics.get('block_count', 0)}")
+    lines.append(f"- source_tr_same_location_clone_count: {source_metrics.get('same_location_clone_count', 0)}")
+    lines.append(f"- source_tr_diegetic_meta_ref_count: {source_metrics.get('diegetic_meta_ref_count', 0)}")
+    lines.append(f"- source_tr_label_meta_ref_count: {source_metrics.get('label_meta_ref_count', 0)}")
+    lines.append(f"- source_tr_diegetic_block_ref_count(alias): {source_metrics.get('diegetic_block_ref_count', 0)}")
+    lines.append(f"- source_tr_npc_continuity_mismatch_count: {source_metrics.get('npc_continuity_mismatch_count', 0)}")
     lines.append(f"- expected_realm_from_tr: {expected_realm}")
     lines.append(f"- expected_internal_energy_from_tr: {expected_energy}")
     lines.append(f"- expected_reputation_from_tr: {expected_reputation}")
     lines.append(f"- expected_enemy_pressure_from_tr: {expected_enemy_pressure}")
-    lines.append(f"- block_meta_leak_count: {len(block_meta_leaks)}")
-    if block_meta_leaks:
-        lines.append("- block_meta_leak_examples:")
-        for leak_path, leak_value in block_meta_leaks[:10]:
+    lines.append(f"- diegetic_meta_leak_count: {len(diegetic_meta_leaks)}")
+    lines.append(f"- label_meta_leak_count: {len(label_meta_leaks)}")
+    if diegetic_meta_leaks:
+        lines.append("- diegetic_meta_leak_examples:")
+        for leak_path, leak_value in diegetic_meta_leaks[:10]:
+            lines.append(f"  - {leak_path}: {leak_value}")
+    if label_meta_leaks:
+        lines.append("- label_meta_leak_examples:")
+        for leak_path, leak_value in label_meta_leaks[:10]:
             lines.append(f"  - {leak_path}: {leak_value}")
     lines.append("")
     return lines, fail_count
