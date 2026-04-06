@@ -68,6 +68,8 @@
           "temp_path",
           "canonical_path",
           "status",
+          "queue_role",
+          "roadmap_rank",
           "depends_on",
           "mirror_present",
           "canonical_present"
@@ -90,6 +92,22 @@
               "completed",
               "blocked"
             ]
+          },
+          "queue_role": {
+            "type": "string",
+            "enum": [
+              "front_active",
+              "blocked_holding",
+              "parked_future_wave",
+              "historical_backing"
+            ]
+          },
+          "roadmap_rank": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
           },
           "depends_on": {
             "type": "array",

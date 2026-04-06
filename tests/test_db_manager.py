@@ -818,6 +818,115 @@ def test_get_latest_stage4_gate_repair_snapshot_surfaces_repair_contract_and_sco
     assert row["primary_failure_layer"] == "downstream_gate"
 
 
+def test_get_latest_stage4_gate_repair_snapshot_backfills_nested_gate_contract_fields(db):
+    db.save_stage_attempt(
+        stage=4,
+        verdict="REJECT",
+        attempt_num=2,
+        ep_num=9,
+        arc_num=1,
+        score=58,
+        session_id="sess-nested-gate",
+        attempt_key="s4:ep9:arc1:a2:sess-nested-gate",
+        candidate_key="A|balanced",
+        content_hash="hash-nested-gate",
+        artifact_path="logs/artifacts/stage4/ep_0009/attempt_02/rejected_best__A_balanced.txt",
+        selection_reason="best candidate",
+        verdict_reason="gate-only contract",
+        open_review="review note",
+        fix_scope="inplace",
+        advisory_flags={
+            "gate_semantics": {
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "quality_floor_fail",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "repair_contract": {
+                    "subtype": "numeric_carryover_authority",
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "provenance": "runtime_synthesized",
+                },
+                "scope_authority": {
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "scope_origin": {
+                        "fix_scope": "runtime_widened",
+                        "authoritative_fix_scope": "director_authoritative",
+                        "repair_scope": "runtime_lane",
+                    },
+                },
+            }
+        },
+        director_quality_passed=True,
+        downstream_override_applied=True,
+        primary_failure_layer="downstream_gate",
+    )
+
+    row = db.get_latest_stage4_gate_repair_snapshot(session_id="sess-nested-gate")
+
+    assert row["attempt_key"] == "s4:ep9:arc1:a2:sess-nested-gate"
+    assert row["director_verdict"] == "PASS_WITH_FIX"
+    assert row["gate_basis"] == "quality_floor_fail"
+    assert row["repair_scope"] == "partial"
+    assert row["fix_scope"] == "partial"
+    assert row["authoritative_fix_scope"] == "inplace"
+    assert row["repair_contract"] == {
+        "subtype": "numeric_carryover_authority",
+        "fix_scope": "partial",
+        "repair_scope": "partial",
+        "authoritative_fix_scope": "inplace",
+        "provenance": "runtime_synthesized",
+    }
+    assert row["scope_authority"] == {
+        "fix_scope": "partial",
+        "repair_scope": "partial",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+            "fix_scope": "runtime_widened",
+            "authoritative_fix_scope": "director_authoritative",
+            "repair_scope": "runtime_lane",
+        },
+        "widened": True,
+    }
+
+
+def test_get_latest_stage4_gate_repair_snapshot_falls_back_to_root_fix_scope_column(db):
+    db.save_stage_attempt(
+        stage=4,
+        verdict="REJECT",
+        attempt_num=1,
+        ep_num=2,
+        arc_num=1,
+        score=50,
+        session_id="sess-root-fix-scope",
+        attempt_key="s4:ep2:arc1:a1:sess-root-fix-scope",
+        candidate_key="A|balanced",
+        content_hash="hash-root-fix-scope",
+        artifact_path="logs/artifacts/stage4/ep_0002/attempt_01/rejected_best__A_balanced.txt",
+        fix_scope="partial",
+        advisory_flags={
+            "gate_semantics": {
+                "director_verdict": "REJECT",
+                "gate_basis": "quality_floor_fail",
+                "authoritative_fix_scope": "inplace",
+            }
+        },
+    )
+
+    row = db.get_latest_stage4_gate_repair_snapshot(session_id="sess-root-fix-scope")
+
+    assert row["attempt_key"] == "s4:ep2:arc1:a1:sess-root-fix-scope"
+    assert row["director_verdict"] == "REJECT"
+    assert row["gate_basis"] == "quality_floor_fail"
+    assert row["fix_scope"] == "partial"
+    assert row["authoritative_fix_scope"] == "inplace"
+    assert row["repair_contract"] == {}
+    assert row["scope_authority"] == {}
+
+
 def test_save_director_selection_persists_director_thinking(db):
     db.save_director_selection(
         7,

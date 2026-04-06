@@ -1,0 +1,11 @@
+{
+  "identity_locked": true,
+  "profile_locked": true,
+  "material_sufficient": true,
+  "manual_audit_pass": true,
+  "remaining_risks": [
+    "TR은 Block 1-5만 상세 생성됨. Block 6-70은 phase0 block_slots 수준의 요약만 존재. 순차 생산 시 블록별 상세화 필요.",
+    "WG-V1 shape check, WG-V2 freeze PASS, WG-V3 drift audit 미수행. 하네스 companion contract 기준 TR 이전에 WG freeze가 선행되어야 하나, 현재 work_guard는 canon truth와 동기화 완료 상태.",
+    "외부 포지션의 구체 종목·수치는 later enrichment only로 유보. 공개 신호 기반 원칙만 잠김."
+  ]
+}

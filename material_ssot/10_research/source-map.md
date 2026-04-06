@@ -27,6 +27,7 @@ Status: active Wave 4 map
 - `10_reference_profiles/투자물_문체_정량_프로파일.md`
 - `10_reference_profiles/2026-03-30_modern_business_reference_master_order.md`
 - `20_fewshot_bank/투자물_현판.yaml`
+- `20_fewshot_bank/investment_engine_pack.md`
 
 ### B. Wuxia side
 
@@ -94,6 +95,7 @@ These paths remain readable but are no longer the canonical home for moved refer
 - register source roots and clusters here first
 - bind work-level research under `10_research/manifests/`
 - normalize work-level packs under `10_research/30_work_materials/`
+- feed reusable engine packs and normalized work-level packs into `material_ssot/20_pitch/synthesis/` before canon selection
 - promote collector outputs into `40_analysis/` or `80_ingest_raw/` before citing them as stage authority
 - promote reusable long-form analysis reports into `40_analysis/pattern_reports/`
 - promote bounded representative corpus bundles into `50_corpus_curated/`

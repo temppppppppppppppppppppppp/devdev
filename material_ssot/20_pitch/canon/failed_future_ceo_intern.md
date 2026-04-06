@@ -9,7 +9,7 @@ Status: canonical pitch
 
 - canonical pitch philosophy:
   - `material_ssot/20_pitch/pitch-philosophy.md`
-- legacy concept import (authoritative truth):
+- legacy concept import (historical origin, superseded by this canon):
   - `material_ssot/20_pitch/intake/legacy_import/20260320/컨셉기획_인턴빙의CEO.md`
 - legacy onboarding prompt (core principles: 선점>회개, 지배>충성, 통제권·지분>성과):
   - `material_ssot/20_pitch/intake/legacy_import/supporting/20260320/failed_future_ceo_intern_onboarding_prompt.md`
@@ -26,24 +26,24 @@ Status: canonical pitch
   - `treatments/_quarantine/failed_future_ceo_intern_tr_block_070_draft.json`
   - `전처리_ssot/docs/20260324/failed_future_ceo_intern_session_context.md`
 
-This is the first canonical pitch authority for `failed_future_ceo_intern`. The upstream `material_ssot/10_research/30_work_materials/failed_future_ceo_intern/90_material_pack.json` is not yet built, and the live root `treatments/failed_future_ceo_intern_phase0_design.json` is not yet materialized — `_quarantine` artifacts are consistency references, not authorities. Canonical pitch truth for `failed_future_ceo_intern` is fixed in this file and replaces any prior bootstrap note.
+This is the first canonical pitch authority for `failed_future_ceo_intern`. The upstream `material_ssot/10_research/30_work_materials/failed_future_ceo_intern/90_material_pack.json` is not yet built, and the live Phase0 artifact now exists at `treatments/phase0/failed_future_ceo_intern_phase0_design.json` while `_quarantine` artifacts remain consistency references, not authorities. Canonical pitch truth for `failed_future_ceo_intern` is fixed in this file and replaces any prior bootstrap note.
 
 ## 2. Pitch Truth
 
 - one-line premise:
-  - 대한민국 시총 1위 기업을 말아먹은 CEO가 13년 전 같은 회사의 첫날 인턴으로 빙의해, 모든 비밀을 알지만 0권한인 상태에서 한라테크의 의사결정 라인을 아래에서부터 다시 장악한다.
+  - 대한민국 시총 1위 기업의 파산을 막지 못한 CEO가 13년 전 같은 회사의 첫날 인턴으로 빙의해, 모든 비밀을 알지만 0권한인 상태에서 한라테크의 의사결정 라인을 아래에서부터 다시 장악한다.
 - why now:
   - 반도체 소재/장비 과잉 투자로 시총 15조 한라테크는 AI 데이터센터·전기차 배터리로의 사업 전환 문턱에 서 있고, 한가 31% / 외국인 28% / 국민연금 9% 지배구조 위로 정태준 경영전략 부사장·오승재 한라캐피탈·신사업팀 한예린의 파벌이 겹쳐 있다. 이수혁은 이 판이 13년 후 어느 결재선·어느 JV·어느 위임장 대결에서 무너지는지 안다. 아는 사람이 지금 이 로비에 인턴으로 서 있다.
 - theme statement:
   - 정답을 아는 것만으로는 기업을 구할 수 없고, 그 정답을 통과시키는 권한 구조까지 손에 넣어야 판이 바뀐다.
 - protagonist position:
-  - 이수혁(22)은 2027년 3월 2일 한라테크 강남 사옥 1층 로비에 선 신입 인턴이다. 전생에서 인턴→사원→대리→과장→전략기획실장→부사장→CEO 13년을 달린 뒤 2040년 한라테크를 파산시킨 당사자이며, 이사회 브리핑·특허 포트폴리오·경쟁사 동향·내부 비리를 기억한다. 빙의 제약 3축: ① 자기가 내린 결정만 선명하고 타인의 행동은 흐릿, ② 전생에 몰랐던 부서(연구소 등)의 정보는 없음, ③ 자기 판단 자체를 의심해야 함. 직급 0, 보고서 1장도 스스로 상신할 수 없다.
+  - 이수혁(22)은 2027년 3월 2일 한라테크 강남 사옥 1층 로비에 선 신입 인턴이다. 전생에서 인턴→사원→대리→과장→전략기획실장→부사장→CEO 13년을 달린 뒤 2040년 한라테크 파산 당시의 CEO였으며, 이사회 브리핑·특허 포트폴리오·경쟁사 동향·내부 비리를 기억한다. 빙의 제약 3축: ① 자기가 내린 결정만 선명하고 타인의 행동은 흐릿, ② 전생에 몰랐던 부서(연구소 등)의 정보는 없음, ③ 자기 판단 자체를 의심해야 함. 직급 0, 보고서 1장도 스스로 상신할 수 없다.
 - long-term goal:
   - 한라테크의 결재선·KPI·예산 전용 코드·프로젝트 오너십·인사 라인·이사회 표결이 이수혁을 거치지 않으면 움직이지 않는 상태까지 끌고 간다. 시총 15조 → 85조의 사업 전환(반도체 소재/장비 → AI 데이터센터 → 전기차 배터리)을 자기 이름으로 통과시키고, 스톡옵션·지분·지배구조 한 축을 실제로 손 안에 옮겨 와 한라테크가 수혁의 관문 없이는 중요한 결정을 내리지 못하는 구조로 고착시킨다.
 - short-term goal:
   - 인턴으로서 첫 우회 성과를 만들어 정규직 전환 가능성 → 전략기획실 접근권 → 정태준·권력자의 공개 주목 → 첫 실권 입장권(배석권/CC 라인/실명 호명)을 Block 1 안에 회수한다. 단순 '인턴 급여 + 소액 투자'가 아니라, 다음 블록에서 KPI 재설계 발언권과 결재선 우회권으로 환전 가능한 체감형 권한 보상을 우선 확보한다.
 - information gap:
-  - 이수혁만이 안다: 어느 R&D 투자가 2030년에 과잉으로 드러나는지, 오승재 한라캐피탈의 횡령 자금이 결국 사라 밀러 쪽에 닿는지, 빅터 웨이의 배터리 JV가 기술 탈취로 뒤집히는 시점, 장현우 연구소장이 쥔 미공개 특허의 진짜 가치, 정태준이 수혁을 키웠다가 어떤 조건에서 버리는지, 그리고 전생 파산의 어느 결정이 정태준의 조작이었는지. 반면 수혁은 지금 22세 인턴이고, 자신의 이 '기억'이 회귀 전 자신이 잘못 내린 결정의 반영이라는 점 때문에 자기 판단을 믿지 못한다. 독자는 이 간극을 알고, 사내 대부분은 모른다.
+  - 이수혁만이 안다: 어느 R&D 투자가 2030년에 과잉으로 드러나는지, 오승재 한라캐피탈의 횡령 자금이 결국 사라 밀러 쪽에 닿는지, 빅터 웨이의 배터리 JV가 기술 탈취로 뒤집히는 시점, 장현우 연구소장이 쥔 미공개 특허의 진짜 가치, 정태준이 수혁을 키웠다가 어떤 조건에서 버리는지, 그리고 전생 파산의 어느 결정이 정태준의 조작이었는지. 반면 수혁은 지금 22세 인턴이고, 자신의 '기억' 속 결정 중 어디까지가 자기 판단이고 어디부터가 정태준이 조작한 데이터 위에서 내린 것인지 구분할 수 없다는 점 때문에 자기 판단의 기반 자체를 의심한다. 독자는 이 간극을 알고, 사내 대부분은 모른다.
 - competence process:
   - 전생 기억으로 병목/위기 조기 감지 → 인턴 직급이 닿을 수 있는 접점(메일, OJT 과제, KPI 보고, 인사평가 초안, 프로젝트 보조) 안에서 우회 설계 → 권한자(김미선 과장·최준호 차장·정태준 부사장)가 제 결재선으로 상신할 수밖에 없도록 밑밥 배치 → 공개 결과로 증명 → 결재선·CC 라인·TF 자리·인사 이동·지분/스톡옵션 중 하나를 보상으로 회수.
 - core engine:
@@ -68,7 +68,7 @@ This is the first canonical pitch authority for `failed_future_ceo_intern`. The 
   - 이사회·지분·표결을 감정극으로만 처리 금지 — 한가 31% / 외국인 28% / 국민연금 9% 숫자와 위임장 수거 구조가 장면에 실체로 나와야 한다.
   - 반도체/AI/배터리 사업 전환을 추상 슬로건으로 처리 금지 — 팹·수율·공정 노드·JV 계약 뼈대가 손에 잡혀야 한다.
   - 전생 기억을 만능 예언으로 쓰지 말 것 — 자기 결정만 선명/타인 행동 흐릿/모르던 부서 정보 없음의 제약을 지킨다.
-  - 회개 서사로 주인공 약화 금지 — 선점>회개, 지배>충성, 통제권·지분>성과. 죄책감은 동력이되 주조감정이 아니다.
+  - 회개 서사로 주인공 약화 금지 — 선점>회개, 지배>충성, 통제권·지분>성과. 미결감("내가 막지 못했다")은 동력이되 주조감정이 아니다. 수혁은 파산의 원흉이 아니라 조작된 판 위에서 결정을 내린 사람이다.
   - 재벌가 치정물·형제 후계전·로맨스 중심화로 흐르지 말 것.
   - 한예린·정태준·오승재 등 주변 인물을 무능 캐리커처로 만들지 말 것 — 이전 시대 정답을 믿은 사람들이다.
 
@@ -117,7 +117,7 @@ This is the first canonical pitch authority for `failed_future_ceo_intern`. The 
   - 결재선·KPI·예산 전용 코드·CC 라인·이사회 표결은 추상이 아니라 실체 숫자·루프로 장면에 등장한다.
   - 정태준·오승재·한예린·사라 밀러·빅터 웨이는 존엄을 유지한 채 밀려나거나 뒤집힌다. 무능·악마화 금지.
   - 전생 기억은 예언이 아니다 — 자기 결정만 선명 / 타인 행동 흐릿 / 모르던 부서 정보 없음 제약 지속.
-  - 수혁의 죄책감("내가 망했다")은 동력이지만 주조 감정이 되어 서사를 회개로 약화시키면 안 된다.
+  - 수혁의 미결감("내가 막지 못했다")은 동력이지만 주조 감정이 되어 서사를 회개로 약화시키면 안 된다. 파산 원인은 정태준의 데이터 조작이며, 수혁의 과실이 아니다.
   - 시총 감소 블록 7회+, 패배/피로스 승리 블록 12개 축 유지.
 - later enrichment only:
   - 반도체 팹 수율·공정 노드·불량률 세부 수치

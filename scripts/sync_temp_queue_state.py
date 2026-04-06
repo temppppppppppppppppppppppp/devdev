@@ -9,6 +9,31 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TEMP = ROOT / "docs" / "temp"
 META_RE = re.compile(r"^(?P<key>[A-Za-z][A-Za-z0-9 /_-]*):(?:\s*(?P<value>.+?)\s*)?$")
+WORKING_ORDER_RE = re.compile(r"^(?P<rank>\d+)\.\s+`(?P<topic>[^`]+)`(?:\s+\((?P<note>.+)\))?$")
+
+QUEUE_ROLE_FRONT_ACTIVE = "front_active"
+QUEUE_ROLE_BLOCKED_HOLDING = "blocked_holding"
+QUEUE_ROLE_PARKED_FUTURE_WAVE = "parked_future_wave"
+QUEUE_ROLE_HISTORICAL_BACKING = "historical_backing"
+
+HISTORICAL_ROLE_MARKERS = (
+    "historical backing",
+    "historical backing only",
+    "retained only as historical backing",
+    "runtime-positive substrate",
+    "runtime-positive substrate lane",
+    "runtime-positive substrate/reference seam",
+    "no longer active queue work",
+    "utility lane",
+    "reference seam",
+)
+PARKED_ROLE_MARKERS = (
+    "parked",
+    "future wave",
+    "stay parked",
+    "context-only future wave",
+    "soak lane",
+)
 
 
 def normalize_relpath(value: str | None) -> str | None:
@@ -34,28 +59,98 @@ def parse_metadata(path: Path, line_limit: int = 40) -> dict[str, str]:
 
 
 def infer_item_status(raw_status: str | None) -> str:
-    text = (raw_status or "").lower()
-    if "blocked" in text:
+    text = (raw_status or "").strip().lower()
+    if not text:
+        return "pending"
+    lead = text.split("(", 1)[0].strip()
+    lead = lead.split("—", 1)[0].strip()
+    normalized = lead.replace("-", "_").replace(" ", "_")
+    if normalized.startswith("blocked"):
         return "blocked"
-    if "closed" in text or "completed" in text:
+    if normalized.startswith("closed") or normalized.startswith("completed"):
         return "completed"
-    if "in progress" in text or "active" in text:
+    if normalized.startswith("parked") or normalized.startswith("pending") or normalized.startswith("draft"):
+        return "pending"
+    if (
+        normalized.startswith("in_progress")
+        or normalized.startswith("active")
+        or normalized.startswith("partially_realized")
+    ):
         return "in_progress"
     return "pending"
 
 
-def build_item_payload(temp_doc: Path) -> dict[str, object]:
+def infer_queue_role(raw_status: str | None, roadmap_note: str | None = None) -> str:
+    note = (roadmap_note or "").strip().lower()
+    if "blocked" in note:
+        return QUEUE_ROLE_BLOCKED_HOLDING
+    if any(marker in note for marker in HISTORICAL_ROLE_MARKERS):
+        return QUEUE_ROLE_HISTORICAL_BACKING
+    if any(marker in note for marker in PARKED_ROLE_MARKERS):
+        return QUEUE_ROLE_PARKED_FUTURE_WAVE
+
+    status = infer_item_status(raw_status)
+    if status == "blocked":
+        return QUEUE_ROLE_BLOCKED_HOLDING
+    if status == "completed":
+        return QUEUE_ROLE_HISTORICAL_BACKING
+    return QUEUE_ROLE_FRONT_ACTIVE
+
+
+def extract_roadmap_item_context(roadmap_path: Path) -> dict[str, dict[str, object]]:
+    items: dict[str, dict[str, object]] = {}
+    capture = False
+    saw_entries = False
+
+    for line in roadmap_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not capture:
+            if stripped == "Working order:" or stripped == "## 4. Execution Order":
+                capture = True
+            continue
+
+        if not stripped:
+            if saw_entries:
+                break
+            continue
+        if stripped == "Priority basis:" or stripped.startswith("- "):
+            continue
+
+        match = WORKING_ORDER_RE.match(stripped)
+        if not match:
+            if saw_entries:
+                break
+            continue
+
+        saw_entries = True
+        topic = match.group("topic")
+        roadmap_note = (match.group("note") or "").strip() or None
+        items[topic] = {
+            "roadmap_rank": int(match.group("rank")),
+            "queue_role": infer_queue_role(None, roadmap_note),
+        }
+
+    return items
+
+
+def build_item_payload(temp_doc: Path, roadmap_item_context: dict[str, dict[str, object]]) -> dict[str, object]:
     metadata = parse_metadata(temp_doc)
     topic = temp_doc.name.removesuffix("-execution-ssot.md")
     canonical_rel = normalize_relpath(metadata.get("canonical_path")) or ""
     temp_rel = temp_doc.relative_to(ROOT).as_posix()
-    status = infer_item_status(metadata.get("status"))
+    raw_status = metadata.get("status")
+    status = infer_item_status(raw_status)
     canonical_path = ROOT / canonical_rel if canonical_rel else None
+    roadmap_context = roadmap_item_context.get(topic, {})
+    roadmap_rank = roadmap_context.get("roadmap_rank")
+    queue_role = str(roadmap_context.get("queue_role") or infer_queue_role(raw_status))
     return {
         "topic": topic,
         "temp_path": temp_rel,
         "canonical_path": canonical_rel,
         "status": status,
+        "queue_role": queue_role,
+        "roadmap_rank": roadmap_rank,
         "depends_on": [],
         "mirror_present": temp_doc.exists(),
         "canonical_present": bool(canonical_path and canonical_path.exists()),
@@ -77,6 +172,7 @@ def main() -> int:
     TEMP.mkdir(parents=True, exist_ok=True)
     exec_docs = sorted(TEMP.glob("*-execution-ssot.md"))
     roadmap_path = TEMP / "execution-roadmap.md"
+    roadmap_item_context = extract_roadmap_item_context(roadmap_path) if roadmap_path.exists() else {}
 
     if not exec_docs:
         payload = {
@@ -88,7 +184,14 @@ def main() -> int:
             "items": [],
         }
     else:
-        items = [build_item_payload(path) for path in exec_docs]
+        items = [build_item_payload(path, roadmap_item_context) for path in exec_docs]
+        items.sort(
+            key=lambda item: (
+                item["roadmap_rank"] is None,
+                item["roadmap_rank"] if item["roadmap_rank"] is not None else 10**9,
+                item["temp_path"],
+            )
+        )
         queue_mode = "single" if len(items) == 1 else "aggregate"
         roadmap = None
         if roadmap_path.exists():

@@ -1,9 +1,9 @@
-# BI 5-Pass 감리 보고서 (2026-03-11)
+﻿# BI 5-Pass 감리 보고서 (2026-03-11)
 
 ## 대상
 - phase0: `treatments/chaebol_allowance_zero_phase0_design.json`
-- draft: `treatments/chaebol_allowance_zero_tr_block_070_draft.json`
-- bi: `bible/0_bi_chaebol_allowance_zero.json`
+- draft: `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`
+- bi: `bible/02_bi_chaebol_allowance_zero.json`
 
 ## PASS 1: 인코딩/파싱
 - result: OK

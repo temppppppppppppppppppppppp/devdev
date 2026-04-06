@@ -1,10 +1,10 @@
-# chaebol_allowance_zero Batch 001 3-Pass Audit
+﻿# chaebol_allowance_zero Batch 001 3-Pass Audit
 
 ## Scope
 
 - Source planning SSOT: `docs/2026-03-10/opus_재벌3세인데용돈이0원.md`
 - Source phase0: `treatments/chaebol_allowance_zero_phase0_design.json`
-- Retry batch: `treatments/chaebol_allowance_zero_tr_block_070_draft.json` Block 1~3
+- Retry batch: `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json` Block 1~3
 - Comparison baseline: `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json` Block 1~3
 
 ---
@@ -83,7 +83,7 @@ Verdict: PASS
   - no question-mark replacement artifacts
   - no broken replacement glyphs
 - Candidate and merged draft are identical for Block 1~3; autofix count is `0`.
-- Merge report is clean and the retry draft now exists at `treatments/chaebol_allowance_zero_tr_block_070_draft.json`.
+- Merge report is clean and the retry draft now exists at `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`.
 - This batch is production-safe for continuation to Block 4~6.
 
 ---

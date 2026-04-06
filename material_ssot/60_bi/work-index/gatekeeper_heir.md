@@ -1,4 +1,4 @@
-# gatekeeper_heir
+﻿# gatekeeper_heir
 
 Title: 사람값이 보이는 후계자
 Family: blockguide
@@ -13,7 +13,7 @@ Status: bootstrap BI manifest
 ## 2. Current Live Chain
 
 - upstream TR manifest: `material_ssot/50_tr/work-index/gatekeeper_heir.md`
-- live BI file: `bible/0_bi_gatekeeper_heir.json`
+- live BI file: `bible/06_bi_gatekeeper_heir.json`
 
 ## 3. Current Notes
 

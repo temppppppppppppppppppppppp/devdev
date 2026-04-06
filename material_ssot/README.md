@@ -14,6 +14,28 @@ Official stage chain:
 
 `리서치 -> 기획안 -> Stage 0 preprocess -> Phase 0 design -> TR 생성 -> BI 생성`
 
+Normalized fresh-creation route:
+
+- the official stage chain above remains the stage-axis contract
+- when operators are creating a fresh work from reusable materials, use this normalized upstream route:
+  - `10_research` engine pack or normalized work material pack
+  - `20_pitch/synthesis/` one-page synthesis
+  - `20_pitch/pitch-selection-checklist.md` audit
+  - `20_pitch/canon/` pitch freeze
+  - `20_pitch/work-guard-translation-map.md` -> work-specific `work_guard`
+- this route clarifies the operator handoff between research and pitch without adding a new stage root
+
+Operational companion note:
+
+- the official stage chain above remains the root stage-axis contract
+- when a work uses `work_guard`, current material-side operating practice treats it as a pre-`TR` runtime-guard companion
+- recommended companion flow: `Phase 0 design -> work_guard draft/freeze -> TR 생성 -> BI 생성`
+- reviewed/frozen work-specific guards may be published into the Stage 0-visible `work_guards/` library after audit
+- current operator pack:
+  - `docs/2026-04-06/work-guard-validator-checklist-spec.md`
+  - `docs/2026-04-06/wg-v2-freeze-checklist.md`
+  - `docs/2026-04-06/wg-v3-drift-audit-card.md`
+
 Quick start read order:
 
 1. `00_governance/bootstrap-status.md`

@@ -2970,21 +2970,27 @@ class Stage4InterviewRound:
         gate_semantics = gate_semantics if isinstance(gate_semantics, dict) else {}
         source = source if isinstance(source, dict) else {}
         repair_contract = source.get("repair_contract") if isinstance(source.get("repair_contract"), dict) else {}
+        source_scope_authority = (
+            source.get("scope_authority") if isinstance(source.get("scope_authority"), dict) else {}
+        )
 
         fix_scope = str(
-            source.get("fix_scope", "")
+            source_scope_authority.get("fix_scope", "")
+            or source.get("fix_scope", "")
             or repair_contract.get("fix_scope", "")
             or gate_semantics.get("repair_scope", "")
             or ""
         ).strip()
         repair_scope = str(
             gate_semantics.get("repair_scope", "")
+            or source_scope_authority.get("repair_scope", "")
             or source.get("repair_scope", "")
             or repair_contract.get("repair_scope", "")
             or ""
         ).strip()
         authoritative_fix_scope = str(
             gate_semantics.get("authoritative_fix_scope", "")
+            or source_scope_authority.get("authoritative_fix_scope", "")
             or source.get("authoritative_fix_scope", "")
             or repair_contract.get("authoritative_fix_scope", "")
             or ""
@@ -2992,6 +2998,8 @@ class Stage4InterviewRound:
         scope_origin = (
             gate_semantics.get("scope_origin")
             if isinstance(gate_semantics.get("scope_origin"), dict)
+            else source_scope_authority.get("scope_origin")
+            if isinstance(source_scope_authority.get("scope_origin"), dict)
             else source.get("scope_origin")
             if isinstance(source.get("scope_origin"), dict)
             else repair_contract.get("scope_origin")
@@ -3024,6 +3032,8 @@ class Stage4InterviewRound:
                 "runtime_widened",
                 "post_select_conflict_override",
             }
+        elif isinstance(source_scope_authority.get("widened"), bool):
+            widened = bool(source_scope_authority.get("widened"))
         elif fix_scope and authoritative_fix_scope:
             widened = fix_scope.lower() != authoritative_fix_scope.lower()
         if payload:
@@ -7248,11 +7258,20 @@ class Stage4InterviewRound:
             if isinstance(_adv, dict) and isinstance(_adv.get("gate_semantics"), dict)
             else {}
         )
+        _scope_authority = (
+            self._build_scope_authority_payload_from_parts(
+                gate_semantics=_gate_semantics,
+                source=_adv if isinstance(_adv, dict) else {},
+            )
+            if isinstance(_adv, dict)
+            else {}
+        )
         _verdict_layers = (
             dict(_gate_semantics.get("verdict_layers") or {})
             if isinstance(_gate_semantics.get("verdict_layers"), dict)
             else {}
         )
+        _resolved_fix_scope = str(_scope_authority.get("fix_scope", "") or fix_scope or "").strip() or None
         return {
             "stage": 4,
             "verdict": verdict or ("PASS" if success else "REJECT"),
@@ -7262,7 +7281,7 @@ class Stage4InterviewRound:
             "score": score,
             "failure_category": failure_category or None,
             "reject_reason": "" if success else (reject_reason or f"score={score}"),
-            "fix_scope": fix_scope,
+            "fix_scope": _resolved_fix_scope,
             "model": _model,
             "duration_ms": duration_ms,
             "advisory_flags": _adv,

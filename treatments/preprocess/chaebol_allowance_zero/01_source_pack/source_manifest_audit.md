@@ -1,10 +1,10 @@
-# Source Manifest Audit
+﻿# Source Manifest Audit
 
 - Canonical sources checked:
   - `docs/2026-03-10/opus_재벌3세인데용돈이0원.md`
   - `treatments/chaebol_allowance_zero_phase0_design.json`
-  - `treatments/chaebol_allowance_zero_tr_block_070_draft.json`
-  - `bible/0_bi_chaebol_allowance_zero.json`
+  - `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`
+  - `bible/02_bi_chaebol_allowance_zero.json`
 - Reference-only sources checked:
   - `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`
   - `bible/02_bi_chaebol_allowance_zero.json`

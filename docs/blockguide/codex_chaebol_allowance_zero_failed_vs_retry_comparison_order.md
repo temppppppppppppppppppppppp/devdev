@@ -1,4 +1,4 @@
-# Codex: 02_chaebol_allowance_zero — 실패 TR vs 재작업 TR 비교 오더
+﻿# Codex: 02_chaebol_allowance_zero — 실패 TR vs 재작업 TR 비교 오더
 
 > 인코딩: **UTF-8 only**
 > 작성일: 2026-03-11
@@ -8,7 +8,7 @@
 > - `docs/blockguide/TF-BH1_block_harness_reinforcement.md` — 규칙/임계값/validate_v3
 > - `docs/blockguide/실패작들/02_chaebol_allowance_zero_tr_block_070_draft.json` — 실패 TR
 > - `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json` — 실패 TR 현행 복사본
-> - `treatments/chaebol_allowance_zero_tr_block_070_draft.json` — 현재 골든 TR
+> - `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json` — 현재 골든 TR
 > - `docs/blockguide/SSOT_blockguide-integrated-order.md` — 단계 판정
 > - `docs/blockguide/treatment-production-harness-v2.md` — 생산 규칙
 

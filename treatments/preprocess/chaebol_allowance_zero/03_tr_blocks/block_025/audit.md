@@ -1,7 +1,7 @@
-# Block 025 Audit
+﻿# Block 025 Audit
 
 - Source sync:
-  - Canonical source: `treatments/chaebol_allowance_zero_tr_block_070_draft.json / Block 25`.
+  - Canonical source: `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json / Block 25`.
   - `candidate.json` and `fixed.json` are locked to the accepted unnumbered canonical TR source.
 
 - Opponent uniqueness:

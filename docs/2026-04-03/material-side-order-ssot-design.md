@@ -75,7 +75,7 @@ Implementation Note: 2026-04-03 same-day bounded cutover로 legacy pitch payload
 
 ### D. Phase 0 design
 
-- live phase0 artifacts: `treatments/*_phase0_design.json`
+- live phase0 artifacts: `treatments/phase0/{work_id}_phase0_design.json`
 - preprocess-side snapshots: `treatments/preprocess/{work_id}/phase0_ready_snapshot.json`
 - note: 현재 phase0 축은 live root file과 preprocess snapshot이 함께 존재한다.
 

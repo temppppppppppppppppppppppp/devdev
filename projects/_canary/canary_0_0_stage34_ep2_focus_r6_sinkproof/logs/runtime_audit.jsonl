@@ -1,0 +1,2 @@
+{"timestamp": "2026-04-03 15:21:47", "type": "blueprint_fail", "message": "ep_2_all_retries_exhausted", "data": {"ep_num": 2, "final_verdict": "FAILED"}}
+{"timestamp": "2026-04-03 15:21:47", "type": "stage4_complete", "message": "stage4 production completed", "data": {"target_ep": 2}}

@@ -1,10 +1,10 @@
-# `chaebol_allowance_zero` 실패본 vs 재시도본 Fusion
+﻿# `chaebol_allowance_zero` 실패본 vs 재시도본 Fusion
 
 ## Findings
 
 1. `Major` 재시도본은 실패본을 실무 기준에서 대체 가능하다. 직접 재검증 기준으로 TR은 `opponent_unique 4 -> 31`, `weakness_unique 7 -> 70`, `avg_bundle_chars 321.29 -> 972.93`로 개선됐고, 실패본의 초반 10블록 2인 로테이션과 10회 weakness 반복이 해소됐다.
 2. `Major` BI는 둘 다 `MasterBible.plot_roadmap` 길이 70과 title sequence 정합성은 맞지만, `FinanceHUD.portfolio_history`는 두 파일 모두 비어 있다. 따라서 기존 비교 문서의 "portfolio_history 동기화" 표현은 과했고, 직접 확인 가능한 동기화 축은 `financial_status.total_assets`와 `mobilizable_capital`이다.
-3. `Major` D2 비교 오더의 핵심 오기는 정리됐다. 현재 골든 TR 정본은 `treatments/chaebol_allowance_zero_tr_block_070_draft.json`이고, 실패 TR 정본은 `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`이며, 실패본 아크 6 opponent는 `윤석진 5 / 백도현 5` 2명이다.
+3. `Major` D2 비교 오더의 핵심 오기는 정리됐다. 현재 골든 TR 정본은 `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`이고, 실패 TR 정본은 `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`이며, 실패본 아크 6 opponent는 `윤석진 5 / 백도현 5` 2명이다.
 4. `Major` 현행 `R31`은 비교 결론과 분리해야 한다. 실패본은 `tail-20 최다 14블록`으로 충분히 FAIL이지만, 현재 골든 TR도 `tail-20 최다 57블록`으로 걸리므로 하네스 규칙 자체가 과잉이다. 이 문제는 재시도본의 개선 사실을 뒤집지 않고 별도 재조정 이슈로 다루는 것이 맞다.
 5. `Medium` `sector missing`은 content defect가 아니라 field-drift 성격으로 보는 편이 맞다. 직접 재검증 결과 실패본과 재시도본 모두 `genre_ext.business_sector`, `genre_ext.section_rotation` 누락이 `0`이다.
 
@@ -20,7 +20,7 @@ BI 쪽 공통분모도 분명하다. 둘 다 `MasterBible.plot_roadmap`는 sourc
 
 | 항목 | 기존 혼선 | Fusion 확정 |
 | ---- | --------- | ----------- |
-| 골든 TR 정본 | `02_...`를 골든처럼 참조한 문서가 있었음 | `treatments/chaebol_allowance_zero_tr_block_070_draft.json`이 현재 골든 TR |
+| 골든 TR 정본 | `02_...`를 골든처럼 참조한 문서가 있었음 | `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`이 현재 골든 TR |
 | 실패 TR 정본 | 실패 보관본과 현행 복사본이 섞여 있었음 | `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`이 실패 TR 현행 복사본 |
 | 실패 아크 6 opponent | `서도윤`이 포함된 3명 아크로 잘못 기술된 문서가 있었음 | 실제는 `윤석진 5 / 백도현 5` 2명 |
 | 현재 골든 핵심 수치 | `15명 / 약 33% / 268자` 같은 구버전 수치가 섞였음 | `opponent_unique 31`, `max_share 24.3%`, `avg_bundle_chars 972.93` 기준으로 잠금 |

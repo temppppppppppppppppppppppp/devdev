@@ -1,4 +1,4 @@
-# chaebol_allowance_zero Density Rewrite — 세션 컨텍스트 메모
+﻿# chaebol_allowance_zero Density Rewrite — 세션 컨텍스트 메모
 
 Date: 2026-03-27
 work_id: `chaebol_allowance_zero`
@@ -110,9 +110,9 @@ Duplicate BI (reference-only, 수정 대상 아님):
 - `chaebol_allowance_zero_bi.json` (599KB)
 
 Stale root paths (존재하지 않음, 정리 필요):
-- `treatments/chaebol_allowance_zero_tr_block_070_draft.json`
+- `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`
 - `treatments/chaebol_allowance_zero_phase0_design.json`
-- `bible/0_bi_chaebol_allowance_zero.json`
+- `bible/02_bi_chaebol_allowance_zero.json`
 - `bible/chaebol_allowance_zero_bi.json`
 
 ## 5. 역할 체계

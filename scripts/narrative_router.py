@@ -17,6 +17,14 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from modules.narrative_router.artifact_paths import (  # noqa: E402
+    resolve_bi_path,
+    resolve_phase0_path,
+    resolve_tr_path,
+)
 
 # ---------------------------------------------------------------------------
 # Profile enum used for family detection
@@ -116,9 +124,9 @@ def _determine_stage(work_id: str, stage0_status: dict[str, bool]) -> str:
         return "stage0"
 
     # Check downstream artifacts
-    phase0_path = ROOT / "treatments" / f"{work_id}_phase0_design.json"
-    tr_path = ROOT / "treatments" / f"{work_id}_tr_block_070_draft.json"
-    bi_path = ROOT / "bible" / f"0_bi_{work_id}.json"
+    phase0_path = resolve_phase0_path(work_id, root=ROOT)
+    tr_path = resolve_tr_path(work_id, root=ROOT)
+    bi_path = resolve_bi_path(work_id, root=ROOT)
 
     phase0_exists = phase0_path.is_file()
     tr_exists = tr_path.is_file()
@@ -140,9 +148,9 @@ def route(work_id: str, genre: str | None = None) -> dict:
     current_stage = _determine_stage(work_id, stage0_status)
 
     # Artifact existence flags
-    phase0_exists = (ROOT / "treatments" / f"{work_id}_phase0_design.json").is_file()
-    tr_exists = (ROOT / "treatments" / f"{work_id}_tr_block_070_draft.json").is_file()
-    bi_exists = (ROOT / "bible" / f"0_bi_{work_id}.json").is_file()
+    phase0_exists = resolve_phase0_path(work_id, root=ROOT).is_file()
+    tr_exists = resolve_tr_path(work_id, root=ROOT).is_file()
+    bi_exists = resolve_bi_path(work_id, root=ROOT).is_file()
 
     harnesses = WUXGUIDE_HARNESSES if family == "wuxguide" else BLOCKGUIDE_HARNESSES
     next_harness = harnesses.get(current_stage, "")

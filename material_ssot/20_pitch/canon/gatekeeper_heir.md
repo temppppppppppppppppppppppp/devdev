@@ -1,4 +1,4 @@
-# gatekeeper_heir
+﻿# gatekeeper_heir
 
 Title: 사람값이 보이는 후계자
 Family: blockguide
@@ -14,11 +14,11 @@ Status: canonical pitch exemplar
 - Stage0 source manifest:
   - `treatments/preprocess/gatekeeper_heir/source_manifest.json`
 - live Phase0 file:
-  - `treatments/gatekeeper_heir_phase0_design.json`
+  - `treatments/phase0/gatekeeper_heir_phase0_design.json`
 - live TR file:
-  - `treatments/gatekeeper_heir_tr_block_070_draft.json`
+  - `treatments/06_gatekeeper_heir_tr_block_070_draft.json`
 - live BI file:
-  - `bible/0_bi_gatekeeper_heir.json`
+  - `bible/06_bi_gatekeeper_heir.json`
 
 This file replaces the old bootstrap note. The canonical pitch truth is now materialized inside `material_ssot/20_pitch`.
 

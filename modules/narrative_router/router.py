@@ -4,6 +4,7 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from .artifact_paths import resolve_bi_path, resolve_phase0_path, resolve_tr_path
 from .contracts import NarrativeFamilyContract
 from .families import get_builtin_families
 from .families.base import NarrativeFamilyPlugin
@@ -65,9 +66,9 @@ def inspect_artifacts(*, work_id: str, contract: NarrativeFamilyContract) -> Nar
         except (json.JSONDecodeError, OSError, UnicodeDecodeError):
             manual_audit_pass = None
 
-    phase0_path = ROOT / contract.planning.phase0_output_pattern.format(work_id=work_id)
-    tr_path = ROOT / f"treatments/{work_id}_tr_block_070_draft.json"
-    bi_path = ROOT / f"bible/0_bi_{work_id}.json"
+    phase0_path = resolve_phase0_path(work_id, root=ROOT)
+    tr_path = resolve_tr_path(work_id, root=ROOT)
+    bi_path = resolve_bi_path(work_id, root=ROOT)
     preprocess_ready = all(preprocess_files_present.values()) and manual_audit_pass is True
 
     return NarrativeArtifactState(

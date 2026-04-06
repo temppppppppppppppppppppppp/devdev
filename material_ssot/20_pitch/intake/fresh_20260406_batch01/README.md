@@ -16,13 +16,15 @@ Current candidates:
 1. `01_line_stop_deputy.md`
 2. `02_permit_window_grade9.md`
 3. `03_manual_meridian_archivist.md`
+4. `04_shockline_salaryman.md`
 
 Initial recommendation:
 
 - strongest `blockguide` pick for immediate build: `01_line_stop_deputy.md`
+- strongest `investment_market_profile` fork pick for immediate build: `04_shockline_salaryman.md`
 - strongest `wuxguide` pick for immediate build: `03_manual_meridian_archivist.md`
 
 Current read posture:
 
-- treat all three as `selection-ready`
+- treat all four as `selection-ready`
 - none of them should be treated as live `work_id` yet

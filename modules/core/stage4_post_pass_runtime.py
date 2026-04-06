@@ -1211,11 +1211,37 @@ class Stage4PostPassRuntime:
                 dict(entry),
             )
 
-    def _build_atomic_state_payloads(self, *, final_state_updates, bible_delta):
+    def _extract_actual_truth_fact_ledger_carryover_overlay(
+        self,
+        *,
+        actual_truth,
+    ) -> dict[str, int | float]:
+        if not isinstance(actual_truth, dict) or not actual_truth:
+            return {}
+
+        carryover_fields = _collect_fact_ledger_carryover_authority_fields(
+            getattr(self.ctx, "fact_ledger", None)
+        )
+        if not carryover_fields:
+            return {}
+
+        overlay: dict[str, int | float] = {}
+        for field_name in carryover_fields:
+            value = actual_truth.get(field_name)
+            if isinstance(value, bool):
+                continue
+            if isinstance(value, (int, float)):
+                overlay[field_name] = value
+        return overlay
+
+    def _build_atomic_state_payloads(self, *, actual_truth, final_state_updates, bible_delta):
         inventory_payload = {}
         relationship_payload = {}
         martial_payload = {}
         pressure_payload = {}
+        numeric_carryover_overlay = self._extract_actual_truth_fact_ledger_carryover_overlay(
+            actual_truth=actual_truth,
+        )
 
         if isinstance(bible_delta, dict):
             inventory_counts = bible_delta.get("inventory_counts")
@@ -1255,6 +1281,8 @@ class Stage4PostPassRuntime:
             world_state_changes.update(pressure_payload)
 
         fact_ledger_changes = dict(final_state_updates or {})
+        if numeric_carryover_overlay:
+            fact_ledger_changes.update(numeric_carryover_overlay)
         if inventory_payload:
             fact_ledger_changes.update(inventory_payload)
         if relationship_payload:
@@ -1418,7 +1446,7 @@ class Stage4PostPassRuntime:
         )
         self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (비차단): {str(meta_err)[:60]}")
 
-    def _save_world_state_atomic(self, *, next_ep, final_state_updates, bible_delta):
+    def _save_world_state_atomic(self, *, next_ep, actual_truth, final_state_updates, bible_delta):
         """[B-1-9a:A4] WorldState + FactLedger 원자적 갱신 + 롤백.
 
         Void return. On failure raises → caught by caller's
@@ -1426,6 +1454,7 @@ class Stage4PostPassRuntime:
         """
         meta_db = getattr(self.ctx.current_project, "db", None)
         payloads = self._build_atomic_state_payloads(
+            actual_truth=actual_truth,
             final_state_updates=final_state_updates,
             bible_delta=bible_delta,
         )

@@ -1,4 +1,4 @@
-# Codex: `R31` Tail 반복 규칙 재조정 문서
+﻿# Codex: `R31` Tail 반복 규칙 재조정 문서
 
 > 인코딩: **UTF-8 only**
 > 작성일: 2026-03-11
@@ -29,7 +29,7 @@
 실측 대상:
 
 - 실패 TR: `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`
-- 개선 TR: `treatments/chaebol_allowance_zero_tr_block_070_draft.json`
+- 개선 TR: `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`
 
 ### 1.1 tail 반복 통계
 

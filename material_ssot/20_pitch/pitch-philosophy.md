@@ -15,6 +15,8 @@ Important operational note:
 
 - a legacy file under `intake/legacy_import/` or an old candidate under any folder does not become an active candidate just because it exists on disk
 - active candidate status now comes from philosophy alignment first, then selection, then handoff
+- current operator lane excludes female-protagonist candidates from active promotion
+- female-protagonist ideas can remain as archived material, but they do not enter the active `synthesis -> canon -> Stage0/Phase0` route
 
 ## 2. Default Operating Mode
 
@@ -22,6 +24,7 @@ Important operational note:
 - build or revise one work-level pitch unit at a time
 - parallel ideation is burst-only and never changes final authority away from the selected pitch file
 - no work should be promoted into Stage 0 or Phase0 just because it has a flashy premise
+- active fresh-candidate selection assumes a male protagonist
 - large downstream artifacts must not be written in one huge overwrite just because the target file is singular
 - if the next unit is `Phase0`, `TR`, or `BI`, keep the current bounded unit as the save unit and preserve parseable JSON after each save step
 
@@ -30,6 +33,15 @@ Authority note:
 - planning semantics come from `docs/blockguide/treatment-planning-harness.md` and `docs/wuxguide/wuxia-planning-harness.md`
 - operator mode semantics come from `docs/implementation/single-ide-default-policy.md`
 - this document defines the pitch-stage bridge and selection gate, not the downstream TR or BI schema
+- deeper house-law references:
+  - `material_ssot/20_pitch/protagonist-first-constitution.md`
+  - `material_ssot/20_pitch/pitch-selection-checklist.md`
+  - `material_ssot/20_pitch/work-guard-translation-map.md`
+- downstream work-guard operator companions:
+  - `docs/2026-04-06/work-guard-validator-checklist-spec.md`
+  - `docs/2026-04-06/wg-v2-freeze-checklist.md`
+  - `docs/2026-04-06/wg-v3-drift-audit-card.md`
+- use the dated companion docs for translation/freeze/drift operations, while keeping philosophy authority in `material_ssot/20_pitch`
 
 ## 3. Our Philosophy
 
@@ -113,6 +125,7 @@ A fresh idea is allowed into active candidate status only if it can answer all o
 
 Hard reject examples:
 
+- female protagonist candidate under the current operator lane
 - first success yields mostly suspicion, probation, surveillance, exile threat, or "at least you survived"
 - the engine depends on the protagonist being nice, patient, sacrificial, or endlessly misunderstood without leverage
 - the reward is only emotional validation with no visible power token

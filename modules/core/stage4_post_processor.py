@@ -880,6 +880,7 @@ class Stage4PostProcessor:
 
         self.post_pass_runtime._save_world_state_atomic(
             next_ep=next_ep,
+            actual_truth=delta["actual_truth"],
             final_state_updates=final_state_updates,
             bible_delta=bible_delta,
         )

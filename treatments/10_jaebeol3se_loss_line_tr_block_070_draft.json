@@ -1,0 +1,1128 @@
+[
+  {
+    "block_id": "Block 1",
+    "title": "리스크 표 만드는 도련님",
+    "content": {
+      "context": "2025년 3월 월요일 아침, 도성그룹 지주사 전략금융실. 도진우(28)는 만기표, 보험표, 자금 스케줄을 정리하는 말석에 앉아 있다. 오너 일가의 3세이지만 결재선 밖으로 밀려나 보험 담당 임원, 구매실장, 생산관리 상무의 보고서가 지나가는 통로 역할만 한다. 본가 식탁에서는 '숫자놀이 좋아하는 애', 회사에서는 '리스크 표 만드는 도련님'으로 소비된다.",
+      "event_villain": "사촌 형 도현석(전략기획실 과장)이 리스크 회의에서 각 부서 보고를 종합 정리하는 발언권을 쥐고 있다. 도진우에게는 표 정리만 시키고 발언 기회를 주지 않는다. 의도적 배제가 아니라 말석 도련님은 그냥 그 자리에 있는 사람이라는 관성.",
+      "solution": "도진우는 아직 움직이지 않는다. 다만 각 부서 보고서가 자기 자리를 지나가는 것을 매일 보면서, 보험 갱신표·클레임 준비금·선적 지연·고객사 실사 경보 숫자들 사이에 아무도 묶지 않는 연결이 보이기 시작한다. 말석은 세 숫자를 다 듣고 나갈 데가 없는 자리다.",
+      "reward": "아직 없다. 도진우는 말석에 앉아 있고, 세 숫자의 연결을 혼자 메모한다."
+    },
+    "stakes": "여기서 계속 표만 만들면 도진우는 영원히 리스크 표 도련님으로 굳는다.",
+    "power_shift": {
+      "protagonist": "말석. 아직 변화 없음.",
+      "antagonist": "도현석이 리스크 회의 발언권을 독점 중."
+    },
+    "relationship_delta": [],
+    "foreshadow": [
+      "도진우가 메모한 세 숫자의 연결은 Block 4에서 손실선으로 터진다."
+    ],
+    "callback": [],
+    "emotional_beat": {
+      "type": "humiliation",
+      "intensity": 5
+    },
+    "tension_level": 3,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도성그룹 지주사 전략금융실",
+      "type": "사무실"
+    },
+    "time_span": {
+      "duration": "하루",
+      "in_story_time": "2025년 3월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "관찰. 말석에서 세 부서 보고서를 동시에 보며 연결을 감지한다.",
+      "investment_type": "없음",
+      "deal_type": "없음",
+      "leverage_used": [
+        "말석 자리의 정보 우위"
+      ],
+      "opponent": {
+        "name": "도현석",
+        "type": "사촌 형",
+        "weakness_exploited": "아직 없음"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "없음. 아직 관찰 단계.",
+      "knowledge_used": "각 부서 보고서를 동시에 볼 수 있는 자리의 구조적 우위",
+      "risk_level": "없음",
+      "business_sector": "리스크 관리",
+      "section_rotation": "ARC-01 도입",
+      "success_pattern": "아직 없음. 관찰과 메모.",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 2",
+    "title": "세 개의 숫자",
+    "content": {
+      "context": "월요일 전략금융실 확대 리스크 회의. 보험 담당 임원 임재훈이 해상보험 인상률을 보고한다. 구매실장 박동수가 분리막 스크랩률을 보고한다. 생산관리 상무 정우진이 중국 항만 슬롯 취소율을 보고한다. 세 사람은 각자 자기 숫자만 보고 자기 영역만 설명한다.",
+      "event_villain": "각 부서장이 자기 숫자만 들고 나가는 구조 자체가 도진우 외에는 아무도 연결을 보지 못하게 만든다. 사촌 형 도현석도 세 숫자를 개별적으로 이해하지만 묶지 못한다.",
+      "solution": "도진우는 세 보고를 말석에서 다 듣는다. 해상보험 인상률, 분리막 스크랩률, 항만 슬롯 취소율 — 세 숫자가 한 줄의 손실선으로 이어진다는 것을 확인한다. 아직 발언하지 않고 한 장 표로 정리한다.",
+      "reward": "한 장 표. 아직 공유되지 않았지만 도진우의 손에 있다."
+    },
+    "stakes": "세 숫자의 연결을 놓치면 18일 뒤 배터리 계열사 마진이 무너지는 것을 아무도 예측하지 못한다.",
+    "power_shift": {
+      "protagonist": "한 장 표를 손에 쥐었지만 아직 공유하지 않은 상태.",
+      "antagonist": "도현석이 세 보고를 종합할 차례를 기다리고 있다."
+    },
+    "relationship_delta": [],
+    "foreshadow": [
+      "trigger set A(보험 인상률, 스크랩률, 슬롯 취소율)가 Block 4의 손실선 선언과 Block 9의 적중으로 이어진다."
+    ],
+    "callback": [],
+    "emotional_beat": {
+      "type": "tension_build",
+      "intensity": 5
+    },
+    "tension_level": 5,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도성그룹 전략금융실 회의실",
+      "type": "회의실"
+    },
+    "time_span": {
+      "duration": "2시간",
+      "in_story_time": "2025년 3월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "세 부서의 보고를 한 장 표로 묶어 손실 연쇄를 감지한다.",
+      "investment_type": "리스크 분석",
+      "deal_type": "없음",
+      "leverage_used": [
+        "trigger set A",
+        "말석 자리에서 세 보고를 동시에 듣는 구조"
+      ],
+      "opponent": {
+        "name": "구조적 사일로",
+        "type": "부서 간 단절",
+        "weakness_exploited": "각 부서장이 자기 숫자만 보고 나가는 관성"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "18일 카운트다운이 시작되지만 아직 도진우만 안다.",
+      "knowledge_used": "보험 → 물류 → 원가 → 리콜 → 실적 쇼크 연쇄 판독",
+      "risk_level": "저위험 (관찰 단계)",
+      "business_sector": "배터리 공급망 리스크",
+      "section_rotation": "ARC-01 - trigger set A 감지",
+      "success_pattern": "손실 연쇄를 먼저 감지하는 출발",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 3",
+    "title": "관리 범위입니다",
+    "content": {
+      "context": "같은 회의 연장. 세 부서장의 보고가 끝나고 사촌 형 도현석이 종합 정리를 한다.",
+      "event_villain": "도현석이 먼저 정리한다: '배터리 라인은 가동률 유지 중이고, 마진 리스크는 관리 범위입니다.' 기존 숫자를 그대로 읽은 결론이다. 회의실 전체가 고개를 끄덕인다. 도현석은 틀린 것이 아니라 세 숫자를 따로 봤기 때문에 연결을 못 본 것이다.",
+      "solution": "도진우는 사촌 형의 정리가 끝나는 것을 기다린다. 한 장 표를 손에 쥐고 있지만 아직 꺼내지 않는다. 다음 블록에서 꺼낸다.",
+      "reward": "아직 없다. 도진우는 발언 타이밍을 잡고 있다."
+    },
+    "stakes": "도현석의 '관리 범위' 결론이 그룹 의사결정의 기본값이 된다. 이 결론이 그대로 통과하면 18일 뒤 마진 붕괴를 아무도 준비하지 못한다.",
+    "power_shift": {
+      "protagonist": "한 장 표를 손에 쥐고 발언 타이밍을 잡는 중.",
+      "antagonist": "도현석의 '관리 범위' 결론이 회의실의 합의가 된 상태."
+    },
+    "relationship_delta": [],
+    "foreshadow": [
+      "도현석의 '관리 범위' 보고는 Block 9에서 공식 오류로 기록된다."
+    ],
+    "callback": [],
+    "emotional_beat": {
+      "type": "tension_peak",
+      "intensity": 7
+    },
+    "tension_level": 7,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도성그룹 전략금융실 회의실",
+      "type": "회의실"
+    },
+    "time_span": {
+      "duration": "30분",
+      "in_story_time": "2025년 3월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "대기. 사촌 형의 낙관 정리가 끝나기를 기다린다.",
+      "investment_type": "리스크 분석",
+      "deal_type": "없음",
+      "leverage_used": [
+        "trigger set A 한 장 표"
+      ],
+      "opponent": {
+        "name": "도현석",
+        "type": "사촌 형",
+        "weakness_exploited": "세 숫자를 따로 봤기 때문에 연결을 못 봄"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "18일 카운트다운. 회의에서 방향이 잡히지 않으면 대응이 늦는다.",
+      "knowledge_used": "손실 연쇄 판독",
+      "risk_level": "중위험 (발언 타이밍에 따라 결과가 갈린다)",
+      "business_sector": "배터리 공급망 리스크",
+      "section_rotation": "ARC-01 - 사촌 형의 낙관 보고",
+      "success_pattern": "아직 터지지 않은 긴장",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 4",
+    "title": "18일",
+    "content": {
+      "context": "회의 속개. 도현석의 '관리 범위' 결론에 회의실이 동의한 직후.",
+      "event_villain": "도현석의 결론이 합의된 상태. 도진우가 이 합의를 뒤집으면 사촌 형의 체면을 정면으로 깨뜨리는 것이다.",
+      "solution": "도진우가 한 장 표를 꺼낸다. 보험 인상률이 여기 있고, 스크랩률이 여기 있고, 슬롯 취소가 여기 있으면 — 사촌 형이 말한 '관리 범위'는 18일 뒤에 무너진다. 세 숫자를 따로 봤기 때문에 연결을 못 본 것이다. 사촌 형이 반박하려다 숫자를 다시 보고 입을 다문다. '관리 범위'라고 올린 보고가 그 자리에서 침묵으로 철회된다.",
+      "reward": "CFO 강태호: '…이건 보고가 아니라 손실선을 먼저 그린 거네.' 회장 도경일: '이번 건은 네 선에서 먼저 잡아.' 도진우의 이름이 회장의 인식에 처음 올라간다. 돈은 없지만 '손실선을 먼저 그린 사람'이라는 평가가 찍힌다."
+    },
+    "stakes": "18일 예측이 틀리면 도진우는 사촌 형의 체면을 깬 건방진 말석 도련님으로 끝난다.",
+    "power_shift": {
+      "protagonist": "'리스크 표 만드는 도련님'에서 '손실선을 먼저 그린 사람'으로 첫 평가 이동.",
+      "antagonist": "도현석의 '관리 범위' 보고가 침묵으로 철회되고, 사촌 형의 발언 독점이 처음으로 흔들린다."
+    },
+    "relationship_delta": [
+      {
+        "target": "도현석",
+        "before": "무시 (말석 도련님)",
+        "after": "침묵 (숫자를 다시 보고 입을 다문다)"
+      },
+      {
+        "target": "강태호",
+        "before": "무관심",
+        "after": "관심 (손실선을 먼저 그린 거네)"
+      },
+      {
+        "target": "도경일",
+        "before": "인식 밖",
+        "after": "인식 시작 (네 선에서 먼저 잡아)"
+      }
+    ],
+    "foreshadow": [
+      "18일 카운트다운은 Block 9에서 적중으로 마무리된다.",
+      "회장의 '네 선에서 먼저 잡아'는 Block 6의 직보 라인 개방으로 이어진다."
+    ],
+    "callback": [
+      "Block 2에서 정리한 한 장 표가 여기서 꺼내진다.",
+      "Block 3의 사촌 형 '관리 범위' 결론이 여기서 뒤집힌다."
+    ],
+    "emotional_beat": {
+      "type": "first_saida",
+      "intensity": 9
+    },
+    "tension_level": 9,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도성그룹 전략금융실 회의실",
+      "type": "회의실"
+    },
+    "time_span": {
+      "duration": "15분",
+      "in_story_time": "2025년 3월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "trigger set A 세 숫자를 한 장 표로 묶어 18일 뒤 마진 붕괴를 선언한다.",
+      "investment_type": "리스크 분석 / 손실선 선언",
+      "deal_type": "회의실 발언",
+      "leverage_used": [
+        "trigger set A",
+        "세 부서 보고서를 동시에 듣는 말석 자리",
+        "손실 연쇄 판독 감각"
+      ],
+      "opponent": {
+        "name": "도현석",
+        "type": "사촌 형",
+        "weakness_exploited": "세 숫자를 따로 봤기 때문에 연결을 못 봄 — 틀린 것이 아니라 묶지 못한 것"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "18일. 여기서 방향이 잡히지 않으면 배터리 계열사 분기 손실이 통제 불가.",
+      "knowledge_used": "보험 → 물류 → 원가 → 리콜 → 실적 쇼크 연쇄",
+      "risk_level": "고위험 (사촌 형의 체면을 정면으로 깨뜨리는 발언)",
+      "business_sector": "배터리 공급망 리스크",
+      "section_rotation": "ARC-01 - 첫 손실선 선언 (first saida)",
+      "success_pattern": "세 숫자의 연결을 회의실에서 먼저 보여준다",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 5",
+    "title": "도련님이 감히",
+    "content": {
+      "context": "Block 4에서 도진우가 사촌 형의 보고를 뒤집은 직후. 회의가 끝나고 사촌 형 도현석이 움직인다.",
+      "event_villain": "도현석이 자기 라인을 통해 보험 갱신표를 재검토하게 한다. 도진우의 18일 예측이 틀리면 공개적으로 망신을 주겠다는 뜻. 전략기획실 실무자들에게 '말석 도련님이 숫자 세 개로 무슨 얘기를 했는지 확인해 봐'라고 지시한다.",
+      "solution": "도진우는 반격하지 않는다. 대신 18일 동안의 데이터를 매일 추적하며 자기 예측이 맞는지 확인한다. 동시에 긴급 헤지안과 원재료 선매입안을 조용히 준비한다.",
+      "reward": "아직 없다. 도진우는 사촌 형의 검증을 받는 입장이다. 단, 회장의 '네 선에서 먼저 잡아'가 보호패로 작동해 즉시 쫓겨나지는 않는다."
+    },
+    "stakes": "18일 예측이 틀리면 도진우는 건방진 말석 도련님으로 사촌 형보다 더 낮은 자리로 떨어진다.",
+    "power_shift": {
+      "protagonist": "검증받는 입장. 회장의 발언이 유일한 보호패.",
+      "antagonist": "도현석이 검증 라인을 가동하며 반격 태세를 갖춘다."
+    },
+    "relationship_delta": [
+      {
+        "target": "도현석",
+        "before": "침묵",
+        "after": "경계 (검증 라인 가동)"
+      }
+    ],
+    "foreshadow": [
+      "도현석의 검증 라인은 Block 9에서 도진우의 적중으로 무력화된다.",
+      "도진우가 준비하는 헤지안과 선매입안은 Block 7에서 공식 제출된다."
+    ],
+    "callback": [
+      "Block 4의 손실선 선언에 대한 사촌 형의 첫 반응."
+    ],
+    "emotional_beat": {
+      "type": "counter_pressure",
+      "intensity": 7
+    },
+    "tension_level": 7,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도성그룹 전략기획실 / 전략금융실",
+      "type": "사무실"
+    },
+    "time_span": {
+      "duration": "3일",
+      "in_story_time": "2025년 3월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "대기와 준비. 사촌 형의 검증을 받으며 헤지안과 선매입안을 조용히 준비한다.",
+      "investment_type": "리스크 대응 준비",
+      "deal_type": "없음 (준비 단계)",
+      "leverage_used": [
+        "회장의 보호패",
+        "18일 카운트다운 데이터 추적"
+      ],
+      "opponent": {
+        "name": "도현석",
+        "type": "사촌 형",
+        "weakness_exploited": "아직 없음 — 도현석이 반격하는 중"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "18일 카운트다운 진행 중.",
+      "knowledge_used": "trigger set A 추적 데이터",
+      "risk_level": "고위험 (예측이 틀리면 끝)",
+      "business_sector": "배터리 공급망 리스크",
+      "section_rotation": "ARC-01 - 사촌 형의 반격",
+      "success_pattern": "반격하지 않고 데이터로 준비한다",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 6",
+    "title": "회장의 메모",
+    "content": {
+      "context": "18일 카운트다운 5일차. 회장 도경일이 매주 받는 주간 리스크 브리프에 도현석과 도진우의 보고가 나란히 올라온다. 도현석의 보고는 기존 가동률 중심이고, 도진우의 보고는 trigger set A 숫자를 추적한 손실선 업데이트다. 회장은 두 보고를 나란히 놓고 본다.",
+      "event_villain": "도현석은 자기 보고에 전략기획실 실무자들의 재검토 결과를 붙여 '보험 인상률은 시장 전체 추세이며 배터리 계열사 특정 리스크는 아닙니다'라는 반론을 올렸다. 형식상 반론은 타당하다. 개별 숫자만 보면 맞는 말이다.",
+      "solution": "도진우는 반론에 직접 대응하지 않는다. 대신 회장에게 올리는 주간 메모에 trigger set A의 다섯째 날 추적 데이터를 담는다. 보험 인상률이 시장 전체 추세인 것은 맞지만, 스크랩률과 슬롯 취소율의 동시 상승은 배터리 섹터 특정이라는 점을 숫자로 보여준다. 장광설 없이 표 한 장.",
+      "reward": "회장 도경일이 도진우에게 직보 주간 메모 라인을 정식으로 연다. '매주 월요일, 네 손실선 업데이트를 먼저 보겠다.' 도현석의 보고는 폐지되지 않지만, 도진우의 보고가 회장의 주간 브리프에서 먼저 읽히는 순서가 된다. 이것이 평가 수정의 첫 공식 영수증이다."
+    },
+    "stakes": "회장이 도현석의 반론을 채택하면 도진우의 손실선은 '말석 도련님의 과잉 해석'으로 묻힌다.",
+    "power_shift": {
+      "protagonist": "회장의 주간 메모 라인이 열린다. 도현석의 보고를 거치지 않고 회장에게 직접 닿는 채널이 생겼다.",
+      "antagonist": "도현석의 반론은 기각되지 않았지만, 회장의 우선 읽기 순서에서 밀렸다."
+    },
+    "relationship_delta": [
+      {
+        "target": "도경일",
+        "before": "인식 시작 (네 선에서 먼저 잡아)",
+        "after": "직보 라인 개방 (매주 네 업데이트를 먼저 보겠다)"
+      },
+      {
+        "target": "도현석",
+        "before": "경계 (검증 라인 가동)",
+        "after": "경계 심화 (자기 보고가 회장 우선 순위에서 밀림)"
+      }
+    ],
+    "foreshadow": [
+      "직보 라인은 Block 11에서 정식 배석권으로 격상된다.",
+      "회장이 두 손자의 보고를 나란히 보는 구조는 ARC-03 Block 49의 저울 장면으로 이어진다."
+    ],
+    "callback": [
+      "Block 4의 '네 선에서 먼저 잡아'가 여기서 직보 라인 개방으로 구체화된다.",
+      "Block 5에서 도현석이 가동한 검증 라인의 결과물이 반론 보고서로 등장한다."
+    ],
+    "emotional_beat": {
+      "type": "recognition_receipt",
+      "intensity": 7
+    },
+    "tension_level": 6,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도성그룹 회장 집무실 / 전략금융실",
+      "type": "집무실"
+    },
+    "time_span": {
+      "duration": "2일",
+      "in_story_time": "2025년 3월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "회장 주간 브리프에 trigger set A 추적 데이터를 표 한 장으로 올려 직보 라인을 얻는다.",
+      "investment_type": "리스크 모니터링",
+      "deal_type": "직보 라인 확보",
+      "leverage_used": [
+        "trigger set A 5일차 추적 데이터",
+        "손실선 업데이트 표",
+        "회장의 기존 관심 (Block 4)"
+      ],
+      "opponent": {
+        "name": "도현석",
+        "type": "사촌 형",
+        "weakness_exploited": "반론이 개별 숫자 기준이라 동시 상승의 섹터 특정성을 놓침"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "18일 카운트다운 5일차. 회장의 판단이 늦어지면 대응 창구가 좁아진다.",
+      "knowledge_used": "trigger set A 추적 — 개별 지표는 시장 전체 추세이지만 동시 상승은 배터리 섹터 특정",
+      "risk_level": "중위험 (회장이 도현석 편을 들면 직보 라인이 안 열림)",
+      "business_sector": "배터리 공급망 리스크",
+      "section_rotation": "ARC-01 - 회장 직보 라인 확보",
+      "success_pattern": "장광설 없이 표 한 장으로 회장의 우선순위를 바꾼다",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 7",
+    "title": "손실선 카운트다운",
+    "content": {
+      "context": "18일 카운트다운 8일차. 도진우가 직보 라인을 통해 회장에게 올린 두 번째 주간 메모. trigger set A 숫자가 예측 궤도 위에 있다는 것을 확인한다. 동시에 긴급 헤지안과 원재료 선매입안을 정식으로 전략금융실에 올린다.",
+      "event_villain": "보험 담당 임원 임재훈이 헤지안을 처음 검토한다. 도진우의 헤지 설계가 보험 갱신 일정과 맞물려 있다는 것을 보고 놀란다. 그러나 임재훈은 아직 도진우를 인정하��� 것이 아니라 자기 영역을 침범당한 ��에 경계한다.",
+      "solution": "도진우는 헤지안을 올리면서 임재훈에게 선을 긋지 않는다. 보험 갱신 일정은 임재훈의 영역이고, 도진우는 원가 연쇄 구간만 잡겠다고 범위를 나눈다. 임재훈의 자존심을 건드리지 않으면서 자기 헤지안의 실행 근거를 확보하는 것.",
+      "reward": "헤지안과 선매입안이 전략금융실 정식 검토 안건에 올라간다. 아직 실행 승인�� 아니지만, 도진우의 이름이 붙은 안��이 결재선에 처음 올라간 것."
+    },
+    "stakes": "헤지안이 기각되면 18일 뒤 마진이 꺾여도 도진우는 경고만 한 사람이지 대응까지 한 사람이 아니게 된다.",
+    "power_shift": {
+      "protagonist": "결재선에 도진우 이름이 붙은 안건이 처음 올라갔다.",
+      "antagonist": "임재훈이 자기 영역 침범을 경계하지만 아직 직접 반대하지는 않는다."
+    },
+    "relationship_delta": [
+      {
+        "target": "임재훈",
+        "before": "무관심",
+        "after": "경계 (자기 영역 침범 감지, 그러나 숫자는 봄)"
+      }
+    ],
+    "foreshadow": [
+      "임재훈이 여기서 도진우의 보험 연동 설계를 처음 본 것은 ARC-02 Block 17에서 갱신안 오류를 찍히는 장면의 복선이���.",
+      "선매입안은 Block 10에서 일부 단가 역전을 ��는다."
+    ],
+    "callback": [
+      "Block 5에서 조용히 준비하던 헤지안과 선매입안이 여기서 정식 제출된다."
+    ],
+    "emotional_beat": {
+      "type": "preparation",
+      "intensity": 5
+    },
+    "tension_level": 6,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도성그룹 전략금융실",
+      "type": "사무실"
+    },
+    "time_span": {
+      "duration": "2일",
+      "in_story_time": "2025년 3월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "긴급 헤지안과 원재료 선매입안을 전략금융실 정식 검토 안건으로 ��린다.",
+      "investment_type": "리스크 헤지 / 원재료 선매입",
+      "deal_type": "안건 제출 (실행 승인 전)",
+      "leverage_used": [
+        "trigger set A 8일차 ��적 데이터",
+        "직보 라인을 통한 회장 인식",
+        "보험 갱신 일정과의 연동 설계"
+      ],
+      "opponent": {
+        "name": "임재훈",
+        "type": "보험 담당 임원",
+        "weakness_exploited": "아직 없음"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "18일 카운트다운 8일차.",
+      "knowledge_used": "trigger set A 추적 + 보험 갱신 일정 연동",
+      "risk_level": "중위험",
+      "business_sector": "배터리 공급망 리스크 / 보���",
+      "section_rotation": "ARC-01 - 헤지안·선매입안 제출",
+      "success_pattern": "상대 영역을 침범하지 않으면서 자기 안건을 결재선에 올린다",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 8",
+    "title": "조용한 준비",
+    "content": {
+      "context": "18일 카운트다운 12일차. 내부 대응안은 검토 중이다. 도진우는 퇴근 후 개인 시간에 공개 해운 지표, 공개 보험���장 인덱스, 공개 공급망 뉴스를 정리한다. 회사 안 데이터가 아니라 누구나 볼 수 있는 공개 신호다.",
+      "event_villain": "없다. 이 블록은 조용한 준비 블록이다. 외부 압박 대신 도진우가 혼자 외부 레인의 밑그림을 그리는 시간.",
+      "solution": "도진우는 공개 해운 지표에서 컨테이너 운임 선물과 슬롯 가용률 추이를 본다. 공개 보험시장에서 로이즈 해상보험 인덱스의 프리미엄 변화를 본다. 이 공개 숫자들만으로도 배터리 공급망 스트레스가 섹터 전체로 번지고 있다는 것을 읽을 수 있다. 내부 데이터 없이, 공개 신호만으로 외부 포지션의 방향을 잡는다.",
+      "reward": "아직 실행하지 않았다. 도진우의 노트북에 ���부 레인 포지션의 밑그림이 있을 뿐. 그러나 이 밑그림은 Block 14에서 파��럿 운용금이 붙은 뒤 첫 집행의 기초가 된다."
+    },
+    "stakes": "낮다. 관찰과 준비의 블록.",
+    "power_shift": {
+      "protagonist": "변화 없음. 조용한 관찰.",
+      "antagonist": "변화 없음."
+    },
+    "relationship_delta": [],
+    "foreshadow": [
+      "이 밑그림은 Block 14의 파일럿 운용금 배정 후 외부 포지션 설계로 이어진다.",
+      "공개 해운 지표의 ���상 신호는 ARC-02 Block 20의 ���객사 실사 공문과 연결된다."
+    ],
+    "callback": [],
+    "emotional_beat": {
+      "type": "quiet_preparation",
+      "intensity": 3
+    },
+    "tension_level": 3,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도진우의 자택 서재",
+      "type": "개인 공간"
+    },
+    "time_span": {
+      "duration": "3일 (퇴근 후)",
+      "in_story_time": "2025년 3월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "공개 해운 지표, 공개 보험시장 인덱스, 공개 공급망 뉴스를 정리해 외부 레인 포지션의 밑그림을 그린다.",
+      "investment_type": "공개 신호 기반 포지션 설계 (밑그림)",
+      "deal_type": "없음 (설계 단계)",
+      "leverage_used": [
+        "공개 컨테이너 운임 선물",
+        "공개 슬롯 가용률 추이",
+        "로이즈 해상보험 인덱스 프리미엄"
+      ],
+      "opponent": {
+        "name": "없음",
+        "type": "없음",
+        "weakness_exploited": "없음"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "18일 카운트다운 12일차.",
+      "knowledge_used": "공개 신호���으로 섹터 스트레스를 읽는 감각.",
+      "risk_level": "없음",
+      "business_sector": "해운 / 보험시장 / 공급망 (공개 지표)",
+      "section_rotation": "ARC-01 - 외부 레인 밑그림 (quiet block)",
+      "success_pattern": "내부 데이터 없이 공개 신호만으로 방향을 잡는다",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 9",
+    "title": "마진이 꺾이다",
+    "content": {
+      "context": "18일째. ��터리 계열사 월간 속보 실적이 올��온다. 분리막 원가 급등과 물류 지연이 동시에 터지며 마진이 예상보다 빠르게 꺾인다. 도진우가 Block 4에서 그은 손실선이 적���했다.",
+      "event_villain": "도현석의 '관리 범위' 보고가 공식적으로 오�� 기록된다. 전략기획실이 ��린 재검토 보고서도 '시장 전체 추세'라는 결론이었는데, 실제로는 배터리 섹터 특정 스트레스였다. 도현석은 틀린 것이 아니라 연결을 못 본 것이지만, 결과적으로 18일 전 도진우의 선언이 맞았다.",
+      "solution": "도진우의 선매입안 덕에 핵심 원재료 일부는 급등 전 단가로 확보되어 있다. 헤지안도 부분 실행되어 환율 변동분은 묶였다. 완벽한 방어는 아니다 — 일부 원재료는 선매입 타이밍을 놓쳤고, 물류 지연은 헤지로 커버할 수 없었다. 그러나 무방비 상태였다면 분기 전체가 날아갔을 손실을 절반 이하로 묶었다.",
+      "reward": "CFO 강태호가 리스크 회의에서 말한다: '선매입이 없었으면 이번 분기는 끝이었다.' 회장 도경일은 도진우의 직보 메모를 다시 꺼내 본다. 사촌 형 도현석은 회의실에서 아무 말도 하지 않는다. 도진우의 평가가 '손실선을 먼저 그린 사람'에서 '손실을 실제로 묶은 사람'으로 한 칸 더 올라간다."
+    },
+    "stakes": "적���하지 않았다면 도진우는 건방진 말석 도련님으로 끝났다.",
+    "power_shift": {
+      "protagonist": "손실선 적중 + 선매입 실적. '손실을 실제로 묶은 사람'으로 승격.",
+      "antagonist": "도현석의 '관리 범위' 보고가 공식 오류. 사촌 형은 ���묵."
+    },
+    "relationship_delta": [
+      {
+        "target": "도현석",
+        "before": "���계 (검증 라인 가동)",
+        "after": "침묵 (회의실에서 아무 말도 안 함)"
+      },
+      {
+        "target": "강태호",
+        "before": "관심",
+        "after": "인정 (선매입이 없었으면 끝이었다)"
+      },
+      {
+        "target": "도경일",
+        "before": "직보 라인 개방",
+        "after": "신뢰 강화 (직보 메모를 다시 꺼내 봄)"
+      },
+      {
+        "target": "임재훈",
+        "before": "경계",
+        "after": "인식 전환 (보험 연동이 실제로 작동했음을 봄)"
+      }
+    ],
+    "foreshadow": [
+      "CFO의 인정은 Block 11의 정식 배석권 부여로 이어진다.",
+      "도현석의 침묵은 ARC-02에서 경계 모드로 전환되는 전환점이다."
+    ],
+    "callback": [
+      "Block 3의 '관리 범위입니다'가 여기서 공식 오류로 기록된다.",
+      "Block 4의 18일 예측이 여기서 적중한다.",
+      "Block 5에서 도현석이 가동한 검증 라인이 여기서 무력화된다.",
+      "Block 7의 헤지안·선매입안이 여기서 실적으로 증명된다."
+    ],
+    "emotional_beat": {
+      "type": "vindication",
+      "intensity": 9
+    },
+    "tension_level": 8,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도성그룹 전략금융실 회의실",
+      "type": "회의실"
+    },
+    "time_span": {
+      "duration": "하루",
+      "in_story_time": "2025년 4월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "분기 손실을 절반 이하로 묶음",
+      "method": "선매입안으로 핵심 원재료 급등 전 단가 확보 + 헤지안으로 환율 변동분 ���어. 완벽한 방어가 아니라 최소 피해 통제.",
+      "investment_type": "리스크 방어 실적 증명",
+      "deal_type": "손실 방어 결과 보고",
+      "leverage_used": [
+        "trigger set A 18일 적중",
+        "선매입 실행 실적",
+        "헤지 실행 실적"
+      ],
+      "opponent": {
+        "name": "도현석",
+        "type": "사촌 형",
+        "weakness_exploited": "관리 범위 보고가 공식 오류"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "18일 카운트다운 종���.",
+      "knowledge_used": "trigger set A 연쇄 판독의 최종 증명",
+      "risk_level": "고위험 해소",
+      "business_sector": "배터리 공급망 리스크",
+      "section_rotation": "ARC-01 - 18일 적중 (vindication)",
+      "success_pattern": "완벽한 방어가 아니라 최소 피해 통제",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 10",
+    "title": "선매입의 대가",
+    "content": {
+      "context": "적중 직후. 선매입안이 전체적으로는 성공이지만, 일부 원재료에서 단가 역전이 발생했다. 분리막 스크랩률이 예상보다 빠르게 안정화되면서, 선매입한 물량 중 일부가 시장가보다 비싸게 들어온 것이다.",
+      "event_villain": "사촌 형 도현석이 리스크 회의에서 침묵을 깨고 한마디 한다: '선매입 전체는 맞았지만, 분리막 물량은 되레 손해 아닌가.' 틀린 지적이 아니다. 도진우의 방어가 100%가 아니었다는 사실을 정확히 찍는다.",
+      "solution": "도진우는 부인하지 않는다. 분리막 선매입 구간의 단가 역전을 인정한다. 그러나 동시에 전체 선매입 포트폴리오의 순기여를 장부로 보여준다. 분리막에서 잃은 것보다 다른 원재료에서 아낀 것이 3배 이상이다. 전체 그림을 한 장으로 보여주는 것.",
+      "reward": "도현석의 지적이 기각되지는 않는다. 그러나 CFO가 '전체 순기여는 플러스다'라고 정리하면서 도진우의 방어 실적이 공식 인정��다. 완벽하지 않았지만 없었으면 끝이었다 — 이 평가가 굳는다."
+    },
+    "stakes": "도현석의 지적이 먹히면 도진우의 적중은 '부분 실패'로 재해석��� 수 있다.",
+    "power_shift": {
+      "protagonist": "완벽하지 않았지만 순기여 플러스 — 방어 실적 공식 인정.",
+      "antagonist": "도현석이 침묵을 깨고 정확한 지적을 했다. 디테일을 짚는 사람이라는 것이 확인됨."
+    },
+    "relationship_delta": [
+      {
+        "target": "도현석",
+        "before": "침묵",
+        "after": "정밀 견제 (전체가 아닌 빈틈을 정확히 찍음)"
+      },
+      {
+        "target": "강태호",
+        "before": "인정",
+        "after": "공식 인정 (전체 순기여는 플러스)"
+      }
+    ],
+    "foreshadow": [
+      "분리막 단가 역전의 교훈은 ARC-02에서 도진우가 포지션 설계를 더 정밀하게 만드는 근거가 된다.",
+      "도현석이 디테일을 짚는 능력은 ARC-02 Block 22에서 독자적 리스크 분석 체계를 세우는 기반이 된다."
+    ],
+    "callback": [
+      "Block 7의 선매입안이 여기서 부분 성공·부분 단가 역전으로 결산된다.",
+      "Block 9의 적중이 여기서 '완벽하지 않지만 순기여 플러스'로 재평가된다."
+    ],
+    "emotional_beat": {
+      "type": "tempered_victory",
+      "intensity": 6
+    },
+    "tension_level": 5,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도성그룹 전략금융실 회의실",
+      "type": "회의실"
+    },
+    "time_span": {
+      "duration": "반나절",
+      "in_story_time": "2025년 4월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "분리막 구간 단가 역전 손실 < 전체 선매입 순기여 (3배 이상 차이)",
+      "method": "단가 역전을 인정하되 전체 포트폴리오 순기여를 장부로 보여준다.",
+      "investment_type": "리스크 방어 결산",
+      "deal_type": "방어 실적 결산 보고",
+      "leverage_used": [
+        "전체 선매입 포트폴리오 장부",
+        "순기여 계산"
+      ],
+      "opponent": {
+        "name": "도현석",
+        "type": "사촌 형",
+        "weakness_exploited": "없음 — 도현��의 지적이 정확했다"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "없음. 결산 단계.",
+      "knowledge_used": "전체 포트폴리오 관점에서의 순기여 판독",
+      "risk_level": "저위험",
+      "business_sector": "배터리 공급망 리스크",
+      "section_rotation": "ARC-01 - 선매입 결산 (defeat block / tempered victory)",
+      "success_pattern": "빈틈을 인정하되 전체 그림으로 순기여를 증명한다",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 11",
+    "title": "배석권",
+    "content": {
+      "context": "적중과 결산이 끝난 다음 주 월요일. 전략금융실 확대 리스크 회의가 열린다. 회의실 배치가 바뀌었다. 도진우의 이름표가 벽쪽 뒷자리가 아니라 테이블 위에 놓여 있다. 사촌 형 도현석 바로 옆자리.",
+      "event_villain": "도현석은 도진우의 이름표를 보고 잠깐 멈춘다. 표정을 관리하고 자리에 앉는다. 회의가 시작되면 도현석은 평소처럼 종합 보고를 하지만, 이번에는 보고가 끝난 뒤 회의 진행자가 도진우에게도 의견을 묻는다. 뒷자리에서는 한 번도 없던 일이다.",
+      "solution": "도진우는 길게 말하지 않는다. 직전 분기의 손실선 추적 경과만 짧게 정리하고, 다음 분기에 주시해야 할 보험 갱신 일정 2건을 언급한다. 사촌 형의 보고를 뒤집거나 반박하지 않는다. 배석자의 첫 발언은 존재감 증명이지 승부가 아니다.",
+      "reward": "리스크 회의 정식 배석권. 도진우는 이제 뒷자리에서 표를 만드는 사람이 아니라 테이블에서 의견을 묻는 사람이다. 회의 후 구매실장 박동수가 복도에서 도진우에게 처음으로 원자재 단가 변동 건으로 의견을 물어온다. 설명을 먼저 듣는 구조의 첫 번째 싹."
+    },
+    "stakes": "첫 배석 회의에서 존재감을 잘못 쓰면 배석권이 형식으로 굳고 실질 발언권은 도현석이 계속 독점한다.",
+    "power_shift": {
+      "protagonist": "뒷자리에서 테이블로. 리스크 회의 정식 배석자.",
+      "antagonist": "도현석의 종합 보고 독점이 처음으로 구조적으로 흔들린다 — 도진우에게도 의견을 묻는 절차가 생김."
+    },
+    "relationship_delta": [
+      {
+        "target": "도현석",
+        "before": "정밀 견제 (빈틈을 정확히 찍음)",
+        "after": "긴장 (옆자리에 도진우가 앉음)"
+      },
+      {
+        "target": "박동수",
+        "before": "인식 없음",
+        "after": "처음으로 도진우에게 의견을 물어옴"
+      }
+    ],
+    "foreshadow": [
+      "박동수가 복도에서 의견을 묻는 것은 '설명을 먼저 듣는 구조'의 시작이며, ARC-02에서 구매실장이 도진우에게 먼저 전화하는 장면으로 이어진다.",
+      "배석 회의에서 도진우가 보험 갱신 일정을 언급한 것은 ARC-02 보험 재협상 테이블의 복선이다."
+    ],
+    "callback": [
+      "Block 9에서 CFO가 인정한 방어 실적이 여기서 배석권이라는 제도적 권한으로 전환된다.",
+      "Block 1에서 뒷자리에 앉아 표만 만들던 도진우가 여기서 테이블에 올라온다."
+    ],
+    "emotional_beat": {
+      "type": "status_upgrade",
+      "intensity": 7
+    },
+    "tension_level": 4,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도성그룹 전략금융실 회의실 (테이블석)",
+      "type": "회의실"
+    },
+    "time_span": {
+      "duration": "1시간",
+      "in_story_time": "2025년 4월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "첫 배석 회의에서 짧고 정확한 발언으로 존재감을 증명한다.",
+      "investment_type": "권한 확보",
+      "deal_type": "정식 배석권 부여",
+      "leverage_used": [
+        "Block 9-10 방어 실적",
+        "회장의 신뢰",
+        "CFO의 공식 인정"
+      ],
+      "opponent": {
+        "name": "도현석",
+        "type": "사촌 형",
+        "weakness_exploited": "없음 — 이번 블록은 상대 약점을 찌르는 것이 아니라 자리를 받는 것"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "없음. 권한 획득 단계.",
+      "knowledge_used": "다음 분기 보험 갱신 일정 2건 (내부 데이터 — 내부 손실 방어용으로만 언급)",
+      "risk_level": "저위험",
+      "business_sector": "리스크 관리",
+      "section_rotation": "ARC-01 - 배석권 획득",
+      "success_pattern": "길게 말하지 않고 존재감만 증명한다",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 12",
+    "title": "대시보드",
+    "content": {
+      "context": "배석권을 받은 다음 날. CFO 강태호가 도진우에게 보험 갱신안·클레임 준비금 대시보드 접근 권한을 부여한다. 임재훈이 대시보드 단말 앞에서 도진우에게 시스템을 설명해야 하는 상황이 된다.",
+      "event_villain": "임재훈은 대시보드를 보여주면서 핵심 탭만 빠르게 넘기고, 상세 데이터는 '실무 경험이 있어야 읽히는 부분'이라며 축약하려 한다. 영역을 완전히 내주지 않겠다는 조용한 저항.",
+      "solution": "도진우는 임재훈의 축약을 문제 삼지 않는다. 대신 갱신 일정 탭에서 다음 분기 만기 도래 건수 하나를 짚고, '이 건은 직전 분기 스크랩률 추이와 겹치네요'라고 한마디만 한다. 그 한마디가 임재훈에게 '이 사람은 대시보드를 볼 줄 안다'는 신호를 보낸다.",
+      "reward": "보험 갱신안·클레임 준비금 대시보드 열람권. 도진우가 처음으로 갱신 일정과 준비금 변동을 실시간으로 볼 수 있게 된다. 임재훈은 대시보드 상세 탭까지 열어준다 — 한마디의 전문성이 영역 벽을 낮췄다."
+    },
+    "stakes": "임재훈이 핵심 탭을 계속 숨기면 도진우는 대시보드 접근권이 있어도 실질적으로 반쪽짜리 데이터만 보게 된다.",
+    "power_shift": {
+      "protagonist": "보험·클레임 대시보드 실시간 열람. 손실선을 더 정밀하게 읽을 수 있는 도구가 생겼다.",
+      "antagonist": "임재훈이 조용히 저항했지만, 도진우의 한마디가 전문성을 증명하면서 저항이 녹았다."
+    },
+    "relationship_delta": [
+      {
+        "target": "임재훈",
+        "before": "인식 전환 (보험 연동 작동 봄)",
+        "after": "경계 완화 (대시보드 상세 탭까지 열어줌)"
+      },
+      {
+        "target": "강태호",
+        "before": "공식 인정",
+        "after": "도구 부여 (대시보드 접근권 발급)"
+      }
+    ],
+    "foreshadow": [
+      "대시보드로 본 다음 분기 갱신 만기 건은 ARC-02의 보험 재협상 테이블에서 핵심 소재가 된다.",
+      "임재훈의 경계 완화는 ARC-02에서 도진우에게 먼저 자료를 가져오는 장면의 기반이다."
+    ],
+    "callback": [
+      "Block 7에서 임재훈이 경계했던 '영역 침범'이 여기서 공식 접근권으로 제도화된다.",
+      "Block 11에서 도진우가 언급한 보험 갱신 일정이 여기서 대시보드를 통해 구체 데이터로 확인된다."
+    ],
+    "emotional_beat": {
+      "type": "access_granted",
+      "intensity": 5
+    },
+    "tension_level": 4,
+    "pov_character": "도진우",
+    "location": {
+      "place": "도성그룹 전략금융실 업무 공간 (대시보드 단말)",
+      "type": "업무 공간"
+    },
+    "time_span": {
+      "duration": "반나절",
+      "in_story_time": "2025년 4월"
+    },
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "대시보드 설명 중 갱신 일정과 스크랩률 교차점을 한마디로 짚어 전문성을 증명한다.",
+      "investment_type": "권한 확보 (열람권)",
+      "deal_type": "대시보드 열람권 부여",
+      "leverage_used": [
+        "CFO의 접근권 발급 지시",
+        "갱신 일정과 스크랩률 교차점 판독"
+      ],
+      "opponent": {
+        "name": "임재훈",
+        "type": "보험 담당 임원",
+        "weakness_exploited": "도진우가 대시보드를 못 읽을 거라는 추정이 한마디에 무너짐"
+      },
+      "historical_event": {
+        "name": null,
+        "year": null,
+        "how_exploited": null
+      },
+      "time_pressure": "없음. 권한 획득 단계.",
+      "knowledge_used": "갱신 만기 일정과 스크랩률 추이의 교차점 — 내부 데이터이며 내부 손실 방어 맥락에서만 사용",
+      "risk_level": "저위험",
+      "business_sector": "보험 / 리스크 관리",
+      "section_rotation": "ARC-01 - 대시보드 열람권 획득",
+      "success_pattern": "한마디의 전문성으로 영역 벽을 낮춘다",
+      "special_ability": {
+        "has_ability": false,
+        "ability_type": null,
+        "ability_name": null,
+        "ability_source": null,
+        "ability_used_for": null
+      }
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  }
+]

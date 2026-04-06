@@ -1,19 +1,20 @@
 # 0_0 Stage2 Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: parked (survey-backed future wave; narrowed to Stage2-owned packet extraction and keep-drop normalization; not active while active Stage4 finalization seams remain higher priority)
+Status: partially_realized (2026-04-06 re-audited and promoted from parked after live validation/finalizer revalidation confirmed a still-live Stage2 persistence-authority seam; active bounded tranche is truth-preserving `joint_docs.world_joint` / `status_shadow` merge at Stage2 sinks while broader Stage2 normalization remains queued behind it)
 Canonical Path: `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2 survey docs and lane drafts untracked`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `2026-04-05 bounded `00_0405` survey added fresh Stage2 evidence: selected packet truth can diverge from final arc txt on location/item carryover, while high-signal correction and retrieval evidence remains hidden in audit/quality sinks; lane remains parked and queue order unchanged`
+- Resume Commit: `0d7c077a9e6f14575aba7fc509b836d218db610d`
+- Resume Drift Summary: `2026-04-05 bounded Stage2 realization slices narrowed the lane, the 2026-04-06 global P0-P1 Opus survey confirmed two still-live Stage2 persistence seams, and current workspace revalidation in `stage2_validation_pipeline.py` plus `stage2_finalizer.py` proved the whole-object overwrite shell is still live; this SSOT is now promoted into an active bounded tranche directly behind the current Stage4 pair`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
 - `docs/2026-04-01/0_0-stage2-stage3-context-hierarchy-bounded-survey.md`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-bounded-survey.md`
 - `docs/2026-04-05/00_0405-stage2-artifact-truth-observability-bounded-survey.md`
+- `docs/2026-04-06/rol-global-terminal2-stage2-pipeline-p0p1.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-evidence.json`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-evidence.json`
@@ -22,14 +23,14 @@ Side-Effect Coverage: covered
 
 ## 1. Intent
 
-Preserve a bounded, implementable future wave for `Stage2 contract normalization` without promoting it into the active queue ahead of current `Stage3 static survey` and unresolved `Stage4` finalization seams.
+Activate a bounded, implementable `Stage2 contract normalization` tranche focused on truth-preserving persistence shells for `joint_docs.world_joint` and `status_shadow`.
 
-This execution SSOT exists because the latest survey already proved:
+This execution SSOT still exists because the latest survey plus current code revalidation already proved:
 
 - `Stage2` has a real problem
-- but that problem is primarily `authority packaging / contract drift`, not missing narrative content
-- the first material drift still appears at `Stage3`
-- therefore `Stage2` should be queued as a future upstream normalization wave, not treated as the immediate blocker
+- that problem is primarily `authority packaging / contract drift`, not missing narrative content
+- the sharpest still-live Stage2-local P1 is now the persistence-time overwrite of LLM-authored packet truth
+- therefore the immediate work is a bounded Stage2 sink fix, not a broad Stage2 architecture wave
 
 ## 2. Baseline Facts
 
@@ -41,11 +42,17 @@ This execution SSOT exists because the latest survey already proved:
 - The first clearly visible narrative drift still appears in `Stage3`, not inside Stage2 artifacts themselves.
 - Fresh `00_0405` evidence shows a second Stage2-local symptom: selected Stage2 packet truth can diverge from final arc txt truth on bounded location/item carryover even when the business-state spine stays coherent.
 - Fresh `00_0405` evidence also shows that key Stage2 correction and retrieval facts are fragmented across `runtime_audit.jsonl` and `quality_metrics.jsonl` instead of being operator-visible in the console.
+- 2026-04-06 Opus revalidation proves the remaining Stage2-local high-severity seam is no longer just generic packet drift: `joint_docs.world_joint` and `status_shadow` can still be overwritten by `enriched_block` payloads at validation/finalization time before canonical persistence.
 
 ## 3. Scope
 
 Included:
 
+- current active bounded owner set:
+  - `modules/core/stage2_validation_pipeline.py`
+  - `modules/core/stage2_finalizer.py`
+  - `modules/core/stage2_contracts.py`
+- bounded truth-preserving sink merge for `joint_docs.world_joint` and `status_shadow`
 - `modules/domain/agents/arc_ensemble.py`
 - `config/prompts/ensemble.yaml`
 - bounded Stage2 mission-authority packet extraction and emission surfaces
@@ -60,6 +67,7 @@ Excluded:
 - downstream consumer-side rename sweep across `Stage3` / `Stage4`
 - `Stage3` contract tightening
 - `Stage4` remediation work
+- broad Stage2 architecture rewrite in the same turn
 - fresh canary or runtime closure proof in this lane
 - DB schema redesign
 - artifact rewrites in `projects/`
@@ -86,22 +94,28 @@ Primary debt inventory for this wave:
 4. Stage2 emission aliases that blur the real canonical packet owner
 5. selected Stage2 packet truth not always round-tripping cleanly into final arc txt truth
 6. high-signal Stage2 correction and retrieval evidence hidden from operator-visible console flow
+7. persistence-time overwrite of LLM-generated `joint_docs.world_joint` and `status_shadow` by block-level fallback structures
 
 ## 5. Pass 2. Semantic Classification
 
-### Class A. Primary realization when this lane is reactivated
+### Class A. Current active bounded tranche
+
+- truth-preserving merge at Stage2 validation/finalization sinks for `joint_docs.world_joint` and `status_shadow`
+- explicit Stage2-owned fallback/backfill policy for `enriched_block` vs refined-arc packet truth
+
+### Class B. Residual realization after the active tranche
 
 - structured mission authority extraction from `tactical_doc`
 - Stage2-owned packet alias normalization at emission time
 - keep-or-drop decisions for dead or low-signal Stage2 fields
 
-### Class B. Residual but related
+### Class C. Residual but related
 
 - downstream consumer-side vocabulary alignment
 - `constraint_summary` strength normalization across stages
 - Stage3 compiler/substep reduction
 
-### Class C. Explicitly deferred outside this lane
+### Class D. Explicitly deferred outside this lane
 
 - active `Stage4` finalization seams
 - current `Stage3` contract tightening future wave
@@ -185,12 +199,13 @@ Realization direction:
 
 ## 8. Execution Tranches
 
-1. Stage2 mission packet normalization
-2. Stage2-owned packet alias normalization
-3. dead-field keep-or-drop cleanup
-4. bounded observability surfacing
-5. bounded regression coverage
-6. later runtime proof only after explicit reactivation
+1. Stage2 persistence-authority merge for `joint_docs.world_joint` / `status_shadow`
+2. Stage2 mission packet normalization
+3. Stage2-owned packet alias normalization
+4. dead-field keep-or-drop cleanup
+5. bounded observability surfacing
+6. bounded regression coverage
+7. later runtime proof only after closure candidacy
 
 ## 9. Acceptance Criteria
 
@@ -199,6 +214,7 @@ Realization direction:
 - Stage2-owned field aliases no longer obscure which packet is canonical at emission time
 - `beat_sequence`, `hybrid_composition`, and `semantic_carryover` each have an explicit keep-or-drop policy
 - selected Stage2 packet truth and final arc txt truth no longer diverge on bounded carryover location/item/state fields without explicit policy
+- canonical persistence no longer overwrites live LLM-authored `joint_docs.world_joint` or `status_shadow` with stale or empty `enriched_block` values
 - high-signal Stage2 auto-correct and retrieval-emptiness facts are no longer completely hidden from operator-visible console flow
 - no new `180+ LOC` function is introduced
 
@@ -206,6 +222,7 @@ Realization direction:
 
 - targeted Stage2 packet rendering regressions
 - targeted Stage2 packet alias and field-survival regressions
+- targeted `stage2_finalizer` / `stage2_validation_pipeline` regressions for `world_joint` and `status_shadow` persistence preservation
 - `python -m py_compile` on touched production modules
 - `ruff check` on touched files
 - targeted pytest shards only
@@ -215,19 +232,20 @@ Realization direction:
 
 ## 11. Guardrails
 
-- do not let this parked wave outrank active `Stage4` finalization seams without explicit reprioritization
+- keep this active tranche below the current `Stage4 consumer` / `Stage4 repair` front pair unless explicit reprioritization changes the queue again
 - do not widen this lane into downstream consumer rename cleanup in the same turn
 - do not widen this lane into `Stage3` contract tightening in the same turn
-- do not run a canary from this lane until explicit reactivation
+- do not widen the persistence tranche into a broad Stage2 architecture sweep in the same turn
+- do not run a canary from this lane until the bounded persistence tranche and targeted validation settle
 - do not rewrite artifact history in `projects/`
 
 ## 12. Temp Queue Notes
 
-- temp status: `parked`
+- temp status: `partially_realized`
 - cleanup condition:
-  - keep the temp mirror as a future-wave queue item until explicit closure or formal deactivation
+  - keep the temp mirror as an active bounded queue item until explicit closure or formal deactivation
 - roadmap dependency:
-  - this item stays below active `Stage4` lanes and below the nearer `Stage3` contract-tightening future wave
+  - this item stays below active `Stage4` lanes but now sits above parked `Stage3` / `Stage0` future waves
 
 ## 13. Validation and Closure Hooks
 
@@ -240,22 +258,22 @@ Realization direction:
 
 Pass 1, structure and scope:
 
-- kept this as a future bounded execution SSOT, not an active lane
-- narrowed the lane to Stage2-owned packet extraction, alias normalization, and keep-or-drop policy only
-- excluded downstream consumer rename cleanup, Stage3 tightening, and Stage4 remediation from scope
+- promoted this from a parked future wave into an active bounded Stage2 lane
+- narrowed the immediate tranche to Stage2 sink-side persistence authority for `joint_docs.world_joint` / `status_shadow`
+- kept downstream consumer rename cleanup, Stage3 tightening, and Stage4 remediation out of the current patch scope
 
 Pass 2, evidence and consistency:
 
-- aligned the document with the global Stage2 production-consumption survey verdict
-- kept claims bounded to known survey evidence and did not overclaim runtime impact
+- aligned the document with the global Stage2 production-consumption survey verdict and the 2026-04-06 Opus P1 revalidation
+- confirmed the same overwrite shell is still live in the current workspace at `stage2_validation_pipeline.py` and `stage2_finalizer.py`
 
 Pass 3, execution and readability:
 
-- made the parking status explicit
-- made the reactivation condition explicit
-- kept tranches upstream-only and implementable rather than architectural-only
+- made the queue promotion explicit without claiming that the whole broader Stage2 backlog is now front of queue
+- made the current owner set and bounded next action explicit
+- kept the active tranche implementable instead of broadening it into an architectural rewrite
 
-Confidence: `96%`
+Confidence: `97%`
 
 ## 15. 2026-04-05 Evidence Appendix: `00_0405`
 
@@ -324,11 +342,11 @@ The `00_0405` evidence enriches this parked SSOT. It does not justify:
 
 This bounded realization update was executed only because the operator explicitly overrode queue order for a narrow Stage2 implementation slice.
 
-Queue semantics remain unchanged:
+Queue semantics at the time of this appendix remained unchanged:
 
-- status stays `parked`
-- roadmap priority stays unchanged
-- this does not promote the full Stage2 lane above active Stage4 work
+- status stayed `parked`
+- roadmap priority stayed unchanged
+- this did not yet promote the full Stage2 lane above active Stage4 work
 
 Landed bounded slice:
 
@@ -767,3 +785,70 @@ Bounded implementation verdict:
   - Arc 3 entity alias drift that must be verified on the next fresh run
   - Arc 3 numeric continuity phrasing/arithmetic drift
   - future-wave dead-field/readiness cleanup
+
+## 26. 2026-04-06 Opus P0-P1 Revalidation: `world_joint` / `status_shadow` Persistence Seam
+
+The 2026-04-06 global P0-P1 Opus survey did not change queue order, but it did sharpen the active Stage2 future-wave debt into two deterministic persistence-time seams that belong in this SSOT.
+
+Queue semantics remain unchanged:
+
+- status stays `parked`
+- roadmap priority stays unchanged
+- this does not promote the full Stage2 lane above active Stage4 work
+
+Confirmed live P1 seams:
+
+1. `joint_docs.world_joint` overwrite seam
+   - LLM output generates `joint_docs.world_joint` as a required schema field
+   - `stage2_validation_pipeline.py` and `stage2_finalizer.py` can overwrite that field with `enriched_block`-owned `joint_docs`
+   - canonical arc persistence then saves the overwritten value
+   - downstream Stage3/4 consumers can inherit stale or empty world-state carryover
+2. `status_shadow` overwrite seam
+   - LLM output generates `status_shadow.item_consumption`, `expected_injuries`, and `key_stat_change`
+   - validation/finalization can replace `status_shadow` with block-level fallback content before persistence
+   - inventory carryover then reads the overwritten `item_consumption`, so consumed items may survive into canonical carryover when later sync shells do not fully recover the loss
+
+Execution consequence:
+
+- the remaining Stage2 parked lane is now explicitly about `truth-preserving persistence shells`, not just broad packet vocabulary cleanup
+- the narrowest owner set for this P1 is:
+  - `modules/core/stage2_finalizer.py`
+  - `modules/core/stage2_validation_pipeline.py`
+- static evidence is sufficient to keep these seams in the SSOT; a fresh run is useful for impact measurement, but not required to prove the overwrite path exists
+
+Bounded future realization direction:
+
+- preserve LLM-authored `joint_docs.world_joint` and `status_shadow` through validation/finalization unless an explicit Stage2 authority-sync shell replaces them field-by-field
+- if replacement is required, add an explicit resync contract parallel to the existing location/inventory syncs rather than silent whole-object overwrite
+
+Revalidation note:
+
+- this update converts the Opus survey finding into execution SSOT language without changing queue priority
+- confidence after the 2026-04-06 re-audit remains `97%`
+
+## 27. 2026-04-06 Reprioritization: Active Bounded Persistence Tranche
+
+The operator explicitly promoted this SSOT from parked future wave to active bounded realization after the current workspace revalidation confirmed that the Opus seam is still live in both `modules/core/stage2_validation_pipeline.py` and `modules/core/stage2_finalizer.py`.
+
+Queue semantics now change:
+
+- status is now `partially_realized`
+- roadmap priority is promoted above parked `Stage3` and `Stage0` future waves
+- this lane still remains below the active `Stage4 consumer` and `Stage4 repair` pair
+
+Active bounded owner set:
+
+- `modules/core/stage2_validation_pipeline.py`
+- `modules/core/stage2_finalizer.py`
+- `modules/core/stage2_contracts.py`
+
+Immediate execution target:
+
+- preserve LLM-authored `joint_docs.world_joint` and `status_shadow` keys through validation/finalization by merging `enriched_block` only as field fallback
+- keep explicit location/inventory authority syncs as the only Stage2 shells allowed to rewrite those packets field-by-field
+- land targeted regressions before the next fresh run
+
+Reprioritization note:
+
+- this promotion addresses a live P1 truth-loss seam, not the full broader Stage2 normalization backlog
+- broader mission-authority, alias, dead-field, and readiness work remains in this SSOT but outside the current bounded tranche

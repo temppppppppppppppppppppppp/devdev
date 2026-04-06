@@ -19,11 +19,16 @@ import sys
 from pathlib import Path
 from typing import Any
 
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from modules.narrative_router.artifact_paths import resolve_tr_path  # noqa: E402
+
 
 def load_treatment(work_id: str) -> dict[str, Any]:
     """treatments/{work_id}_tr_block_070_draft.json 을 로드한다."""
-    base = Path(__file__).resolve().parent.parent / "treatments"
-    filepath = base / f"{work_id}_tr_block_070_draft.json"
+    filepath = resolve_tr_path(work_id, root=ROOT)
     if not filepath.exists():
         print(f"[ERROR] 파일을 찾을 수 없습니다: {filepath}", file=sys.stderr)
         sys.exit(2)

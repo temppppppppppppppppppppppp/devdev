@@ -1,4 +1,4 @@
-<!-- utf8-hygiene: allow-file rationale: legitimate Sino-Korean wuxia terminology (천의무쌍, 진소백(陳小白), 의무일체(醫武一體), 의술 비무(醫鬪) etc.) throughout canonical pitch body. -->
+﻿<!-- utf8-hygiene: allow-file rationale: legitimate Sino-Korean wuxia terminology (천의무쌍, 진소백(陳小白), 의무일체(醫武一體), 의술 비무(醫鬪) etc.) throughout canonical pitch body. -->
 # wuxia_heavenly_physician
 
 Title: 천의무쌍(天醫武雙)
@@ -29,12 +29,12 @@ Status: canonical pitch
   - `material_ssot/20_pitch/intake/legacy_import/20260320/컨셉기획_041_무협_천의무쌍.md`
 - supporting context handoff:
   - `전처리_ssot/docs/20260324/천의무쌍_컨텍스트_핸드오프.md`
-- live root Phase0 file:
-  - not present — `treatments/wuxia_heavenly_physician_phase0_design.json` does not exist on disk. Authority for the Phase0 frame is held by `phase0_ready_snapshot.json` plus the Stage0 bundle summary above.
+- live Phase0 file:
+  - `treatments/phase0/wuxia_heavenly_physician_phase0_design.json`
 - live TR file (consistency reference only):
-  - `treatments/wuxia_heavenly_physician_tr_block_070_draft.json`
+  - `treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
 - live BI file (consistency reference only):
-  - `bible/0_bi_wuxia_heavenly_physician.json`
+  - `bible/09_bi_wuxia_heavenly_physician.json`
 
 Downstream TR/BI artifacts are consistency references, not authorities. If they drift from this pitch and the Stage0 snapshot, this file and the Stage0 bundle win.
 
@@ -53,7 +53,7 @@ This file replaces the prior bootstrap anchor note. The canonical pitch truth is
 - long-term goal:
   - 침의에서 시작해 혈의→맥의→신의→의성→의신→천의까지 7경지를 돌파하고, 의무일체를 200년 만에 완성해 다음 세대에 전수하며, 독역을 근절하고 좌천명이 설계한 무림 질서 재편을 해체한다.
 - short-term goal:
-  - 형 소풍의 급습 중상을 첫 침으로 살려 내고, 그 첫 각성으로 얻은 존재 증명을 딛고 장로회 사술 낙인과 가문 축출 위기를 방어해 의원으로서의 가문 내 발언권을 확보한다.
+  - 형 소풍의 급습 중상을 첫 침으로 살려 내고, 그 첫 각성으로 얻은 존재 증명을 딛고 장로회 사술 낙인과 가문 축출 위기를 돌파해, 조건부 공인 의원 자격·약방 접근권·서고 의서 접근권을 단계적으로 획득하며 가문 내 의원으로서의 발언권과 진료 기반을 확보한다.
 - information gap:
   - 소백만이 환자의 의맥·독맥·경혈 패턴과 독역이 내공을 타고 퍼지는 경로를 동시에 읽는다. 독역의 진짜 설계자가 좌천명이라는 사실, 자신의 의맥이 어머니에게서 이식된 것이라는 출생 비밀, 활침과 살침이 동일 기술의 양면이라는 사실, 칠성침법의 7번째 침 조건 — 이 네 층의 지식 비대칭이 적대자들보다 항상 한 수 앞서 움직이게 한다.
 - competence process:
@@ -96,8 +96,9 @@ This file replaces the prior bootstrap anchor note. The canonical pitch truth is
 - first block problem:
   - 가문 장로회가 의무일체를 `사술`로 규정해 축출하려 하고, 독문은 이미 진가장 약재 기반을 노리며 조여 온다. 막내 의원의 각성이 사술 낙인으로 덮여 버리면 소백은 가문 안에서도 무림 안에서도 자리를 잃는다.
 - first block reward:
-  - 가문 내 발언권 확보(축출 대상에서 공식 의원으로)
-  - 의원으로서의 첫 인정(진소풍과 진혜란의 방패, 아버지의 첫 유보적 관찰)
+  - 형 치료 직후 조건부 공인 의원 자격 획득(축출 대상이 아닌, 시험 기간의 가문 의원)
+  - 진료 실적에 따른 약방 접근권·서고 의서 접근권의 단계적 개방
+  - 의원으로서의 가문 내 보호(진소풍·진혜란의 방패, 아버지의 묵인이 조건부 허가로 전환)
   - 침의→혈의 경지 진입의 실마리와 칠성침법의 존재 단서
   - 백무명이라는 숨은 스승 라인의 진입권
   - 다음 블록(독문·약왕곡·의선 대회) 진출의 명분

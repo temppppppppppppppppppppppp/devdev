@@ -2611,6 +2611,137 @@ class TestRecordS4Attempt:
         assert payload["is_patch_fallback"] is False
         assert payload["patch_strategy"] == "patch_with_feedback"
 
+    def test_build_stage4_db_attempt_payload_prefers_resolved_scope_authority_fix_scope(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir._build_stage4_db_attempt_payload(
+            episode=2,
+            round_num=1,
+            success=False,
+            score=61,
+            arc=1,
+            verdict="REJECT",
+            reject_reason="retry needed",
+            fix_scope="inplace",
+            model="gemini-2.5-pro",
+            duration_ms=222,
+            advisory_flags={
+                "gate_semantics": {
+                    "director_verdict": "PASS_WITH_FIX",
+                    "final_verdict": "REJECT",
+                    "gate_basis": "quality_floor_fail",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "scope_origin": {
+                        "fix_scope": "runtime_widened",
+                        "authoritative_fix_scope": "director_authoritative",
+                        "repair_scope": "runtime_lane",
+                    },
+                    "scope_authority": {
+                        "fix_scope": "partial",
+                        "repair_scope": "partial",
+                        "authoritative_fix_scope": "inplace",
+                        "scope_origin": {
+                            "fix_scope": "runtime_widened",
+                            "authoritative_fix_scope": "director_authoritative",
+                            "repair_scope": "runtime_lane",
+                        },
+                        "widened": True,
+                    },
+                },
+                "repair_contract": {
+                    "subtype": "movement",
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "provenance": "director_authored",
+                },
+                "scope_authority": {
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "scope_origin": {
+                        "fix_scope": "runtime_widened",
+                        "authoritative_fix_scope": "director_authoritative",
+                        "repair_scope": "runtime_lane",
+                    },
+                    "widened": True,
+                },
+            },
+            session_id="sess-stage4",
+            attempt_key="s4:ep2:arc1:a2:sess-stage4",
+            artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/final.txt",
+            },
+            selection_reason="best candidate",
+            verdict_reason="conflict",
+            open_review="repeat detected",
+            fix_scope_reasoning="bounded fix",
+            runtime_advisory="keep continuity",
+            retry_directives="change ending",
+            failure_category="LOGIC_ERROR",
+            initial_verdict="PASS_WITH_FIX",
+            score_breakdown={"narrative_flow": 9},
+            is_patch=False,
+            is_patch_fallback=False,
+            patch_strategy="",
+        )
+
+        assert payload["fix_scope"] == "partial"
+        assert payload["advisory_flags"]["scope_authority"]["fix_scope"] == "partial"
+        assert payload["advisory_flags"]["scope_authority"]["authoritative_fix_scope"] == "inplace"
+
+    def test_build_stage4_db_attempt_payload_prefers_root_scope_authority_fix_scope(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir._build_stage4_db_attempt_payload(
+            episode=2,
+            round_num=1,
+            success=False,
+            score=61,
+            arc=1,
+            verdict="REJECT",
+            reject_reason="retry needed",
+            fix_scope="inplace",
+            model="gemini-2.5-pro",
+            duration_ms=222,
+            advisory_flags={
+                "scope_authority": {
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": True,
+                }
+            },
+            session_id="sess-stage4-root-scope",
+            attempt_key="s4:ep2:arc1:a2:sess-stage4-root-scope",
+            artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/final.txt",
+            },
+            selection_reason="best candidate",
+            verdict_reason="conflict",
+            open_review="repeat detected",
+            fix_scope_reasoning="bounded fix",
+            runtime_advisory="keep continuity",
+            retry_directives="change ending",
+            failure_category="LOGIC_ERROR",
+            initial_verdict="PASS_WITH_FIX",
+            score_breakdown={"narrative_flow": 9},
+            is_patch=False,
+            is_patch_fallback=False,
+            patch_strategy="",
+        )
+
+        assert payload["fix_scope"] == "partial"
+        assert payload["advisory_flags"]["scope_authority"]["fix_scope"] == "partial"
+        assert payload["advisory_flags"]["scope_authority"]["authoritative_fix_scope"] == "inplace"
+
     def test_log_session_decision_surfaces_authoritative_fix_scope_metadata(self):
         ctx = _make_ctx()
         ctx.session_logger = MagicMock()

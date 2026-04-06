@@ -3,8 +3,15 @@
 """Block 42-50 production: ARC-05 본사를 넘어서 (continuation)"""
 
 import json, pathlib
+import sys
 
-TR_PATH = pathlib.Path(r"C:\Users\User\Desktop\글도비\treatments\office_checkup_next_day_tr_block_070_draft.json")
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from modules.narrative_router.artifact_paths import canonical_tr_path  # noqa: E402
+
+TR_PATH = canonical_tr_path("office_checkup_next_day", root=ROOT)
 
 block_42 = {
     "block_id": "Block 42",

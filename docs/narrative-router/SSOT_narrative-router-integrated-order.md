@@ -109,7 +109,7 @@ Do not stop just because the user did not manually name the stage.
 
 These output paths remain shared across families.
 
-- `treatments/{work_id}_phase0_design.json`
+- `treatments/phase0/{work_id}_phase0_design.json`
 - `treatments/{work_id}_tr_block_070_draft.json`
 - `bible/0_bi_{work_id}.json`
 

@@ -7,6 +7,7 @@ from pathlib import Path
 import modules.narrative_router.router as router_module
 import scripts.audit_wuxia_bi_5pass as audit_script
 import scripts.build_wuxia_bi_from_phase0_and_tr as build_script
+from modules.narrative_router.artifact_paths import resolve_bi_path, resolve_tr_path
 from modules.narrative_router.router import resolve_route
 from scripts.wuxia_tr_batch_harness import compute_treatment_metrics
 
@@ -206,7 +207,7 @@ def test_router_detects_stage_from_work_id_artifacts(temp_dir, monkeypatch):
     assert route.artifact_state is not None
     assert route.artifact_state.preprocess_ready is True
 
-    _write_json(temp_dir / "treatments" / "demo_phase0_design.json", {"phase0": True})
+    _write_json(temp_dir / "treatments" / "phase0" / "demo_phase0_design.json", {"phase0": True})
     route = resolve_route(genre="wuxia", work_id="demo")
     assert route.stage == "production"
 
@@ -217,6 +218,36 @@ def test_router_detects_stage_from_work_id_artifacts(temp_dir, monkeypatch):
     _write_json(temp_dir / "bible" / "0_bi_demo.json", {})
     route = resolve_route(genre="wuxia", work_id="demo")
     assert route.stage == "audit_or_repair"
+
+
+def test_router_accepts_legacy_root_phase0_path_as_fallback(temp_dir, monkeypatch):
+    monkeypatch.setattr(router_module, "ROOT", temp_dir)
+
+    preprocess_dir = temp_dir / "treatments" / "preprocess" / "demo"
+    preprocess_dir.mkdir(parents=True)
+    for name in ("source_manifest.json", "profile_lock.json", "material_bundle_summary.json"):
+        _write_json(preprocess_dir / name, {"ok": True})
+    _write_json(preprocess_dir / "phase0_ready_snapshot.json", {"manual_audit_pass": True})
+
+    _write_json(temp_dir / "treatments" / "demo_phase0_design.json", {"phase0": True})
+    route = resolve_route(genre="wuxia", work_id="demo")
+
+    assert route.stage == "production"
+    assert route.artifact_state is not None
+    assert route.artifact_state.phase0_path.endswith("treatments/demo_phase0_design.json")
+
+
+def test_artifact_paths_accept_numbered_tr_bi_files(temp_dir):
+    (temp_dir / "treatments").mkdir(parents=True)
+    (temp_dir / "bible").mkdir(parents=True)
+    _write_json(temp_dir / "treatments" / "06_gatekeeper_heir_tr_block_070_draft.json", [])
+    _write_json(temp_dir / "bible" / "06_bi_gatekeeper_heir.json", {})
+
+    tr_path = resolve_tr_path("gatekeeper_heir", root=temp_dir)
+    bi_path = resolve_bi_path("gatekeeper_heir", root=temp_dir)
+
+    assert tr_path.name == "06_gatekeeper_heir_tr_block_070_draft.json"
+    assert bi_path.name == "06_bi_gatekeeper_heir.json"
 
 
 def test_wuxia_compute_treatment_metrics_passes_positive_fixture():

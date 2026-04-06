@@ -24,6 +24,8 @@ class QueueItem:
     depends_on: list[str]
     mirror_present: bool
     canonical_present: bool
+    queue_role: str = "front_active"
+    roadmap_rank: int | None = None
 
 
 def normalize_relpath(value: str | None) -> str | None:
@@ -139,11 +141,20 @@ def queue_items_from_state(state: dict[str, object]) -> list[QueueItem]:
                 temp_path=str(raw_item.get("temp_path", "")),
                 canonical_path=str(raw_item.get("canonical_path", "")),
                 status=str(raw_item.get("status", "pending")),
+                queue_role=str(raw_item.get("queue_role", "front_active")),
+                roadmap_rank=raw_item.get("roadmap_rank"),
                 depends_on=list(raw_item.get("depends_on", [])),
                 mirror_present=bool(raw_item.get("mirror_present", False)),
                 canonical_present=bool(raw_item.get("canonical_present", False)),
             )
         )
+    items.sort(
+        key=lambda item: (
+            item.roadmap_rank is None,
+            item.roadmap_rank if item.roadmap_rank is not None else 10**9,
+            item.temp_path,
+        )
+    )
     return items
 
 

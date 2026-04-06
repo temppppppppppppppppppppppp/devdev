@@ -11,6 +11,14 @@ Entry Point: `docs/narrative-router/SSOT_narrative-router-integrated-order.md`
 - Preserve existing `blockguide` semantics for modern-fantasy business-power works.
 - Make `MartialHUD` canonical for martial-family BI output.
 
+## 1A. Immediate Stop Sign
+
+- `tr_block_070_draft.json`는 **완성 목표 파일명**이지, 통생성 지시가 아니다.
+- Production의 내부 실행 단위는 항상 **Block 1개**다.
+- 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이다.
+- `Block 5`에 도달하면 continuity/merge 상태를 보고하고 반드시 정지한다.
+- BI handoff는 TR 5블록 cap과 별개인 **다음 단계**다. `TR 70블록 통생성 -> BI`로 해석하지 않는다.
+
 ## 2. Read Order
 
 1. `docs/narrative-router/SSOT_narrative-router-integrated-order.md`
@@ -54,7 +62,7 @@ Intermediate artifact quarantine:
 - `treatments/preprocess/{work_id}/profile_lock.json`
 - `treatments/preprocess/{work_id}/material_bundle_summary.json`
 - `treatments/preprocess/{work_id}/phase0_ready_snapshot.json`
-- `treatments/{work_id}_phase0_design.json`
+- `treatments/phase0/{work_id}_phase0_design.json`
 - `treatments/{work_id}_tr_block_070_draft.json`
 - `bible/0_bi_{work_id}.json`
 
@@ -104,8 +112,8 @@ python -X utf8 scripts/narrative_tr_batch.py --genre wuxia merge --draft treatme
 BI build and audit:
 
 ```bash
-python -X utf8 scripts/build_narrative_bi.py --genre wuxia --phase0 treatments/<work_id>_phase0_design.json --draft treatments/<work_id>_tr_block_070_draft.json --output bible/0_bi_<work_id>.json
-python -X utf8 scripts/audit_narrative_bi.py --genre wuxia --phase0 treatments/<work_id>_phase0_design.json --draft treatments/<work_id>_tr_block_070_draft.json --bi bible/0_bi_<work_id>.json --report bible/audit_reports/<work_id>_wuxia_bi_5pass.md
+python -X utf8 scripts/build_narrative_bi.py --genre wuxia --phase0 treatments/phase0/<work_id>_phase0_design.json --draft treatments/<work_id>_tr_block_070_draft.json --output bible/0_bi_<work_id>.json
+python -X utf8 scripts/audit_narrative_bi.py --genre wuxia --phase0 treatments/phase0/<work_id>_phase0_design.json --draft treatments/<work_id>_tr_block_070_draft.json --bi bible/0_bi_<work_id>.json --report bible/audit_reports/<work_id>_wuxia_bi_5pass.md
 ```
 
 ## 9. Guardrails

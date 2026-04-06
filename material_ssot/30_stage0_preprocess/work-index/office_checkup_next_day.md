@@ -1,4 +1,4 @@
-# office_checkup_next_day
+﻿# office_checkup_next_day
 
 Title: 검진 다음 날부터
 Family: blockguide
@@ -21,9 +21,9 @@ Status: bootstrap manifest
 - preprocess profile lock: `treatments/preprocess/office_checkup_next_day/profile_lock.json`
 - preprocess bundle summary: `treatments/preprocess/office_checkup_next_day/material_bundle_summary.json`
 - phase0 snapshot: `treatments/preprocess/office_checkup_next_day/phase0_ready_snapshot.json`
-- live phase0 file: `treatments/office_checkup_next_day_phase0_design.json`
-- live TR file: `treatments/office_checkup_next_day_tr_block_070_draft.json`
-- live BI file: `bible/0_bi_office_checkup_next_day.json`
+- live phase0 file: `treatments/phase0/office_checkup_next_day_phase0_design.json`
+- live TR file: `treatments/07_office_checkup_next_day_tr_block_070_draft.json`
+- live BI file: `bible/07_bi_office_checkup_next_day.json`
 
 ## 3. Current Notes
 

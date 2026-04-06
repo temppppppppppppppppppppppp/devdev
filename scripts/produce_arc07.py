@@ -3,9 +3,17 @@
 """Produce ARC-07 Blocks 61-70 for failed_future_ceo_intern."""
 
 import json
+from pathlib import Path
 import sys
 
-DRAFT_PATH = "treatments/failed_future_ceo_intern_tr_block_070_draft.json"
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from modules.narrative_router.artifact_paths import canonical_tr_path  # noqa: E402
+
+DRAFT_PATH = canonical_tr_path("failed_future_ceo_intern", root=ROOT).relative_to(ROOT).as_posix()
+
 
 def load_draft():
     with open(DRAFT_PATH, "r", encoding="utf-8") as f:

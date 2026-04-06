@@ -7,6 +7,14 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from sync_temp_queue_state import (
+    QUEUE_ROLE_BLOCKED_HOLDING,
+    QUEUE_ROLE_FRONT_ACTIVE,
+    QUEUE_ROLE_HISTORICAL_BACKING,
+    QUEUE_ROLE_PARKED_FUTURE_WAVE,
+    extract_roadmap_item_context,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 TEMP = DOCS / "temp"
@@ -188,6 +196,15 @@ def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, resul
     expected_temp_paths = {path.relative_to(ROOT).as_posix() for path in exec_docs}
     reported_temp_paths: set[str] = set()
     allowed_statuses = {"pending", "in_progress", "completed", "blocked"}
+    allowed_queue_roles = {
+        QUEUE_ROLE_FRONT_ACTIVE,
+        QUEUE_ROLE_BLOCKED_HOLDING,
+        QUEUE_ROLE_PARKED_FUTURE_WAVE,
+        QUEUE_ROLE_HISTORICAL_BACKING,
+    }
+    roadmap_context = extract_roadmap_item_context(roadmap_path) if roadmap_path is not None else {}
+    reported_topics: set[str] = set()
+    reported_ranks: set[int] = set()
 
     for index, item in enumerate(items, start=1):
         item_fields = {
@@ -195,6 +212,8 @@ def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, resul
             "temp_path",
             "canonical_path",
             "status",
+            "queue_role",
+            "roadmap_rank",
             "depends_on",
             "mirror_present",
             "canonical_present",
@@ -210,6 +229,23 @@ def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, resul
             result.fail(
                 f"docs/temp/{QUEUE_STATE_NAME}: item {index} has unsupported status {item['status']}"
             )
+
+        if item["queue_role"] not in allowed_queue_roles:
+            result.fail(
+                f"docs/temp/{QUEUE_STATE_NAME}: item {index} has unsupported queue_role {item['queue_role']}"
+            )
+
+        roadmap_rank = item["roadmap_rank"]
+        if roadmap_rank is not None and (not isinstance(roadmap_rank, int) or roadmap_rank < 1):
+            result.fail(
+                f"docs/temp/{QUEUE_STATE_NAME}: item {index} has invalid roadmap_rank {roadmap_rank}"
+            )
+        if isinstance(roadmap_rank, int):
+            if roadmap_rank in reported_ranks:
+                result.fail(
+                    f"docs/temp/{QUEUE_STATE_NAME}: roadmap_rank {roadmap_rank} is duplicated"
+                )
+            reported_ranks.add(roadmap_rank)
 
         temp_rel = normalize_relpath(item["temp_path"])
         canonical_rel = normalize_relpath(item["canonical_path"])
@@ -231,9 +267,33 @@ def validate_queue_state(exec_docs: list[Path], roadmap_path: Path | None, resul
                 f"docs/temp/{QUEUE_STATE_NAME}: item {index} canonical_present does not match file existence for {canonical_rel}"
             )
 
+        topic = str(item["topic"])
+        reported_topics.add(topic)
+        if roadmap_path is not None:
+            expected_context = roadmap_context.get(topic)
+            if expected_context is None:
+                result.fail(
+                    f"docs/temp/{QUEUE_STATE_NAME}: item {index} topic {topic} is missing from roadmap execution order"
+                )
+            else:
+                expected_rank = expected_context["roadmap_rank"]
+                expected_role = expected_context["queue_role"]
+                if roadmap_rank != expected_rank:
+                    result.fail(
+                        f"docs/temp/{QUEUE_STATE_NAME}: item {index} roadmap_rank={roadmap_rank} does not match roadmap rank {expected_rank} for {topic}"
+                    )
+                if item["queue_role"] != expected_role:
+                    result.fail(
+                        f"docs/temp/{QUEUE_STATE_NAME}: item {index} queue_role={item['queue_role']} does not match roadmap role {expected_role} for {topic}"
+                    )
+
     if reported_temp_paths != expected_temp_paths:
         result.fail(
             f"docs/temp/{QUEUE_STATE_NAME}: item temp_path set does not match active temp execution docs"
+        )
+    if roadmap_path is not None and reported_topics != set(roadmap_context):
+        result.fail(
+            f"docs/temp/{QUEUE_STATE_NAME}: item topic set does not match roadmap execution-order topic set"
         )
 
 

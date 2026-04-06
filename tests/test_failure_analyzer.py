@@ -273,6 +273,56 @@ def test_failure_analyzer_load_stage_attempt_alignment_sink_dedupes_latest_row(t
         db.close()
 
 
+def test_failure_analyzer_load_stage_attempt_alignment_sink_reads_root_gate_repair_fields(tmp_path):
+    db = DBManager(tmp_path / "test_sink_alignment_stage_attempt_root_gate_repair.db")
+    try:
+        attempt_key = "s4:ep82:arc8:a1:sess_root_gate"
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            attempt_num=1,
+            ep_num=82,
+            arc_num=8,
+            score=94,
+            session_id="sess_root_gate",
+            attempt_key=attempt_key,
+            advisory_flags={
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "bounded_local_repair",
+                "repair_scope": "partial",
+                "repair_contract": {
+                    "subtype": "movement",
+                    "provenance": "runtime_synthesized",
+                },
+                "scope_authority": {
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": True,
+                },
+            },
+        )
+
+        analyzer = FailureAnalyzer(db)
+        result = analyzer._load_stage_attempt_alignment_sink(
+            stage=4,
+            lookback=10,
+            session_id="sess_root_gate",
+        )
+
+        assert result is not None
+        assert result[attempt_key]["director_verdict"] == "PASS_WITH_FIX"
+        assert result[attempt_key]["gate_basis"] == "bounded_local_repair"
+        assert result[attempt_key]["repair_scope"] == "partial"
+        assert result[attempt_key]["repair_contract_subtype"] == "movement"
+        assert result[attempt_key]["repair_contract_provenance"] == "runtime_synthesized"
+        assert result[attempt_key]["scope_authority_fix_scope"] == "partial"
+        assert result[attempt_key]["scope_authority_authoritative_fix_scope"] == "inplace"
+        assert result[attempt_key]["scope_authority_widened"] is True
+    finally:
+        db.close()
+
+
 def test_failure_analyzer_build_sink_alignment_attempt_sets_respects_optional_sinks():
     final_union, lifecycle_union, attempts_considered = FailureAnalyzer._build_sink_alignment_attempt_sets(
         stage=4,
@@ -1760,30 +1810,38 @@ def test_collect_sink_alignment_gate_repair_results_backfills_stage_attempt_from
             attempt_key=attempt_key,
             stage_attempts={
                 attempt_key: {
+                    "gate_basis": "",
+                    "repair_scope": "",
                     "fix_pack_target_kind": "",
                     "fix_pack_patch_targets": [],
                     "repair_contract_provenance": "",
-                    "scope_authority_fix_scope": "full",
-                    "scope_authority_widened": True,
+                    "scope_authority_fix_scope": "",
+                    "scope_authority_authoritative_fix_scope": "",
                 }
             },
             pass_rate_monitor={},
             director_selections={},
             session_decisions={
                 attempt_key: {
+                    "gate_basis": "bounded_local_repair",
+                    "repair_scope": "partial",
                     "fix_pack_target_kind": "scene_model",
                     "fix_pack_patch_targets": ["scene_4"],
                     "repair_contract_provenance": "director_authored",
-                    "scope_authority_fix_scope": "full",
+                    "scope_authority_fix_scope": "partial",
+                    "scope_authority_authoritative_fix_scope": "inplace",
                     "scope_authority_widened": True,
                 }
             },
             episode_production={
                 attempt_key: {
+                    "gate_basis": "bounded_local_repair",
+                    "repair_scope": "partial",
                     "fix_pack_target_kind": "scene_model",
                     "fix_pack_patch_targets": ["scene_4"],
                     "repair_contract_provenance": "director_authored",
-                    "scope_authority_fix_scope": "full",
+                    "scope_authority_fix_scope": "partial",
+                    "scope_authority_authoritative_fix_scope": "inplace",
                     "scope_authority_widened": True,
                 }
             },
@@ -1791,6 +1849,12 @@ def test_collect_sink_alignment_gate_repair_results_backfills_stage_attempt_from
         )
 
         missing_entries = [item for item in result["gate_repair_metadata_missing"] if item["attempt_key"] == attempt_key]
+        assert not any(
+            item["field"] == "gate_basis" and "stage_attempts" in item["sinks"] for item in missing_entries
+        )
+        assert not any(
+            item["field"] == "repair_scope" and "stage_attempts" in item["sinks"] for item in missing_entries
+        )
         assert not any(
             item["field"] == "fix_pack_target_kind" and "stage_attempts" in item["sinks"] for item in missing_entries
         )
@@ -1800,9 +1864,26 @@ def test_collect_sink_alignment_gate_repair_results_backfills_stage_attempt_from
         assert not any(
             item["field"] == "repair_contract_provenance" and "stage_attempts" in item["sinks"] for item in missing_entries
         )
+        assert not any(
+            item["field"] == "scope_authority_fix_scope" and "stage_attempts" in item["sinks"]
+            for item in missing_entries
+        )
+        assert not any(
+            item["field"] == "scope_authority_authoritative_fix_scope" and "stage_attempts" in item["sinks"]
+            for item in missing_entries
+        )
+        assert not any(
+            item["field"] == "scope_authority_widened" and "stage_attempts" in item["sinks"]
+            for item in missing_entries
+        )
+        assert result["gate_basis_mismatches"] == []
+        assert result["repair_scope_mismatches"] == []
         assert result["fix_pack_target_kind_mismatches"] == []
         assert result["fix_pack_patch_targets_mismatches"] == []
         assert result["repair_contract_provenance_mismatches"] == []
+        assert result["scope_authority_fix_scope_mismatches"] == []
+        assert result["scope_authority_authoritative_fix_scope_mismatches"] == []
+        assert result["scope_authority_widened_mismatches"] == []
     finally:
         db.close()
 

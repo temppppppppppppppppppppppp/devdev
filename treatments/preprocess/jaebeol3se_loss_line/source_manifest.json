@@ -1,0 +1,63 @@
+{
+  "work_identity": {
+    "work_id": "jaebeol3se_loss_line",
+    "title": "재벌 3세는 손실선을 먼저 읽는다",
+    "primary_profile": "investment_market_profile",
+    "secondary_profile": "office_power_profile"
+  },
+  "canonical_sources": [
+    "material_ssot/20_pitch/canon/jaebeol3se_loss_line.md",
+    "material_ssot/20_pitch/synthesis/investment_dokshik_jaebeol3se_working_synthesis.md",
+    "material_ssot/20_pitch/pitch-selection-checklist.md",
+    "material_ssot/20_pitch/protagonist-first-constitution.md",
+    "material_ssot/10_research/20_fewshot_bank/investment_engine_pack.md"
+  ],
+  "reference_only_sources": [
+    "material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_insaengi_neomu_gabyeopda_A.md",
+    "material_ssot/10_research/20_fewshot_bank/cards/gim_daerineun_byeorakbuja_A.md",
+    "material_ssot/10_research/20_fewshot_bank/cards/jusigui_sin_A.md",
+    "material_ssot/10_research/20_fewshot_bank/cards/jaebeol_saenghwal_girokbu_A.md",
+    "material_ssot/10_research/20_fewshot_bank/cards/dokshik_jaebeol3se_A.md",
+    "material_ssot/20_pitch/synthesis/investment_dokshik_jaebeol3se_checklist_audit.md"
+  ],
+  "core_materials": [
+    "오너 일가에서 밀려 전략금융실 말석에 박힌 재벌 3세가 각 부서 숫자를 한 줄의 손실선으로 먼저 읽어 회사 안 권한과 시장 바깥 수익을 함께 독식하는 dual-lane 투자물이다.",
+    "주인공의 고유 능력은 시세 예측이 아니라 자리의 정보 우위와 연결을 읽는 감각의 조합이다.",
+    "내부 레인(손실 방어/권한)과 외부 레인(공개 신호 기반 포지션)의 데이터 출처는 반드시 분리된다.",
+    "보상 순서는 평가 수정 → 권한 → 자본이며 절대 뒤집지 않는다.",
+    "trigger set A: 분리막 스크랩률, 해상보험 갱신률, 중국 항만 슬롯 취소율."
+  ],
+  "npc_pool": [
+    "도현석 - 사촌 형, 전략기획실 과장. 숫자를 따로 봤기 때문에 연결을 못 본 사람. 무능 캐리커처 금지.",
+    "강태호 - CFO. 감화가 아니라 계산으로 판단을 바꾼다.",
+    "임재훈 - 보험 담당 임원. 자존심은 상하지만 숫자가 맞으니 입을 다문다.",
+    "도경일 - 회장. 두 손자를 저울에 올린다.",
+    "박동수 - 구매실장. 자기 숫자만 보던 사람이 연결을 인정하게 된다.",
+    "정우진 - 생산관리 상무. 항만 슬롯 취소율을 보고하는 사람."
+  ],
+  "crisis_pool": [
+    "사촌 형의 낙관 보고('관리 범위')가 그룹 의사결정 기본값으로 굳어 18일 뒤 배터리 계열사 마진이 무너질 위기.",
+    "보험 담당 임원의 갱신안에 숨은 리스크가 있지만 실무 경험 부족 지적으로 도진우의 분석이 묵살될 위기.",
+    "외부 포지션이 타이밍을 놓쳐 손실을 내고 사촌 형이 회의에서 지적하는 위기.",
+    "사촌 형이 도진우의 외부 포지션 근거를 추적하며 내부 정보 사용 의심을 제기하는 위기.",
+    "계열사 간 리스크 연쇄가 터져 그룹 전체 실적이 흔들리는 위기."
+  ],
+  "hard_constraints": [
+    "내부 데이터를 근거로 외부 포지션을 잡는 구조는 절대 금지 (insider-trading 금지).",
+    "내부 레인과 외부 레인의 데이터 출처를 섞지 않는다 (dual-lane 혼선 금지).",
+    "자산 수치를 reward 첫 문장에 놓지 않는다 (asset-first reward narration 금지).",
+    "평가 수정 → 권한 → 자본 순서를 절대 뒤집지 않는다.",
+    "사촌 형을 무능/탐욕 캐리커처로 만들지 않는다.",
+    "퇴사 판타지 오프닝 금지. 자기연민/회개 서사 금지.",
+    "특정 종목, 특정 회사, 특정 수치 복제 금지."
+  ],
+  "do_not_fake": [
+    "해상보험 갱신 실무 (갱신률, 클레임 준비금, 로이즈 인덱스)",
+    "분리막·배터리 공급망 실무 (스크랩률, 원자재 가격, 공급 병목)",
+    "항만·물류 실무 (슬롯 취소, 선적 지연, 해운 지표)",
+    "고객사 실사 실무 (실사 항목, 원가 연쇄, 방어 브리프)",
+    "리스크 위원회 운영 구조 (배석/의결 구분, 서명권, 직보 라인)",
+    "공개 보험시장·해운·공급망 지표의 실제 존재 여부"
+  ],
+  "manual_audit_note": "synthesis → canon → phase0 → work_guard → TR → BI 순서로 생성 완료. Stage 0 4-pack은 사후 정규화. canon truth는 material_ssot/20_pitch/canon/jaebeol3se_loss_line.md가 SSOT."
+}

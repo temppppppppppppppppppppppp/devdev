@@ -18,15 +18,20 @@ from modules.core.response_schemas import (  # noqa: E402 - entrypoint path boot
     validate_bible_structure,
     validate_treatment_structure,
 )
+from modules.narrative_router.artifact_paths import (  # noqa: E402
+    canonical_bi_path,
+    canonical_phase0_path,
+    canonical_tr_path,
+)
 
 WORK_ID = "fallen_prince_buys_joseon"
 TITLE = "망국 황자는 조선을 산다"
 PROTAGONIST_NAME = "이강윤"
 
-PHASE0_PATH = ROOT / "treatments" / f"{WORK_ID}_phase0_design.json"
-TR_PATH = ROOT / "treatments" / f"{WORK_ID}_tr_block_070_draft.json"
+PHASE0_PATH = canonical_phase0_path(WORK_ID, root=ROOT)
+TR_PATH = canonical_tr_path(WORK_ID, root=ROOT)
 TR_TITLE_PATH = ROOT / "treatments" / f"{TITLE}_tr_block_070_draft.json"
-BI_PATH = ROOT / "bible" / f"0_bi_{WORK_ID}.json"
+BI_PATH = canonical_bi_path(WORK_ID, root=ROOT)
 
 ROYAL = "AH-1905-1910-KR_ROYAL_ASSETS_EXILE-B01"
 EU = "AH-1907-1936-EU_FINANCE_PORTS-B01"

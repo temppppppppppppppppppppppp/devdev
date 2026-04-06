@@ -167,6 +167,8 @@ class StageZeroManager:
         engine_lines = "\n".join(f"    - {engine}" for engine in scene_engines)
         return (
             "work_identity:\n"
+            '  work_id: ""\n'
+            '  family: ""\n'
             f"  work_type: {work_type}\n"
             '  one_line_truth: ""\n'
             "  mandatory_lexicon: []\n"

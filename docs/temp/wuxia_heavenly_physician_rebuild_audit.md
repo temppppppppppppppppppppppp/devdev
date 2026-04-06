@@ -1,8 +1,8 @@
-# Wuxia BI 5-Pass Audit (2026-03-26)
+﻿# Wuxia BI 5-Pass Audit (2026-03-26)
 
 ## Inputs
 - phase0: `treatments/_quarantine/wuxia_heavenly_physician_phase0_design.json`
-- draft: `treatments/wuxia_heavenly_physician_tr_block_070_draft.json`
+- draft: `treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
 - bi: `docs/temp/wuxia_heavenly_physician_rebuild.json`
 
 ## PASS 1: encoding and parse

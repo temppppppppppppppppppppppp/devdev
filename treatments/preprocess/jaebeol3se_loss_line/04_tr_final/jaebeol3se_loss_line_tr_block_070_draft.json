@@ -1,0 +1,300 @@
+[
+  {
+    "block_id": "Block 1",
+    "title": "리스크 표 만드는 도련님",
+    "content": {
+      "context": "2025년 3월 월요일 아침, 도성그룹 지주사 전략금융실. 도진우(28)는 만기표, 보험표, 자금 스케줄을 정리하는 말석에 앉아 있다. 오너 일가의 3세이지만 결재선 밖으로 밀려나 보험 담당 임원, 구매실장, 생산관리 상무의 보고서가 지나가는 통로 역할만 한다. 본가 식탁에서는 '숫자놀이 좋아하는 애', 회사에서는 '리스크 표 만드는 도련님'으로 소비된다.",
+      "event_villain": "사촌 형 도현석(전략기획실 과장)이 리스크 회의에서 각 부서 보고를 종합 정리하는 발언권을 쥐고 있다. 도진우에게는 표 정리만 시키고 발언 기회를 주지 않는다. 의도적 배제가 아니라 말석 도련님은 그냥 그 자리에 있는 사람이라는 관성.",
+      "solution": "도진우는 아직 움직이지 않는다. 다만 각 부서 보고서가 자기 자리를 지나가는 것을 매일 보면서, 보험 갱신표·클레임 준비금·선적 지연·고객사 실사 경보 숫자들 사이에 아무도 묶지 않는 연결이 보이기 시작한다. 말석은 세 숫자를 다 듣고 나갈 데가 없는 자리다.",
+      "reward": "아직 없다. 도진우는 말석에 앉아 있고, 세 숫자의 연결을 혼자 메모한다."
+    },
+    "stakes": "여기서 계속 표만 만들면 도진우는 영원히 리스크 표 도련님으로 굳는다.",
+    "power_shift": {
+      "protagonist": "말석. 아직 변화 없음.",
+      "antagonist": "도현석이 리스크 회의 발언권을 독점 중."
+    },
+    "relationship_delta": [],
+    "foreshadow": [
+      "도진우가 메모한 세 숫자의 연결은 Block 4에서 손실선으로 터진다."
+    ],
+    "callback": [],
+    "emotional_beat": {"type": "humiliation", "intensity": 5},
+    "tension_level": 3,
+    "pov_character": "도진우",
+    "location": {"place": "도성그룹 지주사 전략금융실", "type": "사무실"},
+    "time_span": {"duration": "하루", "in_story_time": "2025년 3월"},
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "관찰. 말석에서 세 부서 보고서를 동시에 보며 연결을 감지한다.",
+      "investment_type": "없음",
+      "deal_type": "없음",
+      "leverage_used": ["말석 자리의 정보 우위"],
+      "opponent": {"name": "도현석", "type": "사촌 형", "weakness_exploited": "아직 없음"},
+      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "time_pressure": "없음. 아직 관찰 단계.",
+      "knowledge_used": "각 부서 보고서를 동시에 볼 수 있는 자리의 구조적 우위",
+      "risk_level": "없음",
+      "business_sector": "리스크 관리",
+      "section_rotation": "ARC-01 도입",
+      "success_pattern": "아직 없음. 관찰과 메모.",
+      "special_ability": {"has_ability": false, "ability_type": null, "ability_name": null, "ability_source": null, "ability_used_for": null}
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 2",
+    "title": "세 개의 숫자",
+    "content": {
+      "context": "월요일 전략금융실 확대 리스크 회의. 보험 담당 임원 임재훈이 해상보험 인상률을 보고한다. 구매실장 박동수가 분리막 스크랩률을 보고한다. 생산관리 상무 정우진이 중국 항만 슬롯 취소율을 보고한다. 세 사람은 각자 자기 숫자만 보고 자기 영역만 설명한다.",
+      "event_villain": "각 부서장이 자기 숫자만 들고 나가는 구조 자체가 도진우 외에는 아무도 연결을 보지 못하게 만든다. 사촌 형 도현석도 세 숫자를 개별적으로 이해하지만 묶지 못한다.",
+      "solution": "도진우는 세 보고를 말석에서 다 듣는다. 해상보험 인상률, 분리막 스크랩률, 항만 슬롯 취소율 — 세 숫자가 한 줄의 손실선으로 이어진다는 것을 확인한다. 아직 발언하지 않고 한 장 표로 정리한다.",
+      "reward": "한 장 표. 아직 공유되지 않았지만 도진우의 손에 있다."
+    },
+    "stakes": "세 숫자의 연결을 놓치면 18일 뒤 배터리 계열사 마진이 무너지는 것을 아무도 예측하지 못한다.",
+    "power_shift": {
+      "protagonist": "한 장 표를 손에 쥐었지만 아직 공유하지 않은 상태.",
+      "antagonist": "도현석이 세 보고를 종합할 차례를 기다리고 있다."
+    },
+    "relationship_delta": [],
+    "foreshadow": [
+      "trigger set A(보험 인상률, 스크랩률, 슬롯 취소율)가 Block 4의 손실선 선언과 Block 9의 적중으로 이어진다."
+    ],
+    "callback": [],
+    "emotional_beat": {"type": "tension_build", "intensity": 5},
+    "tension_level": 5,
+    "pov_character": "도진우",
+    "location": {"place": "도성그룹 전략금융실 회의실", "type": "회의실"},
+    "time_span": {"duration": "2시간", "in_story_time": "2025년 3월"},
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "세 부서의 보고를 한 장 표로 묶어 손실 연쇄를 감지한다.",
+      "investment_type": "리스크 분석",
+      "deal_type": "없음",
+      "leverage_used": ["trigger set A", "말석 자리에서 세 보고를 동시에 듣는 구조"],
+      "opponent": {"name": "구조적 사일로", "type": "부서 간 단절", "weakness_exploited": "각 부서장이 자기 숫자만 보고 나가는 관성"},
+      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "time_pressure": "18일 카운트다운이 시작되지만 아직 도진우만 안다.",
+      "knowledge_used": "보험 → 물류 → 원가 → 리콜 → 실적 쇼크 연쇄 판독",
+      "risk_level": "저위험 (관찰 단계)",
+      "business_sector": "배터리 공급망 리스크",
+      "section_rotation": "ARC-01 - trigger set A 감지",
+      "success_pattern": "손실 연쇄를 먼저 감지하는 출발",
+      "special_ability": {"has_ability": false, "ability_type": null, "ability_name": null, "ability_source": null, "ability_used_for": null}
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 3",
+    "title": "관리 범위입니다",
+    "content": {
+      "context": "같은 회의 연장. 세 부서장의 보고가 끝나고 사촌 형 도현석이 종합 정리를 한다.",
+      "event_villain": "도현석이 먼저 정리한다: '배터리 라인은 가동률 유지 중이고, 마진 리스크는 관리 범위입니다.' 기존 숫자를 그대로 읽은 결론이다. 회의실 전체가 고개를 끄덕인다. 도현석은 틀린 것이 아니라 세 숫자를 따로 봤기 때문에 연결을 못 본 것이다.",
+      "solution": "도진우는 사촌 형의 정리가 끝나는 것을 기다린다. 한 장 표를 손에 쥐고 있지만 아직 꺼내지 않는다. 다음 블록에서 꺼낸다.",
+      "reward": "아직 없다. 도진우는 발언 타이밍을 잡고 있다."
+    },
+    "stakes": "도현석의 '관리 범위' 결론이 그룹 의사결정의 기본값이 된다. 이 결론이 그대로 통과하면 18일 뒤 마진 붕괴를 아무도 준비하지 못한다.",
+    "power_shift": {
+      "protagonist": "한 장 표를 손에 쥐고 발언 타이밍을 잡는 중.",
+      "antagonist": "도현석의 '관리 범위' 결론이 회의실의 합의가 된 상태."
+    },
+    "relationship_delta": [],
+    "foreshadow": [
+      "도현석의 '관리 범위' 보고는 Block 9에서 공식 오류로 기록된다."
+    ],
+    "callback": [],
+    "emotional_beat": {"type": "tension_peak", "intensity": 7},
+    "tension_level": 7,
+    "pov_character": "도진우",
+    "location": {"place": "도성그룹 전략금융실 회의실", "type": "회의실"},
+    "time_span": {"duration": "30분", "in_story_time": "2025년 3월"},
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "대기. 사촌 형의 낙관 정리가 끝나기를 기다린다.",
+      "investment_type": "리스크 분석",
+      "deal_type": "없음",
+      "leverage_used": ["trigger set A 한 장 표"],
+      "opponent": {"name": "도현석", "type": "사촌 형", "weakness_exploited": "세 숫자를 따로 봤기 때문에 연결을 못 봄"},
+      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "time_pressure": "18일 카운트다운. 회의에서 방향이 잡히지 않으면 대응이 늦는다.",
+      "knowledge_used": "손실 연쇄 판독",
+      "risk_level": "중위험 (발언 타이밍에 따라 결과가 갈린다)",
+      "business_sector": "배터리 공급망 리스크",
+      "section_rotation": "ARC-01 - 사촌 형의 낙관 보고",
+      "success_pattern": "아직 터지지 않은 긴장",
+      "special_ability": {"has_ability": false, "ability_type": null, "ability_name": null, "ability_source": null, "ability_used_for": null}
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 4",
+    "title": "18일",
+    "content": {
+      "context": "회의 속개. 도현석의 '관리 범위' 결론에 회의실이 동의한 직후.",
+      "event_villain": "도현석의 결론이 합의된 상태. 도진우가 이 합의를 뒤집으면 사촌 형의 체면을 정면으로 깨뜨리는 것이다.",
+      "solution": "도진우가 한 장 표를 꺼낸다. 보험 인상률이 여기 있고, 스크랩률이 여기 있고, 슬롯 취소가 여기 있으면 — 사촌 형이 말한 '관리 범위'는 18일 뒤에 무너진다. 세 숫자를 따로 봤기 때문에 연결을 못 본 것이다. 사촌 형이 반박하려다 숫자를 다시 보고 입을 다문다. '관리 범위'라고 올린 보고가 그 자리에서 침묵으로 철회된다.",
+      "reward": "CFO 강태호: '…이건 보고가 아니라 손실선을 먼저 그린 거네.' 회장 도경일: '이번 건은 네 선에서 먼저 잡아.' 도진우의 이름이 회장의 인식에 처음 올라간다. 돈은 없지만 '손실선을 먼저 그린 사람'이라는 평가가 찍힌다."
+    },
+    "stakes": "18일 예측이 틀리면 도진우는 사촌 형의 체면을 깬 건방진 말석 도련님으로 끝난다.",
+    "power_shift": {
+      "protagonist": "'리스크 표 만드는 도련님'에서 '손실선을 먼저 그린 사람'으로 첫 평가 이동.",
+      "antagonist": "도현석의 '관리 범위' 보고가 침묵으로 철회되고, 사촌 형의 발언 독점이 처음으로 흔들린다."
+    },
+    "relationship_delta": [
+      {"target": "도현석", "before": "무시 (말석 도련님)", "after": "침묵 (숫자를 다시 보고 입을 다문다)"},
+      {"target": "강태호", "before": "무관심", "after": "관심 (손실선을 먼저 그린 거네)"},
+      {"target": "도경일", "before": "인식 밖", "after": "인식 시작 (네 선에서 먼저 잡아)"}
+    ],
+    "foreshadow": [
+      "18일 카운트다운은 Block 9에서 적중으로 마무리된다.",
+      "회장의 '네 선에서 먼저 잡아'는 Block 6의 직보 라인 개방으로 이어진다."
+    ],
+    "callback": [
+      "Block 2에서 정리한 한 장 표가 여기서 꺼내진다.",
+      "Block 3의 사촌 형 '관리 범위' 결론이 여기서 뒤집힌다."
+    ],
+    "emotional_beat": {"type": "first_saida", "intensity": 9},
+    "tension_level": 9,
+    "pov_character": "도진우",
+    "location": {"place": "도성그룹 전략금융실 회의실", "type": "회의실"},
+    "time_span": {"duration": "15분", "in_story_time": "2025년 3월"},
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "trigger set A 세 숫자를 한 장 표로 묶어 18일 뒤 마진 붕괴를 선언한다.",
+      "investment_type": "리스크 분석 / 손실선 선언",
+      "deal_type": "회의실 발언",
+      "leverage_used": ["trigger set A", "세 부서 보고서를 동시에 듣는 말석 자리", "손실 연쇄 판독 감각"],
+      "opponent": {"name": "도현석", "type": "사촌 형", "weakness_exploited": "세 숫자를 따로 봤기 때문에 연결을 못 봄 — 틀린 것이 아니라 묶지 못한 것"},
+      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "time_pressure": "18일. 여기서 방향이 잡히지 않으면 배터리 계열사 분기 손실이 통제 불가.",
+      "knowledge_used": "보험 → 물류 → 원가 → 리콜 → 실적 쇼크 연쇄",
+      "risk_level": "고위험 (사촌 형의 체면을 정면으로 깨뜨리는 발언)",
+      "business_sector": "배터리 공급망 리스크",
+      "section_rotation": "ARC-01 - 첫 손실선 선언 (first saida)",
+      "success_pattern": "세 숫자의 연결을 회의실에서 먼저 보여준다",
+      "special_ability": {"has_ability": false, "ability_type": null, "ability_name": null, "ability_source": null, "ability_used_for": null}
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  },
+  {
+    "block_id": "Block 5",
+    "title": "도련님이 감히",
+    "content": {
+      "context": "Block 4에서 도진우가 사촌 형의 보고를 뒤집은 직후. 회의가 끝나고 사촌 형 도현석이 움직인다.",
+      "event_villain": "도현석이 자기 라인을 통해 보험 갱신표를 재검토하게 한다. 도진우의 18일 예측이 틀리면 공개적으로 망신을 주겠다는 뜻. 전략기획실 실무자들에게 '말석 도련님이 숫자 세 개로 무슨 얘기를 했는지 확인해 봐'라고 지시한다.",
+      "solution": "도진우는 반격하지 않는다. 대신 18일 동안의 데이터를 매일 추적하며 자기 예측이 맞는지 확인한다. 동시에 긴급 헤지안과 원재료 선매입안을 조용히 준비한다.",
+      "reward": "아직 없다. 도진우는 사촌 형의 검증을 받는 입장이다. 단, 회장의 '네 선에서 먼저 잡아'가 보호패로 작동해 즉시 쫓겨나지는 않는다."
+    },
+    "stakes": "18일 예측이 틀리면 도진우는 건방진 말석 도련님으로 사촌 형보다 더 낮은 자리로 떨어진다.",
+    "power_shift": {
+      "protagonist": "검증받는 입장. 회장의 발언이 유일한 보호패.",
+      "antagonist": "도현석이 검증 라인을 가동하며 반격 태세를 갖춘다."
+    },
+    "relationship_delta": [
+      {"target": "도현석", "before": "침묵", "after": "경계 (검증 라인 가동)"}
+    ],
+    "foreshadow": [
+      "도현석의 검증 라인은 Block 9에서 도진우의 적중으로 무력화된다.",
+      "도진우가 준비하는 헤지안과 선매입안은 Block 7에서 공식 제출된다."
+    ],
+    "callback": [
+      "Block 4의 손실선 선언에 대한 사촌 형의 첫 반응."
+    ],
+    "emotional_beat": {"type": "counter_pressure", "intensity": 7},
+    "tension_level": 7,
+    "pov_character": "도진우",
+    "location": {"place": "도성그룹 전략기획실 / 전략금융실", "type": "사무실"},
+    "time_span": {"duration": "3일", "in_story_time": "2025년 3월"},
+    "genre_ext": {
+      "type": "investment",
+      "capital_before": "0",
+      "capital_after": "0",
+      "capital_delta": "0",
+      "profit_loss": "0",
+      "method": "대기와 준비. 사촌 형의 검증을 받으며 헤지안과 선매입안을 조용히 준비한다.",
+      "investment_type": "리스크 대응 준비",
+      "deal_type": "없음 (준비 단계)",
+      "leverage_used": ["회장의 보호패", "18일 카운트다운 데이터 추적"],
+      "opponent": {"name": "도현석", "type": "사촌 형", "weakness_exploited": "아직 없음 — 도현석이 반격하는 중"},
+      "historical_event": {"name": null, "year": null, "how_exploited": null},
+      "time_pressure": "18일 카운트다운 진행 중.",
+      "knowledge_used": "trigger set A 추적 데이터",
+      "risk_level": "고위험 (예측이 틀리면 끝)",
+      "business_sector": "배터리 공급망 리스크",
+      "section_rotation": "ARC-01 - 사촌 형의 반격",
+      "success_pattern": "반격하지 않고 데이터로 준비한다",
+      "special_ability": {"has_ability": false, "ability_type": null, "ability_name": null, "ability_source": null, "ability_used_for": null}
+    },
+    "regression_ext": {
+      "is_regressor": false,
+      "regression_type": null,
+      "timeline_knowledge": null,
+      "butterfly_effect": null,
+      "death_flag": null,
+      "regression_hint": null,
+      "future_prep": null,
+      "single_heir_policy": null,
+      "incarnation_type": null,
+      "execution_doctrine": null
+    }
+  }
+]

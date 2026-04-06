@@ -1,8 +1,8 @@
-# Chaebol Ent Empire TR/BI 3PASS Audit (2026-03-10)
+﻿# Chaebol Ent Empire TR/BI 3PASS Audit (2026-03-10)
 
 ## Targets
-- TR: `treatments/chaebol_ent_empire_tr_block_070_draft.json`
-- BI: `bible/0_bi_chaebol_ent_empire.json`
+- TR: `treatments/03_chaebol_ent_empire_tr_block_070_draft.json`
+- BI: `bible/03_bi_chaebol_ent_empire.json`
 
 ## UTF-8 baseline
 - result: OK

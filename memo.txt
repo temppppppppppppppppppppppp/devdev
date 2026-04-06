@@ -1,4 +1,4 @@
-이건 문학이 아니다. 공장이다.
+﻿이건 문학이 아니다. 공장이다.
 
 우리는 “잘 쓴 글”을 만드는 게 아니라,
 “안 나가진 않는 글”을 대량으로 찍어낸다.
@@ -89,8 +89,8 @@
 - 기획안 재료 = 전처리 SSOT 기획안만 확인된 경우
 
 1. 무협
-- 파일: `bible/0_bi_wuxia_heavenly_physician.json`
-- 짝 파일: `treatments/wuxia_heavenly_physician_tr_block_070_draft.json`
+- 파일: `bible/09_bi_wuxia_heavenly_physician.json`
+- 짝 파일: `treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
 - 보유 수준: 실전 산출물
 
 2. 헌터

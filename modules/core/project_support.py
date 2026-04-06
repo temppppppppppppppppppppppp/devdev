@@ -272,6 +272,7 @@ def load_work_guard_summary(project_dir: Path) -> dict[str, Any]:
         "work_guard_exists": False,
         "work_guard_valid": True,
         "work_guard_error": "",
+        "work_id": "",
         "work_type": "",
         "tracking_slots": 0,
         "registry_profiles": 0,
@@ -297,6 +298,7 @@ def load_work_guard_summary(project_dir: Path) -> dict[str, Any]:
 
     work_identity = data.get("work_identity", data) if isinstance(data, dict) else {}
     if isinstance(work_identity, dict):
+        payload["work_id"] = str(work_identity.get("work_id", "") or "").strip()
         payload["work_type"] = str(work_identity.get("work_type", "") or "").strip()
         for key in ("tracking_slots", "registry_profiles", "role_fit_constraints"):
             value = work_identity.get(key) or []

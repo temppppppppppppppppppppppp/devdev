@@ -1,0 +1,43 @@
+{
+  "tag": "shutdown_final",
+  "timestamp": "2026-04-06 14:56:40",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 0,
+  "counts": {},
+  "latest_event_type": "",
+  "recent_events": [],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth."
+  },
+  "proof_digest": {
+    "available": false,
+    "status": "unavailable",
+    "artifacts": {
+      "db_available": true,
+      "session_decisions_exists": false,
+      "ui_events_jsonl_exists": true,
+      "pass_rate_monitor_exists": true,
+      "episode_production_exists": false,
+      "runtime_audit_jsonl_exists": false,
+      "ui_events_db_available": true,
+      "ui_events_count": 244,
+      "ui_event_coverage_status": "ok"
+    },
+    "stages": {},
+    "session_lineage": {
+      "plain_log_token": "20260406_145601",
+      "structured_session_id": "20260406_145605",
+      "status": "split_mapped"
+    }
+  }
+}

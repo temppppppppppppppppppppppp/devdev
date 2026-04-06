@@ -1,4 +1,4 @@
-# Codex: `chaebol_allowance_zero` 실패본 vs 재시도본 Fusion 오더
+﻿# Codex: `chaebol_allowance_zero` 실패본 vs 재시도본 Fusion 오더
 
 > 인코딩: **UTF-8 only**
 > 작성일: 2026-03-11
@@ -14,9 +14,9 @@
 | 역할 | 정본 경로 | 비고 |
 | ---- | --------- | ---- |
 | 실패 TR | `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json` | 실패 현행 복사본 |
-| 개선 TR | `treatments/chaebol_allowance_zero_tr_block_070_draft.json` | 현재 골든 TR |
+| 개선 TR | `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json` | 현재 골든 TR |
 | 실패 BI | `bible/02_bi_chaebol_allowance_zero.json` | 실패 BI |
-| 개선 BI | `bible/0_bi_chaebol_allowance_zero.json` | 재시도 BI |
+| 개선 BI | `bible/02_bi_chaebol_allowance_zero.json` | 재시도 BI |
 | 기획 SSOT | `docs/2026-03-10/opus_재벌3세인데용돈이0원.md` | 공통 기획 축 |
 | Phase 0 | `treatments/chaebol_allowance_zero_phase0_design.json` | 공통 설계 축 |
 | 비교 기준 오더(D2) | `docs/blockguide/codex_chaebol_allowance_zero_failed_vs_retry_comparison_order.md` | 현재 기준 문서 |
@@ -68,7 +68,7 @@
 
 ### 3.1 BLOCKER
 
-- `CR-01`: 현재 골든 TR은 `treatments/chaebol_allowance_zero_tr_block_070_draft.json`이다.
+- `CR-01`: 현재 골든 TR은 `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`이다.
   `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`은 실패 TR 현행 복사본이다.
 
 ### 3.2 MAJOR

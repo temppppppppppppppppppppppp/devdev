@@ -4,11 +4,26 @@
 
 import json
 from datetime import date
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from modules.narrative_router.artifact_paths import (  # noqa: E402
+    canonical_bi_path,
+    canonical_tr_path,
+    resolve_phase0_path,
+)
 
 def main():
-    with open("treatments/wuxia_heavenly_physician_phase0_design.json", "r", encoding="utf-8") as f:
+    phase0_path = resolve_phase0_path("wuxia_heavenly_physician", root=ROOT)
+    tr_path = canonical_tr_path("wuxia_heavenly_physician", root=ROOT)
+
+    with open(phase0_path, "r", encoding="utf-8") as f:
         p0 = json.load(f)
-    with open("treatments/wuxia_heavenly_physician_tr_block_070_draft.json", "r", encoding="utf-8") as f:
+    with open(tr_path, "r", encoding="utf-8") as f:
         tr = json.load(f)
 
     blocks = tr["blocks"]
@@ -83,8 +98,8 @@ def main():
         "_genre": "wuxia",
         "_work_id": "wuxia_heavenly_physician",
         "_family": "wuxguide",
-        "_source_tr": "treatments/wuxia_heavenly_physician_tr_block_070_draft.json",
-        "_source_phase0": "treatments/wuxia_heavenly_physician_phase0_design.json",
+        "_source_tr": canonical_tr_path("wuxia_heavenly_physician", root=ROOT).relative_to(ROOT).as_posix(),
+        "_source_phase0": phase0_path.relative_to(ROOT).as_posix(),
         "MasterBible": {
             "ProjectData": {
                 "MetaInfo": {
@@ -202,7 +217,7 @@ def main():
     }
 
     # === Phase 3: Save UTF-8 ===
-    output_path = "bible/0_bi_wuxia_heavenly_physician.json"
+    output_path = canonical_bi_path("wuxia_heavenly_physician", root=ROOT)
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(bi, f, ensure_ascii=False, indent=2)
 
@@ -215,7 +230,7 @@ def main():
     mhud = v["MartialHUD"]["Protagonist"]["actual_truth"]
     ci = v["MasterBible"]["ProjectData"]["CoreIdentity"]
 
-    print(f"BI saved: {output_path}")
+    print(f"BI saved: {output_path.relative_to(ROOT).as_posix()}")
     print(f"JSON parse: PASS")
     print(f"plot_roadmap length: {len(v['plot_roadmap'])}")
     print(f"??? count: {raw.count('???')}")

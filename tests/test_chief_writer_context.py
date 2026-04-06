@@ -872,3 +872,28 @@ class TestIFCPacketInputWiring:
         assert "브리지 거래·청산·이체·펀딩" in section
         assert "generic authority line one" in section
         assert "직전 원문 금융 언급" not in section
+
+    def test_stage4_carryover_ceiling_surfaces_fact_ledger_baseline_without_prev_text(self):
+        host = _make_host()
+        host.context.fact_ledger = MagicMock()
+        host.context.fact_ledger.get_numbers.return_value = {
+            "total_assets": {
+                "value": 10000000,
+                "unit": "won",
+                "last_ep": 1,
+                "authority_scope": "carryover_baseline",
+            }
+        }
+        builder = ChiefWriterContextBuilder(host)
+
+        section = builder.context_packets._build_stage4_carryover_ceiling_section(
+            blueprint={"capital_plan": "200억 확보"},
+            prev_manuscript="",
+            prev_digest="",
+        )
+
+        assert "Stage4 Carryover Ceiling" in section
+        assert "FactLedger carryover baseline numeric authority" in section
+        assert "total_assets: 10000000 won (EP1 carryover baseline)" in section
+        assert "pending claim/target" in section
+        assert "current truth" in section

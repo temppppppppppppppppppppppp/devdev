@@ -12,13 +12,20 @@
 > - `wuxia-bi-production-harness.md` → 덴시피케이션 완료 후 BI 재동기화 시 참조
 > - 이 하네스는 `wuxia-production-harness.md`의 **후처리 확장**이지, 대체가 아니다
 > - `blockguide/treatment-densification-harness-v1.md` §0D의 family-agnostic 보조 입력 인터페이스를 준수한다
+>
+> **즉시 정지 표지판**
+>
+> - 이 문서는 `이미 70블록 TR draft가 존재할 때만` 진입한다.
+> - 이 문서는 `처음 70블록을 한 번에 만드는 생산 하네스`가 아니다.
+> - 70블록 일괄 재작성은 금지다.
+> - 밀도 보강도 배치 단위로 순차 처리한다.
 
 ---
 
 ## 0A. 빠른 시작 (10단계 즉시 체크리스트)
 
 1. `treatments/{work_id}_tr_block_070_draft.json` 존재 확인
-2. `treatments/{work_id}_phase0_design.json` 존재 확인
+2. `treatments/phase0/{work_id}_phase0_design.json` 존재 확인
 3. `bible/{work_id}_bi.json` 존재 확인 (BI 5-Pass PASS 상태)
 4. 덴시피케이션 진입 사유 확인 (4축 감사 or 밀도 게이트 FAIL)
 5. 잠금/재작성 필드 분류표(§1) 확인
@@ -357,7 +364,7 @@ Phase 0의 경지 로드맵과 무공 목록을 기반으로 LLM이 작성. 작�
 ```json
 {
   "_description": "덴시피케이션 보강용 Phase 0 확장 시트 (무협)",
-  "source_phase0": "treatments/{work_id}_phase0_design.json",
+  "source_phase0": "treatments/phase0/{work_id}_phase0_design.json",
   "martial_timeline_ref": "densification/martial_timeline.json",
   "jianghu_force_pool_ref": "densification/jianghu_force_pool.json",
   "artifact_catalog_ref": "densification/artifact_catalog.json",
@@ -956,7 +963,7 @@ compaction 또는 세션 전환 후 재진입 시 아래를 순서대로 재로�
 
 1. 이 하네스 `treatment-densification-harness-v1.md`를 UTF-8로 다시 읽는다.
 2. 아래 파일을 순서대로 UTF-8로 다시 연다:
-   - `treatments/{work_id}_phase0_design.json`
+   - `treatments/phase0/{work_id}_phase0_design.json`
    - `treatments/{work_id}_tr_block_070_draft.json`
    - `treatments/preprocess/{work_id}/densification/batch_plan.json`
    - `treatments/preprocess/{work_id}/densification/phase0_supplement.json`

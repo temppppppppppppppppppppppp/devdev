@@ -29,12 +29,18 @@ def test_prepare_stage2_pass_arc_for_persistence_shell_delegates_to_family(final
     finalize_result = {"action": "continue", "refined_arc": {"ep_end": 5, "state_changes": {}}}
     finalizer._repair_stage2_pass_arc_structure = MagicMock(return_value=repair_result)
     finalizer._finalize_stage2_pass_arc_preparation = MagicMock(return_value=finalize_result)
-    refined_arc = {}
+    refined_arc = {
+        "joint_docs": {"world_joint": "llm-world"},
+        "status_shadow": {"hp": "stable", "key_stat_change": "llm-stat"},
+    }
 
     result = finalizer._prepare_stage2_pass_arc_for_persistence(
         refined_arc=refined_arc,
         arc_drive={"desire_vector": "test"},
-        enriched_block={"joint_docs": {"final_location": "city"}, "status_shadow": {"hp": "stable"}},
+        enriched_block={
+            "joint_docs": {"final_location": "city", "world_joint": "stale-world"},
+            "status_shadow": {"hp": "fallback-stable", "expected_injuries": "none"},
+        },
         all_refined_arcs=[],
         global_arc_no=3,
         current_feedback="",
@@ -47,15 +53,22 @@ def test_prepare_stage2_pass_arc_for_persistence_shell_delegates_to_family(final
 
     assert result == finalize_result
     assert refined_arc["arc_drive"] == {"desire_vector": "test"}
-    assert refined_arc["joint_docs"] == {"final_location": "city"}
-    assert refined_arc["status_shadow"] == {"hp": "stable"}
+    assert refined_arc["joint_docs"] == {"final_location": "city", "world_joint": "llm-world"}
+    assert refined_arc["status_shadow"] == {
+        "hp": "stable",
+        "expected_injuries": "none",
+        "key_stat_change": "llm-stat",
+    }
     finalizer._repair_stage2_pass_arc_structure.assert_called_once()
     finalizer._finalize_stage2_pass_arc_preparation.assert_called_once_with(
         refined_arc=repair_result["refined_arc"],
         all_refined_arcs=[],
         global_arc_no=3,
         constraint_block="MUST NOT regress",
-        enriched_block={"joint_docs": {"final_location": "city"}, "status_shadow": {"hp": "stable"}},
+        enriched_block={
+            "joint_docs": {"final_location": "city", "world_joint": "stale-world"},
+            "status_shadow": {"hp": "fallback-stable", "expected_injuries": "none"},
+        },
     )
 
 

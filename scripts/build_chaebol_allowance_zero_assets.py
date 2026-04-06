@@ -18,14 +18,19 @@ from modules.core.response_schemas import (  # noqa: E402 - entrypoint path boot
     validate_bible_structure,
     validate_treatment_structure,
 )
+from modules.narrative_router.artifact_paths import (  # noqa: E402
+    canonical_bi_path,
+    canonical_phase0_path,
+    canonical_tr_path,
+)
 
 WORK_ID = "chaebol_allowance_zero"
 TITLE = "재벌 3세인데 용돈이 0원"
 PROTAGONIST_NAME = "윤재이"
-PHASE0_PATH = ROOT / "treatments" / f"{WORK_ID}_phase0_design.json"
-TR_PATH = ROOT / "treatments" / f"{WORK_ID}_tr_block_070_draft.json"
+PHASE0_PATH = canonical_phase0_path(WORK_ID, root=ROOT)
 TR_TITLE_PATH = ROOT / "treatments" / f"{TITLE}_tr_block_070_draft.json"
-BI_PATH = ROOT / "bible" / f"0_bi_{WORK_ID}.json"
+TR_PATH = canonical_tr_path(WORK_ID, root=ROOT)
+BI_PATH = canonical_bi_path(WORK_ID, root=ROOT)
 
 
 def format_eok(value: int) -> str:

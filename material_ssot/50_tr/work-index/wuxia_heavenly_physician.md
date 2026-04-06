@@ -1,4 +1,4 @@
-# wuxia_heavenly_physician
+﻿# wuxia_heavenly_physician
 
 Title: 천의무쌍(天醫武雙)
 Family: wuxguide
@@ -13,7 +13,7 @@ Status: bootstrap TR manifest
 ## 2. Current Live Chain
 
 - upstream Phase0 manifest: `material_ssot/40_phase0_design/work-index/wuxia_heavenly_physician.md`
-- live TR file: `treatments/wuxia_heavenly_physician_tr_block_070_draft.json`
+- live TR file: `treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
 - next BI manifest: `material_ssot/60_bi/work-index/wuxia_heavenly_physician.md`
 
 ## 3. Current Notes
