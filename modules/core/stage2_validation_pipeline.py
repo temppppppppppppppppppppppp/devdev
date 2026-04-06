@@ -1178,8 +1178,12 @@ class Stage2ValidationPipeline:
     def _apply_continuity_pass_updates(self, *, refined_arc, enriched_block: dict, continuity_result: dict) -> None:
         corrected_joint_docs = continuity_result.get("corrected_joint_docs")
         if corrected_joint_docs:
-            refined_arc["joint_docs"] = corrected_joint_docs
-            enriched_block["joint_docs"] = corrected_joint_docs
+            merged_joint_docs = merge_stage2_authoritative_packet(
+                corrected_joint_docs,
+                refined_arc.get("joint_docs"),
+            )
+            refined_arc["joint_docs"] = merged_joint_docs
+            enriched_block["joint_docs"] = merged_joint_docs
             self.ctx.ui.log("      🔧 [V49.2] joint_docs 자동 수정 반영됨")
 
         corrected_state = continuity_result.get("corrected_state_constraints")

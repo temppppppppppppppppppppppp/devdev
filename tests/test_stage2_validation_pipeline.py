@@ -425,6 +425,65 @@ class TestRunValidation:
         assert result["refined_arc"]["joint_docs"]["world_joint"] == "llm-world"
         assert result["refined_arc"]["status_shadow"]["item_consumption"] == ["천풍검"]
 
+    def test_run_continuity_inspection_preserves_existing_joint_fields_when_correction_is_partial(
+        self,
+        pipeline,
+        valid_refined_arc,
+    ):
+        pipeline.ctx.agents = {"continuity_inspector": MagicMock()}
+        refined_arc = {
+            **valid_refined_arc,
+            "joint_docs": {
+                "final_location": "llm-city",
+                "physical_inventory": ["천풍검"],
+                "world_joint": "llm-world",
+            },
+        }
+        enriched_block = {
+            "joint_docs": {
+                "final_location": "block-city",
+                "physical_inventory": [],
+                "world_joint": "stale-world",
+            },
+            "status_shadow": {"internal_energy_loss": "5%"},
+        }
+        pipeline._inspect_continuity = MagicMock(
+            return_value={
+                "decision": "PASS",
+                "corrected_joint_docs": {
+                    "final_location": "market",
+                    "physical_inventory": ["장부"],
+                },
+            }
+        )
+
+        result = pipeline._run_continuity_inspection(
+            refined_arc=refined_arc,
+            four_phase_passed=False,
+            all_refined_arcs=[],
+            entity_registry_for_director=None,
+            enriched_block=enriched_block,
+            global_arc_no=1,
+            current_ep_start=1,
+            generation_method="four_phase",
+            attempt=0,
+            protagonist_name="이청풍",
+            V50_MODULES_AVAILABLE=False,
+            rich_console=None,
+            _python_advisories=[],
+        )
+
+        assert result["refined_arc"]["joint_docs"] == {
+            "final_location": "market",
+            "physical_inventory": ["장부"],
+            "world_joint": "llm-world",
+        }
+        assert enriched_block["joint_docs"] == {
+            "final_location": "market",
+            "physical_inventory": ["장부"],
+            "world_joint": "llm-world",
+        }
+
 
 class TestExtractedHelperFamilies:
     def test_build_invalid_refined_arc_retry_returns_retry_payload(self, pipeline):

@@ -986,6 +986,8 @@ class TestRunFinalize:
     def test_missing_critical_data_returns_retry(self, finalizer, valid_refined_arc):
         arc = dict(valid_refined_arc)
         arc.pop("hybrid_composition", None)
+        arc.pop("joint_docs", None)
+        arc.pop("status_shadow", None)
         kwargs = _make_finalize_kwargs(
             arc,
             enriched_block={"joint_docs": {}, "status_shadow": {}},

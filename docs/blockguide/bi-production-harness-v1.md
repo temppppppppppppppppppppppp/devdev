@@ -32,6 +32,10 @@
    - 5-Pass 감리
    - PASS/FAIL 보고 후 정지
 10. 하나라도 실패하면 다음 단계로 넘어가지 않는다.
+11. source TR과 BI 모두에서 `Block / ARC / Phase / Stage` 번호 메타가 narrative prose 필드로 새면 FAIL이다.
+    - `foreshadow` / `callback`도 자연어만 허용한다.
+    - 구조 타깃은 `foreshadow_targets` / `callback_sources`와 같은 전용 필드에만 둔다.
+    - `section_rotation`, `arc_section`, `phase`는 번호 없는 자연어 라벨만 허용한다.
 
 추가 해석:
 
@@ -328,7 +332,7 @@ BI 단계도 연속 handoff를 허용한다.
 1. `SSOT_blockguide-integrated-order.md`를 다시 읽는다.
 2. `phase0_design`를 UTF-8로 연다.
 3. `tr_block_070_draft`를 UTF-8로 연다.
-4. source TR handoff gate(`production_density_gate`, `avg_bundle_chars`, `opponent_unique`, `deal_top_repetition`, `method_top_repetition`)를 확인한다.
+4. source TR handoff gate(`production_density_gate`, `avg_bundle_chars`, `opponent_unique`, `deal_top_repetition`, `method_top_repetition`, `diegetic_meta_ref_zero`, `label_meta_ref_zero`)를 확인한다.
 5. 기존 `0_bi_{work_id}.json`이 있으면 UTF-8 파싱과 오염 여부만 확인한다.
 6. 오염이 있으면 부분 수선보다 재생성을 택한다.
 7. BI 최소 스켈레톤만 먼저 만든다.

@@ -1,0 +1,487 @@
+{
+  "_schema": "tr.v1",
+  "_work_id": "hoegui_surgeon",
+  "_title": "정년퇴직 외과의가 레지던트 1년차로 돌아갔다",
+  "_total_blocks": 70,
+  "_authority_sources": [
+    "material_ssot/20_pitch/canon/hoegui_surgeon.md",
+    "treatments/preprocess/hoegui_surgeon/02_phase0_work/phase0_fixed.json",
+    "work_guards/12_hoegui_surgeon.yaml"
+  ],
+  "_arc": "ARC-01",
+  "_arc_title": "차트가 먼저 맞는 R1",
+  "_block_range": "1-10",
+  "blocks": [
+    {
+      "block_id": "Block 1",
+      "block_no": 1,
+      "title": "갈고리",
+      "content": {
+        "context": "2026년 3월, 한림대학교병원 외과. 서동혁(28)은 레지던트 1년차 첫 수술 배정을 받는다. 전날까지 65세 정년퇴직 외과 과장이었던 기억이 28세의 손끝 위에 겹쳐 있다. 30년간 3만 건의 수술을 집도한 손이 갈고리를 잡으라는 지시를 받는다. 머릿속에는 이 수술의 변수가 전부 읽히는데, 입은 열 수 없는 자리.",
+        "event_villain": "수술 계획 브리핑. 지도교수 강태준이 환자의 간담도 수술 접근법을 설명한다. 서동혁은 CT에서 변이 혈관 패턴을 읽고 의견을 낸다. 강태준은 브리핑을 멈추지 않는다. '네가 뭘 알아, 기구 잡고 있어.' 회의실의 공기가 한 번 멈추고, 치프 한정우가 서동혁에게 눈짓으로 입 다물라고 한다. 동기 R1 박세진이 옆에서 숨을 죽인다.",
+        "solution": "서동혁은 반박하지 않는다. 대신 브리핑이 끝난 뒤 혼자 남아 환자 차트를 연다. 강 교수의 우측 접근법이 이 환자의 변이 간동맥 패턴에서 대량 출혈을 유발할 확률이 높다는 것을 30,000건의 경험이 말해 준다. 교과서에는 없는 패턴이다. 서동혁은 차트 노트에 한 줄을 적는다. R1이 공식으로 남길 수 있는 유일한 것이 차트 기록이니까.",
+        "reward": "돈도 권한도 아무것도 얻지 않는다. 차트에 '우측 접근 시 변이 간동맥 손상 우려, 좌측 접근 제안 — R1 서동혁'이라는 기록 한 줄이 남았을 뿐이다. 이 기록은 아무도 읽지 않는다. 아직은."
+      },
+      "stakes": "이 브리핑에서 입을 다문 것은 복종이 아니다. R1이 교수에게 반박하면 수련 자체가 끝날 수 있다. 서동혁은 말 대신 기록을 선택한다. 기록이 맞았는지는 내일 수술장에서 판명된다.",
+      "power_shift": {
+        "protagonist": "갈고리만 잡는 R1. 발언권 없음. 수술 계획 수정 권한 없음.",
+        "antagonist": "강태준은 30년 경력 교수의 권위로 브리핑을 지배한다. R1의 의견은 소음으로 처리된다."
+      },
+      "relationship_delta": [
+        { "target": "강태준", "before": "신입 R1", "after": "의견을 냈다가 묵살당한 R1 — 기억에도 남지 않을 수준" },
+        { "target": "한정우", "before": "같은 과 치프", "after": "입 다물라고 눈짓한 치프 — 위계 수호자" },
+        { "target": "박세진", "before": "동기 R1", "after": "옆에서 숨 죽인 동기 — 서동혁의 무모함에 놀람" }
+      ],
+      "foreshadow": [
+        { "id": "FS-01", "type": "seed", "description": "차트 기록 한 줄이 남는다. 이 기록은 Block 5에서 무기가 된다." }
+      ],
+      "callback": [],
+      "emotional_beat": { "type": "suppressed_fury", "intensity": 7 },
+      "tension_level": 6,
+      "pov_character": "서동혁",
+      "location": { "place": "한림대학교병원 외과 브리핑룸 → 차트실", "type": "수련 거점" },
+      "time_span": { "duration": "3시간", "in_story_time": "2026년 3월 초, 오전~오후" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "갈고리 R1",
+        "authority_after": "갈고리 R1 (변화 없음)",
+        "authority_delta": "0",
+        "method": "묵살 후 차트에 판독 기록 1줄 생산",
+        "opponent": { "name": "강태준", "type": "지도교수", "weakness_exploited": "R1의 의견을 소음으로 처리하는 관성" },
+        "medical_sector": "간담도 수술 브리핑",
+        "section_rotation": "ARC-01 — 차트가 먼저 맞는 R1"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "이 환자의 변이 간동맥 패턴은 30,000건 중 7번 본 희귀 패턴이다. 우측 접근 시 4번은 대량 출혈이었다.", "accuracy": "상", "source": "전생 수술 경험" },
+        "butterfly_effect": { "original_event": "1회차 서동혁은 R1으로서 아무 기록도 남기지 않았다.", "changed_event": "차트에 판독 기록을 남긴다.", "ripple_effect": "기록이 있으면 적중을 증명할 수 있다." },
+        "regression_hint": { "slip_up": "없음 (입을 다물었다)", "suspicion_from": "없음" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "실력이 곧 권력이다. 기록이 곧 증거다."
+      }
+    },
+    {
+      "block_id": "Block 2",
+      "block_no": 2,
+      "title": "변이 간동맥",
+      "content": {
+        "context": "수술 전날 밤. 외과 당직실. 서동혁은 내일 수술 환자의 CT를 다시 편다. 3D 재구성 영상에서 변이 간동맥의 주행 경로가 교과서 도해와 다르다. 대부분의 외과의는 이 차이를 놓친다 — 500건 경험으로는 이 패턴을 본 적이 없으니까. 서동혁은 30,000건 중에서 이 패턴을 7번 봤고, 4번은 우측 접근에서 대량 출혈로 이어졌다.",
+        "event_villain": "강태준 교수의 수술 계획서가 EMR에 올라와 있다. 우측 접근, 표준 박리 순서. 교과서적으로는 맞다. 하지만 이 환자의 변이 패턴에서는 우측으로 들어가면 간동맥 분지가 박리면에 걸린다. 출혈이 시작되면 시야가 사라지고, 시야가 사라지면 교수의 손이 멈춘다.",
+        "solution": "서동혁은 자기 판독을 차트 노트에 정식으로 남긴다. '3D CT 재구성 상 변이 간동맥(replaced right hepatic artery) 주행이 우측 접근 박리면을 횡단. 우측 접근 시 간동맥 손상 우려. 좌측 접근으로 전환 시 박리면 회피 가능. — R1 서동혁.' 기록 시간이 EMR에 자동으로 찍힌다. 수술 18시간 전.",
+        "reward": "여전히 아무것도 바뀌지 않는다. 강태준 교수가 이 차트 노트를 읽을 가능성은 거의 없다. R1의 차트 노트를 수술 전에 확인하는 교수는 이 병원에 없다. 하지만 기록은 남았고, 기록에는 시간이 찍혀 있다."
+      },
+      "stakes": "내일 수술에서 강 교수가 우측으로 들어가면 출혈이 터진다. 서동혁의 차트 기록이 맞았는지는 메스가 닿는 순간에 판명된다. 맞았는데 아무도 안 읽었다면 — 환자는 위험해지고 기록만 남는다.",
+      "power_shift": {
+        "protagonist": "갈고리 R1. 차트 기록 2건 누적. 아무도 읽지 않는다.",
+        "antagonist": "강태준의 수술 계획서가 EMR에 확정 상태로 올라가 있다."
+      },
+      "relationship_delta": [
+        { "target": "강태준", "before": "의견 냈다가 묵살당한 R1", "after": "변화 없음 — 강태준은 차트 노트를 읽지 않았다" }
+      ],
+      "foreshadow": [
+        { "id": "FS-01", "type": "reinforcement", "description": "차트 기록에 시간이 찍혔다. 수술 18시간 전. 이 시간이 Block 5에서 결정적 증거가 된다." }
+      ],
+      "callback": [],
+      "emotional_beat": { "type": "cold_preparation", "intensity": 6 },
+      "tension_level": 7,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 당직실 → EMR 차트실", "type": "야간 판독" },
+      "time_span": { "duration": "4시간", "in_story_time": "2026년 3월, 수술 전날 밤" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "갈고리 R1",
+        "authority_after": "갈고리 R1 (변화 없음)",
+        "authority_delta": "0",
+        "method": "CT 재판독 → 차트 노트 정식 기록 (EMR 시간 각인)",
+        "opponent": { "name": "강태준", "type": "지도교수", "weakness_exploited": "R1 차트 노트를 읽지 않는 관행" },
+        "medical_sector": "간담도 수술 전 판독",
+        "section_rotation": "ARC-01 — 차트가 먼저 맞는 R1"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "변이 간동맥 패턴 7회 경험 중 우측 접근 4회 대량 출혈", "accuracy": "상", "source": "전생 수술 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 차트 기록 없이 수술장에 들어갔다.", "changed_event": "EMR에 시간이 찍힌 정식 기록을 남긴다.", "ripple_effect": "적중 시 기록이 증거가 된다." },
+        "regression_hint": { "slip_up": "없음", "suspicion_from": "없음" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "말로 하면 묵살당한다. 기록으로 남기면 시간이 증명한다."
+      }
+    },
+    {
+      "block_id": "Block 3",
+      "block_no": 3,
+      "title": "출혈",
+      "content": {
+        "context": "수술 당일. 수술장 3번. 강태준 교수 집도, 서동혁은 2nd assist. 갈고리를 잡고 시야를 확보하는 자리. 수술은 강 교수의 계획대로 우측 접근으로 시작된다. 박리가 진행되고, 간실질이 분리되고, 혈관이 드러나기 시작한다. 서동혁의 시야에서 박리면 아래로 변이 간동맥의 윤곽이 보인다. 차트에 적은 그 혈관이다.",
+        "event_villain": "강 교수의 전기소작기가 박리면을 지나는 순간, 변이 간동맥 분지가 손상된다. 출혈이 시작된다. 수술장에 '석션'이라는 외침이 울리고, 서동혁의 손에 석션이 들린다. 출혈량이 빠르게 늘어난다. 강 교수의 손이 0.5초 멈춘다 — 30년 경력의 교수도 예상치 못한 변이 혈관이다.",
+        "solution": "서동혁은 석션으로 시야를 확보하면서 한 줄을 말한다. '좌측으로 돌리면 박리 가능합니다.' 장광설이 아니다. 위치와 방향만. 강 교수는 반사적으로 기구를 좌측으로 전환한다. 변이 간동맥의 주행을 피해 박리가 진행되고, 출혈이 통제된다. 수술이 재개된다. 서동혁은 다시 갈고리를 잡는다.",
+        "reward": "환자는 안전하다. 수술은 끝났다. 강태준 교수는 수술장을 나가며 서동혁을 한 번 쳐다본다. 말은 없다. 수술 기록에는 '수술 중 변이 혈관 출혈 발생, 접근법 전환으로 통제'라고만 적힌다. 서동혁의 이름은 기록에 없다. 하지만 수술장에 있던 간호사, 마취과 전공의, 1st assist 전부가 들었다 — R1이 한 줄을 말했고, 교수가 따랐다."
+      },
+      "stakes": "출혈이 통제되지 않으면 환자가 위험하고, 서동혁이 아무 말도 하지 않으면 1회차와 똑같이 흘러간다. 한 줄을 말하면 위계 위반이지만, 말하지 않으면 환자가 위험하다. 의학적 명분이 있는 개입.",
+      "power_shift": {
+        "protagonist": "수술장에서 한 줄을 말했다. 교수가 따랐다. 아직 공식 기록에는 없지만, 수술장에 있던 모든 사람이 목격했다.",
+        "antagonist": "강태준은 수술 중 R1의 코멘트로 접근법을 전환했다. 수술 기록에는 적지 않았지만, 스스로 안다."
+      },
+      "relationship_delta": [
+        { "target": "강태준", "before": "차트 노트를 읽지 않은 교수", "after": "수술장에서 R1의 한 줄을 반사적으로 따른 교수 — 아직 인식하지 않으려 한다" },
+        { "target": "박세진", "before": "서동혁의 무모함에 놀란 동기", "after": "수술장에서 R1이 교수를 멈추는 장면을 목격한 동기" }
+      ],
+      "foreshadow": [],
+      "callback": [
+        { "id": "FS-01", "type": "setup", "description": "차트 기록이 맞았다는 것이 수술장에서 물리적으로 증명됐다. 하지만 아직 공식 석상에서 확인되지 않았다." }
+      ],
+      "emotional_beat": { "type": "controlled_explosion", "intensity": 9 },
+      "tension_level": 9,
+      "pov_character": "서동혁",
+      "location": { "place": "수술장 3번", "type": "수술 현장" },
+      "time_span": { "duration": "5시간", "in_story_time": "2026년 3월, 수술 당일" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "갈고리 R1",
+        "authority_after": "수술장에서 한 줄을 말한 R1 (비공식)",
+        "authority_delta": "+0.5 (목격자만 안다)",
+        "method": "출혈 발생 시 준비된 대안 한 줄 코멘트 → 교수가 반사적으로 따름",
+        "opponent": { "name": "강태준", "type": "지도교수", "weakness_exploited": "변이 혈관 미인지" },
+        "medical_sector": "간담도 수술 집도",
+        "section_rotation": "ARC-01 — 차트가 먼저 맞는 R1"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "좌측 전환 시 박리면이 변이 혈관을 회피하는 경로", "accuracy": "상", "source": "전생 수술 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 아무 말도 하지 않았고 강 교수가 혼자 수습했다.", "changed_event": "한 줄 코멘트로 접근법 전환을 유도했다.", "ripple_effect": "수술장의 모든 사람이 R1이 교수를 멈추는 장면을 목격했다." },
+        "regression_hint": { "slip_up": "R1이 '좌측으로 돌리면 박리 가능합니다'를 0.5초 만에 말한 것. 출혈 상황에서 이 속도는 이상하다.", "suspicion_from": "1st assist (미약)" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "수술장에서는 한 줄만. 설명은 차트가 한다."
+      }
+    },
+    {
+      "block_id": "Block 4",
+      "block_no": 4,
+      "title": "R1 주제에",
+      "content": {
+        "context": "수술 다음 날. 외과 의국. 강태준 교수가 치프 한정우를 통해 서동혁을 호출한다. 수술장에서 R1이 지시 없이 발언한 것이 문제다. 수술은 성공했지만, 강 교수의 얼굴에는 감사가 아니라 불쾌함이 있다.",
+        "event_villain": "강태준은 논리적이다. '레지던트가 수술 중 집도의의 판단을 사전 승인 없이 코멘트하는 것은 수련 체계의 위계를 무너뜨린다. 결과가 좋았으니 이번은 넘어가지만, 다음에 이런 일이 있으면 수련 평가에 반영하겠다.' 치프 한정우도 동조한다. '동혁아, 네 의도는 이해하는데, 이건 순서가 있어.' 서동혁이 말했던 한 줄은 위계 위반으로 정리되고 있다.",
+        "solution": "서동혁은 반박하지 않는다. '알겠습니다, 교수님.' 감정을 소비하지 않는다. 자기비하도 하지 않는다. 내가 한 일이 옳았다는 것은 차트가 안다. 차트 기록은 삭제되지 않는다. 누군가 보게 될 때까지 기다리면 된다.",
+        "reward": "이 블록에서 서동혁은 아무것도 얻지 않는다. 오히려 수련 평가 위협이라는 피해를 받는다. 하지만 서동혁은 리듬을 잃지 않는다. 차트 기록이 있다. 적중한 사실이 있다. 누군가 그 기록을 보는 순간이 보상이다."
+      },
+      "stakes": "강태준이 이 사건을 수련 평가에 반영하면 서동혁의 R1 수련 자체가 위험해진다. 서동혁은 싸우지 않고 기록을 남긴 채 물러난다. 이것은 비굴함이 아니라 전략적 후퇴다 — 기록은 시간 위에 있다.",
+      "power_shift": {
+        "protagonist": "위계 위반으로 수련 평가 위협. 권한 후퇴.",
+        "antagonist": "강태준은 R1을 다시 제자리로 돌려놓았다고 생각한다."
+      },
+      "relationship_delta": [
+        { "target": "강태준", "before": "수술장에서 R1의 한 줄을 반사적으로 따른 교수", "after": "R1의 발언을 위계 위반으로 정리하고 수련 평가를 거론한 교수" },
+        { "target": "한정우", "before": "묵살당한 R1에게 눈짓한 치프", "after": "'순서가 있어'라고 동조한 치프 — 위계 수호 강화" }
+      ],
+      "foreshadow": [],
+      "callback": [],
+      "emotional_beat": { "type": "restrained_patience", "intensity": 7 },
+      "tension_level": 6,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 의국", "type": "수련 공간" },
+      "time_span": { "duration": "30분", "in_story_time": "2026년 3월, 수술 다음 날" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "수술장에서 한 줄을 말한 R1 (비공식)",
+        "authority_after": "위계 위반으로 경고받은 R1 (후퇴)",
+        "authority_delta": "-0.5",
+        "method": "반박하지 않고 수용. 차트 기록은 유지.",
+        "opponent": { "name": "강태준", "type": "지도교수", "weakness_exploited": "없음 — 이번 블록은 강태준이 이긴다" },
+        "medical_sector": "수련 체계 위계",
+        "section_rotation": "ARC-01 — 차트가 먼저 맞는 R1"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "전생에서도 병원 정치에 밀렸다. 감정으로 싸우면 진다는 것을 안다.", "accuracy": "상", "source": "전생 경험" },
+        "butterfly_effect": { "original_event": "1회차에서도 R1 시절 교수에게 밀렸다.", "changed_event": "이번에는 기록을 남기고 물러난다.", "ripple_effect": "기록이 있으니 다음 기회가 온다." },
+        "regression_hint": { "slip_up": "없음 — 오히려 28세답지 않은 차분함", "suspicion_from": "한정우 (미약 — '저 R1은 좀 다르다')" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "감정으로 싸우면 진다. 기록으로 남기면 시간이 이긴다."
+      }
+    },
+    {
+      "block_id": "Block 5",
+      "block_no": 5,
+      "title": "차트 날짜",
+      "content": {
+        "context": "주간 외과 컨퍼런스. 지난주 수술 케이스 리뷰. 강태준 교수의 간담도 수술이 안건에 올라 있다. '수술 중 변이 혈관 출혈 → 접근법 전환으로 통제' — 수술 기록에 적힌 그대로다. 강 교수는 수술 중 변수 대응으로 정리하려 한다.",
+        "event_villain": "케이스 리뷰가 순조롭게 진행되려는 순간, 외과 과장 조영채가 EMR 차트를 넘기다가 멈춘다. R1 서동혁의 차트 노트가 있다. 기록 시간: 수술 18시간 전. 내용: '우측 접근 시 변이 간동맥 손상 우려, 좌측 접근 제안.' 조영채 과장이 화면을 돌린다. '수술 전 차트에 이게 적혀 있었어?'",
+        "solution": "회의실이 조용해진다. 강태준 교수는 차트 노트의 존재를 몰랐다. R1의 차트 노트를 수술 전에 확인하는 교수는 없었으니까. 서동혁은 아무 말도 하지 않는다. 차트가 말해 주고 있으니까. 조영채 과장이 다시 묻는다. '이 소견은 어떤 근거로?' 서동혁이 대답한다. '3D CT 재구성에서 변이 간동맥 주행이 우측 박리면을 횡단하는 것이 보여서 기록했습니다.' 한 줄. 그 이상은 없다.",
+        "reward": "회의 후 복도에서 조영채 과장의 시선이 달라져 있다. 아직 말은 없다. 하지만 '네가 뭘 알아'에서 '이 R1의 차트 기록이 맞았다'로 프레임이 전환된 순간이다. 첫 평가 수정. 아직 권한은 없다. 하지만 R1의 차트 노트가 처음으로 누군가에게 읽혔다."
+      },
+      "stakes": "이 컨퍼런스에서 차트 기록이 확인되지 않으면 서동혁의 판독은 영원히 '운이 좋았겠지'로 덮인다. 조영채 과장이 EMR을 넘긴 것은 우연이지만, 기록이 있었기 때문에 우연이 증거가 되었다.",
+      "power_shift": {
+        "protagonist": "차트 기록이 공식 석상에서 확인됐다. '갈고리 R1'에서 '차트 기록이 맞는 R1'로 인식 전환 시작.",
+        "antagonist": "강태준은 차트 노트의 존재를 몰랐다는 사실이 드러났다. R1의 기록을 무시한 것이 아니라 읽지 않은 것이었다는 점이 더 문제적."
+      },
+      "relationship_delta": [
+        { "target": "조영채", "before": "외과 과장 (서동혁을 인지하지 않음)", "after": "R1의 차트 기록이 맞았다는 것을 확인한 과장 — 관심의 시작" },
+        { "target": "강태준", "before": "R1의 발언을 위계 위반으로 정리한 교수", "after": "R1의 사전 기록을 몰랐다는 사실이 컨퍼런스에서 드러난 교수" }
+      ],
+      "foreshadow": [],
+      "callback": [
+        { "id": "FS-01", "type": "payoff", "description": "Block 1-2에서 남긴 차트 기록이 컨퍼런스에서 공개 확인됐다. 기록 시간 18시간 전이 결정적 증거." }
+      ],
+      "emotional_beat": { "type": "quiet_vindication", "intensity": 8 },
+      "tension_level": 8,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 컨퍼런스룸", "type": "공식 회의" },
+      "time_span": { "duration": "1시간", "in_story_time": "2026년 3월, 수술 후 1주" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "위계 위반으로 경고받은 R1",
+        "authority_after": "차트 기록이 맞는 R1 (첫 평가 수정)",
+        "authority_delta": "+2",
+        "method": "컨퍼런스에서 EMR 차트 노트 공개 확인 → 평가 전환",
+        "opponent": { "name": "강태준", "type": "지도교수", "weakness_exploited": "R1 차트 노트를 읽지 않은 관행이 공개 석상에서 드러남" },
+        "medical_sector": "외과 컨퍼런스 케이스 리뷰",
+        "section_rotation": "ARC-01 — 차트가 먼저 맞는 R1"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "없음 — 이 블록은 기록 자체가 증명한다", "accuracy": "해당 없음", "source": "차트 기록" },
+        "butterfly_effect": { "original_event": "1회차에서는 기록이 없어서 컨퍼런스에서 아무것도 확인되지 않았다.", "changed_event": "기록이 있으니 컨퍼런스에서 확인이 가능했다.", "ripple_effect": "조영채 과장의 관심이 시작된다." },
+        "regression_hint": { "slip_up": "없음", "suspicion_from": "없음" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "기록이 말하게 놔둔다. 본인은 한 줄만."
+      }
+    },
+    {
+      "block_id": "Block 6",
+      "block_no": 6,
+      "title": "과장의 계산",
+      "content": {
+        "context": "컨퍼런스 이후 며칠. 조영채 과장의 진료실. 과장의 책상 위에 다음 주 수술 리스트가 있다. 고난도 간엽절제. 환자의 CT가 모니터에 떠 있다. 조영채는 이 환자의 혈관 해부학이 까다롭다는 것을 알고 있다.",
+        "event_villain": "조영채 과장은 감동한 사람이 아니다. 지난주 컨퍼런스에서 R1의 차트 기록이 맞았다는 것을 확인했다. 한 번은 우연일 수 있다. 하지만 조영채는 자기 환자의 수술을 앞두고 계산을 한다. 이 R1의 판독이 진짜라면, 자기 수술에서도 합병증 패턴을 먼저 잡을 수 있다. 자기 환자 생존율이 올라간다. 자기 수술 실적이 올라간다.",
+        "solution": "조영채는 감화되는 것이 아니다. 손익을 계산한다. '이 R1의 판독이 맞으면 내 환자가 살고, 내 실적이 올라간다. 이 R1의 판독이 틀리면 차트 노트 하나 무시하면 된다. 손해가 없다.' 조영채는 서동혁에게 다음 주 수술 환자의 CT를 먼저 보라고 한다. 공식 지시가 아니라 비공식 요청. 하지만 과장이 R1에게 먼저 차트를 보라고 하는 것 자체가 전례 없는 일이다.",
+        "reward": "아직 공식 권한은 없다. 하지만 과장이 R1의 판독을 먼저 듣겠다는 의사를 비공식으로 표현했다. 이것은 '차트가 맞는 R1'에서 '과장이 먼저 차트를 보라고 하는 R1'로의 전환의 시작이다."
+      },
+      "stakes": "조영채 과장의 계산 전환이 이루어지지 않으면 서동혁의 판독은 우연 취급에서 벗어나지 못한다. 이 계산 전환이 이후 모든 권한 토큰의 기반이 된다.",
+      "power_shift": {
+        "protagonist": "과장의 비공식 요청을 받은 R1. 아직 공식 권한은 없지만 실질적 인정의 시작.",
+        "antagonist": "강태준은 이 비공식 요청을 아직 모른다."
+      },
+      "relationship_delta": [
+        { "target": "조영채", "before": "R1의 차트 기록이 맞았다는 것을 확인한 과장", "after": "계산 전환 — 자기 수술에 이 R1의 판독을 먼저 쓰겠다고 결정한 과장" }
+      ],
+      "foreshadow": [],
+      "callback": [],
+      "emotional_beat": { "type": "strategic_shift", "intensity": 5 },
+      "tension_level": 4,
+      "pov_character": "조영채 (관점 전환)",
+      "location": { "place": "외과 과장실", "type": "의사 결정 공간" },
+      "time_span": { "duration": "1시간", "in_story_time": "2026년 3월 말" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "차트 기록이 맞는 R1",
+        "authority_after": "과장이 먼저 차트를 보라고 하는 R1 (비공식)",
+        "authority_delta": "+1",
+        "method": "조력자(조영채)의 계산 전환 — 감화가 아니라 손익",
+        "opponent": { "name": "없음", "type": "없음", "weakness_exploited": "없음" },
+        "medical_sector": "과장 의사결정",
+        "section_rotation": "ARC-01 — 차트가 먼저 맞는 R1"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "없음 — 이 블록은 조영채의 계산이 핵심", "accuracy": "해당 없음", "source": "해당 없음" },
+        "butterfly_effect": { "original_event": "1회차에서는 조영채 과장과 접점이 거의 없었다.", "changed_event": "차트 기록 적중이 과장의 계산을 바꿨다.", "ripple_effect": "이후 직보선, 배정권, 발표권의 기반이 된다." },
+        "regression_hint": { "slip_up": "없음", "suspicion_from": "없음" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "조력자는 감화시키는 것이 아니라 계산을 바꾸는 것이다."
+      }
+    },
+    {
+      "block_id": "Block 7",
+      "block_no": 7,
+      "title": "직보선",
+      "content": {
+        "context": "조영채 과장이 서동혁을 과장실로 부른다. 다음 주 수술 환자의 CT 판독 결과를 듣기 위해서다. 서동혁은 판독 소견을 준비해 왔다.",
+        "event_villain": "조영채의 다음 주 환자는 간문부 담관암. 혈관 해부학이 복잡하고 교과서적 접근법이 여러 개 존재한다. 서동혁은 CT에서 문맥 분지의 변이와 담관의 주행 패턴을 읽고, 교과서에 없는 접근 경로를 제안한다. 조영채는 듣는다 — 28세 R1이 자기 앞에서 교수급 판독을 하고 있다.",
+        "solution": "서동혁의 판독은 간결하다. 변이 부위를 짚고, 위험 혈관을 표시하고, 접근 순서를 제안한다. 조영채는 끝까지 듣고 나서 한 줄을 말한다. '앞으로 내 환자 차트는 수술 전에 네가 먼저 봐. 소견이 있으면 나한테 직접 가져와.' 과장 직보선이 공식적으로 열린다.",
+        "reward": "과장 직보선. R1에게는 존재하지 않는 권한이 과장 재량으로 생겼다. 서동혁은 이제 강태준 교수를 거치지 않고 과장에게 직접 판독 소견을 올릴 수 있다. 권한 토큰 1개."
+      },
+      "stakes": "직보선이 열리면 서동혁은 강태준의 지도교수 통제를 우회할 수 있는 공식 경로를 가진다. 이것은 단순한 인정이 아니라 구조적 권한 변화.",
+      "power_shift": {
+        "protagonist": "과장 직보선 확보. 지도교수를 거치지 않고 과장에게 직접 갈 수 있는 경로.",
+        "antagonist": "강태준은 아직 이 직보선의 존재를 모른다. 알게 되면 위계 문제를 다시 제기할 가능성."
+      },
+      "relationship_delta": [
+        { "target": "조영채", "before": "계산 전환 후 비공식 요청을 한 과장", "after": "공식 직보선을 부여한 과장 — '내 환자 차트는 네가 먼저 봐'" }
+      ],
+      "foreshadow": [],
+      "callback": [],
+      "emotional_beat": { "type": "earned_access", "intensity": 7 },
+      "tension_level": 5,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 과장실", "type": "권한 부여 공간" },
+      "time_span": { "duration": "40분", "in_story_time": "2026년 4월 초" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "과장이 먼저 차트를 보라고 하는 R1 (비공식)",
+        "authority_after": "과장 직보선 R1 (공식)",
+        "authority_delta": "+2",
+        "method": "판독 소견 브리핑 → 과장이 직보선을 부여",
+        "opponent": { "name": "없음", "type": "없음", "weakness_exploited": "없음" },
+        "medical_sector": "간문부 담관암 판독",
+        "section_rotation": "ARC-01 — 차트가 먼저 맞는 R1"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "간문부 담관암의 문맥 분지 변이 패턴 — 30,000건 중 유사 케이스 12건", "accuracy": "상", "source": "전생 수술 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 조영채 과장의 직보선이 없었다.", "changed_event": "차트 적중 → 계산 전환 → 직보선.", "ripple_effect": "강태준 통제를 우회하는 공식 경로 생성." },
+        "regression_hint": { "slip_up": "28세가 간문부 담관암의 교과서 밖 접근 경로를 제안한 것. 조영채는 '이상하다'보다 '쓸 만하다'가 먼저.", "suspicion_from": "조영채 (미약 — 의문보다 활용이 먼저)" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "권한은 감화로 얻는 것이 아니라 적중으로 벌어들이는 것이다."
+      }
+    },
+    {
+      "block_id": "Block 8",
+      "block_no": 8,
+      "title": "두 번째 차트",
+      "content": {
+        "context": "조영채 과장의 간문부 담관암 수술 전. 서동혁은 직보선을 통해 과장에게 두 번째 판독 소견을 올린다. 이번에는 단순 차트 노트가 아니라, 과장이 직접 요청한 판독이다.",
+        "event_villain": "서동혁의 판독은 교과서 접근법과 다르다. 문맥 우분지의 변이 때문에 표준 순서로 박리하면 문맥 손상 위험이 있다. 대안: 간정맥을 먼저 확보한 뒤 문맥 분지를 우회하는 순서. 조영채는 20년 경력이지만 이 접근 순서를 써 본 적이 없다.",
+        "solution": "서동혁은 소견을 3D CT 위에 접근 경로를 그려서 제출한다. 말이 아니라 그림과 데이터로. 조영채는 수술 전날 밤까지 이 경로를 검토한다. 최종적으로 서동혁의 접근 순서를 채택한다. R1의 수술 계획이 과장의 수술에 적용되는 첫 사례.",
+        "reward": "아직 공식 보상은 없다. 하지만 서동혁의 판독이 과장의 수술 계획을 실제로 바꿨다. 이 수술이 성공하면 '차트가 맞았다'가 '차트가 수술을 바꿨다'로 격상된다."
+      },
+      "stakes": "이 판독이 틀리면 조영채 과장의 환자가 위험해지고, 직보선도 끊긴다. 서동혁의 판독력에 대한 두 번째 시험.",
+      "power_shift": {
+        "protagonist": "R1의 판독이 과장의 수술 계획을 실제로 바꿨다.",
+        "antagonist": "강태준은 서동혁이 조영채 과장과 직접 소통하고 있다는 것을 감지하기 시작한다."
+      },
+      "relationship_delta": [
+        { "target": "조영채", "before": "직보선을 부여한 과장", "after": "서동혁의 판독으로 자기 수술 계획을 바꾼 과장 — 의존의 시작" },
+        { "target": "강태준", "before": "R1을 위계로 제어한 교수", "after": "R1과 과장의 직접 소통을 감지 — 경계의 시작" }
+      ],
+      "foreshadow": [],
+      "callback": [],
+      "emotional_beat": { "type": "rising_trust", "intensity": 6 },
+      "tension_level": 6,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 과장실 → CT 리뷰실", "type": "판독 공간" },
+      "time_span": { "duration": "2일", "in_story_time": "2026년 4월" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "과장 직보선 R1",
+        "authority_after": "과장의 수술 계획을 바꾼 R1",
+        "authority_delta": "+1",
+        "method": "3D CT 기반 대안 접근 경로 제안 → 과장이 채택",
+        "opponent": { "name": "없음", "type": "없음", "weakness_exploited": "없음" },
+        "medical_sector": "간문부 담관암 수술 계획",
+        "section_rotation": "ARC-01 — 차트가 먼저 맞는 R1"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "문맥 우분지 변이 시 간정맥 선행 확보 접근법 — 전생에서 5회 시행", "accuracy": "상", "source": "전생 수술 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 이 수술에 관여하지 않았다.", "changed_event": "직보선을 통해 수술 계획을 바꿨다.", "ripple_effect": "과장의 의존이 시작된다." },
+        "regression_hint": { "slip_up": "간정맥 선행 확보는 국내에서 거의 시도되지 않는 접근법. 28세가 어디서 배웠는지 의문.", "suspicion_from": "조영채 (관심 — 하지만 결과가 더 중요)" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "말이 아니라 그림과 데이터로."
+      }
+    },
+    {
+      "block_id": "Block 9",
+      "block_no": 9,
+      "title": "적중",
+      "content": {
+        "context": "조영채 과장의 간문부 담관암 수술 당일. 서동혁의 접근 순서가 적용된다. 간정맥 선행 확보 후 문맥 분지를 우회하는 박리. 이 순서를 처음 써보는 조영채 과장이 집도하고, 서동혁은 1st assist 위치에서 시야를 확보한다.",
+        "event_villain": "수술 중 표준 순서로 갔으면 문맥 분지 손상이 발생했을 지점을 지나간다. 서동혁의 접근 순서 덕분에 해당 구간이 안전하게 통과된다. 조영채 과장은 수술장에서 직접 체감한다 — 이 R1의 판독이 자기 수술을 살렸다.",
+        "solution": "수술이 성공적으로 끝난다. 출혈량 최소, 합병증 없음. 조영채 과장은 수술 후 서동혁에게 두 가지를 말한다. '앞으로 까다로운 케이스가 들어오면 네가 먼저 차트를 봐.' 그리고 '다음 주 컨퍼런스에서 이 케이스 발표해봐.' 고난도 케이스 사전 배정과 컨퍼런스 발표권. R1에게 없던 권한 2개가 동시에 열린다.",
+        "reward": "고난도 케이스 사전 배정 + 컨퍼런스 발표권. 직보선에 이어 권한 토큰 2개 추가. 서동혁은 이제 까다로운 환자가 들어오면 가장 먼저 차트를 보는 R1이다. 그리고 컨퍼런스에서 자기 이름으로 발표할 수 있는 R1이다."
+      },
+      "stakes": "두 번째 적중이 실패하면 첫 번째는 운이었다는 평가로 돌아간다. 성공하면 '반복 적중'이 되고, 직보선 이상의 권한이 열린다.",
+      "power_shift": {
+        "protagonist": "과장의 수술에서 판독이 두 번째로 적중. 반복 적중이 증명됨. 케이스 배정 + 발표권 획득.",
+        "antagonist": "강태준은 서동혁이 과장의 수술에 깊이 관여하고 있다는 것을 확인. 위계 우회가 구조화되고 있다는 위기감."
+      },
+      "relationship_delta": [
+        { "target": "조영채", "before": "서동혁의 판독으로 수술 계획을 바꾼 과장", "after": "케이스 사전 배정 + 발표권을 부여한 과장 — 계산 전환 완료, 실질적 의존" }
+      ],
+      "foreshadow": [],
+      "callback": [],
+      "emotional_beat": { "type": "confirmed_value", "intensity": 8 },
+      "tension_level": 7,
+      "pov_character": "서동혁",
+      "location": { "place": "수술장 → 외과 과장실", "type": "수술 + 보상" },
+      "time_span": { "duration": "8시간", "in_story_time": "2026년 4월" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "과장의 수술 계획을 바꾼 R1",
+        "authority_after": "케이스 사전 배정 + 컨퍼런스 발표권을 가진 R1",
+        "authority_delta": "+3",
+        "method": "두 번째 판독 적중 → 반복 적중 증명 → 배정권 + 발표권 회수",
+        "opponent": { "name": "없음", "type": "없음", "weakness_exploited": "없음" },
+        "medical_sector": "간문부 담관암 수술",
+        "section_rotation": "ARC-01 — 차트가 먼저 맞는 R1"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "간정맥 선행 확보 접근법의 수술장 내 실행 순서", "accuracy": "상", "source": "전생 수술 경험" },
+        "butterfly_effect": { "original_event": "1회차에서는 조영채 과장의 수술에 관여하지 않았다.", "changed_event": "판독 적중 반복으로 배정권과 발표권을 얻었다.", "ripple_effect": "R1의 권한이 구조적으로 확장되기 시작한다." },
+        "regression_hint": { "slip_up": "간정맥 선행 확보를 1st assist 위치에서 완벽하게 보조한 것. 이 술기를 처음 한다고 보기 어려운 능숙함.", "suspicion_from": "수술 간호사 (미약 — '이 R1은 원래 이렇게 잘해?')" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "반복 적중이 운을 실력으로 바꾼다."
+      }
+    },
+    {
+      "block_id": "Block 10",
+      "block_no": 10,
+      "title": "1st Assist",
+      "content": {
+        "context": "4월 말. 외과 과장실. 조영채 과장은 다음 달 수술 스케줄을 짜고 있다. 고난도 간엽절제가 하나 잡혀 있다. 과장이 직접 집도할 수술. 1st assist를 누구로 할지 결정해야 한다.",
+        "event_villain": "통상적으로 과장의 1st assist는 펠로우나 시니어 레지던트가 맡는다. R1이 1st assist를 맡은 전례는 이 병원에 없다. 조영채는 서동혁의 이름을 1st assist 란에 적는다. 이것이 의국에 알려지면 파장이 크다.",
+        "solution": "서동혁이 R1 최초 1st assist로 지명된다. 조영채 과장은 이 결정을 의국 회의에서 발표한다. 근거: '이 레지던트의 수술 전 판독과 수술장 내 보조가 일관되게 수술 결과를 개선했다. 데이터가 있다.' 한정우 치프의 표정이 복잡해진다. 박세진 동기는 놀란다. 강태준 교수는 처음으로 이 R1을 경계의 대상으로 본다.",
+        "reward": "1st Assist 지명. R1에게 없던 자리. '갈고리만 잡는 R1'에서 '과장의 1st assist로 지명된 R1'로 평가가 완전히 뒤집힌다. ARC-01 종료 시점에서 서동혁이 확보한 권한: 과장 직보선, 고난도 케이스 사전 배정, 컨퍼런스 발표권, 1st assist 지명. 전부 R1에게 원래 존재하지 않는 것들이다. 전부 차트 판독 적중의 영수증이다."
+      },
+      "stakes": "1st assist 지명은 서동혁의 권한 상승이 비공식에서 공식으로 전환되는 순간이다. 이 지명이 의국에서 수용되면 서동혁의 위치가 구조적으로 바뀐다. 수용되지 않으면 조영채 과장의 판단력이 도마에 오른다.",
+      "power_shift": {
+        "protagonist": "R1 최초 1st assist. 과장 직보선 + 배정권 + 발표권 + 1st assist. ARC-01 목표 달성.",
+        "antagonist": "강태준은 이 R1을 더 이상 '갈고리 잡는 신입'으로 볼 수 없다. 경계의 시작. ARC-02에서 본격 반격."
+      },
+      "relationship_delta": [
+        { "target": "조영채", "before": "케이스 배정 + 발표권을 부여한 과장", "after": "R1 최초 1st assist로 공식 지명한 과장 — 자기 판단을 걸었다" },
+        { "target": "강태준", "before": "위계 우회를 감지하고 경계하기 시작한 교수", "after": "서동혁을 경계의 대상으로 인식 — ARC-02 반격 예고" },
+        { "target": "한정우", "before": "'순서가 있어'라고 동조한 치프", "after": "R1이 1st assist로 지명된 것에 복잡한 표정 — 위계 혼란" },
+        { "target": "박세진", "before": "수술장에서 R1이 교수를 멈추는 장면을 목격한 동기", "after": "동기가 1st assist로 지명된 것에 놀람 + 경외" }
+      ],
+      "foreshadow": [
+        { "id": "FS-02", "type": "seed", "description": "강태준이 서동혁을 경계의 대상으로 인식. ARC-02에서 지도교수 권한을 이용한 체계적 반격이 시작된다." }
+      ],
+      "callback": [
+        { "id": "FS-01", "type": "arc_close", "description": "Block 1의 '네가 뭘 알아, 기구 잡고 있어'에서 Block 10의 '과장의 1st assist'로. 차트 기록 한 줄에서 시작된 권한 상승이 ARC-01을 닫는다." }
+      ],
+      "emotional_beat": { "type": "arrival", "intensity": 9 },
+      "tension_level": 7,
+      "pov_character": "서동혁",
+      "location": { "place": "외과 의국 → 과장실", "type": "공식 발표" },
+      "time_span": { "duration": "1일", "in_story_time": "2026년 4월 말" },
+      "genre_ext": {
+        "type": "medical_authority",
+        "authority_before": "케이스 사전 배정 + 컨퍼런스 발표권을 가진 R1",
+        "authority_after": "과장의 1st Assist + 직보선 + 배정권 + 발표권",
+        "authority_delta": "+3 (ARC-01 총합: 0 → 12)",
+        "method": "조영채 과장이 데이터 근거로 의국 회의에서 공식 지명",
+        "opponent": { "name": "강태준", "type": "지도교수", "weakness_exploited": "서동혁의 실적을 부정할 데이터가 없다" },
+        "medical_sector": "1st Assist 인사",
+        "section_rotation": "ARC-01 — 차트가 먼저 맞는 R1 (ARC 종료)"
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "전생에서는 R1 시절 아무런 권한도 얻지 못했다.", "accuracy": "해당 없음", "source": "전생 대비" },
+        "butterfly_effect": { "original_event": "1회차 R1 시절에는 갈고리만 잡고 끝났다.", "changed_event": "차트 기록 → 적중 → 반복 적중 → 1st assist.", "ripple_effect": "ARC-02에서 M&M 회의록 등재와 강태준 반격이 동시에 시작된다." },
+        "regression_hint": { "slip_up": "없음 — 이 블록에서는 실적이 말한다", "suspicion_from": "강태준 (경계 — '이 R1은 어디서 이 감각을 가져온 거지')" },
+        "incarnation_type": "회귀자",
+        "execution_doctrine": "실력이 곧 권력이다. 기록이 곧 증거다. 적중이 곧 자리다."
+      }
+    }
+  ]
+}

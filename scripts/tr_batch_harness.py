@@ -21,6 +21,16 @@ from modules.core.stage0_handoff import canonicalize_treatment_payload
 from modules.narrative_router.harness_digest import load_harness_digest, render_harness_digest_lines
 
 BLOCK_REF_RE = re.compile(r"Block\s*(\d+)", re.IGNORECASE)
+META_REF_RE = re.compile(
+    r"(?<![A-Za-z])(?:"
+    r"B\d{1,3}(?:\s*[~→\-]\s*B?\d{1,3})*|"
+    r"Block\s+\d{1,3}|블록\s*\d{1,3}|"
+    r"ARC[-\s]?\d{1,3}|Arc\s+\d{1,3}|아크\s*\d{1,3}|"
+    r"Phase\s+\d{1,3}|페이즈\s*\d{1,3}|"
+    r"Stage\s+\d{1,3}|스테이지\s*\d{1,3}"
+    r")(?:에서의|에서|와의|과의|와|과|보다|의|으로|로|은|는|이|가|를|을|에|도|만)?(?![A-Za-z])",
+    re.IGNORECASE,
+)
 HANGUL_RE = re.compile(r"[가-힣]")
 LATIN_RE = re.compile(r"[A-Za-z]")
 TOKEN_RE = re.compile(r"[가-힣A-Za-z0-9]{2,}")
@@ -85,6 +95,22 @@ ENTITY_TOKEN_STOPWORDS = {
     "계약",
     "정산",
 }
+ALLOWED_META_PATH_PREFIXES = (
+    "block_id",
+    "arc_id",
+    "arc_no",
+    "phase_no",
+    "stage_no",
+    "foreshadow_targets",
+    "callback_sources",
+)
+LABEL_META_PATH_PREFIXES = (
+    "section_rotation",
+    "genre_ext.section_rotation",
+    "arc_section",
+    "phase",
+    "phase_label",
+)
 
 
 @dataclass
@@ -241,14 +267,188 @@ def normalize_solution_stakes_signature(block: dict[str, Any]) -> str:
     return text
 
 
+def normalize_text_signature(text: Any, block: dict[str, Any] | None = None) -> str:
+    raw = as_text(text)
+    if not raw:
+        return ""
+
+    value = BLOCK_REF_RE.sub("[BLOCK]", raw)
+    value = AMOUNT_RE.sub("[N]", value)
+    value = ORG_RE.sub("[ORG]", value)
+    if block is not None:
+        for token in iter_entity_tokens(block):
+            value = re.sub(re.escape(token), "[ENT]", value, flags=re.IGNORECASE)
+    value = re.sub(r"[A-Za-z]{2,}", "[ENG]", value)
+    value = re.sub(r"[가-힣]{2,5}", "[K]", value)
+    return re.sub(r"\s+", " ", value).strip().lower()
+
+
+def relation_target_signature(block: dict[str, Any]) -> tuple[str, ...]:
+    targets = {
+        as_text(relation.get("target"))
+        for relation in ensure_list(block.get("relationship_delta"))
+        if isinstance(relation, dict) and as_text(relation.get("target"))
+    }
+    return tuple(sorted(targets))
+
+
+def relation_before_signature(relation: dict[str, Any]) -> str:
+    return as_text(
+        relation.get("anchor_before")
+        or relation.get("continuity_anchor_before")
+        or relation.get("state_before")
+        or relation.get("before")
+    )
+
+
+def relation_after_signature(relation: dict[str, Any]) -> str:
+    return as_text(
+        relation.get("anchor_after")
+        or relation.get("continuity_anchor_after")
+        or relation.get("state_after")
+        or relation.get("after")
+    )
+
+
+def is_allowed_meta_path(path: str) -> bool:
+    for prefix in ALLOWED_META_PATH_PREFIXES:
+        if path == prefix or path.startswith(f"{prefix}[") or path.startswith(f"{prefix}."):
+            return True
+    return False
+
+
+def is_label_meta_path(path: str) -> bool:
+    for prefix in LABEL_META_PATH_PREFIXES:
+        if path == prefix or path.startswith(f"{prefix}[") or path.startswith(f"{prefix}.") or path.endswith(f".{prefix}"):
+            return True
+    return False
+
+
+def collect_meta_leaks(value: Any, *, path: str = "") -> list[tuple[str, str]]:
+    leaks: list[tuple[str, str]] = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            child_path = f"{path}.{key}" if path else key
+            leaks.extend(collect_meta_leaks(item, path=child_path))
+        return leaks
+    if isinstance(value, list):
+        for index, item in enumerate(value):
+            child_path = f"{path}[{index}]"
+            leaks.extend(collect_meta_leaks(item, path=child_path))
+        return leaks
+    if isinstance(value, str) and not is_allowed_meta_path(path) and META_REF_RE.search(value):
+        leaks.append((path, value.strip()))
+    return leaks
+
+
+def split_meta_leaks(leaks: list[tuple[str, str]]) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+    diegetic: list[tuple[str, str]] = []
+    label: list[tuple[str, str]] = []
+    for path, raw in leaks:
+        if is_label_meta_path(path):
+            label.append((path, raw))
+        else:
+            diegetic.append((path, raw))
+    return diegetic, label
+
+
+def extract_numeric_refs(value: Any) -> list[int]:
+    refs: list[int] = []
+    for item in ensure_list(value):
+        number = parse_block_no(item)
+        if number is not None and number not in refs:
+            refs.append(number)
+    return refs
+
+
+def extract_foreshadow_targets(block: dict[str, Any], seed: str = "") -> list[int]:
+    targets = extract_numeric_refs(block.get("foreshadow_targets"))
+    if targets:
+        return targets
+    return [int(match.group(1)) for match in BLOCK_REF_RE.finditer(seed)]
+
+
+def extract_callback_sources(block: dict[str, Any], text: str = "") -> list[int]:
+    sources = extract_numeric_refs(block.get("callback_sources"))
+    if sources:
+        return sources
+    return [int(match.group(1)) for match in BLOCK_REF_RE.finditer(text)]
+
+
+def compute_npc_continuity_mismatches(blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    state: dict[str, str] = {}
+    issues: list[dict[str, Any]] = []
+    for block in blocks:
+        block_no = parse_block_no(block.get("block_id")) or 0
+        for relation in ensure_list(block.get("relationship_delta")):
+            if not isinstance(relation, dict):
+                continue
+            target = as_text(relation.get("target"))
+            if not target:
+                continue
+            before_sig = relation_before_signature(relation)
+            after_sig = relation_after_signature(relation)
+            prev_sig = state.get(target, "")
+            if prev_sig and before_sig and before_sig != prev_sig:
+                issues.append(
+                    {
+                        "block_no": block_no,
+                        "target": target,
+                        "prev_after": prev_sig,
+                        "current_before": before_sig,
+                        "current_after": after_sig,
+                    }
+                )
+            if after_sig:
+                state[target] = after_sig
+    return issues
+
+
+def same_location_change_axes(prev_block: dict[str, Any], curr_block: dict[str, Any]) -> list[str]:
+    prev_place = as_text(get_nested(prev_block, "location.place"))
+    curr_place = as_text(get_nested(curr_block, "location.place"))
+    if not prev_place or prev_place != curr_place:
+        return []
+
+    changed: list[str] = []
+
+    if as_text(get_nested(prev_block, "genre_ext.deal_type")) != as_text(get_nested(curr_block, "genre_ext.deal_type")):
+        changed.append("deal_type")
+
+    prev_opp = (
+        as_text(get_nested(prev_block, "genre_ext.opponent.name")),
+        as_text(get_nested(prev_block, "genre_ext.opponent.weakness_exploited")),
+    )
+    curr_opp = (
+        as_text(get_nested(curr_block, "genre_ext.opponent.name")),
+        as_text(get_nested(curr_block, "genre_ext.opponent.weakness_exploited")),
+    )
+    if prev_opp != curr_opp:
+        changed.append("opponent/front")
+
+    if normalize_text_signature(get_nested(prev_block, "stakes"), prev_block) != normalize_text_signature(
+        get_nested(curr_block, "stakes"), curr_block
+    ):
+        changed.append("stakes")
+
+    if relation_target_signature(prev_block) != relation_target_signature(curr_block):
+        changed.append("evaluator_proxy")
+
+    if as_text(get_nested(prev_block, "location.type")) != as_text(get_nested(curr_block, "location.type")):
+        changed.append("sub_location")
+
+    return changed
+
+
 def count_unresolved_foreshadows(blocks: list[dict[str, Any]]) -> int:
     unresolved = 0
     for foreshadow_source in blocks:
+        plant_no = parse_block_no(foreshadow_source.get("block_id")) or 0
         for foreshadow in ensure_list(foreshadow_source.get("foreshadow")):
             text = as_text(foreshadow)
             if not text:
                 continue
-            targets = [int(match.group(1)) for match in BLOCK_REF_RE.finditer(text)]
+            targets = extract_foreshadow_targets(foreshadow_source, text)
             if not targets:
                 continue
             source_tokens = set(TOKEN_RE.findall(text.lower()))
@@ -257,7 +457,8 @@ def count_unresolved_foreshadows(blocks: list[dict[str, Any]]) -> int:
                     unresolved += 1
                     continue
                 callbacks = ensure_list(blocks[target - 1].get("callback"))
-                resolved = False
+                callback_sources = extract_callback_sources(blocks[target - 1])
+                resolved = plant_no in callback_sources
                 for callback in callbacks:
                     callback_tokens = set(TOKEN_RE.findall(as_text(callback).lower()))
                     if len(source_tokens & callback_tokens) >= 2:
@@ -318,6 +519,16 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             "critical_thin_blocks": [],
             "thin_blocks": [],
             "short_stakes_blocks": [],
+            "same_location_clone_blocks": [],
+            "same_location_clone_count": 0,
+            "diegetic_meta_ref_examples": [],
+            "diegetic_meta_ref_count": 0,
+            "label_meta_ref_examples": [],
+            "label_meta_ref_count": 0,
+            "diegetic_block_ref_examples": [],
+            "diegetic_block_ref_count": 0,
+            "npc_continuity_mismatch_examples": [],
+            "npc_continuity_mismatch_count": 0,
             "recognition_signal_blocks": 0,
             "max_recognition_gap_streak": 0,
             "late_blank_opponent_blocks": [],
@@ -333,9 +544,19 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
                 "solution_pattern_warnings": [],
                 "forbidden_pattern_reuse": [],
                 "structural_gate_failures": [],
-            },
+                "same_location_clone_blocks": [],
+                "diegetic_meta_ref_examples": [],
+                "label_meta_ref_examples": [],
+                "diegetic_block_ref_examples": [],
+                "npc_continuity_mismatch_examples": [],
+                },
         }
 
+    npc_continuity_mismatches = compute_npc_continuity_mismatches(blocks)
+    diegetic_meta_ref_examples: list[dict[str, Any]] = []
+    diegetic_meta_ref_count = 0
+    label_meta_ref_examples: list[dict[str, Any]] = []
+    label_meta_ref_count = 0
     opponent_names: list[str] = []
     weaknesses: list[str] = []
     deals: list[str] = []
@@ -356,8 +577,19 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
     is_regressor_treatment = False
     foreshadow_total = 0
     callback_total = 0
+    same_location_clone_blocks: list[dict[str, Any]] = []
+    prev_block_for_location: dict[str, Any] | None = None
 
     for block_no, block in enumerate(blocks, start=1):
+        meta_leaks = collect_meta_leaks(block)
+        diegetic_meta_leaks, label_meta_leaks = split_meta_leaks(meta_leaks)
+        diegetic_meta_ref_count += len(diegetic_meta_leaks)
+        label_meta_ref_count += len(label_meta_leaks)
+        for path, raw in diegetic_meta_leaks[: max(0, 10 - len(diegetic_meta_ref_examples))]:
+            diegetic_meta_ref_examples.append({"block_no": block_no, "path": path, "text": raw})
+        for path, raw in label_meta_leaks[: max(0, 10 - len(label_meta_ref_examples))]:
+            label_meta_ref_examples.append({"block_no": block_no, "path": path, "text": raw})
+
         genre = block.get("genre_ext", {}) if isinstance(block, dict) else {}
         content = block.get("content", {}) if isinstance(block, dict) else {}
         opponent = genre.get("opponent", {}) if isinstance(genre.get("opponent", {}), dict) else {}
@@ -398,6 +630,19 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         foreshadow_total += len([text for text in ensure_list(block.get("foreshadow")) if as_text(text)])
         callback_total += len([text for text in ensure_list(block.get("callback")) if as_text(text)])
 
+        if prev_block_for_location is not None:
+            changed_axes = same_location_change_axes(prev_block_for_location, block)
+            prev_place = as_text(get_nested(prev_block_for_location, "location.place"))
+            curr_place = as_text(get_nested(block, "location.place"))
+            if prev_place and prev_place == curr_place and len(changed_axes) < 2:
+                same_location_clone_blocks.append(
+                    {
+                        "block_no": block_no,
+                        "location": curr_place,
+                        "changed_axes": changed_axes,
+                    }
+                )
+
         if is_regressor:
             if has_recognition_signal(block):
                 recognition_signal_blocks += 1
@@ -405,6 +650,8 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             else:
                 recognition_gap_streak += 1
                 max_recognition_gap_streak = max(max_recognition_gap_streak, recognition_gap_streak)
+
+        prev_block_for_location = block
 
     opponent_counter = Counter(name for name in opponent_names if name and not is_blankish(name))
     weakness_counter = Counter(value for value in weaknesses if value and not is_blankish(value))
@@ -457,6 +704,9 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         "section_rotation_present": section_rotation_missing == 0,
         "late_blank_opponent_ok": len(late_blank_opponent_blocks) <= 1,
         "normalized_solution_stakes_repeat_ok": normalized_solution_stakes_repeat_max <= 3,
+        "diegetic_meta_ref_zero": diegetic_meta_ref_count == 0,
+        "label_meta_ref_zero": label_meta_ref_count == 0,
+        "diegetic_block_ref_zero": diegetic_meta_ref_count == 0,
     }
     if is_regressor_treatment:
         hard_gate_checks["regressor_recognition_count_ok"] = recognition_signal_blocks >= required_recognition_blocks
@@ -472,6 +722,14 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         pattern_warnings.append(
             f"top opponent {top_opponent_name} share is {round(top_opponent_repetition / len(blocks) * 100, 1)}%"
         )
+    if same_location_clone_blocks:
+        pattern_warnings.append(f"same-location under-differentiated reuse {len(same_location_clone_blocks)}회")
+    if diegetic_meta_ref_count:
+        pattern_warnings.append(f"diegetic meta leak {diegetic_meta_ref_count}건")
+    if label_meta_ref_count:
+        pattern_warnings.append(f"label meta leak {label_meta_ref_count}건")
+    if npc_continuity_mismatches:
+        pattern_warnings.append(f"npc continuity mismatch {len(npc_continuity_mismatches)}건")
     structural_gate_failures = [key for key, ok in hard_gate_checks.items() if not ok]
 
     return {
@@ -500,6 +758,16 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         "critical_thin_blocks": critical_thin_blocks,
         "thin_blocks": thin_blocks,
         "short_stakes_blocks": short_stakes_blocks,
+        "same_location_clone_blocks": same_location_clone_blocks,
+        "same_location_clone_count": len(same_location_clone_blocks),
+        "diegetic_meta_ref_examples": diegetic_meta_ref_examples,
+        "diegetic_meta_ref_count": diegetic_meta_ref_count,
+        "label_meta_ref_examples": label_meta_ref_examples,
+        "label_meta_ref_count": label_meta_ref_count,
+        "diegetic_block_ref_examples": diegetic_meta_ref_examples,
+        "diegetic_block_ref_count": diegetic_meta_ref_count,
+        "npc_continuity_mismatch_examples": npc_continuity_mismatches[:10],
+        "npc_continuity_mismatch_count": len(npc_continuity_mismatches),
         "recognition_signal_blocks": recognition_signal_blocks,
         "max_recognition_gap_streak": max_recognition_gap_streak,
         "late_blank_opponent_blocks": late_blank_opponent_blocks,
@@ -515,6 +783,11 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             "solution_pattern_warnings": pattern_warnings,
             "forbidden_pattern_reuse": forbidden_reuse,
             "structural_gate_failures": structural_gate_failures,
+            "same_location_clone_blocks": same_location_clone_blocks,
+            "diegetic_meta_ref_examples": diegetic_meta_ref_examples,
+            "label_meta_ref_examples": label_meta_ref_examples,
+            "diegetic_block_ref_examples": diegetic_meta_ref_examples,
+            "npc_continuity_mismatch_examples": npc_continuity_mismatches[:10],
         },
     }
 
@@ -677,8 +950,8 @@ def build_npc_state(blocks: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
                 continue
             state[target] = {
                 "last_block": block_no,
-                "before": as_text(relation.get("before")),
-                "after": as_text(relation.get("after")),
+                "before": relation_before_signature(relation),
+                "after": relation_after_signature(relation),
             }
     return state
 
@@ -691,9 +964,11 @@ def build_due_foreshadows(blocks: list[dict[str, Any]]) -> dict[int, list[dict[s
             seed = as_text(text)
             if not seed:
                 continue
-            for match in BLOCK_REF_RE.finditer(seed):
-                target = int(match.group(1))
+            for target in extract_foreshadow_targets(block, seed):
                 if target <= len(blocks):
+                    target_sources = extract_callback_sources(blocks[target - 1])
+                    if plant_no in target_sources:
+                        continue
                     target_callbacks = [as_text(item) for item in ensure_list(blocks[target - 1].get("callback"))]
                     if callback_matches(seed, target_callbacks):
                         continue
@@ -722,11 +997,15 @@ def build_open_foreshadow_ledger(blocks: list[dict[str, Any]]) -> list[dict[str,
             if not seed:
                 continue
 
-            targets = [int(match.group(1)) for match in BLOCK_REF_RE.finditer(seed)]
+            targets = extract_foreshadow_targets(block, seed)
             if targets:
                 status = "OPEN"
                 for target in targets:
                     if target <= len(blocks):
+                        target_sources = extract_callback_sources(blocks[target - 1])
+                        if plant_no in target_sources:
+                            status = "CLOSED"
+                            break
                         callbacks = [cb for no, cb in completed_callbacks if no == target]
                         flat = callbacks[0] if callbacks else []
                         if callback_matches(seed, flat):
@@ -850,10 +1129,18 @@ def prompt_json_skeleton(start: int, batch_size: int, protagonist: str) -> str:
             "antagonist": "적대자 위상 변화",
         },
         "relationship_delta": [
-            {"target": "NPC 이름", "before": "직전 after 복사", "after": "이번 변화"}
+            {
+                "target": "NPC 이름",
+                "anchor_before": "직전 상태 앵커",
+                "before": "직전 after 복사 또는 자연어 요약",
+                "anchor_after": "이번 상태 앵커",
+                "after": "이번 변화"
+            }
         ],
-        "foreshadow": ["향후 회수할 복선"],
-        "callback": ["이번 블록에서 회수한 복선"],
+        "foreshadow": ["향후 회수할 사건의 자연어 의미만 적기"],
+        "foreshadow_targets": [start + 2],
+        "callback": ["이번 블록에서 회수한 사건의 자연어 의미만 적기"],
+        "callback_sources": [max(1, start - 1)],
         "emotional_beat": {"type": "resolve", "intensity": 7},
         "tension_level": 8,
         "pov_character": protagonist or "주인공",
@@ -874,7 +1161,7 @@ def prompt_json_skeleton(start: int, batch_size: int, protagonist: str) -> str:
             "knowledge_used": "판단 근거",
             "risk_level": "중상",
             "business_sector": "섹터명",
-            "section_rotation": "대단원 내 역할",
+            "section_rotation": "원자재 첫 증명과 숏 준비",
             "global_partner": {"name": "파트너", "cadence": "비정형", "objective": "목적"},
             "success_pattern": "한국어 결과 패턴",
         },
@@ -930,6 +1217,19 @@ def render_pattern_feedback_lines(history_blocks: list[dict[str, Any]]) -> list[
         lines.append("### 금지 패턴 재사용")
         for item in forbidden:
             lines.append(f"- {item}")
+    same_location_clone_blocks = snap.get("same_location_clone_blocks", [])
+    if same_location_clone_blocks:
+        lines.append("### 연속 장소 기능 복제 경고")
+        for item in same_location_clone_blocks[:5]:
+            changed = ", ".join(item.get("changed_axes", [])) or "변화 축 0개"
+            lines.append(f"- Block {item.get('block_no')}: {item.get('location')} | 변경 축: {changed}")
+    npc_issues = snap.get("npc_continuity_mismatch_examples", [])
+    if npc_issues:
+        lines.append("### NPC 연속성 경고")
+        for item in npc_issues[:5]:
+            lines.append(
+                f"- Block {item.get('block_no')}: {item.get('target')} | prev={item.get('prev_after')} | before={item.get('current_before')}"
+            )
     gate_failures = snap.get("structural_gate_failures", [])
     if gate_failures:
         lines.append("### 구조 게이트 실패")
@@ -995,6 +1295,11 @@ def build_prompt(
         "## OPEN 복선 원장",
         foreshadow_table(completed),
         "",
+        "## NPC 연속성 규칙",
+        "- 반복 등장 NPC는 relationship_delta에 `anchor_before` / `anchor_after`를 우선 기입하라.",
+        "- `before` / `after` 자연어 문장은 바뀌어도 되지만, anchor는 직전 anchor_after를 잇는다.",
+        "- anchor를 안 쓰면 하네스는 `before` / `after` 문장 자체를 continuity truth로 본다.",
+        "",
         *digest_lines,
         *pattern_feedback_lines,
         "",
@@ -1012,9 +1317,13 @@ def build_prompt(
         "- 한국어 대신 영문 템플릿 사용 금지",
         "- `plan_01`, `type_1`, `_B01` 같은 코드형 값 금지",
         "- callback을 `직전 블록의 성과가 발판` 한 문장으로 때우는 것 금지",
+        "- `Block 3`, `B12`, `블록 7`, `ARC-01`, `Phase 1`, `Stage 4` 같은 메타 표기는 자연어 필드 전면 금지",
+        "- 복선/회수 타깃 블록은 `foreshadow_targets` / `callback_sources`에만 적고, `foreshadow` / `callback`에는 자연어 의미만 적을 것",
+        "- `section_rotation`에는 `ARC-01 - ...` 같은 번호 메타 금지. 자연어 라벨만 허용",
         "- deal_type 3블록 이내 재등장 금지",
         "- emotional_beat.type 2연속 동일 금지",
         "- location 15블록 이내 재등장 금지",
+        "- 같은 장소를 연속 쓸 때는 deal_type / opponent / stakes / 관계 타깃 / 세부 장소 중 2개 이상 바꿀 것",
         "- `capital_before != 직전 capital_after` 금지",
         "- `relationship_delta.before != 직전 after` 금지",
         "- leverage_used 동일 세트 3회 반복 금지",
@@ -1062,6 +1371,7 @@ def validate_candidate(
     all_locations = [as_text(get_nested(block, "location.place")) for block in history_blocks]
     all_deal_types = [as_text(get_nested(block, "genre_ext.deal_type")) for block in history_blocks]
     all_beats = [as_text(get_nested(block, "emotional_beat.type")) for block in history_blocks]
+    prev_block_for_location = history_blocks[-1] if history_blocks else None
     leverage_counter = Counter(
         tuple(sorted(as_text(item) for item in ensure_list(get_nested(block, "genre_ext.leverage_used")) if as_text(item)))
         for block in history_blocks
@@ -1170,30 +1480,38 @@ def validate_candidate(
             target = as_text(relation.get("target"))
             before_text = as_text(relation.get("before"))
             after_text = as_text(relation.get("after"))
+            before_sig = relation_before_signature(relation)
+            after_sig = relation_after_signature(relation)
             if target and target in npc_state:
                 expected_before = as_text(npc_state[target]["after"])
-                if before_text != expected_before:
+                if before_sig != expected_before:
                     fixed = False
                     if autofix:
-                        relation["before"] = expected_before
-                        before_text = expected_before
+                        if relation.get("anchor_before"):
+                            relation["anchor_before"] = expected_before
+                            before_sig = expected_before
+                        else:
+                            relation["before"] = expected_before
+                            before_text = expected_before
+                            before_sig = expected_before
                         fixed = True
-                    append_finding(findings, "P0", "REL-001", label, f"{target} before가 직전 after와 다르다.", fixed=fixed)
+                    append_finding(findings, "P0", "REL-001", label, f"{target} before/anchor_before가 직전 after/anchor_after와 다르다.", fixed=fixed)
             if target and before_text == after_text:
                 append_finding(findings, "P1", "REL-002", label, f"{target} 관계가 이번 블록에서 변하지 않았다.")
             if target:
                 npc_state[target] = {
                     "last_block": expected_no,
-                    "before": before_text,
-                    "after": after_text,
+                    "before": before_sig,
+                    "after": after_sig,
                 }
 
         due_items = due_foreshadows.get(expected_no, [])
         callbacks = [as_text(item) for item in ensure_list(block.get("callback")) if as_text(item)]
         if due_items and not callbacks:
             append_finding(findings, "P1", "FS-001", label, "이번 블록에서 회수해야 할 복선이 있는데 callback이 비어 있다.")
+        callback_sources = extract_callback_sources(block)
         for item in due_items:
-            if callbacks and not callback_matches(item["text"], callbacks):
+            if callbacks and item["plant_block"] not in callback_sources and not callback_matches(item["text"], callbacks):
                 append_finding(findings, "P1", "FS-002", label, f"지정 회수 복선을 callback에서 찾지 못했다: {truncate(item['text'], 50)}")
 
         for pattern in BANNED_TEMPLATE_RES:
@@ -1207,6 +1525,25 @@ def validate_candidate(
         for item in callbacks:
             if GENERIC_CALLBACK_RE.search(item):
                 append_finding(findings, "P1", "CALL-001", label, "callback이 기계식 carry-over 패턴이다.")
+
+        meta_leaks = collect_meta_leaks(block)
+        diegetic_meta_leaks, label_meta_leaks = split_meta_leaks(meta_leaks)
+        for path, raw in diegetic_meta_leaks[:5]:
+            append_finding(
+                findings,
+                "P0",
+                "META-001",
+                label,
+                f"{path}에 Block/ARC/Phase/Stage 메타 참조가 새었다. 자연어 필드에서는 금지: {truncate(raw, 60)}",
+            )
+        for path, raw in label_meta_leaks[:5]:
+            append_finding(
+                findings,
+                "P0",
+                "META-002",
+                label,
+                f"{path} 라벨에 번호 메타가 들어 있다. section_rotation/arc_section/phase는 자연어 라벨만 허용: {truncate(raw, 60)}",
+            )
 
         language_values: list[tuple[str, str]] = []
         for path in LANGUAGE_PATHS:
@@ -1242,8 +1579,20 @@ def validate_candidate(
         location = as_text(get_nested(block, "location.place"))
         if location and location in all_locations[-14:]:
             append_finding(findings, "P2", "LOC-001", label, f"location이 최근 15블록 이내에 재등장했다: {location}")
+        if prev_block_for_location is not None:
+            changed_axes = same_location_change_axes(prev_block_for_location, block)
+            prev_place = as_text(get_nested(prev_block_for_location, "location.place"))
+            if location and prev_place == location and len(changed_axes) < 2:
+                append_finding(
+                    findings,
+                    "P2",
+                    "LOC-002",
+                    label,
+                    f"같은 장소 연속 사용인데 차별화 축이 부족하다: {location} / 변경 축={changed_axes or ['없음']}",
+                )
         if location:
             all_locations.append(location)
+        prev_block_for_location = block
 
         leverage = tuple(
             sorted(as_text(item) for item in ensure_list(get_nested(block, "genre_ext.leverage_used")) if as_text(item))

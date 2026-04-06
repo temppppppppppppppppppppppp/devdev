@@ -39,6 +39,10 @@
     - 위반 시 같은 블록만 재생성
 10. `70블록 draft`가 완성되면 바로 BI를 상상하지 말고, 먼저 감리와 출고 게이트를 통과시킨다.
 11. 감리 통과 뒤에는 `bi-production-harness-v1.md`로 인계한다.
+12. `Block / ARC / Phase / Stage` 번호 메타는 자연어 필드에서 전면 금지한다.
+    - `title`, `context`, `event_villain`, `solution`, `reward`, `stakes`, `power_shift`, `foreshadow`, `callback`, 기타 자연어/라벨 필드에 새면 즉시 FAIL이다.
+    - 구조 타깃은 `foreshadow_targets` / `callback_sources` 같은 전용 배열 필드에만 적는다.
+    - `section_rotation`, `arc_section`, `phase`는 번호 없는 자연어 라벨만 허용한다.
 
 금지:
 
@@ -84,10 +88,16 @@
 | `business_growth_profile` | 운영권 인수, 공급망 묶음 장악, 정산 표준화 | 운영 장악물인데 모든 해결을 주가 차익으로만 처리 | 장례식장 뒤문 계약이 그룹 표준으로 커지는 블록 | `business_lines`, `company_state`, `portfolio_history` |
 | `investment_market_profile` | 지분 매입, CB, 헤지, 구조화 거래 | 차트와 수익률만 있고 기업/리스크 근거가 없음 | 유동성 위기 기업 지분을 구조화해 들어가는 블록 | `portfolio_history`, `risk_rule`, `HistoricalEvents` |
 | `entertainment_media_profile` | 캐스팅, 편성 슬롯 선점, 저작권 묶음 확보 | 연예 감정선만 있고 IP/유통/팬덤 축이 없음 | 무명 연습생 계약을 글로벌 유통 판으로 키우는 블록 | `business_lines`, `HistoricalEvents`, `WorldState` |
-| `medical_professional_profile` | 집도권 확보, 프로토콜 개정, 연구/증례 선점 | 수술 장면만 있고 병원 권한/신뢰도 변화가 없음 | 레지던트가 집도권과 케이스를 동시에 따내는 블록 | `company_state`, `HistoricalEvents`, `Seeds` |
+| `medical_professional_profile` | 집도권 확보, 프로토콜 개정, 연구/증례 선점 | 수술 장면만 있고 병원 권한/신뢰도 변화가 없음. 희생/과로/감사 미담만 있고 권한 영수증이 없음 | 레지던트가 집도권과 케이스를 동시에 따내는 블록 | `company_state`, `HistoricalEvents`, `Seeds` |
 | `office_power_profile` | KPI 재설계, 결재선 장악, 인사권 회수 | 순수 직장 드라마인데 측정 가능한 권력축이 없음 | 예산 승인권이 넘어오며 팀 통제권이 바뀌는 블록 | `company_state`, `business_lines`, `HistoricalEvents` |
 | `tech_startup_profile` | 제품 출시, 라이선스, 특허/데이터 선점 | 기술 설명만 길고 고객/배포/수익 축이 없음 | 베타 제품을 계약 구조로 시장 표준에 꽂는 블록 | `business_lines`, `portfolio_history`, `WorldState` |
 | `urban_power_profile` | 레이드 배치, 독점권 확보, 팀 재편 | 전투 장면만 있고 길드/권리/위상 변화가 없음 | 길드 하위팀이 던전 독점권을 따내는 블록 | `company_state`, `HistoricalEvents`, `WorldState` |
+
+의사물 생산 추가 규칙:
+
+- 겉으로 희생처럼 보이는 장면이 나와도, 블록 안에서 `기록/프로토콜/판단 근거`가 먼저 보여야 한다.
+- 그 희생의 결과는 `감동`이 아니라 `재평가`, `집도권`, `케이스 배정권`, `발표권`, `직보선`으로 회수되어야 한다.
+- `밤샘 수술 -> 모두 감동`만 남고 권한 변화가 없는 블록은 실패 블록으로 본다.
 
 ## 0E. 구현 드리프트 메모
 
@@ -589,15 +599,24 @@ Phase 0 완료 시 아래를 기준으로 정리한다.
     블록별 최소 2항목은 고유해야 한다.
 15. is_regressor 정합성: regression_type이 "빙의" 또는 "회귀"이면
     is_regressor=true 필수.
-16. 블록 번호 본문 노출 금지: TR 블록의 **모든 텍스트 필드**에 "B숫자", "Block 숫자", "블록 숫자" 패턴 금지.
-    대상: content.*, stakes, power_shift.*, relationship_delta[].before/after,
-    foreshadow[].event, callback[].event, genre_ext.*/regression_ext.* 내 텍스트 필드.
-    foreshadow/callback의 블록 참조는 ref 필드에만 기입한다.
+16. 메타 번호 본문 노출 금지: TR 블록의 **모든 자연어 텍스트 필드**에 `B숫자`, `Block 숫자`, `블록 숫자`, `ARC-숫자`, `Phase 숫자`, `Stage 숫자` 패턴 금지.
+    대상: content.*, stakes, power_shift.*, relationship_delta[].before/after, foreshadow, callback, genre_ext.*/regression_ext.* 내 텍스트 필드.
+    복선/회수의 구조 타깃은 `foreshadow_targets` / `callback_sources`에만 기입한다.
+    `section_rotation`/`arc_section`/`phase`는 번호 없는 자연어 라벨만 허용한다.
     이유: TR의 모든 텍스트가 downstream 원고 생성에 흐르므로 메타 번호의 작중 오염을 방지.
 17. 복선 실제 회수 의무: foreshadow에서 ref로 지목한 블록의 callback에 명시적으로 회수 문장 포함 필수.
 18. 페이즈 내 NPC 변화 의무: 동일 NPC가 5블록 이상 등장하면,
     before≠after인 블록이 최소 3개 있어야 한다.
 19. 장소 순환 주기 최소 15블록: 동일 장소가 15블록 이내에 재등장하면 위반.
+19A. 연속 장소 기능 복제 금지:
+    - 동일 장소 2연속 자체는 허용한다.
+    - 단, `동일 장소 + 동일 장면 기능 + 동일 평가자/목격자 구도` 2연속이면 위반이다.
+    - 동일 장소를 연속 사용할 때는 다음 중 최소 2개 이상이 달라져야 한다.
+      1) 장면 기능
+      2) 주도권 보유자
+      3) stakes / 즉시 목표
+      4) 평가자/목격자 구도
+      5) 세부 구역 / 시간대
 20. 파트너 축 분화 의무:
     - 투자/글로벌 서브모드면 70블록에 최소 3개 해외 파트너 등장.
     - 기업 운영/재벌/회사원형이면 해외 파트너 강제 금지.
@@ -679,6 +698,8 @@ Phase 0 완료 시 아래를 기준으로 정리한다.
    - opponent 또는 weakness: [직전] → [이번]
    - location: [직전] → [이번]
    - duration: [직전] → [이번]
+   - 만약 location이 직전과 같다면, 장면 기능/주도권/stakes/평가자/세부 구역 중
+     무엇이 달라졌는지 2개 이상 추가로 적어라.
    5개 중 3개 이상이 직전과 동일하면 해당 블록을 다시 구상하라.
 4. **자본 계산 과정**: capital_before = [직전 capital_after] = [숫자].
    변동 근거 = [서사적 근거]. capital_after = [계산식].
@@ -720,6 +741,8 @@ Phase 0 완료 시 아래를 기준으로 정리한다.
 3. deal_type 열에 3블록 이내 동일 값? → 수정
 4. opponent 열이 전부 동일? → 최소 2개 분화
 5. location 열에 3블록 이내 동일 값? → 수정
+5A. location이 직전과 같을 때 장면 기능/주도권/평가자/stakes/세부 구역 중
+    2개 이상 실제로 바뀌었는가? 아니면 수정
 6. duration 열이 전부 동일? → 최소 3종 분화
 7. 성장률 열에 3연속 ±1%p 이내? → 수정
 8. success 열이 전부 동일? → 최소 2개 "실패"/"부분성공"
@@ -934,8 +957,8 @@ Phase 2 자동 교정은 수치·연속성만 다룬다. 서사 필드는 Python
 |------|-----------|
 | `content.*` | 사건, 적대 행동, 해결, 보상은 서사 재작성 대상 |
 | `stakes` | 손실 규모와 긴장도는 문맥 의존적 |
-| `foreshadow` | 객체 배열 (ref+event). 장기 복선 구조 판단이 필요. event 텍스트에 블록번호 노출 금지 |
-| `callback` | 객체 배열 (ref+event). 구체 사건 회수 문장을 다시 써야 함. event 텍스트에 블록번호 노출 금지 |
+| `foreshadow` | 자연어 배열. 의미만 적고 번호 메타 금지. 구조 타깃은 `foreshadow_targets`로 분리 |
+| `callback` | 자연어 배열. 의미만 적고 번호 메타 금지. 구조 원본은 `callback_sources`로 분리 |
 | `deal_type` | 배치 차별화와 거래 구조 설계에 직접 영향 |
 | `location` | 순환 패턴 회피와 장면 설계가 함께 필요 |
 | `leverage_used` | 반복 여부만으로 대체 항목을 결정할 수 없음 |
@@ -1580,6 +1603,7 @@ Python 자동 검증(§5) + LLM 6개 검사 항목 × 70블록:
 - reward 한국어
 - duration 3종 이상
 - location 8곳 이상, 15블록 이내 재등장 0건
+- 동일 장소 연속 사용 시 기능/주도권/평가자/stakes 중 2개 이상 변화
 - 투자/글로벌형이면 global_partner 3곳 이상, 그 외는 국내 파트너/부서/계열사 3축 이상
 - 핵심 서술 평균 길이 400자 이상
 - foreshadow 평균 1.0 이상
@@ -1874,8 +1898,8 @@ python -X utf8 scripts/tr_batch_harness.py merge `
 | `emotional_beat.intensity` | 3블록 연속 동일 금지, 1~10 전구간 |
 | `opponent.name` | 70블록에 최소 3세력 |
 | NPC 수 | 전체 최소 8명 |
-| `foreshadow` | 객체 배열. ref=대상블록번호, event=서사적 서술(블록번호 노출 금지). 장기 복선 5개+ (10블록+ 지연) |
-| `callback` | 객체 배열. ref=원복선블록번호, event=서사적 회수 서술(블록번호 노출 금지). 구체적 사건 참조 (템플릿 금지) |
+| `foreshadow` | 자연어 배열. 장기 복선 5개+ 권장. 번호 메타는 금지하고, 대상 블록은 `foreshadow_targets`에 둔다 |
+| `callback` | 자연어 배열. 구체적 사건 회수 서술만 남기고, 원복선 블록은 `callback_sources`에 둔다 |
 | `deal_type` | 3블록 이내 재등장 금지, 10종+ |
 | `success_pattern` | 4종+ (실패/부분성공/피로스 포함), 동일 3회 금지 |
 | `leverage_used` | 동일 세트 3회 미만, 블록별 최소 2항목 고유 |

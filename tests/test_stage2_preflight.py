@@ -513,7 +513,11 @@ class TestPreflightArcAnalysis:
             current_vol_strategy={"strategy_doc": "단기 유가 변동을 활용한 포지션 정리"},
         )
 
-        assert result["tracking_slots"] == ["유가 급등을 이용한 자산 불리기", "PB 박성호와의 신뢰 회복"]
+        assert result["tracking_slots"] == [
+            "유가 급등을 이용한 자산 불리기",
+            "PB 박성호와의 신뢰 회복",
+            "소꿉친구와의 관계 복구가 필요하다",
+        ]
         assert result["mandatory_scene_engines"][0].startswith("EP4:")
 
     def test_resolve_work_retrieval_focus_uses_raw_block_metadata_when_mission_packet_missing(self, preflight):
@@ -1160,6 +1164,63 @@ class TestPreflightEnrichment:
             genre_for_tracker="wuxia",
         )
         preflight._log_four_phase_pass_summary.assert_called_once()
+
+    def test_finalize_four_phase_pass_preserves_existing_authoritative_packets(self, preflight):
+        tracker = MagicMock()
+        tracker.npc_registry = {}
+        tracker.resolved_plots = []
+        tracker.entity_destructions = []
+        tracker.protagonist_skills = set()
+        tracker.skill_acquisitions = []
+        tracker.npc_npc_relationships = {}
+        tracker.item_state_registry = {}
+        tracker.active_plots = []
+        tracker.npc_dialogue_profiles = {}
+        tracker.in_world_timeline = []
+        tracker.current_companions = []
+        tracker.pending_commitments = []
+        tracker.protagonist_emotion = {}
+        tracker.dungeon_clear_registry = {}
+        tracker.skill_cooldown_registry = {}
+        tracker.spell_repertoire = {}
+        tracker.financial_number_registry = {}
+        tracker.extract_npc_deaths_from_arc.return_value = []
+        tracker.extract_skill_acquisitions_from_arc.return_value = []
+        tracker.extract_npc_info_from_arc.return_value = []
+        tracker.check_suspended_plots.return_value = []
+        preflight.ctx.state_tracker = tracker
+        preflight.ctx.adversarial_self_play = None
+        preflight._run_auxiliary_state_tracker_extractors = MagicMock()
+        preflight._run_state_tracker_tail_tasks = MagicMock()
+        preflight._log_four_phase_pass_summary = MagicMock()
+
+        payload = preflight.runtime.finalize_four_phase_pass(
+            attempt=0,
+            global_arc_no=5,
+            director_feedback_for_fourphase="feedback",
+            refined_arc={
+                "tactical_doc": "PASS ARC",
+                "joint_docs": {"final_location": "llm-city", "world_joint": "llm-world"},
+                "status_shadow": {"expected_injuries": "llm-wound", "item_consumption": []},
+            },
+            pipeline_result={"retries": 1, "phases": {"generate": {"candidates_count": 2}}},
+            enriched_block={
+                "joint_docs": {"final_location": "block-city", "physical_inventory": ["ledger"], "world_joint": "stale"},
+                "status_shadow": {"expected_injuries": "stale-wound", "key_stat_change": "fallback-stat"},
+            },
+            genre_for_tracker="wuxia",
+        )
+
+        assert payload.refined_arc["joint_docs"] == {
+            "final_location": "llm-city",
+            "physical_inventory": ["ledger"],
+            "world_joint": "llm-world",
+        }
+        assert payload.refined_arc["status_shadow"] == {
+            "expected_injuries": "llm-wound",
+            "item_consumption": [],
+            "key_stat_change": "fallback-stat",
+        }
 
     def test_apply_four_phase_pass_state_tracker_updates_snapshots_and_dispatches_tail_tasks(self, preflight):
         from modules.core.stage2_preflight import Stage2FourPhaseTrackerPayload
@@ -2248,7 +2309,8 @@ class TestPreflightEnrichment:
         assert not preflight.ctx.memory.retrieve_multi_query_context.called
         assert not preflight.ctx.memory.retrieve_npc_context.called
         call_kwargs = preflight.ctx.agents["four_phase"].generate.call_args.kwargs
-        assert call_kwargs["vector_context"] == "legacy vector block"
+        assert call_kwargs["vector_context"].startswith("[작품 추적 슬롯 요약]")
+        assert "legacy vector block" in call_kwargs["vector_context"]
 
     @patch("modules.core.spinners.StageSpinner", MagicMock())
     def test_fact_ledger_context_prepended_to_fourphase_vector_context(self, preflight):

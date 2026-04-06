@@ -12,6 +12,7 @@ Scope: selection checklist for fresh pitch candidates under `material_ssot/20_pi
 - judge protagonist engine first, domain materials second
 - current active operator lane is `male protagonist only`
 - female-protagonist candidates are archived or research-only under the current policy, and default to `REJECT` for active selection
+- in `medical` or adjacent professional lanes, a surface-sacrificial move may still pass if it is justified by protocol, record, or decision ownership and is immediately paid back by authority change
 
 Verdict bands:
 
@@ -68,6 +69,7 @@ Verdict bands:
 - 주인공 활약 뒤에도 모두가 계속 우습게 본다
 - 위기가 너무 갑작스러워 준비와 읽기가 안 보인다
 - 손해가 손해로만 남고 다음 카드가 없다
+- 의사물/전문직물에서 희생처럼 보이는 장면이 권한 영수증 없이 감동만 남는다
 
 ## 5. Quick Verdict Template
 
