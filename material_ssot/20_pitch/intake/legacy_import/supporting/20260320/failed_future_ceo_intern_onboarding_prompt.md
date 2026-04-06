@@ -1,4 +1,4 @@
-# 망한 미래의 CEO가 인턴으로 빙의했다 온보딩 프롬프트
+﻿# 망한 미래의 CEO가 인턴으로 빙의했다 온보딩 프롬프트
 
 > 인코딩: **UTF-8 only (기본값, 예외 없음)**
 > 목적: 컨텍스트가 없는 새 세션에서도 이 작품의 `Phase 0 -> TR -> BI -> 감리`를 하네스 기준으로 자동 진행시키기 위한 시작 프롬프트 모음
@@ -41,8 +41,8 @@ work_id는 `failed_future_ceo_intern`으로 고정한다.
 
 산출물 경로는 아래처럼 고정한다.
 - Phase 0: `treatments\failed_future_ceo_intern_phase0_design.json`
-- TR draft: `treatments\failed_future_ceo_intern_tr_block_070_draft.json`
-- BI: `bible\0_bi_failed_future_ceo_intern.json`
+- TR draft: `treatments\05_failed_future_ceo_intern_tr_block_070_draft.json`
+- BI: `bible\05_bi_failed_future_ceo_intern.json`
 
 시작 순서는 아래와 같다.
 1. 하네스 문서와 기획 문서를 UTF-8로 읽고 요약 확인
@@ -84,7 +84,7 @@ work_id는 `failed_future_ceo_intern`으로 고정한다.
 - `treatments\failed_future_ceo_intern_phase0_design.json`
 
 위 문서를 SSOT로 삼아 TR 70블록을 자동 진행으로 끝까지 생산하라.
-출력은 `treatments\failed_future_ceo_intern_tr_block_070_draft.json`에 UTF-8로 저장하라.
+출력은 `treatments\05_failed_future_ceo_intern_tr_block_070_draft.json`에 UTF-8로 저장하라.
 컨텍스트 compaction이 발생해도 직전 SSOT를 다시 열고 자동 재개하라.
 TR 3-pass 감리까지 끝내고 멈춰라. BI는 아직 만들지 말라.
 ```
@@ -100,10 +100,10 @@ TR 3-pass 감리까지 끝내고 멈춰라. BI는 아직 만들지 말라.
 - `docs\blockguide\treatment-production-harness-v2.md`
 - `docs\blockguide\bi-production-harness-v1.md`
 - `treatments\failed_future_ceo_intern_phase0_design.json`
-- `treatments\failed_future_ceo_intern_tr_block_070_draft.json`
+- `treatments\05_failed_future_ceo_intern_tr_block_070_draft.json`
 
 위 문서를 SSOT로 삼아 BI를 생성하라.
-출력은 `bible\0_bi_failed_future_ceo_intern.json`에 UTF-8로 저장하라.
+출력은 `bible\05_bi_failed_future_ceo_intern.json`에 UTF-8로 저장하라.
 `plot_roadmap`는 창작하지 말고 TR draft에서 동기화하라.
 BI 5-pass 감리 또는 최소 3-pass 정합성 감리까지 끝내고 결과를 보고하라.
 ```
@@ -124,8 +124,8 @@ SSOT 후보:
 - `docs\blockguide\bi-production-harness-v1.md`
 - `docs\2026-03-10\top3_replanning_brief_for_tr_bi.md`
 - `treatments\failed_future_ceo_intern_phase0_design.json`
-- `treatments\failed_future_ceo_intern_tr_block_070_draft.json`
-- `bible\0_bi_failed_future_ceo_intern.json`
+- `treatments\05_failed_future_ceo_intern_tr_block_070_draft.json`
+- `bible\05_bi_failed_future_ceo_intern.json`
 
 복구 순서:
 1. 어떤 산출물이 이미 존재하는지 UTF-8로 확인

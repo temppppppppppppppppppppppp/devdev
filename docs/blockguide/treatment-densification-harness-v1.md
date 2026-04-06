@@ -17,7 +17,7 @@
 ## 0A. 빠른 시작 (10단계 즉시 체크리스트)
 
 1. `treatments/{work_id}_tr_block_070_draft.json` 존재 확인
-2. `treatments/{work_id}_phase0_design.json` 존재 확인
+2. `treatments/phase0/{work_id}_phase0_design.json` 존재 확인
 3. `bible/{work_id}_bi.json` 존재 확인 (BI 5-Pass PASS 상태)
 4. 덴시피케이션 진입 사유 확인 (4축 감사 보고서 or 밀도 게이트 FAIL 판정)
 5. 잠금/재작성 필드 분류표(§1) 확인
@@ -415,7 +415,7 @@ Block 1~6처럼 이미 `avg_bundle_chars >= 800` + 차이 행렬 PASS인 블록�
 ```json
 {
   "_description": "덴시피케이션 보강용 Phase 0 확장 시트",
-  "source_phase0": "treatments/{work_id}_phase0_design.json",
+  "source_phase0": "treatments/phase0/{work_id}_phase0_design.json",
   "historical_timeline_ref": "densification/historical_timeline.json",
   "external_opponent_pool_ref": "densification/external_opponent_pool.json",
   "item_catalog_ref": "densification/item_catalog.json",
@@ -1030,7 +1030,7 @@ compaction 또는 세션 전환 후 재진입 시 아래를 순서대로 재로�
 
 1. 이 하네스 `treatment-densification-harness-v1.md`를 UTF-8로 다시 읽는다.
 2. 아래 파일을 순서대로 UTF-8로 다시 연다:
-   - `treatments/{work_id}_phase0_design.json`
+   - `treatments/phase0/{work_id}_phase0_design.json`
    - `treatments/{work_id}_tr_block_070_draft.json` (원본 스켈레톤 + merge 완료분)
    - `treatments/preprocess/{work_id}/densification/batch_plan.json`
    - `treatments/preprocess/{work_id}/densification/phase0_supplement.json`

@@ -1,4 +1,4 @@
-# BI 생산 하네스 v1
+﻿# BI 생산 하네스 v1
 <!-- utf8-hygiene: allow-file rationale: this harness intentionally documents literal mojibake tokens like ??? and � as detection examples. -->
 
 > 인코딩: **UTF-8 only (기본값, 예외 없음)**
@@ -166,7 +166,7 @@ Treatment는 블록 단위로 쪼개 생산할 수 있지만, BI는 보통 한 �
 
 BI 생성 시 원천 데이터는 아래 2개만 신뢰한다.
 
-1. `treatments/{work_id}_phase0_design.json`
+1. `treatments/phase0/{work_id}_phase0_design.json`
 2. `treatments/{work_id}_tr_block_070_draft.json`
 
 규칙:
@@ -200,7 +200,7 @@ BI에서 직접 새로 써야 하는 한글은 최소화한다.
 ### 2.3 파일명과 저장 규칙
 
 - 출력 파일명은 ASCII 기준을 권장한다.
-  - 예: `bible/0_bi_chaebol_ent_empire.json`
+  - 예: `bible/03_bi_chaebol_ent_empire.json`
 - 파일 내용은 UTF-8, BOM 없음으로 저장한다.
 - Windows PowerShell 5.x에서는 `Set-Content -Encoding UTF8`의 BOM/표시 문제를 피하기 위해 **JSON 저장은 Python `-X utf8` 또는 검증된 편집기 저장만 사용**한다.
 
@@ -546,8 +546,8 @@ print('JSON_OK')
 최소 탐지 패턴:
 
 ```powershell
-rg -n "\?\?\?" bible\0_bi_chaebol_ent_empire.json
-rg -n "�" bible\0_bi_chaebol_ent_empire.json
+rg -n "\?\?\?" bible\03_bi_chaebol_ent_empire.json
+rg -n "�" bible\03_bi_chaebol_ent_empire.json
 ```
 
 해석:

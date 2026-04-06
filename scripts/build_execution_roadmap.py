@@ -17,7 +17,8 @@ from ops_support import (
 def build_roadmap_text(topic: str, date_dir: str, items) -> str:
     queue_snapshot = "\n".join(f"- `{item.temp_path}`" for item in items)
     inventory_rows = "\n".join(
-        f"| `{item.topic}` | `{item.canonical_path}` | `{item.temp_path}` | {item.status} | auto-built from queue-state |"
+        f"| `{item.topic}` | `{item.canonical_path}` | `{item.temp_path}` | {item.status} | "
+        f"queue_role={item.queue_role}; roadmap_rank={item.roadmap_rank if item.roadmap_rank is not None else 'n/a'}; auto-built from queue-state |"
         for item in items
     )
     dependency_lines = []

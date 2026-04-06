@@ -1,4 +1,4 @@
-# migration_map
+﻿# migration_map
 
 > snapshot: 2026-03-12
 > 목적: 기존 루트 경로와 `전처리_ssot/docs/` 허브 경로의 관계를 기록하기 위한 지도
@@ -50,8 +50,8 @@
 | source path | target hub path | policy | status |
 | --- | --- | --- | --- |
 | `bible/01_bi_투자물_골든_sample.json` | `전처리_ssot/docs/20_db_and_materials/samples/golden/investment_sample/` | `indexed-reference` | active |
-| `treatments/chaebol_allowance_zero_tr_block_070_draft.json` | `전처리_ssot/docs/20_db_and_materials/samples/golden/chaebol_allowance_zero/` | `indexed-reference` | active |
-| `bible/0_bi_chaebol_allowance_zero.json` | `전처리_ssot/docs/20_db_and_materials/samples/golden/chaebol_allowance_zero/` | `indexed-reference` | active |
+| `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json` | `전처리_ssot/docs/20_db_and_materials/samples/golden/chaebol_allowance_zero/` | `indexed-reference` | active |
+| `bible/02_bi_chaebol_allowance_zero.json` | `전처리_ssot/docs/20_db_and_materials/samples/golden/chaebol_allowance_zero/` | `indexed-reference` | active |
 | `treatments/us_ai_exile_monopoly_tr_block_070_draft.json` | `전처리_ssot/docs/20_db_and_materials/samples/golden/us_ai_exile_monopoly/` | `indexed-reference` | active |
 | `bible/0_bi_us_ai_exile_monopoly.json` | `전처리_ssot/docs/20_db_and_materials/samples/golden/us_ai_exile_monopoly/` | `indexed-reference` | active |
 

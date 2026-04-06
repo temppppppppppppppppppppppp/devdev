@@ -19,7 +19,7 @@
 3. 작품이 현대판타지이고 업계/직업/전문분야 재료가 필요하면 `modern_fantasy_material_harness.md`를 추가로 읽는다.
 4. 장르가 `alt_history`이거나 역사 재료 DB 조회가 필요하면 `alt_history_db_harness.md`를 추가로 읽는다.
 5. 이 문서를 **UTF-8로 다시 읽는다.**
-6. `treatments/{work_id}_phase0_design.json`과 직전 `candidate/fixed/draft`를 재오픈한다.
+6. `treatments/phase0/{work_id}_phase0_design.json`과 직전 `candidate/fixed/draft`를 재오픈한다.
 7. `Phase 0`가 없으면 이 문서를 실행하지 말고 planning 단계로 되돌린다.
 8. 생산 단계가 맞으면 출력 단위는 항상 **블록 1개**로 잡는다.
    - `auto-run`은 블록을 순서대로 이어서 쌓는다는 뜻이다.

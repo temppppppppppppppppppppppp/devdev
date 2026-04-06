@@ -1,4 +1,4 @@
-# 2026-03-27 세션 컨텍스트 메모 (갱신: 최종)
+﻿# 2026-03-27 세션 컨텍스트 메모 (갱신: 최종)
 
 Date: 2026-03-27
 Purpose: 감리 및 이어가기용 — 모든 작업 스트림의 중단 지점과 다음 단계 기록
@@ -202,8 +202,8 @@ Last updated: 이 세션의 guard-alignment + Arc 2-4 오더 생성 + 커밋 완
 - 기타 시스템/감사 문서
 
 ### Active path 파일 (untracked)
-- `bible/0_bi_pantech_cyworld_reborn.json`
-- `treatments/pantech_cyworld_reborn_tr_block_070_draft.json`
+- `bible/08_bi_pantech_cyworld_reborn.json`
+- `treatments/08_pantech_cyworld_reborn_tr_block_070_draft.json`
 
 ### Temp 파일 (정리 가능)
 - `_temp_block_7.json` ~ `_temp_block_16.json` — chaebol_allowance_zero Wave 1 작업물로 추정, 이미 TR에 머지됨

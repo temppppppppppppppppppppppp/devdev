@@ -1,4 +1,4 @@
-# failed_future_ceo_intern 세션 컨텍스트 문서
+﻿# failed_future_ceo_intern 세션 컨텍스트 문서
 
 > 작성일: 2026-03-24
 > 목적: 후속 세션에서 Block 57~70 이어 작성 시 필요한 전체 맥락 복원용
@@ -24,7 +24,7 @@ treatments/preprocess/failed_future_ceo_intern/profile_lock.json
 treatments/preprocess/failed_future_ceo_intern/material_bundle_summary.json
 treatments/preprocess/failed_future_ceo_intern/phase0_ready_snapshot.json
 treatments/failed_future_ceo_intern_phase0_design.json
-treatments/failed_future_ceo_intern_tr_block_070_draft.json  ← Block 1~56
+treatments/05_failed_future_ceo_intern_tr_block_070_draft.json  ← Block 1~56
 ```
 
 ---
@@ -126,7 +126,7 @@ work_id: failed_future_ceo_intern
 아래 파일들을 UTF-8로 읽고 현재 상태를 복원하라:
 1. 전처리_ssot/docs/20260324/failed_future_ceo_intern_session_context.md (이 문서)
 2. treatments/failed_future_ceo_intern_phase0_design.json
-3. treatments/failed_future_ceo_intern_tr_block_070_draft.json
+3. treatments/05_failed_future_ceo_intern_tr_block_070_draft.json
 4. docs/blockguide/treatment-production-harness-v2.md
 
 Block 56까지 완료. Block 57부터 auto-run으로 Block 70까지 이어 작성하라.

@@ -1,4 +1,4 @@
-# office_checkup_next_day
+﻿# office_checkup_next_day
 
 Title: 검진 다음 날부터
 Family: blockguide
@@ -13,7 +13,7 @@ Status: bootstrap BI manifest
 ## 2. Current Live Chain
 
 - upstream TR manifest: `material_ssot/50_tr/work-index/office_checkup_next_day.md`
-- live BI file: `bible/0_bi_office_checkup_next_day.json`
+- live BI file: `bible/07_bi_office_checkup_next_day.json`
 
 ## 3. Current Notes
 

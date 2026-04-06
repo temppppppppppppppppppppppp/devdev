@@ -33,7 +33,11 @@ Scope: material-side stage progression only
 ### B. Pitch
 
 - read `20_pitch/README.md`
+- when building a fresh candidate from reusable material truth, start with `20_pitch/synthesis/README.md`
+- place the one-page operator handoff under `20_pitch/synthesis/` before promoting anything into canon
+- run `20_pitch/pitch-selection-checklist.md` before calling a synthesis selection-ready
 - use `20_pitch/canon/` for work-level pitch anchors
+- use `20_pitch/work-guard-translation-map.md` only after pitch truth is frozen enough to translate into a work-specific guard
 - use `20_pitch/intake/legacy_import/` for migrated legacy pitch payloads
 - use `20_pitch/quarantine/` only for non-canonical pitch-adjacent docs
 - treat `전처리_ssot/docs/10_pitches` as legacy transition docs
@@ -53,18 +57,20 @@ Scope: material-side stage progression only
 ### D. Phase 0 design
 
 - read `40_phase0_design/README.md`
-- prefer `treatments/{work_id}_phase0_design.json` when it exists
+- prefer `treatments/phase0/{work_id}_phase0_design.json` when it exists
 - otherwise fall back to `treatments/preprocess/{work_id}/phase0_ready_snapshot.json`
 
 ### E. TR
 
 - read `50_tr/README.md`
-- use `treatments/{work_id}_tr_block_070_draft.json` as the live TR artifact
+- use `treatments/NN_{work_id}_tr_block_070_draft.json` when the work is in the numbered live set
+- otherwise fall back to `treatments/{work_id}_tr_block_070_draft.json`
 
 ### F. BI
 
 - read `60_bi/README.md`
-- use `bible/0_bi_{work_id}.json` as the live BI artifact
+- use `bible/NN_bi_{work_id}.json` when the work is in the numbered live set
+- otherwise fall back to `bible/0_bi_{work_id}.json`
 
 ## 3. Boundary Rules
 

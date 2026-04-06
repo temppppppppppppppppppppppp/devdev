@@ -372,6 +372,59 @@ class TestRunValidation:
         assert len(ci_advisories) == 1
         assert "[STRUCTURED_FEEDBACK]" in ci_advisories[0]["message"]
 
+    def test_run_continuity_inspection_preserves_refined_arc_packets_over_enriched_block(
+        self,
+        pipeline,
+        valid_refined_arc,
+    ):
+        pipeline.ctx.agents = {"continuity_inspector": MagicMock()}
+        pipeline._inspect_continuity = MagicMock(return_value={"decision": "PASS"})
+        refined_arc = {
+            **valid_refined_arc,
+            "joint_docs": {"world_joint": "llm-world"},
+            "status_shadow": {
+                "expected_injuries": "llm-wound",
+                "item_consumption": ["천풍검"],
+                "key_stat_change": "llm-stat",
+            },
+        }
+
+        result = pipeline._run_continuity_inspection(
+            refined_arc=refined_arc,
+            four_phase_passed=False,
+            all_refined_arcs=[],
+            entity_registry_for_director=None,
+            enriched_block={
+                "joint_docs": {"final_location": "block-city", "world_joint": "stale-world"},
+                "status_shadow": {
+                    "internal_energy_loss": "5%",
+                    "expected_injuries": "stale-wound",
+                },
+            },
+            global_arc_no=1,
+            current_ep_start=1,
+            generation_method="four_phase",
+            attempt=0,
+            protagonist_name="이청풍",
+            V50_MODULES_AVAILABLE=False,
+            rich_console=None,
+            _python_advisories=[],
+        )
+
+        inspected_arc = pipeline._inspect_continuity.call_args.kwargs["refined_arc"]
+        assert inspected_arc["joint_docs"] == {
+            "final_location": "block-city",
+            "world_joint": "llm-world",
+        }
+        assert inspected_arc["status_shadow"] == {
+            "internal_energy_loss": "5%",
+            "expected_injuries": "llm-wound",
+            "item_consumption": ["천풍검"],
+            "key_stat_change": "llm-stat",
+        }
+        assert result["refined_arc"]["joint_docs"]["world_joint"] == "llm-world"
+        assert result["refined_arc"]["status_shadow"]["item_consumption"] == ["천풍검"]
+
 
 class TestExtractedHelperFamilies:
     def test_build_invalid_refined_arc_retry_returns_retry_payload(self, pipeline):

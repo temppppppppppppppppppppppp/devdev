@@ -6,6 +6,14 @@
 > 목적: **모든 지능 수준의 모델이 무협/선협/세가물/문파물 Treatment JSON을 생산**할 수 있는 완전한 하네스
 > 출력: `treatments/{work_id}_tr_block_070_draft.json`
 > 선행 문서: `SSOT_wuxguide-integrated-order.md`
+>
+> **즉시 정지 표지판**
+>
+> - `treatments/{work_id}_tr_block_070_draft.json`는 **최종 누적 저장 컨테이너 이름**이다.
+> - 이 파일명은 `70블록을 한 번에 생성하라`는 뜻이 아니다.
+> - 실제 생산 단위는 항상 **Block 1개**다.
+> - 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이다.
+> - 블록 완료 시마다 즉시 merge/save 하고, `Block 5`에서 반드시 정지한다.
 
 ---
 
@@ -309,7 +317,7 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
 1. `SSOT_wuxguide-integrated-order.md`를 **UTF-8로 먼저 읽는다.**
 2. `wuxia-planning-harness.md`를 다시 확인해 지금이 기획 단계인지 생산 단계인지 판단한다.
 3. 이 문서를 **UTF-8로 다시 읽는다.**
-4. `treatments/{work_id}_phase0_design.json`과 직전 `candidate/fixed/draft`를 재오픈한다.
+4. `treatments/phase0/{work_id}_phase0_design.json`과 직전 `candidate/fixed/draft`를 재오픈한다.
 5. `Phase 0`가 없으면 이 문서를 실행하지 말고 planning 단계로 되돌린다.
 
 ### 1.3 블록 1개 생산 사이클

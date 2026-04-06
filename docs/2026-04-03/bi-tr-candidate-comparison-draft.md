@@ -1,4 +1,4 @@
-# BI/TR Candidate Comparison Draft
+﻿# BI/TR Candidate Comparison Draft
 
 Date: 2026-04-03
 Status: draft
@@ -14,13 +14,13 @@ Purpose: compare `Golden Canary` and current BI/TR harness outputs before freezi
 
 ### Candidate B. Current Modern Builder Family
 
-- BI: `bible/0_bi_gatekeeper_heir.json`
-- TR: `treatments/gatekeeper_heir_tr_block_070_draft.json`
+- BI: `bible/06_bi_gatekeeper_heir.json`
+- TR: `treatments/06_gatekeeper_heir_tr_block_070_draft.json`
 
 ### Candidate C. Current Wuxia Builder Family
 
-- BI: `bible/0_bi_wuxia_heavenly_physician.json`
-- TR: `treatments/wuxia_heavenly_physician_tr_block_070_draft.json`
+- BI: `bible/09_bi_wuxia_heavenly_physician.json`
+- TR: `treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
 
 ## 2. Evidence Snapshot
 

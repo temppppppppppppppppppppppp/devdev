@@ -1,4 +1,4 @@
-# BI 생산 하네스 v1
+﻿# BI 생산 하네스 v1
 
 > 인코딩: **UTF-8 only (기본값, 예외 없음)**
 > 작성일: 2026-03-09
@@ -178,7 +178,7 @@ BI에서 직접 새로 써야 하는 한글은 최소화한다.
 ### 2.3 파일명과 저장 규칙
 
 - 출력 파일명은 ASCII 기준을 권장한다.
-  - 예: `bible/0_bi_chaebol_ent_empire.json`
+  - 예: `bible/03_bi_chaebol_ent_empire.json`
 - 파일 내용은 UTF-8, BOM 없음으로 저장한다.
 - Windows PowerShell 5.x에서는 `Set-Content -Encoding UTF8`의 BOM/표시 문제를 피하기 위해 **JSON 저장은 Python `-X utf8` 또는 검증된 편집기 저장만 사용**한다.
 
@@ -511,8 +511,8 @@ print('JSON_OK')
 최소 탐지 패턴:
 
 ```powershell
-rg -n "\?\?\?" bible\0_bi_chaebol_ent_empire.json
-rg -n "�" bible\0_bi_chaebol_ent_empire.json
+rg -n "\?\?\?" bible\03_bi_chaebol_ent_empire.json
+rg -n "�" bible\03_bi_chaebol_ent_empire.json
 ```
 
 해석:

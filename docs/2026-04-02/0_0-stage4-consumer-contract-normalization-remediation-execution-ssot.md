@@ -1,14 +1,14 @@
 # 0_0 Stage4 Consumer-Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (aggregate Stage4 wave active; flashback, NpcDrift, fix-pack provenance, post-pass state owner-boundary, intake authority, and sink-alignment follow-up patches are now runtime-backed; 2026-04-03 fresh full run plus r2 Stage4-only sinkproof prove ep2 can PASS, the later analyzer/readback backfill closes the remaining metadata/sink hygiene gap, and the next bounded debt is now numeric asset authority / carryover owner-boundary rather than replay-first residuals)
+Status: partially_realized (aggregate Stage4 wave active; flashback, NpcDrift, fix-pack provenance, post-pass state owner-boundary, intake authority, and sink-alignment follow-up patches are now runtime-backed; 2026-04-03 fresh full run plus r2 Stage4-only sinkproof prove ep2 can PASS, the earlier metadata/sink hard-fail interpretation no longer fronts the queue, and the 2026-04-06 revalidation keeps the next bounded debt on numeric asset authority / carryover owner-boundary rather than replay-first residuals)
 Canonical Path: `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `09a7b478c2a2c16d708cc041aaa6e194278e7f9b`
 - Baseline Dirty Summary: `dirty: active Stage4 docs/code/test deltas, prepared canary targets, temp roadmap/queue active`
-- Resume Commit: `0dd825f19d729aff544ca69f8887aab4e88778eb`
-- Resume Drift Summary: `2026-04-03 r4+r5 bounded canary evidence and handoff re-audit kept Stage4 as the active owner; the later fresh full run in projects/00_20260403 proved ep2 can PASS through bounded inplace correction, the r2 Stage4-only sinkproof canary removed the hard final-sink failure interpretation by landing authoritative Stage4 rows in stage_attempts, the later analyzer/readback backfill removed the remaining gate-repair metadata gap, and the subsequent numeric authority re-audit showed the next bounded seam is asset carryover/authority mismatch rather than replay-first residuals`
+- Resume Commit: `0d7c077a9e6f14575aba7fc509b836d218db610d`
+- Resume Drift Summary: `2026-04-03 runtime proof kept Stage4 as the active owner, the later readback backfill removed the earlier gate-repair metadata gap, the bounded chief-writer carryover packet update tightened prompt authority, and the 2026-04-06 global P0-P1 survey reconfirmed that no new Stage4 P0 exists while the remaining live P1 stays on numeric carryover baseline promotion / owner-boundary rather than broad sink failure`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-bounded-survey.md`
@@ -23,6 +23,7 @@ Source Survey Docs:
 - `docs/2026-04-03/0_0-stage34-ep2-fresh-run-post-run-merge-audit.md`
 - `docs/2026-04-03/0_0-stage4-ep2-sinkproof-r2-runtime-closure-audit.md`
 - `docs/2026-04-03/0_0-stage4-numeric-asset-authority-carryover-bounded-survey.md`
+- `docs/2026-04-06/rol-global-terminal4-stage4-pipeline-p0p1.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-evidence.json`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-evidence.json`
@@ -75,6 +76,7 @@ This wave is not a global Stage4 redesign. It is an aggregate contract-normaliza
 - the fresh full run and the `r2` Stage4-only sinkproof run both finish with clean final PASS rows, while the failed `r2` round-1 pathology is typed as `contradiction_type = 수치`
 - archived and current artifact truth now show a split numeric ladder: arc-level `20억` band, blueprint/manuscript `200억`, and resumed ep1 FactLedger `1천만원`
 - The remaining issue is no longer “Stage4 cannot pass or persist final authority.” It is “finish bounded numeric asset authority / carryover owner-boundary follow-up without prematurely reopening upstream hierarchy work.”
+- 2026-04-06 Opus revalidation confirmed the remaining live P1 is a `baseline promotion gap`, not a false PASS or final-sink failure: legitimately changed numeric truth can still be re-flagged at the next-episode boundary when carryover baseline ownership is not explicitly promoted.
 
 ## 3. Scope
 
@@ -384,3 +386,40 @@ Pass 3, execution and readability:
 - clarified that the current bounded intake-authority subtask has moved from opening hard-lock debates to numeric carryover authority alignment without reopening the same-location lock question
 
 Confidence: `96%`
+
+## 15. 2026-04-06 Opus P0-P1 Revalidation: Numeric Carryover Promotion Gap
+
+The 2026-04-06 global P0-P1 Opus survey did not change Stage4 queue order, but it did sharpen the active consumer-side seam into one bounded execution statement.
+
+Queue semantics remain unchanged:
+
+- status stays `partial`
+- roadmap priority stays unchanged
+- this remains the front Stage4 consumer lane above the repair-contract substrate lane
+
+Confirmed live P1:
+
+- `Stage4ContextBuilder` injects carryover baseline numeric authority into the writer prompt
+- `stage4_post_pass_runtime` persists `state_truth_owner_contract` with `fact_ledger_carryover_baseline` ownership
+- but the post-pass path still does not autonomously promote manuscript-proven numeric change into the next carryover baseline owner boundary
+- the next episode therefore depends on contradiction-firewall / numeric-consistency readback to detect the split, which can create bounded false-positive retry pressure on a manuscript that actually changed the number on-page for valid plot reasons
+
+Execution consequence:
+
+- this lane remains the correct front owner for `numeric asset authority / carryover owner-boundary`
+- the narrowest owner set stays:
+  - `modules/core/stage4_context_builder.py`
+  - `modules/core/stage4_post_pass_runtime.py`
+  - writer/readback surfaces already cited under the intake-authority tranche
+- the earlier metadata/readback hard-fail interpretation does not front the queue anymore; that concern now belongs below this lane
+
+2026-04-06 bounded realization note:
+
+- the recent `chief_writer_context_packets.py` carryover packet tightening improved writer-facing visibility by surfacing FactLedger baseline numeric authority even when previous manuscript/digest text is thin
+- that patch narrows prompt ambiguity, but it does not by itself close the baseline-promotion seam described here
+
+Revalidation note:
+
+- static evidence is sufficient to keep this as a live P1 execution target
+- fresh run is still useful for runtime impact measurement, but not required to prove the seam exists
+- confidence after the 2026-04-06 re-audit remains `97%`

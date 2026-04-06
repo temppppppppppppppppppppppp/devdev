@@ -13,6 +13,7 @@ state via self.owner (ChiefWriterContextBuilder) properties.
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 from typing import TYPE_CHECKING
@@ -317,12 +318,26 @@ This is optional and should follow narrative flow first.
         prev_manuscript: str,
         prev_digest: str,
     ) -> str:
-        if not prev_manuscript and not prev_digest:
+        carryover_numeric_lines = self._collect_fact_ledger_carryover_numeric_lines(limit=3)
+        if not prev_manuscript and not prev_digest and not carryover_numeric_lines:
             return ""
+
+        blueprint_text = ""
+        if isinstance(blueprint, dict):
+            try:
+                blueprint_text = json.dumps(blueprint, ensure_ascii=False)
+            except TypeError:
+                blueprint_text = str(blueprint)
+        else:
+            blueprint_text = str(blueprint or "")
+        blueprint_mentions_assets = any(
+            token in blueprint_text.lower()
+            for token in ("capital", "asset", "assets", "wealth", "cash", "balance", "funding", "liquidat")
+        )
 
         lines = [
             "### [Stage4 Carryover Ceiling — prior/current authority only]",
-            "아래 ceiling은 직전 원고/다이제스트/현재 structured blueprint에서 확인된 범위만 정리한 것이다.",
+            "아래 ceiling은 직전 원고/다이제스트/FactLedger carryover/현재 structured blueprint에서 확인된 범위만 정리한 것이다.",
         ]
 
         opening_evidence = self._collect_recent_sentence_evidence(
@@ -363,12 +378,18 @@ This is optional and should follow narrative flow first.
             lines.extend(f"  - {item}" for item in planning_lines[:3])
             lines.append("  - 위 계산·계획·메모를 이번 화에서 처음 완성한 것처럼 다시 쓰지 마라.")
 
-        carryover_numeric_lines = self._collect_fact_ledger_carryover_numeric_lines(limit=3)
         if carryover_numeric_lines:
             lines.append("- FactLedger carryover baseline numeric authority:")
             lines.extend(f"  - {item}" for item in carryover_numeric_lines)
             lines.append(
                 "  - 위 숫자는 직전 화에서 이어지는 persisted baseline이다. 더 큰 blueprint/arc 목표 숫자는 브리지 거래·청산·이체·펀딩이 on-page로 써지기 전까지 현재 확정 자산으로 승격하지 마라."
+            )
+            if blueprint_mentions_assets:
+                lines.append(
+                    "  - blueprint 자산 숫자가 carryover baseline을 초과하면 pending claim/target으로만 취급하고, 전환 경로가 on-page로 써지기 전까지 현재 확정 자산으로 가정하지 마라."
+                )
+            lines.append(
+                "  - 이번 화 capital/total_assets가 baseline을 넘어서면 그 숫자가 어떻게 current truth가 되었는지 먼저 서술한 뒤 확정 사실로 재사용하라."
             )
 
         generic_digest_lines = self._collect_generic_prev_digest_carryover_lines(prev_digest, limit=3)

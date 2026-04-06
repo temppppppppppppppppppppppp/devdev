@@ -1,4 +1,4 @@
-# gatekeeper_heir
+﻿# gatekeeper_heir
 
 Title: 사람값이 보이는 후계자
 Family: blockguide
@@ -21,9 +21,9 @@ Status: bootstrap manifest
 - preprocess profile lock: `treatments/preprocess/gatekeeper_heir/profile_lock.json`
 - preprocess bundle summary: `treatments/preprocess/gatekeeper_heir/material_bundle_summary.json`
 - phase0 snapshot: `treatments/preprocess/gatekeeper_heir/phase0_ready_snapshot.json`
-- live phase0 file: `treatments/gatekeeper_heir_phase0_design.json`
-- live TR file: `treatments/gatekeeper_heir_tr_block_070_draft.json`
-- live BI file: `bible/0_bi_gatekeeper_heir.json`
+- live phase0 file: `treatments/phase0/gatekeeper_heir_phase0_design.json`
+- live TR file: `treatments/06_gatekeeper_heir_tr_block_070_draft.json`
+- live BI file: `bible/06_bi_gatekeeper_heir.json`
 
 ## 3. Current Notes
 

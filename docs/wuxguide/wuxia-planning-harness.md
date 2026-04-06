@@ -230,7 +230,7 @@ faction_drift 방지를 위해, 문파 소속 변경은 반드시 서사적 사�
 Output target:
 
 ```text
-treatments/{work_id}_phase0_design.json
+treatments/phase0/{work_id}_phase0_design.json
 ```
 
 ## 8. Stop/Go 기준 (무협 특화)

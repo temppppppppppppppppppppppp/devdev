@@ -12,7 +12,8 @@ Primary docs:
 
 Current live path:
 
-- `treatments/*_tr_block_070_draft.json`
+- `treatments/NN_*_tr_block_070_draft.json` for numbered live works
+- legacy fallback: `treatments/*_tr_block_070_draft.json`
 
 Current note:
 

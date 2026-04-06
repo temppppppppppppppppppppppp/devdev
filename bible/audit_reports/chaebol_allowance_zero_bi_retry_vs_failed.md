@@ -1,8 +1,8 @@
-# chaebol_allowance_zero BI Retry vs Failed Audit
+﻿# chaebol_allowance_zero BI Retry vs Failed Audit
 
 ## Scope
 
-- Retry BI: `bible/0_bi_chaebol_allowance_zero.json`
+- Retry BI: `bible/02_bi_chaebol_allowance_zero.json`
 - Failed BI: `bible/02_bi_chaebol_allowance_zero.json`
 - Shared planning SSOT: `docs/2026-03-10/opus_재벌3세인데용돈이0원.md`
 

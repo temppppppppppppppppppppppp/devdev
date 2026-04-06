@@ -120,6 +120,22 @@
 - `김 대리는 벼락부자 B`
 - `국세청 망나니 B`
 
+### 4.4 2026-04-06 투자물 신규 기획안 Deep Core 5
+
+향후 `investment_market_profile` 신규 기획안 조립 시 아래 5개를 deep-study 우선 세트로 취급한다.
+
+- `김 대리는 인생이 너무 가볍다 A`
+- `김 대리는 벼락부자 A`
+- `주식의 신 A`
+- `재벌생활기록부 A`
+- `독식하는 재벌 3세 A`
+
+운용 기준:
+
+- 이 5개는 `작품 모사`가 아니라 `엔진 조합`용이다
+- 각 작품에서는 대표 엔진 1개만 빌리는 것을 기본값으로 한다
+- 보조 산업/시장 재료는 `investment_engine_pack.md`에 고정된 YouTube lanes를 본다
+
 ---
 
 ## 5. 다음 액션
@@ -127,8 +143,9 @@
 현재 기준 최우선 작업:
 
 1. `24개 audited/pass` 풀에서 기능 매트릭스를 뽑는다
-2. `Director synthesis`로 opening / edge / spike / first reward / growth axis를 교차 조합한다
-3. 그 다음 `work_id` 기획안 조립으로 이동
+2. 투자물 신규안은 먼저 `investment_engine_pack.md`의 Deep Core 5와 YouTube material lanes를 본다
+3. `Director synthesis`로 opening / edge / spike / first reward / growth axis를 교차 조합한다
+4. 그 다음 `work_id` 기획안 조립으로 이동
 
 운영 메모:
 

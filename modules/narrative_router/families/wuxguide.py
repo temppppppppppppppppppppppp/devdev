@@ -29,7 +29,7 @@ PLUGIN = NarrativeFamilyPlugin(
             ),
             readiness_flag_file="phase0_ready_snapshot.json",
             readiness_flag_path=("manual_audit_pass",),
-            phase0_output_pattern="treatments/{work_id}_phase0_design.json",
+            phase0_output_pattern="treatments/phase0/{work_id}_phase0_design.json",
         ),
         tr=NarrativeTRContract(
             harness_script="scripts/wuxia_tr_batch_harness.py",

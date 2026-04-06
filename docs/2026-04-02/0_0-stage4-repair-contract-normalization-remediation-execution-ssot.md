@@ -1,16 +1,17 @@
 # 0_0 Stage4 Repair-Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: parked (survey-backed promotion complete; sink-wiring and naming-normalization tranche not yet realized)
+Status: partially_realized (survey-backed promotion complete; bounded sink/readback fixes have landed, but shared grammar and first-class repair metadata normalization remain open)
 Canonical Path: `docs/2026-04-02/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `aaf495d65c95c9ffe7ea99277f315a69609252db`
 - Baseline Dirty Summary: `dirty: Stage4 contract docs/code/test deltas active; roadmap/temp queue already dirty; current ep2 canary work in progress`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `promoted directly from bounded survey while active ep2 runtime verification remains in flight; no realization work started from this SSOT`
+- Resume Commit: `0d7c077a9e6f14575aba7fc509b836d218db610d`
+- Resume Drift Summary: `the lane no longer sits at pure survey status: bounded `stage4_interview_round.py` and `db_manager.py` fixes tightened fix-scope/readback behavior, and the 2026-04-06 global P0-P1 survey confirmed the remaining live repair-contract seam is phantom mismatch inflation across repair_scope/gate_basis/readback surfaces rather than a broad Stage4 sink failure`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-repair-contract-grammar-global-bounded-survey.md`
+- `docs/2026-04-06/rol-global-terminal4-stage4-pipeline-p0p1.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage4-repair-contract-grammar-global-evidence.json`
 Side-Effect Coverage: covered
@@ -44,6 +45,8 @@ This lane is intentionally below the active `ep2` runtime verification stack. It
   - subtype naming fragmentation
   - operator sink blackout for structured repair fields
   - invisible widening from `authoritative_fix_scope` to runtime-derived scope
+- 2026-04-06 revalidation narrows the still-live P1 to a specific readback class:
+  - `repair_scope`, `gate_basis`, `repair_contract` grammar, and scope-authority metadata can still surface as phantom sink mismatches because first-class persistence and readback normalization are incomplete
 - The survey identified a minimum common field set of 12 fields:
   - `check`
   - `severity`
@@ -71,6 +74,8 @@ Included:
 - `modules/core/stage4_post_pass_runtime.py`
 - `modules/core/stage4_post_processor.py`
 - `modules/core/stage4_immutable_fact_contract.py`
+- `modules/core/db_manager.py`
+- `modules/core/failure_analyzer.py`
 - operator-visible Stage4 sink surfaces:
   - runtime evidence json
   - summary payloads
@@ -110,6 +115,7 @@ Primary debt inventory:
 3. Director-authored versus runtime-synthesized repair authority is not visible enough
 4. fix-scope widening can occur without preserving the original authoritative scope in operator-facing summaries
 5. post-pass truth surfaces and repair-contract truth are still too disconnected
+6. metadata-absence artifacts can still inflate sink-alignment mismatch reports at readback time
 
 ## 5. Pass 2. Semantic Classification
 
@@ -217,12 +223,16 @@ Primary targets:
 
 - `stage4_reject_runtime.py`
 - `stage4_post_pass_runtime.py`
+- `stage4_interview_round.py`
+- `db_manager.py`
+- `failure_analyzer.py`
 - shared payload builders used by summaries and operator sinks
 
 Acceptance shape:
 
 - scope widening is visible rather than silent
 - Director-authored and runtime-synthesized contracts remain distinguishable end-to-end
+- readback summaries no longer overcount mismatches merely because first-class repair metadata is missing or inconsistently surfaced
 
 ## 9. Acceptance Criteria
 
@@ -230,11 +240,17 @@ Acceptance shape:
 - subtype naming fragmentation is reduced to one explicit bridge or one canonical field name
 - at least `subtype`, `fix_scope`, and `provenance` reach operator-visible Stage4 JSON outputs
 - `authoritative_fix_scope` versus runtime-derived scope is no longer hidden in operator-facing evidence
+- readback and sink-alignment summaries no longer report phantom repair mismatches caused only by metadata-absence artifacts
 - realization stays bounded and does not expand into broad Stage4 redesign
 
 ## 10. Verification Plan
 
 - focused unit/regression tests for Stage4 payload builders and sink serialization
+- focused regressions for:
+  - `tests/test_stage4_interview_round.py -k "build_stage4_db_attempt_payload or stage4_db_attempt_payload" -q`
+  - `tests/test_db_manager.py -k "latest_stage4_gate_repair_snapshot" -q`
+  - `tests/test_failure_analyzer.py -k "nested_gate_semantics or gate_repair_contract_fields or scope_authority" -q`
+  - `tests/test_stage4_canary_tools.py -k "build_stage4_canary_summary" -q`
 - `python -m py_compile` on touched files
 - `ruff check` on touched files
 - UTF-8 hygiene on touched docs/code
@@ -250,12 +266,13 @@ Acceptance shape:
 
 ## 12. Temp Queue Notes
 
-- temp status: parked
+- temp status: partial
 - cleanup condition:
   - remove the temp mirror only after bounded realization closes or the lane is superseded by a broader Stage4 contract wave
 - roadmap dependency:
   - subordinate to `0_0-stage4-consumer-contract-normalization-remediation`
   - below active `ep2` runtime verification work
+  - remains the next open Stage4 substrate because numeric carryover work still depends on shared repair/readback grammar staying truthful
 
 ## 13. Validation and Closure Hooks
 
@@ -270,6 +287,42 @@ Acceptance shape:
 3-pass audit status:
 
 - Pass 1. Structure and Scope: execution SSOT type, bounded Stage4 grammar scope, and excluded surfaces confirmed
-- Pass 2. Evidence and Consistency: survey/evidence lineage, field-set summary, and operator-sink conclusions aligned
-- Pass 3. Execution and Readability: tranches, acceptance criteria, and guardrails are actionable and bounded
-- Confidence: 0.96
+- Pass 2. Evidence and Consistency: survey/evidence lineage, field-set summary, operator-sink conclusions, and the 2026-04-06 readback phantom-mismatch revalidation are aligned
+- Pass 3. Execution and Readability: tranches, acceptance criteria, guardrails, and repair/readback owner files are actionable and bounded
+- Confidence: 0.97
+
+## 14. 2026-04-06 Opus P0-P1 Revalidation: Repair Readback Phantom Mismatch
+
+The 2026-04-06 global P0-P1 Opus survey converted the remaining Stage4 repair-contract debt into a narrower execution statement than the original survey-backed promotion.
+
+Queue semantics remain unchanged:
+
+- this lane stays below the aggregate Stage4 consumer lane
+- this lane stays above parked future-wave Stage2/3 work
+- queue order does not change
+
+Confirmed live P1:
+
+- `stage4_interview_round.py` can correctly derive `repair_scope`, `gate_basis`, `scope_authority`, and `authoritative_fix_scope`
+- but those fields are not yet normalized as first-class readback truth across all persistence/sink surfaces
+- `FailureAnalyzer` and related summary/readback surfaces can therefore count `repair_scope`, `gate_basis`, `repair_contract_subtype`, or scope-authority fields as mismatches when the underlying issue is metadata absence or inconsistent sink exposure rather than verdict disagreement
+
+2026-04-06 bounded realization note:
+
+- the recent bounded fixes in `stage4_interview_round.py` and `db_manager.py` improved:
+  - root `fix_scope` alignment with resolved `scope_authority`
+  - latest gate-repair snapshot fallback/readback for root and nested scope metadata
+- those fixes reduce the seam, but they do not fully close the broader repair-contract grammar/readback normalization lane
+
+Execution consequence:
+
+- the narrowest active owner set for this residual P1 is:
+  - `modules/core/stage4_interview_round.py`
+  - `modules/core/db_manager.py`
+  - `modules/core/failure_analyzer.py`
+- this remains the correct Stage4 substrate lane for sink-visibility, scope/provenance boundary, and phantom-mismatch normalization
+
+Revalidation note:
+
+- static evidence is sufficient to keep this as a live execution SSOT
+- fresh run is helpful for measuring mismatch volume, but not required to prove the readback seam exists

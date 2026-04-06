@@ -2840,6 +2840,7 @@ class DBManager:
                    content_hash,
                    artifact_path,
                    advisory_flags,
+                   fix_scope,
                    selection_reason,
                    verdict_reason,
                    open_review,
@@ -2872,12 +2873,47 @@ class DBManager:
         repair_contract = advisory_flags.get("repair_contract")
         if not isinstance(repair_contract, dict):
             repair_contract = {}
+        nested_repair_contract = gate_semantics.get("repair_contract")
+        if isinstance(nested_repair_contract, dict) and nested_repair_contract:
+            repair_contract = {**repair_contract, **nested_repair_contract}
         scope_authority = advisory_flags.get("scope_authority")
         if not isinstance(scope_authority, dict):
             scope_authority = {}
+        nested_scope_authority = gate_semantics.get("scope_authority")
+        if isinstance(nested_scope_authority, dict) and nested_scope_authority:
+            scope_authority = {**scope_authority, **nested_scope_authority}
         retry_budget_axes = advisory_flags.get("retry_budget_axes")
         if not isinstance(retry_budget_axes, dict):
             retry_budget_axes = {}
+
+        fix_scope_value = str(
+            scope_authority.get("fix_scope")
+            or repair_contract.get("fix_scope")
+            or item.get("fix_scope")
+            or ""
+        ).strip()
+        authoritative_fix_scope_value = str(
+            scope_authority.get("authoritative_fix_scope")
+            or repair_contract.get("authoritative_fix_scope")
+            or gate_semantics.get("authoritative_fix_scope")
+            or ""
+        ).strip()
+        repair_scope_value = str(
+            gate_semantics.get("repair_scope")
+            or scope_authority.get("repair_scope")
+            or repair_contract.get("repair_scope")
+            or ""
+        ).strip()
+
+        if scope_authority:
+            if fix_scope_value and not str(scope_authority.get("fix_scope") or "").strip():
+                scope_authority["fix_scope"] = fix_scope_value
+            if repair_scope_value and not str(scope_authority.get("repair_scope") or "").strip():
+                scope_authority["repair_scope"] = repair_scope_value
+            if authoritative_fix_scope_value and not str(scope_authority.get("authoritative_fix_scope") or "").strip():
+                scope_authority["authoritative_fix_scope"] = authoritative_fix_scope_value
+            if "widened" not in scope_authority and fix_scope_value and authoritative_fix_scope_value:
+                scope_authority["widened"] = fix_scope_value.lower() != authoritative_fix_scope_value.lower()
 
         payload: dict[str, object] = {
             "ep_num": int(item.get("ep_num") or 0),
@@ -2894,9 +2930,9 @@ class DBManager:
             "open_review": str(item.get("open_review") or "").strip(),
             "director_verdict": str(gate_semantics.get("director_verdict") or "").strip(),
             "gate_basis": str(gate_semantics.get("gate_basis") or "").strip(),
-            "repair_scope": str(gate_semantics.get("repair_scope") or "").strip(),
-            "fix_scope": str(scope_authority.get("fix_scope") or "").strip(),
-            "authoritative_fix_scope": str(scope_authority.get("authoritative_fix_scope") or "").strip(),
+            "repair_scope": repair_scope_value,
+            "fix_scope": fix_scope_value,
+            "authoritative_fix_scope": authoritative_fix_scope_value,
             "fix_pack": fix_pack,
             "repair_contract": repair_contract,
             "scope_authority": scope_authority,

@@ -1,4 +1,4 @@
-# pantech_cyworld_reborn
+﻿# pantech_cyworld_reborn
 
 Title: 벽돌 더미 속 미래 지도
 Family: blockguide
@@ -24,7 +24,7 @@ Status: canonical pitch
   - `docs/2026-03-26/blockguide-quarantine-static-quality-survey.md`
   - `docs/2026-03-09/pantech_cyworld_reborn_batch_002_prompt.md`
 
-This is the first canonical pitch authority for `pantech_cyworld_reborn`. The upstream `material_ssot/10_research/30_work_materials/pantech_cyworld_reborn/90_material_pack.json` is not yet built, and the live root `treatments/pantech_cyworld_reborn_phase0_design.json` / `treatments/pantech_cyworld_reborn_tr_block_070_draft.json` / `bible/0_bi_pantech_cyworld_reborn.json` are not yet materialized — `_quarantine` TR/BI are supporting consistency references only, not authorities. Canonical pitch truth for `pantech_cyworld_reborn` is fixed in this file and replaces any prior bootstrap note.
+This is the first canonical pitch authority for `pantech_cyworld_reborn`. The upstream `material_ssot/10_research/30_work_materials/pantech_cyworld_reborn/90_material_pack.json` is not yet built, and the live downstream artifacts now exist at `treatments/phase0/pantech_cyworld_reborn_phase0_design.json` / `treatments/08_pantech_cyworld_reborn_tr_block_070_draft.json` / `bible/08_bi_pantech_cyworld_reborn.json`. Canonical pitch truth for `pantech_cyworld_reborn` remains fixed in this file and replaces any prior bootstrap note.
 
 ## 2. Pitch Truth
 
@@ -72,7 +72,7 @@ This is the first canonical pitch authority for `pantech_cyworld_reborn`. The up
 ## 3. Early Conversion
 
 - opening spike:
-  - 프롤로그(2024년 겨울, 서울 임대 오피스텔): 유통 계열사만 전전하다 쫓겨난 오너 3세 윤도현이 팬택이 벽돌 더미가 되고 싸이월드가 모바일 시대 문턱에서 미끄러진 뉴스 앞에서 고독사한다. Block 1 본편(2006년 1월, 세림그룹 본관 28층 전략회의실): 31세의 윤도현이 그룹 전략회의에 배석해, 팬택 전환권과 싸이월드 모바일 전환권을 한 판으로 묶겠다고 처음 선언한다. 차우진 CFO는 "도련님이 또 유행어 하나 주워 왔다"고 일축하고, 회장 윤재문은 "휴대폰과 인터넷 서비스는 해외 거인에게 먹힐 소모품"이라고 못 박는다. 윤도현은 감정 대신 2007년 여름의 판 변화 일정표와 손익 구조를 들이밀고, 개인 주식 담보 180억 + 회장 실험 예산 170억 = 350억의 전시 자금을 묶어 프론티어 원 SPC 설립과 개인 책임 조건 CB 인수를 요구한다. Block 1 마지막 줄: "이번엔 벽돌 더미 속에서 지도를 먼저 그립니다."
+  - 프롤로그(2024년 겨울, 서울 임대 오피스텔): 전통 계열 결재선에 밀려 유통 계열사만 돌다 끝난 오너 3세 윤도현이 팬택이 벽돌 더미가 되고 싸이월드가 모바일 시대 문턱에서 미끄러진 뉴스 앞에서 고독사한다. Block 1 본편(2006년 1월, 세림그룹 본관 28층 전략회의실): 31세의 윤도현이 그룹 전략회의에 배석해, 팬택 전환권과 싸이월드 모바일 전환권을 한 판으로 묶겠다고 처음 선언한다. 차우진 CFO는 "도련님이 또 유행어 하나 주워 왔다"고 일축하고, 회장 윤재문은 "휴대폰과 인터넷 서비스는 해외 거인에게 먹힐 소모품"이라고 못 박는다. 윤도현은 감정 대신 2007년 여름의 판 변화 일정표와 손익 구조를 들이밀고, 개인 주식 담보 180억 + 회장 실험 예산 170억 = 350억의 전시 자금을 묶어 프론티어 원 SPC 설립과 개인 책임 조건 CB 인수를 요구한다. Block 1 마지막 줄: "이번엔 벽돌 더미 속에서 지도를 먼저 그립니다."
 - episodes 1 to 3 impact:
   - Block 1: 2024 몰락 프롤로그 → 2006 전략회의 배석 → 차우진·윤재문 앞에서 프론티어 원 SPC + CB 350억 승인 → "이번엔 내가 먼저 그린다" 선언. 회귀 제약 3축(거시만 선명/미시 불가/정체 노출 위험)과 1인칭 제한 시점 공개.
   - Block 2: 김포 팬택 연구개발센터와 채권단 회의실에서 통신사 보조금 회의록을 카드로 내밀어 팬택 전환사채 인수 + 연구소 브리지 자금 투입 + 공급망 채권 선점을 묶는다. 오세라 팬택 전략기획 임원이 터치 UI 프로토타입을 처음 꺼내고, 윤도현은 "단말만으로는 안 된다"며 일촌 그래프와의 결합 각도를 처음 던진다.
@@ -83,13 +83,13 @@ This is the first canonical pitch authority for `pantech_cyworld_reborn`. The up
   - 현금 수익이 아니라 권한 입장권으로 되돌려 받는다:
     - 프론티어 원 SPC 설립 + 개인 책임 조건 CB 350억 승인
     - 차우진 CFO의 "숫자만큼은 틀리지 않았다" 인정 + 실무 자료(통신사 보조금 회의록·팬택 채권 포지션) 접근권
-    - 회장 윤재문의 "시험해볼 카드" 승격 — 유통 계열 한량 후보에서 승계 플레이어 후보로 격상
+    - 회장 윤재문의 "시험해볼 카드" 승격 — 유통 계열 발령 오너 3세에서 승계 플레이어 후보로 격상
     - 다음 블록(팬택 전환권 매입 + 싸이월드 협상권) 입장권
   - 핵심: 첫 보상은 돈도 지분도 아니고, "팬택 이사회와 싸이월드 협상 테이블에 같은 자금으로 동시에 꽂을 수 있게 해 주는 금융 입장권"이다.
 - early antagonist shape:
   - 적대자는 감정적 악당이 아니라 구조다. 1차 적대축(초반)은 차우진 CFO + 세림그룹 감사위원회 + 회장 윤재문의 전통 계열 결재선 — 자금선과 회계 문구로 디지털 투자안을 질식시킨다. 외부 구조 적대축은 통신사 구매 연합 + 규격 파편화 + 정보통신부 심의 병목, 그리고 통신사 포털이 첫 화면을 쥔 하청 구조다. 싸이월드 경영진은 "현재 매출 방어 vs 모바일 전환" 사이에서 관성화된 상태로 등장하고, 오세라·한유리·박기태는 이전 시대의 정답을 믿은 사람으로서 협력자로 돌아선다. 중반부에는 형제 적대축(윤태선 큰형·윤태민 차남)이 사익 편취 프레임으로 승계전 공개 역공에 들어가고, 후반부에는 해외 SNS/외부 플랫폼 압박과 일본 디지털 유통(마키노 레이) 접점이 복합 구도로 붙는다.
 - proof scene:
-  - Block 1~3 범위에서, 윤도현이 서른한 살 한량 오너 3세의 권한으로는 먼저 알 수 없는 통신사 보조금 회의록 한 줄 + 팬택 전환권 가격 접점 + 싸이월드 모바일 전환권의 진짜 가치를 한 자리에서 동시에 짚고, 차우진 CFO의 감사 라인과 회장 윤재문의 직보 라인 안에서 프론티어 원이 팬택 CB와 싸이월드 협상권을 같은 주에 쥐는 장면이 공개된다. 이 순간 세림그룹 안의 윤도현 해석이 "유행어 주워 온 도련님"에서 "금융 액션 + 제품 전환 + 계정 구조를 한 스택으로 읽는 사람"으로 이동한다. 독자는 여기서 "벽돌 더미가 될 팬택과 모바일 문턱에서 미끄러질 싸이월드를 같은 손이 먼저 잡았다"는 선점 쾌감을 첫 체감한다.
+  - 영수증 장면(Block 1): 세림그룹 본관 28층 전략회의실에서 차우진 CFO가 "도련님이 또 유행어를 주워 왔다"며 안건 삭제를 시도한다. 윤도현은 감정 대신 2007년 여름 판 변화 일정표와 손익 구조를 들이민다 — "단말·계정·결제·앱 장터가 한 몸으로 묶인 사업자가 한국엔 아직 없다." 유통 계열사에서 밀려난 서른한 살 오너 3세가 회장과 CFO 앞에서 개인 주식 담보 180억과 이사 자리까지 걸고 CB 350억을 통과시킨다. 차우진이 "숫자만큼은 틀리지 않았다"고 인정하는 순간이 태도 변화 영수증이다. `저건 쟤라서 가능했다`: 전통 계열 결재선에 밀렸던 사람이 미래 타임라인 지식을 숫자와 손익으로 환전해, 유행어가 아니라 손익 구조임을 증명한 것이다. Block 2~3에서 이 입장권이 팬택 CB 전환권 + 싸이월드 일촌 그래프 접근권으로 확장되며, "벽돌 더미가 될 팬택과 모바일 문턱에서 미끄러질 싸이월드를 같은 손이 먼저 잡았다"는 선점 쾌감이 완성된다.
 
 ## 4. Phase0 Handoff Note
 

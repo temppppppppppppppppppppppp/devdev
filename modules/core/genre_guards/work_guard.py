@@ -29,6 +29,7 @@ _ROOT_SCALAR_LIST_FIELDS = (
     "extra_mandatory_concepts",
     "custom_rules",
 )
+_ROOT_SCALAR_FIELDS = ()
 _WORK_IDENTITY_SCALAR_LIST_FIELDS = (
     "tracking_slots",
     "mandatory_scene_engines",
@@ -37,6 +38,12 @@ _WORK_IDENTITY_SCALAR_LIST_FIELDS = (
     "protagonist_weapon",
     "business_axes",
     "control_axes",
+)
+_WORK_IDENTITY_SCALAR_FIELDS = (
+    "work_id",
+    "work_type",
+    "family",
+    "one_line_truth",
 )
 _PROTAGONIST_EVAL_SCALAR_LIST_FIELDS = (
     "admiration_axes",
@@ -58,6 +65,13 @@ def _validate_scalar_list_field(value: Any, *, path: Path, field_name: str) -> N
     for idx, item in enumerate(value):
         if isinstance(item, (dict, list)):
             _raise_config_error(path, f"'{field_name}[{idx}]' must be a scalar value")
+
+
+def _validate_scalar_field(value: Any, *, path: Path, field_name: str) -> None:
+    if value is None:
+        return
+    if isinstance(value, (dict, list)):
+        _raise_config_error(path, f"'{field_name}' must be a scalar value")
 
 
 def _validate_list_field(value: Any, *, path: Path, field_name: str) -> None:
@@ -87,6 +101,8 @@ def validate_work_guard_config(data: Any, yaml_path: Path | str) -> dict[str, An
     if not isinstance(data, dict):
         _raise_config_error(path, "top-level YAML must be a mapping")
 
+    for field_name in _ROOT_SCALAR_FIELDS:
+        _validate_scalar_field(data.get(field_name), path=path, field_name=field_name)
     for field_name in _ROOT_SCALAR_LIST_FIELDS:
         _validate_scalar_list_field(data.get(field_name), path=path, field_name=field_name)
 
@@ -97,6 +113,12 @@ def validate_work_guard_config(data: Any, yaml_path: Path | str) -> dict[str, An
     if work_identity is not None:
         if not isinstance(work_identity, dict):
             _raise_config_error(path, "'work_identity' must be a mapping")
+        for field_name in _WORK_IDENTITY_SCALAR_FIELDS:
+            _validate_scalar_field(
+                work_identity.get(field_name),
+                path=path,
+                field_name=f"work_identity.{field_name}",
+            )
         for field_name in _WORK_IDENTITY_SCALAR_LIST_FIELDS:
             _validate_scalar_list_field(
                 work_identity.get(field_name),

@@ -1,9 +1,9 @@
-# chaebol_allowance_zero Full Retry vs Failed Audit
+﻿# chaebol_allowance_zero Full Retry vs Failed Audit
 
 ## Scope
 
 - Planning SSOT: `docs/2026-03-10/opus_재벌3세인데용돈이0원.md`
-- Retry TR: `treatments/chaebol_allowance_zero_tr_block_070_draft.json`
+- Retry TR: `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`
 - Failed baseline TR: `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`
 
 ---

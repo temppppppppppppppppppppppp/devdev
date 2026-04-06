@@ -1,4 +1,4 @@
-# office_checkup_next_day
+﻿# office_checkup_next_day
 
 Title: 검진 다음 날부터
 Family: blockguide
@@ -22,11 +22,11 @@ Status: canonical pitch
 - legacy concept import:
   - `material_ssot/20_pitch/intake/legacy_import/20260330/컨셉기획_검진다음날부터.md`
 - live Phase0 file:
-  - `treatments/office_checkup_next_day_phase0_design.json`
+  - `treatments/phase0/office_checkup_next_day_phase0_design.json`
 - live TR file:
-  - `treatments/office_checkup_next_day_tr_block_070_draft.json`
+  - `treatments/07_office_checkup_next_day_tr_block_070_draft.json`
 - live BI file:
-  - `bible/0_bi_office_checkup_next_day.json`
+  - `bible/07_bi_office_checkup_next_day.json`
 
 This file replaces the old bootstrap anchor note. The canonical pitch truth for `office_checkup_next_day` is now materialized inside `material_ssot/20_pitch/canon/`. Downstream Phase0/TR/BI artifacts are consistency references, not authorities.
 

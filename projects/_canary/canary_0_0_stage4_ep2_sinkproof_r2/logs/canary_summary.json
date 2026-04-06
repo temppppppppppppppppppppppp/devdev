@@ -1,0 +1,560 @@
+{
+  "project": "canary_0_0_stage4_ep2_sinkproof_r2",
+  "project_locator": "projects/canary_0_0_stage4_ep2_sinkproof_r2",
+  "project_root": "C:\\Users\\wjjo\\Desktop\\글도비\\projects\\canary_0_0_stage4_ep2_sinkproof_r2",
+  "target_ep": 2,
+  "prepared_from": "00_20260403",
+  "latest_session_id": "20260403_164841",
+  "draft_count": 2,
+  "draft_files": [
+    "ep_0001.txt",
+    "ep_0002.txt"
+  ],
+  "runtime_audit_tag": "stage4_complete",
+  "runtime_audit_summary": {
+    "tag": "stage4_complete",
+    "timestamp": "2026-04-03 17:09:31",
+    "summary_role": "runtime_heartbeat_with_proof_digest",
+    "total_events": 5,
+    "counts": {
+      "stage4_retry_pathology_signal": 1,
+      "stage4_v75d_blueprint_patch_snapshot": 1,
+      "stage4_cove_runtime_advisory": 1,
+      "target_ep_reached": 1,
+      "stage4_complete": 1
+    },
+    "latest_event_type": "stage4_complete",
+    "recent_events": [
+      {
+        "type": "stage4_retry_pathology_signal",
+        "message": "stage4 retry pathology observed"
+      },
+      {
+        "type": "stage4_v75d_blueprint_patch_snapshot",
+        "message": "stage4 V75-D blueprint patch snapshot persisted"
+      },
+      {
+        "type": "stage4_cove_runtime_advisory",
+        "message": "stage4 CoVe runtime advisory observed"
+      },
+      {
+        "type": "target_ep_reached",
+        "message": "stage4 target episode reached"
+      },
+      {
+        "type": "stage4_complete",
+        "message": "stage4 production completed"
+      }
+    ],
+    "contract": {
+      "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+      "attempt_truth_authoritative": false,
+      "authoritative_attempt_sinks": [
+        "stage_attempts",
+        "pass_rate_monitor",
+        "session_decisions",
+        "episode_production",
+        "director_selections"
+      ],
+      "proof_digest_truth_scope": "committed_persistence_only",
+      "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth."
+    },
+    "proof_digest": {
+      "available": true,
+      "status": "warn",
+      "artifacts": {
+        "db_available": true,
+        "session_decisions_exists": true,
+        "ui_events_jsonl_exists": true,
+        "pass_rate_monitor_exists": true,
+        "episode_production_exists": true,
+        "runtime_audit_jsonl_exists": true,
+        "ui_events_db_available": true,
+        "ui_events_count": 695,
+        "ui_event_coverage_status": "ok"
+      },
+      "stages": {
+        "stage3": {
+          "status": "warn",
+          "attempts_considered": 2,
+          "complete_final_attempts": 0,
+          "complete_lifecycle_attempts": 0,
+          "legacy_key_attempts": 0,
+          "session_scoped_attempts": 2,
+          "coverage": {
+            "stage_attempts": 2,
+            "pass_rate_monitor": 0,
+            "director_selections": 2,
+            "episode_production": 0,
+            "session_decisions": 0
+          },
+          "issue_counts": {
+            "final_sink_missing": 4,
+            "artifact_missing_files": 2
+          }
+        },
+        "stage4": {
+          "status": "warn",
+          "attempts_considered": 3,
+          "complete_final_attempts": 0,
+          "complete_lifecycle_attempts": 2,
+          "legacy_key_attempts": 0,
+          "session_scoped_attempts": 3,
+          "coverage": {
+            "stage_attempts": 2,
+            "pass_rate_monitor": 0,
+            "director_selections": 3,
+            "episode_production": 2,
+            "session_decisions": 2
+          },
+          "issue_counts": {
+            "final_sink_missing": 2,
+            "lifecycle_sink_missing": 1,
+            "lifecycle_missing_in_final_sinks": 4,
+            "final_score_mismatches": 1,
+            "selection_candidate_key_mismatches": 1,
+            "artifact_metadata_missing": 1,
+            "gate_repair_metadata_missing": 6,
+            "rationale_metadata_missing": 2
+          }
+        }
+      },
+      "session_lineage": {
+        "plain_log_token": "20260403_164840",
+        "structured_session_id": "20260403_164841",
+        "status": "split_mapped"
+      }
+    }
+  },
+  "stage4_attempts": 2,
+  "director_stage4_rows": 3,
+  "pass_rate_monitor_exists": true,
+  "patch_trace_summary": {},
+  "stage3_sink_alignment_summary": {
+    "stage": 3,
+    "session_filter": "",
+    "attempts_considered": 2,
+    "coverage": {
+      "stage_attempts": 2,
+      "pass_rate_monitor": 0,
+      "director_selections": 2,
+      "episode_production": 0,
+      "session_decisions": 0
+    },
+    "complete_final_attempts": 2,
+    "director_lifecycle_attempts": 0,
+    "complete_lifecycle_attempts": 0,
+    "final_sink_missing": {
+      "session_decisions": {
+        "count": 2,
+        "examples": [
+          "s3:ep1:arc1:a1:20260403_124527",
+          "s3:ep2:arc1:a1:20260403_124527"
+        ]
+      }
+    },
+    "lifecycle_sink_missing": {},
+    "lifecycle_missing_in_final_sinks": {},
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [],
+    "repair_scope_mismatches": [],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "repair_contract_subtype_mismatches": [],
+    "repair_contract_provenance_mismatches": [],
+    "scope_authority_fix_scope_mismatches": [],
+    "scope_authority_authoritative_fix_scope_mismatches": [],
+    "scope_authority_widened_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [],
+    "selection_reason_mismatches": [],
+    "verdict_reason_mismatches": [],
+    "fix_scope_mismatches": [],
+    "gate_repair_metadata_missing": [],
+    "rationale_metadata_missing": [],
+    "artifact_missing_files": [
+      {
+        "attempt_key": "s3:ep1:arc1:a1:20260403_124527",
+        "sink": "stage_attempts",
+        "artifact_path": "logs/artifacts/stage3/ep_0001/attempt_01/final_blueprint__dialogue_focused.json"
+      },
+      {
+        "attempt_key": "s3:ep2:arc1:a1:20260403_124527",
+        "sink": "stage_attempts",
+        "artifact_path": "logs/artifacts/stage3/ep_0002/attempt_01/final_blueprint__action_focused.json"
+      }
+    ],
+    "selection_companion_pre_final_rows": [],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {},
+    "session_scoped_attempts": 2,
+    "legacy_key_attempts": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "warn"
+  },
+  "sink_alignment_summary": {
+    "stage": 4,
+    "session_filter": "",
+    "attempts_considered": 3,
+    "coverage": {
+      "stage_attempts": 2,
+      "pass_rate_monitor": 0,
+      "director_selections": 3,
+      "episode_production": 2,
+      "session_decisions": 0
+    },
+    "complete_final_attempts": 2,
+    "director_lifecycle_attempts": 3,
+    "complete_lifecycle_attempts": 2,
+    "final_sink_missing": {},
+    "lifecycle_sink_missing": {
+      "episode_production": {
+        "count": 1,
+        "examples": [
+          "s4:ep1:arc1:a1:20260403_124527"
+        ]
+      }
+    },
+    "lifecycle_missing_in_final_sinks": {
+      "stage_attempts": {
+        "count": 1,
+        "examples": [
+          "s4:ep1:arc1:a1:20260403_124527"
+        ]
+      }
+    },
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [],
+    "repair_scope_mismatches": [],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "repair_contract_subtype_mismatches": [],
+    "repair_contract_provenance_mismatches": [],
+    "scope_authority_fix_scope_mismatches": [],
+    "scope_authority_authoritative_fix_scope_mismatches": [],
+    "scope_authority_widened_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [],
+    "selection_reason_mismatches": [],
+    "verdict_reason_mismatches": [],
+    "fix_scope_mismatches": [],
+    "gate_repair_metadata_missing": [],
+    "rationale_metadata_missing": [],
+    "artifact_missing_files": [],
+    "selection_companion_pre_final_rows": [
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260403_164841",
+        "ep_num": 2,
+        "attempt_num": 1,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/rejected_best__C.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/rejected_best__C_balanced.txt",
+        "selection_content_hash": "6ccb371d4caead5094aad2b3e82fc1e30e9103ebb6152a5d48c435ef09519f26",
+        "final_content_hash": "6ccb371d4caead5094aad2b3e82fc1e30e9103ebb6152a5d48c435ef09519f26",
+        "diff_fields": [
+          "artifact_path"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260403_164841",
+        "ep_num": 2,
+        "attempt_num": 2,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_02/selected_candidate__A.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_02/final_manuscript__A.txt",
+        "selection_content_hash": "95ae2da9ec680bbb1de8d30bced013a2fb49b8e3821e81fd9c90214e7da18567",
+        "final_content_hash": "95ae2da9ec680bbb1de8d30bced013a2fb49b8e3821e81fd9c90214e7da18567",
+        "diff_fields": [
+          "artifact_path"
+        ]
+      }
+    ],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {
+      "status": "ok",
+      "final_authority_sink": "stage_attempts",
+      "selection_role": "historical_companion",
+      "rows_considered": 2,
+      "aligned_selection_rows": 0,
+      "pre_final_selection_rows": 2,
+      "missing_selection_rows": 0,
+      "note": "Stage 4 final authority resolves from stage_attempts. director_selections remains companion review history and may point to pre-final artifacts."
+    },
+    "session_scoped_attempts": 3,
+    "legacy_key_attempts": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "warn"
+  },
+  "current_session_sink_alignment_summary": {
+    "stage": 4,
+    "session_filter": "20260403_164841",
+    "attempts_considered": 2,
+    "coverage": {
+      "stage_attempts": 2,
+      "pass_rate_monitor": 0,
+      "director_selections": 2,
+      "episode_production": 2,
+      "session_decisions": 0
+    },
+    "complete_final_attempts": 2,
+    "director_lifecycle_attempts": 2,
+    "complete_lifecycle_attempts": 2,
+    "final_sink_missing": {},
+    "lifecycle_sink_missing": {},
+    "lifecycle_missing_in_final_sinks": {},
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [],
+    "repair_scope_mismatches": [],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "repair_contract_subtype_mismatches": [],
+    "repair_contract_provenance_mismatches": [],
+    "scope_authority_fix_scope_mismatches": [],
+    "scope_authority_authoritative_fix_scope_mismatches": [],
+    "scope_authority_widened_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [],
+    "selection_reason_mismatches": [],
+    "verdict_reason_mismatches": [],
+    "fix_scope_mismatches": [],
+    "gate_repair_metadata_missing": [],
+    "rationale_metadata_missing": [],
+    "artifact_missing_files": [],
+    "selection_companion_pre_final_rows": [
+      {
+        "attempt_key": "s4:ep2:arc1:a1:20260403_164841",
+        "ep_num": 2,
+        "attempt_num": 1,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/rejected_best__C.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/rejected_best__C_balanced.txt",
+        "selection_content_hash": "6ccb371d4caead5094aad2b3e82fc1e30e9103ebb6152a5d48c435ef09519f26",
+        "final_content_hash": "6ccb371d4caead5094aad2b3e82fc1e30e9103ebb6152a5d48c435ef09519f26",
+        "diff_fields": [
+          "artifact_path"
+        ]
+      },
+      {
+        "attempt_key": "s4:ep2:arc1:a2:20260403_164841",
+        "ep_num": 2,
+        "attempt_num": 2,
+        "selection_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_02/selected_candidate__A.txt",
+        "final_artifact_path": "logs/artifacts/stage4/ep_0002/attempt_02/final_manuscript__A.txt",
+        "selection_content_hash": "95ae2da9ec680bbb1de8d30bced013a2fb49b8e3821e81fd9c90214e7da18567",
+        "final_content_hash": "95ae2da9ec680bbb1de8d30bced013a2fb49b8e3821e81fd9c90214e7da18567",
+        "diff_fields": [
+          "artifact_path"
+        ]
+      }
+    ],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {
+      "status": "ok",
+      "final_authority_sink": "stage_attempts",
+      "selection_role": "historical_companion",
+      "rows_considered": 2,
+      "aligned_selection_rows": 0,
+      "pre_final_selection_rows": 2,
+      "missing_selection_rows": 0,
+      "note": "Stage 4 final authority resolves from stage_attempts. director_selections remains companion review history and may point to pre-final artifacts."
+    },
+    "session_scoped_attempts": 2,
+    "legacy_key_attempts": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "ok"
+  },
+  "hard_gate_sink_alignment_scope": "current_session",
+  "final_authority_contract_summary": {
+    "status": "ok",
+    "final_authority_sink": "stage_attempts",
+    "selection_role": "historical_companion",
+    "rows_considered": 2,
+    "aligned_selection_rows": 0,
+    "pre_final_selection_rows": 2,
+    "missing_selection_rows": 0,
+    "note": "Stage 4 final authority resolves from stage_attempts. director_selections remains companion review history and may point to pre-final artifacts."
+  },
+  "gate_repair_summary": {
+    "ep_num": 2,
+    "attempt_num": 2,
+    "attempt_key": "s4:ep2:arc1:a2:20260403_164841",
+    "session_id": "20260403_164841",
+    "final_verdict": "PASS",
+    "final_score": 92,
+    "candidate_key": "A|긴장감 + 반전 강조",
+    "content_hash": "95ae2da9ec680bbb1de8d30bced013a2fb49b8e3821e81fd9c90214e7da18567",
+    "artifact_path": "logs/artifacts/stage4/ep_0002/attempt_02/final_manuscript__A.txt",
+    "selection_reason": "후보 A는 이전 에피소드와의 연속성을 완벽하게 준수했으며, 특히 주인공이 1화에서 이미 획득한 '폴더폰'의 소유 상태를 정확히 반영했습니다. 반면 다른 후보들은 이 부분에서 치명적인 모순을 보였습니다. 또한, 블루프린트의 핵심 흐름을 간결하고 속도감 있게 구현하여 장르적 재미를 가장 잘 살렸습니다.",
+    "verdict_reason": "후보 A는 이전 에피소드와의 연속성을 완벽하게 준수했으며, 특히 주인공이 1화에서 이미 획득한 '폴더폰'의 소유 상태를 정확히 반영했습니다. 반면 다른 후보들은 이 부분에서 치명적인 모순을 보였습니다. 또한, 블루프린트의 핵심 흐름을 간결하고 속도감 있게 구현하여 장르적 재미를 가장 잘 살렸습니다.",
+    "open_review": "특이사항 없음. 후보 A는 블루프린트의 의도를 잘 살리면서도, 다른 후보들이 보인 과도한 내면 독백을 피해 간결하고 속도감 있는 전개를 보여주어 가장 완성도가 높습니다.",
+    "director_verdict": "PASS",
+    "gate_basis": "director_primary_pass",
+    "repair_scope": "inplace",
+    "fix_scope": "inplace",
+    "authoritative_fix_scope": "inplace",
+    "fix_pack": {},
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "scope_origin": {
+        "fix_scope": "director_authoritative",
+        "authoritative_fix_scope": "director_authoritative",
+        "repair_scope": "runtime_lane"
+      }
+    },
+    "scope_authority": {
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "scope_origin": {
+        "fix_scope": "director_authoritative",
+        "authoritative_fix_scope": "director_authoritative",
+        "repair_scope": "runtime_lane"
+      },
+      "widened": false
+    },
+    "retry_budget_axes": {
+      "round": "retry_round_2",
+      "repair": "rewrite_regenerate",
+      "strategy": "full",
+      "escalation": "none",
+      "guidance": "baseline"
+    },
+    "final_authority_sink": "stage_attempts",
+    "director_quality_passed": true,
+    "downstream_override_applied": false,
+    "primary_failure_layer": "none",
+    "selection_role": "historical_companion",
+    "selection_companion_status": "pre_final_candidate",
+    "selection_matches_final_artifact": false
+  },
+  "gate_repair_surface_summary": {
+    "status": "ok",
+    "mismatch_scope": "current_session",
+    "attempt_key": "s4:ep2:arc1:a2:20260403_164841",
+    "session_id": "20260403_164841",
+    "final_verdict": "PASS",
+    "fix_scope": "inplace",
+    "authoritative_fix_scope": "inplace",
+    "repair_scope": "inplace",
+    "repair_contract_subtype": "",
+    "repair_contract_provenance": "",
+    "scope_origin": "{'fix_scope': 'director_authoritative', 'authoritative_fix_scope': 'director_authoritative', 'repair_scope': 'runtime_lane'}",
+    "widened": false,
+    "mismatch_counts": {
+      "repair_contract_subtype_mismatches": 0,
+      "repair_contract_provenance_mismatches": 0,
+      "scope_authority_fix_scope_mismatches": 0,
+      "scope_authority_authoritative_fix_scope_mismatches": 0,
+      "scope_authority_widened_mismatches": 0,
+      "gate_repair_metadata_missing": 0
+    }
+  },
+  "rationale_contract_summary": {
+    "status": "ok",
+    "required_fields": [
+      "selection_reason",
+      "verdict_reason",
+      "open_review",
+      "fix_scope_reasoning",
+      "runtime_advisory",
+      "retry_directives"
+    ],
+    "missing_columns": [],
+    "stage4_row_count": 2,
+    "retry_required_row_count": 1,
+    "field_nonempty_counts": {
+      "selection_reason": 2,
+      "verdict_reason": 2,
+      "open_review": 2,
+      "fix_scope_reasoning": 2,
+      "runtime_advisory": 2,
+      "retry_directives": 0
+    },
+    "rows_missing_selection_reason": [],
+    "rows_missing_verdict_reason": [],
+    "rows_missing_retry_context": []
+  },
+  "companion_audit_summary": {
+    "status": "ok",
+    "latest_session_id": "20260403_164841",
+    "row_count": 2,
+    "required_stage_attempt_fields": [
+      "attempt_key",
+      "candidate_key",
+      "content_hash",
+      "artifact_path",
+      "selection_reason",
+      "verdict_reason"
+    ],
+    "rows_missing_required_fields": [],
+    "director_companion_rows": 3,
+    "director_rationale_available": 2,
+    "note": "Same-run stage_attempt provenance/rationale fields must stand on their own; director_selections is companion evidence only."
+  },
+  "proof_scope_summary": {
+    "summary_role": "stage4_live_canary_with_baseline_stage3_probe",
+    "backend_wide_proof": false,
+    "scope_status": "stage4_only",
+    "stage4_live_context_regression": "covered",
+    "stage4_sink_alignment_status": "warn",
+    "stage3_sink_probe_status": "warn",
+    "stage3_probe_origin": "baseline_copy",
+    "rationale_contract_status": "ok",
+    "covered_surfaces": [
+      "stage4_live_context_path",
+      "stage4_sink_alignment",
+      "stage4_rationale_contract",
+      "stage3_baseline_sink_probe"
+    ],
+    "uncovered_surfaces": [
+      "stage3_live_generation_path",
+      "backend_wide_multi_stage_runtime"
+    ],
+    "notes": [
+      "This canary is not a backend-wide proof net.",
+      "Stage 3 sink alignment here is baseline carryover from the copied source project; this canary does not rerun live Stage 3 generation."
+    ],
+    "observability_contract": {
+      "stage3_sink_alignment_observed": true,
+      "stage4_sink_alignment_observed": true,
+      "stage4_rationale_contract_observed": true
+    }
+  },
+  "proof_record_summary": {
+    "classification": "current",
+    "proof_origin": "current_workspace_refresh",
+    "project_locator": "projects/canary_0_0_stage4_ep2_sinkproof_r2",
+    "summary_path": "logs/canary_summary.json",
+    "companion_audit_path": "logs/canary_companion_audit.json",
+    "latest_session_id": "20260403_164841",
+    "refreshed_at": "2026-04-03T18:16:32"
+  },
+  "hard_gates": {
+    "status": "pass",
+    "errors": [],
+    "warnings": []
+  }
+}

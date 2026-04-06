@@ -7,7 +7,10 @@ import re
 from difflib import SequenceMatcher
 
 from modules.core.constants import AIModels
-from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
+from modules.core.stage2_contracts import (
+    TACTICAL_DOC_DUPLICATE_THRESHOLD,
+    merge_stage2_authoritative_packet,
+)
 from modules.validation.threshold_helper import _threshold
 
 _JACCARD_SIMILARITY_THRESHOLD = _threshold(
@@ -916,8 +919,14 @@ class Stage2ValidationPipeline:
         if not four_phase_passed and "continuity_inspector" in self.ctx.agents:
             self.ctx.ui.log(f"      🔍 [V49] Arc {global_arc_no} 연속성 검증 중...")
 
-            refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
-            refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
+            refined_arc["joint_docs"] = merge_stage2_authoritative_packet(
+                refined_arc.get("joint_docs"),
+                enriched_block.get("joint_docs"),
+            )
+            refined_arc["status_shadow"] = merge_stage2_authoritative_packet(
+                refined_arc.get("status_shadow"),
+                enriched_block.get("status_shadow"),
+            )
 
             continuity_result = self._inspect_continuity(
                 refined_arc=refined_arc,

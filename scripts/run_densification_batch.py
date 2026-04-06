@@ -11,6 +11,12 @@ import subprocess
 from pathlib import Path
 import sys
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from modules.narrative_router.artifact_paths import canonical_tr_path  # noqa: E402
+
 def load_mapping(mapping_file: Path):
     with open(mapping_file, 'r', encoding='utf-8') as f:
         return json.load(f)
@@ -81,7 +87,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--start", type=int, required=True)
     parser.add_argument("--batch-size", type=int, default=3)
-    parser.add_argument("--draft", type=Path, default=Path("treatments/chaebol_allowance_zero_tr_block_070_draft.json"))
+    parser.add_argument(
+        "--draft",
+        type=Path,
+        default=canonical_tr_path("chaebol_allowance_zero", root=ROOT).relative_to(ROOT),
+    )
     parser.add_argument("--roadmap", type=Path, default=Path("bible/chaebol_allowance_zero_bi.json"))
     parser.add_argument("--mode", type=str, default="pro", choices=["flash", "pro"])
     args = parser.parse_args()

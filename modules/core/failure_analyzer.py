@@ -511,10 +511,15 @@ class FailureAnalyzer:
     ) -> dict[str, object]:
         """Allow readback-only recovery for stage_attempt fields when other final sinks agree."""
         if field_name not in {
+            "gate_basis",
+            "repair_scope",
             "fix_pack_target_kind",
             "fix_pack_patch_targets",
             "repair_contract_subtype",
             "repair_contract_provenance",
+            "scope_authority_fix_scope",
+            "scope_authority_authoritative_fix_scope",
+            "scope_authority_widened",
         }:
             return values_by_sink
         if "stage_attempts" not in values_by_sink:
@@ -653,6 +658,9 @@ class FailureAnalyzer:
                         retry_budget_axes=advisory_flags.get("retry_budget_axes"),
                         repair_contract=advisory_flags.get("repair_contract"),
                         scope_authority=advisory_flags.get("scope_authority"),
+                        director_verdict=advisory_flags.get("director_verdict"),
+                        gate_basis=advisory_flags.get("gate_basis"),
+                        repair_scope=advisory_flags.get("repair_scope"),
                     ),
                 }
         return stage_attempts

@@ -1,0 +1,45 @@
+{
+  "events": [
+    "trigger set A 감지: 분리막 스크랩률 상승 + 해상보험 갱신률 급등 + 중국 항만 슬롯 취소율 증가",
+    "사촌 형의 낙관 보고 '관리 범위입니다'가 회의실 합의로 굳어지는 순간",
+    "도진우가 세 숫자를 한 장 표로 묶어 18일 뒤 마진 붕괴를 선언",
+    "18일 뒤 배터리 계열사 마진 실제 붕괴 — 손실선 적중",
+    "보험 재협상 테이블에서 공개 데이터로 갱신안 오류를 찍는 장면",
+    "외부 포지션 실패 후 순기여 플러스 증명",
+    "사촌 형의 내부 정보 사용 의심 → 공개 데이터 출처 전량 확인 (dual-lane 서사 내 증명)",
+    "리스크 위원회 정식 위원 승격",
+    "산업 레벨 공급망 재편 감지 및 그룹 전략 전환",
+    "그룹 최대 위기 방어 → 리스크 체계 총괄"
+  ],
+  "npc_candidates": [
+    {"name": "도현석", "role": "사촌 형 / 전략기획실 과장", "attitude_arc": "무시 → 침묵 → 경계 → 본격 대응 → 전략적 공존"},
+    {"name": "강태호", "role": "CFO", "attitude_arc": "견제 → 계산 전환 → ���석 요청 → 위원 추천"},
+    {"name": "임재훈", "role": "보험 담당 임원", "attitude_arc": "무시 → 침묵 → 먼저 자료를 가져옴"},
+    {"name": "도경일", "role": "회장", "attitude_arc": "관망 → 직보 라인 → 위원 승격 → 저울 → 최종 판단"},
+    {"name": "박동수", "role": "구매실장", "attitude_arc": "무관심 → 도진우에게 먼저 묻기 시작"},
+    {"name": "정우진", "role": "생산관리 상무", "attitude_arc": "무관심 → 인식"}
+  ],
+  "crisis_candidates": [
+    {"crisis": "18일 예측 검증 압박", "block_range": "4-9", "severity": "high"},
+    {"crisis": "보험 실무 경험 부족 반격", "block_range": "17-19", "severity": "medium"},
+    {"crisis": "외부 포지션 타이밍 실패", "block_range": "24-25", "severity": "medium"},
+    {"crisis": "사촌 형의 의결 범위 제한 시도", "block_range": "33", "severity": "high"},
+    {"crisis": "내부 정보 사용 의심", "block_range": "39-40", "severity": "high"},
+    {"crisis": "계열사 CEO 전략 전환 저항", "block_range": "48", "severity": "medium"},
+    {"crisis": "그룹 최대 위기", "block_range": "66-67", "severity": "critical"}
+  ],
+  "terms": [
+    "손실선: 개별 이상 신호를 하나의 연쇄로 묶은 선. 보험 → 물류 → 원가 → 리콜 → 실적 쇼크.",
+    "trigger set A: 분리막 스크랩률 + 해상보험 갱신률 + 중국 항만 슬롯 취소율.",
+    "dual-lane separation: 내부 데이터는 손실 방어/권한 전용, 외부 포지션은 공개 신호 전용. 출처를 ���지 않는다.",
+    "배석권: 리스크 회의에 정식으로 참석할 수 있는 권한.",
+    "의결권: 리스크 위원회에서 안건에 투표할 수 있는 권한.",
+    "직보 라인: 회장에게 직접 보고할 수 있는 채널."
+  ],
+  "scene_details": [
+    "first proof scene: 월요일 확대 리스크 회의에서 사촌 형의 '관리 범위' 보고를 trigger set A 한 장 표로 뒤집는 장면.",
+    "Block 2 opening: 보험 재협상 테이블에서 공개 데이터(로이즈 인덱스, 공개 손해율)로 갱신안 오류를 찍고 '공개 데이터입니다. 누구나 볼 수 있습니다'라고 답하는 장면.",
+    "dual-lane 증명: Block 39-40에서 사촌 형이 외부 포지션 근거를 추적하지만 모두 공개 신호임이 확인되는 장면."
+  ],
+  "notes": "이 작품은 synthesis → canon → phase0 → work_guard → TR → BI 순서로 생성된 신규 투자물이다. Stage 0 4-pack은 사후 정규화. deep engine 5개 + YouTube supporting lane 3개에서 엔진을 조합했다."
+}

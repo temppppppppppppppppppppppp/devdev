@@ -1,4 +1,4 @@
-# BI/TR Canonical v1 Mapping Table Draft
+﻿# BI/TR Canonical v1 Mapping Table Draft
 
 Date: 2026-04-03
 Status: working map for `IDE-2`
@@ -14,11 +14,11 @@ Reference candidates:
   - `bible/01_bi_투자물_골든_카나리아 테스트.json`
   - `treatments/01_tr_투자물_골든_카나리아 테스트.json`
 - Current modern builder family
-  - `bible/0_bi_gatekeeper_heir.json`
-  - `treatments/gatekeeper_heir_tr_block_070_draft.json`
+  - `bible/06_bi_gatekeeper_heir.json`
+  - `treatments/06_gatekeeper_heir_tr_block_070_draft.json`
 - Current wuxia builder family
-  - `bible/0_bi_wuxia_heavenly_physician.json`
-  - `treatments/wuxia_heavenly_physician_tr_block_070_draft.json`
+  - `bible/09_bi_wuxia_heavenly_physician.json`
+  - `treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
 
 Mapping verbs used below:
 

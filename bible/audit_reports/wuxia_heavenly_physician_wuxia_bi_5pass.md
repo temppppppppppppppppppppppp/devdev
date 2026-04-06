@@ -1,9 +1,9 @@
-=== Wuxia BI 5-Pass Audit ===
+﻿=== Wuxia BI 5-Pass Audit ===
 Work: wuxia_heavenly_physician
 Date: 2026-03-25
-Source TR: treatments/wuxia_heavenly_physician_tr_block_070_draft.json (70 blocks)
+Source TR: treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json (70 blocks)
 Source Phase0: treatments/wuxia_heavenly_physician_phase0_design.json
-BI Output: bible/0_bi_wuxia_heavenly_physician.json (93,959 bytes)
+BI Output: bible/09_bi_wuxia_heavenly_physician.json (93,959 bytes)
 
 ---
 

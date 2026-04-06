@@ -1,0 +1,12 @@
+{
+  "identity_locked": true,
+  "profile_locked": true,
+  "material_sufficient": true,
+  "manual_audit_pass": true,
+  "remaining_risks": [
+    "비급 필사 오류의 구체적 유형 분류표(운기 역순, 경맥 탈자, 혈도 오기 등) 미확정 — Phase 0 또는 TR 단계에서 상세화",
+    "장서각/봉인각 열람 등급 체계의 구체적 등급명과 조건 미확정 — Phase 0에서 확정",
+    "침점법의 세부 기술 체계(경맥 약점 유형, 대응 동작) 미확정 — TR 초반 전투 블록에서 컨벤션 확립",
+    "대교란에 의해 변조된 비급의 구체적 목록과 변조 방식 상세 — TR 단계에서 상세화"
+  ]
+}

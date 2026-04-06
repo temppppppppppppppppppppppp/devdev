@@ -1,4 +1,4 @@
-# NPC Martial State Substrate Wave1 Execution SSOT
+﻿# NPC Martial State Substrate Wave1 Execution SSOT
 
 Date: 2026-03-27
 Status: blocked (parked follow-up item after 2026-03-28 queue reorder; future work requires fresh Stage 4 / STV seam evidence)
@@ -343,7 +343,7 @@ Why reopened again:
 - a fresh wuxia canary no longer crashes with `TypeError: unhashable type: 'dict'`
 - the same canary plus targeted runtime-shape tracing found a new bounded defect: `manager.update_state_and_lore_v20` returns `actual_truth.martial_arts` as `list[dict]` while the intended contract remains string-list oriented
 - current Stage 4 normalization only protects diff computation and does not normalize the persisted `actual_truth` payload before `StateTextVerifier`, `episode_bibles`, or `state_logs`
-- BI/TR contamination was ruled out by read-only scans of `bible/0_bi_wuxia_heavenly_physician.json` and `treatments/wuxia_heavenly_physician_tr_block_070_draft.json`
+- BI/TR contamination was ruled out by read-only scans of `bible/09_bi_wuxia_heavenly_physician.json` and `treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
 
 Out of scope remains unchanged:
 

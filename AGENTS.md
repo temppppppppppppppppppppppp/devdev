@@ -2,6 +2,15 @@
 
 Pipeline Order: `리서치 -> 기획안 -> Stage 0 preprocess -> Phase 0 design -> TR 생성 -> BI 생성 -> 글도비 파이프라인`
 
+WorkGuard companion contract:
+
+- the root pipeline order above remains the stage-axis contract
+- `work_guard` is promoted as a global `material-side standard companion artifact`
+- standard material-side flow for new or actively maintained works is:
+  - `Phase 0 design -> work_guard draft -> WG-V1 shape check -> WG-V2 freeze PASS -> work_guard freeze -> TR 생성 -> WG-V3 drift audit -> BI 생성`
+- this promotion does **not** change current stage detection or current runtime/pipeline tolerance
+- current runtime may still proceed without `work_guard`; this is a producer-side standardization, not a consumer-side hard gate
+
 ## SSOT
 
 - 현재 워크스페이스 운영 SSOT는 `AGENTS.md`
@@ -204,6 +213,9 @@ Pipeline Order: `리서치 -> 기획안 -> Stage 0 preprocess -> Phase 0 design 
 
 - 한 번에 1단위만 진행한다.
 - 애매하면 더 작은 단위로 쪼갠다.
+- `work_guard`는 전역 material-side standard companion artifact로 본다.
+- 새 work 또는 actively maintained work가 standard material-side path를 따른다면, `Phase 0` 뒤 `TR` 전에 `work_guard` draft/freeze를 수행한다.
+- 현재 `work_guard` 부재만으로 stage detection이나 baseline runtime viability를 바꾸지는 않는다. 단, standard material-side path에서는 pre-`TR` `work_guard` 부재를 계약 미달로 보고 먼저 보고한다.
 - `Phase 0` 없이 TR 생성 금지
 - `TR draft` 없이 BI 생성 금지
 - 감리 PASS 전 완료 선언 금지

@@ -100,7 +100,7 @@ def test_inspect_project_support_assets_reports_ready_flags(tmp_path):
     (project_dir / "stage0_output").mkdir(parents=True)
     (project_dir / "config" / "author_directives.txt").write_text("intent", encoding="utf-8")
     (project_dir / "config" / "work_guard.yaml").write_text(
-        "work_identity:\n  work_type: enterprise\n  tracking_slots:\n    - hero\n",
+        "work_identity:\n  work_id: demo_work\n  work_type: enterprise\n  tracking_slots:\n    - hero\n",
         encoding="utf-8",
     )
     (project_dir / "stage0_output" / "style_guide.json").write_text(
@@ -121,6 +121,7 @@ def test_inspect_project_support_assets_reports_ready_flags(tmp_path):
 
     assert payload["author_directives"]["ready"] is True
     assert payload["work_guard"]["work_guard_exists"] is True
+    assert payload["work_guard"]["work_id"] == "demo_work"
     assert payload["work_guard"]["tracking_slots"] == 1
     assert payload["style_guide"]["ready"] is True
     assert payload["style_guide"]["tone"] == "sharp"
@@ -132,6 +133,7 @@ def test_load_work_guard_summary_handles_missing_file(tmp_path):
     payload = load_work_guard_summary(tmp_path)
 
     assert payload["work_guard_exists"] is False
+    assert payload["work_id"] == ""
     assert payload["tracking_slots"] == 0
 
 

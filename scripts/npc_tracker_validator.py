@@ -15,13 +15,18 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
 BASE = Path(__file__).resolve().parents[1]
+if str(BASE) not in sys.path:
+    sys.path.insert(0, str(BASE))
+
+from modules.narrative_router.artifact_paths import resolve_tr_path  # noqa: E402
+
 TREATMENTS = BASE / "treatments"
 DOCS = BASE / "전처리_ssot" / "docs" / "20260324"
 
 # 작품별 설정: (draft_file, tracker_file, cutoff_block)
 WORKS = {
     "failed_future_ceo_intern": {
-        "draft": TREATMENTS / "failed_future_ceo_intern_tr_block_070_draft.json",
+        "draft": resolve_tr_path("failed_future_ceo_intern", root=BASE),
         "tracker": DOCS / "failed_future_ceo_intern_npc_tracker.md",
         "cutoff": 56,
     },
@@ -41,7 +46,7 @@ WORKS = {
         "cutoff": 70,
     },
     "wuxia_heavenly_physician": {
-        "draft": TREATMENTS / "wuxia_heavenly_physician_tr_block_070_draft.json",
+        "draft": resolve_tr_path("wuxia_heavenly_physician", root=BASE),
         "tracker": DOCS / "wuxia_heavenly_physician_npc_tracker_final.md",
         "cutoff": 70,
     },

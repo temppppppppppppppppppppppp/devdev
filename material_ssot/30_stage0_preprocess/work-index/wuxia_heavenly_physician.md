@@ -1,4 +1,4 @@
-# wuxia_heavenly_physician
+﻿# wuxia_heavenly_physician
 
 Title: 천의무쌍(天醫武雙) <!-- utf8-hygiene: allow-line rationale: legitimate Sino-Korean title spelling in the canonical work title. -->
 Family: wuxguide
@@ -9,7 +9,7 @@ Status: bootstrap manifest
 - research: normalized work-level material pack present
 - pitch: mapped through `material_ssot/20_pitch`
 - stage0 preprocess: present
-- phase0 design: preprocess snapshot only in current live chain
+- phase0 design: present
 - TR: present
 - BI: present
 
@@ -21,9 +21,9 @@ Status: bootstrap manifest
 - preprocess profile lock: `treatments/preprocess/wuxia_heavenly_physician/profile_lock.json`
 - preprocess bundle summary: `treatments/preprocess/wuxia_heavenly_physician/material_bundle_summary.json`
 - phase0 snapshot: `treatments/preprocess/wuxia_heavenly_physician/phase0_ready_snapshot.json`
-- live phase0 file: not present at `treatments/wuxia_heavenly_physician_phase0_design.json`
-- live TR file: `treatments/wuxia_heavenly_physician_tr_block_070_draft.json`
-- live BI file: `bible/0_bi_wuxia_heavenly_physician.json`
+- live phase0 file: `treatments/phase0/wuxia_heavenly_physician_phase0_design.json`
+- live TR file: `treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
+- live BI file: `bible/09_bi_wuxia_heavenly_physician.json`
 
 ## 3. Current Notes
 
@@ -31,7 +31,7 @@ Status: bootstrap manifest
 - primary profile: `wuxia`
 - research-stage normalized material pack is now available for upstream handoff
 - preprocess readiness: rich enough to move directly into Phase 0 and later TR detail work
-- current phase0 handling: use the preprocess-side phase0 snapshot until a root live phase0 file is materialized
+- current phase0 handling: prefer the dedicated `treatments/phase0/` live file and keep the preprocess-side snapshot as fallback evidence
 - canonical status: current live TR and BI are treated as canonical outputs
 
 ## 4. Deferred Links

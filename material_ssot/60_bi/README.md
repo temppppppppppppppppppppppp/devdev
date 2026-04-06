@@ -12,7 +12,8 @@ Primary docs:
 
 Current live path:
 
-- `bible/0_bi_{work_id}.json`
+- `bible/NN_bi_{work_id}.json` for numbered live works
+- legacy fallback: `bible/0_bi_{work_id}.json`
 
 Current note:
 

@@ -1,4 +1,4 @@
-# work_registry
+﻿# work_registry
 
 > snapshot: 2026-03-12
 > 목적: 현재 `work_id`별 정본, 레거시, 전처리 기지 상태를 한 장에서 파악하기 위한 레지스트리
@@ -14,7 +14,7 @@
 
 | work_id | primary profile | canonical pitch / planning source | canonical phase0 | canonical TR | canonical BI | legacy assets | preprocess base | snapshot |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `chaebol_allowance_zero` | `business_growth + office_power` | `docs/2026-03-10/opus_재벌3세인데용돈이0원.md` | `treatments/chaebol_allowance_zero_phase0_design.json` | `treatments/chaebol_allowance_zero_tr_block_070_draft.json` | `bible/0_bi_chaebol_allowance_zero.json` | `treatments/02_...`, `bible/02_...` 실패본 유지 | `initialized at treatments/preprocess/chaebol_allowance_zero/` | canonical full set exists + preprocess Stage 0 completed + TR seed baseline initialized |
+| `chaebol_allowance_zero` | `business_growth + office_power` | `docs/2026-03-10/opus_재벌3세인데용돈이0원.md` | `treatments/chaebol_allowance_zero_phase0_design.json` | `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json` | `bible/02_bi_chaebol_allowance_zero.json` | `treatments/02_...`, `bible/02_...` 실패본 유지 | `initialized at treatments/preprocess/chaebol_allowance_zero/` | canonical full set exists + preprocess Stage 0 completed + TR seed baseline initialized |
 | `chaebol_ent_empire` | `entertainment_media + business_growth` | `docs/2026-03-09/문피아30_배치3_엔터배우작가.md` | `treatments/chaebol_ent_empire_phase0_design.json` | `canonical pending` | `canonical pending` | `treatments/03_chaebol_ent_empire_tr_block_070_draft.json`, `bible/03_bi_chaebol_ent_empire_bi.json`, `bible/09_bi_chaebol_ent_empire_entertainment.json` | `not initialized` | phase0 exists, canonical output pending |
 | `us_ai_exile_monopoly` | `tech_startup + business_growth` | `docs/2026-03-10/us_ai_exile_monopoly_onboarding_prompt.md`, `docs/2026-03-10/top3_replanning_brief_for_tr_bi.md` | `treatments/us_ai_exile_monopoly_phase0_design.json` | `treatments/us_ai_exile_monopoly_tr_block_070_draft.json` | `bible/0_bi_us_ai_exile_monopoly.json` | `treatments/08_...`, `bible/11_bi_us_ai_exile_monopoly_ai_business.json` | `not initialized` | canonical full set exists |
 | `defense_defect_engineer` | `business_growth` | `docs/2026-03-09/컨셉기획_방산물A.md` | `canonical pending` | `canonical pending` | `canonical pending` | `treatments/04_defense_defect_engineer_tr_block_070_draft.json`, `bible/04_defense_defect_engineer_bi.json`, `bible/10_bi_defense_defect_engineer_defense_business.json` | `not initialized` | SSOT conflict first, then rebuild |

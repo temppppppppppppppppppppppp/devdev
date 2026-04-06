@@ -7,8 +7,15 @@ Reads existing 35-block draft, appends blocks 36-70, saves complete 70-block fil
 
 import json
 import pathlib
+import sys
 
-TR_PATH = pathlib.Path(r"C:\Users\User\Desktop\글도비\treatments\office_checkup_next_day_tr_block_070_draft.json")
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from modules.narrative_router.artifact_paths import canonical_tr_path  # noqa: E402
+
+TR_PATH = canonical_tr_path("office_checkup_next_day", root=ROOT)
 
 # ── ARC-04 remainder (36-40): 오세진 축 정리 + 인사 S ──────────
 

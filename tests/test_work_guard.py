@@ -105,6 +105,38 @@ class TestWorkGuardInit:
         with pytest.raises(WorkGuardConfigError, match="work_identity.tracking_slots"):
             WorkGuard(MockBaseGuard(), p)
 
+    def test_invalid_work_id_shape_raises_config_error(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard, WorkGuardConfigError
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              work_id:
+                nested: nope
+            """,
+        )
+
+        with pytest.raises(WorkGuardConfigError, match="work_identity.work_id"):
+            WorkGuard(MockBaseGuard(), p)
+
+    def test_valid_work_id_scalar_loads_cleanly(self, tmp_path):
+        from modules.core.genre_guards.work_guard import WorkGuard
+
+        p = _write_yaml(
+            tmp_path,
+            """\
+            work_identity:
+              work_id: demo_work
+              family: blockguide
+              work_type: office_power
+              one_line_truth: 데모 작품이다
+            """,
+        )
+
+        guard = WorkGuard(MockBaseGuard(), p)
+        assert guard.get_genre_name() == "TEST+Work"
+
 
 # ── extra_forbidden_terms 병합 ───────────────────────────────
 

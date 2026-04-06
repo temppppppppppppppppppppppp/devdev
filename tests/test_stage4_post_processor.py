@@ -342,6 +342,7 @@ class TestProcessPassResult:
         pp.ctx.current_project.db.save_anchor.assert_called_once_with("chain_link_6", {"cliffhanger": "next hook"})
         pp.post_pass_runtime._save_world_state_atomic.assert_called_once_with(
             next_ep=6,
+            actual_truth={"location": "gate"},
             final_state_updates={"hp": 10},
             bible_delta={"relationship_changes": []},
         )
@@ -2032,6 +2033,7 @@ class TestAtomicMetadataSave:
         pp = self._make_pp_with_metadata()
 
         result = pp.post_pass_runtime._build_atomic_state_payloads(
+            actual_truth={},
             final_state_updates={"hp": 10},
             bible_delta={
                 "inventory_counts": {"gold": 3},
@@ -2052,6 +2054,7 @@ class TestAtomicMetadataSave:
         pp = self._make_pp_with_metadata()
 
         result = pp.post_pass_runtime._build_atomic_state_payloads(
+            actual_truth={},
             final_state_updates={"hp": 10},
             bible_delta={
                 "state_changes": {
@@ -2076,6 +2079,47 @@ class TestAtomicMetadataSave:
             }
         ]
         assert "npc_martial_state_changes" not in result["fact_ledger_changes"]
+
+    def test_build_atomic_state_payloads_promotes_actual_truth_numeric_carryover_into_fact_ledger(self):
+        pp = self._make_pp_with_metadata()
+        pp.ctx.fact_ledger.get_numbers.return_value = {
+            "capital": {
+                "value": 10_000_000_000,
+                "unit": "won",
+                "last_ep": 5,
+                "authority_scope": "carryover_baseline",
+            },
+            "total_assets": {
+                "value": 12_000_000_000,
+                "unit": "won",
+                "last_ep": 5,
+                "authority_scope": "carryover_baseline",
+            },
+            "bonus_pool": {
+                "value": 300_000_000,
+                "unit": "won",
+                "last_ep": 5,
+                "authority_scope": "scene_local",
+            },
+        }
+
+        result = pp.post_pass_runtime._build_atomic_state_payloads(
+            actual_truth={
+                "capital": 20_000_000_000,
+                "total_assets": 25_000_000_000,
+                "bonus_pool": 900_000_000,
+                "location": "vault",
+            },
+            final_state_updates={"hp": 10},
+            bible_delta={},
+        )
+
+        assert result["world_state_changes"] == {"hp": 10}
+        assert result["fact_ledger_changes"]["hp"] == 10
+        assert result["fact_ledger_changes"]["capital"] == 20_000_000_000
+        assert result["fact_ledger_changes"]["total_assets"] == 25_000_000_000
+        assert "bonus_pool" not in result["fact_ledger_changes"]
+        assert "location" not in result["fact_ledger_changes"]
 
     def test_process_pass_result_bridges_arc_npc_martial_state_changes_into_world_state_only(self, tmp_path):
         pp = self._make_pp_with_metadata()

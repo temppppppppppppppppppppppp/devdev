@@ -15,6 +15,7 @@ from modules.core.constants import VolumeSettings
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.numeric_consistency_checker import NumericConsistencyChecker
+from modules.core.stage2_contracts import merge_stage2_authoritative_packet
 from modules.core.stage2_entity_contract import normalize_stage2_arc_entity_contract
 from modules.core.stage2_location_contract import collapse_stage2_location_label
 from modules.models.arc import StateChangesDict, validate_arc
@@ -1206,8 +1207,14 @@ class Stage2Finalizer:
         constraint_block: str,
     ) -> Stage2PassPreparationResult:
         refined_arc["arc_drive"] = arc_drive if arc_drive else {}
-        refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
-        refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
+        refined_arc["joint_docs"] = merge_stage2_authoritative_packet(
+            refined_arc.get("joint_docs"),
+            enriched_block.get("joint_docs"),
+        )
+        refined_arc["status_shadow"] = merge_stage2_authoritative_packet(
+            refined_arc.get("status_shadow"),
+            enriched_block.get("status_shadow"),
+        )
         repair_result = self._repair_stage2_pass_arc_structure(
             refined_arc=refined_arc,
             all_refined_arcs=all_refined_arcs,

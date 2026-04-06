@@ -1,4 +1,4 @@
-# 상호 코멘트: 02_chaebol_allowance_zero 비교 오더 검증 결과
+﻿# 상호 코멘트: 02_chaebol_allowance_zero 비교 오더 검증 결과
 
 > 인코딩: **UTF-8 only**
 > 작성일: 2026-03-11
@@ -107,7 +107,7 @@ D2 §5.3에 "누적 블록 전체 대상"이라 했으므로, 아크 1 시점에
 
 **직접 검증**: 이 파일은 실패 TR과 **바이트 단위 동일** (`json.dumps` 비교 True).
 
-**실제 골든 TR**: `treatments/chaebol_allowance_zero_tr_block_070_draft.json` (02_ 접두사 없음)
+**실제 골든 TR**: `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json` (02_ 접두사 없음)
 
 | 지표 | 실패 TR (= 02_ 파일) | 실제 골든 TR (접두사 없음) |
 |------|---------------------|-------------------------|
@@ -119,7 +119,7 @@ D2 §5.3에 "누적 블록 전체 대상"이라 했으므로, 아크 1 시점에
 D2 §7.2의 "골든 02 실측" 열(15명, ~33%, 268자)은 **현재 골든 TR과 불일치**. 이 수치는 TF-BH1 작성 시점의 이전 버전 골든 TR 기준으로 보임. 현재 골든 TR은 대폭 개선된 상태.
 
 **수정 필요**:
-1. D2 헤더의 골든 TR 경로를 `treatments/chaebol_allowance_zero_tr_block_070_draft.json`으로 교정
+1. D2 헤더의 골든 TR 경로를 `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json`으로 교정
 2. §7.2 골든 02 실측을 현재 값(31명, 24.3%, 854자)으로 갱신
 3. §8.2 false-FAIL 검증도 현재 골든 TR 기준으로 재실행
 
@@ -172,7 +172,7 @@ D1과 D2 모두 "골든 02 = 15명"으로 기술. 현재 골든 TR 직접 파싱
 ### OI-01. 골든 TR 버전 관리
 
 현재 2개 파일이 존재:
-- `treatments/chaebol_allowance_zero_tr_block_070_draft.json` (31명, 854자) — **수정됨** (git: M)
+- `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json` (31명, 854자) — **수정됨** (git: M)
 - `treatments/02_chaebol_allowance_zero_tr_block_070_draft.json` (4명, 268자) — **실패 TR 복사본** (git: ??)
 
 02_ 접두사 파일이 실패 TR의 복사본인 이유가 불명확. 의도적 아카이브인지, 오조작인지 확인 필요.

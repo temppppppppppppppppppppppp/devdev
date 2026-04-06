@@ -489,6 +489,54 @@ class TestRunFinalize:
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_finalize_preserves_refined_arc_packets_over_enriched_block(
+        self,
+        _validate,
+        finalizer,
+        valid_refined_arc,
+    ):
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["joint_docs"] = {
+            "final_location": "llm-city",
+            "physical_inventory": ["천풍검"],
+            "world_joint": "llm-world",
+        }
+        refined_arc["status_shadow"] = {
+            "internal_energy_loss": "10%",
+            "expected_injuries": "llm-wound",
+            "item_consumption": ["천풍검"],
+            "key_stat_change": "llm-stat",
+        }
+        kwargs = _make_finalize_kwargs(
+            refined_arc,
+            enriched_block={
+                "joint_docs": {
+                    "final_location": "block-city",
+                    "physical_inventory": [],
+                    "world_joint": "stale-world",
+                },
+                "status_shadow": {
+                    "internal_energy_loss": "5%",
+                    "expected_injuries": "stale-wound",
+                    "item_consumption": [],
+                    "key_stat_change": "stale-stat",
+                },
+                "joint_docs_brief": "brief",
+            },
+        )
+
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        saved_arc = kwargs["all_refined_arcs"][0]
+        assert saved_arc["joint_docs"]["final_location"] == "llm-city"
+        assert saved_arc["joint_docs"]["world_joint"] == "llm-world"
+        assert saved_arc["status_shadow"]["expected_injuries"] == "llm-wound"
+        assert saved_arc["status_shadow"]["item_consumption"] == ["천풍검"]
+        assert saved_arc["status_shadow"]["key_stat_change"] == "llm-stat"
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_finalize_syncs_start_equipment_from_prev_arc_deterministic_carryover(
         self,
         _validate,
@@ -1016,4 +1064,3 @@ def test_sync_first_episode_start_state_line_rewrites_stale_equipment_and_insert
     assert '소지품: ["검"]' in synced
     assert "부상: 편두통" in synced
     assert "내공: 30" in synced
-
