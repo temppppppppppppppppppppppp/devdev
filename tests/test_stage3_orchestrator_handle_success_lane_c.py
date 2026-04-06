@@ -72,8 +72,16 @@ def test_lane_c_record_stage3_success_completion_records_dashboard_warnings():
     orch._record_stage3_success_completion(
         working_ep=5,
         arc_no=2,
+        blueprint={"_inventory_gaps": [{"item": "법인 통장"}], "_continuity_pin_unresolved": [{"pin": "start"}]},
         pipeline_result={
-            "phases": {"generate": {"selected_strategy": "lane", "selected_score": 91}},
+            "retries": 1,
+            "phases": {
+                "generate": {"selected_strategy": "lane", "selected_score": 91},
+                "validate": {
+                    "selected_candidate_advisory": {"issue_count": 6},
+                    "binding_prevalidation_issue_count": 2,
+                },
+            },
         },
         final_verdict="PASS_WITH_FIX",
         quality_gate_failed=True,
@@ -92,3 +100,9 @@ def test_lane_c_record_stage3_success_completion_records_dashboard_warnings():
         "quality_risk",
         "revision_required",
     ]
+    log_texts = [call.args[0] for call in ctx.ui.log.call_args_list if call.args]
+    assert any(
+        "[Stage3 Summary] ep 5 | verdict=PASS_WITH_FIX | score=91 | attempt=2 | prevalidation=6 | binding=2 | TF-49=1 | PinGuard=1"
+        in text
+        for text in log_texts
+    )

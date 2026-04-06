@@ -254,9 +254,21 @@ semantic_ctx=2176자)
    📐 제4화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
  ⠋ 제4화  0s         ⏳ 제4화 Blueprint 생성 시작 (최대 10회 시도)...
          ⏳ 제4화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=3, semantic_ctx=2176자)
- ⠋ 제4화 · Blueprint 생성  9m 42s         📊 제4화 Blueprint 결과: PASS (score=92)
-         └─ 선택 전략: emotion_focused
-         └─ Director 판정: score strong (92.0)
+      [TF-49] inventory gaps 1: 몸뿐
+      [Stage3] blueprint success (verdict=PASS, strategy=emotion_focused, score=92)
+      [Stage3] ep 4 blueprint save completed
+         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 0)
+
+   📐 제5화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
+ ⠋ 제5화  0s         ⏳ 제5화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제5화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=4, semantic_ctx=2176자)
+ ⠧ 제5화 · Blueprint 생성  17m 29s         📊 제5화 Blueprint 결과: PASS (score=84)
+         └─ 선택 전략: action_focused
+         └─ Director 판정: pass (84.0) - see improvement guidance; binding prevalidation repair required
+         보완 포인트: Binding Python prevalidation invariants require bounded repair before plain PASS.
+      [TF-49] inventory gaps 2: SW인베스트먼트 법인 통장, SW인베스트먼트 사업자등록증
+      [PinGuard][WARN] ep 5 unresolved continuity pins
+      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, score=84)
       [TF-49] inventory gaps 1: 몸뿐
       [Stage3] blueprint success (verdict=PASS, strategy=emotion_focused, score=92)
       [Stage3] ep 4 blueprint save completed
@@ -274,6 +286,67 @@ semantic_ctx=2176자)
       [Stage3] blueprint success (verdict=PASS, strategy=action_focused, score=84)
       [Stage3] ep 5 blueprint save completed
          ⏳ Entity Registry 추출 중... (Arc 1, 첫 호출)
+      [TF-49] inventory gaps 1: 몸뿐
+      [Stage3] blueprint success (verdict=PASS, strategy=emotion_focused, score=92)
+      [Stage3] ep 4 blueprint save completed
+         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 0)
+
+   📐 제5화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
+ ⠋ 제5화  0s         ⏳ 제5화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제5화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=4, semantic_ctx=2176자)
+ ⠧ 제5화 · Blueprint 생성  17m 29s         📊 제5화 Blueprint 결과: PASS (score=84)
+         └─ 선택 전략: action_focused
+         └─ Director 판정: pass (84.0) - see improvement guidance; binding prevalidation repair required
+         보완 포인트: Binding Python prevalidation invariants require bounded repair before plain PASS.
+      [TF-49] inventory gaps 2: SW인베스트먼트 법인 통장, SW인베스트먼트 사업자등록증
+      [PinGuard][WARN] ep 5 unresolved continuity pins
+      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, score=84)
+      [Stage3] ep 5 blueprint save completed
+         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 0)
+
+   📐 제5화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
+ ⠋ 제5화  0s         ⏳ 제5화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제5화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=4, semantic_ctx=2176자)
+ ⠧ 제5화 · Blueprint 생성  17m 29s         📊 제5화 Blueprint 결과: PASS (score=84)
+         └─ 선택 전략: action_focused
+         └─ Director 판정: pass (84.0) - see improvement guidance; binding prevalidation repair required
+         보완 포인트: Binding Python prevalidation invariants require bounded repair before plain PASS.
+      [TF-49] inventory gaps 2: SW인베스트먼트 법인 통장, SW인베스트먼트 사업자등록증
+      [PinGuard][WARN] ep 5 unresolved continuity pins
+      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, score=84)
+         └─ 선택 전략: action_focused
+         └─ Director 판정: pass (84.0) - see improvement guidance; binding prevalidation repair required
+         보완 포인트: Binding Python prevalidation invariants require bounded repair before plain PASS.
+      [TF-49] inventory gaps 2: SW인베스트먼트 법인 통장, SW인베스트먼트 사업자등록증
+      [PinGuard][WARN] ep 5 unresolved continuity pins
+      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, score=84)
+         └─ Director 판정: pass (84.0) - see improvement guidance; binding prevalidation repair required
+         보완 포인트: Binding Python prevalidation invariants require bounded repair before plain PASS.
+      [TF-49] inventory gaps 2: SW인베스트먼트 법인 통장, SW인베스트먼트 사업자등록증
+      [PinGuard][WARN] ep 5 unresolved continuity pins
+      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, score=84)
+      [PinGuard][WARN] ep 5 unresolved continuity pins
+      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, score=84)
+      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, score=84)
+      [Stage3] ep 5 blueprint save completed
+      [Stage3] ep 5 blueprint save completed
+         ⏳ Entity Registry 추출 중... (Arc 1, 첫 호출)
          📋 [V61] Entity Registry 추출: 56개 엔티티
-   
+
    📐 제6화 Blueprint 생성 중... (Arc 2, 주인공: 한시우)
+ ⠋ 제6화  0s         ⏳ 제6화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제6화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=5, 
+semantic_ctx=2422자)
+ ⠙ 제6화 · Blueprint 생성  6m 7s         📊 제6화 Blueprint 결과: PASS (score=92)
+         └─ 선택 전략: action_focused
+         └─ Director 판정: score strong (92.0)
+      [TF-49] inventory gaps 2: SW인베스트먼트 법인 통장, SW인베스트먼트 사업자등록증
+      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, score=92)
+      [Stage3] ep 6 blueprint save completed
+         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 1)
+
+   📐 제7화 Blueprint 생성 중... (Arc 2, 주인공: 한시우)
+ ⠋ 제7화  0s         ⏳ 제7화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제7화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=6, 
+semantic_ctx=2422자)
+ ⠴ 제7화 · Blueprint 생성  19m 34s
