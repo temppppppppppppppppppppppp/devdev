@@ -108,3 +108,6 @@ projects/스트레스*/
 
 # === 임시 DB 파일 ===
 tmp_*.db
+
+# === 임시 백업 ===
+projects/0_0_tmp_backup/
