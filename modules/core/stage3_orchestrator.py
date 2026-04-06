@@ -1518,17 +1518,18 @@ class Stage3Orchestrator:
                 arc_data=arc_data,
             )
             _verdict = pipeline_result.get("final_verdict", "UNKNOWN")
+            _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
             _bp_score = pipeline_result.get(
                 "last_score", pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0)
             )
             ctx.ui.log(
-                f"      📊 제{working_ep}화 Blueprint 결과: {_verdict} (score={_bp_score})",
+                f"      📊 제{working_ep}화 Blueprint 결과: {_verdict} (attempt={_attempt_num}, score={_bp_score})",
                 stage="stage3",
                 component="blueprint_generation",
                 ep_num=working_ep,
                 arc_num=arc_idx,
                 event_kind="result",
-                meta={"verdict": _verdict, "score": _bp_score},
+                meta={"verdict": _verdict, "score": _bp_score, "attempt_num": _attempt_num},
             )
             _selected_strategy = pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy")
             if _selected_strategy:
@@ -1787,6 +1788,7 @@ class Stage3Orchestrator:
         self._record_stage3_success_completion(
             working_ep=working_ep,
             arc_no=arc_no,
+            blueprint=blueprint,
             pipeline_result=pipeline_result,
             final_verdict=final_verdict,
             quality_gate_failed=quality_gate_failed,
@@ -2102,6 +2104,7 @@ class Stage3Orchestrator:
         *,
         working_ep,
         arc_no,
+        blueprint,
         pipeline_result,
         final_verdict: str,
         quality_gate_failed: bool,
@@ -2131,6 +2134,14 @@ class Stage3Orchestrator:
             f"score={pipeline_result.get('phases', {}).get('generate', {}).get('selected_score', 0)})"
         )
         ctx.ui.log(f"   [Stage3] ep {working_ep} blueprint save completed")
+        ctx.ui.log(
+            self._build_stage3_success_summary_line(
+                working_ep=working_ep,
+                blueprint=blueprint,
+                pipeline_result=pipeline_result,
+                final_verdict=final_verdict,
+            )
+        )
         quality_dashboard = getattr(self.app, "quality_dashboard", None)
         if quality_dashboard is not None and hasattr(quality_dashboard, "record_validation"):
             try:
@@ -2174,6 +2185,50 @@ class Stage3Orchestrator:
             return max(1, int(retries) + 1)
         except (TypeError, ValueError):
             return 1
+
+    @staticmethod
+    def _extract_stage3_prevalidation_counts(pipeline_result: dict) -> tuple[int, int]:
+        """Return total prevalidation issues and binding subset counts for operator summaries."""
+        if not isinstance(pipeline_result, dict):
+            return 0, 0
+        phases = pipeline_result.get("phases", {})
+        if not isinstance(phases, dict):
+            return 0, 0
+        validate = phases.get("validate", {})
+        if not isinstance(validate, dict):
+            return 0, 0
+        advisory = validate.get("selected_candidate_advisory", {})
+        issue_count = 0
+        if isinstance(advisory, dict):
+            try:
+                issue_count = max(0, int(advisory.get("issue_count", 0) or 0))
+            except (TypeError, ValueError):
+                issue_count = 0
+        try:
+            binding_count = max(0, int(validate.get("binding_prevalidation_issue_count", 0) or 0))
+        except (TypeError, ValueError):
+            binding_count = 0
+        return issue_count, binding_count
+
+    @classmethod
+    def _build_stage3_success_summary_line(
+        cls,
+        *,
+        working_ep: int,
+        blueprint,
+        pipeline_result: dict,
+        final_verdict: str,
+    ) -> str:
+        attempt_num = cls._extract_stage3_attempt_num(pipeline_result)
+        issue_count, binding_count = cls._extract_stage3_prevalidation_counts(pipeline_result)
+        score = pipeline_result.get("last_score", pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0))
+        inventory_gap_count = len(blueprint.get("_inventory_gaps", [])) if isinstance(blueprint, dict) else 0
+        unresolved_pin_count = len(blueprint.get("_continuity_pin_unresolved", [])) if isinstance(blueprint, dict) else 0
+        return (
+            f"   [Stage3 Summary] ep {working_ep} | verdict={final_verdict} | score={score} | "
+            f"attempt={attempt_num} | prevalidation={issue_count} | binding={binding_count} | "
+            f"TF-49={inventory_gap_count} | PinGuard={unresolved_pin_count}"
+        )
 
     @staticmethod
     def _resolve_stage3_arc_num(arc_no: int | None, pipeline_result: dict) -> int | None:

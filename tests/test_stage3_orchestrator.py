@@ -1167,7 +1167,14 @@ class TestProcessSingleEpisode:
         pipeline_result = {
             "final_verdict": "PASS",
             "last_score": 87,
-            "phases": {"generate": {"selected_score": 87, "selected_strategy": "A"}},
+            "retries": 1,
+            "phases": {
+                "generate": {"selected_score": 87, "selected_strategy": "A"},
+                "validate": {
+                    "selected_candidate_advisory": {"issue_count": 4},
+                    "binding_prevalidation_issue_count": 1,
+                },
+            },
             "_stage3_duration_ms": 4321,
             "_stage3_token_cost_usd": 0.123,
         }
@@ -1178,11 +1185,16 @@ class TestProcessSingleEpisode:
         assert kw["stage"] == 3
         assert kw["success"] is True
         assert kw["final_verdict"] == "PASS"
-        assert kw["attempt_key"] == "s3:ep3:arc1:a1"
+        assert kw["attempt_key"] == "s3:ep3:arc1:a2"
         assert kw["duration_ms"] == 4321
         assert kw["token_cost"] == 0.123
         log_texts = [call.args[0] for call in app_mock.ui.log.call_args_list if call.args]
         assert any("blueprint success (verdict=PASS, strategy=A, score=87)" in text for text in log_texts)
+        assert any(
+            "[Stage3 Summary] ep 3 | verdict=PASS | score=87 | attempt=2 | prevalidation=4 | binding=1 | TF-49=0 | PinGuard=0"
+            in text
+            for text in log_texts
+        )
 
     def test_stage3_failure_records_pass_rate_monitor(self, orch, app_mock):
         pipeline_result = {
