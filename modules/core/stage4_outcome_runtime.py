@@ -22,6 +22,43 @@ class Stage4OutcomeRuntime:
     def __init__(self, owner: "Stage4Orchestrator") -> None:
         self.owner = owner
 
+    @staticmethod
+    def _normalize_stage3_binding_categories(s3_meta: dict | None) -> list[str]:
+        if not isinstance(s3_meta, dict):
+            return []
+        raw_categories = s3_meta.get("binding_prevalidation_categories", [])
+        if not isinstance(raw_categories, list):
+            return []
+        categories: list[str] = []
+        seen: set[str] = set()
+        for item in raw_categories:
+            category = str(item or "").strip()
+            if not category or category in seen:
+                continue
+            seen.add(category)
+            categories.append(category)
+        return categories[:6]
+
+    def _stage3_repair_signal_reasons(self, s3_meta: dict | None) -> list[str]:
+        if not isinstance(s3_meta, dict):
+            return []
+        reasons: list[str] = []
+        if bool(s3_meta.get("quality_risk", False)):
+            reasons.append("quality_risk")
+        if bool(s3_meta.get("revision_required", False)):
+            reasons.append("revision_required")
+        final_verdict = str(s3_meta.get("final_verdict", "") or "").strip().upper()
+        if final_verdict in {"PASS_WITH_FIX", "PASS_WITH_WARNING"} and "revision_required" not in reasons:
+            reasons.append("final_verdict")
+        binding_categories = self._normalize_stage3_binding_categories(s3_meta)
+        try:
+            binding_issue_count = int(s3_meta.get("binding_prevalidation_issue_count") or 0)
+        except (TypeError, ValueError):
+            binding_issue_count = 0
+        if binding_issue_count > 0 or binding_categories:
+            reasons.append("binding_prevalidation")
+        return reasons
+
     def _build_retry_attempt_key(self, *, ep_num: int, round_num: int, arc_num: int = 0) -> str:
         owner = self.owner
         interview_round = getattr(owner, "interview_round", None) or getattr(owner, "_interview_round", None)
@@ -937,7 +974,8 @@ class Stage4OutcomeRuntime:
             return qr7_disposition
 
         s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
-        quality_risk = bool(s3_meta.get("quality_risk", False))
+        stage3_repair_reasons = self._stage3_repair_signal_reasons(s3_meta)
+        stage3_repair_signal = bool(stage3_repair_reasons)
         quality_risk_threshold = owner.get_stage4_policy_int(
             "retry_escalation",
             "quality_risk_inplace_threshold",
@@ -953,10 +991,11 @@ class Stage4OutcomeRuntime:
             "blueprint_regeneration_after_inplace_streak",
             default=2,
         )
-        v75d_threshold = quality_risk_threshold if quality_risk else default_inplace_threshold
+        v75d_threshold = quality_risk_threshold if stage3_repair_signal else default_inplace_threshold
         logging.info(
-            "[V75-D] quality_risk=%s -> threshold=%d, streak=%d",
-            quality_risk,
+            "[V75-D] stage3_repair_signal=%s reasons=%s -> threshold=%d, streak=%d",
+            stage3_repair_signal,
+            ",".join(stage3_repair_reasons) if stage3_repair_reasons else "-",
             v75d_threshold,
             logic_error_streak,
         )

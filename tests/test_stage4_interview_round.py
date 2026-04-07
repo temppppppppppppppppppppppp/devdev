@@ -2742,6 +2742,42 @@ class TestRecordS4Attempt:
         assert payload["advisory_flags"]["scope_authority"]["fix_scope"] == "partial"
         assert payload["advisory_flags"]["scope_authority"]["authoritative_fix_scope"] == "inplace"
 
+    def test_build_stage4_patch_advisory_payload_promotes_structured_targets_and_trace(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir._build_stage4_patch_advisory_payload(
+            director_result={
+                "fix_pack": {
+                    "patch_targets": ["opening_location_name"],
+                    "must_fix": ["rename opening location"],
+                    "do_not_regress": ["timeline"],
+                    "success_condition": "opening label is corrected",
+                    "target_kind": "entity_ref",
+                }
+            },
+            patch_trace={
+                "patch_strategy": "inplace_patch_local_ops",
+                "patch_round": 2,
+                "patch_targets": ["opening_location_name"],
+                "repair_trace": [
+                    {
+                        "old_excerpt": "old venue",
+                        "new_excerpt": "new venue",
+                        "why_changed": "rename opening location",
+                    }
+                ],
+                "guard_result": {"status": "pass"},
+            },
+        )
+
+        assert payload["fix_pack"]["patch_target_records"][0]["summary"] == "opening_location_name"
+        assert payload["fix_pack"]["patch_target_records"][0]["target_kind"] == "entity_ref"
+        assert payload["partial_fix_eval"]["patch_round"] == 2
+        assert payload["partial_fix_eval"]["patch_target_id"].startswith("pt:")
+        assert payload["repair_trace"][0]["guard_result"]["status"] == "pass"
+        assert payload["repair_trace"][0]["new_excerpt"] == "new venue"
+
     def test_log_session_decision_surfaces_authoritative_fix_scope_metadata(self):
         ctx = _make_ctx()
         ctx.session_logger = MagicMock()
@@ -6369,6 +6405,39 @@ class TestLane2DirectorSemantics:
         assert "shared failure" == parts[3]
         assert "mandatory context" == parts[4]
         assert parts[5].startswith("[S3-META 경고]")
+
+    def test_build_director_decision_core_parts_injects_stage3_binding_note(self):
+        ctx = _make_ctx()
+        ctx.current_project.master_bible = {
+            "MasterBible": {
+                "protagonist_config": {
+                    "pov": "first_person",
+                    "external_pov_insert_policy": "limited",
+                }
+            }
+        }
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.blueprint = {
+            "_stage3_meta": {
+                "revision_required": True,
+                "final_verdict": "PASS_WITH_FIX",
+                "last_score": 77,
+                "binding_prevalidation_issue_count": 2,
+                "binding_prevalidation_categories": ["dead_npc", "fact_lock_location"],
+            }
+        }
+
+        parts = ir.director_runtime._build_director_decision_core_parts(
+            round_ctx=round_ctx,
+            validation_results=[{"shared_failure_warnings": []}],
+            mandatory_context="mandatory context",
+            writing_directive=_writing_directive_stub(),
+        )
+
+        assert any(part.startswith("[S3-META binding]") for part in parts)
+        assert any("dead_npc, fact_lock_location" in part for part in parts)
+        assert any(part.startswith("[S3-META 주의]") for part in parts)
 
     def test_build_director_candidate_evidence_parts_formats_advisories_and_feedback(self):
         ctx = _make_ctx()

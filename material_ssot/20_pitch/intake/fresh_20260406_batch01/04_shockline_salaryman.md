@@ -82,6 +82,47 @@ Status: fresh candidate
 - domain truth:
   - 리콜, 실사, 보험 갱신, 안전 CAPEX, 대체공급망, 공시 일정이 실제 전장이다.
 
+## 4A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 출하 보류 적중 뒤 리스크 TF가 호출되며 `예민한 대리`가 아니라 쇼크선을 먼저 읽는 사람으로 재평가된다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 고객사 벌점 조항과 보험사 질의서를 묶어 생산본부장 라인을 압박하고 실사 동행권이 열린다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 보험 질의 선열람권과 리스크 메모 승인선 강화가 같은 블록 안에서 붙는다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 공개 신호가 뜬 뒤 안전 설비 수혜 포지션 시드 수익이 붙어 내부 권한과 외부 회수가 한 번 닫힌다.
+  receipt_kind: seed_capital
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 재가동 조건표와 공시 시나리오를 직접 짜며 다음 위기 선독용 자료 접근권이 열린다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 4B. Readiness Claim
+
+- selection-ready: no
+- Phase0-ready: no
+- all 2~6 rows pay in-block: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 5. Phase0 Handoff Note
 
 - already_locked:

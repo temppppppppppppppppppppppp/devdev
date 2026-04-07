@@ -98,6 +98,47 @@ This is the first canonical pitch authority for `chaebol_allowance_zero`. Live r
 - proof scene:
   - 장례 특수가 끝난 직후, 형 서도윤과 재무실이 "재이는 또 빈손이 될 것"이라 예측한 자리에서 윤재이가 세탁·청소·셔틀·영수증 정산 라인으로 묶인 첫 월 반복매출 숫자를 장부로 꺼낸다. 누수 패턴·유령업체 단서까지 함께 짚는 순간, 사내의 윤재이 해석이 "일회성으로 운 좋았던 망나니"에서 "하부 운영망 누수 지도를 읽고 정산 레인을 표준화할 수 있는 사람"으로 이동한다. 형의 눈빛이 처음으로 바뀌는 바로 그 장면이다.
 
+## 3A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 꽃값 현금 회수선과 빈소 셔틀 노선권을 동시에 잡아 장례 운영 누수를 자기 레인으로 묶는다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 세탁실과 밤샘 청소팀 계약 구조를 재편해 장례 특수 종료 뒤에도 첫 월 반복매출이 계속 들어오는 구조를 만든다.
+  receipt_kind: recurring_cashflow
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 조의금 영수증과 외주비 장부를 손에 쥐고 정산 레인 접근권을 확보한다.
+  receipt_kind: evidence_access
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 서도윤의 시선이 망나니에서 현장 라인을 읽는 놈으로 바뀌고 재무실 감시선이 재설정된다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 호텔 백오브하우스에 발을 들일 명분과 연결선을 확보해 다음 운영 전장 입장권이 열린다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 3B. Readiness Declaration
+
+- selection-ready: yes
+- Phase0-ready: yes
+- all 2~6 ledger rows have has_cider true: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 4. Phase0 Handoff Note
 
 - already locked:

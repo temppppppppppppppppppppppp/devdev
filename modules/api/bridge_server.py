@@ -1594,6 +1594,7 @@ def _build_gate_repair_summary(snapshot: dict | None) -> dict[str, Any]:
         "ep_num": None,
         "attempt_num": None,
         "attempt_key": "",
+        "session_id": "",
         "final_verdict": None,
         "final_score": None,
         "director_verdict": None,
@@ -1601,6 +1602,14 @@ def _build_gate_repair_summary(snapshot: dict | None) -> dict[str, Any]:
         "repair_scope": None,
         "fix_scope": None,
         "authoritative_fix_scope": None,
+        "repair_contract_subtype": None,
+        "repair_contract_provenance": None,
+        "scope_authority_fix_scope": None,
+        "scope_authority_authoritative_fix_scope": None,
+        "scope_authority_scope_origin": None,
+        "scope_authority_widened": None,
+        "partial_fix_eval": {},
+        "repair_trace": [],
         "fix_pack": {},
         "repair_contract": {},
         "scope_authority": {},
@@ -1617,12 +1626,49 @@ def _build_gate_repair_summary(snapshot: dict | None) -> dict[str, Any]:
 
     fix_pack = snapshot.get("fix_pack")
     retry_budget_axes = snapshot.get("retry_budget_axes")
+    repair_contract = (
+        dict(snapshot.get("repair_contract") or {})
+        if isinstance(snapshot.get("repair_contract"), dict)
+        else {}
+    )
+    partial_fix_eval = (
+        dict(snapshot.get("partial_fix_eval") or {})
+        if isinstance(snapshot.get("partial_fix_eval"), dict)
+        else {}
+    )
+    repair_trace = list(snapshot.get("repair_trace") or []) if isinstance(snapshot.get("repair_trace"), list) else []
+    scope_authority = (
+        dict(snapshot.get("scope_authority") or {})
+        if isinstance(snapshot.get("scope_authority"), dict)
+        else {}
+    )
+    repair_contract_subtype = str(
+        snapshot.get("repair_contract_subtype") or repair_contract.get("subtype") or ""
+    ).strip()
+    repair_contract_provenance = str(
+        snapshot.get("repair_contract_provenance") or repair_contract.get("provenance") or ""
+    ).strip()
+    scope_authority_fix_scope = str(
+        snapshot.get("scope_authority_fix_scope") or scope_authority.get("fix_scope") or ""
+    ).strip()
+    scope_authority_authoritative_fix_scope = str(
+        snapshot.get("scope_authority_authoritative_fix_scope")
+        or scope_authority.get("authoritative_fix_scope")
+        or ""
+    ).strip()
+    scope_authority_scope_origin = snapshot.get("scope_authority_scope_origin")
+    if scope_authority_scope_origin in (None, "", []):
+        scope_authority_scope_origin = scope_authority.get("scope_origin")
+    scope_authority_widened = snapshot.get("scope_authority_widened")
+    if scope_authority_widened is None:
+        scope_authority_widened = scope_authority.get("widened")
     payload.update(
         {
             "available": True,
             "ep_num": snapshot.get("ep_num"),
             "attempt_num": snapshot.get("attempt_num"),
             "attempt_key": str(snapshot.get("attempt_key") or "").strip(),
+            "session_id": str(snapshot.get("session_id") or "").strip(),
             "final_verdict": str(snapshot.get("final_verdict") or "").strip() or None,
             "final_score": snapshot.get("final_score"),
             "director_verdict": str(snapshot.get("director_verdict") or "").strip() or None,
@@ -1630,13 +1676,17 @@ def _build_gate_repair_summary(snapshot: dict | None) -> dict[str, Any]:
             "repair_scope": str(snapshot.get("repair_scope") or "").strip() or None,
             "fix_scope": str(snapshot.get("fix_scope") or "").strip() or None,
             "authoritative_fix_scope": str(snapshot.get("authoritative_fix_scope") or "").strip() or None,
+            "repair_contract_subtype": repair_contract_subtype or None,
+            "repair_contract_provenance": repair_contract_provenance or None,
+            "scope_authority_fix_scope": scope_authority_fix_scope or None,
+            "scope_authority_authoritative_fix_scope": scope_authority_authoritative_fix_scope or None,
+            "scope_authority_scope_origin": scope_authority_scope_origin,
+            "scope_authority_widened": scope_authority_widened,
+            "partial_fix_eval": partial_fix_eval,
+            "repair_trace": repair_trace,
             "fix_pack": dict(fix_pack) if isinstance(fix_pack, dict) else {},
-            "repair_contract": dict(snapshot.get("repair_contract") or {})
-            if isinstance(snapshot.get("repair_contract"), dict)
-            else {},
-            "scope_authority": dict(snapshot.get("scope_authority") or {})
-            if isinstance(snapshot.get("scope_authority"), dict)
-            else {},
+            "repair_contract": repair_contract,
+            "scope_authority": scope_authority,
             "retry_budget_axes": dict(retry_budget_axes) if isinstance(retry_budget_axes, dict) else {},
             "authority": {
                 "final_authority_sink": str(snapshot.get("final_authority_sink") or "").strip(),

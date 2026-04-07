@@ -1,14 +1,14 @@
 # 0_0 Stage4 Repair-Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (survey-backed promotion complete; bounded sink/readback fixes have landed, but shared grammar and first-class repair metadata normalization remain open)
+Status: partially_realized (survey-backed promotion complete; bounded sink/readback fixes plus operator-visible first-class snapshot promotion have landed, but shared grammar closure and fresh runtime proof remain open)
 Canonical Path: `docs/2026-04-02/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `aaf495d65c95c9ffe7ea99277f315a69609252db`
 - Baseline Dirty Summary: `dirty: Stage4 contract docs/code/test deltas active; roadmap/temp queue already dirty; current ep2 canary work in progress`
 - Resume Commit: `0d7c077a9e6f14575aba7fc509b836d218db610d`
-- Resume Drift Summary: `the lane no longer sits at pure survey status: bounded `stage4_interview_round.py` and `db_manager.py` fixes tightened fix-scope/readback behavior, and the 2026-04-06 global P0-P1 survey confirmed the remaining live repair-contract seam is phantom mismatch inflation across repair_scope/gate_basis/readback surfaces rather than a broad Stage4 sink failure`
+- Resume Drift Summary: `the lane no longer sits at pure survey status: bounded `stage4_interview_round.py` and `db_manager.py` fixes tightened fix-scope/readback behavior, the 2026-04-06 global P0-P1 survey confirmed the remaining live repair-contract seam as phantom mismatch inflation across repair_scope/gate_basis/readback surfaces, and the 2026-04-07 bounded `db_manager.py` + `bridge_server.py` + `stage4_canary_tools.py` patch promoted first-class repair subtype/provenance/scope-authority fields into operator-visible readback summaries with focused static validation while fresh canary/live proof remains deferred`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-repair-contract-grammar-global-bounded-survey.md`
 - `docs/2026-04-06/rol-global-terminal4-stage4-pipeline-p0p1.md`
@@ -326,3 +326,36 @@ Revalidation note:
 
 - static evidence is sufficient to keep this as a live execution SSOT
 - fresh run is helpful for measuring mismatch volume, but not required to prove the readback seam exists
+
+## 15. 2026-04-07 Bounded Readback Surface Promotion
+
+The 2026-04-07 realization pass converted the revalidated phantom-mismatch substrate into one bounded operator-surface patch instead of reopening broad Stage4 grammar work.
+
+Landed:
+
+- `modules/core/db_manager.py`
+  - `get_latest_stage4_gate_repair_snapshot()` now emits first-class `repair_contract_subtype`, `repair_contract_provenance`, `scope_authority_fix_scope`, `scope_authority_authoritative_fix_scope`, `scope_authority_scope_origin`, and `scope_authority_widened`
+  - root/nested fallback still works when `scope_authority` is absent but `fix_scope` and `authoritative_fix_scope` remain available
+- `modules/api/bridge_server.py`
+  - quality-dashboard `gate_repair_summary` now exposes the same promoted first-class repair fields without requiring nested `repair_contract` / `scope_authority` inference
+- `modules/core/stage4_canary_tools.py`
+  - `gate_repair_surface_summary` now prefers promoted first-class repair fields when present and keeps the same compact operator-facing shape
+
+Bounded outcome:
+
+- operator-visible JSON no longer drops subtype/provenance/scope-authority truth behind nested-only payload inspection
+- readback surfaces can preserve widened-scope visibility even when the nested `scope_authority` object is sparse or absent
+- this narrows the active Stage4 repair lane from readback phantom-mismatch normalization toward residual grammar closure plus fresh runtime proof
+
+Focused validation:
+
+- `python -m py_compile modules/core/db_manager.py modules/core/stage4_canary_tools.py modules/api/bridge_server.py tests/test_db_manager.py tests/test_stage4_canary_tools.py tests/test_bridge_quality_summary.py`
+- `pytest tests/test_db_manager.py -k "latest_stage4_gate_repair_snapshot" -q`
+- `pytest tests/test_stage4_canary_tools.py -k "build_stage4_canary_summary" -q`
+- `pytest tests/test_failure_analyzer.py -k "nested_gate_semantics or gate_repair_contract_fields or scope_authority" -q`
+- `ruff check modules/core/db_manager.py modules/core/stage4_canary_tools.py modules/api/bridge_server.py tests/test_db_manager.py tests/test_stage4_canary_tools.py tests/test_bridge_quality_summary.py`
+
+Deferred / blocked:
+
+- fresh canary/live proof remains intentionally deferred by operator order
+- `pytest tests/test_bridge_quality_summary.py -k "surfaces_gate_repair_summary" -q` is environment-blocked in this shell because `fastapi` is not installed, so bridge verification here is limited to compile + static diff review

@@ -78,6 +78,47 @@ Selection audit: P0 11/11 PASS, P1 10/11 PASS, Selection Gate 9/9 PASS. 2026-04-
 - opening_reward_vector:
   - 승리 직후 의심만 남는 구조가 아니라, 같은 Arc 안에서 보호패+열쇠+진입권이 즉시 붙는다. 첫 보상이 다음 비고와 다음 문파 전장의 입장권을 열어 엔진이 정지하지 않는다.
 
+## 3A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 계승비무 역전 직후 장로의 공개 보호가 붙어 외문 잡역의 참견이 보호패로 전환된다.
+  receipt_kind: protection
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 장서각 임시 열쇠를 받아 봉인된 비고에 직접 들어갈 수 있게 된다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 문파가 잃어버린 두 번째 비급의 결맥을 발견해 복원 비급 열람 우선권이 생긴다.
+  receipt_kind: knowledge_access
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 경쟁 문파의 위서 비급 사기를 간파해 태허검문의 체면을 지키고 복원 능력이 대외 정통성 판정으로 인정된다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 내문 진입권을 회수해 다음 비고와 다음 문파 전장을 여는 상위 입장권을 확보한다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 3B. Readiness Declaration
+
+- selection-ready: yes
+- Phase0-ready: yes
+- all 2~6 ledger rows have has_cider true: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 4. Phase0 Handoff Note
 
 - already_locked:

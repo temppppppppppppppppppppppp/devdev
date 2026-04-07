@@ -7,6 +7,8 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from modules.core.partial_fix_contract import build_partial_fix_eval, normalize_guard_result
+
 if TYPE_CHECKING:
     from modules.core.stage4_interview_round import Stage4InterviewRound
 
@@ -624,10 +626,36 @@ class Stage4RetryRuntime:
                 patch_trace["patch_strategy"] = str(
                     patch_trace.get("patch_strategy") or patched[0].get("strategy", "") or "inplace_patch"
                 )
+                patch_trace["patch_round"] = fix_index + 1
                 if not patch_trace.get("patch_targets"):
                     patch_trace["patch_targets"] = list(
                         patched[0].get("patch_targets") or fix_pack.get("patch_targets") or []
                     )
+                if not patch_trace.get("target_kind"):
+                    patch_trace["target_kind"] = str(
+                        patch_trace.get("target_kind")
+                        or patched[0].get("target_kind", "")
+                        or fix_pack.get("target_kind", "")
+                        or ""
+                    ).strip()
+                if not patch_trace.get("patch_target_records"):
+                    patch_trace["patch_target_records"] = list(
+                        patch_trace.get("patch_target_records")
+                        or patched[0].get("patch_target_records")
+                        or fix_pack.get("patch_target_records")
+                        or []
+                    )
+                if not patch_trace.get("repair_trace"):
+                    patch_trace["repair_trace"] = list(
+                        patch_trace.get("repair_trace") or patched[0].get("repair_trace") or []
+                    )
+                patch_trace["partial_fix_eval"] = build_partial_fix_eval(
+                    patch_round=patch_trace.get("patch_round"),
+                    is_patch_attempt=True,
+                    patch_target_records=list(patch_trace.get("patch_target_records") or []),
+                    target_kind=str(patch_trace.get("target_kind", "") or ""),
+                    fallback_reason=str(patch_trace.get("fallback_reason", "") or ""),
+                )
             return _PassWithFixPatchAttemptPayload(
                 should_abort=False,
                 patched_candidates=patched or [],
@@ -688,6 +716,17 @@ class Stage4RetryRuntime:
                 failure_key=failure_key,
                 notice=length_notice,
             )
+            patch_trace["guard_result"] = normalize_guard_result(
+                {
+                    "status": "fail",
+                    "failure_key": failure_key,
+                }
+            )
+            if isinstance(patch_trace.get("partial_fix_eval"), dict):
+                patch_trace["partial_fix_eval"] = {
+                    **dict(patch_trace.get("partial_fix_eval") or {}),
+                    "fallback_reason": failure_key,
+                }
             return _PassWithFixPatchGuardPayload(
                 should_abort=True,
                 current_audit_result=current_audit_result,
@@ -716,6 +755,17 @@ class Stage4RetryRuntime:
                 failure_key="inplace_min_preserve_ratio",
                 notice=preserve_notice,
             )
+            patch_trace["guard_result"] = normalize_guard_result(
+                {
+                    "status": "fail",
+                    "failure_key": "inplace_min_preserve_ratio",
+                }
+            )
+            if isinstance(patch_trace.get("partial_fix_eval"), dict):
+                patch_trace["partial_fix_eval"] = {
+                    **dict(patch_trace.get("partial_fix_eval") or {}),
+                    "fallback_reason": "inplace_min_preserve_ratio",
+                }
             return _PassWithFixPatchGuardPayload(
                 should_abort=True,
                 current_audit_result=current_audit_result,
@@ -727,7 +777,10 @@ class Stage4RetryRuntime:
             should_abort=False,
             current_audit_result=current_audit_result,
             director_feedback=director_feedback,
-            patch_trace=patch_trace,
+            patch_trace={
+                **dict(patch_trace or {}),
+                "guard_result": normalize_guard_result({"status": "pass", "failure_key": ""}),
+            },
         )
 
     def _capture_pass_with_fix_patch_delta(

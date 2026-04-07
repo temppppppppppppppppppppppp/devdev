@@ -128,6 +128,11 @@ Out of scope:
 
 - 일부 이미 존재
 - 신규 운영 spec에서는 이것을 공식 `V1`로 부른다
+- current thin runner:
+  - `python -X utf8 scripts/run_work_guard_v1.py --path <yaml>`
+  - `--work-id <work_id>` for library publish lookup
+  - `--project-dir <project_dir>` for `{project}/config/work_guard.yaml`
+  - exit code: `0=PASS`, `2=HOLD`, `1=FAIL`
 
 ### 5.2 WG-V2 Freeze Checklist
 
@@ -185,6 +190,8 @@ Out of scope:
 한 줄로 압축하면:
 
 - `Phase0 -> WG-V1 -> WG-V2 -> freeze -> TR -> WG-V3`
+- current operator command:
+  - `python -X utf8 scripts/run_work_guard_v1.py --path <yaml>`
 
 ## 7. WG-V1 Shape Validator Spec
 

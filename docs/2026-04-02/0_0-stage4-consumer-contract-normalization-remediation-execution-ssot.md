@@ -1,14 +1,14 @@
 # 0_0 Stage4 Consumer-Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (aggregate Stage4 wave active; flashback, NpcDrift, fix-pack provenance, post-pass state owner-boundary, intake authority, and sink-alignment follow-up patches are now runtime-backed; 2026-04-03 fresh full run plus r2 Stage4-only sinkproof prove ep2 can PASS, the earlier metadata/sink hard-fail interpretation no longer fronts the queue, and the 2026-04-06 revalidation keeps the next bounded debt on numeric asset authority / carryover owner-boundary rather than replay-first residuals)
+Status: partially_realized (aggregate Stage4 wave active; flashback, NpcDrift, fix-pack provenance, post-pass state owner-boundary, intake authority, and sink-alignment follow-up patches are now runtime-backed; 2026-04-03 fresh full run plus r2 Stage4-only sinkproof prove ep2 can PASS, the earlier metadata/sink hard-fail interpretation no longer fronts the queue, the 2026-04-06 revalidation kept the next bounded debt on numeric asset authority / carryover owner-boundary rather than replay-first residuals, and the 2026-04-07 bounded post-pass numeric carryover refresh patch landed with focused static validation while fresh canary/live proof remains explicitly deferred by operator)
 Canonical Path: `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `09a7b478c2a2c16d708cc041aaa6e194278e7f9b`
 - Baseline Dirty Summary: `dirty: active Stage4 docs/code/test deltas, prepared canary targets, temp roadmap/queue active`
-- Resume Commit: `0d7c077a9e6f14575aba7fc509b836d218db610d`
-- Resume Drift Summary: `2026-04-03 runtime proof kept Stage4 as the active owner, the later readback backfill removed the earlier gate-repair metadata gap, the bounded chief-writer carryover packet update tightened prompt authority, and the 2026-04-06 global P0-P1 survey reconfirmed that no new Stage4 P0 exists while the remaining live P1 stays on numeric carryover baseline promotion / owner-boundary rather than broad sink failure`
+- Resume Commit: `5a2ef92ab04e46d47ee73b9d56d3e546544576c0`
+- Resume Drift Summary: `2026-04-07 bounded Stage4 consumer implementation landed in post-pass runtime: carryover refresh now accepts structured numeric truth from actual_truth plus director fallback, promotion metadata is persisted in state_truth_owner_contract, focused pytest/ruff/py_compile validation closed, and operator explicitly deferred fresh canary/live proof so the lane stays partial pending runtime measurement`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-bounded-survey.md`
@@ -24,6 +24,8 @@ Source Survey Docs:
 - `docs/2026-04-03/0_0-stage4-ep2-sinkproof-r2-runtime-closure-audit.md`
 - `docs/2026-04-03/0_0-stage4-numeric-asset-authority-carryover-bounded-survey.md`
 - `docs/2026-04-06/rol-global-terminal4-stage4-pipeline-p0p1.md`
+- `docs/2026-04-07/stage4-consumer-front-implementation-context.md`
+- `docs/2026-04-07/stage234-handoff-harness-merge-audit.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-evidence.json`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-evidence.json`
@@ -311,6 +313,13 @@ Realization update (2026-04-05):
 - this keeps the active numeric owner-boundary seam in the existing Stage4 consumer lane while also feeding the already-landed reject/retry/session sink wiring with a richer contract shape
 - targeted verification: `pytest tests/test_a4_failure_pattern.py -q`, `pytest tests/test_v75c_contradiction_firewall.py -q`, `pytest tests/test_stage4_interview_round.py -k "authoritative_fix_scope_metadata or numeric_carryover_operator_notes or stage4_db_attempt_payload" -q`, `ruff check`, `python -m py_compile`
 
+Realization update (2026-04-07):
+
+- `stage4_post_pass_runtime.py` now computes a bounded numeric carryover refresh plan that accepts asset-family structured numeric truth from `actual_truth` first and `final_state_updates` fallback, then reuses that plan for FactLedger carryover overlay plus `state_truth_owner_contract` promotion metadata
+- `state_truth_owner_contract.numeric_carryover_authority` now records `promotion_rule`, `promoted_fields`, and `promotion_sources` when a carryover baseline refresh is emitted from structured post-pass truth
+- focused verification closed: `pytest tests/test_stage4_post_processor.py::TestStateTruthOwnerContract::test_marks_promoted_numeric_carryover_refresh_sources tests/test_stage4_post_processor.py::TestAtomicMetadataSave::test_build_atomic_state_payloads_promotes_actual_truth_numeric_carryover_into_fact_ledger tests/test_stage4_post_processor.py::TestAtomicMetadataSave::test_build_atomic_state_payloads_promotes_string_and_director_fallback_numeric_carryover -q`, `pytest tests/test_stage4_post_processor.py -k "numeric_carryover_authority or carryover" -q`, `pytest tests/test_stage4_context_builder.py -k "numeric_carryover_authority or carryover" -q`, `pytest tests/test_a4_failure_pattern.py -q`, `pytest tests/test_v75c_contradiction_firewall.py -q`, `ruff check modules/core/stage4_post_pass_runtime.py tests/test_stage4_post_processor.py`, `python -m py_compile modules/core/stage4_post_pass_runtime.py tests/test_stage4_post_processor.py`
+- operator explicitly deferred fresh canary/live proof, so this lane remains `partial`; treat the code landing as implementation progress, not runtime closure
+
 ## 9. Acceptance Criteria
 
 - Stage4 bounded contradiction types preserve enough subtype detail to support local repair where appropriate
@@ -423,3 +432,9 @@ Revalidation note:
 - static evidence is sufficient to keep this as a live P1 execution target
 - fresh run is still useful for runtime impact measurement, but not required to prove the seam exists
 - confidence after the 2026-04-06 re-audit remains `97%`
+
+2026-04-07 implementation delta:
+
+- the previous zero-promotion path is no longer the current code state for structured asset-family fields: post-pass now refreshes carryover baseline candidates from `actual_truth` first and `final_state_updates` fallback, and records promotion metadata in the owner contract
+- operator explicitly deferred fresh canary/live proof, so this lane remains open for runtime measurement rather than broad new implementation inside the same topic
+- if runtime proof continues to stay deferred, the next code implementation queue item is `0_0-stage4-repair-contract-normalization-remediation`; do not reinterpret that as Stage4 consumer closure

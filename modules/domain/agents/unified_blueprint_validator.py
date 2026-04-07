@@ -25,6 +25,7 @@ import logging
 import re
 
 from modules.core.constants import AIModels, Stage2Limits
+from modules.core.partial_fix_contract import normalize_patch_target_records
 from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _get_agent_default_model
@@ -52,8 +53,13 @@ _STOP_LINE_COMMON_TOKENS = {
 }
 _BINDING_PREVALIDATION_CATEGORIES = {
     "scene_completeness",
+    "arc_compliance",
     "arc_timeline",
     "capital_unit",
+    "dead_npc",
+    "fact_lock_item",
+    "fact_lock_location",
+    "fact_lock_provenance",
     "opening_anchor",
     "mission_clarity",
     "timeline_specificity",
@@ -98,6 +104,61 @@ def _safe_int(value, default=0):
         return int(value)
     except (ValueError, TypeError):
         return default
+
+
+def _compact_stage3_fix_list(raw: object, *, limit: int = 6, item_limit: int = 180) -> list[str]:
+    if isinstance(raw, str):
+        items = [raw]
+    elif isinstance(raw, list):
+        items = list(raw)
+    else:
+        items = []
+
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        text = " ".join(str(item or "").split()).strip()[:item_limit]
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        normalized.append(text)
+        if len(normalized) >= limit:
+            break
+    return normalized
+
+
+def _normalize_stage3_fix_pack(raw_payload: object) -> dict:
+    payload = raw_payload if isinstance(raw_payload, dict) else {}
+    source = payload.get("fix_pack") if isinstance(payload.get("fix_pack"), dict) else payload
+    if not isinstance(source, dict):
+        return {}
+
+    target_kind = str(source.get("target_kind") or payload.get("target_kind") or "").strip()
+    patch_targets, patch_target_records = normalize_patch_target_records(
+        source.get("patch_target_records") or source.get("patch_targets"),
+        stage="stage3",
+        container_kind="blueprint",
+        container_id="stage3_blueprint",
+        default_target_kind=target_kind,
+    )
+    must_fix = _compact_stage3_fix_list(source.get("must_fix"), limit=6, item_limit=180)
+    do_not_regress = _compact_stage3_fix_list(source.get("do_not_regress"), limit=6, item_limit=180)
+    success_condition = " ".join(str(source.get("success_condition", "") or "").split()).strip()[:220]
+    normalized: dict = {}
+    if patch_targets:
+        normalized["patch_targets"] = patch_targets
+    if patch_target_records:
+        normalized["patch_target_records"] = patch_target_records
+    resolved_target_kind = target_kind or str((patch_target_records or [{}])[0].get("target_kind") or "").strip()
+    if resolved_target_kind:
+        normalized["target_kind"] = resolved_target_kind
+    if must_fix:
+        normalized["must_fix"] = must_fix
+    if do_not_regress:
+        normalized["do_not_regress"] = do_not_regress
+    if success_condition:
+        normalized["success_condition"] = success_condition
+    return normalized
 
 
 class UnifiedBlueprintValidator:
@@ -207,6 +268,22 @@ class UnifiedBlueprintValidator:
                 continue
             binding_issues.append(issue)
         return binding_issues
+
+    @staticmethod
+    def _summarize_binding_prevalidation_categories(binding_issues: list[dict]) -> list[str]:
+        if not isinstance(binding_issues, list):
+            return []
+        categories: list[str] = []
+        seen: set[str] = set()
+        for issue in binding_issues:
+            if not isinstance(issue, dict):
+                continue
+            category = str(issue.get("category", "") or "").strip()
+            if not category or category in seen:
+                continue
+            seen.add(category)
+            categories.append(category)
+        return categories[:6]
 
     def _apply_binding_prevalidation_contract(
         self,
@@ -440,7 +517,9 @@ class UnifiedBlueprintValidator:
             fix_scope=fix_scope,
             fix_scope_reasoning=fix_scope_reasoning,
         )
+        binding_categories = self._summarize_binding_prevalidation_categories(binding_issues)
         revision_required = bool(revision_required or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"))
+        fix_pack = _normalize_stage3_fix_pack(compare_result)
 
         result = {
             "verdict": verdict,
@@ -464,7 +543,10 @@ class UnifiedBlueprintValidator:
             "candidate_advisories": candidate_advisories,
             "selected_candidate_advisory": selected_candidate_advisory,
             "binding_prevalidation_issue_count": len(binding_issues),
+            "binding_prevalidation_categories": binding_categories,
         }
+        if fix_pack:
+            result["fix_pack"] = fix_pack
 
         status = "PASS" if verdict in ("PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING") else "REJECT"
         logging.info(
@@ -644,6 +726,7 @@ class UnifiedBlueprintValidator:
             fix_scope=str(director_result.get("fix_scope", "") or ""),
             fix_scope_reasoning=str(director_result.get("fix_scope_reasoning", "") or ""),
         )
+        binding_categories = self._summarize_binding_prevalidation_categories(binding_issues)
         if python_warnings:
             ensemble_meta = blueprint.get("_ensemble_meta", {}) if isinstance(blueprint, dict) else {}
             if not isinstance(ensemble_meta, dict):
@@ -675,7 +758,11 @@ class UnifiedBlueprintValidator:
             "revision_required": final_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"),
             "candidate_count": 1,
             "binding_prevalidation_issue_count": len(binding_issues),
+            "binding_prevalidation_categories": binding_categories,
         }
+        fix_pack = _normalize_stage3_fix_pack(director_result)
+        if fix_pack:
+            result["fix_pack"] = fix_pack
 
         status = "PASS" if final_verdict in ("PASS", "PASS_WITH_FIX") else "REJECT"
         logging.warning(f"[{status}] Director score={director_score} reason={(director_reason or '')[:50]}")

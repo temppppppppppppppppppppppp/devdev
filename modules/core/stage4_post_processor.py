@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 
 from modules.core.metrics_collector import get_metrics_collector
+from modules.core.non_wuxia_recovery_policy import normalize_chain_link_for_genre
 from modules.core.project_support import resolve_project_pov_contract
 from modules.core.quality_signal_metrics import compute_quality_signal_bundle, extract_warning_count
 from modules.core.soft_failure import report_soft_failure, resolve_project_log_dir
@@ -874,6 +875,7 @@ class Stage4PostProcessor:
             if extract_chain_link_fn:
                 chain_link = extract_chain_link_fn(next_ep, final_manuscript, blueprint)
             if chain_link:
+                chain_link = normalize_chain_link_for_genre(chain_link, genre_type)
                 self.ctx.current_project.db.save_anchor(f"chain_link_{next_ep}", chain_link)
         except Exception as chain_link_err:
             self.ctx.ui.log(f"   Chain link save failed: {str(chain_link_err)[:50]}")

@@ -161,10 +161,28 @@ def test_failure_analyzer_patch_trace_summary_uses_episode_logs(tmp_path):
                 "initial_score": 92,
                 "final_verdict": "PASS",
                 "final_score": 98,
+                "fix_scope": "inplace",
                 "flags": {"patch_mode": True},
                 "patch_trace": {
                     "patch_strategy": "inplace_patch_structural",
                     "patch_targets": ["scene_2"],
+                    "patch_target_records": [
+                        {
+                            "patch_target_id": "pt:scene_2",
+                            "summary": "scene_2",
+                            "target_kind": "scene_block",
+                        }
+                    ],
+                    "partial_fix_eval": {
+                        "patch_round": 1,
+                        "is_patch_attempt": True,
+                        "patch_target_id": "pt:scene_2",
+                        "target_kind": "scene_block",
+                        "must_fix_resolved": True,
+                        "do_not_regress_held": True,
+                        "success_condition_met": True,
+                        "fallback_reason": "",
+                    },
                     "unchanged_ratio": 0.83,
                     "fallback_reason": "",
                     "focus": "ending",
@@ -179,10 +197,28 @@ def test_failure_analyzer_patch_trace_summary_uses_episode_logs(tmp_path):
                 "initial_score": 88,
                 "final_verdict": "REJECT",
                 "final_score": 61,
+                "fix_scope": "partial",
                 "flags": {"patch_mode": True},
                 "patch_trace": {
                     "patch_strategy": "inplace_patch",
                     "patch_targets": [],
+                    "patch_target_records": [
+                        {
+                            "patch_target_id": "pt:scene_2",
+                            "summary": "scene_2",
+                            "target_kind": "scene_block",
+                        }
+                    ],
+                    "partial_fix_eval": {
+                        "patch_round": 2,
+                        "is_patch_attempt": True,
+                        "patch_target_id": "pt:scene_2",
+                        "target_kind": "scene_block",
+                        "must_fix_resolved": False,
+                        "do_not_regress_held": False,
+                        "success_condition_met": False,
+                        "fallback_reason": "global_issue",
+                    },
                     "unchanged_ratio": 0.58,
                     "fallback_reason": "global_issue",
                     "focus": "global",
@@ -205,7 +241,13 @@ def test_failure_analyzer_patch_trace_summary_uses_episode_logs(tmp_path):
         assert result["strategy_counts"]["inplace_patch_structural"] == 1
         assert result["fallback_reasons"]["global_issue"] == 1
         assert result["focus_counts"]["ending"] == 1
-        assert result["top_patch_targets"] == [{"target": "scene_2", "count": 1}]
+        assert result["top_patch_targets"] == [{"target": "scene_2", "count": 2}]
+        assert result["partial_fix_eval"]["local_hit_rate"] == 0.5
+        assert result["partial_fix_eval"]["fallback_to_partial_or_full"] == 0.5
+        assert result["partial_fix_eval"]["same_target_retry_avg"] == 2.0
+        assert result["partial_fix_eval"]["same_target_retry_p95"] == 2
+        assert result["partial_fix_eval"]["do_not_regress_violation_rate"] == 0.5
+        assert result["partial_fix_eval"]["verifier_coverage"] == 1.0
         assert summary["patch_trace_summary"]["count"] == 2
     finally:
         db.close()

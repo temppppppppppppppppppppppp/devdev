@@ -65,6 +65,47 @@ This is the canonical pitch authority for `permit_window_grade9`. Phase0, TR, BI
   - 인허가를 추상 정치싸움으로만 쓰지 않는다.
   - 개발 비리를 막연한 정의감으로만 해결하지 않는다.
 
+## 3A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 밤비 속 현장 침수와 대피 동선 문제가 그대로 드러나며 기훈의 도장 보류가 공개적으로 맞았다고 확인된다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 하청 도면 돌려쓰기와 허위 민원 처리 흔적을 묶어 특별점검을 트리거한다.
+  receipt_kind: proof_confirmation
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 사용승인 재개 조건표를 직접 작성하며 `다시 열 수 있는 조건을 가진 사람` 위치로 올라선다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 특별보완명령권이 붙어 창구 9급 문장이 실제 현장 명령으로 바뀐다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 시장 직보 라인과 도시개발 TF 실무 간사 자리를 회수하며 다음 개발사업 우선 검토권이 열린다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 3B. Readiness Declaration
+
+- selection-ready: yes
+- Phase0-ready: yes
+- all 2~6 ledger rows have has_cider true: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 4. Phase0 Handoff Note
 
 - already_locked:

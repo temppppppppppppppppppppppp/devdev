@@ -58,13 +58,15 @@ def test_inplace_patch_uses_deterministic_local_ops_for_local_sentence_fix_pack(
         }
     ]
     assert writer.ask.call_count == 1
-    assert writer._last_inplace_patch_trace == {
-        "patch_strategy": "inplace_patch_local_ops",
-        "patch_targets": ["scene_2"],
-        "fallback_reason": "",
-        "focus": "",
-        "structural_attempted": False,
-    }
+    assert writer._last_inplace_patch_trace["patch_strategy"] == "inplace_patch_local_ops"
+    assert writer._last_inplace_patch_trace["patch_targets"] == ["scene_2"]
+    assert writer._last_inplace_patch_trace["fallback_reason"] == ""
+    assert writer._last_inplace_patch_trace["focus"] == ""
+    assert writer._last_inplace_patch_trace["structural_attempted"] is False
+    assert writer._last_inplace_patch_trace["target_kind"] == "local_sentence"
+    assert writer._last_inplace_patch_trace["patch_target_records"][0]["summary"] == "scene_2"
+    assert writer._last_inplace_patch_trace["repair_trace"][0]["old_excerpt"] == "여기서 잘못된 문장이다."
+    assert writer._last_inplace_patch_trace["repair_trace"][0]["new_excerpt"] == "여기서 수정된 문장이다."
 
 
 def test_inplace_patch_falls_back_to_whole_text_when_local_ops_are_unusable():
@@ -119,10 +121,10 @@ def test_inplace_patch_falls_back_to_whole_text_when_local_ops_are_unusable():
         }
     ]
     assert writer.ask.call_count == 2
-    assert writer._last_inplace_patch_trace == {
-        "patch_strategy": "inplace_patch",
-        "patch_targets": ["opening_location_name"],
-        "fallback_reason": "op_1_apply_failed",
-        "focus": "",
-        "structural_attempted": False,
-    }
+    assert writer._last_inplace_patch_trace["patch_strategy"] == "inplace_patch"
+    assert writer._last_inplace_patch_trace["patch_targets"] == ["opening_location_name"]
+    assert writer._last_inplace_patch_trace["fallback_reason"] == "op_1_apply_failed"
+    assert writer._last_inplace_patch_trace["focus"] == ""
+    assert writer._last_inplace_patch_trace["structural_attempted"] is False
+    assert writer._last_inplace_patch_trace["target_kind"] == "entity_ref"
+    assert writer._last_inplace_patch_trace["patch_target_records"][0]["summary"] == "opening_location_name"

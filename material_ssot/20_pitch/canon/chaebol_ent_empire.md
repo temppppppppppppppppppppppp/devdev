@@ -67,6 +67,47 @@ Note: upstream Stage0 preprocess bundle은 아직 존재하지 않는다. 이 �
   - 한도윤(경영관리실장): 청산을 기다리는 감시자. 태하의 판단이 틀리는 순간 매각 명분으로 쓴다.
   - 대형 기획사/업계 관성: 방송 중심·대형 과점 구조가 태하의 비방송 비대칭 전략을 처음에는 웃긴 변칙으로 취급한다.
 
+## 3A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 강이현 즉석 무대 직후 VIP 쪽에서 후속 행사 부킹 관심이 붙고 "저 애 누구냐" 질문이 공개적으로 튄다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 윤서아 정식 오디션 콜백을 확보해 두 번째 인재 축이 같은 블록 안에서 열린다.
+  receipt_kind: next_gate
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 세령컬처웍스 운영 조건부 자본 120억과 제한적 결정권이 묶여 태하 손에 실권이 생긴다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 서민재가 "사람 보는 눈만큼은 맞는다"는 첫 인정을 남겨 태하 해석이 낙하산에서 배치 설계자로 바뀐다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 강이현과 윤서아를 묶는 패키지 설계 입장권이 열리며 다음 비방송 전장으로 넘어갈 발판이 생긴다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 3B. Readiness Declaration
+
+- selection-ready: yes
+- Phase0-ready: yes
+- all 2~6 ledger rows have has_cider true: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 4. Phase0 Handoff Note
 
 - already locked:

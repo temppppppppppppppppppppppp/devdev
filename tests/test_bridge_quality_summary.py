@@ -489,6 +489,26 @@ def test_quality_dashboard_endpoint_surfaces_gate_repair_summary(tmp_path, monke
             "fix_scope": "partial",
             "repair_scope": "inplace",
         },
+        "partial_fix_eval": {
+            "patch_round": 1,
+            "is_patch_attempt": True,
+            "patch_target_id": "pt:opening",
+            "target_kind": "entity_ref",
+            "must_fix_resolved": None,
+            "do_not_regress_held": None,
+            "success_condition_met": None,
+            "fallback_reason": "",
+        },
+        "repair_trace": [
+            {
+                "target": "opening_location_name",
+                "target_kind": "entity_ref",
+                "patch_target_id": "pt:opening",
+                "old_excerpt": "old venue",
+                "new_excerpt": "new venue",
+                "why_changed": "repair opening label",
+            }
+        ],
         "scope_authority": {
             "fix_scope": "partial",
             "repair_scope": "inplace",
@@ -571,6 +591,13 @@ def test_quality_dashboard_endpoint_surfaces_gate_repair_summary(tmp_path, monke
     assert data["gate_repair_summary"]["repair_scope"] == "inplace"
     assert data["gate_repair_summary"]["fix_scope"] == "partial"
     assert data["gate_repair_summary"]["authoritative_fix_scope"] == "inplace"
+    assert data["gate_repair_summary"]["session_id"] == "sess_gate"
+    assert data["gate_repair_summary"]["repair_contract_subtype"] == "opening_spatial_continuity"
+    assert data["gate_repair_summary"]["repair_contract_provenance"] == "runtime_synthesized"
+    assert data["gate_repair_summary"]["scope_authority_fix_scope"] == "partial"
+    assert data["gate_repair_summary"]["scope_authority_authoritative_fix_scope"] == "inplace"
+    assert data["gate_repair_summary"]["scope_authority_scope_origin"] == "runtime_lane"
+    assert data["gate_repair_summary"]["scope_authority_widened"] is False
     assert data["gate_repair_summary"]["fix_pack"]["patch_targets"] == [
         "opening_location_name",
         "ending_location_name",
@@ -589,6 +616,10 @@ def test_quality_dashboard_endpoint_surfaces_gate_repair_summary(tmp_path, monke
         "widened": False,
     }
     assert data["gate_repair_summary"]["retry_budget_axes"] == {"round": 1, "repair": 1, "guidance": 0}
+    assert data["gate_repair_summary"]["partial_fix_eval"]["patch_round"] == 1
+    assert data["gate_repair_summary"]["partial_fix_eval"]["patch_target_id"] == "pt:opening"
+    assert data["gate_repair_summary"]["repair_trace"][0]["target"] == "opening_location_name"
+    assert data["gate_repair_summary"]["repair_trace"][0]["new_excerpt"] == "new venue"
     assert data["gate_repair_summary"]["authority"]["final_authority_sink"] == "stage_attempts"
     assert data["gate_repair_summary"]["authority"]["selection_role"] == "historical_companion"
     assert data["result_summary"]["gate_repair"]["director_verdict"] == "PASS_WITH_FIX"

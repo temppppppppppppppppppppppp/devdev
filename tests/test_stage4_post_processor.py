@@ -339,7 +339,14 @@ class TestProcessPassResult:
             "state_truth_owner_contract": {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}},
             "meta_save_failed": True,
         }
-        pp.ctx.current_project.db.save_anchor.assert_called_once_with("chain_link_6", {"cliffhanger": "next hook"})
+        pp.ctx.current_project.db.save_anchor.assert_called_once_with(
+            "chain_link_6",
+            {
+                "cliffhanger": "next hook",
+                "pending_actions": [],
+                "physical_state": "정상",
+            },
+        )
         pp.post_pass_runtime._save_world_state_atomic.assert_called_once_with(
             next_ep=6,
             actual_truth={"location": "gate"},
@@ -350,6 +357,66 @@ class TestProcessPassResult:
         assert (
             pp.post_pass_runtime._run_post_pass_advisories.call_args.kwargs["state_truth_owner_contract"]
             == {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}}
+        )
+
+    def test_run_pass_result_post_pass_pipeline_normalizes_nonwuxia_soft_chain_link_before_save(self):
+        pp = self._make_pp()
+        pp.ctx.selected_genre = {"type": "investment"}
+        pp.post_pass_runtime._submit_manager_async = MagicMock(
+            return_value={
+                "bible_future": None,
+                "current_state": {"state": "snapshot"},
+                "lore_list": ["lore"],
+                "active_seeds": ["seed-1"],
+                "causal_history": "history",
+            }
+        )
+        pp.post_pass_runtime._memorize_and_validate = MagicMock()
+        pp.post_pass_runtime._collect_manager_and_build_delta = MagicMock(
+            return_value={
+                "bible_delta": {"relationship_changes": []},
+                "actual_truth": {"location": "gate"},
+                "state_truth_owner_contract": {},
+                "meta_save_failed": False,
+            }
+        )
+        pp.post_pass_runtime._save_world_state_atomic = MagicMock()
+        pp.post_pass_runtime._run_post_pass_advisories = MagicMock()
+
+        pp._run_pass_result_post_pass_pipeline(
+            next_ep=6,
+            final_manuscript="test manuscript",
+            final_title="episode title",
+            final_state_updates={"hp": 10},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 2},
+            extract_chain_link_fn=lambda *_args, **_kwargs: {
+                "cliffhanger": "전화가 오기 직전 멈칫했다.",
+                "pending_actions": ["전화를 받기", "현관으로 이동하기"],
+                "emotional_state": "긴장",
+                "physical_state": "신경계 피로 Moderate",
+                "location": "서재 앞 복도",
+                "time_marker": "직후",
+            },
+            quality_labels={"score": 94},
+            quality_signals={"ced_score": 0.5},
+            detect_npc_overexposure_fn=lambda *_args, **_kwargs: None,
+            detect_cross_episode_repetition_fn=lambda *_args, **_kwargs: None,
+            v50_modules_available=False,
+        )
+
+        pp.ctx.current_project.db.save_anchor.assert_called_once_with(
+            "chain_link_6",
+            {
+                "cliffhanger": "전화가 오기 직전 멈칫했다.",
+                "pending_actions": [],
+                "emotional_state": "긴장",
+                "physical_state": "정상",
+                "location": "서재 앞 복도",
+                "time_marker": "직후",
+                "soft_pending_actions": ["전화를 받기", "현관으로 이동하기"],
+                "soft_physical_state": "신경계 피로 Moderate",
+            },
         )
 
     def test_finalize_pass_result_session_saves_costs_and_flushes(self):
@@ -1884,6 +1951,37 @@ class TestStateTruthOwnerContract:
             "provenance": "fact_ledger_authority_scope",
         }
 
+    def test_marks_promoted_numeric_carryover_refresh_sources(self):
+        contract = _build_state_truth_owner_contract(
+            actual_truth={"capital": "200억 원"},
+            final_state_updates={"total_assets": 25_000_000_000},
+            curr_inventory_counts={},
+            inventory_count_deltas=[],
+            relationship_changes=[],
+            active_pressure_vectors=[],
+            arc_data={},
+            fact_ledger_carryover_fields=["capital", "total_assets"],
+            numeric_carryover_refresh_plan={
+                "promoted_fields": ["capital", "total_assets"],
+                "promotion_sources": {
+                    "capital": "actual_truth",
+                    "total_assets": "director_state_updates_fallback",
+                },
+            },
+        )
+
+        assert contract["field_families"]["numeric_carryover_authority"]["promotion_rule"] == (
+            "post_pass_structured_numeric_refresh_v1"
+        )
+        assert contract["field_families"]["numeric_carryover_authority"]["promoted_fields"] == [
+            "capital",
+            "total_assets",
+        ]
+        assert contract["field_families"]["numeric_carryover_authority"]["promotion_sources"] == {
+            "capital": "actual_truth",
+            "total_assets": "director_state_updates_fallback",
+        }
+
 
 class TestAtomicMetadataSave:
     """[TF-C10] WorldState + FactLedger 원자적 저장 테스트"""
@@ -2018,6 +2116,7 @@ class TestAtomicMetadataSave:
 
         pp.post_pass_runtime._save_world_state_atomic(
             next_ep=3,
+            actual_truth={},
             final_state_updates={"inventory_counts": {"gold": 1}},
             bible_delta={},
         )
@@ -2120,6 +2219,39 @@ class TestAtomicMetadataSave:
         assert result["fact_ledger_changes"]["total_assets"] == 25_000_000_000
         assert "bonus_pool" not in result["fact_ledger_changes"]
         assert "location" not in result["fact_ledger_changes"]
+
+    def test_build_atomic_state_payloads_promotes_string_and_director_fallback_numeric_carryover(self):
+        pp = self._make_pp_with_metadata()
+        pp.ctx.fact_ledger.get_numbers.return_value = {
+            "capital": {
+                "value": 10_000_000,
+                "unit": "won",
+                "last_ep": 1,
+                "authority_scope": "carryover_baseline",
+            },
+            "total_assets": {
+                "value": 20_000_000,
+                "unit": "won",
+                "last_ep": 1,
+                "authority_scope": "carryover_baseline",
+            },
+        }
+
+        result = pp.post_pass_runtime._build_atomic_state_payloads(
+            actual_truth={
+                "capital": "200억 원",
+            },
+            final_state_updates={
+                "hp": 10,
+                "total_assets": "250억 원",
+            },
+            bible_delta={},
+        )
+
+        assert result["world_state_changes"] == {"hp": 10, "total_assets": "250억 원"}
+        assert result["fact_ledger_changes"]["hp"] == 10
+        assert result["fact_ledger_changes"]["capital"] == "200억 원"
+        assert result["fact_ledger_changes"]["total_assets"] == "250억 원"
 
     def test_process_pass_result_bridges_arc_npc_martial_state_changes_into_world_state_only(self, tmp_path):
         pp = self._make_pp_with_metadata()
@@ -2263,6 +2395,7 @@ class TestAtomicMetadataSave:
         assert result is True
         pp.post_pass_runtime._save_world_state_atomic.assert_called_once_with(
             next_ep=7,
+            actual_truth={},
             final_state_updates={"inventory_counts": {"gold": 2}},
             bible_delta={"relationship_changes": []},
         )

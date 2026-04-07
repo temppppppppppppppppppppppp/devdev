@@ -21,6 +21,12 @@ publish 원칙:
 - 작품별 고유 doctrine, concrete registry_profiles, role_fit_constraints는 개별 `work_guard.yaml`에서 선언한다.
 - research synthesis 정본은 `material_ssot/10_research/` 쪽 문서에 두고, work guard는 그것을 번역한 runtime 규칙만 담는다.
 
+검증 진입점:
+
+- draft 또는 publish 후보는 먼저 `python -X utf8 scripts/run_work_guard_v1.py --path <yaml>`로 `WG-V1` shape validation을 돌린다.
+- `--work-id <work_id>`를 쓰면 라이브러리 publish 경로를 바로 찾아 검증할 수 있다.
+- 이 검증은 `PASS / HOLD / FAIL`만 표면화하며, stage detection이나 runtime optionality를 바꾸지 않는다.
+
 권장 구조:
 
 - `work_guards/investment/`

@@ -27,6 +27,5 @@ Operating rule:
 Bootstrap:
 
 - normalized packs currently present:
-  - `gatekeeper_heir`
   - `office_checkup_next_day`
   - `wuxia_heavenly_physician`

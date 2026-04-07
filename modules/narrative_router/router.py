@@ -4,7 +4,12 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from .artifact_paths import resolve_bi_path, resolve_phase0_path, resolve_tr_path
+from .artifact_paths import (
+    resolve_bi_path,
+    resolve_phase0_path,
+    resolve_tr_path,
+    resolve_work_guard_library_path,
+)
 from .contracts import NarrativeFamilyContract
 from .families import get_builtin_families
 from .families.base import NarrativeFamilyPlugin
@@ -42,12 +47,31 @@ class NarrativeArtifactState:
     preprocess_files_present: dict[str, bool]
     preprocess_ready: bool
     manual_audit_pass: bool | None
+    work_guard_library_path: str
+    work_guard_library_exists: bool
+    work_guard_advisory: str
     phase0_path: str
     phase0_exists: bool
     tr_path: str
     tr_exists: bool
     bi_path: str
     bi_exists: bool
+
+
+def describe_work_guard_advisory(
+    *,
+    phase0_exists: bool,
+    tr_exists: bool,
+    bi_exists: bool,
+    work_guard_exists: bool,
+) -> str:
+    if work_guard_exists:
+        return "present"
+    if tr_exists or bi_exists:
+        return "missing_after_tr"
+    if phase0_exists:
+        return "missing_before_tr"
+    return "not_expected_yet"
 
 
 def inspect_artifacts(*, work_id: str, contract: NarrativeFamilyContract) -> NarrativeArtifactState:
@@ -69,7 +93,15 @@ def inspect_artifacts(*, work_id: str, contract: NarrativeFamilyContract) -> Nar
     phase0_path = resolve_phase0_path(work_id, root=ROOT)
     tr_path = resolve_tr_path(work_id, root=ROOT)
     bi_path = resolve_bi_path(work_id, root=ROOT)
+    work_guard_path = resolve_work_guard_library_path(work_id, root=ROOT)
     preprocess_ready = all(preprocess_files_present.values()) and manual_audit_pass is True
+    work_guard_exists = work_guard_path.exists()
+    work_guard_advisory = describe_work_guard_advisory(
+        phase0_exists=phase0_path.exists(),
+        tr_exists=tr_path.exists(),
+        bi_exists=bi_path.exists(),
+        work_guard_exists=work_guard_exists,
+    )
 
     return NarrativeArtifactState(
         work_id=work_id,
@@ -77,6 +109,9 @@ def inspect_artifacts(*, work_id: str, contract: NarrativeFamilyContract) -> Nar
         preprocess_files_present=preprocess_files_present,
         preprocess_ready=preprocess_ready,
         manual_audit_pass=manual_audit_pass,
+        work_guard_library_path=work_guard_path.as_posix(),
+        work_guard_library_exists=work_guard_exists,
+        work_guard_advisory=work_guard_advisory,
         phase0_path=phase0_path.as_posix(),
         phase0_exists=phase0_path.exists(),
         tr_path=tr_path.as_posix(),

@@ -1,7 +1,7 @@
 # 0_0 Stage3 Opening Transition Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: parked (context-only future wave; not active; Stage4 opening hard-binding is the current implementation lane)
+Status: pending (promoted from parked on 2026-04-07 roadmap reorder; context-only upstream lane kept below broader Stage3 functional work)
 Canonical Path: `docs/2026-04-02/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md`
 Commit State:
@@ -16,11 +16,11 @@ Source Survey Docs:
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage34-ep2-focused-bounded-canary-evidence.json`
 - `docs/2026-04-02/0_0-stage34-ep2-single-episode-demo-run-evidence.json`
-Side-Effect Coverage: context-only parked wave; no code changes in this lane yet
+Side-Effect Coverage: context-only pending lane; no code changes in this lane yet
 
 ## 1. Answer First
 
-이 lane은 `지금 당장 구현할 본선`이 아니라, 나중에 반드시 정리해야 할 `Stage3/BP opening-transition contract`를 queue에 명시해 두기 위한 parked context다.
+이 lane은 `지금 당장 구현할 본선`이 아니라, 나중에 반드시 정리해야 할 `Stage3/BP opening-transition contract`를 queue에 명시해 두기 위한 promoted pending context다.
 
 핵심 문제는 `EP1 ending -> EP2 opening`이 언제나 같은 장소 직접 연결이어야 한다는 뜻이 아니다.
 
@@ -34,7 +34,7 @@ Side-Effect Coverage: context-only parked wave; no code changes in this lane yet
 
 다만 현재 직접 blocker는 여전히 `Stage4 opening spatial continuity hard-binding`이며, 그 코드는 이미 landed 상태다.
 
-따라서 이 lane은 `upstream normalization future wave`로만 보관한다.
+따라서 이 lane은 `upstream normalization pending lane`으로 보관한다.
 
 ## 2. Why This Exists
 
@@ -79,7 +79,7 @@ Excluded:
 2. 필요한 건 direct sameness가 아니라 `설명 가능한 transition contract`다.
 3. 이 contract는 장기적으로 Stage3/BP가 더 직접 소유해야 한다.
 4. 하지만 지금 active blocker는 Stage4이므로 이 lane을 본선으로 올리면 우선순위가 흐려진다.
-5. 따라서 이 lane은 parked future wave로만 유지한다.
+5. 따라서 이 lane은 promoted pending context lane으로 유지한다.
 
 ## 6. Non-Goals
 
@@ -125,21 +125,21 @@ downstream handoff tightening
 
 ## 9. Queue Placement
 
-이 lane은 `parked future wave`다.
+이 lane은 `promoted pending context lane`이다.
 
 - active Stage4 remediation 아래
 - `0_0-stage3-contract-tightening-remediation` 아래
-- `0_0-stage2-contract-normalization-remediation` 위
+- `0_0-stage2-contract-normalization-remediation`, `0_0-stage234-cross-stage-contract-normalization-remediation` 아래
 
 이유:
 
 - 지금 직접 런을 막는 blocker는 아니다
 - Stage3 general contract tightening보다도 더 뒤의 optional refinement다
-- 하지만 Stage2보다는 현재 ep2 evidence와 더 직접 연결된다
+- ep2 evidence와 직접 연결되더라도, broader Stage2/cross-stage contract lanes보다 먼저 열 bounded behavior slice는 아니다
 
 ## 10. Next Action
 
-지금은 구현하지 않는다.
+지금은 구현하지 않는다. 다만 정식 pending queue에서는 유지한다.
 
 기억만 유지한다.
 
@@ -149,7 +149,7 @@ downstream handoff tightening
 ## 11. 3-Pass Audit
 
 Pass 1. Structure/Scope
-- parked future wave 성격 명시
+- pending context lane 성격 명시
 - active blocker와 장기 substrate를 분리
 - included/excluded scope 분리 완료
 

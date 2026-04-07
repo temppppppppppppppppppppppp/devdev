@@ -83,6 +83,43 @@ class Stage4DirectorRuntime:
     def __init__(self, owner: "Stage4InterviewRound") -> None:
         self.owner = owner
 
+    @staticmethod
+    def _normalize_stage3_binding_categories(s3_meta: dict | None) -> list[str]:
+        if not isinstance(s3_meta, dict):
+            return []
+        raw_categories = s3_meta.get("binding_prevalidation_categories", [])
+        if not isinstance(raw_categories, list):
+            return []
+        categories: list[str] = []
+        seen: set[str] = set()
+        for item in raw_categories:
+            category = str(item or "").strip()
+            if not category or category in seen:
+                continue
+            seen.add(category)
+            categories.append(category)
+        return categories[:6]
+
+    def _build_stage3_binding_note(self, s3_meta: dict | None) -> str:
+        if not isinstance(s3_meta, dict):
+            return ""
+        binding_categories = self._normalize_stage3_binding_categories(s3_meta)
+        try:
+            binding_issue_count = int(s3_meta.get("binding_prevalidation_issue_count") or 0)
+        except (TypeError, ValueError):
+            binding_issue_count = 0
+        if binding_issue_count <= 0 and not binding_categories:
+            return ""
+        category_summary = ", ".join(binding_categories[:4]) if binding_categories else "structured_binding"
+        if binding_issue_count <= 0:
+            binding_issue_count = len(binding_categories)
+        return (
+            "[S3-META binding] 이 Blueprint는 Stage 3 Python binding 계약 이슈를 안고 PASS_WITH_FIX 경로로 통과했다 "
+            f"(verdict={s3_meta.get('final_verdict', '?')}, score={s3_meta.get('last_score', '?')}, "
+            f"issues={binding_issue_count}, categories={category_summary}). "
+            "Stage4는 해당 구조 계약이 실제 원고와 opening/continuity 흐름에서 풀렸는지 더 엄격하게 확인하세요."
+        )
+
     def run_pre_director_validation(
         self,
         *,
@@ -1181,6 +1218,13 @@ class Stage4DirectorRuntime:
             decision_core_parts.insert(0, "\n".join(shared_failure_warnings))
 
         s3_meta = round_ctx.blueprint.get("_stage3_meta", {}) if isinstance(round_ctx.blueprint, dict) else {}
+        binding_note = self._build_stage3_binding_note(s3_meta)
+        if binding_note:
+            decision_core_parts.append(binding_note)
+            logging.info(
+                "[S3-META] binding_prevalidation_issue_count=%s -> Director binding advisory 주입",
+                s3_meta.get("binding_prevalidation_issue_count"),
+            )
         if s3_meta.get("quality_risk"):
             decision_core_parts.append(
                 f"[S3-META 경고] 이 Blueprint는 Stage 3에서 quality_risk로 판정됨 "

@@ -37,6 +37,10 @@ def _prefixed_matches(folder: Path, pattern: str) -> tuple[Path, ...]:
     return tuple(sorted(folder.glob(pattern), key=lambda path: path.name))
 
 
+def _direct_subfolder_matches(folder: Path, pattern: str) -> tuple[Path, ...]:
+    return tuple(sorted(folder.glob(f"*/{pattern}"), key=lambda path: path.as_posix()))
+
+
 def canonical_phase0_path(work_id: str, *, root: Path | None = None) -> Path:
     return _root(root) / "treatments" / "phase0" / f"{work_id}_phase0_design.json"
 
@@ -134,7 +138,9 @@ def work_guard_candidate_paths(work_id: str, *, root: Path | None = None) -> tup
         (
             canonical_work_guard_path(work_id, root=root),
             *_prefixed_matches(base, f"[0-9][0-9]_{work_id}.yaml"),
+            *_direct_subfolder_matches(base, f"[0-9][0-9]_{work_id}.yaml"),
             legacy_work_guard_path(work_id, root=root),
+            *_direct_subfolder_matches(base, f"{work_id}.yaml"),
         )
     )
 

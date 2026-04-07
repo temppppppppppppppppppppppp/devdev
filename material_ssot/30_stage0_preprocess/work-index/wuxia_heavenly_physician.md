@@ -21,6 +21,7 @@ Status: bootstrap manifest
 - preprocess profile lock: `treatments/preprocess/wuxia_heavenly_physician/profile_lock.json`
 - preprocess bundle summary: `treatments/preprocess/wuxia_heavenly_physician/material_bundle_summary.json`
 - phase0 snapshot: `treatments/preprocess/wuxia_heavenly_physician/phase0_ready_snapshot.json`
+- work-guard library publish: `work_guards/09_wuxia_heavenly_physician.yaml`
 - live phase0 file: `treatments/phase0/wuxia_heavenly_physician_phase0_design.json`
 - live TR file: `treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
 - live BI file: `bible/09_bi_wuxia_heavenly_physician.json`
@@ -32,6 +33,7 @@ Status: bootstrap manifest
 - research-stage normalized material pack is now available for upstream handoff
 - preprocess readiness: rich enough to move directly into Phase 0 and later TR detail work
 - current phase0 handling: prefer the dedicated `treatments/phase0/` live file and keep the preprocess-side snapshot as fallback evidence
+- companion visibility: work-guard library publish is present; this remains advisory-only for stage reading
 - canonical status: current live TR and BI are treated as canonical outputs
 
 ## 4. Deferred Links

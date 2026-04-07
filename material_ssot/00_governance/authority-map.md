@@ -34,11 +34,10 @@ This map does not replace family routing. `docs/narrative-router` remains the fa
 
 The representative work manifests in this bounded slice are anchored on:
 
-- `gatekeeper_heir`
 - `office_checkup_next_day`
 - `wuxia_heavenly_physician`
 
-These works were chosen because they already have stable live preprocess, TR, and BI paths.
+These works were chosen because they currently retain stable live preprocess, TR, and BI paths.
 
 ## 4. Operating Rule
 

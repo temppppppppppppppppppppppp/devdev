@@ -7,6 +7,10 @@ Status: draft save before 3-pass audit
 
 Historical Note: this draft preserves a capture-time process-worktree context and should not be read as the current workspace authority.
 
+Current active early-conversion law now lives in `material_ssot/20_pitch/cider-doctrine-v1.md`.
+Current active readiness gate now also lives in `material_ssot/20_pitch/material-benchmark-readiness-harness-v1.md`.
+Current promotion command now lives in `python -X utf8 scripts/material_promotion_gate.py --stage phase0 --path <pitch-md> --work-id <work_id>`.
+
 ## 1. Role
 
 - `planning_candidate`는 `BI/TR 이전`의 기획 후보 단위다.
@@ -38,8 +42,23 @@ Historical Note: this draft preserves a capture-time process-worktree context an
 - 그 우위가 실제 유능함으로 드러나는 과정은 무엇인가
 - 이 이야기의 핵심 소재와 전장은 무엇인가
 - 초반 1~3화, 혹은 첫 block에서 독자에게 어떤 임팩트를 줄 것인가
+- 첫 block 안에서 어떤 visible 사이다가 떨어지는가
 - 이 이야기의 장기 성장선은 무엇인가
 - 지금 플랫폼에서 왜 이 포장으로 내야 하는가
+
+## 3.1 First-Block Cider Rule
+
+- readiness judgment에서 `first block`는 엄격히 `2~6화`로 본다.
+- `planning_candidate`는 첫 block 안의 visible 사이다를 plain language로 설명할 수 있어야 한다.
+- 첫 block가 실패, 굴욕, 질책, 의심, 지연만 남기고 닫히면 `hold`다.
+- proof scene만 있고 reward token이 없으면 아직 약하다.
+- 좋은 early conversion은 `proof -> 재평가 -> visible reward -> next gate`다.
+- 모든 `planning_candidate`는 `TR blocks 2~6` 각각에 대해 `first_block_cider_ledger`를 작성해야 한다.
+- `first_block_cider_ledger`는 블록별 `has_cider: true/false`를 반드시 적는다.
+- exploratory draft에서는 `has_cider: false`인 블록도 비워 두지 말고, 왜 구멍이 생겼는지 `bridge_or_payback_note`를 남겨야 한다.
+- 다만 `selection-ready` 또는 `phase0_ready` 주장에는 false row가 남아 있으면 안 된다.
+- `block 6`이 `pain_only_exit`로 닫히면 `hold`다.
+- `block 7+`의 보상으로 `2~6`의 빈칸을 메우면 안 된다.
 
 ## 4. Draft Field Set
 
@@ -118,10 +137,67 @@ Historical Note: this draft preserves a capture-time process-worktree context an
 - `first_block_reward`
   - 첫 block를 통과했을 때 얻는 보상
   - 돈, 사람, 규칙, 직위, 입장권 중 무엇인가
+- `opening_reward_vector`
+  - 첫 block 안에서 실제로 떨어지는 visible reward token 묶음
+  - 예: `이름 호출 + CC 진입 + TF 발령`
 - `early_antagonist`
   - 초반에 바로 부딪히는 적대자/관문
 - `proof_scene`
   - 주인공만 할 수 있는 걸 처음 증명하는 장면
+
+### 4-5A. First-Block Cider Ledger
+
+- `first_block_cider_ledger`
+  - `TR blocks 2~6` 각각의 사이다 유무와 영수증 구조를 기록하는 고정 ledger
+  - 목적:
+    - first-block을 감으로 말하지 않고 block-by-block로 잠그기
+    - `사이다 있음/없음`을 명시해 early conversion 오판을 막기
+    - `없음`인 블록도 왜 아직 허용되는지 설명 책임을 남기기
+
+탐색용 hole example (`draft` only, not `selection-ready`):
+
+```json
+{
+  "first_block_cider_ledger": [
+    {
+      "block_no": 2,
+      "has_cider": true,
+      "cider_elements": ["proof", "reevaluation", "reward_token"],
+      "visible_reward_token": "전무 이름 호명 + 배석권",
+      "bridge_or_payback_note": "",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 3,
+      "has_cider": false,
+      "cider_elements": [],
+      "visible_reward_token": "",
+      "bridge_or_payback_note": "다음 proof scene을 위해 병목 데이터와 전달 경로를 확보한다.",
+      "pain_only_exit": false
+    }
+  ]
+}
+```
+
+운영 규칙:
+
+- entries는 정확히 `block_no 2, 3, 4, 5, 6` 다섯 줄이어야 한다
+- exploratory draft에서는 false row를 hole marker로 둘 수 있지만 기본값은 `hold`다
+- `selection-ready`와 `phase0_ready`에서는 다섯 줄 모두 `has_cider: true`여야 한다
+- `visible_reward_token`은 같은 블록 안 payback chain에서 느껴져야 한다
+- `pain_only_exit: true`는 `block 6`에서 금지다
+- false row는 `bridge_or_payback_note`로 구제되지 않는다; 사람 검토 후 수리 전까지 승격 금지다
+
+권장 `cider_elements` 어휘:
+
+- `proof`
+- `reevaluation`
+- `reward_token`
+- `protection`
+- `authority_shift`
+- `access_shift`
+- `next_gate`
+- `recovery_asset`
 
 ### 4-6. Growth Shape
 
@@ -144,7 +220,21 @@ Historical Note: this draft preserves a capture-time process-worktree context an
 - `director_checkpoints`
   - 사람 판단이 꼭 필요한 지점
 
-## 5. Minimal Example Shape
+## 4-0A. Pre-Phase0 Promotion Gate
+
+`Phase0-ready`로 부르기 전 반드시 아래를 실행한다.
+
+```bash
+python -X utf8 scripts/material_promotion_gate.py --stage phase0 --path <pitch-md> --work-id <work_id>
+```
+
+규칙:
+
+- material readiness gate가 fail이면 승격 금지
+- Stage 0 handoff gate가 fail이면 승격 금지
+- 둘 다 pass한 뒤에만 `phase0_readiness_note`를 `ready`로 적을 수 있다
+
+## 5. Minimal Example Shape (`selection-ready` target)
 
 ```json
 {
@@ -168,6 +258,49 @@ Historical Note: this draft preserves a capture-time process-worktree context an
   "episodes_1_to_3_impact": "독대권 확보 -> 숨은 원인 폭로 -> 첫 재심의 성립",
   "first_block_problem": "고객 인증 탈락을 막지 못하면 주인공은 다시 구경꾼으로 밀려난다.",
   "first_block_reward": "회장 직보권 + 지휘권 + 인사 이동권",
+  "opening_reward_vector": "이름 호출 + 직보권 + 지휘권 + 인사 이동권",
+  "first_block_cider_ledger": [
+    {
+      "block_no": 2,
+      "has_cider": true,
+      "cider_elements": ["proof", "reevaluation"],
+      "visible_reward_token": "독대권",
+      "bridge_or_payback_note": "",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 3,
+      "has_cider": true,
+      "cider_elements": ["proof", "reward_token"],
+      "visible_reward_token": "첫 재심의 성립",
+      "bridge_or_payback_note": "",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 4,
+      "has_cider": true,
+      "cider_elements": ["access_shift", "next_gate"],
+      "visible_reward_token": "진짜 병목 로그 접근권",
+      "bridge_or_payback_note": "",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 5,
+      "has_cider": true,
+      "cider_elements": ["reevaluation", "reward_token", "next_gate"],
+      "visible_reward_token": "회장 직보권",
+      "bridge_or_payback_note": "",
+      "pain_only_exit": false
+    },
+    {
+      "block_no": 6,
+      "has_cider": true,
+      "cider_elements": ["authority_shift", "next_gate"],
+      "visible_reward_token": "지휘권 + 인사 이동권",
+      "bridge_or_payback_note": "",
+      "pain_only_exit": false
+    }
+  ],
   "promise_to_reader": "남들이 비용센터로 보던 병목을 주인공만 돈줄과 권력줄로 바꾼다.",
   "contamination_guard": "기술 설명물이나 투자썰로 새지 말고, 항상 권한 이동으로 보상할 것."
 }
@@ -175,20 +308,15 @@ Historical Note: this draft preserves a capture-time process-worktree context an
 
 ## 6. Judgement Questions
 
-`planning_candidate`는 아래 질문에 답하지 못하면 Phase0로 올리지 않는다.
+`planning_candidate`는 아래 7문항에 답하지 못하면 Phase0로 올리지 않는다.
 
-1. 주인공은 장기적으로 무엇을 원하는가
-2. 주인공은 지금 당장 무엇을 원하고, 왜 급한가
-3. 주인공만 가진 정보격차는 무엇인가
-4. 그 정보격차가 실제 유능함으로 어떻게 증명되는가
-5. 이 이야기의 핵심 소재와 전장은 무엇인가
-6. 1~3화 안에 독자에게 보여 줄 첫 사이다/첫 임팩트는 무엇인가
-7. 첫 block를 통과하면 무엇을 보상으로 얻는가
-8. 이 보상이 다음 block나 다음 성장선으로 이어지는가
-9. 지금 플랫폼 트렌드와 맞는 포장은 무엇인가
-10. 이 후보가 흔한 유사작과 갈라지는 차별점은 무엇인가
-11. 어디로 새면 망하는가
-12. 지금 바로 Phase0로 올릴 수 있는가, 아니면 재료를 더 캐야 하는가
+1. 주인공은 지금 당장 무엇을 원하고, 왜 이 first block 안에 급한가
+2. 주인공만 가진 정보격차 또는 판독 우위는 무엇인가
+3. `저건 쟤라서 가능했다`를 만드는 first block proof scene은 무엇인가
+4. `2~6화` 안에 떨어지는 visible 사이다는 무엇인가
+5. 누가 주인공을 재평가하고, 그 재평가가 어떤 영수증으로 보이는가
+6. first block 보상이 block 2의 다음 관문을 어떻게 여는가
+7. 이 후보를 초반 `고구마`로 망치게 할 contamination은 무엇이며, 어떻게 금지하는가
 
 ## 7. Hard Gate
 
@@ -201,6 +329,8 @@ Historical Note: this draft preserves a capture-time process-worktree context an
 - `major_materials`
 - `episodes_1_to_3_impact`
 - `first_block_reward`
+- `opening_reward_vector`
+- `first_block_cider_ledger`
 - `promise_to_reader`
 
 이유:
@@ -210,7 +340,8 @@ Historical Note: this draft preserves a capture-time process-worktree context an
 - 유능함 증명 과정이 없으면 말뿐인 천재가 된다.
 - 주요 소재가 없으면 간판만 있고 실물이 없다.
 - 초반 임팩트가 없으면 플랫폼 포장과 맞지 않는다.
-- 첫 block 보상이 없으면 다음 블록으로 못 이어진다.
+- 첫 block 보상과 visible reward vector가 없으면 다음 블록으로 못 이어진다.
+- block별 cider ledger가 없으면 `초반에 사이다가 있다`는 말을 검증할 수 없다.
 
 ## 8. Weekly Operating Flow
 

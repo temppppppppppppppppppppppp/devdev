@@ -79,6 +79,47 @@ Status: fresh candidate
 - domain truth:
   - 도면, 소방, 배수, 사용승인, 특별점검, 예산 코드가 구체 전장이다.
 
+## 4A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 현장 침수와 대피 동선 문제가 바로 드러나며 기훈의 도장 보류가 공개 적중으로 확인된다.
+  receipt_kind: proof_confirmation
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 하청 도면 돌려쓰기와 허위 민원 처리 흔적을 묶어 특별점검이 즉시 트리거된다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 시장실 앞에서 사용승인 재개 조건표를 직접 만들며 다시 열 조건을 가진 사람으로 재평가된다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 특별보완명령권과 시장 직보 라인이 같은 Arc 안에서 붙는다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 도시개발 TF 실무 간사와 다음 개발사업 우선 검토권이 열려 다음 전장 입장권이 생긴다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 4B. Readiness Claim
+
+- selection-ready: no
+- Phase0-ready: no
+- all 2~6 rows pay in-block: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 5. Phase0 Handoff Note
 
 - already_locked:

@@ -105,9 +105,15 @@ Planning 시작 전 필수 입력:
 - `treatments/preprocess/{work_id}/material_bundle_summary.json`
 - `treatments/preprocess/{work_id}/phase0_ready_snapshot.json`
 
+Pitch-side promotion gate:
+
+- `python -X utf8 scripts/material_promotion_gate.py --stage phase0 --path <pitch-md> --work-id <work_id>`
+- 이 gate가 pass하지 않으면 Planning에서 `Phase0-ready`를 선언하지 않는다
+
 Planning 진입 전 자동 검증:
 
 - Planning 진입 전 반드시 `python scripts/stage0_handoff_validator.py --work-id {work_id}`를 실행한다. exit code 0이 아니면 Planning 진입 금지.
+- pitch 문서를 Phase 0 입력 truth로 승격할 때는 반드시 `python -X utf8 scripts/material_promotion_gate.py --stage phase0 --path <pitch-md> --work-id <work_id>`를 먼저 실행한다.
 
 Planning 진입 금지 조건:
 
@@ -128,6 +134,41 @@ Planning 진입 금지 조건:
 - `source_manifest` 없이 기획자의 감으로만 Phase 0를 쓰려 함
 - 프로파일이 비어 있거나 3개 이상 섞임
 - material summary가 “업계 감” 같은 추상 일반론뿐임
+
+## 0F. `First-Block Cider Ledger` 의무
+
+신규 기획안은 이제 `first_block_cider_ledger` 없이 통과하지 않는다.
+
+정의:
+
+- `TR blocks 2~6` 각각에 대해 사이다 유무와 영수증 구조를 적는 5줄 ledger
+- 목적은 `초반에 사이다가 있다`를 감이 아니라 표로 잠그는 것
+
+필수 필드:
+
+| 키 | 의미 |
+| ---- | ---- |
+| `block_no` | `2`, `3`, `4`, `5`, `6` 중 하나 |
+| `has_cider` | `true / false` |
+| `cider_elements` | `proof`, `reevaluation`, `reward_token`, `protection`, `authority_shift`, `access_shift`, `next_gate`, `recovery_asset` 중 해당 요소 |
+| `visible_reward_token` | 독자가 실제로 느끼는 영수증 |
+| `bridge_or_payback_note` | `has_cider = false`일 때 왜 아직 리듬이 안 죽는지 |
+| `pain_only_exit` | 그 블록이 실패/굴욕만 남기고 닫히는지 여부 |
+
+Planning hard rule:
+
+- 5줄이 정확히 다 있어야 한다
+- exploratory draft에서는 false row를 hole marker로 남길 수 있지만 기본값은 `hold`다
+- `selection-ready` 또는 `Phase0-ready`로 넘길 때는 blocks `2~6` 다섯 줄이 모두 `has_cider = true`여야 한다
+- `visible_reward_token`은 같은 블록 안 payback chain에서 느껴져야 한다
+- `block 6`은 `pain_only_exit = true`면 안 된다
+- `block 7+`의 보상으로 `2~6` ledger 빈칸을 메우면 invalid다
+
+추천 운영:
+
+- exploratory draft에서 `has_cider = false`가 1개라도 있으면 사람이 다시 본다
+- false 블록의 `bridge_or_payback_note`는 hole 설명일 뿐, promotion 근거가 아니다
+- block `2~6`의 누가 proof 담당, 누가 reevaluation 담당, 누가 reward/token 담당인지 분업이 보여야 한다
 
 ## 0. 이 문서가 존재하는 이유
 

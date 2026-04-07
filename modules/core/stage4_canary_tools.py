@@ -660,6 +660,18 @@ def _build_stage4_gate_repair_surface_summary(
     scope_authority = gate_repair_summary.get("scope_authority", {}) or {}
     if not isinstance(scope_authority, dict):
         scope_authority = {}
+    repair_contract_subtype = str(
+        gate_repair_summary.get("repair_contract_subtype") or repair_contract.get("subtype") or ""
+    ).strip()
+    repair_contract_provenance = str(
+        gate_repair_summary.get("repair_contract_provenance") or repair_contract.get("provenance") or ""
+    ).strip()
+    scope_origin = gate_repair_summary.get("scope_authority_scope_origin")
+    if scope_origin in (None, "", []):
+        scope_origin = scope_authority.get("scope_origin")
+    scope_authority_widened = gate_repair_summary.get("scope_authority_widened")
+    if scope_authority_widened is None:
+        scope_authority_widened = scope_authority.get("widened", False)
 
     mismatch_source = (
         current_session_sink_alignment_summary
@@ -695,10 +707,10 @@ def _build_stage4_gate_repair_surface_summary(
         "fix_scope": str(gate_repair_summary.get("fix_scope", "") or "").strip(),
         "authoritative_fix_scope": str(gate_repair_summary.get("authoritative_fix_scope", "") or "").strip(),
         "repair_scope": str(gate_repair_summary.get("repair_scope", "") or "").strip(),
-        "repair_contract_subtype": str(repair_contract.get("subtype", "") or "").strip(),
-        "repair_contract_provenance": str(repair_contract.get("provenance", "") or "").strip(),
-        "scope_origin": str(scope_authority.get("scope_origin", "") or "").strip(),
-        "widened": bool(scope_authority.get("widened", False)),
+        "repair_contract_subtype": repair_contract_subtype,
+        "repair_contract_provenance": repair_contract_provenance,
+        "scope_origin": str(scope_origin or "").strip(),
+        "widened": bool(scope_authority_widened),
         "mismatch_counts": mismatch_counts,
     }
 

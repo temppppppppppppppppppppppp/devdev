@@ -32,19 +32,25 @@ Bootstrap rule:
 
 Current canon rule:
 
+- `cider-doctrine-v1.md` is the fast-entry first-block catharsis contract and should be read first inside `20_pitch`
+- `material-benchmark-readiness-harness-v1.md` is the readiness gate for `selection-ready`, `canon`, and `Phase0-ready` claims
+- `python -X utf8 scripts/material_readiness_validator.py --path <md-or-dir>` is the machine gate for future canon/intake/synthesis files
+- `python -X utf8 scripts/material_promotion_gate.py --stage canon|phase0 --path <md> [--work-id <work_id>]` is the promotion gate for actual canon / Phase0 transitions
+- the machine gate targets candidate/canon/working-synthesis docs only; checklist audits, integration handoffs, and retire notes are not promotion targets
 - `pitch-philosophy.md` is the canonical pitch philosophy and minimum contract
 - `protagonist-first-constitution.md` is the current house-law document for protagonist design
 - `pitch-selection-checklist.md` is the current fresh-candidate selection checklist
 - `work-guard-translation-map.md` is the canonical bridge from pitch house law into downstream `work_guard.yaml` semantics
 - `synthesis/` is the normalized operator handoff lane, not canonical pitch truth
-- `canon/gatekeeper_heir.md` is the first full canonical pitch exemplar
-- `canon/office_checkup_next_day.md` is the second full canonical pitch exemplar
+- `canon/office_checkup_next_day.md` is the first active canonical pitch exemplar
+- `canon/pantech_cyworld_reborn.md` is the second active canonical pitch exemplar
 - other `canon/` work files may remain anchor notes until they are upgraded into full canonical pitch docs
 
 Current downstream companion pack:
 
 - use the dated operator pack below when a pitch is being translated into a work-specific `work_guard`
 - these docs are operating companions, not replacements for the canonical law docs above
+- `python -X utf8 scripts/run_work_guard_v1.py --path <yaml>`
 - `docs/2026-04-06/work-guard-validator-checklist-spec.md`
 - `docs/2026-04-06/wg-v2-freeze-checklist.md`
 - `docs/2026-04-06/wg-v3-drift-audit-card.md`

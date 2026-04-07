@@ -20,6 +20,12 @@ from modules.core.constants import smart_truncate
 from modules.core.context_advisor import RetrievalSources
 from modules.core.jsonl_io import append_jsonl_record
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
+from modules.core.partial_fix_contract import (
+    build_partial_fix_eval,
+    normalize_guard_result,
+    normalize_patch_target_records,
+    normalize_repair_trace_entries,
+)
 from modules.core.soft_failure import resolve_project_log_dir
 from modules.core.stage4_director_runtime import Stage4DirectorRuntime
 from modules.core.stage4_reject_runtime import Stage4RejectRuntime
@@ -1998,7 +2004,6 @@ class Stage4InterviewRound:
     @classmethod
     def _normalize_fix_pack(cls, raw: object) -> dict:
         payload = raw if isinstance(raw, dict) else {}
-        patch_targets = cls._normalize_fix_pack_list(payload.get("patch_targets"), limit=None, item_limit=None)
         must_fix = cls._normalize_fix_pack_list(payload.get("must_fix"), limit=None, item_limit=None)
         do_not_regress = cls._normalize_fix_pack_list(payload.get("do_not_regress"), limit=None, item_limit=None)
         success_condition = " ".join(str(payload.get("success_condition", "") or "").split()).strip()
@@ -2032,6 +2037,13 @@ class Stage4InterviewRound:
             if kind and kind not in target_kinds:
                 target_kinds.append(kind)
         target_kind = cls._resolve_primary_fix_target_kind(target_kinds)
+        patch_targets, patch_target_records = normalize_patch_target_records(
+            payload.get("patch_target_records") or payload.get("patch_targets"),
+            stage="stage4",
+            container_kind="manuscript",
+            default_target_kind=target_kind,
+            limit=6,
+        )
 
         normalized = {
             "patch_targets": patch_targets,
@@ -2040,6 +2052,8 @@ class Stage4InterviewRound:
             "success_condition": success_condition,
             "target_kind": target_kind,
         }
+        if patch_target_records:
+            normalized["patch_target_records"] = patch_target_records
         if target_kinds:
             normalized["target_kinds"] = target_kinds
         if evidence_summary:
@@ -2132,6 +2146,8 @@ class Stage4InterviewRound:
             "success_condition": str(fix_pack.get("success_condition", "") or ""),
             "target_kind": str(fix_pack.get("target_kind", "") or ""),
         }
+        if fix_pack.get("patch_target_records"):
+            payload["patch_target_records"] = list(fix_pack.get("patch_target_records") or [])[:6]
         if fix_pack.get("evidence_summary"):
             payload["evidence_summary"] = str(fix_pack.get("evidence_summary", "") or "")
         if fix_pack.get("target_kinds"):
@@ -3927,6 +3943,7 @@ class Stage4InterviewRound:
             selected=selected,
             score=trace_payload.final_score,
             error_category=error_category,
+            patch_trace=trace_payload.trace_patch_trace,
         )
         return self._finalize_reject_result(
             reject_result=reject_result,
@@ -5539,6 +5556,10 @@ class Stage4InterviewRound:
             strategy=str(selected_candidate.get("strategy_name", "") or selected_candidate.get("strategy", "")),
             fallback="stage4",
         )
+        patch_advisory_payload = self._build_stage4_patch_advisory_payload(
+            director_result=director_result,
+            patch_trace=patch_trace,
+        )
         attempt_artifact_meta = self._record_s4_attempt(
             episode=next_ep,
             round_num=round_num,
@@ -5553,8 +5574,15 @@ class Stage4InterviewRound:
             advisory_flags={
                 **(dict(getattr(self, "_last_advisory_summary", None) or {})),
                 "gate_semantics": self._build_gate_semantics_payload(director_result),
-                "fix_pack": self._build_fix_pack_payload(director_result),
+                "fix_pack": patch_advisory_payload.get("fix_pack", {}),
                 "retry_budget_axes": dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
+                **(
+                    {
+                        key: value
+                        for key, value in patch_advisory_payload.items()
+                        if key != "fix_pack" and value not in ({}, [], "", None)
+                    }
+                ),
             },
             model=getattr(getattr(round_ctx, "chief_writer", None), "model_tier", None),
             patch_strategy=str(patch_trace.get("patch_strategy", "") or ""),
@@ -5612,6 +5640,7 @@ class Stage4InterviewRound:
         selected: str,
         score: int,
         error_category: str,
+        patch_trace: dict | None = None,
     ):
         return self.reject_runtime.handle_reject(
             director_result=director_result,
@@ -5631,6 +5660,7 @@ class Stage4InterviewRound:
             selected=selected,
             score=score,
             error_category=error_category,
+            patch_trace=patch_trace,
         )
 
     def _build_retry_regenerate_kwargs(
@@ -6733,6 +6763,108 @@ class Stage4InterviewRound:
                 pass
         return " | ".join(summary_parts)
 
+    def _resolve_stage4_patch_contract_payloads(
+        self,
+        *,
+        director_result: dict | None,
+        patch_trace: dict | None,
+    ) -> tuple[dict[str, object], dict[str, object]]:
+        fix_pack_payload = self._build_fix_pack_payload(director_result)
+        trace_payload = dict(patch_trace or {})
+        if not trace_payload and not fix_pack_payload:
+            return {}, fix_pack_payload
+
+        default_target_kind = str(
+            trace_payload.get("target_kind") or fix_pack_payload.get("target_kind") or ""
+        ).strip()
+        patch_targets, patch_target_records = normalize_patch_target_records(
+            trace_payload.get("patch_target_records")
+            or fix_pack_payload.get("patch_target_records")
+            or trace_payload.get("patch_targets")
+            or fix_pack_payload.get("patch_targets"),
+            stage="stage4",
+            container_kind="manuscript",
+            default_target_kind=default_target_kind,
+            limit=6,
+        )
+        if patch_targets:
+            trace_payload["patch_targets"] = patch_targets
+            if not fix_pack_payload.get("patch_targets"):
+                fix_pack_payload["patch_targets"] = list(patch_targets)
+        if patch_target_records:
+            trace_payload["patch_target_records"] = patch_target_records
+            fix_pack_payload["patch_target_records"] = list(patch_target_records)
+        if default_target_kind:
+            trace_payload["target_kind"] = default_target_kind
+
+        patch_round = trace_payload.get("patch_round")
+        try:
+            normalized_patch_round = int(patch_round or 0)
+        except (TypeError, ValueError):
+            normalized_patch_round = 0
+        if normalized_patch_round > 0:
+            trace_payload["patch_round"] = normalized_patch_round
+
+        normalized_guard_result = normalize_guard_result(trace_payload.get("guard_result"))
+        if normalized_guard_result:
+            trace_payload["guard_result"] = normalized_guard_result
+
+        normalized_repair_trace = normalize_repair_trace_entries(
+            trace_payload.get("repair_trace"),
+            default_target_records=patch_target_records,
+            default_target_kind=default_target_kind,
+            guard_result=normalized_guard_result,
+        )
+        if normalized_repair_trace:
+            trace_payload["repair_trace"] = normalized_repair_trace
+
+        partial_fix_eval_source = (
+            trace_payload.get("partial_fix_eval")
+            if isinstance(trace_payload.get("partial_fix_eval"), dict)
+            else {}
+        )
+        partial_fix_eval = build_partial_fix_eval(
+            patch_round=partial_fix_eval_source.get("patch_round", trace_payload.get("patch_round")),
+            is_patch_attempt=partial_fix_eval_source.get("is_patch_attempt", bool(trace_payload)),
+            patch_target_records=patch_target_records,
+            target_kind=partial_fix_eval_source.get("target_kind", default_target_kind),
+            fallback_reason=partial_fix_eval_source.get(
+                "fallback_reason",
+                str(
+                    trace_payload.get("fallback_reason")
+                    or normalized_guard_result.get("failure_key", "")
+                    if normalized_guard_result
+                    else trace_payload.get("fallback_reason", "")
+                ),
+            ),
+            must_fix_resolved=partial_fix_eval_source.get("must_fix_resolved"),
+            do_not_regress_held=partial_fix_eval_source.get("do_not_regress_held"),
+            success_condition_met=partial_fix_eval_source.get("success_condition_met"),
+        )
+        if partial_fix_eval:
+            trace_payload["partial_fix_eval"] = partial_fix_eval
+
+        return trace_payload, fix_pack_payload
+
+    def _build_stage4_patch_advisory_payload(
+        self,
+        *,
+        director_result: dict | None,
+        patch_trace: dict | None,
+    ) -> dict[str, object]:
+        trace_payload, fix_pack_payload = self._resolve_stage4_patch_contract_payloads(
+            director_result=director_result,
+            patch_trace=patch_trace,
+        )
+        payload: dict[str, object] = {
+            "fix_pack": fix_pack_payload,
+        }
+        if isinstance(trace_payload.get("partial_fix_eval"), dict):
+            payload["partial_fix_eval"] = dict(trace_payload.get("partial_fix_eval") or {})
+        if isinstance(trace_payload.get("repair_trace"), list):
+            payload["repair_trace"] = list(trace_payload.get("repair_trace") or [])
+        return payload
+
     @staticmethod
     def _build_reaudit_story_context(base_story_context: str, applied_patches: list[str]) -> str:
         story_context = str(base_story_context or "")
@@ -6895,7 +7027,11 @@ class Stage4InterviewRound:
             _selection_reason = director_result.get("selection_reason") or ""
             _verdict_reason = director_result.get("verdict_reason") or _selection_reason
             _gate_semantics = self._build_gate_semantics_payload(director_result)
-            _fix_pack = self._build_fix_pack_payload(director_result)
+            _patch_trace = dict(patch_trace or {})
+            _patch_trace, _fix_pack = self._resolve_stage4_patch_contract_payloads(
+                director_result=director_result,
+                patch_trace=_patch_trace,
+            )
             _repair_contract = self._build_repair_contract_payload_from_parts(
                 gate_semantics=_gate_semantics,
                 fix_pack=_fix_pack,
@@ -6905,7 +7041,6 @@ class Stage4InterviewRound:
                 gate_semantics=_gate_semantics,
                 source=director_result,
             )
-            _patch_trace = dict(patch_trace or {})
             _feedback_provenance = dict(feedback_provenance or {})
             _normalized_patch_strategy = str(_patch_trace.get("patch_strategy", "") or "").strip()
             if is_patch and not _normalized_patch_strategy:
@@ -7023,6 +7158,18 @@ class Stage4InterviewRound:
                 entry["primary_failure_layer"] = str(_verdict_layers.get("primary_failure_layer", "") or "")
             if isinstance(_scope_authority.get("scope_origin"), dict):
                 entry["scope_origin"] = dict(_scope_authority.get("scope_origin") or {})
+            if str(_patch_trace.get("target_kind", "") or "").strip():
+                entry["patch_trace"]["target_kind"] = str(_patch_trace.get("target_kind", "") or "").strip()
+            if isinstance(_patch_trace.get("patch_round"), int) and int(_patch_trace.get("patch_round") or 0) > 0:
+                entry["patch_trace"]["patch_round"] = int(_patch_trace.get("patch_round") or 0)
+            if isinstance(_patch_trace.get("patch_target_records"), list) and _patch_trace.get("patch_target_records"):
+                entry["patch_trace"]["patch_target_records"] = list(_patch_trace.get("patch_target_records") or [])
+            if isinstance(_patch_trace.get("guard_result"), dict) and _patch_trace.get("guard_result"):
+                entry["patch_trace"]["guard_result"] = dict(_patch_trace.get("guard_result") or {})
+            if isinstance(_patch_trace.get("repair_trace"), list) and _patch_trace.get("repair_trace"):
+                entry["patch_trace"]["repair_trace"] = list(_patch_trace.get("repair_trace") or [])
+            if isinstance(_patch_trace.get("partial_fix_eval"), dict) and _patch_trace.get("partial_fix_eval"):
+                entry["patch_trace"]["partial_fix_eval"] = dict(_patch_trace.get("partial_fix_eval") or {})
             # [SSS-T2] Carryover persistence from enriched gate_semantics
             if isinstance(carryover_contracts, dict):
                 for _ck in ("conflict_resolution_linkage", "reuse_contract"):

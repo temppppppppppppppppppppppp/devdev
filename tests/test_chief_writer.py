@@ -416,13 +416,14 @@ class TestChiefWriterStructuralInplacePatch:
                 "patch_targets": ["scene_2"],
             }
         ]
-        assert chief_writer._last_inplace_patch_trace == {
-            "patch_strategy": "inplace_patch_structural",
-            "patch_targets": ["scene_2"],
-            "fallback_reason": "",
-            "focus": "ending",
-            "structural_attempted": True,
-        }
+        assert chief_writer._last_inplace_patch_trace["patch_strategy"] == "inplace_patch_structural"
+        assert chief_writer._last_inplace_patch_trace["patch_targets"] == ["scene_2"]
+        assert chief_writer._last_inplace_patch_trace["fallback_reason"] == ""
+        assert chief_writer._last_inplace_patch_trace["focus"] == "ending"
+        assert chief_writer._last_inplace_patch_trace["structural_attempted"] is True
+        assert chief_writer._last_inplace_patch_trace["target_kind"] == "scene_block"
+        assert chief_writer._last_inplace_patch_trace["patch_target_records"][0]["scene_id"] == "scene_2"
+        assert chief_writer._last_inplace_patch_trace["repair_trace"][0]["target"] == "scene_2"
 
     def test_structural_inplace_patch_global_feedback_falls_back_to_whole_text_patch(self, chief_writer):
         blueprint = {
@@ -505,13 +506,16 @@ class TestChiefWriterStructuralInplacePatch:
                 "patch_targets": ["opening_location_name", "ending_location_name"],
             }
         ]
-        assert chief_writer._last_inplace_patch_trace == {
-            "patch_strategy": "inplace_patch",
-            "patch_targets": ["opening_location_name", "ending_location_name"],
-            "fallback_reason": "",
-            "focus": "",
-            "structural_attempted": False,
-        }
+        assert chief_writer._last_inplace_patch_trace["patch_strategy"] == "inplace_patch"
+        assert chief_writer._last_inplace_patch_trace["patch_targets"] == [
+            "opening_location_name",
+            "ending_location_name",
+        ]
+        assert chief_writer._last_inplace_patch_trace["fallback_reason"] == "invalid_local_ops_payload"
+        assert chief_writer._last_inplace_patch_trace["focus"] == ""
+        assert chief_writer._last_inplace_patch_trace["structural_attempted"] is False
+        assert chief_writer._last_inplace_patch_trace["target_kind"] == "entity_ref"
+        assert chief_writer._last_inplace_patch_trace["patch_target_records"][0]["summary"] == "opening_location_name"
 
 
 # ══════════════════════════════════════════════════════════════

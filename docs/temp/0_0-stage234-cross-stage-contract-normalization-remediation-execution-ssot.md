@@ -1,14 +1,14 @@
 # 0_0 Stage234 Cross-Stage Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: parked (survey-backed future wave; shared vocabulary and source-of-truth normalization substrate; not active while Stage4 consumer/finalization seams remain higher priority)
+Status: partially_realized (promoted from parked on 2026-04-07 roadmap reorder; a first bounded activation tranche has now landed by adding a shared cross-stage alias helper and teaching `Stage4ContextBuilder` to preserve the `constraint_summary` family plus current-episode mission packets through work-focus, slot-summary, and tier0 mandatory context, while broader owner/strength normalization and fresh proof remain deferred)
 Canonical Path: `docs/2026-04-02/0_0-stage234-cross-stage-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage234-cross-stage-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: config/models.yaml, active/temp roadmap mirrors, queue-state, canary fixpack runtime artifacts, and 2026-04-02 survey bundles/lane drafts present in workspace`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Drift Summary: `2026-04-07 bounded first activation tranche landed across `stage_cross_stage_contract.py`, `stage4_context_builder.py`, and `test_stage4_context_builder.py`: a shared helper now resolves `constraint_summary` / `arc_constraint_summary` aliases plus current-episode mission packets from `episode_details`, and Stage4 work-focus, slot-summary, and tier0 mandatory context surfaces now preserve that machine-readable Stage2/Stage3 contract data with focused regression/static validation closed`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage234-cross-stage-vocabulary-source-of-truth-matrix-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-bounded-survey.md`
@@ -23,7 +23,7 @@ Side-Effect Coverage: covered
 
 ## 1. Intent
 
-Preserve a bounded future wave for `Stage2/3/4 cross-stage contract normalization` without promoting it ahead of the current active Stage4 consumer/finalization lanes.
+Preserve a bounded pending lane for `Stage2/3/4 cross-stage contract normalization` without promoting it ahead of the current active Stage4 consumer/finalization lanes.
 
 This execution SSOT exists because the matrix survey proved:
 
@@ -132,13 +132,13 @@ Highest-cost mismatch families:
 
 ## 7. Realization Architecture
 
-This future wave sits above the current Stage4 seam docs. It should reuse, not replace, the evidence and substrate already produced by:
+This pending lane sits above the current Stage4 seam docs. It should reuse, not replace, the evidence and substrate already produced by:
 
 - `0_0-stage4-consumer-contract-normalization-remediation`
 - `0_0-stage4-post-select-continuity-contract-normalization-remediation`
 - `0_0-stage4-fixpack-finalization-remediation`
 - `0_0-stage4-canonical-entity-postselect-remediation`
-- parked Stage3 and Stage2 normalization docs
+- pending Stage3 and Stage2 normalization docs
 
 The architectural rule for this lane:
 
@@ -200,6 +200,28 @@ Outputs:
 - narrowed boundary normalization patches
 - compatibility metadata where immediate deletion is too risky
 
+## 8A. Implementation Update (2026-04-07)
+
+Landed bounded tranche:
+
+- `modules/core/stage_cross_stage_contract.py` now provides a shared alias helper for the highest-cost vocabulary family in this lane: `constraint_summary` vs `arc_constraint_summary`, plus bounded extraction of current-episode mission lines from canonical `episode_details`.
+- `modules/core/stage4_context_builder.py` now consumes that helper in `work_focus`, work-identity slot summaries, and tier0 mandatory sections, so Stage4 no longer depends only on `constraint_summary` and now exposes a machine-readable current-episode mission packet instead of flattening that handoff into prose-only tactical context.
+- `tests/test_stage4_context_builder.py` now locks the new alias survival contract in place, including `arc_constraint_summary` fallback and current-episode mission packet promotion into Stage4 mandatory context.
+
+Residual deferred inside this lane:
+
+- broader owner-precedence normalization for `fix_scope / authoritative_fix_scope / repair_scope`
+- broader split-truth owner normalization for `final_state_updates / actual_truth / world_state`
+- Stage2 -> Stage3 transport tightening beyond the bounded Stage4 consumer intake slice
+- fresh canary/live proof
+
+Complexity recount:
+
+- `_compose_work_focus_text(...)` is now `52 LOC`
+- `_build_work_identity_slot_summary(...)` is now `88 LOC`
+- `_build_tier0_mandatory_sections(...)` is now `160 LOC` and remains a bounded shell, not a new semantic-core hotspot
+- no new `180+ LOC` function was introduced in this tranche
+
 ## 9. Acceptance Criteria
 
 - the highest-cost shared concept families have a canonical vocabulary
@@ -207,13 +229,18 @@ Outputs:
 - each major concept has an explicit strength classification by stage
 - known split-truth concepts no longer rely on implicit owner inference
 - future Stage-count simplification can cite this matrix instead of intuition
+- no new `180+ LOC` function is introduced in the first activation tranche
 
 ## 10. Verification Plan
 
 - re-run 3-pass audit against the live workspace before any code patching from this document
-- validate canonical/temp mirror integrity with `python scripts/ops_validator.py --strict`
+- `python -m py_compile modules/core/stage_cross_stage_contract.py modules/core/stage4_context_builder.py tests/test_stage4_context_builder.py`
+- `pytest tests/test_stage4_context_builder.py -q`
+- `ruff check modules/core/stage_cross_stage_contract.py modules/core/stage4_context_builder.py tests/test_stage4_context_builder.py`
 - validate UTF-8 hygiene on the SSOT and mirror
-- when reactivated later, use bounded static audit first and runtime proof only after patch landing
+- `python scripts/sync_temp_queue_state.py`
+- `python scripts/ops_validator.py --strict`
+- keep runtime proof bounded and deferred until explicit reactivation
 
 ## 11. Guardrails
 
@@ -225,7 +252,7 @@ Outputs:
 
 ## 12. Temp Queue Notes
 
-- temp status: parked
+- temp status: `in_progress`
 - cleanup condition:
   - remove the mirror only on explicit closure, replacement, or strategic cancellation
 - roadmap dependency:
@@ -245,14 +272,14 @@ Outputs:
 ## 3-Pass Audit Record
 
 Pass 1. Structure and scope
-- document type matches a parked execution SSOT
+- document type matches a promoted pending execution SSOT
 - scope is bounded to cross-stage contract normalization, not a broad rewrite
 - active Stage4 seams remain out of scope and higher priority
 
 Pass 2. Evidence and consistency
 - claims are bounded to the new matrix survey and prior Stage2/Stage3/Stage4 surveys
 - source docs and evidence artifacts are coherent
-- queue semantics align with existing parked Stage2/Stage3 future waves
+- queue semantics align with the promoted pending Stage2/Stage3 lanes
 
 Pass 3. Execution and readability
 - tranches are ordered from contract definition to boundary normalization

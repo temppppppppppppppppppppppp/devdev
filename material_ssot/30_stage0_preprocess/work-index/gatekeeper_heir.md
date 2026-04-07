@@ -21,6 +21,7 @@ Status: bootstrap manifest
 - preprocess profile lock: `treatments/preprocess/gatekeeper_heir/profile_lock.json`
 - preprocess bundle summary: `treatments/preprocess/gatekeeper_heir/material_bundle_summary.json`
 - phase0 snapshot: `treatments/preprocess/gatekeeper_heir/phase0_ready_snapshot.json`
+- work-guard library publish: `work_guards/06_gatekeeper_heir.yaml`
 - live phase0 file: `treatments/phase0/gatekeeper_heir_phase0_design.json`
 - live TR file: `treatments/06_gatekeeper_heir_tr_block_070_draft.json`
 - live BI file: `bible/06_bi_gatekeeper_heir.json`
@@ -33,6 +34,7 @@ Status: bootstrap manifest
 - research-stage normalized material pack is now available for upstream handoff
 - canonical pitch now exists as a full work-level pitch doc under `material_ssot/20_pitch/canon`
 - preprocess readiness: strong enough to hand off directly into Phase 0
+- companion visibility: work-guard library publish is present; this remains advisory-only for stage reading
 - canonical status: current live TR and BI are treated as canonical outputs
 
 ## 4. Deferred Links

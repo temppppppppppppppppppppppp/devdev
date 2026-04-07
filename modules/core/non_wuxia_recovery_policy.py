@@ -168,6 +168,124 @@ _VAGUE_RECOVERY_PATTERNS = (
     r"\bback to full strength\b",
 )
 
+_HARD_PENDING_ACTION_TOKENS = (
+    "도망",
+    "탈출",
+    "추격",
+    "반격",
+    "공격",
+    "응급",
+    "구조",
+    "구출",
+    "치료",
+    "병원",
+    "수술",
+    "해독",
+    "은신",
+    "잠입",
+    "추적",
+    "저지",
+    "인질",
+    "폭발",
+    "도주",
+    "escape",
+    "flee",
+    "chase",
+    "counterattack",
+    "attack",
+    "rescue",
+    "emergency",
+    "treat",
+    "hospital",
+    "surgery",
+    "antidote",
+    "hide",
+    "infiltrate",
+    "pursuit",
+)
+_HARD_PENDING_ACTION_PATTERNS = (
+    r"\bescape\b",
+    r"\bflee\b",
+    r"\bchase\b",
+    r"\bcounterattack\b",
+    r"\battack\b",
+    r"\brescue\b",
+    r"\bemergency\b",
+    r"\bsurgery\b",
+    r"\bantidote\b",
+    r"\binfiltrat(?:e|ion)\b",
+)
+
+_ROUTINE_PENDING_ACTION_TOKENS = (
+    "전화",
+    "통화",
+    "회의",
+    "미팅",
+    "보고",
+    "검토",
+    "확인",
+    "정리",
+    "출근",
+    "퇴근",
+    "귀가",
+    "현관",
+    "복도",
+    "사무실",
+    "서재",
+    "자리",
+    "이동",
+    "식사",
+    "휴식",
+    "수면",
+    "잠",
+    "샤워",
+    "커피",
+    "메일",
+    "서류",
+    "업무",
+    "준비",
+    "call",
+    "phone",
+    "meeting",
+    "review",
+    "report",
+    "check",
+    "organize",
+    "commute",
+    "office",
+    "hallway",
+    "door",
+    "meal",
+    "rest",
+    "sleep",
+    "shower",
+    "coffee",
+    "email",
+    "document",
+    "prepare",
+    "move",
+)
+_ROUTINE_PENDING_ACTION_PATTERNS = (
+    r"\bcall\b",
+    r"\bphone\b",
+    r"\bmeeting\b",
+    r"\breview\b",
+    r"\breport\b",
+    r"\bcheck\b",
+    r"\borganize\b",
+    r"\bcommut(?:e|ing)\b",
+    r"\boffice\b",
+    r"\bhallway\b",
+    r"\bmeal\b",
+    r"\brest\b",
+    r"\bsleep\b",
+    r"\bshower\b",
+    r"\bcoffee\b",
+    r"\bemail\b",
+    r"\bprepare\b",
+    r"\bmove\b",
+)
+
 
 def normalize_genre_type(genre: object) -> str:
     text = str(genre or "").strip().lower()
@@ -223,3 +341,108 @@ def split_injury_entries_for_genre(injuries: list[dict], genre: object) -> tuple
             continue
         hard_injuries.append(injury)
     return hard_injuries, soft_states
+
+
+def classify_chain_link_physical_state(text: object, genre: object) -> str:
+    normalized_text = str(text or "").strip()
+    if not normalized_text or normalized_text == "정상":
+        return "normal"
+
+    genre_type = normalize_genre_type(genre)
+    if is_wuxia(genre_type):
+        return "hard"
+    if has_hard_injury_signal(normalized_text):
+        return "hard"
+    if has_soft_non_wuxia_state_signal(normalized_text):
+        return "soft"
+    return "hard"
+
+
+def _normalize_pending_action_items(actions: object) -> list[str]:
+    if isinstance(actions, list):
+        items = [str(item or "").strip() for item in actions]
+        return [item for item in items if item]
+    if isinstance(actions, str):
+        text = str(actions).strip()
+        if not text:
+            return []
+        parts = [part.strip() for part in re.split(r"[,\n/]+", text) if part.strip()]
+        return parts if parts else [text]
+    return []
+
+
+def _is_hard_pending_action(text: object) -> bool:
+    normalized_text = str(text or "").strip()
+    if not normalized_text:
+        return False
+    if has_hard_injury_signal(normalized_text) or has_hard_recovery_action(normalized_text):
+        return True
+    return _contains_signal(
+        normalized_text,
+        tokens=_HARD_PENDING_ACTION_TOKENS,
+        patterns=_HARD_PENDING_ACTION_PATTERNS,
+    )
+
+
+def _is_routine_pending_action(text: object) -> bool:
+    normalized_text = str(text or "").strip()
+    if not normalized_text:
+        return False
+    if _is_hard_pending_action(normalized_text):
+        return False
+    if has_soft_recovery_action(normalized_text) or has_vague_recovery_signal(normalized_text):
+        return True
+    return _contains_signal(
+        normalized_text,
+        tokens=_ROUTINE_PENDING_ACTION_TOKENS,
+        patterns=_ROUTINE_PENDING_ACTION_PATTERNS,
+    )
+
+
+def split_chain_link_pending_actions(actions: object, genre: object) -> tuple[list[str], list[str]]:
+    items = _normalize_pending_action_items(actions)
+    if not items:
+        return [], []
+
+    genre_type = normalize_genre_type(genre)
+    if is_wuxia(genre_type):
+        return items, []
+
+    hard_actions: list[str] = []
+    soft_actions: list[str] = []
+    for action in items:
+        if _is_routine_pending_action(action):
+            soft_actions.append(action)
+            continue
+        hard_actions.append(action)
+    return hard_actions, soft_actions
+
+
+def normalize_chain_link_for_genre(chain_link: object, genre: object) -> dict[str, object]:
+    payload = dict(chain_link) if isinstance(chain_link, dict) else {}
+    if not payload:
+        return {}
+
+    hard_actions, soft_actions = split_chain_link_pending_actions(payload.get("pending_actions"), genre)
+    if hard_actions:
+        payload["pending_actions"] = hard_actions
+    else:
+        payload["pending_actions"] = []
+    if soft_actions:
+        payload["soft_pending_actions"] = soft_actions
+    else:
+        payload.pop("soft_pending_actions", None)
+
+    physical_state = str(payload.get("physical_state") or "").strip()
+    physical_state_binding = classify_chain_link_physical_state(physical_state, genre)
+    if physical_state_binding == "soft":
+        payload["soft_physical_state"] = physical_state
+        payload["physical_state"] = "정상"
+    else:
+        payload.pop("soft_physical_state", None)
+        if physical_state_binding == "normal":
+            payload["physical_state"] = "정상"
+        elif physical_state:
+            payload["physical_state"] = physical_state
+
+    return payload

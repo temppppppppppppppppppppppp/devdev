@@ -9,6 +9,7 @@ Scope: modern webnovel protagonist design constitution for `material_ssot/20_pit
 - lock the current house philosophy before idea selection, Stage 0 spend, and Phase0 expansion
 - keep pitch work centered on protagonist reward logic instead of theme-only, suffering-only, or vibe-only drafting
 - give operators and external models one explicit standard for `왜 이 주인공은 먹히는가`
+- use `material_ssot/20_pitch/cider-doctrine-v1.md` as the fast-entry companion for first-block conversion
 - current operator lane applies this constitution only to male-protagonist active candidates
 - female-protagonist ideas are outside the active promotion lane and should not be selected into `canon/` under the current policy
 
@@ -43,7 +44,7 @@ Scope: modern webnovel protagonist design constitution for `material_ssot/20_pit
 ### 3.2 첫 승리와 보상
 
 7. 첫 승리는 사건 해결보다 평가 수정이어야 한다.
-8. 첫 블록(대략 3~6화) 안에는 반드시 `저건 쟤라서 가능했다`는 임팩트 장면이 있어야 한다.
+8. 첫 블록(엄격히 `2~6화`) 안에는 반드시 `저건 쟤라서 가능했다`는 임팩트 장면이 있어야 한다.
 9. 초반 보상은 돈보다 서열 변화가 먼저다.
 
 첫 보상으로 우선되는 것:
@@ -60,6 +61,14 @@ Scope: modern webnovel protagonist design constitution for `material_ssot/20_pit
 - 규모보다 원인이 선명해야 한다
 - 결과보다 `왜 저게 주인공의 것인가`가 먼저 보여야 한다
 - 독자가 `저건 쟤밖에 못 한다`를 느껴야 한다
+
+첫 블록 전환 추가 규칙:
+
+- 첫 블록 판단은 엄격히 `2~6화`로 본다.
+- 이 구간에는 proof scene만이 아니라 visible reward token `1종 이상`이 반드시 떨어져야 한다.
+- selection-ready 판단에서는 `2~6`의 모든 row가 same-block payback을 가져야 한다.
+- 첫 블록이 실패, 굴욕, 질책, 의심, 유예 생존만 남기고 닫히면 기본값은 `HOLD` 또는 `REJECT`다.
+- 좋은 첫 블록은 `proof -> 재평가 -> visible reward -> 다음 입장권` 순서가 읽힌다.
 
 좋은 예:
 

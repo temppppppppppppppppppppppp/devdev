@@ -2002,13 +2002,48 @@ class Stage3Orchestrator:
     ):
         ctx = self.ctx
         if isinstance(blueprint, dict):
+            validate_meta = pipeline_result.get("phases", {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
+            binding_issue_count = 0
+            if isinstance(validate_meta, dict):
+                try:
+                    binding_issue_count = int(validate_meta.get("binding_prevalidation_issue_count") or 0)
+                except (TypeError, ValueError):
+                    binding_issue_count = 0
+            binding_categories = []
+            if isinstance(validate_meta, dict):
+                raw_binding_categories = validate_meta.get("binding_prevalidation_categories", [])
+                if isinstance(raw_binding_categories, list):
+                    binding_categories = [
+                        str(item).strip() for item in raw_binding_categories if str(item or "").strip()
+                    ][:6]
             blueprint["_stage3_meta"] = {
                 "final_verdict": final_verdict,
                 "quality_gate_failed": quality_gate_failed,
                 "quality_risk": quality_risk,
                 "revision_required": revision_required,
                 "last_score": pipeline_result.get("last_score", 0),
+                "binding_prevalidation_issue_count": binding_issue_count,
             }
+            if binding_categories:
+                blueprint["_stage3_meta"]["binding_prevalidation_categories"] = binding_categories
+            partial_fix_eval = validate_meta.get("partial_fix_eval") if isinstance(validate_meta, dict) else {}
+            if isinstance(partial_fix_eval, dict) and partial_fix_eval:
+                blueprint["_stage3_meta"]["partial_fix_eval"] = dict(partial_fix_eval)
+            fix_pack = validate_meta.get("fix_pack") if isinstance(validate_meta, dict) else {}
+            if isinstance(fix_pack, dict) and fix_pack:
+                compact_fix_pack = {
+                    key: value
+                    for key, value in {
+                        "patch_targets": list(fix_pack.get("patch_targets") or []),
+                        "target_kind": str(fix_pack.get("target_kind", "") or "").strip(),
+                        "must_fix": list(fix_pack.get("must_fix") or []),
+                        "do_not_regress": list(fix_pack.get("do_not_regress") or []),
+                        "success_condition": str(fix_pack.get("success_condition", "") or "").strip(),
+                    }.items()
+                    if value not in ("", [], {}, None)
+                }
+                if compact_fix_pack:
+                    blueprint["_stage3_meta"]["fix_pack"] = compact_fix_pack
 
         if isinstance(blueprint, dict) and working_ep > 1:
             inventory_gaps = self._detect_inventory_gaps(blueprint, arc_data)
@@ -2476,6 +2511,12 @@ class Stage3Orchestrator:
             _advisory["quality_risk"] = True
         if bool(validate.get("revision_required", False) or pipeline_result.get("revision_required", False)):
             _advisory["revision_required"] = True
+        fix_pack = validate.get("fix_pack")
+        if isinstance(fix_pack, dict) and fix_pack:
+            _advisory["fix_pack"] = dict(fix_pack)
+        partial_fix_eval = validate.get("partial_fix_eval")
+        if isinstance(partial_fix_eval, dict) and partial_fix_eval:
+            _advisory["partial_fix_eval"] = dict(partial_fix_eval)
         selected_candidate_advisory = validate.get("selected_candidate_advisory", {})
         if isinstance(selected_candidate_advisory, dict) and selected_candidate_advisory:
             _warning_messages: list[str] = []

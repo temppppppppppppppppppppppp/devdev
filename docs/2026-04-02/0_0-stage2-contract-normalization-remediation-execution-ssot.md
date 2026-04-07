@@ -1,14 +1,14 @@
 # 0_0 Stage2 Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (2026-04-06 re-audited and promoted from parked after live validation/finalizer revalidation confirmed a still-live Stage2 persistence-authority seam; the bounded preflight/validation/finalizer persistence tranche and the bounded Flow Guard severity tranche have now landed as child slices inside this SSOT, while broader Stage2 normalization remains queued behind them)
+Status: partially_realized (2026-04-06 re-audited and promoted from parked after live validation/finalizer revalidation confirmed a still-live Stage2 persistence-authority seam; the bounded preflight/validation/finalizer persistence tranche, the bounded Flow Guard severity tranche, and the same-day bounded non-wuxia persistence state-cleanup tranche have now landed as child slices inside this SSOT, while broader Stage2 normalization remains queued behind them)
 Canonical Path: `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2 survey docs and lane drafts untracked`
 - Resume Commit: `5428daf989bb8dd91aa12f86a137d899596fed4a`
-- Resume Drift Summary: `2026-04-05 bounded Stage2 realization slices narrowed the lane, the 2026-04-06 global P0-P1 Opus survey confirmed two still-live Stage2 persistence seams, the 2026-04-06 Golden bounded survey added one residual artifact-truth P1 plus abrupt-shutdown observability debt, the workspace then landed truth-preserving packet merges across `stage2_preflight_runtime.py`, `stage2_validation_pipeline.py`, `stage2_finalizer.py`, and `stage2_contracts.py`, and the current workspace additionally landed a bounded Flow Guard severity split in `stage2_validation_pipeline.py` with focused Stage2 family regressions passing`
+- Resume Drift Summary: `2026-04-05 bounded Stage2 realization slices narrowed the lane, the 2026-04-06 global P0-P1 Opus survey confirmed two still-live Stage2 persistence seams, the 2026-04-06 Golden bounded survey added one residual artifact-truth P1 plus abrupt-shutdown observability debt, the workspace then landed truth-preserving packet merges across `stage2_preflight_runtime.py`, `stage2_validation_pipeline.py`, `stage2_finalizer.py`, and `stage2_contracts.py`, the current workspace additionally landed a bounded Flow Guard severity split in `stage2_validation_pipeline.py`, and the same-day bounded finalizer persistence cleanup now strips non-wuxia `internal_energy` / `realm` / `qi_nature` / `martial_arts` state noise both before and after `validate_arc()` so accepted artifacts no longer silently rehydrate those fields at save time`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
 - `docs/2026-04-01/0_0-stage2-stage3-context-hierarchy-bounded-survey.md`
@@ -1024,5 +1024,40 @@ Residual scope:
 
 - broader severity normalization across non-`flow_guard` advisory sources
 - possible future contract work on explicit `beat_sequence` keep-or-drop policy
+
+Confidence for this landed slice: `97%`
+
+## 32. 2026-04-07 Bounded Realization: Non-Wuxia Persistence State Cleanup Landed
+
+Implementation evidence:
+
+- `modules/core/stage2_finalizer.py`
+- `tests/test_stage2_finalizer.py`
+- `tests/test_stage2_finalizer_lane_e.py`
+
+What changed:
+
+1. Stage2 finalizer now strips non-wuxia state-noise fields (`internal_energy`, `realm`, `qi_nature`, `martial_arts`) before persistence-shell repair/finalization continues
+2. the same cleanup now runs again after `validate_arc()` so `ArcState` default hydration cannot silently reintroduce `internal_energy` into accepted non-wuxia `arc_start_state` / `arc_end_state`
+3. operator-visible `[Non-Wuxia State Cleanup]` logging plus audit events now describe the exact persisted cleanup phase and removed field families
+4. wuxia paths intentionally remain untouched
+
+Execution consequence:
+
+- the Golden residual `artifact-truth false closure` seam is now narrower than the original survey reading
+- accepted non-wuxia artifacts no longer depend on candidate-side cleanup alone to keep wuxia-only state fields out of persisted `state_constraints`
+- this SSOT still remains `partially_realized` because broader mission-authority, alias/dead-field policy, observability, and fresh live-run closure work are still deferred
+
+Targeted verification:
+
+- `pytest tests/test_stage2_finalizer.py tests/test_stage2_finalizer_lane_e.py -q`
+- `python -m py_compile modules/core/stage2_finalizer.py tests/test_stage2_finalizer.py tests/test_stage2_finalizer_lane_e.py`
+- `ruff check modules/core/stage2_finalizer.py tests/test_stage2_finalizer.py tests/test_stage2_finalizer_lane_e.py`
+
+Residual scope after this landed slice:
+
+- explicit fresh live-run impact check for the broader Stage2 residual SSOT before any wider reactivation
+- remaining mission-authority / alias / dead-field normalization still queued inside the same SSOT
+- abnormal-shutdown observability debt from `01_golden`
 
 Confidence for this landed slice: `97%`

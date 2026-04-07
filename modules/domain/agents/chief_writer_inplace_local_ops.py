@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
+
+from modules.core.partial_fix_contract import normalize_patch_target_records
 
 SUPPORTED_LOCAL_TARGET_KINDS = {"entity_ref", "local_phrase", "local_sentence"}
 
@@ -15,6 +18,8 @@ class LocalEditAttempt:
     state_updates: dict[str, Any] | None = None
     failure_reason: str = ""
     operation_count: int = 0
+    patch_target_records: list[dict[str, Any]] | None = None
+    repair_trace: list[dict[str, Any]] | None = None
 
 
 def supports_local_edit_fix_pack(normalized_fix_pack: dict[str, Any] | None) -> bool:
@@ -57,16 +62,48 @@ def attempt_local_edit_patch(
     state_updates = payload.get("patch_state_updates", {})
     if not isinstance(state_updates, dict):
         state_updates = {}
+    patch_target_records = list(normalized_fix_pack.get("patch_target_records") or [])
+    if not patch_target_records:
+        _, patch_target_records = normalize_patch_target_records(
+            normalized_fix_pack.get("patch_targets"),
+            stage="stage4",
+            container_kind="manuscript",
+            default_target_kind=str(normalized_fix_pack.get("target_kind", "") or ""),
+        )
 
     patched = original_manuscript
+    repair_trace: list[dict[str, Any]] = []
     for idx, op in enumerate(operations, start=1):
+        matched = _find_matching_spans(
+            text=patched,
+            old_text=op["old_text"],
+            anchor_before=op.get("anchor_before", ""),
+            anchor_after=op.get("anchor_after", ""),
+        )
         patched = _apply_replace_operation(
             patched,
             op,
             target_kind=str(normalized_fix_pack.get("target_kind", "") or ""),
         )
-        if patched is None:
+        if patched is None or len(matched) != 1:
             return LocalEditAttempt(success=False, failure_reason=f"op_{idx}_apply_failed")
+        target_record = patch_target_records[min(idx - 1, len(patch_target_records) - 1)] if patch_target_records else {}
+        repair_trace.append(
+            {
+                "target": str(target_record.get("summary") or "").strip(),
+                "target_kind": str(
+                    target_record.get("target_kind") or normalized_fix_pack.get("target_kind") or ""
+                ).strip(),
+                "patch_target_id": str(target_record.get("patch_target_id") or "").strip(),
+                "old_excerpt": str(op.get("old_text", "") or "").strip()[:240],
+                "new_excerpt": str(op.get("new_text", "") or "").strip()[:240],
+                "why_changed": " / ".join(
+                    str(item or "").strip()
+                    for item in list(normalized_fix_pack.get("must_fix") or [])[:2]
+                    if str(item or "").strip()
+                )[:220],
+            }
+        )
 
     if patched == original_manuscript:
         return LocalEditAttempt(success=False, failure_reason="no_local_change")
@@ -76,6 +113,8 @@ def attempt_local_edit_patch(
         manuscript=patched,
         state_updates=state_updates,
         operation_count=len(operations),
+        patch_target_records=patch_target_records,
+        repair_trace=repair_trace,
     )
 
 

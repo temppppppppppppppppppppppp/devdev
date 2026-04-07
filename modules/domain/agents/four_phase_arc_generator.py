@@ -23,6 +23,7 @@ from collections.abc import Callable
 from modules.core.constants import AIModels, ContextLimits, Stage2Limits, smart_truncate
 from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 from modules.core.failure_analyzer import FailureAnalyzer
+from modules.core.stage2_partial_fix_contract import build_stage2_fix_pack_guidance, normalize_stage2_fix_pack
 from modules.validation.threshold_helper import _threshold
 
 from .arc_ensemble import ArcEnsembleGenerator
@@ -622,6 +623,7 @@ class FourPhaseArcGenerator(BaseAgent):
         original_arc: dict,
         director_feedback: str,
         arc_no: int,
+        fix_pack: dict | None = None,
     ) -> dict | None:
         """[TF-23] LLM 1회 호출로 Arc in-place 수정. 실패 시 None → patch/rewrite 폴백."""
         from modules.core.prompt_loader import PromptLoader
@@ -639,18 +641,24 @@ class FourPhaseArcGenerator(BaseAgent):
             logging.warning(f"[TF-23] ARC_PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
             _patch_template = None
 
+        normalized_fix_pack = normalize_stage2_fix_pack(fix_pack or {})
+        fix_pack_guidance = build_stage2_fix_pack_guidance(normalized_fix_pack)
+        patch_feedback = str(director_feedback or "").strip()
+        if fix_pack_guidance:
+            patch_feedback = "\n\n".join(part for part in (patch_feedback, fix_pack_guidance) if part)
+
         def _esc(s):
             return s.replace("{", "{{").replace("}", "}}")
 
         if _patch_template:
             prompt = _patch_template.format(
-                feedback_text=_esc(director_feedback),
+                feedback_text=_esc(patch_feedback),
                 original_arc=_esc(original_json),
             )
         else:
             prompt = (
                 f"[Arc 원본 보존 + 지적사항만 수정]\n\n"
-                f"## Director 피드백\n{director_feedback}\n\n"
+                f"## Director 피드백\n{patch_feedback}\n\n"
                 f"## 원본 Arc\n{original_json}\n\n"
                 f"전면 재설계하지 마세요. 지적된 부분만 고치세요."
             )
