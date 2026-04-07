@@ -230,6 +230,26 @@ def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
                     "scope_origin": "director_authored",
                     "widened": False,
                 },
+                "partial_fix_eval": {
+                    "patch_round": 1,
+                    "is_patch_attempt": True,
+                    "patch_target_id": "pt:opening",
+                    "target_kind": "entity_ref",
+                    "must_fix_resolved": None,
+                    "do_not_regress_held": None,
+                    "success_condition_met": None,
+                    "fallback_reason": "",
+                },
+                "repair_trace": [
+                    {
+                        "target": "opening_location_name",
+                        "target_kind": "entity_ref",
+                        "patch_target_id": "pt:opening",
+                        "old_excerpt": "old venue",
+                        "new_excerpt": "new venue",
+                        "why_changed": "repair opening label",
+                    }
+                ],
                 "gate_semantics": {
                     "repair_scope": "targeted_opening_patch",
                 },
@@ -257,9 +277,19 @@ def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
     assert summary["final_authority_contract_summary"]["final_authority_sink"] == "stage_attempts"
     assert summary["proof_scope_summary"]["backend_wide_proof"] is False
     assert summary["proof_scope_summary"]["stage3_sink_probe_status"] == "missing"
+    assert summary["gate_repair_summary"]["session_id"] == "sess"
+    assert summary["gate_repair_summary"]["repair_contract_subtype"] == "opening_spatial_continuity"
+    assert summary["gate_repair_summary"]["repair_contract_provenance"] == "runtime_synthesized"
+    assert summary["gate_repair_summary"]["scope_authority_fix_scope"] == "partial"
+    assert summary["gate_repair_summary"]["scope_authority_authoritative_fix_scope"] == "inplace"
+    assert summary["gate_repair_summary"]["scope_authority_scope_origin"] == "director_authored"
+    assert summary["gate_repair_summary"]["scope_authority_widened"] is False
     assert summary["gate_repair_summary"]["repair_contract"]["subtype"] == "opening_spatial_continuity"
     assert summary["gate_repair_summary"]["scope_authority"]["authoritative_fix_scope"] == "inplace"
+    assert summary["gate_repair_summary"]["partial_fix_eval"]["patch_target_id"] == "pt:opening"
+    assert summary["gate_repair_summary"]["repair_trace"][0]["target"] == "opening_location_name"
     assert summary["gate_repair_surface_summary"]["status"] == "ok"
+    assert summary["gate_repair_surface_summary"]["session_id"] == "sess"
     assert summary["gate_repair_surface_summary"]["repair_contract_subtype"] == "opening_spatial_continuity"
     assert summary["gate_repair_surface_summary"]["repair_contract_provenance"] == "runtime_synthesized"
     assert summary["gate_repair_surface_summary"]["fix_scope"] == "partial"

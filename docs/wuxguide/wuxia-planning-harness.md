@@ -46,6 +46,14 @@ python scripts/stage0_handoff_validator.py --work-id {work_id}
 
 exit 0이 아니면 Planning 진입 금지. 실패 시 Stage 0으로 복귀하여 산출물을 보완한다.
 
+Pitch-side promotion gate:
+
+```bash
+python -X utf8 scripts/material_promotion_gate.py --stage phase0 --path <pitch-md> --work-id <work_id>
+```
+
+이 gate가 pass하지 않으면 해당 pitch를 `Phase0-ready`로 부르지 않는다.
+
 핸드오프 검증 항목:
 
 - `source_manifest.json` 존재 및 정본/참고본 구분 여부
@@ -65,6 +73,44 @@ exit 0이 아니면 Planning 진입 금지. 실패 시 Stage 0으로 복귀하�
 - `source_manifest` 없이 "무협은 다 비슷하니까"로 Phase 0를 시작하려 함
 - 프로파일이 비어 있거나 `business_growth_profile`로 잘못 잠겨 있음
 - material summary가 "전형적인 무협 세계관"처럼 추상적 일반론뿐임
+
+## 3B. `First-Block Cider Ledger` 의무
+
+무협도 신규 기획안 단계에서는 `first_block_cider_ledger`를 반드시 만든다.
+
+정의:
+
+- `TR blocks 2~6` 각각에 대해 사이다 유무와 영수증을 기록하는 5줄 ledger
+- wuxguide에서는 `rank`, `elder protection`, `manual access`, `realm step`, `reputation`, `inheritance clue` 같은 토큰이 핵심이다
+
+필수 필드:
+
+| 키 | 의미 |
+| --- | --- |
+| `block_no` | `2`, `3`, `4`, `5`, `6` |
+| `has_cider` | `true / false` |
+| `cider_elements` | `proof`, `reevaluation`, `reward_token`, `protection`, `realm_shift`, `manual_access`, `next_gate`, `recovery_asset` |
+| `visible_reward_token` | 공인 의원 자격, 장로 보호, 서고 접근권, 비급 단서 같은 구체 토큰 |
+| `bridge_or_payback_note` | `has_cider = false` 블록의 허용 이유 |
+| `pain_only_exit` | 고통만 남기고 닫히는지 |
+
+Planning hard rule:
+
+- 5줄이 정확히 다 있어야 한다
+- exploratory draft에서는 false row를 hole marker로 남길 수 있지만 기본값은 `hold`
+- `selection-ready` 또는 `Phase0-ready`로 넘길 때는 blocks `2~6` 다섯 줄이 모두 `has_cider = true`
+- `visible_reward_token`은 같은 블록 안 payback chain에서 느껴져야 한다
+- `block 6 pain_only_exit = true` 금지
+- `block 7+` 비무 승리나 사사 보상으로 `2~6` 빈칸을 메우면 invalid
+
+특히 무협에서 자주 생기는 오판:
+
+- `고수와 만났다`만으로 사이다 처리
+- `비급 단서만 얻었다`고 쓰고 토큰을 안 적음
+- `block 7`의 공개 승리로 `2~6`의 무보상 opening을 구제
+
+이 세 가지는 모두 금지다.
+또한 false row를 `bridge_or_payback_note`로 구제해서 selection-ready라 우기는 것도 금지다.
 
 ## 4. 대원칙: 자기이익 우선 원칙의 Phase 0 적용
 

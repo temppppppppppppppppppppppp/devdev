@@ -91,6 +91,47 @@ This is the first canonical pitch authority for `pantech_cyworld_reborn`. The up
 - proof scene:
   - 영수증 장면(Block 1): 세림그룹 본관 28층 전략회의실에서 차우진 CFO가 "도련님이 또 유행어를 주워 왔다"며 안건 삭제를 시도한다. 윤도현은 감정 대신 2007년 여름 판 변화 일정표와 손익 구조를 들이민다 — "단말·계정·결제·앱 장터가 한 몸으로 묶인 사업자가 한국엔 아직 없다." 유통 계열사에서 밀려난 서른한 살 오너 3세가 회장과 CFO 앞에서 개인 주식 담보 180억과 이사 자리까지 걸고 CB 350억을 통과시킨다. 차우진이 "숫자만큼은 틀리지 않았다"고 인정하는 순간이 태도 변화 영수증이다. `저건 쟤라서 가능했다`: 전통 계열 결재선에 밀렸던 사람이 미래 타임라인 지식을 숫자와 손익으로 환전해, 유행어가 아니라 손익 구조임을 증명한 것이다. Block 2~3에서 이 입장권이 팬택 CB 전환권 + 싸이월드 일촌 그래프 접근권으로 확장되며, "벽돌 더미가 될 팬택과 모바일 문턱에서 미끄러질 싸이월드를 같은 손이 먼저 잡았다"는 선점 쾌감이 완성된다.
 
+## 3A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 팬택 전환사채 인수와 연구소 브리지 자금 투입, 공급망 채권 선점을 한 판으로 묶어 제조축 입장권을 확보한다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 싸이월드 모바일 전환권 라이선싱과 JV 협상 테이블을 열어 소셜축 입장권을 같은 블록 안에 붙인다.
+  receipt_kind: next_gate
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 차우진 CFO가 "숫자만큼은 틀리지 않았다"며 실무 자료 접근권을 내주고 태도를 바꾼다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 회장 윤재문의 "시험해볼 카드" 승격이 찍히며 유통 계열 발령 오너 3세에서 승계 플레이어 후보로 격상된다.
+  receipt_kind: status_shift
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 팬택 이사회와 싸이월드 협상 테이블에 같은 자금으로 동시에 꽂을 수 있는 금융 입장권이 완성된다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 3B. Readiness Declaration
+
+- selection-ready: yes
+- Phase0-ready: yes
+- all 2~6 ledger rows have has_cider true: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 4. Phase0 Handoff Note
 
 - already locked:

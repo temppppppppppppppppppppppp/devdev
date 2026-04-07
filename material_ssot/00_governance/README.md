@@ -13,6 +13,34 @@ Core docs:
 - `legacy-map.md`
 - `work-coverage-matrix.md`
 - `bootstrap-status.md`
+- `production-pair-benchmark-spec-v1.md`
+- `external-model-benchmark-operation-harness-v1.md`
+- `external-model-benchmark-launch-playbook-v1.md`
+- `external-model-benchmark-prompt-template-v1.md`
+- `external-model-material-benchmark-one-shot-order-template-v1.md`
+- `external-model-material-benchmark-example-office_checkup_next_day-v1.md`
+- `external-model-material-benchmark-example-line_stop_deputy-v1.md`
+
+Live report exemplar:
+
+- `docs/2026-04-07/material_benchmark_office_checkup_next_day_report.md`
+
+Operator-training HOLD exemplar:
+
+- `docs/2026-04-07/material_benchmark_line_stop_deputy_hold_example.md`
+
+Operator-training REJECT exemplar:
+
+- `docs/2026-04-07/material_benchmark_legacy_import_042_reject_example.md`
+
+Quick operator card:
+
+- `docs/2026-04-07/material_benchmark_pass_hold_reject_cheat_sheet.md`
+
+Launch generator:
+
+- `python -X utf8 scripts/material_benchmark_order_generator.py --pitch <pitch-md> [--promotion-intent none|canon|phase0]`
+- `python -X utf8 scripts/material_benchmark_batch_generator.py [--path <dir>] [--promotion-intent auto|none|canon|phase0]`
 
 Suggested read order:
 
@@ -21,6 +49,7 @@ Suggested read order:
 3. `legacy-map.md`
 4. `stage-read-order.md`
 5. `work-coverage-matrix.md`
+6. `production-pair-benchmark-spec-v1.md` when auditing existing `BI/TR` pairs
 
 Role:
 
@@ -29,5 +58,6 @@ Role:
 - define how a reader should traverse the material-side order without mixing family routing and system routing
 - show which representative works are already connected end-to-end
 - show which gaps remain before a later cutover wave
+- define how existing live `TR + BI` pairs are benchmarked and grade-capped
 
 This directory should remain documentation-first during the current bounded slice.

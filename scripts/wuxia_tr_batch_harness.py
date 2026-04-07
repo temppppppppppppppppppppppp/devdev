@@ -61,6 +61,10 @@ LANGUAGE_PATHS = (
     "content.event_villain",
     "content.solution",
     "content.reward",
+    "genre_ext.block_cider.receipt_type",
+    "genre_ext.block_cider.receipt_line",
+    "martial_ext.block_cider.receipt_type",
+    "martial_ext.block_cider.receipt_line",
     "genre_ext.enemy_pressure",
     "genre_ext.martial_art_gain",
     "genre_ext.artifact_or_manual_gain",
@@ -228,6 +232,43 @@ def bundle_size(block: dict[str, Any]) -> int:
         + len(as_text(content.get("reward")))
         + len(as_text(block.get("stakes")))
     )
+
+
+def parse_bool_flag(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    text = as_text(value).lower()
+    if text in {"true", "1", "yes", "y", "예", "있음", "있다"}:
+        return True
+    if text in {"false", "0", "no", "n", "아니오", "없음", "없다"}:
+        return False
+    return None
+
+
+def get_block_cider_payload(block: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(block, dict):
+        return {}
+    for container_key in ("martial_ext", "genre_ext"):
+        container = block.get(container_key)
+        if isinstance(container, dict):
+            payload = container.get("block_cider")
+            if isinstance(payload, dict):
+                return payload
+    return {}
+
+
+def extract_block_cider_state(block: dict[str, Any]) -> dict[str, Any]:
+    payload = get_block_cider_payload(block)
+    present = any(key in payload for key in ("has_cider", "receipt_type", "receipt_line", "pain_only_exit"))
+    has_cider = parse_bool_flag(payload.get("has_cider"))
+    pain_only_exit = parse_bool_flag(payload.get("pain_only_exit"))
+    return {
+        "present": present,
+        "has_cider": has_cider is True,
+        "pain_only_exit": pain_only_exit is True,
+        "receipt_type": as_text(payload.get("receipt_type")),
+        "receipt_line": as_text(payload.get("receipt_line")),
+    }
 
 
 def normalize_solution_stakes_signature(block: dict[str, Any]) -> str:
@@ -646,6 +687,10 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             "critical_thin_blocks": [],
             "thin_blocks": [],
             "short_stakes_blocks": [],
+            "block_cider_missing_blocks": [],
+            "no_cider_blocks": [],
+            "pain_only_exit_blocks": [],
+            "cider_receipt_line_missing_blocks": [],
             "same_location_clone_blocks": [],
             "same_location_clone_count": 0,
             "diegetic_meta_ref_examples": [],
@@ -698,6 +743,10 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
     critical_thin_blocks: list[int] = []
     thin_blocks: list[int] = []
     short_stakes_blocks: list[int] = []
+    block_cider_missing_blocks: list[int] = []
+    no_cider_blocks: list[int] = []
+    pain_only_exit_blocks: list[int] = []
+    cider_receipt_line_missing_blocks: list[int] = []
     martial_progress_blocks: list[int] = []
     no_progress_blocks: list[int] = []
     recognition_signal_blocks = 0
@@ -767,6 +816,16 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
                 enemy_pressure_val = "active" if (opp_name and opp_name.lower() not in {"없음", "n/a", "none", ""}) else ""
         if is_blankish(enemy_pressure_val):
             enemy_pressure_missing += 1
+
+        block_cider = extract_block_cider_state(block)
+        if not block_cider["present"]:
+            block_cider_missing_blocks.append(block_no)
+        if not block_cider["has_cider"]:
+            no_cider_blocks.append(block_no)
+        if not block_cider["receipt_line"]:
+            cider_receipt_line_missing_blocks.append(block_no)
+        if block_cider["pain_only_exit"]:
+            pain_only_exit_blocks.append(block_no)
 
         foreshadow_total += len([text for text in ensure_list(block.get("foreshadow")) if as_text(text)])
         callback_total += len([text for text in ensure_list(block.get("callback")) if as_text(text)])
@@ -859,6 +918,10 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         "late_thin_blocks_zero": not any(block_no > len(blocks) - 10 for block_no in thin_blocks),
         "short_stakes_blocks_total_ok": len(short_stakes_blocks) <= 2,
         "endgame_low_stakes_zero": len(endgame_low_stakes_blocks) == 0,
+        "block_cider_declared": len(block_cider_missing_blocks) == 0,
+        "no_cider_blocks_zero": len(no_cider_blocks) == 0,
+        "pain_only_exit_blocks_zero": len(pain_only_exit_blocks) == 0,
+        "cider_receipt_line_present": len(cider_receipt_line_missing_blocks) == 0,
         "callback_ratio_ok": callback_ratio >= 0.55,
         "unresolved_foreshadow_count_ok": unresolved_foreshadow_count <= (foreshadow_total * 0.40),
         "faction_position_present": faction_position_missing == 0,
@@ -915,6 +978,10 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         "critical_thin_blocks": critical_thin_blocks,
         "thin_blocks": thin_blocks,
         "short_stakes_blocks": short_stakes_blocks,
+        "block_cider_missing_blocks": block_cider_missing_blocks,
+        "no_cider_blocks": no_cider_blocks,
+        "pain_only_exit_blocks": pain_only_exit_blocks,
+        "cider_receipt_line_missing_blocks": cider_receipt_line_missing_blocks,
         "same_location_clone_blocks": same_location_clone_blocks,
         "same_location_clone_count": len(same_location_clone_blocks),
         "diegetic_meta_ref_examples": diegetic_meta_ref_examples,
@@ -999,6 +1066,12 @@ def prompt_json_skeleton(start: int, batch_size: int, protagonist: str) -> str:
                 "weakness_exploited": "What weakness was used",
             },
             "success_pattern": "How this block delivers wuxia satisfaction",
+            "block_cider": {
+                "has_cider": True,
+                "receipt_type": "승급 + 재평가",
+                "receipt_line": "이번 블록 안에서 문파가 주인공의 실력을 인정하고 다음 심사 입장권을 내주며 same-block 사이다가 지급된다.",
+                "pain_only_exit": False
+            }
         },
         "regression_ext": {
             "is_regressor": False,
@@ -1029,7 +1102,8 @@ def build_prompt(
         predeclare = [
             "1. Cite the previous realm_after and internal_energy_after before the JSON.",
             "2. State which wuxia axis each block advances.",
-            "3. After JSON, output a short continuity diff.",
+            "3. State each block's same-block cider receipt in one line before the JSON.",
+            "4. After JSON, output a short continuity diff.",
         ]
         batch_rule = "Return predeclare, JSON array, and a short continuity diff only."
     elif mode == "pro":
@@ -1037,6 +1111,7 @@ def build_prompt(
             "1. Summarize continuity anchors and open foreshadow debt before the JSON.",
             "2. After JSON, output continuity diff, NPC tracker delta, and foreshadow debt update.",
             "3. Flag any block that is intentionally political or recovery-heavy instead of realm growth.",
+            "4. Confirm that every block is quiet but paid, not quiet and empty.",
         ]
         batch_rule = "Return predeclare, JSON array, continuity diff, NPC tracker delta, and foreshadow debt update."
     else:
@@ -1093,6 +1168,8 @@ def build_prompt(
         "8. If the place repeats from the previous block, change at least two among scene function, opponent/front, stakes, relation targets, or sub-location.",
         "9. `Block/ARC/Phase/Stage` 번호 메타는 자연어 필드에 금지. 복선/회수 번호는 `foreshadow_targets` / `callback_sources`에만 적을 것.",
         "10. `section_rotation`, `arc_section`, `phase` 같은 라벨 필드는 번호 없이 자연어 제목만 적을 것.",
+        "11. Every block must include `genre_ext.block_cider` with `has_cider=true`, a same-block `receipt_line`, and `pain_only_exit=false`.",
+        "12. Training, recovery, politics, and infiltration blocks are allowed only when they are quiet but paid.",
         "",
         "## Predeclare",
         *predeclare,
@@ -1131,6 +1208,9 @@ def render_metrics_snapshot(metrics: dict[str, Any]) -> list[str]:
         f"- label_meta_ref_count: {metrics.get('label_meta_ref_count')}",
         f"- opponent_unique: {metrics.get('opponent_unique')}",
         f"- top_opponent_share: {metrics.get('top_opponent_share')}",
+        f"- block_cider_missing_blocks: {metrics.get('block_cider_missing_blocks')}",
+        f"- no_cider_blocks: {metrics.get('no_cider_blocks')}",
+        f"- pain_only_exit_blocks: {metrics.get('pain_only_exit_blocks')}",
         f"- martial_progress_blocks: {len(metrics.get('martial_progress_blocks', []))}/{metrics.get('block_count', 0)}",
         f"- same_location_clone_count: {metrics.get('same_location_clone_count')}",
         f"- hard_gate_failures: {metrics.get('hard_gate_failures', [])}",
@@ -1190,6 +1270,17 @@ def validate_candidate(
                 append_finding(findings, "P0", "CONTENT-001", label, f"content.{field} is blank.")
 
         genre = ensure_dict(block, "genre_ext")
+        block_cider = ensure_dict(genre, "block_cider")
+        has_cider = parse_bool_flag(block_cider.get("has_cider"))
+        pain_only_exit = parse_bool_flag(block_cider.get("pain_only_exit"))
+        if has_cider is not True:
+            append_finding(findings, "P0", "CIDER-001", label, "genre_ext.block_cider.has_cider=true가 필수다.")
+        if not as_text(block_cider.get("receipt_type")):
+            append_finding(findings, "P1", "CIDER-002", label, "genre_ext.block_cider.receipt_type이 비어 있다.")
+        if not as_text(block_cider.get("receipt_line")):
+            append_finding(findings, "P0", "CIDER-003", label, "genre_ext.block_cider.receipt_line이 비어 있다.")
+        if pain_only_exit is True:
+            append_finding(findings, "P0", "CIDER-004", label, "genre_ext.block_cider.pain_only_exit=true는 허용되지 않는다.")
         for field in MANDATORY_MARTIAL_FIELDS:
             if is_blankish(genre.get(field)):
                 append_finding(findings, "P1", "MARTIAL-001", label, f"genre_ext.{field} is blank.")

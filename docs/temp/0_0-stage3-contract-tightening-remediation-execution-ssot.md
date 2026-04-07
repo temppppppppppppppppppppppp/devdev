@@ -1,28 +1,27 @@
 # 0_0 Stage3 Contract Tightening Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: parked (survey-backed future wave; narrowed to binding and semantic-handoff enforcement only; explicit tier-2.5 canary proof pending, no execution yet)
+Status: partially_realized (promoted from parked on 2026-04-07 roadmap reorder; re-audited again against the current workspace before implementation start; the first bounded tranche then landed by widening binding enforcement for `dead_npc`, stop-line/`arc_compliance`, and `fact_lock_*` seams, persisting binding metadata through Stage3 success handoff, and teaching Stage4 to consume that metadata as real Director/retry pressure; explicit tier-2.5 canary proof still remains required before closure)
 Canonical Path: `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2/Stage3 survey docs and lane drafts untracked`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Commit: `5a2ef92ab04e46d47ee73b9d56d3e546544576c0`
+- Resume Drift Summary: `the queue was later re-ranked to make this the next unopened implementation lane, the 2026-04-07 Stage234 terminal survey confirmed the still-live Stage3 seams as binding-scope gaps plus advisory-only `_stage3_meta` handoff, the originally listed static survey and runtime closure audit now live under archived `docs/이전/` paths, the previously referenced Stage3 artifact JSON paths are no longer present in the active workspace so this SSOT now relies on the archived survey/evidence set plus the 2026-04-07 handoff survey rather than stale artifact-local pointers, and the current workspace has now landed a bounded first tranche across `unified_blueprint_validator.py`, `three_phase_blueprint_runtime.py`, `stage3_orchestrator.py`, `stage4_director_runtime.py`, and `stage4_outcome_runtime.py` with focused regression/static validation while fresh tier-2.5 canary proof stays deferred`
 Source Survey Docs:
-- `docs/2026-04-02/0_0-stage3-static-global-bounded-survey.md`
+- `docs/이전/2026-04-02/0_0-stage3-static-global-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
-- `docs/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-audit.md`
+- `docs/이전/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-audit.md`
+- `docs/2026-04-07/stage234-terminal2-stage3-binding-handoff-survey.md`
 Evidence Artifacts:
-- `docs/2026-04-02/0_0-stage3-static-global-evidence.json`
-- `projects/0_0/logs/artifacts/stage3/ep_0005/attempt_06/final_blueprint__action_focused.json`
-- `projects/0_0/logs/artifacts/stage3/ep_0006/attempt_09/final_blueprint__dialogue_focused.json`
-- `projects/canary_0_0_stage3_arc2_semantic_r5/logs/artifacts/stage3/ep_0005/attempt_02/final_blueprint__dialogue_focused.json`
+- `docs/이전/2026-04-02/0_0-stage3-static-global-evidence.json`
+- `docs/이전/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-evidence.json`
 Side-Effect Coverage: covered
 
 ## 1. Intent
 
-Preserve a bounded future wave for `Stage3 contract tightening` without promoting it ahead of active `Stage4` remediation seams.
+Preserve a bounded queued lane for `Stage3 contract tightening` without promoting it ahead of active `Stage4` remediation seams.
 
 This execution SSOT exists because the latest static survey proved:
 
@@ -93,7 +92,7 @@ Primary debt inventory for this wave:
   - future Stage3 blueprint artifact shape and metadata may change
 
 - DB / schema / transaction boundaries:
-  - not applicable for this bounded future wave
+  - not applicable for this bounded pending lane
 
 - JSONL / log / audit sinks:
   - Stage3 prevalidation and verdict metadata may become richer or more binding
@@ -154,6 +153,17 @@ Realization direction:
 4. bounded regression coverage
 5. later runtime proof only after explicit reactivation
 
+## 8A. Implementation Update (2026-04-07)
+
+- Tranche 1 landed in bounded form:
+  - `dead_npc`, `arc_compliance`, `fact_lock_location`, `fact_lock_item`, and `fact_lock_provenance` now participate in Stage3 binding escalation when severity is `MAJOR/CRITICAL`
+- Tranche 2 landed in bounded handoff form:
+  - Stage3 validation/runtime now preserves `binding_prevalidation_issue_count` plus category metadata through `pipeline_result["phases"]["validate"]` and persisted `_stage3_meta`
+  - Stage4 Director and retry escalation now consume those Stage3-owned binding signals as structured caution/escalation input instead of treating them as dead handoff fields
+- fresh runtime proof remains deferred:
+  - focused pytest, `py_compile`, and `ruff` closed
+  - explicit tier-2.5 canary proof is still required before closure
+
 ## 9. Acceptance Criteria
 
 - highest-risk Stage3 seams no longer remain purely advisory by default
@@ -175,18 +185,18 @@ Realization direction:
 ## 11. Guardrails
 
 - do not activate this lane before explicit operator decision
-- do not let this parked wave outrank current active Stage4 seams without deliberate reprioritization
+- do not let this partial lane outrank current active Stage4 seams without deliberate reprioritization
 - do not widen this lane into broad Stage3 prompt retuning
 - do not widen this lane into Stage2 redesign or Stage4 redesign
 - do not run a canary from this lane until explicit operator approval
 
 ## 12. Temp Queue Notes
 
-- temp status: `parked`
+- temp status: `in_progress`
 - cleanup condition:
-  - keep the temp mirror as a future-wave queue item until explicit closure or replacement
+  - keep the temp mirror as an active verification-pending queue item until explicit closure or replacement
 - roadmap dependency:
-  - this item stays below active Stage4 lanes and above the more distant Stage2 normalization future wave
+  - this item stays below active Stage4 lanes and the narrower pending Stage4/Stage2 child slices
 
 ## 13. Validation and Closure Hooks
 
@@ -199,19 +209,21 @@ Realization direction:
 
 Pass 1, structure and scope:
 
-- kept this as a future bounded execution SSOT, not an active lane
+- kept this as a bounded execution SSOT tied to the live queue rather than widening it into a broad Stage3 rewrite
 - narrowed this wave to validator/binding enforcement plus semantic handoff preservation
 - excluded broad Stage3 prompt retuning, Stage2 normalization, and active Stage4 remediation from scope
 
 Pass 2, evidence and consistency:
 
-- aligned the document with the Stage3 static global survey verdict
-- bounded claims to surveyed static evidence and prior artifact truth only
+- aligned the document with the archived Stage3 static global survey verdict and the archived runtime closure audit
+- refreshed the source/evidence paths so they match the current workspace layout
+- removed stale Stage3 artifact-local pointers that no longer exist in the active workspace
+- incorporated the 2026-04-07 Stage234 terminal survey as the latest narrow handoff/binding confirmation
 
 Pass 3, execution and readability:
 
-- made the parking status explicit
+- made the pending promotion explicit
 - kept tranches validator/compiler-owned and implementable
 - tied future activation to an explicit canary-proof gate rather than implicit urgency
 
-Confidence: `96%`
+Confidence: `98%`

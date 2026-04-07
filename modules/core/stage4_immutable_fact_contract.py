@@ -75,6 +75,8 @@ class ImmutableFactPacket:
     carryover_pending_actions: str = ""
     carryover_location: str = ""
     carryover_time_marker: str = ""
+    soft_carryover_pending_actions: str = ""
+    soft_physical_state: str = ""
 
     # 2. committed state facts
     committed_state_facts: list[str] = field(default_factory=list)
@@ -106,6 +108,8 @@ class ImmutableFactPacket:
             or self.carryover_pending_actions
             or self.carryover_location
             or self.carryover_time_marker
+            or self.soft_carryover_pending_actions
+            or self.soft_physical_state
             or self.committed_state_facts
             or self.completed_event_facts
             or self.scene_obligations
@@ -174,9 +178,10 @@ def _extract_chain_link_carryover(packet: ImmutableFactPacket, chain_link_sectio
         return
     for raw_line in str(chain_link_section).splitlines():
         line = raw_line.strip()
-        if not line.startswith("- carryover_"):
+        if line.startswith("- carryover_") or line.startswith("- soft_carryover_") or line.startswith("- soft_physical_state:"):
+            key, _, value = line[2:].partition(":")
+        else:
             continue
-        key, _, value = line[2:].partition(":")
         normalized_value = " ".join(str(value).split()).strip()
         if not normalized_value:
             continue
@@ -188,6 +193,10 @@ def _extract_chain_link_carryover(packet: ImmutableFactPacket, chain_link_sectio
             packet.carryover_location = normalized_value
         elif key == "carryover_time_marker":
             packet.carryover_time_marker = normalized_value
+        elif key == "soft_carryover_pending_actions":
+            packet.soft_carryover_pending_actions = normalized_value
+        elif key == "soft_physical_state":
+            packet.soft_physical_state = normalized_value
 
 
 def _extract_committed_state_facts(
@@ -573,6 +582,17 @@ def render_packet_for_cw(packet: ImmutableFactPacket) -> str:
             "- 다른 장소/시간 또는 다른 시점 opening이 필요하면 전환 문장이나 `* * *` 후 1~2문장 안에 바뀐 장소/시간/행동 상태를 명시하세요."
         )
         lines.append("⛔ 위 anchor를 무전환으로 덮어쓰거나, 직전 화에서 이미 끝난 행동을 opening에서 다시 재연하면 즉시 불합격.")
+        if packet.soft_carryover_pending_actions or packet.soft_physical_state:
+            lines.append(
+                "- non-wuxia soft carryover below is reference guidance. Natural healing or ordinary off-page completion is allowed when the opening states the new condition clearly."
+            )
+            if packet.soft_carryover_pending_actions:
+                lines.append(
+                    "- soft carryover pending_actions reference: "
+                    f"{packet.soft_carryover_pending_actions}"
+                )
+            if packet.soft_physical_state:
+                lines.append(f"- soft physical_state reference: {packet.soft_physical_state}")
         lines.append("")
 
     # Committed state facts

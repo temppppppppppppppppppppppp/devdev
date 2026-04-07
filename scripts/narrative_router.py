@@ -24,6 +24,7 @@ from modules.narrative_router.artifact_paths import (  # noqa: E402
     resolve_bi_path,
     resolve_phase0_path,
     resolve_tr_path,
+    resolve_work_guard_library_path,
 )
 
 # ---------------------------------------------------------------------------
@@ -141,6 +142,22 @@ def _determine_stage(work_id: str, stage0_status: dict[str, bool]) -> str:
     return "complete"
 
 
+def _describe_work_guard_status(
+    *,
+    phase0_exists: bool,
+    tr_exists: bool,
+    bi_exists: bool,
+    work_guard_exists: bool,
+) -> str:
+    if work_guard_exists:
+        return "present"
+    if tr_exists or bi_exists:
+        return "missing_after_tr"
+    if phase0_exists:
+        return "missing_before_tr"
+    return "not_expected_yet"
+
+
 def route(work_id: str, genre: str | None = None) -> dict:
     """Build the full routing result dict."""
     family = _detect_family(genre, work_id)
@@ -151,6 +168,14 @@ def route(work_id: str, genre: str | None = None) -> dict:
     phase0_exists = resolve_phase0_path(work_id, root=ROOT).is_file()
     tr_exists = resolve_tr_path(work_id, root=ROOT).is_file()
     bi_exists = resolve_bi_path(work_id, root=ROOT).is_file()
+    work_guard_path = resolve_work_guard_library_path(work_id, root=ROOT)
+    work_guard_exists = work_guard_path.is_file()
+    work_guard_status = _describe_work_guard_status(
+        phase0_exists=phase0_exists,
+        tr_exists=tr_exists,
+        bi_exists=bi_exists,
+        work_guard_exists=work_guard_exists,
+    )
 
     harnesses = WUXGUIDE_HARNESSES if family == "wuxguide" else BLOCKGUIDE_HARNESSES
     next_harness = harnesses.get(current_stage, "")
@@ -165,6 +190,11 @@ def route(work_id: str, genre: str | None = None) -> dict:
             "phase0": phase0_exists,
             "tr": tr_exists,
             "bi": bi_exists,
+        },
+        "work_guard": {
+            "library_path": work_guard_path.relative_to(ROOT).as_posix(),
+            "exists": work_guard_exists,
+            "status": work_guard_status,
         },
         "stage0_detail": stage0_status,
         "manual_audit_pass": _get_manual_audit_pass(work_id),

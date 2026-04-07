@@ -62,6 +62,47 @@ This is the canonical pitch authority for `jangyeongshil_industrial_revolution`.
 - opening_reward_vector:
   - 초반 관상감 기술자들의 반발("관노에게 설계를 맡기느냐")은 있지만, 같은 Arc 안에서 설계 책임자 지정 + 면천 + 기술소 출입이라는 보호 벡터가 즉시 붙는다. 성공의 보상이 단순 생존이나 칭찬으로 축소되지 않는다.
 
+## 3A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 오리피스 역산 도면이 실제 제작에서 오차 없이 작동하며 이천의 태도가 공개적으로 바뀐다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 자격루 설계 책임자로 이름이 등재되어 도면에 `장영실 제`가 붙는다.
+  receipt_kind: status_shift
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 면천이 확정되어 동래로 돌아가는 소모품 관노 신분에서 빠져나온다.
+  receipt_kind: protection
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 궁중 기술소 출입권이 열려 다음 설계와 검수 전장에 직접 들어갈 수 있게 된다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 자재 요청서에 자기 이름을 처음 쓰며 다음 인프라 제작 전장의 결재선을 손에 넣는다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 3B. Readiness Declaration
+
+- selection-ready: yes
+- Phase0-ready: yes
+- all 2~6 ledger rows have has_cider true: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 4. Post-Patron Independence Lock
 
 세종 개인의 후원이 아니라 조정 제도에 심은 4축 인프라. 세종이 건강 악화로 빠지거나 사후에도 주인공이 무력해지지 않는 구조적 근거.

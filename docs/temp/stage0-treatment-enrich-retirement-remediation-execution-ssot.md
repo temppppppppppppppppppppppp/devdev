@@ -1,5 +1,5 @@
 Date: 2026-04-02
-Status: parked
+Status: pending (promoted from parked on 2026-04-07 roadmap reorder; Stage0 hygiene lane kept below nearer runtime-facing work)
 Canonical Path: `docs/2026-04-02/stage0-treatment-enrich-retirement-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage0-treatment-enrich-retirement-remediation-execution-ssot.md`
 Baseline Commit: `aaf495d6`
@@ -23,7 +23,7 @@ Side-Effect Coverage:
 - legacy/manual Stage0 path에서 optional prompt로만 켜진다.
 - 켜면 block `title`, `content`, `joint_docs`, `status_shadow`를 다시 쓸 수 있다.
 
-따라서 이 lane은 `active remediation`이 아니라 `parked future wave`로 유지한다.
+따라서 이 lane은 `active remediation`이 아니라 `promoted pending hygiene lane`으로 유지한다.
 
 # 2. Why This Exists
 
@@ -75,7 +75,7 @@ Side-Effect Coverage:
 1. `Stage0 treatment enrich`는 장기적으로 제거 또는 강등 대상이다.
 2. 이 기능은 Stage0 canonical path의 일부로 승격하면 안 된다.
 3. active blocker가 아니므로 지금 당장 본선으로 당길 필요는 없다.
-4. future wave에서 할 일은 `기능 확장`이 아니라 `퇴역/비활성화/명시적 분리`다.
+4. pending lane에서 할 일은 `기능 확장`이 아니라 `퇴역/비활성화/명시적 분리`다.
 
 # 6. Non-Goals
 
@@ -85,7 +85,7 @@ Side-Effect Coverage:
 
 # 7. Acceptance Criteria
 
-이 parked wave를 나중에 열 경우, 최소 acceptance criteria는 아래다.
+이 pending lane을 나중에 열 경우, 최소 acceptance criteria는 아래다.
 
 1. Stage0 기본 pair pass가 enrich 없이도 유지된다.
 2. enrich가 canonical default path에서 빠진다.
@@ -118,10 +118,10 @@ retirement or quarantine
 
 # 9. Queue Placement
 
-이 lane은 `parked future wave`다.
+이 lane은 `promoted pending hygiene lane`이다.
 
 - active Stage4 remediation보다 아래
-- `Stage3 contract tightening`, `Stage2 contract normalization` 같은 parked wave보다도 아래
+- `Stage3 contract tightening`, `Stage2 contract normalization` 같은 pending lane보다도 아래
 - 이유:
   - direct runtime blocker가 아님
   - operator가 지금 당장 이 기능을 쓰지 않아도 주요 pair 운영은 가능함
@@ -140,7 +140,7 @@ retirement or quarantine
 
 Pass 1. Structure/Scope
 - execution SSOT 타입 적합
-- parked future wave임을 명시
+- pending queue lane임을 명시
 - included/excluded scope 분리 완료
 
 Pass 2. Evidence/Consistency

@@ -17,13 +17,12 @@ Scope: commit-ready summary for the current `material_ssot` slice
 - research Wave 3 moved bounded reusable source corpora into `material_ssot/10_research/40_analysis/source_corpora`
 - research Wave 3.5 moved the bounded NAS medical sample corpus into `material_ssot/10_research/50_corpus_curated/reference_samples`
 - research Wave 4 moved the longtail title corpus into `material_ssot/10_research/60_corpus_longtail`
-- first normalized work-level research pack exists at `material_ssot/10_research/30_work_materials/gatekeeper_heir/90_material_pack.json`
-- additional normalized work-level research packs now exist at:
+- normalized work-level research packs now exist at:
   - `material_ssot/10_research/30_work_materials/office_checkup_next_day/90_material_pack.json`
   - `material_ssot/10_research/30_work_materials/wuxia_heavenly_physician/90_material_pack.json`
 - legacy pitch bundle payloads are moved under `material_ssot/20_pitch/intake/legacy_import`
 - canonical pitch philosophy now exists at `material_ssot/20_pitch/pitch-philosophy.md`
-- first full canonical pitch exemplar now exists at `material_ssot/20_pitch/canon/gatekeeper_heir.md`
+- active canonical pitch exemplar now exists at `material_ssot/20_pitch/canon/office_checkup_next_day.md`
 - pitch-adjacent QA summaries are isolated under `material_ssot/20_pitch/quarantine`
 - `narrative_ssot/10_reference_bank` now operates as a cards mirror plus archive residue shell, not as research authority
 - bounded machine validation now exists at `python -X utf8 scripts/validate_material_ssot.py`
@@ -46,10 +45,10 @@ Scope: commit-ready summary for the current `material_ssot` slice
 
 ## 3. Current Gaps
 
-- representative work coverage is still bounded to three works
+- representative work coverage is still bounded to two works
 - `office_checkup_next_day`: work-level raw research path is not yet pinned
 - `wuxia_heavenly_physician`: root phase0 live file is not yet materialized
-- all three normalized packs still keep raw corpus pinning deferred
+- both normalized packs still keep raw corpus pinning deferred
 - NAS fresh rebuild verification still belongs to another machine
 
 ## 4. Why This Slice Is Stable
@@ -58,8 +57,7 @@ Scope: commit-ready summary for the current `material_ssot` slice
 - family-axis routing is still isolated under `docs/narrative-router`
 - legacy-active, scaffold, mirror, and deferred paths are labeled before any cutover
 - research reference profiles and few-shot cards now have one canonical stage root under `material_ssot/10_research`
-- `gatekeeper_heir` can now be read from a normalized research pack and a canonical pitch exemplar instead of only preprocess artifacts
-- `office_checkup_next_day` and `wuxia_heavenly_physician` can now also be read from normalized research packs
+- `office_checkup_next_day` and `wuxia_heavenly_physician` can now be read from normalized research packs
 - active pitch references now point to `material_ssot/20_pitch` paths instead of the old payload bundle
 - representative work manifests still connect the current live chain without relocating production artifacts
 

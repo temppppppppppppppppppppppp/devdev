@@ -49,6 +49,7 @@ def test_prepare_stage2_pass_arc_for_persistence_shell_delegates_to_family(final
         cdb_snapshot=None,
         constraint_db=MagicMock(),
         constraint_block="MUST NOT regress",
+        genre="investment",
     )
 
     assert result == finalize_result
@@ -69,6 +70,7 @@ def test_prepare_stage2_pass_arc_for_persistence_shell_delegates_to_family(final
             "joint_docs": {"final_location": "city", "world_joint": "stale-world"},
             "status_shadow": {"hp": "fallback-stable", "expected_injuries": "none"},
         },
+        genre="investment",
     )
 
 

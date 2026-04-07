@@ -85,7 +85,6 @@ These paths remain readable but are no longer the canonical home for moved refer
   - gap log
   - final `material_pack`
 - representative bounded packs present:
-  - `30_work_materials/gatekeeper_heir/90_material_pack.json`
   - `30_work_materials/office_checkup_next_day/90_material_pack.json`
   - `30_work_materials/wuxia_heavenly_physician/90_material_pack.json`
 - raw corpus pinning remains optional until a later wave

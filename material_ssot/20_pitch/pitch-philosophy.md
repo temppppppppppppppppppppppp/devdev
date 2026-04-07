@@ -34,6 +34,8 @@ Authority note:
 - operator mode semantics come from `docs/implementation/single-ide-default-policy.md`
 - this document defines the pitch-stage bridge and selection gate, not the downstream TR or BI schema
 - deeper house-law references:
+  - `material_ssot/20_pitch/cider-doctrine-v1.md`
+  - `material_ssot/20_pitch/material-benchmark-readiness-harness-v1.md`
   - `material_ssot/20_pitch/protagonist-first-constitution.md`
   - `material_ssot/20_pitch/pitch-selection-checklist.md`
   - `material_ssot/20_pitch/work-guard-translation-map.md`
@@ -44,6 +46,31 @@ Authority note:
 - use the dated companion docs for translation/freeze/drift operations, while keeping philosophy authority in `material_ssot/20_pitch`
 
 ## 3. Our Philosophy
+
+### 3.0 `Cider First` Contract
+
+- for judgment, `first block` means strictly `TR blocks 2~6`
+- every first block must contain at least one visible `cider`
+- proof alone is not enough; proof must cash out as reevaluation, authority, protection, access, or the next gate
+- a first block that closes on only failure, humiliation, suspicion, delay, or `later payoff` does not pass
+- if pain is used in the first block, the same block must still land a recovery asset or reward token
+
+### 3.0A `First-Block Cider Ledger` Contract
+
+- every fresh pitch must carry `first_block_cider_ledger`
+- `first_block_cider_ledger` is a fixed five-row ledger for `TR blocks 2, 3, 4, 5, 6`
+- each row must explicitly mark:
+  - `has_cider: true/false`
+  - `cider_elements`
+  - `visible_reward_token`
+  - `bridge_or_payback_note`
+  - `pain_only_exit`
+- blank is not allowed
+- in exploratory draft work, `has_cider: false` may appear only as a named hole and the default verdict is `HOLD`
+- in `selection-ready`, `canon`, or `Phase0-ready` judgment, every row in `2~6` must be `has_cider: true`
+- `bridge_or_payback_note` may explain a thin receipt, but it may not rescue a false row
+- if the ledger cannot show a visible token inside each row's same-block payback chain, the pitch is not selection-ready
+- if `block 6` is `pain_only_exit: true`, reject or hold the pitch before Phase0
 
 ### 3.1 Protagonist-First, `둥기둥기 first`
 
@@ -122,6 +149,8 @@ A fresh idea is allowed into active candidate status only if it can answer all o
 - what information gap only the protagonist can exploit
 - what the opening spike is
 - what the first earned success is
+- what the first-block cider is in plain language
+- what each of `TR blocks 2~6` pays or withholds in the `first_block_cider_ledger`
 - what the first visible reward is
 - how that first reward opens the next gate
 - what the work must not drift into
@@ -130,6 +159,7 @@ Hard reject examples:
 
 - female protagonist candidate under the current operator lane
 - first success yields mostly suspicion, probation, surveillance, exile threat, or "at least you survived"
+- the first block ends on failure, humiliation, scolding, or delay without visible cider
 - the engine depends on the protagonist being nice, patient, sacrificial, or endlessly misunderstood without leverage
 - the reward is only emotional validation with no visible power token
 - the domain materials stay generic enough to swap with any other office or jianghu story
@@ -157,6 +187,7 @@ Every fresh canonical pitch, and every fresh intake-batch entry that wants selec
 - `first_block_problem`
 - `first_block_reward`
 - `opening_reward_vector`
+- `first_block_cider_ledger`
 - `repeatable_loop`
 - `promise_to_reader`
 - `contamination_guard`
@@ -175,6 +206,7 @@ Do not promote a pitch as canonical if any of these are missing or vague:
 - `opening_spike`
 - `first_block_reward`
 - `opening_reward_vector`
+- `first_block_cider_ledger`
 - `promise_to_reader`
 
 Reject or hold the pitch if:
@@ -183,9 +215,12 @@ Reject or hold the pitch if:
 - the protagonist wins because opponents are stupid
 - the domain materials stay abstract where the family promise needs concrete truth
 - the first spike comes too late to convert the reader
+- the first block cannot name a visible cider token in plain language
 - the first visible reward is only survival, probation, or "not expelled"
 - the opening asks the reader to endure pain first and trust that compensation may arrive much later
 - the pitch cannot explain how block 1 opens block 2
+- the pitch says "초반에 사이다 있음" but cannot mark `has_cider true/false` for each of blocks `2~6`
+- any `first_block_cider_ledger` row in `2~6` remains `has_cider: false` at promotion time
 
 ## 7. Output Shapes
 

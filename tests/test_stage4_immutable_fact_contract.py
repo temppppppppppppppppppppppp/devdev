@@ -191,6 +191,16 @@ class TestBuildPacket:
         assert packet.carryover_location == "서재 앞 복도"
         assert packet.carryover_time_marker == "직후"
 
+    def test_chain_link_soft_carryover_fields_are_extracted(self):
+        chain = (
+            "### [V68-Soft] 직전 화 soft carryover 참고 - 자연 회복/명시적 전환 허용\n"
+            "- soft_physical_state: 신경계 피로 Moderate\n"
+            "- soft_carryover_pending_actions: 전화를 받기, 현관으로 이동하기"
+        )
+        packet = build_packet(chain_link_section=chain)
+        assert packet.soft_physical_state == "신경계 피로 Moderate"
+        assert packet.soft_carryover_pending_actions == "전화를 받기, 현관으로 이동하기"
+
 
 # ── classify_violation_family ────────────────────────────────────
 
@@ -407,6 +417,17 @@ class TestRenderPacketForCW:
         ) in rendered
         assert "다른 장소/시간 또는 다른 시점 opening이 필요하면" in rendered
         assert "무전환으로 덮어쓰거나, 직전 화에서 이미 끝난 행동을 opening에서 다시 재연하면 즉시 불합격." in rendered
+
+    def test_soft_chain_link_carryover_renders_as_reference_only(self):
+        packet = ImmutableFactPacket(
+            start_location="서재 앞 복도",
+            soft_carryover_pending_actions="전화를 받기, 현관으로 이동하기",
+            soft_physical_state="신경계 피로 Moderate",
+        )
+        rendered = render_packet_for_cw(packet)
+        assert "soft carryover pending_actions reference: 전화를 받기, 현관으로 이동하기" in rendered
+        assert "soft physical_state reference: 신경계 피로 Moderate" in rendered
+        assert "carryover pending_actions to resolve before new thread or explicitly transition away" not in rendered
 
 
 # ── render_violation_summary ─────────────────────────────────────

@@ -10,6 +10,7 @@ Rules for this batch:
 - candidate status comes from philosophy alignment first, not from file existence alone
 - do not promote any candidate into `canon/` until one candidate is selected and tightened
 - the goal of this batch is to restart from initial pitch stage with works that already carry the current protagonist-first reward logic
+- this batch predates `material-benchmark-readiness-harness-v1.md`; use the new readiness harness for any current re-judgment
 
 Current candidates:
 
@@ -26,5 +27,5 @@ Initial recommendation:
 
 Current read posture:
 
-- treat all four as `selection-ready`
+- do not inherit `selection-ready` by batch note alone; each file must be re-judged under `material-benchmark-readiness-harness-v1.md`
 - none of them should be treated as live `work_id` yet

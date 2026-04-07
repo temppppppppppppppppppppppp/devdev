@@ -5,7 +5,9 @@
     "70블록 단일 출력 금지",
     "영문 템플릿 문장 사용 금지",
     "code-like 값(plan_01, type_1, _B01) 사용 금지",
-    "callback을 generic 한 문장으로 때우는 것 금지"
+    "callback을 generic 한 문장으로 때우는 것 금지",
+    "no-cider block 금지: 모든 블록은 same-block 사이다 영수증을 지급해야 함",
+    "pain-only exit 금지: 실패/굴욕/지연만 남기고 블록 종료 금지"
   ],
   "continuity_equalities": [
     "capital_before == 직전 capital_after",
@@ -14,7 +16,8 @@
   "family_axis_requirements": [
     "이번 배치의 각 블록은 사업축, 상대 구도, 감정 비트 중 최소 하나에서 직전과 차이를 만들어야 한다",
     "deal_type, location, leverage_used는 반복 신호 없이 재탕하지 않는다",
-    "reward는 단순 수익이 아니라 승인권, 신용, 정보 우위 중 최소 하나의 이동을 보여야 한다"
+    "reward는 단순 수익이 아니라 승인권, 신용, 정보 우위 중 최소 하나의 이동을 보여야 한다",
+    "각 블록은 genre_ext.block_cider.has_cider=true, receipt_line 1문장, pain_only_exit=false를 포함해야 한다"
   ],
   "lexicon_bans": [
     "영문 프롬프트 문장",
@@ -31,6 +34,9 @@
     "title sequence 보존",
     "callback debt 방치 금지",
     "capital continuity 보존",
-    "relationship carry-over 보존"
+    "relationship carry-over 보존",
+    "block_cider_missing_blocks = 0",
+    "no_cider_blocks = 0",
+    "pain_only_exit_blocks = 0"
   ]
 }

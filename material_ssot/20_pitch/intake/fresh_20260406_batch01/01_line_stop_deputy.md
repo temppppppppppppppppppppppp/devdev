@@ -96,6 +96,47 @@ Integration note:
 - domain truth:
   - 안전 인터록, 보험 심사, 리콜, 실사, 생산 결재선이 실제 전장이다.
 
+## 4A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 폭발 직전 혼합 라인을 멈추고 고객사 앞에서 재가동 조건을 쥐며 첫 라인 중지권을 확보한다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 조작 점검표와 우회 배선을 엮어 보험사 실사 테이블에서 발언권과 협상권을 가져온다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 재가동 공동 서명권과 외부 감사 배석권이 같은 블록 안에서 붙는다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 해외 고객사 실사 배석과 보험 갱신 협상 테이블 진입권이 연결되어 보호 벡터가 생긴다.
+  receipt_kind: protection
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 공개 신호 기반 합법 외부 환전 수익이 권한 4종 뒤에 붙으며 다음 공장 전장 입장권이 열린다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 4B. Readiness Claim
+
+- selection-ready: no
+- Phase0-ready: no
+- all 2~6 rows pay in-block: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 5. Phase0 Handoff Note
 
 - already_locked:

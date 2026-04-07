@@ -1880,10 +1880,15 @@ class FailureAnalyzer:
                 {
                     "patch_strategy": patch_strategy,
                     "patch_targets": list(patch_trace.get("patch_targets") or []),
+                    "patch_target_records": list(patch_trace.get("patch_target_records") or []),
+                    "partial_fix_eval": dict(patch_trace.get("partial_fix_eval") or {})
+                    if isinstance(patch_trace.get("partial_fix_eval"), dict)
+                    else {},
                     "fallback_reason": str(patch_trace.get("fallback_reason", "") or ""),
                     "focus": str(patch_trace.get("focus", "") or ""),
                     "structural_attempted": structural_attempted,
                     "unchanged_ratio": patch_trace.get("unchanged_ratio"),
+                    "fix_scope": str(entry.get("fix_scope", "") or ""),
                     "final_verdict": str(entry.get("final_verdict", entry.get("verdict", "")) or ""),
                 }
             )
@@ -1899,6 +1904,14 @@ class FailureAnalyzer:
         final_pass = 0
         final_reject = 0
         structural_attempted_count = 0
+        fix_scope_rows = 0
+        partial_or_full_rows = 0
+        verifier_rows = 0
+        must_fix_rows = 0
+        must_fix_resolved_rows = 0
+        do_not_regress_rows = 0
+        do_not_regress_failed_rows = 0
+        patch_target_retry_counts: dict[str, int] = defaultdict(int)
 
         for row in patch_rows:
             strategy = row["patch_strategy"]
@@ -1910,10 +1923,50 @@ class FailureAnalyzer:
             focus = row["focus"]
             if focus:
                 focus_counts[focus] += 1
-            for target in row["patch_targets"]:
+            patch_targets = list(row["patch_targets"] or [])
+            if not patch_targets:
+                patch_targets = [
+                    str(item.get("summary") or "").strip()
+                    for item in list(row["patch_target_records"] or [])
+                    if isinstance(item, dict) and str(item.get("summary") or "").strip()
+                ]
+            for target in patch_targets:
                 target_text = str(target or "").strip()
                 if target_text:
                     target_counts[target_text] += 1
+            partial_fix_eval = row["partial_fix_eval"] if isinstance(row["partial_fix_eval"], dict) else {}
+            patch_target_id = str(partial_fix_eval.get("patch_target_id") or "").strip()
+            if not patch_target_id:
+                for record in list(row["patch_target_records"] or []):
+                    if not isinstance(record, dict):
+                        continue
+                    patch_target_id = str(record.get("patch_target_id") or "").strip()
+                    if patch_target_id:
+                        break
+            if patch_target_id:
+                patch_target_retry_counts[patch_target_id] += 1
+            fix_scope = str(row["fix_scope"] or "").strip().lower()
+            if fix_scope:
+                fix_scope_rows += 1
+                if fix_scope in {"partial", "full"}:
+                    partial_or_full_rows += 1
+            verifier_flags = (
+                partial_fix_eval.get("must_fix_resolved"),
+                partial_fix_eval.get("do_not_regress_held"),
+                partial_fix_eval.get("success_condition_met"),
+            )
+            if any(isinstance(flag, bool) for flag in verifier_flags):
+                verifier_rows += 1
+            must_fix_resolved = partial_fix_eval.get("must_fix_resolved")
+            if isinstance(must_fix_resolved, bool):
+                must_fix_rows += 1
+                if must_fix_resolved:
+                    must_fix_resolved_rows += 1
+            do_not_regress_held = partial_fix_eval.get("do_not_regress_held")
+            if isinstance(do_not_regress_held, bool):
+                do_not_regress_rows += 1
+                if not do_not_regress_held:
+                    do_not_regress_failed_rows += 1
             try:
                 unchanged_ratio = float(row["unchanged_ratio"])
             except (TypeError, ValueError):
@@ -1926,6 +1979,15 @@ class FailureAnalyzer:
                 final_pass += 1
             elif row["final_verdict"] == "REJECT":
                 final_reject += 1
+
+        retry_count_values = sorted(patch_target_retry_counts.values())
+        if retry_count_values:
+            p95_index = max(0, min(len(retry_count_values) - 1, int(len(retry_count_values) * 0.95 + 0.9999) - 1))
+            same_target_retry_avg = round(sum(retry_count_values) / len(retry_count_values), 4)
+            same_target_retry_p95 = retry_count_values[p95_index]
+        else:
+            same_target_retry_avg = None
+            same_target_retry_p95 = None
 
         return {
             "count": len(patch_rows),
@@ -1942,6 +2004,18 @@ class FailureAnalyzer:
                 {"target": target, "count": count}
                 for target, count in sorted(target_counts.items(), key=lambda item: (-item[1], item[0]))[:5]
             ],
+            "partial_fix_eval": {
+                "stage": 4,
+                "lookback": len(rows),
+                "local_hit_rate": round(must_fix_resolved_rows / must_fix_rows, 4) if must_fix_rows else None,
+                "fallback_to_partial_or_full": round(partial_or_full_rows / fix_scope_rows, 4) if fix_scope_rows else None,
+                "same_target_retry_avg": same_target_retry_avg,
+                "same_target_retry_p95": same_target_retry_p95,
+                "do_not_regress_violation_rate": round(do_not_regress_failed_rows / do_not_regress_rows, 4)
+                if do_not_regress_rows
+                else None,
+                "verifier_coverage": round(verifier_rows / len(patch_rows), 4) if patch_rows else None,
+            },
         }
 
     def compare_versions(

@@ -10,6 +10,7 @@ from contextlib import nullcontext as _nullcontext
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from modules.core.fact_ledger import _coerce_direct_financial_scalar
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.inventory_state import compute_inventory_count_deltas, normalize_inventory_counts
 from modules.core.jsonl_io import append_jsonl_record
@@ -126,6 +127,68 @@ def _collect_fact_ledger_carryover_authority_fields(fact_ledger) -> list[str]:
     return sorted(fields)
 
 
+def _choose_numeric_carryover_refresh_value(*, field_name: str, actual_truth, final_state_updates) -> tuple[object | None, str]:
+    source_candidates = (
+        ("actual_truth", actual_truth),
+        ("director_state_updates_fallback", final_state_updates),
+    )
+    for source_name, source in source_candidates:
+        if not isinstance(source, dict) or field_name not in source:
+            continue
+        raw_value = source.get(field_name)
+        if isinstance(raw_value, bool):
+            continue
+        if _coerce_direct_financial_scalar(raw_value) is None:
+            continue
+        return raw_value, source_name
+    return None, ""
+
+
+def _build_numeric_carryover_refresh_plan(*, actual_truth, final_state_updates, fact_ledger) -> dict[str, object]:
+    carryover_fields = _collect_fact_ledger_carryover_authority_fields(fact_ledger)
+    if not carryover_fields:
+        return {"overlay": {}, "promoted_fields": [], "promotion_sources": {}}
+
+    numbers = {}
+    if fact_ledger is not None and hasattr(fact_ledger, "get_numbers"):
+        try:
+            raw_numbers = fact_ledger.get_numbers()
+        except Exception:
+            raw_numbers = {}
+        if isinstance(raw_numbers, dict):
+            numbers = raw_numbers
+
+    overlay: dict[str, object] = {}
+    promoted_fields: list[str] = []
+    promotion_sources: dict[str, str] = {}
+    for field_name in carryover_fields:
+        raw_value, source_name = _choose_numeric_carryover_refresh_value(
+            field_name=field_name,
+            actual_truth=actual_truth,
+            final_state_updates=final_state_updates,
+        )
+        if not source_name:
+            continue
+        overlay[field_name] = raw_value
+
+        baseline_info = numbers.get(field_name)
+        baseline_value = None
+        if isinstance(baseline_info, dict):
+            baseline_value = _coerce_direct_financial_scalar(baseline_info.get("value"))
+        candidate_value = _coerce_direct_financial_scalar(raw_value)
+        if candidate_value is None:
+            continue
+        if baseline_value is None or abs(candidate_value - baseline_value) > 1e-9:
+            promoted_fields.append(field_name)
+            promotion_sources[field_name] = source_name
+
+    return {
+        "overlay": overlay,
+        "promoted_fields": promoted_fields,
+        "promotion_sources": promotion_sources,
+    }
+
+
 def _build_state_truth_owner_contract(
     *,
     actual_truth,
@@ -136,6 +199,7 @@ def _build_state_truth_owner_contract(
     active_pressure_vectors,
     arc_data,
     fact_ledger_carryover_fields: list[str] | None = None,
+    numeric_carryover_refresh_plan: dict | None = None,
 ) -> dict:
     manager_fields = _normalize_state_truth_field_names(actual_truth)
     director_fields = _normalize_state_truth_field_names(final_state_updates)
@@ -193,7 +257,7 @@ def _build_state_truth_owner_contract(
         str(item).strip() for item in (fact_ledger_carryover_fields or []) if str(item).strip()
     ]
     if carryover_fields:
-        field_families["numeric_carryover_authority"] = {
+        carryover_family: dict[str, object] = {
             "owner": "fact_ledger_carryover_baseline",
             "surfaces": [
                 "fact_ledger",
@@ -204,6 +268,23 @@ def _build_state_truth_owner_contract(
             "authority_scope": "carryover_baseline",
             "provenance": "fact_ledger_authority_scope",
         }
+        refresh_plan = numeric_carryover_refresh_plan if isinstance(numeric_carryover_refresh_plan, dict) else {}
+        promoted_fields = [
+            str(item).strip() for item in list(refresh_plan.get("promoted_fields") or []) if str(item).strip()
+        ]
+        raw_promotion_sources = refresh_plan.get("promotion_sources")
+        raw_promotion_sources = raw_promotion_sources if isinstance(raw_promotion_sources, dict) else {}
+        promotion_sources = {
+            field_name: str(raw_promotion_sources.get(field_name, "") or "").strip()
+            for field_name in promoted_fields
+            if str(raw_promotion_sources.get(field_name, "") or "").strip()
+        }
+        if promoted_fields:
+            carryover_family["promotion_rule"] = "post_pass_structured_numeric_refresh_v1"
+            carryover_family["promoted_fields"] = promoted_fields[:6]
+            if promotion_sources:
+                carryover_family["promotion_sources"] = promotion_sources
+        field_families["numeric_carryover_authority"] = carryover_family
 
     contract = {
         "contract_version": "stage4_state_truth_owner_contract_v1",
@@ -912,6 +993,11 @@ class Stage4PostPassRuntime:
             final_state_updates=final_state_updates,
             arc_data=arc_data,
         )
+        numeric_carryover_refresh_plan = _build_numeric_carryover_refresh_plan(
+            actual_truth=actual_truth,
+            final_state_updates=final_state_updates,
+            fact_ledger=getattr(self.ctx, "fact_ledger", None),
+        )
         state_truth_owner_contract = _build_state_truth_owner_contract(
             actual_truth=actual_truth,
             final_state_updates=final_state_updates,
@@ -923,6 +1009,7 @@ class Stage4PostPassRuntime:
             fact_ledger_carryover_fields=_collect_fact_ledger_carryover_authority_fields(
                 getattr(self.ctx, "fact_ledger", None)
             ),
+            numeric_carryover_refresh_plan=numeric_carryover_refresh_plan,
         )
         bible_delta = {
             "new_items": all_new_items,
@@ -1215,24 +1302,15 @@ class Stage4PostPassRuntime:
         self,
         *,
         actual_truth,
-    ) -> dict[str, int | float]:
-        if not isinstance(actual_truth, dict) or not actual_truth:
-            return {}
-
-        carryover_fields = _collect_fact_ledger_carryover_authority_fields(
-            getattr(self.ctx, "fact_ledger", None)
+        final_state_updates,
+    ) -> dict[str, object]:
+        refresh_plan = _build_numeric_carryover_refresh_plan(
+            actual_truth=actual_truth,
+            final_state_updates=final_state_updates,
+            fact_ledger=getattr(self.ctx, "fact_ledger", None),
         )
-        if not carryover_fields:
-            return {}
-
-        overlay: dict[str, int | float] = {}
-        for field_name in carryover_fields:
-            value = actual_truth.get(field_name)
-            if isinstance(value, bool):
-                continue
-            if isinstance(value, (int, float)):
-                overlay[field_name] = value
-        return overlay
+        overlay = refresh_plan.get("overlay")
+        return dict(overlay) if isinstance(overlay, dict) else {}
 
     def _build_atomic_state_payloads(self, *, actual_truth, final_state_updates, bible_delta):
         inventory_payload = {}
@@ -1241,6 +1319,7 @@ class Stage4PostPassRuntime:
         pressure_payload = {}
         numeric_carryover_overlay = self._extract_actual_truth_fact_ledger_carryover_overlay(
             actual_truth=actual_truth,
+            final_state_updates=final_state_updates,
         )
 
         if isinstance(bible_delta, dict):

@@ -98,6 +98,47 @@ This file replaces the old bootstrap anchor note. The canonical pitch truth for 
 - proof scene:
   - 임원회의 당일 아침, 시혁이 전무에게 실물동량 기반 대안을 올리고 회의장에서 외주 컨설팅 보고서의 MD사업부 조작 데이터 인용 지점을 한 줄로 짚는다. 통합안이 보류되고 시혁 대안이 검토 안건으로 채택되는 순간, 시혁의 능력이 "문장 잘 쓰는 사원"이 아니라 "결재선·숫자·사람 배치를 동시에 읽어 우회 경로를 짤 수 있는 사람"이라는 걸 사내에 공개 증명한다.
 
+## 3A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 전무가 처음으로 시혁 이름을 부르며 배석권을 붙여 Lv2 자리로 끌어올린다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 기존 통합안이 보류되고 시혁 대안이 검토 안건으로 채택되며 우회 상신이 공개적으로 적중한다.
+  receipt_kind: proof_confirmation
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 대표이사 전사 메일에서 한시혁 실명이 호명되어 조직 내 평가가 한 단계 올라간다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 물류 재설계 TF 실무 간사 발령과 전무실 옆 TF룸 자리 이동이 동시에 붙는다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 팀장 오세진 CC에서 이탈하고 전무 직보 CC 라인에 진입하며 다음 예산 편성 회의 입장권이 열린다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 3B. Readiness Declaration
+
+- selection-ready: yes
+- Phase0-ready: yes
+- all 2~6 ledger rows have has_cider true: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 4. Phase0 Handoff Note
 
 - already locked:

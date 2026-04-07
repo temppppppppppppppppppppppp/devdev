@@ -98,6 +98,47 @@ Note: upstream normalized research pack (`material_ssot/10_research/30_work_mate
 - proof scene:
   - 이사회 직후 48시간 안에 하준영이 열처리 협력사 납품 붕괴 선과 시험 일정 봉쇄 루트를 동시에 짚어, 안전을 명분으로 협력사 채권을 회수하고 시험 순서를 재배치한다. "이 계열사 버리면 그룹 목줄이 같이 날아간다"는 주인공의 진단이 실제 결함·병목·비리 흐름으로 공개 증명되며, 능력이 "미래 암기"가 아니라 "결함·비리·돈줄 병목 판독과 병목 장악"이라는 게 사내에 각인된다.
 
+## 3A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 현무에어로테크 전략조정실 실질 통제권을 받아 막내아들이 아니라 방산 계열 관문지기로 호명된다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 열처리·패스너 협력사 채권 회수권을 쥐며 첫 공급망 병목이 자기 관문으로 전환된다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 공군 시험평가대대 윤소라 라인 접근권이 열려 장남 라인이 막던 시험 순서를 뒤집을 손이 생긴다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 방사청 규격 초안 의견 개진권이 박성우 책상까지 도달하며 하준영 문장이 공식 문구 후보로 올라간다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 민태수·오상철 거래 흔적이 묶인 감사 장부 첫 묶음과 다음 SPV 전장 입장권이 동시에 열린다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 3B. Readiness Declaration
+
+- selection-ready: yes
+- Phase0-ready: yes
+- all 2~6 ledger rows have has_cider true: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 4. Phase0 Handoff Note
 
 - already locked:

@@ -124,6 +124,24 @@
 - 순수 회사원/조직 권력형 전용 repo sample은 아직 고정되지 않았다.
 - 따라서 회사원형은 위 3개 샘플의 공통 계약을 따르되, `예산/KPI/결재선/인사권` 예시를 본 문서 표준 예시로 삼는다.
 
+## 0G. 블록별 사이다 계약 (생산 단계 필수)
+
+이 문서는 이제 **각 TR 블록이 같은 블록 안에서 체감 가능한 사이다 영수증을 지급해야 한다**는 전제를 깔고 읽는다.
+`first block`만이 아니라 **전 블록**에 적용되는 생산 계약이다.
+
+- 모든 블록은 `genre_ext.block_cider`를 포함해야 한다.
+- `genre_ext.block_cider.has_cider = true`가 아니면 그 블록은 생산 실패다.
+- `genre_ext.block_cider.receipt_type`과 `genre_ext.block_cider.receipt_line`에는
+  "이번 블록 안에서 이미 지급된 영수증"을 1문장 이상 적어야 한다.
+- 허용 영수증은 `재평가`, `권한/접근권 이동`, `보호/지원 확보`, `가시 자산 확보`,
+  `라인 선택권`, `반격 카드 개봉`, `명시적 다음 관문 입장권`처럼
+  독자가 셀 수 있는 same-block 결과여야 한다.
+- `quiet block`, `회복 block`, `정치 block`, `설명 block`도 예외가 아니다.
+  조용할 수는 있지만 반드시 `quiet but paid`여야 한다.
+- `실패/굴욕/지연/대기/질책만 남기고 닫힘`은 `pain_only_exit = true`로 보고 즉시 재생성한다.
+- 규칙 문장:
+  `one no-cider block, no production-ready.`
+
 ## 0. 왜 이 문서가 필요한가
 
 ### 0.1 근본 원인
@@ -624,6 +642,12 @@ Phase 0 완료 시 아래를 기준으로 정리한다.
 21. execution_doctrine 진화 의무: 20블록 이상 동일 문장이면 재작성.
 22. `reward` 재진술 금지: `context`를 시제만 바꿔 반복하거나 같은 문장을 축약하는 수준이면 무효.
     `reward`에는 반드시 "새로 생긴 결과/손실/지배력 변화"가 1개 이상 포함되어야 한다.
+22A. 블록별 same-block 사이다 의무:
+    - 모든 TR 블록은 `genre_ext.block_cider`를 포함해야 한다.
+    - `genre_ext.block_cider.has_cider=true`가 아니면 무효.
+    - `receipt_type`과 `receipt_line`에는 "이번 블록 안에서 이미 지급된 영수증"을 적어야 한다.
+    - `quiet/setup/recovery/political` 블록도 예외가 아니다. 조용한 블록은 허용하지만 반드시 `quiet but paid`여야 한다.
+    - `pain_only_exit=true` 또는 실패/굴욕/지연/질책만 남기고 닫히는 블록은 즉시 재생성.
 23. `relationship_delta.after` 복제 금지: 동일 문장이 다른 블록/다른 NPC에 3회 이상 반복되면 재작성.
 24. 대단원 슬롯 반복 금지: 10블록 패턴을 다음 대단원에서 같은 순서로 재사용하면 무효.
     특히 `deal_type`, `method`, `success_pattern` 3종이 같은 인덱스에서 반복되면 재작성.
@@ -1453,7 +1477,8 @@ Python 자동 검증(§5) + LLM 6개 검사 항목 × 70블록:
 
 1차 결과 재검토:
 - 장기 복선으로 의도된 지연 → FP
-- 의도적 저강도 블록(quiet block) → FP
+- 의도적 저강도 블록도 `same-block 사이다 영수증`이 있으면만 FP
+- `quiet but empty`, `pain-only exit`, `later payoff only`는 FP가 아니라 확정 위반
 - 규칙 완화 사유를 코멘트로 기록
 
 ### 6.3 3차 감리 (최종 확정)
@@ -1488,6 +1513,10 @@ Python 자동 검증(§5) + LLM 6개 검사 항목 × 70블록:
 - `critical_thin_blocks`
 - `thin_blocks`
 - `short_stakes_blocks`
+- `block_cider_missing_blocks`
+- `no_cider_blocks`
+- `pain_only_exit_blocks`
+- `cider_receipt_line_missing_blocks`
 - `recognition_signal_blocks`
 - `max_recognition_gap_streak`
 - `late_blank_opponent_blocks`
@@ -1520,6 +1549,10 @@ Python 자동 검증(§5) + LLM 6개 검사 항목 × 70블록:
 - critical_thin_blocks: [22]
 - thin_blocks: [18, 24, 27]
 - short_stakes_blocks: [55, 56, 57]
+- block_cider_missing_blocks: [22, 24]
+- no_cider_blocks: [22, 24, 56]
+- pain_only_exit_blocks: [56]
+- cider_receipt_line_missing_blocks: [24]
 - recognition_signal_blocks: 4
 - max_recognition_gap_streak: 21
 - late_blank_opponent_blocks: [62, 63, 64]
@@ -1543,6 +1576,10 @@ Python 자동 검증(§5) + LLM 6개 검사 항목 × 70블록:
 - `critical_thin_blocks = 0`
 - `thin_blocks` 전체 비율 10% 이하, 마지막 10블록 0개
 - `short_stakes_blocks` 전체 2개 이하, 마지막 5블록 0개
+- `block_cider_missing_blocks = 0`
+- `no_cider_blocks = 0`
+- `pain_only_exit_blocks = 0`
+- `cider_receipt_line_missing_blocks = 0`
 - `foreshadow` 평균 0.8개 이상
 - `callback` 평균 0.8개 이상
 - `callback_ratio >= 0.65`
@@ -1569,6 +1606,8 @@ Python 자동 검증(§5) + LLM 6개 검사 항목 × 70블록:
 - 위 기준을 못 넘기면 "JSON은 맞지만 실제 생산용으론 저밀도"로 판정한다.
 - 특히 `stakes / recognition / callback / opponent / section_rotation` 중 2개 이상이 비면
   평균 글자수가 높아도 block 책임이 비어 있는 것으로 본다.
+- `quiet block`은 더 이상 면책 사유가 아니다. 조용해도 same-block 영수증이 있으면 통과,
+  영수증이 없으면 즉시 `no-cider block`으로 본다.
 - 이 경우 패치보다 **Phase 0 유지 + TR 전면 재생성**이 우선이다.
 - `avg_bundle_chars < 350` 또는 위 구조 밀도 hard gate 중 하나라도 FAIL이면
   `production_density_gate = FAIL`, 즉시 `skeleton draft`로 분류한다.
@@ -1885,6 +1924,7 @@ python -X utf8 scripts/tr_batch_harness.py merge `
 | `genre_ext.capital_delta` | capital_after - capital_before 정합 |
 | `genre_ext.capital_after` | 성장률 5블록 연속 동일 금지 |
 | 자본 감소 | 70블록 중 최소 3블록은 delta < 0 |
+| `genre_ext.block_cider.has_cider` | 모든 블록 `true` 필수. `false` 또는 누락이면 production-ready 불가 |
 | `pov_character` | 전 블록 일관 |
 | `time_span.in_story_time` | 순방향 진행 (역행 0건) |
 | `regression_ext.is_regressor` | 빙의/회귀 → true |
@@ -1898,6 +1938,7 @@ python -X utf8 scripts/tr_batch_harness.py merge `
 | `emotional_beat.intensity` | 3블록 연속 동일 금지, 1~10 전구간 |
 | `opponent.name` | 70블록에 최소 3세력 |
 | NPC 수 | 전체 최소 8명 |
+| `genre_ext.block_cider.receipt_type / receipt_line` | 이번 블록의 same-block 영수증을 1문장으로 명시 |
 | `foreshadow` | 자연어 배열. 장기 복선 5개+ 권장. 번호 메타는 금지하고, 대상 블록은 `foreshadow_targets`에 둔다 |
 | `callback` | 자연어 배열. 구체적 사건 회수 서술만 남기고, 원복선 블록은 `callback_sources`에 둔다 |
 | `deal_type` | 3블록 이내 재등장 금지, 10종+ |

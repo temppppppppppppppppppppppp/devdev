@@ -12,12 +12,14 @@ from typing import Any, Literal, NotRequired, TypedDict
 
 from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import VolumeSettings
+from modules.core.genre_schema_builder import is_wuxia
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.numeric_consistency_checker import NumericConsistencyChecker
 from modules.core.stage2_contracts import merge_stage2_authoritative_packet
 from modules.core.stage2_entity_contract import normalize_stage2_arc_entity_contract
 from modules.core.stage2_location_contract import collapse_stage2_location_label
+from modules.core.stage2_partial_fix_contract import build_stage2_partial_fix_eval, normalize_stage2_fix_pack
 from modules.models.arc import StateChangesDict, validate_arc
 
 
@@ -37,6 +39,7 @@ _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
 _TACTICAL_EPISODE_HEADER_RE = re.compile(r"(?:^|\n)\s*(?:\[\s*)?제\s*\d+\s*화[^\n]*", re.MULTILINE)
 _TACTICAL_START_STATE_LINE_RE = re.compile(r"^\s*\[시작 상태\].*$", re.MULTILINE)
 _BLOCKING_ARC_PATCH_SIGNAL_CODES = frozenset({"episode_start_future_artifact"})
+_NON_WUXIA_STATE_NOISE_KEYS = ("internal_energy", "realm", "qi_nature", "martial_arts")
 
 
 def _extract_first_tactical_episode_section(tactical_doc: str) -> str:
@@ -75,6 +78,43 @@ def _extract_future_artifact_asset_keywords(start_state_line: str, matched_artif
         if keyword and keyword not in deduped:
             deduped.append(keyword)
     return tuple(deduped)
+
+
+def _strip_non_wuxia_state_noise_for_persistence(refined_arc: dict, *, genre: str) -> list[str]:
+    if not isinstance(refined_arc, dict) or is_wuxia(str(genre or "").strip()):
+        return []
+
+    state_constraints = refined_arc.get("state_constraints")
+    if not isinstance(state_constraints, dict):
+        return []
+
+    removed_sections: list[str] = []
+    for section_key in ("arc_start_state", "arc_end_state"):
+        section = state_constraints.get(section_key)
+        if not isinstance(section, dict):
+            continue
+        removed_keys = [key for key in _NON_WUXIA_STATE_NOISE_KEYS if key in section]
+        if not removed_keys:
+            continue
+        for key in removed_keys:
+            section.pop(key, None)
+        removed_sections.append(f"{section_key}: {', '.join(removed_keys)}")
+
+    refined_arc["state_constraints"] = state_constraints
+    return removed_sections
+
+
+def _log_non_wuxia_state_cleanup(ctx, *, global_arc_no: int, removed_sections: list[str], phase: str) -> None:
+    if not removed_sections:
+        return
+    summary = "; ".join(removed_sections)
+    ctx.ui.log(f"      🔧 [Non-Wuxia State Cleanup] Arc {global_arc_no} {phase}: {summary}")
+    if callable(getattr(ctx, "audit_event", None)):
+        ctx.audit_event(
+            "field_repair",
+            "non-wuxia persistence state noise removed",
+            {"arc_no": global_arc_no, "phase": phase, "fields": removed_sections},
+        )
 
 
 def _find_future_artifact_action_sentence(body: str, action_terms: tuple[str, ...]) -> tuple[str, str]:
@@ -960,6 +1000,7 @@ class Stage2Finalizer:
         all_refined_arcs: list,
         current_feedback: str,
         constraint_block: str,
+        genre: str,
         last_refined_context: str,
         current_ep_start: int,
         director_feedback_for_fourphase: str,
@@ -998,6 +1039,7 @@ class Stage2Finalizer:
             cdb_snapshot=cdb_snapshot,
             constraint_db=constraint_db,
             constraint_block=constraint_block,
+            genre=genre,
         )
         if prepared_result.get("action") == "retry":
             return prepared_result
@@ -1129,6 +1171,7 @@ class Stage2Finalizer:
                 all_refined_arcs=all_refined_arcs,
                 current_feedback=current_feedback,
                 constraint_block=constraint_block,
+                genre=genre,
                 last_refined_context=last_refined_context,
                 current_ep_start=current_ep_start,
                 director_feedback_for_fourphase=director_feedback_for_fourphase,
@@ -1205,6 +1248,7 @@ class Stage2Finalizer:
         cdb_snapshot,
         constraint_db,
         constraint_block: str,
+        genre: str = "",
     ) -> Stage2PassPreparationResult:
         refined_arc["arc_drive"] = arc_drive if arc_drive else {}
         refined_arc["joint_docs"] = merge_stage2_authoritative_packet(
@@ -1214,6 +1258,13 @@ class Stage2Finalizer:
         refined_arc["status_shadow"] = merge_stage2_authoritative_packet(
             refined_arc.get("status_shadow"),
             enriched_block.get("status_shadow"),
+        )
+        removed_state_noise = _strip_non_wuxia_state_noise_for_persistence(refined_arc, genre=genre)
+        _log_non_wuxia_state_cleanup(
+            self.ctx,
+            global_arc_no=global_arc_no,
+            removed_sections=removed_state_noise,
+            phase="pre-persistence shell",
         )
         repair_result = self._repair_stage2_pass_arc_structure(
             refined_arc=refined_arc,
@@ -1234,6 +1285,7 @@ class Stage2Finalizer:
             global_arc_no=global_arc_no,
             constraint_block=constraint_block,
             enriched_block=enriched_block,
+            genre=genre,
         )
 
     def _repair_stage2_pass_arc_structure(
@@ -1374,6 +1426,7 @@ class Stage2Finalizer:
         global_arc_no: int,
         constraint_block: str,
         enriched_block: dict,
+        genre: str = "",
     ) -> Stage2PassPreparationResult:
 
         if constraint_block:
@@ -1447,6 +1500,13 @@ class Stage2Finalizer:
         if isinstance(refined_arc, dict) and "arc_no" not in refined_arc:
             refined_arc["arc_no"] = global_arc_no
         refined_arc = validate_arc(refined_arc)
+        removed_state_noise = _strip_non_wuxia_state_noise_for_persistence(refined_arc, genre=genre)
+        _log_non_wuxia_state_cleanup(
+            self.ctx,
+            global_arc_no=global_arc_no,
+            removed_sections=removed_state_noise,
+            phase="post-validate shell",
+        )
 
         ns2_warnings = _check_block_worldstate_alignment(enriched_block, refined_arc, global_arc_no)
         if ns2_warnings:
@@ -2375,6 +2435,10 @@ class Stage2Finalizer:
         current_audit: dict,
         re_audit: dict,
     ) -> dict:
+        if isinstance(current_audit.get("fix_pack"), dict):
+            re_audit["fix_pack"] = deepcopy(current_audit["fix_pack"])
+        if isinstance(current_audit.get("partial_fix_eval"), dict):
+            re_audit["partial_fix_eval"] = deepcopy(current_audit["partial_fix_eval"])
         if isinstance(current_audit.get("patch_pressure"), dict):
             re_audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
         if isinstance(current_audit.get("patch_guard_signals"), dict):
@@ -2440,6 +2504,10 @@ class Stage2Finalizer:
         last_fix_scope_reasoning = current_audit.get("fix_scope_reasoning", "")
         if last_fix_scope_reasoning:
             audit["fix_scope_reasoning"] = last_fix_scope_reasoning
+        if isinstance(current_audit.get("fix_pack"), dict):
+            audit["fix_pack"] = deepcopy(current_audit["fix_pack"])
+        if isinstance(current_audit.get("partial_fix_eval"), dict):
+            audit["partial_fix_eval"] = deepcopy(current_audit["partial_fix_eval"])
         if isinstance(current_audit.get("patch_pressure"), dict):
             audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
         if isinstance(current_audit.get("patch_guard_signals"), dict):
@@ -2539,6 +2607,7 @@ class Stage2Finalizer:
         current_arc: dict,
         fix_instr: str,
         global_arc_no: int,
+        fix_pack: dict | None = None,
     ) -> dict | None:
         """inplace patch authority 호출과 예외/실패 처리를 감싼다."""
         if not (four_phase and hasattr(four_phase, "_inplace_patch_arc")):
@@ -2549,6 +2618,7 @@ class Stage2Finalizer:
                 original_arc=current_arc,
                 director_feedback=fix_instr,
                 arc_no=global_arc_no,
+                fix_pack=fix_pack,
             )
         except (RuntimeError, ValueError, OSError):
             logging.exception("[TF-32-V] inplace_patch_arc 예외")
@@ -2828,11 +2898,18 @@ class Stage2Finalizer:
             )
             if fix_instr is None:
                 break
+            fix_pack = normalize_stage2_fix_pack(
+                current_audit,
+                default_fix_instruction=fix_instr,
+            )
+            if fix_pack:
+                current_audit["fix_pack"] = dict(fix_pack)
             patched = self._apply_stage2_pass_fix_patch(
                 four_phase=four_phase,
                 current_arc=current_arc,
                 fix_instr=fix_instr,
                 global_arc_no=global_arc_no,
+                fix_pack=fix_pack,
             )
             if patched is None:
                 break
@@ -2891,6 +2968,15 @@ class Stage2Finalizer:
             )
             if re_state is None:
                 break
+            if fix_pack:
+                re_state["audit"]["fix_pack"] = dict(fix_pack)
+            partial_fix_eval = build_stage2_partial_fix_eval(
+                fix_pack=fix_pack,
+                patch_round=fix_i + 1,
+                verdict=re_state["decision"],
+            )
+            if partial_fix_eval:
+                re_state["audit"]["partial_fix_eval"] = partial_fix_eval
             loop_state = self._apply_stage2_pass_fix_reaudit_result(
                 patched=patched,
                 current_arc=current_arc,
@@ -3095,6 +3181,7 @@ class Stage2Finalizer:
                             score=_score,
                             selection_reason=str(audit.get("reason", "")),
                             fix_scope=str(audit.get("fix_scope", "") or ""),
+                            advisory_warnings=_advisory_flags,
                             attempt_key=attempt_key,
                             candidate_key=_candidate_key,
                             content_hash=_artifact_meta["content_hash"],
@@ -3239,6 +3326,7 @@ class Stage2Finalizer:
                         score=score,
                         selection_reason=str(audit.get("reason", "")),
                         fix_scope=str(audit.get("fix_scope", "") or ""),
+                        advisory_warnings=advisory_flags,
                         attempt_key=metric_context["attempt_key"],
                         candidate_key=metric_context["candidate_key"],
                         content_hash=metric_context["artifact_meta"]["content_hash"],
@@ -3612,5 +3700,13 @@ class Stage2Finalizer:
                 compact_codes = [str(code)[:40] for code in codes[:5] if str(code).strip()]
                 if compact_codes:
                     flags["arc_patch_signal_codes"] = compact_codes
+
+        fix_pack = normalize_stage2_fix_pack(audit.get("fix_pack"))
+        if fix_pack:
+            flags["fix_pack"] = fix_pack
+
+        partial_fix_eval = audit.get("partial_fix_eval")
+        if isinstance(partial_fix_eval, dict) and partial_fix_eval:
+            flags["partial_fix_eval"] = dict(partial_fix_eval)
 
         return flags or None

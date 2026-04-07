@@ -70,7 +70,40 @@ Scope: medical-lane fresh candidate before canon selection
 3. capital or career token:
    - 첫 단독 보조(1st assist) 지정. R1 중 최초.
 
-## 9. Authority Gain Route
+## 9. First-Block Cider Ledger (`2~6`)
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 수술 전 차트 기록이 컨퍼런스에서 확인되며 `갈고리 R1` 해석이 깨진다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: M&M 회의록에 사전 판독 적중이 공식 기재된다.
+  receipt_kind: proof_confirmation
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 외과 과장 직보선과 컨퍼런스 발표권이 같은 Arc 안에서 붙는다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 고난도 케이스 사전 배정과 1st assist 지정이 권한 토큰으로 바뀐다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 타과 협진 호출권이 생기며 다음 고난도 환자 전장 입장권이 열린다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 10. Authority Gain Route
 
 - Block 1: `갈고리 R1` → `차트가 맞는 R1`. 차트 판독 적중으로 과장 직보선과 컨퍼런스 발표권을 얻는다.
 - Block 2: `컨퍼런스 발표자` → `단독 집도 후보`.
@@ -80,14 +113,14 @@ Scope: medical-lane fresh candidate before canon selection
   - reward token: M&M 회의록 기재 직후, 조영채 과장이 주인공을 고난도 간절제 케이스의 1st assist로 직접 지명한다. 수술 성공 후 과장이 다음 고난도 케이스에 대해 "네가 먼저 차트 보고 접근법 올려"라고 지시한다. 이것은 사실상 수술 계획 사전 설계권 — R1에게는 존재하지 않는 권한이 과장 재량으로 생긴 것이다. 동시에 소화기내과에서 첫 협진 요청이 들어온다: "간 쪽 까다로운 환자인데, 외과 그 레지던트한테 먼저 보여줄 수 있나." 타과 협진 호출권의 시작.
 - what changes in how people must treat the protagonist: `레지던트가 뭘 아냐`가 `그 레지던트한테 먼저 보여줘`로 바뀐다. 교수가 수술 전에 R1의 소견을 확인하는 것이 관행이 된다. 서열은 그대로인데 실질적 발언권이 뒤집힌다.
 
-## 10. Crisis 4-Element Check
+## 11. Crisis 4-Element Check
 
 - first read: 수술 전 차트 판독에서 합병증 패턴을 먼저 읽는다. 다른 사람이 `괜찮겠지`로 넘기는 소견에서 위험 신호를 잡는다.
 - response tool: 차트 기록(공식 문서), 수술장 내 한 줄 코멘트, 필요시 과장 직보선.
 - minimum damage control: 출혈/합병증이 발생해도 이미 대응법을 준비하고 있으므로 최소 피해로 통제한다.
 - immediate recovery vector: 적중 후 다음 케이스 배정, 발언권 확대, 직급과 무관한 실질 권한 상승.
 
-## 11. Contamination Risk
+## 12. Contamination Risk
 
 - likely self-fault drift: 주인공이 `전생에서 교수를 못 한 건 내 탓`이라는 자기비하로 빠지는 것. → 금지. 전생 실패는 병원 정치 때문이지 실력 부족이 아니다.
 - likely shame-forward drift: `환자를 못 살린 트라우마`로 참회/자기소모 서사에 빠지는 것. → 금지. 주인공의 감정은 허용하되, 감정이 소모로만 끝나면 안 된다.
@@ -102,16 +135,25 @@ Scope: medical-lane fresh candidate before canon selection
   - 필수: 희생 직후 반드시 평가 수정, 호출권, 케이스 배정권, 발표권, 직보선 같은 권한 영수증이 붙어야 한다.
   - 금지: 감동만 남고 권한 변화 없음, 착한 희생이 주인공 소모로 끝남, 보상 없는 희생이 반복됨.
 
-## 12. Selection Verdict Prep
+## 13. Selection Verdict Prep
 
 - innocence: `PASS` — 저평가 이유가 회귀로 인한 자리(R1) 때문이지 본인 과실이 아니다.
 - first win = evaluation revision: `PASS` — 환자 구조가 아니라 차트 판독 적중 → 평가 변화가 첫 승리다.
 - proof scene: `PASS` — 수술 전 차트 기록 → 수술 중 적중 → 컨퍼런스에서 드러남. `저건 쟤라서 가능했다`가 선다.
 - early reward = status first: `PASS` — 과장 직보선, 케이스 사전 배정, 컨퍼런스 발표권이 먼저. 단독 보조 지정이 뒤따름.
+- ledger `2~6` all pay: `PASS`
 - crisis 4 elements: `PASS` — 먼저 읽음(차트 판독) + 준비(기록) + 최소 피해(출혈 통제) + 곧바로 회수(권한 확대).
 - current verdict guess: `PASS`
 
-## 13. Handoff Note
+## 14. Readiness Claim
+
+- selection-ready: no
+- Phase0-ready: no
+- all 2~6 rows pay in-block: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
+## 15. Handoff Note
 
 - if this passes:
   - promote truth into `20_pitch/canon/` (사용자 승인 후)

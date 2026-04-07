@@ -32,6 +32,7 @@ Operational companion note:
 - recommended companion flow: `Phase 0 design -> work_guard draft/freeze -> TR 생성 -> BI 생성`
 - reviewed/frozen work-specific guards may be published into the Stage 0-visible `work_guards/` library after audit
 - current operator pack:
+  - `python -X utf8 scripts/run_work_guard_v1.py --path <yaml>`
   - `docs/2026-04-06/work-guard-validator-checklist-spec.md`
   - `docs/2026-04-06/wg-v2-freeze-checklist.md`
   - `docs/2026-04-06/wg-v3-drift-audit-card.md`
@@ -63,6 +64,7 @@ Current governance anchors:
 - `00_governance/legacy-map.md`
 - `00_governance/work-coverage-matrix.md`
 - `00_governance/bootstrap-status.md`
+- `00_governance/production-pair-benchmark-spec-v1.md`
 
 Current path labels at a glance:
 

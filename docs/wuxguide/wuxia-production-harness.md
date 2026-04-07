@@ -144,6 +144,23 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
 
 ---
 
+## 0C-1. 블록별 사이다 계약 (생산 단계 필수)
+
+무협도 예외가 아니다. 이 문서는 이제 **각 블록이 같은 블록 안에서 체감 가능한 사이다 영수증을 지급해야 한다**는 전제로 읽는다.
+
+- 모든 블록은 `martial_ext.block_cider`를 포함해야 한다.
+- 현재 운용 JSON이 `genre_ext`를 쓰면 `genre_ext.block_cider`로 같은 계약을 기록해도 된다.
+- `has_cider=true`가 아니면 그 블록은 생산 실패다.
+- `receipt_type`과 `receipt_line`에는 "이번 블록 안에서 이미 지급된 영수증"을 적어야 한다.
+- 무협 영수증은 `재평가`, `입문/승급`, `비급/영약/토큰 확보`, `문파 내 발언권`,
+  `보호 세력 확보`, `복수 카드 개봉`, `다음 비무/심사/입장권`처럼
+  독자가 셀 수 있는 same-block 결과여야 한다.
+- `수련 block`, `회복 block`, `정치 block`, `잠복 block`도 예외가 아니다.
+  조용할 수는 있지만 반드시 `quiet but paid`여야 한다.
+- `실패/굴욕/부상/대기만 남기고 닫힘`은 `pain_only_exit=true`로 보고 즉시 재생성한다.
+
+---
+
 ## 0D. 절대 금지 규칙
 
 ```
@@ -199,6 +216,13 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
 23. 복선 실제 회수 의무: foreshadow에서 ref로 지목한 블록의 callback에 명시적으로 회수 문장 포함 필수.
 24. reward 재진술 금지: context를 시제만 바꿔 반복하면 무효.
     reward에는 반드시 "새로 생긴 결과/손실/경지 변화"가 1개 이상 포함.
+24A. 블록별 same-block 사이다 의무:
+    - 모든 블록은 `martial_ext.block_cider`를 포함해야 한다.
+      현재 JSON 운용이 `genre_ext`를 쓰면 `genre_ext.block_cider`로 같은 정보를 적는다.
+    - `has_cider=true`가 아니면 무효.
+    - `receipt_type`과 `receipt_line`에는 "이번 블록 안에서 이미 지급된 영수증"을 적어야 한다.
+    - `수련/회복/정치/잠복` 블록도 예외가 아니다. 반드시 `quiet but paid`여야 한다.
+    - `pain_only_exit=true` 또는 패배/부상/지연만 남기고 닫히는 블록은 즉시 재생성.
 25. 대단원 슬롯 반복 금지: 10블록 패턴을 다음 대단원에서 같은 순서로 재사용하면 무효.
 26. skeleton draft 금지: Phase 0의 block slot 문장을 context/reward에 얕게 풀어쓴 수준이면 무효.
     블록마다 최소 1개의 "구체 장면", 1개의 "구체 경지/세력/관계 변화"가 새로 생겨야 한다.
@@ -263,6 +287,12 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
     },
     "strategy": "비무 전반부에 수세로 상대 패턴을 읽고, 후반부에 청풍검법 신초식으로 허를 찌름",
     "success_pattern": "비무 승리, 그러나 좌측 경맥 손상 악화",
+    "block_cider": {
+      "has_cider": true,
+      "receipt_type": "문파 승급 + 재평가",
+      "receipt_line": "이류 문파 승격과 함께 정파 내 호평이 시작되어, 한서진은 같은 블록 안에서 장문인 위상 상승 영수증을 받는다.",
+      "pain_only_exit": false
+    },
     "leverage_used": ["청풍검법 신초식", "감재안으로 상대 약점 간파", "제자 진무혁의 사전 정보"],
     "martial_domain": "정파 무림",
     "active_domains": ["비무", "문파 운영", "제자 교육"]
@@ -289,6 +319,7 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
 | `opponent` | object | 필수 | 적대자 정보. 적대자 없는 수련 블록이면 `{"name": "없음(수련 블록)"}` |
 | `strategy` | string | 필수 | 이번 블록의 전략/전술 (blockguide의 method에 해당) |
 | `success_pattern` | string | 필수 | 결과 패턴 |
+| `block_cider` | object | 필수 | 이번 블록의 same-block 사이다 영수증. `has_cider=true`, `receipt_type`, `receipt_line`, `pain_only_exit=false`를 기본으로 기록 |
 | `leverage_used` | list[string] | 필수 | 동원한 자원/인맥/무공 |
 | `martial_domain` | string | 필수 | 활동 영역 (정파/사파/마교/관부/강호/상단) |
 | `active_domains` | list[string] | 권장 | 현재 활성 활동 영역 |
@@ -889,6 +920,10 @@ def auto_correct_martial(blocks: list[dict], npc_tracker: dict) -> list[dict]:
 - `context + event_villain + solution + reward + stakes` 평균(`avg_bundle_chars`) 350자 이상
 - 300자 미만 블록(`critical_thin_blocks`) = 0
 - 300~349자 블록(`thin_blocks`) 전체 비율 10% 이하, 마지막 10블록 0개
+- `block_cider_missing_blocks = 0`
+- `no_cider_blocks = 0`
+- `pain_only_exit_blocks = 0`
+- `cider_receipt_line_missing_blocks = 0`
 
 반복 검출 — 같은 적대자:
 
@@ -927,6 +962,7 @@ MartialHUD 고유 밀도:
 - `injury_status` 미추적(부상 후 3블록 이상 언급 없음) = 0건
 - `martial_arts_acquired` 전체 합계 10종 이상 (70블록 기준)
 - `kill_count + spare_count` 전체 합계 0이면 전투가 없는 것 = 전투 블록 최소 15개
+- `quiet block`도 면책이 아니다. 휴식/회복 블록이어도 same-block 영수증이 있어야 통과
 
 ### 5.2 반복 검출 상세
 
@@ -964,6 +1000,10 @@ MartialHUD 고유 밀도:
 - unresolved_foreshadow_count: 12
 - critical_thin_blocks: []
 - thin_blocks: []
+- block_cider_missing_blocks: []
+- no_cider_blocks: []
+- pain_only_exit_blocks: []
+- cider_receipt_line_missing_blocks: []
 - realm_stagnation_blocks: []
 - injury_untracked_blocks: []
 - total_martial_arts_acquired: 18

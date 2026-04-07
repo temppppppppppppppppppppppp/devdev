@@ -108,7 +108,40 @@ dual-lane separation:
 3. capital second:
    - 첫 공개 수혜 포지션 수익 시드. 근거는 공개 신호만 사용: 사건 이후 공개된 안전 CAPEX 가이던스 상향 공시, 공개 보험시장 지표 급등, 공개 공급망 뉴스의 대체공급망 수혜 흐름. 내부 데이터는 근거로 쓰지 않는다.
 
-## 7. Authority Gain Route
+## 7. First-Block Cider Ledger (`2~6`)
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 출하 보류 적중과 함께 `예민한 대리`에서 `쇼크선을 먼저 읽는 놈`으로 평가가 바뀐다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 리스크 TF 배석권과 고객사 실사 동행권이 같은 Arc 안에서 붙는다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 보험사 질의 선열람권이 열리며 내부 리스크 메모의 관문이 강화된다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 공개 안전 CAPEX 신호가 나온 뒤 첫 포지션 시드 수익이 붙는다.
+  receipt_kind: seed_capital
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 재가동 조건표와 공시 시나리오 설계권이 생겨 다음 위기 전장 입장권이 열린다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 8. Authority Gain Route
 
 - Block 1:
   - 예민한 대리 → 리스크 TF 배석자. 출하 보류 적중으로 자리를 얻는다.
@@ -121,7 +154,7 @@ dual-lane separation:
 - newly opened channels:
   - 리스크 TF, 고객사 실사 창구, 보험사 질의 라인
 
-## 8. Crisis 4-Element Check
+## 9. Crisis 4-Element Check
 
 - first read:
   - 습도 이탈 + 압력 이상 + 보험 질의를 묶어 출하 전에 위기를 읽는다.
@@ -135,7 +168,7 @@ dual-lane separation:
   - 외부: 사건 이후 공개된 신호(안전 CAPEX 가이던스 상향 공시, 대체공급망 수혜 뉴스)만으로 설계한 포지션 수익이 뒤따른다.
   - 두 회수는 같은 현상의 안팎이지만, 근거 데이터 출처가 분리되어 있다.
 
-## 9. Reward Weight Rule
+## 10. Reward Weight Rule
 
 - wrong wording:
   - `수혜주로 얼마를 번다`, `시드 수익 얼마`
@@ -144,7 +177,7 @@ dual-lane separation:
   - `그 결과 배석권과 동행권이 붙는다`
   - `그 뒤에 공개 신호 기반 시드 수익이 따라온다`
 
-## 10. Must-Not-Copy
+## 11. Must-Not-Copy
 
 - exact app or cheat UI 금지
 - 특정 종목, 특정 회사, 특정 수치 복제 금지
@@ -154,16 +187,25 @@ dual-lane separation:
 - insider-trading 구조 금지: 내부 데이터를 근거로 외부 포지션을 잡는 장면은 절대 불가
 - dual-lane 혼선 금지: 내부 레인(출하 보류/발언권)과 외부 레인(공개 신호 기반 포지션)의 데이터 출처를 섞지 않는다
 
-## 11. Current Selection Guess
+## 12. Current Selection Guess
 
 - innocence: `PASS`
 - first win = evaluation revision: `PASS`
 - proof scene: `PASS`
 - early reward = status first: `PASS`
+- ledger `2~6` all pay: `PASS`
 - crisis 4 elements: `PASS`
 - likely verdict: `PASS`
 
-## 12. Promotion Note
+## 13. Readiness Claim
+
+- selection-ready: no
+- Phase0-ready: no
+- all 2~6 rows pay in-block: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
+## 14. Promotion Note
 
 - 자리 증명: §2에서 리스크관리팀 = 설비/보험/품질 3부서 신호 교차점으로 잠금 완료.
 - dual-lane: §2에서 내부 레인/외부 레인 분리 명문화 완료. 공개 신호 출처 4개 특정.

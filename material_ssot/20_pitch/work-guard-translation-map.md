@@ -7,6 +7,7 @@ Scope: canonical bridge from `20_pitch` house law into runtime-safe `work_guard.
 ## 1. Role
 
 - convert `pitch philosophy` and `protagonist-first constitution` into a compact downstream rule shape
+- translate `cider-doctrine-v1` into runtime-safe first-block rules
 - define what belongs in `work_guard.yaml` and what must stay in upstream philosophy docs
 - prevent late-stage prompt stuffing by translating house law into short runtime slots
 - give operators one stable bridge from `20_pitch` truth to downstream guard semantics
@@ -71,6 +72,31 @@ Companion audit pack:
 - “왜 그런가”에 대한 교육용 해설
 - 장면별 TR 수준 세부계획
 - 문체 시범문 자체
+
+### 3.3A Keep `first_block_cider_ledger` Upstream, Translate Its Result Only
+
+- `first_block_cider_ledger` 원문 5줄 전체는 upstream pitch/planning 문서에 둔다
+- `work_guard.yaml`에는 ledger 원문을 통째로 넣지 않는다
+- 대신 ledger에서 살아남은 결과만 압축한다:
+  - `tracking_slots`: 어떤 보상 축이 block `2~6`에서 반복되는가
+  - `mandatory_scene_engines`: 어떤 block들이 proof / reevaluation / token을 담당하는가
+  - `evaluation_thresholds`: block `2~6` 내 visible reward token과 태도 변화 기준
+  - `custom_rules`: `block 6 pain-only exit 금지`, `block 7+ rescue 금지` 같은 짧은 룰
+- upstream `first_block_cider_ledger`에 any `has_cider: false` row가 남아 있으면 `WG-V2 HOLD`다
+- `work_guard.yaml`은 false row를 압축해서 없던 일처럼 만들 수 없다
+
+### 3.4 First-Block `Cider v1` Freeze Check
+
+`work_guard.yaml`로 번역할 때는 아래 다섯 가지가 살아 있어야 한다.
+
+1. `one_line_truth`가 고통보다 보상과 상승을 약속하는가
+2. `mandatory_scene_engines`에 protagonist-only proof와 visible reevaluation이 같이 들어 있는가
+3. `tracking_slots` 또는 `custom_rules`가 첫 블록 보상을 다음 관문 개방으로 연결하는가
+4. `protagonist_evaluation` 또는 동등 규칙이 첫 블록 visible reward를 명시적으로 요구하는가
+5. `forbidden_flattenings`가 failure-only / humiliation-only / `success -> pure punishment spiral`을 금지하는가
+
+하나라도 약하면 `WG-V2 HOLD`를 먼저 검토한다.
+특히 upstream ledger에 false row가 남아 있으면 기본값은 `WG-V2 HOLD`다.
 
 ## 4. Field Map
 
@@ -151,6 +177,7 @@ Companion audit pack:
 - `회의/협상에서 판 읽기와 우선순위 선점`
 - `위기 징후 선독 후 최소 피해 통제`
 - `결재선/승인권/호출권이 주인공 쪽으로 이동하는 장면`
+- `첫 블록 안에 proof가 visible reward token으로 바로 환전되는 장면`
 
 피해야 할 예:
 
@@ -175,6 +202,8 @@ Companion audit pack:
 - `비굴한 해명/인정 구걸`
 - `자기연민 소비`
 - `success -> pure punishment spiral`
+- `first block failure-only exit`
+- `first block humiliation-only exit`
 - `주인공 고유성 없는 대형 성과`
 - `운빨 생존을 실력처럼 처리`
 - `활약 후 태도 변화 없음`
@@ -409,10 +438,11 @@ Companion audit pack:
 2. `controllable_growth_resource`를 `business_axes`와 `control_axes`로 나눈다.
 3. `information_gap + competence_process`를 `protagonist_weapon`으로 압축한다.
 4. `opening_reward_vector + first_block_reward`를 `tracking_slots` 2~4개로 바꾼다.
-5. `episodes_1_to_3_impact + first_block_problem`을 `mandatory_scene_engines` 2~3개로 바꾼다.
-6. 철학 위반 패턴을 `forbidden_flattenings`로 적는다.
-7. 고평가 방식은 `protagonist_evaluation.*`로 적는다.
-8. 나머지 잔여 규칙만 `custom_rules`에 넣는다.
+5. `first_block_cider_ledger`를 읽고 block `2~6`의 proof / reevaluation / token 분업을 `mandatory_scene_engines` 2~3개로 바꾼다.
+6. `episodes_1_to_3_impact + first_block_problem`의 리듬 규칙을 `evaluation_thresholds`와 `custom_rules`에 나눈다.
+7. 철학 위반 패턴을 `forbidden_flattenings`로 적는다.
+8. 고평가 방식은 `protagonist_evaluation.*`로 적는다.
+9. 나머지 잔여 규칙만 `custom_rules`에 넣는다.
 
 ## 7. Recommended Size Budget
 

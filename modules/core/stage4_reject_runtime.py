@@ -416,6 +416,7 @@ class Stage4RejectRuntime:
         selected: str,
         score: int,
         error_category: str,
+        patch_trace: dict | None = None,
     ):
         from modules.core.stage4_types import _InterviewRoundResult
 
@@ -530,6 +531,7 @@ class Stage4RejectRuntime:
             feedback_provenance=_feedback_provenance,
             reject_bucket=_reject_bucket,
             error_category=error_category,
+            patch_trace=patch_trace,
         )
         if isinstance(previous_attempt, dict) and isinstance(_attempt_artifact_meta, dict):
             for key in ("attempt_key", "candidate_key", "content_hash", "artifact_path"):
@@ -1221,6 +1223,7 @@ class Stage4RejectRuntime:
         feedback_provenance: dict[str, str],
         reject_bucket: str,
         error_category: str,
+        patch_trace: dict | None,
     ) -> dict:
         owner = self.owner
         sink_source = self._build_reject_sink_source(
@@ -1253,6 +1256,10 @@ class Stage4RejectRuntime:
             if isinstance(advisory_gate_semantics.get("fix_pack_origin"), dict)
             else {}
         )
+        patch_advisory_payload = owner._build_stage4_patch_advisory_payload(
+            director_result=sink_source,
+            patch_trace=patch_trace,
+        )
         return owner._record_s4_attempt(
             episode=next_ep,
             round_num=round_num,
@@ -1268,11 +1275,18 @@ class Stage4RejectRuntime:
             advisory_flags={
                 **(dict(getattr(owner, "_last_advisory_summary", None) or {})),
                 "gate_semantics": advisory_gate_semantics,
-                "fix_pack": advisory_fix_pack,
+                "fix_pack": patch_advisory_payload.get("fix_pack", advisory_fix_pack),
                 "repair_contract": advisory_repair_contract,
                 "scope_authority": advisory_scope_authority,
                 "fix_pack_origin": advisory_fix_pack_origin,
                 "retry_budget_axes": dict(getattr(owner, "_last_retry_budget_axes", {}) or {}),
+                **(
+                    {
+                        key: value
+                        for key, value in patch_advisory_payload.items()
+                        if key != "fix_pack" and value not in ({}, [], "", None)
+                    }
+                ),
             },
             model=getattr(getattr(round_ctx, "chief_writer", None), "model_tier", None),
             candidate_key=candidate_key,

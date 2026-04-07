@@ -344,6 +344,21 @@ class TestBlueprintPatchIntegration:
             "quality_risk": True,
             "candidate_advisories": [{"n": 1}, {"n": 2}, {"n": 3}, {"n": 4}],
             "selected_candidate_advisory": {"focus": "keep"},
+            "fix_pack": {
+                "patch_targets": ["scene_2.summary"],
+                "patch_target_records": [
+                    {
+                        "summary": "scene_2.summary",
+                        "scene_id": "scene_2",
+                        "field_path": "scene_breakdown.scene_2.summary",
+                        "target_kind": "scene_block",
+                    }
+                ],
+                "must_fix": ["scene 2 summary must reflect the repaired reveal"],
+                "do_not_regress": ["scene 1 opening cadence must stay intact"],
+                "success_condition": "scene 2 now states the reveal without rewriting the arc shell",
+                "target_kind": "scene_block",
+            },
         }
 
         blueprint_generator.runtime._record_phase3_validation_payload(
@@ -357,6 +372,8 @@ class TestBlueprintPatchIntegration:
 
         assert pipeline["phases"]["validate"]["candidate_advisories"] == validation_result["candidate_advisories"][:3]
         assert pipeline["phases"]["validate"]["selected_candidate_advisory"] == {"focus": "keep"}
+        assert pipeline["phases"]["validate"]["fix_pack"]["patch_targets"] == ["scene_2.summary"]
+        assert pipeline["phases"]["validate"]["fix_pack"]["patch_target_records"][0]["scene_id"] == "scene_2"
         assert pipeline["quality_risk"] is True
         assert pipeline["revision_required"] is True
         assert pipeline["phases"]["generate"]["selected_strategy"] == "steady"
@@ -369,7 +386,10 @@ class TestBlueprintPatchIntegration:
         assert verdict == "REJECT"
 
     def test_run_phase3_validation_logs_quality_gate_reason(self, blueprint_generator, sample_arc_data):
-        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState, _ThreePhaseValidationEnvelope
+        from modules.domain.agents.three_phase_blueprint_runtime import (
+            _ThreePhaseRetryState,
+            _ThreePhaseValidationEnvelope,
+        )
 
         blueprint_generator._operator_log = MagicMock()
         pipeline_result = {"phases": {"generate": {}, "validate": {}}}
@@ -419,7 +439,10 @@ class TestBlueprintPatchIntegration:
         assert any("이슈: HIGH | quality_gate | score floor miss" in text for text in log_texts)
 
     def test_run_phase3_validation_records_effective_score_after_ifc_penalty(self, blueprint_generator, sample_arc_data):
-        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState, _ThreePhaseValidationEnvelope
+        from modules.domain.agents.three_phase_blueprint_runtime import (
+            _ThreePhaseRetryState,
+            _ThreePhaseValidationEnvelope,
+        )
 
         blueprint_generator._operator_log = MagicMock()
         pipeline_result = {"phases": {"generate": {}, "validate": {}}}
@@ -476,8 +499,8 @@ class TestBlueprintPatchIntegration:
         assert any("effective_score=88" in text for text in log_texts)
 
     def test_finalize_terminal_failure_uses_emergency_fallback(self, blueprint_generator):
-        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
         from modules.core.constants import PatchModeThresholds
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
 
         retry_state = _ThreePhaseRetryState(
             prev_reject_score=PatchModeThresholds.REWRITE,
@@ -741,6 +764,7 @@ class TestBlueprintPatchIntegration:
             prev_blueprint=None,
             current_blueprint={"ep_num": 1},
             current_validation={"fix_scope": "inplace", "feedback": "scene 3 tension up\nrestore anchor"},
+            pipeline_result={"phases": {"generate": {}, "validate": {}}},
             score=82,
             quality_gate_score=90,
             director=MagicMock(),
@@ -759,6 +783,78 @@ class TestBlueprintPatchIntegration:
         assert any("사유: scene 3 tension up" in text for text in log_texts)
         assert any("사유: restore anchor" in text for text in log_texts)
         assert any("[TF-32-V] patch #1 failed" in text for text in log_texts)
+
+    def test_pass_with_fix_iteration_appends_fix_pack_guidance_and_partial_fix_eval(
+        self, blueprint_generator, sample_arc_data
+    ):
+        blueprint_generator._inplace_patch_blueprint = MagicMock(
+            return_value={
+                "ep_num": 1,
+                "scene_breakdown": {
+                    "scene_1": {"summary": "opening"},
+                    "scene_2": {"summary": "repaired"},
+                },
+            }
+        )
+        blueprint_generator.validator.validate.return_value = (
+            "PASS",
+            {"score": 95, "issues": [], "confidence": 91},
+        )
+        pipeline_result = {"phases": {"generate": {}, "validate": {}}}
+
+        result = blueprint_generator.runtime._run_pass_with_fix_iteration(
+            ep_num=1,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            prev_blueprint=None,
+            current_blueprint={
+                "ep_num": 1,
+                "scene_breakdown": {
+                    "scene_1": {"summary": "opening"},
+                    "scene_2": {"summary": "old"},
+                },
+            },
+            current_validation={
+                "fix_scope": "inplace",
+                "feedback": "tighten scene 2 summary",
+                "fix_pack": {
+                    "patch_targets": ["scene_2.summary"],
+                    "patch_target_records": [
+                        {
+                            "summary": "scene_2.summary",
+                            "scene_id": "scene_2",
+                            "field_path": "scene_breakdown.scene_2.summary",
+                            "target_kind": "scene_block",
+                        }
+                    ],
+                    "must_fix": ["scene 2 summary must reflect the repaired reveal"],
+                    "do_not_regress": ["scene 1 opening cadence must stay intact"],
+                    "success_condition": "scene 2 now states the reveal without rewriting the arc shell",
+                    "target_kind": "scene_block",
+                },
+            },
+            pipeline_result=pipeline_result,
+            score=84,
+            quality_gate_score=90,
+            director=MagicMock(),
+            arc_idx=0,
+            entity_registry=None,
+            state_tracker=None,
+            prev_hud=None,
+            fix_index=0,
+            max_fix=3,
+        )
+
+        assert result.fix_ok is True
+        patch_feedback = blueprint_generator._inplace_patch_blueprint.call_args.kwargs["director_feedback"]
+        assert "[Stage3 partial-fix contract]" in patch_feedback
+        assert "scene_2.summary" in patch_feedback
+        assert "scene 2 summary must reflect the repaired reveal" in patch_feedback
+        assert pipeline_result["phases"]["validate"]["fix_pack"]["target_kind"] == "scene_block"
+        assert pipeline_result["phases"]["validate"]["partial_fix_eval"]["patch_round"] == 1
+        assert pipeline_result["phases"]["validate"]["partial_fix_eval"]["target_kind"] == "scene_block"
+        assert pipeline_result["phases"]["validate"]["partial_fix_eval"]["must_fix_resolved"] is True
+        assert pipeline_result["phases"]["validate"]["partial_fix_eval"]["success_condition_met"] is True
 
     def test_terminal_stage3_reject_does_not_record_intermediate_observability(
         self, blueprint_generator, sample_arc_data
@@ -922,6 +1018,8 @@ class TestBlueprintPatchIntegration:
                 "verdict_reason": "warning only",
                 "quality_risk": False,
                 "revision_required": True,
+                "binding_prevalidation_issue_count": 1,
+                "binding_prevalidation_categories": ["dead_npc"],
                 "candidate_count": 1,
                 "selected_candidate_advisory": {
                     "candidate_index": 0,
@@ -941,6 +1039,8 @@ class TestBlueprintPatchIntegration:
         assert bool(pipeline.get("quality_risk", False)) is False
         assert pipeline["revision_required"] is True
         assert pipeline["phases"]["validate"]["revision_required"] is True
+        assert pipeline["phases"]["validate"]["binding_prevalidation_issue_count"] == 1
+        assert pipeline["phases"]["validate"]["binding_prevalidation_categories"] == ["dead_npc"]
 
     def test_low_score_skips_inplace(self, blueprint_generator, sample_arc_data):
         """score < 50이면 in-place 미진입, 전면 재생성."""

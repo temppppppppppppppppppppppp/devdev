@@ -107,6 +107,35 @@ class DBManager:
             return json.loads(fallback)
 
     @staticmethod
+    def _safe_bool(value: object) -> bool | None:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"true", "1", "yes", "y"}:
+                return True
+            if normalized in {"false", "0", "no", "n"}:
+                return False
+            return None
+        if isinstance(value, (int, float)):
+            return bool(value)
+        return None
+
+    @staticmethod
+    def _pick_repair_contract_subtype(repair_contract: dict[str, object]) -> str:
+        subtype = str(repair_contract.get("subtype") or "").strip()
+        if subtype:
+            return subtype
+        subtypes = repair_contract.get("subtypes")
+        if not isinstance(subtypes, list):
+            return ""
+        for raw_subtype in subtypes:
+            candidate = str(raw_subtype or "").strip()
+            if candidate:
+                return candidate
+        return ""
+
+    @staticmethod
     def _normalize_ui_event_stage(stage: int | str | None) -> tuple[int | None, str | None]:
         if stage is None:
             return None, None
@@ -2885,6 +2914,12 @@ class DBManager:
         retry_budget_axes = advisory_flags.get("retry_budget_axes")
         if not isinstance(retry_budget_axes, dict):
             retry_budget_axes = {}
+        partial_fix_eval = advisory_flags.get("partial_fix_eval")
+        if not isinstance(partial_fix_eval, dict):
+            partial_fix_eval = {}
+        repair_trace = advisory_flags.get("repair_trace")
+        if not isinstance(repair_trace, list):
+            repair_trace = []
 
         fix_scope_value = str(
             scope_authority.get("fix_scope")
@@ -2904,6 +2939,33 @@ class DBManager:
             or repair_contract.get("repair_scope")
             or ""
         ).strip()
+        scope_authority_fix_scope_value = str(
+            scope_authority.get("fix_scope")
+            or repair_contract.get("fix_scope")
+            or gate_semantics.get("fix_scope")
+            or fix_scope_value
+            or ""
+        ).strip()
+        scope_authority_authoritative_fix_scope_value = str(
+            scope_authority.get("authoritative_fix_scope")
+            or repair_contract.get("authoritative_fix_scope")
+            or gate_semantics.get("authoritative_fix_scope")
+            or authoritative_fix_scope_value
+            or ""
+        ).strip()
+        scope_authority_scope_origin = (
+            scope_authority.get("scope_origin")
+            or gate_semantics.get("scope_origin")
+            or repair_contract.get("scope_origin")
+        )
+        scope_authority_widened = self._safe_bool(scope_authority.get("widened"))
+        if scope_authority_widened is None and scope_authority_fix_scope_value and scope_authority_authoritative_fix_scope_value:
+            scope_authority_widened = (
+                scope_authority_fix_scope_value.lower()
+                != scope_authority_authoritative_fix_scope_value.lower()
+            )
+        repair_contract_subtype = self._pick_repair_contract_subtype(repair_contract)
+        repair_contract_provenance = str(repair_contract.get("provenance") or "").strip()
 
         if scope_authority:
             if fix_scope_value and not str(scope_authority.get("fix_scope") or "").strip():
@@ -2933,10 +2995,18 @@ class DBManager:
             "repair_scope": repair_scope_value,
             "fix_scope": fix_scope_value,
             "authoritative_fix_scope": authoritative_fix_scope_value,
+            "repair_contract_subtype": repair_contract_subtype,
+            "repair_contract_provenance": repair_contract_provenance,
             "fix_pack": fix_pack,
             "repair_contract": repair_contract,
             "scope_authority": scope_authority,
+            "scope_authority_fix_scope": scope_authority_fix_scope_value,
+            "scope_authority_authoritative_fix_scope": scope_authority_authoritative_fix_scope_value,
+            "scope_authority_scope_origin": scope_authority_scope_origin,
+            "scope_authority_widened": scope_authority_widened,
             "retry_budget_axes": retry_budget_axes,
+            "partial_fix_eval": partial_fix_eval,
+            "repair_trace": repair_trace,
             "final_authority_sink": "stage_attempts",
             "director_quality_passed": bool(item.get("director_quality_passed", False)),
             "downstream_override_applied": bool(item.get("downstream_override_applied", False)),

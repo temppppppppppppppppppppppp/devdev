@@ -143,6 +143,127 @@ class TestCommitSemantics:
             {"arc_no": 1, "error": "safe_commit_async returned False"},
         )
 
+    def test_prepare_stage2_pass_arc_for_persistence_strips_nonwuxia_state_noise_from_saved_arc(
+        self,
+        finalizer,
+        valid_refined_arc,
+    ):
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["state_constraints"] = {
+            "arc_start_state": {
+                "location": "여의도 HQ",
+                "equipment": [],
+                "injuries": "없음",
+                "internal_energy": 80,
+                "realm": "후천",
+            },
+            "arc_end_state": {
+                "location": "강남 HQ",
+                "equipment": [],
+                "injuries": "없음",
+                "qi_nature": "청명",
+                "martial_arts": ["비검술"],
+            },
+            "items_acquired": [],
+        }
+
+        result = finalizer._prepare_stage2_pass_arc_for_persistence(
+            refined_arc=refined_arc,
+            arc_drive={"desire_vector": "test"},
+            enriched_block={
+                "joint_docs": {"final_location": "강남 HQ", "physical_inventory": [], "world_joint": "stable"},
+                "status_shadow": {
+                    "internal_energy_loss": "5%",
+                    "expected_injuries": "none",
+                    "item_consumption": [],
+                },
+                "joint_docs_brief": "brief",
+            },
+            all_refined_arcs=[],
+            global_arc_no=1,
+            current_feedback="",
+            generation_method="four_phase",
+            st_snapshot=None,
+            cdb_snapshot=None,
+            constraint_db=MagicMock(arc_states=[]),
+            constraint_block="",
+            genre="investment",
+        )
+
+        assert result["action"] == "continue"
+        saved_arc = result["refined_arc"]["state_constraints"]
+        assert "internal_energy" not in saved_arc["arc_start_state"]
+        assert "realm" not in saved_arc["arc_start_state"]
+        assert "internal_energy" not in saved_arc["arc_end_state"]
+        assert "qi_nature" not in saved_arc["arc_end_state"]
+        assert "martial_arts" not in saved_arc["arc_end_state"]
+        assert any(
+            "[Non-Wuxia State Cleanup]" in call.args[0]
+            for call in finalizer.ctx.ui.log.call_args_list
+            if call.args
+        )
+
+    def test_prepare_stage2_pass_arc_for_persistence_keeps_wuxia_state_fields(
+        self,
+        finalizer,
+        valid_refined_arc,
+    ):
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["state_constraints"] = {
+            "arc_start_state": {
+                "location": "청풍산장",
+                "equipment": ["검"],
+                "injuries": "없음",
+                "internal_energy": 80,
+                "realm": "후천",
+            },
+            "arc_end_state": {
+                "location": "청풍산장 후원",
+                "equipment": ["검"],
+                "injuries": "경미한 타박상",
+                "internal_energy": 65,
+                "qi_nature": "청명",
+                "martial_arts": ["비검술"],
+            },
+            "items_acquired": [],
+        }
+
+        result = finalizer._prepare_stage2_pass_arc_for_persistence(
+            refined_arc=refined_arc,
+            arc_drive={"desire_vector": "test"},
+            enriched_block={
+                "joint_docs": {"final_location": "청풍산장 후원", "physical_inventory": ["검"], "world_joint": "긴장"},
+                "status_shadow": {
+                    "internal_energy_loss": "15%",
+                    "expected_injuries": "경미한 타박상",
+                    "item_consumption": [],
+                },
+                "joint_docs_brief": "brief",
+            },
+            all_refined_arcs=[],
+            global_arc_no=1,
+            current_feedback="",
+            generation_method="four_phase",
+            st_snapshot=None,
+            cdb_snapshot=None,
+            constraint_db=MagicMock(arc_states=[]),
+            constraint_block="",
+            genre="wuxia",
+        )
+
+        assert result["action"] == "continue"
+        saved_arc = result["refined_arc"]["state_constraints"]
+        assert saved_arc["arc_start_state"]["internal_energy"] == 80
+        assert saved_arc["arc_start_state"]["realm"] == "후천"
+        assert saved_arc["arc_end_state"]["internal_energy"] == 65
+        assert saved_arc["arc_end_state"]["qi_nature"] == "청명"
+        assert saved_arc["arc_end_state"]["martial_arts"] == ["비검술"]
+        assert not any(
+            "[Non-Wuxia State Cleanup]" in call.args[0]
+            for call in finalizer.ctx.ui.log.call_args_list
+            if call.args
+        )
+
     def test_ctx_proxy(self, finalizer, finalizer_ctx):
         assert finalizer.ctx is finalizer_ctx
 
@@ -901,6 +1022,67 @@ class TestRunFinalize:
                 ],
             },
         )
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_pass_with_fix_persists_fix_pack_and_partial_fix_eval(self, _validate, finalizer, valid_refined_arc):
+        patched_arc = deepcopy(valid_refined_arc)
+        patched_arc["state_constraints"] = {
+            "arc_end_state": {"location": "Gangnam HQ"},
+            "items_acquired": [],
+        }
+        finalizer.ctx.agents["four_phase"] = MagicMock()
+        finalizer.ctx.agents["four_phase"]._inplace_patch_arc.return_value = patched_arc
+        finalizer.ctx.agents["director"].audit_strategic_plan.side_effect = [
+            {
+                "decision": "PASS_WITH_FIX",
+                "score": 93,
+                "reason": "needs bounded local fix",
+                "re_slice_instruction": "repair the ending venue only",
+                "fix_scope": "inplace",
+                "fix_pack": {
+                    "patch_targets": [
+                        {
+                            "summary": "state_constraints.arc_end_state.location",
+                            "field_path": "state_constraints.arc_end_state.location",
+                            "target_kind": "field_value",
+                        }
+                    ],
+                    "must_fix": ["set arc_end_state.location to Gangnam HQ"],
+                    "do_not_regress": ["keep the tactical_doc flow unchanged"],
+                    "success_condition": "arc_end_state.location now matches the repaired venue",
+                },
+            },
+            {
+                "decision": "PASS",
+                "score": 95,
+                "reason": "looks good",
+            },
+        ]
+
+        kwargs = _make_finalize_kwargs(valid_refined_arc)
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        patch_kw = finalizer.ctx.agents["four_phase"]._inplace_patch_arc.call_args.kwargs
+        assert patch_kw["fix_pack"]["patch_targets"] == ["state_constraints.arc_end_state.location"]
+        assert patch_kw["fix_pack"]["patch_target_records"][0]["field_path"] == "state_constraints.arc_end_state.location"
+        assert patch_kw["fix_pack"]["target_kind"] == "field_value"
+
+        save_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert save_kw["advisory_flags"]["fix_pack"]["patch_targets"] == ["state_constraints.arc_end_state.location"]
+        assert save_kw["advisory_flags"]["fix_pack"]["patch_target_records"][0]["field_path"] == "state_constraints.arc_end_state.location"
+        assert save_kw["advisory_flags"]["partial_fix_eval"]["patch_round"] == 1
+        assert save_kw["advisory_flags"]["partial_fix_eval"]["target_kind"] == "field_value"
+        assert save_kw["advisory_flags"]["partial_fix_eval"]["must_fix_resolved"] is True
+        assert save_kw["advisory_flags"]["partial_fix_eval"]["success_condition_met"] is True
+        assert save_kw["advisory_flags"]["partial_fix_eval"]["patch_target_id"].startswith("pt:")
+
+        selection_kw = finalizer.ctx.current_project.db.save_director_selection.call_args.kwargs
+        assert selection_kw["advisory_warnings"]["fix_pack"]["patch_targets"] == [
+            "state_constraints.arc_end_state.location"
+        ]
+        assert selection_kw["advisory_warnings"]["partial_fix_eval"]["patch_target_id"].startswith("pt:")
 
     def test_collect_arc_patch_guard_signals_flags_future_artifact_in_first_episode_start_state(
         self,

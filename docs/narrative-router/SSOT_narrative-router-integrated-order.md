@@ -147,6 +147,9 @@ Expected operator reads from the JSON:
 - `stage`: `planning`, `production`, `bi`, or `audit_or_repair`
 - `artifact_state.preprocess_ready`: whether shared Stage 0 preprocess is ready
 - `artifact_state.manual_audit_pass`: whether `phase0_ready_snapshot.manual_audit_pass == true`
+- advisory `work_guard` visibility may also be surfaced where available
+  - `present`, `missing_before_tr`, `missing_after_tr`, `not_expected_yet`
+  - this is a material-side companion signal only and does not change stage detection
 - `planning_path`, `production_path`, `bi_path`: next harness docs
 
 If `stage == planning` and `artifact_state.preprocess_ready == false`, return to `전처리_ssot/docs/SSOT_stage0_preprocess_integrated_order.md` before opening a family planning harness.

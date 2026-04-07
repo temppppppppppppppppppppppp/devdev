@@ -2281,6 +2281,61 @@ class TestHandleRoundOutcomeRetryPathology:
         assert result.inplace_attempted is False
         assert result.blueprint_regenerated is False
 
+    def test_apply_retry_repair_escalation_uses_stage3_binding_repair_signal(
+        self,
+        orch_with_ctx,
+        minimal_round_ctx,
+    ):
+        from types import SimpleNamespace
+
+        orch = orch_with_ctx
+        runtime = orch.outcome_runtime
+        round_ctx = dataclasses.replace(
+            minimal_round_ctx,
+            blueprint={
+                "_stage3_meta": {
+                    "revision_required": True,
+                    "final_verdict": "PASS_WITH_FIX",
+                    "binding_prevalidation_issue_count": 1,
+                    "binding_prevalidation_categories": ["dead_npc"],
+                }
+            },
+        )
+        orch.get_stage4_policy_int = MagicMock(
+            side_effect=lambda *path, default: {
+                "quality_risk_inplace_threshold": 1,
+                "default_inplace_threshold": 3,
+                "blueprint_regeneration_after_inplace_streak": 4,
+            }.get(path[-1], default)
+        )
+        escalated = SimpleNamespace(
+            round_ctx=dataclasses.replace(round_ctx, blueprint={"patched": True}),
+            director_feedback="patched",
+            previous_attempt={"score": 61, "reject_bucket": "quality_issue"},
+            logic_error_streak=0,
+            inplace_attempted=True,
+            blueprint_regenerated=False,
+        )
+        orch._apply_v75d_inplace_repair = MagicMock(return_value=escalated)
+
+        result = runtime.apply_retry_repair_escalation(
+            round_ctx=round_ctx,
+            next_ep=1,
+            interview_round=0,
+            director_feedback="retry feedback",
+            previous_attempt={"score": 61},
+            logic_error_streak=1,
+            inplace_attempted=False,
+            blueprint_regenerated=False,
+            tf29_advisory="",
+            dominant_contradiction="timeline",
+            pathology_counts={},
+            pathology_repeat_emitted=set(),
+        )
+
+        orch._apply_v75d_inplace_repair.assert_called_once()
+        assert result is escalated
+
     def test_apply_retry_repair_escalation_respects_blueprint_regeneration_threshold_override(
         self,
         orch_with_ctx,

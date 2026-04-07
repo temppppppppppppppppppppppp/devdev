@@ -8,16 +8,10 @@ Scope: current representative bounded work coverage inside `material_ssot`
 
 | work_id | family | research manifest | pitch anchor | Stage0 manifest | Phase0 manifest | TR manifest | BI manifest | key gap |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `gatekeeper_heir` | `blockguide` | yes | yes | yes | yes | yes | yes | later enrichment only |
 | `office_checkup_next_day` | `blockguide` | yes | yes | yes | yes | yes | yes | raw research path not yet pinned |
 | `wuxia_heavenly_physician` | `wuxguide` | yes | yes | yes | yes | yes | yes | root phase0 live file not yet materialized |
 
 ## 2. Stage Notes
-
-### gatekeeper_heir
-
-- canonical pitch now exists at `material_ssot/20_pitch/canon/gatekeeper_heir.md`
-- Phase0, TR, and BI all exist as live artifacts
 
 ### office_checkup_next_day
 
@@ -29,6 +23,12 @@ Scope: current representative bounded work coverage inside `material_ssot`
 - pitch resolves to `material_ssot/20_pitch/intake/legacy_import/20260320/컨셉기획_041_무협_천의무쌍.md`
 - phase0 currently resolves through `treatments/preprocess/wuxia_heavenly_physician/phase0_ready_snapshot.json`
 - TR and BI exist as live artifacts and both are currently canonical
+
+## 2A. Companion Visibility Note
+
+- `office_checkup_next_day`: work-guard library publish visible at `work_guards/07_office_checkup_next_day.yaml`
+- `wuxia_heavenly_physician`: work-guard library publish visible at `work_guards/09_wuxia_heavenly_physician.yaml`
+- these entries are advisory material-side companion signals, not stage hard gates
 
 ## 3. Validation Note
 

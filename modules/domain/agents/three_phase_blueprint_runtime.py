@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from modules.core.constants import PatchModeThresholds
+from modules.core.partial_fix_contract import build_partial_fix_eval, normalize_patch_target_records
 from modules.models.blueprint import validate_blueprint
 from modules.validation.threshold_helper import _threshold
 
@@ -94,6 +95,139 @@ class _ThreePhaseRetryCycleResult:
     should_continue: bool = False
     should_break: bool = False
     final_result: tuple[dict | None, dict] | None = None
+
+
+def _compact_stage3_fix_list(raw: object, *, limit: int = 6, item_limit: int = 180) -> list[str]:
+    if isinstance(raw, str):
+        items = [raw]
+    elif isinstance(raw, list):
+        items = list(raw)
+    else:
+        items = []
+
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        text = " ".join(str(item or "").split()).strip()[:item_limit]
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        normalized.append(text)
+        if len(normalized) >= limit:
+            break
+    return normalized
+
+
+def _normalize_stage3_fix_pack(raw_payload: object) -> dict:
+    payload = raw_payload if isinstance(raw_payload, dict) else {}
+    source = payload.get("fix_pack") if isinstance(payload.get("fix_pack"), dict) else payload
+    if not isinstance(source, dict):
+        return {}
+
+    target_kind = str(source.get("target_kind") or payload.get("target_kind") or "").strip()
+    patch_targets, patch_target_records = normalize_patch_target_records(
+        source.get("patch_target_records") or source.get("patch_targets"),
+        stage="stage3",
+        container_kind="blueprint",
+        container_id="stage3_blueprint",
+        default_target_kind=target_kind,
+    )
+    must_fix = _compact_stage3_fix_list(source.get("must_fix"), limit=6, item_limit=180)
+    do_not_regress = _compact_stage3_fix_list(source.get("do_not_regress"), limit=6, item_limit=180)
+    success_condition = " ".join(str(source.get("success_condition", "") or "").split()).strip()[:220]
+    normalized: dict = {}
+    if patch_targets:
+        normalized["patch_targets"] = patch_targets
+    if patch_target_records:
+        normalized["patch_target_records"] = patch_target_records
+    resolved_target_kind = target_kind or str((patch_target_records or [{}])[0].get("target_kind") or "").strip()
+    if resolved_target_kind:
+        normalized["target_kind"] = resolved_target_kind
+    if must_fix:
+        normalized["must_fix"] = must_fix
+    if do_not_regress:
+        normalized["do_not_regress"] = do_not_regress
+    if success_condition:
+        normalized["success_condition"] = success_condition
+    return normalized
+
+
+def _build_stage3_fix_pack_guidance(fix_pack: dict | None) -> str:
+    payload = fix_pack if isinstance(fix_pack, dict) else {}
+    if not payload:
+        return ""
+
+    lines: list[str] = []
+    patch_targets = list(payload.get("patch_targets") or [])
+    if patch_targets:
+        lines.append("- patch_targets: " + ", ".join(str(item) for item in patch_targets[:6]))
+    patch_target_records = list(payload.get("patch_target_records") or [])
+    if patch_target_records:
+        record_lines: list[str] = []
+        for record in patch_target_records[:3]:
+            if not isinstance(record, dict):
+                continue
+            parts = [str(record.get("summary") or "").strip()]
+            scene_id = str(record.get("scene_id") or "").strip()
+            field_path = str(record.get("field_path") or "").strip()
+            target_kind = str(record.get("target_kind") or "").strip()
+            detail = ", ".join(part for part in (scene_id, field_path, target_kind) if part)
+            if detail:
+                parts.append(f"({detail})")
+            text = " ".join(part for part in parts if part).strip()
+            if text:
+                record_lines.append(text)
+        if record_lines:
+            lines.append("- patch_target_records: " + " | ".join(record_lines))
+    must_fix = list(payload.get("must_fix") or [])
+    if must_fix:
+        lines.append("- must_fix: " + " | ".join(str(item) for item in must_fix[:4]))
+    do_not_regress = list(payload.get("do_not_regress") or [])
+    if do_not_regress:
+        lines.append("- do_not_regress: " + " | ".join(str(item) for item in do_not_regress[:4]))
+    success_condition = str(payload.get("success_condition", "") or "").strip()
+    if success_condition:
+        lines.append("- success_condition: " + success_condition)
+    if not lines:
+        return ""
+    return "[Stage3 partial-fix contract]\n" + "\n".join(lines)
+
+
+def _build_stage3_partial_fix_eval(
+    *,
+    fix_pack: dict | None,
+    patch_round: int,
+    verdict: str = "",
+    fallback_reason: str = "",
+) -> dict:
+    payload = fix_pack if isinstance(fix_pack, dict) else {}
+    patch_target_records = list(payload.get("patch_target_records") or [])
+    target_kind = str(payload.get("target_kind", "") or "").strip()
+    normalized_verdict = str(verdict or "").strip().upper()
+    must_fix_resolved = None
+    do_not_regress_held = None
+    success_condition_met = None
+    if normalized_verdict in {"PASS", "PASS_WITH_WARNING"}:
+        must_fix_resolved = True
+        do_not_regress_held = True
+        success_condition_met = True
+    elif normalized_verdict == "PASS_WITH_FIX":
+        must_fix_resolved = False
+        success_condition_met = False
+    elif normalized_verdict == "REJECT":
+        must_fix_resolved = False
+        do_not_regress_held = False
+        success_condition_met = False
+    return build_partial_fix_eval(
+        patch_round=patch_round,
+        is_patch_attempt=True,
+        patch_target_records=patch_target_records,
+        target_kind=target_kind,
+        fallback_reason=fallback_reason,
+        must_fix_resolved=must_fix_resolved,
+        do_not_regress_held=do_not_regress_held,
+        success_condition_met=success_condition_met,
+    )
 
 
 class ThreePhaseBlueprintRuntime:
@@ -827,12 +961,34 @@ class ThreePhaseBlueprintRuntime:
                 len(all_candidates) if isinstance(all_candidates, list) else 1,
             ),
         }
+        binding_issue_count = validation_result.get("binding_prevalidation_issue_count", 0)
+        try:
+            binding_issue_count = int(binding_issue_count or 0)
+        except (TypeError, ValueError):
+            binding_issue_count = 0
+        if binding_issue_count > 0:
+            pipeline_result["phases"]["validate"]["binding_prevalidation_issue_count"] = binding_issue_count
+        binding_categories = validation_result.get("binding_prevalidation_categories", [])
+        if isinstance(binding_categories, list):
+            normalized_binding_categories = [
+                str(item).strip() for item in binding_categories if str(item or "").strip()
+            ]
+            if normalized_binding_categories:
+                pipeline_result["phases"]["validate"]["binding_prevalidation_categories"] = (
+                    normalized_binding_categories[:6]
+                )
         candidate_advisories = validation_result.get("candidate_advisories", [])
         if isinstance(candidate_advisories, list) and candidate_advisories:
             pipeline_result["phases"]["validate"]["candidate_advisories"] = candidate_advisories[:3]
         selected_candidate_advisory = validation_result.get("selected_candidate_advisory", {})
         if isinstance(selected_candidate_advisory, dict) and selected_candidate_advisory:
             pipeline_result["phases"]["validate"]["selected_candidate_advisory"] = selected_candidate_advisory
+        normalized_fix_pack = _normalize_stage3_fix_pack(validation_result)
+        if normalized_fix_pack:
+            pipeline_result["phases"]["validate"]["fix_pack"] = normalized_fix_pack
+        partial_fix_eval = validation_result.get("partial_fix_eval")
+        if isinstance(partial_fix_eval, dict) and partial_fix_eval:
+            pipeline_result["phases"]["validate"]["partial_fix_eval"] = dict(partial_fix_eval)
         if validation_quality_risk:
             pipeline_result["quality_risk"] = True
         if validation_revision_required:
@@ -942,6 +1098,7 @@ class ThreePhaseBlueprintRuntime:
                 prev_blueprint=prev_blueprint,
                 current_blueprint=current_blueprint,
                 current_validation=current_validation,
+                pipeline_result=pipeline_result,
                 score=score,
                 quality_gate_score=quality_gate_score,
                 director=director,
@@ -1004,6 +1161,7 @@ class ThreePhaseBlueprintRuntime:
         prev_blueprint: dict | None,
         current_blueprint: dict | None,
         current_validation: dict,
+        pipeline_result: dict,
         score: int,
         quality_gate_score: int,
         director,
@@ -1028,7 +1186,14 @@ class ThreePhaseBlueprintRuntime:
                 should_break=True,
             )
 
+        validate_phase = pipeline_result.setdefault("phases", {}).setdefault("validate", {})
+        normalized_fix_pack = _normalize_stage3_fix_pack(current_validation)
+        if normalized_fix_pack:
+            validate_phase["fix_pack"] = dict(normalized_fix_pack)
         fix_feedback = current_validation.get("re_slice_instruction", "") or current_validation.get("feedback", "")
+        fix_pack_guidance = _build_stage3_fix_pack_guidance(normalized_fix_pack)
+        if fix_pack_guidance:
+            fix_feedback = f"{fix_feedback}\n\n{fix_pack_guidance}".strip() if fix_feedback else fix_pack_guidance
         logging.info(f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}")
         self._log_operator_retry_context(
             title=f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}",
@@ -1052,6 +1217,14 @@ class ThreePhaseBlueprintRuntime:
             )
         if not patched_blueprint:
             logging.warning("[TF-32-V] patch failed")
+            partial_fix_eval = _build_stage3_partial_fix_eval(
+                fix_pack=normalized_fix_pack,
+                patch_round=fix_index + 1,
+                fallback_reason="patch_generation_failed",
+            )
+            if partial_fix_eval:
+                validate_phase["partial_fix_eval"] = partial_fix_eval
+                current_validation["partial_fix_eval"] = partial_fix_eval
             self._log_operator_retry_context(
                 title=f"[TF-32-V] patch #{fix_index + 1} failed",
                 level="warning",
@@ -1118,6 +1291,19 @@ class ThreePhaseBlueprintRuntime:
                 "score": re_validation.get("score", 0),
             },
         )
+        partial_fix_eval = _build_stage3_partial_fix_eval(
+            fix_pack=normalized_fix_pack,
+            patch_round=fix_index + 1,
+            verdict=re_verdict,
+            fallback_reason="still_requires_fix"
+            if re_verdict == "PASS_WITH_FIX"
+            else "re_audit_reject" if re_verdict not in {"PASS", "PASS_WITH_WARNING"} else "",
+        )
+        if partial_fix_eval:
+            validate_phase["partial_fix_eval"] = partial_fix_eval
+            re_validation["partial_fix_eval"] = partial_fix_eval
+        if normalized_fix_pack:
+            re_validation.setdefault("fix_pack", dict(normalized_fix_pack))
         if re_verdict == "PASS":
             re_score = re_validation.get("score", 0)
             try:

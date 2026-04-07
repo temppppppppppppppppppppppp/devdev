@@ -54,6 +54,8 @@ MANDATORY_CONTENT_FIELDS = ("context", "event_villain", "solution", "reward")
 LANGUAGE_PATHS = [
     "stakes",
     "content.reward",
+    "genre_ext.block_cider.receipt_type",
+    "genre_ext.block_cider.receipt_line",
     "genre_ext.method",
     "genre_ext.success_pattern",
     "regression_ext.regression_hint.slip_up",
@@ -228,6 +230,43 @@ def bundle_size(block: dict[str, Any]) -> int:
         + len(as_text(content.get("reward")))
         + len(as_text(block.get("stakes")))
     )
+
+
+def parse_bool_flag(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    text = as_text(value).lower()
+    if text in {"true", "1", "yes", "y", "예", "있음", "있다"}:
+        return True
+    if text in {"false", "0", "no", "n", "아니오", "없음", "없다"}:
+        return False
+    return None
+
+
+def get_block_cider_payload(block: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(block, dict):
+        return {}
+    for container_key in ("genre_ext", "martial_ext"):
+        container = block.get(container_key)
+        if isinstance(container, dict):
+            payload = container.get("block_cider")
+            if isinstance(payload, dict):
+                return payload
+    return {}
+
+
+def extract_block_cider_state(block: dict[str, Any]) -> dict[str, Any]:
+    payload = get_block_cider_payload(block)
+    present = any(key in payload for key in ("has_cider", "receipt_type", "receipt_line", "pain_only_exit"))
+    has_cider = parse_bool_flag(payload.get("has_cider"))
+    pain_only_exit = parse_bool_flag(payload.get("pain_only_exit"))
+    return {
+        "present": present,
+        "has_cider": has_cider is True,
+        "pain_only_exit": pain_only_exit is True,
+        "receipt_type": as_text(payload.get("receipt_type")),
+        "receipt_line": as_text(payload.get("receipt_line")),
+    }
 
 
 def iter_entity_tokens(block: dict[str, Any]) -> list[str]:
@@ -519,6 +558,10 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             "critical_thin_blocks": [],
             "thin_blocks": [],
             "short_stakes_blocks": [],
+            "block_cider_missing_blocks": [],
+            "no_cider_blocks": [],
+            "pain_only_exit_blocks": [],
+            "cider_receipt_line_missing_blocks": [],
             "same_location_clone_blocks": [],
             "same_location_clone_count": 0,
             "diegetic_meta_ref_examples": [],
@@ -571,6 +614,10 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
     critical_thin_blocks: list[int] = []
     thin_blocks: list[int] = []
     short_stakes_blocks: list[int] = []
+    block_cider_missing_blocks: list[int] = []
+    no_cider_blocks: list[int] = []
+    pain_only_exit_blocks: list[int] = []
+    cider_receipt_line_missing_blocks: list[int] = []
     recognition_signal_blocks = 0
     recognition_gap_streak = 0
     max_recognition_gap_streak = 0
@@ -626,6 +673,16 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             business_sector_missing += 1
         if is_blankish(genre.get("section_rotation")):
             section_rotation_missing += 1
+
+        block_cider = extract_block_cider_state(block)
+        if not block_cider["present"]:
+            block_cider_missing_blocks.append(block_no)
+        if not block_cider["has_cider"]:
+            no_cider_blocks.append(block_no)
+        if not block_cider["receipt_line"]:
+            cider_receipt_line_missing_blocks.append(block_no)
+        if block_cider["pain_only_exit"]:
+            pain_only_exit_blocks.append(block_no)
 
         foreshadow_total += len([text for text in ensure_list(block.get("foreshadow")) if as_text(text)])
         callback_total += len([text for text in ensure_list(block.get("callback")) if as_text(text)])
@@ -699,6 +756,10 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         "late_thin_blocks_zero": not any(block_no > len(blocks) - 10 for block_no in thin_blocks),
         "short_stakes_blocks_total_ok": len(short_stakes_blocks) <= 2,
         "endgame_low_stakes_zero": len(endgame_low_stakes_blocks) == 0,
+        "block_cider_declared": len(block_cider_missing_blocks) == 0,
+        "no_cider_blocks_zero": len(no_cider_blocks) == 0,
+        "pain_only_exit_blocks_zero": len(pain_only_exit_blocks) == 0,
+        "cider_receipt_line_present": len(cider_receipt_line_missing_blocks) == 0,
         "callback_ratio_ok": callback_ratio >= 0.65,
         "unresolved_foreshadow_count_ok": unresolved_foreshadow_count <= (foreshadow_total * 0.35),
         "section_rotation_present": section_rotation_missing == 0,
@@ -758,6 +819,10 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         "critical_thin_blocks": critical_thin_blocks,
         "thin_blocks": thin_blocks,
         "short_stakes_blocks": short_stakes_blocks,
+        "block_cider_missing_blocks": block_cider_missing_blocks,
+        "no_cider_blocks": no_cider_blocks,
+        "pain_only_exit_blocks": pain_only_exit_blocks,
+        "cider_receipt_line_missing_blocks": cider_receipt_line_missing_blocks,
         "same_location_clone_blocks": same_location_clone_blocks,
         "same_location_clone_count": len(same_location_clone_blocks),
         "diegetic_meta_ref_examples": diegetic_meta_ref_examples,
@@ -1164,6 +1229,12 @@ def prompt_json_skeleton(start: int, batch_size: int, protagonist: str) -> str:
             "section_rotation": "원자재 첫 증명과 숏 준비",
             "global_partner": {"name": "파트너", "cadence": "비정형", "objective": "목적"},
             "success_pattern": "한국어 결과 패턴",
+            "block_cider": {
+                "has_cider": True,
+                "receipt_type": "재평가 + 권한 이동",
+                "receipt_line": "이번 블록 안에서 회의 참석자들이 주인공에게 예산 재검토 권한을 넘기며 same-block 사이다가 지급된다.",
+                "pain_only_exit": False
+            }
         },
         "regression_ext": {
             "is_regressor": True,
@@ -1256,7 +1327,8 @@ def build_prompt(
     if mode == "flash":
         predeclare = """1. 직전 상태 인용: 직전 블록의 capital_after, emotional_beat, 관계 after를 인용하라.
 2. 자본 계산: capital_before = 직전 capital_after. 이번 변화 근거와 계산식을 적어라.
-3. 차별화 1줄: 직전 블록과 가장 크게 달라진 지점을 1문장으로 써라."""
+3. same-block 사이다 영수증: 이번 블록의 `genre_ext.block_cider.receipt_line`을 1문장으로 먼저 적어라.
+4. 차별화 1줄: 직전 블록과 가장 크게 달라진 지점을 1문장으로 써라."""
         batch_rule = "배치는 3블록이며, JSON 뒤에 3블록 차이 행렬과 OPEN 복선 원장만 출력하라."
     else:
         predeclare = """1. 이전 블록 잔향
@@ -1264,7 +1336,8 @@ def build_prompt(
 3. 5필드 차별화 증명
 4. 자본 계산 과정
 5. NPC 관계 이월
-6. 언어·형식 체크"""
+6. 각 블록 `genre_ext.block_cider` 사이다 영수증 확인
+7. 언어·형식 체크"""
         batch_rule = "배치가 끝나면 차이 행렬, NPC 추적표, 복선 원장, 자본 곡선을 출력하라."
 
     lines = [
@@ -1316,6 +1389,8 @@ def build_prompt(
         "- 70블록 단일 출력 금지",
         "- 한국어 대신 영문 템플릿 사용 금지",
         "- `plan_01`, `type_1`, `_B01` 같은 코드형 값 금지",
+        "- 각 블록은 `genre_ext.block_cider.has_cider=true`, `receipt_line` 1줄, `pain_only_exit=false`를 반드시 포함할 것",
+        "- quiet/setup/recovery/political block이라도 same-block 영수증 없이 닫지 말 것",
         "- callback을 `직전 블록의 성과가 발판` 한 문장으로 때우는 것 금지",
         "- `Block 3`, `B12`, `블록 7`, `ARC-01`, `Phase 1`, `Stage 4` 같은 메타 표기는 자연어 필드 전면 금지",
         "- 복선/회수 타깃 블록은 `foreshadow_targets` / `callback_sources`에만 적고, `foreshadow` / `callback`에는 자연어 의미만 적을 것",
@@ -1414,6 +1489,18 @@ def validate_candidate(
                 append_finding(findings, "P0", "CONTENT-001", label, f"content.{field}가 비어 있다.")
 
         genre = ensure_dict(block, "genre_ext")
+        block_cider = ensure_dict(genre, "block_cider")
+        has_cider = parse_bool_flag(block_cider.get("has_cider"))
+        pain_only_exit = parse_bool_flag(block_cider.get("pain_only_exit"))
+        if has_cider is not True:
+            append_finding(findings, "P0", "CIDER-001", label, "genre_ext.block_cider.has_cider=true가 필수다.")
+        if not as_text(block_cider.get("receipt_type")):
+            append_finding(findings, "P1", "CIDER-002", label, "genre_ext.block_cider.receipt_type이 비어 있다.")
+        if not as_text(block_cider.get("receipt_line")):
+            append_finding(findings, "P0", "CIDER-003", label, "genre_ext.block_cider.receipt_line이 비어 있다.")
+        if pain_only_exit is True:
+            append_finding(findings, "P0", "CIDER-004", label, "genre_ext.block_cider.pain_only_exit=true는 허용되지 않는다.")
+
         before_raw = as_text(genre.get("capital_before"))
         after_raw = as_text(genre.get("capital_after"))
         delta_raw = as_text(genre.get("capital_delta"))

@@ -6,8 +6,10 @@ Scope: selection checklist for fresh pitch candidates under `material_ssot/20_pi
 
 ## 1. How To Use
 
+- use this after reading `cider-doctrine-v1.md`
 - use this after reading `pitch-philosophy.md` and `protagonist-first-constitution.md`
 - this checklist is for `fresh candidate -> selection-ready -> canon candidate` judgment
+- before a real canon promotion, run `python -X utf8 scripts/material_promotion_gate.py --stage canon --path <candidate-md>`
 - do not promote because the idea is broad, flashy, or research-heavy
 - judge protagonist engine first, domain materials second
 - current active operator lane is `male protagonist only`
@@ -30,7 +32,8 @@ Verdict bands:
 | 1 | 주인공은 결핍은 있어도 과실은 없는가 | 저평가 이유가 재능 부족, 자리 부족, 정치적 희생, 잘못된 기준, 빙의 전 몸의 과실 | 현재 주인공 본인의 게으름, 무책임, 자업자득 추락 |
 | 2 | 주인공은 비굴하지 않은가 | 억울해도 구걸하거나 징징대지 않음 | 인정 구걸, 자기비하, 장광설 변명 |
 | 3 | 첫 승리가 평가 수정을 만드는가 | 사람들의 태도 변화가 찍힘 | 사건만 해결되고 평가가 그대로 |
-| 4 | 첫 블록(대략 3~6화) 안에 주인공 고유 유능함 기반 임팩트 장면이 있는가 | `저건 쟤라서 가능했다`가 보임 | 결과는 큰데 누구나 했을 것 같음 |
+| 4 | 첫 블록(엄격히 `2~6`) 안에 주인공 고유 유능함 기반 임팩트 장면이 있는가 | `저건 쟤라서 가능했다`가 보임 | 결과는 큰데 누구나 했을 것 같음 |
+| 4A | `first_block_cider_ledger`가 selection-ready 기준을 충족하는가 | blocks `2~6` 다섯 줄이 모두 있고, 전부 `has_cider: true`, same-block payback이 보임 | "초반에 대충 있음", no 블록을 bridge note로 구제, 7화 이후 보상으로 구제, blank ledger |
 | 5 | 초반 보상이 서열 변화를 동반하는가 | 이름, 자리, 접근권, 보호, 경계, 입장권 | 돈 몇 푼, 칭찬 한 줄, 생존만 함 |
 | 6 | 첫 성공 뒤 순수 처벌 스파이럴이 아닌가 | 같은 Arc 안에서 보호 또는 권한 벡터가 붙음 | 감시, 의심, 유예 생존만 남음 |
 | 7 | 주인공이 무능해 보이지 않는가 | 실패해도 자리/권한/판이 불리했음이 보임 | 그냥 못해서 짐 |
@@ -85,6 +88,8 @@ Verdict bands:
 
 - 소재는 좋다
 - 하지만 주인공 과실, 첫 간판 장면, 첫 보상, 위기 대응, 태도 변화 중 1~2개가 약하다
+- 혹은 `first_block_cider_ledger`가 비어 있거나 yes/no 표기가 흐리다
+- 혹은 `first_block_cider_ledger`에 `has_cider: false` row가 남아 있다
 - premise를 버리기보다 protagonist engine을 재잠그는 게 먼저다
 
 ### REJECT

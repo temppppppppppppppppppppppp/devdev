@@ -120,6 +120,17 @@ def test_lane_c_build_director_validation_result_keeps_pass_with_fix_contract():
             "fix_scope_reasoning": "reasoned",
             "re_slice_instruction": "slice again",
             "selection_reason": "selected after review",
+            "patch_target_records": [
+                {
+                    "summary": "scene_2.summary",
+                    "scene_id": "scene_2",
+                    "field_path": "scene_breakdown.scene_2.summary",
+                    "target_kind": "scene_block",
+                }
+            ],
+            "must_fix": ["scene 2 summary must reflect the repaired reveal"],
+            "do_not_regress": ["scene 1 opening cadence must stay intact"],
+            "success_condition": "scene 2 now states the reveal without rewriting the arc shell",
         },
     )
 
@@ -131,6 +142,11 @@ def test_lane_c_build_director_validation_result_keeps_pass_with_fix_contract():
     assert result["selection_reason"] == "selected after review"
     assert result["verdict_reason"] == "needs repair"
     assert result["quality_risk"] is True
+    assert result["fix_pack"]["patch_targets"] == ["scene_2.summary"]
+    assert result["fix_pack"]["patch_target_records"][0]["scene_id"] == "scene_2"
+    assert result["fix_pack"]["target_kind"] == "scene_block"
+    assert result["fix_pack"]["must_fix"] == ["scene 2 summary must reflect the repaired reveal"]
+    assert result["fix_pack"]["success_condition"] == "scene 2 now states the reveal without rewriting the arc shell"
     assert blueprint["_ensemble_meta"]["python_warnings"][0]["source"] == "python_prevalidate"
 
 
@@ -194,7 +210,9 @@ def test_lane_c_python_pre_validate_combines_structure_fidelity_and_continuity()
 
     categories = [issue["category"] for issue in pre_result["issues"]]
 
-    assert categories == ["structure", "structure", "structure", "fidelity", "continuity"]
+    assert categories[:5] == ["structure", "structure", "structure", "fidelity", "continuity"]
+    assert "opening_anchor" in categories
+    assert "mission_clarity" in categories
     assert pre_result["has_critical"] is False
     assert pre_result["has_major_excess"] is True
     assert pre_result["critical_summary"] == ""
@@ -304,7 +322,53 @@ def test_lane_c_build_director_validation_result_escalates_binding_issue_to_pass
     assert result["revision_required"] is True
     assert result["fix_scope"] == "inplace"
     assert result["binding_prevalidation_issue_count"] == 1
+    assert result["binding_prevalidation_categories"] == ["scene_completeness"]
     assert "[Binding prevalidation]" in result["feedback"]
+
+
+def test_lane_c_build_director_validation_result_escalates_dead_npc_and_fact_lock_binding_categories():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    blueprint = {}
+
+    verdict, result = validator._build_director_validation_result(
+        blueprint=blueprint,
+        pre_result={
+            "issues": [
+                {
+                    "severity": "CRITICAL",
+                    "category": "dead_npc",
+                    "issue": "죽은 NPC 등장: 흑풍",
+                    "fix_hint": "죽은 NPC는 회상/언급만 허용",
+                },
+                {
+                    "severity": "MAJOR",
+                    "category": "fact_lock_location",
+                    "issue": "위치 사실잠금 위반: 확정 위치 '북문' -> blueprint 시작 '남문'",
+                    "fix_hint": "이전 화 종료 위치에서 시작하거나 이동 경위를 명시",
+                },
+                {
+                    "severity": "CRITICAL",
+                    "category": "arc_compliance",
+                    "issue": "정지선 위반: 다음 화 내용 포함",
+                    "fix_hint": "이번 화 범위 내에서만 작성",
+                },
+            ]
+        },
+        director_result={
+            "decision": "PASS",
+            "reason": "narrative quality okay",
+            "feedback": "",
+            "score": 84,
+        },
+    )
+
+    assert verdict == "PASS_WITH_FIX"
+    assert result["binding_prevalidation_issue_count"] == 3
+    assert result["binding_prevalidation_categories"] == [
+        "dead_npc",
+        "fact_lock_location",
+        "arc_compliance",
+    ]
 
 
 def test_lane_c_python_pre_validate_flags_capital_unit_drift_as_major():
@@ -399,6 +463,7 @@ def test_lane_c_build_director_validation_result_escalates_capital_unit_issue_to
     assert result["verdict"] == "PASS_WITH_FIX"
     assert result["revision_required"] is True
     assert result["binding_prevalidation_issue_count"] == 1
+    assert result["binding_prevalidation_categories"] == ["capital_unit"]
     assert "[Binding prevalidation]" in result["feedback"]
 
 
@@ -510,4 +575,5 @@ def test_lane_c_run_compare_validation_escalates_capital_unit_issue_to_pass_with
     assert result["verdict"] == "PASS_WITH_FIX"
     assert result["revision_required"] is True
     assert result["binding_prevalidation_issue_count"] == 1
+    assert result["binding_prevalidation_categories"] == ["capital_unit"]
     assert "[Binding prevalidation]" in result["feedback"]

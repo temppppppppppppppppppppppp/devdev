@@ -1,5 +1,5 @@
 Date: 2026-04-02
-Status: parked
+Status: pending (promoted from parked on 2026-04-07 roadmap reorder; long-horizon Stage0 source-of-truth lane kept below nearer bounded slices)
 Canonical Path: `docs/2026-04-02/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
 Baseline Commit: `aaf495d6`
@@ -27,7 +27,7 @@ Side-Effect Coverage:
 
 세 군데에 권위를 분산시키고 있다는 점이다.
 
-따라서 이 lane은 지금 바로 구현할 본선이 아니라, `parked future wave`로 유지한다.
+따라서 이 lane은 지금 바로 구현할 본선이 아니라, `promoted pending long-horizon lane`으로 유지한다.
 
 장기 방향은 다음 둘 중 하나다.
 
@@ -103,7 +103,7 @@ Side-Effect Coverage:
 
 # 7. Acceptance Criteria
 
-이 parked wave를 나중에 활성화할 경우, 최소 acceptance criteria는 아래다.
+이 pending lane을 나중에 활성화할 경우, 최소 acceptance criteria는 아래다.
 
 1. raw artifact truth와 runtime handoff truth의 owner가 문서와 코드에서 명시된다.
 2. `plot_roadmap`와 `protagonist_config`가 어디서 authoritative한지 고정된다.
@@ -146,10 +146,10 @@ production harness normalization
 
 # 9. Queue Placement
 
-이 lane은 `parked future wave`다.
+이 lane은 `promoted pending long-horizon lane`이다.
 
 - active Stage4 remediation 아래
-- parked `Stage3` / `Stage2` normalization 아래
+- pending `Stage3` / `Stage2` normalization 아래
 - `stage0-treatment-enrich-retirement-remediation` 아래
 
 이유:
@@ -166,13 +166,13 @@ production harness normalization
 
 - `dual artifact 운영은 임시방편 성격이 강함`
 - `split truth 정리`가 장기 목표
-- `BI/TR production harness normalization`은 parked future wave
+- `BI/TR production harness normalization`은 promoted pending long-horizon lane
 
 # 11. 3-Pass Audit
 
 Pass 1. Structure/Scope
 - execution SSOT 형식 적합
-- parked future wave 성격 명시
+- pending queue lane 성격 명시
 - included/excluded scope 분리 완료
 
 Pass 2. Evidence/Consistency

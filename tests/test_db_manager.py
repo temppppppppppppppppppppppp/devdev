@@ -768,6 +768,26 @@ def test_get_latest_stage4_gate_repair_snapshot_surfaces_repair_contract_and_sco
                 "repair_scope": "partial",
                 "provenance": "runtime_synthesized",
             },
+            "partial_fix_eval": {
+                "patch_round": 2,
+                "is_patch_attempt": True,
+                "patch_target_id": "pt:movement",
+                "target_kind": "local_sentence",
+                "must_fix_resolved": None,
+                "do_not_regress_held": None,
+                "success_condition_met": None,
+                "fallback_reason": "",
+            },
+            "repair_trace": [
+                {
+                    "target": "scene_7",
+                    "target_kind": "local_sentence",
+                    "patch_target_id": "pt:movement",
+                    "old_excerpt": "old movement sentence",
+                    "new_excerpt": "new movement sentence",
+                    "why_changed": "repair opening motion",
+                }
+            ],
             "scope_authority": {
                 "fix_scope": "partial",
                 "repair_scope": "partial",
@@ -794,6 +814,8 @@ def test_get_latest_stage4_gate_repair_snapshot_surfaces_repair_contract_and_sco
     assert row["repair_scope"] == "partial"
     assert row["fix_scope"] == "partial"
     assert row["authoritative_fix_scope"] == "inplace"
+    assert row["repair_contract_subtype"] == "movement"
+    assert row["repair_contract_provenance"] == "runtime_synthesized"
     assert row["repair_contract"] == {
         "subtype": "movement",
         "fix_scope": "partial",
@@ -811,7 +833,19 @@ def test_get_latest_stage4_gate_repair_snapshot_surfaces_repair_contract_and_sco
         },
         "widened": True,
     }
+    assert row["scope_authority_fix_scope"] == "partial"
+    assert row["scope_authority_authoritative_fix_scope"] == "inplace"
+    assert row["scope_authority_scope_origin"] == {
+        "fix_scope": "runtime_widened",
+        "authoritative_fix_scope": "director_authoritative",
+        "repair_scope": "runtime_lane",
+    }
+    assert row["scope_authority_widened"] is True
     assert row["retry_budget_axes"] == {"repair": "patch_revision"}
+    assert row["partial_fix_eval"]["patch_round"] == 2
+    assert row["partial_fix_eval"]["patch_target_id"] == "pt:movement"
+    assert row["repair_trace"][0]["target"] == "scene_7"
+    assert row["repair_trace"][0]["new_excerpt"] == "new movement sentence"
     assert row["final_authority_sink"] == "stage_attempts"
     assert row["director_quality_passed"] is True
     assert row["downstream_override_applied"] is True
@@ -873,6 +907,8 @@ def test_get_latest_stage4_gate_repair_snapshot_backfills_nested_gate_contract_f
     assert row["repair_scope"] == "partial"
     assert row["fix_scope"] == "partial"
     assert row["authoritative_fix_scope"] == "inplace"
+    assert row["repair_contract_subtype"] == "numeric_carryover_authority"
+    assert row["repair_contract_provenance"] == "runtime_synthesized"
     assert row["repair_contract"] == {
         "subtype": "numeric_carryover_authority",
         "fix_scope": "partial",
@@ -891,6 +927,14 @@ def test_get_latest_stage4_gate_repair_snapshot_backfills_nested_gate_contract_f
         },
         "widened": True,
     }
+    assert row["scope_authority_fix_scope"] == "partial"
+    assert row["scope_authority_authoritative_fix_scope"] == "inplace"
+    assert row["scope_authority_scope_origin"] == {
+        "fix_scope": "runtime_widened",
+        "authoritative_fix_scope": "director_authoritative",
+        "repair_scope": "runtime_lane",
+    }
+    assert row["scope_authority_widened"] is True
 
 
 def test_get_latest_stage4_gate_repair_snapshot_falls_back_to_root_fix_scope_column(db):
@@ -923,8 +967,14 @@ def test_get_latest_stage4_gate_repair_snapshot_falls_back_to_root_fix_scope_col
     assert row["gate_basis"] == "quality_floor_fail"
     assert row["fix_scope"] == "partial"
     assert row["authoritative_fix_scope"] == "inplace"
+    assert row["repair_contract_subtype"] == ""
+    assert row["repair_contract_provenance"] == ""
     assert row["repair_contract"] == {}
     assert row["scope_authority"] == {}
+    assert row["scope_authority_fix_scope"] == "partial"
+    assert row["scope_authority_authoritative_fix_scope"] == "inplace"
+    assert row["scope_authority_scope_origin"] is None
+    assert row["scope_authority_widened"] is True
 
 
 def test_save_director_selection_persists_director_thinking(db):

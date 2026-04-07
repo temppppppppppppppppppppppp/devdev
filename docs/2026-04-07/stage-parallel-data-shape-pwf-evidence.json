@@ -1,0 +1,91 @@
+{
+  "topic": "stage-parallel-data-shape-pwf",
+  "date": "2026-04-07",
+  "baseline_commit": "5a2ef92ab04e46d47ee73b9d56d3e546544576c0",
+  "baseline_dirty_summary": "dirty: 81 tracked, 52 untracked; hotspots: docs, treatments, material_ssot, bible, scripts, modules",
+  "assumption": "PWF interpreted as PASS_WITH_FIX family",
+  "queue_note": {
+    "temp_controller_present": true,
+    "temp_roadmap_path": "docs/temp/execution-roadmap.md",
+    "temp_queue_item_count": 18,
+    "queue_mutated_by_this_survey": false
+  },
+  "ast_counts": {
+    "stage0": {
+      "dict_literals": 112,
+      "list_literals": 130,
+      "dict_return_annotations": 13,
+      "list_return_annotations": 16
+    },
+    "stage2": {
+      "dict_literals": 198,
+      "list_literals": 158,
+      "dict_return_annotations": 46,
+      "list_return_annotations": 10
+    },
+    "stage3": {
+      "dict_literals": 226,
+      "list_literals": 92,
+      "dict_return_annotations": 21,
+      "list_return_annotations": 7
+    },
+    "stage4": {
+      "dict_literals": 696,
+      "list_literals": 544,
+      "dict_return_annotations": 138,
+      "list_return_annotations": 70
+    }
+  },
+  "key_references": {
+    "stage0": [
+      "modules/core/response_schemas.py:900-919",
+      "modules/core/response_schemas.py:923-939",
+      "modules/core/response_schemas.py:973-1001",
+      "modules/core/stage0_handoff.py:329-400"
+    ],
+    "stage2": [
+      "modules/core/stage2_context.py:21-58",
+      "modules/core/stage2_context.py:89-105",
+      "modules/core/stage2_contracts.py:19-37",
+      "modules/core/stage2_finalizer.py:361-380",
+      "modules/core/stage2_finalizer.py:1091-1109",
+      "modules/core/stage2_finalizer.py:2225-2245",
+      "modules/core/stage2_finalizer.py:2297-2308",
+      "modules/core/stage2_finalizer.py:2362-2369",
+      "modules/core/stage2_finalizer.py:2520-2552"
+    ],
+    "stage3": [
+      "modules/core/stage3_orchestrator.py:1733-1739",
+      "modules/core/stage3_orchestrator.py:2449-2521",
+      "modules/domain/agents/three_phase_blueprint_runtime.py:964-978",
+      "modules/domain/agents/three_phase_blueprint_runtime.py:1018-1045",
+      "modules/domain/agents/three_phase_blueprint_runtime.py:1130-1158"
+    ],
+    "stage4": [
+      "modules/core/stage4_types.py:15-89",
+      "modules/core/stage4_retry_runtime.py:14-83",
+      "modules/core/stage4_interview_round.py:2696-2757",
+      "modules/core/stage4_interview_round.py:6737-6745",
+      "modules/domain/agents/chief_writer.py:1335-1396",
+      "modules/domain/agents/chief_writer.py:1447-1505",
+      "modules/domain/agents/chief_writer_inplace_local_ops.py:20-45",
+      "modules/domain/agents/chief_writer_inplace_local_ops.py:82-120",
+      "modules/domain/agents/chief_writer_inplace_local_ops.py:164-220",
+      "modules/domain/agents/director_ensemble.py:2036-2063",
+      "modules/domain/agents/director_ensemble.py:2329-2350"
+    ]
+  },
+  "conclusions": {
+    "overall_shape": "dict-first with nested ordered lists",
+    "stage0_shape": "dict-first canonical path with strong list compatibility and roadmap sequencing",
+    "stage2_shape": "dict-dominant",
+    "stage3_shape": "dict-dominant",
+    "stage4_shape": "dict-dominant",
+    "pwf_style": "targeted repair instructions and target-aware patch metadata, not unified diff text",
+    "pwf_targeting_strength": {
+      "stage2": "instruction string plus fix_scope",
+      "stage3": "instruction string plus fix_scope",
+      "stage4": "scene targets and anchored replace operations"
+    }
+  }
+}

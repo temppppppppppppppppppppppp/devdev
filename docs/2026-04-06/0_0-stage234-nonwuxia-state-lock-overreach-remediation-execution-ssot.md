@@ -1,14 +1,14 @@
 # 0_0 Stage234 Nonwuxia State-Lock Overreach Remediation Execution SSOT
 
 Date: 2026-04-06
-Status: partially_realized (2026-04-06 Stage2 producer tranche landed with targeted tests and hygiene/compile checks passing, and the 2026-04-07 workspace reinspection confirmed the Stage4 intake/post-pass tranche is still pending with no hidden landing found)
+Status: partially_realized (2026-04-06 Stage2 producer tranche landed with targeted tests and hygiene/compile checks passing; the 2026-04-07 workspace reinspection reconfirmed the pending Stage4 tranche; later on 2026-04-07 the bounded Stage4 intake/post-pass normalization patch landed with focused regression/static validation, while canary/live proof remains deferred so closure is still pending)
 Canonical Path: `docs/2026-04-06/0_0-stage234-nonwuxia-state-lock-overreach-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage234-nonwuxia-state-lock-overreach-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `5c71b81a36ab2cbae824c630bb63219354b913a8`
 - Baseline Dirty Summary: `dirty: 6 untracked 2026-04-06 survey docs (bounded survey + lane1-5)`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `same HEAD; working tree includes landed Stage2 producer-side normalization in arc_ensemble.py, state_extractor.py, analyst.yaml, analyst_prompts.py, shared recovery helper, and targeted Stage2 regressions, while the 2026-04-07 workspace reinspection found the Stage4 target files/tests still encode genre-blind opening/carryover hardening`
+- Resume Drift Summary: `same HEAD; Stage2 producer-side normalization remains landed in arc_ensemble.py, state_extractor.py, analyst.yaml, analyst_prompts.py, shared recovery helper, and targeted Stage2 regressions; the 2026-04-07 workspace reinspection first reconfirmed the pending Stage4 seam, and the same-day bounded Stage4 tranche then landed in non_wuxia_recovery_policy.py, stage4_context_builder.py, stage4_immutable_fact_contract.py, and stage4_post_processor.py with focused regression/static validation while canary/live proof stays deferred`
 Source Survey Docs:
 - `docs/2026-04-06/stage234-nonwuxia-state-lock-overreach-full-survey-audit-order.md`
 - `docs/2026-04-06/stage234-nonwuxia-state-lock-overreach-bounded-survey.md`
@@ -356,3 +356,39 @@ Implementation-ready owner set:
 - `tests/test_stage4_post_processor.py`
 
 Confidence for this reinspection update: `97%`
+
+## 17. 2026-04-07 Bounded Stage4 Tranche Landed
+
+Implementation evidence:
+
+- `modules/core/non_wuxia_recovery_policy.py`
+- `modules/core/stage4_context_builder.py`
+- `modules/core/stage4_immutable_fact_contract.py`
+- `modules/core/stage4_post_processor.py`
+- `tests/test_stage4_context_builder.py`
+- `tests/test_stage4_immutable_fact_contract.py`
+- `tests/test_stage4_post_processor.py`
+
+What landed:
+
+1. shared non-wuxia chain-link normalization now classifies mild `physical_state` and routine `pending_actions` as soft carryover while preserving hard injury / blocking action continuity
+2. `[Stage4 Opening Scene Authority]` now keeps hard-canon behavior for wuxia but downgrades non-wuxia soft carryover to baseline/reference guidance when the opening explicitly states the new condition
+3. chain-link load/render surfaces now emit hard carryover fields separately from `soft_physical_state` / `soft_carryover_pending_actions`
+4. immutable fact packet rendering now preserves soft carryover as reference-only guidance rather than a hard opening obligation
+5. post-pass `chain_link_{ep}` persistence now normalizes non-wuxia soft carryover before save so mild fatigue and routine actions stop becoming sticky by default
+
+Focused validation:
+
+- `python -m py_compile modules/core/non_wuxia_recovery_policy.py modules/core/stage4_context_builder.py modules/core/stage4_immutable_fact_contract.py modules/core/stage4_post_processor.py tests/test_stage4_context_builder.py tests/test_stage4_immutable_fact_contract.py tests/test_stage4_post_processor.py`
+- `pytest tests/test_stage4_context_builder.py -q`
+- `pytest tests/test_stage4_immutable_fact_contract.py -q`
+- `pytest tests/test_stage4_post_processor.py -q`
+- `ruff check modules/core/non_wuxia_recovery_policy.py modules/core/stage4_context_builder.py modules/core/stage4_immutable_fact_contract.py modules/core/stage4_post_processor.py tests/test_stage4_context_builder.py tests/test_stage4_immutable_fact_contract.py tests/test_stage4_post_processor.py`
+
+Queue consequence after landing:
+
+- keep status as `partially_realized` until bounded canary/live proof is recorded
+- keep Stage3 as optional follow-on only if later runtime evidence still shows a residual genre-blind inherited-state seam
+- if the active Stage4 pair and this lane all remain proof-deferred, the next unopened code lane becomes `0_0-stage2-contract-normalization-remediation`
+
+Confidence for this implementation update: `97%`

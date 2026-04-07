@@ -31,8 +31,14 @@ from modules.core.context_advisor import (
     build_context_observation,
 )
 from modules.core.context_compression import ContextCompressor
+from modules.core.genre_schema_builder import is_wuxia
+from modules.core.non_wuxia_recovery_policy import normalize_chain_link_for_genre, normalize_genre_type
 from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.core.stage4_context_packets import Stage4ContextPackets
+from modules.core.stage_cross_stage_contract import (
+    resolve_cross_stage_constraint_summary,
+    resolve_cross_stage_episode_mission_lines,
+)
 from modules.core.tactical_utils import extract_episode_tactical
 from modules.core.writer_prompt_builders import (
     _check_hud_anomalies as _detect_hud_anomalies,
@@ -235,6 +241,27 @@ class Stage4ContextBuilder:
         except Exception as exc:
             logging.debug("[Stage4ContextBuilder] bible protagonist 조회 실패 (비치명): %s", exc)
             return ""
+
+    def _resolve_stage4_genre_type(self, explicit_genre_type: str = "") -> str:
+        candidates: list[object] = [explicit_genre_type]
+        selected_genre = getattr(self.ctx, "selected_genre", None)
+        if isinstance(selected_genre, dict):
+            candidates.extend([selected_genre.get("type"), selected_genre.get("name")])
+        project_genre = getattr(getattr(self.ctx, "current_project", None), "genre", None)
+        if isinstance(project_genre, dict):
+            candidates.extend([project_genre.get("type"), project_genre.get("name")])
+        for candidate in candidates:
+            normalized = normalize_genre_type(candidate)
+            if normalized:
+                return normalized
+        return "wuxia"
+
+    @staticmethod
+    def _render_chain_link_items(value: object) -> str:
+        if isinstance(value, list):
+            items = [str(item or "").strip() for item in value if str(item or "").strip()]
+            return ", ".join(items)
+        return str(value or "").strip()
 
     @staticmethod
     def _extract_npc_tokens(query: str) -> list[str]:
@@ -693,6 +720,7 @@ class Stage4ContextBuilder:
         prev_ending: str,
         blueprint: dict | None,
         cp_entities: dict[str, list[str] | str] | None,
+        next_ep: int | None = None,
         max_chars: int = 4000,
     ) -> str:
         parts: list[str] = []
@@ -701,10 +729,16 @@ class Stage4ContextBuilder:
         if prev_ending:
             parts.append(str(prev_ending))
         if isinstance(arc_data, dict):
-            for key in ("constraint_summary", "goal", "core_conflict", "hook"):
+            constraint_summary = resolve_cross_stage_constraint_summary(arc_data)
+            if constraint_summary:
+                parts.append(constraint_summary)
+            for key in ("goal", "core_conflict", "hook"):
                 value = str(arc_data.get(key, "") or "").strip()
                 if value:
                     parts.append(value)
+            mission_lines = resolve_cross_stage_episode_mission_lines(arc_data, ep_num=next_ep)
+            if mission_lines:
+                parts.extend(mission_lines)
         if isinstance(blueprint, dict):
             for key in ("title", "summary", "hook", "core_conflict", "goal", "twist"):
                 value = str(blueprint.get(key, "") or "").strip()
@@ -740,6 +774,7 @@ class Stage4ContextBuilder:
         prev_ending: str,
         blueprint: dict | None,
         cp_entities: dict[str, list[str] | str] | None,
+        next_ep: int | None = None,
     ) -> WorkRetrievalFocusPayload:
         guard = getattr(getattr(self.ctx, "sys", None), "guard", None)
         if not guard or not hasattr(guard, "select_retrieval_focus"):
@@ -751,6 +786,7 @@ class Stage4ContextBuilder:
             prev_ending=prev_ending,
             blueprint=blueprint,
             cp_entities=cp_entities,
+            next_ep=next_ep,
         )
         try:
             focus = guard.select_retrieval_focus(stage=stage, focus_text=focus_text)
@@ -766,6 +802,7 @@ class Stage4ContextBuilder:
         focus: WorkRetrievalFocusPayload,
         arc_data: dict | None,
         cp_entities: dict[str, list[str] | str] | None,
+        next_ep: int | None = None,
         max_chars: int = 1800,
     ) -> str:
         if not isinstance(focus, dict) or not focus:
@@ -809,9 +846,15 @@ class Stage4ContextBuilder:
                 lines.append(f"- 이번 화 연동 엔티티: {' | '.join(linked_parts)}")
 
         if isinstance(arc_data, dict):
-            constraint_summary = self._trim_summary_value(arc_data.get("constraint_summary", ""), 160)
+            constraint_summary = self._trim_summary_value(
+                resolve_cross_stage_constraint_summary(arc_data),
+                160,
+            )
             if constraint_summary:
                 lines.append(f"- 현재 갈등축: {constraint_summary}")
+            mission_lines = resolve_cross_stage_episode_mission_lines(arc_data, ep_num=next_ep, limit=2)
+            if mission_lines:
+                lines.append(f"- 현재 화 mission packet: {' | '.join(mission_lines)}")
 
         try:
             protagonist_name = self._resolve_protagonist_name()
@@ -820,7 +863,8 @@ class Stage4ContextBuilder:
                     ", ".join(tracking_slots),
                     ", ".join(scene_engines),
                     " ".join(str(profile.get("purpose", "") or "") for profile in registry_profiles),
-                    str((arc_data or {}).get("constraint_summary", "") or ""),
+                    resolve_cross_stage_constraint_summary(arc_data),
+                    " ".join(resolve_cross_stage_episode_mission_lines(arc_data, ep_num=next_ep, limit=2)),
                 ]
             ).strip()
             broker = SemanticQueryBroker(
@@ -848,6 +892,7 @@ class Stage4ContextBuilder:
         arc_data: dict | None,
         blueprint: dict | None,
         cp_entities: dict[str, list[str] | str] | None,
+        s4_genre_type: str = "",
         prev_ending: str = "",
         chain_link_section: str = "",
         max_chars: int = 2000,
@@ -876,6 +921,11 @@ class Stage4ContextBuilder:
         carryover_pending_actions = carryover_fields.get("pending_actions", "")
         carryover_location = carryover_fields.get("location", "")
         carryover_time_marker = carryover_fields.get("time_marker", "")
+        soft_carryover_fields = self._extract_chain_link_soft_fields(chain_link_section)
+        soft_pending_actions = soft_carryover_fields.get("pending_actions", "")
+        soft_physical_state = soft_carryover_fields.get("physical_state", "")
+        genre_type = self._resolve_stage4_genre_type(s4_genre_type)
+        non_wuxia_genre = not is_wuxia(genre_type)
 
         if not any(
             [
@@ -891,6 +941,8 @@ class Stage4ContextBuilder:
                 carryover_pending_actions,
                 carryover_location,
                 carryover_time_marker,
+                soft_pending_actions,
+                soft_physical_state,
             ]
         ):
             return ""
@@ -907,13 +959,22 @@ class Stage4ContextBuilder:
         lines.extend(
             [
                 "- alternate openings are allowed only with an explicit transition/cut and immediate state declaration.",
-                "- opening scene continuity below is hard canon. Do not improvise a different movement path or camera reset.",
                 "- do not replay a completed prior-episode event in the opening. Continue its aftermath or explicitly transition away from it.",
                 "- if the opening changes location, dominant action, or time band, use an explicit transition sentence or `* * *` first.",
                 "- after `* * *`, state the changed location, time, or action within the next 1-2 sentences.",
                 "- without a transition signal, do not jump to a new room, vehicle, exterior route, or later time band.",
             ]
         )
+        if non_wuxia_genre:
+            lines.insert(
+                len(lines) - 4,
+                "- opening continuity below is baseline authority. Keep true cliffhanger/location/time continuity strong, but allow natural healing or ordinary completion for non-wuxia soft-state carryover when the opening states the shift explicitly.",
+            )
+        else:
+            lines.insert(
+                len(lines) - 4,
+                "- opening scene continuity below is hard canon. Do not improvise a different movement path or camera reset.",
+            )
         if prev_ending_excerpt:
             lines.append(f"- previous ending bridge to honor before new motion: {prev_ending_excerpt}")
         if carryover_cliffhanger:
@@ -927,6 +988,14 @@ class Stage4ContextBuilder:
                 "- opening carryover pending_actions to resolve before new thread or explicitly transition away: "
                 f"{carryover_pending_actions}"
             )
+        if soft_pending_actions or soft_physical_state:
+            lines.append(
+                "- non-wuxia soft carryover below is reference guidance. Natural healing or ordinary off-page completion is allowed when the opening states the changed condition clearly."
+            )
+            if soft_pending_actions:
+                lines.append(f"- soft carryover pending_actions reference: {soft_pending_actions}")
+            if soft_physical_state:
+                lines.append(f"- soft physical_state reference: {soft_physical_state}")
 
         lines.extend(
             [
@@ -1081,6 +1150,26 @@ class Stage4ContextBuilder:
                 continue
             key, _, value = line[2:].partition(":")
             normalized_key = key.replace("carryover_", "", 1).strip()
+            normalized_value = re.sub(r"\s+", " ", value).strip()
+            if normalized_key and normalized_value:
+                fields[normalized_key] = normalized_value
+        return fields
+
+    @staticmethod
+    def _extract_chain_link_soft_fields(chain_link_section: str) -> dict[str, str]:
+        if not chain_link_section:
+            return {}
+        fields: dict[str, str] = {}
+        for raw_line in str(chain_link_section).splitlines():
+            line = raw_line.strip()
+            if line.startswith("- soft_carryover_"):
+                key, _, value = line[2:].partition(":")
+                normalized_key = key.replace("soft_carryover_", "", 1).strip()
+            elif line.startswith("- soft_physical_state:"):
+                normalized_key = "physical_state"
+                _, _, value = line[2:].partition(":")
+            else:
+                continue
             normalized_value = re.sub(r"\s+", " ", value).strip()
             if normalized_key and normalized_value:
                 fields[normalized_key] = normalized_value
@@ -1662,15 +1751,13 @@ class Stage4ContextBuilder:
             _cl_raw = self.ctx.current_project.db.load_anchor(f"chain_link_{next_ep - 1}")
             if not _cl_raw or not isinstance(_cl_raw, dict):
                 return ""
-            _cl_data = _cl_raw
+            _cl_data = normalize_chain_link_for_genre(_cl_raw, self._resolve_stage4_genre_type())
             _cl_parts = ["### [V68] 직전 화 연결고리 - 반드시 이어받을 것"]
             if _cl_data.get("cliffhanger"):
                 _cl_parts.append(f"- 진행 중 상황: {_cl_data['cliffhanger']}")
             if _cl_data.get("pending_actions"):
-                actions = _cl_data["pending_actions"]
-                if isinstance(actions, list):
-                    _cl_parts.append(f"- 해야 할 행동: {', '.join(str(a) for a in actions)}")
-                else:
+                actions = self._render_chain_link_items(_cl_data["pending_actions"])
+                if actions:
                     _cl_parts.append(f"- 해야 할 행동: {actions}")
             if _cl_data.get("emotional_state"):
                 _cl_parts.append(f"- 감정 상태: {_cl_data['emotional_state']}")
@@ -1684,10 +1771,9 @@ class Stage4ContextBuilder:
             if _cl_data.get("cliffhanger"):
                 _carryover_parts.append(f"- carryover_cliffhanger: {_cl_data['cliffhanger']}")
             if _cl_data.get("pending_actions"):
-                actions = _cl_data["pending_actions"]
-                if isinstance(actions, list):
-                    actions = ", ".join(str(a) for a in actions if str(a).strip())
-                _carryover_parts.append(f"- carryover_pending_actions: {actions}")
+                actions = self._render_chain_link_items(_cl_data["pending_actions"])
+                if actions:
+                    _carryover_parts.append(f"- carryover_pending_actions: {actions}")
             if _cl_data.get("location"):
                 _carryover_parts.append(f"- carryover_location: {_cl_data['location']}")
             if _cl_data.get("time_marker"):
@@ -1696,6 +1782,20 @@ class Stage4ContextBuilder:
                 _cl_parts.append("")
                 _cl_parts.append("### [ChainLink Carryover Contract]")
                 _cl_parts.extend(_carryover_parts)
+            _soft_parts = []
+            if _cl_data.get("soft_physical_state"):
+                _soft_parts.append(f"- soft_physical_state: {_cl_data['soft_physical_state']}")
+            if _cl_data.get("soft_pending_actions"):
+                soft_actions = self._render_chain_link_items(_cl_data["soft_pending_actions"])
+                if soft_actions:
+                    _soft_parts.append(f"- soft_carryover_pending_actions: {soft_actions}")
+            if _soft_parts:
+                _cl_parts.append("")
+                _cl_parts.append("### [V68-Soft] 직전 화 soft carryover 참고 - 자연 회복/명시적 전환 허용")
+                _cl_parts.extend(_soft_parts)
+                _cl_parts.append(
+                    "- 비무협 soft state와 routine pending_actions는 opening에서 자연 회복되거나 off-page로 정리될 수 있다. 다만 바뀐 상태는 첫 1-2문장에서 분명히 보여줄 것."
+                )
             if len(_cl_parts) > 1:
                 return "\n".join(_cl_parts)
             return ""
@@ -1906,8 +2006,10 @@ class Stage4ContextBuilder:
     def _build_tier0_mandatory_sections(
         self,
         *,
+        next_ep: int,
         arc_data: dict,
         blueprint: dict | None,
+        s4_genre_type: str,
         prev_ending: str,
         chain_link_section: str,
         cp_entities: dict[str, list[str] | str],
@@ -1928,9 +2030,12 @@ class Stage4ContextBuilder:
         # Sections inserted via insert(0, ...) end up in reverse order of insertion.
         tier0_parts = [mandatory_context] if mandatory_context else []
 
-        arc_constraint_summary = arc_data.get("constraint_summary", "") if arc_data else ""
+        arc_constraint_summary = resolve_cross_stage_constraint_summary(arc_data)
         if arc_constraint_summary:
             tier0_parts.append(f"[Arc 제약 - MUST NOT DO]\n{arc_constraint_summary}")
+        mission_lines = resolve_cross_stage_episode_mission_lines(arc_data, ep_num=next_ep)
+        if mission_lines:
+            tier0_parts.append("[Current Episode Mission Packet]\n" + "\n".join(f"- {line}" for line in mission_lines))
 
         if self.ctx.world_state:
             try:
@@ -2037,6 +2142,7 @@ class Stage4ContextBuilder:
                 arc_data=arc_data,
                 blueprint=blueprint,
                 cp_entities=cp_entities,
+                s4_genre_type=s4_genre_type,
                 prev_ending=prev_ending,
                 chain_link_section=chain_link_section,
             )
@@ -2754,6 +2860,7 @@ class Stage4ContextBuilder:
         seed = self._build_mandatory_context_seed(
             next_ep=next_ep,
             arc_data=arc_data,
+            s4_genre_type=s4_genre_type,
             arc_tactical=arc_tactical,
             prev_ending=prev_ending,
             blueprint=blueprint,
@@ -2848,6 +2955,7 @@ class Stage4ContextBuilder:
         *,
         next_ep: int,
         arc_data: dict,
+        s4_genre_type: str,
         arc_tactical: str,
         prev_ending: str,
         blueprint: dict | None,
@@ -2865,18 +2973,22 @@ class Stage4ContextBuilder:
             prev_ending=prev_ending,
             blueprint=blueprint,
             cp_entities=cp_entities,
+            next_ep=next_ep,
         )
         slot_summary = self._build_work_identity_slot_summary(
             focus=work_focus,
             arc_data=arc_data,
             cp_entities=cp_entities,
+            next_ep=next_ep,
         )
         chain_link_section = self.load_chain_link_section(next_ep)
         if chain_link_section:
             logging.info(f"[V68] 직전 화 연결고리 로드 완료 ({len(chain_link_section)}자)")
         tier0_parts = self._build_tier0_mandatory_sections(
+            next_ep=next_ep,
             arc_data=arc_data,
             blueprint=blueprint,
+            s4_genre_type=s4_genre_type,
             prev_ending=prev_ending,
             chain_link_section=chain_link_section,
             cp_entities=cp_entities,

@@ -79,6 +79,47 @@ Status: fresh candidate
 - domain truth:
   - 비급, 경맥, 운기 순서, 필사 오류, 계승비무, 문파 정통성이 실제 전장이다.
 
+## 4A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 죽은 검식 복원 직후 장로의 공개 보호가 붙어 외문 서고지기 해석이 즉시 바뀐다.
+  receipt_kind: protection
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 장서각 임시 열쇠를 받아 봉인된 비고에 직접 들어갈 수 있게 된다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 문파가 잃어버린 두 번째 비급의 결맥을 발견해 복원 비급 열람 우선권을 얻는다.
+  receipt_kind: knowledge_access
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 경쟁 문파의 위서 비급 사기를 간파해 태허검문의 체면을 지키고 정통성 판정권의 씨앗을 심는다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 내문 진입권을 회수하며 다음 비고와 다음 문파 전장 입장권이 열린다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 4B. Readiness Claim
+
+- selection-ready: no
+- Phase0-ready: no
+- all 2~6 rows pay in-block: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 5. Phase0 Handoff Note
 
 - already_locked:

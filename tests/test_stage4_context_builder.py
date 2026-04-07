@@ -161,6 +161,32 @@ class TestContextTailPreservation:
         assert len(summary) <= 180
         assert "TAIL-REL" in summary
 
+    @patch("modules.core.stage4_context_builder.SemanticQueryBroker")
+    def test_work_identity_slot_summary_uses_cross_stage_constraint_and_mission_aliases(self, broker_cls):
+        ctx = _make_ctx()
+        broker_cls.return_value.build_stage4_relation_slice.return_value = ""
+        cb = Stage4ContextBuilder(ctx)
+
+        summary = cb._build_work_identity_slot_summary(
+            focus={
+                "tracking_slots": ["slot-a"],
+                "mandatory_scene_engines": ["engine-a"],
+                "registry_profiles": [],
+            },
+            arc_data={
+                "arc_constraint_summary": "투자 실패를 외부 음모로 성급히 확정하지 말 것",
+                "episode_details": [
+                    {"ep_num": 7, "details": ["실사 데이터부터 검증", "승계 리스크를 이사회에 공유"]},
+                ],
+            },
+            cp_entities={"npcs": [], "items": [], "plots": ["승계 분쟁"], "locations": ["본사"]},
+            next_ep=7,
+            max_chars=800,
+        )
+
+        assert "현재 갈등축: 투자 실패를 외부 음모로 성급히 확정하지 말 것" in summary
+        assert "현재 화 mission packet: 실사 데이터부터 검증 | 승계 리스크를 이사회에 공유" in summary
+
     def test_fetch_manuscript_excerpt_preserves_recent_tail_context(self):
         ctx = _make_ctx()
         ctx.db = ctx.current_project.db
@@ -234,6 +260,27 @@ class TestLoadChainLinkSection:
         assert "적이 나타났다" in result
         assert "청풍산장" in result
         assert "도망" in result
+
+    def test_demotes_nonwuxia_soft_state_and_routine_actions(self):
+        ctx = _make_ctx()
+        ctx.current_project.genre = {"name": "investment", "type": "investment"}
+        ctx.current_project.db.load_anchor.return_value = {
+            "cliffhanger": "전화가 오기 직전 멈칫했다.",
+            "pending_actions": ["전화를 받기", "현관으로 이동하기"],
+            "physical_state": "신경계 피로 Moderate",
+            "location": "서재 앞 복도",
+            "time_marker": "직후",
+        }
+        cb = Stage4ContextBuilder(ctx)
+
+        result = cb.load_chain_link_section(5)
+
+        assert "### [V68] 직전 화 연결고리 - 반드시 이어받을 것" in result
+        assert "### [V68-Soft] 직전 화 soft carryover 참고 - 자연 회복/명시적 전환 허용" in result
+        assert "- soft_physical_state: 신경계 피로 Moderate" in result
+        assert "- soft_carryover_pending_actions: 전화를 받기, 현관으로 이동하기" in result
+        assert "- carryover_pending_actions:" not in result
+        assert "- 신체 상태: 신경계 피로 Moderate" not in result
 
     def test_no_data_returns_empty(self):
         ctx = _make_ctx()
@@ -319,7 +366,7 @@ class TestBuildContinuityPacketHelpers:
 
         assert len(sections) == 2
         assert sections[0].startswith("• 수치 변화 이력")
-        assert "score: 10 pt(ep2) → 12 pt(ep7)" in sections[0]
+        assert "score: 10 pt(ep2) → 12 pt (ep7 기준)" in sections[0]
         assert "└ ep7: bonus applied" in sections[0]
         assert sections[1] == "• 정설 팩트\nfact"
 
@@ -896,6 +943,51 @@ class TestBuildMandatoryContext:
         assert result["mandatory_context"] == ""
         cb._build_mandatory_context_payload.assert_not_called()
 
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_promotes_arc_constraint_alias_and_episode_mission_packet(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.memory.retrieve_multi_query_context.return_value = ""
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return False
+            if key == "smart_retrieval.stage4_enabled":
+                return False
+            if key == "context.vector_max_results_s4":
+                return 16
+            return default
+
+        with patch("modules.core.stage4_context_builder._threshold", side_effect=threshold_side_effect):
+            result = cb.build_mandatory_context(
+                next_ep=7,
+                arc_data={
+                    "arc_no": 1,
+                    "arc_constraint_summary": "공개 지분 이동을 사적 감정으로 오판하지 말 것",
+                    "episode_details": [
+                        {"ep_num": 7, "details": ["공시 직전 cap table 재확인", "재무팀 보고선 고정"]},
+                    ],
+                },
+                arc_tactical="arc tactical",
+                prev_text="이전 원고",
+                prev_ending="이전 화 엔딩",
+                hud_report="HUD",
+                writer_agent=MagicMock(),
+                anchor_sys=anchor_sys,
+                s4_genre_type="investment",
+                v50_modules_available=False,
+                blueprint={},
+            )
+
+        assert "[Arc 제약 - MUST NOT DO]\n공개 지분 이동을 사적 감정으로 오판하지 말 것" in result["mandatory_context"]
+        assert "[Current Episode Mission Packet]" in result["mandatory_context"]
+        assert "- 공시 직전 cap table 재확인" in result["mandatory_context"]
+        assert "- 재무팀 보고선 고정" in result["mandatory_context"]
+
     def test_load_reference_anchor_prompt_returns_generated_prompt(self):
         cb = Stage4ContextBuilder(_make_ctx())
         anchor_sys = MagicMock()
@@ -955,7 +1047,9 @@ class TestBuildMandatoryContext:
         cb._build_work_identity_slot_summary = MagicMock(return_value="[작품 추적 슬롯 요약]\n소꿉친구 라인")
 
         result = cb._build_mandatory_context_seed(
+            next_ep=5,
             arc_data={"arc_no": 1},
+            s4_genre_type="wuxia",
             arc_tactical="소꿉친구 라인 재등장",
             prev_ending="연홍과의 인연이 남았다",
             blueprint={"scene_breakdown": {}},
@@ -1141,7 +1235,9 @@ class TestBuildMandatoryContext:
             reflexion_prompt="reflect",
         )
         cb._build_mandatory_context_seed.assert_called_once_with(
+            next_ep=5,
             arc_data={"arc_no": 1},
+            s4_genre_type="wuxia",
             arc_tactical="전술",
             prev_ending="ending",
             blueprint={"scene_breakdown": {}},
@@ -2333,6 +2429,7 @@ class TestBuildMandatoryContext:
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_build_mandatory_context_promotes_opening_scene_authority_even_without_work_focus(self, _mock_build):
         ctx = _make_ctx()
+        ctx.current_project.genre = {"name": "investment", "type": "investment"}
         ctx.sys.guard = MagicMock()
         ctx.sys.guard.select_retrieval_focus.return_value = {
             "tracking_slots": [],
@@ -2342,6 +2439,7 @@ class TestBuildMandatoryContext:
         ctx.current_project.db.load_anchor.return_value = {
             "cliffhanger": "전화가 오기 직전 멈칫했다.",
             "pending_actions": ["전화를 받기", "현관으로 이동하기"],
+            "physical_state": "신경계 피로 Moderate",
             "location": "서재 앞 복도",
             "time_marker": "직후",
         }
@@ -2381,9 +2479,17 @@ class TestBuildMandatoryContext:
         assert "opening carryover location to honor or explicitly transition from: 서재 앞 복도" in text
         assert "opening carryover time_marker to honor or explicitly advance from: 직후" in text
         assert (
+            "allow natural healing or ordinary completion for non-wuxia soft-state carryover"
+        ) in text
+        assert (
+            "soft carryover pending_actions reference: 전화를 받기, 현관으로 이동하기"
+        ) in text
+        assert "soft physical_state reference: 신경계 피로 Moderate" in text
+        assert (
             "opening carryover pending_actions to resolve before new thread or explicitly transition away: "
             "전화를 받기, 현관으로 이동하기"
-        ) in text
+        ) not in text
+        assert "opening scene continuity below is hard canon." not in text
         assert "do not replay a completed prior-episode event in the opening." in text
         assert "use an explicit transition sentence or `* * *` first." in text
         assert "after `* * *`, state the changed location, time, or action within the next 1-2 sentences." in text

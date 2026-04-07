@@ -107,6 +107,47 @@ This file replaces the prior bootstrap anchor note. The canonical pitch truth is
 - proof scene:
   - 첫 의술 비무에서 소백은 경혈을 봉쇄하며 동시에 치료하듯 상대를 제압한다. `치료하듯 싸운다`의 역설이 가문과 장로 앞에서 증명되며, 소백이 단순히 착한 의원이 아니라 의무일체의 실전 사용자라는 것, 활침과 살침이 같은 기술이라는 것, 그리고 이 각성이 운이 아니라 재현 가능한 시스템이라는 것이 한 씬 안에서 전부 드러난다.
 
+## 3A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 형 치료 직후 조건부 공인 의원 자격을 받아 축출 대상이 아니라 시험 기간의 가문 의원으로 자리표가 바뀐다.
+  receipt_kind: status_shift
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 진소풍과 진혜란의 보호, 그리고 아버지의 묵인이 조건부 허가로 바뀌며 가문 안 보호막이 생긴다.
+  receipt_kind: protection
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 진료 실적에 따라 약방 접근권이 단계적으로 열려 치료 자원을 자기 손으로 고를 수 있게 된다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 서고 의서 접근권과 칠성침법 존재 단서가 함께 풀리며 의무일체의 다음 증명 루프가 열린다.
+  receipt_kind: knowledge_access
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 백무명이라는 숨은 스승 라인과 독문·약왕곡·의선 대회 진출 명분이 같은 블록 안에서 붙는다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 3B. Readiness Declaration
+
+- selection-ready: yes
+- Phase0-ready: yes
+- all 2~6 ledger rows have has_cider true: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 4. Phase0 Handoff Note
 
 - already locked:

@@ -1,0 +1,307 @@
+# Production Pair Benchmark Spec v1
+
+Date: 2026-04-07
+Status: active
+Scope: canonical grading benchmark for existing live `TR + BI` pairs
+
+## 1. Role
+
+- define one shared benchmark before auditing, repairing, re-grading, or promoting existing `BI/TR` pairs
+- replace taste-only pair judgment with explicit gates, caps, and score axes
+- let `production_pair_grade_aliases/` and later pair audits use the same ruler
+- keep the benchmark pair-level: `TR` and `BI` are judged as one unit
+- external-model execution discipline is governed by `external-model-benchmark-operation-harness-v1.md`
+
+## 2. Core Thesis
+
+The first question is not `is this pair interesting?`
+
+The first question is:
+
+`Does block 1 pay the reader back clearly enough to earn block 2?`
+
+Working rule:
+
+- `block 1` means roughly episodes `2~6`
+- if a pair has no visible `cider` inside block 1, it cannot grade above `YELLOW`
+- proof alone is not enough
+- block 1 must end with:
+  - protagonist-only proof
+  - reevaluation
+  - visible reward token
+  - next gate opening
+
+### 2.1 Strict Window Contract
+
+- for benchmark audits, `block 1` is a strict evidence window: `TR` blocks `2, 3, 4, 5, 6` only
+- `TR block 1` may be used for opening pain, innocence, or setup context, but it cannot satisfy `P0` gates `1~5`
+- `TR block 7+` may be used for later cadence or loop analysis, but it cannot rescue a missing `P0` gate `1~4`
+- if the first visible `cider` or first concrete reward token lands at `TR block 7` or later, gate `1` fails and the pair has a `YELLOW ceiling`
+- if proof exists in `TR blocks 2~6` but reevaluation or token first lands at `TR block 7+`, gates `3` and `4` fail
+- gate `5` may cite `TR block 7+` only as downstream confirmation that a token already earned by `TR block 6` opened the next gate; `TR block 7+` cannot backfill a missing reward
+- use absolute block numbers in every benchmark report; do not write vague phrases like `early blocks`, `opening arc`, or `초반부` without numbered anchors
+
+### 2.2 Fast Invalidity Checks
+
+The following readings are invalid and should be rejected during audit:
+
+- `Block 1 had a strong opener, so first-block cider passes`
+- `Block 7 reward rescues a weak 2~6 opening`
+- `Block 10 authority grant proves first-block visible reward`
+- `later payoff` or `next arc reward` counts as first-block conversion
+
+Valid shape:
+
+- `TR blocks 2~6 already contain proof + reevaluation + token`
+- `TR block 7` is cited only to confirm that the token earned by `TR block 6` opened the next battlefield
+
+### 2.3 Full-Block Cider Scan Contract
+
+After the opening gates, run one more benchmark pass across the full `TR`.
+
+- scan every `TR` block individually
+- mark each block as `has_cider: true/false`
+- `has_cider: true` requires at least one reader-countable payback inside that same block:
+  - visible reward token
+  - weighted reevaluation receipt
+  - protection receipt
+  - authority or access shift
+  - recovery asset that materially offsets same-block pain
+  - explicit next-card or next-gate receipt the reader can feel now
+- `has_cider: false` includes:
+  - setup-only block
+  - explanation-only block
+  - wait-only block
+  - pain-only block
+  - humiliation-only block
+  - failure-only block
+  - `later payoff` promise with no same-block receipt
+- if any block is `has_cider: false`, the pair has a `YELLOW ceiling`
+- reports must name the exact no-cider block numbers; vague phrases like `middle feels slow` are not enough
+- this is a strong house rule by design: a production pair does not earn `GREEN` or `GREENPLUS` by asking the reader to coast through rewardless blocks
+
+## 3. Grade Bands
+
+- `GREENPLUS`
+  - top-tier benchmark preservation
+  - first-block conversion is exemplary
+  - full-block cider scan finds zero no-cider blocks
+  - no major cap rule is triggered
+  - late blocks keep reward cadence
+- `GREEN`
+  - production-ready pair
+  - core promise survives
+  - full-block cider scan finds zero no-cider blocks
+  - some residual weakness exists, but not enough to break the engine
+- `YELLOW`
+  - strong premise or some strong arcs exist
+  - current pair breaks one or more benchmark ceilings
+  - one no-cider block is enough to place the pair here
+  - repair should focus on bounded top `3` units, not full-wave surgery by default
+- `RED`
+  - pair-level benchmark failure
+  - current pair should not be promoted or grade-aliased upward before major repair
+
+## 4. P0 Hard Gates
+
+Run these first.
+
+### 4.1 Gate Set
+
+1. `first-block visible cider`
+   - `TR blocks 2~6` contain at least one visible reward readers can count or feel
+2. `protagonist-only proof`
+   - `TR blocks 2~6` make `저건 쟤라서 가능했다` undeniable
+3. `evaluation revision`
+   - someone with weight reevaluates the protagonist inside `TR blocks 2~6`
+4. `visible reward token`
+   - `TR blocks 2~6` land at least one concrete token:
+     - `blockguide`: name call, seat, `CC`, report line, `TF`, approval, ownership, entry ticket
+     - `wuxguide`: rank, elder protection, manual access, treasure, realm step, reputation, inheritance clue
+     - `medical` and adjacent lanes: case access, authority, conference slot, direct line, protocol ownership, public reevaluation
+5. `block 1 -> block 2 gate linkage`
+   - the reward earned by `TR block 6` or earlier opens the next gate
+   - `TR block 7+` may confirm this linkage, but cannot supply the first reward token retroactively
+6. `BI/TR early conversion alignment`
+   - `BI` early promise, `cider_point`, and `success_device` are visibly alive in `TR` block `1~3`
+
+### 4.2 Ceiling Rules
+
+- if gate `1` fails: `YELLOW ceiling`
+- if gate `2` fails: `YELLOW ceiling`
+- if gate `3` or `4` fails: `YELLOW ceiling`
+- if gate `5` fails: `YELLOW ceiling`
+- if gate `6` fails: `YELLOW ceiling`
+- if two or more gates fail: default `RED review lane`
+- if a report cites `TR block 1` or `TR block 7+` as the primary proof for gates `1~4`, that gate reading is invalid and must be re-judged
+
+### 4.3 Opening Innocence Rule
+
+- if current-protagonist fault is the main cause of the opening fall, the pair cannot grade above `YELLOW`
+- acceptable opening disadvantage:
+  - wrong seat
+  - wrong structure
+  - political sacrifice
+  - inherited bad frame
+  - previous-era criteria
+- unacceptable opening disadvantage:
+  - laziness
+  - irresponsibility
+  - self-inflicted collapse by the current protagonist
+
+## 5. P1 Score Axes
+
+Score each axis `0 / 1 / 2`.
+
+| Axis | `0` | `1` | `2` |
+| --- | --- | --- | --- |
+| protagonist innocence | opening fault mostly belongs to protagonist | mixed | protagonist is clearly defendable |
+| protagonist-only proof clarity | generic success | partly specific | unmistakably protagonist-only |
+| evaluation revision visibility | barely visible | partial | explicit and weighted |
+| visible reward token strength | emotional only | weak token | concrete token with force |
+| block1 -> block2 linkage | unclear | partial | clean next-gate opening |
+| rational opposition | cartoon resistance | mixed | incentive-driven, era-valid opposition |
+| domain truth density | generic lane | partly textured | concrete domain truth carries the engine |
+| repeatable loop clarity | one-off win | partial loop | loop is visible and reusable |
+| BI amplification power | BI echoes TR only | some amplification | BI materially sharpens TR promise |
+| blockwise cider continuity | one or more no-cider blocks | all blocks pay but several are weak bridge-only beats | every block lands a felt receipt |
+
+Total: `20`
+
+## 6. Cap Rules Beyond P0
+
+Even with a strong score, the pair cannot exceed the cap below if the pattern appears.
+
+- no visible cider inside block 1: `YELLOW ceiling`
+- first concrete token lands at `TR block 7+`: `YELLOW ceiling`
+- any no-cider block in the full-block cider scan: `YELLOW ceiling`
+- rewardless pain blocks `2` in a row: `GREEN ceiling`
+- no-cider drought `6+` blocks: `YELLOW ceiling`
+- major defeat without next card in the same or next block: `YELLOW ceiling`
+- `BI` acts as summary echo only and does not amplify the pair: `GREEN ceiling`
+- early reward is asset-only and lacks status or authority shift: `GREEN ceiling`
+- wins rely on stupid opposition: `GREEN ceiling`
+- domain texture is generic enough to swap with another lane: `GREEN ceiling`
+- protagonist stays mostly passive across a key arc while reward remains weak: `YELLOW ceiling`
+
+## 7. RED Triggers
+
+Any of the following should start from `RED` unless later evidence clearly rescues the pair:
+
+- two or more `P0` hard gates fail
+- block 1 closes on pain-only exit and `BI/TR` early conversion mismatch is also present
+- the repeatable loop is still unclear by block `10`
+- protagonist passivity, weak reward, and low reevaluation stack together across early arc
+
+## 8. Grade Decision Table
+
+### 8.1 `GREENPLUS`
+
+Requirements:
+
+- all `P0` hard gates pass
+- no `YELLOW` ceiling rule triggered
+- total score `17~20`
+- block 1 is an exemplar of `proof -> reevaluation -> reward -> next gate`
+- full-block cider scan shows zero no-cider blocks
+- later reward cadence still feels intentional
+
+### 8.2 `GREEN`
+
+Requirements:
+
+- all `P0` hard gates pass
+- no `YELLOW` ceiling rule triggered
+- total score `13~16`
+- full-block cider scan shows zero no-cider blocks
+- one or more `GREEN` cap rules may exist, but the pair remains clearly production-ready
+
+### 8.3 `YELLOW`
+
+Requirements:
+
+- any `YELLOW` ceiling rule triggered, or
+- any no-cider block exists, or
+- total score `9~12`
+
+Interpretation:
+
+- engine survives
+- bounded repair is justified
+- default repair scope is `top 3` weak units
+
+### 8.4 `RED`
+
+Requirements:
+
+- any `RED` trigger, or
+- total score `0~8`
+
+Interpretation:
+
+- do not promote or snapshot-grade upward
+- repair should start from contract truth, early conversion, or regenerate-first judgment
+
+## 9. Current Benchmark Exemplars
+
+These are the current reference exemplars for reading the benchmark, not immutable sacred grades.
+
+- `office_checkup_next_day`
+  - first-block conversion benchmark
+  - cleanest `proof -> reevaluation -> token` chain
+- `pantech_cyworld_reborn`
+  - authority-ticket benchmark
+  - block `1~3` converts proof into access rights and power gates
+- `defense_defect_engineer`
+  - proof-scene precision benchmark
+  - hidden defect + hidden cost -> reevaluation and entry-ticket payoff
+- `wuxia_heavenly_physician`
+  - high-pain recovery-control benchmark
+  - useful for testing whether a painful lane still keeps reward cadence
+- `투자물_골든_카나리아 테스트_canonical_v1`
+  - `GREEN` reference pair
+  - good market-power benchmark, but early reward leans more toward asset gain than status shift
+
+## 10. Standard Audit Output Shape
+
+Every pair benchmark audit should produce:
+
+1. pair identity
+2. compliance self-check
+3. `P0` gate pass/fail table
+4. full-block cider scan summary
+5. active cap rules
+6. `P1` score table and total
+7. provisional grade
+8. top `3` repair units if grade is `YELLOW` or `RED`
+9. alias update note if grade is `GREENPLUS` or `GREEN`
+
+Audit discipline:
+
+- the `P0` section must name at least one concrete `TR block` anchor for each gate
+- if the anchor for gates `1~4` sits outside `TR blocks 2~6`, the report is non-compliant
+- if a pair passes on the strength of `TR block 7+`, re-run the benchmark before using the grade operationally
+- the compliance self-check must confirm:
+  - `P0 = 6 gates`
+  - `P1 = 10 axes x 0/1/2 = 20`
+  - `gate 6 = BI + TR 1~3`
+  - `full-block cider scan covered every TR block`
+- the full-block cider scan must name:
+  - total `TR` block count
+  - no-cider block count
+  - exact no-cider block numbers, or `none`
+
+## 11. Operating Rule
+
+- do not start from full-wave surgery
+- benchmark first
+- classify second
+- repair the smallest profitable scope third
+- re-grade after repair
+
+Shorthand:
+
+- `block 1 must pay`
+- `proof alone is not cider`
+- `no first-block cider, no grade above YELLOW`
+- `one no-cider block, no grade above YELLOW`

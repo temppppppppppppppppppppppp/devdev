@@ -24,6 +24,7 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from modules.core.constants import smart_truncate
 from modules.core.genre_schema_builder import build_state_updates_schema
+from modules.core.partial_fix_contract import normalize_patch_target_records
 from modules.models.manuscript import validate_manuscript_candidate
 
 from .base_agent import _SYSTEM_CFG, BaseAgent
@@ -1138,6 +1139,9 @@ class ChiefWriter(BaseAgent):
         fallback_reason: str = "",
         focus: str = "",
         structural_attempted: bool = False,
+        target_kind: str = "",
+        patch_target_records: list[dict] | None = None,
+        repair_trace: list[dict] | None = None,
     ) -> dict:
         trace = {
             "patch_strategy": str(patch_strategy or ""),
@@ -1146,6 +1150,13 @@ class ChiefWriter(BaseAgent):
             "focus": str(focus or ""),
             "structural_attempted": bool(structural_attempted),
         }
+        normalized_target_kind = " ".join(str(target_kind or "").split()).strip()[:80]
+        if normalized_target_kind:
+            trace["target_kind"] = normalized_target_kind
+        if patch_target_records:
+            trace["patch_target_records"] = list(patch_target_records)
+        if repair_trace:
+            trace["repair_trace"] = list(repair_trace)
         self._last_inplace_patch_trace = trace
         return trace
 
@@ -1175,12 +1186,17 @@ class ChiefWriter(BaseAgent):
                     break
             return cleaned
 
-        patch_targets = _normalize_list(payload.get("patch_targets"), limit=6, item_limit=80)
         must_fix = _normalize_list(payload.get("must_fix"), limit=6, item_limit=180)
         do_not_regress = _normalize_list(payload.get("do_not_regress"), limit=6, item_limit=180)
         success_condition = " ".join(str(payload.get("success_condition", "") or "").split()).strip()[:220]
         target_kind = " ".join(str(payload.get("target_kind", "") or "").split()).strip()[:80]
         evidence_summary = " ".join(str(payload.get("evidence_summary", "") or "").split()).strip()[:220]
+        patch_targets, patch_target_records = normalize_patch_target_records(
+            payload.get("patch_target_records") or payload.get("patch_targets"),
+            stage="stage4",
+            container_kind="manuscript",
+            default_target_kind=target_kind,
+        )
 
         normalized = {
             "patch_targets": patch_targets,
@@ -1189,6 +1205,8 @@ class ChiefWriter(BaseAgent):
             "success_condition": success_condition,
             "target_kind": target_kind,
         }
+        if patch_target_records:
+            normalized["patch_target_records"] = patch_target_records
         if evidence_summary:
             normalized["evidence_summary"] = evidence_summary
 
@@ -1433,6 +1451,7 @@ class ChiefWriter(BaseAgent):
             patch_targets=list(plan["target_scene_ids"]),
             focus=str(plan["focus"] or ""),
             structural_attempted=True,
+            target_kind="scene_block",
         )
 
         def _esc(text: str) -> str:
@@ -1494,6 +1513,7 @@ class ChiefWriter(BaseAgent):
 
         merged_blocks = list(plan["blocks"])
         patched_any = False
+        repair_trace: list[dict] = []
         for scene_id in plan["target_scene_ids"]:
             patch_text = str(patched_blocks.get(scene_id, "") or "").strip()
             if len(patch_text) < 80:
@@ -1501,8 +1521,18 @@ class ChiefWriter(BaseAgent):
             block_idx = plan["target_index_map"].get(scene_id)
             if block_idx is None or block_idx >= len(merged_blocks):
                 continue
+            old_block = merged_blocks[block_idx]
             merged_blocks[block_idx] = patch_text
             patched_any = True
+            repair_trace.append(
+                {
+                    "target": scene_id,
+                    "target_kind": "scene_block",
+                    "old_excerpt": old_block[:240],
+                    "new_excerpt": patch_text[:240],
+                    "why_changed": " ".join(str(director_feedback or "").split())[:220],
+                }
+            )
 
         if not patched_any:
             logging.info("[PWF-STRUCT] usable patched block 없음 → whole-text fallback")
@@ -1531,11 +1561,20 @@ class ChiefWriter(BaseAgent):
         if not isinstance(state_updates, dict):
             state_updates = {}
 
+        _, patch_target_records = normalize_patch_target_records(
+            plan["target_scene_ids"],
+            stage="stage4",
+            container_kind="manuscript",
+            default_target_kind="scene_block",
+        )
         self._set_last_inplace_patch_trace(
             patch_strategy="inplace_patch_structural",
             patch_targets=list(plan["target_scene_ids"]),
             focus=str(plan["focus"] or ""),
             structural_attempted=True,
+            target_kind="scene_block",
+            patch_target_records=patch_target_records,
+            repair_trace=repair_trace,
         )
 
         return [
@@ -1754,15 +1793,28 @@ class ChiefWriter(BaseAgent):
         focus: str,
         structural_attempted: bool,
         patch_strategy: str = "inplace_patch",
+        patch_target_records: list[dict] | None = None,
+        repair_trace: list[dict] | None = None,
+        target_kind: str = "",
     ) -> list[dict]:
         existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})
         trace_focus = "" if normalized_fix_pack.get("patch_targets") else str(existing_trace.get("focus") or focus)
+        effective_patch_target_records = list(
+            patch_target_records
+            or existing_trace.get("patch_target_records")
+            or normalized_fix_pack.get("patch_target_records")
+            or []
+        )
+        effective_repair_trace = list(repair_trace or existing_trace.get("repair_trace") or [])
         self._set_last_inplace_patch_trace(
             patch_strategy=patch_strategy,
             patch_targets=list(existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or []),
             fallback_reason=str(existing_trace.get("fallback_reason") or fallback_reason),
             focus=trace_focus,
             structural_attempted=bool(existing_trace.get("structural_attempted") or structural_attempted),
+            target_kind=str(existing_trace.get("target_kind") or target_kind or normalized_fix_pack.get("target_kind") or ""),
+            patch_target_records=effective_patch_target_records,
+            repair_trace=effective_repair_trace,
         )
         logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(manuscript)}자)")
 
@@ -1815,6 +1867,9 @@ class ChiefWriter(BaseAgent):
                 focus="",
                 structural_attempted=False,
                 patch_strategy="inplace_patch_local_ops",
+                patch_target_records=local_edit_attempt.patch_target_records,
+                repair_trace=local_edit_attempt.repair_trace,
+                target_kind=str(normalized_fix_pack.get("target_kind", "") or ""),
             )
         if local_edit_attempt.failure_reason:
             existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})

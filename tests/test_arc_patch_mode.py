@@ -269,6 +269,42 @@ class TestArcPatchMode:
         assert "TAIL-ARC" in feedback
         assert feedback.count("A") < 35000
 
+    def test_inplace_patch_arc_appends_stage2_fix_pack_guidance(self, arc_generator, sample_arc):
+        patched_arc = {
+            **sample_arc,
+            "state_constraints": {"arc_end_state": {"location": "Gangnam HQ"}},
+        }
+        arc_generator.ensemble.ask.return_value = {"ok": True}
+        arc_generator.ensemble._extract_json_robust.return_value = patched_arc
+
+        with patch("modules.core.prompt_loader.PromptLoader") as mock_loader_cls:
+            with patch("modules.models.arc.validate_arc", side_effect=lambda arc: arc):
+                mock_loader_cls.return_value.load.side_effect = FileNotFoundError("not found")
+
+                result = arc_generator._inplace_patch_arc(
+                    original_arc=sample_arc,
+                    director_feedback="repair the ending venue only",
+                    arc_no=1,
+                    fix_pack={
+                        "patch_targets": [
+                            {
+                                "summary": "state_constraints.arc_end_state.location",
+                                "field_path": "state_constraints.arc_end_state.location",
+                                "target_kind": "field_value",
+                            }
+                        ],
+                        "must_fix": ["set arc_end_state.location to Gangnam HQ"],
+                        "success_condition": "arc_end_state.location now matches the repaired venue",
+                    },
+                )
+
+        assert result is not None
+        prompt = arc_generator.ensemble.ask.call_args.args[0]
+        assert "[Stage2 partial-fix contract]" in prompt
+        assert "state_constraints.arc_end_state.location" in prompt
+        assert "field_value" in prompt
+        assert "repair the ending venue only" in prompt
+
     def test_build_patch_mode_constraint_block_direct_helper_includes_non_wuxia_warning(self, arc_generator):
         arc_generator._genre = "investment"
         arc_generator.preflight.analyze.return_value = {"world_state": {}}

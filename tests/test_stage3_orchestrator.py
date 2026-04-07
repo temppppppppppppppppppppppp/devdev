@@ -492,6 +492,86 @@ class TestStageAttemptObservability:
         assert payload["advisory_warnings"]["revision_required"] is True
         assert payload["advisory_warnings"]["selected_candidate_advisory"] == ["Arc NPC mention is thin"]
 
+    def test_build_stage3_director_selection_kwargs_preserves_partial_fix_contract(self):
+        payload = Stage3Orchestrator._build_stage3_director_selection_kwargs(
+            {
+                "final_verdict": "PASS",
+                "phases": {
+                    "validate": {
+                        "verdict": "PASS",
+                        "selected_index": 0,
+                        "selection_reason": "candidate 1 closes the local repair cleanly",
+                        "fix_pack": {
+                            "patch_targets": ["scene_2.summary"],
+                            "target_kind": "scene_block",
+                            "must_fix": ["scene 2 summary must reflect the repaired reveal"],
+                        },
+                        "partial_fix_eval": {
+                            "patch_round": 1,
+                            "patch_target_id": "pt:scene2",
+                            "target_kind": "scene_block",
+                            "must_fix_resolved": True,
+                            "do_not_regress_held": True,
+                            "success_condition_met": True,
+                        },
+                    }
+                },
+            },
+            ep_num=4,
+            attempt_num=1,
+            attempt_key="s3:ep4:arc1:a1",
+            selected_strategy="dialogue_focused",
+            score=93,
+            candidate_key="dialogue_focused",
+        )
+
+        assert payload is not None
+        assert payload["advisory_warnings"]["fix_pack"]["patch_targets"] == ["scene_2.summary"]
+        assert payload["advisory_warnings"]["partial_fix_eval"]["patch_target_id"] == "pt:scene2"
+
+    def test_annotate_stage3_success_blueprint_preserves_binding_meta(self, orch):
+        blueprint = {}
+
+        result = orch._annotate_stage3_success_blueprint(
+            working_ep=1,
+            arc_data={},
+            blueprint=blueprint,
+            pipeline_result={
+                "last_score": 88,
+                "phases": {
+                    "validate": {
+                        "binding_prevalidation_issue_count": 2,
+                        "binding_prevalidation_categories": ["dead_npc", "fact_lock_location"],
+                        "fix_pack": {
+                            "patch_targets": ["scene_2.summary"],
+                            "target_kind": "scene_block",
+                            "must_fix": ["scene 2 summary must reflect the repaired reveal"],
+                            "success_condition": "scene 2 now states the reveal without rewriting the arc shell",
+                        },
+                        "partial_fix_eval": {
+                            "patch_round": 1,
+                            "patch_target_id": "pt:scene2",
+                            "target_kind": "scene_block",
+                            "must_fix_resolved": True,
+                            "do_not_regress_held": True,
+                            "success_condition_met": True,
+                        },
+                    }
+                },
+            },
+            final_verdict="PASS_WITH_FIX",
+            quality_gate_failed=False,
+            quality_risk=False,
+            revision_required=True,
+        )
+
+        assert result["_stage3_meta"]["final_verdict"] == "PASS_WITH_FIX"
+        assert result["_stage3_meta"]["revision_required"] is True
+        assert result["_stage3_meta"]["binding_prevalidation_issue_count"] == 2
+        assert result["_stage3_meta"]["binding_prevalidation_categories"] == ["dead_npc", "fact_lock_location"]
+        assert result["_stage3_meta"]["fix_pack"]["patch_targets"] == ["scene_2.summary"]
+        assert result["_stage3_meta"]["partial_fix_eval"]["patch_target_id"] == "pt:scene2"
+
 
 class TestLoadPrevBlueprint:
     def test_returns_none_for_ep1(self, orch):

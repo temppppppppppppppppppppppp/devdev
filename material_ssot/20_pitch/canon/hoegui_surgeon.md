@@ -81,6 +81,47 @@ This is the canonical pitch authority for `hoegui_surgeon`. Phase0, TR, BI, work
     - 필수: 희생 직후 반드시 평가 수정, 호출권, 케이스 배정권, 발표권, 직보선 같은 권한 영수증이 붙어야 한다.
     - 금지: 감동만 남고 권한 변화 없음, 착한 희생이 주인공 소모로 끝남, 보상 없는 희생이 반복됨.
 
+## 3A. First-Block Cider Ledger
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 수술 전 차트 기록이 컨퍼런스에서 드러나며 `갈고리 R1`이 아니라 `차트가 맞는 레지던트`로 평가가 뒤집힌다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: M&M 회의록에 `R1 서동혁의 사전 판독이 합병증 예방 가능 소견으로 확인됨`이 공식 기재된다.
+  receipt_kind: proof_confirmation
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 조영채 과장이 판독 소견을 직접 듣겠다고 지정하며 과장 직보선이 열린다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 고난도 간절제 케이스의 1st assist와 수술 계획을 먼저 올릴 권한이 같은 블록 안에서 붙는다.
+  receipt_kind: authority_shift
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 소화기내과 첫 타과 협진 호출이 들어오며 다음 고난도 환자 전장 입장권이 열린다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 3B. Readiness Declaration
+
+- selection-ready: yes
+- Phase0-ready: yes
+- all 2~6 ledger rows have has_cider true: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
 ## 4. Phase0 Handoff Note
 
 - already_locked:

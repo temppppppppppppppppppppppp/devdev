@@ -25,6 +25,7 @@ Normalized route:
 - `10_research/20_fewshot_bank` and other reusable research packs
 - `10_research/30_work_materials/{work_id}/90_material_pack.json` when a normalized work pack exists
 - `20_pitch/synthesis/` one-page synthesis
+- `20_pitch/material-benchmark-readiness-harness-v1.md` readiness check
 - `20_pitch/pitch-selection-checklist.md` audit
 - `20_pitch/canon/` pitch freeze
 - `20_pitch/work-guard-translation-map.md` -> work-specific `work_guard`
@@ -38,6 +39,7 @@ Minimum synthesis shape:
 - stay method or continued-stage reason when relevant
 - first proof scene
 - first block reward
+- first-block cider ledger for `2~6`
 - contamination risk or must-not-copy note
 
 Operating rule:
@@ -46,6 +48,7 @@ Operating rule:
 - use this lane when assembling a fresh candidate from multiple research engines
 - current active operator lane is `male protagonist only`
 - female-protagonist ideas can be analyzed as reference or archive material, but do not enter active synthesis promotion
+- if any `first_block_cider_ledger` row in `2~6` is `has_cider: false`, the synthesis is `HOLD`, not selection-ready
 - if the idea passes checklist review, promote the truth into `canon/`
 - if the idea fails, keep the notes here or discard them; do not bypass canon by translating directly into a `work_guard`
 

@@ -62,7 +62,40 @@ Scope: fresh candidate synthesis before canon selection
 - first access token or protection: 면천(신분 해방) + 궁중 기술소 출입권. 자재 요청서에 자기 이름을 쓸 수 있게 됨.
 - money or asset gain, if any: 없음. 첫 보상은 순수하게 이름과 자리.
 
-## 9. Authority Gain Route
+## 9. First-Block Cider Ledger (`2~6`)
+
+- block_no: 2
+  has_cider: true
+  same_block_receipt: 이중 수조 설계가 실제 제작에서 오차 없이 맞아 이천의 태도가 공개적으로 뒤집힌다.
+  receipt_kind: weighted_reevaluation
+  bridge_or_payback_note:
+
+- block_no: 3
+  has_cider: true
+  same_block_receipt: 자격루 설계 책임자 이름이 공식 기록에 올라간다.
+  receipt_kind: status_shift
+  bridge_or_payback_note:
+
+- block_no: 4
+  has_cider: true
+  same_block_receipt: 면천이 확정되고 궁중 기술소 출입권이 열린다.
+  receipt_kind: protection
+  bridge_or_payback_note:
+
+- block_no: 5
+  has_cider: true
+  same_block_receipt: 자재 요청서를 자기 명의로 올릴 수 있게 되며 설계권이 실무 권한으로 바뀐다.
+  receipt_kind: access_shift
+  bridge_or_payback_note:
+
+- block_no: 6
+  has_cider: true
+  same_block_receipt: 다음 자격루와 갑인자 전장을 여는 기술 관청 입장권이 생긴다.
+  receipt_kind: next_gate
+  pain_only_exit: false
+  bridge_or_payback_note:
+
+## 10. Authority Gain Route
 
 각 블록의 발명은 "뭘 만들었나"가 아니라 "그 결과 누가 먼저 허락을 구하게 됐나"로 읽는다.
 
@@ -112,32 +145,41 @@ what changes in how people must treat the protagonist:
 - 대단원 4~5: "세종의 총신" → "검수 결재선의 최종권자"
 - 대단원 6~7: "세종이 키운 사람" → "이 사람 없이는 나라 인프라가 안 돌아가는 사람"
 
-## 10. Crisis 4-Element Check
+## 11. Crisis 4-Element Check
 
 - first read: 가마 사건 — 주인공이 가마 부품의 응력 집중점을 설계 단계에서 지적했으나, 정치적 압력으로 일정이 당겨지면서 검증이 생략됨. 주인공은 이 부분이 파손 원인이 될 것을 알고 있다.
 - response tool: 설계 단계의 응력 계산 도면(원본)과 실제 제작된 부품의 치수 차이를 기록한 검수표. 증거를 가마 납품 전에 이미 확보.
 - minimum damage control: 가마가 파손되었을 때, "설계와 다른 부품이 들어갔다"는 물증을 즉시 제출. 기술 실패가 아니라 제작 변경(또는 고의 파괴)임을 입증.
 - immediate recovery vector: 파직 명령 철회 + "도면대로 만들었으면 안 부서졌다"가 확인됨 → 이후 핵심 부품 검수 최종 결재권까지 획득.
 
-## 11. Contamination Risk
+## 12. Contamination Risk
 
 - likely self-fault drift: "세종이 없으면 난 아무것도 못 한다"는 자기연민 → 차단: 대단원 4 이후 세종 개인이 아니라 제도가 자리를 보장하므로 자기연민의 근거가 사라짐. 세종 건강 악화 시 주인공의 반응은 슬픔이 아니라 "제도 안에서 어떻게 다음 권한을 지키느냐"여야 함.
 - likely shame-forward drift: 가마 사건에서 파직당한 뒤 "관노 출신이라 이런 취급"으로 장광설 → 차단: 주인공은 물증을 제출하고 입을 닫는다. 수치심을 말하지 않고 검수 결재권이라는 결과로 회수.
 - likely asset-first or scale-first drift: 발명품 나열이 목적이 되면 "문명건설 카탈로그" → 차단: Authority Gain Route를 `발명 → 태도 변화 → 자리 변화 → 다음 문` 4단 공식으로 고정. 매 발명의 첫 줄은 "뭘 만들었나"가 아니라 "누가 허락을 구하게 됐나"로 시작해야 함.
 - must-not-copy: 이 기획안의 운용 규칙 — "다음에 뭘 만들지?"는 금지 질문. "이 발명으로 누가 주인공을 다시 봐야 하는가?"가 매 블록의 유일한 질문.
 
-## 12. Selection Verdict Prep
+## 13. Selection Verdict Prep
 
 - innocence: PASS — 관노 신분은 빙의 전 몸주인의 출생. 현 주인공의 과실 없음.
 - first win = evaluation revision: PASS — 도면 한 장으로 경험칙을 이기고, 이천의 태도가 바뀐다.
 - proof scene: PASS — 오리피스 설계는 주인공만 가능. "저건 쟤라서 가능했다"가 선명.
 - early reward = status first: PASS — 이름 등재, 면천, 설계 책임자 지정. 돈이 아니라 자리.
+- ledger `2~6` all pay: PASS
 - crisis 4 elements: PASS — 가마 사건(물증 확보 + 즉시 제출 + 검수권 획득) + 세종 사후(도면 표준 독점 + 피해 산출표 + 기술소 존속 확보). 두 구간 모두 4요소 충족.
 - catalogue contamination guard: PASS — Authority Gain Route가 `발명 → 태도 변화 → 자리 변화 → 다음 문` 4단 공식으로 잠김. 매 블록의 질문이 "뭘 만들었나"가 아니라 "누가 허락을 구하게 됐나"로 고정.
 - post-patron independence: PASS — 도면 표준 독점, 검수 결재선 제도화, 제자 라인, 자재 배분 결재권. 세종 없이도 나라 인프라가 영실 없이 안 돌아가는 구조.
 - current verdict: `PASS`
 
-## 13. Handoff Note
+## 14. Readiness Claim
+
+- selection-ready: no
+- Phase0-ready: no
+- all 2~6 rows pay in-block: yes
+- block 1 used as opening rescue: no
+- block 7+ used as opening rescue: no
+
+## 15. Handoff Note
 
 - this passes: promote truth into `20_pitch/canon/`
 - remaining watch items (canon 작업 시 점검):
