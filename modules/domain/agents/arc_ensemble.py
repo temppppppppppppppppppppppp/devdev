@@ -27,6 +27,11 @@ from modules.core.genre_schema_builder import (
     is_wuxia,
 )
 from modules.core.investment_arithmetic_checker import InvestmentArithmeticChecker
+from modules.core.non_wuxia_recovery_policy import (
+    has_hard_injury_signal,
+    has_hard_recovery_action,
+    has_vague_recovery_signal,
+)
 from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import ARC_DESIGN_SCHEMA  # [TF11] response_schema 확대
 from modules.core.stage2_location_contract import is_verbose_stage2_location_label
@@ -384,7 +389,7 @@ def _collect_non_wuxia_state_noise_issues(candidate: dict, genre: str) -> list[s
 
 
 def _collect_non_wuxia_recovery_issues(candidate: dict, genre: str) -> list[str]:
-    """Penalize vague opening recovery when non-wuxia carryover fatigue is present."""
+    """Penalize vague hard-injury recovery while allowing natural healing for soft non-wuxia fatigue."""
     if is_wuxia(genre):
         return []
 
@@ -404,89 +409,12 @@ def _collect_non_wuxia_recovery_issues(candidate: dict, genre: str) -> list[str]
     if not opening_text:
         return []
 
-    fatigue_tokens = (
-        "회복",
-        "피로",
-        "스트레스",
-        "지친",
-        "탈진",
-        "기다림",
-        "기다렸",
-        "6주",
-        "몇 주",
-        "며칠",
-    )
-    fatigue_patterns = (
-        r"\brecovery\b",
-        r"\brecover(?:ed|ing)?\b",
-        r"\bfatigue\b",
-        r"\bstress\b",
-        r"\bburnout\b",
-        r"\bexhausted\b",
-        r"\bwaiting\b",
-        r"\bweeks?\b",
-        r"\bdays?\b",
-    )
-    explicit_action_tokens = (
-        "수면",
-        "잠",
-        "잠들",
-        "식사",
-        "먹",
-        "샤워",
-        "씻",
-        "산책",
-        "걷",
-        "휴식",
-        "쉬",
-        "대화",
-        "통화",
-        "술",
-        "커피",
-        "멍하니",
-    )
-    explicit_action_patterns = (
-        r"\bsleep\b",
-        r"\bslept\b",
-        r"\bmeal\b",
-        r"\beat\b",
-        r"\bate\b",
-        r"\bshower\b",
-        r"\bwalk(?:ed|ing)?\b",
-        r"\brest(?:ed|ing)?\b",
-        r"\btalk(?:ed|ing)?\b",
-        r"\bdrink(?:ing)?\b",
-        r"\bdrank\b",
-        r"\bcoffee\b",
-    )
-    vague_recovery_tokens = (
-        "회복하는 시간",
-        "회복의 시간",
-        "시간이 지나",
-        "버티는 시간",
-        "정리하는 시간",
-    )
-    vague_recovery_patterns = (
-        r"\brecovered over time\b",
-        r"\btime passed\b",
-        r"\bhad time to recover\b",
-    )
-
-    has_fatigue_signal = any(token in opening_text for token in fatigue_tokens) or any(
-        re.search(pattern, opening_text) for pattern in fatigue_patterns
-    )
-    if not has_fatigue_signal:
+    if not has_hard_injury_signal(opening_text):
         return []
 
-    has_explicit_action = any(token in opening_text for token in explicit_action_tokens) or any(
-        re.search(pattern, opening_text) for pattern in explicit_action_patterns
-    )
-    has_vague_recovery = any(token in opening_text for token in vague_recovery_tokens) or any(
-        re.search(pattern, opening_text) for pattern in vague_recovery_patterns
-    )
-    if has_explicit_action:
+    if has_hard_recovery_action(opening_text):
         return []
-    if has_vague_recovery or has_fatigue_signal:
+    if has_vague_recovery_signal(opening_text):
         return ["opening recovery beat too implicit for non-wuxia carryover fatigue"]
     return []
 
@@ -767,10 +695,10 @@ def _build_non_wuxia_energy_block(genre: str, critical_keys: list[str] | None = 
   ### [NR-1] 정신적 피로 자연 회복 원칙 (비무협 장르)
   - 정신적 마모/스트레스/피로는 물리적 부상이 아니다. 일상적 활동으로 자연 회복된다.
   - 회복 경로: 수면, 식사, 산책, 대화, 취미, 음주, 휴식 등 — 1문장 언급이면 충분.
-  - 회복은 opening beat에서 명시적으로 보여라. 수면, 식사, 샤워, 산책, 대화, 음주, 휴식 같은 일상 행동이 직접 보여야 한다.
-  - "시간이 지나며 회복했다" 같은 추상 문장만으로는 부족하다. 장면 안에서 보이는 회복 행동 1개는 필요하다.
-  - Arc 내에서 정신적 피로가 화를 거듭하며 악화만 하는 것은 금지. 반드시 회복 구간을 설계하라.
-  - 회복 없이 정신적 마모가 3화 연속 누적되면 REJECT 사유.
+  - opening beat에서 일상 회복 행동이 직접 보이면 가장 좋지만, 비무협 soft fatigue는 시간 경과나 일상 흐름상 자연 회복으로 읽혀도 허용된다.
+  - "시간이 지나며 회복했다" 같은 추상 문장도 soft fatigue에는 허용된다. 다만 직전 화의 피로를 즉시 "최상의 컨디션"으로 뒤집는 식의 노골적 모순은 금지한다.
+  - Arc 내에서 정신적 피로가 화를 거듭하며 악화만 하는 것은 피하고, 필요하면 회복 구간을 설계하라.
+  - soft fatigue 누적은 경고/감점 사유가 될 수 있지만 자동 REJECT 기준으로 고정하지 않는다.
   - 병원/정신과 방문은 선택사항이지 필수가 아니다. 일상적 회복이 기본이다.
 
   ### [V60.40] 화간 상태 체크포인트 필수

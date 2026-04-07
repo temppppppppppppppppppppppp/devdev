@@ -506,7 +506,7 @@ def test_evaluate_candidate_penalizes_non_wuxia_state_noise():
     assert any("non-wuxia state noise" in issue for issue in issues)
 
 
-def test_evaluate_candidate_penalizes_implicit_non_wuxia_recovery_opening():
+def test_evaluate_candidate_allows_implicit_non_wuxia_soft_recovery_opening():
     agent = _make_agent()
     agent._genre = "investment"
     candidate = _base_candidate(
@@ -541,8 +541,7 @@ def test_evaluate_candidate_penalizes_implicit_non_wuxia_recovery_opening():
         forbidden_items=[],
     )
 
-    assert score < 100
-    assert "opening recovery beat too implicit for non-wuxia carryover fatigue" in issues
+    assert "opening recovery beat too implicit for non-wuxia carryover fatigue" not in issues
 
 
 def test_evaluate_candidate_accepts_explicit_non_wuxia_recovery_opening():
@@ -581,6 +580,45 @@ def test_evaluate_candidate_accepts_explicit_non_wuxia_recovery_opening():
     )
 
     assert "opening recovery beat too implicit for non-wuxia carryover fatigue" not in issues
+
+
+def test_evaluate_candidate_penalizes_vague_non_wuxia_hard_injury_recovery_opening():
+    agent = _make_agent()
+    agent._genre = "investment"
+    candidate = _base_candidate(
+        ep_start=4,
+        ep_end=6,
+        tactical_doc=(
+            "Episode 4: With a fractured wrist still fresh, he says time passed and he recovered over time "
+            "before heading back to the office. "
+            "Episode 5: He returns to the negotiation table. "
+            "Episode 6: He closes the arc at the same office. "
+        )
+        + ("x" * 1800),
+        episode_details=[
+            {"ep_num": 4, "details": ["He insists the broken wrist got better over time."]},
+            {"ep_num": 5, "details": ["He returns to the office."]},
+            {"ep_num": 6, "details": ["He closes the arc."]},
+        ],
+        joint_docs={"final_location": "B", "physical_inventory": [], "world_joint": ""},
+        state_constraints={
+            "arc_start_state": {"location": "A", "equipment": []},
+            "arc_end_state": {"location": "B", "equipment": []},
+            "items_acquired": [],
+            "items_consumed": [],
+        },
+    )
+
+    score, issues = agent._evaluate_candidate(
+        candidate,
+        prev_arc_context="서사 시작점",
+        constraint_block="",
+        prev_equipment=None,
+        forbidden_items=[],
+    )
+
+    assert score < 100
+    assert "opening recovery beat too implicit for non-wuxia carryover fatigue" in issues
 
 
 def test_evaluate_candidate_penalizes_investment_arithmetic_boundary_mismatch():

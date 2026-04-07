@@ -17,3 +17,4 @@
 {"timestamp": "2026-04-06 18:45:52", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 5, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "시작 내공 수정: 100% → 85%", "시작 부상 수정: '없음' → '정상'", "arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']"]}}
 {"timestamp": "2026-04-06 18:47:52", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
 {"timestamp": "2026-04-06 18:48:32", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "target_arc_no": 6, "items_tracked": 8}}
+{"timestamp": "2026-04-07 07:55:56", "type": "emergency_shutdown", "message": "System emergency shutdown initiated", "data": {}}

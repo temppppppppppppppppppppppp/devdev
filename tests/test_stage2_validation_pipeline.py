@@ -232,6 +232,42 @@ class TestRunValidation:
         assert any(a["source"] == "flow_guard" for a in advisories)
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_flow_guard_beat_count_reject_becomes_major_advisory(self, pipeline, valid_refined_arc):
+        pipeline._stage2_flow_guard = MagicMock(
+            return_value={
+                "status": "REJECT",
+                "reason": "beats missing",
+                "feedback": "add beats",
+                "diagnostics": {"type": "beat_count"},
+            }
+        )
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = pipeline.run_validation(**kwargs)
+
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        flow_guard = next(a for a in advisories if a["source"] == "flow_guard")
+        assert flow_guard["severity"] == "MAJOR"
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_flow_guard_stagnation_reject_stays_critical_advisory(self, pipeline, valid_refined_arc):
+        pipeline._stage2_flow_guard = MagicMock(
+            return_value={
+                "status": "REJECT",
+                "reason": "stagnation",
+                "feedback": "flow retry",
+                "diagnostics": {"type": "stagnation"},
+            }
+        )
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = pipeline.run_validation(**kwargs)
+
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        flow_guard = next(a for a in advisories if a["source"] == "flow_guard")
+        assert flow_guard["severity"] == "CRITICAL"
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_duplicate_guard_reject_becomes_advisory(self, pipeline, valid_refined_arc):
         """[TF-25-08] Duplicate Guard REJECT → advisory로 전환."""
         pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})

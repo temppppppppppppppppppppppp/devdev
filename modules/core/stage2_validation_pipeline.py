@@ -606,7 +606,7 @@ class Stage2ValidationPipeline:
             _python_advisories.append(
                 {
                     "source": "flow_guard",
-                    "severity": "CRITICAL",
+                    "severity": self._classify_flow_guard_advisory_severity(flow_guard),
                     "message": _fg_feedback[:2000],
                 }
             )
@@ -647,6 +647,14 @@ class Stage2ValidationPipeline:
             return {"early_return": {"action": "retry", "current_feedback": current_feedback}}
 
         return {"early_return": None}
+
+    def _classify_flow_guard_advisory_severity(self, flow_guard: dict) -> str:
+        """Bound Flow Guard advisories so beat-shape issues do not inflate to CRITICAL."""
+        diagnostics = flow_guard.get("diagnostics") if isinstance(flow_guard, dict) else None
+        diagnostic_type = diagnostics.get("type") if isinstance(diagnostics, dict) else None
+        if diagnostic_type in {"beat_count", "empty_beats", "beat_condensed"}:
+            return "MAJOR"
+        return "CRITICAL"
 
     def _run_draft_validator_full(
         self,

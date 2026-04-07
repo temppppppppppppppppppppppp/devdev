@@ -1,14 +1,14 @@
 # 0_0 Stage2 Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (2026-04-06 re-audited and promoted from parked after live validation/finalizer revalidation confirmed a still-live Stage2 persistence-authority seam; the bounded preflight/validation/finalizer persistence tranche has now landed and reads as a closure-candidate child tranche inside this SSOT, while broader Stage2 normalization remains queued behind it)
+Status: partially_realized (2026-04-06 re-audited and promoted from parked after live validation/finalizer revalidation confirmed a still-live Stage2 persistence-authority seam; the bounded preflight/validation/finalizer persistence tranche and the bounded Flow Guard severity tranche have now landed as child slices inside this SSOT, while broader Stage2 normalization remains queued behind them)
 Canonical Path: `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2 survey docs and lane drafts untracked`
 - Resume Commit: `5428daf989bb8dd91aa12f86a137d899596fed4a`
-- Resume Drift Summary: `2026-04-05 bounded Stage2 realization slices narrowed the lane, the 2026-04-06 global P0-P1 Opus survey confirmed two still-live Stage2 persistence seams, the 2026-04-06 Golden bounded survey added one residual artifact-truth P1 plus abrupt-shutdown observability debt, and the current workspace then landed truth-preserving packet merges across `stage2_preflight_runtime.py`, `stage2_validation_pipeline.py`, `stage2_finalizer.py`, and `stage2_contracts.py` with focused Stage2 family regressions passing`
+- Resume Drift Summary: `2026-04-05 bounded Stage2 realization slices narrowed the lane, the 2026-04-06 global P0-P1 Opus survey confirmed two still-live Stage2 persistence seams, the 2026-04-06 Golden bounded survey added one residual artifact-truth P1 plus abrupt-shutdown observability debt, the workspace then landed truth-preserving packet merges across `stage2_preflight_runtime.py`, `stage2_validation_pipeline.py`, `stage2_finalizer.py`, and `stage2_contracts.py`, and the current workspace additionally landed a bounded Flow Guard severity split in `stage2_validation_pipeline.py` with focused Stage2 family regressions passing`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
 - `docs/2026-04-01/0_0-stage2-stage3-context-hierarchy-bounded-survey.md`
@@ -927,3 +927,102 @@ Residual risks and deferred scope:
 - abnormal-shutdown observability and explicit interruption-marking debt, also captured in `01_golden`
 - broader mission-authority extraction, alias normalization, and dead-field keep-or-drop work
 - no fresh live run has yet been used to convert this bounded landing into a runtime closure audit
+
+## 30. 2026-04-06 Opus Follow-Up: No-New-Lane Confirmation and Flow-Guard Severity Inflation
+
+Follow-up evidence docs:
+
+- `docs/2026-04-06/0-temp-stage2-other-issues-bounded-survey.md`
+- `docs/2026-04-06/0-temp-stage2-flow-guard-beat-severity-mismatch-bounded-survey.md`
+- `docs/2026-04-06/0-temp-stage2-opus-terminal1-flow-guard-severity-memo.md`
+- `docs/2026-04-06/0-temp-stage2-opus-followup-terminal2-no-new-lane-confirmation.md`
+
+Queue semantics remain unchanged:
+
+- no new execution SSOT is promoted from the `0_temp.txt` follow-up wave
+- no roadmap reorder is justified by the Opus follow-up
+- this Stage2 SSOT remains the correct home for the residual `beat_sequence` / `Flow Guard` policy seam
+
+Confirmed follow-up reading:
+
+1. `0_temp.txt` does contain other real issue families beyond the already-promoted non-wuxia state-lock lane, but those families are already documented and owned:
+   - numeric arithmetic drift remains covered by the existing Arc 3/4 Stage2 survey and the active Stage4 consumer lane
+   - entity reject/retry remains covered by the existing Arc 5 Stage2 survey and still reads as retry-only residue
+   - repeated `Patch pressure exceeded -> advisory only` remains supporting evidence for observability/patch-path debt, not a separate front queue item
+2. the only plausible under-documented residual confirmed by the Opus follow-up is the `Flow Guard` / `beat_sequence` severity mismatch
+3. that mismatch is best classified as `severity inflation`, not false-positive fabrication:
+   - Python correctly detects thin or empty `beat_sequence` metadata
+   - but the current advisory sink still escalates those `Flow Guard REJECT` paths as fixed `CRITICAL` severity even when Director semantic review judges the prose structure substantively sufficient
+
+Bounded owner set:
+
+- primary owner: `modules/core/stage2_validation_pipeline.py`
+- secondary owner: Stage2 contract policy for `beat_sequence`
+
+The Opus memo also sharpened a broader contract observation inside the same owner family:
+
+- the Stage2 validation advisory sink is effectively flat-severity for multiple sources, not just `flow_guard`
+- the current sink path treats `consensus`, `flow_guard`, `duplicate_guard`, `draft_validator`, `arc_corrector_*`, and `continuity_inspector` advisories too uniformly at the severity layer
+
+Execution consequence:
+
+- keep this seam inside the broader Stage2 residual backlog rather than promoting a separate lane
+- treat it as a future bounded Stage2 policy/observability subtask after the already-landed persistence-authority tranche
+- the likely future patch shape, if later activated, is:
+  - tiered severity by `diagnostics.type` rather than flat `CRITICAL`
+  - explicit keep-or-drop policy for `beat_sequence`
+  - bounded downgrade path when `tactical_doc` / `episode_details` already provide semantically sufficient structure
+
+Guardrail:
+
+- this appendix does not demote the active front pair (`Stage4 consumer`, `Stage4 repair`)
+- this appendix does not demote the active `Stage234 non-wuxia state-lock overreach` lane
+- this appendix does not convert the Stage2 residual backlog into an immediate implementation order
+
+3-pass update note:
+
+- Pass 1: bounded this update to Opus follow-up conclusions only, with no queue mutation
+- Pass 2: confirmed the new memos support, rather than overturn, the current Stage2 SSOT reading
+- Pass 3: recorded only the execution consequence that matters operationally: keep the seam in this SSOT and do not create a new lane
+
+Confidence for this appendix: `96%`
+
+## 31. 2026-04-06 Bounded Realization: Flow-Guard Severity Split Landed
+
+Implementation audit:
+
+- `docs/2026-04-06/0_0-stage2-flow-guard-severity-tranche-3pass-audit.md`
+- `docs/2026-04-06/0_0-stage2-flow-guard-severity-landed-3pass-audit.md`
+
+Landed code/tests:
+
+- `modules/core/stage2_validation_pipeline.py`
+- `tests/test_stage2_validation_pipeline.py`
+- `tests/test_stage2_preflight_helpers.py`
+
+What changed:
+
+1. the `flow_guard` advisory sink no longer forces every reject into fixed `CRITICAL`
+2. `diagnostics.type in {beat_count, empty_beats, beat_condensed}` now maps to `MAJOR`
+3. stagnation-class or unknown rejects remain `CRITICAL`
+4. `entity` handling was intentionally left untouched in this tranche
+
+Execution consequence:
+
+- the Stage2 SSOT no longer treats the `Flow Guard` severity split as purely future/speculative
+- the broader advisory-tier flattening problem still remains residual debt inside this same SSOT
+- no new lane, roadmap reorder, or queue promotion is justified by this landed slice
+
+Targeted verification:
+
+- `pytest tests/test_stage2_validation_pipeline.py -k "flow_guard" -q`
+- `pytest tests/test_stage2_preflight_helpers.py -k "flow_guard_reject_becomes_advisory" -q`
+- `python -m py_compile modules/core/stage2_validation_pipeline.py tests/test_stage2_validation_pipeline.py tests/test_stage2_preflight_helpers.py`
+- `ruff check modules/core/stage2_validation_pipeline.py tests/test_stage2_validation_pipeline.py tests/test_stage2_preflight_helpers.py`
+
+Residual scope:
+
+- broader severity normalization across non-`flow_guard` advisory sources
+- possible future contract work on explicit `beat_sequence` keep-or-drop policy
+
+Confidence for this landed slice: `97%`
