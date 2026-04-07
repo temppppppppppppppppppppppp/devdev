@@ -671,6 +671,8 @@ class TestPreflightValidationRejectPaths:
         assert result["action"] == "proceed"
         advisories = result.get("python_advisories", [])
         assert any(a["source"] == "flow_guard" and "서사" in a["message"] for a in advisories)
+        flow_guard = next(a for a in advisories if a["source"] == "flow_guard")
+        assert flow_guard["severity"] == "CRITICAL"
 
     # ── 4) Duplicate Guard REJECT ──
 

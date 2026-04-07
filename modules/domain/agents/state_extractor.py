@@ -9,10 +9,18 @@ Purpose:
 - [V61] Entity Registry 추출 - 고유명사 일관성 추적
 """
 
+# utf8-hygiene: allow-file -- Korean regex extractors and literal fallback placeholders intentionally use `?` tokens.
+
 import json
 import logging
 
-from modules.core.constants import smart_truncate
+from modules.core.constants import GenreTypes, smart_truncate
+from modules.core.genre_schema_builder import is_wuxia
+from modules.core.non_wuxia_recovery_policy import (
+    has_soft_non_wuxia_state_signal,
+    normalize_genre_type,
+    split_injury_entries_for_genre,
+)
 from modules.core.prompt_loader import SafeDict
 
 from .base_agent import BaseAgent
@@ -68,6 +76,13 @@ STATE_EXTRACTION_PROMPT = """
 
 ### [Arc 데이터]
 {arc_data}
+
+### [장르]
+- genre_type: {genre_type}
+- genre_name: {genre_name}
+
+### [recovery_scene_required 판정 규칙]
+{recovery_guidance}
 
 ### [추출 대상]
 1. **부상 상태 (injuries)**
@@ -246,6 +261,9 @@ class StateExtractor(BaseAgent):
             SafeDict(
                 arc_data=self._escape_braces(json.dumps(cleaned_data, ensure_ascii=False, indent=2)),
                 arc_no=arc_no,
+                genre_type=self._resolve_genre_type(arc_data),
+                genre_name=self._resolve_genre_name(arc_data),
+                recovery_guidance=self._build_recovery_guidance(arc_data),
             )
         )
 
@@ -413,25 +431,43 @@ class StateExtractor(BaseAgent):
         inventory = state.get("inventory", {})
         forbidden = state.get("forbidden_in_next_arc", {})
         constraints = state.get("next_arc_constraints", {})
+        genre_type = self._resolve_genre_type()
+        is_wuxia_genre = is_wuxia(genre_type)
 
         lines = [
             "=" * 60,
-            "🚨🚨🚨 [V60.10 STATE LOCK - 위반 시 즉시 REJECT] 🚨🚨🚨",
+            (
+                "🚨🚨🚨 [V60.10 STATE LOCK - 위반 시 즉시 REJECT] 🚨🚨🚨"
+                if is_wuxia_genre or constraints.get("recovery_scene_required")
+                else "ℹ️ [V60.10 STATE CONTINUITY - SOFT STATE ADVISORY]"
+            ),
             "=" * 60,
             "",
-            "### 1. 부상/내공 상태 (RECOVERY REQUIRED)",
+            (
+                "### 1. 부상/내공 상태 (RECOVERY REQUIRED)"
+                if is_wuxia_genre or constraints.get("recovery_scene_required")
+                else "### 1. 상태 메모 (SOFT STATE ADVISORY)"
+            ),
         ]
 
         injuries = protagonist.get("injuries", [])
         if not isinstance(injuries, list):
             injuries = []
-        if injuries:
-            for inj in injuries:
+        hard_injuries, soft_states = split_injury_entries_for_genre(injuries, genre_type)
+        if hard_injuries or soft_states:
+            for inj in hard_injuries:
                 if not isinstance(inj, dict):
                     continue
                 lines.append(
                     f"   - {inj.get('name', '?')}: {inj.get('severity', '?')} "
                     f"(회복 {inj.get('recovery_days', '?')}일 필요)"
+                )
+            for state_item in soft_states:
+                if not isinstance(state_item, dict):
+                    continue
+                lines.append(
+                    f"   - {state_item.get('name', '?')}: {state_item.get('severity', '?')} "
+                    "(일상 회복 가능, 회복 장면 강제 아님)"
                 )
         else:
             lines.append("   - 없음")
@@ -439,9 +475,10 @@ class StateExtractor(BaseAgent):
         energy = protagonist.get("internal_energy", {})
         if not isinstance(energy, dict):
             energy = {"current_percent": int(energy) if isinstance(energy, int | float) else 100}
-        lines.append(
-            f"   - 내공: {energy.get('current_percent', 100)}% (회복 {energy.get('recovery_needed_days', 0)}일 필요)"
-        )
+        if is_wuxia_genre:
+            lines.append(
+                f"   - 내공: {energy.get('current_percent', 100)}% (회복 {energy.get('recovery_needed_days', 0)}일 필요)"
+            )
 
         lines.append("")
         lines.append("### 2. 현재 소지품 (MUST HAVE)")
@@ -472,6 +509,8 @@ class StateExtractor(BaseAgent):
             lines.append(f"   ✅ 회복 장면 필수 (최소 {constraints.get('min_time_skip_days', 1)}일)")
         if constraints.get("must_start_with"):
             lines.append(f"   ✅ 도입부: {constraints.get('must_start_with')}")
+        if (not constraints.get("recovery_scene_required")) and soft_states:
+            lines.append("   ℹ️ 정신적 피로/스트레스는 일상 흐름상 자연 회복 가능. opening beat 강제 아님.")
 
         lines.append("")
         lines.append("=" * 60)
@@ -480,6 +519,7 @@ class StateExtractor(BaseAgent):
 
     def _validate_and_fix_result(self, result: dict, original_arc: dict) -> dict:
         """결과 검증 및 보정"""
+        genre_type = self._resolve_genre_type(original_arc)
 
         # protagonist_state 보정
         if "protagonist_state" not in result:
@@ -517,24 +557,28 @@ class StateExtractor(BaseAgent):
                 "resolved_problems": [],
             }
 
-        # next_arc_constraints 보정
-        if "next_arc_constraints" not in result:
-            injuries = ps.get("injuries", [])
-            if not isinstance(injuries, list):
-                injuries = []
-            energy = ps.get("internal_energy", {})
-            if not isinstance(energy, dict):
-                energy = {"current_percent": int(energy) if isinstance(energy, int | float) else 100}
+        injuries = ps.get("injuries", [])
+        if not isinstance(injuries, list):
+            injuries = []
+        energy = ps.get("internal_energy", {})
+        if not isinstance(energy, dict):
+            energy = {"current_percent": int(energy) if isinstance(energy, int | float) else 100}
 
-            recovery_needed = bool(injuries) or energy.get("current_percent", 100) < 50
-            min_days = max([inj.get("recovery_days", 0) for inj in injuries if isinstance(inj, dict)] + [0])
+        hard_injuries, _soft_states = split_injury_entries_for_genre(injuries, genre_type)
+        recovery_needed = bool(hard_injuries) or (is_wuxia(genre_type) and energy.get("current_percent", 100) < 50)
+        min_days = max([inj.get("recovery_days", 0) for inj in hard_injuries if isinstance(inj, dict)] + [0])
 
-            result["next_arc_constraints"] = {
-                "must_start_with": "이전 상태 계승" if recovery_needed else None,
-                "recovery_scene_required": recovery_needed,
-                "min_time_skip_days": min_days,
-                "mandatory_items_in_possession": inv.get("current_items", []),
-            }
+        constraints = result.get("next_arc_constraints", {})
+        if not isinstance(constraints, dict):
+            constraints = {}
+        if recovery_needed:
+            constraints["must_start_with"] = constraints.get("must_start_with") or "이전 상태 계승"
+        elif constraints.get("must_start_with") == "이전 상태 계승":
+            constraints["must_start_with"] = None
+        constraints["recovery_scene_required"] = recovery_needed
+        constraints["min_time_skip_days"] = min_days if recovery_needed else 0
+        constraints.setdefault("mandatory_items_in_possession", inv.get("current_items", []))
+        result["next_arc_constraints"] = constraints
 
         # [V61] entity_registry 보정
         if "entity_registry" not in result:
@@ -550,6 +594,7 @@ class StateExtractor(BaseAgent):
 
     def _fallback_extraction(self, arc_data: dict) -> dict:
         """LLM 실패 시 Python 기반 추출"""
+        genre_type = self._resolve_genre_type(arc_data)
 
         joint = arc_data.get("joint_docs", {})
         shadow = arc_data.get("status_shadow", {})
@@ -570,12 +615,21 @@ class StateExtractor(BaseAgent):
         injuries_raw = arc_end_state.get("injuries") or shadow.get("expected_injuries", "")
         injuries = []
         if injuries_raw and injuries_raw != "없음":
+            is_soft_state = (not is_wuxia(genre_type)) and has_soft_non_wuxia_state_signal(injuries_raw)
             injuries.append(
-                {"name": injuries_raw[:50], "severity": "unknown", "recovery_days": 3, "recovery_method": "운기조식"}
+                {
+                    "name": injuries_raw[:50],
+                    "severity": "soft" if is_soft_state else "unknown",
+                    "recovery_days": 0 if is_soft_state else 3,
+                    "recovery_method": "일상 회복" if is_soft_state else "운기조식",
+                }
             )
 
         # 내공 추출 - arc_end_state 우선
-        if arc_end_state.get("internal_energy") is not None:
+        if (not is_wuxia(genre_type)) and arc_end_state.get("internal_energy") is None:
+            loss_percent = 0
+            current_energy = 100
+        elif arc_end_state.get("internal_energy") is not None:
             raw_energy = arc_end_state["internal_energy"]
             try:  # [V70] string/float 안전 변환
                 current_energy = (
@@ -596,6 +650,9 @@ class StateExtractor(BaseAgent):
                 logging.warning(f" [V60.73] internal_energy_loss 파싱 실패: '{energy_loss}' → 50% 가정")
                 loss_percent = 50
                 current_energy = 50
+
+        hard_injuries, _soft_states = split_injury_entries_for_genre(injuries, genre_type)
+        recovery_needed = bool(hard_injuries) or (is_wuxia(genre_type) and loss_percent > 30)
 
         return {
             "arc_no": arc_data.get("arc_no", "Unknown"),
@@ -622,8 +679,9 @@ class StateExtractor(BaseAgent):
                 "resolved_problems": [],
             },
             "next_arc_constraints": {
-                "recovery_scene_required": bool(injuries) or loss_percent > 30,
-                "min_time_skip_days": max([i.get("recovery_days", 0) for i in injuries] + [0]),
+                "must_start_with": "이전 상태 계승" if recovery_needed else None,
+                "recovery_scene_required": recovery_needed,
+                "min_time_skip_days": max([i.get("recovery_days", 0) for i in hard_injuries] + [0]),
                 "mandatory_items_in_possession": current_items,
             },
             # [V61.1] Python regex fallback으로 entity 추출 (LLM 실패 시)
@@ -631,6 +689,50 @@ class StateExtractor(BaseAgent):
                 str(arc_data.get("tactical_doc", "")) + " " + str(joint)
             ),
         }
+
+    def _resolve_genre_type(self, arc_data: dict | None = None) -> str:
+        if isinstance(arc_data, dict):
+            for key in ("genre_type", "genre", "work_type"):
+                raw = arc_data.get(key)
+                if isinstance(raw, dict):
+                    raw = raw.get("type") or raw.get("name")
+                genre_type = normalize_genre_type(raw)
+                if genre_type:
+                    return genre_type
+
+        ctx = getattr(self, "context", None)
+        project = getattr(ctx, "current_project", None)
+        genre_info = getattr(project, "genre", None)
+        if isinstance(genre_info, dict):
+            for raw in (genre_info.get("type"), genre_info.get("name")):
+                genre_type = normalize_genre_type(raw)
+                if genre_type:
+                    return genre_type
+
+        guard = getattr(ctx, "guard", None)
+        if guard and hasattr(guard, "get_genre_name"):
+            genre_type = normalize_genre_type(guard.get_genre_name())
+            if genre_type:
+                return genre_type
+
+        return GenreTypes.WUXIA
+
+    def _resolve_genre_name(self, arc_data: dict | None = None) -> str:
+        genre_type = self._resolve_genre_type(arc_data)
+        return GenreTypes.get_name(genre_type)
+
+    def _build_recovery_guidance(self, arc_data: dict | None = None) -> str:
+        genre_type = self._resolve_genre_type(arc_data)
+        if is_wuxia(genre_type):
+            return (
+                "- 물리적 부상, 이동 불가, 내공 고갈은 hard state로 본다.\n"
+                "- 이런 경우 `recovery_scene_required=true`를 유지해도 된다."
+            )
+        return (
+            "- 비무협에서 정신적 피로/스트레스/과로/두통/신경계 피로 등 soft state는 `recovery_scene_required=false`로 둔다.\n"
+            "- 비무협에서 물리적 부상, 골절, 출혈, 이동 불가 같은 hard injury만 `recovery_scene_required=true`로 둔다.\n"
+            '- soft state는 `must_start_with="이전 상태 계승"`를 강제하지 말고 상태 메모만 남겨도 된다.'
+        )
 
     def _empty_entity_registry(self) -> dict:
         """[V61] 빈 Entity Registry 반환"""
