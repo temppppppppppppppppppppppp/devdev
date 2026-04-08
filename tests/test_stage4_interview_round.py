@@ -907,7 +907,9 @@ class TestPreDirectorValidation:
         with (
             patch("modules.validation.threshold_helper._threshold", side_effect=threshold_side_effect),
             patch.object(ir, "_resolve_director_work_focus", return_value={"tracking_slots": ["소꿉친구 라인"]}),
-            patch.object(ir, "_build_director_work_focus_summary", return_value="[작품 추적 슬롯 요약]\n- 소꿉친구 라인"),
+            patch.object(
+                ir, "_build_director_work_focus_summary", return_value="[작품 추적 슬롯 요약]\n- 소꿉친구 라인"
+            ),
             patch.object(ir, "_build_director_relationship_context", return_value=""),
         ):
             validation_results, _director_mem = ir.director_runtime.run_pre_director_validation(
@@ -964,7 +966,9 @@ class TestPreDirectorValidation:
         with (
             patch("modules.validation.threshold_helper._threshold", side_effect=threshold_side_effect),
             patch.object(ir, "_resolve_director_work_focus", return_value={"tracking_slots": ["소꿉친구 라인"]}),
-            patch.object(ir, "_build_director_work_focus_summary", return_value="[작품 추적 슬롯 요약]\n- 소꿉친구 라인"),
+            patch.object(
+                ir, "_build_director_work_focus_summary", return_value="[작품 추적 슬롯 요약]\n- 소꿉친구 라인"
+            ),
             patch.object(ir, "_build_director_relationship_context", return_value=""),
         ):
             director_memory_context = ir.director_runtime.collect_director_retrieval_context(
@@ -1077,9 +1081,7 @@ class TestPreDirectorValidation:
             prev_manuscript="",
         )
 
-        assert validation_results[0]["warnings"] == [
-            "[Python검증-ADVISORY] degraded: relationship_consistency"
-        ]
+        assert validation_results[0]["warnings"] == ["[Python검증-ADVISORY] degraded: relationship_consistency"]
         assert validation_results[0]["warning_count"] == 1
         assert validation_results[0]["focus_points"] == ["Python 검증 advisory 1건 (Director 참고)"]
 
@@ -1305,16 +1307,8 @@ class TestPreDirectorValidation:
             "Python 검증 경고 1건 (Director 판단 필요)",
             "Python 검증 advisory 2건 (Director 참고)",
         ]
-        assert any(
-            "Python 검증 경고 1건" in call.args[0]
-            for call in ctx.ui.log.call_args_list
-            if call.args
-        )
-        assert any(
-            "Python 검증 advisory 2건" in call.args[0]
-            for call in ctx.ui.log.call_args_list
-            if call.args
-        )
+        assert any("Python 검증 경고 1건" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
+        assert any("Python 검증 advisory 2건" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
 
     def test_apply_blocking_validator_failures_updates_focus_points_and_logs_details(self):
         ctx = _make_ctx()
@@ -1332,16 +1326,8 @@ class TestPreDirectorValidation:
         assert validation_result["warnings"] == ["[Python검증-CRITICAL] grave issue"]
         assert validation_result["warning_count"] == 1
         assert validation_result["focus_points"] == ["Python 검증 경고 1건 (Director 판단 필요)"]
-        assert any(
-            "Python 검증 경고 1건" in call.args[0]
-            for call in ctx.ui.log.call_args_list
-            if call.args
-        )
-        assert any(
-            "[CRITICAL] grave issue" in call.args[0]
-            for call in ctx.ui.log.call_args_list
-            if call.args
-        )
+        assert any("Python 검증 경고 1건" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
+        assert any("[CRITICAL] grave issue" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
 
     def test_apply_blocking_validator_advisories_updates_focus_points_and_logs_summary(self):
         ctx = _make_ctx()
@@ -1362,11 +1348,7 @@ class TestPreDirectorValidation:
         ]
         assert validation_result["warning_count"] == 2
         assert validation_result["focus_points"] == ["Python 검증 advisory 2건 (Director 참고)"]
-        assert any(
-            "Python 검증 advisory 2건" in call.args[0]
-            for call in ctx.ui.log.call_args_list
-            if call.args
-        )
+        assert any("Python 검증 advisory 2건" in call.args[0] for call in ctx.ui.log.call_args_list if call.args)
 
     def test_collect_blocking_validator_advisory_warnings_dedupes_and_formats(self):
         warnings = Stage4InterviewRound._collect_blocking_validator_advisory_warnings(
@@ -1581,11 +1563,7 @@ class TestInterviewRoundRun:
         )
 
         decisions_path = tmp_path / "logs" / "session" / "decisions.jsonl"
-        rows = [
-            json.loads(line)
-            for line in decisions_path.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
+        rows = [json.loads(line) for line in decisions_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         row = rows[-1]
         meta = row["meta"]
 
@@ -1867,7 +1845,7 @@ class TestInterviewRoundRun:
         ir = Stage4InterviewRound(ctx)
         prev_manuscripts_text = "[제2화] " + ("history " * 30)
 
-        history = ir._build_manuscript_history_for_check(prev_manuscripts_text, next_ep=3)
+        history = ir.post_select_runtime.build_manuscript_history_for_check(prev_manuscripts_text, next_ep=3)
 
         assert len(history) == 1
         assert history[0]["ep_num"] == 2
@@ -2826,9 +2804,7 @@ class TestRecordS4Attempt:
         kwargs = ctx.session_logger.log_decision.call_args.kwargs
         assert kwargs["fix_scope"] == "partial"
         assert kwargs["authoritative_fix_scope"] == ""
-        assert kwargs["authoritative_fix_scope_violation"] == {
-            "type": "blank_authoritative_fix_scope"
-        }
+        assert kwargs["authoritative_fix_scope_violation"] == {"type": "blank_authoritative_fix_scope"}
         assert kwargs["scope_origin"] == {
             "fix_scope": "director_authoritative",
             "authoritative_fix_scope": "director_authoritative",
@@ -2852,6 +2828,66 @@ class TestRecordS4Attempt:
             "authoritative_fix_scope_violation": {"type": "blank_authoritative_fix_scope"},
             "widened": False,
         }
+
+    def test_log_pass_session_decision_uses_logging_payload_fix_pack(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        ctx = _make_ctx()
+        ctx.session_logger = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = _PassResultLoggingPayload(
+            log_artifact_meta={
+                "candidate_key": "A|patched",
+                "content_hash": "hash-final",
+                "artifact_path": "artifacts/final.txt",
+            },
+            session_selection_reason="final selection",
+            session_verdict_reason="final verdict",
+            session_runtime_advisory="runtime digest",
+            session_retry_directives="retry digest",
+            session_gate_semantics={
+                "director_verdict": "PASS",
+                "gate_basis": "patch_reaudit_pass",
+                "repair_scope": "inplace",
+            },
+            session_fix_pack={
+                "patch_targets": ["name_anchor"],
+                "must_fix": ["rename family anchor"],
+                "do_not_regress": ["ending hook"],
+                "success_condition": "anchor renamed",
+                "target_kind": "entity_ref",
+            },
+        )
+
+        ir._log_pass_session_decision(
+            next_ep=1,
+            round_num=0,
+            arc_num=1,
+            director_result={"fix_scope": "inplace"},
+            trace_director_result={},
+            final_verdict="PASS",
+            final_score=90,
+            selected="A",
+            reason="legacy reason",
+            error_category="",
+            attempt_key="s4:ep1:arc1:a1:test",
+            selection_artifact_meta={
+                "candidate_key": "A|pre",
+                "content_hash": "hash-pre",
+                "artifact_path": "artifacts/pre.txt",
+            },
+            initial_verdict="PASS_WITH_FIX",
+            initial_score=90,
+            logging_payload=payload,
+        )
+
+        call_kwargs = ctx.session_logger.log_decision.call_args.kwargs
+        assert call_kwargs["fix_pack"]["target_kind"] == "entity_ref"
+        assert call_kwargs["fix_pack"]["patch_targets"] == ["name_anchor"]
+        assert call_kwargs["reason"] == "legacy reason"
+        assert call_kwargs["selection_reason"] == "final selection"
+        assert call_kwargs["verdict_reason"] == "final verdict"
 
     def test_record_stage4_pass_rate_attempt_uses_prelude_payload(self):
         ctx = _make_ctx()
@@ -3266,7 +3302,7 @@ class TestRecordS4Attempt:
             "summary": "continuity mismatch",
         }
 
-        verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+        verdict, director_feedback, previous_attempt, error_category = ir.post_select_runtime.run_post_select_checks(
             verdict="PASS",
             final_manuscript="patched manuscript",
             final_state_updates={},
@@ -3325,7 +3361,7 @@ class TestRecordS4Attempt:
             "summary": "",
         }
 
-        verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+        verdict, director_feedback, previous_attempt, error_category = ir.post_select_runtime.run_post_select_checks(
             verdict="PASS",
             final_manuscript="patched manuscript",
             final_state_updates={},
@@ -4068,11 +4104,7 @@ class TestRecordS4Attempt:
         assert patch_fallback is False
         assert prev_score == 88
         assert asp_manuscript is None
-        tf_rh1_call = next(
-            call
-            for call in ctx.ui.log.call_args_list
-            if call.args and "[TF-RH1]" in call.args[0]
-        )
+        tf_rh1_call = next(call for call in ctx.ui.log.call_args_list if call.args and "[TF-RH1]" in call.args[0])
         assert tf_rh1_call.kwargs["event_kind"] == "policy"
         assert tf_rh1_call.kwargs["attempt_key"] == "s4:ep9:arc1:a3"
 
@@ -4231,7 +4263,7 @@ class TestRecordS4Attempt:
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
         ir._record_s4_attempt = MagicMock()
-        ir._run_post_select_checks = MagicMock(return_value=("PASS_WITH_FIX", "", {}, ""))
+        ir.post_select_runtime.run_post_select_checks = MagicMock(return_value=("PASS_WITH_FIX", "", {}, ""))
         ir._execute_pass_with_fix_loop = MagicMock(
             return_value=(
                 "PASS",
@@ -4294,7 +4326,7 @@ class TestRecordS4Attempt:
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
         ir._record_s4_attempt = MagicMock()
-        ir._run_post_select_checks = MagicMock(
+        ir.post_select_runtime.run_post_select_checks = MagicMock(
             return_value=("REJECT", "retry required", {"score": 71, "fix_scope": "partial"}, "LOGIC_ERROR")
         )
         round_ctx = _make_round_ctx()
@@ -4403,7 +4435,7 @@ class TestRecordS4Attempt:
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
-        ir._run_post_select_checks = MagicMock(
+        ir.post_select_runtime.run_post_select_checks = MagicMock(
             return_value=("PASS_WITH_FIX", "needs patch", {"score": 94}, "")
         )
         ir._execute_pass_with_fix_loop = MagicMock(
@@ -4816,9 +4848,12 @@ class TestRecordS4Attempt:
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
 
-        with patch("modules.core.constants.log_patch_diff") as mocked_diff, patch(
-            "modules.core.constants.calc_patch_change_ratio",
-            return_value=0.125,
+        with (
+            patch("modules.core.constants.log_patch_diff") as mocked_diff,
+            patch(
+                "modules.core.constants.calc_patch_change_ratio",
+                return_value=0.125,
+            ),
         ):
             payload = ir.retry_runtime._capture_pass_with_fix_patch_delta(
                 current_ms="original manuscript",
@@ -4837,9 +4872,12 @@ class TestRecordS4Attempt:
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
 
-        with patch("modules.core.constants.log_patch_diff"), patch(
-            "modules.core.constants.calc_patch_change_ratio",
-            return_value=0.42,
+        with (
+            patch("modules.core.constants.log_patch_diff"),
+            patch(
+                "modules.core.constants.calc_patch_change_ratio",
+                return_value=0.42,
+            ),
         ):
             payload = ir.retry_runtime._capture_pass_with_fix_patch_delta(
                 current_ms="original manuscript",
@@ -5053,66 +5091,65 @@ class TestRecordS4Attempt:
         assert payload.director_feedback.endswith("[TF-32-V] PASS_WITH_FIX 수정 실패 → REJECT")
 
     def test_append_episode_log_includes_round_cost_and_strategy_flags(self):
-            ctx = _make_ctx()
-            ctx.current_project.name = "proj"
-            ir = Stage4InterviewRound(ctx)
-            ir._round_start_ts = time.monotonic() - 1
-            ir._last_strategy_budget = "reduced"
-            ir._last_strategy_count = 2
-            ir._last_retry_budget_axes = {
-                "round": "retry_round_2",
-                "repair": "patch_revision",
-                "strategy": "reduced",
-                "escalation": "mad",
-                "guidance": "augmented",
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ir = Stage4InterviewRound(ctx)
+        ir._round_start_ts = time.monotonic() - 1
+        ir._last_strategy_budget = "reduced"
+        ir._last_strategy_count = 2
+        ir._last_retry_budget_axes = {
+            "round": "retry_round_2",
+            "repair": "patch_revision",
+            "strategy": "reduced",
+            "escalation": "mad",
+            "guidance": "augmented",
+        }
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 4,
+                "total_tokens": 4321,
+                "total_cost_usd": 0.456,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 4321, "cost": 0.456}},
             }
-            ir._get_round_metrics_delta = MagicMock(
-                return_value={
-                    "total_calls": 4,
-                    "total_tokens": 4321,
-                    "total_cost_usd": 0.456,
-                    "model_breakdown": {"gemini-2.5-pro": {"tokens": 4321, "cost": 0.456}},
-                }
+        )
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            ir._append_episode_log(
+                ep_num=3,
+                round_num=1,
+                director_result={
+                    "verdict": "REJECT",
+                    "score": 44,
+                    "selected": "A",
+                    "selection_reason": "best candidate",
+                    "selected_candidate": {"strategy_name": "tension"},
+                    "score_breakdown": {},
+                    "action_items": [],
+                    "open_review": "",
+                },
+                is_patch=False,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="gemini-2.5-pro",
+                reject_bucket="constraint_violation",
+                validation_warnings=["warn-1"],
             )
 
-            with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
-                ir._append_episode_log(
-                    ep_num=3,
-                    round_num=1,
-                    director_result={
-                        "verdict": "REJECT",
-                        "score": 44,
-                        "selected": "A",
-                        "selection_reason": "best candidate",
-                        "selected_candidate": {"strategy_name": "tension"},
-                        "score_breakdown": {},
-                        "action_items": [],
-                        "open_review": "",
-                    },
-                    is_patch=False,
-                    patch_fallback=False,
-                    tot_used=False,
-                    mad_used=False,
-                    asp_used=False,
-                    model="gemini-2.5-pro",
-                    reject_bucket="constraint_violation",
-                    validation_warnings=["warn-1"],
-                )
-
-            written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
-            payload = json.loads(written.strip())
-            assert payload["round_total_calls"] == 4
-            assert payload["round_total_tokens"] == 4321
-            assert payload["round_total_cost_usd"] == 0.456
-            assert payload["round_model_breakdown"]["gemini-2.5-pro"]["tokens"] == 4321
-            assert payload["flags"]["strategy_budget"] == "reduced"
-            assert payload["flags"]["strategy_count"] == 2
-            assert payload["flags"]["reject_bucket"] == "constraint_violation"
-            assert payload["flags"]["retry_budget_axes"]["repair"] == "patch_revision"
-            assert payload["patch_trace"]["patch_strategy"] == ""
-            assert payload["patch_trace"]["patch_targets"] == []
-            assert payload["patch_trace"]["unchanged_ratio"] is None
-
+        written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
+        payload = json.loads(written.strip())
+        assert payload["round_total_calls"] == 4
+        assert payload["round_total_tokens"] == 4321
+        assert payload["round_total_cost_usd"] == 0.456
+        assert payload["round_model_breakdown"]["gemini-2.5-pro"]["tokens"] == 4321
+        assert payload["flags"]["strategy_budget"] == "reduced"
+        assert payload["flags"]["strategy_count"] == 2
+        assert payload["flags"]["reject_bucket"] == "constraint_violation"
+        assert payload["flags"]["retry_budget_axes"]["repair"] == "patch_revision"
+        assert payload["patch_trace"]["patch_strategy"] == ""
+        assert payload["patch_trace"]["patch_targets"] == []
+        assert payload["patch_trace"]["unchanged_ratio"] is None
 
     def test_append_episode_log_normalizes_patch_strategy_for_feedback_retry(self):
         ctx = _make_ctx()
@@ -5156,45 +5193,44 @@ class TestRecordS4Attempt:
         assert payload["flags"]["patch_mode"] is True
         assert payload["patch_trace"]["patch_strategy"] == "patch_with_feedback"
 
-
     def test_append_episode_log_persists_selection_and_verdict_reason(self):
         ctx = _make_ctx()
         ctx.current_project.name = "proj"
         ir = Stage4InterviewRound(ctx)
         ir._round_start_ts = time.monotonic() - 1
         ir._get_round_metrics_delta = MagicMock(
-                return_value={
-                    "total_calls": 1,
-                    "total_tokens": 1234,
-                    "total_cost_usd": 0.123,
-                    "model_breakdown": {"gemini-2.5-pro": {"tokens": 1234, "cost": 0.123}},
-                }
-            )
+            return_value={
+                "total_calls": 1,
+                "total_tokens": 1234,
+                "total_cost_usd": 0.123,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 1234, "cost": 0.123}},
+            }
+        )
 
         with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
             ir._append_episode_log(
-                    ep_num=4,
-                    round_num=0,
-                    director_result={
-                        "verdict": "REJECT",
-                        "score": 44,
-                        "selected": "A",
-                        "selection_reason": "최우수 후보 선택",
-                        "verdict_reason": "Contradiction Firewall: CRITICAL 1건",
-                        "selected_candidate": {"strategy_name": "balanced"},
-                        "score_breakdown": {},
-                        "action_items": ["마지막 장면 수정"],
-                        "open_review": "",
-                    },
-                    is_patch=False,
-                    patch_fallback=False,
-                    tot_used=False,
-                    mad_used=False,
-                    asp_used=False,
-                    model="gemini-2.5-pro",
-                    reject_bucket="constraint_violation",
-                    validation_warnings=[],
-                )
+                ep_num=4,
+                round_num=0,
+                director_result={
+                    "verdict": "REJECT",
+                    "score": 44,
+                    "selected": "A",
+                    "selection_reason": "최우수 후보 선택",
+                    "verdict_reason": "Contradiction Firewall: CRITICAL 1건",
+                    "selected_candidate": {"strategy_name": "balanced"},
+                    "score_breakdown": {},
+                    "action_items": ["마지막 장면 수정"],
+                    "open_review": "",
+                },
+                is_patch=False,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="gemini-2.5-pro",
+                reject_bucket="constraint_violation",
+                validation_warnings=[],
+            )
 
             written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
             payload = json.loads(written.strip())
@@ -5250,6 +5286,105 @@ class TestRecordS4Attempt:
         assert payload["initial_score"] == 95
         assert payload["final_score"] == 95
         assert payload["attempt_key"] == "s4:ep5:arc0:a1"
+
+    def test_append_episode_log_prefers_explicit_final_sink_metadata(self):
+        ctx = _make_ctx()
+        ctx.current_project.name = "proj"
+        ir = Stage4InterviewRound(ctx)
+        ir._round_start_ts = time.monotonic() - 1
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 1,
+                "total_tokens": 1000,
+                "total_cost_usd": 0.1,
+                "model_breakdown": {"gemini-2.5-pro": {"tokens": 1000, "cost": 0.1}},
+            }
+        )
+
+        with patch("builtins.open", mock_open()) as mocked_open, patch("os.makedirs"):
+            ir._append_episode_log(
+                ep_num=5,
+                round_num=0,
+                director_result={
+                    "verdict": "PASS_WITH_FIX",
+                    "score": 90,
+                    "selected": "A",
+                    "selection_reason": "stale selection",
+                    "verdict_reason": "stale verdict",
+                    "selected_candidate": {"strategy_name": "balanced"},
+                    "fix_scope": "inplace",
+                    "fix_pack": {
+                        "patch_targets": ["name_anchor"],
+                        "must_fix": ["rename family anchor"],
+                        "do_not_regress": ["ending hook"],
+                        "success_condition": "anchor renamed",
+                        "target_kind": "entity_ref",
+                        "subtype": "고유명사",
+                        "provenance": "director_authored",
+                    },
+                    "score_breakdown": {},
+                    "action_items": [],
+                    "open_review": "",
+                },
+                initial_verdict="PASS_WITH_FIX",
+                final_verdict="PASS",
+                initial_score=90,
+                final_score=90,
+                is_patch=True,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="gemini-2.5-pro",
+                validation_warnings=[],
+                final_warnings=[],
+                patch_trace={"patch_strategy": "inplace_patch_local_ops", "patch_targets": ["name_anchor"]},
+                selection_reason="final selection",
+                verdict_reason="final verdict",
+                gate_semantics={
+                    "director_verdict": "PASS",
+                    "final_verdict": "PASS",
+                    "gate_basis": "patch_reaudit_pass",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "repair_contract": {
+                        "subtype": "고유명사",
+                        "fix_scope": "inplace",
+                        "repair_scope": "inplace",
+                        "authoritative_fix_scope": "inplace",
+                        "provenance": "director_authored",
+                        "target_kind": "entity_ref",
+                    },
+                    "scope_authority": {
+                        "fix_scope": "inplace",
+                        "repair_scope": "inplace",
+                        "authoritative_fix_scope": "inplace",
+                        "widened": False,
+                    },
+                },
+                fix_pack={
+                    "patch_targets": ["name_anchor"],
+                    "must_fix": ["rename family anchor"],
+                    "do_not_regress": ["ending hook"],
+                    "success_condition": "anchor renamed",
+                    "target_kind": "entity_ref",
+                    "subtype": "고유명사",
+                    "provenance": "director_authored",
+                },
+                runtime_advisory="runtime digest",
+                retry_directives="retry digest",
+            )
+
+        written = "".join(call.args[0] for call in mocked_open().write.call_args_list)
+        payload = json.loads(written.strip())
+        assert payload["selection_reason"] == "final selection"
+        assert payload["verdict_reason"] == "final verdict"
+        assert payload["director_verdict"] == "PASS"
+        assert payload["gate_basis"] == "patch_reaudit_pass"
+        assert payload["fix_pack"]["target_kind"] == "entity_ref"
+        assert payload["repair_contract"]["provenance"] == "director_authored"
+        assert payload["feedback_provenance"]["runtime_advisory"] == "runtime digest"
+        assert payload["feedback_provenance"]["retry_directives"] == "retry digest"
 
     def test_append_episode_log_includes_top_level_token_aliases(self):
         ctx = _make_ctx()
@@ -5419,6 +5554,7 @@ class TestRecordS4Attempt:
         round_ctx = _make_round_ctx()
         round_ctx.chief_writer.model_tier = "gemini-2.5-pro"
         round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+
         def _inplace_side_effect(**kwargs):
             round_ctx.chief_writer._last_inplace_patch_trace = {
                 "patch_strategy": "inplace_patch_structural",
@@ -5972,11 +6108,7 @@ class TestRecordS4Attempt:
         )
 
         decisions_path = tmp_path / "logs" / "session" / "decisions.jsonl"
-        rows = [
-            json.loads(line)
-            for line in decisions_path.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
+        rows = [json.loads(line) for line in decisions_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         row = rows[-1]
         meta = row["meta"]
 
@@ -6010,9 +6142,7 @@ class TestRecordS4Attempt:
             "open_review": "",
         }
 
-        with patch("modules.core.stage4_interview_round.open", side_effect=OSError("disk full")), patch(
-            "os.makedirs"
-        ):
+        with patch("modules.core.stage4_interview_round.open", side_effect=OSError("disk full")), patch("os.makedirs"):
             result = ir.run(
                 round_num=0,
                 stage4_spinner=MagicMock(),
@@ -6247,9 +6377,7 @@ class TestLane2DirectorSemantics:
         assert "operator note" in director_kwargs["reference_appendix"]
         mandatory_context = director_kwargs["mandatory_context"]
         assert mandatory_context.index("### [Decision Core]") < mandatory_context.index("### [Candidate Evidence]")
-        assert mandatory_context.index("### [Candidate Evidence]") < mandatory_context.index(
-            "### [Reference Appendix]"
-        )
+        assert mandatory_context.index("### [Candidate Evidence]") < mandatory_context.index("### [Reference Appendix]")
 
     def test_save_director_selection_persists_gate_semantics_payload(self):
         ctx = _make_ctx()
@@ -6446,17 +6574,19 @@ class TestLane2DirectorSemantics:
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
 
-        with patch.object(
-            ir,
-            "_run_advisory_chain",
-            return_value=[
-                "[TruthGate] hard fact conflict",
-                "[LM-B] npc moved",
-                "StyleSignal drift",
-                "[Whatever] 이상 없음",
-            ],
-        ), patch.object(ir, "_suppress_conflicting_advisories", side_effect=lambda parts: parts), patch.object(
-            ir, "_log_attempt_event"
+        with (
+            patch.object(
+                ir,
+                "_run_advisory_chain",
+                return_value=[
+                    "[TruthGate] hard fact conflict",
+                    "[LM-B] npc moved",
+                    "StyleSignal drift",
+                    "[Whatever] 이상 없음",
+                ],
+            ),
+            patch.object(ir, "_suppress_conflicting_advisories", side_effect=lambda parts: parts),
+            patch.object(ir, "_log_attempt_event"),
         ):
             payload = ir.director_runtime._build_director_candidate_evidence_parts(
                 candidates=[_candidate()],
@@ -6486,17 +6616,19 @@ class TestLane2DirectorSemantics:
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
 
-        with patch.object(
-            ir,
-            "_run_advisory_chain",
-            return_value=[
-                "[TruthGate] hard fact conflict",
-                "[LM-B] npc moved",
-                "StyleSignal drift",
-                "[Whatever] 이상 없음",
-            ],
-        ), patch.object(ir, "_suppress_conflicting_advisories", side_effect=lambda parts: parts), patch.object(
-            ir, "_log_attempt_event"
+        with (
+            patch.object(
+                ir,
+                "_run_advisory_chain",
+                return_value=[
+                    "[TruthGate] hard fact conflict",
+                    "[LM-B] npc moved",
+                    "StyleSignal drift",
+                    "[Whatever] 이상 없음",
+                ],
+            ),
+            patch.object(ir, "_suppress_conflicting_advisories", side_effect=lambda parts: parts),
+            patch.object(ir, "_log_attempt_event"),
         ):
             payload = ir.director_runtime._build_director_advisory_payload(
                 candidates=[_candidate()],
@@ -6536,23 +6668,26 @@ class TestLane2DirectorSemantics:
             "action_items": ["fix ending"],
         }
 
-        with patch.object(
-            ir.director_runtime,
-            "build_director_input_pack",
-            return_value=_DirectorInputPackResult(
-                mandatory_context="MANDATORY",
-                decision_core="DECISION",
-                candidate_evidence="EVIDENCE",
-                reference_appendix="APPENDIX",
-                advisory_summary={"shared_failure_warnings": 1},
+        with (
+            patch.object(
+                ir.director_runtime,
+                "build_director_input_pack",
+                return_value=_DirectorInputPackResult(
+                    mandatory_context="MANDATORY",
+                    decision_core="DECISION",
+                    candidate_evidence="EVIDENCE",
+                    reference_appendix="APPENDIX",
+                    advisory_summary={"shared_failure_warnings": 1},
+                ),
             ),
-        ), patch(
-            "modules.core.stage4_interview_round.snapshot_logged_artifact",
-            return_value={
-                "candidate_key": "A|balanced",
-                "content_hash": "hash123",
-                "artifact_path": "logs/artifacts/stage4/ep_001/attempt_01/rejected_best__A_balanced.txt",
-            },
+            patch(
+                "modules.core.stage4_interview_round.snapshot_logged_artifact",
+                return_value={
+                    "candidate_key": "A|balanced",
+                    "content_hash": "hash123",
+                    "artifact_path": "logs/artifacts/stage4/ep_001/attempt_01/rejected_best__A_balanced.txt",
+                },
+            ),
         ):
             result = ir.director_runtime.run_director_review_phase(
                 stage4_spinner=MagicMock(),
@@ -7095,9 +7230,7 @@ class TestLane2DirectorSemantics:
 
         assert payload["fix_scope"] == "partial"
         assert payload["authoritative_fix_scope"] == ""
-        assert payload["authoritative_fix_scope_violation"] == {
-            "type": "blank_authoritative_fix_scope"
-        }
+        assert payload["authoritative_fix_scope_violation"] == {"type": "blank_authoritative_fix_scope"}
         assert payload["fix_pack_reason"] == "missing_fix_pack"
         assert payload["conflict_contract"]["contract_type"] == "post_select_conflict"
 
@@ -7436,7 +7569,9 @@ class TestLane2DirectorSemantics:
         assert kwargs["reject_bucket"] == "post_select_conflict"
         assert kwargs["advisory_flags"]["gate_semantics"]["gate_basis"] == "post_select_conflict"
         assert kwargs["advisory_flags"]["gate_semantics"]["repair_scope"] == "full"
-        assert kwargs["advisory_flags"]["gate_semantics"]["scope_origin"]["fix_scope"] == "post_select_conflict_override"
+        assert (
+            kwargs["advisory_flags"]["gate_semantics"]["scope_origin"]["fix_scope"] == "post_select_conflict_override"
+        )
         assert (
             kwargs["advisory_flags"]["gate_semantics"]["conflict_resolution_linkage"]["original_contract_type"]
             == "post_select_conflict"
@@ -7581,14 +7716,22 @@ class TestLane2DirectorSemantics:
             final_score=98,
             is_patch=True,
             is_patch_fallback=False,
-            selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+            selection_artifact_meta={
+                "candidate_key": "A",
+                "content_hash": "sel-hash",
+                "artifact_path": "selection.json",
+            },
             validation_warnings=["warn-a"],
             final_warnings=["final-warn"],
             patch_trace={"mode": "patch"},
             tot_used=False,
             mad_used=True,
             logging_payload=_PassResultLoggingPayload(
-                log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                log_artifact_meta={
+                    "candidate_key": "stage4|A",
+                    "content_hash": "hash-123",
+                    "artifact_path": "artifact.json",
+                },
                 session_selection_reason="selection",
                 session_verdict_reason="verdict",
                 session_runtime_advisory="runtime digest",
@@ -7635,14 +7778,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -7659,6 +7810,59 @@ class TestLane2DirectorSemantics:
         assert payload["asp_used"] is True
         assert payload["attempt_key"] == "s4:ep1:arc1:a1"
 
+    def test_build_pass_result_logging_payload_preserves_fix_pack_when_trace_is_partial(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_retry_advisory_digest = MagicMock(return_value="[advisory] keep continuity")
+
+        payload = ir._build_pass_result_logging_payload(
+            pass_result=SimpleNamespace(
+                attempt_artifact_meta={
+                    "candidate_key": "A|patched",
+                    "content_hash": "hash-final",
+                    "artifact_path": "artifacts/final.txt",
+                },
+                final_manuscript="patched manuscript",
+                previous_attempt={},
+            ),
+            next_ep=1,
+            round_num=0,
+            round_ctx=_make_round_ctx(),
+            director_result={
+                "selection_reason": "pre-fix selection",
+                "verdict_reason": "pre-fix verdict",
+                "fix_scope": "inplace",
+                "fix_pack": {
+                    "patch_targets": ["name_anchor"],
+                    "must_fix": ["rename family anchor"],
+                    "do_not_regress": ["ending hook"],
+                    "success_condition": "anchor renamed",
+                    "target_kind": "entity_ref",
+                    "subtype": "고유명사",
+                    "provenance": "director_authored",
+                },
+            },
+            trace_director_result={
+                "selection_reason": "post-fix selection",
+                "verdict_reason": "post-fix verdict",
+                "director_verdict": "PASS",
+                "final_verdict": "PASS",
+                "gate_basis": "patch_reaudit_pass",
+                "repair_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+            },
+            reason="fallback",
+            is_patch=True,
+            trace_patch_trace={"patch_targets": ["name_anchor"], "target_kind": "entity_ref"},
+        )
+
+        assert payload.session_selection_reason == "post-fix selection"
+        assert payload.session_verdict_reason == "post-fix verdict"
+        assert payload.session_fix_pack["target_kind"] == "entity_ref"
+        assert payload.session_fix_pack["patch_targets"] == ["name_anchor"]
+        assert payload.session_gate_semantics["repair_contract"]["subtype"] == "고유명사"
+        assert payload.session_gate_semantics["repair_contract"]["provenance"] == "director_authored"
+
     def test_append_pass_episode_log_delegates_to_stage4_episode_logging(self):
         from modules.core import stage4_episode_logging as s4_episode_logging
         from modules.core.stage4_interview_round import _PassResultLoggingPayload
@@ -7670,6 +7874,15 @@ class TestLane2DirectorSemantics:
         chief_writer = MagicMock()
         chief_writer.model_tier = "writer-model"
         expected = {"attempt_key": "s4:ep1:arc1:a1"}
+        session_gate_semantics = {
+            "director_verdict": "PASS",
+            "gate_basis": "patch_reaudit_pass",
+            "repair_scope": "inplace",
+        }
+        session_fix_pack = {
+            "patch_targets": ["name_anchor"],
+            "target_kind": "entity_ref",
+        }
 
         with patch.object(s4_episode_logging, "build_pass_episode_log_payload", return_value=expected) as mock_builder:
             ir._append_pass_episode_log(
@@ -7692,19 +7905,37 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
-                    session_gate_semantics={},
+                    session_gate_semantics=session_gate_semantics,
+                    session_fix_pack=session_fix_pack,
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             )
 
-        ir._append_episode_log.assert_called_once_with(**expected, carryover_contracts=None)
+        ir._append_episode_log.assert_called_once()
+        append_kwargs = ir._append_episode_log.call_args.kwargs
+        assert append_kwargs["attempt_key"] == "s4:ep1:arc1:a1"
+        assert append_kwargs["selection_reason"] == "selection"
+        assert append_kwargs["verdict_reason"] == "verdict"
+        assert append_kwargs["gate_semantics"] == session_gate_semantics
+        assert append_kwargs["fix_pack"] == session_fix_pack
+        assert append_kwargs["runtime_advisory"] == "runtime digest"
+        assert append_kwargs["retry_directives"] == "retry directives"
+        assert append_kwargs["carryover_contracts"] is None
         mock_builder.assert_called_once()
         normalized_request = mock_builder.call_args.kwargs["request"]
         assert normalized_request.model_tier == "writer-model"
@@ -7741,14 +7972,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -7803,14 +8042,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -7849,14 +8096,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -7906,14 +8161,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -7956,14 +8219,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -8009,14 +8280,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -8058,14 +8337,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -8106,14 +8393,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -8145,14 +8440,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -8189,14 +8492,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -8237,14 +8548,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -8282,14 +8601,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -8324,14 +8651,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -8367,14 +8702,22 @@ class TestLane2DirectorSemantics:
                 final_warnings=["final-warn"],
                 patch_trace={"mode": "patch"},
                 logging_payload=_PassResultLoggingPayload(
-                    log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                    log_artifact_meta={
+                        "candidate_key": "stage4|A",
+                        "content_hash": "hash-123",
+                        "artifact_path": "artifact.json",
+                    },
                     session_selection_reason="selection",
                     session_verdict_reason="verdict",
                     session_runtime_advisory="runtime digest",
                     session_retry_directives="retry directives",
                     session_gate_semantics={},
                 ),
-                selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
                 arc_num=1,
                 asp_manuscript="asp",
             ),
@@ -8408,7 +8751,11 @@ class TestLane2DirectorSemantics:
             initial_score=91,
             final_verdict="PASS_WITH_FIX",
             final_score=98,
-            selection_artifact_meta={"candidate_key": "A", "content_hash": "sel-hash", "artifact_path": "selection.json"},
+            selection_artifact_meta={
+                "candidate_key": "A",
+                "content_hash": "sel-hash",
+                "artifact_path": "selection.json",
+            },
             validation_warnings=["warn-a"],
             is_patch=True,
             is_patch_fallback=False,
@@ -8417,7 +8764,11 @@ class TestLane2DirectorSemantics:
             mad_used=True,
             asp_manuscript="asp",
             logging_payload=_PassResultLoggingPayload(
-                log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                log_artifact_meta={
+                    "candidate_key": "stage4|A",
+                    "content_hash": "hash-123",
+                    "artifact_path": "artifact.json",
+                },
                 session_selection_reason="selection",
                 session_verdict_reason="verdict",
                 session_runtime_advisory="runtime digest",
@@ -8472,7 +8823,11 @@ class TestLane2DirectorSemantics:
             initial_verdict="PASS",
             initial_score=91,
             logging_payload=_PassResultLoggingPayload(
-                log_artifact_meta={"candidate_key": "stage4|A", "content_hash": "hash-123", "artifact_path": "artifact.json"},
+                log_artifact_meta={
+                    "candidate_key": "stage4|A",
+                    "content_hash": "hash-123",
+                    "artifact_path": "artifact.json",
+                },
                 session_selection_reason="selection",
                 session_verdict_reason="verdict",
                 session_runtime_advisory="runtime digest",
@@ -8922,7 +9277,10 @@ class TestLane2DirectorSemantics:
         assert "Scope: runtime=full, authoritative=partial." in payload.session_runtime_advisory
         assert "Provenance: runtime_synthesized." in payload.session_runtime_advisory
         assert "[Numeric carryover authority]" in payload.session_retry_directives
-        assert "do not promote blueprint/manuscript future or liquidatable asset claims" in payload.session_retry_directives
+        assert (
+            "do not promote blueprint/manuscript future or liquidatable asset claims"
+            in payload.session_retry_directives
+        )
         assert payload.feedback_provenance["runtime_advisory"] == payload.session_runtime_advisory
         assert payload.feedback_provenance["retry_directives"] == payload.session_retry_directives
 
@@ -9512,8 +9870,7 @@ class TestOperatorParityAdvisoryFullSurface:
 
         drift_mock = MagicMock()
         drift_items = [
-            {"npc": f"NPC_{i}", "field": "성격", "expected": "냉정", "found_in_ms": long_found}
-            for i in range(15)
+            {"npc": f"NPC_{i}", "field": "성격", "expected": "냉정", "found_in_ms": long_found} for i in range(15)
         ]
         drift_mock.check.return_value = drift_items
 
@@ -9742,12 +10099,16 @@ class TestOperatorParityAdvisoryFullSurface:
         ip_items = [{"info_used": long_info, "why_paradox": long_why} for _ in range(9)]
         ip_mock.check.return_value = ip_items
 
-        with patch("modules.core.constants.HUDKeys.get_protagonist_name", return_value="한시우"), patch(
-            "modules.core.info_paradox_checker.InfoParadoxChecker.build_knowledge_summary",
-            return_value="knowledge",
-        ), patch(
-            "modules.core.info_paradox_checker.InfoParadoxChecker",
-            return_value=ip_mock,
+        with (
+            patch("modules.core.constants.HUDKeys.get_protagonist_name", return_value="한시우"),
+            patch(
+                "modules.core.info_paradox_checker.InfoParadoxChecker.build_knowledge_summary",
+                return_value="knowledge",
+            ),
+            patch(
+                "modules.core.info_paradox_checker.InfoParadoxChecker",
+                return_value=ip_mock,
+            ),
         ):
             result = ir._advisory_info_paradox(
                 candidates=[{"manuscript": "원고"}],
@@ -9773,12 +10134,15 @@ class TestOperatorParityAdvisoryFullSurface:
         ltr_items = [{"pattern": long_pattern, "issue": long_issue} for _ in range(7)]
         ltr_mock.check.return_value = ltr_items
 
-        with patch(
-            "modules.core.long_term_repetition_advisor.LongTermRepetitionAdvisor.build_pattern_summary",
-            return_value="summary",
-        ), patch(
-            "modules.core.long_term_repetition_advisor.LongTermRepetitionAdvisor",
-            return_value=ltr_mock,
+        with (
+            patch(
+                "modules.core.long_term_repetition_advisor.LongTermRepetitionAdvisor.build_pattern_summary",
+                return_value="summary",
+            ),
+            patch(
+                "modules.core.long_term_repetition_advisor.LongTermRepetitionAdvisor",
+                return_value=ltr_mock,
+            ),
         ):
             result = ir._advisory_long_term_rep(
                 candidates=[{"manuscript": "원고"}],
@@ -10200,7 +10564,7 @@ class TestScopeSinkSemantics:
             "summary": "location mismatch",
         }
 
-        verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+        verdict, director_feedback, previous_attempt, error_category = ir.post_select_runtime.run_post_select_checks(
             verdict="PASS",
             next_ep=3,
             round_num=1,
@@ -10259,7 +10623,7 @@ class TestScopeSinkSemantics:
             "summary": "institution mismatch",
         }
 
-        verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+        verdict, director_feedback, previous_attempt, error_category = ir.post_select_runtime.run_post_select_checks(
             verdict="PASS",
             next_ep=4,
             round_num=2,
@@ -10324,8 +10688,7 @@ class TestScopeSinkSemantics:
             "target_kind": "entity_ref",
         }
         assert any(
-            "institution mismatch" in item
-            for item in previous_attempt["conflict_contract"]["contradiction_details"]
+            "institution mismatch" in item for item in previous_attempt["conflict_contract"]["contradiction_details"]
         )
 
     def test_post_select_conflict_merges_opening_continuity_pin_metadata(self):
@@ -10350,7 +10713,7 @@ class TestScopeSinkSemantics:
             "summary": "opening continuity mismatch",
         }
 
-        verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+        verdict, director_feedback, previous_attempt, error_category = ir.post_select_runtime.run_post_select_checks(
             verdict="PASS",
             next_ep=2,
             round_num=0,
@@ -10379,8 +10742,7 @@ class TestScopeSinkSemantics:
         assert "opening_action_continuity" in previous_attempt["contradiction_types"]
         assert "opening_action_continuity" in previous_attempt["conflict_contract"]["contradiction_types"]
         assert any(
-            "opening continuity pin" in item
-            for item in previous_attempt["conflict_contract"]["contradiction_details"]
+            "opening continuity pin" in item for item in previous_attempt["conflict_contract"]["contradiction_details"]
         )
         assert "[Continuity Conflict]" in director_feedback
 
@@ -10409,7 +10771,7 @@ def test_post_select_conflict_logs_detail_to_ui_sink():
         "summary": "location mismatch",
     }
 
-    verdict, director_feedback, previous_attempt, error_category = ir._run_post_select_checks(
+    verdict, director_feedback, previous_attempt, error_category = ir.post_select_runtime.run_post_select_checks(
         verdict="PASS",
         next_ep=3,
         round_num=1,
@@ -10443,8 +10805,7 @@ def test_post_select_conflict_logs_detail_to_ui_sink():
     detail_calls = [
         call
         for call in ctx.ui.log.call_args_list
-        if call.kwargs.get("component") == "post_select_validation"
-        and call.kwargs.get("event_kind") == "detail"
+        if call.kwargs.get("component") == "post_select_validation" and call.kwargs.get("event_kind") == "detail"
     ]
     assert detail_calls
     assert any("location mismatch" in call.args[0] for call in detail_calls if call.args)

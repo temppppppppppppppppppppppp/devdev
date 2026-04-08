@@ -1,4 +1,4 @@
-﻿"""
+"""
 [B-1-3] Stage4 Interview Round — 단일 면담 라운드 실행.
 """
 
@@ -28,6 +28,10 @@ from modules.core.partial_fix_contract import (
 )
 from modules.core.soft_failure import resolve_project_log_dir
 from modules.core.stage4_director_runtime import Stage4DirectorRuntime
+from modules.core.stage4_postselect_runtime import (
+    Stage4PostSelectRuntime,
+    _emit_stage4_ui_log,
+)
 from modules.core.stage4_reject_runtime import Stage4RejectRuntime
 from modules.core.stage4_retry_runtime import Stage4RetryRuntime
 
@@ -107,9 +111,7 @@ def _sanitize_writer_blueprint_text(text: object) -> str:
     if "\n" not in raw:
         return ""
     kept_lines = [
-        line.rstrip()
-        for line in raw.splitlines()
-        if line.strip() and not _has_writer_blueprint_ui_contamination(line)
+        line.rstrip() for line in raw.splitlines() if line.strip() and not _has_writer_blueprint_ui_contamination(line)
     ]
     return "\n".join(kept_lines).strip()
 
@@ -128,128 +130,6 @@ def _sanitize_writer_blueprint_payload(value: object) -> object:
     if isinstance(value, str):
         return _sanitize_writer_blueprint_text(value)
     return value
-
-
-def _build_post_select_conflict_contract(
-    conflicts: list[str] | None,
-    *,
-    contradiction_types: list[str] | None = None,
-    contradiction_details: list[str] | None = None,
-    bounded_local_fix_hint: bool = False,
-    target_kind: str = "",
-) -> dict[str, object]:
-    entries: list[dict[str, str]] = []
-    if not isinstance(conflicts, list):
-        return {}
-
-    for raw_line in conflicts:
-        line = str(raw_line or "").strip()
-        if not line:
-            continue
-        if "Continuity" in line:
-            conflict_type = "continuity"
-        elif "History" in line:
-            conflict_type = "history"
-        else:
-            conflict_type = "check_error"
-        detail = line.split("]", 1)[1].strip() if "]" in line else line
-        expected_truth = detail.split(":", 1)[1].strip() if ":" in detail else detail
-        entries.append(
-            {
-                "conflict_type": conflict_type,
-                "conflict_detail": detail,
-                "source_episode": "",
-                "expected_truth": expected_truth,
-            }
-        )
-
-    if not entries:
-        return {}
-
-    contract: dict[str, object] = {
-        "contract_type": "post_select_conflict",
-        "mode": "rewrite_with_best_manuscript_reuse",
-        "conflicts": entries,
-    }
-    normalized_contradiction_types: list[str] = []
-    for item in contradiction_types or []:
-        token = str(item or "").strip()
-        if token and token not in normalized_contradiction_types:
-            normalized_contradiction_types.append(token)
-    if normalized_contradiction_types:
-        contract["contradiction_types"] = normalized_contradiction_types
-    normalized_contradiction_details: list[str] = []
-    for item in contradiction_details or []:
-        line = str(item or "").strip()
-        if line and line not in normalized_contradiction_details:
-            normalized_contradiction_details.append(line)
-    if normalized_contradiction_details:
-        contract["contradiction_details"] = normalized_contradiction_details
-    normalized_target_kind = str(target_kind or "").strip().lower()
-    if normalized_target_kind:
-        contract["target_kind"] = normalized_target_kind
-    if bounded_local_fix_hint:
-        contract["bounded_local_fix_hint"] = True
-    return contract
-
-
-def _extract_opening_continuity_pin_metadata(blueprint: dict | None) -> tuple[list[str], list[str]]:
-    if not isinstance(blueprint, dict):
-        return [], []
-
-    contradiction_types: list[str] = []
-    contradiction_details: list[str] = []
-    for item in blueprint.get("_continuity_pins") or []:
-        if not isinstance(item, dict):
-            continue
-        pin_type = str(item.get("type", "") or "").strip().lower()
-        if pin_type != "opening_action_continuity_pin":
-            continue
-        if "opening_action_continuity" not in contradiction_types:
-            contradiction_types.append("opening_action_continuity")
-        before = str(item.get("before", "") or "").strip()
-        expected = str(item.get("expected", "") or "").strip()
-        observed = str(item.get("observed", "") or "").strip()
-        detail_parts = ["opening continuity pin"]
-        if before:
-            detail_parts.append(f"previous={before}")
-        if expected:
-            detail_parts.append(f"expected={expected}")
-        if observed:
-            detail_parts.append(f"observed={observed}")
-        detail = " | ".join(detail_parts)
-        if detail not in contradiction_details:
-            contradiction_details.append(detail)
-    return contradiction_types, contradiction_details
-
-
-def _emit_stage4_ui_log(
-    ui,
-    message: str,
-    *,
-    component: str,
-    event_kind: str,
-    level: str = "warning",
-    ep_num: int | None = None,
-    round_num: int | None = None,
-    meta: dict[str, object] | None = None,
-) -> None:
-    logger = getattr(ui, "log", None)
-    if not callable(logger):
-        return
-    kwargs: dict[str, object] = {
-        "stage": "stage4",
-        "component": component,
-        "event_kind": event_kind,
-        "level": level,
-    }
-    if ep_num is not None:
-        kwargs["ep_num"] = ep_num
-    if round_num is not None:
-        kwargs["round_num"] = round_num
-    if meta:
-        kwargs["meta"] = meta
-    logger(message, **kwargs)
 
 
 @dataclass
@@ -296,6 +176,7 @@ class _PassResultLoggingPayload:
     session_runtime_advisory: str
     session_retry_directives: str
     session_gate_semantics: dict[str, object]
+    session_fix_pack: dict[str, object] | None = None
 
 
 @dataclass
@@ -405,6 +286,7 @@ class Stage4InterviewRound:
         self._last_retry_budget_axes: dict[str, str] = {}
         self._consecutive_empty_patches: int = 0  # [IFC] track consecutive empty patch rounds
         self.director_runtime = Stage4DirectorRuntime(self)
+        self.post_select_runtime = Stage4PostSelectRuntime(self)
         self.reject_runtime = Stage4RejectRuntime(self)
         self.retry_runtime = Stage4RetryRuntime(self)
 
@@ -664,7 +546,11 @@ class Stage4InterviewRound:
             **({"repair_contract": dict(repair_contract)} if isinstance(repair_contract, dict) else {}),
             **({"scope_authority": dict(scope_authority)} if isinstance(scope_authority, dict) else {}),
             # [SSS-T2] Carryover linkage — captured via **meta in session logger
-            **({"conflict_resolution_linkage": conflict_resolution_linkage} if isinstance(conflict_resolution_linkage, dict) else {}),
+            **(
+                {"conflict_resolution_linkage": conflict_resolution_linkage}
+                if isinstance(conflict_resolution_linkage, dict)
+                else {}
+            ),
             **({"reuse_contract": dict(reuse_contract)} if isinstance(reuse_contract, dict) else {}),
         )
 
@@ -874,19 +760,19 @@ class Stage4InterviewRound:
 
         evidence_lines: list[str] = []
         if isinstance(selected_validation, dict):
-            for warning in (selected_validation.get("truth_gate_warnings") or []):
+            for warning in selected_validation.get("truth_gate_warnings") or []:
                 if isinstance(warning, dict):
-                    evidence_lines.append(f"[{warning.get('severity', '?')}] {str(warning.get('text', '') or '').strip()}")
-            for violation in (selected_validation.get("structured_violations") or []):
+                    evidence_lines.append(
+                        f"[{warning.get('severity', '?')}] {str(warning.get('text', '') or '').strip()}"
+                    )
+            for violation in selected_validation.get("structured_violations") or []:
                 if isinstance(violation, dict):
                     evidence_lines.append(f"[VIOLATION] {str(violation.get('reason', '') or '').strip()}")
-            for warning in (selected_validation.get("quality_signal_warnings") or []):
+            for warning in selected_validation.get("quality_signal_warnings") or []:
                 text = str(warning or "").strip()
                 if text:
                     evidence_lines.append(f"[STYLE] {text}")
-            evidence_lines.extend(
-                self._structured_validation_evidence_lines(selected_validation, limit_per_key=None)
-            )
+            evidence_lines.extend(self._structured_validation_evidence_lines(selected_validation, limit_per_key=None))
         evidence_summary = ""
         if evidence_lines:
             evidence_summary = "[근거 요약 - 수정 시 반드시 반영]\n" + "\n".join(f"  {line}" for line in evidence_lines)
@@ -1083,7 +969,7 @@ class Stage4InterviewRound:
 
         writer_blueprint = copy.deepcopy(blueprint)
         scenes = writer_blueprint.get("scene_breakdown")
-        if isinstance(scenes, (dict, list)):
+        if isinstance(scenes, dict | list):
             writer_blueprint["scene_breakdown"] = _sanitize_writer_blueprint_payload(scenes)
         raw_advisory = str(writer_blueprint.get("integrated_scenario_advisory", "") or "").strip()
         raw_integrated = str(writer_blueprint.get("integrated_scenario", "") or "").strip()
@@ -1400,9 +1286,8 @@ class Stage4InterviewRound:
 
             if not reveal_all:
                 return ""
-            return (
-                f"[DB-6 최근 10화 내 밝혀진 사실 ({len(reveal_all)}건)] {_DB_ADVISORY_NOTICE}\n"
-                + "\n".join(reveal_all[-8:])
+            return f"[DB-6 최근 10화 내 밝혀진 사실 ({len(reveal_all)}건)] {_DB_ADVISORY_NOTICE}\n" + "\n".join(
+                reveal_all[-8:]
             )
         except Exception as rev_err:
             logging.debug("[DB-6] reveals advisory 실패 (비치명): %s", rev_err)
@@ -1666,7 +1551,9 @@ class Stage4InterviewRound:
         return signatures
 
     def _detect_shared_failure_warnings(self, validation_results: list[dict]) -> list[str]:
-        signature_sets = [self._extract_failure_signatures(result) for result in validation_results if isinstance(result, dict)]
+        signature_sets = [
+            self._extract_failure_signatures(result) for result in validation_results if isinstance(result, dict)
+        ]
         signature_sets = [items for items in signature_sets if items]
         if len(signature_sets) < 2:
             return []
@@ -1763,11 +1650,7 @@ class Stage4InterviewRound:
         import re as _re
 
         text = str(advisory_text or "")
-        explicit = {
-            match.group(1).strip()
-            for match in _re.finditer(r"'([^']{2,40})'", text)
-            if match.group(1).strip()
-        }
+        explicit = {match.group(1).strip() for match in _re.finditer(r"'([^']{2,40})'", text) if match.group(1).strip()}
         broad = set(explicit)
         stopwords = {
             "truthgate",
@@ -1854,7 +1737,9 @@ class Stage4InterviewRound:
             "[참고 — 판정 무관]",
             "아래 통계·추세는 참고 메모입니다. score/verdict의 직접 근거로 사용하지 마세요.",
         ]
-        return "\n".join(header) + "\n\n" + "\n\n".join(str(part).strip() for part in reference_parts if str(part).strip())
+        return (
+            "\n".join(header) + "\n\n" + "\n\n".join(str(part).strip() for part in reference_parts if str(part).strip())
+        )
 
     @staticmethod
     def _join_director_pack_parts(parts: list[str] | tuple[str, ...]) -> str:
@@ -2069,7 +1954,14 @@ class Stage4InterviewRound:
 
         has_payload = any(
             normalized.get(key)
-            for key in ("patch_targets", "must_fix", "do_not_regress", "success_condition", "target_kind", "evidence_summary")
+            for key in (
+                "patch_targets",
+                "must_fix",
+                "do_not_regress",
+                "success_condition",
+                "target_kind",
+                "evidence_summary",
+            )
         )
         return normalized if has_payload else {}
 
@@ -2225,12 +2117,8 @@ class Stage4InterviewRound:
         if evidence_labels:
             evidence_summary = f"{evidence_summary}: {'; '.join(evidence_labels[:2])}"
         if "plain_directional" in relation_label_kinds:
-            must_fix = [
-                "relation_to_protag 방향성과 canonical relation semantics에 어긋난 관계 표현을 국소 수정"
-            ]
-            do_not_regress = [
-                "평문 관계 태그를 literal 뒤집기로 해석하지 말고 canonical direction 의미 정렬만 수행"
-            ]
+            must_fix = ["relation_to_protag 방향성과 canonical relation semantics에 어긋난 관계 표현을 국소 수정"]
+            do_not_regress = ["평문 관계 태그를 literal 뒤집기로 해석하지 말고 canonical direction 의미 정렬만 수행"]
             success_condition = (
                 "NpcDrift relation_to_protag 경고가 사라지고 관계 프레이밍이 canonical direction과 의미적으로 합치한다"
             )
@@ -2238,12 +2126,8 @@ class Stage4InterviewRound:
             must_fix = [
                 "relation_to_protag 압축 관계 태그와 의미적으로 어긋난 관계 표현을 canonical relation framing에 맞게 국소 수정"
             ]
-            do_not_regress = [
-                "압축 관계 태그 숫자/토큰을 원고에 그대로 삽입하지 말고 prose 의미 정렬만 수행"
-            ]
-            success_condition = (
-                "NpcDrift relation_to_protag 경고가 사라지고 관계 프레이밍이 canonical relation tag 축과 의미적으로 합치한다"
-            )
+            do_not_regress = ["압축 관계 태그 숫자/토큰을 원고에 그대로 삽입하지 말고 prose 의미 정렬만 수행"]
+            success_condition = "NpcDrift relation_to_protag 경고가 사라지고 관계 프레이밍이 canonical relation tag 축과 의미적으로 합치한다"
         return {
             "patch_targets": [f"NPC relation_to_protag 관계 프레이밍 문장{target_suffix}"],
             "must_fix": must_fix,
@@ -2349,7 +2233,9 @@ class Stage4InterviewRound:
                 target_kind = item_target_kind
             patch_anchor = str(item.get("patch_anchor", "") or "").strip()
             marker = str(item.get("marker", "") or "").strip()
-            default_target, default_fix, default_guard = target_templates.get(subtype or "other", target_templates["other"])
+            default_target, default_fix, default_guard = target_templates.get(
+                subtype or "other", target_templates["other"]
+            )
             target_label = patch_anchor or (f"{default_target} ('{marker}')" if marker else default_target)
             if target_label and target_label not in patch_targets:
                 patch_targets.append(target_label)
@@ -2384,13 +2270,11 @@ class Stage4InterviewRound:
         if not isinstance(escalation, dict):
             return self._normalize_fix_pack(director_result.get("fix_pack"))
         fix_pack = self._normalize_fix_pack(director_result.get("fix_pack"))
-        triggered = [
-            str(item).strip().lower()
-            for item in (escalation.get("triggered_by") or [])
-            if str(item).strip()
-        ]
+        triggered = [str(item).strip().lower() for item in (escalation.get("triggered_by") or []) if str(item).strip()]
         target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
-        semantic_fix_pack = self._build_npc_drift_relation_tag_fix_pack(director_result) if "npc_drift" in triggered else {}
+        semantic_fix_pack = (
+            self._build_npc_drift_relation_tag_fix_pack(director_result) if "npc_drift" in triggered else {}
+        )
         flashback_fix_pack = (
             self._build_flashback_continuity_fix_pack(director_result) if "flashback" in triggered else {}
         )
@@ -2564,7 +2448,9 @@ class Stage4InterviewRound:
         normalized["repair_scope"] = fallback_fix_scope
         fix_scope_reasoning = str(normalized.get("fix_scope_reasoning", "") or "").strip()
         if note not in fix_scope_reasoning:
-            normalized["fix_scope_reasoning"] = f"{fix_scope_reasoning}\n{note}".strip() if fix_scope_reasoning else note
+            normalized["fix_scope_reasoning"] = (
+                f"{fix_scope_reasoning}\n{note}".strip() if fix_scope_reasoning else note
+            )
         verdict_reason = str(normalized.get("verdict_reason", "") or "").strip()
         if note not in verdict_reason:
             normalized["verdict_reason"] = f"{note}\n{verdict_reason}".strip() if verdict_reason else note
@@ -2597,10 +2483,14 @@ class Stage4InterviewRound:
         previous_attempt: dict | None = None,
     ) -> dict[str, str]:
         previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
-        guidance_budget = "augmented" if any(
-            str(previous_attempt.get(key, "") or "").strip()
-            for key in ("runtime_advisory", "retry_directives", "fix_scope_reasoning")
-        ) else "baseline"
+        guidance_budget = (
+            "augmented"
+            if any(
+                str(previous_attempt.get(key, "") or "").strip()
+                for key in ("runtime_advisory", "retry_directives", "fix_scope_reasoning")
+            )
+            else "baseline"
+        )
         escalation_budget = "none"
         if reject_bucket == "structure_error":
             escalation_budget = "tot"
@@ -2622,18 +2512,21 @@ class Stage4InterviewRound:
         authoritative_fix_scope = str(
             director_result.get("authoritative_fix_scope", director_result.get("fix_scope", "")) or ""
         ).strip()
-        director_verdict = str(
-            director_result.get("director_verdict")
-            or director_result.get("original_verdict")
-            or director_result.get("verdict")
+        director_verdict = (
+            str(
+                director_result.get("director_verdict")
+                or director_result.get("original_verdict")
+                or director_result.get("verdict")
+                or "REJECT"
+            ).strip()
             or "REJECT"
-        ).strip() or "REJECT"
-        final_verdict = str(
-            director_result.get("final_verdict")
-            or director_result.get("verdict")
-            or director_verdict
+        )
+        final_verdict = (
+            str(
+                director_result.get("final_verdict") or director_result.get("verdict") or director_verdict or "REJECT"
+            ).strip()
             or "REJECT"
-        ).strip() or "REJECT"
+        )
         repair_scope = self._normalize_repair_scope_value(
             director_result.get("repair_scope") or director_result.get("fix_scope")
         )
@@ -2666,11 +2559,14 @@ class Stage4InterviewRound:
             director_result["final_verdict"] = "PASS_WITH_FIX"
             director_result["verdict"] = "PASS_WITH_FIX"
             director_result["gate_basis"] = "strong_advisory_escalation"
-            director_result.setdefault("strong_advisory_escalation", {
-                "source_verdict": "PASS",
-                "escalated_to": "PASS_WITH_FIX",
-                "triggered_by": _triggered,
-            })
+            director_result.setdefault(
+                "strong_advisory_escalation",
+                {
+                    "source_verdict": "PASS",
+                    "escalated_to": "PASS_WITH_FIX",
+                    "triggered_by": _triggered,
+                },
+            )
             logging.warning(
                 "[Stage4Gate] strong advisory escalation: PASS → PASS_WITH_FIX (classes=%s)",
                 ",".join(_triggered),
@@ -2690,20 +2586,24 @@ class Stage4InterviewRound:
 
         # [DCM-T2] Authoritative fix_scope contract validation
         _normalized_authoritative_scope = authoritative_fix_scope.lower()
-        if (
-            final_verdict in ("REJECT", "PASS_WITH_FIX")
-            and _normalized_authoritative_scope not in {"inplace", "partial", "full"}
-        ):
+        if final_verdict in ("REJECT", "PASS_WITH_FIX") and _normalized_authoritative_scope not in {
+            "inplace",
+            "partial",
+            "full",
+        }:
             _vtype = (
                 "blank_authoritative_fix_scope"
                 if not _normalized_authoritative_scope
                 else "invalid_authoritative_fix_scope"
             )
-            director_result.setdefault("authoritative_fix_scope_violation", {
-                "type": _vtype,
-                "raw_value": authoritative_fix_scope,
-                "verdict": final_verdict,
-            })
+            director_result.setdefault(
+                "authoritative_fix_scope_violation",
+                {
+                    "type": _vtype,
+                    "raw_value": authoritative_fix_scope,
+                    "verdict": final_verdict,
+                },
+            )
             logging.warning(
                 "[Stage4Gate] fix_scope contract violation: verdict=%s fix_scope=%r",
                 final_verdict,
@@ -2714,9 +2614,7 @@ class Stage4InterviewRound:
             if final_verdict == "PASS_WITH_FIX":
                 _is_advisory_escalation = bool(director_result.get("strong_advisory_escalation"))
                 _g2_basis = (
-                    "strong_advisory_escalation_no_scope"
-                    if _is_advisory_escalation
-                    else "fix_scope_contract_violation"
+                    "strong_advisory_escalation_no_scope" if _is_advisory_escalation else "fix_scope_contract_violation"
                 )
                 final_verdict = "REJECT"
                 director_result["final_verdict"] = "REJECT"
@@ -2790,9 +2688,7 @@ class Stage4InterviewRound:
                 )
                 _existing_reasoning = str(director_result.get("fix_scope_reasoning", "") or "").strip()
                 director_result["fix_scope_reasoning"] = (
-                    f"{_existing_reasoning}\n{_reason_line}".strip()
-                    if _existing_reasoning
-                    else _reason_line
+                    f"{_existing_reasoning}\n{_reason_line}".strip() if _existing_reasoning else _reason_line
                 )
                 director_result.setdefault("strong_advisory_escalation", {}).update(
                     {
@@ -2936,7 +2832,7 @@ class Stage4InterviewRound:
             _push(source.get(key, ""))
         for key in ("subtypes", "contradiction_types"):
             _push_many(source.get(key))
-        for item in (source.get("contradiction_details") or []):
+        for item in source.get("contradiction_details") or []:
             if not isinstance(item, dict):
                 continue
             for key in ("subtype", "contradiction_subtype", "drift_subtype"):
@@ -2967,7 +2863,9 @@ class Stage4InterviewRound:
         provenance = str(fix_pack.get("provenance", "") or "").strip()
         if provenance:
             payload["provenance"] = provenance
-        provenance_sources = [str(item).strip() for item in (fix_pack.get("provenance_sources") or []) if str(item).strip()]
+        provenance_sources = [
+            str(item).strip() for item in (fix_pack.get("provenance_sources") or []) if str(item).strip()
+        ]
         if provenance_sources:
             payload["provenance_sources"] = provenance_sources[:4]
         target_kind = str(fix_pack.get("target_kind", "") or "").strip()
@@ -3064,9 +2962,7 @@ class Stage4InterviewRound:
         director_verdict = str(normalized.get("director_verdict", "") or "").strip().upper()
         final_verdict = str(normalized.get("final_verdict", "") or "").strip().upper()
         director_quality_passed = director_verdict in {"PASS", "PASS_WITH_FIX"}
-        downstream_override_applied = bool(
-            director_verdict and final_verdict and director_verdict != final_verdict
-        )
+        downstream_override_applied = bool(director_verdict and final_verdict and director_verdict != final_verdict)
         primary_failure_layer = "none"
         if final_verdict == "REJECT":
             primary_failure_layer = "downstream_gate" if director_quality_passed else "director_quality"
@@ -3272,9 +3168,7 @@ class Stage4InterviewRound:
     ):
         from modules.core.stage4_types import _InterviewRoundResult
 
-        logging.error(
-            f"[Stage4] 제{next_ep}화 {round_num + 1}차 면담: candidates 빈 배열 — 모든 후보 생성 실패"
-        )
+        logging.error(f"[Stage4] 제{next_ep}화 {round_num + 1}차 면담: candidates 빈 배열 — 모든 후보 생성 실패")
         self.ctx.ui.log(
             f"   🚨 [V66.3] 모든 후보 생성 실패 — {'최종 실패 처리' if round_num >= 4 else '다음 면담으로 진행'}"
         )
@@ -3383,10 +3277,7 @@ class Stage4InterviewRound:
             logging.warning("[Stage4] R%d 후보 생성 결과 None/empty — candidates=[]", round_num)
             candidates = []
         _pre_filter_count = len(candidates)
-        candidates = [
-            c for c in candidates
-            if isinstance(c, dict) and c.get("manuscript", "").strip()
-        ]
+        candidates = [c for c in candidates if isinstance(c, dict) and c.get("manuscript", "").strip()]
         if _pre_filter_count > 0 and not candidates:
             logging.warning(
                 "[Stage4] R%d 후보 %d건 전량 필터링 탈락 (manuscript 누락/빈 문자열)",
@@ -3566,13 +3457,19 @@ class Stage4InterviewRound:
                 _dt = director_result.get("_director_thinking", "") if isinstance(director_result, dict) else ""
                 if _dt:
                     _db_adj.save_attempt_raw_rationale(
-                        attempt_key=attempt_key, stage=4, ep_num=next_ep,
-                        payload_kind="director_thinking", payload=_dt,
+                        attempt_key=attempt_key,
+                        stage=4,
+                        ep_num=next_ep,
+                        payload_kind="director_thinking",
+                        payload=_dt,
                     )
                 if isinstance(raw_advisory_payload, dict) and raw_advisory_payload:
                     import json as _json
+
                     _db_adj.save_attempt_raw_rationale(
-                        attempt_key=attempt_key, stage=4, ep_num=next_ep,
+                        attempt_key=attempt_key,
+                        stage=4,
+                        ep_num=next_ep,
                         payload_kind="advisory_warnings_raw",
                         payload=_json.dumps(raw_advisory_payload, ensure_ascii=False),
                     )
@@ -3873,20 +3770,12 @@ class Stage4InterviewRound:
         is_patch: bool,
     ) -> _RoundOutcomeTracePayload:
         trace_director_result = (
-            trace_meta.get("director_result", director_result)
-            if isinstance(trace_meta, dict)
-            else director_result
+            trace_meta.get("director_result", director_result) if isinstance(trace_meta, dict) else director_result
         )
         final_verdict = (
-            trace_meta.get("final_verdict", initial_verdict)
-            if isinstance(trace_meta, dict)
-            else initial_verdict
+            trace_meta.get("final_verdict", initial_verdict) if isinstance(trace_meta, dict) else initial_verdict
         )
-        final_score = (
-            trace_meta.get("final_score", initial_score)
-            if isinstance(trace_meta, dict)
-            else initial_score
-        )
+        final_score = trace_meta.get("final_score", initial_score) if isinstance(trace_meta, dict) else initial_score
         trace_patch_trace = trace_meta.get("patch_trace", {}) if isinstance(trace_meta, dict) else {}
         validation_warnings = self._collect_validation_warning_lines(validation_results, limit=20)
         return _RoundOutcomeTracePayload(
@@ -4278,26 +4167,28 @@ class Stage4InterviewRound:
                     payload=getattr(pass_result, "final_manuscript", ""),
                 )
             )
+        _logging_source = dict(director_result or {}) if isinstance(director_result, dict) else {}
+        if isinstance(trace_director_result, dict):
+            for _key, _value in trace_director_result.items():
+                if _value not in (None, "", [], {}):
+                    _logging_source[_key] = _value
+        _, _session_fix_pack = self._resolve_stage4_patch_contract_payloads(
+            director_result=_logging_source,
+            patch_trace=trace_patch_trace,
+        )
+        if _session_fix_pack and not self._normalize_fix_pack(_logging_source.get("fix_pack")):
+            _logging_source["fix_pack"] = dict(_session_fix_pack)
         session_selection_reason = str(
-            (
-                trace_director_result.get("selection_reason")
-                or director_result.get("selection_reason", "")
-            )
-            if isinstance(trace_director_result, dict)
+            (_logging_source.get("selection_reason") or director_result.get("selection_reason", ""))
+            if _logging_source
             else director_result.get("selection_reason", "")
         )
         session_verdict_reason = str(
-            (
-                trace_director_result.get("verdict_reason")
-                or reason
-                or session_selection_reason
-            )
-            if isinstance(trace_director_result, dict)
+            (_logging_source.get("verdict_reason") or reason or session_selection_reason)
+            if _logging_source
             else (reason or session_selection_reason)
         )
-        _gate = self._build_gate_semantics_payload(
-            trace_director_result if isinstance(trace_director_result, dict) else director_result
-        )
+        _gate = self._build_gate_semantics_payload(_logging_source)
         # [SSS-T2] PASS-side carryover linkage — conflict resolution and reuse contract
         _prev_attempt = getattr(pass_result, "previous_attempt", None)
         if isinstance(_prev_attempt, dict):
@@ -4318,6 +4209,7 @@ class Stage4InterviewRound:
             session_runtime_advisory=self._build_retry_advisory_digest(),
             session_retry_directives="",
             session_gate_semantics=_gate,
+            session_fix_pack=dict(_session_fix_pack or {}),
         )
 
     def _sync_pass_result_selection_rationale(
@@ -4375,7 +4267,9 @@ class Stage4InterviewRound:
         logging_payload: _PassResultLoggingPayload,
     ) -> None:
         arc_num = round_ctx.arc_data.get("arc_no", 0)
-        final_warnings = list((trace_director_result.get("final_warnings") or []) if isinstance(trace_director_result, dict) else [])
+        final_warnings = list(
+            (trace_director_result.get("final_warnings") or []) if isinstance(trace_director_result, dict) else []
+        )
         self._append_pass_round_logs(
             next_ep=next_ep,
             round_num=round_num,
@@ -4553,6 +4447,12 @@ class Stage4InterviewRound:
                     session_id=resolve_logging_session_id(getattr(self.ctx, "current_project", None)),
                 )
             ),
+            selection_reason=logging_payload.session_selection_reason,
+            verdict_reason=logging_payload.session_verdict_reason,
+            gate_semantics=logging_payload.session_gate_semantics,
+            fix_pack=dict(logging_payload.session_fix_pack or {}),
+            runtime_advisory=logging_payload.session_runtime_advisory,
+            retry_directives=logging_payload.session_retry_directives,
             carryover_contracts=_carryover or None,
         )
 
@@ -4613,66 +4513,58 @@ class Stage4InterviewRound:
             director_verdict=logging_payload.session_gate_semantics.get("director_verdict", ""),
             gate_basis=logging_payload.session_gate_semantics.get("gate_basis", ""),
             repair_scope=logging_payload.session_gate_semantics.get("repair_scope", ""),
-            fix_pack=self._build_fix_pack_payload(
-                trace_director_result if isinstance(trace_director_result, dict) else director_result
+            fix_pack=dict(logging_payload.session_fix_pack or {}),
+            retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
+            runtime_advisory=logging_payload.session_runtime_advisory,
+            retry_directives=logging_payload.session_retry_directives,
+            firewall_triggered=bool(
+                trace_director_result.get("firewall_triggered")
+                if isinstance(trace_director_result, dict)
+                else director_result.get("firewall_triggered")
             ),
-                retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
-                runtime_advisory=logging_payload.session_runtime_advisory,
-                retry_directives=logging_payload.session_retry_directives,
-                firewall_triggered=bool(
-
-                    trace_director_result.get("firewall_triggered")
-                    if isinstance(trace_director_result, dict)
-                    else director_result.get("firewall_triggered")
-
+            firewall_reason=(
+                trace_director_result.get("firewall_reason", "")
+                if isinstance(trace_director_result, dict)
+                else director_result.get("firewall_reason", "")
             ),
-                firewall_reason=(
-                    trace_director_result.get("firewall_reason", "")
-                    if isinstance(trace_director_result, dict)
-                    else director_result.get("firewall_reason", "")
-                ),
-                authoritative_fix_scope=str(
-                    logging_payload.session_gate_semantics.get("authoritative_fix_scope", "") or ""
-                ),
-                authoritative_fix_scope_violation=(
-                    logging_payload.session_gate_semantics.get("authoritative_fix_scope_violation")
-                    if isinstance(
-                        logging_payload.session_gate_semantics.get("authoritative_fix_scope_violation"),
-                        dict,
-                    )
-                    else None
-                ),
-                strong_advisory_escalation=(
-                    logging_payload.session_gate_semantics.get("strong_advisory_escalation")
-                    if isinstance(
-                        logging_payload.session_gate_semantics.get("strong_advisory_escalation"),
-                        dict,
-                    )
-                    else None
-                ),
-                scope_origin=(
-                    logging_payload.session_gate_semantics.get("scope_origin")
-                    if isinstance(logging_payload.session_gate_semantics.get("scope_origin"), dict)
-                    else None
-                ),
-                repair_contract=(
-                    logging_payload.session_gate_semantics.get("repair_contract")
-                    if isinstance(logging_payload.session_gate_semantics.get("repair_contract"), dict)
-                    else None
-                ),
-                scope_authority=(
-                    logging_payload.session_gate_semantics.get("scope_authority")
-                    if isinstance(logging_payload.session_gate_semantics.get("scope_authority"), dict)
-                    else None
-                ),
-                # [SSS-T2] PASS-side carryover linkage to decisions.jsonl
-                conflict_resolution_linkage=(
-                    logging_payload.session_gate_semantics.get("conflict_resolution_linkage")
-                ),
-                reuse_contract=(
-                    logging_payload.session_gate_semantics.get("reuse_contract")
-                ),
-            )
+            authoritative_fix_scope=str(
+                logging_payload.session_gate_semantics.get("authoritative_fix_scope", "") or ""
+            ),
+            authoritative_fix_scope_violation=(
+                logging_payload.session_gate_semantics.get("authoritative_fix_scope_violation")
+                if isinstance(
+                    logging_payload.session_gate_semantics.get("authoritative_fix_scope_violation"),
+                    dict,
+                )
+                else None
+            ),
+            strong_advisory_escalation=(
+                logging_payload.session_gate_semantics.get("strong_advisory_escalation")
+                if isinstance(
+                    logging_payload.session_gate_semantics.get("strong_advisory_escalation"),
+                    dict,
+                )
+                else None
+            ),
+            scope_origin=(
+                logging_payload.session_gate_semantics.get("scope_origin")
+                if isinstance(logging_payload.session_gate_semantics.get("scope_origin"), dict)
+                else None
+            ),
+            repair_contract=(
+                logging_payload.session_gate_semantics.get("repair_contract")
+                if isinstance(logging_payload.session_gate_semantics.get("repair_contract"), dict)
+                else None
+            ),
+            scope_authority=(
+                logging_payload.session_gate_semantics.get("scope_authority")
+                if isinstance(logging_payload.session_gate_semantics.get("scope_authority"), dict)
+                else None
+            ),
+            # [SSS-T2] PASS-side carryover linkage to decisions.jsonl
+            conflict_resolution_linkage=(logging_payload.session_gate_semantics.get("conflict_resolution_linkage")),
+            reuse_contract=(logging_payload.session_gate_semantics.get("reuse_contract")),
+        )
 
     def _run_director_continuity_and_state_tracker_advisories(
         self,
@@ -4807,9 +4699,7 @@ class Stage4InterviewRound:
             severity = failure.get("severity", "HIGH")
             validation_result["warnings"].append(f"[Python검증-{severity}] {reason}")
         validation_result["warning_count"] = len(validation_result["warnings"])
-        validation_result["focus_points"].append(
-            f"Python 검증 경고 {len(bv_failures)}건 (Director 판단 필요)"
-        )
+        validation_result["focus_points"].append(f"Python 검증 경고 {len(bv_failures)}건 (Director 판단 필요)")
         self.ctx.ui.log(
             f"      ⚠️ 후보{candidate_index} Python 검증 경고 {len(bv_failures)}건 → Director에 전달",
             stage="stage4",
@@ -4846,9 +4736,7 @@ class Stage4InterviewRound:
         for advisory_warning in bv_advisory_warnings:
             validation_result["warnings"].append(f"[Python검증-ADVISORY] {advisory_warning}")
         validation_result["warning_count"] = len(validation_result["warnings"])
-        validation_result["focus_points"].append(
-            f"Python 검증 advisory {len(bv_advisory_warnings)}건 (Director 참고)"
-        )
+        validation_result["focus_points"].append(f"Python 검증 advisory {len(bv_advisory_warnings)}건 (Director 참고)")
         _bv_detail_lines = "\n".join(f"    - {w}" for w in bv_advisory_warnings)
         self.ctx.ui.log(
             f"      ⚠️ 후보{candidate_index} Python 검증 advisory {len(bv_advisory_warnings)}건 → Director에 전달\n{_bv_detail_lines}",
@@ -4858,7 +4746,11 @@ class Stage4InterviewRound:
             round_num=round_num,
             event_kind="warning",
             level="warning",
-            meta={"candidate_index": candidate_index, "advisory_count": len(bv_advisory_warnings), "advisory_details": bv_advisory_warnings},
+            meta={
+                "candidate_index": candidate_index,
+                "advisory_count": len(bv_advisory_warnings),
+                "advisory_details": bv_advisory_warnings,
+            },
         )
 
     @staticmethod
@@ -4878,301 +4770,6 @@ class Stage4InterviewRound:
                 bv_advisory_warnings.append(warning_text)
                 bv_seen_warnings.add(warning_text)
         return bv_advisory_warnings
-
-    def _run_post_select_checks(
-        self,
-        *,
-        verdict: str,
-        final_manuscript: str,
-        final_state_updates: dict,
-        next_ep: int,
-        round_num: int,
-        round_ctx,
-        director_result: dict,
-        director_feedback: str,
-        score: int,
-        error_category: str,
-        previous_attempt: dict | None,
-        stage4_spinner,
-        director_memory_context: str,
-    ) -> tuple:
-        """[God-3] Post-select 병렬 검사 (continuity + history conflict).
-
-        Returns:
-            tuple: (verdict, director_feedback, previous_attempt, error_category)
-                   verdict 이 REJECT로 바뀔 수 있음.
-        """
-        _post_select_conflicts = []
-
-        _prev_manuscripts_text = round_ctx.prev_manuscripts_text
-        story_context = round_ctx.story_context
-        _director_agent = self.ctx.agents.get("director", None)
-        _run_continuity = next_ep > 1 and final_manuscript
-        _run_history = (
-            _prev_manuscripts_text
-            and final_manuscript
-            and hasattr(_director_agent, "check_manuscript_history_conflicts")
-        )
-
-        if _run_continuity or _run_history:
-            from concurrent.futures import ThreadPoolExecutor
-
-            stage4_spinner.update_detail(f"Ep {next_ep} · post-select checks (parallel)")
-
-            with ThreadPoolExecutor(max_workers=2, thread_name_prefix="postselect") as _ps_exec:
-                _fut_cont = None
-                _fut_hist = None
-
-                if _run_continuity:
-                    _fut_cont = _ps_exec.submit(
-                        self.ctx.agents["director"].check_manuscript_continuity_with_cache,
-                        new_manuscript=final_manuscript,
-                        ep_num=next_ep,
-                        db=self.ctx.current_project.db,
-                        limit=10,
-                        story_context=story_context,
-                        memory_context=director_memory_context,
-                    )
-
-                if _run_history:
-                    _ms_history_for_check = self._build_manuscript_history_for_check(_prev_manuscripts_text, next_ep)
-                    if _ms_history_for_check:
-                        _fut_hist = _ps_exec.submit(
-                            self.ctx.agents["director"].check_manuscript_history_conflicts,
-                            ep_num=next_ep,
-                            current_manuscript=final_manuscript,
-                            manuscript_history=_ms_history_for_check,
-                            use_summary=False,
-                            story_context=story_context,
-                            memory_context=director_memory_context,
-                        )
-
-                # (a) Continuity check result
-                if _fut_cont is not None:
-                    try:
-                        continuity_check = _fut_cont.result(timeout=120)
-                        if continuity_check.get("decision") == "CONFLICT":
-                            _conflict_msg = continuity_check.get("summary", "Continuity conflict detected")
-                            _post_select_conflicts.append(f"[Continuity Conflict] {_conflict_msg}")
-                            self.ctx.ui.log(f"   [A-3] Post-select continuity conflict: {_conflict_msg}")
-                    except Exception as _cont_err:
-                        logging.warning(f"[FailClosed:SC:PostSelectContinuity] {_cont_err!s:.100}")
-                        _post_select_conflicts.append(
-                            f"[Continuity Check Error] 검증 실패 (fail-closed): {_cont_err!s}"
-                        )
-
-                # (b) History conflict check result
-                if _fut_hist is not None:
-                    try:
-                        _conflict_result = _fut_hist.result(timeout=120)
-                        if _conflict_result.get("decision") == "CONFLICT":
-                            _conflict_msg = _conflict_result.get("summary", "History conflict detected")
-                            _post_select_conflicts.append(f"[V67] History Conflict: {_conflict_msg}")
-                            self.ctx.ui.log(f"   [A-3] Post-select history conflict: {_conflict_msg}")
-                    except Exception as _hist_err:
-                        logging.warning(f"[FailClosed:SC:PostSelectHistory] {_hist_err!s:.100}")
-                        _post_select_conflicts.append(
-                            f"[History Check Error] 검증 실패 (fail-closed): {_hist_err!s}"
-                        )
-
-        # (c) Downgrade provisional PASS to REJECT if post-select validation found conflicts
-        if _post_select_conflicts:
-            _conflict_types = []
-            for _c in _post_select_conflicts:
-                if "Continuity" in _c:
-                    _conflict_types.append("continuity")
-                elif "History" in _c:
-                    _conflict_types.append("history")
-                else:
-                    _conflict_types.append("check_error")
-            for _conflict_detail, _conflict_type in zip(_post_select_conflicts, _conflict_types):
-                _emit_stage4_ui_log(
-                    self.ctx.ui,
-                    f"   [TF-3 detail] {_conflict_detail}",
-                    component="post_select_validation",
-                    event_kind="detail",
-                    ep_num=next_ep,
-                    round_num=round_num,
-                    meta={
-                        "conflict_type": _conflict_type,
-                        "conflict_detail": _conflict_detail,
-                        "conflict_count": len(_post_select_conflicts),
-                    },
-                )
-            _emit_stage4_ui_log(
-                self.ctx.ui,
-                f"   [TF-3] Provisional PASS → REJECT downgrade: "
-                f"{len(_post_select_conflicts)} post-select conflicts ({', '.join(_conflict_types)})",
-                component="post_select_validation",
-                event_kind="policy",
-                ep_num=next_ep,
-                round_num=round_num,
-                meta={
-                    "conflict_types": list(_conflict_types),
-                    "conflict_count": len(_post_select_conflicts),
-                    "conflict_details": list(_post_select_conflicts),
-                },
-            )
-            verdict = "REJECT"
-            director_result = self._apply_director_gate_update(
-                director_result,
-                final_verdict="REJECT",
-                gate_basis="post_select_conflict",
-                repair_scope="full",
-            )
-            # [C-2 seam fix] Post-select conflict must also stamp fix_scope="full"
-            # on director_result so downstream _build_reject_guidance_payload reads
-            # the correct scope instead of the pre-downgrade value.
-            director_result["fix_scope"] = "full"
-            # [TF-49/TF-3] A-3 다운그레이드 시 error_category를 구체적으로 설정
-            # → V75-D/V75-B 에스컬레이션 체인 트리거 (Blueprint 자동 수정)
-            _has_continuity = any("Continuity" in c for c in _post_select_conflicts)
-            _has_history = any("History" in c for c in _post_select_conflicts)
-            if _has_continuity and _has_history:
-                error_category = "POST_SELECT_CONTINUITY_AND_HISTORY"
-            elif _has_continuity:
-                error_category = "POST_SELECT_CONTINUITY_CONFLICT"
-            elif _has_history:
-                error_category = "POST_SELECT_HISTORY_CONFLICT"
-            else:
-                error_category = "POST_SELECT_CHECK_ERROR"
-            director_feedback += "\n" + "\n".join(_post_select_conflicts)
-            # [P0-D3] 다운그레이드 시 previous_attempt 갱신 — 다음 라운드 패치 모드용
-            _fix_scope = director_result.get("fix_scope", "") if isinstance(director_result, dict) else ""
-            _sel_candidate = director_result.get("selected_candidate") or {}
-            if not isinstance(_sel_candidate, dict):
-                _sel_candidate = {}
-            _sel_strategy_key = _sel_candidate.get("strategy", "") or _sel_candidate.get("strategy_name", "")
-            _selection_reason = director_result.get("selection_reason", "") if isinstance(director_result, dict) else ""
-            _verdict_reason = director_result.get("verdict_reason", "") if isinstance(director_result, dict) else ""
-            _post_select_fix_scope = "full"
-            _existing_contradiction_types: list[str] = []
-            for item in director_result.get("contradiction_types", []) if isinstance(director_result, dict) else []:
-                token = str(item or "").strip()
-                if token and token not in _existing_contradiction_types:
-                    _existing_contradiction_types.append(token)
-            _pin_contradiction_types, _pin_contradiction_details = (
-                _extract_opening_continuity_pin_metadata(round_ctx.blueprint) if _has_continuity else ([], [])
-            )
-            for token in _pin_contradiction_types:
-                if token not in _existing_contradiction_types:
-                    _existing_contradiction_types.append(token)
-            _raw_contradiction_details = (
-                list(director_result.get("contradiction_details", []) or [])
-                if isinstance(director_result, dict)
-                else []
-            )
-            _compact_contradiction_details = self._compact_contradiction_detail_lines(
-                _raw_contradiction_details,
-                max_items=None,
-                line_limit=160,
-            )
-            for line in _pin_contradiction_details:
-                if line not in _compact_contradiction_details:
-                    _compact_contradiction_details.append(line)
-            if not _compact_contradiction_details:
-                _compact_contradiction_details = [str(item or "").strip() for item in _post_select_conflicts if str(item or "").strip()]
-            _post_select_fix_pack_contract = self._evaluate_fix_pack_contract(
-                director_result.get("fix_pack") if isinstance(director_result, dict) else {}
-            )
-            _normalized_post_select_fix_pack = _post_select_fix_pack_contract.get("fix_pack", {})
-            _bounded_local_fix_hint = bool(_post_select_fix_pack_contract.get("ready"))
-            _conflict_contract = _build_post_select_conflict_contract(
-                _post_select_conflicts,
-                contradiction_types=_existing_contradiction_types,
-                contradiction_details=_compact_contradiction_details,
-                bounded_local_fix_hint=_bounded_local_fix_hint,
-                target_kind=str(_normalized_post_select_fix_pack.get("target_kind", "") or ""),
-            )
-            if isinstance(director_result, dict):
-                if _existing_contradiction_types:
-                    director_result["contradiction_types"] = list(_existing_contradiction_types)
-                elif _conflict_types:
-                    director_result["contradiction_types"] = list(dict.fromkeys(_conflict_types))
-                if _raw_contradiction_details:
-                    director_result["contradiction_details"] = list(_raw_contradiction_details)
-                elif _compact_contradiction_details:
-                    director_result["contradiction_details"] = list(_compact_contradiction_details)
-            previous_attempt = {
-                "best_manuscript": final_manuscript,
-                "state_updates": final_state_updates,
-                "score": score,
-                # [TF-36] S4-005: fix_scope/rejection_reason/selected_strategy 보존
-                "fix_scope": _post_select_fix_scope,
-                # [DCM-T3] Director-authored scope preserved separately from derived retry scope
-                "authoritative_fix_scope": _fix_scope,
-                "rejection_reason": director_feedback,
-                "selected_strategy": director_result.get("selected_strategy", "") if isinstance(director_result, dict) else "",
-                "selected_strategy_key": _sel_strategy_key,
-                "selection_reason": _selection_reason,
-                "verdict_reason": _verdict_reason,
-                "director_verdict": director_result.get("director_verdict", ""),
-                "final_verdict": director_result.get("final_verdict", verdict),
-                "gate_basis": director_result.get("gate_basis", "post_select_conflict"),
-                "repair_scope": director_result.get("repair_scope", _post_select_fix_scope),
-                "reject_bucket": "post_select_conflict",
-                "retry_pathology_source": "post_select_conflict",
-                "provisional_pass_downgrade": True,
-                "score_breakdown": director_result.get("score_breakdown", {}) if isinstance(director_result, dict) else {},
-                "consistency_checklist": director_result.get("consistency_checklist", {})
-                if isinstance(director_result, dict)
-                else {},
-                "error_category": error_category,
-                "open_review": director_result.get("open_review", "")
-                if isinstance(director_result, dict)
-                else "",  # [TF-29]
-                # [TF-R2] fix_pack/action_items 보존 — 다음 retry lane에서 patch_targets 참조 가능
-                "fix_pack": self._build_fix_pack_payload(director_result) if isinstance(director_result, dict) else {},
-                "action_items": list(director_result.get("action_items", []) or [])
-                if isinstance(director_result, dict)
-                else [],
-                "prior_attempts": self._inherit_attempt_history(previous_attempt),
-            }
-            if _existing_contradiction_types:
-                previous_attempt["contradiction_types"] = list(_existing_contradiction_types)
-            elif _conflict_types:
-                previous_attempt["contradiction_types"] = list(dict.fromkeys(_conflict_types))
-            if _raw_contradiction_details:
-                previous_attempt["contradiction_details"] = list(_raw_contradiction_details)
-            elif _compact_contradiction_details:
-                previous_attempt["contradiction_details"] = list(_compact_contradiction_details)
-            if _conflict_contract:
-                previous_attempt["conflict_contract"] = _conflict_contract
-            previous_attempt["reuse_contract"] = {
-                "mode": "best_manuscript_baseline",
-                "baseline_field": "best_manuscript",
-                "conflict_field": "conflict_contract",
-                "preserve_rationale": True,
-            }
-            # [SSS-T1] Scope origin for post-select conflict carryover
-            previous_attempt["scope_origin"] = {
-                "fix_scope": "post_select_conflict_override",
-                "authoritative_fix_scope": "director_authoritative",
-                "repair_scope": "runtime_lane",
-            }
-            _post_select_repair_contract = self._build_repair_contract_payload_from_parts(
-                gate_semantics={
-                    "repair_scope": str(previous_attempt.get("repair_scope", "") or ""),
-                    "authoritative_fix_scope": str(previous_attempt.get("authoritative_fix_scope", "") or ""),
-                    "scope_origin": dict(previous_attempt.get("scope_origin") or {}),
-                },
-                fix_pack=previous_attempt.get("fix_pack") or {},
-                source=director_result if isinstance(director_result, dict) else previous_attempt,
-            )
-            if _post_select_repair_contract:
-                previous_attempt["repair_contract"] = _post_select_repair_contract
-            _post_select_scope_authority = self._build_scope_authority_payload_from_parts(
-                gate_semantics={
-                    "repair_scope": str(previous_attempt.get("repair_scope", "") or ""),
-                    "authoritative_fix_scope": str(previous_attempt.get("authoritative_fix_scope", "") or ""),
-                    "scope_origin": dict(previous_attempt.get("scope_origin") or {}),
-                },
-                source=previous_attempt,
-            )
-            if _post_select_scope_authority:
-                previous_attempt["scope_authority"] = _post_select_scope_authority
-
-        return verdict, director_feedback, previous_attempt, error_category
 
     def _execute_pass_with_fix_loop(
         self,
@@ -5277,12 +4874,17 @@ class Stage4InterviewRound:
                 processed.trace_meta,
             )
 
-        return None, director_feedback, previous_attempt, {
-            "final_verdict": verdict,
-            "final_score": score,
-            "director_result": director_result,
-            "patch_trace": {},
-        }
+        return (
+            None,
+            director_feedback,
+            previous_attempt,
+            {
+                "final_verdict": verdict,
+                "final_score": score,
+                "director_result": director_result,
+                "patch_trace": {},
+            },
+        )
 
     def _process_positive_verdict(
         self,
@@ -5382,7 +4984,7 @@ class Stage4InterviewRound:
         final_state_updates: dict,
         director_result: dict,
     ) -> _PositiveVerdictTransitionPayload:
-        verdict, director_feedback, previous_attempt, error_category = self._run_post_select_checks(
+        verdict, director_feedback, previous_attempt, error_category = self.post_select_runtime.run_post_select_checks(
             verdict=verdict,
             final_manuscript=final_manuscript,
             final_state_updates=final_state_updates,
@@ -5777,16 +5379,12 @@ class Stage4InterviewRound:
             try:
                 _prev_ms = _db.get_manuscript(_prev_ep)
             except Exception as _ms_err:
-                logging.warning(
-                    f"[SilentPass:InterviewRound] prev_hud manuscript load 실패: {_ms_err!s:.100}"
-                )
+                logging.warning(f"[SilentPass:InterviewRound] prev_hud manuscript load 실패: {_ms_err!s:.100}")
 
             try:
                 _state_log = _db.load_state_log(_prev_ep)
             except Exception as _state_err:
-                logging.warning(
-                    f"[SilentPass:InterviewRound] prev_hud state_log load 실패: {_state_err!s:.100}"
-                )
+                logging.warning(f"[SilentPass:InterviewRound] prev_hud state_log load 실패: {_state_err!s:.100}")
             else:
                 _loaded_state = _state_log.get("data", {}) if isinstance(_state_log, dict) else {}
                 if isinstance(_loaded_state, dict):
@@ -5817,7 +5415,10 @@ class Stage4InterviewRound:
         return {}, ""
 
     def _build_cv_identity_context(self, *, next_ep: int, genre_name: str) -> dict:
-        cv_context = {"time_warnings": self.time_warnings, "_failure_learner": getattr(self.ctx, "failure_learner", None)}
+        cv_context = {
+            "time_warnings": self.time_warnings,
+            "_failure_learner": getattr(self.ctx, "failure_learner", None),
+        }
         prev_hud, prev_hud_source = self._resolve_prev_hud_snapshot(next_ep)
         cv_context["prev_hud"] = prev_hud
         cv_context["prev_hud_source"] = prev_hud_source
@@ -5926,7 +5527,20 @@ class Stage4InterviewRound:
             if not key_npcs:
                 key_npcs = mb_root.get("AssetLibrary", {}).get("Key_NPCs", [])
             villain_keywords = ("빌런", "적대", "악역", "antagonist", "주적", "숙적", "원수")
-            superior_keywords = ("상사", "상관", "사부", "스승", "사형", "문주", "장문인", "회장", "대표", "사장", "원장", "교수")
+            superior_keywords = (
+                "상사",
+                "상관",
+                "사부",
+                "스승",
+                "사형",
+                "문주",
+                "장문인",
+                "회장",
+                "대표",
+                "사장",
+                "원장",
+                "교수",
+            )
             for npc in key_npcs or []:
                 if not isinstance(npc, dict):
                     continue
@@ -6073,14 +5687,20 @@ class Stage4InterviewRound:
             for _adv_type, _adv_lines in sorted(_advisory_per_type.items()):
                 self.ctx.ui.log(
                     f"         [{_adv_type}] {len(_adv_lines)}건",
-                    stage="stage4", component="advisory_chain", ep_num=next_ep,
-                    round_num=_round_num, event_kind="detail",
+                    stage="stage4",
+                    component="advisory_chain",
+                    ep_num=next_ep,
+                    round_num=_round_num,
+                    event_kind="detail",
                 )
                 for _adv_line in _adv_lines:
                     self.ctx.ui.log(
                         f"            {_adv_line}",
-                        stage="stage4", component="advisory_chain", ep_num=next_ep,
-                        round_num=_round_num, event_kind="detail",
+                        stage="stage4",
+                        component="advisory_chain",
+                        ep_num=next_ep,
+                        round_num=_round_num,
+                        event_kind="detail",
                     )
         else:
             self.ctx.ui.log(
@@ -6165,10 +5785,7 @@ class Stage4InterviewRound:
             _existing_position = self._extract_npc_drift_attr_value(_known_attrs.get("position"))
             _registry_position = str(_npc_info.get("position", "") or "").strip()
             _registry_role = str(
-                _npc_info.get("role")
-                or _npc_info.get("public_role")
-                or _npc_info.get("job")
-                or ""
+                _npc_info.get("role") or _npc_info.get("public_role") or _npc_info.get("job") or ""
             ).strip()
 
             if _registry_position and not _existing_position:
@@ -6329,9 +5946,7 @@ class Stage4InterviewRound:
                         if _fw.get("_cand_idx", 0) < 3
                         else str(_fw.get("_cand_idx", 0) + 1)
                     )
-                    _fb_lines.append(
-                        f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')}"
-                    )
+                    _fb_lines.append(f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')}")
                 logging.info(
                     "[FlashbackVerifier\u2192Director] %d\uac74 \ud68c\uc0c1 \uc624\uc5fc \uac10\uc9c0", len(_fb_all)
                 )
@@ -6527,9 +6142,7 @@ class Stage4InterviewRound:
                     prev_manuscript=_prev_ms,
                 )
                 if _warns and _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
-                    validation_results[_ci].setdefault("numeric_consistency_warnings", []).extend(
-                        copy.deepcopy(_warns)
-                    )
+                    validation_results[_ci].setdefault("numeric_consistency_warnings", []).extend(copy.deepcopy(_warns))
                 for _w in _warns:
                     _w["_cand_idx"] = _ci
                 _nc_all.extend(_warns)
@@ -6576,7 +6189,9 @@ class Stage4InterviewRound:
             _signals = (_summary.get("signals") or {}) if isinstance(_summary, dict) else {}
             _ai_median = float((_signals.get("ai_slop") or {}).get("median", 0.0) or 0.0)
             _ced_median = float((_signals.get("ced") or {}).get("median", 0.0) or 0.0)
-            _target_dialogue_ratio = resolve_style_dialogue_ratio_target(project=getattr(self.ctx, "current_project", None))
+            _target_dialogue_ratio = resolve_style_dialogue_ratio_target(
+                project=getattr(self.ctx, "current_project", None)
+            )
 
             _advisory_lines = [
                 "[StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director]"
@@ -6588,7 +6203,11 @@ class Stage4InterviewRound:
                 if not _ms:
                     continue
 
-                _vr = validation_results[_ci] if _ci < len(validation_results) and isinstance(validation_results[_ci], dict) else {}
+                _vr = (
+                    validation_results[_ci]
+                    if _ci < len(validation_results) and isinstance(validation_results[_ci], dict)
+                    else {}
+                )
                 _warning_count = int(_vr.get("warning_count", 0) or 0) if isinstance(_vr, dict) else 0
                 _bundle = compute_quality_signal_bundle(_ms, warning_count=_warning_count)
                 _candidate_lines: list[str] = []
@@ -6600,7 +6219,8 @@ class Stage4InterviewRound:
                 _ai_threshold = max(0.6, _ai_median * 1.15 if _ai_median > 0 else 0.6)
                 if _ai_score >= _ai_threshold or _ai_total_hits >= 3:
                     _hit_preview = ", ".join(
-                        f"{str(item.get('pattern', '') or '')}x{int(item.get('count', 0) or 0)}" for item in _ai_hits[:3]
+                        f"{str(item.get('pattern', '') or '')}x{int(item.get('count', 0) or 0)}"
+                        for item in _ai_hits[:3]
                     )
                     if _ai_median > 0:
                         _candidate_lines.append(
@@ -6774,9 +6394,7 @@ class Stage4InterviewRound:
         if not trace_payload and not fix_pack_payload:
             return {}, fix_pack_payload
 
-        default_target_kind = str(
-            trace_payload.get("target_kind") or fix_pack_payload.get("target_kind") or ""
-        ).strip()
+        default_target_kind = str(trace_payload.get("target_kind") or fix_pack_payload.get("target_kind") or "").strip()
         patch_targets, patch_target_records = normalize_patch_target_records(
             trace_payload.get("patch_target_records")
             or fix_pack_payload.get("patch_target_records")
@@ -6819,9 +6437,7 @@ class Stage4InterviewRound:
             trace_payload["repair_trace"] = normalized_repair_trace
 
         partial_fix_eval_source = (
-            trace_payload.get("partial_fix_eval")
-            if isinstance(trace_payload.get("partial_fix_eval"), dict)
-            else {}
+            trace_payload.get("partial_fix_eval") if isinstance(trace_payload.get("partial_fix_eval"), dict) else {}
         )
         partial_fix_eval = build_partial_fix_eval(
             patch_round=partial_fix_eval_source.get("patch_round", trace_payload.get("patch_round")),
@@ -6831,8 +6447,7 @@ class Stage4InterviewRound:
             fallback_reason=partial_fix_eval_source.get(
                 "fallback_reason",
                 str(
-                    trace_payload.get("fallback_reason")
-                    or normalized_guard_result.get("failure_key", "")
+                    trace_payload.get("fallback_reason") or normalized_guard_result.get("failure_key", "")
                     if normalized_guard_result
                     else trace_payload.get("fallback_reason", "")
                 ),
@@ -6922,35 +6537,6 @@ class Stage4InterviewRound:
 
     # ── Stage 4 PassRateMonitor 기록 ──────────────────────────────
 
-    def _build_manuscript_history_for_check(self, prev_manuscripts_text: str, next_ep: int) -> list:
-        """[Phase A-3] Build manuscript-history records for conflict checks."""
-        _ms_history_for_check = []
-        import re as _re_hist
-
-        if prev_manuscripts_text:
-            for _block in prev_manuscripts_text.split("\n\n---\n\n"):
-                _m = _re_hist.match(r"^\[[^\d]*(\d+)[^\]]*\]\s*", _block)
-                if _m:
-                    _ep = int(_m.group(1))
-                    _text = _block[_m.end() :]
-                    if _text and len(_text) > 100:
-                        _ms_history_for_check.append({"ep_num": _ep, "text": _text})
-
-        if not _ms_history_for_check:
-            for _prev_ep in range(max(1, next_ep - 30), next_ep):
-                try:
-                    _prev_ms_data = self.ctx.current_project.db.get_manuscript(_prev_ep)
-                    if _prev_ms_data:
-                        _content = (
-                            _prev_ms_data.get("content", "") if isinstance(_prev_ms_data, dict) else str(_prev_ms_data)
-                        )
-                        if _content:
-                            _ms_history_for_check.append({"ep_num": _prev_ep, "text": _content})
-                except Exception as e:
-                    logging.warning(f"[SilentPass:InterviewRound] ep{_prev_ep} history load failed: {e!s:.100}")
-
-        return _ms_history_for_check
-
     # ═══════════════════════════════════════════════════════════════════════
     # Episode log + attempt recording (DB, pass_rate_monitor, JSONL)
     # ═══════════════════════════════════════════════════════════════════════
@@ -6985,6 +6571,12 @@ class Stage4InterviewRound:
         selection_content_hash="",
         selection_artifact_path="",
         carryover_contracts=None,
+        selection_reason="",
+        verdict_reason="",
+        gate_semantics=None,
+        fix_pack=None,
+        runtime_advisory="",
+        retry_directives="",
     ):
         """[V76] 라운드별 생산 로그를 JSONL로 기록."""
         try:
@@ -7001,18 +6593,14 @@ class Stage4InterviewRound:
                 _sel_candidate = {}
 
             try:
-                _initial_score = int(
-                    director_result.get("score", 0) if initial_score is None else initial_score
-                )
+                _initial_score = int(director_result.get("score", 0) if initial_score is None else initial_score)
             except (ValueError, TypeError):
                 _initial_score = 0
             try:
                 _final_score = int(_initial_score if final_score is None else final_score)
             except (ValueError, TypeError):
                 _final_score = _initial_score
-            _initial_verdict = str(
-                director_result.get("verdict", "") if initial_verdict is None else initial_verdict
-            )
+            _initial_verdict = str(director_result.get("verdict", "") if initial_verdict is None else initial_verdict)
             _final_verdict = str(_initial_verdict if final_verdict is None else final_verdict)
 
             _duration_ms = None
@@ -7024,22 +6612,45 @@ class Stage4InterviewRound:
             _candidate_warnings = list(validation_warnings or [])
             _final_warnings = list(final_warnings or [])
             _round_metrics = self._get_round_metrics_delta()
-            _selection_reason = director_result.get("selection_reason") or ""
-            _verdict_reason = director_result.get("verdict_reason") or _selection_reason
-            _gate_semantics = self._build_gate_semantics_payload(director_result)
+            _selection_reason = str(selection_reason or director_result.get("selection_reason") or "")
+            _verdict_reason = str(verdict_reason or director_result.get("verdict_reason") or _selection_reason)
+            _gate_semantics = (
+                dict(gate_semantics or {})
+                if isinstance(gate_semantics, dict)
+                else self._build_gate_semantics_payload(director_result)
+            )
             _patch_trace = dict(patch_trace or {})
+            _contract_source = dict(director_result or {}) if isinstance(director_result, dict) else {}
+            if isinstance(fix_pack, dict) and fix_pack:
+                _contract_source["fix_pack"] = dict(fix_pack)
+            if isinstance(_gate_semantics.get("repair_contract"), dict) and _gate_semantics.get("repair_contract"):
+                _contract_source["repair_contract"] = dict(_gate_semantics.get("repair_contract") or {})
+            if isinstance(_gate_semantics.get("scope_authority"), dict) and _gate_semantics.get("scope_authority"):
+                _contract_source["scope_authority"] = dict(_gate_semantics.get("scope_authority") or {})
             _patch_trace, _fix_pack = self._resolve_stage4_patch_contract_payloads(
-                director_result=director_result,
+                director_result=_contract_source,
                 patch_trace=_patch_trace,
             )
-            _repair_contract = self._build_repair_contract_payload_from_parts(
+            if isinstance(fix_pack, dict) and fix_pack and not _fix_pack:
+                _fix_pack = dict(fix_pack)
+            _derived_repair_contract = self._build_repair_contract_payload_from_parts(
                 gate_semantics=_gate_semantics,
                 fix_pack=_fix_pack,
-                source=director_result,
+                source=_contract_source,
             )
-            _scope_authority = self._build_scope_authority_payload_from_parts(
+            _repair_contract = (
+                dict(_derived_repair_contract or {}) | dict(_gate_semantics.get("repair_contract") or {})
+                if isinstance(_gate_semantics.get("repair_contract"), dict)
+                else dict(_derived_repair_contract or {})
+            )
+            _derived_scope_authority = self._build_scope_authority_payload_from_parts(
                 gate_semantics=_gate_semantics,
-                source=director_result,
+                source={**_contract_source, "repair_contract": _repair_contract},
+            )
+            _scope_authority = (
+                dict(_derived_scope_authority or {}) | dict(_gate_semantics.get("scope_authority") or {})
+                if isinstance(_gate_semantics.get("scope_authority"), dict)
+                else dict(_derived_scope_authority or {})
             )
             _feedback_provenance = dict(feedback_provenance or {})
             _normalized_patch_strategy = str(_patch_trace.get("patch_strategy", "") or "").strip()
@@ -7061,7 +6672,9 @@ class Stage4InterviewRound:
                 )
             )
             try:
-                _unchanged_ratio = float(_patch_trace["unchanged_ratio"]) if _patch_trace.get("unchanged_ratio") is not None else None
+                _unchanged_ratio = (
+                    float(_patch_trace["unchanged_ratio"]) if _patch_trace.get("unchanged_ratio") is not None else None
+                )
             except (ValueError, TypeError):
                 _unchanged_ratio = None
 
@@ -7139,8 +6752,14 @@ class Stage4InterviewRound:
                 "candidate_warnings": _candidate_warnings,
                 "feedback_provenance": {
                     "director_feedback": self._compact_text(_feedback_provenance.get("director_feedback", ""), None),
-                    "runtime_advisory": self._compact_text(_feedback_provenance.get("runtime_advisory", ""), None),
-                    "retry_directives": self._compact_text(_feedback_provenance.get("retry_directives", ""), None),
+                    "runtime_advisory": self._compact_text(
+                        runtime_advisory or _feedback_provenance.get("runtime_advisory", ""),
+                        None,
+                    ),
+                    "retry_directives": self._compact_text(
+                        retry_directives or _feedback_provenance.get("retry_directives", ""),
+                        None,
+                    ),
                 },
             }
             _scope_violation = _gate_semantics.get("authoritative_fix_scope_violation")
@@ -7152,9 +6771,7 @@ class Stage4InterviewRound:
             _verdict_layers = _gate_semantics.get("verdict_layers")
             if isinstance(_verdict_layers, dict):
                 entry["verdict_layers"] = _verdict_layers
-                entry["downstream_override_applied"] = bool(
-                    _verdict_layers.get("downstream_override_applied", False)
-                )
+                entry["downstream_override_applied"] = bool(_verdict_layers.get("downstream_override_applied", False))
                 entry["primary_failure_layer"] = str(_verdict_layers.get("primary_failure_layer", "") or "")
             if isinstance(_scope_authority.get("scope_origin"), dict):
                 entry["scope_origin"] = dict(_scope_authority.get("scope_origin") or {})
@@ -7238,7 +6855,9 @@ class Stage4InterviewRound:
         if not isinstance(_adv, dict):
             return _adv or None
         _normalized = dict(_adv)
-        _gate_semantics = dict(_normalized.get("gate_semantics") or {}) if isinstance(_normalized.get("gate_semantics"), dict) else {}
+        _gate_semantics = (
+            dict(_normalized.get("gate_semantics") or {}) if isinstance(_normalized.get("gate_semantics"), dict) else {}
+        )
         _fix_pack = dict(_normalized.get("fix_pack") or {}) if isinstance(_normalized.get("fix_pack"), dict) else {}
         _nested_repair_contract = (
             dict(_gate_semantics.get("repair_contract") or {})
@@ -7322,8 +6941,12 @@ class Stage4InterviewRound:
         score_breakdown: dict | None,
         artifact_meta: dict[str, str],
     ) -> dict:
-        _gate_semantics, _fix_pack, _repair_contract, _retry_budget_axes = self._extract_stage4_advisory_contract_payloads(advisory_flags)
-        _verdict_layers = _gate_semantics.get("verdict_layers") if isinstance(_gate_semantics.get("verdict_layers"), dict) else {}
+        _gate_semantics, _fix_pack, _repair_contract, _retry_budget_axes = (
+            self._extract_stage4_advisory_contract_payloads(advisory_flags)
+        )
+        _verdict_layers = (
+            _gate_semantics.get("verdict_layers") if isinstance(_gate_semantics.get("verdict_layers"), dict) else {}
+        )
         _scope_authority = self._build_scope_authority_payload_from_parts(
             gate_semantics=_gate_semantics,
             source=advisory_flags if isinstance(advisory_flags, dict) else {"repair_contract": _repair_contract},

@@ -1,33 +1,35 @@
 # Cross-PC Implementation Handoff Context
 
 Date: 2026-04-07
-Status: active handoff note (roadmap already current; no further reorder applied in this pass)
+Status: active handoff note (roadmap stays in the same working order; this pass only advances lane status and queue truth)
 Canonical Path: `docs/2026-04-07/cross-pc-implementation-handoff-context-2026-04-07.md`
-Audience: another PC / another terminal resuming the current system-track queue
+Audience: another PC or another terminal resuming the current system-track queue
 Source of truth controller:
 - `docs/2026-04-01/active-temp-execution-roadmap.md`
 - `docs/temp/queue-state.json`
 
 ## 1. Answer First
 
-As of 2026-04-07, the roadmap is already re-ordered and synced.
+As of 2026-04-07, the latest landed bounded tranche is now the Stage0 BI/TR source-of-truth declaration pass.
 
-- no extra roadmap reorder was needed in this pass
-- the current next unopened code lane is `0_0-stage3-opening-transition-contract-normalization-remediation`
-- the proof/closure front stack is still intentionally deferred, not closed
+- no roadmap reorder was performed in this pass
+- `stage0-bi-tr-production-harness-normalization-remediation` is now active / partially realized, not unopened
+- the Stage0 enrich lane remains active / partially realized from the earlier same-day tranche
+- the proof / closure front stack is still intentionally deferred
+- after this status change, no unopened implementation lane remains in the active queue snapshot
 
-If another PC wants the safest next step, there are only two sane branches:
+Operational reading:
 
 1. proof-first:
-   run bounded canary/closure work for the already-landed front stack
+   keep working the already-landed front stack toward canary or closure evidence
 2. code-first:
-   open `0_0-stage3-opening-transition-contract-normalization-remediation`
+   continue the active `stage0-bi-tr-production-harness-normalization-remediation` lane with `runtime handoff normalization`
 
-If the operator keeps the current "돈 아끼고 구현 먼저" stance, choose branch 2.
+If the operator keeps the current "proof later, keep implementing" stance, choose branch 2.
 
 ## 2. Current Queue Truth
 
-The roadmap and queue-state already reflect this order:
+The roadmap and queue-state should reflect this order:
 
 1. `0_0-stage4-consumer-contract-normalization-remediation`
 2. `0_0-stage4-repair-contract-normalization-remediation`
@@ -39,47 +41,41 @@ The roadmap and queue-state already reflect this order:
 8. `0_0-stage2-partial-fix-hardening-remediation`
 9. `0_0-stage234-cross-stage-contract-normalization-remediation`
 10. `0_0-stage3-opening-transition-contract-normalization-remediation`
+11. `0_0-stage4-interview-round-owner-surface-reduction-remediation`
+12. `stage0-treatment-enrich-retirement-remediation`
+13. `stage0-bi-tr-production-harness-normalization-remediation`
+14. `0_0-stage2-stage3-stage4-readiness-remediation`
+15. `frontier-lag-soak-canary-wave1`
+16. `npc-martial-state-substrate-wave1`
 
 Operational interpretation:
 
-- `1~5` are implementation-landed but proof-deferred closure candidates
-- `6~9` are partially realized follow-up lanes that also remain proof-deferred
-- `10` is now the next unopened implementation lane
+- `1~13` are implementation-landed or partially realized items
+- `14` remains blocked
+- `15` is an older in-progress reference-validation lane, not an unopened implementation lane
+- `16` remains blocked
 
-## 3. What Landed Today
+## 3. What Landed Most Recently
 
-The current workspace already includes these bounded implementation tranches:
+The latest bounded Stage0 BI/TR tranche introduced a structured source-of-truth contract.
 
-- Stage4 consumer:
-  - post-pass numeric carryover refresh promotion landed
-- Stage4 repair:
-  - repair readback surface promotion landed
-- non-wuxia state-lock overreach:
-  - Stage4 intake/post-pass demotion of soft carryover landed
-- Stage2 residual normalization:
-  - non-wuxia finalizer cleanup landed
-- Stage3 contract tightening:
-  - binding widening plus `_stage3_meta` / Stage4 pressure handoff landed
-- Stage4 partial-fix:
-  - shared `PatchTargetRecord`, `repair_trace`, `partial_fix_eval` readback tranche landed
-- Stage3 partial-fix:
-  - `fix_pack-lite` plus `partial_fix_eval` / advisory sink tranche landed
-- Stage2 partial-fix:
-  - Stage2 `fix_pack-lite` plus local patch prompt / sink tranche landed
-- cross-stage substrate:
-  - first bounded alias-survival tranche landed
+Primary changed files:
 
-The latest cross-stage tranche specifically changed:
+- [stage0_handoff.py](/c:/Users/PC/Desktop/글도비/modules/core/stage0_handoff.py)
+- [project_manager.py](/c:/Users/PC/Desktop/글도비/modules/core/project_manager.py)
+- [stage2_orchestrator.py](/c:/Users/PC/Desktop/글도비/modules/core/stage2_orchestrator.py)
+- [test_bi_tr_canonical_contract.py](/c:/Users/PC/Desktop/글도비/tests/test_bi_tr_canonical_contract.py)
+- [test_stage0_handoff_ingress.py](/c:/Users/PC/Desktop/글도비/tests/test_stage0_handoff_ingress.py)
+- [test_stage2_orchestrator.py](/c:/Users/PC/Desktop/글도비/tests/test_stage2_orchestrator.py)
+- [test_blockguide_bi_builder.py](/c:/Users/PC/Desktop/글도비/tests/test_blockguide_bi_builder.py)
 
-- [stage_cross_stage_contract.py](/c:/Users/wjjo/Desktop/글도비/modules/core/stage_cross_stage_contract.py)
-- [stage4_context_builder.py](/c:/Users/wjjo/Desktop/글도비/modules/core/stage4_context_builder.py)
-- [test_stage4_context_builder.py](/c:/Users/wjjo/Desktop/글도비/tests/test_stage4_context_builder.py)
+What that tranche means:
 
-Meaning:
-
-- `constraint_summary` vs `arc_constraint_summary` is now normalized through one shared helper
-- current-episode mission lines from `episode_details` now survive into Stage4 work-focus, slot-summary, and tier0 mandatory context
-- the next cross-stage tranche should not reopen this helper unless a new owner/strength seam is proven
+- `treatment.blocks` is now declared as the canonical material source
+- `MasterBible` is now declared as a BI projection artifact
+- `db_anchor:bible` is now declared as the runtime handoff owner
+- `MasterBible.plot_roadmap` is the BI-side structured authority for roadmap projection
+- Stage2 bootstrap now surfaces the runtime handoff contract instead of silently depending on the DB anchor
 
 ## 4. Recommended Next Actions
 
@@ -97,90 +93,94 @@ Target closure front:
 
 Bounded intent:
 
-- run one bounded canary/live proof event that exercises the already-landed front stack
-- PASS means these can move toward closure bookkeeping
-- FAIL means the failed seam becomes the next actual code priority
+- run one bounded canary or live-proof pass against the already-landed front stack
+- PASS means closure bookkeeping can advance
+- FAIL means the failed seam becomes the next concrete code priority
 
 ### Branch B. Code First
 
-Use this if implementation speed still outranks canary cost.
+Use this if implementation speed still outranks proof cost.
 
-Open:
+Continue:
 
-- `0_0-stage3-opening-transition-contract-normalization-remediation`
+- active Stage0 lane: `stage0-bi-tr-production-harness-normalization-remediation`
 
-Interpretation of that lane:
+Interpretation:
 
-- this is an upstream Stage3/BP context lane
-- the goal is not "always direct continuation"
-- the real contract to structure is:
-  - direct continuation
-  - explicit transition
-  - jump opening
+- there is no lower unopened implementation lane left after the Stage0 BI/TR tranche became active
+- the next bounded continuation inside that same lane is `runtime handoff normalization`
+- do not treat `frontier-lag-soak-canary-wave1` as the next unopened code lane; it is already an older in-progress reference-validation item
 
-Do not widen it into:
+Do not widen Branch B into:
 
-- broad Stage3 prompt retuning
-- new Stage4 opening logic rewrite in the same tranche
-- canary execution from inside that SSOT
+- broad Stage0 builder redesign
+- broad Stage2 or Stage4 rewrites from inside this lane
+- canary execution from inside this SSOT
 
 ## 5. Minimal Read Set For The Next Operator
 
 Read these in order:
 
 1. `docs/2026-04-01/active-temp-execution-roadmap.md`
-2. `docs/2026-04-02/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md`
-3. `docs/2026-04-02/0_0-stage234-cross-stage-contract-normalization-remediation-execution-ssot.md`
-4. `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
+2. `docs/2026-04-02/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
+3. `docs/2026-04-02/stage0-treatment-enrich-retirement-remediation-execution-ssot.md`
+4. `docs/2026-04-07/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md`
 
-If touching the latest cross-stage tranche, inspect these code anchors first:
+If continuing the active Stage0 BI/TR lane, inspect these code anchors first:
 
-- [stage_cross_stage_contract.py](/c:/Users/wjjo/Desktop/글도비/modules/core/stage_cross_stage_contract.py#L71)
-- [stage4_context_builder.py](/c:/Users/wjjo/Desktop/글도비/modules/core/stage4_context_builder.py#L715)
-- [stage4_context_builder.py](/c:/Users/wjjo/Desktop/글도비/modules/core/stage4_context_builder.py#L799)
-- [stage4_context_builder.py](/c:/Users/wjjo/Desktop/글도비/modules/core/stage4_context_builder.py#L2006)
+- [stage0_handoff.py](/c:/Users/PC/Desktop/글도비/modules/core/stage0_handoff.py#L11)
+- [stage0_handoff.py](/c:/Users/PC/Desktop/글도비/modules/core/stage0_handoff.py#L83)
+- [project_manager.py](/c:/Users/PC/Desktop/글도비/modules/core/project_manager.py#L937)
+- [stage2_orchestrator.py](/c:/Users/PC/Desktop/글도비/modules/core/stage2_orchestrator.py#L315)
 
 ## 6. Validation Baseline
 
-The latest bounded cross-stage tranche already passed:
+The latest bounded Stage0 BI/TR tranche already has this focused validation baseline:
 
-- `python -m py_compile modules/core/stage_cross_stage_contract.py modules/core/stage4_context_builder.py tests/test_stage4_context_builder.py`
-- `pytest tests/test_stage4_context_builder.py -q`
-- `ruff check modules/core/stage_cross_stage_contract.py modules/core/stage4_context_builder.py tests/test_stage4_context_builder.py`
-- `python scripts/check_utf8_hygiene.py ...`
-- `python scripts/sync_temp_queue_state.py`
-- `python scripts/ops_validator.py --strict`
+- `python -m py_compile modules/core/stage0_handoff.py modules/core/project_manager.py modules/core/stage2_orchestrator.py tests/test_bi_tr_canonical_contract.py tests/test_stage0_handoff_ingress.py tests/test_stage2_orchestrator.py tests/test_blockguide_bi_builder.py`
+- `pytest tests/test_bi_tr_canonical_contract.py -q`
+- `pytest tests/test_stage0_handoff_ingress.py -q`
+- `pytest tests/test_stage2_orchestrator.py -q`
+- `pytest tests/test_blockguide_bi_builder.py -q`
+- `pytest tests/test_wuxia_bi_builder_contract.py -q`
 
-Roadmap / queue integrity is already current:
+Roadmap and queue integrity must then be refreshed:
 
-- no additional reorder needed in this handoff pass
-- `docs/temp/execution-roadmap.md` matches canonical
-- `docs/temp/queue-state.json` already shows:
-  - cross-stage = `in_progress`
-  - Stage3 opening = `pending`
+- update `docs/temp/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md` from the canonical SSOT
+- update `docs/temp/execution-roadmap.md` from the canonical roadmap
+- run `python scripts/sync_temp_queue_state.py`
+- run `python scripts/ops_validator.py --strict`
+
+Expected queue-state after sync:
+
+- Stage0 enrich retirement = `in_progress`
+- Stage0 BI/TR production harness = `in_progress`
+- readiness lane = `blocked`
+- frontier lag soak = `in_progress`
+- no item remains `pending`
 
 ## 7. Guardrails For Another PC
 
-- do not reopen closed queue ordering unless a new explicit execution item was added
-- do not re-demote `0_0-stage234-cross-stage-contract-normalization-remediation`; its first tranche is already landed
-- do not treat `0_0-stage3-opening-transition-contract-normalization-remediation` as a Stage4 repair lane
-- do not mix proof/closure canary work and new broad implementation in one turn unless the failure evidence is the reason for the patch
-- if opening-transition implementation starts, keep the first tranche bounded to contract shape and downstream transport, not broad generator retuning
+- do not reopen queue ordering unless a genuinely new execution topic is introduced
+- do not claim closure for the Stage0 BI/TR lane; only the first bounded tranche is landed
+- keep the next pass focused on runtime handoff normalization rather than broad builder-family redesign
+- do not mix proof-first canary work and broad new implementation in one turn unless the failure evidence requires it
+- do not rewrite Stage2 opening or later-stage logic from inside this Stage0 lane
 
 ## 8. 3-Pass Audit
 
 Pass 1. Structure / scope
-- this note is a cross-PC handoff summary, not a new execution SSOT
-- roadmap truth, queue truth, landed tranche set, and next branches are separated clearly
+- this remains a handoff note, not a replacement execution SSOT
+- roadmap truth, queue truth, latest landed tranche, and next branches are separated clearly
 
 Pass 2. Evidence / consistency
-- queue order matches the active roadmap
-- cross-stage status matches the latest SSOT and queue-state
-- next unopened lane matches the current roadmap wording
+- queue order still matches the active roadmap after the Stage0 BI/TR tranche became active
+- the lane status now matches the latest Stage0 BI/TR SSOT
+- `frontier-lag-soak-canary-wave1` is preserved as an older in-progress lane rather than mislabeled as unopened
 
 Pass 3. Execution / readability
-- another operator can choose either proof-first or code-first without re-deriving queue state
-- the minimal read set and code anchors are explicit
-- overreach trimmed: no new reprioritization was introduced here
+- another operator can choose proof-first or code-first without re-deriving queue semantics
+- the minimal read set and code anchors point directly at the landed Stage0 contract seam
+- overreach is trimmed: no queue reorder, no closure claim, no proof claim
 
 Confidence: `97%`

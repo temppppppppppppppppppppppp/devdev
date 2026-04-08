@@ -275,13 +275,11 @@ class Stage2Orchestrator:
 
         return (ep_num - 1) // DEFAULT_EP_COUNT + 1
 
-    def _bootstrap_stage2_arc_pipeline(
-        self, *, target_arc_count: int | None
-    ) -> Stage2BootstrapPayload:
+    def _bootstrap_stage2_arc_pipeline(self, *, target_arc_count: int | None) -> Stage2BootstrapPayload:
         """Prepare Stage 2 startup state before entering batch orchestration."""
         from modules.core.constants import HUDKeys
         from modules.core.constraint_db import ConstraintDB
-        from modules.core.stage0_handoff import check_plot_roadmap_ready
+        from modules.core.stage0_handoff import check_plot_roadmap_ready, resolve_stage0_bible_contract
         from modules.domain.agents.state_tracker import StateTracker
 
         self.ctx.ui.log("🔞 [Stage 2] 0124 매니페스트 정합 엔진 및 멀티 공정 기동...")
@@ -310,6 +308,14 @@ class Stage2Orchestrator:
             return {"ready": False}
         arcs_source = roadmap_status.roadmap
 
+        stage0_contract = resolve_stage0_bible_contract(bible_data)
+        self.ctx.ui.log(
+            "      [Stage0 Contract] "
+            f"runtime_handoff_owner={stage0_contract.get('runtime_handoff', {}).get('owner')}; "
+            f"plot_roadmap_authority={stage0_contract.get('field_authority', {}).get('plot_roadmap')}; "
+            f"projection_source={stage0_contract.get('projection_source')}"
+        )
+
         protagonist_name = None
         genre = ""
         try:
@@ -329,7 +335,11 @@ class Stage2Orchestrator:
         total_count = len(arcs_source)
 
         existing_tracker_arcs = self.ctx.state_tracker_loaded_arcs or 0
-        if self.ctx.state_tracker is None or existing_tracker_arcs == 0 or existing_tracker_arcs > len(all_refined_arcs):
+        if (
+            self.ctx.state_tracker is None
+            or existing_tracker_arcs == 0
+            or existing_tracker_arcs > len(all_refined_arcs)
+        ):
             self.ctx.state_tracker = StateTracker(
                 preset_registry=self.ctx.preset_registry,
                 llm_client=self.ctx.sys.api_client,
@@ -431,9 +441,10 @@ class Stage2Orchestrator:
         sem: asyncio.Semaphore,
     ) -> Stage2BatchEnrichmentPayload:
         """Run Stage 2 batch enrichment, sanitize results, and recover failed items."""
+        import time as _time_mod
+
         from modules.core.constants import RecoveryLimits
         from modules.core.spinners import StageSpinner
-        import time as _time_mod
 
         with StageSpinner(2, f"Batch {batch_start + 1}~{batch_end} batch enrich") as spinner:
             self.ctx.ui.log(f"[Batch] {batch_start + 1}~{batch_end} range enrich start")
@@ -467,7 +478,9 @@ class Stage2Orchestrator:
                         curr_b, prev_b, next_b_safe, [], transfused_history=last_refined_context
                     )
                     enrich_done += 1
-                    spinner.update_detail(f"Batch {batch_start + 1}~{batch_end} LLM enrich ({enrich_done}/{enrich_total})")
+                    spinner.update_detail(
+                        f"Batch {batch_start + 1}~{batch_end} LLM enrich ({enrich_done}/{enrich_total})"
+                    )
                     self.ctx.ui.log(f"      [Enrich] {bid} task done ({enrich_done}/{enrich_total})")
                     return result
 
@@ -487,7 +500,9 @@ class Stage2Orchestrator:
             if isinstance(item, Exception):
                 self.ctx.ui.log(f"[Enrich] parallel task failed (idx={source_arc_idx}): {item}")
                 if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event("enrich_error", "batch enrich failed", {"error": str(item), "arc_idx": source_arc_idx})
+                    self.ctx.audit_event(
+                        "enrich_error", "batch enrich failed", {"error": str(item), "arc_idx": source_arc_idx}
+                    )
                 failed_indices.append(source_arc_idx)
                 continue
             if not isinstance(item, dict):
@@ -566,9 +581,7 @@ class Stage2Orchestrator:
         last_refined_context = fin.get("last_refined_context", last_refined_context)
         current_ep_start = fin.get("current_ep_start", current_ep_start)
         current_feedback = fin.get("current_feedback", current_feedback)
-        director_feedback_for_fourphase = fin.get(
-            "director_feedback_for_fourphase", director_feedback_for_fourphase
-        )
+        director_feedback_for_fourphase = fin.get("director_feedback_for_fourphase", director_feedback_for_fourphase)
         st_snapshot = fin.get("st_snapshot", st_snapshot)
 
         session_logger = getattr(self.ctx, "session_logger", None)
@@ -882,6 +895,7 @@ class Stage2Orchestrator:
             "current_feedback": current_feedback,
             "constraint_block": constraint_db.generate_constraint_block(global_arc_no),
         }
+
     # ═══════════════════════════════════════════════════════════════════════
     # 메인 파이프라인
     # ═══════════════════════════════════════════════════════════════════════
@@ -999,7 +1013,9 @@ class Stage2Orchestrator:
 
                 if stitch_res and isinstance(stitch_res, dict) and stitch_res.get("status") == "REPAIRED":
                     if "content" in arc_b and isinstance(arc_b["content"], dict):
-                        arc_b["content"]["context"] = stitch_res.get("repaired_joint_b", arc_b["content"].get("context", ""))
+                        arc_b["content"]["context"] = stitch_res.get(
+                            "repaired_joint_b", arc_b["content"].get("context", "")
+                        )
                     if stitch_res.get("entity_anchors") and getattr(self.ctx.sys, "lore", None):
                         try:
                             self.ctx.sys.lore.update_v20_assets({"Temporary_Anchors": stitch_res["entity_anchors"]})
@@ -1554,7 +1570,9 @@ class Stage2Orchestrator:
         """현재 Arc 번호에 대응하는 권별 전략 문서를 고른다."""
         vol_no = ((global_arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME) + 1
         default_vol_strategy = {"vol_no": vol_no, "strategy_doc": ""}
-        return next((strategy for strategy in volumes_strategy if strategy.get("vol_no") == vol_no), default_vol_strategy)
+        return next(
+            (strategy for strategy in volumes_strategy if strategy.get("vol_no") == vol_no), default_vol_strategy
+        )
 
     def _augment_stage2_feedback_from_rejections(
         self, *, current_feedback: str, attempt: int, global_arc_no: int
@@ -1609,7 +1627,11 @@ class Stage2Orchestrator:
             current_ep_start=current_ep_start,
         )
         if failure_result["action"] == "abort":
-            return {"action": "abort", "current_ep_start": current_ep_start, "last_refined_context": last_refined_context}
+            return {
+                "action": "abort",
+                "current_ep_start": current_ep_start,
+                "last_refined_context": last_refined_context,
+            }
         if failure_result["action"] == "skip":
             current_ep_start = failure_result["current_ep_start"]
         return {"action": "next", "current_ep_start": current_ep_start, "last_refined_context": last_refined_context}
@@ -1631,14 +1653,18 @@ class Stage2Orchestrator:
                 f"[{advisory['source']}:{advisory['severity']}] {advisory['message'][:200]}"
                 for advisory in python_advisories[:5]
             )
-            updated_constraint_block += f"\n\n[Python Pre-Director advisory {len(python_advisories)}건]\n{advisory_text}"
+            updated_constraint_block += (
+                f"\n\n[Python Pre-Director advisory {len(python_advisories)}건]\n{advisory_text}"
+            )
         return updated_constraint_block
 
     def _log_stage2_four_phase_retry(self, refined_arc: dict[str, Any] | None, attempt: int, max_attempts: int) -> bool:
         """FourPhase 생성 실패 시 재시도 로그를 남기고 continue 여부를 반환한다."""
         if refined_arc is not None:
             return False
-        self.ctx.ui.log(f"      🔄 [V60.77] FourPhase 실패 → Director 대면 {min(attempt + 2, max_attempts)}/{max_attempts} 재시도")
+        self.ctx.ui.log(
+            f"      🔄 [V60.77] FourPhase 실패 → Director 대면 {min(attempt + 2, max_attempts)}/{max_attempts} 재시도"
+        )
         return True
 
     def _handle_stage2_batch_completion(

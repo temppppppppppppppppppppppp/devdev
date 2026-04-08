@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import re
 from copy import deepcopy
 from dataclasses import dataclass
-import re
 from typing import Any
 
 RUNTIME_PROTAGONIST_KEYS = ("world_origin", "incarnation_type", "pov", "external_pov_insert_policy")
+STAGE0_CONTRACT_KEY = "_stage0_contract"
+STAGE0_CONTRACT_SCHEMA = "stage0.material.v1"
+STAGE0_RUNTIME_HANDOFF_OWNER = "db_anchor:bible"
+STAGE0_TREATMENT_ROLE = "canonical_material_source"
+STAGE0_BIBLE_ROLE = "bi_projection_artifact"
 
 
 @dataclass
@@ -75,6 +80,63 @@ def _as_text(value: Any) -> str:
     return str(value).strip()
 
 
+def _build_stage0_contract_base(*, artifact_role: str, artifact_truth: str) -> dict[str, Any]:
+    return {
+        "schema": STAGE0_CONTRACT_SCHEMA,
+        "artifact_role": artifact_role,
+        "artifact_truth": artifact_truth,
+        "projection_model": "canonical_material_schema_to_projection",
+        "projection_source": "treatment.blocks",
+        "field_authority": {
+            "treatment_blocks": "treatment.blocks",
+            "plot_roadmap": "MasterBible.plot_roadmap",
+            "protagonist_config": "MasterBible.protagonist_config",
+        },
+        "runtime_handoff": {
+            "owner": STAGE0_RUNTIME_HANDOFF_OWNER,
+            "stage2_surface": "MasterBible.plot_roadmap",
+            "stage2_consumer_mode": "db_anchor_first",
+        },
+        "compatibility_bridges": {
+            "ensure_plot_roadmap": "compatibility_bridge",
+            "force_sync_v25_dna": "compatibility_bridge",
+        },
+    }
+
+
+def build_stage0_treatment_contract() -> dict[str, Any]:
+    return _build_stage0_contract_base(
+        artifact_role=STAGE0_TREATMENT_ROLE,
+        artifact_truth="treatment.blocks",
+    )
+
+
+def build_stage0_bible_contract(*, treatment: Any | None = None) -> dict[str, Any]:
+    contract = _build_stage0_contract_base(
+        artifact_role=STAGE0_BIBLE_ROLE,
+        artifact_truth="MasterBible",
+    )
+    projected_blocks = normalize_treatment_blocks(treatment) if treatment is not None else []
+    contract["projection_block_count"] = len(projected_blocks)
+    return contract
+
+
+def resolve_stage0_treatment_contract(treatment: Any) -> dict[str, Any]:
+    if isinstance(treatment, dict) and isinstance(treatment.get(STAGE0_CONTRACT_KEY), dict):
+        return deepcopy(treatment[STAGE0_CONTRACT_KEY])
+    return build_stage0_treatment_contract()
+
+
+def resolve_stage0_bible_contract(bible: Any, *, treatment: Any | None = None) -> dict[str, Any]:
+    if isinstance(bible, dict):
+        if isinstance(bible.get(STAGE0_CONTRACT_KEY), dict):
+            return deepcopy(bible[STAGE0_CONTRACT_KEY])
+        master = bible.get("MasterBible")
+        if isinstance(master, dict) and isinstance(master.get(STAGE0_CONTRACT_KEY), dict):
+            return deepcopy(master[STAGE0_CONTRACT_KEY])
+    return build_stage0_bible_contract(treatment=treatment)
+
+
 def _normalize_contract_genre(raw_genre: str) -> str:
     genre = _as_text(raw_genre).lower()
     if "wuxia" in genre or "무협" in genre:
@@ -116,8 +178,7 @@ def _infer_world_origin_and_incarnation(
 
     is_regressor = bool(protagonist_config.get("is_regressor"))
     has_regression_marker = any(
-        protagonist_config.get(key)
-        for key in ("regression_origin", "regression_point", "regression_mechanic")
+        protagonist_config.get(key) for key in ("regression_origin", "regression_point", "regression_mechanic")
     )
     normalized_genre = _normalize_contract_genre(genre_hint)
 
@@ -232,9 +293,8 @@ def repair_runtime_protagonist_contract(
         normalize_external_pov_insert_policy,
     )
 
-    external_policy = (
-        _as_text(protagonist.get("external_pov_insert_policy"))
-        or _as_text(fallback_external_pov_insert_policy)
+    external_policy = _as_text(protagonist.get("external_pov_insert_policy")) or _as_text(
+        fallback_external_pov_insert_policy
     )
     if not external_policy:
         external_policy = default_external_pov_insert_policy(pov, genre=contract_genre)
@@ -248,9 +308,7 @@ def repair_runtime_protagonist_contract(
         if fallback_external_pov_insert_policy:
             warnings.append("borrowed protagonist_config.external_pov_insert_policy fallback")
         else:
-            warnings.append(
-                f"filled protagonist_config.external_pov_insert_policy='{external_policy}'"
-            )
+            warnings.append(f"filled protagonist_config.external_pov_insert_policy='{external_policy}'")
 
     return warnings
 
@@ -298,6 +356,7 @@ def canonicalize_treatment_payload(
     payload, warnings = normalize_treatment_to_canonical_view(treatment)
     payload["_schema"] = schema
     payload["_total_blocks"] = len(payload.get("blocks", [])) if isinstance(payload.get("blocks"), list) else 0
+    payload[STAGE0_CONTRACT_KEY] = build_stage0_treatment_contract()
 
     from modules.core.response_schemas import validate_treatment_canonical_structure
 
@@ -410,14 +469,18 @@ def normalize_bible_to_canonical_view(
     if not isinstance(bible, dict):
         return {"MasterBible": {}}, [f"bible is not a dict ({type(bible).__name__})"]
 
-    top_level_metadata = {key: deepcopy(value) for key, value in bible.items() if isinstance(key, str) and key.startswith("_")}
+    top_level_metadata = {
+        key: deepcopy(value) for key, value in bible.items() if isinstance(key, str) and key.startswith("_")
+    }
     master = bible.get("MasterBible")
     if isinstance(master, dict):
         canonical = deepcopy(bible)
         master_root = canonical["MasterBible"]
     else:
         canonical = dict(top_level_metadata)
-        master_root = {key: deepcopy(value) for key, value in bible.items() if not (isinstance(key, str) and key.startswith("_"))}
+        master_root = {
+            key: deepcopy(value) for key, value in bible.items() if not (isinstance(key, str) and key.startswith("_"))
+        }
         canonical["MasterBible"] = master_root
         warnings.append("MasterBible wrapper missing; wrapped root into canonical BI view")
 
@@ -499,11 +562,18 @@ def canonicalize_bible_payload(
             warnings.append("removed root-level plot_roadmap sidecar from canonical BI copy")
 
         project_data = master.get("ProjectData")
-        if isinstance(project_data, dict) and "protagonist_config" in project_data and isinstance(
-            master.get("protagonist_config"), dict
+        if (
+            isinstance(project_data, dict)
+            and "protagonist_config" in project_data
+            and isinstance(master.get("protagonist_config"), dict)
         ):
             project_data.pop("protagonist_config", None)
             warnings.append("removed ProjectData.protagonist_config sidecar from canonical BI copy")
+        if isinstance(master.get(STAGE0_CONTRACT_KEY), dict):
+            master.pop(STAGE0_CONTRACT_KEY, None)
+            warnings.append("removed MasterBible._stage0_contract sidecar from canonical BI copy")
+
+    payload[STAGE0_CONTRACT_KEY] = build_stage0_bible_contract(treatment=treatment)
 
     from modules.core.response_schemas import validate_bible_canonical_structure
 

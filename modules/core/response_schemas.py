@@ -613,10 +613,7 @@ BLUEPRINT_SCENE_ENTRY_SCHEMA = types.Schema(
 
 BLUEPRINT_SCENE_BREAKDOWN_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
-    properties={
-        f"scene_{scene_no}": deepcopy(BLUEPRINT_SCENE_ENTRY_SCHEMA)
-        for scene_no in range(1, 6)
-    },
+    properties={f"scene_{scene_no}": deepcopy(BLUEPRINT_SCENE_ENTRY_SCHEMA) for scene_no in range(1, 6)},
     description=(
         "Scene breakdown map keyed by scene_1..scene_5. Runtime validation preserves the "
         "dict contract while avoiding additionalProperties for current google-genai "
@@ -684,6 +681,19 @@ BLUEPRINT_SCHEMA = types.Schema(
         # [V49.5] 시간 흐름
         "time_flow": types.Schema(type=types.Type.STRING),  # 예: "같은 날 밤", "3일 후"
         "start_location": types.Schema(type=types.Type.STRING),
+        "opening_transition": types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "type": types.Schema(
+                    type=types.Type.STRING,
+                    enum=["direct_continuation", "explicit_transition", "jump_opening"],
+                ),
+                "signals": types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(type=types.Type.STRING),
+                ),
+            },
+        ),
         "end_location": types.Schema(type=types.Type.STRING),
         "core_tension": types.Schema(type=types.Type.STRING),
         "expected_ending": types.Schema(type=types.Type.STRING),

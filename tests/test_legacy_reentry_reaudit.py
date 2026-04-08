@@ -75,6 +75,7 @@ def test_blueprint_schema_scene_breakdown_is_typed():
     assert any(branch.type.value == "OBJECT" for branch in scene_entry_schema.any_of)
     assert "title" in BLUEPRINT_SCHEMA.properties
     assert "ending_hook" in BLUEPRINT_SCHEMA.properties
+    assert "opening_transition" in BLUEPRINT_SCHEMA.properties
 
 
 def test_blueprint_model_uses_typed_scene_entries():
@@ -284,9 +285,7 @@ def test_unified_blueprint_validator_rejects_stop_line_clause_leak():
 
     blueprint = {
         "scene_breakdown": {"scene_1": {}, "scene_2": {}, "scene_3": {}},
-        "integrated_scenario": (
-            "주인공은 황실 경매장 잠입 계획을 실행하고 독호와 재회해 은장도를 확보한다. " * 30
-        ),
+        "integrated_scenario": ("주인공은 황실 경매장 잠입 계획을 실행하고 독호와 재회해 은장도를 확보한다. " * 30),
     }
     pre_result = validator._python_pre_validate(
         blueprint,
@@ -305,9 +304,7 @@ def test_unified_blueprint_validator_allows_light_stop_line_overlap_without_leak
 
     blueprint = {
         "scene_breakdown": {"scene_1": {}, "scene_2": {}, "scene_3": {}},
-        "integrated_scenario": (
-            "주인공은 황실 입구에서 정보를 모으고 다음 경매장 잠입을 준비한다. " * 30
-        ),
+        "integrated_scenario": ("주인공은 황실 입구에서 정보를 모으고 다음 경매장 잠입을 준비한다. " * 30),
     }
     pre_result = validator._python_pre_validate(
         blueprint,

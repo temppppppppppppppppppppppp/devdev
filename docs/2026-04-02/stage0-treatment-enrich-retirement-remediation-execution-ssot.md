@@ -1,9 +1,9 @@
 Date: 2026-04-02
-Status: pending (promoted from parked on 2026-04-07 roadmap reorder; Stage0 hygiene lane kept below nearer runtime-facing work)
+Status: in_progress (first bounded authority-demotion tranche landed on 2026-04-07; Stage0 hygiene lane remains below nearer runtime-facing work)
 Canonical Path: `docs/2026-04-02/stage0-treatment-enrich-retirement-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage0-treatment-enrich-retirement-remediation-execution-ssot.md`
-Baseline Commit: `aaf495d6`
-Baseline Dirty Summary: `dirty: Stage4 consumer-contract edits, demo canary artifacts, and queue docs already in flight during SSOT drafting`
+Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
+Baseline Dirty Summary: `dirty: prior Stage3/Stage4 bounded tranches and queue docs already in flight during Stage0 enrich re-audit`
 Source Survey Docs:
 - `docs/2026-04-02/stage0-bible-generation-dna-sync-stage2-consume-bounded-survey.md`
 Evidence Artifacts:
@@ -23,7 +23,7 @@ Side-Effect Coverage:
 - legacy/manual Stage0 path에서 optional prompt로만 켜진다.
 - 켜면 block `title`, `content`, `joint_docs`, `status_shadow`를 다시 쓸 수 있다.
 
-따라서 이 lane은 `active remediation`이 아니라 `promoted pending hygiene lane`으로 유지한다.
+따라서 이 lane은 `active blocker`가 아니라 `partially realized hygiene lane`으로 유지한다.
 
 # 2. Why This Exists
 
@@ -70,12 +70,16 @@ Side-Effect Coverage:
    - density 부족 block을 Block 1 수준으로 끌어올리는 보조 장치다.
    - canonical source-of-truth를 강화하기보다, treatment를 추가 가공한다.
 
+5. authority demotion은 bounded하게 착수 가능하다.
+   - default-off semantics를 바꾸지 않고도 prompt/UI/save wording에서 canonical path 아님을 명시할 수 있다.
+   - 이번 tranche는 바로 그 operator-facing demotion만 수행한다.
+
 # 5. Hard Conclusions
 
 1. `Stage0 treatment enrich`는 장기적으로 제거 또는 강등 대상이다.
 2. 이 기능은 Stage0 canonical path의 일부로 승격하면 안 된다.
 3. active blocker가 아니므로 지금 당장 본선으로 당길 필요는 없다.
-4. pending lane에서 할 일은 `기능 확장`이 아니라 `퇴역/비활성화/명시적 분리`다.
+4. 이 lane에서 할 일은 `기능 확장`이 아니라 `퇴역/비활성화/명시적 분리`다.
 
 # 6. Non-Goals
 
@@ -85,7 +89,7 @@ Side-Effect Coverage:
 
 # 7. Acceptance Criteria
 
-이 pending lane을 나중에 열 경우, 최소 acceptance criteria는 아래다.
+이 lane을 열 경우, 최소 acceptance criteria는 아래다.
 
 1. Stage0 기본 pair pass가 enrich 없이도 유지된다.
 2. enrich가 canonical default path에서 빠진다.
@@ -99,8 +103,10 @@ Side-Effect Coverage:
 
 enrich path authority demotion
 
-- prompt/UI wording에서 canonical Stage0 flow처럼 보이지 않게 낮춘다
-- operator에게 `non-canonical semantic rewrite utility`임을 명시한다
+- landed in this pass:
+  - legacy Stage0 prompt에서 `canonical Stage0 pair pass 경로가 아님`을 명시
+  - confirm/save/runtime log에서 `non-canonical semantic rewrite utility`와 rewrite risk를 명시
+  - original Treatment preserved / `_enriched.json` utility output wording을 operator-facing으로 고정
 
 ## Tranche 2
 
@@ -118,7 +124,7 @@ retirement or quarantine
 
 # 9. Queue Placement
 
-이 lane은 `promoted pending hygiene lane`이다.
+이 lane은 `partially realized hygiene lane`이다.
 
 - active Stage4 remediation보다 아래
 - `Stage3 contract tightening`, `Stage2 contract normalization` 같은 pending lane보다도 아래
@@ -128,29 +134,30 @@ retirement or quarantine
 
 # 10. Next Action
 
-지금은 구현하지 않는다.
+이번 턴에서 broad retirement는 하지 않는다.
 
-운영상 조치만 기억한다.
+다음 bounded 선택지만 남긴다.
 
-- `enrich는 temporary workaround`
-- `canonical Stage0 기준으로 보지 않음`
-- `추후 retire/deprecate lane으로만 다룸`
+- `Tranche 2: default-off hardening`
+- `Tranche 3: retirement or quarantine`
+- strict next-unopened semantics만 따르면 다음 lane은 `stage0-bi-tr-production-harness-normalization-remediation`
 
 # 11. 3-Pass Audit
 
 Pass 1. Structure/Scope
 - execution SSOT 타입 적합
-- pending queue lane임을 명시
-- included/excluded scope 분리 완료
+- first bounded authority-demotion tranche만 열고 broad Stage0 재배선을 피함
+- included/excluded scope 분리 유지
 
 Pass 2. Evidence/Consistency
-- enrich trigger path, merge path, and block_enricher rewrite role confirmed
+- enrich trigger path, merge path, and block_enricher rewrite role reconfirmed
+- `modules/core/stage01_helpers.py` / `main_a.py` live wording surfaces now demoted
 - source survey/evidence lineage attached
-- queue placement rationale bounded to current roadmap state
+- queue placement rationale remains bounded to current roadmap state
 
 Pass 3. Execution/Readability
-- active implementation 금지 명시
-- retirement lane 성격과 future tranche shape 명시
-- next action bounded
+- first bounded tranche는 operator-facing wording demotion으로 제한
+- retirement lane 성격과 later tranche shape 명시
+- next unopened lane shift만 문서적으로 반영 가능하도록 정리
 
-Confidence: 96%
+Confidence: 97%

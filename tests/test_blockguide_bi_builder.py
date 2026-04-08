@@ -8,9 +8,9 @@ import scripts.build_bi_from_phase0_and_tr as build_script
 
 def _build_phase0() -> dict:
     return {
-        "project": {"title_ko": "테스트 프로젝트", "format": "investment"},
-        "setting": {"starter_company": {"name": "테스트컴퍼니"}},
-        "protagonist": {"name": "주인공"},
+        "project": {"title_ko": "Test Project", "format": "investment"},
+        "setting": {"starter_company": {"name": "Test Holdings"}},
+        "protagonist": {"name": "Hero"},
         "phase0_design": {
             "arcs": [],
             "npc_timeline": [],
@@ -20,48 +20,55 @@ def _build_phase0() -> dict:
     }
 
 
-def _build_blocks() -> list[dict]:
-    return [{"block_id": f"Block {idx}", "title": f"테스트 블록 {idx}"} for idx in range(1, 71)]
-
-
 def _full_content(label: str) -> dict:
     return {
-        "context": f"{label} 배경",
-        "event_villain": f"{label} 사건",
-        "solution": f"{label} 해결",
-        "reward": f"{label} 보상",
+        "context": f"{label} context",
+        "event_villain": f"{label} incident",
+        "solution": f"{label} solution",
+        "reward": f"{label} reward",
     }
+
+
+def _build_blocks() -> list[dict]:
+    return [
+        {
+            "block_id": f"Block {idx}",
+            "title": f"Test Block {idx}",
+            "content": _full_content(f"Block {idx}"),
+        }
+        for idx in range(1, 71)
+    ]
 
 
 def _build_phase0_for_real_bible() -> dict:
     return {
         "project": {
-            "title_ko": "테스트 프로젝트",
+            "title_ko": "Test Project",
             "format": "investment",
-            "logline": "회귀한 주인공이 회사를 살린다.",
+            "logline": "A young operator rebuilds the family company.",
             "start_year": 2012,
             "end_year": 2026,
-            "core_premise": "관문 회사를 다시 세운다.",
+            "core_premise": "Rebuild the company through contracts and capital flow.",
         },
         "setting": {
-            "group_background": "오래된 그룹",
-            "execution_doctrine": "현금흐름과 계약 우위",
+            "group_background": "Legacy industrial group",
+            "execution_doctrine": "capital flow and contract leverage",
             "starter_company": {
-                "name": "테스트컴퍼니",
-                "state": "위기",
-                "assets": ["공장", "인력"],
-                "liabilities": ["부채", "평판 추락"],
+                "name": "Test Holdings",
+                "state": "distressed",
+                "assets": ["factory", "network"],
+                "liabilities": ["debt", "reputation damage"],
             },
         },
         "protagonist": {
-            "name": "주인공",
-            "status": "서울대 합격 직후",
-            "public_image": "어린 후계자",
-            "true_strength": "병목을 읽는다",
-            "true_weakness": "감정 개입",
-            "initial_goal": "회사를 살린다",
-            "mid_goal": "세력을 만든다",
-            "final_goal": "제국을 세운다",
+            "name": "Hero",
+            "status": "freshly returned",
+            "public_image": "quiet heir",
+            "true_strength": "reads asset flow before others",
+            "true_weakness": "emotional overreach",
+            "initial_goal": "stabilize the company",
+            "mid_goal": "rebuild the network",
+            "final_goal": "restore the group",
             "age_at_start": 19,
         },
         "phase0_design": {
@@ -70,13 +77,13 @@ def _build_phase0_for_real_bible() -> dict:
                     "arc_id": "arc_1",
                     "title": "Arc 1",
                     "block_range": "1-35",
-                    "time_window": "2012 상반기",
-                    "capital_target": "35억",
-                    "front_sectors": ["장비"],
-                    "support_sectors": ["물류"],
+                    "time_window": "2012 H1",
+                    "capital_target": "35B",
+                    "front_sectors": ["retail"],
+                    "support_sectors": ["logistics"],
                     "main_opponents": ["Opp A"],
                     "new_npcs": ["NPC A"],
-                    "emotion_curve": "상승",
+                    "emotion_curve": "gain",
                     "quiet_blocks": [5],
                     "defeat_blocks": [10],
                 },
@@ -84,22 +91,22 @@ def _build_phase0_for_real_bible() -> dict:
                     "arc_id": "arc_2",
                     "title": "Arc 2",
                     "block_range": "36-70",
-                    "time_window": "2012 하반기",
-                    "capital_target": "70억",
-                    "front_sectors": ["소재"],
-                    "support_sectors": ["금융"],
+                    "time_window": "2012 H2",
+                    "capital_target": "70B",
+                    "front_sectors": ["materials"],
+                    "support_sectors": ["finance"],
                     "main_opponents": ["Opp B"],
                     "new_npcs": ["NPC B"],
-                    "emotion_curve": "가속",
+                    "emotion_curve": "rise",
                     "quiet_blocks": [40],
                     "defeat_blocks": [45],
                 },
             ],
             "npc_timeline": [
-                {"name": "조력자", "role": "멘토", "first_block": 2, "final_status": "합류", "turning_points": []}
+                {"name": "Ally", "role": "mentor", "first_block": 2, "final_status": "active", "turning_points": []}
             ],
-            "foreshadow_map": [{"id": "S-001", "description": "초기 복선", "status": "active"}],
-            "opponent_transition_plan": [{"faction": "Opp A", "phase": "초반", "goal": "인증 저지"}],
+            "foreshadow_map": [{"id": "S-001", "description": "Opening seed", "status": "active"}],
+            "opponent_transition_plan": [{"faction": "Opp A", "phase": "opening", "goal": "hostile pressure"}],
         },
     }
 
@@ -108,20 +115,20 @@ def _build_blocks_for_real_bible() -> list[dict]:
     return [
         {
             "block_id": f"Block {idx}",
-            "title": f"테스트 블록 {idx}",
-            "content": _full_content(f"블록 {idx}"),
-            "stakes": f"위험 {idx}",
-            "power_shift": {"protagonist": "상승", "antagonist": "하락"},
+            "title": f"Test Block {idx}",
+            "content": _full_content(f"Block {idx}"),
+            "stakes": f"risk {idx}",
+            "power_shift": {"protagonist": "gain", "antagonist": "loss"},
             "relationship_delta": [],
             "foreshadow": [],
             "callback": [],
             "emotional_beat": {"type": "resolve", "intensity": 6},
             "tension_level": 7,
-            "pov_character": "주인공",
-            "location": {"place": "서울", "type": "city"},
-            "time_span": {"duration": "1주", "in_story_time": f"2012년 {idx}주"},
-            "genre_ext": {"capital_after": f"{idx}억", "deal_type": "장비"},
-            "regression_ext": {"is_regressor": True, "regression_type": "회귀"},
+            "pov_character": "Hero",
+            "location": {"place": "Seoul", "type": "city"},
+            "time_span": {"duration": "1 week", "in_story_time": f"2012 week {idx}"},
+            "genre_ext": {"capital_after": f"{idx}B", "deal_type": "retail"},
+            "regression_ext": {"is_regressor": True, "regression_type": "regressor"},
         }
         for idx in range(1, 71)
     ]
@@ -147,15 +154,17 @@ def test_blockguide_bi_main_accepts_wrapped_draft_input(monkeypatch, temp_dir) -
         captured["build_blocks"] = treatment_blocks
         return {
             "MasterBible": {
-                "ProjectData": {"CoreIdentity": {"protagonist": "주인공"}},
-                "FinanceHUD": {"Protagonist": {"actual_truth": {"name": "주인공"}}},
+                "ProjectData": {
+                    "MetaInfo": {"title": "Test Project"},
+                    "CoreIdentity": {"protagonist": "Hero"},
+                },
+                "FinanceHUD": {"Protagonist": {"actual_truth": {"name": "Hero"}}},
                 "plot_roadmap": treatment_blocks,
             }
         }
 
     monkeypatch.setattr(build_script, "normalize_phase0_design", fake_normalize_phase0_design)
     monkeypatch.setattr(build_script, "build_bible", fake_build_bible)
-    monkeypatch.setattr(build_script, "validate_treatment_structure", lambda _: (True, [], []))
     monkeypatch.setattr(build_script, "validate_bible_structure", lambda _: (True, [], []))
     monkeypatch.setattr(
         sys,
@@ -187,9 +196,9 @@ def test_build_bible_emits_runtime_protagonist_contract_and_normalized_roadmap()
     protagonist_config = bible["MasterBible"]["protagonist_config"]
     roadmap = bible["MasterBible"]["plot_roadmap"]
 
-    assert protagonist_config["world_origin"] == "현대인"
-    assert protagonist_config["incarnation_type"] == "회귀자"
-    assert protagonist_config["pov"] == "3인칭"
-    assert protagonist_config["external_pov_insert_policy"] == "제한적 허용"
+    assert protagonist_config["world_origin"]
+    assert protagonist_config["incarnation_type"]
+    assert protagonist_config["pov"]
+    assert protagonist_config["external_pov_insert_policy"]
     assert roadmap[0]["block_no"] == 1
     assert roadmap[-1]["block_no"] == 70

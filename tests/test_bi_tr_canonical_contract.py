@@ -7,6 +7,7 @@ from modules.core.stage0_handoff import (
     canonicalize_treatment_payload,
     normalize_bible_to_canonical_view,
     normalize_treatment_to_canonical_view,
+    resolve_stage0_bible_contract,
 )
 
 
@@ -161,6 +162,9 @@ def test_canonicalize_treatment_payload_promotes_tr_v1_contract():
     assert payload["_schema"] == "tr.v1"
     assert payload["_total_blocks"] == 1
     assert payload["blocks"][0]["block_no"] == 4
+    assert payload["_stage0_contract"]["artifact_role"] == "canonical_material_source"
+    assert payload["_stage0_contract"]["artifact_truth"] == "treatment.blocks"
+    assert payload["_stage0_contract"]["runtime_handoff"]["owner"] == "db_anchor:bible"
     assert any("raw list wrapper" in warning for warning in warnings)
 
 
@@ -186,4 +190,16 @@ def test_canonicalize_bible_payload_repairs_runtime_contract_and_strips_sidecars
     assert protagonist["external_pov_insert_policy"] == "제한적 허용"
     assert "plot_roadmap" not in payload
     assert "protagonist_config" not in payload["MasterBible"]["ProjectData"]
+    assert payload["_stage0_contract"]["artifact_role"] == "bi_projection_artifact"
+    assert payload["_stage0_contract"]["field_authority"]["plot_roadmap"] == "MasterBible.plot_roadmap"
+    assert payload["_stage0_contract"]["runtime_handoff"]["owner"] == "db_anchor:bible"
+    assert payload["_stage0_contract"]["projection_source"] == "treatment.blocks"
     assert any("filled protagonist_config.world_origin='원시인'" in warning for warning in warnings)
+
+
+def test_resolve_stage0_bible_contract_falls_back_to_default_runtime_owner():
+    contract = resolve_stage0_bible_contract({"MasterBible": {"plot_roadmap": [{"block_no": 1}]}})
+
+    assert contract["artifact_role"] == "bi_projection_artifact"
+    assert contract["runtime_handoff"]["owner"] == "db_anchor:bible"
+    assert contract["field_authority"]["protagonist_config"] == "MasterBible.protagonist_config"

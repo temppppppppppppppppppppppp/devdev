@@ -1,4 +1,4 @@
-﻿"""
+"""
 [V64.P3] Stage4Orchestrator — SovereignApp의 Stage 4 원고 집필 오케스트레이션 로직 캡슐화
 
 SovereignApp에서 분리된 Stage 4 관련 메서드:
@@ -24,6 +24,12 @@ from modules.core.stage4_outcome_runtime import Stage4OutcomeRuntime
 from modules.core.stage4_policy_digest import resolve_stage4_policy_value
 from modules.core.stage4_post_processor import Stage4PostProcessor
 from modules.core.stage4_types import _RoundContext
+from modules.core.stage_cross_stage_contract import (
+    OPENING_TRANSITION_DIRECT,
+    OPENING_TRANSITION_EXPLICIT,
+    OPENING_TRANSITION_JUMP,
+    resolve_opening_transition_contract,
+)
 from modules.validation.threshold_helper import _threshold
 
 _perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
@@ -672,10 +678,13 @@ class Stage4Orchestrator:
                 pre_checklist_result = checklist
 
         try:
-            return callback(
-                writer_reject_reason=reject_reason,
-                pre_checklist_result=pre_checklist_result,
-            ) or ""
+            return (
+                callback(
+                    writer_reject_reason=reject_reason,
+                    pre_checklist_result=pre_checklist_result,
+                )
+                or ""
+            )
         except Exception as exc:
             logging.warning("[Stage4->3] reverse feedback helper 실패: %s", exc)
             return ""
@@ -708,7 +717,9 @@ class Stage4Orchestrator:
 
         fix_pack = (previous_attempt or {}).get("fix_pack", {}) if isinstance(previous_attempt, dict) else {}
         if isinstance(fix_pack, dict):
-            feedback_parts.extend(str(item or "").strip() for item in fix_pack.get("must_fix", []) if str(item or "").strip())
+            feedback_parts.extend(
+                str(item or "").strip() for item in fix_pack.get("must_fix", []) if str(item or "").strip()
+            )
             feedback_parts.extend(
                 str(item or "").strip() for item in fix_pack.get("do_not_regress", []) if str(item or "").strip()
             )
@@ -727,6 +738,8 @@ class Stage4Orchestrator:
         scene_1 = blueprint.get("scene_breakdown", {}).get("scene_1", {})
         start_location = str(blueprint.get("start_location", "") or scene_1.get("location", "") or "").strip()
         time_flow = str(blueprint.get("time_flow", "") or "").strip()
+        opening_transition = resolve_opening_transition_contract(blueprint)
+        opening_transition_type = str(opening_transition.get("type", "") or "").strip()
         prev_ending_excerpt = smart_truncate(str(round_ctx.prev_ending or "").strip(), max_chars=220, head_chars=140)
         chain_link_excerpt = smart_truncate(
             str(round_ctx.chain_link_section or "").strip(),
@@ -744,7 +757,25 @@ class Stage4Orchestrator:
                 f"- authoritative opening location은 '{start_location}'입니다. 다른 장소로 바꾸려면 scene_1 내부에 explicit transition을 먼저 기입하세요."
             )
         if time_flow:
-            lines.append(f"- authoritative opening time marker는 '{time_flow}'입니다. 시간 점프가 있으면 scene_1 summary와 key_events에 명시하세요.")
+            lines.append(
+                f"- authoritative opening time marker는 '{time_flow}'입니다. 시간 점프가 있으면 scene_1 summary와 key_events에 명시하세요."
+            )
+        if opening_transition_type:
+            lines.append(
+                f"- authoritative opening_transition.type은 '{opening_transition_type}'입니다. opening anchors와 scene_1 contract를 이 타입과 모순되게 바꾸지 마세요."
+            )
+            if opening_transition_type == OPENING_TRANSITION_DIRECT:
+                lines.append(
+                    "- direct_continuation이면 직전 ending의 후속 비트를 유지하고 새 jump/cut를 임의로 추가하지 마세요."
+                )
+            elif opening_transition_type == OPENING_TRANSITION_EXPLICIT:
+                lines.append(
+                    "- explicit_transition이면 scene_1 summary/key_events 첫 비트에 전환 문장 또는 cut을 남기고 새 anchor를 즉시 못 박으세요."
+                )
+            elif opening_transition_type == OPENING_TRANSITION_JUMP:
+                lines.append(
+                    "- jump_opening이면 direct continuation처럼 위장하지 말고 새 장소/시간/상태를 첫 비트에서 바로 선언하세요."
+                )
         if any(signal in combined_feedback for signal in replay_signals):
             lines.extend(
                 [
@@ -992,7 +1023,9 @@ class Stage4Orchestrator:
 
         high_count = len(high_issues)
         log_level = "⚠️" if high_count > 0 else "ℹ️"
-        self.ctx.ui.log(f"   {log_level} [TF-49b] Preflight: {len(issues)}건 발견 (high={high_count}) → CW/Director advisory 전달")
+        self.ctx.ui.log(
+            f"   {log_level} [TF-49b] Preflight: {len(issues)}건 발견 (high={high_count}) → CW/Director advisory 전달"
+        )
         for issue in issues[:5]:
             self.ctx.ui.log(
                 f"      [{issue.get('severity', '?')}] {issue.get('category', '?')}: "
@@ -1285,9 +1318,7 @@ JSON으로 출력:
         )
         self.ctx.ui.log(f"{'=' * 60}")
 
-        ctx_prompts["mandatory_context"] = self._apply_mandatory_context_budget(
-            ctx_prompts["mandatory_context"]
-        )
+        ctx_prompts["mandatory_context"] = self._apply_mandatory_context_budget(ctx_prompts["mandatory_context"])
         return self._build_episode_round_context(
             ep_ctx=ep_ctx,
             ctx_prompts=ctx_prompts,
@@ -1340,9 +1371,7 @@ JSON으로 출력:
                 f"   ⚠️ [V66.1] mandatory_context {original_len}자 → {len(trimmed)}자 (섹션 {budget_result.removed_count}개 제거)"
             )
         elif budget_result.used_fallback:
-            self.ctx.ui.log(
-                f"   ⚠️ [V66.1] mandatory_context {original_len}자 → {mc_max:,}자로 truncate (폴백)"
-            )
+            self.ctx.ui.log(f"   ⚠️ [V66.1] mandatory_context {original_len}자 → {mc_max:,}자로 truncate (폴백)")
         return trimmed
 
     def _process_episode_pass(
@@ -1737,9 +1766,7 @@ JSON으로 출력:
             last_best = previous_attempt.get("best_manuscript", "")
             last_score = previous_attempt.get("score", 0)
             if last_best and self._allow_stage4_best_manuscript_adoption():
-                self.ctx.ui.log(
-                    f"\n⚠️ [EP {next_ep}] {max_rounds}회 소진. 마지막 최선 결과물(score={last_score}) 존재."
-                )
+                self.ctx.ui.log(f"\n⚠️ [EP {next_ep}] {max_rounds}회 소진. 마지막 최선 결과물(score={last_score}) 존재.")
                 choice = self._get_stage4_exhaustion_default_choice()
                 if callable(getattr(self.ctx, "get_int_input", None)):
                     choice = self.ctx.get_int_input(
@@ -1922,9 +1949,7 @@ JSON으로 출력:
         logic_error_streak: int,
     ) -> dict | None:
         try:
-            self.ctx.ui.log(
-                f"   🔧 [V75-D] LOGIC_ERROR {logic_error_streak}연속 → 블루프린트 inplace 패치 시도..."
-            )
+            self.ctx.ui.log(f"   🔧 [V75-D] LOGIC_ERROR {logic_error_streak}연속 → 블루프린트 inplace 패치 시도...")
             patched_bp = self._request_v75d_inplace_blueprint_patch(
                 round_ctx=round_ctx,
                 next_ep=next_ep,
@@ -2074,7 +2099,7 @@ JSON으로 출력:
                 "content_hash": str(bp_artifact_meta.get("content_hash", "") or "").strip(),
                 "artifact_path": str(bp_artifact_meta.get("artifact_path", "") or "").strip(),
             }
-            if isinstance(bp_change_ratio, (int, float)):
+            if isinstance(bp_change_ratio, int | float):
                 audit_payload["change_ratio"] = float(bp_change_ratio)
             audit_event(
                 "stage4_v75d_blueprint_patch_snapshot",
@@ -2083,7 +2108,7 @@ JSON으로 출력:
             )
         return _V75DArtifactPayload(
             artifact_meta=bp_artifact_meta,
-            change_ratio=float(bp_change_ratio) if isinstance(bp_change_ratio, (int, float)) else None,
+            change_ratio=float(bp_change_ratio) if isinstance(bp_change_ratio, int | float) else None,
         )
 
     @staticmethod
@@ -2122,9 +2147,7 @@ JSON으로 출력:
         v75b_success = False
         blueprint_regenerated = False
         try:
-            self.ctx.ui.log(
-                f"   🔄 [V75-B] LOGIC_ERROR {logic_error_streak}연속 → 블루프린트 재생성 시도..."
-            )
+            self.ctx.ui.log(f"   🔄 [V75-B] LOGIC_ERROR {logic_error_streak}연속 → 블루프린트 재생성 시도...")
             reverse_feedback_43 = self._build_stage4_to_3_reverse_feedback(
                 director_feedback=director_feedback,
                 previous_attempt=previous_attempt,
@@ -2420,9 +2443,7 @@ JSON으로 출력:
             voice_prompt = character_voice.get_writer_injection()
             if voice_prompt:
                 style_guide += f"\n\n{voice_prompt}"
-                self.ctx.ui.log(
-                    f"🎤 [V62.5] 캐릭터 보이스 가이드 주입됨 ({len(character_voice.profiles)}명)"
-                )
+                self.ctx.ui.log(f"🎤 [V62.5] 캐릭터 보이스 가이드 주입됨 ({len(character_voice.profiles)}명)")
         except Exception as voice_err:
             self.ctx.ui.log(f"   ⚠️ 캐릭터 보이스 주입 실패 (비차단): {voice_err}")
         return style_guide
@@ -2586,7 +2607,9 @@ JSON으로 출력:
             v50_modules_available=runtime_deps.v50_modules_available,
         )
 
-    def stage_4_v2_chief_writer(self, limit_mode: bool = False, *, target_ep: int | None = None, skip_pause: bool = False) -> None:
+    def stage_4_v2_chief_writer(
+        self, limit_mode: bool = False, *, target_ep: int | None = None, skip_pause: bool = False
+    ) -> None:
         """
         [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
 

@@ -1,18 +1,18 @@
 # 0_0 Stage4 Interview-Round Owner-Surface Reduction Remediation Execution SSOT
 
 Date: 2026-04-07
-Status: pending (promoted from parked on 2026-04-07 roadmap reorder; structure-first lane kept below functional pending work)
+Status: in_progress (first bounded post-select boundary extraction landed on 2026-04-07; structure-first lane remains below proof-deferred functional work)
 Canonical Path: `docs/2026-04-07/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md`
 Commit State:
-- Baseline Commit: `5a2ef92ab04e46d47ee73b9d56d3e546544576c0`
-- Baseline Dirty Summary: `dirty: tracked narrative TR/BI artifacts modified; 2026-04-07 in-flight meta cleanup docs untracked`
+- Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
+- Baseline Dirty Summary: `dirty: prior Stage3 opening-transition tranche plus docs/temp mirrors already modified in worktree`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Drift Summary: `live 3-pass re-audit found current owner pressure at 160 direct methods / 3 180+ / 6 120+; the first bounded post-select boundary extraction then landed and moved the next unopened lane to stage0-treatment-enrich-retirement-remediation`
 Source Survey Docs:
 - `docs/2026-04-07/0_0-stage4-interview-round-owner-surface-reduction-bounded-survey.md`
 Evidence Artifacts:
-- `none; direct code/AST evidence is embedded in the source survey`
+- `none; live AST recount and focused regression evidence are recorded inline below`
 Side-Effect Coverage: covered
 
 ## 1. Intent
@@ -24,17 +24,17 @@ It exists so the workspace can keep a real owner-surface debt item explicit in t
 
 ## 2. Baseline Facts
 
-- `Stage4InterviewRound` currently owns `158` direct methods.
-- It still contains `3` `180+ LOC` methods and `6` `120+ LOC` methods.
-- Existing extracted siblings already exist:
+- live pre-tranche recount: `Stage4InterviewRound` owned `160` direct methods and now owns `158`
+- hotspot recount moved from `3 -> 2` `180+ LOC` methods and from `6 -> 5` `120+ LOC` methods
+- Existing extracted siblings already exist, and this tranche adds:
   - `Stage4DirectorRuntime`
+  - `Stage4PostSelectRuntime`
   - `Stage4RejectRuntime`
   - `Stage4RetryRuntime`
 - The remaining heavy families still concentrated in the owner are:
-  - post-select downgrade / continuity / reuse handling
   - director gate normalization / pass-with-fix shaping
   - episode-log / attempt / sink payload assembly
-- This is therefore best treated as a `module boundary / owner-surface reduction` lane, not as incremental helper growth inside the same file.
+- the landed post-select extraction confirms this is best treated as a `module boundary / owner-surface reduction` lane, not as incremental helper growth inside the same file
 
 ## 3. Scope
 
@@ -64,6 +64,7 @@ Primary owner inventory:
    - `stage4_interview_round.py`
 2. existing extracted runtime siblings
    - `stage4_director_runtime.py`
+   - `stage4_postselect_runtime.py`
    - `stage4_reject_runtime.py`
    - `stage4_retry_runtime.py`
 3. high-risk regression surfaces
@@ -73,21 +74,22 @@ Primary owner inventory:
 
 Primary debt inventory:
 
-1. post-select handling is still a large direct owner responsibility
+1. post-select handling was the leading owner hotspot and is now the first landed extraction tranche
 2. gate semantics normalization still mixes contract logic, fallback rules, and mutation wiring in one owner method
 3. episode-log / sink payload assembly still sits as a long owner-local serialization family
-4. the existing runtime helper extraction pattern is underused relative to current owner pressure
+4. the existing runtime helper extraction pattern remains the right direction for the remaining owner pressure
 
 ## 5. Pass 2. Semantic Classification
 
-### Class A. Primary future extraction families
+### Class A. Primary extraction families
 
-- `_run_post_select_checks`
-- `_normalize_director_gate_semantics`
-- `_append_episode_log`
+- landed in this tranche: `_run_post_select_checks` -> `Stage4PostSelectRuntime`
+- next primary family: `_normalize_director_gate_semantics`
+- next primary family: `_append_episode_log`
 
 ### Class B. Secondary extraction / cleanup support
 
+- `post-select` history readback / helper migration that naturally moves with the new boundary owner
 - `_backfill_strong_advisory_fix_pack`
 - `_build_retry_feedback_provenance`
 - adjacent payload builders and trace helpers that naturally move with the extracted family
@@ -117,11 +119,11 @@ Implementation rule:
 ## 7. Execution Tranches
 
 1. contract freeze and owner map
-   - identify the exact behavior contract and sink ownership for the target family
-   - freeze it with targeted tests before movement
+   - landed with focused regression freeze around post-select downgrade, retry-round reuse, and positive-verdict transition routing
 
 2. post-select boundary extraction
-   - move the final-round downgrade / reuse decision family out of the owner shell
+   - landed: `stage4_postselect_runtime.py` now owns post-select conflict collection, history readback, and downgrade payload assembly
+   - `Stage4InterviewRound` now delegates to the new boundary owner and no longer owns `_run_post_select_checks` / `_build_manuscript_history_for_check`
 
 3. gate-semantics boundary extraction
    - move pass-with-fix / authoritative-scope normalization into a dedicated boundary owner
@@ -130,17 +132,17 @@ Implementation rule:
    - move episode-log / attempt payload assembly out of the owner shell
 
 5. recount and closure
-   - rerun targeted regressions
-   - recount direct-method pressure and `120+ / 180+` hotspot deltas
+   - focused recount / validation landed for this tranche
+   - full lane closure still waits on later extraction tranches or an explicit proof-first decision
 
 ## 8. Acceptance Criteria
 
 - no new `180+ LOC` function is introduced
 - at least one current `180+ LOC` hotspot is reduced below `180 LOC` or moved out of `Stage4InterviewRound`
-- `Stage4InterviewRound` direct-method pressure is reduced from the current `158` baseline
+- `Stage4InterviewRound` direct-method pressure is reduced from the live pre-tranche `160` baseline
 - extracted families have explicit owner boundaries rather than same-file helper sprawl
 - targeted Stage4 regressions pass without semantic drift
-- post-change complexity recount is recorded
+- post-change complexity recount is recorded (`158` direct methods / `2` `180+ LOC` / `5` `120+ LOC`)
 
 ## 9. Verification Plan
 
@@ -164,9 +166,9 @@ Implementation rule:
 
 ## 11. Temp Queue Notes
 
-- temp status: `pending`
+- temp status: `in_progress`
 - cleanup condition:
-  - keep the mirror while this remains a recognized pending structure lane
+  - keep the mirror while this remains a recognized partial structure lane
   - remove only on explicit closure, deactivation, or replacement
 - roadmap dependency:
   - below the active Stage4 consumer / repair / non-wuxia lanes
@@ -185,18 +187,19 @@ Implementation rule:
 
 Pass 1, structure and scope:
 
-- execution SSOT type is correct for a pending structure-only queue lane
-- scope is bounded to one owner family and its immediate extracted siblings
+- execution SSOT type is correct for an active partial structure lane
+- the first bounded tranche stays limited to the post-select family and one new boundary module
 
 Pass 2, evidence and consistency:
 
-- queue absence was rechecked against the current roadmap before promotion
-- source survey, hotspot counts, and boundary rationale are aligned
+- live pre-tranche recount confirmed `160` direct methods / `3` `180+ LOC` / `6` `120+ LOC`
+- post-change recount confirmed `158` direct methods / `2` `180+ LOC` / `5` `120+ LOC`
+- focused regression shards preserved post-select downgrade and positive-verdict transition behavior
 
 Pass 3, execution and readability:
 
-- tranches are boundary-first and actionable
-- guardrails keep the lane from jumping ahead of current functional work
-- acceptance criteria stay measurable without overpromising a full Stage4 redesign
+- boundary-first extraction landed without broad Stage4 logic rewrite
+- the remaining gate/attempt families stay explicit rather than getting hidden behind same-file helper growth
+- because this lane is no longer unopened, the next unopened code lane now moves to `stage0-treatment-enrich-retirement-remediation`
 
-Confidence: `96%`
+Confidence: `97%`

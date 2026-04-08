@@ -394,8 +394,12 @@ class SovereignApp:
         self._bootstrap_status = BootstrapStatus()
         self.bootstrap_runtime = SovereignBootstrapRuntime(self)
         self.perf_timer = PerfTimer("Pipeline")  # [V65] 파이프라인 성능 프로파일링
-        self.world_state = None  # [V68] WorldStateManager — Stage 3 primary init; Stage 4 gateway fallback (Stage-3-skip)
-        self.fact_ledger = None  # [V68] FactLedger 누적 팩트 원장 — Stage 3 primary init; Stage 4 gateway fallback (Stage-3-skip)
+        self.world_state = (
+            None  # [V68] WorldStateManager — Stage 3 primary init; Stage 4 gateway fallback (Stage-3-skip)
+        )
+        self.fact_ledger = (
+            None  # [V68] FactLedger 누적 팩트 원장 — Stage 3 primary init; Stage 4 gateway fallback (Stage-3-skip)
+        )
 
     def _init_session_and_service_runtime(self) -> None:
         self._session_logger = SessionLogger(
@@ -751,7 +755,9 @@ class SovereignApp:
     def _apply_director_responsibility_fields(self, *, audit_result: dict, error_category: str) -> None:
         if error_category == "LOGIC_ERROR":
             audit_result["responsibility"] = "ANALYST"
-            audit_result["responsibility_guide"] = "Analyst\uc758 Arc \uc124\uacc4\uc5d0 \ubb38\uc81c \uc788\uc74c. \uc7ac\uc124\uacc4 \uac80\ud1a0."
+            audit_result["responsibility_guide"] = (
+                "Analyst\uc758 Arc \uc124\uacc4\uc5d0 \ubb38\uc81c \uc788\uc74c. \uc7ac\uc124\uacc4 \uac80\ud1a0."
+            )
             return
 
         audit_result["responsibility"] = "WRITER"
@@ -1682,18 +1688,20 @@ class SovereignApp:
         needs_enrichment: list[dict[str, Any]],
     ) -> bool:
         self.ui.log(f"📊 농축 필요 Block: {len(needs_enrichment)}/{len(treatment_blocks)}개")
+        self.ui.log("   ⚠️ canonical Stage0 pair pass 경로가 아닌 비정규 semantic rewrite utility입니다.")
+        self.ui.log("   ⚠️ 일부 block의 title/content/joint_docs/status_shadow가 교체될 수 있습니다.")
         for info in needs_enrichment[:5]:
             self.ui.log(f"   - {info['block_id']}: 밀도 {info['density_score']:.2f}, 부족 요소: {info['missing']}")
         if len(needs_enrichment) > 5:
             self.ui.log(f"   ... 외 {len(needs_enrichment) - 5}개")
 
         proceed = self._confirm(
-            f"   → {len(needs_enrichment)}개 Block을 농축하시겠습니까? (Y/n): ",
+            f"   → 비정규 semantic rewrite utility로 {len(needs_enrichment)}개 Block을 농축하시겠습니까? (Y/n): ",
             default=True,
             prompt_id="stage0_treatment_enrichment_confirm",
         )
         if not proceed:
-            self.ui.log("⏭️ 농축을 건너뜁니다.")
+            self.ui.log("⏭️ 농축을 건너뜁니다. 비정규 utility는 실행하지 않습니다.")
         return bool(proceed)
 
     def _run_treatment_block_parallel_enrichment(
@@ -1704,7 +1712,7 @@ class SovereignApp:
         protagonist_name: str,
         genre: str,
     ) -> list[dict[str, Any]]:
-        self.ui.log("🔄 Block 병렬 농축 시작... (Block 1을 품질 기준으로 사용)")
+        self.ui.log("🔄 Block 병렬 농축 시작... (비정규 utility, Block 1을 품질 기준으로 사용)")
         self.ui.log("   📋 Phase 1: 배치 병렬 농축 → Phase 2: 인과 검증 → Phase 3: 문제 Block 재농축")
 
         result = enricher.enrich_all_blocks_parallel(
@@ -1744,16 +1752,18 @@ class SovereignApp:
         with open(enriched_path, "w", encoding="utf-8") as f:
             json.dump(enriched_blocks, f, ensure_ascii=False, indent=2)
         self.ui.log(f"✅ 농축된 Treatment 저장 완료: {enriched_filename}")
-        self.ui.log(f"   원본: {treatment_file} (보존)")
-        self.ui.log(f"   농축본: {enriched_filename} (사용)")
+        self.ui.log(f"   원본: {treatment_file} (canonical source 유지)")
+        self.ui.log(f"   농축본: {enriched_filename} (비정규 utility output)")
+        self.ui.log("   ⚠️ 일부 block의 title/content/joint_docs/status_shadow가 교체되었을 수 있습니다.")
         return enriched_filename
 
     def _enrich_treatment_blocks(self, treatment_file: str) -> str:
         """
-        [V60.10] Treatment Block 자동 농축
+        [V60.10] Treatment Block 비정규 농축 utility
 
-        정보량이 부족한 Block들을 Block 1 수준으로 자동 농축합니다.
-        농축된 Treatment는 별도 파일로 저장되고 그 경로를 반환합니다.
+        정보량이 부족한 Block들을 Block 1 수준으로 끌어올리기 위한
+        비정규 semantic rewrite utility이다.
+        원본 Treatment는 보존되고, 결과는 별도 *_enriched.json 파일로 저장된다.
 
         Args:
             treatment_file: 원본 Treatment 파일명
@@ -1761,7 +1771,7 @@ class SovereignApp:
         Returns:
             농축된 Treatment 파일명 (또는 실패 시 원본 파일명)
         """
-        self.ui.log("🔧 [V60.10] Treatment Block 농축 시작...")
+        self.ui.log("🔧 [V60.10] Treatment Block 비정규 농축 utility 시작...")
 
         try:
             # 1. 원본 Treatment 로드
@@ -3400,7 +3410,10 @@ class SovereignApp:
             base_genre = genre_map.get(selected["type"])
             if base_genre is None:
                 base_genre = str(selected.get("type", "")).lower() or "unknown"
-                logging.warning("[genre-guardrail] _initialize_selected_genre_preset_registry: unmapped genre type %s", selected.get("type"))
+                logging.warning(
+                    "[genre-guardrail] _initialize_selected_genre_preset_registry: unmapped genre type %s",
+                    selected.get("type"),
+                )
             self.preset_registry = _PresetRegistry(base_genre=base_genre)
             self.ui.log(f"   📦 프리셋 초기화: {base_genre}")
 
@@ -4058,9 +4071,7 @@ class SovereignApp:
             current_arc = refreshed_arcs[current_arc_no - 1]
             arc_ep_start = current_arc.get("ep_start", 1)
             arc_ep_end = current_arc.get("ep_end", arc_ep_start + 4)
-            self.ui.log(
-                f"   ✅ [Stage 2] Arc {current_arc_no} 이미 설계됨 (ep {arc_ep_start}~{arc_ep_end}) — 건너뜀"
-            )
+            self.ui.log(f"   ✅ [Stage 2] Arc {current_arc_no} 이미 설계됨 (ep {arc_ep_start}~{arc_ep_end}) — 건너뜀")
             return {"status": "ready", "refreshed_arcs": refreshed_arcs}
 
         self.ui.log(f"\n   📐 [Stage 2] Arc {current_arc_no} 설계 중...")
@@ -4100,11 +4111,7 @@ class SovereignApp:
         return {"status": "ready", "refreshed_arcs": refreshed_arcs}
 
     def _run_frontier_lag_stage3_sync(self, *, frontier_plan: dict[str, Any]) -> dict[str, Any]:
-        self.ui.log(
-            "\n"
-            f"   📐 [Stage 3] Blueprint frontier 동기화"
-            f" (target <= ep {frontier_plan['stage3_target']})..."
-        )
+        self.ui.log(f"\n   📐 [Stage 3] Blueprint frontier 동기화 (target <= ep {frontier_plan['stage3_target']})...")
         try:
             from modules.core.stage3_context import Stage3Context
 
@@ -4188,11 +4195,7 @@ class SovereignApp:
             }
 
     def _run_frontier_lag_stage4_sync(self, *, frontier_plan: dict[str, Any]) -> dict[str, Any]:
-        self.ui.log(
-            "\n"
-            f"   🚀 [Stage 4] Manuscript frontier 동기화"
-            f" (target <= ep {frontier_plan['stage4_target']})..."
-        )
+        self.ui.log(f"\n   🚀 [Stage 4] Manuscript frontier 동기화 (target <= ep {frontier_plan['stage4_target']})...")
         ms_max_before = self._get_max_episode_from_manuscripts()
         try:
             self._stage_4_v2_chief_writer(target_ep=frontier_plan["stage4_target"], skip_pause=True)
@@ -4225,7 +4228,12 @@ class SovereignApp:
             }
         except KeyboardInterrupt:
             self.ui.log("\n   ⚠️ 사용자 중단 요청.")
-            return {"arcs_advanced_delta": 0, "manuscripts_delta": 0, "status": "stop", "stop_reason": "keyboard_interrupt"}
+            return {
+                "arcs_advanced_delta": 0,
+                "manuscripts_delta": 0,
+                "status": "stop",
+                "stop_reason": "keyboard_interrupt",
+            }
         except Exception as s4_err:
             self.ui.log(f"   ❌ [Stage 4] 원고 집필 오류: {str(s4_err)[:100]}")
             self.ui.log("   🛑 Stage 4 오류로 다음 Arc 자동 진행을 중단합니다.")
@@ -4249,7 +4257,12 @@ class SovereignApp:
         )
         if not frontier_plan:
             self.ui.log("   ❌ [FrontierLag] 설계 frontier 계산 실패")
-            return {"arcs_advanced_delta": 0, "manuscripts_delta": 0, "status": "stop", "stop_reason": "frontier_plan_missing"}
+            return {
+                "arcs_advanced_delta": 0,
+                "manuscripts_delta": 0,
+                "status": "stop",
+                "stop_reason": "frontier_plan_missing",
+            }
 
         self.ui.log(
             "   🧭 [FrontierLag]"
@@ -4542,9 +4555,7 @@ class SovereignApp:
             current_arc = refreshed_arcs[current_arc_no - 1]
             arc_ep_start = current_arc.get("ep_start", 1)
             arc_ep_end = current_arc.get("ep_end", arc_ep_start + 4)
-            self.ui.log(
-                f"   ✅ [Stage 2] Arc {current_arc_no} 이미 설계됨 (ep {arc_ep_start}~{arc_ep_end}) — 건너뜀"
-            )
+            self.ui.log(f"   ✅ [Stage 2] Arc {current_arc_no} 이미 설계됨 (ep {arc_ep_start}~{arc_ep_end}) — 건너뜀")
         else:
             self.ui.log(f"\n   📐 [Stage 2] Arc {current_arc_no}/{total_arcs} 설계 중...")
             try:
