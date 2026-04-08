@@ -41,14 +41,13 @@ SKIP_DIR_NAMES = {
     "__pycache__",
     "dist",
     "node_modules",
-    "projects",
     "python-embed",
-    "style_references",
     "win-unpacked",
 }
 ALLOW_LINE_MARKER = "utf8-hygiene: allow-line"
 ALLOW_FILE_MARKER = "utf8-hygiene: allow-file"
 TRIPLE_QUESTION_RE = re.compile(r"\?{3,}")
+PROJECT_RUNTIME_SKIP_DIRS = {"drafts", "logs", "plans", "stage0_output"}
 
 
 @dataclass(frozen=True)
@@ -63,8 +62,25 @@ def _is_text_candidate(path: Path) -> bool:
     return path.suffix.lower() in TEXT_SUFFIXES or path.name in ROOT_FILE_ALLOWLIST
 
 
+def _is_generated_project_runtime_text(path: Path) -> bool:
+    if "projects" not in path.parts:
+        return False
+    project_index = path.parts.index("projects")
+    return any(part in PROJECT_RUNTIME_SKIP_DIRS for part in path.parts[project_index + 2 :])
+
+
+def _is_style_reference_runtime_sample(path: Path) -> bool:
+    if "style_references" not in path.parts:
+        return False
+    return path.name.startswith("style_guide") and path.suffix.lower() == ".json"
+
+
 def _should_skip(path: Path) -> bool:
-    return any(part in SKIP_DIR_NAMES for part in path.parts)
+    return (
+        any(part in SKIP_DIR_NAMES for part in path.parts)
+        or _is_generated_project_runtime_text(path)
+        or _is_style_reference_runtime_sample(path)
+    )
 
 
 def _iter_candidate_files(paths: list[Path]) -> list[Path]:
