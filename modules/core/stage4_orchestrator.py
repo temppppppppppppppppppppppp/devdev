@@ -16,6 +16,7 @@ from modules.core.artifact_logging import build_candidate_key, snapshot_logged_a
 from modules.core.constants import smart_truncate
 from modules.core.jsonl_io import append_jsonl_record
 from modules.core.llm_generate import generate_content_via_router
+from modules.core.logging_keys import resolve_logging_session_id
 from modules.core.project_support import load_style_guide_anchor, resolve_project_bible_pov
 from modules.core.soft_failure import resolve_project_log_dir
 from modules.core.stage4_context_builder import Stage4ContextBuilder
@@ -585,6 +586,7 @@ class Stage4Orchestrator:
 
     def _log_target_ep_reached(self, *, target_ep: int, next_ep: int) -> None:
         """Record stage4 target-episode stop as a control-plane decision/audit event."""
+        session_id = str(resolve_logging_session_id(getattr(self.ctx, "current_project", None)) or "")
         _sl = getattr(self.ctx, "session_logger", None)
         if _sl and hasattr(_sl, "log_decision"):
             _sl.log_decision(
@@ -595,6 +597,7 @@ class Stage4Orchestrator:
                 result="STOP",
                 score=0,
                 reason="stage4 target episode reached; stop before next episode generation",
+                session_id=session_id,
                 target_ep=int(target_ep),
                 next_ep=int(next_ep),
             )
@@ -605,9 +608,39 @@ class Stage4Orchestrator:
                 "target_ep_reached",
                 "stage4 target episode reached",
                 {
+                    "session_id": session_id,
                     "target_ep": int(target_ep),
                     "next_ep": int(next_ep),
                 },
+            )
+
+    def _log_stage4_session_scope(self, *, start_ep: int, target_ep: int | None, total_planned_ep: int) -> None:
+        """Record the bounded Stage4 live-session scope for later proof reuse."""
+        session_id = str(resolve_logging_session_id(getattr(self.ctx, "current_project", None)) or "")
+        payload = {
+            "session_id": session_id,
+            "start_ep": int(start_ep),
+            "target_ep": int(target_ep) if target_ep is not None else None,
+            "total_planned_ep": int(total_planned_ep),
+        }
+        _sl = getattr(self.ctx, "session_logger", None)
+        if _sl and hasattr(_sl, "log_decision"):
+            _sl.log_decision(
+                stage="stage4_control",
+                ep_num=int(start_ep),
+                round_num=0,
+                decision_type="session_scope",
+                result="START",
+                score=0,
+                **payload,
+            )
+
+        _audit_event = getattr(self.ctx, "audit_event", None)
+        if callable(_audit_event):
+            _audit_event(
+                "stage4_session_scope",
+                "stage4 session scope declared",
+                dict(payload),
             )
 
     def _load_chain_link_section(self, next_ep: int) -> str:
@@ -1471,6 +1504,12 @@ JSON으로 출력:
         runtime = self._prepare_interview_loop_runtime(session)
         if runtime is None:
             return False
+        start_ep = int(self.ctx.current_project.get_latest_episode_number() or 1)
+        self._log_stage4_session_scope(
+            start_ep=start_ep,
+            target_ep=runtime.target_ep,
+            total_planned_ep=session.total_planned_ep,
+        )
 
         # 5. 원고 생산 메인 루프
         loop_guard = 0
@@ -2636,7 +2675,10 @@ JSON으로 출력:
                 _audit_event(
                     "stage4_complete",
                     "stage4 production completed",
-                    {"target_ep": getattr(session, "target_ep", target_ep)},
+                    {
+                        "session_id": str(resolve_logging_session_id(getattr(ctx, "current_project", None)) or ""),
+                        "target_ep": getattr(session, "target_ep", target_ep),
+                    },
                 )
             _write_summary = getattr(ctx, "write_audit_summary", None)
             if callable(_write_summary):

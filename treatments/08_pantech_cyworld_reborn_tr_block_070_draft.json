@@ -84,7 +84,14 @@
           "전환사채 구조 설계"
         ],
         "first_screen_move": "없음(제품 이전 단계)",
-        "section_rotation": "출범기 · 프론티어 원 선언"
+        "section_rotation": "출범기 · 프론티어 원 선언",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "세림그룹은 공식 투자 대신 개인 책임 조건 CB 인수를 승인하고 프론티어 원 설립 안건을 통과시킨다.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -194,7 +201,14 @@
           "터치 UI 프로토타입"
         ],
         "first_screen_move": "터치 UI 프로토타입 내부 확인",
-        "section_rotation": "출범기 · 김포 연구소의 브리지 자금"
+        "section_rotation": "출범기 · 김포 연구소의 브리지 자금",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "asset_lock",
+          "receipt_line": "팬택 CB 전환권 1차 포지션 확보 + 공급망 채권 지분 평가익 + 터치 UI 라인 3개월 연장.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "포지션과 자산 고정"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -291,7 +305,14 @@
           "도토리 결제 흐름"
         ],
         "first_screen_move": "없음(라이선싱 단계)",
-        "section_rotation": "출범기 · 일촌 그래프는 주소록이다"
+        "section_rotation": "출범기 · 일촌 그래프는 주소록이다",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "싸이월드 모바일 전환권 1차 라이선싱 + 일촌 그래프 샘플 접근권 + 한유리 포섭.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "계약을 잠가 다음 전장 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -389,7 +410,14 @@
           "현금흐름 증거 설계"
         ],
         "first_screen_move": "없음",
-        "section_rotation": "출범기 · 첫 이사회 냉대"
+        "section_rotation": "출범기 · 첫 이사회 냉대",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "공식 투자 거절은 '도련님 변덕' 프레임 확산으로 돌아오지만, 이사진의 실제 관심사(단가·채권단·현금흐름)가 노출되며 CB 설계 각도 재구성.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 공식 승인과 권한 확보"
       },
       "failure_design": {
         "failure_type": "희망 연결",
@@ -494,7 +522,14 @@
           "가산 충돌 로그"
         ],
         "first_screen_move": "없음(인증 단계)",
-        "section_rotation": "출범기 · 차우진의 특별감사 예고 + 가산의 충돌 로그 더미"
+        "section_rotation": "출범기 · 차우진의 특별감사 예고 + 가산의 충돌 로그 더미",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "특별감사 공세가 '개인 담보 소진' 프레임에 걸리며 감사 근거 약화.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -593,7 +628,14 @@
           "첫 화면·앱 장터"
         ],
         "first_screen_move": "첫 화면·앱 장터 프론티어 원 소유권 선언(설계 단계)",
-        "section_rotation": "출범기 · 대덕 미들웨어 스택"
+        "section_rotation": "출범기 · 대덕 미들웨어 스택",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "첫 화면·앱 장터·계정 체계 통합 스택 설계 초안 공식 문서 확정.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -686,7 +728,14 @@
           "일촌 그래프 접근권"
         ],
         "first_screen_move": "계정 결제 완전 결합 실패(부분 결합 유지)",
-        "section_rotation": "출범기 · 도토리 반쪽 개방"
+        "section_rotation": "출범기 · 도토리 반쪽 개방",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "도토리 완전 개방 실패했지만 라이선싱 연장 + 일촌 그래프 접근권 확대로 실무 결합 유지.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 계약과 연결고리 확보"
       },
       "failure_design": {
         "failure_type": "피로스",
@@ -793,7 +842,14 @@
           "통신사 인증 3단계 등급"
         ],
         "first_screen_move": "없음(인증 단계)",
-        "section_rotation": "출범기 · 가산 테스트 라인 독점 밑작업"
+        "section_rotation": "출범기 · 가산 테스트 라인 독점 밑작업",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "가산 테스트 라인 독점 계약 밑작업 완료 + 312종 충돌 로그 3단계 인증 등급 분류 합의 + 박기태 신용 +2.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "계약을 잠가 다음 전장 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -889,7 +945,14 @@
           "팬택 CB 전환권 1.5차"
         ],
         "first_screen_move": "없음(금융 단계)",
-        "section_rotation": "출범기 · 부실 자산 인수"
+        "section_rotation": "출범기 · 부실 자산 인수",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "asset_lock",
+          "receipt_line": "팬택 공급망 채권(부실 자산) 인수 성사 + 단가 하한선 공개 강제 + 채권단 내부 담합 차단.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "포지션과 자산 고정"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -992,7 +1055,14 @@
           "SPC 독립 회계"
         ],
         "first_screen_move": "없음(회계·지배구조 단계)",
-        "section_rotation": "출범기 · 결합권의 결속"
+        "section_rotation": "출범기 · 결합권의 결속",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "SPC 결합 포지션 독립 회계가 1차 인정되며 '디지털 계열 분리' 논의 테이블이 처음 열림.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1084,7 +1154,14 @@
           "공급망 채권 숨은 조항"
         ],
         "first_screen_move": "없음",
-        "section_rotation": "동시 돌파기 · 숨은 지분 조항"
+        "section_rotation": "동시 돌파기 · 숨은 지분 조항",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "숨은 지분 조항 발동 요건 확정 + 채권단 조항 폐기 시도 차단 + 후일 공급망 수직 통합 계약의 근거 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "계약을 잠가 다음 전장 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1177,7 +1254,14 @@
           "공급망 수직 통합"
         ],
         "first_screen_move": "단말 탑재 OS 베타 가동",
-        "section_rotation": "동시 돌파기 · 부평 시제작 라인"
+        "section_rotation": "동시 돌파기 · 부평 시제작 라인",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "베타폰 1차 조립 완료 + 3단계 인증 등급 체계 인증 기준 제시 + 공급망 수직 통합 1차 초안.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1270,7 +1354,14 @@
           "충돌 로그 공개"
         ],
         "first_screen_move": "단말 시연 중단",
-        "section_rotation": "동시 돌파기 · 코엑스 시연 중단"
+        "section_rotation": "동시 돌파기 · 코엑스 시연 중단",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "코엑스 공개 시연 실패의 체감 손실은 크지만, 312종 충돌 로그 패턴이 공개 장면에 공식 노출되며 가산 테스트 라인 독점 계약 정당성 강화 + 정보통신부 실무 채널 개설.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 공식 승인과 권한 확보"
       },
       "failure_design": {
         "failure_type": "희망 연결",
@@ -1373,7 +1464,14 @@
           "2세대 센서 원점"
         ],
         "first_screen_move": "터치 UI 응답 최적화",
-        "section_rotation": "동시 돌파기 · 응답 지연의 비밀"
+        "section_rotation": "동시 돌파기 · 응답 지연의 비밀",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "펌웨어 보정 회로 재설계 방향 확정 + 센서 교체 과잉 비용 차단 + 후일 2세대 소셜폰 센서 재설계의 원점 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1467,7 +1565,14 @@
           "가산 인증 등급"
         ],
         "first_screen_move": "인증 단말 출시 준비",
-        "section_rotation": "동시 돌파기 · 인증 1건 통과"
+        "section_rotation": "동시 돌파기 · 인증 1건 통과",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "베타폰 통신사 인증 1건 통과 + 3단계 인증 등급 체계의 시장 정당성 확보 + 통신사 연합 내부 균열 시작.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1560,7 +1665,14 @@
           "계정 체계"
         ],
         "first_screen_move": "베타 내부 단말에 계정 탑재",
-        "section_rotation": "동시 돌파기 · 일촌 주소록 베타"
+        "section_rotation": "동시 돌파기 · 일촌 주소록 베타",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "일촌 주소록 베타 프로토타입 완성 + 내부 베타 사용자 확보 + 후일 모바일 주소록 공개 베타의 기술 기반 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1656,7 +1768,14 @@
           "SPC 독립 회계"
         ],
         "first_screen_move": "없음(감사 단계)",
-        "section_rotation": "동시 돌파기 · 특별감사의 철창"
+        "section_rotation": "동시 돌파기 · 특별감사의 철창",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "asset_lock",
+          "receipt_line": "자금선 일시 동결의 체감 손실은 크지만, 감사위원회 내부 파벌 균열 포착 + 중립파 2명 설득 성공 + 후일 ABS 재발행의 돌파구 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 포지션과 자산 고정"
       },
       "failure_design": {
         "failure_type": "피로스",
@@ -1761,7 +1880,14 @@
           "베타폰 체감 리뷰"
         ],
         "first_screen_move": "포털 첫 화면 밖 노출 경로 확보",
-        "section_rotation": "동시 돌파기 · 백수현 커뮤니티"
+        "section_rotation": "동시 돌파기 · 백수현 커뮤니티",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "포털 바깥 여론 형성 증거 + 백수현 신용 잔고 +1 + 후일 한빛전자마트 예약률 급등의 여론 기반.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1855,7 +1981,14 @@
           "언론 프레임"
         ],
         "first_screen_move": "없음(내부 정보 단계)",
-        "section_rotation": "동시 돌파기 · 윤태선의 기자 간담회 예고"
+        "section_rotation": "동시 돌파기 · 윤태선의 기자 간담회 예고",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "간담회 예고 단계에서 프레임 방어 문서 선공급 + 차명 자금 파트너 라인 경리 구조 1차 스캔 + 후일 기자 간담회 본격화에 대비한 반격 카드 준비.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1953,7 +2086,14 @@
           "감사위원회"
         ],
         "first_screen_move": "없음(감사+규제 단계)",
-        "section_rotation": "동시 돌파기 · 같은 주 돌파"
+        "section_rotation": "동시 돌파기 · 같은 주 돌파",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "감사위원회 1차 기각(ABS 2차 발행 일정 재개 승인) + 정보통신부 심의에서 '규격 정비 필요성' 공식 인정 + ABS 1차 발행 실제 성사.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2045,7 +2185,14 @@
           "팬택 공급망 실질 소유"
         ],
         "first_screen_move": "없음",
-        "section_rotation": "여론 전환기 · 부실 자산 대금 이전"
+        "section_rotation": "여론 전환기 · 부실 자산 대금 이전",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "부실 자산 이전 완결 + 팬택 공급망 채권 실질 소유 확정 + 차우진의 2차 감사 카드 무효화.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2138,7 +2285,14 @@
           "도토리 결제 계정화"
         ],
         "first_screen_move": "계정 결제 결합 2차",
-        "section_rotation": "여론 전환기 · JV 2차 전환 기회"
+        "section_rotation": "여론 전환기 · JV 2차 전환 기회",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "싸이월드 일부 지분 우호적 M&A 계약 체결 + 모바일 전환권 JV 전환 확정 + 도토리 결제 흐름 계정화 2차 단계 개시.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "계약을 잠가 다음 전장 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2231,7 +2385,14 @@
           "공정위 단서"
         ],
         "first_screen_move": "포털 첫 화면 하청 구조 공론화",
-        "section_rotation": "여론 전환기 · 학생 데이터요금 차별"
+        "section_rotation": "여론 전환기 · 학생 데이터요금 차별",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "학생 요금 차별화의 체감 손실은 있지만, 공정위 예비조사 1차 단서 축적 + 백수현 여론전 발화점 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 다음 전장 입장권 확보"
       },
       "failure_design": {
         "failure_type": "예측-전환",
@@ -2336,7 +2497,14 @@
           "팬택 단말 단가"
         ],
         "first_screen_move": "없음(공급망 단계)",
-        "section_rotation": "여론 전환기 · 공급망 수직 통합"
+        "section_rotation": "여론 전환기 · 공급망 수직 통합",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "공급망 수직 통합 계약 체결 + 공급망 파트너사 일부 지분 전환 완료 + 팬택 단말 단가 안정성 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "계약을 잠가 다음 전장 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2430,7 +2598,14 @@
           "첫 화면 진입 속도"
         ],
         "first_screen_move": "첫 화면 진입 속도 0.8초 규격 공식 고정",
-        "section_rotation": "여론 전환기 · 앱 장터 기술사용권"
+        "section_rotation": "여론 전환기 · 앱 장터 기술사용권",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "access_shift",
+          "receipt_line": "앱 장터 기술사용권 확보 + 첫 화면 진입 속도 규격 고정 + 포털 하청 프레임 차단.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "접근권으로 다음 전장 진입"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2524,7 +2699,14 @@
           "한빛전자마트"
         ],
         "first_screen_move": "체험존 단말 첫 화면 공개",
-        "section_rotation": "여론 전환기 · 한빛전자마트 예약률 급등"
+        "section_rotation": "여론 전환기 · 한빛전자마트 예약률 급등",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "한빛전자마트 대중 유통 체험존 1차 오픈 계약 + 예약률 데이터 공식 채택 + 김재복 신용 잔고 +2.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2618,7 +2800,14 @@
           "언론 프레임"
         ],
         "first_screen_move": "없음(언론 단계)",
-        "section_rotation": "여론 전환기 · 윤태선의 기자 간담회"
+        "section_rotation": "여론 전환기 · 윤태선의 기자 간담회",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "사익 편취 프레임 확산의 체감 손실은 있지만, 감사위원회 공식 문서 방어벽 가동 + 차명 자금 경리 취재 루트 개설.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 공식 승인과 권한 확보"
       },
       "failure_design": {
         "failure_type": "희망 연결",
@@ -2723,7 +2912,14 @@
           "결합 구조 시연"
         ],
         "first_screen_move": "단말 첫 화면에 계정+주소록 탑재",
-        "section_rotation": "여론 전환기 · 모바일 주소록 베타 공개"
+        "section_rotation": "여론 전환기 · 모바일 주소록 베타 공개",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "모바일 주소록 베타 공식 출시 + 단말+계정+결제 한 화면 시연 + 카피 서비스 선점 보도 무효화.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2816,7 +3012,14 @@
           "아시아 확장 브리지"
         ],
         "first_screen_move": "해외 단말 적용 가능성 검토",
-        "section_rotation": "여론 전환기 · 마키노 레이의 첫 접촉"
+        "section_rotation": "여론 전환기 · 마키노 레이의 첫 접촉",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "마키노 레이 비공식 파트너십 시작 + 일본 디지털 유통 JV 초안 공유 + 포털 본사 출시일 혼선 공작 예열.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2926,7 +3129,14 @@
           "중부데이터센터"
         ],
         "first_screen_move": "디지털 계열 독립 운영권 첫 공식화",
-        "section_rotation": "여론 전환기 · 디지털 계열 분리 1차 승인"
+        "section_rotation": "여론 전환기 · 디지털 계열 분리 1차 승인",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "디지털 계열 분리 1차 이사회 승인 + ABS 2차 발행 완료 + 중부데이터센터 증설권 가계약 체결.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3020,7 +3230,14 @@
           "오프라인 세미나"
         ],
         "first_screen_move": "실측 QA 공개",
-        "section_rotation": "정면 공세기 · 포털 외부 여론 성숙"
+        "section_rotation": "정면 공세기 · 포털 외부 여론 성숙",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "포털 외부 여론 2차 확산 + 과포장 프레임 방어 + 백수현 신용 +1.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3116,7 +3333,14 @@
           "한빛전자마트"
         ],
         "first_screen_move": "제품 포지셔닝 공식 등록",
-        "section_rotation": "정면 공세기 · 한빛전자마트가 백화점을 넘다"
+        "section_rotation": "정면 공세기 · 한빛전자마트가 백화점을 넘다",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "한빛전자마트 대중 유통 1차 대량 발주 계약 + 전통 계열 결재선 균열 첫 기록 + 제품 포지셔닝 공식 등록.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3212,7 +3436,14 @@
           "카메라 센서 JV"
         ],
         "first_screen_move": "2세대 UI 로드맵 공개",
-        "section_rotation": "정면 공세기 · 2세대 소셜폰 로드맵"
+        "section_rotation": "정면 공세기 · 2세대 소셜폰 로드맵",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "2세대 소셜폰 로드맵 공식 공개 + 카메라 센서 JV 초안 합의 + 가산 센터의 글로벌 규격 대응 확장.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3307,7 +3538,14 @@
           "중부데이터센터 증설"
         ],
         "first_screen_move": "가족 안심 영상 서비스 복구",
-        "section_rotation": "정면 공세기 · 저장 병목 장애"
+        "section_rotation": "정면 공세기 · 저장 병목 장애",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "장애 체감 손실은 크지만 중부데이터센터 증설 본계약 체결 + 가족 안심 구독권 보상 재설계 + 저장 병목 실측 수치 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 계약과 연결고리 확보"
       },
       "failure_design": {
         "failure_type": "피로스",
@@ -3413,7 +3651,14 @@
           "해외 회계 공조"
         ],
         "first_screen_move": "없음",
-        "section_rotation": "정면 공세기 · 해외 계좌 연결점"
+        "section_rotation": "정면 공세기 · 해외 계좌 연결점",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "해외 계좌 연결점 확보 + 일본 회계 공조 단서 + 후일 형제파 자금줄 1차 절단의 핵심 카드.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3507,7 +3752,14 @@
           "도토리 결제 계정화"
         ],
         "first_screen_move": "구독권 결제 흐름 첫 화면 진입",
-        "section_rotation": "정면 공세기 · 가족 안심 구독권 2만 세대"
+        "section_rotation": "정면 공세기 · 가족 안심 구독권 2만 세대",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "가족 안심 구독권 2만 세대 안정화 + 도토리 결제 계정화 완결 + 반복 현금흐름 첫 기둥 확립.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3603,7 +3855,14 @@
           "정책 의견서"
         ],
         "first_screen_move": "없음(정책 단계)",
-        "section_rotation": "정면 공세기 · 담합 본조사 점화"
+        "section_rotation": "정면 공세기 · 담합 본조사 점화",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "통신 담합 본조사 점화 + 프론티어 원 공식 의견서 공정위 채택 + 통신사 방어 광고비 소모 가속.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3701,7 +3960,14 @@
           "카메라 센서 JV 재협상"
         ],
         "first_screen_move": "2세대 공개 일정 재조정",
-        "section_rotation": "정면 공세기 · 2세대 공개 1차 지연"
+        "section_rotation": "정면 공세기 · 2세대 공개 1차 지연",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "2세대 공개 일정 2주 연기의 체감 손실은 있지만, JV 계약 뼈대가 프론티어 원 측으로 크게 유리하게 재구성.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 계약과 연결고리 확보"
       },
       "failure_design": {
         "failure_type": "희망 연결",
@@ -3805,7 +4071,14 @@
           "공공 돌봄"
         ],
         "first_screen_move": "실버형 단말 UI 초안",
-        "section_rotation": "정면 공세기 · 실버형 IoT 센서"
+        "section_rotation": "정면 공세기 · 실버형 IoT 센서",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "실버형 IoT 센서 구조 확정 + 공공 돌봄 브리지 포지셔닝 + 후일 표준 채택기 도시 엣지센터 표준의 기술 원점 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3906,7 +4179,14 @@
           "형제 자금줄 1차 절단"
         ],
         "first_screen_move": "2세대 소셜폰 공식 로드맵 재공개",
-        "section_rotation": "정면 공세기 · 카메라 센서 JV 본계약"
+        "section_rotation": "정면 공세기 · 카메라 센서 JV 본계약",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "카메라 센서 JV 본계약 체결 + ABS 3차 발행 완료 + 형제파 차명 자금줄 1차 절단.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "계약을 잠가 다음 전장 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4004,7 +4284,14 @@
           "상표 등록"
         ],
         "first_screen_move": "생활계정 로고 첫 화면 진입",
-        "section_rotation": "글로벌 방어전 · 생활계정 프레임"
+        "section_rotation": "글로벌 방어전 · 생활계정 프레임",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "생활계정 프레임 공식 확정 + 프론티어 원 상표 선등록 + 통신사 포털 대체 상표 등록 시도 차단.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4098,7 +4385,14 @@
           "회계 공조"
         ],
         "first_screen_move": "일본 단말 첫 화면 대응 초안",
-        "section_rotation": "글로벌 방어전 · 일본 JV 초안 구체화"
+        "section_rotation": "글로벌 방어전 · 일본 JV 초안 구체화",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "일본 디지털 유통 JV 계약 뼈대 구체화 + 일본 회계 공조 채널 개방 + 한·일 동시 방어 광고 대응 여력 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "계약을 잠가 다음 전장 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4192,7 +4486,14 @@
           "카피 서비스 차별화"
         ],
         "first_screen_move": "아시아 단말 첫 화면 결합 시연",
-        "section_rotation": "글로벌 방어전 · 아시아 출시 앞 카피 선점 보도"
+        "section_rotation": "글로벌 방어전 · 아시아 출시 앞 카피 선점 보도",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "아시아 출시 일정 유지 + '기능 유사 ≠ 결합 구조' 프레임 재공개 + 카피 서비스 결제 흐름 분리 약점 노출.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "failure_design": {
         "failure_type": "희망 연결",
@@ -4295,7 +4596,14 @@
           "일본 디지털 유통 JV 본계약"
         ],
         "first_screen_move": "일본 단말 첫 화면 JV 로고 노출",
-        "section_rotation": "글로벌 방어전 · 마키노 레이 JV 본계약"
+        "section_rotation": "글로벌 방어전 · 마키노 레이 JV 본계약",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "일본 디지털 유통 JV 본계약 체결 + 한일 합작 법인 프레임 확립 + 펌웨어 라이선싱 수출 첫 계약 구조 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "계약을 잠가 다음 전장 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4388,7 +4696,14 @@
           "생활 기기 인증"
         ],
         "first_screen_move": "실버 단말 첫 화면 알림망 노출",
-        "section_rotation": "글로벌 방어전 · 병원·보험 연동 시범 1건"
+        "section_rotation": "글로벌 방어전 · 병원·보험 연동 시범 1건",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "병원·보험 연동 시범 1건 가동 + 생활 기기 등급 인증 통과 + 실버 IoT 실측 데이터 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4484,7 +4799,14 @@
           "아시아 공동 규격 라인"
         ],
         "first_screen_move": "없음(인증 단계)",
-        "section_rotation": "글로벌 방어전 · 가산 글로벌 규격 대응"
+        "section_rotation": "글로벌 방어전 · 가산 글로벌 규격 대응",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "가산 센터 글로벌 규격 대응 확장 + 동남아 통신 규격 대응 확보 + 통신사 연합 잔여 반격 카드 약화.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4579,7 +4901,14 @@
           "이탈 이사 추적선"
         ],
         "first_screen_move": "없음(이사회 단계)",
-        "section_rotation": "글로벌 방어전 · 전통 계열 이탈"
+        "section_rotation": "글로벌 방어전 · 전통 계열 이탈",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "2차 표결 부결의 체감 손실은 있지만, 이탈 이사 2명의 해외 차명 연결점 확보 + 후일 최종 재표결 카드 준비.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 다음 전장 입장권 확보"
       },
       "failure_design": {
         "failure_type": "피로스",
@@ -4685,7 +5014,14 @@
           "2세대 아시아 출격"
         ],
         "first_screen_move": "2세대 단말 아시아 출시 광고 중심 메시지",
-        "section_rotation": "글로벌 방어전 · 카메라 센서 글로벌 인증 통과"
+        "section_rotation": "글로벌 방어전 · 카메라 센서 글로벌 인증 통과",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "카메라 센서 아시아 공동 규격 인증 통과 + 2세대 소셜폰 아시아 출격 준비 완료 + 국내 경쟁사 프레임 붕괴.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4780,7 +5116,14 @@
           "도시 단위 운영 OS"
         ],
         "first_screen_move": "운영 OS 개념 공식화",
-        "section_rotation": "글로벌 방어전 · 서도진의 엣지 노드"
+        "section_rotation": "글로벌 방어전 · 서도진의 엣지 노드",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "엣지 노드 구조 초안 확정 + 도시 단위 운영 OS 포지셔닝 + 서도진 신용 +1 + 후일 표준 채택기 도시 엣지센터 표준의 직접 원점 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4875,7 +5218,14 @@
           "이탈 이사 증거"
         ],
         "first_screen_move": "펌웨어 라이선싱 아시아 단말 첫 화면 이식",
-        "section_rotation": "글로벌 방어전 · 펌웨어 라이선싱 수출 + 이탈 이사 추적선"
+        "section_rotation": "글로벌 방어전 · 펌웨어 라이선싱 수출 + 이탈 이사 추적선",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "펌웨어 라이선싱 수출 계약 체결 + 이탈 이사 해외 차명 증거 법적 문서 완성 + ABS 4차 발행 예열.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "계약을 잠가 다음 전장 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4970,7 +5320,14 @@
           "재평가 보고서"
         ],
         "first_screen_move": "없음(IR 단계)",
-        "section_rotation": "표준 채택기 · 분기 가이던스 상향"
+        "section_rotation": "표준 채택기 · 분기 가이던스 상향",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "분기 가이던스 상향 공식화 + 재평가 보고서 1차 초안 공급 + 실측 근거 + 중립 회계법인 공동 검증.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5064,7 +5421,14 @@
           "전통 계열 결재선 전향"
         ],
         "first_screen_move": "디지털 사업 현금흐름 공식 실증",
-        "section_rotation": "표준 채택기 · 한빛전자마트가 그룹 백화점 전체를 넘다"
+        "section_rotation": "표준 채택기 · 한빛전자마트가 그룹 백화점 전체를 넘다",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "한빛전자마트 매출 백화점 전체 역전 공식 기록 + 전통 계열 결재선 전향 논의 개시 + 김재복 신용 +2.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5158,7 +5522,14 @@
           "데이터 주권 설계"
         ],
         "first_screen_move": "동의 절차 3단계 UI 공개",
-        "section_rotation": "표준 채택기 · 공공 데이터 감사 공세"
+        "section_rotation": "표준 채택기 · 공공 데이터 감사 공세",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "asset_lock",
+          "receipt_line": "가입 일시 차단 체감 손실 + 시총 일시 하락은 있지만, 데이터 주권 설계 문서가 정책협의체 표준 후보로 격상 + 국민연금 우호지분 약정 연대 명분 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 포지션과 자산 고정"
       },
       "failure_design": {
         "failure_type": "희망 연결",
@@ -5262,7 +5633,14 @@
           "가입 재개"
         ],
         "first_screen_move": "주권 UI 공식 프레젠테이션",
-        "section_rotation": "표준 채택기 · 주권 설계 표준 후보"
+        "section_rotation": "표준 채택기 · 주권 설계 표준 후보",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "주권 설계 표준 후보 등록 + 가입 차단 해제 + 실사용 데이터 기반의 프레젠테이션 공개.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5360,7 +5738,14 @@
           "도시 엣지센터 표준 초안"
         ],
         "first_screen_move": "클라우드 첫 화면 생활계정 통합",
-        "section_rotation": "표준 채택기 · 가족 건강 클라우드 런칭"
+        "section_rotation": "표준 채택기 · 가족 건강 클라우드 런칭",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "가족 건강 클라우드 정식 런칭 + 구독권 40만 세대 + 도시 엣지센터 표준 초안 공식 문서화.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5452,7 +5837,14 @@
           "슬립업 관리"
         ],
         "first_screen_move": "공공 시범 단말 첫 화면",
-        "section_rotation": "표준 채택기 · 공공 연동 시범 2건 + 패턴을 읽는 눈"
+        "section_rotation": "표준 채택기 · 공공 연동 시범 2건 + 패턴을 읽는 눈",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "공공 연동 시범 2건 가동 + 한유리 패턴 수집 1단계 대응 + 슬립업 관리 체계 구축.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "같은 블록 보상을 다음 전장 입장권으로 전환"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5547,7 +5939,14 @@
           "TCO 분석서"
         ],
         "first_screen_move": "없음(입찰 단계)",
-        "section_rotation": "표준 채택기 · 지자체 1차 입찰 실패"
+        "section_rotation": "표준 채택기 · 지자체 1차 입찰 실패",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "1차 입찰 실패의 체감 손실은 있지만, 경쟁 연합 운영 비용 구조 역분석 완료 + TCO 분석서 준비.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 다음 전장 입장권 확보"
       },
       "failure_design": {
         "failure_type": "피로스",
@@ -5650,7 +6049,14 @@
           "아시아 공동운영 브리지"
         ],
         "first_screen_move": "아시아 공동운영 로고 초안",
-        "section_rotation": "표준 채택기 · 아시아 공동운영 브리지"
+        "section_rotation": "표준 채택기 · 아시아 공동운영 브리지",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "access_shift",
+          "receipt_line": "마키노 레이 아시아 공동운영 브리지 파트너 확정 + 다자 브리지 구조 초안 + 한일 편향 프레임 전환.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "접근권으로 다음 전장 진입"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5746,7 +6152,14 @@
           "지배구조 재편 준비"
         ],
         "first_screen_move": "없음(결재선 단계)",
-        "section_rotation": "표준 채택기 · '그룹의 새 뿌리'"
+        "section_rotation": "표준 채택기 · '그룹의 새 뿌리'",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "회장의 '새 뿌리' 언급 공식 기록화 + 재평가 보고서 재검증 요구 대응 + 후일 회장 공식 전향 발언의 기반 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5852,7 +6265,14 @@
           "국민연금 약정"
         ],
         "first_screen_move": "도시 운영 OS 공식 가동",
-        "section_rotation": "표준 채택기 · 2차 입찰 수주 + 정책협의체 공식 채택"
+        "section_rotation": "표준 채택기 · 2차 입찰 수주 + 정책협의체 공식 채택",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "지자체 통합 돌봄망 2건 수주 + 도시 엣지센터 표준 정책협의체 공식 채택 + 국민연금 우호지분 약정 등록.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5947,7 +6367,14 @@
           "우호지분 연대체"
         ],
         "first_screen_move": "없음(방어 단계)",
-        "section_rotation": "승계 완결기 · 장외 매집 경보"
+        "section_rotation": "승계 완결기 · 장외 매집 경보",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "한가 지분 방어 블록 공식 등록 + 우호지분 연대 체계 확립 + 재평가 보고서 공개 일정 조정.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6043,7 +6470,14 @@
           "디지털 계열 정당성"
         ],
         "first_screen_move": "없음(선언 단계)",
-        "section_rotation": "승계 완결기 · 회장의 철회"
+        "section_rotation": "승계 완결기 · 회장의 철회",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "회장 '소모품' 발언 공식 철회 + '생활계정 그룹 = 세림그룹 새 뿌리' 공식 인정 + 시무식 원고에 3축 성과 첨부.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6136,7 +6570,14 @@
           "우호지분 이탈"
         ],
         "first_screen_move": "없음(지배구조 단계)",
-        "section_rotation": "승계 완결기 · 매집 1차 공세"
+        "section_rotation": "승계 완결기 · 매집 1차 공세",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "asset_lock",
+          "receipt_line": "1차 공세의 체감 손실 + 우호지분 일부 이탈은 있지만, 이탈 경로가 이탈 이사 2명 배후 해외 차명 계좌와 다시 연결되는 단서 확보.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 포지션과 자산 고정"
       },
       "failure_design": {
         "failure_type": "희망 연결",
@@ -6243,7 +6684,14 @@
           "재평가 공개"
         ],
         "first_screen_move": "없음(지배구조 단계)",
-        "section_rotation": "승계 완결기 · 방어 가동"
+        "section_rotation": "승계 완결기 · 방어 가동",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "방어 블록 공식 가동 + 장외 매집 2차 가격 인상 차단 + 재평가 보고서 공개.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6337,7 +6785,14 @@
           "아시아 공동운영 계약"
         ],
         "first_screen_move": "공동운영 로고 5국 단말 첫 화면 노출",
-        "section_rotation": "승계 완결기 · 아시아 공동운영 계약 체결"
+        "section_rotation": "승계 완결기 · 아시아 공동운영 계약 체결",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "contract_lock",
+          "receipt_line": "아시아 공동운영 계약 체결 + 5국 공동 표준화 로드맵 + 공동운영 독점 프레임 차단.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "계약을 잠가 다음 전장 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6432,7 +6887,14 @@
           "공개 카드 준비"
         ],
         "first_screen_move": "없음(이사회 단계)",
-        "section_rotation": "승계 완결기 · 분리 최종 표결 1차 보류"
+        "section_rotation": "승계 완결기 · 분리 최종 표결 1차 보류",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "visible_reward",
+          "receipt_line": "1차 보류의 체감 손실과 시총 일시 하락은 있지만, 보류 과정에서 차우진 프레임이 반복적 카드 사용으로 소진되기 시작 + 후일 이사회 공개 카드 준비.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "겉손실 대신 다음 전장 입장권 확보"
       },
       "failure_design": {
         "failure_type": "예측-전환",
@@ -6535,7 +6997,14 @@
           "검증 라인 재구성"
         ],
         "first_screen_move": "없음(내부 전환 단계)",
-        "section_rotation": "승계 완결기 · 차우진의 내려놓음"
+        "section_rotation": "승계 완결기 · 차우진의 내려놓음",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "차우진 CFO의 감사 라인 해체 + 검증 라인으로의 공식 포지션 전환 + 중립 검증 기록 재첨부.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6635,7 +7104,14 @@
           "형제파 프레임 무효화"
         ],
         "first_screen_move": "없음(이사회 단계)",
-        "section_rotation": "승계 완결기 · 공개 카드"
+        "section_rotation": "승계 완결기 · 공개 카드",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "asset_lock",
+          "receipt_line": "매집 경로+배후 차명 연결점 이사회 공개 + 출처 합법성 입증 + 형제파 '외교 리스크' 프레임 최종 무효화 + 우호지분 이탈 경로 역전 단초.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "포지션과 자산 고정"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6735,7 +7211,14 @@
           "지배구조 재편"
         ],
         "first_screen_move": "신규 계열 공식 구조도 등록",
-        "section_rotation": "승계 완결기 · 최종 표결 통과"
+        "section_rotation": "승계 완결기 · 최종 표결 통과",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "디지털 계열 공식 분리 최종 표결 통과 + 지배구조 재편 공식 등록 + 형제파 장외 매집 재매수 여력 소진.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6835,7 +7318,14 @@
           "그룹 승계 확립"
         ],
         "first_screen_move": "생활계정 그룹 로고 공식 첫 화면 가동",
-        "section_rotation": "승계 완결기 · 생활계정 그룹 선포"
+        "section_rotation": "승계 완결기 · 생활계정 그룹 선포",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority_shift",
+          "receipt_line": "생활계정 그룹 공식 선포 + 한국 IT 재편 + 그룹 승계 한 축 공식 확보 + 출범기 첫 전략회의의 '벽돌 더미 속 지도' 표현이 그룹 비전 공식 문구로 격상.",
+          "pain_only_exit": false
+        },
+        "success_pattern": "공식 승인과 권한 확보"
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6856,5 +7346,16 @@
         }
       }
     }
-  ]
+  ],
+  "_work_id": "pantech_cyworld_reborn",
+  "_authority_chain": [
+    "material_ssot/20_pitch/canon/pantech_cyworld_reborn.md",
+    "treatments/preprocess/pantech_cyworld_reborn/source_manifest.json",
+    "treatments/preprocess/pantech_cyworld_reborn/material_bundle_summary.json",
+    "treatments/preprocess/pantech_cyworld_reborn/profile_lock.json",
+    "treatments/preprocess/pantech_cyworld_reborn/phase0_ready_snapshot.json",
+    "treatments/phase0/pantech_cyworld_reborn_phase0_design.json",
+    "treatments/08_pantech_cyworld_reborn_tr_block_070_draft.json"
+  ],
+  "_phase0_ref": "treatments/phase0/pantech_cyworld_reborn_phase0_design.json"
 }

@@ -80,6 +80,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "장현태와 오세진 앞에서는 3년 패턴이 한 번 더 닫혔다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -183,6 +189,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "장현태의 차단 동기 분석 + 우회 경로 설계"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "전무 박성원이 경영기획팀에 직접 전화를 건다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -292,6 +304,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "회의 중 숫자 뒤의 역학 구조 실시간 분석"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "배석 연장 지시가 떨어진다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -390,6 +408,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "오세진의 다음 견제 경로 예측"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "배석권 재확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -487,6 +511,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "컨설팅 보고서 물동량 기준선의 비정상성 즉시 감지"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "이 블록의 보상은 정보다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -595,6 +625,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "월별 요약본의 구조적 누락 패턴 식별 + 대안 프레이밍 최적화"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "대안 문서 완성.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -712,6 +748,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "대안 전달 경로 최적화 — 누가 말해야 임원회의에서 먹히는지를 읽는다"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "임원회의에서 그룹 핵심 계열사의 최대 투자안이 보류되고 시혁의 대안이 검토 안건으로 채택된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -826,6 +868,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "이 블록에서는 직접 사용하지 않음 — 보상 수령 블록"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "보상 4종 동시 발동: ① 대표이사 전사 메일에 '한시혁 사원' 실명 언급 — 전 직원이 읽는다, ② 물류 재설계 TF 실무 간사 발령 — 부장급 사이에 사원 이름이 올라간다, ③ 9층 구석에서 12층 전무실 옆 TF룸으로 자리 이동 — 물리적 위치가 바뀐다, ④ 오세진 CC 탈락 / 박전무 직보 CC 진입 — 결재 구조가 바뀐다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -929,6 +977,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "TF 멤버들의 라인과 성향 파악 — 협력자/적대자 식별"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "TF 내 위치 확립.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1039,6 +1093,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "윤재환 행동 패턴 변화를 통해 장현태의 반격 시작을 감지"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "아크 마무리.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1137,6 +1197,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "TF 멤버 행동 패턴에서 의도 읽기 + 윤재환 역이용 설계"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "감각의 새로운 차원이 열린다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1239,6 +1305,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "현장 입고 구역에서 시스템-실물 괴리를 즉시 감지"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "현장 데이터라는 새로운 증거 계층 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1337,6 +1409,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "오세진의 다음 수(TF 복귀 요청 + 인사평가 의견서)를 사전 감지"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "오세진의 TF 복귀 요청이 전무실에서 '이미 병행 근무로 해결됐다'고 처리된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1439,6 +1517,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "발표 중 윤재환의 미세 반응 감지 + 질문 대응 최적화"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "Lv3 발언권 실증.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1466,7 +1550,13 @@
         "protagonist": "분기별 반품 패턴 증거 확보. 하지만 체력 소모 누적.",
         "antagonist": "장현태는 분기 실적 관리를 위한 반품 조절을 계속하고 있으나 발각 사실을 모름."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "장현태",
+          "before": "현장과 분리된 채 숫자만 만지는 MD사업부장",
+          "after": "분기별 반품 조절 흔적이 드러난 구조적 적대자"
+        }
+      ],
       "foreshadow": [
         "분기별 반품 인정률 패턴은 그 단계에서 장현태의 실적 조작 증거의 핵심 고리가 된다.",
         "시혁의 체력 한계는 다음 단계에서 감각 저하의 물리적 원인으로 회수된다.",
@@ -1525,6 +1615,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "졸면서 본 데이터에서 분기별 반품 조절 패턴을 무의식적으로 감지"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "분기별 반품 조절 패턴이라는 강력한 간접 증거 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1621,6 +1717,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "반품 대기 구역 물량 구성에서 밀어내기 반품 비율을 즉시 감지"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "2개 센터의 현장 데이터 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1719,6 +1821,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "도착한 원본이 '너무 깨끗하다'는 이상을 즉시 감지"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "최부장이 시혁의 편에 서기 시작한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1816,6 +1924,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "본부장 성향 읽기 — 1차 의견을 뒤집기 어렵다는 예측. 이번에는 나쁜 결과를 미리 아는 감각."
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "시혁은 인사평가에서 B+에 그친다 — 그 시점의 B0보다는 올랐지만, TF 성과 대비 부당하게 낮은 평가다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1918,6 +2032,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "대표의 질문 의도 즉시 읽기 — 숫자 비교가 아니라 리스크 확인"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "TF 최종안 대표이사 승인.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2018,6 +2138,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "예산 회의 흐름 읽기 + MD 증액 요청의 실제 용도 감지 + 최적 발언 타이밍 포착"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "Lv5 예산 발언권 획득.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2110,6 +2236,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "서정민의 접촉 의도 읽기 — 단순 원가 반영이 아니라 MD 구조 의심"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "재무팀 차장 서정민이라는 숫자 검증 아군 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2209,6 +2341,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "프로모션 정책 재설계 공지에서 '자체 개선'이 아니라 '흔적 지우기'라는 진짜 의도 감지"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "시혁은 장현태의 움직임 신호를 감지하고 과거 데이터를 백업한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2308,6 +2446,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "전무의 한계 감지 — 본부장과 같은 위계에서 TF 범위 문제를 밀어붙일 수 없는 구조 읽기"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "TF에서 직접 추적은 막혔지만, 재무팀 감사 라인이라는 우회 경로는 살아 있다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2403,6 +2547,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "서정민에게 제공할 데이터의 범위와 프레이밍 최적화"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "재무팀 정기감사 보고서에 MD사업부 비용 구조 이상이 공식 기재된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2433,7 +2583,13 @@
         "protagonist": "물류 실무 진행. 재무팀 감사 보고서 대기.",
         "antagonist": "장현태는 프로모션 정책 재설계 진행 중. 겉으로 자체 개선, 실제로 흔적 지우기."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "최부장",
+          "before": "현장 실무 협력자",
+          "after": "회의록에 시혁의 주도권을 남기는 공식 현장 동맹"
+        }
+      ],
       "foreshadow": [
         "시혁의 '이게 뭐지?' 자문은 그 시점과 다음 단계에서 회수.",
         "정밀검사를 안 받았다는 사실은 감각의 원인이 계속 미스터리로 남는 장치."
@@ -2490,6 +2646,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "이 블록에서는 직접 사용하지 않음. '이게 뭐지?' 자문만."
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "물류 재설계 실무 진행.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2591,6 +2753,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "이 블록에서는 직접 사용하지 않음 — 이전 블록에서 설치한 구조가 자동 작동"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "MD사업부에 공식 소명 요청 발동.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2691,6 +2859,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "소명서 논리 구조의 약점 즉시 감지 — '자체 개선'이 과거를 인정한 것이라는 역설"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "서정민의 대조표가 올라가면서 소명서의 '자체 개선' 논리가 약해진다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2791,6 +2965,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "장현태가 본부장에 의존하는 구조를 약점으로 읽음"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "감사 항목 유보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2882,6 +3062,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "MD 내부 불만의 존재와 균열 가능성 감지"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "MD 내부 균열 인지 + 향후 접점 경로 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2980,6 +3166,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "이 블록에서는 직접 사용하지 않음 — 이전에 설치한 구조가 자동으로 결과를 만듦"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "MD사업부 자체 감사 발동.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3072,6 +3264,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "장현태의 감사 방어 패턴 예측 + 요청 순서 최적화"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "감사 데이터 요청 리스트 전략적 배치 완료.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3169,6 +3367,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "이 블록에서 감각이 작동하지 않음. 감정 없는 기계적 대응 앞에서 무력화."
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "시혁은 감각의 한계를 인정하고, 감각 외의 무기(절차, 서면, 실무)로 보완하는 방법을 배운다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3266,6 +3470,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "이 블록에서는 감각보다 숫자 분석이 주된 무기. 감각은 보조적으로만 작동."
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "서면에서 숫자 불일치를 잡아냄으로써, 감각이 안 통하는 상대도 절차와 숫자로 공략할 수 있다는 것을 증명.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3363,6 +3573,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "장현태의 입꼬리 떨림에서 진짜 불안 감지. 감각 작동 조건 확인."
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "감사 지속 승인.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3390,7 +3606,13 @@
         "protagonist": "체력 한계 + 정밀검사 예약. 자기 관리의 시작.",
         "antagonist": "해당 없음."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "한시혁(자기 자신)",
+          "before": "감각과 체력을 동시에 버티려는 실무자",
+          "after": "자기 관리 필요를 인정하고 정밀검사를 예약한 사람"
+        }
+      ],
       "foreshadow": [
         "정밀검사 예약은 결과가 돌아오는 복선.",
         "감각 흐려짐은 오세진 최후 견제 대응 시 오판 가능성의 복선."
@@ -3445,6 +3667,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "이 블록에서 감각이 흐려지는 것인지 피로인지 불분명. 한계 체감."
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "정밀검사 예약.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3543,6 +3771,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "인사 가중치 변경의 진짜 동기와 오세진 인사 라인 동원 범위 파악"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "시혁이 만든 프로젝트별 기여 문서 목록은 이후 반격의 탄약이 된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3635,6 +3869,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "오세진의 코멘트가 인사위원회에서 어떤 효과를 내는지 읽으려 했으나 피로로 인해 불완전"
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "서정민의 확인서 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3729,6 +3969,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "이 블록에서는 감각에 의존하지 않음. 문서와 증거만 사용."
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "전무가 HR팀장에게 전화를 걸었다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3820,6 +4066,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "팀 충성 전환 감지. 누가 오세진 편에 남아 있고 누가 이미 옮겼는지를 복도 대화에서 읽음."
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "오세진의 팀 내 통제력이 눈에 띄게 약해졌다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3919,6 +4171,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "이 블록에서 감각은 보조적. 결과는 문서와 증거로 만들었다."
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "S등급 확정.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4006,6 +4264,12 @@
           "ability_name": "조직 역학 조감",
           "ability_source": "건강검진 이후 발현 (원인 불명)",
           "ability_used_for": "조직 경계에서 감각이 끊어지는 현상을 처음 체감. 정태호의 의도는 부분적으로 읽힘."
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "계열사 회의 첫 참석 완료.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4057,7 +4321,11 @@
         "investment_type": "데이터 분석 역량의 그룹 레벨 확장 투자",
         "deal_type": "비용 재분류 표준안 작성 (결정적 진행 액션)",
         "leverage_used": "유통 물류 재설계 TF 실적 + 전무 직보 라인 + 오세진 교훈(이름 보호)",
-        "opponent": "정태호(경영지원실 팀장) — 데이터 탈취 2차 시도",
+        "opponent": {
+          "name": "정태호(경영지원실 팀장) — 데이터 탈취 2차 시도",
+          "type": "legacy-normalized",
+          "weakness_exploited": "정태호는 시혁에게 데이터를 선제 공유했지만, 이것은 호의가 아니다."
+        },
         "historical_event": "계열사 합동 물류 효율화 TF 2차 회의에서 3사 비용 항목 재분류 최초 시도",
         "time_pressure": "정태호가 경영지원실 월간 보고서 마감 전에 시혁의 분석을 빼가려 한다",
         "knowledge_used": "물류 재설계 TF에서 쌓은 비용 구조 분석 역량 + 인사전에서 배운 문서 이름 보호 전략",
@@ -4065,7 +4333,13 @@
         "business_sector": "그룹 경영지원실 / 합동 물류 TF",
         "section_rotation": "한일유통 내부 → 그룹 본관 계열사 합동",
         "success_pattern": "숫자의 이름을 맞춰 감각 경계를 돌파하고, 공동 산출물 프레임으로 오너십을 지킨다",
-        "special_ability": "조직 역학 조감 감각 — 조직 경계를 넘어 같은 비용이 다른 이름으로 숨는 구조를 읽어냄"
+        "special_ability": "조직 역학 조감 감각 — 조직 경계를 넘어 같은 비용이 다른 이름으로 숨는 구조를 읽어냄",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "시혁은 세 회사의 비용 항목을 하나의 분류 체계로 재정렬한 첫 번째 사람이 된다.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "discovery",
@@ -4135,7 +4409,11 @@
         "investment_type": "그룹 레벨 발표 역량 투자 시도 (실패)",
         "deal_type": "브리핑 발표 (결정적 진행 액션 — 실패)",
         "leverage_used": "3사 비용 재분류표 + 물류 효율화 절감 수치",
-        "opponent": "윤재경(전략기획 상무) — 형식 요구 / 정태호(경영지원실 팀장) — 번역 탈취",
+        "opponent": {
+          "name": "윤재경(전략기획 상무) — 형식 요구 / 정태호(경영지원실 팀장) — 번역 탈취",
+          "type": "legacy-normalized",
+          "weakness_exploited": "윤재경 상무는 시혁을 깎아내리려는 것이 아니다."
+        },
         "historical_event": "계열사 합동 TF 3차 회의에서 시혁 첫 그룹 레벨 발표 실패",
         "time_pressure": "회의록이 확정되면 정태호 이름이 고착됨",
         "knowledge_used": "유통 물류 재설계 실적 + 재분류표 — 그러나 본사 전략 언어 미장착",
@@ -4143,7 +4421,13 @@
         "business_sector": "그룹 경영지원실 / 합동 물류 TF",
         "section_rotation": "그룹 본관 계열사 합동 (연속)",
         "success_pattern": "해당 없음 — 패배 블록",
-        "special_ability": "감각은 숫자를 읽지만 조직의 공식 언어까지 자동 번역하지는 못한다"
+        "special_ability": "감각은 숫자를 읽지만 조직의 공식 언어까지 자동 번역하지는 못한다",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "이 블록은 회의록에서 시혁의 이름이 탈락한 패배 블록이다.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "humiliation",
@@ -4214,7 +4498,11 @@
         "investment_type": "그룹 레벨 인맥 직접 구축",
         "deal_type": "1:1 면담을 통한 인식 재설정",
         "leverage_used": "재분류표 원본 작성자 메타데이터 + TF 공동 산출물 등록 이력",
-        "opponent": "윤재경(회색 지대) / 정태호(간접)",
+        "opponent": {
+          "name": "윤재경(회색 지대) / 정태호(간접)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "윤재경은 시혁의 한 문장에 반응하지만, 바로 수용하지 않는다."
+        },
         "historical_event": "시혁의 첫 그룹 임원급 1:1 면담",
         "time_pressure": "정태호가 시혁의 직접 접근을 알기 전에 윤재경의 인식을 바꿔야 한다",
         "knowledge_used": "그룹 중기 전략 프레임워크 7축 + KPI 트리",
@@ -4222,7 +4510,13 @@
         "business_sector": "그룹 전략기획 / 합동 물류 TF",
         "section_rotation": "그룹 본관 (회의실 -> 상무실)",
         "success_pattern": "숫자에 전략 축 번호를 달면 임원 눈높이에 맞는다",
-        "special_ability": "감각으로 윤재경의 판단 기준을 읽음"
+        "special_ability": "감각으로 윤재경의 판단 기준을 읽음",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "윤재경 상무와의 첫 1:1 면담 성공.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "tension",
@@ -4287,7 +4581,11 @@
         "investment_type": "그룹 레벨 실무 네트워크 구축",
         "deal_type": "비공식 데이터 맞춤",
         "leverage_used": "재분류표 품질 + 유통 TF 실적 + 감각",
-        "opponent": "해당 없음 (조용한 블록)",
+        "opponent": {
+          "name": "해당 없음",
+          "type": "조용한/내면 블록",
+          "weakness_exploited": "해당 없음"
+        },
         "historical_event": "시혁과 이도현의 첫 만남. 정태호 출처 위조 최초 발각",
         "time_pressure": "낮음",
         "knowledge_used": "전략 프레임워크 7축 + KPI 가중치 + 재분류표",
@@ -4295,7 +4593,13 @@
         "business_sector": "그룹 전략실 / 합동 물류 TF",
         "section_rotation": "그룹 본관 (상무실 -> 구내식당/로비)",
         "success_pattern": "같은 숫자를 다른 프레임에 넣으면 다른 무게가 된다",
-        "special_ability": "감각으로 이도현에게 탈취 의도가 없음을 판별"
+        "special_ability": "감각으로 이도현에게 탈취 의도가 없음을 판별",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "이도현이라는 그룹 전략실 내부 협력자 확보.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "understanding",
@@ -4366,7 +4670,11 @@
         "investment_type": "그룹 레벨 조직 설계 역량 투자",
         "deal_type": "공동 TF 설계안 발표 및 채택 검토 (결정적 진행 액션)",
         "leverage_used": "이도현 템플릿 + 재분류표 원본 + 전략 프레임워크 축3 맵핑 + 유통 물류 재설계 TF 실적",
-        "opponent": "정태호(사무국 확보 시도) / 윤재경(심판 — 검토 중)",
+        "opponent": {
+          "name": "정태호(사무국 확보 시도) / 윤재경(심판 — 검토 중)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "정태호는 시혁이 직접 발표하겠다고 나선 것에 불쾌하다."
+        },
         "historical_event": "계열사 합동 TF 4차 회의. 시혁의 첫 그룹 레벨 조직 설계안 발표",
         "time_pressure": "4차 회의에서 채택되지 않으면 각사 별개 프로젝트로 쪼개질 위험",
         "knowledge_used": "전략 프레임워크 축3 KPI + 이도현 템플릿 + 3사 비용 재분류표 + 유통 TF 운영 경험",
@@ -4374,7 +4682,13 @@
         "business_sector": "그룹 전략기획 / 합동 물류 TF",
         "section_rotation": "그룹 본관 합동 회의실 (재등장)",
         "success_pattern": "숫자가 아니라 판의 구조를 설계하고 프레임으로 포장한 첫 승부. 사무국과 실행 간사를 분리해 행정과 통제를 나눔.",
-        "special_ability": "감각으로 정태호가 사무국 제안을 할 것을 예측하고 설계안에 분리 구조를 미리 포함"
+        "special_ability": "감각으로 정태호가 사무국 제안을 할 것을 예측하고 설계안에 분리 구조를 미리 포함",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "공동 TF 설계안이 TF 검토 안건으로 채택됨.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "ambition",
@@ -4445,7 +4759,11 @@
         "investment_type": "계열사 간 구조 설계 역량 확장",
         "deal_type": "결합 운행 조건표 작성 및 제출 (결정적 진행 액션)",
         "leverage_used": "재분류표 원본 + 유통 물류 데이터 + 이도현 전략실 양식 + 감각(식품 부장의 진짜 방어 대상 판별)",
-        "opponent": "한일식품 물류 부장(영역 방어 — 해소됨)",
+        "opponent": {
+          "name": "한일식품 물류 부장(영역 방어 — 해소됨)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "한일식품 물류 부장이 조건표를 보고 경계한다."
+        },
         "historical_event": "계열사 간 물류 결합 운행 최초 조건표 작성",
         "time_pressure": "윤재경의 검토가 끝나기 전에 실행 간사로서의 성과를 보여줘야 함",
         "knowledge_used": "유통 물류 재설계 데이터 + 식품 원재료 운반 경로 + 공차율 분석 + 계약 구조 이해",
@@ -4453,7 +4771,13 @@
         "business_sector": "그룹 물류 / 유통-식품 결합",
         "section_rotation": "본사 TF룸 + 그룹 본관 (메일 경유)",
         "success_pattern": "상대가 지키려는 것을 읽고 그것을 건드리지 않는 구조를 설계하면 저항이 사라진다.",
-        "special_ability": "감각으로 식품 부장이 지키려는 것이 금액이 아니라 관계임을 판별 — 우선 배정 조건으로 해소"
+        "special_ability": "감각으로 식품 부장이 지키려는 것이 금액이 아니라 관계임을 판별 — 우선 배정 조건으로 해소",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "두 회사의 병목을 한 장의 조건표로 이어 붙인 첫 사례.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "mastery",
@@ -4524,7 +4848,11 @@
         "investment_type": "카드 온존 (장기 투자)",
         "deal_type": "해당 없음 — 패배 블록, 행동 보류",
         "leverage_used": "감각으로 윤재경의 판단 기준 판별 — 폭로자가 아니라 해결자를 택한다",
-        "opponent": "정태호(사무국장 권한 공세) + 장현태 측근 부장(논리 지원)",
+        "opponent": {
+          "name": "정태호(사무국장 권한 공세) + 장현태 측근 부장(논리 지원)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "정태호는 사무국장 권한으로 정당한 절차를 밟고 있다."
+        },
         "historical_event": "정태호의 실행 간사 산하 배치안 제출. 장현태 잔여 세력과 정태호의 첫 연대.",
         "time_pressure": "윤재경이 결정하기 전에 시혁이 대안을 만들어야 한다",
         "knowledge_used": "감각 — 윤재경이 폭로자를 신뢰하지 않을 것이라는 판단",
@@ -4532,7 +4860,13 @@
         "business_sector": "그룹 경영지원실 / 합동 물류 TF",
         "section_rotation": "그룹 본관 경영지원실 + 본사 TF룸",
         "success_pattern": "해당 없음 — 패배 블록",
-        "special_ability": "감각으로 '지금 출처 위조를 터뜨리면 정태호를 죽이지만 윤재경의 신뢰를 잃는다'는 판단"
+        "special_ability": "감각으로 '지금 출처 위조를 터뜨리면 정태호를 죽이지만 윤재경의 신뢰를 잃는다'는 판단",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "이 블록은 정태호의 임명안이 윤재경 앞에 올라간 패배 블록이다.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "restraint",
@@ -4603,7 +4937,11 @@
         "investment_type": "조건 설계를 통한 간접 통제 역량",
         "deal_type": "조건 협상 (결정적 진행 액션)",
         "leverage_used": "출처 위조 정보(온존) + 윤재경의 합리성 판단 기준 + 실행력 독점",
-        "opponent": "정태호(함정 구도에 갇힘)",
+        "opponent": {
+          "name": "정태호(함정 구도에 갇힘)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "정태호는 시혁이 수용했다는 소식에 안심한다."
+        },
         "historical_event": "시혁의 첫 조건 설계 승부. 폭로 없이 상대의 자기 모순을 드러내는 구조 설계 성공.",
         "time_pressure": "윤재경이 임명안을 최종 결정하기 전에 조건을 붙여야 했다",
         "knowledge_used": "정태호의 출처 위조 + 윤재경의 판단 기준 + 조직 절차 이해",
@@ -4611,7 +4949,13 @@
         "business_sector": "그룹 경영지원실 / 합동 물류 TF",
         "section_rotation": "본사 TF룸 + 그룹 본관 (메모 경유)",
         "success_pattern": "직급으로 이기지 못할 때는 조건으로 이긴다. 상대가 자기 모순을 밟는 구조를 설계한다.",
-        "special_ability": "감각으로 정태호의 딜레마를 설계 — 수용해도 거부해도 출처 문제가 드러나는 양갈래"
+        "special_ability": "감각으로 정태호의 딜레마를 설계 — 수용해도 거부해도 출처 문제가 드러나는 양갈래",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "윤재경이 '원본 출처 등재'를 합리적 조건으로 인정.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "counterattack",
@@ -4687,7 +5031,11 @@
         "investment_type": "그룹 레벨 리더십 포지션 확보",
         "deal_type": "공동 TF 킥오프 및 보고 체계 설계 (결정적 진행 액션)",
         "leverage_used": "실행 간사 정식 임명 + 재분류표 원본 + 이도현 템플릿 + 3사 실무자 데이터 독점",
-        "opponent": "정태호(행정 한정, 위험 인식 전환)",
+        "opponent": {
+          "name": "정태호(행정 한정, 위험 인식 전환)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "정태호는 사무국장으로 TF에 이름이 올라가 있지만, 킥오프 회의에서 정태호의 역할은 행정 공지와 회의실 예약이다."
+        },
         "historical_event": "한일그룹 계열사 간 자원 최적화 TF 정식 출범. 시혁의 그룹 레벨 플레이어 전환.",
         "time_pressure": "킥오프 회의에서 3사 실무자의 합의를 얻어야 보고 체계가 정착됨",
         "knowledge_used": "이도현 템플릿 + 전략 프레임워크 축3 KPI + 3사 물류 데이터 + 유통 TF 운영 경험",
@@ -4695,7 +5043,13 @@
         "business_sector": "그룹 자원 최적화 TF",
         "section_rotation": "그룹 본관 합동 회의실 (TF 킥오프)",
         "success_pattern": "직급이 아니라 리듬으로 사람을 움직인다. 보고 주기를 정하는 사람이 실질 리더다.",
-        "special_ability": "감각으로 3사 실무자들의 수용 조건을 읽고, 과시 없이 리듬 변경으로 통제 확보"
+        "special_ability": "감각으로 3사 실무자들의 수용 조건을 읽고, 과시 없이 리듬 변경으로 통제 확보",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "공동 TF 정식 출범.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "validation",
@@ -4766,7 +5120,11 @@
         "investment_type": "감사 인프라 제공을 통한 간접 영향력 확보",
         "deal_type": "외부 감사 전면 투입 트리거 (결정적 진행 액션)",
         "leverage_used": "공동 TF 3사 데이터 접근권 + 감사 경험 + 전무 직보 라인",
-        "opponent": "장현태(최종전 개시) + 정태호(연쇄 위기)",
+        "opponent": {
+          "name": "장현태(최종전 개시) + 정태호(연쇄 위기)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "장현태는 이미 MD사업부장에서 밀려났지만, 계열사 간 자금 이동의 흔적은 장현태가 부장이던 시절에 만들어진 것이다."
+        },
         "historical_event": "한일그룹 계열사 간 자금 이동 전면 감사 시작. 장현태 축 최종전 개시.",
         "time_pressure": "감사 시작 전에 데이터 정리가 완료되어야 시혁이 제공자 위치를 유지할 수 있다",
         "knowledge_used": "MD사업부 감사 경험 + 3사 비용 재분류표 + 건설 현장 지원비 데이터",
@@ -4774,7 +5132,13 @@
         "business_sector": "그룹 감사 / MD사업부 구조조정 / 계열사 자금 이동",
         "section_rotation": "본사 전무실/대표이사실 + 그룹 본관",
         "success_pattern": "폭로자가 아니라 인프라가 된다. 데이터를 제공하되 판단은 맡기지 않는다.",
-        "special_ability": "감각 이전에 숫자가 말해 줌 — 건설→유통 판촉 지원금의 비정상성을 데이터 구조에서 즉시 포착"
+        "special_ability": "감각 이전에 숫자가 말해 줌 — 건설→유통 판촉 지원금의 비정상성을 데이터 구조에서 즉시 포착",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "외부 감사 전면 투입 결정.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "resolve",
@@ -4854,7 +5218,11 @@
         "investment_type": "법무 영역 협력 네트워크 구축",
         "deal_type": "감사 지원 조건 설계 (결정적 진행 액션)",
         "leverage_used": "3사 데이터 접근권 + 감각(장현태 측 서류 조작 포착) + 최수연 신뢰",
-        "opponent": "장현태(서류 조작 방어) — 간접 대응",
+        "opponent": {
+          "name": "장현태(서류 조작 방어) — 간접 대응",
+          "type": "legacy-normalized",
+          "weakness_exploited": "장현태는 감사 소식을 듣고 즉각 방어에 들어간다."
+        },
         "historical_event": "법무팀 최수연 변호사 감사 지원 배치. 장현태 측 서류 급조 시작.",
         "time_pressure": "장현태 측이 서류를 완성하기 전에 감사팀의 데이터 요청 형식에 일자 정렬을 포함시켜야 한다",
         "knowledge_used": "감사 경험 + 감각(메일 빈도/프린터 사용량 변화 포착) + 법적 절차 이해",
@@ -4862,7 +5230,13 @@
         "business_sector": "법무 / 그룹 감사 / MD사업부 자금 이동",
         "section_rotation": "본사 (TF룸 -> 법무팀 회의실)",
         "success_pattern": "증거를 직접 찾지 않는다. 감사팀이 증거를 찾을 수 있는 조건만 만든다.",
-        "special_ability": "감각으로 장현태 측의 서류 조작을 메일 빈도와 프린터 사용량 변화에서 포착"
+        "special_ability": "감각으로 장현태 측의 서류 조작을 메일 빈도와 프린터 사용량 변화에서 포착",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "최수연 변호사와의 첫 협력 관계 수립.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "calculation",
@@ -4933,7 +5307,11 @@
         "investment_type": "증거 보전 실패에서 교훈 획득",
         "deal_type": "해당 없음 — 패배 블록",
         "leverage_used": "IT팀 접근 + 최수연 법적 조언",
-        "opponent": "장현태 측근 부장(증거 인멸)",
+        "opponent": {
+          "name": "장현태 측근 부장(증거 인멸)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "장현태 측근 부장은 폴더를 삭제하면서 동시에 건설 쪽 담당자에게도 연락해 건설 내부 백업을 지우게 했다."
+        },
         "historical_event": "감사 중 MD사업부 시절 원본 품의서 폴더 삭제 사건",
         "time_pressure": "삭제된 데이터의 복구 가능 기간이 제한되어 있다",
         "knowledge_used": "IT 시스템 삭제 로그 구조 + 법적 자료 삭제 의미(최수연 조언)",
@@ -4941,7 +5319,13 @@
         "business_sector": "그룹 감사 / 경영관리본부 / IT",
         "section_rotation": "본사 (TF룸 -> IT팀 -> 법무팀)",
         "success_pattern": "해당 없음 — 패배 블록",
-        "special_ability": "감각이 아니라 404 에러가 먼저 알려줌 — 감각의 한계(물리적으로 사라진 데이터는 읽을 수 없다)"
+        "special_ability": "감각이 아니라 404 에러가 먼저 알려줌 — 감각의 한계(물리적으로 사라진 데이터는 읽을 수 없다)",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "이 블록은 원본 품의서가 사라진 패배 블록이다.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "shock",
@@ -5012,7 +5396,11 @@
         "investment_type": "이사회 레벨 신뢰 자본 구축",
         "deal_type": "감사위원회 질의 응답 (결정적 진행 액션)",
         "leverage_used": "3사 데이터 + 삭제 로그 + 아카이브 원본 + 최수연의 법적 원칙",
-        "opponent": "장현태(정상 거래 프레임 — 무력화)",
+        "opponent": {
+          "name": "장현태(정상 거래 프레임 — 무력화)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "장현태는 감사위원회 보고 자리에 배석하지 못한다 — 이해당사자이기 때문이다."
+        },
         "historical_event": "시혁의 첫 이사회 감사위원회 배석 및 사외이사 직접 질의 응답",
         "time_pressure": "감사위원회 보고 자리에서 즉시 응답해야 하는 상황",
         "knowledge_used": "감사 데이터 전체 + 법적 선(해석 불가) + 사실 나열 기법",
@@ -5020,7 +5408,13 @@
         "business_sector": "이사회 감사위원회 / 그룹 감사",
         "section_rotation": "본사 (법무팀 -> 이사회 회의실)",
         "success_pattern": "해석을 붙이지 않고 사실만 나열하면 듣는 사람이 스스로 결론을 내린다.",
-        "special_ability": "감각으로 사외이사의 질문이 장현태 대변이 아니라 균형 확인임을 판별 — 방어가 아닌 사실 제공으로 대응"
+        "special_ability": "감각으로 사외이사의 질문이 장현태 대변이 아니라 균형 확인임을 판별 — 방어가 아닌 사실 제공으로 대응",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "이사회 감사위원회 배석 및 사외이사 질의 응답 완료.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "composure",
@@ -5086,7 +5480,11 @@
         "investment_type": "증거 경로 설계",
         "deal_type": "서류 대조 및 경로 제공 (조용한 진행 액션)",
         "leverage_used": "품의서 3건 + IT 서버 이메일 아카이브 존재 인지 + 감사팀 열람 권한",
-        "opponent": "해당 없음 (조용한 블록)",
+        "opponent": {
+          "name": "해당 없음",
+          "type": "조용한/내면 블록",
+          "weakness_exploited": "해당 없음"
+        },
         "historical_event": "사전 품의 메일 경로 최초 발견",
         "time_pressure": "낮음 — 감사 진행 중 루틴 내에서 수행",
         "knowledge_used": "결재 시스템 구조 + IT 이메일 서버 보존 정책 + 품의서 사전 승인 절차",
@@ -5094,7 +5492,13 @@
         "business_sector": "그룹 감사 / IT / 재무",
         "section_rotation": "본사 TF룸 (단일 장소)",
         "success_pattern": "결전은 회의실이 아니라 서류전에서 열린다. 빈칸을 메우는 것이 진짜 승부.",
-        "special_ability": "감각 없이 절차적 역추적으로 경로 발견 — 감각에 의존하지 않는 실무 역량"
+        "special_ability": "감각 없이 절차적 역추적으로 경로 발견 — 감각에 의존하지 않는 실무 역량",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "사전 품의 메일 경로 발견.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "patience",
@@ -5160,7 +5564,11 @@
         "investment_type": "설계한 구조의 자동 수확",
         "deal_type": "해당 없음 — 관찰 블록",
         "leverage_used": "사전 품의 메일 + 감사팀 소명 절차 + 감각(측근 부장 충성 이탈 판별)",
-        "opponent": "장현태(침묵 방어) — 간접",
+        "opponent": {
+          "name": "장현태(침묵 방어) — 간접",
+          "type": "legacy-normalized",
+          "weakness_exploited": "장현태는 침묵으로 방어한다."
+        },
         "historical_event": "장현태-측근 부장 연대 최초 균열. 측근 부장 변호사 선임.",
         "time_pressure": "측근 부장의 소명서 제출 기한이 다가오고 있다",
         "knowledge_used": "감사 절차 + 소명 프로세스 + 감각",
@@ -5168,7 +5576,13 @@
         "business_sector": "그룹 감사 / 경영관리본부",
         "section_rotation": "본사 TF룸 (관찰 위치)",
         "success_pattern": "적이 약해서가 아니라 구조가 무너져서 갈라진다. 설계한 조건이 자동으로 작동할 때 개입하지 않는다.",
-        "special_ability": "감각으로 측근 부장의 눈에서 충성이 빠지는 것을 포착"
+        "special_ability": "감각으로 측근 부장의 눈에서 충성이 빠지는 것을 포착",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "장현태-측근 부장 연대에 균열 발생.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "anticipation",
@@ -5236,7 +5650,11 @@
         "investment_type": "원칙 기반 포지션 강화",
         "deal_type": "합의 제안 거절(판단 이관) — 결정적 진행 액션",
         "leverage_used": "감사 절차의 독립성 + 데이터 제공자 포지션의 중립성",
-        "opponent": "장현태(합의 시도 — 실패)",
+        "opponent": {
+          "name": "장현태(합의 시도 — 실패)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "장현태의 제안은 자기를 살리는 선택이다."
+        },
         "historical_event": "장현태-시혁 첫 1:1 대면. 합의 제안 및 거절.",
         "time_pressure": "장현태의 합의 시도는 감사 최종 보고 전에 끝내야 하는 시한이 있었다",
         "knowledge_used": "감각(장현태가 원하는 것은 퇴직금이 아니라 네트워크 보존) + 그 단계부터의 구조 이해",
@@ -5244,7 +5662,13 @@
         "business_sector": "그룹 감사 / MD사업부 구조조정",
         "section_rotation": "본사 1층 카페 (비공식 장소)",
         "success_pattern": "판단을 직접 내리지 않고 절차에 맡긴다. 데이터 제공자는 합의 당사자가 아니다.",
-        "special_ability": "감각으로 장현태의 진짜 의도를 읽음 — 퇴직금이 아니라 구조/네트워크 보존"
+        "special_ability": "감각으로 장현태의 진짜 의도를 읽음 — 퇴직금이 아니라 구조/네트워크 보존",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "시혁은 장현태의 합의 제안을 거절했다.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "determination",
@@ -5315,7 +5739,11 @@
         "investment_type": "위기 관리",
         "deal_type": "인사 재분류 이관 메모 (부분 방어 액션)",
         "leverage_used": "전략 축 3번 실행 보고서 공식 담당자 지위 + 윤재경 라인",
-        "opponent": "장현태(인사/외부/정태호 세 방향 동시 공격)",
+        "opponent": {
+          "name": "장현태(인사/외부/정태호 세 방향 동시 공격)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "장현태는 자기가 직접 나서지 않는다."
+        },
         "historical_event": "장현태의 최후 총공세 — 세 방향 동시 압박",
         "time_pressure": "인사 재분류안이 처리되기 전에 전략실 관할 이관을 확보해야 했다",
         "knowledge_used": "TF 직무의 전략실 관할 소속 근거 + 윤재경 라인 활용",
@@ -5323,7 +5751,13 @@
         "business_sector": "인사 / 외부 이해관계자 / 경영지원실 / 그룹 전략",
         "section_rotation": "본사 + 그룹 본관 (다방면)",
         "success_pattern": "가장 급한 것부터 처리한다. 절차적 방어로 시간을 번다.",
-        "special_ability": "감각으로 세 건의 동시 발생이 우연이 아닌 장현태의 총공세임을 판별 + 카드 소진 상태 확인"
+        "special_ability": "감각으로 세 건의 동시 발생이 우연이 아닌 장현태의 총공세임을 판별 + 카드 소진 상태 확인",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "survival",
+          "receipt_line": "인사 재분류안은 전략실 관할로 이관시켜 일단 막았다.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "pressure",
@@ -5394,7 +5828,11 @@
         "investment_type": "감사 인프라 역할 완수",
         "deal_type": "감사 최종 보고 배석 (결정적 진행 액션)",
         "leverage_used": "전체 증거 체인 + 최수연 법적 검토 + 감사팀 보고서",
-        "opponent": "장현태(전 방어선 붕괴) / 정태호(자기 모순 무력화)",
+        "opponent": {
+          "name": "장현태(전 방어선 붕괴) / 정태호(자기 모순 무력화)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "장현태는 최종 보고 자리에 참석하지 못한다."
+        },
         "historical_event": "한일유통 MD사업부 계열사 자금 이동 감사 최종 보고. 장현태 측 전 방어선 붕괴.",
         "time_pressure": "최종 보고 당일 — 이 자리에서 증거 체인이 완성되어야 함",
         "knowledge_used": "전체 감사 데이터 + 증거 경로 + 법적 절차",
@@ -5402,7 +5840,13 @@
         "business_sector": "이사회 / 그룹 감사 / MD사업부",
         "section_rotation": "본사 이사회 회의실",
         "success_pattern": "증거를 직접 꺼내지 않고, 감사팀이 증거를 정리할 수 있는 경로를 만들어 온 결과의 수확.",
-        "special_ability": "감각으로 장현태의 카드가 전부 소진되었음을 확인 — 남은 것은 정리뿐"
+        "special_ability": "감각으로 장현태의 카드가 전부 소진되었음을 확인 — 남은 것은 정리뿐",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "감사팀 최종 보고 완료.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "catharsis",
@@ -5473,7 +5917,11 @@
         "investment_type": "누적 성과 수확",
         "deal_type": "인사 발령 수령 (결정적 진행 액션)",
         "leverage_used": "전체 감사 기여 + 공동 TF 성과 + 전무/대표이사 인지",
-        "opponent": "해당 없음 — 장현태 퇴장",
+        "opponent": {
+          "name": "해당 없음",
+          "type": "조용한/내면 블록",
+          "weakness_exploited": "해당 없음"
+        },
         "historical_event": "장현태 권고사직. MD사업부 재편. 시혁 팀장 직무대행 발령.",
         "time_pressure": "없음 — 정리 블록",
         "knowledge_used": "해당 없음 — 수확 블록",
@@ -5481,7 +5929,13 @@
         "business_sector": "인사 / 경영기획팀 / 그룹 TF",
         "section_rotation": "본사 (전무실 -> 경영기획팀 사무실)",
         "success_pattern": "적대축이 정리되면 빈 자리를 자기가 채운다. 누적 성과가 인사 발령으로 돌아온다.",
-        "special_ability": "감각으로 팀장 자리에서 보이는 것이 사원 자리와 다르다는 것을 즉시 인지 — 다음 전장의 윤곽이 읽힌다"
+        "special_ability": "감각으로 팀장 자리에서 보이는 것이 사원 자리와 다르다는 것을 즉시 인지 — 다음 전장의 윤곽이 읽힌다",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "장현태 퇴진.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "triumph",
@@ -5548,7 +6002,11 @@
         "investment_type": "전장 분석",
         "deal_type": "빈 구조 식별 (준비 액션)",
         "leverage_used": "팀장 직무대행 시야 + 감각(구조 읽기) + 이후 여러 단계 누적 경험",
-        "opponent": "그룹 전략실장(예고)",
+        "opponent": {
+          "name": "그룹 전략실장(예고)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "해당 없음."
+        },
         "historical_event": "장현태 퇴진 후 빈 구조 최초 조감",
         "time_pressure": "그룹 전략실이 먼저 움직이기 전에 구조를 파악해야 한다",
         "knowledge_used": "유통 내부 결재선 + MD사업부 자금 구조 + 계열사 데이터 거버넌스 현황",
@@ -5556,7 +6014,13 @@
         "business_sector": "경영기획 / 그룹 전략 / MD사업부",
         "section_rotation": "본사 경영기획팀 사무실 (단일)",
         "success_pattern": "누가 빠졌는지보다 어떤 구조가 비었는지를 먼저 읽는다.",
-        "special_ability": "팀장 자리에서의 감각 — 사람이 아니라 구조의 빈 자리가 먼저 보인다"
+        "special_ability": "팀장 자리에서의 감각 — 사람이 아니라 구조의 빈 자리가 먼저 보인다",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "빈 구조 3건 식별.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "surveying",
@@ -5625,7 +6089,11 @@
         "investment_type": "선택지 확보",
         "deal_type": "정식 조직 제안 수령 및 보류 (결정적 진행 액션)",
         "leverage_used": "감각(강민호의 의도 판별) + 라인 2개 보유 상태",
-        "opponent": "강민호(견제 — 후원의 형태)",
+        "opponent": {
+          "name": "강민호(견제 — 후원의 형태)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "강민호의 제안에는 조건이 있다."
+        },
         "historical_event": "시혁과 강민호 첫 1:1 대면. 그룹 전략실 정식 조직 제안.",
         "time_pressure": "9월 그룹 전략실 조직 개편 전 답변 필요",
         "knowledge_used": "감각 + 조직 구조 이해 + 라인 독립성의 가치",
@@ -5633,7 +6101,13 @@
         "business_sector": "그룹 전략실 / 유통 경영기획",
         "section_rotation": "그룹 본관 17층 임원 식당",
         "success_pattern": "즉답하지 않는다. 골라지는 것이 아니라 고르는 위치를 유지한다.",
-        "special_ability": "감각으로 후원의 형태를 한 견제를 판별 — 라인 2개를 1개로 줄이고 산하에 넣는 구도"
+        "special_ability": "감각으로 후원의 형태를 한 견제를 판별 — 라인 2개를 1개로 줄이고 산하에 넣는 구도",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "survival",
+          "receipt_line": "그룹 전략실장과의 첫 직접 대면.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "wariness",
@@ -5699,7 +6173,11 @@
         "investment_type": "선택지 유지를 위한 시간 매입",
         "deal_type": "승진 보류 요청 (패배에 가까운 결정적 액션)",
         "leverage_used": "TF 안착 논리 + 전무와의 신뢰 관계",
-        "opponent": "구조적 함정 (강민호 제안 vs 대표이사 승진)",
+        "opponent": {
+          "name": "구조적 함정 (강민호 제안 vs 대표이사 승진)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "이것은 적의 공격이 아니다."
+        },
         "historical_event": "시혁의 팀장 정식 승진 제안 및 보류",
         "time_pressure": "강민호 답변 기한(9월) + 대표이사 승진 제안 응답 기대",
         "knowledge_used": "감각(승진이 유통 묶어두기임을 판별) + 조직 직제 이해(팀장+TF 겸임 불가)",
@@ -5707,7 +6185,13 @@
         "business_sector": "유통 경영기획 / 그룹 전략실",
         "section_rotation": "본사 전무실",
         "success_pattern": "해당 없음 — 패배에 가까운 선택. 보류만으로는 답이 아니다.",
-        "special_ability": "감각으로 팀장 승진이 유통 묶어두기임을 판별 — 강민호 제안의 유통 버전"
+        "special_ability": "감각으로 팀장 승진이 유통 묶어두기임을 판별 — 강민호 제안의 유통 버전",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "이 블록은 정식 팀장 승진을 보류한 패배에 가까운 선택 블록이다.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "dilemma",
@@ -5755,7 +6239,13 @@
         "protagonist": "선택지 C 설계. 양쪽 묶어두기의 역이용 구조. 승진 목표에서 구조 변경 목표로 전환.",
         "antagonist": "시간 압박 — 강민호 9월 기한, 대표이사 인내 한계."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "강민호",
+          "before": "그룹 전략실 제안자",
+          "after": "시혁이 역제안할 대상으로 재설계한 협상 상대"
+        }
+      ],
       "genre_ext": {
         "type": "office_power_profile",
         "capital_before": "Lv7+ 팀장 직무대행(유지) + TF 겸임(유지) + 강민호 제안 보류 + 팀장 승진 보류 + 제3의 답 필요 + 시간 압박",
@@ -5766,7 +6256,11 @@
         "investment_type": "조직 설계 역량의 자기 적용",
         "deal_type": "선택지 C 설계 (내적 결정적 액션)",
         "leverage_used": "TF 설계 경험 + 조건 설계 역량 + 양쪽의 시혁 필요성",
-        "opponent": "시간 압박",
+        "opponent": {
+          "name": "시간 압박",
+          "type": "legacy-normalized",
+          "weakness_exploited": "직접 적대 없음."
+        },
         "historical_event": "시혁이 처음으로 자기 자리를 직접 설계",
         "time_pressure": "9월 첫째 주 강민호 기한 + 대표이사 인내 한계",
         "knowledge_used": "유통 조직 직제 + 그룹 전략실 보고 체계 + TF 운영 구조",
@@ -5774,7 +6268,13 @@
         "business_sector": "유통 경영기획 / 그룹 전략실",
         "section_rotation": "본사 TF룸 (단일)",
         "success_pattern": "묶이려는 구도를 역이용한다. 양쪽에서 필요한 사람이 되면 양쪽 조건을 시혁이 정할 수 있다.",
-        "special_ability": "조직 설계 감각 — 남의 조직이 아니라 자기 자리를 직접 설계"
+        "special_ability": "조직 설계 감각 — 남의 조직이 아니라 자기 자리를 직접 설계",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "선택지 C 설계 완료.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "clarity",
@@ -5823,7 +6323,13 @@
         "protagonist": "정밀검사 결과 확인. 감각의 정체 열어 둠. 감각이 아니라 판단으로 선택하겠다는 내적 전환.",
         "antagonist": "해당 없음."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "한시혁(자기 자신)",
+          "before": "감각의 정체를 답으로 받아내려던 사람",
+          "after": "감각보다 판단으로 자리를 고르겠다고 정한 사람"
+        }
+      ],
       "genre_ext": {
         "type": "office_power_profile",
         "capital_before": "Lv7+ 팀장 직무대행 + TF 겸임 + 선택지 C 설계 완료(유통 팀장+TF 유통 산하+그룹 보고 유지) + 양쪽 제안 대응안 확보",
@@ -5834,7 +6340,11 @@
         "investment_type": "내적 전환",
         "deal_type": "해당 없음 — 내면 블록",
         "leverage_used": "이후 여러 단계에서의 경험 — 감각 없이도 판을 짤 수 있다는 증명",
-        "opponent": "해당 없음 (조용한 블록)",
+        "opponent": {
+          "name": "해당 없음",
+          "type": "조용한/내면 블록",
+          "weakness_exploited": "해당 없음"
+        },
         "historical_event": "정밀검사 결과 확인. 감각의 정체에 대한 답을 열어 둠.",
         "time_pressure": "내일 선택지 C 제시 — 내적 전환과 외적 행동의 전야",
         "knowledge_used": "감각 흔들림 + 프레임 학습 + 조건 설계 — 감각 보완 역사",
@@ -5842,7 +6352,13 @@
         "business_sector": "해당 없음 — 개인",
         "section_rotation": "자취방 (첫 등장)",
         "success_pattern": "답을 확정하지 않는다. 감각이 무엇이든 판단으로 선택한다.",
-        "special_ability": "감각의 정체를 묻는 대신, 감각과 판단의 관계를 재정의 — 끌려다니지 않고 함께 쓴다"
+        "special_ability": "감각의 정체를 묻는 대신, 감각과 판단의 관계를 재정의 — 끌려다니지 않고 함께 쓴다",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "정밀검사 결과: 특이 소견 없음.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "acceptance",
@@ -5892,7 +6408,13 @@
         "protagonist": "감각에 '조감'이라는 이름. 판단과 감각의 관계 정의. 선택지 C 제시 준비 완료.",
         "antagonist": "해당 없음."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "이도현",
+          "before": "전략실 내부 실무 연결자",
+          "after": "강민호 미팅 창구를 먼저 열어 주는 선제 조력자"
+        }
+      ],
       "genre_ext": {
         "type": "office_power_profile",
         "capital_before": "Lv7+ 팀장 직무대행 + TF 겸임 + 선택지 C 확정 + 정밀검사 정상(감각 정체 미결) + 감각 의존 탈피 선언",
@@ -5903,7 +6425,11 @@
         "investment_type": "자기 정체성 확립",
         "deal_type": "해당 없음 — 내적 전환 블록",
         "leverage_used": "이후 여러 단계 전체 경험 — 감각이 통한 순간과 안 통한 순간의 총합",
-        "opponent": "해당 없음",
+        "opponent": {
+          "name": "해당 없음",
+          "type": "조용한/내면 블록",
+          "weakness_exploited": "해당 없음"
+        },
         "historical_event": "시혁이 감각에 '조감'이라는 이름을 붙임",
         "time_pressure": "오늘 오전 강민호 미팅",
         "knowledge_used": "감각의 성공/실패 이력 전체 + 정밀검사 결과",
@@ -5911,7 +6437,13 @@
         "business_sector": "해당 없음 — 개인",
         "section_rotation": "지하철 / 이동 중",
         "success_pattern": "이름을 붙이면 관계가 정해진다. 도구에 이름을 붙이면 도구에 끌려다니지 않는다.",
-        "special_ability": "감각을 초능력으로도 착각으로도 규정하지 않고, '조감'이라는 도구로 재정의"
+        "special_ability": "감각을 초능력으로도 착각으로도 규정하지 않고, '조감'이라는 도구로 재정의",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "survival",
+          "receipt_line": "감각에 '조감'이라는 이름을 붙임.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "naming",
@@ -5983,7 +6515,11 @@
         "investment_type": "조건 협상을 통한 라인 설계",
         "deal_type": "선택지 C 양쪽 제시 (결정적 진행 액션)",
         "leverage_used": "조감(양쪽의 핵심 이해 판별) + 선택지 C 구조 설계 + 양쪽의 시혁 필요성",
-        "opponent": "해당 없음 — 양쪽 모두 보류(거절 아님)",
+        "opponent": {
+          "name": "해당 없음",
+          "type": "조용한/내면 블록",
+          "weakness_exploited": "해당 없음"
+        },
         "historical_event": "시혁이 처음으로 양쪽 상위자에게 자기 조건을 동시에 제시",
         "time_pressure": "9월 그룹 전략실 조직 개편 기한",
         "knowledge_used": "조감 — 강민호는 보고서 체면, 대표이사는 유통 잔류를 원한다는 판별",
@@ -5991,7 +6527,13 @@
         "business_sector": "그룹 전략실 / 유통 경영기획",
         "section_rotation": "그룹 본관 -> 본사 전무실",
         "success_pattern": "양쪽의 핵심 이해를 건드리지 않는 구조를 설계하면 양쪽 모두 거절하기 어렵다.",
-        "special_ability": "조감으로 강민호(보고서 체면)와 대표이사(유통 잔류)의 핵심 이해를 정확히 분리"
+        "special_ability": "조감으로 강민호(보고서 체면)와 대표이사(유통 잔류)의 핵심 이해를 정확히 분리",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "선택지 C를 양쪽에 제시 완료.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "initiative",
@@ -6062,7 +6604,11 @@
         "investment_type": "조건 설계의 장기 수확 — B48에서 온존시킨 카드의 자연 폭발",
         "deal_type": "해당 없음 — 정태호 자멸",
         "leverage_used": "출처 위조 카드 — 직접 쓰지 않았지만 자연스럽게 작동",
-        "opponent": "정태호(최종 공세 — 자멸)",
+        "opponent": {
+          "name": "정태호(최종 공세 — 자멸)",
+          "type": "legacy-normalized",
+          "weakness_exploited": "정태호는 출처 문제가 드러나면서 자기 자리가 위험해졌다."
+        },
         "historical_event": "정태호 사무국장 해임. 출처 위조 공식 노출. 이후 여러 단계 정태호 축 완결.",
         "time_pressure": "조직 개편 일정 내 정태호 처리 완료",
         "knowledge_used": "이도현 정보 + 카드 온존 전략 + 출처 등재 조건 — 전체가 연쇄 작동",
@@ -6070,7 +6616,13 @@
         "business_sector": "그룹 전략실 / 경영지원실",
         "section_rotation": "그룹 본관 + 본사",
         "success_pattern": "카드를 직접 쓰지 않아도, 조건을 설계해 두면 시스템이 카드를 터뜨린다.",
-        "special_ability": "조감으로 정태호의 마지막 공세가 자멸로 끝날 것을 판단 — 반격 불필요"
+        "special_ability": "조감으로 정태호의 마지막 공세가 자멸로 끝날 것을 판단 — 반격 불필요",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "정태호 사무국장 해임.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "quiet_justice",
@@ -6141,7 +6693,11 @@
         "investment_type": "누적 성과 최종 수확",
         "deal_type": "라인 확정 (최종 결정적 액션)",
         "leverage_used": "선택지 C 구조 + 양쪽의 시혁 필요성 + 조감",
-        "opponent": "해당 없음",
+        "opponent": {
+          "name": "해당 없음",
+          "type": "조용한/내면 블록",
+          "weakness_exploited": "해당 없음"
+        },
         "historical_event": "한시혁 경영기획팀장 정식 발령. 그룹 구조조정 TF 실무총괄. 라인 선택권 확보.",
         "time_pressure": "없음 — 수확 블록",
         "knowledge_used": "전체 ARC 누적 경험",
@@ -6149,7 +6705,13 @@
         "business_sector": "유통 경영기획 / 그룹 전략",
         "section_rotation": "본사 (전무실 -> 경영기획팀 사무실)",
         "success_pattern": "자기 자리를 직접 설계하고, 양쪽의 승인을 받아, 누구에게도 묶이지 않는 구조를 만든다.",
-        "special_ability": "조감 — 양쪽의 핵심 이해를 분리하고, 충돌하지 않는 구조를 설계"
+        "special_ability": "조감 — 양쪽의 핵심 이해를 분리하고, 충돌하지 않는 구조를 설계",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "라인 선택권 확보.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "fulfillment",
@@ -6198,7 +6760,13 @@
         "protagonist": "경영기획팀장 첫 출근. 조감은 자연스럽게 작동하지만 특별하지 않다. 모르는 채로 살기로 함.",
         "antagonist": "해당 없음."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "한일유통 경영기획팀",
+          "before": "시혁이 지나가던 부서",
+          "after": "시혁을 팀장으로 호명하는 자기 조직"
+        }
+      ],
       "genre_ext": {
         "type": "office_power_profile",
         "capital_before": "Lv8 경영기획팀장 + 그룹 구조조정 TF 실무총괄 + 전략실/대표 동시 보고 라인 + 라인 선택권 확보 + 이름 3곳 동시 등재",
@@ -6209,7 +6777,11 @@
         "investment_type": "해당 없음 — 마무리",
         "deal_type": "해당 없음 — 마지막 블록",
         "leverage_used": "해당 없음",
-        "opponent": "해당 없음",
+        "opponent": {
+          "name": "해당 없음",
+          "type": "조용한/내면 블록",
+          "weakness_exploited": "해당 없음"
+        },
         "historical_event": "한시혁 경영기획팀장 첫 출근일",
         "time_pressure": "없음",
         "knowledge_used": "전체 경험의 내재화",
@@ -6217,7 +6789,13 @@
         "business_sector": "경영기획",
         "section_rotation": "본사 경영기획팀 사무실",
         "success_pattern": "끝이 아니라 시작. 특별하지 않은 아침이 도착의 증거.",
-        "special_ability": "조감이 자연스럽게 작동하지만 더 이상 특별하게 여기지 않는다. 도구가 몸에 배었다."
+        "special_ability": "조감이 자연스럽게 작동하지만 더 이상 특별하게 여기지 않는다. 도구가 몸에 배었다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "경영기획팀장으로서의 첫 아침.",
+          "pain_only_exit": false
+        }
       },
       "emotional_beat": {
         "type": "quiet_beginning",
@@ -6242,5 +6820,16 @@
         2
       ]
     }
+  ],
+  "_work_id": "office_checkup_next_day",
+  "_phase0_ref": "treatments/phase0/office_checkup_next_day_phase0_design.json",
+  "_authority_chain": [
+    "material_ssot/20_pitch/canon/office_checkup_next_day.md",
+    "treatments/preprocess/office_checkup_next_day/source_manifest.json",
+    "treatments/preprocess/office_checkup_next_day/material_bundle_summary.json",
+    "treatments/preprocess/office_checkup_next_day/profile_lock.json",
+    "treatments/preprocess/office_checkup_next_day/phase0_ready_snapshot.json",
+    "treatments/phase0/office_checkup_next_day_phase0_design.json",
+    "treatments/07_office_checkup_next_day_tr_block_070_draft.json"
   ]
 }

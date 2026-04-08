@@ -867,6 +867,143 @@ def _build_rationale_digest_from_carryover(semantic_carryover: dict | None) -> s
     return "\n".join(parts[:8])
 
 
+def _build_inventory_preview(raw: Any, *, limit: int = 3, text_limit: int = 40) -> list[str]:
+    preview: list[str] = []
+    for item in _coerce_inventory_items(raw)[: max(0, int(limit or 0))]:
+        label = _inventory_item_key(item)
+        if not label:
+            label = _clip_text(item, text_limit)
+        if label and label not in preview:
+            preview.append(label)
+    return preview
+
+
+def _build_stage2_carryover_authority_summary(refined_arc: dict | None) -> dict | None:
+    if not isinstance(refined_arc, dict):
+        return None
+
+    state_constraints = refined_arc.get("state_constraints")
+    joint_docs = refined_arc.get("joint_docs")
+    semantic_carryover = refined_arc.get("semantic_carryover")
+    if not isinstance(state_constraints, dict):
+        state_constraints = {}
+    if not isinstance(joint_docs, dict):
+        joint_docs = {}
+    if not isinstance(semantic_carryover, dict):
+        semantic_carryover = {}
+
+    start_state = state_constraints.get("arc_start_state")
+    end_state = state_constraints.get("arc_end_state")
+    investment_calc = state_constraints.get("investment_calc")
+    if not isinstance(start_state, dict):
+        start_state = {}
+    if not isinstance(end_state, dict):
+        end_state = {}
+    if not isinstance(investment_calc, dict):
+        investment_calc = {}
+
+    start_location = collapse_stage2_location_label(start_state.get("location")) or str(
+        start_state.get("location") or ""
+    ).strip()
+    end_location = collapse_stage2_location_label(end_state.get("location")) or collapse_stage2_location_label(
+        joint_docs.get("final_location")
+    )
+    end_location = end_location or str(end_state.get("location") or joint_docs.get("final_location") or "").strip()
+
+    start_inventory = _coerce_inventory_items(start_state.get("equipment", []))
+    end_inventory = _coerce_inventory_items(end_state.get("equipment", [])) or _coerce_inventory_items(
+        joint_docs.get("physical_inventory", [])
+    )
+
+    summary: dict[str, object] = {}
+    if start_location:
+        summary["start_location"] = start_location
+    if start_inventory:
+        summary["start_inventory_count"] = len(start_inventory)
+        preview = _build_inventory_preview(start_inventory)
+        if preview:
+            summary["start_inventory_preview"] = preview
+    if end_location:
+        summary["end_location"] = end_location
+    if end_inventory:
+        summary["end_inventory_count"] = len(end_inventory)
+        preview = _build_inventory_preview(end_inventory)
+        if preview:
+            summary["end_inventory_preview"] = preview
+
+    for source_key, target_key in (
+        ("total_assets", "start_total_assets"),
+        ("capital", "start_capital"),
+        ("portfolio_position", "start_portfolio_position"),
+    ):
+        value = _clip_text(start_state.get(source_key, ""), 120)
+        if value:
+            summary[target_key] = value
+    for source_key, target_key in (
+        ("total_assets", "end_total_assets"),
+        ("capital", "end_capital"),
+        ("portfolio_position", "end_portfolio_position"),
+    ):
+        value = _clip_text(end_state.get(source_key, ""), 120)
+        if value:
+            summary[target_key] = value
+
+    for source_key, target_key in (
+        ("final_total_assets", "investment_calc_final_total_assets"),
+        ("final_cash", "investment_calc_final_cash"),
+    ):
+        value = investment_calc.get(source_key)
+        if isinstance(value, int | float):
+            summary[target_key] = value
+
+    semantic_keys = [str(key).strip() for key in semantic_carryover.keys() if str(key or "").strip()]
+    if semantic_keys:
+        summary["semantic_carryover_keys"] = semantic_keys[:6]
+    checkpoints = semantic_carryover.get("continuity_checkpoints")
+    if isinstance(checkpoints, list) and checkpoints:
+        summary["continuity_checkpoint_count"] = len(checkpoints)
+
+    return summary or None
+
+
+def _extract_stage2_director_compare_meta(artifact_payload: dict | None) -> dict[str, object]:
+    if not isinstance(artifact_payload, dict):
+        return {}
+    meta = artifact_payload.get("_director_compare_meta")
+    return dict(meta) if isinstance(meta, dict) else {}
+
+
+def _resolve_stage2_selection_reason(audit: dict | None, artifact_payload: dict | None = None) -> str:
+    if not isinstance(audit, dict):
+        audit = {}
+    compare_meta = _extract_stage2_director_compare_meta(artifact_payload)
+    for value in (
+        audit.get("selection_reason", ""),
+        compare_meta.get("selection_reason", ""),
+        audit.get("reason", ""),
+    ):
+        text = str(value or "").strip()
+        if text:
+            return text
+    return ""
+
+
+def _resolve_stage2_verdict_reason(audit: dict | None, artifact_payload: dict | None = None) -> str:
+    if not isinstance(audit, dict):
+        audit = {}
+    compare_meta = _extract_stage2_director_compare_meta(artifact_payload)
+    for value in (
+        audit.get("verdict_reason", ""),
+        audit.get("reason", ""),
+        compare_meta.get("feedback", ""),
+        compare_meta.get("selection_reason", ""),
+    ):
+        text = str(value or "").strip()
+        if text:
+            return text
+    return ""
+
+
 class Stage2Finalizer:
     """Director audit + PASS/REJECT post-processing for Stage 2."""
 
@@ -2268,6 +2405,52 @@ class Stage2Finalizer:
             except (AttributeError, TypeError) as exc:
                 logging.debug("[SilentPass:S2:SessionLog] %s", exc)
 
+    def _log_stage2_authoritative_session_decision(
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        session_id: str,
+        generation_method: str,
+        selected_strategy: str,
+        audit: dict,
+        score: int,
+        attempt_key: str,
+        artifact_meta: dict,
+        artifact_payload: dict | None = None,
+        carryover_authority: dict | None = None,
+    ) -> None:
+        session_logger = getattr(self.ctx, "session_logger", None)
+        if not session_logger:
+            return
+        try:
+            session_logger.log_decision(
+                stage="stage2",
+                ep_num=global_arc_no,
+                round_num=attempt + 1,
+                decision_type="arc_final",
+                result=str(audit.get("decision", "UNKNOWN") or "UNKNOWN"),
+                score=int(score or 0),
+                arc_no=global_arc_no,
+                session_id=str(session_id or ""),
+                generation_method=str(generation_method or ""),
+                selected_strategy=str(selected_strategy or generation_method or ""),
+                reason=str(audit.get("reason", "") or ""),
+                reject_reason=str(audit.get("reason", "") or ""),
+                selection_reason=_resolve_stage2_selection_reason(audit, artifact_payload),
+                verdict_reason=_resolve_stage2_verdict_reason(audit, artifact_payload),
+                fix_scope=str(audit.get("fix_scope", "") or ""),
+                fix_scope_reasoning=str(audit.get("fix_scope_reasoning", "") or ""),
+                failure_category=str(self._extract_failure_category(audit) or ""),
+                attempt_key=str(attempt_key or ""),
+                candidate_key=str((artifact_meta or {}).get("candidate_key", "") or ""),
+                content_hash=str((artifact_meta or {}).get("content_hash", "") or ""),
+                artifact_path=str((artifact_meta or {}).get("artifact_path", "") or ""),
+                carryover_authority=dict(carryover_authority or {}),
+            )
+        except (AttributeError, TypeError, ValueError) as exc:
+            logging.debug("[SilentPass:S2:AuthoritativeSessionLog] %s", exc)
+
     def _prepare_stage2_pass_fix_iteration(
         self,
         *,
@@ -3102,7 +3285,10 @@ class Stage2Finalizer:
         )
         _token_cost = _peek_scope_total_cost_usd()
 
-        if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
+        _selection_reason = _resolve_stage2_selection_reason(audit, artifact_payload)
+        _verdict_reason = _resolve_stage2_verdict_reason(audit, artifact_payload)
+
+        if getattr(self.ctx, "pass_rate_monitor", None):
             try:
                 self.ctx.pass_rate_monitor.record_attempt(
                     stage=2,
@@ -3122,6 +3308,8 @@ class Stage2Finalizer:
                     content_hash=_artifact_meta["content_hash"],
                     artifact_path=_artifact_meta["artifact_path"],
                 )
+                if hasattr(self.ctx.pass_rate_monitor, "_save_records"):
+                    self.ctx.pass_rate_monitor._save_records()
             except Exception as e:  # [V64.P4] OPTIONAL: metrics
                 logging.debug(f"[SILENT] metrics (success): {e}")
 
@@ -3137,7 +3325,26 @@ class Stage2Finalizer:
                 _director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
                 _failure_category = self._extract_failure_category(audit)
-                _advisory_flags = self._extract_advisory_flags(audit)
+                _advisory_flags = self._extract_advisory_flags(audit, artifact_payload=artifact_payload)
+                self._emit_stage2_carryover_authority_observability(
+                    global_arc_no=global_arc_no,
+                    attempt=attempt,
+                    attempt_key=attempt_key,
+                    advisory_flags=_advisory_flags,
+                )
+                self._log_stage2_authoritative_session_decision(
+                    global_arc_no=global_arc_no,
+                    attempt=attempt,
+                    session_id=_session_id,
+                    generation_method=generation_method,
+                    selected_strategy=selected_strategy,
+                    audit=audit,
+                    score=_score,
+                    attempt_key=attempt_key,
+                    artifact_meta=_artifact_meta,
+                    artifact_payload=artifact_payload,
+                    carryover_authority=(_advisory_flags or {}).get("carryover_authority"),
+                )
                 _prompt_version = _build_stage2_prompt_version(
                     generation_method=generation_method,
                     is_patch=is_patch,
@@ -3161,8 +3368,8 @@ class Stage2Finalizer:
                     candidate_key=_candidate_key,
                     content_hash=_artifact_meta["content_hash"],
                     artifact_path=_artifact_meta["artifact_path"],
-                    selection_reason=str(audit.get("selection_reason", "") or ""),
-                    verdict_reason=str(audit.get("verdict_reason", "") or ""),
+                    selection_reason=_selection_reason,
+                    verdict_reason=_verdict_reason,
                     fix_scope_reasoning=str(audit.get("fix_scope_reasoning", "") or ""),
                     open_review=str(audit.get("open_review", "") or ""),
                     runtime_advisory="",
@@ -3179,7 +3386,7 @@ class Stage2Finalizer:
                             verdict=str(audit.get("decision", "PASS")),
                             stage=2,
                             score=_score,
-                            selection_reason=str(audit.get("reason", "")),
+                            selection_reason=_selection_reason,
                             fix_scope=str(audit.get("fix_scope", "") or ""),
                             advisory_warnings=_advisory_flags,
                             attempt_key=attempt_key,
@@ -3266,8 +3473,11 @@ class Stage2Finalizer:
         audit: dict,
         duration_ms: int | None,
         is_patch: bool,
+        artifact_payload: dict | None,
         metric_context: dict[str, Any],
     ) -> None:
+        selection_reason = _resolve_stage2_selection_reason(audit, artifact_payload)
+        verdict_reason = _resolve_stage2_verdict_reason(audit, artifact_payload)
         try:
             db = getattr(getattr(self.ctx, "current_project", None), "db", None)
             if not (db and hasattr(db, "save_stage_attempt")):
@@ -3282,7 +3492,24 @@ class Stage2Finalizer:
             director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
             model = getattr(director, "primary_model", None) if director else None
             failure_category = self._extract_failure_category(audit)
-            advisory_flags = self._extract_advisory_flags(audit)
+            advisory_flags = self._extract_advisory_flags(audit, artifact_payload=artifact_payload)
+            self._emit_stage2_carryover_authority_observability(
+                global_arc_no=global_arc_no,
+                attempt=attempt,
+                attempt_key=metric_context["attempt_key"],
+                advisory_flags=advisory_flags,
+            )
+            self._log_stage2_authoritative_session_decision(
+                global_arc_no=global_arc_no,
+                attempt=attempt,
+                generation_method=generation_method,
+                selected_strategy=selected_strategy,
+                audit=audit,
+                attempt_key=metric_context["attempt_key"],
+                artifact_meta=metric_context["artifact_meta"],
+                artifact_payload=artifact_payload,
+                carryover_authority=(advisory_flags or {}).get("carryover_authority"),
+            )
             prompt_version = _build_stage2_prompt_version(
                 generation_method=generation_method,
                 is_patch=is_patch,
@@ -3297,8 +3524,8 @@ class Stage2Finalizer:
                 failure_category=failure_category,
                 reject_reason=str(audit.get("reason", "")),
                 fix_scope=str(audit.get("fix_scope", "") or ""),
-                selection_reason=str(audit.get("selection_reason", "") or ""),
-                verdict_reason=str(audit.get("verdict_reason", "") or audit.get("reason", "")),
+                selection_reason=selection_reason,
+                verdict_reason=verdict_reason,
                 fix_scope_reasoning=str(audit.get("fix_scope_reasoning", "") or ""),
                 open_review=str(audit.get("open_review", "") or ""),
                 runtime_advisory="",
@@ -3324,7 +3551,7 @@ class Stage2Finalizer:
                         verdict=str(audit.get("decision", "REJECT")),
                         stage=2,
                         score=score,
-                        selection_reason=str(audit.get("reason", "")),
+                        selection_reason=selection_reason,
                         fix_scope=str(audit.get("fix_scope", "") or ""),
                         advisory_warnings=advisory_flags,
                         attempt_key=metric_context["attempt_key"],
@@ -3453,7 +3680,6 @@ class Stage2Finalizer:
         artifact_payload: dict | None = None,
     ) -> None:
         """[4-R3-f] Record Stage 2 REJECT metrics (PassRateMonitor, Dashboard, History, Optimizer)."""
-        from modules.core.spinners import V50_MODULES_AVAILABLE
 
         metric_context = self._build_stage2_reject_metric_context(
             global_arc_no=global_arc_no,
@@ -3463,7 +3689,7 @@ class Stage2Finalizer:
             artifact_payload=artifact_payload,
         )
 
-        if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
+        if getattr(self.ctx, "pass_rate_monitor", None):
             try:
                 self.ctx.pass_rate_monitor.record_attempt(
                     stage=2,
@@ -3484,6 +3710,8 @@ class Stage2Finalizer:
                     content_hash=metric_context["artifact_meta"]["content_hash"],
                     artifact_path=metric_context["artifact_meta"]["artifact_path"],
                 )
+                if hasattr(self.ctx.pass_rate_monitor, "_save_records"):
+                    self.ctx.pass_rate_monitor._save_records()
             except Exception as e:  # [V64.P4] OPTIONAL: metrics
                 logging.debug(f"[SILENT] metrics (reject): {e}")
         self._persist_stage2_reject_attempt_records(
@@ -3494,6 +3722,7 @@ class Stage2Finalizer:
             audit=audit,
             duration_ms=duration_ms,
             is_patch=is_patch,
+            artifact_payload=artifact_payload,
             metric_context=metric_context,
         )
         self._save_stage2_reject_cost_record(
@@ -3654,7 +3883,7 @@ class Stage2Finalizer:
         )
 
     @staticmethod
-    def _extract_advisory_flags(audit: dict) -> dict | None:
+    def _extract_advisory_flags(audit: dict, *, artifact_payload: dict | None = None) -> dict | None:
         """Collect advisory-like metadata already available in Director audit output."""
         if not isinstance(audit, dict):
             return None
@@ -3709,4 +3938,66 @@ class Stage2Finalizer:
         if isinstance(partial_fix_eval, dict) and partial_fix_eval:
             flags["partial_fix_eval"] = dict(partial_fix_eval)
 
+        carryover_authority = _build_stage2_carryover_authority_summary(artifact_payload)
+        if carryover_authority:
+            flags["carryover_authority"] = carryover_authority
+
         return flags or None
+
+    def _emit_stage2_carryover_authority_observability(
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        attempt_key: str,
+        advisory_flags: dict | None,
+    ) -> None:
+        carryover = advisory_flags.get("carryover_authority") if isinstance(advisory_flags, dict) else None
+        if not isinstance(carryover, dict) or not carryover:
+            return
+
+        start_location = str(carryover.get("start_location", "") or "").strip() or "-"
+        end_location = str(carryover.get("end_location", "") or "").strip() or "-"
+        start_items = int(carryover.get("start_inventory_count") or 0)
+        end_items = int(carryover.get("end_inventory_count") or 0)
+        asset_hint = (
+            str(carryover.get("end_total_assets", "") or "")
+            or str(carryover.get("investment_calc_final_total_assets", "") or "")
+            or "-"
+        )
+        message = (
+            "      📎 [Stage2 Carryover Authority] "
+            f"start={start_location} ({start_items} items) -> "
+            f"end={end_location} ({end_items} items) | assets={asset_hint}"
+        )
+        try:
+            self.ctx.ui.log(message)
+        except Exception:
+            pass
+
+        session_logger = getattr(self.ctx, "session_logger", None)
+        current_project = getattr(self.ctx, "current_project", None)
+        session_id = resolve_logging_session_id(current_project)
+        event_kwargs = {
+            "session_id": session_id,
+            "stage": 2,
+            "ep_num": global_arc_no,
+            "arc_num": global_arc_no,
+            "round_num": attempt + 1,
+            "attempt_key": attempt_key,
+            "component": "Stage2Finalizer",
+            "event_kind": "carryover_authority",
+            "message": message.strip(),
+            "meta": carryover,
+        }
+        if session_logger:
+            try:
+                session_logger.log_ui_event(**event_kwargs)
+            except Exception as exc:
+                logging.debug("[Stage2Carryover:UIEvent] %s", exc)
+        db = getattr(current_project, "db", None)
+        if db and hasattr(db, "save_ui_event"):
+            try:
+                db.save_ui_event(**event_kwargs)
+            except Exception as exc:
+                logging.debug("[Stage2Carryover:DBUIEvent] %s", exc)

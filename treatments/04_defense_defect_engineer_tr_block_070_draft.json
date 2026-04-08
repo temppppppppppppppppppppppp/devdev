@@ -77,6 +77,13 @@
           "ability_name": "붉은 선",
           "ability_source": "회귀 후 각성",
           "ability_used_for": "14년의 몰락 순서를 한 장 지도로 접어 머리에 고정한다."
+        },
+        "success_pattern": "규격 문구와 검토 절차를 먼저 설계해 상대의 기준표를 뒤집는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "돈도 권한도 얻지 못한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -179,6 +186,13 @@
           "ability_name": "붉은 선",
           "ability_source": "회귀 후 각성",
           "ability_used_for": "시험기 브리핑 파일·민태수 결재선·윤문희 미소에서 동일 결함선을 식별한다."
+        },
+        "success_pattern": "매각 안건은 아직 통과되지 않는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "survival",
+          "receipt_line": "매각 안건은 아직 통과되지 않는다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -276,6 +290,13 @@
           "ability_name": "붉은 선",
           "ability_source": "회귀 후 각성",
           "ability_used_for": "모욕 발언 순간 하성우 라인의 자신감과 빈틈을 동시에 읽는다."
+        },
+        "success_pattern": "하준영은 공개 모욕을 감수한 대신 48시간 유예와 전략조정실 내부 검토권을 우선 확보한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "하준영은 공개 모욕을 감수한 대신 48시간 유예와 전략조정실 내부 검토권을 우선 확보한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -378,6 +399,13 @@
           "ability_name": "붉은 선",
           "ability_source": "회귀 후 각성",
           "ability_used_for": "정해윤 서류철의 빈 칸 한 줄을 접촉 없이 시각으로 먼저 포착한다."
+        },
+        "success_pattern": "하준영은 48시간 유예의 구체 조건 세 가지를 확보하고, 비서실장 정해윤을 아직 중립 관찰자로 고정시킨다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "하준영은 48시간 유예의 구체 조건 세 가지를 확보하고, 비서실장 정해윤을 아직 중립 관찰자로 고정시킨다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -470,6 +498,13 @@
           "ability_name": "붉은 선",
           "ability_source": "회귀 후 각성",
           "ability_used_for": "복합재 도면·성적서·열처리 롯트 3개 경로에서 결함선 분포를 접촉 매핑한다."
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "하준영은 복합재 공용 라인의 실제 결함선 분포 지도를 머릿속에 확정하고, 열처리 롯트 중 병목 가능성이 있는 10개 번호를 따로 구조화한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -562,6 +597,13 @@
           "name": "고준명",
           "type": "열처리·패스너 협력사 연합 회장",
           "weakness_exploited": "빈 칸 4개가 이미 현장 기록으로 노출된 이상 회장 직거래 명분이 먼저 깨진다는 사실"
+        },
+        "success_pattern": "고준명은 장부를 덮지 못한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "고준명은 장부를 덮지 못한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -644,6 +686,13 @@
           "name": "박성우",
           "type": "방사청 항공사업팀장",
           "weakness_exploited": "장남 라인 요청만으로 시험일정을 봉쇄한 행정 편향이 안전 근거 앞에서 약해진다는 구조"
+        },
+        "success_pattern": "시험평가 일정은 여전히 봉쇄된 상태다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "시험평가 일정은 여전히 봉쇄된 상태다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -731,6 +780,13 @@
           "name": "박성우",
           "type": "방사청 항공사업팀장",
           "weakness_exploited": "외형상 봉쇄된 일정도 시험평가대대 내부 안전 선제 검증 카드 앞에서는 논리적 반박이 약하다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "하준영은 공군 시험평가대대 윤소라 라인과 첫 거래 테이블을 성사시킨다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -823,6 +879,13 @@
           "name": "민태수",
           "type": "그룹 CFO",
           "weakness_exploited": "비자금 초기 기록이 비서실장 라인에 공식 관리되는 순간, CFO의 결재 통제력이 반으로 줄어든다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "48시간 시험의 세 가지 증거가 회장에게 그대로 전달되기로 확정된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -915,6 +978,13 @@
           "name": "하도진",
           "type": "현무그룹 회장/아버지",
           "weakness_exploited": "시험하는 아버지는 조건을 다 쥐려는 자보다 구조를 직접 설계하는 자를 더 무겁게 본다"
+        },
+        "success_pattern": "하도진은 결재 펜을 든다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "하도진은 결재 펜을 든다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1002,6 +1072,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "법무팀 차명 보증을 너무 빨리 썼다"
+        },
+        "success_pattern": "5개사 이탈은 그대로 진행되지만, 하준영은 남은 11개사에 대한 채권 재검토권과 이탈 3개사의 차명 보증 구조 증거 1건을 확보한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "5개사 이탈은 그대로 진행되지만, 하준영은 남은 11개사에 대한 채권 재검토권과 이탈 3개사의 차명 보증 구조 증거 1건을 확보한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1089,6 +1166,13 @@
           "name": "박성우",
           "type": "방사청 항공사업팀장",
           "weakness_exploited": "참조 기준의 노후화가 외부에서 지적되면 행정 정당성이 흔들린다"
+        },
+        "success_pattern": "규격 문구와 검토 절차를 먼저 설계해 상대의 기준표를 뒤집는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "안건은 보류 상태지만, 박성우는 구식 규격집이 자기 참조 기준이라는 사실을 막내 앞에서 부인하지 못한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1171,6 +1255,13 @@
           "name": "고준명",
           "type": "협력사 연합 회장",
           "weakness_exploited": "연합 회장 명분이 막내의 분할안 안에서만 유지 가능하다는 구조"
+        },
+        "success_pattern": "하준영은 4개사에 대한 공식 감사 집행 단서를 확보하고, 고준명을 연합 회장으로 조건부 복속시킨다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "하준영은 4개사에 대한 공식 감사 집행 단서를 확보하고, 고준명을 연합 회장으로 조건부 복속시킨다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1253,6 +1344,13 @@
           "name": "박성우",
           "type": "방사청 항공사업팀장",
           "weakness_exploited": "안건이 1회로 줄면 서명을 거부할 행정 명분이 사라진다"
+        },
+        "success_pattern": "안건은 1회 시험으로 축소되어 심의를 통과하고, 박성우는 결과 보고서에 직접 서명할 의무를 지게 된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "안건은 1회 시험으로 축소되어 심의를 통과하고, 박성우는 결과 보고서에 직접 서명할 의무를 지게 된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1340,6 +1438,13 @@
           "name": "이가연",
           "type": "대한에어로폼 2세 대표",
           "weakness_exploited": "결함선 분포를 외부자가 이미 안다는 사실 앞에서 공개 일정을 조절할 수 없다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "하준영은 이가연과 아직 정식 동맹을 맺지 못하지만, 3번째 미공개 샘플의 존재와 위치 힌트를 확보한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1427,6 +1532,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "현장 개입이 대대 내부 공식판 앞에서 흡수된다"
+        },
+        "success_pattern": "7번 항목 1회 시험이 윤소라 공식 체크리스트 기준으로 실시되고, 결과 보고서에 박성우가 서명한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "7번 항목 1회 시험이 윤소라 공식 체크리스트 기준으로 실시되고, 결과 보고서에 박성우가 서명한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1514,6 +1626,13 @@
           "name": "서기태",
           "type": "군수금융 브로커",
           "weakness_exploited": "템플릿 권한을 지키려면 발동권을 양보해야 하는 구조"
+        },
+        "success_pattern": "리스크 구조를 바꿔 돈줄과 통제권을 동시에 묶는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "SPV 설계 계약이 표준 템플릿 + 발동 제약 추가 조항 형태로 합의된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1606,6 +1725,13 @@
           "name": "고준명",
           "type": "협력사 연합 회장",
           "weakness_exploited": "연합 회장 자리가 막내의 보류 판단에 달려 있다"
+        },
+        "success_pattern": "4개사 채권 회수권이 공식 집행되고, 원가 누수 수혜자 이름 1건이 감사장부 2차 묶음에 기록된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "survival",
+          "receipt_line": "4개사 채권 회수권이 공식 집행되고, 원가 누수 수혜자 이름 1건이 감사장부 2차 묶음에 기록된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1688,6 +1814,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "이월 3개월이 막내에게는 ARC-03 착수 시간이 된다"
+        },
+        "success_pattern": "2차 시험 일정 동결은 그대로 진행된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "2차 시험 일정 동결은 그대로 진행된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1780,6 +1913,13 @@
           "name": "박성우",
           "type": "방사청 항공사업팀장",
           "weakness_exploited": "윤소라 공식판·서명 보고서 결합 앞에서 거부 명분이 사라진다"
+        },
+        "success_pattern": "규격 문구와 검토 절차를 먼저 설계해 상대의 기준표를 뒤집는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "방사청 항공사업 규격 초안에 하준영의 첫 문장 한 줄이 삽입된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1862,6 +2002,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "자재 공급 단절 카드가 안전 명분 앞에서 즉시 쓰이지 못한다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "하준영은 복합재 라인 2대 정지권과 개조 설계도 선취권을 확보한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1944,6 +2091,13 @@
           "name": "하지혁",
           "type": "차남/현무금속 사장",
           "weakness_exploited": "기회주의자는 타이밍 지연에 약하다"
+        },
+        "success_pattern": "하준영은 하지혁과 정식 동맹을 맺지 않지만, 현무금속 방산 소재 지분 구조 자료 1건을 확보한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "하준영은 하지혁과 정식 동맹을 맺지 않지만, 현무금속 방산 소재 지분 구조 자료 1건을 확보한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2026,6 +2180,13 @@
           "name": "오상철",
           "type": "국회 국방위 의원",
           "weakness_exploited": "비자금 흔적이 감사실 이름으로 묶이면 직접 공격이 어려워진다"
+        },
+        "success_pattern": "감사장부 3차 묶음이 오상철·민태수 공동 비자금 흔적을 포함한 형태로 생성된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "감사장부 3차 묶음이 오상철·민태수 공동 비자금 흔적을 포함한 형태로 생성된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2118,6 +2279,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "사고 책임 전가 프레임이 감사실 공식 소견서 앞에서 굳지 못한다"
+        },
+        "success_pattern": "열처리 사고 책임 전가 프레임은 가족회의에서 완전히 깨지지 않지만 '계속 조사 중' 상태로 유예된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "열처리 사고 책임 전가 프레임은 가족회의에서 완전히 깨지지 않지만 '계속 조사 중' 상태로 유예된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2200,6 +2368,13 @@
           "name": "오상철",
           "type": "국회 국방위 의원",
           "weakness_exploited": "공식 요청 문서가 감사장부에 연결되면 국감 마이크 정당성이 약해진다"
+        },
+        "success_pattern": "오상철과 정식 동맹은 맺지 않고, 대신 요청 문서 1건을 감사장부 3차 묶음에 연결시킨다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "오상철과 정식 동맹은 맺지 않고, 대신 요청 문서 1건을 감사장부 3차 묶음에 연결시킨다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2282,6 +2457,13 @@
           "name": "서기태",
           "type": "군수금융 브로커",
           "weakness_exploited": "추가 삽입이 들키면 수수료 협상으로만 회복 가능하다"
+        },
+        "success_pattern": "리스크 구조를 바꿔 돈줄과 통제권을 동시에 묶는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "SPV 설립 계약서 초안에서 4번째 독소 조항이 삭제된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2369,6 +2551,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "감사실 공식 권고 문서 앞에서 직접 공격 명분이 사라진다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "복합재 라인 2대 개조안이 감사실 공동 서명 구조로 승인되고, 자재 공급 담당자 2명이 교체된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2416,7 +2605,13 @@
         "protagonist": "중동 수출 무대 진입 근거 1건을 기록 자산으로 확보한다.",
         "antagonist": "장남 라인은 메모를 선공유했지만 실제 회신·계약 경로는 아직 열지 못한다."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "나심 알사예드",
+          "before": "정비권 관심을 내비친 외부 조달 채널",
+          "after": "중동 정비권 경로의 명시적 수신자이자 씨앗 보유자"
+        }
+      ],
       "foreshadow": [
         {
           "ref": "FS-09",
@@ -2450,6 +2645,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "메모 선공유만으로는 정비권 경로를 선점할 수 없다"
+        },
+        "success_pattern": "정비권과 채널을 먼저 잠가 수출 무대의 관문을 선점한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "나심 알사예드의 정비권 메모가 감사장부·SPV 설계와 나란히 '중동 수출 무대 진입 근거' 1건으로 정렬된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2537,6 +2739,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "공동 법인 구조는 본체 지배권 바깥에 있다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "이가연은 공동 기술 지분 법인 설립 MOU에 서명한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2619,6 +2828,13 @@
           "name": "서기태",
           "type": "군수금융 브로커",
           "weakness_exploited": "감사실 공동 서명 앞에서 상한 명시를 거부할 수 없다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "SPV가 정식으로 설립된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2706,6 +2922,13 @@
           "name": "오상철",
           "type": "국회 국방위 의원",
           "weakness_exploited": "자문 요청 기록이 언론에 공개되면 마이크 정당성이 흔들린다"
+        },
+        "success_pattern": "국감 폭로는 그대로 진행되고 '감사 은폐' 프레임이 언론에 돈다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "survival",
+          "receipt_line": "국감 폭로는 그대로 진행되고 '감사 은폐' 프레임이 언론에 돈다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2793,6 +3016,13 @@
           "name": "박성우",
           "type": "방사청 항공사업팀장",
           "weakness_exploited": "상위 지시를 형식상 따르면 되지 문장 자체를 삭제할 명분은 없다"
+        },
+        "success_pattern": "규격 문구와 검토 절차를 먼저 설계해 상대의 기준표를 뒤집는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "Block 20의 첫 문장은 하준영의 이름 대신 공군 시험평가대대 공식판 근거 문서로 귀속된 채 방사청 규격 확정 과정에 살아남는다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2875,6 +3105,13 @@
           "name": "서기태",
           "type": "군수금융 브로커",
           "weakness_exploited": "단독 대응권이 막히면 감사실 공식 소견서에 종속된다"
+        },
+        "success_pattern": "리스크 구조를 바꿔 돈줄과 통제권을 동시에 묶는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "SPV 조회 대응이 감사실 주도로 이뤄지고, 자금 흐름 점검 문건에 대한 공식 답변서가 감사실 공식 소견서 형식으로 제출된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2962,6 +3199,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "2차 담합 시도가 감사장부에 기록되면 장기 비용이 커진다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "7개사 중 4개사가 하준영의 재협상 제안을 수용하고, 나머지 3개사는 관망 상태로 남는다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3044,6 +3288,13 @@
           "name": "민태수",
           "type": "그룹 CFO",
           "weakness_exploited": "공동 전략 파트너 구조는 단독 공격으로 깨기 어렵다"
+        },
+        "success_pattern": "감사장부 3차+4차 묶음 기반의 1장짜리 종합 메모가 생성되고, 발동 트리거가 사전 합의된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "survival",
+          "receipt_line": "감사장부 3차+4차 묶음 기반의 1장짜리 종합 메모가 생성되고, 발동 트리거가 사전 합의된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3126,6 +3377,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "언론 공격 추가 경로 확보 실패"
+        },
+        "success_pattern": "방산 정책 토론회 자료 1편이 전략조정실 이름으로 배포되고, 문장 통제권이 유지된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "방산 정책 토론회 자료 1편이 전략조정실 이름으로 배포되고, 문장 통제권이 유지된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3208,6 +3466,13 @@
           "name": "박성우",
           "type": "방사청 항공사업팀장",
           "weakness_exploited": "개인 책임 범위 제한을 제시하면 거부 명분이 약하다"
+        },
+        "success_pattern": "규격 문구와 검토 절차를 먼저 설계해 상대의 기준표를 뒤집는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "방사청 규격 초안에 두 번째 문장이 축소된 형태로 삽입된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3295,6 +3560,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "구식 규격집 역이용이 오히려 막내 문장 보완 근거로 재분류된다"
+        },
+        "success_pattern": "규격 문구와 검토 절차를 먼저 설계해 상대의 기준표를 뒤집는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "구식 규격집 93페이지 문구가 막내 문장의 '보완 근거'로 재분류되면서, 하준영의 두 번째 문장이 최종 규격 확정안에 공식 삽입된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3377,6 +3649,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "담합 유지 압박 문서가 감사장부 기록으로 남는다"
+        },
+        "success_pattern": "규격 문구와 검토 절차를 먼저 설계해 상대의 기준표를 뒤집는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "협력사 연합 3개사가 신규격 기준으로 공식 전환하고, 국내 방산 카르텔 내부에 첫 구조적 균열이 생긴다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3464,6 +3743,13 @@
           "name": "오상철",
           "type": "국회 국방위 의원",
           "weakness_exploited": "자금 흐름 구조가 국회 간사실에 접수되면 의원 공세 명분이 사라진다"
+        },
+        "success_pattern": "오상철 의원의 2차 공세가 철회된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "오상철 의원의 2차 공세가 철회된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3551,6 +3837,13 @@
           "name": "이가연",
           "type": "대한에어로폼 2세 대표",
           "weakness_exploited": "단독화 요구가 막혀도 3년 우선권은 명분이 된다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "3번째 샘플이 중동 수출 시범계약 스펙에 공식 장착되고, 공동 기술 지분 법인이 중동 무대 첫 진입 자산을 확보한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3633,6 +3926,13 @@
           "name": "나심 알사예드",
           "type": "UAE 조달청 차장",
           "weakness_exploited": "정비권은 돈이라는 자기 발언이 3축 구조 초안과 연결된다"
+        },
+        "success_pattern": "정비권과 채널을 먼저 잠가 수출 무대의 관문을 선점한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "나심 알사예드의 정비권 카드가 3축 구조 초안과 처음 연결된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3720,6 +4020,13 @@
           "name": "경쟁 정비권 업체",
           "type": "중동 정비권 경쟁사",
           "weakness_exploited": "언론 프레임이 공식 확인서 앞에서 꺾인다"
+        },
+        "success_pattern": "UAE 조달청은 '사고는 이미 인지된 결함이며 개조 진행 중'이라는 사실을 수용한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "UAE 조달청은 '사고는 이미 인지된 결함이며 개조 진행 중'이라는 사실을 수용한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3807,6 +4114,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "사막 시험장 차명 투자가 중동 사고와 엮이면 장남 라인 자체가 위험해진다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "FS-03(장남 라인 사막 시험장 투자 메모) payoff — Block 6에서 심긴 힌트가 사막 시험장 차명 투자 구조 1건으로 실체 확인된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3854,7 +4168,13 @@
         "protagonist": "수출금융 설계 외부자에서 리스크 연동 한도 구조 공동 설계자로 이동한다.",
         "antagonist": "정책금융공사·수출보증은 방산 수출금융에 리스크 연동 모델을 처음 적용한다."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "정책금융공사 방산팀",
+          "before": "사고 직후 방산 수출금융에 소극적인 행정 주체",
+          "after": "리스크 연동 한도 구조를 함께 설계하는 금융 파트너"
+        }
+      ],
       "foreshadow": [],
       "callback": [],
       "emotional_beat": {
@@ -3883,6 +4203,13 @@
           "name": "정책금융공사 방산팀",
           "type": "수출금융 행정",
           "weakness_exploited": "리스크 연동 구조는 담당팀 리스크도 줄여준다"
+        },
+        "success_pattern": "리스크 구조를 바꿔 돈줄과 통제권을 동시에 묶는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "수출금융 패키지 설계 1차안이 '절반 이하 한도 + 리스크 연동 상향 구조'로 합의된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3930,7 +4257,13 @@
         "protagonist": "수출금융 한국 축 1차 합의자에서 현지 은행 3축 채널 구조 설계자로 이동한다.",
         "antagonist": "경쟁 정비권 업체 2곳은 ENBD 단독 채널에 묶여 규제 검토 리스크를 공유한다."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "ADIB 방산금융팀",
+          "before": "규제 검토를 이유로 거리를 두는 현지 은행 채널",
+          "after": "3축 한정 채널 구조를 비공식 수용한 현지 금융 창구"
+        }
+      ],
       "foreshadow": [],
       "callback": [],
       "emotional_beat": {
@@ -3959,6 +4292,13 @@
           "name": "경쟁 정비권 업체",
           "type": "중동 정비권 경쟁사",
           "weakness_exploited": "ENBD 단독 채널이 규제 리스크로 묶인다"
+        },
+        "success_pattern": "정비권과 채널을 먼저 잠가 수출 무대의 관문을 선점한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "ADIB와 3축 한정 채널 구조가 비공식 합의되고, 경쟁 정비권 업체 2곳이 접촉 중인 ENBD를 우회하는 경로가 준비된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4046,6 +4386,13 @@
           "name": "엘렌 크로프트",
           "type": "미국 수출통제 로펌 파트너",
           "weakness_exploited": "대체설계 질문에 답하는 순간 로펌 범위가 확장된다"
+        },
+        "success_pattern": "엘렌 크로프트의 ITAR 예외허가 조건표가 처음 공식 테이블에 오른다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "엘렌 크로프트의 ITAR 예외허가 조건표가 처음 공식 테이블에 오른다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4128,6 +4475,13 @@
           "name": "나심 알사예드",
           "type": "UAE 조달청 차장",
           "weakness_exploited": "조달청 내부 보고 카드 욕구가 배분 재설계를 허락한다"
+        },
+        "success_pattern": "리스크 구조를 바꿔 돈줄과 통제권을 동시에 묶는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "오프셋 30%가 '교육 22% + 부품표준 5% + 현지 생산 3%'로 재분배된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4210,6 +4564,13 @@
           "name": "경쟁 정비권 업체",
           "type": "중동 정비권 경쟁사",
           "weakness_exploited": "ENBD 단독 채널 리스크가 공식 문서에 같이 실린다"
+        },
+        "success_pattern": "수출금융 심사는 2개월 유예되지만 (패배 #8 — 수출금융 심사 지연), 경쟁 정비권 업체 2곳의 ENBD 단독 채널 리스크가 공식 문서로 정책금융공사에 기록된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "수출금융 심사는 2개월 유예되지만 (패배 #8 — 수출금융 심사 지연), 경쟁 정비권 업체 2곳의 ENBD 단독 채널 리스크가 공식 문서로 정책금융공사에 기록된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4297,6 +4658,13 @@
           "name": "경쟁 정비권 업체",
           "type": "중동 정비권 경쟁사",
           "weakness_exploited": "ENBD 단독 채널이 공식 재심사에서 이미 취약성 기록됨"
+        },
+        "success_pattern": "아부다비 정비거점 선매입 계약이 공식 서명된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "아부다비 정비거점 선매입 계약이 공식 서명된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4379,6 +4747,13 @@
           "name": "엘렌 크로프트",
           "type": "미국 수출통제 로펌 파트너",
           "weakness_exploited": "로펌 수임을 수락하는 순간 단독 경로 통제력이 분산된다"
+        },
+        "success_pattern": "예외허가 + 대체설계 병행 구조가 공식화된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "예외허가 + 대체설계 병행 구조가 공식화된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4466,6 +4841,13 @@
           "name": "나심 알사예드",
           "type": "UAE 조달청 차장",
           "weakness_exploited": "자기 메모 원본 앞에서 단계 구분을 거부할 수 없다"
+        },
+        "success_pattern": "나심은 2단계 확장 구조를 수용한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "나심은 2단계 확장 구조를 수용한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4548,6 +4930,13 @@
           "name": "ITAR 구조",
           "type": "미국 수출통제 체계",
           "weakness_exploited": "단계적 전환 통지 앞에서 즉시 개입 카드가 약하다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "대체설계 기술 검토 1차안이 '프랑스 DGA 인증 경로 결합 + 단계적 전환' 구조로 완성된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4630,6 +5019,13 @@
           "name": "마티유 로랑",
           "type": "프랑스 항전장비 업체 임원",
           "weakness_exploited": "공동 명의 등재 카드가 프랑스 업체에도 인센티브가 된다"
+        },
+        "success_pattern": "규격 문구와 검토 절차를 먼저 설계해 상대의 기준표를 뒤집는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "프랑스 Thales-Auriga와의 공동규격 역제안 경로가 개방된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4726,6 +5122,13 @@
           "name": "민태수",
           "type": "그룹 CFO",
           "weakness_exploited": "SPV 방어선 3종 앞에서 탈취 카드가 작동하지 않는다"
+        },
+        "success_pattern": "SPV 독소 조항 구조는 가문 안에서 공개되지만 (패배 #9 — 차명 SPV 추적 노출), 발동 제약·이자율 상한 방어선 덕분에 즉시 탈취 카드는 작동하지 않는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "SPV 독소 조항 구조는 가문 안에서 공개되지만 (패배 #9 — 차명 SPV 추적 노출), 발동 제약·이자율 상한 방어선 덕분에 즉시 탈취 카드는 작동하지 않는다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4808,6 +5211,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "권한 3종이 외부 구조로 묶여 단순 환수가 불가능하다"
+        },
+        "success_pattern": "권한 3종은 유지되지만, 회장 하도진의 신뢰가 공식 복원되지는 않는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "권한 3종은 유지되지만, 회장 하도진의 신뢰가 공식 복원되지는 않는다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4855,7 +5265,13 @@
         "protagonist": "SPV 피타격자에서 대체 부품 샘플 라인 운영자로 이동한다.",
         "antagonist": "장남 라인 기술진은 샘플 단계에는 개입하지 못한다."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "대한에어로폼 R&D 라인",
+          "before": "대체설계 기술 검토 파트너",
+          "after": "샘플 2종 일정이 공식화된 대체 부품 라인 동맹"
+        }
+      ],
       "foreshadow": [],
       "callback": [],
       "emotional_beat": {
@@ -4884,6 +5300,13 @@
           "name": "장남 라인 기술진",
           "type": "내부 기술 행정",
           "weakness_exploited": "샘플 단계 외곽에서는 개입 명분이 약하다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "대체 부품 샘플 2종 제작이 6개월 일정으로 공식 착수된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4966,6 +5389,13 @@
           "name": "DGA 시험관",
           "type": "프랑스 국방규격 기관",
           "weakness_exploited": "이견을 문서화하면 공식 근거로 역이용된다"
+        },
+        "success_pattern": "규격 문구와 검토 절차를 먼저 설계해 상대의 기준표를 뒤집는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "대체 부품 1종이 유럽 규격 예비 시험을 통과한다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5048,6 +5478,13 @@
           "name": "마티유 로랑",
           "type": "프랑스 항전장비 업체 임원",
           "weakness_exploited": "영어 병기는 중동 무대 진입 논리로 반박하기 어렵다"
+        },
+        "success_pattern": "규격 문구와 검토 절차를 먼저 설계해 상대의 기준표를 뒤집는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "공동규격 초안이 '영어·프랑스어 병기 + 한국어 부속서' 구조로 확정된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5130,6 +5567,13 @@
           "name": "DDTC",
           "type": "미국 국무부 방산무역통제국",
           "weakness_exploited": "부분 전환 통지에는 철회 근거가 약하다"
+        },
+        "success_pattern": "규격 문구와 검토 절차를 먼저 설계해 상대의 기준표를 뒤집는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "대체설계 전환이 '1차 배치 한정' 범위로 공식화되고, 예외허가 진행은 철회 없이 유지된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5217,6 +5661,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "승계 시나리오 자체가 4종 자산의 그림자에 놓인다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "회장 하도진은 4개 자산을 2014년 1분기 이사회 재편 판단 재료에 공식 포함시킨다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5299,6 +5750,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "비상 의결권 위임장 존재를 아직 모른다"
+        },
+        "success_pattern": "회장 비밀금고의 붉은 보험증권·비상 의결권 위임장 2장의 위치·내용이 하준영에게 최초로 공식 공개된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "회장 비밀금고의 붉은 보험증권·비상 의결권 위임장 2장의 위치·내용이 하준영에게 최초로 공식 공개된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5391,6 +5849,13 @@
           "name": "하성우·민태수·윤문희 연합",
           "type": "가문 쿠데타 연합",
           "weakness_exploited": "비상 의결권 위임장과 차남 동맹 카드를 예측하지 못했다"
+        },
+        "success_pattern": "임시 이사회가 열리지만, 회장 하도진이 비상 의결권 위임장 1장의 수령인에 '하준영' 이름을 직접 써 넣는다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "임시 이사회가 열리지만, 회장 하도진이 비상 의결권 위임장 1장의 수령인에 '하준영' 이름을 직접 써 넣는다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5473,6 +5938,13 @@
           "name": "윤문희",
           "type": "계모/패밀리오피스 실권자",
           "weakness_exploited": "위임장 정당성 카드가 남은 공란 1장 앞에서 약하다"
+        },
+        "success_pattern": "양산 대신 샘플과 외곽 라인부터 열어 기술 자산을 조용히 축적한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "붉은 보험증권의 수익 수령권이 전략조정실로 이관된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5555,6 +6027,13 @@
           "name": "민태수",
           "type": "그룹 CFO",
           "weakness_exploited": "직속 라인 대부분이 재교육·배치 전환으로 묶인다"
+        },
+        "success_pattern": "그룹 행정 공백 없이 잔존 세력이 정리된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "그룹 행정 공백 없이 잔존 세력이 정리된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5602,7 +6081,13 @@
         "protagonist": "공동규격 초안 공동 작성자에서 EU 로펌 네트워크 3자 검토 제안자로 이동한다.",
         "antagonist": "독일·이탈리아 계열 로펌 의견서 공식화가 유예된다."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "마티유 로랑",
+          "before": "공동규격 검토 파트너",
+          "after": "EU 로펌 3자 검토 회의 유예를 함께 만든 대응 축"
+        }
+      ],
       "foreshadow": [],
       "callback": [],
       "emotional_beat": {
@@ -5631,6 +6116,13 @@
           "name": "독일·이탈리아 계열 로펌",
           "type": "EU 방산규제 자문",
           "weakness_exploited": "3자 추가 검토 회의 제안 앞에서 의견서 공식화 명분이 약하다"
+        },
+        "success_pattern": "독일·이탈리아 계열 로펌 의견서는 공식화 전에 '3자 추가 검토 회의' 단계로 유예된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "독일·이탈리아 계열 로펌 의견서는 공식화 전에 '3자 추가 검토 회의' 단계로 유예된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5718,6 +6210,13 @@
           "name": "DGA",
           "type": "프랑스 국방규격 기관",
           "weakness_exploited": "자기 부속서가 재심 근거로 역이용된다"
+        },
+        "success_pattern": "유럽 인증 1종 부분 반려는 그대로 확정된다 (패배 #11 — 유럽 인증 반려).",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "유럽 인증 1종 부분 반려는 그대로 확정된다 (패배 #11 — 유럽 인증 반려).",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5800,6 +6299,13 @@
           "name": "DDTC",
           "type": "미국 국무부 방산무역통제국",
           "weakness_exploited": "2차 배치 확장 카드가 대체설계 전환 방향과 충돌한다"
+        },
+        "success_pattern": "ITAR 예외허가가 '1차 배치 한정' 범위로 공식 통과된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "ITAR 예외허가가 '1차 배치 한정' 범위로 공식 통과된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5892,6 +6398,13 @@
           "name": "하성우",
           "type": "장남/현무중공업 부회장",
           "weakness_exploited": "3축 재편 앞에서 방산 영구 상실을 거부할 명분이 사라진다"
+        },
+        "success_pattern": "그룹 이사회 재편 최종안이 '회장 직보 방산 계열 지주 구조 + 하준영 지주 지분 19.6% + 3축 후계 재편' 형태로 확정된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "그룹 이사회 재편 최종안이 '회장 직보 방산 계열 지주 구조 + 하준영 지주 지분 19.6% + 3축 후계 재편' 형태로 확정된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5974,6 +6487,13 @@
           "name": "하성우 라인 잔존 세력",
           "type": "가문 쿠데타 잔여",
           "weakness_exploited": "6축 구조가 의사록에 기록되면 우회 시도 명분이 사라진다"
+        },
+        "success_pattern": "방산 계열 6축 구조 공식 가동 + 회장 하도진의 공개 승인 발언이 그룹 이사회 의사록에 기록된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "방산 계열 6축 구조 공식 가동 + 회장 하도진의 공개 승인 발언이 그룹 이사회 의사록에 기록된다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -6006,5 +6526,15 @@
         "execution_doctrine": "안전은 명분, 목적은 승계와 규격 독점"
       }
     }
-  ]
+  ],
+  "_authority_chain": [
+    "material_ssot/20_pitch/canon/defense_defect_engineer.md",
+    "treatments/preprocess/defense_defect_engineer/source_manifest.json",
+    "treatments/preprocess/defense_defect_engineer/material_bundle_summary.json",
+    "treatments/preprocess/defense_defect_engineer/profile_lock.json",
+    "treatments/preprocess/defense_defect_engineer/phase0_ready_snapshot.json",
+    "treatments/phase0/defense_defect_engineer_phase0_design.json",
+    "treatments/04_defense_defect_engineer_tr_block_070_draft.json"
+  ],
+  "_phase0_ref": "treatments/phase0/defense_defect_engineer_phase0_design.json"
 }

@@ -12,6 +12,12 @@ Scope: canonical grading benchmark for existing live `TR + BI` pairs
 - keep the benchmark pair-level: `TR` and `BI` are judged as one unit
 - external-model execution discipline is governed by `external-model-benchmark-operation-harness-v1.md`
 
+Schema precondition:
+
+- use `production-pair-schema-standard-v1.md` first when the pair still has contract-shape drift
+- benchmark judgment starts after the pair is normalized enough to count as one canonical `TR + BI` unit
+- this benchmark must not invent new pair-core requiredness outside that schema standard
+
 ## 2. Core Thesis
 
 The first question is not `is this pair interesting?`
@@ -79,6 +85,32 @@ After the opening gates, run one more benchmark pass across the full `TR`.
 - if any block is `has_cider: false`, the pair has a `YELLOW ceiling`
 - reports must name the exact no-cider block numbers; vague phrases like `middle feels slow` are not enough
 - this is a strong house rule by design: a production pair does not earn `GREEN` or `GREENPLUS` by asking the reader to coast through rewardless blocks
+
+### 2.4 Schema Interlock And Evidence Mode
+
+Benchmark judgment does not erase schema status.
+
+- every benchmark report must also name:
+  - `schema status`
+  - `benchmark freshness`
+  - `evidence mode`
+  - `open migration debt: yes/no`
+- use `legacy_read` only under the conditions defined in `production-pair-operating-policy-addendum-v1.md`
+- use `serialized_canonical` for new, newly touched, regenerated, or promotion-target pairs
+- an untouched historical live pair may keep a historical alias snapshot while carrying open migration debt
+- no pair may newly earn or refresh `GREEN` or `GREENPLUS` operationally while open migration debt remains
+
+### 2.5 Benchmark Freshness Rule
+
+Use the operating addendum to classify benchmark freshness.
+
+Working rule:
+
+- if a pair was materially touched or regenerated after the last benchmark artifact, benchmark freshness becomes `pending_refresh`
+- `pending_refresh` does not delete the historical benchmark reading, but it does block active baseline claims and fresh alias refresh
+- freshness becomes `current` only after:
+  - a new benchmark run, or
+  - a bounded benchmark-preservation audit that explicitly confirms the relevant benchmark anchors and cap rules remained intact after the latest rewrite
 
 ## 3. Grade Bands
 
@@ -244,7 +276,12 @@ Interpretation:
 
 ## 9. Current Benchmark Exemplars
 
-These are the current reference exemplars for reading the benchmark, not immutable sacred grades.
+These are historical benchmark exemplars for reading the ruler, not automatic proof of current active-baseline freshness.
+
+For operator use:
+
+- read benchmark freshness from `production-pair-operational-registry-v1.md`
+- do not treat this section alone as proof that a pair is a current active baseline candidate
 
 - `office_checkup_next_day`
   - first-block conversion benchmark
@@ -259,22 +296,27 @@ These are the current reference exemplars for reading the benchmark, not immutab
   - high-pain recovery-control benchmark
   - useful for testing whether a painful lane still keeps reward cadence
 - `투자물_골든_카나리아 테스트_canonical_v1`
-  - `GREEN` reference pair
-  - good market-power benchmark, but early reward leans more toward asset gain than status shift
+  - `GREENPLUS` live pair
+  - market-power proof that now converts early into authority/status token as well as capital gain
 
 ## 10. Standard Audit Output Shape
 
 Every pair benchmark audit should produce:
 
 1. pair identity
-2. compliance self-check
-3. `P0` gate pass/fail table
-4. full-block cider scan summary
-5. active cap rules
-6. `P1` score table and total
-7. provisional grade
-8. top `3` repair units if grade is `YELLOW` or `RED`
-9. alias update note if grade is `GREENPLUS` or `GREEN`
+2. operational state
+3. schema status
+4. benchmark freshness
+5. evidence mode
+6. compliance self-check
+7. `P0` gate pass/fail table
+8. full-block cider scan summary
+9. active cap rules
+10. `P1` score table and total
+11. provisional grade
+12. open migration debt: `yes/no`
+13. alias update note if grade is `GREENPLUS` or `GREEN`
+14. top `3` repair units if grade is `YELLOW` or `RED`
 
 Audit discipline:
 
@@ -294,7 +336,7 @@ Audit discipline:
 ## 11. Operating Rule
 
 - do not start from full-wave surgery
-- benchmark first
+- after schema normalization, benchmark first
 - classify second
 - repair the smallest profitable scope third
 - re-grade after repair

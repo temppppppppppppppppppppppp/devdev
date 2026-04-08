@@ -602,6 +602,107 @@ def test_build_stage4_canary_summary_fails_when_retry_context_missing(tmp_path):
     assert "stage4_retry_context_missing" in summary["hard_gates"]["errors"]
 
 
+def test_build_stage4_canary_summary_surfaces_numeric_consistency_summary(tmp_path):
+    project = tmp_path / "numauth_project"
+    _make_project_root(project)
+    artifact_dir = project / "logs" / "artifacts" / "stage4" / "ep_0002" / "attempt_01"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    artifact_path = artifact_dir / "final_manuscript__A_balanced.txt"
+    artifact_path.write_text("artifact", encoding="utf-8")
+    (project / "logs" / "canary_prep.json").write_text(
+        json.dumps({"source_project": "source", "canary_scope": "stage4_only"}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    db = DBManager(project / "project_data.db")
+    try:
+        db.save_stage_attempt(
+            stage=4,
+            verdict="REJECT",
+            ep_num=2,
+            attempt_num=1,
+            arc_num=1,
+            score=71,
+            session_id="sess-num",
+            attempt_key="s4:ep2:arc1:a1:sess-num",
+            candidate_key="A|balanced",
+            content_hash="hash-num",
+            artifact_path="logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__A_balanced.txt",
+            runtime_advisory=(
+                "[NC-1][후보 A][MAJOR][numeric_carryover_authority] "
+                "[numeric carryover authority mismatch] 원고 '20억 원' (20.0억) vs resumed "
+                "FactLedger 'capital'=2000000000.0억 (EP1 carryover baseline)."
+            ),
+        )
+        db.save_director_selection(
+            ep_num=2,
+            round_num=1,
+            selected_label="A",
+            selected_strategy="balanced",
+            verdict="REJECT",
+            score=71,
+            stage=4,
+            attempt_key="s4:ep2:arc1:a1:sess-num",
+            candidate_key="A|balanced",
+            content_hash="hash-num",
+            artifact_path="logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__A_balanced.txt",
+        )
+    finally:
+        db.close()
+
+    (project / "logs" / "episode_production.jsonl").write_text(
+        json.dumps(
+            {
+                "ep": 2,
+                "attempt_key": "s4:ep2:arc1:a1:sess-num",
+                "verdict": "REJECT",
+                "initial_verdict": "REJECT",
+                "final_verdict": "REJECT",
+                "final_score": 71,
+                "candidate_key": "A|balanced",
+                "selection_candidate_key": "A|balanced",
+                "content_hash": "hash-num",
+                "artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__A_balanced.txt",
+                "patch_trace": {"patch_strategy": "", "structural_attempted": False},
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (project / "logs" / "session").mkdir(parents=True, exist_ok=True)
+    (project / "logs" / "session" / "decisions.jsonl").write_text(
+        json.dumps(
+            {
+                "stage": "stage4",
+                "ep_num": 2,
+                "result": "REJECT",
+                "score": 71,
+                "meta": {
+                    "attempt_key": "s4:ep2:arc1:a1:sess-num",
+                    "candidate_key": "A|balanced",
+                    "content_hash": "hash-num",
+                    "artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__A_balanced.txt",
+                },
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (project / "logs" / "runtime_audit_summary.json").write_text(
+        json.dumps({"tag": "interrupted", "total_events": 1, "counts": {"evt": 1}}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    summary = build_stage4_canary_summary(project, target_ep=2)
+
+    assert summary["numeric_consistency_summary"]["status"] == "warn"
+    assert summary["numeric_consistency_summary"]["signal_count"] == 1
+    assert summary["numeric_consistency_summary"]["category_counts"]["numeric_carryover_authority"] == 1
+    assert summary["numeric_consistency_summary"]["ledger_field_counts"]["capital"] == 1
+
+
 def test_evaluate_stage4_canary_gates_treats_metadata_only_sink_warn_as_warning():
     gates = _evaluate_stage4_canary_gates(
         target_ep=1,

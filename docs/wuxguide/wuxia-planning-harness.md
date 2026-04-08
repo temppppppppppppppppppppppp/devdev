@@ -4,6 +4,12 @@ Date: 2026-03-20
 Status: active
 Family: `wuxguide`
 
+Delegation bootstrap note:
+
+- external or delegated models should read `docs/wuxguide/delegation-bootstrap.md` first
+- work-level current-truth docs override older handoff summaries for task start
+- saved boundary beats filename shape
+
 ## 1. When To Use
 
 Use this harness when:
@@ -17,6 +23,7 @@ If preprocess artifacts are missing or not audited, return to Stage 0 preprocess
 ## 2. Required Inputs
 
 - canonical pitch / onboarding / user notes
+- work-level current-truth doc when it exists
 - `treatments/preprocess/{work_id}/source_manifest.json`
 - `treatments/preprocess/{work_id}/profile_lock.json`
 - `treatments/preprocess/{work_id}/material_bundle_summary.json`

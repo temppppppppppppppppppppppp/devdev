@@ -1,0 +1,54 @@
+{
+  "prepared_at": "2026-04-08T09:58:43",
+  "source_project": "000_ㅇㅇㅇ",
+  "target_project": "_canary/canary_000_ㅇㅇㅇ_stage4_ep1_sinkproof_r1",
+  "canary_scope": "stage4_only",
+  "reruns_stage3_generation": false,
+  "preserves_stage3_blueprints": true,
+  "preserves_stage3_sink_baseline": true,
+  "from_ep": 1,
+  "cleanup": {
+    "from_ep": 1,
+    "db_impact": {
+      "manuscripts": 1,
+      "state_logs": 1,
+      "episode_bibles": 1,
+      "causal_graph": 5,
+      "episode_meta": 1,
+      "episode_quality_labels": 1,
+      "stage4_attempts": 1,
+      "stage4_director_selections": 1,
+      "blueprints_kept": 3,
+      "orphan_chain_link_anchors": 1
+    },
+    "anchor_validation": {
+      "status": "ok",
+      "cleanup_status": "ok",
+      "minimum_truth_status": "ok",
+      "from_ep": 1,
+      "orphan_chain_links": [],
+      "fact_ledger_history_at_or_after": {},
+      "world_state_alive_npcs_at_or_after": [],
+      "world_state_active_items_at_or_after": [],
+      "world_state_last_updated_ep": 0,
+      "expected_minimum_world_state": {
+        "npc_names": [],
+        "relationships": {},
+        "active_items": []
+      },
+      "actual_minimum_world_state": {
+        "npc_names": [],
+        "relationships": {},
+        "active_items": []
+      },
+      "missing_world_state_npcs": [],
+      "missing_world_state_active_items": [],
+      "world_state_relationship_mismatches": []
+    },
+    "file_cleanup": {
+      "draft_files_removed": 1,
+      "log_entries_removed": 8,
+      "memory_entries_removed": 0
+    }
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "_schema_version": "production_pair_operational_registry.v1",
+  "updated_at": "2026-04-08",
+  "notes": [
+    "Operational states here are durable governance overrides for the normalization runner.",
+    "Benchmark freshness tracks whether a benchmark or bounded benchmark-preservation audit has been recorded after the latest material touch or regeneration.",
+    "The 2026-04-08 benchmark freshness wave closes all current tracked pairs to benchmark_freshness=current."
+  ],
+  "pairs": [
+    {
+      "work_id": "투자물_골든_카나리아 테스트_canonical_v1",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "numbered_live_pair",
+      "operational_state": "newly_touched_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "docs/2026-04-08/pair01-strict-rebenchmark-greenplus-report.md",
+      "operator_note": "Benchmark-fresh numbered live pair; safe for current family baseline reading."
+    },
+    {
+      "work_id": "chaebol_allowance_zero",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "numbered_live_pair",
+      "operational_state": "newly_touched_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "operator_note": "Benchmark-fresh live pair; safe for current family baseline reading."
+    },
+    {
+      "work_id": "chaebol_ent_empire",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "numbered_live_pair",
+      "operational_state": "newly_touched_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "operator_note": "Benchmark-fresh live pair; safe for current family baseline reading."
+    },
+    {
+      "work_id": "defense_defect_engineer",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "numbered_live_pair",
+      "operational_state": "regenerated_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "operator_note": "Benchmark-fresh regenerated live pair; safe for current family baseline reading."
+    },
+    {
+      "work_id": "office_checkup_next_day",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "numbered_live_pair",
+      "operational_state": "newly_touched_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "operator_note": "Benchmark-fresh live pair; safe for current family baseline reading."
+    },
+    {
+      "work_id": "pantech_cyworld_reborn",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "numbered_live_pair",
+      "operational_state": "newly_touched_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "operator_note": "Benchmark-fresh live pair; safe for current family baseline reading."
+    },
+    {
+      "work_id": "wuxia_heavenly_physician",
+      "family": "wuxguide",
+      "reference_only": false,
+      "inventory_role": "numbered_live_pair",
+      "operational_state": "regenerated_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "operator_note": "Benchmark-fresh regenerated live pair; safe for current family baseline reading."
+    },
+    {
+      "work_id": "jangyeongshil_industrial_revolution",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "new_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREEN",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "operator_note": "Benchmark-fresh unslotted live pair; positive alias granted, but still outside the numbered-slot manifest."
+    },
+    {
+      "work_id": "manual_meridian_archivist",
+      "family": "wuxguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "new_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREEN",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "operator_note": "Benchmark-fresh unslotted live pair; positive alias granted, but still outside the numbered-slot manifest."
+    }
+  ]
+}

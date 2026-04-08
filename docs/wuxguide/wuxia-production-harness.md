@@ -7,6 +7,12 @@
 > 출력: `treatments/{work_id}_tr_block_070_draft.json`
 > 선행 문서: `SSOT_wuxguide-integrated-order.md`
 >
+> 위임/외부 모델 시작 규칙:
+>
+> - 먼저 `docs/wuxguide/delegation-bootstrap.md`를 읽는다.
+> - work-level current-truth doc가 있으면 handoff note보다 우선한다.
+> - `tr_block_070_draft`라는 이름은 저장 컨테이너 이름이지 saved boundary 보장이 아니다.
+>
 > **즉시 정지 표지판**
 >
 > - `treatments/{work_id}_tr_block_070_draft.json`는 **최종 누적 저장 컨테이너 이름**이다.

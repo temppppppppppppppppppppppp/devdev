@@ -1,7 +1,7 @@
 # shockline_salaryman — RETIRE NOTE
 
-Status: **RETIRED** (2026-04-06)
-Disposition: absorbed into `line_stop_deputy`
+Status: **RETIRED** (2026-04-06, lineage closed 2026-04-08)
+Disposition: retired; former absorption target `line_stop_deputy` is also retired
 
 ## 흡수 내역
 
@@ -24,6 +24,6 @@ Disposition: absorbed into `line_stop_deputy`
 
 - `fresh_20260406_batch01/04_shockline_salaryman.md` (원본 파일 보존, 수정하지 않음)
 
-## 통합본
+## 통합본(역사 기록)
 
-- `fresh_20260406_batch01/01_line_stop_deputy.md` (integrated candidate)
+- `fresh_20260406_batch01/01_line_stop_deputy_RETIRE.md` (retired)

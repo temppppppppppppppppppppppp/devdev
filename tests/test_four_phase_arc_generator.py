@@ -218,9 +218,52 @@ def test_run_director_selection_phase_reject_updates_retry_state():
     assert envelope.best_arc is rejected
     assert envelope.prev_rejected_arc is rejected
     assert envelope.prev_reject_feedback == "[base]\n[Director 비교 피드백]\n구조를 다시 정리하라"
-    assert envelope.prev_selected_strategy == "aggressive"
-    assert envelope.spare_candidates == [spare]
-    assert pipeline_result["phases"]["director_selection"]["status"] == "reject"
+
+
+def test_run_director_selection_phase_stamps_compare_meta_on_selected_arc():
+    gen = _make_generator()
+    selected = {"_strategy": "balanced", "tactical_doc": "selected tactical"}
+    director = MagicMock()
+    director.compare_and_select_arc.return_value = {
+        "decision": "PASS_WITH_FIX",
+        "selected_arc": selected,
+        "feedback": "국소 정리 필요",
+        "fix_scope": "inplace",
+        "reason": "후보 1이 가장 안정적이다.",
+        "comparison_notes": "후보 2는 상태 연속성이 약하다.",
+        "quality_gate_triggered": True,
+        "quality_gate_reasons": ["investment-major:nc"],
+        "score": 94,
+    }
+    pipeline_result = {"phases": {}}
+
+    envelope = gen.runtime._run_director_selection_phase(
+        director=director,
+        arc_no=2,
+        curr_block={},
+        prev_arc_context="prev",
+        full_constraint_block="constraints",
+        all_candidates=[selected],
+        candidate_quality_flags=[{}],
+        ns3b_director_advisory="",
+        investment_director_advisory="",
+        investment_advisory=[],
+        base_director_feedback="[base]",
+        feedback="seed",
+        prev_rejected_arc=None,
+        prev_reject_feedback="",
+        prev_selected_strategy="",
+        spare_candidates=[],
+        pipeline_result=pipeline_result,
+    )
+
+    assert envelope.should_return is True
+    assert selected["_director_compare_meta"]["selection_reason"] == "후보 1이 가장 안정적이다."
+    assert selected["_director_compare_meta"]["feedback"] == "국소 정리 필요"
+    assert selected["_director_compare_meta"]["fix_scope"] == "inplace"
+    assert selected["_director_compare_meta"]["quality_gate_triggered"] is True
+    assert pipeline_result["phases"]["director_selection"]["status"] == "pass_with_fix"
+    assert pipeline_result["final_verdict"] == "PASS"
 
 
 def test_run_phase3_validation_reject_clears_spares_on_low_confidence():

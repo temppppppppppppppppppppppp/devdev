@@ -110,9 +110,14 @@ def infer_bible_work_key(path: Path) -> str:
 
 def infer_treatment_work_key(path: Path) -> str | None:
     stem = path.stem
-    match = re.match(r"^(.+?)_tr_block_", stem)
-    if match:
-        return _normalize_work_key(match.group(1))
+    for pattern in (
+        r"^(.+?)_tr_block_",
+        r"^\d+_tr_(.+)$",
+        r"^(.+?)_tr$",
+    ):
+        match = re.match(pattern, stem)
+        if match:
+            return _normalize_work_key(match.group(1))
     return None
 
 

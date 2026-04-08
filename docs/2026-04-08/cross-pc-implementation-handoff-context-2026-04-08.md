@@ -1,8 +1,10 @@
 # Cross-PC Implementation Handoff Context
 
 Date: 2026-04-08
-Status: active handoff note (fresh `000_ㅇㅇㅇ` run reached Stage4 `ep1` persistence success, a bounded Stage4 PASS-side sink-alignment follow-up is now captured for push-ready handoff, queue order remains unchanged, and closure is still rerun-pending)
+Status: historical handoff note (the rerun-pending Stage4 sink-alignment question captured here was later resolved by `docs/2026-04-08/0_0-stage4-ep1-sinkproof-r1-runtime-closure-audit.md`)
 Canonical Path: `docs/2026-04-08/cross-pc-implementation-handoff-context-2026-04-08.md`
+Superseded By:
+- `docs/2026-04-08/0_0-stage4-ep1-sinkproof-r1-runtime-closure-audit.md`
 Supersedes:
 - `docs/2026-04-07/cross-pc-implementation-handoff-context-2026-04-07.md`
 Audience: another PC or another terminal resuming the current system-track queue

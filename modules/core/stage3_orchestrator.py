@@ -74,6 +74,9 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
     coverage_warnings = [str(item).strip() for item in (meta.get("coverage_warnings") or []) if str(item or "").strip()]
     provenance_ledger = meta.get("provenance_ledger") if isinstance(meta.get("provenance_ledger"), dict) else {}
     budget_ledger = meta.get("budget_ledger") if isinstance(meta.get("budget_ledger"), dict) else {}
+    source_anchor_summary = (
+        meta.get("source_anchor_summary") if isinstance(meta.get("source_anchor_summary"), dict) else {}
+    )
     flags = {
         "semantic_ctx_chars": int(meta.get("semantic_ctx_chars") or 0),
         "semantic_ctx_sources": sorted(source_counts.keys()),
@@ -84,8 +87,120 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
         "work_focus_present": bool(meta.get("work_focus_present", False)),
         "provenance_ledger": provenance_ledger,
         "budget_ledger": budget_ledger,
+        "source_anchor_summary": source_anchor_summary,
     }
     return {key: value for key, value in flags.items() if value not in ("", [], {}, None, 0, False)}
+
+
+def _clip_stage3_anchor_text(value: object, limit: int = 80) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3].rstrip() + "..."
+
+
+def _build_stage3_anchor_inventory_preview(raw: object, *, limit: int = 3) -> list[str]:
+    items = raw if isinstance(raw, list) else ([raw] if raw not in (None, "", []) else [])
+    preview: list[str] = []
+    for item in items[: max(0, int(limit or 0))]:
+        if isinstance(item, dict):
+            label = ""
+            for key in ("name", "item", "label", "summary"):
+                label = _clip_stage3_anchor_text(item.get(key, ""), 40)
+                if label:
+                    break
+            if not label:
+                label = _clip_stage3_anchor_text(_json.dumps(item, ensure_ascii=False), 40)
+        else:
+            label = _clip_stage3_anchor_text(item, 40)
+        if label and label not in preview:
+            preview.append(label)
+    return preview
+
+
+def _build_stage3_source_anchor_summary(arc_data: dict | None, blueprint_window: list | None) -> dict:
+    arc_payload = arc_data if isinstance(arc_data, dict) else {}
+    state_constraints = arc_payload.get("state_constraints") if isinstance(arc_payload.get("state_constraints"), dict) else {}
+    joint_docs = arc_payload.get("joint_docs") if isinstance(arc_payload.get("joint_docs"), dict) else {}
+    semantic_carryover = (
+        arc_payload.get("semantic_carryover") if isinstance(arc_payload.get("semantic_carryover"), dict) else {}
+    )
+    start_state = state_constraints.get("arc_start_state") if isinstance(state_constraints.get("arc_start_state"), dict) else {}
+    prev_blueprint = blueprint_window[-1] if isinstance(blueprint_window, list) and blueprint_window else {}
+    if not isinstance(prev_blueprint, dict):
+        prev_blueprint = {}
+
+    start_location = _clip_stage3_anchor_text(start_state.get("location") or joint_docs.get("final_location") or "", 80)
+    start_inventory = start_state.get("equipment", [])
+    inventory_preview = _build_stage3_anchor_inventory_preview(start_inventory)
+    inventory_count = len(start_inventory) if isinstance(start_inventory, list) else (1 if inventory_preview else 0)
+    prev_end_location = _clip_stage3_anchor_text(
+        prev_blueprint.get("end_location") or prev_blueprint.get("location") or "",
+        80,
+    )
+    prev_transition = prev_blueprint.get("opening_transition") if isinstance(prev_blueprint.get("opening_transition"), dict) else {}
+    semantic_keys = [str(key).strip() for key in semantic_carryover.keys() if str(key or "").strip()]
+    continuity = semantic_carryover.get("continuity_checkpoints")
+
+    summary: dict[str, object] = {}
+    if isinstance(blueprint_window, list) and blueprint_window:
+        summary["blueprint_window_count"] = len(blueprint_window)
+    prev_ep = prev_blueprint.get("ep_num") or prev_blueprint.get("episode_number")
+    if prev_ep not in (None, ""):
+        summary["previous_blueprint_ep"] = prev_ep
+    if prev_end_location:
+        summary["previous_blueprint_end_location"] = prev_end_location
+    prev_transition_type = _clip_stage3_anchor_text(prev_transition.get("type", ""), 40)
+    if prev_transition_type:
+        summary["previous_blueprint_opening_transition_type"] = prev_transition_type
+    if start_location:
+        summary["current_arc_start_location"] = start_location
+    if inventory_count:
+        summary["current_arc_start_inventory_count"] = inventory_count
+    if inventory_preview:
+        summary["current_arc_start_inventory_preview"] = inventory_preview
+    if semantic_keys:
+        summary["semantic_carryover_keys"] = semantic_keys[:6]
+    if isinstance(continuity, list) and continuity:
+        summary["continuity_checkpoint_count"] = len(continuity)
+
+    anchor_surfaces: list[str] = []
+    if prev_end_location:
+        anchor_surfaces.append("prev_blueprint_end_location")
+    if prev_transition_type:
+        anchor_surfaces.append("prev_blueprint_opening_transition")
+    if start_location:
+        anchor_surfaces.append("arc_start_location")
+    if inventory_count:
+        anchor_surfaces.append("arc_start_inventory")
+    if semantic_keys:
+        anchor_surfaces.append("semantic_carryover")
+    if anchor_surfaces:
+        summary["anchor_surfaces"] = anchor_surfaces
+
+    return summary
+
+
+def _format_stage3_source_anchor_summary(summary: dict | None) -> str:
+    if not isinstance(summary, dict) or not summary:
+        return ""
+    parts: list[str] = []
+    prev_ep = summary.get("previous_blueprint_ep")
+    prev_location = str(summary.get("previous_blueprint_end_location", "") or "").strip()
+    if prev_ep not in (None, "") or prev_location:
+        parts.append(f"prev_ep={prev_ep or '-'}:{prev_location or '-'}")
+    transition_type = str(summary.get("previous_blueprint_opening_transition_type", "") or "").strip()
+    if transition_type:
+        parts.append(f"prev_opening={transition_type}")
+    start_location = str(summary.get("current_arc_start_location", "") or "").strip()
+    if start_location:
+        parts.append(f"start={start_location}")
+    inventory_count = int(summary.get("current_arc_start_inventory_count") or 0)
+    if inventory_count:
+        parts.append(f"start_items={inventory_count}")
+    return " | ".join(parts[:4])
 
 
 def _select_stage3_anchor_recent_window(
@@ -1315,6 +1430,9 @@ class Stage3Orchestrator:
             vector_context_chars=len(_bp_semantic_ctx),
             budget_ledger=_stage3_budget_ledger,
         )
+        _source_anchor_summary = _build_stage3_source_anchor_summary(arc_data, blueprint_window)
+        if _source_anchor_summary:
+            _stage3_observation["source_anchor_summary"] = _source_anchor_summary
         _record_retrieval_observation(
             self.app,
             ep_num=working_ep,
@@ -1642,6 +1760,9 @@ class Stage3Orchestrator:
         _source_counts = semantic_bundle.get("source_counts") or {}
         _coverage_warnings = semantic_bundle.get("coverage_warnings") or []
         _bp_semantic_ctx = str(semantic_bundle.get("semantic_ctx", "") or "")
+        _source_anchor_summary = {}
+        if isinstance(_stage3_observation, dict):
+            _source_anchor_summary = dict((_stage3_observation or {}).get("source_anchor_summary") or {})
 
         pipeline_result["_stage3_duration_ms"] = max(0, int((_time.perf_counter() - started_at) * 1000))
         pipeline_result["_stage3_token_cost_usd"] = max(
@@ -1656,6 +1777,7 @@ class Stage3Orchestrator:
             "work_focus_present": bool(_s3_work_focus),
             "provenance_ledger": dict((_stage3_observation or {}).get("provenance_ledger") or {}),
             "budget_ledger": dict((_stage3_observation or {}).get("budget_ledger") or {}),
+            "source_anchor_summary": _source_anchor_summary,
         }
         return pipeline_result
 
@@ -1740,6 +1862,7 @@ class Stage3Orchestrator:
         pov_contract = resolve_project_pov_contract(ctx.current_project)
         duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
         token_cost = float(pipeline_result.get("_stage3_token_cost_usd") or 0.0)
+        source_anchor_line = _format_stage3_source_anchor_summary(observability_flags.get("source_anchor_summary"))
 
         try:
             runtime_payload = self._build_stage3_success_runtime_payload(
@@ -1763,6 +1886,17 @@ class Stage3Orchestrator:
             )
         except Exception as stage_attempt_err:
             _logging.debug("[stage_attempts] Stage3 PASS record failed (non-blocking): %s", stage_attempt_err)
+
+        if source_anchor_line:
+            ctx.ui.log(
+                f"      source_anchor: {source_anchor_line}",
+                stage="stage3",
+                component="blueprint_generation",
+                ep_num=working_ep,
+                arc_num=arc_no,
+                event_kind="summary",
+                meta={"source_anchor_summary": observability_flags.get("source_anchor_summary")},
+            )
 
         blueprint = self._annotate_stage3_success_blueprint(
             working_ep=working_ep,
@@ -1931,6 +2065,8 @@ class Stage3Orchestrator:
                     artifact_path=artifact_meta["artifact_path"],
                     score_breakdown=_s3_pass_breakdown or None,
                 )
+                if hasattr(ctx.pass_rate_monitor, "_save_records"):
+                    ctx.pass_rate_monitor._save_records()
             except Exception as prm_err:
                 _logging.debug("[stage3_prm] Stage3 PASS record failed (non-blocking): %s", prm_err)
 
@@ -2642,6 +2778,7 @@ class Stage3Orchestrator:
         _selected_strategy = str(
             pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
         )
+        _source_anchor_line = _format_stage3_source_anchor_summary(_observability_flags.get("source_anchor_summary"))
         ctx.ui.log(
             f"      └─ REJECT 사유: {_reject_reason}",
             stage="stage3",
@@ -2665,6 +2802,16 @@ class Stage3Orchestrator:
                 "observability_flags": _observability_flags,
             },
         )
+        if _source_anchor_line:
+            ctx.ui.log(
+                f"      source_anchor: {_source_anchor_line}",
+                stage="stage3",
+                component="blueprint_generation",
+                ep_num=working_ep,
+                arc_num=arc_no or 0,
+                event_kind="summary",
+                meta={"source_anchor_summary": _observability_flags.get("source_anchor_summary")},
+            )
         self._record_stage3_failure_attempt(
             working_ep=working_ep,
             pipeline_result=pipeline_result,
@@ -2803,6 +2950,8 @@ class Stage3Orchestrator:
                     artifact_path=_artifact_meta["artifact_path"],
                     score_breakdown=_s3_rej_breakdown or None,
                 )
+                if hasattr(ctx.pass_rate_monitor, "_save_records"):
+                    ctx.pass_rate_monitor._save_records()
             except Exception as _prm_err:
                 _logging.debug("[stage3_prm] Stage3 REJECT record failed (best-effort: %s)", _prm_err)
 

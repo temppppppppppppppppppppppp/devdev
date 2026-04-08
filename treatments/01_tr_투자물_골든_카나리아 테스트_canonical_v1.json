@@ -75,7 +75,14 @@
         "knowledge_used": "2006년 원유 60달러 → 80달러 상승, 이란 핵 위기, 에콰도르 옥시덴탈 페트롤리엄 강제 계약 해지 예정",
         "risk_level": "저위험 (아직 투자 전)",
         "business_sector": "투자/금융",
-        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다"
+        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다",
+        "success_pattern": "한시우는 개인 자산을 정리한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "한시우는 개인 자산을 정리한다.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -179,7 +186,14 @@
         "knowledge_used": "이란 핵 위기로 OPEC 공급 차질 발생 → WTI 2006년 60달러 → 7~8월 78달러 도달. 공급 충격 = 가격 급등 메커니즘. 레버리지 3배 적용 시 원유 30% 상승 → 수익 90% 확대.",
         "risk_level": "고위험",
         "business_sector": "원자재/에너지",
-        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다"
+        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다",
+        "success_pattern": "2월 말, 이란이 핵 농축 재개를 선언한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "2월 말, 이란이 핵 농축 재개를 선언한다.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -292,7 +306,14 @@
         "knowledge_used": "에콰도르 정부의 옥시덴탈 계약 해지 시기, 중남미 국유화 도미노 우려로 유가 75달러 돌파",
         "risk_level": "중위험",
         "business_sector": "원자재/에너지",
-        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다"
+        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다",
+        "success_pattern": "박성호 PB가 완전히 태도를 바꾼다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "박성호 PB가 완전히 태도를 바꾼다.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -399,7 +420,14 @@
         "knowledge_used": "2006년 하반기 금 620→700달러 상승",
         "risk_level": "중위험",
         "business_sector": "원자재/귀금속",
-        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다"
+        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다",
+        "success_pattern": "금 포지션으로 첫 수확.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "금 포지션으로 첫 수확.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -526,7 +554,14 @@
             "골드 롱"
           ]
         },
-        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다"
+        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다",
+        "success_pattern": "연말 결산.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "연말 결산.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -635,7 +670,14 @@
         "knowledge_used": "중국 인프라 붐(올림픽 준비) → 철강 수요 급증 → 포스코 마진 확대. 동시에 해운 물동량 증가 → 조선 수주 급증 → 현대중공업·대우조선 주가 급등. 2007년 코스피 2000 고점 후 폭락 예정.",
         "risk_level": "중위험",
         "business_sector": "조선/철강",
-        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다"
+        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다",
+        "success_pattern": "주변에서 '더 간다'고 한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "주변에서 '더 간다'고 한다.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -747,7 +789,14 @@
           "ABX 지수",
           "풋옵션"
         ],
-        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다"
+        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다",
+        "success_pattern": "CDS 거래 루트 확보.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "CDS 거래 루트 확보.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -861,7 +910,14 @@
         "knowledge_used": "CDS(신용부도스와프) = 채권 부도 보험. 2007년 BNP 파리바 환매 중단으로 신용 경색 시작. 2008년 3월 베어스턴스 긴급 매각, 9월 리먼 파산. AIG 수십조 달러 CDS 매도 포지션 붕괴.",
         "risk_level": "초고위험",
         "business_sector": "금융/파생상품",
-        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다"
+        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다",
+        "success_pattern": "포지션 진입 완료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "포지션 진입 완료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -967,7 +1023,14 @@
         "knowledge_used": "이건 시작. 2008년 리먼이 본게임",
         "risk_level": "고위험 (홀딩 리스크)",
         "business_sector": "금융/파생상품",
-        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다"
+        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다",
+        "success_pattern": "미실현 수익 30억 포함 총 자산 120억.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "미실현 수익 30억 포함 총 자산 120억.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1097,7 +1160,14 @@
             "VIX 콜옵션"
           ]
         },
-        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다"
+        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다",
+        "success_pattern": "2007년 종료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "2007년 종료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1211,7 +1281,14 @@
         "knowledge_used": "베어스턴스는 구제되지만, 리먼은 파산한다",
         "risk_level": "중위험",
         "business_sector": "금융/투자은행",
-        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다"
+        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "success_pattern": "베어스턴스 CDS 익절로 50억 순익 확정.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "베어스턴스 CDS 익절로 50억 순익 확정.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1322,7 +1399,14 @@
         "knowledge_used": "WTI 배럴당 147달러 = 슈퍼사이클 정점. 고유가 → 수요 파괴(항공·제조·소비 위축) → 피크 디맨드. 리먼 파산 9월 예정. CDS 가치 폭등 구간 진입.",
         "risk_level": "초고위험",
         "business_sector": "에너지/금융",
-        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다"
+        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "success_pattern": "8월, 유가가 하락하기 시작한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "8월, 유가가 하락하기 시작한다.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1431,7 +1515,14 @@
         "knowledge_used": "리먼 파산 후 AIG 구제, 10월 패닉",
         "risk_level": "중위험 (이미 수익권)",
         "business_sector": "금융/투자은행",
-        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다"
+        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "success_pattern": "리먼 CDS 폭발.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "리먼 CDS 폭발.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1542,7 +1633,14 @@
         "knowledge_used": "VIX 80이 단기 고점, 바닥은 2009년 3월",
         "risk_level": "중위험",
         "business_sector": "금융",
-        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다"
+        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "success_pattern": "익절 완료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "익절 완료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1644,7 +1742,9 @@
           "회귀 지식 (저점 매수 타이밍)",
           "현금 확보"
         ],
-        "opponent": null,
+        "opponent": {
+          "name": "주변에서 말한다."
+        },
         "historical_event": {
           "name": "오바마 당선, 구제금융",
           "year": 2008,
@@ -1668,7 +1768,14 @@
             "원유 숏"
           ]
         },
-        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다"
+        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "success_pattern": "2008년 종료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "2008년 종료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1805,7 +1912,14 @@
         "knowledge_used": "S&P500 666.79, 2009년 3월 9일 바닥",
         "risk_level": "저위험 (현금)",
         "business_sector": "대기",
-        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다"
+        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "success_pattern": "2월 말.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "2월 말.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -1939,7 +2053,14 @@
         "knowledge_used": "S&P500 666 = 2009년 3월 6일 사이클 바닥. VIX 80+ = 공황 극점 = 반전 시그널. 역발상 원칙: 공포 지수 극점에서 매수. 이후 V자 반등으로 1년 내 100%+ 수익.",
         "risk_level": "고위험",
         "business_sector": "주식",
-        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다"
+        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "success_pattern": "체결 완료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "체결 완료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2055,7 +2176,14 @@
         "knowledge_used": "애플 100배, 아마존 200배 성장",
         "risk_level": "중위험",
         "business_sector": "주식",
-        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다"
+        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "success_pattern": "9월 말 기준.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "9월 말 기준.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2166,7 +2294,14 @@
         "knowledge_used": "비트코인 = 발행 한도 2100만 개 고정 알고리즘. 4년마다 반감기(채굴 보상 50% 감소) → 공급 감소. 2017년 2만 달러, 2024년 10만 달러 예정. 법정화폐 무제한 발행 대비 희소성 자산.",
         "risk_level": "초고위험",
         "business_sector": "암호화폐",
-        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다"
+        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "success_pattern": "비트코인 포지션 구축 완료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "비트코인 포지션 구축 완료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2291,7 +2426,14 @@
             "비트코인 초기 매수"
           ]
         },
-        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다"
+        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "success_pattern": "2010년 종료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "2010년 종료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2400,7 +2542,14 @@
         "knowledge_used": "카카오 2017년 상장, 시총 10조+",
         "risk_level": "중위험",
         "business_sector": "플랫폼/모바일",
-        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다"
+        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "success_pattern": "카카오 지분 3% 확보.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "카카오 지분 3% 확보.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2515,7 +2664,14 @@
         "knowledge_used": "K-POP 글로벌화, BTS 현상",
         "risk_level": "중위험",
         "business_sector": "엔터테인먼트",
-        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다"
+        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "success_pattern": "YG 지분 2% 확보 (80억).",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "YG 지분 2% 확보 (80억).",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2632,7 +2788,14 @@
         "knowledge_used": "알리바바 2014년 IPO, 시총 2000억 달러+",
         "risk_level": "중위험",
         "business_sector": "이커머스/중국",
-        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다"
+        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "success_pattern": "알리바바 프리IPO 지분 확보.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "알리바바 프리IPO 지분 확보.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2754,7 +2917,14 @@
           "end_capital": "3500억",
           "return_rate": "+17400%"
         },
-        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다"
+        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "success_pattern": "넷마블 지분 확보.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "넷마블 지분 확보.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2870,7 +3040,14 @@
         "knowledge_used": "비트코인 생존, 2016년 반감기, 2017년 2만 달러",
         "risk_level": "초고위험",
         "business_sector": "암호화폐",
-        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다"
+        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "success_pattern": "추가 매수 완료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "추가 매수 완료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -2988,7 +3165,14 @@
           "end_capital": "4500억",
           "return_rate": "+22400%"
         },
-        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다"
+        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "success_pattern": "알리바바 부분 익절로 80억 확정.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "알리바바 부분 익절로 80억 확정.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3100,7 +3284,14 @@
         "knowledge_used": "이더리움 2017년 1000달러, 2021년 4000달러+",
         "risk_level": "초고위험",
         "business_sector": "암호화폐/스마트컨트랙트",
-        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다"
+        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "success_pattern": "이더리움 재단 측과 협의, OTC로 150억 어치 ETH 확보.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "이더리움 재단 측과 협의, OTC로 150억 어치 ETH 확보.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3212,7 +3403,14 @@
           "bitcoin": "600억 → 1000억+",
           "ethereum": "150억 → 3600억"
         },
-        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다"
+        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "success_pattern": "비트코인 1000억+.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "비트코인 1000억+.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3323,7 +3521,14 @@
           "bitcoin": "1조",
           "ethereum": "9조"
         },
-        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다"
+        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "success_pattern": "이더리움만으로 9조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "이더리움만으로 9조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3459,7 +3664,14 @@
             "2015-2017: 크립토 (4500억→13조)"
           ]
         },
-        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다"
+        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "success_pattern": "크립토 익절 10조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "크립토 익절 10조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3571,7 +3783,14 @@
         "knowledge_used": "비트코인 3000달러 바닥 (2018년 말)",
         "risk_level": "저위험 (현금)",
         "business_sector": "관망",
-        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다"
+        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "success_pattern": "크립토 관망.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "크립토 관망.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3682,7 +3901,14 @@
         "knowledge_used": "테슬라 = EV 소프트웨어 마진 구조. 내연기관차 부품 2만 개 vs EV 2천 개 → 원가 절감. EV 침투율 1%→10% 구간 급성장. 2020년 S&P500 편입, 이후 주가 10배+ 예정.",
         "risk_level": "고위험",
         "business_sector": "전기차/테크",
-        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다"
+        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "success_pattern": "테슬라 2조 매수 완료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "테슬라 2조 매수 완료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3797,7 +4023,14 @@
         "knowledge_used": "2020년 코로나 → 무제한 QE → 자산 폭등",
         "risk_level": "고위험",
         "business_sector": "크립토/테크",
-        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다"
+        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "success_pattern": "포지션 구축 완료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "포지션 구축 완료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -3907,7 +4140,14 @@
         "knowledge_used": "2020년 1월 코로나, 3월 서킷브레이커",
         "risk_level": "중위험 (헷지 비용)",
         "business_sector": "파생상품",
-        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다"
+        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "success_pattern": "헷지 포지션 1.5조 구축.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "헷지 포지션 1.5조 구축.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4022,7 +4262,14 @@
         "knowledge_used": "3월 서킷브레이커, 3월 23일 바닥",
         "risk_level": "고위험",
         "business_sector": "파생상품",
-        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다"
+        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "success_pattern": "헷지 포지션 수익 전환.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "헷지 포지션 수익 전환.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4145,7 +4392,14 @@
         "knowledge_used": "연준 무제한 QE + 제로금리 → 유동성 폭발. 예금·채권 금리 0% → 자산시장 자금 유입 강제. 3월 23일 S&P500 2191 바닥, 이후 V자 반등. 유동성 = 가장 저평가된 자산으로 흘러든다.",
         "risk_level": "고위험",
         "business_sector": "전체",
-        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다"
+        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "success_pattern": "헷지 익절 12조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "헷지 익절 12조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4253,7 +4507,14 @@
         "knowledge_used": "2020년 말까지 강세장",
         "risk_level": "저위험",
         "business_sector": "전체",
-        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다"
+        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "success_pattern": "포트폴리오 27조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "포트폴리오 27조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4365,7 +4626,14 @@
         "knowledge_used": "2020년 말까지 강세",
         "risk_level": "저위험",
         "business_sector": "테크",
-        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다"
+        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "success_pattern": "포트폴리오 35조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "포트폴리오 35조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4473,7 +4741,14 @@
         "knowledge_used": "12월 21일 편입 당일이 단기 고점",
         "risk_level": "저위험",
         "business_sector": "전기차",
-        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다"
+        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "success_pattern": "홀딩 유지.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "홀딩 유지.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4603,7 +4878,14 @@
             "2020.12: 테슬라 편입 (15조 → 익절 5조)"
           ]
         },
-        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다"
+        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "success_pattern": "2020년 종료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "2020년 종료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4730,7 +5012,14 @@
         "knowledge_used": "도지코인 SNL 방송 후 폭등/폭락",
         "risk_level": "저위험 (소량 베팅)",
         "business_sector": "밈/크립토",
-        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다"
+        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "success_pattern": "도지코인 매수 완료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "도지코인 매수 완료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4847,7 +5136,14 @@
         "knowledge_used": "11월이 진짜 ATH",
         "risk_level": "중위험",
         "business_sector": "크립토",
-        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다"
+        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "success_pattern": "BTC 2조 익절 완료 (슬리피지 반영).",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "BTC 2조 익절 완료 (슬리피지 반영).",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -4958,7 +5254,14 @@
         "knowledge_used": "SNL 방송 후 폭락, 크립토 여름 조정",
         "risk_level": "고위험 (밈코인)",
         "business_sector": "밈코인",
-        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다"
+        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "success_pattern": "도지 익절 1.3조 추가.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "도지 익절 1.3조 추가.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5080,7 +5383,14 @@
         "knowledge_used": "11월 6.9만 달러 ATH",
         "risk_level": "고위험",
         "business_sector": "크립토",
-        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다"
+        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "success_pattern": "크립토 포지션 재정비.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "크립토 포지션 재정비.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5198,7 +5508,14 @@
         "knowledge_used": "11월 10일 = ATH, 이후 크립토 윈터",
         "risk_level": "고위험 결정",
         "business_sector": "크립토",
-        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다"
+        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "success_pattern": "크립토 전량 익절.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "크립토 전량 익절.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5316,7 +5633,14 @@
         "knowledge_used": "루나 붕괴 (5월), 연준 금리 인상",
         "risk_level": "저위험 (현금)",
         "business_sector": "관망",
-        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다"
+        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "success_pattern": "현금 37조, 주식 10조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "현금 37조, 주식 10조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5440,7 +5764,14 @@
         "knowledge_used": "루나/UST 5월 붕괴",
         "risk_level": "초고위험",
         "business_sector": "크립토 파생",
-        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다"
+        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "success_pattern": "강제 매도 금액 + UST 숏 포지션 유지.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "강제 매도 금액 + UST 숏 포지션 유지.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5555,7 +5886,14 @@
         "knowledge_used": "UST 완전 붕괴, 도미노 효과",
         "risk_level": "초고위험 (초고수익)",
         "business_sector": "크립토 파생",
-        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다"
+        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "success_pattern": "UST 숏 10조 수익.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "UST 숏 10조 수익.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5671,7 +6009,14 @@
         "knowledge_used": "FTX 11월 붕괴, BTC 1.6만 바닥",
         "risk_level": "중위험",
         "business_sector": "크립토",
-        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다"
+        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "success_pattern": "비트코인 1조 매수.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "비트코인 1조 매수.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5803,7 +6148,14 @@
             "2022.11: FTX 붕괴 후 BTC 저점 매수 (20조)"
           ]
         },
-        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다"
+        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "success_pattern": "비트코인 21조 (1조 기존 + 20조 신규).",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "비트코인 21조 (1조 기존 + 20조 신규).",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -5911,7 +6263,14 @@
         "knowledge_used": "엔비디아 3조 달러 시총, BTC 10만 달러",
         "risk_level": "중위험",
         "business_sector": "AI/크립토",
-        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다"
+        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "success_pattern": "비트코인 35조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "비트코인 35조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6021,7 +6380,14 @@
         "knowledge_used": "NVDA 3조 달러 (2024년)",
         "risk_level": "중위험",
         "business_sector": "AI 반도체",
-        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다"
+        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "success_pattern": "엔비디아 11조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "엔비디아 11조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6129,7 +6495,14 @@
         "knowledge_used": "NVDA 4분기 실적 폭발",
         "risk_level": "중위험",
         "business_sector": "AI/크립토",
-        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다"
+        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "success_pattern": "엔비디아 13조, 비트코인 40조, 주식 8조, 현금 13조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "엔비디아 13조, 비트코인 40조, 주식 8조, 현금 13조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6243,7 +6616,14 @@
         "knowledge_used": "1월 10일 BTC 현물 ETF 승인",
         "risk_level": "저위험",
         "business_sector": "AI/크립토",
-        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다"
+        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "success_pattern": "엔비디아 18조, 비트코인 65조, 주식 8조, 현금 9조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "엔비디아 18조, 비트코인 65조, 주식 8조, 현금 9조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6357,7 +6737,14 @@
         "knowledge_used": "비트코인 현물 ETF 승인 = 기관 진입 경로 개방. 연금펀드·국부펀드·보험사 ETF 통해 합법 매수 가능. 전 세계 기관 자산 수경 달러 중 1% 유입 시 시총 수배. 3월 7만 달러 목표 후 부분 익절.",
         "risk_level": "저위험",
         "business_sector": "크립토",
-        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다"
+        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "success_pattern": "비트코인 45조 홀딩 + 현금 29조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "비트코인 45조 홀딩 + 현금 29조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6468,7 +6855,14 @@
         "knowledge_used": "반감기 후 조정, 연말 10만 달러",
         "risk_level": "저위험 (현금화)",
         "business_sector": "크립토/AI",
-        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다"
+        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "success_pattern": "비트코인 15조, 엔비디아 15조, 현금 64조, 기타 주식 8조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "비트코인 15조, 엔비디아 15조, 현금 64조, 기타 주식 8조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6590,7 +6984,14 @@
         "knowledge_used": "9월부터 연말 랠리",
         "risk_level": "중위험",
         "business_sector": "크립토/AI",
-        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다"
+        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "success_pattern": "비트코인 35조, 엔비디아 20조, 주식 8조, 현금 39조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "비트코인 35조, 엔비디아 20조, 주식 8조, 현금 39조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6702,7 +7103,14 @@
         "knowledge_used": "10만 달러 = 심리적 저항선",
         "risk_level": "저위험 (익절)",
         "business_sector": "크립토/AI",
-        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다"
+        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "success_pattern": "현금 127조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "현금 127조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6808,7 +7216,14 @@
         "knowledge_used": "없음 (미래 지식 불필요)",
         "risk_level": "저위험",
         "business_sector": "자산관리",
-        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다"
+        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "success_pattern": "자산 분산 완료.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "자산 분산 완료.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6933,7 +7348,14 @@
             "2024.11: 최종 익절 (135조)"
           ]
         },
-        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다"
+        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "success_pattern": "최종 자산 135조.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "reward_receipt",
+          "receipt_line": "최종 자산 135조.",
+          "pain_only_exit": false
+        }
       },
       "regression_ext": {
         "is_regressor": true,
@@ -6968,5 +7390,12 @@
         59
       ]
     }
-  ]
+  ],
+  "_work_id": "투자물_골든_카나리아 테스트_canonical_v1",
+  "_phase0_ref": "treatments/phase0/투자물_골든_카나리아 테스트_canonical_v1_phase0_design.json",
+  "_authority_chain": [
+    "treatments/phase0/투자물_골든_카나리아 테스트_canonical_v1_phase0_design.json",
+    "treatments/01_tr_투자물_골든_카나리아 테스트_canonical_v1.json"
+  ],
+  "_family": "blockguide"
 }

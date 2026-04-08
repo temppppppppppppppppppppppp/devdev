@@ -612,6 +612,11 @@ class Stage4RejectRuntime:
             director_result=director_result,
             selection_reason=reject_logging.session_selection_reason,
             verdict_reason=reject_logging.session_verdict_reason,
+            advisory_warnings=owner._build_final_selection_advisory_payload(
+                gate_semantics=reject_logging.session_gate_semantics,
+                fix_pack=self.owner._build_fix_pack_payload(sink_source),
+                retry_budget_axes=dict(previous_attempt.get("retry_budget_axes") or {}),
+            ),
         )
         owner._append_episode_log(
             ep_num=next_ep,
@@ -1311,6 +1316,7 @@ class Stage4RejectRuntime:
         director_result: dict,
         selection_reason: str,
         verdict_reason: str,
+        advisory_warnings: dict | None = None,
     ) -> None:
         current_db = getattr(getattr(self.owner.ctx, "current_project", None), "db", None)
         if current_db is None or not hasattr(current_db, "update_director_selection_rationale"):
@@ -1331,6 +1337,7 @@ class Stage4RejectRuntime:
                         director_result.get("fix_scope", ""),
                     )
                 ),
+                advisory_warnings=advisory_warnings,
             )
         except Exception as exc:
             logging.debug("[Stage4] director rationale sync failed: %s", exc)

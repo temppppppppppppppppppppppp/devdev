@@ -6,13 +6,12 @@
   "_family": "blockguide",
   "_work_id": "pantech_cyworld_reborn",
   "_authority_chain": [
-    "material_ssot/20_pitch/pitch-philosophy.md",
     "material_ssot/20_pitch/canon/pantech_cyworld_reborn.md",
     "treatments/preprocess/pantech_cyworld_reborn/source_manifest.json",
     "treatments/preprocess/pantech_cyworld_reborn/material_bundle_summary.json",
     "treatments/preprocess/pantech_cyworld_reborn/profile_lock.json",
     "treatments/preprocess/pantech_cyworld_reborn/phase0_ready_snapshot.json",
-    "treatments/pantech_cyworld_reborn_phase0_design.json",
+    "treatments/phase0/pantech_cyworld_reborn_phase0_design.json",
     "treatments/08_pantech_cyworld_reborn_tr_block_070_draft.json"
   ],
   "_creation_note": "이 파일은 canonical pitch·Stage0 4종·live Phase0·live TR를 authority 순서대로 동기화한 첫 live BI다. plot_roadmap은 live TR 전량 복사이며 BI 레벨에서 재창작하지 않았다.",
@@ -262,7 +261,10 @@
         "regression_cost": "슬립업 누적·suspicion_pressure 상승",
         "victory_cost": "decline 14회 통해 단기 손실로 장기 통제권 매입",
         "relationship_debt": "한유리·박기태·정민석·김재복·서도진·백수현·마키노 레이 7인과 누적 신용 잔고 관리"
-      }
+      },
+      "regulatory_context": "2006~2008년 한국 IT 재편기. 통신사 구매 연합·정보통신부·공정위·정책협의체가 주요 규제 카운터파트. 통신 담합 본조사·도시 엣지센터 표준 채택이 후반 정책 라인의 핵심.",
+      "expansion_order_locked": "팬택 단말 → 싸이월드 일촌 그래프 → 도토리 결제 계정화 → 앱 장터·첫 화면 → 가족 안심 구독권 → 도시 엣지센터 표준 → 아시아 공동운영",
+      "hud_interpretation": "FinanceHUD를 단순 자본 추적이 아니라 결합 포지션 평가익으로 해석. capital_after는 결합 포지션 평가익 누계, decline은 결산/감사/방어/협상 비용으로 발생하는 일시 하락."
     },
     "AssetLibrary": {
       "KeyNPCs": [
@@ -599,6 +601,32 @@
           "벽돌 더미 속 지도를 먼저 그린다",
           "단기 손실은 장기 통제권의 값이다"
         ]
+      },
+      "CapitalCurve": {
+        "arc_01": "프론티어 원 0 → 1,030억 (CB 350억 + 팬택 CB 포지션 + 싸이월드 전환권 평가익)",
+        "arc_02": "1,030억 → 1,760억 (ABS 1차 발행 + 공급망 채권 지분 평가익)",
+        "arc_03": "1,560억 → 2,620억 (앱 장터 라이선스 선수금 + 대중 유통 예약 매출, Block 23·27 순감소 포함)",
+        "arc_04": "2,620억 → 3,780억 (JV 선급금 + 가족 안심 구독권 선매출 + ABS 2차 발행, Block 34·38 순감소 포함)",
+        "arc_05": "3,780억 → 4,540억 (아시아 JV + 펌웨어 라이선싱, Block 43·47 순감소 포함)",
+        "arc_06": "4,540억 → 6,060억 (공공 입찰 수주 + 구독권 스케일업, Block 53·57 순감소 포함)",
+        "arc_07": "6,060억 → 7,790억 (기업가치 재평가 + 지배구조 재편 프리미엄, Block 63·66 순감소 포함)",
+        "decline_blocks": [
+          4,
+          7,
+          13,
+          17,
+          23,
+          27,
+          34,
+          38,
+          43,
+          47,
+          53,
+          57,
+          63,
+          66
+        ],
+        "decline_count": 14
       }
     },
     "Seeds": [
@@ -815,7 +843,16 @@
         "defeat_mechanic": "15/70 블록에서 자본 감소. 단기 손실이 장기 통제권의 값. 손실 없는 승리 금지.",
         "escalation_pattern": "팬택+싸이월드 결합 → 베타폰+앱 장터+첫 화면 선점 → 2세대 소셜폰+담합 본조사 → 아시아 공동운영 → 스마트시티 표준 → 지배구조 재편+생활계정 그룹 선포",
         "tech_identity_anchor": "모든 확장은 '팬택 제조 역량+싸이월드 관계 그래프'에서 출발한다는 원점 유지. 스마트시티·공공 돌봄·아시아 확장으로 확장해도 기저 기술은 단말+계정+결제+인증 결합."
-      }
+      },
+      "do_not_fake": [
+        "회귀자 정체 직접 노출 금지 (슬립업은 한정된 3회)",
+        "그룹 본체 자금 유입 금지 (개인 책임 조건 CB만 사용)",
+        "메타 언어(Block N / Arc N / Phase N / Stage N) 인간 가독 필드 사용 금지"
+      ],
+      "contamination_guard": [
+        "Arc5~7 후반에 스마트시티·정책·공공 언어로 기술 정체성이 희석되지 않게 단말+센서+계정+결제 스택 원점을 매번 재확인",
+        "메인 라인 센서를 공공 돌봄 브리지로만 포지셔닝하되, 메인 2세대 소셜폰 라인은 별도 유지"
+      ]
     },
     "ArcStructure": {
       "_description": "70블록을 7개 대단원(Arc)으로 묶은 상위 서사 구조. Phase0·TR와 동기화.",
@@ -8010,5 +8047,7 @@
         }
       }
     ]
-  }
+  },
+  "_source_phase0": "treatments/phase0/pantech_cyworld_reborn_phase0_design.json",
+  "_source_tr": "treatments/08_pantech_cyworld_reborn_tr_block_070_draft.json"
 }

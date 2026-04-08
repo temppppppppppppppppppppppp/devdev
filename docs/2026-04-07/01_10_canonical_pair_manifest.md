@@ -9,6 +9,7 @@
 - 같은 번호대에 실험/보조 자산이 있어도, 3축 정합이 없으면 canonical pair로 세지지 않는다.
 - pair audit, benchmark, repair, meta-cleanup 오더는 이 manifest를 기준으로 pair 번호를 해석한다.
 - retired slot은 자동 재사용하지 않는다.
+- 이 문서는 **full live inventory** 문서가 아니다. unslotted live pair와 benchmark freshness는 `material_ssot/00_governance/production-pair-operational-registry-v1.md`에서 따로 읽는다.
 
 ## Pair Table
 
@@ -37,6 +38,7 @@
 - `01`은 `canonical_v1` suffix가 세 축 모두에 남아 있으므로, pair lookup 시 slug normalize를 섣불리 적용하지 않는다.
 - `09`는 `wuxguide` 계열 pair라서 blockwise cider / benchmark 재감리 때 non-wuxia 규칙을 그대로 덮어씌우지 않는다.
 - `09pair benchmark` 문서는 이름대로 01~09까지만 다루므로, retired slot을 다시 포함시키려면 별도 override가 필요하다.
+- `jangyeongshil_industrial_revolution`, `manual_meridian_archivist` 같은 unslotted live pair는 이 문서가 아니라 pair operational registry에서 해석한다.
 
 ## Recommended Usage
 

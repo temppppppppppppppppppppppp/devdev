@@ -13,7 +13,11 @@ Core docs:
 - `legacy-map.md`
 - `work-coverage-matrix.md`
 - `bootstrap-status.md`
+- `production-pair-schema-standard-v1.md`
+- `production-pair-operating-policy-addendum-v1.md`
 - `production-pair-benchmark-spec-v1.md`
+- `production-pair-operational-registry-v1.md`
+- `pre-new-pitch-operational-readiness-v1.md`
 - `external-model-benchmark-operation-harness-v1.md`
 - `external-model-benchmark-launch-playbook-v1.md`
 - `external-model-benchmark-prompt-template-v1.md`
@@ -42,6 +46,15 @@ Launch generator:
 - `python -X utf8 scripts/material_benchmark_order_generator.py --pitch <pitch-md> [--promotion-intent none|canon|phase0]`
 - `python -X utf8 scripts/material_benchmark_batch_generator.py [--path <dir>] [--promotion-intent auto|none|canon|phase0]`
 
+Normalization runner:
+
+- `python -X utf8 scripts/production_pair_normalization_runner.py`
+- `python -X utf8 scripts/production_pair_normalization_runner.py --work-id <work_id> [--json]`
+
+Pre-new-pitch gate:
+
+- `python -X utf8 scripts/pre_new_pitch_readiness_gate.py`
+
 Suggested read order:
 
 1. `bootstrap-status.md`
@@ -49,7 +62,11 @@ Suggested read order:
 3. `legacy-map.md`
 4. `stage-read-order.md`
 5. `work-coverage-matrix.md`
-6. `production-pair-benchmark-spec-v1.md` when auditing existing `BI/TR` pairs
+6. `production-pair-schema-standard-v1.md` when normalizing or auditing existing `BI/TR` pairs
+7. `production-pair-operating-policy-addendum-v1.md` when deciding live migration debt, grade refresh, or provenance fallback
+8. `production-pair-operational-registry-v1.md` when reading current live inventory, durable pair state, or benchmark freshness
+9. `production-pair-benchmark-spec-v1.md` after schema normalization is clear
+10. `pre-new-pitch-operational-readiness-v1.md` before starting a fresh pitch wave
 
 Role:
 

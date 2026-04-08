@@ -1,14 +1,14 @@
 # 0_0 Stage4 Partial-Fix Hardening Remediation Execution SSOT
 
 Date: 2026-04-07
-Status: partially_realized (2026-04-07 merge-survey promotion clarified shared schema dependency, `partial_fix_eval`, and `repair_trace` / readback work inside this lane; the first bounded Stage4 tranche has now landed by anchoring `PatchTargetRecord` normalization, persisting structured `partial_fix_eval` / `repair_trace` payloads through Stage4 patch traces and `stage_attempts`, and widening analyzer + readback surfaces while explicit verifier canary/live proof remains deferred; a later 2026-04-08 fresh `000_ㅇㅇㅇ` Stage4 `ep1` post-run merge audit then exposed PASS-side `episode_production` / session sink finalization drift, and a bounded `stage4_interview_round.py` logging follow-up landed while closure remains rerun-pending)
+Status: partially_realized (2026-04-07 merge-survey promotion clarified shared schema dependency, `partial_fix_eval`, and `repair_trace` / readback work inside this lane; the first bounded Stage4 tranche has now landed by anchoring `PatchTargetRecord` normalization, persisting structured `partial_fix_eval` / `repair_trace` payloads through Stage4 patch traces and `stage_attempts`, and widening analyzer + readback surfaces while explicit verifier canary/live proof remained deferred; a later 2026-04-08 fresh `000_ㅇㅇㅇ` Stage4 `ep1` post-run merge audit then exposed PASS-side `episode_production` / session sink finalization drift, a bounded `stage4_interview_round.py` logging follow-up landed, the subsequent `canary_000_ㅇㅇㅇ_stage4_ep1_sinkproof_r1` Stage4-only rerun proved current-session Stage4 sink alignment clean, a later bounded proof-operational metadata tranche then landed across Stage4 control-plane/session scope, post-pass contract signals, and `runtime_audit_summary.json` synthesis without creating a new queue topic or making `proof_intent` mandatory, and the latest same-day bounded implementation tranche now lands companion-sink advisory sync, `PassRateMonitor` compatibility, and numeric-consistency proof surfacing while a fresh rerun remains pending)
 Canonical Path: `docs/2026-04-07/0_0-stage4-partial-fix-hardening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-partial-fix-hardening-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `5a2ef92ab04e46d47ee73b9d56d3e546544576c0`
 - Baseline Dirty Summary: `dirty: 139 tracked, 106 untracked; hotspots: docs/, treatments/, material_ssot/, modules/, tests/`
-- Resume Commit: `5c71b81a36ab2cbae824c630bb63219354b913a8`
-- Resume Drift Summary: `2026-04-07 bounded Stage4 partial-fix tranche landed across `partial_fix_contract.py`, `chief_writer.py`, `chief_writer_inplace_local_ops.py`, `stage4_retry_runtime.py`, `stage4_interview_round.py`, `stage4_reject_runtime.py`, `failure_analyzer.py`, `db_manager.py`, and `bridge_server.py`: Stage4 now normalizes structured `PatchTargetRecord` payloads while preserving summary-compatible `patch_targets`, local/structural patch traces keep bounded `repair_trace` evidence, `partial_fix_eval` is persisted into patch traces and `stage_attempts`, and DB/dashboard/canary readback now exposes the new sink shape with focused regression/static validation closed`
+- Resume Commit: `6dd7712ea9a58802221634081ba199bc872d2349`
+- Resume Drift Summary: `the bounded Stage4 partial-fix tranche remains landed, the 2026-04-08 fresh `000_ㅇㅇㅇ` audit exposed PASS-side sink drift, the bounded `stage4_interview_round.py` logging follow-up landed, the later `canary_000_ㅇㅇㅇ_stage4_ep1_sinkproof_r1` Stage4-only rerun now proves current-session Stage4 sink alignment / authority / rationale surfaces clean, a later same-day proof-operational metadata follow-up landed across `stage4_orchestrator.py`, `stage4_post_pass_runtime.py`, and `audit_service.py` so real fresh runs now emit session-scoped Stage4 proof metadata without requiring mandatory `proof_intent`, and the newest bounded proof-channel tranche now lands `director_selections` companion advisory sync, `PassRateMonitor` compatibility with live Stage4 attempt payloads, and analyzer/canary numeric-consistency surfacing while the dedicated verifier tranche and fresh rerun remain pending inside this same lane`
 Source Survey Docs:
 - `docs/2026-04-07/stage4-data-shape-pwf-bounded-survey.md`
 - `docs/2026-04-07/stage-parallel-container-and-pwf-master-survey.md`
@@ -17,6 +17,9 @@ Source Survey Docs:
 - `docs/2026-04-07/partial-fix-terminal3-operator-before-after-trace-survey.md`
 - `docs/2026-04-07/partial-fix-hardening-parallel-merge-survey.md`
 - `docs/2026-04-08/000-fresh-run-stage4-ep1-post-run-merge-audit.md`
+- `docs/2026-04-08/0_0-stage4-ep1-sinkproof-r1-runtime-closure-audit.md`
+- `docs/2026-04-08/stage4-proof-operational-metadata-bounded-survey.md`
+- `docs/2026-04-08/stage4-ep2-interrupted-run-evidence-harvest-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Evidence Artifacts:
@@ -73,6 +76,9 @@ But the current substrate is still uneven:
 Included:
 
 - `modules/core/stage4_interview_round.py`
+- `modules/core/stage4_orchestrator.py`
+- `modules/core/stage4_post_pass_runtime.py`
+- `modules/core/services/audit_service.py`
 - `modules/domain/agents/chief_writer.py`
 - `modules/domain/agents/chief_writer_inplace_local_ops.py`
 - `modules/core/failure_analyzer.py`
@@ -81,6 +87,8 @@ Included:
 - `modules/core/stage4_canary_tools.py`
 - bounded Stage4 local repair selection and post-patch verification surfaces
 - bounded fix-pack address precision, `partial_fix_eval`, and patch-trace fidelity improvements
+- bounded Stage4 proof-operational metadata and runtime-summary synthesis for later fresh-run proof reuse
+- bounded current-session companion sink truth plus numeric-consistency proof surfacing for interrupted/live retry runs
 
 Excluded:
 
@@ -89,6 +97,7 @@ Excluded:
 - broad Stage4 owner-surface refactor
 - new queue rank creation
 - new DB table or column creation
+- mandatory operator-supplied `proof_intent`
 - Stage2 or Stage3 redesign inside this lane
 - fresh canary execution in this documentation turn
 
@@ -316,6 +325,114 @@ Realization direction:
   - keep this lane `partially_realized`
   - do not claim closure until a fresh rerun re-proves the patched pass-side sink alignment
 
+## 8C. Stage4-only Sinkproof Update (2026-04-08)
+
+- `projects/_canary/canary_000_ㅇㅇㅇ_stage4_ep1_sinkproof_r1` now provides the bounded rerun proof requested by the fresh `000_ㅇㅇㅇ` audit:
+  - `proof_scope_summary.scope_status = stage4_only`
+  - `proof_scope_summary.stage4_sink_alignment_status = ok`
+  - `sink_alignment_summary.status = ok`
+  - `current_session_sink_alignment_summary.status = ok`
+- final-authority and rationale surfaces are also clean on the rerun:
+  - `final_authority_contract_summary.status = ok`
+  - `rationale_contract_summary.status = ok`
+  - `companion_audit_summary.status = ok`
+  - `gate_repair_surface_summary.status = ok`
+- the remaining warns are bounded and out of scope for the original Stage4 sink-alignment question:
+  - top-level `proof_digest.status = warn` remains because Stage3 probe data is copied baseline carryover from the source project
+  - `hard_gates.warnings = ["stage4_retry_contract_not_exercised"]` because `ep1` passed in round 1, so the retry path was not exercised
+- queue consequence:
+  - keep this lane `partially_realized`
+  - treat the rerun-pending PASS-side sink-alignment blocker as runtime-closed and positive
+  - leave the dedicated verifier hardening and broader local-vs-structural policy tightening for the next tranche inside this same lane
+
+## 8D. Proof Operational Metadata Update (2026-04-08)
+
+- operator follow-up clarified that real fresh runs should gain better proof reuse metadata, but should not require mandatory `proof_intent`
+- bounded follow-up landed inside this same lane:
+  - `stage4_orchestrator.py` now emits `stage4_session_scope` at Stage4 session start and tags `target_ep_reached` plus `stage4_complete` with `session_id`
+  - `stage4_post_pass_runtime.py` now tags `STAGE4_POST_PASS_CONTRACT` and the mirrored `stage4_post_pass_contract_signal` with the current `session_id`
+  - `audit_service.py` now extends `runtime_audit_summary.json -> proof_digest.operational_metadata` with:
+    - `latest_session_id`
+    - `stage3_live_session`
+    - `stage4_live_session`
+    - `retry_exercised`
+    - `patch_exercised`
+    - `post_pass_contract_signal_count`
+    - `session_scope`
+    - `non_exercised_reasons`
+- guardrails kept:
+  - no new DB schema
+  - no canary harness changes
+  - no mandatory `proof_intent`
+  - no new queue topic
+- targeted verification closed:
+  - `pytest tests/test_audit_service.py -k "operational_metadata or proof_digest or committed_snapshot_only" -q`
+  - `pytest tests/test_stage4_orchestrator.py -k "target_ep_reached or session_scope" -q`
+  - `pytest tests/test_stage4_post_processor.py -k "post_pass_contract_signal" -q`
+  - `ruff check modules/core/services/audit_service.py modules/core/stage4_orchestrator.py modules/core/stage4_post_pass_runtime.py tests/test_audit_service.py tests/test_stage4_orchestrator.py tests/test_stage4_post_processor.py`
+  - `python -m py_compile modules/core/services/audit_service.py modules/core/stage4_orchestrator.py modules/core/stage4_post_pass_runtime.py`
+- queue consequence:
+  - keep this lane `partially_realized`
+  - treat this as proof-aware observability support for later fresh-run closure reuse, not as verifier closure by itself
+
+## 8E. Interrupted EP2 Evidence Harvest Update (2026-04-08)
+
+- interrupted `projects/_canary/canary_000_ㅇㅇㅇ_stage4_ep2_numauth_r1` analyze is not closure proof, but it did capture new same-session Stage4 evidence:
+  - `current_session_sink_alignment_summary.status = warn`
+  - `scope_authority_fix_scope_mismatches = 2`
+  - `scope_authority_widened_mismatches = 1`
+  - `gate_repair_metadata_missing = 2`
+- mismatch shape is bounded and specific:
+  - `stage_attempts` plus `episode_production` agree on widened runtime scope
+  - `director_selections` companion rows lag behind on widened `fix_scope` / `widened` / repair metadata
+  - therefore the immediate same-lane patch target is companion sink truth, not broad Stage4 owner reassignment
+- the same run also surfaced a proof-channel observability regression:
+  - `pass_rate_monitor_cache_missing` is accompanied by repeated session-log failures: `PassRateMonitor.record_attempt() got an unexpected keyword argument 'fix_scope'`
+  - treat this as bounded Stage4 proof-channel compatibility debt inside the same lane
+- numauth evidence split is now explicit:
+  - semantic ownership of `numeric asset authority / carryover owner-boundary` remains with `0_0-stage4-consumer-contract-normalization-remediation`
+  - but the current proof channel still leaves repeated `numeric_carryover_authority` signals in run logs without one official analyze summary field, so surfacing that evidence belongs here as bounded proof-channel hardening
+- upstream evidence was also harvested, but does not change immediate order:
+  - flashback/location/inventory drift signals are strong enough to justify a later Stage2/Stage3 observability tranche
+  - however that proof wave should still follow the Stage4 proof-channel fixes above, not precede them
+- queue consequence:
+  - keep this lane `partially_realized`
+  - treat the next bounded implementation tranche as:
+    - companion sink scope-authority synchronization
+    - `PassRateMonitor` compatibility
+    - numeric-consistency proof surfacing
+  - do not reopen Stage2/Stage3 ahead of these Stage4 proof-channel fixes
+
+## 8F. Proof-Channel Implementation Update (2026-04-08)
+
+- the bounded proof-channel tranche identified in `8E` is now code-landed without opening a new queue topic:
+  - `modules/core/db_manager.py`
+  - `modules/core/stage4_interview_round.py`
+  - `modules/core/stage4_reject_runtime.py`
+  - `modules/core/pass_rate_monitor.py`
+  - `modules/core/failure_analyzer.py`
+  - `modules/core/services/audit_service.py`
+  - `modules/core/stage4_canary_tools.py`
+- landed behavior:
+  - final Stage4 rationale sync now also merges final advisory payloads into `director_selections.advisory_warnings`, so same-session companion rows can follow widened runtime `scope_authority` / repair metadata instead of freezing the initial selection-time view
+  - `PassRateMonitor.record_attempt()` now accepts and persists current Stage4 gate/authority payload fields instead of dropping the row with `unexpected keyword argument 'fix_scope'`
+  - analyzer / proof outputs now expose `numeric_consistency_summary` from persisted Stage4 `runtime_advisory` / `retry_directives` text, so interrupted/live numauth evidence is no longer log-only
+- bounded validation landed before any fresh rerun:
+  - targeted pytest shards for `db_manager`, `stage4_interview_round`, `pass_rate_monitor`, `failure_analyzer`, `audit_service`, and `stage4_canary_tools`
+  - `ruff check` on touched code/tests
+  - `python -m py_compile` on touched code/tests
+  - `python scripts/check_utf8_hygiene.py` on touched code/tests
+  - `python scripts/ops_validator.py --strict`
+- existing interrupted canary re-analyze now confirms the new proof surface without opening a fresh run:
+  - `projects/_canary/canary_000_ㅇㅇㅇ_stage4_ep2_numauth_r1/logs/canary_summary.json` now includes `numeric_consistency_summary.status = warn`
+  - the same summary still shows the captured current-session companion drift buckets, so the lane is now implementation-landed but not closure-ready
+- queue consequence:
+  - keep this lane `partially_realized`
+  - treat the next runtime action as a fresh rerun to validate:
+    - companion sink alignment after the advisory-sync patch
+    - `PassRateMonitor` cache persistence on a live retry session
+    - Stage4 numeric-consistency surfacing on a fresh proof run rather than interrupted evidence only
+
 ## 9. Acceptance Criteria
 
 - Stage4 can express one stable partial-fix address family across both local-op and structural patch flows
@@ -325,6 +442,10 @@ Realization direction:
 - structural patch remains bounded to target scenes when local edit is insufficient
 - Stage4 persists bounded `partial_fix_eval` outcomes and exposes aggregate rates without inventing a new queue lane
 - Stage4 exposes bounded `repair_trace[]` entries to operator readback with `target`, `old_excerpt`, `new_excerpt`, `why_changed`, and truthful `guard_result`
+- `runtime_audit_summary.json` exposes latest-session proof-operational metadata for Stage4 fresh runs without requiring operator-supplied `proof_intent`
+- current-session companion sinks do not drift on widened `scope_authority` / repair metadata relative to `stage_attempts` plus `episode_production`
+- Stage4 proof summaries surface bounded numeric-consistency authority evidence instead of leaving it log-only
+- Stage4 proof runs retain `PassRateMonitor` evidence without non-blocking argument-signature failure
 - no new `180+ LOC` function is introduced
 
 ## 10. Verification Plan
@@ -337,6 +458,9 @@ Realization direction:
 - `python -m py_compile` on touched production modules
 - `ruff check` on touched files
 - targeted pytest shards only
+- targeted audit/control-plane regression checks for Stage4 session scope and proof-operational metadata
+- targeted regression checks for same-session companion sink scope-authority serialization and `PassRateMonitor` compatibility
+- targeted analyzer/proof-summary checks for numeric-consistency evidence surfacing
 - `python scripts/check_utf8_hygiene.py` on touched docs/code
 - `python scripts/sync_temp_queue_state.py`
 - `python scripts/ops_validator.py --strict`
@@ -378,10 +502,14 @@ Pass 2, evidence and consistency:
 - anchored claims to live Stage4 fix-pack, structural patch, and local-op code paths
 - kept the document separate from existing repair-contract grammar work
 - aligned the execution scope with the 2026-04-07 eval-harness, shared-schema, and operator-trace survey conclusions
+- folded the later interrupted `ep2` evidence harvest into the same lane without reopening queue ownership or misclassifying the numeric seam as upstream-first
 
 Pass 3, execution and readability:
 
 - made the implementation sequence explicit: shared schema -> address -> selection -> verifier/sink -> repair trace -> aggregator
+- extended the same lane with a bounded proof-operational metadata tranche instead of inventing a new queue topic
+- made the post-harvest next tranche explicit: companion sink truth -> monitor compatibility -> numeric surfacing
+- recorded that bounded implementation has now landed and moved the lane to fresh-rerun-pending rather than leaving the proof-channel tranche only as a survey recommendation
 - kept activation order subordinate to the current proof-deferred Stage4 front queue
 
 Confidence: `97%`

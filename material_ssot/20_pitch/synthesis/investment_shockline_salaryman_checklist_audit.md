@@ -107,5 +107,5 @@ Verdict: **PASS** (엔진 품질) / **동결** (포트폴리오 운영)
 Portfolio decision:
 - 작품 품질 판정: PASS / selection-ready
 - 운영 판정: independent canon candidate로는 보류
-- 역할: `line_stop_deputy` 통합본에 흡수할 validated sub-engine
-- 상태: `validated absorbable engine` — 추가 승격 없이 동결 대기
+- 역할: historical validated sub-engine record only
+- 상태: archive-only — 현재 active promotion target 없음

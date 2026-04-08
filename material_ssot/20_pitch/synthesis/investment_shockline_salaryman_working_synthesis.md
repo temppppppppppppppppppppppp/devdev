@@ -1,8 +1,8 @@
 # Investment One-Page Synthesis
 
-Status: validated absorbable engine — 동결 대기
+Status: archived validated engine
 Scope: investment-lane fresh candidate before canon selection
-Portfolio decision: independent canon candidate 보류. line_stop_deputy 통합본에 흡수할 validated sub-engine으로 확정.
+Portfolio decision: independent canon candidate 보류. former absorption target `line_stop_deputy` is now retired, so this file remains archive-only reference.
 
 ## 0. Header
 
@@ -209,5 +209,5 @@ dual-lane separation:
 
 - 자리 증명: §2에서 리스크관리팀 = 설비/보험/품질 3부서 신호 교차점으로 잠금 완료.
 - dual-lane: §2에서 내부 레인/외부 레인 분리 명문화 완료. 공개 신호 출처 4개 특정.
-- canon 생성 금지 (사용자 지시)
-- next step: canon candidate tightening (사용자 승인 후)
+- canon 생성 금지
+- next step: none under the current portfolio; archive-only unless a future explicit restart order reopens the lane from scratch

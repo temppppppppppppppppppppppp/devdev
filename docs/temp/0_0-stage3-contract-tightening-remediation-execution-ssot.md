@@ -1,22 +1,29 @@
 # 0_0 Stage3 Contract Tightening Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (promoted from parked on 2026-04-07 roadmap reorder; re-audited again against the current workspace before implementation start; the first bounded tranche then landed by widening binding enforcement for `dead_npc`, stop-line/`arc_compliance`, and `fact_lock_*` seams, persisting binding metadata through Stage3 success handoff, and teaching Stage4 to consume that metadata as real Director/retry pressure; explicit tier-2.5 canary proof still remains required before closure)
+Status: partially_realized (promoted from parked on 2026-04-07 roadmap reorder; re-audited again against the current workspace before implementation start; the first bounded tranche then landed by widening binding enforcement for `dead_npc`, stop-line/`arc_compliance`, and `fact_lock_*` seams, persisting binding metadata through Stage3 success handoff, and teaching Stage4 to consume that metadata as real Director/retry pressure; a later 2026-04-08 bounded observability follow-up then surfaced actual Stage3 source-anchor summaries for flashback/opening/inherited inventory planning through runtime, DB, and operator-visible sinks; the newest same-day follow-up landed a Stage3 proof-digest / `PassRateMonitor` durability slice, but the later `projects/000_260408` proof-wave merge audit did not exercise Stage3 at all, and the newer `projects/000_260408_B` proof-wave merge audit again shows Stage3 absent by operator choice while the upstream Stage2 handoff packet is structurally ready, so the new Stage3 proof surfaces remain verification-pending until a fresh run actually reaches Stage3; explicit tier-2.5 canary proof still remains required before closure)
 Canonical Path: `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2/Stage3 survey docs and lane drafts untracked`
-- Resume Commit: `5a2ef92ab04e46d47ee73b9d56d3e546544576c0`
-- Resume Drift Summary: `the queue was later re-ranked to make this the next unopened implementation lane, the 2026-04-07 Stage234 terminal survey confirmed the still-live Stage3 seams as binding-scope gaps plus advisory-only `_stage3_meta` handoff, the originally listed static survey and runtime closure audit now live under archived `docs/이전/` paths, the previously referenced Stage3 artifact JSON paths are no longer present in the active workspace so this SSOT now relies on the archived survey/evidence set plus the 2026-04-07 handoff survey rather than stale artifact-local pointers, and the current workspace has now landed a bounded first tranche across `unified_blueprint_validator.py`, `three_phase_blueprint_runtime.py`, `stage3_orchestrator.py`, `stage4_director_runtime.py`, and `stage4_outcome_runtime.py` with focused regression/static validation while fresh tier-2.5 canary proof stays deferred`
+- Resume Commit: `6dd7712ea9a58802221634081ba199bc872d2349`
+- Resume Drift Summary: `the queue was later re-ranked to make this the next unopened implementation lane, the 2026-04-07 Stage234 terminal survey confirmed the still-live Stage3 seams as binding-scope gaps plus advisory-only `_stage3_meta` handoff, the originally listed static survey and runtime closure audit now live under archived `docs/이전/` paths, the previously referenced Stage3 artifact JSON paths are no longer present in the active workspace so this SSOT now relies on the archived survey/evidence set plus the 2026-04-07 handoff survey rather than stale artifact-local pointers, the current workspace first landed a bounded tranche across `unified_blueprint_validator.py`, `three_phase_blueprint_runtime.py`, `stage3_orchestrator.py`, `stage4_director_runtime.py`, and `stage4_outcome_runtime.py` with focused regression/static validation, a later same-day follow-up in `stage3_orchestrator.py` then persisted source-anchor summaries for previous-blueprint end state plus current Stage2 carryover start state so flashback/opening/inherited-inventory proof waves have cleaner operator-visible evidence while fresh tier-2.5 canary proof stays deferred, the newest same-day follow-up across `stage3_orchestrator.py` plus `audit_service.py` then landed a Stage3 proof-digest / `PassRateMonitor` durability slice, the later `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md` confirmed that the first fresh run never reached Stage3, and the newer `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md` confirms the absence again while also upgrading the upstream Stage2 handoff from sink-drift-risk to structurally ready proof input`
 Source Survey Docs:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
 - `docs/이전/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-audit.md`
 - `docs/2026-04-07/stage234-terminal2-stage3-binding-handoff-survey.md`
+- `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md`
+- `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md`
 Evidence Artifacts:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-evidence.json`
 - `docs/이전/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-evidence.json`
+- `projects/000_260408/project_data.db`
+- `projects/000_260408/logs/runtime_audit_summary.json`
+- `projects/000_260408/logs/pass_rate_monitor.json`
+- `projects/000_260408/logs/session/decisions.jsonl`
+- `projects/000_260408/logs/session/ui_events.jsonl`
 Side-Effect Coverage: covered
 
 ## 1. Intent
@@ -164,6 +171,49 @@ Realization direction:
   - focused pytest, `py_compile`, and `ruff` closed
   - explicit tier-2.5 canary proof is still required before closure
 
+## 8B. Observability Update (2026-04-08)
+
+- a bounded same-lane follow-up is now landed in `stage3_orchestrator.py`
+  - Stage3 runtime/advisory sinks now persist `source_anchor_summary`
+  - the summary pins previous-blueprint episode/location/transition anchors plus current Stage2 start-location and start-inventory anchors
+- operator-visible Stage3 summary logs now echo the compact source-anchor line so later flashback/opening drift can be attributed without digging only through raw blueprint JSON
+- this follow-up is observability-only:
+  - it does not retune Stage3 generation
+  - it does not reopen Stage2 or Stage4 ownership
+  - it narrows the next upstream proof wave by making the actual anchor surfaces explicit
+
+## 8C. Runtime Summary / Monitor Durability Update (2026-04-08)
+
+- a later same-lane follow-up is now also landed across `stage3_orchestrator.py` and `audit_service.py`
+  - Stage3 `PassRateMonitor` writes now flush immediately after each PASS/REJECT attempt record
+  - `audit_service.py` now includes the Stage3 latest-session summary path for attempt coverage, decision-row coverage, artifact-path coverage, and the latest persisted `source_anchor_summary`
+- this follow-up stays inside the same bounded lane:
+  - it does not retune Stage3 generation
+  - it does not change Stage3 semantic ownership
+  - it reduces proof-wave dependency on manual DB/JSONL joins for basic Stage3 attribution once a fresh run actually reaches Stage3
+
+## 8D. Fresh Proof-Wave Revalidation (2026-04-08)
+
+- `projects/000_260408` did not exercise Stage3:
+  - `stage_attempts` has `0` Stage3 rows
+  - `director_selections` has `0` Stage3 rows
+  - `blueprints` has `0` rows
+  - `logs/artifacts/stage3/` is absent
+  - `logs/session/ui_events.jsonl` has `0` `source_anchor_summary` rows
+  - `logs/session/decisions.jsonl` has `0` Stage3 rows
+  - `logs/pass_rate_monitor.json` has `0` records
+- `runtime_audit_summary.json` is internally consistent with that runtime fact:
+  - `proof_digest.operational_metadata.stage3_live_session.status = "absent"`
+  - `attempt_count = 0`
+  - `episodes = []`
+- execution consequence:
+  - do not treat the current absence as a logging-only failure
+  - do not claim the landed Stage3 source-anchor / monitor slice is runtime-validated yet
+  - keep this SSOT verification-pending until a fresh run actually reaches Stage3
+  - keep the next proof artifact bounded to `Stage2 proof-sink repair -> rerun that reaches Stage3`, not a new Stage3 design lane
+- watch item only:
+  - the current proof wave does not justify a new upstream owner change, but the eventual Stage3-exercising rerun should still confirm whether Stage2-origin anchor inputs are sufficient for `source_anchor_summary`
+
 ## 9. Acceptance Criteria
 
 - highest-risk Stage3 seams no longer remain purely advisory by default
@@ -227,3 +277,36 @@ Pass 3, execution and readability:
 - tied future activation to an explicit canary-proof gate rather than implicit urgency
 
 Confidence: `98%`
+
+## 15. 2026-04-08 Fresh Proof-Wave Validation Upgrade (`000_260408_B`)
+
+Evidence basis:
+
+- `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md`
+- `0_temp.txt`
+- `projects/000_260408_B/project_data.db`
+- `projects/000_260408_B/logs/runtime_audit_summary.json`
+- `projects/000_260408_B/logs/runtime_audit.jsonl`
+
+Fresh proof-wave verdict:
+
+1. Stage3 still was not exercised on `000_260408_B`:
+   - operator exited from the main menu after `Stage 2 [✅]`
+   - `stage_attempts`, `director_selections`, `llm_calls`, and `blueprints` contain `0` Stage3 rows
+   - `logs/artifacts/stage3/` is absent
+   - `proof_digest.operational_metadata.stage3_live_session.status = "absent"`
+2. the absence should now be read more cleanly than on the prior run:
+   - it is operator-choice / not exercised, not a fresh Stage3 logging failure
+   - the upstream Stage2 proof sinks are no longer the main ambiguity; `stage2_live_session.status = "ok"` and the latest `carryover_authority` packet is fully surfaced
+3. the Stage2 -> Stage3 handoff is structurally ready:
+   - final Stage2 arc has a reachable artifact path, populated `attempt_key`, populated `selection_reason`, populated `verdict_reason`, populated `fix_scope_reasoning`, and full `carryover_authority`
+   - the only promoted watch item is semantic rather than sink-related: arc 3 still records a latent asset-math contradiction inside `verdict_reason`
+
+Execution consequence:
+
+- keep this Stage3 lane verification-pending rather than runtime-failed
+- do not open another broad Stage3 patch from absence-only evidence
+- take a rerun that actually reaches Stage3 as the next useful proof artifact
+- if that rerun still exits before Stage3, treat the cause as runtime/operator control flow first, not as proof-sink regression
+
+Confidence for this validation upgrade: `97%`

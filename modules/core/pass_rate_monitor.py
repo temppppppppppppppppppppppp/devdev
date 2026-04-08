@@ -61,7 +61,11 @@ class AttemptRecord:
     director_verdict: str = ""
     gate_basis: str = ""
     repair_scope: str = ""
+    fix_scope: str = ""
+    authoritative_fix_scope: str = ""
     fix_pack: dict[str, Any] = field(default_factory=dict)
+    repair_contract: dict[str, Any] = field(default_factory=dict)
+    scope_authority: dict[str, Any] = field(default_factory=dict)
     retry_budget_axes: dict[str, Any] = field(default_factory=dict)
     patch_strategy: str = ""
     structural_attempted: bool = False
@@ -71,6 +75,9 @@ class AttemptRecord:
     candidate_key: str = ""
     content_hash: str = ""
     artifact_path: str = ""
+    downstream_override_applied: bool = False
+    primary_failure_layer: str = ""
+    strong_advisory_escalation: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -173,6 +180,99 @@ class PassRateMonitor:
         except Exception as e:
             logging.warning(f" [PassRateMonitor] 기록 저장 실패: {e}")
 
+    @staticmethod
+    def _normalize_dict_payload(raw_value: Any) -> dict[str, Any]:
+        if isinstance(raw_value, dict):
+            return dict(raw_value)
+        if isinstance(raw_value, str) and raw_value.strip():
+            try:
+                payload = json.loads(raw_value)
+            except (TypeError, ValueError, json.JSONDecodeError):
+                return {}
+            if isinstance(payload, dict):
+                return payload
+        return {}
+
+    @staticmethod
+    def _success_from_verdict(verdict: str) -> bool:
+        verdict_text = str(verdict or "").strip().upper()
+        return verdict_text in {"PASS", "PASS_WITH_WARNING"}
+
+    def reconcile_from_db(
+        self,
+        db,
+        *,
+        session_id: str = "",
+        stages: tuple[int, ...] = (2,),
+    ) -> int:
+        """Backfill missing convenience-cache rows from committed stage_attempts."""
+        if db is None or not hasattr(db, "conn"):
+            return 0
+
+        normalized_stages = tuple(sorted({int(stage) for stage in stages if int(stage or 0) > 0}))
+        if not normalized_stages:
+            return 0
+
+        placeholders = ",".join("?" for _ in normalized_stages)
+        sql = (
+            "SELECT ts, stage, ep_num, arc_num, attempt_num, verdict, reject_reason, "
+            "generation_method, duration_ms, attempt_key, fix_scope, candidate_key, "
+            "content_hash, artifact_path, is_patch, is_patch_fallback, patch_strategy, "
+            "score_breakdown, primary_failure_layer "
+            f"FROM stage_attempts WHERE stage IN ({placeholders})"
+        )
+        params: list[Any] = list(normalized_stages)
+        session_text = str(session_id or "").strip()
+        if session_text:
+            sql += " AND session_id = ?"
+            params.append(session_text)
+        sql += " ORDER BY id ASC"
+
+        try:
+            rows = db.conn.execute(sql, tuple(params)).fetchall()
+        except Exception as exc:
+            logging.debug("[PassRateMonitor] reconcile_from_db query failed: %s", exc)
+            return 0
+
+        with self._lock:
+            existing_keys = {str(record.attempt_key or "").strip() for record in self.records if record.attempt_key}
+            appended = 0
+            for row in rows:
+                payload = dict(row)
+                attempt_key = str(payload.get("attempt_key", "") or "").strip()
+                if not attempt_key or attempt_key in existing_keys:
+                    continue
+                score_breakdown = self._normalize_dict_payload(payload.get("score_breakdown"))
+                self.records.append(
+                    AttemptRecord(
+                        timestamp=str(payload.get("ts") or datetime.now().isoformat()),
+                        stage=int(payload.get("stage") or 0),
+                        episode=int(payload.get("ep_num") or 0),
+                        arc=int(payload.get("arc_num") or 0),
+                        attempt_num=int(payload.get("attempt_num") or 1),
+                        success=self._success_from_verdict(payload.get("verdict")),
+                        reject_reason=str(payload.get("reject_reason") or ""),
+                        generation_method=str(payload.get("generation_method") or "default"),
+                        duration_ms=int(payload.get("duration_ms") or 0),
+                        attempt_key=attempt_key,
+                        final_verdict=str(payload.get("verdict") or ""),
+                        fix_scope=str(payload.get("fix_scope") or ""),
+                        candidate_key=str(payload.get("candidate_key") or ""),
+                        content_hash=str(payload.get("content_hash") or ""),
+                        artifact_path=str(payload.get("artifact_path") or ""),
+                        is_patch=bool(payload.get("is_patch", 0)),
+                        patch_fallback=bool(payload.get("is_patch_fallback", 0)),
+                        patch_strategy=str(payload.get("patch_strategy") or ""),
+                        score_breakdown=score_breakdown,
+                        primary_failure_layer=str(payload.get("primary_failure_layer") or ""),
+                    )
+                )
+                existing_keys.add(attempt_key)
+                appended += 1
+            if len(self.records) > 1000:
+                self.records = self.records[-1000:]
+        return appended
+
     def record_attempt(
         self,
         stage: int,
@@ -193,7 +293,11 @@ class PassRateMonitor:
         director_verdict: str = "",
         gate_basis: str = "",
         repair_scope: str = "",
+        fix_scope: str = "",
+        authoritative_fix_scope: str = "",
         fix_pack: dict[str, Any] | None = None,
+        repair_contract: dict[str, Any] | None = None,
+        scope_authority: dict[str, Any] | None = None,
         retry_budget_axes: dict[str, Any] | None = None,
         patch_strategy: str = "",
         structural_attempted: bool = False,
@@ -203,6 +307,9 @@ class PassRateMonitor:
         candidate_key: str = "",
         content_hash: str = "",
         artifact_path: str = "",
+        downstream_override_applied: bool = False,
+        primary_failure_layer: str = "",
+        strong_advisory_escalation: dict[str, Any] | None = None,
     ):
         """
         시도 기록
@@ -242,7 +349,11 @@ class PassRateMonitor:
             director_verdict=str(director_verdict or ""),
             gate_basis=str(gate_basis or ""),
             repair_scope=str(repair_scope or ""),
+            fix_scope=str(fix_scope or ""),
+            authoritative_fix_scope=str(authoritative_fix_scope or ""),
             fix_pack=dict(fix_pack or {}),
+            repair_contract=dict(repair_contract or {}),
+            scope_authority=dict(scope_authority or {}),
             retry_budget_axes=dict(retry_budget_axes or {}),
             patch_strategy=str(patch_strategy or ""),
             structural_attempted=bool(structural_attempted),
@@ -252,6 +363,9 @@ class PassRateMonitor:
             candidate_key=str(candidate_key or ""),
             content_hash=str(content_hash or ""),
             artifact_path=str(artifact_path or ""),
+            downstream_override_applied=bool(downstream_override_applied),
+            primary_failure_layer=str(primary_failure_layer or ""),
+            strong_advisory_escalation=dict(strong_advisory_escalation or {}),
         )
 
         with self._lock:

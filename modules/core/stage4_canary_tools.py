@@ -562,6 +562,10 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
             stage=4,
             session_id=latest_session_id,
         )
+        numeric_consistency_summary = analyzer.numeric_consistency_summary(
+            stage=4,
+            session_id=latest_session_id,
+        )
         stage3_sink_alignment_summary = analyzer.sink_alignment_summary(stage=3, include_session_decisions=True)
         final_authority_contract_summary = sink_alignment_summary.get("final_authority_contract", {}) or {}
         rationale_contract_summary = _summarize_stage4_rationale_contract(db)
@@ -633,6 +637,7 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
         "director_stage4_rows": len(director_stage4_rows),
         "pass_rate_monitor_exists": pass_rate_monitor_exists,
         "patch_trace_summary": patch_trace_summary,
+        "numeric_consistency_summary": numeric_consistency_summary,
         "stage3_sink_alignment_summary": stage3_sink_alignment_summary,
         "sink_alignment_summary": sink_alignment_summary,
         "current_session_sink_alignment_summary": current_session_sink_alignment_summary,

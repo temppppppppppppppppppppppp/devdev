@@ -61,6 +61,7 @@ class FailureAnalyzer:
             "quality_distribution": lambda: self.quality_distribution(),
             "patch_trace_summary": lambda: self.patch_trace_summary(),
             "sink_alignment_summary": lambda: self.sink_alignment_summary(),
+            "numeric_consistency_summary": lambda: self.numeric_consistency_summary(),
         }
         for key, loader in metric_loaders.items():
             try:
@@ -74,6 +75,137 @@ class FailureAnalyzer:
                 )
                 logging.debug("[FailureAnalyzer] %s failed: %s", key, _e)
         return result
+
+    @staticmethod
+    def _extract_numeric_consistency_signal_segments(text: object) -> list[str]:
+        payload = str(text or "")
+        positions = [match.start() for match in re.finditer(r"\[NC-\d+\]", payload)]
+        if not positions:
+            return []
+        segments: list[str] = []
+        for index, start in enumerate(positions):
+            end = positions[index + 1] if index + 1 < len(positions) else len(payload)
+            segment = payload[start:end].strip(" /\r\n\t-")
+            if segment:
+                segments.append(segment)
+        return segments
+
+    @classmethod
+    def _parse_numeric_consistency_signal(cls, segment: str) -> dict[str, object] | None:
+        match = re.match(
+            r"^\[NC-(?P<signal_id>\d+)\]\[(?P<candidate>[^\]]+)\]\[(?P<severity>[^\]]+)\](?:\[(?P<category>[^\]]+)\])?\s*(?P<text>.*)$",
+            str(segment or "").strip(),
+            re.DOTALL,
+        )
+        if not match:
+            return None
+        text = re.sub(r"\s+", " ", str(match.group("text") or "").strip())
+        ledger_field_match = re.search(r"FactLedger '([^']+)'", text)
+        return {
+            "signal_id": f"NC-{match.group('signal_id')}",
+            "candidate": str(match.group("candidate") or "").strip(),
+            "severity": str(match.group("severity") or "").strip(),
+            "category": str(match.group("category") or "").strip(),
+            "text": text,
+            "ledger_field": str(ledger_field_match.group(1) or "").strip() if ledger_field_match else "",
+        }
+
+    def numeric_consistency_summary(
+        self,
+        *,
+        stage: int = 4,
+        lookback: int = 100,
+        session_id: str | None = None,
+    ) -> dict:
+        stage = max(1, int(stage or 4))
+        lookback = max(1, int(lookback or 100))
+        session_filter = str(session_id or "").strip()
+        try:
+            rows = self.db.conn.execute(
+                """
+                SELECT attempt_key, ep_num, attempt_num, runtime_advisory, retry_directives
+                FROM stage_attempts
+                WHERE stage = ? AND COALESCE(attempt_key, '') != ''
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (stage, lookback),
+            ).fetchall()
+        except Exception as exc:
+            self._report_soft_failure(
+                "numeric_consistency_summary",
+                exc,
+                message="stage_attempts load for numeric_consistency_summary failed",
+                extra={"stage": stage, "session_id": session_filter},
+            )
+            logging.debug("[FailureAnalyzer] numeric consistency load failed: %s", exc)
+            return {}
+
+        signals: list[dict[str, object]] = []
+        dedupe_keys: set[tuple[str, str, str]] = set()
+        attempts_considered = 0
+        for row in rows:
+            attempt_key = str(row["attempt_key"] or "").strip()
+            if not attempt_key:
+                continue
+            if session_filter and not self._attempt_key_matches_session_id(attempt_key, session_filter):
+                continue
+            attempts_considered += 1
+            for source_name in ("runtime_advisory", "retry_directives"):
+                for segment in self._extract_numeric_consistency_signal_segments(row[source_name]):
+                    parsed = self._parse_numeric_consistency_signal(segment)
+                    if not parsed:
+                        continue
+                    dedupe_key = (
+                        attempt_key,
+                        str(parsed.get("signal_id") or ""),
+                        str(parsed.get("text") or ""),
+                    )
+                    if dedupe_key in dedupe_keys:
+                        continue
+                    dedupe_keys.add(dedupe_key)
+                    signals.append(
+                        {
+                            "attempt_key": attempt_key,
+                            "ep_num": int(row["ep_num"] or 0),
+                            "attempt_num": int(row["attempt_num"] or 0),
+                            "source": source_name,
+                            **parsed,
+                        }
+                    )
+
+        if attempts_considered <= 0:
+            return {}
+
+        category_counts: dict[str, int] = defaultdict(int)
+        severity_counts: dict[str, int] = defaultdict(int)
+        ledger_field_counts: dict[str, int] = defaultdict(int)
+        attempts_with_signals: set[str] = set()
+        for signal in signals:
+            attempts_with_signals.add(str(signal.get("attempt_key") or ""))
+            category = str(signal.get("category") or "").strip() or "uncategorized"
+            severity = str(signal.get("severity") or "").strip() or "unspecified"
+            ledger_field = str(signal.get("ledger_field") or "").strip()
+            category_counts[category] += 1
+            severity_counts[severity] += 1
+            if ledger_field:
+                ledger_field_counts[ledger_field] += 1
+
+        return {
+            "status": "warn" if signals else "ok",
+            "stage": stage,
+            "session_filter": session_filter,
+            "attempt_rows_considered": attempts_considered,
+            "attempts_with_signals": len(attempts_with_signals),
+            "signal_count": len(signals),
+            "category_counts": dict(sorted(category_counts.items())),
+            "severity_counts": dict(sorted(severity_counts.items())),
+            "ledger_field_counts": dict(sorted(ledger_field_counts.items())),
+            "signal_examples": signals[:5],
+            "observability_note": (
+                "Numeric consistency summary surfaces persisted NC advisory text only; owner classification remains external to this summary."
+            ),
+        }
 
     def _load_episode_production_entries(self, min_score: int = 0) -> list[dict]:
         """episode_production.jsonl fallback loader."""

@@ -15,6 +15,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from modules.core.stage2_context import Stage2Context
 from modules.core.stage2_finalizer import (
     Stage2Finalizer,
+    _build_stage2_carryover_authority_summary,
     _compute_inventory_carryover,
     _sync_first_episode_start_state_line,
     _sync_stage2_end_location_contract,
@@ -117,6 +118,36 @@ def _make_finalize_kwargs(refined_arc, **overrides):
     }
     defaults.update(overrides)
     return defaults
+
+
+def test_build_stage2_carryover_authority_summary_surfaces_start_end_and_finance():
+    refined_arc = {
+        "joint_docs": {"final_location": "강남 오피스", "physical_inventory": ["법인 인감", "노트북"]},
+        "semantic_carryover": {"continuity_checkpoints": ["회귀 유지"], "foreshadow_anchors": ["유가 급등"]},
+        "state_constraints": {
+            "arc_start_state": {
+                "location": "성북동 본가",
+                "equipment": ["구형 폴더폰", "지갑"],
+                "total_assets": "약 20억원",
+            },
+            "arc_end_state": {
+                "location": "강남 오피스",
+                "equipment": ["법인 인감", "노트북"],
+                "total_assets": "20억원",
+                "capital": "20억원",
+            },
+            "investment_calc": {"final_total_assets": 2000000000, "final_cash": 2000000000},
+        },
+    }
+
+    summary = _build_stage2_carryover_authority_summary(refined_arc)
+
+    assert summary["start_location"] == "성북동 본가"
+    assert summary["start_inventory_count"] == 2
+    assert summary["end_location"] == "강남 오피스"
+    assert summary["end_inventory_count"] == 2
+    assert summary["investment_calc_final_total_assets"] == 2000000000
+    assert "semantic_carryover_keys" in summary
 
 
 class TestFinalizerStructure:
@@ -356,6 +387,12 @@ class TestMetricsRecording:
         qd_kw = finalizer.ctx.quality_dashboard.record_validation.call_args[1]
         assert qd_kw["result"]["decision"] == "PASS"
 
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_pass_metrics_record_monitor_even_when_v50_flag_false(self, finalizer):
+        finalizer._record_s2_pass_metrics(global_arc_no=1, attempt=0, generation_method="analyst", audit={"score": 88})
+
+        finalizer.ctx.pass_rate_monitor.record_attempt.assert_called_once()
+
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
     def test_pass_metrics_without_monitor(self, finalizer):
         finalizer.ctx.pass_rate_monitor = None
@@ -504,6 +541,69 @@ class TestConstraintDbLogging:
         assert (tmp_path / prm_kw["artifact_path"]).exists()
         assert db_kw["artifact_path"] == prm_kw["artifact_path"]
         assert ds_kw["artifact_path"] == prm_kw["artifact_path"]
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_pass_metrics_fall_back_to_director_compare_meta_for_selection_reason(
+        self,
+        finalizer,
+        valid_refined_arc,
+        tmp_path,
+    ):
+        finalizer.ctx.current_project.paths = MagicMock()
+        finalizer.ctx.current_project.paths.root = tmp_path
+        payload = deepcopy(valid_refined_arc)
+        payload["_director_compare_meta"] = {
+            "selection_reason": "후보 3은 블록 DNA를 가장 충실하게 반영했다.",
+            "feedback": "auto-correct pressure cleared after compare gate",
+        }
+
+        finalizer._record_s2_pass_metrics(
+            global_arc_no=2,
+            attempt=0,
+            generation_method="four_phase",
+            selected_strategy="balanced",
+            audit={"score": 96, "decision": "PASS"},
+            artifact_payload=payload,
+        )
+
+        db_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        ds_kw = finalizer.ctx.current_project.db.save_director_selection.call_args.kwargs
+        assert db_kw["selection_reason"] == "후보 3은 블록 DNA를 가장 충실하게 반영했다."
+        assert db_kw["verdict_reason"] == "auto-correct pressure cleared after compare gate"
+        assert ds_kw["selection_reason"] == "후보 3은 블록 DNA를 가장 충실하게 반영했다."
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_pass_metrics_emit_authoritative_session_decision_with_artifact_linkage(
+        self,
+        finalizer,
+        valid_refined_arc,
+        tmp_path,
+    ):
+        finalizer.ctx.current_project.paths = MagicMock()
+        finalizer.ctx.current_project.paths.root = tmp_path
+        payload = deepcopy(valid_refined_arc)
+        payload["_director_compare_meta"] = {
+            "selection_reason": "후보 1이 가장 안정적으로 후속 전개를 이어 준다.",
+            "feedback": "carryover anchor remains intact",
+        }
+
+        finalizer._record_s2_pass_metrics(
+            global_arc_no=3,
+            attempt=0,
+            generation_method="four_phase",
+            selected_strategy="balanced",
+            audit={"score": 94, "decision": "PASS"},
+            artifact_payload=payload,
+        )
+
+        log_kw = finalizer.ctx.session_logger.log_decision.call_args.kwargs
+        assert log_kw["decision_type"] == "arc_final"
+        assert log_kw["attempt_key"] == "s2:ep3:arc3:a1"
+        assert log_kw["candidate_key"] == "balanced"
+        assert "session_id" in log_kw
+        assert log_kw["selection_reason"] == "후보 1이 가장 안정적으로 후속 전개를 이어 준다."
+        assert log_kw["verdict_reason"] == "carryover anchor remains intact"
+        assert log_kw["artifact_path"].endswith("final_arc__balanced.json")
 
 
 class TestDeterministicCarryover:
@@ -1083,6 +1183,53 @@ class TestRunFinalize:
             "state_constraints.arc_end_state.location"
         ]
         assert selection_kw["advisory_warnings"]["partial_fix_eval"]["patch_target_id"].startswith("pt:")
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_pass_metrics_persist_carryover_authority_summary(self, _validate, finalizer, valid_refined_arc):
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["state_constraints"] = {
+            "arc_start_state": {
+                "location": "성북동 본가",
+                "equipment": ["구형 폴더폰", "지갑"],
+                "total_assets": "약 20억원",
+            },
+            "arc_end_state": {
+                "location": "강남 오피스",
+                "equipment": ["법인 인감", "노트북"],
+                "total_assets": "20억원",
+            },
+            "investment_calc": {"final_total_assets": 2000000000},
+            "items_acquired": [],
+        }
+        refined_arc["joint_docs"] = {
+            "final_location": "강남 오피스",
+            "physical_inventory": ["법인 인감", "노트북"],
+            "world_joint": "stable",
+        }
+        finalizer.ctx.agents["director"].audit_strategic_plan.return_value = {
+            "decision": "PASS",
+            "score": 95,
+            "reason": "ok",
+        }
+
+        result = asyncio.run(finalizer.run_finalize(**_make_finalize_kwargs(refined_arc)))
+
+        assert result["action"] == "break"
+        save_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        summary = save_kw["advisory_flags"]["carryover_authority"]
+        assert summary["start_location"] == "성북동 본가"
+        assert summary["end_location"] == "강남 오피스"
+        assert summary["investment_calc_final_total_assets"] == 2000000000
+        ui_event_kw = finalizer.ctx.current_project.db.save_ui_event.call_args.kwargs
+        assert ui_event_kw["event_kind"] == "carryover_authority"
+        assert ui_event_kw["attempt_key"] == save_kw["attempt_key"]
+        assert ui_event_kw["meta"]["end_location"] == "강남 오피스"
+        assert any(
+            "[Stage2 Carryover Authority]" in str(call.args[0])
+            for call in finalizer.ctx.ui.log.call_args_list
+            if call.args
+        )
 
     def test_collect_arc_patch_guard_signals_flags_future_artifact_in_first_episode_start_state(
         self,

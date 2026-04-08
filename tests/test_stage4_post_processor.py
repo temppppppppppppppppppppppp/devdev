@@ -70,6 +70,7 @@ class TestProcessPassResult:
         project = MagicMock()
         project.db = db
         project.name = "test_project"
+        project.metrics_session_id = "sess-post-pass"
         project.latest_state = {}
         project.seed_tracker = None
         project.karma_matrix = {}
@@ -1030,6 +1031,7 @@ class TestProcessPassResult:
         contract_rows = [row for row in rows if row.get("event") == "STAGE4_POST_PASS_CONTRACT"]
         assert len(contract_rows) == 1
         assert contract_rows[0]["ep"] == 4
+        assert contract_rows[0]["session_id"] == "sess-post-pass"
         assert contract_rows[0]["numeric_carryover_authority"]["fields"] == ["capital", "total_assets"]
         assert contract_rows[0]["numeric_carryover_summary"] == {
             "owner": "",

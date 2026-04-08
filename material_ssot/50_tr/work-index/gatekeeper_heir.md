@@ -1,22 +1,15 @@
-﻿# gatekeeper_heir
+# gatekeeper_heir
 
 Title: 사람값이 보이는 후계자
 Family: blockguide
-Status: bootstrap TR manifest
+Status: retired placeholder
 
-## 1. Stage Snapshot
+## 1. Retirement State
 
-- live TR file: present
-- block count: 70
-- canonical TR contract: pass
+- this work no longer has an active TR manifest guarantee in the bounded slice
+- any historical TR path references should be treated as retired inventory, not current live-chain truth
 
-## 2. Current Live Chain
+## 2. Current Rule
 
-- upstream Phase0 manifest: `material_ssot/40_phase0_design/work-index/gatekeeper_heir.md`
-- live TR file: `treatments/06_gatekeeper_heir_tr_block_070_draft.json`
-- next BI manifest: `material_ssot/60_bi/work-index/gatekeeper_heir.md`
-
-## 3. Current Notes
-
-- current TR is treated as the live canonical draft
-- current pair contract with BI is passing
+- do not use this file for repair, benchmark, or promotion routing
+- any future reuse requires a new active TR artifact and explicit re-entry decision

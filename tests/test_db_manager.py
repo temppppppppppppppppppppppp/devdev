@@ -660,6 +660,64 @@ def test_update_director_selection_rationale_updates_latest_attempt_row(db):
     assert row["fix_scope"] == "ending_only"
 
 
+def test_update_director_selection_rationale_merges_advisory_warnings(db):
+    db.save_director_selection(
+        5,
+        1,
+        "A",
+        "balanced",
+        "PASS_WITH_FIX",
+        score=88,
+        selection_reason="initial rationale",
+        verdict_reason="initial verdict",
+        fix_scope="inplace",
+        advisory_warnings={
+            "gate_semantics": {
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "bounded_local_repair",
+            },
+            "patch_context": {"tag": "patch"},
+        },
+        stage=4,
+        attempt_key="s4:ep5:arc2:a2",
+    )
+
+    updated = db.update_director_selection_rationale(
+        attempt_key="s4:ep5:arc2:a2",
+        selection_reason="re-audited rationale",
+        verdict_reason="re-audited verdict",
+        fix_scope="ending_only",
+        advisory_warnings={
+            "fix_pack": {"target_kind": "scene_model"},
+            "repair_contract": {"provenance": "runtime_backfilled"},
+            "scope_authority": {
+                "fix_scope": "full",
+                "authoritative_fix_scope": "full",
+                "widened": True,
+            },
+        },
+    )
+
+    row = db.conn.execute(
+        """
+        SELECT advisory_warnings
+        FROM director_selections
+        WHERE attempt_key = 's4:ep5:arc2:a2'
+        ORDER BY id DESC
+        LIMIT 1
+        """
+    ).fetchone()
+    advisory = json.loads(row["advisory_warnings"])
+
+    assert updated is True
+    assert advisory["gate_semantics"]["director_verdict"] == "PASS_WITH_FIX"
+    assert advisory["patch_context"] == {"tag": "patch"}
+    assert advisory["fix_pack"]["target_kind"] == "scene_model"
+    assert advisory["repair_contract"]["provenance"] == "runtime_backfilled"
+    assert advisory["scope_authority"]["fix_scope"] == "full"
+    assert advisory["scope_authority"]["widened"] is True
+
+
 def test_get_stage4_final_authority_rows_marks_selection_as_companion_when_patch_changes_artifact(db):
     attempt_key = "s4:ep5:arc2:a2:sess-authority"
     db.save_director_selection(

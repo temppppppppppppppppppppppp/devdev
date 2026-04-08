@@ -2352,16 +2352,23 @@ class DBManager:
         selection_reason: str = "",
         verdict_reason: str = "",
         fix_scope: str = "",
+        advisory_warnings: dict | None = None,
     ) -> bool:
         """Update the latest director selection row for an attempt with final rationale fields."""
         if not attempt_key:
             return False
         with self._lock:
             nested = self.conn.in_transaction
-            cur = self.cursor.execute(
+            cur = self.conn.cursor()
+            advisory_json = self._load_and_merge_director_selection_advisory_warnings(
+                cur=cur,
+                attempt_key=str(attempt_key),
+                advisory_warnings=advisory_warnings,
+            )
+            cur.execute(
                 """
                 UPDATE director_selections
-                SET selection_reason = ?, verdict_reason = ?, fix_scope = ?
+                SET selection_reason = ?, verdict_reason = ?, fix_scope = ?, advisory_warnings = ?
                 WHERE id = (
                     SELECT id
                     FROM director_selections
@@ -2374,12 +2381,62 @@ class DBManager:
                     selection_reason or "",
                     verdict_reason or "",
                     fix_scope or "",
+                    advisory_json,
                     str(attempt_key),
                 ),
             )
             if not nested:
                 self.commit()
             return int(cur.rowcount or 0) > 0
+
+    @classmethod
+    def _merge_director_selection_json_payloads(
+        cls,
+        existing: dict | None,
+        incoming: dict | None,
+    ) -> dict:
+        merged = dict(existing or {})
+        for key, value in (incoming or {}).items():
+            if value is None or value == "" or value == []:
+                continue
+            if isinstance(value, dict):
+                prior = merged.get(key)
+                if isinstance(prior, dict):
+                    merged[key] = cls._merge_director_selection_json_payloads(prior, value)
+                else:
+                    merged[key] = cls._merge_director_selection_json_payloads({}, value)
+                continue
+            merged[key] = value
+        return merged
+
+    def _load_and_merge_director_selection_advisory_warnings(
+        self,
+        *,
+        cur,
+        attempt_key: str,
+        advisory_warnings: dict | None,
+    ) -> str | None:
+        row = cur.execute(
+            """
+            SELECT advisory_warnings
+            FROM director_selections
+            WHERE attempt_key = ?
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (str(attempt_key),),
+        ).fetchone()
+        existing: dict = {}
+        raw_existing = row["advisory_warnings"] if row else None
+        if raw_existing:
+            try:
+                parsed = json.loads(raw_existing)
+            except Exception:
+                parsed = {}
+            if isinstance(parsed, dict):
+                existing = parsed
+        merged = self._merge_director_selection_json_payloads(existing, advisory_warnings if isinstance(advisory_warnings, dict) else {})
+        return json.dumps(merged, ensure_ascii=False) if merged else None
 
     def save_episode_quality_label(self, ep_num: int, labels: dict) -> None:
         """PASS 에피소드의 정규화된 품질 라벨 저장."""

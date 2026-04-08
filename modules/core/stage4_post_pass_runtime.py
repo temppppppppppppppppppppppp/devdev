@@ -14,6 +14,7 @@ from modules.core.fact_ledger import _coerce_direct_financial_scalar
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.inventory_state import compute_inventory_count_deltas, normalize_inventory_counts
 from modules.core.jsonl_io import append_jsonl_record
+from modules.core.logging_keys import resolve_logging_session_id
 from modules.core.soft_failure import resolve_project_log_dir
 
 if TYPE_CHECKING:
@@ -1263,6 +1264,8 @@ class Stage4PostPassRuntime:
         if not contract:
             return
 
+        current_project = getattr(self.ctx, "current_project", None)
+        session_id = str(resolve_logging_session_id(current_project) or "")
         families = contract.get("field_families")
         families = families if isinstance(families, dict) else {}
         carryover_family = families.get("numeric_carryover_authority")
@@ -1271,13 +1274,13 @@ class Stage4PostPassRuntime:
         entry = {
             "event": "STAGE4_POST_PASS_CONTRACT",
             "ep": int(next_ep),
+            "session_id": session_id,
             "actual_truth_primary_owner": str(contract.get("actual_truth_primary_owner", "") or ""),
             "numeric_carryover_authority": carryover_family,
             "numeric_carryover_summary": carryover_summary,
             "state_truth_owner_contract": dict(contract),
         }
 
-        current_project = getattr(self.ctx, "current_project", None)
         logs_dir = resolve_project_log_dir(current_project)
         if logs_dir is None:
             project_name = getattr(current_project, "name", None)

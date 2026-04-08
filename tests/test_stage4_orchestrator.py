@@ -185,6 +185,7 @@ class TestStage4AuditSummary:
         ctx.sys = mock_app.sys
         ctx.session_logger = MagicMock()
         ctx.audit_event = MagicMock()
+        ctx.current_project.metrics_session_id = "sess-stage4"
 
         orch = Stage4Orchestrator(mock_app, context=ctx)
 
@@ -195,12 +196,54 @@ class TestStage4AuditSummary:
         assert decision_kwargs["stage"] == "stage4_control"
         assert decision_kwargs["decision_type"] == "target_ep_reached"
         assert decision_kwargs["ep_num"] == 2
+        assert decision_kwargs["session_id"] == "sess-stage4"
         assert decision_kwargs["next_ep"] == 3
 
         ctx.audit_event.assert_called_once_with(
             "target_ep_reached",
             "stage4 target episode reached",
-            {"target_ep": 2, "next_ep": 3},
+            {"session_id": "sess-stage4", "target_ep": 2, "next_ep": 3},
+        )
+
+    def test_log_stage4_session_scope_writes_control_decision_and_audit_event(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.current_project = mock_app.current_project
+        ctx.current_project.metrics_session_id = "sess-scope"
+        ctx.agents = mock_app.agents
+        ctx.state_tracker = None
+        ctx.memory = None
+        ctx.context_advisor = None
+        ctx.perf_timer = MagicMock()
+        ctx.sys = mock_app.sys
+        ctx.session_logger = MagicMock()
+        ctx.audit_event = MagicMock()
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        orch._log_stage4_session_scope(start_ep=2, target_ep=3, total_planned_ep=10)
+
+        ctx.session_logger.log_decision.assert_called_once()
+        decision_kwargs = ctx.session_logger.log_decision.call_args.kwargs
+        assert decision_kwargs["decision_type"] == "session_scope"
+        assert decision_kwargs["result"] == "START"
+        assert decision_kwargs["ep_num"] == 2
+        assert decision_kwargs["session_id"] == "sess-scope"
+        assert decision_kwargs["target_ep"] == 3
+        assert decision_kwargs["total_planned_ep"] == 10
+
+        ctx.audit_event.assert_called_once_with(
+            "stage4_session_scope",
+            "stage4 session scope declared",
+            {
+                "session_id": "sess-scope",
+                "start_ep": 2,
+                "target_ep": 3,
+                "total_planned_ep": 10,
+            },
         )
 
     def test_stage4_early_return_does_not_write_runtime_audit_summary(self, mock_app):

@@ -128,6 +128,8 @@ New docs should write readiness in this exact key shape:
 
 Operator gate:
 
+- before starting a fresh repo-level pitch wave, run:
+  - `python -X utf8 scripts/pre_new_pitch_readiness_gate.py`
 - run `python -X utf8 scripts/material_readiness_validator.py --path <md-or-dir>` before promotion
 - for real promotion, prefer:
   - pre-canon: `python -X utf8 scripts/material_promotion_gate.py --stage canon --path <candidate-md>`

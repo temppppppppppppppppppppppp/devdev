@@ -61,6 +61,30 @@ def as_text(value: Any) -> str:
     return str(value).strip()
 
 
+def relative_posix(path: Path) -> str:
+    return path.resolve().relative_to(ROOT).as_posix()
+
+
+def derive_work_id_from_phase0_path(path: Path) -> str:
+    stem = path.stem
+    if stem.endswith("_phase0_design"):
+        return stem[: -len("_phase0_design")]
+    return stem
+
+
+def build_authority_chain(work_id: str, *, phase0_path: Path, draft_path: Path) -> list[str]:
+    candidates = [
+        ROOT / "material_ssot" / "20_pitch" / "canon" / f"{work_id}.md",
+        ROOT / "treatments" / "preprocess" / work_id / "source_manifest.json",
+        ROOT / "treatments" / "preprocess" / work_id / "material_bundle_summary.json",
+        ROOT / "treatments" / "preprocess" / work_id / "profile_lock.json",
+        ROOT / "treatments" / "preprocess" / work_id / "phase0_ready_snapshot.json",
+        phase0_path,
+        draft_path,
+    ]
+    return [relative_posix(path) for path in candidates if path.is_file()]
+
+
 def ensure_list(value: Any) -> list[Any]:
     if isinstance(value, list):
         return value
@@ -213,7 +237,11 @@ def build_faction_map(protagonist: dict[str, Any], setting: dict[str, Any], phas
     }
 
 
-def build_treasures(protagonist: dict[str, Any], setting: dict[str, Any]) -> list[dict[str, str]]:
+def build_treasures(
+    protagonist: dict[str, Any],
+    setting: dict[str, Any],
+    phase0_design: dict[str, Any] | None = None,
+) -> list[dict[str, str]]:
     treasures: list[dict[str, str]] = []
     for item in ensure_list(get_nested(protagonist, "inventory")):
         text = as_text(item)
@@ -229,6 +257,20 @@ def build_treasures(protagonist: dict[str, Any], setting: dict[str, Any]) -> lis
             text = as_text(item.get("name") if isinstance(item, dict) else item)
             if text:
                 treasures.append({"name": text, "role": role, "status": "active"})
+    for item in ensure_list((phase0_design or {}).get("treasure_path")):
+        if not isinstance(item, dict):
+            continue
+        text = as_text(item.get("treasure"))
+        if text:
+            status = as_text(item.get("arc")) or as_text(item.get("acquisition_block")) or "planned"
+            treasures.append({"name": text, "role": "treasure_path", "status": status})
+    for item in ensure_list((phase0_design or {}).get("martial_art_path")):
+        if not isinstance(item, dict):
+            continue
+        text = as_text(item.get("art"))
+        if text:
+            status = as_text(item.get("arc")) or as_text(item.get("acquisition")) or "planned"
+            treasures.append({"name": text, "role": "martial_art_path", "status": status})
     return treasures
 
 
@@ -638,14 +680,22 @@ def resolve_runtime_pov_contract(
     return pov, external_policy
 
 
-def build_bible(phase0: dict[str, Any], treatment_blocks: list[dict[str, Any]]) -> dict[str, Any]:
+def build_bible(
+    phase0: dict[str, Any],
+    treatment_blocks: list[dict[str, Any]],
+    *,
+    work_id: str,
+    source_phase0: str,
+    source_tr: str,
+    authority_chain: list[str],
+) -> dict[str, Any]:
     project = phase0["project"]
     setting = phase0["setting"]
     protagonist = phase0["protagonist"]
     treatment_blocks = build_plot_roadmap_from_treatment(treatment_blocks)
     phase0_design = phase0["phase0_design"]
     faction_map = build_faction_map(protagonist, setting, phase0_design)
-    treasures = build_treasures(protagonist, setting)
+    treasures = build_treasures(protagonist, setting, phase0_design)
     snapshot = build_treatment_snapshot(treatment_blocks)
     world_origin, incarnation_type = resolve_runtime_identity(protagonist, treatment_blocks)
     pov, external_pov_insert_policy = resolve_runtime_pov_contract(protagonist, setting, project)
@@ -731,6 +781,7 @@ def build_bible(phase0: dict[str, Any], treatment_blocks: list[dict[str, Any]]) 
             "CurrentLocation": first_text(treatment_blocks[0], "location.place", default="강호"),
             "EraWindow": f"{first_text(project, 'start_year', default='미상')} - {first_text(project, 'end_year', default='미상')}",
             "JianghuPhase": first_text(setting, "jianghu_phase", default="군웅할거"),
+            "internal_energy_curve": phase0_design.get("internal_energy_curve"),
         },
         "AssetLibrary": {
             "KeyNPCs": build_key_npcs(project, protagonist, ensure_list(phase0_design.get("npc_timeline"))),
@@ -759,6 +810,11 @@ def build_bible(phase0: dict[str, Any], treatment_blocks: list[dict[str, Any]]) 
             }
             for index, arc in enumerate(ensure_list(phase0_design.get("arcs")))
         ],
+        "GenreRules": {
+            "core_mode": first_text(project, "format", default="무협"),
+            "taboo_rules": ensure_list(phase0_design.get("taboo_rules")),
+            "do_not_fake": ensure_list(phase0_design.get("do_not_fake")),
+        },
         "plot_roadmap": treatment_blocks,
     }
     master_bible = sanitize_bi_value(master_bible)
@@ -767,6 +823,11 @@ def build_bible(phase0: dict[str, Any], treatment_blocks: list[dict[str, Any]]) 
         "_schema_description": f"{master_bible['ProjectData']['MetaInfo']['title']} wuxia BI",
         "_last_updated": date.today().isoformat(),
         "_genre": detect_genre_code(project),
+        "_family": "wuxguide",
+        "_work_id": work_id,
+        "_authority_chain": authority_chain,
+        "_source_phase0": source_phase0,
+        "_source_tr": source_tr,
         "MasterBible": master_bible,
     }
 
@@ -782,14 +843,22 @@ def main() -> int:
     draft_raw = load_json(args.draft)
     canonical_treatment, tr_warnings = canonicalize_treatment_payload(draft_raw)
     treatment_blocks = canonical_treatment["blocks"]
-    require(isinstance(treatment_blocks, list) and len(treatment_blocks) == 70, "Treatment draft must contain 70 blocks")
+    require(isinstance(treatment_blocks, list) and len(treatment_blocks) >= 1, "Treatment draft must contain at least one block")
     require(isinstance(phase0, dict), "Phase0 payload must be a dict")
     for section in REQUIRED_PHASE0_SECTIONS:
         require(section in phase0, f"Phase0 payload missing required section: {section}")
     for field in REQUIRED_PHASE0_FIELDS:
         require(field in phase0["phase0_design"], f"Phase0 design missing field: {field}")
 
-    bible = build_bible(phase0, treatment_blocks)
+    work_id = derive_work_id_from_phase0_path(args.phase0)
+    bible = build_bible(
+        phase0,
+        treatment_blocks,
+        work_id=work_id,
+        source_phase0=relative_posix(args.phase0),
+        source_tr=relative_posix(args.draft),
+        authority_chain=build_authority_chain(work_id, phase0_path=args.phase0, draft_path=args.draft),
+    )
     bible, canonical_warnings = canonicalize_bible_payload(bible, treatment=canonical_treatment, genre_hint="wuxia")
     valid, errors, warnings = validate_bible_structure(bible)
     require(valid, f"Bible validation failed: {errors}")
@@ -798,7 +867,10 @@ def main() -> int:
         == bible["MasterBible"]["MartialHUD"]["Protagonist"]["actual_truth"]["name"],
         "Protagonist name mismatch inside BI",
     )
-    require(len(bible["MasterBible"]["plot_roadmap"]) == 70, "BI plot_roadmap must contain 70 blocks")
+    require(
+        len(bible["MasterBible"]["plot_roadmap"]) == len(treatment_blocks),
+        "BI plot_roadmap must align with treatment block count",
+    )
 
     draft_titles = [as_text(block.get("title")) for block in treatment_blocks]
     bible_titles = [as_text(block.get("title")) for block in bible["MasterBible"]["plot_roadmap"]]
