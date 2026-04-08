@@ -7,16 +7,30 @@ from modules.core.response_schemas import validate_phase0_files, validate_treatm
 from modules.core.stage0_handoff import build_plot_roadmap_from_treatment
 
 
-def _valid_bible():
-    return {"MasterBible": {"ProjectData": {"MetaInfo": {"title": "테스트 작품"}}}}
-
-
 def _full_content(label: str) -> dict:
     return {
         "context": f"{label} 배경",
-        "event_villain": f"{label} 적대 사건",
+        "event_villain": f"{label} 사건",
         "solution": f"{label} 해결",
         "reward": f"{label} 보상",
+    }
+
+
+def _valid_bible():
+    return {
+        "MasterBible": {
+            "ProjectData": {
+                "MetaInfo": {"title": "테스트 작품"},
+                "CoreIdentity": {"protagonist": "주인공"},
+            },
+            "protagonist_config": {
+                "world_origin": "현대인",
+                "incarnation_type": "회귀자",
+                "pov": "3인칭",
+                "external_pov_insert_policy": "제한적 허용",
+            },
+            "plot_roadmap": [{"block_no": 1, "title": "seed", "content": _full_content("seed")}],
+        }
     }
 
 
@@ -37,9 +51,9 @@ def test_dict_blocks_treatment_normalizes_to_stage2_ready_roadmap():
         "blocks": [
             {
                 "block_id": "Block 7",
-                "title": "화산 입문",
+                "title": "무산 입문",
                 "content": _full_content("입문"),
-                "genre_ext": {"realm": "삼류"},
+                "genre_ext": {"realm": "일류"},
             }
         ]
     }
@@ -53,7 +67,7 @@ def test_dict_blocks_treatment_normalizes_to_stage2_ready_roadmap():
     assert len(roadmap) == 1
     assert roadmap[0]["block_no"] == 7
     assert roadmap[0]["content"]["context"] == "입문 배경"
-    assert roadmap[0]["genre_ext"]["realm"] == "삼류"
+    assert roadmap[0]["genre_ext"]["realm"] == "일류"
 
 
 def test_dict_treatments_normalizes_and_reports_block_count():
@@ -73,7 +87,7 @@ def test_dict_treatments_normalizes_and_reports_block_count():
 
 
 def test_build_plot_roadmap_guarantees_block_no_with_enumeration_fallback():
-    treatment = {"blocks": [{"title": "무명 블록", "content": _full_content("기승")}]}
+    treatment = {"blocks": [{"title": "무명 블록", "content": _full_content("기습")}]}
 
     roadmap = build_plot_roadmap_from_treatment(treatment)
 
@@ -97,7 +111,7 @@ def test_force_sync_v25_dna_uses_normalized_block_list(tmp_path):
                 "blocks": [
                     {
                         "block_id": "Block 9",
-                        "title": "의술 개안",
+                        "title": "서술 개선안",
                         "content": _full_content("각성"),
                     }
                 ]
@@ -119,5 +133,8 @@ def test_force_sync_v25_dna_uses_normalized_block_list(tmp_path):
     roadmap = ctx.master_bible["MasterBible"]["plot_roadmap"]
     assert len(roadmap) == 1
     assert roadmap[0]["block_no"] == 9
-    assert roadmap[0]["title"] == "의술 개안"
+    assert roadmap[0]["title"] == "서술 개선안"
+    assert ctx.master_bible["_stage0_contract"]["artifact_role"] == "bi_projection_artifact"
+    assert ctx.master_bible["_stage0_contract"]["runtime_handoff"]["owner"] == "db_anchor:bible"
+    assert ctx.master_bible["_stage0_contract"]["field_authority"]["plot_roadmap"] == "MasterBible.plot_roadmap"
     ctx.save_v20_anchor.assert_called_once_with("bible", ctx.master_bible)

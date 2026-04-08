@@ -141,8 +141,10 @@ class ProjectContext:
             authoritative_arcs = self.db.load_arc_payloads()
         except Exception:
             authoritative_arcs = []
-        self.arcs = authoritative_arcs if authoritative_arcs else (
-            anchors.get("arcs") if isinstance(anchors.get("arcs"), list) else []
+        self.arcs = (
+            authoritative_arcs
+            if authoritative_arcs
+            else (anchors.get("arcs") if isinstance(anchors.get("arcs"), list) else [])
         )
 
         # [TF-7-P0-03] preset_state anchor 복원 — 호출부에서 app.preset_registry 재구성용
@@ -886,6 +888,7 @@ class ProjectContext:
                 build_plot_roadmap_from_treatment,
                 canonicalize_bible_payload,
                 canonicalize_treatment_payload,
+                resolve_stage0_bible_contract,
             )
 
             # [V49.3] Phase 0 JSON 스키마 검증
@@ -904,7 +907,8 @@ class ProjectContext:
                     for warn in report["bible"]["warnings"]:
                         logging.warning(f" {warn}")
 
-                logging.info(f"Treatment: {'✅ 유효' if report['treatment']['valid'] else '❌ 오류'} ({report['treatment']['block_count']}개 블록)"
+                logging.info(
+                    f"Treatment: {'✅ 유효' if report['treatment']['valid'] else '❌ 오류'} ({report['treatment']['block_count']}개 블록)"
                 )
                 if report["treatment"]["errors"]:
                     for err in report["treatment"]["errors"]:
@@ -927,10 +931,21 @@ class ProjectContext:
                 bible_data,
                 treatment=canonical_treatment,
             )
+            stage0_contract = resolve_stage0_bible_contract(canonical_bible, treatment=canonical_treatment)
             if treatment_warnings:
                 logging.info(" [DNA Injection] treatment canonicalization: %s", "; ".join(treatment_warnings[:5]))
             if bible_warnings:
                 logging.info(" [DNA Injection] bible canonicalization: %s", "; ".join(bible_warnings[:5]))
+            logging.info(
+                " [DNA Injection] Stage0 contract: role=%s, runtime_handoff_owner=%s, plot_roadmap_authority=%s, projection_source=%s",
+                stage0_contract.get("artifact_role"),
+                stage0_contract.get("runtime_handoff", {}).get("owner"),
+                stage0_contract.get("field_authority", {}).get("plot_roadmap"),
+                stage0_contract.get("projection_source"),
+            )
+            logging.info(
+                " [DNA Injection] force_sync_v25_dna remains a compatibility bridge; DB bible anchor is the runtime handoff owner"
+            )
 
             # 2. MasterBible 루트 확보 (포장지가 있든 없든 대응)
             master_bible = canonical_bible.get("MasterBible", canonical_bible)
@@ -951,7 +966,8 @@ class ProjectContext:
             success = self.save_v20_anchor("bible", self.master_bible)
 
             if success:
-                logging.info(f"✅ [S-Grade Success] {len(refined_roadmap)}개 블록이 포함된 '완전한 성경'이 DB에 안착되었습니다."
+                logging.info(
+                    f"✅ [S-Grade Success] {len(refined_roadmap)}개 블록이 포함된 '완전한 성경'이 DB에 안착되었습니다."
                 )
                 logging.info(f" 로드맵 크기: {len(self.master_bible['MasterBible']['plot_roadmap'])} blocks")
                 return True
@@ -1011,7 +1027,10 @@ class ProjectContext:
             if re.search(r"배신|동맹|화해|적대", content):
                 _bulk_events.add("relationship")
             # NPC 이름 패턴 (한글 2-4자 + "은/는/이/가/을/를")
-            for _m in re.finditer(r"([가-힣]{2,4})(?:은|는|이|가|을|를)\s", content[:8000]):  # utf8-hygiene: allow-line regex pattern
+            for _m in re.finditer(
+                r"([가-힣]{2,4})(?:은|는|이|가|을|를)\s",  # utf8-hygiene: allow-line
+                content[:8000],
+            ):
                 _bulk_entities.add(_m.group(1))
             memory.memorize_v20_episode(
                 ep_num,

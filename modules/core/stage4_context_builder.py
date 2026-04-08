@@ -36,8 +36,12 @@ from modules.core.non_wuxia_recovery_policy import normalize_chain_link_for_genr
 from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.core.stage4_context_packets import Stage4ContextPackets
 from modules.core.stage_cross_stage_contract import (
+    OPENING_TRANSITION_DIRECT,
+    OPENING_TRANSITION_EXPLICIT,
+    OPENING_TRANSITION_JUMP,
     resolve_cross_stage_constraint_summary,
     resolve_cross_stage_episode_mission_lines,
+    resolve_opening_transition_contract,
 )
 from modules.core.tactical_utils import extract_episode_tactical
 from modules.core.writer_prompt_builders import (
@@ -907,6 +911,8 @@ class Stage4ContextBuilder:
         opening_time_flow = str(blueprint.get("time_flow", "") or "").strip()
         opening_scene_location = ""
         opening_scene_title = ""
+        opening_transition = resolve_opening_transition_contract(blueprint)
+        opening_transition_type = str(opening_transition.get("type", "") or "").strip()
         scenes = blueprint.get("scene_breakdown", {})
         if isinstance(scenes, dict) and scenes:
             scene_1 = scenes.get("scene_1") or next(iter(scenes.values()), {})
@@ -936,6 +942,7 @@ class Stage4ContextBuilder:
                 opening_time_flow,
                 opening_scene_location,
                 opening_scene_title,
+                opening_transition_type,
                 prev_ending_excerpt,
                 carryover_cliffhanger,
                 carryover_pending_actions,
@@ -956,6 +963,20 @@ class Stage4ContextBuilder:
             lines.append(f"- default opening time_flow anchor: {opening_time_flow}")
         if opening_scene_title:
             lines.append(f"- opening scene_1.title anchor: {opening_scene_title}")
+        if opening_transition_type:
+            lines.append(f"- structured opening_transition.type: {opening_transition_type}")
+            if opening_transition_type == OPENING_TRANSITION_DIRECT:
+                lines.append(
+                    "- treat the opening as a direct continuation of the prior ending unless the blueprint itself changes that contract."
+                )
+            elif opening_transition_type == OPENING_TRANSITION_EXPLICIT:
+                lines.append(
+                    "- explicit_transition means the opening may move/cut, but the first beat must declare that transition immediately."
+                )
+            elif opening_transition_type == OPENING_TRANSITION_JUMP:
+                lines.append(
+                    "- jump_opening means a new anchor is intentional; declare the new location/time/state immediately instead of implying one continuous path."
+                )
         lines.extend(
             [
                 "- alternate openings are allowed only with an explicit transition/cut and immediate state declaration.",
@@ -978,11 +999,15 @@ class Stage4ContextBuilder:
         if prev_ending_excerpt:
             lines.append(f"- previous ending bridge to honor before new motion: {prev_ending_excerpt}")
         if carryover_cliffhanger:
-            lines.append(f"- opening carryover cliffhanger to resolve or explicitly transition from: {carryover_cliffhanger}")
+            lines.append(
+                f"- opening carryover cliffhanger to resolve or explicitly transition from: {carryover_cliffhanger}"
+            )
         if carryover_location:
             lines.append(f"- opening carryover location to honor or explicitly transition from: {carryover_location}")
         if carryover_time_marker:
-            lines.append(f"- opening carryover time_marker to honor or explicitly advance from: {carryover_time_marker}")
+            lines.append(
+                f"- opening carryover time_marker to honor or explicitly advance from: {carryover_time_marker}"
+            )
         if carryover_pending_actions:
             lines.append(
                 "- opening carryover pending_actions to resolve before new thread or explicitly transition away: "
@@ -1000,8 +1025,8 @@ class Stage4ContextBuilder:
         lines.extend(
             [
                 "",
-            "[Stage4 Work Identity Authority]",
-            "- below fields are hard intake authority, not soft advisory prose.",
+                "[Stage4 Work Identity Authority]",
+                "- below fields are hard intake authority, not soft advisory prose.",
             ]
         )
         if tracking_slots:
@@ -2117,7 +2142,9 @@ class Stage4ContextBuilder:
                         "- 확정된 주인공 경지 및 습득 기술 목록이 BI 초기 설정이나 advisory 요약보다 우선한다.\n"
                         "- 주인공의 현재 경지에서 허용되지 않는 기술을 사용하면 안 된다."
                     )
-                    logging.info("[Wave-TR1] Wuxia technique/realm authority clause injected (%d skills)", len(_protag_skills))
+                    logging.info(
+                        "[Wave-TR1] Wuxia technique/realm authority clause injected (%d skills)", len(_protag_skills)
+                    )
         except Exception as _wuxia_auth_err:
             logging.debug("[Wave-TR1] Wuxia authority clause skipped (non-blocking): %s", _wuxia_auth_err)
 
@@ -2148,7 +2175,10 @@ class Stage4ContextBuilder:
             )
             if work_identity_authority:
                 tier0_parts.insert(0, work_identity_authority)
-                logging.info("[WorkGuard] Stage4 work identity authority packet injected (%d chars)", len(work_identity_authority))
+                logging.info(
+                    "[WorkGuard] Stage4 work identity authority packet injected (%d chars)",
+                    len(work_identity_authority),
+                )
         except Exception as work_identity_err:
             logging.debug("[WorkGuard] Stage4 authority packet build failed (non-blocking): %s", work_identity_err)
 
@@ -2318,7 +2348,10 @@ class Stage4ContextBuilder:
                 warnings.append("work_focus_without_slots")
             if slot_summary and "[작품 추적 슬롯 요약]" not in context_text:
                 warnings.append("trimmed_work_slot_summary")
-            if source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0 and "[관계 의미 질의]" not in context_text:
+            if (
+                source_counts.get(RetrievalSources.DB_NPC_RELATIONSHIP, 0) > 0
+                and "[관계 의미 질의]" not in context_text
+            ):
                 warnings.append("missing_relation_slice")
             if (
                 retrieval_plan
@@ -2637,9 +2670,7 @@ class Stage4ContextBuilder:
                     if hud_parts:
                         snapshot = "\n".join(f"- {part}" for part in hud_parts)
                         episode_digest = (
-                            (episode_digest + f"\n{snapshot}")
-                            if episode_digest
-                            else f"[HUD 금융 스냅샷]\n{snapshot}"
+                            (episode_digest + f"\n{snapshot}") if episode_digest else f"[HUD 금융 스냅샷]\n{snapshot}"
                         )
         except Exception as hud_err:
             logging.warning("[SilentPass:V74] HUD 스냅샷 주입 실패: %s", hud_err)
@@ -2804,7 +2835,9 @@ class Stage4ContextBuilder:
         genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get("name", "")
         if not genre_name:
             genre_name = s4_genre_type or "unknown"
-            logging.warning("[genre-guardrail] _assemble_mandatory_context: genre display name unresolved, using %r", genre_name)
+            logging.warning(
+                "[genre-guardrail] _assemble_mandatory_context: genre display name unresolved, using %r", genre_name
+            )
 
         if writer_agent is None:
             return self._build_empty_mandatory_context_payload()
@@ -3160,11 +3193,7 @@ class Stage4ContextBuilder:
             if not writer_guidance:
                 return justification_prompt
             guidance_block = f"[Writer Guidance]\n{writer_guidance}"
-            return (
-                f"{justification_prompt}\n\n{guidance_block}".strip()
-                if justification_prompt
-                else guidance_block
-            )
+            return f"{justification_prompt}\n\n{guidance_block}".strip() if justification_prompt else guidance_block
         except Exception as writer_guidance_err:
             self.ctx.ui.log(f"   ⚠️ Writer guidance 실패 (비치명): {writer_guidance_err}")
             return justification_prompt

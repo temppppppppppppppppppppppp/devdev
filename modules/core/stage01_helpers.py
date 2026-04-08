@@ -87,7 +87,7 @@ class Stage01Helpers:
             }
 
         strategy = vol_data.get("strategy_doc", "")
-        if isinstance(strategy, (dict, list)):
+        if isinstance(strategy, dict | list):
             strategy = json.dumps(strategy, ensure_ascii=False)
         elif strategy is None:
             return {
@@ -198,11 +198,16 @@ class Stage01Helpers:
         return app._ui_select_bible(), app._ui_select_treatment()
 
     def _maybe_enrich_phase0_treatment(self, app, treatment_file):
+        app.ui.log("   ⚠️ [Stage0 Utility] Treatment Block 농축은 canonical Stage0 pair pass 경로가 아닙니다.")
+        app.ui.log(
+            "      비정규 semantic rewrite utility이며 일부 block의 title/content/joint_docs/status_shadow를 다시 쓸 수 있습니다."
+        )
+        app.ui.log("      원본 Treatment는 보존되고 결과는 *_enriched.json 별도 파일로 저장됩니다.")
         try:
             enrich_choice = (
                 self._prompt_with_ui(
                     app,
-                    "   🔧 [V60.10] Treatment Block 자동 농축을 수행하시겠습니까? (y/N): ",
+                    "   🔧 비정규 semantic rewrite utility를 실행하시겠습니까? (y/N): ",
                     prompt_id="stage0_enrich_treatment_confirm",
                 )
                 .strip()
@@ -347,7 +352,9 @@ class Stage01Helpers:
         else:
             app.ui.log("🆕 [New Project] 기존 원고가 없습니다. 신규 프로젝트로 기동합니다.")
 
-    def _handle_phase0_dna_sync_result(self, app, dna_success: bool, bible_file, treatment_file, protagonist_config: dict):
+    def _handle_phase0_dna_sync_result(
+        self, app, dna_success: bool, bible_file, treatment_file, protagonist_config: dict
+    ):
         if dna_success:
             self._save_phase0_protagonist_config(app, protagonist_config)
             self._sync_phase0_existing_drafts(app)

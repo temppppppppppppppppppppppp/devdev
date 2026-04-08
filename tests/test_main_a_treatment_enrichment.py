@@ -1,4 +1,3 @@
-from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -89,8 +88,12 @@ def test_confirm_treatment_enrichment_plan_logs_summary_and_honors_decline():
 
     assert proceed is False
     app._confirm.assert_called_once()
+    confirm_prompt = app._confirm.call_args.args[0]
+    assert "비정규 semantic rewrite utility" in confirm_prompt
     logs = [call.args[0] for call in app.ui.log.call_args_list if call.args]
     assert any("농축 필요 Block" in msg for msg in logs)
+    assert any("canonical Stage0 pair pass 경로가 아닌" in msg for msg in logs)
+    assert any("title/content/joint_docs/status_shadow" in msg for msg in logs)
     assert any("농축을 건너뜁니다." in msg for msg in logs)
 
 
@@ -124,6 +127,7 @@ def test_run_treatment_block_parallel_enrichment_merges_and_logs_stats():
     assert result[0]["block_id"] == "B1-new"
     assert result[1] == treatment_blocks[1]
     logs = [call.args[0] for call in app.ui.log.call_args_list if call.args]
+    assert any("비정규 utility" in msg for msg in logs)
     assert any("농축 완료" in msg for msg in logs)
     assert any("인과 수정" in msg for msg in logs)
 
@@ -144,3 +148,6 @@ def test_save_enriched_treatment_blocks_writes_new_file(monkeypatch, tmp_path):
     saved_path = treatments_dir / filename
     assert saved_path.exists()
     assert '"block_id": "B1"' in saved_path.read_text(encoding="utf-8")
+    logs = [call.args[0] for call in app.ui.log.call_args_list if call.args]
+    assert any("canonical source 유지" in msg for msg in logs)
+    assert any("비정규 utility output" in msg for msg in logs)

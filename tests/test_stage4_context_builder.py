@@ -144,7 +144,9 @@ class TestContextTailPreservation:
     @patch("modules.core.stage4_context_builder.SemanticQueryBroker")
     def test_work_identity_slot_summary_preserves_relation_slice_tail(self, broker_cls):
         ctx = _make_ctx()
-        broker_cls.return_value.build_stage4_relation_slice.return_value = "[관계 의미 질의]\n" + ("R" * 220) + "TAIL-REL"
+        broker_cls.return_value.build_stage4_relation_slice.return_value = (
+            "[관계 의미 질의]\n" + ("R" * 220) + "TAIL-REL"
+        )
         cb = Stage4ContextBuilder(ctx)
 
         summary = cb._build_work_identity_slot_summary(
@@ -190,9 +192,7 @@ class TestContextTailPreservation:
     def test_fetch_manuscript_excerpt_preserves_recent_tail_context(self):
         ctx = _make_ctx()
         ctx.db = ctx.current_project.db
-        ctx.db.get_manuscripts_range.return_value = [
-            {"ep_num": 7, "content": "HEAD-MS\n" + ("M" * 900) + "\nTAIL-MS"}
-        ]
+        ctx.db.get_manuscripts_range.return_value = [{"ep_num": 7, "content": "HEAD-MS\n" + ("M" * 900) + "\nTAIL-MS"}]
         cb = Stage4ContextBuilder(ctx)
 
         excerpt = cb._fetch_manuscript_excerpt(7, 7, max_chars=220)
@@ -1041,7 +1041,9 @@ class TestBuildMandatoryContext:
 
     def test_build_mandatory_context_seed_builds_focus_tier0_and_slot_summary(self):
         cb = Stage4ContextBuilder(_make_ctx())
-        cb._extract_blueprint_entities = MagicMock(return_value={"npcs": ["연홍"], "items": [], "plots": [], "locations": [], "_full_text": "bp"})
+        cb._extract_blueprint_entities = MagicMock(
+            return_value={"npcs": ["연홍"], "items": [], "plots": [], "locations": [], "_full_text": "bp"}
+        )
         cb._resolve_work_retrieval_focus = MagicMock(return_value={"tracking_slots": ["소꿉친구 라인"]})
         cb._build_tier0_mandatory_sections = MagicMock(return_value=["writer mandatory"])
         cb._build_work_identity_slot_summary = MagicMock(return_value="[작품 추적 슬롯 요약]\n소꿉친구 라인")
@@ -2462,6 +2464,7 @@ class TestBuildMandatoryContext:
             blueprint={
                 "start_location": "서재 앞 복도",
                 "time_flow": "직후",
+                "opening_transition": {"type": "direct_continuation", "signals": ["same_location_anchor"]},
                 "scene_breakdown": {
                     "scene_1": {
                         "title": "복도에서 현관으로",
@@ -2476,24 +2479,25 @@ class TestBuildMandatoryContext:
         assert "default opening start_location anchor: 서재 앞 복도" in text
         assert "default opening scene_1.location anchor: 현관 방향 복도" in text
         assert "default opening time_flow anchor: 직후" in text
+        assert "structured opening_transition.type: direct_continuation" in text
         assert "opening carryover location to honor or explicitly transition from: 서재 앞 복도" in text
         assert "opening carryover time_marker to honor or explicitly advance from: 직후" in text
-        assert (
-            "allow natural healing or ordinary completion for non-wuxia soft-state carryover"
-        ) in text
-        assert (
-            "soft carryover pending_actions reference: 전화를 받기, 현관으로 이동하기"
-        ) in text
+        assert ("allow natural healing or ordinary completion for non-wuxia soft-state carryover") in text
+        assert ("soft carryover pending_actions reference: 전화를 받기, 현관으로 이동하기") in text
         assert "soft physical_state reference: 신경계 피로 Moderate" in text
         assert (
             "opening carryover pending_actions to resolve before new thread or explicitly transition away: "
             "전화를 받기, 현관으로 이동하기"
         ) not in text
         assert "opening scene continuity below is hard canon." not in text
+        assert "treat the opening as a direct continuation of the prior ending" in text
         assert "do not replay a completed prior-episode event in the opening." in text
         assert "use an explicit transition sentence or `* * *` first." in text
         assert "after `* * *`, state the changed location, time, or action within the next 1-2 sentences." in text
-        assert "alternate openings are allowed only with an explicit transition/cut and immediate state declaration." in text
+        assert (
+            "alternate openings are allowed only with an explicit transition/cut and immediate state declaration."
+            in text
+        )
         assert text.index("[Stage4 Opening Scene Authority]") < text.index("[Stage4 Work Identity Authority]")
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")

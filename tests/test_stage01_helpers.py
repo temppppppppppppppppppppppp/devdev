@@ -170,6 +170,18 @@ class TestPhase0Recovery:
         app_mock._ui_select_treatment.assert_called_once()
         app_mock.current_project.force_sync_v25_dna.assert_called_once_with("bible.json", "treatment.json")
 
+    def test_maybe_enrich_phase0_treatment_warns_non_canonical_utility(self, helpers, app_mock):
+        with patch.object(Stage01Helpers, "_prompt_with_ui", return_value="n") as prompt_mock:
+            result = helpers._maybe_enrich_phase0_treatment(app_mock, "treatment.json")
+
+        assert result == "treatment.json"
+        prompt_text = prompt_mock.call_args.args[1]
+        assert "비정규 semantic rewrite utility" in prompt_text
+        logs = [call.args[0] for call in app_mock.ui.log.call_args_list if call.args]
+        assert any("canonical Stage0 pair pass 경로가 아닙니다" in msg for msg in logs)
+        assert any("title/content/joint_docs/status_shadow" in msg for msg in logs)
+        assert any("*_enriched.json" in msg for msg in logs)
+
     def test_legacy_flow_can_store_mixed_pov(self, helpers, app_mock):
         """기존 흐름에서도 POV 4번 선택 시 혼합 시점이 저장된다."""
         with (
@@ -396,7 +408,10 @@ class TestExtendBlocks:
 class TestStage0Extended:
     def test_stage0_unavailable_returns_early(self, helpers, app_mock):
         """STAGE0_AVAILABLE=False → 즉시 반환"""
-        with redirect_stdout(StringIO()), patch.object(Stage01Helpers, "_stage0_extended_available", return_value=False):
+        with (
+            redirect_stdout(StringIO()),
+            patch.object(Stage01Helpers, "_stage0_extended_available", return_value=False),
+        ):
             helpers.stage_0_extended(mode=1)
         # StageZeroManager 초기화 안 함 (아무 project 접근 없음)
         app_mock.current_project.save_v20_anchor.assert_not_called()

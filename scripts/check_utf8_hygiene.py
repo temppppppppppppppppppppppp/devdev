@@ -41,7 +41,9 @@ SKIP_DIR_NAMES = {
     "__pycache__",
     "dist",
     "node_modules",
+    "projects",
     "python-embed",
+    "style_references",
     "win-unpacked",
 }
 ALLOW_LINE_MARKER = "utf8-hygiene: allow-line"
@@ -87,11 +89,7 @@ def _contains_hangul(char: str) -> bool:
 
 def _contains_cjk(char: str) -> bool:
     codepoint = ord(char)
-    return (
-        0x3400 <= codepoint <= 0x4DBF
-        or 0x4E00 <= codepoint <= 0x9FFF
-        or 0xF900 <= codepoint <= 0xFAFF
-    )
+    return 0x3400 <= codepoint <= 0x4DBF or 0x4E00 <= codepoint <= 0x9FFF or 0xF900 <= codepoint <= 0xFAFF
 
 
 def _has_mixed_hangul_cjk_token(line: str) -> str | None:
@@ -156,7 +154,9 @@ def scan_file(path: Path) -> list[Finding]:
             findings.append(Finding(path.as_posix(), line_no, "triple_question_placeholder", line[:240]))
         suspicious_question_token = _has_suspicious_question_token(line)
         if suspicious_question_token:
-            findings.append(Finding(path.as_posix(), line_no, "suspicious_question_token", suspicious_question_token[:240]))
+            findings.append(
+                Finding(path.as_posix(), line_no, "suspicious_question_token", suspicious_question_token[:240])
+            )
         mixed_token = _has_mixed_hangul_cjk_token(line)
         if mixed_token:
             findings.append(Finding(path.as_posix(), line_no, "hangul_cjk_mixed_token", mixed_token[:240]))

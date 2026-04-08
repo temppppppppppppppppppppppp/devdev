@@ -1,7 +1,7 @@
 # 0_0 Stage4 Partial-Fix Hardening Remediation Execution SSOT
 
 Date: 2026-04-07
-Status: partially_realized (2026-04-07 merge-survey promotion clarified shared schema dependency, `partial_fix_eval`, and `repair_trace` / readback work inside this lane; the first bounded Stage4 tranche has now landed by anchoring `PatchTargetRecord` normalization, persisting structured `partial_fix_eval` / `repair_trace` payloads through Stage4 patch traces and `stage_attempts`, and widening analyzer + readback surfaces while explicit verifier canary/live proof remains deferred)
+Status: partially_realized (2026-04-07 merge-survey promotion clarified shared schema dependency, `partial_fix_eval`, and `repair_trace` / readback work inside this lane; the first bounded Stage4 tranche has now landed by anchoring `PatchTargetRecord` normalization, persisting structured `partial_fix_eval` / `repair_trace` payloads through Stage4 patch traces and `stage_attempts`, and widening analyzer + readback surfaces while explicit verifier canary/live proof remains deferred; a later 2026-04-08 fresh `000_ㅇㅇㅇ` Stage4 `ep1` post-run merge audit then exposed PASS-side `episode_production` / session sink finalization drift, and a bounded `stage4_interview_round.py` logging follow-up landed while closure remains rerun-pending)
 Canonical Path: `docs/2026-04-07/0_0-stage4-partial-fix-hardening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-partial-fix-hardening-remediation-execution-ssot.md`
 Commit State:
@@ -16,6 +16,7 @@ Source Survey Docs:
 - `docs/2026-04-07/partial-fix-terminal2-shared-patch-address-schema-survey.md`
 - `docs/2026-04-07/partial-fix-terminal3-operator-before-after-trace-survey.md`
 - `docs/2026-04-07/partial-fix-hardening-parallel-merge-survey.md`
+- `docs/2026-04-08/000-fresh-run-stage4-ep1-post-run-merge-audit.md`
 - `docs/2026-04-02/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Evidence Artifacts:
@@ -297,6 +298,23 @@ Realization direction:
   - `failure_analyzer.patch_trace_summary()` now emits a `partial_fix_eval` aggregate block keyed off the persisted Stage4 patch-trace sink
 - explicit Tranche 3 verifier work remains deferred:
   - the new sink shape is live, but `must_fix_resolved` / `do_not_regress_held` / `success_condition_met` still wait on a later dedicated verifier tranche rather than a broad prompt redesign in this turn
+
+## 8B. Fresh Run Audit Update (2026-04-08)
+
+- fresh `projects/000_ㅇㅇㅇ` evidence now proves Stage4 `ep1` persistence success:
+  - `stage_attempts` final row is `PASS`
+  - `drafts/ep_0001.txt` and DB `manuscripts` stay aligned
+  - the final artifact path is `logs/artifacts/stage4/ep_0001/attempt_01/patched_after_fix__A_InPlace.txt`
+- the same completed run still leaves `runtime_audit_summary.json` at `proof_digest.status = warn` because PASS-side sinks disagree on final patched truth:
+  - `episode_production.jsonl` retained pre-fix `PASS_WITH_FIX` / `director_primary_pass_with_fix` metadata
+  - `logs/session/decisions.jsonl` carried the final rationale but dropped the bounded `fix_pack`
+  - `director_selections` remained the expected pre-final companion rather than the final authority row
+- bounded follow-up landed in `stage4_interview_round.py`:
+  - pass-side logging now merges non-empty trace fields onto the original `director_result` so partial traces cannot erase `fix_pack`
+  - `episode_production` and session logging now receive explicit final `selection_reason`, `verdict_reason`, `gate_semantics`, `fix_pack`, `runtime_advisory`, and `retry_directives`
+- queue consequence:
+  - keep this lane `partially_realized`
+  - do not claim closure until a fresh rerun re-proves the patched pass-side sink alignment
 
 ## 9. Acceptance Criteria
 

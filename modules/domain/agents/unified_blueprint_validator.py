@@ -26,6 +26,10 @@ import re
 
 from modules.core.constants import AIModels, Stage2Limits
 from modules.core.partial_fix_contract import normalize_patch_target_records
+from modules.core.stage_cross_stage_contract import (
+    apply_opening_transition_contract,
+    read_declared_opening_transition_type,
+)
 from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _get_agent_default_model
@@ -66,6 +70,7 @@ _BINDING_PREVALIDATION_CATEGORIES = {
     "protagonist_state",
     "fact_lock_institution",
     "tactical_semantic_fidelity",
+    "opening_transition",
 }
 _TACTICAL_INTRUSION_ENTRY_MARKERS = (
     "취객",
@@ -305,7 +310,11 @@ class UnifiedBlueprintValidator:
             if str(issue.get("issue") or issue.get("evidence") or "").strip()
         ]
         summary = "; ".join(snippets[:2])[:240]
-        binding_note = f"[Binding prevalidation] {summary}" if summary else "[Binding prevalidation] structured invariant repair required"
+        binding_note = (
+            f"[Binding prevalidation] {summary}"
+            if summary
+            else "[Binding prevalidation] structured invariant repair required"
+        )
         merged_feedback = f"{feedback}\n{binding_note}".strip() if feedback else binding_note
         merged_reason = f"{verdict_reason}; binding prevalidation repair required".strip("; ")
         merged_scope = str(fix_scope or "inplace")
@@ -849,7 +858,7 @@ class UnifiedBlueprintValidator:
 
     @staticmethod
     def _count_scene_entries(scenes) -> int:
-        if isinstance(scenes, (dict, list)):
+        if isinstance(scenes, dict | list):
             return len(scenes)
         return 0
 
@@ -1063,6 +1072,8 @@ class UnifiedBlueprintValidator:
     ) -> dict:
         """Python 사전검사 (무료, 빠름)"""
         blueprint = blueprint if isinstance(blueprint, dict) else {}
+        declared_opening_transition_type = read_declared_opening_transition_type(blueprint)
+        normalized_opening_transition = apply_opening_transition_contract(blueprint, prev_blueprint=prev_blueprint)
         integrated = self._normalize_integrated_scenario(blueprint.get("integrated_scenario", ""))
         scenes = blueprint.get("scene_breakdown", {})
         scene_count = self._count_scene_entries(scenes)
@@ -1147,6 +1158,9 @@ class UnifiedBlueprintValidator:
                 blueprint=blueprint,
                 scenes=scenes,
                 scene_count=scene_count,
+                prev_blueprint=prev_blueprint,
+                declared_opening_transition_type=declared_opening_transition_type,
+                normalized_opening_transition=normalized_opening_transition,
             )
         )
         issues.extend(
@@ -1281,10 +1295,23 @@ class UnifiedBlueprintValidator:
                             # e.g. HMC투자증권 → shortest suffix is 증권, not 투자증권
                             # so competing 한미증권 (also ends with 증권) is caught
                             _inst_suffixes = (
-                                "투자증권", "자산운용", "인베스트먼트", "PB센터",
-                                "증권", "은행", "캐피탈", "보험", "병원",
-                                "센터", "그룹", "재단", "협회", "연구소",
-                                "본사", "지점", "사무실",
+                                "투자증권",
+                                "자산운용",
+                                "인베스트먼트",
+                                "PB센터",
+                                "증권",
+                                "은행",
+                                "캐피탈",
+                                "보험",
+                                "병원",
+                                "센터",
+                                "그룹",
+                                "재단",
+                                "협회",
+                                "연구소",
+                                "본사",
+                                "지점",
+                                "사무실",
                             )
                             _matching = [s for s in _inst_suffixes if inst_name.endswith(s)]
                             _matched_suffix = min(_matching, key=len) if _matching else ""
@@ -1413,7 +1440,9 @@ class UnifiedBlueprintValidator:
             return []
 
         capital_label_hints = ("자본", "투입", "잔고", "보유")
-        krw_amount_re = re.compile(r"\d[\d,.]*\s*(?:억(?:\s*\d[\d,.]*\s*(?:천만|백만|만))?|천만|백만|만)?\s*(?:원|만원|만\s*원)")
+        krw_amount_re = re.compile(
+            r"\d[\d,.]*\s*(?:억(?:\s*\d[\d,.]*\s*(?:천만|백만|만))?|천만|백만|만)?\s*(?:원|만원|만\s*원)"
+        )
         usd_amount_re = re.compile(r"\d[\d,.]*\s*(?:억|천만|백만|만)?\s*달러")
         capital_ctx_re = re.compile(
             r"(?:증거금|투입|추가\s*증거금|예치|잔고|잔액|가용\s*현금|가용\s*자금|총자산|자산|유동성|자본|청산\s*대금)"
@@ -1619,6 +1648,9 @@ class UnifiedBlueprintValidator:
         blueprint: dict,
         scenes,
         scene_count: int,
+        prev_blueprint: dict | None,
+        declared_opening_transition_type: str = "",
+        normalized_opening_transition: dict | None = None,
     ) -> list[dict]:
         """Flag missing Stage4-readiness contract fields before Director compare."""
         issues: list[dict] = []
@@ -1660,6 +1692,35 @@ class UnifiedBlueprintValidator:
                     "issue": f"opening anchor 계약 누락: {', '.join(opening_missing)}",
                     "evidence": f"missing_fields={opening_missing}",
                     "fix_hint": "start_location, time_flow, scene_1.title, scene_1.location을 구조적으로 채우기",
+                }
+            )
+
+        normalized_opening_transition = (
+            normalized_opening_transition if isinstance(normalized_opening_transition, dict) else {}
+        )
+        normalized_transition_type = str(normalized_opening_transition.get("type", "") or "").strip()
+        if (
+            isinstance(prev_blueprint, dict)
+            and declared_opening_transition_type
+            and normalized_transition_type
+            and declared_opening_transition_type != normalized_transition_type
+        ):
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "opening_transition",
+                    "issue": (
+                        "opening_transition.type mismatch: "
+                        f"declared '{declared_opening_transition_type}' "
+                        f"vs normalized '{normalized_transition_type}'"
+                    ),
+                    "evidence": (
+                        f"declared={declared_opening_transition_type}; normalized={normalized_transition_type}"
+                    ),
+                    "fix_hint": (
+                        "opening_transition.type을 prev ending anchor와 "
+                        "start_location/time_flow/scene_1 contract에 맞게 정규화"
+                    ),
                 }
             )
 
@@ -1840,9 +1901,7 @@ class UnifiedBlueprintValidator:
             {
                 "severity": "CRITICAL",
                 "category": "tactical_semantic_fidelity",
-                "issue": (
-                    "episode tactical authority에 없는 물리 위협/난입 이벤트가 blueprint에 새로 삽입됨"
-                ),
+                "issue": ("episode tactical authority에 없는 물리 위협/난입 이벤트가 blueprint에 새로 삽입됨"),
                 "evidence": (
                     f"entry_markers={entry_summary}; conflict_markers={conflict_summary}; "
                     f"tactical_excerpt={tactical_excerpt[:120]}"

@@ -17,6 +17,13 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
+from modules.core.stage_cross_stage_contract import (
+    OPENING_TRANSITION_DIRECT,
+    OPENING_TRANSITION_EXPLICIT,
+    OPENING_TRANSITION_JUMP,
+    resolve_opening_transition_contract,
+)
+
 _logger = logging.getLogger(__name__)
 
 # ── Violation family vocabulary ──────────────────────────────────
@@ -70,6 +77,8 @@ class ImmutableFactPacket:
     start_time_flow: str = ""
     scene_1_title: str = ""
     scene_1_location: str = ""
+    opening_transition_type: str = ""
+    opening_transition_signals: list[str] = field(default_factory=list)
     prev_ending_bridge: str = ""
     carryover_cliffhanger: str = ""
     carryover_pending_actions: str = ""
@@ -103,6 +112,7 @@ class ImmutableFactPacket:
             self.start_location
             or self.start_time_flow
             or self.scene_1_location
+            or self.opening_transition_type
             or self.prev_ending_bridge
             or self.carryover_cliffhanger
             or self.carryover_pending_actions
@@ -147,6 +157,11 @@ def build_packet(
         if isinstance(scene_1, dict):
             packet.scene_1_title = str(scene_1.get("title", "") or "").strip()
             packet.scene_1_location = str(scene_1.get("location", "") or "").strip()
+    opening_transition = resolve_opening_transition_contract(bp)
+    packet.opening_transition_type = str(opening_transition.get("type", "") or "").strip()
+    packet.opening_transition_signals = [
+        str(item).strip() for item in (opening_transition.get("signals") or []) if str(item or "").strip()
+    ][:6]
 
     if prev_manuscript_ending:
         packet.prev_ending_bridge = prev_manuscript_ending[-500:]
@@ -178,7 +193,11 @@ def _extract_chain_link_carryover(packet: ImmutableFactPacket, chain_link_sectio
         return
     for raw_line in str(chain_link_section).splitlines():
         line = raw_line.strip()
-        if line.startswith("- carryover_") or line.startswith("- soft_carryover_") or line.startswith("- soft_physical_state:"):
+        if (
+            line.startswith("- carryover_")
+            or line.startswith("- soft_carryover_")
+            or line.startswith("- soft_physical_state:")
+        ):
             key, _, value = line[2:].partition(":")
         else:
             continue
@@ -213,9 +232,26 @@ def _extract_committed_state_facts(
             if line.startswith("-") and any(
                 kw in line
                 for kw in (
-                    "억", "만원", "원", "달러", "$", "계좌", "자본", "잔고", "자산",
-                    "capital", "won", "balance", "account", "fund",
-                    "소유", "법인", "개인", "명의", "보유", "활동중",
+                    "억",
+                    "만원",
+                    "원",
+                    "달러",
+                    "$",
+                    "계좌",
+                    "자본",
+                    "잔고",
+                    "자산",
+                    "capital",
+                    "won",
+                    "balance",
+                    "account",
+                    "fund",
+                    "소유",
+                    "법인",
+                    "개인",
+                    "명의",
+                    "보유",
+                    "활동중",
                 )
             ):
                 facts.append(line.lstrip("- ").strip())
@@ -495,7 +531,7 @@ def normalize_actor_reference(value: Any) -> str:
         _logger.warning("[IFC] dict actor ref could not be scalarized: %s", value)
         return str(value)
 
-    if isinstance(value, (list, tuple)) and value:
+    if isinstance(value, list | tuple) and value:
         first = value[0]
         if isinstance(first, str):
             return first.strip()
@@ -552,7 +588,7 @@ def render_packet_for_cw(packet: ImmutableFactPacket) -> str:
     ]
 
     # Opening anchor
-    if packet.start_location or packet.start_time_flow:
+    if packet.start_location or packet.start_time_flow or packet.opening_transition_type:
         lines.append("#### 1. 시작 계약 (Opening Anchor)")
         if packet.start_location:
             lines.append(f"- 시작 장소: {packet.start_location}")
@@ -562,13 +598,29 @@ def render_packet_for_cw(packet: ImmutableFactPacket) -> str:
             lines.append(f"- 시간대: {packet.start_time_flow}")
         if packet.scene_1_title:
             lines.append(f"- 첫 씬 제목: {packet.scene_1_title}")
+        if packet.opening_transition_type:
+            lines.append(f"- opening transition type: {packet.opening_transition_type}")
+            if packet.opening_transition_type == OPENING_TRANSITION_DIRECT:
+                lines.append(
+                    "- direct_continuation이면 직전 ending의 후속 비트를 유지하고 새 cut/jump를 발명하지 마라."
+                )
+            elif packet.opening_transition_type == OPENING_TRANSITION_EXPLICIT:
+                lines.append(
+                    "- explicit_transition이면 scene_1 초반에 전환 문장 또는 cut을 먼저 선언하고 새 anchor를 즉시 못 박아라."
+                )
+            elif packet.opening_transition_type == OPENING_TRANSITION_JUMP:
+                lines.append(
+                    "- jump_opening이면 direct continuation처럼 위장하지 말고 새 장소/시간/상태를 첫 비트에서 즉시 선언하라."
+                )
         if packet.prev_ending_bridge:
             bridge_excerpt = " ".join(str(packet.prev_ending_bridge).split())
             if len(bridge_excerpt) > 260:
                 bridge_excerpt = bridge_excerpt[:257] + "..."
             lines.append(f"- 직전 화 종료 브리지: {bridge_excerpt}")
         if packet.carryover_cliffhanger:
-            lines.append(f"- carryover cliffhanger to resolve or explicitly transition from: {packet.carryover_cliffhanger}")
+            lines.append(
+                f"- carryover cliffhanger to resolve or explicitly transition from: {packet.carryover_cliffhanger}"
+            )
         if packet.carryover_location:
             lines.append(f"- carryover location to honor or explicitly transition from: {packet.carryover_location}")
         if packet.carryover_time_marker:
@@ -581,16 +633,15 @@ def render_packet_for_cw(packet: ImmutableFactPacket) -> str:
         lines.append(
             "- 다른 장소/시간 또는 다른 시점 opening이 필요하면 전환 문장이나 `* * *` 후 1~2문장 안에 바뀐 장소/시간/행동 상태를 명시하세요."
         )
-        lines.append("⛔ 위 anchor를 무전환으로 덮어쓰거나, 직전 화에서 이미 끝난 행동을 opening에서 다시 재연하면 즉시 불합격.")
+        lines.append(
+            "⛔ 위 anchor를 무전환으로 덮어쓰거나, 직전 화에서 이미 끝난 행동을 opening에서 다시 재연하면 즉시 불합격."
+        )
         if packet.soft_carryover_pending_actions or packet.soft_physical_state:
             lines.append(
                 "- non-wuxia soft carryover below is reference guidance. Natural healing or ordinary off-page completion is allowed when the opening states the new condition clearly."
             )
             if packet.soft_carryover_pending_actions:
-                lines.append(
-                    "- soft carryover pending_actions reference: "
-                    f"{packet.soft_carryover_pending_actions}"
-                )
+                lines.append(f"- soft carryover pending_actions reference: {packet.soft_carryover_pending_actions}")
             if packet.soft_physical_state:
                 lines.append(f"- soft physical_state reference: {packet.soft_physical_state}")
         lines.append("")

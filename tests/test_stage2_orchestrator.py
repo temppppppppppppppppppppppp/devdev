@@ -16,6 +16,53 @@ def _make_ctx(arcs, calculate_arc_from_episode=None):
     )
 
 
+def _make_bootstrap_ctx():
+    ui = MagicMock()
+    ui.log = MagicMock()
+    db = MagicMock()
+    db.load_anchor.side_effect = lambda name: [] if name in {"volumes", "arcs"} else {}
+    current_project = SimpleNamespace(
+        master_bible={
+            "_stage0_contract": {
+                "artifact_role": "bi_projection_artifact",
+                "projection_source": "treatment.blocks",
+                "field_authority": {"plot_roadmap": "MasterBible.plot_roadmap"},
+                "runtime_handoff": {"owner": "db_anchor:bible"},
+            },
+            "MasterBible": {
+                "ProjectData": {"MetaInfo": {"grand_objective": "goal"}},
+                "plot_roadmap": [
+                    {
+                        "block_no": 1,
+                        "title": "Block 1",
+                        "content": {
+                            "context": "ctx",
+                            "event_villain": "villain",
+                            "solution": "solve",
+                            "reward": "reward",
+                        },
+                    }
+                ],
+            },
+        },
+        volumes=[{"vol_no": 1, "strategy_doc": "vol"}],
+        db=db,
+        load_v20_anchor=MagicMock(return_value=None),
+        save_v20_anchor=MagicMock(),
+        arcs=[],
+    )
+    return SimpleNamespace(
+        ui=ui,
+        current_project=current_project,
+        selected_genre={"type": "investment"},
+        state_tracker_loaded_arcs=0,
+        state_tracker=None,
+        preset_registry=None,
+        sys=SimpleNamespace(api_client=MagicMock()),
+        world_state=None,
+    )
+
+
 def test_resolve_arc_number_for_episode_uses_actual_arc_boundaries_when_callback_missing():
     ctx = _make_ctx(
         arcs=[
@@ -56,4 +103,41 @@ def test_stage2_failure_report_source_normalizes_constraints_before_reporting():
     src = Path("modules/core/stage2_orchestrator.py").read_text(encoding="utf-8")
 
     assert "current_constraints = self._fit_prompt_text(" in src
-    assert "constraint_db.generate_constraint_block(global_arc_no) if constraint_db else \"N/A\"" in src
+    assert 'constraint_db.generate_constraint_block(global_arc_no) if constraint_db else "N/A"' in src
+
+
+def test_bootstrap_stage2_arc_pipeline_surfaces_stage0_contract(monkeypatch):
+    class DummyConstraintDB:
+        def __init__(self, _project):
+            self.arc_states = {}
+
+    class DummyStateTracker:
+        def __init__(self, preset_registry=None, llm_client=None):
+            self.preset_registry = preset_registry
+            self.llm_client = llm_client
+            self.npc_registry = {}
+            self.financial_number_registry = {}
+
+        def bind_db(self, _db):
+            return None
+
+        def bind_world_state(self, _world_state):
+            return None
+
+        def full_extract_from_arcs(self, _arcs, genre=""):
+            return None
+
+        def export_financial_registry(self):
+            return {}
+
+    monkeypatch.setattr("modules.core.constraint_db.ConstraintDB", DummyConstraintDB)
+    monkeypatch.setattr("modules.domain.agents.state_tracker.StateTracker", DummyStateTracker)
+
+    ctx = _make_bootstrap_ctx()
+    orch = Stage2Orchestrator(app=MagicMock(), context=ctx)
+
+    result = orch._bootstrap_stage2_arc_pipeline(target_arc_count=1)
+
+    assert result["ready"] is True
+    log_messages = [call.args[0] for call in ctx.ui.log.call_args_list if call.args]
+    assert any("[Stage0 Contract] runtime_handoff_owner=db_anchor:bible" in message for message in log_messages)

@@ -37,6 +37,7 @@ class TestBuildPacket:
         bp = {
             "start_location": "강남 5성급 호텔",
             "time_flow": "오전 11시 -> 오후 1시",
+            "opening_transition": {"type": "explicit_transition", "signals": ["location_shift"]},
             "scene_breakdown": {
                 "scene_1": {
                     "title": "호텔 라운지의 만남",
@@ -55,6 +56,7 @@ class TestBuildPacket:
         assert packet.start_time_flow == "오전 11시 -> 오후 1시"
         assert packet.scene_1_title == "호텔 라운지의 만남"
         assert packet.scene_1_location == "라운지 카페"
+        assert packet.opening_transition_type == "explicit_transition"
 
     def test_scene_obligations_extracted(self):
         bp = {
@@ -101,11 +103,7 @@ class TestBuildPacket:
 
     def test_committed_state_english_balance_account_fund(self):
         """[Wave1-B] English labels balance/account/fund must be recognized."""
-        ledger = (
-            "- account balance: 500000 won\n"
-            "- fund allocation: 30%\n"
-            "- unrelated note"
-        )
+        ledger = "- account balance: 500000 won\n- fund allocation: 30%\n- unrelated note"
         packet = build_packet(fact_ledger_summary=ledger)
         assert len(packet.committed_state_facts) >= 2
 
@@ -131,9 +129,7 @@ class TestBuildPacket:
     def test_committed_state_ownership_keywords(self):
         """[Wave2-A] Entity-ownership lines must yield committed-state facts."""
         ledger = (
-            "- OTP 발생기 (보유, 소유: 주인공, ep3)\n"
-            "- SW인베스트먼트 법인 인감 (획득, 소유: 주인공, ep4)\n"
-            "- 일반 메모"
+            "- OTP 발생기 (보유, 소유: 주인공, ep3)\n- SW인베스트먼트 법인 인감 (획득, 소유: 주인공, ep4)\n- 일반 메모"
         )
         packet = build_packet(fact_ledger_summary=ledger)
         assert len(packet.committed_state_facts) >= 2
@@ -154,14 +150,7 @@ class TestBuildPacket:
 
     def test_completed_events_procedural_keywords(self):
         """[Wave2-B] Procedural-completion verbs must yield completed-event facts."""
-        digest = (
-            "- 계좌 세팅 완료\n"
-            "- OTP 수령\n"
-            "- 법인 인감 발급\n"
-            "- 법인 설립 완료\n"
-            "- 사무실 입주\n"
-            "- HTS 접속 확인"
-        )
+        digest = "- 계좌 세팅 완료\n- OTP 수령\n- 법인 인감 발급\n- 법인 설립 완료\n- 사무실 입주\n- HTS 접속 확인"
         packet = build_packet(prev_digest=digest)
         assert len(packet.completed_event_facts) >= 6
 
@@ -370,12 +359,14 @@ class TestRenderPacketForCW:
         packet = ImmutableFactPacket(
             start_location="강남 호텔",
             start_time_flow="오전 11시",
+            opening_transition_type="explicit_transition",
         )
         rendered = render_packet_for_cw(packet)
         assert "강남 호텔" in rendered
         assert "오전 11시" in rendered
         assert "불변" in rendered
         assert "불합격" in rendered
+        assert "opening transition type: explicit_transition" in rendered
 
     def test_committed_state_facts_rendered(self):
         packet = ImmutableFactPacket(committed_state_facts=["자본금: 38억"])
@@ -442,9 +433,11 @@ class TestRenderViolationSummary:
         assert "시작계약위반" in summary
 
     def test_multiple_families(self):
-        summary = render_violation_summary([
-            VIOLATION_OPENING_ANCHOR_DRIFT,
-            VIOLATION_COMMITTED_STATE_REGRESSION,
-        ])
+        summary = render_violation_summary(
+            [
+                VIOLATION_OPENING_ANCHOR_DRIFT,
+                VIOLATION_COMMITTED_STATE_REGRESSION,
+            ]
+        )
         assert "시작계약위반" in summary
         assert "확정상태회귀" in summary

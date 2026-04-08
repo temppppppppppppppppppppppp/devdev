@@ -580,7 +580,9 @@ class TestPrepareStage4SessionLimits:
         orch = Stage4Orchestrator(mock_app, context=ctx)
 
         assert orch._validate_session_prerequisites(error_emoji="ERR") is False
-        ctx.ui.log.assert_called_once_with("ERR [System] Bible 또는 Arc 데이터가 없습니다. Stage 1-2를 먼저 실행하세요.")
+        ctx.ui.log.assert_called_once_with(
+            "ERR [System] Bible 또는 Arc 데이터가 없습니다. Stage 1-2를 먼저 실행하세요."
+        )
 
     def test_prepare_session_style_payload_applies_character_voice_to_resolved_style(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionStyleGuidePayload
@@ -1399,7 +1401,9 @@ class TestHandleRoundOutcomeErrorPaths:
         assert result == {"scene_breakdown": {}}
         assert bp_agent.generate.call_args.kwargs["external_feedback"] == "translated reverse feedback"
 
-    def test_handle_round_outcome_keeps_pass_when_cove_verify_raises(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
+    def test_handle_round_outcome_keeps_pass_when_cove_verify_raises(
+        self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path
+    ):
         from modules.core.stage4_types import _InterviewRoundResult
 
         orch = orch_with_ctx
@@ -1468,6 +1472,7 @@ class TestHandleRoundOutcomeErrorPaths:
 # Test: Stage4Orchestrator 초기화 + import
 # ══════════════════════════════════════════════════════════════
 
+
 class TestHandleRoundOutcomeRetryPathology:
     @pytest.fixture
     def orch_with_ctx(self, mock_app):
@@ -1529,7 +1534,9 @@ class TestHandleRoundOutcomeRetryPathology:
             preflight_advisory="",
         )
 
-    def test_handle_round_outcome_logs_cove_runtime_advisory(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
+    def test_handle_round_outcome_logs_cove_runtime_advisory(
+        self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path
+    ):
         from modules.core.stage4_types import _InterviewRoundResult
 
         orch = orch_with_ctx
@@ -1574,7 +1581,9 @@ class TestHandleRoundOutcomeRetryPathology:
             ANY,
         )
 
-    def test_handle_round_outcome_keeps_pass_when_cove_quick_verify_raises(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
+    def test_handle_round_outcome_keeps_pass_when_cove_quick_verify_raises(
+        self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path
+    ):
         from modules.core.stage4_types import _InterviewRoundResult
 
         orch = orch_with_ctx
@@ -1611,7 +1620,9 @@ class TestHandleRoundOutcomeRetryPathology:
         assert advisory_rows[-1]["source"] == "quick_verify"
         assert advisory_rows[-1]["director_pass_preserved"] is True
 
-    def test_handle_round_outcome_persists_full_cove_runtime_advisory_detail(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
+    def test_handle_round_outcome_persists_full_cove_runtime_advisory_detail(
+        self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path
+    ):
         from modules.core.stage4_types import _InterviewRoundResult
 
         orch = orch_with_ctx
@@ -1649,7 +1660,9 @@ class TestHandleRoundOutcomeRetryPathology:
         advisory_rows = [row for row in rows if row.get("event") == "STAGE4_COVE_RUNTIME_ADVISORY"]
         assert advisory_rows[-1]["quick_warning"] == long_hint.strip()
 
-    def test_handle_round_outcome_still_retries_when_cove_requests_regeneration(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
+    def test_handle_round_outcome_still_retries_when_cove_requests_regeneration(
+        self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path
+    ):
         from types import SimpleNamespace
 
         from modules.core.stage4_types import _InterviewRoundResult
@@ -1809,9 +1822,13 @@ class TestHandleRoundOutcomeRetryPathology:
         )
 
         assert result is None
-        cove.verify.assert_called_once_with("draft manuscript", {"quick_verify_warnings": "hint"}, content_type="manuscript")
+        cove.verify.assert_called_once_with(
+            "draft manuscript", {"quick_verify_warnings": "hint"}, content_type="manuscript"
+        )
         assert any(
-            "LLM 검증 경고 (비차단)" in call.args[0] and "first issue" in call.args[0] and "second issue" in call.args[0]
+            "LLM 검증 경고 (비차단)" in call.args[0]
+            and "first issue" in call.args[0]
+            and "second issue" in call.args[0]
             for call in orch._ctx.ui.log.call_args_list
             if call.args
         )
@@ -2719,9 +2736,7 @@ class TestHandleRoundOutcomeRetryPathology:
         orch.outcome_runtime.handle_pass_round_result.assert_not_called()
         orch.outcome_runtime.handle_reject_round_result.assert_called_once()
 
-    def test_finalize_round_outcome_loop_accepts_last_best_when_user_chooses_continue(
-        self, orch_with_ctx
-    ):
+    def test_finalize_round_outcome_loop_accepts_last_best_when_user_chooses_continue(self, orch_with_ctx):
         orch = orch_with_ctx
         orch._ctx.get_int_input = MagicMock(return_value=1)
 
@@ -3214,11 +3229,7 @@ class TestHandleRoundOutcomeRetryPathology:
         )
         orch._merge_blueprint_feedback.assert_called_once_with("director feedback", "[S4->S3] hint")
         bp_agent._inplace_patch_blueprint.assert_called_once()
-        assert any(
-            "inplace 패치 실패" in call.args[0]
-            for call in orch._ctx.ui.log.call_args_list
-            if call.args
-        )
+        assert any("inplace 패치 실패" in call.args[0] for call in orch._ctx.ui.log.call_args_list if call.args)
 
     def test_attempt_v75d_inplace_blueprint_patch_returns_none_on_exception(
         self,
@@ -3313,12 +3324,15 @@ class TestHandleRoundOutcomeRetryPathology:
         bp_agent._inplace_patch_blueprint.return_value = {"patched": True}
         orch._ctx.agents["three_phase_bp"] = bp_agent
         orch._build_stage4_to_3_reverse_feedback = MagicMock(return_value="[S4->S3] hint")
-        orch._merge_blueprint_feedback = MagicMock(return_value="merged blueprint feedback\ncontinuity replay\nflashback")
+        orch._merge_blueprint_feedback = MagicMock(
+            return_value="merged blueprint feedback\ncontinuity replay\nflashback"
+        )
         minimal_round_ctx = dataclasses.replace(
             minimal_round_ctx,
             blueprint={
                 "start_location": "본가 저택 서재 앞 복도",
                 "time_flow": "오전",
+                "opening_transition": {"type": "direct_continuation"},
                 "scene_breakdown": {
                     "scene_1": {
                         "location": "본가 저택 서재 앞 복도",
@@ -3351,6 +3365,7 @@ class TestHandleRoundOutcomeRetryPathology:
         assert "scene_breakdown.scene_1.summary" in patch_feedback
         assert "EP1에서 이미 완료된 전화/행동을 EP2 opening에서 회상·재연 장면으로 다시 쓰지 마세요." in patch_feedback
         assert "authoritative opening location은 '본가 저택 서재 앞 복도'" in patch_feedback
+        assert "authoritative opening_transition.type은 'direct_continuation'" in patch_feedback
         assert "integrated_scenario, scene_1.summary, scene_1.key_events, expected_ending" in patch_feedback
 
     def test_apply_v75d_patch_success_captures_artifact_and_returns_reset_payload(
@@ -3493,7 +3508,9 @@ class TestHandleRoundOutcomeRetryPathology:
         escalation_args = orch._log_escalation_event.call_args.args
         assert escalation_args[:3] == (2, "V75-B_FULL_REGEN", 0)
 
-    def test_handle_round_outcome_emits_retry_pathology_repeat(self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path):
+    def test_handle_round_outcome_emits_retry_pathology_repeat(
+        self, orch_with_ctx, minimal_round_ctx, monkeypatch, tmp_path
+    ):
         from modules.core.stage4_types import _InterviewRoundResult
 
         orch = orch_with_ctx
@@ -3558,6 +3575,7 @@ class TestHandleRoundOutcomeRetryPathology:
             "stage4 retry pathology repeated",
             ANY,
         )
+
 
 class TestStage4OrchestratorImport:
     def test_import_succeeds(self):
@@ -3900,9 +3918,7 @@ class TestStage4OrchestratorImport:
         ctx.fact_ledger.get_canonical_summary.return_value = "facts {ledger}"
 
         orch = Stage4Orchestrator(mock_app, context=ctx)
-        apply_pins = MagicMock(
-            return_value={"changes": ["pin-a"], "blueprint": {"scene_breakdown": {"a": 1}}}
-        )
+        apply_pins = MagicMock(return_value={"changes": ["pin-a"], "blueprint": {"scene_breakdown": {"a": 1}}})
         extract_tactical = MagicMock(return_value="tactical {note}")
 
         result = orch._build_blueprint_preflight_request(

@@ -1,9 +1,9 @@
 Date: 2026-04-02
-Status: pending (promoted from parked on 2026-04-07 roadmap reorder; long-horizon Stage0 source-of-truth lane kept below nearer bounded slices)
+Status: in_progress (first bounded source-of-truth declaration tranche landed on 2026-04-07; the lane remains an active long-horizon Stage0 normalization track)
 Canonical Path: `docs/2026-04-02/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
-Baseline Commit: `aaf495d6`
-Baseline Dirty Summary: `dirty: Stage4 consumer-contract edits, demo canary artifacts, and queue docs already in flight during SSOT drafting`
+Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
+Baseline Dirty Summary: `dirty: prior Stage3 and Stage4 bounded tranches, the Stage0 enrich tranche, and queue docs were already in flight during the 2026-04-07 re-audit`
 Source Survey Docs:
 - `docs/2026-04-02/stage0-bible-generation-dna-sync-stage2-consume-bounded-survey.md`
 Evidence Artifacts:
@@ -12,177 +12,199 @@ Side-Effect Coverage:
 - `scripts/build_bi_from_phase0_and_tr.py` routed BI builder contract
 - `scripts/build_wuxia_bi_from_phase0_and_tr.py` family-specific BI builder contract
 - `modules/core/project_manager.py` DNA sync and DB bible anchor overwrite path
-- `modules/core/stage0_handoff.py` roadmap backfill/handoff path
-- `modules/core/stage2_orchestrator.py` and `modules/core/stage2_preflight.py` downstream consume path
+- `modules/core/stage0_handoff.py` Stage0 contract declaration and canonical payload normalization path
+- `modules/core/stage2_orchestrator.py` downstream consume path
+- `modules/core/stage2_preflight.py` downstream readiness path
 
 # 1. Answer First
 
-`BI/TR 생산 하네스 규격화`는 당장 active blocker는 아니지만, 장기적으로는 분명한 정리 대상이다.
+This lane is no longer unopened.
 
-핵심 문제는 `BI`와 `TR`을 둘로 나눴다는 사실 자체보다, 현재 구조가
+The first bounded tranche is now landed, and it does one narrow job: declare the Stage0 source-of-truth split explicitly instead of leaving it implicit in builder, sync, and handoff side effects.
 
-- raw `BI file`
-- `treatment`
-- DB `bible` anchor
+The landed contract says:
 
-세 군데에 권위를 분산시키고 있다는 점이다.
+- `treatment.blocks` is the canonical material source
+- `MasterBible` is a BI projection artifact, not the upstream material owner
+- `db_anchor:bible` is the runtime handoff owner
+- `MasterBible.plot_roadmap` remains the structured authority for the BI-side roadmap projection
+- Stage2 intake still consumes the runtime handoff path rather than the raw BI file directly
 
-따라서 이 lane은 지금 바로 구현할 본선이 아니라, `promoted pending long-horizon lane`으로 유지한다.
+This is intentionally bounded.
 
-장기 방향은 다음 둘 중 하나다.
+- broad Stage0 builder redesign is still deferred
+- broad Stage2 or Stage4 rewrite from inside this lane is still deferred
+- runtime handoff normalization is still the next tranche, not closure
 
-- `canonical material schema -> BI/TR projection`
-- 또는 `BI/TR dual artifact`를 유지하더라도 runtime handoff contract를 분리·고정
+# 2. Why This Lane Exists
 
-# 2. Why This Exists
+The structural debt was never just "the BI file is inconsistent."
 
-현재 Stage0 조사에서 드러난 문제는 builder 하나의 고장이 아니다.
+The real split-truth problem is that runtime behavior is spread across:
 
-- 최신 builder 코드는 `plot_roadmap`와 `protagonist_config`를 생산하도록 설계돼 있다.
-- 그런데 legacy Stage0 flow와 handoff는 생성 후 treatment 기반으로 roadmap를 다시 만들고 DB anchor에 덮어쓴다.
-- Stage2는 raw BI file보다 DB anchor의 handoff 결과를 더 직접 믿고 진입한다.
+- builder output
+- treatment material
+- compatibility sync and roadmap backfill
+- DB bible anchor overwrite
+- Stage2 runtime intake
 
-즉 지금의 real contract는 `artifact schema` 하나가 아니라 `artifact + sync + handoff + DB anchor` 묶음이다.
+That means the practical contract is a chain, not a single artifact schema.
 
-이 lane은 이 구조를 나중에 정리하기 위한 장기 normalization wave다.
+This lane exists to normalize that chain in a controlled order:
 
-# 3. Scope
+1. declare owners and boundaries
+2. reduce compatibility-bridge authority
+3. normalize the production harness only after the runtime handoff contract is explicit
 
-## Included
+# 3. Landed Tranche: Source-of-Truth Declaration
 
-- Stage0 BI/TR production harness contract inventory
-- raw artifact schema vs runtime handoff schema separation
-- `plot_roadmap`, `protagonist_config`, treatment block owner 정리
-- BI/TR dual artifact 유지 vs projection-only model 판단
-- legacy DNA sync/handoff의 권한 축소 또는 명시적 demotion
+Date landed: `2026-04-07`
 
-## Excluded
+Primary code anchors:
 
-- 지금 당장 builder rewrite
-- Stage4 active remediation stack
-- enrich retire lane 구현
-- 작품별 narrative material rewrite
+- `modules/core/stage0_handoff.py`
+- `modules/core/project_manager.py`
+- `modules/core/stage2_orchestrator.py`
 
-# 4. Current Findings
+Primary test anchors:
 
-1. 최신 builder만 보면 BI contract는 비교적 보수적이다.
-   - `plot_roadmap`
-   - `protagonist_config`
-   - treatment hash alignment
-   를 직접 생산/검증한다.
+- `tests/test_bi_tr_canonical_contract.py`
+- `tests/test_stage0_handoff_ingress.py`
+- `tests/test_stage2_orchestrator.py`
+- `tests/test_blockguide_bi_builder.py`
+- `tests/test_wuxia_bi_builder_contract.py`
 
-2. runtime에서는 builder 단독 권위가 아니다.
-   - `force_sync_v25_dna()`
-   - `ensure_plot_roadmap()`
-   - bible DB anchor save
-   가 생성 후 truth를 다시 주입한다.
+What changed:
 
-3. Stage2는 raw BI file보다 DB bible anchor 기반 handoff truth를 믿는다.
+- canonical treatment payloads now carry a structured `_stage0_contract`
+- canonical BI payloads now carry a structured `_stage0_contract`
+- stale `MasterBible._stage0_contract` sidecars are stripped from the canonical BI copy
+- DNA sync now logs that it remains a compatibility bridge and reports the runtime handoff owner explicitly
+- Stage2 bootstrap now surfaces the Stage0 runtime handoff contract instead of silently depending on DB anchor truth
 
-4. root BI corpus는 heterogeneous하다.
-   - 어떤 파일은 `plot_roadmap` / `protagonist_config`가 있고
-   - 어떤 파일은 없다.
+# 4. Current Findings After Re-Audit
 
-5. 따라서 현재 문제는 `BI/TR schema 확정 미비`만이 아니라
-   `artifact schema`와 `runtime-consumable contract`가 분리돼 있지 않다는 것이다.
+1. The builder side is not the main ambiguity anymore.
+   - current BI builders can emit `plot_roadmap`, `protagonist_config`, and normalized treatment linkage
 
-# 5. Hard Conclusions
+2. Runtime still treats the DB bible anchor as the effective handoff truth.
+   - `force_sync_v25_dna()` remains in the path
+   - roadmap backfill and save behavior still shape the runtime payload
 
-1. `BI/TR 생산 하네스 규격화`는 실재하는 upstream 구조 부채다.
-2. 하지만 active runtime blocker는 아니므로 지금 즉시 본선으로 올릴 필요는 없다.
-3. Stage0 장기 방향은 `split truth 축소`이지, 단순 field backfill 추가가 아니다.
-4. `BI`와 `TR`을 계속 둘 다 둘지 여부는 나중에 결정하되, 먼저 `source-of-truth contract`부터 고정해야 한다.
-5. 현재 dual-artifact 운영은 임시방편 성격이 강하며, 장기적으로 `projection model` 검토 가치가 있다.
+3. Stage2 trust is attached to the runtime handoff path, not to the raw BI artifact path.
 
-# 6. Non-Goals
+4. The unresolved risk is therefore owner ambiguity, not just missing fields.
 
-- 지금 당장 `BI`와 `TR`를 하나로 합치기
-- builder family 전면 rewrite
-- Stage2/3/4 active lane 재우선순위화
-- Golden Canary pair ingress 경로 즉시 교체
+5. The first tranche materially improves this by expressing:
+   - artifact role
+   - artifact truth
+   - field authority
+   - runtime handoff owner
+   - projection source
 
-# 7. Acceptance Criteria
+# 5. Scope
 
-이 pending lane을 나중에 활성화할 경우, 최소 acceptance criteria는 아래다.
+## Included in this lane
 
-1. raw artifact truth와 runtime handoff truth의 owner가 문서와 코드에서 명시된다.
-2. `plot_roadmap`와 `protagonist_config`가 어디서 authoritative한지 고정된다.
-3. legacy DNA sync/handoff가 `silent overwrite` 대신 명시적 compatibility bridge로 격하된다.
-4. `BI/TR dual artifact` 유지 여부가 설계로 결정된다.
-5. dual artifact를 유지하더라도 `canonical material schema -> projection` 개념이 명시된다.
-6. Stage2 consume contract가 raw file 의존인지 DB anchor 의존인지 혼합되지 않는다.
+- Stage0 BI/TR production-harness contract inventory
+- source-of-truth declaration for treatment, BI projection, and DB handoff roles
+- explicit authority for `plot_roadmap`
+- compatibility-bridge demotion language and transport
+- minimal downstream surfacing into Stage2
 
-# 8. Execution Shape
+## Excluded from this tranche
+
+- broad builder rewrite
+- projection-model conversion
+- Stage2 or Stage4 major intake redesign
+- canary or live proof work
+- queue reprioritization
+
+# 6. Execution Shape
 
 ## Tranche 1
 
 source-of-truth declaration
 
-- raw BI file
-- treatment
-- DB bible anchor
+Status: landed
 
-세 owner의 역할과 우선순위를 명시한다.
+- declare treatment vs BI vs DB runtime roles structurally
+- attach `_stage0_contract` to canonical payloads
+- surface the runtime handoff owner in Stage2-facing logs
 
 ## Tranche 2
 
 runtime handoff normalization
 
-- `force_sync_v25_dna`
-- `ensure_plot_roadmap`
-- Stage2-ready handoff
+Status: next bounded continuation
 
-를 compatibility bridge로 낮추거나 bounded owner로 재정의한다.
+- reduce `force_sync_v25_dna()` and roadmap backfill toward a narrower compatibility bridge
+- make Stage2 handoff transport explicit without broad Stage2 logic churn
+- continue reducing silent overwrite behavior
 
 ## Tranche 3
 
 production harness normalization
 
-- `canonical material schema`
-- `BI/TR projection`
-- 또는 `dual artifact with fixed contract`
+Status: deferred
 
-중 하나로 정리한다.
+- choose between `canonical material schema -> BI/TR projection`
+- or keep dual artifacts with a fixed, explicit contract
 
-# 9. Queue Placement
+# 7. Queue Placement
 
-이 lane은 `promoted pending long-horizon lane`이다.
+This lane is now a partially realized long-horizon Stage0 source-of-truth lane.
 
-- active Stage4 remediation 아래
-- pending `Stage3` / `Stage2` normalization 아래
-- `stage0-treatment-enrich-retirement-remediation` 아래
+It remains below the proof-deferred front stack and below the already active Stage4, Stage3, and Stage2 normalization families because:
 
-이유:
+- the runtime is not currently blocked by this lane
+- the blast radius is still wider than the nearer bounded slices
+- the landed tranche only established contract truth; it did not finish the handoff normalization
 
-- 지금 직접 런을 막는 blocker가 아니다
-- 구조적으로는 크지만 위험한 upstream refactor다
-- active runtime seams와 데모/운영 안정화보다 우선할 이유가 아직 없다
+Queue implication:
 
-# 10. Next Action
+- this tranche removes the last `pending` code-first lane from the current queue
+- after this update there is no remaining unopened implementation lane in the active queue snapshot
+- code-first continuation should stay inside this active Stage0 BI/TR lane unless the queue is explicitly redefined
 
-지금은 구현하지 않는다.
+# 8. Next Action
 
-운영상 기억만 한다.
+Continue `Tranche 2: runtime handoff normalization`.
 
-- `dual artifact 운영은 임시방편 성격이 강함`
-- `split truth 정리`가 장기 목표
-- `BI/TR production harness normalization`은 promoted pending long-horizon lane
+Bounded priorities for the next pass:
 
-# 11. 3-Pass Audit
+- keep `force_sync_v25_dna()` framed as a compatibility bridge
+- keep `db_anchor:bible` as the currently declared runtime handoff owner until the replacement boundary is ready
+- normalize Stage2 intake transport without broad Stage2 prompt or runtime redesign
+- do not widen into full builder-family refactors
 
-Pass 1. Structure/Scope
-- execution SSOT 형식 적합
-- pending queue lane 성격 명시
-- included/excluded scope 분리 완료
+# 9. Validation Targets For This Tranche
 
-Pass 2. Evidence/Consistency
-- source survey/evidence lineage attached
-- builder / sync / handoff / Stage2 consume chain과 정합
-- current roadmap placement bounded
+Focused validation for the landed tranche must stay centered on:
 
-Pass 3. Execution/Readability
-- active implementation 금지 명시
-- long-term direction and non-goals 분리
-- next action bounded
+- `tests/test_bi_tr_canonical_contract.py`
+- `tests/test_stage0_handoff_ingress.py`
+- `tests/test_stage2_orchestrator.py`
+- `tests/test_blockguide_bi_builder.py`
+- `tests/test_wuxia_bi_builder_contract.py`
 
-Confidence: 96%
+Static checks must also cover the touched Stage0 and Stage2 files plus this SSOT and temp mirror through UTF-8 hygiene and queue validators.
+
+# 10. 3-Pass Audit
+
+Pass 1. Structure / scope
+- the lane is now recorded as active and partially realized rather than promoted pending
+- the landed tranche, deferred tranches, and non-goals are separated clearly
+- owner language is tied to concrete runtime boundaries
+
+Pass 2. Evidence / consistency
+- the 2026-04-02 survey and evidence artifacts still anchor the lane rationale
+- the 2026-04-07 re-audit confirmed that live code still routes runtime truth through the DB bible anchor
+- the landed contract matches the current `stage0_handoff -> project_manager -> stage2_orchestrator` chain
+
+Pass 3. Execution / readability
+- the next bounded continuation is explicit
+- overreach is trimmed: no broad builder rewrite, no proof claim, no queue reorder
+- queue truth now reflects that this lane is active rather than unopened
+
+Confidence: `97%`

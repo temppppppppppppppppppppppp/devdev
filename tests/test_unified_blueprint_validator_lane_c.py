@@ -67,11 +67,7 @@ def test_lane_c_prepare_director_validation_payload_injects_focus_and_hud_contex
     payload = validator._prepare_director_validation_payload(
         blueprint={
             "integrated_scenario": "core scenario",
-            "_ensemble_meta": {
-                "python_warnings": [
-                    {"message": "dead npc risk", "focus": "flashback-only"}
-                ]
-            },
+            "_ensemble_meta": {"python_warnings": [{"message": "dead npc risk", "focus": "flashback-only"}]},
         },
         arc_data={"tactical_doc": {"goal": "protect"}, "ep_start": 3, "ep_count": 7},
         prev_blueprint={"ending_hook": "prev ending"},
@@ -218,15 +214,82 @@ def test_lane_c_python_pre_validate_combines_structure_fidelity_and_continuity()
     assert pre_result["critical_summary"] == ""
 
 
+def test_lane_c_python_pre_validate_normalizes_opening_transition_contract():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    blueprint = {
+        "scene_breakdown": {
+            "scene_1": {
+                "title": "직후 후속 비트",
+                "summary": "통화를 마친 직후 숨을 고른다.",
+                "location": "서재 앞 복도",
+            }
+        },
+        "integrated_scenario": "한시우가 통화를 마친 직후 서재 앞 복도에서 숨을 고른다. " * 20,
+        "start_location": "서재 앞 복도",
+        "time_flow": "직후",
+        "core_tension": "통화 후 대응",
+        "expected_ending": "현관으로 이동한다",
+        "target_beat": "후속 비트",
+        "protagonist_state": {"mood": "긴장"},
+    }
+
+    pre_result = validator._python_pre_validate(
+        blueprint=blueprint,
+        constraint_block={},
+        prev_blueprint={"end_location": "서재 앞 복도", "time_flow": "직후"},
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert blueprint["opening_transition"]["type"] == "direct_continuation"
+    assert not any(issue["category"] == "opening_transition" for issue in pre_result["issues"])
+
+
+def test_lane_c_python_pre_validate_flags_declared_opening_transition_mismatch():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    blueprint = {
+        "scene_breakdown": {
+            "scene_1": {
+                "title": "새 미팅",
+                "summary": "한시우는 PB센터 상담실에서 새 회의를 시작한다. " * 8,
+                "location": "강남 PB센터 상담실",
+            }
+        },
+        "integrated_scenario": "한시우는 PB센터 상담실에서 새 회의를 시작한다. " * 30,
+        "start_location": "강남 PB센터 상담실",
+        "time_flow": "다음 날 아침",
+        "core_tension": "새 투자 협상",
+        "expected_ending": "협상 카드 확보",
+        "target_beat": "새 국면 진입",
+        "protagonist_state": {"mood": "냉정"},
+        "opening_transition": {"type": "direct_continuation"},
+    }
+
+    pre_result = validator._python_pre_validate(
+        blueprint=blueprint,
+        constraint_block={},
+        prev_blueprint={"end_location": "본가 저택 서재 앞 복도", "time_flow": "직후"},
+        state_tracker=None,
+        arc_data={},
+    )
+
+    issue = next(issue for issue in pre_result["issues"] if issue["category"] == "opening_transition")
+    assert "declared 'direct_continuation'" in issue["issue"]
+    assert blueprint["opening_transition"]["type"] == "jump_opening"
+
+
 def test_lane_c_python_pre_validate_flags_stop_line_leak_as_critical():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
     pre_result = validator._python_pre_validate(
         blueprint={
             "scene_breakdown": {"scene_1": {}, "scene_2": {}, "scene_3": {}},
-            "integrated_scenario": "주인공이 정산 경매장에 잠입 계획을 실행하고 상호가 사회자 동선을 정보로 준다. " * 30,
+            "integrated_scenario": "주인공이 정산 경매장에 잠입 계획을 실행하고 상호가 사회자 동선을 정보로 준다. "
+            * 30,
         },
-        constraint_block={"stop_line": {"content": "정산 경매장에 잠입 계획을 실행하고 상호가 사회자 동선을 정보로 준다"}},
+        constraint_block={
+            "stop_line": {"content": "정산 경매장에 잠입 계획을 실행하고 상호가 사회자 동선을 정보로 준다"}
+        },
         prev_blueprint=None,
         state_tracker=None,
         arc_data={},
@@ -382,8 +445,7 @@ def test_lane_c_python_pre_validate_flags_capital_unit_drift_as_major():
                 "scene_3": {"goal": "g3", "summary": "s3", "characters": ["Hero", "PB"]},
             },
             "integrated_scenario": (
-                "한시우는 WTI 익절로 확보한 500만 달러를 추가 증거금으로 즉각 투입한다. "
-                + "A" * 900
+                "한시우는 WTI 익절로 확보한 500만 달러를 추가 증거금으로 즉각 투입한다. " + "A" * 900
             ),
         },
         constraint_block={
@@ -414,10 +476,7 @@ def test_lane_c_python_pre_validate_skips_price_only_dollar_mentions_for_capital
                 "scene_2": {"goal": "g2", "summary": "s2", "characters": ["PB"]},
                 "scene_3": {"goal": "g3", "summary": "s3", "characters": ["Hero", "PB"]},
             },
-            "integrated_scenario": (
-                "그해 8월 8일 FOMC 이후 금값은 온스당 700달러를 향해 폭등했다. "
-                + "A" * 900
-            ),
+            "integrated_scenario": ("그해 8월 8일 FOMC 이후 금값은 온스당 700달러를 향해 폭등했다. " + "A" * 900),
         },
         constraint_block={
             "capital_continuity_packet": {

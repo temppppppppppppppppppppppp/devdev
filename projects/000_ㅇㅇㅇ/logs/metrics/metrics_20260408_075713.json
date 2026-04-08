@@ -1,0 +1,107 @@
+{
+  "session_id": "20260408_075713",
+  "start_time": "2026-04-08T07:57:13.967592",
+  "end_time": "2026-04-08T08:47:13.043415",
+  "total_calls": 27,
+  "successful_calls": 27,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 344645,
+  "total_cost_usd": 1.082835,
+  "agent_stats": {
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 5,
+      "successful_calls": 5,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 42561.31615638733,
+        "min_ms": 17370.113849639893,
+        "max_ms": 79072.39580154419,
+        "p50_ms": 31473.409414291382,
+        "p90_ms": 71872.15280532837,
+        "p99_ms": 78352.37150192261
+      }
+    },
+    "ChiefWriter": {
+      "agent_name": "ChiefWriter",
+      "total_calls": 19,
+      "successful_calls": 19,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 77718.85141573455,
+        "min_ms": 16604.551792144775,
+        "max_ms": 202411.92245483398,
+        "p50_ms": 71964.70594406128,
+        "p90_ms": 122972.35932350156,
+        "p99_ms": 193799.08636569977
+      }
+    },
+    "Manager": {
+      "agent_name": "Manager",
+      "total_calls": 2,
+      "successful_calls": 2,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 31087.56649494171,
+        "min_ms": 16684.47756767273,
+        "max_ms": 45490.65542221069,
+        "p50_ms": 31087.56649494171,
+        "p90_ms": 42610.0376367569,
+        "p99_ms": 45202.593643665314
+      }
+    },
+    "StateExtractor": {
+      "agent_name": "StateExtractor",
+      "total_calls": 1,
+      "successful_calls": 1,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 14421.945333480835,
+        "min_ms": 14421.945333480835,
+        "max_ms": 14421.945333480835,
+        "p50_ms": 14421.945333480835,
+        "p90_ms": 14421.945333480835,
+        "p99_ms": 14421.945333480835
+      }
+    }
+  },
+  "model_stats": {
+    "vertexai:gemini-2.5-pro": {
+      "input_tokens": 37422,
+      "output_tokens": 3310,
+      "cached_tokens": 0,
+      "thinking_tokens": 12390,
+      "total_tokens": 40732,
+      "cost_usd": 0.079877
+    },
+    "vertexai:gemini-3.1-pro-preview": {
+      "input_tokens": 216816,
+      "output_tokens": 72593,
+      "cached_tokens": 0,
+      "thinking_tokens": 105718,
+      "total_tokens": 289409,
+      "cost_usd": 0.99695
+    },
+    "vertexai:gemini-2.5-flash": {
+      "input_tokens": 13386,
+      "output_tokens": 1118,
+      "cached_tokens": 2977,
+      "thinking_tokens": 9060,
+      "total_tokens": 14504,
+      "cost_usd": 0.006007
+    }
+  }
+}
