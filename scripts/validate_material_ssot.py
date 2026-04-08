@@ -39,6 +39,9 @@ REQUIRED_PATHS = (
     "material_ssot/00_governance/stage-read-order.md",
     "material_ssot/00_governance/bootstrap-status.md",
     "material_ssot/00_governance/work-coverage-matrix.md",
+    "material_ssot/00_governance/production-pair-operational-registry-v1.md",
+    "material_ssot/00_governance/production-pair-operational-registry-v1.json",
+    "material_ssot/00_governance/pre-new-pitch-operational-readiness-v1.md",
     "material_ssot/90_migration/pending-cuts.md",
     "material_ssot/10_research/source-map.md",
     "material_ssot/20_pitch/pitch-philosophy.md",
@@ -57,6 +60,7 @@ REQUIRED_PATHS = (
     "scripts/export_youtube_idea_packets.py",
     "scripts/build_epub_sample_corpus.py",
     "scripts/sync_narrative_reference_bank.py",
+    "scripts/pre_new_pitch_readiness_gate.py",
 )
 
 ACTIVE_PATH_SCOPE = (
@@ -89,6 +93,7 @@ ACTIVE_PATH_SCOPE = (
     "scripts/export_youtube_idea_packets.py",
     "scripts/build_epub_sample_corpus.py",
     "scripts/sync_narrative_reference_bank.py",
+    "scripts/pre_new_pitch_readiness_gate.py",
     "scripts/research_collectors",
 )
 
@@ -119,6 +124,7 @@ ACTIVE_AUTHORITY_SCOPE = (
     "scripts/build_youtube_channel_corpus.py",
     "scripts/export_youtube_idea_packets.py",
     "scripts/build_epub_sample_corpus.py",
+    "scripts/pre_new_pitch_readiness_gate.py",
     "scripts/research_collectors",
 )
 
@@ -161,10 +167,34 @@ TEXT_RULES = (
     TextRule(
         "material_ssot/00_governance/work-coverage-matrix.md",
         required=(
-            "| `gatekeeper_heir` | `blockguide` | yes | yes | yes | yes | yes | yes | later enrichment only |",
             "| `office_checkup_next_day` | `blockguide` | yes | yes | yes | yes | yes | yes | raw research path not yet pinned |",
-            "| `wuxia_heavenly_physician` | `wuxguide` | yes | yes | yes | yes | yes | yes | root phase0 live file not yet materialized |",
+            "| `wuxia_heavenly_physician` | `wuxguide` | yes | yes | yes | yes | yes | yes | raw research path not yet pinned |",
             "- bounded work-chain validation now runs through `python -X utf8 scripts/validate_material_ssot.py`",
+            "- repo-level pre-new-pitch readiness now runs through `python -X utf8 scripts/pre_new_pitch_readiness_gate.py`",
+        ),
+    ),
+    TextRule(
+        "material_ssot/00_governance/bootstrap-status.md",
+        required=(
+            "- repo-level pre-new-pitch readiness gate now exists at `python -X utf8 scripts/pre_new_pitch_readiness_gate.py`",
+            "- current live pair inventory and benchmark freshness now have a durable registry under `production-pair-operational-registry-v1.md`",
+            "- all currently tracked schema-clean pairs now carry benchmark-fresh readings, including the previously unbenchmarked unslotted live pairs",
+        ),
+    ),
+    TextRule(
+        "material_ssot/00_governance/production-pair-operational-registry-v1.md",
+        required=(
+            "Scope: durable operational registry for current schema-clean production pairs",
+            "| `manual_meridian_archivist` | `wuxguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREEN` | `current` | benchmark-fresh unslotted live pair; positive alias granted, still outside numbered-slot manifest |",
+            "| `wuxia_heavenly_physician` | `wuxguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | benchmark-fresh regenerated live pair; safe for current family baseline reading |",
+        ),
+    ),
+    TextRule(
+        "material_ssot/00_governance/pre-new-pitch-operational-readiness-v1.md",
+        required=(
+            "Scope: repo-level readiness gate before starting a fresh pitch wave",
+            "- `python -X utf8 scripts/pre_new_pitch_readiness_gate.py`",
+            "This means new pitch work is operationally unblocked, and pair-side fresh baseline claims can rely on the current registry so long as inventory-role distinctions and the `GREEN` vs `GREENPLUS` shelf split are respected.",
         ),
     ),
     TextRule(
@@ -263,20 +293,6 @@ TEXT_RULES = (
 )
 
 BOOTSTRAP_WORK_COVERAGE = (
-    {
-        "work_id": "gatekeeper_heir",
-        "required_paths": (
-            "material_ssot/10_research/30_work_materials/gatekeeper_heir/90_material_pack.json",
-            "material_ssot/20_pitch/canon/gatekeeper_heir.md",
-            "material_ssot/30_stage0_preprocess/work-index/gatekeeper_heir.md",
-            "material_ssot/40_phase0_design/work-index/gatekeeper_heir.md",
-            "material_ssot/50_tr/work-index/gatekeeper_heir.md",
-            "material_ssot/60_bi/work-index/gatekeeper_heir.md",
-            "treatments/phase0/gatekeeper_heir_phase0_design.json",
-            "treatments/06_gatekeeper_heir_tr_block_070_draft.json",
-            "bible/06_bi_gatekeeper_heir.json",
-        ),
-    },
     {
         "work_id": "office_checkup_next_day",
         "required_paths": (

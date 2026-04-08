@@ -46,6 +46,30 @@ def as_text(value: Any) -> str:
     return str(value).strip()
 
 
+def relative_posix(path: Path) -> str:
+    return path.resolve().relative_to(ROOT).as_posix()
+
+
+def derive_work_id_from_phase0_path(path: Path) -> str:
+    stem = path.stem
+    if stem.endswith("_phase0_design"):
+        return stem[: -len("_phase0_design")]
+    return stem
+
+
+def build_authority_chain(work_id: str, *, phase0_path: Path, draft_path: Path) -> list[str]:
+    candidates = [
+        ROOT / "material_ssot" / "20_pitch" / "canon" / f"{work_id}.md",
+        ROOT / "treatments" / "preprocess" / work_id / "source_manifest.json",
+        ROOT / "treatments" / "preprocess" / work_id / "material_bundle_summary.json",
+        ROOT / "treatments" / "preprocess" / work_id / "profile_lock.json",
+        ROOT / "treatments" / "preprocess" / work_id / "phase0_ready_snapshot.json",
+        phase0_path,
+        draft_path,
+    ]
+    return [relative_posix(path) for path in candidates if path.is_file()]
+
+
 def unique_preserve_order(items: list[str]) -> list[str]:
     seen: set[str] = set()
     out: list[str] = []
@@ -144,7 +168,7 @@ def resolve_runtime_pov_contract(
 
 
 def build_portfolio_history(blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    checkpoints = [1, 10, 20, 30, 40, 50, 60, 70]
+    checkpoints = select_progress_checkpoints(len(blocks))
     history: list[dict[str, Any]] = []
     for block_no in checkpoints:
         block = blocks[block_no - 1]
@@ -214,7 +238,7 @@ def derive_partner_location_sector_distribution(
 
 def derive_capital_curve(treatment_blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     points: list[dict[str, Any]] = []
-    for block_no in [1, 10, 20, 30, 40, 50, 60, 70]:
+    for block_no in select_progress_checkpoints(len(treatment_blocks)):
         block = treatment_blocks[block_no - 1]
         points.append(
             {
@@ -259,6 +283,25 @@ def normalize_phase0_design(
     if "defeat_blocks" not in normalized:
         normalized["defeat_blocks"] = derive_defeat_blocks(normalized, treatment_blocks)
     return normalized
+
+
+def select_progress_checkpoints(total_blocks: int) -> list[int]:
+    if total_blocks <= 0:
+        return []
+    checkpoints = [point for point in [1, 10, 20, 30, 40, 50, 60, 70] if point <= total_blocks]
+    if total_blocks not in checkpoints:
+        checkpoints.append(total_blocks)
+    return checkpoints
+
+
+def resolve_starter_company(setting: dict[str, Any]) -> dict[str, Any]:
+    starter_company = setting.get("starter_company")
+    if isinstance(starter_company, dict):
+        return starter_company
+    starter_organization = setting.get("starter_organization")
+    if isinstance(starter_organization, dict):
+        return starter_organization
+    return {"name": "", "state": "", "assets": [], "liabilities": []}
 
 
 def build_key_npcs(
@@ -311,7 +354,7 @@ def build_arc_sheets(arcs: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "title": arc["title"],
                 "block_range": arc["block_range"],
                 "time_window": arc["time_window"],
-                "capital_target": arc["capital_target"],
+                "capital_target": arc.get("capital_target") or arc.get("authority_target") or "",
                 "front_sectors": arc["front_sectors"],
                 "support_sectors": arc["support_sectors"],
                 "main_opponents": arc["main_opponents"],
@@ -371,19 +414,31 @@ def build_world_state(
     first_block: dict[str, Any],
 ) -> dict[str, Any]:
     distribution = phase0["partner_location_sector_distribution"]
+    starter_company = resolve_starter_company(setting)
     return {
         "CurrentEra": first_block["time_span"]["in_story_time"],
         "CurrentLocation": first_block["location"]["place"],
         "era_window": f"{project['start_year']}년~{project['end_year']}년",
         "group_background": setting["group_background"],
         "execution_doctrine": setting["execution_doctrine"],
-        "starter_company": setting["starter_company"],
+        "starter_company": starter_company,
         "opponent_transition_plan": phase0["opponent_transition_plan"],
         "front_sector_by_arc": distribution["front_sector_by_arc"],
+        "regulatory_context": setting.get("regulatory_context"),
+        "expansion_order_locked": phase0.get("expansion_order_locked"),
+        "hud_interpretation": phase0.get("hud_interpretation"),
     }
 
 
-def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str, Any]]) -> dict[str, Any]:
+def build_bible(
+    phase0_payload: dict[str, Any],
+    treatment_blocks: list[dict[str, Any]],
+    *,
+    work_id: str,
+    source_phase0: str,
+    source_tr: str,
+    authority_chain: list[str],
+) -> dict[str, Any]:
     project = phase0_payload["project"]
     setting_data = phase0_payload["setting"]
     protagonist = phase0_payload["protagonist"]
@@ -402,7 +457,7 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
         ]
     )
 
-    starter_company = setting_data["starter_company"]
+    starter_company = resolve_starter_company(setting_data)
     final_capital = portfolio_history[-1]["total_assets"]
     max_capital = final_capital
     protagonist_faction = derive_protagonist_faction(starter_company)
@@ -512,6 +567,7 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
             "Partners": phase0["partner_location_sector_distribution"]["partners"],
             "LocationPool": phase0["partner_location_sector_distribution"]["location_pool"],
             "DealTypeRotation": phase0["partner_location_sector_distribution"]["deal_type_rotation"],
+            "CapitalCurve": phase0.get("capital_curve", []),
             "BusinessAxis": {
                 "front_sectors": all_sectors,
                 "execution_doctrine": setting_data["execution_doctrine"],
@@ -527,6 +583,8 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
             "reward_rule": "승리의 단위는 수익, 지배력, 반복 현금흐름, 계약/규격 우위로 측정한다.",
             "risk_rule": "패배는 여론전, 계약, 내부 정치, 규제, 지배구조 리스크에서 온다.",
             "talent_rule": "능력은 전지적 예언이 아니라 사업 구조와 위험을 더 빨리 읽는 감각으로만 작동한다.",
+            "do_not_fake": phase0.get("do_not_fake", []),
+            "contamination_guard": phase0.get("contamination_guard", []),
         },
         "plot_roadmap": treatment_blocks,
     }
@@ -536,6 +594,11 @@ def build_bible(phase0_payload: dict[str, Any], treatment_blocks: list[dict[str,
         "_schema_description": f"{project['title_ko']} Bible - phase0/TR draft 동기화 산출물",
         "_last_updated": date.today().isoformat(),
         "_genre": project["format"],
+        "_family": "blockguide",
+        "_work_id": work_id,
+        "_authority_chain": authority_chain,
+        "_source_phase0": source_phase0,
+        "_source_tr": source_tr,
         "MasterBible": master_bible,
     }
 
@@ -549,9 +612,13 @@ def main() -> int:
 
     phase0 = load_json(args.phase0)
     draft_raw = load_json(args.draft)
+    work_id = derive_work_id_from_phase0_path(args.phase0)
+    source_phase0 = relative_posix(args.phase0)
+    source_tr = relative_posix(args.draft)
+    authority_chain = build_authority_chain(work_id, phase0_path=args.phase0, draft_path=args.draft)
     canonical_treatment, tr_warnings = canonicalize_treatment_payload(draft_raw)
     treatment_blocks = canonical_treatment["blocks"]
-    require(isinstance(treatment_blocks, list) and len(treatment_blocks) == 70, "Treatment draft must contain 70 blocks")
+    require(isinstance(treatment_blocks, list) and len(treatment_blocks) >= 1, "Treatment draft must contain at least one block")
     require(isinstance(phase0, dict), "Phase0 payload must be a dict")
     require("project" in phase0 and "setting" in phase0 and "protagonist" in phase0 and "phase0_design" in phase0, "Phase0 payload is missing required sections")
 
@@ -566,7 +633,14 @@ def main() -> int:
         "phase0_design": normalize_phase0_design(phase0_design, treatment_blocks),
     }
     payload["setting"]["protagonist"] = phase0["protagonist"]
-    bible = build_bible(payload, treatment_blocks)
+    bible = build_bible(
+        payload,
+        treatment_blocks,
+        work_id=work_id,
+        source_phase0=source_phase0,
+        source_tr=source_tr,
+        authority_chain=authority_chain,
+    )
     bible, canonical_warnings = canonicalize_bible_payload(bible, treatment=canonical_treatment)
 
     valid, errors, warnings = validate_bible_structure(bible)
@@ -576,7 +650,10 @@ def main() -> int:
         == bible["MasterBible"]["FinanceHUD"]["Protagonist"]["actual_truth"]["name"],
         "Protagonist name mismatch inside BI",
     )
-    require(len(bible["MasterBible"]["plot_roadmap"]) == 70, "BI plot_roadmap must contain 70 blocks")
+    require(
+        len(bible["MasterBible"]["plot_roadmap"]) == len(treatment_blocks),
+        "BI plot_roadmap must align with treatment block count",
+    )
 
     draft_hash = hashlib.sha256(json.dumps(treatment_blocks, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
     bible_hash = hashlib.sha256(

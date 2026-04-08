@@ -22,7 +22,20 @@ Status: canonical pitch
 - selection date: 2026-04-06
 - selection verdict: PASS (P0 12/12, P1 11/11, P2 경고 0개)
 
-This is the canonical pitch authority for `jangyeongshil_industrial_revolution`. Phase0, TR, BI, work_guard는 아직 미착수.
+This is the canonical pitch authority for `jangyeongshil_industrial_revolution`.
+
+Current pair-side status:
+
+- root Phase0 exists:
+  - `treatments/phase0/jangyeongshil_industrial_revolution_phase0_design.json`
+- live TR exists:
+  - `treatments/jangyeongshil_industrial_revolution_tr_block_025_draft.json`
+- live BI exists:
+  - `bible/jangyeongshil_industrial_revolution_bi.json`
+- current operator reading:
+  - unslotted live pair, `GREEN`, `benchmark_freshness=current`
+- current status anchor:
+  - `docs/2026-04-08/jangyeongshil_industrial_revolution_live_status.md`
 
 ## 2. Pitch Truth
 

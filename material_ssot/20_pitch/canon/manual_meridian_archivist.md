@@ -23,6 +23,23 @@ Status: canonical pitch
 
 Selection audit: P0 11/11 PASS, P1 10/11 PASS, Selection Gate 9/9 PASS. 2026-04-06 canon lock.
 
+Current pair-side status:
+
+- preprocess bundle exists:
+  - `treatments/preprocess/manual_meridian_archivist/`
+- root Phase0 exists:
+  - `treatments/phase0/manual_meridian_archivist_phase0_design.json`
+- published work_guard exists:
+  - `work_guards/11_manual_meridian_archivist.yaml`
+- live TR exists:
+  - `treatments/manual_meridian_archivist_tr_block_070_draft.json`
+- live BI exists:
+  - `bible/manual_meridian_archivist_bi.json`
+- current operator reading:
+  - unslotted live pair, `GREEN`, `benchmark_freshness=current`
+- current status anchor:
+  - `docs/2026-04-08/manual_meridian_archivist_live_status.md`
+
 ## 2. Pitch Truth
 
 - one_line_premise:

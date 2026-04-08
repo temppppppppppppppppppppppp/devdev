@@ -281,6 +281,126 @@ class TestWriteAuditSummary:
         finally:
             db.close()
 
+    def test_write_summary_proof_digest_surfaces_numeric_consistency_summary(self, svc, tmp_project):
+        db = DBManager(tmp_project.root / "project_data.db")
+        attempt_key = "s4:ep2:arc1:a1:sess_num"
+        artifact_path = "logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__A_balanced.txt"
+        try:
+            artifact_file = tmp_project.root / artifact_path
+            artifact_file.parent.mkdir(parents=True, exist_ok=True)
+            artifact_file.write_text("artifact", encoding="utf-8")
+            (tmp_project.root / "logs" / "session").mkdir(parents=True, exist_ok=True)
+            (tmp_project.root / "logs" / "session" / "ui_events.jsonl").write_text(
+                json.dumps(
+                    {
+                        "session_id": "sess_num",
+                        "seq": 1,
+                        "component": "UI",
+                        "stage": 4,
+                        "ep_num": 2,
+                        "attempt_key": attempt_key,
+                        "message": "visible operator event",
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            db.save_stage_attempt(
+                stage=4,
+                verdict="REJECT",
+                attempt_num=1,
+                ep_num=2,
+                arc_num=1,
+                score=71,
+                session_id="sess_num",
+                attempt_key=attempt_key,
+                candidate_key="A|balanced",
+                content_hash="hash-num",
+                artifact_path=artifact_path,
+                runtime_advisory=(
+                    "[NC-1][후보 A][MAJOR][numeric_carryover_authority] "
+                    "[numeric carryover authority mismatch] 원고 '20억 원' (20.0억) vs resumed "
+                    "FactLedger 'capital'=2000000000.0억 (EP1 carryover baseline)."
+                ),
+            )
+            db.save_ui_event(
+                session_id="sess_num",
+                seq=1,
+                stage=4,
+                ep_num=2,
+                attempt_key=attempt_key,
+                component="UI",
+                message="visible operator event",
+            )
+            db.save_director_selection(
+                ep_num=2,
+                round_num=1,
+                selected_label="A",
+                selected_strategy="balanced",
+                verdict="REJECT",
+                score=71,
+                stage=4,
+                attempt_key=attempt_key,
+                candidate_key="A|balanced",
+                content_hash="hash-num",
+                artifact_path=artifact_path,
+            )
+            (tmp_project.root / "logs" / "session" / "decisions.jsonl").write_text(
+                json.dumps(
+                    {
+                        "stage": "stage4",
+                        "ep_num": 2,
+                        "result": "REJECT",
+                        "score": 71,
+                        "meta": {
+                            "attempt_key": attempt_key,
+                            "candidate_key": "A|balanced",
+                            "content_hash": "hash-num",
+                            "artifact_path": artifact_path,
+                        },
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (tmp_project.root / "logs" / "episode_production.jsonl").write_text(
+                json.dumps(
+                    {
+                        "ep": 2,
+                        "attempt_key": attempt_key,
+                        "verdict": "REJECT",
+                        "initial_verdict": "REJECT",
+                        "final_verdict": "REJECT",
+                        "final_score": 71,
+                        "candidate_key": "A|balanced",
+                        "selection_candidate_key": "A|balanced",
+                        "content_hash": "hash-num",
+                        "artifact_path": artifact_path,
+                        "patch_trace": {"patch_strategy": "", "structural_attempted": False},
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            svc.audit_event("evt", "msg")
+            svc.write_audit_summary("numeric_surface")
+
+            summary_path = tmp_project.root / "logs" / "runtime_audit_summary.json"
+            data = json.loads(summary_path.read_text(encoding="utf-8"))
+            numeric_summary = data["proof_digest"]["stages"]["stage4"]["numeric_consistency_summary"]
+
+            assert numeric_summary["status"] == "warn"
+            assert numeric_summary["signal_count"] == 1
+            assert numeric_summary["category_counts"]["numeric_carryover_authority"] == 1
+            assert numeric_summary["ledger_field_counts"]["capital"] == 1
+        finally:
+            db.close()
+
     def test_write_summary_surfaces_rationale_mismatch_issue_counts(self, svc, tmp_project):
         db = DBManager(tmp_project.root / "project_data.db")
         attempt_key = "s3:ep12:arc1:a1:sess_warn"
@@ -439,6 +559,326 @@ class TestWriteAuditSummary:
                 assert data["contract"]["proof_digest_truth_scope"] == "committed_persistence_only"
                 assert data["proof_digest"]["artifacts"]["ui_events_db_available"] is True
                 assert data["proof_digest"]["artifacts"]["ui_events_count"] == 0
+        finally:
+            db.close()
+
+    def test_write_summary_proof_digest_includes_latest_stage2_session_alignment(self, svc, tmp_project):
+        db = DBManager(tmp_project.root / "project_data.db")
+        attempt_key = "s2:ep2:arc2:a1:sess-stage2"
+        artifact_path = "logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json"
+        try:
+            (tmp_project.root / "logs" / "session").mkdir(parents=True, exist_ok=True)
+            artifact_file = tmp_project.root / artifact_path
+            artifact_file.parent.mkdir(parents=True, exist_ok=True)
+            artifact_file.write_text("{}", encoding="utf-8")
+            (tmp_project.root / "logs" / "session_legacy_token.log").write_text("session log", encoding="utf-8")
+
+            db.save_stage_attempt(
+                stage=2,
+                verdict="PASS",
+                attempt_num=1,
+                ep_num=2,
+                arc_num=2,
+                score=93,
+                session_id="sess-stage2",
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-proof",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet remains stable",
+                verdict_reason="ready for blueprint handoff",
+            )
+            db.save_director_selection(
+                ep_num=2,
+                round_num=1,
+                selected_label="A",
+                selected_strategy="balanced",
+                verdict="PASS",
+                score=93,
+                stage=2,
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-proof",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet remains stable",
+            )
+            (tmp_project.root / "logs" / "session" / "decisions.jsonl").write_text(
+                json.dumps(
+                    {
+                        "stage": "stage2",
+                        "ep_num": 2,
+                        "result": "PASS",
+                        "score": 93,
+                        "meta": {
+                            "session_id": "sess-stage2",
+                            "attempt_key": attempt_key,
+                            "candidate_key": "balanced",
+                            "content_hash": "hash-stage2-proof",
+                            "artifact_path": artifact_path,
+                            "selection_reason": "carryover packet remains stable",
+                            "verdict_reason": "ready for blueprint handoff",
+                        },
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (tmp_project.root / "logs" / "pass_rate_monitor.json").write_text(
+                json.dumps(
+                    {
+                        "records": [
+                            {
+                                "stage": 2,
+                                "episode": 2,
+                                "arc": 2,
+                                "attempt_num": 1,
+                                "success": True,
+                                "attempt_key": attempt_key,
+                                "final_verdict": "PASS",
+                                "candidate_key": "balanced",
+                                "content_hash": "hash-stage2-proof",
+                                "artifact_path": artifact_path,
+                            }
+                        ]
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            svc.audit_event("evt", "msg")
+            svc.write_audit_summary("stage2_proof")
+
+            summary_path = tmp_project.root / "logs" / "runtime_audit_summary.json"
+            data = json.loads(summary_path.read_text(encoding="utf-8"))
+            stage2 = data["proof_digest"]["stages"]["stage2"]
+
+            assert data["proof_digest"]["available"] is True
+            assert stage2["status"] == "warn"
+            assert stage2["attempts_considered"] == 1
+            assert stage2["session_scoped_attempts"] == 1
+            assert stage2["coverage"]["session_decisions"] == 1
+            assert stage2["coverage"]["pass_rate_monitor"] == 1
+            assert stage2["issue_counts"]["rationale_metadata_missing"] == 1
+        finally:
+            db.close()
+
+    def test_write_summary_includes_operational_metadata_for_latest_stage4_session(self, svc, tmp_project):
+        db = DBManager(tmp_project.root / "project_data.db")
+        stage2_artifact_path = "logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json"
+        artifact_path = "logs/artifacts/stage4/ep_0002/attempt_01/final_manuscript__A_balanced.txt"
+        stage3_artifact_path = "logs/artifacts/stage3/ep_0002/attempt_01/final_blueprint__A_balanced.json"
+        try:
+            (tmp_project.root / "logs" / "session").mkdir(parents=True, exist_ok=True)
+            stage2_artifact_file = tmp_project.root / stage2_artifact_path
+            stage2_artifact_file.parent.mkdir(parents=True, exist_ok=True)
+            stage2_artifact_file.write_text("{}", encoding="utf-8")
+            artifact_file = tmp_project.root / artifact_path
+            artifact_file.parent.mkdir(parents=True, exist_ok=True)
+            artifact_file.write_text("manuscript", encoding="utf-8")
+            stage3_artifact_file = tmp_project.root / stage3_artifact_path
+            stage3_artifact_file.parent.mkdir(parents=True, exist_ok=True)
+            stage3_artifact_file.write_text("{}", encoding="utf-8")
+
+            db.save_stage_attempt(
+                stage=2,
+                verdict="PASS",
+                attempt_num=1,
+                ep_num=2,
+                arc_num=2,
+                score=91,
+                session_id="sess-wave",
+                attempt_key="s2:ep2:arc2:a1:sess-wave",
+                candidate_key="balanced",
+                content_hash="hash-stage2",
+                artifact_path=stage2_artifact_path,
+                selection_reason="arc 2 closes the carryover boundary cleanly",
+                verdict_reason="ready for Stage3 handoff",
+                advisory_flags={
+                    "carryover_authority": {
+                        "start_location": "장례식장 운영실",
+                        "end_location": "장례식장 지하 1층 후방 복도",
+                        "start_inventory_count": 2,
+                        "end_inventory_count": 3,
+                    }
+                },
+            )
+            db.save_stage_attempt(
+                stage=3,
+                verdict="PASS",
+                attempt_num=1,
+                ep_num=2,
+                arc_num=1,
+                score=94,
+                session_id="sess-wave",
+                attempt_key="s3:ep2:arc1:a1:sess-wave",
+                candidate_key="A|bp",
+                content_hash="hash-stage3",
+                artifact_path=stage3_artifact_path,
+                selection_reason="candidate A preserves the opening transition cleanly",
+                verdict_reason="blueprint is ready without structural drift",
+                advisory_flags={
+                    "source_anchor_summary": {
+                        "previous_blueprint_ep": 1,
+                        "previous_blueprint_end_location": "서재 앞 복도",
+                        "current_arc_start_location": "SW인베스트먼트 사무실",
+                    }
+                },
+            )
+            db.save_stage_attempt(
+                stage=4,
+                verdict="PASS",
+                attempt_num=1,
+                ep_num=2,
+                arc_num=1,
+                score=97,
+                session_id="sess-wave",
+                attempt_key="s4:ep2:arc1:a1:sess-wave",
+                candidate_key="A|balanced",
+                content_hash="hash-stage4",
+                artifact_path=artifact_path,
+            )
+            db.save_ui_event(
+                session_id="sess-wave",
+                seq=1,
+                stage=2,
+                ep_num=2,
+                attempt_key="s2:ep2:arc2:a1:sess-wave",
+                component="Stage2Finalizer",
+                event_kind="carryover_authority",
+                message="carryover authority emitted",
+                artifact_path=stage2_artifact_path,
+                meta={
+                    "start_location": "장례식장 운영실",
+                    "end_location": "장례식장 지하 1층 후방 복도",
+                },
+            )
+            db.save_ui_event(
+                session_id="sess-wave",
+                seq=2,
+                stage=3,
+                ep_num=2,
+                attempt_key="s3:ep2:arc1:a1:sess-wave",
+                component="blueprint_generation",
+                event_kind="summary",
+                message="source anchor emitted",
+                artifact_path=stage3_artifact_path,
+                meta={
+                    "source_anchor_summary": {
+                        "previous_blueprint_ep": 1,
+                        "previous_blueprint_end_location": "서재 앞 복도",
+                        "current_arc_start_location": "SW인베스트먼트 사무실",
+                    }
+                },
+            )
+            (tmp_project.root / "logs" / "session" / "decisions.jsonl").write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "stage": "stage2",
+                                "ep_num": 2,
+                                "result": "PASS",
+                                "score": 91,
+                                "meta": {
+                                    "attempt_key": "s2:ep2:arc2:a1:sess-wave",
+                                    "artifact_path": stage2_artifact_path,
+                                    "selection_reason": "arc 2 closes the carryover boundary cleanly",
+                                    "verdict_reason": "ready for Stage3 handoff",
+                                },
+                            },
+                            ensure_ascii=False,
+                        ),
+                        json.dumps(
+                            {
+                                "stage": "stage3",
+                                "ep_num": 2,
+                                "result": "PASS",
+                                "score": 94,
+                                "meta": {
+                                    "attempt_key": "s3:ep2:arc1:a1:sess-wave",
+                                    "artifact_path": stage3_artifact_path,
+                                    "selection_reason": "candidate A preserves the opening transition cleanly",
+                                    "verdict_reason": "blueprint is ready without structural drift",
+                                },
+                            },
+                            ensure_ascii=False,
+                        ),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            svc.audit_event(
+                "stage4_session_scope",
+                "stage4 session scope declared",
+                {
+                    "session_id": "sess-wave",
+                    "start_ep": 2,
+                    "target_ep": 2,
+                    "total_planned_ep": 2,
+                },
+            )
+            svc.audit_event(
+                "stage4_post_pass_contract_signal",
+                "stage4 post-pass contract persisted",
+                {
+                    "session_id": "sess-wave",
+                    "ep": 2,
+                },
+            )
+            svc.audit_event(
+                "target_ep_reached",
+                "stage4 target episode reached",
+                {
+                    "session_id": "sess-wave",
+                    "target_ep": 2,
+                    "next_ep": 3,
+                },
+            )
+            svc.audit_event(
+                "stage4_complete",
+                "stage4 production completed",
+                {
+                    "session_id": "sess-wave",
+                    "target_ep": 2,
+                },
+            )
+
+            svc.write_audit_summary("stage4_complete")
+
+            summary_path = tmp_project.root / "logs" / "runtime_audit_summary.json"
+            data = json.loads(summary_path.read_text(encoding="utf-8"))
+            operational = data["proof_digest"]["operational_metadata"]
+
+            assert operational["status"] == "ok"
+            assert operational["latest_session_id"] == "sess-wave"
+            assert operational["stage2_live_session"]["status"] == "ok"
+            assert operational["stage2_live_session"]["episodes"] == [2]
+            assert operational["stage2_live_session"]["attempt_key_coverage"]["status"] == "ok"
+            assert operational["stage2_live_session"]["carryover_authority_event_count"] == 1
+            assert operational["stage2_live_session"]["latest_carryover_authority"]["end_location"] == "장례식장 지하 1층 후방 복도"
+            assert operational["stage3_live_session"]["status"] == "ok"
+            assert operational["stage3_live_session"]["episodes"] == [2]
+            assert operational["stage3_live_session"]["selection_reason_coverage"]["status"] == "ok"
+            assert operational["stage3_live_session"]["source_anchor_summary_count"] == 1
+            assert operational["stage3_live_session"]["source_anchor_ui_event_count"] == 1
+            assert operational["stage3_live_session"]["latest_source_anchor_summary"]["previous_blueprint_ep"] == 1
+            assert operational["stage4_live_session"]["status"] == "ok"
+            assert operational["stage4_live_session"]["episodes"] == [2]
+            assert operational["stage4_live_session"]["retry_exercised"] is False
+            assert operational["stage4_live_session"]["patch_exercised"] is False
+            assert operational["stage4_live_session"]["post_pass_contract_signal_count"] == 1
+            assert operational["stage4_live_session"]["target_ep_reached"] is True
+            assert operational["stage4_live_session"]["stage4_complete_emitted"] is True
+            assert operational["stage4_live_session"]["session_scope"]["target_ep"] == 2
+            assert operational["stage4_live_session"]["non_exercised_reasons"] == [
+                "stage4_retry_not_needed_round1_pass",
+                "stage4_patch_not_needed",
+            ]
         finally:
             db.close()
 

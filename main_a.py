@@ -2399,9 +2399,32 @@ class SovereignApp:
         if not (V50_MODULES_AVAILABLE and getattr(self, "pass_rate_monitor", None)):
             return
         try:
+            SovereignApp._reconcile_pass_rate_monitor_for_stage2_session(self)
             self.pass_rate_monitor.save()
         except Exception as pr_err:
             logging.debug("[Audit] pass_rate_monitor save before summary failed: %s", pr_err)
+
+    def _reconcile_pass_rate_monitor_for_stage2_session(self) -> int:
+        """Sink-boundary backfill for Stage2 attempt parity before summary/shutdown writes."""
+        if not (V50_MODULES_AVAILABLE and getattr(self, "pass_rate_monitor", None)):
+            return 0
+        current_project = getattr(self, "current_project", None)
+        db = getattr(current_project, "db", None)
+        reconcile = getattr(self.pass_rate_monitor, "reconcile_from_db", None)
+        if db is None or not callable(reconcile):
+            return 0
+        try:
+            return int(
+                reconcile(
+                    db,
+                    session_id=resolve_logging_session_id(current_project),
+                    stages=(2,),
+                )
+                or 0
+            )
+        except Exception as pr_err:
+            logging.debug("[Audit] pass_rate_monitor reconcile before save failed: %s", pr_err)
+            return 0
 
     def _persist_shutdown_advisory_state(self) -> None:
         current_project = getattr(self, "current_project", None)
@@ -2414,6 +2437,7 @@ class SovereignApp:
     def _persist_shutdown_pass_rate_state(self) -> None:
         if V50_MODULES_AVAILABLE and getattr(self, "pass_rate_monitor", None):
             try:
+                SovereignApp._reconcile_pass_rate_monitor_for_stage2_session(self)
                 self.pass_rate_monitor.save()
                 record_count = len(getattr(self.pass_rate_monitor, "records", []))
                 SovereignApp._shutdown_log(

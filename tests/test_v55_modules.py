@@ -373,6 +373,76 @@ class TestPassRateMonitor:
         assert "Pass Rate Monitor" in summary
         assert "Stage" in summary
 
+    def test_record_attempt_accepts_stage4_gate_repair_fields(self, tmp_path):
+        from modules.core.pass_rate_monitor import PassRateMonitor
+
+        monitor = PassRateMonitor(str(tmp_path))
+
+        monitor.record_attempt(
+            stage=4,
+            episode=12,
+            arc=2,
+            attempt_num=3,
+            success=False,
+            attempt_key="s4:ep12:arc2:a3:sess",
+            final_verdict="REJECT",
+            director_verdict="PASS",
+            gate_basis="strong_advisory_escalation_non_local_fix",
+            repair_scope="scene_rewrite",
+            fix_scope="full",
+            authoritative_fix_scope="scene_rewrite",
+            fix_pack={"target_kind": "scene_model"},
+            repair_contract={"provenance": "runtime_backfilled"},
+            scope_authority={"fix_scope": "full", "widened": True},
+            retry_budget_axes={"round": 3, "repair": "patch_revision"},
+            downstream_override_applied=True,
+            primary_failure_layer="downstream_gate",
+            strong_advisory_escalation={"triggered_by": ["flashback"]},
+        )
+
+        record = monitor.records[-1]
+        assert record.fix_scope == "full"
+        assert record.authoritative_fix_scope == "scene_rewrite"
+        assert record.repair_contract["provenance"] == "runtime_backfilled"
+        assert record.scope_authority["widened"] is True
+        assert record.downstream_override_applied is True
+        assert record.primary_failure_layer == "downstream_gate"
+
+    def test_reconcile_from_db_backfills_missing_stage2_attempts(self, tmp_path):
+        from modules.core.db_manager import DBManager
+        from modules.core.pass_rate_monitor import PassRateMonitor
+
+        db = DBManager(tmp_path / "project_data.db")
+        try:
+            db.save_stage_attempt(
+                stage=2,
+                verdict="PASS",
+                attempt_num=1,
+                ep_num=4,
+                arc_num=4,
+                score=91,
+                session_id="sess-reconcile",
+                attempt_key="s2:ep4:arc4:a1:sess-reconcile",
+                generation_method="four_phase",
+                candidate_key="balanced",
+                content_hash="hash-reconcile",
+                artifact_path="logs/artifacts/stage2/arc_004/attempt_01/final_arc__balanced.json",
+                fix_scope="inplace",
+            )
+
+            monitor = PassRateMonitor(str(tmp_path))
+            appended = monitor.reconcile_from_db(db, session_id="sess-reconcile", stages=(2,))
+
+            assert appended == 1
+            assert len(monitor.records) == 1
+            record = monitor.records[0]
+            assert record.stage == 2
+            assert record.attempt_key == "s2:ep4:arc4:a1:sess-reconcile"
+            assert record.final_verdict == "PASS"
+            assert record.artifact_path.endswith("final_arc__balanced.json")
+        finally:
+            db.close()
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TreeOfThoughts Tests (4분기)

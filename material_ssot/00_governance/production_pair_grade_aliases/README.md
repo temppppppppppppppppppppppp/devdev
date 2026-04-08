@@ -1,6 +1,6 @@
 # Production Pair Grade Aliases
 
-Snapshot date: `2026-04-06`
+Snapshot date: `2026-04-08`
 
 이 폴더는 live `TR + BI` pair의 등급 alias snapshot이다.
 정본 파일명은 유지하고, 이 폴더에서만 `{등급}_...` 파일명으로 본다.
@@ -10,6 +10,15 @@ Snapshot date: `2026-04-06`
 - `../production-pair-benchmark-spec-v1.md`
 
 이 alias snapshot은 감으로 붙이지 않고, 위 benchmark spec의 `P0 hard gates -> cap rules -> P1 score -> grade decision` 순서로 판정한 뒤에만 갱신한다.
+
+Operational interlock:
+
+- live alias operation also follows `../production-pair-operating-policy-addendum-v1.md`
+- untouched historical live pairs may temporarily keep a historical alias snapshot while carrying open `block_cider` migration debt
+- no pair may newly earn or refresh `GREENPLUS` or `GREEN` while open migration debt remains
+- report `benchmark grade` and `schema status` separately; do not collapse them into one label
+- the current filename list is an alias snapshot, and its live freshness should still be read together with `../production-pair-operational-registry-v1.md`
+- after the 2026-04-08 benchmark freshness wave, all aliased pairs listed below are benchmark-fresh on the current registry
 
 Legend:
 - `GREENPLUS_`: 지금 기준 상위권. protagonist-first 철학 보존도가 특히 높음.
@@ -22,6 +31,8 @@ Current aliases:
 - `GREENPLUS_office_checkup_next_day.md`
 - `GREENPLUS_chaebol_allowance_zero.md`
 - `GREENPLUS_chaebol_ent_empire.md`
-- `GREEN_투자물_골든_카나리아 테스트_canonical_v1.md` (`reference pair`, non-live)
+- `GREENPLUS_투자물_골든_카나리아 테스트_canonical_v1.md`
 - `GREENPLUS_wuxia_heavenly_physician.md`
 - `GREENPLUS_pantech_cyworld_reborn.md`
+- `GREEN_jangyeongshil_industrial_revolution.md`
+- `GREEN_manual_meridian_archivist.md`

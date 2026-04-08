@@ -8,7 +8,8 @@
     "treatments/preprocess/chaebol_allowance_zero/material_bundle_summary.json",
     "treatments/preprocess/chaebol_allowance_zero/profile_lock.json",
     "treatments/preprocess/chaebol_allowance_zero/phase0_ready_snapshot.json",
-    "treatments/chaebol_allowance_zero_phase0_design.json"
+    "treatments/phase0/chaebol_allowance_zero_phase0_design.json",
+    "treatments/02_chaebol_allowance_zero_tr_block_070_draft.json"
   ],
   "_draft_status": "ARC-01~07 complete (blocks 1-70). TR draft full.",
   "blocks": [
@@ -94,6 +95,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "structure",
+          "receipt_line": "돈은 0원 그대로.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -220,6 +227,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "긴급 배식 수수료와 폐기 예정 식자재 재배치로 2억을 만든다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -347,6 +360,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "셔틀·주차 관제권을 얻는 대신 기사 선지급·임시 보험료로 1억을 먼저 쓴다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -474,6 +493,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "꽃집 네 곳에서 영수증 분리 발행권을 가져오지만 선지급 약속으로 자본 1억을 다시 외상으로 걸어 장부상 0.5억으로 떨어진다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -595,6 +620,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "셔틀 노선 3개 공동 운영권 + 배정호와의 장기 라인 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -720,6 +751,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "직접 현금 증가는 없다.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -842,6 +879,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "세탁실 출입카드 기록 접근권 + 린넨 회전 로그 원본 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -963,6 +1006,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "청소팀 40명 계약 재설계권 + 공용 보너스 설계권 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1097,6 +1146,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "세탁·청소·셔틀 월 반복매출 약 1.5억/월 확정.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1225,6 +1280,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "이번 아크 exit — 호텔 백오브하우스(린넨실) 진입 입장권 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1351,6 +1412,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "호텔 린넨실 운영권 양수 검토 개시.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1486,6 +1553,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "유령업체 장부 시스템 예치 완료.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1611,6 +1684,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "미니바 무알콜·스낵·생수 유통권 + 청소 동기화 표준 절차 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1730,6 +1809,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "주차장 야간반 발렛 전표 교차 확인권 + 누수 환수 월 0.9억 (일 30만원×30일).",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1848,6 +1933,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "연회장 외주 2사 변동비 계약 전환 + 월 0.5억 외주비 절감.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -1973,6 +2064,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "위생 책임 전가 철회 + 린넨실 양수 유지 + 노현주 비공식 조력 관계 강화.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2102,6 +2199,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "배정호 세탁 공장 공동 인수 완료 (제로라인 30% + 배정호 20% + 은행 분할 50%).",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2222,6 +2325,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "호텔 BOH 영수증 실시간 분리 발행 설계안 확정 + 한유림의 시스템 언어 번역자 역할 공식화.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2340,6 +2449,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "호텔 BOH 표준양식 계약 수용 (2개 지점).",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2468,6 +2583,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "월말 정산서 한 장 표준양식이 호텔 BOH 공식 수용 + CFO가 공장·병원 확장 검토 동의.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2588,6 +2709,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "공장 구내식당 급식 실인원 연동 발주 시스템 설계권 + 최문갑과 첫 연결.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2706,6 +2833,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "폐기물 외주 재계약 권한 확보 + 주 3회 반출 표준 확정.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2824,6 +2957,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "공장 작업복 세탁 이관 계약 + 유령 인건비 40명 적발.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -2941,6 +3080,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "기숙사 청소·소모품 통합 계약 체결 + 월 0.4억 절감.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3070,6 +3215,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "산업안전 책임 전가 철회 + 폐기물 외주업체 전면 교체권 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3194,6 +3345,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "폐기물 코드 이원화 + 반출 단가 32% 절감 + 보험 리스크 분리 책정.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3317,6 +3474,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "통근버스 + 식당 발주 시간표 통합 + 새벽조 식판 오차 제거.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3437,6 +3600,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "하루 세 번 발주 도입 + 폐기율 40% → 12%.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3562,6 +3731,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "공장 3곳 통합 장부 도입 (화성 + 평택 2곳 수용, 청주는 추후).",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3686,6 +3861,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "CFO가 병원 지원 라인 확장 검토 동의.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3811,6 +3992,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "정채린과 첫 직통 라인 + 병원 감염 대응 패키지 설계권 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -3936,6 +4123,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "격리병동 린넨 회전 전담권 확보 + 월 반복매출 3.2억/월 추가 (팬데믹 특수).",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4061,6 +4254,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "정채린의 비공식 실행 지휘권 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4180,6 +4379,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "의료 소모품 실시간 재배치 시스템 도입 + 구매팀 중간 관리자 리베이트 적발.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4308,6 +4513,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "병원 지원 라인 축소 저지 + 외래 폐쇄 기간 감염 대응 확장 유지.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4432,6 +4643,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "음압병실 앞 청소·폐기물 묶음 운영권 + 감염 리스크 감소 45% 인증.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4557,6 +4774,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "광주·대전 지방 병원 소독차 네트워크 구축 + 민가온 지역 연합 첫 지분 제휴.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4612,7 +4835,13 @@
         "protagonist": "'다각 서비스 패키지 공급자'로 체급 변화.",
         "antagonist": "병원 행정실 + 기존 안내업체 이중 저항 해체."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "정채린",
+          "before": "병원 감염관리 공동 설계자",
+          "after": "발열 체크 패키지 확장을 승인하는 감염관리 실행 축"
+        }
+      ],
       "foreshadow": [
         "다각 패키지 공급 모델은 후속 분기 병원 소모품 공동구매로 진화."
       ],
@@ -4677,6 +4906,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "발열 체크 패키지 납품권 + 대기열 35% 감소 인증.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4797,6 +5032,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "감염 대응 매뉴얼 그룹 표준 채택 + 정채린이 그룹 감염관리 자문 확장 승인.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -4939,6 +5180,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "그룹 이사회 공식 인정 + 월 반복매출 합계 약 12.8억/월 (연환산 154억 포지션) 확정.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5066,6 +5313,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "그룹 정산 양식 통합 TF 구성권 확보 + 문태준(정산 자동화 개발자) 합류 검토.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5186,6 +5439,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "정산 자동화 미들웨어 프로토타입 착수 + 문태준 정식 합류 (제로라인 기술 총괄 포지션).",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5309,6 +5568,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "전자세금계산서 내부 14분 주기 도입 + 지급 리듬 실시간 장악.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5433,6 +5698,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "구매코드 4417 재배정권 확보 + 가격 후려치기 루트 1건 차단.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5563,6 +5834,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "정산 시스템 중단 사고 방어 + 계열사 양식 통합 강제 로드맵 승인.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5686,6 +5963,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "공장 손글씨 발주서 OCR 전환 완료 + 현장 감 발주 데이터 자산화.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5740,7 +6023,13 @@
         "protagonist": "'출입 기록이 곧 지급 권력'이라는 축의 완성자.",
         "antagonist": "정보보안팀 + 인사팀 이중 관할 해체."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "문태준",
+          "before": "정산 포털 내부 설계자",
+          "after": "출입기록-정산코드 연동 표준의 시스템 공동 설계자"
+        }
+      ],
       "foreshadow": [
         "출입카드-정산코드 연동 표준은 후속 분기 CFO 중앙 정산망 이양의 결정적 레버리지."
       ],
@@ -5812,6 +6101,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "세탁실 출입카드 기록의 정산 권력 전환 완료 + 그룹 전체 출입 기록-정산코드 연동 표준 수립.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -5868,7 +6163,13 @@
         "protagonist": "'공급망 협상력 지도 보유자'로 진화 — 지급 권력의 실질 무기화.",
         "antagonist": "서도윤 루머 대응 실패."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "공급망 협력사 30곳",
+          "before": "동일 지급 주기 안에 묶인 수동 협력사 집단",
+          "after": "민감도 지도로 등급이 나뉜 협상 대상 집합"
+        }
+      ],
       "foreshadow": [
         "민감도 지도는 후속 분기 공급망 대출 원장의 직접 기반."
       ],
@@ -5932,6 +6233,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "공급망 협력사 30곳 지급 타이밍 민감도 지도 확보 + 지급 주기 차별화 권한.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -6060,6 +6367,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "정산 포털 그룹 전체 일상 사용률 90% 확보 + 한유림의 시스템 내부 번역자 역할 공식화.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -6191,6 +6504,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "그룹 중앙 정산망 운영권 제로라인 이양 완료.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -6317,6 +6636,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "광주 청소연합 지분 제휴 체결 + 지역 12곳의 정산 포털 연동.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -6371,7 +6696,13 @@
         "protagonist": "'지역 중간 원청 구조 해체자'로 격상.",
         "antagonist": "지역 원청·서도윤 언론 플레이 무력화."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "열두 도시 지역 사장단",
+          "before": "각자 단가로 흩어진 지역 사장들",
+          "after": "통합 표를 공유하는 전국 제휴 후보군"
+        }
+      ],
       "foreshadow": [
         "단가 통합 표는 후속 분기 전국 열두 거점 완성의 직접 근거."
       ],
@@ -6435,6 +6766,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "열두 도시 단가 통합 표 공식화 + 7개 도시 추가 제휴 의향 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -6556,6 +6893,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "매각 거절 + 백도현 저점 매입 창구 차단.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -6610,7 +6953,13 @@
         "protagonist": "'차량·장비 공동 풀 운영자'로 확장.",
         "antagonist": "지역 리스사 관행 구조 해체."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "지역 리스사",
+          "before": "개별 리스 관행을 지키는 지역 공급자들",
+          "after": "공동 풀 기준을 받아들이는 운영 파트너 집합"
+        }
+      ],
       "foreshadow": [],
       "callback": [
         {
@@ -6667,6 +7016,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "전국 차량·장비 공동 풀 운영권 + 리스 비용 28% 절감.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -6783,6 +7138,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "대구 공백 12시간 내 메우기 성공 + 대구 업체 2곳 제로라인 합류.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -6906,6 +7267,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "공급망 대출 원장 공식 출범 + 협력사 30곳 운영자금 공급자 지위.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -7029,6 +7396,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "급식 매출채권 팩토링 라인 가동 + 최문갑 라인 현금흐름 안정화.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -7150,6 +7523,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "병원·호텔·공장 공동구매 협상권 + 단가 35% 인상력 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -7284,6 +7663,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "전국 열두 거점 완성 (네트워크 공식화).",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -7409,6 +7794,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "금감원 법적 검토 통과 + 협력사 50곳 대출 원장 공식 운영.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -7530,6 +7921,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "재무실이 제로라인에 운영자금 대여 공식 요청.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -7649,6 +8046,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "윤성건설 운영자금 80억 대여 실행 + 회수권 담보 계약 체결.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -7794,6 +8197,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "유언장 뒷면 조항 반전 성공 + 서도윤 단독 상속 자격 박탈 위협 확정.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -7922,6 +8331,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "서도윤 대금 지연 공격 무력화 + 지연 지시 증거 확보.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -8056,6 +8471,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "3개 거점 방어 + 백도현 600억 매입 무력화 + 이사회 여론 전환.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -8111,7 +8532,13 @@
         "protagonist": "가문 계열사 운영 공급자에서 '가문 일상 운영의 관문'으로 최종 포지셔닝.",
         "antagonist": "회장실 관행 무력화."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "계열사 대표들",
+          "before": "회장실 선확인을 관행으로 삼던 수요자들",
+          "after": "제로라인 조건표를 먼저 찾는 직접 방문 수요자들"
+        }
+      ],
       "foreshadow": [
         "'가문의 관문' 포지션은 후속 분기 표준계약 서명의 직접 명분."
       ],
@@ -8174,6 +8601,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "계열사 대표들의 제로라인 직접 방문 공식화 + '가문의 일상 운영은 제로라인을 거친다'는 사실 확정.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -8298,6 +8731,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "영구 운영수수료 약정 구조 확정 + 문태준 시스템 최종 고정.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -8443,6 +8882,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "가문 전체 제로라인 표준계약서 공동 서명 완료 + 재이의 '관문' 포지션 공식화.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -8570,6 +9015,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "capital",
+          "receipt_line": "백도현 대체 플랫폼 시도 자연 소멸 + 그룹 운영금융 계약 최종 서명.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -8732,6 +9183,12 @@
           "ability_name": null,
           "ability_source": null,
           "ability_used_for": null
+        },
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "authority",
+          "receipt_line": "최종 포지션: 연환산 반복 현금흐름 약 254억 + 운영 자산 네트워크 + 가문 공동 서명 표준계약 + 영구 운영수수료 수취권.",
+          "pain_only_exit": false
         }
       },
       "regression_ext": {
@@ -8777,5 +9234,6 @@
         69
       ]
     }
-  ]
+  ],
+  "_phase0_ref": "treatments/phase0/chaebol_allowance_zero_phase0_design.json"
 }

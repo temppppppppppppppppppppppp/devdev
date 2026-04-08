@@ -1,0 +1,29 @@
+{
+  "project_locator": "projects/_canary/canary_000_ㅇㅇㅇ_stage4_ep1_sinkproof_r1",
+  "proof_record_summary": {
+    "classification": "current",
+    "proof_origin": "current_workspace_refresh",
+    "project_locator": "projects/_canary/canary_000_ㅇㅇㅇ_stage4_ep1_sinkproof_r1",
+    "summary_path": "logs/canary_summary.json",
+    "companion_audit_path": "logs/canary_companion_audit.json",
+    "latest_session_id": "20260408_095913",
+    "refreshed_at": "2026-04-08T10:20:15"
+  },
+  "companion_audit_summary": {
+    "status": "ok",
+    "latest_session_id": "20260408_095913",
+    "row_count": 1,
+    "required_stage_attempt_fields": [
+      "attempt_key",
+      "candidate_key",
+      "content_hash",
+      "artifact_path",
+      "selection_reason",
+      "verdict_reason"
+    ],
+    "rows_missing_required_fields": [],
+    "director_companion_rows": 1,
+    "director_rationale_available": 1,
+    "note": "Same-run stage_attempt provenance/rationale fields must stand on their own; director_selections is companion evidence only."
+  }
+}

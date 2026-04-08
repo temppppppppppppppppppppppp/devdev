@@ -14,6 +14,7 @@ from modules.core.session_logger import SessionLogger
 from modules.core.stage3_context import Stage3Context
 from modules.core.stage3_orchestrator import (
     Stage3Orchestrator,
+    _build_stage3_source_anchor_summary,
     _build_stage3_work_focus_advisory,
     _select_stage3_anchor_recent_window,
 )
@@ -227,6 +228,34 @@ class TestGetEntityRegistry:
 
 
 class TestStageAttemptObservability:
+    def test_build_stage3_source_anchor_summary_surfaces_prev_bp_and_start_state(self):
+        summary = _build_stage3_source_anchor_summary(
+            {
+                "joint_docs": {"final_location": "SW인베스트먼트 사무실"},
+                "semantic_carryover": {"continuity_checkpoints": ["회귀 사실 유지"]},
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "SW인베스트먼트 사무실",
+                        "equipment": ["법인 인감", "CME 계좌 증빙"],
+                    }
+                },
+            },
+            [
+                {
+                    "ep_num": 1,
+                    "end_location": "서재 앞 복도",
+                    "opening_transition": {"type": "direct_continuation"},
+                }
+            ],
+        )
+
+        assert summary["previous_blueprint_ep"] == 1
+        assert summary["previous_blueprint_end_location"] == "서재 앞 복도"
+        assert summary["previous_blueprint_opening_transition_type"] == "direct_continuation"
+        assert summary["current_arc_start_location"] == "SW인베스트먼트 사무실"
+        assert summary["current_arc_start_inventory_count"] == 2
+        assert "anchor_surfaces" in summary
+
     def test_handle_success_persists_semantic_context_metadata(self, orch, app_mock):
         pipeline_result = {
             "final_verdict": "PASS",
@@ -242,6 +271,11 @@ class TestStageAttemptObservability:
                 "work_focus_present": True,
                 "provenance_ledger": {"source_pack": "stage3", "dropped_at": "stage3"},
                 "budget_ledger": {"budget_bucket": "smart_retrieval.stage3_total_budget", "configured_cap": 2400},
+                "source_anchor_summary": {
+                    "previous_blueprint_ep": 1,
+                    "previous_blueprint_end_location": "서재 앞 복도",
+                    "current_arc_start_location": "SW인베스트먼트 사무실",
+                },
             },
         }
 
@@ -262,6 +296,12 @@ class TestStageAttemptObservability:
         assert kwargs["advisory_flags"]["semantic_ctx_sources"] == ["db_npc_relationship", "vec_memory"]
         assert kwargs["advisory_flags"]["provenance_ledger"]["source_pack"] == "stage3"
         assert kwargs["advisory_flags"]["budget_ledger"]["budget_bucket"] == "smart_retrieval.stage3_total_budget"
+        assert kwargs["advisory_flags"]["source_anchor_summary"]["current_arc_start_location"] == "SW인베스트먼트 사무실"
+        assert any(
+            "source_anchor:" in str(call.args[0])
+            for call in app_mock.ui.log.call_args_list
+            if call.args
+        )
 
     def test_handle_failure_persists_failure_category_and_observability(self, orch, app_mock):
         pipeline_result = {
@@ -1168,6 +1208,10 @@ class TestGenerateBlueprint:
             "observation": {
                 "provenance_ledger": {"source_pack": "stage3"},
                 "budget_ledger": {"budget_bucket": "smart_retrieval.stage3_total_budget"},
+                "source_anchor_summary": {
+                    "previous_blueprint_ep": 1,
+                    "current_arc_start_location": "SW인베스트먼트 사무실",
+                },
             },
         }
 
@@ -1192,6 +1236,7 @@ class TestGenerateBlueprint:
         }
         assert result["_stage3_observability"]["planned_slots_count"] == 2
         assert result["_stage3_observability"]["provenance_ledger"]["source_pack"] == "stage3"
+        assert result["_stage3_observability"]["source_anchor_summary"]["previous_blueprint_ep"] == 1
 
 
 # ── Single Episode Processing ────────────────────────────────
@@ -1268,6 +1313,7 @@ class TestProcessSingleEpisode:
         assert kw["attempt_key"] == "s3:ep3:arc1:a2"
         assert kw["duration_ms"] == 4321
         assert kw["token_cost"] == 0.123
+        app_mock.pass_rate_monitor._save_records.assert_called_once()
         log_texts = [call.args[0] for call in app_mock.ui.log.call_args_list if call.args]
         assert any("blueprint success (verdict=PASS, strategy=A, score=87)" in text for text in log_texts)
         assert any(
@@ -1294,6 +1340,7 @@ class TestProcessSingleEpisode:
         assert kw["attempt_key"] == "s3:ep4:arc2:a1"
         assert kw["duration_ms"] == 987
         assert kw["token_cost"] == 0.456
+        app_mock.pass_rate_monitor._save_records.assert_called_once()
         log_texts = [call.args[0] for call in app_mock.ui.log.call_args_list if call.args]
         assert any("REJECT 사유:" in text for text in log_texts)
         assert any("category=" in text and "strategy=B" in text for text in log_texts)

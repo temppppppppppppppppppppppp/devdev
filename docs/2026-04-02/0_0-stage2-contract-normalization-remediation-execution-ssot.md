@@ -1,14 +1,14 @@
 # 0_0 Stage2 Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (2026-04-06 re-audited and promoted from parked after live validation/finalizer revalidation confirmed a still-live Stage2 persistence-authority seam; the bounded preflight/validation/finalizer persistence tranche, the bounded Flow Guard severity tranche, and the same-day bounded non-wuxia persistence state-cleanup tranche have now landed as child slices inside this SSOT, while broader Stage2 normalization remains queued behind them)
+Status: partially_realized (2026-04-06 re-audited and promoted from parked after live validation/finalizer revalidation confirmed a still-live Stage2 persistence-authority seam; the bounded preflight/validation/finalizer persistence tranche, the bounded Flow Guard severity tranche, and the same-day bounded non-wuxia persistence state-cleanup tranche have now landed as child slices inside this SSOT, a later 2026-04-08 bounded observability follow-up then surfaced authoritative carryover location/inventory/finance summaries through Stage2 runtime, DB, and operator-visible sinks, and the newest same-day follow-up landed a Stage2 decision/proof-digest hardening slice; the later `projects/000_260408` proof-wave merge audit then showed those proof sinks were only partially closed, and the new `projects/000_260408_B` proof-wave merge audit now validates the bounded proof-sink tranche materially: DB `ui_events` carryover parity, `pass_rate_monitor` parity, `proof_digest.stages.stage2`, and `proof_digest.operational_metadata.stage2_live_session` are live, while the residual `warn` narrows to `director_selections.verdict_reason` drift plus 6 intermediate decision rows without `attempt_key`; broader Stage2 normalization stays queued behind that residual sink hygiene)
 Canonical Path: `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2 survey docs and lane drafts untracked`
-- Resume Commit: `5428daf989bb8dd91aa12f86a137d899596fed4a`
-- Resume Drift Summary: `2026-04-05 bounded Stage2 realization slices narrowed the lane, the 2026-04-06 global P0-P1 Opus survey confirmed two still-live Stage2 persistence seams, the 2026-04-06 Golden bounded survey added one residual artifact-truth P1 plus abrupt-shutdown observability debt, the workspace then landed truth-preserving packet merges across `stage2_preflight_runtime.py`, `stage2_validation_pipeline.py`, `stage2_finalizer.py`, and `stage2_contracts.py`, the current workspace additionally landed a bounded Flow Guard severity split in `stage2_validation_pipeline.py`, and the same-day bounded finalizer persistence cleanup now strips non-wuxia `internal_energy` / `realm` / `qi_nature` / `martial_arts` state noise both before and after `validate_arc()` so accepted artifacts no longer silently rehydrate those fields at save time`
+- Resume Commit: `6dd7712ea9a58802221634081ba199bc872d2349`
+- Resume Drift Summary: `2026-04-05 bounded Stage2 realization slices narrowed the lane, the 2026-04-06 global P0-P1 Opus survey confirmed two still-live Stage2 persistence seams, the 2026-04-06 Golden bounded survey added one residual artifact-truth P1 plus abrupt-shutdown observability debt, the workspace then landed truth-preserving packet merges across `stage2_preflight_runtime.py`, `stage2_validation_pipeline.py`, `stage2_finalizer.py`, and `stage2_contracts.py`, the current workspace additionally landed a bounded Flow Guard severity split in `stage2_validation_pipeline.py`, the same-day bounded finalizer persistence cleanup then strips non-wuxia `internal_energy` / `realm` / `qi_nature` / `martial_arts` state noise both before and after `validate_arc()` so accepted artifacts no longer silently rehydrate those fields at save time, the later 2026-04-08 follow-up in `stage2_finalizer.py` then persisted compact carryover-authority summaries for start/end location, inventory, and finance facts so later proof waves can see the authoritative Stage2 packet truth without reopening the lane into a broader redesign, the newest same-day follow-up across `stage2_finalizer.py` plus `audit_service.py` then landed a Stage2 decision/proof-digest hardening slice, the later `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md` confirmed that slice only partially closed runtime proof, and the newer `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md` now shows the proof-blocking sinks materially repaired while residual `warn` scope narrows to companion verdict parity plus intermediate decision-row linkage`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
 - `docs/2026-04-01/0_0-stage2-stage3-context-hierarchy-bounded-survey.md`
@@ -16,10 +16,17 @@ Source Survey Docs:
 - `docs/2026-04-05/00_0405-stage2-artifact-truth-observability-bounded-survey.md`
 - `docs/2026-04-06/rol-global-terminal2-stage2-pipeline-p0p1.md`
 - `docs/2026-04-06/01_golden_stage2_p0_p3_bounded_survey.md`
+- `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md`
+- `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-evidence.json`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-evidence.json`
 - `docs/2026-04-05/00_0405-stage2-artifact-truth-observability-evidence.json`
+- `projects/000_260408/project_data.db`
+- `projects/000_260408/logs/runtime_audit_summary.json`
+- `projects/000_260408/logs/pass_rate_monitor.json`
+- `projects/000_260408/logs/session/decisions.jsonl`
+- `projects/000_260408/logs/session/ui_events.jsonl`
 Side-Effect Coverage: covered
 
 ## 1. Intent
@@ -1027,6 +1034,130 @@ Residual scope:
 
 Confidence for this landed slice: `97%`
 
+## 36. 2026-04-08 Fresh Proof-Wave Validation Upgrade (`000_260408_B`)
+
+Evidence basis:
+
+- `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md`
+- `projects/000_260408_B/project_data.db`
+- `projects/000_260408_B/logs/runtime_audit_summary.json`
+- `projects/000_260408_B/logs/pass_rate_monitor.json`
+- `projects/000_260408_B/logs/session/decisions.jsonl`
+- `projects/000_260408_B/logs/session/ui_events.jsonl`
+
+Fresh proof-wave verdict:
+
+1. the previously front-blocking Stage2 proof-sink tranche is now materially validated on the fresh rerun:
+   - DB `ui_events` now has `3` `carryover_authority` rows, matching session JSONL
+   - `logs/pass_rate_monitor.json` now has `3` committed Stage2 rows with clean attempt/hash/artifact parity
+   - `logs/session/decisions.jsonl` now has `9` Stage2 rows including `3` `arc_final` rows with `session_id`, `attempt_key`, `candidate_key`, `artifact_path`, `selection_reason`, `verdict_reason`, `fix_scope_reasoning`, and compact `carryover_authority`
+   - `runtime_audit_summary.json` now has `proof_digest.available = true`, `proof_digest.stages.stage2`, and `proof_digest.operational_metadata.stage2_live_session.status = "ok"`
+2. the residual Stage2 `warn` is now narrow rather than tranche-blocking:
+   - `director_selections.verdict_reason` is blank on `3/3` while `stage_attempts` and `arc_final` are populated
+   - `session_decision_rows_without_attempt_key = 6` comes only from the intermediate `3 x arc` plus `3 x arc_design` rows
+3. contradiction cleanup from the five-terminal survey is now canonical:
+   - `rationale_metadata_missing = 3` is driven by `director_selections.verdict_reason`, not by blank `arc_final.meta.reason`
+   - do not promote the Terminal 5 mojibake claim; live UTF-8 DB readback was clean
+   - do not promote the Terminal 3 Stage2-source-blank reading; `stage_attempts.selection_reason`, `verdict_reason`, and `fix_scope_reasoning` are populated on all `3` rows
+4. lower-tier residuals remain inside the same lane:
+   - preview lists stay intentionally capped at `3` items
+   - `director_selections.selected_label` remains blank
+   - arc 3 still carries a latent asset-math semantic contradiction inside `verdict_reason`
+
+Execution consequence:
+
+- treat the old Stage2 proof-sink repair tranche as runtime-validated at the proof-blocking level
+- keep the remaining Stage2 work inside this same SSOT as bounded sink hygiene rather than as the next front proof blocker
+- do not open a new queue lane and do not reorder the queue from this validation alone
+- shift the next useful proof artifact to a rerun that actually reaches Stage3; only reopen code here first if the operator explicitly wants to clear the residual `warn` before that rerun
+
+Confidence for this validation upgrade: `97%`
+
+## 34. 2026-04-08 Bounded Realization: Final Decision / Proof-Digest Surfacing Hardened
+
+Implementation evidence:
+
+- `modules/core/stage2_finalizer.py`
+- `modules/core/services/audit_service.py`
+- `tests/test_stage2_finalizer.py`
+- `tests/test_audit_service.py`
+
+What changed:
+
+1. Stage2 final persistence now emits an additional authoritative `session_logger.log_decision` row with `attempt_key`, `candidate_key`, `artifact_path`, `selection_reason`, `verdict_reason`, `fix_scope_reasoning`, and compact `carryover_authority`
+2. `audit_service.py` now contains the Stage2-specific proof-digest path that is intended to surface Stage2 attempt coverage, decision-row coverage, artifact-path coverage, and the latest carryover-authority event snapshot
+3. the code-level goal of this slice is to keep Stage2 proof triage from depending only on DB readback when fresh runs need quick operator-visible attribution
+
+Execution consequence:
+
+- the landed code narrowed the Stage2 evidence problem to a bounded proof-sink question rather than a broad contract redesign question
+- later `projects/000_260408` runtime evidence confirmed this slice is only partially realized at the sink layer: structured carryover truth survives across DB/director/jsonl, but summary/session parity still remains incomplete
+
+Targeted verification:
+
+- `pytest tests/test_stage2_finalizer.py -k "authoritative_session_decision or pass_metrics_fall_back_to_director_compare_meta_for_selection_reason" -q`
+- `pytest tests/test_audit_service.py -k "operational_metadata" -q`
+- `python -m py_compile modules/core/stage2_finalizer.py modules/core/services/audit_service.py tests/test_stage2_finalizer.py tests/test_audit_service.py`
+- `ruff check modules/core/stage2_finalizer.py modules/core/services/audit_service.py tests/test_stage2_finalizer.py tests/test_audit_service.py`
+
+Residual scope after this landed slice:
+
+- broader Stage2 mission-authority / alias / dead-field normalization still remains inside this SSOT
+- abnormal-shutdown observability debt from `01_golden` still remains separate
+- fresh live-run proof is still required before closure
+- Stage2 proof-sink parity still remains open: DB `ui_events` misses `carryover_authority`, `decisions.jsonl` still lacks attempt-level join keys and reasoning surfaces, `pass_rate_monitor` remains empty, and `proof_digest.operational_metadata.stage2_live_session` is still absent in the latest fresh run
+
+Confidence for this landed slice: `97%`
+
+## 35. 2026-04-08 Fresh Proof-Wave Merge Revalidation
+
+Evidence basis:
+
+- `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md`
+- `projects/000_260408/project_data.db`
+- `projects/000_260408/logs/runtime_audit_summary.json`
+- `projects/000_260408/logs/pass_rate_monitor.json`
+- `projects/000_260408/logs/session/decisions.jsonl`
+- `projects/000_260408/logs/session/ui_events.jsonl`
+- `projects/000_260408/logs/artifacts/stage2/arc_001/attempt_01/final_arc__balanced.json`
+- `projects/000_260408/logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json`
+- `projects/000_260408/logs/artifacts/stage2/arc_003/attempt_01/final_arc__conservative.json`
+
+Fresh proof-wave verdict:
+
+1. the Stage2 carryover-authority slice is now materially real at the structured runtime layer:
+   - `stage_attempts.advisory_flags.carryover_authority`
+   - `director_selections.advisory_warnings.carryover_authority`
+   - `logs/session/ui_events.jsonl` `event_kind = carryover_authority`
+   all agree for `ep1 -> ep2 -> ep3`
+2. the same proof wave also confirms the Stage2 proof-sink repair is not closed:
+   - DB `ui_events` has `0` `carryover_authority` rows while `ui_events.jsonl` has `3`
+   - `logs/session/decisions.jsonl` still contains only `arc` / `arc_design` summary rows and still omits `attempt_key`, `candidate_key`, `artifact_path`, `fix_scope_reasoning`, and `advisory_flags.carryover_authority`
+   - `arc_design.meta.fix_scope` stays blank on all `3` rows despite `stage_attempts.fix_scope = "inplace"`
+   - `logs/pass_rate_monitor.json` remains `0` records despite `3` committed Stage2 PASS rows
+   - `runtime_audit_summary.json` still has `proof_digest.available = false`, `proof_digest.stages = {}`, and no `proof_digest.operational_metadata.stage2_live_session`
+3. some missing reasoning fields are not sink-only loss:
+   - `stage_attempts.selection_reason` is blank on `3/3`
+   - `stage_attempts.verdict_reason` is blank on `3/3`
+   - `director_selections.verdict_reason` is blank on `3/3`
+   - `director_selections.selection_reason` survives only on `ep1`
+4. lower-tier residuals remain inside the same lane:
+   - `end_inventory_preview` stays stale on `ep2` / `ep3`
+   - `arc_003` keeps a structured-vs-prose inventory mismatch (`end_inventory_count = 7` vs artifact prose `소지품: 변경 없음`)
+
+Execution consequence:
+
+- keep this inside the existing Stage2 SSOT; do not open a new queue lane
+- the next bounded Stage2 tranche is now explicit:
+  - session decision sink parity
+  - `pass_rate_monitor` parity
+  - `proof_digest.operational_metadata.stage2_live_session`
+  - DB `ui_events` parity for `carryover_authority`
+- do not widen this into a broad Stage2 contract rewrite from this audit alone
+- keep Stage2 ahead of Stage3 for the next proof-oriented follow-up because Stage2 now has fresh, concrete sink drift while Stage3 still lacks an exercised sample
+
+Confidence for this revalidation: `97%`
+
 ## 32. 2026-04-07 Bounded Realization: Non-Wuxia Persistence State Cleanup Landed
 
 Implementation evidence:
@@ -1059,5 +1190,38 @@ Residual scope after this landed slice:
 - explicit fresh live-run impact check for the broader Stage2 residual SSOT before any wider reactivation
 - remaining mission-authority / alias / dead-field normalization still queued inside the same SSOT
 - abnormal-shutdown observability debt from `01_golden`
+
+Confidence for this landed slice: `97%`
+
+## 33. 2026-04-08 Bounded Realization: Carryover-Authority Observability Surfaced
+
+Implementation evidence:
+
+- `modules/core/stage2_finalizer.py`
+- `tests/test_stage2_finalizer.py`
+
+What changed:
+
+1. Stage2 finalizer now builds a compact `carryover_authority` summary from the authoritative Stage2 packet surfaces
+2. the summary pins start/end location, start/end inventory counts and previews, plus finance hints such as `total_assets` / `capital` / `investment_calc`
+3. the same summary now persists into `stage_attempts.advisory_flags` and `director_selections.advisory_warnings`
+4. operator-visible logs now echo a bounded `[Stage2 Carryover Authority]` line so later upstream proof waves can see which Stage2 facts were actually packaged
+
+Execution consequence:
+
+- later fresh runs can distinguish Stage2 packet truth from downstream Blueprint/Writer drift more quickly
+- this follow-up is observability-only and does not reopen broader Stage2 normalization or queue rank
+
+Targeted verification:
+
+- `pytest tests/test_stage2_finalizer.py -k "carryover_authority or pass_metrics_persist_carryover_authority_summary" -q`
+- `python -m py_compile modules/core/stage2_finalizer.py tests/test_stage2_finalizer.py`
+- `ruff check modules/core/stage2_finalizer.py tests/test_stage2_finalizer.py`
+
+Residual scope after this landed slice:
+
+- broader Stage2 mission-authority / alias / dead-field normalization still remains inside this SSOT
+- abnormal-shutdown observability debt from `01_golden` still remains separate
+- fresh live-run proof is still required before closure
 
 Confidence for this landed slice: `97%`

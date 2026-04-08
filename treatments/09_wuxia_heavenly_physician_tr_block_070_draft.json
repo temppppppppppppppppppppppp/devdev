@@ -164,7 +164,65 @@
           "가문/세가 정치"
         ]
       },
-      "block_no": 1
+      "block_no": 1,
+      "genre_ext": {
+        "realm_before": "없음 (의술 경지 진입 전, 내공 미자각)",
+        "realm_after": "침의(鍼醫) 입문 (정확도 약30%, 통제 불가)",
+        "internal_energy_before": "0.5갑자 미만 (미자각 상태)",
+        "internal_energy_after": "0.5갑자 (의무일체 발현으로 내공 자각, 그러나 통제 불가)",
+        "martial_arts_acquired": [
+          "의무일체 기본 침법 (첫 발현, 미숙)"
+        ],
+        "martial_arts_used": [
+          "의무일체 기본 침법 (극천혈 치료 시 무의식 발현)"
+        ],
+        "injury_status": {
+          "current": "극심한 체력 소모로 탈진. 경맥 자체에 손상은 없으나 3일간 움직이지 못할 정도의 기력 고갈.",
+          "change": "정상 → 기력 고갈 (내공 과소비)"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원",
+          "change": "변동 없음. 가문 내 입지는 여전히 최하위이나, 능력 발현으로 주목받기 시작"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "진가장 막내. 무공 자질 없는 의원. 무림에는 이름조차 알려지지 않음",
+          "after": "진가장 내부에서만 '이상한 침법으로 소풍을 살린 막내'로 소문. 외부에는 아직 알려지지 않음"
+        },
+        "action_type": "치료 (형 소풍의 끊어진 경맥 봉합)",
+        "opponent": {
+          "name": "없음 (치료 블록). 간접 적대: 큰형 진무강의 사술 의심",
+          "sect_or_faction": "진가장 내부",
+          "weakness_exploited": "해당 없음 (전투 블록 아님)"
+        },
+        "strategy": "합곡-내관-극천 경혈 라인을 따라 침을 놓되, 끊어진 경맥에 침을 통해 내공을 직접 흘려보내는 본능적 시도",
+        "success_pattern": "치료 성공 — 형의 경맥 봉합. 그러나 소백 자신은 탈진으로 쓰러짐. 가문 내 사술 의심 촉발",
+        "leverage_used": [
+          "은침 한 벌",
+          "경혈 지식 (합곡/내관/극천)",
+          "의맥(선천 — 본인 미인지)",
+          "형을 살리겠다는 절박함"
+        ],
+        "martial_domain": "정파 무림 (진가장 내부)",
+        "active_domains": [
+          "치료/의술",
+          "가문/세가 정치"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원",
+          "change": "변동 없음. 가문 내 입지는 여전히 최하위이나, 능력 발현으로 주목받기 시작"
+        },
+        "enemy_pressure": "넷째 형 진소풍이 외부 초청 고수와 비무 중 경맥을 직격당해 쓰러진다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "넷째 형 소풍의 경맥이 이어져 폐인 위기에서 벗어난다.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 2",
@@ -281,7 +339,61 @@
           "치료/의술 (간접)"
         ]
       },
-      "block_no": 2
+      "block_no": 2,
+      "genre_ext": {
+        "realm_before": "침의(鍼醫) 입문 (정확도 약30%, 통제 불가)",
+        "realm_after": "침의(鍼醫) 입문 (정확도 약30%, 통제 불가)",
+        "internal_energy_before": "0.5갑자",
+        "internal_energy_after": "0.5갑자 (탈진 회복. 내공 수치 변동 없음)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "기력 고갈에서 회복 중. 일상 활동 가능하나 침술 사용 시 체력 소모 극심할 것으로 예상.",
+          "change": "기력 고갈 → 회복 중 (3일 안정)"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 조건부 진료 허가 (감시 병행)",
+          "change": "축출 위기에서 조건부 공인 의원으로 전환. 부상자 치료 공식 허가. 소풍/혜란이 아군으로 확보"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "진가장 내부에서만 '이상한 침법으로 소풍을 살린 막내'로 소문. 외부에는 아직 알려지지 않음",
+          "after": "진가장 내부에서 '형을 살린 가문 의원'으로 공식화. 외부에는 여전히 알려지지 않음"
+        },
+        "action_type": "가문 정치 (장로회 심문 대응)",
+        "opponent": {
+          "name": "큰형 진무강 + 삼형 진소검 + 장로 2인",
+          "sect_or_faction": "진가장 내부 무공파",
+          "weakness_exploited": "소풍의 생존이라는 반박 불가능한 증거와 혜란의 고서 발굴로 사술 규정 논리를 와해"
+        },
+        "strategy": "소백이 먼저 맥진 시연으로 '결과'를 장로들 앞에 내밀어 사술 논리에 균열을 냄. 출처를 말로 설명하지 못하는 약점을 의원의 실증으로 돌파한 것. 이후 소풍의 증언과 혜란의 고서가 균열을 확대하고, 아버지의 최종 결정이 '축출 없음 + 공인 진료'로 떨어지면서 자리를 얻음",
+        "success_pattern": "축출 위기를 넘겨 조건부 공인 의원 자격 획득. 아군 확보 + 공식 진료 허가. 사술 의심은 해소되지 않았으나 함부로 밀어낼 수 없는 자리를 얻음",
+        "leverage_used": [
+          "소백의 맥진 시연 (경맥 회복 경과 실증 — protagonist-first agency)",
+          "소풍의 증언 (경맥 치료 실증)",
+          "혜란의 고서 발굴 (의무일체 실존 증거)",
+          "아버지의 '축출 없음 + 공인 진료' 결정"
+        ],
+        "martial_domain": "정파 무림 (진가장 내부)",
+        "active_domains": [
+          "가문/세가 정치",
+          "치료/의술 (간접)"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 조건부 진료 허가 (감시 병행)",
+          "change": "축출 위기에서 조건부 공인 의원으로 전환. 부상자 치료 공식 허가. 소풍/혜란이 아군으로 확보"
+        },
+        "enemy_pressure": "큰형 진무강이 장로회를 소집한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "faction_power",
+          "receipt_line": "소백은 축출을 면한 것을 넘어, 아버지 진천웅의 결정으로 '시험 기간 조건부 공인 의원' 자격을 얻는다.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 3",
@@ -396,7 +508,62 @@
           "감정/관계"
         ]
       },
-      "block_no": 3
+      "block_no": 3,
+      "genre_ext": {
+        "realm_before": "침의(鍼醫) 입문 (정확도 약30%, 통제 불가)",
+        "realm_after": "침의(鍼醫) 입문 (정확도 약32%, 순수 침술 소폭 향상)",
+        "internal_energy_before": "0.5갑자",
+        "internal_energy_after": "0.5갑자 (내공 사용 자제. 변동 없음)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "순수 경혈 자극 침술 (내공 미사용)"
+        ],
+        "injury_status": {
+          "current": "정상. 첫 무의식 발현 직후의 탈진에서 완전 회복.",
+          "change": "회복 중 → 정상"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 약방 조건부 접근권 획득",
+          "change": "마을 진료 실적으로 약방 접근권 획득. 진료 기반이 실질적으로 확대"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "진가장 내부에서 '의무일체 의심 대상'으로 공식화. 외부에는 여전히 알려지지 않음",
+          "after": "근교 마을에서 '진가장 막내 의원'으로 소박한 인정. 무림 전체에는 무명"
+        },
+        "action_type": "치료 (마을 환자 진료 + 약초 결합 시도)",
+        "opponent": {
+          "name": "없음 (치료/교류 블록). 간접 위협: 기이한 열병(독역 초기)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "장로회 감시를 피하기 위해 내공 없는 순수 침술만 사용. 매화의 약초 지식을 결합하여 한계 보완",
+        "success_pattern": "증상 완화 성공이나 완치 실패. 침+약초 결합 가능성 발견이라는 부분 성과",
+        "leverage_used": [
+          "경혈 지식",
+          "매화의 약초 배합 지식",
+          "마을 의원 경험"
+        ],
+        "martial_domain": "민간 (마을 의료)",
+        "active_domains": [
+          "치료/의술",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 약방 조건부 접근권 획득",
+          "change": "마을 진료 실적으로 약방 접근권 획득. 진료 기반이 실질적으로 확대"
+        },
+        "enemy_pressure": "진가장 근교 마을에서 독역 초기 증상을 보이는 노인이 발견된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "독역 초기 환자를 일시 완화시키는 데 성공.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 4",
@@ -516,7 +683,62 @@
           "탐색/조사"
         ]
       },
-      "block_no": 4
+      "block_no": 4,
+      "genre_ext": {
+        "realm_before": "침의(鍼醫) 입문 (정확도 약32%, 순수 침술 소폭 향상)",
+        "realm_after": "침의(鍼醫) 초기 (정확도 약38%, 기초 경혈 체화)",
+        "internal_energy_before": "0.5갑자",
+        "internal_energy_after": "0.5갑자 (내공 사용 자제 지속. 변동 없음)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "순수 경혈 자극 침술 (합곡/곡지/족삼리/양관/중완/풍지 등)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 마을 역병 정찰 임무 공인",
+          "change": "독역 관찰 보고가 장로회에 올라가며, 마을 순회 진료가 가문 공인 임무로 격상. 감시가 보고 수령으로 전환"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "근교 마을에서 '진가장 막내 의원'으로 소박한 인정. 무림 전체에는 무명",
+          "after": "근교 3개 마을에서 '실력 있는 젊은 의원'으로 평판 소폭 상승. 무림에는 여전히 무명"
+        },
+        "action_type": "치료 + 탐색/조사 (독역 관찰 데이터 수집)",
+        "opponent": {
+          "name": "없음 (치료/탐색 블록). 간접 위협: 확산하는 기이한 열병(독역)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "같은 경혈 조합을 내공 유무 환자에게 동일 시술하여 반응 차이를 관찰. 약초 배합을 변형하여 체질별 대응",
+        "success_pattern": "독역 메커니즘에 대한 최초 관찰. 그러나 치료법은 미확보. 기초 축적형 성과",
+        "leverage_used": [
+          "기초 경혈 지식 (합곡/곡지/족삼리 등)",
+          "매화의 약초 배합",
+          "환자 4명 비교 관찰 데이터"
+        ],
+        "martial_domain": "민간 (마을 의료)",
+        "active_domains": [
+          "치료/의술",
+          "탐색/조사"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 마을 역병 정찰 임무 공인",
+          "change": "독역 관찰 보고가 장로회에 올라가며, 마을 순회 진료가 가문 공인 임무로 격상. 감시가 보고 수령으로 전환"
+        },
+        "enemy_pressure": "마을 순회 중 독역 초기 환자가 3명 더 발견된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "독역의 핵심 메커니즘 — 내공이 높을수록 치명적 — 에 대한 최초의 관찰 데이터를 확보.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 5",
@@ -638,7 +860,64 @@
           "감정/관계"
         ]
       },
-      "block_no": 5
+      "block_no": 5,
+      "genre_ext": {
+        "realm_before": "침의(鍼醫) 초기 (정확도 약38%, 기초 경혈 체화)",
+        "realm_after": "침의(鍼醫) 초기 (정확도 약42%, 의념 집중법 터득)",
+        "internal_energy_before": "0.5갑자",
+        "internal_energy_after": "0.7갑자 (의무일체 의식적 발현으로 내공 미량 증가)",
+        "martial_arts_acquired": [
+          "의무일체 의념 집중법 (백무명 전수, 기초 단계)"
+        ],
+        "martial_arts_used": [
+          "의무일체 기본 침법 (의식적 발현 첫 성공, 미약)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음. 의식적 발현 시 체력 소모 있으나 첫 무의식 발현 당시 수준의 탈진은 아님"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 마을 역병 정찰 임무 수행 중",
+          "change": "공인 지위 유지. 백무명 접촉은 비밀"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "근교 3개 마을에서 '실력 있는 젊은 의원'으로 평판 소폭 상승. 무림에는 여전히 무명",
+          "after": "변동 없음 (백무명과의 만남은 비밀)"
+        },
+        "action_type": "기연/깨달음 (의무일체 핵심 원리 파악)",
+        "opponent": {
+          "name": "없음 (기연 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "'살려야 한다'는 절박한 의념을 침끝에 실어 의무일체를 의식적으로 발현시키는 시도",
+        "success_pattern": "의식적 발현 첫 성공. 미약하지만 통제의 실마리를 잡음. 스승 후보 접촉이라는 전략적 성과",
+        "leverage_used": [
+          "백무명의 시범과 지도",
+          "독역 환자에 대한 절박함(감정 동기)",
+          "첫 무의식 발현의 기억"
+        ],
+        "martial_domain": "정파 무림 (비공식)",
+        "active_domains": [
+          "수련/성장",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 마을 역병 정찰 임무 수행 중",
+          "change": "공인 지위 유지. 백무명 접촉은 비밀"
+        },
+        "enemy_pressure": "산길에서 정체불명의 노인이 소백 앞에 나타난다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "의무일체의 의식적 발현에 처음 성공 — '의념을 침에 싣는다'는 핵심 원리를 파악.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 6",
@@ -752,7 +1031,60 @@
           "가문/세가 정치"
         ]
       },
-      "block_no": 6
+      "block_no": 6,
+      "genre_ext": {
+        "realm_before": "침의(鍼醫) 초기 (정확도 약42%, 의념 집중법 터득)",
+        "realm_after": "침의(鍼醫) 초중기 (정확도 약45%, 경지 체계 인지로 목표 명확화)",
+        "internal_energy_before": "0.7갑자",
+        "internal_energy_after": "0.8갑자 (의념 수련 지속, 소폭 증가)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 서고 의서 접근권 추가 획득",
+          "change": "아버지의 조건부 허가로 서고 의서 접근권 획득. 금서 침입은 비밀 유지"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "변동 없음 (백무명과의 만남은 비밀)",
+          "after": "변동 없음"
+        },
+        "action_type": "탐색/조사 (가문 서고 금서 탐색)",
+        "opponent": {
+          "name": "없음 (탐색 블록). 잠재적 위협: 장로회 감시",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "혜란의 정보를 바탕으로 서고 금서 구역 잠입. 의무일체 기록 암기 후 흔적 없이 퇴각",
+        "success_pattern": "경지 체계 파악 성공. 아버지와 마주쳤으나 묵인. 비밀 유지 성공",
+        "leverage_used": [
+          "혜란의 서고 정보",
+          "기억력(기록 암기)",
+          "아버지의 의무일체에 대한 사전 지식(결과적으로 묵인 유도)"
+        ],
+        "martial_domain": "진가장 내부",
+        "active_domains": [
+          "탐색/조사",
+          "가문/세가 정치"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 서고 의서 접근권 추가 획득",
+          "change": "아버지의 조건부 허가로 서고 의서 접근권 획득. 금서 침입은 비밀 유지"
+        },
+        "enemy_pressure": "혜란의 도움으로 소백은 가문 서고 금서 구역에 몰래 잠입한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "의무일체 경지 체계 7단계의 존재를 확인 — 자신이 걸어야 할 길의 지도를 얻음.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 7",
@@ -864,7 +1196,66 @@
           "가문/세가 정치"
         ]
       },
-      "block_no": 7
+      "block_no": 7,
+      "genre_ext": {
+        "realm_before": "침의(鍼醫) 초중기 (정확도 약45%, 경지 체계 인지로 목표 명확화)",
+        "realm_after": "침의(鍼醫) 중기 (정확도 약50%, 전투적 활용 첫 성공)",
+        "internal_energy_before": "0.8갑자",
+        "internal_energy_after": "1.0갑자 (비무 중 의무일체 실전 사용으로 내공 소폭 증가)",
+        "martial_arts_acquired": [
+          "의무일체 혈도 봉쇄 기법 (내관혈 단일 경혈, 전투 적용)"
+        ],
+        "martial_arts_used": [
+          "의무일체 기본 침법 (의념 집중)",
+          "의무일체 혈도 봉쇄 기법 (내관혈)"
+        ],
+        "injury_status": {
+          "current": "비무 중 경미한 타박상 (좌측 어깨). 회피 실패 1회로 검등에 맞음.",
+          "change": "정상 → 경미한 타박상 (1주 내 자연 회복 예상)"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 비무 승리로 실력 공인",
+          "change": "비무 승리로 가문 내 위상 변화: 조건부 공인 의원→실력까지 증명된 의원. 사술 논란은 약화됐으나 소멸되지 않음"
+        },
+        "kill_count": 0,
+        "spare_count": 1,
+        "jianghu_reputation": {
+          "before": "변동 없음",
+          "after": "진가장 내부에서 '침으로 무인을 제압한 막내'라는 소문. 외부에는 미전파"
+        },
+        "action_type": "비무/전투 (가문 내부 수련 비무)",
+        "opponent": {
+          "name": "삼형 진소검의 측근 제자 (이류 초입 검사)",
+          "sect_or_faction": "진가장 내부",
+          "weakness_exploited": "공격을 위해 팔을 뻗는 순간 내관혈이 노출되는 검법 습관. 수비보다 공격에 치우친 자세의 빈틈"
+        },
+        "strategy": "3차례 회피로 상대 패턴 파악 후, 공격 시 노출되는 내관혈에 은침+의념으로 혈도 봉쇄",
+        "success_pattern": "비무 승리. 가문 충격. 그러나 내공 소모 극심하고 더 강한 상대에게는 불가능한 수준",
+        "leverage_used": [
+          "은침",
+          "의무일체 혈도 봉쇄(내관혈)",
+          "산길 순회로 단련된 민첩함",
+          "상대 검법 패턴 관찰"
+        ],
+        "martial_domain": "정파 무림 (진가장 내부)",
+        "active_domains": [
+          "비무/전투",
+          "가문/세가 정치"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 공인 의원 — 비무 승리로 실력 공인",
+          "change": "비무 승리로 가문 내 위상 변화: 조건부 공인 의원→실력까지 증명된 의원. 사술 논란은 약화됐으나 소멸되지 않음"
+        },
+        "enemy_pressure": "삼형 진소검이 비무 상대로 자신의 측근 제자를 지정한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "비무 승리.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 8",
@@ -984,7 +1375,62 @@
           "거래/외교"
         ]
       },
-      "block_no": 8
+      "block_no": 8,
+      "genre_ext": {
+        "realm_before": "침의(鍼醫) 중기 (정확도 약50%, 전투적 활용 첫 성공)",
+        "realm_after": "침의(鍼醫) 중기 (정확도 약50%, 기초 부재 자각으로 실질 변동 없음)",
+        "internal_energy_before": "1.0갑자",
+        "internal_energy_after": "1.2갑자 (태산 이동 중 의념 수련 소폭 증가)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "의무일체 기본 침법 (독역 환자 치료 시도 — 실패)"
+        ],
+        "injury_status": {
+          "current": "태산 이동 중 입은 경미한 타박상 회복 완료. 정상.",
+          "change": "경미한 타박상 → 정상 (자연 회복)"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊) — 일시 외출 (태산 의선대 수련)",
+          "rank": "막내, 가문 의원",
+          "change": "아버지 묵인 하에 태산 행. 장로회 감시에서 일시 해방"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "진가장 내부에서 '침으로 무인을 제압한 막내'라는 소문. 외부에는 미전파",
+          "after": "태산 의선대에서 엽천수의 제자가 됨. 정파 의술 계통에 처음 발을 디딤"
+        },
+        "action_type": "거래/외교 (스승 확보) + 수련 시작",
+        "opponent": {
+          "name": "자기 자신 (기초 부재라는 내적 한계)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "엽천수의 시험에서 실패를 인정하고, 겸허하게 사사를 청함. 정통 의술 기초 수련으로 의무일체의 안정성 확보를 도모",
+        "success_pattern": "스승 확보 + 자기 한계 자각. 치료 시도는 실패했으나 배움의 기회를 얻음",
+        "leverage_used": [
+          "의무일체 발현(불완전하나 엽천수의 관심을 끔)",
+          "소풍의 아버지 설득",
+          "겸허한 태도"
+        ],
+        "martial_domain": "정파 무림 (의술 계통)",
+        "active_domains": [
+          "수련/성장",
+          "거래/외교"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊) — 일시 외출 (태산 의선대 수련)",
+          "rank": "막내, 가문 의원",
+          "change": "아버지 묵인 하에 태산 행. 장로회 감시에서 일시 해방"
+        },
+        "enemy_pressure": "엽천수가 소백에게 시험을 낸다: 독역 초기 환자를 앞에 놓고 '이 환자를 치료해 보아라.' 소백은 의무일체로 침에 의념을 실어 경혈을 자극하지만, 환자의 상태가 오히려 악화된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "엽천수라는 정파 최고 의술 스승 확보.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 9",
@@ -1090,7 +1536,64 @@
           "탐색/조사"
         ]
       },
-      "block_no": 9
+      "block_no": 9,
+      "genre_ext": {
+        "realm_before": "침의(鍼醫) 중기 (정확도 약50%, 기초 부재 자각으로 실질 변동 없음)",
+        "realm_after": "침의(鍼醫) 중후기 (정확도 약53%, 정통 진단법 습득으로 안정도 향상)",
+        "internal_energy_before": "1.2갑자",
+        "internal_energy_after": "1.5갑자 (엽천수 지도 하 의념 수련 + 정통 경맥 이론 습득으로 내공 효율 개선)",
+        "martial_arts_acquired": [
+          "정통 사진법(四診法) 기초 — 망문문절"
+        ],
+        "martial_arts_used": [
+          "정통 사진법 (약재상 거래 중 약재 감별 시 망진 활용)"
+        ],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊) + 태산 의선대 (수련 중)",
+          "rank": "엽천수의 제자 (비공식)",
+          "change": "태산 의선대 제자 명분으로 약재 거래 루트 확보"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "태산 의선대에서 엽천수의 제자. 정파 의술 계통에 처음 발을 디딤",
+          "after": "태산 약재 시장에서 '엽천수 제자'로 소폭 인지. 매화와 함께 '젊은 의원+약초상' 콤비로 소문"
+        },
+        "action_type": "거래/외교 (약재 구매 루트 확보)",
+        "opponent": {
+          "name": "조팽덕 (태산약방 주인) — 적대 아닌 거래 상대, 그러나 독문과 간접 연결",
+          "sect_or_faction": "민간 약재상 (독문과 간접 거래)",
+          "weakness_exploited": "조팽덕의 독점 가격에 매화의 야생 약초 대체 루트로 대응. 가격 우위 확보"
+        },
+        "strategy": "시가 3배 약재를 거부하고 매화의 대체 루트로 독자 조달. 조팽덕과의 관계는 유지하되 의존하지 않음",
+        "success_pattern": "독자 약재 루트 확보 + 무림 경제 이해 + 독역-약재 연관성 의심. 다층적 성과",
+        "leverage_used": [
+          "태산 의선대 제자 명분",
+          "매화의 약초 감별/야생 산지 지식",
+          "소백의 독역 관찰 데이터"
+        ],
+        "martial_domain": "민간 + 정파 무림 (약재 경제)",
+        "active_domains": [
+          "거래/외교",
+          "탐색/조사"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊) + 태산 의선대 (수련 중)",
+          "rank": "엽천수의 제자 (비공식)",
+          "change": "태산 의선대 제자 명분으로 약재 거래 루트 확보"
+        },
+        "enemy_pressure": "태산약방 주인 조팽덕은 무림 약재 유통의 핵심 인물이다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "매화를 통한 독자 약재 조달 루트 확보.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 10",
@@ -1233,7 +1736,68 @@
           "거래/외교"
         ]
       },
-      "block_no": 10
+      "block_no": 10,
+      "genre_ext": {
+        "realm_before": "침의(鍼醫) 중후기 (정확도 약53%, 정통 진단법 습득으로 안정도 향상)",
+        "realm_after": "침의(鍼醫) 완성 → 혈의(穴醫) 입문 (정확도 약55%, 정통 진단+의무일체 결합)",
+        "internal_energy_before": "1.5갑자",
+        "internal_energy_after": "2갑자 (독역 치료 시 의무일체 실전 사용으로 내공 성장)",
+        "martial_arts_acquired": [
+          "의무일체 경맥 경로 독기 배출법 (수태음폐경 → 태연혈/척택혈)"
+        ],
+        "martial_arts_used": [
+          "정통 사진법 (망문문절)",
+          "의무일체 기본 침법 (의념 집중)",
+          "의무일체 경맥 경로 독기 배출법"
+        ],
+        "injury_status": {
+          "current": "정상. 독역 치료 후 체력 소모 있으나 탈진 수준은 아님.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원 — 사술 판정 보류, 독역 치료 능력 인정",
+          "change": "조건부 공인 의원에서 '독역 대응 핵심 자산'으로 위상 전환. 큰형이 소백 편으로 전환 시작"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "태산 약재 시장에서 '엽천수 제자'로 소폭 인지",
+          "after": "진가장 내부에서 '독역 치료 가능한 유일한 의원'으로 인정. 독문이 소백을 인지 시작"
+        },
+        "action_type": "가문 정치 + 치료 (장로회 심판 + 독역 치료 시연)",
+        "opponent": {
+          "name": "삼형 진소검 (사술 판정 주도) + 독문 부하 (해독제 판매 시도)",
+          "sect_or_faction": "진가장 내부 + 사파 독문(독왕 사마련)",
+          "weakness_exploited": "삼형의 사술론을 독역 치료 실연으로 무력화. 독문의 해독제 제안을 자체 치료 능력으로 거부"
+        },
+        "strategy": "말이 아닌 행동(치료 시연)으로 장로회를 설득. 정통 진단법+의무일체를 결합하여 체계적 의술임을 증명",
+        "success_pattern": "사술 판정 보류(실질적 승리) + 큰형 전환 + 독문 거부. 그러나 독문의 타겟이 됨(대가)",
+        "leverage_used": [
+          "정통 사진법 (엽천수 전수)",
+          "의무일체 독기 배출법",
+          "독역 환자의 존재(실증 기회)",
+          "큰형의 실용적 판단 전환"
+        ],
+        "martial_domain": "정파 무림 (진가장 내부 + 사파 접점)",
+        "active_domains": [
+          "가문/세가 정치",
+          "치료/의술",
+          "거래/외교"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원 — 사술 판정 보류, 독역 치료 능력 인정",
+          "change": "조건부 공인 의원에서 '독역 대응 핵심 자산'으로 위상 전환. 큰형이 소백 편으로 전환 시작"
+        },
+        "enemy_pressure": "장로회 심판이 열린다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "장로회에서 사술 최종 판정이 보류됨 — 완전한 인정은 아니지만, '독역 치료 능력'이라는 실용적 가치가 사술 논란을 압도.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 11",
@@ -1342,7 +1906,63 @@
           "가문/세가 정치"
         ]
       },
-      "block_no": 11
+      "block_no": 11,
+      "genre_ext": {
+        "realm_before": "침의(鍼醫) 완성 → 혈의(穴醫) 입문 (정확도 약55%, 정통 진단+의무일체 결합)",
+        "realm_after": "혈의(穴醫) 입문 (정확도 약50%로 하락 — 자신감 붕괴)",
+        "internal_energy_before": "2갑자",
+        "internal_energy_after": "2갑자 (치료 실패. 내공 수치 변동은 없으나 심리적 위축)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "의무일체 기본 침법",
+          "의무일체 경맥 경로 독기 배출법 (수소음심경 — 실패)"
+        ],
+        "injury_status": {
+          "current": "정상. 물리적 부상 없으나 치료 실패에 의한 극심한 심리적 충격.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원 — 독역 치료 담당",
+          "change": "아버지 치료 실패로 가문 내 입지 약화. 독문 해독제 구매론이 힘을 얻음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "진가장 내부에서 '독역 치료 가능한 유일한 의원'으로 인정. 독문이 소백을 인지 시작",
+          "after": "진가장 내부에서 '가주를 살리지 못한 의원'으로 신뢰 하락. 독문에는 더 위협적 존재로 각인"
+        },
+        "action_type": "치료 (아버지 독역 치료 시도 — 실패)",
+        "opponent": {
+          "name": "독역 (내공 70갑자 체내의 응집 독기) — 적대자가 아닌 질병이지만 현재 최대 장애물",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음 (내공 격차로 인한 완패)"
+        },
+        "strategy": "심경 소부혈/신문혈을 통한 독기 배출 시도. 정확한 진단은 가능했으나 밀어낼 내공이 절대 부족",
+        "success_pattern": "치료 실패. 진단은 정확했으나 실행 불가. 내공 격차라는 근본 한계 직면",
+        "leverage_used": [
+          "정통 사진법 (진단)",
+          "의무일체 독기 배출법 (시도)",
+          "수소음심경 경로 지식"
+        ],
+        "martial_domain": "정파 무림 (진가장 내부)",
+        "active_domains": [
+          "치료/의술",
+          "가문/세가 정치"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원 — 독역 치료 담당",
+          "change": "아버지 치료 실패로 가문 내 입지 약화. 독문 해독제 구매론이 힘을 얻음"
+        },
+        "enemy_pressure": "가주 진천웅이 독역에 감염되었다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "아버지 치료 실패.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 12",
@@ -1452,7 +2072,60 @@
           "탐색/조사"
         ]
       },
-      "block_no": 12
+      "block_no": 12,
+      "genre_ext": {
+        "realm_before": "혈의(穴醫) 입문 (정확도 약50%로 하락 — 자신감 붕괴)",
+        "realm_after": "혈의(穴醫) 입문 (정확도 약52% — 소폭 회복 시작)",
+        "internal_energy_before": "2갑자",
+        "internal_energy_after": "2.5갑자 (낙양 이동 중 의념 수련 지속)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "정상",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림맹 회의 참석 대리인",
+          "change": "무림맹과 비공식 연결(장풍래). 진가장 대리인으로 처음 외부 활동"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "진가장 내부에서 '가주를 살리지 못한 의원'. 독문에는 더 위협적 존재",
+          "after": "무림맹에서 '독역 메커니즘을 보고한 진가장 의원'으로 소수에게 인지. 대다수는 무시"
+        },
+        "action_type": "거래/외교 (무림맹 독역 대책 회의 참석)",
+        "opponent": {
+          "name": "무림맹 보수파 장로들 (독역 경시, 정치 우선)",
+          "sect_or_faction": "무림맹 내부",
+          "weakness_exploited": "장풍래라는 동조자를 찾아 회의 결론이 아닌 비공식 루트로 실질적 성과 확보"
+        },
+        "strategy": "공식 회의에서 데이터 보고(실패) + 비공식 접촉으로 장풍래 동맹 확보(성공)",
+        "success_pattern": "공식 인정 실패, 비공식 동맹 확보. 장기적 네트워크 구축이라는 전략적 부분 성공",
+        "leverage_used": [
+          "독역 관찰 데이터 (마을 순회 진료 기간 축적)",
+          "진가장 대리인 자격",
+          "엽천수 제자 명분"
+        ],
+        "martial_domain": "정파 무림 (무림맹 본부)",
+        "active_domains": [
+          "거래/외교",
+          "탐색/조사"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림맹 회의 참석 대리인",
+          "change": "무림맹과 비공식 연결(장풍래). 진가장 대리인으로 처음 외부 활동"
+        },
+        "enemy_pressure": "무림맹 독역 대책 회의.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "faction_power",
+          "receipt_line": "장풍래라는 무림맹 내 동맹 확보.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 13",
@@ -1579,7 +2252,68 @@
           "감정/관계"
         ]
       },
-      "block_no": 13
+      "block_no": 13,
+      "genre_ext": {
+        "realm_before": "혈의(穴醫) 입문 (정확도 약52% — 소폭 회복 시작)",
+        "realm_after": "혈의(穴醫) 정체 (정확도 약45%로 하락 — 자신감 붕괴 심화)",
+        "internal_energy_before": "2.5갑자",
+        "internal_energy_after": "2갑자 (7침 동시 운용으로 내공 과소비, 0.5갑자 소모)",
+        "martial_arts_acquired": [
+          "약침 결합법 prototype (1례 비공식 시술 성공)"
+        ],
+        "martial_arts_used": [
+          "의무일체 기본 침법 (7침 동시 의념 분산 시도 — 실패)",
+          "정통 사진법 (진단)"
+        ],
+        "injury_status": {
+          "current": "내공 과소비로 기력 저하. 2일간 안정 필요.",
+          "change": "정상 → 기력 저하 (내공 과소비)"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원",
+          "change": "아버지 치료 2차 실패로 가문 내 신뢰 더 하락; 같은 밤 안에 매화의 약침 prototype 1례 시험 성공 + 혜란의 가문 약방 1회 confidential 반출권 확보로 다음 카드 동시 보유"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "무림맹에서 '독역 메커니즘을 보고한 진가장 의원'으로 소수에게 인지",
+          "after": "변동 없음 (진가장 내부 사건)"
+        },
+        "action_type": "치료 (아버지 독역 치료 2차 시도 — 실패)",
+        "opponent": {
+          "name": "독역 (심경+심포경 이중 독기 응집)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음 (역부족)"
+        },
+        "strategy": "7곳 경혈 동시 침으로 독기 분산 공략. 5침까지 성공했으나 내공 고갈로 나머지 2침 실패, 독기 역류",
+        "success_pattern": "완전 실패. 오히려 아버지 상태 악화. 그러나 약침 아이디어라는 부산물 획득",
+        "leverage_used": [
+          "엽천수 자문 (분산 공략)",
+          "장풍래 의료 서적",
+          "7경혈 동시 시술 시도",
+          "매화의 정서적 지원",
+          "매화의 황련 달임",
+          "혜란의 가문 약방 1회 confidential 반출권"
+        ],
+        "martial_domain": "정파 무림 (진가장 내부)",
+        "active_domains": [
+          "치료/의술",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원",
+          "change": "아버지 치료 2차 실패로 가문 내 신뢰 더 하락; 같은 밤 안에 매화의 약침 prototype 1례 시험 성공 + 혜란의 가문 약방 1회 confidential 반출권 확보로 다음 카드 동시 보유"
+        },
+        "enemy_pressure": "소백은 아버지의 심경과 심포경에 동시에 7곳의 침을 놓는다: 소부(少府), 신문(神門), 통리(通里), 대릉(大陵), 내관(內關), 간사(間使), 곡택(曲澤).",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "아버지 치료 2차 실패.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 14",
@@ -1700,7 +2434,64 @@
           "비무/전투"
         ]
       },
-      "block_no": 14
+      "block_no": 14,
+      "genre_ext": {
+        "realm_before": "혈의(穴醫) 정체 (정확도 약45%로 하락 — 자신감 붕괴 심화)",
+        "realm_after": "혈의(穴醫) 정체 (정확도 약48% — 소폭 회복, 약재 확보로 의욕 상승)",
+        "internal_energy_before": "2갑자",
+        "internal_energy_after": "2.5갑자 (이동 중 의념 수련 + 실전 도주에서 미량 성장)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "의무일체 혈도 봉쇄 (추격자 팔 봉쇄)",
+          "기본 민첩 회피"
+        ],
+        "injury_status": {
+          "current": "도주 중 우측 종아리 찰과상. 독초 가시에 긁힘. 경미.",
+          "change": "아버지 치료 실패 직후 기력 저하 → 회복 + 경미한 찰과상"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 1,
+        "jianghu_reputation": {
+          "before": "변동 없음",
+          "after": "독문에서 '독왕이 관심 갖는 진가장 의원'으로 등급 상승. 정파에는 미전파"
+        },
+        "action_type": "탐색/조사 + 비무(도주전) (약왕곡 잠입 + 약재 탈취)",
+        "opponent": {
+          "name": "독문 하급 무인 3명 + 독문 간부 1명 + 독문 순찰대",
+          "sect_or_faction": "사파 독문(독왕 사마련)",
+          "weakness_exploited": "독문이 정문만 통제하고 뒷산길을 방치한 허점. 독초 함정의 배치 패턴을 매화가 간파"
+        },
+        "strategy": "정면 회피, 뒷산길 잠입, 매화의 약초 지식으로 함정 회피, 독연초 연막으로 탈출",
+        "success_pattern": "약재 확보 성공. 그러나 독문에 얼굴이 노출됨(대가). 모험적 부분 승리",
+        "leverage_used": [
+          "매화의 약왕곡 지리 지식",
+          "매화의 독초 감별/독연초 연막",
+          "은침 혈도 봉쇄 (추격자 제압)",
+          "야간 잠입"
+        ],
+        "martial_domain": "사파 영역 (약왕곡)",
+        "active_domains": [
+          "탐색/조사",
+          "비무/전투"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "약왕곡 입구에서 독문 하급 무인 3명이 약재 출입을 통제하고 있다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "청심연 3송이 확보 — 아버지 치료와 약침 개발의 핵심 재료.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 15",
@@ -1837,7 +2628,67 @@
           "감정/관계"
         ]
       },
-      "block_no": 15
+      "block_no": 15,
+      "genre_ext": {
+        "realm_before": "혈의(穴醫) 정체 (정확도 약48% — 소폭 회복, 약재 확보로 의욕 상승)",
+        "realm_after": "혈의(穴醫) (정확도 약55% — 홍연 맥진 성공과 청심연 약침 시제로 자신감 회복 시작)",
+        "internal_energy_before": "2.5갑자",
+        "internal_energy_after": "3갑자 (의념 수련 지속 + 홍연 맥진 시 의무일체 감각 활성화)",
+        "martial_arts_acquired": [
+          "독역 맥진 심화 — 일반 독역 vs 홍연 체내 상위 독의 차이를 감별하는 진단 기술"
+        ],
+        "martial_arts_used": [
+          "정통 사진법 (홍연 맥진)",
+          "의무일체 감각 (홍연 체내 독기 감지)"
+        ],
+        "injury_status": {
+          "current": "약왕곡 도주 시 입은 찰과상 회복 완료. 정상.",
+          "change": "경미한 찰과상 → 정상"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원",
+          "change": "마교 성녀와 비공식 접촉. 가문에는 비밀"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "독문에서 '독왕이 관심 갖는 진가장 의원'으로 등급 상승",
+          "after": "마교에서도 '독역에 대해 아는 의원'으로 인지. 정파/사파/마교 3파에서 동시에 인지되기 시작"
+        },
+        "action_type": "탐색/조사 + 거래 (홍연 체질 분석 + 정보 교환)",
+        "opponent": {
+          "name": "없음 (조사/거래 블록). 잠재적 위험: 마교 접촉의 정치적 리스크",
+          "sect_or_faction": "마교 (협력적 접촉)",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "홍연의 체질을 진단하여 독역 면역 메커니즘 파악. 정보 교환(데이터↔혈액)으로 양측 이익",
+        "success_pattern": "핵심 단서 확보 + 마교 접점 형성. 장기적 전략 자산 획득",
+        "leverage_used": [
+          "정통 맥진 능력",
+          "독역 관찰 데이터",
+          "의무일체 감각 (체내 독기 감지)",
+          "의원의 중립적 입장"
+        ],
+        "martial_domain": "마교 접점 (비공식)",
+        "active_domains": [
+          "탐색/조사",
+          "거래/외교",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원",
+          "change": "마교 성녀와 비공식 접촉. 가문에는 비밀"
+        },
+        "enemy_pressure": "소백이 여인을 관찰한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "홍연의 체질 단서 확보 — '체내에 독역보다 강한 독이 이미 존재'한다는 핵심 정보.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 16",
@@ -1963,7 +2814,68 @@
           "수련/성장"
         ]
       },
-      "block_no": 16
+      "block_no": 16,
+      "genre_ext": {
+        "realm_before": "혈의(穴醫) (정확도 약55% — 홍연 맥진 성공과 청심연 약침 시제로 자신감 회복 시작)",
+        "realm_after": "혈의(穴醫) 완성 (정확도 75%, 약침 결합법으로 질적 도약)",
+        "internal_energy_before": "3갑자",
+        "internal_energy_after": "5갑자 (대량 치료 중 의무일체 반복 사용으로 내공 급성장)",
+        "martial_arts_acquired": [
+          "약침(藥鍼) 결합법 — 침에 약초 추출물을 바르고 의념으로 약효를 경맥에 안내하는 고유 치료법"
+        ],
+        "martial_arts_used": [
+          "약침 결합법",
+          "의무일체 기본 침법",
+          "정통 사진법"
+        ],
+        "injury_status": {
+          "current": "극심한 과로. 3일간 밤낮 치료로 경맥에 미세 부담 누적. 아직 손상 수준은 아니나 전조.",
+          "change": "정상 → 과로 (경맥 미세 부담 시작)"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 핵심 의원 — 독역 치료 담당",
+          "change": "가문 내 위상 급상승. '가문을 구하는 의원'으로 인정. 큰형의 태도 전환"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "마교에서도 '독역에 대해 아는 의원'으로 인지",
+          "after": "진가장과 주변 5개 마을에서 '독역을 치료하는 신의(新醫)'로 소문. 외부 무림에 소문 확산 시작"
+        },
+        "action_type": "치료 (약침 개발 + 독역 대량 치료)",
+        "opponent": {
+          "name": "독역 (80명 환자) — 독문 해독제에 대한 대안 제시",
+          "sect_or_faction": "N/A (질병 대응)",
+          "weakness_exploited": "내공 부족을 약초의 힘으로 보완. 의념이 약효의 전달체라는 발견"
+        },
+        "strategy": "약침으로 내공 부족을 약초 힘으로 보완. 의념으로 약효를 경맥에 안내하는 새 원리",
+        "success_pattern": "독역 대량 치료 성공. 혈의 완성. 그러나 과로 시작(대가)",
+        "leverage_used": [
+          "청심연 추출물",
+          "매화의 약초 조제 능력",
+          "의무일체 의념 집중법",
+          "정통 경맥 이론",
+          "3일간 밤낮 치료 체력"
+        ],
+        "martial_domain": "정파 무림 (진가장 + 주변 마을)",
+        "active_domains": [
+          "치료/의술",
+          "수련/성장"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 핵심 의원 — 독역 치료 담당",
+          "change": "가문 내 위상 급상승. '가문을 구하는 의원'으로 인정. 큰형의 태도 전환"
+        },
+        "enemy_pressure": "독역 환자가 하루에 5명씩 늘고 있다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "약침(藥鍼) 결합법 완성.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 17",
@@ -2073,7 +2985,69 @@
           "거래/외교"
         ]
       },
-      "block_no": 17
+      "block_no": 17,
+      "genre_ext": {
+        "realm_before": "혈의(穴醫) 완성 (정확도 75%, 약침 결합법으로 질적 도약)",
+        "realm_after": "맥의(脈醫) 입문 (정확도 80%, 전장 의술 + 거란 의학 융합)",
+        "internal_energy_before": "5갑자",
+        "internal_energy_after": "7갑자 (대량 치료 + 극한 환경 시술로 내공 급성장)",
+        "martial_arts_acquired": [
+          "전장 의술 (말 위 침술, 이동 중 치료)",
+          "경혈 외 침투 경로 (거란 약초 훈증 결합)"
+        ],
+        "martial_arts_used": [
+          "약침 결합법",
+          "전장 의술",
+          "정통 사진법"
+        ],
+        "injury_status": {
+          "current": "과로 지속. 거란 3주 치료로 경맥 피로 누적. 아직 손상 미만.",
+          "change": "약침 결합법 개발기 과로 지속 → 피로 누적 심화"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊) + 무림맹 비공식 파견",
+          "rank": "무림맹 비공식 의원",
+          "change": "거란 치료 성공으로 무림맹 내 비공식 인정 상승"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "진가장 주변에서 '독역을 치료하는 신의'로 소문 시작",
+          "after": "거란 변경에서 '중원의 젊은 신의'로 감사. 무림맹 비공식 루트로 소문 확산"
+        },
+        "action_type": "치료 + 수련 (전장 의술 체득, 대량 치료)",
+        "opponent": {
+          "name": "독역 (거란 변경 40명) + 전투 부상 (15명)",
+          "sect_or_faction": "N/A (질병+전상 대응)",
+          "weakness_exploited": "거란 의원의 훈증법과 소백의 약침을 결합하여 경혈+비경혈 이중 경로 치료"
+        },
+        "strategy": "거란 의원과 대립이 아닌 협력. 기존 약침에 거란 훈증을 결합한 현지 적응형 치료",
+        "success_pattern": "독역 25명 + 부상 15명 치료 성공. 맥의 입문. 거란 명성 획득. 과로 심화(대가)",
+        "leverage_used": [
+          "약침 결합법",
+          "거란 의원 협력",
+          "장풍래 비공식 파견",
+          "의원의 중립적 입장"
+        ],
+        "martial_domain": "거란 변경 (중립 지대)",
+        "active_domains": [
+          "치료/의술",
+          "수련/성장",
+          "거래/외교"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊) + 무림맹 비공식 파견",
+          "rank": "무림맹 비공식 의원",
+          "change": "거란 치료 성공으로 무림맹 내 비공식 인정 상승"
+        },
+        "enemy_pressure": "거란 초원에 도착.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "거란 전장에서 독역 환자 25명 치료(증상 완화~회복).",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 18",
@@ -2176,7 +3150,65 @@
           "감정/관계"
         ]
       },
-      "block_no": 18
+      "block_no": 18,
+      "genre_ext": {
+        "realm_before": "맥의(脈醫) 입문 (정확도 80%, 전장 의술 + 거란 의학 융합)",
+        "realm_after": "맥의(脈醫) (정확도 82%, 극한 환경 시술로 정밀도 미세 상승)",
+        "internal_energy_before": "7갑자",
+        "internal_energy_after": "8갑자 (극한 치료로 내공 소폭 성장. 그러나 경맥 피로 위험 수준)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "약침 결합법",
+          "전장 의술",
+          "의무일체 혈도 봉쇄 (비전투 — 지혈용)"
+        ],
+        "injury_status": {
+          "current": "극한 과로. 경맥 피로가 위험 수준 근접. 탈진으로 의식 잃음.",
+          "change": "과로 피로 누적 → 극한 과로 + 탈진"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림맹 비공식 의원",
+          "change": "중원+거란 양쪽에서 인정"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "거란에서 '중원의 젊은 신의'",
+          "after": "거란 전장에서 '의원에게 적은 없다'의 전설. 중원 주둔군에도 이름 전파"
+        },
+        "action_type": "치료 (전장 양쪽 부상자 동시 치료)",
+        "opponent": {
+          "name": "없음 (치료 블록). 갈등: 중원 장교 vs 거란 족장의 우선 치료 요구",
+          "sect_or_faction": "중원 주둔군 + 거란 기마 부족 (양쪽 갈등)",
+          "weakness_exploited": "양쪽 모두 '자기 사람이 먼저'라는 감정적 요구. 중상자 우선이라는 의료 원칙으로 양쪽의 논리를 무력화"
+        },
+        "strategy": "중상자 우선 치료 원칙 고수. 양쪽을 번갈아 치료하여 공정성 증명",
+        "success_pattern": "양쪽 6명 전원 치료. 양쪽 인정. 그러나 탈진(대가)",
+        "leverage_used": [
+          "약침 결합법",
+          "전장 의술",
+          "'의원에게 적은 없다' 선언",
+          "거란 의원 협력 (약초 지원)"
+        ],
+        "martial_domain": "중립 지대 (전장)",
+        "active_domains": [
+          "치료/의술",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림맹 비공식 의원",
+          "change": "중원+거란 양쪽에서 인정"
+        },
+        "enemy_pressure": "중원 군 장교가 소백에게 명령한다: '우리 병사를 먼저 치료하라.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "'의원에게 적은 없다'라는 소백의 핵심 신념이 전장에서 실현.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 19",
@@ -2289,7 +3321,67 @@
           "치료/의술 (자가 치료)"
         ]
       },
-      "block_no": 19
+      "block_no": 19,
+      "genre_ext": {
+        "realm_before": "맥의(脈醫) (정확도 82%, 극한 환경 시술로 정밀도 미세 상승)",
+        "realm_after": "맥의(脈醫) (정확도 83%, 실전 전투 경험으로 미세 상승)",
+        "internal_energy_before": "8갑자",
+        "internal_energy_after": "8갑자 (전투 소모와 회복이 상쇄)",
+        "martial_arts_acquired": [
+          "의무일체 자가 방어 침술 (독 확산 봉쇄 — 곡지혈 자가 시술)"
+        ],
+        "martial_arts_used": [
+          "의무일체 혈도 봉쇄 (신문혈 — 자객 손목)",
+          "의무일체 자가 방어 침술 (곡지혈)",
+          "기본 민첩 회피"
+        ],
+        "injury_status": {
+          "current": "왼팔 마비독 부분 잔류. 대부분 해독되었으나 완전 회복에 1주 필요. 경맥 피로 지속.",
+          "change": "극한 과로 → 마비독 피해 + 경맥 피로 (복합)"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원",
+          "change": "독문과 직접 적대 확정"
+        },
+        "kill_count": 0,
+        "spare_count": 1,
+        "jianghu_reputation": {
+          "before": "거란 전장에서 '의원에게 적은 없다'",
+          "after": "독문의 암살 타겟. 독문에서 '제거 대상 의원'으로 확정"
+        },
+        "action_type": "비무/전투 (독문 자객 대응 — 방어+도주전)",
+        "opponent": {
+          "name": "독문 자객 (이류 초입 독공 사용자)",
+          "sect_or_faction": "사파 독문(독왕 사마련)",
+          "weakness_exploited": "자객이 원거리 독침에만 의존하여 근접전 대비가 부족. 은침을 날려 신문혈 봉쇄로 독침 주머니 탈락 유도"
+        },
+        "strategy": "정면 회피 + 자가 독 봉쇄 + 매화 해독 약초 + 반격(신문혈 은침). 도주 기반 방어전",
+        "success_pattern": "생존 성공. 자객 퇴각. 그러나 마비독 잔류 + 독문 적대 격상(대가)",
+        "leverage_used": [
+          "의무일체 자가 방어(곡지혈)",
+          "은침 원거리 투척(신문혈)",
+          "매화의 기척 감지 + 해독 약초",
+          "산길 지형 이용"
+        ],
+        "martial_domain": "무림 (전투)",
+        "active_domains": [
+          "비무/전투",
+          "치료/의술 (자가 치료)"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 의원",
+          "change": "독문과 직접 적대 확정"
+        },
+        "enemy_pressure": "독문 자객 1명이 소백의 목을 노린다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "첫 실전 암살 시도를 생존.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 20",
@@ -2401,7 +3493,58 @@
           "치료/의술 (위기)"
         ]
       },
-      "block_no": 20
+      "block_no": 20,
+      "genre_ext": {
+        "realm_before": "맥의(脈醫) (정확도 83%, 실전 전투 경험으로 미세 상승)",
+        "realm_after": "맥의(脈醫) (정확도 83%, 약재 상실로 치료 능력 사실상 반감)",
+        "internal_energy_before": "8갑자",
+        "internal_energy_after": "9갑자 (마비독 완전 회복 + 의념 수련 지속으로 소폭 성장)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "왼팔 마비독 완전 회복. 경맥 피로 지속 (약침 결합법 개발기 이후 누적). 물리적 부상 없음.",
+          "change": "마비독 잔류 → 완전 회복. 경맥 피로는 지속"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 핵심 의원",
+          "change": "가문 전체가 독문 적대 확정. 큰형이 가문 무력 대응 선언"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "독문 암살 타겟 + 거란 전장 명성",
+          "after": "독문의 직접 공격을 받은 가문의 의원. 정파 내에서 '독문과 싸우는 진가장'으로 인식 시작"
+        },
+        "action_type": "가문/세가 정치 (독문 습격 대응 + 향후 전략)",
+        "opponent": {
+          "name": "독문 정예 5명 (독왕 사마련 직속)",
+          "sect_or_faction": "사파 독문",
+          "weakness_exploited": "해당 없음 (소백이 도착했을 때는 이미 약탈 완료. 방어 실패)"
+        },
+        "strategy": "방어 실패. 사후 대응으로 약재 없는 순수 의무일체 개발이라는 새 방향 설정",
+        "success_pattern": "완전 패배. 약재 기반 붕괴. 그러나 '약재 의존 탈피'라는 성장 방향 획득",
+        "leverage_used": [
+          "해당 없음 (방어 실패 블록)"
+        ],
+        "martial_domain": "정파 무림 (진가장)",
+        "active_domains": [
+          "가문/세가 정치",
+          "치료/의술 (위기)"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "막내, 가문 핵심 의원",
+          "change": "가문 전체가 독문 적대 확정. 큰형이 가문 무력 대응 선언"
+        },
+        "enemy_pressure": "한밤중, 독문 정예 5명이 진가장 약고를 습격한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "약고 전량 탈취.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 21",
@@ -2501,7 +3644,67 @@
           "수련/성장"
         ]
       },
-      "block_no": 21
+      "block_no": 21,
+      "genre_ext": {
+        "realm_before": "맥의(脈醫) (정확도 83%, 약재 상실로 치료 능력 사실상 반감)",
+        "realm_after": "맥의(脈醫) 중기 (정확도 88%, 순수 의무일체 치료 가능)",
+        "internal_energy_before": "9갑자",
+        "internal_energy_after": "12갑자 (집중 수련으로 의념 효율 대폭 개선, 내공 급성장)",
+        "martial_arts_acquired": [
+          "순수 의무일체 치료법 (약재 없이 의념+침만으로 치료)",
+          "정통 침술 정밀도 극한 조정 (1촌 오차 없는 경혈 찾기)"
+        ],
+        "martial_arts_used": [
+          "정통 사진법",
+          "의무일체 의념 집중법",
+          "순수 침술 (하루 200회 시술)"
+        ],
+        "injury_status": {
+          "current": "경맥 피로 지속(약침 결합법 개발기부터). 수련으로 오히려 경맥 사용이 증가했으나, 엽천수의 조절 하에 손상 미만 유지.",
+          "change": "경맥 피로 지속. 소폭 악화 가능성 있으나 스승 관리 하 안정"
+        },
+        "faction_status": {
+          "affiliation": "진가장 + 태산 의선대 수련",
+          "rank": "엽천수 정식 제자",
+          "change": "엽천수 정식 제자로 인정"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "독문 공격을 받은 진가장 의원",
+          "after": "태산 의선대 엽천수 정식 제자. 정파 의술 계통에서 공식 인정"
+        },
+        "action_type": "수련/성장 (정통 침술 집중 수련)",
+        "opponent": {
+          "name": "없음 (수련 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "하루 200회 침 시술로 정밀도를 극한까지 끌어올리고, 정통 의술과 의무일체를 체계적으로 융합",
+        "success_pattern": "침술 정밀도 비약적 향상. 약재 의존 탈피. 스승 인정",
+        "leverage_used": [
+          "엽천수의 지도",
+          "하루 200회 반복 수련",
+          "의무일체 의념 집중법",
+          "독문 약고 잠입 위기에서 온 절박함"
+        ],
+        "martial_domain": "정파 무림 (태산 의선대)",
+        "active_domains": [
+          "수련/성장"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 + 태산 의선대 수련",
+          "rank": "엽천수 정식 제자",
+          "change": "엽천수 정식 제자로 인정"
+        },
+        "enemy_pressure": "엽천수의 수련은 가혹하다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "침술 정확도 급상승(83%→88%).",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 22",
@@ -2607,7 +3810,62 @@
           "수련/성장"
         ]
       },
-      "block_no": 22
+      "block_no": 22,
+      "genre_ext": {
+        "realm_before": "맥의(脈醫) 중기 (정확도 88%, 순수 의무일체 치료 가능)",
+        "realm_after": "맥의(脈醫) 중기 (정확도 88%, 칠성침법 이론 습득으로 잠재력 대폭 확장)",
+        "internal_energy_before": "12갑자",
+        "internal_energy_after": "13갑자 (석굴 탐사 중 의념 활성화로 소폭 증가)",
+        "martial_arts_acquired": [
+          "칠성침법 이론 (완전판, 7침 전체 이론 파악. 실전 1침만 겨우 가능)"
+        ],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "경맥 피로 지속. 스승 관리 하 안정.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장 + 태산 의선대",
+          "rank": "엽천수 정식 제자",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "태산 의선대 엽천수 정식 제자",
+          "after": "변동 없음 (칠성침법 발견은 비밀)"
+        },
+        "action_type": "기연/깨달음 (칠성침법 완전판 발견)",
+        "opponent": {
+          "name": "없음 (기연 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "엽천수의 허락 하에 석굴 탐사. 의무일체 원전과 칠성침법 완전판 발견 및 암기",
+        "success_pattern": "칠성침법 완전판 발견. 최종 무기의 설계도 확보. 장기 성장 로드맵 명확화",
+        "leverage_used": [
+          "엽천수의 석굴 접근 허가",
+          "의무일체 기본 지식 (원전 해독 능력)",
+          "기억력 (원전 암기)"
+        ],
+        "martial_domain": "정파 무림 (태산 의선대)",
+        "active_domains": [
+          "기연/깨달음",
+          "수련/성장"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 + 태산 의선대",
+          "rank": "엽천수 정식 제자",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "석굴 깊은 곳에서 석판에 새겨진 의서를 발견한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "칠성침법 완전판 발견.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 23",
@@ -2709,7 +3967,65 @@
           "수련/성장"
         ]
       },
-      "block_no": 23
+      "block_no": 23,
+      "genre_ext": {
+        "realm_before": "맥의(脈醫) 중기 (정확도 88%, 칠성침법 이론 습득으로 잠재력 대폭 확장)",
+        "realm_after": "맥의(脈醫) 중후기 (정확도 90%, 칠성침법 3침으로 치료 범위 확대)",
+        "internal_energy_before": "13갑자",
+        "internal_energy_after": "16갑자 (칠성침법 수련으로 의념 효율 대폭 향상, 내공 급성장)",
+        "martial_arts_acquired": [
+          "칠성침법 1~3침 (천추/천선/천기성. 기해/관원/중완혈. 3명 동시 치료 가능)"
+        ],
+        "martial_arts_used": [
+          "칠성침법 1~3침 수련",
+          "의무일체 의념 집중법"
+        ],
+        "injury_status": {
+          "current": "경맥 피로 지속이나 수련 과정에서 의념 효율 개선으로 부담 소폭 감소.",
+          "change": "경맥 피로 소폭 완화"
+        },
+        "faction_status": {
+          "affiliation": "진가장 + 태산 의선대",
+          "rank": "엽천수 정식 제자",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "변동 없음",
+          "after": "변동 없음 (수련 중)"
+        },
+        "action_type": "수련/성장 (칠성침법 1~3침 수련)",
+        "opponent": {
+          "name": "없음 (수련 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "세 침을 독립 의념이 아닌 관통 흐름으로 운용. 엽천수 조언 기반 발상 전환",
+        "success_pattern": "3침 완성. 치료 범위 3명 확대. 의념 관통 원리 체득",
+        "leverage_used": [
+          "칠성침법 원전",
+          "엽천수의 '의념 관통' 조언",
+          "3주 집중 수련",
+          "기해/관원/중완 경혈 정밀 체화"
+        ],
+        "martial_domain": "정파 무림 (태산 의선대)",
+        "active_domains": [
+          "수련/성장"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 + 태산 의선대",
+          "rank": "엽천수 정식 제자",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "1침은 3일 만에 성공 — 기해혈에 의념을 실어 주변 기혈 흐름이 미세하게 변하는 것을 확인.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "칠성침법 1~3침 수련 완성.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 24",
@@ -2818,7 +4134,67 @@
           "치료/의술"
         ]
       },
-      "block_no": 24
+      "block_no": 24,
+      "genre_ext": {
+        "realm_before": "맥의(脈醫) 중후기 (정확도 90%, 칠성침법 3침으로 치료 범위 확대)",
+        "realm_after": "맥의(脈醫) 완성 (정확도 93%, 의선 대회 우승)",
+        "internal_energy_before": "16갑자",
+        "internal_energy_after": "18갑자 (대회 3라운드 치료로 내공 소폭 성장)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "의무일체 감각 (초고속 진단)",
+          "칠성침법 1~3침",
+          "약침 결합법",
+          "정통 사진법"
+        ],
+        "injury_status": {
+          "current": "경맥 피로 지속. 대회 3라운드로 추가 소모 있으나 관리 가능.",
+          "change": "소폭 악화"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림 의선 대회 우승자",
+          "change": "무림 전체에 이름 전파. 공식 명의 반열"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "태산 의선대 엽천수 정식 제자. 거란 전장 명성",
+          "after": "무림 의선 대회 최연소 우승. 천하 명의 반열. '진가장 진소백'이 무림 전체에 알려짐"
+        },
+        "action_type": "비무/전투 (의술 비무 — 의선 대회)",
+        "opponent": {
+          "name": "독문 의원 (결승 상대) + 15명 참가자",
+          "sect_or_faction": "사파 독문 + 정파 의원들",
+          "weakness_exploited": "독문의 이독제독이 부작용(잔류독)을 남기는 반면 소백의 정화 치료는 부작용 없음. 일반 의원들은 진단 속도에서 의무일체 감각을 따라오지 못함"
+        },
+        "strategy": "1R 의무일체 감각으로 초고속 진단, 2R 칠성침법 3침으로 효율 치료, 3R 약침+칠성침으로 독문 이독제독 압도",
+        "success_pattern": "3라운드 전승 우승. 천하 명의 인정. 그러나 칠성침법 노출(대가)",
+        "leverage_used": [
+          "의무일체 감각(초고속 진단)",
+          "칠성침법 3침",
+          "약침 결합법",
+          "정통 사진법",
+          "독역 치료 경험"
+        ],
+        "martial_domain": "정파 무림 (무림맹 공식 대회)",
+        "active_domains": [
+          "비무/전투",
+          "치료/의술"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림 의선 대회 우승자",
+          "change": "무림 전체에 이름 전파. 공식 명의 반열"
+        },
+        "enemy_pressure": "대회 형식: 3라운드.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "무림 의선 대회 우승.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 25",
@@ -2923,7 +4299,59 @@
           "감정/관계"
         ]
       },
-      "block_no": 25
+      "block_no": 25,
+      "genre_ext": {
+        "realm_before": "맥의(脈醫) 완성 (정확도 93%, 의선 대회 우승)",
+        "realm_after": "맥의(脈醫) 완성 (정확도 93%, 변동 없음 — 정치/관계 블록)",
+        "internal_energy_before": "18갑자",
+        "internal_energy_after": "18갑자 (변동 없음)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "경맥 피로 지속. 의선 대회 후 소폭 회복 중.",
+          "change": "소폭 회복"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림 명의 + 가문 핵심 의원",
+          "change": "큰형과의 관계 전환으로 가문 내 정치 구조 변화"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "무림 의선 대회 최연소 우승. 천하 명의 반열",
+          "after": "변동 없음 (가문 내부 사건)"
+        },
+        "action_type": "가문/세가 정치 (큰형의 비밀 발견 + 가문 정치 이해)",
+        "opponent": {
+          "name": "없음 (관계 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "우연한 발견에서 큰형과 솔직한 대화로 전환. 아버지의 보호 구조를 이해",
+        "success_pattern": "큰형과의 관계 전환. 가문 정치 이해. 정보 획득",
+        "leverage_used": [
+          "큰형의 서찰 발견",
+          "직접 대화"
+        ],
+        "martial_domain": "진가장 내부",
+        "active_domains": [
+          "가문/세가 정치",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림 명의 + 가문 핵심 의원",
+          "change": "큰형과의 관계 전환으로 가문 내 정치 구조 변화"
+        },
+        "enemy_pressure": "큰형이 들어오며 소백을 발견한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "아버지가 소백을 은밀히 보호하고 있었다는 사실 확인.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 26",
@@ -3032,7 +4460,67 @@
           "비무/전투"
         ]
       },
-      "block_no": 26
+      "block_no": 26,
+      "genre_ext": {
+        "realm_before": "맥의(脈醫) 완성 (정확도 93%, 변동 없음 — 정치/관계 블록)",
+        "realm_after": "신의(神醫) 입문 근접 (정확도 95%, 약왕곡 의술 대결에서 약침+칠성침법 융합 안정화)",
+        "internal_energy_before": "18갑자",
+        "internal_energy_after": "20갑자 (5명 치료 + 대결의 긴장감에서 의념 집중력 한 단계 상승)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "약침 결합법",
+          "칠성침법 1~3침",
+          "의무일체 감각(진단)",
+          "정통 사진법"
+        ],
+        "injury_status": {
+          "current": "경맥 피로 지속. 5명 연속 치료로 소폭 악화.",
+          "change": "경맥 피로 소폭 악화"
+        },
+        "faction_status": {
+          "affiliation": "진가장 + 무림맹 비공식 대표",
+          "rank": "약왕곡 약재 우선 배분 수령인",
+          "change": "약재 공급선 공식 확보"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "천하 명의 반열. 의선 대회 우승자",
+          "after": "약왕곡에서 독문을 의술로 꺾은 정파 대표 의원. 명성 한 단계 상승"
+        },
+        "action_type": "거래/외교 + 치료 (약왕곡 3파전 협상 + 의술 시연 대결)",
+        "opponent": {
+          "name": "독문 대리인 (사마련 측근)",
+          "sect_or_faction": "사파 독문",
+          "weakness_exploited": "독문 이독제독의 잔류독 부작용. 소백의 약침은 부작용 없는 완전 치료"
+        },
+        "strategy": "의술 시연 대결에서 약침+칠성침법으로 독문 이독제독을 압도. 약왕곡주의 중재 하에 공정 경쟁",
+        "success_pattern": "약재 우선권 확보. 독문 격퇴. 그러나 독문 보복 예고(대가)",
+        "leverage_used": [
+          "약침 결합법",
+          "칠성침법 3침",
+          "장풍래 무림맹 지원",
+          "의선 대회 우승 명성"
+        ],
+        "martial_domain": "정파 + 사파 접점 (약왕곡)",
+        "active_domains": [
+          "거래/외교",
+          "치료/의술",
+          "비무/전투"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 + 무림맹 비공식 대표",
+          "rank": "약왕곡 약재 우선 배분 수령인",
+          "change": "약재 공급선 공식 확보"
+        },
+        "enemy_pressure": "약왕곡에서 3파전 협상이 열린다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "약왕곡 약재 우선 배분권 확보.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 27",
@@ -3122,7 +4610,57 @@
           "감정/관계"
         ]
       },
-      "block_no": 27
+      "block_no": 27,
+      "genre_ext": {
+        "realm_before": "신의(神醫) 입문 근접 (정확도 95%, 약왕곡 의술 대결에서 약침+칠성침법 융합 안정화)",
+        "realm_after": "신의(神醫) 입문 (정확도 95% — 변동 없음이나 감정 불안정으로 잠재적 하락 위험)",
+        "internal_energy_before": "20갑자",
+        "internal_energy_after": "20갑자 (변동 없음)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "경맥 피로 지속.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림 명의",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "약왕곡에서 독문 격퇴. 명성 상승",
+          "after": "변동 없음 (개인 사건)"
+        },
+        "action_type": "감정/관계 (매화와의 관계 진전)",
+        "opponent": {
+          "name": "없음 (감정 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "N/A",
+        "success_pattern": "연인 관계 성립. 인간적 성장. 그러나 '침 떨림' 약점 발견",
+        "leverage_used": [
+          "솔직한 감정 표현"
+        ],
+        "martial_domain": "N/A",
+        "active_domains": [
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림 명의",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "매화가 소백에게 고백한다: '나는 네가 약초상 딸이 아닌 이상의 사람으로 봐주길 원해.' 소백은 매화의 감정을 받아들이려 하지만, 그 순간 매화의 손을 잡으며 습관적으로 맥을 짚는다 — 그리고 침을 놓으려는 순간 침끝이 떨린다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "매화와의 연인 관계 시작.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 28",
@@ -3243,7 +4781,64 @@
           "치료/의술 (좌절)"
         ]
       },
-      "block_no": 28
+      "block_no": 28,
+      "genre_ext": {
+        "realm_before": "신의(神醫) 입문 (정확도 95% — 변동 없음이나 감정 불안정으로 잠재적 하락 위험)",
+        "realm_after": "신의(神醫) 하락 (정확도 78%, 경맥 3개 손상으로 급락)",
+        "internal_energy_before": "20갑자",
+        "internal_energy_after": "15갑자 (경맥 손상으로 내공 순환 효율 급락. 10갑자 감소)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "약침 결합법 (25명 연속 치료 중 사용)",
+          "칠성침법 3침"
+        ],
+        "injury_status": {
+          "current": "수태양소장경, 족소양담경, 족태음비경 3개 경맥 미세 파열. 의무일체 사용 금지(최소 2개월). 내공 순환 40% 차단.",
+          "change": "경맥 피로 → 경맥 3개 미세 파열 (최악의 부상)"
+        },
+        "faction_status": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "무림 명의 — 활동 중단",
+          "change": "치료 활동 전면 중단. 2,000명 환자 대응 공백; 같은 블록에 엽천수의 천년삼편 1편·약왕곡 빙잠지 1합 우선 배분으로 다음 카드 동시 보유"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "약왕곡에서 독문 격퇴. 무림 명의 정점",
+          "after": "'과로로 쓰러진 천하 명의'. 무림에서 소백의 건강 우려. 독문이 공백을 노림"
+        },
+        "action_type": "치료 (대량 치료 중 경맥 파열 — 좌절)",
+        "opponent": {
+          "name": "과로 (자기 자신의 한계)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음 (자기 한계에 의한 자멸)"
+        },
+        "strategy": "멈출 수 없어 계속 치료하다 경맥이 파열. 전략 실패 — 자기 보존을 무시한 대가",
+        "success_pattern": "25명 치료 후 쓰러짐. 완전한 좌절. 내공/정확도/활동 능력 모두 하락",
+        "leverage_used": [
+          "약침 결합법",
+          "칠성침법 3침",
+          "의무일체 의념 — 과부하로 경맥 파열",
+          "엽천수의 천년삼편 1편",
+          "약왕곡 빙잠지 1합 (경맥 보호유)"
+        ],
+        "martial_domain": "정파 무림 (무림맹 의원소)",
+        "active_domains": [
+          "치료/의술 (좌절)"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "무림 명의 — 활동 중단",
+          "change": "치료 활동 전면 중단. 2,000명 환자 대응 공백; 같은 블록에 엽천수의 천년삼편 1편·약왕곡 빙잠지 1합 우선 배분으로 다음 카드 동시 보유"
+        },
+        "enemy_pressure": "무림맹 의원소에서 30명을 연속 치료하던 중, 25번째 환자에게 약침을 놓는 순간 — 소백의 경맥에서 '뚝' 하는 감각.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "경맥 3개 손상.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 29",
@@ -3362,7 +4957,67 @@
           "치료/의술 (간접)"
         ]
       },
-      "block_no": 29
+      "block_no": 29,
+      "genre_ext": {
+        "realm_before": "신의(神醫) 하락 (정확도 78%, 경맥 3개 손상으로 급락)",
+        "realm_after": "신의(神醫) 정체 (정확도 80%, 소폭 회복이나 시술 불가)",
+        "internal_energy_before": "15갑자",
+        "internal_energy_after": "15갑자 (경맥 회복 중이나 내공 순환은 제한적)",
+        "martial_arts_acquired": [
+          "진단+처방 분업 체계 (직접 시술 없이 의원 활동 가능한 운영 방식)",
+          "의약합진 표준 (무림맹 공식 채택 분업 운영)"
+        ],
+        "martial_arts_used": [
+          "정통 사진법 (진단만 — 시술 불가)"
+        ],
+        "injury_status": {
+          "current": "3개 경맥 중 2개(소장경, 담경) 회복 진행. 1개(비경) 완치 불가 진단. 의무일체 제한적 사용 가능(미약).",
+          "change": "3개 파열 → 2개 회복 진행 + 1개 미회복"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림 명의 — 요양 중",
+          "change": "삼형 축출론 재부상 → 같은 블록 안에 무림맹 `의약합진 표준` 채택 + 진가장 `의약합진 좌장` 호칭 부여로 무력화"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "과로로 쓰러진 천하 명의. 독문이 공백 노림",
+          "after": "요양 중. 무림에서 소백의 복귀를 기다리는 의견과 '독문에 의존해야'라는 의견 양분"
+        },
+        "action_type": "감정/관계 + 치료 간접 (요양 + 분업 체계 구축)",
+        "opponent": {
+          "name": "경맥 손상 (자기 자신의 부상) + 삼형 진소검 (축출론)",
+          "sect_or_faction": "진가장 내부",
+          "weakness_exploited": "해당 없음 (방어적 블록)"
+        },
+        "strategy": "직접 시술 불가 상황에서 진단+처방 분업으로 공백 최소화. 매화에게 약초 치료 전수",
+        "success_pattern": "공백 부분 메움. 그러나 비경 미회복이라는 잔여 문제. 서역 행 필요성 확인",
+        "leverage_used": [
+          "정통 진단 능력",
+          "매화의 약초 지식+전수 능력",
+          "약침 공식 (약 부분 분리)",
+          "엽천수 정파 의선 채널",
+          "혜란 가문 정치 채널"
+        ],
+        "martial_domain": "진가장 + 근교 마을",
+        "active_domains": [
+          "감정/관계",
+          "치료/의술 (간접)"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림 명의 — 요양 중",
+          "change": "삼형 축출론 재부상 → 같은 블록 안에 무림맹 `의약합진 표준` 채택 + 진가장 `의약합진 좌장` 호칭 부여로 무력화"
+        },
+        "enemy_pressure": "독문이 소백의 공백을 파고든다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "직접 시술은 불가능하지만, 진단+처방 분업 체계를 구축하여 공백을 부분적으로 메움.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 30",
@@ -3487,7 +5142,63 @@
           "거래/외교"
         ]
       },
-      "block_no": 30
+      "block_no": 30,
+      "genre_ext": {
+        "realm_before": "신의(神醫) 정체 (정확도 80%, 소폭 회복이나 시술 불가)",
+        "realm_after": "신의(神醫) 정체 (정확도 80%, 변동 없음 — 정보 블록)",
+        "internal_energy_before": "15갑자",
+        "internal_energy_after": "16갑자 (경맥 2개 회복 진행으로 소폭 증가)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "의무일체 감각 (홍연의 체내 독 재감지 — 미약한 수준)"
+        ],
+        "injury_status": {
+          "current": "소장경/담경 대부분 회복. 비경 미회복 지속. 의무일체 제한적 사용 가능.",
+          "change": "2개 경맥 회복 진행 → 대부분 회복"
+        },
+        "faction_status": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림 명의 — 요양 중",
+          "change": "독역=무기라는 전략 정보를 무림맹에 전달. 정보 제공자로서의 가치 입증"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "요양 중. 복귀 기대와 독문 의존론 양분",
+          "after": "변동 없음 (비밀 정보 교환)"
+        },
+        "action_type": "탐색/조사 (독역의 진짜 메커니즘 파악)",
+        "opponent": {
+          "name": "독왕 사마련 (흡독공 야망 — 정보 차원에서 적대 격화)",
+          "sect_or_faction": "사파 독문",
+          "weakness_exploited": "홍연의 마교 첩보망을 활용하여 사마련의 비밀을 입수"
+        },
+        "strategy": "홍연의 정보 + 소백의 의학적 분석을 결합하여 독역 메커니즘의 전모 파악. 장풍래에게 전달",
+        "success_pattern": "핵심 정보 확보. 무림맹 대응 전환 계기. 그러나 진짜 흑막(좌천명)은 미파악",
+        "leverage_used": [
+          "홍연의 마교 첩보",
+          "소백의 독역 관찰 데이터 축적",
+          "홍연 첫 맥진에서 얻은 체질 분석",
+          "장풍래 연결"
+        ],
+        "martial_domain": "정파 + 마교 접점 (비밀 정보)",
+        "active_domains": [
+          "탐색/조사",
+          "거래/외교"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(陳家莊)",
+          "rank": "무림 명의 — 요양 중",
+          "change": "독역=무기라는 전략 정보를 무림맹에 전달. 정보 제공자로서의 가치 입증"
+        },
+        "enemy_pressure": "홍연이 소백을 다시 찾아온다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "faction_power",
+          "receipt_line": "독역의 진짜 메커니즘(인위적 확산+흡독공 수확) 파악.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 31",
@@ -3591,7 +5302,67 @@
           "거래/외교"
         ]
       },
-      "block_no": 31
+      "block_no": 31,
+      "genre_ext": {
+        "realm_before": "신의(神醫) 정체 (정확도 80%, 변동 없음 — 정보 블록)",
+        "realm_after": "신의(神醫) 회복 시작 (정확도 82%, 우회 치료법으로 회복 중)",
+        "internal_energy_before": "16갑자",
+        "internal_energy_after": "18갑자 (차크라 명상으로 내공 순환 효율 개선)",
+        "martial_arts_acquired": [
+          "경맥 우회 치료법 (아유르베다+중원 침술 혼합)",
+          "차크라 명상 기초"
+        ],
+        "martial_arts_used": [
+          "정통 사진법 (자가 진단)",
+          "차크라 명상"
+        ],
+        "injury_status": {
+          "current": "소장경/담경 완전 회복. 비경 우회 치료 진행 중 — 자연 회복 유도 단계.",
+          "change": "비경 미회복 → 우회 치료 개시, 회복 진행"
+        },
+        "faction_status": {
+          "affiliation": "진가장 (서역 원정 중)",
+          "rank": "무림 명의",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "요양 중",
+          "after": "서역 원정 중 (무림에 미전파)"
+        },
+        "action_type": "수련/성장 (동서 의학 융합 학습)",
+        "opponent": {
+          "name": "없음 (수련 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "아유르베다 우회 치료법을 배워 비경 손상을 자연 회복 유도",
+        "success_pattern": "우회 치료법 고안. 비경 회복 진행. 동서 융합 시작",
+        "leverage_used": [
+          "라지브의 아유르베다 지도",
+          "엽천수의 추천",
+          "장풍래의 통행증",
+          "소백의 학습 태도"
+        ],
+        "martial_domain": "서역 (비무림)",
+        "active_domains": [
+          "수련/성장",
+          "거래/외교"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 (서역 원정 중)",
+          "rank": "무림 명의",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "천축 의학원에 도착.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "경맥 손상 우회 치료법 고안.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 32",
@@ -3686,7 +5457,66 @@
           "수련/성장"
         ]
       },
-      "block_no": 32
+      "block_no": 32,
+      "genre_ext": {
+        "realm_before": "신의(神醫) 회복 시작 (정확도 82%, 우회 치료법으로 회복 중)",
+        "realm_after": "신의(神醫) 회복 (정확도 85%, 비경 80% 접합)",
+        "internal_energy_before": "18갑자",
+        "internal_energy_after": "22갑자 (비경 회복+차크라 명상으로 내공 순환 대폭 개선)",
+        "martial_arts_acquired": [
+          "자가 경맥 정비 기법 (차크라 명상+침술 의념 결합)"
+        ],
+        "martial_arts_used": [
+          "경맥 우회 치료법",
+          "차크라 명상",
+          "자가 경맥 정비"
+        ],
+        "injury_status": {
+          "current": "3개 경맥 중 소장경/담경 완전 회복. 비경 80% 접합(흉터 잔류). 의무일체 90% 효율.",
+          "change": "비경 우회 치료 → 80% 접합"
+        },
+        "faction_status": {
+          "affiliation": "진가장 (서역 원정 중)",
+          "rank": "무림 명의",
+          "change": "중원 복귀 준비"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "서역 원정 중",
+          "after": "변동 없음"
+        },
+        "action_type": "수련/성장 (경맥 회복 + 동서 융합 완성)",
+        "opponent": {
+          "name": "비경 흉터 (불완전 회복)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "자가 경맥 정비 기법으로 점진적 회복을 도모하며 90% 효율로 복귀 결정",
+        "success_pattern": "불완전하지만 실전 투입 가능한 회복. 동서 융합 체계 확립",
+        "leverage_used": [
+          "라지브의 지도",
+          "차크라 명상",
+          "천축산 약초 오일",
+          "자가 경맥 정비"
+        ],
+        "martial_domain": "서역",
+        "active_domains": [
+          "수련/성장"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 (서역 원정 중)",
+          "rank": "무림 명의",
+          "change": "중원 복귀 준비"
+        },
+        "enemy_pressure": "비경 접합이 80% 진행된 시점에서 문제 발생 — 접합 부위에 미세한 '흉터'가 형성되어 완전한 복원이 아닌 변형 회복이 되고 있다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "비경 80% 회복.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 33",
@@ -3792,7 +5622,66 @@
           "수련/성장"
         ]
       },
-      "block_no": 33
+      "block_no": 33,
+      "genre_ext": {
+        "realm_before": "신의(神醫) 회복 (정확도 85%, 비경 80% 접합)",
+        "realm_after": "신의(神醫) (정확도 87%, 나디 봉쇄로 전투 폭 확장)",
+        "internal_energy_before": "22갑자",
+        "internal_energy_after": "23갑자 (교류전 실전 경험으로 소폭 성장)",
+        "martial_arts_acquired": [
+          "나디 교차점 봉쇄 기법",
+          "요가 호흡법 기초 (신체 유연성+회피)"
+        ],
+        "martial_arts_used": [
+          "의무일체 혈도 봉쇄 (실패 후 나디 봉쇄로 전환)",
+          "나디 교차점 봉쇄"
+        ],
+        "injury_status": {
+          "current": "비경 80% 접합 유지. 교류전 중 타박 없음.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장",
+          "rank": "무림 명의",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 1,
+        "jianghu_reputation": {
+          "before": "변동 없음",
+          "after": "천축에서 '나디를 읽는 중원 의원'으로 소문"
+        },
+        "action_type": "비무/전투 (천축 교류전)",
+        "opponent": {
+          "name": "천축 요가 무승",
+          "sect_or_faction": "천축 사원",
+          "weakness_exploited": "요가 무승의 나디 순환 체계에서 교차점이 경혈과 유사한 기능. 이를 파악하여 나디 봉쇄"
+        },
+        "strategy": "경혈 봉쇄 실패 후 아유르베다 지식으로 나디 체계를 분석, 교차점을 찾아 봉쇄",
+        "success_pattern": "교류전 승리. 새 전투 기법 획득. 동서 융합의 전투적 증명",
+        "leverage_used": [
+          "아유르베다 나디 지식",
+          "의무일체 감각(나디 교차점 감지)",
+          "요가 무승 관찰(패턴 분석)"
+        ],
+        "martial_domain": "서역 (비무림 교류)",
+        "active_domains": [
+          "비무/전투",
+          "수련/성장"
+        ],
+        "faction_position": {
+          "affiliation": "진가장",
+          "rank": "무림 명의",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "교류 비무.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "나디 교차점 봉쇄라는 새 전투 기법 획득 — 경혈 봉쇄가 통하지 않는 상대에게도 대응 가능.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 34",
@@ -3908,7 +5797,66 @@
           "가문/세가 정치"
         ]
       },
-      "block_no": 34
+      "block_no": 34,
+      "genre_ext": {
+        "realm_before": "신의(神醫) (정확도 87%, 나디 봉쇄로 전투 폭 확장)",
+        "realm_after": "신의(神醫) (정확도 88%, 해독제 분석으로 독역 이해 심화)",
+        "internal_energy_before": "23갑자",
+        "internal_energy_after": "24갑자 (자가 경맥 정비 지속으로 소폭 증가)",
+        "martial_arts_acquired": [
+          "독문 해독제 성분 분석 기법"
+        ],
+        "martial_arts_used": [
+          "정통 사진법 (아버지 재진단)",
+          "약초 성분 분석 (매화 협력)"
+        ],
+        "injury_status": {
+          "current": "비경 80% 접합 유지. 자가 정비로 점진 회복 중.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장",
+          "rank": "무림 명의",
+          "change": "중원 복귀. 독문 해독제 분석이라는 전략 무기 확보"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "서역 원정 중",
+          "after": "중원 복귀. '독문 해독제가 치료가 아니라 봉인'이라는 분석이 무림맹 비공식 루트로 전파 시작"
+        },
+        "action_type": "탐색/조사 (해독제 분석 + 무림 정세 파악)",
+        "opponent": {
+          "name": "독문(해독제 사업 모델) + 좌천명(정보 묵살)",
+          "sect_or_faction": "사파 독문 + 무림맹 암부",
+          "weakness_exploited": "해독제 성분 분석으로 봉인+재발 구조를 과학적으로 폭로"
+        },
+        "strategy": "즉시 치료 대신 해독제 분석으로 근본 원인 접근. 장풍래에게 보고하여 무림맹 대응 전환 유도",
+        "success_pattern": "해독제 실체 폭로. 전략적 성과. 아버지 즉시 치료는 보류(리스크 관리)",
+        "leverage_used": [
+          "매화의 약초 성분 분석",
+          "소백의 독역 지식",
+          "혜란의 정보",
+          "장풍래 연결"
+        ],
+        "martial_domain": "정파 무림",
+        "active_domains": [
+          "탐색/조사",
+          "가문/세가 정치"
+        ],
+        "faction_position": {
+          "affiliation": "진가장",
+          "rank": "무림 명의",
+          "change": "중원 복귀. 독문 해독제 분석이라는 전략 무기 확보"
+        },
+        "enemy_pressure": "아버지의 독역이 다시 악화.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "독문 해독제의 실체(봉인+재발 유도) 폭로.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 35",
@@ -4036,7 +5984,66 @@
           "감정/관계"
         ]
       },
-      "block_no": 35
+      "block_no": 35,
+      "genre_ext": {
+        "realm_before": "신의(神醫) (정확도 88%, 해독제 분석으로 독역 이해 심화)",
+        "realm_after": "신의(神醫) 완성 근접 (정확도 90%, 비전 전수로 질적 도약)",
+        "internal_energy_before": "24갑자",
+        "internal_energy_after": "28갑자 (백무명 비전 전수+의맥 관리법으로 내공 순환 최적화, 대폭 성장)",
+        "martial_arts_acquired": [
+          "의무일체 비전 — 경지 전환 핵심 기법",
+          "의맥 관리법",
+          "칠성침법 7침 힌트 ('죽음이 아니라 재생')"
+        ],
+        "martial_arts_used": [
+          "의무일체 의념 집중법 (비전 수령 시 활성화)"
+        ],
+        "injury_status": {
+          "current": "비경 85% 접합(자가 정비 진행). 의무일체 95% 효율로 향상.",
+          "change": "80% → 85% 접합"
+        },
+        "faction_status": {
+          "affiliation": "진가장",
+          "rank": "무림 명의 + 의무일체 정식 전승자",
+          "change": "의무일체의 정식 전승자로 확정"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "독문 해독제 분석 전파 시작",
+          "after": "변동 없음 (비밀 전수)"
+        },
+        "action_type": "기연/깨달음 (출생 비밀 + 비전 전수)",
+        "opponent": {
+          "name": "없음 (기연 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "백무명의 전수를 온전히 수용. 출생 비밀을 감정적으로 소화",
+        "success_pattern": "비전 전수 완료. 출생 비밀 해소. 독립. 정서적 성숙",
+        "leverage_used": [
+          "백무명의 200년 비전",
+          "소백의 4년간 성장 (전수 수용 가능한 수준)",
+          "어머니의 유언"
+        ],
+        "martial_domain": "의무일체 계통",
+        "active_domains": [
+          "기연/깨달음",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장",
+          "rank": "무림 명의 + 의무일체 정식 전승자",
+          "change": "의무일체의 정식 전승자로 확정"
+        },
+        "enemy_pressure": "백무명이 자신의 정체를 밝힌다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "소백의 출생 비밀 전면 공개.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 36",
@@ -4137,7 +6144,63 @@
           "탐색/조사"
         ]
       },
-      "block_no": 36
+      "block_no": 36,
+      "genre_ext": {
+        "realm_before": "신의(神醫) 완성 근접 (정확도 90%, 비전 전수로 질적 도약)",
+        "realm_after": "신의(神醫) 완성 (정확도 92%, 비전 체화+대의원 자원으로 안정화)",
+        "internal_energy_before": "28갑자",
+        "internal_energy_after": "30갑자 (비전 체화로 내공 효율 지속 개선)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "의무일체 감각 (좌천명 맥 감지 시도)"
+        ],
+        "injury_status": {
+          "current": "비경 90% 접합. 의무일체 98% 효율.",
+          "change": "85% → 90% 접합"
+        },
+        "faction_status": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "무림맹 대의원(大醫員) — 독역 치료 총괄",
+          "change": "공식 임명"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "천하 명의",
+          "after": "무림맹 공식 대의원. 독역 치료 총괄. 무림 전체 공인"
+        },
+        "action_type": "거래/외교 (무림맹 대의원 임명)",
+        "opponent": {
+          "name": "좌천명 (잠재적 — 첫 직접 의심)",
+          "sect_or_faction": "무림맹 암부",
+          "weakness_exploited": "해당 없음 (관찰 단계)"
+        },
+        "strategy": "대의원직 수락으로 무림맹 자원 확보. 좌천명에 대한 의심은 비밀리에 추적",
+        "success_pattern": "대의원 임명 + 좌천명 첫 의심. 정치적 절정과 잠재적 위험의 동시 획득",
+        "leverage_used": [
+          "장풍래의 내부 추진",
+          "의선 대회 우승+약왕곡 실적",
+          "독역 치료 실적"
+        ],
+        "martial_domain": "정파 무림 (무림맹 본부)",
+        "active_domains": [
+          "거래/외교",
+          "가문/세가 정치",
+          "탐색/조사"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "무림맹 대의원(大醫員) — 독역 치료 총괄",
+          "change": "공식 임명"
+        },
+        "enemy_pressure": "임명식에서 좌천명(무림맹 부맹주)이 처음으로 소백과 직접 대면한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "faction_power",
+          "receipt_line": "무림맹 대의원으로 공식 임명.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 37",
@@ -4238,7 +6301,68 @@
           "치료/의술"
         ]
       },
-      "block_no": 37
+      "block_no": 37,
+      "genre_ext": {
+        "realm_before": "신의(神醫) 완성 (정확도 92%, 비전 체화+대의원 자원으로 안정화)",
+        "realm_after": "신의(神醫) 완성 확정 (정확도 93%, 실전 검증)",
+        "internal_energy_before": "30갑자",
+        "internal_energy_after": "33갑자 (실전 전투+치료로 내공 성장)",
+        "martial_arts_acquired": [
+          "활침 독공 정화 기법 (적 체내 독기를 침으로 역정화)"
+        ],
+        "martial_arts_used": [
+          "의무일체 혈도 봉쇄 (합곡+곡지 2점)",
+          "칠성침법 1침 (의념 극대화)",
+          "활침 독공 정화 (내관혈)"
+        ],
+        "injury_status": {
+          "current": "비경 90% 유지. 전투 중 독기에 미량 노출되었으나 자가 정화.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "대의원",
+          "change": "약재 보급 방어 성공으로 대의원 위신 확립"
+        },
+        "kill_count": 0,
+        "spare_count": 2,
+        "jianghu_reputation": {
+          "before": "무림맹 대의원",
+          "after": "'활침으로 독공을 무력화하는 의원'이라는 새 전설. 독문 내에서 경계 극대화"
+        },
+        "action_type": "비무/전투 (독문 간부 대응 + 호위 무인 치료)",
+        "opponent": {
+          "name": "독문 간부 (장풍독수 사용자)",
+          "sect_or_faction": "사파 독문",
+          "weakness_exploited": "장풍독수가 경맥을 통해 작동 — 합곡+곡지 봉쇄로 독공 경맥 차단, 내관혈 활침으로 체내 독기 정화"
+        },
+        "strategy": "독기 범위 밖에서 원거리 은침 봉쇄 → 칠성침법 1침으로 의념 극대화 → 활침 정화로 비살상 제압",
+        "success_pattern": "간부 제압 + 호위 5명 치료. 완전 승리. 비살상 원칙 유지",
+        "leverage_used": [
+          "은침 원거리 투척",
+          "합곡+곡지+내관 3경혈 조합",
+          "칠성침법 1침",
+          "활침 정화",
+          "약침 (호위 치료)"
+        ],
+        "martial_domain": "정파 무림 (무림맹 관도)",
+        "active_domains": [
+          "비무/전투",
+          "치료/의술"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "대의원",
+          "change": "약재 보급 방어 성공으로 대의원 위신 확립"
+        },
+        "enemy_pressure": "독문 간부급 2명이 무림맹 약재 호위대를 습격.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "활침으로 독공 사용자를 무력화하는 전투법 실전 검증.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 38",
@@ -4349,7 +6473,65 @@
           "감정/관계"
         ]
       },
-      "block_no": 38
+      "block_no": 38,
+      "genre_ext": {
+        "realm_before": "신의(神醫) 완성 확정 (정확도 93%, 실전 검증)",
+        "realm_after": "신의(神醫) 심리적 정체 (정확도 0% — 침을 잡지 못함)",
+        "internal_energy_before": "33갑자",
+        "internal_energy_after": "30갑자 (치료 시도 중 내공 과소비 + 심리적 충격)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "약침 결합법",
+          "칠성침법 1~3침 + 4침 시도(실패)",
+          "활침 정화 (전력 투입)"
+        ],
+        "injury_status": {
+          "current": "물리적 부상 없으나 극심한 심리적 트라우마. 침을 잡으면 손이 떨림.",
+          "change": "정상 → 심리적 트라우마 (시술 불가)"
+        },
+        "faction_status": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "대의원 — 활동 사실상 중단",
+          "change": "스승 사망으로 활동 중단"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "활침으로 독공 무력화하는 대의원",
+          "after": "'스승조차 살리지 못한 대의원'이라는 자기 인식. 외부에는 엽천수 사망 소식만 전파"
+        },
+        "action_type": "치료 (스승 독역 치료 — 실패) + 감정/관계 (상실)",
+        "opponent": {
+          "name": "독역 (50갑자 체내 — 치료 불가)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "약침+칠성침법+활침 총동원. 칠성침법 4침 시도까지 했으나 내공 부족(40갑자 미달)으로 실패",
+        "success_pattern": "완전 실패. 스승 사망. 소백 정신적 붕괴",
+        "leverage_used": [
+          "약침",
+          "칠성침법 3침+4침 시도",
+          "활침 정화",
+          "33갑자 내공 전량 투입"
+        ],
+        "martial_domain": "정파 무림 (태산 의선대)",
+        "active_domains": [
+          "치료/의술",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "대의원 — 활동 사실상 중단",
+          "change": "스승 사망으로 활동 중단"
+        },
+        "enemy_pressure": "태산 도착.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "엽천수 스승 사망.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 39",
@@ -4444,7 +6626,61 @@
           "감정/관계"
         ]
       },
-      "block_no": 39
+      "block_no": 39,
+      "genre_ext": {
+        "realm_before": "신의(神醫) 심리적 정체 (정확도 0% — 침을 잡지 못함)",
+        "realm_after": "의성(醫聖) 전 정체 (정확도 0%→미미한 회복 조짐. 살침 개념 형성)",
+        "internal_energy_before": "30갑자",
+        "internal_energy_after": "30갑자 (변동 없음)",
+        "martial_arts_acquired": [
+          "살침(殺鍼) 개념 — 아직 이론적 맹아 단계"
+        ],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "심리적 트라우마 지속. 침을 잡으면 떨림. 물리적 부상 없음.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "대의원 — 해임 위기",
+          "change": "대의원 해임 압박"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "엽천수 사망 소식 전파",
+          "after": "대의원 활동 중단. '폐업 위기'라는 소문"
+        },
+        "action_type": "감정/관계 (심리적 회복 과정)",
+        "opponent": {
+          "name": "삼형 진소검 (해임 공세) + 자기 자신 (트라우마)",
+          "sect_or_faction": "진가장 내부",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "소극적 회복. 매화+소풍의 지지. 스승 유언의 재해석으로 방향 모색",
+        "success_pattern": "살침 개념의 맹아라는 미미한 성과. 아직 침을 잡지 못하나 방향은 보임",
+        "leverage_used": [
+          "매화의 무조건적 지지",
+          "소풍의 물리적 방어",
+          "꿈속 스승 유언 재해석"
+        ],
+        "martial_domain": "N/A",
+        "active_domains": [
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "대의원 — 해임 위기",
+          "change": "대의원 해임 압박"
+        },
+        "enemy_pressure": "삼형 진소검이 다시 움직인다: '스승을 살리지 못한 의원이 무슨 대의원인가.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "faction_power",
+          "receipt_line": "2주간의 침체.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 40",
@@ -4556,7 +6792,66 @@
           "거래/외교"
         ]
       },
-      "block_no": 40
+      "block_no": 40,
+      "genre_ext": {
+        "realm_before": "의성(醫聖) 전 정체 (정확도 0%→미미한 회복 조짐. 살침 개념 형성)",
+        "realm_after": "의성(醫聖) 입문 직전 (정확도 60% — 트라우마 돌파, 급속 회복 시작)",
+        "internal_energy_before": "30갑자",
+        "internal_energy_after": "32갑자 (분노 각성으로 내공 활성화)",
+        "martial_arts_acquired": [
+          "무림맹 약재 오염 분석 기법"
+        ],
+        "martial_arts_used": [
+          "정통 사진법 (약재 성분 분석)",
+          "의무일체 감각 (오염 약재의 독기 감지)"
+        ],
+        "injury_status": {
+          "current": "심리적 트라우마 돌파. 침을 잡을 수 있게 됨. 비경 90% 유지.",
+          "change": "트라우마 → 분노 각성으로 돌파"
+        },
+        "faction_status": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "대의원 — 활동 재개 직전",
+          "change": "약재 오염 증거로 무림맹 내 비밀 수사 개시"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "폐업 위기",
+          "after": "아직 공개하지 않음. 비밀리에 수사 중"
+        },
+        "action_type": "탐색/조사 (무림맹 약재 오염 발견)",
+        "opponent": {
+          "name": "좌천명 (간접 — 측근의 약재 관리 접근)",
+          "sect_or_faction": "무림맹 암부",
+          "weakness_exploited": "약재 창고 접근 기록에 좌천명 측근 이름이 남아있는 관리 부실"
+        },
+        "strategy": "장풍래와 야간 잠입. 오염 약재 샘플 확보. 해독제 성분 대조 분석",
+        "success_pattern": "핵심 증거 확보 + 트라우마 돌파. 전략적+심리적 이중 돌파",
+        "leverage_used": [
+          "장풍래의 창고 접근권",
+          "소백의 약재 분석 능력",
+          "독문 해독제 성분 분석 경험",
+          "스승 죽음에 대한 분노"
+        ],
+        "martial_domain": "정파 무림 (무림맹 내부)",
+        "active_domains": [
+          "탐색/조사",
+          "거래/외교"
+        ],
+        "faction_position": {
+          "affiliation": "진가장 + 무림맹",
+          "rank": "대의원 — 활동 재개 직전",
+          "change": "약재 오염 증거로 무림맹 내 비밀 수사 개시"
+        },
+        "enemy_pressure": "소백은 장풍래와 함께 오염 약재를 분석한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "무림맹 약재 오염 발견 — 좌천명 측근이 관리.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 41",
@@ -4659,7 +6954,66 @@
           "수련/성장"
         ]
       },
-      "block_no": 41
+      "block_no": 41,
+      "genre_ext": {
+        "realm_before": "의성(醫聖) 입문 직전 (정확도 60% — 트라우마 돌파, 급속 회복 시작)",
+        "realm_after": "의성(醫聖) 입문 (정확도 70%, 살침 이론 확립으로 경지 전환)",
+        "internal_energy_before": "32갑자",
+        "internal_energy_after": "35갑자",
+        "martial_arts_acquired": [
+          "독 3종 분류법(신경독/혈액독/세포독)",
+          "살침 이론(독 분리→개별 정화)"
+        ],
+        "martial_arts_used": [
+          "의무일체 감각(독기 감지)",
+          "자가 치료(독초 포자 해독)"
+        ],
+        "injury_status": {
+          "current": "독초 포자 흡입 미열. 자가 치료. 비경 90%.",
+          "change": "미열→자가 해독"
+        },
+        "faction_status": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "비밀 수사 중",
+          "after": "변동 없음"
+        },
+        "action_type": "탐색/조사 (독의 본질 연구)",
+        "opponent": {
+          "name": "독림 환경 (독초/독충)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "현지인 안내+의무일체 감각으로 독림 탐사. 독 분류 학습",
+        "success_pattern": "살침 이론 확립. 독 샘플 확보",
+        "leverage_used": [
+          "현지 약초꾼",
+          "의무일체 감각",
+          "독역 관찰 데이터 축적"
+        ],
+        "martial_domain": "남해 (비무림)",
+        "active_domains": [
+          "탐색/조사",
+          "수련/성장"
+        ],
+        "faction_position": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "독림은 발을 디디는 것부터 위험하다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "독의 3종 분류와 독역 복합 구조 파악.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 42",
@@ -4773,7 +7127,69 @@
           "치료/의술"
         ]
       },
-      "block_no": 42
+      "block_no": 42,
+      "genre_ext": {
+        "realm_before": "의성(醫聖) 입문 (정확도 70%, 살침 이론 확립으로 경지 전환)",
+        "realm_after": "의성(醫聖) (정확도 80%, 살침 실전 성공으로 급회복)",
+        "internal_energy_before": "35갑자",
+        "internal_energy_after": "38갑자 (살침 실전+의독대결 극한 집중으로 성장)",
+        "martial_arts_acquired": [
+          "살침(殺鍼) 실전 — 독 3종 분리+개별 정화",
+          "활침+살침 교차 사용법"
+        ],
+        "martial_arts_used": [
+          "약침 결합법(열세)",
+          "살침(독 분리+정화)",
+          "활침(치료)",
+          "칠성침법 1~3침"
+        ],
+        "injury_status": {
+          "current": "정상. 사마련이 전투로 전환하지 않아 물리적 부상 없음.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "비밀 수사 중",
+          "after": "'독왕 사마련과 의독대결에서 승리한 대의원'으로 소문 시작"
+        },
+        "action_type": "비무/전투 (의술 비무 — 의독대결)",
+        "opponent": {
+          "name": "독왕 사마련",
+          "sect_or_faction": "사파 독문",
+          "weakness_exploited": "사마련의 이독제독이 봉인+잔류독 구조인 반면 소백의 살침은 완전 소멸. 근본적 치료 우위"
+        },
+        "strategy": "약침(열세) → 살침으로 전환. 독 3종 분리+활침/살침 교차로 완전 소멸 치료",
+        "success_pattern": "의독대결 실질 승리. 살침 검증. 사마련 도주+살해 위협(대가)",
+        "leverage_used": [
+          "살침(이론 정립 단계 기법)",
+          "활침+살침 교차",
+          "독 3종 분류",
+          "칠성침법 3침"
+        ],
+        "martial_domain": "정파+사파 접점",
+        "active_domains": [
+          "비무/전투",
+          "치료/의술"
+        ],
+        "faction_position": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "사마련의 이독제독은 대회 때의 독문 의원과 차원이 다르다 — 독왕 자신의 독공은 정교하고, 독으로 독을 제압한 뒤 잔류독까지 제거하는 완성형.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "살침 첫 실전 성공.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 43",
@@ -4886,7 +7302,68 @@
           "치료/의술"
         ]
       },
-      "block_no": 43
+      "block_no": 43,
+      "genre_ext": {
+        "realm_before": "의성(醫聖) (정확도 80%, 살침 실전 성공으로 급회복)",
+        "realm_after": "의성(醫聖) (정확도 85%, 살침 개안이나 내공 급락)",
+        "internal_energy_before": "38갑자",
+        "internal_energy_after": "35갑자 (내공 역류로 3갑자 미세 손실)",
+        "martial_arts_acquired": [
+          "살침(殺鍼) 전투 적용 — 적 독공 실시간 무력화"
+        ],
+        "martial_arts_used": [
+          "살침(전투)",
+          "활침(아군 치료)",
+          "칠성침법 1~3침",
+          "의무일체 혈도 봉쇄"
+        ],
+        "injury_status": {
+          "current": "내공 역류. 경맥 전체에 미세 충격. 2일 안정 필요.",
+          "change": "정상 → 내공 역류(심각)"
+        },
+        "faction_status": {
+          "affiliation": "진가장+무림맹+정파연합",
+          "rank": "대의원+전장 의원",
+          "change": "정파 연합 전쟁 참전"
+        },
+        "kill_count": 0,
+        "spare_count": 3,
+        "jianghu_reputation": {
+          "before": "의독대결 승리 소문",
+          "after": "'살침으로 독공을 분해하는 의원'으로 무림 전체에 전파"
+        },
+        "action_type": "비무/전투 + 치료 (독문 전초기지 전투)",
+        "opponent": {
+          "name": "독문 무인 3명",
+          "sect_or_faction": "사파 독문",
+          "weakness_exploited": "독공이 경맥을 통해 작동 — 살침으로 경맥 내 독기를 분리+파괴"
+        },
+        "strategy": "독공 경맥 경로를 읽고 살침으로 실시간 분해+비살상 제압",
+        "success_pattern": "독문 무인 3명 제압. 그러나 내공 역류 급락(대가)",
+        "leverage_used": [
+          "살침",
+          "독 3종 분류",
+          "의무일체 감각(독기 경로 감지)",
+          "정파 연합 지원"
+        ],
+        "martial_domain": "정파 vs 사파 전장",
+        "active_domains": [
+          "비무/전투",
+          "치료/의술"
+        ],
+        "faction_position": {
+          "affiliation": "진가장+무림맹+정파연합",
+          "rank": "대의원+전장 의원",
+          "change": "정파 연합 전쟁 참전"
+        },
+        "enemy_pressure": "소백이 살침을 본격 전투에 처음 사용한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "살침 개안 완성.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 44",
@@ -4999,7 +7476,68 @@
           "탐색/조사"
         ]
       },
-      "block_no": 44
+      "block_no": 44,
+      "genre_ext": {
+        "realm_before": "의성(醫聖) (정확도 85%, 살침 개안이나 내공 급락)",
+        "realm_after": "의성(醫聖) (정확도 88%, 대규모 실전으로 정밀도 상승)",
+        "internal_energy_before": "35갑자",
+        "internal_energy_after": "42갑자 (대규모 전투+살침 연속 사용으로 내공 급성장)",
+        "martial_arts_acquired": [
+          "독기 결계 분해법(살침의 구조물 적용)"
+        ],
+        "martial_arts_used": [
+          "살침(전투+결계 분해)",
+          "활침(아군 치료)",
+          "칠성침법 3침"
+        ],
+        "injury_status": {
+          "current": "5일간 전투로 피로 누적이나 역류 없음. 살침 안정도 향상.",
+          "change": "내공 역류 회복 → 전투 피로(관리 가능)"
+        },
+        "faction_status": {
+          "affiliation": "정파 연합",
+          "rank": "전장 의원+핵심 전력",
+          "change": "독문 함락 핵심 공로자"
+        },
+        "kill_count": 0,
+        "spare_count": 5,
+        "jianghu_reputation": {
+          "before": "살침으로 독공 분해하는 의원",
+          "after": "독문 본거지 함락의 핵심 전력. 무림 전체에서 '천하 제일 의원'이라는 별칭 시작"
+        },
+        "action_type": "비무/전투 + 무림 대전 (독문 본거지 공략)",
+        "opponent": {
+          "name": "독문 간부급 다수 + 독기 결계",
+          "sect_or_faction": "사파 독문",
+          "weakness_exploited": "독기 결계가 경맥 원리로 작동 → 살침으로 결계의 '경맥'을 분해"
+        },
+        "strategy": "살침으로 결계 무력화 후 연합군 돌입. 독문 무인의 독공을 실시간 분해",
+        "success_pattern": "본거지 함락. 제조시설 증거 확보. 사마련 도주(미완)",
+        "leverage_used": [
+          "살침",
+          "독기 결계 분해법",
+          "정파 연합 군사력",
+          "장풍래 작전 지휘"
+        ],
+        "martial_domain": "정파 vs 사파 전장",
+        "active_domains": [
+          "비무/전투",
+          "치료/의술",
+          "탐색/조사"
+        ],
+        "faction_position": {
+          "affiliation": "정파 연합",
+          "rank": "전장 의원+핵심 전력",
+          "change": "독문 함락 핵심 공로자"
+        },
+        "enemy_pressure": "곤륜산 독문 본거지는 삼중 독기 결계로 보호된다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "독문 본거지 함락.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 45",
@@ -5104,7 +7642,63 @@
           "감정/관계"
         ]
       },
-      "block_no": 45
+      "block_no": 45,
+      "genre_ext": {
+        "realm_before": "의성(醫聖) (정확도 88%, 대규모 실전으로 정밀도 상승)",
+        "realm_after": "의성(醫聖) (정확도 85%, 심리적 충격이나 스승 죽음 당시보다 빠르게 회복 예상)",
+        "internal_energy_before": "42갑자",
+        "internal_energy_after": "40갑자 (큰형 치료 시도로 소모)",
+        "martial_arts_acquired": [
+          "의무일체 기억 단편 (백무명 최종 전수)"
+        ],
+        "martial_arts_used": [
+          "활침(큰형 응급 치료 시도 — 실패)"
+        ],
+        "injury_status": {
+          "current": "물리적 부상 없으나 심리적 충격. 그러나 스승 죽음 당시와 달리 분노가 방향을 가짐.",
+          "change": "전투 피로 → 심리적 충격(관리 가능)"
+        },
+        "faction_status": {
+          "affiliation": "진가장+정파연합",
+          "rank": "대의원",
+          "change": "큰형 전사로 진가장 차기 장주 공백"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "독문 함락 핵심 전력",
+          "after": "독문 전쟁에서 형을 잃은 의원. 무림의 동정+존경"
+        },
+        "action_type": "비무/전투 + 감정 (잔당 소탕 + 형 전사 + 백무명 퇴장)",
+        "opponent": {
+          "name": "독문 잔당(자폭 공격)",
+          "sect_or_faction": "사파 독문 잔당",
+          "weakness_exploited": "해당 없음 (방어 불가 자폭 공격)"
+        },
+        "strategy": "방어 불가 상황. 큰형이 소백 대신 독기를 맞음",
+        "success_pattern": "큰형 전사. 백무명 퇴장. 소백 생존(큰형 덕분). 기억 단편 전수",
+        "leverage_used": [
+          "큰형의 희생",
+          "백무명의 기억 전수"
+        ],
+        "martial_domain": "전장",
+        "active_domains": [
+          "비무/전투",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장+정파연합",
+          "rank": "대의원",
+          "change": "큰형 전사로 진가장 차기 장주 공백"
+        },
+        "enemy_pressure": "독문 잔당의 기습.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "큰형 진무강 전사.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 46",
@@ -5214,7 +7808,65 @@
           "치료/의술"
         ]
       },
-      "block_no": 46
+      "block_no": 46,
+      "genre_ext": {
+        "realm_before": "의성(醫聖) (정확도 85%, 심리적 충격이나 스승 죽음 당시보다 빠르게 회복 예상)",
+        "realm_after": "의성(醫聖) 완성 (정확도 95%, 활살일체)",
+        "internal_energy_before": "40갑자",
+        "internal_energy_after": "55갑자 (활살 통합으로 내공 효율 배가, 급등)",
+        "martial_arts_acquired": [
+          "활살일체(活殺一體) — 활침+살침 동시 운용, 역류 없음"
+        ],
+        "martial_arts_used": [
+          "활침+살침 동시(활살일체)",
+          "칠성침법 3침"
+        ],
+        "injury_status": {
+          "current": "내공 역류 완치. 경맥 안정. 비경 92% 접합.",
+          "change": "역류 위험 소멸. 경맥 최적화"
+        },
+        "faction_status": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "독문 전쟁 공로+형 상실",
+          "after": "활살일체 소문 시작. '살리면서 죽이는 침'이라는 전설"
+        },
+        "action_type": "수련/성장 + 치료 (활살일체 완성)",
+        "opponent": {
+          "name": "없음 (수련 블록)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "활침과 살침의 의념 근원이 같음을 체화. '치료하겠다'는 하나의 의지에서 갈라진 두 방향",
+        "success_pattern": "활살일체 완성. 의성 완성. 내공 급등. 역류 소멸",
+        "leverage_used": [
+          "백무명 기억 단편",
+          "큰형 상실에 대한 결의",
+          "내공 역류 경험에서 배운 교훈"
+        ],
+        "martial_domain": "진가장",
+        "active_domains": [
+          "수련/성장",
+          "치료/의술"
+        ],
+        "faction_position": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "활침과 살침의 이원화가 내공 역류를 일으켰다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "활살일체 완성.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 47",
@@ -5305,7 +7957,62 @@
           "탐색/조사"
         ]
       },
-      "block_no": 47
+      "block_no": 47,
+      "genre_ext": {
+        "realm_before": "의성(醫聖) 완성 (정확도 95%, 활살일체)",
+        "realm_after": "의성(醫聖) 완성 (정확도 95%, 변동 없음 — 조사 블록)",
+        "internal_energy_before": "55갑자",
+        "internal_energy_after": "57갑자 (자가 정비 지속)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "정통 사진법(약재 분석)"
+        ],
+        "injury_status": {
+          "current": "비경 92%. 전반적 양호.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "활살일체 전설",
+          "after": "변동 없음(비밀 수사)"
+        },
+        "action_type": "탐색/조사 (좌천명 배후 증거 수집)",
+        "opponent": {
+          "name": "좌천명 (간접 추적)",
+          "sect_or_faction": "무림맹 암부",
+          "weakness_exploited": "10년 전 기록 관리 부실+약재부 관리 시기 기록 잔존"
+        },
+        "strategy": "기록 발굴+성분 대조+시기 분석으로 간접 증거 체계 구축",
+        "success_pattern": "간접 증거 완성. 직접 증거는 미확보",
+        "leverage_used": [
+          "장풍래의 기록보관소 접근",
+          "독역 제조시설 침투에서 확보한 증거",
+          "무림맹 약재 창고에서 확보한 오염 약재",
+          "독문 해독제 분석 결과"
+        ],
+        "martial_domain": "무림맹 내부",
+        "active_domains": [
+          "탐색/조사"
+        ],
+        "faction_position": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "장풍래가 무림맹 기록 보관소에서 10년 전 약재 유출 사건 기록을 찾아낸다 — '무림맹 의약창고에서 대규모 약재 유출.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "좌천명 음모의 간접 증거 체계 완성: 10년 전 약재 유출+독역 발생 시기 일치+제조 공식 동일 기반+약재 오염 경로.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 48",
@@ -5410,7 +8117,64 @@
           "치료/의술"
         ]
       },
-      "block_no": 48
+      "block_no": 48,
+      "genre_ext": {
+        "realm_before": "의성(醫聖) 완성 (정확도 95%, 변동 없음 — 조사 블록)",
+        "realm_after": "의신(醫神) 입문 근접 (정확도 96%, 해양 약재+활살일체 융합)",
+        "internal_energy_before": "57갑자",
+        "internal_energy_after": "60갑자",
+        "martial_arts_acquired": [
+          "해양 약재 활용법"
+        ],
+        "martial_arts_used": [
+          "활살일체(해적 아들 치료)"
+        ],
+        "injury_status": {
+          "current": "양호.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "활살일체 전설",
+          "after": "유구국에서 '바다를 건너온 신의'로 소문"
+        },
+        "action_type": "거래/외교 + 치료 (해적 거래 + 아들 치료)",
+        "opponent": {
+          "name": "해적 두목 (거래 상대, 비적대)",
+          "sect_or_faction": "유구국 해적",
+          "weakness_exploited": "두목의 아들 독역을 치료하여 거래 성립"
+        },
+        "strategy": "치료를 대가로 약재 확보. 무력 대신 의술 외교",
+        "success_pattern": "약재 확보+거래 성공+추가 해양 약재",
+        "leverage_used": [
+          "활살일체(치료)",
+          "의원의 중립적 입장",
+          "해적 아들 독역"
+        ],
+        "martial_domain": "동해 (비무림)",
+        "active_domains": [
+          "거래/외교",
+          "치료/의술"
+        ],
+        "faction_position": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "해약도는 '철갑 해적단' 두목 이해룡(李海龍)이 10년간 장악하고 있다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "산호정화련 5송이 확보 — 아버지 치료의 최종 핵심 약재.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 49",
@@ -5502,7 +8266,59 @@
           "감정/관계"
         ]
       },
-      "block_no": 49
+      "block_no": 49,
+      "genre_ext": {
+        "realm_before": "의신(醫神) 입문 근접 (정확도 96%, 해양 약재+활살일체 융합)",
+        "realm_after": "의신(醫神) 입문 (정확도 96%, 감정적 정돈으로 의념 안정화. 경지 전환)",
+        "internal_energy_before": "60갑자",
+        "internal_energy_after": "65갑자 (감정적 안정이 내공 순환을 최적화)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "양호.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장",
+          "rank": "대의원+차기 가주 후보",
+          "change": "부자 화해로 가문 내 입지 최고조"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "변동 없음",
+          "after": "변동 없음(가문 내부)"
+        },
+        "action_type": "감정/관계 (부자 화해)",
+        "opponent": {
+          "name": "없음",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "N/A",
+        "success_pattern": "부자 화해. 아버지 치료의 심리적 최적 상태",
+        "leverage_used": [
+          "아버지의 의식 회복",
+          "큰형/백무명의 사전 정보",
+          "소백의 성장"
+        ],
+        "martial_domain": "N/A",
+        "active_domains": [
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장",
+          "rank": "대의원+차기 가주 후보",
+          "change": "부자 화해로 가문 내 입지 최고조"
+        },
+        "enemy_pressure": "아버지가 소백을 알아보고, 처음으로 소백에게 어머니 이야기를 직접 한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "아버지의 직접 고백으로 어머니 비밀의 최종 해소.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 50",
@@ -5636,7 +8452,68 @@
           "감정/관계"
         ]
       },
-      "block_no": 50
+      "block_no": 50,
+      "genre_ext": {
+        "realm_before": "의신(醫神) 입문 (정확도 96%, 감정적 정돈으로 의념 안정화. 경지 전환)",
+        "realm_after": "의신(醫神) 입문 확정 (정확도 96%, 아버지 완치)",
+        "internal_energy_before": "65갑자",
+        "internal_energy_after": "70갑자 (6시간 극한 시술에서 역설적 내공 성장)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "약침(산호정화련+청심연)",
+          "칠성침법 4침",
+          "활살일체",
+          "정통 사진법"
+        ],
+        "injury_status": {
+          "current": "6시간 시술 후 극심한 피로. 1주 안정 필요.",
+          "change": "양호 → 극심한 피로"
+        },
+        "faction_status": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원+진가장 핵심",
+          "change": "아버지 완치로 가문 내 최고 위상"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "유구국 소문+활살일체 전설",
+          "after": "'5년간 폐인이었던 가주를 살린 천하 신의.' 무림 전체에 소백의 이름이 전설이 됨"
+        },
+        "action_type": "치료 (아버지 독역 완치) + 탐색/조사 (좌천명 증거 공개)",
+        "opponent": {
+          "name": "독역 (70갑자 체내 — 5년간 축적)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "독역 3종 분리+활살일체+칠성침법 4침으로 근본 치료"
+        },
+        "strategy": "칠성침법 4침으로 경혈 잠금 → 활살일체로 3종 독 분리파괴 → 산호정화련 약침으로 잔류독 정화",
+        "success_pattern": "아버지 완치(5년 목표 달성) + 좌천명 직접 증거 확보. 더블 성과",
+        "leverage_used": [
+          "칠성침법 4침",
+          "활살일체",
+          "산호정화련+청심연 약침",
+          "65갑자 내공",
+          "5년간 축적한 모든 의술"
+        ],
+        "martial_domain": "진가장",
+        "active_domains": [
+          "치료/의술",
+          "탐색/조사",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장+무림맹",
+          "rank": "대의원+진가장 핵심",
+          "change": "아버지 완치로 가문 내 최고 위상"
+        },
+        "enemy_pressure": "아버지 체내의 독역은 5년간 봉인(독문 해독제)되어 있었으나, 해독제를 중단한 지금 독기가 폭발적으로 활성화.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "아버지 독역 완치.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 51",
@@ -5749,7 +8626,62 @@
           "거래/외교"
         ]
       },
-      "block_no": 51
+      "block_no": 51,
+      "genre_ext": {
+        "realm_before": "의신(醫神) 입문 확정 (정확도 96%, 아버지 완치)",
+        "realm_after": "의신 (97%)",
+        "internal_energy_before": "70갑자",
+        "internal_energy_after": "75갑자",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "활살일체(전장 치료)"
+        ],
+        "injury_status": {
+          "current": "아버지 완치 시술 직후 피로 회복. 양호.",
+          "change": "피로→회복"
+        },
+        "faction_status": {
+          "affiliation": "반좌천명 연합",
+          "rank": "전장 의원+전략 참모",
+          "change": "무림 대전 참전"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "천하 신의",
+          "after": "무림 대전 반좌천명 연합 핵심 인물"
+        },
+        "action_type": "무림 대전/전쟁 (대전 서막)",
+        "opponent": {
+          "name": "좌천명+좌천명파",
+          "sect_or_faction": "무림맹 암부",
+          "weakness_exploited": "독역 치료 실적으로 중립파 설득"
+        },
+        "strategy": "독역 증거+치료 실적으로 정치적 우위 확보",
+        "success_pattern": "대전 선포. 연합 결성. 전쟁 시작",
+        "leverage_used": [
+          "좌천명 증거",
+          "독역 5,000명 치료 실적",
+          "장풍래 정치력"
+        ],
+        "martial_domain": "정파 내전",
+        "active_domains": [
+          "무림 대전",
+          "거래/외교"
+        ],
+        "faction_position": {
+          "affiliation": "반좌천명 연합",
+          "rank": "전장 의원+전략 참모",
+          "change": "무림 대전 참전"
+        },
+        "enemy_pressure": "좌천명이 입을 연다: '관인이 위조라는 것은 내 서기관이 증언할 것이다.' 서기관 마도현이 증인석에 선다 — 전날 밤 좌천명의 암부가 그의 가족을 '보호'하고 있다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "faction_power",
+          "receipt_line": "원로회 탄핵 투표 결과: 찬성 127, 반대 58, 기권 15.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 52",
@@ -5856,7 +8788,64 @@
           "무림 대전"
         ]
       },
-      "block_no": 52
+      "block_no": 52,
+      "genre_ext": {
+        "realm_before": "의신 (97%)",
+        "realm_after": "의신 (97%)",
+        "internal_energy_before": "75갑자",
+        "internal_energy_after": "80갑자",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "활살일체",
+          "약침",
+          "칠성침법 4침"
+        ],
+        "injury_status": {
+          "current": "전장 피로 누적이나 관리 가능.",
+          "change": "양호→전장 피로"
+        },
+        "faction_status": {
+          "affiliation": "반좌천명 연합",
+          "rank": "전장 의원",
+          "change": "적군 치료로 심리전 성과"
+        },
+        "kill_count": 0,
+        "spare_count": 5,
+        "jianghu_reputation": {
+          "before": "대전 핵심 인물",
+          "after": "'전장에서 가장 강한 자는 의원' 전설"
+        },
+        "action_type": "치료 + 무림 대전 (전장 양측 치료)",
+        "opponent": {
+          "name": "좌천명파 (적군)",
+          "sect_or_faction": "좌천명 세력",
+          "weakness_exploited": "적군 부상자 치료로 내부 이탈 유도"
+        },
+        "strategy": "무차별 치료로 적 내부 동요 유도",
+        "success_pattern": "적군 이탈+아군 사기 상승. 심리전 승리",
+        "leverage_used": [
+          "활살일체",
+          "의원의 중립성",
+          "거란 전장 의술 경험"
+        ],
+        "martial_domain": "전장",
+        "active_domains": [
+          "치료/의술",
+          "무림 대전"
+        ],
+        "faction_position": {
+          "affiliation": "반좌천명 연합",
+          "rank": "전장 의원",
+          "change": "적군 치료로 심리전 성과"
+        },
+        "enemy_pressure": "연합 우익 지휘관 곽천풍이 의료소에 들이닥친다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "적군 이탈 200명 확보.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 53",
@@ -5963,7 +8952,66 @@
           "치료/의술"
         ]
       },
-      "block_no": 53
+      "block_no": 53,
+      "genre_ext": {
+        "realm_before": "의신 (97%)",
+        "realm_after": "의신 하락 (정확도 90%, 독 중독으로 하락)",
+        "internal_energy_before": "80갑자",
+        "internal_energy_after": "60갑자 (85→50→60. 독 급락 후 화독위공 부분 회복)",
+        "martial_arts_acquired": [
+          "화독위공(化毒爲功) — 독을 내공으로 전환"
+        ],
+        "martial_arts_used": [
+          "화독위공",
+          "자가 활살일체",
+          "산호정화련 응급 복용"
+        ],
+        "injury_status": {
+          "current": "특수 독 30% 잔류. 경맥 부분 오염. 전력 시술 제한.",
+          "change": "양호→독 중독(심각)"
+        },
+        "faction_status": {
+          "affiliation": "반좌천명 연합",
+          "rank": "전장 의원 — 부상",
+          "change": "좌천명의 함정 생존. 적대 격화"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "전장 전설",
+          "after": "좌천명에게 독살당할 뻔한 대의원. 동정+분노"
+        },
+        "action_type": "거래/외교(함정) → 비무(자가 생존전)",
+        "opponent": {
+          "name": "좌천명 (직접)",
+          "sect_or_faction": "무림맹 암부",
+          "weakness_exploited": "해당 없음(소백이 함정에 빠짐). 탈출은 화독위공으로"
+        },
+        "strategy": "함정에 빠졌으나 화독위공+산호정화련으로 생존",
+        "success_pattern": "생존. 화독위공 발현. 그러나 독 30% 잔류(미완)",
+        "leverage_used": [
+          "산호정화련(해약도 원정 수획)",
+          "화독위공(살침 이론 기반)",
+          "활살일체(자가)"
+        ],
+        "martial_domain": "전장",
+        "active_domains": [
+          "비무/전투",
+          "치료/의술"
+        ],
+        "faction_position": {
+          "affiliation": "반좌천명 연합",
+          "rank": "전장 의원 — 부상",
+          "change": "좌천명의 함정 생존. 적대 격화"
+        },
+        "enemy_pressure": "협상 자리에서 좌천명이 차를 권한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "좌천명의 함정에 빠져 독에 중독.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 54",
@@ -6059,7 +9107,63 @@
           "치료/의술"
         ]
       },
-      "block_no": 54
+      "block_no": 54,
+      "genre_ext": {
+        "realm_before": "의신 하락 (정확도 90%, 독 중독으로 하락)",
+        "realm_after": "의신 회복 중 (92%)",
+        "internal_energy_before": "60갑자",
+        "internal_energy_after": "70갑자 (화독위공으로 독→내공 전환 진행)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "활살일체(전장 치료)",
+          "화독위공(자가 해독 진행)"
+        ],
+        "injury_status": {
+          "current": "독 잔류 20%로 감소(30%→20%). 경맥 오염 완화 중.",
+          "change": "독 30%→20%"
+        },
+        "faction_status": {
+          "affiliation": "반좌천명 연합",
+          "rank": "전장 의원(부상 상태)",
+          "change": "내전 격화"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "독살 미수 동정",
+          "after": "부상 속 전장 복귀. 존경 상승"
+        },
+        "action_type": "무림 대전 (내전 본격화)",
+        "opponent": {
+          "name": "좌천명파 군사",
+          "sect_or_faction": "좌천명 세력",
+          "weakness_exploited": "소백의 전장 치료로 아군 전력 유지"
+        },
+        "strategy": "화독위공으로 자가 회복하면서 전장 의원 역할 수행",
+        "success_pattern": "내전 교착. 소백 점진 회복",
+        "leverage_used": [
+          "화독위공",
+          "활살일체",
+          "장풍래 군사 지휘"
+        ],
+        "martial_domain": "내전 전장",
+        "active_domains": [
+          "무림 대전",
+          "치료/의술"
+        ],
+        "faction_position": {
+          "affiliation": "반좌천명 연합",
+          "rank": "전장 의원(부상 상태)",
+          "change": "내전 격화"
+        },
+        "enemy_pressure": "좌천명이 본부를 장악한 후 첫 행보: 무림맹 산하 12개 분타에 칙령을 보낸다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "war_pressure",
+          "receipt_line": "약재고 140상자 확보.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 55",
@@ -6174,7 +9278,69 @@
           "거래/외교"
         ]
       },
-      "block_no": 55
+      "block_no": 55,
+      "genre_ext": {
+        "realm_before": "의신 회복 중 (92%)",
+        "realm_after": "의신 완성 근접 (97%)",
+        "internal_energy_before": "70갑자",
+        "internal_energy_after": "85갑자 (교주 치료 8시간 극한 시술+화독위공 체내 독 추가 전환)",
+        "martial_arts_acquired": [
+          "칠성침법 5침 실전"
+        ],
+        "martial_arts_used": [
+          "칠성침법 5침",
+          "활살일체",
+          "화독위공",
+          "약침"
+        ],
+        "injury_status": {
+          "current": "독 잔류 15%로 감소(화독위공 진행). 8시간 시술 피로.",
+          "change": "독 20%→15%. 피로 추가"
+        },
+        "faction_status": {
+          "affiliation": "반좌천명 연합+마교 동맹",
+          "rank": "전장 의원+마교 은인",
+          "change": "마교 동맹 확보"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "부상 속 전장 복귀",
+          "after": "마교 교주까지 치료한 천하 신의. 정파+마교 양쪽의 은인"
+        },
+        "action_type": "치료 (마교 교주 독역 치료)",
+        "opponent": {
+          "name": "독역 (90갑자 체내)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "칠성침법 5침+활살일체+화독위공 삼중 결합"
+        },
+        "strategy": "5침으로 경맥 잠금→활살일체→화독위공으로 독 분리/파괴/내공화",
+        "success_pattern": "교주 완치. 마교 동맹. 5침 검증",
+        "leverage_used": [
+          "칠성침법 5침",
+          "활살일체",
+          "화독위공",
+          "홍연 가교",
+          "산호정화련 잔량"
+        ],
+        "martial_domain": "마교 본거지",
+        "active_domains": [
+          "치료/의술",
+          "거래/외교"
+        ],
+        "faction_position": {
+          "affiliation": "반좌천명 연합+마교 동맹",
+          "rank": "전장 의원+마교 은인",
+          "change": "마교 동맹 확보"
+        },
+        "enemy_pressure": "흑월성 도착.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "천마존 독역 완치 — 천마존의 90갑자 내공이 보전됨.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 56",
@@ -6274,7 +9440,60 @@
           "가문/세가 정치"
         ]
       },
-      "block_no": 56
+      "block_no": 56,
+      "genre_ext": {
+        "realm_before": "의신 완성 근접 (97%)",
+        "realm_after": "의신 완성 (98%)",
+        "internal_energy_before": "85갑자",
+        "internal_energy_after": "90갑자 (화독위공 체내 독 추가 전환+정신적 안정)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "독 잔류 10%로 감소. 거의 정상.",
+          "change": "독 15%→10%"
+        },
+        "faction_status": {
+          "affiliation": "진가장",
+          "rank": "차기 가주",
+          "change": "가주 추대"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "정파+마교 은인",
+          "after": "진가장 가주이자 천하 신의"
+        },
+        "action_type": "가문/세가 정치 (가주 추대)",
+        "opponent": {
+          "name": "진소검(삼형)",
+          "sect_or_faction": "진가장 내부",
+          "weakness_exploited": "삼형의 반발을 가문 대다수 지지로 압도"
+        },
+        "strategy": "가주직 수락+삼형 포용으로 가문 통합",
+        "success_pattern": "가주 추대. 가문 통합",
+        "leverage_used": [
+          "아버지 지명",
+          "가문 지지",
+          "무림 대전 공로",
+          "아버지 완치 실적"
+        ],
+        "martial_domain": "진가장",
+        "active_domains": [
+          "가문/세가 정치"
+        ],
+        "faction_position": {
+          "affiliation": "진가장",
+          "rank": "차기 가주",
+          "change": "가주 추대"
+        },
+        "enemy_pressure": "아버지가 선언한다: '진가장 차기 가주로 막내 소백을 추대한다.' 가문 원로 12명 중 9명이 찬성.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "faction_power",
+          "receipt_line": "진가장 차기 가주 추대 확정.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 57",
@@ -6381,7 +9600,61 @@
           "감정/관계"
         ]
       },
-      "block_no": 57
+      "block_no": 57,
+      "genre_ext": {
+        "realm_before": "의신 완성 (98%)",
+        "realm_after": "의신 완성 (98%, 변동 없음 — 감정 블록)",
+        "internal_energy_before": "90갑자",
+        "internal_energy_after": "88갑자 (소풍 응급 치료 시도로 소모)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "활침(소풍 응급 치료 시도)"
+        ],
+        "injury_status": {
+          "current": "독 잔류 10%. 물리적 부상 없음. 심리적 충격.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "반좌천명+마교 연합",
+          "rank": "전장 사령+가주",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "진가장 가주+천하 신의",
+          "after": "형의 희생을 겪은 전장 의원"
+        },
+        "action_type": "무림 대전 + 감정 (형 중상 + 전쟁 선택)",
+        "opponent": {
+          "name": "좌천명 암부 (독 화살)",
+          "sect_or_faction": "좌천명 세력",
+          "weakness_exploited": "해당 없음(기습)"
+        },
+        "strategy": "소풍을 홍연에게 맡기고 전선 선택",
+        "success_pattern": "전쟁 선택. 소풍 위탁. 감정적 고통(대가)",
+        "leverage_used": [
+          "홍연의 독역 면역(독 진행 지연)",
+          "소백의 결단"
+        ],
+        "martial_domain": "전장",
+        "active_domains": [
+          "무림 대전",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "반좌천명+마교 연합",
+          "rank": "전장 사령+가주",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "좌천명의 암부(暗部) '독영대(毒影隊)' 5명이 전선 혼란 속에 소백의 지휘소에 침투한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "소풍 중상 — 절맥독으로 경맥 동결, 12시간 시한.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 58",
@@ -6479,7 +9752,65 @@
           "치료/의술"
         ]
       },
-      "block_no": 58
+      "block_no": 58,
+      "genre_ext": {
+        "realm_before": "의신 완성 (98%, 변동 없음 — 감정 블록)",
+        "realm_after": "의신 완성 (98%)",
+        "internal_energy_before": "88갑자",
+        "internal_energy_after": "85갑자 (전투+치료 소모)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "활살일체(동시 치료+전투)",
+          "살침(적 독공 무력화)",
+          "약침(장풍래 치료)"
+        ],
+        "injury_status": {
+          "current": "독 잔류 8%. 전투 소모.",
+          "change": "독 10%→8%. 전투 피로"
+        },
+        "faction_status": {
+          "affiliation": "연합",
+          "rank": "전장 사령",
+          "change": "전선 역전"
+        },
+        "kill_count": 0,
+        "spare_count": 3,
+        "jianghu_reputation": {
+          "before": "형의 희생을 겪은 의원",
+          "after": "전장을 역전시킨 의원. 전설 강화"
+        },
+        "action_type": "비무/전투 + 치료 (전장 역전)",
+        "opponent": {
+          "name": "좌천명파 주력",
+          "sect_or_faction": "좌천명 세력",
+          "weakness_exploited": "살침으로 적 독공 무력화+활살일체로 동시 치료"
+        },
+        "strategy": "치료+전투 동시 수행. 한 손 활침(아군), 한 손 살침(적)",
+        "success_pattern": "전선 역전+장풍래 치료",
+        "leverage_used": [
+          "활살일체",
+          "살침",
+          "약침",
+          "전장 의술 경험"
+        ],
+        "martial_domain": "전장",
+        "active_domains": [
+          "비무/전투",
+          "치료/의술"
+        ],
+        "faction_position": {
+          "affiliation": "연합",
+          "rank": "전장 사령",
+          "change": "전선 역전"
+        },
+        "enemy_pressure": "좌천명파 주력 2만이 반좌천명 연합의 남쪽 방어선을 돌파했다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "전선 역전.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 59",
@@ -6581,7 +9912,57 @@
           "무림 대전"
         ]
       },
-      "block_no": 59
+      "block_no": 59,
+      "genre_ext": {
+        "realm_before": "의신 완성 (98%)",
+        "realm_after": "의신 완성 (98%)",
+        "internal_energy_before": "85갑자",
+        "internal_energy_after": "85갑자 (교전 없이 후퇴)",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "독 잔류 8%. 물리적 양호.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "연합",
+          "rank": "전장 사령",
+          "change": "연합군 후퇴 결정"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "전장 역전 전설",
+          "after": "좌천명 괴물화에 후퇴한 연합 지도자"
+        },
+        "action_type": "무림 대전 (좌천명 변신 목격 + 후퇴 결정)",
+        "opponent": {
+          "name": "좌천명 (150갑자 독기 괴물)",
+          "sect_or_faction": "좌천명 세력",
+          "weakness_exploited": "해당 없음(정면 대결 불가)"
+        },
+        "strategy": "후퇴+시간 벌기. 칠성침법 7침 완성이 유일한 대안",
+        "success_pattern": "연합군 보전. 최종 대응책(7침) 확인",
+        "leverage_used": [
+          "전략적 판단(후퇴)"
+        ],
+        "martial_domain": "전장",
+        "active_domains": [
+          "무림 대전"
+        ],
+        "faction_position": {
+          "affiliation": "연합",
+          "rank": "전장 사령",
+          "change": "연합군 후퇴 결정"
+        },
+        "enemy_pressure": "좌천명이 최후의 수단을 쓴다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "faction_power",
+          "receipt_line": "좌천명이 흡독공 자가 적용으로 최종 보스화.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 60",
@@ -6695,7 +10076,67 @@
           "치료/의술"
         ]
       },
-      "block_no": 60
+      "block_no": 60,
+      "genre_ext": {
+        "realm_before": "의신 완성 (98%)",
+        "realm_after": "의신 완성 → 천의 도전 준비 (98%)",
+        "internal_energy_before": "85갑자",
+        "internal_energy_after": "100갑자 (화독위공 체내 독 완전 전환+감정적 각성으로 내공 폭증)",
+        "martial_arts_acquired": [
+          "독역 범용 해독제 조제법"
+        ],
+        "martial_arts_used": [
+          "약침 기술(해독제 조제)",
+          "화독위공(체내 독 완전 전환)"
+        ],
+        "injury_status": {
+          "current": "독 잔류 0% — 화독위공으로 완전 전환. 비경 95% 접합. 최상.",
+          "change": "독 8%→0%. 완전 해독"
+        },
+        "faction_status": {
+          "affiliation": "진가장+연합",
+          "rank": "가주+대의원",
+          "change": "최종전 준비 완료"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "후퇴한 연합 지도자",
+          "after": "독역 해독제 완성. 천하 유일의 해결책 보유"
+        },
+        "action_type": "감정/관계 + 치료 (유서 + 해독제 완성)",
+        "opponent": {
+          "name": "없음",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "유서에서 정서적 힘을 얻고, 홍연 혈액+독역 지식으로 해독제 완성",
+        "success_pattern": "유서 감동+해독제 완성. 이중 성과",
+        "leverage_used": [
+          "큰형 유서(정서적 동력)",
+          "홍연 혈액",
+          "독역 3종 분류",
+          "산호정화련",
+          "약침 기술"
+        ],
+        "martial_domain": "진가장",
+        "active_domains": [
+          "감정/관계",
+          "치료/의술"
+        ],
+        "faction_position": {
+          "affiliation": "진가장+연합",
+          "rank": "가주+대의원",
+          "change": "최종전 준비 완료"
+        },
+        "enemy_pressure": "유서의 내용: '소백아, 네가 이것을 읽는다면 나는 이미 없겠지.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "큰형 유서 발견 — '네가 진가의 진짜 자랑이다.' 시리즈 최고 감동 장면 중 하나.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 61",
@@ -6711,7 +10152,13 @@
         "protagonist": "천의 입문. 6침 완성. 의념 6개 동시 제어. 치료 범위 200명. 그러나 7침 조건 미해독이 최대 장벽.",
         "antagonist": "좌천명 150갑자로 전선 교착 중. 2주간 수련 시간을 벌어준 연합+마교의 방어선이 한계에 도달."
       },
-      "relationship_delta": [],
+      "relationship_delta": [
+        {
+          "target": "진소풍(형)",
+          "before": "홍연 치료 이후 아직 완전 회복 전의 형",
+          "after": "소백의 6침 완성을 위해 전선을 버텨 주는 후방 지지자"
+        }
+      ],
       "foreshadow": [
         {
           "event": "(복선) 7침 조건 '무량 내공+생명 대가' → '정(情)의 침'으로 해독",
@@ -6789,7 +10236,63 @@
           "수련/성장"
         ]
       },
-      "block_no": 61
+      "block_no": 61,
+      "genre_ext": {
+        "realm_before": "의신 완성 → 천의 도전 준비 (98%)",
+        "realm_after": "천의 입문 (99%)",
+        "internal_energy_before": "100갑자",
+        "internal_energy_after": "110갑자",
+        "martial_arts_acquired": [
+          "칠성침법 6침 완성"
+        ],
+        "martial_arts_used": [
+          "칠성침법 1~6침"
+        ],
+        "injury_status": {
+          "current": "비경 95%. 최상.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "연합",
+          "rank": "가주+대의원",
+          "change": "변동 없음"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "해독제 완성",
+          "after": "6침 완성 소문. 천의 근접"
+        },
+        "action_type": "수련/성장",
+        "opponent": {
+          "name": "없음",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "200회 반복+의념 관통 원리로 6침 완성",
+        "success_pattern": "6침 완성. 천의 입문",
+        "leverage_used": [
+          "엽천수 수련법",
+          "의념 관통 원리",
+          "100갑자 내공"
+        ],
+        "martial_domain": "진가장",
+        "active_domains": [
+          "수련/성장"
+        ],
+        "faction_position": {
+          "affiliation": "연합",
+          "rank": "가주+대의원",
+          "change": "변동 없음"
+        },
+        "enemy_pressure": "3일간 실패 반복.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "칠성침법 6침 완성 — 천의 입문.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 62",
@@ -6908,7 +10411,67 @@
         "terrain_advantage": "전선 후방 진가장 약방과 전선 사이의 보급선 확보가 핵심. 매화의 약재 수송이 치료 지속의 전제 조건",
         "risk_level": "극한. 소백 과로 시 치료 인력 전무. 독기 파동이 매일 강화되어 4일 뒤 6침 한계 돌파 예상"
       },
-      "block_no": 62
+      "block_no": 62,
+      "genre_ext": {
+        "realm_before": "천의 입문 (99%)",
+        "realm_after": "천의 입문 (99%)",
+        "internal_energy_before": "110갑자",
+        "internal_energy_after": "105갑자",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "6침",
+          "살침",
+          "활살일체",
+          "해독제"
+        ],
+        "injury_status": {
+          "current": "전투 피로.",
+          "change": "최상→피로"
+        },
+        "faction_status": {
+          "affiliation": "연합",
+          "rank": "전장 사령",
+          "change": "전선 유지"
+        },
+        "kill_count": 0,
+        "spare_count": 5,
+        "jianghu_reputation": {
+          "before": "6침 소문",
+          "after": "전선을 혼자 유지하는 의원"
+        },
+        "action_type": "무림 대전 + 치료",
+        "opponent": {
+          "name": "좌천명 세력",
+          "sect_or_faction": "좌천명",
+          "weakness_exploited": "6침+해독제로 독기 정화"
+        },
+        "strategy": "6침 원거리 의념 치료로 하루 200명 치료+해독제 대량 배포+마교 면역 부대 최전방 방패. 치료 속도 vs 독기 확산 속도의 경쟁에서 간신히 균형 유지",
+        "success_pattern": "전선 유지. 좌천명 본인은 미대응",
+        "leverage_used": [
+          "6침",
+          "해독제",
+          "살침"
+        ],
+        "martial_domain": "전장",
+        "active_domains": [
+          "무림 대전",
+          "치료/의술"
+        ],
+        "terrain_advantage": "전선 후방 진가장 약방과 전선 사이의 보급선 확보가 핵심. 매화의 약재 수송이 치료 지속의 전제 조건",
+        "risk_level": "극한. 소백 과로 시 치료 인력 전무. 독기 파동이 매일 강화되어 4일 뒤 6침 한계 돌파 예상",
+        "faction_position": {
+          "affiliation": "연합",
+          "rank": "전장 사령",
+          "change": "전선 유지"
+        },
+        "enemy_pressure": "전선 도착.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "전선 일시 안정 — 붕괴 직전에서 1주일 시간 확보.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 63",
@@ -7031,7 +10594,73 @@
           "detail": "'내공이 부족한 게 아니다. 110갑자면 충분한데 뭔가 다른 것이 부족하다' — 7침의 조건이 내공이 아님을 직감"
         }
       },
-      "block_no": 63
+      "block_no": 63,
+      "genre_ext": {
+        "realm_before": "천의 입문 (99%)",
+        "realm_after": "천의 위기",
+        "internal_energy_before": "105갑자",
+        "internal_energy_after": "80갑자",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "칠성침법 7침 시도(실패)"
+        ],
+        "injury_status": {
+          "current": "3개 경맥 파열. 의무일체 사용 불가.",
+          "change": "최상→파열(최악)"
+        },
+        "faction_status": {
+          "affiliation": "연합",
+          "rank": "가주 — 활동 불가",
+          "change": "7침 실패"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "전선 유지 전설",
+          "after": "7침 실패 충격"
+        },
+        "action_type": "수련(실패)",
+        "opponent": {
+          "name": "칠성침법 7침(자기 한계)",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "칠성침법 7침(요광성) 강행. 의념 7개 동시 관통 시도. 6침까지 안정 유지 후 7번째 의념 발사 — 경혈 도달 직전 의념 끊김. 역류로 3경맥 재파열",
+        "success_pattern": "실패. 경맥 파열",
+        "leverage_used": [
+          "110갑자",
+          "6침 완성"
+        ],
+        "martial_domain": "진가장",
+        "active_domains": [
+          "수련/성장"
+        ],
+        "technique_used": [
+          "칠성침법 7침 시도(실패)",
+          "의념 7개 동시 발사(6개 안정, 7번째 실패)"
+        ],
+        "injury": {
+          "type": "경맥 파열",
+          "severity": "중상",
+          "detail": "수태양소장경/족소양담경/족태임비경 3경맥 재파열. 과거 과로 경맥 손상 흉터 부위. 토혈. 전투 불능"
+        },
+        "breakthrough": {
+          "type": "실패 속 깨달음",
+          "detail": "'내공이 부족한 게 아니다. 110갑자면 충분한데 뭔가 다른 것이 부족하다' — 7침의 조건이 내공이 아님을 직감"
+        },
+        "faction_position": {
+          "affiliation": "연합",
+          "rank": "가주 — 활동 불가",
+          "change": "7침 실패"
+        },
+        "enemy_pressure": "칠성침법 7침(요광성, 瑤光星).",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "칠성침법 7침 첫 시도 실패.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 64",
@@ -7157,7 +10786,67 @@
           "detail": "의식 불명 중 동료들의 기운을 감지 — 의념이 침 없이도 작동할 수 있다는 천의의 전조. '사람/감정'이라는 7침의 실마리 부상"
         }
       },
-      "block_no": 64
+      "block_no": 64,
+      "genre_ext": {
+        "realm_before": "천의 위기",
+        "realm_after": "회복 시작",
+        "internal_energy_before": "80갑자",
+        "internal_energy_after": "85갑자",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "자가 경맥 정비"
+        ],
+        "injury_status": {
+          "current": "3경맥 접합 시작.",
+          "change": "파열→접합 시작"
+        },
+        "faction_status": {
+          "affiliation": "연합",
+          "rank": "가주 — 요양",
+          "change": "동료들 대리"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "7침 실패",
+          "after": "동료들이 소백 없이 버텨주는 감동"
+        },
+        "action_type": "감정/관계",
+        "opponent": {
+          "name": "좌천명(교착)",
+          "sect_or_faction": "좌천명",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "소백 부재 중 동료들의 분업: 소풍(전선 방어), 매화(해독제 배포), 홍연(독기 교란), 장풍래(사기 유지). 소백은 무의식 중 의념 감지로 동료들의 활동을 인식",
+        "success_pattern": "1주 교착. 회복 시작",
+        "leverage_used": [
+          "소풍",
+          "매화",
+          "홍연",
+          "장풍래",
+          "자가 정비"
+        ],
+        "martial_domain": "진가장+전장",
+        "active_domains": [
+          "감정/관계"
+        ],
+        "breakthrough": {
+          "type": "감각적 직관",
+          "detail": "의식 불명 중 동료들의 기운을 감지 — 의념이 침 없이도 작동할 수 있다는 천의의 전조. '사람/감정'이라는 7침의 실마리 부상"
+        },
+        "faction_position": {
+          "affiliation": "연합",
+          "rank": "가주 — 요양",
+          "change": "동료들 대리"
+        },
+        "enemy_pressure": "소풍(회복 80%, 내공 25갑자)이 진가장 호위대 50명을 이끌고 전선에 복귀한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "war_pressure",
+          "receipt_line": "동료들이 1주일간 전선을 사수하여 소백에게 회복 시간 제공.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 65",
@@ -7302,7 +10991,74 @@
           "detail": "7침 진짜 조건 해독: 무량=무한한 감정, 생명 대가=경맥의 죽음과 재생의 동시성. 3경맥 완전 재생(이전보다 강화). 금빛 의념 최초 발현"
         }
       },
-      "block_no": 65
+      "block_no": 65,
+      "genre_ext": {
+        "realm_before": "회복 시작",
+        "realm_after": "천의 개안 (99%)",
+        "internal_energy_before": "85갑자",
+        "internal_energy_after": "120갑자",
+        "martial_arts_acquired": [
+          "정(情)의 침",
+          "7침 조건 해독"
+        ],
+        "martial_arts_used": [
+          "정(情)의 침(경맥 재생)"
+        ],
+        "injury_status": {
+          "current": "3경맥 재생 70%.",
+          "change": "접합→재생 진행"
+        },
+        "faction_status": {
+          "affiliation": "연합",
+          "rank": "가주",
+          "change": "천의 개안"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "7침 실패",
+          "after": "천의 개안. 세 빛"
+        },
+        "action_type": "기연/깨달음",
+        "opponent": {
+          "name": "없음",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "금기 재해석으로 7침 조건 해독. 감정을 의념으로 전환 → 파열 경맥을 감정의 불로 태워 재생. 활침+살침+정(情)의 침 3중 발현",
+        "success_pattern": "천의 개안. 7침 해독. 경맥 재생",
+        "leverage_used": [
+          "모든 복선의 수렴",
+          "사랑하는 이들의 존재"
+        ],
+        "martial_domain": "내면",
+        "active_domains": [
+          "기연/깨달음",
+          "감정/관계"
+        ],
+        "technique_used": [
+          "정(情)의 침(경맥 재생)",
+          "활침(푸른빛)",
+          "살침(붉은빛)",
+          "정의침(금빛)"
+        ],
+        "breakthrough": {
+          "type": "천의 개안 전 단계",
+          "detail": "7침 진짜 조건 해독: 무량=무한한 감정, 생명 대가=경맥의 죽음과 재생의 동시성. 3경맥 완전 재생(이전보다 강화). 금빛 의념 최초 발현"
+        },
+        "faction_position": {
+          "affiliation": "연합",
+          "rank": "가주",
+          "change": "천의 개안"
+        },
+        "enemy_pressure": "금기의 진실이 뒤집힌다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "천의 개안의 전 단계 — '정(情)의 침' 발현.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 66",
@@ -7432,7 +11188,72 @@
           "detail": "침 없이 의념만으로 치료 가능. 치료 범위 1,000명. 감정이 연료인 한 의념은 고갈되지 않는다(무량 근접). 칠성침법 7침의 기술적 조건 충족"
         }
       },
-      "block_no": 66
+      "block_no": 66,
+      "genre_ext": {
+        "realm_before": "천의 개안 (99%)",
+        "realm_after": "천의 (100%)",
+        "internal_energy_before": "120갑자",
+        "internal_energy_after": "무량 근접",
+        "martial_arts_acquired": [
+          "의념치료"
+        ],
+        "martial_arts_used": [
+          "의념치료"
+        ],
+        "injury_status": {
+          "current": "경맥 90% 재생.",
+          "change": "70%→90%"
+        },
+        "faction_status": {
+          "affiliation": "연합",
+          "rank": "가주",
+          "change": "천의 도달"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "천의 개안",
+          "after": "'침 없이 치료하는 천의'"
+        },
+        "action_type": "수련+치료",
+        "opponent": {
+          "name": "없음",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "침 없이 의념만으로 치료 — 의무일체의 궁극 형태. 양손 발현 금빛 의념 → 10명 동시 독역 분해 + 경맥 재생. 치료 범위 1,000명(반경 500장)",
+        "success_pattern": "천의 도달. 의념 치료 검증",
+        "leverage_used": [
+          "정(情)의 침",
+          "감정→내공 전환"
+        ],
+        "martial_domain": "진가장",
+        "active_domains": [
+          "치료/의술",
+          "수련/성장"
+        ],
+        "technique_used": [
+          "의념치료(침 없이)",
+          "금빛 의념 발현",
+          "원거리 경맥 감지(반경 500장)"
+        ],
+        "breakthrough": {
+          "type": "천의 도달",
+          "detail": "침 없이 의념만으로 치료 가능. 치료 범위 1,000명. 감정이 연료인 한 의념은 고갈되지 않는다(무량 근접). 칠성침법 7침의 기술적 조건 충족"
+        },
+        "faction_position": {
+          "affiliation": "연합",
+          "rank": "가주",
+          "change": "천의 도달"
+        },
+        "enemy_pressure": "마당에 전선에서 후송된 독역 중독자 10명이 누워 있다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "천의 경지 도달 확정.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 67",
@@ -7546,7 +11367,58 @@
           "감정/관계"
         ]
       },
-      "block_no": 67
+      "block_no": 67,
+      "genre_ext": {
+        "realm_before": "천의 (100%)",
+        "realm_after": "천의 (100%)",
+        "internal_energy_before": "무량 근접",
+        "internal_energy_after": "무량 근접",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [],
+        "injury_status": {
+          "current": "경맥 95%.",
+          "change": "90%→95%"
+        },
+        "faction_status": {
+          "affiliation": "연합+마교",
+          "rank": "최고 전력",
+          "change": "최종전 선봉"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "천의 전설",
+          "after": "최종전 선봉. 무림의 희망"
+        },
+        "action_type": "감정/관계",
+        "opponent": {
+          "name": "좌천명(통첩)",
+          "sect_or_faction": "좌천명",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "결의. 최종전 전야에 '좌천명을 싸우지 않고 치료하겠다'는 전략 선언. 감정적 최적 상태 진입",
+        "success_pattern": "비무대 아래에서 숨죽이던 막내가 3,000명 앞에 선 천의 — 70블록 성장의 시각적 대구",
+        "leverage_used": [
+          "아버지 축복",
+          "동료 유대"
+        ],
+        "martial_domain": "본영",
+        "active_domains": [
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "연합+마교",
+          "rank": "최고 전력",
+          "change": "최종전 선봉"
+        },
+        "enemy_pressure": "좌천명이 전서구로 최후 통첩을 보낸다: '내일 해 뜰 때 끝내겠다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "최종전 전야 결의 완료.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 68",
@@ -7689,7 +11561,78 @@
         "terrain_advantage": "낙양 동쪽 평야 — 평지라 의념 확산에 장애물 없음. 반경 500장 전장 전체를 커버",
         "risk_level": "극한. 3구역 동시 운용이 의념 집중력의 한계. 좌천명 접근 전 소진 가능성"
       },
-      "block_no": 68
+      "block_no": 68,
+      "genre_ext": {
+        "realm_before": "천의 (100%)",
+        "realm_after": "천의 (100%)",
+        "internal_energy_before": "무량 근접",
+        "internal_energy_after": "무량 근접",
+        "martial_arts_acquired": [],
+        "martial_arts_used": [
+          "6침",
+          "의념치료",
+          "살침",
+          "활살일체"
+        ],
+        "injury_status": {
+          "current": "전투 피로.",
+          "change": "피로"
+        },
+        "faction_status": {
+          "affiliation": "연합+마교",
+          "rank": "최종 전력",
+          "change": "좌천명 접근"
+        },
+        "kill_count": 0,
+        "spare_count": 10,
+        "jianghu_reputation": {
+          "before": "무림의 희망",
+          "after": "전장을 빛으로 가르는 천의. 생전 전설"
+        },
+        "action_type": "무림 대전",
+        "opponent": {
+          "name": "좌천명 세력",
+          "sect_or_faction": "좌천명",
+          "weakness_exploited": "6침 독기 정화+살침 무력화"
+        },
+        "strategy": "전장 3구역 분할 운용. 1구역(전방): 살침 의념으로 적 독기 해체+혈도 봉쇄. 2구역(중앙): 활침 의념으로 아군 실시간 치료. 3구역(후방): 화독위공 의념으로 독기 흡수-분해-중화. 1인 3역 동시 전개",
+        "success_pattern": "전장 지배. 좌천명 접근",
+        "leverage_used": [
+          "천의",
+          "6침",
+          "의념치료",
+          "살침",
+          "활살일체",
+          "연합+마교"
+        ],
+        "martial_domain": "전장",
+        "active_domains": [
+          "무림 대전",
+          "치료/의술",
+          "비무/전투"
+        ],
+        "technique_used": [
+          "천의 의념(3구역 동시)",
+          "살침 의념(원거리 혈도 봉쇄)",
+          "활침 의념(원거리 치료)",
+          "화독위공 의념(독기 정화)",
+          "칠성침법 6침(대규모)"
+        ],
+        "terrain_advantage": "낙양 동쪽 평야 — 평지라 의념 확산에 장애물 없음. 반경 500장 전장 전체를 커버",
+        "risk_level": "극한. 3구역 동시 운용이 의념 집중력의 한계. 좌천명 접근 전 소진 가능성",
+        "faction_position": {
+          "affiliation": "연합+마교",
+          "rank": "최종 전력",
+          "change": "좌천명 접근"
+        },
+        "enemy_pressure": "좌천명파 독공 무인 수십 명이 선봉으로 나서며 독기를 방출한다.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "proof",
+          "receipt_line": "전장 독기 정화 완료.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 69",
@@ -7848,7 +11791,78 @@
         ],
         "risk_level": "최극한. 실패 시 독기 폭발로 반경 1리 초토화. 소백 사망 가능"
       },
-      "block_no": 69
+      "block_no": 69,
+      "genre_ext": {
+        "realm_before": "천의 (100%)",
+        "realm_after": "천의 완성 (100%, 7침)",
+        "internal_energy_before": "무량 근접",
+        "internal_energy_after": "무량(無量)",
+        "martial_arts_acquired": [
+          "칠성침법 7침 완성"
+        ],
+        "martial_arts_used": [
+          "7침",
+          "활침",
+          "살침",
+          "정(情)의 침",
+          "의념치료"
+        ],
+        "injury_status": {
+          "current": "경맥 100% 재생.",
+          "change": "95%→100%"
+        },
+        "faction_status": {
+          "affiliation": "연합+마교",
+          "rank": "천하 최강 의원",
+          "change": "최종전 승리"
+        },
+        "kill_count": 0,
+        "spare_count": 1,
+        "jianghu_reputation": {
+          "before": "생전 전설",
+          "after": "천의무쌍. 적을 치료하며 이긴 전무후무한 의원"
+        },
+        "action_type": "비무/전투(최종전 — 치료로 승리)",
+        "opponent": {
+          "name": "좌천명",
+          "level": "150갑자(흡독공 자가적용)",
+          "detail": "수천 명 내공 흡수한 독기 괴물. 경맥이 인간의 것이 아님. 내부에 수천 명의 고통이 비명으로 울림"
+        },
+        "strategy": "독기 파동 속으로 전진. 자신의 몸을 매개체로 화독위공 자동 발동 → 좌천명 이마에 손 얹고 7침 완성. 활침(내공 환원)+살침(독기 해체)+정(情)의 침(경맥 재생) 3중 동시 시전으로 150갑자를 분해",
+        "success_pattern": "7침 완성 — 침 없이 의념의 침 7개가 7경혈 동시 침투. 내관혈 첫 봉쇄에서 시작한 기술이 7경혈 의념 침투로 완성",
+        "leverage_used": [
+          "7침",
+          "활침+살침+정의침",
+          "무량 내공",
+          "감정",
+          "7년 모든 성장"
+        ],
+        "martial_domain": "최종 전장",
+        "active_domains": [
+          "비무/전투",
+          "치료/의술"
+        ],
+        "technique_used": [
+          "칠성침법 7침(완성)",
+          "활침 의념(수천 명 내공 환원)",
+          "살침 의념(흡독공 구조 해체)",
+          "정(情)의 침 의념(뒤엉킨 경맥 정리)",
+          "화독위공(독기 자동 흡수)"
+        ],
+        "risk_level": "최극한. 실패 시 독기 폭발로 반경 1리 초토화. 소백 사망 가능",
+        "faction_position": {
+          "affiliation": "연합+마교",
+          "rank": "천하 최강 의원",
+          "change": "최종전 승리"
+        },
+        "enemy_pressure": "좌천명이 독기를 폭발시킨다 — 반경 50장 내 모든 것을 부식시키는 독기 파동.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "realm_gain",
+          "receipt_line": "칠성침법 7침 완성.",
+          "pain_only_exit": false
+        }
+      }
     },
     {
       "block_id": "Block 70",
@@ -7975,12 +11989,81 @@
           "감정/관계"
         ]
       },
-      "block_no": 70
+      "block_no": 70,
+      "genre_ext": {
+        "realm_before": "천의 완성 (100%, 7침)",
+        "realm_after": "천의 (100%, 무량)",
+        "internal_energy_before": "무량",
+        "internal_energy_after": "무량",
+        "martial_arts_acquired": [
+          "의무일체 전수법"
+        ],
+        "martial_arts_used": [
+          "의념치료",
+          "칠성침법"
+        ],
+        "injury_status": {
+          "current": "완전 건강.",
+          "change": "변동 없음"
+        },
+        "faction_status": {
+          "affiliation": "진가장(이양)+무림맹",
+          "rank": "천하 유랑 의원",
+          "change": "가주직 소풍에게 이양"
+        },
+        "kill_count": 0,
+        "spare_count": 0,
+        "jianghu_reputation": {
+          "before": "천의무쌍 전설",
+          "after": "천의 진소백. 천하를 유람하며 치료하는 전설의 의원"
+        },
+        "action_type": "치료+감정(에필로그)",
+        "opponent": {
+          "name": "없음",
+          "sect_or_faction": "N/A",
+          "weakness_exploited": "해당 없음"
+        },
+        "strategy": "천하 유람하며 독역 후유증 환자 치료. 의무일체 기초 전수. 에필로그",
+        "success_pattern": "비무대 아래 부상자 치료 → 천하를 유람하며 치료. 시작의 행위가 결말의 유산. 마지막 장면: 산길에서 쓰러진 나그네에게 '환자분, 어디가 아프십니까?'",
+        "leverage_used": [
+          "천의",
+          "의무일체 전수법",
+          "매화",
+          "해독제",
+          "모든 동료의 유산"
+        ],
+        "martial_domain": "천하",
+        "active_domains": [
+          "치료/의술",
+          "감정/관계"
+        ],
+        "faction_position": {
+          "affiliation": "진가장(이양)+무림맹",
+          "rank": "천하 유랑 의원",
+          "change": "가주직 소풍에게 이양"
+        },
+        "enemy_pressure": "에필로그.",
+        "block_cider": {
+          "has_cider": true,
+          "receipt_type": "healing",
+          "receipt_line": "독역 완전 소멸.",
+          "pain_only_exit": false
+        }
+      }
     }
   ],
   "_work_id": "wuxia_heavenly_physician",
   "_created": "2026-03-24",
   "_family": "wuxguide",
   "_subgenre": "medical_wuxia_profile",
-  "_phase0_ref": "treatments/wuxia_heavenly_physician_phase0_design.json"
+  "_phase0_ref": "treatments/phase0/wuxia_heavenly_physician_phase0_design.json",
+  "_authority_chain": [
+    "material_ssot/20_pitch/canon/wuxia_heavenly_physician.md",
+    "treatments/preprocess/wuxia_heavenly_physician/source_manifest.json",
+    "treatments/preprocess/wuxia_heavenly_physician/material_bundle_summary.json",
+    "treatments/preprocess/wuxia_heavenly_physician/profile_lock.json",
+    "treatments/preprocess/wuxia_heavenly_physician/phase0_ready_snapshot.json",
+    "treatments/phase0/wuxia_heavenly_physician_phase0_design.json",
+    "treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json"
+  ]
 }

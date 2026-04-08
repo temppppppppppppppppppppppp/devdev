@@ -4102,6 +4102,11 @@ class Stage4InterviewRound:
             director_result=director_result,
             selection_reason=logging_payload.session_selection_reason,
             verdict_reason=logging_payload.session_verdict_reason,
+            advisory_warnings=self._build_final_selection_advisory_payload(
+                gate_semantics=logging_payload.session_gate_semantics,
+                fix_pack=dict(logging_payload.session_fix_pack or {}),
+                retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
+            ),
         )
         self._emit_pass_result_logs(
             next_ep=next_ep,
@@ -4220,6 +4225,7 @@ class Stage4InterviewRound:
         director_result: dict,
         selection_reason: str,
         verdict_reason: str,
+        advisory_warnings: dict | None = None,
     ) -> None:
         current_db = getattr(getattr(self.ctx, "current_project", None), "db", None)
         if current_db is None or not hasattr(current_db, "update_director_selection_rationale"):
@@ -4234,9 +4240,59 @@ class Stage4InterviewRound:
                     if isinstance(trace_director_result, dict)
                     else director_result.get("fix_scope", "")
                 ),
+                advisory_warnings=advisory_warnings,
             )
         except Exception as _e:
             logging.debug("[Stage4] director rationale sync failed: %s", _e)
+
+    def _build_final_selection_advisory_payload(
+        self,
+        *,
+        gate_semantics: dict | None,
+        fix_pack: dict | None = None,
+        retry_budget_axes: dict | None = None,
+    ) -> dict[str, object]:
+        advisory_payload: dict[str, object] = {}
+        gate_payload = copy.deepcopy(gate_semantics) if isinstance(gate_semantics, dict) else {}
+        if gate_payload:
+            advisory_payload["gate_semantics"] = gate_payload
+        fix_pack_payload = copy.deepcopy(fix_pack) if isinstance(fix_pack, dict) else {}
+        if not fix_pack_payload and isinstance(gate_payload.get("fix_pack"), dict):
+            fix_pack_payload = copy.deepcopy(gate_payload.get("fix_pack") or {})
+        if fix_pack_payload:
+            advisory_payload["fix_pack"] = fix_pack_payload
+        retry_payload = copy.deepcopy(retry_budget_axes) if isinstance(retry_budget_axes, dict) else {}
+        if retry_payload:
+            advisory_payload["retry_budget_axes"] = retry_payload
+        repair_contract_payload = (
+            copy.deepcopy(gate_payload.get("repair_contract"))
+            if isinstance(gate_payload.get("repair_contract"), dict)
+            else {}
+        )
+        if not repair_contract_payload:
+            repair_contract_payload = self._build_repair_contract_payload_from_parts(
+                gate_semantics=gate_payload,
+                fix_pack=fix_pack_payload,
+                source=gate_payload,
+            )
+        if repair_contract_payload:
+            advisory_payload["repair_contract"] = repair_contract_payload
+        scope_authority_payload = (
+            copy.deepcopy(gate_payload.get("scope_authority"))
+            if isinstance(gate_payload.get("scope_authority"), dict)
+            else {}
+        )
+        if not scope_authority_payload:
+            scope_authority_payload = self._build_scope_authority_payload_from_parts(
+                gate_semantics=gate_payload,
+                source={
+                    **gate_payload,
+                    "repair_contract": repair_contract_payload,
+                },
+            )
+        if scope_authority_payload:
+            advisory_payload["scope_authority"] = scope_authority_payload
+        return advisory_payload
 
     def _emit_pass_result_logs(
         self,

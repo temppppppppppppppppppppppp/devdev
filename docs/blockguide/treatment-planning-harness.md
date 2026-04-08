@@ -6,6 +6,12 @@
 > 목적: **Treatment의 서사 설계(기획안)를 짤 때 지켜야 할 원칙과 검증 체계**
 > 위치: 파이프라인에서 Stage 0 전처리 **이후**, Phase 0 **이전** — 전처리 handoff → 기획안 → Phase 0 아크 설계
 > 선행 문서: `SSOT_blockguide-integrated-order.md`
+>
+> 위임/외부 모델 시작 규칙:
+>
+> - 먼저 `docs/blockguide/delegation-bootstrap.md`를 읽는다.
+> - 현재 루트는 `material_ssot/`와 live artifact paths다.
+> - 아래 본문에 남아 있는 legacy 경로/transition 설명보다 work-level current-truth doc와 current-root docs를 우선한다.
 
 ---
 
@@ -15,20 +21,21 @@
 사용자가 작품명, `work_id`, 짧은 기획안, Bible 조각만 던져도 아래 순서를 먼저 수행한다.
 
 1. `SSOT_blockguide-integrated-order.md`를 **UTF-8로 먼저 읽는다.**
-2. 그다음 `전처리_ssot\docs\SSOT_stage0_preprocess_integrated_order.md`를 읽는다.
-3. `treatments/preprocess/{work_id}/source_manifest.json`, `profile_lock.json`, `material_bundle_summary.json`, `phase0_ready_snapshot.json` 존재 여부를 확인한다.
-4. `phase0_ready_snapshot.manual_audit_pass != true`면 이 문서를 계속 읽지 말고 `Stage 0 preprocess`로 돌아간다.
-5. 그다음 이 문서를 **UTF-8로 읽는다.**
-6. 장르가 `alt_history`이거나 역사 재료 DB 조회가 필요하면 `alt_history_db_harness.md`를 추가로 읽는다.
-7. 이미 `phase0_design`, `tr_block_070_draft`, `0_bi_{work_id}.json` 중 무엇이 있는지 확인한다.
-8. `phase0_design`이 이미 있으면, 이 문서에서 새 기획을 다시 만들지 말고 통합 오더에 따라 다음 단계로 넘긴다.
-9. 아직 기획 단계라면 **한 번에 설계 단위 1개만** 만든다.
-10. 각 단위가 끝날 때마다 아래 3줄만 남긴다.
+2. 그다음 `material_ssot/README.md`와 `material_ssot/00_governance/delegation-envelope-spec-v1.md`를 읽는다.
+3. work-level current-truth doc가 있으면 먼저 연다.
+4. `treatments/preprocess/{work_id}/source_manifest.json`, `profile_lock.json`, `material_bundle_summary.json`, `phase0_ready_snapshot.json` 존재 여부를 확인한다.
+5. `phase0_ready_snapshot.manual_audit_pass != true`면 이 문서를 계속 읽지 말고 `Stage 0 preprocess`로 돌아간다.
+6. 그다음 이 문서를 **UTF-8로 읽는다.**
+7. 장르가 `alt_history`이거나 역사 재료 DB 조회가 필요하면 `alt_history_db_harness.md`를 추가로 읽는다.
+8. 이미 `phase0_design`, `tr_block_070_draft`, `0_bi_{work_id}.json` 중 무엇이 있는지 확인한다.
+9. `phase0_design`이 이미 있으면, 이 문서에서 새 기획을 다시 만들지 말고 통합 오더에 따라 다음 단계로 넘긴다.
+10. 아직 기획 단계라면 **한 번에 설계 단위 1개만** 만든다.
+11. 각 단위가 끝날 때마다 아래 3줄만 남긴다.
    - 이번 턴에 확정된 사실
    - 아직 비어 있는 사실
    - 다음 턴 기본 행동
-11. `Phase 0 JSON`이 완성되면 이 문서의 역할은 끝난다. 즉시 `treatment-production-harness-v2.md` 단계로 인계한다.
-12. 기획 단계 메모에서도 `Block 3에서`, `B12`, `블록 7` 같은 번호 메타를 서사 문장처럼 쓰지 않는다.
+12. `Phase 0 JSON`이 완성되면 이 문서의 역할은 끝난다. 즉시 `treatment-production-harness-v2.md` 단계로 인계한다.
+13. 기획 단계 메모에서도 `Block 3에서`, `B12`, `블록 7` 같은 번호 메타를 서사 문장처럼 쓰지 않는다.
     - 번호 참조는 운영 메모/복선 맵에서만 쓰고, 작품 본문 truth 문장에는 사건 의미만 남긴다.
 
 금지:

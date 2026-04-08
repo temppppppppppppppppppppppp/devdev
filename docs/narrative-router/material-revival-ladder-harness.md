@@ -73,9 +73,12 @@ Run the ladder in order. Do not skip forward unless an existing artifact already
 Goal:
 
 - prove the pair is still consumable by the current harness
+- prove the pair first matches the current production pair schema standard before any narrative judgment
 
 Check:
 
+- pair schema normalization against `material_ssot/00_governance/production-pair-schema-standard-v1.md`
+- operational state classification against `material_ssot/00_governance/production-pair-operating-policy-addendum-v1.md`
 - pair admission
 - BI standalone roadmap readiness
 - embedded roadmap warnings
@@ -85,6 +88,8 @@ If pair consumability fails:
 
 - patch only the smallest contract blockers first
 - do not start narrative repair before contract ingestion is stable
+- do not run pair benchmark before schema normalization is stable
+- if the only open issue is grandfathered `block_cider` migration debt on an untouched historical live pair, note `pass with migration debt` and freeze promotion lanes until the debt is closed
 
 ### Step 2. TR Static Audit
 
@@ -225,13 +230,20 @@ Expected evidence:
 - genre texture survives into manuscript
 - protagonist engine still reads in prose, not only metadata
 
-If this passes, the pair qualifies as an active baseline candidate for that family lane.
+If this passes and no open migration debt remains, the pair qualifies as an active baseline candidate for that family lane only when benchmark freshness is also `current`.
+
+If the pair was materially touched or regenerated after the latest benchmark artifact:
+
+- treat the pair as `benchmark freshness = pending_refresh`
+- keep using the pair as a repaired schema-clean unit
+- do not elevate it to active family baseline candidate until a fresh benchmark or bounded benchmark-preservation audit closes the freshness gap
 
 ## 6. Decision Table
 
 | Current result | Next action |
 | --- | --- |
 | pair consumability = fail | minimal contract patch first |
+| pair consumability = pass with migration debt | audit or benchmark may continue, but promotion patch / active baseline lanes stay frozen |
 | TR verdict = strong, BI repair viable = yes | BI repair |
 | TR verdict = mixed | Step 2A lite repair audit |
 | lite repair top 3 recheck = pass | BI repair or revival canary |
@@ -242,7 +254,7 @@ If this passes, the pair qualifies as an active baseline candidate for that fami
 | promotion patch = pass | revival-stage probe |
 | revival-stage probe = pass | active promotion |
 | active promotion = done | bounded Stage 4 canary |
-| Stage 4 canary = pass | treat as active family baseline candidate |
+| Stage 4 canary = pass, no open migration debt remains, and benchmark freshness = current | treat as active family baseline candidate |
 
 ## 6A. Promotion Escalation Gate
 
@@ -259,6 +271,7 @@ Hard guardrails:
 - `top 10` or all-arc repair is not the default path
 - full-wave surgery must be explicitly justified as higher ROI than regenerate-first
 - if repair spread becomes too diffuse, classify the pair as regenerate-first instead of endlessly extending salvage scope
+- open migration debt is allowed for historical observation only, not for `promotion patch`, `active promotion`, or `Stage 4` baseline use
 
 ## 7. Family Overlays
 

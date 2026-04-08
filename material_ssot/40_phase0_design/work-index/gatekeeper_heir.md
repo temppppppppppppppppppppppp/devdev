@@ -2,23 +2,14 @@
 
 Title: 사람값이 보이는 후계자
 Family: blockguide
-Status: bootstrap phase0 manifest
+Status: retired placeholder
 
-## 1. Stage Snapshot
+## 1. Retirement State
 
-- dedicated phase0 file: present
-- preprocess phase0 snapshot: present
-- current phase0 route: dedicated `treatments/phase0/` live file preferred
+- this work no longer has an active Phase0 live-chain guarantee in the bounded slice
+- any historical Phase0 path references should be treated as legacy residue, not current phase authority
 
-## 2. Current Live Chain
+## 2. Current Rule
 
-- upstream Stage0 manifest: `material_ssot/30_stage0_preprocess/work-index/gatekeeper_heir.md`
-- preprocess phase0 snapshot: `treatments/preprocess/gatekeeper_heir/phase0_ready_snapshot.json`
-- live phase0 file: `treatments/phase0/gatekeeper_heir_phase0_design.json`
-- next TR manifest: `material_ssot/50_tr/work-index/gatekeeper_heir.md`
-
-## 3. Current Notes
-
-- phase0 payload keys: `project`, `setting`, `protagonist`, `phase0_design`
-- snapshot readiness flags are all `true`
-- current phase0 state is stable enough to serve as the live design anchor
+- use this file only as a retired pointer from older stage-index links
+- any future reuse requires a new explicit Phase0 authority restore step

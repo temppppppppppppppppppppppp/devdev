@@ -101,6 +101,57 @@ def test_failure_analyzer_stage_pass_rates_treats_pass_with_fix_as_transient(tmp
         db.close()
 
 
+def test_failure_analyzer_numeric_consistency_summary_surfaces_persisted_nc_signals(tmp_path):
+    db = DBManager(tmp_path / "test_numeric_consistency_summary.db")
+    try:
+        db.save_stage_attempt(
+            stage=4,
+            verdict="REJECT",
+            ep_num=2,
+            attempt_num=1,
+            arc_num=1,
+            session_id="sess_num",
+            attempt_key="s4:ep2:arc1:a1:sess_num",
+            runtime_advisory=(
+                "[NC-1][후보 A][MAJOR][numeric_carryover_authority] "
+                "[numeric carryover authority mismatch] 원고 '20억 원' (20.0억) vs resumed "
+                "FactLedger 'capital'=2000000000.0억 (EP1 carryover baseline)."
+            ),
+            retry_directives=(
+                "[NC-1][후보 A][MAJOR][numeric_carryover_authority] "
+                "[numeric carryover authority mismatch] 원고 '20억 원' (20.0억) vs resumed "
+                "FactLedger 'capital'=2000000000.0억 (EP1 carryover baseline). / "
+                "- [NC-2][후보 A][MAJOR][numeric_carryover_authority] "
+                "[numeric carryover authority mismatch] 원고 '20억 원' (20.0억) vs resumed "
+                "FactLedger 'total_assets'=2000000000.0억 (EP1 carryover baseline)."
+            ),
+        )
+        db.save_stage_attempt(
+            stage=4,
+            verdict="PASS",
+            ep_num=3,
+            attempt_num=1,
+            arc_num=1,
+            session_id="other_sess",
+            attempt_key="s4:ep3:arc1:a1:other_sess",
+            runtime_advisory="[NC-1][후보 B][MINOR] [first_mention_drift] something else",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer.numeric_consistency_summary(stage=4, session_id="sess_num")
+
+        assert result["status"] == "warn"
+        assert result["attempt_rows_considered"] == 1
+        assert result["attempts_with_signals"] == 1
+        assert result["signal_count"] == 2
+        assert result["category_counts"]["numeric_carryover_authority"] == 2
+        assert result["ledger_field_counts"]["capital"] == 1
+        assert result["ledger_field_counts"]["total_assets"] == 1
+        assert result["signal_examples"][0]["attempt_key"] == "s4:ep2:arc1:a1:sess_num"
+    finally:
+        db.close()
+
+
 def test_failure_analyzer_episode_log_fallback_prefers_final_verdict_and_score(tmp_path):
     db = DBManager(tmp_path / "test_episode_log_fallback.db")
     try:

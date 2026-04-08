@@ -1,21 +1,15 @@
-﻿# gatekeeper_heir
+# gatekeeper_heir
 
 Title: 사람값이 보이는 후계자
 Family: blockguide
-Status: bootstrap BI manifest
+Status: retired placeholder
 
-## 1. Stage Snapshot
+## 1. Retirement State
 
-- live BI file: present
-- canonical BI contract: pass
-- pair canonical contract with TR: pass
+- this work no longer has an active BI manifest guarantee in the bounded slice
+- any historical BI path references should be treated as retired inventory, not current pair truth
 
-## 2. Current Live Chain
+## 2. Current Rule
 
-- upstream TR manifest: `material_ssot/50_tr/work-index/gatekeeper_heir.md`
-- live BI file: `bible/06_bi_gatekeeper_heir.json`
-
-## 3. Current Notes
-
-- BI title matches the current work title
-- current BI is treated as the live canonical BI artifact
+- do not use this file for active BI repair or benchmark routing
+- any future reuse requires a new active BI artifact and explicit re-entry decision

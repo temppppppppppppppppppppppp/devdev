@@ -104,7 +104,7 @@ Status: ARC-03 Block 25 완료. Block 26부터 재개.
 작업 대상: jangyeongshil_industrial_revolution TR 순차 생산
 재개 지점: Block 26 (ARC-03 후반)
 읽을 것:
-1. treatments/jangyeongshil_industrial_revolution_production_status.md
+1. docs/2026-04-06/jangyeongshil_industrial_revolution_production_status.md
 2. treatments/phase0/jangyeongshil_industrial_revolution_phase0_design.json (ARC-03 Block 26-30)
 3. treatments/jangyeongshil_industrial_revolution_tr_block_021_025_draft.json (직전 블록)
 하네스: narrative_ssot/30_harness/40_tr_production_harness.md

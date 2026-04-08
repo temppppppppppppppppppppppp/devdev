@@ -17,11 +17,15 @@ def _capture_shutdown_logs(monkeypatch):
 def test_persist_shutdown_pass_rate_state_logs_saved_record_count(monkeypatch):
     monkeypatch.setattr(main_a, "V50_MODULES_AVAILABLE", True)
     logs = _capture_shutdown_logs(monkeypatch)
-    pass_rate_monitor = SimpleNamespace(records=[1, 2, 3], save=MagicMock())
-    app = SimpleNamespace(pass_rate_monitor=pass_rate_monitor)
+    pass_rate_monitor = SimpleNamespace(records=[1, 2, 3], save=MagicMock(), reconcile_from_db=MagicMock(return_value=1))
+    app = SimpleNamespace(
+        pass_rate_monitor=pass_rate_monitor,
+        current_project=SimpleNamespace(db=object()),
+    )
 
     main_a.SovereignApp._persist_shutdown_pass_rate_state(app)
 
+    pass_rate_monitor.reconcile_from_db.assert_called_once()
     pass_rate_monitor.save.assert_called_once()
     assert logs[-1][1]["meta"] == {"record_count": 3}
     assert "통과율 기록 저장" in logs[-1][0]

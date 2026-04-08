@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import ANY, MagicMock, mock_open, patch
 
 from modules.core import stage4_episode_logging as s4_episode_logging
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
@@ -5896,6 +5896,7 @@ class TestRecordS4Attempt:
             selection_reason="re-audit accepted",
             verdict_reason="ending needs a local fix",
             fix_scope="inplace",
+            advisory_warnings=ANY,
         )
 
     def test_reject_episode_log_uses_final_attempt_meta_and_preserves_selection_meta(self, tmp_path):
@@ -5948,6 +5949,7 @@ class TestRecordS4Attempt:
             selection_reason="best candidate",
             verdict_reason="conflict",
             fix_scope="",
+            advisory_warnings=ANY,
         )
 
     def test_pass_with_fix_loop_sets_and_clears_structural_patch_context(self):
@@ -7059,6 +7061,7 @@ class TestLane2DirectorSemantics:
             selection_reason="selection",
             verdict_reason="verdict",
             fix_scope="rewrite",
+            advisory_warnings=ANY,
         )
 
     def test_sync_reject_result_selection_rationale_prefers_trace_fix_scope(self):
@@ -7079,6 +7082,7 @@ class TestLane2DirectorSemantics:
             selection_reason="selection",
             verdict_reason="verdict",
             fix_scope="partial",
+            advisory_warnings=ANY,
         )
 
     def test_build_reject_retry_snapshot_preserves_candidate_and_retry_metadata(self):

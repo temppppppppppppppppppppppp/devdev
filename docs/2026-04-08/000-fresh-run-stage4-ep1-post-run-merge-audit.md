@@ -1,8 +1,10 @@
 # 000 Fresh Run Stage4 Ep1 Post-Run Merge Audit
 
 Date: 2026-04-08
-Status: audit_complete (fresh `000_ㅇㅇㅇ` run reached Stage4 `ep1` persistence success; closure is still deferred because the completed run's proof digest remains `warn` until the bounded PASS-side sink-alignment patch is re-proven by a fresh rerun)
+Status: audit_complete_historical (fresh `000_ㅇㅇㅇ` run reached Stage4 `ep1` persistence success; this pre-rerun audit correctly held closure pending, and the rerun question is now superseded by `docs/2026-04-08/0_0-stage4-ep1-sinkproof-r1-runtime-closure-audit.md`)
 Canonical Path: `docs/2026-04-08/000-fresh-run-stage4-ep1-post-run-merge-audit.md`
+Superseded By:
+- `docs/2026-04-08/0_0-stage4-ep1-sinkproof-r1-runtime-closure-audit.md`
 Related Queue Lanes:
 - `docs/2026-04-07/0_0-stage4-partial-fix-hardening-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`

@@ -1364,6 +1364,15 @@ class FourPhaseArcRuntime:
             director_arc.get("_ensemble_meta", {}).get("best_strategy")
             or director_arc.get("_strategy", "unknown")
         )
+        director_arc["_director_compare_meta"] = {
+            "selection_reason": str(director_result.get("reason", "") or ""),
+            "comparison_notes": str(director_result.get("comparison_notes", "") or ""),
+            "director_decision": str(status or ""),
+            "feedback": str(director_result.get("feedback", "") or ""),
+            "fix_scope": str(director_result.get("fix_scope", "") or ""),
+            "quality_gate_triggered": bool(director_result.get("quality_gate_triggered")),
+            "quality_gate_reasons": list(director_result.get("quality_gate_reasons") or []),
+        }
         pipeline_result["phases"]["generate"] = {
             "status": "complete",
             "candidates_count": len(all_candidates),
@@ -1729,4 +1738,3 @@ class FourPhaseArcRuntime:
             pipeline_result=pipeline_result,
             feedback=state.feedback,
         )
-

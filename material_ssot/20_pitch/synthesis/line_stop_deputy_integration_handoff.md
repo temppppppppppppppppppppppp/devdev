@@ -1,19 +1,19 @@
-# line_stop_deputy — Integration Handoff Lock
+# line_stop_deputy — Integration Handoff Closeout
 
 Date: 2026-04-06
-Status: **LOCKED**
-Authority: this document is the integration decision SSOT for `line_stop_deputy` + `shockline_salaryman` merge
+Status: **CLOSED / RETIRED** (updated 2026-04-08)
+Authority: this document is the historical integration decision record for `line_stop_deputy` + `shockline_salaryman`
 
 ## 1. Decision Summary
 
 | Work | Disposition | Detail |
 |---|---|---|
-| `line_stop_deputy` | **KEEP (본체)** | work_id 유지, core engine / first reward / repeatable loop 전부 이 쪽 기준 |
-| `shockline_salaryman` | **ABSORB → RETIRE** | 부품 2개만 흡수, 나머지 폐기. canon 후보에서 영구 제거 |
+| `line_stop_deputy` | **RETIRE** | active candidate lane에서 제거. canon / phase0 / downstream route 종료 |
+| `shockline_salaryman` | **RETIRED** | 기존 retire 유지. active candidate lane 복귀 없음 |
 
-두 작품을 병렬로 유지하지 않는다. canon에 올라가는 건 `line_stop_deputy` 하나뿐이다.
+현재는 두 작품 모두 active promotion 대상이 아니다. 이 문서는 historical reasoning record로만 보존한다.
 
-## 2. Keep — line_stop_deputy 고정 요소
+## 2. Historical Keep Logic
 
 ### core engine
 `사고를 막는 사람`이 아니라 `멈출 권리를 가진 사람`으로 올라가는 안전 권력 엔진.
@@ -42,7 +42,7 @@ Authority: this document is the integration decision SSOT for `line_stop_deputy`
 | 1 | "회사에 남아 있어야 먼저 읽는다" 내러티브 | protagonist_position, Phase0 handoff `already_locked` |
 | 2 | 공개 신호 → 합법 외부 환전 보조 루프 | long_term_goal, repeatable_loop, controllable_growth_resource (secondary) |
 
-이 두 요소는 이미 `01_line_stop_deputy.md` 통합본에 반영 완료되었다. 추가 흡수 없음.
+이 두 요소는 historical 통합본에 반영되었고, 현재는 `01_line_stop_deputy_RETIRE.md` 경로 아래 retirement 상태로만 남아 있다. 추가 흡수 없음.
 
 ## 4. Retire — shockline_salaryman에서 버린 것
 
@@ -75,18 +75,18 @@ downstream(canon / phase0 / work_guard / TR)은 아래를 재판단하지 않는
 - 투자 루프가 서사 주도권을 잡으면 contamination이다
 - TR/BI 설계 시 블록당 투자 환전 비중은 서브플롯 수준으로 제한
 
-## 6. Next Canonical Route
+## 6. Downstream Status
 
-1. `line_stop_deputy` 통합본 → synthesis checklist audit
-2. audit pass → `material_ssot/20_pitch/canon/line_stop_deputy.md` 승격
-3. canon 승격 후 → Stage0 preprocess → Phase0 design
-4. `shockline_salaryman`은 이 경로에 진입하지 않는다
+- `line_stop_deputy` canon route: closed
+- `line_stop_deputy` Stage0 / Phase0 route: closed
+- `shockline_salaryman` route: already retired and still closed
+- downstream는 이 두 작품을 active candidate로 다시 읽지 않는다 unless a future explicit restart order creates a new work from scratch
 
 ## 7. File References
 
 | Role | Path |
 |---|---|
-| 통합본 (현 SSOT) | `material_ssot/20_pitch/intake/fresh_20260406_batch01/01_line_stop_deputy.md` |
+| retire 기록 | `material_ssot/20_pitch/intake/fresh_20260406_batch01/01_line_stop_deputy_RETIRE.md` |
 | retire 기록 | `material_ssot/20_pitch/intake/fresh_20260406_batch01/04_shockline_salaryman_RETIRE.md` |
 | shockline 원본 (동결) | `material_ssot/20_pitch/intake/fresh_20260406_batch01/04_shockline_salaryman.md` |
 | pitch philosophy | `material_ssot/20_pitch/pitch-philosophy.md` |

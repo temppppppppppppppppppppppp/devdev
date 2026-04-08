@@ -6,6 +6,12 @@
 > 목적: **모든 지능 수준의 모델이 골든루트급 Treatment JSON을 생산**할 수 있는 완전한 하네스
 > 출력: `treatments/{작품명}_tr_block_070_draft.json`
 > 선행 문서: `SSOT_blockguide-integrated-order.md`
+>
+> 위임/외부 모델 시작 규칙:
+>
+> - 먼저 `docs/blockguide/delegation-bootstrap.md`를 읽는다.
+> - work-level current-truth doc가 있으면 직전 handoff보다 우선한다.
+> - live `TR` filename은 저장 컨테이너 이름일 뿐이고, 실제 saved boundary는 current-truth doc 또는 파일 내용이 결정한다.
 
 ---
 
@@ -14,14 +20,16 @@
 이 문서는 **`Phase 0`가 이미 있는 상태에서 TR을 생산할 때만** 쓴다.
 사용자가 작품명, `work_id`, 짧은 기획안, `다음 스텝`만 던져도 아래 순서를 먼저 수행한다.
 
-1. `SSOT_blockguide-integrated-order.md`를 **UTF-8로 먼저 읽는다.**
-2. `treatment-planning-harness.md`를 다시 확인해 지금이 기획 단계인지 생산 단계인지 판단한다.
-3. 작품이 현대판타지이고 업계/직업/전문분야 재료가 필요하면 `modern_fantasy_material_harness.md`를 추가로 읽는다.
-4. 장르가 `alt_history`이거나 역사 재료 DB 조회가 필요하면 `alt_history_db_harness.md`를 추가로 읽는다.
-5. 이 문서를 **UTF-8로 다시 읽는다.**
-6. `treatments/phase0/{work_id}_phase0_design.json`과 직전 `candidate/fixed/draft`를 재오픈한다.
-7. `Phase 0`가 없으면 이 문서를 실행하지 말고 planning 단계로 되돌린다.
-8. 생산 단계가 맞으면 출력 단위는 항상 **블록 1개**로 잡는다.
+1. `docs/blockguide/delegation-bootstrap.md`와 `SSOT_blockguide-integrated-order.md`를 **UTF-8로 먼저 읽는다.**
+2. `material_ssot/README.md`와 `material_ssot/00_governance/delegation-envelope-spec-v1.md`를 읽는다.
+3. work-level current-truth doc가 있으면 먼저 연다.
+4. `treatment-planning-harness.md`를 다시 확인해 지금이 기획 단계인지 생산 단계인지 판단한다.
+5. 작품이 현대판타지이고 업계/직업/전문분야 재료가 필요하면 `modern_fantasy_material_harness.md`를 추가로 읽는다.
+6. 장르가 `alt_history`이거나 역사 재료 DB 조회가 필요하면 `alt_history_db_harness.md`를 추가로 읽는다.
+7. 이 문서를 **UTF-8로 다시 읽는다.**
+8. `treatments/phase0/{work_id}_phase0_design.json`과 직전 saved live `TR`를 재오픈한다.
+9. `Phase 0`가 없으면 이 문서를 실행하지 말고 planning 단계로 되돌린다.
+10. 생산 단계가 맞으면 출력 단위는 항상 **블록 1개**로 잡는다.
    - `auto-run`은 블록을 순서대로 이어서 쌓는다는 뜻이다.
    - 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이다.
    - `Block 005`, `010`, `015` ... 경계에 도달하면 새 오더 전까지 반드시 멈춘다.
@@ -30,16 +38,16 @@
    - 70블록 일괄 생성이나 10블록 일괄 생성은 금지한다.
    - 큰 JSON 파일이라는 이유로 `70블록 TR` 전체를 한 번에 overwrite 하지 않는다.
    - 파일 저장도 현재 출력 단위에 맞춰 진행하며, 각 저장 시점마다 on-disk JSON이 parse 가능한 상태여야 한다.
-9. 각 블록에서 해야 할 일은 항상 같다.
+11. 각 블록에서 해야 할 일은 항상 같다.
     - 사전 선언
     - 블록 1개 생성
     - 절대 금지 규칙 자가 점검
     - Python 교정/검증
     - 수동 감리 메모 작성
     - 위반 시 같은 블록만 재생성
-10. `70블록 draft`가 완성되면 바로 BI를 상상하지 말고, 먼저 감리와 출고 게이트를 통과시킨다.
-11. 감리 통과 뒤에는 `bi-production-harness-v1.md`로 인계한다.
-12. `Block / ARC / Phase / Stage` 번호 메타는 자연어 필드에서 전면 금지한다.
+12. `70블록 draft`가 완성되면 바로 BI를 상상하지 말고, 먼저 감리와 출고 게이트를 통과시킨다.
+13. 감리 통과 뒤에는 `bi-production-harness-v1.md`로 인계한다.
+14. `Block / ARC / Phase / Stage` 번호 메타는 자연어 필드에서 전면 금지한다.
     - `title`, `context`, `event_villain`, `solution`, `reward`, `stakes`, `power_shift`, `foreshadow`, `callback`, 기타 자연어/라벨 필드에 새면 즉시 FAIL이다.
     - 구조 타깃은 `foreshadow_targets` / `callback_sources` 같은 전용 배열 필드에만 적는다.
     - `section_rotation`, `arc_section`, `phase`는 번호 없는 자연어 라벨만 허용한다.

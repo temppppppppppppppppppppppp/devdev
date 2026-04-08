@@ -42,8 +42,10 @@ Quick start read order:
 1. `00_governance/bootstrap-status.md`
 2. `00_governance/authority-map.md`
 3. `00_governance/stage-read-order.md`
-4. `00_governance/work-coverage-matrix.md`
-5. one representative work chain under `30_stage0_preprocess/work-index/`
+4. `00_governance/delegation-envelope-spec-v1.md`
+5. `00_governance/work-current-truth-template-v1.md`
+6. `00_governance/work-coverage-matrix.md`
+7. one representative work chain under `30_stage0_preprocess/work-index/`
 
 This root does not replace:
 
@@ -62,6 +64,8 @@ Current governance anchors:
 - `00_governance/authority-map.md`
 - `00_governance/stage-read-order.md`
 - `00_governance/legacy-map.md`
+- `00_governance/delegation-envelope-spec-v1.md`
+- `00_governance/work-current-truth-template-v1.md`
 - `00_governance/work-coverage-matrix.md`
 - `00_governance/bootstrap-status.md`
 - `00_governance/production-pair-benchmark-spec-v1.md`
