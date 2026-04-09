@@ -156,6 +156,34 @@ Canonical `TR` is not a title-only scaffold.
 - `title` or summary-only blocks are compatibility-valid only in a weak sense and should not be treated as ready canonical pair blocks
 - numeric block refs belong in `foreshadow_targets` / `callback_sources`, not in natural-language prose fields
 
+#### 4.3.1 Structured Ref Convention Alias (ratified 2026-04-09)
+
+Some live pairs adopted an alternate structured-ref convention earlier than `foreshadow_targets` / `callback_sources` were promoted as recommended fields in §4.2. Those pairs use:
+
+- `foreshadow: [{ref: int, event: str}, ...]`
+- `callback: [{ref: int, event: str}, ...]`
+
+Under this convention the `ref` integer field provides the structural separation that §4.3 requires, and the `event` string is natural-language plan-level narrative. For these pairs the rule is interpreted as follows:
+
+- the `foreshadow[].ref` / `callback[].ref` integer field is treated as functionally equivalent to `foreshadow_targets` / `callback_sources` for §4.3 structural separation compliance
+- `foreshadow[].event` / `callback[].event` natural-language text, and other narrative prose fields (`content.*`, `stakes`, `power_shift.*`, `relationship_delta[].before/after`, family-ext `strategy` / `success_pattern`) may carry **TR-internal plan-level numeric references** (e.g. `B48`, `ARC-05`) without violating §4.3
+- downstream manuscript / episode generators are responsible for interpreting these plan-level references at the scene level and removing them from final published prose — they are not treated as in-universe text leakage
+- audit reports may still count `meta_number_leak_blocks` as an **INFO-level observation**, but it does not produce a P1 FAIL under this alias convention
+
+Eligibility conditions (all required):
+
+- the pair uses `foreshadow[{ref:int, event:str}]` / `callback[{ref:int, event:str}]` consistently across the full TR (work-wide, not hybrid)
+- the `ref` values form a coherent planning index usable by repair and audit tools without guessing
+- the alias is declared in the pair's `live_status.md` Delegation Rule or equivalent canonical pointer
+- newly created pairs that have not yet adopted either convention should default to the recommended `foreshadow_targets` / `callback_sources` field form in §4.2
+
+Pairs that do **not** meet these conditions still follow §4.3 as originally written: numeric refs must not appear in natural-language prose, and structured targets belong in the dedicated `foreshadow_targets` / `callback_sources` fields.
+
+Precedents:
+
+- `manual_meridian_archivist` (wuxguide): alias adopted since early ARC serialization, declared in `docs/2026-04-08/manual_meridian_archivist_live_status.md §Delegation Rule`, audit precedent `docs/2026-04-09/manual_meridian_archivist_b46_b47_3pass_audit.md` §2.5
+- downstream wuxguide harness Rule 22A in `docs/wuxguide/wuxia-production-harness.md §0D` is the family-specific surface of this alias — it is subordinate to §4.3.1 and should be read as an implementation note, not an independent authority
+
 ### 4.4 Canonical Family Extension Container
 
 Canonical forward write name for block-level extension data:
