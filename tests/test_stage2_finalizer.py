@@ -1,6 +1,7 @@
-﻿"""[B-1-7] Unit tests for Stage2Finalizer extracted from Stage2Orchestrator."""
+"""[B-1-7] Unit tests for Stage2Finalizer extracted from Stage2Orchestrator."""
 
 import asyncio
+import json
 import sys
 from copy import deepcopy
 from pathlib import Path
@@ -229,9 +230,7 @@ class TestCommitSemantics:
         assert "qi_nature" not in saved_arc["arc_end_state"]
         assert "martial_arts" not in saved_arc["arc_end_state"]
         assert any(
-            "[Non-Wuxia State Cleanup]" in call.args[0]
-            for call in finalizer.ctx.ui.log.call_args_list
-            if call.args
+            "[Non-Wuxia State Cleanup]" in call.args[0] for call in finalizer.ctx.ui.log.call_args_list if call.args
         )
 
     def test_prepare_stage2_pass_arc_for_persistence_keeps_wuxia_state_fields(
@@ -290,9 +289,7 @@ class TestCommitSemantics:
         assert saved_arc["arc_end_state"]["qi_nature"] == "청명"
         assert saved_arc["arc_end_state"]["martial_arts"] == ["비검술"]
         assert not any(
-            "[Non-Wuxia State Cleanup]" in call.args[0]
-            for call in finalizer.ctx.ui.log.call_args_list
-            if call.args
+            "[Non-Wuxia State Cleanup]" in call.args[0] for call in finalizer.ctx.ui.log.call_args_list if call.args
         )
 
     def test_ctx_proxy(self, finalizer, finalizer_ctx):
@@ -308,8 +305,7 @@ class TestDirectorAuditPreparation:
     def test_prepare_audit_state_normalizes_entity_aliases_before_director(self, finalizer, valid_refined_arc):
         refined_arc = deepcopy(valid_refined_arc)
         refined_arc["tactical_doc"] = (
-            "WTI 원유 6월물 포지션을 정리하고 금 가격 차트를 보며 "
-            "SW인베스트먼트 오피스로 이동해 PDA를 확인한다."
+            "WTI 원유 6월물 포지션을 정리하고 금 가격 차트를 보며 SW인베스트먼트 오피스로 이동해 PDA를 확인한다."
         )
         refined_arc["joint_docs"]["final_location"] = "SW인베스트먼트 오피스"
         refined_arc["joint_docs"]["physical_inventory"] = ["PDA"]
@@ -377,7 +373,9 @@ class TestMetricsRecording:
         collector = MagicMock()
         collector.peek_scope.return_value = {"total_cost_usd": 0.0123}
         with patch("modules.core.stage2_finalizer.get_metrics_collector", return_value=collector):
-            finalizer._record_s2_pass_metrics(global_arc_no=1, attempt=0, generation_method="analyst", audit={"score": 88})
+            finalizer._record_s2_pass_metrics(
+                global_arc_no=1, attempt=0, generation_method="analyst", audit={"score": 88}
+            )
         kw = finalizer.ctx.pass_rate_monitor.record_attempt.call_args[1]
         assert kw["success"] is True
         assert kw["stage"] == 2
@@ -460,9 +458,7 @@ class TestConstraintDbLogging:
         )
 
         constraint_db.update_arc_state.assert_called_once_with({"arc_no": 1, "title": "Arc 1"})
-        finalizer.ctx.ui.log.assert_any_call(
-            "      [V49.4] ConstraintDB 업데이트 완료 (총 1개 Arc)"
-        )
+        finalizer.ctx.ui.log.assert_any_call("      [V49.4] ConstraintDB 업데이트 완료 (총 1개 Arc)")
 
     def test_stage2_finalizer_source_keeps_only_single_live_duplicate_prone_defs(self):
         src = (PROJECT_ROOT / "modules" / "core" / "stage2_finalizer.py").read_text(encoding="utf-8")
@@ -470,6 +466,7 @@ class TestConstraintDbLogging:
         assert src.count("async def _persist_stage2_pass_arc_commit(") == 1
         assert src.count("def _maybe_generate_stage2_volume_summaries(") == 1
         assert "ConstraintDB 업데이트 완료" in src
+
     def test_reject_metric_context_persists_artifact_linkage(self, finalizer, valid_refined_arc, tmp_path):
         finalizer.ctx.current_project.paths = MagicMock()
         finalizer.ctx.current_project.paths.root = tmp_path
@@ -516,6 +513,21 @@ class TestConstraintDbLogging:
         db_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
         assert db_kw["attempt_key"] == "s2:ep1:arc1:a1:sess_stage2"
         assert db_kw["session_id"] == "sess_stage2"
+
+    def test_intermediate_stage2_session_decision_logs_attempt_key(self, finalizer):
+        finalizer.ctx.current_project.metrics_session_id = "sess_stage2"
+
+        finalizer._log_stage2_session_decision(
+            audit={"decision": "PASS", "reason": "stable"},
+            global_arc_no=2,
+            attempt=0,
+            generation_method="four_phase",
+            score=91,
+        )
+
+        log_kw = finalizer.ctx.session_logger.log_decision.call_args.kwargs
+        assert log_kw["decision_type"] == "arc"
+        assert log_kw["attempt_key"] == "s2:ep2:arc2:a1:sess_stage2"
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
     def test_pass_metrics_persist_artifact_linkage(self, finalizer, valid_refined_arc, tmp_path):
@@ -571,6 +583,137 @@ class TestConstraintDbLogging:
         assert db_kw["selection_reason"] == "후보 3은 블록 DNA를 가장 충실하게 반영했다."
         assert db_kw["verdict_reason"] == "auto-correct pressure cleared after compare gate"
         assert ds_kw["selection_reason"] == "후보 3은 블록 DNA를 가장 충실하게 반영했다."
+        assert ds_kw["verdict_reason"] == "auto-correct pressure cleared after compare gate"
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_pass_metrics_drop_escalatory_verdict_reason_when_final_decision_is_pass(
+        self,
+        finalizer,
+        valid_refined_arc,
+        tmp_path,
+    ):
+        finalizer.ctx.current_project.paths = MagicMock()
+        finalizer.ctx.current_project.paths.root = tmp_path
+        payload = deepcopy(valid_refined_arc)
+        payload["_director_compare_meta"] = {
+            "selection_reason": "후보 2가 carryover contract를 가장 안정적으로 유지한다.",
+            "feedback": "수치 정합성이 재감리에서 해소되어 Stage3 handoff가 가능하다.",
+        }
+
+        finalizer._record_s2_pass_metrics(
+            global_arc_no=2,
+            attempt=0,
+            generation_method="four_phase",
+            selected_strategy="balanced",
+            audit={
+                "score": 95,
+                "decision": "PASS",
+                "reason": (
+                    "Major investment advisory requires at least PASS_WITH_FIX.\n"
+                    "[F-1] Arc 2: 총자산 합산 불일치. 계산 2.05억 vs 서술 1.05억"
+                ),
+            },
+            artifact_payload=payload,
+        )
+
+        db_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        ds_kw = finalizer.ctx.current_project.db.save_director_selection.call_args.kwargs
+        log_kw = finalizer.ctx.session_logger.log_decision.call_args.kwargs
+
+        assert db_kw["verdict_reason"] == "수치 정합성이 재감리에서 해소되어 Stage3 handoff가 가능하다."
+        assert ds_kw["verdict_reason"] == "수치 정합성이 재감리에서 해소되어 Stage3 handoff가 가능하다."
+        assert log_kw["verdict_reason"] == "수치 정합성이 재감리에서 해소되어 Stage3 handoff가 가능하다."
+        assert "PASS_WITH_FIX" not in db_kw["verdict_reason"]
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_pass_metrics_refresh_stale_compare_meta_after_pass_fix_resolution(
+        self,
+        finalizer,
+        valid_refined_arc,
+        tmp_path,
+    ):
+        finalizer.ctx.current_project.paths = MagicMock()
+        finalizer.ctx.current_project.paths.root = tmp_path
+        payload = deepcopy(valid_refined_arc)
+        payload["_director_compare_meta"] = {
+            "selection_reason": "치명적 설정 모순이 존재하나, 수정 후 통과가 적합.",
+            "comparison_notes": "후보 1이 가장 안정적이다.",
+            "director_decision": "PASS_WITH_FIX",
+            "feedback": "제9화의 30만원 선금 지출 과정을 수정해야 합니다.",
+            "fix_scope": "inplace",
+            "quality_gate_triggered": True,
+            "quality_gate_reasons": ["investment-major:[F-1]"],
+        }
+
+        finalizer._record_s2_pass_metrics(
+            global_arc_no=2,
+            attempt=0,
+            generation_method="four_phase",
+            selected_strategy="balanced",
+            audit={
+                "score": 95,
+                "decision": "PASS",
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "전술서의 논리적 무결성과 수치 정합성이 재감리에서 모두 해소되었다.",
+            },
+            artifact_payload=payload,
+        )
+
+        compare_meta = payload["_director_compare_meta"]
+        db_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        log_kw = finalizer.ctx.session_logger.log_decision.call_args.kwargs
+        artifact_path = tmp_path / db_kw["artifact_path"]
+        artifact_payload = json.loads(artifact_path.read_text(encoding="utf-8"))
+
+        assert compare_meta["director_decision"] == "PASS"
+        assert compare_meta["feedback"] == "전술서의 논리적 무결성과 수치 정합성이 재감리에서 모두 해소되었다."
+        assert compare_meta["quality_gate_triggered"] is False
+        assert compare_meta["quality_gate_reasons"] == []
+        assert db_kw["verdict_reason"] == "전술서의 논리적 무결성과 수치 정합성이 재감리에서 모두 해소되었다."
+        assert log_kw["verdict_reason"] == "전술서의 논리적 무결성과 수치 정합성이 재감리에서 모두 해소되었다."
+        assert artifact_payload["_director_compare_meta"]["director_decision"] == "PASS"
+        assert artifact_payload["_director_compare_meta"]["feedback"] == (
+            "전술서의 논리적 무결성과 수치 정합성이 재감리에서 모두 해소되었다."
+        )
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_reject_metrics_persist_verdict_reason_to_director_selection(
+        self,
+        finalizer,
+        valid_refined_arc,
+        tmp_path,
+    ):
+        finalizer.ctx.current_project.paths = MagicMock()
+        finalizer.ctx.current_project.paths.root = tmp_path
+
+        finalizer._record_s2_reject_metrics(
+            global_arc_no=4,
+            attempt=0,
+            generation_method="four_phase",
+            selected_strategy="defensive",
+            audit={
+                "decision": "REJECT",
+                "score": 42,
+                "reason": "bad structure",
+                "verdict_reason": "carryover anchor breaks before blueprint handoff",
+                "runtime_advisory": "다음 시도에서는 carryover authority를 먼저 검증하라.",
+                "re_slice_instruction": "핵심 carryover packet을 다시 설계하라.",
+                "fix_scope": "rewrite",
+            },
+            artifact_payload=deepcopy(valid_refined_arc),
+        )
+
+        db_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        ds_kw = finalizer.ctx.current_project.db.save_director_selection.call_args.kwargs
+        log_kw = finalizer.ctx.session_logger.log_decision.call_args.kwargs
+        assert db_kw["verdict_reason"] == "carryover anchor breaks before blueprint handoff"
+        assert db_kw["runtime_advisory"] == "다음 시도에서는 carryover authority를 먼저 검증하라."
+        assert db_kw["retry_directives"] == "핵심 carryover packet을 다시 설계하라."
+        assert ds_kw["verdict_reason"] == "carryover anchor breaks before blueprint handoff"
+        assert ds_kw["runtime_advisory"] == "다음 시도에서는 carryover authority를 먼저 검증하라."
+        assert ds_kw["retry_directives"] == "핵심 carryover packet을 다시 설계하라."
+        assert log_kw["runtime_advisory"] == "다음 시도에서는 carryover authority를 먼저 검증하라."
+        assert log_kw["retry_directives"] == "핵심 carryover packet을 다시 설계하라."
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_pass_metrics_emit_authoritative_session_decision_with_artifact_linkage(
@@ -628,6 +771,47 @@ class TestRunFinalize:
         assert result["current_ep_start"] == 11
         assert len(kwargs["all_refined_arcs"]) == 1
         finalizer.ctx.current_project.save_v20_anchor.assert_called()
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_run_finalize_normalizes_compare_meta_before_arcs_anchor_save(
+        self,
+        _validate,
+        finalizer,
+        valid_refined_arc,
+    ):
+        saved_arcs_payloads = []
+
+        def _capture_save(key, payload):
+            if key == "arcs":
+                saved_arcs_payloads.append(deepcopy(payload))
+
+        finalizer.ctx.current_project.save_v20_anchor.side_effect = _capture_save
+        finalizer.ctx.agents["director"].audit_strategic_plan.return_value = {
+            "decision": "PASS",
+            "score": 95,
+            "fix_scope": "inplace",
+            "fix_scope_reasoning": "재감리에서 모든 수정 지시가 해소되었다.",
+        }
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["_director_compare_meta"] = {
+            "director_decision": "PASS_WITH_FIX",
+            "selection_reason": "후보 2는 수정 후 통과가 적합하다.",
+            "feedback": "장면 9의 선금 지출을 수정해야 한다.",
+            "fix_scope": "inplace",
+            "quality_gate_triggered": True,
+            "quality_gate_reasons": ["investment-major:[F-1]"],
+        }
+
+        result = asyncio.run(finalizer.run_finalize(**_make_finalize_kwargs(refined_arc)))
+
+        assert result["action"] == "break"
+        assert saved_arcs_payloads
+        saved_meta = saved_arcs_payloads[0][0]["_director_compare_meta"]
+        assert saved_meta["director_decision"] == "PASS"
+        assert saved_meta["feedback"] == "재감리에서 모든 수정 지시가 해소되었다."
+        assert saved_meta["quality_gate_triggered"] is False
+        assert saved_meta["quality_gate_reasons"] == []
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
@@ -1166,12 +1350,17 @@ class TestRunFinalize:
         assert result["action"] == "break"
         patch_kw = finalizer.ctx.agents["four_phase"]._inplace_patch_arc.call_args.kwargs
         assert patch_kw["fix_pack"]["patch_targets"] == ["state_constraints.arc_end_state.location"]
-        assert patch_kw["fix_pack"]["patch_target_records"][0]["field_path"] == "state_constraints.arc_end_state.location"
+        assert (
+            patch_kw["fix_pack"]["patch_target_records"][0]["field_path"] == "state_constraints.arc_end_state.location"
+        )
         assert patch_kw["fix_pack"]["target_kind"] == "field_value"
 
         save_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
         assert save_kw["advisory_flags"]["fix_pack"]["patch_targets"] == ["state_constraints.arc_end_state.location"]
-        assert save_kw["advisory_flags"]["fix_pack"]["patch_target_records"][0]["field_path"] == "state_constraints.arc_end_state.location"
+        assert (
+            save_kw["advisory_flags"]["fix_pack"]["patch_target_records"][0]["field_path"]
+            == "state_constraints.arc_end_state.location"
+        )
         assert save_kw["advisory_flags"]["partial_fix_eval"]["patch_round"] == 1
         assert save_kw["advisory_flags"]["partial_fix_eval"]["target_kind"] == "field_value"
         assert save_kw["advisory_flags"]["partial_fix_eval"]["must_fix_resolved"] is True
@@ -1251,7 +1440,10 @@ class TestRunFinalize:
             patched_arc=patched_arc,
         )
 
-        assert {"code": "episode_start_future_artifact", "detail": "제 15화 돌아온 방향타: 최종 매도 체결 확인서 precedes later action '전량 익절 청산'"} in signals
+        assert {
+            "code": "episode_start_future_artifact",
+            "detail": "제 15화 돌아온 방향타: 최종 매도 체결 확인서 precedes later action '전량 익절 청산'",
+        } in signals
 
     def test_collect_arc_patch_guard_signals_ignores_other_asset_liquidation_carryover(
         self,
@@ -1377,7 +1569,7 @@ class TestRunFinalize:
 def test_sync_first_episode_start_state_line_rewrites_stale_equipment_and_inserts_missing_fields():
     tactical_doc = (
         "제 40화: 귀환과 정적\n"
-        "[시작 상태] 위치: 홍콩, 소지품: [\"검\", \"망령패\"], 부상: 없음\n"
+        '[시작 상태] 위치: 홍콩, 소지품: ["검", "망령패"], 부상: 없음\n'
         "본문\n"
         "[종료 상태] 위치: 서울"
     )

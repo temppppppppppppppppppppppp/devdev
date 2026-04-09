@@ -341,6 +341,7 @@ class FailureAnalyzer:
                     entries.append(
                         {
                             "attempt_key": str(meta.get("attempt_key", row.get("attempt_key", "")) or "").strip(),
+                            "decision_type": str(row.get("decision_type", "") or "").strip(),
                             "final_verdict": str(row.get("result", "") or "").strip(),
                             "final_score": self._coerce_int(row.get("score")),
                             "candidate_key": str(meta.get("candidate_key", row.get("candidate_key", "")) or "").strip(),
@@ -368,7 +369,7 @@ class FailureAnalyzer:
                                     "verdict_reason",
                                     row.get(
                                         "verdict_reason",
-                                        meta.get("reason", row.get("reason", meta.get("selection_reason", ""))),
+                                        meta.get("reason", row.get("reason", "")),
                                     ),
                                 )
                                 or ""
@@ -384,9 +385,7 @@ class FailureAnalyzer:
                                 meta.get("director_verdict", row.get("director_verdict", "")) or ""
                             ).strip(),
                             "gate_basis": str(meta.get("gate_basis", row.get("gate_basis", "")) or "").strip(),
-                            "repair_scope": str(
-                                meta.get("repair_scope", row.get("repair_scope", "")) or ""
-                            ).strip(),
+                            "repair_scope": str(meta.get("repair_scope", row.get("repair_scope", "")) or "").strip(),
                             "repair_contract": dict(meta.get("repair_contract") or {})
                             if isinstance(meta.get("repair_contract"), dict)
                             else {},
@@ -483,6 +482,62 @@ class FailureAnalyzer:
             return json.dumps(cleaned, ensure_ascii=False)
         return str(value or "").strip()
 
+    @classmethod
+    def _session_decision_alignment_score(cls, row: dict[str, object]) -> int:
+        weights = (
+            ("candidate_key", 1),
+            ("content_hash", 1),
+            ("artifact_path", 3),
+            ("selection_reason", 2),
+            ("verdict_reason", 2),
+            ("fix_scope", 1),
+        )
+        score = 0
+        for key, weight in weights:
+            if cls._normalize_alignment_value(row.get(key)):
+                score += weight
+        return score
+
+    @classmethod
+    def _session_decision_authority_rank(cls, row: dict[str, object]) -> int:
+        decision_type = str(row.get("decision_type", "") or "").strip().lower()
+        if decision_type.endswith("_final") or decision_type == "arc_final":
+            return 3
+        if decision_type.endswith("_design") or decision_type == "arc_design":
+            return 2
+        if decision_type:
+            return 1
+        return 0
+
+    @classmethod
+    def _merge_session_decision_alignment_row(
+        cls,
+        existing: dict[str, object],
+        candidate: dict[str, object],
+    ) -> dict[str, object]:
+        existing_rank = cls._session_decision_authority_rank(existing)
+        candidate_rank = cls._session_decision_authority_rank(candidate)
+        if candidate_rank > existing_rank:
+            preferred = dict(candidate)
+            secondary = existing
+        elif existing_rank > candidate_rank:
+            preferred = dict(existing)
+            secondary = candidate
+        else:
+            existing_score = cls._session_decision_alignment_score(existing)
+            candidate_score = cls._session_decision_alignment_score(candidate)
+            if candidate_score >= existing_score:
+                preferred = dict(candidate)
+                secondary = existing
+            else:
+                preferred = dict(existing)
+                secondary = candidate
+
+        for key, value in secondary.items():
+            if key not in preferred or not cls._normalize_alignment_value(preferred.get(key)):
+                preferred[key] = value
+        return preferred
+
     @staticmethod
     def _safe_dict(value: object) -> dict[str, object]:
         return dict(value) if isinstance(value, dict) else {}
@@ -511,7 +566,7 @@ class FailureAnalyzer:
             if normalized in {"false", "0", "no", "n"}:
                 return False
             return None
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return bool(value)
         return None
 
@@ -525,7 +580,7 @@ class FailureAnalyzer:
 
     @classmethod
     def _safe_json_loads(cls, value: object, default: str = "{}") -> object:
-        if isinstance(value, (dict, list)):
+        if isinstance(value, dict | list):
             return value
         raw = value if isinstance(value, str) and value.strip() else default
         try:
@@ -580,9 +635,7 @@ class FailureAnalyzer:
             "repair_contract_provenance": str(repair_payload.get("provenance") or "").strip(),
             "scope_authority": scope_payload,
             "scope_authority_fix_scope": str(scope_payload.get("fix_scope") or "").strip(),
-            "scope_authority_authoritative_fix_scope": str(
-                scope_payload.get("authoritative_fix_scope") or ""
-            ).strip(),
+            "scope_authority_authoritative_fix_scope": str(scope_payload.get("authoritative_fix_scope") or "").strip(),
             "scope_authority_scope_origin": str(scope_payload.get("scope_origin") or "").strip(),
             "scope_authority_widened": cls._safe_bool(scope_payload.get("widened")),
         }
@@ -740,7 +793,8 @@ class FailureAnalyzer:
                 stage_attempt_rows = self.db.conn.execute(
                     """
                     SELECT id, attempt_key, verdict, score, session_id,
-                           candidate_key, content_hash, artifact_path, advisory_flags
+                           candidate_key, content_hash, artifact_path, advisory_flags,
+                           selection_reason, verdict_reason, fix_scope, runtime_advisory, retry_directives
                     FROM stage_attempts
                     WHERE stage = ? AND COALESCE(attempt_key, '') != '' AND session_id = ?
                     ORDER BY id DESC
@@ -752,7 +806,8 @@ class FailureAnalyzer:
                 stage_attempt_rows = self.db.conn.execute(
                     """
                     SELECT id, attempt_key, verdict, score, session_id,
-                           candidate_key, content_hash, artifact_path, advisory_flags
+                           candidate_key, content_hash, artifact_path, advisory_flags,
+                           selection_reason, verdict_reason, fix_scope, runtime_advisory, retry_directives
                     FROM stage_attempts
                     WHERE stage = ? AND COALESCE(attempt_key, '') != ''
                     ORDER BY id DESC
@@ -784,6 +839,11 @@ class FailureAnalyzer:
                     "candidate_key": str(row["candidate_key"] or "").strip(),
                     "content_hash": str(row["content_hash"] or "").strip(),
                     "artifact_path": str(row["artifact_path"] or "").strip(),
+                    "selection_reason": str(row["selection_reason"] or "").strip(),
+                    "verdict_reason": str(row["verdict_reason"] or "").strip(),
+                    "fix_scope": str(row["fix_scope"] or "").strip(),
+                    "runtime_advisory": str(row["runtime_advisory"] or "").strip(),
+                    "retry_directives": str(row["retry_directives"] or "").strip(),
                     **self._extract_gate_repair_bundle(
                         gate_semantics=advisory_flags.get("gate_semantics"),
                         fix_pack=advisory_flags.get("fix_pack"),
@@ -796,6 +856,58 @@ class FailureAnalyzer:
                     ),
                 }
         return stage_attempts
+
+    def _count_stage_attempt_rows_without_attempt_key(
+        self,
+        *,
+        stage: int,
+        lookback: int,
+        session_id: str,
+    ) -> int:
+        try:
+            if session_id:
+                row = self.db.conn.execute(
+                    """
+                    SELECT COUNT(*) AS cnt
+                    FROM (
+                        SELECT attempt_key
+                        FROM stage_attempts
+                        WHERE stage = ? AND session_id = ?
+                        ORDER BY id DESC
+                        LIMIT ?
+                    )
+                    WHERE COALESCE(attempt_key, '') = ''
+                    """,
+                    (stage, session_id, lookback),
+                ).fetchone()
+            else:
+                row = self.db.conn.execute(
+                    """
+                    SELECT COUNT(*) AS cnt
+                    FROM (
+                        SELECT attempt_key
+                        FROM stage_attempts
+                        WHERE stage = ?
+                        ORDER BY id DESC
+                        LIMIT ?
+                    )
+                    WHERE COALESCE(attempt_key, '') = ''
+                    """,
+                    (stage, lookback),
+                ).fetchone()
+        except Exception as _e:
+            self._report_soft_failure(
+                "sink_alignment_stage_attempts_blank_attempt_key",
+                _e,
+                message="stage_attempts blank-attempt-key count for sink_alignment_summary failed",
+                extra={"stage": stage, "session_id": session_id},
+            )
+            logging.debug("[FailureAnalyzer] sink_alignment blank stage_attempt attempt_key count failed: %s", _e)
+            return 0
+        try:
+            return int((row["cnt"] if row else 0) or 0)
+        except (TypeError, ValueError, KeyError):
+            return 0
 
     def _load_pass_rate_monitor_alignment_sink(
         self,
@@ -884,6 +996,8 @@ class FailureAnalyzer:
                     "selection_reason": str(row["selection_reason"] or "").strip(),
                     "verdict_reason": str(row["verdict_reason"] or "").strip(),
                     "fix_scope": str(row["fix_scope"] or "").strip(),
+                    "runtime_advisory": str(advisory_warnings.get("runtime_advisory", "") or "").strip(),
+                    "retry_directives": str(advisory_warnings.get("retry_directives", "") or "").strip(),
                     **self._extract_gate_repair_bundle(
                         gate_semantics=advisory_warnings.get("gate_semantics"),
                         fix_pack=advisory_warnings.get("fix_pack"),
@@ -915,8 +1029,11 @@ class FailureAnalyzer:
                 continue
             if session_id and not self._attempt_key_matches_session_id(attempt_key, session_id):
                 continue
-            if attempt_key not in session_decisions:
+            existing = session_decisions.get(attempt_key)
+            if existing is None:
                 session_decisions[attempt_key] = row
+            else:
+                session_decisions[attempt_key] = self._merge_session_decision_alignment_row(existing, row)
         return session_decisions, session_decision_rows_without_attempt_key
 
     def _load_episode_production_alignment_sink(
@@ -942,7 +1059,9 @@ class FailureAnalyzer:
             entry = {
                 "initial_verdict": str(row.get("initial_verdict", row.get("verdict", "")) or ""),
                 "final_verdict": str(row.get("final_verdict", row.get("verdict", "")) or ""),
-                "final_score": None if lifecycle_only else self._coerce_int(row.get("final_score", row.get("score", 0))),
+                "final_score": None
+                if lifecycle_only
+                else self._coerce_int(row.get("final_score", row.get("score", 0))),
                 "patch_strategy": str(patch_trace.get("patch_strategy", "") or ""),
                 "candidate_key": "" if lifecycle_only else str(row.get("candidate_key", "") or "").strip(),
                 "content_hash": "" if lifecycle_only else str(row.get("content_hash", "") or "").strip(),
@@ -1025,6 +1144,9 @@ class FailureAnalyzer:
         final_union = set(stage_attempts)
         if include_session_decisions:
             final_union |= set(session_decisions)
+        if stage == 2:
+            final_union |= set(pass_rate_monitor)
+            final_union |= set(director_selections)
         lifecycle_union: set[str] = set()
         if stage == 4:
             lifecycle_union = set(director_selections) | set(episode_production)
@@ -1034,6 +1156,7 @@ class FailureAnalyzer:
     @staticmethod
     def _collect_sink_alignment_missing_buckets(
         *,
+        stage: int,
         include_session_decisions: bool,
         final_union: set[str],
         lifecycle_union: set[str],
@@ -1049,6 +1172,13 @@ class FailureAnalyzer:
         if include_session_decisions:
             final_missing["session_decisions"] = FailureAnalyzer._compact_examples(
                 list(final_union - set(session_decisions))
+            )
+        if stage == 2:
+            final_missing["pass_rate_monitor"] = FailureAnalyzer._compact_examples(
+                list(final_union - set(pass_rate_monitor))
+            )
+            final_missing["director_selections"] = FailureAnalyzer._compact_examples(
+                list(final_union - set(director_selections))
             )
         final_missing = {key: value for key, value in final_missing.items() if value}
 
@@ -1067,9 +1197,7 @@ class FailureAnalyzer:
             lifecycle_missing_in_final = {
                 "stage_attempts": FailureAnalyzer._compact_examples(list(lifecycle_union - set(stage_attempts))),
             }
-            lifecycle_missing_in_final = {
-                key: value for key, value in lifecycle_missing_in_final.items() if value
-            }
+            lifecycle_missing_in_final = {key: value for key, value in lifecycle_missing_in_final.items() if value}
         return final_missing, lifecycle_missing, lifecycle_missing_in_final
 
     @staticmethod
@@ -1226,27 +1354,57 @@ class FailureAnalyzer:
             (
                 "director_verdict",
                 "director_verdict_mismatches",
-                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+                (
+                    "stage_attempts",
+                    "pass_rate_monitor",
+                    "session_decisions",
+                    "episode_production",
+                    "director_selections",
+                ),
             ),
             (
                 "gate_basis",
                 "gate_basis_mismatches",
-                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+                (
+                    "stage_attempts",
+                    "pass_rate_monitor",
+                    "session_decisions",
+                    "episode_production",
+                    "director_selections",
+                ),
             ),
             (
                 "repair_scope",
                 "repair_scope_mismatches",
-                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+                (
+                    "stage_attempts",
+                    "pass_rate_monitor",
+                    "session_decisions",
+                    "episode_production",
+                    "director_selections",
+                ),
             ),
             (
                 "fix_pack_target_kind",
                 "fix_pack_target_kind_mismatches",
-                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+                (
+                    "stage_attempts",
+                    "pass_rate_monitor",
+                    "session_decisions",
+                    "episode_production",
+                    "director_selections",
+                ),
             ),
             (
                 "fix_pack_patch_targets",
                 "fix_pack_patch_targets_mismatches",
-                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+                (
+                    "stage_attempts",
+                    "pass_rate_monitor",
+                    "session_decisions",
+                    "episode_production",
+                    "director_selections",
+                ),
             ),
             (
                 "retry_budget_axes",
@@ -1256,33 +1414,61 @@ class FailureAnalyzer:
             (
                 "repair_contract_subtype",
                 "repair_contract_subtype_mismatches",
-                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+                (
+                    "stage_attempts",
+                    "pass_rate_monitor",
+                    "session_decisions",
+                    "episode_production",
+                    "director_selections",
+                ),
             ),
             (
                 "repair_contract_provenance",
                 "repair_contract_provenance_mismatches",
-                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+                (
+                    "stage_attempts",
+                    "pass_rate_monitor",
+                    "session_decisions",
+                    "episode_production",
+                    "director_selections",
+                ),
             ),
             (
                 "scope_authority_fix_scope",
                 "scope_authority_fix_scope_mismatches",
-                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+                (
+                    "stage_attempts",
+                    "pass_rate_monitor",
+                    "session_decisions",
+                    "episode_production",
+                    "director_selections",
+                ),
             ),
             (
                 "scope_authority_authoritative_fix_scope",
                 "scope_authority_authoritative_fix_scope_mismatches",
-                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+                (
+                    "stage_attempts",
+                    "pass_rate_monitor",
+                    "session_decisions",
+                    "episode_production",
+                    "director_selections",
+                ),
             ),
             (
                 "scope_authority_widened",
                 "scope_authority_widened_mismatches",
-                ("stage_attempts", "pass_rate_monitor", "session_decisions", "episode_production", "director_selections"),
+                (
+                    "stage_attempts",
+                    "pass_rate_monitor",
+                    "session_decisions",
+                    "episode_production",
+                    "director_selections",
+                ),
             ),
         ):
             values_by_sink = {
-                sink: gate_repair_sinks[sink].get(field_name)
-                for sink in sinks
-                if sink in gate_repair_sinks
+                sink: gate_repair_sinks[sink].get(field_name) for sink in sinks if sink in gate_repair_sinks
             }
             values_by_sink = self._backfill_stage_attempt_gate_repair_value(field_name, values_by_sink)
             nonempty_values = self._nonempty_value_map(values_by_sink)
@@ -1350,9 +1536,7 @@ class FailureAnalyzer:
                 ("content_hash", "content_hash_mismatches"),
                 ("artifact_path", "artifact_path_mismatches"),
             ):
-                values_by_sink = {
-                    sink: payload.get(field_name, "") for sink, payload in final_artifact_fields.items()
-                }
+                values_by_sink = {sink: payload.get(field_name, "") for sink, payload in final_artifact_fields.items()}
                 nonempty_values = self._nonempty_value_map(values_by_sink)
                 if len(set(nonempty_values.values())) > 1:
                     results[result_key].append({"attempt_key": attempt_key, **nonempty_values})
@@ -1390,8 +1574,10 @@ class FailureAnalyzer:
     def _collect_sink_alignment_rationale_results(
         self,
         *,
+        stage: int,
         include_session_decisions: bool,
         attempt_key: str,
+        stage_attempts: dict[str, dict],
         director_selections: dict[str, dict],
         session_decisions: dict[str, dict],
         episode_production: dict[str, dict],
@@ -1400,22 +1586,48 @@ class FailureAnalyzer:
             "selection_reason_mismatches": [],
             "verdict_reason_mismatches": [],
             "fix_scope_mismatches": [],
+            "runtime_advisory_mismatches": [],
+            "retry_directives_mismatches": [],
             "rationale_metadata_missing": [],
         }
         if not include_session_decisions:
             return results
 
         rationale_values_by_field: dict[str, dict[str, str]] = {}
+        if attempt_key in stage_attempts:
+            rationale_values_by_field.setdefault("selection_reason", {})["stage_attempts"] = str(
+                stage_attempts[attempt_key].get("selection_reason", "") or ""
+            ).strip()
+            rationale_values_by_field.setdefault("verdict_reason", {})["stage_attempts"] = str(
+                stage_attempts[attempt_key].get("verdict_reason", "") or ""
+            ).strip()
+            rationale_values_by_field.setdefault("fix_scope", {})["stage_attempts"] = str(
+                stage_attempts[attempt_key].get("fix_scope", "") or ""
+            ).strip()
+            if stage == 2:
+                rationale_values_by_field.setdefault("runtime_advisory", {})["stage_attempts"] = str(
+                    stage_attempts[attempt_key].get("runtime_advisory", "") or ""
+                ).strip()
+                rationale_values_by_field.setdefault("retry_directives", {})["stage_attempts"] = str(
+                    stage_attempts[attempt_key].get("retry_directives", "") or ""
+                ).strip()
         if attempt_key in director_selections:
-            rationale_values_by_field.setdefault("selection_reason", {})["director_selections"] = (
-                director_selections[attempt_key]["selection_reason"]
-            )
-            rationale_values_by_field.setdefault("verdict_reason", {})["director_selections"] = (
-                director_selections[attempt_key]["verdict_reason"]
-            )
-            rationale_values_by_field.setdefault("fix_scope", {})["director_selections"] = (
-                director_selections[attempt_key]["fix_scope"]
-            )
+            rationale_values_by_field.setdefault("selection_reason", {})["director_selections"] = director_selections[
+                attempt_key
+            ]["selection_reason"]
+            rationale_values_by_field.setdefault("verdict_reason", {})["director_selections"] = director_selections[
+                attempt_key
+            ]["verdict_reason"]
+            rationale_values_by_field.setdefault("fix_scope", {})["director_selections"] = director_selections[
+                attempt_key
+            ]["fix_scope"]
+            if stage == 2:
+                rationale_values_by_field.setdefault("runtime_advisory", {})["director_selections"] = str(
+                    director_selections[attempt_key].get("runtime_advisory", "") or ""
+                ).strip()
+                rationale_values_by_field.setdefault("retry_directives", {})["director_selections"] = str(
+                    director_selections[attempt_key].get("retry_directives", "") or ""
+                ).strip()
         if attempt_key in session_decisions:
             rationale_values_by_field.setdefault("selection_reason", {})["session_decisions"] = str(
                 session_decisions[attempt_key].get("selection_reason", "") or ""
@@ -1426,6 +1638,13 @@ class FailureAnalyzer:
             rationale_values_by_field.setdefault("fix_scope", {})["session_decisions"] = str(
                 session_decisions[attempt_key].get("fix_scope", "") or ""
             ).strip()
+            if stage == 2:
+                rationale_values_by_field.setdefault("runtime_advisory", {})["session_decisions"] = str(
+                    session_decisions[attempt_key].get("runtime_advisory", "") or ""
+                ).strip()
+                rationale_values_by_field.setdefault("retry_directives", {})["session_decisions"] = str(
+                    session_decisions[attempt_key].get("retry_directives", "") or ""
+                ).strip()
         if attempt_key in episode_production:
             rationale_values_by_field.setdefault("selection_reason", {})["episode_production"] = str(
                 episode_production[attempt_key].get("selection_reason", "") or ""
@@ -1450,6 +1669,22 @@ class FailureAnalyzer:
                 results["rationale_metadata_missing"].append(
                     {"attempt_key": attempt_key, "field": field_name, "sinks": missing_sinks}
                 )
+        if stage == 2:
+            for field_name, result_key in (
+                ("runtime_advisory", "runtime_advisory_mismatches"),
+                ("retry_directives", "retry_directives_mismatches"),
+            ):
+                values_by_sink = rationale_values_by_field.get(field_name, {})
+                if len(values_by_sink) < 2:
+                    continue
+                nonempty_values = self._nonempty_value_map(values_by_sink)
+                if len(set(nonempty_values.values())) > 1:
+                    results[result_key].append({"attempt_key": attempt_key, **nonempty_values})
+                missing_sinks = self._missing_value_sinks(values_by_sink)
+                if missing_sinks and nonempty_values:
+                    results["rationale_metadata_missing"].append(
+                        {"attempt_key": attempt_key, "field": field_name, "sinks": missing_sinks}
+                    )
         return results
 
     def _collect_sink_alignment_consistency_results(
@@ -1489,6 +1724,8 @@ class FailureAnalyzer:
             "selection_reason_mismatches": [],
             "verdict_reason_mismatches": [],
             "fix_scope_mismatches": [],
+            "runtime_advisory_mismatches": [],
+            "retry_directives_mismatches": [],
             "gate_repair_metadata_missing": [],
             "rationale_metadata_missing": [],
             "artifact_missing_files": [],
@@ -1530,8 +1767,10 @@ class FailureAnalyzer:
                     authority_row=final_authority_by_attempt.get(attempt_key),
                 ),
                 self._collect_sink_alignment_rationale_results(
+                    stage=stage,
                     include_session_decisions=include_session_decisions,
                     attempt_key=attempt_key,
+                    stage_attempts=stage_attempts,
                     director_selections=director_selections,
                     session_decisions=session_decisions,
                     episode_production=episode_production,
@@ -1559,6 +1798,7 @@ class FailureAnalyzer:
         final_missing: dict[str, dict],
         lifecycle_missing: dict[str, dict],
         lifecycle_missing_in_final: dict[str, dict],
+        stage_attempt_rows_without_attempt_key: int,
         session_decision_rows_without_attempt_key: int,
         final_authority_rows: list[dict],
         consistency_results: dict[str, object],
@@ -1631,9 +1871,12 @@ class FailureAnalyzer:
                 consistency_results["selection_reason_mismatches"],
                 consistency_results["verdict_reason_mismatches"],
                 consistency_results["fix_scope_mismatches"],
+                consistency_results["runtime_advisory_mismatches"],
+                consistency_results["retry_directives_mismatches"],
                 consistency_results["gate_repair_metadata_missing"],
                 consistency_results["rationale_metadata_missing"],
                 consistency_results["artifact_missing_files"],
+                stage_attempt_rows_without_attempt_key > 0,
                 session_decision_rows_without_attempt_key > 0,
             )
         )
@@ -1665,9 +1908,7 @@ class FailureAnalyzer:
             "fix_pack_patch_targets_mismatches": consistency_results["fix_pack_patch_targets_mismatches"][:10],
             "retry_budget_axes_mismatches": consistency_results["retry_budget_axes_mismatches"][:10],
             "repair_contract_subtype_mismatches": consistency_results["repair_contract_subtype_mismatches"][:10],
-            "repair_contract_provenance_mismatches": consistency_results["repair_contract_provenance_mismatches"][
-                :10
-            ],
+            "repair_contract_provenance_mismatches": consistency_results["repair_contract_provenance_mismatches"][:10],
             "scope_authority_fix_scope_mismatches": consistency_results["scope_authority_fix_scope_mismatches"][:10],
             "scope_authority_authoritative_fix_scope_mismatches": consistency_results[
                 "scope_authority_authoritative_fix_scope_mismatches"
@@ -1682,6 +1923,8 @@ class FailureAnalyzer:
             "selection_reason_mismatches": consistency_results["selection_reason_mismatches"][:10],
             "verdict_reason_mismatches": consistency_results["verdict_reason_mismatches"][:10],
             "fix_scope_mismatches": consistency_results["fix_scope_mismatches"][:10],
+            "runtime_advisory_mismatches": consistency_results["runtime_advisory_mismatches"][:10],
+            "retry_directives_mismatches": consistency_results["retry_directives_mismatches"][:10],
             "gate_repair_metadata_missing": consistency_results["gate_repair_metadata_missing"][:10],
             "rationale_metadata_missing": consistency_results["rationale_metadata_missing"][:10],
             "artifact_missing_files": consistency_results["artifact_missing_files"][:10],
@@ -1690,6 +1933,7 @@ class FailureAnalyzer:
             "final_authority_contract": final_authority_contract,
             "session_scoped_attempts": session_scoped_attempts,
             "legacy_key_attempts": len(attempts_considered) - session_scoped_attempts,
+            "stage_attempt_rows_without_attempt_key": stage_attempt_rows_without_attempt_key,
             "session_decision_rows_without_attempt_key": session_decision_rows_without_attempt_key,
             "status": "warn" if has_issues else "ok",
         }
@@ -1714,6 +1958,11 @@ class FailureAnalyzer:
         )
         if stage_attempts is None:
             return {}
+        stage_attempt_rows_without_attempt_key = self._count_stage_attempt_rows_without_attempt_key(
+            stage=stage,
+            lookback=lookback,
+            session_id=session_id,
+        )
         pass_rate_monitor = self._load_pass_rate_monitor_alignment_sink(
             stage=stage,
             lookback=lookback,
@@ -1749,10 +1998,15 @@ class FailureAnalyzer:
             session_decisions=session_decisions,
             episode_production=episode_production,
         )
-        if not attempts_considered and session_decision_rows_without_attempt_key <= 0:
+        if (
+            not attempts_considered
+            and stage_attempt_rows_without_attempt_key <= 0
+            and session_decision_rows_without_attempt_key <= 0
+        ):
             return {}
 
         final_missing, lifecycle_missing, lifecycle_missing_in_final = self._collect_sink_alignment_missing_buckets(
+            stage=stage,
             include_session_decisions=include_session_decisions,
             final_union=final_union,
             lifecycle_union=lifecycle_union,
@@ -1787,6 +2041,7 @@ class FailureAnalyzer:
             final_missing=final_missing,
             lifecycle_missing=lifecycle_missing,
             lifecycle_missing_in_final=lifecycle_missing_in_final,
+            stage_attempt_rows_without_attempt_key=stage_attempt_rows_without_attempt_key,
             session_decision_rows_without_attempt_key=session_decision_rows_without_attempt_key,
             final_authority_rows=final_authority_rows,
             consistency_results=consistency_results,
@@ -1859,24 +2114,16 @@ class FailureAnalyzer:
                     checklist_total[key] += 1
                     if verdict_text == "OK":
                         checklist_ok[key] += 1
-            reason_text = " ".join(
-                str(row.get(field, "") or "") for field in ("selection_reason", "open_review")
-            )
+            reason_text = " ".join(str(row.get(field, "") or "") for field in ("selection_reason", "open_review"))
             tokens = {
-                token
-                for token in re.findall(r"[가-힣A-Za-z]{2,}", reason_text)
-                if token.lower() not in stopwords
+                token for token in re.findall(r"[가-힣A-Za-z]{2,}", reason_text) if token.lower() not in stopwords
             }
             for token in tokens:
                 keyword_counts[token] += 1
 
         patterns: list[dict] = []
         axis_avgs = sorted(
-            (
-                (key, round(score_totals[key] / score_counts[key], 1))
-                for key in score_totals
-                if score_counts[key] > 0
-            ),
+            ((key, round(score_totals[key] / score_counts[key], 1)) for key in score_totals if score_counts[key] > 0),
             key=lambda item: item[1],
             reverse=True,
         )
@@ -1889,11 +2136,7 @@ class FailureAnalyzer:
                 }
             )
 
-        stable_keys = [
-            key
-            for key, total in checklist_total.items()
-            if total > 0 and checklist_ok[key] / total >= 0.8
-        ]
+        stable_keys = [key for key, total in checklist_total.items() if total > 0 and checklist_ok[key] / total >= 0.8]
         if stable_keys:
             patterns.append(
                 {
@@ -1903,7 +2146,9 @@ class FailureAnalyzer:
                 }
             )
 
-        common_keywords = [key for key, count in sorted(keyword_counts.items(), key=lambda item: item[1], reverse=True) if count >= 2]
+        common_keywords = [
+            key for key, count in sorted(keyword_counts.items(), key=lambda item: item[1], reverse=True) if count >= 2
+        ]
         if common_keywords:
             patterns.append(
                 {
@@ -2140,7 +2385,9 @@ class FailureAnalyzer:
                 "stage": 4,
                 "lookback": len(rows),
                 "local_hit_rate": round(must_fix_resolved_rows / must_fix_rows, 4) if must_fix_rows else None,
-                "fallback_to_partial_or_full": round(partial_or_full_rows / fix_scope_rows, 4) if fix_scope_rows else None,
+                "fallback_to_partial_or_full": round(partial_or_full_rows / fix_scope_rows, 4)
+                if fix_scope_rows
+                else None,
                 "same_target_retry_avg": same_target_retry_avg,
                 "same_target_retry_p95": same_target_retry_p95,
                 "do_not_regress_violation_rate": round(do_not_regress_failed_rows / do_not_regress_rows, 4)

@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Literal, NotRequired, TypedDict
 
 from modules.core.constants import VolumeSettings, smart_truncate
+from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.stage2_contracts import TACTICAL_DOC_DUPLICATE_THRESHOLD
 
 DEFAULT_EP_COUNT = VolumeSettings.EPISODES_PER_ARC
@@ -587,16 +588,29 @@ class Stage2Orchestrator:
         session_logger = getattr(self.ctx, "session_logger", None)
         if session_logger:
             try:
-                stage2_verdict = "PASS" if action == "break" else "REJECT"
+                if action == "break":
+                    stage2_verdict = "PASS"
+                elif action in {"retry", "continue"}:
+                    stage2_verdict = "RETRY"
+                else:
+                    stage2_verdict = "REJECT"
+                attempt_key = build_attempt_key(
+                    stage=2,
+                    ep_num=global_arc_no,
+                    arc_num=global_arc_no,
+                    attempt_num=attempt + 1,
+                    session_id=resolve_logging_session_id(getattr(self.ctx, "current_project", None)),
+                )
                 session_logger.log_decision(
                     stage="stage2",
-                    ep_num=0,
-                    round_num=attempt,
+                    ep_num=global_arc_no,
+                    round_num=attempt + 1,
                     decision_type="arc_design",
                     result=stage2_verdict,
                     score=fin.get("score", 0),
                     arc_no=global_arc_no,
                     fix_scope=fin.get("fix_scope", ""),
+                    attempt_key=attempt_key,
                 )
             except Exception as log_err:
                 logging.debug("[SilentPass:Stage2:SessionLog] %s", log_err)

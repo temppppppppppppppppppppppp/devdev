@@ -119,10 +119,7 @@ def test_run_stage2_single_arc_attempt_retries_before_validation():
     assert result["refined_arc"] == {"draft": "enriched"}
     orch._validation_pipeline.run_validation.assert_not_called()
     orch._finalizer.run_finalize.assert_not_awaited()
-    assert (
-        orch._preflight._preflight_arc_analysis.call_args.kwargs["cached_preflight_injection"]
-        == "inject"
-    )
+    assert orch._preflight._preflight_arc_analysis.call_args.kwargs["cached_preflight_injection"] == "inject"
 
 
 def test_run_stage2_single_arc_attempt_finalizes_with_transition_state():
@@ -269,3 +266,73 @@ def test_run_stage2_single_arc_design_threads_attempt_state_between_calls():
     assert second_call["last_refined_context"] == "ctx-1"
     assert second_call["current_ep_start"] == 6
     orch._handle_stage2_single_arc_failure.assert_not_awaited()
+
+
+def test_handle_stage2_finalize_transition_logs_attempt_key_for_arc_design():
+    ctx = _make_ctx()
+    ctx.current_project.metrics_session_id = "sess_stage2"
+    ctx.session_logger = MagicMock()
+    orch = Stage2Orchestrator(app=MagicMock(), context=ctx)
+
+    orch._handle_stage2_finalize_transition(
+        fin={
+            "action": "break",
+            "score": 96,
+            "fix_scope": "inplace",
+            "current_feedback": "ok",
+            "director_feedback_for_fourphase": "ok",
+            "st_snapshot": {"seed": True},
+            "last_refined_context": "ctx",
+        },
+        global_arc_no=2,
+        attempt=0,
+        last_refined_context="ctx",
+        current_ep_start=4,
+        current_feedback="seed-feedback",
+        director_feedback_for_fourphase="seed-director",
+        st_snapshot={"seed": True},
+    )
+
+    log_kw = ctx.session_logger.log_decision.call_args.kwargs
+    assert log_kw["decision_type"] == "arc_design"
+    assert log_kw["ep_num"] == 2
+    assert log_kw["round_num"] == 1
+    assert log_kw["result"] == "PASS"
+    assert log_kw["score"] == 96
+    assert log_kw["fix_scope"] == "inplace"
+    assert log_kw["attempt_key"] == "s2:ep2:arc2:a1:sess_stage2"
+
+
+def test_handle_stage2_finalize_transition_logs_retry_for_non_break_arc_design():
+    ctx = _make_ctx()
+    ctx.current_project.metrics_session_id = "sess_stage2"
+    ctx.session_logger = MagicMock()
+    orch = Stage2Orchestrator(app=MagicMock(), context=ctx)
+
+    orch._handle_stage2_finalize_transition(
+        fin={
+            "action": "retry",
+            "score": 41,
+            "fix_scope": "rewrite",
+            "current_feedback": "retry-feedback",
+            "director_feedback_for_fourphase": "retry-director",
+            "st_snapshot": {"seed": True},
+            "last_refined_context": "ctx",
+        },
+        global_arc_no=3,
+        attempt=1,
+        last_refined_context="ctx",
+        current_ep_start=9,
+        current_feedback="seed-feedback",
+        director_feedback_for_fourphase="seed-director",
+        st_snapshot={"seed": True},
+    )
+
+    log_kw = ctx.session_logger.log_decision.call_args.kwargs
+    assert log_kw["decision_type"] == "arc_design"
+    assert log_kw["ep_num"] == 3
+    assert log_kw["round_num"] == 2
+    assert log_kw["result"] == "RETRY"
+    assert log_kw["score"] == 41
+    assert log_kw["fix_scope"] == "rewrite"
+    assert log_kw["attempt_key"] == "s2:ep3:arc3:a2:sess_stage2"
