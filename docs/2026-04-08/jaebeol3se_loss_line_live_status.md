@@ -7,8 +7,8 @@ Family: `blockguide`
 
 ## 1. Operator Reading
 
-- inventory role: `arc02_complete_post_audit_tr_continue_b31_ready`
-- operational state: `arc02_complete_16_30_risk_committee_member_entered_B10_third_reuse_arc03_entry_inscribed_audit_pass_tr_continue_b31_allowed`
+- inventory role: `arc02_complete_route_B_rewrite_done_tr_continue_b31_ready`
+- operational state: `arc02_complete_16_30_route_B_rewrite_done_phase0_edited_post_rewrite_audit_PASS_tr_continue_b31_allowed`
 - schema status: `not_pair_tracked`
 - benchmark alias: `not_applicable`
 - benchmark freshness: `not_applicable`
@@ -226,9 +226,13 @@ Family: `blockguide`
 
 The current saved boundary is **Block 30** — **ARC-02 complete (16-30 of 16-30)**. defeat_blocks [18, 24] + quiet_blocks [20, 26] 네 개 모두 통과, 임재훈 분할 8단계 최종 완주(B26), 박동수 분업 축 카운터파트 확장 발행자 등록(B27), 외부 레인 5축 프레임 재설계 + 두 번째 실전 집행 수익 확정 + B24 실패 회수 완료(B28~B29), B25 표준 양식 두 번째 적용 + 재사용 가능 양식 공식 기록(B29), 두 체계 공존 구조 행동 차원 첫 실전 양측 활자 검증 완료(B29 사내 결재 시스템 로그 차원 + B30 회의록 차원 이중화), **B30 ARC-02 cap 리스크 위원회 정식 위원 진입 + 사내 좌표 8건째 추가 + B10 회계 어휘 세 번째 재사용 완료 + ARC-03 입장권 양식 활자화 + asset-first 차단 8연속 완주(30블록 연속 차단) + 자세 사슬 12단 변주 등록**, 감리 11-20 next_10_focus 12/12 완주. **Block 021~030 자체 감리 PASS 2026-04-09** (treatment-production-harness-v2 §1.1C 10-block 감리 게이트, repair_targets 0건, 감리 next_10_focus 12항목 B31~B40 등록). **다음 필수 envelope: `tr_continue` Block 31 only (ARC-03 진입)**. envelope 분리 원칙에 따라 감리와 tr_continue를 같은 턴에 묶지 않는다.
 
-- **`block_audit_10` (completed 2026-04-09, historical record):**
-  - **Block 021~030 자체 감리 PASS 2026-04-09** (ARC-02 cap 감리, repair_targets 0건)
-  - 감리 노트: `treatments/preprocess/jaebeol3se_loss_line/05_audits/block_021_030_audit_2026-04-09.md` (320 lines)
+- **`block_audit_10` (completed 2026-04-09, 경로 B rewrite + post-rewrite 재감리 완료):**
+  - **Block 021~030 자체 감리 PASS 2026-04-09** (post-rewrite 재감리, 확신도 94%, Phase0 4건 divergence 해소)
+  - post-rewrite 감리 노트 (현행본): `treatments/preprocess/jaebeol3se_loss_line/05_audits/block_021_030_audit_2026-04-09_post_route_B.md` (387 lines, PASS)
+  - 원 감리 노트 (역사 기록, 경로 D patch 완료본): `treatments/preprocess/jaebeol3se_loss_line/05_audits/block_021_030_audit_2026-04-09.md` (430 lines, CONDITIONAL PASS)
+  - 3pass 메타 감리 (역사 기록): `docs/2026-04-09/jaebeol3se_loss_line_block_021_030_audit_3pass_audit.md` (407 lines)
+  - 경로 B 설계 문서 (역사 기록): `docs/2026-04-09/jaebeol3se_loss_line_route_B_rewrite_design.md`
+  - 경로 B 실행 요약: TR B30 full rewrite (명부 등재→제도적 준비 walk-back, time 8월 마지막 주 조정) + Phase0 ARC-02/03 capital_target 정정 + B31/B32/B34/B37/B44 function 확장
   - 감리 기준: treatment-production-harness-v2 §1.1C
   - 감리 범위 (10블록 전체):
     - B21 `실사 서명` — 원가 연쇄 방어 브리프 v1 정식 등록, 결재선 마지막 서명자, 고객사 실사 담당자 첫 등장, 박동수·정우진 자발적 협조 직전 단계, 2층 브리프 구조 확장, dual-lane 9회 작동
@@ -283,11 +287,12 @@ The current saved boundary is **Block 30** — **ARC-02 complete (16-30 of 16-30
   7. 자세 사슬 13단 변주 가능성 관리 — ARC-03 진입 첫 블록에서 13단 변주 등록 가능
 
 - **`tr_continue` Block 31 only (primary required, 다음 envelope 고정):**
-  - Block 31 집필 1블록만 — ARC-03 진입 첫 블록 (`첫 정기 리스크 위원회 회의 참석, 정식 위원 지위 첫 참석`)
-  - 감리 노트 §5 + §6 envelope 분리 원칙 준수 — 같은 턴에 다른 작업(감리·live_status 갱신·다중 블록) 혼입 금지
-  - 집필 가이드: 감리 노트 §4 next_10_focus (B31~B40, ARC-03 전반부) 12항목 — 특히 #1 (B31 최소 톤 + 의결 단계 첫 작동 관찰 위치), #10 (자세 사슬 13단 변주 등록), #11 (ARC-03 defeat_blocks / quiet_blocks Phase0 block_slots 31~40 정확 확인)
-  - 공통 어휘: B10→B25→B30 세 번 재사용 회계 어휘가 실제 안건에 등장하는 첫 사례 등록 (next_10_focus #2)
-  - 권위 입력: Phase0 block_slots 31~40 + canon + current-root live TR state at Block 30 + 감리 노트 B21~B30 PASS 상태
+  - Block 31 집필 1블록만 — ARC-03 진입 첫 블록: Phase0 B31 `의결석` function 589 chars (경로 B envelope 3.3에서 확장 완료)
+  - **Phase0 B31 function 핵심 이벤트**: 금요일 정기 리스크 위원회 회의 + CFO 제안서 정식 의결 + 4인 찬성 발언 + 도현석 배석자 회의 석상 한 문장 재호명 + 부칙 등록 + 회장 asset-first 차단 제도 차원 원칙 보증 회의록 활자화 + Block 10 회계 어휘 네 번째 재사용 예약(B42 지정). B30에서 이관된 원 4·5·6장 이벤트 집합.
+  - **집필 구조 권장**: 6장 분할 — (A) 월~금 전 준비 (B) 4인 찬성 발언 순회 (C) 도현석 재호명 (D) 회장 의결 + 부칙 등록 (E) 도진우 회의록 정독 (F) CFO ARC-03 입장권 후속 메모
+  - 감리 노트 §4 next_10_focus (B31~B40, ARC-03 전반부) 12항목 — 특히 #1 (B31 6장 구조 분할 집필), #2 (B32 50→100억 1차 scale-up), #3 (B33 본격 대응 전환점 + defeat_block)
+  - Phase0 ARC-03: `defeat_blocks: [33, 39]`, `quiet_blocks: [35, 41]`
+  - 권위 입력: Phase0 block_slots 31~40 (경로 B 편집 완료본) + canon + current-root live TR state at Block 30 (경로 B rewrite 완료본) + post-rewrite 감리 노트 B21~B30 PASS 상태
   - do not read the 2026-04-06 handoff §11 as authoritative content
 - `tr_merge_rebuild` (only with explicit operator authorization):
   - only if the operator explicitly authorizes reconstructing Block 8+ from the 2026-04-06 handoff §11 or similar quarantined sources
