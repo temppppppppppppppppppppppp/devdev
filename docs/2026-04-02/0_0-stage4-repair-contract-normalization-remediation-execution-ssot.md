@@ -327,6 +327,26 @@ Revalidation note:
 - static evidence is sufficient to keep this as a live execution SSOT
 - fresh run is helpful for measuring mismatch volume, but not required to prove the readback seam exists
 
+## 14A. 2026-04-09 Static Validity Recheck: Stale-Likely P1 Note
+
+A current-HEAD static recheck against the landed code and focused tests no longer reproduces section 14 exactly as written.
+
+Recheck anchors:
+
+- `modules/core/db_manager.py` now surfaces `repair_contract_subtype`, `scope_authority_fix_scope`, `scope_authority_authoritative_fix_scope`, and `scope_authority_widened` in the Stage4 gate-repair snapshot payload.
+- `modules/api/bridge_server.py` now exposes the same readback fields through `gate_repair_summary`.
+- `modules/core/failure_analyzer.py` now extracts, merges, and backfills the same gate-repair fields across `stage_attempts` and `episode_production` readback surfaces.
+- focused validation passed on current HEAD:
+  - `pytest tests/test_db_manager.py -k "stage4_gate_repair_snapshot" -q`
+  - `pytest tests/test_bridge_quality_summary.py::test_quality_dashboard_endpoint_surfaces_gate_repair_summary -q`
+  - `pytest tests/test_failure_analyzer.py::test_failure_analyzer_load_stage_attempt_alignment_sink_reads_root_gate_repair_fields tests/test_failure_analyzer.py::test_load_episode_production_alignment_sink_merges_lifecycle_runtime_scope_authority tests/test_failure_analyzer.py::test_collect_sink_alignment_gate_repair_results_backfills_stage_attempt_from_consensus_runtime_sinks -q`
+
+Current reading:
+
+- the older statement that the repair-contract fields are "not yet normalized as first-class readback truth across all persistence/sink surfaces" is now stale-likely under static review
+- static review alone still cannot prove full demotion, because fresh canary/live proof has not yet re-measured mismatch volume on current HEAD
+- queue order therefore remains unchanged for now; treat this as `stale-likely / runtime-demotion-pending`, not as a fresh broad implementation reopen
+
 ## 15. 2026-04-07 Bounded Readback Surface Promotion
 
 The 2026-04-07 realization pass converted the revalidated phantom-mismatch substrate into one bounded operator-surface patch instead of reopening broad Stage4 grammar work.

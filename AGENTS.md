@@ -33,13 +33,20 @@ WorkGuard companion contract:
   - `phase0_design`, `tr_block_070_draft`, `BI` 파일 존재로 단계를 판정하지 않는다. (이 규칙은 시스템 오더 트랙에만 적용. 서사 파이프라인 오더에서는 SSOT_stage0_preprocess_integrated_order.md §3의 파일 존재 기반 단계 판정을 따른다.)
 - `서사 파이프라인 오더`
   - 작품 기획, `work_id` 기반 `Treatment/BI`, `Phase 0`, `TR draft`, `BI`, 감리, 정합성, 밀도 점검, 전처리 handoff, 작품 기준 `다음 스텝/계속/승인`
+  - `재료 사이드`, `재료 사이드 하네스`, `material_ssot`, `기획안~TR/BI`, `TR/BI pair 제작`, `글도비 파이프라인 이전` 같은 표현도 기본적으로 이 트랙으로 판정한다.
   - 이 경우에만 아래 `Narrative Router First` 규칙과 `AGENTS.narrative-router.md`를 적용한다.
 
 판정 원칙:
 
 - 대상이 코드/시스템/앱/테스트면 시스템 오더다.
-- 대상이 작품/`work_id`/`treatments/`/`bible/` 산출물이면 서사 파이프라인 오더다.
+- 대상이 작품/`work_id`/`treatments/`/`bible/` 산출물, `material_ssot`, 기획안, `Phase 0`, `TR draft`, `BI`, `work_guard`, `TR/BI pair` 제작이면 서사 파이프라인 오더다.
 - `다음 스텝`, `계속`, `승인`만으로는 narrative-router 트리거가 아니다. 현재 대상이 작품 파이프라인일 때만 트리거다.
+
+## Material-Side Alias Rule
+
+- `재료 사이드`, `재료 사이드 하네스`, `material-side`, `material-side harness`, `material_ssot`, `글도비 파이프라인 이전`, `기획안~TR/BI`, `TR/BI pair 제작`은 기본적으로 `material_ssot` 중심의 material-side order를 뜻한다.
+- 위 표현들은 코드/런타임/DB/앱/테스트를 직접 고치라는 요청이 아닌 한 시스템 오더가 아니라 서사 파이프라인 오더로 판정한다.
+- 기본 진입 read order는 `material_ssot/README.md` -> `material_ssot/00_governance/stage-read-order.md` -> 필요 시 `docs/narrative-router/SSOT_narrative-router-integrated-order.md`다.
 
 ## Document Save Rule
 

@@ -145,7 +145,8 @@ Use these freshness readings:
   - the benchmark was run after the latest material touch or regeneration, or
   - a bounded benchmark-preservation audit explicitly recorded that benchmark anchors and cap rules remained intact after the latest schema-only rewrite
 - `pending_refresh`
-  - the pair was materially touched or regenerated after the latest benchmark artifact, and no post-touch freshness audit exists yet
+  - the pair was materially touched or regenerated after the latest benchmark artifact, and no post-touch freshness audit exists yet, or
+  - a previously current positive reading was withdrawn after a benchmark-law contradiction or false-pass finding
 - `unbenchmarked`
   - no benchmark-grade artifact exists yet
 

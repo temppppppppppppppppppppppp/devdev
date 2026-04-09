@@ -1,10 +1,12 @@
 {
   "_schema_version": "production_pair_operational_registry.v1",
-  "updated_at": "2026-04-08",
+  "updated_at": "2026-04-09",
   "notes": [
     "Operational states here are durable governance overrides for the normalization runner.",
     "Benchmark freshness tracks whether a benchmark or bounded benchmark-preservation audit has been recorded after the latest material touch or regeneration.",
-    "The 2026-04-08 benchmark freshness wave closes all current tracked pairs to benchmark_freshness=current."
+    "The 2026-04-08 benchmark freshness wave closed the then-current tracked pairs to benchmark_freshness=current, but later false-pass withdrawals may move a pair back to pending_refresh without deleting the historical alias snapshot.",
+    "2026-04-09 chaebol_allowance_zero positive reading withdrawn after opening pacing false-pass triage; keep only as a negative exemplar / false-pass archive.",
+    "2026-04-09 jangyeongshil_industrial_revolution record updated after TR Block 70 completion + bi_refresh + independent 7-Pass mechanical audit + independent 3-Pass philosophy audit (all PASS)."
   ],
   "pairs": [
     {
@@ -27,9 +29,10 @@
       "operational_state": "newly_touched_live_pair",
       "schema_status": "pass",
       "benchmark_alias": "GREENPLUS",
-      "benchmark_freshness": "current",
-      "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
-      "operator_note": "Benchmark-fresh live pair; safe for current family baseline reading."
+      "alias_status": "withdrawn_false_pass_historical_snapshot",
+      "benchmark_freshness": "pending_refresh",
+      "benchmark_artifact": "docs/2026-04-09/chaebol_allowance_zero_opening_pacing_false_pass_triage.md",
+      "operator_note": "Historical GREENPLUS snapshot withdrawn after the 2026-04-09 opening pacing false-pass triage; keep only as a negative exemplar / false-pass archive and do not cite as a current family baseline."
     },
     {
       "work_id": "chaebol_ent_empire",
@@ -101,7 +104,15 @@
       "benchmark_alias": "GREEN",
       "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
-      "operator_note": "Benchmark-fresh unslotted live pair; positive alias granted, but still outside the numbered-slot manifest."
+      "last_audit_date": "2026-04-09",
+      "audit_trail": [
+        "docs/2026-04-09/jangyeongshil_industrial_revolution_bi_audit_report.md",
+        "docs/2026-04-09/jangyeongshil_industrial_revolution_3pass_audit_report.md"
+      ],
+      "work_guard": "work_guards/13_jangyeongshil_industrial_revolution.yaml",
+      "preprocess_dir": "treatments/preprocess/jangyeongshil_industrial_revolution/",
+      "downstream_ready": true,
+      "operator_note": "Benchmark-fresh unslotted live pair; positive alias granted, but still outside the numbered-slot manifest. 2026-04-09: TR Block 1-70 complete, bi_refresh executed, 3 independent audit layers (self-reported BI 5-Pass, external 7-Pass mechanical, external 3-Pass philosophy) all PASS. canon §5.2 4-step formula 70/70 complete (100%), Post-Patron Independence Lock 8/8, BI verbatim-sync contract 100%. Work-level Phase 3 checker waiver active. work_guard published as work_guards/13_jangyeongshil_industrial_revolution.yaml (file-ordering number, not canonical slot; inventory_role remains unslotted_live_pair). Downstream consumer manifests (profile_lock/source_manifest/phase0_ready_snapshot/material_bundle_summary) published to treatments/preprocess/jangyeongshil_industrial_revolution/ — pair is now downstream-consumer ready for densification/scene/episode pipelines."
     },
     {
       "work_id": "manual_meridian_archivist",

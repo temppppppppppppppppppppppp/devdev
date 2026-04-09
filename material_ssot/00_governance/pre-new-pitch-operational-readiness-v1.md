@@ -1,6 +1,6 @@
 # Pre-New-Pitch Operational Readiness v1
 
-Date: 2026-04-08
+Date: 2026-04-09
 Status: active
 Scope: repo-level readiness gate before starting a fresh pitch wave
 
@@ -54,13 +54,14 @@ That freshness is tracked separately in:
 - for fresh pitch judgment, rely on `material-benchmark-readiness-harness-v1.md` and `material_promotion_gate.py`
 - for pair-side family reference, consult `production-pair-operational-registry-v1.md`
 - if a pair is `unslotted_live_pair`, respect that inventory role even when benchmark freshness is `current`
+- if a pair carries `pending_refresh` because a positive reading was withdrawn after a false-pass finding, treat it as a negative exemplar only
 - numbered `GREEN` pairs are live and benchmark-fresh, but they still sit below the `GREENPLUS` exemplar shelf
 
-## 5. Current 2026-04-08 Snapshot
+## 5. Current 2026-04-09 Snapshot
 
 - tracked pair inventory: schema-clean
-- tracked pair inventory: benchmark-fresh
+- tracked pair inventory: benchmark-fresh except `chaebol_allowance_zero`, which is now a withdrawn false-pass historical record with `pending_refresh`
 - `material_ssot/20_pitch`: validator-pass
 - bounded governance substrate: validator-pass
 
-This means new pitch work is operationally unblocked, and pair-side fresh baseline claims can rely on the current registry so long as inventory-role distinctions and the `GREEN` vs `GREENPLUS` shelf split are respected.
+This means new pitch work is operationally unblocked, and pair-side fresh baseline claims can rely on the current registry so long as inventory-role distinctions, withdrawn false-pass notes, and the `GREEN` vs `GREENPLUS` shelf split are respected.

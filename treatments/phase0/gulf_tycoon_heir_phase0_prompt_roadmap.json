@@ -1,0 +1,647 @@
+{
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "알고 보니 내 아버지가 걸프 대부호였다",
+        "genre_archetype": "family office / port-logistics / succession war / global business fantasy",
+        "logline": "혈통은 입장권일 뿐이었다. 윤태하는 가족을 얻은 날 바로 적자 자산 묶음을 떠안고, 사하르의 family office 안쪽에서 항만, 창고, 은행, board를 하나씩 살려 내며 자기 자리를 장부로 산다."
+      },
+      "CoreIdentity": {
+        "protagonist": "윤태하"
+      }
+    }
+  },
+  "plot_roadmap": [
+    {
+      "block_id": "Block 1",
+      "block_no": 1,
+      "title": "검은 봉투",
+      "summary": "한국에서 소모되던 태하 앞에 하산이 직접 찾아오고, guest-heir 배지와 혈통 확인 청문 입장권, K-Transit 7 파일 접근을 연다.",
+      "arc_id": "ARC-01",
+      "arc_title": "썩은 자산 묶음",
+      "arc_block_range": "1-10"
+    },
+    {
+      "block_id": "Block 2",
+      "block_no": 2,
+      "title": "혈통 확인",
+      "summary": "혈통 확인 청문을 통과하고 K-Transit 7의 90일 임시 운영권과 limited protection을 얻는다.",
+      "arc_id": "ARC-01",
+      "arc_title": "썩은 자산 묶음",
+      "arc_block_range": "1-10"
+    },
+    {
+      "block_id": "Block 3",
+      "block_no": 3,
+      "title": "동결 계좌",
+      "summary": "보증 호출과 customs hold를 멈춰 cargo seizure를 막고 첫 signatory override를 얻는다.",
+      "arc_id": "ARC-01",
+      "arc_title": "썩은 자산 묶음",
+      "arc_block_range": "1-10"
+    },
+    {
+      "block_id": "Block 4",
+      "block_no": 4,
+      "title": "빈 창고",
+      "summary": "누르 프리존 빈 창고와 만료 직전 quota를 cash line으로 바꾼다.",
+      "arc_id": "ARC-01",
+      "arc_title": "썩은 자산 묶음",
+      "arc_block_range": "1-10"
+    },
+    {
+      "block_id": "Block 5",
+      "block_no": 5,
+      "title": "우회 선적",
+      "summary": "siblings 이름을 팔아먹던 charter-rate 누수 구조를 적발해 direct report line과 board observer seat를 얻는다.",
+      "arc_id": "ARC-01",
+      "arc_title": "썩은 자산 묶음",
+      "arc_block_range": "1-10"
+    },
+    {
+      "block_id": "Block 6",
+      "block_no": 6,
+      "title": "서명권",
+      "summary": "은행 롤오버와 항만 슬롯 연장을 동시에 성사시켜 다음 자산 인수전 입장권을 연다.",
+      "arc_id": "ARC-01",
+      "arc_title": "썩은 자산 묶음",
+      "arc_block_range": "1-10"
+    },
+    {
+      "block_id": "Block 7",
+      "block_no": 7,
+      "title": "가짜 어음",
+      "summary": "defeat 블록. old-guard가 fake paper와 split invoice로 태하를 역으로 엮어 넣으려 한다.",
+      "arc_id": "ARC-01",
+      "arc_title": "썩은 자산 묶음",
+      "arc_block_range": "1-10"
+    },
+    {
+      "block_id": "Block 8",
+      "block_no": 8,
+      "title": "현금흐름표",
+      "summary": "quiet 블록. cash conversion cycle과 누수 지도를 다시 그려 K-Transit 7의 진짜 목줄을 정리한다.",
+      "arc_id": "ARC-01",
+      "arc_title": "썩은 자산 묶음",
+      "arc_block_range": "1-10"
+    },
+    {
+      "block_id": "Block 9",
+      "block_no": 9,
+      "title": "항만 슬롯",
+      "summary": "칼리즈 포트 슬롯을 고정시키며 port corridor의 첫 실권을 잡는다.",
+      "arc_id": "ARC-01",
+      "arc_title": "썩은 자산 묶음",
+      "arc_block_range": "1-10"
+    },
+    {
+      "block_id": "Block 10",
+      "block_no": 10,
+      "title": "가족회의",
+      "summary": "가족회의에서 태하가 temporary heir가 아니라 inside operator라는 사실을 공식화한다.",
+      "arc_id": "ARC-01",
+      "arc_title": "썩은 자산 묶음",
+      "arc_block_range": "1-10"
+    },
+    {
+      "block_id": "Block 11",
+      "block_no": 11,
+      "title": "cash room",
+      "summary": "사미르의 아침 cash room 참관권을 얻어 실제 treasury 흐름을 본다.",
+      "arc_id": "ARC-02",
+      "arc_title": "패밀리 오피스의 안쪽",
+      "arc_block_range": "11-20"
+    },
+    {
+      "block_id": "Block 12",
+      "block_no": 12,
+      "title": "냉동 라인",
+      "summary": "냉동·할랄 식품 라인의 회전을 복구한다.",
+      "arc_id": "ARC-02",
+      "arc_title": "패밀리 오피스의 안쪽",
+      "arc_block_range": "11-20"
+    },
+    {
+      "block_id": "Block 13",
+      "block_no": 13,
+      "title": "waiver",
+      "summary": "customs waiver 전쟁을 이겨 한 줄의 허가를 묶는다.",
+      "arc_id": "ARC-02",
+      "arc_title": "패밀리 오피스의 안쪽",
+      "arc_block_range": "11-20"
+    },
+    {
+      "block_id": "Block 14",
+      "block_no": 14,
+      "title": "dashboard",
+      "summary": "quiet 블록. treasury dashboard를 해독하며 숫자와 권력의 지도를 그린다.",
+      "arc_id": "ARC-02",
+      "arc_title": "패밀리 오피스의 안쪽",
+      "arc_block_range": "11-20"
+    },
+    {
+      "block_id": "Block 15",
+      "block_no": 15,
+      "title": "debt trader",
+      "summary": "첫 debt trader와 직접 거래해 rollover 조건을 유리하게 고친다.",
+      "arc_id": "ARC-02",
+      "arc_title": "패밀리 오피스의 안쪽",
+      "arc_block_range": "11-20"
+    },
+    {
+      "block_id": "Block 16",
+      "block_no": 16,
+      "title": "이중 누수",
+      "summary": "defeat 블록. 경호·회계 라인 이중 누수가 터져 family office 신뢰가 흔들린다.",
+      "arc_id": "ARC-02",
+      "arc_title": "패밀리 오피스의 안쪽",
+      "arc_block_range": "11-20"
+    },
+    {
+      "block_id": "Block 17",
+      "block_no": 17,
+      "title": "catering",
+      "summary": "airline catering 적자 라인을 흑자로 돌린다.",
+      "arc_id": "ARC-02",
+      "arc_title": "패밀리 오피스의 안쪽",
+      "arc_block_range": "11-20"
+    },
+    {
+      "block_id": "Block 18",
+      "block_no": 18,
+      "title": "노동자 숙소",
+      "summary": "worker housing과 급식 라인을 장기 계약으로 묶는다.",
+      "arc_id": "ARC-02",
+      "arc_title": "패밀리 오피스의 안쪽",
+      "arc_block_range": "11-20"
+    },
+    {
+      "block_id": "Block 19",
+      "block_no": 19,
+      "title": "voting alignment",
+      "summary": "family office board voting alignment를 재편한다.",
+      "arc_id": "ARC-02",
+      "arc_title": "패밀리 오피스의 안쪽",
+      "arc_block_range": "11-20"
+    },
+    {
+      "block_id": "Block 20",
+      "block_no": 20,
+      "title": "inside operator",
+      "summary": "태하가 family office의 정식 inside operator 직함을 얻는다.",
+      "arc_id": "ARC-02",
+      "arc_title": "패밀리 오피스의 안쪽",
+      "arc_block_range": "11-20"
+    },
+    {
+      "block_id": "Block 21",
+      "block_no": 21,
+      "title": "liaison",
+      "summary": "항만청 liaison과 첫 조건부 거래를 만든다.",
+      "arc_id": "ARC-03",
+      "arc_title": "항만과 은행",
+      "arc_block_range": "21-30"
+    },
+    {
+      "block_id": "Block 22",
+      "block_no": 22,
+      "title": "credit line",
+      "summary": "한국 supplier credit line 일부를 family office 안으로 인수한다.",
+      "arc_id": "ARC-03",
+      "arc_title": "항만과 은행",
+      "arc_block_range": "21-30"
+    },
+    {
+      "block_id": "Block 23",
+      "block_no": 23,
+      "title": "2구역 창고",
+      "summary": "누르 프리존 2구역 창고 매입으로 storage power를 확장한다.",
+      "arc_id": "ARC-03",
+      "arc_title": "항만과 은행",
+      "arc_block_range": "21-30"
+    },
+    {
+      "block_id": "Block 24",
+      "block_no": 24,
+      "title": "front asset",
+      "summary": "defeat 블록. 파이살의 front asset 뒤에 붙은 old-guard 자금 압박과 정면 충돌한다.",
+      "arc_id": "ARC-03",
+      "arc_title": "항만과 은행",
+      "arc_block_range": "21-30"
+    },
+    {
+      "block_id": "Block 25",
+      "block_no": 25,
+      "title": "syndicate",
+      "summary": "local bank syndicate 구조를 재편해 debt line 주도권을 잡는다.",
+      "arc_id": "ARC-03",
+      "arc_title": "항만과 은행",
+      "arc_block_range": "21-30"
+    },
+    {
+      "block_id": "Block 26",
+      "block_no": 26,
+      "title": "cold chain",
+      "summary": "항공-항만-식품 cold chain 묶음을 설계한다.",
+      "arc_id": "ARC-03",
+      "arc_title": "항만과 은행",
+      "arc_block_range": "21-30"
+    },
+    {
+      "block_id": "Block 27",
+      "block_no": 27,
+      "title": "treasury alliance",
+      "summary": "라일라와 treasury 동맹을 확정한다.",
+      "arc_id": "ARC-03",
+      "arc_title": "항만과 은행",
+      "arc_block_range": "21-30"
+    },
+    {
+      "block_id": "Block 28",
+      "block_no": 28,
+      "title": "허가표",
+      "summary": "quiet 블록. 돈보다 먼저 움직이는 허가와 서류의 순서를 다시 짠다.",
+      "arc_id": "ARC-03",
+      "arc_title": "항만과 은행",
+      "arc_block_range": "21-30"
+    },
+    {
+      "block_id": "Block 29",
+      "block_no": 29,
+      "title": "외부 인수",
+      "summary": "첫 외부 M&A를 성사시켜 family office 외곽 자산을 먹는다.",
+      "arc_id": "ARC-03",
+      "arc_title": "항만과 은행",
+      "arc_block_range": "21-30"
+    },
+    {
+      "block_id": "Block 30",
+      "block_no": 30,
+      "title": "후계 2강",
+      "summary": "태하가 family succession 2강 구도에 진입한다.",
+      "arc_id": "ARC-03",
+      "arc_title": "항만과 은행",
+      "arc_block_range": "21-30"
+    },
+    {
+      "block_id": "Block 31",
+      "block_no": 31,
+      "title": "전용 회랑",
+      "summary": "부산-사하르 전용 corridor 구상을 공개한다.",
+      "arc_id": "ARC-04",
+      "arc_title": "회랑의 주인",
+      "arc_block_range": "31-40"
+    },
+    {
+      "block_id": "Block 32",
+      "block_no": 32,
+      "title": "배후 지구",
+      "summary": "항만 배후 worker district를 재정비해 logistics labor를 안정화한다.",
+      "arc_id": "ARC-04",
+      "arc_title": "회랑의 주인",
+      "arc_block_range": "31-40"
+    },
+    {
+      "block_id": "Block 33",
+      "block_no": 33,
+      "title": "통합센터",
+      "summary": "data, cold chain, customs를 묶는 통합센터를 착수한다.",
+      "arc_id": "ARC-04",
+      "arc_title": "회랑의 주인",
+      "arc_block_range": "31-40"
+    },
+    {
+      "block_id": "Block 34",
+      "block_no": 34,
+      "title": "royal line",
+      "summary": "royal liaison line과 공개 협상을 시작한다.",
+      "arc_id": "ARC-04",
+      "arc_title": "회랑의 주인",
+      "arc_block_range": "31-40"
+    },
+    {
+      "block_id": "Block 35",
+      "block_no": 35,
+      "title": "insurance",
+      "summary": "insurance market을 묶어 corridor risk price를 낮춘다.",
+      "arc_id": "ARC-04",
+      "arc_title": "회랑의 주인",
+      "arc_block_range": "31-40"
+    },
+    {
+      "block_id": "Block 36",
+      "block_no": 36,
+      "title": "hostile bid",
+      "summary": "rival family office의 hostile bid를 정면으로 받는다.",
+      "arc_id": "ARC-04",
+      "arc_title": "회랑의 주인",
+      "arc_block_range": "31-40"
+    },
+    {
+      "block_id": "Block 37",
+      "block_no": 37,
+      "title": "건강 쇼크",
+      "summary": "defeat 블록. 하산의 건강 쇼크로 succession clock이 갑자기 앞당겨진다.",
+      "arc_id": "ARC-04",
+      "arc_title": "회랑의 주인",
+      "arc_block_range": "31-40"
+    },
+    {
+      "block_id": "Block 38",
+      "block_no": 38,
+      "title": "내 이름",
+      "summary": "quiet 블록. 아버지 이름 없이 태하 자신의 조건표를 정리한다.",
+      "arc_id": "ARC-04",
+      "arc_title": "회랑의 주인",
+      "arc_block_range": "31-40"
+    },
+    {
+      "block_id": "Block 39",
+      "block_no": 39,
+      "title": "역인수",
+      "summary": "hostile bid를 역이용해 rival line 일부를 먹는다.",
+      "arc_id": "ARC-04",
+      "arc_title": "회랑의 주인",
+      "arc_block_range": "31-40"
+    },
+    {
+      "block_id": "Block 40",
+      "block_no": 40,
+      "title": "회랑의 주인",
+      "summary": "태하가 사하르-아시아 회랑의 핵심 operator로 공식 등극한다.",
+      "arc_id": "ARC-04",
+      "arc_title": "회랑의 주인",
+      "arc_block_range": "31-40"
+    },
+    {
+      "block_id": "Block 41",
+      "block_no": 41,
+      "title": "국부펀드 호출",
+      "summary": "sovereign fund가 태하의 corridor 모델을 공식 실사 대상으로 부른다.",
+      "arc_id": "ARC-05",
+      "arc_title": "국부펀드의 문",
+      "arc_block_range": "41-50"
+    },
+    {
+      "block_id": "Block 42",
+      "block_no": 42,
+      "title": "승인 보류",
+      "summary": "defeat 블록. royal line과 fund 실무가 approval을 보류하며 태하를 시험대에 올린다.",
+      "arc_id": "ARC-05",
+      "arc_title": "국부펀드의 문",
+      "arc_block_range": "41-50"
+    },
+    {
+      "block_id": "Block 43",
+      "block_no": 43,
+      "title": "공급선 바꿔치기",
+      "summary": "승인 없이도 돈이 도는 공급선 구조를 먼저 다시 짠다.",
+      "arc_id": "ARC-05",
+      "arc_title": "국부펀드의 문",
+      "arc_block_range": "41-50"
+    },
+    {
+      "block_id": "Block 44",
+      "block_no": 44,
+      "title": "항공-항만 패키지",
+      "summary": "air cargo와 port cold chain을 묶은 복합 패키지를 제시한다.",
+      "arc_id": "ARC-05",
+      "arc_title": "국부펀드의 문",
+      "arc_block_range": "41-50"
+    },
+    {
+      "block_id": "Block 45",
+      "block_no": 45,
+      "title": "왕실 liaison",
+      "summary": "royal liaison line과 실질 거래를 성사시킨다.",
+      "arc_id": "ARC-05",
+      "arc_title": "국부펀드의 문",
+      "arc_block_range": "41-50"
+    },
+    {
+      "block_id": "Block 46",
+      "block_no": 46,
+      "title": "실사실",
+      "summary": "fund due diligence war room을 장악한다.",
+      "arc_id": "ARC-05",
+      "arc_title": "국부펀드의 문",
+      "arc_block_range": "41-50"
+    },
+    {
+      "block_id": "Block 47",
+      "block_no": 47,
+      "title": "공개입찰",
+      "summary": "rival line과의 공개입찰에서 구조와 가격으로 이긴다.",
+      "arc_id": "ARC-05",
+      "arc_title": "국부펀드의 문",
+      "arc_block_range": "41-50"
+    },
+    {
+      "block_id": "Block 48",
+      "block_no": 48,
+      "title": "조건표",
+      "summary": "quiet 블록. 정치적 대가 없이 받을 수 있는 것과 없는 것을 명시한 조건표를 고정한다.",
+      "arc_id": "ARC-05",
+      "arc_title": "국부펀드의 문",
+      "arc_block_range": "41-50"
+    },
+    {
+      "block_id": "Block 49",
+      "block_no": 49,
+      "title": "브로커 정리",
+      "summary": "국내외 정치 브로커와 수수료 라인을 끊어낸다.",
+      "arc_id": "ARC-05",
+      "arc_title": "국부펀드의 문",
+      "arc_block_range": "41-50"
+    },
+    {
+      "block_id": "Block 50",
+      "block_no": 50,
+      "title": "펀드 동행",
+      "summary": "sovereign line과 공식 동행 자격을 얻는다.",
+      "arc_id": "ARC-05",
+      "arc_title": "국부펀드의 문",
+      "arc_block_range": "41-50"
+    },
+    {
+      "block_id": "Block 51",
+      "block_no": 51,
+      "title": "냉장선",
+      "summary": "cold chain fleet와 port reefer line을 정례화한다.",
+      "arc_id": "ARC-06",
+      "arc_title": "도시권 엔진",
+      "arc_block_range": "51-60"
+    },
+    {
+      "block_id": "Block 52",
+      "block_no": 52,
+      "title": "데이터 룸",
+      "summary": "supply, tariff, cargo, slot을 한 눈에 보는 data room을 연다.",
+      "arc_id": "ARC-06",
+      "arc_title": "도시권 엔진",
+      "arc_block_range": "51-60"
+    },
+    {
+      "block_id": "Block 53",
+      "block_no": 53,
+      "title": "에너지 저장",
+      "summary": "에너지 저장 설비를 묶어 logistics cost 변동성을 낮춘다.",
+      "arc_id": "ARC-06",
+      "arc_title": "도시권 엔진",
+      "arc_block_range": "51-60"
+    },
+    {
+      "block_id": "Block 54",
+      "block_no": 54,
+      "title": "전력 쇼크",
+      "summary": "defeat 블록. 전력 쇼크로 city-scale 인프라가 흔들린다.",
+      "arc_id": "ARC-06",
+      "arc_title": "도시권 엔진",
+      "arc_block_range": "51-60"
+    },
+    {
+      "block_id": "Block 55",
+      "block_no": 55,
+      "title": "도시 급식",
+      "summary": "도시권 급식과 공공 공급 계약을 묶는다.",
+      "arc_id": "ARC-06",
+      "arc_title": "도시권 엔진",
+      "arc_block_range": "51-60"
+    },
+    {
+      "block_id": "Block 56",
+      "block_no": 56,
+      "title": "노동자 주거",
+      "summary": "worker housing과 생활 서비스 line을 체계화한다.",
+      "arc_id": "ARC-06",
+      "arc_title": "도시권 엔진",
+      "arc_block_range": "51-60"
+    },
+    {
+      "block_id": "Block 57",
+      "block_no": 57,
+      "title": "공항화물",
+      "summary": "airport cargo line까지 corridor에 편입한다.",
+      "arc_id": "ARC-06",
+      "arc_title": "도시권 엔진",
+      "arc_block_range": "51-60"
+    },
+    {
+      "block_id": "Block 58",
+      "block_no": 58,
+      "title": "운임 대시보드",
+      "summary": "quiet 블록. 운임, 에너지, 슬롯 가격이 어떻게 묶이는지 표준화한다.",
+      "arc_id": "ARC-06",
+      "arc_title": "도시권 엔진",
+      "arc_block_range": "51-60"
+    },
+    {
+      "block_id": "Block 59",
+      "block_no": 59,
+      "title": "도시권 공급망",
+      "summary": "도시권 전체 공급망이 태하의 dashboard를 기준으로 움직이기 시작한다.",
+      "arc_id": "ARC-06",
+      "arc_title": "도시권 엔진",
+      "arc_block_range": "51-60"
+    },
+    {
+      "block_id": "Block 60",
+      "block_no": 60,
+      "title": "사하르 스탠더드",
+      "summary": "태하식 corridor와 pricing model이 사하르 standard로 채택된다.",
+      "arc_id": "ARC-06",
+      "arc_title": "도시권 엔진",
+      "arc_block_range": "51-60"
+    },
+    {
+      "block_id": "Block 61",
+      "block_no": 61,
+      "title": "의장 직무대행",
+      "summary": "하산 부재 속 태하가 사실상 의장 직무대행 역할을 맡는다.",
+      "arc_id": "ARC-07",
+      "arc_title": "되찾은 자리",
+      "arc_block_range": "61-70"
+    },
+    {
+      "block_id": "Block 62",
+      "block_no": 62,
+      "title": "조건부 유언",
+      "summary": "혈통이 아니라 운영 실적을 중심으로 한 승계 조건표가 공개된다.",
+      "arc_id": "ARC-07",
+      "arc_title": "되찾은 자리",
+      "arc_block_range": "61-70"
+    },
+    {
+      "block_id": "Block 63",
+      "block_no": 63,
+      "title": "형제 협약",
+      "summary": "siblings 사이 역할과 자산선, 경계선을 정리한 협약을 만든다.",
+      "arc_id": "ARC-07",
+      "arc_title": "되찾은 자리",
+      "arc_block_range": "61-70"
+    },
+    {
+      "block_id": "Block 64",
+      "block_no": 64,
+      "title": "가문의 장부",
+      "summary": "family office의 숨은 누수와 legacy asset을 마지막으로 정리한다.",
+      "arc_id": "ARC-07",
+      "arc_title": "되찾은 자리",
+      "arc_block_range": "61-70"
+    },
+    {
+      "block_id": "Block 65",
+      "block_no": 65,
+      "title": "아들의 이름",
+      "summary": "quiet 블록. 태하가 가족의 이름과 자신의 이름을 어떻게 함께 쓸지 결정한다.",
+      "arc_id": "ARC-07",
+      "arc_title": "되찾은 자리",
+      "arc_block_range": "61-70"
+    },
+    {
+      "block_id": "Block 66",
+      "block_no": 66,
+      "title": "최후의 공개매수",
+      "summary": "old-guard 잔당과 외부 투자자 연합의 마지막 공개매수를 막아낸다.",
+      "arc_id": "ARC-07",
+      "arc_title": "되찾은 자리",
+      "arc_block_range": "61-70"
+    },
+    {
+      "block_id": "Block 67",
+      "block_no": 67,
+      "title": "회랑 표준",
+      "summary": "태하 시스템이 corridor 운영의 공식 표준으로 못 박힌다.",
+      "arc_id": "ARC-07",
+      "arc_title": "되찾은 자리",
+      "arc_block_range": "61-70"
+    },
+    {
+      "block_id": "Block 68",
+      "block_no": 68,
+      "title": "부재 테스트",
+      "summary": "defeat 블록. 태하가 빠진 짧은 기간 동안 시스템이 얼마나 흔들리는지 드러난다.",
+      "arc_id": "ARC-07",
+      "arc_title": "되찾은 자리",
+      "arc_block_range": "61-70"
+    },
+    {
+      "block_id": "Block 69",
+      "block_no": 69,
+      "title": "승계 투표",
+      "summary": "혈통이 아니라 시스템 ownership을 기준으로 승계 표결이 이루어진다.",
+      "arc_id": "ARC-07",
+      "arc_title": "되찾은 자리",
+      "arc_block_range": "61-70"
+    },
+    {
+      "block_id": "Block 70",
+      "block_no": 70,
+      "title": "되찾은 자리",
+      "summary": "태하는 family office와 corridor의 실질적 owner-operator로 자리를 되찾고 작품이 닫힌다.",
+      "arc_id": "ARC-07",
+      "arc_title": "되찾은 자리",
+      "arc_block_range": "61-70"
+    }
+  ],
+  "_bridge_note": "Derived from treatments/phase0/gulf_tycoon_heir_phase0_design.json for prompt/check/merge compatibility. Planning authority remains the root Phase0 design file."
+}

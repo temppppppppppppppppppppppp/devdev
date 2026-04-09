@@ -1,8 +1,10 @@
 # External-Model Benchmark Operation Harness v1
 
-Date: 2026-04-07
+Date: 2026-04-09
 Status: active
 Scope: reusable execution harness for external-model read-only benchmark audits
+Update Note:
+- 2026-04-09 TR block episode-bundle clarification added
 
 ## 1. Role
 
@@ -70,6 +72,9 @@ There are only two valid benchmark target types.
 
 ### 3.1 Pair Hard Laws
 
+- `TR block` is a plan-level episode bundle, not a published episode counter
+- default operator reading: one meaningful `TR block` should be dense enough to unfold into roughly `2~6` downstream serialized episodes
+- benchmark shorthand `block 1` means the first reader-earning bundle operationalized through `TR 2~6`, not literal `TR block 1`
 - `P0` is always **6 gates**
 - `P1` is always **10 axes**
 - `P1` scoring is always **0 / 1 / 2**
@@ -100,6 +105,7 @@ The external model must not do any of the following:
 
 - replace `P0 6 gates` with `4/4`, `5 gates`, or any custom subset
 - replace `P1 10 axes x 0/1/2 = 20` with `5-point`, `0~10`, `/40`, `/100`, or weighted custom math
+- read `TR block` as `published episode 1개`
 - treat `TR block 1` as first-block cider proof
 - treat `TR block 7+` as a rescue for missing `P0 gates 1~4`
 - use `work_guard` alone as primary proof for `gate 6`

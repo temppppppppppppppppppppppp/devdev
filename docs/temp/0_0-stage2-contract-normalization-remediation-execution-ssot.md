@@ -1,7 +1,7 @@
 # 0_0 Stage2 Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (2026-04-09 current-state re-audited and adversarially 3-pass confirmed against fresh Stage2 closure evidence plus targeted scratch repros; the earlier 2026-04-08 proof-digest residual warn pair and the later producer-side compare-meta / session-row tranche are now closed or demoted, while the new governing bounded Stage2 tranche inside this SSOT is proof-layer hardening: authoritative `stage_attempts` rationale coverage, blank-`attempt_key` hard-warn surfacing, `session_decisions.verdict_reason` fallback tightening, and `runtime_advisory` / `retry_directives` sink-proof inclusion)
+Status: partially_realized (2026-04-09 current-state re-audited and adversarially 3-pass confirmed against fresh Stage2 closure evidence plus the same-day static parallel audit; the earlier 2026-04-08 proof-digest residual warn pair and the later producer-side compare-meta / session-row tranche are now closed or demoted, no live Stage2 `P0-P2` reopened on the static audit, and this SSOT therefore stays open but operator-parked by default unless explicit reactivation, contradictory runtime evidence, or a Stage3-reaching proof need pulls the bounded proof-layer tranche back to the front)
 Canonical Path: `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Commit State:
@@ -18,11 +18,13 @@ Source Survey Docs:
 - `docs/2026-04-06/01_golden_stage2_p0_p3_bounded_survey.md`
 - `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md`
 - `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md`
-- `2026-04-09 current-state re-audit embedded in this SSOT; no standalone survey doc was created`
+- `docs/2026-04-09/stage2-static-parallel-3pass-audit.md`
+- `2026-04-09 current-state re-audit embedded in this SSOT`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-evidence.json`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-evidence.json`
 - `docs/2026-04-05/00_0405-stage2-artifact-truth-observability-evidence.json`
+- `docs/2026-04-09/stage2-static-parallel-evidence.json`
 - `projects/000_260408/project_data.db`
 - `projects/000_260408/logs/runtime_audit_summary.json`
 - `projects/000_260408/logs/pass_rate_monitor.json`
@@ -37,7 +39,7 @@ Side-Effect Coverage: covered
 
 ## 1. Intent
 
-Activate the current bounded `Stage2 proof-hardening` tranche now that the older warn-first proof-sink pair has been closed on fresh `000_260408_ㅇ` evidence and the later producer-side cleanup tranche has already landed.
+Keep this execution SSOT open but operator-parked by default now that the older warn-first proof-sink pair has been closed on fresh `000_260408_ㅇ` evidence, the later producer-side cleanup tranche has already landed, and the same-day static parallel audit reopened no live Stage2 `P0-P2`.
 
 This execution SSOT still exists because the latest current-state re-audit plus static code survey now prove:
 
@@ -45,7 +47,7 @@ This execution SSOT still exists because the latest current-state re-audit plus 
 - the later producer-side compare-meta normalization / `arc_design` parity tranche is no longer the governing next step either
 - the remaining live Stage2 risk is now concentrated in the shared proof layer, not in the Stage2 producer shell
 - the sharpest current Stage2-local P1s are missing authoritative `stage_attempts` rationale coverage and blank-`attempt_key` proof disappearance
-- therefore the immediate work is a bounded proof-hardening tranche inside the same owner lane, not a rerun-only step and not a broad Stage2 architecture rewrite
+- therefore the remaining bounded proof-hardening tranche stays inside the same owner lane, but it should remain parked by default rather than drive the next automatic code step unless the operator explicitly reactivates it
 
 ## 1A. 2026-04-09 Current Execution Override
 
@@ -333,11 +335,11 @@ Realization direction:
 
 ## 12. Temp Queue Notes
 
-- temp status: `partially_realized`
+- temp status: `partially_realized (open, operator-parked by default)`
 - cleanup condition:
-  - keep the temp mirror as an active bounded queue item until explicit closure or formal deactivation
+  - keep the temp mirror as an open but parked queue item until explicit closure, formal deactivation, or explicit reactivation
 - roadmap dependency:
-  - this item stays below active `Stage4` lanes but now sits above parked `Stage3` / `Stage0` future waves
+  - this item stays below active `Stage4` lanes and the active `0_0-stage234-nonwuxia-state-lock-overreach-remediation` lane; do not auto-promote it from static-only evidence
 
 ## 13. Validation and Closure Hooks
 
@@ -1114,6 +1116,29 @@ Residual scope:
 - possible future contract work on explicit `beat_sequence` keep-or-drop policy
 
 Confidence for this landed slice: `97%`
+
+## 37. 2026-04-09 Operator Park Decision
+
+Evidence basis:
+
+- `docs/2026-04-09/stage2-static-parallel-3pass-audit.md`
+- `docs/2026-04-09/stage2-static-parallel-evidence.json`
+- `projects/000_260408_ㅇ/project_data.db`
+- `projects/000_260408_ㅇ/logs/runtime_audit_summary.json`
+
+Decision:
+
+1. the same-day static parallel 3-pass audit reopened no live Stage2 `P0-P2`
+2. this SSOT therefore remains open for bounded proof-layer and structural watch work, but the default execution posture is now `operator-parked` rather than immediately active
+3. reactivate this lane only on explicit operator instruction, contradictory runtime evidence, or a concrete Stage3-reaching proof need
+
+Queue consequence:
+
+- do not close this SSOT from the park decision alone
+- do not open a new Stage2 lane from the static audit alone
+- keep the roadmap order unchanged unless stronger runtime evidence later requires a reorder
+
+Confidence for this park decision: `97%`
 
 ## 36. 2026-04-08 Fresh Proof-Wave Validation Upgrade (`000_260408_B`)
 

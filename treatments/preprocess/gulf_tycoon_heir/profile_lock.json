@@ -1,0 +1,55 @@
+{
+  "primary_profile": "business_growth_profile",
+  "secondary_profile": "office_power_profile",
+  "resource_axis": [
+    "K-Transit 7 적자 자산 묶음 운영권",
+    "guest-heir 배지와 혈통 확인 청문 입장권",
+    "90일 임시 운영권과 limited protection",
+    "emergency signatory override",
+    "누르 프리존 빈 창고, bonded inventory, 수입 quota",
+    "direct report line과 board observer seat",
+    "bank rollover, port slot extension, treasury dashboard",
+    "local bank syndicate, insurance market, corridor operating rights"
+  ],
+  "power_axis": [
+    "LC, guarantee, customs, warehouse, charter, port slot, covenant를 한 장 시스템으로 읽는 능력",
+    "죽어 가는 자산에서 실제 현금흐름이 되는 한 줄을 가장 먼저 되살리는 능력",
+    "가족 감정과 승계 정치를 business receipts로 번역하는 능력",
+    "siblings를 적으로 만들지 않고 old-guard를 숫자와 구조로 밀어내는 관계 운영력",
+    "board, treasury, port, bank line을 연결해 operator seat를 owner seat로 키우는 능력",
+    "화려한 front asset보다 반복 현금흐름 자산을 먼저 가치화하는 안목"
+  ],
+  "control_axis": [
+    "태하가 signatory와 customs line을 못 열면 K-Transit 7은 cargo seizure와 guarantee call로 opening에서 죽는 상태",
+    "태하가 free-zone 창고를 cash line으로 못 바꾸면 적자 자산 묶음은 rent burn asset으로만 남는 상태",
+    "태하가 direct report line과 board observer seat를 못 얻으면 family office 안쪽 장부에 계속 한 박자 늦게 닿는 상태",
+    "태하가 siblings 뒤의 old-guard 누수 구조를 못 끊으면 family affection과 무관하게 실권은 계속 old-guard가 쥐는 상태",
+    "태하가 bank rollover와 port slot을 동시에 못 묶으면 다음 자산 인수전과 corridor 설계가 열리지 않는 상태"
+  ],
+  "payoff_axis": [
+    "guest-heir 배지와 혈통 확인 청문 입장권",
+    "90일 임시 운영권과 family office 보호",
+    "첫 signatory override와 cargo seizure 회피",
+    "첫 free-zone cash line과 빈 창고의 재평가",
+    "direct report line + board observer seat",
+    "bank rollover + port slot extension",
+    "treasury access + syndicate bank line + insurance market 관문",
+    "corridor operator + family office succession 핵심 seat"
+  ],
+  "failure_axis": [
+    "되찾았지만 일을 모르는 손님으로 고정되는 상태",
+    "혈통은 인정받아도 decorative heir로 남는 상태",
+    "old-guard가 siblings 이름을 팔아먹으며 누수를 계속 구조화하는 상태",
+    "형제들이 모두 악역이 되어 가족선이 싸구려 멜로드라마로 오염되는 상태",
+    "럭셔리와 exotic display가 business receipts를 덮어버리는 상태",
+    "국부펀드·royal liaison scale이 opening cashflow receipts보다 먼저 커져 개연성이 무너지는 상태",
+    "태하가 감정적으로 폭발해 numbers-first operator identity를 잃는 상태"
+  ],
+  "hud_interpretation": {
+    "capital": "이 작품의 capital은 단순 현금이 아니라 운영권, 서명권, free-zone 창고, quota, board seat, treasury line, bank rollover, port slot, corridor rights까지 포함한 통제 가능한 business asset 전체다",
+    "deal_type": "혈통 확인 청문, 90일 운영 시험, LC 수정, customs hold 해제, 창고 재가동, charter 재협상, board 보고, syndicate rollover, port slot 연장처럼 관문 단위 액션으로 읽는다",
+    "resource_power_hud": "family office 권한, signatory, port/customs gate, bank line, board access, siblings alignment, old-guard 누수 차단 수준이 동시에 보이는 business-growth + office-power HUD로 해석한다",
+    "business_lines": "K-Transit 7, free-zone warehouse, bonded inventory, industrial cargo forwarding, cold chain, airline catering, worker housing, port corridor, bank syndicate",
+    "company_state": "K-Transit 7과 카디르 family office의 현재 운영 상태 — cargo 지연, guarantee call, customs hold, 창고 공실, rollover, charter leakage, board alignment, siblings/old-guard 구도"
+  }
+}

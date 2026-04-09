@@ -1,0 +1,58 @@
+{
+  "events": [
+    "어머니 장례 직후 도착한 봉인 서류로 윤태하가 사하르 연방으로 소환되고, 하산 알 카디르가 오랫동안 찾던 잃어버린 아들이라는 사실이 드러난다",
+    "family office 혈통 확인 청문에서 태하는 상속금이 아니라 K-Transit 7 적자 자산 묶음의 90일 임시 운영권을 요구한다",
+    "보증 호출과 customs hold로 묶인 부산발 cargo를 태하가 LC 수정과 re-export 서류 정리로 살려낸다",
+    "누르 프리존 빈 창고와 만료 직전 quota를 묶어 첫 cash line을 만들며 rent burn asset을 money asset으로 바꾼다",
+    "형제들 이름을 팔아먹던 old-guard 측근의 charter-rate 구조를 적발해 direct report line과 board observer seat를 얻는다",
+    "bank rollover와 port slot extension을 묶어 다음 자산 인수전의 입장권을 확보한다",
+    "treasury dashboard, customs waiver, airline catering, worker housing line을 통해 패밀리 오피스 안쪽 operator 자리로 들어간다",
+    "local bank syndicate, insurance market, port corridor를 재설계하며 siblings와의 권력 균형이 본격적으로 재편된다",
+    "royal liaison와 sovereign fund가 붙으며 family office의 성공이 사하르 도시권 운영과 정치전으로 번진다",
+    "마지막엔 혈통이 아니라 태하 시스템 없이는 family office와 corridor가 안 돈다는 사실이 승계를 결정한다"
+  ],
+  "npc_candidates": [
+    "윤태하 — 한국 프로젝트 정산/클레임 실무자 출신 주인공",
+    "하산 알 카디르 — 잃어버린 아들을 되찾았지만 시험부터 던지는 대부호 생부",
+    "파이살 알 카디르 — 장남, front asset 담당 후계자 후보이자 따뜻한 형",
+    "라일라 알 카디르 — treasury와 debt line을 쥔 장녀, 가장 빠르게 태하를 실력으로 인정하는 인물",
+    "사미르 하디드 — family office CFO, 숫자와 covenant를 믿는 핵심 관리자",
+    "무라드 알 나심 — customs, port, royal liaison line을 잇는 fixer",
+    "아드난 바크르 — old-guard 법무 고문, 태하를 decorative heir로 묶어 두려는 축",
+    "라시드 바흐완 — 물류 subsidiary와 charter broker 라인을 쥔 실무 적대자",
+    "free-zone 운영총괄(실명 미정) — quota와 warehouse gatekeeper",
+    "syndicate bank 실무책임자(실명 미정) — rollover 협상의 핵심 금융 담당"
+  ],
+  "crisis_candidates": [
+    "혈통은 확인되지만 실권은 못 받는 decorative heir 함정",
+    "cargo seizure, customs hold, guarantee call, bank rollover failure가 동시에 붙는 opening 위기",
+    "rent burn asset인 free-zone 빈 창고를 cash line으로 못 바꾸는 사업성 위기",
+    "siblings 이름을 팔아먹는 old-guard 측근과 fake invoice, split commission 누수 위기",
+    "board observer seat 이전까지 안쪽 장부에 한 박자 늦게 닿는 정보권한 위기",
+    "royal liaison, sovereign fund, insurance market이 얽히며 business success가 곧 정치전이 되는 scale-up 위기",
+    "형제애는 유지하되 승계와 자산 재편은 냉정하게 가야 하는 가족-권력 이중 위기"
+  ],
+  "terms": [
+    "K-Transit 7: 한국-걸프 corridor에 걸친 적자 자산 묶음. cargo, warehouse, charter, cold chain, bank line이 함께 꼬여 있다",
+    "guest-heir: 가족 인정은 받았지만 아직 실권은 없는 복귀자에게 주는 임시 출입/보호 status",
+    "emergency signatory override: 기존 승인선 바깥에서 제한적으로 서명을 집행할 수 있는 임시 권한",
+    "free-zone warehouse: customs와 bonded inventory 규칙 안에서 rent burn asset이 cash line으로도 바뀔 수 있는 핵심 시설",
+    "guarantee call: 계약 미이행·지연을 이유로 은행이나 발주처가 보증을 호출하는 상황",
+    "customs hold: 서류·허가·재분류 문제로 cargo가 세관 또는 항만에서 묶이는 상태",
+    "board observer seat: 투표권은 없지만 안쪽 장부와 논의 흐름에 공식 접근하는 자리",
+    "syndicate rollover: 여러 은행이 엮인 debt line 만기를 다시 넘기는 재협상",
+    "charter-rate leakage: 운송료를 부풀리고 리베이트를 나눠 먹는 old-guard 실무 누수 구조",
+    "corridor operator: 개별 자산이 아니라 항만-창고-은행-운송이 이어지는 회랑 전체를 설계하고 굴리는 사람"
+  ],
+  "scene_details": [
+    "어머니 장례 직후 검은 봉투를 열고 처음으로 하산 알 카디르 이름과 사하르 소환장을 확인하는 장면",
+    "family office 혈통 확인 청문에서 siblings는 태하를 반기지만 old-guard는 settlement로 묶어 두려는 장면",
+    "보증 호출과 customs hold가 동시에 터진 비상회의장에서 debt 규모가 아니라 서류와 signatory 충돌을 짚는 장면",
+    "누르 프리존의 텅 빈 창고와 만료 직전 quota를 보며 rent burn asset이 아니라 first cash line으로 읽는 장면",
+    "형제들 이름을 팔아먹던 charter-rate 표를 비교해 direct report line과 board observer seat를 얻는 장면",
+    "사미르의 cash room, 라일라의 treasury desk, 무라드의 permit line이 하나의 battlefield로 묶이는 장면",
+    "old-guard가 태하를 감정이 아니라 구조로 제거하려 하지만, 태하가 가족과 적대를 분리해 대응하는 장면",
+    "sovereign fund와 royal liaison가 붙으며 family office의 성공이 국가 규모 사업과 접속되는 장면"
+  ],
+  "notes": "opening 2~6 ledger와 ARC-01~04 하드 락이 선명해서 Phase0와 opening TR은 현재 재료만으로 안정적으로 생산 가능하다. 특히 Block 1~10은 lost-son return을 얼굴로 쓰되 receipt는 guest-heir 배지, 운영권, signatory, cash line, board seat, rollover처럼 business 영수증으로 바로 회수하는 구조가 명확하다. 아직 비어 있는 재료는 사하르 연방 정치 구조, sovereign fund 세부 조건표, insurance market 구조, later corridor expansion 계약 디테일이다. 오염 방지 핵심은 형제 본체를 악역으로 깎지 않고 old-guard와 투자자 라인으로 적대를 분리하는 것, 그리고 오일머니 럭셔리보다 family office 장부와 port/bank/free-zone receipts를 앞세우는 것이다."
+}

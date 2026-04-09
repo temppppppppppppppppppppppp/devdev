@@ -1,0 +1,143 @@
+{
+  "date": "2026-04-09",
+  "topic": "stage2-static-parallel-3pass-audit",
+  "mode": "system-track static-only survey",
+  "commit_state": {
+    "baseline_commit": "b94390cb508a298a28349152bb15876f36662c65",
+    "baseline_dirty_summary": "clean",
+    "resume_commit": "same-as-baseline",
+    "resume_drift_summary": "none"
+  },
+  "queue_context": {
+    "roadmap_file": "docs/temp/execution-roadmap.md",
+    "stage2_contract_normalization_priority": 4,
+    "stage2_partial_fix_priority": 8,
+    "stage2_readiness_parent_priority": 14,
+    "stage2_contract_normalization_status": "partial",
+    "stage2_partial_fix_status": "partial",
+    "stage2_readiness_parent_status": "blocked"
+  },
+  "evidence_classes": {
+    "A_live_code": [
+      "modules/core/stage2_contracts.py:19-37",
+      "modules/core/stage2_validation_pipeline.py:930-936",
+      "modules/core/stage2_validation_pipeline.py:1186-1194",
+      "modules/core/stage2_finalizer.py:1516-1522",
+      "modules/core/stage2_finalizer.py:3403-3582",
+      "modules/core/services/audit_service.py:428-475",
+      "modules/core/services/audit_service.py:700-767",
+      "modules/core/failure_analyzer.py:784-844",
+      "modules/core/failure_analyzer.py:1574-1688",
+      "modules/core/failure_analyzer.py:1941-2004"
+    ],
+    "B_structured_inventory": [
+      "AST inventory: Stage2Orchestrator direct_methods=51, over120=3, max_loc=153",
+      "AST inventory: Stage2Finalizer direct_methods=51, over120=6, over180=1, max_loc=180",
+      "AST inventory: Stage2ValidationPipeline direct_methods=32, over120=3, max_loc=144",
+      "AST inventory: FailureAnalyzer direct_methods=75, over120=3, max_loc=176",
+      "AST inventory: AuditService direct_methods=28, max_loc=93"
+    ],
+    "C_test_surface": [
+      "tests/test_stage2_validation_pipeline.py:420-462",
+      "tests/test_stage2_validation_pipeline.py:235-268",
+      "tests/test_stage2_finalizer.py:680-716",
+      "tests/test_stage2_finalizer.py:905-941",
+      "tests/test_stage2_finalizer.py:1378-1418",
+      "tests/test_audit_service.py:565-839",
+      "tests/test_audit_service.py:843-1053",
+      "tests/test_audit_service.py:1082-1435",
+      "tests/test_failure_analyzer.py:307-827",
+      "tests/test_failure_analyzer.py:1311-1393",
+      "tests/test_failure_analyzer.py:2173-2190"
+    ],
+    "E_lineage": [
+      "docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md",
+      "docs/2026-04-06/rol-global-terminal2-stage2-pipeline-p0p1.md",
+      "docs/2026-04-06/01_golden_stage2_p0_p3_bounded_survey.md",
+      "docs/temp/execution-roadmap.md"
+    ]
+  },
+  "inventory": {
+    "stage2_orchestrator": {
+      "direct_methods": 51,
+      "over120_loc_methods": [
+        "_bootstrap_stage2_arc_pipeline",
+        "_run_stage2_batch_enrichment",
+        "_run_stage2_single_arc_attempt"
+      ]
+    },
+    "stage2_finalizer": {
+      "direct_methods": 51,
+      "over120_loc_methods": [
+        "run_finalize",
+        "_repair_stage2_pass_arc_structure",
+        "_build_stage2_director_story_context",
+        "_prepare_stage2_pass_fix_iteration",
+        "_execute_stage2_pass_fix_iterations",
+        "_record_s2_pass_metrics"
+      ],
+      "over180_loc_methods": [
+        "_record_s2_pass_metrics"
+      ]
+    },
+    "stage2_validation_pipeline": {
+      "direct_methods": 32,
+      "over120_loc_methods": [
+        "run_validation",
+        "_run_flow_and_duplicate_guards",
+        "_stage2_flow_guard"
+      ]
+    }
+  },
+  "static_findings": [
+    {
+      "id": "F1",
+      "title": "Former authoritative packet overwrite seam is no longer live in current static code",
+      "severity": "closed-former-p1",
+      "anchors": [
+        "modules/core/stage2_contracts.py:19-37",
+        "modules/core/stage2_validation_pipeline.py:930-936",
+        "modules/core/stage2_finalizer.py:1516-1522",
+        "tests/test_stage2_validation_pipeline.py:420-462",
+        "tests/test_stage2_finalizer.py:905-941"
+      ]
+    },
+    {
+      "id": "F2",
+      "title": "Stage2 proof-layer sink parity is instrumented in static code and guarded by targeted tests",
+      "severity": "not-reopened",
+      "anchors": [
+        "modules/core/services/audit_service.py:428-475",
+        "modules/core/services/audit_service.py:700-767",
+        "modules/core/failure_analyzer.py:784-844",
+        "modules/core/failure_analyzer.py:1574-1688",
+        "modules/core/failure_analyzer.py:1941-2004",
+        "tests/test_audit_service.py:843-1053",
+        "tests/test_audit_service.py:1082-1435",
+        "tests/test_stage2_finalizer.py:680-716"
+      ]
+    },
+    {
+      "id": "F3",
+      "title": "Stage2 structural owner pressure remains above workspace comfort line",
+      "severity": "P3-structural",
+      "anchors": [
+        "AST inventory: Stage2Orchestrator direct_methods=51",
+        "AST inventory: Stage2Finalizer direct_methods=51",
+        "AST inventory: Stage2Finalizer _record_s2_pass_metrics loc=180",
+        "docs/temp/execution-roadmap.md:397-417"
+      ]
+    }
+  ],
+  "severity_snapshot": {
+    "P0": [],
+    "P1": [],
+    "P2": [],
+    "P3": [
+      "F3"
+    ],
+    "watch_only": [
+      "proof-layer runtime closure remains queued inside the existing Stage2 SSOT and still wants a fresh rerun for closure proof"
+    ]
+  }
+}

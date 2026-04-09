@@ -1,9 +1,0 @@
-{"timestamp": "2026-04-08 16:22:18", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']"]}}
-{"timestamp": "2026-04-08 16:23:17", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-04-08 16:23:57", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 3}}
-{"timestamp": "2026-04-08 16:29:39", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 1건 제거: ['긴급 운영비 집행코드 EXEC-77B (3800만원 사용)']", "[PATCH-A] 자산 성장률 3900% — 시작 5000000→종료 200000000 (200% 상한 초과, 산술 검증 권고)"]}}
-{"timestamp": "2026-04-08 16:31:26", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-04-08 16:31:58", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 5}}
-{"timestamp": "2026-04-08 16:38:29", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 1건 제거: ['현금 1억원 (외부 버스 기사 선지급 및 임시 보험료)']"]}}
-{"timestamp": "2026-04-08 16:40:36", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-04-08 16:41:18", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "target_arc_no": 4, "items_tracked": 8}}

@@ -2,6 +2,8 @@
 [B-1-1] Stage4 Post-Processor — PASS 후처리 및 세션 종료 로직 분리
 """
 
+import hashlib
+import json
 import logging
 import os
 import re
@@ -114,6 +116,133 @@ class Stage4PostProcessor:
         title = str(final_title or f"제{next_ep}화").strip() or f"제{next_ep}화"
         dump_path.write_text(f"# {title}\n\n{final_manuscript}", encoding="utf-8")
         return dump_path
+
+    @staticmethod
+    def _build_human_facing_manuscript_path(*, output_dir, next_ep: int) -> Path:
+        export_dir = Path(output_dir)
+        export_dir.mkdir(parents=True, exist_ok=True)
+        return export_dir / f"ep_{next_ep:04d}.txt"
+
+    @staticmethod
+    def _build_stage4_settlement_packet_path(*, output_dir, next_ep: int) -> Path:
+        export_dir = Path(output_dir)
+        export_dir.mkdir(parents=True, exist_ok=True)
+        return export_dir / f"ep_{next_ep:04d}.settlement.json"
+
+    def _relativize_artifact_path(self, path: Path) -> str:
+        project_paths = getattr(getattr(self.ctx, "current_project", None), "paths", None)
+        project_root = getattr(project_paths, "root", None)
+        if isinstance(project_root, (str, Path)):
+            try:
+                return path.relative_to(Path(project_root)).as_posix()
+            except ValueError:
+                pass
+        return str(path)
+
+    def _write_human_facing_manuscript_export(
+        self,
+        *,
+        next_ep: int,
+        final_title: str,
+        final_manuscript: str,
+        output_dir,
+    ) -> Path:
+        file_path = self._build_human_facing_manuscript_path(output_dir=output_dir, next_ep=next_ep)
+        file_path.write_text(f"# {final_title}\n\n{final_manuscript}", encoding="utf-8")
+        return file_path
+
+    def _build_stage4_settlement_packet(
+        self,
+        *,
+        next_ep: int,
+        final_title: str,
+        final_manuscript: str,
+        final_state_updates: dict,
+        blueprint: dict,
+        arc_data: dict,
+        quality_labels,
+        quality_signals,
+        post_pass_payload: dict,
+        output_dir,
+    ) -> dict:
+        txt_path = self._build_human_facing_manuscript_path(output_dir=output_dir, next_ep=next_ep)
+        packet_path = self._build_stage4_settlement_packet_path(output_dir=output_dir, next_ep=next_ep)
+        stage3_meta = {}
+        if isinstance(blueprint, dict) and isinstance(blueprint.get("_stage3_meta"), dict):
+            stage3_meta = dict(blueprint.get("_stage3_meta") or {})
+        actual_truth = post_pass_payload.get("actual_truth", {}) if isinstance(post_pass_payload, dict) else {}
+        state_truth_owner_contract = (
+            post_pass_payload.get("state_truth_owner_contract", {}) if isinstance(post_pass_payload, dict) else {}
+        )
+        bible_delta = post_pass_payload.get("bible_delta", {}) if isinstance(post_pass_payload, dict) else {}
+        title = str(final_title or f"제{next_ep}화").strip() or f"제{next_ep}화"
+        manuscript_hash = hashlib.sha256(str(final_manuscript or "").encode("utf-8")).hexdigest()
+        return {
+            "packet_version": "stage4_settlement_packet_v1",
+            "stage": 4,
+            "ep_num": int(next_ep),
+            "title": title,
+            "arc_no": int((arc_data or {}).get("arc_no", 0) or 0) if isinstance(arc_data, dict) else 0,
+            "blueprint_ep": int(next_ep),
+            "manuscript": {
+                "db_table": "manuscripts",
+                "char_count": len(final_manuscript or ""),
+                "content_hash": manuscript_hash,
+                "human_facing_txt_path": self._relativize_artifact_path(txt_path),
+            },
+            "stage3_meta": stage3_meta,
+            "quality": {
+                "labels": dict(quality_labels or {}) if isinstance(quality_labels, dict) else {},
+                "signals": dict(quality_signals or {}) if isinstance(quality_signals, dict) else {},
+            },
+            "settlement": {
+                "episode_bible": dict(bible_delta or {}) if isinstance(bible_delta, dict) else {},
+                "actual_truth": dict(actual_truth or {}) if isinstance(actual_truth, dict) else {},
+                "final_state_updates": dict(final_state_updates or {}) if isinstance(final_state_updates, dict) else {},
+                "state_truth_owner_contract": (
+                    dict(state_truth_owner_contract or {}) if isinstance(state_truth_owner_contract, dict) else {}
+                ),
+                "meta_save_failed": bool(post_pass_payload.get("meta_save_failed", False))
+                if isinstance(post_pass_payload, dict)
+                else False,
+            },
+            "artifacts": {
+                "settlement_packet_path": self._relativize_artifact_path(packet_path),
+                "human_facing_txt_path": self._relativize_artifact_path(txt_path),
+                "episode_bible_table": "episode_bibles",
+                "state_log_table": "state_logs",
+            },
+        }
+
+    def _persist_stage4_settlement_packet(
+        self,
+        *,
+        next_ep: int,
+        final_title: str,
+        final_manuscript: str,
+        final_state_updates: dict,
+        blueprint: dict,
+        arc_data: dict,
+        quality_labels,
+        quality_signals,
+        post_pass_payload: dict,
+        output_dir,
+    ) -> Path:
+        packet_path = self._build_stage4_settlement_packet_path(output_dir=output_dir, next_ep=next_ep)
+        packet = self._build_stage4_settlement_packet(
+            next_ep=next_ep,
+            final_title=final_title,
+            final_manuscript=final_manuscript,
+            final_state_updates=final_state_updates,
+            blueprint=blueprint,
+            arc_data=arc_data,
+            quality_labels=quality_labels,
+            quality_signals=quality_signals,
+            post_pass_payload=post_pass_payload,
+            output_dir=output_dir,
+        )
+        packet_path.write_text(json.dumps(packet, ensure_ascii=False, indent=2, sort_keys=True, default=str), encoding="utf-8")
+        return packet_path
 
     @staticmethod
     def _extract_save_error(manager, fallback: str) -> str:
@@ -761,12 +890,6 @@ class Stage4PostProcessor:
                 self.ctx.ui.log(f"   HUD update failed: {hud_err}")
 
         try:
-            file_path = output_dir / f"ep_{next_ep:04d}.txt"
-            file_path.write_text(f"# {final_title}\n\n{final_manuscript}", encoding="utf-8")
-        except Exception as file_err:
-            self.ctx.ui.log(f"   Output file save failed: {file_err}")
-
-        try:
             self._reconcile_capital(final_manuscript, next_ep, final_state_updates=final_state_updates)
         except Exception as cap_err:
             logging.warning("[V73] capital reconcile failed: %s", cap_err)
@@ -901,6 +1024,7 @@ class Stage4PostProcessor:
 
         return {
             "actual_truth": delta["actual_truth"],
+            "bible_delta": bible_delta,
             "state_truth_owner_contract": delta.get("state_truth_owner_contract", {}),
             "meta_save_failed": delta["meta_save_failed"],
         }
@@ -1034,13 +1158,6 @@ class Stage4PostProcessor:
         )
         _meta_save_failed = post_pass_payload["meta_save_failed"]
 
-        self._finalize_pass_result_session(
-            next_ep=next_ep,
-            final_title=final_title,
-            final_manuscript=final_manuscript,
-            arc_data=arc_data,
-        )
-
         # [S4-001] Episode Bible 저장 실패 시 오케스트레이터에 실패 신호 전달
         # WARNING: early return below skips remaining sinks. Manuscript is already persisted.
         if _meta_save_failed:
@@ -1056,6 +1173,73 @@ class Stage4PostProcessor:
                 meta={"result": "meta_save_failed"},
             )
             return False
+
+        try:
+            self._persist_stage4_settlement_packet(
+                next_ep=next_ep,
+                final_title=final_title,
+                final_manuscript=final_manuscript,
+                final_state_updates=final_state_updates,
+                blueprint=blueprint,
+                arc_data=arc_data,
+                quality_labels=_quality_labels,
+                quality_signals=_quality_signals,
+                post_pass_payload=post_pass_payload,
+                output_dir=output_dir,
+            )
+        except Exception as packet_err:
+            logging.error("[S4-SETTLEMENT] settlement packet save failed ep=%d: %s", next_ep, packet_err)
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event(
+                    "stage4_settlement_packet_save_failed",
+                    "stage4 settlement packet save failed",
+                    {"ep": next_ep},
+                )
+            self.ctx.ui.log(
+                "   ❌ structured settlement packet 저장 실패: 원고 본문은 저장됐지만 PASS 정산을 성공으로 확정하지 않습니다.",
+                stage="stage4",
+                component="post_pass_settlement_packet",
+                ep_num=next_ep,
+                arc_num=arc_data.get("arc_no", 0) if isinstance(arc_data, dict) else 0,
+                event_kind="result",
+                level="error",
+                meta={"result": "settlement_packet_save_failed"},
+            )
+            return False
+
+        try:
+            self._write_human_facing_manuscript_export(
+                next_ep=next_ep,
+                final_title=final_title,
+                final_manuscript=final_manuscript,
+                output_dir=output_dir,
+            )
+        except Exception as file_err:
+            logging.error("[S4-TXT] human-facing txt save failed ep=%d: %s", next_ep, file_err)
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event(
+                    "stage4_human_facing_export_failed",
+                    "stage4 human-facing txt export failed",
+                    {"ep": next_ep},
+                )
+            self.ctx.ui.log(
+                "   ❌ human-facing txt 저장 실패: structured settlement packet은 저장됐지만 PASS 정산을 성공으로 확정하지 않습니다.",
+                stage="stage4",
+                component="post_pass_human_export",
+                ep_num=next_ep,
+                arc_num=arc_data.get("arc_no", 0) if isinstance(arc_data, dict) else 0,
+                event_kind="result",
+                level="error",
+                meta={"result": "human_facing_txt_save_failed"},
+            )
+            return False
+
+        self._finalize_pass_result_session(
+            next_ep=next_ep,
+            final_title=final_title,
+            final_manuscript=final_manuscript,
+            arc_data=arc_data,
+        )
 
         return True
 

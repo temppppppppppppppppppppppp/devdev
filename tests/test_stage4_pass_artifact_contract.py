@@ -7,15 +7,25 @@ from modules.core.stage4_post_processor import Stage4PostProcessor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT_PATH = ROOT / "docs/2026-03-13/stage4-pass-artifact-contract.json"
+CONTRACT_CANDIDATES = (
+    ROOT / "docs/2026-03-13/stage4-pass-artifact-contract.json",
+    ROOT / "docs/이전/2026-03-13/stage4-pass-artifact-contract.json",
+)
 SOURCE_PATHS = (
     ROOT / "modules/core/stage4_post_processor.py",
     ROOT / "modules/core/stage4_post_pass_runtime.py",
 )
 
 
+def _resolve_contract_path() -> Path:
+    for path in CONTRACT_CANDIDATES:
+        if path.exists():
+            return path
+    raise FileNotFoundError("stage4-pass-artifact-contract.json not found in expected docs paths")
+
+
 def _load_contract() -> dict:
-    return json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+    return json.loads(_resolve_contract_path().read_text(encoding="utf-8"))
 
 
 def _soft_failure_ops(tmp_path: Path) -> list[str]:
@@ -134,15 +144,18 @@ def test_stage4_pass_artifact_contract_matches_source_markers() -> None:
     contract = _load_contract()
     source = "\n".join(path.read_text(encoding="utf-8") for path in SOURCE_PATHS)
 
-    assert contract["contract_id"] == "stage4-pass-artifact-contract-v1"
+    assert contract["contract_id"] == "stage4-pass-artifact-contract-v2"
     assert "save_manuscript(" in source
     assert "save_episode_bible" in source
     assert "_meta_save_failed" in source
+    assert "_persist_stage4_settlement_packet" in source
+    assert "_write_human_facing_manuscript_export" in source
+    assert "stage4_settlement_packet_save_failed" in source
+    assert "stage4_human_facing_export_failed" in source
     assert 'operation="save_state_log_with_summary"' in source
     assert 'operation="save_world_state_atomic"' in source
     assert 'operation="save_episode_quality_label"' in source
     assert 'operation="save_episode_quality_signal"' in source
-    assert "file_path.write_text" in source
 
 
 def test_hard_incomplete_when_episode_bible_save_fails(tmp_path: Path) -> None:
@@ -190,3 +203,14 @@ def test_soft_clean_when_no_stage4_soft_failures_exist(tmp_path: Path) -> None:
     assert result is True
     assert soft_ops == []
     assert _derive_completeness_status(result, soft_ops) == "hard_complete_soft_clean"
+
+    settlement_path = tmp_path / "ep_0003.settlement.json"
+    txt_path = tmp_path / "ep_0003.txt"
+    assert settlement_path.exists()
+    assert txt_path.exists()
+
+    settlement = json.loads(settlement_path.read_text(encoding="utf-8"))
+    assert settlement["packet_version"] == "stage4_settlement_packet_v1"
+    assert settlement["settlement"]["meta_save_failed"] is False
+    assert settlement["artifacts"]["settlement_packet_path"].endswith("ep_0003.settlement.json")
+    assert settlement["artifacts"]["human_facing_txt_path"].endswith("ep_0003.txt")

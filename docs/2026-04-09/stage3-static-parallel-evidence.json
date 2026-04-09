@@ -1,0 +1,288 @@
+{
+  "topic": "stage3-static-parallel-3pass-audit",
+  "date": "2026-04-09",
+  "mode": "static_parallel_survey_only",
+  "commit_state": {
+    "baseline_commit": "b94390cb508a298a28349152bb15876f36662c65",
+    "baseline_dirty_summary": "dirty: roadmap + Stage2 park docs edited; several dated status docs, narrative source files, and docs/2026-04-09/ outputs dirty/untracked",
+    "resume_commit": "same-as-baseline",
+    "resume_drift_summary": "none"
+  },
+  "sources": {
+    "roadmap": "docs/2026-04-01/active-temp-execution-roadmap.md",
+    "execution_ssots": [
+      "docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md",
+      "docs/2026-04-07/0_0-stage3-partial-fix-hardening-remediation-execution-ssot.md",
+      "docs/2026-04-02/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md",
+      "docs/2026-04-01/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md"
+    ],
+    "proof_wave_audits": [
+      "docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md",
+      "docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md"
+    ]
+  },
+  "parallel_slices": [
+    {
+      "slice": "stage3_contract_handoff",
+      "focus": [
+        "0_0-stage3-contract-tightening-remediation",
+        "Stage3 success/failure observability sinks",
+        "Stage3 -> Stage4 handoff consumption"
+      ]
+    },
+    {
+      "slice": "stage3_partial_fix_and_opening_transition",
+      "focus": [
+        "0_0-stage3-partial-fix-hardening-remediation",
+        "0_0-stage3-opening-transition-contract-normalization-remediation",
+        "fix_pack / partial_fix_eval propagation",
+        "opening_transition normalization and Stage4 intake"
+      ]
+    },
+    {
+      "slice": "stage3_related_mixed_lanes",
+      "focus": [
+        "0_0-stage2-stage3-stage4-readiness-remediation",
+        "0_0-stage234-nonwuxia-state-lock-overreach-remediation",
+        "0_0-stage234-cross-stage-contract-normalization-remediation"
+      ]
+    }
+  ],
+  "roadmap_snapshot": {
+    "no_new_cross_pipeline_p0": {
+      "path": "docs/2026-04-01/active-temp-execution-roadmap.md",
+      "line": 79
+    },
+    "stage3_owned_lanes": [
+      {
+        "slug": "0_0-stage3-contract-tightening-remediation",
+        "status": "partial",
+        "rank": 5,
+        "path": "docs/2026-04-01/active-temp-execution-roadmap.md",
+        "line": 104
+      },
+      {
+        "slug": "0_0-stage3-partial-fix-hardening-remediation",
+        "status": "partial",
+        "rank": 7,
+        "path": "docs/2026-04-01/active-temp-execution-roadmap.md",
+        "line": 106
+      },
+      {
+        "slug": "0_0-stage3-opening-transition-contract-normalization-remediation",
+        "status": "partial",
+        "rank": 10,
+        "path": "docs/2026-04-01/active-temp-execution-roadmap.md",
+        "line": 109
+      }
+    ],
+    "mixed_stage3_related_lanes": [
+      {
+        "slug": "0_0-stage234-nonwuxia-state-lock-overreach-remediation",
+        "status": "partial",
+        "severity": "P1",
+        "rank": 3,
+        "owner_reading": "mixed Stage2 producer + Stage4 intake/post-pass",
+        "path": "docs/2026-04-01/active-temp-execution-roadmap.md",
+        "line": 102
+      },
+      {
+        "slug": "0_0-stage2-stage3-stage4-readiness-remediation",
+        "status": "blocked",
+        "severity": "ungraded_parent",
+        "rank": 14,
+        "owner_reading": "blocked parent; not a direct Stage3 defect lane",
+        "path": "docs/2026-04-01/active-temp-execution-roadmap.md",
+        "line": 113
+      }
+    ]
+  },
+  "closed_or_demoted_claims": [
+    {
+      "claim": "Stage3 absence in the latest proof wave is a fresh logging failure",
+      "current_reading": "demoted; absence is operator-choice / not exercised",
+      "evidence": [
+        {
+          "path": "docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md",
+          "line": 299
+        },
+        {
+          "path": "docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md",
+          "line": 162
+        }
+      ]
+    },
+    {
+      "claim": "Stage3 opening-transition contract still depends on Stage4 prose inference only",
+      "current_reading": "demoted; Stage3 normalizes the contract and Stage4 consumes it structurally",
+      "evidence": [
+        {
+          "path": "modules/domain/agents/unified_blueprint_validator.py",
+          "line": 1075
+        },
+        {
+          "path": "modules/domain/agents/unified_blueprint_validator.py",
+          "line": 1710
+        },
+        {
+          "path": "modules/core/stage_cross_stage_contract.py",
+          "line": 296
+        },
+        {
+          "path": "modules/core/stage4_context_builder.py",
+          "line": 914
+        },
+        {
+          "path": "modules/core/stage4_orchestrator.py",
+          "line": 774
+        }
+      ]
+    },
+    {
+      "claim": "Stage3 partial-fix sink data still disappears before blueprint/advisory handoff",
+      "current_reading": "demoted; fix_pack and partial_fix_eval now persist through runtime, blueprint metadata, and advisory sinks",
+      "evidence": [
+        {
+          "path": "modules/domain/agents/three_phase_blueprint_runtime.py",
+          "line": 1220
+        },
+        {
+          "path": "modules/domain/agents/three_phase_blueprint_runtime.py",
+          "line": 1294
+        },
+        {
+          "path": "modules/core/stage3_orchestrator.py",
+          "line": 2165
+        },
+        {
+          "path": "modules/core/stage3_orchestrator.py",
+          "line": 2653
+        }
+      ]
+    }
+  ],
+  "live_code_findings": {
+    "stage3_observability_sinks": [
+      {
+        "surface": "source_anchor_summary recorded into Stage3 observation",
+        "path": "modules/core/stage3_orchestrator.py",
+        "line": 1433
+      },
+      {
+        "surface": "session decision logging for Stage3 success",
+        "path": "modules/core/stage3_orchestrator.py",
+        "line": 2025
+      },
+      {
+        "surface": "PassRateMonitor Stage3 record",
+        "path": "modules/core/stage3_orchestrator.py",
+        "line": 2052
+      },
+      {
+        "surface": "DB stage_attempt and director_selection persistence",
+        "path": "modules/core/stage3_orchestrator.py",
+        "line": 2080
+      },
+      {
+        "surface": "audit event / UI / quality dashboard success surfaces",
+        "path": "modules/core/stage3_orchestrator.py",
+        "line": 2286
+      }
+    ],
+    "stage3_handoff_consumption": [
+      {
+        "surface": "_stage3_meta binding note becomes Director decision-core advisory",
+        "path": "modules/core/stage4_director_runtime.py",
+        "line": 1220
+      },
+      {
+        "surface": "Stage4 retry threshold reads Stage3 repair signals",
+        "path": "modules/core/stage4_outcome_runtime.py",
+        "line": 976
+      }
+    ],
+    "complexity_hotspots": [
+      {
+        "path": "modules/core/stage3_orchestrator.py",
+        "class_name": "Stage3Orchestrator",
+        "direct_methods": 46,
+        "function": "_record_stage3_failure_attempt",
+        "line": 2832,
+        "loc": 186,
+        "severity": "P3_structural"
+      },
+      {
+        "path": "modules/domain/agents/three_phase_blueprint_runtime.py",
+        "function": "_run_pass_with_fix_iteration",
+        "line": 1155,
+        "loc": 195,
+        "severity": "P3_structural"
+      }
+    ]
+  },
+  "severity_ledger": {
+    "stage3_owned": {
+      "P0": [],
+      "P1": [],
+      "P2": [],
+      "P3": [
+        {
+          "type": "structural_hotspot",
+          "path": "modules/core/stage3_orchestrator.py",
+          "function": "_record_stage3_failure_attempt",
+          "line": 2832,
+          "loc": 186
+        },
+        {
+          "type": "structural_hotspot",
+          "path": "modules/domain/agents/three_phase_blueprint_runtime.py",
+          "function": "_run_pass_with_fix_iteration",
+          "line": 1155,
+          "loc": 195
+        }
+      ],
+      "watch_items": [
+        {
+          "type": "semantic_watch",
+          "path": "docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md",
+          "line": 303,
+          "summary": "arc 3 latent asset-math contradiction remains a watch item, not a promoted sink blocker"
+        }
+      ]
+    },
+    "stage3_related_mixed": {
+      "P0": [],
+      "P1": [
+        {
+          "slug": "0_0-stage234-nonwuxia-state-lock-overreach-remediation",
+          "owner_reading": "mixed Stage2 producer + Stage4 intake/post-pass",
+          "path": "docs/2026-04-01/active-temp-execution-roadmap.md",
+          "line": 102
+        }
+      ],
+      "P2": [],
+      "P3": []
+    }
+  },
+  "adversarial_rounds": [
+    {
+      "round": 1,
+      "challenge": "Promote Stage3 absence to a live logging or sink P1.",
+      "result": "rejected",
+      "reason": "latest proof-wave evidence marks absence as operator-choice, not an exercised Stage3 sink regression"
+    },
+    {
+      "round": 2,
+      "challenge": "Promote Stage3 partial-fix and opening-transition lanes back to correctness defects.",
+      "result": "rejected",
+      "reason": "live code shows fix_pack / partial_fix_eval propagation and opening_transition structural intake are already landed"
+    },
+    {
+      "round": 3,
+      "challenge": "Claim Stage3 is fully closed because no direct P1 remains.",
+      "result": "rejected",
+      "reason": "Stage3 lanes remain verification-pending and two structural hotspots still justify P3"
+    }
+  ],
+  "confidence": 96
+}

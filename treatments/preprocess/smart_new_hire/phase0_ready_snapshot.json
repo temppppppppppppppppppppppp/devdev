@@ -1,0 +1,13 @@
+{
+  "identity_locked": true,
+  "profile_locked": true,
+  "material_sufficient": true,
+  "manual_audit_pass": true,
+  "remaining_risks": [
+    "세광리테일의 실제 채널 분류와 매출 규모 미확정 — TR 진입 전 최소 operating scale 결정 필요",
+    "승진 grade 체계와 심사 주기 미확정 — ARC-05 상세 생산 전에 고정 필요",
+    "budget code 세목과 비용 귀속 규칙 미확정 — ARC-04~06 숫자 장면에서 상상으로 때우면 안 됨",
+    "거래처 유형과 리베이트 예외조항 샘플 미확정 — opening 이후 vendor negotiation 장면 전 보강 필요",
+    "ARC-05~07 block title과 세부 적대축은 skeleton 확장 여지 있음 — 다만 ARC-01~04 reward chain과 internal ladder는 변경 금지"
+  ]
+}
