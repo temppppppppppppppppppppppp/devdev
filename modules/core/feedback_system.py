@@ -177,9 +177,9 @@ class FeedbackSystem:
                     {
                         "type": "QUANTIFIED",
                         "basis": "heuristic_fallback",
-                        "description": f"후반부 분량 부족: Scene 5-6에 {latter_shortage}자 추가 필요",
+                        "description": f"후반부 핵심 씬 분량 부족: {latter_shortage}자 추가 필요",
                         "severity": "HIGH",
-                        "suggestion": f"Scene 5에 +{latter_shortage // 2}자, Scene 6에 +{latter_shortage // 2}자 배분",
+                        "suggestion": f"후반부 장면들에 +{latter_shortage // 2}자씩 배분하고 turning point를 장면화",
                     }
                 )
 
@@ -189,9 +189,9 @@ class FeedbackSystem:
                 {
                     "type": "QUANTIFIED",
                     "basis": "heuristic_fallback",
-                    "description": "씬 반영 부족: Blueprint의 모든 씬 균등 반영 필요",
+                    "description": "장면화 부족: Blueprint 핵심 씬/의무를 실제 장면으로 모두 풀어써야 함",
                     "severity": "HIGH",
-                    "suggestion": "각 씬당 최소 700자 확보 (6개 씬 × 700자 = 4,200자 베이스라인)",
+                    "suggestion": "씬 수를 억지로 늘리기보다 각 핵심 씬의 goal/action/turning point를 후반부까지 압축 없이 장면화",
                 }
             )
 
@@ -524,7 +524,7 @@ class FeedbackSystem:
                     "priority": "CRITICAL",
                     "area": "장면 구성",
                     "score": scene_score,
-                    "action": "장면 수 부족. 최소 5개 이상 설계 필요.",
+                    "action": "장면화 부족. 고정 씬 수를 늘리기보다 핵심 의무를 실제 장면으로 재배치하세요.",
                 }
             )
         elif scene_score < 15:
@@ -533,7 +533,7 @@ class FeedbackSystem:
                     "priority": "HIGH",
                     "area": "장면 구성",
                     "score": scene_score,
-                    "action": "장면 밀도 불균형. 각 씬 분량을 균등하게 조정.",
+                    "action": "장면 밀도 불균형. 후반부 핵심 씬 체류 시간을 늘리고 요약 전개를 풀어내세요.",
                 }
             )
 
@@ -616,14 +616,14 @@ class FeedbackSystem:
         if "후반" in reason_lower or "요약" in reason_lower or "밀도" in reason_lower:
             lines.append("")
             lines.append("⚠️ 이전 원고 문제: 후반부 밀도 부족")
-            lines.append("   → 이번 Blueprint: Scene 5-6에 더 많은 이벤트 배치")
-            lines.append("   → 각 씬 목표 분량을 명시적으로 설정")
+            lines.append("   → 이번 Blueprint: 후반부 핵심 씬에 더 많은 turning point와 반응 배치")
+            lines.append("   → 각 핵심 씬의 체류 시간과 감정/행동 비트를 명시적으로 설정")
 
         if "분량" in reason_lower or "짧" in reason_lower or "부족" in reason_lower:
             lines.append("")
             lines.append("⚠️ 이전 원고 문제: 전체 분량 부족")
-            lines.append("   → 이번 Blueprint: 씬 수 6개 이상 확보")
-            lines.append("   → 각 씬에 세부 비트 2-3개 추가")
+            lines.append("   → 이번 Blueprint: 씬 수를 억지로 늘리지 말고 각 핵심 씬에 세부 비트 2-3개 추가")
+            lines.append("   → 후반부도 앞부분처럼 실제 장면으로 보이게 체류 시간을 확보")
 
         if "설정" in reason_lower or "모순" in reason_lower or "일관" in reason_lower:
             lines.append("")
@@ -794,21 +794,21 @@ class FeedbackSystem:
                     "pass_threshold": 70,
                     "feedback_level": "detailed",
                     "strictness": "high",
-                    "guidance": "6개 이상의 균형 잡힌 씬을 설계하세요.",
+                    "guidance": "핵심 씬/의무를 빠짐없이 장면화하고 후반부 압축을 피하세요.",
                 }
             elif retry_count == 1:
                 return {
                     "pass_threshold": 60,
                     "feedback_level": "focused",
                     "strictness": "medium",
-                    "guidance": "핵심 씬 5개 확보, 설정 일관성 유지에 집중.",
+                    "guidance": "장면 수보다 obligation materialization과 설정 일관성 유지에 집중.",
                 }
             else:
                 return {
                     "pass_threshold": 50,
                     "feedback_level": "minimal",
                     "strictness": "low",
-                    "guidance": "최소 4개 씬, 기본 연속성만 확보하세요.",
+                    "guidance": "최소 2개 이상의 밀도 있는 씬과 기본 연속성만 확보하세요.",
                 }
 
         else:  # Stage 4
@@ -817,21 +817,21 @@ class FeedbackSystem:
                     "pass_threshold": 70,
                     "feedback_level": "detailed",
                     "strictness": "high",
-                    "guidance": f"{ManuscriptLimits.TARGET_LENGTH}자 이상, 균형 잡힌 씬 분배를 목표로.",
+                    "guidance": f"{ManuscriptLimits.TARGET_LENGTH}자 이상, 핵심 의무를 장면화하고 후반부 압축 없이 체류 시간을 확보.",
                 }
             elif retry_count == 1:
                 return {
                     "pass_threshold": 65,
                     "feedback_level": "focused",
                     "strictness": "medium",
-                    "guidance": f"{ManuscriptLimits.WARNING_LENGTH}자 이상, 핵심 씬 반영에 집중.",
+                    "guidance": f"{ManuscriptLimits.WARNING_LENGTH}자 이상, 후반부 핵심 씬 체류와 핵심 의무 장면화에 집중.",
                 }
             else:
                 return {
                     "pass_threshold": 55,
                     "feedback_level": "minimal",
                     "strictness": "low",
-                    "guidance": f"{ManuscriptLimits.MIN_LENGTH}자 최소 기준, Blueprint 핵심만 반영.",
+                    "guidance": f"{ManuscriptLimits.MIN_LENGTH}자 최소 기준, Blueprint 핵심 의무를 요약 없이 실제 장면으로 반영.",
                 }
 
     def classify_rejection_feedback(self, reason: str, feedback: str, blueprint: dict = None) -> str:
@@ -853,7 +853,7 @@ class FeedbackSystem:
                 scene_breakdown = blueprint.get("scene_breakdown", {})
                 scene_names = list(scene_breakdown.keys())[:6]
                 classified_parts.append(f"   - Blueprint 필수 씬: {', '.join(scene_names)}")
-            classified_parts.append("   - 모든 씬을 순서대로 빠짐없이 작성하세요.")
+            classified_parts.append("   - 핵심 씬/의무를 빠짐없이 장면화하고 후반부 요약을 피하세요.")
 
         elif any(kw in reason_lower for kw in ["연속", "continuity", "이전", "직전"]):
             classified_parts.append("🔗 [연속성 오류]")
@@ -906,14 +906,14 @@ class FeedbackSystem:
             if "정체" in core_feedback:
                 critical_issues.append("🔄 서사 정체 금지: 반복 대신 전진하라")
             if "씬" in core_feedback or "장면" in core_feedback:
-                critical_issues.append("🎬 모든 씬 반영: Blueprint 씬을 빠짐없이 포함")
+                critical_issues.append("🎬 핵심 씬 장면화: Blueprint obligation을 빠짐없이 풀어쓰기")
             if "설정" in core_feedback or "무공" in core_feedback:
                 critical_issues.append("⚙️ 설정 준수: 미습득 무공 사용 금지")
             if "밀도" in core_feedback or "균등" in core_feedback:
-                critical_issues.append("📊 밀도 균등: 앞뒤 분량 균형 맞추기")
+                critical_issues.append("📊 밀도 유지: 후반부도 압축 없이 체류 시간 확보")
 
             if not critical_issues:
-                critical_issues = ["📏 분량 4,500자 이상", "🎬 6개 씬 모두 반영", "⚙️ Hard Constraints 준수"]
+                critical_issues = ["📏 분량 4,500자 이상", "🎬 핵심 씬 장면화", "⚙️ Hard Constraints 준수"]
 
             lines.append("**핵심 수정 사항:**")
             for issue in critical_issues[:5]:
@@ -924,8 +924,9 @@ class FeedbackSystem:
 
         lines.append("")
         lines.append("✅ PASS 가능 조건 (3회차+):")
-        lines.append("  - 3~4개 씬만 있어도 OK (밀도 유지 시)")
+        lines.append("  - 2~3개 씬도 OK (goal/summary/key_events가 충분히 장면화되면)")
         lines.append("  - 분량 4,000자 이상이면 통과 가능")
+        lines.append("  - 후반부 요약/비약만 없으면 저씬수도 허용")
         lines.append("  - Hard Constraints만 지키면 승인")
 
         return "\n".join(lines)

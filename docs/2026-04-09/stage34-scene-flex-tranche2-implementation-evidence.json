@@ -1,0 +1,130 @@
+{
+  "audit": "stage34-scene-flex-tranche2-implementation-3pass-audit",
+  "date": "2026-04-09",
+  "head": "7270cf17c7f9c7fc1316fd0ec13dc81b15508b75",
+  "scope": "Tranche 2. Stage4 Anti-Compression Contract Promotion",
+  "direct_severity": {
+    "p0": [],
+    "p1": [],
+    "p2": [],
+    "p3": []
+  },
+  "aligned_surfaces": [
+    {
+      "file": "modules/domain/agents/chief_writer.py",
+      "line": 136,
+      "detail": "Balanced strategy now frames Blueprint as '핵심 씬/의무를 실제 장면으로 반영'."
+    },
+    {
+      "file": "modules/domain/agents/chief_writer_prompts.py",
+      "lines": [167, 173],
+      "detail": "Scene anchors are treated as planning anchors with variable distribution and no late-scene summary."
+    },
+    {
+      "file": "modules/core/writer_template.py",
+      "lines": [242, 278],
+      "detail": "Prompt injection preserves headers but demotes equal-slot authority."
+    },
+    {
+      "file": "modules/core/feedback_system.py",
+      "lines": [527, 536, 820, 834],
+      "detail": "Stage4 guidance now promotes obligation materialization and anti-compression dwell."
+    },
+    {
+      "file": "config/prompts/director.yaml",
+      "lines": [131, 464],
+      "detail": "Evaluation rubric now uses 'Blueprint 장면화 충실도'."
+    },
+    {
+      "file": "modules/domain/agents/director_prompts.py",
+      "line": 120,
+      "detail": "Fallback/source copy matches YAML authority."
+    }
+  ],
+  "tranche3_residuals": [
+    {
+      "file": "modules/validation/blocking_validator_scene_checks.py",
+      "lines": [96, 124],
+      "detail": "_check_scope_overflow() still uses scene_count * chars_per_scene."
+    },
+    {
+      "file": "modules/core/cross_agent_verifier.py",
+      "lines": [239, 260],
+      "detail": "Writer precheck still computes reflection_rate from reflected_count / scene_count."
+    },
+    {
+      "file": "modules/core/writer_template.py",
+      "lines": [351, 386],
+      "detail": "validate_against_template() still derives scene_coverage from keyword-based slot matching."
+    },
+    {
+      "file": "modules/core/quality_amplifier.py",
+      "line": 94,
+      "detail": "Stage3 default constraint still says scenes are limited to 4-6."
+    },
+    {
+      "file": "modules/core/quality_dashboard.py",
+      "lines": [879, 894],
+      "detail": "predict_pass_probability() still uses scene_coverage as a probability factor."
+    }
+  ],
+  "dynamic_probes": [
+    {
+      "probe": "QualityDashboard.get_frequent_reject_warning(stage=4)",
+      "result_contains": "후반부 핵심 씬 체류 시간을 늘리고 요약 전개를 풀어내라."
+    },
+    {
+      "probe": "QualityDashboard.predict_pass_probability(stage=4, current_metrics={'scene_coverage': 20, 'length': 5000})",
+      "result_contains": "씬 반영 부족"
+    }
+  ],
+  "validation": [
+    {
+      "command": "python -m pytest tests/test_feedback_system.py -k \"density_issue or low_scores_critical or scene_feedback_uses_anti_compression_guidance or stage4_first_try or stage4_second_try\" -q",
+      "result": "pass"
+    },
+    {
+      "command": "python -m pytest tests/test_v55_modules.py -k \"prompt_injection\" -q",
+      "result": "pass"
+    },
+    {
+      "command": "python -m pytest tests/test_director_modules.py -k \"director_prompt_contract_prefers_yaml_source\" -q",
+      "result": "pass"
+    },
+    {
+      "command": "python -m pytest tests/test_prompt_loader.py -k \"director_yaml_loads or chief_writer_yaml_loads\" -q",
+      "result": "pass"
+    },
+    {
+      "command": "python -m pytest tests/test_quality_regression.py -k \"frequent_reject_warning_uses_anti_compression_guidance\" -q",
+      "result": "pass"
+    }
+  ],
+  "complexity": [
+    {
+      "symbol": "modules/core/feedback_system.py::generate_structured_blueprint_feedback",
+      "loc": 115
+    },
+    {
+      "symbol": "modules/core/feedback_system.py::get_adaptive_feedback_intensity",
+      "loc": 70
+    },
+    {
+      "symbol": "modules/core/writer_template.py::generate_prompt_injection",
+      "loc": 75
+    },
+    {
+      "symbol": "modules/core/writer_template.py::validate_against_template",
+      "loc": 58
+    },
+    {
+      "symbol": "modules/core/quality_dashboard.py::get_frequent_reject_warning",
+      "loc": 77
+    },
+    {
+      "symbol": "modules/core/quality_dashboard.py::predict_pass_probability",
+      "loc": 150
+    }
+  ],
+  "confidence": 0.97
+}

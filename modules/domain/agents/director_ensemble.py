@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from modules.core.constants import ContextLimits, ManuscriptLimits, smart_truncate  # [V64.P4]
 from modules.core.prompt_loader import PromptLoader
 from modules.core.tactical_utils import extract_episode_tactical
+from modules.domain.agents.scene_cardinality_contract import evaluate_stage3_scene_cardinality
 from modules.validation.threshold_helper import _threshold
 
 
@@ -1893,16 +1894,16 @@ class DirectorEnsembleSelector:
                 }
 
         _sb = blueprint.get("scene_breakdown", {})
-        scene_count = len(_sb) if isinstance(_sb, dict | list) else 0  # [TF-R2-S3-01]
-        if scene_count < 4:
+        scene_gate_passed, scene_count, scene_reason, scene_feedback = evaluate_stage3_scene_cardinality(_sb, integrated)
+        if not scene_gate_passed:
             return {
                 "decision": "REJECT",
                 "score": 30,
                 "pre_firewall_score": 30,
                 "firewall_triggered": False,
                 "firewall_reason": "",
-                "reason": f"씬 개수 부족: {scene_count}개",
-                "feedback": "최소 4개 이상의 씬이 필요합니다.",
+                "reason": scene_reason,
+                "feedback": scene_feedback,
             }
 
         if len(integrated) < 800:

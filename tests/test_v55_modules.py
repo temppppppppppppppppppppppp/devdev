@@ -225,6 +225,8 @@ class TestWriterTemplate:
         assert "Writer Template" in injection
         assert "씬별 작성 가이드" in injection
         assert "scene_1" in injection
+        assert "planning anchor" in injection
+        assert "후반부를 요약하면 불합격" in injection
 
     def test_validation(self, sample_blueprint, sample_manuscript):
         """템플릿 검증 테스트"""

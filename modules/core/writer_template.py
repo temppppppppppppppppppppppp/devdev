@@ -239,7 +239,7 @@ class WriterTemplate:
 
         # 씬별 슬롯
         lines.append("=" * 40)
-        lines.append("📝 씬별 작성 가이드 (순서대로 작성)")
+        lines.append("📝 씬별 작성 가이드 (planning anchor 기준)")
         lines.append("=" * 40)
 
         for slot in template.slots:
@@ -271,10 +271,11 @@ class WriterTemplate:
             lines.append(f'   "{template.closing_hook}"')
 
         lines.append("\n" + "=" * 60)
-        lines.append("⚠️ 각 씬을 순서대로 빠짐없이 작성하세요.")
-        lines.append("⚠️ 각 씬의 시작 부분에 반드시 '### 씬 N: 제목' 형식의 헤더를 삽입하세요.")
+        lines.append("⚠️ scene anchor를 순서대로 따라가되, 분량은 균등 배분하지 마세요.")
+        lines.append("⚠️ 각 scene anchor의 시작 부분에 반드시 '### 씬 N: 제목' 형식의 헤더를 삽입하세요.")
         lines.append("   예: ### 씬 1: 호텔 라운지의 만남")
-        lines.append("   씬 헤더 없이 하나의 산문 블록으로 작성하면 불합격 처리됩니다.")
+        lines.append("   헤더는 planning anchor입니다. 각 anchor 아래에서 핵심 의무가 실제 장면으로 보이게 써 주세요.")
+        lines.append("   모든 anchor를 하나의 산문 블록으로 뭉개거나 후반부를 요약하면 불합격 처리됩니다.")
         lines.append("=" * 60)
 
         return "\n".join(lines)

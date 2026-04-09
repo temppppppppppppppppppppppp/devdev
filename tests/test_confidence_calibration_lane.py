@@ -101,3 +101,22 @@ def test_build_confidence_result_uses_thresholds_without_behavior_change():
     assert result.level is ConfidenceLevel.VERY_HIGH
     assert result.needs_extra_verification is False
     assert result.recommendation == "pass"
+
+
+def test_assess_blueprint_allows_two_scene_blueprint_without_scene_count_concern():
+    calibrator = ConfidenceCalibrator()
+
+    result = calibrator._assess_blueprint(
+        {
+            "integrated_scenario": "가" * 1200,
+            "scene_breakdown": {
+                "scene_1": {"goal": "도입"},
+                "scene_2": {"goal": "결말"},
+            },
+            "ending_hook": "다음 화 떡밥",
+        },
+        {},
+    )
+
+    assert result.factors["scene_count"] == 20
+    assert "씬 부족" not in " ".join(result.concerns)

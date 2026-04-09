@@ -27,6 +27,7 @@ from typing import Any
 
 from modules.core.constants import ManuscriptLimits, smart_truncate  # [V64.P4]
 from modules.core.llm_generate import generate_content_via_router
+from modules.domain.agents.scene_cardinality_contract import evaluate_stage3_scene_cardinality
 
 
 class ComplianceLevel(Enum):
@@ -179,10 +180,16 @@ JSON 형식으로 응답:
         scene_breakdown = blueprint.get("scene_breakdown", {})
         if not isinstance(scene_breakdown, dict):
             scene_breakdown = {}
-        min_scenes = arc_design.get("min_scenes", 4)
-        if len(scene_breakdown) < min_scenes:
+        scene_gate_passed, _scene_count, scene_reason, scene_feedback = evaluate_stage3_scene_cardinality(
+            scene_breakdown,
+            blueprint.get("integrated_scenario", ""),
+        )
+        if not scene_gate_passed:
             violations.append(
-                {"item": "씬 개수 부족", "reason": f"최소 {min_scenes}개 씬 필요, 현재 {len(scene_breakdown)}개"}
+                {
+                    "item": "씬 개수 부족" if "씬 개수 부족" in scene_reason else "씬 밀도 부족",
+                    "reason": f"{scene_reason} - {scene_feedback}" if scene_feedback else scene_reason,
+                }
             )
 
         # 2. 핵심 키워드 반영 체크
@@ -192,7 +199,7 @@ JSON 형식으로 응답:
             doc = arc_design.get("tactical_doc", "")
             if isinstance(doc, str):
                 # 따옴표로 감싼 단어들 추출
-                arc_keywords = re.findall(r'[「『"\'](.*?)[」』"\']', doc)
+                arc_keywords = re.findall(r'[「『"\'](.*?)[」』"\']', doc)  # utf8-hygiene: allow-line -- CJK quote delimiters are intentional.
 
         blueprint_text = json.dumps(blueprint, ensure_ascii=False)
         missing_keywords = []

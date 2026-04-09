@@ -1,0 +1,320 @@
+{
+  "survey": "Stage234 Scene Split Origin and Density Survey",
+  "date": "2026-04-09",
+  "baseline_commit": "b94390cb508a298a28349152bb15876f36662c65",
+  "question": "Where does the current Stage4-era four-scene tendency come from, is it owned by Stage2 or Stage3 or Stage4, and does the current contract create compression pressure against a variable scene-unit design?",
+  "parallel_slices": [
+    {
+      "id": "upstream_origin",
+      "scope": [
+        "Stage2->Stage3 handoff",
+        "Stage3 qualification and Director gating",
+        "Stage3 prompt/schema/validator"
+      ]
+    },
+    {
+      "id": "stage4_realization",
+      "scope": [
+        "writer prompt/template contracts",
+        "pre-Director manuscript checks",
+        "Stage4 context consumers"
+      ]
+    },
+    {
+      "id": "compression_pressure",
+      "scope": [
+        "scope overflow",
+        "scene completeness and header rules",
+        "feedback/dashboard/self-check pressure",
+        "targeted tests"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "stage2_not_owner",
+      "summary": "Stage2 surfaces scene-engine hints but does not appear to export a fixed scene-count contract into the Stage2->Stage3 boundary.",
+      "evidence": [
+        {
+          "path": "modules/core/stage2_preflight.py",
+          "line": 550,
+          "note": "scene_engines are extracted as focus hints"
+        },
+        {
+          "path": "modules/core/stage2_preflight.py",
+          "line": 705,
+          "note": "boundary output exposes mandatory_scene_engines, not fixed scene_count"
+        },
+        {
+          "path": "modules/domain/agents/blueprint_constraint_compiler.py",
+          "line": 124,
+          "note": "constraint block emits must_focus"
+        },
+        {
+          "path": "modules/domain/agents/blueprint_constraint_compiler.py",
+          "line": 125,
+          "note": "constraint block emits stop_line"
+        },
+        {
+          "path": "modules/domain/agents/blueprint_constraint_compiler.py",
+          "line": 127,
+          "note": "constraint block emits inherited_state"
+        },
+        {
+          "path": "tests/test_stage2_stage3_episode_boundary_guardrail.py",
+          "line": 321,
+          "note": "boundary prompt test checks MUST_FOCUS / STOP_LINE / INHERITED_STATE"
+        }
+      ]
+    },
+    {
+      "id": "stage3_hard_floor",
+      "summary": "The earliest hard four-scene gates live in Stage3 qualification and Stage3 Director single-candidate gating.",
+      "severity": "P2",
+      "evidence": [
+        {
+          "path": "modules/domain/agents/blueprint_ensemble.py",
+          "line": 492,
+          "note": "candidate qualification requires scene_count >= 4"
+        },
+        {
+          "path": "modules/domain/agents/blueprint_ensemble.py",
+          "line": 604,
+          "note": "ensemble cannot proceed normally if no candidate survives"
+        },
+        {
+          "path": "modules/domain/agents/director_ensemble.py",
+          "line": 1897,
+          "note": "single-candidate gate rejects <4 scenes"
+        },
+        {
+          "path": "tests/test_blueprint_ensemble_generate_ensemble.py",
+          "line": 67,
+          "note": "qualification test locks four-scene pass / three-scene fail behavior"
+        },
+        {
+          "path": "tests/test_director_modules.py",
+          "line": 333,
+          "note": "Director test locks reject_few_scenes behavior"
+        },
+        {
+          "path": "docs/stage_map/stage3.md",
+          "line": 122,
+          "note": "stage map documents candidate minimum scene_count >= 4"
+        }
+      ]
+    },
+    {
+      "id": "stage3_prompt_schema_incoherence",
+      "summary": "Stage3 prompt/schema/validator layers already disagree on whether the meaningful scene count band is 3, 4, or 5.",
+      "severity": "P3",
+      "evidence": [
+        {
+          "path": "config/prompts/ensemble.yaml",
+          "line": 393,
+          "note": "prompt example shows scene_1..scene_4 JSON"
+        },
+        {
+          "path": "config/prompts/ensemble.yaml",
+          "line": 436,
+          "note": "prompt says scene_breakdown should be 3~5 scenes"
+        },
+        {
+          "path": "config/prompts/ensemble.yaml",
+          "line": 449,
+          "note": "checklist repeats 3~5 range"
+        },
+        {
+          "path": "modules/core/response_schemas.py",
+          "line": 618,
+          "note": "response schema describes scene_1..scene_5"
+        },
+        {
+          "path": "modules/domain/agents/unified_blueprint_validator.py",
+          "line": 925,
+          "note": "validator only flags <3 scenes"
+        },
+        {
+          "path": "tests/test_stage3_clarity_density_wave1.py",
+          "line": 267,
+          "note": "density tests cover 4 scenes"
+        },
+        {
+          "path": "tests/test_stage3_clarity_density_wave1.py",
+          "line": 275,
+          "note": "density tests cover 5 scenes"
+        },
+        {
+          "path": "tests/test_stage3_clarity_density_wave1.py",
+          "line": 291,
+          "note": "density tests cover 3 scenes"
+        }
+      ]
+    },
+    {
+      "id": "stage4_dynamic_consumer",
+      "summary": "Stage4 is not hard-coded to exactly four scenes; most Stage4 runtime consumers derive behavior from the actual scene_breakdown count.",
+      "evidence": [
+        {
+          "path": "modules/core/stage4_context_builder.py",
+          "line": 353,
+          "note": "context builder consumes scene_breakdown or scenes dynamically"
+        },
+        {
+          "path": "modules/core/stage4_context_builder.py",
+          "line": 492,
+          "note": "context builder iterates actual scene_breakdown keys"
+        },
+        {
+          "path": "modules/domain/agents/chief_writer.py",
+          "line": 1343,
+          "note": "structural block split uses expected_blocks=len(scene_breakdown)"
+        },
+        {
+          "path": "modules/core/pre_director_manuscript_checker.py",
+          "line": 308,
+          "note": "expected_count = len(scene_breakdown)"
+        },
+        {
+          "path": "modules/validation/blocking_validator_scene_checks.py",
+          "line": 72,
+          "note": "scope overflow starts from dynamic scene_count"
+        },
+        {
+          "path": "modules/validation/blocking_validator_scene_checks.py",
+          "line": 151,
+          "note": "scene completeness uses dynamic scene_count"
+        }
+      ]
+    },
+    {
+      "id": "stage4_amplification_pressure",
+      "summary": "Stage4 amplifies the upstream scene-count floor into a slot-coverage contract through explicit headers, all-scene reflection pressure, and scene-count-based scoring.",
+      "severity": "P2",
+      "evidence": [
+        {
+          "path": "modules/domain/agents/chief_writer.py",
+          "line": 136,
+          "note": "writer guidance says all blueprint scenes should be reflected with balanced weight"
+        },
+        {
+          "path": "modules/domain/agents/chief_writer_prompts.py",
+          "line": 169,
+          "note": "writer prompt requires ### 씬 N: 제목 headers"
+        },
+        {
+          "path": "modules/domain/agents/chief_writer_prompts.py",
+          "line": 172,
+          "note": "writer prompt says all scenes must be separated and written in order"
+        },
+        {
+          "path": "modules/core/writer_template.py",
+          "line": 275,
+          "note": "writer template repeats explicit scene-header contract"
+        },
+        {
+          "path": "modules/core/prompt_builder.py",
+          "line": 539,
+          "note": "self-check requires all scenes to be reflected evenly and bans back-half summary collapse"
+        },
+        {
+          "path": "modules/domain/agents/director_prompts.py",
+          "line": 360,
+          "note": "Director prompt sets 6-scene goal"
+        },
+        {
+          "path": "modules/domain/agents/director_prompts.py",
+          "line": 361,
+          "note": "Director prompt requires minimum 4 scenes on retries 0-1"
+        },
+        {
+          "path": "modules/core/feedback_system.py",
+          "line": 856,
+          "note": "feedback says all scenes must be written in order"
+        },
+        {
+          "path": "modules/core/feedback_system.py",
+          "line": 916,
+          "note": "retry fallback explicitly says 6개 씬 모두 반영"
+        },
+        {
+          "path": "modules/core/quality_dashboard.py",
+          "line": 640,
+          "note": "dashboard guidance says Blueprint 6개 씬 모두 반영, especially later scenes"
+        }
+      ]
+    },
+    {
+      "id": "compression_pressure",
+      "summary": "Compression pressure is real because the system combines all-scene coverage pressure with per-scene length heuristics and total-length floors.",
+      "severity": "P2",
+      "evidence": [
+        {
+          "path": "modules/core/quality_amplifier.py",
+          "line": 294,
+          "note": "design rule says 4-6 scenes"
+        },
+        {
+          "path": "modules/core/quality_amplifier.py",
+          "line": 295,
+          "note": "800-1500 chars per scene"
+        },
+        {
+          "path": "modules/core/quality_amplifier.py",
+          "line": 296,
+          "note": "4000-6000 total chars"
+        },
+        {
+          "path": "modules/validation/blocking_validator_scene_checks.py",
+          "line": 95,
+          "note": "scope overflow computes max_allowed_length from scene_count * chars_per_scene"
+        },
+        {
+          "path": "modules/validation/blocking_validator_scene_checks.py",
+          "line": 106,
+          "note": "overflow may reject as blueprint scope overrun"
+        },
+        {
+          "path": "modules/core/cross_agent_verifier.py",
+          "line": 270,
+          "note": "writer precheck also uses scene_count-based max_expected_length"
+        },
+        {
+          "path": "modules/core/feedback_system.py",
+          "line": 927,
+          "note": "late retry still talks in scene-count terms rather than obligation dwell time"
+        }
+      ]
+    }
+  ],
+  "targeted_validation": [
+    {
+      "command": "python -m pytest tests/test_blueprint_ensemble_generate_ensemble.py -k \"qualify_blueprint_candidates_tracks_pass_and_fail_metadata\" -q",
+      "result": "pass"
+    },
+    {
+      "command": "python -m pytest tests/test_director_modules.py -k \"compare_and_select_single_candidate_reject_few_scenes\" -q",
+      "result": "pass"
+    },
+    {
+      "command": "python -m pytest tests/test_prompt_builder.py -k \"less_than_4_scenes_returns_empty or with_scene_count\" -q",
+      "result": "pass"
+    },
+    {
+      "command": "python -m pytest tests/test_blocking_validator_submodules.py -k \"scope_overflow_smoke or markdown_scene_headers_pass or markdown_scene_headers_incomplete_rejects\" -q",
+      "result": "pass"
+    }
+  ],
+  "p_ledger": {
+    "P0": [],
+    "P1": [],
+    "P2": [
+      "cross-stage scene-cardinality and slot-coverage contract biases the writer toward compression",
+      "earliest hard floor is Stage3; strongest amplification is Stage4"
+    ],
+    "P3": [
+      "scene-count semantics are internally inconsistent across prompt/schema/validator/constants/grading surfaces"
+    ]
+  },
+  "confidence": 96
+}

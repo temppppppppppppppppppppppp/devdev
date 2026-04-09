@@ -3,12 +3,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from modules.core.adversarial_self_play import AdversarialSelfPlay, AdversaryFeedback
 from modules.core.chain_of_verification import (
     ChainOfVerification,
     ChainOfVerificationLLMError,
     ChainOfVerificationParseError,
 )
-from modules.core.adversarial_self_play import AdversarialSelfPlay, AdversaryFeedback
 from modules.core.cross_agent_verifier import CrossAgentVerifier
 from modules.core.multi_agent_deliberation import AgentOpinion, AgentRole, MultiAgentDeliberation
 from modules.core.quality_dashboard import QualityDashboard
@@ -18,9 +18,9 @@ from modules.core.stage0.story_expander import StoryExpander
 from modules.core.stage0.style_extractor import StyleExtractor, StyleGuide
 from modules.domain.agents import analyst_prompt_api
 from modules.domain.agents.arc_critic import ArcCritic
+from modules.domain.agents.consensus_validator import ConsensusValidator
 from modules.domain.agents.director_auditor import DirectorQualityAuditor
 from modules.domain.agents.director_continuity import DirectorContinuityValidator
-from modules.domain.agents.consensus_validator import ConsensusValidator
 
 
 def test_chain_of_verification_parse_result_handles_list_payload():
@@ -163,6 +163,24 @@ def test_cross_agent_verifier_architect_compliance_preserves_tail_context(monkey
     assert "...(중간 생략)..." in captured["prompt"]
 
 
+def test_cross_agent_verifier_architect_precheck_accepts_dense_two_scene_blueprint():
+    verifier = CrossAgentVerifier(api_client=MagicMock())
+
+    violations = verifier._python_precheck_architect(
+        blueprint={
+            "integrated_scenario": "가" * 1000,
+            "scene_breakdown": {
+                "scene_1": {"goal": "주인공이 PB센터에서 첫 매수 버튼을 누른다", "key_events": ["매수"]},
+                "scene_2": {"summary": "레버리지 경고와 담보 압박이 동시에 몰려온다", "key_events": ["경고", "압박"]},
+            },
+            "ending_hook": "장 마감 10초 전, 창밖에서 누군가 이름을 불렀다.",
+        },
+        arc_design={},
+    )
+
+    assert violations == []
+
+
 def test_cross_agent_verifier_no_legacy_head_cut_assignments():
     source = Path("modules/core/cross_agent_verifier.py").read_text(encoding="utf-8")
 
@@ -283,6 +301,24 @@ def test_adversarial_self_play_feedback_preserves_tail_context(monkeypatch):
     assert "...(중간 생략)..." in captured["prompt"]
 
 
+def test_adversarial_self_play_quick_check_allows_dense_two_scene_blueprint():
+    asp = AdversarialSelfPlay(api_client=MagicMock())
+
+    passed, summary = asp.quick_adversary_check(
+        {
+            "integrated_scenario": "가" * 1000,
+            "scene_breakdown": {
+                "scene_1": {"goal": "도입", "key_events": ["계약"]},
+                "scene_2": {"summary": "결말", "key_events": ["반전"]},
+            },
+        },
+        content_type="blueprint",
+    )
+
+    assert passed is True
+    assert summary == ""
+
+
 def test_adversarial_self_play_revision_preserves_tail_context(monkeypatch):
     asp = AdversarialSelfPlay(api_client=MagicMock())
     captured = {}
@@ -308,6 +344,18 @@ def test_adversarial_self_play_revision_preserves_tail_context(monkeypatch):
     assert revised.endswith("TAIL-ASP-REVISED")
     assert "TAIL-ASP-ORIG" in captured["prompt"]
     assert "...(중간 생략)..." in captured["prompt"]
+
+
+def test_self_reflector_quick_check_allows_two_scene_architect_output():
+    reflector = SelfReflector(api_client=MagicMock())
+
+    result = reflector.quick_check(
+        output="scene_1: 도입\nscene_2: 결말",
+        target=ReflectionTarget.ARCHITECT,
+    )
+
+    assert result["issues_count"] == 0
+    assert result["severity"] == "none"
 
 
 def test_multi_agent_deliberation_opinion_preserves_tail_context(monkeypatch):

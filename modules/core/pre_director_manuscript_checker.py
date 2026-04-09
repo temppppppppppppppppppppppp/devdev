@@ -360,7 +360,7 @@ class PreDirectorManuscriptChecker:
         """
         items = []
 
-        if not isinstance(scene_breakdown, dict) or not scene_breakdown or len(scene_breakdown) < 3:
+        if not isinstance(scene_breakdown, dict) or not scene_breakdown or len(scene_breakdown) <= 1:
             return items
 
         scene_count = len(scene_breakdown)
@@ -395,7 +395,7 @@ class PreDirectorManuscriptChecker:
 
                 section_densities.append(density)
 
-        if len(section_densities) < 3:
+        if len(section_densities) < 2:
             return items
 
         mid_point = len(section_densities) // 2
@@ -442,57 +442,62 @@ class PreDirectorManuscriptChecker:
         self, sections: list[str], section_densities: list[float], scene_count: int
     ) -> list[CheckItem]:
         """
-        [V60.5] High Impact Zone (Scene 5-6) 강화 체크
+        [V60.5] 후반부 핵심 씬 강화 체크
 
-        클라이맥스 영역인 마지막 2개 씬에 대해 더 높은 기준 적용:
+        클라이맥스/전환 영역인 마지막 1-2개 씬에 대해 더 높은 기준 적용:
         - 밀도 기준 50% (일반 씬은 30%)
         - 분량 기준 600자 이상 (일반 씬은 500자)
         """
         items = []
 
-        if scene_count < 4 or len(sections) < 4:
+        if scene_count < 2 or len(sections) < 2:
             return items
 
-        high_impact_sections = sections[-2:]
-        high_impact_densities = section_densities[-2:] if len(section_densities) >= 2 else []
+        late_zone_size = 1 if scene_count == 2 else 2
+        high_impact_sections = sections[-late_zone_size:]
+        high_impact_densities = section_densities[-late_zone_size:] if len(section_densities) >= late_zone_size else []
+        late_scene_nums = list(range(scene_count - late_zone_size + 1, scene_count + 1))
 
         high_impact_lengths = [len(s) for s in high_impact_sections]
         short_high_impact = [i for i, length in enumerate(high_impact_lengths) if length < 600]
 
         if short_high_impact:
-            scene_nums = [scene_count - 1 + i for i in short_high_impact]
+            scene_nums = [late_scene_nums[i] for i in short_high_impact]
             items.append(
                 CheckItem(
                     category=CheckCategory.BLUEPRINT_MATCH,
-                    name="High Impact Zone 분량 부족",
+                    name="후반부 핵심 씬 분량 부족",
                     passed=True,
                     severity=CheckSeverity.WARNING,
-                    message=f"클라이맥스 씬(Scene {', '.join(map(str, scene_nums))}) 분량 부족 - 각 600자 이상 권장",
+                    message=f"후반부 핵심 씬(Scene {', '.join(map(str, scene_nums))}) 분량 부족 - 각 600자 이상 권장",
                 )
             )
 
         if high_impact_densities:
             low_density_high_impact = [i for i, d in enumerate(high_impact_densities) if d < 0.5]
-            if len(low_density_high_impact) == 2:
+            if len(low_density_high_impact) == len(high_impact_densities):
+                detail = ", ".join(
+                    f"Scene {late_scene_nums[i]}: {high_impact_densities[i]:.0%}" for i in range(len(high_impact_densities))
+                )
                 items.append(
                     CheckItem(
                         category=CheckCategory.BLUEPRINT_MATCH,
-                        name="High Impact Zone 밀도 부족",
+                        name="후반부 핵심 씬 밀도 부족",
                         passed=False,
                         severity=CheckSeverity.FAIL,
-                        message=f"클라이맥스 씬 전체 밀도 부족 (Scene 5: {high_impact_densities[0]:.0%}, Scene 6: {high_impact_densities[1]:.0%}) - 절벽걸기 품질 저하",
+                        message=f"후반부 핵심 씬 전체 밀도 부족 ({detail}) - 절벽걸기 품질 저하",
                     )
                 )
             elif low_density_high_impact:
-                scene_num = scene_count - 1 + low_density_high_impact[0]
+                scene_num = late_scene_nums[low_density_high_impact[0]]
                 density = high_impact_densities[low_density_high_impact[0]]
                 items.append(
                     CheckItem(
                         category=CheckCategory.BLUEPRINT_MATCH,
-                        name="High Impact Zone 밀도 경고",
+                        name="후반부 핵심 씬 밀도 경고",
                         passed=True,
                         severity=CheckSeverity.WARNING,
-                        message=f"Scene {scene_num} 밀도 부족 ({density:.0%}) - 클라이맥스 보강 권장",
+                        message=f"Scene {scene_num} 밀도 부족 ({density:.0%}) - 후반부 체류 시간 보강 권장",
                     )
                 )
             else:
@@ -500,10 +505,10 @@ class PreDirectorManuscriptChecker:
                 items.append(
                     CheckItem(
                         category=CheckCategory.BLUEPRINT_MATCH,
-                        name="High Impact Zone 양호",
+                        name="후반부 핵심 씬 양호",
                         passed=True,
                         severity=CheckSeverity.PASS,
-                        message=f"클라이맥스 씬 밀도 양호 (평균 {avg_high_density:.0%})",
+                        message=f"후반부 핵심 씬 밀도 양호 (평균 {avg_high_density:.0%})",
                     )
                 )
 

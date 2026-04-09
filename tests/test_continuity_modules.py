@@ -1077,22 +1077,23 @@ class TestPreDirectorChecklistConstraintMap:
         assert len(field_fails) >= 1
 
     def test_blueprint_scene_count_check(self):
-        """블루프린트 씬 개수 검증"""
+        """밀도 있는 2씬 블루프린트는 hard fail하지 않는다."""
         checker = PreDirectorChecklist()
-        # 씬이 2개뿐 (최소 3개 필요)
         bp = json.dumps(
             {
-                "integrated_scenario": "시나리오 " * 100,
+                "integrated_scenario": "시나리오 " * 220,
                 "scene_breakdown": {
-                    "scene1": "장면1",
-                    "scene2": "장면2",
+                    "scene1": {"goal": "주인공이 PB센터에서 첫 매수 버튼을 누른다", "key_events": ["매수"]},
+                    "scene2": {"summary": "레버리지 경고와 담보 압박이 동시에 몰려온다", "key_events": ["경고", "압박"]},
                 },
             },
             ensure_ascii=False,
         )
         result = checker.check(bp, "blueprint")
-        scene_fails = [i for i in result.items if i.name == "씬 개수" and i.severity == CheckSeverity.FAIL]
-        assert len(scene_fails) >= 1
+        scene_fail = [i for i in result.items if i.name == "씬 개수" and i.severity == CheckSeverity.FAIL]
+        scene_warning = [i for i in result.items if i.name == "씬 개수" and i.severity == CheckSeverity.WARNING]
+        assert scene_fail == []
+        assert scene_warning
 
     def test_forbidden_patterns_detected(self):
         """금지 패턴(TODO, PLACEHOLDER) 감지"""

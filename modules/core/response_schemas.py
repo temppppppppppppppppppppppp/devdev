@@ -615,7 +615,8 @@ BLUEPRINT_SCENE_BREAKDOWN_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={f"scene_{scene_no}": deepcopy(BLUEPRINT_SCENE_ENTRY_SCHEMA) for scene_no in range(1, 6)},
     description=(
-        "Scene breakdown map keyed by scene_1..scene_5. Runtime validation preserves the "
+        "Scene breakdown map keyed by scene_1..scene_5; dense 3-scene plans stay valid by "
+        "using a shorter prefix. Runtime validation preserves the "
         "dict contract while avoiding additionalProperties for current google-genai "
         "compatibility."
     ),

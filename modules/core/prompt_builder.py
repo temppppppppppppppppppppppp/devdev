@@ -167,7 +167,7 @@ class PromptBuilder:
             return ""
 
         total_scenes = len(scene_breakdown)
-        if total_scenes < 4:
+        if total_scenes <= 1:
             return ""
 
         front_ratio = 0.4
@@ -199,14 +199,14 @@ class PromptBuilder:
             lines.append(f"  - {scene_key}: 약 {front_per_scene}자 ('{scene_title[:20]}...')")
 
         lines.append("")
-        lines.append("🔥 후반부 (클라이맥스/결말) - 반드시 상세하게!")
+        lines.append("🔥 후반부 핵심 씬 (클라이맥스/결말) - 반드시 상세하게!")
 
         for scene_key in back_scenes:
             scene_data = scene_breakdown.get(scene_key, {})
             scene_title = scene_data.get("title", scene_key) if isinstance(scene_data, dict) else scene_key
             lines.append(f"  - {scene_key}: 최소 {back_per_scene}자 이상 ('{scene_title[:20]}...')")
 
-        lines.extend(["", "⚠️ 경고: 후반부가 전반부보다 요약되면 REJECT됩니다!", "=" * 50, ""])
+        lines.extend(["", "⚠️ 경고: 씬 수와 무관하게 후반부가 전반부보다 요약되면 REJECT됩니다!", "=" * 50, ""])
 
         return "\n".join(lines)
 
@@ -536,7 +536,7 @@ class PromptBuilder:
             scene_count = len(scene_breakdown) if scene_breakdown else 6
 
         lines.append("📏 분량: 4,500자 이상 목표 (4,000자 미만 = 즉시 REJECT)")
-        lines.append(f"🎬 장면: {scene_count}개 씬 모두 균등 반영 (앞만 상세하고 뒤 요약 금지)")
+        lines.append(f"🎬 장면: {scene_count}개 설계 항목 모두 장면화 (후반부 요약 금지)")
         lines.append("🔄 흐름: 서사 폭주(1~2장면에 해결) 또는 정체(3장면+ 반복) 금지")
         lines.append("⚙️ 설정: 미습득 무공 사용 금지, 핵심 인물 이름 유지")
         lines.append("✍️ 문체: 대화 4개+, 감각 묘사 포함, 시점 전환 활용")

@@ -286,8 +286,8 @@ class DirectorGradingSystem:
                 "type": "structure_fix",
                 "description": "씬 구조 개선",
                 "details": [
-                    "Blueprint의 6개 씬이 모두 반영되었는지 확인",
-                    "각 씬의 분량이 균등하게 배분되었는지 검토",
+                    "Blueprint 핵심 씬/의무가 모두 실제 장면으로 구현되었는지 확인",
+                    "후반부 씬이 요약되지 않고 체류 시간이 확보되었는지 검토",
                     "씬 전환이 자연스러운지 점검",
                 ],
             },
