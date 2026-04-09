@@ -30,6 +30,7 @@ from enum import Enum
 from typing import Any
 
 from modules.core.constants import ManuscriptLimits  # [V64.P4]
+from modules.domain.agents.scene_cardinality_contract import evaluate_stage3_scene_cardinality
 
 
 class CheckCategory(Enum):
@@ -634,16 +635,29 @@ class PreDirectorChecklist:
         scene_breakdown = bp.get("scene_breakdown", {})
         if not isinstance(scene_breakdown, dict):
             scene_breakdown = {}
-        scene_count = len(scene_breakdown)
+        scene_gate_passed, scene_count, scene_reason, scene_feedback = evaluate_stage3_scene_cardinality(
+            scene_breakdown,
+            scenario,
+        )
 
-        if scene_count < 3:
+        if not scene_gate_passed:
             items.append(
                 CheckItem(
                     category=CheckCategory.STRUCTURE,
                     name="씬 개수",
                     passed=False,
                     severity=CheckSeverity.FAIL,
-                    message=f"씬 부족: {scene_count}개 (최소 3개)",
+                    message=f"{scene_reason} - {scene_feedback}" if scene_feedback else scene_reason,
+                )
+            )
+        elif scene_count <= 3:
+            items.append(
+                CheckItem(
+                    category=CheckCategory.STRUCTURE,
+                    name="씬 개수",
+                    passed=True,
+                    severity=CheckSeverity.WARNING,
+                    message=f"저씬수 예외 허용: {scene_count}개 (밀도/구체성 기준 충족)",
                 )
             )
         elif scene_count > 8:

@@ -128,11 +128,22 @@ class TestGenerateHighImpactZoneGuide:
         assert "전반부" in result
         assert "후반부" in result
 
-    def test_less_than_4_scenes_returns_empty(self, builder):
-        """4개 미만 씬이면 빈 문자열"""
-        bp = {"scene_breakdown": {"s1": {}, "s2": {}, "s3": {}}}
+    def test_one_scene_returns_empty(self, builder):
+        """1씬 이하면 빈 문자열"""
+        bp = {"scene_breakdown": {"s1": {}}}
         result = builder.generate_high_impact_zone_guide(bp)
         assert result == ""
+
+    def test_two_scenes_generate_guide(self, builder):
+        """밀도 가이드는 2씬 blueprint에도 생성된다."""
+        bp = {
+            "scene_breakdown": {
+                "s1": {"title": "도입"},
+                "s2": {"title": "결말"},
+            }
+        }
+        result = builder.generate_high_impact_zone_guide(bp)
+        assert "후반부 핵심 씬" in result
 
     def test_empty_blueprint(self, builder):
         """빈 블루프린트이면 빈 문자열"""

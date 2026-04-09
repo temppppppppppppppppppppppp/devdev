@@ -324,13 +324,14 @@ class ConfidenceCalibrator:
             scene_breakdown = {}
         scene_count = len(scene_breakdown)
 
-        if 4 <= scene_count <= 7:
+        if 2 <= scene_count <= 7:
             factors["scene_count"] = 20
-        elif 3 <= scene_count <= 8:
+        elif scene_count == 8:
             factors["scene_count"] = 15
-        elif scene_count > 0:
-            factors["scene_count"] = 10
-            concerns.append(f"씬 개수 {'부족' if scene_count < 4 else '과다'} ({scene_count})")
+            concerns.append(f"씬 개수 과다 ({scene_count})")
+        elif scene_count == 1:
+            factors["scene_count"] = 5
+            concerns.append(f"씬 부족 ({scene_count})")
         else:
             factors["scene_count"] = 0
             concerns.append("씬이 없음")

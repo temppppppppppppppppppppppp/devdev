@@ -95,7 +95,7 @@ JSON 형식으로 응답:
 다음 관점에서 블루프린트를 비평하세요:
 
 1. **범위 초과**: 이번 화에서 다뤄야 할 범위를 넘어섰는가?
-2. **씬 구성**: 4-6개 씬이 적절히 구성되었는가?
+2. **씬 구성**: 2개 이상 가변 씬이 적절히 구성되었는가? 후반부가 요약되지 않았는가?
 3. **클리프행어**: 끝에 다음 화를 유인하는 훅이 있는가?
 4. **연속성**: 직전 화 엔딩과 자연스럽게 이어지는가?
 5. **긴장 곡선**: 이완-긴장 리듬이 적절한가?
@@ -332,7 +332,7 @@ JSON 형식으로 응답:
         elif target == ReflectionTarget.ARCHITECT:
             # 씬 개수 체크
             scene_count = len(re.findall(r"scene_\d+|씬\s*\d+", output, re.IGNORECASE))
-            if scene_count < 3 or scene_count > 8:
+            if scene_count <= 1 or scene_count > 8:
                 issues_count += 1
 
         quality = max(1, 10 - issues_count * 2)

@@ -323,6 +323,28 @@ def test_lane_c_python_pre_validate_flags_empty_scene_characters_as_major():
     assert "2/4" in issue["issue"]
 
 
+def test_lane_c_python_pre_validate_allows_two_scene_structure_floor():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {"goal": "주인공이 PB센터에서 첫 매수 버튼을 누른다", "summary": "매수 실행", "characters": ["Hero"]},
+                "scene_2": {"goal": "레버리지 경고와 담보 압박이 동시에 몰려온다", "summary": "압박 도착", "characters": ["PB"]},
+            },
+            "integrated_scenario": "A" * 900,
+        },
+        constraint_block={},
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not any(
+        issue["category"] == "structure" and "씬 부족" in issue["issue"] for issue in pre_result["issues"]
+    )
+
+
 def test_lane_c_python_pre_validate_flags_arc_timeline_drift_as_major():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 

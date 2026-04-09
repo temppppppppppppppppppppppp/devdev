@@ -26,6 +26,7 @@ from modules.core.response_schemas import BLUEPRINT_SCHEMA
 from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _SYSTEM_CFG, AgentErrorType, BaseAgent
+from .scene_cardinality_contract import evaluate_stage3_scene_cardinality
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
@@ -485,11 +486,11 @@ class BlueprintEnsembleGenerator(BaseAgent):
         for candidate in candidates:
             strategy_name = candidate.get("_strategy", "unknown")
             scenes = candidate.get("scene_breakdown", {})
-            scene_count = len(scenes) if isinstance(scenes, (dict, list)) else 0
             integrated = candidate.get("integrated_scenario", "")
             integrated_len = len(integrated) if isinstance(integrated, str) else 0
+            scene_gate_passed, scene_count, _, _ = evaluate_stage3_scene_cardinality(scenes, integrated)
 
-            if scene_count >= 4 and integrated_len >= 500:
+            if scene_gate_passed and integrated_len >= 500:
                 candidate["_qualified"] = True
                 candidate["_scene_count"] = scene_count
                 candidate["_length"] = integrated_len

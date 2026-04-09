@@ -256,6 +256,18 @@ class TestRetrievalObservationSummary:
         assert summary["recent"][1]["provenance_ledger"]["source_pack"] == "stage2"
         assert summary["recent"][1]["budget_ledger"]["budget_bucket"] == "smart_retrieval.stage2_total_budget"
 
+    def test_frequent_reject_warning_uses_anti_compression_guidance(self):
+        db = QualityDashboard(project_path=None)
+        db.validation_history = [
+            {"decision": "REJECT", "stage": 4, "violations": ["후반부 밀도 부족", "요약 전개"]},
+            {"decision": "REJECT", "stage": 4, "violations": ["밀도 불균형", "후반부 요약"]},
+        ]
+
+        warning = db.get_frequent_reject_warning(stage=4, recent_n=10)
+
+        assert "후반부 핵심 씬 체류 시간을 늘리고 요약 전개를 풀어내라." in warning
+        assert "앞뒤 분량 균등" not in warning
+
 
 class TestPersistenceHealth:
     def test_save_record_failure_surfaces_persistence_health_and_soft_failure_sink(self, tmp_path):

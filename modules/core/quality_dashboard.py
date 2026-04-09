@@ -637,11 +637,11 @@ class QualityDashboard:
             elif reason == "서사 정체":
                 lines.append("     → 반복 대신 인과적 전진. 새로운 정보/사건 추가.")
             elif reason == "씬 미반영":
-                lines.append("     → Blueprint 6개 씬 모두 반영. 특히 후반부 씬 주의.")
+                lines.append("     → Blueprint 핵심 씬/의무를 모두 장면화. 특히 후반부 씬 압축 주의.")
             elif reason == "설정 오류":
                 lines.append("     → 직전 화 확인. 미습득 무공/장비 사용 금지.")
             elif reason == "밀도 불균형":
-                lines.append("     → 앞뒤 분량 균등. 후반부 요약 금지.")
+                lines.append("     → 후반부 핵심 씬 체류 시간을 늘리고 요약 전개를 풀어내라.")
 
         lines.append("")
         lines.append("⚠️ 위 패턴은 반복 REJECT의 주요 원인입니다. 특히 주의하세요.")
@@ -979,7 +979,7 @@ class QualityDashboard:
             lines.append("")
             lines.append("현재 상태로는 REJECT 가능성 높음. 다음을 반드시 확인하라:")
             lines.append("  1. 분량이 4,500자 이상인가?")
-            lines.append("  2. Blueprint 6개 씬을 모두 반영했는가?")
+            lines.append("  2. Blueprint 핵심 장면/의무를 모두 장면화했는가?")
             lines.append("  3. 대화와 묘사가 균형 잡혀 있는가?")
 
         return "\n".join(lines)

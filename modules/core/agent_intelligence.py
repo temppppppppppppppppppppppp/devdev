@@ -591,7 +591,7 @@ JSON 형식으로 응답:
         elif agent_type == AgentType.ARCHITECT:
             # 씬 개수 체크
             scene_count = len(re.findall(r"[Ss]cene|씬\s*\d|장면\s*\d", text))
-            if scene_count < 4:
+            if scene_count <= 1:
                 issues.append(f"씬 부족 ({scene_count}개)")
                 score -= 15
             elif scene_count > 7:

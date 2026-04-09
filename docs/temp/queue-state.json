@@ -1,8 +1,8 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-08T08:30:20.358660+00:00",
+  "generated_at": "2026-04-09T07:36:26.348886+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 21,
+  "active_item_count": 22,
   "roadmap": {
     "temp_path": "docs/temp/execution-roadmap.md",
     "canonical_path": "docs/2026-04-01/active-temp-execution-roadmap.md",
@@ -47,7 +47,7 @@
       "temp_path": "docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md",
       "status": "in_progress",
-      "queue_role": "front_active",
+      "queue_role": "parked_future_wave",
       "roadmap_rank": 4,
       "depends_on": [],
       "mirror_present": true,
@@ -91,7 +91,7 @@
       "temp_path": "docs/temp/0_0-stage2-partial-fix-hardening-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-07/0_0-stage2-partial-fix-hardening-remediation-execution-ssot.md",
       "status": "in_progress",
-      "queue_role": "front_active",
+      "queue_role": "parked_future_wave",
       "roadmap_rank": 8,
       "depends_on": [],
       "mirror_present": true,
@@ -236,6 +236,17 @@
       "status": "in_progress",
       "queue_role": "historical_backing",
       "roadmap_rank": 21,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "0_0-stage34-scene-flex-contract-normalization-remediation",
+      "temp_path": "docs/temp/0_0-stage34-scene-flex-contract-normalization-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-09/0_0-stage34-scene-flex-contract-normalization-remediation-execution-ssot.md",
+      "status": "in_progress",
+      "queue_role": "front_active",
+      "roadmap_rank": 22,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true

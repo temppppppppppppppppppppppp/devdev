@@ -415,6 +415,8 @@ class TestGenerateStructuredBlueprintFeedback:
         }
         result = fs.generate_structured_blueprint_feedback(result_dict)
         assert "CRITICAL" in result
+        assert "핵심 의무" in result
+        assert "최소 5개 이상 설계 필요" not in result
 
     def test_high_scores_no_issues(self, fs):
         """높은 점수는 문제 없음"""
@@ -428,6 +430,20 @@ class TestGenerateStructuredBlueprintFeedback:
         }
         result = fs.generate_structured_blueprint_feedback(result_dict)
         assert "문제 없음" in result
+
+    def test_scene_feedback_uses_anti_compression_guidance(self, fs):
+        """장면 피드백은 고정 씬 수 대신 후반부 압축 해소를 지시한다."""
+        result_dict = {
+            "score_breakdown": {
+                "setting_consistency": 20,
+                "scene_composition": 12,
+                "narrative_flow": 20,
+                "length_fulfillment": 20,
+            }
+        }
+        result = fs.generate_structured_blueprint_feedback(result_dict)
+        assert "후반부 핵심 씬" in result
+        assert "균등하게 조정" not in result
 
     def test_retry_count_message(self, fs):
         """재시도 횟수별 메시지"""
@@ -453,7 +469,7 @@ class TestGenerateReverseFeedbackStage4To3:
         """후반부 밀도 문제"""
         result = fs.generate_reverse_feedback_stage4_to_3("후반부 밀도 부족")
         assert "후반부" in result
-        assert "Scene 5-6" in result
+        assert "후반부 핵심 씬" in result
 
     def test_length_issue(self, fs):
         """분량 문제"""
@@ -566,12 +582,15 @@ class TestGetAdaptiveFeedbackIntensity:
         """Stage 4, 첫 시도"""
         result = fs.get_adaptive_feedback_intensity(retry_count=0, stage=4)
         assert result["pass_threshold"] == 70
+        assert "핵심 의무" in result["guidance"]
+        assert "후반부 압축" in result["guidance"]
 
     def test_stage4_second_try(self, fs):
         """Stage 4, 2회차"""
         result = fs.get_adaptive_feedback_intensity(retry_count=1, stage=4)
         assert result["pass_threshold"] == 65
         assert result["feedback_level"] == "focused"
+        assert "후반부 핵심 씬" in result["guidance"]
 
     def test_stage3(self, fs):
         """Stage 3 테스트"""
@@ -644,4 +663,4 @@ class TestSimplifyPromptForRetry:
     def test_default_issues_when_no_keywords(self, fs):
         """키워드 매칭 없으면 기본 이슈"""
         result = fs.simplify_prompt_for_retry("", "특이한 문제", attempt=2)
-        assert "4,500자" in result or "6개 씬" in result
+        assert "4,500자" in result or "핵심 씬" in result

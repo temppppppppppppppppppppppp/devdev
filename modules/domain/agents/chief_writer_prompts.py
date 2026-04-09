@@ -164,12 +164,13 @@ def build_chief_writer_main_prompt(
 {hud_anomaly_section}
 
 ### [STEP 1: Blueprint 분석]
-아래 Blueprint의 structured scene contract를 먼저 파악하고, 누락 없이 반영하라.
+아래 Blueprint의 structured scene contract를 먼저 파악하고, 각 scene anchor의 핵심 의무를 실제 장면으로 구현하라.
 
 ⚠️ 필수: 각 씬의 시작 부분에 반드시 '### 씬 N: 제목' 형식의 마크다운 헤더를 삽입하라.
    예: ### 씬 1: 호텔 라운지의 만남
    씬 헤더 없이 하나의 산문 블록으로 쓰면 불합격이다.
-   모든 씬을 빠짐없이 헤더로 구분하여 순서대로 작성하라.
+   헤더는 planning anchor다. anchor별 분량은 균등 분배하지 말고 장면 밀도와 긴장에 맞춰 가변 배분하라.
+   후반부 anchor도 요약하지 말고, Blueprint의 핵심 의무가 독자 눈앞에서 보이게 써라.
 
 {scene_breakdown}
 

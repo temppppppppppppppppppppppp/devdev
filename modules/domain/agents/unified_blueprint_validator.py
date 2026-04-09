@@ -922,14 +922,14 @@ class UnifiedBlueprintValidator:
                 }
             )
 
-        if scene_count < 3:
+        if scene_count <= 1:
             issues.append(
                 {
                     "severity": "MAJOR",
                     "category": "structure",
-                    "issue": f"씬 부족: {scene_count}개 < 3개",
+                    "issue": f"씬 부족: {scene_count}개 < 2개",
                     "evidence": f"scene_breakdown에 {scene_count}개 씬만 있음",
-                    "fix_hint": "최소 3개 이상의 씬으로 구성",
+                    "fix_hint": "최소 2개 이상의 씬으로 구성",
                 }
             )
 

@@ -1,0 +1,149 @@
+{
+  "topic": "stage34-scene-flex-tranche1-residual-blocker-survey",
+  "date": "2026-04-09",
+  "baseline_commit": "a5af976daa5285cc4b34fe7b075948057763f787",
+  "baseline_dirty_summary": "dirty: active scene-flex tranche-1 code/doc updates, prompt/schema alignment edits, roadmap mirror refresh, and queue-state refresh already present in worktree",
+  "source_docs": [
+    "docs/2026-04-09/0_0-stage34-scene-flex-contract-normalization-remediation-execution-ssot.md",
+    "docs/2026-04-01/active-temp-execution-roadmap.md",
+    "docs/2026-04-09/stage234-scene-split-origin-and-density-survey.md"
+  ],
+  "hard_or_semi_hard_residuals": [
+    {
+      "severity": "P2",
+      "owner_family": "architect_precheck",
+      "path": "modules/core/cross_agent_verifier.py",
+      "line_refs": [182, 183, 303],
+      "summary": "Architect Python precheck still defaults min_scenes to 4 and can short-circuit LLM review once multiple violations accumulate."
+    },
+    {
+      "severity": "P2",
+      "owner_family": "operator_blueprint_checklist",
+      "path": "modules/core/pre_director_checklist.py",
+      "line_refs": [639, 646],
+      "summary": "Blueprint checklist still emits FAIL below 3 scenes."
+    },
+    {
+      "severity": "P2",
+      "owner_family": "director_manuscript_authority",
+      "path": "config/prompts/director.yaml",
+      "line_refs": [983, 985, 1064, 1068],
+      "summary": "Active manuscript-mode Director authority still requires 4+ scenes and scores 2-scene manuscripts at 0 for scene composition."
+    },
+    {
+      "severity": "P2",
+      "owner_family": "director_manuscript_authority_fallback",
+      "path": "modules/domain/agents/director_prompts.py",
+      "line_refs": [372, 374, 442, 446],
+      "summary": "Code fallback prompt mirrors the same 4/6-scene manuscript assumptions."
+    }
+  ],
+  "pressure_or_advisory_residuals": [
+    {
+      "severity": "P3",
+      "owner_family": "manuscript_checker_gap",
+      "path": "modules/core/pre_director_manuscript_checker.py",
+      "line_refs": [363, 453],
+      "summary": "Low-scene manuscripts skip density/header guidance paths below 3 or 4 scenes."
+    },
+    {
+      "severity": "P3",
+      "owner_family": "writer_guidance",
+      "path": "modules/core/prompt_builder.py",
+      "line_refs": [170, 209, 539],
+      "summary": "High-impact guide is suppressed below 4 scenes and self-diagnosis still asks for equal reflection of all scenes."
+    },
+    {
+      "severity": "P3",
+      "owner_family": "retry_feedback",
+      "path": "modules/core/feedback_system.py",
+      "line_refs": [192, 194, 811, 916, 927],
+      "summary": "Retry/operator guidance still anchors around minimum 4 scenes, 6-scene reflection, and quantified slot coverage."
+    },
+    {
+      "severity": "P3",
+      "owner_family": "operator_dashboard",
+      "path": "modules/core/quality_dashboard.py",
+      "line_refs": [640, 982],
+      "summary": "Operator dashboard still tells readers to reflect all 6 blueprint scenes."
+    },
+    {
+      "severity": "P3",
+      "owner_family": "chief_writer_prompt_source",
+      "path": "config/prompts/chief_writer.yaml",
+      "line_refs": [59, 60],
+      "summary": "Chief-writer prompt source still asks for equal scene weighting and same-density late scenes."
+    },
+    {
+      "severity": "P3",
+      "owner_family": "auxiliary_calibration",
+      "path": "modules/core/adversarial_self_play.py",
+      "line_refs": [386, 387],
+      "summary": "Adversarial self-play still flags fewer than 3 scenes as an issue."
+    },
+    {
+      "severity": "P3",
+      "owner_family": "auxiliary_calibration",
+      "path": "modules/core/self_reflection.py",
+      "line_refs": [98, 335],
+      "summary": "Self-reflection still frames good architect output as 4-6 scenes and penalizes fewer than 3."
+    },
+    {
+      "severity": "P3",
+      "owner_family": "auxiliary_calibration",
+      "path": "modules/core/agent_intelligence.py",
+      "line_refs": [594, 595],
+      "summary": "Architect-scoring intelligence still penalizes fewer than 4 scenes."
+    },
+    {
+      "severity": "P3",
+      "owner_family": "auxiliary_calibration",
+      "path": "modules/core/confidence_calibration.py",
+      "line_refs": [333],
+      "summary": "Confidence calibration still calls scene_count < 4 '부족'."
+    }
+  ],
+  "test_anchors": [
+    {
+      "path": "tests/test_continuity_modules.py",
+      "line_refs": [1082],
+      "summary": "Checklist test still encodes '2 scenes -> minimum 3 required'."
+    },
+    {
+      "path": "tests/test_prompt_builder.py",
+      "line_refs": [132],
+      "summary": "Prompt-builder test still expects the guide to disappear below 4 scenes."
+    },
+    {
+      "path": "tests/test_sweep33.py",
+      "line_refs": [80],
+      "summary": "Source sweep still pins the manuscript-checker <3 guard."
+    }
+  ],
+  "targeted_validation": [
+    {
+      "command": "python -m pytest tests/test_continuity_modules.py -k \"blueprint_scene_count_check\" -q",
+      "result": "pass"
+    },
+    {
+      "command": "python -m pytest tests/test_prompt_builder.py -k \"less_than_4_scenes_returns_empty\" -q",
+      "result": "pass"
+    },
+    {
+      "command": "python -m pytest tests/test_sweep33.py -q",
+      "result": "pass"
+    }
+  ],
+  "summary": {
+    "p0": 0,
+    "p1": 0,
+    "p2": 3,
+    "p3": 10,
+    "next_safe_patch_order": [
+      "CrossAgentVerifier + PreDirectorChecklist",
+      "Director manuscript prompt/scoring",
+      "pressure/advisory surfaces",
+      "fresh proof wave"
+    ]
+  }
+}

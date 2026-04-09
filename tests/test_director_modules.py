@@ -331,7 +331,7 @@ class TestDirectorEnsemble:
         assert result["selected_blueprint"] == candidate
 
     def test_compare_and_select_single_candidate_reject_few_scenes(self, director):
-        """21. Single candidate with fewer than 4 scenes gets REJECT."""
+        """21. Sparse low-scene candidate still gets REJECT before Director LLM."""
         candidate = {
             "integrated_scenario": "A" * 1000,
             "scene_breakdown": {"scene1": "x", "scene2": "y"},
@@ -340,7 +340,38 @@ class TestDirectorEnsemble:
             candidates=[candidate], arc_data={"tactical_doc": "전술서"}, ep_num=1
         )
         assert result["decision"] == "REJECT"
-        assert "씬 개수 부족" in result["reason"]
+        assert "씬 밀도 부족" in result["reason"]
+
+    def test_compare_and_select_single_candidate_dense_three_scenes_reaches_fail_closed_llm_gate(self, director):
+        candidate = {
+            "integrated_scenario": "A" * 1000,
+            "scene_breakdown": {
+                "scene_1": {"goal": "주인공이 PB센터에서 첫 매수 버튼을 누른다", "key_events": ["매수"]},
+                "scene_2": {"summary": "리스크 경고와 담보 압박이 즉시 몰려온다", "key_events": ["경고", "압박"]},
+                "scene_3": {"goal": "마감 직전 체결 뒤 다음 위기를 남긴다"},
+            },
+        }
+        result = director.compare_and_select_blueprint(
+            candidates=[candidate], arc_data={"tactical_doc": "전술서"}, ep_num=1
+        )
+        assert result["decision"] == "REJECT"
+        assert "씬 개수 부족" not in result["reason"]
+        assert "Director LLM" in result["reason"]
+
+    def test_compare_and_select_single_candidate_dense_two_scenes_reaches_fail_closed_llm_gate(self, director):
+        candidate = {
+            "integrated_scenario": "A" * 1000,
+            "scene_breakdown": {
+                "scene_1": {"goal": "주인공이 PB센터에서 첫 매수 버튼을 누른다", "key_events": ["매수"]},
+                "scene_2": {"summary": "레버리지 경고와 담보 압박이 동시에 몰려온다", "key_events": ["경고", "압박"]},
+            },
+        }
+        result = director.compare_and_select_blueprint(
+            candidates=[candidate], arc_data={"tactical_doc": "전술서"}, ep_num=1
+        )
+        assert result["decision"] == "REJECT"
+        assert "씬 개수 부족" not in result["reason"]
+        assert "Director LLM" in result["reason"]
 
     def test_compare_and_select_multi_candidate_reject_keeps_selected_blueprint(self, director):
         candidates = [
@@ -1211,6 +1242,7 @@ class TestDirectorCoreMethods:
         assert contract["available"] is True
         assert contract["used_fallback"] is False
         assert contract["effective_source"].startswith("config/prompts/director.yaml:")
+        assert "Blueprint 장면화 충실도" in director.ENSEMBLE_SELECTION_PROMPT
 
 
 # ═══════════════════════════════════════════════════════════════

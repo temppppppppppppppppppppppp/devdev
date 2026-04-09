@@ -89,6 +89,53 @@ def test_qualify_blueprint_candidates_tracks_pass_and_fail_metadata():
     assert disqualified == [("dialogue_focused", 3, 320)]
 
 
+def test_qualify_blueprint_candidates_accepts_dense_three_scene_blueprint():
+    agent = _make_agent()
+
+    qualified, disqualified = agent._qualify_blueprint_candidates(
+        [
+            {
+                "_strategy": "dense_three_scene",
+                "scene_breakdown": {
+                    "scene_1": {"goal": "주인공이 VIP룸에서 매수 주문을 밀어붙인다", "key_events": ["PB 반대 무시"]},
+                    "scene_2": {"summary": "레버리지 경고와 담보 압박이 동시에 몰려온다", "key_events": ["경고", "압박"]},
+                    "scene_3": {"goal": "마감 직전 체결과 동시에 다음 위기를 남긴다"},
+                },
+                "integrated_scenario": "가" * 900,
+            }
+        ]
+    )
+
+    assert len(qualified) == 1
+    assert qualified[0]["_qualified"] is True
+    assert qualified[0]["_scene_count"] == 3
+    assert qualified[0]["_length"] == 900
+    assert disqualified == []
+
+
+def test_qualify_blueprint_candidates_accepts_dense_two_scene_blueprint():
+    agent = _make_agent()
+
+    qualified, disqualified = agent._qualify_blueprint_candidates(
+        [
+            {
+                "_strategy": "dense_two_scene",
+                "scene_breakdown": {
+                    "scene_1": {"goal": "주인공이 PB센터에서 첫 매수 버튼을 누른다", "key_events": ["매수"]},
+                    "scene_2": {"summary": "레버리지 경고와 담보 압박이 동시에 몰려온다", "key_events": ["경고", "압박"]},
+                },
+                "integrated_scenario": "가" * 900,
+            }
+        ]
+    )
+
+    assert len(qualified) == 1
+    assert qualified[0]["_qualified"] is True
+    assert qualified[0]["_scene_count"] == 2
+    assert qualified[0]["_length"] == 900
+    assert disqualified == []
+
+
 def test_finalize_blueprint_candidates_attaches_meta_and_cleans_temp_fields():
     agent = _make_agent()
     qualified_candidates = [

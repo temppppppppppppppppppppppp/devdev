@@ -221,10 +221,20 @@ class TestOpeningAnchorGate:
 
 class TestSceneDensityBalance:
     def test_few_scenes_no_items(self, checker):
-        """씬 2개 이하면 빈 리스트."""
-        breakdown = {"s1": "a", "s2": "b"}
+        """1씬 이하면 빈 리스트."""
+        breakdown = {"s1": "a"}
         result = checker._check_scene_density_balance("원고", breakdown)
         assert result == []
+
+    def test_two_scenes_can_emit_density_signal(self, checker):
+        """2씬도 후반부 압축 여부를 점검한다."""
+        breakdown = {
+            "s1": {"description": "무림 장면 1"},
+            "s2": {"description": "무림 장면 2"},
+        }
+        ms = ("무림 " * 400) + ("서술 " * 50)
+        items = checker._check_scene_density_balance(ms, breakdown)
+        assert items
 
     def test_balanced_scenes(self, checker):
         """균등 밀도면 PASS 포함."""
@@ -243,8 +253,8 @@ class TestSceneDensityBalance:
 
 class TestHighImpactZone:
     def test_few_scenes_no_items(self, checker):
-        """4씬 미만이면 빈 리스트."""
-        result = checker._check_high_impact_zone(["a", "b", "c"], [0.5, 0.5, 0.5], 3)
+        """1씬이면 빈 리스트."""
+        result = checker._check_high_impact_zone(["a"], [0.5], 1)
         assert result == []
 
     def test_short_high_impact_warning(self, checker):
@@ -252,7 +262,7 @@ class TestHighImpactZone:
         sections = ["x" * 1000, "x" * 1000, "x" * 1000, "x" * 100, "x" * 100]
         densities = [0.6, 0.6, 0.6, 0.6, 0.6]
         items = checker._check_high_impact_zone(sections, densities, 5)
-        assert any(i.name == "High Impact Zone 분량 부족" for i in items)
+        assert any(i.name == "후반부 핵심 씬 분량 부족" for i in items)
 
     def test_good_high_impact_pass(self, checker):
         """마지막 2씬 충분하고 밀도 높으면 PASS."""

@@ -77,7 +77,7 @@ def test_sweep33_source_guards_and_cleanup_exist():
     assert "if scene_breakdown and isinstance(scene_breakdown, dict):" in pdc
     pdm = _read("modules/core/pre_director_manuscript_checker.py")
     assert "if not scene_breakdown or not isinstance(scene_breakdown, dict):" in pdm
-    assert "if not isinstance(scene_breakdown, dict) or not scene_breakdown or len(scene_breakdown) < 3:" in pdm
+    assert "if not isinstance(scene_breakdown, dict) or not scene_breakdown or len(scene_breakdown) <= 1:" in pdm
     assert 'scores["structure"] = min(100, 80 + (0.5 - abs(cv - 0.35)) * 100)' in _read(
         "modules/core/diversity_sampler.py"
     )

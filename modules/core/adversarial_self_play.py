@@ -32,6 +32,7 @@ from typing import Any
 
 from modules.core.constants import ManuscriptLimits, smart_truncate  # [V64.P4]
 from modules.core.llm_generate import generate_content_via_router
+from modules.domain.agents.scene_cardinality_contract import evaluate_stage3_scene_cardinality
 
 
 class ContentType(Enum):
@@ -382,9 +383,12 @@ JSON 형식으로 냉정하게:
             if not bp.get("integrated_scenario"):
                 issues.append("시나리오 없음")
 
-            scene_count = len(bp.get("scene_breakdown", {}))
-            if scene_count < 3:
-                issues.append(f"씬 부족 ({scene_count}개)")
+            scene_gate_passed, scene_count, scene_reason, _scene_feedback = evaluate_stage3_scene_cardinality(
+                bp.get("scene_breakdown", {}),
+                bp.get("integrated_scenario", ""),
+            )
+            if not scene_gate_passed:
+                issues.append(scene_reason or f"씬 부족 ({scene_count}개)")
 
         passed = len(issues) == 0
         return passed, "; ".join(issues) if issues else ""
