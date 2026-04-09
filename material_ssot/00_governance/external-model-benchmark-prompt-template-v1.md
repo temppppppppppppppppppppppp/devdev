@@ -1,6 +1,6 @@
 # External-Model Benchmark Prompt Template v1
 
-Date: 2026-04-07
+Date: 2026-04-09
 Status: active
 Scope: reusable prompt template for future `material` or `pair` benchmark dispatch
 
@@ -32,6 +32,9 @@ Write the final report directly to the intended report path if your environment 
 
 If `Benchmark Type = pair`:
 
+- `TR block` is a plan-level episode-bundle unit, not a published episode counter
+- default reading: one meaningful `TR block` should be dense enough to unfold into roughly `2~6` downstream serialized episodes
+- benchmark shorthand `block 1` means the first reader-earning bundle evidenced through `TR 2~6`, not literal `TR block 1`
 - for `P0` gates `1~4`, use `TR blocks 2~6` only
 - `gate 6` must be anchored in `BI + TR 1~3`
 - run a full-block cider scan across every `TR` block

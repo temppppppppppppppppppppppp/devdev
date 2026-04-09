@@ -1,8 +1,8 @@
 # Corporate One-Page Working Synthesis
 
-Status: draft synthesis
-Scope: operator handoff for other-PC continuation before canon selection
-Date frozen: 2026-04-08
+Status: tightened synthesis
+Scope: operator handoff source tightened for conservative canon-promotion path
+Date frozen: 2026-04-09
 
 ## 0. Header
 
@@ -10,7 +10,7 @@ Date frozen: 2026-04-08
 - working title: `신입사원이 일을 잘함`
 - protagonist sex: `male`
 - lane: `corporate / office / growth fantasy`
-- status: `draft synthesis, other-PC handoff ready`
+- status: `tightened synthesis, canon-promotion source`
 - upstream source set:
   - engine pack: `2026-04-08_new_idea_batch01.md`의 신규 아이디어 후보군 중 `신입사원이 일을 잘함`
   - normalized material pack: 없음
@@ -18,13 +18,12 @@ Date frozen: 2026-04-08
 
 ## 1. Session Freeze
 
-이 문서는 2026-04-08 대화 세션에서 만든 `신입사원이 일을 잘함` 후보의 현재 확정 컨텍스트를 다른 PC로 넘기기 위한 handoff 문서다.
+이 문서는 2026-04-08 대화 세션에서 만든 `신입사원이 일을 잘함` 후보를 2026-04-09 보수적 lock pass로 재정리한 source 문서다. canon 승격 직전의 planning authority로 쓰며, canon file가 materialize되면 historical source로 내려간다.
 
 중요:
 
-- 아직 `canon/` 승격 전이다
 - 아직 공식 `Phase0` JSON은 만들지 않았다
-- 하지만 `selection-ready` 수준의 protagonist engine과 opening ledger, 그리고 ARC-01~03 하드 락이 이미 잡혀 있다
+- 하지만 `selection-ready` 수준의 protagonist engine과 opening ledger, 그리고 ARC-01~04 하드 락이 이미 잡혀 있다
 - 다음 작업자는 이 문서를 다시 아이디어 브레인스토밍의 출발점으로 취급하면 안 된다
 
 즉, 현재 상태는:
@@ -32,9 +31,9 @@ Date frozen: 2026-04-08
 - fresh idea: 종료
 - protagonist engine lock: 완료
 - opening `2~6` ledger lock: 완료
-- ARC-01~03 slot hard lock: 완료
-- ARC-04~07 skeleton: 1차 골격만 존재
-- recommended next action: `ARC-04 31~40 hard lock` 또는 `canon candidate 정리`
+- ARC-01~04 slot hard lock: 완료
+- ARC-05~07 skeleton: 1차 골격만 존재
+- recommended next action: `canon candidate 정리 -> formal canon gate`
 
 ## 2. One-Line Premise
 
@@ -270,15 +269,40 @@ notes:
 - defeat block = 25
 - ARC-03의 핵심은 `칭찬`이 아니라 `ownerliness`다
 
-## 18. ARC-04~07 Skeleton Only
+## 18. ARC-04 Conservative Hard Lock (`31~40`)
 
-아래 4개 ARC는 1차 skeleton까지만 잡혀 있고, 아직 ARC-01~03 수준의 block hard lock은 아니다.
+arc_title: `예산과 책임선의 전쟁`
 
-- ARC-04 `예산과 책임선의 전쟁`
-  - entry: 임시 PM 역할
-  - exit: `joint authority`
-  - quiet: 34
-  - defeat: 37
+fixed flow summary:
+
+- B31: 임시 PM 킥오프 — 보고서를 잘 쓰는 신입이 아니라 일정표와 owner표를 다시 짜는 사람으로 첫 인식
+- B32: 예산 코드 owner 충돌 — 실무와 재무가 서로 책임을 미루는 지점을 도혁이 먼저 잡아낸다
+- B33: 공동 검토선 — 오세린과의 공식 공동 검토선 확보, 재무 파트너가 첫 제도 동맹으로 고정
+- B34: 책임자 없는 정답 quiet — 정답보다 owner 지정이 먼저라는 조용한 변주
+- B35: 실행 책임표 — 회의록이 아니라 실행표를 만드는 사람으로 격상
+- B36: 두 본부의 숫자 전쟁 — 현업과 재무 수치 충돌을 공개 조정하는 첫 큰 무대
+- B37: 예산 동결 defeat — 책임자 확정 직전 예산이 묶이며 역풍, 권한 없는 ownerliness의 한계를 정면 체감
+- B38: 우회 집행 기준안 — 동결을 깨는 예외 기준표와 우회 집행선 설계
+- B39: 공동 결재 복원 — 현업 PM line + 재무 partner line이 동시에 도혁을 통과점으로 인정
+- B40: 이름이 빠지지 않는 보고서 — `joint authority` 확정, 공식 공동권한 획득
+
+arc_exit reward:
+
+- `공식 공동권한 (현업 PM line + 재무 partner line)`
+- `예산 코드 사전 검토권`
+- `ARC-05 입장권`
+
+notes:
+
+- quiet block = 34
+- defeat block = 37
+- ARC-04는 임시 PM이 `일을 맡은 사람`에서 `예산과 책임선을 함께 움직일 수 있는 사람`으로 올라가는 구간
+- 적대자는 바보가 아니라 각자 자기 KPI와 책임 회피 논리를 지키는 사람들이다
+- `joint authority`는 도혁 단독 승리가 아니라, 서로 다른 승인선을 가진 두 레인이 동시에 도혁을 통과점으로 인정하는 상태다
+
+## 18A. ARC-05~07 Skeleton Only
+
+아래 3개 ARC는 1차 skeleton까지만 잡혀 있고, 아직 ARC-01~04 수준의 block hard lock은 아니다.
 
 - ARC-05 `본사 정치와 승진 심사`
   - entry: 공식 공동권한 보유
@@ -326,32 +350,32 @@ notes:
 - Block 1 정보격차 원칙
 - opening `2~6` ledger
 - Block 6 reward 3종
-- ARC-01~03의 arc promise와 receipt chain
+- ARC-01~04의 arc promise와 receipt chain
 
 조정 가능한 것:
 
 - 노인의 정체
 - 팀장/대리/재무 파트너의 세부 성격과 말투
 - 업계 용어 밀도
-- ARC-04 이후 세부 slot 제목
+- ARC-05 이후 세부 slot 제목
 
 ## 22. Practical Other-PC Next Step
 
 다른 PC에서 이어서 할 때 추천 순서:
 
-1. 이 문서를 source-of-truth로 읽는다
+1. 이 문서를 historical source로 읽는다
 2. `material_ssot/20_pitch/material-benchmark-readiness-harness-v1.md`와 `pitch-selection-checklist.md`를 다시 확인한다
-3. `ARC-04 31~40`를 ARC-01~03과 같은 해상도로 hard lock한다
-4. 그 뒤 이 문서를 더 다듬어 `canon candidate`로 승격 가능한 형태로 정리한다
-5. 공식 승격 전에는 `scripts/material_promotion_gate.py --stage canon`을 통과시키기 전까지 canon truth라고 부르지 않는다
+3. 이 문서를 바탕으로 `canon candidate` 초안을 정리한다
+4. `scripts/material_readiness_validator.py`와 `scripts/material_promotion_gate.py --stage canon`을 순서대로 통과시킨다
+5. gate pass 후에만 canon truth라고 부르고, 그 다음 `Phase0`로 내려간다
 
 가장 보수적인 다음 액션:
 
-- `ARC-04 31~40 hard lock`
+- `canon candidate 정리 + formal canon gate`
 
 가장 빠른 다음 액션:
 
-- 이 문서를 바탕으로 `canon candidate` 초안 저장
+- `canon candidate` 초안 저장 후 validator 선실행
 
 ## 23. Selection Verdict Prep
 
@@ -373,16 +397,17 @@ notes:
 
 주의:
 
-- 위 `Phase0-ready: yes`는 현재 세션의 `concept / skeleton readiness` 판정이다
-- 아직 공식 validator/promotion gate를 실제로 돌린 상태는 아니다
+- 위 `Phase0-ready: yes`는 `ARC-01~04 hard lock + ARC-05~07 skeleton` 기준의 planning readiness 판정이다
+- 공식 validator/promotion gate는 여전히 별도 절차다
 
 ## 25. Handoff Note
 
 - if this passes:
-  - tighten into `canon candidate`
+  - materialize `canon candidate`
   - then run formal canon promotion gate
+  - then create work-level current-truth doc
   - then build Phase0
 - if this needs more safety:
-  - hard-lock ARC-04 first
+  - keep ARC-05~07 as skeleton only and do not open downstream artifacts yet
 - do not restart ideation from scratch
 - do not translate directly into `work_guard` before canon truth is frozen

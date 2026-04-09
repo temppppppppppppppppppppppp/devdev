@@ -1,0 +1,138 @@
+{
+  "date": "2026-04-09",
+  "question": "Is the current Stage2/3/4 logging stack strong enough to finish a merged proof wave within three total runs without rerunning merely because proof logs are missing?",
+  "baseline_commit": "b94390cb508a298a28349152bb15876f36662c65",
+  "baseline_dirty_summary": "dirty worktree already contained active roadmap/SSOT/doc updates plus unrelated narrative/material edits; this survey stayed read-only except for its own dated survey outputs",
+  "survey_mode": "static_parallel_additional_survey",
+  "parallel_slices": [
+    {
+      "stage": "stage2",
+      "verdict": "ready",
+      "severity": "P3_watch_only",
+      "evidence": [
+        "modules/core/stage2_finalizer.py:3420",
+        "modules/core/stage2_finalizer.py:3479",
+        "modules/core/stage2_finalizer.py:3502",
+        "modules/core/stage2_finalizer.py:4102",
+        "modules/core/stage2_orchestrator.py:1705",
+        "modules/core/services/audit_service.py:428",
+        "tests/test_stage2_finalizer.py:506",
+        "tests/test_audit_service.py:565",
+        "tests/test_audit_service.py:668",
+        "tests/test_audit_service.py:744",
+        "tests/test_audit_service.py:843",
+        "tests/test_audit_service.py:876",
+        "tests/test_audit_service.py:974",
+        "tests/test_audit_service.py:1080"
+      ],
+      "blind_spot": "summary synthesis is still tail-triggered at stage completion rather than continuously refreshed"
+    },
+    {
+      "stage": "stage3",
+      "verdict": "mostly_ready",
+      "severity": "P3_watch_only",
+      "evidence": [
+        "modules/core/stage3_orchestrator.py:788",
+        "modules/core/stage3_orchestrator.py:1433",
+        "modules/core/stage3_orchestrator.py:1890",
+        "modules/core/stage3_orchestrator.py:1946",
+        "modules/core/services/audit_service.py:477",
+        "modules/core/services/audit_service.py:606",
+        "tests/test_stage3_orchestrator.py:231",
+        "tests/test_stage3_orchestrator.py:1386",
+        "tests/test_audit_service.py:1225"
+      ],
+      "blind_spot": "fresh current-head runtime proof of the live Stage3 path was not executed in this survey; readiness is based on static path and summary classification"
+    },
+    {
+      "stage": "stage4",
+      "verdict": "ready",
+      "severity": "P3_watch_only",
+      "evidence": [
+        "modules/core/stage4_orchestrator.py:587",
+        "modules/core/stage4_orchestrator.py:617",
+        "modules/core/stage4_orchestrator.py:2673",
+        "modules/core/stage4_post_pass_runtime.py:1262",
+        "modules/core/services/audit_service.py:535",
+        "modules/api/bridge_server.py:1591",
+        "modules/api/bridge_server.py:2091",
+        "modules/core/stage4_canary_tools.py:867",
+        "modules/core/stage4_canary_tools.py:1472",
+        "main_a.py:418",
+        "main_a.py:2398",
+        "tests/test_stage4_orchestrator.py:146",
+        "tests/test_stage4_orchestrator.py:208",
+        "tests/test_stage4_orchestrator.py:249",
+        "tests/test_stage4_orchestrator.py:296",
+        "tests/test_stage4_post_processor.py:1031",
+        "tests/test_bridge_quality_summary.py:465",
+        "tests/test_stage4_canary_tools.py:309"
+      ],
+      "blind_spot": "runtime_audit_summary.json is terminal-path oriented and is not written for early-return/interrupt/exception paths"
+    }
+  ],
+  "shared_substrate": {
+    "audit_service": [
+      "modules/core/services/audit_service.py:188",
+      "modules/core/services/audit_service.py:206",
+      "modules/core/services/audit_service.py:263",
+      "modules/core/services/audit_service.py:606",
+      "modules/core/services/audit_service.py:700",
+      "modules/core/services/audit_service.py:796"
+    ],
+    "bridge_readback": [
+      "modules/api/bridge_server.py:1591",
+      "modules/api/bridge_server.py:2091",
+      "modules/api/bridge_server.py:2120"
+    ],
+    "app_wiring": [
+      "main_a.py:418",
+      "main_a.py:2398",
+      "main_a.py:3135"
+    ]
+  },
+  "synthetic_checks": [
+    {
+      "name": "stage4_only_summary_marks_stage3_absent",
+      "result": {
+        "summary_role": "runtime_heartbeat_with_proof_digest",
+        "proof_status": "warn",
+        "latest_session_id": "sess-stage4-only",
+        "stage3_status": "absent",
+        "stage4_status": "ok",
+        "stage4_target_ep_reached": true
+      }
+    }
+  ],
+  "targeted_pytest_commands": [
+    "python -m pytest tests/test_audit_service.py -k \"stage2_proof_digest or stage2_missing_monitor or stage2_rationale_drift or stage2_blank_attempt_key or stage2_missing_verdict_reason or stage2_runtime_retry or stage2_richest\" -q",
+    "python -m pytest tests/test_audit_service.py -k \"warn_tag or latest_stage4_session\" -q",
+    "python -m pytest tests/test_stage4_orchestrator.py -k \"stage4_completion_writes_runtime_audit_summary or log_stage4_session_scope_writes_control_decision_and_audit_event or log_target_ep_reached_writes_control_decision_and_audit_event or stage4_early_return_does_not_write_runtime_audit_summary or stage4_interrupt_does_not_write_runtime_audit_summary or stage4_exception_does_not_write_runtime_audit_summary_and_flushes\" -q",
+    "python -m pytest tests/test_bridge_quality_summary.py -k \"runtime_audit_summary or gate_repair_summary\" -q",
+    "python -m pytest tests/test_stage4_post_processor.py -k \"STAGE4_POST_PASS_CONTRACT or post_pass_contract_signal\" -q",
+    "python -m pytest tests/test_stage3_orchestrator.py -k \"source_anchor_summary or stage3_attempt_key_uses_metrics_session_id_when_available or stage3_reject_cost_record_uses_metrics_session_id_when_available\" -q",
+    "python -m pytest tests/test_stage4_canary_tools.py -k \"gate_repair_summary or stage3_probe_scope or runtime_audit_summary\" -q",
+    "python -m pytest tests/test_stage2_finalizer.py -k \"attempt_key_uses_metrics_session_id_when_available\" -q",
+    "python -m pytest tests/test_stage4_interview_round.py -k \"attempt_key_uses_metrics_session_id_when_available or normalized_request.session_id\" -q",
+    "python -m pytest tests/test_logging_keys.py -q",
+    "python -m pytest tests/test_audit_service.py -k \"pre_summary_hook_before_proof_digest\" -q",
+    "python -m pytest tests/test_audit_service.py -k \"operational_metadata_for_latest_stage4_session\" -q"
+  ],
+  "conclusion": {
+    "overall_verdict": "yes_with_bounded_terminal_summary_caveat",
+    "run_budget": {
+      "target": 3,
+      "shape": [
+        "run_1_primary_merged_proof_wave",
+        "run_2_only_if_run_1_is_infra_invalid_or_aborts_before_terminal_summary",
+        "run_3_fail_only_confirmation_after_actual_fix"
+      ]
+    },
+    "severity": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "P3": 1
+    }
+  }
+}

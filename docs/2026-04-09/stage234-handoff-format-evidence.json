@@ -1,0 +1,183 @@
+{
+  "date": "2026-04-09",
+  "question": "Do any pipeline stages fail to emit a JSON handoff, especially across Stage 2, Stage 3, and Stage 4?",
+  "baseline_commit": "b94390cb508a298a28349152bb15876f36662c65",
+  "baseline_dirty_summary": "dirty: active roadmap/SSOT docs plus narrative/material/project artifacts were already modified or deleted; this survey stayed read-only except for its own dated outputs",
+  "parallel_slices": [
+    "stage2 producer/handoff",
+    "stage3 producer/handoff",
+    "stage4 terminal-output/post-pass"
+  ],
+  "stages": {
+    "stage2": {
+      "primary_output_class": "canonical_json_handoff",
+      "canonical_store": [
+        {
+          "surface": "current_project.save_v20_anchor(\"arcs\", all_refined_arcs)",
+          "path": "modules/core/stage2_finalizer.py",
+          "line": 1784
+        },
+        {
+          "surface": "ProjectContext.save_v20_anchor",
+          "path": "modules/core/project_manager.py",
+          "line": 187
+        },
+        {
+          "surface": "DBManager._save_arc_payload_collection",
+          "path": "modules/core/db_manager.py",
+          "line": 1069
+        }
+      ],
+      "human_exports": [
+        {
+          "surface": "plans/arcs/*.txt export-only reference",
+          "path": "modules/core/project_manager.py",
+          "line": 404
+        }
+      ],
+      "structured_sidecars": [
+        {
+          "surface": "attempt artifact snapshot",
+          "path": "modules/core/stage2_finalizer.py",
+          "line": 3430
+        },
+        {
+          "surface": "artifact serializer chooses .json for dict payloads",
+          "path": "modules/core/artifact_logging.py",
+          "line": 92
+        }
+      ],
+      "verdict": "json_first"
+    },
+    "stage3": {
+      "primary_output_class": "canonical_json_handoff",
+      "canonical_store": [
+        {
+          "surface": "current_project.save_episode_blueprint",
+          "path": "modules/core/stage3_orchestrator.py",
+          "line": 2235
+        },
+        {
+          "surface": "ProjectContext.save_episode_blueprint",
+          "path": "modules/core/project_manager.py",
+          "line": 286
+        },
+        {
+          "surface": "DBManager.save_blueprint",
+          "path": "modules/core/db_manager.py",
+          "line": 1434
+        }
+      ],
+      "human_exports": [
+        {
+          "surface": "plans/blueprints/*.txt export-only reference",
+          "path": "modules/core/project_manager.py",
+          "line": 442
+        }
+      ],
+      "downstream_consumer": [
+        {
+          "surface": "Stage4 reads blueprint from current_project.get_blueprint(next_ep)",
+          "path": "modules/core/stage4_orchestrator.py",
+          "line": 1202
+        }
+      ],
+      "structured_sidecars": [
+        {
+          "surface": "final_blueprint snapshot artifact",
+          "path": "modules/core/stage3_orchestrator.py",
+          "line": 1962
+        },
+        {
+          "surface": "Stage3 save_stage_attempt observability",
+          "path": "modules/core/stage3_orchestrator.py",
+          "line": 2001
+        }
+      ],
+      "verdict": "json_first"
+    },
+    "stage4": {
+      "primary_output_class": "human_facing_manuscript_primary",
+      "primary_store": [
+        {
+          "surface": "Stage4 PASS stores manuscript title/content in DB",
+          "path": "modules/core/stage4_post_processor.py",
+          "line": 639
+        },
+        {
+          "surface": "DBManager.save_manuscript",
+          "path": "modules/core/db_manager.py",
+          "line": 535
+        },
+        {
+          "surface": "drafts/ep_XXXX.txt reader-facing file export",
+          "path": "modules/core/stage4_post_processor.py",
+          "line": 738
+        }
+      ],
+      "structured_sidecars": [
+        {
+          "surface": "episode_bible JSON-serialized delta",
+          "path": "modules/core/stage4_post_pass_runtime.py",
+          "line": 1044
+        },
+        {
+          "surface": "state_log JSON-serialized carryover packet",
+          "path": "modules/core/stage4_post_pass_runtime.py",
+          "line": 1206
+        },
+        {
+          "surface": "episode_production.jsonl",
+          "path": "modules/core/stage4_interview_round.py",
+          "line": 6600
+        },
+        {
+          "surface": "attempt artifact snapshot helper",
+          "path": "modules/core/stage4_interview_round.py",
+          "line": 6857
+        }
+      ],
+      "input_dependencies": [
+        {
+          "surface": "Stage4 reads Stage3 blueprint JSON",
+          "path": "modules/core/stage4_orchestrator.py",
+          "line": 1202
+        },
+        {
+          "surface": "Stage4 reads arc context from current_project.arcs",
+          "path": "main_a.py",
+          "line": 3139
+        }
+      ],
+      "text_reverse_feedback_helpers": [
+        {
+          "surface": "generate_reverse_feedback_stage4_to_3",
+          "path": "modules/core/feedback_system.py",
+          "line": 600
+        },
+        {
+          "surface": "generate_reverse_feedback_stage3_to_2",
+          "path": "modules/core/feedback_system.py",
+          "line": 650
+        },
+        {
+          "surface": "generate_reverse_feedback_stage4_to_2",
+          "path": "modules/core/feedback_system.py",
+          "line": 691
+        }
+      ],
+      "verdict": "no_single_canonical_json_packet"
+    }
+  },
+  "answer": {
+    "single_canonical_json_handoff_missing_stages": [
+      4
+    ],
+    "fragmented_structured_sidecars_present_stages": [
+      4
+    ],
+    "best_leverage_stage_for_llm_friendly_packet": 4,
+    "summary": "Stage2 and Stage3 are already JSON-first. Stage4 is human-facing-primary, while structured outputs exist as fragmented sidecars rather than one canonical settlement packet."
+  },
+  "confidence": 0.97
+}

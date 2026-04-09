@@ -14,6 +14,11 @@ Official stage chain:
 
 `리서치 -> 기획안 -> Stage 0 preprocess -> Phase 0 design -> TR 생성 -> BI 생성`
 
+Operator alias note:
+
+- in workspace shorthand, `재료 사이드`, `재료 사이드 하네스`, `material-side harness`, `material_ssot 쪽`, `글도비 파이프라인 이전`, `기획안~TR/BI`, and `TR/BI pair 제작` all point to this root and its companion material-side docs
+- unless the request explicitly asks for code/runtime/DB/app/test work, interpret those phrases as stage-axis material-side work, not system-track
+
 Normalized fresh-creation route:
 
 - the official stage chain above remains the stage-axis contract
@@ -69,6 +74,13 @@ Current governance anchors:
 - `00_governance/work-coverage-matrix.md`
 - `00_governance/bootstrap-status.md`
 - `00_governance/production-pair-benchmark-spec-v1.md`
+
+TR block semantics note:
+
+- on the material side, `TR block` is a planning bundle, not a published episode-count unit
+- default operator reading: one meaningful `TR block` should be dense enough to unfold into roughly `2~6` serialized episodes downstream
+- do not write or audit with the mental model `TR block 1 = episode 1`, `TR block 2 = episode 2`
+- benchmark shorthand such as `block 1` refers to the first reader-earning episode bundle, which the current benchmark operationalizes through `TR blocks 2~6`, not literal `TR block 1`
 
 Current path labels at a glance:
 

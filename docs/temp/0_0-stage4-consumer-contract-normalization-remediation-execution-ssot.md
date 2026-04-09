@@ -431,10 +431,28 @@ Revalidation note:
 
 - static evidence is sufficient to keep this as a live P1 execution target
 - fresh run is still useful for runtime impact measurement, but not required to prove the seam exists
+
+## 16. 2026-04-09 Static Validity Recheck: Stale-Likely P1 Note
+
+A current-HEAD static recheck against the landed code and focused tests no longer reproduces section 15 exactly as written.
+
+Recheck anchors:
+
+- `modules/core/stage4_context_builder.py` still injects the carryover baseline numeric authority packet into the writer prompt.
+- `modules/core/stage4_post_pass_runtime.py` now builds `numeric_carryover_refresh_plan`, records promotion metadata in `state_truth_owner_contract`, and applies the numeric overlay into `fact_ledger_changes`.
+- focused validation passed on current HEAD:
+  - `pytest tests/test_stage4_post_processor.py::TestStateTruthOwnerContract::test_marks_promoted_numeric_carryover_refresh_sources tests/test_stage4_post_processor.py::TestAtomicMetadataSave::test_build_atomic_state_payloads_promotes_actual_truth_numeric_carryover_into_fact_ledger tests/test_stage4_post_processor.py::TestAtomicMetadataSave::test_build_atomic_state_payloads_promotes_string_and_director_fallback_numeric_carryover -q`
+  - `pytest tests/test_stage4_context_builder.py -k "numeric_carryover_authority_packet" -q`
+
+Current reading:
+
+- the older statement that the post-pass path "still does not autonomously promote manuscript-proven numeric change into the next carryover baseline owner boundary" is now stale-likely under static review
+- static review alone still cannot prove full demotion, because the operator-deferred fresh canary/live proof has not yet re-measured the next-episode boundary on current HEAD
+- queue order therefore remains unchanged for now; treat this as `stale-likely / runtime-demotion-pending`, not as a fresh broad implementation reopen
 - confidence after the 2026-04-06 re-audit remains `97%`
 
 2026-04-07 implementation delta:
 
 - the previous zero-promotion path is no longer the current code state for structured asset-family fields: post-pass now refreshes carryover baseline candidates from `actual_truth` first and `final_state_updates` fallback, and records promotion metadata in the owner contract
 - operator explicitly deferred fresh canary/live proof, so this lane remains open for runtime measurement rather than broad new implementation inside the same topic
-- if runtime proof continues to stay deferred, the next code implementation queue item is `0_0-stage4-repair-contract-normalization-remediation`; do not reinterpret that as Stage4 consumer closure
+- if runtime proof continues to stay deferred, keep queue order unchanged and use fresh proof to decide whether `0_0-stage4-repair-contract-normalization-remediation` is still a true next code lane or whether the older consumer P1 framing should be demoted; do not reinterpret this as Stage4 consumer closure

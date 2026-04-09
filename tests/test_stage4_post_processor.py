@@ -103,10 +103,12 @@ class TestProcessPassResult:
     def test_returns_true_on_success(self, tmp_path):
         pp = self._make_pp()
         pp.ctx.current_project.db.save_manuscript.return_value = True
+        manuscript = "테스트 원고 " * 500
+        normalized_manuscript = pp._normalize_reader_facing_manuscript(manuscript)
 
         result = pp.process_pass_result(
             next_ep=1,
-            final_manuscript="테스트 원고 " * 500,
+            final_manuscript=manuscript,
             final_title="테스트",
             final_state_updates={},
             blueprint={"scene_breakdown": []},
@@ -117,6 +119,14 @@ class TestProcessPassResult:
         )
 
         assert result is True
+        assert (tmp_path / "ep_0001.settlement.json").exists()
+        assert (tmp_path / "ep_0001.txt").exists()
+        settlement = json.loads((tmp_path / "ep_0001.settlement.json").read_text(encoding="utf-8"))
+        assert settlement["packet_version"] == "stage4_settlement_packet_v1"
+        assert settlement["ep_num"] == 1
+        assert settlement["manuscript"]["char_count"] == len(normalized_manuscript)
+        assert settlement["settlement"]["meta_save_failed"] is False
+        assert settlement["artifacts"]["human_facing_txt_path"].endswith("ep_0001.txt")
 
     def test_returns_false_on_db_failure(self, tmp_path):
         pp = self._make_pp()
@@ -148,8 +158,10 @@ class TestProcessPassResult:
         pp._save_pass_result_quality_sidecars = MagicMock(return_value={})
         pp._run_pass_result_local_side_effects = MagicMock()
         pp._run_pass_result_post_pass_pipeline = MagicMock(
-            return_value={"actual_truth": {"location": "gate"}, "meta_save_failed": True}
+            return_value={"actual_truth": {"location": "gate"}, "bible_delta": {}, "meta_save_failed": True}
         )
+        pp._persist_stage4_settlement_packet = MagicMock()
+        pp._write_human_facing_manuscript_export = MagicMock()
         pp._finalize_pass_result_session = MagicMock()
 
         result = pp.process_pass_result(
@@ -167,6 +179,75 @@ class TestProcessPassResult:
         assert result is False
         log_texts = [call.args[0] for call in pp.ctx.ui.log.call_args_list if call.args]
         assert any("후처리 메타 저장 실패" in text for text in log_texts)
+        pp._persist_stage4_settlement_packet.assert_not_called()
+        pp._write_human_facing_manuscript_export.assert_not_called()
+        pp._finalize_pass_result_session.assert_not_called()
+
+    def test_returns_false_when_settlement_packet_save_fails(self, tmp_path):
+        pp = self._make_pp()
+        pp._save_pass_result_primary_db = MagicMock(return_value=True)
+        pp._save_pass_result_quality_sidecars = MagicMock(return_value={})
+        pp._run_pass_result_local_side_effects = MagicMock()
+        pp._run_pass_result_post_pass_pipeline = MagicMock(
+            return_value={"actual_truth": {"location": "gate"}, "bible_delta": {}, "meta_save_failed": False}
+        )
+        pp._persist_stage4_settlement_packet = MagicMock(side_effect=RuntimeError("packet write failed"))
+        pp._write_human_facing_manuscript_export = MagicMock()
+        pp._finalize_pass_result_session = MagicMock()
+
+        result = pp.process_pass_result(
+            next_ep=3,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 9},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is False
+        pp.ctx.audit_event.assert_called_once_with(
+            "stage4_settlement_packet_save_failed",
+            "stage4 settlement packet save failed",
+            {"ep": 3},
+        )
+        pp._write_human_facing_manuscript_export.assert_not_called()
+        pp._finalize_pass_result_session.assert_not_called()
+
+    def test_returns_false_when_human_facing_export_fails(self, tmp_path):
+        pp = self._make_pp()
+        pp._save_pass_result_primary_db = MagicMock(return_value=True)
+        pp._save_pass_result_quality_sidecars = MagicMock(return_value={})
+        pp._run_pass_result_local_side_effects = MagicMock()
+        pp._run_pass_result_post_pass_pipeline = MagicMock(
+            return_value={"actual_truth": {"location": "gate"}, "bible_delta": {}, "meta_save_failed": False}
+        )
+        pp._persist_stage4_settlement_packet = MagicMock(return_value=tmp_path / "ep_0003.settlement.json")
+        pp._write_human_facing_manuscript_export = MagicMock(side_effect=RuntimeError("txt write failed"))
+        pp._finalize_pass_result_session = MagicMock()
+
+        result = pp.process_pass_result(
+            next_ep=3,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 9},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is False
+        pp._persist_stage4_settlement_packet.assert_called_once()
+        pp.ctx.audit_event.assert_called_once_with(
+            "stage4_human_facing_export_failed",
+            "stage4 human-facing txt export failed",
+            {"ep": 3},
+        )
+        pp._finalize_pass_result_session.assert_not_called()
 
     def test_hud_update_called(self, tmp_path):
         pp = self._make_pp()
@@ -278,7 +359,7 @@ class TestProcessPassResult:
         pp.ctx.current_project.db.save_episode_quality_label.assert_called_once()
         pp.ctx.current_project.db.save_episode_quality_signal.assert_called_once()
 
-    def test_run_pass_result_local_side_effects_updates_hud_writes_file_and_runs_summary(self, tmp_path):
+    def test_run_pass_result_local_side_effects_updates_hud_runs_summary_and_defers_txt_export(self, tmp_path):
         pp = self._make_pp()
         pp.ctx.agents["director"].on_approve_workflow.return_value = {"applied_updates": {"hp": 77}}
         pp._reconcile_capital = MagicMock()
@@ -295,7 +376,7 @@ class TestProcessPassResult:
         pp.ctx.sys.hud.bulk_update.assert_called_once_with({"hp": 77})
         pp.ctx.generate_narrative_summary.assert_called_once_with(5)
         pp._reconcile_capital.assert_called_once_with("test manuscript", 5, final_state_updates={"hp": 77})
-        assert (tmp_path / "ep_0005.txt").exists()
+        assert not (tmp_path / "ep_0005.txt").exists()
 
     def test_run_pass_result_post_pass_pipeline_delegates_to_runtime(self):
         pp = self._make_pp()
@@ -336,6 +417,7 @@ class TestProcessPassResult:
         )
 
         assert result == {
+            "bible_delta": {"relationship_changes": []},
             "actual_truth": {"location": "gate"},
             "state_truth_owner_contract": {"field_families": {"numeric_carryover_authority": {"fields": ["capital"]}}},
             "meta_save_failed": True,

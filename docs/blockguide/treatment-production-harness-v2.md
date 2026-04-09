@@ -2,6 +2,8 @@
 
 > 인코딩: **UTF-8 only (기본값, 예외 없음)**
 > 작성일: 2026-03-09
+> 업데이트: 2026-04-09 opening macro-battlefield progression patch
+> 업데이트: 2026-04-09 TR block episode-bundle clarification patch
 > 근거: `treatment-block-production-guide.md` + `dynasty-heir-remediation-harness.md` + 8작품 560블록 전수 감사
 > 목적: **모든 지능 수준의 모델이 골든루트급 Treatment JSON을 생산**할 수 있는 완전한 하네스
 > 출력: `treatments/{작품명}_tr_block_070_draft.json`
@@ -31,6 +33,9 @@
 9. `Phase 0`가 없으면 이 문서를 실행하지 말고 planning 단계로 되돌린다.
 10. 생산 단계가 맞으면 출력 단위는 항상 **블록 1개**로 잡는다.
    - `auto-run`은 블록을 순서대로 이어서 쌓는다는 뜻이다.
+   - 여기서 `블록 1개`는 **출판 화수 1개가 아니라 planning bundle 1개**다.
+   - 기본 mental model은 `TR block 1개 ~= downstream 2~6화 분량`이다.
+   - 따라서 블록을 쓸 때는 "이 한 블록이 나중에 2~6화를 버틸 만큼 사건/영수증/전장 이동을 품고 있는가"를 먼저 본다.
    - 같은 운영 오더에서 자동 연속 가능한 최대치는 **5블록**이다.
    - `Block 005`, `010`, `015` ... 경계에 도달하면 새 오더 전까지 반드시 멈춘다.
    - 10블록은 대단원 구조/감리 창(window)일 뿐, 출력 단위가 아니다.
@@ -45,6 +50,7 @@
     - Python 교정/검증
     - 수동 감리 메모 작성
     - 위반 시 같은 블록만 재생성
+    - 이때 반드시 `이 블록이 2~6화 분량 episode-bundle로 확장 가능한가`를 함께 자문한다.
 12. `70블록 draft`가 완성되면 바로 BI를 상상하지 말고, 먼저 감리와 출고 게이트를 통과시킨다.
 13. 감리 통과 뒤에는 `bi-production-harness-v1.md`로 인계한다.
 14. `Block / ARC / Phase / Stage` 번호 메타는 자연어 필드에서 전면 금지한다.
@@ -149,6 +155,32 @@
 - `실패/굴욕/지연/대기/질책만 남기고 닫힘`은 `pain_only_exit = true`로 보고 즉시 재생성한다.
 - 규칙 문장:
   `one no-cider block, no production-ready.`
+
+## 0H. Opening Macro-Battlefield Progression Contract
+
+opening `Block 001~010`은 `location` 다양화만으로 PASS 처리하지 않는다. 같은 시설, 같은 행사, 같은 조직, 같은 운영 전장 안에서 세부 구역만 바뀌면 그것은 다른 `location`일 수는 있어도 같은 `macro_battlefield`로 본다.
+
+핵심 규칙:
+
+1. opening 10블록은 항상 `opening_macro_battlefield_map`을 함께 기록한다.
+2. 장례식장 안의 배식 라인/주차관제실/세탁실/청소팀 대기실처럼 세부 구역만 바뀐 경우는 전부 동일 `macro_battlefield`로 본다.
+3. 호텔 BOH/병원 수술실/방송국 편성실처럼 "공간 이름"이 달라도, 같은 운영 권력권 안에서 같은 목표와 같은 평가자를 상대로 돈다면 동일 `macro_battlefield`로 본다.
+4. opening main `macro_battlefield`가 `Block 002~008` 구간을 사실상 장악하고 있는데, 첫 간판 사건/대표 재평가/다음 전장 입장권이 `Block 009+`에서야 발생하면 opening pacing FAIL이다.
+5. `1화 내`, `3화 내`, `초반`, `opening` 같은 timing 문구를 인용할 때는 반드시 현재 작품의 절대 block 번호로 환산한다.
+6. `location`이 달라도 `macro_battlefield`가 같으면 "전장 확장"으로 계산하지 않는다.
+
+## 0I. TR Block = Episode-Bundle Contract
+
+이 문서의 `TR block`은 published episode 1개와 동일 단위가 아니다.
+
+기본 해석:
+
+1. `TR block`은 downstream manuscript / scene / episode 파이프라인에서 대략 `2~6화`로 풀릴 수 있는 압축 planning bundle이다.
+2. 따라서 `TR block 1 = 1화`, `TR block 2 = 2화` 식으로 쓰면 안 된다.
+3. 블록 하나는 최소한 `주인공의 결정적 움직임 -> 상대/환경 반응 -> 체감 가능한 영수증 또는 판 이동 -> 다음 관문 씨앗`을 버틸 밀도를 가져야 한다.
+4. 장면 1개, 실수 1개, 대기 1개, 감정 반응 1개만으로 닫히는 얇은 단위는 `episode-beat`일 수는 있어도 이 하네스의 `TR block`으로는 부족하다.
+5. opening을 설계할 때는 "`TR blocks 2~6`이 곧 독자가 체감하는 첫 episode-bundle을 닫는 구간"이라는 감각으로 쓴다.
+6. 나중에 화수로 펼칠 때 억지 분량 늘리기만 하고 새 엔진을 발명하지 않도록, block 단계에서 이미 `2~6화 분량의 progression density`를 확보해야 한다.
 
 ## 0. 왜 이 문서가 필요한가
 
@@ -299,14 +331,17 @@ Stage 0, Planning, BI handoff에는 그대로 확장하지 않는다.
 
 1. 이 감리는 다음 10블록으로 넘어가기 전의 **필수 Audit 단위**다.
 2. `Block 010`이 끝났다면 다음 단위는 `Block 011`이 아니라 `Block 001~010 자체 감리`다.
-3. 감리 범위는 직전 10블록 전체다. 최소 아래 6축을 본다.
+3. 감리 범위는 직전 10블록 전체다. 최소 아래 7축을 본다.
    - 주인공 우위와 간판 맛이 살아 있는가
    - 성취 직후 보상/인정 리듬이 유지되는가
    - 자본/권력/조직 장악 축이 실제로 커졌는가
    - opponent, method, deal_type, stakes 반복이 누적되지 않았는가
    - continuity와 열린 복선이 다음 10블록으로 자연스럽게 이어지는가
    - 다음 10블록에서 키워야 할 확장축과 위험축이 분명한가
+   - opening 10블록이라면 `macro_battlefield`가 실제로 이동했고, 첫 간판 사건/대표 재평가/다음 전장 입장권이 약속된 타이밍 안에 들어왔는가
+   - 각 블록이 `1화짜리 얇은 beat`가 아니라 `2~6화 분량 episode-bundle`로 버틸 density를 갖는가
 4. 결과는 짧아도 문서화한다. 최소 `PASS/FAIL`, `top_risks`, `repair_targets`, `next_10_focus`를 남긴다.
+   - opening 10블록 감리라면 `opening_macro_battlefield_map`, `first_signboard_block`, `representative_reevaluation_block`, `next_battlefield_ticket_block`, `timing_reconciliation_note`를 함께 남긴다.
 5. FAIL이면 같은 10블록 구간 안에서 필요한 블록을 먼저 수리하고, PASS 전에는 다음 블록으로 넘어가지 않는다.
 
 ### 1.2 연속 진행 허용 모드 (Quality-First)
@@ -643,6 +678,18 @@ Phase 0 완료 시 아래를 기준으로 정리한다.
       3) stakes / 즉시 목표
       4) 평가자/목격자 구도
       5) 세부 구역 / 시간대
+19B. opening macro-battlefield 과체류 금지:
+    - opening `Block 001~010`에서는 `location`과 별도로 `macro_battlefield`를 본다.
+    - 같은 시설/행사/운영 전장 안의 세부 구역 이동은 같은 `macro_battlefield`다.
+    - opening main `macro_battlefield`가 `Block 002~008` 구간을 사실상 장악하고, 첫 간판 사건/대표 재평가/다음 전장 입장권이 `Block 009+`에서야 열리면 위반이다.
+    - 이런 경우는 location 다양화로 덮지 말고 opening pacing FAIL로 처리한다.
+19C. timing 문구 절대 블록 환산 의무:
+    - `1화 내`, `3화 내`, `초반`, `opening` 같은 문구를 work_guard/current-truth/benchmark에서 인용할 때는 현재 작품 기준 절대 block 번호를 병기한다.
+    - 환산 block이 live TR과 충돌하는데도 PASS를 주면 위반이다.
+19D. block=episode 오독 금지:
+    - `TR block`을 published episode 1개와 1:1 대응 단위로 작성하면 위반이다.
+    - 기본 생산 감각은 `TR block 1개 ~= downstream 2~6화 분량 planning bundle`이다.
+    - 단일 장면/단일 실수/단일 반응만 담긴 얇은 block가 반복되면 density FAIL로 처리한다.
 20. 파트너 축 분화 의무:
     - 투자/글로벌 서브모드면 70블록에 최소 3개 해외 파트너 등장.
     - 기업 운영/재벌/회사원형이면 해외 파트너 강제 금지.
@@ -764,8 +811,8 @@ Phase 0 완료 시 아래를 기준으로 정리한다.
 블록 배치 생성 완료 후, 차이 행렬을 출력하고 자가 검증 수행:
 
 ```
-| Block | beat_type | intensity | tension | deal_type | opponent | location | duration | capital_delta | 성장률 | success |
-|-------|-----------|-----------|---------|-----------|----------|----------|----------|---------------|--------|---------|
+| Block | beat_type | intensity | tension | deal_type | opponent | location | macro_battlefield | duration | capital_delta | 성장률 | success |
+|-------|-----------|-----------|---------|-----------|----------|----------|-------------------|----------|---------------|--------|---------|
 
 ### 자가 검증 (행렬 출력 후 수행)
 1. beat_type 열에 2연속 동일 값? → 수정
@@ -775,6 +822,10 @@ Phase 0 완료 시 아래를 기준으로 정리한다.
 5. location 열에 3블록 이내 동일 값? → 수정
 5A. location이 직전과 같을 때 장면 기능/주도권/평가자/stakes/세부 구역 중
     2개 이상 실제로 바뀌었는가? 아니면 수정
+5B. location이 달라도 macro_battlefield가 같은데 opening progression으로 착각하고 있지 않은가? → 아니면 같은 전장으로 다시 계산
+5C. opening main macro_battlefield가 `Block 002~008` 대부분을 먹고, 첫 간판 사건/대표 재평가/다음 전장 입장권이 `Block 009+`인가? → opening pacing 재설계
+5D. WG/current-truth의 `1화 내`/`3화 내`/`opening` 문구를 절대 block 번호로 환산했고, live TR이 그 창을 실제로 지키는가? → 아니면 수정
+5E. 이번 block들이 전부 `1화짜리 얇은 beat`처럼 보이고, 각 block이 `2~6화 분량 episode-bundle`로 버틸 사건량/영수증량이 부족한가? → density 재설계
 6. duration 열이 전부 동일? → 최소 3종 분화
 7. 성장률 열에 3연속 ±1%p 이내? → 수정
 8. success 열이 전부 동일? → 최소 2개 "실패"/"부분성공"
@@ -1651,6 +1702,9 @@ Python 자동 검증(§5) + LLM 6개 검사 항목 × 70블록:
 - duration 3종 이상
 - location 8곳 이상, 15블록 이내 재등장 0건
 - 동일 장소 연속 사용 시 기능/주도권/평가자/stakes 중 2개 이상 변화
+- opening 10블록 감리 시 `opening_macro_battlefield_map` 기록, `Block 002~008` 과체류 unresolved 0건
+- WG/current-truth timing 문구의 절대 block 환산 누락 0건, 환산값과 live TR 충돌 0건
+- 각 block이 `2~6화 분량 episode-bundle`로 버틸 density를 갖고, `block=episode` 오독 흔적 0건
 - 투자/글로벌형이면 global_partner 3곳 이상, 그 외는 국내 파트너/부서/계열사 3축 이상
 - 핵심 서술 평균 길이 400자 이상
 - foreshadow 평균 1.0 이상

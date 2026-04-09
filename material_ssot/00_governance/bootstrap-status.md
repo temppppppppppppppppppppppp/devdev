@@ -1,6 +1,6 @@
 # Bootstrap Status
 
-Date: 2026-04-08
+Date: 2026-04-09
 Status: active bounded status
 Scope: commit-ready summary for the current `material_ssot` slice
 
@@ -29,7 +29,7 @@ Scope: commit-ready summary for the current `material_ssot` slice
 - repo-level pre-new-pitch readiness gate now exists at `python -X utf8 scripts/pre_new_pitch_readiness_gate.py`
 - canonical pair normalization wave now closes all current tracked pairs under one schema runner
 - current live pair inventory and benchmark freshness now have a durable registry under `production-pair-operational-registry-v1.md`
-- all currently tracked schema-clean pairs now carry benchmark-fresh readings, including the previously unbenchmarked unslotted live pairs
+- tracked schema-clean pairs now carry durable benchmark-state readings in the registry, including benchmark-fresh live pairs, unslotted live pairs, and one withdrawn false-pass historical slot (`chaebol_allowance_zero`)
 
 ## 2. What Is Intentionally Not Done
 

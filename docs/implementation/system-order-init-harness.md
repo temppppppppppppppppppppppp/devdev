@@ -66,7 +66,9 @@ Do not use this harness for narrative-pipeline orders.
 
 ### Step 1. Confirm Track
 - Confirm the request is system-track, not narrative-pipeline.
-- If the task is narrative-pipeline, stop here and use the blockguide flow instead.
+- If the task is narrative-pipeline, stop here and use the material-side / narrative flow instead.
+- Treat `재료 사이드`, `재료 사이드 하네스`, `material_ssot`, `글도비 파이프라인 이전`, `기획안~TR/BI`, `TR/BI pair`, or equivalent wording as material-side narrative work, not system-track.
+- For those material-side requests, stop before temp-queue inspection and start with `material_ssot/README.md` and `material_ssot/00_governance/stage-read-order.md`, then use the narrative-router family flow if family routing is needed.
 - If the user says `ROL` or `rol`, interpret it as the bounded `Recursive Ops Loop`.
 - If the user says `global`, `repo-wide`, `전역`, or `전역 전체`, load the global survey coverage contract unless the request narrows scope.
 - Treat `ROL 전역 전체 전수조사` as deep integrity survey mode by default unless the user explicitly asks for a lighter pass.

@@ -3,6 +3,9 @@
 Date: 2026-04-07
 Status: active
 Scope: canonical grading benchmark for existing live `TR + BI` pairs
+Update Note:
+- 2026-04-09 opening pacing reconciliation patch added
+- 2026-04-09 TR block episode-bundle clarification added
 
 ## 1. Role
 
@@ -26,9 +29,17 @@ The first question is:
 
 `Does block 1 pay the reader back clearly enough to earn block 2?`
 
+Terminology note:
+
+- benchmark shorthand `block 1`, `block 2` is not a literal published episode counter
+- on this material side, `TR block` is a plan-level episode bundle, not `episode 1 = TR block 1`
+- default operator reading: one meaningful `TR block` should be dense enough to unfold into roughly `2~6` downstream serialized episodes
+- for opening benchmark work, the first reader-earning bundle is operationalized through `TR blocks 2~6`
+
 Working rule:
 
 - `block 1` means roughly episodes `2~6`
+- do not read that line as `TR block 1 = episodes 2~6`; it means the first benchmarked reader-earning bundle is evidenced through `TR 2~6`
 - if a pair has no visible `cider` inside block 1, it cannot grade above `YELLOW`
 - proof alone is not enough
 - block 1 must end with:
@@ -47,6 +58,37 @@ Working rule:
 - gate `5` may cite `TR block 7+` only as downstream confirmation that a token already earned by `TR block 6` opened the next gate; `TR block 7+` cannot backfill a missing reward
 - use absolute block numbers in every benchmark report; do not write vague phrases like `early blocks`, `opening arc`, or `초반부` without numbered anchors
 
+### 2.1A WG Or Canon Timing Reconciliation
+
+- `work_guard` or canon timing language may be cited as supporting authority, but never as free-floating rhetoric
+- if a report cites timing phrases such as:
+  - `1화 내`
+  - `3화 내`
+  - `opening arc`
+  - `ARC 종료 시`
+- the report must translate them into absolute `TR` block numbers for that pair
+- if the translation is ambiguous, the report must say so explicitly and may not use that phrase as positive proof
+- if the live `TR` misses the cited timing threshold, the report may not score as though the threshold passed
+- gate `6` still belongs to `BI + TR 1~3`; `work_guard` timing language may sharpen the reading, but may not replace the anchor
+
+### 2.1B Opening Macro-Battlefield Residence Check
+
+- benchmark audits must distinguish `micro-location` from `macro-battlefield`
+- different rooms, desks, lines, bays, or support spaces inside the same operating arena may still count as one opening macro-battlefield
+- example:
+  - `장례식장 배식 라인`
+  - `장례식장 주차관제실`
+  - `장례식장 지하 세탁실`
+  - `장례식장 청소팀 대기실`
+  - may all belong to one macro-battlefield: `장례식장 운영축`
+- for any pair under benchmark review, map `TR blocks 1~12` to macro-battlefields before final grade closure
+- micro-location churn alone does not prove pacing progression
+- if the opening main battlefield still dominates through `TR block 8`, the report must explicitly check:
+  - first public signboard event
+  - first representative reevaluation with real shelf movement
+  - first next-battlefield ticket that is actually cashed soon after
+- if those beats arrive late, the pair may still retain same-block cider quality while failing opening pacing cleanliness
+
 ### 2.2 Fast Invalidity Checks
 
 The following readings are invalid and should be rejected during audit:
@@ -55,6 +97,9 @@ The following readings are invalid and should be rejected during audit:
 - `Block 7 reward rescues a weak 2~6 opening`
 - `Block 10 authority grant proves first-block visible reward`
 - `later payoff` or `next arc reward` counts as first-block conversion
+- `TR block = published episode`, so thin one-episode beats are an acceptable default planning unit
+- `work_guard says 3화 내 간판 폭발`, but the live `TR` lands it at `B9/B10` and the report still treats the threshold as passed
+- `micro-location changed, so the opening battlefield changed`
 
 Valid shape:
 
@@ -166,6 +211,8 @@ Run these first.
 - if gate `6` fails: `YELLOW ceiling`
 - if two or more gates fail: default `RED review lane`
 - if a report cites `TR block 1` or `TR block 7+` as the primary proof for gates `1~4`, that gate reading is invalid and must be re-judged
+- if a report cites `work_guard` or canon timing language without absolute block reconciliation, that gate reading is invalid and must be re-judged
+- if a report mistakes micro-location churn for macro-battlefield progression, that opening reading is invalid and must be re-judged
 
 ### 4.3 Opening Innocence Rule
 
@@ -207,11 +254,14 @@ Even with a strong score, the pair cannot exceed the cap below if the pattern ap
 - no visible cider inside block 1: `YELLOW ceiling`
 - first concrete token lands at `TR block 7+`: `YELLOW ceiling`
 - any no-cider block in the full-block cider scan: `YELLOW ceiling`
+- `work_guard` or canon declares an earlier opening timing threshold and the live `TR` misses it: `YELLOW ceiling`
 - rewardless pain blocks `2` in a row: `GREEN ceiling`
 - no-cider drought `6+` blocks: `YELLOW ceiling`
 - major defeat without next card in the same or next block: `YELLOW ceiling`
 - `BI` acts as summary echo only and does not amplify the pair: `GREEN ceiling`
 - early reward is asset-only and lacks status or authority shift: `GREEN ceiling`
+- opening main battlefield still dominates through `TR block 8` and the first public signboard event or representative-scale reevaluation lands at `TR block 9+`: `GREEN ceiling`
+- micro-location churn exists, but real macro-battlefield progression is absent: `GREEN ceiling`
 - wins rely on stupid opposition: `GREEN ceiling`
 - domain texture is generic enough to swap with another lane: `GREEN ceiling`
 - protagonist stays mostly passive across a key arc while reward remains weak: `YELLOW ceiling`
@@ -323,6 +373,12 @@ Audit discipline:
 - the `P0` section must name at least one concrete `TR block` anchor for each gate
 - if the anchor for gates `1~4` sits outside `TR blocks 2~6`, the report is non-compliant
 - if a pair passes on the strength of `TR block 7+`, re-run the benchmark before using the grade operationally
+- every report must include an `opening macro-battlefield map` for `TR blocks 1~12`
+- if `work_guard` or canon timing language is cited, include a reconciliation note that maps each cited phrase to absolute live `TR` blocks
+- the report must name the absolute block number for:
+  - first public signboard event
+  - first representative reevaluation with shelf movement
+  - first next-battlefield ticket
 - the compliance self-check must confirm:
   - `P0 = 6 gates`
   - `P1 = 10 axes x 0/1/2 = 20`

@@ -1,0 +1,745 @@
+# Treatment Batch Harness Prompt
+
+이 프롬프트는 저지능 모델 기준으로 작성되었다. 절대로 한 번에 70블록을 만들지 마라.
+
+## 작품 컨텍스트
+- 제목: 알고 보니 내 아버지가 걸프 대부호였다
+- 장르: family office / port-logistics / succession war / global business fantasy
+- 주인공: 윤태하
+- 로그라인: 혈통은 입장권일 뿐이었다. 윤태하는 가족을 얻은 날 바로 적자 자산 묶음을 떠안고, 사하르의 family office 안쪽에서 항만, 창고, 은행, board를 하나씩 살려 내며 자기 자리를 장부로 산다.
+
+## 이번 배치
+- 시작 블록: 6
+- 종료 블록: 10
+- 모드: sonnet
+
+## 이번 배치 목표
+- Block 6: 서명권 | skeleton summary: 은행 롤오버와 항만 슬롯 연장을 동시에 성사시켜 다음 자산 인수전 입장권을 연다.
+- Block 7: 가짜 어음 | skeleton summary: defeat 블록. old-guard가 fake paper와 split invoice로 태하를 역으로 엮어 넣으려 한다.
+- Block 8: 현금흐름표 | skeleton summary: quiet 블록. cash conversion cycle과 누수 지도를 다시 그려 K-Transit 7의 진짜 목줄을 정리한다.
+- Block 9: 항만 슬롯 | skeleton summary: 칼리즈 포트 슬롯을 고정시키며 port corridor의 첫 실권을 잡는다.
+- Block 10: 가족회의 | skeleton summary: 가족회의에서 태하가 temporary heir가 아니라 inside operator라는 사실을 공식화한다.
+
+## 직전 3블록 요약
+- Block 3: 동결 계좌 | 자본 K-Transit 7 90일 임시 운영권 + limited protection -> cargo seizure 회피 + emergency signatory override | beat proof/8 | deal 보증 호출 차단 + 임시 서명권 | 장소 카디르 글로벌 홀딩스 상황실 / 칼리즈 포트 customs line
+  reward: cargo seizure가 멈추고 첫 shipment가 살아난다. 동시에 태하는 emergency signatory override를 받아 K-Transit 7 안에서 실제로 서명해 본 사람이 된…
+- Block 4: 빈 창고 | 자본 cargo seizure 회피 + emergency signatory override -> 첫 free-zone cash line | beat visible_token/8 | deal quota + short-turn warehouse rotation | 장소 누르 프리존 4동 창고
+  reward: 누르 프리존 4동은 같은 주 안에 첫 현금 회전을 만든다. small cash지만 중요한 건 해석이 바뀐 것이다. 태하는 `가족 덕에 자산을 받은 복귀자`가 아니라 `빈 창고를 돈으로 바꾸는 사람…
+- Block 5: 우회 선적 | 자본 첫 free-zone cash line -> direct report line + board observer seat | beat reevaluation/9 | deal 우회 선적 + charter-rate 비교표 | 장소 카디르 글로벌 홀딩스 실무 보고실 / 칼리즈 포트 운송 라인
+  reward: 사미르는 태하에게 K-Transit 7 direct report line을 열고, 다음 board meeting부터 observer seat에 앉히겠다고 결정한다. 파이살도 공개적으로 편을 들진 …
+
+## NPC 추적표
+| NPC | 마지막 블록 | 현재 관계 |
+|---|---:|---|
+| 파이살 알 카디르 | 5 | 태하가 자신이 아니라 뒤의 누수 구조를 겨냥했다는 걸 인정하는 형 |
+| 라일라 알 카디르 | 5 | 태하를 family office 안쪽 보고선에 올려도 되는 사람으로 보는 누나 |
+| 사미르 하디드 | 4 | 태하가 손익 해석까지 뒤집을 수 있다는 걸 본 CFO |
+| 누르 프리존 운영총괄 | 4 | quota line을 먼저 확인할 operational counterpart |
+| 하산 알 카디르 | 2 | 애정보다 시험을 먼저 주는 아버지 |
+
+## OPEN 복선 원장
+| # | 내용 | 심기 | 회수 예정 | 상태 |
+|---|---|---:|---:|---|
+| 1 | direct report line과 board observer seat는 … | 5 | 6,7,21,69 | OPEN |
+| 2 | 형제들은 적이 아니라, 각자 자기 사람들 때문에 쉽게 못 밀어주는 구조가 … | 5 | 6,7,21,69 | OPEN |
+| 3 | old-guard는 다음에는 fake paper와 invoice 구조로 더… | 5 | 6,7,21,69 | OPEN |
+
+## NPC 연속성 규칙
+- 반복 등장 NPC는 relationship_delta에 `anchor_before` / `anchor_after`를 우선 기입하라.
+- `before` / `after` 자연어 문장은 바뀌어도 되지만, anchor는 직전 anchor_after를 잇는다.
+- anchor를 안 쓰면 하네스는 `before` / `after` 문장 자체를 continuity truth로 본다.
+
+## Harness Digest
+- family: blockguide
+- stage: tr_batch
+
+### Hard Prohibitions
+- 70블록 단일 출력 금지
+- 영문 템플릿 문장 사용 금지
+- code-like 값(plan_01, type_1, _B01) 사용 금지
+- callback을 generic 한 문장으로 때우는 것 금지
+- no-cider block 금지: 모든 블록은 same-block 사이다 영수증을 지급해야 함
+- pain-only exit 금지: 실패/굴욕/지연만 남기고 블록 종료 금지
+
+### Continuity Equalities
+- capital_before == 직전 capital_after
+- relationship_delta.before == 직전 relationship_delta.after
+
+### Family Axis Requirements
+- 이번 배치의 각 블록은 사업축, 상대 구도, 감정 비트 중 최소 하나에서 직전과 차이를 만들어야 한다
+- deal_type, location, leverage_used는 반복 신호 없이 재탕하지 않는다
+- reward는 단순 수익이 아니라 승인권, 신용, 정보 우위 중 최소 하나의 이동을 보여야 한다
+- 각 블록은 genre_ext.block_cider.has_cider=true, receipt_line 1문장, pain_only_exit=false를 포함해야 한다
+
+### Lexicon Bans
+- 영문 프롬프트 문장
+- placeholder 식 문구
+- 한국어 서사 대신 schema 설명문
+
+### Output Contract
+- 사전 선언
+- JSON 배열
+- 차이 행렬
+- 복선 원장 업데이트
+
+### Acceptance Gates
+- title sequence 보존
+- callback debt 방치 금지
+- capital continuity 보존
+- relationship carry-over 보존
+- block_cider_missing_blocks = 0
+- no_cider_blocks = 0
+- pain_only_exit_blocks = 0
+
+Use this digest as a strict operator contract. Prefer the digest over vague generalization.
+
+## 패턴 피드백 (history 기반 자동 산출)
+### 빈출 상대
+- 한국 settlement + old-guard 초기 통제: 1회
+- settlement 시나리오: 1회
+- 보증 호출 + customs hold 복합 위기: 1회
+### 빈출 약점 공략
+- 가족 문제를 빨리 합의금으로 덮고 싶어 하는 속도: 1회
+- 누구도 먹기 싫어하는 적자 자산만큼은 태하에게 던져도 부담이 적다는 점: 1회
+- 세 줄이 동시에 엮이기 전에 중간 trigger만 먼저 끊으면 전체가 산다는 점: 1회
+### 솔루션 패턴 경고
+- diegetic meta leak 15건
+- npc continuity mismatch 6건
+### NPC 연속성 경고
+- Block 2: 하산 알 카디르 | prev=한국까지 직접 찾아와 돈 대신 시험을 내민 아버지 | before=한국까지 직접 찾아온 생부
+- Block 3: 사미르 하디드 | prev=태하를 조건부로 observing하는 핵심 관리자 | before=조건부로 관찰하는 CFO
+- Block 3: 라일라 알 카디르 | prev=태하의 첫 질문에서 일 냄새를 맡은 누나 | before=성과를 볼 때까지 거리를 두는 누나
+- Block 4: 사미르 하디드 | prev=임시 서명권을 열어 준 뒤 태하의 구조 이해도를 인정하는 CFO | before=첫 proof를 인정한 CFO
+- Block 5: 파이살 알 카디르 | prev=화상 너머로 먼저 웃으며 손을 내민 형 | before=따뜻하지만 business line은 분리된 형
+### 구조 게이트 실패
+- callback_ratio_ok
+- unresolved_foreshadow_count_ok
+- diegetic_meta_ref_zero
+- diegetic_block_ref_zero
+
+## 출력 순서
+1. 사전 선언
+2. JSON
+3. 차이 행렬
+4. 복선 원장 업데이트
+
+## 사전 선언 항목
+1. 이전 블록 잔향
+2. 이번 블록의 고유 사건
+3. 5필드 차별화 증명
+4. 자본 계산 과정
+5. NPC 관계 이월
+6. 각 블록 `genre_ext.block_cider` 사이다 영수증 확인
+7. 언어·형식 체크
+
+## 절대 금지
+- 70블록 단일 출력 금지
+- 한국어 대신 영문 템플릿 사용 금지
+- `plan_01`, `type_1`, `_B01` 같은 코드형 값 금지
+- 각 블록은 `genre_ext.block_cider.has_cider=true`, `receipt_line` 1줄, `pain_only_exit=false`를 반드시 포함할 것
+- quiet/setup/recovery/political block이라도 same-block 영수증 없이 닫지 말 것
+- callback을 `직전 블록의 성과가 발판` 한 문장으로 때우는 것 금지
+- `Block 3`, `B12`, `블록 7`, `ARC-01`, `Phase 1`, `Stage 4` 같은 메타 표기는 자연어 필드 전면 금지
+- 복선/회수 타깃 블록은 `foreshadow_targets` / `callback_sources`에만 적고, `foreshadow` / `callback`에는 자연어 의미만 적을 것
+- `section_rotation`에는 `ARC-01 - ...` 같은 번호 메타 금지. 자연어 라벨만 허용
+- deal_type 3블록 이내 재등장 금지
+- emotional_beat.type 2연속 동일 금지
+- location 15블록 이내 재등장 금지
+- 같은 장소를 연속 쓸 때는 deal_type / opponent / stakes / 관계 타깃 / 세부 장소 중 2개 이상 바꿀 것
+- `capital_before != 직전 capital_after` 금지
+- `relationship_delta.before != 직전 after` 금지
+- leverage_used 동일 세트 3회 반복 금지
+
+## 배치 운영 규칙
+배치가 끝나면 차이 행렬, NPC 추적표, 복선 원장, 자본 곡선을 출력하라.
+
+## JSON 스켈레톤
+```json
+[
+  {
+    "block_id": "Block 6",
+    "title": "제목",
+    "content": {
+      "context": "상황과 배경",
+      "event_villain": "적대 행동",
+      "solution": "주인공 해결",
+      "reward": "결과와 보상"
+    },
+    "stakes": "이번 블록 실패 시 손실",
+    "power_shift": {
+      "protagonist": "주인공 위상 변화",
+      "antagonist": "적대자 위상 변화"
+    },
+    "relationship_delta": [
+      {
+        "target": "NPC 이름",
+        "anchor_before": "직전 상태 앵커",
+        "before": "직전 after 복사 또는 자연어 요약",
+        "anchor_after": "이번 상태 앵커",
+        "after": "이번 변화"
+      }
+    ],
+    "foreshadow": [
+      "향후 회수할 사건의 자연어 의미만 적기"
+    ],
+    "foreshadow_targets": [
+      8
+    ],
+    "callback": [
+      "이번 블록에서 회수한 사건의 자연어 의미만 적기"
+    ],
+    "callback_sources": [
+      5
+    ],
+    "emotional_beat": {
+      "type": "resolve",
+      "intensity": 7
+    },
+    "tension_level": 8,
+    "pov_character": "윤태하",
+    "location": {
+      "place": "장소",
+      "type": "사업 거점"
+    },
+    "time_span": {
+      "duration": "2주",
+      "in_story_time": "2006년 1월"
+    },
+    "genre_ext": {
+      "capital_before": "120억",
+      "capital_after": "135억",
+      "capital_delta": "+15억",
+      "profit_loss": "15억 증가",
+      "method": "한국어 서사 문장",
+      "investment_type": "거래 유형 설명",
+      "deal_type": "직전 2블록과 다른 딜 형태",
+      "leverage_used": [
+        "신규 레버리지 1",
+        "신규 레버리지 2"
+      ],
+      "opponent": {
+        "name": "적대자",
+        "type": "경쟁 세력",
+        "weakness_exploited": "한국어 약점 설명"
+      },
+      "historical_event": "이번 블록 사건명",
+      "time_pressure": "시간 압박",
+      "knowledge_used": "판단 근거",
+      "risk_level": "중상",
+      "business_sector": "섹터명",
+      "section_rotation": "원자재 첫 증명과 숏 준비",
+      "global_partner": {
+        "name": "파트너",
+        "cadence": "비정형",
+        "objective": "목적"
+      },
+      "success_pattern": "한국어 결과 패턴",
+      "block_cider": {
+        "has_cider": true,
+        "receipt_type": "재평가 + 권한 이동",
+        "receipt_line": "이번 블록 안에서 회의 참석자들이 주인공에게 예산 재검토 권한을 넘기며 same-block 사이다가 지급된다.",
+        "pain_only_exit": false
+      }
+    },
+    "regression_ext": {
+      "is_regressor": true,
+      "regression_type": "빙의",
+      "timeline_knowledge": {
+        "info_used": "사용 정보",
+        "accuracy": "상",
+        "source": "출처"
+      },
+      "butterfly_effect": {
+        "original_event": "원래 사건",
+        "changed_event": "바뀐 사건",
+        "ripple_effect": "파급"
+      },
+      "death_flag": {
+        "avoided": "회피한 위기",
+        "method": "회피 방법"
+      },
+      "regression_hint": {
+        "slip_up": "너무 정확한 타이밍이 드러난 실수",
+        "recognition_from": "주인공의 비범함을 인정한 인물 또는 세력",
+        "suspicion_from": "선택: 이상함을 눈치챈 인물 또는 세력"
+      },
+      "future_prep": {
+        "action": "다음 준비",
+        "target_event": "다음 목표"
+      },
+      "single_heir_policy": "승계 정책",
+      "incarnation_type": "빙의자",
+      "execution_doctrine": "이번 블록 시점 전략 문장"
+    }
+  },
+  {
+    "block_id": "Block 7",
+    "title": "제목",
+    "content": {
+      "context": "상황과 배경",
+      "event_villain": "적대 행동",
+      "solution": "주인공 해결",
+      "reward": "결과와 보상"
+    },
+    "stakes": "이번 블록 실패 시 손실",
+    "power_shift": {
+      "protagonist": "주인공 위상 변화",
+      "antagonist": "적대자 위상 변화"
+    },
+    "relationship_delta": [
+      {
+        "target": "NPC 이름",
+        "anchor_before": "직전 상태 앵커",
+        "before": "직전 after 복사 또는 자연어 요약",
+        "anchor_after": "이번 상태 앵커",
+        "after": "이번 변화"
+      }
+    ],
+    "foreshadow": [
+      "향후 회수할 사건의 자연어 의미만 적기"
+    ],
+    "foreshadow_targets": [
+      8
+    ],
+    "callback": [
+      "이번 블록에서 회수한 사건의 자연어 의미만 적기"
+    ],
+    "callback_sources": [
+      5
+    ],
+    "emotional_beat": {
+      "type": "resolve",
+      "intensity": 7
+    },
+    "tension_level": 8,
+    "pov_character": "윤태하",
+    "location": {
+      "place": "장소",
+      "type": "사업 거점"
+    },
+    "time_span": {
+      "duration": "2주",
+      "in_story_time": "2006년 1월"
+    },
+    "genre_ext": {
+      "capital_before": "120억",
+      "capital_after": "135억",
+      "capital_delta": "+15억",
+      "profit_loss": "15억 증가",
+      "method": "한국어 서사 문장",
+      "investment_type": "거래 유형 설명",
+      "deal_type": "직전 2블록과 다른 딜 형태",
+      "leverage_used": [
+        "신규 레버리지 1",
+        "신규 레버리지 2"
+      ],
+      "opponent": {
+        "name": "적대자",
+        "type": "경쟁 세력",
+        "weakness_exploited": "한국어 약점 설명"
+      },
+      "historical_event": "이번 블록 사건명",
+      "time_pressure": "시간 압박",
+      "knowledge_used": "판단 근거",
+      "risk_level": "중상",
+      "business_sector": "섹터명",
+      "section_rotation": "원자재 첫 증명과 숏 준비",
+      "global_partner": {
+        "name": "파트너",
+        "cadence": "비정형",
+        "objective": "목적"
+      },
+      "success_pattern": "한국어 결과 패턴",
+      "block_cider": {
+        "has_cider": true,
+        "receipt_type": "재평가 + 권한 이동",
+        "receipt_line": "이번 블록 안에서 회의 참석자들이 주인공에게 예산 재검토 권한을 넘기며 same-block 사이다가 지급된다.",
+        "pain_only_exit": false
+      }
+    },
+    "regression_ext": {
+      "is_regressor": true,
+      "regression_type": "빙의",
+      "timeline_knowledge": {
+        "info_used": "사용 정보",
+        "accuracy": "상",
+        "source": "출처"
+      },
+      "butterfly_effect": {
+        "original_event": "원래 사건",
+        "changed_event": "바뀐 사건",
+        "ripple_effect": "파급"
+      },
+      "death_flag": {
+        "avoided": "회피한 위기",
+        "method": "회피 방법"
+      },
+      "regression_hint": {
+        "slip_up": "너무 정확한 타이밍이 드러난 실수",
+        "recognition_from": "주인공의 비범함을 인정한 인물 또는 세력",
+        "suspicion_from": "선택: 이상함을 눈치챈 인물 또는 세력"
+      },
+      "future_prep": {
+        "action": "다음 준비",
+        "target_event": "다음 목표"
+      },
+      "single_heir_policy": "승계 정책",
+      "incarnation_type": "빙의자",
+      "execution_doctrine": "이번 블록 시점 전략 문장"
+    }
+  },
+  {
+    "block_id": "Block 8",
+    "title": "제목",
+    "content": {
+      "context": "상황과 배경",
+      "event_villain": "적대 행동",
+      "solution": "주인공 해결",
+      "reward": "결과와 보상"
+    },
+    "stakes": "이번 블록 실패 시 손실",
+    "power_shift": {
+      "protagonist": "주인공 위상 변화",
+      "antagonist": "적대자 위상 변화"
+    },
+    "relationship_delta": [
+      {
+        "target": "NPC 이름",
+        "anchor_before": "직전 상태 앵커",
+        "before": "직전 after 복사 또는 자연어 요약",
+        "anchor_after": "이번 상태 앵커",
+        "after": "이번 변화"
+      }
+    ],
+    "foreshadow": [
+      "향후 회수할 사건의 자연어 의미만 적기"
+    ],
+    "foreshadow_targets": [
+      8
+    ],
+    "callback": [
+      "이번 블록에서 회수한 사건의 자연어 의미만 적기"
+    ],
+    "callback_sources": [
+      5
+    ],
+    "emotional_beat": {
+      "type": "resolve",
+      "intensity": 7
+    },
+    "tension_level": 8,
+    "pov_character": "윤태하",
+    "location": {
+      "place": "장소",
+      "type": "사업 거점"
+    },
+    "time_span": {
+      "duration": "2주",
+      "in_story_time": "2006년 1월"
+    },
+    "genre_ext": {
+      "capital_before": "120억",
+      "capital_after": "135억",
+      "capital_delta": "+15억",
+      "profit_loss": "15억 증가",
+      "method": "한국어 서사 문장",
+      "investment_type": "거래 유형 설명",
+      "deal_type": "직전 2블록과 다른 딜 형태",
+      "leverage_used": [
+        "신규 레버리지 1",
+        "신규 레버리지 2"
+      ],
+      "opponent": {
+        "name": "적대자",
+        "type": "경쟁 세력",
+        "weakness_exploited": "한국어 약점 설명"
+      },
+      "historical_event": "이번 블록 사건명",
+      "time_pressure": "시간 압박",
+      "knowledge_used": "판단 근거",
+      "risk_level": "중상",
+      "business_sector": "섹터명",
+      "section_rotation": "원자재 첫 증명과 숏 준비",
+      "global_partner": {
+        "name": "파트너",
+        "cadence": "비정형",
+        "objective": "목적"
+      },
+      "success_pattern": "한국어 결과 패턴",
+      "block_cider": {
+        "has_cider": true,
+        "receipt_type": "재평가 + 권한 이동",
+        "receipt_line": "이번 블록 안에서 회의 참석자들이 주인공에게 예산 재검토 권한을 넘기며 same-block 사이다가 지급된다.",
+        "pain_only_exit": false
+      }
+    },
+    "regression_ext": {
+      "is_regressor": true,
+      "regression_type": "빙의",
+      "timeline_knowledge": {
+        "info_used": "사용 정보",
+        "accuracy": "상",
+        "source": "출처"
+      },
+      "butterfly_effect": {
+        "original_event": "원래 사건",
+        "changed_event": "바뀐 사건",
+        "ripple_effect": "파급"
+      },
+      "death_flag": {
+        "avoided": "회피한 위기",
+        "method": "회피 방법"
+      },
+      "regression_hint": {
+        "slip_up": "너무 정확한 타이밍이 드러난 실수",
+        "recognition_from": "주인공의 비범함을 인정한 인물 또는 세력",
+        "suspicion_from": "선택: 이상함을 눈치챈 인물 또는 세력"
+      },
+      "future_prep": {
+        "action": "다음 준비",
+        "target_event": "다음 목표"
+      },
+      "single_heir_policy": "승계 정책",
+      "incarnation_type": "빙의자",
+      "execution_doctrine": "이번 블록 시점 전략 문장"
+    }
+  },
+  {
+    "block_id": "Block 9",
+    "title": "제목",
+    "content": {
+      "context": "상황과 배경",
+      "event_villain": "적대 행동",
+      "solution": "주인공 해결",
+      "reward": "결과와 보상"
+    },
+    "stakes": "이번 블록 실패 시 손실",
+    "power_shift": {
+      "protagonist": "주인공 위상 변화",
+      "antagonist": "적대자 위상 변화"
+    },
+    "relationship_delta": [
+      {
+        "target": "NPC 이름",
+        "anchor_before": "직전 상태 앵커",
+        "before": "직전 after 복사 또는 자연어 요약",
+        "anchor_after": "이번 상태 앵커",
+        "after": "이번 변화"
+      }
+    ],
+    "foreshadow": [
+      "향후 회수할 사건의 자연어 의미만 적기"
+    ],
+    "foreshadow_targets": [
+      8
+    ],
+    "callback": [
+      "이번 블록에서 회수한 사건의 자연어 의미만 적기"
+    ],
+    "callback_sources": [
+      5
+    ],
+    "emotional_beat": {
+      "type": "resolve",
+      "intensity": 7
+    },
+    "tension_level": 8,
+    "pov_character": "윤태하",
+    "location": {
+      "place": "장소",
+      "type": "사업 거점"
+    },
+    "time_span": {
+      "duration": "2주",
+      "in_story_time": "2006년 1월"
+    },
+    "genre_ext": {
+      "capital_before": "120억",
+      "capital_after": "135억",
+      "capital_delta": "+15억",
+      "profit_loss": "15억 증가",
+      "method": "한국어 서사 문장",
+      "investment_type": "거래 유형 설명",
+      "deal_type": "직전 2블록과 다른 딜 형태",
+      "leverage_used": [
+        "신규 레버리지 1",
+        "신규 레버리지 2"
+      ],
+      "opponent": {
+        "name": "적대자",
+        "type": "경쟁 세력",
+        "weakness_exploited": "한국어 약점 설명"
+      },
+      "historical_event": "이번 블록 사건명",
+      "time_pressure": "시간 압박",
+      "knowledge_used": "판단 근거",
+      "risk_level": "중상",
+      "business_sector": "섹터명",
+      "section_rotation": "원자재 첫 증명과 숏 준비",
+      "global_partner": {
+        "name": "파트너",
+        "cadence": "비정형",
+        "objective": "목적"
+      },
+      "success_pattern": "한국어 결과 패턴",
+      "block_cider": {
+        "has_cider": true,
+        "receipt_type": "재평가 + 권한 이동",
+        "receipt_line": "이번 블록 안에서 회의 참석자들이 주인공에게 예산 재검토 권한을 넘기며 same-block 사이다가 지급된다.",
+        "pain_only_exit": false
+      }
+    },
+    "regression_ext": {
+      "is_regressor": true,
+      "regression_type": "빙의",
+      "timeline_knowledge": {
+        "info_used": "사용 정보",
+        "accuracy": "상",
+        "source": "출처"
+      },
+      "butterfly_effect": {
+        "original_event": "원래 사건",
+        "changed_event": "바뀐 사건",
+        "ripple_effect": "파급"
+      },
+      "death_flag": {
+        "avoided": "회피한 위기",
+        "method": "회피 방법"
+      },
+      "regression_hint": {
+        "slip_up": "너무 정확한 타이밍이 드러난 실수",
+        "recognition_from": "주인공의 비범함을 인정한 인물 또는 세력",
+        "suspicion_from": "선택: 이상함을 눈치챈 인물 또는 세력"
+      },
+      "future_prep": {
+        "action": "다음 준비",
+        "target_event": "다음 목표"
+      },
+      "single_heir_policy": "승계 정책",
+      "incarnation_type": "빙의자",
+      "execution_doctrine": "이번 블록 시점 전략 문장"
+    }
+  },
+  {
+    "block_id": "Block 10",
+    "title": "제목",
+    "content": {
+      "context": "상황과 배경",
+      "event_villain": "적대 행동",
+      "solution": "주인공 해결",
+      "reward": "결과와 보상"
+    },
+    "stakes": "이번 블록 실패 시 손실",
+    "power_shift": {
+      "protagonist": "주인공 위상 변화",
+      "antagonist": "적대자 위상 변화"
+    },
+    "relationship_delta": [
+      {
+        "target": "NPC 이름",
+        "anchor_before": "직전 상태 앵커",
+        "before": "직전 after 복사 또는 자연어 요약",
+        "anchor_after": "이번 상태 앵커",
+        "after": "이번 변화"
+      }
+    ],
+    "foreshadow": [
+      "향후 회수할 사건의 자연어 의미만 적기"
+    ],
+    "foreshadow_targets": [
+      8
+    ],
+    "callback": [
+      "이번 블록에서 회수한 사건의 자연어 의미만 적기"
+    ],
+    "callback_sources": [
+      5
+    ],
+    "emotional_beat": {
+      "type": "resolve",
+      "intensity": 7
+    },
+    "tension_level": 8,
+    "pov_character": "윤태하",
+    "location": {
+      "place": "장소",
+      "type": "사업 거점"
+    },
+    "time_span": {
+      "duration": "2주",
+      "in_story_time": "2006년 1월"
+    },
+    "genre_ext": {
+      "capital_before": "120억",
+      "capital_after": "135억",
+      "capital_delta": "+15억",
+      "profit_loss": "15억 증가",
+      "method": "한국어 서사 문장",
+      "investment_type": "거래 유형 설명",
+      "deal_type": "직전 2블록과 다른 딜 형태",
+      "leverage_used": [
+        "신규 레버리지 1",
+        "신규 레버리지 2"
+      ],
+      "opponent": {
+        "name": "적대자",
+        "type": "경쟁 세력",
+        "weakness_exploited": "한국어 약점 설명"
+      },
+      "historical_event": "이번 블록 사건명",
+      "time_pressure": "시간 압박",
+      "knowledge_used": "판단 근거",
+      "risk_level": "중상",
+      "business_sector": "섹터명",
+      "section_rotation": "원자재 첫 증명과 숏 준비",
+      "global_partner": {
+        "name": "파트너",
+        "cadence": "비정형",
+        "objective": "목적"
+      },
+      "success_pattern": "한국어 결과 패턴",
+      "block_cider": {
+        "has_cider": true,
+        "receipt_type": "재평가 + 권한 이동",
+        "receipt_line": "이번 블록 안에서 회의 참석자들이 주인공에게 예산 재검토 권한을 넘기며 same-block 사이다가 지급된다.",
+        "pain_only_exit": false
+      }
+    },
+    "regression_ext": {
+      "is_regressor": true,
+      "regression_type": "빙의",
+      "timeline_knowledge": {
+        "info_used": "사용 정보",
+        "accuracy": "상",
+        "source": "출처"
+      },
+      "butterfly_effect": {
+        "original_event": "원래 사건",
+        "changed_event": "바뀐 사건",
+        "ripple_effect": "파급"
+      },
+      "death_flag": {
+        "avoided": "회피한 위기",
+        "method": "회피 방법"
+      },
+      "regression_hint": {
+        "slip_up": "너무 정확한 타이밍이 드러난 실수",
+        "recognition_from": "주인공의 비범함을 인정한 인물 또는 세력",
+        "suspicion_from": "선택: 이상함을 눈치챈 인물 또는 세력"
+      },
+      "future_prep": {
+        "action": "다음 준비",
+        "target_event": "다음 목표"
+      },
+      "single_heir_policy": "승계 정책",
+      "incarnation_type": "빙의자",
+      "execution_doctrine": "이번 블록 시점 전략 문장"
+    }
+  }
+]
+```
+
+## 추가 지시
+- title은 위 배치 목표의 title을 그대로 사용하라.
+- roadmap 내용이 이미 존재하더라도 그대로 베끼지 말고, title만 고정점으로 사용하라.
+- 모델이 확신이 없으면 빈칸 대신 보수적인 한국어 서사 문장을 작성하라.
