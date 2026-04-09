@@ -219,6 +219,30 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
     복선/회수 구조 타깃은 `foreshadow_targets` / `callback_sources`에만 기입한다.
     `section_rotation`/`arc_section`/`phase`는 번호 없는 자연어 라벨만 허용한다.
     이유: TR의 모든 텍스트가 downstream 원고 생성에 흐르므로 메타 번호의 작중 오염을 방지.
+
+    ### 22A. Plan-level 참조 허용 예외 (ratified 2026-04-09)
+
+    TR이 `foreshadow_targets` / `callback_sources` 구조 필드를 사용하지 않고 `foreshadow: [{ref: int, event: str}, ...]` / `callback: [{ref: int, event: str}, ...]` convention을 채택한 작품에 한해, 아래 조건을 모두 충족하면 자연어 필드의 `B숫자` / `ARC-숫자` inline 참조를 **TR-내부 plan-level 참조**로 허용한다.
+
+    **허용 조건**:
+    - `foreshadow[].ref` / `callback[].ref`가 정수 구조 필드로 분리돼 있을 것 (번호 구조는 ref에 고정)
+    - inline 참조는 plan-level 서사 연결 신호이며, downstream 원고 생성기(episode writer / scene builder)가 scene 레벨에서 해석·제거하는 책임을 진다
+    - 특정 작품 TR 내부에서 이 convention이 일관되게 사용되고 있을 것 (work_id별 all-or-nothing)
+    - `.` 같은 작중 대사/서술 filed가 아니라 plan 텍스트 필드(`content.context/event_villain/solution/reward`, `stakes`, `power_shift.*`, `strategy`, `success_pattern`, `relationship_delta[].before/after`, `foreshadow.event`, `callback.event`)에 한함
+
+    **여전히 금지**:
+    - 최종 원고(`manuscript` / `episode` 산출물)의 작중 대사·서술
+    - `foreshadow_targets` / `callback_sources` 구조 필드가 이미 사용된 TR — 그 경우에는 Rule 22 원문을 그대로 적용
+    - 하이브리드(일부 블록만 ref convention, 일부는 inline)도 금지 — 작품 단위로 일관되어야 함
+
+    **Precedent**:
+    - `manual_meridian_archivist` (wuxguide): ARC-03/04 §5.3 감리가 이 pattern을 암묵 승인, 2026-04-09 B46·B47 3-pass 감리(`docs/2026-04-09/manual_meridian_archivist_b46_b47_3pass_audit.md`)에서 systemic finding으로 정면 적발 → 본 예외로 공식 수용
+
+    **운영 규칙**:
+    - 신규 작품 TR 생성 시 기본값은 Rule 22 원문 (구조 필드 사용)
+    - 기존 작품이 이미 inline convention을 채택한 경우에만 22A 예외 적용
+    - 22A 예외 적용 작품은 `live_status.md §Delegation Rule` 또는 해당 work의 canonical SSOT에 "Rule 22A 예외 적용"을 명시해야 함
+    - 감리 보고서의 `meta_number_leak_blocks` 수치는 계속 기록하되, 22A 예외 작품에서는 P1 FAIL이 아닌 **INFO-level 관찰 항목**으로 분류
 23. 복선 실제 회수 의무: foreshadow에서 ref로 지목한 블록의 callback에 명시적으로 회수 문장 포함 필수.
 24. reward 재진술 금지: context를 시제만 바꿔 반복하면 무효.
     reward에는 반드시 "새로 생긴 결과/손실/경지 변화"가 1개 이상 포함.
