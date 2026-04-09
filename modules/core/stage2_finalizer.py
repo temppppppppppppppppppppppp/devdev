@@ -1,4 +1,4 @@
-﻿"""[B-1-7] Stage2 finalizer extracted from Stage2Orchestrator.
+"""[B-1-7] Stage2 finalizer extracted from Stage2Orchestrator.
 
 utf8-hygiene: allow-file -- legacy Korean regex and prompt strings predate this patch; item 1 changes are ASCII-bounded.
 """
@@ -34,6 +34,7 @@ def _peek_scope_total_cost_usd() -> float:
     except Exception as exc:
         logging.debug("[Stage2] metrics scope peek failed (non-blocking): %s", exc)
         return 0.0
+
 
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
 _TACTICAL_EPISODE_HEADER_RE = re.compile(r"(?:^|\n)\s*(?:\[\s*)?제\s*\d+\s*화[^\n]*", re.MULTILINE)
@@ -175,7 +176,7 @@ def _detect_episode_start_future_artifact_signal(tactical_doc: str) -> dict[str,
 def _render_start_state_field_value(value: object) -> str:
     if isinstance(value, str):
         return value
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return str(value)
     if isinstance(value, list):
         return json.dumps(value, ensure_ascii=False)
@@ -234,7 +235,9 @@ def _sync_first_episode_start_state_line(tactical_doc: str, start_state: dict[st
         synced_line = _replace_or_append_start_state_field(synced_line, "소지품", start_state.get("equipment"))
         synced_line = _replace_or_append_start_state_field(synced_line, "부상", start_state.get("injuries"))
         synced_line = _replace_or_append_start_state_field(synced_line, "내공", start_state.get("internal_energy"))
-        first_section = first_section[: start_state_match.start()] + synced_line + first_section[start_state_match.end() :]
+        first_section = (
+            first_section[: start_state_match.start()] + synced_line + first_section[start_state_match.end() :]
+        )
     else:
         header_match = _TACTICAL_EPISODE_HEADER_RE.search(first_section)
         if not header_match:
@@ -287,9 +290,7 @@ def _compute_inventory_carryover(prev_inventory: Any, consumed: Any, acquired: A
     prev_items = _coerce_inventory_items(prev_inventory)
     acquired_items = _coerce_inventory_items(acquired)
     consumed_names = {
-        name
-        for name in (_inventory_item_key(item) for item in _coerce_inventory_items(consumed))
-        if name
+        name for name in (_inventory_item_key(item) for item in _coerce_inventory_items(consumed)) if name
     }
 
     inherited: list[Any] = []
@@ -437,7 +438,7 @@ def _build_stage2_prompt_version(*, generation_method: str, is_patch: bool = Fal
 
 def _to_num_with_korean_units(raw: object) -> float | None:
     """'23억', '1.2조', '+3만' 형식 텍스트 → float 변환."""
-    if isinstance(raw, (int, float)):
+    if isinstance(raw, int | float):
         return float(raw)
     if not isinstance(raw, str):
         return None
@@ -902,9 +903,9 @@ def _build_stage2_carryover_authority_summary(refined_arc: dict | None) -> dict 
     if not isinstance(investment_calc, dict):
         investment_calc = {}
 
-    start_location = collapse_stage2_location_label(start_state.get("location")) or str(
-        start_state.get("location") or ""
-    ).strip()
+    start_location = (
+        collapse_stage2_location_label(start_state.get("location")) or str(start_state.get("location") or "").strip()
+    )
     end_location = collapse_stage2_location_label(end_state.get("location")) or collapse_stage2_location_label(
         joint_docs.get("final_location")
     )
@@ -988,10 +989,100 @@ def _resolve_stage2_selection_reason(audit: dict | None, artifact_payload: dict 
     return ""
 
 
+def _is_escalatory_stage2_verdict_reason(text: str) -> bool:
+    normalized = " ".join(str(text or "").upper().split())
+    if not normalized:
+        return False
+    return any(
+        marker in normalized
+        for marker in (
+            "PASS_WITH_FIX",
+            "REQUIRES AT LEAST",
+            "QUALITY GATE FAIL",
+            "QUALITY GATE REJECT",
+            "MUST REJECT",
+        )
+    )
+
+
+def _normalize_stage2_pass_compare_meta(audit: dict | None, artifact_payload: dict | None = None) -> None:
+    if not isinstance(audit, dict) or not isinstance(artifact_payload, dict):
+        return
+    if str(audit.get("decision", "") or "").strip().upper() != "PASS":
+        return
+    raw_meta = artifact_payload.get("_director_compare_meta")
+    if raw_meta is None:
+        return
+    if not isinstance(raw_meta, dict):
+        return
+
+    meta = dict(raw_meta)
+    previous_decision = str(meta.get("director_decision", "") or "").strip().upper()
+    stale_non_pass_meta = previous_decision not in {"", "PASS"}
+
+    selection_reason = ""
+    for value in (
+        audit.get("selection_reason", ""),
+        meta.get("selection_reason", ""),
+        audit.get("reason", ""),
+    ):
+        text = str(value or "").strip()
+        if text:
+            selection_reason = text
+            break
+
+    verdict_reason = ""
+    pass_verdict_sources = [
+        audit.get("verdict_reason", ""),
+        audit.get("fix_scope_reasoning", ""),
+        audit.get("reason", ""),
+    ]
+    if stale_non_pass_meta:
+        pass_verdict_sources.append(meta.get("selection_reason", ""))
+    else:
+        pass_verdict_sources.extend((meta.get("feedback", ""), meta.get("selection_reason", "")))
+    for value in pass_verdict_sources:
+        text = str(value or "").strip()
+        if text and not _is_escalatory_stage2_verdict_reason(text):
+            verdict_reason = text
+            break
+
+    meta["director_decision"] = "PASS"
+    if selection_reason:
+        meta["selection_reason"] = selection_reason
+    meta["feedback"] = verdict_reason
+    resolved_fix_scope = str(audit.get("fix_scope", "") or meta.get("fix_scope", "") or "").strip()
+    if resolved_fix_scope:
+        meta["fix_scope"] = resolved_fix_scope
+    if stale_non_pass_meta:
+        meta["quality_gate_triggered"] = False
+        meta["quality_gate_reasons"] = []
+    artifact_payload["_director_compare_meta"] = meta
+
+
 def _resolve_stage2_verdict_reason(audit: dict | None, artifact_payload: dict | None = None) -> str:
     if not isinstance(audit, dict):
         audit = {}
     compare_meta = _extract_stage2_director_compare_meta(artifact_payload)
+    decision = str(audit.get("decision", "") or "").strip().upper()
+    compare_decision = str(compare_meta.get("director_decision", "") or "").strip().upper()
+    stale_non_pass_meta = decision == "PASS" and compare_decision not in {"", "PASS"}
+    if decision == "PASS":
+        pass_verdict_sources = [
+            audit.get("verdict_reason", ""),
+            audit.get("fix_scope_reasoning", ""),
+            audit.get("selection_reason", ""),
+            audit.get("reason", ""),
+        ]
+        if stale_non_pass_meta:
+            pass_verdict_sources.append(compare_meta.get("selection_reason", ""))
+        else:
+            pass_verdict_sources.extend((compare_meta.get("feedback", ""), compare_meta.get("selection_reason", "")))
+        for value in pass_verdict_sources:
+            text = str(value or "").strip()
+            if text and not _is_escalatory_stage2_verdict_reason(text):
+                return text
+        return ""
     for value in (
         audit.get("verdict_reason", ""),
         audit.get("reason", ""),
@@ -1002,6 +1093,40 @@ def _resolve_stage2_verdict_reason(audit: dict | None, artifact_payload: dict | 
         if text:
             return text
     return ""
+
+
+def _resolve_stage2_retry_directives(audit: dict | None) -> str:
+    if not isinstance(audit, dict):
+        audit = {}
+    for value in (
+        audit.get("retry_directives", ""),
+        audit.get("re_slice_instruction", ""),
+    ):
+        text = str(value or "").strip()
+        if text:
+            return text
+    decision = str(audit.get("decision", "") or "").strip().upper()
+    if decision in {"REJECT", "PASS_WITH_FIX"}:
+        return "밀도 보강 필요"
+    return ""
+
+
+def _resolve_stage2_runtime_advisory(audit: dict | None) -> str:
+    if not isinstance(audit, dict):
+        return ""
+    return str(audit.get("runtime_advisory", "") or "").strip()
+
+
+def _coerce_stage2_audit_score(audit: dict | None) -> int:
+    if not isinstance(audit, dict):
+        audit = {}
+    score = audit.get("score", 0)
+    if isinstance(score, int):
+        return score
+    try:
+        return int(score)
+    except (ValueError, TypeError):
+        return 0
 
 
 class Stage2Finalizer:
@@ -1438,6 +1563,7 @@ class Stage2Finalizer:
         constraint_db,
     ) -> Stage2PassPreparationResult:
         from modules.core.constants import RecoveryLimits
+
         if callable(getattr(self.ctx, "validate_arc_data_fields", None)):
             repaired_arc = self.ctx.validate_arc_data_fields(refined_arc, global_arc_no)
             if repaired_arc is None:
@@ -1494,9 +1620,11 @@ class Stage2Finalizer:
         elif curr_inventory != curr_joint.get("physical_inventory", []):
             refined_arc["joint_docs"]["physical_inventory"] = curr_inventory
 
-        canonical_end_inventory, joint_inventory_changed, end_inventory_changed = _sync_stage2_end_state_inventory_contract(
-            refined_arc,
-            all_refined_arcs[-1] if all_refined_arcs else None,
+        canonical_end_inventory, joint_inventory_changed, end_inventory_changed = (
+            _sync_stage2_end_state_inventory_contract(
+                refined_arc,
+                all_refined_arcs[-1] if all_refined_arcs else None,
+            )
         )
         if joint_inventory_changed and not all_refined_arcs:
             self.ctx.ui.log(
@@ -1565,10 +1693,11 @@ class Stage2Finalizer:
         enriched_block: dict,
         genre: str = "",
     ) -> Stage2PassPreparationResult:
-
         if constraint_block:
             constraint_lines = constraint_block.strip().split("\n")
-            must_not = [line.strip() for line in constraint_lines if "금지" in line or "MUST NOT" in line or "절대" in line]
+            must_not = [
+                line.strip() for line in constraint_lines if "금지" in line or "MUST NOT" in line or "절대" in line
+            ]
             refined_arc["constraint_summary"] = "\n".join(must_not[:10]) if must_not else ""
 
         rationale_parts: list[str] = []
@@ -1696,6 +1825,7 @@ class Stage2Finalizer:
                 )
             return {"action": "retry", "current_feedback": current_feedback}
         return None
+
     def _upsert_stage2_pass_arc_dependencies(
         self,
         *,
@@ -1725,6 +1855,7 @@ class Stage2Finalizer:
             self.ctx.ui.log(f"      [V49.4] ConstraintDB 업데이트 완료 (총 {len(constraint_db.arc_states)}개 Arc)")
         except (AttributeError, TypeError, RuntimeError) as cdb_err:
             logging.warning("[B4-P1-1] constraint_db.update_arc_state 실패 (best-effort): %s", cdb_err)
+
     def _maybe_generate_stage2_volume_summaries(self, *, global_arc_no: int) -> None:
         arcs_per_volume = max(1, int(VolumeSettings.ARCS_PER_VOLUME))
         if global_arc_no <= 0 or global_arc_no % arcs_per_volume != 0:
@@ -1744,10 +1875,7 @@ class Stage2Finalizer:
                         if isinstance(npc_status, dict) and npc_status:
                             summary_parts.append(
                                 "NPC: "
-                                + ", ".join(
-                                    f"{name}({value.get('status', '')})"
-                                    for name, value in npc_status.items()
-                                )
+                                + ", ".join(f"{name}({value.get('status', '')})" for name, value in npc_status.items())
                             )
                         if arc_summary.get("world_changes"):
                             summary_parts.append(
@@ -1815,6 +1943,7 @@ class Stage2Finalizer:
                 logging.warning("[V68] 시리즈 요약 갱신 실패 (best-effort: %s)", series_err)
         except Exception as volume_err:
             logging.warning("[V68] 볼륨 요약 생성 실패 (best-effort: %s)", volume_err)
+
     def _advance_stage2_pass_persistence_state(
         self,
         *,
@@ -1877,6 +2006,10 @@ class Stage2Finalizer:
         prev_score: float,
         patch_fallback: bool,
     ) -> Stage2PassFinalizeTailResult:
+        _normalize_stage2_pass_compare_meta(
+            audit,
+            refined_arc if isinstance(refined_arc, dict) else None,
+        )
         commit_result = await self._persist_stage2_pass_arc_commit(
             refined_arc=refined_arc,
             all_refined_arcs=all_refined_arcs,
@@ -1929,6 +2062,8 @@ class Stage2Finalizer:
             "current_feedback": current_feedback,
             "director_feedback_for_fourphase": director_feedback_for_fourphase,
             "st_snapshot": st_snapshot,
+            "score": int(audit.get("score", 0) or 0),
+            "fix_scope": str(audit.get("fix_scope", "") or ""),
         }
 
     async def _legacy_stage2_pass_persistence_and_tail_body(
@@ -1988,6 +2123,8 @@ class Stage2Finalizer:
             "current_feedback": current_feedback,
             "director_feedback_for_fourphase": director_feedback_for_fourphase,
             "st_snapshot": st_snapshot,
+            "score": int(audit.get("score", 0) or 0),
+            "fix_scope": str(audit.get("fix_scope", "") or ""),
         }
 
     def _maybe_reject_stage2_pass_for_quality_gate(
@@ -2392,6 +2529,14 @@ class Stage2Finalizer:
         session_logger = getattr(self.ctx, "session_logger", None)
         if session_logger:
             try:
+                session_id = resolve_logging_session_id(getattr(self.ctx, "current_project", None))
+                attempt_key = build_attempt_key(
+                    stage=2,
+                    ep_num=global_arc_no,
+                    arc_num=global_arc_no,
+                    attempt_num=attempt + 1,
+                    session_id=session_id,
+                )
                 session_logger.log_decision(
                     stage="stage2",
                     ep_num=global_arc_no,
@@ -2401,6 +2546,7 @@ class Stage2Finalizer:
                     score=score,
                     generation_method=generation_method,
                     reason=str(audit.get("reason", ""))[:500],
+                    attempt_key=attempt_key,
                 )
             except (AttributeError, TypeError) as exc:
                 logging.debug("[SilentPass:S2:SessionLog] %s", exc)
@@ -2424,6 +2570,8 @@ class Stage2Finalizer:
         if not session_logger:
             return
         try:
+            runtime_advisory = _resolve_stage2_runtime_advisory(audit)
+            retry_directives = _resolve_stage2_retry_directives(audit)
             session_logger.log_decision(
                 stage="stage2",
                 ep_num=global_arc_no,
@@ -2446,6 +2594,8 @@ class Stage2Finalizer:
                 candidate_key=str((artifact_meta or {}).get("candidate_key", "") or ""),
                 content_hash=str((artifact_meta or {}).get("content_hash", "") or ""),
                 artifact_path=str((artifact_meta or {}).get("artifact_path", "") or ""),
+                runtime_advisory=runtime_advisory,
+                retry_directives=retry_directives,
                 carryover_authority=dict(carryover_authority or {}),
             )
         except (AttributeError, TypeError, ValueError) as exc:
@@ -2695,7 +2845,9 @@ class Stage2Finalizer:
             audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
         if isinstance(current_audit.get("patch_guard_signals"), dict):
             audit["patch_guard_signals"] = deepcopy(current_audit["patch_guard_signals"])
-        audit["reason"] = (audit.get("reason", "") or "") + f"\n[TF-32-V] PASS_WITH_FIX 수정 {max_fix}회 내 미해결 → REJECT"
+        audit["reason"] = (
+            audit.get("reason", "") or ""
+        ) + f"\n[TF-32-V] PASS_WITH_FIX 수정 {max_fix}회 내 미해결 → REJECT"
         audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "지적사항 미해결 — 재설계 필요"
         self.ctx.ui.log("      ❌ [TF-32-V] 수정 실패 → REJECT 전환")
         return {"refined_arc": refined_arc, "audit": audit, "decision": decision, "score": score}
@@ -2778,9 +2930,7 @@ class Stage2Finalizer:
             return None
 
         fix_instr = current_audit.get("re_slice_instruction", "")
-        self.ctx.ui.log(
-            f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{fix_i + 1}/{max_fix} (fix: {fix_instr!s})"
-        )
+        self.ctx.ui.log(f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{fix_i + 1}/{max_fix} (fix: {fix_instr!s})")
         return fix_instr
 
     def _apply_stage2_pass_fix_patch(
@@ -2858,7 +3008,9 @@ class Stage2Finalizer:
                 )
 
         blocking_patch_guard_signals = [
-            signal for signal in patch_guard_signals if str(signal.get("code", "")).strip() in _BLOCKING_ARC_PATCH_SIGNAL_CODES
+            signal
+            for signal in patch_guard_signals
+            if str(signal.get("code", "")).strip() in _BLOCKING_ARC_PATCH_SIGNAL_CODES
         ]
         if blocking_patch_guard_signals:
             blocking_codes = ", ".join(str(signal.get("code", "")).strip() for signal in blocking_patch_guard_signals)
@@ -3015,9 +3167,7 @@ class Stage2Finalizer:
         if re_decision == "PASS":
             quality_gate_score = _threshold("scoring.quality_gate_score", 90)
             if re_score < quality_gate_score:
-                self.ctx.ui.log(
-                    f"      ⚠️ [TF-35] 재심사 PASS이나 score={re_score} < {quality_gate_score} → patch 종료"
-                )
+                self.ctx.ui.log(f"      ⚠️ [TF-35] 재심사 PASS이나 score={re_score} < {quality_gate_score} → patch 종료")
                 return {
                     "current_arc": current_arc,
                     "current_audit": current_audit,
@@ -3243,7 +3393,9 @@ class Stage2Finalizer:
             audit["patch_pressure"] = deepcopy(current_audit["patch_pressure"])
         if isinstance(current_audit.get("patch_guard_signals"), dict):
             audit["patch_guard_signals"] = deepcopy(current_audit["patch_guard_signals"])
-        audit["reason"] = (audit.get("reason", "") or "") + f"\n[TF-32-V] PASS_WITH_FIX 수정 {max_fix}회 내 미해결 → REJECT"
+        audit["reason"] = (
+            audit.get("reason", "") or ""
+        ) + f"\n[TF-32-V] PASS_WITH_FIX 수정 {max_fix}회 내 미해결 → REJECT"
         audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "지적사항 미해결 — 재설계 필요"
         self.ctx.ui.log("      ❌ [TF-32-V] 수정 실패 → REJECT 전환")
         return {"refined_arc": refined_arc, "audit": audit, "decision": decision, "score": score}
@@ -3274,6 +3426,7 @@ class Stage2Finalizer:
             session_id=_session_id,
         )
         _candidate_key = build_candidate_key(strategy=selected_strategy, fallback=generation_method)
+        _normalize_stage2_pass_compare_meta(audit, artifact_payload)
         _artifact_meta = snapshot_logged_artifact(
             getattr(self.ctx, "current_project", None),
             stage=2,
@@ -3287,6 +3440,8 @@ class Stage2Finalizer:
 
         _selection_reason = _resolve_stage2_selection_reason(audit, artifact_payload)
         _verdict_reason = _resolve_stage2_verdict_reason(audit, artifact_payload)
+        _runtime_advisory = _resolve_stage2_runtime_advisory(audit)
+        _retry_directives = _resolve_stage2_retry_directives(audit)
 
         if getattr(self.ctx, "pass_rate_monitor", None):
             try:
@@ -3316,12 +3471,7 @@ class Stage2Finalizer:
         try:
             _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
             if _db and hasattr(_db, "save_stage_attempt"):
-                _score = audit.get("score", 0)
-                if not isinstance(_score, int):
-                    try:
-                        _score = int(_score)
-                    except (ValueError, TypeError):
-                        _score = 0
+                _score = _coerce_stage2_audit_score(audit)
                 _director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
                 _model = getattr(_director, "primary_model", None) if _director else None
                 _failure_category = self._extract_failure_category(audit)
@@ -3372,8 +3522,8 @@ class Stage2Finalizer:
                     verdict_reason=_verdict_reason,
                     fix_scope_reasoning=str(audit.get("fix_scope_reasoning", "") or ""),
                     open_review=str(audit.get("open_review", "") or ""),
-                    runtime_advisory="",
-                    retry_directives="",
+                    runtime_advisory=_runtime_advisory,
+                    retry_directives=_retry_directives,
                 )
                 # [TF-60] Stage 2 director_selections 기록
                 if hasattr(_db, "save_director_selection"):
@@ -3389,11 +3539,14 @@ class Stage2Finalizer:
                             selection_reason=_selection_reason,
                             fix_scope=str(audit.get("fix_scope", "") or ""),
                             advisory_warnings=_advisory_flags,
+                            verdict_reason=_verdict_reason,
                             attempt_key=attempt_key,
                             candidate_key=_candidate_key,
                             content_hash=_artifact_meta["content_hash"],
                             artifact_path=_artifact_meta["artifact_path"],
                             director_thinking=str(audit.get("_director_thinking", "") or ""),
+                            runtime_advisory=_runtime_advisory,
+                            retry_directives=_retry_directives,
                         )
                     except Exception as _ds_err:
                         logging.debug("[director_selections] Stage2 PASS 기록 실패: %s", _ds_err)
@@ -3478,17 +3631,14 @@ class Stage2Finalizer:
     ) -> None:
         selection_reason = _resolve_stage2_selection_reason(audit, artifact_payload)
         verdict_reason = _resolve_stage2_verdict_reason(audit, artifact_payload)
+        runtime_advisory = _resolve_stage2_runtime_advisory(audit)
+        retry_directives = _resolve_stage2_retry_directives(audit)
         try:
             db = getattr(getattr(self.ctx, "current_project", None), "db", None)
             if not (db and hasattr(db, "save_stage_attempt")):
                 return
 
-            score = audit.get("score", 0)
-            if not isinstance(score, int):
-                try:
-                    score = int(score)
-                except (ValueError, TypeError):
-                    score = 0
+            score = _coerce_stage2_audit_score(audit)
             director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
             model = getattr(director, "primary_model", None) if director else None
             failure_category = self._extract_failure_category(audit)
@@ -3502,9 +3652,11 @@ class Stage2Finalizer:
             self._log_stage2_authoritative_session_decision(
                 global_arc_no=global_arc_no,
                 attempt=attempt,
+                session_id=metric_context["session_id"],
                 generation_method=generation_method,
                 selected_strategy=selected_strategy,
                 audit=audit,
+                score=score,
                 attempt_key=metric_context["attempt_key"],
                 artifact_meta=metric_context["artifact_meta"],
                 artifact_payload=artifact_payload,
@@ -3528,8 +3680,8 @@ class Stage2Finalizer:
                 verdict_reason=verdict_reason,
                 fix_scope_reasoning=str(audit.get("fix_scope_reasoning", "") or ""),
                 open_review=str(audit.get("open_review", "") or ""),
-                runtime_advisory="",
-                retry_directives="",
+                runtime_advisory=runtime_advisory,
+                retry_directives=retry_directives,
                 model=str(model) if model else None,
                 duration_ms=duration_ms,
                 advisory_flags=advisory_flags,
@@ -3554,11 +3706,14 @@ class Stage2Finalizer:
                         selection_reason=selection_reason,
                         fix_scope=str(audit.get("fix_scope", "") or ""),
                         advisory_warnings=advisory_flags,
+                        verdict_reason=verdict_reason,
                         attempt_key=metric_context["attempt_key"],
                         candidate_key=metric_context["candidate_key"],
                         content_hash=metric_context["artifact_meta"]["content_hash"],
                         artifact_path=metric_context["artifact_meta"]["artifact_path"],
                         director_thinking=str(audit.get("_director_thinking", "") or ""),
+                        runtime_advisory=runtime_advisory,
+                        retry_directives=retry_directives,
                     )
                 except Exception as director_selection_err:
                     logging.debug("[director_selections] Stage2 REJECT 기록 실패: %s", director_selection_err)

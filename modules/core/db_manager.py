@@ -202,7 +202,9 @@ class DBManager:
                 break
 
         if added_columns:
-            logging.info("[DBManager] %s compatibility migration added columns: %s", log_label, ", ".join(added_columns))
+            logging.info(
+                "[DBManager] %s compatibility migration added columns: %s", log_label, ", ".join(added_columns)
+            )
         if failure is not None:
             remaining_columns = [name for name, _ in missing_columns[len(added_columns) :]]
             logging.warning(
@@ -341,7 +343,8 @@ class DBManager:
                         except Exception as _fts_row_err:
                             _fts_fail_count += 1
                             if _fts_fail_count <= 3:
-                                logging.warning("[B4-P1-6] episode_fts 행 이관 실패 (rowid=%s): %s", rowid, _fts_row_err
+                                logging.warning(
+                                    "[B4-P1-6] episode_fts 행 이관 실패 (rowid=%s): %s", rowid, _fts_row_err
                                 )
                     if _fts_fail_count:
                         logging.warning("[B4-P1-6] episode_fts 이관 중 %d행 실패", _fts_fail_count)
@@ -365,7 +368,8 @@ class DBManager:
                         except Exception as _vec_row_err:
                             _vec_fail_count += 1
                             if _vec_fail_count <= 3:
-                                logging.warning("[B4-P1-6] vec_episodes 행 이관 실패 (rowid=%s): %s", rowid, _vec_row_err
+                                logging.warning(
+                                    "[B4-P1-6] vec_episodes 행 이관 실패 (rowid=%s): %s", rowid, _vec_row_err
                                 )
                     if _vec_fail_count:
                         logging.warning("[B4-P1-6] vec_episodes 이관 중 %d행 실패", _vec_fail_count)
@@ -398,7 +402,8 @@ class DBManager:
                 logging.info("[DB-MERGE] vec_memory.db 마이그레이션 완료 -> .db.migrated")
             else:
                 vec_path.rename(vec_path.with_suffix(".db.partial_migrated"))
-                logging.warning("[DB-MERGE] sqlite-vec 미설치로 vec_episodes 미이관. "
+                logging.warning(
+                    "[DB-MERGE] sqlite-vec 미설치로 vec_episodes 미이관. "
                     "원본 보존(.partial_migrated). sqlite-vec 설치 후 재시도 가능."
                 )
         except Exception as e:
@@ -1156,7 +1161,10 @@ class DBManager:
                         payload = {}
                     if isinstance(payload, dict):
                         arc_payload_rows.append(
-                            (self._infer_arc_payload_no(payload, fallback_no=self._arc_payload_no_from_key(key)), payload)
+                            (
+                                self._infer_arc_payload_no(payload, fallback_no=self._arc_payload_no_from_key(key)),
+                                payload,
+                            )
                         )
                     continue
                 try:
@@ -1523,7 +1531,9 @@ class DBManager:
             logging.debug("[causal_graph] get_recent_causal_links 실패 (비치명): %s", _e)
             return []
 
-    def get_causal_links_by_entities(self, entity_names: list[str], *, before_ep: int, lookback: int = 120, limit: int = 30) -> list[dict]:
+    def get_causal_links_by_entities(
+        self, entity_names: list[str], *, before_ep: int, lookback: int = 120, limit: int = 30
+    ) -> list[dict]:
         """Entity-filtered causal link lookup for long-range continuity hints."""
         names = [str(name or "").strip() for name in entity_names if str(name or "").strip()]
         if not names:
@@ -2005,7 +2015,9 @@ class DBManager:
             cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM episode_pacing WHERE ep_num >= ?", (target_ep,))
             impact["episode_pacing"] = cur.fetchone()["cnt"]
 
-            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM episode_quality_labels WHERE ep_num >= ?", (target_ep,))
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM episode_quality_labels WHERE ep_num >= ?", (target_ep,)
+            )
             impact["episode_quality_labels"] = cur.fetchone()["cnt"]
 
             cur = self.cursor.execute(
@@ -2078,9 +2090,7 @@ class DBManager:
         with self._lock:
             cur = self.conn.cursor()
             try:
-                rows = cur.execute(
-                    "SELECT npc_name, profile_data FROM character_voice ORDER BY npc_name"
-                ).fetchall()
+                rows = cur.execute("SELECT npc_name, profile_data FROM character_voice ORDER BY npc_name").fetchall()
                 return [dict(row) for row in rows]
             except Exception as e:
                 logging.debug("[character_voice] 전체 조회 실패 (비치명): %s", e)
@@ -2303,6 +2313,8 @@ class DBManager:
         content_hash: str = "",
         artifact_path: str = "",
         director_thinking: str = "",
+        runtime_advisory: str = "",
+        retry_directives: str = "",
     ) -> None:
         """Persist director selection result."""
         if not self.accepts_runtime_telemetry_writes:
@@ -2311,7 +2323,12 @@ class DBManager:
             if not self.accepts_runtime_telemetry_writes:
                 return
             nested = self.conn.in_transaction
-            _adv_json = json.dumps(advisory_warnings, ensure_ascii=False) if advisory_warnings else None
+            advisory_payload = dict(advisory_warnings or {}) if isinstance(advisory_warnings, dict) else {}
+            if runtime_advisory:
+                advisory_payload["runtime_advisory"] = str(runtime_advisory or "")
+            if retry_directives:
+                advisory_payload["retry_directives"] = str(retry_directives or "")
+            _adv_json = json.dumps(advisory_payload, ensure_ascii=False) if advisory_payload else None
             self.cursor.execute(
                 "INSERT INTO director_selections "
                 "(stage, ep_num, round_num, selected_label, selected_strategy, verdict, score, "
@@ -2435,7 +2452,9 @@ class DBManager:
                 parsed = {}
             if isinstance(parsed, dict):
                 existing = parsed
-        merged = self._merge_director_selection_json_payloads(existing, advisory_warnings if isinstance(advisory_warnings, dict) else {})
+        merged = self._merge_director_selection_json_payloads(
+            existing, advisory_warnings if isinstance(advisory_warnings, dict) else {}
+        )
         return json.dumps(merged, ensure_ascii=False) if merged else None
 
     def save_episode_quality_label(self, ep_num: int, labels: dict) -> None:
@@ -2623,9 +2642,7 @@ class DBManager:
         signals = {
             "ced": build_signal_stat(field="ced_score", recent_rows=recent_rows, mode="lower_better"),
             "ai_slop": build_signal_stat(field="ai_slop_score", recent_rows=recent_rows, mode="lower_better"),
-            "compression": build_signal_stat(
-                field="compression_ratio", recent_rows=recent_rows, mode="deviation"
-            ),
+            "compression": build_signal_stat(field="compression_ratio", recent_rows=recent_rows, mode="deviation"),
             "burstiness": build_signal_stat(field="burstiness", recent_rows=recent_rows, mode="deviation"),
             "complexity": build_signal_stat(field="complexity", recent_rows=recent_rows, mode="deviation"),
         }
@@ -2696,13 +2713,9 @@ class DBManager:
     def _director_stage_predicate(stage: int, *, alias: str = "") -> str:
         prefix = f"{alias}." if alias else ""
         if stage == 2:
-            return (
-                f"({prefix}stage = 2 OR ({prefix}stage IS NULL AND COALESCE({prefix}selected_label, '') = ''))"
-            )
+            return f"({prefix}stage = 2 OR ({prefix}stage IS NULL AND COALESCE({prefix}selected_label, '') = ''))"
         if stage == 4:
-            return (
-                f"({prefix}stage = 4 OR ({prefix}stage IS NULL AND COALESCE({prefix}selected_label, '') != ''))"
-            )
+            return f"({prefix}stage = 4 OR ({prefix}stage IS NULL AND COALESCE({prefix}selected_label, '') != ''))"
         return f"{prefix}stage = {int(stage)}"
 
     def get_recent_episode_scores(self, before_ep: int, lookback: int = 5) -> list[dict]:
@@ -2853,17 +2866,9 @@ class DBManager:
             selection_candidate_key = str(row.get("selection_candidate_key") or "").strip()
 
             diff_fields: list[str] = []
-            if (
-                final_content_hash
-                and selection_content_hash
-                and final_content_hash != selection_content_hash
-            ):
+            if final_content_hash and selection_content_hash and final_content_hash != selection_content_hash:
                 diff_fields.append("content_hash")
-            if (
-                final_artifact_path
-                and selection_artifact_path
-                and final_artifact_path != selection_artifact_path
-            ):
+            if final_artifact_path and selection_artifact_path and final_artifact_path != selection_artifact_path:
                 diff_fields.append("artifact_path")
 
             selection_row_present = bool(
@@ -2934,7 +2939,7 @@ class DBManager:
                    downstream_override_applied,
                    primary_failure_layer
             FROM stage_attempts
-            WHERE {' AND '.join(where_parts)}
+            WHERE {" AND ".join(where_parts)}
             ORDER BY id DESC
             LIMIT 1
         """
@@ -2979,10 +2984,7 @@ class DBManager:
             repair_trace = []
 
         fix_scope_value = str(
-            scope_authority.get("fix_scope")
-            or repair_contract.get("fix_scope")
-            or item.get("fix_scope")
-            or ""
+            scope_authority.get("fix_scope") or repair_contract.get("fix_scope") or item.get("fix_scope") or ""
         ).strip()
         authoritative_fix_scope_value = str(
             scope_authority.get("authoritative_fix_scope")
@@ -3016,10 +3018,13 @@ class DBManager:
             or repair_contract.get("scope_origin")
         )
         scope_authority_widened = self._safe_bool(scope_authority.get("widened"))
-        if scope_authority_widened is None and scope_authority_fix_scope_value and scope_authority_authoritative_fix_scope_value:
+        if (
+            scope_authority_widened is None
+            and scope_authority_fix_scope_value
+            and scope_authority_authoritative_fix_scope_value
+        ):
             scope_authority_widened = (
-                scope_authority_fix_scope_value.lower()
-                != scope_authority_authoritative_fix_scope_value.lower()
+                scope_authority_fix_scope_value.lower() != scope_authority_authoritative_fix_scope_value.lower()
             )
         repair_contract_subtype = self._pick_repair_contract_subtype(repair_contract)
         repair_contract_provenance = str(repair_contract.get("provenance") or "").strip()

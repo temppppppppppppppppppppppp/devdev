@@ -665,6 +665,563 @@ class TestWriteAuditSummary:
         finally:
             db.close()
 
+    def test_write_summary_stage2_proof_digest_warns_when_stage2_monitor_sink_is_missing(self, svc, tmp_project):
+        db = DBManager(tmp_project.root / "project_data.db")
+        attempt_key = "s2:ep1:arc1:a1:sess-stage2-missing-monitor"
+        artifact_path = "logs/artifacts/stage2/arc_001/attempt_01/final_arc__balanced.json"
+        try:
+            (tmp_project.root / "logs" / "session").mkdir(parents=True, exist_ok=True)
+            artifact_file = tmp_project.root / artifact_path
+            artifact_file.parent.mkdir(parents=True, exist_ok=True)
+            artifact_file.write_text("{}", encoding="utf-8")
+
+            db.save_stage_attempt(
+                stage=2,
+                verdict="PASS",
+                attempt_num=1,
+                ep_num=1,
+                arc_num=1,
+                score=93,
+                session_id="sess-stage2-missing-monitor",
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-missing-monitor",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet remains stable",
+                verdict_reason="ready for Stage3 handoff",
+            )
+            db.save_director_selection(
+                ep_num=1,
+                round_num=1,
+                selected_label="A",
+                selected_strategy="balanced",
+                verdict="PASS",
+                score=93,
+                stage=2,
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-missing-monitor",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet remains stable",
+                verdict_reason="ready for Stage3 handoff",
+            )
+            (tmp_project.root / "logs" / "session" / "decisions.jsonl").write_text(
+                json.dumps(
+                    {
+                        "stage": "stage2",
+                        "ep_num": 1,
+                        "decision_type": "arc_final",
+                        "result": "PASS",
+                        "score": 93,
+                        "meta": {
+                            "session_id": "sess-stage2-missing-monitor",
+                            "attempt_key": attempt_key,
+                            "candidate_key": "balanced",
+                            "content_hash": "hash-stage2-missing-monitor",
+                            "artifact_path": artifact_path,
+                            "selection_reason": "carryover packet remains stable",
+                            "verdict_reason": "ready for Stage3 handoff",
+                        },
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            svc.audit_event("evt", "msg")
+            svc.write_audit_summary("stage2_missing_monitor")
+
+            summary_path = tmp_project.root / "logs" / "runtime_audit_summary.json"
+            data = json.loads(summary_path.read_text(encoding="utf-8"))
+            stage2 = data["proof_digest"]["stages"]["stage2"]
+
+            assert stage2["status"] == "warn"
+            assert stage2["issue_counts"]["final_sink_missing"] == 1
+        finally:
+            db.close()
+
+    def test_write_summary_stage2_proof_digest_warns_on_stage_attempt_rationale_drift(self, svc, tmp_project):
+        db = DBManager(tmp_project.root / "project_data.db")
+        attempt_key = "s2:ep4:arc4:a1:sess-stage2-rationale"
+        artifact_path = "logs/artifacts/stage2/arc_004/attempt_01/final_arc__balanced.json"
+        try:
+            (tmp_project.root / "logs" / "session").mkdir(parents=True, exist_ok=True)
+            artifact_file = tmp_project.root / artifact_path
+            artifact_file.parent.mkdir(parents=True, exist_ok=True)
+            artifact_file.write_text("{}", encoding="utf-8")
+
+            db.save_stage_attempt(
+                stage=2,
+                verdict="PASS",
+                attempt_num=1,
+                ep_num=4,
+                arc_num=4,
+                score=95,
+                session_id="sess-stage2-rationale",
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-rationale",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet remains stable",
+                verdict_reason="stage-attempt rationale only",
+            )
+            db.save_director_selection(
+                ep_num=4,
+                round_num=1,
+                selected_label="A",
+                selected_strategy="balanced",
+                verdict="PASS",
+                score=95,
+                stage=2,
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-rationale",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet remains stable",
+                verdict_reason="shared final rationale",
+            )
+            (tmp_project.root / "logs" / "session" / "decisions.jsonl").write_text(
+                json.dumps(
+                    {
+                        "stage": "stage2",
+                        "ep_num": 4,
+                        "decision_type": "arc_final",
+                        "result": "PASS",
+                        "score": 95,
+                        "meta": {
+                            "session_id": "sess-stage2-rationale",
+                            "attempt_key": attempt_key,
+                            "candidate_key": "balanced",
+                            "content_hash": "hash-stage2-rationale",
+                            "artifact_path": artifact_path,
+                            "selection_reason": "carryover packet remains stable",
+                            "verdict_reason": "shared final rationale",
+                        },
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (tmp_project.root / "logs" / "pass_rate_monitor.json").write_text(
+                json.dumps(
+                    {
+                        "records": [
+                            {
+                                "stage": 2,
+                                "episode": 4,
+                                "arc": 4,
+                                "attempt_num": 1,
+                                "success": True,
+                                "attempt_key": attempt_key,
+                                "final_verdict": "PASS",
+                                "candidate_key": "balanced",
+                                "content_hash": "hash-stage2-rationale",
+                                "artifact_path": artifact_path,
+                            }
+                        ]
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            svc.audit_event("evt", "msg")
+            svc.write_audit_summary("stage2_rationale_drift")
+
+            data = json.loads((tmp_project.root / "logs" / "runtime_audit_summary.json").read_text(encoding="utf-8"))
+            stage2 = data["proof_digest"]["stages"]["stage2"]
+
+            assert data["proof_digest"]["status"] == "warn"
+            assert stage2["status"] == "warn"
+            assert stage2["issue_counts"]["verdict_reason_mismatches"] == 1
+        finally:
+            db.close()
+
+    def test_write_summary_stage2_proof_digest_warns_on_blank_stage_attempt_attempt_key(self, svc, tmp_project):
+        db = DBManager(tmp_project.root / "project_data.db")
+        try:
+            db.save_stage_attempt(
+                stage=2,
+                verdict="PASS",
+                attempt_num=1,
+                ep_num=5,
+                arc_num=5,
+                score=88,
+                session_id="sess-stage2-blank-key",
+                attempt_key="",
+                candidate_key="balanced",
+                content_hash="hash-stage2-blank-key",
+                artifact_path="logs/artifacts/stage2/arc_005/attempt_01/final_arc__balanced.json",
+                selection_reason="carryover packet remains stable",
+                verdict_reason="ready for Stage3 handoff",
+            )
+
+            svc.audit_event("evt", "msg")
+            svc.write_audit_summary("stage2_blank_attempt_key")
+
+            data = json.loads((tmp_project.root / "logs" / "runtime_audit_summary.json").read_text(encoding="utf-8"))
+            stage2 = data["proof_digest"]["stages"]["stage2"]
+
+            assert data["proof_digest"]["available"] is True
+            assert data["proof_digest"]["status"] == "warn"
+            assert stage2["status"] == "warn"
+            assert stage2["attempts_considered"] == 0
+            assert stage2["issue_counts"]["stage_attempt_rows_without_attempt_key"] == 1
+        finally:
+            db.close()
+
+    def test_write_summary_stage2_proof_digest_warns_when_session_verdict_reason_is_missing(self, svc, tmp_project):
+        db = DBManager(tmp_project.root / "project_data.db")
+        attempt_key = "s2:ep6:arc6:a1:sess-stage2-missing-verdict"
+        artifact_path = "logs/artifacts/stage2/arc_006/attempt_01/final_arc__balanced.json"
+        try:
+            (tmp_project.root / "logs" / "session").mkdir(parents=True, exist_ok=True)
+            artifact_file = tmp_project.root / artifact_path
+            artifact_file.parent.mkdir(parents=True, exist_ok=True)
+            artifact_file.write_text("{}", encoding="utf-8")
+
+            db.save_stage_attempt(
+                stage=2,
+                verdict="PASS",
+                attempt_num=1,
+                ep_num=6,
+                arc_num=6,
+                score=92,
+                session_id="sess-stage2-missing-verdict",
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-missing-verdict",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet remains stable",
+                verdict_reason="ready for Stage3 handoff",
+            )
+            db.save_director_selection(
+                ep_num=6,
+                round_num=1,
+                selected_label="A",
+                selected_strategy="balanced",
+                verdict="PASS",
+                score=92,
+                stage=2,
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-missing-verdict",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet remains stable",
+                verdict_reason="ready for Stage3 handoff",
+            )
+            (tmp_project.root / "logs" / "session" / "decisions.jsonl").write_text(
+                json.dumps(
+                    {
+                        "stage": "stage2",
+                        "ep_num": 6,
+                        "decision_type": "arc_final",
+                        "result": "PASS",
+                        "score": 92,
+                        "meta": {
+                            "session_id": "sess-stage2-missing-verdict",
+                            "attempt_key": attempt_key,
+                            "candidate_key": "balanced",
+                            "content_hash": "hash-stage2-missing-verdict",
+                            "artifact_path": artifact_path,
+                            "selection_reason": "carryover packet remains stable",
+                        },
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (tmp_project.root / "logs" / "pass_rate_monitor.json").write_text(
+                json.dumps(
+                    {
+                        "records": [
+                            {
+                                "stage": 2,
+                                "episode": 6,
+                                "arc": 6,
+                                "attempt_num": 1,
+                                "success": True,
+                                "attempt_key": attempt_key,
+                                "final_verdict": "PASS",
+                                "candidate_key": "balanced",
+                                "content_hash": "hash-stage2-missing-verdict",
+                                "artifact_path": artifact_path,
+                            }
+                        ]
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            svc.audit_event("evt", "msg")
+            svc.write_audit_summary("stage2_missing_verdict_reason")
+
+            data = json.loads((tmp_project.root / "logs" / "runtime_audit_summary.json").read_text(encoding="utf-8"))
+            stage2 = data["proof_digest"]["stages"]["stage2"]
+
+            assert data["proof_digest"]["status"] == "warn"
+            assert stage2["status"] == "warn"
+            assert stage2["issue_counts"]["rationale_metadata_missing"] == 1
+        finally:
+            db.close()
+
+    def test_write_summary_stage2_proof_digest_surfaces_runtime_and_retry_mismatches(self, svc, tmp_project):
+        db = DBManager(tmp_project.root / "project_data.db")
+        attempt_key = "s2:ep7:arc7:a1:sess-stage2-runtime-retry"
+        artifact_path = "logs/artifacts/stage2/arc_007/attempt_01/final_arc__balanced.json"
+        try:
+            (tmp_project.root / "logs" / "session").mkdir(parents=True, exist_ok=True)
+            artifact_file = tmp_project.root / artifact_path
+            artifact_file.parent.mkdir(parents=True, exist_ok=True)
+            artifact_file.write_text("{}", encoding="utf-8")
+
+            db.save_stage_attempt(
+                stage=2,
+                verdict="REJECT",
+                attempt_num=1,
+                ep_num=7,
+                arc_num=7,
+                score=61,
+                session_id="sess-stage2-runtime-retry",
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-runtime-retry",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet drifted",
+                verdict_reason="repair required before Stage3 handoff",
+                runtime_advisory="authority digest A",
+                retry_directives="retry plan A",
+            )
+            db.save_director_selection(
+                ep_num=7,
+                round_num=1,
+                selected_label="A",
+                selected_strategy="balanced",
+                verdict="REJECT",
+                score=61,
+                stage=2,
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-runtime-retry",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet drifted",
+                verdict_reason="repair required before Stage3 handoff",
+                runtime_advisory="authority digest B",
+                retry_directives="retry plan B",
+            )
+            (tmp_project.root / "logs" / "session" / "decisions.jsonl").write_text(
+                json.dumps(
+                    {
+                        "stage": "stage2",
+                        "ep_num": 7,
+                        "decision_type": "arc_final",
+                        "result": "REJECT",
+                        "score": 61,
+                        "meta": {
+                            "session_id": "sess-stage2-runtime-retry",
+                            "attempt_key": attempt_key,
+                            "candidate_key": "balanced",
+                            "content_hash": "hash-stage2-runtime-retry",
+                            "artifact_path": artifact_path,
+                            "selection_reason": "carryover packet drifted",
+                            "verdict_reason": "repair required before Stage3 handoff",
+                            "runtime_advisory": "authority digest B",
+                            "retry_directives": "retry plan B",
+                        },
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (tmp_project.root / "logs" / "pass_rate_monitor.json").write_text(
+                json.dumps(
+                    {
+                        "records": [
+                            {
+                                "stage": 2,
+                                "episode": 7,
+                                "arc": 7,
+                                "attempt_num": 1,
+                                "success": False,
+                                "attempt_key": attempt_key,
+                                "final_verdict": "REJECT",
+                                "candidate_key": "balanced",
+                                "content_hash": "hash-stage2-runtime-retry",
+                                "artifact_path": artifact_path,
+                            }
+                        ]
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            svc.audit_event("evt", "msg")
+            svc.write_audit_summary("stage2_runtime_retry")
+
+            data = json.loads((tmp_project.root / "logs" / "runtime_audit_summary.json").read_text(encoding="utf-8"))
+            stage2 = data["proof_digest"]["stages"]["stage2"]
+
+            assert data["proof_digest"]["status"] == "warn"
+            assert stage2["status"] == "warn"
+            assert stage2["issue_counts"]["runtime_advisory_mismatches"] == 1
+            assert stage2["issue_counts"]["retry_directives_mismatches"] == 1
+        finally:
+            db.close()
+
+    def test_write_summary_stage2_proof_digest_prefers_authoritative_session_decision_row(self, svc, tmp_project):
+        db = DBManager(tmp_project.root / "project_data.db")
+        attempt_key = "s2:ep3:arc3:a1:sess-stage2-rich"
+        artifact_path = "logs/artifacts/stage2/arc_003/attempt_01/final_arc__balanced.json"
+        try:
+            (tmp_project.root / "logs" / "session").mkdir(parents=True, exist_ok=True)
+            artifact_file = tmp_project.root / artifact_path
+            artifact_file.parent.mkdir(parents=True, exist_ok=True)
+            artifact_file.write_text("{}", encoding="utf-8")
+            (tmp_project.root / "logs" / "session_legacy_token.log").write_text("session log", encoding="utf-8")
+
+            db.save_stage_attempt(
+                stage=2,
+                verdict="PASS",
+                attempt_num=1,
+                ep_num=3,
+                arc_num=3,
+                score=94,
+                session_id="sess-stage2-rich",
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-rich",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet remains stable",
+                verdict_reason="ready for blueprint handoff",
+            )
+            db.save_director_selection(
+                ep_num=3,
+                round_num=1,
+                selected_label="A",
+                selected_strategy="balanced",
+                verdict="PASS",
+                score=94,
+                stage=2,
+                attempt_key=attempt_key,
+                candidate_key="balanced",
+                content_hash="hash-stage2-rich",
+                artifact_path=artifact_path,
+                selection_reason="carryover packet remains stable",
+                verdict_reason="ready for blueprint handoff",
+            )
+            (tmp_project.root / "logs" / "session" / "decisions.jsonl").write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "stage": "stage2",
+                                "ep_num": 3,
+                                "decision_type": "arc",
+                                "result": "PASS",
+                                "score": 94,
+                                "meta": {
+                                    "session_id": "sess-stage2-rich",
+                                    "attempt_key": attempt_key,
+                                },
+                            },
+                            ensure_ascii=False,
+                        ),
+                        json.dumps(
+                            {
+                                "stage": "stage2",
+                                "ep_num": 3,
+                                "decision_type": "arc_final",
+                                "result": "PASS",
+                                "score": 94,
+                                "meta": {
+                                    "session_id": "sess-stage2-rich",
+                                    "attempt_key": attempt_key,
+                                    "candidate_key": "balanced",
+                                    "content_hash": "hash-stage2-rich",
+                                    "artifact_path": artifact_path,
+                                    "selection_reason": "carryover packet remains stable",
+                                    "verdict_reason": "ready for blueprint handoff",
+                                },
+                            },
+                            ensure_ascii=False,
+                        ),
+                        json.dumps(
+                            {
+                                "stage": "stage2",
+                                "ep_num": 3,
+                                "decision_type": "arc_design",
+                                "result": "PASS",
+                                "score": 94,
+                                "meta": {
+                                    "session_id": "sess-stage2-rich",
+                                    "attempt_key": attempt_key,
+                                    "candidate_key": "balanced",
+                                    "content_hash": "hash-stage2-rich",
+                                    "artifact_path": artifact_path,
+                                    "selection_reason": "stale intermediate row",
+                                    "verdict_reason": "stale intermediate verdict",
+                                },
+                            },
+                            ensure_ascii=False,
+                        ),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (tmp_project.root / "logs" / "pass_rate_monitor.json").write_text(
+                json.dumps(
+                    {
+                        "records": [
+                            {
+                                "stage": 2,
+                                "episode": 3,
+                                "arc": 3,
+                                "attempt_num": 1,
+                                "success": True,
+                                "attempt_key": attempt_key,
+                                "final_verdict": "PASS",
+                                "candidate_key": "balanced",
+                                "content_hash": "hash-stage2-rich",
+                                "artifact_path": artifact_path,
+                            }
+                        ]
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            svc.audit_event("evt", "msg")
+            svc.write_audit_summary("stage2_richest")
+
+            summary_path = tmp_project.root / "logs" / "runtime_audit_summary.json"
+            data = json.loads(summary_path.read_text(encoding="utf-8"))
+            stage2 = data["proof_digest"]["stages"]["stage2"]
+            operational = data["proof_digest"]["operational_metadata"]["stage2_live_session"]
+
+            assert data["proof_digest"]["status"] == "ok"
+            assert stage2["status"] == "ok"
+            assert stage2["attempts_considered"] == 1
+            assert stage2["issue_counts"] == {}
+            assert operational["decision_artifact_path_coverage"] == {
+                "present": 2,
+                "total": 3,
+                "status": "partial",
+            }
+        finally:
+            db.close()
+
     def test_write_summary_includes_operational_metadata_for_latest_stage4_session(self, svc, tmp_project):
         db = DBManager(tmp_project.root / "project_data.db")
         stage2_artifact_path = "logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json"
@@ -860,7 +1417,10 @@ class TestWriteAuditSummary:
             assert operational["stage2_live_session"]["episodes"] == [2]
             assert operational["stage2_live_session"]["attempt_key_coverage"]["status"] == "ok"
             assert operational["stage2_live_session"]["carryover_authority_event_count"] == 1
-            assert operational["stage2_live_session"]["latest_carryover_authority"]["end_location"] == "장례식장 지하 1층 후방 복도"
+            assert (
+                operational["stage2_live_session"]["latest_carryover_authority"]["end_location"]
+                == "장례식장 지하 1층 후방 복도"
+            )
             assert operational["stage3_live_session"]["status"] == "ok"
             assert operational["stage3_live_session"]["episodes"] == [2]
             assert operational["stage3_live_session"]["selection_reason_coverage"]["status"] == "ok"

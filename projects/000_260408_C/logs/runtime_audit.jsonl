@@ -1,0 +1,9 @@
+{"timestamp": "2026-04-08 21:18:03", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_end_state 위치 동기화: '장례식장 본관-주방동 연결 뒷문 복도' → '장례식장 본관과 주방동을 잇는 소란스러운 뒷문 복도'", "arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 1건 제거: ['윤성가 후계자라는 사회적 지위']"]}}
+{"timestamp": "2026-04-08 21:19:11", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-08 21:19:54", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 3}}
+{"timestamp": "2026-04-08 21:27:07", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 1건 제거: ['소액 집행 한도 포스트잇 (권한 사용)']", "[PATCH-A] 자산 성장률 3900% — 시작 5000000→종료 200000000 (200% 상한 초과, 산술 검증 권고)"]}}
+{"timestamp": "2026-04-08 21:29:08", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-08 21:29:47", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 5}}
+{"timestamp": "2026-04-08 21:36:38", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']"]}}
+{"timestamp": "2026-04-08 21:39:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-08 21:39:54", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "target_arc_no": 4, "items_tracked": 8}}

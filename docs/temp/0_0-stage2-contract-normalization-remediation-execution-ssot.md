@@ -1,14 +1,14 @@
 # 0_0 Stage2 Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (2026-04-06 re-audited and promoted from parked after live validation/finalizer revalidation confirmed a still-live Stage2 persistence-authority seam; the bounded preflight/validation/finalizer persistence tranche, the bounded Flow Guard severity tranche, and the same-day bounded non-wuxia persistence state-cleanup tranche have now landed as child slices inside this SSOT, a later 2026-04-08 bounded observability follow-up then surfaced authoritative carryover location/inventory/finance summaries through Stage2 runtime, DB, and operator-visible sinks, and the newest same-day follow-up landed a Stage2 decision/proof-digest hardening slice; the later `projects/000_260408` proof-wave merge audit then showed those proof sinks were only partially closed, and the new `projects/000_260408_B` proof-wave merge audit now validates the bounded proof-sink tranche materially: DB `ui_events` carryover parity, `pass_rate_monitor` parity, `proof_digest.stages.stage2`, and `proof_digest.operational_metadata.stage2_live_session` are live, while the residual `warn` narrows to `director_selections.verdict_reason` drift plus 6 intermediate decision rows without `attempt_key`; broader Stage2 normalization stays queued behind that residual sink hygiene)
+Status: partially_realized (2026-04-09 current-state re-audited and adversarially 3-pass confirmed against fresh Stage2 closure evidence plus targeted scratch repros; the earlier 2026-04-08 proof-digest residual warn pair and the later producer-side compare-meta / session-row tranche are now closed or demoted, while the new governing bounded Stage2 tranche inside this SSOT is proof-layer hardening: authoritative `stage_attempts` rationale coverage, blank-`attempt_key` hard-warn surfacing, `session_decisions.verdict_reason` fallback tightening, and `runtime_advisory` / `retry_directives` sink-proof inclusion)
 Canonical Path: `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2 survey docs and lane drafts untracked`
-- Resume Commit: `6dd7712ea9a58802221634081ba199bc872d2349`
-- Resume Drift Summary: `2026-04-05 bounded Stage2 realization slices narrowed the lane, the 2026-04-06 global P0-P1 Opus survey confirmed two still-live Stage2 persistence seams, the 2026-04-06 Golden bounded survey added one residual artifact-truth P1 plus abrupt-shutdown observability debt, the workspace then landed truth-preserving packet merges across `stage2_preflight_runtime.py`, `stage2_validation_pipeline.py`, `stage2_finalizer.py`, and `stage2_contracts.py`, the current workspace additionally landed a bounded Flow Guard severity split in `stage2_validation_pipeline.py`, the same-day bounded finalizer persistence cleanup then strips non-wuxia `internal_energy` / `realm` / `qi_nature` / `martial_arts` state noise both before and after `validate_arc()` so accepted artifacts no longer silently rehydrate those fields at save time, the later 2026-04-08 follow-up in `stage2_finalizer.py` then persisted compact carryover-authority summaries for start/end location, inventory, and finance facts so later proof waves can see the authoritative Stage2 packet truth without reopening the lane into a broader redesign, the newest same-day follow-up across `stage2_finalizer.py` plus `audit_service.py` then landed a Stage2 decision/proof-digest hardening slice, the later `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md` confirmed that slice only partially closed runtime proof, and the newer `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md` now shows the proof-blocking sinks materially repaired while residual `warn` scope narrows to companion verdict parity plus intermediate decision-row linkage`
+- Resume Commit: `e8eab966db779b116c5e4377940bc30e906913b1`
+- Resume Drift Summary: `workspace remains synced to the 2026-04-08 checkpoint commit, the fresh `000_260408_ㅇ` Stage2 rerun has closed the earlier warn-first residual pair, the later producer-side compare-meta / `arc_design` parity tranche is now implementation-landed, and the current operator-directed continuation re-audits this SSOT to govern the next bounded Stage2 proof-layer tranche: authoritative `stage_attempts` rationale coverage, blank-`attempt_key` hard-warn surfacing, `session_decisions.verdict_reason` fallback tightening, and retry/runtime sink-proof inclusion before the next fresh proof run`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
 - `docs/2026-04-01/0_0-stage2-stage3-context-hierarchy-bounded-survey.md`
@@ -18,6 +18,7 @@ Source Survey Docs:
 - `docs/2026-04-06/01_golden_stage2_p0_p3_bounded_survey.md`
 - `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md`
 - `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md`
+- `2026-04-09 current-state re-audit embedded in this SSOT; no standalone survey doc was created`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-evidence.json`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-evidence.json`
@@ -27,18 +28,98 @@ Evidence Artifacts:
 - `projects/000_260408/logs/pass_rate_monitor.json`
 - `projects/000_260408/logs/session/decisions.jsonl`
 - `projects/000_260408/logs/session/ui_events.jsonl`
+- `projects/000_260408_ㅇ/project_data.db`
+- `projects/000_260408_ㅇ/logs/runtime_audit_summary.json`
+- `projects/000_260408_ㅇ/logs/pass_rate_monitor.json`
+- `projects/000_260408_ㅇ/logs/session/decisions.jsonl`
+- `0_temp.txt`
 Side-Effect Coverage: covered
 
 ## 1. Intent
 
-Activate a bounded, implementable `Stage2 contract normalization` tranche focused on truth-preserving persistence shells for `joint_docs.world_joint` and `status_shadow`.
+Activate the current bounded `Stage2 proof-hardening` tranche now that the older warn-first proof-sink pair has been closed on fresh `000_260408_ㅇ` evidence and the later producer-side cleanup tranche has already landed.
 
-This execution SSOT still exists because the latest survey plus current code revalidation already proved:
+This execution SSOT still exists because the latest current-state re-audit plus static code survey now prove:
 
-- `Stage2` has a real problem
-- that problem is primarily `authority packaging / contract drift`, not missing narrative content
-- the sharpest still-live Stage2-local P1 in the active queue is now the persistence-time overwrite of LLM-authored packet truth
-- therefore the immediate work is a bounded Stage2 sink fix, not a broad Stage2 architecture wave
+- the earlier `director_selections.verdict_reason` / intermediate `attempt_key` residual pair is no longer the governing next step
+- the later producer-side compare-meta normalization / `arc_design` parity tranche is no longer the governing next step either
+- the remaining live Stage2 risk is now concentrated in the shared proof layer, not in the Stage2 producer shell
+- the sharpest current Stage2-local P1s are missing authoritative `stage_attempts` rationale coverage and blank-`attempt_key` proof disappearance
+- therefore the immediate work is a bounded proof-hardening tranche inside the same owner lane, not a rerun-only step and not a broad Stage2 architecture rewrite
+
+## 1A. 2026-04-09 Current Execution Override
+
+Current included implementation surfaces:
+
+- `modules/core/failure_analyzer.py`
+- `modules/core/services/audit_service.py`
+- `modules/core/stage2_finalizer.py`
+- `modules/core/db_manager.py`
+- `modules/core/db_bootstrap_runtime.py`
+- `tests/test_audit_service.py`
+- `tests/test_stage2_finalizer.py`
+- bounded Stage2/Stage3 sink-contract touchpoints only if directly required by the fixes above
+
+Current bounded fix targets:
+
+1. make `proof_digest.stage2` compare authoritative `stage_attempts` rationale fields instead of treating them as out-of-band truth
+2. surface blank-`attempt_key` Stage2 proof-sink rows as explicit hard warnings instead of letting them disappear into `proof_digest.status = unavailable`
+3. tighten `session_decisions.verdict_reason` fallback so missing field loss is not silently masked by `selection_reason`
+4. include `runtime_advisory` / `retry_directives` in the Stage2 proof surface and in bounded sink persistence where directly required by that proof contract
+
+Current exclusions for this tranche:
+
+- broad mission-authority / alias / dead-field normalization
+- Stage3 `semantic_carryover` consumer semantics
+- `pass_rate_monitor` rich backfill parity beyond the proof surface actually used
+- artifact rewrites inside existing `projects/*` run outputs
+- new queue-lane creation or queue reorder
+
+Current execution order:
+
+1. adversarial proof-layer revalidation against live code and scratch repros
+2. proof-surface hardening in `failure_analyzer.py` / `audit_service.py`
+3. bounded Stage2 sink persistence updates in `stage2_finalizer.py` / DB touchpoints only where the proof contract requires them
+4. targeted regression coverage and focused validation
+
+Current closure gates before claiming this tranche landed:
+
+- targeted `pytest` on Stage2 audit-service/finalizer coverage plus any directly touched DB sink tests
+- `python -m py_compile` on touched modules/tests
+- `python -m ruff check` on touched modules/tests
+- fresh rerun remains the preferred post-implementation proof, but code realization in this turn may stop at targeted validation if live rerun is intentionally deferred
+
+When this current execution override conflicts with older tranche notes below, Section `1A` governs the current implementation turn.
+
+## 1B. 2026-04-09 Adversarial 3-Pass Revalidation
+
+Pass 1. Scope/structure verdict:
+
+- the current Stage2 owner lane remains the right queue item
+- the active producer-side compare-meta / `arc_design` parity tranche is no longer the governing next step
+- the next bounded tranche is proof-layer hardening, not another broad Stage2 producer rewrite
+
+Pass 2. Evidence/consistency verdict:
+
+- targeted scratch repro confirmed that Stage2 `stage_attempts.verdict_reason` drift is currently invisible to `proof_digest.stage2`
+- targeted scratch repro confirmed that blank-`attempt_key` Stage2 DB rows can collapse into `proof_digest.status = unavailable` instead of a Stage2 warning
+- targeted scratch repro confirmed that `session_decisions.verdict_reason` still backfills from `selection_reason`, masking explicit field loss
+- the earlier `world_joint` / `status_shadow` overwrite seam is now historical context, not the current front P1
+
+Pass 3. Execution/use verdict:
+
+- the bounded next tranche should prioritize proof trust before another rerun
+- safe included implementation surfaces are the analyzer/audit path plus the minimum Stage2/DB sink touchpoints needed to satisfy the proof contract
+- fresh rerun remains the preferred closure proof after implementation, but is not required before this bounded tranche can land as code
+
+Current adversarially confirmed priority for realization:
+
+1. authoritative `stage_attempts` rationale coverage
+2. blank-`attempt_key` hard-warn surfacing
+3. `session_decisions.verdict_reason` fallback tightening
+4. `runtime_advisory` / `retry_directives` Stage2 proof inclusion
+
+Confidence for this revalidation anchor: `96%`
 
 ## 2. Baseline Facts
 
@@ -1069,7 +1150,7 @@ Execution consequence:
 - treat the old Stage2 proof-sink repair tranche as runtime-validated at the proof-blocking level
 - keep the remaining Stage2 work inside this same SSOT as bounded sink hygiene rather than as the next front proof blocker
 - do not open a new queue lane and do not reorder the queue from this validation alone
-- shift the next useful proof artifact to a rerun that actually reaches Stage3; only reopen code here first if the operator explicitly wants to clear the residual `warn` before that rerun
+- keep the operator-directed next code action on the bounded residual `warn` cleanup inside this lane, and take the rerun that actually reaches Stage3 only after that cleanup is landed and verified
 
 Confidence for this validation upgrade: `97%`
 

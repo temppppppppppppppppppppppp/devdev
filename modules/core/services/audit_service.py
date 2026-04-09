@@ -21,7 +21,9 @@ class _ProofDigestDBFacade:
 
     def __init__(self, db_path) -> None:
         self.db_path = db_path
-        self.conn = sqlite3.connect(f"{db_path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False, timeout=30.0)
+        self.conn = sqlite3.connect(
+            f"{db_path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False, timeout=30.0
+        )
         self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
         self._lock = threading.RLock()
@@ -135,6 +137,8 @@ class AuditService:
             "selection_reason_mismatches",
             "verdict_reason_mismatches",
             "fix_scope_mismatches",
+            "runtime_advisory_mismatches",
+            "retry_directives_mismatches",
             "rationale_metadata_missing",
             "artifact_missing_files",
         )
@@ -143,6 +147,9 @@ class AuditService:
             for field in issue_fields
             if self._count_issue_entries(summary.get(field)) > 0
         }
+        stage_attempt_rows_without_attempt_key = int(summary.get("stage_attempt_rows_without_attempt_key", 0) or 0)
+        if stage_attempt_rows_without_attempt_key > 0:
+            issue_counts["stage_attempt_rows_without_attempt_key"] = stage_attempt_rows_without_attempt_key
         session_rows_without_attempt_key = int(summary.get("session_decision_rows_without_attempt_key", 0) or 0)
         if session_rows_without_attempt_key > 0:
             issue_counts["session_decision_rows_without_attempt_key"] = session_rows_without_attempt_key
@@ -443,7 +450,9 @@ class AuditService:
                 "latest_carryover_authority": {},
             }
 
-        carryover_events = [row for row in ui_rows if str(row.get("event_kind", "") or "").strip() == "carryover_authority"]
+        carryover_events = [
+            row for row in ui_rows if str(row.get("event_kind", "") or "").strip() == "carryover_authority"
+        ]
         latest_carryover = {}
         if carryover_events:
             latest_meta = carryover_events[-1].get("meta")
@@ -523,7 +532,9 @@ class AuditService:
             "latest_source_anchor_summary": latest_source_anchor,
         }
 
-    def _build_stage4_live_session_summary(self, *, rows: list[dict], runtime_events: list[dict], session_id: str) -> dict:
+    def _build_stage4_live_session_summary(
+        self, *, rows: list[dict], runtime_events: list[dict], session_id: str
+    ) -> dict:
         scope_events = self._filter_runtime_events_for_session(
             runtime_events,
             event_type="stage4_session_scope",
@@ -658,8 +669,12 @@ class AuditService:
         stage2_rows = self._load_stage_attempt_rows_for_session(db, stage=2, session_id=latest_session_id)
         stage3_rows = self._load_stage_attempt_rows_for_session(db, stage=3, session_id=latest_session_id)
         stage4_rows = self._load_stage_attempt_rows_for_session(db, stage=4, session_id=latest_session_id)
-        stage2_decisions = self._load_session_decision_rows_for_session(log_dir, stage_label="stage2", session_id=latest_session_id)
-        stage3_decisions = self._load_session_decision_rows_for_session(log_dir, stage_label="stage3", session_id=latest_session_id)
+        stage2_decisions = self._load_session_decision_rows_for_session(
+            log_dir, stage_label="stage2", session_id=latest_session_id
+        )
+        stage3_decisions = self._load_session_decision_rows_for_session(
+            log_dir, stage_label="stage3", session_id=latest_session_id
+        )
         stage2_ui_rows = self._load_ui_event_rows_for_session(db, session_id=latest_session_id, stage=2)
         stage3_ui_rows = self._load_ui_event_rows_for_session(db, session_id=latest_session_id, stage=3)
         return {
@@ -772,9 +787,7 @@ class AuditService:
             "authoritative_attempt_sinks": list(cls._AUTHORITATIVE_ATTEMPT_SINKS),
             "proof_digest_truth_scope": "committed_persistence_only",
             "operational_metadata_scope": "latest_structured_session_plus_runtime_audit_events_and_session_sinks",
-            "authoritative_attempt_truth_note": (
-                "Use DB/JSONL/artifact sink join for authoritative attempt truth."
-            ),
+            "authoritative_attempt_truth_note": ("Use DB/JSONL/artifact sink join for authoritative attempt truth."),
             "operational_metadata_note": (
                 "Operational metadata is best-effort run interpretation and does not override persisted attempt truth."
             ),
