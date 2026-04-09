@@ -220,7 +220,9 @@ Block 42: "스승의 가르침을 세상에 알리기 위해" 비무에 나선�
     `section_rotation`/`arc_section`/`phase`는 번호 없는 자연어 라벨만 허용한다.
     이유: TR의 모든 텍스트가 downstream 원고 생성에 흐르므로 메타 번호의 작중 오염을 방지.
 
-    ### 22A. Plan-level 참조 허용 예외 (ratified 2026-04-09)
+    ### 22A. Plan-level 참조 허용 예외 (ratified 2026-04-09, superseded by material-side §4.3.1 on same date)
+
+    **Authority note**: 본 Rule 22A는 `material_ssot/00_governance/production-pair-schema-standard-v1.md §4.3.1 Structured Ref Convention Alias`의 **family-specific 구현 노트**다. 최종 권한은 material-side §4.3.1이며, wuxguide 하네스의 본 항목은 wuxia family TR 생성 시 그 규칙을 어떻게 적용하는지 적는 참조용이다. 충돌 시 material-side §4.3.1이 승리한다.
 
     TR이 `foreshadow_targets` / `callback_sources` 구조 필드를 사용하지 않고 `foreshadow: [{ref: int, event: str}, ...]` / `callback: [{ref: int, event: str}, ...]` convention을 채택한 작품에 한해, 아래 조건을 모두 충족하면 자연어 필드의 `B숫자` / `ARC-숫자` inline 참조를 **TR-내부 plan-level 참조**로 허용한다.
 
