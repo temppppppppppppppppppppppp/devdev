@@ -104,6 +104,7 @@ Family: `wuxguide`
 - use this file, the canon pitch, the root Phase0 file, the published work_guard, and the live TR file as the current-truth entry set
 - do not describe this work as `Phase0/TR/BI not started`
 - do not promote handoff-only Block 22-25 content into live truth without a merge step
+- **Rule 22A 예외 적용** (ratified 2026-04-09): 본 work은 `foreshadow: [{ref: int, event: str}, ...]` / `callback: [{ref: int, event: str}, ...]` convention을 채택했으므로 `docs/wuxguide/wuxia-production-harness.md` §0D Rule 22A (Plan-level 참조 허용 예외)가 적용된다. content.*/stakes/power_shift.*/relationship_delta/foreshadow.event/callback.event/strategy/success_pattern 필드의 `B숫자`/`ARC-숫자` inline 참조는 TR-내부 plan-level 참조로 허용되며, 감리 보고서에서 `meta_number_leak_blocks` 수치는 INFO-level 관찰 항목으로 분류한다. Precedent: `docs/2026-04-09/manual_meridian_archivist_b46_b47_3pass_audit.md` §2.5
 
 ## 7. B46·B47 Audit (2026-04-09)
 
