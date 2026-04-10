@@ -5,6 +5,9 @@ Three-phase blueprint runtime orchestration split.
 
 import json
 import logging
+import sys
+import threading
+import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -157,7 +160,10 @@ def _build_stage3_fix_pack_guidance(fix_pack: dict | None) -> str:
     if not payload:
         return ""
 
-    lines: list[str] = []
+    lines: list[str] = [
+        "- authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc shell.",
+        "- patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.",
+    ]
     patch_targets = list(payload.get("patch_targets") or [])
     if patch_targets:
         lines.append("- patch_targets: " + ", ".join(str(item) for item in patch_targets[:6]))
@@ -171,9 +177,22 @@ def _build_stage3_fix_pack_guidance(fix_pack: dict | None) -> str:
             scene_id = str(record.get("scene_id") or "").strip()
             field_path = str(record.get("field_path") or "").strip()
             target_kind = str(record.get("target_kind") or "").strip()
-            detail = ", ".join(part for part in (scene_id, field_path, target_kind) if part)
+            patch_target_id = str(record.get("patch_target_id") or "").strip()
+            detail = ", ".join(part for part in (scene_id, field_path, target_kind, patch_target_id) if part)
             if detail:
                 parts.append(f"({detail})")
+            text_anchor = record.get("text_anchor")
+            if isinstance(text_anchor, dict):
+                anchor_bits = [
+                    str(text_anchor.get("old_text") or "").strip()[:60],
+                    str(text_anchor.get("anchor_before") or "").strip()[:60],
+                    str(text_anchor.get("anchor_after") or "").strip()[:60],
+                ]
+                anchor_text = " / ".join(bit for bit in anchor_bits if bit)
+            else:
+                anchor_text = str(text_anchor or "").strip()[:80]
+            if anchor_text:
+                parts.append(f"anchor={anchor_text}")
             text = " ".join(part for part in parts if part).strip()
             if text:
                 record_lines.append(text)
@@ -285,13 +304,108 @@ class ThreePhaseBlueprintRuntime:
     ) -> None:
         owner = self.owner
         payload = meta or {}
-        owner._operator_log(title, level=level, meta=payload)
+        self._emit_operator_progress(owner, title, level=level, meta=payload, force_console=True)
         if fix_scope:
-            owner._operator_log(f"      fix_scope: {fix_scope}", level=level, meta=payload)
+            self._emit_operator_progress(owner, f"      fix_scope: {fix_scope}", level=level, meta=payload, force_console=True)
         for line in self._preview_feedback_lines(feedback):
-            owner._operator_log(f"      사유: {line}", level=level, meta=payload)
+            self._emit_operator_progress(owner, f"      사유: {line}", level=level, meta=payload, force_console=True)
         for line in self._preview_issue_lines(issues):
-            owner._operator_log(f"      이슈: {line}", level=level, meta=payload)
+            self._emit_operator_progress(owner, f"      이슈: {line}", level=level, meta=payload, force_console=True)
+
+    @staticmethod
+    def _force_console_progress(message: str) -> None:
+        text = str(message or "").strip()
+        if not text:
+            return
+        try:
+            sys.stderr.write(f"\n{text}\n")
+            sys.stderr.flush()
+        except Exception:
+            pass
+
+    def _emit_operator_progress(
+        self,
+        owner,
+        message: str,
+        *,
+        level: str = "info",
+        meta: dict | None = None,
+        force_console: bool = False,
+    ) -> None:
+        payload = dict(meta or {})
+        payload.setdefault("emit_console", True)
+        owner._operator_log(message, level=level, meta=payload)
+        if force_console:
+            self._force_console_progress(message)
+
+    @staticmethod
+    def _format_operator_elapsed(elapsed_seconds: float) -> str:
+        total_seconds = max(0, int(elapsed_seconds))
+        minutes, seconds = divmod(total_seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+        if hours:
+            return f"{hours}h {minutes}m {seconds}s"
+        if minutes:
+            return f"{minutes}m {seconds}s"
+        return f"{seconds}s"
+
+    def _call_with_operator_heartbeat(
+        self,
+        *,
+        title: str,
+        meta: dict | None,
+        fn,
+        interval_seconds: float = 30.0,
+    ):
+        owner = self.owner
+        payload = dict(meta or {})
+        started_at = time.perf_counter()
+        stop_event = threading.Event()
+
+        self._emit_operator_progress(owner, f"{title} 시작", meta=payload, force_console=True)
+
+        def _heartbeat() -> None:
+            heartbeat_index = 0
+            while not stop_event.wait(interval_seconds):
+                heartbeat_index += 1
+                elapsed_text = self._format_operator_elapsed(time.perf_counter() - started_at)
+                heartbeat_meta = dict(payload)
+                heartbeat_meta["heartbeat_index"] = heartbeat_index
+                heartbeat_meta["elapsed_text"] = elapsed_text
+                self._emit_operator_progress(
+                    owner,
+                    f"{title} 대기 중... ({elapsed_text})",
+                    meta=heartbeat_meta,
+                    force_console=True,
+                )
+
+        heartbeat_thread = threading.Thread(target=_heartbeat, name="stage3_operator_heartbeat", daemon=True)
+        heartbeat_thread.start()
+
+        try:
+            result = fn()
+        except Exception:
+            elapsed_text = self._format_operator_elapsed(time.perf_counter() - started_at)
+            stop_event.set()
+            heartbeat_thread.join(timeout=0.1)
+            error_meta = dict(payload)
+            error_meta["elapsed_text"] = elapsed_text
+            self._emit_operator_progress(
+                owner,
+                f"{title} 예외 종료 ({elapsed_text})",
+                level="warning",
+                meta=error_meta,
+                force_console=True,
+            )
+            raise
+
+        elapsed_text = self._format_operator_elapsed(time.perf_counter() - started_at)
+        stop_event.set()
+        heartbeat_thread.join(timeout=0.1)
+        done_meta = dict(payload)
+        done_meta["elapsed_text"] = elapsed_text
+        self._emit_operator_progress(owner, f"{title} 완료 ({elapsed_text})", meta=done_meta, force_console=True)
+        return result
 
     def _bootstrap_runtime_context(
         self,
@@ -395,18 +509,33 @@ class ThreePhaseBlueprintRuntime:
         reused_cache = retry > 0 and retry_state.cached_constraint_block is not None
         if reused_cache:
             constraint_block = retry_state.cached_constraint_block or {}
+            owner._operator_log(
+                "[Phase 1] 제약 블록 재사용",
+                meta={"phase": "constraint", "retry_index": retry + 1, "cached": True},
+            )
         else:
             # [pre-rerun] 직전 원고 말미 500자를 시간 진실 소스로 전달
             prev_manuscript_ending = ""
             if prev_manuscripts_text:
                 prev_manuscript_ending = prev_manuscripts_text.strip()[-500:]
-            constraint_block = owner.constraint_compiler.compile(
-                arc_data=arc_data,
-                ep_num=ep_num,
-                prev_blueprint=prev_blueprint,
-                prev_blueprints=prev_blueprints,
-                genre=genre,
-                prev_manuscript_ending=prev_manuscript_ending,
+            constraint_block = self._call_with_operator_heartbeat(
+                title="[Phase 1] 제약 수집",
+                meta={
+                    "phase": "constraint",
+                    "retry_index": retry + 1,
+                    "cached": False,
+                    "previous_blueprint_present": bool(prev_blueprint),
+                    "blueprint_window_count": len(prev_blueprints or []),
+                    "prev_manuscript_ending_chars": len(prev_manuscript_ending),
+                },
+                fn=lambda: owner.constraint_compiler.compile(
+                    arc_data=arc_data,
+                    ep_num=ep_num,
+                    prev_blueprint=prev_blueprint,
+                    prev_blueprints=prev_blueprints,
+                    genre=genre,
+                    prev_manuscript_ending=prev_manuscript_ending,
+                ),
             )
             retry_state.cached_constraint_block = constraint_block
 
@@ -554,12 +683,37 @@ class ThreePhaseBlueprintRuntime:
         )
         if use_inplace_patch:
             logging.info(" [Patch Mode] retry=%d blueprint in-place patch 시도", retry)
+            owner._operator_log(
+                (
+                    f"[Phase 2] patch mode 진입 "
+                    f"(retry={retry + 1}/{max_retries + 1}, prev_score={retry_state.prev_reject_score}, "
+                    f"fix_scope={fix_scope or '-'})"
+                ),
+                meta={
+                    "phase": "generate",
+                    "retry_index": retry + 1,
+                    "max_retries": max_retries + 1,
+                    "mode": "inplace_patch",
+                    "prev_reject_score": retry_state.prev_reject_score,
+                    "fix_scope": fix_scope or "",
+                },
+            )
             try:
-                best_blueprint = owner._inplace_patch_blueprint(
-                    original_blueprint=retry_state.previous_best,
-                    director_feedback=retry_state.prev_reject_feedback,
-                    ep_num=ep_num,
-                    arc_data=arc_data,
+                best_blueprint = self._call_with_operator_heartbeat(
+                    title="[Phase 2] in-place patch",
+                    meta={
+                        "phase": "generate",
+                        "retry_index": retry + 1,
+                        "max_retries": max_retries + 1,
+                        "mode": "inplace_patch",
+                        "feedback_chars": len(str(retry_state.prev_reject_feedback or "")),
+                    },
+                    fn=lambda: owner._inplace_patch_blueprint(
+                        original_blueprint=retry_state.previous_best,
+                        director_feedback=retry_state.prev_reject_feedback,
+                        ep_num=ep_num,
+                        arc_data=arc_data,
+                    ),
                 )
             except Exception:
                 logging.exception("[Patch Mode] Blueprint in-place patch 예외")
@@ -590,7 +744,22 @@ class ThreePhaseBlueprintRuntime:
                 }
                 if single_strategy:
                     ensemble_kwargs["single_strategy"] = single_strategy
-                best_blueprint, all_candidates = owner.ensemble.generate_ensemble(**ensemble_kwargs)
+                generation_mode = f"single_strategy:{single_strategy}" if single_strategy else "full_ensemble"
+                best_blueprint, all_candidates = self._call_with_operator_heartbeat(
+                    title=f"[Phase 2] 후보 생성 ({generation_mode})",
+                    meta={
+                        "phase": "generate",
+                        "retry_index": retry + 1,
+                        "max_retries": max_retries + 1,
+                        "mode": generation_mode,
+                        "feedback_chars": len(str(attempt_feedback or "")),
+                        "strategy_feedback_chars": len(str(strategy_feedback or "")),
+                        "previous_blueprint_present": bool(prev_blueprint),
+                        "blueprint_window_count": len(prev_blueprints or []),
+                        "prev_manuscript_chars": len(str(prev_manuscripts_text or "")),
+                    },
+                    fn=lambda: owner.ensemble.generate_ensemble(**ensemble_kwargs),
+                )
             except Exception:
                 logging.exception("[Phase 2] generate_ensemble 예외")
                 best_blueprint, all_candidates = None, []
@@ -812,11 +981,15 @@ class ThreePhaseBlueprintRuntime:
         if not (director and db and ep_num > 1):
             return None
 
-        continuity_result = director.check_blueprint_continuity_with_cache(
-            new_blueprint=best_blueprint,
-            ep_num=ep_num,
-            db=db,
-            limit=10,
+        continuity_result = self._call_with_operator_heartbeat(
+            title="[Phase 3] 연속성 사전검사",
+            meta={"phase": "validate", "retry_index": retry + 1, "max_retries": max_retries + 1},
+            fn=lambda: director.check_blueprint_continuity_with_cache(
+                new_blueprint=best_blueprint,
+                ep_num=ep_num,
+                db=db,
+                limit=10,
+            ),
         )
         if continuity_result.get("decision") != "REJECT":
             return None
@@ -876,18 +1049,26 @@ class ThreePhaseBlueprintRuntime:
         prev_hud: dict | None,
     ) -> _ThreePhaseValidationEnvelope:
         owner = self.owner
-        verdict, validation_result = owner.validator.validate(
-            blueprint=best_blueprint,
-            arc_data=arc_data,
-            constraint_block=constraint_block,
-            prev_blueprint=prev_blueprint,
-            director=director,
-            working_ep=ep_num,
-            arc_idx=arc_idx,
-            entity_registry=entity_registry,
-            state_tracker=state_tracker,
-            all_candidates=all_candidates,
-            prev_hud=prev_hud,
+        verdict, validation_result = self._call_with_operator_heartbeat(
+            title="[Phase 3] Director compare + judge",
+            meta={
+                "phase": "validate",
+                "candidate_count": len(all_candidates or []),
+                "previous_blueprint_present": bool(prev_blueprint),
+            },
+            fn=lambda: owner.validator.validate(
+                blueprint=best_blueprint,
+                arc_data=arc_data,
+                constraint_block=constraint_block,
+                prev_blueprint=prev_blueprint,
+                director=director,
+                working_ep=ep_num,
+                arc_idx=arc_idx,
+                entity_registry=entity_registry,
+                state_tracker=state_tracker,
+                all_candidates=all_candidates,
+                prev_hud=prev_hud,
+            ),
         )
 
         if validation_result.get("selected_blueprint"):
@@ -1193,7 +1374,7 @@ class ThreePhaseBlueprintRuntime:
         fix_feedback = current_validation.get("re_slice_instruction", "") or current_validation.get("feedback", "")
         fix_pack_guidance = _build_stage3_fix_pack_guidance(normalized_fix_pack)
         if fix_pack_guidance:
-            fix_feedback = f"{fix_feedback}\n\n{fix_pack_guidance}".strip() if fix_feedback else fix_pack_guidance
+            fix_feedback = f"{fix_pack_guidance}\n\n{fix_feedback}".strip() if fix_feedback else fix_pack_guidance
         logging.info(f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}")
         self._log_operator_retry_context(
             title=f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}",
@@ -1202,11 +1383,21 @@ class ThreePhaseBlueprintRuntime:
             fix_scope=str(fix_scope or ""),
         )
         try:
-            patched_blueprint = owner._inplace_patch_blueprint(
-                original_blueprint=current_blueprint,
-                director_feedback=fix_feedback,
-                ep_num=ep_num,
-                arc_data=arc_data,
+            patched_blueprint = self._call_with_operator_heartbeat(
+                title=f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}",
+                meta={
+                    "phase": "validate",
+                    "patch_round": fix_index + 1,
+                    "patch_max": max_fix,
+                    "fix_scope": str(fix_scope or ""),
+                    "feedback_chars": len(str(fix_feedback or "")),
+                },
+                fn=lambda: owner._inplace_patch_blueprint(
+                    original_blueprint=current_blueprint,
+                    director_feedback=fix_feedback,
+                    ep_num=ep_num,
+                    arc_data=arc_data,
+                ),
             )
         except Exception:
             logging.exception("[TF-32-V] inplace_patch_blueprint exception")
@@ -1260,18 +1451,27 @@ class ThreePhaseBlueprintRuntime:
             pass
 
         try:
-            re_verdict, re_validation = owner.validator.validate(
-                blueprint=patched_blueprint,
-                arc_data=arc_data,
-                constraint_block=constraint_block,
-                prev_blueprint=prev_blueprint,
-                director=director,
-                working_ep=ep_num,
-                arc_idx=arc_idx,
-                entity_registry=entity_registry,
-                state_tracker=state_tracker,
-                all_candidates=None,
-                prev_hud=prev_hud,
+            re_verdict, re_validation = self._call_with_operator_heartbeat(
+                title=f"[TF-32-V] re-audit #{fix_index + 1}",
+                meta={
+                    "phase": "validate",
+                    "patch_round": fix_index + 1,
+                    "patch_max": max_fix,
+                    "candidate_count": 1,
+                },
+                fn=lambda: owner.validator.validate(
+                    blueprint=patched_blueprint,
+                    arc_data=arc_data,
+                    constraint_block=constraint_block,
+                    prev_blueprint=prev_blueprint,
+                    director=director,
+                    working_ep=ep_num,
+                    arc_idx=arc_idx,
+                    entity_registry=entity_registry,
+                    state_tracker=state_tracker,
+                    all_candidates=None,
+                    prev_hud=prev_hud,
+                ),
             )
         except Exception:
             logging.exception("[TF-32-V] re-audit exception")
@@ -1304,6 +1504,9 @@ class ThreePhaseBlueprintRuntime:
             re_validation["partial_fix_eval"] = partial_fix_eval
         if normalized_fix_pack:
             re_validation.setdefault("fix_pack", dict(normalized_fix_pack))
+        if isinstance(re_validation, dict):
+            re_validation.setdefault("verdict", re_verdict)
+            re_validation.setdefault("decision", re_verdict)
         if re_verdict == "PASS":
             re_score = re_validation.get("score", 0)
             try:
@@ -1327,13 +1530,13 @@ class ThreePhaseBlueprintRuntime:
                     fix_scope=str(re_validation.get("fix_scope", "") or ""),
                 )
                 return _ThreePhasePassWithFixIterationResult(
-                    current_blueprint=current_blueprint,
-                    current_validation=current_validation,
+                    current_blueprint=patched_blueprint,
+                    current_validation=re_validation,
                     should_break=True,
                 )
             return _ThreePhasePassWithFixIterationResult(
                 current_blueprint=patched_blueprint,
-                current_validation=current_validation,
+                current_validation=re_validation,
                 fix_ok=True,
             )
         if re_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"):
@@ -1367,15 +1570,21 @@ class ThreePhaseBlueprintRuntime:
     ) -> _ThreePhasePassWithFixResult:
         owner = self.owner
         last_reaudit_verdict = current_validation.get("verdict", "") or current_validation.get("decision", "")
-        if last_reaudit_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING") and current_blueprint != best_blueprint:
+        effective_score = current_validation.get("score", score)
+        try:
+            effective_score = int(effective_score)
+        except (ValueError, TypeError):
+            effective_score = score
+        if last_reaudit_verdict in ("PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING") and current_blueprint != best_blueprint:
             best_blueprint = current_blueprint
-            pass_fix_score = current_validation.get("score", score)
-            try:
-                pass_fix_score = int(pass_fix_score)
-            except (ValueError, TypeError):
-                pass_fix_score = score
-            validation_result["score"] = pass_fix_score
-            logging.info("[PF-3] PASS_WITH_FIX exhausted -> adopt latest patched blueprint (score=%d)", pass_fix_score)
+            validation_result["score"] = effective_score
+            if last_reaudit_verdict == "PASS":
+                logging.info(
+                    "[PF-3] PASS below quality gate -> adopt latest patched blueprint for retry (score=%d)",
+                    effective_score,
+                )
+            else:
+                logging.info("[PF-3] PASS_WITH_FIX exhausted -> adopt latest patched blueprint (score=%d)", effective_score)
 
         logging.warning("[TF-32-V] Blueprint patch failed -> REJECT")
         self._log_operator_retry_context(
@@ -1383,7 +1592,7 @@ class ThreePhaseBlueprintRuntime:
             level="warning",
             meta={
                 "phase": "validate",
-                "score": score,
+                "score": effective_score,
                 "retry_index": retry + 1,
                 "max_retries": max_retries + 1,
                 "error_category": "patch_retry_reject",
@@ -1397,7 +1606,7 @@ class ThreePhaseBlueprintRuntime:
         self._apply_validation_reject_state(
             validation_result=current_validation,
             retry_state=retry_state,
-            score=score,
+            score=effective_score,
             selected_strategy=selected_strategy,
             best_blueprint=best_blueprint,
         )
@@ -1618,7 +1827,7 @@ class ThreePhaseBlueprintRuntime:
         owner = self.owner
         if log_retry:
             owner._operator_log(
-                f"[Retry {retry + 1}/{max_retries + 1}] Blueprint ?앹꽦 以?..",
+                f"[Retry {retry + 1}/{max_retries + 1}] Stage3 retry cycle 시작",
                 meta={"retry_index": retry + 1, "max_retries": max_retries + 1, "ep_num": ep_num},
             )
         pipeline_result["retries"] = retry

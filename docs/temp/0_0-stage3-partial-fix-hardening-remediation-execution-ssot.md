@@ -1,14 +1,14 @@
 # 0_0 Stage3 Partial-Fix Hardening Remediation Execution SSOT
 
 Date: 2026-04-07
-Status: partially_realized (2026-04-07 merge-survey promotion clarified shared schema dependency and `partial_fix_eval` sink parity inside this lane; a first bounded tranche has now landed across Stage3 validator/runtime/advisory sinks by consuming shared `PatchTargetRecord` records, preserving a Stage3 `fix_pack-lite` contract, appending bounded patch guidance, and persisting `partial_fix_eval` into validate/advisory/meta surfaces while dedicated verifier hardening and fresh proof remain deferred)
+Status: partially_realized (2026-04-07 merge-survey promotion clarified shared schema dependency and `partial_fix_eval` sink parity inside this lane; a first bounded tranche has now landed across Stage3 validator/runtime/advisory sinks by consuming shared `PatchTargetRecord` records, preserving a Stage3 `fix_pack-lite` contract, appending bounded patch guidance, and persisting `partial_fix_eval` into validate/advisory/meta surfaces, the later 2026-04-10 aborted `00_000` fresh run then promoted this lane from a proof-deferred child to a live runtime bug owner because Stage3 ep1 reaches `PASS_WITH_FIX` locally but the repair loop could discard re-audit `PASS < quality_gate` outcomes back into long reject/retry churn while patch drift still showed secondary preservation debt, the same-day bounded runtime hardening follow-up now preserves low-score `PASS` patch state for the next retry path, and the later same-day structural survey plus layering-first adversarial audit now split the remaining owner surfaces more sharply: packet layering / threshold alignment / canonical patch anchors return to the parent lane, while this child lane keeps verifier, retry-exhaustion, and locality-preservation debt)
 Canonical Path: `docs/2026-04-07/0_0-stage3-partial-fix-hardening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-partial-fix-hardening-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `5a2ef92ab04e46d47ee73b9d56d3e546544576c0`
 - Baseline Dirty Summary: `dirty: 139 tracked, 106 untracked; hotspots: docs/, treatments/, material_ssot/, modules/, tests/`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `2026-04-07 bounded Stage3 partial-fix tranche landed across `unified_blueprint_validator.py`, `three_phase_blueprint_runtime.py`, and `stage3_orchestrator.py`: validator results now preserve structured Stage3 `fix_pack-lite` payloads, the runtime appends bounded patch-target guidance and persists `partial_fix_eval` through `phases.validate`, and Stage3 advisory / `_stage3_meta` sinks now retain the compact fix-pack plus eval payloads with focused validation closed`
+- Resume Commit: `e597a7bf4836dab71547e350b015f6658a1cfb03`
+- Resume Drift Summary: `2026-04-07 bounded Stage3 partial-fix tranche landed across `unified_blueprint_validator.py`, `three_phase_blueprint_runtime.py`, and `stage3_orchestrator.py`: validator results now preserve structured Stage3 `fix_pack-lite` payloads, the runtime appends bounded patch-target guidance and persists `partial_fix_eval` through `phases.validate`, and Stage3 advisory / `_stage3_meta` sinks now retain the compact fix-pack plus eval payloads with focused validation closed; the later `docs/2026-04-10/00_000-stage3-fresh-run-abort-post-run-merge-audit.md` then records a fresh current-HEAD run that finally reaches Stage3 ep1 and shows this lane's remaining live debt directly: a `PASS_WITH_FIX` repair loop could discard post-patch `PASS < quality_gate` re-audits back into the broader reject/retry path, while patch drift still remained a secondary preservation issue; the same-day bounded runtime follow-up in `three_phase_blueprint_runtime.py` now preserves that low-score `PASS` patch state for retry carry-forward and aligns reject bookkeeping to the re-audit score, and the later current-HEAD rerun plus `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md` / `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md` now clarify that packet layering / threshold alignment / canonical patch anchors should not be absorbed into this child lane`
 Source Survey Docs:
 - `docs/2026-04-07/stage3-data-shape-pwf-bounded-survey.md`
 - `docs/2026-04-07/stage-parallel-container-and-pwf-master-survey.md`
@@ -16,8 +16,15 @@ Source Survey Docs:
 - `docs/2026-04-07/partial-fix-terminal2-shared-patch-address-schema-survey.md`
 - `docs/2026-04-07/partial-fix-hardening-parallel-merge-survey.md`
 - `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
+- `docs/2026-04-10/00_000-stage3-fresh-run-abort-post-run-merge-audit.md`
+- `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md`
+- `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md`
 Evidence Artifacts:
 - `docs/2026-04-07/stage-parallel-data-shape-pwf-evidence.json`
+- `0_temp.txt`
+- `projects/00_000/logs/session_20260410_143423.log`
+- `projects/00_000/logs/session_20260410_160214.log`
+- `projects/00_000/logs/runtime_audit_summary.json`
 Side-Effect Coverage: covered
 Parent Lane:
 - `0_0-stage3-contract-tightening-remediation`
@@ -67,6 +74,9 @@ Excluded:
 
 - broad Stage3 contract tightening or binding redesign
 - broad Stage3 prompt retuning
+- ep-local packet layering / gating
+- threshold alignment across validator / Director / runtime
+- canonical patch-anchor transport
 - new queue rank creation
 - Stage4-style before/after excerpt trace
 - Stage4 fix-pack redesign
@@ -236,6 +246,53 @@ Residual deferred inside this lane:
 - retry exhaustion logic keyed by repeated `patch_target_id`
 - fresh canary/live proof
 
+## 8B. Runtime Revalidation Update (2026-04-10)
+
+- the aborted `00_000` fresh run is the first current-HEAD proof artifact in this lane that actually reaches Stage3 ep1
+- the new live finding is action-bearing:
+  - Stage3 enters `PASS_WITH_FIX`
+  - local patching runs
+  - re-audit can return `PASS`
+  - if that `PASS` stays below the quality gate, the runtime logs `[TF-35]` and falls back into the broader reject/retry path instead of preserving the improved patched state cleanly for the next attempt
+- the same run also shows secondary patch-preservation debt:
+  - one patch path drops `scene_breakdown`
+  - another local patch expands by `+52.8%`, which is too large to treat as comfortably local
+- execution consequence:
+  - this lane is no longer only "fresh proof deferred"
+  - it now owns the immediate bounded fail-only runtime repair before the next merged proof wave or Stage3-reaching rerun
+
+## 8C. Implementation Update (2026-04-10 same-day)
+
+Landed bounded runtime follow-up:
+
+- `three_phase_blueprint_runtime.py` now preserves patched blueprint state and re-audit payloads when Stage3 patch re-audit returns `PASS` below the quality gate
+- the same runtime path now stamps `verdict` / `decision` back into the re-audit payload so downstream retry/finalizer bookkeeping does not lose the last re-audit meaning
+- `_finalize_pass_with_fix_failure(...)` now adopts the latest patched blueprint for retry carry-forward on `PASS`, `PASS_WITH_FIX`, and `PASS_WITH_WARNING`, and it uses the re-audit score rather than the stale pre-patch score when logging and recording the reject state
+
+Residual deferred inside this lane after the follow-up:
+
+- deeper scene/path preservation hardening when local patch drift is too large
+- dedicated verifier logic beyond broad re-audit-backed measurement
+- retry-exhaustion logic keyed tightly to repeated `patch_target_id`
+- fresh rerun proof on current HEAD
+
+## 8D. Parent-Lane Structural Split Update (2026-04-10 same-day)
+
+- the later current-HEAD rerun plus `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md` and `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md` now clarify that this child lane is not the correct owner for the whole remaining Stage3 design debt
+- the stronger split is now:
+  - this child lane keeps:
+    - verifier hardening
+    - retry-exhaustion keyed by repeated targets
+    - local patch-preservation / locality hardening
+  - the parent `0_0-stage3-contract-tightening-remediation` lane now keeps:
+    - ep-local packet layering / gating
+    - threshold alignment
+    - canonical patch anchors
+- execution consequence:
+  - do not widen this child lane into packet-layering work
+  - keep the current same-day runtime repair as landed
+  - treat the next code-first structural step as parent-lane work, with this child lane returning afterward for narrower verifier/locality follow-up if still needed
+
 ## 9. Acceptance Criteria
 
 - Stage3 no longer relies on one repair string alone for partial-fix routing
@@ -264,6 +321,7 @@ Residual deferred inside this lane:
 - do not activate this lane before explicit operator decision
 - do not let this lane outrank the pending Stage3 contract-tightening lane without deliberate reprioritization
 - do not widen this lane into broad Stage3 prompt retuning
+- do not absorb parent-lane packet layering / threshold alignment / canonical anchor work into this child lane
 - do not widen this lane into Stage4 or Stage2 redesign
 - do not fabricate Stage4-style before/after excerpt trace obligations from inside this lane
 - do not run canary/live proof from this lane until explicit operator approval
@@ -274,7 +332,7 @@ Residual deferred inside this lane:
 - cleanup condition:
   - keep the temp mirror as a promoted pending queue item until explicit closure, replacement, or merge into a later active Stage3 wave
 - roadmap dependency:
-  - this item stays below the current active Stage4 front, below the pending Stage3 contract-tightening lane, and above soak-only references
+  - this item stays below the current active Stage4 front in the global queue, and inside the Stage3 family its same-day bounded runtime hardening is now landed while closure still waits on a fresh rerun
 
 ## 13. Validation and Closure Hooks
 

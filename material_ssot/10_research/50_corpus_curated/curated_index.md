@@ -28,6 +28,7 @@ Moved bundle set:
 - `헌터물_만렙 사냥꾼, 회귀하다` - 20 episodes
 - `헌터물_SSS급 블러드 헌터!` - 20 episodes
 - `reference_samples/medical_magical_surgeon_sample_corpus` - 10 representative NAS medical episodes
+- `reference_samples/tr_block_bundle_density_benchmark_pack` - bounded bundle-density baseline pack for `TR block -> 2~6 episode` calibration
 
 Selection rule:
 

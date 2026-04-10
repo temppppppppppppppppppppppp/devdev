@@ -1059,7 +1059,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         semantic_carryover = constraint_block.get("semantic_carryover")
         if isinstance(semantic_carryover, dict) and semantic_carryover:
-            advisory_lines.append("[Arc Semantic Carryover]")
+            advisory_lines.append("[Future Semantic Advisory — 이번 화 obligation 아님]")
+            advisory_lines.append("  아래 항목은 미래 화/관계 맥락 참고용이다. 이번 화에서 반드시 모두 소비할 필요는 없다.")
             for entry in semantic_carryover.get("relationship_rationale", []) or []:
                 if not isinstance(entry, dict):
                     continue

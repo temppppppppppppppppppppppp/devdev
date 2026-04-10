@@ -165,6 +165,7 @@ Working rule:
   - full-block cider scan finds zero no-cider blocks
   - no major cap rule is triggered
   - late blocks keep reward cadence
+  - operator intent: this shelf should be strict enough to stand in for real webnovel sell-in quality, not just internal benchmark prestige
 - `GREEN`
   - production-ready pair
   - core promise survives
@@ -287,6 +288,38 @@ Requirements:
 - block 1 is an exemplar of `proof -> reevaluation -> reward -> next gate`
 - full-block cider scan shows zero no-cider blocks
 - later reward cadence still feels intentional
+
+### 8.1A Operational Deployable `GREENPLUS`
+
+`GREENPLUS` is not just a historical compliment band.
+
+For current operator use, a pair should be treated as deployable `GREENPLUS` only when all of the following are true:
+
+- benchmark grade is `GREENPLUS`
+- benchmark freshness is `current`
+- no open migration debt remains
+- opening pacing triage is currently `GREEN`
+- no whole-run pacing re-audit currently places the pair in `YELLOW` or `UNTRIAGED`
+- no active operator note places the pair in:
+  - `repair-first`
+  - `manual re-audit pending`
+  - `forensic re-audit`
+  - `hold`
+- opening cleanliness is supported by one of:
+  - declared-contract evidence, or
+  - bounded same-day manual closeout that explicitly confirms the opening timing gates with absolute block numbers
+- the pair may be cited without qualifier as:
+  - current family exemplar
+  - market-facing quality reference
+  - live sell-in baseline candidate
+
+If any item above is missing, the pair may still keep a historical `GREENPLUS` benchmark alias snapshot, but it is not an operator-deployable `GREENPLUS` shelf item.
+
+Quality-first reading:
+
+- do not award operational `GREENPLUS` out of thrift, nostalgia, or repair sunk-cost protection
+- if there is any serious doubt about live market deployability, keep the pair below deployable `GREENPLUS`
+- the burden of proof is positive closure, not absence of obvious disaster
 
 ### 8.2 `GREEN`
 

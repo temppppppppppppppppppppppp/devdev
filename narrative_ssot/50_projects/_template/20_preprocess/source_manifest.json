@@ -2,6 +2,9 @@
   "work_identity": {
     "work_id": "template_work_id",
     "title": "TODO: replace title",
+    "subtitle": "",
+    "commercial_label": "",
+    "slug_aliases": [],
     "primary_profile": "business_growth_profile",
     "secondary_profile": ""
   },

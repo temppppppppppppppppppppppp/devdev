@@ -56,10 +56,12 @@ Strict mode:
 2. refresh temp mirrors
 3. optionally refresh `docs/temp/queue-state.json` with `python scripts/sync_temp_queue_state.py`
 4. run the validator
-5. if validation passes, continue realization or closure
-6. if validation fails, repair the doc or queue state first
+5. if validation passes and ClickUp queue mirroring is configured, run `python -X utf8 scripts/sync_clickup_queue.py`
+6. if validation passes, continue realization or closure
+7. if validation fails, repair the doc or queue state first
 
 ## 7. Guardrails
 - Do not treat the validator as a substitute for the document 3-pass audit.
 - Do not clear temp artifacts after a failing validation run.
 - Do not ignore repeated warnings; they signal drift that will become failure later.
+- Do not push ClickUp status updates from an unvalidated queue snapshot or from canonical/temp mirror drift.

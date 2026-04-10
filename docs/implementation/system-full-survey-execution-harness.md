@@ -77,6 +77,7 @@ Execution SSOT handling rule:
 - After each material edit, overwrite the `docs/temp/` mirror copy from the canonical file.
 - Do not manually hotfix the `docs/temp/` copy without syncing the canonical file in the same turn.
 - Treat the `docs/temp/` copy as a disposable working mirror, not as an authority.
+- If ClickUp mirroring is enabled for the workspace, update ClickUp only after the canonical doc, temp mirror, and queue-state snapshot are all aligned and validated.
 
 ### 3.5 Execution SSOT Metadata Contract
 Each execution SSOT should carry enough metadata to reconstruct lineage.
@@ -252,6 +253,7 @@ If a category is truly not applicable, state that explicitly in the survey inste
 - If multiple execution SSOT mirrors are active, order them with the roadmap plus `docs/implementation/queue-priority-rubric.md`.
 - If there are multiple source docs, use `docs/implementation/execution-synthesis-harness.md`.
 - If temporary exceptions remain, record them with `docs/implementation/exception-registry-harness.md`.
+- If the finalized execution doc or roadmap changes queue status, rank, or membership, refresh `docs/temp/queue-state.json`, validate with `docs/implementation/ops-validator-harness.md`, and then mirror the queue change into ClickUp when configured.
 
 ### Step 5A. Codebase-Global Bundle Rule
 When the order is using the codebase-global survey coverage contract:

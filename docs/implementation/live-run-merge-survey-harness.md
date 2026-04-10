@@ -92,6 +92,7 @@ Allowed:
 - execution SSOT docs for action-bearing findings
 - roadmap creation or refresh if multiple execution items emerge
 - queue or closure actions after the merged audit passes confidence gates
+- ClickUp reflection only after canonical docs, temp mirrors, and queue-state refresh are complete
 
 ## 6. Standard Workflow
 
@@ -143,6 +144,7 @@ Allowed:
 - If the merged audit finds only bounded observations, stop at survey output.
 - If it finds action-bearing items, create canonical execution SSOT docs after the merged audit.
 - Create `docs/temp/` mirrors only after the governing canonical execution docs pass the save gate.
+- If the merged audit materially changes queue status or roadmap ordering, refresh `docs/temp/queue-state.json`, validate the queue, and only then mirror the change into ClickUp.
 
 ## 7. Output Set
 Recommended output shapes for this mode:
@@ -168,6 +170,7 @@ Naming guidance:
 - Do not let shell-host capture quirks outrank the completed run's authoritative sinks.
 - Do not treat provisional watchlists as closure notes.
 - Do not mirror draft execution documents into `docs/temp/`.
+- Do not mirror provisional live-run findings into ClickUp before the post-run merge audit is finalized.
 
 ## 10. Completion Markers
 Before declaring the live-merge cycle complete, confirm:

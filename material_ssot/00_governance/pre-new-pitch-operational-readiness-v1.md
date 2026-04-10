@@ -56,6 +56,8 @@ That freshness is tracked separately in:
 - if a pair is `unslotted_live_pair`, respect that inventory role even when benchmark freshness is `current`
 - if a pair carries `pending_refresh` because a positive reading was withdrawn after a false-pass finding, treat it as a negative exemplar only
 - numbered `GREEN` pairs are live and benchmark-fresh, but they still sit below the `GREENPLUS` exemplar shelf
+- `GREENPLUS` exemplar shelf should be read as a deployable quality shelf, not a loose benchmark compliment
+- if the registry row still carries provisional, repair-first, whole-run-unclean, or legacy-heuristic-only ambiguity, do not treat that pair as a current top-shelf sell-in reference even when the alias filename says `GREENPLUS`
 
 ## 5. Current 2026-04-09 Snapshot
 

@@ -17,7 +17,47 @@
   ],
   "properties": {
     "work_identity": {
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "work_id",
+        "title",
+        "subtitle",
+        "commercial_label",
+        "slug_aliases",
+        "primary_profile",
+        "secondary_profile"
+      ],
+      "properties": {
+        "work_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "commercial_label": {
+          "type": "string"
+        },
+        "slug_aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "primary_profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "secondary_profile": {
+          "type": "string"
+        }
+      }
     },
     "canonical_sources": {
       "type": "array"
@@ -45,4 +85,3 @@
     }
   }
 }
-

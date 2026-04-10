@@ -27,6 +27,7 @@ from check_bi_tr_consumability import (
     inspect_pair,
 )
 from modules.core.stage0_handoff import get_effective_bible_root, normalize_bible_to_canonical_view, normalize_treatment_blocks
+from modules.core.work_identity_surface import resolve_phase0_work_identity_surface
 
 LIVE_BIBLE_DIR = ROOT / "bible"
 LIVE_TREATMENT_DIR = ROOT / "treatments"
@@ -115,6 +116,10 @@ class PairNormalizationReport:
     active_baseline_eligible: bool
     root_phase0_status: str
     preprocess_authority_available: bool
+    naming_surface_status: str
+    naming_surface_resolution: str | None
+    canonical_title: str | None
+    observed_bi_title: str | None
     raw_pair_canonical_valid: bool
     normalized_pair_canonical_valid: bool
     counts: dict[str, int] = field(default_factory=dict)
@@ -211,6 +216,18 @@ def deep_key_present(data: Any, key: str) -> bool:
     if isinstance(data, list):
         return any(deep_key_present(item, key) for item in data)
     return False
+
+
+def unique_texts(items: list[Any]) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for item in items:
+        text = as_text(item)
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        out.append(text)
+    return out
 
 
 def count_missing_blocks(blocks: list[dict[str, Any]], path: str) -> int:
@@ -361,6 +378,81 @@ def top_findings(findings: list[Finding], *, limit: int = 3) -> list[Finding]:
 
 def sort_findings(findings: list[Finding]) -> list[Finding]:
     return sorted(findings, key=lambda item: (SEVERITY_ORDER[item.severity], -(item.count or 0), item.code))
+
+
+def read_bi_naming_surface(canonical_bi: Any) -> dict[str, Any]:
+    master_bible = get_effective_bible_root(canonical_bi)
+    project_data = master_bible.get("ProjectData") if isinstance(master_bible, dict) else {}
+    meta_info = project_data.get("MetaInfo") if isinstance(project_data, dict) else {}
+    slug_aliases_raw = meta_info.get("slug_aliases") if isinstance(meta_info, dict) else []
+    slug_aliases = unique_texts(slug_aliases_raw if isinstance(slug_aliases_raw, list) else [])
+    title = as_text(meta_info.get("title")) if isinstance(meta_info, dict) else ""
+    commercial_label = as_text(meta_info.get("commercial_label")) if isinstance(meta_info, dict) else ""
+    return {
+        "title": title,
+        "commercial_label": commercial_label,
+        "slug_aliases": slug_aliases,
+        "allowed_titles": unique_texts([title, commercial_label, *slug_aliases]),
+    }
+
+
+def inspect_naming_surface(
+    *,
+    phase0_data: Any,
+    canonical_bi: Any,
+    untouched_historical: bool,
+    findings: list[Finding],
+    counts: dict[str, int],
+    notes: list[str],
+) -> tuple[str, str | None, str | None, str | None]:
+    bi_naming_surface = read_bi_naming_surface(canonical_bi)
+    observed_bi_title = bi_naming_surface["title"] or None
+    if not isinstance(phase0_data, dict):
+        notes.append("naming surface unavailable: root phase0 payload missing")
+        counts["naming_surface_available"] = 0
+        return "unavailable", None, None, observed_bi_title
+
+    phase0_naming_surface = resolve_phase0_work_identity_surface(phase0_data)
+    canonical_title = as_text(phase0_naming_surface.get("canonical_title")) or None
+    allowed_titles = phase0_naming_surface.get("allowed_titles", [])
+    resolution = as_text(phase0_naming_surface.get("resolution")) or None
+    counts["naming_surface_available"] = 1
+    counts["naming_allowed_title_count"] = len(allowed_titles)
+
+    if not canonical_title:
+        notes.append("naming surface unavailable: phase0 title authority unresolved")
+        return "unavailable", resolution, None, observed_bi_title
+    if not observed_bi_title:
+        notes.append(f"naming title missing: expected canonical '{canonical_title}'")
+        return "missing", resolution, canonical_title, None
+    if observed_bi_title == canonical_title:
+        return "canonical", resolution, canonical_title, observed_bi_title
+    if observed_bi_title in allowed_titles:
+        add_finding(
+            findings,
+            "alias",
+            "BI-NAMING-ALIAS-SURFACE",
+            (
+                f"BI MetaInfo.title '{observed_bi_title}' is inside the allowed phase0 naming surface "
+                f"but not canonical title '{canonical_title}'."
+            ),
+            fix_target="BI.MasterBible.ProjectData.MetaInfo.title",
+        )
+        notes.append(f"naming alias surface: {observed_bi_title} -> {canonical_title}")
+        return "alias-surface", resolution, canonical_title, observed_bi_title
+
+    add_finding(
+        findings,
+        "drift",
+        "BI-NAMING-DRIFT",
+        (
+            f"BI MetaInfo.title '{observed_bi_title}' is outside the phase0 naming surface "
+            f"{allowed_titles or [canonical_title]}."
+        ),
+        fix_target="BI.MasterBible.ProjectData.MetaInfo.title",
+    )
+    notes.append(f"naming drift: {observed_bi_title} vs {canonical_title}")
+    return "drifting", resolution, canonical_title, observed_bi_title
 
 
 def inspect_family_fields(
@@ -758,6 +850,19 @@ def build_report(
         findings=findings,
         counts=counts,
     )
+    (
+        naming_surface_status,
+        naming_surface_resolution,
+        canonical_title,
+        observed_bi_title,
+    ) = inspect_naming_surface(
+        phase0_data=phase0_data,
+        canonical_bi=canonical_bi,
+        untouched_historical=untouched_historical,
+        findings=findings,
+        counts=counts,
+        notes=notes,
+    )
 
     blocker_findings = [finding for finding in findings if finding.severity == "blocker"]
     alias_findings = [finding for finding in findings if finding.severity == "alias"]
@@ -816,6 +921,10 @@ def build_report(
         active_baseline_eligible=active_baseline_eligible,
         root_phase0_status=root_phase0_status,
         preprocess_authority_available=preprocess_authority_available,
+        naming_surface_status=naming_surface_status,
+        naming_surface_resolution=naming_surface_resolution,
+        canonical_title=canonical_title,
+        observed_bi_title=observed_bi_title,
         raw_pair_canonical_valid=consumability.pair_canonical_valid,
         normalized_pair_canonical_valid=consumability.normalized_pair_canonical_valid,
         counts=counts,
@@ -899,6 +1008,7 @@ def render_text(reports: list[PairNormalizationReport]) -> str:
                     f"schema={report.schema_status}",
                     f"tierA={report.strict_tier_a_status}",
                     f"tierB={report.tier_b_status}",
+                    f"naming={report.naming_surface_status}",
                     f"evidence={report.evidence_mode}",
                     f"migration_debt={'yes' if report.open_migration_debt else 'no'}",
                 ]

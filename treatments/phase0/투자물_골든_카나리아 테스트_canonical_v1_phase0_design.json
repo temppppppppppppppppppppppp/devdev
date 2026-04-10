@@ -246,6 +246,22 @@
         "defeat_blocks": []
       }
     ],
+    "opening_bundle_contract": {
+      "bundle_window": "TR 2~6",
+      "macro_battlefield": "원자재 첫 증명과 PB 게이트 전환",
+      "macro_battlefield_map": [
+        "회귀 직후 시장 thesis 확정",
+        "가족 방관을 이용한 독립 선언",
+        "WTI 첫 포지션 진입",
+        "PB tone shift와 VIP line",
+        "다음 cycle 입장권 확보"
+      ],
+      "bundle_goal": "opening 3화 안에 WTI thesis를 실행으로 바꾸고, 늦어도 4화 안에 PB 재평가와 다음 전장 입장권을 확보한다.",
+      "first_signboard_block": 3,
+      "representative_reevaluation_block": 3,
+      "next_battlefield_ticket_block": 4,
+      "timing_reconciliation_note": "ARC-01이 B1-10까지 이어지더라도 opening reader-earning chain은 초반 3화 기본, 4화 soft cap으로 읽는다. 회귀 충격 정리, 독립 선언, 법인 준비는 첫 proof와 signboard를 늦추는 변명이 될 수 없다."
+    },
     "npc_timeline": [
       {
         "name": "한정호",

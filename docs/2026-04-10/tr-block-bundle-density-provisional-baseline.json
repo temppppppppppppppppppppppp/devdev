@@ -1,0 +1,1983 @@
+{
+  "_schema_version": "bundle_density_snapshot.v1",
+  "generated_at": "2026-04-10T06:00:46.595563+00:00",
+  "window_sizes": [
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "corpora": [
+    {
+      "label": "투자물_금수저 투자백서",
+      "corpus_dir": "material_ssot\\10_research\\50_corpus_curated\\투자물_금수저 투자백서",
+      "episode_files": 50,
+      "series_summary": {
+        "episode_count": 50,
+        "episode_span": [
+          1,
+          50
+        ],
+        "char_count": {
+          "min": 5441,
+          "p25": 6048.5,
+          "p50": 6490.0,
+          "p75": 6854.5,
+          "max": 8920,
+          "avg": 6550.9
+        },
+        "paragraph_count": {
+          "p25": 149.0,
+          "p50": 156.5,
+          "p75": 171.75,
+          "avg": 161.84
+        },
+        "sentence_count": {
+          "p25": 171.0,
+          "p50": 186.5,
+          "p75": 202.0,
+          "avg": 189.4
+        },
+        "domain_anchor_per_1000_chars": {
+          "p25": 2.08,
+          "p50": 3.1,
+          "p75": 4.84,
+          "avg": 3.39
+        },
+        "quote_paragraph_ratio": {
+          "p25": 0.42,
+          "p50": 0.46,
+          "p75": 0.49,
+          "avg": 0.45
+        }
+      },
+      "window_summaries": {
+        "2": {
+          "window_count": 49,
+          "char_count": {
+            "p25": 12383.0,
+            "p50": 13072.0,
+            "p75": 13847.0,
+            "avg": 13103.39
+          },
+          "paragraph_count": {
+            "p25": 301.0,
+            "p50": 321.0,
+            "p75": 341.0,
+            "avg": 323.41
+          },
+          "sentence_count": {
+            "p25": 347.0,
+            "p50": 374.0,
+            "p75": 403.0,
+            "avg": 378.24
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.24,
+            "p50": 3.18,
+            "p75": 4.3,
+            "avg": 3.35
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.42,
+            "p50": 0.46,
+            "p75": 0.49,
+            "avg": 0.45
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 2,
+              "char_count": 13314,
+              "paragraph_count": 323,
+              "sentence_count": 376,
+              "domain_anchor_per_1000_chars": 5.11,
+              "quote_paragraph_ratio": 0.418
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 3,
+              "char_count": 13801,
+              "paragraph_count": 343,
+              "sentence_count": 392,
+              "domain_anchor_per_1000_chars": 5.58,
+              "quote_paragraph_ratio": 0.382
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 4,
+              "char_count": 12768,
+              "paragraph_count": 307,
+              "sentence_count": 369,
+              "domain_anchor_per_1000_chars": 5.64,
+              "quote_paragraph_ratio": 0.404
+            }
+          ]
+        },
+        "3": {
+          "window_count": 48,
+          "char_count": {
+            "p25": 18713.5,
+            "p50": 19489.0,
+            "p75": 20536.25,
+            "avg": 19664.88
+          },
+          "paragraph_count": {
+            "p25": 449.75,
+            "p50": 484.0,
+            "p75": 509.0,
+            "avg": 485.1
+          },
+          "sentence_count": {
+            "p25": 530.0,
+            "p50": 571.0,
+            "p75": 591.75,
+            "avg": 567.6
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.54,
+            "p50": 3.14,
+            "p75": 4.24,
+            "avg": 3.34
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.42,
+            "p50": 0.46,
+            "p75": 0.48,
+            "avg": 0.45
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 3,
+              "char_count": 20355,
+              "paragraph_count": 498,
+              "sentence_count": 584,
+              "domain_anchor_per_1000_chars": 5.5,
+              "quote_paragraph_ratio": 0.398
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 4,
+              "char_count": 19528,
+              "paragraph_count": 475,
+              "sentence_count": 553,
+              "domain_anchor_per_1000_chars": 5.38,
+              "quote_paragraph_ratio": 0.404
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 5,
+              "char_count": 19128,
+              "paragraph_count": 480,
+              "sentence_count": 571,
+              "domain_anchor_per_1000_chars": 5.02,
+              "quote_paragraph_ratio": 0.44
+            }
+          ]
+        },
+        "4": {
+          "window_count": 47,
+          "char_count": {
+            "p25": 25216.5,
+            "p50": 26340.0,
+            "p75": 27155.5,
+            "avg": 26225.26
+          },
+          "paragraph_count": {
+            "p25": 618.5,
+            "p50": 639.0,
+            "p75": 671.0,
+            "avg": 646.4
+          },
+          "sentence_count": {
+            "p25": 714.0,
+            "p50": 755.0,
+            "p75": 784.5,
+            "avg": 756.47
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.58,
+            "p50": 3.23,
+            "p75": 4.29,
+            "avg": 3.32
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.42,
+            "p50": 0.45,
+            "p75": 0.48,
+            "avg": 0.45
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 4,
+              "char_count": 26082,
+              "paragraph_count": 630,
+              "sentence_count": 745,
+              "domain_anchor_per_1000_chars": 5.37,
+              "quote_paragraph_ratio": 0.411
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 5,
+              "char_count": 25888,
+              "paragraph_count": 648,
+              "sentence_count": 755,
+              "domain_anchor_per_1000_chars": 4.98,
+              "quote_paragraph_ratio": 0.431
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 6,
+              "char_count": 25708,
+              "paragraph_count": 636,
+              "sentence_count": 742,
+              "domain_anchor_per_1000_chars": 5.02,
+              "quote_paragraph_ratio": 0.434
+            }
+          ]
+        },
+        "5": {
+          "window_count": 46,
+          "char_count": {
+            "p25": 31897.75,
+            "p50": 32932.5,
+            "p75": 33591.0,
+            "avg": 32796.8
+          },
+          "paragraph_count": {
+            "p25": 776.75,
+            "p50": 804.0,
+            "p75": 839.75,
+            "avg": 807.78
+          },
+          "sentence_count": {
+            "p25": 905.5,
+            "p50": 940.5,
+            "p75": 970.75,
+            "avg": 945.37
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.58,
+            "p50": 3.21,
+            "p75": 4.0,
+            "avg": 3.31
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.43,
+            "p50": 0.44,
+            "p75": 0.48,
+            "avg": 0.45
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 5,
+              "char_count": 32442,
+              "paragraph_count": 803,
+              "sentence_count": 947,
+              "domain_anchor_per_1000_chars": 5.06,
+              "quote_paragraph_ratio": 0.431
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 6,
+              "char_count": 32468,
+              "paragraph_count": 804,
+              "sentence_count": 926,
+              "domain_anchor_per_1000_chars": 4.99,
+              "quote_paragraph_ratio": 0.428
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 7,
+              "char_count": 32218,
+              "paragraph_count": 802,
+              "sentence_count": 924,
+              "domain_anchor_per_1000_chars": 4.78,
+              "quote_paragraph_ratio": 0.435
+            }
+          ]
+        },
+        "6": {
+          "window_count": 45,
+          "char_count": {
+            "p25": 38657.0,
+            "p50": 39271.0,
+            "p75": 40278.0,
+            "avg": 39381.71
+          },
+          "paragraph_count": {
+            "p25": 929.0,
+            "p50": 959.0,
+            "p75": 1010.0,
+            "avg": 969.07
+          },
+          "sentence_count": {
+            "p25": 1088.0,
+            "p50": 1122.0,
+            "p75": 1169.0,
+            "avg": 1134.18
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.79,
+            "p50": 3.1,
+            "p75": 4.03,
+            "avg": 3.3
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.43,
+            "p50": 0.45,
+            "p75": 0.47,
+            "avg": 0.45
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 6,
+              "char_count": 39022,
+              "paragraph_count": 959,
+              "sentence_count": 1118,
+              "domain_anchor_per_1000_chars": 5.05,
+              "quote_paragraph_ratio": 0.429
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 7,
+              "char_count": 38978,
+              "paragraph_count": 970,
+              "sentence_count": 1108,
+              "domain_anchor_per_1000_chars": 4.8,
+              "quote_paragraph_ratio": 0.43
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 8,
+              "char_count": 40034,
+              "paragraph_count": 999,
+              "sentence_count": 1151,
+              "domain_anchor_per_1000_chars": 4.42,
+              "quote_paragraph_ratio": 0.435
+            }
+          ]
+        }
+      },
+      "sample_episodes": [
+        {
+          "episode_no": 1,
+          "char_count": 6554,
+          "paragraph_count": 155,
+          "sentence_count": 192,
+          "quote_paragraph_count": 67,
+          "amount_mentions": 22,
+          "org_mentions": 13,
+          "domain_anchor_mentions": 35,
+          "domain_anchor_per_1000_chars": 5.34,
+          "quote_paragraph_ratio": 0.432
+        },
+        {
+          "episode_no": 2,
+          "char_count": 6760,
+          "paragraph_count": 168,
+          "sentence_count": 184,
+          "quote_paragraph_count": 68,
+          "amount_mentions": 31,
+          "org_mentions": 2,
+          "domain_anchor_mentions": 33,
+          "domain_anchor_per_1000_chars": 4.88,
+          "quote_paragraph_ratio": 0.405
+        },
+        {
+          "episode_no": 3,
+          "char_count": 7041,
+          "paragraph_count": 175,
+          "sentence_count": 208,
+          "quote_paragraph_count": 63,
+          "amount_mentions": 43,
+          "org_mentions": 1,
+          "domain_anchor_mentions": 44,
+          "domain_anchor_per_1000_chars": 6.25,
+          "quote_paragraph_ratio": 0.36
+        }
+      ]
+    },
+    {
+      "label": "투자물_금수저생활백서",
+      "corpus_dir": "material_ssot\\10_research\\50_corpus_curated\\투자물_금수저생활백서",
+      "episode_files": 50,
+      "series_summary": {
+        "episode_count": 50,
+        "episode_span": [
+          1,
+          50
+        ],
+        "char_count": {
+          "min": 5499,
+          "p25": 5812.0,
+          "p50": 6075.0,
+          "p75": 6425.5,
+          "max": 7399,
+          "avg": 6149.24
+        },
+        "paragraph_count": {
+          "p25": 158.25,
+          "p50": 166.5,
+          "p75": 178.75,
+          "avg": 168.92
+        },
+        "sentence_count": {
+          "p25": 191.0,
+          "p50": 199.5,
+          "p75": 208.0,
+          "avg": 200.32
+        },
+        "domain_anchor_per_1000_chars": {
+          "p25": 1.86,
+          "p50": 2.91,
+          "p75": 3.66,
+          "avg": 2.93
+        },
+        "quote_paragraph_ratio": {
+          "p25": 0.44,
+          "p50": 0.46,
+          "p75": 0.51,
+          "avg": 0.46
+        }
+      },
+      "window_summaries": {
+        "2": {
+          "window_count": 49,
+          "char_count": {
+            "p25": 11818.0,
+            "p50": 12450.0,
+            "p75": 12616.0,
+            "avg": 12312.78
+          },
+          "paragraph_count": {
+            "p25": 319.0,
+            "p50": 339.0,
+            "p75": 358.0,
+            "avg": 337.82
+          },
+          "sentence_count": {
+            "p25": 384.0,
+            "p50": 399.0,
+            "p75": 416.0,
+            "avg": 400.96
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.24,
+            "p50": 2.68,
+            "p75": 3.54,
+            "avg": 2.91
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.44,
+            "p50": 0.48,
+            "p75": 0.5,
+            "avg": 0.47
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 2,
+              "char_count": 12623,
+              "paragraph_count": 347,
+              "sentence_count": 399,
+              "domain_anchor_per_1000_chars": 3.56,
+              "quote_paragraph_ratio": 0.334
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 3,
+              "char_count": 12909,
+              "paragraph_count": 365,
+              "sentence_count": 422,
+              "domain_anchor_per_1000_chars": 1.7,
+              "quote_paragraph_ratio": 0.386
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 4,
+              "char_count": 12699,
+              "paragraph_count": 356,
+              "sentence_count": 413,
+              "domain_anchor_per_1000_chars": 2.68,
+              "quote_paragraph_ratio": 0.438
+            }
+          ]
+        },
+        "3": {
+          "window_count": 48,
+          "char_count": {
+            "p25": 18161.25,
+            "p50": 18314.0,
+            "p75": 18959.5,
+            "avg": 18466.12
+          },
+          "paragraph_count": {
+            "p25": 482.5,
+            "p50": 507.5,
+            "p75": 536.25,
+            "avg": 506.5
+          },
+          "sentence_count": {
+            "p25": 582.75,
+            "p50": 604.5,
+            "p75": 621.75,
+            "avg": 601.6
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.33,
+            "p50": 2.95,
+            "p75": 3.4,
+            "avg": 2.91
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.45,
+            "p50": 0.47,
+            "p75": 0.49,
+            "avg": 0.47
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 3,
+              "char_count": 18864,
+              "paragraph_count": 531,
+              "sentence_count": 613,
+              "domain_anchor_per_1000_chars": 3.13,
+              "quote_paragraph_ratio": 0.369
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 4,
+              "char_count": 19367,
+              "paragraph_count": 537,
+              "sentence_count": 621,
+              "domain_anchor_per_1000_chars": 2.17,
+              "quote_paragraph_ratio": 0.404
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 5,
+              "char_count": 18413,
+              "paragraph_count": 524,
+              "sentence_count": 613,
+              "domain_anchor_per_1000_chars": 2.34,
+              "quote_paragraph_ratio": 0.471
+            }
+          ]
+        },
+        "4": {
+          "window_count": 47,
+          "char_count": {
+            "p25": 24142.5,
+            "p50": 24529.0,
+            "p75": 25076.5,
+            "avg": 24591.11
+          },
+          "paragraph_count": {
+            "p25": 647.5,
+            "p50": 676.0,
+            "p75": 706.0,
+            "avg": 674.19
+          },
+          "sentence_count": {
+            "p25": 779.0,
+            "p50": 804.0,
+            "p75": 823.5,
+            "avg": 801.04
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.44,
+            "p50": 2.97,
+            "p75": 3.33,
+            "avg": 2.91
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.45,
+            "p50": 0.47,
+            "p75": 0.49,
+            "avg": 0.47
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 4,
+              "char_count": 25322,
+              "paragraph_count": 703,
+              "sentence_count": 812,
+              "domain_anchor_per_1000_chars": 3.12,
+              "quote_paragraph_ratio": 0.387
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 5,
+              "char_count": 25081,
+              "paragraph_count": 705,
+              "sentence_count": 821,
+              "domain_anchor_per_1000_chars": 2.03,
+              "quote_paragraph_ratio": 0.437
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 6,
+              "char_count": 25440,
+              "paragraph_count": 728,
+              "sentence_count": 881,
+              "domain_anchor_per_1000_chars": 1.93,
+              "quote_paragraph_ratio": 0.471
+            }
+          ]
+        },
+        "5": {
+          "window_count": 46,
+          "char_count": {
+            "p25": 30189.75,
+            "p50": 30699.0,
+            "p75": 31227.5,
+            "avg": 30707.78
+          },
+          "paragraph_count": {
+            "p25": 809.0,
+            "p50": 848.5,
+            "p75": 878.75,
+            "avg": 841.63
+          },
+          "sentence_count": {
+            "p25": 968.75,
+            "p50": 1005.0,
+            "p75": 1028.25,
+            "avg": 1000.41
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.51,
+            "p50": 2.79,
+            "p75": 3.38,
+            "avg": 2.91
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.45,
+            "p50": 0.47,
+            "p75": 0.48,
+            "avg": 0.47
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 5,
+              "char_count": 31036,
+              "paragraph_count": 871,
+              "sentence_count": 1012,
+              "domain_anchor_per_1000_chars": 2.84,
+              "quote_paragraph_ratio": 0.417
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 6,
+              "char_count": 32108,
+              "paragraph_count": 909,
+              "sentence_count": 1089,
+              "domain_anchor_per_1000_chars": 1.78,
+              "quote_paragraph_ratio": 0.444
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 7,
+              "char_count": 30939,
+              "paragraph_count": 882,
+              "sentence_count": 1065,
+              "domain_anchor_per_1000_chars": 2.29,
+              "quote_paragraph_ratio": 0.477
+            }
+          ]
+        },
+        "6": {
+          "window_count": 45,
+          "char_count": {
+            "p25": 36421.0,
+            "p50": 36851.0,
+            "p75": 37309.0,
+            "avg": 36844.51
+          },
+          "paragraph_count": {
+            "p25": 965.0,
+            "p50": 1005.0,
+            "p75": 1057.0,
+            "avg": 1009.67
+          },
+          "sentence_count": {
+            "p25": 1171.0,
+            "p50": 1203.0,
+            "p75": 1231.0,
+            "avg": 1200.56
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.47,
+            "p50": 2.78,
+            "p75": 3.47,
+            "avg": 2.91
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.45,
+            "p50": 0.47,
+            "p75": 0.48,
+            "avg": 0.47
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 6,
+              "char_count": 38063,
+              "paragraph_count": 1075,
+              "sentence_count": 1280,
+              "domain_anchor_per_1000_chars": 2.47,
+              "quote_paragraph_ratio": 0.427
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 7,
+              "char_count": 37607,
+              "paragraph_count": 1063,
+              "sentence_count": 1273,
+              "domain_anchor_per_1000_chars": 2.1,
+              "quote_paragraph_ratio": 0.453
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 8,
+              "char_count": 37895,
+              "paragraph_count": 1091,
+              "sentence_count": 1295,
+              "domain_anchor_per_1000_chars": 2.67,
+              "quote_paragraph_ratio": 0.465
+            }
+          ]
+        }
+      },
+      "sample_episodes": [
+        {
+          "episode_no": 1,
+          "char_count": 5955,
+          "paragraph_count": 166,
+          "sentence_count": 191,
+          "quote_paragraph_count": 55,
+          "amount_mentions": 36,
+          "org_mentions": 1,
+          "domain_anchor_mentions": 37,
+          "domain_anchor_per_1000_chars": 6.21,
+          "quote_paragraph_ratio": 0.331
+        },
+        {
+          "episode_no": 2,
+          "char_count": 6668,
+          "paragraph_count": 181,
+          "sentence_count": 208,
+          "quote_paragraph_count": 61,
+          "amount_mentions": 7,
+          "org_mentions": 1,
+          "domain_anchor_mentions": 8,
+          "domain_anchor_per_1000_chars": 1.2,
+          "quote_paragraph_ratio": 0.337
+        },
+        {
+          "episode_no": 3,
+          "char_count": 6241,
+          "paragraph_count": 184,
+          "sentence_count": 214,
+          "quote_paragraph_count": 80,
+          "amount_mentions": 14,
+          "org_mentions": 0,
+          "domain_anchor_mentions": 14,
+          "domain_anchor_per_1000_chars": 2.24,
+          "quote_paragraph_ratio": 0.435
+        }
+      ]
+    },
+    {
+      "label": "재벌물_독식하는 재벌 3세",
+      "corpus_dir": "material_ssot\\10_research\\50_corpus_curated\\재벌물_독식하는 재벌 3세",
+      "episode_files": 50,
+      "series_summary": {
+        "episode_count": 50,
+        "episode_span": [
+          1,
+          50
+        ],
+        "char_count": {
+          "min": 5344,
+          "p25": 5498.25,
+          "p50": 5575.0,
+          "p75": 5751.5,
+          "max": 6153,
+          "avg": 5637.1
+        },
+        "paragraph_count": {
+          "p25": 126.25,
+          "p50": 133.0,
+          "p75": 142.75,
+          "avg": 136.36
+        },
+        "sentence_count": {
+          "p25": 176.75,
+          "p50": 185.5,
+          "p75": 193.5,
+          "avg": 187.34
+        },
+        "domain_anchor_per_1000_chars": {
+          "p25": 4.46,
+          "p50": 6.99,
+          "p75": 8.52,
+          "avg": 6.69
+        },
+        "quote_paragraph_ratio": {
+          "p25": 0.4,
+          "p50": 0.44,
+          "p75": 0.48,
+          "avg": 0.43
+        }
+      },
+      "window_summaries": {
+        "2": {
+          "window_count": 49,
+          "char_count": {
+            "p25": 11030.0,
+            "p50": 11177.0,
+            "p75": 11332.0,
+            "avg": 11260.49
+          },
+          "paragraph_count": {
+            "p25": 254.0,
+            "p50": 264.0,
+            "p75": 272.0,
+            "avg": 271.67
+          },
+          "sentence_count": {
+            "p25": 356.0,
+            "p50": 369.0,
+            "p75": 385.0,
+            "avg": 373.96
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 4.68,
+            "p50": 7.02,
+            "p75": 8.09,
+            "avg": 6.68
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.4,
+            "p50": 0.43,
+            "p75": 0.47,
+            "avg": 0.43
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 2,
+              "char_count": 12040,
+              "paragraph_count": 366,
+              "sentence_count": 430,
+              "domain_anchor_per_1000_chars": 9.8,
+              "quote_paragraph_ratio": 0.213
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 3,
+              "char_count": 12140,
+              "paragraph_count": 344,
+              "sentence_count": 433,
+              "domain_anchor_per_1000_chars": 10.54,
+              "quote_paragraph_ratio": 0.346
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 4,
+              "char_count": 11905,
+              "paragraph_count": 316,
+              "sentence_count": 421,
+              "domain_anchor_per_1000_chars": 9.91,
+              "quote_paragraph_ratio": 0.453
+            }
+          ]
+        },
+        "3": {
+          "window_count": 48,
+          "char_count": {
+            "p25": 16594.0,
+            "p50": 16748.0,
+            "p75": 16984.25,
+            "avg": 16882.12
+          },
+          "paragraph_count": {
+            "p25": 383.75,
+            "p50": 396.0,
+            "p75": 409.25,
+            "avg": 406.08
+          },
+          "sentence_count": {
+            "p25": 537.75,
+            "p50": 550.0,
+            "p75": 576.25,
+            "avg": 559.9
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 5.79,
+            "p50": 6.64,
+            "p75": 7.83,
+            "avg": 6.68
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.41,
+            "p50": 0.43,
+            "p75": 0.47,
+            "avg": 0.43
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 3,
+              "char_count": 18193,
+              "paragraph_count": 530,
+              "sentence_count": 645,
+              "domain_anchor_per_1000_chars": 9.73,
+              "quote_paragraph_ratio": 0.274
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 4,
+              "char_count": 17892,
+              "paragraph_count": 496,
+              "sentence_count": 639,
+              "domain_anchor_per_1000_chars": 10.45,
+              "quote_paragraph_ratio": 0.393
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 5,
+              "char_count": 17863,
+              "paragraph_count": 487,
+              "sentence_count": 629,
+              "domain_anchor_per_1000_chars": 9.29,
+              "quote_paragraph_ratio": 0.407
+            }
+          ]
+        },
+        "4": {
+          "window_count": 47,
+          "char_count": {
+            "p25": 22143.5,
+            "p50": 22331.0,
+            "p75": 22589.0,
+            "avg": 22489.96
+          },
+          "paragraph_count": {
+            "p25": 509.0,
+            "p50": 531.0,
+            "p75": 549.0,
+            "avg": 540.15
+          },
+          "sentence_count": {
+            "p25": 712.0,
+            "p50": 729.0,
+            "p75": 767.5,
+            "avg": 745.47
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 5.54,
+            "p50": 6.85,
+            "p75": 7.79,
+            "avg": 6.68
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.41,
+            "p50": 0.43,
+            "p75": 0.45,
+            "avg": 0.43
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 4,
+              "char_count": 23945,
+              "paragraph_count": 682,
+              "sentence_count": 851,
+              "domain_anchor_per_1000_chars": 9.86,
+              "quote_paragraph_ratio": 0.324
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 5,
+              "char_count": 23850,
+              "paragraph_count": 667,
+              "sentence_count": 847,
+              "domain_anchor_per_1000_chars": 9.85,
+              "quote_paragraph_ratio": 0.375
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 6,
+              "char_count": 23950,
+              "paragraph_count": 647,
+              "sentence_count": 846,
+              "domain_anchor_per_1000_chars": 9.27,
+              "quote_paragraph_ratio": 0.41
+            }
+          ]
+        },
+        "5": {
+          "window_count": 46,
+          "char_count": {
+            "p25": 27734.0,
+            "p50": 27852.5,
+            "p75": 28101.5,
+            "avg": 28095.54
+          },
+          "paragraph_count": {
+            "p25": 634.25,
+            "p50": 659.0,
+            "p75": 692.5,
+            "avg": 673.91
+          },
+          "sentence_count": {
+            "p25": 893.0,
+            "p50": 912.5,
+            "p75": 961.5,
+            "avg": 930.74
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 5.86,
+            "p50": 6.73,
+            "p75": 7.5,
+            "avg": 6.68
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.42,
+            "p50": 0.44,
+            "p75": 0.45,
+            "avg": 0.43
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 5,
+              "char_count": 29903,
+              "paragraph_count": 853,
+              "sentence_count": 1059,
+              "domain_anchor_per_1000_chars": 9.5,
+              "quote_paragraph_ratio": 0.324
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 6,
+              "char_count": 29937,
+              "paragraph_count": 827,
+              "sentence_count": 1064,
+              "domain_anchor_per_1000_chars": 9.72,
+              "quote_paragraph_ratio": 0.383
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 7,
+              "char_count": 29924,
+              "paragraph_count": 806,
+              "sentence_count": 1068,
+              "domain_anchor_per_1000_chars": 8.99,
+              "quote_paragraph_ratio": 0.421
+            }
+          ]
+        },
+        "6": {
+          "window_count": 45,
+          "char_count": {
+            "p25": 33279.0,
+            "p50": 33496.0,
+            "p75": 33658.0,
+            "avg": 33689.47
+          },
+          "paragraph_count": {
+            "p25": 762.0,
+            "p50": 790.0,
+            "p75": 826.0,
+            "avg": 806.89
+          },
+          "sentence_count": {
+            "p25": 1071.0,
+            "p50": 1093.0,
+            "p75": 1151.0,
+            "avg": 1115.51
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 6.09,
+            "p50": 6.73,
+            "p75": 7.55,
+            "avg": 6.68
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.42,
+            "p50": 0.44,
+            "p75": 0.45,
+            "avg": 0.43
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 6,
+              "char_count": 35990,
+              "paragraph_count": 1013,
+              "sentence_count": 1276,
+              "domain_anchor_per_1000_chars": 9.45,
+              "quote_paragraph_ratio": 0.339
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 7,
+              "char_count": 35911,
+              "paragraph_count": 986,
+              "sentence_count": 1286,
+              "domain_anchor_per_1000_chars": 9.41,
+              "quote_paragraph_ratio": 0.397
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 8,
+              "char_count": 35666,
+              "paragraph_count": 955,
+              "sentence_count": 1276,
+              "domain_anchor_per_1000_chars": 8.66,
+              "quote_paragraph_ratio": 0.417
+            }
+          ]
+        }
+      },
+      "sample_episodes": [
+        {
+          "episode_no": 1,
+          "char_count": 6053,
+          "paragraph_count": 186,
+          "sentence_count": 212,
+          "quote_paragraph_count": 26,
+          "amount_mentions": 33,
+          "org_mentions": 16,
+          "domain_anchor_mentions": 49,
+          "domain_anchor_per_1000_chars": 8.1,
+          "quote_paragraph_ratio": 0.14
+        },
+        {
+          "episode_no": 2,
+          "char_count": 5987,
+          "paragraph_count": 180,
+          "sentence_count": 218,
+          "quote_paragraph_count": 52,
+          "amount_mentions": 44,
+          "org_mentions": 25,
+          "domain_anchor_mentions": 69,
+          "domain_anchor_per_1000_chars": 11.52,
+          "quote_paragraph_ratio": 0.289
+        },
+        {
+          "episode_no": 3,
+          "char_count": 6153,
+          "paragraph_count": 164,
+          "sentence_count": 215,
+          "quote_paragraph_count": 67,
+          "amount_mentions": 48,
+          "org_mentions": 11,
+          "domain_anchor_mentions": 59,
+          "domain_anchor_per_1000_chars": 9.59,
+          "quote_paragraph_ratio": 0.409
+        }
+      ]
+    },
+    {
+      "label": "재벌물_재벌 3세는 총수가 되고 싶다",
+      "corpus_dir": "material_ssot\\10_research\\50_corpus_curated\\재벌물_재벌 3세는 총수가 되고 싶다",
+      "episode_files": 20,
+      "series_summary": {
+        "episode_count": 20,
+        "episode_span": [
+          1,
+          20
+        ],
+        "char_count": {
+          "min": 5328,
+          "p25": 5846.0,
+          "p50": 6110.0,
+          "p75": 6551.0,
+          "max": 7477,
+          "avg": 6198.25
+        },
+        "paragraph_count": {
+          "p25": 163.25,
+          "p50": 176.0,
+          "p75": 184.0,
+          "avg": 173.25
+        },
+        "sentence_count": {
+          "p25": 179.25,
+          "p50": 197.0,
+          "p75": 210.25,
+          "avg": 196.6
+        },
+        "domain_anchor_per_1000_chars": {
+          "p25": 6.55,
+          "p50": 7.46,
+          "p75": 9.25,
+          "avg": 7.86
+        },
+        "quote_paragraph_ratio": {
+          "p25": 0.34,
+          "p50": 0.37,
+          "p75": 0.44,
+          "avg": 0.39
+        }
+      },
+      "window_summaries": {
+        "2": {
+          "window_count": 19,
+          "char_count": {
+            "p25": 11936.5,
+            "p50": 12296.0,
+            "p75": 12673.0,
+            "avg": 12351.05
+          },
+          "paragraph_count": {
+            "p25": 328.5,
+            "p50": 345.0,
+            "p75": 359.0,
+            "avg": 344.79
+          },
+          "sentence_count": {
+            "p25": 366.5,
+            "p50": 396.0,
+            "p75": 404.5,
+            "avg": 390.58
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 6.77,
+            "p50": 7.44,
+            "p75": 8.32,
+            "avg": 7.79
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.36,
+            "p50": 0.39,
+            "p75": 0.41,
+            "avg": 0.39
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 2,
+              "char_count": 12147,
+              "paragraph_count": 349,
+              "sentence_count": 398,
+              "domain_anchor_per_1000_chars": 11.28,
+              "quote_paragraph_ratio": 0.352
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 3,
+              "char_count": 12296,
+              "paragraph_count": 340,
+              "sentence_count": 396,
+              "domain_anchor_per_1000_chars": 10.17,
+              "quote_paragraph_ratio": 0.353
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 4,
+              "char_count": 12678,
+              "paragraph_count": 370,
+              "sentence_count": 442,
+              "domain_anchor_per_1000_chars": 7.65,
+              "quote_paragraph_ratio": 0.4
+            }
+          ]
+        },
+        "3": {
+          "window_count": 18,
+          "char_count": {
+            "p25": 17934.75,
+            "p50": 18310.5,
+            "p75": 19231.0,
+            "avg": 18527.33
+          },
+          "paragraph_count": {
+            "p25": 492.5,
+            "p50": 515.5,
+            "p75": 540.0,
+            "avg": 516.72
+          },
+          "sentence_count": {
+            "p25": 553.25,
+            "p50": 575.0,
+            "p75": 615.25,
+            "avg": 584.89
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 6.97,
+            "p50": 7.44,
+            "p75": 8.43,
+            "avg": 7.7
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.36,
+            "p50": 0.39,
+            "p75": 0.41,
+            "avg": 0.39
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 3,
+              "char_count": 18079,
+              "paragraph_count": 514,
+              "sentence_count": 589,
+              "domain_anchor_per_1000_chars": 10.01,
+              "quote_paragraph_ratio": 0.35
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 4,
+              "char_count": 19042,
+              "paragraph_count": 545,
+              "sentence_count": 647,
+              "domain_anchor_per_1000_chars": 9.35,
+              "quote_paragraph_ratio": 0.387
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 5,
+              "char_count": 19171,
+              "paragraph_count": 562,
+              "sentence_count": 661,
+              "domain_anchor_per_1000_chars": 7.3,
+              "quote_paragraph_ratio": 0.415
+            }
+          ]
+        },
+        "4": {
+          "window_count": 17,
+          "char_count": {
+            "p25": 23969.0,
+            "p50": 24775.0,
+            "p75": 25387.0,
+            "avg": 24696.88
+          },
+          "paragraph_count": {
+            "p25": 658.0,
+            "p50": 681.0,
+            "p75": 719.0,
+            "avg": 688.35
+          },
+          "sentence_count": {
+            "p25": 733.0,
+            "p50": 757.0,
+            "p75": 827.0,
+            "avg": 777.88
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 6.99,
+            "p50": 7.54,
+            "p75": 8.37,
+            "avg": 7.69
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.37,
+            "p50": 0.39,
+            "p75": 0.4,
+            "avg": 0.39
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 4,
+              "char_count": 24825,
+              "paragraph_count": 719,
+              "sentence_count": 840,
+              "domain_anchor_per_1000_chars": 9.43,
+              "quote_paragraph_ratio": 0.377
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 5,
+              "char_count": 25535,
+              "paragraph_count": 737,
+              "sentence_count": 866,
+              "domain_anchor_per_1000_chars": 8.65,
+              "quote_paragraph_ratio": 0.402
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 6,
+              "char_count": 25183,
+              "paragraph_count": 744,
+              "sentence_count": 872,
+              "domain_anchor_per_1000_chars": 7.54,
+              "quote_paragraph_ratio": 0.431
+            }
+          ]
+        },
+        "5": {
+          "window_count": 16,
+          "char_count": {
+            "p25": 30236.5,
+            "p50": 30930.0,
+            "p75": 31358.75,
+            "avg": 30835.75
+          },
+          "paragraph_count": {
+            "p25": 835.75,
+            "p50": 846.5,
+            "p75": 873.25,
+            "avg": 857.88
+          },
+          "sentence_count": {
+            "p25": 927.0,
+            "p50": 946.5,
+            "p75": 994.25,
+            "avg": 968.06
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 7.21,
+            "p50": 7.43,
+            "p75": 8.48,
+            "avg": 7.68
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.37,
+            "p50": 0.39,
+            "p75": 0.41,
+            "avg": 0.39
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 5,
+              "char_count": 31318,
+              "paragraph_count": 911,
+              "sentence_count": 1059,
+              "domain_anchor_per_1000_chars": 8.84,
+              "quote_paragraph_ratio": 0.391
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 6,
+              "char_count": 31547,
+              "paragraph_count": 919,
+              "sentence_count": 1077,
+              "domain_anchor_per_1000_chars": 8.59,
+              "quote_paragraph_ratio": 0.418
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 7,
+              "char_count": 31319,
+              "paragraph_count": 921,
+              "sentence_count": 1066,
+              "domain_anchor_per_1000_chars": 7.31,
+              "quote_paragraph_ratio": 0.419
+            }
+          ]
+        },
+        "6": {
+          "window_count": 15,
+          "char_count": {
+            "p25": 36541.0,
+            "p50": 37314.0,
+            "p75": 37433.5,
+            "avg": 36992.67
+          },
+          "paragraph_count": {
+            "p25": 998.0,
+            "p50": 1021.0,
+            "p75": 1047.5,
+            "avg": 1028.27
+          },
+          "sentence_count": {
+            "p25": 1113.0,
+            "p50": 1136.0,
+            "p75": 1199.0,
+            "avg": 1158.8
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 7.21,
+            "p50": 7.62,
+            "p75": 8.25,
+            "avg": 7.69
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.37,
+            "p50": 0.39,
+            "p75": 0.41,
+            "avg": 0.39
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 6,
+              "char_count": 37330,
+              "paragraph_count": 1093,
+              "sentence_count": 1270,
+              "domain_anchor_per_1000_chars": 8.76,
+              "quote_paragraph_ratio": 0.406
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 7,
+              "char_count": 37683,
+              "paragraph_count": 1096,
+              "sentence_count": 1271,
+              "domain_anchor_per_1000_chars": 8.23,
+              "quote_paragraph_ratio": 0.41
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 8,
+              "char_count": 36647,
+              "paragraph_count": 1054,
+              "sentence_count": 1216,
+              "domain_anchor_per_1000_chars": 7.29,
+              "quote_paragraph_ratio": 0.415
+            }
+          ]
+        }
+      },
+      "sample_episodes": [
+        {
+          "episode_no": 1,
+          "char_count": 5783,
+          "paragraph_count": 174,
+          "sentence_count": 193,
+          "quote_paragraph_count": 60,
+          "amount_mentions": 51,
+          "org_mentions": 5,
+          "domain_anchor_mentions": 56,
+          "domain_anchor_per_1000_chars": 9.68,
+          "quote_paragraph_ratio": 0.345
+        },
+        {
+          "episode_no": 2,
+          "char_count": 6364,
+          "paragraph_count": 175,
+          "sentence_count": 205,
+          "quote_paragraph_count": 63,
+          "amount_mentions": 71,
+          "org_mentions": 10,
+          "domain_anchor_mentions": 81,
+          "domain_anchor_per_1000_chars": 12.73,
+          "quote_paragraph_ratio": 0.36
+        },
+        {
+          "episode_no": 3,
+          "char_count": 5932,
+          "paragraph_count": 165,
+          "sentence_count": 191,
+          "quote_paragraph_count": 57,
+          "amount_mentions": 35,
+          "org_mentions": 9,
+          "domain_anchor_mentions": 44,
+          "domain_anchor_per_1000_chars": 7.42,
+          "quote_paragraph_ratio": 0.345
+        }
+      ]
+    },
+    {
+      "label": "medical_magical_surgeon_sample_corpus",
+      "corpus_dir": "material_ssot\\10_research\\50_corpus_curated\\reference_samples\\medical_magical_surgeon_sample_corpus",
+      "episode_files": 10,
+      "series_summary": {
+        "episode_count": 10,
+        "episode_span": [
+          1,
+          494
+        ],
+        "char_count": {
+          "min": 3686,
+          "p25": 3860.0,
+          "p50": 4973.0,
+          "p75": 5722.25,
+          "max": 6057,
+          "avg": 4841.8
+        },
+        "paragraph_count": {
+          "p25": 104.75,
+          "p50": 143.5,
+          "p75": 178.0,
+          "avg": 148.2
+        },
+        "sentence_count": {
+          "p25": 145.75,
+          "p50": 188.5,
+          "p75": 213.5,
+          "avg": 184.7
+        },
+        "domain_anchor_per_1000_chars": {
+          "p25": 1.38,
+          "p50": 2.68,
+          "p75": 3.33,
+          "avg": 2.56
+        },
+        "quote_paragraph_ratio": {
+          "p25": 0.43,
+          "p50": 0.54,
+          "p75": 0.6,
+          "avg": 0.51
+        }
+      },
+      "window_summaries": {
+        "2": {
+          "window_count": 9,
+          "char_count": {
+            "p25": 7722.0,
+            "p50": 10740.0,
+            "p75": 11076.0,
+            "avg": 9690.11
+          },
+          "paragraph_count": {
+            "p25": 213.0,
+            "p50": 302.0,
+            "p75": 373.0,
+            "avg": 294.56
+          },
+          "sentence_count": {
+            "p25": 302.0,
+            "p50": 377.0,
+            "p75": 448.0,
+            "avg": 370.22
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.17,
+            "p50": 2.35,
+            "p75": 2.71,
+            "avg": 2.63
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.49,
+            "p50": 0.54,
+            "p75": 0.57,
+            "avg": 0.53
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 2,
+              "char_count": 7549,
+              "paragraph_count": 201,
+              "sentence_count": 296,
+              "domain_anchor_per_1000_chars": 1.99,
+              "quote_paragraph_ratio": 0.488
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 3,
+              "char_count": 7722,
+              "paragraph_count": 213,
+              "sentence_count": 305,
+              "domain_anchor_per_1000_chars": 2.59,
+              "quote_paragraph_ratio": 0.54
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 10,
+              "char_count": 7664,
+              "paragraph_count": 201,
+              "sentence_count": 261,
+              "domain_anchor_per_1000_chars": 2.35,
+              "quote_paragraph_ratio": 0.428
+            }
+          ]
+        },
+        "3": {
+          "window_count": 8,
+          "char_count": {
+            "p25": 12325.0,
+            "p50": 15367.5,
+            "p75": 16648.25,
+            "avg": 14640.25
+          },
+          "paragraph_count": {
+            "p25": 332.75,
+            "p50": 425.0,
+            "p75": 541.0,
+            "avg": 440.88
+          },
+          "sentence_count": {
+            "p25": 439.5,
+            "p50": 541.0,
+            "p75": 666.75,
+            "avg": 554.38
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.32,
+            "p50": 2.75,
+            "p75": 3.22,
+            "avg": 2.74
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.5,
+            "p50": 0.54,
+            "p75": 0.56,
+            "avg": 0.53
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 3,
+              "char_count": 11408,
+              "paragraph_count": 304,
+              "sentence_count": 435,
+              "domain_anchor_per_1000_chars": 2.72,
+              "quote_paragraph_ratio": 0.474
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 10,
+              "char_count": 11527,
+              "paragraph_count": 311,
+              "sentence_count": 427,
+              "domain_anchor_per_1000_chars": 1.91,
+              "quote_paragraph_ratio": 0.498
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 91,
+              "char_count": 12591,
+              "paragraph_count": 340,
+              "sentence_count": 441,
+              "domain_anchor_per_1000_chars": 2.78,
+              "quote_paragraph_ratio": 0.5
+            }
+          ]
+        },
+        "4": {
+          "window_count": 7,
+          "char_count": {
+            "p25": 17429.0,
+            "p50": 19995.0,
+            "p75": 22293.0,
+            "avg": 19588.14
+          },
+          "paragraph_count": {
+            "p25": 476.5,
+            "p50": 548.0,
+            "p75": 697.0,
+            "avg": 582.14
+          },
+          "sentence_count": {
+            "p25": 622.5,
+            "p50": 705.0,
+            "p75": 860.0,
+            "avg": 734.29
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.27,
+            "p50": 2.8,
+            "p75": 3.12,
+            "avg": 2.74
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.52,
+            "p50": 0.53,
+            "p75": 0.56,
+            "avg": 0.53
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 10,
+              "char_count": 15213,
+              "paragraph_count": 402,
+              "sentence_count": 557,
+              "domain_anchor_per_1000_chars": 2.17,
+              "quote_paragraph_ratio": 0.458
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 91,
+              "char_count": 16454,
+              "paragraph_count": 450,
+              "sentence_count": 607,
+              "domain_anchor_per_1000_chars": 2.37,
+              "quote_paragraph_ratio": 0.531
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 171,
+              "char_count": 18404,
+              "paragraph_count": 503,
+              "sentence_count": 638,
+              "domain_anchor_per_1000_chars": 3.53,
+              "quote_paragraph_ratio": 0.511
+            }
+          ]
+        },
+        "5": {
+          "window_count": 6,
+          "char_count": {
+            "p25": 22663.75,
+            "p50": 24953.0,
+            "p75": 26962.5,
+            "avg": 24642.83
+          },
+          "paragraph_count": {
+            "p25": 622.5,
+            "p50": 712.0,
+            "p75": 836.75,
+            "avg": 729.5
+          },
+          "sentence_count": {
+            "p25": 814.0,
+            "p50": 904.0,
+            "p75": 1034.5,
+            "avg": 919.5
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.75,
+            "p50": 2.93,
+            "p75": 3.06,
+            "avg": 2.87
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.52,
+            "p50": 0.54,
+            "p75": 0.56,
+            "avg": 0.54
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 91,
+              "char_count": 20140,
+              "paragraph_count": 541,
+              "sentence_count": 737,
+              "domain_anchor_per_1000_chars": 2.48,
+              "quote_paragraph_ratio": 0.495
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 171,
+              "char_count": 22267,
+              "paragraph_count": 613,
+              "sentence_count": 804,
+              "domain_anchor_per_1000_chars": 3.1,
+              "quote_paragraph_ratio": 0.532
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 252,
+              "char_count": 23854,
+              "paragraph_count": 651,
+              "sentence_count": 844,
+              "domain_anchor_per_1000_chars": 3.02,
+              "quote_paragraph_ratio": 0.518
+            }
+          ]
+        },
+        "6": {
+          "window_count": 5,
+          "char_count": {
+            "p25": 27717.0,
+            "p50": 29911.0,
+            "p75": 31071.0,
+            "avg": 29571.4
+          },
+          "paragraph_count": {
+            "p25": 761.0,
+            "p50": 876.0,
+            "p75": 956.0,
+            "avg": 875.4
+          },
+          "sentence_count": {
+            "p25": 1010.0,
+            "p50": 1103.0,
+            "p75": 1180.0,
+            "avg": 1103.4
+          },
+          "domain_anchor_per_1000_chars": {
+            "p25": 2.77,
+            "p50": 2.83,
+            "p75": 3.01,
+            "avg": 2.89
+          },
+          "quote_paragraph_ratio": {
+            "p25": 0.53,
+            "p50": 0.55,
+            "p75": 0.55,
+            "avg": 0.54
+          },
+          "example_windows": [
+            {
+              "start_episode": 1,
+              "end_episode": 171,
+              "char_count": 25953,
+              "paragraph_count": 704,
+              "sentence_count": 934,
+              "domain_anchor_per_1000_chars": 3.08,
+              "quote_paragraph_ratio": 0.504
+            },
+            {
+              "start_episode": 2,
+              "end_episode": 252,
+              "char_count": 27717,
+              "paragraph_count": 761,
+              "sentence_count": 1010,
+              "domain_anchor_per_1000_chars": 2.74,
+              "quote_paragraph_ratio": 0.534
+            },
+            {
+              "start_episode": 3,
+              "end_episode": 333,
+              "char_count": 29911,
+              "paragraph_count": 876,
+              "sentence_count": 1103,
+              "domain_anchor_per_1000_chars": 3.01,
+              "quote_paragraph_ratio": 0.549
+            }
+          ]
+        }
+      },
+      "sample_episodes": [
+        {
+          "episode_no": 1,
+          "char_count": 3686,
+          "paragraph_count": 91,
+          "sentence_count": 130,
+          "quote_paragraph_count": 29,
+          "amount_mentions": 1,
+          "org_mentions": 10,
+          "domain_anchor_mentions": 11,
+          "domain_anchor_per_1000_chars": 2.98,
+          "quote_paragraph_ratio": 0.319
+        },
+        {
+          "episode_no": 2,
+          "char_count": 3863,
+          "paragraph_count": 110,
+          "sentence_count": 166,
+          "quote_paragraph_count": 69,
+          "amount_mentions": 2,
+          "org_mentions": 2,
+          "domain_anchor_mentions": 4,
+          "domain_anchor_per_1000_chars": 1.04,
+          "quote_paragraph_ratio": 0.627
+        },
+        {
+          "episode_no": 3,
+          "char_count": 3859,
+          "paragraph_count": 103,
+          "sentence_count": 139,
+          "quote_paragraph_count": 46,
+          "amount_mentions": 5,
+          "org_mentions": 11,
+          "domain_anchor_mentions": 16,
+          "domain_anchor_per_1000_chars": 4.15,
+          "quote_paragraph_ratio": 0.447
+        }
+      ]
+    }
+  ]
+}

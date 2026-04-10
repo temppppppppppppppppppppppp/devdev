@@ -35,6 +35,13 @@ def main() -> int:
 
     if args.dry_run:
         result = build_stage0_selection_draft(args.work_id, root=ROOT)
+        work_identity = result.source_manifest["work_identity"]
+        print(f"[dry-run] title={result.source_manifest['work_identity']['title']}")
+        print(f"[dry-run] work_identity={result.work_identity_resolution}")
+        if work_identity.get("commercial_label"):
+            print(f"[dry-run] commercial_label={work_identity['commercial_label']}")
+        if work_identity.get("slug_aliases"):
+            print(f"[dry-run] slug_aliases={', '.join(work_identity['slug_aliases'])}")
         print(f"[dry-run] primary_profile={result.profile_lock['primary_profile']}")
         print(
             "[dry-run] opening_bundle_contract="
@@ -45,6 +52,7 @@ def main() -> int:
 
     result = sync_stage0_from_reference_selection(args.work_id, root=ROOT, write=True)
     print(f"Built Stage0 preprocess draft for: {args.work_id}")
+    print(f"Title: {result.source_manifest['work_identity']['title']}")
     print(f"Primary profile: {result.profile_lock['primary_profile']}")
     print(
         "Opening macro battlefield: "

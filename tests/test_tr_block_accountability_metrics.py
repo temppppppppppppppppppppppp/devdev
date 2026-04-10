@@ -215,6 +215,20 @@ def _build_phase0_payload() -> dict:
     }
 
 
+def _build_phase0_payload_with_work_identity_surface() -> dict:
+    payload = _build_phase0_payload()
+    payload["work_identity_surface"] = {
+        "work_id": "test_project",
+        "title": "골든 루트",
+        "subtitle": "",
+        "commercial_label": "골든 카나리아",
+        "slug_aliases": ["카나리아 테스트", "테스트 프로젝트"],
+        "primary_profile": "business_growth_profile",
+        "secondary_profile": "investment_market_profile",
+    }
+    return payload
+
+
 def _build_draft_payload() -> list[dict]:
     payload = []
     for idx in range(1, 71):
@@ -337,6 +351,60 @@ def _make_audit_metrics() -> dict:
     }
 
 
+def _make_audit_metrics_green() -> dict:
+    return {
+        "production_density_gate": True,
+        "avg_bundle_chars": 720.0,
+        "avg_solution_chars": 190.0,
+        "foreshadow_total": 20,
+        "callback_total": 16,
+        "callback_ratio": 0.8,
+        "unresolved_foreshadow_count": 0,
+        "opponent_unique": 12,
+        "top_opponent_repetition": 2,
+        "top_opponent_share": 2.9,
+        "top_weakness_repetition": 1,
+        "deal_top_repetition": 2,
+        "method_top_repetition": 2,
+        "solution_tail20_top_repetition": 1,
+        "one_sentence_like_solution_blocks": 0,
+        "business_sector_missing": 0,
+        "section_rotation_missing": 0,
+        "critical_thin_blocks": [],
+        "thin_blocks": [],
+        "short_stakes_blocks": [],
+        "recognition_signal_blocks": 6,
+        "max_recognition_gap_streak": 4,
+        "late_blank_opponent_blocks": [],
+        "endgame_low_stakes_blocks": [],
+        "normalized_solution_stakes_repeat_max": 2,
+        "is_regressor_treatment": True,
+        "hard_gate_checks": {
+            "critical_thin_blocks_zero": True,
+            "thin_blocks_ratio_ok": True,
+            "late_thin_blocks_zero": True,
+            "short_stakes_blocks_total_ok": True,
+            "endgame_low_stakes_zero": True,
+            "callback_ratio_ok": True,
+            "unresolved_foreshadow_count_ok": True,
+            "section_rotation_present": True,
+            "late_blank_opponent_ok": True,
+            "normalized_solution_stakes_repeat_ok": True,
+            "regressor_recognition_count_ok": True,
+            "regressor_recognition_gap_ok": True,
+        },
+        "hard_gate_failures": [],
+        "window_10_opponent_unique_counts": [5, 5, 5, 5, 5, 5, 5],
+        "pattern_feedback_snapshot": {
+            "top_opponents": [("상대A", 2)],
+            "top_weaknesses": [("질문 회피", 1)],
+            "solution_pattern_warnings": [],
+            "forbidden_pattern_reuse": [],
+            "structural_gate_failures": [],
+        },
+    }
+
+
 def test_compute_treatment_metrics_flags_golden_canary_structural_gaps():
     sample_path = next(Path("treatments").glob("*골든*카나리아*.json"))
     payload = json.loads(sample_path.read_text(encoding="utf-8"))
@@ -446,3 +514,50 @@ def test_audit_bi_5pass_blocks_bi_handoff_when_source_tr_gate_fails(monkeypatch,
     assert "- source_tr_section_rotation_gate: FAIL" in report_text
     assert "- source_tr_regressor_recognition_count_gate: FAIL" in report_text
     assert "- hard_gate_failures: ['late_thin_blocks_zero', 'callback_ratio_ok', 'section_rotation_present', 'regressor_recognition_count_ok']" in report_text
+
+
+def test_audit_bi_5pass_reports_alias_aware_title_surface(monkeypatch, temp_dir):
+    phase0_path = temp_dir / "phase0.json"
+    draft_path = temp_dir / "draft.json"
+    bi_path = temp_dir / "bi.json"
+    report_path = temp_dir / "report.md"
+    _write_json(phase0_path, _build_phase0_payload_with_work_identity_surface())
+    _write_json(draft_path, _build_draft_payload())
+    bi_payload = _build_bi_payload()
+    bi_payload["MasterBible"]["ProjectData"]["MetaInfo"]["title"] = "골든 카나리아"
+    bi_payload["MasterBible"]["ProjectData"]["MetaInfo"]["commercial_label"] = "골든 카나리아"
+    bi_payload["MasterBible"]["ProjectData"]["MetaInfo"]["slug_aliases"] = ["카나리아 테스트", "테스트 프로젝트"]
+    _write_json(bi_path, bi_payload)
+
+    monkeypatch.setattr(audit_script, "compute_treatment_metrics", lambda _: _make_audit_metrics_green())
+    monkeypatch.setattr(audit_script, "validate_treatment_structure", lambda _: (True, [], []))
+    monkeypatch.setattr(audit_script, "validate_bible_structure", lambda _: (True, [], []))
+    monkeypatch.setattr(audit_script, "validate_treatment_canonical_structure", lambda _: (True, [], []))
+    monkeypatch.setattr(audit_script, "validate_bible_canonical_structure", lambda _: (True, [], []))
+    monkeypatch.setattr(audit_script, "normalize_treatment_to_canonical_view", lambda payload: (payload, []))
+    monkeypatch.setattr(audit_script, "normalize_bible_to_canonical_view", lambda payload, treatment=None: (payload, []))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "audit_bi_5pass.py",
+            "--phase0",
+            str(phase0_path),
+            "--draft",
+            str(draft_path),
+            "--bi",
+            str(bi_path),
+            "--report",
+            str(report_path),
+        ],
+    )
+
+    exit_code = audit_script.main()
+    report_text = report_path.read_text(encoding="utf-8")
+
+    assert exit_code == 1
+    assert "- phase0_canonical_title: 골든 루트" in report_text
+    assert "- phase0_allowed_titles: ['골든 루트', '골든 카나리아', '카나리아 테스트', '테스트 프로젝트']" in report_text
+    assert "- bi_meta_title: 골든 카나리아" in report_text
+    assert "- title_match_phase0: FAIL" in report_text
+    assert "- title_within_phase0_surface: OK" in report_text

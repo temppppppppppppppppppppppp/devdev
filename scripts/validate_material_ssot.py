@@ -178,15 +178,16 @@ TEXT_RULES = (
         required=(
             "- repo-level pre-new-pitch readiness gate now exists at `python -X utf8 scripts/pre_new_pitch_readiness_gate.py`",
             "- current live pair inventory and benchmark freshness now have a durable registry under `production-pair-operational-registry-v1.md`",
-            "- all currently tracked schema-clean pairs now carry benchmark-fresh readings, including the previously unbenchmarked unslotted live pairs",
+            "- tracked schema-clean pairs now carry durable benchmark-state readings in the registry, including benchmark-fresh live pairs, unslotted live pairs, and one withdrawn false-pass historical slot (`chaebol_allowance_zero`)",
         ),
     ),
     TextRule(
         "material_ssot/00_governance/production-pair-operational-registry-v1.md",
         required=(
             "Scope: durable operational registry for current schema-clean production pairs",
-            "| `manual_meridian_archivist` | `wuxguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREEN` | `current` | benchmark-fresh unslotted live pair; positive alias granted, still outside numbered-slot manifest |",
-            "| `wuxia_heavenly_physician` | `wuxguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | benchmark-fresh regenerated live pair; safe for current family baseline reading |",
+            "| `manual_meridian_archivist` | `wuxguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREEN` | `current` | `GREEN` | provisional keep; not a discard candidate, but not a fresh declared-contract opening exemplar certification |",
+            "| `wuxia_heavenly_physician` | `wuxguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | opening GREEN only; whole-run pacing re-audit downgraded it to YELLOW because late blank-opponent drag appears in B61/B65/B66/B70 |",
+            "- `opening pacing triage` is a separate operator field from `benchmark alias`",
         ),
     ),
     TextRule(
@@ -194,7 +195,7 @@ TEXT_RULES = (
         required=(
             "Scope: repo-level readiness gate before starting a fresh pitch wave",
             "- `python -X utf8 scripts/pre_new_pitch_readiness_gate.py`",
-            "This means new pitch work is operationally unblocked, and pair-side fresh baseline claims can rely on the current registry so long as inventory-role distinctions and the `GREEN` vs `GREENPLUS` shelf split are respected.",
+            "This means new pitch work is operationally unblocked, and pair-side fresh baseline claims can rely on the current registry so long as inventory-role distinctions, withdrawn false-pass notes, and the `GREEN` vs `GREENPLUS` shelf split are respected.",
         ),
     ),
     TextRule(

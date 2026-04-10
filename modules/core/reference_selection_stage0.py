@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -23,6 +24,14 @@ PLAIN_TABLE_FIELD_RE = re.compile(
     re.MULTILINE,
 )
 INLINE_SPLIT_RE = re.compile(r"\s*(?:/|·|•|;|,)\s*")
+OPENING_CONTRACT_WINDOW_RE = re.compile(r"2\s*[~\-]\s*6")
+OPENING_CONTRACT_BLOCK_START = 2
+OPENING_CONTRACT_BLOCK_END = 6
+OPENING_CONTRACT_BLOCK_FIELDS = (
+    "first_signboard_block",
+    "representative_reevaluation_block",
+    "next_battlefield_ticket_block",
+)
 
 PROFILE_KEYWORDS: dict[str, tuple[str, ...]] = {
     "investment_market_profile": ("투자", "금융", "주식", "환율", "펀드", "m&a", "지분", "포트폴리오"),
@@ -115,6 +124,9 @@ class Stage0SelectionDraftResult:
     phase0_ready_snapshot: dict[str, Any]
     contamination_guard: dict[str, Any]
     selected_cards: tuple[CardSignal, ...]
+    work_identity_resolution: str
+    profile_resolution: str
+    opening_contract_resolution: str
     updated_paths: tuple[str, ...]
 
 
@@ -146,6 +158,13 @@ def _shorten(text: str, limit: int = 120) -> str:
     return compact[: limit - 1].rstrip() + "…"
 
 
+def _meaningful_text(value: Any) -> bool:
+    if not isinstance(value, str):
+        return False
+    compact = value.strip()
+    return bool(compact) and not compact.lower().startswith("todo:")
+
+
 def _first_nonempty(*values: Any) -> str:
     for value in values:
         if isinstance(value, str) and value.strip():
@@ -165,6 +184,14 @@ def _unique_texts(values: list[str], limit: int | None = None) -> list[str]:
         if limit is not None and len(unique) >= limit:
             break
     return unique
+
+
+def _normalize_slug_aliases(values: Any) -> list[str]:
+    if values is None:
+        return []
+    if not isinstance(values, list):
+        raise ValueError("work_identity_override.slug_aliases must be an array of strings")
+    return _unique_texts([str(value) for value in values])
 
 
 def _extract_slim_fields(card_text: str) -> dict[str, str]:
@@ -335,6 +362,135 @@ def resolve_profiles(
     return inferred_primary, inferred_secondary, "inferred from selected_cards heuristics"
 
 
+def _work_identity_override(reference_selection: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    override = reference_selection.get("work_identity_override")
+    if override is None:
+        return {}, ""
+    if not isinstance(override, dict):
+        raise ValueError("reference_selection.work_identity_override must be an object or null")
+
+    title = _clean_text(str(override.get("title", "")))
+    subtitle = _clean_text(str(override.get("subtitle", "")))
+    commercial_label = _clean_text(str(override.get("commercial_label", "")))
+    slug_aliases = _normalize_slug_aliases(override.get("slug_aliases"))
+    reason = _clean_text(str(override.get("reason", "")))
+    if not title:
+        raise ValueError("reference_selection.work_identity_override.title must be non-empty")
+    if not reason:
+        raise ValueError("reference_selection.work_identity_override.reason must be non-empty")
+    return (
+        {
+            "title": title,
+            "subtitle": subtitle,
+            "commercial_label": commercial_label,
+            "slug_aliases": [alias for alias in slug_aliases if alias != title],
+        },
+        reason,
+    )
+
+
+def resolve_work_identity(
+    reference_selection: dict[str, Any],
+    work_id: str,
+) -> tuple[dict[str, Any], str]:
+    override_identity, override_reason = _work_identity_override(reference_selection)
+    if override_identity:
+        resolved = {
+            "work_id": work_id,
+            "title": override_identity["title"],
+            "subtitle": override_identity.get("subtitle", ""),
+            "commercial_label": override_identity.get("commercial_label", ""),
+            "slug_aliases": deepcopy(override_identity.get("slug_aliases", [])),
+        }
+        return (
+            resolved,
+            f"work_identity_override locked in reference_selection: {override_reason}",
+        )
+    return (
+        {
+            "work_id": work_id,
+            "title": f"TODO: replace title for {work_id}",
+            "subtitle": "",
+            "commercial_label": "",
+            "slug_aliases": [],
+        },
+        "placeholder title retained; add work_identity_override.title in reference_selection",
+    )
+
+
+def _validate_opening_bundle_contract_override(
+    override: dict[str, Any],
+) -> dict[str, Any]:
+    bundle_window = _clean_text(str(override.get("bundle_window", "")))
+    macro_battlefield = _clean_text(str(override.get("macro_battlefield", "")))
+    bundle_goal = _clean_text(str(override.get("bundle_goal", "")))
+    timing_note = _clean_text(str(override.get("timing_reconciliation_note", "")))
+    macro_map_raw = override.get("macro_battlefield_map", [])
+
+    if not bundle_window or not OPENING_CONTRACT_WINDOW_RE.search(bundle_window):
+        raise ValueError(
+            "reference_selection.opening_bundle_contract_override.bundle_window must lock TR 2~6"
+        )
+    if not macro_battlefield:
+        raise ValueError(
+            "reference_selection.opening_bundle_contract_override.macro_battlefield must be non-empty"
+        )
+    if not bundle_goal:
+        raise ValueError(
+            "reference_selection.opening_bundle_contract_override.bundle_goal must be non-empty"
+        )
+    if not timing_note:
+        raise ValueError(
+            "reference_selection.opening_bundle_contract_override.timing_reconciliation_note must be non-empty"
+        )
+    if not isinstance(macro_map_raw, list) or not macro_map_raw:
+        raise ValueError(
+            "reference_selection.opening_bundle_contract_override.macro_battlefield_map must be a non-empty array"
+        )
+    macro_map = _unique_texts([str(item) for item in macro_map_raw])
+    if not macro_map:
+        raise ValueError(
+            "reference_selection.opening_bundle_contract_override.macro_battlefield_map entries must be non-empty"
+        )
+
+    resolved = {
+        "bundle_window": bundle_window,
+        "macro_battlefield": macro_battlefield,
+        "macro_battlefield_map": macro_map,
+        "bundle_goal": bundle_goal,
+        "timing_reconciliation_note": timing_note,
+    }
+    for field in OPENING_CONTRACT_BLOCK_FIELDS:
+        value = override.get(field)
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError(
+                f"reference_selection.opening_bundle_contract_override.{field} must be an integer"
+            )
+        if value < OPENING_CONTRACT_BLOCK_START or value > OPENING_CONTRACT_BLOCK_END:
+            raise ValueError(
+                f"reference_selection.opening_bundle_contract_override.{field} must stay within TR 2~6"
+            )
+        resolved[field] = value
+    return resolved
+
+
+def resolve_opening_bundle_contract(
+    reference_selection: dict[str, Any],
+    cards: tuple[CardSignal, ...],
+) -> tuple[dict[str, Any], str]:
+    override = reference_selection.get("opening_bundle_contract_override")
+    if override is None:
+        return build_opening_bundle_contract(cards), "inferred from selected_cards heuristics"
+    if not isinstance(override, dict):
+        raise ValueError(
+            "reference_selection.opening_bundle_contract_override must be an object or null"
+        )
+    return (
+        _validate_opening_bundle_contract_override(override),
+        "opening_bundle_contract_override locked in reference_selection",
+    )
+
+
 def _profile_hud(primary_profile: str) -> dict[str, str]:
     return dict(HUD_DEFAULTS.get(primary_profile, HUD_DEFAULTS["business_growth_profile"]))
 
@@ -435,11 +591,15 @@ def build_stage0_selection_draft(
     root: Path = ROOT,
 ) -> Stage0SelectionDraftResult:
     reference_selection, _contamination_guard, cards = load_selected_card_signals(work_id, root=root)
+    work_identity_seed, work_identity_resolution = resolve_work_identity(reference_selection, work_id)
+    project_title = str(work_identity_seed.get("title", "")).strip()
     primary_profile, secondary_profile, profile_resolution = resolve_profiles(reference_selection, cards)
+    opening_bundle_contract, opening_contract_resolution = resolve_opening_bundle_contract(
+        reference_selection,
+        cards,
+    )
 
     selection_relpath = f"narrative_ssot/50_projects/{work_id}/10_reference_selection/reference_selection.json"
-    opening_bundle_contract = build_opening_bundle_contract(cards)
-    project_title = f"TODO: replace title for {work_id}"
 
     reference_only_sources = _unique_texts(
         [selection_relpath, *[card.mirror_relpath for card in cards]],
@@ -500,8 +660,11 @@ def build_stage0_selection_draft(
 
     source_manifest = {
         "work_identity": {
-            "work_id": work_id,
+            "work_id": work_identity_seed["work_id"],
             "title": project_title,
+            "subtitle": work_identity_seed.get("subtitle", ""),
+            "commercial_label": work_identity_seed.get("commercial_label", ""),
+            "slug_aliases": deepcopy(work_identity_seed.get("slug_aliases", [])),
             "primary_profile": primary_profile,
             "secondary_profile": secondary_profile,
         },
@@ -514,7 +677,9 @@ def build_stage0_selection_draft(
         "do_not_fake": do_not_fake,
         "manual_audit_note": _shorten(
             "reference_selection 기반 자동 Stage0 초안이다. selected_cards의 오프닝 구조와 must_not_copy "
-            f"제약은 이식했지만, 프로젝트 고유 재료와 canon source 감사는 아직 미완료다. Profile: {profile_resolution}.",
+            "제약은 이식했지만, 프로젝트 고유 재료와 canon source 감사는 아직 미완료다. "
+            f"Work identity: {work_identity_resolution}. Profile: {profile_resolution}. "
+            f"Opening bundle: {opening_contract_resolution}.",
             180,
         ),
     }
@@ -631,14 +796,16 @@ def build_stage0_selection_draft(
         ),
         "notes": _shorten(
             "selected_cards 기반 preprocess 초안이다. card의 Block 1 신호와 must_borrow 축만 요약 반영했으며, "
-            f"실물 재료 audit 전까지는 TR 생산 authority로 단독 사용하면 안 된다. Profile: {profile_resolution}.",
+            "실물 재료 audit 전까지는 TR 생산 authority로 단독 사용하면 안 된다. "
+            f"Work identity: {work_identity_resolution}. Profile: {profile_resolution}. "
+            f"Opening bundle: {opening_contract_resolution}.",
             180,
         ),
         "opening_bundle_contract": opening_bundle_contract,
     }
 
     phase0_ready_snapshot = {
-        "identity_locked": False,
+        "identity_locked": _meaningful_text(project_title),
         "profile_locked": bool(primary_profile and resource_axis and power_axis),
         "material_sufficient": len(cards) >= 1 and bool(material_bundle_summary["events"]),
         "manual_audit_pass": False,
@@ -647,7 +814,9 @@ def build_stage0_selection_draft(
                 "Project-specific canon source is still a placeholder and must be replaced by audited materials.",
                 "Opening bundle contract is inferred from selected reference cards, not from work-specific Phase0 evidence.",
                 "Human audit must confirm contamination controls before planning handoff.",
+                f"Current work identity resolution: {work_identity_resolution}.",
                 f"Current profile resolution: {profile_resolution}.",
+                f"Current opening contract resolution: {opening_contract_resolution}.",
             ]
         ),
     }
@@ -669,6 +838,9 @@ def build_stage0_selection_draft(
         phase0_ready_snapshot=phase0_ready_snapshot,
         contamination_guard=contamination_guard_result,
         selected_cards=cards,
+        work_identity_resolution=work_identity_resolution,
+        profile_resolution=profile_resolution,
+        opening_contract_resolution=opening_contract_resolution,
         updated_paths=(),
     )
 
@@ -704,5 +876,8 @@ def sync_stage0_from_reference_selection(
         phase0_ready_snapshot=result.phase0_ready_snapshot,
         contamination_guard=result.contamination_guard,
         selected_cards=result.selected_cards,
+        work_identity_resolution=result.work_identity_resolution,
+        profile_resolution=result.profile_resolution,
+        opening_contract_resolution=result.opening_contract_resolution,
         updated_paths=tuple(updated_paths),
     )
