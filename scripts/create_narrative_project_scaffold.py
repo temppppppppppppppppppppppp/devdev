@@ -54,6 +54,21 @@ def _replace_placeholder_text(path: Path, old: str, new: str) -> None:
     path.write_text(text.replace(old, new), encoding="utf-8")
 
 
+def _placeholder_opening_bundle_contract() -> dict[str, Any]:
+    return {
+        "bundle_window": "TR 2~6",
+        "macro_battlefield": "TODO: replace opening macro battlefield",
+        "macro_battlefield_map": ["TODO: replace opening sub-battlefield lane"],
+        "bundle_goal": "TODO: define the opening reader-earning goal for TR 2~6",
+        "first_signboard_block": 3,
+        "representative_reevaluation_block": 4,
+        "next_battlefield_ticket_block": 6,
+        "timing_reconciliation_note": (
+            "TODO: reconcile Phase0 arc scale with the faster TR 2~6 reader-earning window."
+        ),
+    }
+
+
 def _rewrite_placeholders(dest_root: Path, work_id: str) -> None:
     today = date.today().isoformat()
 
@@ -84,10 +99,106 @@ def _rewrite_placeholders(dest_root: Path, work_id: str) -> None:
         contamination_guard["notes"] = f"Scaffold created for {work_id} on {today}."
         _write_json(contamination_guard_path, contamination_guard)
 
+    source_manifest_path = dest_root / "20_preprocess" / "source_manifest.json"
+    source_manifest = _read_json(source_manifest_path)
+    if isinstance(source_manifest, dict):
+        source_manifest.clear()
+        source_manifest.update(
+            {
+                "work_identity": {
+                    "work_id": work_id,
+                    "title": f"TODO: replace title for {work_id}",
+                    "primary_profile": "business_growth_profile",
+                    "secondary_profile": "",
+                },
+                "canonical_sources": [f"material_ssot/20_pitch/canon/{work_id}.md"],
+                "reference_only_sources": [],
+                "core_materials": [],
+                "npc_pool": [],
+                "crisis_pool": [],
+                "hard_constraints": [],
+                "do_not_fake": [],
+                "manual_audit_note": (
+                    f"Scaffold placeholder created on {today}. "
+                    "Replace with audited source notes before Stage0 lock."
+                ),
+            }
+        )
+        _write_json(source_manifest_path, source_manifest)
+
+    profile_lock_path = dest_root / "20_preprocess" / "profile_lock.json"
+    profile_lock = _read_json(profile_lock_path)
+    if isinstance(profile_lock, dict):
+        profile_lock.clear()
+        profile_lock.update(
+            {
+                "primary_profile": "business_growth_profile",
+                "secondary_profile": "",
+                "resource_axis": [],
+                "power_axis": [],
+                "control_axis": [],
+                "payoff_axis": [],
+                "failure_axis": [],
+                "hud_interpretation": {},
+            }
+        )
+        _write_json(profile_lock_path, profile_lock)
+
+    material_bundle_path = dest_root / "20_preprocess" / "material_bundle_summary.json"
+    material_bundle = _read_json(material_bundle_path)
+    if isinstance(material_bundle, dict):
+        material_bundle.clear()
+        material_bundle.update(
+            {
+                "events": [],
+                "npc_candidates": [],
+                "crisis_candidates": [],
+                "terms": [],
+                "scene_details": [],
+                "notes": (
+                    f"Scaffold placeholder created on {today}. "
+                    "Replace with audited material bundle notes before Stage0 lock."
+                ),
+                "opening_bundle_contract": _placeholder_opening_bundle_contract(),
+            }
+        )
+        _write_json(material_bundle_path, material_bundle)
+
+    phase0_ready_snapshot_path = dest_root / "20_preprocess" / "phase0_ready_snapshot.json"
+    phase0_ready_snapshot = _read_json(phase0_ready_snapshot_path)
+    if isinstance(phase0_ready_snapshot, dict):
+        phase0_ready_snapshot.clear()
+        phase0_ready_snapshot.update(
+            {
+                "identity_locked": False,
+                "profile_locked": False,
+                "material_sufficient": False,
+                "manual_audit_pass": False,
+                "remaining_risks": [
+                    "Scaffold placeholders must be replaced before planning handoff."
+                ],
+            }
+        )
+        _write_json(phase0_ready_snapshot_path, phase0_ready_snapshot)
+
     phase0_design_path = dest_root / "30_planning" / "phase0_design.json"
     phase0_design = _read_json(phase0_design_path)
     if isinstance(phase0_design, dict):
-        phase0_design["work_id"] = work_id
+        phase0_design.clear()
+        phase0_design.update(
+            {
+                "work_id": work_id,
+                "title": f"TODO: replace title for {work_id}",
+                "protagonist": "TODO: replace protagonist",
+                "core_fantasy": "TODO: replace core fantasy",
+                "opening_arc": {},
+                "opening_bundle_contract": _placeholder_opening_bundle_contract(),
+                "representative_spike": {},
+                "growth_axis": {},
+                "opponent_transition_plan": {},
+                "payoff_axis": {},
+            }
+        )
         _write_json(phase0_design_path, phase0_design)
 
     sequential_status_path = dest_root / "40_production" / "sequential_run_status.json"

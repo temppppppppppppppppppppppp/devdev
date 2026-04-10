@@ -4,6 +4,17 @@
   "crisis_candidates": [],
   "terms": [],
   "scene_details": [],
-  "notes": []
+  "notes": "Scaffold placeholder. Replace with audited material bundle notes before Stage0 lock.",
+  "opening_bundle_contract": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "TODO: replace opening macro battlefield",
+    "macro_battlefield_map": [
+      "TODO: replace opening sub-battlefield lane"
+    ],
+    "bundle_goal": "TODO: define the opening reader-earning goal for TR 2~6",
+    "first_signboard_block": 3,
+    "representative_reevaluation_block": 4,
+    "next_battlefield_ticket_block": 6,
+    "timing_reconciliation_note": "TODO: reconcile Phase0 arc scale with the faster TR 2~6 reader-earning window."
+  }
 }
-

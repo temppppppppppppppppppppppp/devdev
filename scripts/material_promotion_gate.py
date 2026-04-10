@@ -13,8 +13,13 @@ import argparse
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from ops_support import ROOT
 from material_readiness_validator import collect_targets, render_reports, validate_file
+from modules.core.stage0_opening_contract import sync_opening_bundle_contract_for_work
 from stage0_handoff_validator import validate as validate_stage0_handoff
 
 
@@ -37,6 +42,25 @@ def run_material_gate(path: Path) -> int:
 def run_stage0_gate(work_id: str) -> int:
     print()
     print(f"Stage0 Handoff Gate: work_id={work_id}")
+    sync_result = sync_opening_bundle_contract_for_work(work_id, root=ROOT, write=True)
+    if sync_result.contract:
+        print("Opening Bundle Contract Sync:")
+        if not sync_result.updated_paths and not sync_result.missing_paths:
+            print("  - already aligned")
+        for path in sync_result.updated_paths:
+            rel = Path(path)
+            display = rel.relative_to(ROOT).as_posix() if rel.is_relative_to(ROOT) else path
+            print(f"  - synced: {display}")
+        for path in sync_result.missing_paths:
+            rel = Path(path)
+            display = rel.relative_to(ROOT).as_posix() if rel.is_relative_to(ROOT) else path
+            print(f"  - missing: {display}")
+    elif sync_result.missing_paths:
+        print("Opening Bundle Contract Sync:")
+        for path in sync_result.missing_paths:
+            rel = Path(path)
+            display = rel.relative_to(ROOT).as_posix() if rel.is_relative_to(ROOT) else path
+            print(f"  - missing: {display}")
     passed, messages = validate_stage0_handoff(work_id)
     for message in messages:
         print(f"  - {message}")

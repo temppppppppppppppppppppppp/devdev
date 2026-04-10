@@ -31,10 +31,13 @@ Date: 2026-03-31
 
 1. `reference_selection`
 2. `source_manifest`
-3. `phase0_design`
-4. `tr_block_070_draft`
-5. `bi_output`
-6. `release_gate`
+3. `profile_lock`
+4. `material_bundle_summary`
+5. `phase0_ready_snapshot`
+6. `phase0_design`
+7. `tr_block_070_draft`
+8. `bi_output`
+9. `release_gate`
 
 ## Immediate Rule
 
@@ -43,4 +46,3 @@ Date: 2026-03-31
 - `phase0` 없이 TR 금지
 - `verified TR` 없이 BI 금지
 - `release_gate` PASS 전 완료 선언 금지
-

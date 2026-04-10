@@ -1,11 +1,10 @@
 {
-  "primary_profile": "",
+  "primary_profile": "business_growth_profile",
   "secondary_profile": "",
-  "resource_axis": "",
-  "power_axis": "",
-  "control_axis": "",
-  "payoff_axis": "",
-  "failure_axis": "",
-  "hud_interpretation": ""
+  "resource_axis": [],
+  "power_axis": [],
+  "control_axis": [],
+  "payoff_axis": [],
+  "failure_axis": [],
+  "hud_interpretation": {}
 }
-

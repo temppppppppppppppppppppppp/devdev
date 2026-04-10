@@ -1,6 +1,11 @@
 {
   "work_id": "pilot_vertical_stack_001",
   "selection_date": "2026-03-31",
+  "profile_override": {
+    "primary_profile": "business_growth_profile",
+    "secondary_profile": "investment_market_profile",
+    "reason": "Pilot card mix includes patent/startup signals, but the intended lane is modern business-power with institutional investment as secondary."
+  },
   "selected_cards": [
     {
       "card_slug": "yeonbong_1jo_sinipsawon",

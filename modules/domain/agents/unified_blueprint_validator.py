@@ -26,6 +26,7 @@ import re
 
 from modules.core.constants import AIModels, Stage2Limits
 from modules.core.partial_fix_contract import normalize_patch_target_records
+from modules.core.scene_obligation_heuristics import build_blueprint_scene_profile
 from modules.core.stage_cross_stage_contract import (
     apply_opening_transition_contract,
     read_declared_opening_transition_type,
@@ -1921,11 +1922,13 @@ class UnifiedBlueprintValidator:
         if not integrated or scene_count <= 0:
             return []
         issues: list[dict] = []
+        scene_profile = build_blueprint_scene_profile({"scene_breakdown": scenes if isinstance(scenes, dict) else {}})
         # Check 1: Per-scene proportional coverage — flag if scenario is long enough
-        # but too thin relative to scene count
+        # but too thin relative to scene count. Low-scene blueprints are judged by
+        # obligation specificity and anchor density instead of a rigid chars-per-scene floor.
         avg_chars_per_scene = len(integrated) / scene_count if scene_count > 0 else 0
         _AVG_MIN = 200
-        if len(integrated) >= self.min_chars and avg_chars_per_scene < _AVG_MIN:
+        if len(integrated) >= self.min_chars and scene_count > 3 and avg_chars_per_scene < _AVG_MIN:
             issues.append(
                 {
                     "severity": "MINOR",
@@ -1934,8 +1937,11 @@ class UnifiedBlueprintValidator:
                         f"시나리오 밀도 부족: 평균 {avg_chars_per_scene:.0f}자/씬 "
                         f"< {_AVG_MIN}자/씬 ({scene_count}개 씬, 총 {len(integrated)}자)"
                     ),
-                    "evidence": f"avg_chars_per_scene={avg_chars_per_scene:.0f}",
-                    "fix_hint": "각 씬의 내용을 integrated_scenario에 구체적으로 전개",
+                    "evidence": (
+                        f"avg_chars_per_scene={avg_chars_per_scene:.0f}; "
+                        f"scene_keywords={scene_profile.total_keywords}"
+                    ),
+                    "fix_hint": "씬 수를 기계적으로 늘리기보다 각 planning anchor의 goal/key_events를 구체적으로 전개",
                 }
             )
         # Check 2: Concrete anchor density — count location/institution/number tokens

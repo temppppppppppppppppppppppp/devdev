@@ -10,6 +10,7 @@
     "protagonist",
     "core_fantasy",
     "opening_arc",
+    "opening_bundle_contract",
     "representative_spike",
     "growth_axis",
     "opponent_transition_plan",
@@ -29,10 +30,52 @@
       "type": "string"
     },
     "opening_arc": {},
+    "opening_bundle_contract": {
+      "type": "object",
+      "required": [
+        "bundle_window",
+        "macro_battlefield",
+        "macro_battlefield_map",
+        "bundle_goal",
+        "first_signboard_block",
+        "representative_reevaluation_block",
+        "next_battlefield_ticket_block",
+        "timing_reconciliation_note"
+      ],
+      "properties": {
+        "bundle_window": {
+          "type": "string"
+        },
+        "macro_battlefield": {
+          "type": "string"
+        },
+        "macro_battlefield_map": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bundle_goal": {
+          "type": "string"
+        },
+        "first_signboard_block": {
+          "type": "integer"
+        },
+        "representative_reevaluation_block": {
+          "type": "integer"
+        },
+        "next_battlefield_ticket_block": {
+          "type": "integer"
+        },
+        "timing_reconciliation_note": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
     "representative_spike": {},
     "growth_axis": {},
     "opponent_transition_plan": {},
     "payoff_axis": {}
   }
 }
-

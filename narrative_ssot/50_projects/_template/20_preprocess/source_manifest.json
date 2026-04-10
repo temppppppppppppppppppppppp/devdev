@@ -1,12 +1,18 @@
 {
-  "work_identity": {},
-  "canonical_sources": [],
+  "work_identity": {
+    "work_id": "template_work_id",
+    "title": "TODO: replace title",
+    "primary_profile": "business_growth_profile",
+    "secondary_profile": ""
+  },
+  "canonical_sources": [
+    "TODO: replace with canonical source path"
+  ],
   "reference_only_sources": [],
   "core_materials": [],
   "npc_pool": [],
   "crisis_pool": [],
   "hard_constraints": [],
   "do_not_fake": [],
-  "manual_audit_note": ""
+  "manual_audit_note": "Scaffold placeholder. Replace with audited source notes before Stage0 lock."
 }
-

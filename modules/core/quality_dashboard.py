@@ -21,6 +21,37 @@ from typing import Any
 from modules.core.constants import ManuscriptLimits
 
 
+def _get_scene_coverage_factor(
+    scene_coverage: float,
+    *,
+    expected_scenes: int,
+    reflected_scenes: int,
+) -> dict[str, Any] | None:
+    if scene_coverage < 0:
+        return None
+
+    if 0 < expected_scenes <= 3:
+        minimum_reflected = max(1, expected_scenes - 1)
+        impact = f"{scene_coverage:.0f}% ({reflected_scenes}/{expected_scenes} 장면화)"
+        if reflected_scenes >= expected_scenes and scene_coverage >= 70:
+            return {"name": "씬 반영 우수", "impact": impact, "weight": +10}
+        if reflected_scenes >= minimum_reflected and scene_coverage >= 55:
+            return {"name": "저씬 구조 의무 반영 양호", "impact": impact, "weight": +5}
+        if reflected_scenes == 0 or scene_coverage < 30:
+            return {"name": "씬 반영 부족", "impact": impact, "weight": -30}
+        if reflected_scenes < minimum_reflected or scene_coverage < 50:
+            return {"name": "저씬 구조 의무 반영 경계", "impact": impact, "weight": -10}
+        return None
+
+    if scene_coverage < 30:
+        return {"name": "씬 반영 부족", "impact": f"{scene_coverage:.0f}%", "weight": -30}
+    if scene_coverage < 50:
+        return {"name": "씬 반영 경계", "impact": f"{scene_coverage:.0f}%", "weight": -10}
+    if scene_coverage >= 70:
+        return {"name": "씬 반영 우수", "impact": f"{scene_coverage:.0f}%", "weight": +10}
+    return None
+
+
 class QualityDashboard:
     """
     품질 메트릭 추적 및 분석
@@ -878,21 +909,14 @@ class QualityDashboard:
 
             scene_coverage = current_metrics.get("scene_coverage", -1)
             if scene_coverage >= 0:
-                if scene_coverage < 30:
-                    probability -= 30
-                    result["factors"].append(
-                        {"name": "씬 반영 부족", "impact": f"{scene_coverage:.0f}%", "weight": -30}
-                    )
-                elif scene_coverage < 50:
-                    probability -= 10
-                    result["factors"].append(
-                        {"name": "씬 반영 경계", "impact": f"{scene_coverage:.0f}%", "weight": -10}
-                    )
-                elif scene_coverage >= 70:
-                    probability += 10
-                    result["factors"].append(
-                        {"name": "씬 반영 우수", "impact": f"{scene_coverage:.0f}%", "weight": +10}
-                    )
+                coverage_factor = _get_scene_coverage_factor(
+                    scene_coverage,
+                    expected_scenes=current_metrics.get("expected_scenes", 0),
+                    reflected_scenes=current_metrics.get("reflected_scenes", 0),
+                )
+                if coverage_factor:
+                    probability += coverage_factor["weight"]
+                    result["factors"].append(coverage_factor)
 
             pre_fails = current_metrics.get("pre_checklist_fails", 0)
             pre_warnings = current_metrics.get("pre_checklist_warnings", 0)
