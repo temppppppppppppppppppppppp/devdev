@@ -150,7 +150,7 @@ def test_blockguide_bi_main_accepts_wrapped_draft_input(monkeypatch, temp_dir) -
         captured["normalized_blocks"] = treatment_blocks
         return phase0_design
 
-    def fake_build_bible(payload: dict, treatment_blocks: list[dict]) -> dict:
+    def fake_build_bible(payload: dict, treatment_blocks: list[dict], **_kwargs) -> dict:
         captured["build_blocks"] = treatment_blocks
         return {
             "MasterBible": {
@@ -166,6 +166,7 @@ def test_blockguide_bi_main_accepts_wrapped_draft_input(monkeypatch, temp_dir) -
     monkeypatch.setattr(build_script, "normalize_phase0_design", fake_normalize_phase0_design)
     monkeypatch.setattr(build_script, "build_bible", fake_build_bible)
     monkeypatch.setattr(build_script, "validate_bible_structure", lambda _: (True, [], []))
+    monkeypatch.setattr(build_script, "ROOT", temp_dir)
     monkeypatch.setattr(
         sys,
         "argv",
@@ -191,7 +192,14 @@ def test_blockguide_bi_main_accepts_wrapped_draft_input(monkeypatch, temp_dir) -
 
 
 def test_build_bible_emits_runtime_protagonist_contract_and_normalized_roadmap() -> None:
-    bible = build_script.build_bible(_build_phase0_for_real_bible(), _build_blocks_for_real_bible())
+    bible = build_script.build_bible(
+        _build_phase0_for_real_bible(),
+        _build_blocks_for_real_bible(),
+        work_id="test_project",
+        source_phase0="treatments/phase0/test_project_phase0_design.json",
+        source_tr="treatments/01_test_project_tr_block_070_draft.json",
+        authority_chain=["treatments/preprocess/test_project/source_manifest.json"],
+    )
 
     protagonist_config = bible["MasterBible"]["protagonist_config"]
     roadmap = bible["MasterBible"]["plot_roadmap"]

@@ -1,5 +1,6 @@
 """
 [V60.80] Manuscript Validator - Python 기반 사전 검증기
+utf8-hygiene: allow-file -- legacy Korean regex patterns intentionally include optional quantifiers and grouped alternations.
 
 Stage 4 "Director 주권주의" 아키텍처의 무료 사전 검증 레이어.
 LLM 호출 없이 Python으로 빠르게 경고 포인트를 생성.
@@ -14,6 +15,29 @@ import time
 
 from modules.core.constants import AIModels, ManuscriptLimits  # [V64.P4] [TF-9B]
 from modules.core.llm_generate import generate_content_via_router
+from modules.core.scene_obligation_heuristics import measure_manuscript_scene_materialization
+
+
+def _normalize_collection_only_scene_coverage(
+    *,
+    expected_scenes: int,
+    reflected_scenes: int,
+    overall_ratio: float,
+    tail_scene_reflected: bool,
+) -> float:
+    if expected_scenes <= 0:
+        return 100.0
+
+    coverage = reflected_scenes / expected_scenes * 100
+    if expected_scenes > 3:
+        return round(coverage, 1)
+
+    adjusted = max(coverage, overall_ratio * 100)
+    if expected_scenes >= 2 and tail_scene_reflected:
+        adjusted += 20
+    if reflected_scenes >= max(1, expected_scenes - 1):
+        adjusted += 10
+    return min(round(adjusted, 1), 100.0)
 
 
 class ManuscriptValidator:
@@ -267,17 +291,22 @@ class ManuscriptValidator:
         return {"length": length, "warnings": warnings}
 
     def _check_scene_coverage(self, manuscript: str, blueprint: dict) -> dict:
-        """씬 반영률 체크 — 비활성화됨.
+        """씬 materialization 메트릭 수집.
 
-        Python 키워드 매칭 기반이라 오탐(false negative)이 과다.
-        CW가 동일 장면을 다른 표현으로 쓰면 미반영으로 오판함.
-        씬 반영률 판단은 Director(LLM)가 Blueprint 원문 대조로 수행.
+        Python은 수집만 수행하고, 경고/판정은 Director(LLM)에게 맡긴다.
         """
+        materialization = measure_manuscript_scene_materialization(manuscript, blueprint if isinstance(blueprint, dict) else {})
+        coverage = _normalize_collection_only_scene_coverage(
+            expected_scenes=materialization.scene_count,
+            reflected_scenes=materialization.reflected_scenes,
+            overall_ratio=materialization.overall_ratio,
+            tail_scene_reflected=materialization.tail_scene_reflected,
+        )
         return {
-            "coverage": 100.0,
-            "expected": 0,
-            "reflected": 0,
-            "missing_scenes": [],
+            "coverage": coverage,
+            "expected": materialization.scene_count,
+            "reflected": materialization.reflected_scenes,
+            "missing_scenes": list(materialization.weak_scenes),
             "warnings": [],
         }
 

@@ -36,5 +36,21 @@
     "물류센터 현장: 센터 운영 구조, 물동량 산정, 외주 컨설팅 의존 구조",
     "MD사업부 회의: 재고/반품 수치 보고, 밀어내기 관행, 적자 은폐 현장"
   ],
-  "notes": "결재선/프로젝트/예산 3축 전장 재료와 적대축 2개(팀장/사업부장)가 기획안에서 구체적으로 잡혀 있어 Phase 0 즉시 투입 가능. 전무/대표 실명, 유통사 사명, Block 2-3 세부 에피소드는 Phase 0 설계 중 확정 예정. 유통사 예산 편성 구조, 물류센터 통합 판단 기준, MD 적자 은폐 수법은 상상으로 때우면 안 됨."
+  "notes": "결재선/프로젝트/예산 3축 전장 재료와 적대축 2개(팀장/사업부장)가 기획안에서 구체적으로 잡혀 있어 Phase 0 즉시 투입 가능. 전무/대표 실명, 유통사 사명, Block 2-3 세부 에피소드는 Phase 0 설계 중 확정 예정. 유통사 예산 편성 구조, 물류센터 통합 판단 기준, MD 적자 은폐 수법은 상상으로 때우면 안 됨.",
+  "opening_bundle_contract": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "검진 다음 날",
+    "macro_battlefield_map": [
+      "검진 결과지",
+      "전무실 배석",
+      "팀장의 견제",
+      "물류센터 통합안",
+      "데이터 추적"
+    ],
+    "bundle_goal": "투명인간에서 벗어나 이름이 불리는 사람이 된다.",
+    "first_signboard_block": 3,
+    "representative_reevaluation_block": 5,
+    "next_battlefield_ticket_block": 3,
+    "timing_reconciliation_note": "검진 다음 날 arc outline가 B1-10까지 이어져도 reader-earning signboard/reevaluation/ticket은 TR 2~6 안에서 먼저 끝낸다."
+  }
 }

@@ -8,6 +8,21 @@
     },
     {
       "from": "source_manifest",
+      "to": "profile_lock",
+      "rule": "primary_profile and axis language must be inferred before material bundling"
+    },
+    {
+      "from": "profile_lock",
+      "to": "material_bundle_summary",
+      "rule": "opening_bundle_contract draft must be present before planning handoff"
+    },
+    {
+      "from": "material_bundle_summary",
+      "to": "phase0_ready_snapshot",
+      "rule": "manual audit remains false until project-specific material review completes"
+    },
+    {
+      "from": "phase0_ready_snapshot",
       "to": "phase0_design",
       "rule": "phase0_ready_snapshot.manual_audit_pass must be true"
     },
@@ -23,4 +38,3 @@
     }
   ]
 }
-

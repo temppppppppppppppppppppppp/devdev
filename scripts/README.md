@@ -13,6 +13,7 @@ Operator-facing utility scripts. Not imported by production runtime.
 - **material benchmark batch launch generation**: `material_benchmark_batch_generator.py`
 - **UTF-8 hygiene**: `check_utf8_hygiene.py`, `mojibake_global_survey.py`
 - **narrative pipeline**: `narrative_router.py`, `narrative_tr_batch.py`, `build_narrative_bi.py`, `audit_narrative_bi.py`, `build_bi_from_phase0_and_tr.py`, `build_wuxia_bi_from_phase0_and_tr.py`, `audit_bi_5pass.py`, `audit_wuxia_bi_5pass.py`, `generate_tr_bibles.py`, `create_narrative_project_scaffold.py`, `sync_narrative_reference_bank.py`
+- **narrative scaffold enrichment**: `build_stage0_from_reference_selection.py`
 - **material-side companions**: `run_work_guard_v1.py`
 - **data/corpus build**: `build_investment_*.py`, `build_chaebol_*.py`, `build_fallen_prince_*.py`, `build_title_style_control_dataset.py`, `extract_manuscript_samples.py`
 - **test support**: `run_pytest_lowmem.py`, `e2e_menu_smoke.ps1`
@@ -36,4 +37,5 @@ Operator-facing utility scripts. Not imported by production runtime.
 | Run `WG-V1` shape validation on a draft or publishable `work_guard` | `python -X utf8 scripts/run_work_guard_v1.py --path <yaml>` |
 | Build execution roadmap | `python scripts/build_execution_roadmap.py` |
 | Create a `narrative_ssot` project scaffold | `python -X utf8 scripts/create_narrative_project_scaffold.py --work-id <work_id>` |
+| Build Stage0 preprocess drafts from selected reference cards | `python -X utf8 scripts/build_stage0_from_reference_selection.py --work-id <work_id>` |
 | Sync `few-shot-bank` into `narrative_ssot` mirror | `python -X utf8 scripts/sync_narrative_reference_bank.py` |

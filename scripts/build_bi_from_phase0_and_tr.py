@@ -19,6 +19,7 @@ from modules.core.project_support import default_external_pov_insert_policy, nor
 from modules.core.response_schemas import (  # noqa: E402 - entrypoint path bootstrap must precede imports
     validate_bible_structure,
 )
+from modules.core.stage0_opening_contract import ensure_opening_bundle_contract
 from modules.core.stage0_handoff import (
     build_plot_roadmap_from_treatment,
     canonicalize_bible_payload,
@@ -282,6 +283,9 @@ def normalize_phase0_design(
         normalized["capital_curve"] = derive_capital_curve(treatment_blocks)
     if "defeat_blocks" not in normalized:
         normalized["defeat_blocks"] = derive_defeat_blocks(normalized, treatment_blocks)
+    phase0_wrapper = {"phase0_design": normalized}
+    phase0_wrapper, _bundle, _contract = ensure_opening_bundle_contract(phase0_wrapper)
+    normalized = phase0_wrapper["phase0_design"]
     return normalized
 
 

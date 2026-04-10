@@ -46,13 +46,31 @@
         "block_range": "1-10",
         "time_window": "2025년 3월~2025년 5월",
         "capital_target": "Lv1 자료작성권 -> Lv4 상신권",
-        "front_sectors": ["경영기획팀", "SCM/물류"],
-        "support_sectors": ["MD사업부"],
-        "main_opponents": ["오세진", "장현태"],
-        "new_npcs": ["한시혁", "오세진", "장현태", "박전무", "김대표"],
+        "front_sectors": [
+          "경영기획팀",
+          "SCM/물류"
+        ],
+        "support_sectors": [
+          "MD사업부"
+        ],
+        "main_opponents": [
+          "오세진",
+          "장현태"
+        ],
+        "new_npcs": [
+          "한시혁",
+          "오세진",
+          "장현태",
+          "박전무",
+          "김대표"
+        ],
         "emotion_curve": "굴욕 -> 각성 -> 첫 사이다 -> 간판 폭발 -> 체감형 보상",
-        "quiet_blocks": [6],
-        "defeat_blocks": [4],
+        "quiet_blocks": [
+          6
+        ],
+        "defeat_blocks": [
+          4
+        ],
         "entry_function": "3년간 이름 한 번 불린 적 없던 말단 사원이 건강검진 다음 날부터 터질 프로젝트를 먼저 읽고, 막힌 결재선을 거슬러 첫 직보로 전사 최대 투자안을 멈춘다. 굴욕→각성→간판 폭발의 속도로 직행하는 오프닝 아크.",
         "exit_function": "물류 통합안 저지와 보상 4종을 통해 시혁이 TF 실무 간사이자 전무 직보 라인으로 올라서며, 다음 아크의 전장이 경영기획팀 구석에서 TF룸 전체로 확장된다.",
         "block_slots": [
@@ -114,13 +132,30 @@
         "block_range": "11-20",
         "time_window": "2025년 5월~2025년 7월",
         "capital_target": "Lv4 상신권 -> Lv5 예산 발언권",
-        "front_sectors": ["물류 재설계 TF", "경영기획팀"],
-        "support_sectors": ["MD사업부", "SCM팀"],
-        "main_opponents": ["장현태", "오세진"],
-        "new_npcs": ["물류팀장 (TF 내 협력자 후보)", "MD실무진 (장현태의 방패)"],
+        "front_sectors": [
+          "물류 재설계 TF",
+          "경영기획팀"
+        ],
+        "support_sectors": [
+          "MD사업부",
+          "SCM팀"
+        ],
+        "main_opponents": [
+          "장현태",
+          "오세진"
+        ],
+        "new_npcs": [
+          "물류팀장 (TF 내 협력자 후보)",
+          "MD실무진 (장현태의 방패)"
+        ],
         "emotion_curve": "신전장 적응 -> 능력 확장(사람 읽기) -> 팀장 견제 돌파 -> 예산 발언권 획득",
-        "quiet_blocks": [15],
-        "defeat_blocks": [13, 18],
+        "quiet_blocks": [
+          15
+        ],
+        "defeat_blocks": [
+          13,
+          18
+        ],
         "entry_function": "TF 실무 간사로서 부장급과 대등하게 앉되, 실질 권한은 아직 자료 정리 수준. 감각이 숫자 읽기에서 사람 읽기로 확장되기 시작.",
         "exit_function": "분기 예산 편성 회의에서 시혁이 처음으로 숫자를 움직인다. Lv5 예산 발언권 획득. 동시에 장현태의 본격 반격이 시작.",
         "block_slots": [
@@ -182,13 +217,30 @@
         "block_range": "21-30",
         "time_window": "2025년 7월~2025년 9월",
         "capital_target": "Lv5 예산 발언권 유지 + 프로젝트 오너십 첫 획득",
-        "front_sectors": ["MD사업부 감사", "물류 재설계"],
-        "support_sectors": ["재무팀", "외부 감사"],
-        "main_opponents": ["장현태", "MD실무진"],
-        "new_npcs": ["재무팀 차장 (숫자 검증 협력자)", "외부 감사인"],
+        "front_sectors": [
+          "MD사업부 감사",
+          "물류 재설계"
+        ],
+        "support_sectors": [
+          "재무팀",
+          "외부 감사"
+        ],
+        "main_opponents": [
+          "장현태",
+          "MD실무진"
+        ],
+        "new_npcs": [
+          "재무팀 차장 (숫자 검증 협력자)",
+          "외부 감사인"
+        ],
         "emotion_curve": "적의 숫자를 파기 시작 -> 장현태 조직적 방어 -> 첫 정면 충돌 -> 부분 승리",
-        "quiet_blocks": [25],
-        "defeat_blocks": [23, 28],
+        "quiet_blocks": [
+          25
+        ],
+        "defeat_blocks": [
+          23,
+          28
+        ],
         "entry_function": "시혁이 TF 데이터 속에서 MD사업부의 재고/반품 은폐 패턴을 잡기 시작한다.",
         "exit_function": "MD사업부의 숨겨진 적자 일부가 드러나 사업부 자체 감사가 발동된다. 시혁이 감사 지원 TF를 추가로 맡는다.",
         "block_slots": [
@@ -250,13 +302,30 @@
         "block_range": "31-40",
         "time_window": "2025년 10월~2025년 12월",
         "capital_target": "Lv5 유지, Lv6 TF 실권 도전",
-        "front_sectors": ["MD사업부 구조조정", "인사 시즌"],
-        "support_sectors": ["경영기획팀", "HR"],
-        "main_opponents": ["장현태", "오세진 (최후 견제)"],
-        "new_npcs": ["HR팀장", "장현태 측근 부장"],
+        "front_sectors": [
+          "MD사업부 구조조정",
+          "인사 시즌"
+        ],
+        "support_sectors": [
+          "경영기획팀",
+          "HR"
+        ],
+        "main_opponents": [
+          "장현태",
+          "오세진 (최후 견제)"
+        ],
+        "new_npcs": [
+          "HR팀장",
+          "장현태 측근 부장"
+        ],
         "emotion_curve": "감각 한계 첫 노출 -> 오판 -> 회복 -> 오세진 축 정리",
-        "quiet_blocks": [35],
-        "defeat_blocks": [32, 37],
+        "quiet_blocks": [
+          35
+        ],
+        "defeat_blocks": [
+          32,
+          37
+        ],
         "entry_function": "감정적/비합리적 의사결정 앞에서 시혁의 읽기가 처음으로 흔들린다. '이게 대체 뭐지'라고 진지하게 자문하는 순간.",
         "exit_function": "오세진 팀장이 시혁 견제 실패로 자멸한다. 시혁이 경영기획팀 실질 리더 포지션에 선다. 연말 인사평가 S 등급.",
         "block_slots": [
@@ -318,13 +387,30 @@
         "block_range": "41-50",
         "time_window": "2026년 1월~2026년 4월",
         "capital_target": "Lv6 TF 실권 확보",
-        "front_sectors": ["전사 전략기획", "본부 간 공동 TF"],
-        "support_sectors": ["물류", "MD(재편 후)"],
-        "main_opponents": ["전략기획본부 임원", "장현태(잔여 세력)"],
-        "new_npcs": ["전략기획본부 상무", "대표 직속 전략기획실 과장"],
+        "front_sectors": [
+          "전사 전략기획",
+          "본부 간 공동 TF"
+        ],
+        "support_sectors": [
+          "물류",
+          "MD(재편 후)"
+        ],
+        "main_opponents": [
+          "전략기획본부 임원",
+          "장현태(잔여 세력)"
+        ],
+        "new_npcs": [
+          "전략기획본부 상무",
+          "대표 직속 전략기획실 과장"
+        ],
         "emotion_curve": "판 확장 -> 새로운 규칙 -> 더 큰 적 -> 중간 승리",
-        "quiet_blocks": [45],
-        "defeat_blocks": [43, 48],
+        "quiet_blocks": [
+          45
+        ],
+        "defeat_blocks": [
+          43,
+          48
+        ],
         "entry_function": "시혁의 감각이 경영기획팀·물류 TF 범위를 넘어 본사 전체 본부 간 공동 프로젝트 레벨로 확장된다.",
         "exit_function": "시혁이 본사 본부 간 공동 프로젝트 TF를 실질 리딩한다. 한 팀의 유능한 사원에서 전사 레벨 플레이어로 전환.",
         "block_slots": [
@@ -386,13 +472,30 @@
         "block_range": "51-60",
         "time_window": "2026년 4월~2026년 7월",
         "capital_target": "Lv6 TF 실권 -> Lv7 라인 선택권 도전",
-        "front_sectors": ["MD사업부 최종 구조조정", "전사 전략"],
-        "support_sectors": ["재무", "법무", "외부 감사"],
-        "main_opponents": ["장현태 (최종전)"],
-        "new_npcs": ["법무팀 변호사", "이사회 사외이사"],
+        "front_sectors": [
+          "MD사업부 최종 구조조정",
+          "전사 전략"
+        ],
+        "support_sectors": [
+          "재무",
+          "법무",
+          "외부 감사"
+        ],
+        "main_opponents": [
+          "장현태 (최종전)"
+        ],
+        "new_npcs": [
+          "법무팀 변호사",
+          "이사회 사외이사"
+        ],
         "emotion_curve": "최종 공세 -> 장현태 조직적 반격 -> 결전 -> 적대축 정리",
-        "quiet_blocks": [55],
-        "defeat_blocks": [53, 58],
+        "quiet_blocks": [
+          55
+        ],
+        "defeat_blocks": [
+          53,
+          58
+        ],
         "entry_function": "MD사업부 숨겨진 적자가 전면 노출되는 과정이 시작된다.",
         "exit_function": "장현태가 퇴진하고 MD사업부가 재편된다. 시혁은 이 과정의 핵심 인물로 인정받는다.",
         "block_slots": [
@@ -454,13 +557,32 @@
         "block_range": "61-70",
         "time_window": "2026년 7월~2026년 10월",
         "capital_target": "Lv7 라인 선택권 확보",
-        "front_sectors": ["전사 조직 재설계", "대표 직속 전략"],
-        "support_sectors": ["인사", "재무", "물류(안정화)"],
-        "main_opponents": ["대표 직속 전략기획실장", "전사 구조조정 상무", "자기 자신 (감각 의존 vs 판단력)"],
-        "new_npcs": ["대표 직속 전략기획실장", "전사 구조조정 상무"],
+        "front_sectors": [
+          "전사 조직 재설계",
+          "대표 직속 전략"
+        ],
+        "support_sectors": [
+          "인사",
+          "재무",
+          "물류(안정화)"
+        ],
+        "main_opponents": [
+          "대표 직속 전략기획실장",
+          "전사 구조조정 상무",
+          "자기 자신 (감각 의존 vs 판단력)"
+        ],
+        "new_npcs": [
+          "대표 직속 전략기획실장",
+          "전사 구조조정 상무"
+        ],
         "emotion_curve": "최종 도전 -> 감각의 본질 직면 -> 선택 -> 새로운 출발",
-        "quiet_blocks": [65],
-        "defeat_blocks": [63, 68],
+        "quiet_blocks": [
+          65
+        ],
+        "defeat_blocks": [
+          63,
+          68
+        ],
         "entry_function": "시혁이 조직의 구조 자체를 바꿀 수 있는 위치에 서기 직전. 감각의 본질에 대한 질문이 절정에 달한다.",
         "exit_function": "시혁이 누구 밑에서 일할지를 본인이 고르는 라인 선택권을 확보한다. 감각이 능력인지 각성인지에 대한 답은 열어 둔 채 끝난다.",
         "block_slots": [
@@ -525,14 +647,38 @@
         "first_block": 1,
         "final_status": "경영기획팀장 + 전사 전략/구조 TF 실무총괄",
         "key_turning_points": [
-          {"block": 2, "event": "검진 후 감각 첫 발현"},
-          {"block": 7, "event": "ARC-01 대표 스파이크 - 물류 통합안 저지"},
-          {"block": 8, "event": "보상 4종 수령, Lv4 상신권 획득"},
-          {"block": 20, "event": "예산 발언권(Lv5) 첫 확보"},
-          {"block": 32, "event": "감각 흔들림 첫 경험"},
-          {"block": 40, "event": "오세진 축 정리, 팀 실질 리더"},
-          {"block": 60, "event": "장현태 퇴진, 적대축 최종 정리"},
-          {"block": 70, "event": "라인 선택권 확보"}
+          {
+            "block": 2,
+            "event": "검진 후 감각 첫 발현"
+          },
+          {
+            "block": 7,
+            "event": "ARC-01 대표 스파이크 - 물류 통합안 저지"
+          },
+          {
+            "block": 8,
+            "event": "보상 4종 수령, Lv4 상신권 획득"
+          },
+          {
+            "block": 20,
+            "event": "예산 발언권(Lv5) 첫 확보"
+          },
+          {
+            "block": 32,
+            "event": "감각 흔들림 첫 경험"
+          },
+          {
+            "block": 40,
+            "event": "오세진 축 정리, 팀 실질 리더"
+          },
+          {
+            "block": 60,
+            "event": "장현태 퇴진, 적대축 최종 정리"
+          },
+          {
+            "block": 70,
+            "event": "라인 선택권 확보"
+          }
         ]
       },
       {
@@ -542,11 +688,26 @@
         "first_block": 1,
         "final_status": "견제 실패 후 자멸/좌천",
         "key_turning_points": [
-          {"block": 1, "event": "시혁 보고서를 자기 공으로 돌림"},
-          {"block": 4, "event": "시혁 부상 감지, 견제 시작"},
-          {"block": 13, "event": "TF 배제 시도"},
-          {"block": 37, "event": "최후 견제 — 인사평가 방해"},
-          {"block": 40, "event": "자멸/좌천"}
+          {
+            "block": 1,
+            "event": "시혁 보고서를 자기 공으로 돌림"
+          },
+          {
+            "block": 4,
+            "event": "시혁 부상 감지, 견제 시작"
+          },
+          {
+            "block": 13,
+            "event": "TF 배제 시도"
+          },
+          {
+            "block": 37,
+            "event": "최후 견제 — 인사평가 방해"
+          },
+          {
+            "block": 40,
+            "event": "자멸/좌천"
+          }
         ]
       },
       {
@@ -556,12 +717,30 @@
         "first_block": 1,
         "final_status": "적자 전면 노출 후 퇴진",
         "key_turning_points": [
-          {"block": 1, "event": "시혁 보고서를 '현장 모르면서' 한마디로 묻음"},
-          {"block": 6, "event": "조작 데이터 제공 사실이 시혁에게 발각"},
-          {"block": 10, "event": "시혁에 대한 조직적 방어 시작"},
-          {"block": 28, "event": "적자 일부 노출, 사업부 자체 감사 발동"},
-          {"block": 53, "event": "최종 조직적 반격"},
-          {"block": 60, "event": "퇴진"}
+          {
+            "block": 1,
+            "event": "시혁 보고서를 '현장 모르면서' 한마디로 묻음"
+          },
+          {
+            "block": 6,
+            "event": "조작 데이터 제공 사실이 시혁에게 발각"
+          },
+          {
+            "block": 10,
+            "event": "시혁에 대한 조직적 방어 시작"
+          },
+          {
+            "block": 28,
+            "event": "적자 일부 노출, 사업부 자체 감사 발동"
+          },
+          {
+            "block": 53,
+            "event": "최종 조직적 반격"
+          },
+          {
+            "block": 60,
+            "event": "퇴진"
+          }
         ]
       },
       {
@@ -571,9 +750,18 @@
         "first_block": 3,
         "final_status": "시혁의 지속적 후원 라인",
         "key_turning_points": [
-          {"block": 3, "event": "시혁 이름 첫 호명"},
-          {"block": 7, "event": "시혁 대안을 임원회의에 올림"},
-          {"block": 8, "event": "TF 인가"}
+          {
+            "block": 3,
+            "event": "시혁 이름 첫 호명"
+          },
+          {
+            "block": 7,
+            "event": "시혁 대안을 임원회의에 올림"
+          },
+          {
+            "block": 8,
+            "event": "TF 인가"
+          }
         ]
       },
       {
@@ -583,7 +771,10 @@
         "first_block": 7,
         "final_status": "시혁의 최종 인정자",
         "key_turning_points": [
-          {"block": 8, "event": "전사 메일에 시혁 실명 언급"}
+          {
+            "block": 8,
+            "event": "전사 메일에 시혁 실명 언급"
+          }
         ]
       }
     ],
@@ -592,7 +783,10 @@
         "id": "FS-01",
         "name": "건강검진 정밀검사 요망",
         "seed_block": 2,
-        "hint_blocks": [15, 32],
+        "hint_blocks": [
+          15,
+          32
+        ],
         "payoff_block": 65,
         "payoff_meaning": "감각의 본질에 대한 질문이 절정. 정밀검사 결과가 돌아왔을 때 답이 나오는가?"
       },
@@ -600,7 +794,11 @@
         "id": "FS-02",
         "name": "MD사업부 조작 데이터",
         "seed_block": 6,
-        "hint_blocks": [10, 21, 25],
+        "hint_blocks": [
+          10,
+          21,
+          25
+        ],
         "payoff_block": 55,
         "payoff_meaning": "장현태가 숨긴 적자의 전모가 드러나며 사업부 전체가 재편된다."
       },
@@ -608,7 +806,10 @@
         "id": "FS-03",
         "name": "오세진의 정치 네트워크",
         "seed_block": 4,
-        "hint_blocks": [13, 18],
+        "hint_blocks": [
+          13,
+          18
+        ],
         "payoff_block": 37,
         "payoff_meaning": "오세진의 견제가 자멸로 귀결 — 정치형 상사의 한계 증명."
       },
@@ -616,7 +817,10 @@
         "id": "FS-04",
         "name": "감각 흔들림 — 비합리적 의사결정",
         "seed_block": 15,
-        "hint_blocks": [25, 30],
+        "hint_blocks": [
+          25,
+          30
+        ],
         "payoff_block": 32,
         "payoff_meaning": "시혁이 감각의 한계를 처음 경험하고 '이게 뭐지'라고 자문한다."
       },
@@ -624,7 +828,10 @@
         "id": "FS-05",
         "name": "본부 간 전략기획과의 접점",
         "seed_block": 20,
-        "hint_blocks": [35, 40],
+        "hint_blocks": [
+          35,
+          40
+        ],
         "payoff_block": 45,
         "payoff_meaning": "시혁의 판이 경영기획팀 내부에서 본사 전사 레벨로 확장되는 전환점."
       }
@@ -635,9 +842,15 @@
         "phase": "Phase 1: 공 가로채기",
         "block_range": "1-10",
         "entry_block": 1,
-        "main_actors": ["오세진"],
+        "main_actors": [
+          "오세진"
+        ],
         "goal": "시혁의 성과를 자기 이름으로 올리고 시혁의 가시성을 차단한다",
-        "methods": ["보고서 명의 가로채기", "배석 기회 차단", "업무 재배치"],
+        "methods": [
+          "보고서 명의 가로채기",
+          "배석 기회 차단",
+          "업무 재배치"
+        ],
         "weakness": "실력이 아닌 정치로만 올라왔기 때문에 시혁이 직보 라인을 타면 우회당한다",
         "transition_block": 10
       },
@@ -646,9 +859,15 @@
         "phase": "Phase 2: 본격 견제",
         "block_range": "11-40",
         "entry_block": 11,
-        "main_actors": ["오세진"],
+        "main_actors": [
+          "오세진"
+        ],
         "goal": "TF에서 시혁을 배제하고 인사평가로 견제한다",
-        "methods": ["TF 보고 라인 개입", "인사평가 B0 유지 시도", "팀 내 여론 조성"],
+        "methods": [
+          "TF 보고 라인 개입",
+          "인사평가 B0 유지 시도",
+          "팀 내 여론 조성"
+        ],
         "weakness": "시혁의 실적이 이미 전무/대표 레벨에서 인정받아 팀장 권한만으로 막을 수 없다",
         "transition_block": 40
       },
@@ -657,9 +876,16 @@
         "phase": "Phase 1: 방어적 은폐",
         "block_range": "1-20",
         "entry_block": 1,
-        "main_actors": ["장현태", "MD실무진"],
+        "main_actors": [
+          "장현태",
+          "MD실무진"
+        ],
         "goal": "숨겨진 적자(재고 은닉, 반품 누락, 밀어내기)가 드러나지 않게 한다",
-        "methods": ["데이터 조작", "외부 컨설팅 보고서 이용", "시혁 TF 접근 차단"],
+        "methods": [
+          "데이터 조작",
+          "외부 컨설팅 보고서 이용",
+          "시혁 TF 접근 차단"
+        ],
         "weakness": "숫자를 계속 숨기려면 더 큰 숫자로 덮어야 하고, 시혁의 감각은 그 패턴을 읽는다",
         "transition_block": 20
       },
@@ -668,9 +894,17 @@
         "phase": "Phase 2: 공격적 방어",
         "block_range": "21-50",
         "entry_block": 21,
-        "main_actors": ["장현태", "MD실무진", "장현태 측근 부장"],
+        "main_actors": [
+          "장현태",
+          "MD실무진",
+          "장현태 측근 부장"
+        ],
         "goal": "감사를 무마하고 시혁의 신뢰도를 깎는다",
-        "methods": ["감사 범위 축소 로비", "시혁 오판 유도", "데이터 2차 은폐"],
+        "methods": [
+          "감사 범위 축소 로비",
+          "시혁 오판 유도",
+          "데이터 2차 은폐"
+        ],
         "weakness": "은폐가 커질수록 관련자가 늘어나고 내부 이탈자가 생긴다",
         "transition_block": 50
       },
@@ -679,30 +913,82 @@
         "phase": "Phase 3: 최종전",
         "block_range": "51-60",
         "entry_block": 51,
-        "main_actors": ["장현태"],
+        "main_actors": [
+          "장현태"
+        ],
         "goal": "적자 노출을 막는 마지막 수단 — 시혁 제거 또는 합의",
-        "methods": ["인사 압력", "외부 이해관계자 동원", "최후 데이터 파기 시도"],
+        "methods": [
+          "인사 압력",
+          "외부 이해관계자 동원",
+          "최후 데이터 파기 시도"
+        ],
         "weakness": "이미 너무 많은 흔적이 남아 있고, 시혁에게 증거가 축적되어 있다",
         "transition_block": 60
       }
     ],
     "capital_curve": [
-      {"block": 1, "event": "Lv1 자료작성권 — 존재감 0, 인사평가 B0"},
-      {"block": 3, "event": "Lv2 배석권 — 전무 주재 회의 배석 획득"},
-      {"block": 7, "event": "ARC-01 대표 스파이크 - 물류 통합안 저지, 대안 채택"},
-      {"block": 8, "event": "Lv4 상신권 — TF 발령, 실명 인정, 자리 이동, CC 변경"},
-      {"block": 20, "event": "Lv5 예산 발언권 — 분기 예산 편성 회의에서 첫 발언"},
-      {"block": 30, "event": "프로젝트 오너십 첫 획득 — 감사 지원 TF 추가 담당"},
-      {"block": 40, "event": "팀 실질 리더 — 오세진 자멸 후 경영기획팀 주도, 인사평가 S"},
-      {"block": 50, "event": "Lv6 TF 실권 — 본사 본부 간 공동 프로젝트 TF 실질 리딩"},
-      {"block": 60, "event": "장현태 퇴진 — MD사업부 재편 과정의 핵심 인물"},
-      {"block": 70, "event": "Lv7 라인 선택권 — 누구 밑에서 일할지를 본인이 고르는 위치"}
+      {
+        "block": 1,
+        "event": "Lv1 자료작성권 — 존재감 0, 인사평가 B0"
+      },
+      {
+        "block": 3,
+        "event": "Lv2 배석권 — 전무 주재 회의 배석 획득"
+      },
+      {
+        "block": 7,
+        "event": "ARC-01 대표 스파이크 - 물류 통합안 저지, 대안 채택"
+      },
+      {
+        "block": 8,
+        "event": "Lv4 상신권 — TF 발령, 실명 인정, 자리 이동, CC 변경"
+      },
+      {
+        "block": 20,
+        "event": "Lv5 예산 발언권 — 분기 예산 편성 회의에서 첫 발언"
+      },
+      {
+        "block": 30,
+        "event": "프로젝트 오너십 첫 획득 — 감사 지원 TF 추가 담당"
+      },
+      {
+        "block": 40,
+        "event": "팀 실질 리더 — 오세진 자멸 후 경영기획팀 주도, 인사평가 S"
+      },
+      {
+        "block": 50,
+        "event": "Lv6 TF 실권 — 본사 본부 간 공동 프로젝트 TF 실질 리딩"
+      },
+      {
+        "block": 60,
+        "event": "장현태 퇴진 — MD사업부 재편 과정의 핵심 인물"
+      },
+      {
+        "block": 70,
+        "event": "Lv7 라인 선택권 — 누구 밑에서 일할지를 본인이 고르는 위치"
+      }
     ],
     "do_not_fake": [
       "유통사 결재선과 예산 편성을 추상 권력전으로만 쓰지 말 것",
       "물류센터 통합/재고 관리를 단순 숫자놀음으로 때우지 말 것",
       "인사평가와 프로젝트 배정을 막연한 정치로 쓰지 말 것",
       "MD사업부의 적자 은폐를 뭉뚱그리지 말 것"
-    ]
+    ],
+    "opening_bundle_contract": {
+      "bundle_window": "TR 2~6",
+      "macro_battlefield": "검진 다음 날",
+      "macro_battlefield_map": [
+        "검진 결과지",
+        "전무실 배석",
+        "팀장의 견제",
+        "물류센터 통합안",
+        "데이터 추적"
+      ],
+      "bundle_goal": "투명인간에서 벗어나 이름이 불리는 사람이 된다.",
+      "first_signboard_block": 3,
+      "representative_reevaluation_block": 5,
+      "next_battlefield_ticket_block": 3,
+      "timing_reconciliation_note": "검진 다음 날 arc outline가 B1-10까지 이어져도 reader-earning signboard/reevaluation/ticket은 TR 2~6 안에서 먼저 끝낸다."
+    }
   }
 }

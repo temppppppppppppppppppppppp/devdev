@@ -3,6 +3,7 @@
   "profile_locked": false,
   "material_sufficient": false,
   "manual_audit_pass": false,
-  "remaining_risks": []
+  "remaining_risks": [
+    "Scaffold placeholders must be replaced before planning handoff."
+  ]
 }
-

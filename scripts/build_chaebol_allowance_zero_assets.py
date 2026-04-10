@@ -18,6 +18,7 @@ from modules.core.response_schemas import (  # noqa: E402 - entrypoint path boot
     validate_bible_structure,
     validate_treatment_structure,
 )
+from modules.core.stage0_opening_contract import ensure_opening_bundle_contract  # noqa: E402
 from modules.narrative_router.artifact_paths import (  # noqa: E402
     canonical_bi_path,
     canonical_phase0_path,
@@ -719,7 +720,7 @@ def build_phase0(treatment: list[dict[str, Any]]) -> dict[str, Any]:
                 "exit_function": arc["blocks"][-1]["function"],
             }
         )
-    return {
+    phase0 = {
         "project": deepcopy(PROJECT),
         "setting": deepcopy(SETTING),
         "protagonist": deepcopy(PROTAGONIST),
@@ -730,6 +731,8 @@ def build_phase0(treatment: list[dict[str, Any]]) -> dict[str, Any]:
             "opponent_transition_plan": deepcopy(OPPONENT_TRANSITION_PLAN),
         },
     }
+    phase0, _bundle, _contract = ensure_opening_bundle_contract(phase0)
+    return phase0
 
 
 def build_portfolio_history(treatment: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -942,6 +945,8 @@ def verify(phase0: dict[str, Any], treatment: list[dict[str, Any]], bible: dict[
         raise ValueError(f"expected 70 treatment blocks, got {len(treatment)}")
     if len(phase0["phase0_design"]["arcs"]) != 7:
         raise ValueError("phase0 arc count mismatch")
+    if not isinstance(phase0["phase0_design"].get("opening_bundle_contract"), dict):
+        raise ValueError("phase0 opening_bundle_contract missing")
     serialized = json.dumps({"phase0": phase0, "treatment": treatment, "bible": bible}, ensure_ascii=False)
     if "???" in serialized or "�" in serialized:
         raise ValueError("garbled UTF-8 token detected")

@@ -26,4 +26,5 @@ Date: 2026-03-31
 - `selection_reason` 필수
 - `must_not_copy_applied = true` 확인
 - `contamination_risk_reviewed = true` 확인
-
+- selected card 조합이 lane을 흔들 수 있으면 `profile_override.primary_profile`로 명시 lock 허용
+- `profile_override.reason`에는 왜 heuristic inference를 덮는지 한 줄로 남긴다

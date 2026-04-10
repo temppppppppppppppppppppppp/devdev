@@ -61,7 +61,7 @@ PLUGIN = NarrativeFamilyPlugin(
             builder_script="scripts/build_bi_from_phase0_and_tr.py",
             audit_script="scripts/audit_bi_5pass.py",
             required_phase0_sections=("project", "setting", "protagonist", "phase0_design"),
-            required_phase0_design_fields=("arcs", "npc_timeline", "foreshadow_map", "opponent_transition_plan"),
+            required_phase0_design_fields=("arcs", "npc_timeline", "foreshadow_map", "opponent_transition_plan", "opening_bundle_contract"),
             required_master_sections=("ProjectData", "FinanceHUD", "WorldState", "AssetLibrary", "Seeds", "plot_roadmap"),
         ),
     ),

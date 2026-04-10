@@ -1,19 +1,19 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-01
-Status: active (3-pass re-audited 2026-04-10; the fresh `000_260408_仄` Stage2 rerun still closes the earlier warn-first residual pair, the same-day adversarial Stage2 re-audit plus static parallel audit still reopen no live Stage2 `P0-P2`, the 2026-04-09 Stage4 static validity recheck still marks the older direct consumer/repair P1 wording stale-likely under current code/test evidence, and the 2026-04-10 scene-flex refresh now records tranche-3 Wave A/B as landed and bounded-canary clean without reordering the front proof-wave stack)
+Status: active (3-pass re-audited 2026-04-10; the fresh `000_260408_仄` Stage2 rerun still closes the earlier warn-first residual pair, the same-day adversarial Stage2 re-audit plus static parallel audit still reopen no live Stage2 `P0-P2`, the 2026-04-09 Stage4 static validity recheck still marks the older direct consumer/repair P1 wording stale-likely under current code/test evidence, and the same-day scene-flex closure refresh now marks that lane fully closed on the current workspace state and removes its temp mirror without reordering the front proof-wave stack)
 Canonical Path: `docs/2026-04-01/active-temp-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
-Baseline Commit: `fd1707372bd7eb8ad23a5d4506ef556e3f72cc51`
-Baseline Dirty Summary: `dirty: 0_0 runtime logs/db/artifacts active; legacy temp queue mirrors present; 2026-03-31 0_0 survey docs untracked`
-Resume Commit: `b5e306de52d2e3642b5af0eed8cd6b60fbf13ed1`
-Resume Drift Summary: `workspace is now on the 2026-04-10 scene-flex tranche-3 checkpoint commit, the fresh `000_260408_仄` Stage2 rerun still retires the older warn-first cleanup target, the direct Stage4 consumer/repair P1 wording remains stale-likely under current code/test evidence, and the current operator-directed continuation keeps the front queue on one minimal merged proof wave while recording scene-flex tranche-3 Wave A/B as landed and bounded-canary clean`
+Baseline Commit: `dfb44351bc41de1243e0def0bfbcb7336bc93388`
+Baseline Dirty Summary: `dirty: scene-flex closure edits plus unrelated stage0/material work already present in worktree`
+Resume Commit: `same-as-baseline`
+Resume Drift Summary: `same-turn roadmap refresh records scene-flex secondary-surface closure, removes that lane's temp mirror, and keeps the broader front queue ordering unchanged`
 2026-04-10 refresh override:
 
 - the older direct Stage4 consumer/repair P1 wording is now `stale-likely` under current code/test evidence
 - roadmap reading should prefer the stale-likely notes plus the current queue text below over any older direct-P1 phrasing that remains in historical summary lines
 - the next operator-directed action is one minimal merged proof wave, not more broad Stage4 patching or repeated canaries
-- the scene-flex lane now records tranche-3 Wave A/B as landed and bounded-canary clean on current HEAD; only parked secondary surfaces remain deferred there
+- the scene-flex lane is now fully closure-clean on the current workspace state, so its temp mirror is removed and the lane remains only as completed historical backing in this roadmap
 
 Supersedes:
 - `docs/2026-03-31/active-temp-execution-roadmap.md`
@@ -40,7 +40,6 @@ Queue Snapshot:
 - `docs/temp/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md`
 - `docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md`
 - `docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md`
-- `docs/temp/0_0-stage34-scene-flex-contract-normalization-remediation-execution-ssot.md`
 
 ## 1. Purpose
 
@@ -76,7 +75,6 @@ Working order:
 19. `0_0-stage4-canonical-entity-postselect-remediation` (runtime-positive substrate; no longer active queue work)
 20. `0_0-stage4-flashback-continuity-localfix-remediation` (completed runtime-positive substrate; historical backing only)
 21. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` (runtime-positive substrate lane; historical backing only)
-22. `0_0-stage34-scene-flex-contract-normalization-remediation` (explicit operator-override lane; the 2026-04-09 survey says the pressure source is `Stage3 hard floor + Stage4 amplification`, current HEAD now lands tranche-1 residual closure plus tranche-2 anti-compression contract promotion plus tranche-3 Wave A/B runtime normalization, the later post-implementation audit clears the active runtime owner set, and only parked secondary surfaces remain below the broader proof-wave/front closure stack)
 
 This order now reflects the stronger runtime picture:
 
@@ -127,7 +125,7 @@ This order now reflects the stronger runtime picture:
 | `0_0-stage4-canonical-entity-postselect-remediation` | `docs/2026-04-01/0_0-stage4-canonical-entity-postselect-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-canonical-entity-postselect-remediation-execution-ssot.md` | partial | runtime-positive substrate; moved the blocker forward but is no longer current queue work |
 | `0_0-stage4-flashback-continuity-localfix-remediation` | `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md` | completed | code landed; static validation closed; completed runtime-positive historical substrate |
 | `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` | `docs/2026-04-02/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md` | `docs/temp/0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation-execution-ssot.md` | partial | code landed; static validation closed; runtime-positive historical substrate |
-| `0_0-stage34-scene-flex-contract-normalization-remediation` | `docs/2026-04-09/0_0-stage34-scene-flex-contract-normalization-remediation-execution-ssot.md` | `docs/temp/0_0-stage34-scene-flex-contract-normalization-remediation-execution-ssot.md` | in_progress | explicit operator override opened this lane, and current HEAD now lands tranche-1 residual closure, tranche-2 anti-compression promotion, and tranche-3 Wave A/B runtime normalization: the active validator/precheck/confidence/continuity owners no longer impose low-scene false pressure on the bounded runtime seam; later post-implementation audit plus canary clear the active owner set; only parked secondary surfaces remain deferred below the broader proof-wave/front closure stack |
+| `0_0-stage34-scene-flex-contract-normalization-remediation` | `docs/2026-04-09/0_0-stage34-scene-flex-contract-normalization-remediation-execution-ssot.md` | `-` | completed | explicit operator override opened this lane, and the current workspace state now closes tranche-1 residual closure, tranche-2 anti-compression promotion, tranche-3 Wave A/B runtime normalization, and the former parked secondaries; the temp mirror was removed in the 2026-04-10 closure sync and the lane remains only as historical backing |
 
 ## 3. Dependency Notes
 
@@ -157,7 +155,7 @@ This order now reflects the stronger runtime picture:
 - `stage0-treatment-enrich-retirement-remediation` is now a partially realized Stage0 hygiene lane; Golden Canary pair pass still does not depend on enrich, and the first bounded tranche only demotes authority rather than expanding runtime ownership.
 - `stage0-bi-tr-production-harness-normalization-remediation` is now a partially realized long-horizon Stage0 source-of-truth refactor, not an active runtime blocker.
 - `0_0-stage4-interview-round-owner-surface-reduction-remediation` is now a partially realized structure-first Stage4 owner-pressure lane; the first post-select extraction is landed, and later gate/attempt families still keep it below the proof-deferred functional stack.
-- `0_0-stage34-scene-flex-contract-normalization-remediation` is now an explicit operator-override implementation lane for `scene-flex / anti-compression` work; the 2026-04-09 survey still says the true owners are `Stage3 hard floor + Stage4 amplification`, current HEAD now lands tranche-1 residual closure, tranche-2 anti-compression promotion, and tranche-3 Wave A/B runtime normalization, and the later post-implementation audit clears the active owner set without closing or reordering the broader proof-wave/front closure stack.
+- `0_0-stage34-scene-flex-contract-normalization-remediation` is now a completed operator-override lane for `scene-flex / anti-compression` work; the 2026-04-09 survey still says the true owners were `Stage3 hard floor + Stage4 amplification`, and the current workspace state now closes tranche-1 residual closure, tranche-2 anti-compression promotion, tranche-3 Wave A/B runtime normalization, and the former parked secondaries without closing or reordering the broader proof-wave/front closure stack.
 - `0_0-stage3-semantic-fidelity-remediation` is closed via `docs/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-audit.md`.
 - `frontier-lag-soak-canary-wave1` remains a low-priority in-progress reference-validation lane; it is not a prerequisite for the active 0_0 lanes.
 - `npc-martial-state-substrate-wave1` stays blocked and does not constrain any active lane.
@@ -185,7 +183,6 @@ This order now reflects the stronger runtime picture:
 19. `0_0-stage4-canonical-entity-postselect-remediation`
 20. `0_0-stage4-flashback-continuity-localfix-remediation`
 21. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation`
-22. `0_0-stage34-scene-flex-contract-normalization-remediation`
 
 Order rationale:
 
@@ -206,7 +203,7 @@ Order rationale:
 - priority 15 remains a low-priority promoted reference-validation lane
 - priority 16 remains blocked and cannot outrank an executable lane
 - priorities 17-21 are completed or runtime-positive historical backing lanes; retain them for evidence, but do not treat them as active work ahead of the pending implementation stack
-- priority 22 is now an explicit operator-override lane with bounded tranche 1, tranche 2, and tranche-3 Wave A/B already landed; the survey still says it is a real pressure family rather than a live proof-wave/closure blocker, so only the secondary deferred surfaces remain parked unless explicitly re-ranked again
+- completed scene-flex lane is now historical backing only and is intentionally omitted from the active execution-order set unless regression evidence reopens it
 
 ## 5. Per-Item Status Ledger
 
@@ -582,7 +579,7 @@ Order rationale:
 ### 0_0-stage34-scene-flex-contract-normalization-remediation
 
 - bounded survey and execution SSOT completed (2026-04-09)
-- execution SSOT: `in_progress (tranche-1/2 closure-clean; tranche-3 Wave A/B landed on current HEAD; only parked secondary surfaces remain deferred)`
+- execution SSOT: `completed (tranche-1/2/3 plus former secondary surfaces closure-clean on the current workspace state)`
 - primary seams:
   - Stage3 historically hard-failed `<4` scenes in the earliest qualification/judgment path, and the current tranche has now demoted that floor to `<=1` across the direct residual blockers
   - Stage4 now also lands the bounded anti-compression retune across the remaining active writer/director/template/feedback surfaces, while preserving header/template compatibility
@@ -590,10 +587,10 @@ Order rationale:
 - next action:
   - keep tranche 1 closed unless regression evidence reopens it
   - keep tranche 2 closed unless regression evidence reopens it
-  - keep the active tranche-3 runtime owner set closed unless regression evidence reopens it
-  - keep only the parked secondary tranche-3 surfaces below the current proof-wave/front closure stack unless explicitly re-ranked again
+  - keep tranche 3 and the former secondary surfaces closed unless regression evidence reopens them
+  - return to the broader proof-wave/front queue instead of reopening this closed lane by default
 - temp cleanup action:
-  - keep the mirror while this remains a recognized future wave; remove only on explicit closure, deactivation, or replacement
+  - temp mirror removed in the 2026-04-10 closure sync
 
 ## 6. Cleanup Rule
 
@@ -614,7 +611,7 @@ Order rationale:
 - queue inventory updated again to include the newly promoted Stage4InterviewRound owner-surface reduction lane
 - queue inventory updated again to include the newly promoted Stage4/3/2 partial-fix hardening stack
 - queue inventory updated again to record the Stage3 opening-transition lane as partially realized after its first bounded contract/intake tranche landed
-- queue inventory updated again to include the new scene-flex execution lane and later refreshed to record explicit tranche-1 activation by operator override
+- queue inventory updated again to include the new scene-flex execution lane, later refreshed to record explicit tranche-1 activation by operator override, and now refreshed again to mark the lane closed with temp-mirror cleanup
 - the later partial-fix merge survey clarified that the stack expands existing lanes instead of adding a new queue topic
 - new Flashback continuity child lane added directly under the aggregate Stage4 lane
 - NpcDrift child lane kept directly below it as the next bounded seam
@@ -628,7 +625,7 @@ Order rationale:
 - canonical and temp paths for the new non-wuxia execution lane verified against filesystem
 - canonical and temp paths for the newly promoted owner-surface lane verified against filesystem
 - canonical and temp paths for the newly promoted partial-fix hardening stack verified against filesystem
-- canonical and temp paths for the new scene-flex execution lane verified against filesystem
+- canonical scene-flex path and temp-mirror cleanup state verified against filesystem
 - ordering is consistent with the latest Stage4 consumer-finalization survey, the latest ep2 bounded canary failure, and the new 2026-04-06 bounded survey plus execution SSOT for non-wuxia state-lock overreach
 - the 2026-04-07 workspace reinspection was later consumed by a same-day bounded Stage4 tranche landing for the non-wuxia lane, so the item remains partial because runtime proof is still deferred rather than because the Stage4 code is unopened
 - the 2026-04-07 partial-fix survey stack is real and precision-first, but the later merge survey makes Stage4 the anchor owner, Stage3 the next consumer, and Stage2 the last consumer without opening a new queue topic
@@ -647,7 +644,7 @@ Order rationale:
 - the partial-fix hardening stack now stays explicit as Stage4 anchor -> Stage3 consumer -> Stage2 consumer without claiming closure over the proof-deferred front stack
 - the Stage0 enrich lane now sits as a landed bounded authority-demotion slice, and the later Stage0 BI/TR tranche means no unopened code realization remains in the current queue snapshot
 - the promoted Stage4 owner-surface reduction lane remains below the functional pending stack and above Stage0/reference-only work even after its first tranche lands
-- the scene-flex lane remains explicit in the queue without falsely presenting it as a live blocker; current operator override has now landed bounded tranche 1, tranche 2, and tranche-3 Wave A/B while closure/proof work stays pending, and the later post-implementation audit clears the active owner set without escalating the lane above proof/front work
+- the scene-flex lane now remains only as completed historical backing rather than live queue work; the closure refresh clears tranche 1, tranche 2, tranche-3 Wave A/B, and the former secondaries on the current workspace state without escalating the lane above proof/front work
 - no overreach: demo utility not promoted to closure proof, Stage4 resume not declared
 
 Confidence: `97%`

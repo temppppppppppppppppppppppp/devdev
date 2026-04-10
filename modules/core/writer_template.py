@@ -25,6 +25,7 @@ from enum import Enum
 from typing import Any
 
 from modules.core.constants import ManuscriptLimits
+from modules.core.scene_obligation_heuristics import measure_manuscript_scene_materialization
 
 
 class SceneType(Enum):
@@ -64,6 +65,31 @@ class ManuscriptTemplate:
     opening_anchor: str  # 직전 화 연결 앵커
     closing_hook: str  # 클리프행어 목표
     inventory_reminder: list[str]  # 소지품 리마인더
+
+
+def _template_to_blueprint(template: ManuscriptTemplate) -> dict[str, Any]:
+    scene_breakdown: dict[str, dict[str, Any]] = {}
+    total_slots = len(template.slots)
+    for slot in template.slots:
+        scene_data: dict[str, Any] = {
+            "description": slot.description,
+            "required_beats": slot.required_elements,
+            "characters": slot.characters,
+        }
+        if slot.index == 1 and template.opening_anchor:
+            scene_data["opening_anchor"] = template.opening_anchor
+        if slot.index == total_slots and template.closing_hook:
+            scene_data["closing_hook"] = template.closing_hook
+        scene_breakdown[slot.scene_id] = scene_data
+    return {"scene_breakdown": scene_breakdown, "ending_hook": template.closing_hook}
+
+
+def _template_scene_issue_required(total_scenes: int, reflected_scenes: int) -> bool:
+    if total_scenes <= 0:
+        return False
+    if total_scenes <= 3:
+        return reflected_scenes < max(1, total_scenes - 1)
+    return reflected_scenes < total_scenes
 
 
 class WriterTemplate:
@@ -348,17 +374,10 @@ class WriterTemplate:
         elif length > template.total_max_chars * 1.2:
             warnings.append(f"분량 초과: {length}자 (권장 최대 {template.total_max_chars}자)")
 
-        # 2. 씬 키워드 반영 체크
-        missing_scenes = []
-        for slot in template.slots:
-            # 씬 설명에서 핵심 키워드 추출
-            keywords = re.findall(r"[\w가-힣]{2,}", slot.description)[:3]
-            if keywords:
-                matched = sum(1 for kw in keywords if kw in manuscript)
-                if matched == 0:
-                    missing_scenes.append(slot.scene_id)
-
-        if missing_scenes:
+        # 2. 씬 의무 반영 체크
+        materialization = measure_manuscript_scene_materialization(manuscript, _template_to_blueprint(template))
+        missing_scenes = list(materialization.weak_scenes)
+        if _template_scene_issue_required(template.total_scenes, materialization.reflected_scenes):
             issues.append(f"씬 누락 의심: {', '.join(missing_scenes[:3])}")
 
         # 3. 클리프행어 체크
@@ -383,7 +402,7 @@ class WriterTemplate:
             "warnings": warnings,
             "length": length,
             "expected_range": f"{template.total_min_chars}~{template.total_max_chars}",
-            "scene_coverage": f"{template.total_scenes - len(missing_scenes)}/{template.total_scenes}",
+            "scene_coverage": f"{materialization.reflected_scenes}/{template.total_scenes}",
         }
 
     def get_feedback_for_retry(self, validation_result: dict[str, Any], template: ManuscriptTemplate) -> str:

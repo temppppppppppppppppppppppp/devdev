@@ -1,5 +1,6 @@
 """
 [V51.2] Quality Amplifier (품질 증폭기)
+utf8-hygiene: allow-file -- legacy regex patterns intentionally use optional quantifiers and grouped alternations.
 검증 실패 패턴 학습 → 생성 전 제약 주입 → 성공률 향상
 
 핵심: LLM 비용 0원으로 성공률 10-20% 향상
@@ -91,7 +92,7 @@ class QualityAmplifier:
         ],
         3: [  # Stage 3 (Blueprint)
             Constraint(
-                rule="씬 개수는 4-6개로 제한 (범위 초과 방지)",
+                rule="씬 수보다 planning anchor 밀도와 장면 체류 시간을 우선 설계",
                 check_pattern=r"scene_\d+",
                 priority=10,
                 failure_type=FailureType.SCOPE_OVERFLOW,
@@ -289,10 +290,10 @@ class QualityAmplifier:
         for i, c in enumerate(constraints[:4], 1):
             lines.append(f"{i}. {c.rule}")
 
-        # 2. 씬 개수 제한
+        # 2. 씬 구성 가이드
         lines.append("\n[씬 구성 규칙]")
-        lines.append("- 씬 개수: 4-6개 (초과 시 REJECT)")
-        lines.append("- 각 씬 예상 분량: 800-1500자")
+        lines.append("- planning anchor 수는 고정 개수보다 장면 밀도와 체류 시간 기준으로 설계")
+        lines.append("- 각 anchor는 핵심 의무/전환을 실제 장면화할 만큼 충분히 체류")
         lines.append("- 총 분량 목표: 4000-6000자")
 
         # 3. 연속성 체크
@@ -307,7 +308,7 @@ class QualityAmplifier:
         lines.append("\n[설계 전 체크]")
         lines.append("□ 직전 화 클리프행어 해소 장면 포함?")
         lines.append("□ 이번 화만의 클리프행어 존재?")
-        lines.append("□ 씬 개수 4-6개 이내?")
+        lines.append("□ planning anchor가 과잉 분절 없이 충분한 장면 체류 시간을 가지는가?")
 
         return "\n".join(lines)
 
@@ -387,7 +388,7 @@ class QualityAmplifier:
             return """
 [Blueprint 자가 검증]
 생성한 Blueprint를 제출하기 전에 다음을 확인하세요:
-1. 씬 개수가 4-6개 이내인가?
+1. planning anchor가 과잉 분절 없이 충분한 장면 체류 시간을 가지는가?
 2. 직전 화 엔딩과 자연스럽게 연결되는가?
 3. 클리프행어로 종료되는가?
 4. 총 예상 분량이 4000-6000자인가?
