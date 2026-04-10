@@ -23,6 +23,45 @@
     "title": {
       "type": "string"
     },
+    "work_identity_surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "work_id",
+        "title",
+        "subtitle",
+        "commercial_label",
+        "slug_aliases",
+        "primary_profile",
+        "secondary_profile"
+      ],
+      "properties": {
+        "work_id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "commercial_label": {
+          "type": "string"
+        },
+        "slug_aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "primary_profile": {
+          "type": "string"
+        },
+        "secondary_profile": {
+          "type": "string"
+        }
+      }
+    },
     "protagonist": {
       "type": "string"
     },

@@ -1,14 +1,14 @@
 # 0_0 Stage3 Contract Tightening Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (promoted from parked on 2026-04-07 roadmap reorder; re-audited again against the current workspace before implementation start; the first bounded tranche then landed by widening binding enforcement for `dead_npc`, stop-line/`arc_compliance`, and `fact_lock_*` seams, persisting binding metadata through Stage3 success handoff, and teaching Stage4 to consume that metadata as real Director/retry pressure; a later 2026-04-08 bounded observability follow-up then surfaced actual Stage3 source-anchor summaries for flashback/opening/inherited inventory planning through runtime, DB, and operator-visible sinks; the newest same-day follow-up landed a Stage3 proof-digest / `PassRateMonitor` durability slice, but the later `projects/000_260408` proof-wave merge audit did not exercise Stage3 at all, and the newer `projects/000_260408_B` proof-wave merge audit again shows Stage3 absent by operator choice while the upstream Stage2 handoff packet is structurally ready, so the new Stage3 proof surfaces remain verification-pending until a fresh run actually reaches Stage3; explicit tier-2.5 canary proof still remains required before closure)
+Status: partially_realized (promoted from parked on 2026-04-07 roadmap reorder; re-audited again against the current workspace before implementation start; the first bounded tranche then landed by widening binding enforcement for `dead_npc`, stop-line/`arc_compliance`, and `fact_lock_*` seams, persisting binding metadata through Stage3 success handoff, and teaching Stage4 to consume that metadata as real Director/retry pressure; a later 2026-04-08 bounded observability follow-up then surfaced actual Stage3 source-anchor summaries for flashback/opening/inherited inventory planning through runtime, DB, and operator-visible sinks; the newest same-day follow-up landed a Stage3 proof-digest / `PassRateMonitor` durability slice, the later `projects/000_260408` proof-wave merge audit did not exercise Stage3, and `projects/000_260408_B` again showed Stage3 absent by operator choice while the upstream Stage2 handoff packet was structurally ready, but the newer 2026-04-10 `00_000` aborted fresh run now does reach Stage3 ep1 and shows the remaining proof blocker is no longer absence-only; the immediate owner was the narrower Stage3 partial-fix/runtime loop that churned on `PASS_WITH_FIX` -> `TF-35` repair outcomes while committed Stage3 sinks remained absent because the run was operator-aborted before finalization, the same-day child-lane runtime hardening follow-up has now landed, and the later same-day current-HEAD rerun plus final layering-first adversarial audit now promote one bounded parent-lane structural tranche before the next rerun: `ep-local packet layering / gating -> threshold alignment -> canonical patch anchors`, with broad prompt slimming still deferred)
 Canonical Path: `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2/Stage3 survey docs and lane drafts untracked`
-- Resume Commit: `6dd7712ea9a58802221634081ba199bc872d2349`
-- Resume Drift Summary: `the queue was later re-ranked to make this the next unopened implementation lane, the 2026-04-07 Stage234 terminal survey confirmed the still-live Stage3 seams as binding-scope gaps plus advisory-only `_stage3_meta` handoff, the originally listed static survey and runtime closure audit now live under archived `docs/이전/` paths, the previously referenced Stage3 artifact JSON paths are no longer present in the active workspace so this SSOT now relies on the archived survey/evidence set plus the 2026-04-07 handoff survey rather than stale artifact-local pointers, the current workspace first landed a bounded tranche across `unified_blueprint_validator.py`, `three_phase_blueprint_runtime.py`, `stage3_orchestrator.py`, `stage4_director_runtime.py`, and `stage4_outcome_runtime.py` with focused regression/static validation, a later same-day follow-up in `stage3_orchestrator.py` then persisted source-anchor summaries for previous-blueprint end state plus current Stage2 carryover start state so flashback/opening/inherited-inventory proof waves have cleaner operator-visible evidence while fresh tier-2.5 canary proof stays deferred, the newest same-day follow-up across `stage3_orchestrator.py` plus `audit_service.py` then landed a Stage3 proof-digest / `PassRateMonitor` durability slice, the later `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md` confirmed that the first fresh run never reached Stage3, and the newer `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md` confirms the absence again while also upgrading the upstream Stage2 handoff from sink-drift-risk to structurally ready proof input`
+- Resume Commit: `e597a7bf4836dab71547e350b015f6658a1cfb03`
+- Resume Drift Summary: `the queue was later re-ranked to make this the next unopened implementation lane, the 2026-04-07 Stage234 terminal survey confirmed the still-live Stage3 seams as binding-scope gaps plus advisory-only `_stage3_meta` handoff, the originally listed static survey and runtime closure audit now live under archived `docs/이전/` paths, the previously referenced Stage3 artifact JSON paths are no longer present in the active workspace so this SSOT now relies on the archived survey/evidence set plus the 2026-04-07 handoff survey rather than stale artifact-local pointers, the current workspace first landed a bounded tranche across `unified_blueprint_validator.py`, `three_phase_blueprint_runtime.py`, `stage3_orchestrator.py`, `stage4_director_runtime.py`, and `stage4_outcome_runtime.py` with focused regression/static validation, a later same-day follow-up in `stage3_orchestrator.py` then persisted source-anchor summaries for previous-blueprint end state plus current Stage2 carryover start state so flashback/opening/inherited-inventory proof waves have cleaner operator-visible evidence while fresh tier-2.5 canary proof stays deferred, the newest same-day follow-up across `stage3_orchestrator.py` plus `audit_service.py` then landed a Stage3 proof-digest / `PassRateMonitor` durability slice, the later `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md` confirmed that the first fresh run never reached Stage3, the newer `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md` confirmed the absence again while also upgrading the upstream Stage2 handoff from sink-drift-risk to structurally ready proof input, the later `docs/2026-04-10/00_000-stage3-fresh-run-abort-post-run-merge-audit.md` then recorded that a fresh current-HEAD run finally reached Stage3 ep1 but surfaced a live child-lane `PASS_WITH_FIX` repair-loop bug before committed Stage3 sinks could finalize, the same-day bounded child-lane runtime follow-up then landed to preserve low-score `PASS` patch state for the next retry path, and the later same-day current-HEAD rerun plus `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md` / `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md` now upgrade this lane's next bounded code action to parent-owned packet layering / threshold alignment / canonical anchor transport before the next rerun`
 Source Survey Docs:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
@@ -16,6 +16,9 @@ Source Survey Docs:
 - `docs/2026-04-07/stage234-terminal2-stage3-binding-handoff-survey.md`
 - `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md`
 - `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md`
+- `docs/2026-04-10/00_000-stage3-fresh-run-abort-post-run-merge-audit.md`
+- `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md`
+- `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md`
 Evidence Artifacts:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-evidence.json`
 - `docs/이전/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-evidence.json`
@@ -24,6 +27,10 @@ Evidence Artifacts:
 - `projects/000_260408/logs/pass_rate_monitor.json`
 - `projects/000_260408/logs/session/decisions.jsonl`
 - `projects/000_260408/logs/session/ui_events.jsonl`
+- `0_temp.txt`
+- `projects/00_000/logs/session_20260410_143423.log`
+- `projects/00_000/logs/session_20260410_160214.log`
+- `projects/00_000/logs/runtime_audit_summary.json`
 Side-Effect Coverage: covered
 
 ## 1. Intent
@@ -53,6 +60,9 @@ Included:
 - bounded Stage3 binding-scope and escalation hardening surfaces
 - bounded Stage3 -> Stage4 semantic handoff preservation where Stage3 owns the machine-readable contract
 - targeted Stage3-owned contract metadata emission required to preserve downstream subtype fidelity
+- ep-local packet layering / gating for Stage3 blueprint generation input
+- threshold alignment across validator, Director compare, and runtime quality-gate seams
+- canonical patch-anchor transport for Stage3-local repair feedback
 
 Excluded:
 
@@ -214,17 +224,71 @@ Realization direction:
 - watch item only:
   - the current proof wave does not justify a new upstream owner change, but the eventual Stage3-exercising rerun should still confirm whether Stage2-origin anchor inputs are sufficient for `source_anchor_summary`
 
+## 8E. Aborted Fresh-Run Revalidation (2026-04-10)
+
+- `docs/2026-04-10/00_000-stage3-fresh-run-abort-post-run-merge-audit.md` is now the newest runtime anchor for this lane
+- the fresh `00_000` run finally reached Stage3 episode 1:
+  - live logs show multiple Stage3 `PASS_WITH_FIX` entries and entry into the local repair loop
+  - this replaces the older absence-only proof posture as the current runtime fact
+- the run still does not close this parent lane:
+  - the operator aborted the run before Stage3 committed sinks finalized
+  - `runtime_audit_summary.json` still reports `stage3_live_session.status = "absent"` for the aborted session
+  - `stage_attempts`, `director_selections`, and `blueprints` still contain `0` committed Stage3 rows for this run
+- execution consequence:
+  - do not treat the remaining blocker as "Stage3 still unexercised"
+  - do not open another broad Stage3 redesign from this evidence
+  - the immediate owner is now the narrower `0_0-stage3-partial-fix-hardening-remediation` child lane because the live run surfaced a concrete `PASS_WITH_FIX` repair-loop / `TF-35` churn bug inside that ownership surface
+  - after the child repair lands, take the next rerun as the useful proof path for this parent lane
+
+## 8F. Same-Day Child-Lane Repair Follow-Up (2026-04-10)
+
+- the bounded Stage3 partial-fix/runtime follow-up is now landed in `three_phase_blueprint_runtime.py`
+- that follow-up does not widen this parent lane's scope:
+  - it preserves low-score `PASS` patch state for retry carry-forward
+  - it aligns reject bookkeeping to the re-audit score
+  - it does not retune broad Stage3 generation or reopen Stage2/Stage4 ownership
+- execution consequence:
+  - the next useful artifact for this parent lane returns to a fresh rerun that reaches Stage3
+  - closure still requires a completed rerun, not this bounded local repair alone
+
+## 8G. Layering-First Design Promotion (2026-04-10 same-day)
+
+- the later current-HEAD rerun captured in `projects/00_000/logs/session_20260410_160214.log` plus the newer `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md` and `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md` now sharpen the remaining parent-lane owner
+- the new design conclusion is bounded and execution-bearing:
+  - raw arc material is not the primary blocker because ep1 still produces strong first-pass candidates
+  - the stronger remaining parent debt is Stage3 input-packet layering mismatch:
+    - ep-local hard constraints
+    - future relationship / carryover pressure
+    - threshold mismatch across validator / Director / runtime
+    - patch feedback without canonical anchors
+  - simple prompt slimming alone is not enough because the conflict is not only token count but mixed packet authority
+- execution consequence:
+  - keep this lane as the owner for one bounded structural tranche before the next rerun
+  - execute in this order:
+    1. `ep-local packet layering / gating`
+    2. `threshold alignment`
+    3. `canonical patch anchors`
+    4. optional later prompt slimming only after the first three land
+  - do not open a new queue lane for this design conclusion
+  - do not push this ownership back down into the child partial-fix lane
+  - the next rerun remains required, but now follows this bounded parent-lane tranche rather than preceding it
+
 ## 9. Acceptance Criteria
 
 - highest-risk Stage3 seams no longer remain purely advisory by default
 - Stage3 -> Stage4 handoff preserves more than prose-only semantics for key contract fields
 - timeline and institution drift have stronger structured enforcement paths where Stage3 validator/compiler owns the contract
+- ep-local packet layering no longer forces future-carryover pressure to compete with the episode-local hard packet by default
+- Stage3 thresholding no longer depends on the unresolved `800 vs 1000 vs 90` split
+- Stage3 patch feedback can carry canonical anchors instead of only freeform repair wording
 - no new `180+ LOC` function is introduced
 
 ## 10. Verification Plan
 
 - targeted Stage3 validator regressions
 - targeted Stage3 handoff contract regressions
+- targeted Stage3 ep-local packet-layering / gating regressions
+- targeted Stage3 threshold-alignment and canonical-anchor transport regressions
 - `python -m py_compile` on touched production modules
 - `ruff check` on touched files
 - targeted pytest shards only
@@ -238,6 +302,7 @@ Realization direction:
 - do not let this partial lane outrank current active Stage4 seams without deliberate reprioritization
 - do not widen this lane into broad Stage3 prompt retuning
 - do not widen this lane into Stage2 redesign or Stage4 redesign
+- do not mistake packet layering for raw arc-data slimming only; authority separation comes first
 - do not run a canary from this lane until explicit operator approval
 
 ## 12. Temp Queue Notes

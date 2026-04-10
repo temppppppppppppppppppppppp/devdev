@@ -11,6 +11,7 @@ build/
 # === 환경 ===
 .env
 .env.local
+secrets/*.env
 .venv/
 venv/
 env/

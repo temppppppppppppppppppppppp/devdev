@@ -1,6 +1,8 @@
 {
   "work_id": "template_work_id",
   "selection_date": "YYYY-MM-DD",
+  "work_identity_override": null,
   "profile_override": null,
+  "opening_bundle_contract_override": null,
   "selected_cards": []
 }

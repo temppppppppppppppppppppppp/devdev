@@ -33,7 +33,12 @@ def test_create_scaffold_seeds_stage0_and_phase0_opening_contract(monkeypatch, t
     phase0_design = _read_json(destination / "30_planning" / "phase0_design.json")
 
     assert reference_selection["profile_override"] is None
+    assert reference_selection["work_identity_override"] is None
+    assert reference_selection["opening_bundle_contract_override"] is None
     assert source_manifest["work_identity"]["work_id"] == "demo_work"
+    assert source_manifest["work_identity"]["subtitle"] == ""
+    assert source_manifest["work_identity"]["commercial_label"] == ""
+    assert source_manifest["work_identity"]["slug_aliases"] == []
     assert source_manifest["canonical_sources"] == ["material_ssot/20_pitch/canon/demo_work.md"]
     assert profile_lock["primary_profile"] == "business_growth_profile"
     assert profile_lock["resource_axis"] == []
@@ -43,6 +48,7 @@ def test_create_scaffold_seeds_stage0_and_phase0_opening_contract(monkeypatch, t
     assert phase0_ready_snapshot["manual_audit_pass"] is False
     assert phase0_ready_snapshot["remaining_risks"]
     assert phase0_design["work_id"] == "demo_work"
+    assert phase0_design["work_identity_surface"]["slug_aliases"] == []
     assert phase0_design["opening_bundle_contract"]["first_signboard_block"] == 3
     assert (destination / "50_bi" / "0_bi_demo_work.json").is_file()
     assert not (destination / "50_bi" / "0_bi_template.json").exists()

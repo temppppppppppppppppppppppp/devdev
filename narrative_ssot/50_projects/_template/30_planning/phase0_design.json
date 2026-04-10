@@ -1,6 +1,15 @@
 {
   "work_id": "template_work_id",
   "title": "TODO: replace title",
+  "work_identity_surface": {
+    "work_id": "template_work_id",
+    "title": "TODO: replace title",
+    "subtitle": "",
+    "commercial_label": "",
+    "slug_aliases": [],
+    "primary_profile": "business_growth_profile",
+    "secondary_profile": ""
+  },
   "protagonist": "TODO: replace protagonist",
   "core_fantasy": "TODO: replace core fantasy",
   "opening_arc": {},

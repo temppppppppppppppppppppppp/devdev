@@ -14,6 +14,7 @@ from modules.core.constants import ContextLimits, ManuscriptLimits, smart_trunca
 from modules.core.prompt_loader import PromptLoader
 from modules.core.tactical_utils import extract_episode_tactical
 from modules.domain.agents.scene_cardinality_contract import evaluate_stage3_scene_cardinality
+from modules.domain.agents.unified_blueprint_validator import BLUEPRINT_MIN_CHARS
 from modules.validation.threshold_helper import _threshold
 
 
@@ -1906,12 +1907,12 @@ class DirectorEnsembleSelector:
                 "feedback": scene_feedback,
             }
 
-        if len(integrated) < 800:
+        if len(integrated) < BLUEPRINT_MIN_CHARS:
             return {
                 "decision": "REJECT",
                 "score": 40,
                 "reason": f"분량 부족: {len(integrated)}자",
-                "feedback": "시나리오가 800자 이상이어야 합니다.",
+                "feedback": f"시나리오가 {BLUEPRINT_MIN_CHARS}자 이상이어야 합니다.",
             }
 
         # [TF-36] Director 주권: 단일 후보라도 LLM 검토 없이 자동 PASS하지 않는다.
@@ -2022,7 +2023,7 @@ class DirectorEnsembleSelector:
 - 모순 체크 항목에서 **명백한 모순이 1건 이상** 발견됨
 - Arc 전술서에서 지정한 핵심 사건이 **단 하나도** 반영되지 않음
 - 이전 화 종료 위치·상황과 **공간적·시간적 모순** 발생
-- 통합 시나리오 **1000자 미만** (서사 밀도 부족)
+- 통합 시나리오 **{BLUEPRINT_MIN_CHARS}자 미만** (서사 밀도 부족)
 - 엔딩 훅 **누락** 또는 내용 없음
 
 ### 📊 점수 기준 (절대 평가 — 상대 비교 아님)

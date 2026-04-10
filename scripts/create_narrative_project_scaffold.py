@@ -108,6 +108,9 @@ def _rewrite_placeholders(dest_root: Path, work_id: str) -> None:
                 "work_identity": {
                     "work_id": work_id,
                     "title": f"TODO: replace title for {work_id}",
+                    "subtitle": "",
+                    "commercial_label": "",
+                    "slug_aliases": [],
                     "primary_profile": "business_growth_profile",
                     "secondary_profile": "",
                 },
@@ -189,6 +192,15 @@ def _rewrite_placeholders(dest_root: Path, work_id: str) -> None:
             {
                 "work_id": work_id,
                 "title": f"TODO: replace title for {work_id}",
+                "work_identity_surface": {
+                    "work_id": work_id,
+                    "title": f"TODO: replace title for {work_id}",
+                    "subtitle": "",
+                    "commercial_label": "",
+                    "slug_aliases": [],
+                    "primary_profile": "business_growth_profile",
+                    "secondary_profile": "",
+                },
                 "protagonist": "TODO: replace protagonist",
                 "core_fantasy": "TODO: replace core fantasy",
                 "opening_arc": {},

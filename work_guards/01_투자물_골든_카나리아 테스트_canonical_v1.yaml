@@ -38,6 +38,8 @@ work_identity:
     - 비굴한 해명 / 인정 구걸
     - 자기연민 소비
     - success -> pure punishment spiral
+    - opening 3화 setup-only trilogy
+    - proof only -> late conversion drift
     - 주인공 고유성 없는 대형 성과
     - 운빨 생존을 실력처럼 처리
     - 활약 후 태도 변화 없음
@@ -52,6 +54,7 @@ work_identity:
     - 가족 자산과 개인 자산 사이 방화벽 강화
     - 가문이 먼저 자료를 들고 와 막내의 규칙 안에서 도움을 청하는 역전
   mandatory_scene_engines:
+    - 회귀 직후 3화 안에 thesis를 실행 가능한 포지션과 다음 전장 입장권으로 바꾸는 장면
     - 이벤트가 가격에 반영되기 전 포지션을 선점하고 실제 뉴스 직후 proof를 회수하는 장면
     - 익절 타이밍을 먼저 잡아 PB, 리스크팀, 증권가의 태도 변화를 강제하는 장면
     - 과열장에서는 exit, 붕괴장에서는 유동성 우위를 보여주며 다음 cycle 입장권을 확보하는 장면
@@ -76,7 +79,9 @@ work_identity:
       - 한태준과 가족
       - 패밀리오피스 파트너 / 시장 플레이어
     evaluation_thresholds:
-      - Block 2~4 내 원유 proof scene과 PB tone shift 1회 이상
+      - Episode 2 또는 TR Block 2~3 내 첫 실행 / 첫 포지션 진입이 visible해야 한다
+      - Episode 3 또는 TR Block 3~4 내 원유 proof scene과 PB tone shift 1회 이상
+      - Episode 4 또는 TR Block 4 내 첫 signboard / next-cycle ticket이 visible해야 한다
       - ARC 1 종료 전 증권가 소문과 실무 재평가 가시화
       - 중반 이후 자산 증가가 반드시 딜 접근권 / 운용권 변화로 환전
       - 후반에는 가문이 먼저 실사 자료를 들고 와 규칙을 묻는 단계까지 도달
@@ -104,6 +109,9 @@ work_identity:
       exceptions:
         - 수익과 거버넌스 계산상 붙는 선택
 custom_rules:
+  - opening은 3화 기본, 4화 soft cap으로 읽는다
+  - 회귀 충격 정리 / 독립 선언 / 법인 준비만으로 3화를 전부 쓰지 않는다
+  - 첫 proof는 늦어도 Episode 3 안에, 첫 signboard 또는 next ticket은 늦어도 Episode 4 안에 붙인다
   - 가격이 아니라 이득 구조와 exit를 먼저 본다
   - 위기는 피해 연출보다 유동성 보존과 우선순위 선택권 증명으로 사용한다
   - 반격 예약 없는 손해는 금지

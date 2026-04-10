@@ -42,6 +42,7 @@ Current canon rule:
 - `material_ssot/00_governance/production-pair-operational-registry-v1.md` is the current pair-side operational registry when a pitch operator needs family exemplars or benchmark freshness reading
 - the machine gate targets candidate/canon/working-synthesis docs only; checklist audits, integration handoffs, and retire notes are not promotion targets
 - `pitch-philosophy.md` is the canonical pitch philosophy and minimum contract
+- `investment-opening-pacing-spec-v1.md` is the family-side upstream pace ruler for investment-family / business-power openings before `Phase0`
 - `protagonist-first-constitution.md` is the current house-law document for protagonist design
 - `pitch-selection-checklist.md` is the current fresh-candidate selection checklist
 - `work-guard-translation-map.md` is the canonical bridge from pitch house law into downstream `work_guard.yaml` semantics

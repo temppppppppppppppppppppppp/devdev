@@ -19,13 +19,26 @@ Operational interlock:
 - report `benchmark grade` and `schema status` separately; do not collapse them into one label
 - the current filename list is an alias snapshot, and its live freshness should still be read together with `../production-pair-operational-registry-v1.md`
 - a historical alias filename may be preserved as a withdrawn false-pass tombstone; in that case the filename is not a live positive shelf endorsement
+- `opening pacing triage` is tracked in `../production-pair-operational-registry-v1.md`; `YELLOW` pacing triage suspends opening exemplar use pending manual re-audit, but does not by itself rename alias files
 
 Legend:
-- `GREENPLUS_`: 지금 기준 상위권. protagonist-first 철학 보존도가 특히 높음.
+- `GREENPLUS_`: historical benchmark top shelf. But current live sell-in authority does **not** come from the filename alone; operational deployable `GREENPLUS` requires registry closure under the stricter quality-first law.
 - `GREEN_`: production ready 축에 들어가지만 일부 잔여 리스크가 있음.
 - `YELLOW_`: 엔진은 강하지만 현재 철학 기준 보정 포인트가 남음.
 - `RED_`: pair-level benchmark failure. promotion / alias 상향 전 대수선 필요.
 - `withdrawn historical false-pass record`: 과거 양성 alias filename을 보존하되, 현재는 반면교사로만 읽는 tombstone.
+
+Deployable `GREENPLUS` rule:
+
+- treat `GREENPLUS` as a real market-facing shelf, not an internal medal
+- a pair is operationally deployable `GREENPLUS` only if the current registry also closes:
+  - benchmark freshness = `current`
+  - opening pacing triage = `GREEN`
+  - no whole-run `YELLOW` or `UNTRIAGED` hold
+  - no repair-first / manual re-audit / hold note
+  - no legacy-heuristic-only ambiguity left unclosed
+- if those are not all true, read the filename as a historical benchmark snapshot only
+- do not use a bare `GREENPLUS_*.md` filename as proof of live sell-in readiness or ROI-positive baseline quality
 
 Current aliases:
 - `RED_chaebol_allowance_zero.md`

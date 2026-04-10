@@ -66,6 +66,7 @@ These paths remain readable but are no longer the canonical home for moved refer
 - `50_corpus_curated/curated_index.md`
 - `50_corpus_curated/`
 - `50_corpus_curated/reference_samples/medical_magical_surgeon_sample_corpus`
+- `50_corpus_curated/reference_samples/tr_block_bundle_density_benchmark_pack`
 - third bounded cutover in this lane repoints the NAS medical sample builder away from the old narrative reference-bank source-corpora NAS medical sample lane; fresh NAS rebuild validation remains cross-PC
 
 ## 6. Canonical Longtail Corpus

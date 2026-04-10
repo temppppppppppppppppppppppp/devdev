@@ -1,10 +1,33 @@
 {
   "work_id": "pilot_vertical_stack_001",
   "selection_date": "2026-03-31",
+  "work_identity_override": {
+    "title": "골든 루트",
+    "commercial_label": "골든 카나리아",
+    "slug_aliases": [
+      "카나리아 테스트",
+      "투자물_골든_카나리아 테스트_canonical_v1"
+    ],
+    "reason": "TR file slug `카나리아 테스트`와 in-story title `골든 루트`의 naming divergence를 upstream에서 잠가 planning seed와 BI title drift를 막는다."
+  },
   "profile_override": {
     "primary_profile": "business_growth_profile",
     "secondary_profile": "investment_market_profile",
     "reason": "Pilot card mix includes patent/startup signals, but the intended lane is modern business-power with institutional investment as secondary."
+  },
+  "opening_bundle_contract_override": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "기업 후계자 권위 시위와 첫 제도권 입장 전장",
+    "macro_battlefield_map": [
+      "과잉 성능 신입의 공개 증명",
+      "가문과 실무 라인 재평가",
+      "기관 전장 입장권 확보"
+    ],
+    "bundle_goal": "TR 2~6 안에 막내의 과잉 성능, 권위 시위, 다음 기관 전장 입장권을 독자에게 명확히 증명한다.",
+    "first_signboard_block": 3,
+    "representative_reevaluation_block": 4,
+    "next_battlefield_ticket_block": 6,
+    "timing_reconciliation_note": "Pilot card mix의 특허·투자 신호는 보조 레인으로 쓰고, opening macro battlefield는 기업 후계자 권위 시위 전장으로 고정한다."
   },
   "selected_cards": [
     {

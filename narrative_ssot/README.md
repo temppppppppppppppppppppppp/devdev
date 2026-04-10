@@ -34,9 +34,13 @@ Date: 2026-03-31
 ```text
 python -X utf8 scripts/create_narrative_project_scaffold.py --work-id <new_work_id>
 python -X utf8 scripts/build_stage0_from_reference_selection.py --work-id <new_work_id>
+python -X utf8 scripts/build_phase0_seed_from_stage0.py --work-id <new_work_id>
 ```
 
 이 명령은 `_template`를 복제해 `50_projects/<new_work_id>/`를 만들고,
 기본 placeholder를 해당 `work_id` 기준으로 다시 쓴다.
 두 번째 명령은 `reference_selection.json`을 읽어 `source_manifest / profile_lock / material_bundle_summary / phase0_ready_snapshot`
-초안을 실제 selected card 신호로 채운다.
+초안을 실제 selected card 신호로 채우고, 필요하면 `work_identity_override / profile_override / opening_bundle_contract_override`
+authority를 함께 잠근다.
+세 번째 명령은 Stage0 authority를 바탕으로 `30_planning/phase0_design.json`의 planning seed를 채우고,
+`work_identity_surface`까지 미러링해 naming drift를 줄인다.

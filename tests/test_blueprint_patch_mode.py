@@ -825,6 +825,8 @@ class TestBlueprintPatchIntegration:
                             "scene_id": "scene_2",
                             "field_path": "scene_breakdown.scene_2.summary",
                             "target_kind": "scene_block",
+                            "patch_target_id": "scene_2.summary",
+                            "text_anchor": {"old_text": "repaired reveal"},
                         }
                     ],
                     "must_fix": ["scene 2 summary must reflect the repaired reveal"],
@@ -847,14 +849,91 @@ class TestBlueprintPatchIntegration:
 
         assert result.fix_ok is True
         patch_feedback = blueprint_generator._inplace_patch_blueprint.call_args.kwargs["director_feedback"]
-        assert "[Stage3 partial-fix contract]" in patch_feedback
+        assert patch_feedback.startswith("[Stage3 partial-fix contract]")
         assert "scene_2.summary" in patch_feedback
+        assert "authoritative_scope" in patch_feedback
+        assert "anchor=repaired reveal" in patch_feedback
         assert "scene 2 summary must reflect the repaired reveal" in patch_feedback
         assert pipeline_result["phases"]["validate"]["fix_pack"]["target_kind"] == "scene_block"
         assert pipeline_result["phases"]["validate"]["partial_fix_eval"]["patch_round"] == 1
         assert pipeline_result["phases"]["validate"]["partial_fix_eval"]["target_kind"] == "scene_block"
         assert pipeline_result["phases"]["validate"]["partial_fix_eval"]["must_fix_resolved"] is True
         assert pipeline_result["phases"]["validate"]["partial_fix_eval"]["success_condition_met"] is True
+
+    def test_pass_with_fix_iteration_preserves_low_score_pass_for_retry(self, blueprint_generator, sample_arc_data):
+        patched_blueprint = {
+            "ep_num": 1,
+            "scene_breakdown": {
+                "scene_1": {"summary": "opening"},
+                "scene_2": {"summary": "improved"},
+            },
+        }
+        blueprint_generator._inplace_patch_blueprint = MagicMock(return_value=patched_blueprint)
+        blueprint_generator.validator.validate.return_value = (
+            "PASS",
+            {"score": 85, "issues": [], "confidence": 90},
+        )
+
+        result = blueprint_generator.runtime._run_pass_with_fix_iteration(
+            ep_num=1,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            prev_blueprint=None,
+            current_blueprint={
+                "ep_num": 1,
+                "scene_breakdown": {
+                    "scene_1": {"summary": "opening"},
+                    "scene_2": {"summary": "old"},
+                },
+            },
+            current_validation={"fix_scope": "inplace", "feedback": "tighten scene 2 summary"},
+            pipeline_result={"phases": {"generate": {}, "validate": {}}},
+            score=95,
+            quality_gate_score=90,
+            director=MagicMock(),
+            arc_idx=0,
+            entity_registry=None,
+            state_tracker=None,
+            prev_hud=None,
+            fix_index=0,
+            max_fix=3,
+        )
+
+        assert result.should_break is True
+        assert result.current_blueprint == patched_blueprint
+        assert result.current_validation["score"] == 85
+        assert result.current_validation["verdict"] == "PASS"
+
+    def test_finalize_pass_with_fix_failure_adopts_low_score_pass_blueprint(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        original_blueprint = {"ep_num": 1, "scene_breakdown": {"scene_1": {"summary": "old"}}}
+        patched_blueprint = {"ep_num": 1, "scene_breakdown": {"scene_1": {"summary": "improved"}}}
+        retry_state = _ThreePhaseRetryState()
+        blueprint_generator._record_intermediate_reject = MagicMock()
+        blueprint_generator.runtime._apply_validation_reject_state = MagicMock()
+
+        result = blueprint_generator.runtime._finalize_pass_with_fix_failure(
+            best_blueprint=original_blueprint,
+            current_blueprint=patched_blueprint,
+            current_validation={"verdict": "PASS", "score": 85, "feedback": "needs stronger polish", "issues": []},
+            validation_result={"score": 95},
+            score=95,
+            selected_strategy="balanced",
+            initial_feedback="initial feedback",
+            max_fix=3,
+            retry_state=retry_state,
+            ep_num=1,
+            arc_data=sample_arc_data,
+            retry=0,
+            max_retries=1,
+        )
+
+        assert result.should_continue is True
+        assert result.best_blueprint == patched_blueprint
+        apply_kwargs = blueprint_generator.runtime._apply_validation_reject_state.call_args.kwargs
+        assert apply_kwargs["score"] == 85
+        assert apply_kwargs["best_blueprint"] == patched_blueprint
 
     def test_terminal_stage3_reject_does_not_record_intermediate_observability(
         self, blueprint_generator, sample_arc_data

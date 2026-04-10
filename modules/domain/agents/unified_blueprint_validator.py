@@ -259,6 +259,31 @@ class UnifiedBlueprintValidator:
         return entries, bool(entries)
 
     @staticmethod
+    def _coerce_episode_marker(value: object) -> int | None:
+        try:
+            marker = int(value)
+        except (TypeError, ValueError):
+            return None
+        return marker if marker > 0 else None
+
+    @classmethod
+    def _relationship_visible_in_episode(cls, relationship: object, ep_num: int | None) -> bool:
+        if not isinstance(relationship, dict) or not ep_num or ep_num <= 0:
+            return True
+
+        for key in ("episode", "ep_num", "ep", "target_episode", "target_ep"):
+            marker = cls._coerce_episode_marker(relationship.get(key))
+            if marker is not None:
+                return marker <= ep_num
+
+        for key in ("visible_from_episode", "start_episode", "from_episode"):
+            marker = cls._coerce_episode_marker(relationship.get(key))
+            if marker is not None:
+                return marker <= ep_num
+
+        return True
+
+    @staticmethod
     def _collect_binding_prevalidation_issues(issues: list[dict]) -> list[dict]:
         if not isinstance(issues, list):
             return []
@@ -967,7 +992,7 @@ class UnifiedBlueprintValidator:
 
         return issues
 
-    def _collect_fidelity_prevalidation_issues(self, *, integrated: str, arc_data) -> list[dict]:
+    def _collect_fidelity_prevalidation_issues(self, *, integrated: str, arc_data, ep_num: int | None = None) -> list[dict]:
         if not arc_data or not integrated:
             return []
 
@@ -976,6 +1001,8 @@ class UnifiedBlueprintValidator:
         arc_npcs: set[str] = set()
         for relationship in arc_relationship_changes:
             if isinstance(relationship, dict):
+                if not self._relationship_visible_in_episode(relationship, ep_num):
+                    continue
                 npc_name = relationship.get("target") or relationship.get("npc")
                 if npc_name and isinstance(npc_name, str) and len(npc_name) >= 2:
                     arc_npcs.add(npc_name)
@@ -1078,6 +1105,12 @@ class UnifiedBlueprintValidator:
         integrated = self._normalize_integrated_scenario(blueprint.get("integrated_scenario", ""))
         scenes = blueprint.get("scene_breakdown", {})
         scene_count = self._count_scene_entries(scenes)
+        working_ep = 0
+        for candidate in (blueprint.get("ep_num"), blueprint.get("episode_number"), constraint_block.get("ep_num")):
+            marker = self._coerce_episode_marker(candidate)
+            if marker is not None:
+                working_ep = marker
+                break
 
         issues: list[dict] = []
         issues.extend(
@@ -1088,7 +1121,13 @@ class UnifiedBlueprintValidator:
                 scene_count=scene_count,
             )
         )
-        issues.extend(self._collect_fidelity_prevalidation_issues(integrated=integrated, arc_data=arc_data))
+        issues.extend(
+            self._collect_fidelity_prevalidation_issues(
+                integrated=integrated,
+                arc_data=arc_data,
+                ep_num=working_ep,
+            )
+        )
         issues.extend(
             self._collect_arc_compliance_prevalidation_issues(
                 constraint_block=constraint_block,

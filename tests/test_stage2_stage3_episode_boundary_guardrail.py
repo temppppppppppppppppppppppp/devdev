@@ -166,6 +166,50 @@ class TestStateChangesEpisodeFiltering:
         assert "비급무공" not in summary
 
 
+class TestStage3FidelityEpisodeBoundary:
+    """Stage3 fidelity hints must not pressure EPs with future-only relationship changes."""
+
+    def test_future_only_relationship_changes_do_not_trigger_ep1_warning(self):
+        from modules.domain.agents.unified_blueprint_validator import UnifiedBlueprintValidator
+
+        validator = UnifiedBlueprintValidator(MagicMock(), MagicMock())
+        issues = validator._collect_fidelity_prevalidation_issues(
+            integrated="한시우가 첫 투자 발표를 준비한다.",
+            arc_data={
+                "state_constraints": {
+                    "relationship_changes": [
+                        {"npc": "큰형", "episode": 2},
+                        {"npc": "아버지", "episode": 3},
+                    ]
+                }
+            },
+            ep_num=1,
+        )
+
+        assert issues == []
+
+    def test_current_episode_relationship_change_still_triggers_warning_when_missing(self):
+        from modules.domain.agents.unified_blueprint_validator import UnifiedBlueprintValidator
+
+        validator = UnifiedBlueprintValidator(MagicMock(), MagicMock())
+        issues = validator._collect_fidelity_prevalidation_issues(
+            integrated="한시우가 첫 투자 발표를 준비한다.",
+            arc_data={
+                "state_constraints": {
+                    "relationship_changes": [
+                        {"npc": "아버지", "episode": 1},
+                        {"npc": "큰형", "episode": 3},
+                    ]
+                }
+            },
+            ep_num=1,
+        )
+
+        assert len(issues) == 1
+        assert issues[0]["category"] == "fidelity"
+        assert "1명" in issues[0]["issue"]
+
+
 # ── Seam 2: Treatment Block Event Quarantine ──────────────────
 
 

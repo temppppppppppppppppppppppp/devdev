@@ -111,6 +111,19 @@ class TestSemanticCarryoverQuarantine:
         assert "relationship_rationale" in result
         assert result["relationship_rationale"][0]["npc"] == "아버지"
 
+    def test_normalize_filters_future_relationship_rationale_by_episode(self, compiler):
+        """Episode-tagged future relationship rationale must stay out of earlier EP prompts."""
+        payload = {
+            "relationship_rationale": [
+                {"npc": "아버지", "trigger": "투자사 설립", "episode": 1},
+                {"npc": "큰형", "trigger": "지분 갈등", "episode": 3},
+            ],
+        }
+        result = compiler._normalize_semantic_carryover(payload, ep_num=1)
+        assert "relationship_rationale" in result
+        assert len(result["relationship_rationale"]) == 1
+        assert result["relationship_rationale"][0]["npc"] == "아버지"
+
     def test_normalize_preserves_foreshadow_anchors(self, compiler):
         """foreshadow_anchors must remain (with advisory label at render time)."""
         payload = {
@@ -180,6 +193,15 @@ class TestSemanticCarryoverQuarantine:
         prompt = compiler.compile_to_prompt(block)
         assert "유가 상승 뉴스" in prompt
         assert "미래 복선 참고용" in prompt
+
+    def test_compile_to_prompt_ep1_marks_semantic_packet_as_non_binding(
+        self, compiler, arc_data_with_semantic_carryover
+    ):
+        """Semantic carryover must render as advisory, not as a top-level obligation block."""
+        block = compiler.compile(arc_data_with_semantic_carryover, ep_num=1)
+        prompt = compiler.compile_to_prompt(block)
+        assert "FUTURE SEMANTIC ADVISORY" in prompt
+        assert "이번 화 obligation 아님" in prompt
 
     def test_compile_to_prompt_ep1_preserves_relationship_rationale(
         self, compiler, arc_data_with_semantic_carryover
@@ -395,6 +417,24 @@ class TestStopLineLivePromptParity:
         result = ensemble._format_constraints(constraint_block)
         assert "미래 복선 참고용" in result
         assert "유가 뉴스" in result
+
+    def test_format_constraints_semantic_section_is_explicitly_non_binding(self, ensemble):
+        """semantic carryover in live ensemble constraints must stay in advisory tier."""
+        constraint_block = {
+            "ep_num": 1,
+            "must_focus": {"content": "주인공 등장", "key_events": [], "arc_title": ""},
+            "stop_line": {"content": None, "is_arc_finale": True},
+            "continuity": {},
+            "inherited_state": {},
+            "arc_constraint_summary": "",
+            "state_changes_summary": "",
+            "semantic_carryover": {
+                "relationship_rationale": [{"npc": "A", "trigger": "test"}],
+            },
+        }
+        result = ensemble._format_constraints(constraint_block)
+        assert "Future Semantic Advisory" in result
+        assert "이번 화 obligation 아님" in result
 
 
 # ── Wave 1 Regression Guard ──────────────────────────────────

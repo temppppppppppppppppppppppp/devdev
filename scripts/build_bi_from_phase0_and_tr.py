@@ -25,6 +25,7 @@ from modules.core.stage0_handoff import (
     canonicalize_bible_payload,
     canonicalize_treatment_payload,
 )
+from modules.core.work_identity_surface import resolve_phase0_work_identity_surface
 
 # Keep runtime detection broad without embedding hygiene-triggering literals directly in source.
 GARBLED_TOKENS = ("?" * 3, "\\ufffd", chr(0xFFFD))
@@ -79,6 +80,12 @@ def unique_preserve_order(items: list[str]) -> list[str]:
             seen.add(item)
             out.append(item)
     return out
+
+
+def resolve_bi_naming_authority(phase0_payload: dict[str, Any]) -> dict[str, Any]:
+    naming = resolve_phase0_work_identity_surface(phase0_payload)
+    require(bool(naming["canonical_title"]), "Phase0 payload must resolve a canonical title for BI output")
+    return naming
 
 
 def parse_block_range(block_range: str) -> tuple[int, int]:
@@ -446,6 +453,7 @@ def build_bible(
     project = phase0_payload["project"]
     setting_data = phase0_payload["setting"]
     protagonist = phase0_payload["protagonist"]
+    naming_authority = resolve_bi_naming_authority(phase0_payload)
     treatment_blocks = build_plot_roadmap_from_treatment(treatment_blocks)
     phase0 = normalize_phase0_design(phase0_payload["phase0_design"], treatment_blocks)
     first_block = treatment_blocks[0]
@@ -477,7 +485,10 @@ def build_bible(
     master_bible = {
         "ProjectData": {
             "MetaInfo": {
-                "title": project["title_ko"],
+                "title": naming_authority["canonical_title"],
+                "commercial_label": naming_authority["commercial_label"],
+                "slug_aliases": naming_authority["slug_aliases"],
+                "title_authority": naming_authority["resolution"],
                 "grand_objective": project["core_premise"],
                 "genre_archetype": project["format"],
                 "logline": project["logline"],
@@ -595,7 +606,7 @@ def build_bible(
 
     return {
         "_schema_version": "2.0",
-        "_schema_description": f"{project['title_ko']} Bible - phase0/TR draft 동기화 산출물",
+        "_schema_description": f"{naming_authority['canonical_title']} Bible - phase0/TR draft 동기화 산출물",
         "_last_updated": date.today().isoformat(),
         "_genre": project["format"],
         "_family": "blockguide",
@@ -603,6 +614,7 @@ def build_bible(
         "_authority_chain": authority_chain,
         "_source_phase0": source_phase0,
         "_source_tr": source_tr,
+        "_naming_authority": naming_authority,
         "MasterBible": master_bible,
     }
 

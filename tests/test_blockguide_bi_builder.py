@@ -50,6 +50,15 @@ def _build_phase0_for_real_bible() -> dict:
             "end_year": 2026,
             "core_premise": "Rebuild the company through contracts and capital flow.",
         },
+        "work_identity_surface": {
+            "work_id": "test_project",
+            "title": "Golden Route",
+            "subtitle": "",
+            "commercial_label": "Golden Canary",
+            "slug_aliases": ["canary test", "test_project_legacy_slug"],
+            "primary_profile": "business_growth_profile",
+            "secondary_profile": "investment_market_profile",
+        },
         "setting": {
             "group_background": "Legacy industrial group",
             "execution_doctrine": "capital flow and contract leverage",
@@ -202,11 +211,16 @@ def test_build_bible_emits_runtime_protagonist_contract_and_normalized_roadmap()
     )
 
     protagonist_config = bible["MasterBible"]["protagonist_config"]
+    meta = bible["MasterBible"]["ProjectData"]["MetaInfo"]
     roadmap = bible["MasterBible"]["plot_roadmap"]
 
     assert protagonist_config["world_origin"]
     assert protagonist_config["incarnation_type"]
     assert protagonist_config["pov"]
     assert protagonist_config["external_pov_insert_policy"]
+    assert meta["title"] == "Golden Route"
+    assert meta["commercial_label"] == "Golden Canary"
+    assert meta["slug_aliases"] == ["canary test", "test_project_legacy_slug"]
+    assert bible["_naming_authority"]["canonical_title"] == "Golden Route"
     assert roadmap[0]["block_no"] == 1
     assert roadmap[-1]["block_no"] == 70

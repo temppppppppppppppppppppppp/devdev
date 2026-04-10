@@ -95,7 +95,7 @@ class BlueprintConstraintCompiler:
 
         # 6. [V63.2] Arc state_changes 요약 (Stage 2 → Stage 3 직접 전달)
         state_changes_summary = self._summarize_state_changes(arc_data.get("state_changes", {}), ep_num)
-        semantic_carryover = self._normalize_semantic_carryover(arc_data.get("semantic_carryover"))
+        semantic_carryover = self._normalize_semantic_carryover(arc_data.get("semantic_carryover"), ep_num=ep_num)
 
         # 7. [IFC] Immutable fact carryover from prior arc — [W2] ep_num 전달
         immutable_fact_carryover = self._extract_immutable_fact_carryover(arc_data, arc_position, ep_num=ep_num)
@@ -149,11 +149,6 @@ class BlueprintConstraintCompiler:
 
         # 헤더
         semantic_lines = self._format_semantic_carryover_lines(constraint_block.get("semantic_carryover"))
-        if semantic_lines:
-            lines.append("### ARC semantic carryover")
-            lines.extend(semantic_lines)
-            lines.append("")
-
         lines.append("=" * 60)
         lines.append(f"[V60.80 BLUEPRINT CONSTRAINTS] 제{constraint_block['ep_num']}화")
         lines.append(f"Arc {constraint_block['arc_no']} - 위치: {constraint_block['arc_position']}")
@@ -260,6 +255,12 @@ class BlueprintConstraintCompiler:
         if sc_summary:
             lines.append("### 📊 상태 변화 (현재 화까지 확정된 이벤트)")
             lines.append(sc_summary)
+            lines.append("")
+
+        if semantic_lines:
+            lines.append("### 🧭 FUTURE SEMANTIC ADVISORY (이번 화 obligation 아님)")
+            lines.append("아래 항목은 미래 화/관계 맥락 참고용입니다. 이번 화에서 반드시 모두 소비할 의무는 없습니다.")
+            lines.extend(semantic_lines)
             lines.append("")
 
         # [IFC] Immutable fact carryover — prior-arc recovery obligations
@@ -1009,7 +1010,34 @@ class BlueprintConstraintCompiler:
         return "\n".join(lines) if lines else ""
 
     @staticmethod
-    def _normalize_semantic_carryover(payload: object) -> dict:
+    def _coerce_episode_marker(value: object) -> int | None:
+        try:
+            marker = int(value)
+        except (TypeError, ValueError):
+            return None
+        return marker if marker > 0 else None
+
+    @classmethod
+    def _entry_visible_in_episode(cls, entry: object, ep_num: int) -> bool:
+        if ep_num <= 0 or not isinstance(entry, dict):
+            return True
+
+        exact_keys = ("episode", "ep_num", "ep", "target_episode", "target_ep")
+        for key in exact_keys:
+            marker = cls._coerce_episode_marker(entry.get(key))
+            if marker is not None:
+                return marker <= ep_num
+
+        start_keys = ("visible_from_episode", "start_episode", "from_episode")
+        for key in start_keys:
+            marker = cls._coerce_episode_marker(entry.get(key))
+            if marker is not None:
+                return marker <= ep_num
+
+        return True
+
+    @classmethod
+    def _normalize_semantic_carryover(cls, payload: object, *, ep_num: int = 0) -> dict:
         if not isinstance(payload, dict):
             return {}
 
@@ -1020,6 +1048,8 @@ class BlueprintConstraintCompiler:
             rel_rows: list[dict[str, str]] = []
             for entry in rels[:4]:
                 if not isinstance(entry, dict):
+                    continue
+                if not cls._entry_visible_in_episode(entry, ep_num):
                     continue
                 npc = str(entry.get("npc", "") or entry.get("target", "") or "").strip()[:40]
                 trigger = str(entry.get("trigger", "") or "").strip()[:120]
@@ -1043,7 +1073,21 @@ class BlueprintConstraintCompiler:
 
         foreshadow = payload.get("foreshadow_anchors") or []
         if isinstance(foreshadow, list):
-            anchors = [str(item).strip()[:120] for item in foreshadow[:3] if str(item).strip()]
+            anchors: list[str] = []
+            for item in foreshadow[:6]:
+                if isinstance(item, dict):
+                    if not cls._entry_visible_in_episode(item, ep_num):
+                        continue
+                    text = str(
+                        item.get("anchor", "") or item.get("text", "") or item.get("summary", "") or item.get("description", "")
+                    ).strip()[:120]
+                else:
+                    text = str(item).strip()[:120]
+                if not text:
+                    continue
+                anchors.append(text)
+                if len(anchors) >= 3:
+                    break
             if anchors:
                 normalized["foreshadow_anchors"] = anchors
 

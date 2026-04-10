@@ -362,4 +362,185 @@ def test_build_stage0_selection_draft_respects_profile_override(temp_dir) -> Non
 
     assert result.profile_lock["primary_profile"] == "business_growth_profile"
     assert result.profile_lock["secondary_profile"] == "investment_market_profile"
-    assert "profile_override locked in reference_selection" in result.source_manifest["manual_audit_note"]
+    assert result.profile_resolution.startswith("profile_override locked")
+
+
+def test_build_stage0_selection_draft_respects_work_identity_override(temp_dir) -> None:
+    work_id = "title_override_demo"
+    project_root = temp_dir / "narrative_ssot" / "50_projects" / work_id
+    cards_root = temp_dir / "narrative_ssot" / "10_reference_bank" / "cards"
+
+    _write_json(
+        project_root / "10_reference_selection" / "reference_selection.json",
+        {
+            "work_id": work_id,
+            "selection_date": "2026-04-10",
+            "work_identity_override": {
+                "title": "골든 루트",
+                "commercial_label": "골든 카나리아",
+                "slug_aliases": [
+                    "카나리아 테스트",
+                    "title_override_demo"
+                ],
+                "reason": "테스트 슬러그와 작품 타이틀이 다르므로 Stage0부터 canonical title을 잠근다.",
+            },
+            "selected_cards": [
+                {
+                    "card_slug": "title_override_card",
+                    "track": "A",
+                    "handoff_label": "title_override_card_A_ready",
+                    "selection_reason": "기업 성장 opening을 참고한다.",
+                    "must_not_copy_applied": True,
+                    "contamination_risk_reviewed": True,
+                }
+            ],
+        },
+    )
+    _write_json(
+        project_root / "10_reference_selection" / "contamination_guard.json",
+        {
+            "must_not_copy_reviewed": False,
+            "contamination_risk_reviewed": False,
+            "notes": "",
+        },
+    )
+    _write_json(
+        temp_dir / "narrative_ssot" / "10_reference_bank" / "reference_card_manifest.json",
+        _card_manifest(
+            [
+                {
+                    "slug": "title_override_card",
+                    "track": "A",
+                    "output_path": "material_ssot/10_research/20_fewshot_bank/cards/title_override_card_A.md",
+                }
+            ]
+        ),
+    )
+    cards_root.mkdir(parents=True, exist_ok=True)
+    (cards_root / "title_override_card_A.md").write_text(
+        """## Slim Reference Card v1
+
+**usable_lane**: 현대 현판 기업물
+**usable_sector**: 기업물, 투자물
+**opening_humiliation**: 고립된 막내의 출발
+**protagonist_edge**: 계약 감각과 권위 시위
+**block1_spike**: 첫 공개 승리
+**first_reward**: 첫 계약권 확보
+**growth_axis**: 첫 인정 → 사업 확장
+**authority_gain_route**: 실적 공인 → 다음 전장 배정
+**must_borrow**: 빠른 인정 구조
+**must_not_copy**: 고유 인물과 고유 회사명
+**contamination_risk**: 직이식 금지
+**source_manifest_ready_label**: title_override_card_A_ready
+
+## 현대 현판 적용 분해
+""",
+        encoding="utf-8",
+    )
+
+    result = build_stage0_selection_draft(work_id, root=temp_dir)
+
+    assert result.source_manifest["work_identity"]["title"] == "골든 루트"
+    assert result.source_manifest["work_identity"]["commercial_label"] == "골든 카나리아"
+    assert result.source_manifest["work_identity"]["slug_aliases"] == [
+        "카나리아 테스트",
+        "title_override_demo",
+    ]
+    assert result.work_identity_resolution.startswith("work_identity_override locked")
+    assert result.phase0_ready_snapshot["identity_locked"] is True
+    assert "Work identity: work_identity_override locked" in result.source_manifest["manual_audit_note"]
+
+
+def test_build_stage0_selection_draft_respects_opening_bundle_contract_override(temp_dir) -> None:
+    work_id = "opening_override_demo"
+    project_root = temp_dir / "narrative_ssot" / "50_projects" / work_id
+    cards_root = temp_dir / "narrative_ssot" / "10_reference_bank" / "cards"
+
+    _write_json(
+        project_root / "10_reference_selection" / "reference_selection.json",
+        {
+            "work_id": work_id,
+            "selection_date": "2026-04-10",
+            "opening_bundle_contract_override": {
+                "bundle_window": "TR 2~6",
+                "macro_battlefield": "기업 후계자 첫 권위 시위 전장",
+                "macro_battlefield_map": [
+                    "가문 내부 공개 증명",
+                    "실무 라인 재평가",
+                    "다음 거래 전장 입장권"
+                ],
+                "bundle_goal": "TR 2~6 안에 후계자의 첫 권위 시위와 다음 전장 입장권을 증명한다.",
+                "first_signboard_block": 3,
+                "representative_reevaluation_block": 4,
+                "next_battlefield_ticket_block": 6,
+                "timing_reconciliation_note": "opening macro battlefield를 기업 후계자 권위 시위로 잠그고 투자 신호는 보조 레인으로만 사용한다."
+            },
+            "selected_cards": [
+                {
+                    "card_slug": "opening_override_card",
+                    "track": "A",
+                    "handoff_label": "opening_override_card_A_ready",
+                    "selection_reason": "권위 시위와 기업 성장 전개를 함께 쓴다.",
+                    "must_not_copy_applied": True,
+                    "contamination_risk_reviewed": True,
+                }
+            ],
+        },
+    )
+    _write_json(
+        project_root / "10_reference_selection" / "contamination_guard.json",
+        {
+            "must_not_copy_reviewed": False,
+            "contamination_risk_reviewed": False,
+            "notes": "",
+        },
+    )
+    _write_json(
+        temp_dir / "narrative_ssot" / "10_reference_bank" / "reference_card_manifest.json",
+        _card_manifest(
+            [
+                {
+                    "slug": "opening_override_card",
+                    "track": "A",
+                    "output_path": "material_ssot/10_research/20_fewshot_bank/cards/opening_override_card_A.md",
+                }
+            ]
+        ),
+    )
+    cards_root.mkdir(parents=True, exist_ok=True)
+    (cards_root / "opening_override_card_A.md").write_text(
+        """## Slim Reference Card v1
+
+**usable_lane**: 현대 현판 기업물
+**usable_sector**: 기업물, 투자물
+**opening_humiliation**: 과소평가된 막내의 출발
+**protagonist_edge**: 빠른 판단과 계약 감각
+**block1_spike**: 첫 수익과 공개 재평가
+**first_reward**: 첫 계약금과 입장권
+**growth_axis**: 첫 인정 → 다음 계약 → 산업 확장
+**authority_gain_route**: 실적 공인 → 권위 상승 → 다음 전장 배정
+**must_borrow**: 권위 시위와 빠른 재평가
+**must_not_copy**: 고유 회사명과 고유 권력 구도
+**contamination_risk**: 고유 장면과 고유 권력 구도 직이식 금지
+**source_manifest_ready_label**: opening_override_card_A_ready
+
+## 현대 현판 적용 분해
+""",
+        encoding="utf-8",
+    )
+
+    result = build_stage0_selection_draft(work_id, root=temp_dir)
+
+    assert (
+        result.material_bundle_summary["opening_bundle_contract"]["macro_battlefield"]
+        == "기업 후계자 첫 권위 시위 전장"
+    )
+    assert (
+        result.material_bundle_summary["opening_bundle_contract"]["macro_battlefield_map"][0]
+        == "가문 내부 공개 증명"
+    )
+    assert any(
+        "Current opening contract resolution: opening_bundle_contract_override locked"
+        in item
+        for item in result.phase0_ready_snapshot["remaining_risks"]
+    )

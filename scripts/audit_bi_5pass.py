@@ -28,6 +28,7 @@ from modules.core.response_schemas import (  # noqa: E402 - entrypoint path boot
     validate_treatment_structure,
 )
 from modules.core.stage0_handoff import normalize_bible_to_canonical_view, normalize_treatment_to_canonical_view
+from modules.core.work_identity_surface import as_text, resolve_phase0_work_identity_surface, unique_preserve_order
 
 GARBLED_RE = re.compile(r"\?{2,}|�|\ufffd")
 META_REF_RE = re.compile(
@@ -107,6 +108,18 @@ def preview_messages(messages: list[str], *, limit: int = 3) -> str:
     return " | ".join(preview) + suffix
 
 
+def read_bi_naming_surface(meta_info: dict[str, Any]) -> dict[str, Any]:
+    commercial_label = as_text(meta_info.get("commercial_label"))
+    slug_aliases_raw = meta_info.get("slug_aliases")
+    slug_aliases = unique_preserve_order(slug_aliases_raw if isinstance(slug_aliases_raw, list) else [])
+    return {
+        "title": as_text(meta_info.get("title")),
+        "commercial_label": commercial_label,
+        "slug_aliases": slug_aliases,
+        "allowed_titles": unique_preserve_order([as_text(meta_info.get("title")), commercial_label, *slug_aliases]),
+    }
+
+
 def parse_eok(raw: Any) -> int | None:
     if not isinstance(raw, str):
         return None
@@ -158,6 +171,7 @@ def build_source_tr_handoff_checks(
     *,
     protagonist_match: bool,
     title_match_phase0: bool,
+    title_within_phase0_surface: bool,
     starter_company_match: bool,
     portfolio_monotonic: bool,
     portfolio_sync: bool,
@@ -191,6 +205,7 @@ def build_source_tr_handoff_checks(
         ),
         "protagonist_match": protagonist_match,
         "title_match_phase0": title_match_phase0,
+        "title_within_phase0_surface": title_within_phase0_surface,
         "starter_company_match": starter_company_match,
         "portfolio_monotonic": portfolio_monotonic,
         "portfolio_sync_with_tr": portfolio_sync,
@@ -252,7 +267,10 @@ def main() -> int:
     actual = mb["FinanceHUD"]["Protagonist"]["actual_truth"]
     roadmap = mb.get("plot_roadmap", [])
     starter_company = phase0["setting"]["starter_company"]["name"]
-    expected_title = phase0["project"]["title_ko"]
+    phase0_naming_surface = resolve_phase0_work_identity_surface(phase0)
+    bi_naming_surface = read_bi_naming_surface(meta)
+    expected_title = phase0_naming_surface["canonical_title"]
+    phase0_allowed_titles = phase0_naming_surface["allowed_titles"]
     expected_protagonist = phase0["protagonist"]["name"]
     expected_npcs = [phase0["protagonist"]["name"], *[npc["name"] for npc in phase0["phase0_design"]["npc_timeline"]]]
 
@@ -298,6 +316,7 @@ def main() -> int:
         source_metrics,
         protagonist_match=(core["protagonist"] == actual["name"] == expected_protagonist),
         title_match_phase0=(meta["title"] == expected_title),
+        title_within_phase0_surface=(as_text(meta["title"]) in phase0_allowed_titles),
         starter_company_match=(actual["financial_status"]["company"] == starter_company),
         portfolio_monotonic=portfolio_monotonic,
         portfolio_sync=portfolio_sync,
@@ -357,6 +376,16 @@ def main() -> int:
     report_lines.append(f"- phase0: `{args.phase0.as_posix()}`")
     report_lines.append(f"- draft: `{args.draft.as_posix()}`")
     report_lines.append(f"- bi: `{args.bi.as_posix()}`")
+    report_lines.append("")
+    report_lines.append("## Naming Authority")
+    report_lines.append(f"- phase0_title_resolution: {phase0_naming_surface['resolution']}")
+    report_lines.append(f"- phase0_canonical_title: {phase0_naming_surface['canonical_title']}")
+    report_lines.append(f"- phase0_commercial_label: {phase0_naming_surface['commercial_label'] or '(none)'}")
+    report_lines.append(f"- phase0_slug_aliases: {phase0_naming_surface['slug_aliases']}")
+    report_lines.append(f"- phase0_allowed_titles: {phase0_allowed_titles}")
+    report_lines.append(f"- bi_meta_title: {bi_naming_surface['title']}")
+    report_lines.append(f"- bi_meta_commercial_label: {bi_naming_surface['commercial_label'] or '(none)'}")
+    report_lines.append(f"- bi_meta_slug_aliases: {bi_naming_surface['slug_aliases']}")
     report_lines.append("")
     report_lines.append("## Source TR Metrics")
     report_lines.append(f"- production_density_gate: {'PASS' if source_metrics['production_density_gate'] else 'FAIL'}")
