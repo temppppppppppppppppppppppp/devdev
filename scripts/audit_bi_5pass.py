@@ -202,6 +202,14 @@ def build_source_tr_handoff_checks(
         checks["source_tr_regressor_recognition_gap_gate"] = source_metrics.get("hard_gate_checks", {}).get(
             "regressor_recognition_gap_ok", True
         )
+    if "opening_reader_earning_signal_by6" in source_metrics.get("hard_gate_checks", {}):
+        checks["source_tr_opening_reader_earning_gate"] = source_metrics.get("hard_gate_checks", {}).get(
+            "opening_reader_earning_signal_by6", True
+        )
+    if "opening_macro_progression_ok" in source_metrics.get("hard_gate_checks", {}):
+        checks["source_tr_opening_macro_progression_gate"] = source_metrics.get("hard_gate_checks", {}).get(
+            "opening_macro_progression_ok", True
+        )
     return checks
 
 

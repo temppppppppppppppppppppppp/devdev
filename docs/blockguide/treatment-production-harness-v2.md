@@ -4,6 +4,7 @@
 > 작성일: 2026-03-09
 > 업데이트: 2026-04-09 opening macro-battlefield progression patch
 > 업데이트: 2026-04-09 TR block episode-bundle clarification patch
+> 업데이트: 2026-04-10 executable opening pacing gate patch
 > 근거: `treatment-block-production-guide.md` + `dynasty-heir-remediation-harness.md` + 8작품 560블록 전수 감사
 > 목적: **모든 지능 수준의 모델이 골든루트급 Treatment JSON을 생산**할 수 있는 완전한 하네스
 > 출력: `treatments/{작품명}_tr_block_070_draft.json`
@@ -168,6 +169,12 @@ opening `Block 001~010`은 `location` 다양화만으로 PASS 처리하지 않�
 4. opening main `macro_battlefield`가 `Block 002~008` 구간을 사실상 장악하고 있는데, 첫 간판 사건/대표 재평가/다음 전장 입장권이 `Block 009+`에서야 발생하면 opening pacing FAIL이다.
 5. `1화 내`, `3화 내`, `초반`, `opening` 같은 timing 문구를 인용할 때는 반드시 현재 작품의 절대 block 번호로 환산한다.
 6. `location`이 달라도 `macro_battlefield`가 같으면 "전장 확장"으로 계산하지 않는다.
+
+실행기 field contract:
+
+- opening `Block 001~010` 각 블록은 `location.macro_battlefield`를 채운다.
+- opening `Block 001~010` 각 블록은 `genre_ext.opening_progression.public_signboard_event`, `genre_ext.opening_progression.representative_reevaluation`, `genre_ext.opening_progression.next_battlefield_ticket`를 모두 선언한다.
+- 해당 beat가 없으면 빈칸이 아니라 `없음`으로 적는다.
 
 ## 0I. TR Block = Episode-Bundle Contract
 

@@ -14,10 +14,12 @@
     "relationship_delta.before == 직전 relationship_delta.after"
   ],
   "family_axis_requirements": [
+    "TR block 1개는 출판 1화가 아니라 downstream 2~6화 분량 planning bundle로 설계한다",
     "이번 배치의 각 블록은 사업축, 상대 구도, 감정 비트 중 최소 하나에서 직전과 차이를 만들어야 한다",
     "deal_type, location, leverage_used는 반복 신호 없이 재탕하지 않는다",
     "reward는 단순 수익이 아니라 승인권, 신용, 정보 우위 중 최소 하나의 이동을 보여야 한다",
-    "각 블록은 genre_ext.block_cider.has_cider=true, receipt_line 1문장, pain_only_exit=false를 포함해야 한다"
+    "각 블록은 genre_ext.block_cider.has_cider=true, receipt_line 1문장, pain_only_exit=false를 포함해야 한다",
+    "opening Block 001~010은 location.macro_battlefield와 genre_ext.opening_progression 3종을 명시한다"
   ],
   "lexicon_bans": [
     "영문 프롬프트 문장",
@@ -37,6 +39,8 @@
     "relationship carry-over 보존",
     "block_cider_missing_blocks = 0",
     "no_cider_blocks = 0",
-    "pain_only_exit_blocks = 0"
+    "pain_only_exit_blocks = 0",
+    "TR 2~6 안에 first reader-earning signal 확보",
+    "opening main macro_battlefield overstay + first signboard/reevaluation/ticket 9+ 금지"
   ]
 }

@@ -1,6 +1,7 @@
 # GREENPLUS_chaebol_allowance_zero
 
 - status: withdrawn historical alias snapshot (2026-04-09)
+- current_live_alias: `RED_chaebol_allowance_zero.md`
 - path_policy: keep this filename as a tombstone for the withdrawn positive reading; do not read the filename itself as a live endorsement
 - historical_verdict: `GREENPLUS` (promoted 2026-04-06; refreshed 2026-04-08)
 - live_operator_reading: `negative exemplar / false-pass archive`

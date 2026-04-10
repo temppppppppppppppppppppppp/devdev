@@ -1,6 +1,6 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-09T07:36:26.348886+00:00",
+  "generated_at": "2026-04-10T01:58:08.650599+00:00",
   "queue_mode": "aggregate",
   "active_item_count": 22,
   "roadmap": {
@@ -245,7 +245,7 @@
       "temp_path": "docs/temp/0_0-stage34-scene-flex-contract-normalization-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-09/0_0-stage34-scene-flex-contract-normalization-remediation-execution-ssot.md",
       "status": "in_progress",
-      "queue_role": "front_active",
+      "queue_role": "parked_future_wave",
       "roadmap_rank": 22,
       "depends_on": [],
       "mirror_present": true,

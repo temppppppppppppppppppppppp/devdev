@@ -1,23 +1,26 @@
 # 0_0 Stage34 Scene-Flex Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-09
-Status: in_progress (2026-04-09 current-head re-audit plus tranche-2 closure audit now confirms tranche 1 and tranche 2 are closure-clean on current HEAD: the bounded `<=1 scene` hard-floor demotion plus the main Stage4 anti-compression contract promotion are implemented, and tranche 3 plus the broader proof-wave/front queue remain pending)
+Status: in_progress (2026-04-10 current-head post-implementation audit now confirms tranche 1 and tranche 2 remain closure-clean, tranche 3 Wave A/B is landed on current HEAD, the bounded Stage4 operator-path canary is clean, and only parked secondary surfaces plus the broader proof-wave/front queue remain pending)
 Canonical Path: `docs/2026-04-09/0_0-stage34-scene-flex-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage34-scene-flex-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `b94390cb508a298a28349152bb15876f36662c65`
 - Baseline Dirty Summary: `dirty: active roadmap/SSOT docs, dated survey outputs, narrative/material edits, and prior runtime artifact deletions already present in worktree`
-- Resume Commit: `7270cf17c7f9c7fc1316fd0ec13dc81b15508b75`
-- Resume Drift Summary: `2026-04-09 current-head re-audit confirms the owner split still holds, the tranche-1 residual blocker survey remains accurate, and the current implementation now lands tranche 1 plus tranche 2 across Stage3 front owners, active Director manuscript authority, writer/template surfaces, and Stage4 feedback guidance without reordering the broader proof-wave/front queue`
+- Resume Commit: `b5e306de52d2e3642b5af0eed8cd6b60fbf13ed1`
+- Resume Drift Summary: `2026-04-10 current-head post-implementation audit confirms the owner split still holds, tranche 1 and tranche 2 remain closure-clean, tranche 3 Wave A/B now lands across the active validator/precheck/confidence/continuity owners, and the bounded Stage4 operator-path canary clears direct low-scene false-pressure on the live warning seam without reordering the broader proof-wave/front queue`
 Source Survey Docs:
 - `docs/2026-04-09/stage234-scene-split-origin-and-density-survey.md`
 - `docs/2026-04-09/stage34-scene-flex-tranche1-residual-blocker-survey.md`
 - `docs/2026-04-09/stage34-scene-flex-tranche2-implementation-3pass-audit.md`
+- `docs/2026-04-10/stage34-scene-flex-tranche3-pre-implementation-3pass-audit.md`
+- `docs/2026-04-10/stage34-scene-flex-tranche3-post-implementation-3pass-audit.md`
 - `docs/2026-04-01/active-temp-execution-roadmap.md`
 Evidence Artifacts:
 - `docs/2026-04-09/stage234-scene-split-origin-and-density-evidence.json`
 - `docs/2026-04-09/stage34-scene-flex-tranche1-residual-blocker-evidence.json`
 - `docs/2026-04-09/stage34-scene-flex-tranche2-implementation-evidence.json`
+- `docs/2026-04-10/stage34-scene-flex-tranche3-post-implementation-evidence.json`
 Side-Effect Coverage: covered
 
 ## 1. Intent
@@ -32,7 +35,8 @@ This lane exists because the current survey says:
 - the user wants `obligation-first, variable-scene writing`, not rigid scene boxes
 
 This SSOT originated as a deliberately parked lane below the current proof-wave/front closure stack.
-The current operator redirect has now activated tranche 1 and tranche 2 so the workspace can relieve the Stage3 hard floor plus the main Stage4 amplification layer without widening into a full heuristic rewrite.
+The current operator redirect first activated tranche 1 and tranche 2 so the workspace could relieve the Stage3 hard floor plus the main Stage4 amplification layer without widening into a full heuristic rewrite.
+The later 2026-04-10 continuation then landed tranche 3 Wave A/B on the active runtime owners and returned the remaining parked secondary surfaces to deferred status.
 
 ## 2. Baseline Facts
 
@@ -169,8 +173,8 @@ Current activation scope:
 
 - tranche 1 current-head residual closure is landed
 - tranche 2 current-head anti-compression contract promotion is closure-clean
-- not active yet: tranche 3
-- do not widen the current queue turn beyond tranche-2 bookkeeping and validation; tranche 3 still sits below the broader proof-wave/front stack unless explicitly re-ranked again
+- tranche 3 Wave A/B current-head runtime closure is landed
+- do not widen the current queue turn beyond the active runtime owner set already landed; only the parked secondary tranche-3 surfaces still sit below the broader proof-wave/front stack unless explicitly re-ranked again
 
 Realization tranches:
 
@@ -270,23 +274,42 @@ Outputs:
 
 ### Tranche 3. Overflow / Completeness Heuristic Normalization
 
-Status: `not started`
+Status: `Wave A/B landed on current HEAD; bounded operator-path canary clean; parked secondary surfaces remain deferred`
 
 Goal:
 
-- remove rigid scene-count-derived compression incentives from validator/precheck logic
+- remove rigid scene-count-derived compression incentives from the active validator / precheck / confidence / continuity logic without widening into dormant prompt/dashboard cleanup
 
-Targets:
+Implemented Wave A:
 
 - `modules/validation/blocking_validator_scene_checks.py`
 - `modules/core/cross_agent_verifier.py`
+- `modules/core/pre_director_checklist.py`
+- `modules/core/confidence_calibration.py`
+
+Implemented Wave B:
+
+- `modules/domain/agents/director_continuity.py`
+
+Shared helper added:
+
+- `modules/core/scene_obligation_heuristics.py`
+
+Explicitly parked:
+
 - `modules/core/quality_amplifier.py`
+- `modules/core/writer_template.py`
+- `modules/core/quality_dashboard.py`
+- `modules/domain/agents/unified_blueprint_validator.py`
+- `modules/domain/agents/manuscript_validator.py`
 
 Outputs:
 
-- overflow checks no longer dominated by `scene_count * fixed chars_per_scene`
-- completeness checks favor materialized obligations and late-scene non-collapse
-- targeted regressions for dense `3-scene` and fuller `5-scene` shapes
+- overflow checks are no longer dominated by `scene_count * fixed chars_per_scene`
+- completeness and confidence checks now favor materialized obligations and late-scene non-collapse on the active runtime seam
+- Stage4 operator-path warnings no longer attach low-scene false pressure to dense `2-scene` and `3-scene` manuscripts on the live `PreCheck / Confidence / CrossVerify` path
+- `DirectorContinuityValidator` now accepts dense `2-scene` tail-heavy manuscripts while still rejecting weak `3-scene` under-reflection
+- targeted regressions now protect the active runtime seam without widening into dormant prompt/dashboard/template families
 
 ## 9. Acceptance Criteria
 
@@ -306,28 +329,26 @@ Before implementation start from this document:
 - re-open the source survey and confirm the owner split still holds
 - refresh roadmap ordering if a higher-priority live lane appears
 
-Targeted verification executed on current HEAD:
+Targeted verification executed on current HEAD after Wave A/B landed:
 
-- `python -m pytest tests/test_scene_cardinality_contract.py tests/test_continuity_modules.py -k "blueprint_scene_count_check or evaluate_stage3_scene_cardinality" -q`
-- `python -m pytest tests/test_prompt_builder.py -k "GenerateHighImpactZoneGuide or GenerateSelfDiagnosisChecklist" -q`
-- `python -m pytest tests/test_pre_director_submodules.py -k "SceneDensityBalance or HighImpactZone" -q`
-- `python -m pytest tests/test_feedback_system.py -k "density_issue or default_issues_when_no_keywords or scene_classification or low_scores_critical or scene_feedback_uses_anti_compression_guidance or stage4_first_try or stage4_second_try" -q`
-- `python -m pytest tests/test_sweep28.py -k "architect_precheck_accepts_dense_two_scene_blueprint or quick_adversary_check_allows_dense_two_scene_blueprint or quick_check_allows_two_scene_architect_output or cross_agent_verifier_architect_compliance_preserves_tail_context or no_legacy_head_cut_assignments" -q`
-- `python -m pytest tests/test_confidence_calibration_lane.py tests/test_sweep33.py -k "two_scene or test_sweep33_source_guards_and_cleanup_exist or string_scene_breakdown" -q`
-- `python -m pytest tests/test_v55_modules.py -k "prompt_injection" -q`
-- `python -m pytest tests/test_director_modules.py tests/test_unified_blueprint_validator_lane_c.py tests/test_prompt_loader.py -k "dense_two_scenes or dense_three_scenes or director_prompt_contract_prefers_yaml_source or two_scene_structure_floor or director_yaml_loads or chief_writer_yaml_loads" -q`
+- `python -m pytest tests/test_scene_flex_wave_a.py tests/test_scene_flex_wave_b.py -q`
+- `python -m pytest tests/test_director_continuity_blueprint_v60.py tests/test_director_modules.py -k "validate_blueprint_completeness" -q`
+- `python -m pytest tests/test_stage4_interview_round.py -k "run_director_optional_validation_modules_routes_checklist_confidence_and_crossverify" -q`
 - touched-function recount on current HEAD:
-  - `modules/core/feedback_system.py::generate_structured_blueprint_feedback` = `115 LOC`
-  - `modules/core/feedback_system.py::get_adaptive_feedback_intensity` = `70 LOC`
-  - `modules/core/writer_template.py::generate_prompt_injection` = `75 LOC`
-  - no new `120+ LOC` or `180+ LOC` function was introduced by this tranche
-- `python -m py_compile` on touched production/test modules
-- `ruff check` on touched files
+  - `modules/validation/blocking_validator_scene_checks.py::_check_scope_overflow` = `81 LOC`
+  - `modules/core/cross_agent_verifier.py::_python_precheck_writer` = `63 LOC`
+  - `modules/core/pre_director_checklist.py::_check_manuscript_blueprint_alignment` = `141 LOC`
+  - `modules/core/confidence_calibration.py::_score_manuscript_scene_coverage` = `40 LOC`
+  - `modules/domain/agents/director_continuity.py::_validate_blueprint_completeness_v60` = `65 LOC`
+  - no new `180+ LOC` function was introduced by this tranche
+- `python -m py_compile tests/test_scene_flex_wave_b.py`
+- `ruff check tests/test_scene_flex_wave_b.py`
 - UTF-8 hygiene on docs/code
+- dedicated runtime evidence captured in `docs/2026-04-10/stage34-scene-flex-tranche3-post-implementation-evidence.json`
 
 ## 11. Guardrails
 
-- explicit reprioritization has now happened for tranche 1 and tranche 2 only; do not treat that as blanket activation for tranche 3
+- explicit reprioritization has now landed tranche 3 Wave A/B on the active runtime owner set; do not treat that as blanket activation for dormant prompt/dashboard cleanup
 - do not patch Stage2 first
 - do not remove `scene_breakdown` as a concept in tranche 1
 - do not turn tranche 1 into a broad schema rewrite
@@ -335,17 +356,18 @@ Targeted verification executed on current HEAD:
 - do not remove scene headers or template anchors in tranche 2; keep compatibility while demoting equal-slot authority
 - do not replace one rigid scene-count rule with another hidden rigid dwell-time rule
 - keep touched functions below the workspace complexity guardrails
+- do not misread unrelated residual `Confidence:medium` style/length noise as reopened scene-flex pressure
 
 ## 12. Temp Queue Notes
 
-- temp status: `in_progress (tranche-1/2 landed; tranche 3 parked below proof/front stack)`
+- temp status: `in_progress (tranche-1/2 closure-clean; tranche-3 Wave A/B landed; parked secondary surfaces still below proof/front stack)`
 - cleanup condition:
   - keep the mirror while this remains a recognized future execution lane
   - remove on explicit closure, cancellation, or replacement
 - roadmap dependency:
-  - explicit operator redirect temporarily bypasses the older parked posture for tranche 1 and tranche 2 only
+  - explicit operator redirect temporarily bypassed the older parked posture for tranche 1, tranche 2, and the bounded tranche-3 Wave A/B owner set only
   - the broader proof-wave/front closure work remains pending and should not be silently closed or removed
-  - tranche 3 still remains below the active Stage4/Stage3/Stage2 functional stack unless explicitly re-ranked again
+  - parked secondary tranche-3 surfaces still remain below the active Stage4/Stage3/Stage2 functional stack unless explicitly re-ranked again
 
 ## 13. Validation and Closure Hooks
 
@@ -369,14 +391,15 @@ Pass 2. Evidence and consistency:
 - current codebase revalidation confirms that `config/prompts/director.yaml` and the residual blocker survey still identify the same active pressure family
 - current-head implementation closes the direct residual P2/P3 blockers identified by the bounded tranche-1 survey and lands the tranche-2 anti-compression retune without silently widening into tranche 3
 - the later tranche-2 closure audit confirms direct `P0-P3` absence on current HEAD
-- roadmap state still supports parking the remaining tranche 3 work below the current proof-wave/front queue
+- the later tranche-3 post-implementation audit plus bounded operator-path canary now clear the active runtime owner set on current HEAD
+- roadmap state still supports parking only the secondary deferred tranche-3 surfaces below the current proof-wave/front queue
 - touched-function recount stays below the workspace complexity guardrails for this tranche
 - no live `P0-P1` over-claim was introduced
 
 Pass 3. Execution and readability:
 
 - acceptance criteria still focus on pressure relief, not schema cosmetics
-- verification plan stays file-targeted while now recording the actual current-head shard set
-- current re-audit records tranche-1 residual closure plus tranche-2 contract promotion as landed and preserves the parked posture for tranche 3
+- verification plan now records the landed Wave A/B regression set and the bounded Stage4 operator-path evidence
+- current re-audit records tranche-1 residual closure, tranche-2 contract promotion, and tranche-3 Wave A/B runtime closure as landed while preserving a parked posture only for the secondary deferred surfaces
 
 Confidence: `97%`

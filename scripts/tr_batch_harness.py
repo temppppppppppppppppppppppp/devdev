@@ -18,6 +18,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from modules.core.stage0_handoff import canonicalize_treatment_payload
+from modules.narrative_router.artifact_paths import resolve_phase0_path
 from modules.narrative_router.harness_digest import load_harness_digest, render_harness_digest_lines
 
 BLOCK_REF_RE = re.compile(r"Block\s*(\d+)", re.IGNORECASE)
@@ -49,6 +50,8 @@ ORG_RE = re.compile(
 RECOGNITION_RE = re.compile(
     r"(대단|인정|재평가|경탄|감탄|존중|신뢰|의지|믿게|다시\s*봤|경외|감복|수긍|고개를 숙|격이 다르)"
 )
+SIGNBOARD_SIGNAL_RE = re.compile(r"(간판|공식|언론|보도|공개|메인|전면|대표 사례|현판)")
+NEXT_BATTLEFIELD_TICKET_RE = re.compile(r"(입장권|다음 전장|다음 판|초대|초청|호출|출입증|패스|면담권|직행)")
 
 MANDATORY_CONTENT_FIELDS = ("context", "event_villain", "solution", "reward")
 LANGUAGE_PATHS = [
@@ -70,6 +73,27 @@ CODE_PATHS = [
     "regression_ext.regression_hint.slip_up",
 ]
 LOW_INTELLIGENCE_OPEN_FORESHADOW_LIMIT = 10
+OPENING_CONTRACT_END = 10
+OPENING_READER_EARNING_SIGNAL_START = 2
+OPENING_READER_EARNING_SIGNAL_END = 6
+OPENING_MAIN_BATTLEFIELD_END = 8
+OPENING_MAIN_BATTLEFIELD_DOMINANCE_MIN = 5
+OPENING_SIGNAL_KEYS = (
+    "public_signboard_event",
+    "representative_reevaluation",
+    "next_battlefield_ticket",
+)
+WORK_ID_PATTERNS = (
+    re.compile(r"^(?:\d{2}_)?(?P<work_id>[a-z0-9_]+)_tr_block_\d+_draft$", re.IGNORECASE),
+    re.compile(r"^(?:\d{2}_)?bi_(?P<work_id>[a-z0-9_]+)$", re.IGNORECASE),
+    re.compile(r"^(?:\d{2}_)?(?P<work_id>[a-z0-9_]+)_phase0_design$", re.IGNORECASE),
+)
+PREPROCESS_JSON_STEMS = {
+    "source_manifest",
+    "profile_lock",
+    "material_bundle_summary",
+    "phase0_ready_snapshot",
+}
 BLANKISH_PREFIXES = ("없음", "해당 없음")
 BLANKISH_VALUES = {
     "",
@@ -173,6 +197,137 @@ def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def read_json_if_exists(path: Path | None) -> Any | None:
+    if path is None or not path.exists():
+        return None
+    try:
+        return read_json(path)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def pick_first_text(*values: Any) -> str:
+    for value in values:
+        text = as_text(value)
+        if text:
+            return text
+    return ""
+
+
+def join_brief_list(values: Any, *, limit: int = 4, item_limit: int = 30) -> str:
+    items = [truncate(item, item_limit) for item in ensure_list(values) if as_text(item)]
+    return ", ".join(items[:limit])
+
+
+def infer_work_id_from_path(path: Path | None) -> str | None:
+    if path is None:
+        return None
+
+    if path.stem in PREPROCESS_JSON_STEMS and len(path.parts) >= 3 and path.parent.parent.name == "preprocess":
+        return path.parent.name
+
+    stem = path.stem
+    for pattern in WORK_ID_PATTERNS:
+        match = pattern.match(stem)
+        if match:
+            return match.group("work_id")
+    return None
+
+
+def resolve_prompt_work_id(args: argparse.Namespace) -> str | None:
+    explicit = as_text(getattr(args, "work_id", ""))
+    if explicit:
+        return explicit
+    for candidate in (getattr(args, "draft", None), getattr(args, "roadmap", None)):
+        work_id = infer_work_id_from_path(candidate)
+        if work_id:
+            return work_id
+    return None
+
+
+def _phase0_design(payload: Any) -> dict[str, Any]:
+    if isinstance(payload, dict):
+        phase0 = payload.get("phase0_design")
+        if isinstance(phase0, dict):
+            return phase0
+    return {}
+
+
+def _opening_bundle_contract(planning_context: dict[str, Any]) -> dict[str, Any]:
+    material_bundle = planning_context.get("material_bundle_summary")
+    if isinstance(material_bundle, dict):
+        contract = material_bundle.get("opening_bundle_contract")
+        if isinstance(contract, dict):
+            return contract
+    phase0_design = _phase0_design(planning_context.get("phase0_payload"))
+    contract = phase0_design.get("opening_bundle_contract")
+    return contract if isinstance(contract, dict) else {}
+
+
+def _first_phase0_arc(planning_context: dict[str, Any]) -> dict[str, Any]:
+    phase0_design = _phase0_design(planning_context.get("phase0_payload"))
+    arcs = phase0_design.get("arcs")
+    if isinstance(arcs, list):
+        for arc in arcs:
+            if isinstance(arc, dict):
+                return arc
+    return {}
+
+
+def load_planning_context(work_id: str | None) -> dict[str, Any]:
+    if not work_id:
+        return {}
+
+    preprocess_root = ROOT / "treatments" / "preprocess" / work_id
+    phase0_path = resolve_phase0_path(work_id, root=ROOT)
+    return {
+        "work_id": work_id,
+        "source_manifest": read_json_if_exists(preprocess_root / "source_manifest.json"),
+        "profile_lock": read_json_if_exists(preprocess_root / "profile_lock.json"),
+        "material_bundle_summary": read_json_if_exists(preprocess_root / "material_bundle_summary.json"),
+        "phase0_ready_snapshot": read_json_if_exists(preprocess_root / "phase0_ready_snapshot.json"),
+        "phase0_payload": read_json_if_exists(phase0_path),
+    }
+
+
+def merge_prompt_meta(meta: dict[str, Any], planning_context: dict[str, Any]) -> dict[str, Any]:
+    merged = dict(meta)
+    source_manifest = planning_context.get("source_manifest")
+    profile_lock = planning_context.get("profile_lock")
+    phase0_payload = planning_context.get("phase0_payload")
+
+    if not isinstance(source_manifest, dict):
+        source_manifest = {}
+    if not isinstance(profile_lock, dict):
+        profile_lock = {}
+    if not isinstance(phase0_payload, dict):
+        phase0_payload = {}
+
+    merged["title"] = pick_first_text(
+        merged.get("title"),
+        get_nested(source_manifest, "work_identity.title"),
+        get_nested(phase0_payload, "project.title_ko"),
+    )
+    merged["genre"] = pick_first_text(
+        merged.get("genre"),
+        get_nested(phase0_payload, "project.format"),
+        get_nested(source_manifest, "work_identity.primary_profile"),
+        profile_lock.get("primary_profile"),
+    )
+    merged["protagonist"] = pick_first_text(
+        merged.get("protagonist"),
+        get_nested(phase0_payload, "protagonist.name"),
+    )
+    merged["logline"] = pick_first_text(
+        merged.get("logline"),
+        get_nested(phase0_payload, "project.logline"),
+        get_nested(phase0_payload, "project.core_premise"),
+    )
+    if planning_context.get("work_id"):
+        merged["work_id"] = planning_context["work_id"]
+    return merged
+
+
 def build_canonical_treatment_payload(data: Any, *, schema: str = "tr.v1") -> Any:
     if not isinstance(data, list):
         return data
@@ -221,6 +376,14 @@ def is_blankish(value: Any) -> bool:
     return any(text.startswith(prefix) for prefix in BLANKISH_PREFIXES)
 
 
+def extract_macro_battlefield(block: dict[str, Any]) -> str:
+    for path in ("location.macro_battlefield", "genre_ext.macro_battlefield"):
+        value = as_text(get_nested(block, path))
+        if value and not is_blankish(value):
+            return value
+    return ""
+
+
 def bundle_size(block: dict[str, Any]) -> int:
     content = block.get("content", {}) if isinstance(block, dict) else {}
     return (
@@ -267,6 +430,42 @@ def extract_block_cider_state(block: dict[str, Any]) -> dict[str, Any]:
         "receipt_type": as_text(payload.get("receipt_type")),
         "receipt_line": as_text(payload.get("receipt_line")),
     }
+
+
+def get_opening_progression_payload(block: dict[str, Any]) -> dict[str, Any]:
+    genre = block.get("genre_ext", {}) if isinstance(block.get("genre_ext"), dict) else {}
+    payload = genre.get("opening_progression")
+    return payload if isinstance(payload, dict) else {}
+
+
+def opening_progression_missing_keys(block: dict[str, Any]) -> list[str]:
+    payload = get_opening_progression_payload(block)
+    if not payload:
+        return list(OPENING_SIGNAL_KEYS)
+    return [key for key in OPENING_SIGNAL_KEYS if not as_text(payload.get(key))]
+
+
+def detect_opening_progression_signal(block: dict[str, Any], key: str) -> str:
+    declared = as_text(get_nested(block, f"genre_ext.opening_progression.{key}"))
+    if declared and not is_blankish(declared):
+        return declared
+
+    candidates = [
+        as_text(get_nested(block, "content.reward")),
+        as_text(get_nested(block, "genre_ext.block_cider.receipt_line")),
+        as_text(get_nested(block, "power_shift.protagonist")),
+        as_text(get_nested(block, "power_shift.antagonist")),
+    ]
+    candidates.extend(as_text(item) for item in ensure_list(block.get("callback")))
+    joined = " ".join(text for text in candidates if text)
+
+    if key == "representative_reevaluation" and has_recognition_signal(block):
+        return "[legacy recognition signal]"
+    if key == "public_signboard_event" and SIGNBOARD_SIGNAL_RE.search(joined):
+        return "[legacy signboard signal]"
+    if key == "next_battlefield_ticket" and NEXT_BATTLEFIELD_TICKET_RE.search(joined):
+        return "[legacy next-battlefield ticket]"
+    return ""
 
 
 def iter_entity_tokens(block: dict[str, Any]) -> list[str]:
@@ -529,6 +728,126 @@ def has_recognition_signal(block: dict[str, Any]) -> bool:
     return any(RECOGNITION_RE.search(as_text(text)) for text in candidates)
 
 
+def analyze_opening_pacing(blocks: list[dict[str, Any]]) -> dict[str, Any]:
+    opening_entries: list[tuple[int, dict[str, Any]]] = []
+    for block in blocks:
+        block_no = parse_block_no(block.get("block_id"))
+        if block_no is None or block_no < 1 or block_no > OPENING_CONTRACT_END:
+            continue
+        opening_entries.append((block_no, block))
+    opening_entries.sort(key=lambda item: item[0])
+
+    result = {
+        "observed_opening_block_count": len(opening_entries),
+        "opening_contract_declared": False,
+        "opening_macro_battlefield_missing_blocks": [],
+        "opening_progression_missing_blocks": [],
+        "opening_macro_battlefield_map": [],
+        "opening_main_macro_battlefield": "",
+        "opening_main_macro_battlefield_blocks": [],
+        "opening_main_macro_battlefield_share": 0.0,
+        "first_public_signboard_block": None,
+        "representative_reevaluation_block": None,
+        "next_battlefield_ticket_block": None,
+        "first_reader_earning_signal_block": None,
+        "opening_reader_earning_signal_by6": True,
+        "opening_macro_progression_ok": True,
+        "opening_main_macro_battlefield_overstay": False,
+        "opening_pacing_warnings": [],
+    }
+    if not opening_entries:
+        return result
+
+    first_signal_blocks: dict[str, int | None] = {key: None for key in OPENING_SIGNAL_KEYS}
+    missing_macro_blocks: list[int] = []
+    missing_progression_blocks: list[dict[str, Any]] = []
+
+    for block_no, block in opening_entries:
+        macro_battlefield = extract_macro_battlefield(block)
+        if not macro_battlefield:
+            missing_macro_blocks.append(block_no)
+        else:
+            result["opening_macro_battlefield_map"].append(
+                {
+                    "block_no": block_no,
+                    "macro_battlefield": macro_battlefield,
+                    "place": as_text(get_nested(block, "location.place")),
+                }
+            )
+
+        missing_keys = opening_progression_missing_keys(block)
+        if missing_keys:
+            missing_progression_blocks.append({"block_no": block_no, "missing_keys": missing_keys})
+
+        for key in OPENING_SIGNAL_KEYS:
+            if first_signal_blocks[key] is None and detect_opening_progression_signal(block, key):
+                first_signal_blocks[key] = block_no
+
+    result["opening_macro_battlefield_missing_blocks"] = missing_macro_blocks
+    result["opening_progression_missing_blocks"] = missing_progression_blocks
+    result["opening_contract_declared"] = not missing_macro_blocks and not missing_progression_blocks
+    result["first_public_signboard_block"] = first_signal_blocks["public_signboard_event"]
+    result["representative_reevaluation_block"] = first_signal_blocks["representative_reevaluation"]
+    result["next_battlefield_ticket_block"] = first_signal_blocks["next_battlefield_ticket"]
+
+    signal_blocks = [block_no for block_no in first_signal_blocks.values() if block_no is not None]
+    first_reader_signal_block = min(signal_blocks) if signal_blocks else None
+    result["first_reader_earning_signal_block"] = first_reader_signal_block
+
+    window_entries = [
+        (block_no, extract_macro_battlefield(block))
+        for block_no, block in opening_entries
+        if OPENING_READER_EARNING_SIGNAL_START <= block_no <= OPENING_MAIN_BATTLEFIELD_END and extract_macro_battlefield(block)
+    ]
+    if window_entries:
+        macro_counter = Counter(macro for _, macro in window_entries)
+        main_macro, main_count = macro_counter.most_common(1)[0]
+        main_macro_blocks = [block_no for block_no, macro in window_entries if macro == main_macro]
+        result["opening_main_macro_battlefield"] = main_macro
+        result["opening_main_macro_battlefield_blocks"] = main_macro_blocks
+        result["opening_main_macro_battlefield_share"] = round(main_count / len(window_entries) * 100, 1)
+        result["opening_main_macro_battlefield_overstay"] = (
+            OPENING_MAIN_BATTLEFIELD_END in main_macro_blocks and main_count >= OPENING_MAIN_BATTLEFIELD_DOMINANCE_MIN
+        )
+
+    max_opening_block = opening_entries[-1][0]
+    if result["opening_contract_declared"] and max_opening_block >= OPENING_READER_EARNING_SIGNAL_END:
+        result["opening_reader_earning_signal_by6"] = (
+            first_reader_signal_block is not None
+            and OPENING_READER_EARNING_SIGNAL_START <= first_reader_signal_block <= OPENING_READER_EARNING_SIGNAL_END
+        )
+
+    if result["opening_contract_declared"] and max_opening_block >= OPENING_MAIN_BATTLEFIELD_END:
+        late_signal = first_reader_signal_block is None or first_reader_signal_block >= (OPENING_MAIN_BATTLEFIELD_END + 1)
+        result["opening_macro_progression_ok"] = not (
+            result["opening_main_macro_battlefield_overstay"] and late_signal
+        )
+
+    warnings: list[str] = []
+    if missing_macro_blocks:
+        warnings.append(f"opening blocks missing location.macro_battlefield: {missing_macro_blocks}")
+    if missing_progression_blocks:
+        rendered = ", ".join(
+            f"B{item['block_no']}({', '.join(item['missing_keys'])})" for item in missing_progression_blocks[:5]
+        )
+        warnings.append(f"opening blocks missing genre_ext.opening_progression declarations: {rendered}")
+    if result["opening_contract_declared"] and max_opening_block >= OPENING_READER_EARNING_SIGNAL_END and not result[
+        "opening_reader_earning_signal_by6"
+    ]:
+        first_label = format_block_id(first_reader_signal_block) if first_reader_signal_block is not None else "없음"
+        warnings.append(f"TR 2~6 reader-earning signal 부재: first={first_label}")
+    if result["opening_contract_declared"] and max_opening_block >= OPENING_MAIN_BATTLEFIELD_END and not result[
+        "opening_macro_progression_ok"
+    ]:
+        first_label = format_block_id(first_reader_signal_block) if first_reader_signal_block is not None else "없음"
+        warnings.append(
+            "opening main macro_battlefield "
+            f"{result['opening_main_macro_battlefield']!r} overstay through Block 8; first signal={first_label}"
+        )
+    result["opening_pacing_warnings"] = warnings
+    return result
+
+
 def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
     blocks = extract_blocks(blocks)
     if not blocks:
@@ -578,6 +897,21 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             "endgame_low_stakes_blocks": [],
             "normalized_solution_stakes_repeat_max": 0,
             "is_regressor_treatment": False,
+            "observed_opening_block_count": 0,
+            "opening_contract_declared": False,
+            "opening_macro_battlefield_missing_blocks": [],
+            "opening_progression_missing_blocks": [],
+            "opening_macro_battlefield_map": [],
+            "opening_main_macro_battlefield": "",
+            "opening_main_macro_battlefield_blocks": [],
+            "opening_main_macro_battlefield_share": 0.0,
+            "first_public_signboard_block": None,
+            "representative_reevaluation_block": None,
+            "next_battlefield_ticket_block": None,
+            "first_reader_earning_signal_block": None,
+            "opening_reader_earning_signal_by6": True,
+            "opening_macro_progression_ok": True,
+            "opening_main_macro_battlefield_overstay": False,
             "hard_gate_checks": {},
             "hard_gate_failures": [],
             "window_10_opponent_unique_counts": [],
@@ -592,7 +926,8 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
                 "label_meta_ref_examples": [],
                 "diegetic_block_ref_examples": [],
                 "npc_continuity_mismatch_examples": [],
-                },
+                "opening_pacing_warnings": [],
+            },
         }
 
     npc_continuity_mismatches = compute_npc_continuity_mismatches(blocks)
@@ -748,6 +1083,7 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             Counter(chunk).most_common(1)[0][1],
         )
 
+    opening_analysis = analyze_opening_pacing(blocks)
     thin_ratio_limit = len(blocks) * 0.10
     required_recognition_blocks = max(6, (len(blocks) + 9) // 10) if is_regressor_treatment else 0
     hard_gate_checks = {
@@ -769,6 +1105,16 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         "label_meta_ref_zero": label_meta_ref_count == 0,
         "diegetic_block_ref_zero": diegetic_meta_ref_count == 0,
     }
+    if (
+        opening_analysis["opening_contract_declared"]
+        and opening_analysis["observed_opening_block_count"] >= OPENING_READER_EARNING_SIGNAL_END
+    ):
+        hard_gate_checks["opening_reader_earning_signal_by6"] = opening_analysis["opening_reader_earning_signal_by6"]
+    if (
+        opening_analysis["opening_contract_declared"]
+        and opening_analysis["observed_opening_block_count"] >= OPENING_MAIN_BATTLEFIELD_END
+    ):
+        hard_gate_checks["opening_macro_progression_ok"] = opening_analysis["opening_macro_progression_ok"]
     if is_regressor_treatment:
         hard_gate_checks["regressor_recognition_count_ok"] = recognition_signal_blocks >= required_recognition_blocks
         hard_gate_checks["regressor_recognition_gap_ok"] = max_recognition_gap_streak <= 15
@@ -839,6 +1185,21 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
         "endgame_low_stakes_blocks": endgame_low_stakes_blocks,
         "normalized_solution_stakes_repeat_max": normalized_solution_stakes_repeat_max,
         "is_regressor_treatment": is_regressor_treatment,
+        "observed_opening_block_count": opening_analysis["observed_opening_block_count"],
+        "opening_contract_declared": opening_analysis["opening_contract_declared"],
+        "opening_macro_battlefield_missing_blocks": opening_analysis["opening_macro_battlefield_missing_blocks"],
+        "opening_progression_missing_blocks": opening_analysis["opening_progression_missing_blocks"],
+        "opening_macro_battlefield_map": opening_analysis["opening_macro_battlefield_map"],
+        "opening_main_macro_battlefield": opening_analysis["opening_main_macro_battlefield"],
+        "opening_main_macro_battlefield_blocks": opening_analysis["opening_main_macro_battlefield_blocks"],
+        "opening_main_macro_battlefield_share": opening_analysis["opening_main_macro_battlefield_share"],
+        "first_public_signboard_block": opening_analysis["first_public_signboard_block"],
+        "representative_reevaluation_block": opening_analysis["representative_reevaluation_block"],
+        "next_battlefield_ticket_block": opening_analysis["next_battlefield_ticket_block"],
+        "first_reader_earning_signal_block": opening_analysis["first_reader_earning_signal_block"],
+        "opening_reader_earning_signal_by6": opening_analysis["opening_reader_earning_signal_by6"],
+        "opening_macro_progression_ok": opening_analysis["opening_macro_progression_ok"],
+        "opening_main_macro_battlefield_overstay": opening_analysis["opening_main_macro_battlefield_overstay"],
         "hard_gate_checks": hard_gate_checks,
         "hard_gate_failures": structural_gate_failures,
         "window_10_opponent_unique_counts": window_10,
@@ -853,6 +1214,7 @@ def compute_treatment_metrics(blocks: Any) -> dict[str, Any]:
             "label_meta_ref_examples": label_meta_ref_examples,
             "diegetic_block_ref_examples": diegetic_meta_ref_examples,
             "npc_continuity_mismatch_examples": npc_continuity_mismatches[:10],
+            "opening_pacing_warnings": opening_analysis["opening_pacing_warnings"],
         },
     }
 
@@ -1209,7 +1571,7 @@ def prompt_json_skeleton(start: int, batch_size: int, protagonist: str) -> str:
         "emotional_beat": {"type": "resolve", "intensity": 7},
         "tension_level": 8,
         "pov_character": protagonist or "주인공",
-        "location": {"place": "장소", "type": "사업 거점"},
+        "location": {"place": "장소", "type": "사업 거점", "macro_battlefield": "opening 운영 전장"},
         "time_span": {"duration": "2주", "in_story_time": "2006년 1월"},
         "genre_ext": {
             "capital_before": "120억",
@@ -1229,6 +1591,11 @@ def prompt_json_skeleton(start: int, batch_size: int, protagonist: str) -> str:
             "section_rotation": "원자재 첫 증명과 숏 준비",
             "global_partner": {"name": "파트너", "cadence": "비정형", "objective": "목적"},
             "success_pattern": "한국어 결과 패턴",
+            "opening_progression": {
+                "public_signboard_event": "없음",
+                "representative_reevaluation": "없음",
+                "next_battlefield_ticket": "없음"
+            },
             "block_cider": {
                 "has_cider": True,
                 "receipt_type": "재평가 + 권한 이동",
@@ -1306,9 +1673,117 @@ def render_pattern_feedback_lines(history_blocks: list[dict[str, Any]]) -> list[
         lines.append("### 구조 게이트 실패")
         for gate in gate_failures:
             lines.append(f"- {gate}")
+    opening_warnings = snap.get("opening_pacing_warnings", [])
+    if opening_warnings:
+        lines.append("### 오프닝 페이싱 경고")
+        for warning in opening_warnings:
+            lines.append(f"- {warning}")
     if len(lines) == 2:
         return []
     return lines
+
+
+def render_planning_context_lines(planning_context: dict[str, Any]) -> list[str]:
+    if not planning_context:
+        return []
+
+    source_manifest = planning_context.get("source_manifest")
+    profile_lock = planning_context.get("profile_lock")
+    material_bundle = planning_context.get("material_bundle_summary")
+    phase0_ready = planning_context.get("phase0_ready_snapshot")
+    phase0_payload = planning_context.get("phase0_payload")
+
+    if not isinstance(source_manifest, dict):
+        source_manifest = {}
+    if not isinstance(profile_lock, dict):
+        profile_lock = {}
+    if not isinstance(material_bundle, dict):
+        material_bundle = {}
+    if not isinstance(phase0_ready, dict):
+        phase0_ready = {}
+    if not isinstance(phase0_payload, dict):
+        phase0_payload = {}
+
+    contract = _opening_bundle_contract(planning_context)
+    first_arc = _first_phase0_arc(planning_context)
+    reward_rule = get_nested(phase0_payload, "phase0_design.hud_interpretation.first_block_reward_rule")
+
+    primary_profile = pick_first_text(profile_lock.get("primary_profile"), get_nested(source_manifest, "work_identity.primary_profile"))
+    secondary_profile = pick_first_text(
+        profile_lock.get("secondary_profile"),
+        get_nested(source_manifest, "work_identity.secondary_profile"),
+    )
+    manual_audit = phase0_ready.get("manual_audit_pass")
+
+    lines = ["## Stage0 / Phase0 Authority"]
+    work_id = as_text(planning_context.get("work_id"))
+    if work_id:
+        lines.append(f"- work_id: {work_id}")
+    if isinstance(manual_audit, bool):
+        lines.append(f"- stage0 manual audit: {'PASS' if manual_audit else 'FAIL'}")
+    if primary_profile or secondary_profile:
+        lines.append(f"- locked profiles: {primary_profile or '-'} / {secondary_profile or '-'}")
+
+    resource_axis = join_brief_list(profile_lock.get("resource_axis"))
+    if resource_axis:
+        lines.append(f"- resource axis: {resource_axis}")
+    power_axis = join_brief_list(profile_lock.get("power_axis"))
+    if power_axis:
+        lines.append(f"- power axis: {power_axis}")
+    failure_axis = join_brief_list(profile_lock.get("failure_axis"))
+    if failure_axis:
+        lines.append(f"- failure axis: {failure_axis}")
+
+    hard_constraints = join_brief_list(source_manifest.get("hard_constraints"), limit=3, item_limit=44)
+    if hard_constraints:
+        lines.append(f"- hard constraints: {hard_constraints}")
+
+    if contract:
+        lines.append(f"- opening bundle window: {as_text(contract.get('bundle_window')) or 'TR 2~6'}")
+        macro_battlefield = pick_first_text(contract.get("macro_battlefield"), first_arc.get("title"))
+        if macro_battlefield:
+            lines.append(f"- opening macro battlefield: {macro_battlefield}")
+        macro_map = join_brief_list(contract.get("macro_battlefield_map"), limit=5, item_limit=24)
+        if macro_map:
+            lines.append(f"- opening battlefield map: {macro_map}")
+        bundle_goal = pick_first_text(
+            contract.get("bundle_goal"),
+            get_nested(phase0_payload, "protagonist.initial_goal"),
+            first_arc.get("exit_function"),
+        )
+        if bundle_goal:
+            lines.append(f"- opening bundle goal: {truncate(bundle_goal, 120)}")
+        signboard = as_text(contract.get("first_signboard_block"))
+        reevaluation = as_text(contract.get("representative_reevaluation_block"))
+        ticket = as_text(contract.get("next_battlefield_ticket_block"))
+        if signboard or reevaluation or ticket:
+            lines.append(f"- opening timing targets: signboard B{signboard or '?'} / reevaluation B{reevaluation or '?'} / ticket B{ticket or '?'}")
+        timing_note = as_text(contract.get("timing_reconciliation_note"))
+        if timing_note:
+            lines.append(f"- opening pacing note: {truncate(timing_note, 120)}")
+    elif first_arc:
+        title = pick_first_text(first_arc.get("title"), first_arc.get("arc_id"))
+        block_range = as_text(first_arc.get("block_range"))
+        lines.append(f"- opening arc fallback: {title or '(미지정)'}{f' ({block_range})' if block_range else ''}")
+        entry = as_text(first_arc.get("entry_function"))
+        if entry:
+            lines.append(f"- opening entry: {truncate(entry, 120)}")
+        exit_line = as_text(first_arc.get("exit_function"))
+        if exit_line:
+            lines.append(f"- opening exit / next ticket: {truncate(exit_line, 120)}")
+        sectors = join_brief_list(first_arc.get("front_sectors"), limit=3, item_limit=20)
+        support = join_brief_list(first_arc.get("support_sectors"), limit=3, item_limit=20)
+        if sectors or support:
+            lines.append(f"- opening sectors: front={sectors or '-'} | support={support or '-'}")
+
+    if reward_rule:
+        lines.append(f"- first reward rule: {truncate(reward_rule, 120)}")
+
+    material_note = pick_first_text(material_bundle.get("notes"), source_manifest.get("manual_audit_note"))
+    if material_note:
+        lines.append(f"- material note: {truncate(material_note, 120)}")
+
+    return lines if len(lines) > 1 else []
 
 
 def build_prompt(
@@ -1318,17 +1793,20 @@ def build_prompt(
     start: int,
     batch_size: int,
     mode: str,
+    planning_context_lines: list[str] | None = None,
 ) -> str:
     completed = draft_blocks[: start - 1]
     protagonist = as_text(meta.get("protagonist"))
     digest_lines = render_harness_digest_lines(load_harness_digest(family="blockguide", stage="tr_batch"))
     pattern_feedback_lines = render_pattern_feedback_lines(completed)
+    planning_context_lines = planning_context_lines or []
 
     if mode == "flash":
         predeclare = """1. 직전 상태 인용: 직전 블록의 capital_after, emotional_beat, 관계 after를 인용하라.
 2. 자본 계산: capital_before = 직전 capital_after. 이번 변화 근거와 계산식을 적어라.
 3. same-block 사이다 영수증: 이번 블록의 `genre_ext.block_cider.receipt_line`을 1문장으로 먼저 적어라.
-4. 차별화 1줄: 직전 블록과 가장 크게 달라진 지점을 1문장으로 써라."""
+4. opening 블록이면 `location.macro_battlefield`와 `genre_ext.opening_progression` 3종을 먼저 적어라.
+5. 차별화 1줄: 직전 블록과 가장 크게 달라진 지점을 1문장으로 써라."""
         batch_rule = "배치는 3블록이며, JSON 뒤에 3블록 차이 행렬과 OPEN 복선 원장만 출력하라."
     else:
         predeclare = """1. 이전 블록 잔향
@@ -1337,7 +1815,8 @@ def build_prompt(
 4. 자본 계산 과정
 5. NPC 관계 이월
 6. 각 블록 `genre_ext.block_cider` 사이다 영수증 확인
-7. 언어·형식 체크"""
+7. opening 블록이면 `location.macro_battlefield`와 `genre_ext.opening_progression` 3종 선언
+8. 언어·형식 체크"""
         batch_rule = "배치가 끝나면 차이 행렬, NPC 추적표, 복선 원장, 자본 곡선을 출력하라."
 
     lines = [
@@ -1351,10 +1830,18 @@ def build_prompt(
         f"- 주인공: {protagonist or '(미지정)'}",
         f"- 로그라인: {as_text(meta.get('logline')) or '(미지정)'}",
         "",
+        *planning_context_lines,
+        *([""] if planning_context_lines else []),
         "## 이번 배치",
         f"- 시작 블록: {start}",
         f"- 종료 블록: {start + batch_size - 1}",
         f"- 모드: {mode}",
+        "",
+        "## TR 블록 해석 계약",
+        "- TR block 1개는 출판 1화가 아니라 downstream 2~6화 분량 planning bundle이다.",
+        "- opening reader-earning bundle의 기본 증거 창은 `TR 2~6`이다.",
+        "- opening `Block 001~010`은 `location.macro_battlefield`와 `genre_ext.opening_progression` 3종을 반드시 명시한다.",
+        "- opening main `macro_battlefield`가 `Block 2~8`을 먹은 채 첫 signboard/reevaluation/ticket을 `Block 9+`로 미루지 마라.",
         "",
         "## 이번 배치 목표",
         batch_target_lines(roadmap_blocks, start, batch_size),
@@ -1399,6 +1886,10 @@ def build_prompt(
         "- emotional_beat.type 2연속 동일 금지",
         "- location 15블록 이내 재등장 금지",
         "- 같은 장소를 연속 쓸 때는 deal_type / opponent / stakes / 관계 타깃 / 세부 장소 중 2개 이상 바꿀 것",
+        "- opening `Block 001~010`에서 `location.macro_battlefield` 누락 금지",
+        "- opening `Block 001~010`에서 `genre_ext.opening_progression.public_signboard_event` / `representative_reevaluation` / `next_battlefield_ticket` 공란 금지. beat가 없으면 반드시 `없음`으로 적을 것",
+        "- `TR 2~6` 안에 first reader-earning signal 없이 버티는 opening 금지",
+        "- 같은 opening `macro_battlefield`가 `Block 2~8`을 장악한 채 첫 signboard/reevaluation/ticket을 `Block 9+`로 미루는 것 금지",
         "- `capital_before != 직전 capital_after` 금지",
         "- `relationship_delta.before != 직전 after` 금지",
         "- leverage_used 동일 세트 3회 반복 금지",
@@ -1664,6 +2155,20 @@ def validate_candidate(
             all_deal_types.append(deal_type)
 
         location = as_text(get_nested(block, "location.place"))
+        if expected_no <= OPENING_CONTRACT_END:
+            macro_battlefield = as_text(get_nested(block, "location.macro_battlefield"))
+            if not macro_battlefield:
+                append_finding(findings, "P1", "PACE-001", label, "opening 블록은 location.macro_battlefield를 명시해야 한다.")
+            missing_progression = opening_progression_missing_keys(block)
+            if missing_progression:
+                append_finding(
+                    findings,
+                    "P1",
+                    "PACE-002",
+                    label,
+                    "opening 블록은 genre_ext.opening_progression 3종을 모두 명시해야 한다. "
+                    f"빈 항목={missing_progression} (beat가 없으면 '없음' 사용)",
+                )
         if location and location in all_locations[-14:]:
             append_finding(findings, "P2", "LOC-001", label, f"location이 최근 15블록 이내에 재등장했다: {location}")
         if prev_block_for_location is not None:
@@ -1709,6 +2214,38 @@ def validate_candidate(
             "FS-003",
             f"{start}-{start + batch_size - 1}",
             f"OPEN 복선이 {open_after_merge}개라서 저지능 모델 관리 한도를 넘는다.",
+        )
+
+    opening_analysis = analyze_opening_pacing(history_blocks + blocks[:batch_size])
+    if (
+        opening_analysis["opening_contract_declared"]
+        and opening_analysis["observed_opening_block_count"] >= OPENING_READER_EARNING_SIGNAL_END
+        and not opening_analysis["opening_reader_earning_signal_by6"]
+    ):
+        first_block = opening_analysis["first_reader_earning_signal_block"]
+        first_label = format_block_id(first_block) if first_block is not None else "없음"
+        append_finding(
+            findings,
+            "P1",
+            "PACE-003",
+            "1-6",
+            f"`TR 2~6` 안에 first reader-earning signal이 없다. first={first_label}",
+        )
+    if (
+        opening_analysis["opening_contract_declared"]
+        and opening_analysis["observed_opening_block_count"] >= OPENING_MAIN_BATTLEFIELD_END
+        and not opening_analysis["opening_macro_progression_ok"]
+    ):
+        first_block = opening_analysis["first_reader_earning_signal_block"]
+        first_label = format_block_id(first_block) if first_block is not None else "없음"
+        append_finding(
+            findings,
+            "P1",
+            "PACE-004",
+            "1-8",
+            "opening main macro_battlefield "
+            f"{opening_analysis['opening_main_macro_battlefield']!r}가 `Block 2~8`을 과체류했고 "
+            f"first signboard/reevaluation/ticket={first_label}다.",
         )
 
     return findings, blocks[:batch_size]
@@ -1759,7 +2296,10 @@ def command_prompt(args: argparse.Namespace) -> int:
     draft_blocks = load_blocks_from_path(args.draft)
     roadmap_payload = read_json(args.roadmap) if args.roadmap else None
     roadmap_blocks = extract_blocks(roadmap_payload) if roadmap_payload is not None else None
+    work_id = resolve_prompt_work_id(args)
+    planning_context = load_planning_context(work_id)
     meta = extract_project_meta(roadmap_payload) if roadmap_payload is not None else {}
+    meta = merge_prompt_meta(meta, planning_context)
 
     prompt = build_prompt(
         draft_blocks=draft_blocks,
@@ -1768,6 +2308,7 @@ def command_prompt(args: argparse.Namespace) -> int:
         start=args.start,
         batch_size=args.batch_size,
         mode=args.mode,
+        planning_context_lines=render_planning_context_lines(planning_context),
     )
 
     if args.output:
@@ -1869,6 +2410,7 @@ def build_parser() -> argparse.ArgumentParser:
     prompt_parser = subparsers.add_parser("prompt", help="Generate batch prompt bundle")
     prompt_parser.add_argument("--draft", type=Path, help="Existing treatment draft JSON")
     prompt_parser.add_argument("--roadmap", type=Path, help="Roadmap or BI JSON for titles/context")
+    prompt_parser.add_argument("--work-id", help="Canonical work_id for Stage0 / Phase0 prompt authority lookup")
     prompt_parser.add_argument("--start", type=int, required=True, help="Start block number (1-based)")
     prompt_parser.add_argument("--batch-size", type=int, default=3, help="Batch size")
     prompt_parser.add_argument("--mode", choices=["flash", "pro", "sonnet"], default="flash", help="Prompt operating mode")
