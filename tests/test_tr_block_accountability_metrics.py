@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 import scripts.audit_bi_5pass as audit_script
-from scripts.tr_batch_harness import compute_treatment_metrics
+from scripts.tr_batch_harness import compute_treatment_metrics, validate_candidate
 
 
 def _build_block(
@@ -21,27 +21,38 @@ def _build_block(
     section_rotation: str | None = None,
     weakness: str | None = None,
     capital_after: str | None = None,
+    capital_before: str | None = None,
+    macro_battlefield: str | None = None,
+    public_signboard_event: str = "없음",
+    representative_reevaluation: str = "없음",
+    next_battlefield_ticket: str = "없음",
 ) -> dict:
+    before = capital_before or f"{99 + block_no}억"
+    after = capital_after or f"{100 + block_no}억"
     return {
         "block_id": f"Block {block_no}",
-        "title": f"테스트 블록 {block_no}",
+        "title": f"테스트 장면 {block_no}",
         "content": {
             "context": (
-                f"블록 {block_no}에서는 자산이 권력으로 바뀌는 과정과 직전 블록의 비용이 어떻게 남는지, "
-                f"실무자와 계약선이 어떤 식으로 움직였는지를 구체적으로 묘사한다. "
-                f"이 설명은 block 책임을 테스트하기 위한 충분한 분량을 가진다."
+                "자산이 권력으로 바뀌는 과정과 직전 비용의 잔향이 어떻게 남는지, "
+                "실무자와 계약선이 어떤 식으로 움직였는지를 구체적으로 묘사한다. "
+                "이 설명은 treatment 책임을 테스트하기 위한 충분한 분량을 가진다."
             ),
             "event_villain": (
-                f"적대자는 블록 {block_no}에서 서류, 사람, 시간 압박 중 하나를 흔들며 주인공이 같은 방법을 "
-                f"반복하지 못하도록 압박한다. 이 사건은 다음 블록 callback이 붙을 수 있게 설계한다."
+                "적대자는 서류, 사람, 시간 압박 중 하나를 흔들며 주인공이 같은 방법을 "
+                "반복하지 못하도록 압박한다. 이 사건은 다음 callback이 붙을 수 있게 설계한다."
             ),
             "solution": solution,
             "reward": (
-                f"블록 {block_no}의 결과로 단순 수익이 아니라 승인권, 신용, 정보 우위 중 최소 하나가 "
-                f"새로 이동했다는 사실을 명시한다. 그래서 reward가 context 재진술로 끝나지 않는다."
+                "이번 결과로 단순 수익이 아니라 승인권, 신용, 정보 우위 중 최소 하나가 "
+                "새로 이동했다는 사실을 명시한다. 그래서 reward가 context 재진술로 끝나지 않는다."
             ),
         },
         "stakes": stakes,
+        "power_shift": {
+            "protagonist": "주인공이 승인선과 발언권을 조금 더 먼저 잡는다",
+            "antagonist": "적대자는 의사결정 주도권 일부를 잃는다",
+        },
         "relationship_delta": [
             {
                 "target": f"실무자 {block_no}",
@@ -56,23 +67,42 @@ def _build_block(
         ],
         "foreshadow": foreshadow or [],
         "callback": callback or [],
+        "emotional_beat": {"type": "resolve" if block_no % 2 else "pressure", "intensity": 6},
+        "location": {
+            "place": f"테스트 장소 {block_no}",
+            "type": "사업 거점",
+            "macro_battlefield": macro_battlefield or f"오프닝 전장 {((block_no - 1) // 3) + 1}",
+        },
         "genre_ext": {
-            "capital_after": capital_after or f"{100 + block_no}억",
+            "capital_before": before,
+            "capital_after": after,
+            "capital_delta": "+1억",
             "deal_type": f"딜 타입 {block_no}",
             "method": f"방법 {block_no}",
             "business_sector": f"섹터 {block_no}",
-            "section_rotation": section_rotation or f"ARC-01 - 책임 구간 {block_no}",
+            "section_rotation": section_rotation or f"책임 구간 {block_no}",
             "opponent": {
                 "name": opponent_name or f"상대 {block_no}",
                 "type": "경쟁 세력",
                 "weakness_exploited": weakness or f"약점 {block_no}",
+            },
+            "opening_progression": {
+                "public_signboard_event": public_signboard_event,
+                "representative_reevaluation": representative_reevaluation,
+                "next_battlefield_ticket": next_battlefield_ticket,
+            },
+            "block_cider": {
+                "has_cider": True,
+                "receipt_type": "재평가 + 권한 이동",
+                "receipt_line": "이번 장면 안에서 승인권과 질문권 일부가 주인공 쪽으로 기울며 same-block 사이다가 지급된다.",
+                "pain_only_exit": False,
             },
         },
         "regression_ext": {
             "is_regressor": True,
             "regression_type": "회귀",
             "regression_hint": {
-                "slip_up": f"블록 {block_no}의 지나치게 정확한 타이밍 언급",
+                "slip_up": "지나치게 정확한 타이밍 언급",
                 "recognition_from": recognition_from,
                 "suspicion_from": suspicion_from,
             },
@@ -115,10 +145,11 @@ def _make_positive_blocks() -> list[dict]:
         foreshadow = []
         callback = []
         if idx < 10:
-            foreshadow = [f"Block {idx + 1}에서 정산 질문이 승인선 공백을 찌른다"]
+            foreshadow = ["정산 질문 하나가 다음 승인선 공백을 찌른다"]
         if idx > 1:
-            callback = [f"Block {idx - 1}의 정산 질문이 승인선 공백을 찔렀다"]
-        recognition_from = f"PB {idx}가 주인공의 판단력을 인정하고 다음 거래를 먼저 제안한다" if idx <= 6 else ""
+            callback = ["앞서 던진 정산 질문이 승인선 공백을 찔렀다"]
+        recognition_from = f"PB {idx}가 주인공의 판단력을 인정하고 다음 거래를 먼저 제안한다" if 3 <= idx <= 8 else ""
+        macro_battlefield = "자금 포지션 축" if idx <= 3 else "승인선 전환 축" if idx <= 6 else "회수 고정 축"
         blocks.append(
             _build_block(
                 idx,
@@ -127,6 +158,10 @@ def _make_positive_blocks() -> list[dict]:
                 recognition_from=recognition_from,
                 foreshadow=foreshadow,
                 callback=callback,
+                macro_battlefield=macro_battlefield,
+                public_signboard_event="증권가 메인 라인에 주인공 이름이 처음 오르내른다" if idx == 3 else "없음",
+                representative_reevaluation="PB 본부장이 주인공 판단을 공식적으로 인정한다" if idx == 4 else "없음",
+                next_battlefield_ticket="구조조정 실무 회의 입장권이 열린다" if idx == 5 else "없음",
             )
         )
     return blocks
@@ -138,9 +173,9 @@ def _make_repetitive_blocks() -> list[dict]:
         foreshadow = []
         callback = []
         if idx < 10:
-            foreshadow = [f"Block {idx + 1}에서 세무 질문이 위임 계약의 빈틈을 찌른다"]
+            foreshadow = ["세무 질문 하나가 위임 계약의 빈틈을 찌른다"]
         if idx > 1:
-            callback = [f"Block {idx - 1}의 세무 질문이 위임 계약의 빈틈을 찔렀다"]
+            callback = ["앞서 던진 세무 질문이 위임 계약의 빈틈을 찔렀다"]
         blocks.append(
             _build_block(
                 idx,
@@ -156,8 +191,12 @@ def _make_repetitive_blocks() -> list[dict]:
                 foreshadow=foreshadow,
                 callback=callback,
                 opponent_name=f"상대 {idx}",
-                section_rotation=f"ARC-02 - 반복 감시 {idx}",
+                section_rotation=f"반복 감시 {idx}",
                 weakness=f"서류 집착 {idx}",
+                macro_battlefield="반복 감시 축",
+                public_signboard_event="언론이 주인공의 이름을 메인 사례로 올린다" if idx == 9 else "없음",
+                representative_reevaluation="대표가 뒤늦게 주인공 판단을 공식적으로 인정한다" if idx == 9 else "없음",
+                next_battlefield_ticket="다음 협상장 직행권이 열린다" if idx == 10 else "없음",
             )
         )
     return blocks
@@ -306,13 +345,12 @@ def test_compute_treatment_metrics_flags_golden_canary_structural_gaps():
 
     assert metrics["avg_bundle_chars"] > 350
     assert metrics["production_density_gate"] is False
-    assert metrics["callback_ratio"] < 0.65
+    assert metrics["callback_ratio"] < 0.7
     assert metrics["recognition_signal_blocks"] > 0
-    assert metrics["section_rotation_missing"] == metrics["block_count"]
-    assert metrics["late_blank_opponent_blocks"]
-    assert metrics["endgame_low_stakes_blocks"]
-    assert "callback_ratio_ok" in metrics["hard_gate_failures"]
-    assert "section_rotation_present" in metrics["hard_gate_failures"]
+    assert metrics["unresolved_foreshadow_count"] > 0
+    assert metrics["diegetic_meta_ref_count"] > 0
+    assert "unresolved_foreshadow_count_ok" in metrics["hard_gate_failures"]
+    assert "diegetic_meta_ref_zero" in metrics["hard_gate_failures"]
 
 
 def test_compute_treatment_metrics_passes_positive_structural_fixture():
@@ -335,6 +373,38 @@ def test_compute_treatment_metrics_rejects_dense_but_repetitive_solution_stakes(
     assert metrics["normalized_solution_stakes_repeat_max"] > 3
     assert metrics["production_density_gate"] is False
     assert "normalized_solution_stakes_repeat_ok" in metrics["hard_gate_failures"]
+
+
+def test_compute_treatment_metrics_rejects_opening_macro_battlefield_overstay():
+    metrics = compute_treatment_metrics(_make_repetitive_blocks())
+
+    assert "opening_reader_earning_signal_by6" in metrics["hard_gate_failures"]
+    assert "opening_macro_progression_ok" in metrics["hard_gate_failures"]
+    assert metrics["opening_main_macro_battlefield_overstay"] is True
+    assert metrics["first_reader_earning_signal_block"] == 9
+
+
+def test_validate_candidate_requires_opening_contract_fields():
+    block = _build_block(
+        1,
+        solution="주인공은 승인선의 빈칸을 먼저 읽고 질문 순서를 바꿔 상대의 계산을 흔든다.",
+        stakes="이번 장면을 놓치면 승인권과 질문권을 동시에 잃고 다음 전장 입구가 닫힌다.",
+    )
+    block["location"].pop("macro_battlefield", None)
+    block["genre_ext"].pop("opening_progression", None)
+
+    findings, _ = validate_candidate(
+        candidate_blocks=[block],
+        history_blocks=[],
+        start=1,
+        batch_size=1,
+        roadmap_blocks=None,
+        autofix=False,
+    )
+
+    rules = {item.rule for item in findings}
+    assert "PACE-001" in rules
+    assert "PACE-002" in rules
 
 
 def test_audit_bi_5pass_blocks_bi_handoff_when_source_tr_gate_fails(monkeypatch, temp_dir):

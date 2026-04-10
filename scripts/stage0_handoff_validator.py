@@ -13,11 +13,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 # ---------------------------------------------------------------------------
 # Valid profile enum (must match contracts/*.schema.json)
@@ -40,6 +43,13 @@ STAGE0_ARTIFACTS = [
     ("material_bundle_summary.json", "material_bundle_summary.schema.json"),
     ("phase0_ready_snapshot.json", "phase0_ready_snapshot.schema.json"),
 ]
+OPENING_CONTRACT_BLOCK_START = 2
+OPENING_CONTRACT_BLOCK_END = 6
+OPENING_CONTRACT_BLOCK_FIELDS = (
+    "first_signboard_block",
+    "representative_reevaluation_block",
+    "next_battlefield_ticket_block",
+)
 
 
 def _load_json_utf8(path: Path) -> tuple[dict | None, str | None]:
@@ -158,6 +168,52 @@ def _validate_profile_lock(data: dict) -> list[str]:
     return errors
 
 
+def _is_nonempty_text(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _validate_opening_bundle_contract(contract: Any, label: str) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(contract, dict):
+        return [f"[{label}] opening_bundle_contract must be an object"]
+
+    bundle_window = contract.get("bundle_window")
+    if not _is_nonempty_text(bundle_window):
+        errors.append(f"[{label}] opening_bundle_contract.bundle_window must be a non-empty string")
+    elif not re.search(r"2\s*[~\-]\s*6", str(bundle_window)):
+        errors.append(f"[{label}] opening_bundle_contract.bundle_window must lock the TR 2~6 window")
+
+    for field in ("bundle_goal", "macro_battlefield", "timing_reconciliation_note"):
+        if not _is_nonempty_text(contract.get(field)):
+            errors.append(f"[{label}] opening_bundle_contract.{field} must be a non-empty string")
+
+    macro_map = contract.get("macro_battlefield_map")
+    if not isinstance(macro_map, list) or not macro_map:
+        errors.append(f"[{label}] opening_bundle_contract.macro_battlefield_map must be a non-empty array")
+    elif any(not _is_nonempty_text(item) for item in macro_map):
+        errors.append(f"[{label}] opening_bundle_contract.macro_battlefield_map entries must be non-empty strings")
+
+    for field in OPENING_CONTRACT_BLOCK_FIELDS:
+        value = contract.get(field)
+        if isinstance(value, bool) or not isinstance(value, int):
+            errors.append(f"[{label}] opening_bundle_contract.{field} must be an integer")
+            continue
+        if value < OPENING_CONTRACT_BLOCK_START or value > OPENING_CONTRACT_BLOCK_END:
+            errors.append(
+                f"[{label}] opening_bundle_contract.{field} must stay within TR {OPENING_CONTRACT_BLOCK_START}~{OPENING_CONTRACT_BLOCK_END}"
+            )
+
+    return errors
+
+
+def _validate_material_bundle_summary(data: dict) -> list[str]:
+    errors: list[str] = []
+    contract = data.get("opening_bundle_contract")
+    if contract is not None:
+        errors.extend(_validate_opening_bundle_contract(contract, "material_bundle_summary"))
+    return errors
+
+
 def _validate_phase0_ready_snapshot(data: dict) -> list[str]:
     """Phase0-ready-snapshot-specific checks."""
     errors: list[str] = []
@@ -167,6 +223,24 @@ def _validate_phase0_ready_snapshot(data: dict) -> list[str]:
             f"[phase0_ready_snapshot] manual_audit_pass must be boolean, "
             f"got {type(audit).__name__}"
         )
+    return errors
+
+
+def _phase0_candidate_paths(work_id: str) -> tuple[Path, ...]:
+    return (
+        ROOT / "treatments" / "phase0" / f"{work_id}_phase0_design.json",
+        ROOT / "treatments" / f"{work_id}_phase0_design.json",
+    )
+
+
+def _validate_phase0_design(data: dict) -> list[str]:
+    errors: list[str] = []
+    phase0_design = data.get("phase0_design")
+    if not isinstance(phase0_design, dict):
+        return errors
+    contract = phase0_design.get("opening_bundle_contract")
+    if contract is not None:
+        errors.extend(_validate_opening_bundle_contract(contract, "phase0_design"))
     return errors
 
 
@@ -204,8 +278,19 @@ def validate(work_id: str) -> tuple[bool, list[str]]:
             all_errors.extend(_validate_source_manifest(data))
         elif artifact_name == "profile_lock.json":
             all_errors.extend(_validate_profile_lock(data))
+        elif artifact_name == "material_bundle_summary.json":
+            all_errors.extend(_validate_material_bundle_summary(data))
         elif artifact_name == "phase0_ready_snapshot.json":
             all_errors.extend(_validate_phase0_ready_snapshot(data))
+
+    phase0_path = next((path for path in _phase0_candidate_paths(work_id) if path.is_file()), None)
+    if phase0_path is not None:
+        phase0_data, err = _load_json_utf8(phase0_path)
+        if err:
+            all_errors.append(err)
+        else:
+            all_info.append(f"[phase0_design] UTF-8 parse OK: {phase0_path}")
+            all_errors.extend(_validate_phase0_design(phase0_data))
 
     passed = len(all_errors) == 0
     messages = all_info + all_errors

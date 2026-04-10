@@ -2,6 +2,7 @@
 
 > 인코딩: **UTF-8 only (기본값, 예외 없음)**
 > 작성일: 2026-03-09
+> 주의: 최신 opening pacing / episode-bundle executable gate는 `docs/blockguide/treatment-production-harness-v2.md`를 우선 정본으로 읽는다.
 > 근거: `treatment-block-production-guide.md` + `dynasty-heir-remediation-harness.md` + 8작품 560블록 전수 감사
 > 목적: **모든 지능 수준의 모델이 골든루트급 Treatment JSON을 생산**할 수 있는 완전한 하네스
 > 출력: `treatments/{작품명}_tr_block_070_draft.json`

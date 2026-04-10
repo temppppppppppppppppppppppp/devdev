@@ -41,6 +41,56 @@
     "notes": {
       "type": "string",
       "description": "Free-text notes on material collection status."
+    },
+    "opening_bundle_contract": {
+      "type": "object",
+      "description": "Executable opening pacing contract for the first TR bundle (typically TR 2~6).",
+      "required": [
+        "bundle_window",
+        "macro_battlefield",
+        "macro_battlefield_map",
+        "bundle_goal",
+        "first_signboard_block",
+        "representative_reevaluation_block",
+        "next_battlefield_ticket_block",
+        "timing_reconciliation_note"
+      ],
+      "properties": {
+        "bundle_window": {
+          "type": "string",
+          "description": "Locked reader-earning evidence window, such as 'TR 2~6'."
+        },
+        "macro_battlefield": {
+          "type": "string",
+          "description": "Primary opening battlefield that the reader perceives as the first campaign zone."
+        },
+        "macro_battlefield_map": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Named sub-arenas or lanes that explain how the opening battlefield changes within the bundle."
+        },
+        "bundle_goal": {
+          "type": "string",
+          "description": "Concrete opening bundle payoff goal that the TR 2~6 window must earn."
+        },
+        "first_signboard_block": {
+          "type": "integer",
+          "description": "First block inside the opening bundle where public signboard evidence lands."
+        },
+        "representative_reevaluation_block": {
+          "type": "integer",
+          "description": "First block inside the opening bundle where representative reevaluation lands."
+        },
+        "next_battlefield_ticket_block": {
+          "type": "integer",
+          "description": "First block inside the opening bundle where the next battlefield ticket lands."
+        },
+        "timing_reconciliation_note": {
+          "type": "string",
+          "description": "Planner note reconciling Phase0 arc scale with the faster TR 2~6 reader-earning window."
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

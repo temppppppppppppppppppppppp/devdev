@@ -1,6 +1,6 @@
 # Production Pair Grade Aliases
 
-Snapshot date: `2026-04-09`
+Snapshot date: `2026-04-10`
 
 이 폴더는 live `TR + BI` pair의 등급 alias snapshot이다.
 정본 파일명은 유지하고, 이 폴더에서만 `{등급}_...` 파일명으로 본다.
@@ -28,6 +28,7 @@ Legend:
 - `withdrawn historical false-pass record`: 과거 양성 alias filename을 보존하되, 현재는 반면교사로만 읽는 tombstone.
 
 Current aliases:
+- `RED_chaebol_allowance_zero.md`
 - `GREENPLUS_defense_defect_engineer.md`
 - `GREENPLUS_office_checkup_next_day.md`
 - `GREENPLUS_chaebol_ent_empire.md`

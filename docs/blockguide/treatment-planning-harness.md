@@ -177,6 +177,43 @@ Planning hard rule:
 - false 블록의 `bridge_or_payback_note`는 hole 설명일 뿐, promotion 근거가 아니다
 - block `2~6`의 누가 proof 담당, 누가 reevaluation 담당, 누가 reward/token 담당인지 분업이 보여야 한다
 
+## 0G. `opening_bundle_contract` 의무
+
+이제 Planning에서 `Phase0-ready`로 승격시키려면 `material_bundle_summary.opening_bundle_contract`와 `phase0_design.opening_bundle_contract`를 같은 의미로 잠가야 한다.
+
+목적:
+
+- `1 block = 2~6화 분량`이라는 운영 계약을 사람 감각이 아니라 실행 가능한 필드로 넘긴다
+- opening macro-battlefield 체류가 길어지더라도 독자가 `TR 2~6` 안에서 signboard / reevaluation / next ticket을 받게 만든다
+- live TR harness가 Stage0 / Phase0를 prompt authority로 읽을 때 같은 기준을 재사용하게 만든다
+
+필수 필드:
+
+| 키 | 의미 |
+| ---- | ---- |
+| `bundle_window` | 기본값은 `TR 2~6` |
+| `macro_battlefield` | opening 주전장 이름 |
+| `macro_battlefield_map` | opening 주전장 내부의 하위 lanes / sub-arenas |
+| `bundle_goal` | `TR 2~6`이 독자에게 반드시 벌어야 하는 대표 보상 |
+| `first_signboard_block` | 첫 공적 간판 사건이 터지는 블록 |
+| `representative_reevaluation_block` | 대표 재평가가 발생하는 블록 |
+| `next_battlefield_ticket_block` | 다음 전장 입장권이 발생하는 블록 |
+| `timing_reconciliation_note` | Arc 스케일과 `TR 2~6` 체감 속도를 어떻게 reconcile했는지 |
+
+Planning hard rule:
+
+- `bundle_window`는 `TR 2~6`으로 고정한다
+- 세 timing block은 모두 `2~6` 안에 있어야 한다
+- 같은 `macro_battlefield`가 `Block 2~8`을 장악한 채 첫 signboard / reevaluation / ticket을 `Block 9+`로 미루면 invalid다
+- `block_slots` 또는 arc outline이 길어도 `opening_bundle_contract`가 더 상위의 reader-speed contract다
+- `Phase0-ready` 승격안에서 이 계약이 비어 있으면 promotion 금지다
+
+권장 운영:
+
+- `macro_battlefield_map`은 장소 목록이 아니라 리듬 변화가 보이게 쓴다
+- `bundle_goal`은 돈 그 자체보다 권한, 입장권, 대표 재평가처럼 독자가 바로 체감하는 영수증 언어로 적는다
+- `timing_reconciliation_note`에는 왜 arc는 길어도 독자 체감은 느려지지 않는지 한 문장으로 잠근다
+
 ## 0. 이 문서가 존재하는 이유
 
 `treatment-production-harness-v2.md`는 **블록 생산**의 품질을 잡는 하네스다. 하지만 생산 이전에 **기획 자체가 핵심 원칙을 위반하면**, 아무리 깨끗한 블록을 찍어내도 이야기는 재미없다.

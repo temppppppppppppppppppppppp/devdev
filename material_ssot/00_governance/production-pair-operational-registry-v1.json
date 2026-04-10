@@ -1,11 +1,11 @@
 {
   "_schema_version": "production_pair_operational_registry.v1",
-  "updated_at": "2026-04-09",
+  "updated_at": "2026-04-10",
   "notes": [
     "Operational states here are durable governance overrides for the normalization runner.",
     "Benchmark freshness tracks whether a benchmark or bounded benchmark-preservation audit has been recorded after the latest material touch or regeneration.",
     "The 2026-04-08 benchmark freshness wave closed the then-current tracked pairs to benchmark_freshness=current, but later false-pass withdrawals may move a pair back to pending_refresh without deleting the historical alias snapshot.",
-    "2026-04-09 chaebol_allowance_zero positive reading withdrawn after opening pacing false-pass triage; keep only as a negative exemplar / false-pass archive.",
+    "2026-04-10 chaebol_allowance_zero is now explicitly classified as RED for live operation; keep the withdrawn GREENPLUS file only as a historical tombstone / anti-benchmark.",
     "2026-04-09 jangyeongshil_industrial_revolution record updated after TR Block 70 completion + bi_refresh + independent 7-Pass mechanical audit + independent 3-Pass philosophy audit (all PASS)."
   ],
   "pairs": [
@@ -28,11 +28,14 @@
       "inventory_role": "numbered_live_pair",
       "operational_state": "newly_touched_live_pair",
       "schema_status": "pass",
-      "benchmark_alias": "GREENPLUS",
-      "alias_status": "withdrawn_false_pass_historical_snapshot",
-      "benchmark_freshness": "pending_refresh",
+      "benchmark_alias": "RED",
+      "alias_status": "active_negative_exemplar_with_historical_greenplus_tombstone",
+      "historical_alias_tombstones": [
+        "material_ssot/00_governance/production_pair_grade_aliases/GREENPLUS_chaebol_allowance_zero.md"
+      ],
+      "benchmark_freshness": "current",
       "benchmark_artifact": "docs/2026-04-09/chaebol_allowance_zero_opening_pacing_false_pass_triage.md",
-      "operator_note": "Historical GREENPLUS snapshot withdrawn after the 2026-04-09 opening pacing false-pass triage; keep only as a negative exemplar / false-pass archive and do not cite as a current family baseline."
+      "operator_note": "Current live benchmark alias is RED after the 2026-04-09 opening pacing false-pass triage; preserve the withdrawn GREENPLUS file only as a tombstone / anti-benchmark and do not cite this pair as a current family baseline."
     },
     {
       "work_id": "chaebol_ent_empire",

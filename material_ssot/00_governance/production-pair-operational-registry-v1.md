@@ -1,6 +1,6 @@
 # Production Pair Operational Registry v1
 
-Date: 2026-04-09 (last updated; initial 2026-04-08 benchmark freshness wave)
+Date: 2026-04-10 (last updated; initial 2026-04-08 benchmark freshness wave)
 Status: active
 Scope: durable operational registry for current schema-clean production pairs
 
@@ -35,7 +35,7 @@ Freshness closeout artifact:
 | work_id | family | inventory role | durable operational state | schema | alias | benchmark freshness | operator use |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `투자물_골든_카나리아 테스트_canonical_v1` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | benchmark-fresh numbered live pair; safe for current family baseline reading |
-| `chaebol_allowance_zero` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` (historical withdrawn) | `pending_refresh` | withdrawn false-pass record; negative exemplar only, not safe for current family baseline reading |
+| `chaebol_allowance_zero` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `RED` | `current` | RED negative exemplar with withdrawn GREENPLUS tombstone retained as anti-benchmark; not safe for current family baseline reading |
 | `chaebol_ent_empire` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | benchmark-fresh live pair; safe for current family baseline reading |
 | `defense_defect_engineer` | `blockguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | benchmark-fresh regenerated live pair; safe for current family baseline reading |
 | `office_checkup_next_day` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | benchmark-fresh live pair; safe for current family baseline reading |
@@ -56,15 +56,16 @@ Freshness closeout artifact:
 - use this registry when you need pair-side family exemplars or benchmark-freshness truth
 - current aliased pairs are benchmark-fresh unless they explicitly carry `pending_refresh` or withdrawn-historical notes; still respect inventory roles and the `GREEN` vs `GREENPLUS` shelf split when citing them operationally
 
-## 6. 2026-04-09 Update Log
+## 6. 2026-04-10 Update Log
 
-- `chaebol_allowance_zero` positive reading withdrawn after the opening pacing false-pass triage
+- `chaebol_allowance_zero` current live alias fixed to `RED` after the opening pacing false-pass triage
   - operator artifact:
     - `docs/2026-04-09/chaebol_allowance_zero_opening_pacing_false_pass_triage.md`
   - registry reading:
-    - `benchmark_alias = GREENPLUS` is preserved as a historical snapshot only
-    - `benchmark_freshness = pending_refresh`
-    - operator use = withdrawn false-pass record / negative exemplar only
+    - `benchmark_alias = RED`
+    - `benchmark_freshness = current`
+    - withdrawn historical tombstone retained at `production_pair_grade_aliases/GREENPLUS_chaebol_allowance_zero.md`
+    - operator use = RED negative exemplar / anti-benchmark only
   - do not cite this pair as a current family baseline or opening exemplar
 - `jangyeongshil_industrial_revolution` record updated after TR Block 70 completion + bi_refresh + 3 independent audit layers (all PASS)
   - audit trail:
