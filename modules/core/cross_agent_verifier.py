@@ -27,6 +27,11 @@ from typing import Any
 
 from modules.core.constants import ManuscriptLimits, smart_truncate  # [V64.P4]
 from modules.core.llm_generate import generate_content_via_router
+from modules.core.scene_obligation_heuristics import (
+    build_blueprint_scene_profile,
+    estimate_scene_flex_budget,
+    measure_manuscript_scene_materialization,
+)
 from modules.domain.agents.scene_cardinality_contract import evaluate_stage3_scene_cardinality
 
 
@@ -199,7 +204,10 @@ JSON 형식으로 응답:
             doc = arc_design.get("tactical_doc", "")
             if isinstance(doc, str):
                 # 따옴표로 감싼 단어들 추출
-                arc_keywords = re.findall(r'[「『"\'](.*?)[」』"\']', doc)  # utf8-hygiene: allow-line -- CJK quote delimiters are intentional.
+                quote_pattern = (
+                    r'[「『"\'](.*?)[」』"\']'  # utf8-hygiene: allow-line -- CJK quote delimiters are intentional.
+                )
+                arc_keywords = re.findall(quote_pattern, doc)
 
         blueprint_text = json.dumps(blueprint, ensure_ascii=False)
         missing_keywords = []
@@ -232,34 +240,28 @@ JSON 형식으로 응답:
             )
 
         # 2. 씬 반영 체크 (휴리스틱)
-        scene_breakdown = blueprint.get("scene_breakdown", {})
-        if not isinstance(scene_breakdown, dict):
-            scene_breakdown = {}
-        if scene_breakdown:
-            # 각 씬의 핵심 키워드가 원고에 있는지 체크
-            scene_count = len(scene_breakdown)
-            reflected_count = 0
+        profile = build_blueprint_scene_profile(blueprint)
+        materialization = measure_manuscript_scene_materialization(manuscript, blueprint)
+        if profile.scene_count > 0:
+            minimum_reflected = 1 if profile.scene_count <= 3 else 2
+            needs_scene_violation = materialization.reflected_scenes < minimum_reflected
+            if profile.scene_count == 1:
+                needs_scene_violation = True
+            elif needs_scene_violation:
+                needs_scene_violation = materialization.reflected_scenes == 0 or (
+                    materialization.overall_ratio < 0.2 and not materialization.tail_scene_reflected
+                )
 
-            for scene_id, scene_data in scene_breakdown.items():
-                if isinstance(scene_data, dict):
-                    desc = scene_data.get("description", "")
-                    # 씬 설명에서 핵심 단어 추출
-                    keywords = re.findall(r"[\w가-힣]+", desc)
-                    significant_words = [w for w in keywords if len(w) >= 2][:3]
-
-                    # 원고에 하나라도 있으면 반영된 것으로 간주
-                    if any(w in manuscript for w in significant_words):
-                        reflected_count += 1
-
-            if scene_count > 0:
-                reflection_rate = reflected_count / scene_count
-                if reflection_rate < 0.5:
-                    violations.append(
-                        {
-                            "item": "씬 반영 부족",
-                            "reason": f"{scene_count}개 씬 중 {reflected_count}개만 감지됨 ({reflection_rate:.0%})",
-                        }
-                    )
+            if needs_scene_violation:
+                violations.append(
+                    {
+                        "item": "핵심 의무 장면화 부족",
+                        "reason": (
+                            f"{profile.scene_count}개 씬 중 {materialization.reflected_scenes}개만 장면화 신호 감지됨 "
+                            f"(후반부 핵심 씬 체류 {'유지' if materialization.tail_scene_reflected else '부족'})"
+                        ),
+                    }
+                )
 
         # 3. 클리프행어 반영 체크
         ending_hook = blueprint.get("ending_hook") or blueprint.get("cliffhanger", "")
@@ -274,10 +276,17 @@ JSON 형식으로 응답:
                 )
 
         # 4. 범위 초과 체크
-        max_expected_length = len(scene_breakdown) * 1500 * 1.5 if scene_breakdown else 12000
-        if len(manuscript) > max_expected_length:
+        max_expected_length = estimate_scene_flex_budget(
+            scene_count=profile.scene_count,
+            total_keywords=profile.total_keywords,
+            tail_keyword_count=profile.tail_keyword_count,
+        )
+        if len(manuscript) > max_expected_length * 1.2:
             violations.append(
-                {"item": "범위 초과 의심", "reason": f"예상 최대 {max_expected_length}자, 현재 {len(manuscript)}자"}
+                {
+                    "item": "범위 초과 의심",
+                    "reason": f"의무 밀도 보정 최대 {max_expected_length}자 대비 초과, 현재 {len(manuscript)}자",
+                }
             )
 
         return violations

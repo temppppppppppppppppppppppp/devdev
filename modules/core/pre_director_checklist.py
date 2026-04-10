@@ -30,6 +30,11 @@ from enum import Enum
 from typing import Any
 
 from modules.core.constants import ManuscriptLimits  # [V64.P4]
+from modules.core.scene_obligation_heuristics import (
+    build_blueprint_scene_profile,
+    estimate_scene_flex_budget,
+    measure_manuscript_scene_materialization,
+)
 from modules.domain.agents.scene_cardinality_contract import evaluate_stage3_scene_cardinality
 
 
@@ -353,8 +358,37 @@ class PreDirectorChecklist:
                 items.extend(scene_metrics["check_items"])
 
                 # 전체 반영률 기반 판정
-                overall_ratio = scene_metrics["overall_ratio"]
-                if overall_ratio < 0.3:
+                materialization = measure_manuscript_scene_materialization(manuscript, blueprint)
+                overall_ratio = materialization.overall_ratio
+                if materialization.scene_count <= 3:
+                    if materialization.reflected_scenes == 0:
+                        items.append(
+                            CheckItem(
+                                category=CheckCategory.BLUEPRINT_MATCH,
+                                name="씬 반영",
+                                passed=True,
+                                severity=CheckSeverity.WARNING,
+                                message=(
+                                    f"저씬 구조 핵심 의무 장면화 약함: {materialization.reflected_scenes}/"
+                                    f"{materialization.scene_count} 씬, 후반부 핵심 씬 체류 부족 (Director 판단 위임)"
+                                ),
+                            )
+                        )
+                    else:
+                        items.append(
+                            CheckItem(
+                                category=CheckCategory.BLUEPRINT_MATCH,
+                                name="씬 반영",
+                                passed=True,
+                                severity=CheckSeverity.PASS,
+                                message=(
+                                    f"저씬 구조 핵심 의무 장면화 양호: {materialization.reflected_scenes}/"
+                                    f"{materialization.scene_count} 씬, 후반부 핵심 씬 체류 "
+                                    f"{'유지' if materialization.tail_scene_reflected else '보통'}"
+                                ),
+                            )
+                        )
+                elif overall_ratio < 0.3:
                     # [TF-51] FAIL→WARNING 다운그레이드: Python 키워드 매칭 오탐 과다,
                     # Director(LLM)가 Blueprint 원문 대조로 씬 커버리지 판단
                     items.append(
@@ -397,13 +431,9 @@ class PreDirectorChecklist:
                 _opening_text = manuscript[:600] if len(manuscript) > 600 else manuscript
                 _loc_keywords = re.findall(r"[\w가-힣]{2,}", _start_loc)[:5]
                 _loc_matched = [kw for kw in _loc_keywords if kw in _opening_text]
-                _specific_keywords = [
-                    kw for kw in _loc_keywords if kw not in self._GENERIC_LOCATION_TOKENS
-                ]
+                _specific_keywords = [kw for kw in _loc_keywords if kw not in self._GENERIC_LOCATION_TOKENS]
                 _specific_matched = [kw for kw in _specific_keywords if kw in _opening_text]
-                if _loc_keywords and (
-                    len(_loc_matched) == 0 or (_specific_keywords and len(_specific_matched) == 0)
-                ):
+                if _loc_keywords and (len(_loc_matched) == 0 or (_specific_keywords and len(_specific_matched) == 0)):
                     # [Gap-1] 일반 장소명만 겹치고 핵심 앵커가 전부 사라진 경우도 hard fail
                     _fail_basis = (
                         f"핵심 위치 토큰 0/{len(_specific_keywords)}개"
@@ -464,7 +494,12 @@ class PreDirectorChecklist:
             _sb = blueprint.get("scene_breakdown", {})
             scene_count = len(_sb) if isinstance(_sb, dict | list) else 0  # [TF-R2-S3-01]
             if scene_count > 0:
-                expected_max = scene_count * 1500 * 1.4  # 씬당 1500자 + 40% 여유
+                profile = build_blueprint_scene_profile(blueprint)
+                expected_max = estimate_scene_flex_budget(
+                    scene_count=scene_count,
+                    total_keywords=profile.total_keywords if profile.scene_count == scene_count else 0,
+                    tail_keyword_count=profile.tail_keyword_count if profile.scene_count == scene_count else 0,
+                )
                 if length > expected_max:
                     items.append(
                         CheckItem(
@@ -472,7 +507,7 @@ class PreDirectorChecklist:
                             name="범위 초과",
                             passed=True,  # 경고만
                             severity=CheckSeverity.WARNING,
-                            message=f"예상 범위 초과: {length}자 (예상 최대 {int(expected_max)}자)",
+                            message=f"의무 밀도 보정 예상 범위 초과: {length}자 (예상 최대 {int(expected_max)}자)",
                         )
                     )
 

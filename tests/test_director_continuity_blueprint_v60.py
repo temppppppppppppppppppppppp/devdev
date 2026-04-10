@@ -117,3 +117,54 @@ def test_validate_blueprint_completeness_warns_on_cliffhanger_without_tension():
     assert result["valid"] is True
     assert result["warnings"] == ["Cliffhanger 엔딩 긴장감 부족 - 마지막 장면에 서스펜스 요소 추가 권장"]
     assert result["score"] == 95
+
+
+def test_validate_blueprint_completeness_allows_dense_two_scene_tail_heavy_shape():
+    validator = _make_validator()
+    blueprint = {
+        "scene_breakdown": {
+            "scene1": {
+                "summary": "주인공이 PB센터에서 첫 매수 버튼을 누른다",
+                "key_events": ["매수", "체결", "증거"],
+            },
+            "scene2": {
+                "summary": "레버리지 경고와 담보 압박이 동시에 몰려온다",
+                "key_events": ["경고", "담보", "압박"],
+            },
+        }
+    }
+    manuscript = (
+        "주인공은 PB센터에서 매수 주문을 체결하고 증거를 챙겼다. "
+        "후반부에는 담보 압박과 레버리지 경고가 한꺼번에 밀려왔고 마지막 경고 전화가 다시 울렸다."
+    )
+
+    result = validator._validate_blueprint_completeness_v60(manuscript, blueprint)
+
+    assert result["valid"] is True
+    assert result["scene_coverage"] >= 75
+
+
+def test_validate_blueprint_completeness_keeps_three_scene_single_tail_reflection_fail_closed():
+    validator = _make_validator()
+    blueprint = {
+        "scene_breakdown": {
+            "scene1": {
+                "summary": "주인공이 PB센터에서 첫 매수 버튼을 누른다",
+                "key_events": ["매수", "체결"],
+            },
+            "scene2": {
+                "summary": "레버리지 경고와 담보 압박이 동시에 몰려온다",
+                "key_events": ["경고", "담보", "압박"],
+            },
+            "scene3": {
+                "summary": "마감 직전 마지막 위기 전화가 울린다",
+                "key_events": ["마감", "위기", "전화"],
+            },
+        }
+    }
+    manuscript = "후반부에는 마감 직전 마지막 위기 전화만 거칠게 울렸다."
+
+    result = validator._validate_blueprint_completeness_v60(manuscript, blueprint)
+
+    assert result["valid"] is False
+    assert result["scene_coverage"] < 65

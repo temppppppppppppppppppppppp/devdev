@@ -6,6 +6,7 @@ import re
 from typing import TYPE_CHECKING
 
 from modules.core.constants import ManuscriptLimits
+from modules.core.scene_obligation_heuristics import build_blueprint_scene_profile, estimate_scene_flex_budget
 from modules.validation.threshold_helper import _threshold
 
 if TYPE_CHECKING:
@@ -89,12 +90,15 @@ class BlockingValidatorSceneChecks:
         if scene_count == 0:
             return {"check": "scope_overflow", "passed": True, "reason": "씬 개수 추출 불가 - 체크 스킵"}
 
+        profile = build_blueprint_scene_profile(blueprint)
+
         # 2. 원고 길이 vs 예상 범위 비교
         manuscript_length = len(manuscript)
-
-        # 씬당 최대 허용 글자 수 (충분히 여유있게 설정)
-        max_chars_per_scene = _threshold("scope.chars_per_scene", 1500)
-        max_allowed_length = scene_count * max_chars_per_scene
+        max_allowed_length = estimate_scene_flex_budget(
+            scene_count=scene_count,
+            total_keywords=profile.total_keywords if profile.scene_count == scene_count else 0,
+            tail_keyword_count=profile.tail_keyword_count if profile.scene_count == scene_count else 0,
+        )
 
         # 3. 범위 초과 판정
         if manuscript_length > max_allowed_length:
@@ -105,7 +109,10 @@ class BlockingValidatorSceneChecks:
                 return {
                     "check": "scope_overflow",
                     "passed": False,
-                    "reason": f"Blueprint 범위 초과: {manuscript_length}자 (씬 {scene_count}개 기준 최대 {max_allowed_length}자, {overflow_ratio:.1f}배 초과)",
+                    "reason": (
+                        f"Blueprint 범위 초과: {manuscript_length}자 "
+                        f"(씬 {scene_count}개/의무 밀도 기준 최대 {max_allowed_length}자, {overflow_ratio:.1f}배 초과)"
+                    ),
                     "severity": "HIGH",
                     "details": {
                         "manuscript_length": manuscript_length,
@@ -120,7 +127,7 @@ class BlockingValidatorSceneChecks:
             return {
                 "check": "scope_overflow",
                 "passed": True,
-                "warning": f"분량 약간 초과: {manuscript_length}자 (권장 {max_allowed_length}자 이하)",
+                "warning": f"분량 약간 초과: {manuscript_length}자 (의무 밀도 기준 권장 {max_allowed_length}자 이하)",
                 "overflow_ratio": round(overflow_ratio, 2),
             }
 
