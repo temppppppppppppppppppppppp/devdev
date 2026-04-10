@@ -30,6 +30,7 @@ from enum import Enum
 from typing import Any
 
 from modules.core.constants import AIModels, ManuscriptLimits
+from modules.core.scene_obligation_heuristics import measure_manuscript_scene_materialization
 
 
 class ContentType(Enum):
@@ -158,7 +159,10 @@ class ConfidenceCalibrator:
         length = len(manuscript)
         if ManuscriptLimits.TARGET_LENGTH <= length <= 12000:
             return 15
-        if ManuscriptLimits.MIN_LENGTH <= length < ManuscriptLimits.TARGET_LENGTH or 12000 < length <= ManuscriptLimits.MAX_LENGTH:
+        if (
+            ManuscriptLimits.MIN_LENGTH <= length < ManuscriptLimits.TARGET_LENGTH
+            or 12000 < length <= ManuscriptLimits.MAX_LENGTH
+        ):
             concerns.append(f"길이가 다소 {'짧음' if length < 5000 else '김'} ({length}자)")
             return 10
         if 3000 <= length < ManuscriptLimits.MIN_LENGTH:
@@ -186,9 +190,7 @@ class ConfidenceCalibrator:
             structure_score += 5
         return structure_score
 
-    def _score_manuscript_continuity(
-        self, manuscript: str, context: dict[str, Any], concerns: list[str]
-    ) -> int:
+    def _score_manuscript_continuity(self, manuscript: str, context: dict[str, Any], concerns: list[str]) -> int:
         prev_ms = context.get("prev_manuscript", "")
         if not prev_ms:
             return 15
@@ -242,22 +244,42 @@ class ConfidenceCalibrator:
                 scene_keywords.extend(re.findall(r"[\w가-힣]{2,}", desc)[:3])
         return scene_keywords
 
-    def _score_manuscript_scene_coverage(
-        self, manuscript: str, context: dict[str, Any], concerns: list[str]
-    ) -> int:
+    def _score_manuscript_scene_coverage(self, manuscript: str, context: dict[str, Any], concerns: list[str]) -> int:
         blueprint = context.get("blueprint", {})
         if not blueprint or not isinstance(blueprint, dict):
             return 10
-        scene_keywords = self._extract_blueprint_scene_keywords(blueprint)
-        if not scene_keywords:
+        materialization = measure_manuscript_scene_materialization(manuscript, blueprint)
+        if materialization.scene_count == 0:
             return 10
-        matched = sum(1 for keyword in scene_keywords if keyword in manuscript)
-        ratio = matched / max(len(scene_keywords), 1)
-        if ratio >= 0.7:
+
+        if materialization.scene_count == 1:
+            if materialization.reflected_scenes >= 1:
+                concerns.append("Blueprint 씬 반영 부족")
+                return 5
+            concerns.append("Blueprint 씬 대부분 미반영")
+            return 0
+
+        if materialization.scene_count <= 3:
+            if (
+                materialization.reflected_scenes >= materialization.scene_count
+                and materialization.overall_ratio >= 0.55
+            ):
+                return 15
+            if materialization.reflected_scenes >= 1 and (
+                materialization.tail_scene_reflected or materialization.overall_ratio >= 0.35
+            ):
+                return 10
+            if materialization.reflected_scenes >= 1 or materialization.overall_ratio >= 0.2:
+                concerns.append("Blueprint 씬 반영 부족")
+                return 5
+            concerns.append("Blueprint 씬 대부분 미반영")
+            return 0
+
+        if materialization.overall_ratio >= 0.7:
             return 15
-        if ratio >= 0.5:
+        if materialization.overall_ratio >= 0.5:
             return 10
-        if ratio >= 0.3:
+        if materialization.overall_ratio >= 0.3:
             concerns.append("Blueprint 씬 반영 부족")
             return 5
         concerns.append("Blueprint 씬 대부분 미반영")

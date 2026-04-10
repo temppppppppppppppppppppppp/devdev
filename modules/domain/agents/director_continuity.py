@@ -12,6 +12,7 @@ import re
 from modules.core.constants import ContextLimits, smart_truncate
 from modules.core.llm_generate import generate_content_via_router
 from modules.core.prompt_loader import PromptLoader
+from modules.core.scene_obligation_heuristics import measure_manuscript_scene_materialization
 
 
 class DirectorContinuityValidator:
@@ -152,10 +153,10 @@ class DirectorContinuityValidator:
                 if not raw:
                     return ""
                 alias_map = {
-                    "office": "\uC0AC\uBB34\uC2E4",
-                    "\uC624\uD53C\uC2A4": "\uC0AC\uBB34\uC2E4",
-                    "\uC9D1\uBB34\uC2E4": "\uC0AC\uBB34\uC2E4",
-                    "\uC0AC\uBB34\uC2E4": "\uC0AC\uBB34\uC2E4",
+                    "office": "\uc0ac\ubb34\uc2e4",
+                    "\uc624\ud53c\uc2a4": "\uc0ac\ubb34\uc2e4",
+                    "\uc9d1\ubb34\uc2e4": "\uc0ac\ubb34\uc2e4",
+                    "\uc0ac\ubb34\uc2e4": "\uc0ac\ubb34\uc2e4",
                 }
                 for source, canonical in alias_map.items():
                     raw = raw.replace(source, canonical)
@@ -188,7 +189,8 @@ class DirectorContinuityValidator:
                 decision = result.get("decision", "WARNING")
                 logging.warning(f" [V61] Entity 일관성 검증: {decision} ({len(mismatches)}개 불일치)")
                 for m in mismatches[:3]:
-                    logging.info(f"- [{m.get('category', '?')}] {m.get('registered_name', '?')} → {m.get('found_variant', '?')}"
+                    logging.info(
+                        f"- [{m.get('category', '?')}] {m.get('registered_name', '?')} → {m.get('found_variant', '?')}"
                     )
 
             return result
@@ -266,7 +268,8 @@ class DirectorContinuityValidator:
         if isinstance(scene_content, str):
             type_match = re.search(r"\[(Core|Buffer|Cliffhanger|Climax)\]", scene_content, re.IGNORECASE)
             scene_type = type_match.group(1) if type_match else "Unknown"
-            keywords = re.findall(r"[가-힣]{2,5}(?:하다|되다|이다)?", scene_content)
+            keyword_pattern = r"[가-힣]{2,5}(?:하다|되다|이다)?"  # utf8-hygiene: allow-line -- regex quantifier is intentional in this pattern literal.
+            keywords = re.findall(keyword_pattern, scene_content)
             return {
                 "type": scene_type,
                 "keywords": keywords[:5] if keywords else [],
@@ -374,6 +377,25 @@ class DirectorContinuityValidator:
             "score": int(scene_coverage * 0.5),
         }
 
+    @staticmethod
+    def _adjust_low_scene_coverage(
+        *,
+        expected_scenes: int,
+        scene_coverage: float,
+        reflected_count: int,
+        overall_ratio: float,
+        tail_scene_reflected: bool,
+    ) -> float:
+        if expected_scenes <= 0 or expected_scenes > 3:
+            return scene_coverage
+
+        adjusted = max(scene_coverage, overall_ratio * 100)
+        if tail_scene_reflected and expected_scenes >= 2:
+            adjusted += 20
+        if reflected_count >= max(1, expected_scenes - 1):
+            adjusted += 10
+        return min(round(adjusted, 1), 100.0)
+
     def _validate_blueprint_completeness_v60(self, manuscript: str, blueprint: dict) -> dict:
         """
         [V60] Blueprint 완전성 검증 - 원고가 설계 씬을 충분히 반영했는지 확인
@@ -406,6 +428,15 @@ class DirectorContinuityValidator:
             reflected_count = self._blueprint_completeness_fallback_reflection(manuscript, expected_scenes)
 
         scene_coverage = (reflected_count / expected_scenes * 100) if expected_scenes > 0 else 100
+        if scene_keywords and 1 < expected_scenes <= 3:
+            materialization = measure_manuscript_scene_materialization(manuscript, blueprint)
+            scene_coverage = self._adjust_low_scene_coverage(
+                expected_scenes=expected_scenes,
+                scene_coverage=scene_coverage,
+                reflected_count=reflected_count,
+                overall_ratio=materialization.overall_ratio,
+                tail_scene_reflected=materialization.tail_scene_reflected,
+            )
         if scene_coverage < 65:
             return self._blueprint_completeness_failure_result(
                 expected_scenes=expected_scenes,
