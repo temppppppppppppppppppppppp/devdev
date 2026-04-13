@@ -1,6 +1,6 @@
 {
   "version": "clickup-queue-sync-v1",
-  "updated_at": "2026-04-12T11:43:38.923626+00:00",
+  "updated_at": "2026-04-13T08:50:44.010481+00:00",
   "list_id": "901817297564",
   "queue_state_path": "docs/temp/material-queue-state.json",
   "tasks": {
@@ -9,105 +9,112 @@
       "name": "africa_farm_king",
       "desired_status": "Ready",
       "resolved_status": "to do",
-      "synced_at": "2026-04-12T11:42:36.812134+00:00"
-    },
-    "chaebol_ent_empire": {
-      "task_id": "86ex7nefw",
-      "name": "chaebol_ent_empire",
-      "desired_status": "Ready",
-      "resolved_status": "to do",
-      "synced_at": "2026-04-12T11:42:41.042125+00:00"
-    },
-    "defense_defect_engineer": {
-      "task_id": "86ex7neg2",
-      "name": "defense_defect_engineer",
-      "desired_status": "Ready",
-      "resolved_status": "to do",
-      "synced_at": "2026-04-12T11:42:45.084612+00:00"
+      "synced_at": "2026-04-13T08:49:35.205473+00:00"
     },
     "gulf_tycoon_heir": {
       "task_id": "86ex7negn",
       "name": "gulf_tycoon_heir",
       "desired_status": "Ready",
       "resolved_status": "to do",
-      "synced_at": "2026-04-12T11:42:49.613003+00:00"
+      "synced_at": "2026-04-13T08:49:39.571000+00:00"
     },
     "hoegui_surgeon": {
       "task_id": "86ex7negw",
       "name": "hoegui_surgeon",
       "desired_status": "Ready",
       "resolved_status": "to do",
-      "synced_at": "2026-04-12T11:42:53.631330+00:00"
+      "synced_at": "2026-04-13T08:49:43.740981+00:00"
     },
     "jaebeol3se_loss_line": {
       "task_id": "86ex7negy",
       "name": "jaebeol3se_loss_line",
       "desired_status": "Ready",
       "resolved_status": "to do",
-      "synced_at": "2026-04-12T11:42:57.681757+00:00"
+      "synced_at": "2026-04-13T08:49:47.941211+00:00"
     },
     "jangyeongshil_industrial_revolution": {
       "task_id": "86ex7neh4",
       "name": "jangyeongshil_industrial_revolution",
       "desired_status": "Ready",
       "resolved_status": "to do",
-      "synced_at": "2026-04-12T11:43:01.588170+00:00"
+      "synced_at": "2026-04-13T08:49:51.974198+00:00"
     },
     "manual_meridian_archivist": {
       "task_id": "86ex7neh7",
       "name": "manual_meridian_archivist",
       "desired_status": "Ready",
       "resolved_status": "to do",
-      "synced_at": "2026-04-12T11:43:05.789744+00:00"
-    },
-    "pantech_cyworld_reborn": {
-      "task_id": "86ex7nehe",
-      "name": "pantech_cyworld_reborn",
-      "desired_status": "Ready",
-      "resolved_status": "to do",
-      "synced_at": "2026-04-12T11:43:10.181968+00:00"
+      "synced_at": "2026-04-13T08:49:57.403594+00:00"
     },
     "quiet_chaebol_heir": {
       "task_id": "86ex7nehp",
       "name": "quiet_chaebol_heir",
       "desired_status": "Ready",
       "resolved_status": "to do",
-      "synced_at": "2026-04-12T11:43:14.520193+00:00"
+      "synced_at": "2026-04-13T08:50:02.391427+00:00"
     },
-    "wuxia_heavenly_physician": {
-      "task_id": "86ex7nej4",
-      "name": "wuxia_heavenly_physician",
-      "desired_status": "Ready",
-      "resolved_status": "to do",
-      "synced_at": "2026-04-12T11:43:18.481907+00:00"
+    "chaebol_ent_empire": {
+      "task_id": "86ex7nefw",
+      "name": "chaebol_ent_empire",
+      "desired_status": "Closed",
+      "resolved_status": "complete",
+      "synced_at": "2026-04-13T08:50:06.658218+00:00"
+    },
+    "defense_defect_engineer": {
+      "task_id": "86ex7neg2",
+      "name": "defense_defect_engineer",
+      "desired_status": "Closed",
+      "resolved_status": "complete",
+      "synced_at": "2026-04-13T08:50:10.543490+00:00"
     },
     "empire_youngest_allsector": {
       "task_id": "86ex7mz5x",
       "name": "empire_youngest_allsector",
       "desired_status": "Closed",
       "resolved_status": "complete",
-      "synced_at": "2026-04-12T11:43:24.527091+00:00"
+      "synced_at": "2026-04-13T08:50:15.818103+00:00"
     },
     "gatekeeper_heir": {
       "task_id": "86ex7nejh",
       "name": "gatekeeper_heir",
       "desired_status": "Closed",
       "resolved_status": "complete",
-      "synced_at": "2026-04-12T11:43:29.147407+00:00"
+      "synced_at": "2026-04-13T08:50:20.563381+00:00"
     },
     "office_checkup_next_day": {
       "task_id": "86ex7nejn",
       "name": "office_checkup_next_day",
       "desired_status": "Closed",
       "resolved_status": "complete",
-      "synced_at": "2026-04-12T11:43:33.603591+00:00"
+      "synced_at": "2026-04-13T08:50:24.796044+00:00"
+    },
+    "pantech_cyworld_reborn": {
+      "task_id": "86ex7nehe",
+      "name": "pantech_cyworld_reborn",
+      "desired_status": "Closed",
+      "resolved_status": "complete",
+      "synced_at": "2026-04-13T08:50:29.391620+00:00"
     },
     "smart_new_hire": {
       "task_id": "86ex7nek0",
       "name": "smart_new_hire",
       "desired_status": "Closed",
       "resolved_status": "complete",
-      "synced_at": "2026-04-12T11:43:38.923626+00:00"
+      "synced_at": "2026-04-13T08:50:34.683765+00:00"
+    },
+    "wuxia_heavenly_physician": {
+      "task_id": "86ex7nej4",
+      "name": "wuxia_heavenly_physician",
+      "desired_status": "Closed",
+      "resolved_status": "complete",
+      "synced_at": "2026-04-13T08:50:39.269086+00:00"
+    },
+    "투자물_골든_카나리아 테스트_canonical_v1": {
+      "task_id": "86ex815gh",
+      "name": "투자물_골든_카나리아 테스트_canonical_v1",
+      "desired_status": "Closed",
+      "resolved_status": "complete",
+      "synced_at": "2026-04-13T08:50:44.010481+00:00"
     }
   }
 }

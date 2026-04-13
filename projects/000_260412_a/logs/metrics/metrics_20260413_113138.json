@@ -1,0 +1,82 @@
+{
+  "session_id": "20260413_113138",
+  "start_time": "2026-04-13T11:31:38.173959",
+  "end_time": "2026-04-13T12:56:16.686754",
+  "total_calls": 143,
+  "successful_calls": 143,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 3476142,
+  "total_cost_usd": 15.961407,
+  "agent_stats": {
+    "StateExtractor": {
+      "agent_name": "StateExtractor",
+      "total_calls": 1,
+      "successful_calls": 1,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 37673.56371879578,
+        "min_ms": 37673.56371879578,
+        "max_ms": 37673.56371879578,
+        "p50_ms": 37673.56371879578,
+        "p90_ms": 37673.56371879578,
+        "p99_ms": 37673.56371879578
+      }
+    },
+    "BlueprintEnsembleGenerator": {
+      "agent_name": "BlueprintEnsembleGenerator",
+      "total_calls": 89,
+      "successful_calls": 89,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 50472.08349088605,
+        "min_ms": 18637.999296188354,
+        "max_ms": 131999.12881851196,
+        "p50_ms": 50539.55364227295,
+        "p90_ms": 61991.16287231445,
+        "p99_ms": 126716.68476104739
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 53,
+      "successful_calls": 53,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 9490.603060092566,
+        "min_ms": 1489.5474910736084,
+        "max_ms": 27614.686489105225,
+        "p50_ms": 9116.031408309937,
+        "p90_ms": 13154.680109024048,
+        "p99_ms": 22880.80976486203
+      }
+    }
+  },
+  "model_stats": {
+    "vertexai:gemini-2.5-flash": {
+      "input_tokens": 4434,
+      "output_tokens": 2246,
+      "cached_tokens": 0,
+      "thinking_tokens": 1429,
+      "total_tokens": 6680,
+      "cost_usd": 0.006945
+    },
+    "claude-sonnet-4-6": {
+      "input_tokens": 3007289,
+      "output_tokens": 462173,
+      "cached_tokens": 0,
+      "thinking_tokens": 0,
+      "total_tokens": 3469462,
+      "cost_usd": 15.954462
+    }
+  }
+}

@@ -1,0 +1,221 @@
+{
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1277,
+    "prevalidation_issue_count": 1,
+    "python_warnings": [
+      {
+        "category": "arc_timeline",
+        "focus": "ending_state.timeline과 time_flow를 arc state_changes.timeline 종료 시점에 맞추기",
+        "message": "ending_state.timeline 불일치: blueprint '2006년 2월 16일 오전 9시 30분' vs arc '{'year': 2006, 'month': 3, 'week': 1}'",
+        "severity": "MAJOR",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 5,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "_inventory_gaps": [
+    {
+      "item": "18년 치 미래 기억",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "경제사 정보",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "가죽 서류가방",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "SW인베스트먼트 법인 등기부등본",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "해외 선물 거래 계좌",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "씨티은행 체크카드",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "롤렉스 데이토나",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "삼성 애니콜 SGH-D600",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_categories": [
+      "arc_timeline"
+    ],
+    "binding_prevalidation_issue_count": 1,
+    "final_verdict": "PASS_WITH_WARNING",
+    "last_score": 85,
+    "partial_fix_eval": {
+      "do_not_regress_held": false,
+      "fallback_reason": "re_audit_reject",
+      "is_patch_attempt": true,
+      "must_fix_resolved": false,
+      "patch_round": 1,
+      "patch_target_id": "",
+      "success_condition_met": false,
+      "target_kind": ""
+    },
+    "quality_gate_failed": true,
+    "quality_risk": true,
+    "repair_contract": {
+      "fix_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "15억 원유 선물 투자를 위한 본격적인 베팅 준비",
+  "end_location": "한미증권 청담동 지점 15층 VIP룸 입구",
+  "ending_hook": "엘리베이터 문이 열리며 한시우의 눈앞에 'VIP LOUNGE'라는 금색 간판이 나타났다.",
+  "ending_state": {
+    "location": "한미증권 청담동 지점 15층 VIP룸 입구",
+    "protagonist_status": "15억 원유 선물 투자를 위한 VIP룸 미팅 직전, 본격적인 베팅 준비 완료 상태",
+    "timeline": {
+      "표현": "2006년 2월 16일 오전 9시 30분"
+    }
+  },
+  "ep_num": 7,
+  "episode_number": 7,
+  "expected_ending": "한미증권 VIP룸 도착으로 대규모 투자 직전 상황",
+  "integrated_scenario": "2006년 2월 15일 오후 11시 30분, 한시우는 개인 사무실에서 나와 본가 서재로 향했다. 5억 원의 첫 수익이 계좌에 찍힌 상황에서, 이제 본격적인 베팅을 위한 준비가 필요했다. 서재 문을 열고 들어선 한시우는 책상 위에 놓인 노트북을 켰다. WTI 원유 선물 차트가 화면에 떠올랐다. 현재 배럴당 61.2달러. 18년 후의 기억이 선명했다. 2월 말 이란이 핵 농축 재개를 선언하면서 유가는 급등했고, 3월에는 68달러를 넘어섰다. 지금이 포지션을 늘릴 타이밍이었다.\n\n한시우는 휴대폰을 들어 박성호의 번호를 눌렀다. 몇 번의 신호음 후 목소리가 들렸다. \"도련님, 이 늦은 시간에 무슨 일이십니까?\" \"박 과장, 내일 아침에 한미증권 VIP룸에서 만날 수 있습니까? 긴급한 투자 건이 있습니다.\" 전화기 너머로 잠시 침묵이 흘렀다. \"어떤 규모의 투자를 말씀하시는 겁니까?\" \"15억. 원유 선물에 집중 투자하려고 합니다.\" 박성호의 숨소리가 거칠어졌다. \"15억이요? 도련님, 그 정도 규모라면 신중하게...\" \"내일 오전 10시, VIP룸에서 뵙겠습니다.\"\n\n통화를 끊은 박성호는 자택 서재에서 멍하니 앉아 있었다. 한 달 전만 해도 투자에 별 관심이 없던 막내 도련님이 갑자기 15억 규모의 투자를 언급했다. 더구나 원유 선물이라니. 고위험 상품에 그 정도 자금을 투입한다는 것은 보통 일이 아니었다. 하지만 지난번 5억 투자에서 단시간에 수익을 낸 것을 보면, 뭔가 계획이 있는 것 같았다. 박성호는 한미증권 VIP팀장에게 연락을 취했다. \"내일 오전 10시, 특별 고객 미팅이 있습니다. 15억 규모 원유 선물 투자 상담입니다.\"\n\n다음 날 오전 9시, 한시우는 택시에 몸을 맡기고 청담동으로 향했다. 가죽 서류가방 안에는 SW인베스트먼트 법인 서류와 해외 선물 계좌 정보가 들어 있었다. 창밖으로 스쳐 지나가는 서울 시내를 바라보며 한시우는 투자 전략을 다시 한번 점검했다. 현재 20억 중 5억은 이미 투입했고, 추가로 15억을 레버리지 3배로 운용하면 총 60억 규모의 포지션이 된다. 원유가 10% 오르면 6억, 20% 오르면 12억의 수익이었다. 2월 말까지는 시간이 있었지만, 포지션 진입은 빠를수록 좋았다.\n\n택시가 한미증권 청담동 지점 앞에 멈췄다. 유리로 된 고층 건물이 아침 햇살을 받아 반짝였다. 한시우는 서류가방을 들고 내렸다. 로비를 지나 엘리베이터에 올라탔다. 15층 VIP룸. 박성호가 기다리고 있을 것이다. 그리고 오늘, 진짜 베팅이 시작된다. 엘리베이터 문이 열리며 한시우의 눈앞에 'VIP LOUNGE'라는 금색 간판이 나타났다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "time_shift",
+      "scene_transition_cue"
+    ],
+    "type": "explicit_transition"
+  },
+  "pacing_notes": "",
+  "protagonist_state": {
+    "equipment": [
+      "18년 치 미래 기억",
+      "경제사 정보",
+      "가죽 서류가방",
+      "SW인베스트먼트 법인 등기부등본",
+      "해외 선물 거래 계좌",
+      "씨티은행 체크카드",
+      "롤렉스 데이토나",
+      "삼성 애니콜 SGH-D600"
+    ],
+    "injuries": "없음",
+    "mood": "결의에 찬 냉정함과 계산된 확신"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "서재 이동 후 차트 분석",
+        "이란 핵 위기 타이밍 재검토",
+        "박성호에게 연락 결심"
+      ],
+      "location": "성북동 한정호 저택 서재",
+      "summary": "한시우가 본가 서재에서 WTI 원유 차트를 분석하며 투자 계획을 구체화한다",
+      "tension_level": 6,
+      "title": "서재에서의 분석",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "박성호에게 긴급 통화",
+        "15억 원유 투자 계획 언급",
+        "한미증권 VIP룸 미팅 요청"
+      ],
+      "location": "성북동 한정호 저택 서재",
+      "summary": "한시우가 박성호에게 전화를 걸어 긴급 투자 상담을 요청한다",
+      "tension_level": 7,
+      "title": "PB와의 상담 요청",
+      "type": "dialogue_duel"
+    },
+    "scene_3": {
+      "characters": [
+        "박성호"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "한시우 변화에 대한 분석",
+        "15억 투자 규모에 놀라움",
+        "VIP룸 예약 결심"
+      ],
+      "location": "박성호의 자택",
+      "summary": "박성호가 한시우의 갑작스러운 대규모 투자 제안에 당황하며 내심을 드러낸다",
+      "tension_level": 5,
+      "title": "PB의 당혹감",
+      "type": "side_glimpse"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "택시 탑승 후 이동",
+        "투자 전략 최종 점검",
+        "레버리지 계산 재확인"
+      ],
+      "location": "성북동에서 강남구 청담동으로 이동 중인 택시",
+      "summary": "한시우가 택시를 타고 한미증권 VIP룸으로 향하며 첫 베팅을 준비한다",
+      "tension_level": 8,
+      "title": "한미증권으로의 이동",
+      "type": "tension_build"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "한미증권 건물 도착",
+        "VIP룸 입장 준비",
+        "15억 베팅 직전 상황"
+      ],
+      "location": "한미증권 청담동 지점 입구",
+      "summary": "한시우가 한미증권에 도착하며 본격적인 베팅을 앞두고 긴장한다",
+      "tension_level": 9,
+      "title": "VIP룸 도착",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "개인 사무실",
+  "target_beat": "",
+  "time_flow": "2006년 2월 15일 오후 11시 30분 → 2월 16일 오전 9시 30분",
+  "title": "첫 번째 베팅"
+}

@@ -224,6 +224,28 @@ def test_collect_material_field_values_for_canon_stage_without_snapshot(tmp_path
     assert values["Resume Basis"] == "canon_pitch_anchor"
 
 
+def test_collect_material_field_values_for_registry_completed_without_snapshot(tmp_path, monkeypatch):
+    monkeypatch.setattr("scripts.sync_clickup_queue.ROOT", tmp_path)
+
+    values = _collect_material_field_values(
+        _item(
+            topic="투자물_골든_카나리아 테스트_canonical_v1",
+            temp_path="",
+            canonical_path="docs/2026-04-12/golden_canary_deployable_greenplus_closeout.md",
+            material_stage="bi_production_complete",
+            status="completed",
+            queue_role="historical_backing",
+        )
+    )
+
+    assert values["Work ID"] == "투자물_골든_카나리아 테스트_canonical_v1"
+    assert values["Material Stage"] == "BI 생산 완료"
+    assert values["Next Unit Type"] == "complete"
+    assert values["Resume Basis"] == "registry_deployable_live_pair"
+    assert values["Production Complete"] is True
+    assert values["BI Complete"] is True
+
+
 def test_collect_material_field_values_maps_blocked_and_parked_ops_state(tmp_path, monkeypatch):
     monkeypatch.setattr("scripts.sync_clickup_queue.ROOT", tmp_path)
 
