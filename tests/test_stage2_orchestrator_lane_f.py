@@ -174,6 +174,13 @@ def test_run_stage2_single_arc_attempt_emits_heartbeat_and_validation_progress()
     log_texts = [call.args[0] for call in ctx.ui.log.call_args_list if call.args]
     assert any("preflight/four-phase tactical generation 대기" in text for text in log_texts)
     assert any("validation 진입" in text for text in log_texts)
+    single_arc_logs = [
+        call.kwargs for call in ctx.ui.log.call_args_list if call.kwargs.get("component") == "single_arc_attempt"
+    ]
+    assert len(single_arc_logs) == 2
+    assert all(item["ep_num"] == 2 for item in single_arc_logs)
+    assert all(item["arc_num"] == 2 for item in single_arc_logs)
+    assert all(item["meta"]["current_ep_start"] == 5 for item in single_arc_logs)
 
 
 def test_build_stage2_arc_failure_report_context_collects_prev_items_and_constraints():
@@ -208,7 +215,9 @@ def test_handle_stage2_arc_failure_skip_choice_uses_skip_helper(tmp_path):
         paths=SimpleNamespace(root=tmp_path),
     )
     orch = Stage2Orchestrator(app=MagicMock(), context=ctx)
-    orch._resolve_stage2_arc_failure_report_path = MagicMock(return_value=tmp_path / "logs" / "arc_2_failure_report.txt")
+    orch._resolve_stage2_arc_failure_report_path = MagicMock(
+        return_value=tmp_path / "logs" / "arc_2_failure_report.txt"
+    )
     orch._build_stage2_arc_failure_report_context = MagicMock(
         return_value={"arc_rejects": [], "current_constraints": "seed", "prev_items": ["sword"]}
     )

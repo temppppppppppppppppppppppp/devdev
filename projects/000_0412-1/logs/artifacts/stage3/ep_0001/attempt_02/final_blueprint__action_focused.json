@@ -1,0 +1,165 @@
+{
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=1; sample_anchors=80달러",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 1개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [
+      [
+        "emotion_focused",
+        3,
+        992
+      ],
+      [
+        "dialogue_focused",
+        3,
+        1000
+      ]
+    ],
+    "length": 1202,
+    "python_warnings": [
+      {
+        "category": "opening_anchor",
+        "focus": "start_location, time_flow, scene_1.title, scene_1.location을 구조적으로 채우기",
+        "message": "opening anchor 계약 누락: scene_1.title",
+        "severity": "MAJOR",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 1
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 84,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true
+  },
+  "core_tension": "죽음과 함께 얻은 18년의 미래 기억. 새로운 기회를 인지하고 과거를 뒤엎을 결심을 세우는 내적 갈등.",
+  "end_location": "성북동 본가, 한시우의 방 (2006년)",
+  "ending_hook": "과거의 일상을 알리는 방문 밖의 목소리. 한시우는 이제 어떤 첫걸음을 내디딜 것인가.",
+  "ending_state": {
+    "location": "성북동 본가, 한시우의 방",
+    "protagonist_status": "회귀 사실을 인지하고 18년 치 미래 경제사 기억을 정리 완료함.",
+    "timeline": {
+      "표현": "2006년 1월, 어느 날 아침"
+    }
+  },
+  "ep_num": 1,
+  "episode_number": 1,
+  "expected_ending": "회귀를 완전히 인지하고, 미래 지식을 바탕으로 새로운 삶을 시작할 것을 결심한다.",
+  "integrated_scenario": "2024년의 겨울은 유독 혹독했다. 난방이 끊긴 허름한 원룸, 바닥에 뒹구는 빈 소주병 사이로 스며드는 외풍에 한시우는 무감각하게 몸을 떨었다. 재벌가의 막내아들, 한때는 승마 국가대표로 스포트라이트를 받았던 과거는 먼지처럼 흩어졌다. 큰형 한태준과 둘째형 한태민의 경영권 다툼으로 그룹은 공중분해되었고, 이혼과 연이은 사업 실패는 그에게 수십억의 빚만 남겼다. 흐릿해지는 의식 속에서 한시우의 뇌리를 스치는 것은 단 하나의 후회. ‘단 한 번도, 내 인생을 산 적이 없었다.’ 그 서늘한 자각을 마지막으로, 한시우의 심장이 멎었다. 다시 눈을 떴을 때, 한시우를 맞이한 것은 지독한 숙취나 싸늘한 냉기가 아니었다. 창문으로 쏟아지는 따스한 햇살과 익숙한 나무 천장이었다. 성북동 본가, 스무 살 시절부터 사용하던 자신의 방. 한시우는 기계적으로 몸을 일으켰다. 상처 하나 없이 매끈한 팔, 단단한 근육이 잡힌 젊은 육체. 모든 것이 비현실적이었다. 떨리는 손으로 책상 위 구형 피처폰을 열었다. 화면에 선명하게 찍힌 날짜. [2006년 1월 17일]. 심장이 바닥으로 곤두박질치는 충격. 한시우는 그대로 침대에 쓰러지듯 누워 천장을 응시했다. 죽음, 그리고 회귀. 혼란은 잠시였다. 곧이어 그의 머릿속으로 18년 치의 미래가 폭풍처럼 휘몰아쳤다. 이건 단순한 기억이 아니었다. 살을 에는 고통과 뼈저린 실패로 새겨진 기록이었다. 2006년, 이란 핵 문제와 나이지리아 MEND의 무장 투쟁이 맞물리며 배럴당 80달러까지 치솟던 유가, 그리고 곧이어 터질 에콰도르의 옥시덴탈 페트롤리엄 계약 강제 해지까지. 2007년, 스티브 잡스가 발표할 아이폰이 가져올 모바일 혁명. 2008년 9월 15일, 전 세계를 공포로 몰아넣은 리먼 브라더스의 파산. 2009년, 사토시 나카모토라는 정체불명의 인물이 만들어낸 비트코인의 첫 블록, 그리고 2010년 그리스에서 시작된 유럽 재정 위기. 그리고 이어지는 수많은 기회와 위기들. 추측이 아니었다. 한시우 자신이 직접 겪고, 놓치고, 파멸했던 역사의 흐름이었다. 30분. 한시우는 미동도 없이 누워 그 모든 기억을 퍼즐처럼 꿰맞췄다. 실패의 연대기는 이제 누구도 가질 수 없는 완벽한 미래 지도가 되었다. 절망과 후회로 가득 찼던 심장에 차가운 불꽃이 일었다. 한시우는 천천히 몸을 일으켰다. 창밖으로 보이는 2006년의 서울은 기회의 땅 그 자체였다. 더는 누구의 꼭두각시로 살지 않을 것이다. 더는 아버지 한정호의 유산 위에서 벌어진 형들의 탐욕에 휘말려 모든 것을 잃지 않을 것이다. 한시우가 굳게 주먹을 쥐는 순간, 방문 밖에서 목소리가 들려왔다. “시우야, 아침 먹어라.” 오래전 기억 속 가사도우미의 목소리. 과거의 일상을 알리는 그 소리는, 새로운 삶의 시작을 알리는 신호탄처럼 울렸다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "no_prev_anchor"
+    ],
+    "type": "jump_opening"
+  },
+  "pacing_notes": "",
+  "protagonist_state": {
+    "equipment": [
+      "구형 피처폰",
+      "지갑"
+    ],
+    "injuries": "정상",
+    "mood": "냉철한 결의"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "한시우의 절망적인 죽음을 통해 과거의 실패와 후회를 각인시킨다.",
+      "key_events": [
+        "싸구려 소주병이 굴러다니는 방의 냉기를 느낀다.",
+        "이혼, 사업 실패, 흩어진 가족 등 실패한 인생을 반추한다.",
+        "‘단 한 번도 내 인생을 산 적이 없었다’는 마지막 후회와 함께 숨을 거둔다."
+      ],
+      "location": "허름한 원룸 (2024년)",
+      "summary": "2024년 겨울, 빚더미에 앉은 한시우가 차가운 원룸에서 후회 속에 홀로 죽음을 맞이한다.",
+      "tension_level": 8,
+      "title": "차가운 끝"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "회귀라는 비현실적인 상황을 주인공이 인지하고 충격에 빠지는 과정을 보여준다.",
+      "key_events": [
+        "익숙한 천장과 햇살에 눈을 뜨고, 젊고 상처 없는 자신의 몸을 확인한다.",
+        "방 안의 낡은 달력과 구형 피처폰의 날짜를 통해 지금이 2006년 1월임을 깨닫는다.",
+        "거울에 비친 스물여섯 살의 자신을 마주하고 이것이 꿈이 아님을 직감한다."
+      ],
+      "location": "성북동 본가, 한시우의 방 (2006년)",
+      "summary": "한시우는 낯익은 자신의 옛 방에서 눈을 뜬다. 모든 것이 18년 전 과거인 2006년으로 돌아가 있음을 확인하고 극심한 혼란에 휩싸인다.",
+      "tension_level": 7
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "미래에 대한 지식이 단순한 정보가 아닌, 실패로 점철된 생생한 경험의 기록임을 보여주며 복수의 정당성과 절박함을 구축한다.",
+      "key_events": [
+        "이란 핵 문제로 인한 유가 급등, 서브프라임 모기지 사태, 리먼 브라더스 파산, 비트코인의 등장 등 미래의 핵심 경제 이벤트를 순서대로 떠올린다.",
+        "단순한 정보가 아닌, 자신이 직접 겪고 잃었던 고통스러운 경험의 기억임을 재확인한다.",
+        "죽음 직전의 후회가 차가운 분노와 기회에 대한 확신으로 변모한다."
+      ],
+      "location": "성북동 본가, 한시우의 방 (2006년)",
+      "summary": "침대에 누운 채, 한시우는 자신의 머릿속에 18년 치 미래의 경제사가 생생하게 남아있음을 확인한다. 모든 실패의 기록이 이제는 강력한 무기가 되었다.",
+      "tension_level": 9
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "내적 혼란을 끝내고 행동에 나설 것을 결심하는 주인공의 모습을 통해 다음 화에 대한 기대감을 증폭시킨다.",
+      "key_events": [
+        "한시우가 30분간의 정적을 깨고 침대에서 일어선다.",
+        "창밖으로 보이는 2006년의 서울 풍경을 보며 주먹을 꽉 쥔다.",
+        "방문 밖에서 “시우야, 아침 먹어라”라는 가사도우미의 목소리가 들려오며 과거와 미래의 경계에 선다."
+      ],
+      "location": "성북동 본가, 한시우의 방 (2006년)",
+      "summary": "모든 기억의 정리를 마친 한시우가 결의에 찬 눈으로 침대에서 일어선다. 그때, 방문 밖에서 과거의 일상을 알리는 목소리가 들려온다.",
+      "tension_level": 9
+    }
+  },
+  "start_location": "허름한 원룸 (2024년)",
+  "target_beat": "",
+  "time_flow": "2024년 현재에서 2006년 과거로 회귀.",
+  "title": "재, 그리고 먼지"
+}

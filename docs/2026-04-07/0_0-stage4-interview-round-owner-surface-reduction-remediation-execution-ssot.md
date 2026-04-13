@@ -1,14 +1,14 @@
-# 0_0 Stage4 Interview-Round Owner-Surface Reduction Remediation Execution SSOT
+﻿# 0_0 Stage4 Interview-Round Owner-Surface Reduction Remediation Execution SSOT
 
 Date: 2026-04-07
-Status: in_progress (first bounded post-select boundary extraction landed on 2026-04-07; structure-first lane remains below proof-deferred functional work)
+Status: in_progress (the first bounded post-select boundary extraction landed on 2026-04-07, later contract/session/episode/retry/raw-evidence helper work also landed on the live workspace, but the current recount still leaves this as a structure-first, proof-deferred lane with dominant owner pressure in `Stage4InterviewRound`)
 Canonical Path: `docs/2026-04-07/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
 - Baseline Dirty Summary: `dirty: prior Stage3 opening-transition tranche plus docs/temp mirrors already modified in worktree`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `live 3-pass re-audit found current owner pressure at 160 direct methods / 3 180+ / 6 120+; the first bounded post-select boundary extraction then landed and moved the next unopened lane to stage0-treatment-enrich-retirement-remediation`
+- Resume Commit: `2b7cb64f2d1fe2cd1152806a5cc37795609f9755`
+- Resume Drift Summary: `live 3-pass re-audit on the current workspace now finds `Stage4InterviewRound` at 166 direct methods / 2 180+ / 5 120+; the first module-boundary extraction remains landed, later contract/raw-evidence helper work is also landed, and the next useful move is proof-first plus later owner-pressure reopening rather than claiming the older 159-method recount as current truth`
 Source Survey Docs:
 - `docs/2026-04-07/0_0-stage4-interview-round-owner-surface-reduction-bounded-survey.md`
 Evidence Artifacts:
@@ -24,8 +24,8 @@ It exists so the workspace can keep a real owner-surface debt item explicit in t
 
 ## 2. Baseline Facts
 
-- live pre-tranche recount: `Stage4InterviewRound` owned `160` direct methods and now owns `158`
-- hotspot recount moved from `3 -> 2` `180+ LOC` methods and from `6 -> 5` `120+ LOC` methods
+- historical pre-tranche recount moved from `160 -> 159` direct methods with `3 -> 2` `180+ LOC` and `6 -> 5` `120+ LOC` hotspots when the first post-select extraction landed
+- current live recount is now `166` direct methods with `2` `180+ LOC` and `5` `120+ LOC` hotspots, so the lane remains open and the older `159` recount should be treated as a historical tranche anchor rather than current truth
 - Existing extracted siblings already exist, and this tranche adds:
   - `Stage4DirectorRuntime`
   - `Stage4PostSelectRuntime`
@@ -35,6 +35,7 @@ It exists so the workspace can keep a real owner-surface debt item explicit in t
   - director gate normalization / pass-with-fix shaping
   - episode-log / attempt / sink payload assembly
 - the landed post-select extraction confirms this is best treated as a `module boundary / owner-surface reduction` lane, not as incremental helper growth inside the same file
+- the later helper-heavy contract/raw-evidence work improved auditability but did not solve owner pressure; the lane should therefore remain proof-deferred and avoid pretending that helper growth itself closed the structure problem
 
 ## 3. Scope
 
@@ -139,10 +140,10 @@ Implementation rule:
 
 - no new `180+ LOC` function is introduced
 - at least one current `180+ LOC` hotspot is reduced below `180 LOC` or moved out of `Stage4InterviewRound`
-- `Stage4InterviewRound` direct-method pressure is reduced from the live pre-tranche `160` baseline
+- later closure should demonstrate a real reduction from the current live `166` direct-method reality rather than citing only the historical `160 -> 159` tranche anchor
 - extracted families have explicit owner boundaries rather than same-file helper sprawl
 - targeted Stage4 regressions pass without semantic drift
-- post-change complexity recount is recorded (`158` direct methods / `2` `180+ LOC` / `5` `120+ LOC`)
+- current live complexity recount is recorded (`166` direct methods / `2` `180+ LOC` / `5` `120+ LOC`), while the earlier `159 / 2 / 5` remains a historical first-tranche anchor only
 
 ## 9. Verification Plan
 
@@ -192,8 +193,9 @@ Pass 1, structure and scope:
 
 Pass 2, evidence and consistency:
 
-- live pre-tranche recount confirmed `160` direct methods / `3` `180+ LOC` / `6` `120+ LOC`
-- post-change recount confirmed `158` direct methods / `2` `180+ LOC` / `5` `120+ LOC`
+- historical pre-tranche recount confirmed `160` direct methods / `3` `180+ LOC` / `6` `120+ LOC`
+- historical first-tranche recount confirmed `159` direct methods / `2` `180+ LOC` / `5` `120+ LOC`
+- current live recount is `166` direct methods / `2` `180+ LOC` / `5` `120+ LOC`, so later closure should cite current proof-first reality rather than the older historical tranche count alone
 - focused regression shards preserved post-select downgrade and positive-verdict transition behavior
 
 Pass 3, execution and readability:
@@ -203,3 +205,4 @@ Pass 3, execution and readability:
 - because this lane is no longer unopened, the next unopened code lane now moves to `stage0-treatment-enrich-retirement-remediation`
 
 Confidence: `97%`
+

@@ -19,12 +19,12 @@ from modules.core.project_support import default_external_pov_insert_policy, nor
 from modules.core.response_schemas import (  # noqa: E402 - entrypoint path bootstrap must precede imports
     validate_bible_structure,
 )
-from modules.core.stage0_opening_contract import ensure_opening_bundle_contract
 from modules.core.stage0_handoff import (
     build_plot_roadmap_from_treatment,
     canonicalize_bible_payload,
     canonicalize_treatment_payload,
 )
+from modules.core.stage0_opening_contract import ensure_opening_bundle_contract
 from modules.core.work_identity_surface import resolve_phase0_work_identity_surface
 
 # Keep runtime detection broad without embedding hygiene-triggering literals directly in source.
@@ -82,6 +82,20 @@ def unique_preserve_order(items: list[str]) -> list[str]:
     return out
 
 
+def derive_resource_power_checkpoint(block: dict[str, Any]) -> str:
+    genre_ext = block.get("genre_ext", {}) if isinstance(block, dict) else {}
+    for candidate in (
+        genre_ext.get("capital_after"),
+        genre_ext.get("authority_after"),
+        block.get("content", {}).get("reward") if isinstance(block.get("content"), dict) else "",
+        block.get("title"),
+    ):
+        text = as_text(candidate)
+        if text:
+            return text
+    return "source TR aligned checkpoint"
+
+
 def resolve_bi_naming_authority(phase0_payload: dict[str, Any]) -> dict[str, Any]:
     naming = resolve_phase0_work_identity_surface(phase0_payload)
     require(bool(naming["canonical_title"]), "Phase0 payload must resolve a canonical title for BI output")
@@ -117,8 +131,16 @@ def derive_talent_name(protagonist: dict[str, Any]) -> str:
 def derive_growth_rule(phase0: dict[str, Any]) -> str:
     sectors = unique_preserve_order(
         [
-            *[sector for arc in phase0["partner_location_sector_distribution"]["front_sector_by_arc"] for sector in arc["front"]],
-            *[sector for arc in phase0["partner_location_sector_distribution"]["front_sector_by_arc"] for sector in arc["support"]],
+            *[
+                sector
+                for arc in phase0["partner_location_sector_distribution"]["front_sector_by_arc"]
+                for sector in arc["front"]
+            ],
+            *[
+                sector
+                for arc in phase0["partner_location_sector_distribution"]["front_sector_by_arc"]
+                for sector in arc["support"]
+            ],
         ]
     )
     return f"{summarize_business_axis(sectors)} 순으로 사업축을 넓히며 지배력을 키운다."
@@ -185,7 +207,7 @@ def build_portfolio_history(blocks: list[dict[str, Any]]) -> list[dict[str, Any]
                 "episode": 0,
                 "block": block_no,
                 "month": block["time_span"]["in_story_time"],
-                "total_assets": block["genre_ext"]["capital_after"],
+                "total_assets": derive_resource_power_checkpoint(block),
                 "event": block["title"],
             }
         )
@@ -216,8 +238,12 @@ def derive_partner_location_sector_distribution(
         partners.append(
             {
                 "name": name,
-                "cadence": as_text(entry.get("phase")) or as_text(entry.get("block_range")) or as_text(entry.get("entry_block")),
-                "objective": as_text(entry.get("goal")) or as_text(entry.get("weakness")) or "source TR aligned business-power objective",
+                "cadence": as_text(entry.get("phase"))
+                or as_text(entry.get("block_range"))
+                or as_text(entry.get("entry_block")),
+                "objective": as_text(entry.get("goal"))
+                or as_text(entry.get("weakness"))
+                or "source TR aligned business-power objective",
             }
         )
 
@@ -252,7 +278,7 @@ def derive_capital_curve(treatment_blocks: list[dict[str, Any]]) -> list[dict[st
             {
                 "block": block_no,
                 "title": block["title"],
-                "capital_after": block["genre_ext"]["capital_after"],
+                "capital_after": derive_resource_power_checkpoint(block),
             }
         )
     return points
@@ -285,7 +311,9 @@ def normalize_phase0_design(
 ) -> dict[str, Any]:
     normalized = json.loads(json.dumps(phase0, ensure_ascii=False))
     if "partner_location_sector_distribution" not in normalized:
-        normalized["partner_location_sector_distribution"] = derive_partner_location_sector_distribution(normalized, treatment_blocks)
+        normalized["partner_location_sector_distribution"] = derive_partner_location_sector_distribution(
+            normalized, treatment_blocks
+        )
     if "capital_curve" not in normalized:
         normalized["capital_curve"] = derive_capital_curve(treatment_blocks)
     if "defeat_blocks" not in normalized:
@@ -340,7 +368,7 @@ def build_key_npcs(
             {
                 "name": npc["name"],
                 "role": npc["role"],
-                "desc": f"{npc['role']}. Block {npc['first_block']}부터 본격적으로 영향력을 행사한다.",
+                "desc": f"{npc['role']}. 작품 전개에서 본격적으로 영향력을 행사한다.",
                 "first_block": npc["first_block"],
                 "final_status": npc["final_status"],
                 "key_turning_points": turning_points,
@@ -357,7 +385,11 @@ def build_arc_sheets(arcs: list[dict[str, Any]]) -> list[dict[str, Any]]:
             last_slot = arc["block_slots"][-1]
         else:
             start_block, end_block = parse_block_range(arc["block_range"])
-            first_slot = {"block": start_block, "title": arc["title"], "function": arc.get("entry_function", arc["title"])}
+            first_slot = {
+                "block": start_block,
+                "title": arc["title"],
+                "function": arc.get("entry_function", arc["title"]),
+            }
             last_slot = {"block": end_block, "title": arc["title"], "function": arc.get("exit_function", arc["title"])}
         out.append(
             {
@@ -391,7 +423,11 @@ def build_historical_events(
             last_slot = arc["block_slots"][-1]
         else:
             start_block, end_block = parse_block_range(arc["block_range"])
-            first_slot = {"block": start_block, "title": arc["title"], "function": arc.get("entry_function", arc["title"])}
+            first_slot = {
+                "block": start_block,
+                "title": arc["title"],
+                "function": arc.get("entry_function", arc["title"]),
+            }
             last_slot = {"block": end_block, "title": arc["title"], "function": arc.get("exit_function", arc["title"])}
         events.append(
             {
@@ -464,8 +500,16 @@ def build_bible(
 
     all_sectors = unique_preserve_order(
         [
-            *[sector for arc in phase0["partner_location_sector_distribution"]["front_sector_by_arc"] for sector in arc["front"]],
-            *[sector for arc in phase0["partner_location_sector_distribution"]["front_sector_by_arc"] for sector in arc["support"]],
+            *[
+                sector
+                for arc in phase0["partner_location_sector_distribution"]["front_sector_by_arc"]
+                for sector in arc["front"]
+            ],
+            *[
+                sector
+                for arc in phase0["partner_location_sector_distribution"]["front_sector_by_arc"]
+                for sector in arc["support"]
+            ],
         ]
     )
 
@@ -634,9 +678,15 @@ def main() -> int:
     authority_chain = build_authority_chain(work_id, phase0_path=args.phase0, draft_path=args.draft)
     canonical_treatment, tr_warnings = canonicalize_treatment_payload(draft_raw)
     treatment_blocks = canonical_treatment["blocks"]
-    require(isinstance(treatment_blocks, list) and len(treatment_blocks) >= 1, "Treatment draft must contain at least one block")
+    require(
+        isinstance(treatment_blocks, list) and len(treatment_blocks) >= 1,
+        "Treatment draft must contain at least one block",
+    )
     require(isinstance(phase0, dict), "Phase0 payload must be a dict")
-    require("project" in phase0 and "setting" in phase0 and "protagonist" in phase0 and "phase0_design" in phase0, "Phase0 payload is missing required sections")
+    require(
+        "project" in phase0 and "setting" in phase0 and "protagonist" in phase0 and "phase0_design" in phase0,
+        "Phase0 payload is missing required sections",
+    )
 
     phase0_design = phase0["phase0_design"]
     for field in ("arcs", "npc_timeline", "foreshadow_map", "opponent_transition_plan"):
@@ -671,7 +721,9 @@ def main() -> int:
         "BI plot_roadmap must align with treatment block count",
     )
 
-    draft_hash = hashlib.sha256(json.dumps(treatment_blocks, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+    draft_hash = hashlib.sha256(
+        json.dumps(treatment_blocks, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()
     bible_hash = hashlib.sha256(
         json.dumps(bible["MasterBible"]["plot_roadmap"], ensure_ascii=False, sort_keys=True).encode("utf-8")
     ).hexdigest()

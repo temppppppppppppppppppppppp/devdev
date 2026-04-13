@@ -17,7 +17,12 @@ from modules.core.constants import smart_truncate
 from modules.core.jsonl_io import append_jsonl_record
 from modules.core.llm_generate import generate_content_via_router
 from modules.core.logging_keys import resolve_logging_session_id
-from modules.core.project_support import load_style_guide_anchor, resolve_project_bible_pov
+from modules.core.project_support import (
+    default_external_pov_insert_policy,
+    load_style_guide_anchor,
+    load_style_guide_file,
+    resolve_project_bible_pov,
+)
 from modules.core.soft_failure import resolve_project_log_dir
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_interview_round import Stage4InterviewRound
@@ -63,6 +68,62 @@ def _trim_mandatory_context_for_budget(mandatory_context: str, *, max_chars: int
 
     head_chars = max(0, min(int(max_chars * 0.55), max_chars - 80))
     return smart_truncate(text, max_chars=max_chars, head_chars=head_chars)
+
+
+def _render_style_guide_payload(
+    style_payload: dict[str, object] | None,
+    *,
+    bible_pov: str = "",
+) -> tuple[str, str, str, str]:
+    payload = dict(style_payload or {})
+    if not payload:
+        return "", "", "", ""
+
+    tone = str(payload.get("tone") or "").strip() or "중립"
+    resolved_pov = (
+        str(
+            bible_pov
+            or payload.get("effective_primary_pov")
+            or payload.get("selected_primary_pov")
+            or payload.get("pov")
+            or ""
+        ).strip()
+        or "1인칭"
+    )
+    reference_excerpt = str(payload.get("reference_excerpt") or "").strip()
+
+    explicit_prompt = str(payload.get("fallback_style_prompt") or "").strip()
+    if explicit_prompt:
+        return explicit_prompt, reference_excerpt, tone, resolved_pov
+
+    dialogue_ratio = payload.get("dialogue_ratio")
+    try:
+        dialogue_value = float(dialogue_ratio)
+    except (TypeError, ValueError):
+        dialogue_value = 0.3
+    if dialogue_value > 1.0:
+        dialogue_value /= 100.0
+    if not 0.0 <= dialogue_value <= 1.0:
+        dialogue_value = 0.3
+
+    sentence_length = str(payload.get("sentence_length") or "").strip() or "medium"
+    description_style = str(payload.get("description_style") or "").strip() or "균형"
+    vocabulary_level = str(payload.get("vocabulary_level") or "").strip() or "medium"
+    external_policy = str(payload.get("external_pov_insert_policy") or "").strip()
+    if external_policy:
+        external_policy = f"\n- 외부 시점 삽입: {external_policy}"
+
+    prompt = (
+        "## 문체 DNA (절대 준수)\n"
+        f"- 톤: {tone}\n"
+        f"- 시점: {resolved_pov}\n"
+        f"- 대화 비율: {dialogue_value:.0%}\n"
+        f"- 문장 길이: {sentence_length}\n"
+        f"- 묘사: {description_style}\n"
+        f"- 어휘: {vocabulary_level}"
+        f"{external_policy}"
+    )
+    return prompt, reference_excerpt, tone, resolved_pov
 
 
 # ── Dataclass family: budget helpers ──────────────────────────
@@ -2381,40 +2442,59 @@ JSON으로 출력:
     def _resolve_session_style_guide(self, *, stage0_available: bool) -> _SessionStyleGuidePayload:
         style_guide = ""
         reference_excerpt = ""
+        bible_pov = ""
+        try:
+            bible_pov = resolve_project_bible_pov(self.ctx.current_project)
+        except Exception as e:
+            _perf_logger.warning(f"[SilentPass:Stage4] Bible POV 조회 실패: {e!s:.100}")
+
         saved_style = load_style_guide_anchor(self.ctx.current_project)
-        if saved_style and stage0_available:
+        if saved_style:
             try:
                 from modules.core.stage0 import StyleGuide
 
                 loaded_sg = StyleGuide.from_dict(saved_style)
-                try:
-                    bible_pov = resolve_project_bible_pov(self.ctx.current_project)
-                    if bible_pov:
-                        if loaded_sg.pov and bible_pov != loaded_sg.pov:  # [TF-31-2]
-                            logging.warning(
-                                "[TF-31-2] StyleGuide POV(%s) ≠ Bible POV(%s) — Bible 우선 적용",
-                                loaded_sg.pov,
-                                bible_pov,
-                            )
-                        loaded_sg.pov = bible_pov
-                except Exception as e:
-                    _perf_logger.warning(f"[SilentPass:Stage4] Bible POV 오버라이드 실패: {e!s:.100}")
+                if bible_pov:
+                    if loaded_sg.pov and bible_pov != loaded_sg.pov:  # [TF-31-2]
+                        logging.warning(
+                            "[TF-31-2] StyleGuide POV(%s) ≠ Bible POV(%s) — Bible 우선 적용",
+                            loaded_sg.pov,
+                            bible_pov,
+                        )
+                    loaded_sg.pov = bible_pov
                 style_guide = loaded_sg.to_prompt()
                 reference_excerpt = getattr(loaded_sg, "reference_excerpt", "")
                 self.ctx.ui.log(
                     f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone}, 시점: {loaded_sg.pov})"
                 )
             except Exception as e:
-                self.ctx.ui.log(f"⚠️ 스타일 가이드 로드 실패: {e}")
-                saved_style = None
+                _perf_logger.warning(
+                    f"[SilentPass:Stage4] Stage0 StyleGuide 렌더 실패, payload fallback 사용: {e!s:.100}"
+                )
+                style_guide, reference_excerpt, tone, resolved_pov = _render_style_guide_payload(
+                    saved_style,
+                    bible_pov=bible_pov,
+                )
+                if style_guide:
+                    self.ctx.ui.log(f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {tone}, 시점: {resolved_pov})")
 
         reference_excerpt = _clamp_reference_excerpt(reference_excerpt)
 
-        if not style_guide and stage0_available:
+        if not style_guide:
+            file_style = load_style_guide_file(self.ctx.current_project)
+            if file_style:
+                style_guide, reference_excerpt, tone, resolved_pov = _render_style_guide_payload(
+                    file_style,
+                    bible_pov=bible_pov,
+                )
+                if style_guide:
+                    reference_excerpt = _clamp_reference_excerpt(reference_excerpt)
+                    self.ctx.ui.log(f"🎨 [V60.95] Stage0 style_guide.json 로드됨 (톤: {tone}, 시점: {resolved_pov})")
+
+        if not style_guide:
             try:
                 from modules.core.stage0 import StyleGuide as _SG
 
-                bible_pov = resolve_project_bible_pov(self.ctx.current_project)
                 if bible_pov:
                     min_style_guide = _SG(pov=bible_pov)
                     style_guide = min_style_guide.to_prompt()
@@ -2431,6 +2511,25 @@ JSON으로 출력:
                 if style_choice == 2
                 else "카카오: 사이다 전개, 절벽걸기, 4K 해상도 묘사"
             )
+            save_anchor = getattr(self.ctx.current_project, "save_v20_anchor", None)
+            if callable(save_anchor):
+                try:
+                    fallback_pov = bible_pov or "1인칭"
+                    save_anchor(
+                        "style_guide",
+                        {
+                            "tone": "네이버" if style_choice == 2 else "카카오",
+                            "pov": fallback_pov,
+                            "selected_primary_pov": fallback_pov,
+                            "effective_primary_pov": fallback_pov,
+                            "external_pov_insert_policy": default_external_pov_insert_policy(fallback_pov),
+                            "fallback_style_prompt": style_guide,
+                            "reference_excerpt": "",
+                        },
+                    )
+                    self.ctx.ui.log("💾 [V60.95] 선택된 플랫폼 스타일을 style_guide anchor로 저장했습니다.")
+                except Exception as e:
+                    _perf_logger.warning(f"[SilentPass:Stage4] style_guide fallback anchor 저장 실패: {e!s:.100}")
 
         return _SessionStyleGuidePayload(
             style_guide=style_guide,

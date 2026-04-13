@@ -344,6 +344,61 @@ class TestScoringValidator:
         assert result["passed"] is False
         assert result["total_score"] < 70
 
+    def test_generate_dynamic_context_skips_live_hud_for_blueprint_mode(self):
+        from modules.validation.scoring_validator import ScoringValidator
+
+        validator = ScoringValidator(client=None, genre="investment")
+        validator.guard = MagicMock()
+        validator.guard.get_impossible_actions.return_value = [{"reason": "유동성 부족"}]
+        validator.guard.get_justification_patterns.return_value = [r"미래.*기억"]
+
+        context = {
+            "mode": "BLUEPRINT",
+            "martial_hud": {
+                "actual_truth": {
+                    "rank": "SW인베스트먼트 패밀리오피스 수장 / 글로벌 투자자",
+                    "status": "late-stage",
+                }
+            },
+        }
+
+        dynamic_context = validator._generate_dynamic_context(context)
+
+        assert "[V46] 주인공 현재 상태" not in dynamic_context
+        assert "SW인베스트먼트 패밀리오피스 수장 / 글로벌 투자자" not in dynamic_context
+        validator.guard.get_impossible_actions.assert_not_called()
+
+    def test_generate_dynamic_context_uses_explicit_blueprint_scoring_hud_when_provided(self):
+        from modules.validation.scoring_validator import ScoringValidator
+
+        validator = ScoringValidator(client=None, genre="investment")
+        validator.guard = MagicMock()
+        validator.guard.get_impossible_actions.return_value = [{"reason": "유동성 부족"}]
+        validator.guard.get_justification_patterns.return_value = [r"미래.*기억"]
+
+        context = {
+            "mode": "BLUEPRINT",
+            "martial_hud": {
+                "actual_truth": {
+                    "rank": "late-stage should not leak",
+                    "status": "late-stage",
+                }
+            },
+            "blueprint_scoring_hud": {
+                "actual_truth": {
+                    "status": "투자 준비 단계",
+                    "equipment": ["경제사 정보"],
+                }
+            },
+        }
+
+        dynamic_context = validator._generate_dynamic_context(context)
+
+        assert "[V46] 주인공 현재 상태" in dynamic_context
+        assert "투자 준비 단계" in dynamic_context
+        assert "late-stage should not leak" not in dynamic_context
+        validator.guard.get_impossible_actions.assert_called_once()
+
 
 class TestAdvisoryValidator:
     """TIER 3: AdvisoryValidator tests."""
@@ -373,7 +428,6 @@ class TestAdvisoryValidator:
         has_hint = any(kw in text_with_opportunity for kw in foreshadowing_hints)
         assert has_hint
 
-
     def test_expression_improvement_prompt_preserves_tail_context(self, monkeypatch):
         from modules.validation.advisory_validator import AdvisoryValidator
 
@@ -392,9 +446,7 @@ class TestAdvisoryValidator:
             _fake_generate_content_via_router,
         )
 
-        suggestions = validator._suggest_expression_improvements(
-            "HEAD-ADV\n" + ("A" * 3000) + "\nTAIL-ADVISORY"
-        )
+        suggestions = validator._suggest_expression_improvements("HEAD-ADV\n" + ("A" * 3000) + "\nTAIL-ADVISORY")
 
         assert suggestions == []
         assert "TAIL-ADVISORY" in captured["prompt"]
@@ -493,7 +545,9 @@ class TestValidationOrchestrator:
             MagicMock(),
             genre="wuxia",
         )
-        orchestrator.continuity.validate = MagicMock(return_value={"passed": True, "warning_count": 0, "violations": []})
+        orchestrator.continuity.validate = MagicMock(
+            return_value={"passed": True, "warning_count": 0, "violations": []}
+        )
         orchestrator.blocking.validate = MagicMock(return_value={"passed": True, "failure_count": 0, "failures": []})
         orchestrator.consistency.validate = MagicMock(
             return_value={
@@ -530,10 +584,17 @@ class TestValidationOrchestrator:
             MagicMock(),
             genre="wuxia",
         )
-        orchestrator.continuity.validate = MagicMock(return_value={"passed": True, "warning_count": 0, "violations": []})
+        orchestrator.continuity.validate = MagicMock(
+            return_value={"passed": True, "warning_count": 0, "violations": []}
+        )
         orchestrator.blocking.validate = MagicMock(return_value={"passed": True, "failure_count": 0, "failures": []})
         orchestrator.consistency.validate = MagicMock(
-            return_value={"unjustifiable_violations": [], "justifiable_violations": [], "score_penalty": 0, "feedback": ""}
+            return_value={
+                "unjustifiable_violations": [],
+                "justifiable_violations": [],
+                "score_penalty": 0,
+                "feedback": "",
+            }
         )
         orchestrator.pre_llm.validate = MagicMock(return_value={"passed": True, "warnings": [], "score_deduction": 0})
         orchestrator.scoring.validate_v59 = MagicMock(return_value={"total_score": 95, "message": "ok", "passed": True})

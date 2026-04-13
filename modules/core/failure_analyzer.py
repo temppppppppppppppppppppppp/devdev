@@ -9,6 +9,446 @@ from collections import defaultdict
 from pathlib import Path
 
 from modules.core.soft_failure import report_soft_failure
+from modules.core.stage4_raw_evidence import summarize_stage4_raw_rationale_rows
+
+
+def _coerce_text_value_set(values: object) -> set[str]:
+    result: set[str] = set()
+    if isinstance(values, dict):
+        iterable = values.keys()
+    elif isinstance(values, (set, list, tuple)):
+        iterable = values
+    elif values in ("", None):
+        return result
+    else:
+        iterable = (values,)
+    for raw in iterable:
+        text = str(raw or "").strip()
+        if text:
+            result.add(text)
+    return result
+
+
+def _build_stage4_raw_rationale_summary(
+    raw_rationale_by_attempt: dict[str, dict[str, object]],
+) -> dict[str, object]:
+    max_examples_per_bucket = 3
+    payload_kind_union: set[str] = set()
+    record_family_union: set[str] = set()
+    surface_union: set[str] = set()
+    projected_payload_kind_union: set[str] = set()
+    payload_kind_attempt_counts: defaultdict[str, int] = defaultdict(int)
+    record_family_attempt_counts: defaultdict[str, int] = defaultdict(int)
+    surface_attempt_counts: defaultdict[str, int] = defaultdict(int)
+    projected_payload_attempt_counts: defaultdict[str, int] = defaultdict(int)
+    payload_kind_examples: defaultdict[str, list[str]] = defaultdict(list)
+    record_family_examples: defaultdict[str, list[str]] = defaultdict(list)
+    surface_examples: defaultdict[str, list[str]] = defaultdict(list)
+    projected_payload_examples: defaultdict[str, list[str]] = defaultdict(list)
+    attempts_with_projected_payloads = 0
+
+    for attempt_key, payload in raw_rationale_by_attempt.items():
+        if not isinstance(payload, dict):
+            continue
+
+        payload_kinds = _coerce_text_value_set(payload.get("payload_kinds"))
+        record_families = _coerce_text_value_set(payload.get("record_families"))
+        surfaces = _coerce_text_value_set(payload.get("surfaces"))
+        projected_payloads = payload.get("projected_payloads")
+        projected_payload_kinds: set[str] = set()
+        if isinstance(projected_payloads, dict):
+            for raw_kind, raw_payload in projected_payloads.items():
+                kind = str(raw_kind or "").strip()
+                if not kind or raw_payload in ("", None, [], {}):
+                    continue
+                projected_payload_kinds.add(kind)
+
+        if payload_kinds:
+            payload_kind_union.update(payload_kinds)
+            for kind in payload_kinds:
+                payload_kind_attempt_counts[kind] += 1
+                if len(payload_kind_examples[kind]) < max_examples_per_bucket:
+                    payload_kind_examples[kind].append(str(attempt_key))
+        if record_families:
+            record_family_union.update(record_families)
+            for family in record_families:
+                record_family_attempt_counts[family] += 1
+                if len(record_family_examples[family]) < max_examples_per_bucket:
+                    record_family_examples[family].append(str(attempt_key))
+        if surfaces:
+            surface_union.update(surfaces)
+            for surface in surfaces:
+                surface_attempt_counts[surface] += 1
+                if len(surface_examples[surface]) < max_examples_per_bucket:
+                    surface_examples[surface].append(str(attempt_key))
+        if projected_payload_kinds:
+            attempts_with_projected_payloads += 1
+            projected_payload_kind_union.update(projected_payload_kinds)
+            for kind in projected_payload_kinds:
+                projected_payload_attempt_counts[kind] += 1
+                if len(projected_payload_examples[kind]) < max_examples_per_bucket:
+                    projected_payload_examples[kind].append(str(attempt_key))
+
+    return {
+        "attempts_with_raw_rationale": len(raw_rationale_by_attempt),
+        "attempts_with_projected_payloads": attempts_with_projected_payloads,
+        "payload_kinds_present": sorted(payload_kind_union),
+        "record_families_present": sorted(record_family_union),
+        "surfaces_present": sorted(surface_union),
+        "projected_payload_kinds_present": sorted(projected_payload_kind_union),
+        "payload_kind_attempt_counts": {key: value for key, value in sorted(payload_kind_attempt_counts.items())},
+        "record_family_attempt_counts": {key: value for key, value in sorted(record_family_attempt_counts.items())},
+        "surface_attempt_counts": {key: value for key, value in sorted(surface_attempt_counts.items())},
+        "projected_payload_attempt_counts": {
+            key: value for key, value in sorted(projected_payload_attempt_counts.items())
+        },
+        "payload_kind_examples": {key: value for key, value in sorted(payload_kind_examples.items())},
+        "record_family_examples": {key: value for key, value in sorted(record_family_examples.items())},
+        "surface_examples": {key: value for key, value in sorted(surface_examples.items())},
+        "projected_payload_examples": {key: value for key, value in sorted(projected_payload_examples.items())},
+    }
+
+
+def _build_stage4_raw_rationale_health_digest(
+    *,
+    raw_rationale_summary: dict[str, object],
+    consistency_results: dict[str, object],
+) -> dict[str, object]:
+    issue_bucket_map = (
+        ("missing_attempts", "raw_rationale_missing"),
+        ("missing_payload_kinds", "raw_rationale_kind_missing"),
+        ("missing_record_families", "raw_rationale_family_missing"),
+        ("surface_mismatches", "raw_rationale_surface_mismatches"),
+        ("contract_mismatches", "raw_rationale_contract_mismatches"),
+        ("feedback_mismatches", "raw_rationale_feedback_mismatches"),
+        ("patch_trace_mismatches", "raw_rationale_patch_trace_mismatches"),
+        ("retry_chain_mismatches", "raw_rationale_retry_chain_mismatches"),
+    )
+    issue_counts: dict[str, int] = {}
+    issue_examples: dict[str, list[str]] = {}
+    for public_name, bucket_name in issue_bucket_map:
+        bucket = consistency_results.get(bucket_name)
+        if not isinstance(bucket, list) or not bucket:
+            continue
+        issue_counts[public_name] = len(bucket)
+        examples: list[str] = []
+        for row in bucket:
+            if not isinstance(row, dict):
+                continue
+            attempt_key = str(row.get("attempt_key") or "").strip()
+            if not attempt_key or attempt_key in examples:
+                continue
+            examples.append(attempt_key)
+            if len(examples) >= 3:
+                break
+        if examples:
+            issue_examples[public_name] = examples
+
+    attempts_with_raw_rationale = int(raw_rationale_summary.get("attempts_with_raw_rationale") or 0)
+    attempts_with_projected_payloads = int(raw_rationale_summary.get("attempts_with_projected_payloads") or 0)
+    projection_gap = max(attempts_with_raw_rationale - attempts_with_projected_payloads, 0)
+    if attempts_with_raw_rationale <= 0:
+        status = "missing"
+    elif issue_counts:
+        status = "warn"
+    elif projection_gap > 0:
+        status = "partial"
+    else:
+        status = "ok"
+
+    return {
+        "status": status,
+        "attempts_with_raw_rationale": attempts_with_raw_rationale,
+        "attempts_with_projected_payloads": attempts_with_projected_payloads,
+        "projection_gap": projection_gap,
+        "payload_kinds_present": list(raw_rationale_summary.get("payload_kinds_present") or []),
+        "record_families_present": list(raw_rationale_summary.get("record_families_present") or []),
+        "surfaces_present": list(raw_rationale_summary.get("surfaces_present") or []),
+        "issue_counts": issue_counts,
+        "issue_examples": issue_examples,
+    }
+
+
+def _build_stage4_raw_rationale_watchlist(
+    *,
+    raw_rationale_health: dict[str, object],
+) -> list[dict[str, object]]:
+    if not isinstance(raw_rationale_health, dict):
+        return []
+
+    status = str(raw_rationale_health.get("status") or "").strip()
+    attempts_with_raw_rationale = int(raw_rationale_health.get("attempts_with_raw_rationale") or 0)
+    projection_gap = int(raw_rationale_health.get("projection_gap") or 0)
+    issue_counts = raw_rationale_health.get("issue_counts")
+    issue_examples = raw_rationale_health.get("issue_examples")
+    if not isinstance(issue_counts, dict):
+        issue_counts = {}
+    if not isinstance(issue_examples, dict):
+        issue_examples = {}
+
+    watchlist: list[dict[str, object]] = []
+    if attempts_with_raw_rationale <= 0 or status == "missing":
+        watchlist.append(
+            {
+                "priority": "P1",
+                "focus": "raw_rationale_capture",
+                "next_action": "Stage4 attempt raw rationale rows must be emitted before post-run audit is trusted.",
+                "examples": [],
+            }
+        )
+        return watchlist
+
+    if projection_gap > 0:
+        watchlist.append(
+            {
+                "priority": "P2",
+                "focus": "raw_projection_gap",
+                "next_action": "Some raw rationale rows exist without decoded projection coverage; inspect payload kinds lacking projected payloads.",
+                "count": projection_gap,
+                "examples": [],
+            }
+        )
+
+    issue_specs = (
+        (
+            "missing_payload_kinds",
+            "P1",
+            "raw_kind_gap",
+            "Required raw rationale kinds are missing for some Stage4 attempts; verify save paths for selection/contract/feedback rows.",
+        ),
+        (
+            "missing_record_families",
+            "P1",
+            "raw_family_gap",
+            "Raw rationale record families are incomplete; verify _meta.record_family and related persistence builders.",
+        ),
+        (
+            "missing_attempts",
+            "P1",
+            "raw_attempt_gap",
+            "Structured sinks exist without matching Stage4 raw rationale attempts; inspect attempt-level raw evidence persistence.",
+        ),
+        (
+            "contract_mismatches",
+            "P1",
+            "raw_contract_drift",
+            "Raw contract snapshots disagree with structured sinks; reconcile repair-contract and scope-authority projections.",
+        ),
+        (
+            "surface_mismatches",
+            "P2",
+            "raw_surface_drift",
+            "Selection surface raw rows disagree with director selection sinks; verify surface projection and persistence ordering.",
+        ),
+        (
+            "feedback_mismatches",
+            "P2",
+            "raw_feedback_drift",
+            "Feedback provenance raw rows disagree with runtime/session sinks; inspect advisory and retry-directive propagation.",
+        ),
+        (
+            "patch_trace_mismatches",
+            "P2",
+            "raw_patch_trace_drift",
+            "Patch trace raw rows disagree with structured patch sinks; inspect patch strategy and structural-attempt flags.",
+        ),
+        (
+            "retry_chain_mismatches",
+            "P2",
+            "raw_retry_chain_drift",
+            "Reject retry snapshot and pathology raw rows disagree; inspect retry-chain carryover identity and contract payloads.",
+        ),
+    )
+    for issue_name, priority, focus, next_action in issue_specs:
+        count = int(issue_counts.get(issue_name) or 0)
+        if count <= 0:
+            continue
+        watchlist.append(
+            {
+                "priority": priority,
+                "focus": focus,
+                "count": count,
+                "next_action": next_action,
+                "examples": list(issue_examples.get(issue_name) or []),
+            }
+        )
+    return watchlist
+
+
+def _build_stage4_raw_rationale_watchlist_headline(
+    watchlist: list[dict[str, object]],
+) -> dict[str, object]:
+    if not isinstance(watchlist, list) or not watchlist:
+        return {}
+    top_item = next((item for item in watchlist if isinstance(item, dict)), {})
+    if not isinstance(top_item, dict) or not top_item:
+        return {}
+    priority = str(top_item.get("priority") or "").strip()
+    focus = str(top_item.get("focus") or "").strip()
+    count = int(top_item.get("count") or 0)
+    next_action = str(top_item.get("next_action") or "").strip()
+    examples = list(top_item.get("examples") or [])
+    headline_parts = [part for part in (priority, focus) if part]
+    headline = " ".join(headline_parts).strip()
+    if count > 0:
+        headline = f"{headline} x{count}".strip()
+    return {
+        "headline": headline,
+        "priority": priority,
+        "focus": focus,
+        "count": count,
+        "next_action": next_action,
+        "examples": examples[:3],
+    }
+
+
+def _build_stage4_raw_rationale_operator_summary(
+    *,
+    raw_rationale_health: dict[str, object],
+    raw_rationale_watchlist_headline: dict[str, object],
+) -> str:
+    if not isinstance(raw_rationale_health, dict):
+        return ""
+
+    status = str(raw_rationale_health.get("status") or "").strip() or "unknown"
+    attempts_with_raw_rationale = int(raw_rationale_health.get("attempts_with_raw_rationale") or 0)
+    attempts_with_projected_payloads = int(raw_rationale_health.get("attempts_with_projected_payloads") or 0)
+    projection_gap = int(raw_rationale_health.get("projection_gap") or 0)
+    record_families_present = list(raw_rationale_health.get("record_families_present") or [])
+    surfaces_present = list(raw_rationale_health.get("surfaces_present") or [])
+
+    if status == "missing":
+        return "Stage4 raw rationale missing: no attempt raw rationale rows captured yet."
+
+    headline = ""
+    next_action = ""
+    if isinstance(raw_rationale_watchlist_headline, dict):
+        headline = str(raw_rationale_watchlist_headline.get("headline") or "").strip()
+        next_action = str(raw_rationale_watchlist_headline.get("next_action") or "").strip()
+
+    base = (
+        f"Stage4 raw rationale {status}: "
+        f"{attempts_with_raw_rationale} attempt(s), "
+        f"{attempts_with_projected_payloads} projected, "
+        f"{len(record_families_present)} family(s), "
+        f"{len(surfaces_present)} surface(s)"
+    )
+    if projection_gap > 0:
+        base = f"{base}, projection gap {projection_gap}"
+
+    if headline and next_action:
+        return f"{base}. Top watchlist: {headline}. Next: {next_action}"
+    if headline:
+        return f"{base}. Top watchlist: {headline}"
+    return base
+
+
+def _sum_compact_issue_counts(compact_groups: object) -> int:
+    if not isinstance(compact_groups, dict):
+        return 0
+    total = 0
+    for value in compact_groups.values():
+        if not isinstance(value, dict):
+            continue
+        total += int(value.get("count") or 0)
+    return total
+
+
+def _count_issue_rows(
+    consistency_results: dict[str, object],
+    keys: tuple[str, ...],
+) -> int:
+    total = 0
+    for key in keys:
+        value = consistency_results.get(key)
+        if isinstance(value, list):
+            total += len(value)
+    return total
+
+
+def _build_sink_alignment_top_issue_headline(
+    *,
+    stage: int,
+    coverage_gap_count: int,
+    structured_issue_count: int,
+    raw_issue_count: int,
+    raw_rationale_watchlist_headline: dict[str, object],
+) -> dict[str, object]:
+    if coverage_gap_count > 0:
+        return {
+            "headline": f"P1 sink_coverage_gap x{coverage_gap_count}",
+            "priority": "P1",
+            "focus": "sink_coverage_gap",
+            "count": coverage_gap_count,
+            "next_action": "Inspect final/lifecycle sink coverage gaps and blank attempt-key rows before trusting parity.",
+        }
+    if structured_issue_count > 0:
+        return {
+            "headline": f"P2 structured_sink_drift x{structured_issue_count}",
+            "priority": "P2",
+            "focus": "structured_sink_drift",
+            "count": structured_issue_count,
+            "next_action": "Inspect structured sink mismatches before trusting cross-sink contract parity.",
+        }
+    if raw_issue_count > 0:
+        if isinstance(raw_rationale_watchlist_headline, dict) and raw_rationale_watchlist_headline:
+            return dict(raw_rationale_watchlist_headline)
+        return {
+            "headline": f"P2 raw_rationale_drift x{raw_issue_count}",
+            "priority": "P2",
+            "focus": "raw_rationale_drift",
+            "count": raw_issue_count,
+            "next_action": "Inspect Stage4 raw rationale drift before trusting post-run audit evidence.",
+        }
+    return {
+        "headline": f"Stage{stage} sink_alignment_clean",
+        "priority": "OK",
+        "focus": "sink_alignment_clean",
+        "count": 0,
+        "next_action": "No immediate sink-alignment follow-up required.",
+    }
+
+
+def _build_sink_alignment_operator_summary(
+    *,
+    stage: int,
+    status: str,
+    attempts_considered: int,
+    complete_final_attempts: int,
+    final_attempts_total: int,
+    complete_lifecycle_attempts: int,
+    lifecycle_attempts_total: int,
+    coverage_gap_count: int,
+    structured_issue_count: int,
+    raw_issue_count: int,
+    top_issue_headline: dict[str, object],
+    raw_rationale_operator_summary: str,
+) -> str:
+    base_parts = [
+        f"Stage{stage} sink alignment {status}: "
+        f"{attempts_considered} attempt(s), "
+        f"final {complete_final_attempts}/{final_attempts_total}, "
+        f"lifecycle {complete_lifecycle_attempts}/{lifecycle_attempts_total}, "
+        f"coverage gaps {coverage_gap_count}, "
+        f"sink issues {structured_issue_count}"
+    ]
+    if stage == 4:
+        base_parts.append(f"evidence issues {raw_issue_count}")
+    base = ", ".join(base_parts)
+    headline = ""
+    next_action = ""
+    if isinstance(top_issue_headline, dict):
+        headline = str(top_issue_headline.get("headline") or "").strip()
+        next_action = str(top_issue_headline.get("next_action") or "").strip()
+    if headline and next_action:
+        next_action_text = next_action.rstrip()
+        base = f"{base}. Top issue: {headline}. Next: {next_action_text}"
+    elif headline:
+        base = f"{base}. Top issue: {headline}"
+    if raw_rationale_operator_summary:
+        separator = " " if base.endswith((".", "!", "?")) else ". "
+        base = f"{base}{separator}Evidence: {raw_rationale_operator_summary}"
+    return base
 
 
 class FailureAnalyzer:
@@ -794,7 +1234,7 @@ class FailureAnalyzer:
                     """
                     SELECT id, attempt_key, verdict, score, session_id,
                            candidate_key, content_hash, artifact_path, advisory_flags,
-                           selection_reason, verdict_reason, fix_scope, runtime_advisory, retry_directives
+                           selection_reason, verdict_reason, fix_scope, runtime_advisory, retry_directives, patch_strategy
                     FROM stage_attempts
                     WHERE stage = ? AND COALESCE(attempt_key, '') != '' AND session_id = ?
                     ORDER BY id DESC
@@ -807,7 +1247,7 @@ class FailureAnalyzer:
                     """
                     SELECT id, attempt_key, verdict, score, session_id,
                            candidate_key, content_hash, artifact_path, advisory_flags,
-                           selection_reason, verdict_reason, fix_scope, runtime_advisory, retry_directives
+                           selection_reason, verdict_reason, fix_scope, runtime_advisory, retry_directives, patch_strategy
                     FROM stage_attempts
                     WHERE stage = ? AND COALESCE(attempt_key, '') != ''
                     ORDER BY id DESC
@@ -844,6 +1284,7 @@ class FailureAnalyzer:
                     "fix_scope": str(row["fix_scope"] or "").strip(),
                     "runtime_advisory": str(row["runtime_advisory"] or "").strip(),
                     "retry_directives": str(row["retry_directives"] or "").strip(),
+                    "patch_strategy": str(row["patch_strategy"] or "").strip(),
                     **self._extract_gate_repair_bundle(
                         gate_semantics=advisory_flags.get("gate_semantics"),
                         fix_pack=advisory_flags.get("fix_pack"),
@@ -955,7 +1396,7 @@ class FailureAnalyzer:
         try:
             director_rows = self.db.conn.execute(
                 """
-                SELECT id, attempt_key, verdict, score, candidate_key, content_hash, artifact_path,
+                SELECT id, attempt_key, selected_label, selected_strategy, verdict, score, candidate_key, content_hash, artifact_path,
                        selection_reason, verdict_reason, fix_scope, advisory_warnings
                 FROM director_selections
                 WHERE COALESCE(stage, CASE WHEN ? = 3 THEN 3 ELSE 4 END) = ? AND COALESCE(attempt_key, '') != ''
@@ -988,6 +1429,8 @@ class FailureAnalyzer:
                     or str(row["fix_scope"] or "").strip()
                 )
                 director_selections[attempt_key] = {
+                    "selected_label": str(row["selected_label"] or "").strip(),
+                    "selected_strategy": str(row["selected_strategy"] or "").strip(),
                     "initial_verdict": str(row["verdict"] or ""),
                     "initial_score": self._coerce_int(row["score"]),
                     "candidate_key": str(row["candidate_key"] or "").strip(),
@@ -1063,6 +1506,7 @@ class FailureAnalyzer:
                 if lifecycle_only
                 else self._coerce_int(row.get("final_score", row.get("score", 0))),
                 "patch_strategy": str(patch_trace.get("patch_strategy", "") or ""),
+                "structural_attempted": bool(patch_trace.get("structural_attempted", False)),
                 "candidate_key": "" if lifecycle_only else str(row.get("candidate_key", "") or "").strip(),
                 "content_hash": "" if lifecycle_only else str(row.get("content_hash", "") or "").strip(),
                 "artifact_path": "" if lifecycle_only else str(row.get("artifact_path", "") or "").strip(),
@@ -1130,6 +1574,32 @@ class FailureAnalyzer:
             logging.debug("[FailureAnalyzer] sink_alignment final authority projection failed: %s", _e)
             return [], {}
 
+    def _load_stage4_raw_rationale_alignment_sink(
+        self,
+        *,
+        stage: int,
+        attempts_considered: set[str],
+    ) -> dict[str, dict[str, object]]:
+        if stage != 4 or not attempts_considered:
+            return {}
+        results: dict[str, dict[str, object]] = {}
+        for attempt_key in sorted(attempts_considered):
+            try:
+                rows = self.db.get_attempt_raw_rationale(attempt_key)
+            except Exception as _e:
+                self._report_soft_failure(
+                    "sink_alignment_attempt_raw_rationale",
+                    _e,
+                    message="attempt_raw_rationale load for sink_alignment_summary failed",
+                    extra={"stage": stage, "attempt_key": attempt_key},
+                )
+                logging.debug("[FailureAnalyzer] sink_alignment attempt_raw_rationale failed: %s", _e)
+                continue
+            if not rows:
+                continue
+            results[attempt_key] = summarize_stage4_raw_rationale_rows(rows)
+        return results
+
     @staticmethod
     def _build_sink_alignment_attempt_sets(
         *,
@@ -1144,7 +1614,7 @@ class FailureAnalyzer:
         final_union = set(stage_attempts)
         if include_session_decisions:
             final_union |= set(session_decisions)
-        if stage == 2:
+        if stage in (2, 3, 4):
             final_union |= set(pass_rate_monitor)
             final_union |= set(director_selections)
         lifecycle_union: set[str] = set()
@@ -1173,7 +1643,7 @@ class FailureAnalyzer:
             final_missing["session_decisions"] = FailureAnalyzer._compact_examples(
                 list(final_union - set(session_decisions))
             )
-        if stage == 2:
+        if stage in (2, 3, 4):
             final_missing["pass_rate_monitor"] = FailureAnalyzer._compact_examples(
                 list(final_union - set(pass_rate_monitor))
             )
@@ -1235,6 +1705,288 @@ class FailureAnalyzer:
                     "attempt_num": authority_row.get("attempt_num"),
                 }
             )
+        return results
+
+    @staticmethod
+    def _collect_sink_alignment_raw_rationale_results(
+        *,
+        stage: int,
+        attempt_key: str,
+        raw_rationale_by_attempt: dict[str, dict[str, object]],
+        stage_attempts: dict[str, dict],
+        pass_rate_monitor: dict[str, dict],
+        director_selections: dict[str, dict],
+        session_decisions: dict[str, dict],
+        episode_production: dict[str, dict],
+    ) -> dict[str, list[dict]]:
+        results = {
+            "raw_rationale_missing": [],
+            "raw_rationale_kind_missing": [],
+            "raw_rationale_family_missing": [],
+            "raw_rationale_surface_mismatches": [],
+            "raw_rationale_contract_mismatches": [],
+            "raw_rationale_feedback_mismatches": [],
+            "raw_rationale_patch_trace_mismatches": [],
+            "raw_rationale_retry_chain_mismatches": [],
+        }
+        if stage != 4:
+            return results
+        payload = raw_rationale_by_attempt.get(attempt_key, {})
+        payload_kinds = set(payload.get("payload_kinds") or set())
+        record_families = set(payload.get("record_families") or set())
+        decoded_payloads = payload.get("decoded_payloads") if isinstance(payload, dict) else {}
+        projected_payloads = payload.get("projected_payloads") if isinstance(payload, dict) else {}
+        if not isinstance(decoded_payloads, dict):
+            decoded_payloads = {}
+        if not isinstance(projected_payloads, dict):
+            projected_payloads = {}
+
+        expected_kinds: set[str] = set()
+        expected_families: set[str] = set()
+        if attempt_key in director_selections:
+            expected_kinds |= {"selection_contract_snapshot_raw", "selection_surface_raw"}
+            expected_families |= {"contract_snapshot", "selection_surface"}
+        if attempt_key in episode_production:
+            expected_kinds |= {"feedback_provenance_raw", "contract_snapshot_raw"}
+            expected_families |= {"feedback_provenance", "contract_snapshot"}
+
+        if expected_kinds and not payload_kinds:
+            results["raw_rationale_missing"].append(
+                {
+                    "attempt_key": attempt_key,
+                    "expected_payload_kinds": sorted(expected_kinds),
+                    "expected_record_families": sorted(expected_families),
+                }
+            )
+            return results
+
+        missing_kinds = sorted(expected_kinds - payload_kinds)
+        if missing_kinds:
+            results["raw_rationale_kind_missing"].append(
+                {
+                    "attempt_key": attempt_key,
+                    "missing_payload_kinds": missing_kinds,
+                    "present_payload_kinds": sorted(payload_kinds),
+                }
+            )
+        missing_families = sorted(expected_families - record_families)
+        if missing_families:
+            results["raw_rationale_family_missing"].append(
+                {
+                    "attempt_key": attempt_key,
+                    "missing_record_families": missing_families,
+                    "present_record_families": sorted(record_families),
+                }
+            )
+
+        selection_surface_payload = projected_payloads.get(
+            "selection_surface_raw", decoded_payloads.get("selection_surface_raw")
+        )
+        director_selection = director_selections.get(attempt_key)
+        if isinstance(selection_surface_payload, dict) and isinstance(director_selection, dict):
+            field_map = (
+                ("selected_label", "selected_label"),
+                ("selected_strategy", "selected_strategy"),
+                ("verdict", "initial_verdict"),
+                ("score", "initial_score"),
+                ("selection_reason", "selection_reason"),
+                ("verdict_reason", "verdict_reason"),
+                ("fix_scope", "fix_scope"),
+                ("candidate_key", "candidate_key"),
+                ("content_hash", "content_hash"),
+                ("artifact_path", "artifact_path"),
+            )
+            mismatched_fields: dict[str, dict[str, object]] = {}
+            for raw_field, sink_field in field_map:
+                if raw_field not in selection_surface_payload:
+                    continue
+                raw_value = selection_surface_payload.get(raw_field)
+                sink_value = director_selection.get(sink_field)
+                if FailureAnalyzer._normalize_alignment_value(raw_value) == FailureAnalyzer._normalize_alignment_value(
+                    sink_value
+                ):
+                    continue
+                mismatched_fields[raw_field] = {
+                    "selection_surface_raw": raw_value,
+                    "director_selections": sink_value,
+                }
+            if mismatched_fields:
+                results["raw_rationale_surface_mismatches"].append(
+                    {
+                        "attempt_key": attempt_key,
+                        "mismatched_fields": mismatched_fields,
+                    }
+                )
+
+        contract_payload_pairs = (
+            (
+                "selection_contract_snapshot_raw",
+                (("director_selections", director_selection),),
+            ),
+            (
+                "contract_snapshot_raw",
+                (
+                    ("stage_attempts", stage_attempts.get(attempt_key)),
+                    ("pass_rate_monitor", pass_rate_monitor.get(attempt_key)),
+                    ("session_decisions", session_decisions.get(attempt_key)),
+                    ("episode_production", episode_production.get(attempt_key)),
+                ),
+            ),
+        )
+        contract_field_map = (
+            ("director_verdict", "director_verdict"),
+            ("gate_basis", "gate_basis"),
+            ("repair_scope", "repair_scope"),
+            ("fix_pack_target_kind", "fix_pack_target_kind"),
+            ("fix_pack_patch_targets", "fix_pack_patch_targets"),
+            ("retry_budget_axes", "retry_budget_axes"),
+            ("repair_contract_provenance", "repair_contract_provenance"),
+            ("scope_authority_fix_scope", "scope_authority_fix_scope"),
+            ("scope_authority_authoritative_fix_scope", "scope_authority_authoritative_fix_scope"),
+            ("scope_authority_widened", "scope_authority_widened"),
+        )
+        for payload_kind, sink_pairs in contract_payload_pairs:
+            raw_contract_payload = projected_payloads.get(payload_kind, decoded_payloads.get(payload_kind))
+            if not isinstance(raw_contract_payload, dict):
+                continue
+            mismatched_fields: dict[str, dict[str, object]] = {}
+            for raw_field, sink_field in contract_field_map:
+                raw_value = raw_contract_payload.get(raw_field)
+                if not FailureAnalyzer._normalize_alignment_value(raw_value):
+                    continue
+                mismatched_sinks: dict[str, object] = {}
+                for sink_name, sink_row in sink_pairs:
+                    if not isinstance(sink_row, dict):
+                        continue
+                    sink_value = sink_row.get(sink_field)
+                    if not FailureAnalyzer._normalize_alignment_value(sink_value):
+                        continue
+                    if FailureAnalyzer._normalize_alignment_value(
+                        raw_value
+                    ) == FailureAnalyzer._normalize_alignment_value(sink_value):
+                        continue
+                    mismatched_sinks[sink_name] = sink_value
+                if mismatched_sinks:
+                    mismatched_fields[raw_field] = {
+                        payload_kind: raw_value,
+                        **mismatched_sinks,
+                    }
+            if mismatched_fields:
+                results["raw_rationale_contract_mismatches"].append(
+                    {
+                        "attempt_key": attempt_key,
+                        "payload_kind": payload_kind,
+                        "mismatched_fields": mismatched_fields,
+                    }
+                )
+
+        feedback_payload = projected_payloads.get(
+            "feedback_provenance_raw",
+            decoded_payloads.get("feedback_provenance_raw"),
+        )
+        if isinstance(feedback_payload, dict):
+            for field_name in ("runtime_advisory", "retry_directives"):
+                raw_value = feedback_payload.get(field_name)
+                if not FailureAnalyzer._normalize_alignment_value(raw_value):
+                    continue
+                mismatched_sinks: dict[str, object] = {}
+                for sink_name, sink_row in (
+                    ("stage_attempts", stage_attempts.get(attempt_key)),
+                    ("director_selections", director_selections.get(attempt_key)),
+                    ("session_decisions", session_decisions.get(attempt_key)),
+                ):
+                    if not isinstance(sink_row, dict):
+                        continue
+                    sink_value = sink_row.get(field_name)
+                    if not FailureAnalyzer._normalize_alignment_value(sink_value):
+                        continue
+                    if FailureAnalyzer._normalize_alignment_value(
+                        raw_value
+                    ) == FailureAnalyzer._normalize_alignment_value(sink_value):
+                        continue
+                    mismatched_sinks[sink_name] = sink_value
+                if mismatched_sinks:
+                    results["raw_rationale_feedback_mismatches"].append(
+                        {
+                            "attempt_key": attempt_key,
+                            "field": field_name,
+                            "feedback_provenance_raw": raw_value,
+                            **mismatched_sinks,
+                        }
+                    )
+
+        patch_trace_payload = projected_payloads.get("patch_trace_raw", decoded_payloads.get("patch_trace_raw"))
+        if isinstance(patch_trace_payload, dict):
+            for field_name in ("patch_strategy", "structural_attempted"):
+                if field_name not in patch_trace_payload:
+                    continue
+                raw_value = patch_trace_payload.get(field_name)
+                mismatched_sinks: dict[str, object] = {}
+                for sink_name, sink_row in (
+                    ("stage_attempts", stage_attempts.get(attempt_key)),
+                    ("pass_rate_monitor", pass_rate_monitor.get(attempt_key)),
+                    ("episode_production", episode_production.get(attempt_key)),
+                ):
+                    if not isinstance(sink_row, dict):
+                        continue
+                    if field_name not in sink_row:
+                        continue
+                    sink_value = sink_row.get(field_name)
+                    if FailureAnalyzer._normalize_alignment_value(
+                        raw_value
+                    ) == FailureAnalyzer._normalize_alignment_value(sink_value):
+                        continue
+                    mismatched_sinks[sink_name] = sink_value
+                if mismatched_sinks:
+                    results["raw_rationale_patch_trace_mismatches"].append(
+                        {
+                            "attempt_key": attempt_key,
+                            "field": field_name,
+                            "patch_trace_raw": raw_value,
+                            **mismatched_sinks,
+                        }
+                    )
+
+        retry_snapshot_payload = projected_payloads.get(
+            "reject_retry_snapshot_raw",
+            decoded_payloads.get("reject_retry_snapshot_raw"),
+        )
+        retry_pathology_payload = projected_payloads.get(
+            "retry_pathology_raw",
+            decoded_payloads.get("retry_pathology_raw"),
+        )
+        if isinstance(retry_snapshot_payload, dict) and isinstance(retry_pathology_payload, dict):
+            mismatched_fields: dict[str, dict[str, object]] = {}
+            for snapshot_field, pathology_field in (
+                ("previous_attempt_attempt_key", "attempt_key"),
+                ("previous_attempt_candidate_key", "candidate_key"),
+                ("previous_attempt_content_hash", "content_hash"),
+                ("previous_attempt_scope_origin", "scope_origin"),
+                ("previous_attempt_reuse_contract", "reuse_contract"),
+                (
+                    "previous_attempt_authoritative_fix_scope_violation",
+                    "authoritative_fix_scope_violation",
+                ),
+            ):
+                snapshot_value = retry_snapshot_payload.get(snapshot_field)
+                if not FailureAnalyzer._normalize_alignment_value(snapshot_value):
+                    continue
+                pathology_value = retry_pathology_payload.get(pathology_field)
+                if FailureAnalyzer._normalize_alignment_value(
+                    snapshot_value
+                ) == FailureAnalyzer._normalize_alignment_value(pathology_value):
+                    continue
+                mismatched_fields[snapshot_field] = {
+                    "reject_retry_snapshot_raw": snapshot_value,
+                    "retry_pathology_raw": pathology_value,
+                }
+            if mismatched_fields:
+                results["raw_rationale_retry_chain_mismatches"].append(
+                    {
+                        "attempt_key": attempt_key,
+                        "mismatched_fields": mismatched_fields,
+                    }
+                )
         return results
 
     @staticmethod
@@ -1604,7 +2356,7 @@ class FailureAnalyzer:
             rationale_values_by_field.setdefault("fix_scope", {})["stage_attempts"] = str(
                 stage_attempts[attempt_key].get("fix_scope", "") or ""
             ).strip()
-            if stage == 2:
+            if stage in (2, 3, 4):
                 rationale_values_by_field.setdefault("runtime_advisory", {})["stage_attempts"] = str(
                     stage_attempts[attempt_key].get("runtime_advisory", "") or ""
                 ).strip()
@@ -1621,7 +2373,7 @@ class FailureAnalyzer:
             rationale_values_by_field.setdefault("fix_scope", {})["director_selections"] = director_selections[
                 attempt_key
             ]["fix_scope"]
-            if stage == 2:
+            if stage in (2, 3, 4):
                 rationale_values_by_field.setdefault("runtime_advisory", {})["director_selections"] = str(
                     director_selections[attempt_key].get("runtime_advisory", "") or ""
                 ).strip()
@@ -1638,7 +2390,7 @@ class FailureAnalyzer:
             rationale_values_by_field.setdefault("fix_scope", {})["session_decisions"] = str(
                 session_decisions[attempt_key].get("fix_scope", "") or ""
             ).strip()
-            if stage == 2:
+            if stage in (2, 3, 4):
                 rationale_values_by_field.setdefault("runtime_advisory", {})["session_decisions"] = str(
                     session_decisions[attempt_key].get("runtime_advisory", "") or ""
                 ).strip()
@@ -1669,7 +2421,7 @@ class FailureAnalyzer:
                 results["rationale_metadata_missing"].append(
                     {"attempt_key": attempt_key, "field": field_name, "sinks": missing_sinks}
                 )
-        if stage == 2:
+        if stage in (2, 3, 4):
             for field_name, result_key in (
                 ("runtime_advisory", "runtime_advisory_mismatches"),
                 ("retry_directives", "retry_directives_mismatches"),
@@ -1699,6 +2451,7 @@ class FailureAnalyzer:
         session_decisions: dict[str, dict],
         episode_production: dict[str, dict],
         final_authority_by_attempt: dict[str, dict],
+        raw_rationale_by_attempt: dict[str, dict[str, object]],
     ) -> dict[str, object]:
         results = {
             "final_verdict_mismatches": [],
@@ -1731,6 +2484,14 @@ class FailureAnalyzer:
             "artifact_missing_files": [],
             "selection_companion_pre_final_rows": [],
             "selection_companion_missing_rows": [],
+            "raw_rationale_missing": [],
+            "raw_rationale_kind_missing": [],
+            "raw_rationale_family_missing": [],
+            "raw_rationale_surface_mismatches": [],
+            "raw_rationale_contract_mismatches": [],
+            "raw_rationale_feedback_mismatches": [],
+            "raw_rationale_patch_trace_mismatches": [],
+            "raw_rationale_retry_chain_mismatches": [],
         }
 
         for attempt_key in sorted(attempts_considered):
@@ -1775,6 +2536,16 @@ class FailureAnalyzer:
                     session_decisions=session_decisions,
                     episode_production=episode_production,
                 ),
+                self._collect_sink_alignment_raw_rationale_results(
+                    stage=stage,
+                    attempt_key=attempt_key,
+                    raw_rationale_by_attempt=raw_rationale_by_attempt,
+                    stage_attempts=stage_attempts,
+                    pass_rate_monitor=pass_rate_monitor,
+                    director_selections=director_selections,
+                    session_decisions=session_decisions,
+                    episode_production=episode_production,
+                ),
             ):
                 for key, rows in partial.items():
                     if rows:
@@ -1802,6 +2573,7 @@ class FailureAnalyzer:
         session_decision_rows_without_attempt_key: int,
         final_authority_rows: list[dict],
         consistency_results: dict[str, object],
+        raw_rationale_by_attempt: dict[str, dict[str, object]],
     ) -> dict[str, object]:
         session_scoped_attempts = sum(
             1 for attempt_key in attempts_considered if self._attempt_key_has_session_scope(attempt_key)
@@ -1843,6 +2615,92 @@ class FailureAnalyzer:
                 ),
             }
 
+        raw_rationale_summary = _build_stage4_raw_rationale_summary(raw_rationale_by_attempt)
+        raw_rationale_health = (
+            _build_stage4_raw_rationale_health_digest(
+                raw_rationale_summary=raw_rationale_summary,
+                consistency_results=consistency_results,
+            )
+            if stage == 4
+            else {}
+        )
+        raw_rationale_watchlist = (
+            _build_stage4_raw_rationale_watchlist(raw_rationale_health=raw_rationale_health) if stage == 4 else []
+        )
+        raw_rationale_watchlist_headline = (
+            _build_stage4_raw_rationale_watchlist_headline(raw_rationale_watchlist) if stage == 4 else {}
+        )
+        raw_rationale_operator_summary = (
+            _build_stage4_raw_rationale_operator_summary(
+                raw_rationale_health=raw_rationale_health,
+                raw_rationale_watchlist_headline=raw_rationale_watchlist_headline,
+            )
+            if stage == 4
+            else ""
+        )
+        coverage_gap_count = (
+            _sum_compact_issue_counts(final_missing)
+            + _sum_compact_issue_counts(lifecycle_missing)
+            + _sum_compact_issue_counts(lifecycle_missing_in_final)
+            + int(stage_attempt_rows_without_attempt_key > 0)
+            + int(session_decision_rows_without_attempt_key > 0)
+        )
+        structured_issue_count = _count_issue_rows(
+            consistency_results,
+            (
+                "final_verdict_mismatches",
+                "final_score_mismatches",
+                "initial_verdict_mismatches",
+                "director_verdict_mismatches",
+                "gate_basis_mismatches",
+                "repair_scope_mismatches",
+                "fix_pack_target_kind_mismatches",
+                "fix_pack_patch_targets_mismatches",
+                "retry_budget_axes_mismatches",
+                "repair_contract_subtype_mismatches",
+                "repair_contract_provenance_mismatches",
+                "scope_authority_fix_scope_mismatches",
+                "scope_authority_authoritative_fix_scope_mismatches",
+                "scope_authority_widened_mismatches",
+                "patch_strategy_mismatches",
+                "candidate_key_mismatches",
+                "selection_candidate_key_mismatches",
+                "content_hash_mismatches",
+                "artifact_path_mismatches",
+                "artifact_metadata_missing",
+                "selection_reason_mismatches",
+                "verdict_reason_mismatches",
+                "fix_scope_mismatches",
+                "runtime_advisory_mismatches",
+                "retry_directives_mismatches",
+                "gate_repair_metadata_missing",
+                "rationale_metadata_missing",
+                "artifact_missing_files",
+                "selection_companion_pre_final_rows",
+                "selection_companion_missing_rows",
+            ),
+        )
+        raw_issue_count = _count_issue_rows(
+            consistency_results,
+            (
+                "raw_rationale_missing",
+                "raw_rationale_kind_missing",
+                "raw_rationale_family_missing",
+                "raw_rationale_surface_mismatches",
+                "raw_rationale_contract_mismatches",
+                "raw_rationale_feedback_mismatches",
+                "raw_rationale_patch_trace_mismatches",
+                "raw_rationale_retry_chain_mismatches",
+            ),
+        )
+        top_issue_headline = _build_sink_alignment_top_issue_headline(
+            stage=stage,
+            coverage_gap_count=coverage_gap_count,
+            structured_issue_count=structured_issue_count,
+            raw_issue_count=raw_issue_count,
+            raw_rationale_watchlist_headline=raw_rationale_watchlist_headline,
+        )
+
         has_issues = any(
             (
                 final_missing,
@@ -1876,6 +2734,14 @@ class FailureAnalyzer:
                 consistency_results["gate_repair_metadata_missing"],
                 consistency_results["rationale_metadata_missing"],
                 consistency_results["artifact_missing_files"],
+                consistency_results["raw_rationale_missing"],
+                consistency_results["raw_rationale_kind_missing"],
+                consistency_results["raw_rationale_family_missing"],
+                consistency_results["raw_rationale_surface_mismatches"],
+                consistency_results["raw_rationale_contract_mismatches"],
+                consistency_results["raw_rationale_feedback_mismatches"],
+                consistency_results["raw_rationale_patch_trace_mismatches"],
+                consistency_results["raw_rationale_retry_chain_mismatches"],
                 stage_attempt_rows_without_attempt_key > 0,
                 session_decision_rows_without_attempt_key > 0,
             )
@@ -1891,7 +2757,17 @@ class FailureAnalyzer:
                 "director_selections": len(director_selections),
                 "episode_production": len(episode_production),
                 "session_decisions": len(session_decisions),
+                "attempt_raw_rationale": len(raw_rationale_by_attempt),
             },
+            "raw_rationale_summary": raw_rationale_summary,
+            "raw_rationale_health": raw_rationale_health,
+            "raw_rationale_watchlist": raw_rationale_watchlist[:5],
+            "raw_rationale_watchlist_headline": raw_rationale_watchlist_headline,
+            "raw_rationale_operator_summary": raw_rationale_operator_summary,
+            "coverage_gap_count": coverage_gap_count,
+            "structured_issue_count": structured_issue_count,
+            "raw_issue_count": raw_issue_count,
+            "top_issue_headline": top_issue_headline,
             "complete_final_attempts": complete_final_attempts,
             "director_lifecycle_attempts": len(lifecycle_union),
             "complete_lifecycle_attempts": complete_lifecycle_attempts,
@@ -1928,6 +2804,14 @@ class FailureAnalyzer:
             "gate_repair_metadata_missing": consistency_results["gate_repair_metadata_missing"][:10],
             "rationale_metadata_missing": consistency_results["rationale_metadata_missing"][:10],
             "artifact_missing_files": consistency_results["artifact_missing_files"][:10],
+            "raw_rationale_missing": consistency_results["raw_rationale_missing"][:10],
+            "raw_rationale_kind_missing": consistency_results["raw_rationale_kind_missing"][:10],
+            "raw_rationale_family_missing": consistency_results["raw_rationale_family_missing"][:10],
+            "raw_rationale_surface_mismatches": consistency_results["raw_rationale_surface_mismatches"][:10],
+            "raw_rationale_contract_mismatches": consistency_results["raw_rationale_contract_mismatches"][:10],
+            "raw_rationale_feedback_mismatches": consistency_results["raw_rationale_feedback_mismatches"][:10],
+            "raw_rationale_patch_trace_mismatches": consistency_results["raw_rationale_patch_trace_mismatches"][:10],
+            "raw_rationale_retry_chain_mismatches": consistency_results["raw_rationale_retry_chain_mismatches"][:10],
             "selection_companion_pre_final_rows": consistency_results["selection_companion_pre_final_rows"][:10],
             "selection_companion_missing_rows": consistency_results["selection_companion_missing_rows"][:10],
             "final_authority_contract": final_authority_contract,
@@ -1936,6 +2820,20 @@ class FailureAnalyzer:
             "stage_attempt_rows_without_attempt_key": stage_attempt_rows_without_attempt_key,
             "session_decision_rows_without_attempt_key": session_decision_rows_without_attempt_key,
             "status": "warn" if has_issues else "ok",
+            "operator_summary": _build_sink_alignment_operator_summary(
+                stage=stage,
+                status="warn" if has_issues else "ok",
+                attempts_considered=len(attempts_considered),
+                complete_final_attempts=complete_final_attempts,
+                final_attempts_total=len(final_union),
+                complete_lifecycle_attempts=complete_lifecycle_attempts,
+                lifecycle_attempts_total=len(lifecycle_union),
+                coverage_gap_count=coverage_gap_count,
+                structured_issue_count=structured_issue_count,
+                raw_issue_count=raw_issue_count,
+                top_issue_headline=top_issue_headline,
+                raw_rationale_operator_summary=raw_rationale_operator_summary,
+            ),
         }
 
     def sink_alignment_summary(
@@ -1998,6 +2896,10 @@ class FailureAnalyzer:
             session_decisions=session_decisions,
             episode_production=episode_production,
         )
+        raw_rationale_by_attempt = self._load_stage4_raw_rationale_alignment_sink(
+            stage=stage,
+            attempts_considered=attempts_considered,
+        )
         if (
             not attempts_considered
             and stage_attempt_rows_without_attempt_key <= 0
@@ -2026,6 +2928,7 @@ class FailureAnalyzer:
             session_decisions=session_decisions,
             episode_production=episode_production,
             final_authority_by_attempt=final_authority_by_attempt,
+            raw_rationale_by_attempt=raw_rationale_by_attempt,
         )
         return self._build_sink_alignment_summary_payload(
             stage=stage,
@@ -2045,6 +2948,7 @@ class FailureAnalyzer:
             session_decision_rows_without_attempt_key=session_decision_rows_without_attempt_key,
             final_authority_rows=final_authority_rows,
             consistency_results=consistency_results,
+            raw_rationale_by_attempt=raw_rationale_by_attempt,
         )
 
     def top_success_patterns(self, top_n: int = 5, min_score: int = 90) -> list[dict]:

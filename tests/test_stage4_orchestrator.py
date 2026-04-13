@@ -759,7 +759,9 @@ class TestPrepareStage4SessionLimits:
         ctx.character_voice.get_writer_injection.assert_not_called()
         ctx.ui.log.assert_not_called()
 
-    def test_resolve_session_style_guide_uses_saved_style_with_bible_pov_override(self, mock_app):
+    def test_resolve_session_style_guide_uses_saved_style_with_bible_pov_override_even_when_stage0_flag_is_false(
+        self, mock_app
+    ):
         from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionStyleGuidePayload
 
         ctx = MagicMock()
@@ -782,12 +784,44 @@ class TestPrepareStage4SessionLimits:
             patch("modules.core.stage4_orchestrator.load_style_guide_anchor", return_value={"tone": "냉소적"}),
             patch("modules.core.stage4_orchestrator.resolve_project_bible_pov", return_value="1인칭"),
         ):
-            result = orch._resolve_session_style_guide(stage0_available=True)
+            result = orch._resolve_session_style_guide(stage0_available=False)
 
         assert isinstance(result, _SessionStyleGuidePayload)
         assert result.style_guide == "saved style prompt"
         assert result.reference_excerpt == "참고 발췌"
         assert loaded_sg.pov == "1인칭"
+        ctx.get_int_input.assert_not_called()
+        ctx.ui.log.assert_called_once()
+
+    def test_resolve_session_style_guide_uses_stage0_output_file_before_prompt(self, mock_app):
+        from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionStyleGuidePayload
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.ui.log = MagicMock()
+        ctx.get_int_input = MagicMock()
+        ctx.current_project = mock_app.current_project
+
+        orch = Stage4Orchestrator(mock_app, context=ctx)
+
+        with (
+            patch("modules.core.stage4_orchestrator.load_style_guide_anchor", return_value=None),
+            patch(
+                "modules.core.stage4_orchestrator.load_style_guide_file",
+                return_value={
+                    "fallback_style_prompt": "file style prompt",
+                    "tone": "진지",
+                    "pov": "혼합",
+                    "reference_excerpt": "파일 참고",
+                },
+            ),
+            patch("modules.core.stage4_orchestrator.resolve_project_bible_pov", return_value="혼합"),
+        ):
+            result = orch._resolve_session_style_guide(stage0_available=False)
+
+        assert isinstance(result, _SessionStyleGuidePayload)
+        assert result.style_guide == "file style prompt"
+        assert result.reference_excerpt == "파일 참고"
         ctx.get_int_input.assert_not_called()
         ctx.ui.log.assert_called_once()
 
@@ -817,7 +851,9 @@ class TestPrepareStage4SessionLimits:
         fake_stage0.StyleGuide.assert_called_once_with(pov="1인칭")
         ctx.get_int_input.assert_not_called()
 
-    def test_resolve_session_style_guide_prompts_when_no_stage0_style_is_available(self, mock_app):
+    def test_resolve_session_style_guide_prompts_and_persists_fallback_when_no_project_style_truth_exists(
+        self, mock_app
+    ):
         from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionStyleGuidePayload
 
         ctx = MagicMock()
@@ -828,13 +864,22 @@ class TestPrepareStage4SessionLimits:
 
         orch = Stage4Orchestrator(mock_app, context=ctx)
 
-        with patch("modules.core.stage4_orchestrator.load_style_guide_anchor", return_value=None):
+        with (
+            patch("modules.core.stage4_orchestrator.load_style_guide_anchor", return_value=None),
+            patch("modules.core.stage4_orchestrator.load_style_guide_file", return_value=None),
+            patch("modules.core.stage4_orchestrator.resolve_project_bible_pov", return_value=""),
+        ):
             result = orch._resolve_session_style_guide(stage0_available=False)
 
         assert isinstance(result, _SessionStyleGuidePayload)
         assert "네이버" in result.style_guide
         assert result.reference_excerpt == ""
         ctx.get_int_input.assert_called_once()
+        mock_app.current_project.save_v20_anchor.assert_called_once()
+        saved_key, saved_payload = mock_app.current_project.save_v20_anchor.call_args.args
+        assert saved_key == "style_guide"
+        assert saved_payload["fallback_style_prompt"] == result.style_guide
+        assert saved_payload["effective_primary_pov"] == "1인칭"
 
     def test_resolve_session_target_ep_skips_when_explicit_target_already_written(self, mock_app):
         from modules.core.stage4_orchestrator import Stage4Orchestrator, _SessionTargetDecision

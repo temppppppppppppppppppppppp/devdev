@@ -82,6 +82,7 @@ class BlueprintConstraintCompiler:
         continuity = self._extract_continuity(
             prev_blueprint,
             prev_blueprints,
+            arc_data=arc_data,
             prev_manuscript_ending=prev_manuscript_ending,
         )
 
@@ -114,6 +115,14 @@ class BlueprintConstraintCompiler:
             prev_manuscript_ending=prev_manuscript_ending,
             arc_data=arc_data,
             genre=genre,
+            ep_num=ep_num,
+        )
+
+        # 9b. [S3-EP] Episode-Progression Packet — prevent prior-episode replay/drift
+        episode_progression_packet = self._build_episode_progression_packet(
+            prev_blueprint=prev_blueprint,
+            arc_data=arc_data,
+            ep_num=ep_num,
         )
 
         # 10. 제약 블록 생성
@@ -131,6 +140,7 @@ class BlueprintConstraintCompiler:
             "immutable_fact_carryover": immutable_fact_carryover,  # [IFC]
             "fact_lock_packet": fact_lock_packet,  # [S3-FL]
             "capital_continuity_packet": capital_continuity_packet,  # [S3-CC]
+            "episode_progression_packet": episode_progression_packet,  # [S3-EP]
         }
 
         return constraint_block
@@ -182,6 +192,42 @@ class BlueprintConstraintCompiler:
                     value = field.get("value", "")
                     if label and value:
                         lines.append(f"  - {label}: {value}")
+            lines.append("")
+
+        progression_pkt = constraint_block.get("episode_progression_packet", {})
+        if isinstance(progression_pkt, dict) and (
+            progression_pkt.get("time_truths")
+            or progression_pkt.get("institution_truths")
+            or progression_pkt.get("blocked_scene_families")
+        ):
+            lines.append("### ⏭️ [EPISODE PROGRESSION] 직전 화 재연 금지 / 이번 화는 앞으로 전진")
+            lines.append("이번 화는 직전 화 장면을 다시 재연하는 화가 아닙니다. 직전 화의 결과 이후로 전진하세요.")
+            for truth in progression_pkt.get("time_truths", [])[:4]:
+                lines.append(f"  - [시간 truth] {truth}")
+            for truth in progression_pkt.get("institution_truths", [])[:4]:
+                lines.append(f"  - [고유명사 truth] {truth}")
+            blocked_families = progression_pkt.get("blocked_scene_families", [])
+            if isinstance(blocked_families, list) and blocked_families:
+                lines.append("  - [직전 화에서 이미 소비한 scene family — 주 장면으로 재연 금지]")
+                for family in blocked_families[:4]:
+                    if not isinstance(family, dict):
+                        continue
+                    label = str(family.get("label", "") or "").strip()
+                    location = str(family.get("location", "") or "").strip()
+                    scene_type = str(family.get("type", "") or "").strip()
+                    characters = family.get("characters", [])
+                    char_text = ", ".join(str(item or "").strip() for item in characters if str(item or "").strip())
+                    parts = []
+                    if label:
+                        parts.append(label)
+                    if location:
+                        parts.append(f"장소:{location}")
+                    if char_text:
+                        parts.append(f"등장:{char_text}")
+                    if scene_type:
+                        parts.append(f"type:{scene_type}")
+                    if parts:
+                        lines.append("    - " + " | ".join(parts))
             lines.append("")
 
         # MUST FOCUS
@@ -425,6 +471,7 @@ class BlueprintConstraintCompiler:
         prev_blueprints: list[dict] | None = None,
         *,
         prev_manuscript_ending: str = "",
+        arc_data: dict | None = None,
     ) -> dict:
         """연속성 정보 추출
 
@@ -439,7 +486,17 @@ class BlueprintConstraintCompiler:
             "active_characters": [],
         }
 
+        arc_start_location = ""
+        if isinstance(arc_data, dict):
+            state = arc_data.get("state_constraints", {})
+            if isinstance(state, dict):
+                arc_start = state.get("arc_start_state", {})
+                if isinstance(arc_start, dict):
+                    arc_start_location = str(arc_start.get("location", "") or "").strip()
+
         if not prev_blueprint:
+            if arc_start_location:
+                continuity["location"] = arc_start_location
             return continuity
 
         # 직전 Blueprint에서 추출 (기본값)
@@ -487,6 +544,9 @@ class BlueprintConstraintCompiler:
                     conflicts.add(cliffhanger[:50])
             continuity["ongoing_conflicts"] = list(conflicts)[:5]
 
+        if arc_start_location:
+            continuity["location"] = arc_start_location
+
         return continuity
 
     def _extract_inherited_state(self, arc_data: dict, prev_blueprint: dict | None, *, genre: str = "wuxia") -> dict:
@@ -495,6 +555,9 @@ class BlueprintConstraintCompiler:
         inherited: dict = {"equipment": [], "injuries": "없음", "companions": [], "mood": "평온"}
         if genre == "wuxia":
             inherited["internal_energy"] = "100%"
+
+        arc_start_has_equipment = False
+        arc_start_has_injuries = False
 
         # Arc의 joint_docs에서 추출
         joint_docs = arc_data.get("joint_docs", {})
@@ -527,20 +590,24 @@ class BlueprintConstraintCompiler:
         if state:
             arc_start = state.get("arc_start_state", {})
             if arc_start:
-                inherited["injuries"] = arc_start.get("injuries", inherited["injuries"])
+                if arc_start.get("injuries") not in (None, ""):
+                    inherited["injuries"] = arc_start.get("injuries", inherited["injuries"])
+                    arc_start_has_injuries = True
                 # [TF-41] P1-1: 무협 전용 — 비무협 장르는 내공 상속 스킵
                 if genre == "wuxia" and arc_start.get("internal_energy"):
                     inherited["internal_energy"] = f"{arc_start['internal_energy']}%"
-                inherited["equipment"] = arc_start.get("equipment", inherited["equipment"])
+                if "equipment" in arc_start and arc_start.get("equipment") is not None:
+                    inherited["equipment"] = arc_start.get("equipment", inherited["equipment"])
+                    arc_start_has_equipment = True
 
         # 이전 Blueprint에서 보강
         if prev_blueprint:
             # protagonist_state 확인
             protag = prev_blueprint.get("protagonist_state", {})
             if protag:
-                if protag.get("equipment"):
+                if protag.get("equipment") and not arc_start_has_equipment:
                     inherited["equipment"] = protag["equipment"]
-                if protag.get("injuries"):
+                if protag.get("injuries") and not arc_start_has_injuries:
                     inherited["injuries"] = protag["injuries"]
                 if protag.get("companions"):
                     inherited["companions"] = protag["companions"]
@@ -637,16 +704,30 @@ class BlueprintConstraintCompiler:
         # ── 6. NPC/Institution authority anchor [NPC-CF] ──
         # Prevent downstream blueprints from rewriting canonical institution/venue names
         _inst_suffixes_ordered = (
-            "투자증권", "자산운용", "인베스트먼트", "PB센터",
-            "증권", "은행", "캐피탈", "보험", "병원",
-            "센터", "그룹", "재단", "협회", "연구소",
-            "본사", "지점", "사무실",
+            "투자증권",
+            "자산운용",
+            "인베스트먼트",
+            "PB센터",
+            "증권",
+            "은행",
+            "캐피탈",
+            "보험",
+            "병원",
+            "센터",
+            "그룹",
+            "재단",
+            "협회",
+            "연구소",
+            "본사",
+            "지점",
+            "사무실",
         )
         _inst_re = re.compile(
             r"([\w가-힣A-Za-z]{2,15}(?:" + "|".join(re.escape(s) for s in _inst_suffixes_ordered) + r"))"
         )
         manuscript_institution_names: set[str] = set()
         blueprint_institution_names: set[str] = set()
+        arc_institution_names: set[str] = set()
 
         # 6a. From manuscript text
         if ms_text:
@@ -664,6 +745,8 @@ class BlueprintConstraintCompiler:
                     if isinstance(sc, dict):
                         _bp_texts_for_inst.append(str(sc.get("location", "") or ""))
             _bp_texts_for_inst.append(str(bp.get("end_location", "") or ""))
+            for key in ("integrated_scenario", "core_tension", "expected_ending", "ending_hook", "time_flow"):
+                _bp_texts_for_inst.append(str(bp.get(key, "") or ""))
             bp_es = bp.get("ending_state", {})
             if isinstance(bp_es, dict):
                 for val in bp_es.values():
@@ -675,12 +758,36 @@ class BlueprintConstraintCompiler:
                 if len(name) >= 4:
                     blueprint_institution_names.add(name)
 
-        institution_names = manuscript_institution_names or blueprint_institution_names
+        # 6c. From current episode tactical authority + arc-start relationship truth
+        if isinstance(arc_data, dict):
+            state = arc_data.get("state_constraints", {})
+            if isinstance(state, dict):
+                arc_start = state.get("arc_start_state", {})
+                if isinstance(arc_start, dict):
+                    arc_rel = str(arc_start.get("relationship", "") or "")
+                    for m in _inst_re.finditer(arc_rel):
+                        name = m.group(1).strip()
+                        if len(name) >= 4:
+                            arc_institution_names.add(name)
+            current_episode_excerpt = extract_episode_tactical(
+                arc_data.get("tactical_doc", ""),
+                ep_num,
+                episode_details=arc_data.get("episode_details"),
+                fallback_full=False,
+            )
+            for m in _inst_re.finditer(str(current_episode_excerpt or "")):
+                name = m.group(1).strip()
+                if len(name) >= 4:
+                    arc_institution_names.add(name)
+
+        institution_names = manuscript_institution_names | blueprint_institution_names | arc_institution_names
         for inst_name in sorted(institution_names)[:4]:
-            anchors.append({
-                "category": "기관",
-                "fact": f"확정 기관/장소: {inst_name}",
-            })
+            anchors.append(
+                {
+                    "category": "기관",
+                    "fact": f"확정 기관/장소: {inst_name}",
+                }
+            )
             if len(anchors) >= 16:
                 break
 
@@ -690,12 +797,200 @@ class BlueprintConstraintCompiler:
         return {"anchors": anchors[:16], "source": "prev_manuscript+blueprint"}
 
     @staticmethod
+    def _build_episode_progression_packet(
+        *,
+        prev_blueprint: dict | None,
+        arc_data: dict,
+        ep_num: int,
+    ) -> dict:
+        """Build compact progression guardrails for immediate next-episode generation.
+
+        Purpose:
+        - surface authoritative time/season truth from current arc authority
+        - reinforce canonical institution/group names
+        - discourage replaying prior episode scene families as the next episode's main beats
+        """
+        bp = prev_blueprint if isinstance(prev_blueprint, dict) else {}
+        if not bp and not isinstance(arc_data, dict):
+            return {}
+
+        def _dedup(values: list[str], *, limit: int) -> list[str]:
+            seen: set[str] = set()
+            ordered: list[str] = []
+            for raw in values:
+                value = str(raw or "").strip()
+                if not value or value in seen:
+                    continue
+                seen.add(value)
+                ordered.append(value)
+                if len(ordered) >= limit:
+                    break
+            return ordered
+
+        def _parse_timeline_point(raw: object, *, pick: str) -> tuple[int, int] | None:
+            if isinstance(raw, dict):
+                year = raw.get("year")
+                month = raw.get("month")
+                if year is not None and month is not None:
+                    try:
+                        return int(year), int(month)
+                    except (TypeError, ValueError):
+                        return None
+                raw = raw.get("표현") or raw.get("expression") or raw.get("text") or raw.get("raw") or ""
+            text = str(raw or "").strip()
+            if not text:
+                return None
+            year_match = re.search(r"(\d{4})년", text)
+            month_match = re.findall(r"(\d{1,2})월", text)
+            if not month_match:
+                return None
+            month = int(month_match[0] if pick == "start" else month_match[-1])
+            year = int(year_match.group(1)) if year_match else 0
+            return year, month
+
+        def _season_from_month(month: int) -> str:
+            if month in (12, 1, 2):
+                return "겨울"
+            if month in (3, 4, 5):
+                return "봄"
+            if month in (6, 7, 8):
+                return "여름"
+            return "가을"
+
+        def _location_variants(raw: object) -> list[str]:
+            location = str(raw or "").strip()
+            if not location:
+                return []
+            parts = [part.strip() for part in re.split(r"[,/|>→]+", location) if part.strip()]
+            return _dedup([location, *parts[-2:], *parts[:1]], limit=4)
+
+        def _scene_rows(scene_breakdown: object) -> list[dict]:
+            if isinstance(scene_breakdown, list):
+                scene_breakdown = {
+                    f"scene_{idx + 1}": scene for idx, scene in enumerate(scene_breakdown) if isinstance(scene, dict)
+                }
+            if not isinstance(scene_breakdown, dict):
+                return []
+            scene_rows: list[dict] = []
+            scene_keys = sorted(
+                scene_breakdown.keys(),
+                key=lambda key: int(re.search(r"\d+", key).group()) if re.search(r"\d+", key) else 0,
+            )
+            for scene_key in scene_keys:
+                scene = scene_breakdown.get(scene_key, {})
+                if not isinstance(scene, dict):
+                    continue
+                location = str(scene.get("location", "") or "").strip()
+                raw_characters = scene.get("characters", [])
+                if isinstance(raw_characters, str):
+                    characters = _dedup([raw_characters], limit=4)
+                elif isinstance(raw_characters, list):
+                    characters = _dedup([str(item or "").strip() for item in raw_characters], limit=4)
+                else:
+                    characters = []
+                label = str(
+                    scene.get("title", "") or scene.get("summary", "") or scene.get("goal", "") or scene_key
+                ).strip()
+                scene_type = str(scene.get("type", "") or "").strip()
+                if not location and not characters:
+                    continue
+                scene_rows.append(
+                    {
+                        "scene_key": scene_key,
+                        "label": label[:120],
+                        "location": location[:120],
+                        "location_variants": _location_variants(location),
+                        "characters": characters,
+                        "type": scene_type[:40],
+                    }
+                )
+            return scene_rows[-3:]
+
+        time_truths: list[str] = []
+        institution_truths: list[str] = []
+        blocked_scene_families = _scene_rows(bp.get("scene_breakdown", {}))
+
+        if isinstance(arc_data, dict):
+            current_episode_excerpt = extract_episode_tactical(
+                arc_data.get("tactical_doc", ""),
+                ep_num,
+                episode_details=arc_data.get("episode_details"),
+                fallback_full=False,
+            )
+            excerpt_text = str(current_episode_excerpt or "").strip()
+            if any(marker in excerpt_text for marker in ("다음 날", "다음날", "이튿날", "익일")):
+                time_truths.append("이번 화는 직전 화 직후/다음 날 축에서 시작한다.")
+
+            timeline = arc_data.get("state_changes", {}).get("timeline", {})
+            if isinstance(timeline, dict):
+                start_point = _parse_timeline_point(timeline.get("start"), pick="start")
+                end_point = _parse_timeline_point(timeline.get("end"), pick="end")
+                ref_point = start_point or end_point
+                if ref_point is not None:
+                    year, month = ref_point
+                    prefix = f"{year}년 {month}월" if year > 0 else f"{month}월"
+                    time_truths.append(f"현재 Arc 시간축은 {prefix}({_season_from_month(month)} 축)이다.")
+
+            _inst_suffixes_ordered = (
+                "투자증권",
+                "자산운용",
+                "인베스트먼트",
+                "PB센터",
+                "증권",
+                "은행",
+                "캐피탈",
+                "보험",
+                "병원",
+                "센터",
+                "그룹",
+                "재단",
+                "협회",
+                "연구소",
+                "본사",
+                "지점",
+                "사무실",
+            )
+            _inst_re = re.compile(
+                r"([\w가-힣A-Za-z]{2,15}(?:" + "|".join(re.escape(s) for s in _inst_suffixes_ordered) + r"))"
+            )
+            inst_sources: list[str] = [excerpt_text]
+            state = arc_data.get("state_constraints", {})
+            if isinstance(state, dict):
+                arc_start = state.get("arc_start_state", {})
+                if isinstance(arc_start, dict):
+                    inst_sources.append(str(arc_start.get("relationship", "") or ""))
+                    inst_sources.append(str(arc_start.get("location", "") or ""))
+            for raw_source in inst_sources:
+                for match in _inst_re.finditer(str(raw_source or "")):
+                    name = match.group(1).strip()
+                    if len(name) >= 4:
+                        institution_truths.append(name)
+
+        prev_time_flow = str(bp.get("time_flow", "") or "").strip()
+        if prev_time_flow:
+            if any(marker in prev_time_flow for marker in ("다음 날", "다음날", "이튿날", "익일")):
+                time_truths.append("직전 화 시간 진실에 이미 '다음 날' 축이 열려 있다.")
+            if any(marker in prev_time_flow for marker in ("겨울", "한겨울", "1월", "12월", "2월")):
+                time_truths.append(f"직전 화 시간 진실: {prev_time_flow[:120]}")
+
+        if not time_truths and not institution_truths and not blocked_scene_families:
+            return {}
+
+        return {
+            "time_truths": _dedup(time_truths, limit=4),
+            "institution_truths": _dedup(institution_truths, limit=4),
+            "blocked_scene_families": blocked_scene_families,
+            "source": "prev_blueprint+arc_authority",
+        }
+
+    @staticmethod
     def _build_capital_continuity_packet(
         *,
         prev_blueprint: dict | None,
         prev_manuscript_ending: str,
         arc_data: dict,
         genre: str,
+        ep_num: int = 0,
     ) -> dict:
         """[S3-CC] Build capital-state continuity packet for investment-genre runs.
 
@@ -709,6 +1004,21 @@ class BlueprintConstraintCompiler:
         fields: list[dict] = []
         bp = prev_blueprint if isinstance(prev_blueprint, dict) else {}
         ms_text = str(prev_manuscript_ending or "").strip()
+
+        def _capital_within_ep(entry: object) -> bool:
+            if ep_num <= 0:
+                return True
+            if not isinstance(entry, dict):
+                return True
+            for key in ("episode", "ep_num", "ep"):
+                ep_val = entry.get(key)
+                if ep_val is None:
+                    continue
+                try:
+                    return int(ep_val) <= ep_num
+                except (TypeError, ValueError):
+                    return True
+            return True
 
         # ── From blueprint ending state ──
         ending_state = bp.get("ending_state", {})
@@ -745,9 +1055,7 @@ class BlueprintConstraintCompiler:
                     r"|\d[\d,.]*\s*(?:천만|백만|만)?\s*(?:원|달러|만원|만\s*원))"
                 )
                 for item in equip_list[:10]:
-                    item_str = str(
-                        item.get("name", item) if isinstance(item, dict) else item or ""
-                    )
+                    item_str = str(item.get("name", item) if isinstance(item, dict) else item or "")
                     money_m = _money_in_equip_re.search(item_str)
                     if money_m:
                         amount = money_m.group(1).strip()
@@ -767,9 +1075,7 @@ class BlueprintConstraintCompiler:
         if not protag_status and isinstance(ending_state, dict):
             protag_status = str(ending_state.get("protagonist_status", "") or "").strip()
         if protag_status and len(fields) < 8:
-            _money_in_status_re = re.compile(
-                r"(\d[\d,.]*\s*(?:억|만|천만|백만)?\s*(?:원|달러|만원|만\s*원))"
-            )
+            _money_in_status_re = re.compile(r"(\d[\d,.]*\s*(?:억|만|천만|백만)?\s*(?:원|달러|만원|만\s*원))")
             for m in _money_in_status_re.finditer(protag_status):
                 amount = m.group(1).strip()
                 if any(kw in protag_status for kw in ("투입", "매수", "배치", "체결")):
@@ -788,13 +1094,13 @@ class BlueprintConstraintCompiler:
             )
             for m in _deploy_complete_re.finditer(ms_text[-2000:]):
                 amount = m.group(1).strip()
-                if amount and not any(
-                    amount in str(f.get("value", "")) for f in fields
-                ):
-                    fields.append({
-                        "label": "투입 확정",
-                        "value": f"{amount} 투입/매수 — 가용 자본 아님",
-                    })
+                if amount and not any(amount in str(f.get("value", "")) for f in fields):
+                    fields.append(
+                        {
+                            "label": "투입 확정",
+                            "value": f"{amount} 투입/매수 — 가용 자본 아님",
+                        }
+                    )
                     if len(fields) >= 8:
                         break
 
@@ -803,7 +1109,7 @@ class BlueprintConstraintCompiler:
         if isinstance(state_changes, dict):
             capital_events = state_changes.get("capital_changes") or state_changes.get("financial_events") or []
             if isinstance(capital_events, list):
-                for event in capital_events[:3]:
+                for event in [entry for entry in capital_events if _capital_within_ep(entry)][:3]:
                     if isinstance(event, dict):
                         desc = event.get("description") or event.get("event") or ""
                         amount = event.get("amount") or ""
@@ -1079,7 +1385,10 @@ class BlueprintConstraintCompiler:
                     if not cls._entry_visible_in_episode(item, ep_num):
                         continue
                     text = str(
-                        item.get("anchor", "") or item.get("text", "") or item.get("summary", "") or item.get("description", "")
+                        item.get("anchor", "")
+                        or item.get("text", "")
+                        or item.get("summary", "")
+                        or item.get("description", "")
                     ).strip()[:120]
                 else:
                     text = str(item).strip()[:120]

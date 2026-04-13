@@ -715,6 +715,36 @@ class TestConstraintDbLogging:
         assert log_kw["runtime_advisory"] == "다음 시도에서는 carryover authority를 먼저 검증하라."
         assert log_kw["retry_directives"] == "핵심 carryover packet을 다시 설계하라."
 
+    def test_pass_metrics_promote_verdict_reason_to_runtime_advisory_when_missing(
+        self,
+        finalizer,
+        valid_refined_arc,
+        tmp_path,
+    ):
+        finalizer.ctx.current_project.paths = MagicMock()
+        finalizer.ctx.current_project.paths.root = tmp_path
+        payload = deepcopy(valid_refined_arc)
+        payload["_director_compare_meta"] = {
+            "selection_reason": "candidate B keeps the opening bridge stable",
+            "feedback": "carryover authority remains aligned",
+        }
+
+        finalizer._record_s2_pass_metrics(
+            global_arc_no=5,
+            attempt=0,
+            generation_method="four_phase",
+            selected_strategy="balanced",
+            audit={"score": 89, "decision": "PASS_WITH_FIX", "fix_scope": "inplace"},
+            artifact_payload=payload,
+        )
+
+        db_kw = finalizer.ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        ds_kw = finalizer.ctx.current_project.db.save_director_selection.call_args.kwargs
+        log_kw = finalizer.ctx.session_logger.log_decision.call_args.kwargs
+        assert db_kw["runtime_advisory"] == "carryover authority remains aligned"
+        assert ds_kw["runtime_advisory"] == "carryover authority remains aligned"
+        assert log_kw["runtime_advisory"] == "carryover authority remains aligned"
+
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_pass_metrics_emit_authoritative_session_decision_with_artifact_linkage(
         self,
@@ -976,6 +1006,60 @@ class TestRunFinalize:
         assert result["action"] == "break"
         saved_arc = kwargs["all_refined_arcs"][1]
         assert saved_arc["state_constraints"]["arc_start_state"]["equipment"] == ["검", "부적"]
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_finalize_syncs_start_location_and_finance_from_prev_arc_end_state(
+        self,
+        _validate,
+        finalizer,
+        valid_refined_arc,
+    ):
+        prev_arc = {
+            "joint_docs": {
+                "final_location": "headquarters",
+                "physical_inventory": ["ledger"],
+                "world_joint": "stable",
+            },
+            "status_shadow": {
+                "internal_energy_loss": "0%",
+                "expected_injuries": "none",
+                "item_consumption": [],
+            },
+            "state_constraints": {
+                "arc_end_state": {
+                    "location": "headquarters",
+                    "equipment": ["ledger"],
+                    "total_assets": "30억원",
+                    "capital": "17.5억원",
+                    "portfolio_position": "WTI 12.5억원 롱",
+                },
+                "items_acquired": [],
+            },
+        }
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["state_constraints"] = {
+            "arc_start_state": {
+                "location": "stale-office",
+                "equipment": ["ledger"],
+                "total_assets": "10억원",
+                "capital": "5억원",
+                "portfolio_position": "없음",
+            },
+            "items_acquired": [],
+        }
+
+        kwargs = _make_finalize_kwargs(refined_arc, all_refined_arcs=[prev_arc], global_arc_no=2, current_ep_start=11)
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        saved_arc = kwargs["all_refined_arcs"][1]
+        start_state = saved_arc["state_constraints"]["arc_start_state"]
+        assert start_state["location"] == "headquarters"
+        assert start_state["total_assets"] == "30억원"
+        assert start_state["capital"] == "17.5억원"
+        assert start_state["portfolio_position"] == "WTI 12.5억원 롱"
+        assert any("[Carryover Sync]" in str(call.args[0]) for call in finalizer.ctx.ui.log.call_args_list if call.args)
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
@@ -1581,9 +1665,15 @@ def test_sync_first_episode_start_state_line_rewrites_stale_equipment_and_insert
             "equipment": ["검"],
             "injuries": "편두통",
             "internal_energy": 30,
+            "total_assets": "30억원",
+            "capital": "17.5억원",
+            "portfolio_position": "WTI 12.5억원 롱",
         },
     )
 
     assert '소지품: ["검"]' in synced
     assert "부상: 편두통" in synced
     assert "내공: 30" in synced
+    assert "총자산: 30억원" in synced
+    assert "자본: 17.5억원" in synced
+    assert "포지션: WTI 12.5억원 롱" in synced

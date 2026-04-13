@@ -1,4 +1,4 @@
-﻿"""
+"""
 [V64 P2-1] Director EnsembleSelector — 앙상블 선택 전담 모듈
 
 Director God Object 분해의 세 번째 단계.
@@ -137,8 +137,9 @@ def _format_compare_python_warning_block(meta: dict | None) -> str:
 
     warning_entries = _normalize_python_warning_entries(meta.get("python_warnings", []), limit=3)
     issue_count = _safe_int(meta.get("prevalidation_issue_count", len(warning_entries)), 0)
+    advisory_fix_pack = _normalize_fix_pack(meta.get("advisory_fix_pack"))
     quality_risk = bool(meta.get("quality_risk", False) or warning_entries)
-    if not warning_entries and not issue_count and not quality_risk:
+    if not warning_entries and not issue_count and not quality_risk and not advisory_fix_pack:
         return ""
 
     lines: list[str] = []
@@ -152,6 +153,16 @@ def _format_compare_python_warning_block(meta: dict | None) -> str:
         if focus:
             line += f" | focus: {focus}"
         lines.append(line)
+    if advisory_fix_pack:
+        advisory_target_kind = _normalize_fix_target_kind(advisory_fix_pack.get("target_kind"))
+        if advisory_target_kind:
+            lines.append(f"- advisory_target_kind: {advisory_target_kind}")
+        evidence_summary = _short_text(advisory_fix_pack.get("evidence_summary", ""), 120)
+        if evidence_summary:
+            lines.append(f"- advisory_evidence: {evidence_summary}")
+        advisory_focus = _normalize_fix_pack_list(advisory_fix_pack.get("must_fix"), limit=1, item_limit=140)
+        if advisory_focus:
+            lines.append(f"- advisory_focus: {advisory_focus[0]}")
     return "\n".join(lines)
 
 
@@ -217,9 +228,7 @@ def _synthesize_numeric_carryover_fix_pack(raw_fix_pack: object) -> dict:
     )
     fix_pack["do_not_regress"] = _append_unique_compact_items(
         fix_pack.get("do_not_regress") or [],
-        (
-            "FactLedger carryover baseline을 explicit transition 없이 overwrite하지 말 것",
-        ),
+        ("FactLedger carryover baseline을 explicit transition 없이 overwrite하지 말 것",),
         limit=6,
         item_limit=180,
     )
@@ -332,13 +341,9 @@ def _resolve_stage4_contract_fields(
     final_verdict: str,
 ) -> dict[str, object]:
     contradiction_types = _extract_contradiction_types(
-        state.contradiction_check.get("found_contradictions", [])
-        if isinstance(state.contradiction_check, dict)
-        else []
+        state.contradiction_check.get("found_contradictions", []) if isinstance(state.contradiction_check, dict) else []
     )
-    authoritative_fix_scope = str(
-        result.get("authoritative_fix_scope", result.get("fix_scope", "")) or ""
-    ).strip()
+    authoritative_fix_scope = str(result.get("authoritative_fix_scope", result.get("fix_scope", "")) or "").strip()
     fix_scope_reasoning = str(result.get("fix_scope_reasoning", "") or "").strip()
     fix_pack, authoritative_fix_scope, fix_scope_reasoning = _resolve_numeric_carryover_contract_fields(
         final_verdict=final_verdict,
@@ -382,6 +387,12 @@ def _collect_compare_candidate_advisories(candidates: list) -> list[dict]:
         if warning_entries:
             item["python_warnings"] = warning_entries
             item["quality_risk"] = True
+        advisory_fix_pack = _normalize_fix_pack(meta.get("advisory_fix_pack"))
+        if advisory_fix_pack:
+            item["advisory_fix_pack"] = advisory_fix_pack
+            advisory_target_kind = _normalize_fix_target_kind(advisory_fix_pack.get("target_kind"))
+            if advisory_target_kind:
+                item["advisory_target_kind"] = advisory_target_kind
         advisories.append(item)
     return advisories
 
@@ -883,9 +894,7 @@ def _build_stage4_ensemble_decision_payload(
     authoritative_fix_scope_violation: dict | None,
 ) -> dict:
     contradiction_types = _extract_contradiction_types(
-        state.contradiction_check.get("found_contradictions", [])
-        if isinstance(state.contradiction_check, dict)
-        else []
+        state.contradiction_check.get("found_contradictions", []) if isinstance(state.contradiction_check, dict) else []
     )
     repair_contract = _build_director_repair_contract_payload(
         contradiction_types=contradiction_types,
@@ -1149,7 +1158,9 @@ class DirectorEnsembleSelector:
         prev_manuscripts_text: str,
         story_context: str,
     ) -> _EnsemblePromptRequest:
-        blueprint_str = json.dumps(blueprint, ensure_ascii=False, indent=2) if isinstance(blueprint, dict) else str(blueprint)
+        blueprint_str = (
+            json.dumps(blueprint, ensure_ascii=False, indent=2) if isinstance(blueprint, dict) else str(blueprint)
+        )
 
         def _candidate_prompt_info(idx: int) -> dict:
             candidate = candidates[idx] if idx < len(candidates) else {}
@@ -1331,7 +1342,9 @@ class DirectorEnsembleSelector:
             v60_97_swapped = True
             logging.warning(f" [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
             original_reason = result.get("selection_reason", "")
-            result["selection_reason"] = f"[V60.97 자동 교체: {old_selection}→{selected_letter} (분량 기준)] {original_reason}"
+            result["selection_reason"] = (
+                f"[V60.97 자동 교체: {old_selection}→{selected_letter} (분량 기준)] {original_reason}"
+            )
 
         selected_candidate = candidates[selected_idx] if selected_idx < len(candidates) else candidates[0]
         original_verdict = result.get("verdict", "REJECT")
@@ -1405,8 +1418,12 @@ class DirectorEnsembleSelector:
         retry_count: int,
         ep_type: str = "normal",
     ) -> tuple[str, dict]:
-        self._apply_scm_single_candidate_cap(state=state, scm_single_candidate=scm_single_candidate)  # Mutates: state.score
-        self._apply_contradiction_firewall_gate(state=state)  # Mutates: state.firewall_triggered/mode/reason, state.contradiction_details
+        self._apply_scm_single_candidate_cap(
+            state=state, scm_single_candidate=scm_single_candidate
+        )  # Mutates: state.score
+        self._apply_contradiction_firewall_gate(
+            state=state
+        )  # Mutates: state.firewall_triggered/mode/reason, state.contradiction_details
         self._log_numeric_consistency_gate(
             state=state,
             combined_context=combined_context,
@@ -1454,9 +1471,7 @@ class DirectorEnsembleSelector:
         critical_count = sum(
             1 for item in normalized_contradictions if str(item.get("severity", "")).upper() == "CRITICAL"
         )
-        major_count = sum(
-            1 for item in normalized_contradictions if str(item.get("severity", "")).upper() == "MAJOR"
-        )
+        major_count = sum(1 for item in normalized_contradictions if str(item.get("severity", "")).upper() == "MAJOR")
         has_numeric_carryover_authority = any(
             str(item.get("type", "") or "").strip() == "numeric_carryover_authority"
             for item in (state.contradiction_details or [])
@@ -1563,7 +1578,11 @@ class DirectorEnsembleSelector:
                 logging.warning(
                     "[NC-3] consistency_checklist ISSUE %d건 감지: %s",
                     issue_count,
-                    [key for key in _NC3_CHECKLIST_KEYS if str(state.consistency_checklist.get(key, "")).upper() == "ISSUE"],
+                    [
+                        key
+                        for key in _NC3_CHECKLIST_KEYS
+                        if str(state.consistency_checklist.get(key, "")).upper() == "ISSUE"
+                    ],
                 )
             if issue_count >= 3 and isinstance(state.score_breakdown_raw, dict):
                 python_warnings = state.score_breakdown_raw.get("python_warnings", 10)
@@ -1620,10 +1639,14 @@ class DirectorEnsembleSelector:
                 _v97_threshold = adaptive_result.get("threshold_used", 60)
                 if state.score >= _v97_threshold:
                     final_verdict = "PASS"
-                    _adaptive_branch = f"CONDITIONAL_PASS→PASS (V60.97 swap, score={state.score}≥threshold={_v97_threshold})"
+                    _adaptive_branch = (
+                        f"CONDITIONAL_PASS→PASS (V60.97 swap, score={state.score}≥threshold={_v97_threshold})"
+                    )
                 else:
                     final_verdict = "REJECT"
-                    _adaptive_branch = f"CONDITIONAL_PASS→REJECT (V60.97 swap, score={state.score}<threshold={_v97_threshold})"
+                    _adaptive_branch = (
+                        f"CONDITIONAL_PASS→REJECT (V60.97 swap, score={state.score}<threshold={_v97_threshold})"
+                    )
             elif adaptive_result.get("adjusted") and state.original_verdict in ("PASS", "PASS_WITH_FIX"):
                 final_verdict = state.original_verdict
                 _adaptive_branch = f"CONDITIONAL_PASS→{final_verdict} (adjusted pass-through)"
@@ -1694,14 +1717,9 @@ class DirectorEnsembleSelector:
 
         # [DCM-T2] Validate the Director-authored scope separately from any runtime-derived scope.
         _authoritative_fix_scope_violation = None
-        if (
-            final_verdict in ("REJECT", "PASS_WITH_FIX")
-            and authoritative_fix_scope.lower() not in _VALID_FIX_SCOPES
-        ):
+        if final_verdict in ("REJECT", "PASS_WITH_FIX") and authoritative_fix_scope.lower() not in _VALID_FIX_SCOPES:
             _violation_type = (
-                "blank_authoritative_fix_scope"
-                if not authoritative_fix_scope
-                else "invalid_authoritative_fix_scope"
+                "blank_authoritative_fix_scope" if not authoritative_fix_scope else "invalid_authoritative_fix_scope"
             )
             _authoritative_fix_scope_violation = {
                 "type": _violation_type,
@@ -1725,7 +1743,7 @@ class DirectorEnsembleSelector:
 
         if state.firewall_fixable:
             action_items = [str(item).strip() for item in (feedback.get("action_items") or []) if str(item).strip()]
-            for detail in (state.contradiction_details or []):
+            for detail in state.contradiction_details or []:
                 hint = str(detail.get("fix_suggestion", "") or "").strip()
                 if not hint:
                     kind = str(detail.get("type", "") or "모순").strip()
@@ -1895,7 +1913,9 @@ class DirectorEnsembleSelector:
                 }
 
         _sb = blueprint.get("scene_breakdown", {})
-        scene_gate_passed, scene_count, scene_reason, scene_feedback = evaluate_stage3_scene_cardinality(_sb, integrated)
+        scene_gate_passed, scene_count, scene_reason, scene_feedback = evaluate_stage3_scene_cardinality(
+            _sb, integrated
+        )
         if not scene_gate_passed:
             return {
                 "decision": "REJECT",
@@ -2214,12 +2234,16 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
             if not isinstance(tactical, str):
                 tactical = str(tactical) if tactical else ""
             joint = arc.get("joint_docs", {})
-            joint_str = json.dumps(joint, ensure_ascii=False) if isinstance(joint, dict) else str(joint) if joint else ""
+            joint_str = (
+                json.dumps(joint, ensure_ascii=False) if isinstance(joint, dict) else str(joint) if joint else ""
+            )
             state_constraints = arc.get("state_constraints", {})
             state_constraints_str = (
                 json.dumps(state_constraints, ensure_ascii=False)
                 if isinstance(state_constraints, dict)
-                else str(state_constraints) if state_constraints else ""
+                else str(state_constraints)
+                if state_constraints
+                else ""
             )
             state_constraints_prompt = _prompt_snippet(
                 state_constraints_str,

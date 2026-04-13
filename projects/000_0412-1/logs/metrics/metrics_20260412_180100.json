@@ -1,0 +1,23 @@
+{
+  "session_id": "20260412_180100",
+  "start_time": "2026-04-12T18:01:00.852086",
+  "end_time": "2026-04-12T18:01:12.692206",
+  "total_calls": 1,
+  "successful_calls": 0,
+  "failed_calls": 1,
+  "total_retries": 0,
+  "total_tokens": 0,
+  "total_cost_usd": 0.0,
+  "agent_stats": {
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 1,
+      "successful_calls": 0,
+      "failed_calls": 1,
+      "success_rate": 0.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0
+    }
+  },
+  "model_stats": {}
+}

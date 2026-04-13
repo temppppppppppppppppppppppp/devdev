@@ -1,0 +1,419 @@
+{
+  "arc_no": 1,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0001.txt",
+    "settlement_packet_path": "drafts/ep_0001.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 1,
+  "ep_num": 1,
+  "manuscript": {
+    "char_count": 5410,
+    "content_hash": "4be9f17952c58f92d1178854c26c557be25366abb655fc9736fcd7c7c6a7fa08",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0001.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "open_review": "후보 C는 블루프린트의 핵심 목표를 모두 달성하면서도, '가족의 무관심'이라는 설정을 구체적인 상황(모두 출근하고 없음)으로 묘사하여 캐릭터의 동기와 행동의 정당성을 강화하는 영리함을 보여주었습니다. Python의 'Blueprint 씬 대부분 미반영' 경고는, 설계의 목표를 창의적으로 달성하는 과정에서 발생한 것으로 보이며 실제 원고 품질 저하 요인으로 보기 어렵습니다. 오히려 작가의 역량을 보여주는 긍정적 해석으로 판단됩니다. '서사 폭주' 경고 역시 1화의 특성상 독자를 사로잡기 위한 필수적인 정보 제공으로 볼 수 있습니다.",
+      "repair_scope": "inplace",
+      "score": 92,
+      "score_breakdown": {
+        "blueprint_coverage": 16,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 6,
+        "quality_engagement": 20
+      },
+      "selection_reason": "후보 C는 가장 설득력 있고 정교한 인물 설정을 제공합니다. 특히 가족들이 이미 출근하고 없다는 디테일은 주인공의 고립과 기회를 동시에 효과적으로 보여주는 탁월한 장치입니다. 블루프린트를 넘어서는 추가 정보(가문 자산 135조 등)는 서사의 스케일을 키우고 다음 화에 대한 기대감을 증폭시켜, 단순한 실행을 넘어선 창의적인 해석으로 작품의 질을 높였습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [],
+      "ai_slop_score": 0.0,
+      "burstiness": 21.04,
+      "ced_score": 0.0,
+      "complexity": 43.08,
+      "compression_ratio": 0.4724,
+      "signal_summary": {
+        "ai_slop_total_hits": 0,
+        "burstiness": 21.04,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 43.08,
+        "compression_ratio": 0.4724,
+        "sentence_count": 152
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "과거",
+            "일상",
+            "알리",
+            "방문",
+            "밖의"
+          ],
+          "source": "ending_hook",
+          "text": "과거의 일상을 알리는 방문 밖의 목소리. 한시우는 이제 어떤 첫걸음을 내디딜 것인가."
+        }
+      ],
+      "capital": 0,
+      "connections": "가족 (형제들과는 적대적, 아버지와는 무관심)",
+      "current_objective": "종잣돈 마련, 가족의 레이더를 피해 자산 축적, 135조 자금 통제 목표",
+      "equipment": [
+        "구형 피처폰"
+      ],
+      "inventory_counts": {
+        "구형 피처폰": 1
+      },
+      "market_insight": "미래 지식 (2006년 ~ 2024년 경제 위기, 시장 폭등락, 기술 트렌드)",
+      "reputation": "미미함 (가족 내 한량으로 인식)",
+      "status": "회귀 직후, 재기 준비 및 위장 중",
+      "stocks": [],
+      "total_assets": 0,
+      "wealth": 0
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "과거",
+            "일상",
+            "알리",
+            "방문",
+            "밖의"
+          ],
+          "source": "ending_hook",
+          "text": "과거의 일상을 알리는 방문 밖의 목소리. 한시우는 이제 어떤 첫걸음을 내디딜 것인가."
+        }
+      ],
+      "causal_links": [
+        "전생의 파멸적인 경험 -> 한시우의 미래 지식 획득 및 재기 결심",
+        "가족의 무관심과 경영권 다툼 -> 한시우의 독립적인 자산 형성 및 복수 계획 수립",
+        "2024년 죽음 -> 2006년 회귀"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "구형 피처폰",
+          "to": 1
+        }
+      ],
+      "inventory_counts": {
+        "구형 피처폰": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 80,
+          "target": "한태준",
+          "value": -10
+        },
+        {
+          "obsession": 80,
+          "target": "한태민",
+          "value": -10
+        },
+        {
+          "obsession": 50,
+          "target": "한정호",
+          "value": -5
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "한정호",
+          "한태준",
+          "한태민",
+          "가사도우미"
+        ],
+        "new_witnesses": []
+      },
+      "lost_items": [],
+      "new_items": [
+        "구형 피처폰"
+      ],
+      "new_npcs": [
+        "한정호",
+        "한태준",
+        "한태민",
+        "가사도우미"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "한정호",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "한태준",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "한태민",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "가사도우미",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "한태준",
+          "to": "집착80/오해-10"
+        },
+        {
+          "from": "",
+          "npc": "한태민",
+          "to": "집착80/오해-10"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "과거",
+              "일상",
+              "알리",
+              "방문",
+              "밖의"
+            ],
+            "source": "ending_hook",
+            "text": "과거의 일상을 알리는 방문 밖의 목소리. 한시우는 이제 어떤 첫걸음을 내디딜 것인가."
+          }
+        ],
+        "capital": 0,
+        "connections": "가족 (형제들과는 적대적, 아버지와는 무관심)",
+        "current_objective": "종잣돈 마련, 가족의 레이더를 피해 자산 축적, 135조 자금 통제 목표",
+        "equipment": [
+          "구형 피처폰"
+        ],
+        "inventory_counts": {
+          "구형 피처폰": 1
+        },
+        "market_insight": "미래 지식 (2006년 ~ 2024년 경제 위기, 시장 폭등락, 기술 트렌드)",
+        "reputation": "미미함 (가족 내 한량으로 인식)",
+        "status": "회귀 직후, 재기 준비 및 위장 중",
+        "stocks": [],
+        "total_assets": 0,
+        "wealth": 0
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "director_score",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "director_score": 92,
+      "location": "성북동 본가, 한시우의 방",
+      "protagonist_status": "회귀 사실을 인지하고 18년 치 미래 경제사 기억을 정리 완료함.",
+      "timeline": {
+        "표현": "2006년 1월, 어느 날 아침"
+      }
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "director_score",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 84,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true
+  },
+  "title": "제1화: 차가운 끝, 그리고"
+}

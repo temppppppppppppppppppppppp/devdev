@@ -1,3 +1,4 @@
+import copy
 from dataclasses import dataclass
 
 from modules.core.logging_keys import build_attempt_key
@@ -36,6 +37,31 @@ class Stage4PassEpisodeLogRequest:
     log_artifact_meta: dict[str, str]
     selection_artifact_meta: dict
     session_id: str | None
+
+
+@dataclass(slots=True)
+class Stage4RejectEpisodeLogRequest:
+    ep_num: int
+    round_num: int
+    arc_num: int
+    sink_source: dict
+    initial_verdict: str
+    initial_score: int
+    final_verdict: str
+    final_score: int
+    is_patch: bool
+    is_patch_fallback: bool
+    tot_used: bool
+    mad_used: bool
+    asp_used: bool
+    model: str | None
+    reject_bucket: str
+    validation_warnings: list
+    feedback_provenance: dict[str, str]
+    patch_trace: dict | None
+    reject_artifact_meta: dict[str, str]
+    selection_artifact_meta: dict[str, str]
+    attempt_key: str
 
 
 def build_pass_episode_log_payload(*, request: Stage4PassEpisodeLogRequest) -> dict:
@@ -124,11 +150,108 @@ def build_pass_episode_log_warning_fields(*, request: Stage4PassEpisodeLogReques
     }
 
 
-def build_pass_feedback_provenance(*, request: Stage4PassEpisodeLogRequest) -> dict[str, str]:
+def build_stage4_feedback_provenance(
+    *,
+    director_feedback: str,
+    runtime_advisory: str,
+    retry_directives: str,
+) -> dict[str, str]:
+    normalized_director_feedback = str(director_feedback or "")
     return {
-        "director_feedback": str(request.trace_verdict_reason or request.director_feedback),
-        "runtime_advisory": request.session_runtime_advisory,
-        "retry_directives": request.session_retry_directives,
+        "director_feedback": normalized_director_feedback,
+        "director_feedback_text": normalized_director_feedback,
+        "runtime_advisory": str(runtime_advisory or ""),
+        "retry_directives": str(retry_directives or ""),
+    }
+
+
+def build_pass_feedback_provenance(*, request: Stage4PassEpisodeLogRequest) -> dict[str, str]:
+    return build_stage4_feedback_provenance(
+        director_feedback=str(request.trace_verdict_reason or request.director_feedback),
+        runtime_advisory=request.session_runtime_advisory,
+        retry_directives=request.session_retry_directives,
+    )
+
+
+def build_stage4_episode_log_carryover_contracts(*, gate_semantics: dict | None) -> dict[str, dict] | None:
+    gate_payload = gate_semantics if isinstance(gate_semantics, dict) else {}
+    carryover: dict[str, dict] = {}
+    for key in ("conflict_resolution_linkage", "reuse_contract"):
+        value = gate_payload.get(key)
+        if isinstance(value, dict):
+            carryover[key] = copy.deepcopy(value)
+    return carryover or None
+
+
+def build_pass_episode_log_append_kwargs(
+    *,
+    request: Stage4PassEpisodeLogRequest,
+    selection_reason: str,
+    verdict_reason: str,
+    gate_semantics: dict | None,
+    fix_pack: dict | None,
+    runtime_advisory: str,
+    retry_directives: str,
+) -> dict[str, object]:
+    gate_payload = dict(gate_semantics or {}) if isinstance(gate_semantics, dict) else {}
+    return {
+        **build_pass_episode_log_payload(request=request),
+        "selection_reason": str(selection_reason or ""),
+        "verdict_reason": str(verdict_reason or ""),
+        "gate_semantics": gate_payload,
+        "fix_pack": dict(fix_pack or {}),
+        "runtime_advisory": str(runtime_advisory or ""),
+        "retry_directives": str(retry_directives or ""),
+        "carryover_contracts": build_stage4_episode_log_carryover_contracts(gate_semantics=gate_payload),
+    }
+
+
+def build_reject_episode_log_append_kwargs(
+    *,
+    request: Stage4RejectEpisodeLogRequest,
+    selection_reason: str,
+    verdict_reason: str,
+    gate_semantics: dict | None,
+    fix_pack: dict | None,
+    runtime_advisory: str,
+    retry_directives: str,
+) -> dict[str, object]:
+    gate_payload = dict(gate_semantics or {}) if isinstance(gate_semantics, dict) else {}
+    reject_artifact_meta = request.reject_artifact_meta or {}
+    selection_artifact_meta = request.selection_artifact_meta or {}
+    return {
+        "ep_num": request.ep_num,
+        "round_num": request.round_num,
+        "director_result": request.sink_source,
+        "initial_verdict": request.initial_verdict,
+        "initial_score": request.initial_score,
+        "final_verdict": request.final_verdict,
+        "final_score": request.final_score,
+        "is_patch": request.is_patch,
+        "patch_fallback": request.is_patch_fallback,
+        "tot_used": request.tot_used,
+        "mad_used": request.mad_used,
+        "asp_used": request.asp_used,
+        "model": request.model,
+        "reject_bucket": request.reject_bucket,
+        "validation_warnings": request.validation_warnings,
+        "feedback_provenance": dict(request.feedback_provenance or {}),
+        "patch_trace": request.patch_trace,
+        "arc_num": request.arc_num,
+        "candidate_key": str(reject_artifact_meta.get("candidate_key", "") or ""),
+        "content_hash": str(reject_artifact_meta.get("content_hash", "") or ""),
+        "artifact_path": str(reject_artifact_meta.get("artifact_path", "") or ""),
+        "selection_candidate_key": str(selection_artifact_meta.get("candidate_key", "") or ""),
+        "selection_content_hash": str(selection_artifact_meta.get("content_hash", "") or ""),
+        "selection_artifact_path": str(selection_artifact_meta.get("artifact_path", "") or ""),
+        "attempt_key": str(request.attempt_key or ""),
+        "selection_reason": str(selection_reason or ""),
+        "verdict_reason": str(verdict_reason or ""),
+        "gate_semantics": gate_payload,
+        "fix_pack": dict(fix_pack or {}),
+        "runtime_advisory": str(runtime_advisory or ""),
+        "retry_directives": str(retry_directives or ""),
+        "carryover_contracts": build_stage4_episode_log_carryover_contracts(gate_semantics=gate_payload),
     }
 
 

@@ -1208,12 +1208,13 @@ class Stage2Orchestrator:
             "preflight/four-phase tactical generation 대기...",
             stage="stage2",
             component="single_arc_attempt",
-            ep_num=current_ep_start,
+            ep_num=global_arc_no,
             arc_num=global_arc_no,
             event_kind="heartbeat",
             meta={
                 "attempt": attempt + 1,
                 "max_attempts": max_attempts,
+                "current_ep_start": current_ep_start,
                 "wait_state": "preflight_four_phase_generation",
             },
         )
@@ -1250,11 +1251,12 @@ class Stage2Orchestrator:
             f"generation={attempt_state['generation_method']} · validation 진입",
             stage="stage2",
             component="single_arc_attempt",
-            ep_num=current_ep_start,
+            ep_num=global_arc_no,
             arc_num=global_arc_no,
             event_kind="progress",
             meta={
                 "attempt": attempt + 1,
+                "current_ep_start": current_ep_start,
                 "generation_method": attempt_state["generation_method"],
                 "four_phase_passed": bool(attempt_state["four_phase_passed"]),
                 "draft_validator_passed": bool(attempt_state["draft_validator_passed"]),

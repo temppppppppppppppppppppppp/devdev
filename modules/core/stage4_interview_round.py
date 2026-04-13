@@ -32,6 +32,10 @@ from modules.core.stage4_postselect_runtime import (
     Stage4PostSelectRuntime,
     _emit_stage4_ui_log,
 )
+from modules.core.stage4_raw_evidence import (
+    build_stage4_raw_rationale_record,
+    persist_stage4_raw_rationale_records,
+)
 from modules.core.stage4_reject_runtime import Stage4RejectRuntime
 from modules.core.stage4_retry_runtime import Stage4RetryRuntime
 
@@ -180,6 +184,18 @@ class _PassResultLoggingPayload:
 
 
 @dataclass
+class _PassDecisionSurface:
+    selection_reason: str
+    verdict_reason: str
+    decision_reason: str
+    open_review: str
+    action_items: list
+    fix_scope: str
+    firewall_triggered: bool
+    firewall_reason: str
+
+
+@dataclass
 class _VerdictProcessingPayload:
     pass_result: object | None
     director_feedback: str
@@ -219,6 +235,273 @@ class _Stage4AttemptPreludePayload:
     artifact_meta: dict[str, str]
 
 
+@dataclass
+class _Stage4AttemptContractPacket:
+    advisory_flags: dict[str, object]
+    gate_semantics: dict[str, object]
+    fix_pack: dict[str, object]
+    repair_contract: dict[str, object]
+    scope_authority: dict[str, object]
+    retry_budget_axes: dict[str, object]
+    verdict_layers: dict[str, object]
+
+
+def _build_stage4_pass_carryover_linkage(previous_attempt: dict | None) -> dict[str, object]:
+    previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+    payload: dict[str, object] = {}
+    prior_conflict = previous_attempt.get("conflict_contract")
+    if isinstance(prior_conflict, dict) and prior_conflict:
+        payload["conflict_resolution_linkage"] = {
+            "resolved_from": "prior_attempt_conflict",
+            "original_contract_type": str(prior_conflict.get("contract_type", "") or ""),
+            "conflict_count": len(prior_conflict.get("conflicts", []) or []),
+        }
+    prior_reuse = previous_attempt.get("reuse_contract")
+    if isinstance(prior_reuse, dict) and prior_reuse:
+        payload["reuse_contract"] = dict(prior_reuse)
+    return payload
+
+
+def _build_stage4_pass_decision_surface(
+    *,
+    director_result: dict | None,
+    trace_director_result: dict | None,
+    fallback_reason: str,
+) -> _PassDecisionSurface:
+    director_payload = director_result if isinstance(director_result, dict) else {}
+    trace_payload = trace_director_result if isinstance(trace_director_result, dict) else {}
+    has_trace = bool(trace_payload)
+    selection_reason = str(
+        (trace_payload.get("selection_reason") or director_payload.get("selection_reason", ""))
+        if has_trace
+        else director_payload.get("selection_reason", "")
+    )
+    verdict_reason = str(
+        (trace_payload.get("verdict_reason") or fallback_reason or selection_reason)
+        if has_trace
+        else (fallback_reason or selection_reason)
+    )
+    decision_reason = str((trace_payload.get("verdict_reason") or fallback_reason) if has_trace else fallback_reason)
+    open_review = str(trace_payload.get("open_review", "") if has_trace else director_payload.get("open_review", ""))
+    action_items = list(
+        trace_payload.get("action_items", []) if has_trace else director_payload.get("action_items", [])
+    )
+    fix_scope = str(trace_payload.get("fix_scope", "") if has_trace else director_payload.get("fix_scope", ""))
+    firewall_triggered = bool(
+        trace_payload.get("firewall_triggered") if has_trace else director_payload.get("firewall_triggered")
+    )
+    firewall_reason = str(
+        trace_payload.get("firewall_reason", "") if has_trace else director_payload.get("firewall_reason", "")
+    )
+    return _PassDecisionSurface(
+        selection_reason=selection_reason,
+        verdict_reason=verdict_reason,
+        decision_reason=decision_reason,
+        open_review=open_review,
+        action_items=action_items,
+        fix_scope=fix_scope,
+        firewall_triggered=firewall_triggered,
+        firewall_reason=firewall_reason,
+    )
+
+
+def _build_stage4_pass_episode_log_kwargs(
+    *,
+    owner,
+    ep_num: int,
+    round_num: int,
+    director_result: dict,
+    trace_director_result: dict | None,
+    director_feedback: str,
+    initial_verdict: str,
+    initial_score: int,
+    final_verdict: str,
+    final_score: int,
+    is_patch: bool,
+    is_patch_fallback: bool,
+    tot_used: bool,
+    mad_used: bool,
+    asp_manuscript: str,
+    chief_writer,
+    validation_warnings: list[str],
+    final_warnings: list[str],
+    patch_trace: dict | None,
+    logging_payload: _PassResultLoggingPayload,
+    selection_artifact_meta: dict,
+    arc_num: int,
+) -> dict[str, object]:
+    trace_verdict_reason = None
+    if isinstance(trace_director_result, dict):
+        trace_verdict_reason = trace_director_result.get("verdict_reason")
+    return s4_episode_logging.build_pass_episode_log_append_kwargs(
+        request=s4_episode_logging.Stage4PassEpisodeLogRequest(
+            ep_num=ep_num,
+            round_num=round_num,
+            arc_num=arc_num,
+            director_result=director_result,
+            director_feedback=director_feedback,
+            trace_verdict_reason=trace_verdict_reason,
+            initial_verdict=initial_verdict,
+            initial_score=initial_score,
+            final_verdict=final_verdict,
+            final_score=final_score,
+            is_patch=is_patch,
+            is_patch_fallback=is_patch_fallback,
+            tot_used=tot_used,
+            mad_used=mad_used,
+            asp_used=bool(asp_manuscript),
+            model_tier=getattr(chief_writer, "model_tier", None),
+            validation_warnings=validation_warnings,
+            final_warnings=final_warnings,
+            patch_trace=patch_trace,
+            session_runtime_advisory=logging_payload.session_runtime_advisory,
+            session_retry_directives=logging_payload.session_retry_directives,
+            log_artifact_meta=logging_payload.log_artifact_meta,
+            selection_artifact_meta=selection_artifact_meta,
+            session_id=resolve_logging_session_id(getattr(owner.ctx, "current_project", None)),
+        ),
+        selection_reason=logging_payload.session_selection_reason,
+        verdict_reason=logging_payload.session_verdict_reason,
+        gate_semantics=logging_payload.session_gate_semantics,
+        fix_pack=dict(logging_payload.session_fix_pack or {}),
+        runtime_advisory=logging_payload.session_runtime_advisory,
+        retry_directives=logging_payload.session_retry_directives,
+    )
+
+
+def _build_stage4_pass_session_decision_kwargs(
+    *,
+    owner,
+    next_ep: int,
+    round_num: int,
+    arc_num: int,
+    final_verdict: str,
+    final_score: int,
+    selected: str,
+    error_category: str,
+    attempt_key: str,
+    selection_artifact_meta: dict,
+    initial_verdict: str,
+    initial_score: int,
+    decision_surface: _PassDecisionSurface,
+    logging_payload: _PassResultLoggingPayload,
+) -> dict[str, object]:
+    session_fix_pack = dict(
+        logging_payload.session_fix_pack or owner._build_fix_pack_payload(logging_payload.session_gate_semantics) or {}
+    )
+    return owner._build_stage4_session_decision_kwargs(
+        next_ep=next_ep,
+        round_num=round_num,
+        arc_num=arc_num,
+        verdict=final_verdict,
+        score=final_score,
+        selected=selected,
+        error_category=error_category,
+        reason=decision_surface.decision_reason,
+        fix_scope=decision_surface.fix_scope,
+        open_review=decision_surface.open_review,
+        action_items=decision_surface.action_items,
+        attempt_key=attempt_key,
+        artifact_meta=logging_payload.log_artifact_meta,
+        selection_artifact_meta=selection_artifact_meta,
+        initial_verdict=initial_verdict,
+        initial_score=initial_score,
+        selection_reason=logging_payload.session_selection_reason,
+        verdict_reason=logging_payload.session_verdict_reason,
+        session_gate_semantics=logging_payload.session_gate_semantics,
+        fix_pack=session_fix_pack,
+        retry_budget_axes=dict(getattr(owner, "_last_retry_budget_axes", {}) or {}),
+        runtime_advisory=logging_payload.session_runtime_advisory,
+        retry_directives=logging_payload.session_retry_directives,
+        firewall_triggered=decision_surface.firewall_triggered,
+        firewall_reason=decision_surface.firewall_reason,
+    )
+
+
+def _build_stage4_attempt_contract_projection(
+    *,
+    contract_packet: _Stage4AttemptContractPacket,
+    fix_scope_fallback: str | None = None,
+    empty_fix_scope_as_none: bool = False,
+    include_director_quality_passed: bool = False,
+    include_strong_advisory_escalation: bool = False,
+) -> dict[str, object]:
+    resolved_fix_scope = str(contract_packet.scope_authority.get("fix_scope", "") or fix_scope_fallback or "").strip()
+    projection: dict[str, object] = {
+        "director_verdict": str(contract_packet.gate_semantics.get("director_verdict", "") or ""),
+        "gate_basis": str(contract_packet.gate_semantics.get("gate_basis", "") or ""),
+        "repair_scope": str(contract_packet.gate_semantics.get("repair_scope", "") or ""),
+        "fix_scope": resolved_fix_scope or (None if empty_fix_scope_as_none else ""),
+        "authoritative_fix_scope": str(contract_packet.scope_authority.get("authoritative_fix_scope", "") or ""),
+        "fix_pack": contract_packet.fix_pack,
+        "repair_contract": contract_packet.repair_contract,
+        "scope_authority": contract_packet.scope_authority,
+        "retry_budget_axes": contract_packet.retry_budget_axes,
+        "downstream_override_applied": bool(contract_packet.verdict_layers.get("downstream_override_applied", False)),
+        "primary_failure_layer": str(contract_packet.verdict_layers.get("primary_failure_layer", "") or ""),
+    }
+    if include_director_quality_passed:
+        projection["director_quality_passed"] = bool(
+            contract_packet.verdict_layers.get("director_quality_passed", False)
+        )
+    if include_strong_advisory_escalation:
+        strong_advisory = contract_packet.gate_semantics.get("strong_advisory_escalation")
+        if isinstance(strong_advisory, dict):
+            projection["strong_advisory_escalation"] = strong_advisory
+    return projection
+
+
+def _build_stage4_session_contract_projection(
+    *,
+    session_gate_semantics: dict | None,
+    fix_pack: dict | None,
+    retry_budget_axes: dict | None,
+) -> dict[str, object]:
+    gate_semantics = session_gate_semantics if isinstance(session_gate_semantics, dict) else {}
+    projection: dict[str, object] = {
+        "director_verdict": str(gate_semantics.get("director_verdict", "") or ""),
+        "gate_basis": str(gate_semantics.get("gate_basis", "") or ""),
+        "repair_scope": str(gate_semantics.get("repair_scope", "") or ""),
+        "fix_pack": dict(fix_pack or {}),
+        "retry_budget_axes": dict(retry_budget_axes or {}),
+        "authoritative_fix_scope": str(gate_semantics.get("authoritative_fix_scope", "") or ""),
+        "authoritative_fix_scope_violation": (
+            dict(gate_semantics.get("authoritative_fix_scope_violation") or {})
+            if isinstance(gate_semantics.get("authoritative_fix_scope_violation"), dict)
+            else None
+        ),
+        "scope_origin": (
+            dict(gate_semantics.get("scope_origin") or {})
+            if isinstance(gate_semantics.get("scope_origin"), dict)
+            else None
+        ),
+        "repair_contract": (
+            dict(gate_semantics.get("repair_contract") or {})
+            if isinstance(gate_semantics.get("repair_contract"), dict)
+            else None
+        ),
+        "scope_authority": (
+            dict(gate_semantics.get("scope_authority") or {})
+            if isinstance(gate_semantics.get("scope_authority"), dict)
+            else None
+        ),
+        "conflict_resolution_linkage": (
+            dict(gate_semantics.get("conflict_resolution_linkage") or {})
+            if isinstance(gate_semantics.get("conflict_resolution_linkage"), dict)
+            else None
+        ),
+        "reuse_contract": (
+            dict(gate_semantics.get("reuse_contract") or {})
+            if isinstance(gate_semantics.get("reuse_contract"), dict)
+            else None
+        ),
+    }
+    strong_advisory = gate_semantics.get("strong_advisory_escalation")
+    if isinstance(strong_advisory, dict):
+        projection["strong_advisory_escalation"] = dict(strong_advisory)
+    return projection
+
+
 def _build_stage4_prompt_version() -> str | None:
     try:
         from modules.core.prompt_loader import PromptLoader
@@ -227,6 +510,238 @@ def _build_stage4_prompt_version() -> str | None:
     except Exception as _e:
         logging.debug("[Stage4] prompt_version 계산 실패 (비차단): %s", _e)
         return None
+
+
+def _build_stage4_raw_rationale_records(
+    *,
+    attempt_key: str,
+    ep_num: int,
+    director_result: dict | None,
+    raw_advisory_payload: dict | None,
+    selection_advisory: dict | None = None,
+    selection_surface: dict | None = None,
+) -> list[dict[str, object]]:
+    records: list[dict[str, object]] = []
+    director_payload = director_result if isinstance(director_result, dict) else {}
+    director_thinking = str(director_payload.get("_director_thinking", "") or "").strip()
+    if director_thinking:
+        record = build_stage4_raw_rationale_record(
+            attempt_key=attempt_key,
+            ep_num=ep_num,
+            payload_kind="director_thinking",
+            payload=director_thinking,
+        )
+        if record:
+            records.append(record)
+    if isinstance(raw_advisory_payload, dict) and raw_advisory_payload:
+        record = build_stage4_raw_rationale_record(
+            attempt_key=attempt_key,
+            ep_num=ep_num,
+            payload_kind="advisory_warnings_raw",
+            payload=raw_advisory_payload,
+        )
+        if record:
+            records.append(record)
+    advisory_payload = selection_advisory if isinstance(selection_advisory, dict) else {}
+    selection_contract_record = _build_stage4_contract_snapshot_raw_record(
+        attempt_key=attempt_key,
+        ep_num=ep_num,
+        gate_semantics=advisory_payload.get("gate_semantics"),
+        fix_pack=advisory_payload.get("fix_pack"),
+        repair_contract=advisory_payload.get("repair_contract"),
+        scope_authority=advisory_payload.get("scope_authority"),
+        retry_budget_axes=advisory_payload.get("retry_budget_axes"),
+        payload_kind="selection_contract_snapshot_raw",
+        extra_payload={
+            "patch_context": copy.deepcopy(advisory_payload.get("patch_context"))
+            if isinstance(advisory_payload.get("patch_context"), dict)
+            else None,
+        },
+    )
+    if selection_contract_record:
+        records.append(selection_contract_record)
+    selection_surface_payload = selection_surface if isinstance(selection_surface, dict) else {}
+    selection_surface_record = _build_stage4_selection_surface_raw_record(
+        attempt_key=attempt_key,
+        ep_num=ep_num,
+        selection_surface=selection_surface_payload,
+    )
+    if selection_surface_record:
+        records.append(selection_surface_record)
+    return records
+
+
+def _build_stage4_feedback_provenance_raw_record(
+    *,
+    attempt_key: str,
+    ep_num: int,
+    feedback_provenance: dict | None,
+) -> dict[str, object] | None:
+    if not isinstance(feedback_provenance, dict):
+        return None
+    normalized_payload = {
+        str(key): str(value or "") for key, value in feedback_provenance.items() if str(key or "").strip()
+    }
+    if not any(str(value or "").strip() for value in normalized_payload.values()):
+        return None
+    return build_stage4_raw_rationale_record(
+        attempt_key=attempt_key,
+        ep_num=ep_num,
+        payload_kind="feedback_provenance_raw",
+        payload=normalized_payload,
+    )
+
+
+def _build_stage4_patch_trace_raw_record(
+    *,
+    attempt_key: str,
+    ep_num: int,
+    patch_trace: dict | None,
+) -> dict[str, object] | None:
+    if not isinstance(patch_trace, dict):
+        return None
+    normalized_payload = {
+        str(key): value
+        for key, value in patch_trace.items()
+        if str(key or "").strip() and value not in ("", None, [], {})
+    }
+    if not normalized_payload:
+        return None
+    return build_stage4_raw_rationale_record(
+        attempt_key=attempt_key,
+        ep_num=ep_num,
+        payload_kind="patch_trace_raw",
+        payload=normalized_payload,
+    )
+
+
+def _build_stage4_contract_snapshot_raw_record(
+    *,
+    attempt_key: str,
+    ep_num: int,
+    gate_semantics: dict | None,
+    fix_pack: dict | None,
+    repair_contract: dict | None,
+    scope_authority: dict | None,
+    retry_budget_axes: dict | None,
+    payload_kind: str = "contract_snapshot_raw",
+    extra_payload: dict[str, object] | None = None,
+) -> dict[str, object] | None:
+    payload: dict[str, object] = {}
+    if isinstance(gate_semantics, dict) and gate_semantics:
+        payload["gate_semantics"] = copy.deepcopy(gate_semantics)
+    if isinstance(fix_pack, dict) and fix_pack:
+        payload["fix_pack"] = copy.deepcopy(fix_pack)
+    if isinstance(repair_contract, dict) and repair_contract:
+        payload["repair_contract"] = copy.deepcopy(repair_contract)
+    if isinstance(scope_authority, dict) and scope_authority:
+        payload["scope_authority"] = copy.deepcopy(scope_authority)
+    if isinstance(retry_budget_axes, dict) and retry_budget_axes:
+        payload["retry_budget_axes"] = copy.deepcopy(retry_budget_axes)
+    if isinstance(extra_payload, dict):
+        for key, value in extra_payload.items():
+            if not str(key or "").strip() or value in ("", None, [], {}):
+                continue
+            payload[str(key)] = copy.deepcopy(value)
+    if not payload:
+        return None
+    return build_stage4_raw_rationale_record(
+        attempt_key=attempt_key,
+        ep_num=ep_num,
+        payload_kind=str(payload_kind or "contract_snapshot_raw"),
+        payload=payload,
+        payload_meta={
+            "record_family": "contract_snapshot",
+            "surface": str(payload_kind or "contract_snapshot_raw"),
+        },
+    )
+
+
+def _build_stage4_selection_surface_raw_record(
+    *,
+    attempt_key: str,
+    ep_num: int,
+    selection_surface: dict | None,
+) -> dict[str, object] | None:
+    if not isinstance(selection_surface, dict):
+        return None
+    payload: dict[str, object] = {}
+    for key in (
+        "selected_label",
+        "selected_strategy",
+        "verdict",
+        "score",
+        "selection_reason",
+        "verdict_reason",
+        "fix_scope",
+        "candidate_count",
+        "pre_firewall_score",
+        "firewall_triggered",
+        "firewall_reason",
+        "candidate_key",
+        "content_hash",
+        "artifact_path",
+    ):
+        value = selection_surface.get(key)
+        if value in ("", None, [], {}):
+            continue
+        payload[key] = copy.deepcopy(value)
+    advisory_warnings = selection_surface.get("advisory_warnings")
+    if isinstance(advisory_warnings, dict) and advisory_warnings:
+        payload["advisory_warnings"] = copy.deepcopy(advisory_warnings)
+    if not payload:
+        return None
+    return build_stage4_raw_rationale_record(
+        attempt_key=attempt_key,
+        ep_num=ep_num,
+        payload_kind="selection_surface_raw",
+        payload=payload,
+        payload_meta={
+            "record_family": "selection_surface",
+            "surface": "selection_surface_raw",
+        },
+    )
+
+
+def _build_stage4_attempt_raw_evidence_records(
+    *,
+    attempt_key: str,
+    ep_num: int,
+    feedback_provenance: dict | None,
+    patch_trace: dict | None,
+    gate_semantics: dict | None = None,
+    fix_pack: dict | None = None,
+    repair_contract: dict | None = None,
+    scope_authority: dict | None = None,
+    retry_budget_axes: dict | None = None,
+) -> list[dict[str, object]]:
+    records: list[dict[str, object]] = []
+    feedback_record = _build_stage4_feedback_provenance_raw_record(
+        attempt_key=attempt_key,
+        ep_num=ep_num,
+        feedback_provenance=feedback_provenance,
+    )
+    if feedback_record:
+        records.append(feedback_record)
+    patch_trace_record = _build_stage4_patch_trace_raw_record(
+        attempt_key=attempt_key,
+        ep_num=ep_num,
+        patch_trace=patch_trace,
+    )
+    if patch_trace_record:
+        records.append(patch_trace_record)
+    contract_snapshot_record = _build_stage4_contract_snapshot_raw_record(
+        attempt_key=attempt_key,
+        ep_num=ep_num,
+        gate_semantics=gate_semantics,
+        fix_pack=fix_pack,
+        repair_contract=repair_contract,
+        scope_authority=scope_authority,
+        retry_budget_axes=retry_budget_axes,
+    )
+    if contract_snapshot_record:
+        records.append(contract_snapshot_record)
+    return records
 
 
 def _ns4_extract_time_markers(arc_data: dict) -> list:
@@ -456,6 +971,65 @@ class Stage4InterviewRound:
                 str(artifact_path or "-"),
             ),
         )
+
+    @staticmethod
+    def _build_stage4_session_decision_kwargs(
+        *,
+        next_ep: int,
+        round_num: int,
+        arc_num: int,
+        verdict: str,
+        score: int,
+        selected: str,
+        error_category: str,
+        reason: str,
+        fix_scope: str,
+        open_review: str,
+        action_items: list | None,
+        attempt_key: str,
+        artifact_meta: dict | None = None,
+        selection_artifact_meta: dict | None = None,
+        initial_verdict: str = "",
+        initial_score: int = 0,
+        selection_reason: str = "",
+        verdict_reason: str = "",
+        session_gate_semantics: dict | None = None,
+        fix_pack: dict | None = None,
+        retry_budget_axes: dict | None = None,
+        runtime_advisory: str = "",
+        retry_directives: str = "",
+        firewall_triggered: bool = False,
+        firewall_reason: str = "",
+    ) -> dict:
+        return {
+            "next_ep": next_ep,
+            "round_num": round_num,
+            "arc_num": arc_num,
+            "verdict": str(verdict or ""),
+            "score": int(score or 0),
+            "selected": str(selected or ""),
+            "error_category": str(error_category or ""),
+            "reason": reason,
+            "fix_scope": str(fix_scope or ""),
+            "open_review": open_review,
+            "action_items": list(action_items or []),
+            "attempt_key": str(attempt_key or ""),
+            "artifact_meta": artifact_meta,
+            "selection_artifact_meta": selection_artifact_meta,
+            "initial_verdict": str(initial_verdict or ""),
+            "initial_score": int(initial_score or 0),
+            "selection_reason": str(selection_reason or ""),
+            "verdict_reason": str(verdict_reason or ""),
+            "runtime_advisory": runtime_advisory,
+            "retry_directives": retry_directives,
+            "firewall_triggered": bool(firewall_triggered),
+            "firewall_reason": str(firewall_reason or ""),
+            **_build_stage4_session_contract_projection(
+                session_gate_semantics=session_gate_semantics,
+                fix_pack=fix_pack,
+                retry_budget_axes=retry_budget_axes,
+            ),
+        }
 
     def _log_session_decision(
         self,
@@ -817,14 +1391,34 @@ class Stage4InterviewRound:
         ]
         merged_feedback = "\n".join(section for section in merged_sections if section)
 
-        return {
-            "merged_feedback": merged_feedback,
-            "system_feedback": system_feedback,
-            "evidence_summary": evidence_summary,
-            "director_feedback_text": director_feedback_text,
-            "runtime_advisory": runtime_advisory,
-            "retry_directives": retry_directives,
-        }
+        return self._build_stage4_feedback_provenance_payload(
+            director_feedback=director_feedback_text,
+            runtime_advisory=runtime_advisory,
+            retry_directives=retry_directives,
+            merged_feedback=merged_feedback,
+            system_feedback=system_feedback,
+            evidence_summary=evidence_summary,
+        )
+
+    @staticmethod
+    def _build_stage4_feedback_provenance_payload(
+        *,
+        director_feedback: str,
+        runtime_advisory: str,
+        retry_directives: str,
+        merged_feedback: str = "",
+        system_feedback: str = "",
+        evidence_summary: str = "",
+    ) -> dict[str, str]:
+        payload = s4_episode_logging.build_stage4_feedback_provenance(
+            director_feedback=director_feedback,
+            runtime_advisory=runtime_advisory,
+            retry_directives=retry_directives,
+        )
+        payload["merged_feedback"] = str(merged_feedback or "")
+        payload["system_feedback"] = str(system_feedback or "")
+        payload["evidence_summary"] = str(evidence_summary or "")
+        return payload
 
     @staticmethod
     def _compact_contradiction_detail_lines(
@@ -3373,33 +3967,16 @@ class Stage4InterviewRound:
     ) -> dict[str, str]:
         selection_artifact_meta = normalize_artifact_meta(None)
         raw_advisory_payload = None
+        selection_advisory: dict[str, object] | None = None
+        selection_kwargs: dict[str, object] | None = None
         try:
-            selection_advisory = dict(advisory_summary or {})
-            gate_semantics = self._build_gate_semantics_payload(director_result)
-            if gate_semantics:
-                selection_advisory["gate_semantics"] = gate_semantics
-            fix_pack_payload = self._build_fix_pack_payload(director_result)
-            if fix_pack_payload:
-                selection_advisory["fix_pack"] = fix_pack_payload
-            repair_contract_payload = self._build_repair_contract_payload_from_parts(
-                gate_semantics=gate_semantics,
-                fix_pack=fix_pack_payload,
-                source=director_result,
+            selection_advisory = self._build_stage4_selection_advisory_payload(
+                advisory_summary=advisory_summary,
+                director_result=director_result,
+                is_patch=is_patch,
+                is_patch_fallback=is_patch_fallback,
+                prev_score=prev_score,
             )
-            if repair_contract_payload:
-                selection_advisory["repair_contract"] = repair_contract_payload
-            scope_authority_payload = self._build_scope_authority_payload_from_parts(
-                gate_semantics=gate_semantics,
-                source=director_result,
-            )
-            if scope_authority_payload:
-                selection_advisory["scope_authority"] = scope_authority_payload
-            if is_patch:
-                tag = "patch-fallback" if is_patch_fallback else "patch"
-                selection_advisory["patch_context"] = {
-                    "tag": tag,
-                    "score": prev_score,
-                }
             raw_advisory_payload = self._build_raw_advisory_payload(
                 validation_results,
                 selection_summary=selection_advisory,
@@ -3426,56 +4003,93 @@ class Stage4InterviewRound:
                     payload=selected_candidate.get("manuscript", ""),
                 )
             )
-            self.ctx.current_project.db.save_director_selection(
+            selection_kwargs = self._build_stage4_director_selection_kwargs(
                 ep_num=next_ep,
                 round_num=round_num,
                 selected_label=selected,
                 selected_strategy=selected_strategy,
                 verdict=verdict,
-                stage=4,
                 score=score,
                 selection_reason=selection_reason,
                 candidate_count=len(candidates) if candidates else 0,
-                fix_scope=director_result.get("fix_scope", ""),
+                director_result=director_result,
                 advisory_warnings=selection_advisory or None,
                 verdict_reason=verdict_reason,
-                pre_firewall_score=director_result.get("pre_firewall_score", score),
-                firewall_triggered=bool(director_result.get("firewall_triggered")),
-                firewall_reason=director_result.get("firewall_reason", ""),
                 attempt_key=attempt_key,
-                candidate_key=selection_artifact_meta["candidate_key"],
-                content_hash=selection_artifact_meta["content_hash"],
-                artifact_path=selection_artifact_meta["artifact_path"],
-                director_thinking=director_result.get("_director_thinking", ""),
+                selection_artifact_meta=selection_artifact_meta,
             )
+            self.ctx.current_project.db.save_director_selection(**selection_kwargs)
         except Exception as exc:
             logging.warning(f"[D-4] Director 선택 기록 실패 (비차단): {exc!s:.100}")
         # adjunct raw rationale: director thinking + advisory warnings
         try:
             _db_adj = getattr(self.ctx.current_project, "db", None)
-            if _db_adj and hasattr(_db_adj, "save_attempt_raw_rationale") and attempt_key:
-                _dt = director_result.get("_director_thinking", "") if isinstance(director_result, dict) else ""
-                if _dt:
-                    _db_adj.save_attempt_raw_rationale(
+            if attempt_key:
+                persist_stage4_raw_rationale_records(
+                    project_db=_db_adj,
+                    records=_build_stage4_raw_rationale_records(
                         attempt_key=attempt_key,
-                        stage=4,
                         ep_num=next_ep,
-                        payload_kind="director_thinking",
-                        payload=_dt,
-                    )
-                if isinstance(raw_advisory_payload, dict) and raw_advisory_payload:
-                    import json as _json
-
-                    _db_adj.save_attempt_raw_rationale(
-                        attempt_key=attempt_key,
-                        stage=4,
-                        ep_num=next_ep,
-                        payload_kind="advisory_warnings_raw",
-                        payload=_json.dumps(raw_advisory_payload, ensure_ascii=False),
-                    )
+                        director_result=director_result,
+                        raw_advisory_payload=raw_advisory_payload,
+                        selection_advisory=selection_advisory,
+                        selection_surface=selection_kwargs,
+                    ),
+                    log_prefix="Stage4Selection",
+                )
         except Exception:
             pass
         return selection_artifact_meta
+
+    def _build_stage4_director_selection_kwargs(
+        self,
+        *,
+        ep_num: int,
+        round_num: int,
+        selected_label: str,
+        selected_strategy: str,
+        verdict: str,
+        score: int,
+        selection_reason: str,
+        candidate_count: int,
+        director_result: dict | None,
+        advisory_warnings: dict | None,
+        verdict_reason: str,
+        attempt_key: str,
+        selection_artifact_meta: dict[str, str],
+    ) -> dict[str, object]:
+        director_payload = director_result if isinstance(director_result, dict) else {}
+        surface_kwargs = self._build_stage4_selection_rationale_update_kwargs(
+            attempt_key=attempt_key,
+            trace_director_result=None,
+            director_result=director_payload,
+            selection_reason=selection_reason,
+            verdict_reason=verdict_reason,
+            advisory_warnings=advisory_warnings,
+            prefer_authoritative_scope=False,
+        )
+        return {
+            "ep_num": ep_num,
+            "round_num": round_num,
+            "selected_label": selected_label,
+            "selected_strategy": selected_strategy,
+            "verdict": verdict,
+            "stage": 4,
+            "score": score,
+            "selection_reason": surface_kwargs["selection_reason"],
+            "candidate_count": candidate_count,
+            "fix_scope": surface_kwargs["fix_scope"],
+            "advisory_warnings": surface_kwargs["advisory_warnings"],
+            "verdict_reason": surface_kwargs["verdict_reason"],
+            "pre_firewall_score": director_payload.get("pre_firewall_score", score),
+            "firewall_triggered": bool(director_payload.get("firewall_triggered")),
+            "firewall_reason": director_payload.get("firewall_reason", ""),
+            "attempt_key": attempt_key,
+            "candidate_key": selection_artifact_meta["candidate_key"],
+            "content_hash": selection_artifact_meta["content_hash"],
+            "artifact_path": selection_artifact_meta["artifact_path"],
+            "director_thinking": director_payload.get("_director_thinking", ""),
+        }
 
     @staticmethod
     def _extract_blueprint_npc_roster(blueprint: dict) -> list[str]:
@@ -3777,6 +4391,20 @@ class Stage4InterviewRound:
         )
         final_score = trace_meta.get("final_score", initial_score) if isinstance(trace_meta, dict) else initial_score
         trace_patch_trace = trace_meta.get("patch_trace", {}) if isinstance(trace_meta, dict) else {}
+        trace_contract_source = dict(trace_director_result) if isinstance(trace_director_result, dict) else {}
+        trace_patch_trace, trace_fix_pack = self._resolve_stage4_patch_contract_payloads(
+            director_result=trace_contract_source,
+            patch_trace=trace_patch_trace,
+        )
+        if isinstance(trace_director_result, dict) and trace_fix_pack:
+            trace_director_result = dict(trace_director_result)
+            existing_fix_pack = trace_director_result.get("fix_pack")
+            if isinstance(existing_fix_pack, dict) and existing_fix_pack:
+                merged_fix_pack = dict(trace_fix_pack)
+                merged_fix_pack.update(existing_fix_pack)
+                trace_director_result["fix_pack"] = merged_fix_pack
+            else:
+                trace_director_result["fix_pack"] = dict(trace_fix_pack)
         validation_warnings = self._collect_validation_warning_lines(validation_results, limit=20)
         return _RoundOutcomeTracePayload(
             trace_director_result=trace_director_result,
@@ -4102,11 +4730,9 @@ class Stage4InterviewRound:
             director_result=director_result,
             selection_reason=logging_payload.session_selection_reason,
             verdict_reason=logging_payload.session_verdict_reason,
-            advisory_warnings=self._build_final_selection_advisory_payload(
-                gate_semantics=logging_payload.session_gate_semantics,
-                fix_pack=dict(logging_payload.session_fix_pack or {}),
-                retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
-            ),
+            gate_semantics=logging_payload.session_gate_semantics,
+            fix_pack=dict(logging_payload.session_fix_pack or {}),
+            retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
         )
         self._emit_pass_result_logs(
             next_ep=next_ep,
@@ -4183,34 +4809,18 @@ class Stage4InterviewRound:
         )
         if _session_fix_pack and not self._normalize_fix_pack(_logging_source.get("fix_pack")):
             _logging_source["fix_pack"] = dict(_session_fix_pack)
-        session_selection_reason = str(
-            (_logging_source.get("selection_reason") or director_result.get("selection_reason", ""))
-            if _logging_source
-            else director_result.get("selection_reason", "")
-        )
-        session_verdict_reason = str(
-            (_logging_source.get("verdict_reason") or reason or session_selection_reason)
-            if _logging_source
-            else (reason or session_selection_reason)
+        decision_surface = _build_stage4_pass_decision_surface(
+            director_result=director_result,
+            trace_director_result=trace_director_result if isinstance(trace_director_result, dict) else None,
+            fallback_reason=reason,
         )
         _gate = self._build_gate_semantics_payload(_logging_source)
         # [SSS-T2] PASS-side carryover linkage — conflict resolution and reuse contract
-        _prev_attempt = getattr(pass_result, "previous_attempt", None)
-        if isinstance(_prev_attempt, dict):
-            _prior_conflict = _prev_attempt.get("conflict_contract")
-            if isinstance(_prior_conflict, dict) and _prior_conflict:
-                _gate["conflict_resolution_linkage"] = {
-                    "resolved_from": "prior_attempt_conflict",
-                    "original_contract_type": str(_prior_conflict.get("contract_type", "")),
-                    "conflict_count": len(_prior_conflict.get("conflicts", []) or []),
-                }
-            _prior_reuse = _prev_attempt.get("reuse_contract")
-            if isinstance(_prior_reuse, dict) and _prior_reuse:
-                _gate["reuse_contract"] = dict(_prior_reuse)
+        _gate.update(_build_stage4_pass_carryover_linkage(getattr(pass_result, "previous_attempt", None)))
         return _PassResultLoggingPayload(
             log_artifact_meta=log_artifact_meta,
-            session_selection_reason=session_selection_reason,
-            session_verdict_reason=session_verdict_reason,
+            session_selection_reason=decision_surface.selection_reason,
+            session_verdict_reason=decision_surface.verdict_reason,
             session_runtime_advisory=self._build_retry_advisory_digest(),
             session_retry_directives="",
             session_gate_semantics=_gate,
@@ -4226,24 +4836,94 @@ class Stage4InterviewRound:
         selection_reason: str,
         verdict_reason: str,
         advisory_warnings: dict | None = None,
+        gate_semantics: dict | None = None,
+        fix_pack: dict | None = None,
+        retry_budget_axes: dict | None = None,
     ) -> None:
         current_db = getattr(getattr(self.ctx, "current_project", None), "db", None)
         if current_db is None or not hasattr(current_db, "update_director_selection_rationale"):
             return
         try:
             current_db.update_director_selection_rationale(
-                attempt_key=attempt_key,
-                selection_reason=selection_reason,
-                verdict_reason=verdict_reason,
-                fix_scope=(
-                    trace_director_result.get("fix_scope", "")
-                    if isinstance(trace_director_result, dict)
-                    else director_result.get("fix_scope", "")
-                ),
-                advisory_warnings=advisory_warnings,
+                **self._build_stage4_selection_rationale_update_kwargs(
+                    attempt_key=attempt_key,
+                    trace_director_result=trace_director_result,
+                    director_result=director_result,
+                    selection_reason=selection_reason,
+                    verdict_reason=verdict_reason,
+                    advisory_warnings=advisory_warnings,
+                    gate_semantics=gate_semantics,
+                    fix_pack=fix_pack,
+                    retry_budget_axes=retry_budget_axes,
+                    prefer_authoritative_scope=False,
+                )
             )
         except Exception as _e:
             logging.debug("[Stage4] director rationale sync failed: %s", _e)
+
+    @staticmethod
+    def _build_stage4_selection_rationale_sync_kwargs(
+        *,
+        attempt_key: str,
+        trace_director_result,
+        director_result: dict | None,
+        selection_reason: str,
+        verdict_reason: str,
+        advisory_warnings: dict | None = None,
+        prefer_authoritative_scope: bool,
+    ) -> dict[str, object]:
+        trace_payload = trace_director_result if isinstance(trace_director_result, dict) else {}
+        director_payload = director_result if isinstance(director_result, dict) else {}
+        if prefer_authoritative_scope:
+            fix_scope = trace_payload.get(
+                "authoritative_fix_scope",
+                trace_payload.get(
+                    "fix_scope",
+                    director_payload.get("authoritative_fix_scope", director_payload.get("fix_scope", "")),
+                ),
+            )
+        else:
+            fix_scope = trace_payload.get("fix_scope", director_payload.get("fix_scope", ""))
+        return {
+            "attempt_key": attempt_key,
+            "selection_reason": selection_reason,
+            "verdict_reason": verdict_reason,
+            "fix_scope": fix_scope,
+            "advisory_warnings": advisory_warnings,
+        }
+
+    def _build_stage4_selection_rationale_update_kwargs(
+        self,
+        *,
+        attempt_key: str,
+        trace_director_result,
+        director_result: dict | None,
+        selection_reason: str,
+        verdict_reason: str,
+        advisory_warnings: dict | None = None,
+        gate_semantics: dict | None = None,
+        fix_pack: dict | None = None,
+        retry_budget_axes: dict | None = None,
+        prefer_authoritative_scope: bool,
+    ) -> dict[str, object]:
+        advisory_payload = (
+            copy.deepcopy(advisory_warnings)
+            if isinstance(advisory_warnings, dict)
+            else self._build_final_selection_advisory_payload(
+                gate_semantics=gate_semantics,
+                fix_pack=fix_pack,
+                retry_budget_axes=retry_budget_axes,
+            )
+        )
+        return self._build_stage4_selection_rationale_sync_kwargs(
+            attempt_key=attempt_key,
+            trace_director_result=trace_director_result,
+            director_result=director_result,
+            selection_reason=selection_reason,
+            verdict_reason=verdict_reason,
+            advisory_warnings=advisory_payload or None,
+            prefer_authoritative_scope=prefer_authoritative_scope,
+        )
 
     def _build_final_selection_advisory_payload(
         self,
@@ -4252,47 +4932,58 @@ class Stage4InterviewRound:
         fix_pack: dict | None = None,
         retry_budget_axes: dict | None = None,
     ) -> dict[str, object]:
-        advisory_payload: dict[str, object] = {}
         gate_payload = copy.deepcopy(gate_semantics) if isinstance(gate_semantics, dict) else {}
-        if gate_payload:
-            advisory_payload["gate_semantics"] = gate_payload
         fix_pack_payload = copy.deepcopy(fix_pack) if isinstance(fix_pack, dict) else {}
         if not fix_pack_payload and isinstance(gate_payload.get("fix_pack"), dict):
             fix_pack_payload = copy.deepcopy(gate_payload.get("fix_pack") or {})
+        retry_payload = copy.deepcopy(retry_budget_axes) if isinstance(retry_budget_axes, dict) else {}
+        contract_packet = self._build_stage4_attempt_contract_packet(
+            {
+                **({"gate_semantics": gate_payload} if gate_payload else {}),
+                **({"fix_pack": fix_pack_payload} if fix_pack_payload else {}),
+                **({"retry_budget_axes": retry_payload} if retry_payload else {}),
+            },
+            resolve_db_fallbacks=False,
+        )
+        advisory_payload: dict[str, object] = {}
+        if gate_payload:
+            advisory_payload["gate_semantics"] = gate_payload
         if fix_pack_payload:
             advisory_payload["fix_pack"] = fix_pack_payload
-        retry_payload = copy.deepcopy(retry_budget_axes) if isinstance(retry_budget_axes, dict) else {}
         if retry_payload:
             advisory_payload["retry_budget_axes"] = retry_payload
-        repair_contract_payload = (
-            copy.deepcopy(gate_payload.get("repair_contract"))
-            if isinstance(gate_payload.get("repair_contract"), dict)
-            else {}
-        )
-        if not repair_contract_payload:
-            repair_contract_payload = self._build_repair_contract_payload_from_parts(
-                gate_semantics=gate_payload,
-                fix_pack=fix_pack_payload,
-                source=gate_payload,
-            )
-        if repair_contract_payload:
-            advisory_payload["repair_contract"] = repair_contract_payload
-        scope_authority_payload = (
-            copy.deepcopy(gate_payload.get("scope_authority"))
-            if isinstance(gate_payload.get("scope_authority"), dict)
-            else {}
-        )
-        if not scope_authority_payload:
-            scope_authority_payload = self._build_scope_authority_payload_from_parts(
-                gate_semantics=gate_payload,
-                source={
-                    **gate_payload,
-                    "repair_contract": repair_contract_payload,
-                },
-            )
-        if scope_authority_payload:
-            advisory_payload["scope_authority"] = scope_authority_payload
+        if contract_packet.repair_contract:
+            advisory_payload["repair_contract"] = contract_packet.repair_contract
+        if contract_packet.scope_authority:
+            advisory_payload["scope_authority"] = contract_packet.scope_authority
         return advisory_payload
+
+    def _build_stage4_selection_advisory_payload(
+        self,
+        *,
+        advisory_summary: dict[str, int] | None,
+        director_result: dict | None,
+        is_patch: bool,
+        is_patch_fallback: bool,
+        prev_score: int,
+    ) -> dict[str, object]:
+        selection_advisory: dict[str, object] = dict(advisory_summary or {})
+        gate_semantics = self._build_gate_semantics_payload(
+            director_result if isinstance(director_result, dict) else {}
+        )
+        fix_pack_payload = self._build_fix_pack_payload(director_result if isinstance(director_result, dict) else {})
+        selection_advisory.update(
+            self._build_final_selection_advisory_payload(
+                gate_semantics=gate_semantics,
+                fix_pack=fix_pack_payload,
+            )
+        )
+        if is_patch:
+            selection_advisory["patch_context"] = {
+                "tag": "patch-fallback" if is_patch_fallback else "patch",
+                "score": prev_score,
+            }
+        return selection_advisory
 
     def _emit_pass_result_logs(
         self,
@@ -4463,53 +5154,31 @@ class Stage4InterviewRound:
         arc_num: int,
         asp_manuscript: str,
     ) -> None:
-        trace_verdict_reason = None
-        if isinstance(trace_director_result, dict):
-            trace_verdict_reason = trace_director_result.get("verdict_reason")
-        # [SSS-T2] Extract PASS-side carryover contracts from enriched gate semantics
-        _carryover = {}
-        _linkage = logging_payload.session_gate_semantics.get("conflict_resolution_linkage")
-        if isinstance(_linkage, dict):
-            _carryover["conflict_resolution_linkage"] = _linkage
-        _reuse = logging_payload.session_gate_semantics.get("reuse_contract")
-        if isinstance(_reuse, dict):
-            _carryover["reuse_contract"] = _reuse
         self._append_episode_log(
-            **s4_episode_logging.build_pass_episode_log_payload(
-                request=s4_episode_logging.Stage4PassEpisodeLogRequest(
-                    ep_num=ep_num,
-                    round_num=round_num,
-                    arc_num=arc_num,
-                    director_result=director_result,
-                    director_feedback=director_feedback,
-                    trace_verdict_reason=trace_verdict_reason,
-                    initial_verdict=initial_verdict,
-                    initial_score=initial_score,
-                    final_verdict=final_verdict,
-                    final_score=final_score,
-                    is_patch=is_patch,
-                    is_patch_fallback=is_patch_fallback,
-                    tot_used=tot_used,
-                    mad_used=mad_used,
-                    asp_used=bool(asp_manuscript),
-                    model_tier=getattr(chief_writer, "model_tier", None),
-                    validation_warnings=validation_warnings,
-                    final_warnings=final_warnings,
-                    patch_trace=patch_trace,
-                    session_runtime_advisory=logging_payload.session_runtime_advisory,
-                    session_retry_directives=logging_payload.session_retry_directives,
-                    log_artifact_meta=logging_payload.log_artifact_meta,
-                    selection_artifact_meta=selection_artifact_meta,
-                    session_id=resolve_logging_session_id(getattr(self.ctx, "current_project", None)),
-                )
-            ),
-            selection_reason=logging_payload.session_selection_reason,
-            verdict_reason=logging_payload.session_verdict_reason,
-            gate_semantics=logging_payload.session_gate_semantics,
-            fix_pack=dict(logging_payload.session_fix_pack or {}),
-            runtime_advisory=logging_payload.session_runtime_advisory,
-            retry_directives=logging_payload.session_retry_directives,
-            carryover_contracts=_carryover or None,
+            **_build_stage4_pass_episode_log_kwargs(
+                owner=self,
+                ep_num=ep_num,
+                round_num=round_num,
+                director_result=director_result,
+                trace_director_result=trace_director_result if isinstance(trace_director_result, dict) else None,
+                director_feedback=director_feedback,
+                initial_verdict=initial_verdict,
+                initial_score=initial_score,
+                final_verdict=final_verdict,
+                final_score=final_score,
+                is_patch=is_patch,
+                is_patch_fallback=is_patch_fallback,
+                tot_used=tot_used,
+                mad_used=mad_used,
+                asp_manuscript=asp_manuscript,
+                chief_writer=chief_writer,
+                validation_warnings=validation_warnings,
+                final_warnings=final_warnings,
+                patch_trace=patch_trace,
+                logging_payload=logging_payload,
+                selection_artifact_meta=selection_artifact_meta,
+                arc_num=arc_num,
+            )
         )
 
     def _log_pass_session_decision(
@@ -4531,95 +5200,28 @@ class Stage4InterviewRound:
         initial_score: int,
         logging_payload: _PassResultLoggingPayload,
     ) -> None:
+        decision_surface = _build_stage4_pass_decision_surface(
+            director_result=director_result,
+            trace_director_result=trace_director_result if isinstance(trace_director_result, dict) else None,
+            fallback_reason=reason,
+        )
         self._log_session_decision(
-            next_ep=next_ep,
-            round_num=round_num,
-            arc_num=arc_num,
-            verdict=final_verdict,
-            score=final_score,
-            selected=selected,
-            error_category=error_category,
-            reason=(
-                (trace_director_result.get("verdict_reason") or reason)
-                if isinstance(trace_director_result, dict)
-                else reason
-            ),
-            fix_scope=(
-                trace_director_result.get("fix_scope", "")
-                if isinstance(trace_director_result, dict)
-                else director_result.get("fix_scope", "")
-            ),
-            open_review=(
-                trace_director_result.get("open_review", "")
-                if isinstance(trace_director_result, dict)
-                else director_result.get("open_review", "")
-            ),
-            action_items=(
-                trace_director_result.get("action_items", [])
-                if isinstance(trace_director_result, dict)
-                else director_result.get("action_items", [])
-            ),
-            attempt_key=attempt_key,
-            artifact_meta=logging_payload.log_artifact_meta,
-            selection_artifact_meta=selection_artifact_meta,
-            initial_verdict=initial_verdict,
-            initial_score=initial_score,
-            selection_reason=logging_payload.session_selection_reason,
-            verdict_reason=logging_payload.session_verdict_reason,
-            director_verdict=logging_payload.session_gate_semantics.get("director_verdict", ""),
-            gate_basis=logging_payload.session_gate_semantics.get("gate_basis", ""),
-            repair_scope=logging_payload.session_gate_semantics.get("repair_scope", ""),
-            fix_pack=dict(logging_payload.session_fix_pack or {}),
-            retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
-            runtime_advisory=logging_payload.session_runtime_advisory,
-            retry_directives=logging_payload.session_retry_directives,
-            firewall_triggered=bool(
-                trace_director_result.get("firewall_triggered")
-                if isinstance(trace_director_result, dict)
-                else director_result.get("firewall_triggered")
-            ),
-            firewall_reason=(
-                trace_director_result.get("firewall_reason", "")
-                if isinstance(trace_director_result, dict)
-                else director_result.get("firewall_reason", "")
-            ),
-            authoritative_fix_scope=str(
-                logging_payload.session_gate_semantics.get("authoritative_fix_scope", "") or ""
-            ),
-            authoritative_fix_scope_violation=(
-                logging_payload.session_gate_semantics.get("authoritative_fix_scope_violation")
-                if isinstance(
-                    logging_payload.session_gate_semantics.get("authoritative_fix_scope_violation"),
-                    dict,
-                )
-                else None
-            ),
-            strong_advisory_escalation=(
-                logging_payload.session_gate_semantics.get("strong_advisory_escalation")
-                if isinstance(
-                    logging_payload.session_gate_semantics.get("strong_advisory_escalation"),
-                    dict,
-                )
-                else None
-            ),
-            scope_origin=(
-                logging_payload.session_gate_semantics.get("scope_origin")
-                if isinstance(logging_payload.session_gate_semantics.get("scope_origin"), dict)
-                else None
-            ),
-            repair_contract=(
-                logging_payload.session_gate_semantics.get("repair_contract")
-                if isinstance(logging_payload.session_gate_semantics.get("repair_contract"), dict)
-                else None
-            ),
-            scope_authority=(
-                logging_payload.session_gate_semantics.get("scope_authority")
-                if isinstance(logging_payload.session_gate_semantics.get("scope_authority"), dict)
-                else None
-            ),
-            # [SSS-T2] PASS-side carryover linkage to decisions.jsonl
-            conflict_resolution_linkage=(logging_payload.session_gate_semantics.get("conflict_resolution_linkage")),
-            reuse_contract=(logging_payload.session_gate_semantics.get("reuse_contract")),
+            **_build_stage4_pass_session_decision_kwargs(
+                owner=self,
+                next_ep=next_ep,
+                round_num=round_num,
+                arc_num=arc_num,
+                final_verdict=final_verdict,
+                final_score=final_score,
+                selected=selected,
+                error_category=error_category,
+                attempt_key=attempt_key,
+                selection_artifact_meta=selection_artifact_meta,
+                initial_verdict=initial_verdict,
+                initial_score=initial_score,
+                decision_surface=decision_surface,
+                logging_payload=logging_payload,
+            )
         )
 
     def _run_director_continuity_and_state_tracker_advisories(
@@ -6806,17 +7408,22 @@ class Stage4InterviewRound:
                 "warnings": (_final_warnings if _final_verdict in ("PASS", "PASS_WITH_FIX") else _candidate_warnings),
                 "final_warnings": _final_warnings,
                 "candidate_warnings": _candidate_warnings,
-                "feedback_provenance": {
-                    "director_feedback": self._compact_text(_feedback_provenance.get("director_feedback", ""), None),
-                    "runtime_advisory": self._compact_text(
+                "feedback_provenance": self._build_stage4_feedback_provenance_payload(
+                    director_feedback=self._compact_text(
+                        _feedback_provenance.get(
+                            "director_feedback", _feedback_provenance.get("director_feedback_text", "")
+                        ),
+                        None,
+                    ),
+                    runtime_advisory=self._compact_text(
                         runtime_advisory or _feedback_provenance.get("runtime_advisory", ""),
                         None,
                     ),
-                    "retry_directives": self._compact_text(
+                    retry_directives=self._compact_text(
                         retry_directives or _feedback_provenance.get("retry_directives", ""),
                         None,
                     ),
-                },
+                ),
             }
             _scope_violation = _gate_semantics.get("authoritative_fix_scope_violation")
             if isinstance(_scope_violation, dict):
@@ -6851,6 +7458,22 @@ class Stage4InterviewRound:
                         entry[_ck] = _cv
             log_path = Path(logs_dir) / "episode_production.jsonl"
             append_jsonl_record(log_path, entry)
+            _db_adj = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            persist_stage4_raw_rationale_records(
+                project_db=_db_adj,
+                records=_build_stage4_attempt_raw_evidence_records(
+                    attempt_key=_attempt_key,
+                    ep_num=int(ep_num or 0),
+                    feedback_provenance=_feedback_provenance,
+                    patch_trace=_patch_trace,
+                    gate_semantics=_gate_semantics,
+                    fix_pack=_fix_pack,
+                    repair_contract=_repair_contract,
+                    scope_authority=_scope_authority,
+                    retry_budget_axes=_retry_budget_axes,
+                ),
+                log_prefix="Stage4EpisodeLog",
+            )
         except Exception as e:
             logging.warning("[V76] episode_production log 실패 (비차단): %s", e)
 
@@ -6902,6 +7525,52 @@ class Stage4InterviewRound:
             if isinstance(advisory_flags.get("retry_budget_axes"), dict):
                 _retry_budget_axes = dict(advisory_flags.get("retry_budget_axes") or {})
         return _gate_semantics, _fix_pack, _repair_contract, _retry_budget_axes
+
+    def _build_stage4_attempt_contract_packet(
+        self,
+        advisory_flags: dict | None,
+        *,
+        resolve_db_fallbacks: bool,
+    ) -> _Stage4AttemptContractPacket:
+        normalized_advisory = (
+            self._resolve_stage4_db_attempt_advisory_flags(advisory_flags)
+            if resolve_db_fallbacks
+            else dict(advisory_flags or {})
+            if isinstance(advisory_flags, dict)
+            else {}
+        )
+        gate_semantics, fix_pack, repair_contract, retry_budget_axes = self._extract_stage4_advisory_contract_payloads(
+            normalized_advisory
+        )
+        derived_repair_contract = self._build_repair_contract_payload_from_parts(
+            gate_semantics=gate_semantics,
+            fix_pack=fix_pack,
+            source=normalized_advisory if isinstance(normalized_advisory, dict) else {},
+        )
+        if derived_repair_contract:
+            repair_contract = {**repair_contract, **derived_repair_contract}
+        scope_authority = self._build_scope_authority_payload_from_parts(
+            gate_semantics=gate_semantics,
+            source=(
+                {**normalized_advisory, "repair_contract": repair_contract}
+                if normalized_advisory
+                else {"repair_contract": repair_contract}
+            ),
+        )
+        verdict_layers = (
+            dict(gate_semantics.get("verdict_layers") or {})
+            if isinstance(gate_semantics.get("verdict_layers"), dict)
+            else {}
+        )
+        return _Stage4AttemptContractPacket(
+            advisory_flags=normalized_advisory if isinstance(normalized_advisory, dict) else {},
+            gate_semantics=gate_semantics,
+            fix_pack=fix_pack,
+            repair_contract=repair_contract,
+            scope_authority=scope_authority,
+            retry_budget_axes=retry_budget_axes,
+            verdict_layers=verdict_layers,
+        )
 
     def _resolve_stage4_db_attempt_advisory_flags(
         self,
@@ -6997,15 +7666,9 @@ class Stage4InterviewRound:
         score_breakdown: dict | None,
         artifact_meta: dict[str, str],
     ) -> dict:
-        _gate_semantics, _fix_pack, _repair_contract, _retry_budget_axes = (
-            self._extract_stage4_advisory_contract_payloads(advisory_flags)
-        )
-        _verdict_layers = (
-            _gate_semantics.get("verdict_layers") if isinstance(_gate_semantics.get("verdict_layers"), dict) else {}
-        )
-        _scope_authority = self._build_scope_authority_payload_from_parts(
-            gate_semantics=_gate_semantics,
-            source=advisory_flags if isinstance(advisory_flags, dict) else {"repair_contract": _repair_contract},
+        contract_packet = self._build_stage4_attempt_contract_packet(
+            advisory_flags,
+            resolve_db_fallbacks=False,
         )
         payload = {
             "stage": 4,
@@ -7022,15 +7685,6 @@ class Stage4InterviewRound:
             "patch_fallback": patch_fallback,
             "attempt_key": attempt_key,
             "final_verdict": str(verdict or ("PASS" if success else "REJECT")),
-            "director_verdict": str(_gate_semantics.get("director_verdict", "") or ""),
-            "gate_basis": str(_gate_semantics.get("gate_basis", "") or ""),
-            "repair_scope": str(_gate_semantics.get("repair_scope", "") or ""),
-            "fix_scope": str(_scope_authority.get("fix_scope", "") or ""),
-            "authoritative_fix_scope": str(_scope_authority.get("authoritative_fix_scope", "") or ""),
-            "fix_pack": _fix_pack,
-            "repair_contract": _repair_contract,
-            "scope_authority": _scope_authority,
-            "retry_budget_axes": _retry_budget_axes,
             "patch_strategy": patch_strategy,
             "structural_attempted": bool(structural_attempted),
             "error_category": str(error_category or ""),
@@ -7039,12 +7693,11 @@ class Stage4InterviewRound:
             "candidate_key": artifact_meta["candidate_key"],
             "content_hash": artifact_meta["content_hash"],
             "artifact_path": artifact_meta["artifact_path"],
-            "downstream_override_applied": bool(_verdict_layers.get("downstream_override_applied", False)),
-            "primary_failure_layer": str(_verdict_layers.get("primary_failure_layer", "") or ""),
+            **_build_stage4_attempt_contract_projection(
+                contract_packet=contract_packet,
+                include_strong_advisory_escalation=True,
+            ),
         }
-        _strong_advisory = _gate_semantics.get("strong_advisory_escalation")
-        if isinstance(_strong_advisory, dict):
-            payload["strong_advisory_escalation"] = _strong_advisory
         return payload
 
     def _build_stage4_db_attempt_payload(
@@ -7077,27 +7730,11 @@ class Stage4InterviewRound:
         is_patch_fallback: bool = False,
         patch_strategy: str = "",
     ) -> dict:
-        _adv = self._resolve_stage4_db_attempt_advisory_flags(advisory_flags)
+        contract_packet = self._build_stage4_attempt_contract_packet(
+            advisory_flags,
+            resolve_db_fallbacks=True,
+        )
         _model = self._resolve_stage4_db_attempt_model(model)
-        _gate_semantics = (
-            dict(_adv.get("gate_semantics") or {})
-            if isinstance(_adv, dict) and isinstance(_adv.get("gate_semantics"), dict)
-            else {}
-        )
-        _scope_authority = (
-            self._build_scope_authority_payload_from_parts(
-                gate_semantics=_gate_semantics,
-                source=_adv if isinstance(_adv, dict) else {},
-            )
-            if isinstance(_adv, dict)
-            else {}
-        )
-        _verdict_layers = (
-            dict(_gate_semantics.get("verdict_layers") or {})
-            if isinstance(_gate_semantics.get("verdict_layers"), dict)
-            else {}
-        )
-        _resolved_fix_scope = str(_scope_authority.get("fix_scope", "") or fix_scope or "").strip() or None
         return {
             "stage": 4,
             "verdict": verdict or ("PASS" if success else "REJECT"),
@@ -7107,10 +7744,9 @@ class Stage4InterviewRound:
             "score": score,
             "failure_category": failure_category or None,
             "reject_reason": "" if success else (reject_reason or f"score={score}"),
-            "fix_scope": _resolved_fix_scope,
             "model": _model,
             "duration_ms": duration_ms,
-            "advisory_flags": _adv,
+            "advisory_flags": contract_packet.advisory_flags,
             "session_id": session_id,
             "attempt_key": attempt_key,
             "prompt_version": _build_stage4_prompt_version(),
@@ -7128,9 +7764,12 @@ class Stage4InterviewRound:
             "is_patch": is_patch,
             "is_patch_fallback": is_patch_fallback,
             "patch_strategy": patch_strategy or None,
-            "director_quality_passed": bool(_verdict_layers.get("director_quality_passed", False)),
-            "downstream_override_applied": bool(_verdict_layers.get("downstream_override_applied", False)),
-            "primary_failure_layer": str(_verdict_layers.get("primary_failure_layer", "") or ""),
+            **_build_stage4_attempt_contract_projection(
+                contract_packet=contract_packet,
+                fix_scope_fallback=fix_scope,
+                empty_fix_scope_as_none=True,
+                include_director_quality_passed=True,
+            ),
         }
 
     def _build_stage4_attempt_prelude(

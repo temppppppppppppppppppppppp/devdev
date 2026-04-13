@@ -58,6 +58,7 @@ _STOP_LINE_COMMON_TOKENS = {
 }
 _BINDING_PREVALIDATION_CATEGORIES = {
     "scene_completeness",
+    "episode_progression",
     "arc_compliance",
     "arc_timeline",
     "capital_unit",
@@ -72,6 +73,11 @@ _BINDING_PREVALIDATION_CATEGORIES = {
     "fact_lock_institution",
     "tactical_semantic_fidelity",
     "opening_transition",
+}
+_BINDING_PREVALIDATION_REGENERATE_CATEGORIES = {
+    "opening_anchor",
+    "scene_completeness",
+    "episode_progression",
 }
 _TACTICAL_INTRUSION_ENTRY_MARKERS = (
     "취객",
@@ -150,6 +156,7 @@ def _normalize_stage3_fix_pack(raw_payload: object) -> dict:
     must_fix = _compact_stage3_fix_list(source.get("must_fix"), limit=6, item_limit=180)
     do_not_regress = _compact_stage3_fix_list(source.get("do_not_regress"), limit=6, item_limit=180)
     success_condition = " ".join(str(source.get("success_condition", "") or "").split()).strip()[:220]
+    evidence_summary = " ".join(str(source.get("evidence_summary", "") or "").split()).strip()[:220]
     normalized: dict = {}
     if patch_targets:
         normalized["patch_targets"] = patch_targets
@@ -164,7 +171,63 @@ def _normalize_stage3_fix_pack(raw_payload: object) -> dict:
         normalized["do_not_regress"] = do_not_regress
     if success_condition:
         normalized["success_condition"] = success_condition
+    if evidence_summary:
+        normalized["evidence_summary"] = evidence_summary
     return normalized
+
+
+def _merge_stage3_fix_packs(raw_packs: list[object]) -> dict:
+    normalized_packs = [_normalize_stage3_fix_pack(item) for item in list(raw_packs or [])]
+    normalized_packs = [item for item in normalized_packs if item]
+    if not normalized_packs:
+        return {}
+
+    raw_targets: list[object] = []
+    must_fix: list[str] = []
+    do_not_regress: list[str] = []
+    success_conditions: list[str] = []
+    evidence_summaries: list[str] = []
+    target_kind = ""
+
+    for payload in normalized_packs:
+        raw_targets.extend(list(payload.get("patch_target_records") or payload.get("patch_targets") or []))
+        must_fix.extend(list(payload.get("must_fix") or []))
+        do_not_regress.extend(list(payload.get("do_not_regress") or []))
+        success_condition = str(payload.get("success_condition", "") or "").strip()
+        if success_condition and success_condition not in success_conditions:
+            success_conditions.append(success_condition)
+        evidence_summary = str(payload.get("evidence_summary", "") or "").strip()
+        if evidence_summary and evidence_summary not in evidence_summaries:
+            evidence_summaries.append(evidence_summary)
+        if not target_kind:
+            target_kind = str(payload.get("target_kind", "") or "").strip()
+
+    patch_targets, patch_target_records = normalize_patch_target_records(
+        raw_targets,
+        stage="stage3",
+        container_kind="blueprint",
+        container_id="stage3_blueprint",
+        default_target_kind=target_kind,
+    )
+    merged: dict = {}
+    if patch_targets:
+        merged["patch_targets"] = patch_targets
+    if patch_target_records:
+        merged["patch_target_records"] = patch_target_records
+    resolved_target_kind = target_kind or str((patch_target_records or [{}])[0].get("target_kind") or "").strip()
+    if resolved_target_kind:
+        merged["target_kind"] = resolved_target_kind
+    compact_must_fix = _compact_stage3_fix_list(must_fix, limit=6, item_limit=180)
+    compact_do_not_regress = _compact_stage3_fix_list(do_not_regress, limit=6, item_limit=180)
+    if compact_must_fix:
+        merged["must_fix"] = compact_must_fix
+    if compact_do_not_regress:
+        merged["do_not_regress"] = compact_do_not_regress
+    if success_conditions:
+        merged["success_condition"] = " / ".join(success_conditions[:2])[:220]
+    if evidence_summaries:
+        merged["evidence_summary"] = " | ".join(evidence_summaries[:2])[:220]
+    return merged
 
 
 class UnifiedBlueprintValidator:
@@ -234,6 +297,8 @@ class UnifiedBlueprintValidator:
         for issue in issues:
             if not isinstance(issue, dict):
                 continue
+            if issue.get("director_focus") is False or issue.get("advisory_only"):
+                continue
             severity = str(issue.get("severity", "MINOR") or "MINOR").upper()
             category = str(issue.get("category", "issue") or "issue").strip()[:40]
             message = str(issue.get("issue") or issue.get("evidence") or "").strip()
@@ -258,6 +323,20 @@ class UnifiedBlueprintValidator:
 
         return entries, bool(entries)
 
+    def _build_advisory_fix_pack(self, issues: list) -> dict:
+        if not isinstance(issues, list):
+            return {}
+        advisory_packs: list[object] = []
+        for issue in issues:
+            if not isinstance(issue, dict):
+                continue
+            if not (issue.get("advisory_only") or issue.get("director_focus") is False):
+                continue
+            fix_pack = issue.get("fix_pack")
+            if isinstance(fix_pack, dict) and fix_pack:
+                advisory_packs.append(fix_pack)
+        return _merge_stage3_fix_packs(advisory_packs)
+
     @staticmethod
     def _coerce_episode_marker(value: object) -> int | None:
         try:
@@ -265,6 +344,28 @@ class UnifiedBlueprintValidator:
         except (TypeError, ValueError):
             return None
         return marker if marker > 0 else None
+
+    @staticmethod
+    def _relationship_name_variants(name: object) -> set[str]:
+        raw = str(name or "").strip()
+        if len(raw) < 2:
+            return set()
+
+        variants = {raw}
+        squashed = re.sub(r"\s+", "", raw)
+        if len(squashed) >= 2:
+            variants.add(squashed)
+
+        trimmed = re.sub(r"\([^)]*\)", "", raw).strip()
+        trimmed = re.sub(r"\s+", " ", trimmed)
+        if len(trimmed) >= 2:
+            variants.add(trimmed)
+            variants.add(re.sub(r"\s+", "", trimmed))
+
+        if len(squashed) >= 3 and re.fullmatch(r"[가-힣]+", squashed):
+            variants.add(squashed[-2:])
+
+        return {variant for variant in variants if len(variant) >= 2}
 
     @classmethod
     def _relationship_visible_in_episode(cls, relationship: object, ep_num: int | None) -> bool:
@@ -330,6 +431,16 @@ class UnifiedBlueprintValidator:
         if verdict == "REJECT" or not binding_issues:
             return verdict, feedback, verdict_reason, fix_scope, fix_scope_reasoning, binding_issues
 
+        binding_categories = self._summarize_binding_prevalidation_categories(binding_issues)
+        regenerate_only_categories = self._extract_binding_regenerate_only_categories(binding_categories)
+        regenerate_only_reason = (
+            "Structural binding prevalidation requires regenerate-only repair: " + ", ".join(regenerate_only_categories)
+            if regenerate_only_categories
+            else ""
+        )
+        regenerate_categories = [
+            category for category in binding_categories if category in _BINDING_PREVALIDATION_REGENERATE_CATEGORIES
+        ]
         snippets = [
             str(issue.get("issue") or issue.get("evidence") or "").strip()
             for issue in binding_issues
@@ -343,12 +454,34 @@ class UnifiedBlueprintValidator:
         )
         merged_feedback = f"{feedback}\n{binding_note}".strip() if feedback else binding_note
         merged_reason = f"{verdict_reason}; binding prevalidation repair required".strip("; ")
-        merged_scope = str(fix_scope or "inplace")
-        merged_scope_reasoning = str(
-            fix_scope_reasoning or "Binding Python prevalidation invariants require bounded repair before plain PASS."
-        )
+        merged_scope = "full" if regenerate_categories else str(fix_scope or "inplace")
+        if regenerate_categories:
+            regenerate_summary = ", ".join(regenerate_categories)
+            merged_scope_reasoning = (
+                f"Structural binding prevalidation categories require regenerate-only repair: {regenerate_summary}."
+            )
+        else:
+            merged_scope_reasoning = str(
+                fix_scope_reasoning
+                or "Binding Python prevalidation invariants require bounded repair before plain PASS."
+            )
         merged_verdict = "PASS_WITH_FIX" if verdict in {"PASS", "PASS_WITH_WARNING"} else verdict
         return merged_verdict, merged_feedback, merged_reason, merged_scope, merged_scope_reasoning, binding_issues
+
+    @staticmethod
+    def _extract_binding_regenerate_only_categories(binding_categories: list[str]) -> list[str]:
+        if not isinstance(binding_categories, list):
+            return []
+        normalized: list[str] = []
+        seen: set[str] = set()
+        for raw in binding_categories:
+            category = str(raw or "").strip()
+            if not category or category in seen:
+                continue
+            seen.add(category)
+            if category in _BINDING_PREVALIDATION_REGENERATE_CATEGORIES:
+                normalized.append(category)
+        return normalized
 
     @staticmethod
     def _extract_stop_line_clauses(text: str) -> list[str]:
@@ -446,12 +579,15 @@ class UnifiedBlueprintValidator:
         )
 
         python_warnings, quality_risk = self._build_python_warning_entries(pre_result.get("issues", []))
+        advisory_fix_pack = self._build_advisory_fix_pack(pre_result.get("issues", []))
         meta = candidate.get("_ensemble_meta", {})
         if not isinstance(meta, dict):
             meta = {}
         meta["python_warnings"] = python_warnings
         meta["quality_risk"] = quality_risk
         meta["prevalidation_issue_count"] = len(pre_result.get("issues", []))
+        if advisory_fix_pack:
+            meta["advisory_fix_pack"] = advisory_fix_pack
         candidate["_ensemble_meta"] = meta
 
         advisory = {
@@ -462,6 +598,9 @@ class UnifiedBlueprintValidator:
         }
         if python_warnings:
             advisory["python_warnings"] = python_warnings
+        if advisory_fix_pack:
+            advisory["advisory_fix_pack"] = advisory_fix_pack
+            advisory["advisory_target_kind"] = str(advisory_fix_pack.get("target_kind", "") or "").strip()
         return pre_result, advisory
 
     def _run_compare_validation(
@@ -553,8 +692,15 @@ class UnifiedBlueprintValidator:
             fix_scope_reasoning=fix_scope_reasoning,
         )
         binding_categories = self._summarize_binding_prevalidation_categories(binding_issues)
+        regenerate_only_categories = self._extract_binding_regenerate_only_categories(binding_categories)
+        regenerate_only_reason = (
+            "Structural binding prevalidation requires regenerate-only repair: " + ", ".join(regenerate_only_categories)
+            if regenerate_only_categories
+            else ""
+        )
         revision_required = bool(revision_required or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"))
         fix_pack = _normalize_stage3_fix_pack(compare_result)
+        advisory_fix_pack = self._build_advisory_fix_pack(selected_pre_result.get("issues", []))
 
         result = {
             "verdict": verdict,
@@ -580,8 +726,37 @@ class UnifiedBlueprintValidator:
             "binding_prevalidation_issue_count": len(binding_issues),
             "binding_prevalidation_categories": binding_categories,
         }
+        if regenerate_only_categories:
+            result["binding_regenerate_only_categories"] = regenerate_only_categories
+            result["binding_regenerate_only_reason"] = regenerate_only_reason
+        repair_contract = compare_result.get("repair_contract")
+        repair_contract = dict(repair_contract) if isinstance(repair_contract, dict) and repair_contract else {}
+        scope_authority = compare_result.get("scope_authority")
+        scope_authority = dict(scope_authority) if isinstance(scope_authority, dict) and scope_authority else {}
+        repair_scope = str(
+            compare_result.get("repair_scope", "")
+            or repair_contract.get("repair_scope", "")
+            or scope_authority.get("repair_scope", "")
+            or ""
+        ).strip()
+        if repair_scope:
+            result["repair_scope"] = repair_scope
+        authoritative_fix_scope = str(
+            compare_result.get("authoritative_fix_scope", "")
+            or repair_contract.get("authoritative_fix_scope", "")
+            or scope_authority.get("authoritative_fix_scope", "")
+            or ""
+        ).strip()
+        if authoritative_fix_scope:
+            result["authoritative_fix_scope"] = authoritative_fix_scope
+        if repair_contract:
+            result["repair_contract"] = repair_contract
+        if scope_authority:
+            result["scope_authority"] = scope_authority
         if fix_pack:
             result["fix_pack"] = fix_pack
+        if advisory_fix_pack:
+            result["advisory_fix_pack"] = advisory_fix_pack
 
         status = "PASS" if verdict in ("PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING") else "REJECT"
         logging.info(
@@ -746,6 +921,7 @@ class UnifiedBlueprintValidator:
 
         final_verdict = director_verdict
         python_warnings, quality_risk = self._build_python_warning_entries(pre_result["issues"])
+        advisory_fix_pack = self._build_advisory_fix_pack(pre_result["issues"])
         (
             final_verdict,
             director_feedback,
@@ -762,14 +938,28 @@ class UnifiedBlueprintValidator:
             fix_scope_reasoning=str(director_result.get("fix_scope_reasoning", "") or ""),
         )
         binding_categories = self._summarize_binding_prevalidation_categories(binding_issues)
+        regenerate_only_categories = self._extract_binding_regenerate_only_categories(binding_categories)
+        regenerate_only_reason = (
+            "Structural binding prevalidation requires regenerate-only repair: " + ", ".join(regenerate_only_categories)
+            if regenerate_only_categories
+            else ""
+        )
         if python_warnings:
             ensemble_meta = blueprint.get("_ensemble_meta", {}) if isinstance(blueprint, dict) else {}
             if not isinstance(ensemble_meta, dict):
                 ensemble_meta = {}
             ensemble_meta["python_warnings"] = python_warnings
             ensemble_meta["quality_risk"] = quality_risk
+            if advisory_fix_pack:
+                ensemble_meta["advisory_fix_pack"] = advisory_fix_pack
             if isinstance(blueprint, dict):
                 blueprint["_ensemble_meta"] = ensemble_meta
+        elif advisory_fix_pack and isinstance(blueprint, dict):
+            ensemble_meta = blueprint.get("_ensemble_meta", {})
+            if not isinstance(ensemble_meta, dict):
+                ensemble_meta = {}
+            ensemble_meta["advisory_fix_pack"] = advisory_fix_pack
+            blueprint["_ensemble_meta"] = ensemble_meta
 
         result = {
             "verdict": final_verdict,
@@ -795,9 +985,38 @@ class UnifiedBlueprintValidator:
             "binding_prevalidation_issue_count": len(binding_issues),
             "binding_prevalidation_categories": binding_categories,
         }
+        if regenerate_only_categories:
+            result["binding_regenerate_only_categories"] = regenerate_only_categories
+            result["binding_regenerate_only_reason"] = regenerate_only_reason
+        repair_contract = director_result.get("repair_contract")
+        repair_contract = dict(repair_contract) if isinstance(repair_contract, dict) and repair_contract else {}
+        scope_authority = director_result.get("scope_authority")
+        scope_authority = dict(scope_authority) if isinstance(scope_authority, dict) and scope_authority else {}
+        repair_scope = str(
+            director_result.get("repair_scope", "")
+            or repair_contract.get("repair_scope", "")
+            or scope_authority.get("repair_scope", "")
+            or ""
+        ).strip()
+        if repair_scope:
+            result["repair_scope"] = repair_scope
+        authoritative_fix_scope = str(
+            director_result.get("authoritative_fix_scope", "")
+            or repair_contract.get("authoritative_fix_scope", "")
+            or scope_authority.get("authoritative_fix_scope", "")
+            or ""
+        ).strip()
+        if authoritative_fix_scope:
+            result["authoritative_fix_scope"] = authoritative_fix_scope
         fix_pack = _normalize_stage3_fix_pack(director_result)
         if fix_pack:
             result["fix_pack"] = fix_pack
+        if repair_contract:
+            result["repair_contract"] = repair_contract
+        if scope_authority:
+            result["scope_authority"] = scope_authority
+        if advisory_fix_pack:
+            result["advisory_fix_pack"] = advisory_fix_pack
 
         status = "PASS" if final_verdict in ("PASS", "PASS_WITH_FIX") else "REJECT"
         logging.warning(f"[{status}] Director score={director_score} reason={(director_reason or '')[:50]}")
@@ -992,25 +1211,40 @@ class UnifiedBlueprintValidator:
 
         return issues
 
-    def _collect_fidelity_prevalidation_issues(self, *, integrated: str, arc_data, ep_num: int | None = None) -> list[dict]:
+    def _collect_fidelity_prevalidation_issues(
+        self, *, integrated: str, arc_data, ep_num: int | None = None
+    ) -> list[dict]:
         if not arc_data or not integrated:
             return []
 
         arc_state_constraints = (arc_data.get("state_constraints") or {}) if isinstance(arc_data, dict) else {}
         arc_relationship_changes = arc_state_constraints.get("relationship_changes") or []
-        arc_npcs: set[str] = set()
+        arc_npcs: list[str] = []
+        normalized_integrated = re.sub(r"\s+", "", str(integrated or ""))
         for relationship in arc_relationship_changes:
             if isinstance(relationship, dict):
                 if not self._relationship_visible_in_episode(relationship, ep_num):
                     continue
                 npc_name = relationship.get("target") or relationship.get("npc")
-                if npc_name and isinstance(npc_name, str) and len(npc_name) >= 2:
-                    arc_npcs.add(npc_name)
+                if npc_name and isinstance(npc_name, str) and len(npc_name) >= 2 and npc_name not in arc_npcs:
+                    arc_npcs.append(npc_name)
 
         if not arc_npcs:
             return []
 
-        mentioned_count = sum(1 for npc_name in arc_npcs if npc_name in integrated)
+        mentioned_count = 0
+        matched_variants: dict[str, list[str]] = {}
+        missing_npcs: list[str] = []
+        for npc_name in arc_npcs:
+            variants = self._relationship_name_variants(npc_name)
+            matched = [
+                variant for variant in sorted(variants) if variant in integrated or variant in normalized_integrated
+            ]
+            if matched:
+                mentioned_count += 1
+                matched_variants[npc_name] = matched[:4]
+            else:
+                missing_npcs.append(npc_name)
         if mentioned_count > 0:
             return []
 
@@ -1021,6 +1255,32 @@ class UnifiedBlueprintValidator:
                 "issue": f"intent 불일치: Arc 관계 변화 NPC {len(arc_npcs)}명 blueprint 미언급",
                 "evidence": f"NPC: {', '.join(list(arc_npcs)[:3])}",
                 "fix_hint": "Arc 관계 변화 NPC가 blueprint 시나리오에 등장해야 함",
+                "advisory_only": True,
+                "director_focus": False,
+                "advisory_code": "relationship_change_visibility",
+                "advisory_packet": {
+                    "visible_relationship_count": len(arc_npcs),
+                    "mentioned_relationship_count": mentioned_count,
+                    "missing_npcs": missing_npcs[:6],
+                    "matched_variants": matched_variants,
+                },
+                "fix_pack": {
+                    "patch_target_records": [
+                        {
+                            "summary": "integrated_scenario",
+                            "field_path": "integrated_scenario",
+                            "target_kind": "local_sentence",
+                        }
+                    ],
+                    "must_fix": [
+                        "Arc 관계 변화 핵심 인물을 현재 화 시나리오/회상/계획에 명시: " + ", ".join(missing_npcs[:3])
+                    ],
+                    "do_not_regress": [
+                        "현재 화 tactical authority, opening-state, 엔딩 훅은 유지",
+                    ],
+                    "success_condition": "integrated_scenario가 Arc 관계 변화 인물 중 최소 1명을 현재 화 맥락으로 명시한다",
+                    "evidence_summary": "missing_relationship_npcs=" + ", ".join(missing_npcs[:3]),
+                },
             }
         ]
 
@@ -1201,6 +1461,13 @@ class UnifiedBlueprintValidator:
                 prev_blueprint=prev_blueprint,
                 declared_opening_transition_type=declared_opening_transition_type,
                 normalized_opening_transition=normalized_opening_transition,
+            )
+        )
+        issues.extend(
+            self._collect_episode_progression_issues(
+                blueprint=blueprint,
+                prev_blueprint=prev_blueprint,
+                constraint_block=constraint_block,
             )
         )
         issues.extend(
@@ -1637,10 +1904,11 @@ class UnifiedBlueprintValidator:
         if no_events_count >= 2:
             issues.append(
                 {
-                    "severity": "MINOR",
-                    "category": "scene_specificity",
-                    "issue": f"씬 이벤트 부재: {no_events_count}/{scene_count}개 씬에 key_events가 비어 있음",
+                    "severity": "MAJOR",
+                    "category": "scene_completeness",
+                    "issue": f"scene.key_events 누락: {no_events_count}/{scene_count}개 씬에서 key_events가 비어 있음",
                     "evidence": f"no_events_count={no_events_count}",
+                    "missing_fields": ["key_events"],
                     "fix_hint": "각 씬에 최소 1개의 key_event를 명시",
                 }
             )
@@ -1678,6 +1946,7 @@ class UnifiedBlueprintValidator:
                 "category": "scene_completeness",
                 "issue": f"scene.characters 누락: {empty_count}/{scene_count}개 씬에서 characters가 비어 있음",
                 "evidence": f"empty_scene_characters={empty_count}",
+                "missing_fields": ["characters"],
                 "fix_hint": "각 scene에 실제 참여 인물을 최소 정확 집합으로 채우기",
             }
         ]
@@ -1826,6 +2095,124 @@ class UnifiedBlueprintValidator:
             )
 
         return issues
+
+    @staticmethod
+    def _collect_episode_progression_issues(
+        *,
+        blueprint: dict,
+        prev_blueprint: dict | None,
+        constraint_block: dict,
+    ) -> list[dict]:
+        """Detect replay of prior-episode scene families that should have progressed forward."""
+        if not isinstance(prev_blueprint, dict) or not isinstance(constraint_block, dict):
+            return []
+
+        progression_packet = constraint_block.get("episode_progression_packet", {})
+        if not isinstance(progression_packet, dict):
+            return []
+        blocked_families = progression_packet.get("blocked_scene_families", [])
+        if not isinstance(blocked_families, list) or not blocked_families:
+            return []
+
+        scenes = blueprint.get("scene_breakdown", {})
+        if isinstance(scenes, list):
+            scenes = {f"scene_{idx + 1}": scene for idx, scene in enumerate(scenes) if isinstance(scene, dict)}
+        if not isinstance(scenes, dict) or not scenes:
+            return []
+
+        must_focus = ""
+        raw_must_focus = constraint_block.get("must_focus", {})
+        if isinstance(raw_must_focus, dict):
+            must_focus = str(raw_must_focus.get("content", "") or "").strip()
+
+        def _normalize_location_variants(raw: object) -> set[str]:
+            location = str(raw or "").strip()
+            if not location:
+                return set()
+            parts = [part.strip() for part in re.split(r"[,/|>→]+", location) if part.strip()]
+            variants = {location}
+            variants.update(parts[-2:])
+            if parts:
+                variants.add(parts[0])
+            return {variant for variant in variants if len(variant) >= 2}
+
+        def _normalize_characters(raw: object) -> set[str]:
+            if isinstance(raw, str):
+                return {raw.strip()} if raw.strip() else set()
+            if not isinstance(raw, list):
+                return set()
+            return {str(item or "").strip() for item in raw if str(item or "").strip()}
+
+        matched_families: list[str] = []
+        seen_family_keys: set[str] = set()
+
+        for scene_key, scene_value in scenes.items():
+            if not isinstance(scene_value, dict):
+                continue
+            current_location_variants = _normalize_location_variants(scene_value.get("location", ""))
+            current_characters = _normalize_characters(scene_value.get("characters", []))
+            if not current_location_variants or not current_characters:
+                continue
+
+            for family in blocked_families:
+                if not isinstance(family, dict):
+                    continue
+                family_key = str(
+                    family.get("scene_key", "") or family.get("label", "") or family.get("location", "")
+                ).strip()
+                if not family_key or family_key in seen_family_keys:
+                    continue
+
+                family_location_variants = {
+                    str(item or "").strip()
+                    for item in family.get("location_variants", []) or []
+                    if str(item or "").strip()
+                }
+                if not family_location_variants:
+                    family_location_variants = _normalize_location_variants(family.get("location", ""))
+                family_characters = _normalize_characters(family.get("characters", []))
+                if not family_location_variants or not family_characters:
+                    continue
+
+                location_match = any(
+                    left in right or right in left
+                    for left in current_location_variants
+                    for right in family_location_variants
+                )
+                overlap_count = len(current_characters & family_characters)
+                min_overlap = 1 if min(len(current_characters), len(family_characters)) <= 1 else 2
+                if not location_match or overlap_count < min_overlap:
+                    continue
+
+                family_label = str(family.get("label", "") or family.get("location", "") or family_key).strip()
+                family_location = str(family.get("location", "") or "").strip()
+                if must_focus and any(token and token in must_focus for token in (family_label, family_location)):
+                    continue
+
+                matched_families.append(
+                    f"{scene_key}->{family_key} ({family_location or family_label}; overlap={overlap_count})"
+                )
+                seen_family_keys.add(family_key)
+                break
+
+        if len(matched_families) < 2:
+            return []
+
+        must_focus_excerpt = must_focus[:160] if must_focus else "(must_focus unavailable)"
+        return [
+            {
+                "severity": "CRITICAL",
+                "category": "episode_progression",
+                "issue": (
+                    f"직전 화에서 이미 소비한 scene family를 이번 화에서 다시 재연함: {'; '.join(matched_families[:3])}"
+                ),
+                "evidence": f"matched_replay_families={matched_families[:3]}; must_focus={must_focus_excerpt}",
+                "fix_hint": (
+                    "직전 화의 서재 대치/식사/방 TV 같은 완료 장면을 반복하지 말고 "
+                    "현재 화 MUST_FOCUS의 새 사건 축으로 전진"
+                ),
+            }
+        ]
 
     @staticmethod
     def _parse_timeline_point(raw, *, pick: str) -> tuple[int, int] | None:
@@ -1977,10 +2364,34 @@ class UnifiedBlueprintValidator:
                         f"< {_AVG_MIN}자/씬 ({scene_count}개 씬, 총 {len(integrated)}자)"
                     ),
                     "evidence": (
-                        f"avg_chars_per_scene={avg_chars_per_scene:.0f}; "
-                        f"scene_keywords={scene_profile.total_keywords}"
+                        f"avg_chars_per_scene={avg_chars_per_scene:.0f}; scene_keywords={scene_profile.total_keywords}"
                     ),
                     "fix_hint": "씬 수를 기계적으로 늘리기보다 각 planning anchor의 goal/key_events를 구체적으로 전개",
+                    "advisory_code": "scene_specificity_band",
+                    "advisory_packet": {
+                        "avg_chars_per_scene": round(avg_chars_per_scene, 1),
+                        "scene_count": scene_count,
+                        "scene_keyword_count": int(scene_profile.total_keywords),
+                    },
+                    "fix_pack": {
+                        "patch_target_records": [
+                            {
+                                "summary": "integrated_scenario",
+                                "field_path": "integrated_scenario",
+                                "target_kind": "local_sentence",
+                            }
+                        ],
+                        "must_fix": [
+                            f"{scene_count}개 씬 기준 planning anchor의 goal/key_events를 행동/대사로 더 구체화"
+                        ],
+                        "do_not_regress": [
+                            "Arc shell, opening-state, ending hook은 유지",
+                        ],
+                        "success_condition": "integrated_scenario가 각 planning anchor를 더 구체적인 행동/장면 단서로 드러낸다",
+                        "evidence_summary": (
+                            f"avg_chars_per_scene={avg_chars_per_scene:.0f}; scene_keywords={scene_profile.total_keywords}"
+                        ),
+                    },
                 }
             )
         # Check 2: Concrete anchor density — count location/institution/number tokens
@@ -2001,6 +2412,30 @@ class UnifiedBlueprintValidator:
                     ),
                     "evidence": f"anchor_count={len(anchors)}",
                     "fix_hint": "구체적 기관명, 인물명, 수치를 포함하여 시나리오 밀도 향상",
+                    "advisory_only": True,
+                    "director_focus": False,
+                    "advisory_code": "anchor_density",
+                    "advisory_packet": {
+                        "anchor_count": len(anchors),
+                        "anchor_min": _ANCHOR_MIN,
+                        "sample_anchors": anchors[:5],
+                        "scene_keyword_count": int(scene_profile.total_keywords),
+                    },
+                    "fix_pack": {
+                        "patch_target_records": [
+                            {
+                                "summary": "integrated_scenario",
+                                "field_path": "integrated_scenario",
+                                "target_kind": "local_sentence",
+                            }
+                        ],
+                        "must_fix": [f"기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 {len(anchors)}개)"],
+                        "do_not_regress": [
+                            "Arc shell, opening-state, ending hook은 유지",
+                        ],
+                        "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+                        "evidence_summary": f"anchor_count={len(anchors)}; sample_anchors={', '.join(anchors[:3])}",
+                    },
                 }
             )
         return issues[:2]

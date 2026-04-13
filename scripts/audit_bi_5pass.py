@@ -32,7 +32,7 @@ from modules.core.work_identity_surface import as_text, resolve_phase0_work_iden
 
 GARBLED_RE = re.compile(r"\?{2,}|�|\ufffd")
 META_REF_RE = re.compile(
-    r"(?<![A-Za-z])(?:" 
+    r"(?<![A-Za-z])(?:"
     r"B\d{1,3}(?:\s*[~→\-]\s*B?\d{1,3})*|"
     r"Block\s+\d{1,3}|블록\s*\d{1,3}|"
     r"ARC[-\s]?\d{1,3}|Arc\s+\d{1,3}|아크\s*\d{1,3}|"
@@ -132,6 +132,62 @@ def parse_eok(raw: Any) -> int | None:
     return jo * 10000 + eok
 
 
+def coerce_portfolio_value(raw: Any) -> tuple[str, int | str | None]:
+    numeric = parse_eok(raw)
+    if numeric is not None:
+        return ("numeric", numeric)
+    text = as_text(raw)
+    if text:
+        return ("text", text)
+    return ("empty", None)
+
+
+def derive_resource_power_checkpoint(block: dict[str, Any]) -> str:
+    genre_ext = block.get("genre_ext", {}) if isinstance(block, dict) else {}
+    content = block.get("content", {}) if isinstance(block, dict) else {}
+    for candidate in (
+        genre_ext.get("capital_after"),
+        genre_ext.get("authority_after"),
+        content.get("reward") if isinstance(content, dict) else "",
+        block.get("title") if isinstance(block, dict) else "",
+    ):
+        text = as_text(candidate)
+        if text:
+            return text
+    return "source TR aligned checkpoint"
+
+
+def resolve_phase0_organization_anchor(phase0: dict[str, Any]) -> str:
+    setting = phase0.get("setting", {}) if isinstance(phase0, dict) else {}
+    if not isinstance(setting, dict):
+        return ""
+    for key in ("starter_company", "starter_organization", "hospital", "organization"):
+        value = setting.get(key)
+        if isinstance(value, dict):
+            name = as_text(value.get("name"))
+            if name:
+                return name
+        else:
+            name = as_text(value)
+            if name:
+                return name
+    return ""
+
+
+def organization_anchor_match(actual_company: Any, expected_anchor: str) -> bool:
+    expected = as_text(expected_anchor)
+    if not expected:
+        return True
+    return as_text(actual_company) == expected
+
+
+def organization_anchor_consistent(serialized: str, expected_anchor: str) -> bool:
+    expected = as_text(expected_anchor)
+    if not expected:
+        return True
+    return expected in serialized
+
+
 def sample_fields(bi: dict[str, Any]) -> list[tuple[str, str]]:
     mb = bi["MasterBible"]
     meta = mb["ProjectData"]["MetaInfo"]
@@ -178,16 +234,24 @@ def build_source_tr_handoff_checks(
 ) -> dict[str, bool]:
     checks = {
         "source_tr_density_gate": bool(source_metrics.get("production_density_gate")),
-        "source_tr_critical_thin_gate": source_metrics.get("hard_gate_checks", {}).get("critical_thin_blocks_zero", True),
+        "source_tr_critical_thin_gate": source_metrics.get("hard_gate_checks", {}).get(
+            "critical_thin_blocks_zero", True
+        ),
         "source_tr_thin_ratio_gate": source_metrics.get("hard_gate_checks", {}).get("thin_blocks_ratio_ok", True),
         "source_tr_late_thin_gate": source_metrics.get("hard_gate_checks", {}).get("late_thin_blocks_zero", True),
-        "source_tr_short_stakes_gate": source_metrics.get("hard_gate_checks", {}).get("short_stakes_blocks_total_ok", True),
-        "source_tr_endgame_stakes_gate": source_metrics.get("hard_gate_checks", {}).get("endgame_low_stakes_zero", True),
+        "source_tr_short_stakes_gate": source_metrics.get("hard_gate_checks", {}).get(
+            "short_stakes_blocks_total_ok", True
+        ),
+        "source_tr_endgame_stakes_gate": source_metrics.get("hard_gate_checks", {}).get(
+            "endgame_low_stakes_zero", True
+        ),
         "source_tr_callback_gate": source_metrics.get("hard_gate_checks", {}).get("callback_ratio_ok", True),
         "source_tr_unresolved_foreshadow_gate": source_metrics.get("hard_gate_checks", {}).get(
             "unresolved_foreshadow_count_ok", True
         ),
-        "source_tr_section_rotation_gate": source_metrics.get("hard_gate_checks", {}).get("section_rotation_present", True),
+        "source_tr_section_rotation_gate": source_metrics.get("hard_gate_checks", {}).get(
+            "section_rotation_present", True
+        ),
         "source_tr_late_opponent_gate": source_metrics.get("hard_gate_checks", {}).get("late_blank_opponent_ok", True),
         "source_tr_solution_stakes_repeat_gate": source_metrics.get("hard_gate_checks", {}).get(
             "normalized_solution_stakes_repeat_ok", True
@@ -197,11 +261,11 @@ def build_source_tr_handoff_checks(
         "source_tr_label_meta_gate": source_metrics.get("hard_gate_checks", {}).get("label_meta_ref_zero", True),
         "source_tr_block_meta_gate": source_metrics.get("hard_gate_checks", {}).get("diegetic_block_ref_zero", True),
         "source_tr_npc_continuity_gate": source_metrics.get("npc_continuity_mismatch_count", 0) == 0,
-        "source_tr_opponent_diversity_gate": source_metrics["opponent_unique"] >= 8 and source_metrics["top_opponent_share"] <= 30.0,
+        "source_tr_opponent_diversity_gate": source_metrics["opponent_unique"] >= 8
+        and source_metrics["top_opponent_share"] <= 30.0,
         "source_tr_weakness_repeat_gate": source_metrics["top_weakness_repetition"] < 3,
         "source_tr_solution_gate": (
-            source_metrics["avg_solution_chars"] >= 120
-            and source_metrics["one_sentence_like_solution_blocks"] <= 20
+            source_metrics["avg_solution_chars"] >= 120 and source_metrics["one_sentence_like_solution_blocks"] <= 20
         ),
         "protagonist_match": protagonist_match,
         "title_match_phase0": title_match_phase0,
@@ -245,7 +309,9 @@ def main() -> int:
 
     draft_valid, draft_errors, draft_warnings = validate_treatment_structure(draft)
     bi_valid, bi_errors, bi_warnings = validate_bible_structure(bi)
-    draft_canonical_valid, draft_canonical_errors, draft_canonical_warnings = validate_treatment_canonical_structure(draft)
+    draft_canonical_valid, draft_canonical_errors, draft_canonical_warnings = validate_treatment_canonical_structure(
+        draft
+    )
     bi_canonical_valid, bi_canonical_errors, bi_canonical_warnings = validate_bible_canonical_structure(bi)
     normalized_draft, draft_normalization_warnings = normalize_treatment_to_canonical_view(draft)
     normalized_bi, bi_normalization_warnings = normalize_bible_to_canonical_view(bi, treatment=draft)
@@ -259,6 +325,7 @@ def main() -> int:
         normalized_bi_canonical_errors,
         normalized_bi_canonical_warnings,
     ) = validate_bible_canonical_structure(normalized_bi)
+    draft_blocks = normalized_draft.get("blocks", []) if isinstance(normalized_draft, dict) else []
     source_metrics = compute_treatment_metrics(draft)
 
     mb = bi["MasterBible"]
@@ -266,7 +333,7 @@ def main() -> int:
     core = mb["ProjectData"]["CoreIdentity"]
     actual = mb["FinanceHUD"]["Protagonist"]["actual_truth"]
     roadmap = mb.get("plot_roadmap", [])
-    starter_company = phase0["setting"]["starter_company"]["name"]
+    organization_anchor = resolve_phase0_organization_anchor(phase0)
     phase0_naming_surface = resolve_phase0_work_identity_surface(phase0)
     bi_naming_surface = read_bi_naming_surface(meta)
     expected_title = phase0_naming_surface["canonical_title"]
@@ -284,27 +351,32 @@ def main() -> int:
     portfolio_monotonic = True
     portfolio_sync = True
     last_amount: int | None = None
+    saw_numeric_amount = False
     for entry in portfolio_history:
-        amount = parse_eok(entry.get("total_assets"))
-        if amount is None:
+        amount_kind, amount = coerce_portfolio_value(entry.get("total_assets"))
+        if amount_kind == "empty":
             portfolio_monotonic = False
             portfolio_sync = False
             break
-        if last_amount is not None and amount < last_amount:
+        if amount_kind == "numeric" and last_amount is not None and amount < last_amount:
             portfolio_monotonic = False
         block_no = int(entry["block"])
-        tr_amount = parse_eok(draft[block_no - 1]["genre_ext"]["capital_after"])
+        tr_amount_kind, tr_amount = coerce_portfolio_value(derive_resource_power_checkpoint(draft_blocks[block_no - 1]))
         if tr_amount != amount:
             portfolio_sync = False
-        last_amount = amount
+        if amount_kind == "numeric" and tr_amount_kind == "numeric":
+            saw_numeric_amount = True
+            last_amount = amount
+    if not saw_numeric_amount:
+        portfolio_monotonic = True
 
-    title_seq_match = [block["title"] for block in roadmap] == [block["title"] for block in draft]
+    title_seq_match = [block["title"] for block in roadmap] == [block["title"] for block in draft_blocks]
     first_last_match = (
-        len(roadmap) == len(draft)
-        and roadmap[0]["title"] == draft[0]["title"]
-        and roadmap[-1]["title"] == draft[-1]["title"]
+        len(roadmap) == len(draft_blocks)
+        and roadmap[0]["title"] == draft_blocks[0]["title"]
+        and roadmap[-1]["title"] == draft_blocks[-1]["title"]
     )
-    roadmap_hash_match = stable_hash(roadmap) == stable_hash(draft)
+    roadmap_hash_match = stable_hash(roadmap) == stable_hash(draft_blocks)
 
     sample_pairs = sample_fields(bi)
     sample_clean = all(not GARBLED_RE.search(value) for _, value in sample_pairs)
@@ -317,7 +389,7 @@ def main() -> int:
         protagonist_match=(core["protagonist"] == actual["name"] == expected_protagonist),
         title_match_phase0=(meta["title"] == expected_title),
         title_within_phase0_surface=(as_text(meta["title"]) in phase0_allowed_titles),
-        starter_company_match=(actual["financial_status"]["company"] == starter_company),
+        starter_company_match=organization_anchor_match(actual["financial_status"]["company"], organization_anchor),
         portfolio_monotonic=portfolio_monotonic,
         portfolio_sync=portfolio_sync,
     )
@@ -364,7 +436,7 @@ def main() -> int:
             {
                 "sample_fields_clean": sample_clean,
                 "foreign_token_zero": len(foreign_hits) == 0,
-                "company_name_consistent": starter_company in serialized,
+                "company_name_consistent": organization_anchor_consistent(serialized, organization_anchor),
                 "npc_name_consistent": npc_name_match,
             },
         ),

@@ -6,7 +6,8 @@ Operator-facing utility scripts. Not imported by production runtime.
 
 - **ops governance**: `ops_validator.py`, `sync_temp_queue_state.py`, `build_execution_roadmap.py`, `populate_process_health_scorecard.py`, `generate_evidence_manifest.py`, `validate_deep_global_survey_bundle.py`, `run_stale_reference_sweep.py`, `validate_material_ssot.py`, `validate_claude_local_paths.py`
 - **external visibility sync**: `sync_clickup_queue.py`
-- **ClickUp view setup**: `setup_clickup_views.py`
+- **material-side ClickUp sync**: `build_material_queue_state.py`, `sync_material_clickup_queue.py`
+- **ClickUp view setup**: `setup_clickup_views.py`, `setup_material_clickup_views.py`
 - **material readiness validation**: `material_readiness_validator.py`
 - **material promotion gate**: `material_promotion_gate.py`
 - **repo preflight gate**: `pre_new_pitch_readiness_gate.py`
@@ -41,12 +42,31 @@ Operator-facing utility scripts. Not imported by production runtime.
 | Validate `.claude` local-path portability for active GSD docs | `python -X utf8 scripts/validate_claude_local_paths.py` |
 | Materialize temp queue state | `python scripts/sync_temp_queue_state.py` |
 | Mirror the current repo-side queue into a ClickUp List | `python -X utf8 scripts/sync_clickup_queue.py --list-id <clickup-list-id> [--dry-run]` |
+| Build the material-side production queue snapshot for ClickUp mirroring | `python -X utf8 scripts/build_material_queue_state.py [--output docs/temp/material-queue-state.json] [--active-only]` |
+| Mirror the material-side production queue into a ClickUp List | `python -X utf8 scripts/sync_material_clickup_queue.py --list-id <clickup-list-id> [--dry-run] [--active-only]` |
 | Create the recommended ClickUp board/table views for the mirrored queue | `python -X utf8 scripts/setup_clickup_views.py --list-id <clickup-list-id> [--dry-run]` |
+| Create the recommended material-side board/table views for the production schedule list | `python -X utf8 scripts/setup_material_clickup_views.py --list-id <clickup-list-id> [--dry-run]` |
 
 ClickUp sync notes:
 
 - the script loads root `.env` first, then overrides ClickUp-specific values from `secrets/clickup.env` when present
 - set `CLICKUP_ENV_FILE` if you want the ClickUp-only env file in a different path
+- material-side sync may additionally use `CLICKUP_MATERIAL_ENV_FILE`, `CLICKUP_MATERIAL_LIST_ID`, and `CLICKUP_MATERIAL_STATUS_MAP_JSON`
+- material-side sync defaults to a stage-visible schedule: `canon` + `TR/BI production` + `BI complete`
+- use `--active-only` if you want to hide completed items and show only canon/in-flight work
+- if the material production list later gets manual custom fields, the sync is already field-ready for these names:
+  - `Work ID`
+  - `Material Stage`
+  - `Ops State`
+  - `Current Truth Path`
+  - `Sequential Status Path`
+  - `Last Sequential Block Pass`
+  - `Next Unit Type`
+  - `Next Block ID`
+  - `Resume Basis`
+  - `Production Complete`
+  - `BI Complete`
+  - `Updated At`
 | Check UTF-8 hygiene | `python scripts/check_utf8_hygiene.py <files>` |
 | Run `WG-V1` shape validation on a draft or publishable `work_guard` | `python -X utf8 scripts/run_work_guard_v1.py --path <yaml>` |
 | Build execution roadmap | `python scripts/build_execution_roadmap.py` |

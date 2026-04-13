@@ -207,6 +207,9 @@ def _build_start_state_line_from_structured_state(start_state: dict[str, Any]) -
         ("소지품", "equipment"),
         ("부상", "injuries"),
         ("내공", "internal_energy"),
+        ("총자산", "total_assets"),
+        ("자본", "capital"),
+        ("포지션", "portfolio_position"),
     ):
         rendered = _render_start_state_field_value(start_state.get(key))
         if not rendered:
@@ -235,6 +238,9 @@ def _sync_first_episode_start_state_line(tactical_doc: str, start_state: dict[st
         synced_line = _replace_or_append_start_state_field(synced_line, "소지품", start_state.get("equipment"))
         synced_line = _replace_or_append_start_state_field(synced_line, "부상", start_state.get("injuries"))
         synced_line = _replace_or_append_start_state_field(synced_line, "내공", start_state.get("internal_energy"))
+        synced_line = _replace_or_append_start_state_field(synced_line, "총자산", start_state.get("total_assets"))
+        synced_line = _replace_or_append_start_state_field(synced_line, "자본", start_state.get("capital"))
+        synced_line = _replace_or_append_start_state_field(synced_line, "포지션", start_state.get("portfolio_position"))
         first_section = (
             first_section[: start_state_match.start()] + synced_line + first_section[start_state_match.end() :]
         )
@@ -1111,10 +1117,31 @@ def _resolve_stage2_retry_directives(audit: dict | None) -> str:
     return ""
 
 
-def _resolve_stage2_runtime_advisory(audit: dict | None) -> str:
+def _resolve_stage2_runtime_advisory(audit: dict | None, artifact_payload: dict | None = None) -> str:
     if not isinstance(audit, dict):
+        audit = {}
+    explicit = str(audit.get("runtime_advisory", "") or "").strip()
+    if explicit:
+        return explicit
+    decision = str(audit.get("decision", "") or "").strip().upper()
+    has_runtime_risk = bool(
+        audit.get("quality_risk", False) or decision in {"PASS_WITH_FIX", "PASS_WITH_WARNING", "REJECT"}
+    )
+    if not has_runtime_risk:
         return ""
-    return str(audit.get("runtime_advisory", "") or "").strip()
+    verdict_reason = _resolve_stage2_verdict_reason(audit, artifact_payload)
+    selection_reason = _resolve_stage2_selection_reason(audit, artifact_payload)
+    for value in (
+        audit.get("open_review", ""),
+        verdict_reason,
+        audit.get("fix_scope_reasoning", ""),
+        selection_reason,
+        audit.get("reason", ""),
+    ):
+        text = str(value or "").strip()
+        if text and not _is_escalatory_stage2_verdict_reason(text):
+            return text
+    return ""
 
 
 def _coerce_stage2_audit_score(audit: dict | None) -> int:
@@ -1737,6 +1764,7 @@ class Stage2Finalizer:
         if all_refined_arcs:
             prev_arc = all_refined_arcs[-1]
             prev_constraints = prev_arc.get("state_constraints", {}) or {}
+            prev_end_state = prev_constraints.get("arc_end_state", {}) or {}
             correct_equip = _compute_inventory_carryover(
                 prev_arc.get("joint_docs", {}).get("physical_inventory", []),
                 prev_arc.get("status_shadow", {}).get("item_consumption", []),
@@ -1744,15 +1772,48 @@ class Stage2Finalizer:
             )
 
             curr_sc = refined_arc.get("state_constraints", {})
+            if not isinstance(curr_sc, dict):
+                curr_sc = {}
             curr_start = curr_sc.get("arc_start_state", {})
+            if not isinstance(curr_start, dict):
+                curr_start = {}
+            synced_start_fields: list[str] = []
+            prev_end_location = (
+                collapse_stage2_location_label(prev_end_state.get("location"))
+                or str(prev_end_state.get("location") or "").strip()
+            )
+            curr_start_location = (
+                collapse_stage2_location_label(curr_start.get("location"))
+                or str(curr_start.get("location") or "").strip()
+            )
+            if prev_end_location and curr_start_location != prev_end_location:
+                curr_start["location"] = prev_end_location
+                synced_start_fields.append("location")
+            for key in ("total_assets", "capital", "portfolio_position"):
+                prev_value = prev_end_state.get(key)
+                prev_text = str(prev_value or "").strip()
+                if not prev_text:
+                    continue
+                if str(curr_start.get(key) or "").strip() == prev_text:
+                    continue
+                curr_start[key] = prev_value
+                synced_start_fields.append(key)
             old_equip = _coerce_inventory_items(curr_start.get("equipment", []))
             if old_equip != correct_equip:
                 curr_start["equipment"] = correct_equip
-                curr_sc["arc_start_state"] = curr_start
-                refined_arc["state_constraints"] = curr_sc
+                synced_start_fields.append("equipment")
                 self.ctx.ui.log(
                     f"      🔧 [Equipment Sync] Arc {global_arc_no} 시작 소지품 → "
                     f"이전 Arc 종료 소지품으로 동기화 ({len(correct_equip)}개 아이템)"
+                )
+
+            if synced_start_fields:
+                curr_sc["arc_start_state"] = curr_start
+                refined_arc["state_constraints"] = curr_sc
+            carryover_fields = [field for field in synced_start_fields if field != "equipment"]
+            if carryover_fields:
+                self.ctx.ui.log(
+                    f"      🔧 [Carryover Sync] Arc {global_arc_no} 시작 상태 authority → {', '.join(carryover_fields)}"
                 )
 
             synced_tactical_doc = _sync_first_episode_start_state_line(
@@ -2570,7 +2631,7 @@ class Stage2Finalizer:
         if not session_logger:
             return
         try:
-            runtime_advisory = _resolve_stage2_runtime_advisory(audit)
+            runtime_advisory = _resolve_stage2_runtime_advisory(audit, artifact_payload)
             retry_directives = _resolve_stage2_retry_directives(audit)
             session_logger.log_decision(
                 stage="stage2",
@@ -3440,7 +3501,7 @@ class Stage2Finalizer:
 
         _selection_reason = _resolve_stage2_selection_reason(audit, artifact_payload)
         _verdict_reason = _resolve_stage2_verdict_reason(audit, artifact_payload)
-        _runtime_advisory = _resolve_stage2_runtime_advisory(audit)
+        _runtime_advisory = _resolve_stage2_runtime_advisory(audit, artifact_payload)
         _retry_directives = _resolve_stage2_retry_directives(audit)
 
         if getattr(self.ctx, "pass_rate_monitor", None):
@@ -3631,7 +3692,7 @@ class Stage2Finalizer:
     ) -> None:
         selection_reason = _resolve_stage2_selection_reason(audit, artifact_payload)
         verdict_reason = _resolve_stage2_verdict_reason(audit, artifact_payload)
-        runtime_advisory = _resolve_stage2_runtime_advisory(audit)
+        runtime_advisory = _resolve_stage2_runtime_advisory(audit, artifact_payload)
         retry_directives = _resolve_stage2_retry_directives(audit)
         try:
             db = getattr(getattr(self.ctx, "current_project", None), "db", None)

@@ -336,6 +336,85 @@
       {"id": "FS-04", "name": "독자 조건표", "seed_block": 30, "hint_blocks": [43, 47], "payoff_block": 66, "payoff_meaning": "임시 PM의 line 감각이 회사 표준 조건표로 성장한다."},
       {"id": "FS-05", "name": "회사가 먼저 찾는 사람", "seed_block": 19, "hint_blocks": [40, 60], "payoff_block": 69, "payoff_meaning": "도혁과 그의 방식이 함께 호출되는 상태가 완성된다."}
     ],
+    "opponent_transition_plan": [
+      {
+        "faction": "채널운영 관성 / 문제 거래처 line",
+        "phase": "파일 접근 차단",
+        "block_range": "1-10",
+        "entry_block": 1,
+        "main_actors": ["채널운영 관성", "문제 거래처 라인"],
+        "goal": "실무 파일과 브리핑 owner를 기존 line 안에 묶어 신입의 진입을 막는다.",
+        "methods": ["버전 혼선 유지", "예외코드와 정산 시차 은폐", "문제 line freeze 회피"],
+        "weakness": "원본 파일과 owner 표를 같은 자리에서 대조하면 누락 구조가 바로 드러난다.",
+        "transition_block": 10
+      },
+      {
+        "faction": "현장 보수파 / 거래처 방어 라인",
+        "phase": "파일럿 역풍",
+        "block_range": "11-20",
+        "entry_block": 11,
+        "main_actors": ["현장 보수파", "거래처 방어 라인"],
+        "goal": "파일럿 실적을 현장 예외와 기존 KPI 해석으로 무력화한다.",
+        "methods": ["현장별 병목 분산", "협상 조항 책임 회피", "기존 KPI 역공"],
+        "weakness": "현장 체크리스트와 재무 반증표가 결합되면 기존 KPI 해석이 무너진다.",
+        "transition_block": 20
+      },
+      {
+        "faction": "특수 과제 신용탈취 라인 / 채널전략팀장",
+        "phase": "공로 흡수와 owner 탈취",
+        "block_range": "21-30",
+        "entry_block": 21,
+        "main_actors": ["특수 과제 신용탈취 라인", "채널전략팀장(실명 미정)"],
+        "goal": "특수 과제 성과를 본사 line 공으로 흡수하고 도혁을 follow-up 담당으로만 남긴다.",
+        "methods": ["자료 순서 선점", "cross-team 호출 통제", "이름 없는 공 구조"],
+        "weakness": "로그와 첨부 이력을 복원하면 실제 owner 이동 경로가 다시 드러난다.",
+        "transition_block": 30
+      },
+      {
+        "faction": "예산-재무 책임회피 라인",
+        "phase": "예산 동결 압박",
+        "block_range": "31-40",
+        "entry_block": 31,
+        "main_actors": ["예산-재무 책임회피 라인", "budget code owner conflict"],
+        "goal": "실행 owner와 예산 owner를 분리해 공동권한을 무력화한다.",
+        "methods": ["budget code owner conflict", "예산 동결", "공동 검토 지연"],
+        "weakness": "공동 검토선과 예외 집행 기준표가 생기면 현업 line과 재무 line을 동시에 묶을 수 있다.",
+        "transition_block": 40
+      },
+      {
+        "faction": "본사 정치 / 승진 심사 라인",
+        "phase": "승진 보류와 line 포섭",
+        "block_range": "41-50",
+        "entry_block": 41,
+        "main_actors": ["본사 정치/승진 심사 라인", "채널전략팀장(실명 미정)"],
+        "goal": "도혁을 사람 자원으로만 쓰고 독자 line은 주지 않은 채 승진 심사에서 보류시킨다.",
+        "methods": ["sponsor claim", "과잉 개입 프레임", "단일 line 의존 압박"],
+        "weakness": "owner 이동표와 반복 손실 감소표가 쌓이면 도혁 방식이 사람 의존이 아니라 구조라는 점이 드러난다.",
+        "transition_block": 50
+      },
+      {
+        "faction": "계열사 보수파 / 계열사 운영이사",
+        "phase": "공통 원장 거부",
+        "block_range": "51-60",
+        "entry_block": 51,
+        "main_actors": ["계열사 보수파", "계열사 운영이사(실명 미정)"],
+        "goal": "HQ 기준표를 local 예외와 비용 귀속 문제로 되돌려 독자 line 확장을 막는다.",
+        "methods": ["local 예외 확대", "비용 귀속 롤백", "HQ 평가 프레임"],
+        "weakness": "bridge 열과 package v1이 있으면 공통 기준과 local 예외를 같은 owner 표 아래 다시 묶을 수 있다.",
+        "transition_block": 60
+      },
+      {
+        "faction": "전사 흡수 라인 / 혁신PMO 총괄",
+        "phase": "방식 흡수 시도",
+        "block_range": "61-70",
+        "entry_block": 61,
+        "main_actors": ["전사 흡수 라인", "혁신PMO 총괄(실명 미정)"],
+        "goal": "도혁과 기준표를 전사 line 아래 흡수해 사람만 쓰고 방식은 통제하려 한다.",
+        "methods": ["line capture", "exclusive reporting", "긴급 triage person-first 운용"],
+        "weakness": "부재 cost log와 company-first-call proof가 쌓이면 사람보다 조건표와 shared board가 먼저 필요하다는 점이 드러난다.",
+        "transition_block": 70
+      }
+    ],
     "capital_curve": [
       {"block": 2, "event": "공유 메일 실명 노출"},
       {"block": 3, "event": "브리핑 owner"},

@@ -1,14 +1,14 @@
 # 0_0 Stage4 Repair-Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (survey-backed promotion complete; bounded sink/readback fixes plus operator-visible first-class snapshot promotion have landed, but shared grammar closure and fresh runtime proof remain open)
+Status: partially_realized (proof-pending Stage4 substrate lane; bounded sink/readback fixes plus operator-visible first-class snapshot promotion have landed, and the later live-workspace tranche now also lands Stage4 raw-evidence persistence plus FailureAnalyzer raw-rationale health/watchlist/operator-summary substrate; the 2026-04-12 static refresh reopens no new Stage4 P0/P1, marks the older repair-P1 wording stale-likely under current code/test evidence, and keeps this lane near the front of the merged proof wave because Stage4 consumer/repair still own the runtime closure/demotion check for residual mismatch volume on current HEAD)
 Canonical Path: `docs/2026-04-02/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `aaf495d65c95c9ffe7ea99277f315a69609252db`
 - Baseline Dirty Summary: `dirty: Stage4 contract docs/code/test deltas active; roadmap/temp queue already dirty; current ep2 canary work in progress`
-- Resume Commit: `0d7c077a9e6f14575aba7fc509b836d218db610d`
-- Resume Drift Summary: `the lane no longer sits at pure survey status: bounded `stage4_interview_round.py` and `db_manager.py` fixes tightened fix-scope/readback behavior, the 2026-04-06 global P0-P1 survey confirmed the remaining live repair-contract seam as phantom mismatch inflation across repair_scope/gate_basis/readback surfaces, and the 2026-04-07 bounded `db_manager.py` + `bridge_server.py` + `stage4_canary_tools.py` patch promoted first-class repair subtype/provenance/scope-authority fields into operator-visible readback summaries with focused static validation while fresh canary/live proof remains deferred`
+- Resume Commit: `2b7cb64f2d1fe2cd1152806a5cc37795609f9755`
+- Resume Drift Summary: `current main@2b7cb64f is authoritative after the stale-base reset; the 2026-04-12 static refresh reopens no new Stage4 P0/P1, marks the older repair-P1 wording stale-likely under current code/test evidence, confirms that raw-evidence persistence plus FailureAnalyzer raw-rationale health/watchlist/operator-summary substrate are now landed, and keeps this lane proof-pending inside the front merged proof wave because Stage4 consumer/repair still own runtime closure/demotion checks on residual mismatch volume`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-repair-contract-grammar-global-bounded-survey.md`
 - `docs/2026-04-06/rol-global-terminal4-stage4-pipeline-p0p1.md`
@@ -30,7 +30,7 @@ This lane is not a fresh bugfix wave for one episode. It exists to normalize the
 - fix-scope ownership visibility
 - operator sink propagation
 
-This lane is intentionally below the active `ep2` runtime verification stack. It is a parked contract-normalization wave, not the immediate runtime blocker.
+This lane remains below the aggregate Stage4 consumer lane, but it stays inside the same front proof wave because Stage4 still owns the runtime closure/demotion check for the older repair readback framing. It is not a fresh broad implementation blocker.
 
 ## 2. Baseline Facts
 
@@ -45,7 +45,7 @@ This lane is intentionally below the active `ep2` runtime verification stack. It
   - subtype naming fragmentation
   - operator sink blackout for structured repair fields
   - invisible widening from `authoritative_fix_scope` to runtime-derived scope
-- 2026-04-06 revalidation narrows the still-live P1 to a specific readback class:
+- 2026-04-06 revalidation narrowed the then-live P1 framing to a specific readback class; the 2026-04-11 current-main static refresh now treats that older wording as stale-likely pending fresh proof:
   - `repair_scope`, `gate_basis`, `repair_contract` grammar, and scope-authority metadata can still surface as phantom sink mismatches because first-class persistence and readback normalization are incomplete
 - The survey identified a minimum common field set of 12 fields:
   - `check`
@@ -74,6 +74,7 @@ Included:
 - `modules/core/stage4_post_pass_runtime.py`
 - `modules/core/stage4_post_processor.py`
 - `modules/core/stage4_immutable_fact_contract.py`
+- `modules/core/stage4_raw_evidence.py`
 - `modules/core/db_manager.py`
 - `modules/core/failure_analyzer.py`
 - operator-visible Stage4 sink surfaces:
@@ -116,6 +117,7 @@ Primary debt inventory:
 4. fix-scope widening can occur without preserving the original authoritative scope in operator-facing summaries
 5. post-pass truth surfaces and repair-contract truth are still too disconnected
 6. metadata-absence artifacts can still inflate sink-alignment mismatch reports at readback time
+7. raw-evidence presence and surface parity must remain aligned with structured sink truth after the new substrate landing
 
 ## 5. Pass 2. Semantic Classification
 
@@ -291,7 +293,7 @@ Acceptance shape:
 - Pass 3. Execution and Readability: tranches, acceptance criteria, guardrails, and repair/readback owner files are actionable and bounded
 - Confidence: 0.97
 
-## 14. 2026-04-06 Opus P0-P1 Revalidation: Repair Readback Phantom Mismatch
+## 14. 2026-04-06 Opus P0-P1 Revalidation: Historical Repair Readback Phantom Mismatch Framing
 
 The 2026-04-06 global P0-P1 Opus survey converted the remaining Stage4 repair-contract debt into a narrower execution statement than the original survey-backed promotion.
 
@@ -301,7 +303,7 @@ Queue semantics remain unchanged:
 - this lane stays above parked future-wave Stage2/3 work
 - queue order does not change
 
-Confirmed live P1:
+Historical P1 framing:
 
 - `stage4_interview_round.py` can correctly derive `repair_scope`, `gate_basis`, `scope_authority`, and `authoritative_fix_scope`
 - but those fields are not yet normalized as first-class readback truth across all persistence/sink surfaces
@@ -316,7 +318,7 @@ Confirmed live P1:
 
 Execution consequence:
 
-- the narrowest active owner set for this residual P1 is:
+- the narrowest active owner set for this residual readback seam is:
   - `modules/core/stage4_interview_round.py`
   - `modules/core/db_manager.py`
   - `modules/core/failure_analyzer.py`
@@ -324,10 +326,10 @@ Execution consequence:
 
 Revalidation note:
 
-- static evidence is sufficient to keep this as a live execution SSOT
-- fresh run is helpful for measuring mismatch volume, but not required to prove the readback seam exists
+- static evidence is sufficient to keep this as the front Stage4 repair proof substrate
+- static evidence is not sufficient to reopen or confirm a new current-main P1; fresh proof is required to decide runtime demotion of the older mismatch framing
 
-## 14A. 2026-04-09 Static Validity Recheck: Stale-Likely P1 Note
+## 14A. 2026-04-09 -> 2026-04-11 Static Validity Recheck: Stale-Likely Repair P1 Note
 
 A current-HEAD static recheck against the landed code and focused tests no longer reproduces section 14 exactly as written.
 
@@ -344,7 +346,9 @@ Recheck anchors:
 Current reading:
 
 - the older statement that the repair-contract fields are "not yet normalized as first-class readback truth across all persistence/sink surfaces" is now stale-likely under static review
-- static review alone still cannot prove full demotion, because fresh canary/live proof has not yet re-measured mismatch volume on current HEAD
+- the current static refresh reopens no new Stage4 P0/P1 on this topic
+- this lane remains proof-pending inside the same merged proof wave because Stage4 consumer/repair still own the runtime closure/demotion check for mismatch volume on current HEAD
+- static review alone still cannot prove full demotion or closure, because fresh canary/live proof has not yet re-measured mismatch volume on current HEAD
 - queue order therefore remains unchanged for now; treat this as `stale-likely / runtime-demotion-pending`, not as a fresh broad implementation reopen
 
 ## 15. 2026-04-07 Bounded Readback Surface Promotion

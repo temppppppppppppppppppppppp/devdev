@@ -3,6 +3,7 @@ Stage4 post-select validation/runtime orchestration split.
 """
 
 import logging
+import re
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -11,13 +12,215 @@ if TYPE_CHECKING:
     from modules.core.stage4_interview_round import Stage4InterviewRound
 
 
+_POST_SELECT_QUOTED_TOKEN_RE = re.compile(r"'([^']+)'")
+_POST_SELECT_GROUP_TOKEN_RE = re.compile(r"([A-Za-z0-9가-힣]+그룹)")
+_POST_SELECT_ASSET_AMOUNT_RE = re.compile(
+    r"(\d[\d,]*(?:\.\d+)?\s*억(?:\s*원)?(?:\s*규모의)?\s*개인 명의 자산)"
+)  # utf8-hygiene: allow-line regex optional-group tokens next to Hangul
+
+
+def _normalize_post_select_truth_pin_value(value: object) -> str:
+    return str(value or "").strip()
+
+
+def _append_post_select_truth_pin(
+    truth_pins: list[dict[str, str]],
+    *,
+    pin_key: str,
+    family: str,
+    expected: str,
+    observed: str,
+    source_line: str,
+) -> None:
+    normalized_expected = _normalize_post_select_truth_pin_value(expected)
+    normalized_observed = _normalize_post_select_truth_pin_value(observed)
+    normalized_source = _normalize_post_select_truth_pin_value(source_line)
+    if not (pin_key and family and normalized_expected):
+        return
+    candidate = {
+        "pin_key": pin_key,
+        "family": family,
+        "expected": normalized_expected,
+        "observed": normalized_observed,
+        "source_line": normalized_source,
+    }
+    if candidate not in truth_pins:
+        truth_pins.append(candidate)
+
+
+def _extract_post_select_truth_pins(
+    *,
+    conflicts: list[str] | None,
+    contradiction_details: list[str] | None,
+) -> list[dict[str, str]]:
+    truth_pins: list[dict[str, str]] = []
+    for raw_line in list(conflicts or []) + list(contradiction_details or []):
+        line = str(raw_line or "").strip()
+        if not line:
+            continue
+
+        quoted_tokens = [token.strip() for token in _POST_SELECT_QUOTED_TOKEN_RE.findall(line) if token.strip()]
+        group_tokens: list[str] = []
+        for token in quoted_tokens:
+            match = _POST_SELECT_GROUP_TOKEN_RE.search(token)
+            if match:
+                group_name = match.group(1).strip()
+                if group_name and group_name not in group_tokens:
+                    group_tokens.append(group_name)
+        if len(group_tokens) >= 2:
+            _append_post_select_truth_pin(
+                truth_pins,
+                pin_key="family_group_name",
+                family="proper_noun_group",
+                expected=group_tokens[0],
+                observed=group_tokens[1],
+                source_line=line,
+            )
+
+        if "개인 명의 자산" not in line:
+            continue
+        expected = "개인 명의 자산 없음" if "자산이 없" in line else ""
+        observed = ""
+        observed_match = _POST_SELECT_ASSET_AMOUNT_RE.search(line)
+        if observed_match:
+            observed = observed_match.group(1).strip()
+        elif expected and ("보유" in line or "현금화" in line):
+            observed = "개인 명의 자산 보유"
+        if expected and observed:
+            _append_post_select_truth_pin(
+                truth_pins,
+                pin_key="protagonist_personal_assets",
+                family="asset_state",
+                expected=expected,
+                observed=observed,
+                source_line=line,
+            )
+    return truth_pins
+
+
+def _collect_post_select_rewrite_required_reasons(
+    *,
+    conflict_types: list[str] | None,
+    contradiction_types: list[str] | None,
+    truth_pins: list[dict[str, str]] | None,
+) -> list[str]:
+    reasons: list[str] = []
+    normalized_conflict_types = {
+        str(item or "").strip().lower() for item in (conflict_types or []) if str(item or "").strip()
+    }
+    normalized_contradiction_types = {
+        str(item or "").strip().lower() for item in (contradiction_types or []) if str(item or "").strip()
+    }
+    if {"continuity", "history"}.issubset(normalized_conflict_types | normalized_contradiction_types):
+        reasons.append("dual_conflict_continuity_history")
+    if "proper_noun" in normalized_contradiction_types:
+        reasons.append("proper_noun_truth_drift")
+    for pin in truth_pins or []:
+        family = str(pin.get("family", "") or "").strip().lower()
+        if family == "proper_noun_group" and "proper_noun_group_truth_drift" not in reasons:
+            reasons.append("proper_noun_group_truth_drift")
+        elif family == "asset_state" and "asset_state_truth_drift" not in reasons:
+            reasons.append("asset_state_truth_drift")
+    return reasons
+
+
+def _should_allow_bounded_post_select_local_fix(
+    *,
+    conflict_types: list[str] | None,
+    contradiction_types: list[str] | None,
+    truth_pins: list[dict[str, str]] | None,
+    target_kind: str,
+    fix_pack_ready: bool,
+) -> bool:
+    normalized_target_kind = str(target_kind or "").strip().lower()
+    if not fix_pack_ready or normalized_target_kind not in {"entity_ref", "local_phrase", "local_sentence"}:
+        return False
+
+    rewrite_required_reasons = _collect_post_select_rewrite_required_reasons(
+        conflict_types=conflict_types,
+        contradiction_types=contradiction_types,
+        truth_pins=truth_pins,
+    )
+    if rewrite_required_reasons:
+        return False
+
+    effective_types = {
+        str(item or "").strip().lower()
+        for item in list(conflict_types or []) + list(contradiction_types or [])
+        if str(item or "").strip()
+    }
+    return bool(effective_types) and effective_types.issubset(
+        {
+            "continuity",
+            "timeline",
+            "movement",
+            "location",
+            "facing",
+            "dialogue",
+            "opening_action_continuity",
+        }
+    )
+
+
+def _build_post_select_conflict_fingerprint(
+    *,
+    conflict_types: list[str] | None,
+    contradiction_types: list[str] | None,
+    truth_pins: list[dict[str, str]] | None,
+) -> str:
+    tags = ["post_select_conflict"]
+    normalized_types = sorted(
+        {
+            str(item or "").strip().lower()
+            for item in list(conflict_types or []) + list(contradiction_types or [])
+            if str(item or "").strip()
+        }
+    )
+    tags.extend(f"type:{token}" for token in normalized_types)
+    for pin in truth_pins or []:
+        pin_key = str(pin.get("pin_key", "") or "").strip().lower()
+        expected = re.sub(r"\s+", "_", str(pin.get("expected", "") or "").strip().lower())
+        observed = re.sub(r"\s+", "_", str(pin.get("observed", "") or "").strip().lower())
+        if pin_key and expected:
+            tags.append(f"pin:{pin_key}:{expected}->{observed or 'blank'}")
+    return "|".join(tags)
+
+
+def _build_post_select_fix_scope_reasoning(conflict_contract: dict | None) -> str:
+    if not isinstance(conflict_contract, dict) or not conflict_contract:
+        return ""
+    reasons = [
+        str(item or "").strip()
+        for item in (conflict_contract.get("rewrite_required_reasons") or [])
+        if str(item or "").strip()
+    ]
+    truth_pins = conflict_contract.get("truth_pins") or []
+    lines: list[str] = []
+    if reasons:
+        lines.append("[post-select truth-pin reroute] local patch 금지: " + ", ".join(reasons))
+    if isinstance(truth_pins, list):
+        for pin in truth_pins[:4]:
+            if not isinstance(pin, dict):
+                continue
+            pin_key = str(pin.get("pin_key", "") or "").strip()
+            expected = str(pin.get("expected", "") or "").strip()
+            observed = str(pin.get("observed", "") or "").strip()
+            if pin_key and expected:
+                lines.append(f"- preserve {pin_key}={expected} (reject drift={observed or 'unknown'})")
+    return "\n".join(lines).strip()
+
+
 def _build_post_select_conflict_contract(
     conflicts: list[str] | None,
     *,
+    conflict_types: list[str] | None = None,
     contradiction_types: list[str] | None = None,
     contradiction_details: list[str] | None = None,
     bounded_local_fix_hint: bool = False,
     target_kind: str = "",
+    truth_pins: list[dict[str, str]] | None = None,
+    conflict_fingerprint: str = "",
+    rewrite_required_reasons: list[str] | None = None,
 ) -> dict[str, object]:
     entries: list[dict[str, str]] = []
     if not isinstance(conflicts, list):
@@ -71,6 +274,19 @@ def _build_post_select_conflict_contract(
         contract["target_kind"] = normalized_target_kind
     if bounded_local_fix_hint:
         contract["bounded_local_fix_hint"] = True
+    normalized_truth_pins = [dict(item) for item in truth_pins or [] if isinstance(item, dict)]
+    if normalized_truth_pins:
+        contract["truth_pins"] = normalized_truth_pins
+    normalized_conflict_fingerprint = str(conflict_fingerprint or "").strip()
+    if normalized_conflict_fingerprint:
+        contract["conflict_fingerprint"] = normalized_conflict_fingerprint
+    normalized_rewrite_required_reasons = []
+    for item in rewrite_required_reasons or []:
+        token = str(item or "").strip()
+        if token and token not in normalized_rewrite_required_reasons:
+            normalized_rewrite_required_reasons.append(token)
+    if normalized_rewrite_required_reasons:
+        contract["rewrite_required_reasons"] = normalized_rewrite_required_reasons
     return contract
 
 
@@ -433,12 +649,36 @@ class Stage4PostSelectRuntime:
 
         fix_pack_contract = owner._evaluate_fix_pack_contract(director_result.get("fix_pack"))
         normalized_fix_pack = fix_pack_contract.get("fix_pack", {})
+        truth_pins = _extract_post_select_truth_pins(
+            conflicts=post_select_conflicts,
+            contradiction_details=compact_contradiction_details,
+        )
+        rewrite_required_reasons = _collect_post_select_rewrite_required_reasons(
+            conflict_types=classification.conflict_types,
+            contradiction_types=contradiction_types,
+            truth_pins=truth_pins,
+        )
+        conflict_fingerprint = _build_post_select_conflict_fingerprint(
+            conflict_types=classification.conflict_types,
+            contradiction_types=contradiction_types,
+            truth_pins=truth_pins,
+        )
         conflict_contract = _build_post_select_conflict_contract(
             post_select_conflicts,
+            conflict_types=classification.conflict_types,
             contradiction_types=contradiction_types,
             contradiction_details=compact_contradiction_details,
-            bounded_local_fix_hint=bool(fix_pack_contract.get("ready")),
+            bounded_local_fix_hint=_should_allow_bounded_post_select_local_fix(
+                conflict_types=classification.conflict_types,
+                contradiction_types=contradiction_types,
+                truth_pins=truth_pins,
+                target_kind=str(normalized_fix_pack.get("target_kind", "") or ""),
+                fix_pack_ready=bool(fix_pack_contract.get("ready")),
+            ),
             target_kind=str(normalized_fix_pack.get("target_kind", "") or ""),
+            truth_pins=truth_pins,
+            conflict_fingerprint=conflict_fingerprint,
+            rewrite_required_reasons=rewrite_required_reasons,
         )
 
         if contradiction_types:
@@ -515,6 +755,11 @@ class Stage4PostSelectRuntime:
             previous_attempt["contradiction_details"] = list(contradiction_payload.compact_contradiction_details)
         if contradiction_payload.conflict_contract:
             previous_attempt["conflict_contract"] = contradiction_payload.conflict_contract
+            conflict_fingerprint = str(
+                contradiction_payload.conflict_contract.get("conflict_fingerprint", "") or ""
+            ).strip()
+            if conflict_fingerprint:
+                previous_attempt["conflict_fingerprint"] = conflict_fingerprint
 
         previous_attempt["reuse_contract"] = {
             "mode": "best_manuscript_baseline",
@@ -550,5 +795,9 @@ class Stage4PostSelectRuntime:
         )
         if scope_authority:
             previous_attempt["scope_authority"] = scope_authority
+
+        fix_scope_reasoning = _build_post_select_fix_scope_reasoning(previous_attempt.get("conflict_contract"))
+        if fix_scope_reasoning:
+            previous_attempt["fix_scope_reasoning"] = fix_scope_reasoning
 
         return previous_attempt

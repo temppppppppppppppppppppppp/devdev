@@ -1,7 +1,7 @@
 # hoegui_surgeon live status
 
-Date: 2026-04-09
-Status: current operator truth
+Date: 2026-04-09 (updated 2026-04-12, latest refresh after BI build complete / BI audit FAIL / rehab wave 6 complete)
+Status: current operator truth (TR full 1-70 saved, BI built, BI audit FAIL, label-meta and block_cider rehab closed, Blocks 21-60 diegetic-meta sweep closed, diegetic-meta/NPC rehab still pending)
 Work ID: `hoegui_surgeon`
 Family: `medical_regression` (`blockguide` downstream harness overlay)
 
@@ -9,15 +9,15 @@ Family: `medical_regression` (`blockguide` downstream harness overlay)
 
 ## 1. Operator Reading
 
-- inventory role: `root_admitted_inflight_work`
-- operational state: `current_root_live_tr_saved_block_60_arc06_exit_3pass_audited`
+- inventory role: `root_admitted_full_tr_built_bi_audit_fail`
+- operational state: `current_root_live_tr_full_70_saved_bi_built_audit_fail_pending_schema_backfill`
 - schema status: `not_pair_tracked`
 - benchmark alias: `not_applicable`
 - benchmark freshness: `not_applicable`
 - current authority anchor:
   - `material_ssot/20_pitch/canon/hoegui_surgeon.md`
-- last production batch: Block 60 (ARC-06 exit `교육 재편`), saved 2026-04-09
-- last batch audit: `docs/2026-04-09/hoegui_surgeon_block_51_60_self_audit.md` (PASS 3-Pass, ready_for_block_61 = yes)
+- last production batch: Block 70 (ARC-07 `왕좌`), saved 2026-04-12
+- last batch audit: `bible/audit_reports/hoegui_surgeon_bi_5pass.md` (FAIL; schema_backfill rehab required before BI completion)
 - 5-block cap status: 매 오더 1-block envelope 유지 (2026-04-08 operator order 이래 자동 연속 생산 disabled)
 
 ## 2. Current Live Artifacts
@@ -25,7 +25,15 @@ Family: `medical_regression` (`blockguide` downstream harness overlay)
 - canon pitch:
   - `material_ssot/20_pitch/canon/hoegui_surgeon.md`
 - latest operator handoff:
-  - `docs/2026-04-09/hoegui_surgeon_arc07_entry_handoff.md` (ARC-07 Block 61 entry + I-51-60-A/D annotations)
+  - `docs/2026-04-09/hoegui_surgeon_session_handoff.md` (current truth through Block 65, historical source for Block 66-70 run order)
+  - `docs/2026-04-12/hoegui_surgeon_block_66_audit_memo.md` (Block 66 quiet success PASS)
+  - `docs/2026-04-12/hoegui_surgeon_block_67_audit_memo.md` (Block 67 academic proposal PASS, ready_for_block_68 = yes)
+  - `docs/2026-04-12/hoegui_surgeon_block_68_audit_memo.md` (Block 68 cold closure PASS, ready_for_block_69 = yes)
+  - `docs/2026-04-12/hoegui_surgeon_block_69_audit_memo.md` (Block 69 formal confirmation PASS, ready_for_block_70 = yes)
+  - `docs/2026-04-12/hoegui_surgeon_block_70_audit_memo.md` (Block 70 regime proof PASS, ready_for_block_61_70_self_audit = yes)
+  - `docs/2026-04-12/hoegui_surgeon_block_61_70_self_audit.md` (PASS, ready_for_bi_refresh = yes)
+  - `docs/2026-04-12/hoegui_surgeon_bi_refresh_audit_memo.md` (BI build complete, audit FAIL, rehab waves 1-6 complete through Blocks 21-60 content sweep)
+  - prior current root entry: `docs/2026-04-09/hoegui_surgeon_arc07_entry_handoff.md` (historical reference for ARC-07 Block 61 entry + I-51-60-A/D annotations)
   - prior: `docs/2026-04-08/hoegui_surgeon_cross_pc_handoff_block_46_50.md` (ARC-05 생산 설계, historical reference)
   - original: `docs/2026-04-06/02_hoegui_surgeon_context_handoff.md` (root_admit reference)
 - legacy saved Phase0:
@@ -41,61 +49,77 @@ Family: `medical_regression` (`blockguide` downstream harness overlay)
   - `treatments/phase0/hoegui_surgeon_phase0_design.json` (admitted 2026-04-08, story content untouched)
 - current-root live TR:
   - `treatments/hoegui_surgeon_tr_block_020_draft.json`
-  - saved boundary: **Block 60** (ARC-06 exit `교육 재편`, 2026-04-09)
-  - arcs covered: ARC-01, ARC-02, ARC-03, ARC-04, ARC-05, ARC-06
-  - next continuation boundary: Block 61 (ARC-07 entry `과장 선임`)
+  - full 70-block TR draft saved through **Block 70** (ARC-07 `왕좌`, 2026-04-12)
+  - `_saved_block_boundary = null`, `_next_continuation_boundary = null` by full-TR convention
+  - arcs covered: ARC-01, ARC-02, ARC-03, ARC-04, ARC-05, ARC-06, ARC-07 full (61-70)
+  - next continuation boundary: none (TR continuation closed; next gate is 61-70 self-audit)
   - blocks 1-20 origin: verbatim merge of the 3 legacy chunks at root_admit (2026-04-08)
-  - blocks 21-60 origin: produced incrementally in `tr_continue` envelopes 2026-04-08 ~ 2026-04-09 (ARC-03 opening 21-25, ARC-03 closing 26-30, ARC-04 31-40, ARC-05 41-50, ARC-06 51-60)
+  - blocks 21-70 origin: produced incrementally in `tr_continue` envelopes 2026-04-08 ~ 2026-04-12 (ARC-03 opening 21-25, ARC-03 closing 26-30, ARC-04 31-40, ARC-05 41-50, ARC-06 51-60, ARC-07 full 61-70)
+- latest manual block audit:
+  - `docs/2026-04-12/hoegui_surgeon_block_70_audit_memo.md` (PASS; ready_for_block_61_70_self_audit = yes)
 - latest 10-block audit:
-  - `docs/2026-04-09/hoegui_surgeon_block_51_60_self_audit.md` (PASS 3-Pass; ready_for_block_61 = yes)
+  - `docs/2026-04-12/hoegui_surgeon_block_61_70_self_audit.md` (PASS 3-Pass; ready_for_bi_refresh = yes)
 - prior 10-block audits:
+  - `docs/2026-04-09/hoegui_surgeon_block_51_60_self_audit.md`
   - `docs/2026-04-08/hoegui_surgeon_block_21_30_self_audit.md`
   - `docs/2026-04-08/hoegui_surgeon_block_31_40_self_audit.md`
   - `docs/2026-04-08/hoegui_surgeon_block_41_50_self_audit.md`
 - current-root live BI:
-  - not yet built (still gated; explicit `bi_refresh` order required, and not before TR extends further)
+  - `bible/0_bi_hoegui_surgeon.json` (built 2026-04-12 via explicit `bi_refresh` order)
+  - `bible/audit_reports/hoegui_surgeon_bi_5pass.md` (FAIL)
+  - latest rehab delta:
+    - `genre_ext.section_rotation` cleanup complete on 21 ARC-tagged blocks
+    - `label_meta_ref_count = 0`
+    - `genre_ext.block_cider` backfill complete across Blocks 1-70
+    - Blocks `21-30` bounded diegetic meta sweep complete on `content.context/reward/solution`
+    - Blocks `31-40` bounded diegetic meta sweep complete on `content.context/reward/solution`
+    - Blocks `41-50` bounded diegetic meta sweep complete on `content.context/reward/solution`
+    - Blocks `51-60` bounded diegetic meta sweep complete on `content.context/reward/solution`
+    - remaining dominant clusters:
+      - `diegetic_meta_ref_count = 741`
+      - `bi_diegetic_meta_leak_count = 753`
+      - `npc_continuity_mismatch_count = 129`
+      - `production_density_gate = FAIL`
+    - next bounded rehab unit = diegetic meta leak sweep on Blocks `61-70` `content.context/reward/solution`
+  - builder compatibility patch applied:
+    - `scripts/build_bi_from_phase0_and_tr.py` (legacy authority/resource checkpoint fallback)
+    - `scripts/audit_bi_5pass.py` (organization-anchor optionality + checkpoint-sync fallback)
 
 ## 3. Boundary Rule
 
-- downstream truth is not `unstarted`; admitted `Phase0`, published `work_guard`, and live `TR` Blocks `1-60` already exist in current-root paths
-- the current-root live `TR` saved boundary is **Block 60**; the next continuation must begin at **Block 61** (ARC-07 entry)
-- Block 60 (ARC-06 exit `교육 재편`) closes ARC-06 and delivers FS-20 full_payoff (22-block chain: 판독 기반 사전 설계 교육 커리큘럼화) + FS-21 reminder_anchor (I-31-40-C 해소) + FS-38 execution_complete (대한외과학회 춘계 심포지엄 공식 세션 실행)
-- ARC-06 exit_function 3축 달성 확정 (work_guard 해석 기준):
-  1. 과 운영 실무 = Block 59 은폐 수습 TF 실무 책임자 3축 통합 권한 (과장 영역 불변, R8" 준수)
-  2. 수술 교육 체계 재편 시작 = Block 60 4축 필수 모듈 편제 13:0:2 가결 + 2029-09 신학기 적용
-  3. 병원장 라인 독립 = ARC-06 전 구간 FS-27 3회 차단 + 나경태 직접 전화 1회 차단
-- next production envelope is restricted to a **1-block envelope (Block 61 only)** by operator order; automatic continuous production remains disabled
-- ARC 전환 지점(Block 61)이므로 harness §1.5 Gemini-safe 원칙 적용: **단독 감리 필수**
-- block content of 1-60 is frozen for continuation purposes; any rewrite of existing blocks is a separate envelope (`tr_polish` / `schema_backfill`), not `tr_continue`
-- the next harness-mandated 10-block self-audit trigger is Block 70 completion (ARC-07 exit, harness v2 §1.1C)
+- downstream truth is not `unstarted`; admitted `Phase0`, published `work_guard`, and live `TR` Blocks `1-70` now exist in current-root paths
+- ARC-07 live TR is now full-save complete through **Block 70** (`왕좌`); further `tr_continue` is closed
+- Block 70 closes ARC-07 exit: 진료과장 확정 이후 `서동혁 소견 없이 고난도 수술을 열지 않는다`는 운영 관행이 실제 실무에서 증명됨
+- by full-TR convention, `_saved_block_boundary` and `_next_continuation_boundary` are both `null`; this does not mean pair completion
+- the mandatory **Block 61-70 self-audit** PASSed and `bi_refresh` executed, but pair completion is still blocked by BI audit FAIL
+- block content of 1-70 is frozen for continuation purposes; any rewrite of existing blocks is a separate envelope (`tr_polish` / `schema_backfill`), not `tr_continue`
 
 ## 4. Next Allowed Tasks
 
-- `tr_continue` (next main envelope):
-  - allowed envelope: **1-block only**, target = **Block 61 `과장 선임`** against `treatments/phase0/hoegui_surgeon_phase0_design.json` ARC-07 slot 61
-  - entry file: `treatments/hoegui_surgeon_tr_block_020_draft.json`
-  - handoff: `docs/2026-04-09/hoegui_surgeon_arc07_entry_handoff.md`
-  - per operator order 2026-04-08 + 2026-04-09 harness enforcement: automatic continuous production disabled. Each new order advances exactly one block, saves it, updates the boundary, and reports the next gate.
-  - **ARC-07 entry critical guardrails** (from 2026-04-09 3-pass audit §P3.4):
-    - **R1'"** 진료과장 임용 규모 과시 경계 — "최연소" 표현 금지, 전생 구조는 내부 독백 1회 한정
-    - **R9'"** TF 실무 책임자 자동 해제 2029-07 실제 처리 — 연장 요청 금지 원칙 유지, 조교수 4축 단일 직책 복귀 후 후보 등재
-    - **R10'"** FS-07/FS-10 structural_resolution 주석 (Block 51 R2 펠로우 종료의 imputed 해소 명시화) — Block 61 생산 중 handoff doc 또는 callback 주석 처리 가능
-    - **패턴 피드백 주입 필수** (Block 61 생산 프롬프트): 박정민 재등장 금지, 나경태 간접만, 이상훈 재등장 Block 62 예정, 한미정 후진 배치, 권혁수 형식 한정 유지
-    - **회귀물 함정 선제 인식**: Block 64-65 회귀 자산 무력화 구조는 Block 61 시점부터 설계 의식
-  - carry guardrails from ARC-06 (unchanged):
-    - 권혁수 방문 1일 형식 한정 + 서신·학회 공식 경로 이중 한정 (Block 49 원칙, ARC-06 5회 재확인)
-    - 개인 지목 금지 + 제도 경로 원칙 (ARC-06 메타 원칙)
-    - work_guard `서열 그대로 + 실질 결정권 뒤집기` custom_rule
-    - work_guard forbidden_flattenings 10항목 0건 유지
-  - hard stops: no Block 62, no BI, no TR file rename, no rewrite of Blocks 1-60, no auto-continue past Block 61
+- `schema_backfill` (next main envelope):
+  - required now; BI build already executed but audit FAIL
+  - latest completed rehab units:
+    - `genre_ext.section_rotation` label cleanup on the 21 ARC-tagged blocks (`label_meta_ref_count = 0`)
+    - `genre_ext.block_cider` backfill across Blocks 1-70
+    - Blocks `21-30` bounded diegetic meta sweep on `content.context/reward/solution`
+    - Blocks `31-40` bounded diegetic meta sweep on `content.context/reward/solution`
+    - Blocks `41-50` bounded diegetic meta sweep on `content.context/reward/solution`
+    - Blocks `51-60` bounded diegetic meta sweep on `content.context/reward/solution`
+  - next bounded rehab unit:
+    - diegetic meta leak sweep on Blocks `61-70` `content.context/reward/solution`
+  - follow-up rehab families after the next bounded unit:
+    - NPC continuity normalization
+- `bi_refresh_reaudit`:
+  - allowed after each bounded rehab unit
+  - current BI completion gate:
+    - `bible/audit_reports/hoegui_surgeon_bi_5pass.md` PASS
+- `tr_continue`:
+  - closed; full 70-block live TR already saved
 - `tr_polish` / `schema_backfill` (deferred housekeeping, optional):
   - I-02 (canonical `block_cider.*` + `capital_*` + `leverage_used` backfill across Blocks 1-60) — see 2026-04-09 audit §I-02 scope 확대. Not blocking Block 61.
   - I-41-50-A (Block 49 권혁수 방문 디테일 — 실질 영향 없음)
   - I-31-40-A (Block 33 micro patch)
   - I-03/I-04 (prior micro polish)
-- `bi_refresh`:
-  - still gated; allowed only after live `TR` extends meaningfully past the current boundary and an explicit `bi_refresh` order is issued
-
 ## 5. Known Issues (carried / new)
 
 **Resolved this audit (2026-04-09)**:
@@ -112,6 +136,10 @@ Family: `medical_regression` (`blockguide` downstream harness overlay)
 
 **Carry-over (non-blocking)**:
 - I-41-50-A, I-41-50-B, I-31-40-A, I-02, I-03, I-04
+
+**New this refresh (2026-04-12 BI build/audit)**:
+- **BI-01** (blocking) — `bible/0_bi_hoegui_surgeon.json` build succeeded, but `bible/audit_reports/hoegui_surgeon_bi_5pass.md` FAIL. Current dominant cluster: `production_density_gate FAIL`, `diegetic_meta_ref_count=741`, `bi_diegetic_meta_leak_count=753`, `npc_continuity_mismatch_count=129`, `diegetic_meta_ref_zero FAIL`, `diegetic_block_ref_zero FAIL`.
+- **BI-02** (blocking) — legacy medical profile required builder/audit compatibility patch in `scripts/build_bi_from_phase0_and_tr.py` and `scripts/audit_bi_5pass.py`; script mismatch is now closed, remaining failure is content/schema rehab only.
 
 ## 6. Delegation Rule
 
@@ -166,6 +194,40 @@ Family: `medical_regression` (`blockguide` downstream harness overlay)
 - defeat_blocks:[54,55] + quiet_blocks:[56] Phase0 정확 준수
 - 10-block self-audit (51-60, **3-Pass**): `docs/2026-04-09/hoegui_surgeon_block_51_60_self_audit.md` (PASS, 6 new issues non-blocking, 2 resolved, 11 FS full_payoff this batch)
 - ARC-06 exit_function 3축 달성 확정
+
+### ARC-07 partial continuation (2026-04-12)
+- `tr_continue` Blocks 66-70 closed in single-block envelopes
+  - Block 66 `수술 성공` (quiet) — 회복실 안정 이송 + 방법 노트 요청 + Block 67 제안 gate 개방
+  - Block 67 `학회 제안` — 외과학회 표준 프로토콜 재검토 소위원회 `시범 검토 안건` 공식 접수, FS-45 full_payoff
+  - Block 68 `강태준의 퇴장` — FS-21 full_payoff + 옛 지도교수 라인 실무 퇴장 + 관계 수명 종료
+  - Block 69 `진료과장` — 외과 교수회 본심사 8:1:1 통과 + capital_target 달성 + formal confirmation, Block 70 regime proof gate 개방
+  - Block 70 `왕좌` — 진료과장 확정이 실제 고난도 수술 운영 관행으로 증명되며 ARC-07 exit_function 완결
+- current live TR: full 70-block save complete; next mandatory gate = **Block 61-70 self-audit**
+- manual block audits:
+  - `docs/2026-04-12/hoegui_surgeon_block_66_audit_memo.md`
+  - `docs/2026-04-12/hoegui_surgeon_block_67_audit_memo.md`
+  - `docs/2026-04-12/hoegui_surgeon_block_68_audit_memo.md`
+  - `docs/2026-04-12/hoegui_surgeon_block_69_audit_memo.md`
+  - `docs/2026-04-12/hoegui_surgeon_block_70_audit_memo.md`
+  - `docs/2026-04-12/hoegui_surgeon_block_61_70_self_audit.md` (PASS)
+
+### BI refresh (2026-04-12)
+- `bi_refresh` executed on current-root Phase0 + live TR full 70
+- live BI created:
+  - `bible/0_bi_hoegui_surgeon.json`
+- BI audit:
+  - `bible/audit_reports/hoegui_surgeon_bi_5pass.md` (FAIL)
+- script compatibility patch:
+  - `scripts/build_bi_from_phase0_and_tr.py` now tolerates non-business `authority/resource` checkpoints when `capital_after` is absent
+  - `scripts/audit_bi_5pass.py` now tolerates missing `starter_company` anchors and compares BI portfolio sync against derived checkpoints instead of business-only `capital_after`
+- next rehab pointer:
+  - rehab wave 1 complete: `genre_ext.section_rotation` cleanup on the 21 ARC-tagged blocks
+  - rehab wave 2 complete: `genre_ext.block_cider` backfill across Blocks 1-70
+  - rehab wave 3 complete: Blocks `21-30` bounded diegetic meta sweep on `content.context/reward/solution`
+  - rehab wave 4 complete: Blocks `31-40` bounded diegetic meta sweep on `content.context/reward/solution`
+  - rehab wave 5 complete: Blocks `41-50` bounded diegetic meta sweep on `content.context/reward/solution`
+  - rehab wave 6 complete: Blocks `51-60` bounded diegetic meta sweep on `content.context/reward/solution`
+  - next bounded unit: Blocks `61-70` bounded diegetic meta sweep on `content.context/reward/solution`
 
 ### 2026-04-09 — `status_sync` closed (this entry)
 - supersedes `docs/2026-04-08/hoegui_surgeon_live_status.md` (Block 25 기준, 35블록 stale — ARC-03 closing / ARC-04 / ARC-05 / ARC-06 전 구간 gap 해소)

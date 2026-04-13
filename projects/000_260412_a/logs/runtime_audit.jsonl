@@ -1,0 +1,13 @@
+{"timestamp": "2026-04-12 22:43:24", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["joint_docs.final_location synced by authority: '서울 성북동 재벌가 본가 저택, 한시우 개인 서재 (2층 동쪽 끝방)' -> '본가 개인 서재'", "arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']"]}}
+{"timestamp": "2026-04-12 22:44:31", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-12 22:45:11", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 4}}
+{"timestamp": "2026-04-12 22:52:12", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["joint_docs.final_location synced by authority: '서울 성북동 재벌가 본가 저택, 아버지 서재' -> '아버지 서재'", "arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']"]}}
+{"timestamp": "2026-04-12 22:53:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-12 22:53:52", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 5}}
+{"timestamp": "2026-04-12 23:01:51", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["중복 아이템 제거: 한미증권 VIP 카드", "[PATCH-B] 출처 불명 소지품: ['한미증권 VIP 카드'] (items_acquired에 미등록)", "joint_docs.final_location synced by authority: '서울 강남구 청담동 SW인베스트먼트 사무실, 대표 집무실 내 개인 트레이딩 데스크 앞' -> 'SW인베스트먼트 사무실 트레이딩 데스크'", "arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']"]}}
+{"timestamp": "2026-04-12 23:03:01", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-12 23:03:37", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "target_arc_no": 4, "items_tracked": 7}}
+{"timestamp": "2026-04-13 08:38:39", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-13 08:38:39", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "dialogue_focused", "score": 85, "final_verdict": "PASS_WITH_WARNING", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-04-13 08:54:49", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-13 08:54:49", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "emotion_focused", "score": 92, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}

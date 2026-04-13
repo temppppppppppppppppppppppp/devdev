@@ -1,6 +1,6 @@
 {
   "_schema_version": "production_pair_operational_registry.v1",
-  "updated_at": "2026-04-10",
+  "updated_at": "2026-04-12",
   "notes": [
     "Operational states here are durable governance overrides for the normalization runner.",
     "Benchmark freshness tracks whether a benchmark or bounded benchmark-preservation audit has been recorded after the latest material touch or regeneration.",
@@ -8,11 +8,14 @@
     "RED is terminal in current operator governance: negative exemplar archive, no repair budget, and do not reopen unless the governing law itself changes.",
     "Opening pacing triage is a separate operator field from benchmark_alias; YELLOW triage suspends opening exemplar use pending manual re-audit but does not automatically rewrite alias filenames.",
     "Benchmark_alias=GREENPLUS alone is not enough for current sell-in use. Operational deployable GREENPLUS now means quality-first top shelf: benchmark_freshness=current, opening pacing triage GREEN, no whole-run YELLOW/UNTRIAGED hold, no active repair/re-audit/hold note, and no remaining legacy-heuristic-only ambiguity on the opening claim.",
+    "2026-04-12 explicit closeout wave promoted pair01, office_checkup_next_day, chaebol_ent_empire, pantech_cyworld_reborn, and wuxia_heavenly_physician to deployable GREENPLUS. The current sell-in top shelf now reads deployable GREENPLUS 6, and no current live GREENPLUS row remains outside the shelf.",
     "2026-04-10 chaebol_allowance_zero is now explicitly classified as RED for live operation; keep the withdrawn GREENPLUS file only as a historical tombstone / anti-benchmark.",
     "2026-04-10 opening pacing triage operator result currently reads RED 3 / YELLOW 2 / GREEN 9 / UNTRIAGED 1 across the discoverable live TR inventory; incomplete B01~B10 opening windows are held as UNTRIAGED instead of being provisionally kept, the kill-first spot audit promoted jangyeongshil_industrial_revolution to RED while clearing pantech_cyworld_reborn out of kill-first, the forensic spot audit promoted jaebeol3se_loss_line to RED, the same-day targeted repair on chaebol_ent_empire moved its signboard from B09 to B08 and exited opening YELLOW, and the same-day bounded repair on pantech_cyworld_reborn moved its representative reevaluation from B10 to B02 and exited opening YELLOW.",
     "2026-04-10 YELLOW split is now cost-first: office_checkup_next_day/smart_new_hire remain repair-first, while both temporary escalation queues are now resolved (jangyeongshil_industrial_revolution -> RED, jaebeol3se_loss_line -> RED). chaebol_ent_empire and pantech_cyworld_reborn left the current YELLOW shelf after same-day bounded repairs.",
-    "2026-04-10 whole-run pacing re-audit on the prior opening-GREEN queue returned YELLOW 1 / GREEN 5 / UNTRIAGED 1; wuxia_heavenly_physician is whole-run YELLOW and africa_farm_king is whole-run UNTRIAGED pending more blocks. A same-day block-level manual spot audit on the remaining GREEN 5 found no additional downgrade case.",
+    "2026-04-10 whole-run pacing re-audit on the prior opening-GREEN queue returned YELLOW 1 / GREEN 5 / UNTRIAGED 1; wuxia_heavenly_physician was whole-run YELLOW and africa_farm_king was whole-run UNTRIAGED pending more blocks. A same-day block-level manual spot audit on the remaining GREEN 5 found no additional downgrade case.",
     "2026-04-10 current YELLOW salvageability split now reads repair-worth-it 3 / kill-candidate 0 after chaebol_ent_empire and pantech_cyworld_reborn exited opening YELLOW via same-day bounded repairs, so no additional RED promotion was admitted from the present repair shelf.",
+    "2026-04-11 bounded late-run pressure reinjection repair on wuxia_heavenly_physician moved B61/B65/B66 out of blank-opponent state, cleared whole-run pacing back to GREEN, and pushed benchmark_freshness to pending_refresh because the live TR was materially touched after the latest benchmark artifact.",
+    "2026-04-11 bounded authority-first repair on office_checkup_next_day declared opening progression across B01~B10, aligned the live opening read to signboard B03 / reevaluation B05 / ticket B03, cleared late blank-opponent and endgame-low-stakes drag, and pushed benchmark_freshness to pending_refresh because the live TR was materially touched after the latest benchmark artifact.",
     "2026-04-10 deployable GREENPLUS closeout across the current benchmark_alias=GREENPLUS live shelf now reads deployable GREENPLUS 1 / historical-only GREENPLUS snapshot 5. defense_defect_engineer is the first current row admitted by explicit same-day closeout; use explicit registry closeout, not filename prestige, before any sales-facing exemplar claim.",
     "2026-04-09 jangyeongshil_industrial_revolution record updated after TR Block 70 completion + bi_refresh + independent 7-Pass mechanical audit + independent 3-Pass philosophy audit (all PASS)."
   ],
@@ -26,18 +29,18 @@
       "schema_status": "pass",
       "benchmark_alias": "GREENPLUS",
       "benchmark_freshness": "current",
-      "benchmark_artifact": "docs/2026-04-08/pair01-strict-rebenchmark-greenplus-report.md",
+      "benchmark_artifact": "docs/2026-04-12/golden_canary_deployable_greenplus_closeout.md",
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",
-        "evidence_mode": "legacy_heuristic",
-        "artifact": "docs/2026-04-10/production-pair-opening-pacing-triage-wave.md",
-        "opening_exemplar_use": "provisional_keep_not_discard_candidate",
+        "evidence_mode": "manual_spot_audit_override",
+        "artifact": "docs/2026-04-12/golden_canary_deployable_greenplus_closeout.md",
+        "opening_exemplar_use": "deployable_greenplus_certified_manual_closeout",
         "trigger_codes": [
-          "LEGACY-PROVISIONAL-PASS"
+          "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Benchmark-fresh numbered live pair. Opening pacing triage is GREEN under legacy heuristic, so keep in active inventory; this is not a fresh declared-contract opening exemplar certification."
+      "operator_note": "Benchmark-fresh numbered live pair. The 2026-04-12 explicit manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 token ladder with the work-guard timing thresholds, while whole-run pacing reread stays GREEN and the strict re-benchmark authority still stands. Pair 01 is now admitted as current sell-in top shelf."
     },
     {
       "work_id": "chaebol_allowance_zero",
@@ -79,14 +82,14 @@
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",
-        "evidence_mode": "legacy_heuristic",
-        "artifact": "docs/2026-04-10/chaebol_ent_empire_opening_signboard_compression_repair_note.md",
-        "opening_exemplar_use": "provisional_keep_not_discard_candidate",
+        "evidence_mode": "manual_spot_audit_override",
+        "artifact": "docs/2026-04-12/chaebol_ent_empire_deployable_greenplus_closeout.md",
+        "opening_exemplar_use": "deployable_greenplus_certified_manual_closeout",
         "trigger_codes": [
-          "LEGACY-PROVISIONAL-PASS"
+          "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Benchmark-fresh live pair at alias level. A same-day targeted opening compression repair moved the first public signboard from B09 to B08, so opening pacing exits YELLOW and returns to provisional GREEN under legacy heuristic. Keep the alias snapshot in active inventory, but this is still not a fresh declared-contract opening exemplar certification."
+      "operator_note": "Benchmark-fresh live pair. The 2026-04-10 targeted opening compression repair moved the first public signboard from B09 to B08, and the 2026-04-12 explicit manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B03/B04/B08 receipt chain. Whole-run pacing reread stays GREEN with no late drag, so pair 03 is now admitted as current sell-in top shelf."
     },
     {
       "work_id": "defense_defect_engineer",
@@ -119,18 +122,20 @@
       "schema_status": "pass",
       "benchmark_alias": "GREENPLUS",
       "benchmark_freshness": "current",
-      "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "benchmark_artifact": "docs/2026-04-12/office_checkup_next_day_deployable_greenplus_refresh_closeout.md",
       "opening_pacing_triage": {
-        "grade": "YELLOW",
-        "recommended_action": "manual_reaudit_then_repair",
-        "evidence_mode": "legacy_heuristic",
-        "artifact": "docs/2026-04-10/production-pair-opening-pacing-triage-wave.md",
-        "opening_exemplar_use": "repair_first_yellow_pending_manual_reaudit",
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "declared_contract",
+        "artifact": "docs/2026-04-12/office_checkup_next_day_deployable_greenplus_refresh_closeout.md",
+        "opening_exemplar_use": "deployable_greenplus_certified_manual_closeout",
         "trigger_codes": [
-          "LEGACY-MACRO-OVERSTAY"
+          "DECLARED-PASS",
+          "BENCHMARK-PRESERVATION-PASS",
+          "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Benchmark-fresh live pair at alias level, but opening pacing triage is YELLOW under legacy heuristic because the office/decision battlefield overstays and reevaluation lands late. Keep the alias snapshot, suspend use as an opening exemplar, and treat this as repair-first rather than kill-first."
+      "operator_note": "Historical GREENPLUS alias preserved through the 2026-04-11 bounded authority-first repair, and the 2026-04-12 bounded benchmark-preservation closeout re-closes freshness as current. The live opening contract remains explicit at signboard B03 / reevaluation B05 / ticket B03, whole-run pacing reread stays GREEN with no late drag, and 70/70 blocks still keep same-block cider receipts, so pair 07 is now admitted as current sell-in top shelf."
     },
     {
       "work_id": "pantech_cyworld_reborn",
@@ -145,14 +150,14 @@
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",
-        "evidence_mode": "legacy_heuristic",
-        "artifact": "docs/2026-04-10/pantech_cyworld_reborn_cadence_and_reevaluation_surface_repair_note.md",
-        "opening_exemplar_use": "provisional_keep_not_discard_candidate",
+        "evidence_mode": "manual_spot_audit_override",
+        "artifact": "docs/2026-04-12/pantech_cyworld_reborn_deployable_greenplus_closeout.md",
+        "opening_exemplar_use": "deployable_greenplus_certified_manual_closeout",
         "trigger_codes": [
-          "LEGACY-PROVISIONAL-PASS"
+          "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Benchmark-fresh live pair at alias level. The 2026-04-10 bounded repair made the already-present early reevaluation surface explicit enough for the legacy heuristic to read B02 and diversified the repeated mid/late pyrrhic conversion grammar. Opening pacing exits YELLOW and returns to provisional GREEN, but this is still not a fresh declared-contract opening exemplar certification."
+      "operator_note": "Benchmark-fresh live pair. The 2026-04-10 bounded repair made the early reevaluation surface legible at B02 and kept whole-run pacing GREEN, while the 2026-04-12 explicit manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B01/B02/B03 conversion chain despite the heuristic ticket gap. Pair 08 is now admitted as current sell-in top shelf."
     },
     {
       "work_id": "wuxia_heavenly_physician",
@@ -163,18 +168,19 @@
       "schema_status": "pass",
       "benchmark_alias": "GREENPLUS",
       "benchmark_freshness": "current",
-      "benchmark_artifact": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "benchmark_artifact": "docs/2026-04-12/wuxia_heavenly_physician_deployable_greenplus_refresh_closeout.md",
       "opening_pacing_triage": {
         "grade": "GREEN",
         "recommended_action": "keep_active_inventory",
-        "evidence_mode": "legacy_heuristic",
-        "artifact": "docs/2026-04-10/production-pair-opening-pacing-triage-wave.md",
-        "opening_exemplar_use": "provisional_keep_not_discard_candidate",
+        "evidence_mode": "manual_spot_audit_override",
+        "artifact": "docs/2026-04-12/wuxia_heavenly_physician_deployable_greenplus_refresh_closeout.md",
+        "opening_exemplar_use": "deployable_greenplus_certified_manual_closeout",
         "trigger_codes": [
-          "LEGACY-PROVISIONAL-PASS"
+          "BENCHMARK-PRESERVATION-PASS",
+          "MANUAL-CLOSEOUT-PASS"
         ]
       },
-      "operator_note": "Benchmark-fresh regenerated live pair. Opening pacing triage is GREEN under legacy heuristic, so keep in active inventory; this is not a fresh declared-contract opening exemplar certification."
+      "operator_note": "Regenerated live pair repaired on 2026-04-11 via bounded late-run pressure reinjection at B61/B65/B66. The 2026-04-12 bounded preservation closeout re-closes freshness as current, and the same-day manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 permission chain. Whole-run pacing reread stays GREEN with only B70 epilogue closure as the sole late blank, so pair 09 is now admitted as current sell-in top shelf."
     },
     {
       "work_id": "jangyeongshil_industrial_revolution",

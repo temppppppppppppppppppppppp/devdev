@@ -45,6 +45,34 @@ def test_generate_ensemble_owner_shell_coordinates_helper_chain():
     writer._finalize_generate_ensemble_candidates.assert_called_once_with(worker_candidates, 7)
 
 
+def test_generate_ensemble_forwards_strategy_feedback_map_to_worker_chain():
+    writer = _make_writer()
+    writer._prepare_generate_ensemble_context = MagicMock(
+        return_value=("ctx", "cache/manuscript", ["balanced"], {"balanced": 0.7})
+    )
+    worker_candidates = [{"strategy": "balanced", "manuscript": "body"}]
+    writer._run_generate_ensemble_workers = MagicMock(return_value=worker_candidates)
+    writer._recover_generate_ensemble_candidates = MagicMock(return_value=worker_candidates)
+    writer._finalize_generate_ensemble_candidates = MagicMock(return_value=worker_candidates)
+
+    writer.generate_ensemble(
+        ep_num=7,
+        blueprint={},
+        prev_manuscript="prev",
+        hud_report="hud",
+        arc_doc="arc",
+        master_bible={},
+        strategy_feedback_map={"balanced": "map-guidance"},
+    )
+
+    assert writer._run_generate_ensemble_workers.call_args.kwargs["strategy_feedback_map"] == {
+        "balanced": "map-guidance"
+    }
+    assert writer._recover_generate_ensemble_candidates.call_args.kwargs["strategy_feedback_map"] == {
+        "balanced": "map-guidance"
+    }
+
+
 def test_prepare_generate_ensemble_context_builds_context_cache_and_strategies():
     writer = _make_writer()
     writer._context_builder.build_common_context.return_value = "common-context"
@@ -118,12 +146,13 @@ def test_recover_generate_ensemble_candidates_uses_single_fallback_after_total_f
         motivations=[],
         promises=[],
         strategy_specific_feedback="specific",
+        strategy_feedback_map={"balanced": "mapped-specific"},
         rejected_strategy="balanced",
     )
 
     assert recovered == [{"strategy": "balanced", "manuscript": "fallback", "metadata": {}}]
     writer._generate_single_candidate.assert_called_once()
-    assert writer._generate_single_candidate.call_args.kwargs["strategy_feedback"] == "specific"
+    assert writer._generate_single_candidate.call_args.kwargs["strategy_feedback"] == "mapped-specific"
 
 
 def test_finalize_generate_ensemble_candidates_builds_error_fallback_and_annotations():

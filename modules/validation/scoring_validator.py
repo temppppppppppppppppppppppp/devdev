@@ -306,7 +306,8 @@ Step 6: Article 7 (독자 대리만족) 분석
                     try:
                         _val["score"] = max(0, min(int(_val["score"]), int(_val["max"])))
                     except (ValueError, TypeError):
-                        logging.warning(f"[ScoringValidator] 점수 변환 실패: score={_val.get('score')}, max={_val.get('max')} — 0 대입"
+                        logging.warning(
+                            f"[ScoringValidator] 점수 변환 실패: score={_val.get('score')}, max={_val.get('max')} — 0 대입"
                         )
                         _val["score"] = 0
 
@@ -406,9 +407,14 @@ Step 6: Article 7 (독자 대리만족) 분석
         import json
 
         parts = []
+        blueprint_mode = str((context or {}).get("mode", "") or "").strip().upper() == "BLUEPRINT"
 
         # 1. 주인공 현재 상태 (HUD actual_truth)
         martial_hud = context.get("martial_hud", {})
+        if blueprint_mode:
+            # Stage3 blueprint scoring should not blindly consume the live HUD.
+            # When a bounded scoring HUD is needed, inject it explicitly.
+            martial_hud = context.get("blueprint_scoring_hud", {})
         actual_truth = {}
         if isinstance(martial_hud, dict):
             actual_truth = martial_hud.get("actual_truth", martial_hud)

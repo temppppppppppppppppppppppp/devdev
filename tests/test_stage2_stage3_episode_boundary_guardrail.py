@@ -13,7 +13,6 @@ import pytest
 
 from modules.domain.agents.blueprint_constraint_compiler import BlueprintConstraintCompiler
 
-
 # ── Fixtures ─────────────────────────────────────────────────
 
 
@@ -208,6 +207,53 @@ class TestStage3FidelityEpisodeBoundary:
         assert len(issues) == 1
         assert issues[0]["category"] == "fidelity"
         assert "1명" in issues[0]["issue"]
+        assert issues[0]["advisory_only"] is True
+        assert issues[0]["director_focus"] is False
+
+    def test_current_episode_relationship_change_emits_structured_advisory_fix_pack(self):
+        from modules.domain.agents.unified_blueprint_validator import UnifiedBlueprintValidator
+
+        validator = UnifiedBlueprintValidator(MagicMock(), MagicMock())
+        issues = validator._collect_fidelity_prevalidation_issues(
+            integrated="The protagonist prepares the announcement alone.",
+            arc_data={
+                "state_constraints": {
+                    "relationship_changes": [
+                        {"npc": "Han Taejun", "episode": 1},
+                        {"npc": "Future NPC", "episode": 3},
+                    ]
+                }
+            },
+            ep_num=1,
+        )
+
+        assert len(issues) == 1
+        issue = issues[0]
+        assert issue["advisory_code"] == "relationship_change_visibility"
+        assert issue["advisory_packet"]["visible_relationship_count"] == 1
+        assert issue["advisory_packet"]["mentioned_relationship_count"] == 0
+        assert issue["advisory_packet"]["missing_npcs"] == ["Han Taejun"]
+        assert issue["fix_pack"]["patch_target_records"][0]["field_path"] == "integrated_scenario"
+        assert issue["fix_pack"]["patch_target_records"][0]["target_kind"] == "local_sentence"
+        assert "missing_relationship_npcs=Han Taejun" == issue["fix_pack"]["evidence_summary"]
+
+    def test_full_name_tail_match_counts_as_relationship_mention(self):
+        from modules.domain.agents.unified_blueprint_validator import UnifiedBlueprintValidator
+
+        validator = UnifiedBlueprintValidator(MagicMock(), MagicMock())
+        issues = validator._collect_fidelity_prevalidation_issues(
+            integrated="태준은 회의실 문 앞에서 한시우를 노려봤다.",
+            arc_data={
+                "state_constraints": {
+                    "relationship_changes": [
+                        {"npc": "한태준", "episode": 1},
+                    ]
+                }
+            },
+            ep_num=1,
+        )
+
+        assert issues == []
 
 
 # ── Seam 2: Treatment Block Event Quarantine ──────────────────
@@ -272,9 +318,7 @@ class TestTreatmentBlockQuarantine:
         app = MagicMock()
         app.current_project = MagicMock()
         app.current_project.master_bible = {
-            "MasterBible": {
-                "plot_roadmap": [{"title": "Test Arc", "emotional_beat": "rising"}]
-            },
+            "MasterBible": {"plot_roadmap": [{"title": "Test Arc", "emotional_beat": "rising"}]},
         }
         orch = Stage3Orchestrator.__new__(Stage3Orchestrator)
         orch.ctx = MagicMock()

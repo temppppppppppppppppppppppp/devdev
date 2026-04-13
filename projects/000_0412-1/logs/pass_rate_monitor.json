@@ -1,0 +1,511 @@
+{
+  "session_start": "2026-04-12T18:01:27.427610",
+  "last_updated": "2026-04-12T18:35:02.982042",
+  "total_records": 8,
+  "records": [
+    {
+      "timestamp": "2026-04-12T16:06:36.330290",
+      "stage": 2,
+      "episode": 1,
+      "arc": 1,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "four_phase",
+      "model_tier": 1,
+      "duration_ms": 82328,
+      "token_cost": 0.644954,
+      "is_patch": false,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s2:ep1:arc1:a1:20260412_155640",
+      "final_verdict": "PASS",
+      "director_verdict": "",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "balanced",
+      "content_hash": "c28b9148332f87245ce44ff3abcc75cbf7b7ef793d3bd4c0e86019a09b600684",
+      "artifact_path": "logs/artifacts/stage2/arc_001/attempt_01/final_arc__balanced.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {}
+    },
+    {
+      "timestamp": "2026-04-12T16:19:53.591089",
+      "stage": 2,
+      "episode": 2,
+      "arc": 2,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "four_phase",
+      "model_tier": 1,
+      "duration_ms": 106687,
+      "token_cost": 0.676726,
+      "is_patch": false,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s2:ep2:arc2:a1:20260412_155640",
+      "final_verdict": "PASS",
+      "director_verdict": "",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "creative",
+      "content_hash": "4e3e749b62b702d9b17355d492f4d295e213d51c79fb056835bd8a16d1aa1d7d",
+      "artifact_path": "logs/artifacts/stage2/arc_002/attempt_01/final_arc__creative.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {}
+    },
+    {
+      "timestamp": "2026-04-12T16:52:30.113559",
+      "stage": 3,
+      "episode": 1,
+      "arc": 1,
+      "attempt_num": 2,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 1076700,
+      "token_cost": 0.316933,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep1:arc1:a2:20260412_163338",
+      "final_verdict": "PASS",
+      "director_verdict": "",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "action_focused",
+      "content_hash": "b935f28d955ccd6aba009d378feb08e7aa499af5b24f02ddd9cf33b1d69d00d2",
+      "artifact_path": "logs/artifacts/stage3/ep_0001/attempt_02/final_blueprint__action_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {}
+    },
+    {
+      "timestamp": "2026-04-12T17:47:29.047929",
+      "stage": 3,
+      "episode": 2,
+      "arc": 1,
+      "attempt_num": 4,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 823702,
+      "token_cost": 0.760148,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep2:arc1:a4:20260412_173251",
+      "final_verdict": "PASS",
+      "director_verdict": "",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "action_focused",
+      "content_hash": "2667cd51de19bbf8d9fec05fb1949f61d6dbda643ba23430168f501c53dfb448",
+      "artifact_path": "logs/artifacts/stage3/ep_0002/attempt_04/final_blueprint__action_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {}
+    },
+    {
+      "timestamp": "2026-04-12T17:50:02.601990",
+      "stage": 3,
+      "episode": 3,
+      "arc": 1,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "blueprint",
+      "model_tier": 1,
+      "duration_ms": 153486,
+      "token_cost": 0.23488,
+      "is_patch": false,
+      "prev_score": 0.0,
+      "patch_fallback": false,
+      "attempt_key": "s3:ep3:arc1:a1:20260412_173251",
+      "final_verdict": "PASS",
+      "director_verdict": "",
+      "gate_basis": "",
+      "repair_scope": "",
+      "fix_scope": "",
+      "authoritative_fix_scope": "",
+      "fix_pack": {},
+      "repair_contract": {},
+      "scope_authority": {},
+      "retry_budget_axes": {},
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {},
+      "candidate_key": "dialogue_focused",
+      "content_hash": "c0dea9a2b3a4549cd8ef6d35b037810ce5100fcc15bb5bcb74af443ba8737165",
+      "artifact_path": "logs/artifacts/stage3/ep_0003/attempt_01/final_blueprint__dialogue_focused.json",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "",
+      "strong_advisory_escalation": {}
+    },
+    {
+      "timestamp": "2026-04-12T18:08:56.454732",
+      "stage": 4,
+      "episode": 1,
+      "arc": 1,
+      "attempt_num": 1,
+      "success": true,
+      "reject_reason": "",
+      "generation_method": "ensemble",
+      "model_tier": 1,
+      "duration_ms": 432155,
+      "token_cost": 0.584635,
+      "is_patch": false,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep1:arc1:a1:20260412_180124",
+      "final_verdict": "PASS",
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "repair_scope": "inplace",
+      "fix_scope": "inplace",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {},
+      "repair_contract": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        }
+      },
+      "scope_authority": {
+        "fix_scope": "inplace",
+        "repair_scope": "inplace",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "director_authoritative",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": false
+      },
+      "retry_budget_axes": {
+        "round": "initial",
+        "repair": "ensemble_generation",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "baseline"
+      },
+      "patch_strategy": "",
+      "structural_attempted": false,
+      "error_category": "",
+      "reject_bucket": "",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 16,
+        "quality_engagement": 20,
+        "length": 10,
+        "python_warnings": 6
+      },
+      "candidate_key": "C|긴장감 + 반전 강조",
+      "content_hash": "103f31d19fb59d72f236dbbcd804432511c4a474cc5b2310f92df80000e4255b",
+      "artifact_path": "logs/artifacts/stage4/ep_0001/attempt_01/final_manuscript__C.txt",
+      "downstream_override_applied": false,
+      "primary_failure_layer": "none",
+      "strong_advisory_escalation": {}
+    },
+    {
+      "timestamp": "2026-04-12T18:21:54.461260",
+      "stage": 4,
+      "episode": 2,
+      "arc": 1,
+      "attempt_num": 1,
+      "success": false,
+      "reject_reason": "[Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n[V67] History Conflict: 제2화 원고는 제1화의 마지막 장면과 직접적으로 이어지지만, 중대한 연속성 오류가 발견되었습니다. 제1화에서 가사도우미가 아버지와 형들이 이미 출근했다고 언급했으나, 제2화에서는 주인공이 그들과 집 안(서재, 식당)에서 연달아 마주칩니다. 이 타임라인 충돌은 장면의 개연성을 심각하게 훼손하므로 수정이 필요합니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ai_slop score 1.00 / hits=입을 열었다x1\n  [STYLE] ced_score 4.00 (python warnings 4건)\n  [STYLE] dialogue_ratio 19% > style target 0%\n  [NPC] 한태준 relation_to_protag: 기대='집착80/오해-10' → 원고='주인공의 사업 선언에 '실소'를 터뜨리고, 주인공의 변화를 꿰뚫어보지 못한 채 다른 가족들처럼 무시하고 비아냥거리는 태도를 보임. 이는 주인공에 대한 이해도가 낮다는(오해가 크다는) 묘사로, '오해-10' (오해가 적음) 축과 반대됨.'\n  [NPC] 한태민 relation_to_protag: 기대='집착80/오해-10' → 원고='주인공의 사업 선언 후 형 한태준과 함께 '어이없어하는 표정'으로 '비아냥'거리는 등, 주인공의 변화를 전혀 이해하지 못하는 모습을 보임. 이는 주인공에 대한 이해도가 낮다는(오해가 크다는) 묘사로, '오해-10' (오해가 적음) 축과 반대됨.'\n[자유 리뷰] Python advisory 시스템(특히 NpcDrift, FlashbackVerifier)이 현재 원고의 맥락을 오해하고 있는 것으로 보입니다. 예를 들어, 오프닝 씬을 회상으로 잘못 판단하거나, 블루프린트에 명시된 관계 변화와 상충되는 캐릭터 속성을 기반으로 경고를 생성하고 있습니다. 후보 C는 1화 마지막 장면에서 주인공이 떨어뜨린 휴대폰을 2화 초반에 다시 조립하는 디테일을 살려, 편집장으로서 매우 만족스러운 연속성을 보여주었습니다. '타격을 입지 않는 샌드백은 폭행자를 당황하게 만든다'는 내면 묘사는 캐릭터의 변화를 효과적으로 드러내는 훌륭한 문장입니다.\n[모순 세부] [V67] History Conflict: 제2화 원고는 제1화의 마지막 장면과 직접적으로 이어지지만, 중대한 연속성 오류가 발견되었습니다. 제1화에서 가사도우미가 아버지와 형들이 이미 출근했다고 언급했으나, 제2화에서는 주인공이 그들과 집 안(서재, 식당)에서 연달아 마주칩니다. 이 타임라인 충돌은 장면의 개연성을 심각하게 훼손하므로 수정이 필요합니다.\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ai_slop score 2.00 / hits=입을 열었다x2 / - [후보 A] ced_score 7.00 (python warnings 7건) / - [후보 A] dialogue_ratio 16% > style target 0% / - [후보 B] ai_slop score 1.00 / hits=입을 열었다x1 / - [후보 B] ced_score 5.00 (python warnings 5건) / - [후보 C] ai_slop score 1.00 / hits=입을 열었다x1 / - [후보 C] ced_score 4.00 (python warnings 4건) / - [후보 C] dialogue_ratio 19% > style target 0%\n- [MAJOR · NpcDrift] [NpcDriftAdvisor — NPC 속성 표류 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 A][MAJOR] NPC '한태준' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공의 사업 선언을 '네 수준엔 그게 딱이니까'라며 노골적으로 조롱하고 비웃었으며, 주인공이 별다른 반응을 보이지 않자 바로 흥미를 잃고 투명인간 취급하며 무시했다. 이는 주인공에게 강하게 집착하는 '집착80' 속성과 명백히 반대되는 무관심과 경멸의 태도이다.' / - [후보 A][MAJOR] NPC '한태민' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공의 사업 선언을 노골적으로 조롱하고 비웃었으며, 주인공이 별다른 반응을 보이지 않자 바로 흥미를 잃고 투명인간 취급하며 무시했다. 이는 주인공에게 강하게 집착하는 '집착80' 속성과 명백히 반대되는 무관심과 경멸의 태도이다.' / - [후보 B][MAJOR] NPC '한태준' relation_to_protag: 기대='집착80/오해-10 (주인공에 대한 집착이 강하고, 오해는 적은 관계)' → 원고='주인공의 사업 계획을 듣고 '승마 말고 할 줄 아는 게 있었나?'라며 노골적으로 조롱하고, 그를 '그룹의 자본을 갉아먹는 귀찮은 부채'로 여기는 등, 주인공의 현재 능력과 의지를 완전히 오해하고 무시하는 높은 수준의 오해를 보임. 이는 '오해-10'이라는 낮은 오해 수준과 상반된다.' / - [후보 B][MAJOR] NPC '한태민' relation_to_protag: 기대='집착80/오해-10 (주인공에 대한 집착이 강하고, 오해는 적은 관계)' → 원고='주인공의 사업 계획에 대해 '아버지 돈으로 또 뭘 말아먹으려고 그러냐'며 과거의 무능한 모습으로 단정하고, 경영권 분쟁의 변수가 되지 말라고 경고하는 등, 주인공의 변화를 전혀 인지하지 못하고 높은 수준의 오해를 보임. 이는 '오해-10'이라는 낮은 오해 수준과 상반된다.' / - [후보 C][MAJOR] NPC '한태준' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공의 사업 선언에 '실소'를 터뜨리고, 주인공의 변화를 꿰뚫어보지 못한 채 다른 가족들처럼 무시하고 비아냥거리는 태도를 보임. 이는 주인공에 대한 이해도가 낮다는(오해가 크다는) 묘사로, '오해-10' (오해가 적음) 축과 반대됨.' / - [후보 C][MAJOR] NPC '한태민' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공의 사업 선언 후 형 한태준과 함께 '어이없어하는 표정'으로 '비아냥'거리는 등, 주인공의 변화를 전혀 이해하지 못하는 모습을 보임. 이는 주인공에 대한 이해도가 낮다는(오해가 크다는) 묘사로, '오해-10' (오해가 적음) 축과 반대됨.'\n- [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 A][MAJOR] '[회상 1]': 과거 에피소드(EP1) 요약에 따르면, 주인공은 '방문 밖의 목소리'를 듣고 '이제 어떤 첫걸음을 내디딜 것인가'라는 질문과 함께 에피소드가 끝납니다. 이는 주인공이 아직 방을 나서기 전임을 시사합니다. 그러나 회상 장면은 주인공이 이미 '복도로 나섰다'고 서술하며, 복도를 걷는 장면으로 이어집니다. 이는 과거 에피소드의 마지막 시점과 회상 장면의 시작 시점이 일치하지 않는 모순입니다. / - [후보 B][MAJOR] '과거의': 과거 에피소드 요약에서는 사건의 결말을 '방문 밖의 목소리'라고 명시하여, 문이 닫힌 채로 외부의 소리만 들린 상황임을 암시합니다. 하지만 회상 장면에서는 '육중한 방문이 열렸다'고 서술하며 주인공이 문을 열고 복도의 가사도우미를 직접 본 것으로 묘사하여, 문이 열렸는지 여부에 대한 물리적 상황이 과거 맥락과 모순됩니다. / - [후보 C][MAJOR] '과거의': 회상 장면은 '식탁'에서 형들과 함께 있는 상황을 묘사하지만, 참조된 과거 에피소드(EP 1)의 배경은 '한시우의 방'으로 명시되어 있어 장소가 모순됩니다. 이는 단순히 방 안에 식탁이 있는 수준을 넘어, 형들과의 식사라는 별개의 사건을 묘사하므로 EP 1의 맥락과 충돌합니다.",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 561030,
+      "token_cost": 0.631785,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep2:arc1:a1:20260412_180124",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "NPC relation_to_protag 관계 프레이밍 문장 (한태준, 한태민)"
+        ],
+        "must_fix": [
+          "relation_to_protag 압축 관계 태그와 의미적으로 어긋난 관계 표현을 canonical relation framing에 맞게 국소 수정"
+        ],
+        "do_not_regress": [
+          "압축 관계 태그 숫자/토큰을 원고에 그대로 삽입하지 말고 prose 의미 정렬만 수행"
+        ],
+        "success_condition": "NpcDrift relation_to_protag 경고가 사라지고 관계 프레이밍이 canonical relation tag 축과 의미적으로 합치한다",
+        "target_kind": "local_phrase",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_phrase",
+            "summary": "NPC relation_to_protag 관계 프레이밍 문장 (한태준, 한태민)",
+            "patch_target_id": "pt:5cfb74718312"
+          }
+        ],
+        "evidence_summary": "runtime npc_drift relation-tag semantic backfill: 한태준:집착80/오해-10; 한태민:집착80/오해-10",
+        "target_kinds": [
+          "local_phrase"
+        ],
+        "subtype": "relation_tag_semantic",
+        "provenance": "runtime_synthesized",
+        "provenance_sources": [
+          "npc_drift_relation_tag_semantic"
+        ]
+      },
+      "repair_contract": {
+        "subtype": "relation_tag_semantic",
+        "subtypes": [
+          "relation_tag_semantic",
+          "history"
+        ],
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "runtime_synthesized",
+        "provenance_sources": [
+          "npc_drift_relation_tag_semantic"
+        ],
+        "target_kind": "local_phrase"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_2",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 20,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "C|tension",
+      "content_hash": "326641d758530ecd49c5c7bb9042626f8b330323a0ea926246996790400380fb",
+      "artifact_path": "logs/artifacts/stage4/ep_0002/attempt_01/rejected_best__C_tension.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {
+        "source_verdict": "PASS",
+        "escalated_to": "PASS_WITH_FIX",
+        "triggered_by": [
+          "flashback",
+          "npc_drift"
+        ],
+        "local_fix_contract_backfilled": true,
+        "backfilled_from": [
+          "npc_drift_relation_tag_semantic"
+        ],
+        "backfill_target_kind": "local_phrase"
+      }
+    },
+    {
+      "timestamp": "2026-04-12T18:31:32.203742",
+      "stage": 4,
+      "episode": 2,
+      "arc": 1,
+      "attempt_num": 2,
+      "success": false,
+      "reject_reason": "[Conflict-first retry] post-select hard conflict invalidated the provisional PASS. 다음 라운드는 local patch가 아니라 authoritative carryover 기준 재작성으로 처리하세요.\n[Continuity Conflict] 제2화 원고는 제1화의 내용과 대부분의 연속성을 유지하고 있습니다. 주인공 한시우의 회귀 후 행동, 가족 관계, 미래 지식을 활용한 계획 등은 제1화에서 설정된 내용과 일치합니다. 그러나 제1화에서 '대한그룹'으로 명시되었던 가문의 그룹명이 제2화에서 '유성그룹'으로 변경되어 나타나는 치명적인 설정 충돌이 발견되었습니다. 이는 작품의 핵심 배경 설정에 대한 모순으로, 수정이 필요합니다.\n[V67] History Conflict: 검사 결과, 2건의 설정 충돌이 발견되었습니다. 첫째, 제1화의 '대한그룹'이라는 그룹명이 제2화에서 '유성그룹'으로 변경되어 세계관의 일관성을 해치는 CRITICAL 등급의 충돌이 있습니다. 둘째, 제1화에서는 주인공 명의의 자산이 없다고 서술되었으나, 제2화에서는 20억 원 규모의 개인 명의 자산을 보유하고 이를 현금화하는 것으로 설정이 변경되어, 주인공의 초기 자금 확보 과정에 대한 설정에 MAJOR 등급의 모순이 발생했습니다.\n[근거 요약 - 수정 시 반드시 반영]\n  [STYLE] ai_slop score 1.00 / hits=시선을 돌렸다x1\n  [STYLE] ced_score 3.00 (python warnings 3건)\n  [NPC] 한태준 position: 기대='대한그룹 큰아들' → 원고='원고에서 주인공 한시우와 아버지 한정호의 소속 그룹은 '유성그룹'으로 명시되나, 해당 NPC의 소속은 '대한그룹'으로 설정되어 있어 충돌합니다.'\n  [NPC] 한태민 position: 기대='대한그룹 둘째 아들' → 원고='원고에서 주인공 한시우와 아버지 한정호의 소속 그룹은 '유성그룹'으로 명시되나, 해당 NPC의 소속은 '대한그룹'으로 설정되어 있어 충돌합니다.'\n[자유 리뷰] 후보 B는 Blueprint의 '빠른 템포' 지침보다는 다소 서사적이고 묘사 중심적인 호흡을 보여줍니다. 그러나 이는 단점이 아니라, 투자물 장르의 독자들이 기대하는 주인공의 전략적 사고 과정을 깊이 있게 보여주기 위한 효과적인 선택으로 판단됩니다. 주인공의 행동 하나하나에 대한 논리적 근거와 계획을 상세히 서술함으로써 캐릭터의 유능함과 전문성을 성공적으로 부각시켰습니다.\n[모순 세부] [Continuity Conflict] 제2화 원고는 제1화의 내용과 대부분의 연속성을 유지하고 있습니다. 주인공 한시우의 회귀 후 행동, 가족 관계, 미래 지식을 활용한 계획 등은 제1화에서 설정된 내용과 일치합니다. 그러나 제1화에서 '대한그룹'으로 명시되었던 가문의 그룹명이 제2화에서 '유성그룹'으로 변경되어 나타나는 치명적인 설정 충돌이 발견되었습니다. 이는 작품의 핵심 배경 설정에 대한 모순으로, 수정이 필요합니다.\n[모순 세부] [V67] History Conflict: 검사 결과, 2건의 설정 충돌이 발견되었습니다. 첫째, 제1화의 '대한그룹'이라는 그룹명이 제2화에서 '유성그룹'으로 변경되어 세계관의 일관성을 해치는 CRITICAL 등급의 충돌이 있습니다. 둘째, 제1화에서는 주인공 명의의 자산이 없다고 서술되었으나, 제2화에서는 20억 원 규모의 개인 명의 자산을 보유하고 이를 현금화하는 것으로 설정이 변경되어, 주인공의 초기 자금 확보 과정에 대한 설정에 MAJOR 등급의 모순이 발생했습니다.\n[R0 이전 지시] - [R0] [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 5.00 (python warnings 5건) / - [후보 B] ai_slop score 1.00 / hits=시선을 돌렸다x1 / - [후보 B] ced_score 3.00 (python warnings 3건) / - [후보 C] ced_score 6.00 (python warnings 6건) / - [후보 C] dialogue_ratio 14% > style target 0%\n- [R0] [MAJOR · NpcDrift] [NpcDriftAdvisor — NPC 속성 표류 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 A][MAJOR] NPC '한태준' position: 기대='대한그룹 큰아들' → 원고='원고에서 주인공의 가족 그룹은 '유성그룹'으로 명시되어 있어, '유성그룹 큰아들'로 묘사됩니다.' / - [후보 A][MAJOR] NPC '한태준' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공의 독립 선언을 '재롱을 부리는 강아지'를 보는 듯한 시선으로 비웃으며('네가? 승마 말고 할 줄 아는 게 있었나?') 무시와 오해를 보입니다. 이는 설정된 높은 집착/낮은 오해 관계와 반대됩니다.' / - [후보 A][MAJOR] NPC '한태민' position: 기대='대한그룹 둘째 아들' → 원고='원고에서 주인공의 가족 그룹은 '유성그룹'으로 명시되어 있어, '유성그룹 둘째 아들'로 묘사됩니다.' / - [후보 A][MAJOR] NPC '한태민' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공에게 '아버지 돈으로 또 뭘 말아먹으려고'라며 멸시하는 태도를 보입니다. 이는 설정된 높은 집착/낮은 오해 관계와 반대되는 높은 오해와 무시를 나타냅니다.' / - [후보 B][MAJOR] NPC '한태준' position: 기대='대한그룹 큰아들' → 원고='원고에서 주인공 한시우와 아버지 한정호의 소속 그룹은 '유성그룹'으로 명시되나, 해당 NPC의 소속은 '대한그룹'으로 설정되어 있어 충돌합니다.' / - [후보 B][MAJOR] NPC '한태민' position: 기대='대한그룹 둘째 아들' → 원고='원고에서 주인공 한시우와 아버지 한정호의 소속 그룹은 '유성그룹'으로 명시되나, 해당 NPC의 소속은 '대한그룹'으로 설정되어 있어 충돌합니다.' / - [후보 C][MAJOR] NPC '한태준' position: 기대='대한그룹 큰아들' → 원고='원고에서 '유성그룹'의 후계자로 묘사됨 ('유성그룹의 후계 구도를 놓고 피 튀기는 암투를 벌이고 있는 두 사람').' / - [후보 C][MAJOR] NPC '한태준' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공을 '노골적인 조롱과 무시'로 대하며, 주인공은 이들의 태도를 '오만과 무관심'으로 인지함. 이는 '집착'과 상반되는 태도임.' / - [후보 C][MAJOR] NPC '한태민' position: 기대='대한그룹 둘째 아들' → 원고='원고에서 '유성그룹'의 후계자로 묘사됨 ('유성그룹의 후계 구도를 놓고 피 튀기는 암투를 벌이고 있는 두 사람').' / - [후보 C][MAJOR] NPC '한태민' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공을 '노골적인 조롱과 무시'로 대하며, 주인공은 이들의 태도를 '오만과 무관심'으로 인지함. 이는 '집착'과 상반되는 태도임.'\n- [R0] [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 A][MAJOR] '과거의': 회상 장면의 배경이 되는 '이란 핵 협상 결렬' 사건은 과거 에피소드의 시점인 2006년과 맞지 않는 시대착오적 설정입니다. 해당 사건은 주로 2013-2015년의 JCPOA 협상 또는 2018년 미국의 탈퇴와 관련된 것으로, 2006년의 상황과는 거리가 있습니다. / - [후보 B][MAJOR] '과거의': 과거 에피소드(EP 1) 요약에 따르면, 한시우는 방 안에서 '방문 밖의 목소리'를 듣는 상황에서 에피소드가 종료됩니다. 이는 문이 닫힌 상태에서 목소리를 먼저 들었음을 의미합니다. 하지만 회상 장면에서는 '문을 열고 나서자' 가사도우미가 말을 거는 것으로 묘사되어, 문을 연 후에 목소리를 들은 것처럼 사건의 순서가 모순됩니다. / - [후보 C][MAJOR] '과거의': 회상 장면에서는 가사도우미와 한시우가 직접 대면하여 대화하고 물수건을 밀어내는 등 물리적 접촉이 있는 것으로 묘사되나, 과거 에피소드 요약에서는 해당 장면이 '방문 밖의 목소리'로만 언급되어, 문을 사이에 두고 대화가 이루어졌음을 시사합니다. 이는 인물들의 위치 및 상호작용 방식에 대한 모순입니다.\n[Advisory 핵심 요약 - 재시도 시 반영]\n- [MAJOR · StyleSignal] [StyleSignalAdvisor — ai_slop/CED/style-target drift, advisory only — 최종 판단은 Director] / - [후보 A] ced_score 5.00 (python warnings 5건) / - [후보 B] ai_slop score 1.00 / hits=시선을 돌렸다x1 / - [후보 B] ced_score 3.00 (python warnings 3건) / - [후보 C] ced_score 6.00 (python warnings 6건) / - [후보 C] dialogue_ratio 14% > style target 0%\n- [MAJOR · NpcDrift] [NpcDriftAdvisor — NPC 속성 표류 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 A][MAJOR] NPC '한태준' position: 기대='대한그룹 큰아들' → 원고='원고에서 주인공의 가족 그룹은 '유성그룹'으로 명시되어 있어, '유성그룹 큰아들'로 묘사됩니다.' / - [후보 A][MAJOR] NPC '한태준' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공의 독립 선언을 '재롱을 부리는 강아지'를 보는 듯한 시선으로 비웃으며('네가? 승마 말고 할 줄 아는 게 있었나?') 무시와 오해를 보입니다. 이는 설정된 높은 집착/낮은 오해 관계와 반대됩니다.' / - [후보 A][MAJOR] NPC '한태민' position: 기대='대한그룹 둘째 아들' → 원고='원고에서 주인공의 가족 그룹은 '유성그룹'으로 명시되어 있어, '유성그룹 둘째 아들'로 묘사됩니다.' / - [후보 A][MAJOR] NPC '한태민' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공에게 '아버지 돈으로 또 뭘 말아먹으려고'라며 멸시하는 태도를 보입니다. 이는 설정된 높은 집착/낮은 오해 관계와 반대되는 높은 오해와 무시를 나타냅니다.' / - [후보 B][MAJOR] NPC '한태준' position: 기대='대한그룹 큰아들' → 원고='원고에서 주인공 한시우와 아버지 한정호의 소속 그룹은 '유성그룹'으로 명시되나, 해당 NPC의 소속은 '대한그룹'으로 설정되어 있어 충돌합니다.' / - [후보 B][MAJOR] NPC '한태민' position: 기대='대한그룹 둘째 아들' → 원고='원고에서 주인공 한시우와 아버지 한정호의 소속 그룹은 '유성그룹'으로 명시되나, 해당 NPC의 소속은 '대한그룹'으로 설정되어 있어 충돌합니다.' / - [후보 C][MAJOR] NPC '한태준' position: 기대='대한그룹 큰아들' → 원고='원고에서 '유성그룹'의 후계자로 묘사됨 ('유성그룹의 후계 구도를 놓고 피 튀기는 암투를 벌이고 있는 두 사람').' / - [후보 C][MAJOR] NPC '한태준' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공을 '노골적인 조롱과 무시'로 대하며, 주인공은 이들의 태도를 '오만과 무관심'으로 인지함. 이는 '집착'과 상반되는 태도임.' / - [후보 C][MAJOR] NPC '한태민' position: 기대='대한그룹 둘째 아들' → 원고='원고에서 '유성그룹'의 후계자로 묘사됨 ('유성그룹의 후계 구도를 놓고 피 튀기는 암투를 벌이고 있는 두 사람').' / - [후보 C][MAJOR] NPC '한태민' relation_to_protag: 기대='집착80/오해-10' → 원고='주인공을 '노골적인 조롱과 무시'로 대하며, 주인공은 이들의 태도를 '오만과 무관심'으로 인지함. 이는 '집착'과 상반되는 태도임.'\n- [MAJOR · Flashback] [FlashbackVerifier — 회상 오염 감지, 참고용 advisory — 최종 판단은 Director] / - [후보 A][MAJOR] '과거의': 회상 장면의 배경이 되는 '이란 핵 협상 결렬' 사건은 과거 에피소드의 시점인 2006년과 맞지 않는 시대착오적 설정입니다. 해당 사건은 주로 2013-2015년의 JCPOA 협상 또는 2018년 미국의 탈퇴와 관련된 것으로, 2006년의 상황과는 거리가 있습니다. / - [후보 B][MAJOR] '과거의': 과거 에피소드(EP 1) 요약에 따르면, 한시우는 방 안에서 '방문 밖의 목소리'를 듣는 상황에서 에피소드가 종료됩니다. 이는 문이 닫힌 상태에서 목소리를 먼저 들었음을 의미합니다. 하지만 회상 장면에서는 '문을 열고 나서자' 가사도우미가 말을 거는 것으로 묘사되어, 문을 연 후에 목소리를 들은 것처럼 사건의 순서가 모순됩니다. / - [후보 C][MAJOR] '과거의': 회상 장면에서는 가사도우미와 한시우가 직접 대면하여 대화하고 물수건을 밀어내는 등 물리적 접촉이 있는 것으로 묘사되나, 과거 에피소드 요약에서는 해당 장면이 '방문 밖의 목소리'로만 언급되어, 문을 사이에 두고 대화가 이루어졌음을 시사합니다. 이는 인물들의 위치 및 상호작용 방식에 대한 모순입니다.",
+      "generation_method": "patch",
+      "model_tier": 1,
+      "duration_ms": 516312,
+      "token_cost": 0.5981019999999999,
+      "is_patch": true,
+      "prev_score": 0,
+      "patch_fallback": false,
+      "attempt_key": "s4:ep2:arc1:a2:20260412_180124",
+      "final_verdict": "REJECT",
+      "director_verdict": "PASS",
+      "gate_basis": "post_select_conflict",
+      "repair_scope": "full",
+      "fix_scope": "full",
+      "authoritative_fix_scope": "inplace",
+      "fix_pack": {
+        "patch_targets": [
+          "문을 열고 나서자, 2층 복도의 화려한 샹들리에 조명이 시야를 채웠다. \"시우 도련님, 아침 드세요.\""
+        ],
+        "must_fix": [
+          "회상 장면의 순서와 타이밍 묘사를 prior manuscript truth에 맞게 국소 수정"
+        ],
+        "do_not_regress": [
+          "prior truth: 문을 열기 전에 밖에서 들려오는 가사도우미의 목소리를 먼저 들었다."
+        ],
+        "success_condition": "FlashbackVerifier 경고가 사라지고 회상 continuity가 prior manuscript truth와 합치한다",
+        "target_kind": "local_sentence",
+        "patch_target_records": [
+          {
+            "stage": "stage4",
+            "container_kind": "manuscript",
+            "container_id": "",
+            "target_kind": "local_sentence",
+            "summary": "문을 열고 나서자, 2층 복도의 화려한 샹들리에 조명이 시야를 채웠다. \"시우 도련님, 아침 드세요.\"",
+            "patch_target_id": "pt:7b310c99a408"
+          }
+        ],
+        "evidence_summary": "runtime flashback continuity backfill: timeline",
+        "target_kinds": [
+          "local_sentence"
+        ],
+        "subtype": "timeline",
+        "provenance": "runtime_synthesized",
+        "provenance_sources": [
+          "flashback_continuity_localfix"
+        ]
+      },
+      "repair_contract": {
+        "subtype": "timeline",
+        "subtypes": [
+          "timeline",
+          "continuity",
+          "history"
+        ],
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "provenance": "runtime_synthesized",
+        "provenance_sources": [
+          "flashback_continuity_localfix"
+        ],
+        "target_kind": "local_sentence"
+      },
+      "scope_authority": {
+        "fix_scope": "full",
+        "repair_scope": "full",
+        "authoritative_fix_scope": "inplace",
+        "scope_origin": {
+          "fix_scope": "post_select_conflict_override",
+          "authoritative_fix_scope": "director_authoritative",
+          "repair_scope": "runtime_lane"
+        },
+        "widened": true
+      },
+      "retry_budget_axes": {
+        "round": "retry_round_3",
+        "repair": "rewrite_regenerate",
+        "strategy": "full",
+        "escalation": "none",
+        "guidance": "augmented"
+      },
+      "patch_strategy": "patch_with_feedback",
+      "structural_attempted": false,
+      "error_category": "POST_SELECT_CONFLICT",
+      "reject_bucket": "post_select_conflict",
+      "score_breakdown": {
+        "continuity_contradiction": 40,
+        "blueprint_coverage": 20,
+        "quality_engagement": 20,
+        "length": 10,
+        "python_warnings": 8
+      },
+      "candidate_key": "B|narrative",
+      "content_hash": "099e12958ede664f8a35e76bcb7047cf308eb56ef8b8c41e86ba0be263d1ceed",
+      "artifact_path": "logs/artifacts/stage4/ep_0002/attempt_02/rejected_best__B_narrative.txt",
+      "downstream_override_applied": true,
+      "primary_failure_layer": "downstream_gate",
+      "strong_advisory_escalation": {
+        "source_verdict": "PASS",
+        "escalated_to": "PASS_WITH_FIX",
+        "triggered_by": [
+          "flashback",
+          "npc_drift"
+        ],
+        "local_fix_contract_backfilled": true,
+        "backfilled_from": [
+          "flashback_continuity_localfix"
+        ],
+        "backfill_target_kind": "local_sentence"
+      }
+    }
+  ]
+}

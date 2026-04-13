@@ -172,6 +172,72 @@ class TestFactLockPacket:
         assert "FACT-LOCK" in prompt
         assert "남궁세가" in prompt
 
+    def test_fact_lock_packet_merges_arc_and_prior_institution_truth(self):
+        result = BlueprintConstraintCompiler._build_fact_lock_packet(
+            prev_blueprint={
+                "integrated_scenario": "그는 대한그룹 회장의 서재에서 차갑게 통보를 들었다.",
+            },
+            prev_manuscript_ending="그는 은행 PB센터에서 마지막 서류를 정리했다.",
+            arc_data={
+                "state_constraints": {
+                    "arc_start_state": {
+                        "relationship": "대한그룹 한정호 회장의 막내아들",
+                    }
+                },
+                "tactical_doc": "### 제 3화: 강남 PB센터와 법무법인을 오간다.",
+            },
+            ep_num=3,
+        )
+
+        institution_facts = [anchor["fact"] for anchor in result.get("anchors", []) if anchor.get("category") == "기관"]
+        assert any("대한그룹" in fact for fact in institution_facts)
+        assert any("PB센터" in fact for fact in institution_facts)
+
+    def test_compile_to_prompt_includes_episode_progression_guard(self):
+        compiler = BlueprintConstraintCompiler()
+        block = compiler.compile(
+            arc_data={
+                "ep_start": 1,
+                "ep_count": 4,
+                "arc_no": 1,
+                "tactical_doc": (
+                    "### 제 3화: 씨앗을 심는 법\n"
+                    "다음 날부터 그는 대한그룹의 법률 자문이 아닌 바깥 변호사를 만나 법인 설립을 진행하고 "
+                    "PB센터에서 자산 현금화를 요청한다."
+                ),
+                "state_changes": {
+                    "timeline": {
+                        "start": {"year": 2006, "month": 1},
+                        "end": {"year": 2006, "month": 1},
+                    }
+                },
+            },
+            ep_num=3,
+            prev_blueprint={
+                "time_flow": "2006년 1월, 다음 날 저녁",
+                "scene_breakdown": {
+                    "scene_2": {
+                        "title": "독립 선언",
+                        "location": "한정호 회장의 서재",
+                        "characters": ["한시우", "한정호"],
+                        "type": "dialogue_duel",
+                    },
+                    "scene_4": {
+                        "title": "전장의 서막",
+                        "location": "한시우의 방",
+                        "characters": ["한시우"],
+                        "type": "cliffhanger",
+                    },
+                },
+            },
+        )
+
+        prompt = compiler.compile_to_prompt(block)
+        assert "EPISODE PROGRESSION" in prompt
+        assert "대한그룹" in prompt
+        assert "겨울" in prompt
+        assert "한정호 회장의 서재" in prompt
+
     def test_anchor_count_bounded_to_12(self):
         """Packet should not exceed 12 anchors even with many manuscript matches."""
         # Create manuscript with many item storage patterns
@@ -189,6 +255,51 @@ class TestFactLockPacket:
             ep_num=2,
         )
         assert len(result.get("anchors", [])) <= 12
+
+
+# ============================================================
+# Tranche A2: Opening-State Authority
+# ============================================================
+
+
+class TestOpeningStateAuthority:
+    """Current-arc opening authority must outrank stale prior-blueprint state."""
+
+    def test_compile_prefers_arc_start_state_over_stale_prev_blueprint(self):
+        compiler = BlueprintConstraintCompiler()
+        block = compiler.compile(
+            arc_data={
+                "ep_start": 11,
+                "ep_count": 3,
+                "arc_no": 3,
+                "tactical_doc": "제11화: 개장 직전 브리핑",
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "Gangnam HQ",
+                        "equipment": ["BlackBerry 7130", "Ecuador memo"],
+                        "injuries": "없음",
+                    }
+                },
+            },
+            ep_num=11,
+            prev_blueprint={
+                "end_location": "Old Office",
+                "scene_breakdown": {
+                    "scene_1": {
+                        "location": "Old Office",
+                        "characters": ["대표", "비서"],
+                    }
+                },
+                "protagonist_state": {
+                    "equipment": ["Stale pager"],
+                    "injuries": "왼팔 타박상",
+                },
+            },
+        )
+
+        assert block["continuity"]["location"] == "Gangnam HQ"
+        assert block["inherited_state"]["equipment"] == ["BlackBerry 7130", "Ecuador memo"]
+        assert block["inherited_state"]["injuries"] == "없음"
 
 
 # ============================================================
@@ -280,6 +391,31 @@ class TestCapitalContinuityPacket:
             genre="investment",
         )
         assert "capital_continuity_packet" in block
+
+    def test_compile_filters_future_capital_events_by_episode(self):
+        compiler = BlueprintConstraintCompiler()
+        block = compiler.compile(
+            arc_data={
+                "ep_start": 11,
+                "ep_count": 3,
+                "arc_no": 3,
+                "tactical_doc": "제11화: 포지션 점검",
+                "state_changes": {
+                    "capital_changes": [
+                        {"episode": 12, "description": "차익 실현", "amount": "5억"},
+                        {"episode": 11, "description": "WTI 포지션 유지", "amount": "12.5억"},
+                    ]
+                },
+            },
+            ep_num=11,
+            prev_blueprint={},
+            genre="investment",
+        )
+
+        fields = block.get("capital_continuity_packet", {}).get("fields", [])
+        values = [field.get("value", "") for field in fields]
+        assert any("WTI 포지션 유지" in value for value in values)
+        assert not any("차익 실현" in value for value in values)
 
 
 # ============================================================

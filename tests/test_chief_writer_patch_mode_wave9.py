@@ -125,7 +125,7 @@ def test_patch_with_feedback_shell_uses_extracted_patch_helpers():
         patch.object(
             writer,
             "_build_patch_with_feedback_retry_args",
-            return_value=("constraints", "strategy_a", "selection note"),
+            return_value=("constraints", "strategy_a", "selection note", {"strategy_a": "selection note"}),
         ) as mock_retry_args,
     ):
         result = writer.patch_with_feedback(
@@ -156,3 +156,4 @@ def test_patch_with_feedback_shell_uses_extracted_patch_helpers():
     assert kwargs["rejected_strategy"] == "strategy_a"
     assert kwargs["single_strategy"] == "strategy_a"
     assert kwargs["strategy_specific_feedback"] == "selection note"
+    assert kwargs["strategy_feedback_map"] == {"strategy_a": "selection note"}

@@ -2,7 +2,6 @@
 Stage4 round-outcome governance runtime split.
 """
 
-import copy
 import logging
 from pathlib import Path
 from types import SimpleNamespace
@@ -11,9 +10,78 @@ from typing import TYPE_CHECKING
 from modules.core.jsonl_io import append_jsonl_record
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.soft_failure import resolve_project_log_dir
+from modules.core.stage4_raw_evidence import (
+    build_stage4_raw_rationale_record,
+    persist_stage4_raw_rationale_records,
+)
+from modules.core.stage4_reject_runtime import (
+    _build_stage4_retry_contract_carryover_fields,
+    _build_stage4_scope_origin_payload,
+)
 
 if TYPE_CHECKING:
     from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+
+def _build_stage4_retry_pathology_projection(
+    *,
+    previous_attempt: dict | None,
+    fix_scope: str,
+    authoritative_fix_scope: str,
+) -> dict[str, object]:
+    previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+    projection: dict[str, object] = {}
+
+    for key in ("attempt_key", "content_hash", "candidate_key"):
+        value = str(previous_attempt.get(key, "") or "").strip()
+        if value:
+            projection[key] = value
+
+    authoritative_fix_scope_violation = previous_attempt.get("authoritative_fix_scope_violation")
+    if isinstance(authoritative_fix_scope_violation, dict):
+        projection["authoritative_fix_scope_violation"] = authoritative_fix_scope_violation
+
+    projection.update(
+        _build_stage4_retry_contract_carryover_fields(
+            previous_attempt=previous_attempt,
+            fix_scope=fix_scope,
+            authoritative_fix_scope=authoritative_fix_scope,
+        )
+    )
+
+    rationale_blanked_by = str(previous_attempt.get("rationale_blanked_by", "") or "").strip()
+    if rationale_blanked_by:
+        projection["rationale_blanked_by"] = rationale_blanked_by
+
+    return projection
+
+
+def _build_stage4_retry_pathology_raw_record(
+    *,
+    payload: dict | None,
+    event: str = "STAGE4_RETRY_PATHOLOGY",
+) -> dict[str, object] | None:
+    payload = payload if isinstance(payload, dict) else {}
+    attempt_key = str(payload.get("attempt_key", "") or "").strip()
+    ep_num = int(payload.get("ep", 0) or 0)
+    if not attempt_key:
+        return None
+    normalized_payload = {
+        str(key): value for key, value in payload.items() if str(key or "").strip() and value not in ("", None, [], {})
+    }
+    if not normalized_payload:
+        return None
+    normalized_payload["event"] = str(event or "STAGE4_RETRY_PATHOLOGY")
+    return build_stage4_raw_rationale_record(
+        attempt_key=attempt_key,
+        ep_num=ep_num,
+        payload_kind="retry_pathology_raw",
+        payload=normalized_payload,
+        payload_meta={
+            "record_family": "retry_pathology",
+            "surface": "retry_pathology_raw",
+        },
+    )
 
 
 class Stage4OutcomeRuntime:
@@ -385,7 +453,9 @@ class Stage4OutcomeRuntime:
         )
 
     @staticmethod
-    def _build_cove_runtime_round_fields(*, next_ep: int, interview_round: int, max_rounds: int) -> tuple[int, int, int]:
+    def _build_cove_runtime_round_fields(
+        *, next_ep: int, interview_round: int, max_rounds: int
+    ) -> tuple[int, int, int]:
         return (
             next_ep,
             interview_round + 1,
@@ -818,9 +888,7 @@ class Stage4OutcomeRuntime:
                     previous_attempt["plateau_detected"] = True
                     existing_reasoning = str(previous_attempt.get("fix_scope_reasoning", "") or "").strip()
                     previous_attempt["fix_scope_reasoning"] = (
-                        f"{existing_reasoning}\n{plateau_advisory}".strip()
-                        if existing_reasoning
-                        else plateau_advisory
+                        f"{existing_reasoning}\n{plateau_advisory}".strip() if existing_reasoning else plateau_advisory
                     )
                     owner.ctx.ui.log(
                         f"   ⚠️ [QR-7] {str(plateau_advisory)}",
@@ -863,8 +931,7 @@ class Stage4OutcomeRuntime:
                 "structure_error": "구조",
             }.get(prev_reject_bucket, prev_reject_bucket)
             owner.ctx.ui.log(
-                f"   ⚠️ [TF-29] '{bucket_label}' 유형 REJECT {bucket_streak}연속"
-                " → 블루프린트 단계 문제 가능성"
+                f"   ⚠️ [TF-29] '{bucket_label}' 유형 REJECT {bucket_streak}연속 → 블루프린트 단계 문제 가능성"
             )
             tf29_advisory = (
                 f"[⚠️ 반복 실패 패턴 감지] '{bucket_label}' 유형 REJECT가 {bucket_streak}회 연속입니다. "
@@ -921,9 +988,7 @@ class Stage4OutcomeRuntime:
                 "해당 영역의 Arc를 재검토하세요."
             )
             director_feedback = advisory + "\n" + director_feedback
-            owner.ctx.ui.log(
-                f"   ⚠️ [A-4] '{contradiction_label}' 모순 {contradiction_type_streak}연속 → Arc 구조 진단"
-            )
+            owner.ctx.ui.log(f"   ⚠️ [A-4] '{contradiction_label}' 모순 {contradiction_type_streak}연속 → Arc 구조 진단")
 
         return SimpleNamespace(
             director_feedback=director_feedback,
@@ -1087,13 +1152,12 @@ class Stage4OutcomeRuntime:
                 f"{existing_reasoning}\n{notice}".strip() if existing_reasoning else notice
             )
 
-        scope_origin = previous_attempt.get("scope_origin")
-        if not isinstance(scope_origin, dict):
-            scope_origin = {}
-        scope_origin["fix_scope"] = "qr7_plateau_override"
-        scope_origin.setdefault("authoritative_fix_scope", "director_authoritative")
-        scope_origin.setdefault("repair_scope", "runtime_lane")
-        previous_attempt["scope_origin"] = scope_origin
+        previous_attempt["scope_origin"] = _build_stage4_scope_origin_payload(
+            fix_scope=str(previous_attempt.get("fix_scope", "") or ""),
+            authoritative_fix_scope=str(previous_attempt.get("authoritative_fix_scope", "") or ""),
+            existing_scope_origin=previous_attempt.get("scope_origin"),
+            fix_scope_override="qr7_plateau_override",
+        )
 
         if notice not in director_feedback:
             director_feedback = f"{notice}\n{director_feedback}".strip()
@@ -1214,58 +1278,13 @@ class Stage4OutcomeRuntime:
         fix_scope: str,
         authoritative_fix_scope: str,
     ) -> None:
-        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
-        attempt_key = str(previous_attempt.get("attempt_key", "") or "").strip()
-        if attempt_key:
-            payload["attempt_key"] = attempt_key
-        content_hash = str(previous_attempt.get("content_hash", "") or "").strip()
-        if content_hash:
-            payload["content_hash"] = content_hash
-        candidate_key = str(previous_attempt.get("candidate_key", "") or "").strip()
-        if candidate_key:
-            payload["candidate_key"] = candidate_key
-        authoritative_fix_scope_violation = previous_attempt.get("authoritative_fix_scope_violation")
-        if isinstance(authoritative_fix_scope_violation, dict):
-            payload["authoritative_fix_scope_violation"] = authoritative_fix_scope_violation
-        conflict_contract = previous_attempt.get("conflict_contract")
-        if isinstance(conflict_contract, dict) and conflict_contract:
-            payload["conflict_contract"] = conflict_contract
-        # [SSS-T2] Persist reuse_contract to operator-facing sink
-        reuse_contract_val = previous_attempt.get("reuse_contract")
-        if isinstance(reuse_contract_val, dict) and reuse_contract_val:
-            payload["reuse_contract"] = copy.deepcopy(reuse_contract_val)
-        for key in ("repair_contract", "scope_authority", "fix_pack_origin"):
-            value = previous_attempt.get(key)
-            if isinstance(value, dict) and value:
-                payload[key] = copy.deepcopy(value)
-        # [SSS-T1] Scope origin metadata — distinguishes semantic layers in operator evidence
-        existing_scope_origin = previous_attempt.get("scope_origin")
-        if isinstance(existing_scope_origin, dict) and existing_scope_origin:
-            payload["scope_origin"] = dict(existing_scope_origin)
-            payload["scope_origin"].setdefault("authoritative_fix_scope", "director_authoritative")
-            payload["scope_origin"].setdefault("repair_scope", "runtime_lane")
-            payload["scope_origin"].setdefault(
-                "fix_scope",
-                (
-                    "runtime_widened"
-                    if fix_scope and authoritative_fix_scope.lower() != fix_scope.lower()
-                    else "director_authoritative"
-                ),
+        payload.update(
+            _build_stage4_retry_pathology_projection(
+                previous_attempt=previous_attempt,
+                fix_scope=fix_scope,
+                authoritative_fix_scope=authoritative_fix_scope,
             )
-        else:
-            payload["scope_origin"] = {
-                "fix_scope": (
-                    "runtime_widened"
-                    if fix_scope and authoritative_fix_scope.lower() != fix_scope.lower()
-                    else "director_authoritative"
-                ),
-                "authoritative_fix_scope": "director_authoritative",
-                "repair_scope": "runtime_lane",
-            }
-        # [SSS-T3] Rationale elision marker
-        _rationale_blanked = previous_attempt.get("rationale_blanked_by")
-        if _rationale_blanked:
-            payload["rationale_blanked_by"] = _rationale_blanked
+        )
 
     def emit_retry_pathology_signal(
         self,
@@ -1297,6 +1316,14 @@ class Stage4OutcomeRuntime:
         except Exception as exc:
             logging.warning("[Stage4] retry pathology sink write skipped: %s", exc)
 
+        current_project_db = getattr(current_project, "db", None)
+        raw_record = _build_stage4_retry_pathology_raw_record(payload=payload)
+        persist_stage4_raw_rationale_records(
+            project_db=current_project_db,
+            records=[raw_record] if raw_record else [],
+            log_prefix="Stage4RetryPathology",
+        )
+
         audit_event = getattr(owner.ctx, "audit_event", None)
         if callable(audit_event):
             audit_event(
@@ -1320,6 +1347,15 @@ class Stage4OutcomeRuntime:
             append_jsonl_record(log_file, repeat_payload)
         except Exception as exc:
             logging.warning("[Stage4] retry pathology repeat sink write skipped: %s", exc)
+        repeat_raw_record = _build_stage4_retry_pathology_raw_record(
+            payload=repeat_payload,
+            event="STAGE4_RETRY_PATHOLOGY_REPEAT",
+        )
+        persist_stage4_raw_rationale_records(
+            project_db=current_project_db,
+            records=[repeat_raw_record] if repeat_raw_record else [],
+            log_prefix="Stage4RetryPathologyRepeat",
+        )
         if callable(audit_event):
             audit_event(
                 "stage4_retry_pathology_repeat",
