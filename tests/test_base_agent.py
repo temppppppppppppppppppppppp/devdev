@@ -435,6 +435,8 @@ class TestHandleApiError:
         assert result["rate_limit_retry_count"] == 0
         agent._check_connectivity.assert_called_once()
         agent._generate_content.assert_not_called()
+
+
 class TestKeyRotationSignal:
     def test_try_rotate_key_reports_all_keys_exhausted_reason(self, monkeypatch):
         monkeypatch.setattr(BaseAgent, "_keys_initialized", True)
@@ -582,6 +584,7 @@ class TestErrorResponse:
             AgentErrorType.QUOTA_EXCEEDED,
             AgentErrorType.NETWORK_ERROR,
             AgentErrorType.MALFORMED_RESPONSE,
+            AgentErrorType.CANDIDATE_DISQUALIFIED,
             AgentErrorType.UNKNOWN,
         ]:
             hint = agent._get_recovery_hint(error_type)
@@ -596,20 +599,20 @@ class TestErrorResponse:
 
 class TestModelFallbackChain:
     def test_31preview_falls_to_25pro(self):
-        assert BaseAgent.MODEL_FALLBACK_CHAIN["gemini-3.1-pro-preview"] == "gemini-2.5-pro"
+        assert BaseAgent.MODEL_FALLBACK_CHAIN["vertexai:gemini-3.1-pro-preview"] == "vertexai:gemini-2.5-pro"
 
     def test_25pro_falls_to_flash(self):
         """gemini-2.5-pro → gemini-2.5-flash 폴백"""
-        assert BaseAgent.MODEL_FALLBACK_CHAIN["gemini-2.5-pro"] == "gemini-2.5-flash"
+        assert BaseAgent.MODEL_FALLBACK_CHAIN["vertexai:gemini-2.5-pro"] == "vertexai:gemini-2.5-flash"
 
     def test_flash_is_terminal(self):
         """gemini-2.5-flash는 자기 자신으로 폴백 (최종 방어선)"""
-        assert BaseAgent.MODEL_FALLBACK_CHAIN.get("gemini-2.5-flash") == "gemini-2.5-flash"
+        assert BaseAgent.MODEL_FALLBACK_CHAIN.get("vertexai:gemini-2.5-flash") == "vertexai:gemini-2.5-flash"
 
     def test_flash_chain(self):
         """Flash 계열 폴백 — 현재 chain에 gemini-3.x 없음"""
         assert "gemini-3-flash-preview" not in BaseAgent.MODEL_FALLBACK_CHAIN
-        assert BaseAgent.MODEL_FALLBACK_CHAIN["gemini-3.1-pro-preview"] == "gemini-2.5-pro"
+        assert BaseAgent.MODEL_FALLBACK_CHAIN["vertexai:gemini-3.1-pro-preview"] == "vertexai:gemini-2.5-pro"
 
     def test_vertex_prefixed_pro_preserves_provider_on_fallback(self):
         agent = BaseAgent(context=MagicMock(), client=MagicMock(), model_tier="vertexai:gemini-3.1-pro-preview")
@@ -968,7 +971,9 @@ class TestMetricsUsageTracking:
     def test_backup_recovery_uses_measured_usage_and_closes_failed_metric(self, agent, monkeypatch):
         collector = MagicMock()
         collector.start_call.return_value = "backup_metric"
-        collector.calculate_cost.side_effect = lambda model, *_args, **_kwargs: 0.321 if model == "gemini-2.5-pro" else 9.999
+        collector.calculate_cost.side_effect = (
+            lambda model, *_args, **_kwargs: 0.321 if model == "gemini-2.5-pro" else 9.999
+        )
 
         monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", True)
         monkeypatch.setattr(base_agent_module, "get_metrics_collector", lambda: collector)
@@ -1022,7 +1027,9 @@ class TestMetricsUsageTracking:
     def test_backup_recovery_success_logs_session_entry_with_backup_model_pricing(self, agent, monkeypatch):
         collector = MagicMock()
         collector.start_call.return_value = "backup_metric"
-        collector.calculate_cost.side_effect = lambda model, *_args, **_kwargs: 0.432 if model == "gemini-2.5-pro" else 8.765
+        collector.calculate_cost.side_effect = (
+            lambda model, *_args, **_kwargs: 0.432 if model == "gemini-2.5-pro" else 8.765
+        )
 
         monkeypatch.setattr(base_agent_module, "METRICS_ENABLED", True)
         monkeypatch.setattr(base_agent_module, "get_metrics_collector", lambda: collector)
@@ -1084,7 +1091,9 @@ class TestNormalizedProviderHelpers:
         agent._llm_router = MagicMock()
         agent._llm_router.get_provider_for_model.return_value = provider
 
-        response = agent._generate_llm_response(model="gemini-2.5-flash", contents="prompt", config={"temperature": 0.1})
+        response = agent._generate_llm_response(
+            model="gemini-2.5-flash", contents="prompt", config={"temperature": 0.1}
+        )
 
         assert isinstance(response, LLMResponse)
         assert response.text == "ok"

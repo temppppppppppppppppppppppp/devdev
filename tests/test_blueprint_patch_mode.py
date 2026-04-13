@@ -533,6 +533,30 @@ class TestBlueprintPatchIntegration:
         assert pipeline["failure_reason"] == AgentErrorType.SCHEMA_INCOMPATIBLE
         assert pipeline["phases"]["generate"]["error_type"] == AgentErrorType.SCHEMA_INCOMPATIBLE
 
+    def test_phase2_generation_failure_retries_on_candidate_disqualified_bundle(
+        self, blueprint_generator, sample_arc_data
+    ):
+        blueprint_generator.ensemble.last_error_type = AgentErrorType.TIMEOUT
+        blueprint_generator.ensemble.last_error_types = [
+            AgentErrorType.TIMEOUT,
+            AgentErrorType.SCHEMA_INCOMPATIBLE,
+            AgentErrorType.CANDIDATE_DISQUALIFIED,
+        ]
+        pipeline = {"phases": {"generate": {}}}
+
+        result = blueprint_generator.runtime._handle_phase2_generation_failure(
+            retry=0,
+            ep_num=1,
+            arc_data=sample_arc_data,
+            pipeline_result=pipeline,
+            max_retries=2,
+        )
+
+        assert result.should_break is False
+        assert result.should_continue is True
+        assert pipeline["failure_reason"] == AgentErrorType.CANDIDATE_DISQUALIFIED
+        assert pipeline["phases"]["generate"]["error_type"] == AgentErrorType.CANDIDATE_DISQUALIFIED
+
     def test_phase3_validation_continuity_reject_short_circuits(self, blueprint_generator, sample_arc_data):
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
 
@@ -1066,6 +1090,45 @@ class TestBlueprintPatchIntegration:
         assert pipeline["final_verdict"] == "FAILED"
         assert pipeline["failure_reason"] == AgentErrorType.SCHEMA_INCOMPATIBLE
 
+    def test_candidate_disqualified_failure_retries_until_next_attempt_succeeds(
+        self, blueprint_generator, sample_arc_data
+    ):
+        bp = {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "retry success"}]}
+
+        blueprint_generator.context.pass_rate_monitor = MagicMock()
+        blueprint_generator.context.current_project = MagicMock(metrics_session_id="sess_stage3_candidate")
+        blueprint_generator.constraint_compiler.compile.return_value = {}
+        attempts = [(None, []), (bp, [bp])]
+
+        def _set_candidate_disqualified(*args, **kwargs):
+            if len(attempts) == 2:
+                blueprint_generator.ensemble.last_error_type = AgentErrorType.CANDIDATE_DISQUALIFIED
+                blueprint_generator.ensemble.last_error_types = [
+                    AgentErrorType.CANDIDATE_DISQUALIFIED,
+                    AgentErrorType.SCHEMA_INCOMPATIBLE,
+                ]
+            else:
+                blueprint_generator.ensemble.last_error_type = None
+                blueprint_generator.ensemble.last_error_types = []
+            return attempts.pop(0)
+
+        blueprint_generator.ensemble.generate_ensemble.side_effect = _set_candidate_disqualified
+        blueprint_generator.validator.validate.return_value = (
+            "PASS",
+            {"score": 92, "issues": [], "confidence": 88},
+        )
+
+        result, pipeline = blueprint_generator.runtime.generate(
+            ep_num=1,
+            arc_data=sample_arc_data,
+            max_retries=1,
+        )
+
+        assert result["ep_num"] == bp["ep_num"]
+        assert result["scene_list"] == bp["scene_list"]
+        assert pipeline["final_verdict"] == "PASS"
+        assert blueprint_generator.ensemble.generate_ensemble.call_count == 2
+
     def test_generate_failure_retry_records_intermediate_stage3_reject(self, blueprint_generator, sample_arc_data):
         bp = {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "retry success"}]}
 
@@ -1498,9 +1561,7 @@ class TestBlueprintPatchIntegration:
         blueprint_generator._inplace_patch_blueprint.assert_not_called()
         blueprint_generator.ensemble.generate_ensemble.assert_called_once()
 
-    def test_run_phase2_generation_blocks_contract_unsupported_target_kind(
-        self, blueprint_generator, sample_arc_data
-    ):
+    def test_run_phase2_generation_blocks_contract_unsupported_target_kind(self, blueprint_generator, sample_arc_data):
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
 
         generated_blueprint = {"ep_num": 2, "scene_list": [{"scene_no": 1, "summary": "full regenerate"}]}
@@ -1747,10 +1808,69 @@ class TestBlueprintPatchIntegration:
 
         assert result.should_break is True
         assert result.current_validation["fix_scope"] == "full"
-        assert (
-            result.current_validation["local_patch_gate"]["reason"] == "unsupported_target_kind:scene_model"
-        )
+        assert result.current_validation["local_patch_gate"]["reason"] == "unsupported_target_kind:scene_model"
         assert "Contract-driven local patch gate blocked" in result.current_validation["fix_scope_reasoning"]
+        blueprint_generator._inplace_patch_blueprint.assert_not_called()
+
+    def test_pass_with_fix_iteration_reaudits_normalized_opening_transition_alias_without_patch(
+        self, blueprint_generator, sample_arc_data
+    ):
+        current_blueprint = {
+            "episode_number": 8,
+            "opening_transition": {"type": "explicit_transition"},
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "VIP룸",
+                    "location": "한미증권 청담동 지점 15층 VIP룸",
+                    "summary": "박성호가 자리에 앉는다.",
+                }
+            },
+        }
+        blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"unexpected": True})
+        blueprint_generator.validator.validate.return_value = (
+            "PASS",
+            {
+                "score": 95,
+                "issues": [],
+                "confidence": 91,
+                "binding_prevalidation_issue_count": 0,
+            },
+        )
+
+        result = blueprint_generator.runtime._run_pass_with_fix_iteration(
+            ep_num=8,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            prev_blueprint={"end_location": "한미증권 청담동 지점 15층 VIP룸"},
+            current_blueprint=current_blueprint,
+            current_validation={
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": (
+                    "Opening-transition alias mismatch is the sole binding category; "
+                    "routing to inplace alias normalization instead of full regenerate."
+                ),
+                "feedback": "opening_transition.type을 continuity contract에 맞게 정규화",
+                "binding_prevalidation_issue_count": 1,
+                "binding_prevalidation_categories": ["opening_transition"],
+            },
+            pipeline_result={"phases": {"generate": {}, "validate": {}}},
+            score=88,
+            quality_gate_score=90,
+            director=MagicMock(),
+            arc_idx=0,
+            entity_registry=None,
+            state_tracker=None,
+            prev_hud=None,
+            fix_index=0,
+            max_fix=3,
+        )
+
+        assert result.fix_ok is True
+        assert result.patch_attempted is False
+        assert result.current_blueprint == current_blueprint
+        assert result.current_validation["verdict"] == "PASS"
+        assert result.current_validation["binding_prevalidation_issue_count"] == 0
+        assert result.current_validation["local_patch_gate"]["reason"] == "missing_local_contract"
         blueprint_generator._inplace_patch_blueprint.assert_not_called()
 
     def test_pass_with_fix_iteration_appends_fix_pack_guidance_and_partial_fix_eval(
@@ -2064,9 +2184,76 @@ class TestBlueprintPatchIntegration:
 
         assert result.should_continue is True
         assert result.best_blueprint == patched_blueprint
+
+    def test_finalize_pass_with_fix_failure_uses_route_honest_message_before_patch(
+        self, blueprint_generator, sample_arc_data
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        retry_state = _ThreePhaseRetryState()
+        blueprint_generator._record_intermediate_reject = MagicMock()
+        blueprint_generator.runtime._apply_validation_reject_state = MagicMock()
+
+        blueprint_generator.runtime._finalize_pass_with_fix_failure(
+            best_blueprint={"ep_num": 1},
+            current_blueprint={"ep_num": 1},
+            current_validation={
+                "verdict": "PASS_WITH_FIX",
+                "score": 85,
+                "feedback": "binding residual remained",
+                "issues": [],
+                "fix_scope": "full",
+                "binding_regenerate_only_reason": "binding issues require regenerate",
+            },
+            validation_result={"score": 85},
+            score=85,
+            selected_strategy="balanced",
+            initial_feedback="initial feedback",
+            max_fix=3,
+            executed_patch_attempts=0,
+            retry_state=retry_state,
+            ep_num=1,
+            arc_data=sample_arc_data,
+            retry=0,
+            max_retries=1,
+        )
+
+        assert "rerouted before local patch" in retry_state.prev_reject_feedback
+
+    def test_finalize_pass_with_fix_failure_reports_executed_patch_attempts(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        retry_state = _ThreePhaseRetryState()
+        blueprint_generator._record_intermediate_reject = MagicMock()
+        blueprint_generator.runtime._apply_validation_reject_state = MagicMock()
+
+        blueprint_generator.runtime._finalize_pass_with_fix_failure(
+            best_blueprint={"ep_num": 1},
+            current_blueprint={"ep_num": 1},
+            current_validation={
+                "verdict": "PASS_WITH_FIX",
+                "score": 85,
+                "feedback": "still weak",
+                "issues": [],
+                "fix_scope": "inplace",
+            },
+            validation_result={"score": 85},
+            score=85,
+            selected_strategy="balanced",
+            initial_feedback="initial feedback",
+            max_fix=3,
+            executed_patch_attempts=1,
+            retry_state=retry_state,
+            ep_num=1,
+            arc_data=sample_arc_data,
+            retry=0,
+            max_retries=1,
+        )
+
+        assert "after 1 executed local patch attempt" in retry_state.prev_reject_feedback
         apply_kwargs = blueprint_generator.runtime._apply_validation_reject_state.call_args.kwargs
         assert apply_kwargs["score"] == 85
-        assert apply_kwargs["best_blueprint"] == patched_blueprint
+        assert apply_kwargs["best_blueprint"] == {"ep_num": 1}
 
     def test_terminal_stage3_reject_does_not_record_intermediate_observability(
         self, blueprint_generator, sample_arc_data

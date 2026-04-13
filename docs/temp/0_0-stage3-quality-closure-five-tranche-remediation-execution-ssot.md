@@ -1,7 +1,7 @@
 # 0_0 Stage3 Quality Closure Five Tranche Remediation Execution SSOT
 
-Date: 2026-04-13
-Status: `pending_realization` (the 10-terminal parallel investigation is closed, the synthesis is closed at 97% confidence with one synthesis-time live-grep correction, and this execution SSOT is the next step before any code is touched)
+Date: 2026-04-13 (originally drafted) / 2026-04-14 (Tranche 1 landed)
+Status: `tranche_1_landed_parent_gate_pending` (Tranche 1 opening-transition vocabulary coherence is now committed at `56063603` on `main` with all 5 sub-edits + 8 new test cases + 2 stale test debt fixes, all validation gates green: 145 targeted shard tests passed + ops_validator strict errors=0 + UTF-8 hygiene clean. However the parent `0_0-stage3-contract-tightening-remediation` controller still fronts one bounded tactical-authority synonym parity tranche, so this child lane's Proof Gate 1 rerun is now deferred behind that parent residual rather than being the immediate-next operator action. The 10-terminal parallel investigation, synthesis at 97%, and this execution SSOT remain authoritative for this child lane's tranche design, but queue sequencing still defers to the parent Stage3 controller.)
 Canonical Path: `docs/2026-04-13/0_0-stage3-quality-closure-five-tranche-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-quality-closure-five-tranche-remediation-execution-ssot.md`
 Commit State:
@@ -58,6 +58,7 @@ This SSOT does NOT:
 
 - expand scope beyond the 5 tranches the synthesis ranked
 - open a new queue family (it sits inside the existing `0_0-stage3-contract-tightening-remediation` parent lane)
+- override the parent `0_0-stage3-contract-tightening-remediation` lane when a stronger front residual is still active there
 - authorize live rerun without the explicit verification gates in §11
 - mutate Stage4 owner surfaces (T10 hypotheses are deferred per synthesis §5)
 - alter Director rubric weights without the post-Tranche-1 proof rerun (Tranche 4)
@@ -197,13 +198,14 @@ Parallel-safe means the three tranches do not touch the same line ranges. Tranch
 ## 8. Execution Tranche Sequence
 
 1. **Tranche 1** — Opening-Transition Vocabulary Coherence (5 sub-edits, single commit)
-2. **Proof Gate 1** — fresh ep1–ep8 rerun on `000_260412_a` after Tranche 1 lands
-3. **Tranche 2** — Producer Contract Teaching + Validator Calibration Cleanup (4 sub-edits, single commit)
-4. **Tranche 3** — Retry Feedback Surgery (5 sub-edits, single commit)
-5. **Tranche 4** — Director Rubric Alignment + Audit Visibility (5 sub-edits, single commit)
-6. **Proof Gate 2** — fresh ep1–ep8 rerun after Tranches 2+3+4 land; confirm avg attempt < 6
-7. **Tranche 5** — Cost Cap + Round Truncation (3 sub-edits, single commit)
-8. **Proof Gate 3** — fresh ep1–ep8 rerun after Tranche 5 lands; confirm cost reduction without verdict regression
+2. **Parent Gate A** — if the parent `0_0-stage3-contract-tightening-remediation` lane still fronts the bounded tactical-authority synonym parity tranche, land that parent tranche first
+3. **Proof Gate 1** — fresh ep1–ep8 rerun on `000_260412_a` after Tranche 1 lands and Parent Gate A is closed
+4. **Tranche 2** — Producer Contract Teaching + Validator Calibration Cleanup (4 sub-edits, single commit)
+5. **Tranche 3** — Retry Feedback Surgery (5 sub-edits, single commit)
+6. **Tranche 4** — Director Rubric Alignment + Audit Visibility (5 sub-edits, single commit)
+7. **Proof Gate 2** — fresh ep1–ep8 rerun after Tranches 2+3+4 land; confirm avg attempt < 6
+8. **Tranche 5** — Cost Cap + Round Truncation (3 sub-edits, single commit)
+9. **Proof Gate 3** — fresh ep1–ep8 rerun after Tranche 5 lands; confirm cost reduction without verdict regression
 
 ## 9. Per-Tranche Detailed Specification
 
@@ -566,6 +568,7 @@ Per tranche, before commit:
 
 Proof Gate 1 — after Tranche 1:
 
+- execution precondition: the parent `0_0-stage3-contract-tightening-remediation` lane must first close or explicitly demote the bounded tactical-authority synonym parity tranche; until then this gate is deferred and not the front controller
 - fresh `000_260412_a` ep1–ep8 rerun
 - ep8 closes (no interruption)
 - average attempt count drops from 8.4 to < 6

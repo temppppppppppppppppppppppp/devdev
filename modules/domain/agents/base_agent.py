@@ -51,6 +51,7 @@ class AgentErrorType:
     MALFORMED_RESPONSE = "malformed_response"
     NETWORK_ERROR = "network_error"
     SCHEMA_INCOMPATIBLE = "schema_incompatible"
+    CANDIDATE_DISQUALIFIED = "candidate_disqualified"
     UNKNOWN = "unknown"
 
 
@@ -276,10 +277,12 @@ class BaseAgent:
                 cls._key_rotation_pending = False
             logging.warning("[TF-15/P0] API key rotation client creation failed: %s", create_err)
             return None, "client_create_failed"
-        logging.info(f" [V61.5] API 키 순환: Key {old_idx + 1} → Key {cls._current_key_idx + 1} (총 {len(cls._api_keys)}개)"
+        logging.info(
+            f" [V61.5] API 키 순환: Key {old_idx + 1} → Key {cls._current_key_idx + 1} (총 {len(cls._api_keys)}개)"
         )
         # [INF-I5] 키 순환 구조화 로그
-        logging.debug("[SilentPass:Agent] key_rotate old_idx=%d new_idx=%d total_keys=%d",
+        logging.debug(
+            "[SilentPass:Agent] key_rotate old_idx=%d new_idx=%d total_keys=%d",
             old_idx,
             cls._current_key_idx,
             len(cls._api_keys),
@@ -339,7 +342,8 @@ class BaseAgent:
             body_budget = max_chars - len(notice)
             head_chars = max(0, min(int(body_budget * 0.55), body_budget - 80))
             clipped = smart_truncate(prompt, max_chars=body_budget, head_chars=head_chars) + notice
-        logging.warning("[TF3-H7] Prompt length gate applied: %d -> %d chars (agent=%s)",
+        logging.warning(
+            "[TF3-H7] Prompt length gate applied: %d -> %d chars (agent=%s)",
             len(prompt),
             len(clipped),
             self._agent_name,
@@ -1140,7 +1144,8 @@ class BaseAgent:
         config = types.GenerateContentConfig(**config_params)
 
         # [INF-I5] API 호출 시작 구조화 로그
-        logging.debug("[SilentPass:Agent] call_start agent=%s model=%s prompt_len=%d",
+        logging.debug(
+            "[SilentPass:Agent] call_start agent=%s model=%s prompt_len=%d",
             self._agent_name,
             current_model,
             len(base_prompt),
@@ -1245,8 +1250,7 @@ class BaseAgent:
         result["network_retry_count"] = network_retry_count
         wait_time = min(self.NETWORK_RETRY_DELAY_BASE + (network_retry_count - 1) * 5, self.NETWORK_RETRY_DELAY_MAX)
         total_waited = sum(
-            min(self.NETWORK_RETRY_DELAY_BASE + i * 5, self.NETWORK_RETRY_DELAY_MAX)
-            for i in range(network_retry_count)
+            min(self.NETWORK_RETRY_DELAY_BASE + i * 5, self.NETWORK_RETRY_DELAY_MAX) for i in range(network_retry_count)
         )
 
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -1509,7 +1513,8 @@ class BaseAgent:
             overlap_anchor = full_response[-50:].strip()
             # [FIX] 중괄호 이스케이프 적용 (f-string 오류 방지)
             safe_anchor = self._escape_braces(overlap_anchor)
-            logging.warning(f" [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt + 1}/{max_continuations})"
+            logging.warning(
+                f" [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt + 1}/{max_continuations})"
             )
 
             current_prompt = (
@@ -1922,6 +1927,7 @@ class BaseAgent:
             AgentErrorType.NETWORK_ERROR: "네트워크 연결 오류. 인터넷 연결을 확인하세요.",
             AgentErrorType.MALFORMED_RESPONSE: "응답 형식 오류. 프롬프트를 단순화하여 재시도하세요.",
             AgentErrorType.SCHEMA_INCOMPATIBLE: "응답 스키마가 현재 Gemini 경로와 호환되지 않습니다. 스키마 정의를 점검하세요.",
+            AgentErrorType.CANDIDATE_DISQUALIFIED: "생성된 후보가 계약/연속성/authority 조건을 충족하지 못했습니다. 프롬프트 제약과 producer 품질을 점검하세요.",
             AgentErrorType.UNKNOWN: "알 수 없는 오류. 로그를 확인하고 재시도하세요.",
         }
         return hints.get(error_type, hints[AgentErrorType.UNKNOWN])
@@ -2071,8 +2077,7 @@ class BaseAgent:
                 return ast.literal_eval(processed)
             except (ValueError, SyntaxError):
                 # [V44] JSON 파싱 실패 시 정규식 추출 경고
-                logging.warning(f" [JSON Parser] ast.literal_eval 실패, 정규식 fallback 사용 (길이: {len(json_str)}자)"
-                )
+                logging.warning(f" [JSON Parser] ast.literal_eval 실패, 정규식 fallback 사용 (길이: {len(json_str)}자)")
                 # [TF-C11] 2-pass regex: 문자열 값 + 숫자/불리언 값
                 kv_pattern = r'"(\w+)"\s*:\s*"(.*?)"(?="|\s*\}|\s*,)'
                 found_pairs = re.findall(kv_pattern, json_str, re.DOTALL)
@@ -2312,7 +2317,8 @@ class BaseAgent:
                             if getattr(_p, "thought", False) and isinstance(_p.text, str):
                                 _tparts.append(_p.text)
                         if _tparts:
-                            logging.debug("[TF-28:Thinking] agent=%s cached_path thinking_len=%d",
+                            logging.debug(
+                                "[TF-28:Thinking] agent=%s cached_path thinking_len=%d",
                                 self._agent_name,
                                 sum(len(t) for t in _tparts),
                             )

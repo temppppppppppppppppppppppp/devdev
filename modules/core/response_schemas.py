@@ -656,6 +656,14 @@ BLUEPRINT_ENDING_STATE_SCHEMA = types.Schema(
     },
 )
 
+BLUEPRINT_OPENING_TRANSITION_TYPES = [
+    "direct_continuation",
+    "explicit_transition",
+    "jump_opening",
+]
+
+BLUEPRINT_ENSEMBLE_MIN_INTEGRATED_SCENARIO_CHARS = 800
+
 
 BLUEPRINT_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
@@ -687,7 +695,7 @@ BLUEPRINT_SCHEMA = types.Schema(
             properties={
                 "type": types.Schema(
                     type=types.Type.STRING,
-                    enum=["direct_continuation", "explicit_transition", "jump_opening"],
+                    enum=BLUEPRINT_OPENING_TRANSITION_TYPES,
                 ),
                 "signals": types.Schema(
                     type=types.Type.ARRAY,

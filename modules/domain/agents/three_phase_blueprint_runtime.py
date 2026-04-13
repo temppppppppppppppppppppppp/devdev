@@ -39,6 +39,9 @@ _STAGE3_REGENERATE_ONLY_BINDING_CATEGORIES = {
     "tactical_semantic_fidelity",
     "opening_transition",
 }
+_STAGE3_INPLACE_ALIAS_REAUDIT_CATEGORIES = {
+    "opening_transition",
+}
 _STAGE3_LOCAL_PATCH_TARGET_KINDS = {
     "dialogue",
     "entity_ref",
@@ -122,6 +125,7 @@ class _ThreePhasePassWithFixIterationResult:
     current_validation: dict
     fix_ok: bool = False
     should_break: bool = False
+    patch_attempted: bool = False
 
 
 @dataclass
@@ -160,9 +164,11 @@ class _Stage3RepairMaterial:
 
     @property
     def resolved_fix_scope(self) -> str:
-        return str(
-            self.local_patch_gate.get("resolved_fix_scope", "") or self.normalized_requested_fix_scope
-        ).strip().lower()
+        return (
+            str(self.local_patch_gate.get("resolved_fix_scope", "") or self.normalized_requested_fix_scope)
+            .strip()
+            .lower()
+        )
 
 
 @dataclass
@@ -245,7 +251,9 @@ class _Stage3RepairRouter:
             and retry_state.prev_reject_score >= inplace_threshold
             and resolved_fix_scope == "inplace"
         )
-        inplace_patch_eligible = inplace_retry_candidate and bool(material.local_patch_gate.get("local_patch_ready", False))
+        inplace_patch_eligible = inplace_retry_candidate and bool(
+            material.local_patch_gate.get("local_patch_ready", False)
+        )
         contract_block_reason = ""
         if inplace_retry_candidate and not material.local_patch_gate.get("local_patch_ready", False):
             gate_reason = str(material.local_patch_gate.get("reason", "") or "").strip()
@@ -295,7 +303,9 @@ class _Stage3RepairRouter:
                 resolved_fix_scope=resolved_fix_scope,
                 should_break_to_generate=True,
             )
-        if material.local_patch_gate.get("contract_present") and not material.local_patch_gate.get("local_patch_ready", False):
+        if material.local_patch_gate.get("contract_present") and not material.local_patch_gate.get(
+            "local_patch_ready", False
+        ):
             gate_reason = str(material.local_patch_gate.get("reason", "") or "").strip()
             effective_fix_scope = "partial" if resolved_fix_scope == "partial" else "full"
             return _Stage3RepairRouteDecision(
@@ -308,7 +318,9 @@ class _Stage3RepairRouter:
                     f"{gate_reason or 'unknown_reason'}"
                 ),
             )
-        if not material.local_patch_gate.get("contract_present") and not material.local_patch_gate.get("local_patch_ready", False):
+        if not material.local_patch_gate.get("contract_present") and not material.local_patch_gate.get(
+            "local_patch_ready", False
+        ):
             gate_reason = str(material.local_patch_gate.get("reason", "") or "").strip()
             return _Stage3RepairRouteDecision(
                 effective_fix_scope="full",
@@ -437,6 +449,41 @@ def _extract_stage3_regenerate_only_binding_categories(validation_result: dict |
         if category in _STAGE3_REGENERATE_ONLY_BINDING_CATEGORIES:
             normalized.append(category)
     return normalized
+
+
+def _is_stage3_inplace_alias_reaudit_eligible(
+    validation_result: dict | None,
+    *,
+    requested_fix_scope: str,
+    resolved_fix_scope: str,
+) -> bool:
+    if not isinstance(validation_result, dict):
+        return False
+
+    raw_categories = validation_result.get("binding_prevalidation_categories", [])
+    if not isinstance(raw_categories, list):
+        return False
+
+    categories: list[str] = []
+    seen: set[str] = set()
+    for raw in raw_categories:
+        category = str(raw or "").strip()
+        if not category or category in seen:
+            continue
+        seen.add(category)
+        categories.append(category)
+
+    if len(categories) != 1 or categories[0] not in _STAGE3_INPLACE_ALIAS_REAUDIT_CATEGORIES:
+        return False
+
+    effective_scope = (
+        str(resolved_fix_scope or requested_fix_scope or validation_result.get("fix_scope") or "").strip().lower()
+    )
+    if effective_scope != "inplace":
+        return False
+
+    reasoning = str(validation_result.get("fix_scope_reasoning", "") or "").strip()
+    return "Opening-transition alias mismatch is the sole binding category" in reasoning
 
 
 def _build_stage3_regenerate_only_binding_reason(categories: list[str]) -> str:
@@ -611,24 +658,40 @@ def _build_stage3_local_patch_gate(
     normalized_scope_authority = dict(scope_authority or {}) if isinstance(scope_authority, dict) else {}
     patch_targets = list(normalized_fix_pack.get("patch_targets") or [])
     patch_target_records = list(normalized_fix_pack.get("patch_target_records") or [])
-    target_kind = str(
-        normalized_fix_pack.get("target_kind")
-        or normalized_repair_contract.get("target_kind")
-        or (patch_target_records[0].get("target_kind") if patch_target_records and isinstance(patch_target_records[0], dict) else "")
-        or ""
-    ).strip().lower()
-    authoritative_fix_scope = str(
-        normalized_scope_authority.get("authoritative_fix_scope")
-        or normalized_repair_contract.get("authoritative_fix_scope")
-        or ""
-    ).strip().lower()
-    repair_scope = str(
-        normalized_scope_authority.get("repair_scope")
-        or normalized_repair_contract.get("repair_scope")
-        or normalized_scope_authority.get("fix_scope")
-        or normalized_repair_contract.get("fix_scope")
-        or ""
-    ).strip().lower()
+    target_kind = (
+        str(
+            normalized_fix_pack.get("target_kind")
+            or normalized_repair_contract.get("target_kind")
+            or (
+                patch_target_records[0].get("target_kind")
+                if patch_target_records and isinstance(patch_target_records[0], dict)
+                else ""
+            )
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+    authoritative_fix_scope = (
+        str(
+            normalized_scope_authority.get("authoritative_fix_scope")
+            or normalized_repair_contract.get("authoritative_fix_scope")
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+    repair_scope = (
+        str(
+            normalized_scope_authority.get("repair_scope")
+            or normalized_repair_contract.get("repair_scope")
+            or normalized_scope_authority.get("fix_scope")
+            or normalized_repair_contract.get("fix_scope")
+            or ""
+        )
+        .strip()
+        .lower()
+    )
     resolved_fix_scope = authoritative_fix_scope or repair_scope or normalized_fix_scope
     repair_contract_present = bool(
         normalized_repair_contract
@@ -656,7 +719,11 @@ def _build_stage3_local_patch_gate(
 
     if contract_present:
         if authoritative_fix_scope != "inplace":
-            reason = "missing_authoritative_fix_scope" if not authoritative_fix_scope else f"authoritative_scope:{authoritative_fix_scope}"
+            reason = (
+                "missing_authoritative_fix_scope"
+                if not authoritative_fix_scope
+                else f"authoritative_scope:{authoritative_fix_scope}"
+            )
             return {
                 "contract_present": True,
                 "local_patch_ready": False,
@@ -1257,15 +1324,26 @@ class ThreePhaseBlueprintRuntime:
     ) -> _ThreePhasePhase2Result:
         owner = self.owner
         worker_error_types = getattr(owner.ensemble, "last_error_types", None) or []
-        error_type = (
-            AgentErrorType.SCHEMA_INCOMPATIBLE
-            if AgentErrorType.SCHEMA_INCOMPATIBLE in worker_error_types
-            else getattr(owner.ensemble, "last_error_type", None)
-        )
+        error_type = getattr(owner.ensemble, "last_error_type", None)
+        if AgentErrorType.CANDIDATE_DISQUALIFIED in worker_error_types:
+            error_type = AgentErrorType.CANDIDATE_DISQUALIFIED
+        elif AgentErrorType.SCHEMA_INCOMPATIBLE in worker_error_types:
+            error_type = AgentErrorType.SCHEMA_INCOMPATIBLE
+        elif not error_type and worker_error_types:
+            non_unknown = [
+                candidate for candidate in worker_error_types if candidate and candidate != AgentErrorType.UNKNOWN
+            ]
+            error_type = non_unknown[0] if non_unknown else worker_error_types[0]
         pipeline_result["phases"]["generate"] = {"status": "failed"}
         if error_type:
             pipeline_result["phases"]["generate"]["error_type"] = error_type
             pipeline_result["failure_reason"] = error_type
+
+        operator_feedback = "Ensemble 생성 실패. 다시 시도합니다."
+        if error_type == AgentErrorType.SCHEMA_INCOMPATIBLE:
+            operator_feedback = "schema_incompatible로 즉시 중단합니다."
+        elif error_type == AgentErrorType.CANDIDATE_DISQUALIFIED:
+            operator_feedback = "replay/authority/구조 계약 미달 후보만 생성되어 재시도합니다."
 
         logging.warning("❌ [Phase 2] Ensemble 생성 실패")
         self._log_operator_retry_context(
@@ -1277,9 +1355,7 @@ class ThreePhaseBlueprintRuntime:
                 "max_retries": max_retries + 1,
                 "error_category": str(error_type or "generate_failed"),
             },
-            feedback="Ensemble 생성 실패. 다시 시도합니다."
-            if error_type != AgentErrorType.SCHEMA_INCOMPATIBLE
-            else "schema_incompatible로 즉시 중단합니다.",
+            feedback=operator_feedback,
         )
         if error_type == AgentErrorType.SCHEMA_INCOMPATIBLE:
             return _ThreePhasePhase2Result(None, [], should_break=True)
@@ -1289,8 +1365,16 @@ class ThreePhaseBlueprintRuntime:
             arc_data=arc_data,
             retry=retry,
             max_retries=max_retries,
-            reject_reason="Ensemble 생성 실패. 다시 시도하세요.",
-            event_tag="generate_failed",
+            reject_reason=(
+                "replay/authority/구조 계약 미달 후보만 생성됨. 다시 시도하세요."
+                if error_type == AgentErrorType.CANDIDATE_DISQUALIFIED
+                else "Ensemble 생성 실패. 다시 시도하세요."
+            ),
+            event_tag=(
+                "generate_candidate_disqualified"
+                if error_type == AgentErrorType.CANDIDATE_DISQUALIFIED
+                else "generate_failed"
+            ),
         )
         return _ThreePhasePhase2Result(None, [], should_continue=True)
 
@@ -2103,7 +2187,9 @@ class ThreePhaseBlueprintRuntime:
         )
         resolved_fix_scope = str(validation_result.get("fix_scope", "") or "").strip().lower()
         try:
-            retry_state.prev_binding_issue_count = int(validation_result.get("binding_prevalidation_issue_count", 0) or 0)
+            retry_state.prev_binding_issue_count = int(
+                validation_result.get("binding_prevalidation_issue_count", 0) or 0
+            )
         except (TypeError, ValueError):
             retry_state.prev_binding_issue_count = 0
 
@@ -2210,6 +2296,7 @@ class ThreePhaseBlueprintRuntime:
         current_blueprint = best_blueprint
         current_validation = validation_result
         prior_score = score  # [PF-EE] track for score-stall early-exit
+        executed_patch_attempts = 0
 
         for fix_index in range(max_fix):
             iteration_result = self._run_pass_with_fix_iteration(
@@ -2232,6 +2319,8 @@ class ThreePhaseBlueprintRuntime:
             )
             current_blueprint = iteration_result.current_blueprint
             current_validation = iteration_result.current_validation
+            if iteration_result.patch_attempted:
+                executed_patch_attempts += 1
             if iteration_result.fix_ok:
                 pipeline_result["final_verdict"] = "PASS"
                 logging.info("[TF-32-V] Blueprint patch resolved -> PASS")
@@ -2265,6 +2354,7 @@ class ThreePhaseBlueprintRuntime:
             selected_strategy=selected_strategy,
             initial_feedback=initial_feedback,
             max_fix=max_fix,
+            executed_patch_attempts=executed_patch_attempts,
             retry_state=retry_state,
             ep_num=ep_num,
             arc_data=arc_data,
@@ -2305,13 +2395,19 @@ class ThreePhaseBlueprintRuntime:
             validate_phase["scope_authority"] = dict(repair_material.scope_authority)
         validate_phase["local_patch_gate"] = dict(repair_material.local_patch_gate)
         current_validation["local_patch_gate"] = dict(repair_material.local_patch_gate)
+        alias_reaudit_eligible = _is_stage3_inplace_alias_reaudit_eligible(
+            current_validation,
+            requested_fix_scope=repair_material.normalized_requested_fix_scope,
+            resolved_fix_scope=repair_material.resolved_fix_scope,
+        )
         repair_route = _Stage3RepairRouter.decide_pass_with_fix(
             material=repair_material,
             score=score,
             inplace_threshold=int(_threshold("patch_mode.inplace_below", 60)),
         )
+        effective_fix_pack = repair_material.effective_fix_pack
         fix_scope = repair_route.effective_fix_scope
-        if repair_route.regenerate_only_reason:
+        if repair_route.regenerate_only_reason and not alias_reaudit_eligible:
             current_validation["fix_scope"] = "full"
             if repair_material.regenerate_only_binding_categories:
                 current_validation["binding_regenerate_only_categories"] = list(
@@ -2336,73 +2432,96 @@ class ThreePhaseBlueprintRuntime:
             inplace_thresh = int(_threshold("patch_mode.inplace_below", 60))
             fix_scope = "inplace" if score >= inplace_thresh else "full"
             logging.warning("[PF-1] fix_scope missing; score=%d fallback=%s", score, fix_scope)
-        if repair_route.should_break_to_generate:
+        if alias_reaudit_eligible:
+            logging.info(
+                "[TF-33A] opening_transition alias-only mismatch already normalized on current blueprint; "
+                "skip local patch and re-audit current payload"
+            )
+            self._log_operator_retry_context(
+                title=f"[TF-33A] opening_transition alias re-audit #{fix_index + 1}",
+                meta={
+                    "phase": "validate",
+                    "patch_round": fix_index + 1,
+                    "patch_max": max_fix,
+                    "binding_categories": ["opening_transition"],
+                    "path": "normalized_current_blueprint_reaudit",
+                },
+                feedback=current_validation.get("verdict_reason", "") or current_validation.get("feedback", ""),
+                issues=current_validation.get("issues", []),
+                fix_scope=str(fix_scope or ""),
+            )
+            patched_blueprint = current_blueprint
+            patch_attempted = False
+        elif repair_route.should_break_to_generate:
             logging.info(f"[TF-33] fix_scope={fix_scope!r} blocks inplace; delegate to generate loop")
             return _ThreePhasePassWithFixIterationResult(
                 current_blueprint=current_blueprint,
                 current_validation=current_validation,
                 should_break=True,
+                patch_attempted=False,
             )
-
-        effective_fix_pack = repair_material.effective_fix_pack
-        fix_feedback = current_validation.get("re_slice_instruction", "") or current_validation.get("feedback", "")
-        fix_pack_guidance = _build_stage3_fix_pack_guidance(effective_fix_pack)
-        if fix_pack_guidance:
-            fix_feedback = f"{fix_pack_guidance}\n\n{fix_feedback}".strip() if fix_feedback else fix_pack_guidance
-        logging.info(f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}")
-        self._log_operator_retry_context(
-            title=f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}",
-            meta={"phase": "validate", "patch_round": fix_index + 1, "patch_max": max_fix},
-            feedback=fix_feedback,
-            fix_scope=str(fix_scope or ""),
-        )
-        try:
-            patched_blueprint = self._call_with_operator_heartbeat(
-                title=f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}",
-                meta={
-                    "phase": "validate",
-                    "patch_round": fix_index + 1,
-                    "patch_max": max_fix,
-                    "fix_scope": str(fix_scope or ""),
-                    "feedback_chars": len(str(fix_feedback or "")),
-                },
-                fn=lambda: owner._inplace_patch_blueprint(
-                    original_blueprint=current_blueprint,
-                    director_feedback=fix_feedback,
-                    ep_num=ep_num,
-                    arc_data=arc_data,
-                    normalized_fix_pack=effective_fix_pack,
-                ),
-            )
-        except Exception:
-            logging.exception("[TF-32-V] inplace_patch_blueprint exception")
-            return _ThreePhasePassWithFixIterationResult(
-                current_blueprint=current_blueprint,
-                current_validation=current_validation,
-                should_break=True,
-            )
-        if not patched_blueprint:
-            logging.warning("[TF-32-V] patch failed")
-            partial_fix_eval = _build_stage3_partial_fix_eval(
-                fix_pack=effective_fix_pack,
-                patch_round=fix_index + 1,
-                fallback_reason="patch_generation_failed",
-            )
-            if partial_fix_eval:
-                validate_phase["partial_fix_eval"] = partial_fix_eval
-                current_validation["partial_fix_eval"] = partial_fix_eval
+        else:
+            fix_feedback = current_validation.get("re_slice_instruction", "") or current_validation.get("feedback", "")
+            fix_pack_guidance = _build_stage3_fix_pack_guidance(effective_fix_pack)
+            if fix_pack_guidance:
+                fix_feedback = f"{fix_pack_guidance}\n\n{fix_feedback}".strip() if fix_feedback else fix_pack_guidance
+            logging.info(f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}")
             self._log_operator_retry_context(
-                title=f"[TF-32-V] patch #{fix_index + 1} failed",
-                level="warning",
+                title=f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}",
                 meta={"phase": "validate", "patch_round": fix_index + 1, "patch_max": max_fix},
                 feedback=fix_feedback,
                 fix_scope=str(fix_scope or ""),
             )
-            return _ThreePhasePassWithFixIterationResult(
-                current_blueprint=current_blueprint,
-                current_validation=current_validation,
-                should_break=True,
-            )
+            try:
+                patched_blueprint = self._call_with_operator_heartbeat(
+                    title=f"[TF-32-V] Blueprint patch #{fix_index + 1}/{max_fix}",
+                    meta={
+                        "phase": "validate",
+                        "patch_round": fix_index + 1,
+                        "patch_max": max_fix,
+                        "fix_scope": str(fix_scope or ""),
+                        "feedback_chars": len(str(fix_feedback or "")),
+                    },
+                    fn=lambda: owner._inplace_patch_blueprint(
+                        original_blueprint=current_blueprint,
+                        director_feedback=fix_feedback,
+                        ep_num=ep_num,
+                        arc_data=arc_data,
+                        normalized_fix_pack=effective_fix_pack,
+                    ),
+                )
+            except Exception:
+                logging.exception("[TF-32-V] inplace_patch_blueprint exception")
+                return _ThreePhasePassWithFixIterationResult(
+                    current_blueprint=current_blueprint,
+                    current_validation=current_validation,
+                    should_break=True,
+                    patch_attempted=True,
+                )
+            if not patched_blueprint:
+                logging.warning("[TF-32-V] patch failed")
+                partial_fix_eval = _build_stage3_partial_fix_eval(
+                    fix_pack=effective_fix_pack,
+                    patch_round=fix_index + 1,
+                    fallback_reason="patch_generation_failed",
+                )
+                if partial_fix_eval:
+                    validate_phase["partial_fix_eval"] = partial_fix_eval
+                    current_validation["partial_fix_eval"] = partial_fix_eval
+                self._log_operator_retry_context(
+                    title=f"[TF-32-V] patch #{fix_index + 1} failed",
+                    level="warning",
+                    meta={"phase": "validate", "patch_round": fix_index + 1, "patch_max": max_fix},
+                    feedback=fix_feedback,
+                    fix_scope=str(fix_scope or ""),
+                )
+                return _ThreePhasePassWithFixIterationResult(
+                    current_blueprint=current_blueprint,
+                    current_validation=current_validation,
+                    should_break=True,
+                    patch_attempted=True,
+                )
+            patch_attempted = True
 
         try:
             from modules.core.constants import calc_patch_change_ratio, log_patch_diff
@@ -2433,6 +2552,7 @@ class ThreePhaseBlueprintRuntime:
                     "patch_round": fix_index + 1,
                     "patch_max": max_fix,
                     "candidate_count": 1,
+                    "path": "normalized_current_blueprint_reaudit" if alias_reaudit_eligible else "post_patch_reaudit",
                 },
                 fn=lambda: owner.validator.validate(
                     blueprint=patched_blueprint,
@@ -2454,6 +2574,7 @@ class ThreePhaseBlueprintRuntime:
                 current_blueprint=current_blueprint,
                 current_validation=current_validation,
                 should_break=True,
+                patch_attempted=patch_attempted,
             )
 
         logging.info(f"[TF-32-V] re-audit #{fix_index + 1}: {re_verdict} (score={re_validation.get('score', 0)})")
@@ -2523,6 +2644,7 @@ class ThreePhaseBlueprintRuntime:
                         current_blueprint=patched_blueprint,
                         current_validation=re_validation,
                         fix_ok=True,
+                        patch_attempted=patch_attempted,
                     )
                 logging.warning(f"[TF-35] re-audit PASS but score={re_score} < {quality_gate_score}; stop patch loop")
                 self._log_operator_retry_context(
@@ -2543,22 +2665,55 @@ class ThreePhaseBlueprintRuntime:
                     current_blueprint=patched_blueprint,
                     current_validation=re_validation,
                     should_break=True,
+                    patch_attempted=patch_attempted,
                 )
             return _ThreePhasePassWithFixIterationResult(
                 current_blueprint=patched_blueprint,
                 current_validation=re_validation,
                 fix_ok=True,
+                patch_attempted=patch_attempted,
             )
         if re_verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"):
             return _ThreePhasePassWithFixIterationResult(
                 current_blueprint=patched_blueprint,
                 current_validation=re_validation,
                 fix_ok=re_verdict == "PASS_WITH_WARNING",
+                patch_attempted=patch_attempted,
             )
         return _ThreePhasePassWithFixIterationResult(
             current_blueprint=current_blueprint,
             current_validation=current_validation,
             should_break=True,
+            patch_attempted=patch_attempted,
+        )
+
+    @staticmethod
+    def _describe_pass_with_fix_failure(
+        *,
+        executed_patch_attempts: int,
+        max_fix: int,
+        current_validation: dict,
+    ) -> tuple[str, str, str]:
+        fix_scope = str(current_validation.get("fix_scope", "") or "").strip().lower()
+        if executed_patch_attempts <= 0:
+            if fix_scope == "full":
+                return (
+                    "rerouted_before_patch",
+                    "[TF-32-V] PASS_WITH_FIX rerouted before local patch -> REJECT",
+                    "PASS_WITH_FIX rerouted before local patch -> REJECT",
+                )
+            return (
+                "zero_patch_attempts",
+                "[TF-32-V] PASS_WITH_FIX ended before any executed local patch -> REJECT",
+                "PASS_WITH_FIX ended before any executed local patch -> REJECT",
+            )
+
+        noun = "attempt" if executed_patch_attempts == 1 else "attempts"
+        summary = f"PASS_WITH_FIX unresolved after {executed_patch_attempts} executed local patch {noun} -> REJECT"
+        return (
+            "patch_exhaustion",
+            f"[TF-32-V] {summary}",
+            summary,
         )
 
     def _finalize_pass_with_fix_failure(
@@ -2572,6 +2727,7 @@ class ThreePhaseBlueprintRuntime:
         selected_strategy: str,
         initial_feedback: str,
         max_fix: int,
+        executed_patch_attempts: int = 0,
         retry_state: _ThreePhaseRetryState,
         ep_num: int,
         arc_data: dict,
@@ -2601,9 +2757,18 @@ class ThreePhaseBlueprintRuntime:
                     "[PF-3] PASS_WITH_FIX exhausted -> adopt latest patched blueprint (score=%d)", effective_score
                 )
 
+        failure_mode, operator_title, feedback_tail = self._describe_pass_with_fix_failure(
+            executed_patch_attempts=executed_patch_attempts,
+            max_fix=max_fix,
+            current_validation=current_validation,
+        )
+        current_validation = dict(current_validation)
+        current_validation["pass_with_fix_failure_mode"] = failure_mode
+        current_validation["executed_patch_attempts"] = executed_patch_attempts
+
         logging.warning("[TF-32-V] Blueprint patch failed -> REJECT")
         self._log_operator_retry_context(
-            title=f"[TF-32-V] PASS_WITH_FIX unresolved after {max_fix} patch attempts -> REJECT",
+            title=operator_title,
             level="warning",
             meta={
                 "phase": "validate",
@@ -2611,17 +2776,18 @@ class ThreePhaseBlueprintRuntime:
                 "retry_index": retry + 1,
                 "max_retries": max_retries + 1,
                 "error_category": "patch_retry_reject",
+                "executed_patch_attempts": executed_patch_attempts,
+                "configured_patch_budget": max_fix,
             },
             feedback=current_validation.get("verdict_reason", "") or current_validation.get("feedback", ""),
             issues=current_validation.get("issues", []),
             fix_scope=str(current_validation.get("fix_scope", "") or ""),
         )
         owner.stats["phase3_reject"] += 1
-        feedback = initial_feedback + f"\n[TF-32-V] PASS_WITH_FIX unresolved after {max_fix} patch attempts -> REJECT"
+        feedback = initial_feedback + f"\n[TF-32-V] {feedback_tail}"
         regenerate_only_reason = str(current_validation.get("binding_regenerate_only_reason", "") or "").strip()
         if regenerate_only_reason:
             feedback = f"{feedback}\n[TF-33] {regenerate_only_reason}"
-        current_validation = dict(current_validation)
         current_validation.setdefault("reject_origin", "pass_with_fix_unresolved")
         self._apply_validation_reject_state(
             validation_result=current_validation,

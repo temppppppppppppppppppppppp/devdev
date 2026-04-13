@@ -1,14 +1,44 @@
 # Stage3 Cross-PC Proof Rerun Handoff Context
 
 Date: 2026-04-13
-Status: handoff-ready after tranche-3 static closure
+Status: handoff context after tranche-3 static closure; the later same-day live rerun plus bounded producer-side landings are now superseded by one bounded tactical-authority synonym parity tranche before the `ep7/ep8` proof rerun
 Audience: next operator continuing on another PC
 
 ## Purpose
 
 - preserve the exact Stage3 context after the three-tranche safe route
-- let the next operator continue from `pull -> context load -> bounded proof rerun`
+- let the next operator continue from `pull -> context load -> bounded next action` without losing the tranche baseline
 - avoid re-mixing unrelated live-run/material dirt into the Stage3 proof wave
+
+## 2026-04-13 Late Update
+
+- a later local rerun captured in `0_temp.txt` already exercised the post-tranche-3 `ep7/ep8` path on the live workspace
+- the newer authoritative next-step note is now:
+  - `docs/2026-04-13/stage3-ep8-cw-director-root-cause-parallel-survey.md`
+  - `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
+  - `docs/2026-04-01/active-temp-execution-roadmap.md`
+- read this document as tranche-context preservation, not as the newest queue controller
+- the bounded producer-side contract-alignment / route-honest failure-surface slice called for by that survey is now landed on current `main`
+- the later same-day `P2/P3` producer follow-up slice is now also landed on current `main`:
+  - Stage2 shortlist now prefers actionable mission-packet candidates when available
+  - Stage3 placeholder `protagonist_state` shells now fail cheap admission
+  - Stage4 degraded fallback order now prefers the least-bad manuscript contract trace explicitly
+- the newer bounded opening-transition producer-parity support slice is now also landed on current `main`:
+  - Stage3 request/sanitize flow now threads `prev_blueprint` into cheap admission
+  - declared alias forms now normalize into canonical `opening_transition.type`
+  - missing `opening_transition` payloads can now be inferred before cheap admission when local opening-scene continuity is already sufficient
+- the newer bounded tactical-authority / scene-completeness producer support slice is now also landed on current `main`:
+  - Stage3 cheap admission now rejects scene shells that still lack actionable `key_events`
+  - Stage3 sanitize now rejects obvious unauthorized tactical intrusion events before validator spend when the current episode authority does not already include them
+  - the Stage3 producer prompt/checklist now makes both contracts explicit
+- the later adversarial audits are now the newer queue controller for the front residual:
+  - `docs/2026-04-13/stage3-producer-contract-tightening-3pass-audit-and-adversarial-review.md`
+  - `docs/2026-04-13/stage3-producer-adversarial-followup-x3-addendum.md`
+- those audits promote one stronger parent-owned blocker:
+  - Korean synonym tactical-intrusion phrasing can still survive producer sanitize and validator Python prevalidation outside the current marker lexicon
+- current next step is therefore no longer the paid rerun itself:
+  1. one bounded tactical-authority synonym parity tranche
+  2. then one bounded paid `ep7/ep8` rerun
 
 ## Authoritative Code Baseline
 
@@ -87,16 +117,15 @@ These passed on the tranche-3 code baseline:
 
 ## Immediate Next Action
 
-Do not open another code tranche first.
+The earlier proof-first reading was temporarily superseded while one bounded producer-side tranche landed.
 
-The next action is one bounded fresh proof rerun:
+That tranche is now landed on the current live workspace.
 
-1. target `ep7/ep8`
-2. verify that binding-driven faux-inplace churn is gone
-3. verify that non-local contract targets do not slip into local patch
-4. verify that success-state sink behavior stays coherent after patch-IR introduction
+The current next action is:
 
-If that proof rerun is clean, only then move to closure bookkeeping or the next longer-horizon refactor lane.
+1. one bounded tactical-authority synonym parity tranche across producer and validator
+2. then one bounded `ep7/ep8` proof rerun
+3. only after that rerun, closure bookkeeping or the next longer-horizon refactor lane
 
 ## Important Environment Notes For Another PC
 

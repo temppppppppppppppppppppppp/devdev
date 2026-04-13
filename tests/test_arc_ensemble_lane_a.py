@@ -356,6 +356,54 @@ def test_evaluate_candidate_penalizes_incomplete_episode_details_coverage():
     assert any("episode_details mission packet coverage 부족" in issue for issue in issues)
 
 
+def test_evaluate_candidate_penalizes_generic_episode_details_beats():
+    agent = _make_agent()
+    candidate = _base_candidate(
+        ep_start=4,
+        ep_end=6,
+        episode_details=[
+            {"ep_num": 4, "details": ["setup"]},
+            {"ep_num": 5, "details": ["progress"]},
+            {"ep_num": 6, "details": ["climax"]},
+        ],
+    )
+
+    score, issues = agent._evaluate_candidate(
+        candidate,
+        prev_arc_context="fresh start",
+        constraint_block="",
+        prev_equipment=None,
+        forbidden_items=[],
+    )
+
+    assert score < 100
+    assert any("episode_details mission beat too generic" in issue for issue in issues)
+
+
+def test_score_candidates_for_director_prefers_actionable_mission_packet_shortlist():
+    agent = _make_agent()
+    generic = _base_candidate(_strategy="generic")
+    actionable = _base_candidate(_strategy="actionable")
+    agent._evaluate_candidate = MagicMock(
+        side_effect=[
+            (82, ["episode_details mission beat too generic: ep4"]),
+            (78, []),
+        ]
+    )
+
+    scored, director_candidates, diversity = agent._score_candidates_for_director(
+        [generic, actionable],
+        prev_arc_context="서사 시작점",
+        constraint_block="",
+        prev_equipment=None,
+        forbidden_items=[],
+    )
+
+    assert len(scored) == 2
+    assert diversity == {}
+    assert [candidate["_strategy"] for candidate in director_candidates] == ["actionable"]
+
+
 def test_ensure_required_fields_syncs_joint_docs_from_arc_end_state_when_missing():
     agent = _make_agent()
     result = agent._ensure_required_fields(
@@ -424,7 +472,9 @@ def test_evaluate_candidate_penalizes_verbose_state_field_blob():
         ],
         joint_docs={
             "final_location": "서울 강남구, 테헤란로의 허름한 오피스텔 15층. 아직 페인트 냄새도 가시지 않은 텅 빈 공간.",
-            "physical_inventory": ["책상 위에 놓인 2006년형 최신 사양의 조립식 컴퓨터 본체와 모니터 2대, 법인 통장과 OTP 카드"],
+            "physical_inventory": [
+                "책상 위에 놓인 2006년형 최신 사양의 조립식 컴퓨터 본체와 모니터 2대, 법인 통장과 OTP 카드"
+            ],
             "world_joint": "",
         },
     )

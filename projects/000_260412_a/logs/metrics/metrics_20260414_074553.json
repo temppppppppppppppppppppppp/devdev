@@ -1,0 +1,65 @@
+{
+  "session_id": "20260414_074553",
+  "start_time": "2026-04-14T07:45:53.615031",
+  "end_time": "2026-04-14T08:47:34.989817",
+  "total_calls": 5,
+  "successful_calls": 5,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 101352,
+  "total_cost_usd": 0.249632,
+  "agent_stats": {
+    "StateExtractor": {
+      "agent_name": "StateExtractor",
+      "total_calls": 2,
+      "successful_calls": 2,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 44660.65514087677,
+        "min_ms": 43183.33721160889,
+        "max_ms": 46137.97307014465,
+        "p50_ms": 44660.65514087677,
+        "p90_ms": 45842.50948429108,
+        "p99_ms": 46108.426711559296
+      }
+    },
+    "BlueprintEnsembleGenerator": {
+      "agent_name": "BlueprintEnsembleGenerator",
+      "total_calls": 3,
+      "successful_calls": 3,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 48181.79488182068,
+        "min_ms": 38778.66792678833,
+        "max_ms": 56028.91683578491,
+        "p50_ms": 49737.799882888794,
+        "p90_ms": 54770.69344520569,
+        "p99_ms": 55903.09449672699
+      }
+    }
+  },
+  "model_stats": {
+    "vertexai:gemini-2.5-flash": {
+      "input_tokens": 9348,
+      "output_tokens": 4539,
+      "cached_tokens": 0,
+      "thinking_tokens": 7855,
+      "total_tokens": 13887,
+      "cost_usd": 0.014152
+    },
+    "vertexai:gemini-3.1-pro-preview": {
+      "input_tokens": 73048,
+      "output_tokens": 14417,
+      "cached_tokens": 0,
+      "thinking_tokens": 15771,
+      "total_tokens": 87465,
+      "cost_usd": 0.23548
+    }
+  }
+}
