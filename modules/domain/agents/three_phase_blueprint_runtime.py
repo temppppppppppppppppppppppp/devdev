@@ -139,6 +139,193 @@ class _ThreePhaseRetryCycleResult:
     final_result: tuple[dict | None, dict] | None = None
 
 
+@dataclass
+class _Stage3RepairMaterial:
+    requested_fix_scope: str = ""
+    normalized_fix_pack: dict = field(default_factory=dict)
+    advisory_fix_pack: dict = field(default_factory=dict)
+    repair_contract: dict = field(default_factory=dict)
+    scope_authority: dict = field(default_factory=dict)
+    local_patch_gate: dict = field(default_factory=dict)
+    binding_issue_count: int = 0
+    regenerate_only_binding_categories: list[str] = field(default_factory=list)
+
+    @property
+    def effective_fix_pack(self) -> dict:
+        return dict(self.normalized_fix_pack or self.advisory_fix_pack)
+
+    @property
+    def normalized_requested_fix_scope(self) -> str:
+        return str(self.requested_fix_scope or "").strip().lower()
+
+    @property
+    def resolved_fix_scope(self) -> str:
+        return str(
+            self.local_patch_gate.get("resolved_fix_scope", "") or self.normalized_requested_fix_scope
+        ).strip().lower()
+
+
+@dataclass
+class _Stage3RepairRouteDecision:
+    effective_fix_scope: str = ""
+    resolved_fix_scope: str = ""
+    use_inplace_patch: bool = False
+    should_break_to_generate: bool = False
+    inplace_retry_candidate: bool = False
+    block_reasons: list[str] = field(default_factory=list)
+    contract_block_reason: str = ""
+    fix_scope_reasoning: str = ""
+    regenerate_only_reason: str = ""
+
+
+class _Stage3RepairRouter:
+    @staticmethod
+    def build_retry_material(retry_state: _ThreePhaseRetryState) -> _Stage3RepairMaterial:
+        fix_scope = str(retry_state.prev_fix_scope or "").strip().lower()
+        repair_contract = dict(retry_state.prev_repair_contract or {})
+        scope_authority = dict(retry_state.prev_scope_authority or {})
+        normalized_fix_pack = dict(retry_state.prev_fix_pack or {})
+        local_patch_gate = _build_stage3_local_patch_gate(
+            fix_scope=fix_scope,
+            fix_pack=normalized_fix_pack,
+            repair_contract=repair_contract,
+            scope_authority=scope_authority,
+        )
+        return _Stage3RepairMaterial(
+            requested_fix_scope=fix_scope,
+            normalized_fix_pack=normalized_fix_pack,
+            repair_contract=repair_contract,
+            scope_authority=scope_authority,
+            local_patch_gate=local_patch_gate,
+            binding_issue_count=int(retry_state.prev_binding_issue_count or 0),
+        )
+
+    @staticmethod
+    def build_validation_material(validation_result: dict | None) -> _Stage3RepairMaterial:
+        payload = validation_result if isinstance(validation_result, dict) else {}
+        requested_fix_scope = str(payload.get("fix_scope", "") or "")
+        normalized_fix_pack = _normalize_stage3_fix_pack(payload)
+        advisory_fix_pack = _normalize_stage3_advisory_fix_pack(payload)
+        effective_fix_pack = normalized_fix_pack or advisory_fix_pack
+        repair_contract = _normalize_stage3_repair_contract(payload, fix_pack=effective_fix_pack)
+        scope_authority = _normalize_stage3_scope_authority(payload)
+        local_patch_gate = _build_stage3_local_patch_gate(
+            fix_scope=requested_fix_scope,
+            fix_pack=effective_fix_pack,
+            repair_contract=repair_contract,
+            scope_authority=scope_authority,
+        )
+        try:
+            binding_issue_count = int(payload.get("binding_prevalidation_issue_count", 0) or 0)
+        except (TypeError, ValueError):
+            binding_issue_count = 0
+        return _Stage3RepairMaterial(
+            requested_fix_scope=requested_fix_scope,
+            normalized_fix_pack=normalized_fix_pack,
+            advisory_fix_pack=advisory_fix_pack,
+            repair_contract=repair_contract,
+            scope_authority=scope_authority,
+            local_patch_gate=local_patch_gate,
+            binding_issue_count=binding_issue_count,
+            regenerate_only_binding_categories=_extract_stage3_regenerate_only_binding_categories(payload),
+        )
+
+    @staticmethod
+    def decide_phase2_retry(
+        *,
+        retry: int,
+        retry_state: _ThreePhaseRetryState,
+        material: _Stage3RepairMaterial,
+        inplace_threshold: int,
+    ) -> _Stage3RepairRouteDecision:
+        resolved_fix_scope = material.resolved_fix_scope
+        inplace_retry_candidate = (
+            retry > 0
+            and retry_state.previous_best is not None
+            and retry_state.prev_reject_score >= inplace_threshold
+            and (
+                resolved_fix_scope == "inplace"
+                or (
+                    not material.local_patch_gate.get("contract_present")
+                    and bool(material.local_patch_gate.get("local_patch_ready", False))
+                )
+            )
+        )
+        inplace_patch_eligible = inplace_retry_candidate and bool(material.local_patch_gate.get("local_patch_ready", False))
+        contract_block_reason = ""
+        if (
+            inplace_retry_candidate
+            and material.local_patch_gate.get("contract_present")
+            and not material.local_patch_gate.get("local_patch_ready", False)
+        ):
+            gate_reason = str(material.local_patch_gate.get("reason", "") or "").strip()
+            if gate_reason:
+                contract_block_reason = f"local_patch_contract:{gate_reason}"
+        block_reasons = _build_stage3_retry_plateau_reasons(retry_state)
+        if contract_block_reason and contract_block_reason not in block_reasons:
+            block_reasons.append(contract_block_reason)
+        use_inplace_patch = inplace_patch_eligible and not block_reasons
+        return _Stage3RepairRouteDecision(
+            effective_fix_scope=resolved_fix_scope or material.normalized_requested_fix_scope,
+            resolved_fix_scope=resolved_fix_scope,
+            use_inplace_patch=use_inplace_patch,
+            inplace_retry_candidate=inplace_retry_candidate,
+            block_reasons=list(block_reasons),
+            contract_block_reason=contract_block_reason,
+        )
+
+    @staticmethod
+    def decide_pass_with_fix(
+        *,
+        material: _Stage3RepairMaterial,
+        score: int,
+        inplace_threshold: int,
+    ) -> _Stage3RepairRouteDecision:
+        requested_fix_scope = material.requested_fix_scope
+        resolved_fix_scope = material.resolved_fix_scope
+        if material.regenerate_only_binding_categories or material.binding_issue_count > 0:
+            regenerate_only_reason = (
+                _build_stage3_regenerate_only_binding_reason(material.regenerate_only_binding_categories)
+                if material.regenerate_only_binding_categories
+                else (
+                    "Structural binding prevalidation requires regenerate-only repair: "
+                    f"unresolved_binding_issue_count={material.binding_issue_count}"
+                )
+            )
+            return _Stage3RepairRouteDecision(
+                effective_fix_scope="full",
+                resolved_fix_scope=resolved_fix_scope,
+                should_break_to_generate=True,
+                fix_scope_reasoning=regenerate_only_reason,
+                regenerate_only_reason=regenerate_only_reason,
+            )
+        if material.local_patch_gate.get("contract_present") and not material.local_patch_gate.get("local_patch_ready", False):
+            gate_reason = str(material.local_patch_gate.get("reason", "") or "").strip()
+            effective_fix_scope = "partial" if resolved_fix_scope == "partial" else "full"
+            return _Stage3RepairRouteDecision(
+                effective_fix_scope=effective_fix_scope,
+                resolved_fix_scope=resolved_fix_scope,
+                should_break_to_generate=True,
+                contract_block_reason=gate_reason,
+                fix_scope_reasoning=(
+                    "Contract-driven local patch gate blocked Blueprint inplace retry: "
+                    f"{gate_reason or 'unknown_reason'}"
+                ),
+            )
+        if not requested_fix_scope:
+            effective_fix_scope = "inplace" if score >= inplace_threshold else "full"
+            return _Stage3RepairRouteDecision(
+                effective_fix_scope=effective_fix_scope,
+                resolved_fix_scope=resolved_fix_scope,
+                should_break_to_generate=effective_fix_scope in ("partial", "full"),
+            )
+        return _Stage3RepairRouteDecision(
+            effective_fix_scope=requested_fix_scope,
+            resolved_fix_scope=resolved_fix_scope,
+            should_break_to_generate=requested_fix_scope in ("partial", "full"),
+        )
+
+
 def _compact_stage3_fix_list(raw: object, *, limit: int = 6, item_limit: int = 180) -> list[str]:
     if isinstance(raw, str):
         items = [raw]
@@ -1050,52 +1237,24 @@ class ThreePhaseBlueprintRuntime:
         all_candidates: list[dict] = []
         rejected_strategy = retry_state.prev_reject_strategy if retry > 0 else ""
         single_strategy = ""
-        fix_scope = str(retry_state.prev_fix_scope or "").strip().lower()
-        local_patch_gate = _build_stage3_local_patch_gate(
-            fix_scope=fix_scope,
-            fix_pack=retry_state.prev_fix_pack,
-            repair_contract=retry_state.prev_repair_contract,
-            scope_authority=retry_state.prev_scope_authority,
+        repair_material = _Stage3RepairRouter.build_retry_material(retry_state)
+        repair_route = _Stage3RepairRouter.decide_phase2_retry(
+            retry=retry,
+            retry_state=retry_state,
+            material=repair_material,
+            inplace_threshold=int(_threshold("patch_mode.inplace_below", PatchModeThresholds.INPLACE)),
         )
-        resolved_fix_scope = str(local_patch_gate.get("resolved_fix_scope", "") or fix_scope).strip().lower()
-        inplace_threshold = int(_threshold("patch_mode.inplace_below", PatchModeThresholds.INPLACE))
-        inplace_plateau_reasons = _build_stage3_retry_plateau_reasons(retry_state)
+        resolved_fix_scope = repair_route.resolved_fix_scope or repair_material.normalized_requested_fix_scope
 
         if retry > 0 and resolved_fix_scope == "partial" and rejected_strategy:
             single_strategy = rejected_strategy
 
-        inplace_retry_candidate = (
-            retry > 0
-            and retry_state.previous_best is not None
-            and retry_state.prev_reject_score >= inplace_threshold
-            and (
-                resolved_fix_scope == "inplace"
-                or (
-                    not local_patch_gate.get("contract_present")
-                    and bool(local_patch_gate.get("local_patch_ready", False))
-                )
-            )
-        )
-        inplace_patch_eligible = inplace_retry_candidate and bool(local_patch_gate.get("local_patch_ready", False))
-        contract_block_reason = ""
-        if (
-            inplace_retry_candidate
-            and local_patch_gate.get("contract_present")
-            and not local_patch_gate.get("local_patch_ready", False)
-        ):
-            gate_reason = str(local_patch_gate.get("reason", "") or "").strip()
-            if gate_reason:
-                contract_block_reason = f"local_patch_contract:{gate_reason}"
-        block_reasons = list(inplace_plateau_reasons)
-        if contract_block_reason and contract_block_reason not in block_reasons:
-            block_reasons.append(contract_block_reason)
-        use_inplace_patch = inplace_patch_eligible and not block_reasons
-        if inplace_retry_candidate and block_reasons:
+        if repair_route.inplace_retry_candidate and repair_route.block_reasons:
             logging.info(
                 "[PF-EE] skip Stage3 inplace patch retry; reasons=%s",
-                ", ".join(block_reasons),
+                ", ".join(repair_route.block_reasons),
             )
-            pipeline_result["inplace_plateau_block_reasons"] = list(block_reasons)
+            pipeline_result["inplace_plateau_block_reasons"] = list(repair_route.block_reasons)
             owner._operator_log(
                 "[Phase 2] inplace patch blocked; switch back to full_ensemble",
                 meta={
@@ -1104,12 +1263,12 @@ class ThreePhaseBlueprintRuntime:
                     "max_retries": max_retries + 1,
                     "mode": "full_ensemble",
                     "inplace_blocked": True,
-                    "inplace_block_reasons": list(block_reasons),
+                    "inplace_block_reasons": list(repair_route.block_reasons),
                     "prev_reject_score": retry_state.prev_reject_score,
                     "fix_scope": resolved_fix_scope or "",
                 },
             )
-        if use_inplace_patch:
+        if repair_route.use_inplace_patch:
             logging.info(" [Patch Mode] retry=%d blueprint in-place patch 시도", retry)
             owner._operator_log(
                 (
@@ -2051,76 +2210,50 @@ class ThreePhaseBlueprintRuntime:
         max_fix: int,
     ) -> _ThreePhasePassWithFixIterationResult:
         owner = self.owner
-        fix_scope = current_validation.get("fix_scope", "")
         validate_phase = pipeline_result.setdefault("phases", {}).setdefault("validate", {})
-        normalized_fix_pack = _normalize_stage3_fix_pack(current_validation)
-        advisory_fix_pack = _normalize_stage3_advisory_fix_pack(current_validation)
-        if normalized_fix_pack:
-            validate_phase["fix_pack"] = dict(normalized_fix_pack)
-        if advisory_fix_pack:
-            validate_phase["advisory_fix_pack"] = dict(advisory_fix_pack)
-        repair_contract = _normalize_stage3_repair_contract(
-            current_validation,
-            fix_pack=normalized_fix_pack or advisory_fix_pack,
+        repair_material = _Stage3RepairRouter.build_validation_material(current_validation)
+        if repair_material.normalized_fix_pack:
+            validate_phase["fix_pack"] = dict(repair_material.normalized_fix_pack)
+        if repair_material.advisory_fix_pack:
+            validate_phase["advisory_fix_pack"] = dict(repair_material.advisory_fix_pack)
+        if repair_material.repair_contract:
+            validate_phase["repair_contract"] = dict(repair_material.repair_contract)
+        if repair_material.scope_authority:
+            validate_phase["scope_authority"] = dict(repair_material.scope_authority)
+        validate_phase["local_patch_gate"] = dict(repair_material.local_patch_gate)
+        current_validation["local_patch_gate"] = dict(repair_material.local_patch_gate)
+        repair_route = _Stage3RepairRouter.decide_pass_with_fix(
+            material=repair_material,
+            score=score,
+            inplace_threshold=int(_threshold("patch_mode.inplace_below", 60)),
         )
-        if repair_contract:
-            validate_phase["repair_contract"] = dict(repair_contract)
-        scope_authority = _normalize_stage3_scope_authority(current_validation)
-        if scope_authority:
-            validate_phase["scope_authority"] = dict(scope_authority)
-        local_patch_gate = _build_stage3_local_patch_gate(
-            fix_scope=str(fix_scope or ""),
-            fix_pack=normalized_fix_pack or advisory_fix_pack,
-            repair_contract=repair_contract,
-            scope_authority=scope_authority,
-        )
-        validate_phase["local_patch_gate"] = dict(local_patch_gate)
-        current_validation["local_patch_gate"] = dict(local_patch_gate)
-        try:
-            binding_issue_count = int(current_validation.get("binding_prevalidation_issue_count", 0) or 0)
-        except (TypeError, ValueError):
-            binding_issue_count = 0
-        regenerate_only_binding_categories = _extract_stage3_regenerate_only_binding_categories(current_validation)
-        if regenerate_only_binding_categories or binding_issue_count > 0:
-            fix_scope = "full"
+        fix_scope = repair_route.effective_fix_scope
+        if repair_route.regenerate_only_reason:
             current_validation["fix_scope"] = "full"
-            regenerate_only_reason = (
-                _build_stage3_regenerate_only_binding_reason(regenerate_only_binding_categories)
-                if regenerate_only_binding_categories
-                else (
-                    "Structural binding prevalidation requires regenerate-only repair: "
-                    f"unresolved_binding_issue_count={binding_issue_count}"
+            if repair_material.regenerate_only_binding_categories:
+                current_validation["binding_regenerate_only_categories"] = list(
+                    repair_material.regenerate_only_binding_categories
                 )
-            )
-            if regenerate_only_binding_categories:
-                current_validation["binding_regenerate_only_categories"] = list(regenerate_only_binding_categories)
-            current_validation["binding_regenerate_only_reason"] = regenerate_only_reason
-            current_validation["fix_scope_reasoning"] = regenerate_only_reason
+            current_validation["binding_regenerate_only_reason"] = repair_route.regenerate_only_reason
+            current_validation["fix_scope_reasoning"] = repair_route.fix_scope_reasoning
             logging.info(
                 "[TF-33] binding_prevalidation_categories=%s block inplace; force full regenerate",
-                regenerate_only_binding_categories or [f"unresolved_binding_issue_count={binding_issue_count}"],
+                repair_material.regenerate_only_binding_categories
+                or [f"unresolved_binding_issue_count={repair_material.binding_issue_count}"],
             )
-        elif local_patch_gate.get("contract_present") and not local_patch_gate.get("local_patch_ready", False):
-            gate_reason = str(local_patch_gate.get("reason", "") or "").strip()
-            resolved_fix_scope = str(local_patch_gate.get("resolved_fix_scope", "") or "").strip().lower()
-            if resolved_fix_scope == "partial":
-                fix_scope = "partial"
-            else:
-                fix_scope = "full"
+        elif repair_route.fix_scope_reasoning:
             current_validation["fix_scope"] = fix_scope
-            current_validation["fix_scope_reasoning"] = (
-                f"Contract-driven local patch gate blocked Blueprint inplace retry: {gate_reason or 'unknown_reason'}"
-            )
+            current_validation["fix_scope_reasoning"] = repair_route.fix_scope_reasoning
             logging.info(
                 "[TF-33C] contract-driven local patch gate blocks inplace; scope=%s reason=%s",
-                resolved_fix_scope or "missing",
-                gate_reason or "unknown_reason",
+                repair_route.resolved_fix_scope or "missing",
+                repair_route.contract_block_reason or "unknown_reason",
             )
         if not fix_scope:
             inplace_thresh = int(_threshold("patch_mode.inplace_below", 60))
             fix_scope = "inplace" if score >= inplace_thresh else "full"
             logging.warning("[PF-1] fix_scope missing; score=%d fallback=%s", score, fix_scope)
-        if fix_scope in ("partial", "full"):
+        if repair_route.should_break_to_generate:
             logging.info(f"[TF-33] fix_scope={fix_scope!r} blocks inplace; delegate to generate loop")
             return _ThreePhasePassWithFixIterationResult(
                 current_blueprint=current_blueprint,
@@ -2128,7 +2261,7 @@ class ThreePhaseBlueprintRuntime:
                 should_break=True,
             )
 
-        effective_fix_pack = normalized_fix_pack or advisory_fix_pack
+        effective_fix_pack = repair_material.effective_fix_pack
         fix_feedback = current_validation.get("re_slice_instruction", "") or current_validation.get("feedback", "")
         fix_pack_guidance = _build_stage3_fix_pack_guidance(effective_fix_pack)
         if fix_pack_guidance:
@@ -2262,16 +2395,16 @@ class ThreePhaseBlueprintRuntime:
         if partial_fix_eval:
             validate_phase["partial_fix_eval"] = partial_fix_eval
             re_validation["partial_fix_eval"] = partial_fix_eval
-        if normalized_fix_pack:
-            re_validation.setdefault("fix_pack", dict(normalized_fix_pack))
-        if advisory_fix_pack:
-            re_validation.setdefault("advisory_fix_pack", dict(advisory_fix_pack))
-        if repair_contract:
-            re_validation.setdefault("repair_contract", dict(repair_contract))
-        if scope_authority:
-            re_validation.setdefault("scope_authority", dict(scope_authority))
-        if local_patch_gate:
-            re_validation.setdefault("local_patch_gate", dict(local_patch_gate))
+        if repair_material.normalized_fix_pack:
+            re_validation.setdefault("fix_pack", dict(repair_material.normalized_fix_pack))
+        if repair_material.advisory_fix_pack:
+            re_validation.setdefault("advisory_fix_pack", dict(repair_material.advisory_fix_pack))
+        if repair_material.repair_contract:
+            re_validation.setdefault("repair_contract", dict(repair_material.repair_contract))
+        if repair_material.scope_authority:
+            re_validation.setdefault("scope_authority", dict(repair_material.scope_authority))
+        if repair_material.local_patch_gate:
+            re_validation.setdefault("local_patch_gate", dict(repair_material.local_patch_gate))
         if isinstance(re_validation, dict):
             re_validation.setdefault("verdict", re_verdict)
             re_validation.setdefault("decision", re_verdict)

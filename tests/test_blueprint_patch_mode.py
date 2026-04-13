@@ -55,6 +55,67 @@ def sample_arc_data():
     }
 
 
+class TestStage3RepairRouter:
+    def test_router_blocks_phase2_inplace_when_contract_target_is_unsupported(self):
+        from modules.domain.agents.three_phase_blueprint_runtime import _Stage3RepairRouter, _ThreePhaseRetryState
+
+        retry_state = _ThreePhaseRetryState(
+            previous_best={"ep_num": 4, "scene_list": [{"scene_no": 1, "summary": "stale scene model patch"}]},
+            prev_reject_score=84,
+            prev_fix_scope="inplace",
+            prev_fix_pack={
+                "patch_targets": ["scene_breakdown.scene_4"],
+                "target_kind": "scene_model",
+            },
+            prev_repair_contract={
+                "fix_scope": "inplace",
+                "repair_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+                "target_kind": "scene_model",
+            },
+            prev_scope_authority={
+                "fix_scope": "inplace",
+                "repair_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+                "widened": False,
+            },
+        )
+
+        material = _Stage3RepairRouter.build_retry_material(retry_state)
+        route = _Stage3RepairRouter.decide_phase2_retry(
+            retry=1,
+            retry_state=retry_state,
+            material=material,
+            inplace_threshold=60,
+        )
+
+        assert route.inplace_retry_candidate is True
+        assert route.use_inplace_patch is False
+        assert route.block_reasons == ["local_patch_contract:unsupported_target_kind:scene_model"]
+        assert material.local_patch_gate["reason"] == "unsupported_target_kind:scene_model"
+
+    def test_router_forces_full_regenerate_for_binding_prevalidation(self):
+        from modules.domain.agents.three_phase_blueprint_runtime import _Stage3RepairRouter
+
+        current_validation = {
+            "fix_scope": "inplace",
+            "binding_prevalidation_issue_count": 1,
+            "binding_prevalidation_categories": ["arc_timeline"],
+            "feedback": "repair timeline binding",
+        }
+
+        material = _Stage3RepairRouter.build_validation_material(current_validation)
+        route = _Stage3RepairRouter.decide_pass_with_fix(
+            material=material,
+            score=88,
+            inplace_threshold=60,
+        )
+
+        assert route.effective_fix_scope == "full"
+        assert route.should_break_to_generate is True
+        assert "arc_timeline" in route.regenerate_only_reason
+
+
 class TestBlueprintInplacePatchMode:
     def test_inplace_success(self, blueprint_generator, sample_blueprint, sample_arc_data):
         """in-place 패치 정상 동작 — ask()가 유효한 dict를 반환."""

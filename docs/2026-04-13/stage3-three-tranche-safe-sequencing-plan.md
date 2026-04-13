@@ -1,14 +1,14 @@
 # Stage3 Three-Tranche Safe Sequencing Plan
 
 - Date: 2026-04-13
-- Status: active-plan-support
+- Status: active-plan-support (baseline snapshot landed; tranche 1 is now landed on the live workspace; tranche 2 is the immediate-next action)
 - Scope: Stage3 cost-first refactor sequencing on current `main`, with mandatory static validation and snapshot commits between tranches
 - Mode: execution-support planning note; no live rerun and no code realization in this note itself
 - Canonical Path: `docs/2026-04-13/stage3-three-tranche-safe-sequencing-plan.md`
 - Baseline Commit: `347acac374f7246cca433d4be9c7466e802c9883`
 - Baseline Dirty Summary: `dirty: active Stage3 code/docs/tests plus live-run artifacts, logs, and polaris planning docs already present in worktree`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none at plan capture; this note defines the safe sequencing contract for upcoming tranches`
+- Resume Commit: `765132d8d5d45c3dadffb260ac37c2ef0b94fe94`
+- Resume Drift Summary: `the baseline snapshot commit now isolates the earlier Stage3/doc state; tranche 1 Stage3RepairRouter extraction is landed on the live workspace with static validation rerun, so this note now advances the immediate-next action to tranche 2`
 - Confidence: `97%`
 
 ## Purpose
@@ -117,6 +117,12 @@ Required validation:
 Required closure:
 
 - snapshot commit on `main`
+
+Current state:
+
+- tranche 1 is now landed on the live workspace as an authority-consolidation refactor
+- repair reopen / `PASS_WITH_FIX` routing now flows through one `Stage3RepairRouter` surface
+- tranche 2 is now the immediate-next move after this tranche-scoped snapshot commit lands
 
 ### Tranche 2. Strict Local-Fix Contract Gate
 
