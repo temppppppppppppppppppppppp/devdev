@@ -1,38 +1,14 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-12T11:42:30.377298+00:00",
+  "generated_at": "2026-04-13T08:49:29.656372+00:00",
   "queue_mode": "aggregate",
-  "active_item_count": 11,
+  "active_item_count": 7,
   "roadmap": null,
   "items": [
     {
       "topic": "africa_farm_king",
       "temp_path": "",
       "canonical_path": "docs/2026-04-09/africa_farm_king_live_status.md",
-      "status": "pending",
-      "queue_role": "front_active",
-      "material_stage": "canon_stage",
-      "roadmap_rank": null,
-      "depends_on": [],
-      "mirror_present": false,
-      "canonical_present": true
-    },
-    {
-      "topic": "chaebol_ent_empire",
-      "temp_path": "",
-      "canonical_path": "material_ssot/20_pitch/canon/chaebol_ent_empire.md",
-      "status": "pending",
-      "queue_role": "front_active",
-      "material_stage": "canon_stage",
-      "roadmap_rank": null,
-      "depends_on": [],
-      "mirror_present": false,
-      "canonical_present": true
-    },
-    {
-      "topic": "defense_defect_engineer",
-      "temp_path": "",
-      "canonical_path": "material_ssot/20_pitch/canon/defense_defect_engineer.md",
       "status": "pending",
       "queue_role": "front_active",
       "material_stage": "canon_stage",
@@ -102,18 +78,6 @@
       "canonical_present": true
     },
     {
-      "topic": "pantech_cyworld_reborn",
-      "temp_path": "",
-      "canonical_path": "material_ssot/20_pitch/canon/pantech_cyworld_reborn.md",
-      "status": "pending",
-      "queue_role": "front_active",
-      "material_stage": "canon_stage",
-      "roadmap_rank": null,
-      "depends_on": [],
-      "mirror_present": false,
-      "canonical_present": true
-    },
-    {
       "topic": "quiet_chaebol_heir",
       "temp_path": "",
       "canonical_path": "docs/2026-04-08/quiet_chaebol_heir_live_status.md",
@@ -126,12 +90,24 @@
       "canonical_present": true
     },
     {
-      "topic": "wuxia_heavenly_physician",
+      "topic": "chaebol_ent_empire",
       "temp_path": "",
-      "canonical_path": "material_ssot/20_pitch/canon/wuxia_heavenly_physician.md",
-      "status": "pending",
-      "queue_role": "front_active",
-      "material_stage": "canon_stage",
+      "canonical_path": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "status": "completed",
+      "queue_role": "historical_backing",
+      "material_stage": "bi_production_complete",
+      "roadmap_rank": null,
+      "depends_on": [],
+      "mirror_present": false,
+      "canonical_present": true
+    },
+    {
+      "topic": "defense_defect_engineer",
+      "temp_path": "",
+      "canonical_path": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "status": "completed",
+      "queue_role": "historical_backing",
+      "material_stage": "bi_production_complete",
       "roadmap_rank": null,
       "depends_on": [],
       "mirror_present": false,
@@ -174,6 +150,18 @@
       "canonical_present": true
     },
     {
+      "topic": "pantech_cyworld_reborn",
+      "temp_path": "",
+      "canonical_path": "docs/2026-04-08/production-pair-benchmark-freshness-wave.md",
+      "status": "completed",
+      "queue_role": "historical_backing",
+      "material_stage": "bi_production_complete",
+      "roadmap_rank": null,
+      "depends_on": [],
+      "mirror_present": false,
+      "canonical_present": true
+    },
+    {
       "topic": "smart_new_hire",
       "temp_path": "treatments/preprocess/smart_new_hire/sequential_run_status.json",
       "canonical_path": "docs/2026-04-09/smart_new_hire_live_status.md",
@@ -183,6 +171,30 @@
       "roadmap_rank": null,
       "depends_on": [],
       "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "wuxia_heavenly_physician",
+      "temp_path": "",
+      "canonical_path": "docs/2026-04-12/wuxia_heavenly_physician_deployable_greenplus_refresh_closeout.md",
+      "status": "completed",
+      "queue_role": "historical_backing",
+      "material_stage": "bi_production_complete",
+      "roadmap_rank": null,
+      "depends_on": [],
+      "mirror_present": false,
+      "canonical_present": true
+    },
+    {
+      "topic": "투자물_골든_카나리아 테스트_canonical_v1",
+      "temp_path": "",
+      "canonical_path": "docs/2026-04-12/golden_canary_deployable_greenplus_closeout.md",
+      "status": "completed",
+      "queue_role": "historical_backing",
+      "material_stage": "bi_production_complete",
+      "roadmap_rank": null,
+      "depends_on": [],
+      "mirror_present": false,
       "canonical_present": true
     }
   ]

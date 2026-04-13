@@ -1,13 +1,13 @@
 python main_a.py
 [V61.3] Faulthandler 활성화 → crash_dump.log
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                     🎹 V40 SOVEREIGN COCKPIT                                                      ┃
-┃                                                  Multi-Genre Production Factory                                                   ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                       🎹 V40 GENRE SELECTOR                                                       ┃
-┃                                                       장르별 전문 공정 선택                                                       ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                     🎹 V40 SOVEREIGN COCKPIT                                                     ┃
+┃                                                  Multi-Genre Production Factory                                                  ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                      🎹 V40 GENRE SELECTOR                                                       ┃
+┃                                                      장르별 전문 공정 선택                                                       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 📚 [V40 Multi-Genre Factory] 장르를 선택하십시오:
 
@@ -48,16 +48,17 @@ python main_a.py
 
 [Enter] 프로젝트 선택으로 이동
     1. 000_0412-1
-    2. 000_260412_a
-    3. 000__0411
-    4. MagicMock
+    2. 000_20260409_1
+    3. 000_260412_a
+    4. 00_000
     5. _canary
     6. _unknown_project
     7. test
     8. test_project
-    9. 카나리아 테스트
+    9. 기록용
+    10. 스트레스 테스트 모음
 
-👉 Choice: 2
+👉 Choice: 3
       ✅ [TF7-P0-03] preset_registry DB에서 복원 완료
       ✅ [투자 (Investment Fiction)] HUD 시스템 초기화 완료
       🔍 [V61.3] HUD 호환성 체크: FinanceHUDManager
@@ -102,10 +103,149 @@ python main_a.py
       🧭 [SC] Context Advisor 활성화
       📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: investment)
    ✅ [System] 모든 에이전트 안전하게 초기화 완료
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                    🎹 V40 SOVEREIGN PRODUCTION                                                    ┃
-┃                                     Genre: 투자 (Investment Fiction) | Project: 000_260412_a                                      ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                   🎹 V40 SOVEREIGN PRODUCTION                                                    ┃
+┃                                     Genre: 투자 (Investment Fiction) | Project: 000_260412_a                                     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+👇 Select Command:
+   0. Stage 0: Bible/역설계/스타일 추출 [✅]
+   1. Stage 1: Volume Strategy (선택) [⏭️ 스킵가능]
+   2. Stage 2: Arc Tactical Design (유동) [✅]
+   3. 📐 Stage 3: Episode Blueprinting (Batch Design)
+   4. 🚀 Stage 4: Sovereign Production (Writing)
+   5. Exit
+   6. 🔄 One-Stop: Arc-by-Arc 자동 파이프라인
+   7. 🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)
+   44. ⏪ [ROLLBACK] Stage 4 회차별 롤백 (Episode Rewind)
+   77. 🔥 [WIPE] 원고 생산 기록만 삭제 (Stage 4 초기화)
+   88. 🔥 [RESET] Stage 2 (Arcs) 초기화
+   99. ⏪ Stage 2 정밀 되감기 (Selective Rewind)
+
+   👉 Choice: 0
+
+⚙️ Phase 0: S-Grade 데이터 주권 동기화 가동...
+   📌 현재 장르: 투자 (Investment Fiction) (investment)
+
+==================================================
+     📚 Stage 0 - 프로젝트 설정
+   ==================================================
+
+  [1] 기존 방식 - Bible/Treatment 파일 선택
+     [2] 🆕 컨셉 → Bible 생성 (AI 확장)
+     [3] 🔄 역설계 - 기존 원고에서 Bible/스타일 추출
+     [4] 📥 Bible JSON 임포트
+     [5] 📈 Block 확장 - 기존 Treatment에 블록 추가
+     [6] 🎨 스타일 레퍼런스 분석 - 참조 원고에서 문체 DNA 추출
+     [7] 🛡 작품가드 설정 (선택)
+   
+  [0] 취소
+
+  선택 (기본: 1): 7
+   작품가드 설정 (선택)
+   [1] 라이브러리에서 가져오기
+   [2] 기본 템플릿으로 초기화
+   [3] 현재 프로젝트 작품가드 미리보기
+   [4] 현재 프로젝트 작품가드 삭제
+   [0] 돌아가기
+
+  선택: 1
+   사용 가능한 템플릿:
+   [1] work_guards/01_투자물_골든_카나리아 테스트_canonical_v1.yaml
+   [2] work_guards/02_chaebol_allowance_zero.yaml
+   [3] work_guards/03_chaebol_ent_empire.yaml
+   [4] work_guards/04_defense_defect_engineer.yaml
+   [5] work_guards/07_office_checkup_next_day.yaml
+   [6] work_guards/08_pantech_cyworld_reborn.yaml
+   [7] work_guards/09_wuxia_heavenly_physician.yaml
+   [8] work_guards/10_permit_window_grade9.yaml
+   [9] work_guards/11_manual_meridian_archivist.yaml
+   [10] work_guards/12_hoegui_surgeon.yaml
+   [11] work_guards/13_jangyeongshil_industrial_revolution.yaml
+   [12] work_guards/investment/default_work_guard.yaml
+   [13] work_guards/investment/jaebeol3se_loss_line.yaml
+
+  가져올 번호: 1
+    작품가드 가져오기 완료: work_guards\01_투자물_골든_카나리아 테스트_canonical_v1.yaml -> 
+C:\Users\wjjo\Desktop\글도비\projects\000_260412_a\config\work_guard.yaml
+
+[Enter] 메뉴로 돌아가기
+
+[Enter] 메뉴로 돌아가기
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                   🎹 V40 SOVEREIGN PRODUCTION                                                    ┃
+┃                                     Genre: 투자 (Investment Fiction) | Project: 000_260412_a                                     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+👇 Select Command:
+   0. Stage 0: Bible/역설계/스타일 추출 [✅]
+   1. Stage 1: Volume Strategy (선택) [⏭️ 스킵가능]
+   2. Stage 2: Arc Tactical Design (유동) [✅]
+   3. 📐 Stage 3: Episode Blueprinting (Batch Design)
+   4. 🚀 Stage 4: Sovereign Production (Writing)
+   5. Exit
+   6. 🔄 One-Stop: Arc-by-Arc 자동 파이프라인
+   7. 🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)
+   44. ⏪ [ROLLBACK] Stage 4 회차별 롤백 (Episode Rewind)
+   77. 🔥 [WIPE] 원고 생산 기록만 삭제 (Stage 4 초기화)
+   88. 🔥 [RESET] Stage 2 (Arcs) 초기화
+   99. ⏪ Stage 2 정밀 되감기 (Selective Rewind)
+
+   👉 Choice: 0
+
+⚙️ Phase 0: S-Grade 데이터 주권 동기화 가동...
+   📌 현재 장르: 투자 (Investment Fiction) (investment)
+
+==================================================
+     📚 Stage 0 - 프로젝트 설정
+   ==================================================
+   
+  [1] 기존 방식 - Bible/Treatment 파일 선택
+     [2] 🆕 컨셉 → Bible 생성 (AI 확장)
+     [3] 🔄 역설계 - 기존 원고에서 Bible/스타일 추출
+     [4] 📥 Bible JSON 임포트
+     [5] 📈 Block 확장 - 기존 Treatment에 블록 추가
+     [6] 🎨 스타일 레퍼런스 분석 - 참조 원고에서 문체 DNA 추출
+     [7] 🛡 작품가드 설정 (선택)
+   
+  [0] 취소
+
+  선택 (기본: 1): 6
+   [*] 레퍼런스 로드 완료: 1개 작품, 1개 에피소드
+   - 참조작품1: 1개
+
+  분석을 시작하시겠습니까? (y/n): y
+   스타일 캐시 모드
+   [1] 캐시 사용 (기본)
+   [2] 참조 원고 기준 재분석
+   [3] 장르 캐시 초기화 후 재분석
+
+  선택 (기본: 1): 1
+   [*] 스타일 캐시 모드: 캐시 사용
+   [*] 문체 DNA 추출 중... (참조 원고 분석 - 시간 소요)
+   [*] 문체 분석 시작: 1화, 4,247,609자
+   [1/5] 통계 분석... (4,247,609자 중 1,000,008자 샘플링)
+   [2/5] 샘플 큐레이션...
+   [3/5] 리듬 분석...
+   [4/5] LLM 심층 분석...
+   [5/5] Anti-AI 패턴 생성...
+   [OK] 문체 DNA 추출 완료 (v2, 1화 분석)
+    문체 DNA 추출 완료 (vv2)
+   - 캐시 상태: 캐시 미스 후 재분석
+   - 참조 원고: 1개 / 4,247,609자
+   - 참조 작품: 참조작품1
+   - 모범 문단: 15개
+   - Anti-AI 패턴: 10개
+   - 저장: C:\Users\wjjo\Desktop\글도비\projects\000_260412_a\stage0_output\style_guide.json
+   ✅ [V70] StyleGuide DB 저장 완료 (anchor: style_guide)
+
+[Enter] 메뉴로 돌아가기
+
+[Enter] 메뉴로 돌아가기
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                   🎹 V40 SOVEREIGN PRODUCTION                                                    ┃
+┃                                     Genre: 투자 (Investment Fiction) | Project: 000_260412_a                                     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 👇 Select Command:
    0. Stage 0: Bible/역설계/스타일 추출 [✅]
@@ -125,28 +265,28 @@ python main_a.py
    ──────────────────────────────────────────────────
    📥 [Resume] 프로젝트: 000_260412_a
       Arc 설계: 3개 완료
-      Blueprint: ep 1까지 완료
+      Blueprint: ep 6까지 완료
       원고: ep 0까지 완료
       예상 총 에피소드: 17
    ──────────────────────────────────────────────────
          👤 [V60.96] StateTracker 초기화: NPC 1명 (사망: 0명)
          🌍 [V68] WorldStateManager 초기화 (신규)
          📋 [V68] 팩트 원장 초기화 (신규)
-   📂 [Detected] Blueprint 1화, 원고 0화까지 발견
+   📂 [Detected] Blueprint 6화, 원고 0화까지 발견
    📊 [V60.80] 현재 총 17화까지 설계가 가능합니다.
-👉 몇 화까지 설계도를 생성하시겠습니까? (현재 1화 / 최대 17화): 3
+👉 몇 화까지 설계도를 생성하시겠습니까? (현재 6화 / 최대 17화): 10
    
 ════════════════════════════════════════════════════════════
    🎯 [V60.80] Three Phase Blueprint Generator 시작
-      범위: 제2화 ~ 제3화 (2개)
+      범위: 제7화 ~ 제10화 (4개)
    ════════════════════════════════════════════════════════════
 
-         ⏳ Entity Registry 추출 중... (Arc 0, 첫 호출)
-         📋 [V61] Entity Registry 추출: 34개 엔티티
+         ⏳ Entity Registry 추출 중... (Arc 1, 첫 호출)
+         📋 [V61] Entity Registry 추출: 52개 엔티티
    
-   📐 제2화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
- ⠋ 제2화  0s         ⏳ 제2화 Blueprint 생성 시작 (최대 10회 시도)...
-         ⏳ 제2화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=1, semantic_ctx=2663자)
+   📐 제7화 Blueprint 생성 중... (Arc 2, 주인공: 한시우)
+ ⠋ 제7화  0s         ⏳ 제7화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제7화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=6, semantic_ctx=2922자)
 
 [Phase 1] 제약 수집 시작
 
@@ -156,9 +296,7 @@ python main_a.py
 
 [Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
 
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
-
-[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 4s)
+[Phase 2] 후보 생성 (full_ensemble) 완료 (59s)
 
 [Phase 3] 연속성 사전검사 시작
 
@@ -166,22 +304,21 @@ python main_a.py
 
 [Phase 3] Director compare + judge 시작
 
-[Phase 3] Director compare + judge 완료 (12s)
+[Phase 3] Director compare + judge 완료 (11s)
 
 [TF-32-V] Blueprint patch #1/3
 
 fix_scope: inplace
 
-사유: [Stage3 partial-fix contract]
+사유: ending_state.timeline을 '2006년 3월 1주차 자정'으로 수정하고, time_flow의 종료 시점도 동일하게 맞춰주세요. 시나리오 내용은    
+그대로 유지하되 시간 설정만 조정하면 됩니다.
 
-사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
-shell.
-
-사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+사유: [Binding prevalidation] ending_state.timeline 불일치: blueprint '2006년 1월 15일 자정' vs arc '{'year': 2006, 'month': 3,     
+'week': 1}'
 
 [TF-32-V] Blueprint patch #1/3 시작
 
-[TF-32-V] Blueprint patch #1/3 완료 (29s)
+[TF-32-V] Blueprint patch #1/3 완료 (21s)
 
 [TF-32-V] re-audit #1 시작
 
@@ -199,11 +336,10 @@ shell.
 
 fix_scope: inplace
 
-사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 경미한 시간 표현 수정 필요
+사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 강한 훅; binding prevalidation repair required
 
-이슈: MAJOR | temporal_deictic | 시간 지시어 위험: 시나리오 말미에 '18년 전' 회상/기억 패턴 감지
-
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 2개 < 5개 (1832자 중)
+이슈: MAJOR | arc_timeline | ending_state.timeline 불일치: blueprint '2006년 1월 15일 자정' vs arc '{'year': 2006, 'month': 3,      
+'week': 1}'
 
 [Phase 2] 후보 생성 (full_ensemble) 시작
 
@@ -217,245 +353,19 @@ fix_scope: inplace
 
 [Phase 3] Director compare + judge 시작
 
-[Phase 3] Director compare + judge 완료 (8s)
+[Phase 3] Director compare + judge 대기 중... (30s)
+
+[Phase 3] Director compare + judge 완료 (34s)
 
 [TF-32-V] Blueprint patch #1/3
 
 fix_scope: inplace
 
-사유: [Stage3 partial-fix contract]
-
-사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
-shell.
-
-사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
-
-[TF-32-V] Blueprint patch #1/3 시작
-
-[TF-32-V] Blueprint patch #1/3 완료 (25s)
-
-[TF-32-V] re-audit #1 시작
-
-[TF-32-V] re-audit #1 대기 중... (30s)
-
-[TF-32-V] re-audit #1 대기 중... (1m 0s)
-
-[TF-32-V] re-audit #1 완료 (1m 12s)
-
-[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
-
-fix_scope: inplace
-
-사유: Arc 핵심 사건 모두 반영, 모순 없음, 연속성 양호
-
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 4개 < 5개 (1423자 중)
-
-[Phase 2] 후보 생성 (full_ensemble) 시작
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
-
-[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 12s)
-
-[Phase 3] 연속성 사전검사 시작
-
-[Phase 3] 연속성 사전검사 완료 (0s)
-
-[Phase 3] Director compare + judge 시작
-
-[Phase 3] Director compare + judge 완료 (11s)
-
-[TF-32-V] Blueprint patch #1/3
-
-fix_scope: inplace
-
-사유: 오후 6시 뉴스 시청 후 서재로 가는 부분을 '오후 5시 30분경'으로 수정하여 '오후 면담' 설정과 일치시키고, 서재 앞 도착 시간을 오후
-6시로 조정하여 시간 흐름을 자연스럽게 만들 것
-
-[TF-32-V] Blueprint patch #1/3 시작
-
-[TF-32-V] Blueprint patch #1/3 완료 (25s)
-
-[TF-32-V] re-audit #1 시작
-
-[TF-32-V] re-audit #1 대기 중... (30s)
-
-[TF-32-V] re-audit #1 대기 중... (1m 0s)
-
-[TF-32-V] re-audit #1 완료 (1m 3s)
-
-[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
-
-fix_scope: inplace
-
-사유: Arc 핵심 사건 모두 반영, 연속성 우수, 간결하면서도 효과적
-
-[Phase 2] 후보 생성 (full_ensemble) 시작
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
-
-[Phase 2] 후보 생성 (full_ensemble) 완료 (46s)
-
-[Phase 3] 연속성 사전검사 시작
-
-[Phase 3] 연속성 사전검사 완료 (0s)
-
-[Phase 3] Director compare + judge 시작
-
-[Phase 3] Director compare + judge 완료 (13s)
-
-[TF-32-V] Blueprint patch #1/3
-
-fix_scope: inplace
-
-사유: 이란 핵 협상 관련 구체적 기관명(IAEA 등) 추가, 유가 수치를 더 정확히 명시(현재 60달러, 65달러, 70달러, 75달러, 78달러 언급은   
-양호하나 출처나 시점 보강 필요), 한정호그룹 관련 구체적 부문명이나 자회사명 1-2개 추가하여 anchor 밀도 높이기
-
-[TF-32-V] Blueprint patch #1/3 시작
-
-[TF-32-V] Blueprint patch #1/3 완료 (22s)
-
-[TF-32-V] re-audit #1 시작
-
-[TF-32-V] re-audit #1 대기 중... (30s)
-
-[TF-32-V] re-audit #1 대기 중... (1m 0s)
-
-[TF-32-V] re-audit #1 대기 중... (1m 30s)
-
-[TF-32-V] re-audit #1 완료 (1m 53s)
-
-[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
-
-fix_scope: inplace
-
-사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 감정적 깊이 탁월
-
-[Phase 2] 후보 생성 (full_ensemble) 시작
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
-
-[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 4s)
-
-[Phase 3] 연속성 사전검사 시작
-
-[Phase 3] 연속성 사전검사 완료 (0s)
-
-[Phase 3] Director compare + judge 시작
-
-[Phase 3] Director compare + judge 완료 (10s)
-
-[TF-32-V] Blueprint patch #1/3
-
-fix_scope: inplace
-
-사유: [Stage3 partial-fix contract]
-
-사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
-shell.
-
-사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
-
-[TF-32-V] Blueprint patch #1/3 시작
-
-[TF-32-V] Blueprint patch #1/3 대기 중... (30s)
-
-[TF-32-V] Blueprint patch #1/3 완료 (32s)
-
-[TF-32-V] re-audit #1 시작
-
-[TF-32-V] re-audit #1 대기 중... (30s)
-
-[TF-32-V] re-audit #1 대기 중... (1m 0s)
-
-[TF-32-V] re-audit #1 완료 (1m 0s)
-
-[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
-
-fix_scope: inplace
-
-사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 경미한 시간 참조 문제만 수정 필요
-
-이슈: MAJOR | temporal_deictic | 시간 지시어 위험: ending_hook에 '18년 전' 등 절대 과거 참조
-
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 3개 < 5개 (1891자 중)
-
-[Phase 2] 후보 생성 (full_ensemble) 시작
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
-
-[Phase 2] 후보 생성 (full_ensemble) 완료 (56s)
-
-[Phase 3] 연속성 사전검사 시작
-
-[Phase 3] 연속성 사전검사 완료 (0s)
-
-[Phase 3] Director compare + judge 시작
-
-[Phase 3] Director compare + judge 완료 (10s)
-
-[TF-32-V] Blueprint patch #1/3
-
-fix_scope: inplace
-
-사유: [Stage3 partial-fix contract]
-
-사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
-shell.
-
-사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
-
-[TF-32-V] Blueprint patch #1/3 시작
-
-[TF-32-V] Blueprint patch #1/3 완료 (25s)
-
-[TF-32-V] re-audit #1 시작
-
-[TF-32-V] re-audit #1 대기 중... (30s)
-
-[TF-32-V] re-audit #1 대기 중... (1m 0s)
-
-[TF-32-V] re-audit #1 대기 중... (1m 30s)
-
-[TF-32-V] re-audit #1 대기 중... (2m 0s)
-
-[TF-32-V] re-audit #1 완료 (2m 1s)
-
-[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
-
-fix_scope: inplace
-
-사유: Arc 전술서 완벽 반영, 감정적 몰입도 높음, 연속성 우수
-
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 2개 < 5개 (1312자 중)
-
-[Phase 2] 후보 생성 (full_ensemble) 시작
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
-
-[Phase 2] 후보 생성 (full_ensemble) 완료 (57s)
-
-[Phase 3] 연속성 사전검사 시작
-
-[Phase 3] 연속성 사전검사 완료 (0s)
-
-[Phase 3] Director compare + judge 시작
-
-[Phase 3] Director compare + judge 완료 (10s)
-
-[TF-32-V] Blueprint patch #1/3
-
-fix_scope: inplace
-
-사유: [Stage3 partial-fix contract]
-
-사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
-shell.
-
-사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+사유: ending_state.timeline을 '2006년 3월 1주차 오전 10시'로 수정하고, time_flow 종료 시점도 동일하게 맞춰주세요. 시나리오 내용은   
+그대로 유지하되 시간 설정만 조정하면 됩니다.
+
+사유: [Binding prevalidation] ending_state.timeline 불일치: blueprint '2006년 1월 16일 오전 10시' vs arc '{'year': 2006, 'month': 3,
+'week': 1}'
 
 [TF-32-V] Blueprint patch #1/3 시작
 
@@ -469,175 +379,18 @@ shell.
 
 [TF-32-V] re-audit #1 대기 중... (1m 30s)
 
-[TF-32-V] re-audit #1 완료 (1m 44s)
-
-[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
-
-fix_scope: inplace
-
-사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 강한 훅
-
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 3개 < 5개 (1197자 중)
-
-[Phase 2] 후보 생성 (full_ensemble) 시작
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
-
-[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 9s)
-
-[Phase 3] 연속성 사전검사 시작
-
-[Phase 3] 연속성 사전검사 완료 (0s)
-
-[Phase 3] Director compare + judge 시작
-
-[Phase 3] Director compare + judge 완료 (13s)
-
-[TF-32-V] Blueprint patch #1/3
-
-fix_scope: inplace
-
-사유: [Stage3 partial-fix contract]
-
-사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
-shell.
-
-사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
-
-[TF-32-V] Blueprint patch #1/3 시작
-
-[TF-32-V] Blueprint patch #1/3 완료 (29s)
-
-[TF-32-V] re-audit #1 시작
-
-[TF-32-V] re-audit #1 대기 중... (30s)
-
-[TF-32-V] re-audit #1 완료 (54s)
-
-[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
-
-fix_scope: inplace
-
-사유: Arc 핵심 사건 모두 반영, 연속성 우수, 강한 훅
-
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 3개 < 5개 (1567자 중)
-
-[Phase 2] 후보 생성 (full_ensemble) 시작
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
-
-[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 5s)
-
-[Phase 3] 연속성 사전검사 시작
-
-[Phase 3] 연속성 사전검사 완료 (0s)
-
-[Phase 3] Director compare + judge 시작
-
-[Phase 3] Director compare + judge 완료 (12s)
-
-[TF-32-V] Blueprint patch #1/3
-
-fix_scope: inplace
-
-사유: [Stage3 partial-fix contract]
-
-사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
-shell.
-
-사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
-
-[TF-32-V] Blueprint patch #1/3 시작
-
-[TF-32-V] Blueprint patch #1/3 완료 (26s)
-
-[TF-32-V] re-audit #1 시작
-
-[TF-32-V] re-audit #1 대기 중... (30s)
-
-[TF-32-V] re-audit #1 대기 중... (1m 0s)
-
-[TF-32-V] re-audit #1 대기 중... (1m 30s)
-
 [TF-32-V] re-audit #1 대기 중... (2m 0s)
 
-[TF-32-V] re-audit #1 완료 (2m 10s)
+[TF-32-V] re-audit #1 완료 (2m 3s)
 
 [TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
 
 fix_scope: inplace
 
-사유: Arc 전술서 완벽 반영, 연속성 우수, 강한 훅
+사유: Arc 핵심 사건 충실 반영, 연속성 우수, 액션 중심 전개로 몰입도 높음; binding prevalidation repair required
 
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 2개 < 5개 (1407자 중)
-
-[Phase 2] 후보 생성 (full_ensemble) 시작
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
-
-[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 10s)
-
-[Phase 3] 연속성 사전검사 시작
-
-[Phase 3] 연속성 사전검사 완료 (0s)
-
-[Phase 3] Director compare + judge 시작
-
-[Phase 3] Director compare + judge 완료 (15s)
-
-[TF-32-V] Blueprint patch #1/3
-
-fix_scope: inplace
-
-사유: 후보 2 선택. 다만 마지막 문장 '아직 시장은 몰랐다. 하지만 한시우는 알고 있었다.'를 더 구체적이고 강한 훅으로 수정 필요. 예:    
-'2월 말 65달러, 3월 70달러, 여름 78달러. 18년의 기억이 그에게 완벽한 로드맵을 제공하고 있었다.' 등으로 다음 화 기대감 증폭.
-
-[TF-32-V] Blueprint patch #1/3 시작
-
-[TF-32-V] Blueprint patch #1/3 완료 (27s)
-
-[TF-32-V] re-audit #1 시작
-
-[TF-32-V] re-audit #1 대기 중... (30s)
-
-[TF-32-V] re-audit #1 대기 중... (1m 0s)
-
-[TF-32-V] re-audit #1 완료 (1m 5s)
-
-[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
-
-fix_scope: inplace
-
-사유: Arc 핵심 사건 완전 반영, 모순 없음, 자연스러운 연속성
- ⠋ 제2화 · Blueprint 생성  38m 40s         📊 제2화 Blueprint 결과: PASS_WITH_WARNING (attempt=10, score=85)
-         └─ 선택 전략: dialogue_focused
-         └─ Director 판정: Arc 핵심 사건 완전 반영, 모순 없음, 자연스러운 연속성
-         비교 메모: 후보 1은 Python Advisory 지적대로 직전 화 침실 장면 재사용으로 서사 정체. 후보 2는 Arc 전술서 3개 핵심 사건(가족 
-조찬 태도 변화, 형들 후계 경쟁, 저녁 뉴스 이란 핵 문제) 모두 자연스럽게 반영하며 대화 중심으로 인물 관계 발전 효과적. 후보 3은 감정  
-묘사 풍부하나 20억 자산 구성 내역이 기존 설정 근거 부족하여 수치 모순 위험.
-         보완 포인트: 전체 구조와 내용은 우수하며 단순히 엔딩 훅 문장 하나만 더 임팩트 있게 수정하면 되므로 국소 수정으로 충분       
-         모순 메모: 후보 1: 직전 화에서 이미 소비한 침실 장면을 반복 사용하여 서사 진행성 저해
-         모순 메모: 후보 3: 승마 상금 8억, 광고 수입 7억 등 구체적 수치가 기존 설정과 검증되지 않은 상태로 제시
-      [TF-49] inventory gaps 2: 18년 치 미래 기억, 경제사 정보                                                                       
-         source_anchor: prev_ep=1:성북동 한정호 저택 한시우 침실 | prev_opening=jump_opening | start=서사 시작점
-      [Stage3] blueprint success (verdict=PASS_WITH_WARNING, strategy=dialogue_focused, score=85)
-      [Stage3] ep 2 blueprint save completed
-      [Stage3 Summary] ep 2 | verdict=PASS_WITH_WARNING | score=85 | attempt=10 | prevalidation=0 | binding=0 | TF-49=2 | PinGuard=0 
-         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 0)
-
-   📐 제3화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
- ⠋ 제3화  0s         ⏳ 제3화 Blueprint 생성 시작 (최대 10회 시도)...
-         ⏳ 제3화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=2, semantic_ctx=2663자)
-
-[Phase 1] 제약 수집 시작
-
-[Phase 1] 제약 수집 완료 (0s)
+이슈: MAJOR | arc_timeline | ending_state.timeline 불일치: blueprint '2006년 1월 16일 오전 10시' vs arc '{'year': 2006, 'month': 3, 
+'week': 1}'
 
 [Phase 2] 후보 생성 (full_ensemble) 시작
 
@@ -653,22 +406,18 @@ fix_scope: inplace
 
 [Phase 3] Director compare + judge 시작
 
-[Phase 3] Director compare + judge 완료 (10s)
+[Phase 3] Director compare + judge 완료 (14s)
 
 [TF-32-V] Blueprint patch #1/3
 
 fix_scope: inplace
 
-사유: [Stage3 partial-fix contract]
-
-사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
-shell.
-
-사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+사유: 엔딩 부분에서 '문고리를 잡은 손이 미세하게 떨리고 있었다' 앞에 한시우의 내적 긴장감이나 15억 베팅에 대한 마지막 다짐을 한 문장
+추가하여 감정적 몰입도를 높이세요.
 
 [TF-32-V] Blueprint patch #1/3 시작
 
-[TF-32-V] Blueprint patch #1/3 완료 (28s)
+[TF-32-V] Blueprint patch #1/3 완료 (22s)
 
 [TF-32-V] re-audit #1 시작
 
@@ -678,25 +427,19 @@ shell.
 
 [TF-32-V] re-audit #1 대기 중... (1m 30s)
 
-[TF-32-V] re-audit #1 대기 중... (2m 0s)
-
-[TF-32-V] re-audit #1 완료 (2m 7s)
+[TF-32-V] re-audit #1 완료 (1m 58s)
 
 [TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
 
 fix_scope: inplace
 
-사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 강한 훅
-
-이슈: MAJOR | temporal_deictic | 시간 지시어 위험: 시나리오 말미에 '18년 전' 회상/기억 패턴 감지
-
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 2개 < 5개 (1526자 중)
+사유: Arc 핵심사건 완벽반영, 연속성 우수, 시간흐름 정확
 
 [Phase 2] 후보 생성 (full_ensemble) 시작
 
 [Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
 
-[Phase 2] 후보 생성 (full_ensemble) 완료 (49s)
+[Phase 2] 후보 생성 (full_ensemble) 완료 (51s)
 
 [Phase 3] 연속성 사전검사 시작
 
@@ -704,22 +447,21 @@ fix_scope: inplace
 
 [Phase 3] Director compare + judge 시작
 
-[Phase 3] Director compare + judge 완료 (8s)
+[Phase 3] Director compare + judge 완료 (15s)
 
 [TF-32-V] Blueprint patch #1/3
 
 fix_scope: inplace
 
-사유: [Stage3 partial-fix contract]
+사유: 1) '18년 전 기억 속에서' → '과거 분석 자료에 따르면' 또는 '예상 시나리오상' 등으로 수정하여 절대 시간 참조 제거. 2)
+ending_state.timeline을 '2006년 3월 첫째 주 자정 무렵'으로 수정하여 arc timeline과 일치시키기.
 
-사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
-shell.
-
-사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+사유: [Binding prevalidation] ending_state.timeline 불일치: blueprint '2006년 1월 15일 자정 무렵' vs arc '{'year': 2006, 'month': 3,
+'week': 1}'
 
 [TF-32-V] Blueprint patch #1/3 시작
 
-[TF-32-V] Blueprint patch #1/3 완료 (24s)
+[TF-32-V] Blueprint patch #1/3 완료 (23s)
 
 [TF-32-V] re-audit #1 시작
 
@@ -727,35 +469,20 @@ shell.
 
 [TF-32-V] re-audit #1 대기 중... (1m 0s)
 
-[TF-32-V] re-audit #1 완료 (1m 5s)
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 완료 (1m 57s)
 
 [TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
 
 fix_scope: inplace
 
-사유: 대화 중심 구성으로 Arc 핵심 사건 완벽 반영, 연속성 우수
+사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 국소 수정으로 해결 가능; binding prevalidation repair required
 
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 4개 < 5개 (1340자 중)
+이슈: MAJOR | temporal_deictic | 시간 지시어 위험: 시나리오 말미에 '18년 전' 회상/기억 패턴 감지
 
-[Phase 2] 후보 생성 (full_ensemble) 시작
-
-[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
-
-[Phase 2] 후보 생성 (full_ensemble) 완료 (54s)
-
-[Phase 3] 연속성 사전검사 시작
-
-[Phase 3] 연속성 사전검사 완료 (0s)
-
-[Phase 3] Director compare + judge 시작
-
-[Phase 3] Director compare + judge 완료 (8s)
-
-[QualityGate] effective_score=88 (raw=88, ifc_penalty=0) < threshold -> REJECT
-
-사유: Arc 핵심사건 완벽반영, 모순없음, 강한 훅
-
-[Phase 3] REJECT (score=88) - retry 3/10
+이슈: MAJOR | arc_timeline | ending_state.timeline 불일치: blueprint '2006년 1월 15일 자정 무렵' vs arc '{'year': 2006, 'month': 3, 
+'week': 1}'
 
 [Phase 2] 후보 생성 (full_ensemble) 시작
 
@@ -775,12 +502,15 @@ fix_scope: inplace
 
 fix_scope: inplace
 
-사유: 엔딩에서 '현재 유가는 60달러 선이었다. 20달러 상승은 30% 이상의 급등을 의미했다.' 부분을 한정호의 내적 독백이나 반응으로 명확히
-표현하여 화자를 분명히 하고, 수치 정보의 맥락을 더 자연스럽게 연결하세요.
+사유: timeline을 Arc 기준인 '2006년 3월 첫째 주'로 수정하고, 이란 핵 농축 관련 날짜도 그에 맞춰 조정 필요. '2월 말' → '3월 말' 또는 
+'4월 초'로 변경
+
+사유: [Binding prevalidation] ending_state.timeline 불일치: blueprint '2006년 1월 16일 자정 무렵' vs arc '{'year': 2006, 'month': 3,
+'week': 1}'
 
 [TF-32-V] Blueprint patch #1/3 시작
 
-[TF-32-V] Blueprint patch #1/3 완료 (26s)
+[TF-32-V] Blueprint patch #1/3 완료 (25s)
 
 [TF-32-V] re-audit #1 시작
 
@@ -788,19 +518,75 @@ fix_scope: inplace
 
 [TF-32-V] re-audit #1 대기 중... (1m 0s)
 
-[TF-32-V] re-audit #1 완료 (1m 4s)
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 완료 (1m 47s)
 
 [TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
 
 fix_scope: inplace
 
-사유: 대화 중심 구성으로 핵심 사건 완벽 반영, 연속성 우수
+사유: 대화 중심 구성으로 캐릭터 심리와 갈등을 가장 효과적으로 표현; binding prevalidation repair required
+
+이슈: MAJOR | arc_timeline | ending_state.timeline 불일치: blueprint '2006년 1월 16일 자정 무렵' vs arc '{'year': 2006, 'month': 3, 
+'week': 1}'
 
 [Phase 2] 후보 생성 (full_ensemble) 시작
 
 [Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
 
-[Phase 2] 후보 생성 (full_ensemble) 완료 (57s)
+[Phase 2] 후보 생성 (full_ensemble) 완료 (59s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (9s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: ending_state.timeline을 '2006년 3월 1주차'로 수정하고, time_flow의 종료 시점도 동일하게 맞춰야 함. 시나리오 내용은 그대로     
+유지하되 시간 설정만 조정
+
+사유: [Binding prevalidation] ending_state.timeline 불일치: blueprint '2006년 1월 16일 오전 9시' vs arc '{'year': 2006, 'month': 3, 
+'week': 1}'
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (23s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 대기 중... (2m 0s)
+
+[TF-32-V] re-audit #1 완료 (2m 3s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: 감정적 몰입도가 높고 Arc 핵심 사건을 충실히 반영; binding prevalidation repair required
+
+이슈: MAJOR | arc_timeline | ending_state.timeline 불일치: blueprint '2006년 1월 16일 오전 9시' vs arc '{'year': 2006, 'month': 3,  
+'week': 1}'
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 0s)
 
 [Phase 3] 연속성 사전검사 시작
 
@@ -814,12 +600,11 @@ fix_scope: inplace
 
 fix_scope: inplace
 
-사유: [Stage3 partial-fix contract]
+사유: ending_state.timeline을 '2006년 3월 첫째 주'로 수정하고, time_flow도 이에 맞춰 조정. 시나리오 내 구체적 날짜 표기(1월 16일    
+등)를 '며칠 후' 등 상대적 표현으로 변경하여 arc timeline과 일치시킬 것
 
-사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
-shell.
-
-사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+사유: [Binding prevalidation] ending_state.timeline 불일치: blueprint '2006년 1월 16일 오전 9시 50분' vs arc '{'year': 2006,        
+'month': 3, 'week': 1}'
 
 [TF-32-V] Blueprint patch #1/3 시작
 
@@ -831,21 +616,24 @@ shell.
 
 [TF-32-V] re-audit #1 대기 중... (1m 0s)
 
-[TF-32-V] re-audit #1 완료 (1m 14s)
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 완료 (1m 48s)
 
 [TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
 
 fix_scope: inplace
 
-사유: 감정적 깊이와 Arc 준수도가 가장 우수하며 모순 없음
+사유: 액션 중심 구성으로 Arc 핵심 사건 충실 반영, 연속성 우수; binding prevalidation repair required
 
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 4개 < 5개 (1717자 중)
+이슈: MAJOR | arc_timeline | ending_state.timeline 불일치: blueprint '2006년 1월 16일 오전 9시 50분' vs arc '{'year': 2006, 'month':
+3, 'week': 1}'
 
 [Phase 2] 후보 생성 (full_ensemble) 시작
 
 [Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
 
-[Phase 2] 후보 생성 (full_ensemble) 완료 (55s)
+[Phase 2] 후보 생성 (full_ensemble) 완료 (54s)
 
 [Phase 3] 연속성 사전검사 시작
 
@@ -853,53 +641,276 @@ fix_scope: inplace
 
 [Phase 3] Director compare + judge 시작
 
-[Phase 3] Director compare + judge 완료 (5s)
- ⠹ 제3화 · Blueprint 생성  16m 9s         📊 제3화 Blueprint 결과: PASS (attempt=6, score=92)
-         └─ 선택 전략: emotion_focused
-         └─ Director 판정: 모순 없음, Arc 핵심사건 완벽 반영, 강한 캐릭터 성장
-         비교 메모: 후보1: 감정적 깊이와 캐릭터 변화에 집중, Arc 핵심사건 모두 반영, 모순 없음. 후보2: 액션 중심이지만 Python        
-Advisory에서 다음화 내용 포함 지적, 정지선 위반. 후보3: 대화 중심으로 좋으나 시간 흐름이 과도(5시→8시), 앵커 부족 지적.
-      [TF-49] inventory gaps 2: 18년 치 미래 기억, 경제사 정보                                                                       
-         source_anchor: prev_ep=2:성북동 한정호 저택 거실 | prev_opening=explicit_transition | start=서사 시작점
-      [Stage3] blueprint success (verdict=PASS, strategy=emotion_focused, score=92)
-      [Stage3] ep 3 blueprint save completed
-      [Stage3 Summary] ep 3 | verdict=PASS | score=92 | attempt=6 | prevalidation=0 | binding=0 | TF-49=2 | PinGuard=0
+[Phase 3] Director compare + judge 완료 (12s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: 시간 설정을 2006년 3월 1주차로 수정 필요. '2006년 1월 15일 오후 11시 → 2006년 1월 16일 오전 12시 30분'을 '2006년 3월 6일 오후 
+11시 → 2006년 3월 7일 오전 12시 30분'으로 변경하고, 관련 시간 언급 부분도 일괄 수정.
+
+사유: [Binding prevalidation] ending_state.timeline 불일치: blueprint '2006년 1월 16일 오전 12시 30분' vs arc '{'year': 2006,       
+'month': 3, 'week': 1}'
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (22s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 완료 (1m 52s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: 대화 중심 구성으로 캐릭터 관계와 투자 논리가 가장 자연스럽게 전개됨; binding prevalidation repair required
+
+이슈: MAJOR | arc_timeline | ending_state.timeline 불일치: blueprint '2006년 1월 16일 오전 12시 30분' vs arc '{'year': 2006,        
+'month': 3, 'week': 1}'
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (52s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (11s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: ending_state.timeline을 '2006년 3월 2일 오후 1시'로 수정하고, 시나리오 내 시간 흐름 표현도 '3월 초'로 조정. 이란 핵 농축 관련 
+언급을 '3월 말 예정'으로 변경하여 Arc timeline과 일치시킬 것.
+
+사유: [Binding prevalidation] ending_state.timeline 불일치: blueprint '2006년 2월 20일 오후 1시' vs arc '{'year': 2006, 'month': 3, 
+'week': 1}'
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (20s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 완료 (1m 55s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 시간대만 수정 필요; binding prevalidation repair required
+
+이슈: MAJOR | arc_timeline | ending_state.timeline 불일치: blueprint '2006년 2월 20일 오후 1시' vs arc '{'year': 2006, 'month': 3,  
+'week': 1}'
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 0s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (13s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: 시간 설정을 2006년 3월 1주차로 수정 필요. '2006년 2월 15일 오후 11시 30분 → 2월 16일 오전 9시 30분'을 '2006년 3월 6일 오후    
+11시 30분 → 3월 7일 오전 9시 30분'으로 변경하고, 이란 핵 농축 관련 언급도 '3월 말'로 조정.
+
+사유: [Binding prevalidation] ending_state.timeline 불일치: blueprint '2006년 2월 16일 오전 9시 30분' vs arc '{'year': 2006,        
+'month': 3, 'week': 1}'
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (23s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 완료 (1m 41s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 모순 최소; binding prevalidation repair required
+
+이슈: MAJOR | arc_timeline | ending_state.timeline 불일치: blueprint '2006년 2월 16일 오전 9시 30분' vs arc '{'year': 2006, 'month':
+3, 'week': 1}'
+ ⠏ 제7화 · Blueprint 생성  43m 41s         📊 제7화 Blueprint 결과: PASS_WITH_WARNING (attempt=10, score=85)
+         └─ 선택 전략: action_focused
+         └─ Director 판정: Arc 핵심 사건 완벽 반영, 연속성 우수, 모순 최소; binding prevalidation repair required
+         선택 근거: Arc 핵심 사건 완벽 반영, 연속성 우수, 모순 최소
+         비교 메모: 후보 1은 Arc 전술서의 핵심 사건(WTI 차트 분석, 박성호 PB 상담, 한미증권 VIP룸 이동)을 모두 충실히 반영하고 이전 
+화 연속성이 자연스러우며 강한 엔딩 훅을 제공. 시간 설정만 수정하면 완벽. 후보 2는 감정적 깊이는 있으나 시간 지시어 위험과 시간 설정 
+오류가 심각. 후보 3은 대화 중심으로 생동감 있으나 역시 시간 관련 오류 다수 존재.
+         보완 포인트: 시간 설정만 일괄 변경하면 되는 단순한 국소 수정으로, 시나리오의 구조나 내용 변경 없이 해결 가능
+         모순 메모: 후보 1: 시간 설정이 2006년 2월로 되어 있으나 Arc 전술서에서는 3월 1주차로 설정됨
+         모순 메모: 후보 2: 시간 설정이 2006년 1월로 되어 있고 '18년 전' 표현으로 시간 지시어 위험 존재
+         모순 메모: 후보 3: 시간 설정이 2006년 1월로 되어 있고 '18년 후의 기억' 등 시간 지시어 위험 존재
+         주의: ending_state.timeline 불일치: blueprint '2006년 2월 16일 오전 9시 30분' vs arc '{'year': 2006, 'month': 3, 'week':   
+1}'
+      [TF-49] inventory gaps 8: 18년 치 미래 기억, 경제사 정보, 가죽 서류가방, SW인베스트먼트 법인 등기부등본, 해외 선물 거래 계좌, 
+씨티은행 체크카드, 롤렉스 데이토나, 삼성 애니콜 SGH-D600
+         source_anchor: prev_ep=6:개인 사무실 | prev_opening=explicit_transition | start=본가 개인 서재 | start_items=4
+      [Stage3] blueprint success (verdict=PASS_WITH_WARNING, strategy=action_focused, score=85)
+      [Stage3] ep 7 blueprint save completed
+      [Stage3 Summary] ep 7 | verdict=PASS_WITH_WARNING | score=85 | attempt=10 | prevalidation=1 | binding=1 | TF-49=8 | PinGuard=0
+         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 1)
+
+   📐 제8화 Blueprint 생성 중... (Arc 2, 주인공: 한시우)
+ ⠋ 제8화  0s         ⏳ 제8화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제8화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=7, semantic_ctx=2922자)
+
+[Phase 1] 제약 수집 시작
+
+[Phase 1] 제약 수집 완료 (0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 1s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (11s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: timeline을 2006년 3월 1주차로 수정하고, 시간 흐름을 해당 주차 내 적절한 시간대로 조정. 나머지 내용은 Arc 전술서 요구사항을 잘 
+충족하므로 유지
+
+사유: [Binding prevalidation] ending_state.timeline 불일치: blueprint '2006년 2월 16일 오전 10시 30분' vs arc '{'year': 2006,       
+'month': 3, 'week': 1}'
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (24s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 완료 (1m 6s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: 대화 중심 구성으로 설득전을 가장 충실히 구현, 경미한 시간 설정 오류만 수정 필요; binding prevalidation repair required        
+
+이슈: MAJOR | arc_timeline | ending_state.timeline 불일치: blueprint '2006년 2월 16일 오전 10시 30분' vs arc '{'year': 2006,        
+'month': 3, 'week': 1}'
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (52s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 대기 중... (30s)
+                                                                                                                                    
+🛑 [System] 시스템 종료 시퀀스 가동...
    
-════════════════════════════════════════════════════════════
-   📊 [V60.80] Stage 3 완료 통계
-      성공: 2개 | 실패: 0개
-      통과율: 50.0%
-   ════════════════════════════════════════════════════════════
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                    🎹 V40 SOVEREIGN PRODUCTION                                                    ┃
-┃                                     Genre: 투자 (Investment Fiction) | Project: 000_260412_a                                      ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+============================================================
+  [V44] 글도비 성능 메트릭 리포트
+============================================================
+세션 ID: 20260413_140157
+실행 시간: 0:51:58.482496
 
-👇 Select Command:
-   0. Stage 0: Bible/역설계/스타일 추출 [✅]
-   1. Stage 1: Volume Strategy (선택) [⏭️ 스킵가능]
-   2. Stage 2: Arc Tactical Design (유동) [✅]
-   3. 📐 Stage 3: Episode Blueprinting (Batch Design)
-   4. 🚀 Stage 4: Sovereign Production (Writing)
-   5. Exit
-   6. 🔄 One-Stop: Arc-by-Arc 자동 파이프라인
-   7. 🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)
-   44. ⏪ [ROLLBACK] Stage 4 회차별 롤백 (Episode Rewind)
-   77. 🔥 [WIPE] 원고 생산 기록만 삭제 (Stage 4 초기화)
-   88. 🔥 [RESET] Stage 2 (Arcs) 초기화
-   99. ⏪ Stage 2 정밀 되감기 (Selective Rewind)
+[호출 통계]
+- 총 호출: 83회
+- 성공: 82회 (98.8%)
+- 실패: 1회
+- 총 재시도: 0회
 
-   👉 Choice: 
+[비용 통계]
+- 총 토큰: 1,961,599
+- 예상 비용: $8.6859 USD
 
+[에이전트별 통계]
+  StateExtractor:
+    - 호출: 2회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=41553ms, p50=41553ms, p90=45184ms
+  BlueprintEnsembleGenerator:
+    - 호출: 47회 (성공률: 100.0%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=45729ms, p50=50989ms, p90=58987ms
+  Director:
+    - 호출: 34회 (성공률: 97.1%)
+    - 평균 재시도: 0.00회/호출
+    - 응답시간: avg=9188ms, p50=8437ms, p90=13072ms
 
-
-
-
-
-
-
-
-
-
-
-
+[모델별 통계]
+  vertexai:gemini-2.5-flash:
+    - 토큰: 13,836 (in=9,348, out=4,488)
+    - 비용: $0.0140
+  claude-sonnet-4-6:
+    - 토큰: 1,947,763 (in=1,712,045, out=235,718)
+    - 비용: $8.6719
+============================================================
+   📊 [Metrics] 세션 메트릭 저장: C:\Users\wjjo\Desktop\글도비\projects\000_260412_a\logs\metrics\metrics_20260413_140157.json      
+   💾 [CostDB] Session 잔여 스코프 비용 저장: $8.6859 (1,961,599 tokens, 누적 총비용은 arc/episode 레코드 합산 참조)
+   📈 [PassRate] 통과율 기록 저장: 12건
+   ⚖️ [Director Bias] 유의미한 편향 경고 없음
+   📚 [V51.4] 실패 학습 기록 저장(DB): 0건
+   🎭 [V51.5] 캐릭터 음성 저장: 0명
+   🔮 [V51.6] 복선 저장: 0개 (회수율: 0%)
+   💓 [V60.26] 감정선 기록 저장: 0건
+   [System] VecMemory 연결 해제 완료
+   [System] DB 커밋 완료
+   [System] DB 연결 안전하게 해제됨
+   ✅ [System] 종료 완료
+PS C:\Users\wjjo\Desktop\글도비> 

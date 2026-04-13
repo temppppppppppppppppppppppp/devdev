@@ -1,0 +1,177 @@
+{
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1523,
+    "prevalidation_issue_count": 0,
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 5,
+    "strategy": "dialogue_focused",
+    "total_candidates": 2
+  },
+  "_inventory_gaps": [
+    {
+      "item": "18년 치 미래 기억",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "경제사 정보",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "가죽 서류가방",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "SW인베스트먼트 법인 등기부등본",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "해외 선물 거래 계좌",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "last_score": 88,
+    "quality_gate_failed": true,
+    "quality_risk": true,
+    "revision_required": true
+  },
+  "core_tension": "법인 설립 완료 후 첫 투자 실행과 즉각적인 시장 반응",
+  "end_location": "개인 사무실",
+  "ending_hook": "불과 30분 만에 5억의 수익이 그의 계좌에 찍혀 있었다.",
+  "ending_state": {
+    "location": "테헤란로 개인 사무실",
+    "protagonist_status": "WTI 원유 선물 500만 달러 매수 포지션 보유, 첫 수익 5억 원 달성, 본격적인 투자 활동 시작",
+    "timeline": {
+      "표현": "2006년 1월 15일 오후 11시"
+    }
+  },
+  "ep_num": 6,
+  "episode_number": 6,
+  "expected_ending": "WTI 원유 선물 첫 매수와 이란 뉴스로 인한 즉시 수익 발생",
+  "integrated_scenario": "박성호가 서류 뭉치를 한시우 앞에 밀어냈다. \"등기 완료됐습니다. SW인베스트먼트, 자본금 20억. 대표이사 한시우.\" 한시우가 서류를 훑어보며 고개를 끄덕였다. \"사무실은?\" \"강남 테헤란로 쪽에 괜찮은 곳이 있습니다. 월 500만 원, 보증금 5천만 원. 거래 시스템 설치도 가능하고요.\" 박성호의 목소리에는 여전히 의외함이 섞여 있었다. 막내 도련님이 이렇게까지 구체적으로 준비할 줄은 몰랐던 것이다. \"계약하죠.\" 한시우의 답변은 간결했다. 박성호가 전화를 걸어 임대 계약을 진행하는 동안, 한시우는 창밖을 바라봤다. 시간이 흘러가고 있었다. 이란의 상황은 예상보다 빠르게 전개되고 있었고, 그만큼 기회의 창도 좁아지고 있었다. \"해외 선물 계좌 개설도 완료됐습니다.\" 박성호가 또 다른 서류를 내밀었다. \"홍콩 지점을 통해서 뉴욕 상품거래소 접근이 가능합니다. WTI 원유 선물 거래 준비 끝났고요.\" 한시우가 서류에 서명을 마쳤다. \"자금 이체는?\" \"20억 중 15억을 해외 계좌로 이체 완료했습니다. 나머지 5억은 국내 운영자금으로 남겨뒀고요.\" 박성호의 업무 처리 속도는 예상보다 빨랐다. 한시우가 일어섰다. \"사무실 가보겠습니다.\" 테헤란로의 새 사무실은 30평 규모였다. 창문으로 한강이 보이는 전망이 괜찮았고, 무엇보다 거래 시스템 설치가 완료되어 있었다. 한시우가 컴퓨터 앞에 앉아 로그인했다. 홍콩 지점을 통한 해외 선물 계좌에 15억이 입금되어 있었다. 달러로 환산하면 약 1500만 달러. 개인 투자자로는 적지 않은 규모였다. 한시우가 WTI 원유 선물 차트를 띄웠다. 현재 가격은 배럴당 61.2달러. 그의 기억으로는 2월 말까지 68달러, 3월에는 70달러를 넘어설 예정이었다. 이란 핵 협상 결렬이 촉발제가 될 것이고, 나이지리아 상황까지 겹치면 78달러까지 올라갈 것이었다. 한시우가 매수 주문을 입력했다. 500만 달러 규모, 약 82,000배럴. 레버리지는 10:1로 설정했다. 실제로는 8억 2천만 배럴 상당의 포지션이었다. 엔터키를 눌렀다. 주문이 체결되었다. 박성호는 자신의 사무실에서 한시우의 거래를 모니터링하고 있었다. 500만 달러 규모의 원유 선물 매수. 개인 투자자로는 상당한 규모였다. '정말 달라졌구나.' 박성호가 속으로 중얼거렸다. 예전의 막내 도련님이라면 이런 과감한 투자는 상상도 할 수 없었을 것이다. 그런데 지금의 한시우는 마치 모든 것을 계산한 듯 움직이고 있었다. 시장 타이밍, 투자 규모, 심지어 레버리지 비율까지. '혹시 정말 뭔가 알고 있는 건 아닐까?' 박성호가 고개를 저었다. 그럴 리 없었다. 하지만 막내 도련님의 확신에 찬 모습을 보니 괜히 기대가 되었다. 한시우가 사무실에서 차트를 지켜보고 있을 때였다. 뉴스 속보가 터졌다. '이란, IAEA 사찰단 추가 접근 거부... 핵 협상 사실상 결렬.' 한시우의 눈이 번뜩였다. 시작되었다. WTI 원유 선물 가격이 즉시 반응했다. 61.2달러에서 61.8달러로 0.6달러 상승. 한시우의 포지션에서는 약 50만 달러의 수익이 발생했다. 원화로 환산하면 5억 원. 불과 30분 만의 일이었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "time_shift",
+      "scene_transition_cue"
+    ],
+    "type": "explicit_transition"
+  },
+  "pacing_notes": "",
+  "protagonist_state": {
+    "equipment": [
+      "18년 치 미래 기억",
+      "경제사 정보",
+      "가죽 서류가방",
+      "SW인베스트먼트 법인 등기부등본",
+      "해외 선물 거래 계좌"
+    ],
+    "injuries": "없음",
+    "mood": "결의에 찬 냉정함과 계산된 확신"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "법인 등기 완료 확인",
+        "개인 사무실 임대 계약 체결",
+        "박성호의 협력 의지 재확인"
+      ],
+      "location": "시중은행 PB센터 박성호 사무실",
+      "summary": "SW인베스트먼트 법인 등기가 완료되고 개인 사무실 임대 계약을 체결한다",
+      "tension_level": 4,
+      "title": "법인 등기 완료",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "해외 선물 거래 계좌 개설 완료",
+        "20억 자금 이체 준비",
+        "거래 시스템 접근 권한 확보"
+      ],
+      "location": "시중은행 PB센터 박성호 사무실",
+      "summary": "WTI 원유 선물 거래를 위한 해외 계좌 개설 절차를 완료한다",
+      "tension_level": 6,
+      "title": "해외 선물 계좌 개설",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "개인 사무실 첫 방문",
+        "거래 시스템 로그인",
+        "WTI 원유 선물 5억 규모 매수 주문 실행"
+      ],
+      "location": "새로 임대한 개인 사무실",
+      "summary": "개인 사무실에서 WTI 원유 선물 첫 매수 주문을 실행한다",
+      "tension_level": 8,
+      "title": "첫 매수 주문",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "박성호"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "한시우 거래 모니터링",
+        "막내 도련님 변화에 대한 분석",
+        "향후 협력 방향 고민"
+      ],
+      "location": "시중은행 PB센터 박성호 사무실",
+      "summary": "박성호가 한시우의 첫 거래를 모니터링하며 내심을 드러낸다",
+      "tension_level": 5,
+      "title": "박성호의 관찰",
+      "type": "side_glimpse"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "이란 핵 협상 결렬 속보",
+        "WTI 원유 가격 상승 시작",
+        "한시우의 첫 수익 확인"
+      ],
+      "location": "개인 사무실",
+      "summary": "이란 핵 협상 관련 속보가 나오며 유가가 즉시 반응하기 시작한다",
+      "tension_level": 9,
+      "title": "시장의 움직임",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "시중은행 PB센터 로비",
+  "target_beat": "",
+  "time_flow": "오후 9시 30분 → 오후 11시",
+  "title": "새로운 시작"
+}

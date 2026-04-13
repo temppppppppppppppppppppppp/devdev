@@ -367,6 +367,36 @@ def _material_next_action(snapshot: dict[str, Any]) -> str:
     return "현재 current-truth 문서와 sequential status를 함께 다시 읽고 다음 합법 단위를 확인합니다."
 
 
+def _material_snapshot_defaults(item: QueueItem, snapshot: dict[str, Any]) -> dict[str, Any]:
+    next_unit_type = _stringify(snapshot.get("next_unit_type")).strip()
+    resume_basis = _stringify(snapshot.get("resume_basis")).strip()
+    production_complete = bool(snapshot.get("production_complete"))
+    bi_complete = bool(snapshot.get("bi_complete"))
+    if not snapshot and item.material_stage == "bi_production_complete":
+        next_unit_type = "complete"
+        resume_basis = "registry_deployable_live_pair"
+        production_complete = True
+        bi_complete = True
+    elif not snapshot and item.material_stage == "canon_stage":
+        next_unit_type = "canon_stage"
+        resume_basis = "canon_pitch_anchor"
+    elif not snapshot and item.material_stage:
+        next_unit_type = item.material_stage
+    return {
+        "work_id": _stringify(snapshot.get("work_id")).strip() or item.topic,
+        "material_stage": _material_stage_summary(item, snapshot),
+        "next_unit_type": next_unit_type or "(unknown)",
+        "next_block_id": _stringify(snapshot.get("next_block_id")).strip() or "-",
+        "last_pass_display": snapshot.get("last_sequential_block_pass")
+        if isinstance(snapshot.get("last_sequential_block_pass"), int)
+        else "-",
+        "resume_basis": resume_basis or "-",
+        "production_complete": production_complete,
+        "bi_complete": bi_complete,
+        "updated_at": _stringify(snapshot.get("updated_at")).strip() or "-",
+    }
+
+
 def _material_stage_summary(item: QueueItem, snapshot: dict[str, Any]) -> str:
     stage = _stringify(item.material_stage).strip() or ""
     if stage == "canon_stage":
@@ -408,16 +438,7 @@ def _build_material_task_markdown(
     desired_status: str,
 ) -> str:
     snapshot = _load_material_status_snapshot(item)
-    work_id = _stringify(snapshot.get("work_id")).strip() or item.topic
-    material_stage = _material_stage_summary(item, snapshot)
-    next_unit_type = _stringify(snapshot.get("next_unit_type")).strip() or "(unknown)"
-    next_block_id = _stringify(snapshot.get("next_block_id")).strip() or "-"
-    last_pass = snapshot.get("last_sequential_block_pass")
-    last_pass_display = last_pass if isinstance(last_pass, int) else "-"
-    resume_basis = _stringify(snapshot.get("resume_basis")).strip() or "-"
-    production_complete = bool(snapshot.get("production_complete"))
-    bi_complete = bool(snapshot.get("bi_complete"))
-    updated_at = _stringify(snapshot.get("updated_at")).strip() or "-"
+    view = _material_snapshot_defaults(item, snapshot)
     lines = [
         f"{SYNC_MARKER_PREFIX} topic={item.topic} -->",
         "# 글도비 재료 사이드 생산 스케줄 미러",
@@ -425,22 +446,22 @@ def _build_material_task_markdown(
         "이 카드는 재료 사이드 current-truth를 ClickUp 생산 스케줄에 비춘 읽기 전용 미러입니다.",
         "",
         "## 운영 요약",
-        (f"- 한줄 요약: `{work_id}` 현재 material stage는 `{material_stage}`입니다."),
+        (f"- 한줄 요약: `{view['work_id']}` 현재 material stage는 `{view['material_stage']}`입니다."),
         f"- 현재 판단: {_status_summary(desired_status)}",
-        f"- 다음 액션: {_material_next_action(snapshot)}",
+        f"- 다음 액션: {_material_next_action({'next_unit_type': view['next_unit_type'], 'next_block_id': view['next_block_id']})}",
         "",
         "## 현재 상태",
-        f"- Work ID: `{work_id}`",
-        f"- Material stage: `{material_stage}`",
+        f"- Work ID: `{view['work_id']}`",
+        f"- Material stage: `{view['material_stage']}`",
         f"- Repo status: `{item.status}`",
         f"- Desired ClickUp status: `{desired_status}`",
-        f"- Last sequential block pass: `{last_pass_display}`",
-        f"- Next unit type: `{next_unit_type}`",
-        f"- Next block id: `{next_block_id}`",
-        f"- Resume basis: `{resume_basis}`",
-        f"- Production complete: `{str(production_complete).lower()}`",
-        f"- BI complete: `{str(bi_complete).lower()}`",
-        f"- Updated at: `{updated_at}`",
+        f"- Last sequential block pass: `{view['last_pass_display']}`",
+        f"- Next unit type: `{view['next_unit_type']}`",
+        f"- Next block id: `{view['next_block_id']}`",
+        f"- Resume basis: `{view['resume_basis']}`",
+        f"- Production complete: `{str(view['production_complete']).lower()}`",
+        f"- BI complete: `{str(view['bi_complete']).lower()}`",
+        f"- Updated at: `{view['updated_at']}`",
         "",
         "## 소스 경로",
         f"- Current truth: `{item.canonical_path}`",
@@ -678,21 +699,20 @@ def _collect_field_values(item: QueueItem) -> dict[str, Any]:
 
 def _collect_material_field_values(item: QueueItem) -> dict[str, Any]:
     snapshot = _load_material_status_snapshot(item)
-    material_stage = _material_stage_summary(item, snapshot)
+    view = _material_snapshot_defaults(item, snapshot)
     ops_state = _material_ops_state(item, snapshot)
     return {
-        "Work ID": _stringify(snapshot.get("work_id")).strip() or item.topic,
-        "Material Stage": material_stage,
+        "Work ID": view["work_id"],
+        "Material Stage": view["material_stage"],
         "Ops State": ops_state,
         "Current Truth Path": item.canonical_path,
         "Sequential Status Path": item.temp_path,
-        "Next Unit Type": _stringify(snapshot.get("next_unit_type")).strip() or _stringify(item.material_stage).strip(),
+        "Next Unit Type": view["next_unit_type"],
         "Last Sequential Block Pass": snapshot.get("last_sequential_block_pass"),
         "Next Block ID": _stringify(snapshot.get("next_block_id")).strip(),
-        "Resume Basis": _stringify(snapshot.get("resume_basis")).strip()
-        or ("canon_pitch_anchor" if item.material_stage == "canon_stage" else ""),
-        "Production Complete": bool(snapshot.get("production_complete")),
-        "BI Complete": bool(snapshot.get("bi_complete")),
+        "Resume Basis": view["resume_basis"] if view["resume_basis"] != "-" else "",
+        "Production Complete": view["production_complete"],
+        "BI Complete": view["bi_complete"],
         "Updated At": _stringify(snapshot.get("updated_at")).strip(),
     }
 

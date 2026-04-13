@@ -1,0 +1,197 @@
+{
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=3; sample_anchors=시중은행, 12층, 20억",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1368,
+    "prevalidation_issue_count": 1,
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 5,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "_inventory_gaps": [
+    {
+      "item": "18년 치 미래 기억",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "경제사 정보",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "가죽 서류가방",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "last_score": 85,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "20억 자산 정리와 예상보다 빠른 이란 핵 문제 전개",
+  "end_location": "시중은행 PB센터 로비",
+  "ending_hook": "화면 속 이란 뉴스가 그의 계획을 앞당기고 있었다.",
+  "ending_state": {
+    "location": "시중은행 PB센터 로비",
+    "protagonist_status": "자산 정리 절차 시작, 예상보다 빠른 이란 상황 전개 확인",
+    "timeline": {
+      "표현": "2006년 1월 15일 오후 8시"
+    }
+  },
+  "ep_num": 4,
+  "episode_number": 4,
+  "expected_ending": "투자 준비 착수와 함께 시장 변화 조짐 포착",
+  "integrated_scenario": "한시우는 서재 문을 열고 나오며 시계를 확인했다. 오후 6시 10분. 박성호 과장에게 연락할 시간이었다. 복도를 걸어 자신의 침실로 향하며 가죽 서류가방을 챙겼다. 18년 치 미래가 담긴 머릿속 정보를 정리하며 계획을 점검했다. 2월 말까지 법인 설립을 완료하고, 3월 초 이란 핵 협상 결렬 직후 WTI 원유 선물에 진입해야 했다.\n\n\"PB센터로 가주세요.\" 운전기사에게 지시하며 뒷좌석에 앉았다. 차창 밖 서울 시내가 흘러갔다. 2006년 1월의 서울. 아직 스마트폰도 없고, 소셜미디어도 없던 시절. 정보의 속도가 지금보다 느렸던 때. 그만큼 기회의 창이 더 넓었다.\n\n시중은행 PB센터 12층 상담실에서 박성호 과장이 기다리고 있었다. 40대 중반의 단정한 외모, 10년 넘게 한정호 회장 가문의 자산을 담당해온 베테랑이었다. \"시우님, 갑작스럽게 연락을 주셔서 놀랐습니다. 개인 자산 정리를 원하신다고 하셨는데...\"\n\n\"20억 정도 됩니다.\" 한시우가 단도직입적으로 말했다. \"승마 상금, 후원금, 개인 투자 수익 등을 모두 합쳐서요. 이걸 정리해서 법인을 설립하고 싶습니다.\"\n\n박성호의 눈이 약간 커졌다. 평소 귀여운 막내 도련님의 이미지와는 전혀 다른 모습이었다. \"법인 설립이라... 어떤 사업을 염두에 두고 계신지요?\"\n\n\"투자입니다. 구체적으로는 해외 선물 거래요.\" 한시우가 서류가방에서 메모지를 꺼냈다. \"WTI 원유 선물을 중심으로 포트폴리오를 구성할 예정입니다.\"\n\n박성호는 잠시 말을 잃었다. 지난 10년간 한시우를 지켜봐온 그로서는 믿기 어려운 변화였다. 승마만 하던 막내 도련님이 갑자기 원유 선물을 논하다니. '뭔가 달라졌다. 확실히 달라졌어.' 내심으로 생각하며 자세를 고쳐 앉았다.\n\n\"원유 선물이라... 상당히 위험한 투자처인데, 특별한 이유가 있으신가요?\"\n\n\"이란 문제입니다.\" 한시우의 목소리에 확신이 담겨 있었다. \"핵 협상이 결렬될 가능성이 높습니다. 2월 말에서 3월 초 사이에요. 그때 유가가 급등할 겁니다.\"\n\n박성호는 펜을 들고 메모를 시작했다. 한시우의 말에는 단순한 추측이 아닌, 마치 이미 일어난 일을 말하는 듯한 확신이 있었다. '이 분이 정말 그 막내 도련님이 맞나?' 의심스러웠지만, 고객의 요청을 거부할 이유는 없었다.\n\n\"법인 설립에는 보통 2-3주가 소요됩니다. 해외 선물 거래 계좌는 법인 등기 완료 후에 개설 가능하고요.\"\n\n\"그럼 2월 중순까지는 모든 준비가 완료되겠네요.\" 한시우가 고개를 끄덕였다. \"좋습니다. 진행해주세요.\"\n\n면담이 끝나고 로비로 내려오는 길, 한시우는 TV 화면에 시선이 고정되었다. 뉴스 속보가 흘러가고 있었다. '이란 핵 시설 IAEA 사찰단 접근 거부...' 예상보다 빠른 전개였다. 2월이 아니라 이미 1월부터 조짐이 보이고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "time_shift",
+      "scene_transition_cue"
+    ],
+    "type": "explicit_transition"
+  },
+  "pacing_notes": "",
+  "protagonist_state": {
+    "equipment": [
+      "18년 치 미래 기억",
+      "경제사 정보",
+      "가죽 서류가방"
+    ],
+    "injuries": "없음",
+    "mood": "결의에 찬 냉정함과 약간의 긴장감"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "서재에서 나와 가죽 서류가방 챙기기",
+        "운전기사에게 시중은행 PB센터 지시",
+        "차 안에서 박성호 과장과의 면담 시나리오 점검"
+      ],
+      "location": "성북동 한정호 저택 → 시중은행 PB센터",
+      "summary": "한시우가 자산 정리를 위해 시중은행 PB센터로 향한다",
+      "tension_level": 6,
+      "title": "PB센터로의 출발",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "20억 원 자산 현황 파악",
+        "법인 설립 절차와 소요 시간 확인",
+        "해외 선물 거래 계좌 개설 상담"
+      ],
+      "location": "시중은행 PB센터 상담실",
+      "summary": "박성호 과장과 개인 자산 정리 및 법인 설립에 대해 논의한다",
+      "tension_level": 7,
+      "title": "박성호 과장과의 면담",
+      "type": "dialogue_duel"
+    },
+    "scene_3": {
+      "characters": [
+        "박성호"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "막내 도련님의 달라진 모습에 당황",
+        "구체적인 투자 계획에 대한 의외감",
+        "협력 의지 다짐"
+      ],
+      "location": "시중은행 PB센터 상담실",
+      "summary": "박성호가 한시우의 변화된 모습에 놀라며 내심을 드러낸다",
+      "tension_level": 5,
+      "title": "박성호의 내심",
+      "type": "side_glimpse"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "WTI 원유 선물 투자 의도 표명",
+        "이란 핵 문제 타이밍 언급",
+        "2월 내 포지션 진입 계획 설명"
+      ],
+      "location": "시중은행 PB센터 상담실",
+      "summary": "한시우가 원유 선물 투자 계획을 구체적으로 밝힌다",
+      "tension_level": 8,
+      "title": "투자 계획 구체화",
+      "type": "tension_build"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "",
+      "key_events": [
+        "면담 종료 후 로비로 이동",
+        "TV에서 이란 핵 시설 관련 속보 확인",
+        "예상보다 빠른 전개에 긴장"
+      ],
+      "location": "시중은행 PB센터 로비",
+      "summary": "면담 후 로비에서 이란 관련 속보를 목격한다",
+      "tension_level": 9,
+      "title": "급작스러운 뉴스",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "성북동 한정호 저택 서재",
+  "target_beat": "",
+  "time_flow": "오후 6시 → 오후 8시",
+  "title": "자산 정리의 시작"
+}

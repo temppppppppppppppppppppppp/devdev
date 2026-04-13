@@ -17,6 +17,7 @@ REGISTRY_JSON = ROOT / "material_ssot" / "00_governance" / "production-pair-oper
 DEFAULT_OUTPUT_PATH = ROOT / "docs" / "temp" / "material-queue-state.json"
 DEFAULT_CANON_ROOT = CANON_ROOT
 DEFAULT_REGISTRY_JSON = REGISTRY_JSON
+DEPLOYABLE_GREENPLUS_CLOSEOUT = "deployable_greenplus_certified_manual_closeout"
 
 
 @dataclass(slots=True)
@@ -58,18 +59,23 @@ def _current_registry_json() -> Path:
     return ROOT / "material_ssot" / "00_governance" / "production-pair-operational-registry-v1.json"
 
 
+def _iter_registry_rows() -> list[dict[str, Any]]:
+    registry_json = _current_registry_json()
+    if not registry_json.is_file():
+        return []
+    payload = _read_json(registry_json)
+    if not isinstance(payload, dict):
+        return []
+    return [row for row in payload.get("pairs", []) if isinstance(row, dict)]
+
+
 def _excluded_canon_work_ids() -> set[str]:
     excluded: set[str] = set()
-    registry_json = _current_registry_json()
-    if registry_json.is_file():
-        payload = _read_json(registry_json)
-        for row in payload.get("pairs", []) if isinstance(payload, dict) else []:
-            if not isinstance(row, dict):
-                continue
-            work_id = str(row.get("work_id") or "").strip()
-            benchmark_alias = str(row.get("benchmark_alias") or "").strip().upper()
-            if work_id and benchmark_alias == "RED":
-                excluded.add(work_id)
+    for row in _iter_registry_rows():
+        work_id = str(row.get("work_id") or "").strip()
+        benchmark_alias = str(row.get("benchmark_alias") or "").strip().upper()
+        if work_id and benchmark_alias == "RED":
+            excluded.add(work_id)
     return excluded
 
 
@@ -102,6 +108,49 @@ def _status_from_snapshot(snapshot: dict[str, Any]) -> tuple[str, str, str]:
 
 def _canon_only_status() -> tuple[str, str, str]:
     return "pending", "front_active", "canon_stage"
+
+
+def _first_live_pair_path(root: Path, work_id: str) -> Path | None:
+    if not root.is_dir():
+        return None
+    for path in sorted(root.glob(f"*{work_id}*.json")):
+        if "_quarantine" in path.parts or "phase0" in path.parts or "preprocess" in path.parts:
+            continue
+        return path
+    return None
+
+
+def _registry_truth_path(row: dict[str, Any], work_id: str, bi_path: Path) -> Path:
+    artifact_candidates = [
+        str(row.get("benchmark_artifact") or "").strip(),
+        str((row.get("opening_pacing_triage") or {}).get("artifact") or "").strip(),
+    ]
+    for raw_path in artifact_candidates:
+        if not raw_path:
+            continue
+        candidate = ROOT / Path(raw_path)
+        if candidate.is_file():
+            return candidate
+    return _latest_live_status_path(work_id) or bi_path
+
+
+def _registry_completed_items() -> dict[str, Path]:
+    completed: dict[str, Path] = {}
+    for row in _iter_registry_rows():
+        work_id = str(row.get("work_id") or "").strip()
+        if not work_id or bool(row.get("reference_only")):
+            continue
+        benchmark_alias = str(row.get("benchmark_alias") or "").strip().upper()
+        opening = row.get("opening_pacing_triage") if isinstance(row.get("opening_pacing_triage"), dict) else {}
+        opening_use = str(opening.get("opening_exemplar_use") or "").strip()
+        if benchmark_alias != "GREENPLUS" or opening_use != DEPLOYABLE_GREENPLUS_CLOSEOUT:
+            continue
+        tr_path = _first_live_pair_path(ROOT / "treatments", work_id)
+        bi_path = _first_live_pair_path(ROOT / "bible", work_id)
+        if tr_path is None or bi_path is None:
+            continue
+        completed[work_id] = _registry_truth_path(row, work_id, bi_path)
+    return completed
 
 
 def collect_material_queue_items(preprocess_root: Path = PREPROCESS_ROOT) -> list[MaterialQueueItem]:
@@ -145,6 +194,23 @@ def collect_material_queue_items(preprocess_root: Path = PREPROCESS_ROOT) -> lis
             status=status,
             queue_role=queue_role,
             material_stage=material_stage,
+        )
+
+    for work_id, truth_path in _registry_completed_items().items():
+        existing = items_by_work_id.get(work_id)
+        if existing is not None:
+            if existing.status == "completed":
+                continue
+            if existing.sequential_status_path is not None and existing.status == "in_progress":
+                continue
+        items_by_work_id[work_id] = MaterialQueueItem(
+            work_id=work_id,
+            sequential_status_path=None,
+            live_status_path=None,
+            canon_path=truth_path,
+            status="completed",
+            queue_role="historical_backing",
+            material_stage="bi_production_complete",
         )
 
     items = list(items_by_work_id.values())

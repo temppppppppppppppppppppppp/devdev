@@ -158,3 +158,60 @@ def test_build_material_queue_payload_active_only_excludes_completed(tmp_path):
         module.REGISTRY_JSON = old_registry_json
 
     assert [item["topic"] for item in payload["items"]] == ["empire_youngest_allsector"]
+
+
+def test_build_material_queue_payload_promotes_registry_backed_live_pair_to_completed(tmp_path):
+    preprocess_root = tmp_path / "treatments" / "preprocess"
+    canon_root = tmp_path / "material_ssot" / "20_pitch" / "canon"
+    docs_root = tmp_path / "docs" / "2026-04-12"
+    canon_root.mkdir(parents=True, exist_ok=True)
+    docs_root.mkdir(parents=True, exist_ok=True)
+
+    work_id = "투자물_골든_카나리아 테스트_canonical_v1"
+    (canon_root / f"{work_id}.md").write_text("# canon\n", encoding="utf-8")
+    (tmp_path / "treatments" / f"01_tr_{work_id}.json").parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / "treatments" / f"01_tr_{work_id}.json").write_text("{}\n", encoding="utf-8")
+    (tmp_path / "bible" / f"01_bi_{work_id}.json").parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / "bible" / f"01_bi_{work_id}.json").write_text("{}\n", encoding="utf-8")
+    closeout_path = docs_root / "golden_canary_deployable_greenplus_closeout.md"
+    closeout_path.write_text("# closeout\n", encoding="utf-8")
+
+    registry_path = tmp_path / "material_ssot" / "00_governance" / "production-pair-operational-registry-v1.json"
+    _write_json(
+        registry_path,
+        {
+            "pairs": [
+                {
+                    "work_id": work_id,
+                    "reference_only": False,
+                    "benchmark_alias": "GREENPLUS",
+                    "benchmark_artifact": "docs/2026-04-12/golden_canary_deployable_greenplus_closeout.md",
+                    "opening_pacing_triage": {
+                        "opening_exemplar_use": "deployable_greenplus_certified_manual_closeout",
+                        "artifact": "docs/2026-04-12/golden_canary_deployable_greenplus_closeout.md",
+                    },
+                }
+            ]
+        },
+    )
+
+    from scripts import build_material_queue_state as module
+
+    old_root = module.ROOT
+    old_canon_root = module.CANON_ROOT
+    old_registry_json = module.REGISTRY_JSON
+    try:
+        module.ROOT = tmp_path
+        module.CANON_ROOT = canon_root
+        module.REGISTRY_JSON = registry_path
+        payload = build_material_queue_payload(preprocess_root)
+    finally:
+        module.ROOT = old_root
+        module.CANON_ROOT = old_canon_root
+        module.REGISTRY_JSON = old_registry_json
+
+    assert [item["topic"] for item in payload["items"]] == [work_id]
+    assert payload["items"][0]["status"] == "completed"
+    assert payload["items"][0]["queue_role"] == "historical_backing"
+    assert payload["items"][0]["material_stage"] == "bi_production_complete"
+    assert payload["items"][0]["canonical_path"].endswith("golden_canary_deployable_greenplus_closeout.md")

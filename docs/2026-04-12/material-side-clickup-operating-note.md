@@ -42,6 +42,7 @@ Include by default:
 - `canon stage`
 - `TR/BI production stage`
 - `BI production complete`
+- registry-backed `deployable GREENPLUS` live pairs with finished live `TR/BI` artifacts
 
 Current stage mapping:
 
@@ -50,6 +51,8 @@ Current stage mapping:
 - live sequential production in flight, including `bi_handoff`:
   - ClickUp status `in progress`
 - live pair complete / BI complete:
+  - ClickUp status `complete`
+- registry-backed deployable closeout with finished live `TR/BI` pair, even without preprocess sequential snapshot:
   - ClickUp status `complete`
 
 Exclude by default:
