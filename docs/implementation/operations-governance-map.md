@@ -74,6 +74,21 @@ Specific-over-general rule:
 - Optional queue state files must follow `docs/implementation/temp-queue-state-contract-v1.json`.
 - During active live-run-merge mode, canonical closure claims and `docs/temp/` execution mirrors must wait until the post-run merged audit passes the normal save gate.
 
+## 6A. Polaris Future-State Anchor Rule
+- A canonical dated `Polaris` note may exist as a future-state anchor for a subsystem or for cross-stage direction.
+- A `Polaris` note is not a second SSOT and does not outrank `AGENTS.md`, harnesses, canonical execution docs, or live evidence.
+- Use `Polaris` notes to align:
+  - future-state vocabulary
+  - migration tranche naming
+  - queue compaction intent
+  - stage-boundary ownership
+- Do not use a `Polaris` note to:
+  - override a current active roadmap
+  - force mid-run queue cleanup
+  - justify skipping the live-run merge gate
+  - replace canonical execution SSOTs with architecture prose
+- If a `Polaris` note conflicts with live code or completed live evidence, live evidence wins and the `Polaris` note must be revised later.
+
 ## 7. Conflict Resolution Examples
 - If `CLAUDE.md` says one thing and `AGENTS.md` says another, `AGENTS.md` wins.
 - If a temp roadmap differs from the canonical roadmap, fix the canonical roadmap and refresh the temp mirror.

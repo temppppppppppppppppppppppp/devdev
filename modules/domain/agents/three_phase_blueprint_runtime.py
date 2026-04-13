@@ -22,9 +22,30 @@ if TYPE_CHECKING:
     from .three_phase_blueprint_generator import ThreePhaseBlueprintGenerator
 
 _STAGE3_REGENERATE_ONLY_BINDING_CATEGORIES = {
-    "opening_anchor",
     "scene_completeness",
     "episode_progression",
+    "arc_compliance",
+    "arc_timeline",
+    "capital_unit",
+    "dead_npc",
+    "fact_lock_item",
+    "fact_lock_location",
+    "fact_lock_provenance",
+    "opening_anchor",
+    "mission_clarity",
+    "timeline_specificity",
+    "protagonist_state",
+    "fact_lock_institution",
+    "tactical_semantic_fidelity",
+    "opening_transition",
+}
+_STAGE3_LOCAL_PATCH_TARGET_KINDS = {
+    "dialogue",
+    "entity_ref",
+    "field_value",
+    "local_phrase",
+    "local_sentence",
+    "scene_block",
 }
 
 
@@ -39,9 +60,14 @@ class _ThreePhaseRetryState:
     prev_selection_reason: str = ""
     prev_validation_warnings: list[str] = field(default_factory=list)
     prev_fix_scope: str = ""
+    prev_fix_pack: dict = field(default_factory=dict)
+    prev_repair_contract: dict = field(default_factory=dict)
+    prev_scope_authority: dict = field(default_factory=dict)
+    prev_local_patch_gate: dict = field(default_factory=dict)
     prev_reject_origin: str = ""
     prev_quality_gate_reject: bool = False
     prev_reject_signature: str = ""
+    prev_binding_issue_count: int = 0
     repeated_reject_score_streak: int = 0
     repeated_reject_signature_streak: int = 0
     inplace_reject_streak: int = 0
@@ -180,6 +206,8 @@ def _build_stage3_retry_plateau_reasons(retry_state: _ThreePhaseRetryState) -> l
         reasons.append("pass_with_fix_unresolved")
     if reject_origin == "quality_gate_reject" or bool(retry_state.prev_quality_gate_reject):
         reasons.append("quality_gate_reopen")
+    if retry_state.prev_binding_issue_count > 0:
+        reasons.append(f"binding_prevalidation_reopen:{retry_state.prev_binding_issue_count}")
     if (
         retry_state.inplace_reject_streak >= 2
         and retry_state.repeated_reject_score_streak >= 2
@@ -373,6 +401,119 @@ def _normalize_stage3_scope_authority(raw_payload: object) -> dict:
     elif fix_scope and authoritative_fix_scope:
         normalized["widened"] = fix_scope.lower() != authoritative_fix_scope.lower()
     return normalized
+
+
+def _build_stage3_local_patch_gate(
+    *,
+    fix_scope: str = "",
+    fix_pack: dict | None = None,
+    repair_contract: dict | None = None,
+    scope_authority: dict | None = None,
+) -> dict:
+    normalized_fix_scope = str(fix_scope or "").strip().lower()
+    normalized_fix_pack = dict(fix_pack or {}) if isinstance(fix_pack, dict) else {}
+    normalized_repair_contract = dict(repair_contract or {}) if isinstance(repair_contract, dict) else {}
+    normalized_scope_authority = dict(scope_authority or {}) if isinstance(scope_authority, dict) else {}
+    patch_targets = list(normalized_fix_pack.get("patch_targets") or [])
+    patch_target_records = list(normalized_fix_pack.get("patch_target_records") or [])
+    target_kind = str(
+        normalized_fix_pack.get("target_kind")
+        or normalized_repair_contract.get("target_kind")
+        or (patch_target_records[0].get("target_kind") if patch_target_records and isinstance(patch_target_records[0], dict) else "")
+        or ""
+    ).strip().lower()
+    authoritative_fix_scope = str(
+        normalized_scope_authority.get("authoritative_fix_scope")
+        or normalized_repair_contract.get("authoritative_fix_scope")
+        or ""
+    ).strip().lower()
+    repair_scope = str(
+        normalized_scope_authority.get("repair_scope")
+        or normalized_repair_contract.get("repair_scope")
+        or normalized_scope_authority.get("fix_scope")
+        or normalized_repair_contract.get("fix_scope")
+        or ""
+    ).strip().lower()
+    resolved_fix_scope = authoritative_fix_scope or repair_scope or normalized_fix_scope
+    repair_contract_present = bool(
+        normalized_repair_contract
+        and (
+            str(normalized_repair_contract.get("authoritative_fix_scope", "") or "").strip()
+            or str(normalized_repair_contract.get("repair_scope", "") or "").strip()
+            or str(normalized_repair_contract.get("target_kind", "") or "").strip()
+            or str(normalized_repair_contract.get("subtype", "") or "").strip()
+            or list(normalized_repair_contract.get("subtypes") or [])
+        )
+    )
+    scope_authority_present = bool(
+        normalized_scope_authority
+        and (
+            str(normalized_scope_authority.get("authoritative_fix_scope", "") or "").strip()
+            or str(normalized_scope_authority.get("repair_scope", "") or "").strip()
+            or isinstance(normalized_scope_authority.get("widened"), bool)
+        )
+    )
+    contract_present = bool(normalized_fix_pack or repair_contract_present or scope_authority_present)
+    patch_target_count = max(len(patch_targets), len(patch_target_records))
+
+    if contract_present:
+        if resolved_fix_scope != "inplace":
+            reason = f"contract_scope:{resolved_fix_scope or 'missing'}"
+            return {
+                "contract_present": True,
+                "local_patch_ready": False,
+                "resolved_fix_scope": resolved_fix_scope,
+                "authoritative_fix_scope": authoritative_fix_scope,
+                "repair_scope": repair_scope,
+                "target_kind": target_kind,
+                "patch_target_count": patch_target_count,
+                "reason": reason,
+            }
+        if target_kind not in _STAGE3_LOCAL_PATCH_TARGET_KINDS:
+            reason = f"unsupported_target_kind:{target_kind or 'missing'}"
+            return {
+                "contract_present": True,
+                "local_patch_ready": False,
+                "resolved_fix_scope": resolved_fix_scope,
+                "authoritative_fix_scope": authoritative_fix_scope,
+                "repair_scope": repair_scope,
+                "target_kind": target_kind,
+                "patch_target_count": patch_target_count,
+                "reason": reason,
+            }
+        if patch_target_count <= 0:
+            return {
+                "contract_present": True,
+                "local_patch_ready": False,
+                "resolved_fix_scope": resolved_fix_scope,
+                "authoritative_fix_scope": authoritative_fix_scope,
+                "repair_scope": repair_scope,
+                "target_kind": target_kind,
+                "patch_target_count": 0,
+                "reason": "missing_patch_targets",
+            }
+        return {
+            "contract_present": True,
+            "local_patch_ready": True,
+            "resolved_fix_scope": resolved_fix_scope,
+            "authoritative_fix_scope": authoritative_fix_scope,
+            "repair_scope": repair_scope,
+            "target_kind": target_kind,
+            "patch_target_count": patch_target_count,
+            "reason": "contract_local_patch_ready",
+        }
+
+    legacy_local_ready = normalized_fix_scope not in {"partial", "full"}
+    return {
+        "contract_present": False,
+        "local_patch_ready": legacy_local_ready,
+        "resolved_fix_scope": normalized_fix_scope,
+        "authoritative_fix_scope": authoritative_fix_scope,
+        "repair_scope": repair_scope,
+        "target_kind": target_kind,
+        "patch_target_count": patch_target_count,
+        "reason": "legacy_scope_fallback" if legacy_local_ready else f"legacy_scope:{normalized_fix_scope or 'missing'}",
+    }
 
 
 def _build_stage3_fix_pack_guidance(fix_pack: dict | None) -> str:
@@ -708,6 +849,21 @@ class ThreePhaseBlueprintRuntime:
             parts.append(f"[이전 REJECT 피드백]\n{retry_state.prev_reject_feedback}")
         if retry_state.prev_fix_scope:
             parts.append(f"[Director fix_scope]\n{retry_state.prev_fix_scope}")
+        if retry_state.prev_local_patch_gate:
+            local_patch_gate = retry_state.prev_local_patch_gate
+            parts.append(
+                "[Local patch gate]\n"
+                + " | ".join(
+                    part
+                    for part in (
+                        f"scope={str(local_patch_gate.get('resolved_fix_scope', '') or '').strip()}",
+                        f"target_kind={str(local_patch_gate.get('target_kind', '') or '').strip()}",
+                        f"ready={bool(local_patch_gate.get('local_patch_ready', False))}",
+                        f"reason={str(local_patch_gate.get('reason', '') or '').strip()}",
+                    )
+                    if part and not part.endswith("=")
+                )
+            )
         if retry_state.prev_validation_warnings:
             warning_lines = "\n".join(f"- {warning}" for warning in retry_state.prev_validation_warnings[:10])
             parts.append(f"[이전 검증 경고]\n{warning_lines}")
@@ -895,25 +1051,51 @@ class ThreePhaseBlueprintRuntime:
         rejected_strategy = retry_state.prev_reject_strategy if retry > 0 else ""
         single_strategy = ""
         fix_scope = str(retry_state.prev_fix_scope or "").strip().lower()
+        local_patch_gate = _build_stage3_local_patch_gate(
+            fix_scope=fix_scope,
+            fix_pack=retry_state.prev_fix_pack,
+            repair_contract=retry_state.prev_repair_contract,
+            scope_authority=retry_state.prev_scope_authority,
+        )
+        resolved_fix_scope = str(local_patch_gate.get("resolved_fix_scope", "") or fix_scope).strip().lower()
         inplace_threshold = int(_threshold("patch_mode.inplace_below", PatchModeThresholds.INPLACE))
         inplace_plateau_reasons = _build_stage3_retry_plateau_reasons(retry_state)
 
-        if retry > 0 and fix_scope == "partial" and rejected_strategy:
+        if retry > 0 and resolved_fix_scope == "partial" and rejected_strategy:
             single_strategy = rejected_strategy
 
-        inplace_patch_eligible = (
+        inplace_retry_candidate = (
             retry > 0
-            and fix_scope not in ("partial", "full")
             and retry_state.previous_best is not None
             and retry_state.prev_reject_score >= inplace_threshold
+            and (
+                resolved_fix_scope == "inplace"
+                or (
+                    not local_patch_gate.get("contract_present")
+                    and bool(local_patch_gate.get("local_patch_ready", False))
+                )
+            )
         )
-        use_inplace_patch = inplace_patch_eligible and not inplace_plateau_reasons
-        if inplace_patch_eligible and inplace_plateau_reasons:
+        inplace_patch_eligible = inplace_retry_candidate and bool(local_patch_gate.get("local_patch_ready", False))
+        contract_block_reason = ""
+        if (
+            inplace_retry_candidate
+            and local_patch_gate.get("contract_present")
+            and not local_patch_gate.get("local_patch_ready", False)
+        ):
+            gate_reason = str(local_patch_gate.get("reason", "") or "").strip()
+            if gate_reason:
+                contract_block_reason = f"local_patch_contract:{gate_reason}"
+        block_reasons = list(inplace_plateau_reasons)
+        if contract_block_reason and contract_block_reason not in block_reasons:
+            block_reasons.append(contract_block_reason)
+        use_inplace_patch = inplace_patch_eligible and not block_reasons
+        if inplace_retry_candidate and block_reasons:
             logging.info(
                 "[PF-EE] skip Stage3 inplace patch retry; reasons=%s",
-                ", ".join(inplace_plateau_reasons),
+                ", ".join(block_reasons),
             )
-            pipeline_result["inplace_plateau_block_reasons"] = list(inplace_plateau_reasons)
+            pipeline_result["inplace_plateau_block_reasons"] = list(block_reasons)
             owner._operator_log(
                 "[Phase 2] inplace patch blocked; switch back to full_ensemble",
                 meta={
@@ -922,9 +1104,9 @@ class ThreePhaseBlueprintRuntime:
                     "max_retries": max_retries + 1,
                     "mode": "full_ensemble",
                     "inplace_blocked": True,
-                    "inplace_block_reasons": list(inplace_plateau_reasons),
+                    "inplace_block_reasons": list(block_reasons),
                     "prev_reject_score": retry_state.prev_reject_score,
-                    "fix_scope": fix_scope or "",
+                    "fix_scope": resolved_fix_scope or "",
                 },
             )
         if use_inplace_patch:
@@ -933,7 +1115,7 @@ class ThreePhaseBlueprintRuntime:
                 (
                     f"[Phase 2] patch mode 진입 "
                     f"(retry={retry + 1}/{max_retries + 1}, prev_score={retry_state.prev_reject_score}, "
-                    f"fix_scope={fix_scope or '-'})"
+                    f"fix_scope={resolved_fix_scope or '-'})"
                 ),
                 meta={
                     "phase": "generate",
@@ -941,7 +1123,7 @@ class ThreePhaseBlueprintRuntime:
                     "max_retries": max_retries + 1,
                     "mode": "inplace_patch",
                     "prev_reject_score": retry_state.prev_reject_score,
-                    "fix_scope": fix_scope or "",
+                    "fix_scope": resolved_fix_scope or "",
                 },
             )
             try:
@@ -1132,29 +1314,37 @@ class ThreePhaseBlueprintRuntime:
             validation_result=validation_result,
         )
         if validation.verdict == "PASS" and verdict == "REJECT":
-            validation_result = dict(validation_result or {})
-            validation_result.setdefault("reject_origin", "quality_gate_reject")
-            validation_result["quality_gate_score"] = int(_threshold("scoring.quality_gate_score", 90))
-            validation_result["quality_gate_effective_score"] = effective_score
-            validation_result["quality_gate_raw_score"] = validation.score
-            self._log_operator_retry_context(
-                title=(
-                    f"[QualityGate] effective_score={effective_score} "
-                    f"(raw={validation.score}, ifc_penalty={ifc_penalty}) < threshold -> REJECT"
-                ),
-                level="warning",
-                meta={
-                    "phase": "validate",
-                    "score": effective_score,
-                    "raw_score": validation.score,
-                    "ifc_penalty": ifc_penalty,
-                    "error_category": "quality_gate",
-                },
-                feedback=validation.validation_result.get("verdict_reason", "")
-                or validation.validation_result.get("feedback", ""),
-                issues=validation.validation_result.get("issues", []),
-                fix_scope=str(validation.validation_result.get("fix_scope", "") or ""),
+            verdict, validation_result = self._annotate_or_accept_terminal_quality_gate_result(
+                validation_verdict=validation.verdict,
+                verdict=verdict,
+                validation_result=validation_result,
+                effective_score=effective_score,
+                raw_score=validation.score,
+                ifc_penalty=ifc_penalty,
+                retry=retry,
+                max_retries=max_retries,
+                best_blueprint=validation.best_blueprint,
+                pipeline_result=pipeline_result,
             )
+            if verdict == "REJECT":
+                self._log_operator_retry_context(
+                    title=(
+                        f"[QualityGate] effective_score={effective_score} "
+                        f"(raw={validation.score}, ifc_penalty={ifc_penalty}) < threshold -> REJECT"
+                    ),
+                    level="warning",
+                    meta={
+                        "phase": "validate",
+                        "score": effective_score,
+                        "raw_score": validation.score,
+                        "ifc_penalty": ifc_penalty,
+                        "error_category": "quality_gate",
+                    },
+                    feedback=validation.validation_result.get("verdict_reason", "")
+                    or validation.validation_result.get("feedback", ""),
+                    issues=validation.validation_result.get("issues", []),
+                    fix_scope=str(validation.validation_result.get("fix_scope", "") or ""),
+                )
 
         return _ThreePhasePhase3ValidationResult(
             best_blueprint=validation.best_blueprint,
@@ -1252,6 +1442,10 @@ class ThreePhaseBlueprintRuntime:
         retry_state.prev_reject_feedback = continuity_feedback
         retry_state.prev_reject_score = 0
         retry_state.prev_fix_scope = ""
+        retry_state.prev_fix_pack = {}
+        retry_state.prev_repair_contract = {}
+        retry_state.prev_scope_authority = {}
+        retry_state.prev_local_patch_gate = {}
         retry_state.prev_selection_reason = continuity_feedback
         retry_state.prev_validation_warnings = [continuity_feedback]
         if best_blueprint:
@@ -1444,6 +1638,14 @@ class ThreePhaseBlueprintRuntime:
         scope_authority = _normalize_stage3_scope_authority(validation_result)
         if scope_authority:
             pipeline_result["phases"]["validate"]["scope_authority"] = scope_authority
+        local_patch_gate = _build_stage3_local_patch_gate(
+            fix_scope=str(validation_result.get("fix_scope", "") or ""),
+            fix_pack=normalized_fix_pack or advisory_fix_pack,
+            repair_contract=repair_contract,
+            scope_authority=scope_authority,
+        )
+        if isinstance(local_patch_gate, dict) and local_patch_gate:
+            pipeline_result["phases"]["validate"]["local_patch_gate"] = dict(local_patch_gate)
         partial_fix_eval = validation_result.get("partial_fix_eval")
         if isinstance(partial_fix_eval, dict) and partial_fix_eval:
             pipeline_result["phases"]["validate"]["partial_fix_eval"] = dict(partial_fix_eval)
@@ -1541,6 +1743,96 @@ class ThreePhaseBlueprintRuntime:
             return "REJECT"
         return verdict
 
+    @staticmethod
+    def _is_quality_gate_terminal_acceptance(validation_result: dict | None) -> bool:
+        return bool(isinstance(validation_result, dict) and validation_result.get("quality_gate_terminal_acceptance"))
+
+    def _annotate_or_accept_terminal_quality_gate_result(
+        self,
+        *,
+        validation_verdict: str,
+        verdict: str,
+        validation_result: dict | None,
+        effective_score: int,
+        raw_score: int,
+        ifc_penalty: int,
+        retry: int,
+        max_retries: int,
+        best_blueprint: dict | None,
+        pipeline_result: dict,
+    ) -> tuple[str, dict]:
+        if validation_verdict != "PASS" or verdict != "REJECT":
+            return verdict, validation_result or {}
+
+        normalized_validation = dict(validation_result or {})
+        quality_gate_score = int(_threshold("scoring.quality_gate_score", 90))
+        normalized_validation.setdefault("reject_origin", "quality_gate_reject")
+        normalized_validation["quality_gate_score"] = quality_gate_score
+        normalized_validation["quality_gate_effective_score"] = effective_score
+        normalized_validation["quality_gate_raw_score"] = raw_score
+
+        validate_phase = pipeline_result.setdefault("phases", {}).setdefault("validate", {})
+        validate_phase["quality_gate_score"] = quality_gate_score
+        validate_phase["quality_gate_effective_score"] = effective_score
+        validate_phase["quality_gate_raw_score"] = raw_score
+
+        terminal_retry = retry >= max_retries
+        if terminal_retry and best_blueprint and effective_score >= PatchModeThresholds.REWRITE:
+            normalized_validation["quality_gate_terminal_acceptance"] = True
+            normalized_validation["quality_gate_terminal_acceptance_reason"] = "terminal_below_threshold_warning"
+            normalized_validation["quality_gate_soft_override"] = True
+            normalized_validation["quality_risk"] = True
+            normalized_validation["revision_required"] = True
+            normalized_validation["verdict"] = "PASS_WITH_WARNING"
+            normalized_validation["decision"] = "PASS_WITH_WARNING"
+
+            validate_phase["verdict"] = "PASS_WITH_WARNING"
+            validate_phase["quality_risk"] = True
+            validate_phase["revision_required"] = True
+            validate_phase["quality_gate_terminal_acceptance"] = {
+                "decision": "promote_to_pass_with_warning",
+                "effective_score": effective_score,
+                "quality_gate_score": quality_gate_score,
+                "raw_score": raw_score,
+                "ifc_penalty": ifc_penalty,
+                "retry_index": retry + 1,
+                "max_retries": max_retries + 1,
+            }
+
+            pipeline_result["quality_gate_failed"] = True
+            pipeline_result["quality_risk"] = True
+            pipeline_result["revision_required"] = True
+
+            logging.warning(
+                "[QualityGate] terminal PASS below threshold (%d < %d) on retry %d/%d -> accept PASS_WITH_WARNING",
+                effective_score,
+                quality_gate_score,
+                retry + 1,
+                max_retries + 1,
+            )
+            self._log_operator_retry_context(
+                title=(
+                    f"[QualityGate] effective_score={effective_score} "
+                    f"(raw={raw_score}, ifc_penalty={ifc_penalty}) < threshold -> PASS_WITH_WARNING"
+                ),
+                level="warning",
+                meta={
+                    "phase": "validate",
+                    "score": effective_score,
+                    "raw_score": raw_score,
+                    "ifc_penalty": ifc_penalty,
+                    "retry_index": retry + 1,
+                    "max_retries": max_retries + 1,
+                    "error_category": "quality_gate_terminal_acceptance",
+                },
+                feedback=normalized_validation.get("verdict_reason", "") or normalized_validation.get("feedback", ""),
+                issues=normalized_validation.get("issues", []),
+                fix_scope=str(normalized_validation.get("fix_scope", "") or ""),
+            )
+            return "PASS_WITH_WARNING", normalized_validation
+
+        return verdict, normalized_validation
+
     def _apply_validation_reject_state(
         self,
         *,
@@ -1568,6 +1860,10 @@ class ThreePhaseBlueprintRuntime:
             or validation_result.get("quality_gate_score") is not None
         )
         resolved_fix_scope = str(validation_result.get("fix_scope", "") or "").strip().lower()
+        try:
+            retry_state.prev_binding_issue_count = int(validation_result.get("binding_prevalidation_issue_count", 0) or 0)
+        except (TypeError, ValueError):
+            retry_state.prev_binding_issue_count = 0
 
         retry_state.repeated_reject_score_streak = (
             retry_state.repeated_reject_score_streak + 1
@@ -1585,6 +1881,20 @@ class ThreePhaseBlueprintRuntime:
         retry_state.prev_reject_feedback = feedback
         retry_state.prev_reject_strategy = selected_strategy or ""
         retry_state.prev_fix_scope = validation_result.get("fix_scope", "")
+        normalized_fix_pack = _normalize_stage3_fix_pack(validation_result)
+        advisory_fix_pack = _normalize_stage3_advisory_fix_pack(validation_result)
+        retry_state.prev_fix_pack = dict(normalized_fix_pack or advisory_fix_pack or {})
+        retry_state.prev_repair_contract = _normalize_stage3_repair_contract(
+            validation_result,
+            fix_pack=normalized_fix_pack or advisory_fix_pack,
+        )
+        retry_state.prev_scope_authority = _normalize_stage3_scope_authority(validation_result)
+        retry_state.prev_local_patch_gate = _build_stage3_local_patch_gate(
+            fix_scope=str(retry_state.prev_fix_scope or ""),
+            fix_pack=retry_state.prev_fix_pack,
+            repair_contract=retry_state.prev_repair_contract,
+            scope_authority=retry_state.prev_scope_authority,
+        )
         retry_state.prev_reject_origin = reject_origin
         retry_state.prev_quality_gate_reject = quality_gate_reject
         retry_state.prev_reject_signature = reject_signature
@@ -1604,6 +1914,13 @@ class ThreePhaseBlueprintRuntime:
         regenerate_only_reason = str(validation_result.get("binding_regenerate_only_reason", "") or "").strip()
         if regenerate_only_reason:
             retry_state.prev_validation_warnings.append(f"binding_regenerate_only: {regenerate_only_reason}")
+        local_patch_gate_reason = str(retry_state.prev_local_patch_gate.get("reason", "") or "").strip()
+        if (
+            retry_state.prev_local_patch_gate.get("contract_present")
+            and local_patch_gate_reason
+            and local_patch_gate_reason != "contract_local_patch_ready"
+        ):
+            retry_state.prev_validation_warnings.append(f"local_patch_gate: {local_patch_gate_reason}")
         if isinstance(issues, list):
             for issue in issues[:10]:
                 if isinstance(issue, dict):
@@ -1735,30 +2052,6 @@ class ThreePhaseBlueprintRuntime:
     ) -> _ThreePhasePassWithFixIterationResult:
         owner = self.owner
         fix_scope = current_validation.get("fix_scope", "")
-        regenerate_only_binding_categories = _extract_stage3_regenerate_only_binding_categories(current_validation)
-        if regenerate_only_binding_categories:
-            fix_scope = "full"
-            current_validation["fix_scope"] = "full"
-            regenerate_only_reason = _build_stage3_regenerate_only_binding_reason(regenerate_only_binding_categories)
-            current_validation["binding_regenerate_only_categories"] = list(regenerate_only_binding_categories)
-            current_validation["binding_regenerate_only_reason"] = regenerate_only_reason
-            current_validation["fix_scope_reasoning"] = regenerate_only_reason
-            logging.info(
-                "[TF-33] binding_prevalidation_categories=%s block inplace; force full regenerate",
-                regenerate_only_binding_categories,
-            )
-        if not fix_scope:
-            inplace_thresh = int(_threshold("patch_mode.inplace_below", 60))
-            fix_scope = "inplace" if score >= inplace_thresh else "full"
-            logging.warning("[PF-1] fix_scope missing; score=%d fallback=%s", score, fix_scope)
-        if fix_scope in ("partial", "full"):
-            logging.info(f"[TF-33] fix_scope={fix_scope!r} blocks inplace; delegate to generate loop")
-            return _ThreePhasePassWithFixIterationResult(
-                current_blueprint=current_blueprint,
-                current_validation=current_validation,
-                should_break=True,
-            )
-
         validate_phase = pipeline_result.setdefault("phases", {}).setdefault("validate", {})
         normalized_fix_pack = _normalize_stage3_fix_pack(current_validation)
         advisory_fix_pack = _normalize_stage3_advisory_fix_pack(current_validation)
@@ -1775,6 +2068,66 @@ class ThreePhaseBlueprintRuntime:
         scope_authority = _normalize_stage3_scope_authority(current_validation)
         if scope_authority:
             validate_phase["scope_authority"] = dict(scope_authority)
+        local_patch_gate = _build_stage3_local_patch_gate(
+            fix_scope=str(fix_scope or ""),
+            fix_pack=normalized_fix_pack or advisory_fix_pack,
+            repair_contract=repair_contract,
+            scope_authority=scope_authority,
+        )
+        validate_phase["local_patch_gate"] = dict(local_patch_gate)
+        current_validation["local_patch_gate"] = dict(local_patch_gate)
+        try:
+            binding_issue_count = int(current_validation.get("binding_prevalidation_issue_count", 0) or 0)
+        except (TypeError, ValueError):
+            binding_issue_count = 0
+        regenerate_only_binding_categories = _extract_stage3_regenerate_only_binding_categories(current_validation)
+        if regenerate_only_binding_categories or binding_issue_count > 0:
+            fix_scope = "full"
+            current_validation["fix_scope"] = "full"
+            regenerate_only_reason = (
+                _build_stage3_regenerate_only_binding_reason(regenerate_only_binding_categories)
+                if regenerate_only_binding_categories
+                else (
+                    "Structural binding prevalidation requires regenerate-only repair: "
+                    f"unresolved_binding_issue_count={binding_issue_count}"
+                )
+            )
+            if regenerate_only_binding_categories:
+                current_validation["binding_regenerate_only_categories"] = list(regenerate_only_binding_categories)
+            current_validation["binding_regenerate_only_reason"] = regenerate_only_reason
+            current_validation["fix_scope_reasoning"] = regenerate_only_reason
+            logging.info(
+                "[TF-33] binding_prevalidation_categories=%s block inplace; force full regenerate",
+                regenerate_only_binding_categories or [f"unresolved_binding_issue_count={binding_issue_count}"],
+            )
+        elif local_patch_gate.get("contract_present") and not local_patch_gate.get("local_patch_ready", False):
+            gate_reason = str(local_patch_gate.get("reason", "") or "").strip()
+            resolved_fix_scope = str(local_patch_gate.get("resolved_fix_scope", "") or "").strip().lower()
+            if resolved_fix_scope == "partial":
+                fix_scope = "partial"
+            else:
+                fix_scope = "full"
+            current_validation["fix_scope"] = fix_scope
+            current_validation["fix_scope_reasoning"] = (
+                f"Contract-driven local patch gate blocked Blueprint inplace retry: {gate_reason or 'unknown_reason'}"
+            )
+            logging.info(
+                "[TF-33C] contract-driven local patch gate blocks inplace; scope=%s reason=%s",
+                resolved_fix_scope or "missing",
+                gate_reason or "unknown_reason",
+            )
+        if not fix_scope:
+            inplace_thresh = int(_threshold("patch_mode.inplace_below", 60))
+            fix_scope = "inplace" if score >= inplace_thresh else "full"
+            logging.warning("[PF-1] fix_scope missing; score=%d fallback=%s", score, fix_scope)
+        if fix_scope in ("partial", "full"):
+            logging.info(f"[TF-33] fix_scope={fix_scope!r} blocks inplace; delegate to generate loop")
+            return _ThreePhasePassWithFixIterationResult(
+                current_blueprint=current_blueprint,
+                current_validation=current_validation,
+                should_break=True,
+            )
+
         effective_fix_pack = normalized_fix_pack or advisory_fix_pack
         fix_feedback = current_validation.get("re_slice_instruction", "") or current_validation.get("feedback", "")
         fix_pack_guidance = _build_stage3_fix_pack_guidance(effective_fix_pack)
@@ -1917,6 +2270,8 @@ class ThreePhaseBlueprintRuntime:
             re_validation.setdefault("repair_contract", dict(repair_contract))
         if scope_authority:
             re_validation.setdefault("scope_authority", dict(scope_authority))
+        if local_patch_gate:
+            re_validation.setdefault("local_patch_gate", dict(local_patch_gate))
         if isinstance(re_validation, dict):
             re_validation.setdefault("verdict", re_verdict)
             re_validation.setdefault("decision", re_verdict)
@@ -2142,6 +2497,14 @@ class ThreePhaseBlueprintRuntime:
             return None, pipeline_result
 
         if best_blueprint and director and last_score >= PatchModeThresholds.REWRITE:
+            if retry_state.prev_binding_issue_count > 0:
+                pipeline_result["final_verdict"] = "FAILED"
+                logging.warning(
+                    "[ThreePhase] ep%d emergency fallback blocked: unresolved binding issues=%d",
+                    ep_num,
+                    retry_state.prev_binding_issue_count,
+                )
+                return None, pipeline_result
             logging.warning(
                 f" [ThreePhase] ep{ep_num} emergency fallback (score={last_score} >= {PatchModeThresholds.REWRITE})"
             )
@@ -2184,10 +2547,14 @@ class ThreePhaseBlueprintRuntime:
         max_retries: int,
     ) -> _ThreePhaseRetryCycleResult:
         owner = self.owner
-        if verdict in ("PASS", "PASS_WITH_FIX"):
+        if verdict in ("PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING"):
             owner.stats["phase3_pass"] += 1
             pipeline_result["final_verdict"] = verdict
             pipeline_result["last_score"] = score
+            if verdict == "PASS_WITH_WARNING" and self._is_quality_gate_terminal_acceptance(validation_result):
+                pipeline_result["quality_gate_failed"] = True
+                pipeline_result["quality_risk"] = True
+                pipeline_result["revision_required"] = True
             logging.info(f"[Phase 3] {verdict} - ep{ep_num} blueprint finalized")
             owner._operator_log(
                 f"[Phase 3] {verdict} (score={score})",

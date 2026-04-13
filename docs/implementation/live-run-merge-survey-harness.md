@@ -74,6 +74,7 @@ Allowed:
 - draft watchlists
 - explicit draft notes marked as pending live evidence
 - evidence manifests
+- canonical `draft-live-run-pending` architecture or `Polaris` notes that fix future-state vocabulary without making closure claims
 
 Not allowed as final:
 - canonical closure claims
@@ -125,6 +126,7 @@ Allowed:
 ### Step 3. Parallel Static Deepening
 - While the run is active, continue static code reading, sink tracing, and side-effect mapping.
 - New hypotheses may be added to the watchlist.
+- Future-state `Polaris` anchors may be drafted during this step if they are explicitly marked provisional and do not trigger temp-queue mutation.
 - Do not upgrade hypotheses to final findings until post-run merge.
 
 ### Step 4. Run Completion Gate
@@ -171,6 +173,7 @@ Naming guidance:
 - Do not treat provisional watchlists as closure notes.
 - Do not mirror draft execution documents into `docs/temp/`.
 - Do not mirror provisional live-run findings into ClickUp before the post-run merge audit is finalized.
+- Do not let a mid-run `Polaris` note silently mutate the active queue, temp mirrors, or ClickUp state before the post-run merge gate.
 
 ## 10. Completion Markers
 Before declaring the live-merge cycle complete, confirm:

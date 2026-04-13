@@ -183,6 +183,7 @@ Recommended statuses:
 
 - `Intake`
 - `Surveying`
+- `Polaris`
 - `Ready`
 - `Realizing`
 - `Proof Pending`
@@ -196,6 +197,7 @@ Recommended mapping from repo-side queue state:
 | --- | --- |
 | new idea or unframed issue | `Intake` |
 | survey in progress | `Surveying` |
+| canonical future-state anchor exists, but it is not yet an active execution queue item | `Polaris` |
 | canonical doc exists, work not started | `Ready` |
 | execution or doc-backed work in progress | `Realizing` |
 | code/doc landed, proof or rerun still needed | `Proof Pending` |
@@ -206,6 +208,12 @@ Recommended mapping from repo-side queue state:
 Important rule:
 
 If ClickUp status and canonical repo status disagree, the repo wins. ClickUp should be updated to match the repo, not the other way around.
+
+`Polaris` rule:
+
+- use `Polaris` for architecture-direction anchors that fix future-state vocabulary, stage roles, or migration waves
+- do not use `Polaris` for normal execution queue items that already belong in `Ready`, `Realizing`, or `Proof Pending`
+- if a `Polaris` item becomes an active execution lane later, move it out of `Polaris` and into the ordinary queue status model
 
 ### 5.4 Custom Fields
 

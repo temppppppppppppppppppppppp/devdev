@@ -76,6 +76,17 @@ Create or refresh an aggregate roadmap when:
 - cleanup rule for each item
 - priority basis or dependency rationale
 
+### Polaris Alignment Rule
+- If a canonical dated `Polaris` note exists for the same subsystem or for the cross-stage spine, use it as a future-state alignment aid when refreshing roadmap language.
+- `Polaris` alignment may justify:
+  - reducing overloaded `partially_realized` wording
+  - separating active-realization language from proof-pending language
+  - separating historical backing from active queue semantics
+- `Polaris` alignment does not by itself authorize:
+  - deleting temp mirrors mid-run
+  - changing queue state before canonical docs and queue-state are aligned
+  - rewriting roadmap order without evidence or dependency rationale
+
 ## 5. Realization Rules
 - If a roadmap exists, realization follows roadmap order.
 - Do not bypass the roadmap because a later item looks easier.
@@ -128,6 +139,12 @@ When all queued items are complete:
 - remove `docs/temp/execution-roadmap.md`
 - remove `docs/temp/queue-state.json` if it exists
 - leave `docs/temp/README.md`
+
+### Queue Compaction Rule
+- If the roadmap or queue-state already classifies an item as `historical_backing`, treat it as a compaction candidate rather than as normal active workload.
+- If a canonical execution doc says the remaining work is only fresh proof, verifier follow-up, or deferred debt, prefer making that posture explicit instead of leaving the item to read like open realization work.
+- Compaction should preserve canonical evidence while reducing active temp noise.
+- During active live-run-merge mode, queue compaction decisions must still wait until the post-run merged audit passes the save gate.
 
 ### Optional Queue Health Reporting
 - For operator-facing governance checks, create a scorecard with `docs/implementation/process-health-scorecard-harness.md`.
