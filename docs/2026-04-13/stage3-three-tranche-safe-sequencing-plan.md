@@ -1,14 +1,14 @@
 # Stage3 Three-Tranche Safe Sequencing Plan
 
 - Date: 2026-04-13
-- Status: active-plan-support (baseline snapshot landed; tranche 1 is now landed on the live workspace; tranche 2 is the immediate-next action)
+- Status: active-plan-support (baseline snapshot and tranche 1 are committed, tranche 2 is now landed on the live workspace, and tranche 3 is the immediate-next action)
 - Scope: Stage3 cost-first refactor sequencing on current `main`, with mandatory static validation and snapshot commits between tranches
 - Mode: execution-support planning note; no live rerun and no code realization in this note itself
 - Canonical Path: `docs/2026-04-13/stage3-three-tranche-safe-sequencing-plan.md`
 - Baseline Commit: `347acac374f7246cca433d4be9c7466e802c9883`
 - Baseline Dirty Summary: `dirty: active Stage3 code/docs/tests plus live-run artifacts, logs, and polaris planning docs already present in worktree`
 - Resume Commit: `765132d8d5d45c3dadffb260ac37c2ef0b94fe94`
-- Resume Drift Summary: `the baseline snapshot commit now isolates the earlier Stage3/doc state; tranche 1 Stage3RepairRouter extraction is landed on the live workspace with static validation rerun, so this note now advances the immediate-next action to tranche 2`
+- Resume Drift Summary: `the baseline snapshot commit now isolates the earlier Stage3/doc state, tranche 1 Stage3RepairRouter extraction is committed, and tranche 2 strict local-fix contract gating is now landed on the live workspace with static validation rerun, so this note now advances the immediate-next action to tranche 3`
 - Confidence: `97%`
 
 ## Purpose
@@ -117,6 +117,13 @@ Required validation:
 Required closure:
 
 - snapshot commit on `main`
+
+Current state:
+
+- tranche 2 is now landed on the live workspace
+- Stage3 local patch entry now fails closed without a ready local-fix contract
+- missing authoritative scope, patch target records, `must_fix`, or `success_condition` now route back to regenerate instead of silently reopening faux-inplace
+- tranche 3 is now the immediate-next move after this tranche-scoped snapshot commit lands
 
 Current state:
 
@@ -247,8 +254,8 @@ The next action is not a rerun.
 
 The next action is:
 
-- promote and realize `Tranche 1. Stage3RepairRouter Extraction`
+- promote and realize `Tranche 3. Faux-Inplace Reduction / Patch-IR Preparation`
 - run static validation only
 - create a narrow snapshot commit on `main`
 
-Only after that commit lands should `Tranche 2` begin.
+Only after that commit lands should the fresh proof rerun begin.

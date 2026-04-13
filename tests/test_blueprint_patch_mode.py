@@ -55,6 +55,54 @@ def sample_arc_data():
     }
 
 
+def _ready_stage3_local_contract(
+    *,
+    patch_target: str = "scene_2.summary",
+    scene_id: str = "scene_2",
+    field_path: str = "scene_breakdown.scene_2.summary",
+    target_kind: str = "scene_block",
+    patch_target_id: str = "scene_2.summary",
+    old_text: str = "repaired reveal",
+    must_fix: str = "scene 2 summary must reflect the repaired reveal",
+    success_condition: str = "scene 2 now states the reveal without rewriting the arc shell",
+    subtype: str = "movement",
+) -> dict:
+    return {
+        "fix_pack": {
+            "patch_targets": [patch_target],
+            "patch_target_records": [
+                {
+                    "summary": patch_target,
+                    "scene_id": scene_id,
+                    "field_path": field_path,
+                    "target_kind": target_kind,
+                    "patch_target_id": patch_target_id,
+                    "text_anchor": {"old_text": old_text},
+                }
+            ],
+            "must_fix": [must_fix],
+            "success_condition": success_condition,
+            "target_kind": target_kind,
+            "subtype": subtype,
+            "provenance": "director_authored",
+        },
+        "repair_contract": {
+            "subtype": subtype,
+            "fix_scope": "inplace",
+            "repair_scope": "inplace",
+            "authoritative_fix_scope": "inplace",
+            "provenance": "director_authored",
+            "target_kind": target_kind,
+        },
+        "scope_authority": {
+            "fix_scope": "inplace",
+            "repair_scope": "inplace",
+            "authoritative_fix_scope": "inplace",
+            "widened": False,
+        },
+    }
+
+
 class TestStage3RepairRouter:
     def test_router_blocks_phase2_inplace_when_contract_target_is_unsupported(self):
         from modules.domain.agents.three_phase_blueprint_runtime import _Stage3RepairRouter, _ThreePhaseRetryState
@@ -114,6 +162,40 @@ class TestStage3RepairRouter:
         assert route.effective_fix_scope == "full"
         assert route.should_break_to_generate is True
         assert "arc_timeline" in route.regenerate_only_reason
+
+    def test_router_requires_explicit_local_contract_before_inplace(self):
+        from modules.domain.agents.three_phase_blueprint_runtime import _Stage3RepairRouter
+
+        material = _Stage3RepairRouter.build_validation_material(
+            {
+                "fix_scope": "inplace",
+                "fix_pack": {
+                    "patch_targets": ["scene_2.summary"],
+                    "patch_target_records": [
+                        {
+                            "summary": "scene_2.summary",
+                            "scene_id": "scene_2",
+                            "field_path": "scene_breakdown.scene_2.summary",
+                            "target_kind": "scene_block",
+                            "patch_target_id": "scene_2.summary",
+                        }
+                    ],
+                    "must_fix": ["scene 2 summary must reflect the repaired reveal"],
+                    "success_condition": "scene 2 now states the reveal without rewriting the arc shell",
+                    "target_kind": "scene_block",
+                },
+            }
+        )
+
+        route = _Stage3RepairRouter.decide_pass_with_fix(
+            material=material,
+            score=88,
+            inplace_threshold=60,
+        )
+
+        assert material.local_patch_gate["reason"] == "missing_authoritative_fix_scope"
+        assert route.effective_fix_scope == "full"
+        assert route.should_break_to_generate is True
 
 
 class TestBlueprintInplacePatchMode:
@@ -1105,11 +1187,15 @@ class TestBlueprintPatchIntegration:
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
 
         generated_blueprint = {"ep_num": 2, "scene_list": [{"scene_no": 1, "summary": "full regenerate"}]}
+        ready_contract = _ready_stage3_local_contract()
         retry_state = _ThreePhaseRetryState(
             previous_best={"ep_num": 2, "scene_list": [{"scene_no": 1, "summary": "stale patch target"}]},
             prev_reject_score=66,
             prev_fix_scope="inplace",
             prev_reject_origin="pass_with_fix_unresolved",
+            prev_fix_pack=ready_contract["fix_pack"],
+            prev_repair_contract=ready_contract["repair_contract"],
+            prev_scope_authority=ready_contract["scope_authority"],
         )
         blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"unexpected": True})
         blueprint_generator.ensemble.generate_ensemble.return_value = (generated_blueprint, [generated_blueprint])
@@ -1188,11 +1274,15 @@ class TestBlueprintPatchIntegration:
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
 
         generated_blueprint = {"ep_num": 2, "scene_list": [{"scene_no": 1, "summary": "full regenerate"}]}
+        ready_contract = _ready_stage3_local_contract()
         retry_state = _ThreePhaseRetryState(
             previous_best={"ep_num": 2, "scene_list": [{"scene_no": 1, "summary": "stale patch target"}]},
             prev_reject_score=88,
             prev_fix_scope="inplace",
             prev_reject_origin="quality_gate_reject",
+            prev_fix_pack=ready_contract["fix_pack"],
+            prev_repair_contract=ready_contract["repair_contract"],
+            prev_scope_authority=ready_contract["scope_authority"],
         )
         blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"unexpected": True})
         blueprint_generator.ensemble.generate_ensemble.return_value = (generated_blueprint, [generated_blueprint])
@@ -1228,12 +1318,16 @@ class TestBlueprintPatchIntegration:
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
 
         generated_blueprint = {"ep_num": 2, "scene_list": [{"scene_no": 1, "summary": "full regenerate"}]}
+        ready_contract = _ready_stage3_local_contract()
         retry_state = _ThreePhaseRetryState(
             previous_best={"ep_num": 2, "scene_list": [{"scene_no": 1, "summary": "stale patch target"}]},
             prev_reject_score=88,
             prev_fix_scope="inplace",
             prev_reject_origin="",
             prev_quality_gate_reject=True,
+            prev_fix_pack=ready_contract["fix_pack"],
+            prev_repair_contract=ready_contract["repair_contract"],
+            prev_scope_authority=ready_contract["scope_authority"],
         )
         blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"unexpected": True})
         blueprint_generator.ensemble.generate_ensemble.return_value = (generated_blueprint, [generated_blueprint])
@@ -1267,12 +1361,16 @@ class TestBlueprintPatchIntegration:
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
 
         generated_blueprint = {"ep_num": 2, "scene_list": [{"scene_no": 1, "summary": "full regenerate"}]}
+        ready_contract = _ready_stage3_local_contract()
         retry_state = _ThreePhaseRetryState(
             previous_best={"ep_num": 2, "scene_list": [{"scene_no": 1, "summary": "stale patch target"}]},
             prev_reject_score=84,
             prev_fix_scope="inplace",
             prev_reject_origin="validation_reject",
             prev_binding_issue_count=2,
+            prev_fix_pack=ready_contract["fix_pack"],
+            prev_repair_contract=ready_contract["repair_contract"],
+            prev_scope_authority=ready_contract["scope_authority"],
         )
         blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"unexpected": True})
         blueprint_generator.ensemble.generate_ensemble.return_value = (generated_blueprint, [generated_blueprint])
@@ -1363,6 +1461,17 @@ class TestBlueprintPatchIntegration:
     def test_pass_with_fix_patch_failure_logs_patch_context(self, blueprint_generator, sample_arc_data):
         blueprint_generator._operator_log = MagicMock()
         blueprint_generator._inplace_patch_blueprint = MagicMock(return_value=None)
+        current_validation = {"fix_scope": "inplace", "feedback": "scene 3 tension up\nrestore anchor"}
+        current_validation.update(
+            _ready_stage3_local_contract(
+                patch_target="scene_3.summary",
+                scene_id="scene_3",
+                field_path="scene_breakdown.scene_3.summary",
+                patch_target_id="scene_3.summary",
+                must_fix="scene 3 summary must restore the dropped anchor",
+                success_condition="scene 3 now restores the anchor without rewriting the arc shell",
+            )
+        )
 
         result = blueprint_generator.runtime._run_pass_with_fix_iteration(
             ep_num=1,
@@ -1370,7 +1479,7 @@ class TestBlueprintPatchIntegration:
             constraint_block={},
             prev_blueprint=None,
             current_blueprint={"ep_num": 1},
-            current_validation={"fix_scope": "inplace", "feedback": "scene 3 tension up\nrestore anchor"},
+            current_validation=current_validation,
             pipeline_result={"phases": {"generate": {}, "validate": {}}},
             score=82,
             quality_gate_score=90,
@@ -1387,8 +1496,8 @@ class TestBlueprintPatchIntegration:
         assert result.should_break is True
         assert any("[TF-32-V] Blueprint patch #1/3" in text for text in log_texts)
         assert any("fix_scope: inplace" in text for text in log_texts)
-        assert any("사유: scene 3 tension up" in text for text in log_texts)
-        assert any("사유: restore anchor" in text for text in log_texts)
+        assert any("사유: [Stage3 partial-fix contract]" in text for text in log_texts)
+        assert any("사유: authoritative_scope:" in text for text in log_texts)
         assert any("[TF-32-V] patch #1 failed" in text for text in log_texts)
 
     def test_pass_with_fix_iteration_escalates_structural_binding_categories_to_full_regenerate(
@@ -1579,40 +1688,7 @@ class TestBlueprintPatchIntegration:
             current_validation={
                 "fix_scope": "inplace",
                 "feedback": "tighten scene 2 summary",
-                "fix_pack": {
-                    "patch_targets": ["scene_2.summary"],
-                    "patch_target_records": [
-                        {
-                            "summary": "scene_2.summary",
-                            "scene_id": "scene_2",
-                            "field_path": "scene_breakdown.scene_2.summary",
-                            "target_kind": "scene_block",
-                            "patch_target_id": "scene_2.summary",
-                            "text_anchor": {"old_text": "repaired reveal"},
-                        }
-                    ],
-                    "must_fix": ["scene 2 summary must reflect the repaired reveal"],
-                    "do_not_regress": ["scene 1 opening cadence must stay intact"],
-                    "success_condition": "scene 2 now states the reveal without rewriting the arc shell",
-                    "target_kind": "scene_block",
-                    "subtype": "movement",
-                    "provenance": "director_authored",
-                    "provenance_sources": ["director_compare"],
-                },
-                "repair_contract": {
-                    "subtype": "movement",
-                    "fix_scope": "inplace",
-                    "repair_scope": "inplace",
-                    "authoritative_fix_scope": "inplace",
-                    "provenance": "director_authored",
-                    "target_kind": "scene_block",
-                },
-                "scope_authority": {
-                    "fix_scope": "inplace",
-                    "repair_scope": "inplace",
-                    "authoritative_fix_scope": "inplace",
-                    "widened": False,
-                },
+                **_ready_stage3_local_contract(),
             },
             pipeline_result=pipeline_result,
             score=84,
@@ -1669,7 +1745,11 @@ class TestBlueprintPatchIntegration:
                     "scene_2": {"summary": "old"},
                 },
             },
-            current_validation={"fix_scope": "inplace", "feedback": "tighten scene 2 summary"},
+            current_validation={
+                "fix_scope": "inplace",
+                "feedback": "tighten scene 2 summary",
+                **_ready_stage3_local_contract(),
+            },
             pipeline_result={"phases": {"generate": {}, "validate": {}}},
             score=95,
             quality_gate_score=90,
@@ -1726,7 +1806,11 @@ class TestBlueprintPatchIntegration:
                     "scene_2": {"summary": "old"},
                 },
             },
-            current_validation={"fix_scope": "inplace", "feedback": "tighten scene 2 summary"},
+            current_validation={
+                "fix_scope": "inplace",
+                "feedback": "tighten scene 2 summary",
+                **_ready_stage3_local_contract(),
+            },
             pipeline_result={"phases": {"generate": {}, "validate": {}}},
             score=95,
             quality_gate_score=90,
@@ -1776,6 +1860,7 @@ class TestBlueprintPatchIntegration:
                 "fix_scope": "inplace",
                 "feedback": "tighten scene 2 summary",
                 "advisory_fix_pack": {
+                    "patch_targets": ["integrated_scenario"],
                     "patch_target_records": [
                         {
                             "summary": "integrated_scenario",
@@ -1787,6 +1872,18 @@ class TestBlueprintPatchIntegration:
                     "do_not_regress": ["keep the opening move"],
                     "success_condition": "integrated scenario adds one named market anchor",
                     "evidence_summary": "anchor_count=0",
+                },
+                "repair_contract": {
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "target_kind": "local_sentence",
+                },
+                "scope_authority": {
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": False,
                 },
             },
             pipeline_result=pipeline_result,
@@ -1808,6 +1905,39 @@ class TestBlueprintPatchIntegration:
         assert "anchor_count=0" in patch_feedback
         assert pipeline_result["phases"]["validate"]["advisory_fix_pack"]["target_kind"] == "local_sentence"
         assert pipeline_result["phases"]["validate"]["partial_fix_eval"]["target_kind"] == "local_sentence"
+
+    def test_pass_with_fix_iteration_blocks_missing_success_condition(self, blueprint_generator, sample_arc_data):
+        blueprint_generator._inplace_patch_blueprint = MagicMock(return_value={"unexpected": True})
+        current_validation = {
+            "fix_scope": "inplace",
+            "feedback": "tighten scene 2 summary",
+            **_ready_stage3_local_contract(),
+        }
+        current_validation["fix_pack"].pop("success_condition")
+
+        result = blueprint_generator.runtime._run_pass_with_fix_iteration(
+            ep_num=1,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            prev_blueprint=None,
+            current_blueprint={"ep_num": 1},
+            current_validation=current_validation,
+            pipeline_result={"phases": {"generate": {}, "validate": {}}},
+            score=84,
+            quality_gate_score=90,
+            director=MagicMock(),
+            arc_idx=0,
+            entity_registry=None,
+            state_tracker=None,
+            prev_hud=None,
+            fix_index=0,
+            max_fix=3,
+        )
+
+        assert result.should_break is True
+        assert result.current_validation["fix_scope"] == "full"
+        assert result.current_validation["local_patch_gate"]["reason"] == "missing_success_condition"
+        blueprint_generator._inplace_patch_blueprint.assert_not_called()
 
     def test_finalize_pass_with_fix_failure_adopts_low_score_pass_blueprint(self, blueprint_generator, sample_arc_data):
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
@@ -1868,6 +1998,7 @@ class TestBlueprintPatchIntegration:
         """retry==1에서 score >= 60이면 in-place 진입 (ask() 호출, generate_ensemble 1회만)."""
         bp1 = {"ep_num": 1, "scene_list": [{"scene_no": 1}]}
         bp_patched = {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "인플레이스 수정됨"}]}
+        ready_contract = _ready_stage3_local_contract()
 
         blueprint_generator.constraint_compiler.compile.return_value = {}
         blueprint_generator.ensemble.generate_ensemble.side_effect = [
@@ -1877,7 +2008,7 @@ class TestBlueprintPatchIntegration:
         blueprint_generator.ensemble._extract_json_robust.return_value = bp_patched
 
         blueprint_generator.validator.validate.side_effect = [
-            ("REJECT", {"score": 65, "feedback": "밀도 부족", "issues": []}),
+            ("REJECT", {"score": 65, "feedback": "밀도 부족", "issues": [], **ready_contract}),
             ("PASS", {"score": 95, "issues": [], "confidence": 90}),
         ]
 
@@ -1898,6 +2029,7 @@ class TestBlueprintPatchIntegration:
         """retry 마지막 기회에서도 inplace 실패 시 같은 시도 안에서 full rewrite로 폴백한다."""
         bp1 = {"ep_num": 1, "scene_list": [{"scene_no": 1}]}
         bp2 = {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "풀 리라이트 재생성"}]}
+        ready_contract = _ready_stage3_local_contract()
 
         blueprint_generator.constraint_compiler.compile.return_value = {}
         blueprint_generator.ensemble.generate_ensemble.side_effect = [
@@ -1906,7 +2038,7 @@ class TestBlueprintPatchIntegration:
         ]
         blueprint_generator._inplace_patch_blueprint = MagicMock(return_value=None)
         blueprint_generator.validator.validate.side_effect = [
-            ("REJECT", {"score": 65, "feedback": "로컬 수정만으론 부족", "issues": []}),
+            ("REJECT", {"score": 65, "feedback": "로컬 수정만으론 부족", "issues": [], **ready_contract}),
             ("PASS", {"score": 93, "issues": [], "confidence": 87}),
         ]
 
@@ -2083,6 +2215,7 @@ class TestBlueprintPatchIntegration:
         """score == 60 경계값: in-place 진입 확인."""
         bp1 = {"ep_num": 1, "scene_list": [{"scene_no": 1}]}
         bp_patched = {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "경계 수정"}]}
+        ready_contract = _ready_stage3_local_contract()
 
         blueprint_generator.constraint_compiler.compile.return_value = {}
         blueprint_generator.ensemble.generate_ensemble.side_effect = [
@@ -2092,7 +2225,7 @@ class TestBlueprintPatchIntegration:
         blueprint_generator.ensemble._extract_json_robust.return_value = bp_patched
 
         blueprint_generator.validator.validate.side_effect = [
-            ("REJECT", {"score": 60, "feedback": "감정선 보완 필요", "issues": []}),
+            ("REJECT", {"score": 60, "feedback": "감정선 보완 필요", "issues": [], **ready_contract}),
             ("PASS", {"score": 91, "issues": [], "confidence": 87}),
         ]
 
@@ -2191,8 +2324,18 @@ class TestBlueprintPatchIntegration:
         blueprint_generator.constraint_compiler.compile.return_value = {}
         blueprint_generator.ensemble.generate_ensemble.return_value = (bp1, [bp1])
         blueprint_generator._inplace_patch_blueprint = MagicMock(return_value=bp_patched)
+        ready_contract = _ready_stage3_local_contract()
         blueprint_generator.validator.validate.side_effect = [
-            ("PASS_WITH_FIX", {"score": 84, "feedback": "로컬 보강", "fix_scope": "inplace", "issues": []}),
+            (
+                "PASS_WITH_FIX",
+                {
+                    "score": 84,
+                    "feedback": "로컬 보강",
+                    "fix_scope": "inplace",
+                    "issues": [],
+                    **ready_contract,
+                },
+            ),
             ("PASS", {"score": 92, "issues": [], "confidence": 90}),
         ]
 
