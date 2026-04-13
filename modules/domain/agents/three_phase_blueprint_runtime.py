@@ -1382,6 +1382,7 @@ class ThreePhaseBlueprintRuntime:
                         director_feedback=retry_state.prev_reject_feedback,
                         ep_num=ep_num,
                         arc_data=arc_data,
+                        normalized_fix_pack=repair_material.effective_fix_pack,
                     ),
                 )
             except Exception:
@@ -2370,6 +2371,7 @@ class ThreePhaseBlueprintRuntime:
                     director_feedback=fix_feedback,
                     ep_num=ep_num,
                     arc_data=arc_data,
+                    normalized_fix_pack=effective_fix_pack,
                 ),
             )
         except Exception:

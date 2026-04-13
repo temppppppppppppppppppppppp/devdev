@@ -28,6 +28,7 @@ from modules.validation.threshold_helper import _threshold
 from .base_agent import AgentErrorType, BaseAgent, _get_sub_component_models
 from .blueprint_constraint_compiler import BlueprintConstraintCompiler
 from .blueprint_ensemble import BlueprintEnsembleGenerator
+from .stage3_blueprint_patch_ir import apply_blueprint_patch_ir, build_blueprint_patch_packet, supports_blueprint_patch_ir
 from .unified_blueprint_validator import UnifiedBlueprintValidator
 from .three_phase_blueprint_runtime import ThreePhaseBlueprintRuntime
 
@@ -162,6 +163,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         director_feedback: str,
         ep_num: int,
         arc_data: dict,
+        normalized_fix_pack: dict | None = None,
     ) -> dict | None:
         """score >= 60: 단일 LLM 1회 호출로 Blueprint in-place 수정.
 
@@ -199,6 +201,22 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             logging.warning(f"[InPlace] BLUEPRINT_PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
             patch_template = None
 
+        patch_contract = normalized_fix_pack if isinstance(normalized_fix_pack, dict) else {}
+        patch_packet: dict = {}
+        use_patch_ir = False
+        if supports_blueprint_patch_ir(patch_contract):
+            patch_packet = build_blueprint_patch_packet(
+                original_blueprint=original_blueprint,
+                normalized_fix_pack=patch_contract,
+            )
+            if not patch_packet:
+                logging.info("[InPlace] Blueprint structured patch packet unavailable; full regenerate fallback")
+                return None
+            use_patch_ir = True
+
+        patch_contract_json = json.dumps(patch_contract or {}, ensure_ascii=False, indent=2)
+        patch_packet_json = json.dumps(patch_packet or {}, ensure_ascii=False, indent=2)
+
         if patch_template:
 
             def _esc(s):
@@ -206,12 +224,16 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
             prompt = patch_template.format(
                 feedback_text=_esc(director_feedback),
+                patch_contract=_esc(patch_contract_json),
+                patch_packet=_esc(patch_packet_json),
                 original_blueprint=_esc(original_json),
             )
         else:
             prompt = (
                 f"[Blueprint 원본 보존 + 지적사항만 수정]\n\n"
                 f"## Director 피드백\n{director_feedback}\n\n"
+                f"## Patch Contract\n{patch_contract_json}\n\n"
+                f"## Patch Packet\n{patch_packet_json}\n\n"
                 f"## 원본 Blueprint\n{original_json}\n\n"
                 f"전면 재설계하지 마세요. 지적된 부분만 고치세요."
             )
@@ -221,9 +243,24 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             prompt = _arc_tactical_prefix + prompt
 
         try:
-            response = self.ensemble.ask(
-                prompt, temperature=0.3, response_schema=BLUEPRINT_SCHEMA, thinking_level="medium"
-            )
+            if use_patch_ir:
+                response = self.ensemble.ask(prompt, temperature=0.2, thinking_level="medium")
+                patch_payload = self.ensemble._extract_json_robust(response)
+                if not isinstance(patch_payload, dict):
+                    return None
+                result = apply_blueprint_patch_ir(
+                    original_blueprint=original_blueprint,
+                    patch_packet=patch_packet,
+                    patch_payload=patch_payload,
+                )
+                if not isinstance(result, dict):
+                    return None
+                result.setdefault("episode_number", ep_num)
+                result = validate_blueprint(result)
+                logging.info(f"✅ [InPlace] Blueprint 제{ep_num}화 patch-IR 수정 완료")
+                return result
+
+            response = self.ensemble.ask(prompt, temperature=0.3, response_schema=BLUEPRINT_SCHEMA, thinking_level="medium")
             result = self.ensemble._extract_json_robust(response)
             if not isinstance(result, dict):
                 return None

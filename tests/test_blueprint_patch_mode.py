@@ -282,6 +282,104 @@ class TestBlueprintInplacePatchMode:
         assert result["emotion_curve"] == "수정됨"
         assert result["episode_number"] == 1
 
+    def test_inplace_patch_ir_updates_targeted_field_values(self, blueprint_generator, sample_arc_data):
+        original_blueprint = {
+            "ep_num": 1,
+            "integrated_scenario": "기존 시나리오",
+            "scene_list": [{"scene_no": 1, "summary": "도입부"}],
+        }
+        normalized_fix_pack = {
+            "patch_targets": ["integrated_scenario"],
+            "patch_target_records": [
+                {
+                    "summary": "integrated_scenario",
+                    "field_path": "integrated_scenario",
+                    "target_kind": "local_sentence",
+                    "patch_target_id": "pt:integrated",
+                }
+            ],
+            "must_fix": ["add one named market anchor"],
+            "success_condition": "integrated scenario adds one named market anchor",
+            "target_kind": "local_sentence",
+        }
+        blueprint_generator.ensemble.ask.return_value = '{"patch_values":[{"patch_target_id":"pt:integrated","field_path":"integrated_scenario","new_value":"시장 앵커가 들어간 새 시나리오"}]}'
+        blueprint_generator.ensemble._extract_json_robust.return_value = {
+            "patch_values": [
+                {
+                    "patch_target_id": "pt:integrated",
+                    "field_path": "integrated_scenario",
+                    "new_value": "시장 앵커가 들어간 새 시나리오",
+                }
+            ]
+        }
+
+        result = blueprint_generator._inplace_patch_blueprint(
+            original_blueprint=original_blueprint,
+            director_feedback="시장 앵커를 하나만 추가하라",
+            ep_num=1,
+            arc_data=sample_arc_data,
+            normalized_fix_pack=normalized_fix_pack,
+        )
+
+        assert result is not None
+        assert result["integrated_scenario"] == "시장 앵커가 들어간 새 시나리오"
+        assert result["scene_list"] == original_blueprint["scene_list"]
+        prompt = blueprint_generator.ensemble.ask.call_args.args[0]
+        assert "Target Patch Packet" in prompt
+        assert "integrated_scenario" in prompt
+        assert "patch_values" not in prompt
+
+    def test_inplace_patch_ir_returns_none_when_target_snapshot_is_unresolvable(
+        self, blueprint_generator, sample_blueprint, sample_arc_data
+    ):
+        normalized_fix_pack = {
+            "patch_targets": ["missing_field"],
+            "patch_target_records": [
+                {
+                    "summary": "missing_field",
+                    "field_path": "scene_breakdown.scene_99.summary",
+                    "target_kind": "local_sentence",
+                    "patch_target_id": "pt:missing",
+                }
+            ],
+            "must_fix": ["restore the missing anchor"],
+            "success_condition": "missing scene is repaired",
+            "target_kind": "local_sentence",
+        }
+
+        result = blueprint_generator._inplace_patch_blueprint(
+            original_blueprint=sample_blueprint,
+            director_feedback="없는 필드를 고치라고 하면 안 됨",
+            ep_num=1,
+            arc_data=sample_arc_data,
+            normalized_fix_pack=normalized_fix_pack,
+        )
+
+        assert result is None
+        blueprint_generator.ensemble.ask.assert_not_called()
+
+    def test_inplace_scene_block_contract_still_uses_legacy_whole_blueprint_lane(
+        self, blueprint_generator, sample_blueprint, sample_arc_data
+    ):
+        ready_contract = _ready_stage3_local_contract()
+        patched = {**sample_blueprint, "emotion_curve": "legacy whole-blueprint lane"}
+        blueprint_generator.ensemble.ask.return_value = "{}"
+        blueprint_generator.ensemble._extract_json_robust.return_value = patched
+
+        result = blueprint_generator._inplace_patch_blueprint(
+            original_blueprint=sample_blueprint,
+            director_feedback="scene_block 계열은 아직 whole-blueprint lane 유지",
+            ep_num=1,
+            arc_data=sample_arc_data,
+            normalized_fix_pack=ready_contract["fix_pack"],
+        )
+
+        assert result is not None
+        assert result["emotion_curve"] == "legacy whole-blueprint lane"
+        ask_kwargs = blueprint_generator.ensemble.ask.call_args.kwargs
+        assert ask_kwargs["response_schema"] is not None
+        assert ask_kwargs["temperature"] == 0.3
+
 
 class TestBlueprintPatchIntegration:
     """ThreePhaseBlueprintGenerator.generate() 내 in-place 분기 테스트."""
@@ -2051,12 +2149,23 @@ class TestBlueprintPatchIntegration:
         assert result is not None
         assert result["scene_list"][0]["summary"] == "풀 리라이트 재생성"
         assert pipeline["final_verdict"] == "PASS"
-        blueprint_generator._inplace_patch_blueprint.assert_called_once_with(
-            original_blueprint=bp1,
-            director_feedback="로컬 수정만으론 부족",
-            ep_num=1,
-            arc_data=sample_arc_data,
-        )
+        inplace_call = blueprint_generator._inplace_patch_blueprint.call_args.kwargs
+        assert inplace_call["original_blueprint"] == bp1
+        assert inplace_call["director_feedback"] == "로컬 수정만으론 부족"
+        assert inplace_call["ep_num"] == 1
+        assert inplace_call["arc_data"] == sample_arc_data
+        normalized_fix_pack = inplace_call["normalized_fix_pack"]
+        assert normalized_fix_pack["patch_targets"] == ready_contract["fix_pack"]["patch_targets"]
+        assert normalized_fix_pack["must_fix"] == ready_contract["fix_pack"]["must_fix"]
+        assert normalized_fix_pack["success_condition"] == ready_contract["fix_pack"]["success_condition"]
+        assert normalized_fix_pack["target_kind"] == ready_contract["fix_pack"]["target_kind"]
+        record = normalized_fix_pack["patch_target_records"][0]
+        expected = ready_contract["fix_pack"]["patch_target_records"][0]
+        assert record["field_path"] == expected["field_path"]
+        assert record["scene_id"] == expected["scene_id"]
+        assert record["target_kind"] == expected["target_kind"]
+        assert record["summary"] == expected["summary"]
+        assert record["patch_target_id"].startswith("pt:")
         assert blueprint_generator.ensemble.generate_ensemble.call_count == 2
 
     def test_compare_mode_quality_risk_persists_in_pipeline(self, blueprint_generator, sample_arc_data):
