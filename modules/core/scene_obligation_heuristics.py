@@ -43,6 +43,70 @@ _GENERIC_TOKENS = {
 }
 
 
+_ACTIONLESS_OBLIGATION_TOKENS = _GENERIC_TOKENS | {
+    "arc",
+    "beat",
+    "beats",
+    "block",
+    "climax",
+    "closing",
+    "detail",
+    "details",
+    "episode",
+    "episodes",
+    "generic",
+    "mission",
+    "opening",
+    "packet",
+    "phase",
+    "plot",
+    "progress",
+    "setup",
+    "stage",
+    "summary",
+    "개요",
+    "결말",
+    "갈등",
+    "구성",
+    "도입",
+    "마무리",
+    "반응",
+    "변화",
+    "상황",
+    "요소",
+    "요약",
+    "전개",
+    "절정",
+    "준비",
+    "진행",
+}
+_VERBLIKE_SUFFIXES = ("ed", "ing", "다", "한다", "했다", "된다", "인다", "였다")
+_STATE_PLACEHOLDER_TOKENS = {
+    "state",
+    "status",
+    "condition",
+    "generic",
+    "keep",
+    "same",
+    "stable",
+    "mood",
+    "emotion",
+    "feeling",
+    "normal",
+    "placeholder",
+    "상태",
+    "유지",
+    "변화",
+    "기분",
+    "감정",
+    "정상",
+    "보통",
+    "무난",
+    "동일",
+    "현재",
+}
+
+
 @dataclass(frozen=True)
 class SceneKeywordPacket:
     scene_id: str
@@ -67,6 +131,49 @@ class ManuscriptSceneProfile:
     reflected_scenes: int
     tail_scene_reflected: bool
     weak_scenes: tuple[str, ...]
+
+
+def has_actionable_obligation_text(text: object, *, min_meaningful_tokens: int = 2) -> bool:
+    """Return True when obligation text is concrete enough to guide generation."""
+    normalized = re.sub(r"\s+", " ", str(text or "")).strip()
+    if len(normalized) < 8:
+        return False
+
+    tokens = [token.lower() for token in re.findall(r"[\w가-힣]{2,}", normalized)]
+    if not tokens:
+        return False
+
+    meaningful_tokens = [
+        token for token in tokens if token not in _ACTIONLESS_OBLIGATION_TOKENS and not token.isdigit()
+    ]
+    if len(set(meaningful_tokens)) >= min_meaningful_tokens:
+        return True
+
+    has_verblike_token = any(token.endswith(_VERBLIKE_SUFFIXES) for token in tokens)
+    return bool(meaningful_tokens) and has_verblike_token
+
+
+def has_meaningful_state_value(value: object) -> bool:
+    """Return True when a protagonist-state slot carries more than a placeholder label."""
+    if isinstance(value, str):
+        normalized = re.sub(r"\s+", " ", value).strip()
+        if len(normalized) < 2:
+            return False
+        tokens = [token.lower() for token in re.findall(r"[\w가-힣]{2,}", normalized)]
+        if not tokens:
+            return False
+        meaningful_tokens = [
+            token for token in tokens if token not in _STATE_PLACEHOLDER_TOKENS and not token.isdigit()
+        ]
+        return bool(meaningful_tokens)
+
+    if isinstance(value, list | tuple | set):
+        return any(has_meaningful_state_value(item) for item in value)
+
+    if isinstance(value, dict):
+        return any(has_meaningful_state_value(item) for item in value.values())
+
+    return value not in ("", None, [], {}, ())
 
 
 def _extract_keywords(text: str, *, max_terms: int) -> list[str]:

@@ -15,13 +15,12 @@ providers:
   vertex_ai:
     enabled: true
     sdk: "google-genai"
-    auth_mode: "api_key"
-    # auth_mode=api_key keeps Gemini Vertex Express mode isolated from project credentials.
+    auth_mode: "auto"
+    # auth_mode=auto prefers VERTEX_API_KEY and falls back to project/location credentials.
     api_key_env: "VERTEX_API_KEY"
     project_id_env: "VERTEX_PROJECT_ID"
     location_env: "VERTEX_LOCATION"
     credentials_env: "GOOGLE_APPLICATION_CREDENTIALS"
-    # auth_mode=auto falls back from api_key_env to project/location+credentials.
     # Use explicit model prefixes to keep Gemini Developer API and Vertex AI side by side.
     # Example opt-in models:
     # - "vertexai:gemini-3.1-flash-lite-preview"
@@ -35,18 +34,18 @@ providers:
     # Prefix convention: "anthropic-vertex:claude-sonnet-4-6"
 
 agents:
-  analyst: "claude-sonnet-4-6"
+  analyst: "vertexai:gemini-3.1-pro-preview"
   manager: "vertexai:gemini-2.5-flash"
-  chief_writer: "claude-sonnet-4-6"
-  blueprint_ensemble: "claude-sonnet-4-6"
-  three_phase_blueprint_generator: "claude-sonnet-4-6"
-  state_locked_arc_generator: "claude-sonnet-4-6"
+  chief_writer: "vertexai:gemini-3.1-pro-preview"
+  blueprint_ensemble: "vertexai:gemini-3.1-pro-preview"
+  three_phase_blueprint_generator: "vertexai:gemini-3.1-pro-preview"
+  state_locked_arc_generator: "vertexai:gemini-3.1-pro-preview"
   block_enricher: "vertexai:gemini-2.5-flash"
   preflight_checker: "vertexai:gemini-2.5-flash"
   state_extractor: "vertexai:gemini-2.5-flash"
-  four_phase_arc_generator: "claude-sonnet-4-6"
-  continuity_inspector: "claude-sonnet-4-6"
-  director: "claude-sonnet-4-6"
+  four_phase_arc_generator: "vertexai:gemini-3.1-pro-preview"
+  continuity_inspector: "vertexai:gemini-3.1-pro-preview"
+  director: "vertexai:gemini-3.1-pro-preview"
   arc_corrector: "vertexai:gemini-2.5-flash"
   arc_critic: "vertexai:gemini-2.5-flash"
   consensus_validator: "vertexai:gemini-2.5-flash"
@@ -57,10 +56,10 @@ agents:
   writer: "vertexai:gemini-2.5-flash"
 
 fallback_chain:
-  "claude-opus-4-6": "claude-sonnet-4-6"
-  "claude-opus-4-20250514": "claude-sonnet-4-20250514"
-  "claude-sonnet-4-6": "claude-sonnet-4-6"
-  "claude-sonnet-4-20250514": "claude-sonnet-4-20250514"
+  "claude-opus-4-6": "vertexai:gemini-3.1-pro-preview"
+  "claude-opus-4-20250514": "vertexai:gemini-3.1-pro-preview"
+  "claude-sonnet-4-6": "vertexai:gemini-3.1-pro-preview"
+  "claude-sonnet-4-20250514": "vertexai:gemini-3.1-pro-preview"
   "vertexai:gemini-3.1-pro-preview": "vertexai:gemini-2.5-pro"
   "vertexai:gemini-2.5-pro": "vertexai:gemini-2.5-flash"
   "vertexai:gemini-2.5-flash": "vertexai:gemini-2.5-flash"
@@ -68,14 +67,14 @@ fallback_chain:
 sub_components:
   four_phase_arc_generator:
     preflight: "vertexai:gemini-2.5-flash"
-    ensemble: "claude-sonnet-4-6"
+    ensemble: "vertexai:gemini-3.1-pro-preview"
     validator: "vertexai:gemini-2.5-flash"
   three_phase_blueprint_generator:
-    ensemble: "claude-sonnet-4-6"
+    ensemble: "vertexai:gemini-3.1-pro-preview"
     validator: "vertexai:gemini-2.5-flash"
 
 # role_constants follow the same live routing contract as agent defaults.
 role_constants:
-  pro_main: "claude-sonnet-4-6"
+  pro_main: "vertexai:gemini-3.1-pro-preview"
   flash_main: "vertexai:gemini-2.5-flash"
-  emergency: "claude-sonnet-4-6"
+  emergency: "vertexai:gemini-2.5-pro"

@@ -153,6 +153,13 @@ def _format_compare_python_warning_block(meta: dict | None) -> str:
         if focus:
             line += f" | focus: {focus}"
         lines.append(line)
+    if any(
+        entry.get("severity") == "CRITICAL" and entry.get("category") == "episode_progression"
+        for entry in warning_entries
+    ):
+        lines.append(
+            "- hard_gate: this candidate replays prior-episode scene families; prefer a forward-moving alternative or reject all"
+        )
     if advisory_fix_pack:
         advisory_target_kind = _normalize_fix_target_kind(advisory_fix_pack.get("target_kind"))
         if advisory_target_kind:
@@ -959,7 +966,7 @@ def _apply_candidate_quality_gate(result: dict, quality_flag: dict | None) -> di
     reasons = list(_normalize_quality_gate_reasons(result.get("quality_gate_reasons")))
 
     score_cap = quality_flag.get("score_cap")
-    if isinstance(score_cap, (int, float)):
+    if isinstance(score_cap, int | float):
         score = min(score, int(score_cap))
 
     reasons.extend(_normalize_quality_gate_reasons(quality_flag.get("reasons")))
@@ -980,7 +987,7 @@ def _apply_candidate_quality_gate(result: dict, quality_flag: dict | None) -> di
     result["quality_gate_triggered"] = bool(
         quality_flag.get("force_reject")
         or quality_flag.get("force_pass_with_fix")
-        or isinstance(score_cap, (int, float))
+        or isinstance(score_cap, int | float)
     )
     result["quality_gate_reasons"] = reasons
     return result
@@ -2031,6 +2038,7 @@ class DirectorEnsembleSelector:
 - 위 Python Advisory는 구조/연속성/intent 관련 bounded factual hints다.
 - 자동 탈락 규칙이 아니며, 최종 선택/판단 권한은 Director에게 있다.
 - 다만 동급 후보라면 unresolved advisory/fidelity risk가 더 적은 후보를 우선하라.
+- `[CRITICAL/episode_progression]` 또는 `hard_gate`가 찍힌 후보는 직전 화 replay risk로 간주하라. 전진 후보가 있으면 그 후보를 우선 선택하고, 없으면 REJECT하라.
 
 ### 🔍 일관성·모순 체크 항목 (각 후보를 아래 항목으로 반드시 검사)
 1. **사망·부재 NPC 활동**: 이전 화에서 사망하거나 퇴장한 NPC가 활동하는가?

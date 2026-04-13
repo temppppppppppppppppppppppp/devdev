@@ -42,7 +42,13 @@ def test_generate_ensemble_owner_shell_coordinates_helper_chain():
     writer._prepare_generate_ensemble_context.assert_called_once()
     writer._run_generate_ensemble_workers.assert_called_once()
     writer._recover_generate_ensemble_candidates.assert_called_once()
-    writer._finalize_generate_ensemble_candidates.assert_called_once_with(worker_candidates, 7)
+    writer._finalize_generate_ensemble_candidates.assert_called_once_with(
+        worker_candidates,
+        7,
+        blueprint={},
+        prev_manuscript="prev",
+        genre_name="무협",
+    )
 
 
 def test_generate_ensemble_forwards_strategy_feedback_map_to_worker_chain():
@@ -158,7 +164,13 @@ def test_recover_generate_ensemble_candidates_uses_single_fallback_after_total_f
 def test_finalize_generate_ensemble_candidates_builds_error_fallback_and_annotations():
     writer = _make_writer()
 
-    finalized = writer._finalize_generate_ensemble_candidates([], 7)
+    finalized = writer._finalize_generate_ensemble_candidates(
+        [],
+        7,
+        blueprint=None,
+        prev_manuscript="",
+        genre_name="wuxia",
+    )
 
     assert finalized[0]["strategy"] == "error_fallback"
     assert finalized[0]["error"] is True

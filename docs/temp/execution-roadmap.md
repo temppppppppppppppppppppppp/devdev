@@ -120,13 +120,14 @@ Resume Drift Summary: `snapshot main plus the later local `0_temp.txt` continuat
   - temp mirror: `docs/temp/0_0-stage3-quality-closure-five-tranche-remediation-execution-ssot.md`
 - this override does not open a new queue family; the new SSOT sits under the existing parent lane and uses the existing sibling lanes for support
 - the immediate-next operator-directed action is now:
-  1. realize Tranche 1 (opening-transition vocabulary coherence: 5 sub-edits across `stage_cross_stage_contract.py`, `tactical_utils.py`, `blueprint_ensemble.py`, `unified_blueprint_validator.py`, `config/prompts/ensemble.yaml`) as one snapshot commit
-  2. Proof Gate 1 fresh `000_260412_a` ep1–ep8 rerun confirming avg attempt count < 6
-  3. realize Tranches 2/3/4 in parallel, one snapshot commit each
-  4. Proof Gate 2 second rerun
-  5. realize Tranche 5 (cost cap and round truncation) only after Proof Gate 2 passes
-  6. Proof Gate 3 third rerun confirming cost reduction without verdict regression
-- the older same-day adversarial execution-promotion override is partially superseded: the synonym-parity tranche it called for is now folded into Tranche 2 (producer contract teaching + validator calibration cleanup) of the new SSOT, not a standalone tranche
+  1. keep the parent `0_0-stage3-contract-tightening-remediation` lane's bounded tactical-authority synonym parity tranche as the front controller
+  2. treat `0_0-stage3-quality-closure-five-tranche-remediation` as a child lane with Tranche 1 landed and Proof Gate 1 deferred behind that parent tranche
+  3. once the parent tranche lands or is explicitly demoted, take Proof Gate 1 fresh `000_260412_a` ep1–ep8 rerun confirming avg attempt count < 6
+  4. only after Proof Gate 1 passes, realize Tranches 2/3/4 in parallel, one snapshot commit each
+  5. Proof Gate 2 second rerun
+  6. realize Tranche 5 (cost cap and round truncation) only after Proof Gate 2 passes
+  7. Proof Gate 3 third rerun confirming cost reduction without verdict regression
+- the older same-day adversarial execution-promotion override remains the front-sequencing controller for the parent lane; Tranche 2 may later absorb adjacent vocabulary cleanup, but it does not erase the current parent-front tactical tranche
 
 Supersedes:
 - `docs/2026-03-31/active-temp-execution-roadmap.md`
@@ -190,7 +191,7 @@ Working order:
 19. `0_0-stage4-canonical-entity-postselect-remediation` (runtime-positive substrate; no longer active queue work)
 20. `0_0-stage4-flashback-continuity-localfix-remediation` (completed runtime-positive substrate; historical backing only)
 21. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` (runtime-positive substrate lane; historical backing only)
-22. `0_0-stage3-quality-closure-five-tranche-remediation` (newly opened Stage3 quality-closure lane backed by the 10-terminal parallel investigation + synthesis at 97% confidence; sits inside the existing parent `0_0-stage3-contract-tightening-remediation` lane; sequenced as Tranche 1 opening-transition vocabulary coherence -> Proof Gate 1 -> Tranches 2/3/4 in parallel -> Proof Gate 2 -> Tranche 5 cost cap; no new queue family)
+22. `0_0-stage3-quality-closure-five-tranche-remediation` (newly opened Stage3 quality-closure child lane backed by the 10-terminal parallel investigation + synthesis at 97% confidence; Tranche 1 opening-transition vocabulary coherence is now landed on `main`, but this lane still sits behind the parent `0_0-stage3-contract-tightening-remediation` lane's bounded tactical-authority synonym parity tranche, so Proof Gate 1 is deferred until that parent-front residual closes or is explicitly demoted; no new queue family)
 
 This order now reflects the stronger runtime picture:
 

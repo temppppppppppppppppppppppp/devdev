@@ -171,6 +171,49 @@ _TACTICAL_INTRUSION_CONFLICT_MARKERS = (
     "군화",
 )
 
+_RETRY_FEEDBACK_DROP_MARKERS = tuple(
+    marker.casefold()
+    for marker in (
+        "[작품 추적 슬롯 요약]",
+        "[관계 의미 질의]",
+        "[styleguide",
+        "[arc 시간 연속성 참고]",
+        "[arc 개요",
+        "[context tier",
+        "[hud convenience state]",
+        "[등장 가능 npc]",
+        "[v60.98 씬 프리셋",
+        "[주인공 고평가 연출 가이드]",
+    )
+)
+_RETRY_FEEDBACK_SECTION_WINDOWS = (
+    ("[binding prevalidation]", 6),
+    ("[python advisory]", 6),
+    ("[strategy feedback]", 3),
+)
+_RETRY_FEEDBACK_PRIORITY_MARKERS = tuple(
+    marker.casefold()
+    for marker in (
+        "candidate_disqualified",
+        "episode_progression",
+        "temporal_deictic",
+        "opening_transition",
+        "scene_completeness",
+        "scene_breakdown",
+        "protagonist_state",
+        "schema_incompatible",
+        "tactical",
+        "binding",
+        "regenerate",
+        "replay",
+        "must_focus",
+        "stop line",
+        "critical",
+        "major",
+        "reject",
+    )
+)
+
 
 # [V60.98] 씬 프리셋 정의 - 장면/화자 전환 연출
 SCENE_PRESETS = {
@@ -296,6 +339,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
         """Collapse worker failures into one fast-fail hint for the caller."""
         if not error_types:
             return None
+        if AgentErrorType.CANDIDATE_DISQUALIFIED in error_types:
+            return AgentErrorType.CANDIDATE_DISQUALIFIED
         if AgentErrorType.SCHEMA_INCOMPATIBLE in error_types:
             return AgentErrorType.SCHEMA_INCOMPATIBLE
         non_unknown = [error_type for error_type in error_types if error_type and error_type != AgentErrorType.UNKNOWN]
@@ -386,6 +431,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             "prev_info": prev_info,
             "hud_context": hud_context,
             "cache_name": cache_info.get("cache_name"),
+            "constraint_block": constraint_block if isinstance(constraint_block, dict) else {},
         }
 
     def _select_blueprint_ensemble_strategies(self, single_strategy: str) -> list[dict]:
@@ -407,6 +453,84 @@ class BlueprintEnsembleGenerator(BaseAgent):
             return f"[이전 시도 문제 요약]\n{strategy_specific_feedback}"
         return ""
 
+    @staticmethod
+    def _compress_retry_feedback(feedback: str, *, max_lines: int = 18, max_chars: int = 1400) -> str:
+        raw = str(feedback or "").strip()
+        if not raw:
+            return ""
+
+        kept: list[str] = []
+        fallback: list[str] = []
+        seen: set[str] = set()
+        preserve_following = 0
+
+        def _append(line: str, bucket: list[str]) -> None:
+            if line and line not in seen:
+                seen.add(line)
+                bucket.append(line)
+
+        for raw_line in raw.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            lowered = line.casefold()
+            window = next((count for marker, count in _RETRY_FEEDBACK_SECTION_WINDOWS if marker in lowered), 0)
+            if window:
+                _append(line, kept)
+                preserve_following = max(preserve_following, window)
+                if len(kept) >= max_lines:
+                    break
+                continue
+
+            if any(marker in lowered for marker in _RETRY_FEEDBACK_DROP_MARKERS):
+                preserve_following = 0
+                continue
+
+            if preserve_following > 0:
+                _append(line, kept)
+                preserve_following -= 1
+                if len(kept) >= max_lines:
+                    break
+                continue
+
+            if any(marker in lowered for marker in _RETRY_FEEDBACK_PRIORITY_MARKERS):
+                _append(line, kept)
+                if len(kept) >= max_lines:
+                    break
+                continue
+
+            if len(fallback) < 8:
+                _append(line, fallback)
+
+        selected = kept or fallback
+        if not selected:
+            return ""
+
+        return smart_truncate(
+            "\n".join(selected),
+            max_chars=max_chars,
+            head_chars=max(0, min(int(max_chars * 0.7), max_chars - 80)),
+        )
+
+    @staticmethod
+    def _collect_episode_progression_replay_issues(
+        candidate: dict,
+        *,
+        prev_blueprint: dict | None,
+        constraint_block: dict | None,
+    ) -> list[dict]:
+        if not isinstance(candidate, dict) or not isinstance(constraint_block, dict):
+            return []
+
+        from .unified_blueprint_validator import UnifiedBlueprintValidator
+
+        return UnifiedBlueprintValidator._collect_episode_progression_issues(
+            blueprint=candidate,
+            prev_blueprint=prev_blueprint,
+            constraint_block=constraint_block,
+        )
+
     def _run_blueprint_ensemble_workers(
         self,
         *,
@@ -425,6 +549,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         genre: str,
         cache_name: str,
         prev_blueprint: dict | None,
+        constraint_block: dict | None,
     ) -> tuple[list[dict], list[str]]:
         candidates: list[dict] = []
         worker_error_types: list[str] = []
@@ -455,6 +580,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         genre=genre,
                         cache_name=cache_name,
                         prev_blueprint=prev_blueprint,
+                        constraint_block=constraint_block,
                     )
                     futures[future] = strategy_name
                     self._operator_log(
@@ -654,6 +780,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             genre=context_bundle["genre"],
             cache_name=context_bundle["cache_name"],
             prev_blueprint=prev_blueprint,
+            constraint_block=context_bundle["constraint_block"],
         )
 
         self.last_error_types = list(worker_error_types)
@@ -687,6 +814,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         genre: str = GenreTypes.WUXIA,
         cache_name: str = "",
         prev_blueprint: dict | None = None,
+        constraint_block: dict | None = None,
     ) -> dict | tuple[None, str] | None:
         """Generate a single blueprint candidate."""
         try:
@@ -698,6 +826,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     if merged_feedback
                     else f"[Strategy feedback]\n{strategy_feedback}"
                 )
+            merged_feedback = self._compress_retry_feedback(merged_feedback)
             if merged_feedback:
                 extra_directive = (
                     "\n\n"
@@ -747,6 +876,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 genre=genre,
                 tactical_excerpt=tactical_excerpt,
                 prev_blueprint=prev_blueprint,
+                constraint_block=constraint_block,
             )
         except Exception as e:
             import traceback
@@ -839,6 +969,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         genre: str,
         tactical_excerpt: str = "",
         prev_blueprint: dict | None = None,
+        constraint_block: dict | None = None,
     ) -> dict | tuple[None, str]:
         response = self._ask_with_cached_context(
             cache_name=cache_name,
@@ -863,6 +994,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             genre=genre,
             tactical_excerpt=tactical_excerpt,
             prev_blueprint=prev_blueprint,
+            constraint_block=constraint_block,
         )
 
     @staticmethod
@@ -1193,6 +1325,48 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     f"이번 화에서 소비하거나 언급하면 즉시 REJECT ***"
                 )
 
+        progression_pkt = constraint_block.get("episode_progression_packet", {})
+        if isinstance(progression_pkt, dict):
+            progression_lines: list[str] = []
+            for truth in progression_pkt.get("time_truths", [])[:3]:
+                text = str(truth or "").strip()
+                if text:
+                    progression_lines.append(f"  - 시간 truth: {_fit_compact_context(text, 120)}")
+            for truth in progression_pkt.get("institution_truths", [])[:4]:
+                text = str(truth or "").strip()
+                if text:
+                    progression_lines.append(f"  - 기관 truth: {_fit_compact_context(text, 80)}")
+            blocked_families = progression_pkt.get("blocked_scene_families", [])
+            if isinstance(blocked_families, list) and blocked_families:
+                progression_lines.append(
+                    "  - 직전 화에 이미 소비한 scene family를 같은 장소/같은 인물축으로 다시 재연하지 말 것"
+                )
+                for family in blocked_families[:3]:
+                    if not isinstance(family, dict):
+                        continue
+                    label = str(family.get("label", "") or "").strip()
+                    location = str(family.get("location", "") or "").strip()
+                    scene_type = str(family.get("type", "") or "").strip()
+                    characters = family.get("characters", [])
+                    char_text = ", ".join(str(item or "").strip() for item in characters if str(item or "").strip())
+                    parts = []
+                    if label:
+                        parts.append(_fit_compact_context(label, 50))
+                    if location:
+                        parts.append(f"장소:{_fit_compact_context(location, 60)}")
+                    if char_text:
+                        parts.append(f"등장:{_fit_compact_context(char_text, 60)}")
+                    if scene_type:
+                        parts.append(f"type:{_fit_compact_context(scene_type, 24)}")
+                    if parts:
+                        progression_lines.append(f"    · {' | '.join(parts)}")
+                progression_lines.append(
+                    "  - MUST_FOCUS의 새 사건 축으로 전진하고 직전 대치 장면을 길게 반복하지 말 것"
+                )
+            if progression_lines:
+                hard_lines.append("[Episode Progression - 직전 화 replay 금지]")
+                hard_lines.extend(progression_lines)
+
         arc_summary = constraint_block.get("arc_constraint_summary")
         if arc_summary:
             hard_lines.append("[Arc 제약 - MUST NOT DRIFT]")
@@ -1430,6 +1604,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         genre: str,
         tactical_excerpt: str = "",
         prev_blueprint: dict | None = None,
+        constraint_block: dict | None = None,
     ) -> dict | tuple[None, str]:
         allow_system_ui = self._genre_allows_explicit_system_ui(genre)
         integrated_reason = self._detect_blueprint_text_contamination(
@@ -1447,7 +1622,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 level="warning",
                 meta={"strategy": strategy_name, "reason": integrated_reason},
             )
-            return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+            return None, AgentErrorType.CANDIDATE_DISQUALIFIED
 
         scene_breakdown = candidate.get("scene_breakdown")
         if isinstance(scene_breakdown, list):
@@ -1485,7 +1660,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                             "reason": reason,
                         },
                     )
-                    return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+                    return None, AgentErrorType.CANDIDATE_DISQUALIFIED
 
             raw_events = scene.get("key_events", [])
             if isinstance(raw_events, str):
@@ -1513,7 +1688,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     level="warning",
                     meta={"strategy": strategy_name, "scene": scene_key},
                 )
-                return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+                return None, AgentErrorType.CANDIDATE_DISQUALIFIED
 
             if dropped_events:
                 scene["key_events"] = filtered_events
@@ -1550,7 +1725,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     "reason": "missing_opening_transition_pure_omission",
                 },
             )
-            return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+            return None, AgentErrorType.CANDIDATE_DISQUALIFIED
         if opening_transition_route in ("declared", "inferred"):
             logging.info(
                 "[BPEnsemble] normalized opening_transition contract for %s via %s path",
@@ -1577,7 +1752,31 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 level="warning",
                 meta={"strategy": strategy_name, "reason": tactical_intrusion_reason},
             )
-            return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+            return None, AgentErrorType.CANDIDATE_DISQUALIFIED
+
+        progression_issues = self._collect_episode_progression_replay_issues(
+            candidate,
+            prev_blueprint=prev_blueprint,
+            constraint_block=constraint_block,
+        )
+        if progression_issues:
+            issue = progression_issues[0]
+            replay_reason = str(issue.get("evidence", "") or issue.get("issue", "") or "episode_progression").strip()
+            logging.warning(
+                "[BPEnsemble] rejecting replayed episode-progression candidate (%s): %s",
+                strategy_name,
+                replay_reason,
+            )
+            self._operator_log(
+                f"⚠️ [Blueprint] '{strategy_name}' 직전 화 replay 후보 폐기",
+                level="warning",
+                meta={
+                    "strategy": strategy_name,
+                    "reason": "episode_progression",
+                    "evidence": replay_reason[:240],
+                },
+            )
+            return None, AgentErrorType.CANDIDATE_DISQUALIFIED
 
         contract_reason = self._blueprint_contract_admission_reason(candidate)
         if contract_reason:
@@ -1591,7 +1790,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 level="warning",
                 meta={"strategy": strategy_name, "reason": contract_reason},
             )
-            return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+            return None, AgentErrorType.CANDIDATE_DISQUALIFIED
 
         return candidate
 

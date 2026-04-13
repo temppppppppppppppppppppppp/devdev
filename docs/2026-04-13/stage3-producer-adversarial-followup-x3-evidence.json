@@ -1,0 +1,28 @@
+{
+  "baseline_commit": "32d6f0c8b56898fd8a370ae13684043d4cfda91a",
+  "probe_opening_transition_declared_jump_mismatch": {
+    "producer_reason": "",
+    "sanitize_allows_candidate": true,
+    "validator_opening_transition_issue_count": 1,
+    "validator_opening_transition_issue": "opening_transition.type mismatch: declared 'direct_continuation' vs normalized 'jump_opening'"
+  },
+  "probe_generic_verby_scene_shell": {
+    "producer_reason": "",
+    "validator_categories": [
+      "continuity",
+      "opening_anchor",
+      "opening_transition",
+      "scenario_density",
+      "timeline_specificity"
+    ]
+  },
+  "probe_korean_synonym_tactical_intrusion": {
+    "producer_reason": "",
+    "producer_marker": "",
+    "sanitize_allows_candidate": true,
+    "validator_categories": [
+      "opening_anchor",
+      "scenario_density"
+    ]
+  }
+}

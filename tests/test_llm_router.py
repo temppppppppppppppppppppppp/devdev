@@ -23,11 +23,11 @@ def _clear_provider_mode_env(monkeypatch):
 def test_repo_models_yaml_reflects_canonical_vertex_core_roles():
     payload = load_models_yaml()
 
-    assert payload["providers"]["anthropic"]["enabled"] is False
+    assert payload["providers"]["anthropic"]["enabled"] is True
     assert payload["providers"]["vertex_ai"]["enabled"] is True
-    assert payload["agents"]["analyst"] == "vertexai:gemini-2.5-pro"
+    assert payload["agents"]["analyst"] == "vertexai:gemini-3.1-pro-preview"
     assert payload["agents"]["chief_writer"] == "vertexai:gemini-3.1-pro-preview"
-    assert payload["agents"]["director"] == "vertexai:gemini-2.5-pro"
+    assert payload["agents"]["director"] == "vertexai:gemini-3.1-pro-preview"
     assert payload["fallback_chain"]["claude-sonnet-4-6"] == "vertexai:gemini-3.1-pro-preview"
     assert payload["fallback_chain"]["claude-sonnet-4-20250514"] == "vertexai:gemini-3.1-pro-preview"
 
@@ -37,10 +37,11 @@ def test_load_models_yaml_rewrites_to_gemini_direct_when_env_forced(monkeypatch)
 
     payload = load_models_yaml()
 
+    assert payload["providers"]["anthropic"]["enabled"] is True
     assert payload["providers"]["vertex_ai"]["enabled"] is False
-    assert payload["agents"]["analyst"] == "gemini-2.5-pro"
+    assert payload["agents"]["analyst"] == "gemini-3.1-pro-preview"
     assert payload["agents"]["chief_writer"] == "gemini-3.1-pro-preview"
-    assert payload["agents"]["director"] == "gemini-2.5-pro"
+    assert payload["agents"]["director"] == "gemini-3.1-pro-preview"
     assert payload["fallback_chain"]["claude-sonnet-4-6"] == "gemini-3.1-pro-preview"
 
 
@@ -100,9 +101,7 @@ def test_router_enables_registered_non_gemini_providers():
 
 
 def test_router_passes_vertex_auth_mode_config():
-    router = LLMProviderRouter(
-        provider_configs={"vertex_ai": {"enabled": True, "auth_mode": "project_credentials"}}
-    )
+    router = LLMProviderRouter(provider_configs={"vertex_ai": {"enabled": True, "auth_mode": "project_credentials"}})
     provider = router.get_provider_for_model("vertexai:gemini-2.5-pro")
     assert isinstance(provider, VertexAIProvider)
     assert provider.auth_mode == "project_credentials"
@@ -509,7 +508,9 @@ def test_openai_provider_sets_backend_family(monkeypatch):
         def __init__(self, api_key):
             self.responses = SimpleNamespace(
                 create=lambda **kw: SimpleNamespace(
-                    output_text="ok", status="completed", usage=None,
+                    output_text="ok",
+                    status="completed",
+                    usage=None,
                 )
             )
 
@@ -577,13 +578,15 @@ def test_process_runner_build_env_vertex_passthrough():
     from modules.api.process_runner import ProcessRunner
 
     runner = ProcessRunner()
-    env = runner._build_env({
-        "provider_mode": "ambient",
-        "vertex_api_key": "vk-123",
-        "vertex_project_id": "my-proj",
-        "vertex_location": "us-central1",
-        "google_credentials_path": "/tmp/sa.json",
-    })
+    env = runner._build_env(
+        {
+            "provider_mode": "ambient",
+            "vertex_api_key": "vk-123",
+            "vertex_project_id": "my-proj",
+            "vertex_location": "us-central1",
+            "google_credentials_path": "/tmp/sa.json",
+        }
+    )
     assert env["VERTEX_API_KEY"] == "vk-123"
     assert env["VERTEX_PROJECT_ID"] == "my-proj"
     assert env["VERTEX_LOCATION"] == "us-central1"

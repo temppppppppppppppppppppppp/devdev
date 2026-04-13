@@ -1,0 +1,8 @@
+{
+  "baseline_commit": "32d6f0c8b56898fd8a370ae13684043d4cfda91a",
+  "schema_missing_opening_transition_and_protagonist_state_still_valid": true,
+  "tactical_intrusion_marker_under_backstory_authority": "",
+  "sanitize_allows_intrusion_under_backstory_authority": true,
+  "sanitize_result_opening_transition_type": "jump_opening",
+  "sanitize_scene_breakdown_count": 2
+}

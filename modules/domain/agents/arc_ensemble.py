@@ -11,6 +11,8 @@ Strategy:
 Cost: ~3x single generation (but higher pass rate)
 """
 
+# utf8-hygiene: allow-file regex quantifier literals in compiled patterns are intentional and not mojibake evidence.
+
 import ast
 import json
 import logging
@@ -34,6 +36,7 @@ from modules.core.non_wuxia_recovery_policy import (
 )
 from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import ARC_DESIGN_SCHEMA  # [TF11] response_schema 확대
+from modules.core.scene_obligation_heuristics import has_actionable_obligation_text
 from modules.core.stage2_location_contract import is_verbose_stage2_location_label
 
 from .base_agent import _SYSTEM_CFG, BaseAgent
@@ -49,7 +52,9 @@ except ImportError:
 
 _ITEM_SUFFIXES_ALL = get_item_suffixes("")
 _ITEM_SUFFIX_GROUP = "|".join(sorted((re.escape(s) for s in _ITEM_SUFFIXES_ALL), key=len, reverse=True)) or r"아이템"
-_FORBIDDEN_ITEM_RE = re.compile(rf"([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s]{{0,30}}(?:{_ITEM_SUFFIX_GROUP}))")  # utf8-hygiene: allow-line regex quantifier
+_FORBIDDEN_ITEM_RE = re.compile(
+    rf"([가-힣A-Za-z0-9][가-힣A-Za-z0-9\s]{{0,30}}(?:{_ITEM_SUFFIX_GROUP}))"
+)  # utf8-hygiene: allow-line regex quantifier
 _ARC_MIN_EP_COUNT = 2
 _ARC_MAX_EP_COUNT = 6
 
@@ -270,6 +275,25 @@ def _build_canonical_episode_details(result: dict, *, ep_start: int, ep_end: int
     return [{"ep_num": ep_num, "details": canonical_map[ep_num]} for ep_num in sorted(canonical_map)]
 
 
+def _collect_episode_detail_actionability_issues(canonical_episode_details: list[dict[str, object]]) -> list[str]:
+    """Flag mission packets that are present but still too generic to guide downstream generation."""
+    issues: list[str] = []
+    for item in canonical_episode_details:
+        ep_num = int(item.get("ep_num") or 0)
+        raw_details = item.get("details")
+        if isinstance(raw_details, list):
+            details = [str(detail or "").strip() for detail in raw_details if str(detail or "").strip()]
+        elif raw_details:
+            details = [str(raw_details).strip()]
+        else:
+            details = []
+
+        if not any(has_actionable_obligation_text(detail) for detail in details):
+            issues.append(f"episode_details mission beat too generic: ep{ep_num}")
+
+    return issues
+
+
 def _coerce_episode_number(value: object, default: int) -> int:
     """Coerce episode numbers without applying arc-size bounds."""
     if isinstance(value, bool):
@@ -476,9 +500,13 @@ def _score_candidate_contract_health(
     elif missing_eps:
         penalty += min(10, 4 + len(missing_eps) * 2)
         issues.append(
-            "episode_details mission packet coverage 부족: "
-            + ", ".join(f"ep{ep_num}" for ep_num in missing_eps[:3])
+            "episode_details mission packet coverage 부족: " + ", ".join(f"ep{ep_num}" for ep_num in missing_eps[:3])
         )
+
+    actionability_issues = _collect_episode_detail_actionability_issues(canonical_episode_details)
+    if actionability_issues:
+        penalty += min(8, len(actionability_issues) * 4)
+        issues.extend(actionability_issues[:2])
 
     vocabulary_issues = _collect_state_contract_vocabulary_issues(candidate)
     if vocabulary_issues:
@@ -517,6 +545,11 @@ def _score_candidate_contract_health(
         )
 
     return penalty, issues
+
+
+def _has_generic_episode_detail_issue(candidate: dict) -> bool:
+    issues = candidate.get("_issues", [])
+    return any(str(issue).startswith("episode_details mission beat too generic") for issue in issues)
 
 
 def _extract_forbidden_items(constraint_block: str) -> list[str]:
@@ -578,8 +611,7 @@ def _build_block_event_guard(curr_block: dict | None, max_field_len: int = 260) 
 
     return (
         "### [이번 Arc에서 다룰 블록 핵심 사건 목록]\n"
-        "아래 항목은 현재 블록에서만 허용되는 사건 출처입니다:\n"
-        + "\n".join(lines)
+        "아래 항목은 현재 블록에서만 허용되는 사건 출처입니다:\n" + "\n".join(lines)
     )
 
 
@@ -591,7 +623,7 @@ def _format_curr_block_authority(curr_block: dict | None, max_field_len: int = 2
     def _stringify(value: object, *, max_chars: int = max_field_len) -> str:
         if value is None:
             return ""
-        if isinstance(value, (dict, list)):
+        if isinstance(value, dict | list):
             raw = json.dumps(value, ensure_ascii=False)
         else:
             raw = str(value)
@@ -784,7 +816,9 @@ class ArcEnsembleGenerator(BaseAgent):
 
     def _build_strategy_execution_plan(self, strategies: list[dict]) -> list[dict]:
         """최근 PASS 비중을 반영해 전략 temperature를 미세 조정한다."""
-        strategy_names = [str(strategy.get("name", "") or "").strip() for strategy in strategies if strategy.get("name")]
+        strategy_names = [
+            str(strategy.get("name", "") or "").strip() for strategy in strategies if strategy.get("name")
+        ]
         shares = self._load_strategy_bias(strategy_names)
         if not shares or all(shares.get(name, 0.0) <= 0 for name in strategy_names):
             return [dict(strategy) for strategy in strategies]
@@ -1217,6 +1251,11 @@ class ArcEnsembleGenerator(BaseAgent):
         director_candidates = [item for item in scored_candidates if item.get("_score", 0) >= structural_min_score]
         if not director_candidates:
             director_candidates = scored_candidates[:1]
+        cleaner_director_candidates = [
+            item for item in director_candidates if not _has_generic_episode_detail_issue(item)
+        ]
+        if cleaner_director_candidates:
+            director_candidates = cleaner_director_candidates
         diversity_summary = self._summarize_candidate_diversity(director_candidates)
         return scored_candidates, director_candidates, diversity_summary
 
@@ -1373,9 +1412,7 @@ class ArcEnsembleGenerator(BaseAgent):
         if not isinstance(pacing_decision, dict):
             pacing_decision = {}
 
-        pace_mode = self._normalize_pace_mode(
-            pacing_decision.get("pace_mode") or pacing_decision.get("chosen_pacing")
-        )
+        pace_mode = self._normalize_pace_mode(pacing_decision.get("pace_mode") or pacing_decision.get("chosen_pacing"))
         ep_count = self._coerce_ep_count(result.get("ep_count"), ep_count_suggestion)
 
         if pace_mode:
@@ -1482,7 +1519,9 @@ class ArcEnsembleGenerator(BaseAgent):
                         f"- [필수] arc_end_state의 capital/total_assets는 target `{genre_ext.get('capital_after')}`"
                         "와 크게 괴리되지 않게 유지하세요 (권장 ±30%)."
                     )
-                    genre_ext_lines.append("- [금지] 블록 DNA에 없는 대규모 자금 유입/차입으로 수치를 임의 상향하지 마세요.")
+                    genre_ext_lines.append(
+                        "- [금지] 블록 DNA에 없는 대규모 자금 유입/차입으로 수치를 임의 상향하지 마세요."
+                    )
                 for key, value in genre_ext.items():
                     genre_ext_lines.append(f"- **{key}**: {value}")
                 prompt_context["genre_ext_guide"] = "\n".join(genre_ext_lines)
@@ -1817,7 +1856,11 @@ class ArcEnsembleGenerator(BaseAgent):
                     issues.append(f"금지 아이템 획득 시도: {item}")
 
         # 3. 연속성 (25점)
-        if (prev_arc_context and prev_arc_context != "서사 시작점") or prev_equipment or candidate.get("_prev_equipment"):
+        if (
+            (prev_arc_context and prev_arc_context != "서사 시작점")
+            or prev_equipment
+            or candidate.get("_prev_equipment")
+        ):
             # 시작 위치 검사
             start_state = candidate.get("state_constraints", {}).get("arc_start_state", {})
             carryover_packet = _extract_carryover_authority_packet(prev_arc_context)
@@ -1826,9 +1869,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 curr_loc = start_state.get("location", "")
                 if curr_loc and packet_location not in curr_loc and curr_loc not in packet_location:
                     score -= 12
-                    issues.append(
-                        f"carryover authority 시작 위치 불일치: expected={packet_location}, 현재={curr_loc}"
-                    )
+                    issues.append(f"carryover authority 시작 위치 불일치: expected={packet_location}, 현재={curr_loc}")
             elif isinstance(prev_arc_context, str) and "위치" in prev_arc_context:
                 prev_loc_match = re.search(r"위치[:\]]\s*([가-힣\w\s]+)", prev_arc_context)
                 if prev_loc_match:

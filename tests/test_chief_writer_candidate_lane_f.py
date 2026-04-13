@@ -285,3 +285,184 @@ def test_build_regeneration_strategy_hints_prefers_existing_strategy_feedback_ma
     assert rejected_strategy == "tension"
     assert strategy_feedback == "mapped retry focus"
     assert strategy_feedback_map["tension"] == "mapped retry focus"
+
+
+def test_finalize_generate_ensemble_candidates_filters_under_materialized_candidate_when_good_option_exists():
+    writer = _make_writer()
+    blueprint = {
+        "ep_num": 7,
+        "scene_breakdown": {
+            "scene_1": {
+                "summary": "broker rushes into the PB room",
+                "key_events": ["he checks the margin form"],
+            },
+            "scene_2": {
+                "summary": "the desk call turns into a closing hook",
+                "key_events": ["the siren blares across the trading floor"],
+            },
+        },
+        "ending_hook": "the siren blares across the trading floor",
+    }
+    good_manuscript = (
+        ("broker rushes into the PB room and checks the margin form. " * 70)
+        + "\n\n"
+        + ("the desk call turns into a closing hook and the siren blares across the trading floor. " * 70)
+    )
+    weak_manuscript = ("setup progress setup progress " * 220).strip()
+
+    result = writer._finalize_generate_ensemble_candidates(
+        [
+            {
+                "strategy": "balanced",
+                "title": "good",
+                "manuscript": good_manuscript,
+                "state_updates": {},
+                "metadata": {},
+            },
+            {
+                "strategy": "tension",
+                "title": "weak",
+                "manuscript": weak_manuscript,
+                "state_updates": {},
+                "metadata": {},
+            },
+        ],
+        ep_num=7,
+        blueprint=blueprint,
+        prev_manuscript="",
+        genre_name="investment",
+    )
+
+    assert len(result) == 1
+    assert result[0]["strategy"] == "balanced"
+    assert result[0]["metadata"]["template_contract"]["materialization"]["reflected_scenes"] >= 2
+
+
+def test_finalize_generate_ensemble_candidates_keeps_original_candidates_when_all_fail_contract_gate():
+    writer = _make_writer()
+    blueprint = {
+        "ep_num": 7,
+        "scene_breakdown": {
+            "scene_1": {"summary": "broker rushes into the PB room"},
+            "scene_2": {"summary": "the desk call turns into a closing hook"},
+        },
+    }
+
+    result = writer._finalize_generate_ensemble_candidates(
+        [
+            {
+                "strategy": "balanced",
+                "title": "a",
+                "manuscript": ("setup progress " * 260).strip(),
+                "state_updates": {},
+                "metadata": {},
+            },
+            {
+                "strategy": "tension",
+                "title": "b",
+                "manuscript": ("generic summary " * 260).strip(),
+                "state_updates": {},
+                "metadata": {},
+            },
+        ],
+        ep_num=7,
+        blueprint=blueprint,
+        prev_manuscript="",
+        genre_name="investment",
+    )
+
+    assert len(result) == 2
+    assert all(candidate["metadata"].get("contract_admission_reason") for candidate in result)
+
+
+def test_finalize_generate_ensemble_candidates_orders_least_bad_fallback_when_all_fail():
+    writer = _make_writer()
+    candidates = [
+        {"strategy": "balanced", "title": "a", "manuscript": "weak-a", "state_updates": {}, "metadata": {}},
+        {"strategy": "tension", "title": "b", "manuscript": "weak-b", "state_updates": {}, "metadata": {}},
+    ]
+    weak_diag = {
+        "validation": {"issues": ["template miss"]},
+        "materialization": {
+            "scene_count": 2,
+            "reflected_scenes": 0,
+            "overall_ratio": 0.12,
+            "tail_scene_reflected": False,
+            "weak_scenes": ["scene_1", "scene_2"],
+        },
+        "opening_anchor_required": True,
+        "opening_anchor_hit": False,
+    }
+    less_bad_diag = {
+        "validation": {"issues": []},
+        "materialization": {
+            "scene_count": 2,
+            "reflected_scenes": 1,
+            "overall_ratio": 0.41,
+            "tail_scene_reflected": False,
+            "weak_scenes": ["scene_2"],
+        },
+        "opening_anchor_required": True,
+        "opening_anchor_hit": True,
+    }
+
+    with patch(
+        "modules.domain.agents.chief_writer._build_manuscript_contract_diagnostics",
+        side_effect=[weak_diag, less_bad_diag],
+    ):
+        result = writer._finalize_generate_ensemble_candidates(
+            candidates,
+            ep_num=7,
+            blueprint={"scene_breakdown": {"scene_1": {}, "scene_2": {}}},
+            prev_manuscript="",
+            genre_name="investment",
+        )
+
+    assert [candidate["strategy"] for candidate in result] == ["tension", "balanced"]
+    assert all(candidate["metadata"].get("contract_admission_reason") for candidate in result)
+
+
+def test_finalize_generate_ensemble_candidates_orders_qualified_candidates_by_contract_strength():
+    writer = _make_writer()
+    candidates = [
+        {"strategy": "balanced", "title": "a", "manuscript": "candidate-a", "state_updates": {}, "metadata": {}},
+        {"strategy": "tension", "title": "b", "manuscript": "candidate-b", "state_updates": {}, "metadata": {}},
+    ]
+    okay_diag = {
+        "validation": {"issues": []},
+        "materialization": {
+            "scene_count": 2,
+            "reflected_scenes": 2,
+            "overall_ratio": 0.55,
+            "tail_scene_reflected": True,
+            "weak_scenes": [],
+        },
+        "opening_anchor_required": False,
+        "opening_anchor_hit": False,
+    }
+    stronger_diag = {
+        "validation": {"issues": []},
+        "materialization": {
+            "scene_count": 2,
+            "reflected_scenes": 2,
+            "overall_ratio": 0.77,
+            "tail_scene_reflected": True,
+            "weak_scenes": [],
+        },
+        "opening_anchor_required": False,
+        "opening_anchor_hit": True,
+    }
+
+    with patch(
+        "modules.domain.agents.chief_writer._build_manuscript_contract_diagnostics",
+        side_effect=[okay_diag, stronger_diag],
+    ):
+        result = writer._finalize_generate_ensemble_candidates(
+            candidates,
+            ep_num=7,
+            blueprint={"scene_breakdown": {"scene_1": {}, "scene_2": {}}},
+            prev_manuscript="",
+            genre_name="investment",
+        )
+
+    assert [candidate["strategy"] for candidate in result] == ["tension", "balanced"]

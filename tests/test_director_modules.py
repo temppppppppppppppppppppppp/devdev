@@ -474,6 +474,40 @@ class TestDirectorEnsemble:
         assert payload["quality_risk"] is False
         assert len(payload["candidate_advisories"]) == 2
 
+    def test_build_blueprint_compare_prompt_marks_episode_progression_advisory_as_hard_gate(self, director):
+        prompt = director._ensemble._build_blueprint_compare_prompt(
+            candidates=[
+                {
+                    "integrated_scenario": "A" * 1200,
+                    "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                    "_ensemble_meta": {
+                        "strategy": "steady",
+                        "python_warnings": [
+                            {
+                                "severity": "CRITICAL",
+                                "category": "episode_progression",
+                                "message": "replayed scene family from previous episode",
+                            }
+                        ],
+                        "quality_risk": True,
+                    },
+                },
+                {
+                    "integrated_scenario": "B" * 1200,
+                    "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                    "_ensemble_meta": {"strategy": "forward", "python_warnings": [], "quality_risk": False},
+                },
+            ],
+            arc_data={"tactical_doc": "arc tactical"},
+            ep_num=9,
+            prev_blueprint={"end_location": "VIP룸", "ending_hook": "문이 열린다"},
+        )
+
+        assert "[CRITICAL/episode_progression]" in prompt
+        assert "hard_gate" in prompt
+        assert "replays prior-episode scene families" in prompt
+        assert "전진 후보가 있으면 그 후보를 우선 선택" in prompt
+
     def test_compare_and_select_multi_candidate_pass_with_fix_preserves_advisory(self, director):
         candidates = [
             {
@@ -2233,13 +2267,9 @@ class TestDirectorAuditorOperatorParity:
             "엘리베이터를 타고 올라가 에어컨을 켰다."
         )
 
-        result = director.validate_protagonist_config_compliance(
-            manuscript=manuscript, ep_num=1
-        )
+        result = director.validate_protagonist_config_compliance(manuscript=manuscript, ep_num=1)
 
-        critical_violations = [
-            v for v in result["violations"] if v.get("severity") == "CRITICAL"
-        ]
+        critical_violations = [v for v in result["violations"] if v.get("severity") == "CRITICAL"]
         feedback = result.get("feedback", "")
 
         if len(critical_violations) > 3:
@@ -2266,13 +2296,9 @@ class TestDirectorAuditorOperatorParity:
             "회귀에서 경험한 일이었다."
         )
 
-        result = director.validate_protagonist_config_compliance(
-            manuscript=manuscript, ep_num=1
-        )
+        result = director.validate_protagonist_config_compliance(manuscript=manuscript, ep_num=1)
 
-        warning_violations = [
-            v for v in result["violations"] if v.get("severity") == "WARNING"
-        ]
+        warning_violations = [v for v in result["violations"] if v.get("severity") == "WARNING"]
         feedback = result.get("feedback", "")
 
         if len(warning_violations) > 2:
@@ -2289,9 +2315,7 @@ class TestDirectorAuditorOperatorParity:
         guard_mock.run_deep_validation.side_effect = ValueError(long_error_msg)
         director._auditor._d.guard = guard_mock
 
-        result = director._auditor._run_genre_specific_validation(
-            manuscript="원고", ep_num=1
-        )
+        result = director._auditor._run_genre_specific_validation(manuscript="원고", ep_num=1)
 
         assert result["summary"] == f"장르 검증 실패: {long_error_msg}"
 
@@ -2303,9 +2327,7 @@ class TestDirectorAuditorOperatorParity:
         )
         director._auditor._d.guard = guard_mock
 
-        result = director._auditor._run_genre_specific_validation(
-            manuscript="원고", ep_num=1
-        )
+        result = director._auditor._run_genre_specific_validation(manuscript="원고", ep_num=1)
 
         assert result["degraded"] is True
         assert "requires string as left operand" in result["summary"]
@@ -2316,9 +2338,7 @@ class TestDirectorAuditorOperatorParity:
 
         genre_violations = {
             "has_critical": False,
-            "warning_violations": [
-                {"message": f"warning_{i}"} for i in range(10)
-            ],
+            "warning_violations": [{"message": f"warning_{i}"} for i in range(10)],
             "violations": [],
         }
 

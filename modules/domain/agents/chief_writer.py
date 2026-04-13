@@ -25,6 +25,8 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 from modules.core.constants import smart_truncate
 from modules.core.genre_schema_builder import build_state_updates_schema
 from modules.core.partial_fix_contract import normalize_patch_target_records
+from modules.core.scene_obligation_heuristics import measure_manuscript_scene_materialization
+from modules.core.writer_template import create_writer_template
 from modules.models.manuscript import validate_manuscript_candidate
 
 from .base_agent import _SYSTEM_CFG, BaseAgent
@@ -153,7 +155,7 @@ def _build_retry_reuse_feedback_block(previous_attempt: dict | None) -> str:
 def _normalize_strategy_feedback_value(value: object) -> str:
     if isinstance(value, str):
         return value.strip()
-    if isinstance(value, (dict, list)):
+    if isinstance(value, dict | list):
         return json.dumps(value, ensure_ascii=False).strip()
     return str(value or "").strip()
 
@@ -187,6 +189,168 @@ def _resolve_strategy_feedback(
     if strategy_key and strategy_key == str(rejected_strategy or "").strip():
         return _normalize_strategy_feedback_value(strategy_specific_feedback)
     return ""
+
+
+def _build_manuscript_contract_diagnostics(
+    *,
+    candidate: dict,
+    blueprint: dict | None,
+    prev_manuscript: str,
+    genre_name: str,
+) -> dict:
+    if not isinstance(candidate, dict) or not isinstance(blueprint, dict):
+        return {}
+
+    scene_breakdown = blueprint.get("scene_breakdown", {})
+    manuscript = str(candidate.get("manuscript", "") or "").strip()
+    if not manuscript or not isinstance(scene_breakdown, dict) or not scene_breakdown:
+        return {}
+
+    genre_code = normalize_chief_writer_genre_code(genre_name)
+    template_builder = create_writer_template(genre=genre_code)
+    template = template_builder.generate_template(
+        blueprint=blueprint,
+        prev_ending=(prev_manuscript[-600:] if isinstance(prev_manuscript, str) else ""),
+    )
+    validation = template_builder.validate_against_template(manuscript, template)
+    materialization = measure_manuscript_scene_materialization(manuscript, blueprint)
+
+    opening_anchor_keywords = (
+        tuple(re.findall(r"[\w가-힣]{3,}", template.opening_anchor)[:3]) if template.opening_anchor else ()
+    )
+    opening_part = manuscript[:600] if len(manuscript) > 600 else manuscript
+    opening_anchor_hit = not opening_anchor_keywords or any(
+        keyword in opening_part for keyword in opening_anchor_keywords
+    )
+
+    return {
+        "validation": validation,
+        "materialization": {
+            "scene_count": materialization.scene_count,
+            "matched_keywords": materialization.matched_keywords,
+            "total_keywords": materialization.total_keywords,
+            "overall_ratio": round(materialization.overall_ratio, 3),
+            "reflected_scenes": materialization.reflected_scenes,
+            "tail_scene_reflected": materialization.tail_scene_reflected,
+            "weak_scenes": list(materialization.weak_scenes),
+        },
+        "opening_anchor_required": bool(opening_anchor_keywords),
+        "opening_anchor_keywords": list(opening_anchor_keywords),
+        "opening_anchor_hit": opening_anchor_hit,
+    }
+
+
+def _manuscript_candidate_admission_reason(contract_diag: dict) -> str:
+    if not contract_diag:
+        return ""
+
+    validation = contract_diag.get("validation", {})
+    if validation.get("issues") or []:
+        return "template_contract_failed"
+
+    materialization = contract_diag.get("materialization", {})
+    scene_count = int(materialization.get("scene_count") or 0)
+    reflected_scenes = int(materialization.get("reflected_scenes") or 0)
+    if scene_count > 0 and reflected_scenes < min(2, scene_count):
+        return f"scene_obligation_under_materialized:{reflected_scenes}/{scene_count}"
+    if scene_count >= 2 and not materialization.get("tail_scene_reflected", False):
+        return "tail_scene_not_reflected"
+
+    if contract_diag.get("opening_anchor_required") and not contract_diag.get("opening_anchor_hit", False):
+        return "opening_anchor_missing"
+
+    return ""
+
+
+def _score_manuscript_contract_diag(contract_diag: dict) -> tuple:
+    if not contract_diag:
+        return (0, 0, 0.0, 0, 0)
+
+    validation = contract_diag.get("validation", {})
+    validation_issue_count = len(validation.get("issues") or [])
+    materialization = contract_diag.get("materialization", {})
+    reflected_scenes = int(materialization.get("reflected_scenes") or 0)
+    overall_ratio = float(materialization.get("overall_ratio") or 0.0)
+    tail_scene_reflected = int(bool(materialization.get("tail_scene_reflected", False)))
+    opening_anchor_hit = int(bool(contract_diag.get("opening_anchor_hit", False)))
+
+    return (
+        -validation_issue_count,
+        reflected_scenes,
+        round(overall_ratio, 3),
+        tail_scene_reflected,
+        opening_anchor_hit,
+    )
+
+
+def _qualify_manuscript_candidates_for_director(
+    *,
+    host,
+    candidates: list[dict],
+    blueprint: dict | None,
+    prev_manuscript: str,
+    genre_name: str,
+) -> tuple[list[dict], list[tuple[str, str]]]:
+    if not isinstance(blueprint, dict):
+        return candidates, []
+
+    qualified_records: list[tuple[tuple, dict]] = []
+    degraded_records: list[tuple[tuple, dict]] = []
+    rejected: list[tuple[str, str]] = []
+    for candidate in candidates:
+        contract_diag = _build_manuscript_contract_diagnostics(
+            candidate=candidate,
+            blueprint=blueprint,
+            prev_manuscript=prev_manuscript,
+            genre_name=genre_name,
+        )
+        metadata = candidate.setdefault("metadata", {})
+        if isinstance(metadata, dict):
+            metadata["template_contract"] = contract_diag
+
+        reason = _manuscript_candidate_admission_reason(contract_diag)
+        if isinstance(metadata, dict) and reason:
+            metadata["contract_admission_reason"] = reason
+        if isinstance(metadata, dict):
+            metadata["contract_strength"] = {
+                "reflected_scenes": int(contract_diag.get("materialization", {}).get("reflected_scenes") or 0),
+                "overall_ratio": float(contract_diag.get("materialization", {}).get("overall_ratio") or 0.0),
+                "tail_scene_reflected": bool(
+                    contract_diag.get("materialization", {}).get("tail_scene_reflected", False)
+                ),
+                "opening_anchor_hit": bool(contract_diag.get("opening_anchor_hit", False)),
+                "validation_issue_count": len((contract_diag.get("validation", {}) or {}).get("issues") or []),
+            }
+
+        contract_score = _score_manuscript_contract_diag(contract_diag)
+
+        if reason:
+            rejected.append((str(candidate.get("strategy", "unknown") or "unknown"), reason))
+            degraded_records.append((contract_score, candidate))
+            continue
+        qualified_records.append((contract_score, candidate))
+
+    if qualified_records:
+        qualified = [candidate for _, candidate in sorted(qualified_records, key=lambda item: item[0], reverse=True)]
+        safe_operator_log = getattr(host, "_safe_operator_log", None)
+        if callable(safe_operator_log):
+            safe_operator_log(
+                f"🔎 [Writer] {len(qualified)}/{len(candidates)} candidates cleared scene/materialization gate",
+                meta={"qualified_candidates": len(qualified), "rejected_candidates": len(rejected)},
+            )
+        return qualified, rejected
+
+    degraded_candidates = [
+        candidate for _, candidate in sorted(degraded_records, key=lambda item: item[0], reverse=True)
+    ]
+    safe_operator_log = getattr(host, "_safe_operator_log", None)
+    if callable(safe_operator_log) and degraded_candidates:
+        safe_operator_log(
+            "🔎 [Writer] all candidates failed contract gate; returning least-bad fallback order",
+            level="warning",
+            meta={"rejected_candidates": len(rejected)},
+        )
+    return degraded_candidates or candidates, rejected
 
 
 class ChiefWriter(BaseAgent):
@@ -694,7 +858,15 @@ class ChiefWriter(BaseAgent):
             return [fallback]
         return []
 
-    def _finalize_generate_ensemble_candidates(self, candidates: list[dict], ep_num: int) -> list[dict]:
+    def _finalize_generate_ensemble_candidates(
+        self,
+        candidates: list[dict],
+        ep_num: int,
+        *,
+        blueprint: dict | None,
+        prev_manuscript: str,
+        genre_name: str,
+    ) -> list[dict]:
         if not candidates:
             logging.error("[ChiefWriter] generate_ensemble: 앙상블 + 단일 폴백 모두 실패 — 에러 후보 반환")
             candidates = [
@@ -711,8 +883,17 @@ class ChiefWriter(BaseAgent):
             ]
 
         candidates = [validate_manuscript_candidate(candidate) for candidate in candidates]
-        self._annotate_candidate_diversity(candidates)
-        return candidates
+        qualified_candidates, rejected = _qualify_manuscript_candidates_for_director(
+            host=self,
+            candidates=candidates,
+            blueprint=blueprint,
+            prev_manuscript=prev_manuscript,
+            genre_name=genre_name,
+        )
+        if rejected:
+            logging.info("[ChiefWriter] manuscript contract gate rejected %d candidates", len(rejected))
+        self._annotate_candidate_diversity(qualified_candidates)
+        return qualified_candidates
 
     def generate_ensemble(
         self,
@@ -860,7 +1041,13 @@ class ChiefWriter(BaseAgent):
             strategy_feedback_map=normalized_strategy_feedback_map,
             rejected_strategy=rejected_strategy,
         )
-        return self._finalize_generate_ensemble_candidates(candidates, ep_num)
+        return self._finalize_generate_ensemble_candidates(
+            candidates,
+            ep_num,
+            blueprint=blueprint,
+            prev_manuscript=prev_manuscript,
+            genre_name=genre_name,
+        )
 
     def _generate_single_candidate(
         self,
@@ -966,7 +1153,7 @@ class ChiefWriter(BaseAgent):
         strategy_config = self.ENSEMBLE_STRATEGIES.get(strategy, self.ENSEMBLE_STRATEGIES["balanced"])
         temperature = (
             float(strategy_temperature)
-            if isinstance(strategy_temperature, (int, float))
+            if isinstance(strategy_temperature, int | float)
             else float(strategy_config["temperature"])
         )
         strategy_feedback_block = f"\n[Strategy-Specific Feedback]\n{strategy_feedback}\n" if strategy_feedback else ""

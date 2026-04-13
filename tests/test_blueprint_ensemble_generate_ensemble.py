@@ -421,7 +421,7 @@ def test_request_blueprint_generation_rejects_empty_protagonist_state_contract()
         genre=GenreTypes.WUXIA,
     )
 
-    assert result == (None, AgentErrorType.SCHEMA_INCOMPATIBLE)
+    assert result == (None, AgentErrorType.CANDIDATE_DISQUALIFIED)
 
 
 def test_blueprint_contract_admission_reason_rejects_generic_scene_shells():
@@ -496,7 +496,7 @@ def test_sanitize_blueprint_candidate_rejects_unauthorized_tactical_intrusion():
         tactical_excerpt="주인공은 PB와 대치하며 매수 여부를 결정한다.",
     )
 
-    assert result == (None, AgentErrorType.SCHEMA_INCOMPATIBLE)
+    assert result == (None, AgentErrorType.CANDIDATE_DISQUALIFIED)
 
 
 def test_request_blueprint_generation_rejects_contaminated_integrated_scenario():
@@ -517,7 +517,7 @@ def test_request_blueprint_generation_rejects_contaminated_integrated_scenario()
         genre=GenreTypes.WUXIA,
     )
 
-    assert result == (None, AgentErrorType.SCHEMA_INCOMPATIBLE)
+    assert result == (None, AgentErrorType.CANDIDATE_DISQUALIFIED)
 
 
 def test_request_blueprint_generation_sanitizes_contaminated_key_events():
@@ -553,6 +553,154 @@ def test_request_blueprint_generation_sanitizes_contaminated_key_events():
 
     assert isinstance(result, dict)
     assert result["scene_breakdown"]["scene_1"]["key_events"] == ["문을 열고 적과 마주친다."]
+
+
+def test_generate_single_compacts_retry_feedback_before_prompt_injection():
+    agent = _make_agent()
+    captured = {}
+
+    def _capture_prompt_bundle(**kwargs):
+        captured["extra_directive"] = kwargs["extra_directive"]
+        return "PROMPT", "FALLBACK"
+
+    agent._build_blueprint_prompt_bundle = MagicMock(side_effect=_capture_prompt_bundle)
+    agent._request_blueprint_generation = MagicMock(return_value={"ok": True})
+
+    result = agent._generate_single(
+        ep_num=9,
+        arc_focus="focus",
+        constraints_str="constraints",
+        tactical_excerpt="tactical",
+        prev_info="prev",
+        strategy={"name": "action_focused"},
+        feedback=(
+            "[작품 추적 슬롯 요약]\nnoise to drop\n"
+            "[Binding prevalidation]\n"
+            "- [CRITICAL/episode_progression] replayed scene family\n"
+            "- [MAJOR/temporal_deictic] relative date drift\n"
+            "[StyleGuide 문체/anti-AI 참고]\nignore me\n"
+        ),
+        strategy_feedback="Keep the episode on the fresh forward motion axis.",
+        protagonist_name="주인공",
+        protagonist_config={},
+        hud_context="",
+        genre=GenreTypes.WUXIA,
+        cache_name="cache/bp",
+    )
+
+    assert result == {"ok": True}
+    extra_directive = captured["extra_directive"]
+    assert "episode_progression" in extra_directive
+    assert "temporal_deictic" in extra_directive
+    assert "Keep the episode on the fresh forward motion axis." in extra_directive
+    assert "[작품 추적 슬롯 요약]" not in extra_directive
+    assert "StyleGuide 문체/anti-AI 참고" not in extra_directive
+
+
+def test_sanitize_blueprint_candidate_rejects_episode_progression_replay_before_validator_spend():
+    agent = _make_agent()
+    candidate = {
+        "opening_transition": {"type": "direct_continuation"},
+        "protagonist_state": {"mood": "집중"},
+        "integrated_scenario": "A" * 900,
+        "scene_breakdown": {
+            "scene_1": {
+                "title": "다시 서재",
+                "goal": "아버지와 또 맞선다.",
+                "summary": "서재에서 아버지와 다시 대치한다.",
+                "characters": ["한시우", "한정호"],
+                "key_events": ["서재에서 아버지와 다시 대치한다."],
+                "location": "성북동 본가, 서재",
+            },
+            "scene_2": {
+                "title": "다시 방",
+                "goal": "전화를 다시 돌린다.",
+                "summary": "자기 방에서 다시 전화를 돌린다.",
+                "characters": ["한시우"],
+                "key_events": ["방에서 휴대폰으로 다시 전화를 건다."],
+                "location": "성북동 본가, 한시우의 방",
+            },
+        },
+    }
+
+    result = agent._sanitize_blueprint_candidate(
+        candidate,
+        strategy_name="action_focused",
+        genre=GenreTypes.WUXIA,
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_2": {"location": "한정호 회장의 서재", "characters": ["한시우", "한정호"]},
+                "scene_4": {"location": "한시우의 방", "characters": ["한시우"]},
+            }
+        },
+        constraint_block={
+            "must_focus": {"content": "광화문 로펌에서 법인 설립을 의뢰하고, PB센터에서 자산 현금화를 요청한다."},
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_2",
+                        "label": "독립 선언",
+                        "location": "한정호 회장의 서재",
+                        "location_variants": ["한정호 회장의 서재", "서재"],
+                        "characters": ["한시우", "한정호"],
+                    },
+                    {
+                        "scene_key": "scene_4",
+                        "label": "전장의 서막",
+                        "location": "한시우의 방",
+                        "location_variants": ["한시우의 방", "성북동 본가", "방"],
+                        "characters": ["한시우"],
+                    },
+                ]
+            },
+        },
+    )
+
+    assert result == (None, AgentErrorType.CANDIDATE_DISQUALIFIED)
+
+
+def test_format_constraints_surfaces_episode_progression_guardrails_for_producer_prompt():
+    agent = _make_agent()
+
+    formatted = agent._format_constraints(
+        {
+            "ep_num": 9,
+            "must_focus": {
+                "arc_title": "포지션 진입",
+                "key_events": ["수수료 두 배 제안으로 박성호 설득 성공", "WTI 원유 6월물 15억 포지션 진입 완료"],
+            },
+            "episode_progression_packet": {
+                "time_truths": ["현재 Arc 시간축은 2006년 2월(겨울 축)이다."],
+                "blocked_scene_families": [
+                    {
+                        "label": "PB의 맹렬한 반대",
+                        "location": "한미증권 청담동 지점 15층 VIP룸",
+                        "characters": ["한시우", "박성호"],
+                        "type": "tension_build",
+                    }
+                ],
+            },
+        },
+        genre=GenreTypes.HUNTER,
+    )
+
+    assert "[Episode Progression - 직전 화 replay 금지]" in formatted
+    assert "PB의 맹렬한 반대" in formatted
+    assert "한미증권 청담동 지점 15층 VIP룸" in formatted
+    assert "MUST_FOCUS의 새 사건 축으로 전진" in formatted
+
+
+def test_select_generate_error_type_prefers_candidate_disqualified_over_schema_bundle():
+    assert (
+        BlueprintEnsembleGenerator._select_generate_error_type(
+            [
+                AgentErrorType.TIMEOUT,
+                AgentErrorType.SCHEMA_INCOMPATIBLE,
+                AgentErrorType.CANDIDATE_DISQUALIFIED,
+            ]
+        )
+        == AgentErrorType.CANDIDATE_DISQUALIFIED
+    )
 
 
 class TestBlueprintTemporalCarryover:
