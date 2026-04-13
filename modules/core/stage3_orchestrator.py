@@ -2575,32 +2575,53 @@ class Stage3Orchestrator:
                 blueprint_score = pipeline_result.get("last_score")
                 if blueprint_score is None:
                     blueprint_score = pipeline_result.get("phases", {}).get("generate", {}).get("selected_score")
-                if blueprint_score is None:
-                    blueprint_score = 1.0
-                dashboard_warnings: list[str] = []
-                if quality_gate_failed:
-                    dashboard_warnings.append("quality_gate_failed")
-                if quality_risk:
-                    dashboard_warnings.append("quality_risk")
-                if revision_required:
-                    dashboard_warnings.append("revision_required")
                 quality_dashboard.record_validation(
                     ep_num=working_ep,
-                    result={
-                        "decision": final_verdict if final_verdict in ("PASS", "PASS_WITH_WARNING") else "PASS",
-                        "score": blueprint_score,
-                        "violations": [],
-                        "warnings": dashboard_warnings,
-                        "quality_signals": {
-                            "quality_gate_failed": quality_gate_failed,
-                            "quality_risk": quality_risk,
-                            "revision_required": revision_required,
-                        },
-                    },
+                    result=self._build_stage3_quality_dashboard_result(
+                        final_verdict=final_verdict,
+                        blueprint_score=blueprint_score,
+                        quality_gate_failed=quality_gate_failed,
+                        quality_risk=quality_risk,
+                        revision_required=revision_required,
+                    ),
                     stage=3,
                 )
             except Exception as err:
                 _logging.debug("[Stage3] QualityDashboard PASS record failed (ignored): %s", err)
+
+    @staticmethod
+    def _build_stage3_quality_dashboard_result(
+        *,
+        final_verdict: str,
+        blueprint_score,
+        quality_gate_failed: bool,
+        quality_risk: bool,
+        revision_required: bool,
+    ) -> dict:
+        if blueprint_score is None:
+            blueprint_score = 1.0
+        dashboard_warnings: list[str] = []
+        if quality_gate_failed:
+            dashboard_warnings.append("quality_gate_failed")
+        if quality_risk:
+            dashboard_warnings.append("quality_risk")
+        if revision_required:
+            dashboard_warnings.append("revision_required")
+        normalized_decision = (
+            final_verdict if final_verdict in ("PASS", "PASS_WITH_FIX", "PASS_WITH_WARNING") else "PASS"
+        )
+        return {
+            "decision": normalized_decision,
+            "score": blueprint_score,
+            "violations": [],
+            "warnings": dashboard_warnings,
+            "quality_signals": {
+                "final_verdict": final_verdict,
+                "quality_gate_failed": quality_gate_failed,
+                "quality_risk": quality_risk,
+                "revision_required": revision_required,
+            },
+        }
 
     @staticmethod
     def _extract_stage3_attempt_num(pipeline_result: dict) -> int:

@@ -74,11 +74,9 @@ _BINDING_PREVALIDATION_CATEGORIES = {
     "tactical_semantic_fidelity",
     "opening_transition",
 }
-_BINDING_PREVALIDATION_REGENERATE_CATEGORIES = {
-    "opening_anchor",
-    "scene_completeness",
-    "episode_progression",
-}
+# MAJOR/CRITICAL binding prevalidation issues are structural contract breaches.
+# They should never be routed through local faux-inplace repair.
+_BINDING_PREVALIDATION_REGENERATE_CATEGORIES = set(_BINDING_PREVALIDATION_CATEGORIES)
 _TACTICAL_INTRUSION_ENTRY_MARKERS = (
     "취객",
     "난입",
@@ -2242,36 +2240,86 @@ class UnifiedBlueprintValidator:
         blueprint: dict,
         arc_data: dict | None,
     ) -> list[dict]:
-        """Detect ending-state timeline drift against authoritative arc timeline."""
+        """Detect ending-state timeline drift against authoritative arc timeline window.
+
+        For non-terminal episodes inside a multi-episode arc, the blueprint end must
+        stay within the arc window rather than exactly matching the arc terminal end.
+        Exact terminal-end matching is reserved for the arc's last episode (or
+        single-point timelines where start/end collapse to the same bucket).
+        """
         if not isinstance(arc_data, dict):
             return []
         timeline = arc_data.get("state_changes", {}).get("timeline", {})
         if not isinstance(timeline, dict):
             return []
+        arc_start = self._parse_timeline_point(timeline.get("start"), pick="start")
         arc_end = self._parse_timeline_point(timeline.get("end"), pick="end")
-        if arc_end is None:
+        if arc_start is None and arc_end is None:
             return []
         ending_state = blueprint.get("ending_state", {})
         if not isinstance(ending_state, dict):
             return []
         bp_timeline = ending_state.get("timeline", {})
         bp_end = self._parse_timeline_point(bp_timeline, pick="end")
-        if bp_end is None or bp_end == arc_end:
+        if bp_end is None:
             return []
+        ep_num = _safe_int(blueprint.get("ep_num") or blueprint.get("episode_number"), 0)
+        arc_end_ep = _safe_int(arc_data.get("ep_end"), 0)
         bp_expr = bp_timeline.get("표현") if isinstance(bp_timeline, dict) else ""
         if not bp_expr:
             bp_expr = bp_timeline.get("expression") if isinstance(bp_timeline, dict) else ""
         bp_expr = str(bp_expr or bp_timeline or "").strip()
+        arc_start_expr = str(timeline.get("start") or "").strip()
         arc_expr = str(timeline.get("end") or "").strip()
-        return [
-            {
-                "severity": "MAJOR",
-                "category": "arc_timeline",
-                "issue": f"ending_state.timeline 불일치: blueprint '{bp_expr}' vs arc '{arc_expr}'",
-                "evidence": f"blueprint_timeline={bp_end}, arc_timeline={arc_end}",
-                "fix_hint": "ending_state.timeline과 time_flow를 arc state_changes.timeline 종료 시점에 맞추기",
-            }
-        ]
+        require_terminal_exact_match = bool(
+            arc_end is not None
+            and (
+                arc_start is None
+                or arc_start == arc_end
+                or (ep_num > 0 and arc_end_ep > 0 and ep_num >= arc_end_ep)
+            )
+        )
+
+        if require_terminal_exact_match:
+            if bp_end == arc_end:
+                return []
+            return [
+                {
+                    "severity": "MAJOR",
+                    "category": "arc_timeline",
+                    "issue": f"ending_state.timeline 불일치: blueprint '{bp_expr}' vs arc '{arc_expr}'",
+                    "evidence": f"blueprint_timeline={bp_end}, arc_timeline={arc_end}",
+                    "fix_hint": "ending_state.timeline과 time_flow를 arc state_changes.timeline 종료 시점에 맞추기",
+                }
+            ]
+
+        if arc_start is not None and bp_end < arc_start:
+            return [
+                {
+                    "severity": "MAJOR",
+                    "category": "arc_timeline",
+                    "issue": (
+                        f"ending_state.timeline 범위 이탈: blueprint '{bp_expr}' "
+                        f"starts before arc window '{arc_start_expr} -> {arc_expr}'"
+                    ),
+                    "evidence": f"blueprint_timeline={bp_end}, arc_start={arc_start}, arc_end={arc_end}",
+                    "fix_hint": "ending_state.timeline과 time_flow를 arc state_changes.timeline 시작 이후 범위에 맞추기",
+                }
+            ]
+        if arc_end is not None and bp_end > arc_end:
+            return [
+                {
+                    "severity": "MAJOR",
+                    "category": "arc_timeline",
+                    "issue": (
+                        f"ending_state.timeline 범위 이탈: blueprint '{bp_expr}' "
+                        f"exceeds arc window '{arc_start_expr} -> {arc_expr}'"
+                    ),
+                    "evidence": f"blueprint_timeline={bp_end}, arc_start={arc_start}, arc_end={arc_end}",
+                    "fix_hint": "ending_state.timeline과 time_flow를 arc state_changes.timeline 종료 이전 범위에 맞추기",
+                }
+            ]
+        return []
 
     def _collect_tactical_semantic_fidelity_issues(
         self,

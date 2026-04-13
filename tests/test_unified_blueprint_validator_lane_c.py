@@ -886,8 +886,11 @@ def test_lane_c_build_director_validation_result_escalates_capital_unit_issue_to
     assert verdict == "PASS_WITH_FIX"
     assert result["verdict"] == "PASS_WITH_FIX"
     assert result["revision_required"] is True
+    assert result["fix_scope"] == "full"
     assert result["binding_prevalidation_issue_count"] == 1
     assert result["binding_prevalidation_categories"] == ["capital_unit"]
+    assert result["binding_regenerate_only_categories"] == ["capital_unit"]
+    assert "capital_unit" in result["fix_scope_reasoning"]
     assert "[Binding prevalidation]" in result["feedback"]
 
 
@@ -942,8 +945,11 @@ def test_lane_c_run_compare_validation_escalates_binding_issue_to_pass_with_fix(
     assert verdict == "PASS_WITH_FIX"
     assert result["verdict"] == "PASS_WITH_FIX"
     assert result["revision_required"] is True
-    assert result["fix_scope"] == "inplace"
+    assert result["fix_scope"] == "full"
     assert result["binding_prevalidation_issue_count"] == 1
+    assert result["binding_prevalidation_categories"] == ["arc_timeline"]
+    assert result["binding_regenerate_only_categories"] == ["arc_timeline"]
+    assert "arc_timeline" in result["fix_scope_reasoning"]
     assert "[Binding prevalidation]" in result["feedback"]
 
 
@@ -998,6 +1004,64 @@ def test_lane_c_run_compare_validation_escalates_capital_unit_issue_to_pass_with
     assert verdict == "PASS_WITH_FIX"
     assert result["verdict"] == "PASS_WITH_FIX"
     assert result["revision_required"] is True
+    assert result["fix_scope"] == "full"
     assert result["binding_prevalidation_issue_count"] == 1
     assert result["binding_prevalidation_categories"] == ["capital_unit"]
+    assert result["binding_regenerate_only_categories"] == ["capital_unit"]
+    assert "capital_unit" in result["fix_scope_reasoning"]
     assert "[Binding prevalidation]" in result["feedback"]
+
+
+def test_lane_c_arc_timeline_allows_intra_arc_episode_window():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    issues = validator._collect_arc_timeline_alignment_issues(
+        blueprint={
+            "ep_num": 7,
+            "ending_state": {
+                "timeline": {
+                    "표현": "2006년 2월 16일 오전 9시 30분",
+                }
+            },
+        },
+        arc_data={
+            "ep_start": 7,
+            "ep_end": 12,
+            "state_changes": {
+                "timeline": {
+                    "start": {"year": 2006, "month": 2, "day": 1},
+                    "end": {"year": 2006, "month": 3, "week": 1},
+                }
+            },
+        },
+    )
+
+    assert issues == []
+
+
+def test_lane_c_arc_timeline_requires_terminal_episode_to_match_arc_end():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    issues = validator._collect_arc_timeline_alignment_issues(
+        blueprint={
+            "ep_num": 12,
+            "ending_state": {
+                "timeline": {
+                    "표현": "2006년 2월 16일 오전 9시 30분",
+                }
+            },
+        },
+        arc_data={
+            "ep_start": 7,
+            "ep_end": 12,
+            "state_changes": {
+                "timeline": {
+                    "start": {"year": 2006, "month": 2, "day": 1},
+                    "end": {"year": 2006, "month": 3, "week": 1},
+                }
+            },
+        },
+    )
+
+    assert len(issues) == 1
+    assert issues[0]["category"] == "arc_timeline"

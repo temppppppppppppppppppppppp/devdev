@@ -1,14 +1,14 @@
 # 0_0 Stage3 Contract Tightening Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (the earlier Stage3 binding/handoff/source-anchor tranches remain landed, the reopened 2026-04-11 truth-first parent tranche is landed on the live workspace, the later fail-only structural hardening tranche is also landed, and the 2026-04-12 live rerun follow-up slice is now likewise landed on the live workspace: success proof sinks now sit behind committed persistence, Stage3 `runtime_advisory` / `retry_directives` normalization is in place, `PASS_WITH_FIX` success-accounting parity is restored, analyzer sink-alignment coverage is widened, `opening_anchor` / `scene_completeness` structural binding failures now escalate to regenerate-only full repair with explicit visibility, ep-boundary replay leakage plus canonical institution drift on the ep2 -> ep3 seam now force regenerate-only repair through `episode_progression` truth and expanded institution fact-lock coverage, the first 2026-04-13 child-lane follow-up blocks the observed Stage3 retry plateau by denying low-yield inplace reopening after `PASS_WITH_FIX` exhaustion or repeated inplace score/signature plateau, the second same-day live-rerun follow-up now also blocks `Director PASS < quality_gate` patch reopening while suppressing blind live-HUD V46 current-state injection during blueprint scoring unless an explicit `blueprint_scoring_hud` is provided, and a narrower same-day closure-residual observability follow-up is now also landed so Stage3 completion stats separate the current-run pass rate from the cumulative generator pass rate; the older first-ensemble visibility follow-up remains documented but not yet landed, and proof remains pending)
+Status: partially_realized (the earlier Stage3 binding/handoff/source-anchor tranches remain landed, the reopened 2026-04-11 truth-first parent tranche is landed on the live workspace, the later fail-only structural hardening tranche is also landed, and the 2026-04-12/13 rerun follow-up slices are now likewise landed on the live workspace: success proof sinks now sit behind committed persistence, Stage3 `runtime_advisory` / `retry_directives` normalization is in place, `PASS_WITH_FIX` success-accounting parity is restored, analyzer sink-alignment coverage is widened, `opening_anchor` / `scene_completeness` structural binding failures now escalate to regenerate-only full repair with explicit visibility, ep-boundary replay leakage plus canonical institution drift on the ep2 -> ep3 seam now force regenerate-only repair through `episode_progression` truth and expanded institution fact-lock coverage, the first 2026-04-13 child-lane follow-up blocks the observed Stage3 retry plateau by denying low-yield inplace reopening after `PASS_WITH_FIX` exhaustion or repeated inplace score/signature plateau, the second same-day live-rerun follow-up now also blocks `Director PASS < quality_gate` patch reopening while suppressing blind live-HUD V46 current-state injection during blueprint scoring unless an explicit `blueprint_scoring_hud` is provided, the same-day child closure-residual follow-up now has live proof on `ep4/ep5` that advisory-only `scenario_density` settles as `PASS_WITH_WARNING` without reopening local patch, the narrower same-day closure-residual observability follow-up is now also landed so Stage3 completion stats separate the current-run pass rate from the cumulative generator pass rate, the later same-day parent binding-family static-kill tranche is now landed so all MAJOR/CRITICAL binding-prevalidation categories route through regenerate-only repair, Phase2 blocks inplace reopen when prior binding issues remain, and terminal fallback stays blocked on unresolved binding residuals, and the later same-day cost-first decision-surface static survey now fixes the next bounded parent-owned tranche as contract-driven repair eligibility plus success-state projection normalization before another paid proof wave; a fresh Stage3 proof wave is now completed on current `main`, and the next bounded residual for this parent lane is that new cost-first static tranche while the older first-ensemble visibility follow-up remains documented but not yet landed)
 Canonical Path: `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2/Stage3 survey docs and lane drafts untracked`
-- Resume Commit: `2701e9e6a7d741d455afc930afd94e178ed555d4`
-- Resume Drift Summary: `snapshot main is now authoritative; the earlier binding/handoff/source-anchor tranches remain landed, the live workspace on top of current main now also carries the reopened truth-first parent tranche, the bounded Stage3 analyzer sink-alignment coverage follow-up, the later fail-only structural hardening tranche for regenerate-only binding categories plus visibility propagation, the later ep3 replay / institution-truth fail-only follow-up across compiler/validator/runtime, the 2026-04-13 child-lane retry-plateau and quality-gate/truth follow-ups, and the narrower same-day closure-residual observability follow-up in `stage3_orchestrator.py` that now separates current-run pass-rate authority from cumulative generator pass-rate authority while stale 2026-04-11 backup-branch work remains excluded from this SSOT's authority`
+- Resume Commit: `347acac374f7246cca433d4be9c7466e802c9883`
+- Resume Drift Summary: `snapshot main is now authoritative; the earlier binding/handoff/source-anchor tranches remain landed, the live workspace on top of current main also carries the reopened truth-first parent tranche, the bounded Stage3 analyzer sink-alignment coverage follow-up, the later fail-only structural hardening tranche for regenerate-only binding categories plus visibility propagation, the later ep3 replay / institution-truth fail-only follow-up across compiler/validator/runtime, the 2026-04-13 child-lane retry-plateau and quality-gate/truth follow-ups, the same-day child closure-residual follow-up that now has live proof on `ep4/ep5`, the narrower same-day closure-residual observability follow-up in `stage3_orchestrator.py`, the later same-day parent binding-family static-kill tranche across validator/runtime/test coverage, and the later same-day cost-first decision-surface static survey; the bounded fresh proof wave is now completed on current main and the next active residual is the parent-owned static tranche for contract-driven repair eligibility plus projection normalization, while stale 2026-04-11 backup-branch work remains excluded from this SSOT's authority`
 Source Survey Docs:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
@@ -27,6 +27,8 @@ Source Survey Docs:
 - `docs/2026-04-13/stage3-live-run-quality-gate-patch-reopen-3pass-audit.md`
 - `docs/2026-04-13/stage3-live-run-closure-and-residual-families-parallel-full-survey.md`
 - `docs/2026-04-13/stage3-closure-residual-fail-only-promotion-survey.md`
+- `docs/2026-04-13/stage3-post-run-global-residual-promotion-survey.md`
+- `docs/2026-04-13/stage3-cost-first-decision-surface-static-survey.md`
 - `docs/2026-04-11/stage23-current-main-static-parallel-survey.md`
 Evidence Artifacts:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-evidence.json`
@@ -560,3 +562,163 @@ Execution consequence:
 - keep this lane partial, but treat the narrower closure-residual observability slice as landed on current `main`
 - do not treat this as closure for the older first-ensemble heartbeat follow-up
 - keep the next operator-directed action on the bounded proof wave rather than another same-day Stage3 parent patch
+
+## 21. 2026-04-13 Post-Run Global Survey Update
+
+Evidence basis:
+
+- `docs/2026-04-13/stage3-post-run-global-residual-promotion-survey.md`
+- `0_temp.txt`
+- `projects/000_260412_a/logs/session_20260413_113134.log`
+- `modules/domain/agents/three_phase_blueprint_runtime.py`
+- `modules/core/stage3_orchestrator.py`
+
+Live-workspace proof result:
+
+1. the bounded Stage3 proof wave is now complete on current `main`
+2. `ep4`, `ep5`, and `ep6` all closed as saved Stage3 outcomes and the run returned to menu, then exited cleanly
+3. the child-lane advisory-only `scenario_density` acceptance path is now proven landed on `ep4` and `ep5`
+4. the new front Stage3 residual is the `ep6` terminal-quality-gate coherence family:
+   - Director `PASS 88`
+   - quality gate force-reject
+   - emergency fallback accept as `PASS_WITH_WARNING 88`
+5. `TF-49` inventory gaps remain operator-visible but are not the next Stage3 blocker
+
+Execution consequence:
+
+- keep this lane partial, but treat the proof wave itself as completed rather than pending
+- treat the bounded same-lane post-proof terminal-quality-gate coherence tranche as now landed on the current workspace:
+  - final-retry `PASS < quality_gate` now promotes directly to authoritative `PASS_WITH_WARNING`
+  - the terminal surface no longer has to present a fake final `REJECT` before the accepted warning result
+- make the next action a fresh rerun proof of that landed terminal-quality-gate coherence path
+- do not reopen the child `scenario_density` family as front work
+- keep `TF-49` and `temporal_deictic` on the residual watchlist without widening this turn into a new Stage3 lane
+- keep the older first-ensemble visibility follow-up deferred inside this same parent owner
+
+## 22. 2026-04-13 Binding-Family Static-Kill Landing Update
+
+Evidence basis:
+
+- `0_temp.txt`
+- `projects/000_260412_a/logs/session_20260413_140153.log`
+- `projects/000_260412_a/logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json`
+- `projects/000_260412_a/logs/artifacts/stage3/ep_0007/attempt_10/final_blueprint__action_focused.json`
+- `modules/domain/agents/unified_blueprint_validator.py`
+- `modules/domain/agents/three_phase_blueprint_runtime.py`
+
+Live-failure promotion result:
+
+1. the later same-day rerun surfaced a stronger parent-owned failure family than the earlier `ep6` terminal-quality-gate coherence slice:
+   - `ep7` spent repeated local patch attempts on `arc_timeline`
+   - the unresolved binding residual still reached `PASS_WITH_WARNING`
+   - `ep8` immediately reopened on the same `arc_timeline` family before operator shutdown
+2. the static code fix now lands a bounded parent-owned static kill:
+   - all MAJOR/CRITICAL binding-prevalidation categories now route through regenerate-only repair in validator output
+   - runtime Phase2 blocks inplace reopen whenever the previous reject still carried binding issues
+   - runtime terminal fallback remains blocked when unresolved binding issues survive to the final failure surface
+3. this slice intentionally treats binding residuals as structural contract failures, not local faux-inplace patch targets
+
+Execution consequence:
+
+- keep this lane partial, but treat the newer binding-family static-kill tranche as now landed on the current workspace
+- supersede the narrower `ep6` terminal-quality-gate coherence slice as the immediate-next proof target inside this same parent lane
+- make the next action one fresh rerun proof focused on whether `ep7/ep8` no longer churn through `binding -> inplace -> fallback warning`
+- do not widen this turn into DecisionKernel or broad patch-IR refactoring
+
+## 23. 2026-04-13 Cost-First Decision-Surface Static Survey Update
+
+Evidence basis:
+
+- `docs/2026-04-13/stage3-cost-first-decision-surface-static-survey.md`
+- `modules/domain/agents/unified_blueprint_validator.py`
+- `modules/domain/agents/three_phase_blueprint_runtime.py`
+- `modules/domain/agents/three_phase_blueprint_generator.py`
+- `modules/core/stage3_orchestrator.py`
+- `tests/test_unified_blueprint_validator_lane_c.py`
+- `tests/test_blueprint_patch_mode.py`
+- `tests/test_stage3_orchestrator_handle_success_lane_c.py`
+
+Static survey result:
+
+1. the newly landed binding-family static kill is the correct first cheap barrier, but it does not yet close the broader cost surface
+2. the next avoidable spend path is still `repair eligibility authority`:
+   - Phase2 local patch routing still depends mainly on `prev_fix_scope`, score, and retry heuristics
+   - it does not yet consume the authoritative `repair_contract` / `scope_authority` contract as the primary gate
+3. projection semantics also remain compressed in downstream success sinks:
+   - dashboard success projection still collapses `PASS_WITH_FIX` to `PASS` plus warnings
+   - this is acceptable legacy behavior for now, but it weakens deterministic policy reasoning
+
+Execution consequence:
+
+- keep this lane partial, but change the immediate-next residual from `fresh rerun proof first` to one more bounded static tranche:
+  - contract-driven repair eligibility
+  - plus success-state projection normalization
+- after that tranche lands, take the next rerun as the cheapest useful proof step
+- do not open a new queue lane
+- do not widen directly into full DecisionKernel / patch-IR migration from this turn alone
+
+## 24. 2026-04-13 Contract-Driven Repair Eligibility + Projection Normalization Landed
+
+Evidence basis:
+
+- `docs/2026-04-13/stage3-cost-first-decision-surface-static-survey.md`
+- `modules/domain/agents/three_phase_blueprint_runtime.py`
+- `modules/core/stage3_orchestrator.py`
+- `tests/test_blueprint_patch_mode.py`
+- `tests/test_stage3_orchestrator_handle_success_lane_c.py`
+- `tests/chaos/test_stage3_metrics.py`
+
+Landed tranche result:
+
+1. Stage3 runtime local patch routing is now contract-first when an explicit repair contract exists:
+   - Phase2 retry reopen now prefers `repair_contract` / `scope_authority` over raw `prev_fix_scope`
+   - explicit non-local or unsupported local contracts now fail closed back to regenerate instead of silently re-entering faux-inplace
+   - legacy no-contract paths remain backward compatible, so older `fix_scope`-only retries still behave as before until upstream validators emit richer contracts
+2. Stage3 pass-with-fix iteration now records a `local_patch_gate` snapshot and blocks local Blueprint patching when the authoritative contract says the target is not safely local
+3. Stage3 success projection no longer silently flattens `PASS_WITH_FIX` to plain `PASS` in the quality dashboard sink:
+   - success surfaces now preserve `PASS`, `PASS_WITH_FIX`, and `PASS_WITH_WARNING` distinctly
+   - downstream quality signals now also carry the authoritative `final_verdict`
+
+Execution consequence:
+
+- keep this lane partial, but treat the contract-driven repair-eligibility tranche as now landed on the current workspace
+- restore the immediate-next action to one fresh rerun proof focused on `ep7/ep8`:
+  - confirm binding-driven churn no longer reopens faux-inplace
+  - confirm success sinks preserve post-fix warning/fix semantics coherently
+- do not widen this turn into DecisionKernel / patch-IR migration or another new queue lane
+
+## 25. 2026-04-13 Three-Tranche Safe Sequencing Override
+
+Evidence basis:
+
+- `docs/2026-04-13/stage3-three-tranche-safe-sequencing-plan.md`
+- `docs/2026-04-13/stage3-cost-first-decision-surface-static-survey.md`
+- `docs/2026-04-13/stage3-decision-kernel-queue-semantics-operating-note.md`
+
+Operator-safe sequencing result:
+
+1. the operator preference is now explicitly `slow + safe + tranche-isolated`, not `cheapest proof as soon as possible`
+2. under that preference, the next Stage3 move is no longer an immediate rerun
+3. instead, this parent lane now fixes a three-tranche static route with mandatory commit gates:
+   - Tranche 1: `Stage3RepairRouter` extraction only
+   - static validation only
+   - snapshot commit on `main`
+   - Tranche 2: strict local-fix contract gate
+   - static validation only
+   - snapshot commit on `main`
+   - Tranche 3: faux-inplace reduction or first patch-IR preparation
+   - static validation only
+   - snapshot commit on `main`
+   - only after those three commits: one fresh proof rerun
+4. tranche 1 is authority-consolidation only:
+   - behavior meaning should remain as close as possible to the current landed runtime
+   - policy tightening belongs to tranche 2, not tranche 1
+5. live-run artifacts, DB files, and unrelated planning drafts must stay outside the tranche commits unless explicitly separated as evidence commits
+
+Execution consequence:
+
+- keep this lane partial and active
+- supersede the earlier `fresh rerun proof next` reading for the immediate-next action
+- fix the immediate-next action to `Tranche 1. Stage3RepairRouter Extraction`
+- require static validation plus a narrow snapshot commit before tranche 2 is allowed to start
+- do not open a new queue lane for the three-tranche sequence; keep it inside this same parent lane

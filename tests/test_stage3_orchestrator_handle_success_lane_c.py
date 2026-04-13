@@ -95,12 +95,13 @@ def test_lane_c_record_stage3_success_completion_records_dashboard_warnings():
     kwargs = app.quality_dashboard.record_validation.call_args.kwargs
     assert kwargs["ep_num"] == 5
     assert kwargs["stage"] == 3
-    assert kwargs["result"]["decision"] == "PASS"
+    assert kwargs["result"]["decision"] == "PASS_WITH_FIX"
     assert kwargs["result"]["warnings"] == [
         "quality_gate_failed",
         "quality_risk",
         "revision_required",
     ]
+    assert kwargs["result"]["quality_signals"]["final_verdict"] == "PASS_WITH_FIX"
     log_texts = [call.args[0] for call in ctx.ui.log.call_args_list if call.args]
     assert any(
         "[Stage3 Summary] ep 5 | verdict=PASS_WITH_FIX | score=91 | attempt=2 | prevalidation=6 | binding=2 | TF-49=1 | PinGuard=1"
