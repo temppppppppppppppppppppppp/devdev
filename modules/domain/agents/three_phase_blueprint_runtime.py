@@ -243,21 +243,11 @@ class _Stage3RepairRouter:
             retry > 0
             and retry_state.previous_best is not None
             and retry_state.prev_reject_score >= inplace_threshold
-            and (
-                resolved_fix_scope == "inplace"
-                or (
-                    not material.local_patch_gate.get("contract_present")
-                    and bool(material.local_patch_gate.get("local_patch_ready", False))
-                )
-            )
+            and resolved_fix_scope == "inplace"
         )
         inplace_patch_eligible = inplace_retry_candidate and bool(material.local_patch_gate.get("local_patch_ready", False))
         contract_block_reason = ""
-        if (
-            inplace_retry_candidate
-            and material.local_patch_gate.get("contract_present")
-            and not material.local_patch_gate.get("local_patch_ready", False)
-        ):
+        if inplace_retry_candidate and not material.local_patch_gate.get("local_patch_ready", False):
             gate_reason = str(material.local_patch_gate.get("reason", "") or "").strip()
             if gate_reason:
                 contract_block_reason = f"local_patch_contract:{gate_reason}"
@@ -299,11 +289,29 @@ class _Stage3RepairRouter:
                 fix_scope_reasoning=regenerate_only_reason,
                 regenerate_only_reason=regenerate_only_reason,
             )
+        if requested_fix_scope in ("partial", "full"):
+            return _Stage3RepairRouteDecision(
+                effective_fix_scope=requested_fix_scope,
+                resolved_fix_scope=resolved_fix_scope,
+                should_break_to_generate=True,
+            )
         if material.local_patch_gate.get("contract_present") and not material.local_patch_gate.get("local_patch_ready", False):
             gate_reason = str(material.local_patch_gate.get("reason", "") or "").strip()
             effective_fix_scope = "partial" if resolved_fix_scope == "partial" else "full"
             return _Stage3RepairRouteDecision(
                 effective_fix_scope=effective_fix_scope,
+                resolved_fix_scope=resolved_fix_scope,
+                should_break_to_generate=True,
+                contract_block_reason=gate_reason,
+                fix_scope_reasoning=(
+                    "Contract-driven local patch gate blocked Blueprint inplace retry: "
+                    f"{gate_reason or 'unknown_reason'}"
+                ),
+            )
+        if not material.local_patch_gate.get("contract_present") and not material.local_patch_gate.get("local_patch_ready", False):
+            gate_reason = str(material.local_patch_gate.get("reason", "") or "").strip()
+            return _Stage3RepairRouteDecision(
+                effective_fix_scope="full",
                 resolved_fix_scope=resolved_fix_scope,
                 should_break_to_generate=True,
                 contract_block_reason=gate_reason,
@@ -641,9 +649,27 @@ def _build_stage3_local_patch_gate(
         )
     )
     contract_present = bool(normalized_fix_pack or repair_contract_present or scope_authority_present)
-    patch_target_count = max(len(patch_targets), len(patch_target_records))
+    patch_target_count = len(patch_targets)
+    patch_target_record_count = len(patch_target_records)
+    must_fix = list(normalized_fix_pack.get("must_fix") or [])
+    success_condition = str(normalized_fix_pack.get("success_condition", "") or "").strip()
 
     if contract_present:
+        if authoritative_fix_scope != "inplace":
+            reason = "missing_authoritative_fix_scope" if not authoritative_fix_scope else f"authoritative_scope:{authoritative_fix_scope}"
+            return {
+                "contract_present": True,
+                "local_patch_ready": False,
+                "resolved_fix_scope": resolved_fix_scope,
+                "authoritative_fix_scope": authoritative_fix_scope,
+                "repair_scope": repair_scope,
+                "target_kind": target_kind,
+                "patch_target_count": patch_target_count,
+                "patch_target_record_count": patch_target_record_count,
+                "must_fix_count": len(must_fix),
+                "has_success_condition": bool(success_condition),
+                "reason": reason,
+            }
         if resolved_fix_scope != "inplace":
             reason = f"contract_scope:{resolved_fix_scope or 'missing'}"
             return {
@@ -654,6 +680,9 @@ def _build_stage3_local_patch_gate(
                 "repair_scope": repair_scope,
                 "target_kind": target_kind,
                 "patch_target_count": patch_target_count,
+                "patch_target_record_count": patch_target_record_count,
+                "must_fix_count": len(must_fix),
+                "has_success_condition": bool(success_condition),
                 "reason": reason,
             }
         if target_kind not in _STAGE3_LOCAL_PATCH_TARGET_KINDS:
@@ -666,6 +695,9 @@ def _build_stage3_local_patch_gate(
                 "repair_scope": repair_scope,
                 "target_kind": target_kind,
                 "patch_target_count": patch_target_count,
+                "patch_target_record_count": patch_target_record_count,
+                "must_fix_count": len(must_fix),
+                "has_success_condition": bool(success_condition),
                 "reason": reason,
             }
         if patch_target_count <= 0:
@@ -677,7 +709,52 @@ def _build_stage3_local_patch_gate(
                 "repair_scope": repair_scope,
                 "target_kind": target_kind,
                 "patch_target_count": 0,
+                "patch_target_record_count": patch_target_record_count,
+                "must_fix_count": len(must_fix),
+                "has_success_condition": bool(success_condition),
                 "reason": "missing_patch_targets",
+            }
+        if patch_target_record_count <= 0:
+            return {
+                "contract_present": True,
+                "local_patch_ready": False,
+                "resolved_fix_scope": resolved_fix_scope,
+                "authoritative_fix_scope": authoritative_fix_scope,
+                "repair_scope": repair_scope,
+                "target_kind": target_kind,
+                "patch_target_count": patch_target_count,
+                "patch_target_record_count": 0,
+                "must_fix_count": len(must_fix),
+                "has_success_condition": bool(success_condition),
+                "reason": "missing_patch_target_records",
+            }
+        if not must_fix:
+            return {
+                "contract_present": True,
+                "local_patch_ready": False,
+                "resolved_fix_scope": resolved_fix_scope,
+                "authoritative_fix_scope": authoritative_fix_scope,
+                "repair_scope": repair_scope,
+                "target_kind": target_kind,
+                "patch_target_count": patch_target_count,
+                "patch_target_record_count": patch_target_record_count,
+                "must_fix_count": 0,
+                "has_success_condition": bool(success_condition),
+                "reason": "missing_must_fix",
+            }
+        if not success_condition:
+            return {
+                "contract_present": True,
+                "local_patch_ready": False,
+                "resolved_fix_scope": resolved_fix_scope,
+                "authoritative_fix_scope": authoritative_fix_scope,
+                "repair_scope": repair_scope,
+                "target_kind": target_kind,
+                "patch_target_count": patch_target_count,
+                "patch_target_record_count": patch_target_record_count,
+                "must_fix_count": len(must_fix),
+                "has_success_condition": False,
+                "reason": "missing_success_condition",
             }
         return {
             "contract_present": True,
@@ -687,19 +764,24 @@ def _build_stage3_local_patch_gate(
             "repair_scope": repair_scope,
             "target_kind": target_kind,
             "patch_target_count": patch_target_count,
+            "patch_target_record_count": patch_target_record_count,
+            "must_fix_count": len(must_fix),
+            "has_success_condition": True,
             "reason": "contract_local_patch_ready",
         }
 
-    legacy_local_ready = normalized_fix_scope not in {"partial", "full"}
     return {
         "contract_present": False,
-        "local_patch_ready": legacy_local_ready,
+        "local_patch_ready": False,
         "resolved_fix_scope": normalized_fix_scope,
         "authoritative_fix_scope": authoritative_fix_scope,
         "repair_scope": repair_scope,
         "target_kind": target_kind,
         "patch_target_count": patch_target_count,
-        "reason": "legacy_scope_fallback" if legacy_local_ready else f"legacy_scope:{normalized_fix_scope or 'missing'}",
+        "patch_target_record_count": patch_target_record_count,
+        "must_fix_count": len(must_fix),
+        "has_success_condition": bool(success_condition),
+        "reason": "missing_local_contract",
     }
 
 
