@@ -1,14 +1,14 @@
 # 0_0 Stage3 Partial-Fix Hardening Remediation Execution SSOT
 
 Date: 2026-04-07
-Status: partially_realized (2026-04-07 merge-survey promotion clarified shared schema dependency and `partial_fix_eval` sink parity inside this lane; a first bounded tranche has now landed across Stage3 validator/runtime/advisory sinks by consuming shared `PatchTargetRecord` records, preserving a Stage3 `fix_pack-lite` contract, appending bounded patch guidance, and persisting `partial_fix_eval` into validate/advisory/meta surfaces, the later 2026-04-10 aborted `00_000` fresh run then promoted this lane from a proof-deferred child to a live runtime bug owner because Stage3 ep1 reaches `PASS_WITH_FIX` locally but the repair loop could discard re-audit `PASS < quality_gate` outcomes back into long reject/retry churn while patch drift still showed secondary preservation debt, the same-day bounded runtime hardening follow-up now preserves low-score `PASS` patch state for the next retry path, the later same-day structural survey plus layering-first adversarial audit then split the remaining owner surfaces more sharply, the first 2026-04-13 live-run retry-plateau follow-up now blocks low-yield inplace retry reopening after `PASS_WITH_FIX` exhaustion and repeated inplace score/signature plateau, and a second same-day live-rerun follow-up is now also landed: `Director PASS < quality_gate` no longer reopens the same inplace lane on the next retry, and Stage3 blueprint scoring now suppresses blind live-HUD `V46` current-state injection unless an explicit `blueprint_scoring_hud` is supplied, moving this child lane back toward proof-pending verifier / locality debt rather than same-family reopen churn)
+Status: partially_realized (2026-04-07 merge-survey promotion clarified shared schema dependency and `partial_fix_eval` sink parity inside this lane; a first bounded tranche has now landed across Stage3 validator/runtime/advisory sinks by consuming shared `PatchTargetRecord` records, preserving a Stage3 `fix_pack-lite` contract, appending bounded patch guidance, and persisting `partial_fix_eval` into validate/advisory/meta surfaces, the later 2026-04-10 aborted `00_000` fresh run then promoted this lane from a proof-deferred child to a live runtime bug owner because Stage3 ep1 reaches `PASS_WITH_FIX` locally but the repair loop could discard re-audit `PASS < quality_gate` outcomes back into long reject/retry churn while patch drift still showed secondary preservation debt, the same-day bounded runtime hardening follow-up now preserves low-score `PASS` patch state for the next retry path, the later same-day structural survey plus layering-first adversarial audit then split the remaining owner surfaces more sharply, the first 2026-04-13 live-run retry-plateau follow-up now blocks low-yield inplace retry reopening after `PASS_WITH_FIX` exhaustion and repeated inplace score/signature plateau, a second same-day live-rerun follow-up is now also landed so `Director PASS < quality_gate` no longer reopens the same inplace lane on the next retry and Stage3 blueprint scoring now suppresses blind live-HUD `V46` current-state injection unless an explicit `blueprint_scoring_hud` is supplied, and a later same-day closure-residual follow-up now also accepts advisory-only `scenario_density` residuals as `PASS_WITH_WARNING` without reopening a low-yield local patch lane, moving this child lane back toward proof-pending verifier / locality debt rather than same-family reopen churn)
 Canonical Path: `docs/2026-04-07/0_0-stage3-partial-fix-hardening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-partial-fix-hardening-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `5a2ef92ab04e46d47ee73b9d56d3e546544576c0`
 - Baseline Dirty Summary: `dirty: 139 tracked, 106 untracked; hotspots: docs/, treatments/, material_ssot/, modules/, tests/`
-- Resume Commit: `e597a7bf4836dab71547e350b015f6658a1cfb03`
-- Resume Drift Summary: `2026-04-07 bounded Stage3 partial-fix tranche landed across `unified_blueprint_validator.py`, `three_phase_blueprint_runtime.py`, and `stage3_orchestrator.py`: validator results now preserve structured Stage3 `fix_pack-lite` payloads, the runtime appends bounded patch-target guidance and persists `partial_fix_eval` through `phases.validate`, and Stage3 advisory / `_stage3_meta` sinks now retain the compact fix-pack plus eval payloads with focused validation closed; the later `docs/2026-04-10/00_000-stage3-fresh-run-abort-post-run-merge-audit.md` then records a fresh current-HEAD run that finally reaches Stage3 ep1 and shows this lane's remaining live debt directly: a `PASS_WITH_FIX` repair loop could discard post-patch `PASS < quality_gate` re-audits back into the broader reject/retry path, while patch drift still remained a secondary preservation issue; the same-day bounded runtime follow-up in `three_phase_blueprint_runtime.py` now preserves that low-score `PASS` patch state for retry carry-forward and aligns reject bookkeeping to the re-audit score, the later current-HEAD rerun plus `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md` / `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md` then clarified that packet layering / threshold alignment / canonical patch anchors should not be absorbed into this child lane, and the 2026-04-13 live-run retry-plateau follow-up now blocks low-yield inplace retry reopening after repeated `PASS_WITH_FIX unresolved` or repeated inplace score/signature plateau so the next action returns to proof rather than another same-family patch loop`
+- Resume Commit: `2701e9e6a7d741d455afc930afd94e178ed555d4`
+- Resume Drift Summary: `snapshot main is now authoritative; the bounded Stage3 partial-fix tranche remains landed across validator/runtime/advisory sinks, the later current-HEAD rerun and structural split still keep packet layering / threshold alignment / canonical patch anchors out of this child lane, the 2026-04-13 live-run retry-plateau follow-up continues to block low-yield inplace reopening after repeated `PASS_WITH_FIX unresolved` or repeated inplace score/signature plateau, and the later same-day closure-residual follow-up now accepts advisory-only `scenario_density` residuals as `PASS_WITH_WARNING` without reopening a low-yield local patch lane so the next action returns to proof rather than another same-family patch loop`
 Source Survey Docs:
 - `docs/2026-04-07/stage3-data-shape-pwf-bounded-survey.md`
 - `docs/2026-04-07/stage-parallel-container-and-pwf-master-survey.md`
@@ -22,6 +22,8 @@ Source Survey Docs:
 - `docs/2026-04-13/stage3-live-run-retry-plateau-parallel-full-survey.md`
 - `docs/2026-04-13/stage3-live-run-quality-gate-patch-reopen-parallel-full-survey.md`
 - `docs/2026-04-13/stage3-live-run-quality-gate-patch-reopen-3pass-audit.md`
+- `docs/2026-04-13/stage3-live-run-closure-and-residual-families-parallel-full-survey.md`
+- `docs/2026-04-13/stage3-closure-residual-fail-only-promotion-survey.md`
 Evidence Artifacts:
 - `docs/2026-04-07/stage-parallel-data-shape-pwf-evidence.json`
 - `0_temp.txt`
@@ -313,6 +315,27 @@ Residual deferred inside this lane after the follow-up:
   - do not widen this child lane into packet-layering work
   - keep the current same-day runtime repair as landed
   - treat the next code-first structural step as parent-lane work, with this child lane returning afterward for narrower verifier/locality follow-up if still needed
+
+## 8E. Closure Residual Fail-Only Update (2026-04-13 same-day)
+
+Evidence basis:
+
+- `docs/2026-04-13/stage3-live-run-closure-and-residual-families-parallel-full-survey.md`
+- `docs/2026-04-13/stage3-closure-residual-fail-only-promotion-survey.md`
+- `modules/domain/agents/three_phase_blueprint_runtime.py`
+- `tests/test_blueprint_patch_mode.py`
+
+Live-workspace closure:
+
+1. Advisory-only `scenario_density` residuals no longer reopen the low-yield Stage3 local patch lane once the verdict already sits in `PASS_WITH_FIX`.
+2. The runtime now promotes that exact residual shape to bounded `PASS_WITH_WARNING` acceptance instead.
+3. The validate sink now records explicit acceptance metadata for that bounded soft landing.
+
+Execution consequence:
+
+- keep this child lane partial, but treat the closure-residual fail-only slice as landed on current `main`
+- do not widen this same-day change into broader advisory-family policy
+- keep the next operator-directed action on the bounded proof wave / rerun rather than another same-family patch cycle
 
 ## 9. Acceptance Criteria
 

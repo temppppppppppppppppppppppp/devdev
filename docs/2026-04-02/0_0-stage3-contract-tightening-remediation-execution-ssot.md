@@ -1,14 +1,14 @@
 # 0_0 Stage3 Contract Tightening Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (the earlier Stage3 binding/handoff/source-anchor tranches remain landed, the reopened 2026-04-11 truth-first parent tranche is landed on the live workspace, the later fail-only structural hardening tranche is also landed, and the 2026-04-12 live rerun follow-up slice is now likewise landed on the live workspace: success proof sinks now sit behind committed persistence, Stage3 `runtime_advisory` / `retry_directives` normalization is in place, `PASS_WITH_FIX` success-accounting parity is restored, analyzer sink-alignment coverage is widened, `opening_anchor` / `scene_completeness` structural binding failures now escalate to regenerate-only full repair with explicit visibility, ep-boundary replay leakage plus canonical institution drift on the ep2 -> ep3 seam now force regenerate-only repair through `episode_progression` truth and expanded institution fact-lock coverage, the first 2026-04-13 child-lane follow-up blocks the observed Stage3 retry plateau by denying low-yield inplace reopening after `PASS_WITH_FIX` exhaustion or repeated inplace score/signature plateau, and the second same-day live-rerun follow-up now also blocks `Director PASS < quality_gate` patch reopening while suppressing blind live-HUD V46 current-state injection during blueprint scoring unless an explicit `blueprint_scoring_hud` is provided; a same-lane 2026-04-12 operator-visibility follow-up is now documented but not yet landed, and proof remains pending)
+Status: partially_realized (the earlier Stage3 binding/handoff/source-anchor tranches remain landed, the reopened 2026-04-11 truth-first parent tranche is landed on the live workspace, the later fail-only structural hardening tranche is also landed, and the 2026-04-12 live rerun follow-up slice is now likewise landed on the live workspace: success proof sinks now sit behind committed persistence, Stage3 `runtime_advisory` / `retry_directives` normalization is in place, `PASS_WITH_FIX` success-accounting parity is restored, analyzer sink-alignment coverage is widened, `opening_anchor` / `scene_completeness` structural binding failures now escalate to regenerate-only full repair with explicit visibility, ep-boundary replay leakage plus canonical institution drift on the ep2 -> ep3 seam now force regenerate-only repair through `episode_progression` truth and expanded institution fact-lock coverage, the first 2026-04-13 child-lane follow-up blocks the observed Stage3 retry plateau by denying low-yield inplace reopening after `PASS_WITH_FIX` exhaustion or repeated inplace score/signature plateau, the second same-day live-rerun follow-up now also blocks `Director PASS < quality_gate` patch reopening while suppressing blind live-HUD V46 current-state injection during blueprint scoring unless an explicit `blueprint_scoring_hud` is provided, and a narrower same-day closure-residual observability follow-up is now also landed so Stage3 completion stats separate the current-run pass rate from the cumulative generator pass rate; the older first-ensemble visibility follow-up remains documented but not yet landed, and proof remains pending)
 Canonical Path: `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2/Stage3 survey docs and lane drafts untracked`
-- Resume Commit: `2b7cb64f2d1fe2cd1152806a5cc37795609f9755`
-- Resume Drift Summary: `reset main is now authoritative; the earlier binding/handoff/source-anchor tranches remain landed, the live workspace now also lands the reopened truth-first parent tranche, the bounded Stage3 analyzer sink-alignment coverage follow-up, the later fail-only structural hardening tranche for regenerate-only binding categories plus visibility propagation, the later ep3 replay / institution-truth fail-only follow-up across compiler/validator/runtime, and the 2026-04-13 child-lane retry-plateau follow-up that now blocks low-yield inplace reopening after `PASS_WITH_FIX unresolved` or repeated inplace score/signature plateau, so the next action stays on the bounded proof wave while stale 2026-04-11 backup-branch work remains excluded from this SSOT's authority`
+- Resume Commit: `2701e9e6a7d741d455afc930afd94e178ed555d4`
+- Resume Drift Summary: `snapshot main is now authoritative; the earlier binding/handoff/source-anchor tranches remain landed, the live workspace on top of current main now also carries the reopened truth-first parent tranche, the bounded Stage3 analyzer sink-alignment coverage follow-up, the later fail-only structural hardening tranche for regenerate-only binding categories plus visibility propagation, the later ep3 replay / institution-truth fail-only follow-up across compiler/validator/runtime, the 2026-04-13 child-lane retry-plateau and quality-gate/truth follow-ups, and the narrower same-day closure-residual observability follow-up in `stage3_orchestrator.py` that now separates current-run pass-rate authority from cumulative generator pass-rate authority while stale 2026-04-11 backup-branch work remains excluded from this SSOT's authority`
 Source Survey Docs:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
@@ -25,6 +25,8 @@ Source Survey Docs:
 - `docs/2026-04-13/stage3-live-run-retry-plateau-parallel-full-survey.md`
 - `docs/2026-04-13/stage3-live-run-quality-gate-patch-reopen-parallel-full-survey.md`
 - `docs/2026-04-13/stage3-live-run-quality-gate-patch-reopen-3pass-audit.md`
+- `docs/2026-04-13/stage3-live-run-closure-and-residual-families-parallel-full-survey.md`
+- `docs/2026-04-13/stage3-closure-residual-fail-only-promotion-survey.md`
 - `docs/2026-04-11/stage23-current-main-static-parallel-survey.md`
 Evidence Artifacts:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-evidence.json`
@@ -535,3 +537,26 @@ Execution consequence:
 - do not widen this into generator retuning, Director retuning, or Stage4/UI redesign
 
 Confidence for this follow-up: `97%`
+
+## 20. 2026-04-13 Closure Residual Observability Landing Update
+
+Evidence basis:
+
+- `docs/2026-04-13/stage3-live-run-closure-and-residual-families-parallel-full-survey.md`
+- `docs/2026-04-13/stage3-closure-residual-fail-only-promotion-survey.md`
+- `modules/core/stage3_orchestrator.py`
+- `tests/test_stage3_orchestrator.py`
+
+Live-workspace closure:
+
+1. Stage3 completion stats no longer mix unlabeled run-local success/failure counts with an unrelated cumulative pass-rate line.
+2. The completion surface now prints:
+   - current-run pass rate when the current run has attempts
+   - cumulative generator pass rate only when it differs from the current-run rate
+3. This closes the smaller same-day closure-survey observability drift without reopening the broader first-ensemble visibility lane.
+
+Execution consequence:
+
+- keep this lane partial, but treat the narrower closure-residual observability slice as landed on current `main`
+- do not treat this as closure for the older first-ensemble heartbeat follow-up
+- keep the next operator-directed action on the bounded proof wave rather than another same-day Stage3 parent patch
