@@ -1839,6 +1839,21 @@ class TestStage3BatchBlueprintingEntryPoint:
 
         app_mock._write_audit_summary.assert_not_called()
 
+    def test_completion_stats_separate_session_and_cumulative_pass_rates(self, app_mock):
+        app_mock._get_int_input.return_value = 1
+        app_mock.agents["three_phase_bp"].get_stats.return_value = {"pass_rate": "50.0%"}
+        orch = Stage3Orchestrator(app=app_mock)
+        orch._process_single_episode = MagicMock(
+            return_value={"next_ep": 2, "success_count": 1, "fail_count": 0, "break": False}
+        )
+
+        with patch("modules.core.spinners.StageSpinner"):
+            orch.stage_3_batch_blueprinting()
+
+        log_texts = [call.args[0] for call in app_mock.ui.log.call_args_list]
+        assert any("이번 실행 통과율: 100.0%" in text for text in log_texts)
+        assert any("누적 통과율: 50.0%" in text for text in log_texts)
+
 
 def test_stage3_work_focus_advisory_preserves_tail_context(app_mock):
     app_mock.current_project.db.get_relationship_history.return_value = []

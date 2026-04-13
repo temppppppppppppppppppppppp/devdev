@@ -1498,6 +1498,36 @@ class ThreePhaseBlueprintRuntime:
         ]
         return bool(advisory_issues) and not substantive_issues
 
+    @staticmethod
+    def _collect_validation_issue_categories(validation_result: dict | None) -> list[str]:
+        if not isinstance(validation_result, dict):
+            return []
+        issues = validation_result.get("issues", [])
+        if not isinstance(issues, list):
+            return []
+
+        categories: list[str] = []
+        seen: set[str] = set()
+        for issue in issues:
+            if not isinstance(issue, dict):
+                continue
+            category = str(issue.get("category", "") or "").strip()
+            if not category or category in seen:
+                continue
+            seen.add(category)
+            categories.append(category)
+        return categories[:6]
+
+    @classmethod
+    def _has_only_low_yield_advisory_residuals(cls, validation_result: dict | None) -> tuple[bool, list[str]]:
+        if not cls._has_only_advisory_residuals(validation_result):
+            return False, []
+        categories = cls._collect_validation_issue_categories(validation_result)
+        if not categories:
+            return False, []
+        low_yield_categories = {"scenario_density"}
+        return set(categories).issubset(low_yield_categories), categories
+
     def _apply_phase3_quality_gate(self, *, verdict: str, score: int, validation_result: dict | None = None) -> str:
         quality_gate_score = _threshold("scoring.quality_gate_score", 90)
         if verdict == "PASS" and score < quality_gate_score:
@@ -2165,6 +2195,40 @@ class ThreePhaseBlueprintRuntime:
             )
 
             if verdict == "PASS_WITH_FIX":
+                low_yield_advisory_only, advisory_categories = self._has_only_low_yield_advisory_residuals(
+                    validation_result
+                )
+                if low_yield_advisory_only:
+                    logging.warning(
+                        "[TF-35A] advisory-only residuals %s -> accept PASS_WITH_WARNING without local patch reopen",
+                        ", ".join(advisory_categories),
+                    )
+                    self._log_operator_retry_context(
+                        title="[TF-35A] advisory-only residuals -> accept PASS_WITH_WARNING",
+                        level="warning",
+                        meta={
+                            "phase": "validate",
+                            "verdict": verdict,
+                            "score": score,
+                            "error_category": "advisory_only_residual_acceptance",
+                        },
+                        feedback=validation_result.get("verdict_reason", "") or validation_result.get("feedback", ""),
+                        issues=validation_result.get("issues", []),
+                        fix_scope=str(validation_result.get("fix_scope", "") or ""),
+                    )
+                    validate_phase = pipeline_result.setdefault("phases", {}).setdefault("validate", {})
+                    validate_phase["advisory_only_residual_acceptance"] = {
+                        "decision": "promote_to_pass_with_warning",
+                        "categories": advisory_categories,
+                        "reason": "low_yield_advisory_local_patch",
+                    }
+                    pipeline_result["final_verdict"] = "PASS_WITH_WARNING"
+                    best_blueprint = validate_blueprint(best_blueprint)
+                    return _ThreePhaseRetryCycleResult(
+                        best_blueprint=best_blueprint,
+                        feedback=feedback,
+                        final_result=(best_blueprint, pipeline_result),
+                    )
                 pass_fix_result = self._run_pass_with_fix_loop(
                     ep_num=ep_num,
                     arc_data=arc_data,

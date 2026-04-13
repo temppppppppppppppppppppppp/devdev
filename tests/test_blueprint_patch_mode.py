@@ -427,6 +427,59 @@ class TestBlueprintPatchIntegration:
 
         assert verdict == "PASS"
 
+    def test_resolve_retry_cycle_result_accepts_low_yield_advisory_only_pass_with_fix_as_warning(
+        self, blueprint_generator, sample_arc_data
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        pipeline_result = {"phases": {"validate": {}}}
+        blueprint_generator.runtime._run_pass_with_fix_loop = MagicMock(side_effect=AssertionError("unexpected"))
+
+        result = blueprint_generator.runtime._resolve_retry_cycle_result(
+            ep_num=1,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            prev_blueprint=None,
+            best_blueprint={"ep_num": 1, "integrated_scenario": "scenario"},
+            validation_result={
+                "issues": [
+                    {
+                        "category": "scenario_density",
+                        "issue": "앵커가 얇음",
+                        "advisory_only": True,
+                        "director_focus": False,
+                    }
+                ],
+                "quality_risk": False,
+                "binding_prevalidation_issue_count": 0,
+                "feedback": "기관명 anchor를 더 보강",
+                "fix_scope": "inplace",
+            },
+            verdict="PASS_WITH_FIX",
+            score=85,
+            selected_strategy="dialogue",
+            director=MagicMock(),
+            arc_idx=0,
+            entity_registry=None,
+            state_tracker=None,
+            prev_hud=None,
+            initial_feedback="기관명 anchor를 더 보강",
+            feedback="기관명 anchor를 더 보강",
+            retry_state=_ThreePhaseRetryState(),
+            pipeline_result=pipeline_result,
+            retry=0,
+            max_retries=2,
+        )
+
+        _, resolved_pipeline = result.final_result
+        assert resolved_pipeline["final_verdict"] == "PASS_WITH_WARNING"
+        assert resolved_pipeline["phases"]["validate"]["advisory_only_residual_acceptance"] == {
+            "decision": "promote_to_pass_with_warning",
+            "categories": ["scenario_density"],
+            "reason": "low_yield_advisory_local_patch",
+        }
+        blueprint_generator.runtime._run_pass_with_fix_loop.assert_not_called()
+
     def test_run_phase3_validation_logs_quality_gate_reason(self, blueprint_generator, sample_arc_data):
         from modules.domain.agents.three_phase_blueprint_runtime import (
             _ThreePhaseRetryState,

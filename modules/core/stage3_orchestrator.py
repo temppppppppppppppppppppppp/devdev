@@ -962,9 +962,18 @@ class Stage3Orchestrator:
         ctx.ui.log(f"\n{'═' * 60}")
         ctx.ui.log("📊 [V60.80] Stage 3 완료 통계")
         ctx.ui.log(f"   성공: {success_count}개 | 실패: {fail_count}개")
+        run_total = success_count + fail_count
+        session_pass_rate = f"{(success_count / run_total * 100):.1f}%" if run_total > 0 else ""
+        if session_pass_rate:
+            ctx.ui.log(f"   이번 실행 통과율: {session_pass_rate}")
         if ctx.agents and hasattr(ctx.agents.get("three_phase_bp"), "get_stats"):
             stats = ctx.agents["three_phase_bp"].get_stats()
-            ctx.ui.log(f"   통과율: {stats.get('pass_rate', 'N/A')}")
+            cumulative_pass_rate = str(stats.get("pass_rate", "") or "").strip()
+            if cumulative_pass_rate:
+                if session_pass_rate and cumulative_pass_rate != session_pass_rate:
+                    ctx.ui.log(f"   누적 통과율: {cumulative_pass_rate}")
+                elif not session_pass_rate:
+                    ctx.ui.log(f"   통과율: {cumulative_pass_rate}")
         ctx.ui.log(f"{'═' * 60}\n")
 
         # Slack 알림
