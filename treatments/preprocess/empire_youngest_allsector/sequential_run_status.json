@@ -2,10 +2,31 @@
   "work_id": "empire_youngest_allsector",
   "run_class": "sequential_production",
   "last_sequential_block_pass": 70,
-  "next_unit_type": "bi_handoff",
+  "next_unit_type": "complete",
   "next_block_id": null,
   "manual_audit_ready": true,
-  "resume_basis": "manual_audit_pass",
-  "updated_at": "2026-03-26T00:00:00+09:00",
-  "notes": "전 70블록 완료. 자본 0원->200조+. 7대단원 완성. 패배 10개(B5,B7,B18,B29,B34,B42,B50,B57,B62,B65). 원 패턴 7회(B10/20/30/37/43/54/70 '다음.'). 타자POV 6회(B15/25/36/46/52/65). NPC 15명+. 경영권 확보(B66). J제국홀딩스 출범(B68). AAA(B69). '다음 섹터.'(B70)."
+  "resume_basis": "bi_audit_pass",
+  "production_complete": true,
+  "production_ready": true,
+  "bi_complete": true,
+  "shipment_gate": {
+    "date": "2026-04-12",
+    "verdict": "PASS",
+    "avg_bundle_chars": 1342.87,
+    "callback_ratio": 1.1,
+    "opponent_unique": 66
+  },
+  "bi_audit": {
+    "date": "2026-04-12",
+    "verdict": "PASS",
+    "build": "PASS",
+    "raw_runner": "PASS",
+    "pass_1_utf8": "OK",
+    "pass_2_roadmap": "OK",
+    "pass_3_protagonist": "OK",
+    "pass_4_npc_deceased": "OK",
+    "pass_5_foreshadow": "OK"
+  },
+  "updated_at": "2026-04-12",
+  "notes": "quarantine pair rehab 완료 후 live authority lane으로 promotion. treatments/phase0/empire_youngest_allsector_phase0_design.json + treatments/empire_youngest_allsector_tr_block_070_draft.json + bible/0_bi_empire_youngest_allsector.json 기준 fresh BI 5-Pass 감리 PASS. source-side pacing/meta/NPC/foreshadow gate 전부 정리됨."
 }

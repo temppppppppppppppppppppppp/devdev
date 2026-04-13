@@ -1,4 +1,4 @@
-﻿"""
+"""
 [Phase 4C-1a] Stage3Orchestrator — SovereignApp의 Stage 3 Blueprint 배치 생성 로직 캡슐화
 
 원본: main_a.py:2855-3254 (_stage_3_batch_blueprinting, 400줄)
@@ -11,6 +11,7 @@ import json as _json
 import logging as _logging
 import time as _time
 import traceback as _traceback
+from dataclasses import dataclass
 
 from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
 from modules.core.constants import ContextLimits, Emojis, ErrorMessages, smart_truncate
@@ -36,6 +37,21 @@ _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
 _STAGE3_HISTORY_RECENT_LIMIT = 24
 _STAGE3_HISTORY_ANCHOR_LIMIT = 6
 _STAGE3_HISTORY_CACHE_LIMIT = 36
+
+
+@dataclass(slots=True)
+class Stage3AttemptEvidencePacket:
+    db: object
+    attempt_num: int
+    session_id: str
+    attempt_key: str
+    score: int
+    selected_strategy: str
+    candidate_key: str
+    artifact_meta: dict
+    selection_kwargs: dict | None
+    runtime_advisory: str
+    retry_directives: str
 
 
 def _peek_scope_total_cost_usd() -> float:
@@ -92,6 +108,105 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
     return {key: value for key, value in flags.items() if value not in ("", [], {}, None, 0, False)}
 
 
+def _first_stage3_text(*values: object) -> str:
+    for value in values:
+        text = str(value or "").strip()
+        if text:
+            return text
+    return ""
+
+
+def _build_stage3_fix_pack_retry_directives(validate: dict | None) -> str:
+    if not isinstance(validate, dict):
+        return ""
+    fix_pack = validate.get("fix_pack")
+    if not isinstance(fix_pack, dict):
+        return ""
+    chunks: list[str] = []
+    for item in list(fix_pack.get("must_fix") or [])[:2]:
+        text = str(item or "").strip()
+        if text and text not in chunks:
+            chunks.append(text)
+    success_condition = str(fix_pack.get("success_condition", "") or "").strip()
+    if success_condition:
+        chunks.append(f"success_condition: {success_condition}")
+    return " | ".join(chunks[:3])
+
+
+def _resolve_stage3_runtime_advisory(
+    pipeline_result: dict | None,
+    selection_kwargs: dict | None = None,
+    *,
+    reject_reason: str = "",
+) -> str:
+    if not isinstance(pipeline_result, dict):
+        pipeline_result = {}
+    phases = pipeline_result.get("phases", {})
+    validate = phases.get("validate", {}) if isinstance(phases, dict) else {}
+    if not isinstance(validate, dict):
+        validate = {}
+    selection = selection_kwargs if isinstance(selection_kwargs, dict) else {}
+    explicit = _first_stage3_text(
+        pipeline_result.get("runtime_advisory", ""),
+        validate.get("runtime_advisory", ""),
+    )
+    if explicit:
+        return explicit
+    final_verdict = str(pipeline_result.get("final_verdict", "") or "").strip().upper()
+    has_runtime_risk = bool(
+        pipeline_result.get("quality_gate_failed", False)
+        or pipeline_result.get("quality_risk", False)
+        or pipeline_result.get("revision_required", False)
+        or validate.get("quality_risk", False)
+        or validate.get("revision_required", False)
+        or final_verdict in {"PASS_WITH_FIX", "PASS_WITH_WARNING", "REJECT", "ERROR"}
+    )
+    if not has_runtime_risk:
+        return ""
+    return _first_stage3_text(
+        validate.get("open_review", ""),
+        reject_reason,
+        selection.get("verdict_reason", ""),
+        selection.get("selection_reason", ""),
+    )
+
+
+def _resolve_stage3_retry_directives(
+    pipeline_result: dict | None,
+    selection_kwargs: dict | None = None,
+    *,
+    reject_reason: str = "",
+) -> str:
+    if not isinstance(pipeline_result, dict):
+        pipeline_result = {}
+    phases = pipeline_result.get("phases", {})
+    validate = phases.get("validate", {}) if isinstance(phases, dict) else {}
+    if not isinstance(validate, dict):
+        validate = {}
+    selection = selection_kwargs if isinstance(selection_kwargs, dict) else {}
+    explicit = _first_stage3_text(
+        pipeline_result.get("retry_directives", ""),
+        validate.get("retry_directives", ""),
+        selection.get("retry_directives", ""),
+    )
+    if explicit:
+        return explicit
+    final_verdict = str(pipeline_result.get("final_verdict", "") or "").strip().upper()
+    needs_retry_guidance = bool(
+        pipeline_result.get("revision_required", False)
+        or validate.get("revision_required", False)
+        or final_verdict in {"PASS_WITH_FIX", "REJECT", "ERROR"}
+    )
+    if not needs_retry_guidance:
+        return ""
+    return _first_stage3_text(
+        _build_stage3_fix_pack_retry_directives(validate),
+        validate.get("fix_scope_reasoning", ""),
+        validate.get("open_review", ""),
+        reject_reason if final_verdict in {"REJECT", "ERROR"} else "",
+    )
+
+
 def _clip_stage3_anchor_text(value: object, limit: int = 80) -> str:
     text = str(value or "").strip()
     if not text:
@@ -99,6 +214,55 @@ def _clip_stage3_anchor_text(value: object, limit: int = 80) -> str:
     if len(text) <= limit:
         return text
     return text[: limit - 3].rstrip() + "..."
+
+
+def _compact_stage3_contract_list(raw: object, *, limit: int = 4, item_limit: int = 120) -> list[str]:
+    if isinstance(raw, str):
+        items = [raw]
+    elif isinstance(raw, list):
+        items = list(raw)
+    else:
+        items = []
+
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        text = " ".join(str(item or "").split()).strip()[:item_limit]
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        normalized.append(text)
+        if len(normalized) >= limit:
+            break
+    return normalized
+
+
+def _compact_stage3_repair_contract(payload: object) -> dict:
+    source = payload if isinstance(payload, dict) else {}
+    compact = {
+        "subtype": str(source.get("subtype", "") or "").strip(),
+        "subtypes": _compact_stage3_contract_list(source.get("subtypes"), limit=4, item_limit=80),
+        "fix_scope": str(source.get("fix_scope", "") or "").strip(),
+        "repair_scope": str(source.get("repair_scope", "") or "").strip(),
+        "authoritative_fix_scope": str(source.get("authoritative_fix_scope", "") or "").strip(),
+        "provenance": str(source.get("provenance", "") or "").strip(),
+        "provenance_sources": _compact_stage3_contract_list(source.get("provenance_sources"), limit=4, item_limit=120),
+        "target_kind": str(source.get("target_kind", "") or "").strip(),
+    }
+    return {key: value for key, value in compact.items() if value not in ("", [], {}, None)}
+
+
+def _compact_stage3_scope_authority(payload: object) -> dict:
+    source = payload if isinstance(payload, dict) else {}
+    compact = {
+        "fix_scope": str(source.get("fix_scope", "") or "").strip(),
+        "repair_scope": str(source.get("repair_scope", "") or "").strip(),
+        "authoritative_fix_scope": str(source.get("authoritative_fix_scope", "") or "").strip(),
+    }
+    widened = source.get("widened")
+    if isinstance(widened, bool):
+        compact["widened"] = widened
+    return {key: value for key, value in compact.items() if value not in ("", [], {}, None)}
 
 
 def _build_stage3_anchor_inventory_preview(raw: object, *, limit: int = 3) -> list[str]:
@@ -122,12 +286,16 @@ def _build_stage3_anchor_inventory_preview(raw: object, *, limit: int = 3) -> li
 
 def _build_stage3_source_anchor_summary(arc_data: dict | None, blueprint_window: list | None) -> dict:
     arc_payload = arc_data if isinstance(arc_data, dict) else {}
-    state_constraints = arc_payload.get("state_constraints") if isinstance(arc_payload.get("state_constraints"), dict) else {}
+    state_constraints = (
+        arc_payload.get("state_constraints") if isinstance(arc_payload.get("state_constraints"), dict) else {}
+    )
     joint_docs = arc_payload.get("joint_docs") if isinstance(arc_payload.get("joint_docs"), dict) else {}
     semantic_carryover = (
         arc_payload.get("semantic_carryover") if isinstance(arc_payload.get("semantic_carryover"), dict) else {}
     )
-    start_state = state_constraints.get("arc_start_state") if isinstance(state_constraints.get("arc_start_state"), dict) else {}
+    start_state = (
+        state_constraints.get("arc_start_state") if isinstance(state_constraints.get("arc_start_state"), dict) else {}
+    )
     prev_blueprint = blueprint_window[-1] if isinstance(blueprint_window, list) and blueprint_window else {}
     if not isinstance(prev_blueprint, dict):
         prev_blueprint = {}
@@ -140,7 +308,9 @@ def _build_stage3_source_anchor_summary(arc_data: dict | None, blueprint_window:
         prev_blueprint.get("end_location") or prev_blueprint.get("location") or "",
         80,
     )
-    prev_transition = prev_blueprint.get("opening_transition") if isinstance(prev_blueprint.get("opening_transition"), dict) else {}
+    prev_transition = (
+        prev_blueprint.get("opening_transition") if isinstance(prev_blueprint.get("opening_transition"), dict) else {}
+    )
     semantic_keys = [str(key).strip() for key in semantic_carryover.keys() if str(key or "").strip()]
     continuity = semantic_carryover.get("continuity_checkpoints")
 
@@ -985,6 +1155,7 @@ class Stage3Orchestrator:
         if blueprint and pipeline_result.get("final_verdict") in (
             "PASS",
             "PASS_WITH_WARNING",
+            "PASS_WITH_FIX",
         ):  # [TF-32-S3]
             return self._handle_success(
                 working_ep, arc_no, arc_data, blueprint, pipeline_result, prev_blueprints, success_count, fail_count
@@ -1566,7 +1737,9 @@ class Stage3Orchestrator:
                 _prev_ms_text_for_bp = smart_truncate(
                     _prev_ms_text_for_bp,
                     max_chars=ContextLimits.MAX_CONTEXT_CHARS,
-                    head_chars=max(0, min(int(ContextLimits.MAX_CONTEXT_CHARS * 0.55), ContextLimits.MAX_CONTEXT_CHARS - 80)),
+                    head_chars=max(
+                        0, min(int(ContextLimits.MAX_CONTEXT_CHARS * 0.55), ContextLimits.MAX_CONTEXT_CHARS - 80)
+                    ),
                 )
             if _prev_ms_for_bp:
                 _logging.info(
@@ -1673,7 +1846,7 @@ class Stage3Orchestrator:
                         "score": _bp_score,
                         "selected_strategy": _selected_strategy or "",
                     },
-            )
+                )
             return blueprint, pipeline_result
 
     def _apply_stage3_dead_npc_precheck(
@@ -1765,9 +1938,7 @@ class Stage3Orchestrator:
             _source_anchor_summary = dict((_stage3_observation or {}).get("source_anchor_summary") or {})
 
         pipeline_result["_stage3_duration_ms"] = max(0, int((_time.perf_counter() - started_at) * 1000))
-        pipeline_result["_stage3_token_cost_usd"] = max(
-            0.0, round(_peek_scope_total_cost_usd() - started_cost_usd, 6)
-        )
+        pipeline_result["_stage3_token_cost_usd"] = max(0.0, round(_peek_scope_total_cost_usd() - started_cost_usd, 6))
         pipeline_result["_stage3_observability"] = {
             "semantic_ctx_chars": len(_bp_semantic_ctx),
             "source_counts": _normalize_semantic_source_counts(_source_counts),
@@ -1863,6 +2034,26 @@ class Stage3Orchestrator:
         duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
         token_cost = float(pipeline_result.get("_stage3_token_cost_usd") or 0.0)
         source_anchor_line = _format_stage3_source_anchor_summary(observability_flags.get("source_anchor_summary"))
+        blueprint = self._annotate_stage3_success_blueprint(
+            working_ep=working_ep,
+            arc_data=arc_data,
+            blueprint=blueprint,
+            pipeline_result=pipeline_result,
+            final_verdict=final_verdict,
+            quality_gate_failed=quality_gate_failed,
+            quality_risk=quality_risk,
+            revision_required=revision_required,
+        )
+
+        persistence_failure = self._persist_stage3_success_blueprint(
+            working_ep=working_ep,
+            blueprint=blueprint,
+            prev_blueprints=prev_blueprints,
+            success_count=success_count,
+            fail_count=fail_count,
+        )
+        if persistence_failure:
+            return persistence_failure
 
         try:
             runtime_payload = self._build_stage3_success_runtime_payload(
@@ -1898,27 +2089,6 @@ class Stage3Orchestrator:
                 meta={"source_anchor_summary": observability_flags.get("source_anchor_summary")},
             )
 
-        blueprint = self._annotate_stage3_success_blueprint(
-            working_ep=working_ep,
-            arc_data=arc_data,
-            blueprint=blueprint,
-            pipeline_result=pipeline_result,
-            final_verdict=final_verdict,
-            quality_gate_failed=quality_gate_failed,
-            quality_risk=quality_risk,
-            revision_required=revision_required,
-        )
-
-        persistence_failure = self._persist_stage3_success_blueprint(
-            working_ep=working_ep,
-            blueprint=blueprint,
-            prev_blueprints=prev_blueprints,
-            success_count=success_count,
-            fail_count=fail_count,
-        )
-        if persistence_failure:
-            return persistence_failure
-
         self._record_stage3_success_completion(
             working_ep=working_ep,
             arc_no=arc_no,
@@ -1939,7 +2109,27 @@ class Stage3Orchestrator:
         blueprint,
         pipeline_result,
         observability_flags: dict,
-    ) -> dict:
+    ) -> Stage3AttemptEvidencePacket:
+        return self._build_stage3_attempt_evidence_packet(
+            working_ep=working_ep,
+            arc_no=arc_no,
+            blueprint=blueprint,
+            pipeline_result=pipeline_result,
+            observability_flags=observability_flags,
+            artifact_kind="final_blueprint",
+        )
+
+    def _build_stage3_attempt_evidence_packet(
+        self,
+        *,
+        working_ep,
+        arc_no,
+        pipeline_result,
+        observability_flags: dict,
+        blueprint=None,
+        artifact_kind: str,
+        reject_reason: str = "",
+    ) -> Stage3AttemptEvidencePacket:
         ctx = self.ctx
         db = getattr(getattr(ctx, "current_project", None), "db", None)
         attempt_num = self._extract_stage3_attempt_num(pipeline_result)
@@ -1958,6 +2148,7 @@ class Stage3Orchestrator:
             pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
         )
         candidate_key = build_candidate_key(strategy=selected_strategy, fallback="stage3")
+        artifact_payload = blueprint if isinstance(blueprint, dict) else None
         artifact_meta = normalize_artifact_meta(
             snapshot_logged_artifact(
                 getattr(ctx, "current_project", None),
@@ -1966,9 +2157,11 @@ class Stage3Orchestrator:
                 arc_num=arc_no,
                 attempt_num=attempt_num,
                 candidate_key=candidate_key,
-                artifact_kind="final_blueprint",
-                payload=blueprint if isinstance(blueprint, dict) else None,
-            ),
+                artifact_kind=artifact_kind,
+                payload=artifact_payload,
+            )
+            if artifact_payload is not None
+            else None,
             fallback_candidate_key=candidate_key,
         )
         selection_kwargs = self._build_stage3_director_selection_kwargs(
@@ -1982,21 +2175,39 @@ class Stage3Orchestrator:
             advisory_flags=observability_flags,
             artifact_meta=artifact_meta,
         )
+        runtime_advisory = _resolve_stage3_runtime_advisory(
+            pipeline_result,
+            selection_kwargs,
+            reject_reason=reject_reason,
+        )
+        retry_directives = _resolve_stage3_retry_directives(
+            pipeline_result,
+            selection_kwargs,
+            reject_reason=reject_reason,
+        )
+        if isinstance(selection_kwargs, dict) and (runtime_advisory or retry_directives):
+            selection_kwargs = dict(selection_kwargs)
+            if runtime_advisory:
+                selection_kwargs["runtime_advisory"] = runtime_advisory
+            if retry_directives:
+                selection_kwargs["retry_directives"] = retry_directives
         try:
             score = int(score)
         except (ValueError, TypeError):
             score = 0
-        return {
-            "db": db,
-            "attempt_num": attempt_num,
-            "session_id": session_id,
-            "attempt_key": attempt_key,
-            "score": score,
-            "selected_strategy": selected_strategy,
-            "candidate_key": candidate_key,
-            "artifact_meta": artifact_meta,
-            "selection_kwargs": selection_kwargs,
-        }
+        return Stage3AttemptEvidencePacket(
+            db=db,
+            attempt_num=attempt_num,
+            session_id=session_id,
+            attempt_key=attempt_key,
+            score=score,
+            selected_strategy=selected_strategy,
+            candidate_key=candidate_key,
+            artifact_meta=artifact_meta,
+            selection_kwargs=selection_kwargs,
+            runtime_advisory=runtime_advisory,
+            retry_directives=retry_directives,
+        )
 
     def _record_stage3_success_observability(
         self,
@@ -2008,35 +2219,38 @@ class Stage3Orchestrator:
         duration_ms: int | None,
         token_cost: float,
         observability_flags: dict,
-        runtime_payload: dict,
+        runtime_payload: Stage3AttemptEvidencePacket,
         pipeline_result,
         pov_contract: dict,
     ) -> None:
         ctx = self.ctx
-        attempt_key = runtime_payload["attempt_key"]
-        artifact_meta = runtime_payload["artifact_meta"]
-        selection_kwargs = runtime_payload["selection_kwargs"]
-        score = runtime_payload["score"]
-        candidate_key = runtime_payload["candidate_key"]
+        attempt_key = runtime_payload.attempt_key
+        artifact_meta = runtime_payload.artifact_meta
+        selection_kwargs = runtime_payload.selection_kwargs
+        score = runtime_payload.score
+        candidate_key = runtime_payload.candidate_key
 
         session_logger = getattr(ctx, "session_logger", None)
         if session_logger:
             try:
-                self._log_stage3_session_decision(
-                    session_logger,
+                decision_kwargs = self._build_stage3_session_decision_kwargs(
                     ep_num=working_ep,
                     verdict=final_verdict,
                     score=pipeline_result.get("last_score", 0),
                     arc_no=arc_no,
                     quality_risk=quality_risk,
-                    attempt_key=attempt_key,
-                    candidate_key=artifact_meta["candidate_key"],
-                    content_hash=artifact_meta["content_hash"],
-                    artifact_path=artifact_meta["artifact_path"],
+                    packet=runtime_payload,
+                    validate=(pipeline_result.get("phases") or {}).get("validate", {})
+                    if isinstance(pipeline_result, dict)
+                    else {},
                     reason=str((selection_kwargs or {}).get("verdict_reason", "") or ""),
                     selection_reason=str((selection_kwargs or {}).get("selection_reason", "") or ""),
                     verdict_reason=str((selection_kwargs or {}).get("verdict_reason", "") or ""),
                     fix_scope=str((selection_kwargs or {}).get("fix_scope", "") or ""),
+                )
+                self._log_stage3_session_decision(
+                    session_logger,
+                    **decision_kwargs,
                 )
             except Exception as log_err:
                 _logging.debug("[TF-26] session_logger.log_decision failed: %s", str(log_err)[:100])
@@ -2044,62 +2258,54 @@ class Stage3Orchestrator:
         if getattr(ctx, "pass_rate_monitor", None):
             try:
                 _s3_pass_breakdown = {}
-                _validate = (pipeline_result.get("phases") or {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
+                _validate = (
+                    (pipeline_result.get("phases") or {}).get("validate", {})
+                    if isinstance(pipeline_result, dict)
+                    else {}
+                )
                 if isinstance(_validate, dict):
                     _raw_bd = _validate.get("score_breakdown", {})
                     if isinstance(_raw_bd, dict):
-                        _s3_pass_breakdown = {str(k): v for k, v in list(_raw_bd.items())[:5] if isinstance(v, int | float)}
+                        _s3_pass_breakdown = {
+                            str(k): v for k, v in list(_raw_bd.items())[:5] if isinstance(v, int | float)
+                        }
                 ctx.pass_rate_monitor.record_attempt(
-                    stage=3,
-                    episode=working_ep,
-                    arc=arc_no,
-                    attempt_num=runtime_payload["attempt_num"],
-                    success=final_verdict in ("PASS", "PASS_WITH_WARNING"),
-                    generation_method="blueprint",
-                    duration_ms=duration_ms or 0,
-                    token_cost=token_cost,
-                    attempt_key=attempt_key,
-                    final_verdict=str(final_verdict),
-                    candidate_key=candidate_key,
-                    content_hash=artifact_meta["content_hash"],
-                    artifact_path=artifact_meta["artifact_path"],
-                    score_breakdown=_s3_pass_breakdown or None,
+                    **self._build_stage3_pass_rate_attempt_kwargs(
+                        working_ep=working_ep,
+                        arc_no=arc_no,
+                        packet=runtime_payload,
+                        success=final_verdict in ("PASS", "PASS_WITH_WARNING", "PASS_WITH_FIX"),
+                        duration_ms=duration_ms,
+                        token_cost=token_cost,
+                        final_verdict=str(final_verdict),
+                        score_breakdown=_s3_pass_breakdown,
+                    )
                 )
                 if hasattr(ctx.pass_rate_monitor, "_save_records"):
                     ctx.pass_rate_monitor._save_records()
             except Exception as prm_err:
                 _logging.debug("[stage3_prm] Stage3 PASS record failed (non-blocking): %s", prm_err)
 
-        db = runtime_payload["db"]
+        db = runtime_payload.db
         if db and hasattr(db, "save_stage_attempt"):
             director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
             model = getattr(director, "primary_model", None) if director else None
             prompt_version = _build_stage3_prompt_version()
-            _sk = selection_kwargs or {}
-            _s3_validate = (pipeline_result.get("phases") or {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
+            _s3_validate = (
+                (pipeline_result.get("phases") or {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
+            )
             db.save_stage_attempt(
-                stage=3,
-                verdict=str(final_verdict),
-                attempt_num=runtime_payload["attempt_num"],
-                ep_num=working_ep,
-                arc_num=arc_no,
-                score=score,
-                model=str(model) if model else None,
-                session_id=runtime_payload["session_id"],
-                attempt_key=attempt_key,
-                prompt_version=prompt_version,
-                duration_ms=duration_ms,
-                advisory_flags=observability_flags or None,
-                candidate_key=candidate_key,
-                content_hash=artifact_meta["content_hash"],
-                artifact_path=artifact_meta["artifact_path"],
-                selection_reason=str(_sk.get("selection_reason", "") or ""),
-                verdict_reason=str(_sk.get("verdict_reason", "") or ""),
-                fix_scope=str(_sk.get("fix_scope", "") or ""),
-                fix_scope_reasoning=str(_sk.get("fix_scope_reasoning", "") or ""),
-                open_review=str(_s3_validate.get("open_review", "") or "") if isinstance(_s3_validate, dict) else "",
-                runtime_advisory="",
-                retry_directives="",
+                **self._build_stage3_stage_attempt_kwargs(
+                    ep_num=working_ep,
+                    arc_no=arc_no,
+                    verdict=str(final_verdict),
+                    packet=runtime_payload,
+                    model=str(model) if model else None,
+                    prompt_version=prompt_version,
+                    duration_ms=duration_ms,
+                    advisory_flags=observability_flags,
+                    validate=_s3_validate,
+                )
             )
             if hasattr(db, "save_director_selection") and selection_kwargs:
                 try:
@@ -2114,7 +2320,7 @@ class Stage3Orchestrator:
             attempt_key,
             final_verdict,
             score,
-            runtime_payload["selected_strategy"],
+            runtime_payload.selected_strategy,
             candidate_key,
             str(artifact_meta.get("artifact_path", "") or "-"),
             ",".join(sorted(observability_flags.keys())) if observability_flags else "-",
@@ -2138,7 +2344,9 @@ class Stage3Orchestrator:
     ):
         ctx = self.ctx
         if isinstance(blueprint, dict):
-            validate_meta = pipeline_result.get("phases", {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
+            validate_meta = (
+                pipeline_result.get("phases", {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
+            )
             binding_issue_count = 0
             if isinstance(validate_meta, dict):
                 try:
@@ -2152,6 +2360,18 @@ class Stage3Orchestrator:
                     binding_categories = [
                         str(item).strip() for item in raw_binding_categories if str(item or "").strip()
                     ][:6]
+            regenerate_only_categories = []
+            if isinstance(validate_meta, dict):
+                raw_regenerate_only_categories = validate_meta.get("binding_regenerate_only_categories", [])
+                if isinstance(raw_regenerate_only_categories, list):
+                    regenerate_only_categories = [
+                        str(item).strip() for item in raw_regenerate_only_categories if str(item or "").strip()
+                    ][:6]
+            regenerate_only_reason = (
+                str(validate_meta.get("binding_regenerate_only_reason", "") or "").strip()
+                if isinstance(validate_meta, dict)
+                else ""
+            )
             blueprint["_stage3_meta"] = {
                 "final_verdict": final_verdict,
                 "quality_gate_failed": quality_gate_failed,
@@ -2162,6 +2382,10 @@ class Stage3Orchestrator:
             }
             if binding_categories:
                 blueprint["_stage3_meta"]["binding_prevalidation_categories"] = binding_categories
+            if regenerate_only_categories:
+                blueprint["_stage3_meta"]["binding_regenerate_only_categories"] = regenerate_only_categories
+            if regenerate_only_reason:
+                blueprint["_stage3_meta"]["binding_regenerate_only_reason"] = regenerate_only_reason
             partial_fix_eval = validate_meta.get("partial_fix_eval") if isinstance(validate_meta, dict) else {}
             if isinstance(partial_fix_eval, dict) and partial_fix_eval:
                 blueprint["_stage3_meta"]["partial_fix_eval"] = dict(partial_fix_eval)
@@ -2175,17 +2399,35 @@ class Stage3Orchestrator:
                         "must_fix": list(fix_pack.get("must_fix") or []),
                         "do_not_regress": list(fix_pack.get("do_not_regress") or []),
                         "success_condition": str(fix_pack.get("success_condition", "") or "").strip(),
+                        "subtype": str(fix_pack.get("subtype", "") or "").strip(),
+                        "subtypes": _compact_stage3_contract_list(fix_pack.get("subtypes"), limit=4, item_limit=80),
+                        "provenance": str(fix_pack.get("provenance", "") or "").strip(),
+                        "provenance_sources": _compact_stage3_contract_list(
+                            fix_pack.get("provenance_sources"),
+                            limit=4,
+                            item_limit=120,
+                        ),
                     }.items()
                     if value not in ("", [], {}, None)
                 }
                 if compact_fix_pack:
                     blueprint["_stage3_meta"]["fix_pack"] = compact_fix_pack
+            repair_contract = validate_meta.get("repair_contract") if isinstance(validate_meta, dict) else {}
+            compact_repair_contract = _compact_stage3_repair_contract(repair_contract)
+            if compact_repair_contract:
+                blueprint["_stage3_meta"]["repair_contract"] = compact_repair_contract
+            scope_authority = validate_meta.get("scope_authority") if isinstance(validate_meta, dict) else {}
+            compact_scope_authority = _compact_stage3_scope_authority(scope_authority)
+            if compact_scope_authority:
+                blueprint["_stage3_meta"]["scope_authority"] = compact_scope_authority
 
         if isinstance(blueprint, dict) and working_ep > 1:
             inventory_gaps = self._detect_inventory_gaps(blueprint, arc_data)
             if inventory_gaps:
                 blueprint["_inventory_gaps"] = inventory_gaps
-                ctx.ui.log(f"   [TF-49] inventory gaps {len(inventory_gaps)}: {', '.join(g['item'] for g in inventory_gaps)}")
+                ctx.ui.log(
+                    f"   [TF-49] inventory gaps {len(inventory_gaps)}: {', '.join(g['item'] for g in inventory_gaps)}"
+                )
 
         if isinstance(blueprint, dict):
             prev_published_text = ""
@@ -2194,7 +2436,10 @@ class Stage3Orchestrator:
                 prev_row = db.get_manuscript(working_ep - 1) if db and working_ep > 1 else None
                 if isinstance(prev_row, dict):
                     prev_published_text = str(
-                        prev_row.get("content") or prev_row.get("corrected_manuscript") or prev_row.get("manuscript") or ""
+                        prev_row.get("content")
+                        or prev_row.get("corrected_manuscript")
+                        or prev_row.get("manuscript")
+                        or ""
                     )
                 elif prev_row:
                     prev_published_text = str(prev_row)
@@ -2290,7 +2535,9 @@ class Stage3Orchestrator:
                 {
                     "ep_num": working_ep,
                     "arc_no": arc_no,
-                    "strategy": pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown"),
+                    "strategy": pipeline_result.get("phases", {})
+                    .get("generate", {})
+                    .get("selected_strategy", "unknown"),
                     "score": pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0),
                     "final_verdict": final_verdict,
                     "quality_risk": quality_risk,
@@ -2392,9 +2639,13 @@ class Stage3Orchestrator:
     ) -> str:
         attempt_num = cls._extract_stage3_attempt_num(pipeline_result)
         issue_count, binding_count = cls._extract_stage3_prevalidation_counts(pipeline_result)
-        score = pipeline_result.get("last_score", pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0))
+        score = pipeline_result.get(
+            "last_score", pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0)
+        )
         inventory_gap_count = len(blueprint.get("_inventory_gaps", [])) if isinstance(blueprint, dict) else 0
-        unresolved_pin_count = len(blueprint.get("_continuity_pin_unresolved", [])) if isinstance(blueprint, dict) else 0
+        unresolved_pin_count = (
+            len(blueprint.get("_continuity_pin_unresolved", [])) if isinstance(blueprint, dict) else 0
+        )
         return (
             f"   [Stage3 Summary] ep {working_ep} | verdict={final_verdict} | score={score} | "
             f"attempt={attempt_num} | prevalidation={issue_count} | binding={binding_count} | "
@@ -2549,6 +2800,69 @@ class Stage3Orchestrator:
         return ""
 
     @staticmethod
+    def _build_stage3_session_decision_kwargs(
+        *,
+        ep_num: int,
+        verdict: str,
+        score: int,
+        arc_no: int | None,
+        quality_risk: bool,
+        packet: Stage3AttemptEvidencePacket,
+        validate: dict | None = None,
+        reject_reason: str = "",
+        reason: str = "",
+        selection_reason: str = "",
+        verdict_reason: str = "",
+        fix_scope: str = "",
+    ) -> dict:
+        validate = validate if isinstance(validate, dict) else {}
+        repair_contract = _compact_stage3_repair_contract(validate.get("repair_contract"))
+        scope_authority = _compact_stage3_scope_authority(validate.get("scope_authority"))
+        repair_scope = str(
+            validate.get("repair_scope", "")
+            or repair_contract.get("repair_scope", "")
+            or scope_authority.get("repair_scope", "")
+            or ""
+        ).strip()
+        authoritative_fix_scope = str(
+            validate.get("authoritative_fix_scope", "")
+            or repair_contract.get("authoritative_fix_scope", "")
+            or scope_authority.get("authoritative_fix_scope", "")
+            or ""
+        ).strip()
+        fix_pack = validate.get("fix_pack")
+        fix_pack = dict(fix_pack) if isinstance(fix_pack, dict) and fix_pack else {}
+        payload = {
+            "ep_num": ep_num,
+            "verdict": str(verdict or ""),
+            "score": int(score or 0),
+            "arc_no": arc_no,
+            "quality_risk": bool(quality_risk),
+            "reject_reason": str(reject_reason or ""),
+            "reason": str(reason or ""),
+            "selection_reason": str(selection_reason or ""),
+            "verdict_reason": str(verdict_reason or ""),
+            "fix_scope": str(fix_scope or ""),
+            "runtime_advisory": str(packet.runtime_advisory or ""),
+            "retry_directives": str(packet.retry_directives or ""),
+            "attempt_key": str(packet.attempt_key or ""),
+            "candidate_key": str(packet.artifact_meta.get("candidate_key", "") or ""),
+            "content_hash": str(packet.artifact_meta.get("content_hash", "") or ""),
+            "artifact_path": str(packet.artifact_meta.get("artifact_path", "") or ""),
+        }
+        if repair_scope:
+            payload["repair_scope"] = repair_scope
+        if authoritative_fix_scope:
+            payload["authoritative_fix_scope"] = authoritative_fix_scope
+        if fix_pack:
+            payload["fix_pack"] = fix_pack
+        if repair_contract:
+            payload["repair_contract"] = repair_contract
+        if scope_authority:
+            payload["scope_authority"] = scope_authority
+        return payload
+
+    @staticmethod
     def _log_stage3_session_decision(
         session_logger,
         *,
@@ -2566,6 +2880,13 @@ class Stage3Orchestrator:
         selection_reason: str = "",
         verdict_reason: str = "",
         fix_scope: str = "",
+        repair_scope: str = "",
+        authoritative_fix_scope: str = "",
+        fix_pack: dict | None = None,
+        repair_contract: dict | None = None,
+        scope_authority: dict | None = None,
+        runtime_advisory: str = "",
+        retry_directives: str = "",
     ) -> None:
         if not session_logger:
             return
@@ -2582,11 +2903,125 @@ class Stage3Orchestrator:
             selection_reason=str(selection_reason or ""),
             verdict_reason=str(verdict_reason or ""),
             fix_scope=str(fix_scope or ""),
+            repair_scope=str(repair_scope or ""),
+            authoritative_fix_scope=str(authoritative_fix_scope or ""),
+            **({"fix_pack": dict(fix_pack)} if isinstance(fix_pack, dict) else {}),
+            **({"repair_contract": dict(repair_contract)} if isinstance(repair_contract, dict) else {}),
+            **({"scope_authority": dict(scope_authority)} if isinstance(scope_authority, dict) else {}),
+            runtime_advisory=str(runtime_advisory or ""),
+            retry_directives=str(retry_directives or ""),
             attempt_key=str(attempt_key or ""),
             candidate_key=str(candidate_key or ""),
             content_hash=str(content_hash or ""),
             artifact_path=str(artifact_path or ""),
         )
+
+    @staticmethod
+    def _build_stage3_stage_attempt_kwargs(
+        *,
+        ep_num: int,
+        arc_no: int | None,
+        verdict: str,
+        packet: Stage3AttemptEvidencePacket,
+        model: str | None,
+        prompt_version: str,
+        duration_ms: int | None,
+        advisory_flags: dict | None,
+        validate: dict | None = None,
+        failure_category: str = "",
+        reject_reason: str = "",
+    ) -> dict:
+        selection_kwargs = packet.selection_kwargs or {}
+        validate = validate if isinstance(validate, dict) else {}
+        resolved_advisory_flags = dict(advisory_flags or {})
+        for key in ("fix_pack", "advisory_fix_pack", "partial_fix_eval"):
+            value = validate.get(key)
+            if isinstance(value, dict) and value:
+                resolved_advisory_flags[key] = dict(value)
+        repair_contract = _compact_stage3_repair_contract(validate.get("repair_contract"))
+        if repair_contract:
+            resolved_advisory_flags["repair_contract"] = repair_contract
+        scope_authority = _compact_stage3_scope_authority(validate.get("scope_authority"))
+        if scope_authority:
+            resolved_advisory_flags["scope_authority"] = scope_authority
+        if repair_contract or scope_authority:
+            gate_semantics = resolved_advisory_flags.get("gate_semantics")
+            gate_semantics = dict(gate_semantics) if isinstance(gate_semantics, dict) else {}
+            if repair_contract:
+                gate_semantics["repair_contract"] = dict(repair_contract)
+            if scope_authority:
+                gate_semantics["scope_authority"] = dict(scope_authority)
+                if scope_authority.get("repair_scope"):
+                    gate_semantics["repair_scope"] = str(scope_authority.get("repair_scope") or "")
+                if scope_authority.get("authoritative_fix_scope"):
+                    gate_semantics["authoritative_fix_scope"] = str(
+                        scope_authority.get("authoritative_fix_scope") or ""
+                    )
+            if gate_semantics:
+                resolved_advisory_flags["gate_semantics"] = gate_semantics
+        payload = {
+            "stage": 3,
+            "verdict": str(verdict),
+            "attempt_num": packet.attempt_num,
+            "ep_num": ep_num,
+            "arc_num": arc_no,
+            "score": packet.score,
+            "model": str(model) if model else None,
+            "duration_ms": duration_ms,
+            "advisory_flags": resolved_advisory_flags or None,
+            "session_id": packet.session_id,
+            "attempt_key": packet.attempt_key,
+            "prompt_version": prompt_version,
+            "candidate_key": packet.candidate_key,
+            "content_hash": packet.artifact_meta["content_hash"],
+            "artifact_path": packet.artifact_meta["artifact_path"],
+            "selection_reason": str(selection_kwargs.get("selection_reason", "") or ""),
+            "verdict_reason": str(selection_kwargs.get("verdict_reason", "") or ""),
+            "fix_scope": str(selection_kwargs.get("fix_scope", "") or ""),
+            "fix_scope_reasoning": str(selection_kwargs.get("fix_scope_reasoning", "") or ""),
+            "open_review": str(validate.get("open_review", "") or "") if isinstance(validate, dict) else "",
+            "runtime_advisory": str(packet.runtime_advisory or ""),
+            "retry_directives": str(packet.retry_directives or ""),
+        }
+        if failure_category:
+            payload["failure_category"] = failure_category
+        if reject_reason:
+            payload["reject_reason"] = reject_reason
+        return payload
+
+    @staticmethod
+    def _build_stage3_pass_rate_attempt_kwargs(
+        *,
+        working_ep: int,
+        arc_no: int | None,
+        packet: Stage3AttemptEvidencePacket,
+        success: bool,
+        duration_ms: int | None,
+        token_cost: float,
+        final_verdict: str,
+        score_breakdown: dict | None,
+        generation_method: str = "blueprint",
+        reject_reason: str = "",
+    ) -> dict:
+        payload = {
+            "stage": 3,
+            "episode": working_ep,
+            "arc": arc_no,
+            "attempt_num": packet.attempt_num,
+            "success": bool(success),
+            "generation_method": generation_method,
+            "duration_ms": duration_ms or 0,
+            "token_cost": token_cost,
+            "attempt_key": packet.attempt_key,
+            "final_verdict": str(final_verdict or ""),
+            "candidate_key": packet.candidate_key,
+            "content_hash": packet.artifact_meta["content_hash"],
+            "artifact_path": packet.artifact_meta["artifact_path"],
+            "score_breakdown": score_breakdown or None,
+        }
+        if reject_reason:
+            payload["reject_reason"] = str(reject_reason or "")
+        return payload
 
     @staticmethod
     def _build_stage3_director_selection_kwargs(
@@ -2653,6 +3088,12 @@ class Stage3Orchestrator:
         partial_fix_eval = validate.get("partial_fix_eval")
         if isinstance(partial_fix_eval, dict) and partial_fix_eval:
             _advisory["partial_fix_eval"] = dict(partial_fix_eval)
+        repair_contract = _compact_stage3_repair_contract(validate.get("repair_contract"))
+        if repair_contract:
+            _advisory["repair_contract"] = repair_contract
+        scope_authority = _compact_stage3_scope_authority(validate.get("scope_authority"))
+        if scope_authority:
+            _advisory["scope_authority"] = scope_authority
         selected_candidate_advisory = validate.get("selected_candidate_advisory", {})
         if isinstance(selected_candidate_advisory, dict) and selected_candidate_advisory:
             _warning_messages: list[str] = []
@@ -2841,56 +3282,22 @@ class Stage3Orchestrator:
 
         # Prepare shared reject context once, then let each sink fail independently.
         try:
-            _db = getattr(getattr(ctx, "current_project", None), "db", None)
             _final_verdict = str(pipeline_result.get("final_verdict", "REJECT"))
-            _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
             _arc_num = self._resolve_stage3_arc_num(arc_no=arc_no, pipeline_result=pipeline_result)
-            _session_id = resolve_logging_session_id(getattr(ctx, "current_project", None))
-            _attempt_key = build_attempt_key(
-                stage=3,
-                ep_num=working_ep,
-                arc_num=_arc_num,
-                attempt_num=_attempt_num,
-                session_id=_session_id,
-            )
             _reject_reason = self._build_stage3_reject_reason(pipeline_result)
-            _score = pipeline_result.get("last_score") or pipeline_result.get("phases", {}).get("generate", {}).get(
-                "selected_score", 0
-            )
-            _selected_strategy = str(
-                pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
-            )
-            _candidate_key = build_candidate_key(strategy=_selected_strategy, fallback="stage3")
             _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
             _pov_contract = resolve_project_pov_contract(ctx.current_project)
             _duration_ms = int(pipeline_result.get("_stage3_duration_ms") or 0) or None
             _token_cost = float(pipeline_result.get("_stage3_token_cost_usd") or 0.0)
             _failure_category = _classify_stage3_failure_category(pipeline_result)
-            _artifact_meta = normalize_artifact_meta(None, fallback_candidate_key=_candidate_key)
-            if isinstance(blueprint, dict):
-                _artifact_meta = normalize_artifact_meta(
-                    snapshot_logged_artifact(
-                        getattr(ctx, "current_project", None),
-                        stage=3,
-                        ep_num=working_ep,
-                        arc_num=_arc_num,
-                        attempt_num=_attempt_num,
-                        candidate_key=_candidate_key,
-                        artifact_kind="selected_blueprint",
-                        payload=blueprint,
-                    ),
-                    fallback_candidate_key=_candidate_key,
-                )
-            _selection_kwargs = self._build_stage3_director_selection_kwargs(
-                pipeline_result,
-                ep_num=working_ep,
-                attempt_num=_attempt_num,
-                attempt_key=_attempt_key,
-                selected_strategy=_selected_strategy,
-                score=_score,
-                candidate_key=_candidate_key,
-                advisory_flags=_observability_flags,
-                artifact_meta=_artifact_meta,
+            _packet = self._build_stage3_attempt_evidence_packet(
+                working_ep=working_ep,
+                arc_no=_arc_num,
+                pipeline_result=pipeline_result,
+                observability_flags=_observability_flags,
+                blueprint=blueprint,
+                artifact_kind="selected_blueprint",
+                reject_reason=_reject_reason,
             )
         except Exception as _prep_err:
             _logging.debug("[stage_attempts] Stage3 REJECT prep failed (best-effort: %s)", _prep_err)
@@ -2899,100 +3306,91 @@ class Stage3Orchestrator:
         _sl = getattr(ctx, "session_logger", None)
         if _sl:
             try:
-                self._log_stage3_session_decision(
-                    _sl,
+                _decision_kwargs = self._build_stage3_session_decision_kwargs(
                     ep_num=working_ep,
                     verdict=_final_verdict,
                     score=pipeline_result.get("last_score", 0),
                     arc_no=_arc_num,
                     quality_risk=bool(pipeline_result.get("quality_risk", False)),
-                    attempt_key=_attempt_key,
-                    candidate_key=_artifact_meta["candidate_key"],
-                    content_hash=_artifact_meta["content_hash"],
-                    artifact_path=_artifact_meta["artifact_path"],
+                    packet=_packet,
+                    validate=(pipeline_result.get("phases") or {}).get("validate", {})
+                    if isinstance(pipeline_result, dict)
+                    else {},
                     reject_reason=_reject_reason,
-                    reason=str((_selection_kwargs or {}).get("verdict_reason", _reject_reason) or ""),
-                    selection_reason=str((_selection_kwargs or {}).get("selection_reason", "") or ""),
-                    verdict_reason=str((_selection_kwargs or {}).get("verdict_reason", _reject_reason) or ""),
-                    fix_scope=str((_selection_kwargs or {}).get("fix_scope", "") or ""),
+                    reason=str((_packet.selection_kwargs or {}).get("verdict_reason", _reject_reason) or ""),
+                    selection_reason=str((_packet.selection_kwargs or {}).get("selection_reason", "") or ""),
+                    verdict_reason=str((_packet.selection_kwargs or {}).get("verdict_reason", _reject_reason) or ""),
+                    fix_scope=str((_packet.selection_kwargs or {}).get("fix_scope", "") or ""),
+                )
+                self._log_stage3_session_decision(
+                    _sl,
+                    **_decision_kwargs,
                 )
             except Exception as _log_err:
                 _logging.debug("[TF-26] session_logger.log_decision failed: %s", str(_log_err)[:100])
 
-        if not isinstance(_score, int):
-            try:
-                _score = int(_score)
-            except (ValueError, TypeError):
-                _score = 0
-
         if getattr(ctx, "pass_rate_monitor", None):
             try:
                 _s3_rej_breakdown = {}
-                _rej_validate = (pipeline_result.get("phases") or {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
+                _rej_validate = (
+                    (pipeline_result.get("phases") or {}).get("validate", {})
+                    if isinstance(pipeline_result, dict)
+                    else {}
+                )
                 if isinstance(_rej_validate, dict):
                     _rej_raw_bd = _rej_validate.get("score_breakdown", {})
                     if isinstance(_rej_raw_bd, dict):
-                        _s3_rej_breakdown = {str(k): v for k, v in list(_rej_raw_bd.items())[:5] if isinstance(v, int | float)}
+                        _s3_rej_breakdown = {
+                            str(k): v for k, v in list(_rej_raw_bd.items())[:5] if isinstance(v, int | float)
+                        }
                 ctx.pass_rate_monitor.record_attempt(
-                    stage=3,
-                    episode=working_ep,
-                    arc=_arc_num,
-                    attempt_num=_attempt_num,
-                    success=False,
-                    reject_reason=_reject_reason,
-                    generation_method="blueprint",
-                    duration_ms=_duration_ms or 0,
-                    token_cost=_token_cost,
-                    attempt_key=_attempt_key,
-                    final_verdict=_final_verdict,
-                    candidate_key=_candidate_key,
-                    content_hash=_artifact_meta["content_hash"],
-                    artifact_path=_artifact_meta["artifact_path"],
-                    score_breakdown=_s3_rej_breakdown or None,
+                    **self._build_stage3_pass_rate_attempt_kwargs(
+                        working_ep=working_ep,
+                        arc_no=_arc_num,
+                        packet=_packet,
+                        success=False,
+                        duration_ms=_duration_ms,
+                        token_cost=_token_cost,
+                        final_verdict=_final_verdict,
+                        score_breakdown=_s3_rej_breakdown,
+                        reject_reason=_reject_reason,
+                    )
                 )
                 if hasattr(ctx.pass_rate_monitor, "_save_records"):
                     ctx.pass_rate_monitor._save_records()
             except Exception as _prm_err:
                 _logging.debug("[stage3_prm] Stage3 REJECT record failed (best-effort: %s)", _prm_err)
 
-        if _db and hasattr(_db, "save_stage_attempt"):
+        if _packet.db and hasattr(_packet.db, "save_stage_attempt"):
             _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
             _model = getattr(_director, "primary_model", None) if _director else None
             _prompt_version = _build_stage3_prompt_version()
             try:
-                _rsk = _selection_kwargs or {}
-                _s3r_validate = (pipeline_result.get("phases") or {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
-                _db.save_stage_attempt(
-                    stage=3,
-                    verdict=_final_verdict,
-                    attempt_num=_attempt_num,
-                    ep_num=working_ep,
-                    arc_num=_arc_num,
-                    score=_score,
-                    failure_category=_failure_category,
-                    reject_reason=_reject_reason,
-                    model=str(_model) if _model else None,
-                    duration_ms=_duration_ms,
-                    advisory_flags=_observability_flags or None,
-                    session_id=_session_id,
-                    attempt_key=_attempt_key,
-                    prompt_version=_prompt_version,
-                    candidate_key=_candidate_key,
-                    content_hash=_artifact_meta["content_hash"],
-                    artifact_path=_artifact_meta["artifact_path"],
-                    selection_reason=str(_rsk.get("selection_reason", "") or ""),
-                    verdict_reason=str(_rsk.get("verdict_reason", "") or ""),
-                    fix_scope=str(_rsk.get("fix_scope", "") or ""),
-                    fix_scope_reasoning=str(_rsk.get("fix_scope_reasoning", "") or ""),
-                    open_review=str(_s3r_validate.get("open_review", "") or "") if isinstance(_s3r_validate, dict) else "",
-                    runtime_advisory="",
-                    retry_directives="",
+                _s3r_validate = (
+                    (pipeline_result.get("phases") or {}).get("validate", {})
+                    if isinstance(pipeline_result, dict)
+                    else {}
+                )
+                _packet.db.save_stage_attempt(
+                    **self._build_stage3_stage_attempt_kwargs(
+                        ep_num=working_ep,
+                        arc_no=_arc_num,
+                        verdict=_final_verdict,
+                        packet=_packet,
+                        model=str(_model) if _model else None,
+                        prompt_version=_prompt_version,
+                        duration_ms=_duration_ms,
+                        advisory_flags=_observability_flags,
+                        validate=_s3r_validate,
+                        failure_category=_failure_category,
+                        reject_reason=_reject_reason,
+                    )
                 )
             except Exception as _sa_err:
                 _logging.debug("[stage_attempts] Stage3 REJECT record failed (best-effort: %s)", _sa_err)
-            if hasattr(_db, "save_director_selection") and _selection_kwargs:
+            if hasattr(_packet.db, "save_director_selection") and _packet.selection_kwargs:
                 try:
-                    _db.save_director_selection(**_selection_kwargs)
+                    _packet.db.save_director_selection(**_packet.selection_kwargs)
                 except Exception as _ds_err:
                     _logging.debug("[director_selections] Stage3 REJECT record failed (best-effort: %s)", _ds_err)
 
@@ -3001,11 +3399,11 @@ class Stage3Orchestrator:
                 "[STAGE3_EPISODE_SUMMARY] ep=%d arc=%d attempt_key=%s verdict=%s score=%s failure=%s candidate_key=%s reject_reason=%s observability=%s primary_pov=%s external_pov_insert_policy=%s style_guide_extracted_pov=%s effective_pov=%s",
                 working_ep,
                 _arc_num,
-                _attempt_key,
+                _packet.attempt_key,
                 _final_verdict,
-                _score,
+                _packet.score,
                 _failure_category or "-",
-                _candidate_key,
+                _packet.candidate_key,
                 _reject_reason,
                 ",".join(sorted(_observability_flags.keys())) if _observability_flags else "-",
                 _pov_contract.get("primary_pov", "") or "-",
@@ -3015,6 +3413,7 @@ class Stage3Orchestrator:
             )
         except Exception as _summary_err:
             _logging.debug("[stage3_summary] Stage3 REJECT summary failed (best-effort: %s)", _summary_err)
+
     def _append_stage3_rejection_history(self, *, pipeline_result, arc_no: int | None = None) -> None:
         # [S3-N-P1-3] DI 콜백 None 방어
         try:

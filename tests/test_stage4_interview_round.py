@@ -16,11 +16,43 @@ from modules.core.stage4_context import Stage4Context
 from modules.core.stage4_director_runtime import _DirectorInputPackResult
 from modules.core.stage4_interview_round import (
     Stage4InterviewRound,
+    _build_stage4_attempt_contract_projection,
+    _build_stage4_attempt_raw_evidence_records,
+    _build_stage4_contract_snapshot_raw_record,
+    _build_stage4_feedback_provenance_raw_record,
+    _build_stage4_pass_carryover_linkage,
+    _build_stage4_pass_decision_surface,
+    _build_stage4_pass_episode_log_kwargs,
+    _build_stage4_pass_session_decision_kwargs,
+    _build_stage4_patch_trace_raw_record,
+    _build_stage4_raw_rationale_records,
+    _build_stage4_selection_surface_raw_record,
+    _build_stage4_session_contract_projection,
     _RoundOutcomeTracePayload,
+    _Stage4AttemptContractPacket,
     _Stage4AttemptPreludePayload,
 )
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundContext
-from modules.core.stage4_reject_runtime import _RejectLoggingPayload
+from modules.core.stage4_outcome_runtime import (
+    _build_stage4_retry_pathology_projection,
+    _build_stage4_retry_pathology_raw_record,
+)
+from modules.core.stage4_raw_evidence import (
+    build_stage4_raw_rationale_record,
+    persist_stage4_raw_rationale_records,
+)
+from modules.core.stage4_reject_runtime import (
+    _build_stage4_reject_decision_surface,
+    _build_stage4_reject_episode_log_kwargs,
+    _build_stage4_reject_gate_semantics_bundle,
+    _build_stage4_reject_previous_attempt_override,
+    _build_stage4_reject_retry_contract_projection,
+    _build_stage4_reject_retry_snapshot_raw_record,
+    _build_stage4_reject_session_decision_kwargs,
+    _build_stage4_retry_contract_carryover_fields,
+    _build_stage4_scope_origin_payload,
+    _RejectLoggingPayload,
+)
 
 
 def _make_ctx():
@@ -2427,6 +2459,45 @@ class TestRecordS4Attempt:
         assert payload["candidate_key"] == "A|balanced"
         assert payload["artifact_path"] == "logs/final.txt"
 
+    def test_build_stage4_attempt_contract_projection_preserves_shared_contract_fields(self):
+        packet = _Stage4AttemptContractPacket(
+            advisory_flags={},
+            gate_semantics={
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "bounded_local_repair",
+                "repair_scope": "inplace",
+                "strong_advisory_escalation": {"triggered_by": ["truth_gate"]},
+            },
+            fix_pack={"target_kind": "local_sentence"},
+            repair_contract={"subtype": "movement", "fix_scope": "inplace"},
+            scope_authority={"fix_scope": "inplace", "authoritative_fix_scope": "partial"},
+            retry_budget_axes={"repair": "patch_revision"},
+            verdict_layers={
+                "director_quality_passed": True,
+                "downstream_override_applied": True,
+                "primary_failure_layer": "downstream_gate",
+            },
+        )
+
+        payload = _build_stage4_attempt_contract_projection(
+            contract_packet=packet,
+            include_director_quality_passed=True,
+            include_strong_advisory_escalation=True,
+        )
+
+        assert payload["director_verdict"] == "PASS_WITH_FIX"
+        assert payload["gate_basis"] == "bounded_local_repair"
+        assert payload["repair_scope"] == "inplace"
+        assert payload["fix_scope"] == "inplace"
+        assert payload["authoritative_fix_scope"] == "partial"
+        assert payload["repair_contract"] == {"subtype": "movement", "fix_scope": "inplace"}
+        assert payload["scope_authority"] == {"fix_scope": "inplace", "authoritative_fix_scope": "partial"}
+        assert payload["retry_budget_axes"] == {"repair": "patch_revision"}
+        assert payload["director_quality_passed"] is True
+        assert payload["downstream_override_applied"] is True
+        assert payload["primary_failure_layer"] == "downstream_gate"
+        assert payload["strong_advisory_escalation"] == {"triggered_by": ["truth_gate"]}
+
     def test_resolve_stage4_db_attempt_advisory_flags_uses_last_summary_fallback(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -2720,6 +2791,590 @@ class TestRecordS4Attempt:
         assert payload["advisory_flags"]["scope_authority"]["fix_scope"] == "partial"
         assert payload["advisory_flags"]["scope_authority"]["authoritative_fix_scope"] == "inplace"
 
+    def test_build_stage4_attempt_contract_packet_shares_contract_fields(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        packet = ir._build_stage4_attempt_contract_packet(
+            {
+                "gate_semantics": {
+                    "director_verdict": "PASS_WITH_FIX",
+                    "gate_basis": "quality_floor_fail",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "verdict_layers": {
+                        "director_quality_passed": True,
+                        "downstream_override_applied": True,
+                        "primary_failure_layer": "quality_floor",
+                    },
+                    "scope_authority": {
+                        "fix_scope": "partial",
+                        "repair_scope": "partial",
+                        "authoritative_fix_scope": "inplace",
+                        "widened": True,
+                    },
+                },
+                "fix_pack": {
+                    "must_fix": ["tighten ending"],
+                    "target_kind": "local_sentence",
+                },
+                "repair_contract": {
+                    "subtype": "movement",
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "provenance": "director_authored",
+                },
+                "scope_authority": {
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": True,
+                },
+                "retry_budget_axes": {"repair": "patch_revision"},
+            },
+            resolve_db_fallbacks=False,
+        )
+
+        assert packet.gate_semantics["gate_basis"] == "quality_floor_fail"
+        assert packet.fix_pack["target_kind"] == "local_sentence"
+        assert packet.repair_contract["subtype"] == "movement"
+        assert packet.scope_authority["authoritative_fix_scope"] == "inplace"
+        assert packet.retry_budget_axes == {"repair": "patch_revision"}
+        assert packet.verdict_layers["primary_failure_layer"] == "quality_floor"
+
+    def test_stage4_attempt_payload_builders_share_contract_packet(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        advisory_flags = {
+            "gate_semantics": {
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "quality_floor_fail",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "verdict_layers": {
+                    "director_quality_passed": True,
+                    "downstream_override_applied": True,
+                    "primary_failure_layer": "quality_floor",
+                },
+                "scope_authority": {
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": True,
+                },
+            },
+            "fix_pack": {
+                "must_fix": ["tighten ending"],
+                "target_kind": "local_sentence",
+            },
+            "repair_contract": {
+                "subtype": "movement",
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "provenance": "director_authored",
+            },
+            "scope_authority": {
+                "fix_scope": "partial",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "widened": True,
+            },
+            "retry_budget_axes": {"repair": "patch_revision"},
+        }
+
+        pass_rate_payload = ir._build_stage4_pass_rate_attempt_payload(
+            episode=2,
+            round_num=1,
+            score=61,
+            arc=1,
+            success=False,
+            reject_reason="retry needed",
+            is_patch=True,
+            patch_fallback=False,
+            duration_ms=222,
+            token_cost=0.5,
+            prev_score=55,
+            attempt_key="s4:ep2:arc1:a2:sess-stage4",
+            verdict="REJECT",
+            advisory_flags=advisory_flags,
+            patch_strategy="patch_with_feedback",
+            structural_attempted=True,
+            error_category="LOGIC_ERROR",
+            reject_bucket="quality_floor_fail",
+            score_breakdown={"narrative_flow": 9},
+            artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/final.txt",
+            },
+        )
+        db_payload = ir._build_stage4_db_attempt_payload(
+            episode=2,
+            round_num=1,
+            success=False,
+            score=61,
+            arc=1,
+            verdict="REJECT",
+            reject_reason="retry needed",
+            fix_scope="inplace",
+            model="gemini-2.5-pro",
+            duration_ms=222,
+            advisory_flags=advisory_flags,
+            session_id="sess-stage4",
+            attempt_key="s4:ep2:arc1:a2:sess-stage4",
+            artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/final.txt",
+            },
+            selection_reason="best candidate",
+            verdict_reason="conflict",
+            open_review="repeat detected",
+            fix_scope_reasoning="bounded fix",
+            runtime_advisory="keep continuity",
+            retry_directives="change ending",
+            failure_category="LOGIC_ERROR",
+            initial_verdict="PASS_WITH_FIX",
+            score_breakdown={"narrative_flow": 9},
+            is_patch=True,
+            is_patch_fallback=False,
+            patch_strategy="patch_with_feedback",
+        )
+
+        assert pass_rate_payload["repair_contract"]["subtype"] == "movement"
+        assert pass_rate_payload["scope_authority"]["authoritative_fix_scope"] == "inplace"
+        assert pass_rate_payload["retry_budget_axes"] == {"repair": "patch_revision"}
+        assert pass_rate_payload["primary_failure_layer"] == "quality_floor"
+        assert db_payload["advisory_flags"]["repair_contract"]["subtype"] == "movement"
+        assert db_payload["advisory_flags"]["scope_authority"]["authoritative_fix_scope"] == "inplace"
+        assert db_payload["advisory_flags"]["retry_budget_axes"] == {"repair": "patch_revision"}
+        assert db_payload["primary_failure_layer"] == "quality_floor"
+
+    def test_build_final_selection_advisory_payload_reuses_contract_packet(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir._build_final_selection_advisory_payload(
+            gate_semantics={
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "quality_floor_fail",
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "scope_authority": {
+                    "fix_scope": "partial",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": True,
+                },
+            },
+            fix_pack={
+                "must_fix": ["tighten ending"],
+                "target_kind": "local_sentence",
+                "subtype": "movement",
+                "provenance": "director_authored",
+            },
+            retry_budget_axes={"repair": "patch_revision"},
+        )
+
+        assert payload["gate_semantics"]["gate_basis"] == "quality_floor_fail"
+        assert payload["fix_pack"]["target_kind"] == "local_sentence"
+        assert payload["repair_contract"]["subtype"] == "movement"
+        assert payload["scope_authority"]["authoritative_fix_scope"] == "inplace"
+        assert payload["retry_budget_axes"] == {"repair": "patch_revision"}
+
+    def test_build_stage4_selection_advisory_payload_merges_summary_contract_and_patch_context(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir._build_stage4_selection_advisory_payload(
+            advisory_summary={"shared_failure_warnings": 1},
+            director_result={
+                "director_verdict": "PASS_WITH_FIX",
+                "final_verdict": "REJECT",
+                "gate_basis": "quality_floor_fail",
+                "repair_scope": "partial",
+                "fix_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "fix_pack": {
+                    "must_fix": ["tighten ending"],
+                    "target_kind": "local_sentence",
+                    "subtype": "movement",
+                    "provenance": "director_authored",
+                },
+            },
+            is_patch=True,
+            is_patch_fallback=False,
+            prev_score=70,
+        )
+
+        assert payload["shared_failure_warnings"] == 1
+        assert payload["gate_semantics"]["gate_basis"] == "quality_floor_fail"
+        assert payload["repair_contract"]["subtype"] == "movement"
+        assert payload["scope_authority"]["authoritative_fix_scope"] == "inplace"
+        assert payload["patch_context"] == {"tag": "patch", "score": 70}
+
+    def test_build_stage4_director_selection_kwargs_surfaces_selection_contract_metadata(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        kwargs = ir._build_stage4_director_selection_kwargs(
+            ep_num=2,
+            round_num=1,
+            selected_label="A",
+            selected_strategy="balanced",
+            verdict="REJECT",
+            score=44,
+            selection_reason="best candidate",
+            candidate_count=3,
+            director_result={
+                "fix_scope": "partial",
+                "pre_firewall_score": 100,
+                "firewall_triggered": True,
+                "firewall_reason": "quality floor",
+                "_director_thinking": "full director thinking payload",
+            },
+            advisory_warnings={"gate_semantics": {"gate_basis": "quality_floor_fail"}},
+            verdict_reason="quality floor fail",
+            attempt_key="s4:ep2:arc1:a2:sess-stage4",
+            selection_artifact_meta={
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/artifacts/stage4/rejected_best__A_balanced.txt",
+            },
+        )
+
+        assert kwargs["selected_label"] == "A"
+        assert kwargs["selected_strategy"] == "balanced"
+        assert kwargs["pre_firewall_score"] == 100
+        assert kwargs["firewall_triggered"] is True
+        assert kwargs["firewall_reason"] == "quality floor"
+        assert kwargs["fix_scope"] == "partial"
+        assert kwargs["advisory_warnings"] == {"gate_semantics": {"gate_basis": "quality_floor_fail"}}
+        assert kwargs["candidate_key"] == "A|balanced"
+        assert kwargs["director_thinking"] == "full director thinking payload"
+
+    def test_build_stage4_selection_rationale_sync_kwargs_prefers_authoritative_scope_when_requested(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        kwargs = ir._build_stage4_selection_rationale_sync_kwargs(
+            attempt_key="attempt-1",
+            trace_director_result={"fix_scope": "partial", "authoritative_fix_scope": "inplace"},
+            director_result={"fix_scope": "full", "authoritative_fix_scope": "rewrite"},
+            selection_reason="selection",
+            verdict_reason="verdict",
+            advisory_warnings={"gate_semantics": {"gate_basis": "quality_floor_fail"}},
+            prefer_authoritative_scope=True,
+        )
+
+        assert kwargs["attempt_key"] == "attempt-1"
+        assert kwargs["selection_reason"] == "selection"
+        assert kwargs["verdict_reason"] == "verdict"
+        assert kwargs["fix_scope"] == "inplace"
+        assert kwargs["advisory_warnings"] == {"gate_semantics": {"gate_basis": "quality_floor_fail"}}
+
+    def test_build_stage4_selection_rationale_update_kwargs_builds_advisory_payload(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        kwargs = ir._build_stage4_selection_rationale_update_kwargs(
+            attempt_key="attempt-1",
+            trace_director_result={"fix_scope": "partial"},
+            director_result={"fix_scope": "full"},
+            selection_reason="selection",
+            verdict_reason="verdict",
+            gate_semantics={
+                "gate_basis": "patch_reaudit_pass",
+                "repair_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+            },
+            fix_pack={"target_kind": "entity_ref", "patch_targets": ["name_anchor"]},
+            retry_budget_axes={"repair": "patch_revision"},
+            prefer_authoritative_scope=False,
+        )
+
+        assert kwargs["attempt_key"] == "attempt-1"
+        assert kwargs["fix_scope"] == "partial"
+        assert kwargs["advisory_warnings"]["gate_semantics"]["gate_basis"] == "patch_reaudit_pass"
+        assert kwargs["advisory_warnings"]["fix_pack"]["target_kind"] == "entity_ref"
+        assert kwargs["advisory_warnings"]["retry_budget_axes"] == {"repair": "patch_revision"}
+
+    def test_build_stage4_raw_rationale_records_preserves_thinking_and_advisory_bundle(self):
+        records = _build_stage4_raw_rationale_records(
+            attempt_key="s4:ep1:arc1:a1",
+            ep_num=1,
+            director_result={"_director_thinking": "full director thinking payload"},
+            raw_advisory_payload={"selection_summary": {"truth_gate": 1}},
+            selection_advisory={
+                "gate_semantics": {"gate_basis": "quality_floor_fail"},
+                "fix_pack": {"target_kind": "entity_ref"},
+                "retry_budget_axes": {"repair": "patch_revision"},
+                "patch_context": {"tag": "patch", "score": 84},
+            },
+            selection_surface={
+                "selected_label": "A",
+                "selected_strategy": "balanced",
+                "verdict": "REJECT",
+                "score": 44,
+                "selection_reason": "best candidate",
+                "verdict_reason": "conflict",
+                "fix_scope": "partial",
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/artifacts/stage4/ep_0001/rejected_best__A_balanced.txt",
+            },
+        )
+
+        assert records[0] == {
+            "attempt_key": "s4:ep1:arc1:a1",
+            "stage": 4,
+            "ep_num": 1,
+            "payload_kind": "director_thinking",
+            "payload": "full director thinking payload",
+        }
+        assert records[1]["payload_kind"] == "advisory_warnings_raw"
+        assert json.loads(records[1]["payload"]) == {"selection_summary": {"truth_gate": 1}}
+        assert records[2]["payload_kind"] == "selection_contract_snapshot_raw"
+        assert json.loads(records[2]["payload"]) == {
+            "_meta": {
+                "record_family": "contract_snapshot",
+                "surface": "selection_contract_snapshot_raw",
+            },
+            "gate_semantics": {"gate_basis": "quality_floor_fail"},
+            "fix_pack": {"target_kind": "entity_ref"},
+            "retry_budget_axes": {"repair": "patch_revision"},
+            "patch_context": {"tag": "patch", "score": 84},
+        }
+        assert records[3]["payload_kind"] == "selection_surface_raw"
+        assert json.loads(records[3]["payload"]) == {
+            "_meta": {
+                "record_family": "selection_surface",
+                "surface": "selection_surface_raw",
+            },
+            "selected_label": "A",
+            "selected_strategy": "balanced",
+            "verdict": "REJECT",
+            "score": 44,
+            "selection_reason": "best candidate",
+            "verdict_reason": "conflict",
+            "fix_scope": "partial",
+            "candidate_key": "A|balanced",
+            "content_hash": "hash123",
+            "artifact_path": "logs/artifacts/stage4/ep_0001/rejected_best__A_balanced.txt",
+        }
+
+    def test_build_stage4_feedback_provenance_raw_record_preserves_runtime_and_retry_fields(self):
+        record = _build_stage4_feedback_provenance_raw_record(
+            attempt_key="s4:ep1:arc1:a1",
+            ep_num=1,
+            feedback_provenance={
+                "director_feedback": "trace verdict",
+                "runtime_advisory": "runtime digest",
+                "retry_directives": "retry directives",
+            },
+        )
+
+        assert record == {
+            "attempt_key": "s4:ep1:arc1:a1",
+            "stage": 4,
+            "ep_num": 1,
+            "payload_kind": "feedback_provenance_raw",
+            "payload": json.dumps(
+                {
+                    "director_feedback": "trace verdict",
+                    "runtime_advisory": "runtime digest",
+                    "retry_directives": "retry directives",
+                },
+                ensure_ascii=False,
+            ),
+        }
+
+    def test_build_stage4_patch_trace_raw_record_preserves_structured_patch_payload(self):
+        record = _build_stage4_patch_trace_raw_record(
+            attempt_key="s4:ep1:arc1:a1",
+            ep_num=1,
+            patch_trace={
+                "patch_strategy": "patch_with_feedback",
+                "patch_targets": ["scene:1"],
+                "partial_fix_eval": {"patch_round": 2, "is_patch_attempt": True},
+            },
+        )
+
+        assert record == {
+            "attempt_key": "s4:ep1:arc1:a1",
+            "stage": 4,
+            "ep_num": 1,
+            "payload_kind": "patch_trace_raw",
+            "payload": json.dumps(
+                {
+                    "patch_strategy": "patch_with_feedback",
+                    "patch_targets": ["scene:1"],
+                    "partial_fix_eval": {"patch_round": 2, "is_patch_attempt": True},
+                },
+                ensure_ascii=False,
+            ),
+        }
+
+    def test_build_stage4_contract_snapshot_raw_record_preserves_contract_fields(self):
+        record = _build_stage4_contract_snapshot_raw_record(
+            attempt_key="s4:ep1:arc1:a1",
+            ep_num=1,
+            gate_semantics={"gate_basis": "quality_floor_fail"},
+            fix_pack={"target_kind": "entity_ref", "patch_targets": ["opening_location_name"]},
+            repair_contract={"contract_type": "local", "provenance": "director_authored"},
+            scope_authority={"fix_scope": "partial"},
+            retry_budget_axes={"repair": "patch_revision"},
+            payload_kind="selection_contract_snapshot_raw",
+            extra_payload={"patch_context": {"tag": "patch", "score": 84}},
+        )
+
+        assert record == {
+            "attempt_key": "s4:ep1:arc1:a1",
+            "stage": 4,
+            "ep_num": 1,
+            "payload_kind": "selection_contract_snapshot_raw",
+            "payload": json.dumps(
+                {
+                    "_meta": {
+                        "record_family": "contract_snapshot",
+                        "surface": "selection_contract_snapshot_raw",
+                    },
+                    "gate_semantics": {"gate_basis": "quality_floor_fail"},
+                    "fix_pack": {"target_kind": "entity_ref", "patch_targets": ["opening_location_name"]},
+                    "repair_contract": {"contract_type": "local", "provenance": "director_authored"},
+                    "scope_authority": {"fix_scope": "partial"},
+                    "retry_budget_axes": {"repair": "patch_revision"},
+                    "patch_context": {"tag": "patch", "score": 84},
+                },
+                ensure_ascii=False,
+            ),
+        }
+
+    def test_build_stage4_selection_surface_raw_record_preserves_selection_fields(self):
+        record = _build_stage4_selection_surface_raw_record(
+            attempt_key="s4:ep1:arc1:a1",
+            ep_num=1,
+            selection_surface={
+                "selected_label": "A",
+                "selected_strategy": "balanced",
+                "verdict": "REJECT",
+                "score": 44,
+                "selection_reason": "best candidate",
+                "verdict_reason": "conflict",
+                "fix_scope": "partial",
+                "candidate_key": "A|balanced",
+                "content_hash": "hash123",
+                "artifact_path": "logs/artifacts/stage4/ep_0001/rejected_best__A_balanced.txt",
+                "advisory_warnings": {"truth_gate": 1},
+            },
+        )
+
+        assert record == {
+            "attempt_key": "s4:ep1:arc1:a1",
+            "stage": 4,
+            "ep_num": 1,
+            "payload_kind": "selection_surface_raw",
+            "payload": json.dumps(
+                {
+                    "_meta": {
+                        "record_family": "selection_surface",
+                        "surface": "selection_surface_raw",
+                    },
+                    "selected_label": "A",
+                    "selected_strategy": "balanced",
+                    "verdict": "REJECT",
+                    "score": 44,
+                    "selection_reason": "best candidate",
+                    "verdict_reason": "conflict",
+                    "fix_scope": "partial",
+                    "candidate_key": "A|balanced",
+                    "content_hash": "hash123",
+                    "artifact_path": "logs/artifacts/stage4/ep_0001/rejected_best__A_balanced.txt",
+                    "advisory_warnings": {"truth_gate": 1},
+                },
+                ensure_ascii=False,
+            ),
+        }
+
+    def test_persist_stage4_raw_rationale_records_skips_invalid_records(self):
+        project_db = MagicMock()
+
+        persisted = persist_stage4_raw_rationale_records(
+            project_db=project_db,
+            records=[
+                None,
+                {"payload_kind": "missing_attempt_key"},
+                {
+                    "attempt_key": "s4:ep1:arc1:a1",
+                    "stage": 4,
+                    "ep_num": 1,
+                    "payload_kind": "selection_surface_raw",
+                    "payload": '{"selected_label":"A"}',
+                },
+            ],
+            log_prefix="Stage4Test",
+        )
+
+        assert persisted == 1
+        project_db.save_attempt_raw_rationale.assert_called_once_with(
+            attempt_key="s4:ep1:arc1:a1",
+            stage=4,
+            ep_num=1,
+            payload_kind="selection_surface_raw",
+            payload='{"selected_label":"A"}',
+        )
+
+    def test_build_stage4_raw_rationale_record_serializes_mapping_payload(self):
+        record = build_stage4_raw_rationale_record(
+            attempt_key="s4:ep1:arc1:a1",
+            ep_num=1,
+            payload_kind="selection_surface_raw",
+            payload={"selected_label": "A", "verdict": "REJECT"},
+            payload_meta={
+                "record_family": "selection_surface",
+                "surface": "selection_surface_raw",
+            },
+        )
+
+        assert record == {
+            "attempt_key": "s4:ep1:arc1:a1",
+            "stage": 4,
+            "ep_num": 1,
+            "payload_kind": "selection_surface_raw",
+            "payload": json.dumps(
+                {
+                    "_meta": {
+                        "record_family": "selection_surface",
+                        "surface": "selection_surface_raw",
+                    },
+                    "selected_label": "A",
+                    "verdict": "REJECT",
+                },
+                ensure_ascii=False,
+            ),
+        }
+
+    def test_build_stage4_attempt_raw_evidence_records_collects_feedback_and_patch_trace(self):
+        records = _build_stage4_attempt_raw_evidence_records(
+            attempt_key="s4:ep1:arc1:a1",
+            ep_num=1,
+            feedback_provenance={
+                "director_feedback": "trace verdict",
+                "runtime_advisory": "runtime digest",
+            },
+            patch_trace={
+                "patch_strategy": "patch_with_feedback",
+                "patch_targets": ["scene:1"],
+            },
+        )
+
+        assert [record["payload_kind"] for record in records] == [
+            "feedback_provenance_raw",
+            "patch_trace_raw",
+        ]
+
     def test_build_stage4_patch_advisory_payload_promotes_structured_targets_and_trace(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -2829,6 +3484,113 @@ class TestRecordS4Attempt:
             "widened": False,
         }
 
+    def test_build_stage4_session_decision_kwargs_uses_gate_semantics_contracts(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        kwargs = ir._build_stage4_session_decision_kwargs(
+            next_ep=3,
+            round_num=1,
+            arc_num=2,
+            verdict="PASS_WITH_FIX",
+            score=97,
+            selected="B",
+            error_category="LOGIC_ERROR",
+            reason="trace verdict",
+            fix_scope="rewrite",
+            open_review="trace open review",
+            action_items=["trace item"],
+            attempt_key="attempt-2",
+            artifact_meta={"candidate_key": "stage4|B"},
+            selection_artifact_meta={"candidate_key": "stage4|sel"},
+            initial_verdict="PASS",
+            initial_score=91,
+            selection_reason="selection",
+            verdict_reason="verdict",
+            session_gate_semantics={
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "trace_gate",
+                "repair_scope": "rewrite",
+                "authoritative_fix_scope": "partial",
+                "repair_contract": {
+                    "subtype": "movement",
+                    "fix_scope": "rewrite",
+                    "repair_scope": "rewrite",
+                },
+                "scope_authority": {
+                    "fix_scope": "rewrite",
+                    "repair_scope": "rewrite",
+                    "authoritative_fix_scope": "partial",
+                    "widened": True,
+                },
+                "conflict_resolution_linkage": {"conflict_count": 2},
+                "reuse_contract": {"mode": "best_manuscript_baseline"},
+            },
+            fix_pack={"must_fix": ["anchor"]},
+            retry_budget_axes={"repair": "patch_revision"},
+            runtime_advisory="runtime digest",
+            retry_directives="retry directives",
+            firewall_triggered=True,
+            firewall_reason="trace firewall",
+        )
+
+        assert kwargs["director_verdict"] == "PASS_WITH_FIX"
+        assert kwargs["gate_basis"] == "trace_gate"
+        assert kwargs["repair_scope"] == "rewrite"
+        assert kwargs["authoritative_fix_scope"] == "partial"
+        assert kwargs["repair_contract"]["subtype"] == "movement"
+        assert kwargs["scope_authority"]["widened"] is True
+        assert kwargs["conflict_resolution_linkage"] == {"conflict_count": 2}
+        assert kwargs["reuse_contract"] == {"mode": "best_manuscript_baseline"}
+        assert kwargs["fix_pack"] == {"must_fix": ["anchor"]}
+        assert kwargs["retry_budget_axes"] == {"repair": "patch_revision"}
+
+    def test_build_stage4_session_contract_projection_extracts_shared_contract_fields(self):
+        projection = _build_stage4_session_contract_projection(
+            session_gate_semantics={
+                "director_verdict": "PASS_WITH_FIX",
+                "gate_basis": "trace_gate",
+                "repair_scope": "rewrite",
+                "authoritative_fix_scope": "partial",
+                "authoritative_fix_scope_violation": {"type": "blank_authoritative_fix_scope"},
+                "strong_advisory_escalation": {"triggered_by": ["truth_gate"]},
+                "scope_origin": {
+                    "fix_scope": "runtime_widened",
+                    "authoritative_fix_scope": "director_authoritative",
+                    "repair_scope": "runtime_lane",
+                },
+                "repair_contract": {
+                    "subtype": "movement",
+                    "fix_scope": "rewrite",
+                    "repair_scope": "rewrite",
+                },
+                "scope_authority": {
+                    "fix_scope": "rewrite",
+                    "repair_scope": "rewrite",
+                    "authoritative_fix_scope": "partial",
+                    "widened": True,
+                },
+                "conflict_resolution_linkage": {"conflict_count": 2},
+                "reuse_contract": {"mode": "best_manuscript_baseline"},
+            },
+            fix_pack={"must_fix": ["anchor"]},
+            retry_budget_axes={"repair": "patch_revision"},
+        )
+
+        assert projection["director_verdict"] == "PASS_WITH_FIX"
+        assert projection["gate_basis"] == "trace_gate"
+        assert projection["repair_scope"] == "rewrite"
+        assert projection["authoritative_fix_scope"] == "partial"
+        assert projection["authoritative_fix_scope_violation"] == {"type": "blank_authoritative_fix_scope"}
+        assert projection["strong_advisory_escalation"] == {"triggered_by": ["truth_gate"]}
+        assert projection["scope_origin"]["fix_scope"] == "runtime_widened"
+        assert projection["repair_contract"]["subtype"] == "movement"
+        assert projection["scope_authority"]["widened"] is True
+        assert projection["conflict_resolution_linkage"] == {"conflict_count": 2}
+        assert projection["reuse_contract"] == {"mode": "best_manuscript_baseline"}
+        assert projection["fix_pack"] == {"must_fix": ["anchor"]}
+        assert projection["retry_budget_axes"] == {"repair": "patch_revision"}
+
     def test_log_pass_session_decision_uses_logging_payload_fix_pack(self):
         from modules.core.stage4_interview_round import _PassResultLoggingPayload
 
@@ -2888,6 +3650,76 @@ class TestRecordS4Attempt:
         assert call_kwargs["reason"] == "legacy reason"
         assert call_kwargs["selection_reason"] == "final selection"
         assert call_kwargs["verdict_reason"] == "final verdict"
+
+    def test_build_stage4_pass_session_decision_kwargs_surfaces_trace_and_contract_metadata(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_fix_pack_payload = MagicMock(return_value={"must_fix": ["anchor"]})
+        ir._last_retry_budget_axes = {"repair": "patch_revision"}
+
+        decision_surface = _build_stage4_pass_decision_surface(
+            director_result={
+                "fix_scope": "partial",
+                "open_review": "director open review",
+                "action_items": ["director item"],
+                "firewall_triggered": False,
+                "firewall_reason": "",
+            },
+            trace_director_result={
+                "verdict_reason": "trace verdict",
+                "fix_scope": "rewrite",
+                "open_review": "trace open review",
+                "action_items": ["trace item"],
+                "firewall_triggered": True,
+                "firewall_reason": "trace firewall",
+            },
+            fallback_reason="fallback reason",
+        )
+
+        kwargs = _build_stage4_pass_session_decision_kwargs(
+            owner=ir,
+            next_ep=1,
+            round_num=0,
+            arc_num=1,
+            final_verdict="PASS_WITH_FIX",
+            final_score=98,
+            selected="A",
+            error_category="LOGIC_ERROR",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A"},
+            initial_verdict="PASS",
+            initial_score=91,
+            decision_surface=decision_surface,
+            logging_payload=_PassResultLoggingPayload(
+                log_artifact_meta={
+                    "candidate_key": "stage4|A",
+                    "content_hash": "hash-123",
+                    "artifact_path": "artifact.json",
+                },
+                session_selection_reason="selection",
+                session_verdict_reason="verdict",
+                session_runtime_advisory="runtime digest",
+                session_retry_directives="retry directives",
+                session_gate_semantics={
+                    "director_verdict": "PASS_WITH_FIX",
+                    "gate_basis": "trace_gate",
+                    "repair_scope": "rewrite",
+                },
+            ),
+        )
+
+        assert kwargs["reason"] == "trace verdict"
+        assert kwargs["fix_scope"] == "rewrite"
+        assert kwargs["selection_reason"] == "selection"
+        assert kwargs["verdict_reason"] == "verdict"
+        assert kwargs["runtime_advisory"] == "runtime digest"
+        assert kwargs["retry_directives"] == "retry directives"
+        assert kwargs["retry_budget_axes"] == {"repair": "patch_revision"}
+        assert kwargs["fix_pack"] == {"must_fix": ["anchor"]}
+        assert kwargs["firewall_triggered"] is True
+        assert kwargs["firewall_reason"] == "trace firewall"
 
     def test_record_stage4_pass_rate_attempt_uses_prelude_payload(self):
         ctx = _make_ctx()
@@ -3517,6 +4349,68 @@ class TestRecordS4Attempt:
         assert payload.use_inplace is False
         assert payload.force_patch is False
 
+    def test_resolve_retry_lane_routing_blocks_bounded_patch_for_truth_pin_drift(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._resolve_retry_lane_routing(
+            previous_attempt={
+                "score": "98",
+                "fix_scope": "full",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "balanced",
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "bounded_local_fix_hint": True,
+                    "contradiction_types": ["continuity"],
+                    "truth_pins": [
+                        {
+                            "pin_key": "family_group_name",
+                            "family": "proper_noun_group",
+                            "expected": "대한그룹",
+                            "observed": "유성그룹",
+                        }
+                    ],
+                },
+                "fix_pack": _local_fix_pack("group_label_line", target_kind="local_sentence"),
+            },
+            prev_manuscript="original manuscript",
+            round_num=4,
+        )
+
+        assert payload.use_patch is False
+        assert payload.use_inplace is False
+        assert payload.force_patch is False
+
+    def test_resolve_retry_lane_routing_blocks_bounded_patch_after_plateau(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir.retry_runtime._resolve_retry_lane_routing(
+            previous_attempt={
+                "score": "98",
+                "fix_scope": "full",
+                "reject_bucket": "post_select_conflict",
+                "selected_strategy_key": "tension",
+                "plateau_detected": True,
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "bounded_local_fix_hint": True,
+                    "contradiction_types": ["continuity"],
+                },
+                "fix_pack": {
+                    **_local_fix_pack("flashback_line", target_kind="local_sentence"),
+                    "evidence_summary": "runtime flashback continuity backfill: movement",
+                },
+            },
+            prev_manuscript="original manuscript",
+            round_num=4,
+        )
+
+        assert payload.use_patch is False
+        assert payload.use_inplace is False
+        assert payload.force_patch is False
+
     def test_build_retry_regenerate_kwargs_reduces_strategy_budget_for_constraint_violation(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -3942,6 +4836,61 @@ class TestRecordS4Attempt:
         assert result.previous_attempt["reject_bucket"] != "post_select_conflict"
         assert result.previous_attempt["fix_scope"] == "inplace"
         assert result.error_category == ""
+
+    def test_handle_reject_persists_reject_retry_snapshot_raw_record(self):
+        ctx = _make_ctx()
+        ctx.current_project.db.save_attempt_raw_rationale = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+
+        result = ir._handle_reject(
+            director_result={
+                "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
+                "selection_reason": "best candidate",
+                "verdict_reason": "quality drift",
+                "feedback": {"issues": ["style drift"]},
+                "action_items": ["tighten continuity"],
+                "fix_scope": "partial",
+                "fix_pack": _local_fix_pack("opening_location_name", target_kind="entity_ref"),
+                "fix_scope_reasoning": "localized continuity repair",
+                "open_review": "review note",
+                "director_verdict": "REJECT",
+                "final_verdict": "REJECT",
+                "gate_basis": "quality_floor_fail",
+                "repair_scope": "partial",
+            },
+            director_feedback="initial reject",
+            candidates=[_candidate()],
+            validation_results=[_validation_result()],
+            round_ctx=round_ctx,
+            round_num=0,
+            previous_attempt={},
+            is_patch=False,
+            is_patch_fallback=False,
+            prev_score=94,
+            prev_manuscript="previous manuscript",
+            asp_manuscript=None,
+            tot_used=False,
+            mad_used=False,
+            selected="A",
+            score=44,
+            error_category="",
+        )
+
+        raw_calls = ctx.current_project.db.save_attempt_raw_rationale.call_args_list
+        snapshot_calls = [call.kwargs for call in raw_calls if call.kwargs["payload_kind"] == "reject_retry_snapshot_raw"]
+        assert result.previous_attempt["reject_bucket"] in {"quality_issue", "constraint_violation", "structure_error"}
+        assert result.previous_attempt["attempt_key"].startswith("s4:ep")
+        assert result.previous_attempt["candidate_key"] == "A|balanced"
+        assert len(snapshot_calls) == 1
+        snapshot_payload = json.loads(snapshot_calls[0]["payload"])
+        assert snapshot_payload["candidate_key"] == "A|balanced"
+        assert snapshot_payload["previous_attempt"]["selection_reason"] == "best candidate"
+        assert snapshot_payload["previous_attempt"]["attempt_key"] == result.previous_attempt["attempt_key"]
+        assert snapshot_payload["previous_attempt"]["retry_budget_axes"]["repair"] in {
+            "patch_revision",
+            "rewrite_regenerate",
+        }
 
     """
 
@@ -5547,6 +6496,119 @@ class TestRecordS4Attempt:
         assert expected_path.exists()
         assert not fallback_path.exists()
 
+    def test_append_episode_log_persists_feedback_provenance_raw_record(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.db.save_attempt_raw_rationale = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 0,
+                "total_tokens": 0,
+                "total_cost_usd": 0.0,
+                "model_breakdown": {},
+            }
+        )
+
+        with (
+            patch("modules.core.stage4_interview_round.resolve_project_log_dir", return_value=tmp_path / "logs"),
+            patch("modules.core.stage4_interview_round.append_jsonl_record"),
+        ):
+            ir._append_episode_log(
+                ep_num=1,
+                round_num=0,
+                director_result={
+                    "selected": "A",
+                    "selected_candidate": {"strategy_name": "balanced"},
+                    "verdict": "PASS",
+                    "score": 91,
+                    "selection_reason": "accepted",
+                    "verdict_reason": "trace verdict",
+                    "score_breakdown": {},
+                    "action_items": [],
+                    "open_review": "",
+                },
+                is_patch=False,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="writer-model",
+                reject_bucket="",
+                validation_warnings=[],
+                feedback_provenance={
+                    "director_feedback": "trace verdict",
+                    "runtime_advisory": "runtime digest",
+                    "retry_directives": "retry directives",
+                },
+                attempt_key="s4:ep1:arc1:a1",
+            )
+
+        raw_calls = ctx.current_project.db.save_attempt_raw_rationale.call_args_list
+        feedback_calls = [call.kwargs for call in raw_calls if call.kwargs["payload_kind"] == "feedback_provenance_raw"]
+        assert len(feedback_calls) == 1
+        call_kwargs = feedback_calls[0]
+        assert call_kwargs["attempt_key"] == "s4:ep1:arc1:a1"
+        assert call_kwargs["payload_kind"] == "feedback_provenance_raw"
+        assert json.loads(call_kwargs["payload"]) == {
+            "director_feedback": "trace verdict",
+            "runtime_advisory": "runtime digest",
+            "retry_directives": "retry directives",
+        }
+
+    def test_append_episode_log_persists_patch_trace_raw_record(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.db.save_attempt_raw_rationale = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 0,
+                "total_tokens": 0,
+                "total_cost_usd": 0.0,
+                "model_breakdown": {},
+            }
+        )
+
+        with (
+            patch("modules.core.stage4_interview_round.resolve_project_log_dir", return_value=tmp_path / "logs"),
+            patch("modules.core.stage4_interview_round.append_jsonl_record"),
+        ):
+            ir._append_episode_log(
+                ep_num=1,
+                round_num=0,
+                director_result={
+                    "selected": "A",
+                    "selected_candidate": {"strategy_name": "balanced"},
+                    "verdict": "PASS_WITH_FIX",
+                    "score": 91,
+                    "selection_reason": "accepted",
+                    "verdict_reason": "trace verdict",
+                    "score_breakdown": {},
+                    "action_items": [],
+                    "open_review": "",
+                },
+                is_patch=True,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="writer-model",
+                reject_bucket="",
+                validation_warnings=[],
+                patch_trace={
+                    "patch_targets": ["scene:1"],
+                    "partial_fix_eval": {"patch_round": "2", "is_patch_attempt": True},
+                },
+                attempt_key="s4:ep1:arc1:a1",
+            )
+
+        raw_calls = ctx.current_project.db.save_attempt_raw_rationale.call_args_list
+        patch_calls = [call.kwargs for call in raw_calls if call.kwargs["payload_kind"] == "patch_trace_raw"]
+        assert len(patch_calls) == 1
+        payload = json.loads(patch_calls[0]["payload"])
+        assert payload["patch_strategy"] == "patch_with_feedback"
+        assert payload["patch_targets"] == ["scene:1"]
+        assert payload["partial_fix_eval"]["patch_round"] == 2
+
     def test_pass_with_fix_run_logs_initial_and_final_verdicts(self):
         ctx = _make_ctx()
         ctx.pass_rate_monitor = MagicMock()
@@ -6471,6 +7533,17 @@ class TestLane2DirectorSemantics:
                 director_result={
                     "selected_candidate": {"manuscript": "candidate manuscript", "strategy_name": "balanced"},
                     "_director_thinking": "full director thinking payload",
+                    "director_verdict": "PASS_WITH_FIX",
+                    "gate_basis": "quality_floor_fail",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "partial",
+                    "scope_authority": {
+                        "fix_scope": "partial",
+                    },
+                    "fix_pack": {
+                        "target_kind": "entity_ref",
+                        "patch_targets": ["opening_location_name"],
+                    },
                 },
                 advisory_summary={"truth_gate": 1},
                 selected="A",
@@ -6479,13 +7552,20 @@ class TestLane2DirectorSemantics:
                 selection_reason="best candidate",
                 verdict_reason="conflict",
                 attempt_key="s4:ep1:arc1:a1",
-                is_patch=False,
+                is_patch=True,
                 is_patch_fallback=False,
-                prev_score=0,
+                prev_score=71,
             )
 
         raw_calls = ctx.current_project.db.save_attempt_raw_rationale.call_args_list
+        thinking_calls = [call.kwargs for call in raw_calls if call.kwargs["payload_kind"] == "director_thinking"]
         payload_calls = [call.kwargs for call in raw_calls if call.kwargs["payload_kind"] == "advisory_warnings_raw"]
+        snapshot_calls = [
+            call.kwargs for call in raw_calls if call.kwargs["payload_kind"] == "selection_contract_snapshot_raw"
+        ]
+        surface_calls = [call.kwargs for call in raw_calls if call.kwargs["payload_kind"] == "selection_surface_raw"]
+        assert len(thinking_calls) == 1
+        assert thinking_calls[0]["payload"] == "full director thinking payload"
         assert len(payload_calls) == 1
         payload = json.loads(payload_calls[0]["payload"])
         assert payload["selection_summary"]["truth_gate"] == 1
@@ -6496,6 +7576,17 @@ class TestLane2DirectorSemantics:
         assert candidate_payload["quality_signal_warnings"] == ["style drift"]
         assert candidate_payload["warnings"] == ["[Python검증-HIGH] timeline drift"]
         assert candidate_payload["warning_count"] == 4
+        assert len(snapshot_calls) == 1
+        snapshot_payload = json.loads(snapshot_calls[0]["payload"])
+        assert snapshot_payload["gate_semantics"]["gate_basis"] == "quality_floor_fail"
+        assert snapshot_payload["fix_pack"]["target_kind"] == "entity_ref"
+        assert snapshot_payload["patch_context"] == {"tag": "patch", "score": 71}
+        assert len(surface_calls) == 1
+        surface_payload = json.loads(surface_calls[0]["payload"])
+        assert surface_payload["selected_label"] == "A"
+        assert surface_payload["selection_reason"] == "best candidate"
+        assert surface_payload["verdict_reason"] == "conflict"
+        assert surface_payload["advisory_warnings"]["gate_semantics"]["gate_basis"] == "quality_floor_fail"
 
     def test_build_director_decision_core_parts_injects_stage3_pov_and_writing_directive(self):
         ctx = _make_ctx()
@@ -7190,6 +8281,361 @@ class TestLane2DirectorSemantics:
             "target_kind": "local_sentence",
         }
 
+    def test_build_stage4_scope_origin_payload_preserves_existing_fix_scope_label(self):
+        payload = _build_stage4_scope_origin_payload(
+            fix_scope="full",
+            authoritative_fix_scope="inplace",
+            existing_scope_origin={
+                "fix_scope": "post_select_conflict_override",
+            },
+        )
+
+        assert payload == {
+            "fix_scope": "post_select_conflict_override",
+            "authoritative_fix_scope": "director_authoritative",
+            "repair_scope": "runtime_lane",
+        }
+
+    def test_build_stage4_retry_contract_carryover_fields_copies_contract_bundle(self):
+        payload = _build_stage4_retry_contract_carryover_fields(
+            previous_attempt={
+                "scope_origin": {
+                    "fix_scope": "post_select_conflict_override",
+                },
+                "repair_contract": {
+                    "subtype": "opening_action_continuity",
+                },
+                "scope_authority": {
+                    "fix_scope": "full",
+                    "widened": True,
+                },
+                "fix_pack_origin": {
+                    "provenance": "runtime_synthesized",
+                },
+                "reuse_contract": {
+                    "mode": "best_manuscript_baseline",
+                },
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                },
+            },
+            fix_scope="full",
+            authoritative_fix_scope="inplace",
+        )
+
+        assert payload["scope_origin"] == {
+            "fix_scope": "post_select_conflict_override",
+            "authoritative_fix_scope": "director_authoritative",
+            "repair_scope": "runtime_lane",
+        }
+        assert payload["repair_contract"] == {
+            "subtype": "opening_action_continuity",
+        }
+        assert payload["scope_authority"] == {
+            "fix_scope": "full",
+            "widened": True,
+        }
+        assert payload["fix_pack_origin"] == {
+            "provenance": "runtime_synthesized",
+        }
+        assert payload["reuse_contract"] == {
+            "mode": "best_manuscript_baseline",
+        }
+        assert payload["conflict_contract"] == {
+            "contract_type": "post_select_conflict",
+        }
+
+    def test_build_stage4_reject_retry_contract_projection_merges_current_contract_and_carryover(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = _build_stage4_reject_retry_contract_projection(
+            owner=ir,
+            previous_attempt={
+                "reuse_contract": {
+                    "mode": "best_manuscript_baseline",
+                },
+                "scope_origin": {
+                    "fix_scope": "post_select_conflict_override",
+                    "authoritative_fix_scope": "director_authoritative",
+                    "repair_scope": "runtime_lane",
+                },
+            },
+            director_result={
+                "contradiction_types": ["scene_overlap"],
+            },
+            fix_scope="partial",
+            authoritative_fix_scope="",
+            repair_scope="partial",
+            fix_pack={
+                "target_kind": "local_sentence",
+                "provenance": "runtime_synthesized",
+                "provenance_sources": ["flashback_continuity_localfix"],
+            },
+        )
+
+        assert payload["reuse_contract"] == {
+            "mode": "best_manuscript_baseline",
+        }
+        assert payload["scope_origin"] == {
+            "fix_scope": "post_select_conflict_override",
+            "authoritative_fix_scope": "director_authoritative",
+            "repair_scope": "runtime_lane",
+        }
+        assert payload["fix_pack_origin"] == {
+            "provenance": "runtime_synthesized",
+            "provenance_sources": ["flashback_continuity_localfix"],
+            "routing_contract": "runtime_generated_prefers_patch",
+        }
+        assert payload["repair_contract"]["subtype"] == "scene_overlap"
+        assert payload["repair_contract"]["provenance"] == "runtime_synthesized"
+        assert payload["scope_authority"]["fix_scope"] == "partial"
+        assert payload["scope_authority"]["repair_scope"] == "partial"
+
+    def test_build_stage4_reject_gate_semantics_bundle_backfills_fix_pack_origin(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_gate_semantics_payload = MagicMock(
+            return_value={
+                "gate_basis": "continuity",
+                "repair_scope": "partial",
+            }
+        )
+        ir._build_fix_pack_payload = MagicMock(return_value={})
+
+        bundle = _build_stage4_reject_gate_semantics_bundle(
+            owner=ir,
+            sink_source={
+                "fix_pack_origin": {
+                    "provenance": "runtime_synthesized",
+                    "routing_contract": "runtime_generated_prefers_patch",
+                },
+            },
+            previous_attempt={
+                "repair_contract": {"subtype": "opening_action_continuity"},
+                "scope_authority": {"fix_scope": "partial"},
+            },
+            enrich_gate_semantics_fn=ir.reject_runtime._enrich_reject_gate_semantics,
+        )
+
+        assert bundle.gate_semantics["fix_pack_origin"] == {
+            "provenance": "runtime_synthesized",
+            "routing_contract": "runtime_generated_prefers_patch",
+        }
+        assert bundle.repair_contract == {"subtype": "opening_action_continuity"}
+        assert bundle.scope_authority == {"fix_scope": "partial"}
+        assert bundle.fix_pack_origin == {
+            "provenance": "runtime_synthesized",
+            "routing_contract": "runtime_generated_prefers_patch",
+        }
+
+    def test_build_stage4_reject_previous_attempt_override_prefers_scope_authority_fix_scope(self):
+        payload = _build_stage4_reject_previous_attempt_override(
+            {
+                "repair_scope": "partial",
+                "authoritative_fix_scope": "inplace",
+                "fix_pack": {"target_kind": "scene_model"},
+                "fix_pack_origin": {"provenance": "runtime_synthesized"},
+                "repair_contract": {"subtype": "opening_action_continuity"},
+                "scope_origin": {"fix_scope": "runtime_widened"},
+                "scope_authority": {
+                    "fix_scope": "full",
+                    "repair_scope": "partial",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": True,
+                },
+                "authoritative_fix_scope_violation": {"type": "blank_authoritative_fix_scope"},
+                "strong_advisory_escalation": {"tier": "non_local_fix"},
+            }
+        )
+
+        assert payload["fix_scope"] == "full"
+        assert payload["repair_scope"] == "partial"
+        assert payload["authoritative_fix_scope"] == "inplace"
+        assert payload["fix_pack"] == {"target_kind": "scene_model"}
+        assert payload["fix_pack_origin"] == {"provenance": "runtime_synthesized"}
+        assert payload["repair_contract"] == {"subtype": "opening_action_continuity"}
+        assert payload["scope_origin"] == {"fix_scope": "runtime_widened"}
+        assert payload["scope_authority"]["widened"] is True
+        assert payload["authoritative_fix_scope_violation"] == {"type": "blank_authoritative_fix_scope"}
+        assert payload["strong_advisory_escalation"] == {"tier": "non_local_fix"}
+
+    def test_build_stage4_reject_retry_snapshot_raw_record_preserves_snapshot(self):
+        record = _build_stage4_reject_retry_snapshot_raw_record(
+            attempt_key="s4:ep2:arc1:a1",
+            ep_num=2,
+            candidate_key="A|balanced",
+            previous_attempt={
+                "reject_bucket": "constraint_violation",
+                "fix_scope": "partial",
+                "repair_contract": {"subtype": "scene_overlap"},
+                "retry_budget_axes": {"repair": "patch_revision"},
+            },
+        )
+
+        assert record == {
+            "attempt_key": "s4:ep2:arc1:a1",
+            "stage": 4,
+            "ep_num": 2,
+            "payload_kind": "reject_retry_snapshot_raw",
+            "payload": json.dumps(
+                {
+                    "_meta": {
+                        "record_family": "reject_retry_snapshot",
+                        "surface": "reject_retry_snapshot_raw",
+                    },
+                    "candidate_key": "A|balanced",
+                    "previous_attempt": {
+                        "reject_bucket": "constraint_violation",
+                        "fix_scope": "partial",
+                        "repair_contract": {"subtype": "scene_overlap"},
+                        "retry_budget_axes": {"repair": "patch_revision"},
+                    },
+                },
+                ensure_ascii=False,
+            ),
+        }
+
+    def test_build_stage4_reject_decision_surface_prefers_trace_and_preserves_fallbacks(self):
+        surface = _build_stage4_reject_decision_surface(
+            director_result={
+                "selection_reason": "director selection",
+                "open_review": "director review",
+                "action_items": ["director item"],
+            },
+            trace_director_result={
+                "selection_reason": "trace selection",
+                "open_review": "trace review",
+                "action_items": ["trace item"],
+            },
+            fallback_reason="fallback verdict",
+        )
+
+        assert surface.selection_reason == "trace selection"
+        assert surface.verdict_reason == "fallback verdict"
+        assert surface.decision_reason == "fallback verdict"
+        assert surface.open_review == "trace review"
+        assert surface.action_items == ["trace item"]
+
+    def test_build_stage4_pass_decision_surface_prefers_trace_fields(self):
+        surface = _build_stage4_pass_decision_surface(
+            director_result={
+                "selection_reason": "director selection",
+                "open_review": "director review",
+                "action_items": ["director item"],
+                "fix_scope": "full",
+                "firewall_triggered": False,
+                "firewall_reason": "",
+            },
+            trace_director_result={
+                "selection_reason": "trace selection",
+                "verdict_reason": "trace verdict",
+                "open_review": "trace review",
+                "action_items": ["trace item"],
+                "fix_scope": "partial",
+                "firewall_triggered": True,
+                "firewall_reason": "trace firewall",
+            },
+            fallback_reason="fallback verdict",
+        )
+
+        assert surface.selection_reason == "trace selection"
+        assert surface.verdict_reason == "trace verdict"
+        assert surface.decision_reason == "trace verdict"
+        assert surface.open_review == "trace review"
+        assert surface.action_items == ["trace item"]
+        assert surface.fix_scope == "partial"
+        assert surface.firewall_triggered is True
+        assert surface.firewall_reason == "trace firewall"
+
+    def test_build_stage4_pass_carryover_linkage_preserves_conflict_and_reuse(self):
+        payload = _build_stage4_pass_carryover_linkage(
+            {
+                "conflict_contract": {
+                    "contract_type": "post_select_conflict",
+                    "conflicts": [{"conflict_type": "continuity"}, {"conflict_type": "history"}],
+                },
+                "reuse_contract": {
+                    "mode": "best_manuscript_baseline",
+                },
+            }
+        )
+
+        assert payload == {
+            "conflict_resolution_linkage": {
+                "resolved_from": "prior_attempt_conflict",
+                "original_contract_type": "post_select_conflict",
+                "conflict_count": 2,
+            },
+            "reuse_contract": {
+                "mode": "best_manuscript_baseline",
+            },
+        }
+
+    def test_build_stage4_reject_episode_log_kwargs_surfaces_session_contracts(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_fix_pack_payload = MagicMock(return_value={"target_kind": "scene_model"})
+
+        kwargs = _build_stage4_reject_episode_log_kwargs(
+            owner=ir,
+            next_ep=5,
+            round_num=1,
+            sink_source={"selected": "A"},
+            initial_verdict="REJECT",
+            initial_score=71,
+            final_verdict="REJECT",
+            final_score=44,
+            is_patch=False,
+            is_patch_fallback=False,
+            tot_used=False,
+            mad_used=True,
+            asp_used=False,
+            model="writer-model",
+            reject_bucket="post_select_conflict",
+            validation_warnings=["warn-a"],
+            feedback_provenance={
+                "director_feedback": "director said no",
+                "runtime_advisory": "runtime digest",
+                "retry_directives": "retry later",
+            },
+            patch_trace={"mode": "patch"},
+            arc_num=3,
+            reject_artifact_meta={
+                "candidate_key": "stage4|reject",
+                "content_hash": "hash-r",
+                "artifact_path": "reject.json",
+            },
+            selection_artifact_meta={
+                "candidate_key": "stage4|sel",
+                "content_hash": "hash-s",
+                "artifact_path": "sel.json",
+            },
+            attempt_key="attempt-5",
+            selection_reason="selection",
+            verdict_reason="verdict",
+            session_gate_semantics={
+                "director_verdict": "REJECT",
+                "gate_basis": "continuity_firewall",
+                "repair_scope": "partial",
+                "reuse_contract": {"mode": "best_manuscript_baseline"},
+                "conflict_resolution_linkage": {"conflict_count": 2},
+            },
+            runtime_advisory="runtime digest",
+            retry_directives="retry later",
+        )
+
+        assert kwargs["selection_reason"] == "selection"
+        assert kwargs["verdict_reason"] == "verdict"
+        assert kwargs["gate_semantics"]["gate_basis"] == "continuity_firewall"
+        assert kwargs["fix_pack"] == {"target_kind": "scene_model"}
+        assert kwargs["runtime_advisory"] == "runtime digest"
+        assert kwargs["retry_directives"] == "retry later"
+        assert kwargs["carryover_contracts"] == {
+            "reuse_contract": {"mode": "best_manuscript_baseline"},
+            "conflict_resolution_linkage": {"conflict_count": 2},
+        }
+
     def test_retry_pathology_payload_separates_authoritative_and_derived_fix_scope(self):
         from modules.core.stage4_outcome_runtime import Stage4OutcomeRuntime
 
@@ -7313,6 +8759,13 @@ class TestLane2DirectorSemantics:
         assert payload.previous_attempt["rejection_reason"] == "conflict-first reject feedback"
         assert payload.previous_attempt["conflict_contract"]["contract_type"] == "post_select_conflict"
         assert payload.previous_attempt["reuse_contract"]["mode"] == "best_manuscript_baseline"
+        assert "balanced" in payload.previous_attempt["strategy_feedback_map"]
+        assert (
+            "best candidate because covert network felt sharp"
+            in payload.previous_attempt["strategy_feedback_map"]["balanced"]
+        )
+        assert "runtime digest" in payload.previous_attempt["strategy_feedback_map"]["balanced"]
+        assert "retry directives" in payload.previous_attempt["strategy_feedback_map"]["balanced"]
 
     def test_post_select_conflict_snapshot_preserves_bounded_fix_pack_hints(self):
         ctx = _make_ctx()
@@ -7391,6 +8844,11 @@ class TestLane2DirectorSemantics:
 
         assert payload.previous_attempt["fix_pack"]["patch_targets"] == ["기관명 표기 문장"]
         assert payload.previous_attempt["post_select_fix_pack_preserved"] is True
+        assert "balanced" in payload.previous_attempt["strategy_feedback_map"]
+        assert (
+            "best candidate because proper noun continuity almost landed"
+            in payload.previous_attempt["strategy_feedback_map"]["balanced"]
+        )
 
     def test_build_reject_guidance_payload_applies_inplace_gate_and_mad_hint(self):
         ctx = _make_ctx()
@@ -7528,6 +8986,7 @@ class TestLane2DirectorSemantics:
                 "score_breakdown": {"consistency": 0},
             },
             candidate_key="A|balanced",
+            patch_trace=None,
             previous_attempt={
                 "best_manuscript": "candidate manuscript",
                 "gate_basis": "post_select_conflict",
@@ -8001,6 +9460,7 @@ class TestLane2DirectorSemantics:
         assert parts.base_fields["final_verdict"] == "PASS_WITH_FIX"
         assert parts.base_fields["model"] == "writer-model"
         assert parts.feedback_provenance["director_feedback"] == "trace verdict"
+        assert parts.feedback_provenance["director_feedback_text"] == "trace verdict"
         assert parts.feedback_provenance["runtime_advisory"] == "runtime digest"
         assert parts.artifact_fields["candidate_key"] == "stage4|A"
         assert parts.artifact_fields["selection_candidate_key"] == "A"
@@ -8069,8 +9529,203 @@ class TestLane2DirectorSemantics:
 
         assert provenance == {
             "director_feedback": "trace verdict",
+            "director_feedback_text": "trace verdict",
             "runtime_advisory": "runtime digest",
             "retry_directives": "retry directives",
+        }
+
+    def test_build_stage4_episode_log_carryover_contracts_filters_supported_keys(self):
+        payload = s4_episode_logging.build_stage4_episode_log_carryover_contracts(
+            gate_semantics={
+                "conflict_resolution_linkage": {"conflict_count": 2},
+                "reuse_contract": {"mode": "best_manuscript_baseline"},
+                "scope_authority": {"fix_scope": "full"},
+            }
+        )
+
+        assert payload == {
+            "conflict_resolution_linkage": {"conflict_count": 2},
+            "reuse_contract": {"mode": "best_manuscript_baseline"},
+        }
+
+    def test_build_pass_episode_log_append_kwargs_surfaces_contract_and_feedback_fields(self):
+        payload = s4_episode_logging.build_pass_episode_log_append_kwargs(
+            request=s4_episode_logging.Stage4PassEpisodeLogRequest(
+                ep_num=1,
+                round_num=0,
+                arc_num=1,
+                director_result={},
+                director_feedback="raw feedback",
+                trace_verdict_reason="trace verdict",
+                initial_verdict="PASS",
+                initial_score=91,
+                final_verdict="PASS_WITH_FIX",
+                final_score=98,
+                is_patch=True,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                asp_used=False,
+                model_tier="writer-model",
+                validation_warnings=["warn-a"],
+                final_warnings=["final-warn"],
+                patch_trace={"mode": "patch"},
+                session_runtime_advisory="runtime digest",
+                session_retry_directives="retry directives",
+                log_artifact_meta={
+                    "candidate_key": "stage4|A",
+                    "content_hash": "hash-123",
+                    "artifact_path": "artifact.json",
+                },
+                selection_artifact_meta={
+                    "candidate_key": "A",
+                    "content_hash": "sel-hash",
+                    "artifact_path": "selection.json",
+                },
+                session_id="sess-pass-log",
+            ),
+            selection_reason="selection",
+            verdict_reason="verdict",
+            gate_semantics={
+                "gate_basis": "patch_reaudit_pass",
+                "reuse_contract": {"mode": "best_manuscript_baseline"},
+            },
+            fix_pack={"target_kind": "entity_ref"},
+            runtime_advisory="runtime digest",
+            retry_directives="retry directives",
+        )
+
+        assert payload["selection_reason"] == "selection"
+        assert payload["verdict_reason"] == "verdict"
+        assert payload["gate_semantics"]["gate_basis"] == "patch_reaudit_pass"
+        assert payload["fix_pack"] == {"target_kind": "entity_ref"}
+        assert payload["runtime_advisory"] == "runtime digest"
+        assert payload["retry_directives"] == "retry directives"
+        assert payload["carryover_contracts"] == {
+            "reuse_contract": {"mode": "best_manuscript_baseline"},
+        }
+
+    def test_build_reject_episode_log_append_kwargs_surfaces_contract_and_feedback_fields(self):
+        payload = s4_episode_logging.build_reject_episode_log_append_kwargs(
+            request=s4_episode_logging.Stage4RejectEpisodeLogRequest(
+                ep_num=5,
+                round_num=1,
+                arc_num=3,
+                sink_source={"selected": "A"},
+                initial_verdict="REJECT",
+                initial_score=71,
+                final_verdict="REJECT",
+                final_score=44,
+                is_patch=False,
+                is_patch_fallback=False,
+                tot_used=False,
+                mad_used=True,
+                asp_used=False,
+                model="writer-model",
+                reject_bucket="post_select_conflict",
+                validation_warnings=["warn-a"],
+                feedback_provenance={
+                    "director_feedback": "director said no",
+                    "runtime_advisory": "runtime digest",
+                    "retry_directives": "retry later",
+                },
+                patch_trace={"mode": "patch"},
+                reject_artifact_meta={
+                    "candidate_key": "stage4|reject",
+                    "content_hash": "hash-r",
+                    "artifact_path": "reject.json",
+                },
+                selection_artifact_meta={
+                    "candidate_key": "stage4|sel",
+                    "content_hash": "hash-s",
+                    "artifact_path": "sel.json",
+                },
+                attempt_key="attempt-5",
+            ),
+            selection_reason="selection",
+            verdict_reason="verdict",
+            gate_semantics={
+                "gate_basis": "continuity_firewall",
+                "reuse_contract": {"mode": "best_manuscript_baseline"},
+                "conflict_resolution_linkage": {"conflict_count": 2},
+            },
+            fix_pack={"target_kind": "scene_model"},
+            runtime_advisory="runtime digest",
+            retry_directives="retry later",
+        )
+
+        assert payload["selection_reason"] == "selection"
+        assert payload["verdict_reason"] == "verdict"
+        assert payload["gate_semantics"]["gate_basis"] == "continuity_firewall"
+        assert payload["fix_pack"] == {"target_kind": "scene_model"}
+        assert payload["runtime_advisory"] == "runtime digest"
+        assert payload["retry_directives"] == "retry later"
+        assert payload["carryover_contracts"] == {
+            "reuse_contract": {"mode": "best_manuscript_baseline"},
+            "conflict_resolution_linkage": {"conflict_count": 2},
+        }
+
+    def test_build_stage4_pass_episode_log_kwargs_surfaces_session_contracts(self):
+        from modules.core.stage4_interview_round import _PassResultLoggingPayload
+
+        owner = SimpleNamespace(ctx=_make_ctx())
+        owner.ctx.current_project.metrics_session_id = "sess-pass-log"
+        chief_writer = MagicMock()
+        chief_writer.model_tier = "writer-model"
+
+        payload = _build_stage4_pass_episode_log_kwargs(
+            owner=owner,
+            ep_num=1,
+            round_num=0,
+            director_result={},
+            trace_director_result={"verdict_reason": "trace verdict"},
+            director_feedback="raw feedback",
+            initial_verdict="PASS",
+            initial_score=91,
+            final_verdict="PASS_WITH_FIX",
+            final_score=98,
+            is_patch=True,
+            is_patch_fallback=False,
+            tot_used=False,
+            mad_used=True,
+            asp_manuscript="asp manuscript",
+            chief_writer=chief_writer,
+            validation_warnings=["warn-a"],
+            final_warnings=["final-warn"],
+            patch_trace={"mode": "patch"},
+            logging_payload=_PassResultLoggingPayload(
+                log_artifact_meta={
+                    "candidate_key": "stage4|A",
+                    "content_hash": "hash-123",
+                    "artifact_path": "artifact.json",
+                },
+                session_selection_reason="selection",
+                session_verdict_reason="verdict",
+                session_runtime_advisory="runtime digest",
+                session_retry_directives="retry directives",
+                session_gate_semantics={
+                    "gate_basis": "patch_reaudit_pass",
+                    "conflict_resolution_linkage": {"conflict_count": 1},
+                    "reuse_contract": {"mode": "best_manuscript_baseline"},
+                },
+                session_fix_pack={"target_kind": "entity_ref"},
+            ),
+            selection_artifact_meta={
+                "candidate_key": "A",
+                "content_hash": "sel-hash",
+                "artifact_path": "selection.json",
+            },
+            arc_num=1,
+        )
+
+        assert payload["selection_reason"] == "selection"
+        assert payload["verdict_reason"] == "verdict"
+        assert payload["runtime_advisory"] == "runtime digest"
+        assert payload["retry_directives"] == "retry directives"
+        assert payload["fix_pack"] == {"target_kind": "entity_ref"}
+        assert payload["carryover_contracts"] == {
+            "conflict_resolution_linkage": {"conflict_count": 1},
+            "reuse_contract": {"mode": "best_manuscript_baseline"},
         }
 
     def test_build_pass_episode_log_base_fields_preserves_core_round_metadata(self):
@@ -8931,6 +10586,81 @@ class TestLane2DirectorSemantics:
         assert kwargs["runtime_advisory"] == "runtime digest"
         assert kwargs["retry_directives"] == "retry directives"
 
+    def test_build_stage4_reject_session_decision_kwargs_surfaces_trace_and_contract_metadata(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_fix_pack_payload = MagicMock(return_value={"must_fix": ["anchor"]})
+        ir._last_retry_budget_axes = {"repair": "patch_revision"}
+
+        decision_surface = _build_stage4_reject_decision_surface(
+            director_result={
+                "fix_scope": "full",
+                "open_review": "director open review",
+                "action_items": ["director item"],
+            },
+            trace_director_result={
+                "verdict_reason": "trace reject verdict",
+                "open_review": "trace open review",
+                "action_items": ["trace item"],
+            },
+            fallback_reason="fallback reason",
+        )
+        kwargs = _build_stage4_reject_session_decision_kwargs(
+            owner=ir,
+            next_ep=1,
+            round_num=0,
+            arc_num=1,
+            final_verdict="REJECT",
+            final_score=44,
+            selected="A",
+            error_category="LOGIC_ERROR",
+            attempt_key="attempt-1",
+            selection_artifact_meta={"candidate_key": "A"},
+            initial_verdict="REJECT",
+            initial_score=40,
+            decision_surface=decision_surface,
+            reject_logging=_RejectLoggingPayload(
+                reject_bucket="continuity",
+                reject_artifact_meta={
+                    "candidate_key": "stage4|reject",
+                    "content_hash": "hash-r",
+                    "artifact_path": "reject.json",
+                },
+                session_selection_reason="selection",
+                session_verdict_reason="verdict",
+                session_runtime_advisory="runtime digest",
+                session_retry_directives="retry directives",
+                session_gate_semantics={
+                    "director_verdict": "REJECT",
+                    "gate_basis": "continuity",
+                    "repair_scope": "partial",
+                },
+                feedback_provenance={
+                    "director_feedback": "director said no",
+                    "runtime_advisory": "runtime digest",
+                    "retry_directives": "retry directives",
+                },
+            ),
+            sink_source={
+                "fix_scope": "partial",
+                "firewall_triggered": True,
+                "firewall_reason": "trace firewall",
+            },
+        )
+
+        assert kwargs["reason"] == "trace reject verdict"
+        assert kwargs["fix_scope"] == "partial"
+        assert kwargs["open_review"] == "trace open review"
+        assert kwargs["action_items"] == ["trace item"]
+        assert kwargs["selection_reason"] == "selection"
+        assert kwargs["verdict_reason"] == "verdict"
+        assert kwargs["retry_budget_axes"] == {"repair": "patch_revision"}
+        assert kwargs["fix_pack"] == {"must_fix": ["anchor"]}
+        assert kwargs["runtime_advisory"] == "runtime digest"
+        assert kwargs["retry_directives"] == "retry directives"
+        assert kwargs["firewall_triggered"] is True
+        assert kwargs["firewall_reason"] == "trace firewall"
+
     def test_log_reject_session_decision_prefers_final_reject_scope_and_fix_pack(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -9095,6 +10825,12 @@ class TestLane2DirectorSemantics:
                         "authoritative_fix_scope": "director_authoritative",
                         "repair_scope": "runtime_lane",
                     },
+                    "reuse_contract": {
+                        "mode": "best_manuscript_baseline",
+                    },
+                    "conflict_resolution_linkage": {
+                        "conflict_count": 1,
+                    },
                 },
                 feedback_provenance={
                     "director_feedback": "director said no",
@@ -9149,6 +10885,14 @@ class TestLane2DirectorSemantics:
         assert kwargs["director_result"]["fix_pack"] == {}
         assert kwargs["director_result"]["scope_authority"]["fix_scope"] == "full"
         assert kwargs["director_result"]["authoritative_fix_scope"] == "partial"
+        assert kwargs["selection_reason"] == "selection"
+        assert kwargs["verdict_reason"] == "verdict"
+        assert kwargs["runtime_advisory"] == "runtime digest"
+        assert kwargs["retry_directives"] == "retry later"
+        assert kwargs["carryover_contracts"] == {
+            "reuse_contract": {"mode": "best_manuscript_baseline"},
+            "conflict_resolution_linkage": {"conflict_count": 1},
+        }
 
     def test_build_round_outcome_trace_payload_prefers_trace_meta_and_collects_warnings(self):
         ctx = _make_ctx()
@@ -9172,10 +10916,36 @@ class TestLane2DirectorSemantics:
         assert payload.trace_director_result == {"verdict": "PASS_WITH_FIX", "trace": True}
         assert payload.final_verdict == "PASS_WITH_FIX"
         assert payload.final_score == 88
-        assert payload.trace_patch_trace == {"mode": "patch"}
+        assert payload.trace_patch_trace["mode"] == "patch"
+        assert payload.trace_patch_trace["partial_fix_eval"]["is_patch_attempt"] is True
         assert payload.is_patch is True
         assert payload.validation_warnings == ["warn-a", "warn-b"]
         ir._collect_validation_warning_lines.assert_called_once_with([_validation_result()], limit=20)
+
+    def test_build_round_outcome_trace_payload_normalizes_patch_trace_and_backfills_fix_pack(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._collect_validation_warning_lines = MagicMock(return_value=[])
+
+        payload = ir._build_round_outcome_trace_payload(
+            trace_meta={
+                "director_result": {"verdict": "PASS_WITH_FIX"},
+                "patch_trace": {
+                    "patch_targets": ["scene:1"],
+                    "partial_fix_eval": {"patch_round": "2", "is_patch_attempt": True},
+                },
+            },
+            director_result={"verdict": "PASS"},
+            initial_verdict="PASS",
+            initial_score=81,
+            validation_results=[],
+            is_patch=True,
+        )
+
+        assert payload.trace_patch_trace["patch_targets"] == ["scene:1"]
+        assert payload.trace_patch_trace["partial_fix_eval"]["patch_round"] == 2
+        assert payload.trace_director_result["fix_pack"]["patch_targets"] == ["scene:1"]
+        assert payload.is_patch is True
 
     def test_build_reject_logging_payload_prefers_trace_reason_and_previous_attempt_metadata(self):
         ctx = _make_ctx()
@@ -9229,6 +10999,10 @@ class TestLane2DirectorSemantics:
         assert payload.session_retry_directives == "retry later"
         assert payload.feedback_provenance == {
             "director_feedback": "director said no",
+            "director_feedback_text": "director said no",
+            "merged_feedback": "",
+            "system_feedback": "",
+            "evidence_summary": "",
             "runtime_advisory": "runtime digest",
             "retry_directives": "retry later",
         }
@@ -10486,6 +12260,108 @@ class TestScopeSinkSemantics:
 
         assert payload["rationale_blanked_by"] == "runtime_post_select_conflict_elision"
 
+    def test_build_stage4_retry_pathology_projection_collects_identity_and_contract_carryover(self):
+        payload = _build_stage4_retry_pathology_projection(
+            previous_attempt={
+                "attempt_key": "s4:ep5:arc0:a2",
+                "candidate_key": "A|repair",
+                "content_hash": "hash-123",
+                "authoritative_fix_scope_violation": {"type": "blank_authoritative_fix_scope"},
+                "scope_origin": {
+                    "fix_scope": "post_select_conflict_override",
+                    "authoritative_fix_scope": "director_authoritative",
+                    "repair_scope": "runtime_lane",
+                },
+                "reuse_contract": {"mode": "best_manuscript_baseline"},
+                "rationale_blanked_by": "runtime_post_select_conflict_elision",
+            },
+            fix_scope="full",
+            authoritative_fix_scope="inplace",
+        )
+
+        assert payload["attempt_key"] == "s4:ep5:arc0:a2"
+        assert payload["candidate_key"] == "A|repair"
+        assert payload["content_hash"] == "hash-123"
+        assert payload["authoritative_fix_scope_violation"] == {"type": "blank_authoritative_fix_scope"}
+        assert payload["scope_origin"]["fix_scope"] == "post_select_conflict_override"
+        assert payload["reuse_contract"] == {"mode": "best_manuscript_baseline"}
+        assert payload["rationale_blanked_by"] == "runtime_post_select_conflict_elision"
+
+    def test_build_stage4_retry_pathology_raw_record_preserves_payload(self):
+        record = _build_stage4_retry_pathology_raw_record(
+            payload={
+                "ep": 5,
+                "attempt_key": "s4:ep5:arc0:a2",
+                "pathology_fingerprint": "post_select_conflict|fix_pack:not_ready",
+                "scope_origin": {"fix_scope": "post_select_conflict_override"},
+                "reuse_contract": {"mode": "best_manuscript_baseline"},
+            }
+        )
+
+        assert record == {
+            "attempt_key": "s4:ep5:arc0:a2",
+            "stage": 4,
+            "ep_num": 5,
+            "payload_kind": "retry_pathology_raw",
+            "payload": json.dumps(
+                {
+                    "_meta": {
+                        "record_family": "retry_pathology",
+                        "surface": "retry_pathology_raw",
+                    },
+                    "ep": 5,
+                    "attempt_key": "s4:ep5:arc0:a2",
+                    "pathology_fingerprint": "post_select_conflict|fix_pack:not_ready",
+                    "scope_origin": {"fix_scope": "post_select_conflict_override"},
+                    "reuse_contract": {"mode": "best_manuscript_baseline"},
+                    "event": "STAGE4_RETRY_PATHOLOGY",
+                },
+                ensure_ascii=False,
+            ),
+        }
+
+    def test_emit_retry_pathology_signal_persists_raw_rationale_record(self):
+        ctx = _make_ctx()
+        ctx.current_project.db.save_attempt_raw_rationale = MagicMock()
+        orch = Stage4Orchestrator(ctx)
+        runtime = orch.outcome_runtime
+
+        with patch("modules.core.stage4_outcome_runtime.append_jsonl_record"):
+            runtime.emit_retry_pathology_signal(
+                ep_num=5,
+                round_num=1,
+                previous_attempt={
+                    "attempt_key": "s4:ep5:arc0:a2",
+                    "candidate_key": "A|repair",
+                    "content_hash": "hash-123",
+                    "reject_bucket": "post_select_conflict",
+                    "gate_basis": "post_select_conflict",
+                    "fix_scope": "full",
+                    "authoritative_fix_scope": "inplace",
+                    "repair_scope": "full",
+                    "error_category": "LOGIC_ERROR",
+                    "score": 50,
+                    "fix_pack": {},
+                    "reuse_contract": {"mode": "best_manuscript_baseline"},
+                    "scope_origin": {
+                        "fix_scope": "post_select_conflict_override",
+                        "authoritative_fix_scope": "director_authoritative",
+                        "repair_scope": "runtime_lane",
+                    },
+                },
+                pathology_counts={},
+                pathology_repeat_emitted=set(),
+            )
+
+        ctx.current_project.db.save_attempt_raw_rationale.assert_called_once()
+        raw_kwargs = ctx.current_project.db.save_attempt_raw_rationale.call_args.kwargs
+        assert raw_kwargs["attempt_key"] == "s4:ep5:arc0:a2"
+        assert raw_kwargs["payload_kind"] == "retry_pathology_raw"
+        raw_payload = json.loads(raw_kwargs["payload"])
+        assert raw_payload["event"] == "STAGE4_RETRY_PATHOLOGY"
+        assert raw_payload["pathology_fingerprint"].startswith("post_select_conflict")
+        assert raw_payload["reuse_contract"]["mode"] == "best_manuscript_baseline"
+
     def test_pass_side_conflict_resolution_linkage_in_gate_semantics(self):
         """PASS-side logging payload contains conflict_resolution_linkage when previous_attempt had conflict_contract."""
         ctx = _make_ctx()
@@ -10616,7 +12492,7 @@ class TestScopeSinkSemantics:
         }
 
     def test_post_select_conflict_preserves_contradiction_subtype_contract(self):
-        """Post-select downgrade should retain contradiction subtype/detail and bounded local-fix hint."""
+        """Post-select downgrade should retain contradiction subtype/detail and promote rewrite-only truth pins."""
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
@@ -10676,8 +12552,9 @@ class TestScopeSinkSemantics:
         assert previous_attempt["contradiction_types"] == ["proper_noun"]
         assert previous_attempt["conflict_contract"]["contract_type"] == "post_select_conflict"
         assert previous_attempt["conflict_contract"]["contradiction_types"] == ["proper_noun"]
-        assert previous_attempt["conflict_contract"]["bounded_local_fix_hint"] is True
+        assert previous_attempt["conflict_contract"].get("bounded_local_fix_hint") is not True
         assert previous_attempt["conflict_contract"]["target_kind"] == "entity_ref"
+        assert previous_attempt["conflict_contract"]["rewrite_required_reasons"] == ["proper_noun_truth_drift"]
         assert previous_attempt["repair_contract"] == {
             "subtype": "proper_noun",
             "fix_scope": "full",
@@ -10691,9 +12568,77 @@ class TestScopeSinkSemantics:
             "provenance": "director_authored",
             "target_kind": "entity_ref",
         }
+        assert "type:proper_noun" in previous_attempt["conflict_fingerprint"]
+        assert "local patch 금지" in previous_attempt["fix_scope_reasoning"]
         assert any(
             "institution mismatch" in item for item in previous_attempt["conflict_contract"]["contradiction_details"]
         )
+
+    def test_post_select_conflict_promotes_truth_pins_and_disables_bounded_fix_for_group_and_asset_drift(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 2
+        round_ctx.prev_manuscripts_text = "ep1 manuscript"
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {
+            "decision": "CONFLICT",
+            "summary": "제1화에서 '대한그룹'으로 명시되었던 가문의 그룹명이 제2화에서 '유성그룹'으로 변경되었습니다.",
+        }
+        ctx.agents["director"].check_manuscript_history_conflicts.return_value = {
+            "decision": "CONFLICT",
+            "summary": "제1화에서는 주인공 명의의 자산이 없다고 서술되었으나, 제2화에서는 20억 원 규모의 개인 명의 자산을 보유하고 이를 현금화하는 것으로 설정이 변경되었습니다.",
+        }
+
+        verdict, director_feedback, previous_attempt, error_category = ir.post_select_runtime.run_post_select_checks(
+            verdict="PASS",
+            next_ep=2,
+            round_num=1,
+            round_ctx=round_ctx,
+            final_manuscript="candidate manuscript",
+            final_state_updates={},
+            director_result={
+                "director_verdict": "PASS_WITH_FIX",
+                "final_verdict": "PASS_WITH_FIX",
+                "selected_candidate": {"strategy_name": "balanced", "manuscript": "candidate manuscript"},
+                "fix_scope": "inplace",
+                "selection_reason": "best candidate",
+                "verdict_reason": "almost there",
+                "repair_scope": "inplace",
+                "score_breakdown": {},
+                "consistency_checklist": {},
+                "open_review": "keep the investment tempo",
+                "fix_pack": {
+                    "patch_targets": ["group label"],
+                    "must_fix": ["rename group"],
+                    "do_not_regress": ["keep tempo"],
+                    "success_condition": "group continuity restored",
+                    "target_kind": "entity_ref",
+                },
+                "action_items": ["rename group"],
+                "contradiction_types": ["proper_noun"],
+            },
+            director_feedback="initial feedback",
+            score=98,
+            error_category="",
+            previous_attempt={},
+            stage4_spinner=MagicMock(),
+            director_memory_context="",
+        )
+
+        assert verdict == "REJECT"
+        assert error_category == "POST_SELECT_CONTINUITY_AND_HISTORY"
+        conflict_contract = previous_attempt["conflict_contract"]
+        assert conflict_contract.get("bounded_local_fix_hint") is not True
+        assert "dual_conflict_continuity_history" in conflict_contract["rewrite_required_reasons"]
+        assert "proper_noun_truth_drift" in conflict_contract["rewrite_required_reasons"]
+        assert "proper_noun_group_truth_drift" in conflict_contract["rewrite_required_reasons"]
+        assert "asset_state_truth_drift" in conflict_contract["rewrite_required_reasons"]
+        truth_pin_expectations = {
+            pin["pin_key"]: pin["expected"] for pin in conflict_contract["truth_pins"] if isinstance(pin, dict)
+        }
+        assert truth_pin_expectations["family_group_name"] == "대한그룹"
+        assert truth_pin_expectations["protagonist_personal_assets"] == "개인 명의 자산 없음"
+        assert "preserve family_group_name=대한그룹" in previous_attempt["fix_scope_reasoning"]
 
     def test_post_select_conflict_merges_opening_continuity_pin_metadata(self):
         ctx = _make_ctx()

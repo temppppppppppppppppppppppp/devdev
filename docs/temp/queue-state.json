@@ -1,6 +1,6 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-10T07:56:04.660383+00:00",
+  "generated_at": "2026-04-12T16:17:06.961811+00:00",
   "queue_mode": "aggregate",
   "active_item_count": 21,
   "roadmap": {
@@ -10,12 +10,34 @@
   },
   "items": [
     {
+      "topic": "0_0-stage3-contract-tightening-remediation",
+      "temp_path": "docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md",
+      "status": "in_progress",
+      "queue_role": "front_active",
+      "roadmap_rank": 1,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
+      "topic": "0_0-stage3-opening-transition-contract-normalization-remediation",
+      "temp_path": "docs/temp/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md",
+      "canonical_path": "docs/2026-04-02/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md",
+      "status": "in_progress",
+      "queue_role": "blocked_holding",
+      "roadmap_rank": 2,
+      "depends_on": [],
+      "mirror_present": true,
+      "canonical_present": true
+    },
+    {
       "topic": "0_0-stage4-consumer-contract-normalization-remediation",
       "temp_path": "docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md",
       "status": "in_progress",
       "queue_role": "front_active",
-      "roadmap_rank": 1,
+      "roadmap_rank": 3,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -26,7 +48,7 @@
       "canonical_path": "docs/2026-04-02/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md",
       "status": "in_progress",
       "queue_role": "front_active",
-      "roadmap_rank": 2,
+      "roadmap_rank": 4,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -37,7 +59,7 @@
       "canonical_path": "docs/2026-04-06/0_0-stage234-nonwuxia-state-lock-overreach-remediation-execution-ssot.md",
       "status": "in_progress",
       "queue_role": "front_active",
-      "roadmap_rank": 3,
+      "roadmap_rank": 5,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -47,19 +69,8 @@
       "temp_path": "docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md",
       "status": "in_progress",
-      "queue_role": "parked_future_wave",
-      "roadmap_rank": 4,
-      "depends_on": [],
-      "mirror_present": true,
-      "canonical_present": true
-    },
-    {
-      "topic": "0_0-stage3-contract-tightening-remediation",
-      "temp_path": "docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md",
-      "canonical_path": "docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md",
-      "status": "in_progress",
       "queue_role": "front_active",
-      "roadmap_rank": 5,
+      "roadmap_rank": 6,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -70,7 +81,7 @@
       "canonical_path": "docs/2026-04-07/0_0-stage4-partial-fix-hardening-remediation-execution-ssot.md",
       "status": "in_progress",
       "queue_role": "front_active",
-      "roadmap_rank": 6,
+      "roadmap_rank": 7,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -81,7 +92,7 @@
       "canonical_path": "docs/2026-04-07/0_0-stage3-partial-fix-hardening-remediation-execution-ssot.md",
       "status": "in_progress",
       "queue_role": "front_active",
-      "roadmap_rank": 7,
+      "roadmap_rank": 8,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -91,8 +102,8 @@
       "temp_path": "docs/temp/0_0-stage2-partial-fix-hardening-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-07/0_0-stage2-partial-fix-hardening-remediation-execution-ssot.md",
       "status": "in_progress",
-      "queue_role": "parked_future_wave",
-      "roadmap_rank": 8,
+      "queue_role": "front_active",
+      "roadmap_rank": 9,
       "depends_on": [],
       "mirror_present": true,
       "canonical_present": true
@@ -101,17 +112,6 @@
       "topic": "0_0-stage234-cross-stage-contract-normalization-remediation",
       "temp_path": "docs/temp/0_0-stage234-cross-stage-contract-normalization-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-02/0_0-stage234-cross-stage-contract-normalization-remediation-execution-ssot.md",
-      "status": "in_progress",
-      "queue_role": "front_active",
-      "roadmap_rank": 9,
-      "depends_on": [],
-      "mirror_present": true,
-      "canonical_present": true
-    },
-    {
-      "topic": "0_0-stage3-opening-transition-contract-normalization-remediation",
-      "temp_path": "docs/temp/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md",
-      "canonical_path": "docs/2026-04-02/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md",
       "status": "in_progress",
       "queue_role": "front_active",
       "roadmap_rank": 10,

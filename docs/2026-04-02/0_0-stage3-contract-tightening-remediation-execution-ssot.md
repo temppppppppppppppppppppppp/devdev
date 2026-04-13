@@ -1,14 +1,14 @@
 # 0_0 Stage3 Contract Tightening Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (promoted from parked on 2026-04-07 roadmap reorder; re-audited again against the current workspace before implementation start; the first bounded tranche then landed by widening binding enforcement for `dead_npc`, stop-line/`arc_compliance`, and `fact_lock_*` seams, persisting binding metadata through Stage3 success handoff, and teaching Stage4 to consume that metadata as real Director/retry pressure; a later 2026-04-08 bounded observability follow-up then surfaced actual Stage3 source-anchor summaries for flashback/opening/inherited inventory planning through runtime, DB, and operator-visible sinks; the newest same-day follow-up landed a Stage3 proof-digest / `PassRateMonitor` durability slice, the later `projects/000_260408` proof-wave merge audit did not exercise Stage3, and `projects/000_260408_B` again showed Stage3 absent by operator choice while the upstream Stage2 handoff packet was structurally ready, but the newer 2026-04-10 `00_000` aborted fresh run now does reach Stage3 ep1 and shows the remaining proof blocker is no longer absence-only; the immediate owner was the narrower Stage3 partial-fix/runtime loop that churned on `PASS_WITH_FIX` -> `TF-35` repair outcomes while committed Stage3 sinks remained absent because the run was operator-aborted before finalization, the same-day child-lane runtime hardening follow-up has now landed, and the later same-day current-HEAD rerun plus final layering-first adversarial audit now promote one bounded parent-lane structural tranche before the next rerun: `ep-local packet layering / gating -> threshold alignment -> canonical patch anchors`, with broad prompt slimming still deferred)
+Status: partially_realized (the earlier Stage3 binding/handoff/source-anchor tranches remain landed, the reopened 2026-04-11 truth-first parent tranche is landed on the live workspace, the later fail-only structural hardening tranche is also landed, and the 2026-04-12 live rerun follow-up slice is now likewise landed on the live workspace: success proof sinks now sit behind committed persistence, Stage3 `runtime_advisory` / `retry_directives` normalization is in place, `PASS_WITH_FIX` success-accounting parity is restored, analyzer sink-alignment coverage is widened, `opening_anchor` / `scene_completeness` structural binding failures now escalate to regenerate-only full repair with explicit visibility, ep-boundary replay leakage plus canonical institution drift on the ep2 -> ep3 seam now force regenerate-only repair through `episode_progression` truth and expanded institution fact-lock coverage, the first 2026-04-13 child-lane follow-up blocks the observed Stage3 retry plateau by denying low-yield inplace reopening after `PASS_WITH_FIX` exhaustion or repeated inplace score/signature plateau, and the second same-day live-rerun follow-up now also blocks `Director PASS < quality_gate` patch reopening while suppressing blind live-HUD V46 current-state injection during blueprint scoring unless an explicit `blueprint_scoring_hud` is provided; a same-lane 2026-04-12 operator-visibility follow-up is now documented but not yet landed, and proof remains pending)
 Canonical Path: `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2/Stage3 survey docs and lane drafts untracked`
-- Resume Commit: `e597a7bf4836dab71547e350b015f6658a1cfb03`
-- Resume Drift Summary: `the queue was later re-ranked to make this the next unopened implementation lane, the 2026-04-07 Stage234 terminal survey confirmed the still-live Stage3 seams as binding-scope gaps plus advisory-only `_stage3_meta` handoff, the originally listed static survey and runtime closure audit now live under archived `docs/이전/` paths, the previously referenced Stage3 artifact JSON paths are no longer present in the active workspace so this SSOT now relies on the archived survey/evidence set plus the 2026-04-07 handoff survey rather than stale artifact-local pointers, the current workspace first landed a bounded tranche across `unified_blueprint_validator.py`, `three_phase_blueprint_runtime.py`, `stage3_orchestrator.py`, `stage4_director_runtime.py`, and `stage4_outcome_runtime.py` with focused regression/static validation, a later same-day follow-up in `stage3_orchestrator.py` then persisted source-anchor summaries for previous-blueprint end state plus current Stage2 carryover start state so flashback/opening/inherited-inventory proof waves have cleaner operator-visible evidence while fresh tier-2.5 canary proof stays deferred, the newest same-day follow-up across `stage3_orchestrator.py` plus `audit_service.py` then landed a Stage3 proof-digest / `PassRateMonitor` durability slice, the later `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md` confirmed that the first fresh run never reached Stage3, the newer `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md` confirmed the absence again while also upgrading the upstream Stage2 handoff from sink-drift-risk to structurally ready proof input, the later `docs/2026-04-10/00_000-stage3-fresh-run-abort-post-run-merge-audit.md` then recorded that a fresh current-HEAD run finally reached Stage3 ep1 but surfaced a live child-lane `PASS_WITH_FIX` repair-loop bug before committed Stage3 sinks could finalize, the same-day bounded child-lane runtime follow-up then landed to preserve low-score `PASS` patch state for the next retry path, and the later same-day current-HEAD rerun plus `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md` / `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md` now upgrade this lane's next bounded code action to parent-owned packet layering / threshold alignment / canonical anchor transport before the next rerun`
+- Resume Commit: `2b7cb64f2d1fe2cd1152806a5cc37795609f9755`
+- Resume Drift Summary: `reset main is now authoritative; the earlier binding/handoff/source-anchor tranches remain landed, the live workspace now also lands the reopened truth-first parent tranche, the bounded Stage3 analyzer sink-alignment coverage follow-up, the later fail-only structural hardening tranche for regenerate-only binding categories plus visibility propagation, the later ep3 replay / institution-truth fail-only follow-up across compiler/validator/runtime, and the 2026-04-13 child-lane retry-plateau follow-up that now blocks low-yield inplace reopening after `PASS_WITH_FIX unresolved` or repeated inplace score/signature plateau, so the next action stays on the bounded proof wave while stale 2026-04-11 backup-branch work remains excluded from this SSOT's authority`
 Source Survey Docs:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
@@ -16,9 +16,16 @@ Source Survey Docs:
 - `docs/2026-04-07/stage234-terminal2-stage3-binding-handoff-survey.md`
 - `docs/2026-04-08/stage23-proof-wave-parallel-merge-audit.md`
 - `docs/2026-04-08/stage23-proof-wave-000_260408_B-parallel-merge-audit.md`
+- `docs/2026-04-12/stage234-ep3-continuity-replay-season-truth-live-run-followup-parallel-survey.md`
+- `docs/2026-04-12/stage234-ep3-continuity-replay-season-truth-live-run-followup-3pass-audit.md`
+- `docs/2026-04-12/stage3-first-ensemble-visibility-live-run-compact-survey.md`
 - `docs/2026-04-10/00_000-stage3-fresh-run-abort-post-run-merge-audit.md`
 - `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md`
 - `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md`
+- `docs/2026-04-13/stage3-live-run-retry-plateau-parallel-full-survey.md`
+- `docs/2026-04-13/stage3-live-run-quality-gate-patch-reopen-parallel-full-survey.md`
+- `docs/2026-04-13/stage3-live-run-quality-gate-patch-reopen-3pass-audit.md`
+- `docs/2026-04-11/stage23-current-main-static-parallel-survey.md`
 Evidence Artifacts:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-evidence.json`
 - `docs/이전/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-evidence.json`
@@ -46,10 +53,12 @@ This execution SSOT exists because the latest static survey proved:
 ## 2. Baseline Facts
 
 - Stage3 generation hierarchy is explicit and reasonably well-structured.
-- Stage3 validator/binding is advisory-heavy and cannot independently hard-block the most dangerous seams.
+- Stage3 validator/binding is no longer purely advisory-heavy: the most dangerous structural seams now escalate to regenerate-only full repair rather than cheap inplace patching.
 - Stage3 -> Stage4 handoff is transport-clean but semantic-lossy.
 - Off-arc invention improved under prior semantic-fidelity work, but timeline/institution drift remains.
-- The most important residual debt is not Stage2 content starvation but Stage3 contract enforcement weakness.
+- The most important residual debt is now proof-pending enforcement confirmation plus broader semantic-lossy handoff, not an inability to hard-block the clearest structural seams.
+- A smaller same-lane observability seam also remains: the first expensive Stage3 ensemble wait can look stalled on the main console even while session-log evidence proves forward progress.
+- A newer same-lane proof seam is now explicit: Stage3 can still spend cost after a real Director `PASS` if the quality gate force-rejects and reopens `inplace`, and blueprint scoring can over-consume live HUD truth when `V46` current-state context is injected too broadly.
 
 ## 3. Scope
 
@@ -116,6 +125,7 @@ Primary debt inventory for this wave:
 
 - console / UI / operator output:
   - advisory / binding categories and severity visibility may change
+  - first-ensemble heartbeat / candidate-progress legibility remains a bounded pending operator surface in this same lane
 
 - rollback / recovery / retry:
   - stronger Stage3 binding can increase early-stage rejection or PASS_WITH_FIX frequency
@@ -138,6 +148,14 @@ Realization direction:
 
 - review category membership and escalation semantics for high-severity Stage3 seams
 - tighten which issues remain advisory-only
+
+2026-04-12 live-workspace update:
+
+- `opening_anchor`
+- `scene_completeness`
+- bulk `key_events` omission
+
+now route through regenerate-only full repair instead of staying on the cheap inplace path, and the runtime preserves `binding_regenerate_only_categories` plus `binding_regenerate_only_reason` through validate/retry/meta surfaces.
 
 ### Tranche 2. Timeline / Institution Fidelity Tightening
 
@@ -251,6 +269,23 @@ Realization direction:
   - the next useful artifact for this parent lane returns to a fresh rerun that reaches Stage3
   - closure still requires a completed rerun, not this bounded local repair alone
 
+## 8F-2. Live Retry Plateau Follow-Up (2026-04-13)
+
+- `docs/2026-04-13/stage3-live-run-retry-plateau-parallel-full-survey.md` is now the newest runtime diagnostic anchor for the Stage3 live rerun plateau.
+- the confirmed live symptom was not a hard stall:
+  - session logs kept advancing
+  - the active failure was a low-yield retry loop around repeated inplace reopenings, repeated `PASS_WITH_FIX unresolved`, and repeated low-score rejections on the same episode family
+- immediate ownership stayed split as intended:
+  - parent lane ownership remained on Stage3 truth / contract / handoff surfaces
+  - child-lane ownership remained on partial-fix retry exhaustion / locality control
+- landed outcome:
+  - the child lane now tracks reject origin, reject signature, repeated score/signature streaks, and inplace reject streaks
+  - Stage3 now blocks inplace patch reopening after `PASS_WITH_FIX` exhaustion or repeated inplace plateau patterns
+- execution consequence:
+  - do not open a fresh broad Stage3 redesign from this evidence
+  - do not promote visibility-only work over the now-landed plateau breaker
+  - take the next useful artifact as the bounded rerun / proof wave
+
 ## 8G. Layering-First Design Promotion (2026-04-10 same-day)
 
 - the later current-HEAD rerun captured in `projects/00_000/logs/session_20260410_160214.log` plus the newer `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md` and `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md` now sharpen the remaining parent-lane owner
@@ -276,6 +311,10 @@ Realization direction:
 ## 9. Acceptance Criteria
 
 - highest-risk Stage3 seams no longer remain purely advisory by default
+- success proof sinks are not emitted before blueprint persistence and commit succeed
+- Stage3 `runtime_advisory` / `retry_directives` no longer default to blank when bounded advisory truth exists
+- `PASS_WITH_FIX` success accounting no longer diverges from actual Stage3 success control flow
+- Stage3 sink-alignment coverage no longer omits `pass_rate_monitor` / `director_selections` from the bounded final-attempt union
 - Stage3 -> Stage4 handoff preserves more than prose-only semantics for key contract fields
 - timeline and institution drift have stronger structured enforcement paths where Stage3 validator/compiler owns the contract
 - ep-local packet layering no longer forces future-carryover pressure to compete with the episode-local hard packet by default
@@ -287,8 +326,12 @@ Realization direction:
 
 - targeted Stage3 validator regressions
 - targeted Stage3 handoff contract regressions
-- targeted Stage3 ep-local packet-layering / gating regressions
-- targeted Stage3 threshold-alignment and canonical-anchor transport regressions
+- targeted Stage3 success-persistence ordering regressions
+- targeted Stage3 advisory / retry sink parity regressions
+- targeted `PASS_WITH_FIX` success-accounting regressions
+- targeted Stage3 sink-alignment coverage regressions
+- targeted later Stage3 ep-local packet-layering / gating regressions
+- targeted later Stage3 threshold-alignment and canonical-anchor transport regressions
 - `python -m py_compile` on touched production modules
 - `ruff check` on touched files
 - targeted pytest shards only
@@ -375,3 +418,120 @@ Execution consequence:
 - if that rerun still exits before Stage3, treat the cause as runtime/operator control flow first, not as proof-sink regression
 
 Confidence for this validation upgrade: `97%`
+
+## 16. 2026-04-11 Current-Main Static Re-Audit Upgrade
+
+Evidence basis:
+
+- `docs/2026-04-11/stage23-current-main-static-parallel-survey.md`
+- `modules/core/stage3_orchestrator.py`
+- `modules/domain/agents/blueprint_constraint_compiler.py`
+- `modules/core/failure_analyzer.py`
+- direct Stage3 guardrail / observability tests on current `main@2b7cb64f`
+
+Current-main findings:
+
+1. Stage3 success proof sinks still precede blueprint persistence / commit success.
+2. Stage3 `runtime_advisory` / `retry_directives` remain blank by default on both success and reject persistence.
+3. `PASS_WITH_FIX` remains success in Stage3 control flow but not in pass-rate accounting.
+
+Execution consequence:
+
+- keep this lane as the owner for one bounded truth-first tranche before the next rerun
+- execute in this order:
+  1. success proof sink ordering after committed persistence
+  2. Stage3 advisory / retry sink normalization
+  3. `PASS_WITH_FIX` success-accounting parity
+- after that tranche lands, return to the already-promoted packet-layering / threshold / canonical-anchor tranche
+- do not open a new queue lane for this re-audit; keep it inside this parent Stage3 SSOT
+
+Confidence for this upgrade: `96%`
+
+## 17. 2026-04-11 Live-Workspace Truth-First Landing Update
+
+Evidence basis:
+
+- `modules/core/stage3_orchestrator.py`
+- `modules/core/failure_analyzer.py`
+- `tests/test_stage3_orchestrator.py`
+- `tests/test_stage3_orchestrator_handle_success_lane_c.py`
+- `tests/test_failure_analyzer.py`
+
+Live-workspace closures:
+
+1. Stage3 success proof sinks now follow blueprint persistence and commit success.
+2. Stage3 success/reject sinks now persist normalized `runtime_advisory` / `retry_directives`.
+3. `PASS_WITH_FIX` now follows the success path and success accounting.
+4. `FailureAnalyzer` now includes the bounded Stage3 sink-alignment coverage parity for `pass_rate_monitor` / `director_selections` in the final-attempt union and missing-bucket checks.
+
+Execution consequence:
+
+- keep this lane partial, but treat the previously reopened truth-first tranche as landed on the live workspace
+- make the next operator action the fresh proof wave rather than another same-day Stage3 patch
+- only after runtime evidence lands should this lane decide whether the older `packet layering -> threshold alignment -> canonical patch anchors` follow-up still needs activation
+- keep this lane as the owner if the proof wave reopens Stage3 contract drift; otherwise use the proof result to decide demotion or closure bookkeeping without a new lane
+
+## 18. 2026-04-12 EP3 Live-Run Follow-up Re-Audit
+
+3-pass result:
+
+1. The old Stage4 ep2 truth-pin / retry-lane family appears to have improved; the rerun no longer fronts with `대한그룹 -> 유성그룹` plus personal-asset drift.
+2. The current blocker is upstream Stage3 truth:
+   - `blueprint_0002` already consumes the TV-news / next-action cliffhanger that should have remained later progression.
+   - `blueprint_0003` repeats legal-setup / asset-liquidation / father-study beats and reopens canonical institution drift (`대한그룹` -> `한강그룹`).
+3. Stage4 is now acting mainly as the downstream verifier by correctly rejecting:
+   - spring/winter timeline contradiction
+   - replayed ep2 scene families in ep3
+
+Execution consequence:
+
+- keep the earlier truth-first and structural-hardening slices as landed
+- treat the bounded parent-owned ep3 fail-only slice as landed across:
+  - `modules/domain/agents/blueprint_constraint_compiler.py`
+  - `modules/domain/agents/unified_blueprint_validator.py`
+  - `modules/domain/agents/three_phase_blueprint_runtime.py`
+- record the landed parent-owned outcomes:
+  - ep-boundary replay suppression now flows through `episode_progression_packet` truth
+  - canonical institution proper-noun truth now merges manuscript, blueprint, and arc/current-episode sources inside Stage3 fact-lock coverage
+  - replay-family and institution-truth violations now reroute to regenerate-only repair rather than cheap local repair
+- make the next action the bounded proof wave / rerun rather than another same-day Stage3 parent patch
+- keep the older `packet layering -> threshold alignment -> canonical patch anchors` follow-up deferred behind proof of the corrected ep2 -> ep3 seam
+
+Confidence for this landing update: `97%`
+
+## 19. 2026-04-12 First-Ensemble Visibility Follow-up
+
+Evidence basis:
+
+- `docs/2026-04-12/stage3-first-ensemble-visibility-live-run-compact-survey.md`
+- `0_temp.txt`
+- `projects/000_260412_a/logs/session_20260412_231516.log`
+- `projects/000_260412_a/logs/session/ui_events.jsonl`
+- `modules/core/stage3_orchestrator.py`
+- `modules/domain/agents/three_phase_blueprint_runtime.py`
+- `modules/domain/agents/blueprint_ensemble.py`
+
+3-pass result:
+
+1. The Stage3 ep1 quiet zone is not a hard runtime stall:
+   - session-log evidence shows `ThreePhase runtime -> BP ensemble -> Director` progress
+   - the first three Sonnet candidate calls start at `23:17:53` and return by `23:18:46`
+2. The operator-facing seam is a visibility split:
+   - `0_temp.txt` stops at the broad `제1화 Blueprint 생성 중...` surface
+   - `ui_events.jsonl` records the initial `progress` plus one `heartbeat`
+   - the richer later progress remains in session/root logging rather than the main console capture
+3. The owner stays with this parent Stage3 contract lane:
+   - the seam is about Stage3 operator observability during the first expensive ensemble wait
+   - it does not justify a new queue family or a cross-stage promotion
+
+Execution consequence:
+
+- keep this as a bounded same-lane follow-up rather than a new remediation family
+- do not let it outrank the current proof wave
+- if the operator wants observability polish before the next larger refactor wave, implement only:
+  - stronger first-ensemble main-console heartbeat surfacing
+  - candidate-launch / candidate-return visibility
+  - earlier elapsed-time reassurance for the quiet window
+- do not widen this into generator retuning, Director retuning, or Stage4/UI redesign
+
+Confidence for this follow-up: `97%`

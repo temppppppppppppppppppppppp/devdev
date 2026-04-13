@@ -45,7 +45,10 @@ def test_run_manuscript_pre_llm_checks_shell_coordinates_helper_family(monkeypat
     monkeypatch.setattr(
         auditor,
         "_apply_entity_consistency_pre_llm_checks",
-        lambda **kwargs: {"early_result": None, "validation_context": {"history": True, "config": True, "entity": True}},
+        lambda **kwargs: {
+            "early_result": None,
+            "validation_context": {"history": True, "config": True, "entity": True},
+        },
     )
     monkeypatch.setattr(
         auditor,
@@ -104,6 +107,26 @@ def test_apply_protagonist_config_pre_llm_checks_records_warning_context():
     assert result["warnings"] == []
     assert result["validation_context"]["seed"] == "value"
     assert result["validation_context"]["v60_89_config_warnings"] == [{"field": "world_origin"}]
+
+
+def test_apply_entity_consistency_pre_llm_checks_warning_only_records_context():
+    auditor = _make_auditor()
+    auditor._d.validate_entity_consistency.return_value = {
+        "decision": "WARNING",
+        "mismatches": [{"category": "character", "registered_name": "가사도우미", "found_variant": "집사"}],
+    }
+
+    result = auditor._apply_entity_consistency_pre_llm_checks(
+        manuscript="집사가 문을 열었다",
+        entity_registry={"characters": [{"name": "가사도우미"}]},
+        validation_context={"seed": "value"},
+    )
+
+    assert result["early_result"] is None
+    assert result["validation_context"]["seed"] == "value"
+    assert result["validation_context"]["v61_entity_warnings"] == [
+        {"category": "character", "registered_name": "가사도우미", "found_variant": "집사"}
+    ]
 
 
 def test_apply_character_logic_pre_llm_checks_rejects_major_multi_violation():

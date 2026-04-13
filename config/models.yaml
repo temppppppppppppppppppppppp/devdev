@@ -4,7 +4,7 @@ providers:
     sdk: "google-genai"
     api_key_env: "GOOGLE_API_KEY"
   anthropic:
-    enabled: false
+    enabled: true
     sdk: "anthropic"
     api_key_env: "ANTHROPIC_API_KEY"
     # AnthropicProvider falls back to CLAUDE_API when ANTHROPIC_API_KEY is absent.
@@ -35,18 +35,18 @@ providers:
     # Prefix convention: "anthropic-vertex:claude-sonnet-4-6"
 
 agents:
-  analyst: "vertexai:gemini-2.5-pro"
+  analyst: "claude-sonnet-4-6"
   manager: "vertexai:gemini-2.5-flash"
-  chief_writer: "vertexai:gemini-3.1-pro-preview"
-  blueprint_ensemble: "vertexai:gemini-2.5-pro"
-  three_phase_blueprint_generator: "vertexai:gemini-2.5-pro"
-  state_locked_arc_generator: "vertexai:gemini-2.5-pro"
+  chief_writer: "claude-sonnet-4-6"
+  blueprint_ensemble: "claude-sonnet-4-6"
+  three_phase_blueprint_generator: "claude-sonnet-4-6"
+  state_locked_arc_generator: "claude-sonnet-4-6"
   block_enricher: "vertexai:gemini-2.5-flash"
   preflight_checker: "vertexai:gemini-2.5-flash"
   state_extractor: "vertexai:gemini-2.5-flash"
-  four_phase_arc_generator: "vertexai:gemini-2.5-pro"
-  continuity_inspector: "vertexai:gemini-2.5-pro"
-  director: "vertexai:gemini-2.5-pro"
+  four_phase_arc_generator: "claude-sonnet-4-6"
+  continuity_inspector: "claude-sonnet-4-6"
+  director: "claude-sonnet-4-6"
   arc_corrector: "vertexai:gemini-2.5-flash"
   arc_critic: "vertexai:gemini-2.5-flash"
   consensus_validator: "vertexai:gemini-2.5-flash"
@@ -59,8 +59,8 @@ agents:
 fallback_chain:
   "claude-opus-4-6": "claude-sonnet-4-6"
   "claude-opus-4-20250514": "claude-sonnet-4-20250514"
-  "claude-sonnet-4-6": "vertexai:gemini-3.1-pro-preview"
-  "claude-sonnet-4-20250514": "vertexai:gemini-3.1-pro-preview"
+  "claude-sonnet-4-6": "claude-sonnet-4-6"
+  "claude-sonnet-4-20250514": "claude-sonnet-4-20250514"
   "vertexai:gemini-3.1-pro-preview": "vertexai:gemini-2.5-pro"
   "vertexai:gemini-2.5-pro": "vertexai:gemini-2.5-flash"
   "vertexai:gemini-2.5-flash": "vertexai:gemini-2.5-flash"
@@ -68,14 +68,14 @@ fallback_chain:
 sub_components:
   four_phase_arc_generator:
     preflight: "vertexai:gemini-2.5-flash"
-    ensemble: "vertexai:gemini-2.5-pro"
+    ensemble: "claude-sonnet-4-6"
     validator: "vertexai:gemini-2.5-flash"
   three_phase_blueprint_generator:
-    ensemble: "vertexai:gemini-2.5-pro"
+    ensemble: "claude-sonnet-4-6"
     validator: "vertexai:gemini-2.5-flash"
 
-# role_constants follow the same Vertex route so shared constants align with agent routing.
+# role_constants follow the same live routing contract as agent defaults.
 role_constants:
-  pro_main: "vertexai:gemini-2.5-pro"
+  pro_main: "claude-sonnet-4-6"
   flash_main: "vertexai:gemini-2.5-flash"
-  emergency: "vertexai:gemini-2.5-pro"
+  emergency: "claude-sonnet-4-6"

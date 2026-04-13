@@ -1,155 +1,155 @@
 {
   "version": "clickup-queue-sync-v1",
-  "updated_at": "2026-04-10T09:29:37.048490+00:00",
+  "updated_at": "2026-04-12T16:17:27.721788+00:00",
   "list_id": "901817292518",
   "queue_state_path": "docs/temp/queue-state.json",
   "tasks": {
+    "0_0-stage3-contract-tightening-remediation": {
+      "task_id": "86ex7683q",
+      "name": "0_0-stage3-contract-tightening-remediation",
+      "desired_status": "Proof Pending",
+      "resolved_status": "review",
+      "synced_at": "2026-04-12T16:17:14.956421+00:00"
+    },
+    "0_0-stage3-opening-transition-contract-normalization-remediation": {
+      "task_id": "86ex7684c",
+      "name": "0_0-stage3-opening-transition-contract-normalization-remediation",
+      "desired_status": "Realizing",
+      "resolved_status": "in progress",
+      "synced_at": "2026-04-12T16:17:15.826086+00:00"
+    },
     "0_0-stage4-consumer-contract-normalization-remediation": {
       "task_id": "86ex7683f",
       "name": "0_0-stage4-consumer-contract-normalization-remediation",
       "desired_status": "Proof Pending",
       "resolved_status": "review",
-      "synced_at": "2026-04-10T09:29:24.700828+00:00"
+      "synced_at": "2026-04-12T16:17:16.426639+00:00"
     },
     "0_0-stage4-repair-contract-normalization-remediation": {
       "task_id": "86ex7683j",
       "name": "0_0-stage4-repair-contract-normalization-remediation",
       "desired_status": "Proof Pending",
       "resolved_status": "review",
-      "synced_at": "2026-04-10T09:29:25.322671+00:00"
+      "synced_at": "2026-04-12T16:17:17.006395+00:00"
     },
     "0_0-stage234-nonwuxia-state-lock-overreach-remediation": {
       "task_id": "86ex7683m",
       "name": "0_0-stage234-nonwuxia-state-lock-overreach-remediation",
       "desired_status": "Proof Pending",
       "resolved_status": "review",
-      "synced_at": "2026-04-10T09:29:25.908586+00:00"
+      "synced_at": "2026-04-12T16:17:17.767199+00:00"
     },
     "0_0-stage2-contract-normalization-remediation": {
       "task_id": "86ex7683n",
       "name": "0_0-stage2-contract-normalization-remediation",
-      "desired_status": "Parked",
-      "resolved_status": "PARKED",
-      "synced_at": "2026-04-10T09:29:26.530633+00:00"
-    },
-    "0_0-stage3-contract-tightening-remediation": {
-      "task_id": "86ex7683q",
-      "name": "0_0-stage3-contract-tightening-remediation",
-      "desired_status": "Proof Pending",
-      "resolved_status": "review",
-      "synced_at": "2026-04-10T09:29:27.160970+00:00"
+      "desired_status": "Realizing",
+      "resolved_status": "in progress",
+      "synced_at": "2026-04-12T16:17:18.375998+00:00"
     },
     "0_0-stage4-partial-fix-hardening-remediation": {
       "task_id": "86ex7683t",
       "name": "0_0-stage4-partial-fix-hardening-remediation",
       "desired_status": "Proof Pending",
       "resolved_status": "review",
-      "synced_at": "2026-04-10T09:29:27.980508+00:00"
+      "synced_at": "2026-04-12T16:17:18.935599+00:00"
     },
     "0_0-stage3-partial-fix-hardening-remediation": {
       "task_id": "86ex7683z",
       "name": "0_0-stage3-partial-fix-hardening-remediation",
       "desired_status": "Proof Pending",
       "resolved_status": "review",
-      "synced_at": "2026-04-10T09:29:28.500669+00:00"
+      "synced_at": "2026-04-12T16:17:19.486339+00:00"
     },
     "0_0-stage2-partial-fix-hardening-remediation": {
       "task_id": "86ex76846",
       "name": "0_0-stage2-partial-fix-hardening-remediation",
-      "desired_status": "Parked",
-      "resolved_status": "PARKED",
-      "synced_at": "2026-04-10T09:29:29.102293+00:00"
+      "desired_status": "Proof Pending",
+      "resolved_status": "review",
+      "synced_at": "2026-04-12T16:17:20.086351+00:00"
     },
     "0_0-stage234-cross-stage-contract-normalization-remediation": {
       "task_id": "86ex7684b",
       "name": "0_0-stage234-cross-stage-contract-normalization-remediation",
       "desired_status": "Realizing",
-      "resolved_status": "IN PROGRESS",
-      "synced_at": "2026-04-10T09:29:29.733091+00:00"
-    },
-    "0_0-stage3-opening-transition-contract-normalization-remediation": {
-      "task_id": "86ex7684c",
-      "name": "0_0-stage3-opening-transition-contract-normalization-remediation",
-      "desired_status": "Proof Pending",
-      "resolved_status": "review",
-      "synced_at": "2026-04-10T09:29:30.436715+00:00"
+      "resolved_status": "in progress",
+      "synced_at": "2026-04-12T16:17:20.696246+00:00"
     },
     "0_0-stage4-interview-round-owner-surface-reduction-remediation": {
       "task_id": "86ex7684j",
       "name": "0_0-stage4-interview-round-owner-surface-reduction-remediation",
       "desired_status": "Realizing",
-      "resolved_status": "IN PROGRESS",
-      "synced_at": "2026-04-10T09:29:31.076922+00:00"
+      "resolved_status": "in progress",
+      "synced_at": "2026-04-12T16:17:21.336662+00:00"
     },
     "stage0-treatment-enrich-retirement-remediation": {
       "task_id": "86ex7684n",
       "name": "stage0-treatment-enrich-retirement-remediation",
       "desired_status": "Realizing",
-      "resolved_status": "IN PROGRESS",
-      "synced_at": "2026-04-10T09:29:31.656536+00:00"
+      "resolved_status": "in progress",
+      "synced_at": "2026-04-12T16:17:21.895305+00:00"
     },
     "stage0-bi-tr-production-harness-normalization-remediation": {
       "task_id": "86ex7684v",
       "name": "stage0-bi-tr-production-harness-normalization-remediation",
       "desired_status": "Realizing",
-      "resolved_status": "IN PROGRESS",
-      "synced_at": "2026-04-10T09:29:32.232759+00:00"
+      "resolved_status": "in progress",
+      "synced_at": "2026-04-12T16:17:22.756134+00:00"
     },
     "0_0-stage2-stage3-stage4-readiness-remediation": {
       "task_id": "86ex7684x",
       "name": "0_0-stage2-stage3-stage4-readiness-remediation",
       "desired_status": "Blocked",
-      "resolved_status": "BLOCKED",
-      "synced_at": "2026-04-10T09:29:32.763791+00:00"
+      "resolved_status": "blocked",
+      "synced_at": "2026-04-12T16:17:23.467336+00:00"
     },
     "frontier-lag-soak-canary-wave1": {
       "task_id": "86ex7684y",
       "name": "frontier-lag-soak-canary-wave1",
       "desired_status": "Realizing",
-      "resolved_status": "IN PROGRESS",
-      "synced_at": "2026-04-10T09:29:33.304627+00:00"
+      "resolved_status": "in progress",
+      "synced_at": "2026-04-12T16:17:24.086108+00:00"
     },
     "npc-martial-state-substrate-wave1": {
       "task_id": "86ex7684z",
       "name": "npc-martial-state-substrate-wave1",
       "desired_status": "Blocked",
-      "resolved_status": "BLOCKED",
-      "synced_at": "2026-04-10T09:29:33.970181+00:00"
+      "resolved_status": "blocked",
+      "synced_at": "2026-04-12T16:17:24.686314+00:00"
     },
     "0_0-stage34-ep2-single-episode-demo-canary": {
       "task_id": "86ex76850",
       "name": "0_0-stage34-ep2-single-episode-demo-canary",
       "desired_status": "Closed",
-      "resolved_status": "COMPLETE",
-      "synced_at": "2026-04-10T09:29:34.531945+00:00"
+      "resolved_status": "complete",
+      "synced_at": "2026-04-12T16:17:25.316383+00:00"
     },
     "0_0-stage4-ep2-advisory-escalation-loop-remediation": {
       "task_id": "86ex76858",
       "name": "0_0-stage4-ep2-advisory-escalation-loop-remediation",
       "desired_status": "Closed",
-      "resolved_status": "COMPLETE",
-      "synced_at": "2026-04-10T09:29:35.080978+00:00"
+      "resolved_status": "complete",
+      "synced_at": "2026-04-12T16:17:25.906353+00:00"
     },
     "0_0-stage4-canonical-entity-postselect-remediation": {
       "task_id": "86ex76859",
       "name": "0_0-stage4-canonical-entity-postselect-remediation",
       "desired_status": "Closed",
-      "resolved_status": "COMPLETE",
-      "synced_at": "2026-04-10T09:29:35.644023+00:00"
+      "resolved_status": "complete",
+      "synced_at": "2026-04-12T16:17:26.496272+00:00"
     },
     "0_0-stage4-flashback-continuity-localfix-remediation": {
       "task_id": "86ex7685b",
       "name": "0_0-stage4-flashback-continuity-localfix-remediation",
       "desired_status": "Closed",
-      "resolved_status": "COMPLETE",
-      "synced_at": "2026-04-10T09:29:36.466715+00:00"
+      "resolved_status": "complete",
+      "synced_at": "2026-04-12T16:17:27.115529+00:00"
     },
     "0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation": {
       "task_id": "86ex7685e",
       "name": "0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation",
       "desired_status": "Closed",
-      "resolved_status": "COMPLETE",
-      "synced_at": "2026-04-10T09:29:37.048490+00:00"
+      "resolved_status": "complete",
+      "synced_at": "2026-04-12T16:17:27.721788+00:00"
     }
   }
 }

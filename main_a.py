@@ -2186,6 +2186,7 @@ class SovereignApp:
             while True:
                 status, menu = self._prepare_main_process_menu()
                 choice = self.ui.menu(menu)
+                self._clear_main_menu_surface_after_choice()
                 if not self._dispatch_main_process_choice(choice, status):
                     break
 
@@ -2197,6 +2198,21 @@ class SovereignApp:
         except Exception as e:
             self._handle_main_process_error(e)
             sys.exit(1)
+
+    def _clear_main_menu_surface_after_choice(self) -> None:
+        """Clear the persisted main-menu screen before long-running stage output starts.
+
+        The stage runners use Rich Live spinners and incremental log writes. If the
+        main menu surface remains on screen, downstream redraws can make it appear
+        as though the menu itself is looping during Stage 2/3/4 execution.
+        """
+        clear_fn = getattr(getattr(self.ui, "console", None), "clear", None)
+        if not callable(clear_fn):
+            return
+        try:
+            clear_fn()
+        except Exception as exc:
+            logging.debug("[MainMenu] console.clear failed (non-blocking): %s", exc)
 
     def _prepare_main_process_menu(self) -> tuple[dict, dict]:
         self.ui.console.clear()

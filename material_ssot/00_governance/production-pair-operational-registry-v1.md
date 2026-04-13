@@ -1,6 +1,6 @@
 # Production Pair Operational Registry v1
 
-Date: 2026-04-10 (last updated; initial 2026-04-08 benchmark freshness wave)
+Date: 2026-04-12 (last updated; initial 2026-04-08 benchmark freshness wave)
 Status: active
 Scope: durable operational registry for current schema-clean production pairs
 
@@ -46,13 +46,13 @@ Freshness closeout artifact:
 
 | work_id | family | inventory role | durable operational state | schema | alias | benchmark freshness | opening pacing triage | opening exemplar use |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `투자물_골든_카나리아 테스트_canonical_v1` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | provisional keep; not a discard candidate, but not a fresh declared-contract opening exemplar certification |
+| `투자물_골든_카나리아 테스트_canonical_v1` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS certified by 2026-04-12 manual closeout; current sell-in top shelf |
 | `chaebol_allowance_zero` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `RED` | `current` | `RED` | negative exemplar archive; withdrawn GREENPLUS tombstone retained as anti-benchmark |
-| `chaebol_ent_empire` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | provisional keep after targeted opening compression repair; not a fresh declared-contract opening exemplar certification |
+| `chaebol_ent_empire` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS certified by 2026-04-12 manual closeout; current sell-in top shelf |
 | `defense_defect_engineer` | `blockguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS certified by 2026-04-10 manual closeout; current sell-in top shelf |
-| `office_checkup_next_day` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `YELLOW` | repair-first YELLOW; office/decision battlefield overstay candidate |
-| `pantech_cyworld_reborn` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | provisional keep after bounded cadence + reevaluation-surface repair; not a fresh declared-contract opening exemplar certification |
-| `wuxia_heavenly_physician` | `wuxguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | opening GREEN only; whole-run pacing re-audit downgraded it to YELLOW because late blank-opponent drag appears in B61/B65/B66/B70 |
+| `office_checkup_next_day` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS re-closed by 2026-04-12 bounded benchmark-preservation + manual closeout; current sell-in top shelf |
+| `pantech_cyworld_reborn` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS certified by 2026-04-12 manual closeout; current sell-in top shelf |
+| `wuxia_heavenly_physician` | `wuxguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS re-closed by 2026-04-12 bounded benchmark-preservation + manual closeout; current sell-in top shelf |
 | `jangyeongshil_industrial_revolution` | `blockguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREEN` | `current` | `RED` | negative exemplar archive on opening pacing; spot audit confirmed work-level opening promise miss despite positive alias history |
 | `manual_meridian_archivist` | `wuxguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREEN` | `current` | `GREEN` | provisional keep; not a discard candidate, but not a fresh declared-contract opening exemplar certification |
 
@@ -77,7 +77,48 @@ Freshness closeout artifact:
 - practical reading:
   - if a row still says `provisional keep`, `repair-first`, `whole-run YELLOW`, `UNTRIAGED`, or similar qualifier, do not treat it as deployable `GREENPLUS` even if the alias column still shows `GREENPLUS`
 
-## 6. 2026-04-10 Update Log
+## 6. Update Log
+
+- deployable `GREENPLUS` shelf expansion wave recorded under `docs/2026-04-12/deployable-greenplus-shelf-expansion-wave.md`
+  - result:
+    - current deployable `GREENPLUS` shelf moves from `1` to `6`
+    - newly promoted rows:
+      - `투자물_골든_카나리아 테스트_canonical_v1`
+      - `office_checkup_next_day`
+      - `chaebol_ent_empire`
+      - `pantech_cyworld_reborn`
+      - `wuxia_heavenly_physician`
+  - operator effect:
+    - `투자물_골든_카나리아 테스트_canonical_v1` leaves provisional keep after a manual opening-authority closeout reconciles the live `B02/B03/B04/B06` token ladder with the work-guard timing thresholds
+    - `office_checkup_next_day` closes the 2026-04-11 freshness gap through a bounded benchmark-preservation reread and returns from `pending_refresh` to `current`
+    - `chaebol_ent_empire` leaves provisional keep after a manual opening-authority closeout reconciles the live `B03/B04/B08` receipt chain
+    - `pantech_cyworld_reborn` leaves provisional keep after a manual opening-authority closeout reconciles the live `B01/B02/B03` conversion chain despite the heuristic ticket gap
+    - `wuxia_heavenly_physician` closes the 2026-04-11 freshness gap through a bounded benchmark-preservation reread and leaves repaired provisional keep after a manual opening-authority closeout reconciles the live `B02/B03/B04/B06` permission chain
+    - all five rows now count as current sell-in top shelf instead of historical-only `GREENPLUS` snapshots
+
+- `office_checkup_next_day` bounded authority-first repair recorded under `docs/2026-04-11/office_checkup_next_day_repair_note.md`
+  - operator effect:
+    - live opening contract now reads cleanly inside the `TR` and opening pacing triage returns `GREEN` with `signboard B03 / reevaluation B05 / ticket B03`
+    - late blank-opponent / endgame-low-stakes drag in `B65/B66/B67/B69/B70` was cleared and whole-run pacing triage now returns `GREEN`
+    - `benchmark_freshness` becomes `pending_refresh` because the live `TR` was materially touched after the latest benchmark artifact
+    - pair remains repaired active inventory, not a fresh deployable `GREENPLUS` closeout, until benchmark/manual closeout work re-closes it
+  - historical pre-repair row snapshot:
+
+```md
+| `office_checkup_next_day` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `YELLOW` | repair-first YELLOW; office/decision battlefield overstay candidate |
+```
+
+- `wuxia_heavenly_physician` bounded late-run pressure reinjection repair recorded under `docs/2026-04-11/wuxia_heavenly_physician_repair_note.md`
+  - operator effect:
+    - `B61/B65/B66` no longer read as late blank-opponent drag
+    - whole-run pacing triage now returns `GREEN`
+    - `benchmark_freshness` becomes `pending_refresh` because the live `TR` was materially touched after the latest benchmark artifact
+    - pair remains a repaired schema-clean live unit, not a fresh active baseline candidate, until benchmark freshness is re-closed
+  - historical pre-repair row snapshot:
+
+```md
+| `wuxia_heavenly_physician` | `wuxguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | opening GREEN only; whole-run pacing re-audit downgraded it to YELLOW because late blank-opponent drag appears in B61/B65/B66/B70 |
+```
 
 - `RED` is terminal in current operator governance
   - `negative exemplar archive`
@@ -108,7 +149,7 @@ Freshness closeout artifact:
     - `office_checkup_next_day`, `jangyeongshil_industrial_revolution` opening exemplar use suspended pending manual re-audit
 - current `YELLOW` salvageability split recorded under `docs/2026-04-10/current-yellow-salvageability-split.md`
   - scope: opening `YELLOW 2` + whole-run `YELLOW 1`
-  - result: `repair-worth-it 3 / kill-candidate 0`
+  - result: `repair-worth-it 1 / resolved 2 / kill-candidate 0`
   - operator effect:
     - no additional `RED` promotion from the current `YELLOW` shelf
     - next step is repair-cost ordering, not further discard escalation

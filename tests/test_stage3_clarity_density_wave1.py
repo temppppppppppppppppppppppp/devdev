@@ -5,6 +5,7 @@ Tranche A: Authority re-banding in blueprint_ensemble._format_constraints()
 Tranche B: Scene-specificity + scenario-density prevalidation in unified_blueprint_validator
 """
 
+from modules.domain.agents.blueprint_constraint_compiler import BlueprintConstraintCompiler
 from modules.domain.agents.blueprint_ensemble import BlueprintEnsembleGenerator
 from modules.domain.agents.unified_blueprint_validator import UnifiedBlueprintValidator
 
@@ -123,6 +124,64 @@ class TestAuthorityBanding:
         assert cont_idx >= 0
         assert loc_idx > cont_idx
 
+    def test_formatted_constraints_keep_arc_start_state_authority(self):
+        compiler = BlueprintConstraintCompiler()
+        block = compiler.compile(
+            arc_data={
+                "ep_start": 11,
+                "ep_count": 3,
+                "arc_no": 3,
+                "tactical_doc": "제11화: 개장 직전 브리핑",
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "Gangnam HQ",
+                        "equipment": ["BlackBerry 7130", "Ecuador memo"],
+                        "injuries": "없음",
+                    }
+                },
+            },
+            ep_num=11,
+            prev_blueprint={
+                "end_location": "Old Office",
+                "protagonist_state": {
+                    "equipment": ["Stale pager"],
+                    "injuries": "왼팔 타박상",
+                },
+            },
+        )
+        ens = _make_ensemble()
+        result = ens._format_constraints(block, genre="investment")
+
+        assert "EXPECTED CONTINUITY" in result
+        assert "이전 종료 위치: Gangnam HQ" in result
+        assert "장비: BlackBerry 7130, Ecuador memo" in result
+        assert "부상: 없음" in result
+
+    def test_formatted_constraints_filter_future_capital_events(self):
+        compiler = BlueprintConstraintCompiler()
+        block = compiler.compile(
+            arc_data={
+                "ep_start": 11,
+                "ep_count": 3,
+                "arc_no": 3,
+                "tactical_doc": "제11화: 포지션 점검",
+                "state_changes": {
+                    "capital_changes": [
+                        {"episode": 12, "description": "차익 실현", "amount": "5억"},
+                        {"episode": 11, "description": "WTI 포지션 유지", "amount": "12.5억"},
+                    ]
+                },
+            },
+            ep_num=11,
+            prev_blueprint={},
+            genre="investment",
+        )
+        ens = _make_ensemble()
+        result = ens._format_constraints(block, genre="investment")
+
+        assert "WTI 포지션 유지" in result
+        assert "차익 실현" not in result
+
     def test_hard_constraint_band_with_arc_summary(self):
         block = {
             "arc_constraint_summary": "테스트 Arc 요약",
@@ -213,7 +272,8 @@ class TestSceneSpecificityPrevalidation:
         }
         v = _make_validator()
         issues = v._collect_scene_specificity_issues(scenes=scenes, scene_count=3)
-        assert any("이벤트 부재" in i["issue"] for i in issues)
+        assert any(i["category"] == "scene_completeness" for i in issues)
+        assert any("scene.key_events" in i["issue"] for i in issues)
 
     def test_single_thin_scene_not_flagged(self):
         """One thin scene is below threshold (>=2 required)."""
@@ -289,7 +349,27 @@ class TestScenarioDensityPrevalidation:
         scenes = {"scene_1": {"goal": "a" * 20}, "scene_2": {"goal": "b" * 20}, "scene_3": {"goal": "c" * 20}}
         v = _make_validator()
         issues = v._collect_scenario_density_issues(integrated=scenario, scenes=scenes, scene_count=3)
-        assert any("구체성 부족" in i["issue"] for i in issues)
+        anchor_issue = next(i for i in issues if "구체성 부족" in i["issue"])
+        assert anchor_issue["advisory_only"] is True
+        assert anchor_issue["director_focus"] is False
+
+    def test_low_anchor_density_exposes_structured_advisory_packet(self):
+        scenario = "The market mood stays vague and abstract without concrete anchors. " * 30
+        scenes = {
+            "scene_1": {"goal": "hold the room", "key_events": ["hesitation"]},
+            "scene_2": {"goal": "read the reaction", "key_events": ["silence"]},
+            "scene_3": {"goal": "delay the trade", "key_events": ["stall"]},
+        }
+        v = _make_validator()
+
+        issues = v._collect_scenario_density_issues(integrated=scenario, scenes=scenes, scene_count=3)
+
+        anchor_issue = next(issue for issue in issues if issue.get("advisory_code") == "anchor_density")
+        assert anchor_issue["advisory_packet"]["anchor_count"] == 0
+        assert anchor_issue["advisory_packet"]["anchor_min"] == 5
+        assert anchor_issue["fix_pack"]["patch_target_records"][0]["field_path"] == "integrated_scenario"
+        assert anchor_issue["fix_pack"]["patch_target_records"][0]["target_kind"] == "local_sentence"
+        assert "anchor_count=0" in anchor_issue["fix_pack"]["evidence_summary"]
 
     def test_adequate_anchor_density_no_issue(self):
         scenario = (

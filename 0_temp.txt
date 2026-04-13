@@ -1,13 +1,13 @@
- python main_a.py
+python main_a.py
 [V61.3] Faulthandler 활성화 → crash_dump.log
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                     🎹 V40 SOVEREIGN COCKPIT                                                     ┃
-┃                                                  Multi-Genre Production Factory                                                  ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                      🎹 V40 GENRE SELECTOR                                                       ┃
-┃                                                      장르별 전문 공정 선택                                                       ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                     🎹 V40 SOVEREIGN COCKPIT                                                      ┃
+┃                                                  Multi-Genre Production Factory                                                   ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                       🎹 V40 GENRE SELECTOR                                                       ┃
+┃                                                       장르별 전문 공정 선택                                                       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 📚 [V40 Multi-Genre Factory] 장르를 선택하십시오:
 
@@ -47,14 +47,15 @@
       📦 프리셋 초기화: investment
 
 [Enter] 프로젝트 선택으로 이동
-    1. 000_20260409_1
-    2. 00_000
-    3. _canary
-    4. _unknown_project
-    5. test
-    6. test_project
-    7. 기록용
-    8. 스트레스 테스트 모음
+    1. 000_0412-1
+    2. 000_260412_a
+    3. 000__0411
+    4. MagicMock
+    5. _canary
+    6. _unknown_project
+    7. test
+    8. test_project
+    9. 카나리아 테스트
 
 👉 Choice: 2
       ✅ [TF7-P0-03] preset_registry DB에서 복원 완료
@@ -65,8 +66,7 @@
    🛡️ [투자 (Investment Fiction)] Guard 시스템 초기화 완료
       🧥 WorkGuard 적용 완료 (작품별 커스텀 규칙 활성)
    ✅ [System] Vector DB integrity check complete.
-   [VecMemory] shared 모드: vec_episodes 테이블 없음 -> 벡터 검색 비활성
-   ⚠️ [VecMemory] 벡터 엔진 비활성: vec_episodes table not available in shared connection
+   ✅ [VecMemory] sqlite-vec 벡터 엔진 초기화 완료
 [V61.3] Faulthandler 활성화 → crash_dump.log
       🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + ConstraintCompiler)
       🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight + Critic + Consensus)
@@ -102,10 +102,10 @@
       🧭 [SC] Context Advisor 활성화
       📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: investment)
    ✅ [System] 모든 에이전트 안전하게 초기화 완료
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                   🎹 V40 SOVEREIGN PRODUCTION                                                    ┃
-┃                                        Genre: 투자 (Investment Fiction) | Project: 00_000                                        ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                    🎹 V40 SOVEREIGN PRODUCTION                                                    ┃
+┃                                     Genre: 투자 (Investment Fiction) | Project: 000_260412_a                                      ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 👇 Select Command:
    0. Stage 0: Bible/역설계/스타일 추출 [✅]
@@ -123,29 +123,30 @@
 
    👉 Choice: 3
    ──────────────────────────────────────────────────
-   📥 [Resume] 프로젝트: 00_000
+   📥 [Resume] 프로젝트: 000_260412_a
       Arc 설계: 3개 완료
-      Blueprint: ep 0까지 완료
+      Blueprint: ep 1까지 완료
       원고: ep 0까지 완료
       예상 총 에피소드: 17
    ──────────────────────────────────────────────────
+         👤 [V60.96] StateTracker 초기화: NPC 1명 (사망: 0명)
          🌍 [V68] WorldStateManager 초기화 (신규)
          📋 [V68] 팩트 원장 초기화 (신규)
-   📂 [Fresh Start] 기존 데이터 없음 - 1화부터 시작
+   📂 [Detected] Blueprint 1화, 원고 0화까지 발견
    📊 [V60.80] 현재 총 17화까지 설계가 가능합니다.
-👉 몇 화까지 설계도를 생성하시겠습니까? (현재 0화 / 최대 17화): 3
+👉 몇 화까지 설계도를 생성하시겠습니까? (현재 1화 / 최대 17화): 3
    
 ════════════════════════════════════════════════════════════
    🎯 [V60.80] Three Phase Blueprint Generator 시작
-      범위: 제1화 ~ 제3화 (3개)
+      범위: 제2화 ~ 제3화 (2개)
    ════════════════════════════════════════════════════════════
 
          ⏳ Entity Registry 추출 중... (Arc 0, 첫 호출)
-         📋 [V61] Entity Registry 추출: 79개 엔티티
+         📋 [V61] Entity Registry 추출: 34개 엔티티
    
-   📐 제1화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
- ⠋ 제1화  0s         ⏳ 제1화 Blueprint 생성 시작 (최대 10회 시도)...
-         ⏳ 제1화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=0, semantic_ctx=2262자)
+   📐 제2화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
+ ⠋ 제2화  0s         ⏳ 제2화 Blueprint 생성 시작 (최대 10회 시도)...
+         ⏳ 제2화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=1, semantic_ctx=2663자)
 
 [Phase 1] 제약 수집 시작
 
@@ -157,73 +158,326 @@
 
 [Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
 
-[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 19s)
+[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 4s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
 
 [Phase 3] Director compare + judge 시작
 
-[Phase 3] Director compare + judge 대기 중... (30s)
+[Phase 3] Director compare + judge 완료 (12s)
 
-[Phase 3] Director compare + judge 대기 중... (1m 0s)
+[TF-32-V] Blueprint patch #1/3
 
-[Phase 3] Director compare + judge 대기 중... (1m 30s)
+fix_scope: inplace
 
-[Phase 3] Director compare + judge 대기 중... (2m 0s)
+사유: [Stage3 partial-fix contract]
 
-[Phase 3] Director compare + judge 대기 중... (2m 30s)
+사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
+shell.
 
-[Phase 3] Director compare + judge 완료 (2m 40s)
+사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
 
-[QualityGate] effective_score=82 (raw=82, ifc_penalty=0) < threshold -> REJECT
+[TF-32-V] Blueprint patch #1/3 시작
 
-사유: pass (82.0) - see improvement guidance
+[TF-32-V] Blueprint patch #1/3 완료 (29s)
 
-이슈: MINOR | fidelity | intent 불일치: Arc 관계 변화 NPC 3명 blueprint 미언급
+[TF-32-V] re-audit #1 시작
 
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 1개 < 5개 (1168자 중)
+[TF-32-V] re-audit #1 대기 중... (30s)
 
-[Phase 3] REJECT (score=82) - retry 1/10
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
 
-이슈: MINOR | fidelity | intent 불일치: Arc 관계 변화 NPC 3명 blueprint 미언급
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
 
-이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 1개 < 5개 (1168자 중)
+[TF-32-V] re-audit #1 대기 중... (2m 0s)
 
-[Phase 2] in-place patch 시작
+[TF-32-V] re-audit #1 완료 (2m 5s)
 
-[Phase 2] in-place patch 대기 중... (30s)
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
 
-[Phase 2] in-place patch 대기 중... (1m 0s)
+fix_scope: inplace
 
-[Phase 2] in-place patch 완료 (1m 16s)
+사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 경미한 시간 표현 수정 필요
+
+이슈: MAJOR | temporal_deictic | 시간 지시어 위험: 시나리오 말미에 '18년 전' 회상/기억 패턴 감지
+
+이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 2개 < 5개 (1832자 중)
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (54s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
 
 [Phase 3] Director compare + judge 시작
 
-[Phase 3] Director compare + judge 대기 중... (30s)
+[Phase 3] Director compare + judge 완료 (8s)
 
-[Phase 3] Director compare + judge 대기 중... (1m 0s)
+[TF-32-V] Blueprint patch #1/3
 
-[Phase 3] Director compare + judge 대기 중... (1m 30s)
+fix_scope: inplace
 
-[Phase 3] Director compare + judge 대기 중... (2m 0s)
+사유: [Stage3 partial-fix contract]
 
-[Phase 3] Director compare + judge 대기 중... (2m 30s)
+사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
+shell.
 
-[Phase 3] Director compare + judge 완료 (2m 43s)
- ⠦ 제1화 · Blueprint 생성  8m 0s         📊 제1화 Blueprint 결과: PASS (attempt=2, score=100)
-         └─ 선택 전략: action_focused
-         └─ Director 판정: score strong (100)
-         source_anchor: start=성북동 본가 침실 | start_items=1                                                                      
-      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, score=100)
-      [Stage3] ep 1 blueprint save completed
-      [Stage3 Summary] ep 1 | verdict=PASS | score=100 | attempt=2 | prevalidation=0 | binding=0 | TF-49=0 | PinGuard=0
-         ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 0)
-   
-   📐 제2화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
- ⠋ 제2화  0s         ⏳ 제2화 Blueprint 생성 시작 (최대 10회 시도)...
-         ⏳ 제2화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=1, semantic_ctx=2262자)
+사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
 
-[Phase 1] 제약 수집 시작
+[TF-32-V] Blueprint patch #1/3 시작
 
-[Phase 1] 제약 수집 완료 (0s)
+[TF-32-V] Blueprint patch #1/3 완료 (25s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 완료 (1m 12s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 핵심 사건 모두 반영, 모순 없음, 연속성 양호
+
+이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 4개 < 5개 (1423자 중)
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 12s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (11s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: 오후 6시 뉴스 시청 후 서재로 가는 부분을 '오후 5시 30분경'으로 수정하여 '오후 면담' 설정과 일치시키고, 서재 앞 도착 시간을 오후
+6시로 조정하여 시간 흐름을 자연스럽게 만들 것
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (25s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 완료 (1m 3s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 핵심 사건 모두 반영, 연속성 우수, 간결하면서도 효과적
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (46s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (13s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: 이란 핵 협상 관련 구체적 기관명(IAEA 등) 추가, 유가 수치를 더 정확히 명시(현재 60달러, 65달러, 70달러, 75달러, 78달러 언급은   
+양호하나 출처나 시점 보강 필요), 한정호그룹 관련 구체적 부문명이나 자회사명 1-2개 추가하여 anchor 밀도 높이기
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (22s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 완료 (1m 53s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 감정적 깊이 탁월
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 4s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (10s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: [Stage3 partial-fix contract]
+
+사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
+shell.
+
+사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 대기 중... (30s)
+
+[TF-32-V] Blueprint patch #1/3 완료 (32s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 완료 (1m 0s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 경미한 시간 참조 문제만 수정 필요
+
+이슈: MAJOR | temporal_deictic | 시간 지시어 위험: ending_hook에 '18년 전' 등 절대 과거 참조
+
+이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 3개 < 5개 (1891자 중)
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (56s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (10s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: [Stage3 partial-fix contract]
+
+사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
+shell.
+
+사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (25s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 대기 중... (2m 0s)
+
+[TF-32-V] re-audit #1 완료 (2m 1s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 전술서 완벽 반영, 감정적 몰입도 높음, 연속성 우수
+
+이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 2개 < 5개 (1312자 중)
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (57s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (10s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: [Stage3 partial-fix contract]
+
+사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
+shell.
+
+사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (24s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 완료 (1m 44s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 강한 훅
+
+이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 3개 < 5개 (1197자 중)
 
 [Phase 2] 후보 생성 (full_ensemble) 시작
 
@@ -239,27 +493,147 @@
 
 [Phase 3] Director compare + judge 시작
 
-[Phase 3] Director compare + judge 대기 중... (30s)
+[Phase 3] Director compare + judge 완료 (13s)
 
-[Phase 3] Director compare + judge 완료 (37s)
- ⠧ 제2화 · Blueprint 생성  1m 46s         📊 제2화 Blueprint 결과: PASS (attempt=1, score=100)
-         └─ 선택 전략: emotion_focused
-         └─ Director 판정: Arc 전술서의 핵심 사건을 완벽히 이행했으며, 인물의 내면 변화와 투자 계획 수립 과정을 밀도 있게 묘사함.
-         비교 메모: 후보 1은 Arc 전술서에 명시된 '기억 정리 및 투자 계획'과 '뉴스 확인 후 결심'을 충실하고 깊이 있게 묘사했습니다.  
-반면 후보 2는 아버지와의 갈등을 조기 점화시켜 훅은 강력하나, 핵심인 계획 수립 과정을 다소 성급하게 처리하여 Arc의 의도를 일부       
-희석시켰습니다. 안정적인 서사 빌드업 측면에서 후보 1이 명백히 우수합니다.
-         주의: intent 불일치: Arc 관계 변화 NPC 3명 blueprint 미언급
-         주의: 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 1개 < 5개 (1236자 중)
-         source_anchor: prev_ep=1:성북동 본가 침실 앞 복도 | prev_opening=jump_opening | start=성북동 본가 침실 | start_items=1     
-      [TF-49] inventory gaps 1: 낡은 옷
-      [Stage3] blueprint success (verdict=PASS, strategy=emotion_focused, score=100)
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: [Stage3 partial-fix contract]
+
+사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
+shell.
+
+사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (29s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 완료 (54s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 핵심 사건 모두 반영, 연속성 우수, 강한 훅
+
+이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 3개 < 5개 (1567자 중)
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 5s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (12s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: [Stage3 partial-fix contract]
+
+사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
+shell.
+
+사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (26s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 대기 중... (2m 0s)
+
+[TF-32-V] re-audit #1 완료 (2m 10s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 전술서 완벽 반영, 연속성 우수, 강한 훅
+
+이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 2개 < 5개 (1407자 중)
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 10s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (15s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: 후보 2 선택. 다만 마지막 문장 '아직 시장은 몰랐다. 하지만 한시우는 알고 있었다.'를 더 구체적이고 강한 훅으로 수정 필요. 예:    
+'2월 말 65달러, 3월 70달러, 여름 78달러. 18년의 기억이 그에게 완벽한 로드맵을 제공하고 있었다.' 등으로 다음 화 기대감 증폭.
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (27s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 완료 (1m 5s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 핵심 사건 완전 반영, 모순 없음, 자연스러운 연속성
+ ⠋ 제2화 · Blueprint 생성  38m 40s         📊 제2화 Blueprint 결과: PASS_WITH_WARNING (attempt=10, score=85)
+         └─ 선택 전략: dialogue_focused
+         └─ Director 판정: Arc 핵심 사건 완전 반영, 모순 없음, 자연스러운 연속성
+         비교 메모: 후보 1은 Python Advisory 지적대로 직전 화 침실 장면 재사용으로 서사 정체. 후보 2는 Arc 전술서 3개 핵심 사건(가족 
+조찬 태도 변화, 형들 후계 경쟁, 저녁 뉴스 이란 핵 문제) 모두 자연스럽게 반영하며 대화 중심으로 인물 관계 발전 효과적. 후보 3은 감정  
+묘사 풍부하나 20억 자산 구성 내역이 기존 설정 근거 부족하여 수치 모순 위험.
+         보완 포인트: 전체 구조와 내용은 우수하며 단순히 엔딩 훅 문장 하나만 더 임팩트 있게 수정하면 되므로 국소 수정으로 충분       
+         모순 메모: 후보 1: 직전 화에서 이미 소비한 침실 장면을 반복 사용하여 서사 진행성 저해
+         모순 메모: 후보 3: 승마 상금 8억, 광고 수입 7억 등 구체적 수치가 기존 설정과 검증되지 않은 상태로 제시
+      [TF-49] inventory gaps 2: 18년 치 미래 기억, 경제사 정보                                                                       
+         source_anchor: prev_ep=1:성북동 한정호 저택 한시우 침실 | prev_opening=jump_opening | start=서사 시작점
+      [Stage3] blueprint success (verdict=PASS_WITH_WARNING, strategy=dialogue_focused, score=85)
       [Stage3] ep 2 blueprint save completed
-      [Stage3 Summary] ep 2 | verdict=PASS | score=100 | attempt=1 | prevalidation=2 | binding=0 | TF-49=1 | PinGuard=0
+      [Stage3 Summary] ep 2 | verdict=PASS_WITH_WARNING | score=85 | attempt=10 | prevalidation=0 | binding=0 | TF-49=2 | PinGuard=0 
          ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc 0)
 
    📐 제3화 Blueprint 생성 중... (Arc 1, 주인공: 한시우)
  ⠋ 제3화  0s         ⏳ 제3화 Blueprint 생성 시작 (최대 10회 시도)...
-         ⏳ 제3화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=2, semantic_ctx=2262자)
+         ⏳ 제3화 Blueprint 대기: ThreePhase runtime 호출 중 (anchors=0, window=2, semantic_ctx=2663자)
 
 [Phase 1] 제약 수집 시작
 
@@ -271,7 +645,7 @@
 
 [Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
 
-[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 15s)
+[Phase 2] 후보 생성 (full_ensemble) 완료 (1m 0s)
 
 [Phase 3] 연속성 사전검사 시작
 
@@ -279,37 +653,227 @@
 
 [Phase 3] Director compare + judge 시작
 
-[Phase 3] Director compare + judge 대기 중... (30s)
+[Phase 3] Director compare + judge 완료 (10s)
 
-[Phase 3] Director compare + judge 대기 중... (1m 0s)
+[TF-32-V] Blueprint patch #1/3
 
-[Phase 3] Director compare + judge 대기 중... (1m 30s)
+fix_scope: inplace
 
-[Phase 3] Director compare + judge 대기 중... (2m 0s)
+사유: [Stage3 partial-fix contract]
 
-[Phase 3] Director compare + judge 대기 중... (2m 30s)
+사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
+shell.
 
-[Phase 3] Director compare + judge 대기 중... (3m 0s)
+사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
 
-[Phase 3] Director compare + judge 완료 (3m 7s)
- ⠦ 제3화 · Blueprint 생성  4m 22s         📊 제3화 Blueprint 결과: PASS (attempt=1, score=100)
-         └─ 선택 전략: action_focused
-         └─ Director 판정: score strong (100.0)
-         source_anchor: prev_ep=2:성북동 본가 거실 | prev_opening=direct_continuation | start=성북동 본가 침실 | start_items=1      
-      [TF-49] inventory gaps 1: 낡은 옷
-      [Stage3] blueprint success (verdict=PASS, strategy=action_focused, score=100)
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (28s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 30s)
+
+[TF-32-V] re-audit #1 대기 중... (2m 0s)
+
+[TF-32-V] re-audit #1 완료 (2m 7s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: Arc 핵심 사건 완벽 반영, 연속성 우수, 강한 훅
+
+이슈: MAJOR | temporal_deictic | 시간 지시어 위험: 시나리오 말미에 '18년 전' 회상/기억 패턴 감지
+
+이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 2개 < 5개 (1526자 중)
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (49s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (8s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: [Stage3 partial-fix contract]
+
+사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
+shell.
+
+사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (24s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 완료 (1m 5s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: 대화 중심 구성으로 Arc 핵심 사건 완벽 반영, 연속성 우수
+
+이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 4개 < 5개 (1340자 중)
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (54s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (8s)
+
+[QualityGate] effective_score=88 (raw=88, ifc_penalty=0) < threshold -> REJECT
+
+사유: Arc 핵심사건 완벽반영, 모순없음, 강한 훅
+
+[Phase 3] REJECT (score=88) - retry 3/10
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (58s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (10s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: 엔딩에서 '현재 유가는 60달러 선이었다. 20달러 상승은 30% 이상의 급등을 의미했다.' 부분을 한정호의 내적 독백이나 반응으로 명확히
+표현하여 화자를 분명히 하고, 수치 정보의 맥락을 더 자연스럽게 연결하세요.
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (26s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 완료 (1m 4s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: 대화 중심 구성으로 핵심 사건 완벽 반영, 연속성 우수
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (57s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (11s)
+
+[TF-32-V] Blueprint patch #1/3
+
+fix_scope: inplace
+
+사유: [Stage3 partial-fix contract]
+
+사유: authoritative_scope: listed patch targets are authoritative; preserve untouched scenes, entity names, chronology, and arc      
+shell.
+
+사유: patch_mode: edit the anchored span first; do not rename or broaden scope unless the contract explicitly requires it.
+
+[TF-32-V] Blueprint patch #1/3 시작
+
+[TF-32-V] Blueprint patch #1/3 완료 (27s)
+
+[TF-32-V] re-audit #1 시작
+
+[TF-32-V] re-audit #1 대기 중... (30s)
+
+[TF-32-V] re-audit #1 대기 중... (1m 0s)
+
+[TF-32-V] re-audit #1 완료 (1m 14s)
+
+[TF-32-V] PASS_WITH_FIX unresolved after 3 patch attempts -> REJECT
+
+fix_scope: inplace
+
+사유: 감정적 깊이와 Arc 준수도가 가장 우수하며 모순 없음
+
+이슈: MINOR | scenario_density | 시나리오 구체성 부족: 구체적 앵커(기관/인물/수치) 4개 < 5개 (1717자 중)
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (55s)
+
+[Phase 3] 연속성 사전검사 시작
+
+[Phase 3] 연속성 사전검사 완료 (0s)
+
+[Phase 3] Director compare + judge 시작
+
+[Phase 3] Director compare + judge 완료 (5s)
+ ⠹ 제3화 · Blueprint 생성  16m 9s         📊 제3화 Blueprint 결과: PASS (attempt=6, score=92)
+         └─ 선택 전략: emotion_focused
+         └─ Director 판정: 모순 없음, Arc 핵심사건 완벽 반영, 강한 캐릭터 성장
+         비교 메모: 후보1: 감정적 깊이와 캐릭터 변화에 집중, Arc 핵심사건 모두 반영, 모순 없음. 후보2: 액션 중심이지만 Python        
+Advisory에서 다음화 내용 포함 지적, 정지선 위반. 후보3: 대화 중심으로 좋으나 시간 흐름이 과도(5시→8시), 앵커 부족 지적.
+      [TF-49] inventory gaps 2: 18년 치 미래 기억, 경제사 정보                                                                       
+         source_anchor: prev_ep=2:성북동 한정호 저택 거실 | prev_opening=explicit_transition | start=서사 시작점
+      [Stage3] blueprint success (verdict=PASS, strategy=emotion_focused, score=92)
       [Stage3] ep 3 blueprint save completed
-      [Stage3 Summary] ep 3 | verdict=PASS | score=100 | attempt=1 | prevalidation=0 | binding=0 | TF-49=1 | PinGuard=0
+      [Stage3 Summary] ep 3 | verdict=PASS | score=92 | attempt=6 | prevalidation=0 | binding=0 | TF-49=2 | PinGuard=0
    
 ════════════════════════════════════════════════════════════
    📊 [V60.80] Stage 3 완료 통계
-      성공: 3개 | 실패: 0개
-      통과율: 75.0%
+      성공: 2개 | 실패: 0개
+      통과율: 50.0%
    ════════════════════════════════════════════════════════════
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                   🎹 V40 SOVEREIGN PRODUCTION                                                    ┃
-┃                                        Genre: 투자 (Investment Fiction) | Project: 00_000                                        ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                    🎹 V40 SOVEREIGN PRODUCTION                                                    ┃
+┃                                     Genre: 투자 (Investment Fiction) | Project: 000_260412_a                                      ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 👇 Select Command:
    0. Stage 0: Bible/역설계/스타일 추출 [✅]
@@ -325,58 +889,17 @@
    88. 🔥 [RESET] Stage 2 (Arcs) 초기화
    99. ⏪ Stage 2 정밀 되감기 (Selective Rewind)
 
-   👉 Choice: 5
-   
-🛑 [System] 시스템 종료 시퀀스 가동...
-   
-============================================================
-  [V44] 글도비 성능 메트릭 리포트
-============================================================
-세션 ID: 20260410_172408
-실행 시간: 0:17:42.036980
+   👉 Choice: 
 
-[호출 통계]
-- 총 호출: 18회
-- 성공: 18회 (100.0%)
-- 실패: 0회
-- 총 재시도: 0회
 
-[비용 통계]
-- 총 토큰: 215,672
-- 예상 비용: $0.6386 USD
 
-[에이전트별 통계]
-  StateExtractor:
-    - 호출: 1회 (성공률: 100.0%)
-    - 평균 재시도: 0.00회/호출
-    - 응답시간: avg=54847ms, p50=54847ms, p90=54847ms
-  BlueprintEnsembleGenerator:
-    - 호출: 10회 (성공률: 100.0%)
-    - 평균 재시도: 0.00회/호출
-    - 응답시간: avg=65816ms, p50=66643ms, p90=76686ms
-  Director:
-    - 호출: 7회 (성공률: 100.0%)
-    - 평균 재시도: 0.00회/호출
-    - 응답시간: avg=37806ms, p50=33721ms, p90=46498ms
 
-[모델별 통계]
-  vertexai:gemini-2.5-flash:
-    - 토큰: 10,967 (in=6,268, out=4,699)
-    - 비용: $0.0136
-  vertexai:gemini-2.5-pro:
-    - 토큰: 204,705 (in=162,522, out=42,183)
-    - 비용: $0.6250
-============================================================
-   📊 [Metrics] 세션 메트릭 저장: C:\Users\wjjo\Desktop\글도비\projects\00_000\logs\metrics\metrics_20260410_172408.json
-   💾 [CostDB] Session 잔여 스코프 비용 저장: $0.6386 (215,672 tokens, 누적 총비용은 arc/episode 레코드 합산 참조)
-   📈 [PassRate] 통과율 기록 저장: 6건
-   ⚖️ [Director Bias] 유의미한 편향 경고 없음
-   📚 [V51.4] 실패 학습 기록 저장(DB): 0건
-   🎭 [V51.5] 캐릭터 음성 저장: 0명
-   🔮 [V51.6] 복선 저장: 0개 (회수율: 0%)
-   💓 [V60.26] 감정선 기록 저장: 0건
-   [System] VecMemory 연결 해제 완료
-   [System] DB 커밋 완료
-   [System] DB 연결 안전하게 해제됨
-   ✅ [System] 종료 완료
-PS C:\Users\wjjo\Desktop\글도비> 
+
+
+
+
+
+
+
+
+

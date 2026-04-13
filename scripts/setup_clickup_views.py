@@ -14,9 +14,15 @@ if str(ROOT) not in sys.path:
 
 from scripts.sync_clickup_queue import ClickUpClient, ClickUpSyncError, _load_dotenv_if_available
 
-
+PROFILE_CHOICES = ("system", "material")
 OPERATIONS_BOARD_NAME = "글도비 운영 보드"
 FULL_QUEUE_TABLE_NAME = "글도비 전체 큐"
+MATERIAL_BOARD_NAME = "글도비 생산 보드"
+MATERIAL_QUEUE_TABLE_NAME = "글도비 생산 큐"
+MATERIAL_CANON_TABLE_NAME = "글도비 canon 큐"
+MATERIAL_TR_BI_TABLE_NAME = "글도비 TR/BI 생산 큐"
+MATERIAL_BI_COMPLETE_TABLE_NAME = "글도비 BI 완료 큐"
+MATERIAL_EXCEPTION_TABLE_NAME = "글도비 생산 예외 큐"
 
 
 def _extract_views(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -30,17 +36,49 @@ def _base_columns() -> dict[str, Any]:
     return {
         "fields": [
             {"field": "name", "idx": 0, "width": None, "hidden": False, "name": None, "display": None, "pinned": None},
-            {"field": "status", "idx": 1, "width": None, "hidden": False, "name": None, "display": None, "pinned": None},
-            {"field": "assignee", "idx": 2, "width": None, "hidden": False, "name": None, "display": None, "pinned": None},
-            {"field": "priority", "idx": 3, "width": None, "hidden": False, "name": None, "display": None, "pinned": None},
-            {"field": "dueDate", "idx": 4, "width": None, "hidden": False, "name": None, "display": None, "pinned": None},
+            {
+                "field": "status",
+                "idx": 1,
+                "width": None,
+                "hidden": False,
+                "name": None,
+                "display": None,
+                "pinned": None,
+            },
+            {
+                "field": "assignee",
+                "idx": 2,
+                "width": None,
+                "hidden": False,
+                "name": None,
+                "display": None,
+                "pinned": None,
+            },
+            {
+                "field": "priority",
+                "idx": 3,
+                "width": None,
+                "hidden": False,
+                "name": None,
+                "display": None,
+                "pinned": None,
+            },
+            {
+                "field": "dueDate",
+                "idx": 4,
+                "width": None,
+                "hidden": False,
+                "name": None,
+                "display": None,
+                "pinned": None,
+            },
         ]
     }
 
 
-def build_operations_board_payload() -> dict[str, Any]:
+def build_operations_board_payload(name: str = OPERATIONS_BOARD_NAME) -> dict[str, Any]:
     return {
-        "name": OPERATIONS_BOARD_NAME,
+        "name": name,
         "type": "board",
         "grouping": {
             "field": "status",
@@ -94,9 +132,9 @@ def build_operations_board_payload() -> dict[str, Any]:
     }
 
 
-def build_full_queue_table_payload() -> dict[str, Any]:
+def build_full_queue_table_payload(name: str = FULL_QUEUE_TABLE_NAME) -> dict[str, Any]:
     return {
-        "name": FULL_QUEUE_TABLE_NAME,
+        "name": name,
         "type": "table",
         "grouping": {
             "field": "none",
@@ -150,6 +188,60 @@ def build_full_queue_table_payload() -> dict[str, Any]:
     }
 
 
+def _find_custom_field_by_name(fields: list[dict[str, Any]], name: str) -> dict[str, Any] | None:
+    target = name.strip().lower()
+    for field in fields:
+        if str(field.get("name") or "").strip().lower() == target:
+            return field
+    return None
+
+
+def _dropdown_option_id(field: dict[str, Any], option_name: str) -> str | None:
+    type_config = field.get("type_config") if isinstance(field.get("type_config"), dict) else {}
+    options = type_config.get("options") if isinstance(type_config.get("options"), list) else []
+    target = option_name.strip().lower()
+    for option in options:
+        if not isinstance(option, dict):
+            continue
+        if str(option.get("name") or option.get("label") or "").strip().lower() == target:
+            return str(option.get("id") or "").strip() or None
+    return None
+
+
+def build_material_stage_filtered_table_payload(
+    material_stage_field_id: str,
+    stage_value: str,
+    *,
+    name: str,
+) -> dict[str, Any]:
+    payload = build_full_queue_table_payload(name)
+    payload["filters"]["fields"] = [
+        {
+            "field": f"cf_{material_stage_field_id}",
+            "op": "EQ",
+            "values": [stage_value],
+        }
+    ]
+    return payload
+
+
+def build_material_exception_table_payload(
+    ops_state_field_id: str,
+    normal_option_id: str,
+    *,
+    name: str = MATERIAL_EXCEPTION_TABLE_NAME,
+) -> dict[str, Any]:
+    payload = build_full_queue_table_payload(name)
+    payload["filters"]["fields"] = [
+        {
+            "field": f"cf_{ops_state_field_id}",
+            "op": "NOT",
+            "values": [normal_option_id],
+        }
+    ]
+    return payload
+
+
 def _find_view_by_name(views: list[dict[str, Any]], name: str) -> dict[str, Any] | None:
     target = name.strip().lower()
     for view in views:
@@ -164,6 +256,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--list-id",
         default=os.environ.get("CLICKUP_LIST_ID", "").strip(),
         help="ClickUp List ID. Defaults to CLICKUP_LIST_ID.",
+    )
+    parser.add_argument(
+        "--profile",
+        choices=PROFILE_CHOICES,
+        default=os.environ.get("CLICKUP_VIEW_PROFILE", "system").strip().lower() or "system",
+        help="Create system-queue views or material-side production views.",
     )
     parser.add_argument(
         "--token-env",
@@ -192,11 +290,61 @@ def main(argv: list[str] | None = None) -> int:
     client = ClickUpClient(token)
     views_payload = client.request("GET", f"/list/{list_id}/view")
     views = _extract_views(views_payload if isinstance(views_payload, dict) else {})
+    fields = client.get_list_custom_fields(list_id) if args.profile == "material" else []
 
-    desired = [
-        (OPERATIONS_BOARD_NAME, build_operations_board_payload()),
-        (FULL_QUEUE_TABLE_NAME, build_full_queue_table_payload()),
-    ]
+    if args.profile == "material":
+        desired = [
+            (MATERIAL_BOARD_NAME, build_operations_board_payload(MATERIAL_BOARD_NAME)),
+            (MATERIAL_QUEUE_TABLE_NAME, build_full_queue_table_payload(MATERIAL_QUEUE_TABLE_NAME)),
+        ]
+        material_stage_field = _find_custom_field_by_name(fields, "Material Stage")
+        ops_state_field = _find_custom_field_by_name(fields, "Ops State")
+        if material_stage_field is not None:
+            material_stage_field_id = str(material_stage_field.get("id") or "").strip()
+            if material_stage_field_id:
+                desired.extend(
+                    [
+                        (
+                            MATERIAL_CANON_TABLE_NAME,
+                            build_material_stage_filtered_table_payload(
+                                material_stage_field_id,
+                                "canon 단계",
+                                name=MATERIAL_CANON_TABLE_NAME,
+                            ),
+                        ),
+                        (
+                            MATERIAL_TR_BI_TABLE_NAME,
+                            build_material_stage_filtered_table_payload(
+                                material_stage_field_id,
+                                "TR/BI 생산 단계",
+                                name=MATERIAL_TR_BI_TABLE_NAME,
+                            ),
+                        ),
+                        (
+                            MATERIAL_BI_COMPLETE_TABLE_NAME,
+                            build_material_stage_filtered_table_payload(
+                                material_stage_field_id,
+                                "BI 생산 완료",
+                                name=MATERIAL_BI_COMPLETE_TABLE_NAME,
+                            ),
+                        ),
+                    ]
+                )
+        if ops_state_field is not None:
+            ops_state_field_id = str(ops_state_field.get("id") or "").strip()
+            normal_option_id = _dropdown_option_id(ops_state_field, "normal")
+            if ops_state_field_id and normal_option_id:
+                desired.append(
+                    (
+                        MATERIAL_EXCEPTION_TABLE_NAME,
+                        build_material_exception_table_payload(ops_state_field_id, normal_option_id),
+                    )
+                )
+    else:
+        desired = [
+            (OPERATIONS_BOARD_NAME, build_operations_board_payload()),
+            (FULL_QUEUE_TABLE_NAME, build_full_queue_table_payload()),
+        ]
 
     created = 0
     skipped = 0
@@ -219,6 +367,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"- created: {created}")
     print(f"- skipped: {skipped}")
     print(f"- dry_run: {'yes' if args.dry_run else 'no'}")
+    print(f"- profile: {args.profile}")
     return 0
 
 

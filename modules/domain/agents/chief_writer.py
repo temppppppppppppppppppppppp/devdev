@@ -65,13 +65,50 @@ def _format_retry_conflict_contract_block(conflict_contract: object) -> str:
         conflict_detail = str(entry.get("conflict_detail", "") or "").strip()
         expected_truth = str(entry.get("expected_truth", "") or "").strip()
         source_episode = str(entry.get("source_episode", "") or "").strip()
-        summary_parts = [part for part in (f"type={conflict_type}" if conflict_type else "", f"source={source_episode}" if source_episode else "") if part]
+        summary_parts = [
+            part
+            for part in (
+                f"type={conflict_type}" if conflict_type else "",
+                f"source={source_episode}" if source_episode else "",
+            )
+            if part
+        ]
         if conflict_detail:
             summary_parts.append(f"detail={conflict_detail}")
         if expected_truth:
             summary_parts.append(f"expected={expected_truth}")
         if summary_parts:
             lines.append("- " + " | ".join(summary_parts))
+    return "\n".join(lines) if len(lines) > 1 else ""
+
+
+def _format_retry_truth_pins_block(conflict_contract: object) -> str:
+    if not isinstance(conflict_contract, dict):
+        return ""
+    truth_pins = conflict_contract.get("truth_pins")
+    if not isinstance(truth_pins, list) or not truth_pins:
+        return ""
+
+    lines = ["[Authoritative Truth Pins — preserve exactly, do not drift]"]
+    rewrite_required_reasons = [
+        str(item or "").strip()
+        for item in (conflict_contract.get("rewrite_required_reasons") or [])
+        if str(item or "").strip()
+    ]
+    if rewrite_required_reasons:
+        lines.append(f"- local_patch_allowed=no ({', '.join(rewrite_required_reasons)})")
+    for pin in truth_pins[:5]:
+        if not isinstance(pin, dict):
+            continue
+        pin_key = str(pin.get("pin_key", "") or "").strip()
+        expected = str(pin.get("expected", "") or "").strip()
+        observed = str(pin.get("observed", "") or "").strip()
+        if not (pin_key and expected):
+            continue
+        if observed:
+            lines.append(f"- {pin_key}: keep `{expected}`; do not drift to `{observed}`")
+        else:
+            lines.append(f"- {pin_key}: keep `{expected}` exactly")
     return "\n".join(lines) if len(lines) > 1 else ""
 
 
@@ -104,10 +141,52 @@ def _build_retry_reuse_feedback_block(previous_attempt: dict | None) -> str:
     conflict_block = _format_retry_conflict_contract_block(previous_attempt.get("conflict_contract"))
     if conflict_block:
         lines.append(conflict_block)
+    truth_pin_block = _format_retry_truth_pins_block(previous_attempt.get("conflict_contract"))
+    if truth_pin_block:
+        lines.append(truth_pin_block)
 
     lines.append("[Stored Near-pass Manuscript Baseline]")
     lines.append(smart_truncate(baseline_manuscript, max_chars=20000, head_chars=6000))
     return "\n".join(lines)
+
+
+def _normalize_strategy_feedback_value(value: object) -> str:
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False).strip()
+    return str(value or "").strip()
+
+
+def _normalize_strategy_feedback_map(strategy_feedback_map: object) -> dict[str, str]:
+    if not isinstance(strategy_feedback_map, dict):
+        return {}
+    normalized: dict[str, str] = {}
+    for raw_key, raw_value in strategy_feedback_map.items():
+        key = str(raw_key or "").strip()
+        if not key:
+            continue
+        value = _normalize_strategy_feedback_value(raw_value)
+        if value:
+            normalized[key] = value
+    return normalized
+
+
+def _resolve_strategy_feedback(
+    *,
+    strategy: str,
+    strategy_feedback_map: dict[str, str] | None,
+    strategy_specific_feedback: str,
+    rejected_strategy: str,
+) -> str:
+    strategy_key = str(strategy or "").strip()
+    normalized_map = strategy_feedback_map if isinstance(strategy_feedback_map, dict) else {}
+    mapped_feedback = _normalize_strategy_feedback_value(normalized_map.get(strategy_key, ""))
+    if mapped_feedback:
+        return mapped_feedback
+    if strategy_key and strategy_key == str(rejected_strategy or "").strip():
+        return _normalize_strategy_feedback_value(strategy_specific_feedback)
+    return ""
 
 
 class ChiefWriter(BaseAgent):
@@ -207,7 +286,9 @@ class ChiefWriter(BaseAgent):
             return {name: float(stats.get(name, 0.0) or 0.0) for name in strategy_names}
         return {}
 
-    def _build_strategy_execution_plan(self, strategy_names: list[str]) -> tuple[list[str], dict[str, float], dict[str, float]]:
+    def _build_strategy_execution_plan(
+        self, strategy_names: list[str]
+    ) -> tuple[list[str], dict[str, float], dict[str, float]]:
         """전략 실행 순서와 temperature 보정값을 계산한다."""
         shares = self._load_strategy_bias(strategy_names)
         if not shares or all(shares.get(name, 0.0) <= 0 for name in strategy_names):
@@ -468,6 +549,7 @@ class ChiefWriter(BaseAgent):
         genre_name: str,
         cache_name: str | None,
         strategy_specific_feedback: str,
+        strategy_feedback_map: dict[str, str] | None,
         rejected_strategy: str,
         motivations: list | None,
         promises: list | None,
@@ -479,9 +561,12 @@ class ChiefWriter(BaseAgent):
             with ThreadPoolExecutor(max_workers=max(1, min(3, len(strategies)))) as executor:
                 futures = {}
                 for strategy in strategies:
-                    feedback = strategy_specific_feedback if (
-                        strategy == rejected_strategy and strategy_specific_feedback
-                    ) else ""
+                    feedback = _resolve_strategy_feedback(
+                        strategy=strategy,
+                        strategy_feedback_map=strategy_feedback_map,
+                        strategy_specific_feedback=strategy_specific_feedback,
+                        rejected_strategy=rejected_strategy,
+                    )
                     future = executor.submit(
                         self._generate_single_candidate,
                         ep_num=ep_num,
@@ -576,6 +661,7 @@ class ChiefWriter(BaseAgent):
         motivations: list | None,
         promises: list | None,
         strategy_specific_feedback: str,
+        strategy_feedback_map: dict[str, str] | None,
         rejected_strategy: str,
     ) -> list[dict]:
         valid_candidates = [candidate for candidate in candidates if not candidate.get("error")]
@@ -597,8 +683,11 @@ class ChiefWriter(BaseAgent):
             motivations=motivations,
             promises=promises,
             strategy_temperature=strategy_temperatures.get(fallback_strategy),
-            strategy_feedback=(
-                strategy_specific_feedback if (fallback_strategy == rejected_strategy and strategy_specific_feedback) else ""
+            strategy_feedback=_resolve_strategy_feedback(
+                strategy=fallback_strategy,
+                strategy_feedback_map=strategy_feedback_map,
+                strategy_specific_feedback=strategy_specific_feedback,
+                rejected_strategy=rejected_strategy,
             ),
         )
         if fallback and not fallback.get("error"):
@@ -637,6 +726,7 @@ class ChiefWriter(BaseAgent):
         reference_excerpt: str = "",
         director_feedback: str = "",
         strategy_specific_feedback: str = "",
+        strategy_feedback_map: dict[str, object] | None = None,
         rejected_strategy: str = "",
         single_strategy: str = "",
         failure_constraints: str = "",
@@ -736,6 +826,7 @@ class ChiefWriter(BaseAgent):
             preferred_strategy=preferred_strategy,
             single_strategy=single_strategy,
         )
+        normalized_strategy_feedback_map = _normalize_strategy_feedback_map(strategy_feedback_map)
         candidates = self._run_generate_ensemble_workers(
             ep_num=ep_num,
             strategies=strategies,
@@ -747,6 +838,7 @@ class ChiefWriter(BaseAgent):
             genre_name=genre_name,
             cache_name=cache_name,
             strategy_specific_feedback=strategy_specific_feedback,
+            strategy_feedback_map=normalized_strategy_feedback_map,
             rejected_strategy=rejected_strategy,
             motivations=motivations,
             promises=promises,
@@ -765,6 +857,7 @@ class ChiefWriter(BaseAgent):
             motivations=motivations,
             promises=promises,
             strategy_specific_feedback=strategy_specific_feedback,
+            strategy_feedback_map=normalized_strategy_feedback_map,
             rejected_strategy=rejected_strategy,
         )
         return self._finalize_generate_ensemble_candidates(candidates, ep_num)
@@ -1040,17 +1133,20 @@ class ChiefWriter(BaseAgent):
             director_feedback=director_feedback,
             attempt_number=attempt_number,
         )
-        failure_constraints, rejected_strategy, strategy_feedback = self._build_regeneration_strategy_hints(
-            previous_attempt
+        failure_constraints, rejected_strategy, strategy_feedback, strategy_feedback_map = (
+            self._build_regeneration_strategy_hints(previous_attempt)
         )
 
         writer_kwargs["director_feedback"] = enhanced_feedback
         writer_kwargs["strategy_specific_feedback"] = strategy_feedback
+        writer_kwargs["strategy_feedback_map"] = strategy_feedback_map
         writer_kwargs["rejected_strategy"] = rejected_strategy
         writer_kwargs["failure_constraints"] = failure_constraints
         return self.generate_ensemble(**writer_kwargs)
 
-    def _build_regeneration_feedback(self, *, previous_attempt: dict, director_feedback: str, attempt_number: int) -> str:
+    def _build_regeneration_feedback(
+        self, *, previous_attempt: dict, director_feedback: str, attempt_number: int
+    ) -> str:
         """Director feedback와 이전 시도 히스토리를 재시도 prompt용으로 합친다."""
         history_feedback = self._build_retry_history_feedback(previous_attempt)
         reuse_feedback = _build_retry_reuse_feedback_block(previous_attempt)
@@ -1088,19 +1184,20 @@ class ChiefWriter(BaseAgent):
             enhanced_feedback += f"\n\n{history_feedback}"
         return enhanced_feedback
 
-    def _build_regeneration_strategy_hints(self, previous_attempt: dict) -> tuple[str, str, str]:
+    def _build_regeneration_strategy_hints(self, previous_attempt: dict) -> tuple[str, str, str, dict[str, str]]:
         """재생성 시 사용할 실패 제약과 전략 힌트를 정규화한다."""
         failure_constraints = ""
         if previous_attempt.get("action_items"):
             items = previous_attempt.get("action_items", [])
             failure_constraints = "이전 REJECT 사유:\n" + "\n".join([f"- {item}" for item in items])
         rejected_strategy = str(previous_attempt.get("selected_strategy_key", "") or "")
-        strategy_feedback = previous_attempt.get("selection_reason", "")
-        if isinstance(strategy_feedback, dict):
-            strategy_feedback = json.dumps(strategy_feedback, ensure_ascii=False)
-        if not isinstance(strategy_feedback, str):
-            strategy_feedback = str(strategy_feedback or "")
-        return failure_constraints, rejected_strategy, strategy_feedback
+        strategy_feedback_map = _normalize_strategy_feedback_map(previous_attempt.get("strategy_feedback_map"))
+        strategy_feedback = strategy_feedback_map.get(rejected_strategy, "")
+        if not strategy_feedback:
+            strategy_feedback = _normalize_strategy_feedback_value(previous_attempt.get("selection_reason", ""))
+            if rejected_strategy and strategy_feedback:
+                strategy_feedback_map[rejected_strategy] = strategy_feedback
+        return failure_constraints, rejected_strategy, strategy_feedback, strategy_feedback_map
 
     # =========================================================================
     # [TF-23] InPlace — LLM 1회 호출로 원고 국소 수정
@@ -1212,7 +1309,14 @@ class ChiefWriter(BaseAgent):
 
         has_payload = any(
             normalized.get(key)
-            for key in ("patch_targets", "must_fix", "do_not_regress", "success_condition", "target_kind", "evidence_summary")
+            for key in (
+                "patch_targets",
+                "must_fix",
+                "do_not_regress",
+                "success_condition",
+                "target_kind",
+                "evidence_summary",
+            )
         )
         return normalized if has_payload else {}
 
@@ -1655,7 +1759,6 @@ class ChiefWriter(BaseAgent):
 
         return None, focus, fallback_reason, structural_attempted
 
-
     def _build_inplace_patch_prompt(
         self,
         *,
@@ -1812,7 +1915,9 @@ class ChiefWriter(BaseAgent):
             fallback_reason=str(existing_trace.get("fallback_reason") or fallback_reason),
             focus=trace_focus,
             structural_attempted=bool(existing_trace.get("structural_attempted") or structural_attempted),
-            target_kind=str(existing_trace.get("target_kind") or target_kind or normalized_fix_pack.get("target_kind") or ""),
+            target_kind=str(
+                existing_trace.get("target_kind") or target_kind or normalized_fix_pack.get("target_kind") or ""
+            ),
             patch_target_records=effective_patch_target_records,
             repair_trace=effective_repair_trace,
         )
@@ -1875,7 +1980,9 @@ class ChiefWriter(BaseAgent):
             existing_trace = dict(getattr(self, "_last_inplace_patch_trace", {}) or {})
             self._set_last_inplace_patch_trace(
                 patch_strategy="inplace_patch",
-                patch_targets=list(existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or []),
+                patch_targets=list(
+                    existing_trace.get("patch_targets") or normalized_fix_pack.get("patch_targets") or []
+                ),
                 fallback_reason=local_edit_attempt.failure_reason,
                 focus=str(existing_trace.get("focus") or focus),
                 structural_attempted=bool(existing_trace.get("structural_attempted") or structural_attempted),
@@ -2005,7 +2112,7 @@ class ChiefWriter(BaseAgent):
         return enhanced_feedback
 
     @staticmethod
-    def _build_patch_with_feedback_retry_args(previous_attempt: dict) -> tuple[str, str, str]:
+    def _build_patch_with_feedback_retry_args(previous_attempt: dict) -> tuple[str, str, str, dict[str, str]]:
         failure_constraints = ""
         if previous_attempt.get("action_items"):
             items = previous_attempt.get("action_items", [])
@@ -2015,12 +2122,13 @@ class ChiefWriter(BaseAgent):
             failure_constraints += f"\n[수정 범위 근거]\n{fix_scope_reasoning}"
 
         rejected_strategy = str(previous_attempt.get("selected_strategy_key", "") or "")
-        strategy_feedback = previous_attempt.get("selection_reason", "")
-        if isinstance(strategy_feedback, dict):
-            strategy_feedback = json.dumps(strategy_feedback, ensure_ascii=False)
-        if not isinstance(strategy_feedback, str):
-            strategy_feedback = str(strategy_feedback or "")
-        return failure_constraints, rejected_strategy, strategy_feedback
+        strategy_feedback_map = _normalize_strategy_feedback_map(previous_attempt.get("strategy_feedback_map"))
+        strategy_feedback = strategy_feedback_map.get(rejected_strategy, "")
+        if not strategy_feedback:
+            strategy_feedback = _normalize_strategy_feedback_value(previous_attempt.get("selection_reason", ""))
+            if rejected_strategy and strategy_feedback:
+                strategy_feedback_map[rejected_strategy] = strategy_feedback
+        return failure_constraints, rejected_strategy, strategy_feedback, strategy_feedback_map
 
     def patch_with_feedback(
         self,
@@ -2070,12 +2178,13 @@ class ChiefWriter(BaseAgent):
             attempt_number=attempt_number,
             previous_attempt=previous_attempt,
         )
-        failure_constraints, rejected_strategy, strategy_feedback = self._build_patch_with_feedback_retry_args(
-            previous_attempt
+        failure_constraints, rejected_strategy, strategy_feedback, strategy_feedback_map = (
+            self._build_patch_with_feedback_retry_args(previous_attempt)
         )
 
         writer_kwargs["director_feedback"] = enhanced_feedback
         writer_kwargs["strategy_specific_feedback"] = strategy_feedback
+        writer_kwargs["strategy_feedback_map"] = strategy_feedback_map
         writer_kwargs["rejected_strategy"] = rejected_strategy
         writer_kwargs["single_strategy"] = rejected_strategy
         writer_kwargs["failure_constraints"] = failure_constraints

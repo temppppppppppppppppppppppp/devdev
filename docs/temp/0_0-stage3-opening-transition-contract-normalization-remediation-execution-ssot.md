@@ -1,20 +1,21 @@
 # 0_0 Stage3 Opening Transition Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (re-audited against the live `eac3386c` workspace before implementation start on 2026-04-07; the first bounded tranche then landed by making Stage3 normalize a structured top-level `opening_transition` contract and by teaching Stage4 context/IFC/V75-D intake surfaces to consume that contract without reopening broad generator retuning or Stage4 opening rewrites)
+Status: partially_realized (the first bounded `opening_transition.type` normalization tranche remains landed, the reopened 2026-04-11 sibling follow-up is also landed on the live workspace, and the 2026-04-12 live rerun support slice is now likewise landed: opening authority for `arc_start_state` now outranks stale prior-blueprint opening state, the investment `capital_continuity_packet` now applies capital-boundary filtering so future-episode finance events do not leak into the current packet, and the compiler now surfaces bounded immediate-next-day / season-truth / blocked-scene-family carryover truth for the ep2 -> ep3 seam; proof remains pending, while broader retuning remains deferred)
 Canonical Path: `docs/2026-04-02/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
 - Baseline Dirty Summary: `clean`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `2026-04-07 bounded first tranche landed across `stage_cross_stage_contract.py`, `response_schemas.py`, `unified_blueprint_validator.py`, `stage4_immutable_fact_contract.py`, `stage4_context_builder.py`, and `stage4_orchestrator.py`; Stage3 now normalizes `opening_transition.type` as `direct_continuation` / `explicit_transition` / `jump_opening`, and the next unopened code lane shifts to `0_0-stage4-interview-round-owner-surface-reduction-remediation` while canary/live proof remains deferred`
+- Resume Commit: `2b7cb64f2d1fe2cd1152806a5cc37795609f9755`
+- Resume Drift Summary: `the first bounded `opening_transition` contract tranche remains landed on current main, the live workspace now also lands the reopened opening-authority / capital-boundary filtering follow-up, and the 2026-04-12 live rerun support slice is now also landed through compiler-side immediate-next-day / season-truth / blocked-scene-family carryover surfacing while stale 2026-04-11 backup work remains non-authoritative`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage34-ep2-focused-bounded-canary-audit.md`
 - `docs/2026-04-02/0_0-stage34-ep2-single-episode-demo-run-audit.md`
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md`
 - `docs/2026-04-07/cross-pc-implementation-handoff-context-2026-04-07.md`
 - `docs/2026-04-01/active-temp-execution-roadmap.md`
+- `docs/2026-04-11/stage23-current-main-static-parallel-survey.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage34-ep2-focused-bounded-canary-evidence.json`
 - `docs/2026-04-02/0_0-stage34-ep2-single-episode-demo-run-evidence.json`
@@ -118,10 +119,12 @@ Tranche 1 기준:
 3. Stage4는 이 타입을 prose inference가 아니라 structured intake로 받는다.
 4. 기존 `start_location / time_flow / scene_1.location / scene_1.title` 의미와 충돌하지 않는다.
 5. broad Stage3 retuning이나 Stage4 rewrite 없이 bounded transport만 landed한다.
+6. current-arc `arc_start_state` opening authority가 stale `prev_blueprint` opening state에 다시 눌리지 않는다.
+7. investment `capital_continuity_packet`이 future-episode `capital_changes` / `financial_events`를 현재 화 authority처럼 조기 노출하지 않는다.
 
 현재 판정:
 
-- `1-5`: achieved
+- `1-7`: achieved
 - runtime proof / closure: deferred
 
 ## 9. Queue Placement
@@ -131,15 +134,15 @@ Tranche 1 기준:
 - active proof-deferred Stage4 front stack 아래
 - `0_0-stage3-contract-tightening-remediation` 아래
 - `0_0-stage234-cross-stage-contract-normalization-remediation` 다음 bounded child realization으로 처리됨
-
-이 tranche landed 이후, queue order 자체는 바꾸지 않지만 `next unopened code lane`은 `0_0-stage4-interview-round-owner-surface-reduction-remediation`로 이동한다.
+  - live-workspace 기준으로는 sibling follow-up까지 landed한 partial lane이며, 다음 useful artifact는 fresh proof wave다
 
 ## 10. Next Action
 
 - 이 lane은 partial로 유지한다.
-- fresh canary/live proof를 이 lane 안에서 열지 않는다.
-- broad Stage3 prompt retuning은 다음 tranche로 넘긴다.
-- closure proof를 다시 당기지 않는다면, 다음 unopened code lane은 `0_0-stage4-interview-round-owner-surface-reduction-remediation`다.
+- fresh canary/live proof가 기본 다음 액션이었고, 2026-04-12 live rerun follow-up bounded sibling role is now also landed: the ep2 -> ep3 seam now carries tighter immediate-next-day / season-truth / blocked-scene-family support so replayed morning openings are not left to downstream Stage4 rejection alone.
+  - bounded opening-authority / capital-boundary filtering follow-up은 이미 landed 상태로 취급한다.
+- broad Stage3 prompt retuning은 proof 이후 tranche로 넘긴다.
+  - parent `0_0-stage3-contract-tightening-remediation`와 함께 같은 proof wave 결과를 보고 다음 Stage3 opening follow-up 필요성을 다시 판정한다.
 
 ## 11. 3-Pass Audit
 
@@ -159,3 +162,69 @@ Pass 3. Execution/Readability
 - next unopened lane 이동과 defer 잔여분을 명시
 
 Confidence: `97%`
+
+## 12. 2026-04-11 Current-Main Static Re-Audit Upgrade
+
+Evidence basis:
+
+- `docs/2026-04-11/stage23-current-main-static-parallel-survey.md`
+- `modules/domain/agents/blueprint_constraint_compiler.py`
+- `modules/core/stage3_orchestrator.py`
+- direct Stage2 -> Stage3 boundary guardrail tests on current `main@2b7cb64f`
+
+Current-main findings:
+
+1. `arc_start_state` is applied and can then be weakened again by stale `prev_blueprint.protagonist_state`.
+2. `capital_continuity_packet` still reads finance event families without episode-boundary filtering.
+
+Execution consequence:
+
+- keep this as the owner for bounded opening-authority tightening rather than opening a new queue lane
+- land, in order:
+  1. authoritative `arc_start_state` intake for opening-state inheritance
+  2. episode-boundary filtering for investment capital continuity packet construction
+- only after that should proof or broader retuning become the next question inside this lane
+
+Confidence for this upgrade: `96%`
+
+## 13. 2026-04-11 Live-Workspace Opening-Authority Landing Update
+
+Evidence basis:
+
+- `modules/domain/agents/blueprint_constraint_compiler.py`
+- `tests/test_stage3_blueprint_state_precision_guardrail.py`
+- `tests/test_stage3_clarity_density_wave1.py`
+- `tests/test_stage3_npc_capital_carryforward_guardrail.py`
+
+Live-workspace closures:
+
+1. `arc_start_state` opening authority now outranks stale prior-blueprint protagonist-state inheritance.
+2. opening location / equipment / injuries now preserve current-arc authority instead of being re-weakened by stale inherited state.
+3. investment capital continuity now filters future-episode `capital_changes` / `financial_events` rather than leaking them into the current episode packet.
+
+Execution consequence:
+
+- keep this lane partial, but treat the previously reopened bounded sibling follow-up as landed on the live workspace
+- make the next action the fresh proof wave rather than another immediate Stage3 opening patch
+
+## 12. 2026-04-12 EP3 Live-Run Follow-up Role Clarification
+
+Source docs:
+
+- `docs/2026-04-12/stage234-ep3-continuity-replay-season-truth-live-run-followup-parallel-survey.md`
+- `docs/2026-04-12/stage234-ep3-continuity-replay-season-truth-live-run-followup-3pass-audit.md`
+
+Execution consequence:
+
+1. keep the already landed opening-authority / capital-boundary filtering tranche as landed
+2. treat the bounded sibling support slice as now landed inside `modules/domain/agents/blueprint_constraint_compiler.py`
+3. record the landed sibling-owned support surfaces:
+   - immediate-next-day opening truth
+   - season/timeline carryover clarity (`2006년 1월` / winter context)
+   - anti-replay opening disambiguation when the previous episode already consumed the analogous morning-start family
+   - prompt-visible `episode_progression_packet` carryover for downstream Stage3 generation
+4. keep the Stage3 parent lane as the primary owner of the fail-only ep3 slice; this sibling only supports the opening/progression seam
+5. make the next action the bounded proof wave / rerun rather than another immediate Stage3 opening patch
+- keep broader prompt retuning and stronger mismatch hardening deferred behind proof
+
+Confidence for this landing update: `97%`

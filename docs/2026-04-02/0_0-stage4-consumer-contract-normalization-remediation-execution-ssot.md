@@ -1,14 +1,14 @@
 # 0_0 Stage4 Consumer-Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (aggregate Stage4 wave active; flashback, NpcDrift, fix-pack provenance, post-pass state owner-boundary, intake authority, and sink-alignment follow-up patches are now runtime-backed; 2026-04-03 fresh full run plus r2 Stage4-only sinkproof prove ep2 can PASS, the earlier metadata/sink hard-fail interpretation no longer fronts the queue, the 2026-04-06 revalidation kept the next bounded debt on numeric asset authority / carryover owner-boundary rather than replay-first residuals, and the 2026-04-07 bounded post-pass numeric carryover refresh patch landed with focused static validation while fresh canary/live proof remains explicitly deferred by operator)
+Status: partially_realized (proof-pending front Stage4 consumer verifier lane; flashback, NpcDrift, fix-pack provenance, post-pass state owner-boundary, intake authority, and sink-alignment follow-up patches remain landed or historically runtime-positive, the 2026-04-11 current-main static refresh reopens no new Stage4 P0/P1, the older consumer-P1 wording is stale-likely under current code/test evidence, and the 2026-04-12 live rerun follow-up now says the active ep3 blocker is upstream Stage3 replay / season-truth drift while this lane remains the downstream runtime closure/demotion check)
 Canonical Path: `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `09a7b478c2a2c16d708cc041aaa6e194278e7f9b`
 - Baseline Dirty Summary: `dirty: active Stage4 docs/code/test deltas, prepared canary targets, temp roadmap/queue active`
-- Resume Commit: `5a2ef92ab04e46d47ee73b9d56d3e546544576c0`
-- Resume Drift Summary: `2026-04-07 bounded Stage4 consumer implementation landed in post-pass runtime: carryover refresh now accepts structured numeric truth from actual_truth plus director fallback, promotion metadata is persisted in state_truth_owner_contract, focused pytest/ruff/py_compile validation closed, and operator explicitly deferred fresh canary/live proof so the lane stays partial pending runtime measurement`
+- Resume Commit: `2b7cb64f2d1fe2cd1152806a5cc37795609f9755`
+- Resume Drift Summary: `current main@2b7cb64f is authoritative after the stale-base reset; the 2026-04-11 static refresh reopens no new Stage4 P0/P1, marks the older consumer-P1 wording stale-likely under current code/test evidence, and keeps this lane proof-pending at the front of the merged proof wave because Stage4 still owns runtime closure/demotion checks on numeric carryover authority`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-bounded-survey.md`
@@ -78,7 +78,7 @@ This wave is not a global Stage4 redesign. It is an aggregate contract-normaliza
 - the fresh full run and the `r2` Stage4-only sinkproof run both finish with clean final PASS rows, while the failed `r2` round-1 pathology is typed as `contradiction_type = 수치`
 - archived and current artifact truth now show a split numeric ladder: arc-level `20억` band, blueprint/manuscript `200억`, and resumed ep1 FactLedger `1천만원`
 - The remaining issue is no longer “Stage4 cannot pass or persist final authority.” It is “finish bounded numeric asset authority / carryover owner-boundary follow-up without prematurely reopening upstream hierarchy work.”
-- 2026-04-06 Opus revalidation confirmed the remaining live P1 is a `baseline promotion gap`, not a false PASS or final-sink failure: legitimately changed numeric truth can still be re-flagged at the next-episode boundary when carryover baseline ownership is not explicitly promoted.
+- 2026-04-06 Opus revalidation framed the then-live P1 as a `baseline promotion gap`, not a false PASS or final-sink failure: legitimately changed numeric truth could still be re-flagged at the next-episode boundary when carryover baseline ownership was not explicitly promoted; the 2026-04-11 current-main static refresh now treats that older P1 wording as stale-likely pending fresh proof rather than as a newly reopened P1.
 
 ## 3. Scope
 
@@ -396,17 +396,17 @@ Pass 3, execution and readability:
 
 Confidence: `96%`
 
-## 15. 2026-04-06 Opus P0-P1 Revalidation: Numeric Carryover Promotion Gap
+## 15. 2026-04-06 Opus P0-P1 Revalidation: Historical Numeric Carryover Promotion Gap Framing
 
 The 2026-04-06 global P0-P1 Opus survey did not change Stage4 queue order, but it did sharpen the active consumer-side seam into one bounded execution statement.
 
 Queue semantics remain unchanged:
 
-- status stays `partial`
+- status stays `partial / proof-pending`
 - roadmap priority stays unchanged
 - this remains the front Stage4 consumer lane above the repair-contract substrate lane
 
-Confirmed live P1:
+Historical P1 framing:
 
 - `Stage4ContextBuilder` injects carryover baseline numeric authority into the writer prompt
 - `stage4_post_pass_runtime` persists `state_truth_owner_contract` with `fact_ledger_carryover_baseline` ownership
@@ -415,7 +415,7 @@ Confirmed live P1:
 
 Execution consequence:
 
-- this lane remains the correct front owner for `numeric asset authority / carryover owner-boundary`
+- this lane remains the correct front owner for `numeric asset authority / carryover owner-boundary` while proof is pending
 - the narrowest owner set stays:
   - `modules/core/stage4_context_builder.py`
   - `modules/core/stage4_post_pass_runtime.py`
@@ -429,10 +429,30 @@ Execution consequence:
 
 Revalidation note:
 
-- static evidence is sufficient to keep this as a live P1 execution target
-- fresh run is still useful for runtime impact measurement, but not required to prove the seam exists
+- static evidence is sufficient to keep this as the front Stage4 proof owner
+- static evidence is not sufficient to reopen or confirm a new current-main P1; fresh proof is required to decide runtime demotion on current HEAD
 
-## 16. 2026-04-09 Static Validity Recheck: Stale-Likely P1 Note
+## 16A. 2026-04-12 EP3 Live-Run Follow-up Boundary Update
+
+Source docs:
+
+- `docs/2026-04-12/stage234-ep3-continuity-replay-season-truth-live-run-followup-parallel-survey.md`
+- `docs/2026-04-12/stage234-ep3-continuity-replay-season-truth-live-run-followup-3pass-audit.md`
+
+3-pass result:
+
+- Pass 1: the current rerun shows Stage4 still doing useful downstream verification rather than fronting the same old retry-lane bug.
+- Pass 2: the old ep2 truth-pin family appears improved, while the new live blocker comes from upstream Stage3 replay/progression drift and canonical institution drift.
+- Pass 3: the safe queue move is to keep Stage4 consumer as verifier-first and move the next active patch owner upstream to Stage3.
+
+Execution consequence:
+
+1. keep this lane partial and verification-facing
+2. do not open another Stage4-first retry-only patch from the current ep3 evidence
+3. wait for the bounded Stage3 fail-only slice on replay/progression truth
+4. use the next rerun to confirm that Stage4 now clears once the upstream Stage3 family is fixed
+
+## 16. 2026-04-09 -> 2026-04-11 Static Validity Recheck: Stale-Likely Consumer P1 Note
 
 A current-HEAD static recheck against the landed code and focused tests no longer reproduces section 15 exactly as written.
 
@@ -447,12 +467,14 @@ Recheck anchors:
 Current reading:
 
 - the older statement that the post-pass path "still does not autonomously promote manuscript-proven numeric change into the next carryover baseline owner boundary" is now stale-likely under static review
-- static review alone still cannot prove full demotion, because the operator-deferred fresh canary/live proof has not yet re-measured the next-episode boundary on current HEAD
+- the current static refresh reopens no new Stage4 P0/P1 on this topic
+- Stage4 still stays front-ranked because it owns the runtime closure/demotion check for the numeric carryover seam on the next fresh proof wave
+- static review alone still cannot prove full demotion or closure, because the operator-deferred fresh canary/live proof has not yet re-measured the next-episode boundary on current HEAD
 - queue order therefore remains unchanged for now; treat this as `stale-likely / runtime-demotion-pending`, not as a fresh broad implementation reopen
 - confidence after the 2026-04-06 re-audit remains `97%`
 
 2026-04-07 implementation delta:
 
 - the previous zero-promotion path is no longer the current code state for structured asset-family fields: post-pass now refreshes carryover baseline candidates from `actual_truth` first and `final_state_updates` fallback, and records promotion metadata in the owner contract
-- operator explicitly deferred fresh canary/live proof, so this lane remains open for runtime measurement rather than broad new implementation inside the same topic
-- if runtime proof continues to stay deferred, keep queue order unchanged and use fresh proof to decide whether `0_0-stage4-repair-contract-normalization-remediation` is still a true next code lane or whether the older consumer P1 framing should be demoted; do not reinterpret this as Stage4 consumer closure
+- operator explicitly deferred fresh canary/live proof, so this lane remains proof-pending for runtime measurement rather than broad new implementation inside the same topic
+- until that proof runs, keep queue order unchanged and use fresh proof to decide whether the older consumer P1 framing can be demoted and whether `0_0-stage4-repair-contract-normalization-remediation` is still the next active Stage4 substrate lane; do not reinterpret this as Stage4 consumer closure or as a newly reopened P1

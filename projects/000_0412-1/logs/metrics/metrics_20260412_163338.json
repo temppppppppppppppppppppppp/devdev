@@ -1,0 +1,82 @@
+{
+  "session_id": "20260412_163338",
+  "start_time": "2026-04-12T16:33:38.766578",
+  "end_time": "2026-04-12T17:14:36.818401",
+  "total_calls": 34,
+  "successful_calls": 34,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 228463,
+  "total_cost_usd": 0.726332,
+  "agent_stats": {
+    "StateExtractor": {
+      "agent_name": "StateExtractor",
+      "total_calls": 1,
+      "successful_calls": 1,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 50500.22625923157,
+        "min_ms": 50500.22625923157,
+        "max_ms": 50500.22625923157,
+        "p50_ms": 50500.22625923157,
+        "p90_ms": 50500.22625923157,
+        "p99_ms": 50500.22625923157
+      }
+    },
+    "BlueprintEnsembleGenerator": {
+      "agent_name": "BlueprintEnsembleGenerator",
+      "total_calls": 14,
+      "successful_calls": 14,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 68236.1239024571,
+        "min_ms": 37028.57327461243,
+        "max_ms": 101916.21923446655,
+        "p50_ms": 65484.8153591156,
+        "p90_ms": 83656.50599002838,
+        "p99_ms": 99543.13139438629
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 19,
+      "successful_calls": 19,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 42929.66392165736,
+        "min_ms": 32221.986532211304,
+        "max_ms": 53961.12537384033,
+        "p50_ms": 43049.34477806091,
+        "p90_ms": 50092.00882911682,
+        "p99_ms": 53749.15932178497
+      }
+    }
+  },
+  "model_stats": {
+    "vertexai:gemini-2.5-flash": {
+      "input_tokens": 5637,
+      "output_tokens": 3303,
+      "cached_tokens": 0,
+      "thinking_tokens": 4095,
+      "total_tokens": 8940,
+      "cost_usd": 0.009949
+    },
+    "vertexai:gemini-2.5-pro": {
+      "input_tokens": 169011,
+      "output_tokens": 50512,
+      "cached_tokens": 0,
+      "thinking_tokens": 114885,
+      "total_tokens": 219523,
+      "cost_usd": 0.716384
+    }
+  }
+}

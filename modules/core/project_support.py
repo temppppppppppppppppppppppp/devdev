@@ -106,6 +106,26 @@ def load_style_guide_anchor(project) -> dict[str, Any]:
     return raw_style if isinstance(raw_style, dict) else {}
 
 
+def load_style_guide_file(project) -> dict[str, Any]:
+    if project is None:
+        return {}
+
+    try:
+        project_paths = getattr(project, "paths", None)
+        project_root = getattr(project_paths, "root", None)
+        if not project_root:
+            return {}
+        style_path = Path(project_root) / "stage0_output" / "style_guide.json"
+        if not style_path.exists():
+            return {}
+        parsed = json.loads(style_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.debug("style_guide file load failed: %s", exc)
+        return {}
+
+    return parsed if isinstance(parsed, dict) else {}
+
+
 def resolve_style_dialogue_ratio_target(
     style_data: dict[str, Any] | None = None,
     *,
@@ -193,11 +213,11 @@ def resolve_project_pov_contract(project) -> dict[str, str]:
     style_data = load_style_guide_anchor(project)
     primary_pov = resolve_project_bible_pov(project)
     selected_primary_pov = str(style_data.get("selected_primary_pov", "") or "").strip() or primary_pov
-    extracted_pov = str(style_data.get("extracted_pov", "") or "").strip() or str(style_data.get("pov", "") or "").strip()
+    extracted_pov = (
+        str(style_data.get("extracted_pov", "") or "").strip() or str(style_data.get("pov", "") or "").strip()
+    )
     effective_pov = (
-        str(style_data.get("effective_primary_pov", "") or "").strip()
-        or selected_primary_pov
-        or extracted_pov
+        str(style_data.get("effective_primary_pov", "") or "").strip() or selected_primary_pov or extracted_pov
     )
     external_policy = normalize_external_pov_insert_policy(
         str(style_data.get("external_pov_insert_policy", "") or "").strip()
@@ -327,9 +347,10 @@ def inspect_project_support_assets(project_dir: Path) -> dict[str, dict[str, Any
     work_guard_summary = load_work_guard_summary(project_dir)
     author_ready = author_directives.exists() and author_directives.stat().st_size > 0
     style_ready = style_guide.exists()
-    effective_pov = str(style_payload.get("effective_primary_pov", "") or "").strip() or str(
-        style_payload.get("pov", "") or ""
-    ).strip()
+    effective_pov = (
+        str(style_payload.get("effective_primary_pov", "") or "").strip()
+        or str(style_payload.get("pov", "") or "").strip()
+    )
     extracted_pov = str(style_payload.get("extracted_pov", "") or "").strip()
     external_policy = normalize_external_pov_insert_policy(
         str(style_payload.get("external_pov_insert_policy", "") or "").strip(),

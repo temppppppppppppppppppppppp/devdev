@@ -1,4 +1,3 @@
-from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -74,3 +73,22 @@ def test_handle_main_process_error_writes_log_and_shutdown(tmp_path):
     assert "RuntimeError: boom" in contents
     app._shutdown_app.assert_called_once_with()
     app.ui.log.assert_any_call(f"📝 에러 로그 저장: {error_log}")
+
+
+def test_run_main_process_clears_menu_surface_before_dispatch():
+    console = SimpleNamespace(clear=MagicMock())
+    clear_helper = MagicMock(side_effect=lambda: main_a.SovereignApp._clear_main_menu_surface_after_choice(app))
+    app = SimpleNamespace(
+        selected_genre={"name": "투자"},
+        ui=SimpleNamespace(menu=MagicMock(return_value="2"), console=console),
+        _prepare_main_process_menu=MagicMock(return_value=({"Stage 2 (Arcs)": True}, {"2": "Stage 2"})),
+        _dispatch_main_process_choice=MagicMock(return_value=False),
+        _clear_main_menu_surface_after_choice=clear_helper,
+    )
+
+    main_a.SovereignApp._run_main_process(app)
+
+    app.ui.menu.assert_called_once_with({"2": "Stage 2"})
+    clear_helper.assert_called_once_with()
+    console.clear.assert_called_once_with()
+    app._dispatch_main_process_choice.assert_called_once_with("2", {"Stage 2 (Arcs)": True})

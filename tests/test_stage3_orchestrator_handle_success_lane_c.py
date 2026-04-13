@@ -43,7 +43,8 @@ def test_lane_c_handle_success_short_circuits_on_persistence_failure():
 
     assert result == persistence_failure
     orch._record_stage3_success_completion.assert_not_called()
-    orch._record_stage3_success_observability.assert_called_once()
+    orch._build_stage3_success_runtime_payload.assert_not_called()
+    orch._record_stage3_success_observability.assert_not_called()
 
 
 def test_lane_c_persist_stage3_success_blueprint_returns_break_on_commit_failure():

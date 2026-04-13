@@ -4,6 +4,7 @@
 
 # === Core (필수) ===
 google-genai>=1.60.0            # Gemini API (google.genai SDK)
+anthropic>=0.94.0               # Claude API (Anthropic SDK)
 rich>=13.0                       # 콘솔 UI (터미널 출력)
 python-dotenv>=1.0               # .env 환경변수 로드
 

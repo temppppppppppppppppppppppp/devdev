@@ -14,6 +14,175 @@ from modules.core.llm_generate import generate_content_via_router
 from modules.core.prompt_loader import PromptLoader
 from modules.core.scene_obligation_heuristics import measure_manuscript_scene_materialization
 
+_GENERIC_LOCATION_TOKENS = {
+    "집",
+    "본가",
+    "저택",
+    "가옥",
+    "사택",
+    "저",
+    "본채",
+    "사무실",
+    "오피스",
+    "집무실",
+    "현관",
+    "복도",
+    "서재",
+    "거실",
+}
+_GENERIC_ROLE_TOKENS = {
+    "집사",
+    "가사도우미",
+    "가사",
+    "도우미",
+    "가정부",
+    "관리인",
+    "하우스키퍼",
+}
+_OBJECT_SURFACE_MODIFIERS = {
+    "은색",
+    "구형",
+    "낡은",
+    "오래된",
+    "녹슨",
+    "검은",
+    "검정",
+    "블랙",
+    "회색",
+    "회색빛",
+}
+
+
+def _normalize_surface_tokens(text: object) -> list[str]:
+    return [tok for tok in re.findall(r"[0-9A-Za-z가-힣]+", " ".join(str(text or "").strip().lower().split())) if tok]
+
+
+def _normalize_compact(text: object) -> str:
+    return re.sub(r"\s+", "", " ".join(str(text or "").strip().lower().split()))
+
+
+def _is_abbreviation_surface(registered: str, variant: str) -> bool:
+    """variant가 registered의 약칭(부분 포함)인지 확인."""
+    r, v = registered.strip(), variant.strip()
+    if not r or not v:
+        return False
+    if (v in r or r in v) and abs(len(r) - len(v)) / max(len(r), len(v)) >= 0.15:
+        return True
+    r_tokens = [tok for tok in r.split() if tok]
+    v_tokens = [tok for tok in v.split() if tok]
+    if r_tokens and v_tokens:
+        overlap = set(r_tokens) & set(v_tokens)
+        shorter = min(len(r_tokens), len(v_tokens))
+        if shorter > 0 and len(overlap) / shorter >= 0.7:
+            return True
+    return False
+
+
+def _canonicalize_location_alias(text: object) -> str:
+    raw = " ".join(str(text or "").strip().lower().split())
+    if not raw:
+        return ""
+    alias_map = {
+        "office": "사무실",
+        "오피스": "사무실",
+        "집무실": "사무실",
+        "사무실": "사무실",
+    }
+    for source, canonical in alias_map.items():
+        raw = raw.replace(source, canonical)
+    return raw
+
+
+def _canonicalize_concept_alias(text: object) -> str:
+    raw = _normalize_compact(text)
+    if not raw:
+        return ""
+    if "리먼브라더스" in raw and ("파산" in raw or "사태" in raw):
+        return "lehman_event"
+    if any(token in raw for token in ("원유", "유가", "wti")) and any(
+        token in raw for token in ("랠리", "급등", "상승")
+    ):
+        return "oil_price_surge"
+    return ""
+
+
+def _specific_location_tokens(text: object) -> set[str]:
+    return {tok for tok in _normalize_surface_tokens(text) if tok not in _GENERIC_LOCATION_TOKENS}
+
+
+def _is_strong_location_alias(registered: str, variant: str) -> bool:
+    reg_specific = _specific_location_tokens(registered)
+    var_specific = _specific_location_tokens(variant)
+    if not reg_specific or not var_specific:
+        return False
+    return reg_specific == var_specific or reg_specific <= var_specific or var_specific <= reg_specific
+
+
+def _is_generic_location_surface(registered: str, variant: str) -> bool:
+    reg_tokens = set(_normalize_surface_tokens(registered))
+    var_tokens = set(_normalize_surface_tokens(variant))
+    reg_specific = _specific_location_tokens(registered)
+    var_specific = _specific_location_tokens(variant)
+    reg_generic = reg_tokens - reg_specific
+    var_generic = var_tokens - var_specific
+    return (bool(reg_specific) and not var_specific and bool(var_generic & _GENERIC_LOCATION_TOKENS)) or (
+        bool(var_specific) and not reg_specific and bool(reg_generic & _GENERIC_LOCATION_TOKENS)
+    )
+
+
+def _is_generic_role_surface(registered: str, variant: str) -> bool:
+    reg_tokens = set(_normalize_surface_tokens(registered))
+    var_tokens = set(_normalize_surface_tokens(variant))
+    return (
+        bool(reg_tokens)
+        and bool(var_tokens)
+        and reg_tokens <= _GENERIC_ROLE_TOKENS
+        and var_tokens <= _GENERIC_ROLE_TOKENS
+    )
+
+
+def _is_object_surface_variant(registered: str, variant: str) -> bool:
+    reg_core = [tok for tok in _normalize_surface_tokens(registered) if tok not in _OBJECT_SURFACE_MODIFIERS]
+    var_core = [tok for tok in _normalize_surface_tokens(variant) if tok not in _OBJECT_SURFACE_MODIFIERS]
+    return bool(reg_core) and reg_core == var_core and len(reg_core) <= 2
+
+
+def _downgrade_mismatch(mismatch: dict, *, note: str) -> dict:
+    downgraded = dict(mismatch)
+    downgraded["severity"] = "MINOR"
+    downgraded["normalization_note"] = note
+    return downgraded
+
+
+def _derive_v61_decision(mismatches: list[dict]) -> str:
+    critical_count = sum(1 for mismatch in mismatches if str(mismatch.get("severity", "")).upper() == "CRITICAL")
+    major_count = sum(1 for mismatch in mismatches if str(mismatch.get("severity", "")).upper() == "MAJOR")
+    minor_count = sum(1 for mismatch in mismatches if str(mismatch.get("severity", "")).upper() == "MINOR")
+    if critical_count >= 1 or major_count >= 3:
+        return "REJECT"
+    if major_count >= 1 or minor_count >= 2:
+        return "WARNING"
+    return "PASS"
+
+
+def _build_v61_fix_instructions(mismatches: list[dict]) -> str:
+    if not mismatches:
+        return ""
+    replacements: list[str] = []
+    seen: set[tuple[str, str]] = set()
+    for mismatch in mismatches:
+        registered = str(mismatch.get("registered_name", "") or "").strip()
+        variant = str(mismatch.get("found_variant", "") or "").strip()
+        pair = (registered, variant)
+        if not registered or not variant or registered == variant or pair in seen:
+            continue
+        seen.add(pair)
+        replacements.append(f"'{variant}'은 '{registered}'으로")
+    if not replacements:
+        return "Entity Registry에 등록된 정식 명칭으로 통일하십시오."
+    joined = ", ".join(replacements[:6])
+    return f"Entity Registry에 등록된 정식 명칭으로 통일하십시오. {joined} 수정해야 합니다."
+
 
 class DirectorContinuityValidator:
     """
@@ -94,10 +263,19 @@ class DirectorContinuityValidator:
 2. **조직/문파명**: 등록된 명칭과 다른 표기 사용 시 WARNING
    - 예: '철혈문'이 등록되었는데 '철혈파'로 표기
 3. **장소명**: 동일 장소가 다른 명칭으로 표기 시 MINOR
+   - 같은 referent의 표면형 차이(예: '서울 성북동 본가' vs '저택')는 곧바로 REJECT 근거로 과대판정하지 말고,
+     고유 지시어가 같으면 동일 장소일 가능성을 우선 검토
 4. **물품명**: 등록된 무기/아이템이 다른 이름으로 표기 시 MAJOR
    - 예: '백근도'가 등록되었는데 '거구도'로 표기
 5. **기술/무공명**: 등록된 기술이 다른 이름으로 표기 시 MAJOR
    - 예: '이화접목'이 등록되었는데 '중검무봉'으로 표기
+ 6. **개념/사건명**: 동일 사건/시장 이벤트의 표면형 차이는 referent가 같으면 과대판정하지 말 것
+   - 예: '리먼 브라더스 사태' vs '리먼 브라더스의 파산'
+   - 예: '유가 급등' vs '원유 랠리'
+
+추가 주의:
+- 고유명 없는 generic role 표면형('집사', '가사도우미')은 단독으로는 강한 불일치 근거가 아니다.
+- 동일 referent 여부가 불명확하면 경고 수준으로 남기고, lexical 표면 차이만으로 과잉 REJECT하지 마라.
 
 ### 판정 기준
 - REJECT: CRITICAL 1개 이상 또는 MAJOR 3개 이상
@@ -129,45 +307,12 @@ class DirectorContinuityValidator:
             # 결과 로깅
             mismatches = result.get("mismatches", [])
 
-            # [ARC-NOISE-3] 약칭/부분 포함 관계인 경우 MINOR로 다운그레이드 또는 필터
-            def _is_abbreviation(registered: str, variant: str) -> bool:
-                """variant가 registered의 약칭(부분 포함)인지 확인."""
-                r, v = registered.strip(), variant.strip()
-                if not r or not v:
-                    return False
-                # 한쪽이 다른 쪽을 포함하고 길이 차이가 15% 이상이면 약칭으로 간주
-                if (v in r or r in v) and abs(len(r) - len(v)) / max(len(r), len(v)) >= 0.15:
-                    return True
-                # 공백 토큰 기준 부분 포함(중간 수식어 생략)도 약칭으로 간주
-                r_tokens = [tok for tok in r.split() if tok]
-                v_tokens = [tok for tok in v.split() if tok]
-                if r_tokens and v_tokens:
-                    overlap = set(r_tokens) & set(v_tokens)
-                    shorter = min(len(r_tokens), len(v_tokens))
-                    if shorter > 0 and len(overlap) / shorter >= 0.7:
-                        return True
-                return False
-
-            def _canonicalize_location_alias(text: str) -> str:
-                raw = " ".join(str(text or "").strip().lower().split())
-                if not raw:
-                    return ""
-                alias_map = {
-                    "office": "\uc0ac\ubb34\uc2e4",
-                    "\uc624\ud53c\uc2a4": "\uc0ac\ubb34\uc2e4",
-                    "\uc9d1\ubb34\uc2e4": "\uc0ac\ubb34\uc2e4",
-                    "\uc0ac\ubb34\uc2e4": "\uc0ac\ubb34\uc2e4",
-                }
-                for source, canonical in alias_map.items():
-                    raw = raw.replace(source, canonical)
-                return raw
-
             filtered_mismatches = []
             for m in mismatches:
                 reg = m.get("registered_name", "")
                 var = m.get("found_variant", "")
                 category = str(m.get("category", "") or "").strip().lower()
-                if _is_abbreviation(reg, var):
+                if _is_abbreviation_surface(reg, var):
                     # 약칭은 WARNING/REJECT 트리거에서 제외
                     logging.debug(" [V61-ABBREV] 약칭 오탐 필터: %s → %s", reg, var)
                     continue
@@ -177,13 +322,33 @@ class DirectorContinuityValidator:
                     if reg_alias and reg_alias == var_alias:
                         logging.debug(" [V61-ALIAS] location alias filtered: %s -> %s", reg, var)
                         continue
+                    if _is_strong_location_alias(reg, var):
+                        logging.debug(" [V61-LOC] specific location alias filtered: %s -> %s", reg, var)
+                        continue
+                    if _is_generic_location_surface(reg, var):
+                        logging.debug(" [V61-LOC] generic location surface downgraded: %s -> %s", reg, var)
+                        filtered_mismatches.append(_downgrade_mismatch(m, note="generic_location_surface"))
+                        continue
+                if category == "concept":
+                    reg_concept = _canonicalize_concept_alias(reg)
+                    var_concept = _canonicalize_concept_alias(var)
+                    if reg_concept and reg_concept == var_concept:
+                        logging.debug(" [V61-CONCEPT] concept alias filtered: %s -> %s", reg, var)
+                        continue
+                if category in {"character", "npc"} and _is_generic_role_surface(reg, var):
+                    logging.debug(" [V61-ROLE] generic role surface downgraded: %s -> %s", reg, var)
+                    filtered_mismatches.append(_downgrade_mismatch(m, note="generic_role_surface"))
+                    continue
+                if category in {"object", "item"} and _is_object_surface_variant(reg, var):
+                    logging.debug(" [V61-OBJECT] object surface variant downgraded: %s -> %s", reg, var)
+                    filtered_mismatches.append(_downgrade_mismatch(m, note="object_surface_variant"))
+                    continue
                 filtered_mismatches.append(m)
 
             mismatches = filtered_mismatches
             result["mismatches"] = mismatches
-            if not mismatches and result.get("decision") in ("WARNING", "REJECT"):
-                result["decision"] = "PASS"
-                result["fix_instructions"] = ""
+            result["decision"] = _derive_v61_decision(mismatches)
+            result["fix_instructions"] = _build_v61_fix_instructions(mismatches)
 
             if mismatches:
                 decision = result.get("decision", "WARNING")

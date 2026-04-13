@@ -136,3 +136,165 @@ def test_arc_noise3_real_mismatch_passes_through():
     assert result["decision"] == "WARNING"
     assert len(result["mismatches"]) == 1
     assert result["mismatches"][0]["registered_name"] == "박성호"
+
+
+def test_arc_noise3_market_move_alias_filtered():
+    validator = _make_continuity_validator(
+        {
+            "decision": "WARNING",
+            "mismatches": [
+                {
+                    "category": "concept",
+                    "registered_name": "유가 급등",
+                    "found_variant": "원유 랠리",
+                    "severity": "MAJOR",
+                    "context": "원유 랠리가 시장을 흔든다",
+                }
+            ],
+            "fix_instructions": "용어 통일",
+        }
+    )
+
+    result = validator.validate_entity_consistency(
+        content="원유 랠리가 시장을 흔든다",
+        entity_registry={"concepts": [{"name": "유가 급등"}]},
+        content_type="blueprint",
+    )
+
+    assert result["mismatches"] == []
+    assert result["decision"] == "PASS"
+    assert result["fix_instructions"] == ""
+
+
+def test_arc_noise3_named_event_alias_filtered():
+    validator = _make_continuity_validator(
+        {
+            "decision": "WARNING",
+            "mismatches": [
+                {
+                    "category": "concept",
+                    "registered_name": "리먼 브라더스 사태",
+                    "found_variant": "리먼 브라더스의 파산",
+                    "severity": "MAJOR",
+                    "context": "리먼 브라더스의 파산 이후 시장이 무너졌다",
+                }
+            ],
+            "fix_instructions": "용어 통일",
+        }
+    )
+
+    result = validator.validate_entity_consistency(
+        content="리먼 브라더스의 파산 이후 시장이 무너졌다",
+        entity_registry={"concepts": [{"name": "리먼 브라더스 사태"}]},
+        content_type="blueprint",
+    )
+
+    assert result["mismatches"] == []
+    assert result["decision"] == "PASS"
+
+
+def test_arc_noise3_generic_location_surface_downgraded():
+    validator = _make_continuity_validator(
+        {
+            "decision": "REJECT",
+            "mismatches": [
+                {
+                    "category": "location",
+                    "registered_name": "서울 성북동 본가",
+                    "found_variant": "저택",
+                    "severity": "MAJOR",
+                    "context": "저택 복도에서 내려다본다",
+                }
+            ],
+            "fix_instructions": "장소 표기 통일",
+        }
+    )
+
+    result = validator.validate_entity_consistency(
+        content="저택 복도에서 내려다본다",
+        entity_registry={"locations": [{"name": "서울 성북동 본가"}]},
+        content_type="blueprint",
+    )
+
+    assert result["decision"] == "PASS"
+    assert result["mismatches"][0]["severity"] == "MINOR"
+    assert result["mismatches"][0]["normalization_note"] == "generic_location_surface"
+
+
+def test_arc_noise3_generic_role_surface_downgraded():
+    validator = _make_continuity_validator(
+        {
+            "decision": "REJECT",
+            "mismatches": [
+                {
+                    "category": "character",
+                    "registered_name": "가사도우미",
+                    "found_variant": "집사",
+                    "severity": "MAJOR",
+                    "context": "집사가 문을 열었다",
+                }
+            ],
+            "fix_instructions": "호칭 통일",
+        }
+    )
+
+    result = validator.validate_entity_consistency(
+        content="집사가 문을 열었다",
+        entity_registry={"characters": [{"name": "가사도우미"}]},
+        content_type="blueprint",
+    )
+
+    assert result["decision"] == "PASS"
+    assert result["mismatches"][0]["severity"] == "MINOR"
+    assert result["mismatches"][0]["normalization_note"] == "generic_role_surface"
+
+
+def test_arc_noise3_object_surface_variant_downgraded():
+    validator = _make_continuity_validator(
+        {
+            "decision": "WARNING",
+            "mismatches": [
+                {
+                    "category": "object",
+                    "registered_name": "구형 피처폰",
+                    "found_variant": "은색 피처폰",
+                    "severity": "MAJOR",
+                    "context": "은색 피처폰을 꺼내 통화했다",
+                }
+            ],
+            "fix_instructions": "아이템 표기 통일",
+        }
+    )
+
+    result = validator.validate_entity_consistency(
+        content="은색 피처폰을 꺼내 통화했다",
+        entity_registry={"objects": [{"name": "구형 피처폰"}]},
+        content_type="blueprint",
+    )
+
+    assert result["decision"] == "PASS"
+    assert result["mismatches"][0]["severity"] == "MINOR"
+    assert result["mismatches"][0]["normalization_note"] == "object_surface_variant"
+
+
+def test_arc_noise3_prompt_mentions_surface_alias_examples():
+    director = MagicMock()
+    director.entity_consistency_enabled = True
+    director._escape_braces.side_effect = lambda value: value
+    director.ask.return_value = "raw"
+    director._extract_json_robust.return_value = {"decision": "PASS", "mismatches": [], "fix_instructions": ""}
+    validator = DirectorContinuityValidator(director)
+
+    validator.validate_entity_consistency(
+        content="서울 성북동 본가에서 집사가 피처폰을 건넨다",
+        entity_registry={"locations": [{"name": "서울 성북동 본가"}]},
+        content_type="blueprint",
+    )
+
+    prompt = director.ask.call_args.args[0]
+    assert "서울 성북동 본가" in prompt
+    assert "저택" in prompt
+    assert "리먼 브라더스 사태" in prompt
+    assert "원유 랠리" in prompt
+    assert "집사" in prompt
+    assert "가사도우미" in prompt

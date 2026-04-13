@@ -114,7 +114,9 @@ class Stage4RetryRuntime:
         if not isinstance(fix_pack, dict):
             return "", [], ""
         provenance = str(fix_pack.get("provenance", "") or "").strip().lower()
-        provenance_sources = [str(item).strip() for item in (fix_pack.get("provenance_sources") or []) if str(item).strip()]
+        provenance_sources = [
+            str(item).strip() for item in (fix_pack.get("provenance_sources") or []) if str(item).strip()
+        ]
         target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
         return provenance, provenance_sources, target_kind
 
@@ -152,11 +154,40 @@ class Stage4RetryRuntime:
             return False
         if str(previous_attempt.get("fix_scope", "") or "").strip() != "full":
             return False
+        if bool(previous_attempt.get("plateau_detected", False)):
+            return False
+        if isinstance(previous_attempt.get("qr7_contract"), dict) and previous_attempt.get("qr7_contract"):
+            return False
 
         conflict_contract = previous_attempt.get("conflict_contract")
         if not isinstance(conflict_contract, dict) or not conflict_contract:
             return False
         if not bool(conflict_contract.get("bounded_local_fix_hint")):
+            return False
+
+        contract_conflict_types = {
+            str(item.get("conflict_type", "") or "").strip().lower()
+            for item in (conflict_contract.get("conflicts") or [])
+            if isinstance(item, dict) and str(item.get("conflict_type", "") or "").strip()
+        }
+        if {"continuity", "history"}.issubset(contract_conflict_types):
+            return False
+
+        truth_pins = conflict_contract.get("truth_pins") or []
+        truth_pin_families = {
+            str(item.get("family", "") or "").strip().lower()
+            for item in truth_pins
+            if isinstance(item, dict) and str(item.get("family", "") or "").strip()
+        }
+        if truth_pin_families & {"proper_noun_group", "asset_state", "capital_state", "world_fact"}:
+            return False
+
+        rewrite_required_reasons = {
+            str(item or "").strip().lower()
+            for item in (conflict_contract.get("rewrite_required_reasons") or [])
+            if str(item or "").strip()
+        }
+        if rewrite_required_reasons:
             return False
 
         fix_pack = fix_pack_contract.get("fix_pack")
@@ -166,16 +197,30 @@ class Stage4RetryRuntime:
         if target_kind not in {"entity_ref", "local_phrase", "local_sentence"}:
             return False
 
-        evidence_summary = str(fix_pack.get("evidence_summary", "") or "").strip().lower()
-        if "flashback continuity backfill" in evidence_summary:
-            return True
-
         contradiction_types = {
             str(item or "").strip().lower()
             for item in (conflict_contract.get("contradiction_types") or [])
             if str(item or "").strip()
         }
-        return bool(contradiction_types) and contradiction_types.issubset(
+        effective_types = contradiction_types | contract_conflict_types
+        if "proper_noun" in effective_types or "history" in effective_types:
+            return False
+
+        evidence_summary = str(fix_pack.get("evidence_summary", "") or "").strip().lower()
+        if "flashback continuity backfill" in evidence_summary:
+            return bool(effective_types) and effective_types.issubset(
+                {
+                    "continuity",
+                    "timeline",
+                    "movement",
+                    "location",
+                    "facing",
+                    "dialogue",
+                    "opening_action_continuity",
+                }
+            )
+
+        return bool(effective_types) and effective_types.issubset(
             {
                 "continuity",
                 "timeline",
@@ -467,7 +512,9 @@ class Stage4RetryRuntime:
             if fix_scope == "inplace" and not fix_pack_contract.get("ready"):
                 logging.info(
                     "[Lane3 Gate] retry inplace skipped: %s",
-                    owner._pass_with_fix_contract_message(str(fix_pack_contract.get("reason", "") or "missing_fix_pack")),
+                    owner._pass_with_fix_contract_message(
+                        str(fix_pack_contract.get("reason", "") or "missing_fix_pack")
+                    ),
                 )
                 owner.ctx.ui.log("   🔀 [Lane3 Gate] explicit Fix Pack 없는 inplace retry 금지 → patch/rewrite로 이관")
 
@@ -539,7 +586,9 @@ class Stage4RetryRuntime:
         owner = self.owner
         if not current_feedback:
             empty_feedback_notice = "[TF-32-V] PASS_WITH_FIX 피드백 비어 있음 → retry 경로로 명시 이관"
-            logging.warning("[TF-32-V] PASS_WITH_FIX empty feedback abort: ep=%s round=%s", round_ctx.next_ep, round_num)
+            logging.warning(
+                "[TF-32-V] PASS_WITH_FIX empty feedback abort: ep=%s round=%s", round_ctx.next_ep, round_num
+            )
             owner.ctx.ui.log("   ⚠️ [TF-32-V] PASS_WITH_FIX 피드백 비어 있음 — silent break 금지, retry 경로 이관")
             director_feedback = f"{director_feedback}\n{empty_feedback_notice}".strip()
             if isinstance(current_audit_result, dict):
@@ -1118,9 +1167,7 @@ class Stage4RetryRuntime:
             )
         )
         if _consecutive_empty_patch:
-            logging.warning(
-                "[TF-4] missing_patch_targets 연속 감지 → patch 해제, full rewrite escalation"
-            )
+            logging.warning("[TF-4] missing_patch_targets 연속 감지 → patch 해제, full rewrite escalation")
             owner.ctx.ui.log(
                 "   [TF-4] patch_targets 연속 부재 → full rewrite로 전환",
                 stage="stage4",
@@ -1225,10 +1272,8 @@ class Stage4RetryRuntime:
             and bool(fix_pack_contract.get("ready"))
             and (
                 runtime_fix_pack_prefers_patch
-                or
-                bounded_post_select_patch
-                or
-                force_patch
+                or bounded_post_select_patch
+                or force_patch
                 or (
                     patch_enabled
                     and prev_manuscript
@@ -1246,9 +1291,7 @@ class Stage4RetryRuntime:
             and not bool(fix_pack_contract.get("ready"))
             and not _consecutive_empty_patch
         ):
-            logging.warning(
-                "[TF-PATCH-GATE] non-ready fix_pack blocks patch_revision; falling through to rewrite"
-            )
+            logging.warning("[TF-PATCH-GATE] non-ready fix_pack blocks patch_revision; falling through to rewrite")
             owner.ctx.ui.log(
                 "   [TF-PATCH-GATE] non-ready fix_pack -> patch 차단, rewrite 경로 사용",
                 stage="stage4",

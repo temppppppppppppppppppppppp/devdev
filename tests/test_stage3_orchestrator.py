@@ -1,4 +1,4 @@
-﻿"""[Phase 4C-1a] Stage3Orchestrator 단위 테스트
+"""[Phase 4C-1a] Stage3Orchestrator 단위 테스트
 
 추출 대상: _stage_3_batch_blueprinting (main_a.py → stage3_orchestrator.py)
 """
@@ -13,6 +13,7 @@ import pytest
 from modules.core.session_logger import SessionLogger
 from modules.core.stage3_context import Stage3Context
 from modules.core.stage3_orchestrator import (
+    Stage3AttemptEvidencePacket,
     Stage3Orchestrator,
     _build_stage3_source_anchor_summary,
     _build_stage3_work_focus_advisory,
@@ -260,7 +261,13 @@ class TestStageAttemptObservability:
         pipeline_result = {
             "final_verdict": "PASS",
             "last_score": 88,
-            "phases": {"generate": {"selected_strategy": "balanced", "selected_score": 88}},
+            "phases": {
+                "generate": {"selected_strategy": "balanced", "selected_score": 88},
+                "validate": {
+                    "runtime_advisory": "semantic context drift warning",
+                    "retry_directives": "keep the anchor packet stable on the next pass",
+                },
+            },
             "_stage3_duration_ms": 4321,
             "_stage3_observability": {
                 "semantic_ctx_chars": 1234,
@@ -296,12 +303,12 @@ class TestStageAttemptObservability:
         assert kwargs["advisory_flags"]["semantic_ctx_sources"] == ["db_npc_relationship", "vec_memory"]
         assert kwargs["advisory_flags"]["provenance_ledger"]["source_pack"] == "stage3"
         assert kwargs["advisory_flags"]["budget_ledger"]["budget_bucket"] == "smart_retrieval.stage3_total_budget"
-        assert kwargs["advisory_flags"]["source_anchor_summary"]["current_arc_start_location"] == "SW인베스트먼트 사무실"
-        assert any(
-            "source_anchor:" in str(call.args[0])
-            for call in app_mock.ui.log.call_args_list
-            if call.args
+        assert (
+            kwargs["advisory_flags"]["source_anchor_summary"]["current_arc_start_location"] == "SW인베스트먼트 사무실"
         )
+        assert kwargs["runtime_advisory"] == "semantic context drift warning"
+        assert kwargs["retry_directives"] == "keep the anchor packet stable on the next pass"
+        assert any("source_anchor:" in str(call.args[0]) for call in app_mock.ui.log.call_args_list if call.args)
 
     def test_handle_failure_persists_failure_category_and_observability(self, orch, app_mock):
         pipeline_result = {
@@ -310,7 +317,11 @@ class TestStageAttemptObservability:
             "quality_gate_failed": True,
             "phases": {
                 "generate": {"selected_strategy": "balanced", "selected_score": 52},
-                "validate": {"issues_count": 2},
+                "validate": {
+                    "issues_count": 2,
+                    "runtime_advisory": "continuity drift needs review",
+                    "retry_directives": "repair the opening continuity before the next retry",
+                },
             },
             "_stage3_duration_ms": 987,
             "_stage3_observability": {
@@ -335,6 +346,8 @@ class TestStageAttemptObservability:
         assert kwargs["failure_category"] == "quality_gate"
         assert kwargs["duration_ms"] == 987
         assert kwargs["advisory_flags"]["semantic_ctx_sources"] == ["legacy_semantic_context"]
+        assert kwargs["runtime_advisory"] == "continuity drift needs review"
+        assert kwargs["retry_directives"] == "repair the opening continuity before the next retry"
 
     def test_handle_success_persists_stage3_director_selection(self, orch, app_mock, tmp_path):
         app_mock.current_project.paths = MagicMock()
@@ -397,6 +410,8 @@ class TestStageAttemptObservability:
                     "verdict": "REJECT",
                     "feedback": "전술 사건 재배치 필요",
                     "fix_scope": "full",
+                    "runtime_advisory": "timeline mismatch detected",
+                    "retry_directives": "repair the timeline anchors before the next retry",
                     "contradictions": ["timeline mismatch"],
                 },
             },
@@ -426,6 +441,8 @@ class TestStageAttemptObservability:
         assert ds_kw["artifact_path"].endswith("selected_blueprint__action_focused.json")
         assert (tmp_path / ds_kw["artifact_path"]).exists()
         assert ds_kw["advisory_warnings"]["contradictions"] == ["timeline mismatch"]
+        assert ds_kw["runtime_advisory"] == "timeline mismatch detected"
+        assert ds_kw["retry_directives"] == "repair the timeline anchors before the next retry"
 
     def test_handle_success_writes_session_decision_row_with_join_metadata(self, orch, app_mock, tmp_path):
         app_mock.current_project.paths = MagicMock()
@@ -443,6 +460,30 @@ class TestStageAttemptObservability:
                     "selection_reason": "후보 B가 감정선과 연속성 연결이 가장 안정적",
                     "verdict_reason": "구조 리스크 없이 바로 사용 가능",
                     "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "runtime_advisory": "keep the opening continuity packet visible",
+                    "retry_directives": "preserve the opening continuity packet on the next pass",
+                    "fix_pack": {
+                        "patch_targets": ["scene_1.summary"],
+                        "target_kind": "scene_block",
+                        "subtype": "movement",
+                        "provenance": "director_authored",
+                    },
+                    "repair_contract": {
+                        "subtype": "movement",
+                        "fix_scope": "inplace",
+                        "repair_scope": "inplace",
+                        "authoritative_fix_scope": "inplace",
+                        "provenance": "director_authored",
+                        "target_kind": "scene_block",
+                    },
+                    "scope_authority": {
+                        "fix_scope": "inplace",
+                        "repair_scope": "inplace",
+                        "authoritative_fix_scope": "inplace",
+                        "widened": False,
+                    },
                 },
             },
         }
@@ -473,6 +514,13 @@ class TestStageAttemptObservability:
         assert meta["selection_reason"] == "후보 B가 감정선과 연속성 연결이 가장 안정적"
         assert meta["verdict_reason"] == "구조 리스크 없이 바로 사용 가능"
         assert meta["fix_scope"] == "inplace"
+        assert meta["repair_scope"] == "inplace"
+        assert meta["authoritative_fix_scope"] == "inplace"
+        assert meta["runtime_advisory"] == "keep the opening continuity packet visible"
+        assert meta["retry_directives"] == "preserve the opening continuity packet on the next pass"
+        assert meta["fix_pack"]["subtype"] == "movement"
+        assert meta["repair_contract"]["provenance"] == "director_authored"
+        assert meta["scope_authority"]["widened"] is False
         assert (tmp_path / meta["artifact_path"]).exists()
 
     def test_build_stage3_director_selection_kwargs_keeps_500_char_rationale(self):
@@ -545,6 +593,22 @@ class TestStageAttemptObservability:
                             "patch_targets": ["scene_2.summary"],
                             "target_kind": "scene_block",
                             "must_fix": ["scene 2 summary must reflect the repaired reveal"],
+                            "subtype": "movement",
+                            "provenance": "director_authored",
+                        },
+                        "repair_contract": {
+                            "subtype": "movement",
+                            "fix_scope": "inplace",
+                            "repair_scope": "inplace",
+                            "authoritative_fix_scope": "inplace",
+                            "provenance": "director_authored",
+                            "target_kind": "scene_block",
+                        },
+                        "scope_authority": {
+                            "fix_scope": "inplace",
+                            "repair_scope": "inplace",
+                            "authoritative_fix_scope": "inplace",
+                            "widened": False,
                         },
                         "partial_fix_eval": {
                             "patch_round": 1,
@@ -567,6 +631,11 @@ class TestStageAttemptObservability:
 
         assert payload is not None
         assert payload["advisory_warnings"]["fix_pack"]["patch_targets"] == ["scene_2.summary"]
+        assert payload["advisory_warnings"]["fix_pack"]["subtype"] == "movement"
+        assert payload["advisory_warnings"]["fix_pack"]["provenance"] == "director_authored"
+        assert payload["advisory_warnings"]["repair_contract"]["subtype"] == "movement"
+        assert payload["advisory_warnings"]["repair_contract"]["provenance"] == "director_authored"
+        assert payload["advisory_warnings"]["scope_authority"]["widened"] is False
         assert payload["advisory_warnings"]["partial_fix_eval"]["patch_target_id"] == "pt:scene2"
 
     def test_annotate_stage3_success_blueprint_preserves_binding_meta(self, orch):
@@ -582,11 +651,32 @@ class TestStageAttemptObservability:
                     "validate": {
                         "binding_prevalidation_issue_count": 2,
                         "binding_prevalidation_categories": ["dead_npc", "fact_lock_location"],
+                        "binding_regenerate_only_categories": ["opening_anchor"],
+                        "binding_regenerate_only_reason": (
+                            "Structural binding prevalidation requires regenerate-only repair: opening_anchor"
+                        ),
                         "fix_pack": {
                             "patch_targets": ["scene_2.summary"],
                             "target_kind": "scene_block",
                             "must_fix": ["scene 2 summary must reflect the repaired reveal"],
                             "success_condition": "scene 2 now states the reveal without rewriting the arc shell",
+                            "subtype": "movement",
+                            "provenance": "director_authored",
+                            "provenance_sources": ["director_compare"],
+                        },
+                        "repair_contract": {
+                            "subtype": "movement",
+                            "fix_scope": "inplace",
+                            "repair_scope": "inplace",
+                            "authoritative_fix_scope": "inplace",
+                            "provenance": "director_authored",
+                            "target_kind": "scene_block",
+                        },
+                        "scope_authority": {
+                            "fix_scope": "inplace",
+                            "repair_scope": "inplace",
+                            "authoritative_fix_scope": "inplace",
+                            "widened": False,
                         },
                         "partial_fix_eval": {
                             "patch_round": 1,
@@ -609,7 +699,14 @@ class TestStageAttemptObservability:
         assert result["_stage3_meta"]["revision_required"] is True
         assert result["_stage3_meta"]["binding_prevalidation_issue_count"] == 2
         assert result["_stage3_meta"]["binding_prevalidation_categories"] == ["dead_npc", "fact_lock_location"]
+        assert result["_stage3_meta"]["binding_regenerate_only_categories"] == ["opening_anchor"]
+        assert "opening_anchor" in result["_stage3_meta"]["binding_regenerate_only_reason"]
         assert result["_stage3_meta"]["fix_pack"]["patch_targets"] == ["scene_2.summary"]
+        assert result["_stage3_meta"]["fix_pack"]["subtype"] == "movement"
+        assert result["_stage3_meta"]["fix_pack"]["provenance"] == "director_authored"
+        assert result["_stage3_meta"]["repair_contract"]["subtype"] == "movement"
+        assert result["_stage3_meta"]["repair_contract"]["provenance"] == "director_authored"
+        assert result["_stage3_meta"]["scope_authority"]["widened"] is False
         assert result["_stage3_meta"]["partial_fix_eval"]["patch_target_id"] == "pt:scene2"
 
 
@@ -1040,7 +1137,9 @@ class TestGenerateBlueprint:
         assert "[관계 의미 질의]" in semantic_context
         assert "연홍" in semantic_context
 
-    def test_build_stage3_blueprint_semantic_bundle_marks_legacy_source_when_only_advisories_exist(self, orch, app_mock):
+    def test_build_stage3_blueprint_semantic_bundle_marks_legacy_source_when_only_advisories_exist(
+        self, orch, app_mock
+    ):
         app_mock.quality_dashboard = MagicMock()
         app_mock.world_state.get_summary.return_value = "진행 플롯=인수합병"
 
@@ -1145,10 +1244,7 @@ class TestGenerateBlueprint:
         assert "dead_npc_precheck" in pipeline_result["reject_reason"]
         assert "흑풍" in pipeline_result["reject_reason"]
         assert pipeline_result["precheck_failures"][0]["npc_name"] == "흑풍"
-        assert (
-            "dead_npc_precheck"
-            in pipeline_result["phases"]["validate"]["contradictions"][0]
-        )
+        assert "dead_npc_precheck" in pipeline_result["phases"]["validate"]["contradictions"][0]
 
     def test_build_stage3_reject_reason_prefers_explicit_reject_reason(self):
         reason = Stage3Orchestrator._build_stage3_reject_reason(
@@ -1183,9 +1279,7 @@ class TestGenerateBlueprint:
                         "comparison_notes": "후보 C보다 감정 전이가 자연스럽다",
                         "fix_scope_reasoning": "마지막 비트의 여운만 후속 원고에서 더 밀어주면 된다",
                         "selected_candidate_advisory": {
-                            "python_warnings": [
-                                {"message": "Arc NPC 언급 밀도가 낮아 후반 회상 씬에서 보강 권장"}
-                            ]
+                            "python_warnings": [{"message": "Arc NPC 언급 밀도가 낮아 후반 회상 씬에서 보강 권장"}]
                         },
                     }
                 },
@@ -1267,7 +1361,7 @@ class TestProcessSingleEpisode:
         result = orch._process_single_episode(1, 5, [], 0, 0)
         assert result.get("break") is True
 
-    def test_pass_with_fix_uses_failure_path(self, orch, app_mock):
+    def test_pass_with_fix_uses_success_path(self, orch, app_mock):
         app_mock.current_project.get_blueprint.return_value = None
         orch._get_entity_registry = MagicMock(return_value={"characters": []})
         orch._load_prev_blueprint = MagicMock(return_value=None)
@@ -1283,9 +1377,9 @@ class TestProcessSingleEpisode:
 
         result = orch._process_single_episode(1, 5, [], 0, 0)
 
-        assert result == {"path": "failure"}
-        orch._handle_success.assert_not_called()
-        orch._handle_failure.assert_called_once()
+        assert result == {"path": "success"}
+        orch._handle_success.assert_called_once()
+        orch._handle_failure.assert_not_called()
 
     def test_stage3_success_records_pass_rate_monitor(self, orch, app_mock):
         blueprint = {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}}
@@ -1321,6 +1415,31 @@ class TestProcessSingleEpisode:
             in text
             for text in log_texts
         )
+
+    def test_stage3_success_records_pass_rate_monitor_for_pass_with_fix(self, orch, app_mock):
+        blueprint = {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}}
+        pipeline_result = {
+            "final_verdict": "PASS_WITH_FIX",
+            "last_score": 89,
+            "revision_required": True,
+            "phases": {
+                "generate": {"selected_score": 89, "selected_strategy": "A"},
+                "validate": {
+                    "verdict": "PASS_WITH_FIX",
+                    "fix_pack": {
+                        "must_fix": ["preserve the opening continuity packet"],
+                        "success_condition": "the opening packet survives the patch pass",
+                    },
+                },
+            },
+        }
+
+        orch._handle_success(3, 1, {}, blueprint, pipeline_result, [], 0, 0)
+
+        kw = app_mock.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["stage"] == 3
+        assert kw["success"] is True
+        assert kw["final_verdict"] == "PASS_WITH_FIX"
 
     def test_stage3_failure_records_pass_rate_monitor(self, orch, app_mock):
         pipeline_result = {
@@ -1463,6 +1582,177 @@ class TestProcessSingleEpisode:
         assert "external_pov_insert_policy=금지" in caplog.text
         assert "style_guide_extracted_pov=-" in caplog.text
 
+    def test_stage3_attempt_evidence_packet_normalizes_shared_runtime_fields(self, orch, app_mock):
+        blueprint = {"integrated_scenario": "test", "scene_breakdown": {"s1": "scene"}}
+        pipeline_result = {
+            "final_verdict": "REJECT",
+            "last_score": "41",
+            "quality_risk": True,
+            "phases": {
+                "generate": {"selected_strategy": "B", "selected_score": 41},
+                "validate": {
+                    "verdict": "REJECT",
+                    "selection_reason": "후보 B가 그나마 구조적으로 읽힌다",
+                    "verdict_reason": "opening continuity drift",
+                    "fix_scope": "targeted",
+                },
+            },
+        }
+
+        packet = orch._build_stage3_attempt_evidence_packet(
+            working_ep=4,
+            arc_no=2,
+            blueprint=blueprint,
+            pipeline_result=pipeline_result,
+            observability_flags={"semantic_ctx_chars": 120},
+            artifact_kind="selected_blueprint",
+            reject_reason="opening continuity drift",
+        )
+
+        assert isinstance(packet, Stage3AttemptEvidencePacket)
+        assert packet.attempt_key == "s3:ep4:arc2:a1"
+        assert packet.candidate_key == "B"
+        assert packet.score == 41
+        assert packet.selection_kwargs["attempt_key"] == packet.attempt_key
+        assert packet.selection_kwargs["runtime_advisory"] == "opening continuity drift"
+        assert packet.retry_directives == "opening continuity drift"
+        assert packet.artifact_meta["candidate_key"] == "B"
+
+    def test_stage3_sink_payload_builders_share_packet_contract(self, orch):
+        packet = Stage3AttemptEvidencePacket(
+            db=MagicMock(),
+            attempt_num=2,
+            session_id="stage3-session",
+            attempt_key="s3:ep6:arc3:a2",
+            score=87,
+            selected_strategy="B",
+            candidate_key="B",
+            artifact_meta={
+                "candidate_key": "B",
+                "content_hash": "hash-stage3",
+                "artifact_path": "logs/artifacts/stage3/ep006.json",
+            },
+            selection_kwargs={
+                "selection_reason": "후보 B가 opening continuity를 가장 안정적으로 유지",
+                "verdict_reason": "local repair로 충분",
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "opening continuity와 수치 앵커만 보강",
+            },
+            runtime_advisory="opening continuity drift review",
+            retry_directives="preserve the opening continuity packet on the next retry",
+        )
+
+        decision_kwargs = orch._build_stage3_session_decision_kwargs(
+            ep_num=6,
+            verdict="PASS_WITH_FIX",
+            score=87,
+            arc_no=3,
+            quality_risk=True,
+            packet=packet,
+            validate={
+                "fix_pack": {
+                    "patch_targets": ["scene_2.summary"],
+                    "target_kind": "scene_block",
+                    "subtype": "movement",
+                    "provenance": "director_authored",
+                },
+                "repair_contract": {
+                    "subtype": "movement",
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "provenance": "director_authored",
+                    "target_kind": "scene_block",
+                },
+                "scope_authority": {
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": False,
+                },
+            },
+            reason="local repair로 충분",
+            selection_reason=packet.selection_kwargs["selection_reason"],
+            verdict_reason=packet.selection_kwargs["verdict_reason"],
+            fix_scope=packet.selection_kwargs["fix_scope"],
+        )
+        stage_attempt_kwargs = orch._build_stage3_stage_attempt_kwargs(
+            ep_num=6,
+            arc_no=3,
+            verdict="PASS_WITH_FIX",
+            packet=packet,
+            model="gpt-test",
+            prompt_version="stage3.vtest",
+            duration_ms=3210,
+            advisory_flags={"semantic_ctx_chars": 1440},
+            validate={
+                "open_review": "opening continuity 재검토",
+                "fix_pack": {
+                    "patch_targets": ["scene_2.summary"],
+                    "target_kind": "scene_block",
+                    "subtype": "movement",
+                    "provenance": "director_authored",
+                },
+                "repair_contract": {
+                    "subtype": "movement",
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "provenance": "director_authored",
+                    "target_kind": "scene_block",
+                },
+                "scope_authority": {
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": False,
+                },
+            },
+            failure_category="quality_gate",
+            reject_reason="opening continuity drift",
+        )
+        pass_rate_kwargs = orch._build_stage3_pass_rate_attempt_kwargs(
+            working_ep=6,
+            arc_no=3,
+            packet=packet,
+            success=False,
+            duration_ms=3210,
+            token_cost=0.123,
+            final_verdict="REJECT",
+            score_breakdown={"continuity": 62},
+            reject_reason="opening continuity drift",
+        )
+
+        assert decision_kwargs["attempt_key"] == packet.attempt_key
+        assert decision_kwargs["candidate_key"] == "B"
+        assert decision_kwargs["runtime_advisory"] == packet.runtime_advisory
+        assert decision_kwargs["retry_directives"] == packet.retry_directives
+        assert decision_kwargs["artifact_path"] == "logs/artifacts/stage3/ep006.json"
+        assert decision_kwargs["repair_scope"] == "inplace"
+        assert decision_kwargs["authoritative_fix_scope"] == "inplace"
+        assert decision_kwargs["repair_contract"]["subtype"] == "movement"
+        assert decision_kwargs["scope_authority"]["widened"] is False
+        assert stage_attempt_kwargs["session_id"] == packet.session_id
+        assert stage_attempt_kwargs["attempt_key"] == packet.attempt_key
+        assert stage_attempt_kwargs["candidate_key"] == packet.candidate_key
+        assert stage_attempt_kwargs["selection_reason"] == packet.selection_kwargs["selection_reason"]
+        assert stage_attempt_kwargs["runtime_advisory"] == packet.runtime_advisory
+        assert stage_attempt_kwargs["retry_directives"] == packet.retry_directives
+        assert stage_attempt_kwargs["failure_category"] == "quality_gate"
+        assert stage_attempt_kwargs["reject_reason"] == "opening continuity drift"
+        assert stage_attempt_kwargs["open_review"] == "opening continuity 재검토"
+        assert stage_attempt_kwargs["advisory_flags"]["fix_pack"]["subtype"] == "movement"
+        assert stage_attempt_kwargs["advisory_flags"]["repair_contract"]["provenance"] == "director_authored"
+        assert stage_attempt_kwargs["advisory_flags"]["gate_semantics"]["repair_contract"]["subtype"] == "movement"
+        assert stage_attempt_kwargs["advisory_flags"]["scope_authority"]["widened"] is False
+        assert pass_rate_kwargs["attempt_key"] == packet.attempt_key
+        assert pass_rate_kwargs["candidate_key"] == packet.candidate_key
+        assert pass_rate_kwargs["content_hash"] == packet.artifact_meta["content_hash"]
+        assert pass_rate_kwargs["artifact_path"] == packet.artifact_meta["artifact_path"]
+        assert pass_rate_kwargs["success"] is False
+        assert pass_rate_kwargs["reject_reason"] == "opening continuity drift"
+        assert pass_rate_kwargs["score_breakdown"] == {"continuity": 62}
+
 
 # ── Result Handlers ──────────────────────────────────────────
 
@@ -1554,9 +1844,7 @@ def test_stage3_work_focus_advisory_preserves_tail_context(app_mock):
     app_mock.current_project.db.get_relationship_history.return_value = []
 
     with patch("modules.core.stage3_orchestrator.SemanticQueryBroker") as broker_cls:
-        broker_cls.return_value.build_relation_slice.return_value = (
-            "[관계 의미 질의]\n" + ("R" * 220) + "TAIL-REL"
-        )
+        broker_cls.return_value.build_relation_slice.return_value = "[관계 의미 질의]\n" + ("R" * 220) + "TAIL-REL"
         text = _build_stage3_work_focus_advisory(
             {
                 "tracking_slots": ["head-slot"],
@@ -1660,7 +1948,9 @@ def test_stage3_work_focus_advisory_preserves_tail_context(app_mock):
             )
 
         semantic_context = app_mock.agents["three_phase_bp"].generate.call_args.kwargs["semantic_context"]
-        sc_block = semantic_context.split("[SC:genre_context_1]\n")[-1] if "[SC:genre_context_1]" in semantic_context else ""
+        sc_block = (
+            semantic_context.split("[SC:genre_context_1]\n")[-1] if "[SC:genre_context_1]" in semantic_context else ""
+        )
         assert len(sc_block) <= 120
         assert "TAIL-S3" in sc_block
 

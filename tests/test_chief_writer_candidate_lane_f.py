@@ -41,7 +41,9 @@ def test_generate_single_candidate_shell_coordinates_helper_family():
     writer._extract_candidate_npcs = MagicMock(return_value=[{"name": "npc"}])
     writer.quality_gate.apply_self_critique.return_value = '{"content":"body revised"}'
     writer._finalize_single_candidate_critique = MagicMock(return_value=("body revised", "title", {"hp": 10}))
-    writer._build_single_candidate_result = MagicMock(return_value={"strategy": "balanced", "manuscript": "body revised"})
+    writer._build_single_candidate_result = MagicMock(
+        return_value={"strategy": "balanced", "manuscript": "body revised"}
+    )
 
     result = writer._generate_single_candidate(
         ep_num=7,
@@ -91,7 +93,9 @@ def test_generate_single_candidate_normalizes_list_payload_from_extract_json():
     writer._extract_candidate_npcs = MagicMock(return_value=[{"name": "npc"}])
     writer.quality_gate.apply_self_critique.return_value = '{"content":"body revised"}'
     writer._finalize_single_candidate_critique = MagicMock(return_value=("body revised", "title", {"hp": 10}))
-    writer._build_single_candidate_result = MagicMock(return_value={"strategy": "balanced", "manuscript": "body revised"})
+    writer._build_single_candidate_result = MagicMock(
+        return_value={"strategy": "balanced", "manuscript": "body revised"}
+    )
 
     result = writer._generate_single_candidate(
         ep_num=7,
@@ -133,7 +137,9 @@ def test_prepare_single_candidate_request_uses_strategy_temperature_and_schema()
 def test_regenerate_with_feedback_shell_uses_feedback_and_strategy_helpers():
     writer = _make_writer()
     writer._build_regeneration_feedback = MagicMock(return_value="enhanced")
-    writer._build_regeneration_strategy_hints = MagicMock(return_value=("constraints", "tension", "specific"))
+    writer._build_regeneration_strategy_hints = MagicMock(
+        return_value=("constraints", "tension", "specific", {"tension": "specific"})
+    )
     writer.generate_ensemble = MagicMock(return_value=[{"manuscript": "ok"}])
 
     result = writer.regenerate_with_feedback(
@@ -159,6 +165,7 @@ def test_regenerate_with_feedback_shell_uses_feedback_and_strategy_helpers():
     writer._build_regeneration_strategy_hints.assert_called_once_with({"strategy": "balanced"})
     assert writer.generate_ensemble.call_args.kwargs["director_feedback"] == "enhanced"
     assert writer.generate_ensemble.call_args.kwargs["strategy_specific_feedback"] == "specific"
+    assert writer.generate_ensemble.call_args.kwargs["strategy_feedback_map"] == {"tension": "specific"}
     assert writer.generate_ensemble.call_args.kwargs["rejected_strategy"] == "tension"
     assert writer.generate_ensemble.call_args.kwargs["failure_constraints"] == "constraints"
 
@@ -216,6 +223,15 @@ def test_build_regeneration_feedback_includes_reuse_contract_and_structured_conf
                         "expected_truth": "scene overlap conflict",
                     }
                 ],
+                "truth_pins": [
+                    {
+                        "pin_key": "family_group_name",
+                        "family": "proper_noun_group",
+                        "expected": "대한그룹",
+                        "observed": "유성그룹",
+                    }
+                ],
+                "rewrite_required_reasons": ["proper_noun_group_truth_drift"],
             },
         },
         director_feedback="revise now",
@@ -227,6 +243,8 @@ def test_build_regeneration_feedback_includes_reuse_contract_and_structured_conf
     assert "preserved_open_review=keep the burner phone beat" in feedback
     assert "[Structured Conflict Contract" in feedback
     assert "type=continuity" in feedback
+    assert "[Authoritative Truth Pins" in feedback
+    assert "keep `대한그룹`; do not drift to `유성그룹`" in feedback
     assert "[Stored Near-pass Manuscript Baseline]" in feedback
     assert "baseline manuscript body" in feedback
 
@@ -234,14 +252,36 @@ def test_build_regeneration_feedback_includes_reuse_contract_and_structured_conf
 def test_build_regeneration_strategy_hints_stringifies_selection_reason_dict():
     writer = _make_writer()
 
-    failure_constraints, rejected_strategy, strategy_feedback = writer._build_regeneration_strategy_hints(
-        {
-            "action_items": ["fix opening", "reduce leakage"],
-            "selected_strategy_key": "balanced",
-            "selection_reason": {"why": "cadence"},
-        }
+    failure_constraints, rejected_strategy, strategy_feedback, strategy_feedback_map = (
+        writer._build_regeneration_strategy_hints(
+            {
+                "action_items": ["fix opening", "reduce leakage"],
+                "selected_strategy_key": "balanced",
+                "selection_reason": {"why": "cadence"},
+            }
+        )
     )
 
     assert "fix opening" in failure_constraints
     assert rejected_strategy == "balanced"
     assert json.loads(strategy_feedback) == {"why": "cadence"}
+    assert json.loads(strategy_feedback_map["balanced"]) == {"why": "cadence"}
+
+
+def test_build_regeneration_strategy_hints_prefers_existing_strategy_feedback_map():
+    writer = _make_writer()
+
+    failure_constraints, rejected_strategy, strategy_feedback, strategy_feedback_map = (
+        writer._build_regeneration_strategy_hints(
+            {
+                "selected_strategy_key": "tension",
+                "selection_reason": "legacy selection reason",
+                "strategy_feedback_map": {"tension": "mapped retry focus", "balanced": "other"},
+            }
+        )
+    )
+
+    assert failure_constraints == ""
+    assert rejected_strategy == "tension"
+    assert strategy_feedback == "mapped retry focus"
+    assert strategy_feedback_map["tension"] == "mapped retry focus"

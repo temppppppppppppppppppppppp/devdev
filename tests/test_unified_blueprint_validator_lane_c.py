@@ -50,6 +50,56 @@ def test_lane_c_run_compare_validation_normalizes_selected_payload():
     assert result["selected_candidate_advisory"]["candidate_index"] == 0
 
 
+def test_lane_c_prepare_compare_candidate_attaches_advisory_fix_pack():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    validator._python_pre_validate = Mock(
+        return_value={
+            "issues": [
+                {
+                    "severity": "MINOR",
+                    "category": "scenario_density",
+                    "issue": "anchor density is thin",
+                    "advisory_only": True,
+                    "director_focus": False,
+                    "fix_pack": {
+                        "patch_target_records": [
+                            {
+                                "summary": "integrated_scenario",
+                                "field_path": "integrated_scenario",
+                                "target_kind": "local_sentence",
+                            }
+                        ],
+                        "must_fix": ["add a concrete financial anchor"],
+                        "do_not_regress": ["keep the opening move"],
+                        "success_condition": "integrated scenario adds a concrete anchor",
+                        "evidence_summary": "anchor_count=0",
+                    },
+                }
+            ],
+            "has_critical": False,
+        }
+    )
+    validator._apply_dead_npc_advisory = Mock()
+    candidate = {"integrated_scenario": "draft"}
+
+    pre_result, advisory = validator._prepare_compare_candidate(
+        candidate,
+        candidate_index=0,
+        arc_data={"arc_no": 1},
+        constraint_block={},
+        prev_blueprint=None,
+        state_tracker=None,
+        working_ep=1,
+        arc_idx=1,
+    )
+
+    assert pre_result["has_critical"] is False
+    assert advisory["advisory_fix_pack"]["target_kind"] == "local_sentence"
+    assert advisory["advisory_fix_pack"]["patch_targets"] == ["integrated_scenario"]
+    assert advisory["advisory_target_kind"] == "local_sentence"
+    assert candidate["_ensemble_meta"]["advisory_fix_pack"]["evidence_summary"] == "anchor_count=0"
+
+
 def test_lane_c_prepare_director_validation_payload_injects_focus_and_hud_context():
     context = MagicMock()
     context.get_causal_history_summary.return_value = "causal-history"
@@ -91,6 +141,26 @@ def test_lane_c_prepare_director_validation_payload_injects_focus_and_hud_contex
     assert payload["validation_context"]["encyclopedia"]["npcs"][0]["name"] == "Master"
 
 
+def test_lane_c_python_warning_entries_skip_advisory_only_issues():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    entries, quality_risk = validator._build_python_warning_entries(
+        [
+            {
+                "severity": "MINOR",
+                "category": "scenario_density",
+                "issue": "시나리오 구체성 부족: 구체적 앵커 0개 < 5개",
+                "fix_hint": "기관명 보강",
+                "advisory_only": True,
+                "director_focus": False,
+            }
+        ]
+    )
+
+    assert entries == []
+    assert quality_risk is False
+
+
 def test_lane_c_build_director_validation_result_keeps_pass_with_fix_contract():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     blueprint = {}
@@ -113,9 +183,26 @@ def test_lane_c_build_director_validation_result_keeps_pass_with_fix_contract():
             "feedback": "patch the issue",
             "score": "72",
             "fix_scope": "scene",
+            "repair_scope": "inplace",
+            "authoritative_fix_scope": "inplace",
             "fix_scope_reasoning": "reasoned",
             "re_slice_instruction": "slice again",
             "selection_reason": "selected after review",
+            "repair_contract": {
+                "subtype": "movement",
+                "fix_scope": "scene",
+                "repair_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+                "target_kind": "scene_block",
+                "provenance": "director_authored",
+                "provenance_sources": ["director_compare"],
+            },
+            "scope_authority": {
+                "fix_scope": "scene",
+                "repair_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+                "widened": True,
+            },
             "patch_target_records": [
                 {
                     "summary": "scene_2.summary",
@@ -138,12 +225,62 @@ def test_lane_c_build_director_validation_result_keeps_pass_with_fix_contract():
     assert result["selection_reason"] == "selected after review"
     assert result["verdict_reason"] == "needs repair"
     assert result["quality_risk"] is True
+    assert result["repair_scope"] == "inplace"
+    assert result["authoritative_fix_scope"] == "inplace"
+    assert result["repair_contract"]["subtype"] == "movement"
+    assert result["repair_contract"]["provenance"] == "director_authored"
+    assert result["scope_authority"]["widened"] is True
     assert result["fix_pack"]["patch_targets"] == ["scene_2.summary"]
     assert result["fix_pack"]["patch_target_records"][0]["scene_id"] == "scene_2"
     assert result["fix_pack"]["target_kind"] == "scene_block"
     assert result["fix_pack"]["must_fix"] == ["scene 2 summary must reflect the repaired reveal"]
     assert result["fix_pack"]["success_condition"] == "scene 2 now states the reveal without rewriting the arc shell"
     assert blueprint["_ensemble_meta"]["python_warnings"][0]["source"] == "python_prevalidate"
+
+
+def test_lane_c_build_director_validation_result_surfaces_advisory_fix_pack():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    blueprint = {}
+
+    verdict, result = validator._build_director_validation_result(
+        blueprint=blueprint,
+        pre_result={
+            "issues": [
+                {
+                    "severity": "MINOR",
+                    "category": "scenario_density",
+                    "issue": "anchor density is thin",
+                    "advisory_only": True,
+                    "director_focus": False,
+                    "fix_pack": {
+                        "patch_target_records": [
+                            {
+                                "summary": "integrated_scenario",
+                                "field_path": "integrated_scenario",
+                                "target_kind": "local_sentence",
+                            }
+                        ],
+                        "must_fix": ["add a named market anchor"],
+                        "do_not_regress": ["keep the opening move"],
+                        "success_condition": "integrated scenario adds a named market anchor",
+                        "evidence_summary": "anchor_count=0",
+                    },
+                }
+            ]
+        },
+        director_result={
+            "decision": "PASS",
+            "reason": "fine after director review",
+            "feedback": "",
+            "score": "91",
+        },
+    )
+
+    assert verdict == "PASS"
+    assert result["advisory_fix_pack"]["target_kind"] == "local_sentence"
+    assert result["advisory_fix_pack"]["patch_targets"] == ["integrated_scenario"]
+    assert blueprint["_ensemble_meta"]["advisory_fix_pack"]["evidence_summary"] == "anchor_count=0"
+    assert "python_warnings" not in blueprint["_ensemble_meta"]
 
 
 def test_lane_c_validate_without_director_fail_closes_after_python_prevalidation():
@@ -206,9 +343,11 @@ def test_lane_c_python_pre_validate_combines_structure_fidelity_and_continuity()
 
     categories = [issue["category"] for issue in pre_result["issues"]]
 
-    assert categories[:5] == ["structure", "structure", "structure", "fidelity", "continuity"]
+    assert categories[:2] == ["structure", "structure"]
     assert "opening_anchor" in categories
     assert "mission_clarity" in categories
+    assert "timeline_specificity" in categories
+    assert "protagonist_state" in categories
     assert pre_result["has_critical"] is False
     assert pre_result["has_major_excess"] is True
     assert pre_result["critical_summary"] == ""
@@ -318,19 +457,26 @@ def test_lane_c_python_pre_validate_flags_empty_scene_characters_as_major():
         arc_data={},
     )
 
-    issue = next(issue for issue in pre_result["issues"] if issue["category"] == "scene_completeness")
+    issue = next(
+        issue
+        for issue in pre_result["issues"]
+        if issue["category"] == "scene_completeness" and "scene.characters 누락" in issue["issue"]
+    )
     assert issue["severity"] == "MAJOR"
     assert "2/4" in issue["issue"]
+    assert issue["missing_fields"] == ["characters"]
 
 
-def test_lane_c_python_pre_validate_allows_two_scene_structure_floor():
+def test_lane_c_python_pre_validate_flags_empty_key_events_as_major_scene_completeness():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
     pre_result = validator._python_pre_validate(
         blueprint={
             "scene_breakdown": {
-                "scene_1": {"goal": "주인공이 PB센터에서 첫 매수 버튼을 누른다", "summary": "매수 실행", "characters": ["Hero"]},
-                "scene_2": {"goal": "레버리지 경고와 담보 압박이 동시에 몰려온다", "summary": "압박 도착", "characters": ["PB"]},
+                "scene_1": {"goal": "g1", "summary": "s1", "characters": ["Hero"], "key_events": []},
+                "scene_2": {"goal": "g2", "summary": "s2", "characters": ["PB"], "key_events": []},
+                "scene_3": {"goal": "g3", "summary": "s3", "characters": ["Hero", "PB"], "key_events": ["turn"]},
+                "scene_4": {"goal": "g4", "summary": "s4", "characters": ["PB"], "key_events": []},
             },
             "integrated_scenario": "A" * 900,
         },
@@ -340,9 +486,39 @@ def test_lane_c_python_pre_validate_allows_two_scene_structure_floor():
         arc_data={},
     )
 
-    assert not any(
-        issue["category"] == "structure" and "씬 부족" in issue["issue"] for issue in pre_result["issues"]
+    issue = next(issue for issue in pre_result["issues"] if issue["issue"].startswith("scene.key_events 누락"))
+    assert issue["category"] == "scene_completeness"
+    assert issue["severity"] == "MAJOR"
+    assert "3/4" in issue["issue"]
+    assert issue["missing_fields"] == ["key_events"]
+
+
+def test_lane_c_python_pre_validate_allows_two_scene_structure_floor():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {
+                    "goal": "주인공이 PB센터에서 첫 매수 버튼을 누른다",
+                    "summary": "매수 실행",
+                    "characters": ["Hero"],
+                },
+                "scene_2": {
+                    "goal": "레버리지 경고와 담보 압박이 동시에 몰려온다",
+                    "summary": "압박 도착",
+                    "characters": ["PB"],
+                },
+            },
+            "integrated_scenario": "A" * 900,
+        },
+        constraint_block={},
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
     )
+
+    assert not any(issue["category"] == "structure" and "씬 부족" in issue["issue"] for issue in pre_result["issues"])
 
 
 def test_lane_c_python_pre_validate_flags_arc_timeline_drift_as_major():
@@ -378,6 +554,77 @@ def test_lane_c_python_pre_validate_flags_arc_timeline_drift_as_major():
     assert "2006년 4월 중순 심야" in issue["issue"]
 
 
+def test_lane_c_python_pre_validate_flags_episode_progression_replay_as_critical():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "첫 번째 전화",
+                    "goal": "법인 설립용 미팅 확보",
+                    "summary": "다음 날 아침, 한시우가 자신의 방에서 변호사에게 전화를 건다.",
+                    "characters": ["한시우"],
+                    "key_events": ["방에서 휴대폰으로 미팅을 성사시킨다."],
+                    "location": "성북동 본가, 한시우의 방",
+                    "type": "opening_hook",
+                },
+                "scene_4": {
+                    "title": "가장 비싼 좌석",
+                    "goal": "아버지의 추궁에 응수한다.",
+                    "summary": "서재에서 한정호와 다시 맞서며 계획을 암시한다.",
+                    "characters": ["한시우", "한정호"],
+                    "key_events": ["서재에서 다시 아버지와 대치한다."],
+                    "location": "성북동 본가, 서재",
+                    "type": "cliffhanger",
+                },
+            },
+            "integrated_scenario": "A" * 900,
+        },
+        constraint_block={
+            "must_focus": {"content": "광화문 로펌에서 법인 설립을 의뢰하고, PB센터에서 자산 현금화를 요청한다."},
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_2",
+                        "label": "독립 선언",
+                        "location": "한정호 회장의 서재",
+                        "location_variants": ["한정호 회장의 서재", "서재"],
+                        "characters": ["한시우", "한정호"],
+                        "type": "dialogue_duel",
+                    },
+                    {
+                        "scene_key": "scene_4",
+                        "label": "전장의 서막",
+                        "location": "한시우의 방",
+                        "location_variants": ["한시우의 방", "성북동 본가", "방"],
+                        "characters": ["한시우"],
+                        "type": "cliffhanger",
+                    },
+                ]
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_2": {
+                    "location": "한정호 회장의 서재",
+                    "characters": ["한시우", "한정호"],
+                },
+                "scene_4": {
+                    "location": "한시우의 방",
+                    "characters": ["한시우"],
+                },
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    issue = next(issue for issue in pre_result["issues"] if issue["category"] == "episode_progression")
+    assert issue["severity"] == "CRITICAL"
+    assert "scene_1->scene_4" in issue["issue"] or "scene_4->scene_2" in issue["issue"]
+
+
 def test_lane_c_build_director_validation_result_escalates_binding_issue_to_pass_with_fix():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     blueprint = {}
@@ -405,10 +652,106 @@ def test_lane_c_build_director_validation_result_escalates_binding_issue_to_pass
     assert verdict == "PASS_WITH_FIX"
     assert result["verdict"] == "PASS_WITH_FIX"
     assert result["revision_required"] is True
-    assert result["fix_scope"] == "inplace"
+    assert result["fix_scope"] == "full"
+    assert "regenerate-only repair" in result["fix_scope_reasoning"]
     assert result["binding_prevalidation_issue_count"] == 1
     assert result["binding_prevalidation_categories"] == ["scene_completeness"]
+    assert result["binding_regenerate_only_categories"] == ["scene_completeness"]
+    assert "scene_completeness" in result["binding_regenerate_only_reason"]
     assert "[Binding prevalidation]" in result["feedback"]
+
+
+def test_lane_c_build_director_validation_result_escalates_missing_key_events_to_full_regenerate():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    blueprint = {}
+
+    verdict, result = validator._build_director_validation_result(
+        blueprint=blueprint,
+        pre_result={
+            "issues": [
+                {
+                    "severity": "MAJOR",
+                    "category": "scene_completeness",
+                    "issue": "scene.key_events 누락: 4/4개 씬에서 key_events가 비어 있음",
+                    "fix_hint": "fill key_events",
+                }
+            ]
+        },
+        director_result={
+            "decision": "PASS",
+            "reason": "narrative quality okay",
+            "feedback": "",
+            "score": 79,
+        },
+    )
+
+    assert verdict == "PASS_WITH_FIX"
+    assert result["fix_scope"] == "full"
+    assert result["binding_prevalidation_categories"] == ["scene_completeness"]
+    assert "regenerate-only repair" in result["fix_scope_reasoning"]
+    assert result["binding_regenerate_only_categories"] == ["scene_completeness"]
+
+
+def test_lane_c_build_director_validation_result_escalates_opening_anchor_to_full_regenerate():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    blueprint = {}
+
+    verdict, result = validator._build_director_validation_result(
+        blueprint=blueprint,
+        pre_result={
+            "issues": [
+                {
+                    "severity": "MAJOR",
+                    "category": "opening_anchor",
+                    "issue": "opening contract anchor missing: scene_1.title",
+                    "fix_hint": "scene_1 title and opening anchor를 복원",
+                }
+            ]
+        },
+        director_result={
+            "decision": "PASS",
+            "reason": "narrative quality okay",
+            "feedback": "",
+            "score": 80,
+        },
+    )
+
+    assert verdict == "PASS_WITH_FIX"
+    assert result["fix_scope"] == "full"
+    assert result["binding_prevalidation_categories"] == ["opening_anchor"]
+    assert result["binding_regenerate_only_categories"] == ["opening_anchor"]
+    assert "opening_anchor" in result["fix_scope_reasoning"]
+
+
+def test_lane_c_build_director_validation_result_escalates_episode_progression_to_full_regenerate():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    blueprint = {}
+
+    verdict, result = validator._build_director_validation_result(
+        blueprint=blueprint,
+        pre_result={
+            "issues": [
+                {
+                    "severity": "CRITICAL",
+                    "category": "episode_progression",
+                    "issue": "직전 화에서 이미 소비한 scene family를 이번 화에서 다시 재연함",
+                    "fix_hint": "현재 화 MUST_FOCUS의 새 사건 축으로 전진",
+                }
+            ]
+        },
+        director_result={
+            "decision": "PASS",
+            "reason": "narrative quality okay",
+            "feedback": "",
+            "score": 83,
+        },
+    )
+
+    assert verdict == "PASS_WITH_FIX"
+    assert result["fix_scope"] == "full"
+    assert result["binding_prevalidation_categories"] == ["episode_progression"]
+    assert result["binding_regenerate_only_categories"] == ["episode_progression"]
+    assert "episode_progression" in result["fix_scope_reasoning"]
 
 
 def test_lane_c_build_director_validation_result_escalates_dead_npc_and_fact_lock_binding_categories():

@@ -1,6 +1,6 @@
 # Remaining Repair Queue Cross-PC Handoff
 
-Date: 2026-04-10
+Date: 2026-04-11
 Status: active continuation packet
 Audience:
 
@@ -36,20 +36,21 @@ Current hard law:
 
 As of this packet:
 
-- completed same-day repair archives:
+- completed bounded repair archives:
+  - `smart_new_hire`
+  - `wuxia_heavenly_physician`
+  - `office_checkup_next_day`
   - `chaebol_ent_empire`
   - `pantech_cyworld_reborn`
 - remaining current repair-worth-it shelf:
-  - `wuxia_heavenly_physician`
-  - `office_checkup_next_day`
-  - `smart_new_hire`
+  - none
 
 Operational state:
 
 - opening pacing triage:
-  - `RED 3 / YELLOW 2 / GREEN 9 / UNTRIAGED 1`
+  - `RED 1 / YELLOW 2 / GREEN 12 / UNTRIAGED 1` (`2026-04-11` rescan after `smart_new_hire` opening closeout)
 - current YELLOW salvageability split:
-  - `repair-worth-it 3 / kill-candidate 0`
+  - `repair-worth-it 0 / resolved 3 / kill-candidate 0`
 
 Primary SSOT:
 
@@ -70,16 +71,13 @@ If continuing from another PC, read in this order:
 6. target TR draft
 7. target repair note if one already exists
 
-Use these target specs:
-
-- [repair_spec_wuxia_heavenly_physician.md](/C:/Users/wjjo/Desktop/글도비/docs/2026-04-10/repair_spec_wuxia_heavenly_physician.md)
-- [repair_spec_office_checkup_next_day.md](/C:/Users/wjjo/Desktop/글도비/docs/2026-04-10/repair_spec_office_checkup_next_day.md)
-
 For `smart_new_hire`:
 
-- no bounded execution spec exists yet
-- if this work is chosen next, first create:
-  - `docs/2026-04-10/repair_spec_smart_new_hire.md`
+- bounded execution spec now exists:
+  - [repair_spec_smart_new_hire.md](/C:/Users/PC/Desktop/글도비/docs/2026-04-10/repair_spec_smart_new_hire.md)
+- bounded repair note now exists:
+  - [smart_new_hire_repair_note.md](/C:/Users/PC/Desktop/글도비/docs/2026-04-11/smart_new_hire_repair_note.md)
+- if this work is chosen next, do not reopen `B01~B10` or `B41~B50`; the repair-first lane is closed and the next move should come from a fresh non-repair operator order
 
 ---
 
@@ -87,15 +85,16 @@ For `smart_new_hire`:
 
 Recommended next repair order:
 
-1. `wuxia_heavenly_physician`
-2. `office_checkup_next_day`
-3. `smart_new_hire` after a fresh bounded spec is written
+1. no active repair-first target remains
+2. if work resumes on `smart_new_hire`, use a fresh non-repair operator order (`BI`, `work_guard`, or `B51+`), not another repair pass
 
 Why:
 
-- `wuxia` is still the cleanest bounded `TR only` job
-- `office` is harder because it is `preprocess + phase0 + TR`
-- `smart_new_hire` still needs a spec before execution
+- `wuxia` already cleared whole-run `YELLOW` on `2026-04-11` and now waits on fresh benchmark closure, not further repair
+- `office` already cleared both opening and whole-run `YELLOW` on `2026-04-11` and now waits on benchmark/manual closeout, not further repair
+- `smart_new_hire` already consumed its `B41~B45` bounded repair, its planned `B46~B50` continuation, and its opening manual re-audit on `2026-04-11`
+- opening pacing now returns `GREEN` under declared-contract evidence (`B02 / B03 / B06`)
+- the pair no longer belongs to the active repair-first shelf
 
 ---
 
@@ -103,91 +102,65 @@ Why:
 
 ### 5.1 `wuxia_heavenly_physician`
 
-Current debt:
+Current state:
 
-- whole-run `YELLOW`
-- late-run opponent pressure fade
-- especially:
-  - `B61`
-  - `B65`
-  - `B66`
-  - `B70`
-
-Surface:
-
-- `TR only`
-
-Primary window:
-
-- `B60~B66`
-
-Tail check:
-
-- `B67~B70`
-
-Success condition:
-
-- whole-run pacing re-audit exits `YELLOW`
-- late blocks no longer feel like blank-opponent drag
-- craft rhythm survives
+- completed `2026-04-11`
+- whole-run pacing re-audit now returns `GREEN`
+- remaining late blank block is `B70` epilogue only
+- pair now waits on fresh benchmark closure because the `TR` was materially touched after the last benchmark artifact
 
 Files:
 
 - [09_wuxia_heavenly_physician_tr_block_070_draft.json](/C:/Users/wjjo/Desktop/글도비/treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json)
 - [repair_spec_wuxia_heavenly_physician.md](/C:/Users/wjjo/Desktop/글도비/docs/2026-04-10/repair_spec_wuxia_heavenly_physician.md)
-- [green-whole-run-pacing-reaudit-wave.md](/C:/Users/wjjo/Desktop/글도비/docs/2026-04-10/green-whole-run-pacing-reaudit-wave.md)
+- [wuxia_heavenly_physician_repair_note.md](/C:/Users/PC/Desktop/글도비/docs/2026-04-11/wuxia_heavenly_physician_repair_note.md)
 
 ### 5.2 `office_checkup_next_day`
 
-Current debt:
+Current state:
 
-- opening `YELLOW`
-- declared contract vs actual delivery mismatch
-- additional local drag:
-  - `B23~B25`
-  - `B31~B35`
-  - `B61~B67`
-
-Surface:
-
-- `preprocess + phase0 + TR`
-
-Authority-first rule:
-
-1. decide whether current opening contract remains authoritative
-2. prefer `delivery-up`, not `contract-down`
-3. only then clean later drag pockets
+- completed `2026-04-11`
+- opening pacing triage now returns `GREEN` with declared-contract evidence
+- whole-run pacing triage now returns `GREEN`
+- pair now waits on fresh benchmark/manual closeout because the live `TR` was materially touched after the last benchmark artifact
 
 Files:
 
-- [07_office_checkup_next_day_tr_block_070_draft.json](/C:/Users/wjjo/Desktop/글도비/treatments/07_office_checkup_next_day_tr_block_070_draft.json)
-- [office_checkup_next_day_phase0_design.json](/C:/Users/wjjo/Desktop/글도비/treatments/phase0/office_checkup_next_day_phase0_design.json)
-- [material_bundle_summary.json](/C:/Users/wjjo/Desktop/글도비/treatments/preprocess/office_checkup_next_day/material_bundle_summary.json)
-- [repair_spec_office_checkup_next_day.md](/C:/Users/wjjo/Desktop/글도비/docs/2026-04-10/repair_spec_office_checkup_next_day.md)
+- [07_office_checkup_next_day_tr_block_070_draft.json](/C:/Users/PC/Desktop/글도비/treatments/07_office_checkup_next_day_tr_block_070_draft.json)
+- [office_checkup_next_day_repair_note.md](/C:/Users/PC/Desktop/글도비/docs/2026-04-11/office_checkup_next_day_repair_note.md)
+- [repair_spec_office_checkup_next_day.md](/C:/Users/PC/Desktop/글도비/docs/2026-04-10/repair_spec_office_checkup_next_day.md)
 
 ### 5.3 `smart_new_hire`
 
 Current debt:
 
-- still `repair-worth-it`
-- no current bounded execution spec
-- saved truth currently ends at `B45`
+- no active repair-first debt remains
+- bounded execution spec published on `2026-04-11`
+- bounded `B45` anchor repair completed on `2026-04-11`
+- planned `B46~B50` continuation completed on `2026-04-11`
+- opening manual re-audit completed on `2026-04-11`
+- saved truth currently ends at `B50`
 
 Known concentration:
 
-- `ARC-05`
-- especially `B41~B45`
+- post-repair fresh-order gate only
+- current local reading: `B45` quiet boundary tightened, `ARC-05` continuation serialized through exit, and opening contract explicitly declared through `B01~B10`; do not spend another unit in `B01~B10` or `B41~B50` without a new inconsistency
 
 Required first step:
 
-- create `repair_spec_smart_new_hire.md`
-- do not start editing the TR before the spec exists
+- none on the repair ladder
+- if the work is reopened, choose a fresh non-repair lane:
+  - `BI`
+  - `work_guard`
+  - `B51+`
 
 Files:
 
-- [smart_new_hire_tr_block_001_draft.json](/C:/Users/wjjo/Desktop/글도비/treatments/smart_new_hire_tr_block_001_draft.json)
-- [smart_new_hire_phase0_design.json](/C:/Users/wjjo/Desktop/글도비/treatments/phase0/smart_new_hire_phase0_design.json)
-- [smart_new_hire_live_status.md](/C:/Users/wjjo/Desktop/글도비/docs/2026-04-09/smart_new_hire_live_status.md)
+- [smart_new_hire_tr_block_001_draft.json](/C:/Users/PC/Desktop/글도비/treatments/smart_new_hire_tr_block_001_draft.json)
+- [smart_new_hire_phase0_design.json](/C:/Users/PC/Desktop/글도비/treatments/phase0/smart_new_hire_phase0_design.json)
+- [smart_new_hire_live_status.md](/C:/Users/PC/Desktop/글도비/docs/2026-04-09/smart_new_hire_live_status.md)
+- [repair_spec_smart_new_hire.md](/C:/Users/PC/Desktop/글도비/docs/2026-04-10/repair_spec_smart_new_hire.md)
+- [smart_new_hire_repair_note.md](/C:/Users/PC/Desktop/글도비/docs/2026-04-11/smart_new_hire_repair_note.md)
 
 ---
 
@@ -209,7 +182,7 @@ Use opening triage especially for:
 
 - `office_checkup_next_day`
 
-Use both once a new `smart_new_hire` repair spec is executed.
+Use both after the next `smart_new_hire` continuation unit, because opening `YELLOW` still remains legacy-heuristic-only.
 
 ---
 
@@ -217,7 +190,7 @@ Use both once a new `smart_new_hire` repair spec is executed.
 
 Create one execution note:
 
-- `docs/2026-04-10/<work_id>_repair_note.md`
+- `docs/2026-04-11/<work_id>_repair_note.md`
 
 Then update current-state surfaces:
 
@@ -268,6 +241,152 @@ Reason:
 If someone else continues this work:
 
 - read this file first
-- do `wuxia` before `office`
-- do not touch `smart_new_hire` until a fresh bounded spec exists
+- execute `smart_new_hire` via the published bounded spec
+- do not reopen `B41~B45`
+- continue from `B46` only by fresh operator order
 - append every continuation session to this same file before leaving
+
+## Session Log - 2026-04-11 00:00
+
+- operator: Codex
+- target: `wuxia_heavenly_physician`
+- files touched:
+  - `treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
+  - `docs/2026-04-11/wuxia_heavenly_physician_repair_note.md`
+  - current-state queue / registry docs
+- commands run:
+  - `python -X utf8 scripts/production_pair_whole_run_pacing_triage_runner.py --treatment treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
+  - `python -X utf8 scripts/production_pair_opening_pacing_triage_runner.py --treatment treatments/09_wuxia_heavenly_physician_tr_block_070_draft.json`
+  - `python -X utf8 scripts/validate_material_ssot.py`
+- result:
+  - bounded late-run pressure reinjection repair completed
+  - `B61/B65/B66` now carry explicit opponent pressure
+  - whole-run pacing triage moved from `YELLOW` to `GREEN`
+- unresolved:
+  - `wuxia_heavenly_physician` now needs fresh benchmark closure because the live `TR` was materially touched after the latest benchmark artifact
+  - remaining active repair queue is `office_checkup_next_day` then `smart_new_hire`
+- next admissible step:
+  - execute `office_checkup_next_day` authority-first repair
+
+## Session Log - 2026-04-11 00:01
+
+- operator: Codex
+- target: `office_checkup_next_day`
+- files touched:
+  - `treatments/07_office_checkup_next_day_tr_block_070_draft.json`
+  - `docs/2026-04-11/office_checkup_next_day_repair_note.md`
+  - current-state queue / registry docs
+- commands run:
+  - `python -X utf8 scripts/production_pair_opening_pacing_triage_runner.py --treatment treatments/07_office_checkup_next_day_tr_block_070_draft.json`
+  - `python -X utf8 scripts/production_pair_whole_run_pacing_triage_runner.py --treatment treatments/07_office_checkup_next_day_tr_block_070_draft.json`
+  - `python -X utf8 scripts/validate_material_ssot.py`
+- result:
+  - authority-first opening repair aligned the live read to `signboard B03 / reevaluation B05 / ticket B03`
+  - late blank-opponent / endgame-low-stakes drag in `B65/B66/B67/B69/B70` was cleared
+  - opening pacing triage moved from `YELLOW` to `GREEN`
+  - whole-run pacing triage moved from `YELLOW` to `GREEN`
+- unresolved:
+  - `office_checkup_next_day` now needs fresh benchmark closure or manual closeout because the live `TR` was materially touched after the latest benchmark artifact
+  - remaining active repair queue is now `smart_new_hire` only
+- next admissible step:
+  - publish `repair_spec_smart_new_hire.md` before touching its `TR`
+
+## Session Log - 2026-04-11 00:02
+
+- operator: Codex
+- target: `smart_new_hire`
+- files touched:
+  - `docs/2026-04-10/repair_spec_smart_new_hire.md`
+  - `docs/2026-04-10/repair-first_queue_execution_specs.md`
+  - `docs/2026-04-10/remaining_repair_queue_cross_pc_handoff.md`
+  - `docs/2026-04-10/current-yellow-salvageability-split.md`
+- commands run:
+  - `python -X utf8 scripts/production_pair_opening_pacing_triage_runner.py --treatment treatments/smart_new_hire_tr_block_001_draft.json --json`
+  - `python -X utf8 scripts/production_pair_whole_run_pacing_triage_runner.py --treatment treatments/smart_new_hire_tr_block_001_draft.json --json`
+  - UTF-8 readback of `smart_new_hire` Phase0 / preprocess / live-status / live-TR `B41~B45`
+- result:
+  - bounded repair spec published
+  - active queue now has one executable unit: `smart_new_hire` `B41~B45`
+  - `B45` fixed as the mandatory anchor while preserving the quiet lock
+- unresolved:
+  - live `TR` has not been edited yet
+  - opening `YELLOW` remains a secondary legacy-heuristic signal and should be re-read only after the bounded `ARC-05` repair
+- next admissible step:
+  - execute bounded `smart_new_hire` `TR` repair on `B41~B45`
+
+## Session Log - 2026-04-11 00:03
+
+- operator: Codex
+- target: `smart_new_hire`
+- files touched:
+  - `treatments/smart_new_hire_tr_block_001_draft.json`
+  - `docs/2026-04-09/smart_new_hire_live_status.md`
+  - `docs/2026-04-11/smart_new_hire_repair_note.md`
+  - current-state queue docs
+- commands run:
+  - `python -X utf8 scripts/production_pair_whole_run_pacing_triage_runner.py --treatment treatments/smart_new_hire_tr_block_001_draft.json --json`
+  - `python -X utf8 scripts/production_pair_opening_pacing_triage_runner.py --treatment treatments/smart_new_hire_tr_block_001_draft.json --json`
+  - `python -X utf8 scripts/validate_material_ssot.py`
+- result:
+  - bounded `B45` quiet-boundary tightening completed without adding `B46+` truth
+  - whole-run pacing remains `GREEN` and `late_blank_opponent` cleared from `[45]` to `[]`
+  - opening pacing still reads `YELLOW`, but only under `legacy_heuristic`
+- unresolved:
+  - opening contract is still undeclared inside `B01~B10`
+  - `smart_new_hire` still needs fresh continuation at `B46~B50`
+- next admissible step:
+  - continue `smart_new_hire` from `B46`
+
+## Session Log - 2026-04-11 00:04
+
+- operator: Codex
+- target: `smart_new_hire`
+- files touched:
+  - `treatments/smart_new_hire_tr_block_001_draft.json`
+  - `docs/2026-04-09/smart_new_hire_live_status.md`
+  - `docs/2026-04-11/smart_new_hire_repair_note.md`
+  - `docs/2026-04-11/smart_new_hire_arc05_envelope_summary.md`
+  - current-state queue docs
+- commands run:
+  - inline UTF-8 capital/direction checks on live `TR`
+  - `python -X utf8 scripts/stage0_handoff_validator.py --work-id smart_new_hire`
+  - `python -X utf8 scripts/production_pair_whole_run_pacing_triage_runner.py --treatment treatments/smart_new_hire_tr_block_001_draft.json --json`
+  - `python -X utf8 scripts/production_pair_opening_pacing_triage_runner.py --treatment treatments/smart_new_hire_tr_block_001_draft.json --json`
+  - `python -X utf8 scripts/validate_material_ssot.py`
+- result:
+  - planned `B46~B50` continuation serialized through `ARC-05` exit
+  - `B48` mandatory defeat lock preserved and `B50` now closes on 승진 + 독자 line + first affiliate ticket
+  - whole-run pacing remains `GREEN`
+  - opening pacing remains `YELLOW`, but only under `legacy_heuristic`
+- unresolved:
+  - opening contract is still undeclared inside `B01~B10`
+  - `scripts/block_continuity_checker.py` still resolves this work to the missing `..._block_070_draft.json` path, so live continuity was checked directly against the saved `TR`
+- next admissible step:
+  - run `smart_new_hire` opening manual re-audit by fresh operator order
+
+## Session Log - 2026-04-11 00:32
+
+- operator: Codex
+- target: `smart_new_hire`
+- files touched:
+  - `treatments/smart_new_hire_tr_block_001_draft.json`
+  - `docs/2026-04-09/smart_new_hire_live_status.md`
+  - `docs/2026-04-11/smart_new_hire_repair_note.md`
+  - `docs/2026-04-11/smart_new_hire_near_term_wave_plan.md`
+  - current-state queue docs
+- commands run:
+  - `python -X utf8 scripts/production_pair_opening_pacing_triage_runner.py --treatment treatments/smart_new_hire_tr_block_001_draft.json --json`
+  - `python -X utf8 scripts/production_pair_whole_run_pacing_triage_runner.py --treatment treatments/smart_new_hire_tr_block_001_draft.json --json`
+  - `python -X utf8 scripts/stage0_handoff_validator.py --work-id smart_new_hire`
+  - `python -X utf8 scripts/validate_material_ssot.py`
+- result:
+  - opening manual re-audit completed
+  - `B01~B10` now declare opening contract fields
+  - `B01` false signboard keyword was removed without changing the access receipt
+  - opening pacing now returns `GREEN` under declared-contract evidence (`B02 / B03 / B06`)
+  - whole-run pacing remains `GREEN`
+- unresolved:
+  - `scripts/block_continuity_checker.py` still resolves this work to the missing `..._block_070_draft.json` path, so live continuity is still checked directly against the saved `TR`
+- next admissible step:
+  - no further repair-first step remains
+  - if reopening `smart_new_hire`, use a fresh non-repair lane: `BI`, `work_guard`, or `B51+`

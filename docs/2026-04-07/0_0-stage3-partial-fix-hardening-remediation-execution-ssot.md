@@ -1,14 +1,14 @@
 # 0_0 Stage3 Partial-Fix Hardening Remediation Execution SSOT
 
 Date: 2026-04-07
-Status: partially_realized (2026-04-07 merge-survey promotion clarified shared schema dependency and `partial_fix_eval` sink parity inside this lane; a first bounded tranche has now landed across Stage3 validator/runtime/advisory sinks by consuming shared `PatchTargetRecord` records, preserving a Stage3 `fix_pack-lite` contract, appending bounded patch guidance, and persisting `partial_fix_eval` into validate/advisory/meta surfaces, the later 2026-04-10 aborted `00_000` fresh run then promoted this lane from a proof-deferred child to a live runtime bug owner because Stage3 ep1 reaches `PASS_WITH_FIX` locally but the repair loop could discard re-audit `PASS < quality_gate` outcomes back into long reject/retry churn while patch drift still showed secondary preservation debt, the same-day bounded runtime hardening follow-up now preserves low-score `PASS` patch state for the next retry path, and the later same-day structural survey plus layering-first adversarial audit now split the remaining owner surfaces more sharply: packet layering / threshold alignment / canonical patch anchors return to the parent lane, while this child lane keeps verifier, retry-exhaustion, and locality-preservation debt)
+Status: partially_realized (2026-04-07 merge-survey promotion clarified shared schema dependency and `partial_fix_eval` sink parity inside this lane; a first bounded tranche has now landed across Stage3 validator/runtime/advisory sinks by consuming shared `PatchTargetRecord` records, preserving a Stage3 `fix_pack-lite` contract, appending bounded patch guidance, and persisting `partial_fix_eval` into validate/advisory/meta surfaces, the later 2026-04-10 aborted `00_000` fresh run then promoted this lane from a proof-deferred child to a live runtime bug owner because Stage3 ep1 reaches `PASS_WITH_FIX` locally but the repair loop could discard re-audit `PASS < quality_gate` outcomes back into long reject/retry churn while patch drift still showed secondary preservation debt, the same-day bounded runtime hardening follow-up now preserves low-score `PASS` patch state for the next retry path, the later same-day structural survey plus layering-first adversarial audit then split the remaining owner surfaces more sharply, the first 2026-04-13 live-run retry-plateau follow-up now blocks low-yield inplace retry reopening after `PASS_WITH_FIX` exhaustion and repeated inplace score/signature plateau, and a second same-day live-rerun follow-up is now also landed: `Director PASS < quality_gate` no longer reopens the same inplace lane on the next retry, and Stage3 blueprint scoring now suppresses blind live-HUD `V46` current-state injection unless an explicit `blueprint_scoring_hud` is supplied, moving this child lane back toward proof-pending verifier / locality debt rather than same-family reopen churn)
 Canonical Path: `docs/2026-04-07/0_0-stage3-partial-fix-hardening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-partial-fix-hardening-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `5a2ef92ab04e46d47ee73b9d56d3e546544576c0`
 - Baseline Dirty Summary: `dirty: 139 tracked, 106 untracked; hotspots: docs/, treatments/, material_ssot/, modules/, tests/`
 - Resume Commit: `e597a7bf4836dab71547e350b015f6658a1cfb03`
-- Resume Drift Summary: `2026-04-07 bounded Stage3 partial-fix tranche landed across `unified_blueprint_validator.py`, `three_phase_blueprint_runtime.py`, and `stage3_orchestrator.py`: validator results now preserve structured Stage3 `fix_pack-lite` payloads, the runtime appends bounded patch-target guidance and persists `partial_fix_eval` through `phases.validate`, and Stage3 advisory / `_stage3_meta` sinks now retain the compact fix-pack plus eval payloads with focused validation closed; the later `docs/2026-04-10/00_000-stage3-fresh-run-abort-post-run-merge-audit.md` then records a fresh current-HEAD run that finally reaches Stage3 ep1 and shows this lane's remaining live debt directly: a `PASS_WITH_FIX` repair loop could discard post-patch `PASS < quality_gate` re-audits back into the broader reject/retry path, while patch drift still remained a secondary preservation issue; the same-day bounded runtime follow-up in `three_phase_blueprint_runtime.py` now preserves that low-score `PASS` patch state for retry carry-forward and aligns reject bookkeeping to the re-audit score, and the later current-HEAD rerun plus `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md` / `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md` now clarify that packet layering / threshold alignment / canonical patch anchors should not be absorbed into this child lane`
+- Resume Drift Summary: `2026-04-07 bounded Stage3 partial-fix tranche landed across `unified_blueprint_validator.py`, `three_phase_blueprint_runtime.py`, and `stage3_orchestrator.py`: validator results now preserve structured Stage3 `fix_pack-lite` payloads, the runtime appends bounded patch-target guidance and persists `partial_fix_eval` through `phases.validate`, and Stage3 advisory / `_stage3_meta` sinks now retain the compact fix-pack plus eval payloads with focused validation closed; the later `docs/2026-04-10/00_000-stage3-fresh-run-abort-post-run-merge-audit.md` then records a fresh current-HEAD run that finally reaches Stage3 ep1 and shows this lane's remaining live debt directly: a `PASS_WITH_FIX` repair loop could discard post-patch `PASS < quality_gate` re-audits back into the broader reject/retry path, while patch drift still remained a secondary preservation issue; the same-day bounded runtime follow-up in `three_phase_blueprint_runtime.py` now preserves that low-score `PASS` patch state for retry carry-forward and aligns reject bookkeeping to the re-audit score, the later current-HEAD rerun plus `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md` / `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md` then clarified that packet layering / threshold alignment / canonical patch anchors should not be absorbed into this child lane, and the 2026-04-13 live-run retry-plateau follow-up now blocks low-yield inplace retry reopening after repeated `PASS_WITH_FIX unresolved` or repeated inplace score/signature plateau so the next action returns to proof rather than another same-family patch loop`
 Source Survey Docs:
 - `docs/2026-04-07/stage3-data-shape-pwf-bounded-survey.md`
 - `docs/2026-04-07/stage-parallel-container-and-pwf-master-survey.md`
@@ -19,6 +19,9 @@ Source Survey Docs:
 - `docs/2026-04-10/00_000-stage3-fresh-run-abort-post-run-merge-audit.md`
 - `docs/2026-04-10/stage3-blueprint-first-pass-structural-survey.md`
 - `docs/2026-04-10/stage3-blueprint-layering-first-adversarial-audit.md`
+- `docs/2026-04-13/stage3-live-run-retry-plateau-parallel-full-survey.md`
+- `docs/2026-04-13/stage3-live-run-quality-gate-patch-reopen-parallel-full-survey.md`
+- `docs/2026-04-13/stage3-live-run-quality-gate-patch-reopen-3pass-audit.md`
 Evidence Artifacts:
 - `docs/2026-04-07/stage-parallel-data-shape-pwf-evidence.json`
 - `0_temp.txt`
@@ -218,6 +221,24 @@ Goal:
 Realization direction:
 
 - detect repeated failures on the same scene/path target
+
+### 2026-04-13 Live Retry Plateau Update
+
+- `three_phase_blueprint_runtime.py` now tracks Stage3 reject origin, reject signature, repeated reject-score/signature streaks, inplace reject streaks, and advisory-only reject streaks inside `_ThreePhaseRetryState`.
+- `_finalize_pass_with_fix_failure(...)` now labels exhausted patch loops as `pass_with_fix_unresolved`, so the next retry no longer reopens the same cheap inplace lane by default.
+- `_run_phase2_generation(...)` now blocks inplace patch reopening when the current retry state shows:
+  - `PASS_WITH_FIX` exhaustion on the immediately preceding reject
+  - repeated inplace score plateau
+  - repeated inplace issue/signature plateau
+  - repeated advisory-only residual plateau
+- this follow-up is intentionally fail-only:
+  - it does not widen Stage3 packet layering
+  - it does not retune broad Stage3 prompting
+  - it aims only to stop the low-yield retry loop visible in the 2026-04-12/13 live run logs
+- later same-day live-rerun follow-up:
+  - `three_phase_blueprint_runtime.py` now marks `Director PASS < quality_gate` downgrades with `reject_origin=quality_gate_reject`
+  - the same retry-plateau gate now blocks the next retry from reopening `inplace` on that quality-gate family and instead routes back to `full_ensemble`
+  - `scoring_validator.py` now suppresses blind `martial_hud`/`actual_truth` V46 injection during `mode=BLUEPRINT` scoring unless an explicit `blueprint_scoring_hud` is supplied
 - escalate earlier to broader regenerate flow when locality has collapsed
 - preserve enough target identity in retry metadata for later shared aggregation
 - do not fabricate Stage4-style text before/after excerpts in this dict-first lane
