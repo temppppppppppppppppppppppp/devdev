@@ -22,7 +22,16 @@ from modules.core.constants import AIModels, GenreTypes, smart_truncate
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.project_support import normalize_external_pov_insert_policy
 from modules.core.prompt_loader import PromptLoader
-from modules.core.response_schemas import BLUEPRINT_SCHEMA
+from modules.core.response_schemas import (
+    BLUEPRINT_ENSEMBLE_MIN_INTEGRATED_SCENARIO_CHARS,
+    BLUEPRINT_OPENING_TRANSITION_TYPES,
+    BLUEPRINT_SCHEMA,
+)
+from modules.core.scene_obligation_heuristics import has_actionable_obligation_text, has_meaningful_state_value
+from modules.core.stage_cross_stage_contract import (
+    apply_opening_transition_contract,
+    read_declared_opening_transition_type,
+)
 from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _SYSTEM_CFG, AgentErrorType, BaseAgent
@@ -129,6 +138,37 @@ _BLUEPRINT_META_RECAP_MARKERS = tuple(
         "이번 화",
         "이번 에피소드",
     )
+)
+
+_TACTICAL_INTRUSION_ENTRY_MARKERS = (
+    "취객",
+    "난입",
+    "들이닥",
+    "무단침입",
+    "괴한",
+    "습격",
+    "침입자",
+    "철문",
+    "그림자",
+    "심부름센터",
+    "직원",
+)
+
+_TACTICAL_INTRUSION_CONFLICT_MARKERS = (
+    "멱살",
+    "결박",
+    "제압",
+    "처리",
+    "대응",
+    "차단",
+    "쫓아낸",
+    "도망치",
+    "위협",
+    "협박",
+    "박살",
+    "쇠파이프",
+    "쇠지렛대",
+    "군화",
 )
 
 
@@ -266,10 +306,14 @@ class BlueprintEnsembleGenerator(BaseAgent):
     def _resolve_blueprint_arc_focus(self, ep_num: int, arc_data: dict, constraint_block: dict) -> str:
         arc_focus = constraint_block.get("must_focus", {}).get("content", "")
         if not arc_focus:
+            # Stage3 producer-input 전용: tactical_doc shadowing 방지를 위해 prefer_full_doc 모드 사용.
+            # episode_details bullet TL;DR과 per-episode tactical_doc slice를 함께 결합한다.
+            # 다른 12개 호출자(Stage4/Director/continuity/ToT/prompt_builder 등)는 default(False)를 유지.
             arc_focus = extract_episode_tactical(
                 arc_data.get("tactical_doc", ""),
                 ep_num,
                 episode_details=arc_data.get("episode_details"),
+                prefer_full_doc=True,
             )
 
         episode_details = arc_data.get("episode_details") or []
@@ -313,6 +357,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
         arc_focus = self._resolve_blueprint_arc_focus(ep_num, arc_data, constraint_block)
         genre = self._resolve_blueprint_ensemble_genre()
         constraints_str = self._format_constraints(constraint_block, genre=genre)
+        must_focus = constraint_block.get("must_focus", {}) if isinstance(constraint_block, dict) else {}
+        tactical_excerpt = str(must_focus.get("content", "") or "").strip() if isinstance(must_focus, dict) else ""
+        if not tactical_excerpt:
+            tactical_excerpt = str(arc_focus or "").strip()
         prev_info = self._format_prev_info_expanded(prev_blueprint, prev_blueprints, prev_manuscripts_text)
         hud_context = self._build_hud_context(state_tracker, ep_num)
 
@@ -334,6 +382,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             "arc_focus": arc_focus,
             "genre": genre,
             "constraints_str": constraints_str,
+            "tactical_excerpt": tactical_excerpt,
             "prev_info": prev_info,
             "hud_context": hud_context,
             "cache_name": cache_info.get("cache_name"),
@@ -365,6 +414,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         active_strategies: list[dict],
         arc_focus: str,
         constraints_str: str,
+        tactical_excerpt: str,
         prev_info: str,
         feedback: str,
         strategy_specific_feedback: str,
@@ -374,6 +424,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         hud_context: str,
         genre: str,
         cache_name: str,
+        prev_blueprint: dict | None,
     ) -> tuple[list[dict], list[str]]:
         candidates: list[dict] = []
         worker_error_types: list[str] = []
@@ -389,6 +440,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         ep_num=ep_num,
                         arc_focus=arc_focus,
                         constraints_str=constraints_str,
+                        tactical_excerpt=tactical_excerpt,
                         prev_info=prev_info,
                         strategy=strategy,
                         feedback=feedback,
@@ -402,6 +454,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         hud_context=hud_context,
                         genre=genre,
                         cache_name=cache_name,
+                        prev_blueprint=prev_blueprint,
                     )
                     futures[future] = strategy_name
                     self._operator_log(
@@ -489,8 +542,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
             integrated = candidate.get("integrated_scenario", "")
             integrated_len = len(integrated) if isinstance(integrated, str) else 0
             scene_gate_passed, scene_count, _, _ = evaluate_stage3_scene_cardinality(scenes, integrated)
+            contract_reason = self._blueprint_contract_admission_reason(candidate)
 
-            if scene_gate_passed and integrated_len >= 500:
+            if (
+                scene_gate_passed
+                and integrated_len >= BLUEPRINT_ENSEMBLE_MIN_INTEGRATED_SCENARIO_CHARS
+                and not contract_reason
+            ):
                 candidate["_qualified"] = True
                 candidate["_scene_count"] = scene_count
                 candidate["_length"] = integrated_len
@@ -498,7 +556,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 logging.info(f" {strategy_name}: 통과 (씬 {scene_count}개, {integrated_len}자)")
             else:
                 disqualified.append((strategy_name, scene_count, integrated_len))
-                logging.info(f" {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자)")
+                reason_suffix = f", 사유={contract_reason}" if contract_reason else ""
+                logging.info(f" {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자{reason_suffix})")
 
         return qualified_candidates, disqualified
 
@@ -584,6 +643,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             active_strategies=active_strategies,
             arc_focus=context_bundle["arc_focus"],
             constraints_str=context_bundle["constraints_str"],
+            tactical_excerpt=context_bundle["tactical_excerpt"],
             prev_info=context_bundle["prev_info"],
             feedback=feedback,
             strategy_specific_feedback=strategy_specific_feedback,
@@ -593,6 +653,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             hud_context=context_bundle["hud_context"],
             genre=context_bundle["genre"],
             cache_name=context_bundle["cache_name"],
+            prev_blueprint=prev_blueprint,
         )
 
         self.last_error_types = list(worker_error_types)
@@ -615,6 +676,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         ep_num: int,
         arc_focus: str,
         constraints_str: str,
+        tactical_excerpt: str,
         prev_info: str,
         strategy: dict,
         feedback: str = "",
@@ -624,6 +686,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         hud_context: str = "",
         genre: str = GenreTypes.WUXIA,
         cache_name: str = "",
+        prev_blueprint: dict | None = None,
     ) -> dict | tuple[None, str] | None:
         """Generate a single blueprint candidate."""
         try:
@@ -682,6 +745,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 full_prompt_fallback=full_prompt_fallback,
                 strategy_name=strategy_name,
                 genre=genre,
+                tactical_excerpt=tactical_excerpt,
+                prev_blueprint=prev_blueprint,
             )
         except Exception as e:
             import traceback
@@ -772,6 +837,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
         full_prompt_fallback: str,
         strategy_name: str,
         genre: str,
+        tactical_excerpt: str = "",
+        prev_blueprint: dict | None = None,
     ) -> dict | tuple[None, str]:
         response = self._ask_with_cached_context(
             cache_name=cache_name,
@@ -790,7 +857,172 @@ class BlueprintEnsembleGenerator(BaseAgent):
             return None, AgentErrorType.SCHEMA_INCOMPATIBLE
         if "scene_breakdown" not in result or "integrated_scenario" not in result:
             return None, AgentErrorType.SCHEMA_INCOMPATIBLE
-        return self._sanitize_blueprint_candidate(result, strategy_name=strategy_name, genre=genre)
+        return self._sanitize_blueprint_candidate(
+            result,
+            strategy_name=strategy_name,
+            genre=genre,
+            tactical_excerpt=tactical_excerpt,
+            prev_blueprint=prev_blueprint,
+        )
+
+    @staticmethod
+    def _scene_has_meaningful_payload(scene: dict) -> bool:
+        if not isinstance(scene, dict):
+            return False
+
+        for field_name in ("summary", "description", "goal", "content"):
+            if has_actionable_obligation_text(scene.get(field_name, "")):
+                return True
+
+        raw_events = scene.get("key_events", [])
+        if isinstance(raw_events, str):
+            raw_events = [raw_events]
+        if isinstance(raw_events, list):
+            if any(has_actionable_obligation_text(event) for event in raw_events):
+                return True
+
+        return False
+
+    @staticmethod
+    def _scene_has_actionable_key_events(scene: dict) -> bool:
+        if not isinstance(scene, dict):
+            return False
+
+        raw_events = scene.get("key_events", [])
+        if isinstance(raw_events, str):
+            raw_events = [raw_events]
+        if not isinstance(raw_events, list):
+            return False
+        return any(has_actionable_obligation_text(event) for event in raw_events)
+
+    @classmethod
+    def _scene_is_contract_complete(cls, scene: dict) -> bool:
+        if not isinstance(scene, dict):
+            return False
+        return cls._scene_has_meaningful_payload(scene) and cls._scene_has_actionable_key_events(scene)
+
+    @staticmethod
+    def _has_meaningful_protagonist_state(protagonist_state: object) -> bool:
+        if not isinstance(protagonist_state, dict):
+            return False
+
+        for value in protagonist_state.values():
+            if has_meaningful_state_value(value):
+                return True
+
+        return False
+
+    def _blueprint_contract_admission_reason(self, candidate: dict) -> str:
+        opening_transition = candidate.get("opening_transition")
+        if not isinstance(opening_transition, dict):
+            return "missing_opening_transition"
+
+        opening_type = str(opening_transition.get("type", "") or "").strip()
+        if opening_type not in BLUEPRINT_OPENING_TRANSITION_TYPES:
+            return "invalid_opening_transition"
+
+        if not self._has_meaningful_protagonist_state(candidate.get("protagonist_state")):
+            return "missing_protagonist_state"
+
+        scene_breakdown = candidate.get("scene_breakdown")
+        if isinstance(scene_breakdown, list):
+            scene_iter = scene_breakdown
+        elif isinstance(scene_breakdown, dict):
+            scene_iter = scene_breakdown.values()
+        else:
+            return "missing_scene_breakdown"
+
+        incomplete_scene_count = sum(1 for scene in scene_iter if not self._scene_is_contract_complete(scene))
+        if incomplete_scene_count:
+            return f"scene_completeness:{incomplete_scene_count}"
+
+        informative_scene_count = sum(1 for scene in scene_iter if self._scene_has_meaningful_payload(scene))
+        if informative_scene_count < 2:
+            return f"insufficient_scene_payload:{informative_scene_count}"
+
+        return ""
+
+    @staticmethod
+    def _collect_candidate_tactical_surface(candidate: dict) -> str:
+        parts: list[str] = []
+        integrated = str(candidate.get("integrated_scenario", "") or "").strip()
+        if integrated:
+            parts.append(integrated)
+
+        scenes = candidate.get("scene_breakdown", {})
+        if isinstance(scenes, dict):
+            scene_iter = scenes.values()
+        elif isinstance(scenes, list):
+            scene_iter = scenes
+        else:
+            scene_iter = []
+
+        for scene in scene_iter:
+            if not isinstance(scene, dict):
+                continue
+            for key in ("title", "summary", "goal", "description", "location"):
+                value = str(scene.get(key, "") or "").strip()
+                if value:
+                    parts.append(value)
+            raw_events = scene.get("key_events", [])
+            if isinstance(raw_events, str):
+                raw_events = [raw_events]
+            if isinstance(raw_events, list):
+                parts.extend(str(item or "").strip() for item in raw_events if str(item or "").strip())
+
+        return "\n".join(parts)
+
+    def _detect_unauthorized_tactical_intrusion(self, candidate: dict, *, tactical_excerpt: str) -> str:
+        authority_text = str(tactical_excerpt or "").strip().lower()
+        if not authority_text:
+            return ""
+        if any(marker in authority_text for marker in _TACTICAL_INTRUSION_ENTRY_MARKERS) and any(
+            marker in authority_text for marker in _TACTICAL_INTRUSION_CONFLICT_MARKERS
+        ):
+            return ""
+
+        candidate_text = self._collect_candidate_tactical_surface(candidate).lower()
+        if not candidate_text:
+            return ""
+
+        entry_hits = [marker for marker in _TACTICAL_INTRUSION_ENTRY_MARKERS if marker in candidate_text]
+        conflict_hits = [marker for marker in _TACTICAL_INTRUSION_CONFLICT_MARKERS if marker in candidate_text]
+        if not entry_hits or not conflict_hits:
+            return ""
+        return f"entry={entry_hits[0]}; conflict={conflict_hits[0]}"
+
+    @staticmethod
+    def _normalize_opening_transition_contract(candidate: dict, *, prev_blueprint: dict | None) -> str:
+        """opening_transition contract 정규화 + 출처 라벨 반환.
+
+        Return values:
+          - ``""``: LLM이 이미 유효한 type을 직접 선언했고 정규화 불필요
+          - ``"declared"``: LLM이 alias 형태로 선언, canonical type으로 정규화 후 mutation
+          - ``"inferred"``: LLM 미선언, prev_blueprint/scene/time_flow 단서로 추론 + mutation
+          - ``"missing"``: LLM 미선언 AND 추론 단서 부재 → cheap admission fail-closed 신호
+
+        ``"missing"``은 cheap admission이 차단해야 하는 신호이며, 호출자는 이 값에 대해
+        후보를 폐기해야 한다. T4.H1 (cheap gate disarmed by upstream normalization)을 닫는다.
+        """
+        raw_contract = candidate.get("opening_transition")
+        declared_type = read_declared_opening_transition_type(candidate)
+        if declared_type:
+            raw_type = str(raw_contract.get("type", "") or "").strip() if isinstance(raw_contract, dict) else ""
+            if raw_type == declared_type and isinstance(raw_contract, dict):
+                return ""
+            normalized_contract = dict(raw_contract) if isinstance(raw_contract, dict) else {}
+            normalized_contract["type"] = declared_type
+            candidate["opening_transition"] = normalized_contract
+            return "declared"
+
+        raw_type = str(raw_contract.get("type", "") or "").strip() if isinstance(raw_contract, dict) else ""
+        if raw_type in BLUEPRINT_OPENING_TRANSITION_TYPES:
+            return ""
+
+        inferred_contract = apply_opening_transition_contract(candidate, prev_blueprint=prev_blueprint)
+        if inferred_contract:
+            return "inferred"
+        return "missing"
 
     def _build_protagonist_instructions(self, protagonist_config: dict, genre: str = "wuxia") -> str:
         """
@@ -947,10 +1179,14 @@ class BlueprintEnsembleGenerator(BaseAgent):
             if stop_line.get("content"):
                 hard_lines.append("[Stop Line]")
                 _next_ep = stop_line.get("next_ep", "?")
-                hard_lines.append(f"  [제{_next_ep}화] 다음 화 내용 금지: {_fit_compact_context(stop_line['content'], 150)}")
+                hard_lines.append(
+                    f"  [제{_next_ep}화] 다음 화 내용 금지: {_fit_compact_context(stop_line['content'], 150)}"
+                )
                 for _fe in stop_line.get("future_eps") or []:
                     if isinstance(_fe, dict) and _fe.get("content"):
-                        hard_lines.append(f"  [제{_fe.get('ep', '?')}화] 금지: {_fit_compact_context(_fe['content'], 150)}")
+                        hard_lines.append(
+                            f"  [제{_fe.get('ep', '?')}화] 금지: {_fit_compact_context(_fe['content'], 150)}"
+                        )
                 _cur_ep = constraint_block.get("ep_num", "?")
                 hard_lines.append(
                     f"  *** 제{_cur_ep}화 이후 모든 에피소드 사건/NPC/전개를 "
@@ -1060,7 +1296,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         semantic_carryover = constraint_block.get("semantic_carryover")
         if isinstance(semantic_carryover, dict) and semantic_carryover:
             advisory_lines.append("[Future Semantic Advisory — 이번 화 obligation 아님]")
-            advisory_lines.append("  아래 항목은 미래 화/관계 맥락 참고용이다. 이번 화에서 반드시 모두 소비할 필요는 없다.")
+            advisory_lines.append(
+                "  아래 항목은 미래 화/관계 맥락 참고용이다. 이번 화에서 반드시 모두 소비할 필요는 없다."
+            )
             for entry in semantic_carryover.get("relationship_rationale", []) or []:
                 if not isinstance(entry, dict):
                     continue
@@ -1081,10 +1319,22 @@ class BlueprintEnsembleGenerator(BaseAgent):
             "",
         ]
         for header, band_lines in (
-            ("\u2550\u2550\u2550 IMMUTABLE (\ud655\uc815 \uc0ac\uc2e4 \u2014 \uc808\ub300 \ubcc0\uacbd \uae08\uc9c0) \u2550\u2550\u2550", immutable_lines),
-            ("\u2500\u2500\u2500 HARD CONSTRAINT (\ud544\uc218 \uc900\uc218 \u2014 \uc704\ubc18 \uc2dc REJECT) \u2500\u2500\u2500", hard_lines),
-            ("\u2500\u2500\u2500 EXPECTED CONTINUITY (\uacc4\uc2b9 \uae30\ub300 \u2014 \ubd88\uc77c\uce58 \uc2dc \uacbd\uace0) \u2500\u2500\u2500", continuity_lines),
-            ("\u00b7\u00b7\u00b7 ADVISORY (\ucc38\uace0\uc6a9 \u2014 \ud544\uc218 \uc544\ub2d8) \u00b7\u00b7\u00b7", advisory_lines),
+            (
+                "\u2550\u2550\u2550 IMMUTABLE (\ud655\uc815 \uc0ac\uc2e4 \u2014 \uc808\ub300 \ubcc0\uacbd \uae08\uc9c0) \u2550\u2550\u2550",
+                immutable_lines,
+            ),
+            (
+                "\u2500\u2500\u2500 HARD CONSTRAINT (\ud544\uc218 \uc900\uc218 \u2014 \uc704\ubc18 \uc2dc REJECT) \u2500\u2500\u2500",
+                hard_lines,
+            ),
+            (
+                "\u2500\u2500\u2500 EXPECTED CONTINUITY (\uacc4\uc2b9 \uae30\ub300 \u2014 \ubd88\uc77c\uce58 \uc2dc \uacbd\uace0) \u2500\u2500\u2500",
+                continuity_lines,
+            ),
+            (
+                "\u00b7\u00b7\u00b7 ADVISORY (\ucc38\uace0\uc6a9 \u2014 \ud544\uc218 \uc544\ub2d8) \u00b7\u00b7\u00b7",
+                advisory_lines,
+            ),
         ):
             _append_constraint_section(lines, header, band_lines)
         if lines[-1] == "":
@@ -1178,6 +1428,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
         *,
         strategy_name: str,
         genre: str,
+        tactical_excerpt: str = "",
+        prev_blueprint: dict | None = None,
     ) -> dict | tuple[None, str]:
         allow_system_ui = self._genre_allows_explicit_system_ui(genre)
         integrated_reason = self._detect_blueprint_text_contamination(
@@ -1277,6 +1529,70 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 f"🧹 [Blueprint] '{strategy_name}' key_events 오염 정리",
                 meta={"strategy": strategy_name, "removed_key_events": sanitized_key_events},
             )
+
+        opening_transition_route = self._normalize_opening_transition_contract(
+            candidate,
+            prev_blueprint=prev_blueprint,
+        )
+        if opening_transition_route == "missing":
+            # T4.H1: cheap gate disarmed 닫기 — LLM이 opening_transition을 선언하지 않았고
+            # prev_blueprint/scene/time_flow에서도 추론할 단서가 없으면 즉시 폐기.
+            # 이전에는 normalizer가 빈 string을 반환해 admission gate가 통과시켜 버렸다.
+            logging.warning(
+                "[BPEnsemble] rejecting candidate (%s): opening_transition pure omission with no inference anchor",
+                strategy_name,
+            )
+            self._operator_log(
+                f"⚠️ [Blueprint] '{strategy_name}' opening_transition 부재 + 추론 불가 후보 폐기",
+                level="warning",
+                meta={
+                    "strategy": strategy_name,
+                    "reason": "missing_opening_transition_pure_omission",
+                },
+            )
+            return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+        if opening_transition_route in ("declared", "inferred"):
+            logging.info(
+                "[BPEnsemble] normalized opening_transition contract for %s via %s path",
+                strategy_name,
+                opening_transition_route,
+            )
+            self._operator_log(
+                f"[Blueprint] '{strategy_name}' opening_transition contract normalized",
+                meta={"strategy": strategy_name, "route": opening_transition_route},
+            )
+
+        tactical_intrusion_reason = self._detect_unauthorized_tactical_intrusion(
+            candidate,
+            tactical_excerpt=tactical_excerpt,
+        )
+        if tactical_intrusion_reason:
+            logging.warning(
+                "[BPEnsemble] rejecting unauthorized tactical intrusion candidate (%s): %s",
+                strategy_name,
+                tactical_intrusion_reason,
+            )
+            self._operator_log(
+                f"⚠️ [Blueprint] '{strategy_name}' tactical authority 미달 후보 폐기",
+                level="warning",
+                meta={"strategy": strategy_name, "reason": tactical_intrusion_reason},
+            )
+            return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+
+        contract_reason = self._blueprint_contract_admission_reason(candidate)
+        if contract_reason:
+            logging.warning(
+                "[BPEnsemble] rejecting under-structured blueprint candidate (%s): %s",
+                strategy_name,
+                contract_reason,
+            )
+            self._operator_log(
+                f"⚠️ [Blueprint] '{strategy_name}' 구조 계약 미달 후보 폐기",
+                level="warning",
+                meta={"strategy": strategy_name, "reason": contract_reason},
+            )
+            return None, AgentErrorType.SCHEMA_INCOMPATIBLE
+
         return candidate
 
     def _format_prev_blueprint_carryover(self, bp: dict) -> str:

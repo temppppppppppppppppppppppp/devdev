@@ -22,8 +22,6 @@ _OPENING_TRANSITION_SCENE_MARKERS = (
     "컷",
     "cut",
     "이동",
-    "향해",
-    "향하",
     "옮기",
     "걸음을 옮",
     "발을 옮",
@@ -31,7 +29,6 @@ _OPENING_TRANSITION_SCENE_MARKERS = (
     "들어서",
     "빠져나와",
     "도착",
-    "진입",
     "한편",
 )
 _OPENING_TRANSITION_TIME_SHIFT_MARKERS = (
@@ -46,8 +43,6 @@ _OPENING_TRANSITION_TIME_SHIFT_MARKERS = (
     "한참 후",
     "이후",
     "뒤",
-    "->",
-    "→",
 )
 
 
