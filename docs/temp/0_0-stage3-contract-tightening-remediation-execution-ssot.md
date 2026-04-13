@@ -724,6 +724,11 @@ Execution consequence:
 - keep tranche 2 as now landed on the live workspace:
   - Stage3 local patch entry now fails closed unless a ready local-fix contract exists
   - missing authoritative scope, patch target records, `must_fix`, or `success_condition` now block local patch and route back to regenerate
-- advance the immediate-next action to `Tranche 3. Faux-Inplace Reduction / Patch-IR Preparation`
-- require static validation plus a narrow snapshot commit before the fresh proof rerun is allowed to start
+- keep tranche 3 as now landed on the live workspace:
+  - the first bounded Stage3 patch-IR lane now exists for leaf/path-scoped targets only
+  - supported target kinds are currently `dialogue`, `entity_ref`, `field_value`, `local_phrase`, and `local_sentence`
+  - unresolvable target snapshots fail closed before the local patch call
+  - broader `scene_block`-style repair stays on the legacy whole-blueprint lane for now
+- advance the immediate-next action to the tranche-3 snapshot commit plus one fresh proof rerun
+- keep the rerun target bounded to `ep7/ep8` proof, not a broader live wave
 - do not open a new queue lane for the three-tranche sequence; keep it inside this same parent lane

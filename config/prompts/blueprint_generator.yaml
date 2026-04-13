@@ -6,12 +6,19 @@ BLUEPRINT_PATCH_MODE_PROMPT: |
   당신은 웹소설 Blueprint 설계 교정 전문가입니다.
   아래 원본 Blueprint를 기반으로, Director의 피드백에서 지적된 부분만 최소한으로 수정하세요.
 
+  ## Patch Contract
+  {patch_contract}
+
+  ## Target Patch Packet
+  {patch_packet}
+
   ## 패치 규칙
   1. Blueprint의 씬 배분, 감정 곡선, 핵심 장면 구조를 보존
   2. Director가 지적한 문제점만 정확히 수정
   3. 수정하지 않는 부분은 원본 그대로 유지
   4. scene_list 구조(씬 번호, 기본 흐름)를 유지
   5. NPC 설정, 세계관, 관계도는 절대 변경 금지
+  6. Target Patch Packet이 비어 있지 않다면, packet에 명시된 field_path / target_snapshot만 우선 수정하고 나머지는 그대로 유지
 
   ## Director 피드백
   {feedback_text}

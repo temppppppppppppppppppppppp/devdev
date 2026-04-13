@@ -178,6 +178,13 @@ Goal:
 
 - reduce or replace the remaining faux-inplace whole-blueprint rewrite lane in a controlled way
 
+Landed result on the live workspace:
+
+- the first bounded Stage3 patch-IR lane now exists for leaf/path-scoped targets only
+- current supported target kinds are `dialogue`, `entity_ref`, `field_value`, `local_phrase`, and `local_sentence`
+- unresolved or unresolvable target snapshots fail closed before the local patch call
+- broader `scene_block`-style repair still stays on the legacy whole-blueprint lane for now
+
 Bounded scope:
 
 - either:
@@ -230,7 +237,7 @@ Recommended shape:
 
 - commit 1: `refactor: extract stage3 repair router`
 - commit 2: `fix: enforce stage3 local repair contract gate`
-- commit 3: `refactor: reduce stage3 faux-inplace repair scope`
+- commit 3: `refactor: introduce stage3 blueprint patch ir`
 
 Commit content should be path-scoped.
 
@@ -250,12 +257,11 @@ Stop before the next tranche if any of the following happens:
 
 ## Immediate Next Action
 
-The next action is not a rerun.
+Tranche 3 is now landed on the live workspace and closed by static validation.
 
-The next action is:
+The next action is now:
 
-- promote and realize `Tranche 3. Faux-Inplace Reduction / Patch-IR Preparation`
-- run static validation only
-- create a narrow snapshot commit on `main`
+- create the narrow tranche-3 snapshot commit on `main`
+- then run one fresh proof rerun
 
-Only after that commit lands should the fresh proof rerun begin.
+That proof rerun should target `ep7/ep8` and verify the new bounded patch-IR lane without widening the tranche again.
