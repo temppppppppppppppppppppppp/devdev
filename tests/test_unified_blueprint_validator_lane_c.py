@@ -1065,3 +1065,131 @@ def test_lane_c_arc_timeline_requires_terminal_episode_to_match_arc_end():
 
     assert len(issues) == 1
     assert issues[0]["category"] == "arc_timeline"
+
+
+# ===========================================================================
+# Tranche 1 (2026-04-14): Opening-Transition Vocabulary Coherence
+# ===========================================================================
+
+
+def test_lane_c_opening_transition_marker_calibration_no_fp_on_arrow_time_flow():
+    """Tranche 1 sub-edit 1.1: '->'와 '→'를 TIME_SHIFT_MARKERS에서 제거했으므로
+    같은 위치에 시작하는 episode가 time_flow에 '오전 → 저녁' 형태의 화살표를 써도
+    direct_continuation이 explicit_transition으로 강제 정규화되지 않아야 한다."""
+    from modules.core.stage_cross_stage_contract import (
+        OPENING_TRANSITION_DIRECT,
+        infer_opening_transition_contract,
+    )
+
+    contract = infer_opening_transition_contract(
+        {
+            "start_location": "강남구 한미증권 본사",
+            "time_flow": "진각 오전 → 진각 저녁",
+            "scene_breakdown": {
+                "scene_1": {
+                    "location": "강남구 한미증권 본사",
+                    "summary": "한시우가 박성호를 설득한다",
+                }
+            },
+        },
+        prev_blueprint={
+            "end_location": "강남구 한미증권 본사",
+            "time_flow": "진각 오전",
+        },
+    )
+    assert contract.get("type") == OPENING_TRANSITION_DIRECT, (
+        "time_flow 화살표는 시간 전이 마커가 아니라 duration span이므로 direct_continuation이어야 한다"
+    )
+
+
+def test_lane_c_opening_transition_marker_calibration_no_fp_on_diegetic_jin_ip():
+    """Tranche 1 sub-edit 1.1: '진입'/'향해'/'향하'를 SCENE_MARKERS에서 제거했으므로
+    scene_1 description에 인물의 diegetic '진입' (방으로 들어가는 행위)이 있어도
+    explicit_transition이 강제 정규화되지 않아야 한다."""
+    from modules.core.stage_cross_stage_contract import (
+        OPENING_TRANSITION_DIRECT,
+        infer_opening_transition_contract,
+    )
+
+    contract = infer_opening_transition_contract(
+        {
+            "start_location": "한미증권 청담동 지점 15층 VIP룸",
+            "time_flow": "진각 오후",
+            "scene_breakdown": {
+                "scene_1": {
+                    "location": "한미증권 청담동 지점 15층 VIP룸",
+                    "summary": "박성호가 VIP룸으로 진입하여 한시우를 향해 자리에 앉는다",
+                }
+            },
+        },
+        prev_blueprint={
+            "end_location": "한미증권 청담동 지점 15층 VIP룸",
+            "time_flow": "진각 오후",
+        },
+    )
+    assert contract.get("type") == OPENING_TRANSITION_DIRECT, (
+        "diegetic '진입'/'향해'는 인물 행동 묘사이므로 scene transition cue로 분류되면 안 된다"
+    )
+
+
+def test_lane_c_opening_transition_inplace_eligible_when_alias_only():
+    """Tranche 1 sub-edit 1.5: opening_transition이 유일한 binding category이면
+    full regenerate 대신 inplace alias 정규화가 허용되어야 한다."""
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    verdict, feedback, verdict_reason, fix_scope, fix_scope_reasoning, binding_issues = (
+        validator._apply_binding_prevalidation_contract(
+            verdict="PASS",
+            issues=[
+                {
+                    "severity": "MAJOR",
+                    "category": "opening_transition",
+                    "issue": "opening_transition.type mismatch: declared 'direct_continuation' vs normalized 'explicit_transition'",
+                    "fix_hint": "선언과 정규화 일치",
+                }
+            ],
+            feedback="",
+            verdict_reason="ok",
+            fix_scope="inplace",
+            fix_scope_reasoning="",
+        )
+    )
+
+    assert verdict == "PASS_WITH_FIX"
+    assert fix_scope == "inplace", "opening_transition alias-only는 inplace 허용"
+    assert "Opening-transition alias mismatch is the sole binding category" in fix_scope_reasoning
+    assert binding_issues[0]["category"] == "opening_transition"
+
+
+def test_lane_c_opening_transition_full_when_co_fires_with_other_binding():
+    """Tranche 1 sub-edit 1.5: opening_transition이 다른 binding category와 함께
+    firing되면 inplace 격하가 아니라 기존대로 full regenerate를 강제해야 한다."""
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    verdict, feedback, verdict_reason, fix_scope, fix_scope_reasoning, binding_issues = (
+        validator._apply_binding_prevalidation_contract(
+            verdict="PASS",
+            issues=[
+                {
+                    "severity": "MAJOR",
+                    "category": "opening_transition",
+                    "issue": "opening_transition.type mismatch",
+                    "fix_hint": "fix",
+                },
+                {
+                    "severity": "MAJOR",
+                    "category": "protagonist_state",
+                    "issue": "protagonist_state 비어 있음",
+                    "fix_hint": "fill",
+                },
+            ],
+            feedback="",
+            verdict_reason="ok",
+            fix_scope="inplace",
+            fix_scope_reasoning="",
+        )
+    )
+
+    assert verdict == "PASS_WITH_FIX"
+    assert fix_scope == "full", "opening_transition + protagonist_state co-fire는 full regenerate"
+    assert "Structural binding prevalidation categories require regenerate-only repair" in fix_scope_reasoning
+    categories = {issue["category"] for issue in binding_issues}
+    assert categories == {"opening_transition", "protagonist_state"}

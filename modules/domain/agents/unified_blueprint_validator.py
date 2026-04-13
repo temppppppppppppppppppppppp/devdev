@@ -77,6 +77,10 @@ _BINDING_PREVALIDATION_CATEGORIES = {
 # MAJOR/CRITICAL binding prevalidation issues are structural contract breaches.
 # They should never be routed through local faux-inplace repair.
 _BINDING_PREVALIDATION_REGENERATE_CATEGORIES = set(_BINDING_PREVALIDATION_CATEGORIES)
+# T7.H3 / Tranche 1 sub-edit 1.5: opening_transition alias mismatch는 구조적 binding 위반이
+# 아니라 type 라벨만 정규화하면 되는 1-line 수정 가능 케이스이다. 다른 binding category가
+# 동시에 firing되지 않고 opening_transition alias가 유일한 binding 위반이면 inplace 허용.
+_BINDING_PREVALIDATION_INPLACE_ALIAS_CATEGORIES = frozenset({"opening_transition"})
 _TACTICAL_INTRUSION_ENTRY_MARKERS = (
     "취객",
     "난입",
@@ -439,6 +443,14 @@ class UnifiedBlueprintValidator:
         regenerate_categories = [
             category for category in binding_categories if category in _BINDING_PREVALIDATION_REGENERATE_CATEGORIES
         ]
+        # T7.H3 / Tranche 1 sub-edit 1.5: opening_transition alias mismatch는 1-line 수정으로
+        # 충분하다. opening_transition이 유일한 binding category이면 inplace 허용으로 격하한다.
+        # 다른 binding category가 함께 발생하면(예: opening_transition + protagonist_state)
+        # 구조적 위반으로 간주하여 기존대로 full regenerate를 강제한다.
+        opening_transition_inplace_eligible = (
+            len(regenerate_categories) == 1
+            and regenerate_categories[0] in _BINDING_PREVALIDATION_INPLACE_ALIAS_CATEGORIES
+        )
         snippets = [
             str(issue.get("issue") or issue.get("evidence") or "").strip()
             for issue in binding_issues
@@ -452,13 +464,20 @@ class UnifiedBlueprintValidator:
         )
         merged_feedback = f"{feedback}\n{binding_note}".strip() if feedback else binding_note
         merged_reason = f"{verdict_reason}; binding prevalidation repair required".strip("; ")
-        merged_scope = "full" if regenerate_categories else str(fix_scope or "inplace")
-        if regenerate_categories:
+        if opening_transition_inplace_eligible:
+            merged_scope = str(fix_scope or "inplace")
+            merged_scope_reasoning = (
+                "Opening-transition alias mismatch is the sole binding category; "
+                "routing to inplace alias normalization instead of full regenerate."
+            )
+        elif regenerate_categories:
+            merged_scope = "full"
             regenerate_summary = ", ".join(regenerate_categories)
             merged_scope_reasoning = (
                 f"Structural binding prevalidation categories require regenerate-only repair: {regenerate_summary}."
             )
         else:
+            merged_scope = str(fix_scope or "inplace")
             merged_scope_reasoning = str(
                 fix_scope_reasoning
                 or "Binding Python prevalidation invariants require bounded repair before plain PASS."
@@ -2273,11 +2292,7 @@ class UnifiedBlueprintValidator:
         arc_expr = str(timeline.get("end") or "").strip()
         require_terminal_exact_match = bool(
             arc_end is not None
-            and (
-                arc_start is None
-                or arc_start == arc_end
-                or (ep_num > 0 and arc_end_ep > 0 and ep_num >= arc_end_ep)
-            )
+            and (arc_start is None or arc_start == arc_end or (ep_num > 0 and arc_end_ep > 0 and ep_num >= arc_end_ep))
         )
 
         if require_terminal_exact_match:

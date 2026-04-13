@@ -96,7 +96,10 @@ def test_stage4_readiness_categories_are_binding():
     )
 
     assert verdict == "PASS_WITH_FIX"
-    assert fix_scope == "inplace"
+    # binding-family static-kill landing(2026-04-13)에서 opening_anchor MAJOR는 regenerate-only로 승격됨.
+    # Tranche 1 sub-edit 1.5는 opening_transition alias-only 케이스에만 inplace를 허용하며
+    # opening_anchor는 여전히 structural binding 위반으로 full regenerate를 강제한다.
+    assert fix_scope == "full"
     assert binding_issues[0]["category"] == "opening_anchor"
     assert "[Binding prevalidation]" in feedback
 
@@ -126,8 +129,11 @@ def test_binding_contract_merges_fact_lock_issue_into_existing_pass_with_fix():
     assert "[Binding prevalidation]" in feedback
     assert "기관 사실잠금 위반" in feedback
     assert verdict_reason.endswith("binding prevalidation repair required")
-    assert fix_scope == "inplace"
-    assert fix_scope_reasoning == "국소 수정"
+    # binding-family static-kill landing(2026-04-13)에서 fact_lock_institution CRITICAL은 regenerate-only로 승격됨.
+    # Tranche 1 sub-edit 1.5는 opening_transition alias-only 케이스에만 inplace를 허용하며
+    # fact_lock_institution은 여전히 structural binding 위반으로 full regenerate를 강제한다.
+    assert fix_scope == "full"
+    assert "Structural binding prevalidation categories require regenerate-only repair" in fix_scope_reasoning
     assert binding_issues[0]["category"] == "fact_lock_institution"
 
 
@@ -137,8 +143,20 @@ def test_python_pre_validate_flags_off_arc_intrusion_as_tactical_semantic_fideli
         blueprint={
             "ep_num": 5,
             "scene_breakdown": {
-                "scene_1": {"title": "난입", "location": "오피스텔", "goal": "대응", "summary": "난입 대응", "characters": ["한시우", "취객"]},
-                "scene_2": {"title": "주문", "location": "오피스텔", "goal": "매수", "summary": "WTI 주문", "characters": ["한시우", "박성호"]},
+                "scene_1": {
+                    "title": "난입",
+                    "location": "오피스텔",
+                    "goal": "대응",
+                    "summary": "난입 대응",
+                    "characters": ["한시우", "취객"],
+                },
+                "scene_2": {
+                    "title": "주문",
+                    "location": "오피스텔",
+                    "goal": "매수",
+                    "summary": "WTI 주문",
+                    "characters": ["한시우", "박성호"],
+                },
             },
             "integrated_scenario": ("취객이 난입했고 한시우가 멱살을 잡은 뒤 무단침입을 경고했다. " * 40).strip(),
             "start_location": "강남구 원룸 오피스텔",
@@ -159,7 +177,9 @@ def test_python_pre_validate_flags_off_arc_intrusion_as_tactical_semantic_fideli
             "episode_details": [
                 {
                     "ep_num": 5,
-                    "details": ["한시우가 박성호 PB의 만류를 무시하고 15억 원 규모의 WTI 6월물 3배 레버리지 매수를 지시함"],
+                    "details": [
+                        "한시우가 박성호 PB의 만류를 무시하고 15억 원 규모의 WTI 6월물 3배 레버리지 매수를 지시함"
+                    ],
                 }
             ]
         },
@@ -175,8 +195,20 @@ def test_python_pre_validate_skips_tactical_intrusion_flag_when_authorized_by_ar
         blueprint={
             "ep_num": 5,
             "scene_breakdown": {
-                "scene_1": {"title": "난입", "location": "오피스텔", "goal": "대응", "summary": "난입 대응", "characters": ["한시우", "취객"]},
-                "scene_2": {"title": "주문", "location": "오피스텔", "goal": "매수", "summary": "WTI 주문", "characters": ["한시우", "박성호"]},
+                "scene_1": {
+                    "title": "난입",
+                    "location": "오피스텔",
+                    "goal": "대응",
+                    "summary": "난입 대응",
+                    "characters": ["한시우", "취객"],
+                },
+                "scene_2": {
+                    "title": "주문",
+                    "location": "오피스텔",
+                    "goal": "매수",
+                    "summary": "WTI 주문",
+                    "characters": ["한시우", "박성호"],
+                },
             },
             "integrated_scenario": ("취객이 난입했고 한시우가 멱살을 잡은 뒤 무단침입을 경고했다. " * 40).strip(),
             "start_location": "강남구 원룸 오피스텔",
@@ -226,7 +258,9 @@ def test_python_pre_validate_flags_disguised_intrusion_from_scene_breakdown_text
                     "characters": ["한시우", "박성호"],
                 },
             },
-            "integrated_scenario": ("2006년 2월 28일 밤. 한시우가 오피스텔에서 15억 원 규모 WTI 주문을 준비한다. " * 30).strip(),
+            "integrated_scenario": (
+                "2006년 2월 28일 밤. 한시우가 오피스텔에서 15억 원 규모 WTI 주문을 준비한다. " * 30
+            ).strip(),
             "start_location": "강남구 원룸 오피스텔",
             "time_flow": "2006년 2월 말의 밤",
             "core_tension": "첫 투자 지시와 통제력",
@@ -245,7 +279,9 @@ def test_python_pre_validate_flags_disguised_intrusion_from_scene_breakdown_text
             "episode_details": [
                 {
                     "ep_num": 5,
-                    "details": ["한시우가 박성호 PB의 만류를 무시하고 15억 원 규모의 WTI 6월물 3배 레버리지 매수를 지시함"],
+                    "details": [
+                        "한시우가 박성호 PB의 만류를 무시하고 15억 원 규모의 WTI 6월물 3배 레버리지 매수를 지시함"
+                    ],
                 }
             ]
         },
