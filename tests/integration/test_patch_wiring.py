@@ -10,6 +10,8 @@ mocked.
 
 from __future__ import annotations
 
+import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 # ---------------------------------------------------------------------------
@@ -48,6 +50,7 @@ class TestEmotionTrackerCalledOnPass:
         project.name = "test_project"
         project.master_bible = {}
         project.latest_state = {}
+        project.paths.root = Path(tempfile.mkdtemp(prefix="geuldobi_patch_wiring_test_")) / "test_project"
 
         ctx.current_project = project
 

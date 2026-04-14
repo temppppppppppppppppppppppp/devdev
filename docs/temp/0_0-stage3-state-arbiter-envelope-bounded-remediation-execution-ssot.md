@@ -7,8 +7,8 @@ Temp Mirror Path: `docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediati
 Commit State:
 - Baseline Commit: `f58059fefd10ed3f41d7bacca3b908dd47ada418`
 - Baseline Dirty Summary: `dirty: live 000_260412_a logs/db, 0_temp.txt, and untracked 2026-04-14 diagnostic notes already present in worktree`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `current workspace now carries Tranche A EpisodeStateArbiter, Tranche B prompt-envelope budget, and a local Tranche C bounded boundary split across runtime/orchestrator helper shells`
+- Resume Commit: `1b946d2c7931c15c5ebbf5e64379482a991878a1` (`refactor: split stage3 runtime boundaries`)
+- Resume Drift Summary: `Tranche C snapshot commit is now the authoritative post-boundary-split anchor; post-C audit cleanup should reason from this snapshot rather than the older Tranche A/B baseline`
 Source Survey Docs:
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
