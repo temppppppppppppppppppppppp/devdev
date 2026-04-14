@@ -1,19 +1,20 @@
 # 0_0-stage234-global-authority-alignment-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: active (3-pass audited through current-head `Tranche A`; working-tree `Tranche B` and `Tranche C` closure audits are now recorded; `Tranche D` is the next bounded gate)
+Status: active (3-pass audited through current-head `Tranche D`; `Tranche A/B/C` are landed on current `main`; fresh rerun remains operator-gated and this lane is now proof-pending rather than code-open)
 Canonical Path: `docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f005794b578d68bb855a960778c75ca3f77787a6`
 - Baseline Dirty Summary: `clean main after Tranche C snapshot, post-C audit cleanup, and evidence-branch split`
 - Resume Commit: `8a9490531f7fa2f0527cb70407cdb804d87d7ddd` (`stage2: emit cross-stage authority packet`)
-- Resume Drift Summary: `current head lands the bounded Tranche A Stage2 emission slice, the live working tree also lands bounded Tranche B Stage3 preferential consume, and the current working tree now also lands bounded Tranche C Stage4 intake/post-pass reuse: Stage4ContextBuilder reuses explicit CrossStageAuthorityPacket numeric lineage with ledger-first fallback, and Stage4PostPassRuntime carries that transport lineage into numeric carryover authority contracts while atomic overlay reuses the settled contract fields; the Tranche C closure audit is now recorded and Tranche D becomes the next gate`
+- Resume Drift Summary: `current main now carries bounded Tranche A/B/C end-to-end cross-stage transport realization, and the current-head Tranche D audit records that no further pre-rerun Stage234 code tranche is open: Stage2 emit, Stage3 preferential consume, and Stage4 intake/post-pass reuse are all landed on current HEAD while fresh rerun remains threshold-cleared but operator-gated under the canonical Stage3 gate`
 Source Survey Docs:
 - `docs/2026-04-14/stage234-global-authority-alignment-bounded-survey.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-a-current-head-3pass-audit.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-b-working-tree-3pass-audit.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-c-working-tree-3pass-audit.md`
+- `docs/2026-04-14/stage234-global-authority-alignment-tranche-d-current-head-3pass-audit.md`
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
@@ -31,6 +32,22 @@ Evidence Artifacts:
 Side-Effect Coverage: covered (cross-stage authority transport, Stage2/3/4 prompt and sink surfaces, roadmap/queue controller updates)
 Confidence: `96%`
 
+2026-04-14 current-head Tranche D rerun-gate override:
+
+- Local audit HEAD: `2fec364d6652ccbda68757cbc1c71a626eee5b41`
+- authoritative audit doc:
+  - `docs/2026-04-14/stage234-global-authority-alignment-tranche-d-current-head-3pass-audit.md`
+- landed tranches:
+  - `Tranche A`
+  - `Tranche B`
+  - `Tranche C`
+- current gate result:
+  - no additional pre-rerun code tranche is open inside this lane
+  - the cross-stage packet path is realized end-to-end from `Stage2 emit -> Stage3 prefer -> Stage4 intake/post-pass reuse`
+  - fresh rerun remains threshold-cleared but operator-gated under `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+- current practical next action:
+  - keep this lane proof-pending until explicit operator re-authorization consumes runtime proof or a later closure/demotion audit supersedes it
+
 2026-04-14 current-head Tranche A re-audit override:
 
 - Local audit HEAD: `8a9490531f7fa2f0527cb70407cdb804d87d7ddd`
@@ -45,9 +62,9 @@ Confidence: `96%`
   - carryover UI observability now exposes packet presence/version metadata only; the human-facing message shape stays unchanged
   - legacy `[Carryover Authority Packet]` text compatibility remains green on current-head tests
 - remaining deferred work:
-  - `Tranche D` proof / rerun gate revisit
+  - current-head `Tranche D` proof / rerun gate revisit is now recorded separately
 - current practical next action:
-  - use the recorded `Tranche C` closure to decide whether rerun should reopen or remain operator-gated
+  - historical only; superseded by the current-head `Tranche D` override above
 
 ## 1. Intent
 
@@ -170,6 +187,15 @@ Goal:
 
 - after A/B/C land, re-audit the governing docs and decide whether rerun should reopen
 
+Current status:
+
+- recorded on current `main` at `2fec364d`
+- authoritative audit:
+  - `docs/2026-04-14/stage234-global-authority-alignment-tranche-d-current-head-3pass-audit.md`
+- verified result:
+  - rerun remains operator-gated under the canonical Stage3 gate
+  - no hidden `Tranche E` is opened by this lane alone
+
 ## 5. Acceptance Criteria
 
 - a bounded shared `CrossStageAuthorityPacket` exists
@@ -199,14 +225,14 @@ Goal:
 
 ## 8. Current Decision
 
-The post-`Tranche C` branch decision is now exercised as:
+The post-`Tranche D` gate decision is now exercised as:
 
-- `fresh rerun`: deferred and still operator-gated
+- `fresh rerun`: threshold-cleared but still operator-gated
 - `retry owner debt`: deferred as a lower-ROI follow-up
-- `next active bounded lane`: `0_0-stage234-global-authority-alignment-bounded-remediation`
+- `this lane`: proof-pending with no additional pre-rerun code tranche currently open
 
 Current next action:
 
-1. open `Tranche D` as a bounded proof / rerun gate revisit
-2. re-audit the governing docs against the current head before deciding whether fresh rerun reopens
-3. do not widen into broader Stage4 redesign, `ChiefWriter` plumbing, or retry-owner debt in the same wave
+1. keep this lane proof-pending until explicit operator re-authorization consumes runtime proof or a later closure/demotion audit supersedes it
+2. do not widen into broader Stage4 redesign, `ChiefWriter` plumbing, `Stage4PostselectRuntime`, or retry-owner debt as a hidden `Tranche E`
+3. treat the next local code-first owner outside this lane as `0_0-stage3-state-arbiter-envelope-bounded-remediation` unless runtime is explicitly re-authorized first
