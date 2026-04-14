@@ -1,19 +1,20 @@
 # Stage234 Global Authority Alignment Bounded Survey
 
 Date: 2026-04-14
-Status: final (3-pass audited; current-head code-first bounded survey)
+Status: final (3-pass audited lane-shape authority; current implementation note refreshed after working-tree `Tranche B` closure audit)
 Canonical Path: `docs/2026-04-14/stage234-global-authority-alignment-bounded-survey.md`
 Commit State:
 - Baseline Commit: `f005794b578d68bb855a960778c75ca3f77787a6`
 - Baseline Dirty Summary: `clean main after Tranche C snapshot, post-C audit cleanup, and evidence-branch split`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Commit: `8a9490531f7fa2f0527cb70407cdb804d87d7ddd`
+- Resume Drift Summary: `the survey body remains the lane-shape authority; current implementation has now moved from current-head Tranche A land to a working-tree Tranche B realization with a recorded closure audit, while Tranche C remains the next unopened slice`
 Source Survey Docs:
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage234-cross-stage-contract-normalization-remediation-execution-ssot.md`
+- `docs/2026-04-14/stage234-global-authority-alignment-tranche-b-working-tree-3pass-audit.md`
 Evidence Artifacts:
 - `modules/domain/agents/arc_ensemble.py`
 - `modules/core/stage2_finalizer.py`
@@ -25,6 +26,15 @@ Evidence Artifacts:
 - `modules/domain/agents/chief_writer_context_packets.py`
 Side-Effect Coverage: covered (Stage2 emission, Stage3 carryover arbitration, Stage4 intake authority, Stage4 post-pass owner contract, queue/controller docs)
 Confidence: `96%`
+
+Current-head implementation note:
+
+- the body below remains the pre-`Tranche A` inventory and root-cause basis that selected this lane
+- current implementation note:
+  - `Tranche A` is landed on current-head `8a949053`
+  - the working tree now also carries bounded `Tranche B` preferential consume inside `EpisodeStateArbiter` and `BlueprintConstraintCompiler`
+  - working-tree closure status is recorded in `stage234-global-authority-alignment-tranche-b-working-tree-3pass-audit.md`
+  - `Tranche C` remains the next unopened realization slice after local snapshot closure
 
 ## 1. Intent
 

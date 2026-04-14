@@ -1,21 +1,24 @@
 # 0_0-stage234-global-authority-alignment-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: active (3-pass audited; next bounded long-horizon follow-up after Stage3 Tranche C)
+Status: active (3-pass audited through current-head `Tranche A`; working-tree `Tranche B` closure audit is now recorded; `Tranche C` remains the next unopened slice)
 Canonical Path: `docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f005794b578d68bb855a960778c75ca3f77787a6`
 - Baseline Dirty Summary: `clean main after Tranche C snapshot, post-C audit cleanup, and evidence-branch split`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Commit: `8a9490531f7fa2f0527cb70407cdb804d87d7ddd` (`stage2: emit cross-stage authority packet`)
+- Resume Drift Summary: `current head lands the bounded Tranche A Stage2 emission slice, and the live working tree now also lands the bounded Tranche B Stage3 preferential-consume slice: EpisodeStateArbiter and BlueprintConstraintCompiler consume explicit CrossStageAuthorityPacket transport when present while preserving current arc-start / scattered-field fallback compatibility; the closure audit is now recorded and Tranche C remains unopened`
 Source Survey Docs:
 - `docs/2026-04-14/stage234-global-authority-alignment-bounded-survey.md`
+- `docs/2026-04-14/stage234-global-authority-alignment-tranche-a-current-head-3pass-audit.md`
+- `docs/2026-04-14/stage234-global-authority-alignment-tranche-b-working-tree-3pass-audit.md`
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
 Evidence Artifacts:
+- `modules/core/cross_stage_authority_packet.py`
 - `modules/domain/agents/arc_ensemble.py`
 - `modules/core/stage2_finalizer.py`
 - `modules/core/episode_state_arbiter.py`
@@ -26,6 +29,24 @@ Evidence Artifacts:
 - `modules/domain/agents/chief_writer_context_packets.py`
 Side-Effect Coverage: covered (cross-stage authority transport, Stage2/3/4 prompt and sink surfaces, roadmap/queue controller updates)
 Confidence: `96%`
+
+2026-04-14 current-head Tranche A re-audit override:
+
+- Local audit HEAD: `8a9490531f7fa2f0527cb70407cdb804d87d7ddd`
+- authoritative audit doc:
+  - `docs/2026-04-14/stage234-global-authority-alignment-tranche-a-current-head-3pass-audit.md`
+- landed tranche:
+  - `Tranche A` only
+- landed effects:
+  - shared `CrossStageAuthorityPacket` contract now exists under `modules/core/`
+  - `Stage2Finalizer` emits the packet after Stage2 normalization into the finalized saved arc payload
+  - Stage2 advisory sinks mirror the packet while preserving the legacy `carryover_authority` summary
+  - carryover UI observability now exposes packet presence/version metadata only; the human-facing message shape stays unchanged
+  - legacy `[Carryover Authority Packet]` text compatibility remains green on current-head tests
+- remaining deferred work:
+  - `Tranche C` Stage4 intake + post-pass reuse
+- current practical next action:
+  - use the recorded `Tranche B` closure to decide whether `Tranche C` opens
 
 ## 1. Intent
 
@@ -93,6 +114,18 @@ Guardrails:
 - do not remove legacy Stage2 surfaces yet
 - emit the new packet alongside existing fields first
 - keep compatibility with current sinks and prompts
+
+Current status:
+
+- landed on current `main` at `8a949053`
+- realized surfaces:
+  - `modules/core/cross_stage_authority_packet.py`
+  - `modules/core/stage2_finalizer.py`
+  - `tests/test_stage2_finalizer.py`
+- verified effects:
+  - finalized Stage2 arcs now persist `cross_stage_authority_packet`
+  - Stage2 advisory sinks now mirror `cross_stage_authority_packet`
+  - legacy Stage2 carryover text packet path is preserved and still green
 
 ### Tranche B. Stage3 Preferential Consume
 
@@ -173,6 +206,6 @@ The post-`Tranche C` branch decision is now exercised as:
 
 Current next action:
 
-1. realize `Tranche A`
-2. snapshot and validate
-3. then decide whether `Tranche B` opens immediately or after another bounded audit
+1. decide whether `Tranche C` opens immediately or after another bounded audit
+2. keep any Stage4 follow-up bounded to intake/post-pass reuse only
+3. do not widen into broader Stage4 redesign or retry-owner debt in the same wave
