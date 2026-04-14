@@ -1,18 +1,11 @@
 {
   "tag": "shutdown_final",
-  "timestamp": "2026-04-14 08:47:35",
+  "timestamp": "2026-04-14 10:04:27",
   "summary_role": "runtime_heartbeat_with_proof_digest",
-  "total_events": 1,
-  "counts": {
-    "blueprint_fail": 1
-  },
-  "latest_event_type": "blueprint_fail",
-  "recent_events": [
-    {
-      "type": "blueprint_fail",
-      "message": "ep_9_all_retries_exhausted"
-    }
-  ],
+  "total_events": 0,
+  "counts": {},
+  "latest_event_type": "",
+  "recent_events": [],
   "contract": {
     "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
     "attempt_truth_authoritative": false,
@@ -39,7 +32,7 @@
       "episode_production_exists": false,
       "runtime_audit_jsonl_exists": true,
       "ui_events_db_available": true,
-      "ui_events_count": 2256,
+      "ui_events_count": 2494,
       "ui_event_coverage_status": "ok"
     },
     "stages": {
@@ -64,7 +57,7 @@
       }
     },
     "session_lineage": {
-      "plain_log_token": "20260414_074547",
+      "plain_log_token": "20260414_094148",
       "structured_session_id": "20260414_074553",
       "status": "split_mapped"
     },

@@ -1,13 +1,13 @@
-python main_a.py
+ python main_a.py
 [V61.3] Faulthandler 활성화 → crash_dump.log
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                                🎹 V40 SOVEREIGN COCKPIT                                                                 ┃
-┃                                                             Multi-Genre Production Factory                                                              ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                                  🎹 V40 GENRE SELECTOR                                                                  ┃
-┃                                                                  장르별 전문 공정 선택                                                                  ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                     🎹 V40 SOVEREIGN COCKPIT                                                     ┃
+┃                                                  Multi-Genre Production Factory                                                  ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                      🎹 V40 GENRE SELECTOR                                                       ┃
+┃                                                      장르별 전문 공정 선택                                                       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 📚 [V40 Multi-Genre Factory] 장르를 선택하십시오:
 
@@ -48,16 +48,17 @@ python main_a.py
 
 [Enter] 프로젝트 선택으로 이동
     1. 000_0412-1
-    2. 000_260412_a
-    3. 000__0411
-    4. MagicMock
+    2. 000_20260409_1
+    3. 000_260412_a
+    4. 00_000
     5. _canary
     6. _unknown_project
     7. test
     8. test_project
-    9. 카나리아 테스트
+    9. 기록용
+    10. 스트레스 테스트 모음
 
-👉 Choice: 2
+👉 Choice: 3
       ✅ [TF7-P0-03] preset_registry DB에서 복원 완료
       ✅ [투자 (Investment Fiction)] HUD 시스템 초기화 완료
       🔍 [V61.3] HUD 호환성 체크: FinanceHUDManager
@@ -102,10 +103,10 @@ python main_a.py
       🧭 [SC] Context Advisor 활성화
       📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: investment)
    ✅ [System] 모든 에이전트 안전하게 초기화 완료
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                               🎹 V40 SOVEREIGN PRODUCTION                                                               ┃
-┃                                                Genre: 투자 (Investment Fiction) | Project: 000_260412_a                                                 ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                   🎹 V40 SOVEREIGN PRODUCTION                                                    ┃
+┃                                     Genre: 투자 (Investment Fiction) | Project: 000_260412_a                                     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 👇 Select Command:
    0. Stage 0: Bible/역설계/스타일 추출 [✅]
@@ -142,7 +143,7 @@ python main_a.py
    ════════════════════════════════════════════════════════════
 
          ⏳ Entity Registry 추출 중... (Arc 1, 첫 호출)
-         📋 [V61] Entity Registry 추출: 51개 엔티티
+         📋 [V61] Entity Registry 추출: 50개 엔티티
    
    📐 제9화 Blueprint 생성 중... (Arc 2, 주인공: 한시우)
  ⠋ 제9화  0s         ⏳ 제9화 Blueprint 생성 시작 (최대 10회 시도)...
@@ -156,54 +157,85 @@ python main_a.py
 
 [Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
 
-[Phase 2] 후보 생성 (full_ensemble) 완료 (56s)
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (2m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (2m 30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (3m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (3m 30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (4m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (4m 30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (5m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (5m 30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (5m 53s)
 
 [Phase 2] 후보 생성 실패 - retry 1/10
 
-사유: schema_incompatible로 즉시 중단합니다.
- ⠸ 제9화 · Blueprint 생성  55s         📊 제9화 Blueprint 결과: FAILED (attempt=1, score=0)
-      ❌ 제9화 Blueprint 생성 실패                                                                                                                         
-         └─ REJECT 사유: final_verdict=FAILED
-         판정 근거: category=reject | strategy=unknown | 
-observability=semantic_ctx_chars,semantic_ctx_sources,semantic_ctx_source_counts,advisor_path_used,planned_slots_count,work_focus_present,provenance_ledger
-,budget_ledger,source_anchor_summary
-         source_anchor: prev_ep=8:한미증권 청담동 지점 15층 VIP룸 | prev_opening=direct_continuation | start=본가 개인 서재 | start_items=4
-   
-════════════════════════════════════════════════════════════
-   📊 [V60.80] Stage 3 완료 통계
-      성공: 0개 | 실패: 1개
-      이번 실행 통과율: 0.0%
-   ════════════════════════════════════════════════════════════
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                                                               🎹 V40 SOVEREIGN PRODUCTION                                                               ┃
-┃                                                Genre: 투자 (Investment Fiction) | Project: 000_260412_a                                                 ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+사유: replay/authority/구조 계약 미달 후보만 생성되어 재시도합니다.
 
-👇 Select Command:
-   0. Stage 0: Bible/역설계/스타일 추출 [✅]
-   1. Stage 1: Volume Strategy (선택) [⏭️ 스킵가능]
-   2. Stage 2: Arc Tactical Design (유동) [✅]
-   3. 📐 Stage 3: Episode Blueprinting (Batch Design)
-   4. 🚀 Stage 4: Sovereign Production (Writing)
-   5. Exit
-   6. 🔄 One-Stop: Arc-by-Arc 자동 파이프라인
-   7. 🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)
-   44. ⏪ [ROLLBACK] Stage 4 회차별 롤백 (Episode Rewind)
-   77. 🔥 [WIPE] 원고 생산 기록만 삭제 (Stage 4 초기화)
-   88. 🔥 [RESET] Stage 2 (Arcs) 초기화
-   99. ⏪ Stage 2 정밀 되감기 (Selective Rewind)
+[Phase 2] 후보 생성 (full_ensemble) 시작
 
-   👉 Choice: 
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
 
+[Phase 2] 후보 생성 (full_ensemble) 완료 (50s)
 
+[Phase 2] 후보 생성 실패 - retry 2/10
 
+사유: replay/authority/구조 계약 미달 후보만 생성되어 재시도합니다.
 
+[Phase 2] 후보 생성 (full_ensemble) 시작
 
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
 
+[Phase 2] 후보 생성 (full_ensemble) 완료 (52s)
 
+[Phase 2] 후보 생성 실패 - retry 3/10
 
+사유: replay/authority/구조 계약 미달 후보만 생성되어 재시도합니다.
 
+[Phase 2] 후보 생성 (full_ensemble) 시작
 
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
 
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
 
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 30s)
 
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (2m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (2m 30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (3m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (3m 30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (4m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (4m 30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (5m 0s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (5m 30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 완료 (5m 40s)
+
+[Phase 2] 후보 생성 실패 - retry 4/10
+
+사유: replay/authority/구조 계약 미달 후보만 생성되어 재시도합니다.
+
+[Phase 2] 후보 생성 (full_ensemble) 시작
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (30s)
+
+[Phase 2] 후보 생성 (full_ensemble) 대기 중... (1m 0s)
+ ⠸ 제9화 · Blueprint 생성  14m 33s
