@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -7,12 +8,15 @@ from modules.domain.agents.base_agent import AgentErrorType
 from modules.domain.agents.blueprint_ensemble import BlueprintEnsembleGenerator
 
 
-def _make_agent():
+def _make_agent(root: Path | None = None):
     ctx = SimpleNamespace()
     ctx.author_directives = ""
     ctx.db = MagicMock()
     ctx.db.load_anchor.return_value = {}
-    ctx.current_project = SimpleNamespace(name="Lane Project")
+    current_project = SimpleNamespace(name="Lane Project")
+    if root is not None:
+        current_project.paths = SimpleNamespace(root=root)
+    ctx.current_project = current_project
     ctx.project_name = "Lane Project"
     return BlueprintEnsembleGenerator(ctx, MagicMock())
 
@@ -27,6 +31,7 @@ def test_generate_ensemble_owner_shell_coordinates_helper_chain():
         "prev_info": "prev",
         "hud_context": "hud",
         "cache_name": "cache/bp",
+        "constraint_block": {},
     }
     active_strategies = [{"name": "action_focused"}]
     raw_candidates = [{"scene_breakdown": [1, 2, 3, 4], "integrated_scenario": "x" * 600}]
@@ -53,6 +58,9 @@ def test_generate_ensemble_owner_shell_coordinates_helper_chain():
         constraint_block={},
         prev_blueprint={"end_location": "VIP 룸"},
         single_strategy="action_focused",
+        fix_pack={"must_fix": ["keep continuity"]},
+        repair_contract={"repair_scope": "full"},
+        attempt_num=3,
     )
 
     assert result == finalized
@@ -63,8 +71,16 @@ def test_generate_ensemble_owner_shell_coordinates_helper_chain():
     agent._run_blueprint_ensemble_workers.assert_called_once()
     assert agent._run_blueprint_ensemble_workers.call_args.kwargs["cache_name"] == "cache/bp"
     assert agent._run_blueprint_ensemble_workers.call_args.kwargs["prev_blueprint"] == {"end_location": "VIP 룸"}
+    assert agent._run_blueprint_ensemble_workers.call_args.kwargs["fix_pack"] == {"must_fix": ["keep continuity"]}
+    assert agent._run_blueprint_ensemble_workers.call_args.kwargs["repair_contract"] == {"repair_scope": "full"}
     agent._qualify_blueprint_candidates.assert_called_once_with(raw_candidates)
-    agent._finalize_blueprint_candidates.assert_called_once_with(qualified_candidates, [])
+    agent._finalize_blueprint_candidates.assert_called_once_with(
+        qualified_candidates,
+        [],
+        ep_num=9,
+        arc_data={},
+        attempt_num=3,
+    )
 
 
 def test_qualify_blueprint_candidates_tracks_pass_and_fail_metadata():
@@ -191,7 +207,12 @@ def test_finalize_blueprint_candidates_attaches_meta_and_cleans_temp_fields():
     ]
     disqualified = [("action_focused", 2, 120)]
 
-    best, all_candidates = agent._finalize_blueprint_candidates(qualified_candidates, disqualified)
+    best, all_candidates = agent._finalize_blueprint_candidates(
+        qualified_candidates,
+        disqualified,
+        ep_num=1,
+        arc_data={},
+    )
 
     assert best is all_candidates[0]
     meta = all_candidates[0]["_ensemble_meta"]
@@ -204,6 +225,32 @@ def test_finalize_blueprint_candidates_attaches_meta_and_cleans_temp_fields():
     assert "_qualified" not in all_candidates[0]
     assert "_scene_count" not in all_candidates[0]
     assert "_length" not in all_candidates[0]
+
+
+def test_finalize_blueprint_candidates_snapshots_fanout_candidates_when_attempt_num_present(tmp_path):
+    agent = _make_agent(tmp_path)
+    qualified_candidates = [
+        {
+            "_strategy": "emotion_focused",
+            "_qualified": True,
+            "_scene_count": 4,
+            "_length": 700,
+            "scene_breakdown": {"scene_1": {"summary": "opening"}},
+            "integrated_scenario": "x" * 700,
+        }
+    ]
+
+    _, all_candidates = agent._finalize_blueprint_candidates(
+        qualified_candidates,
+        [],
+        ep_num=9,
+        arc_data={"arc_no": 2},
+        attempt_num=4,
+    )
+
+    artifact_path = all_candidates[0]["_candidate_artifact_meta"]["artifact_path"]
+    assert artifact_path.endswith("candidate_blueprint__emotion_focused.json")
+    assert (tmp_path / artifact_path).exists()
 
 
 def test_build_blueprint_prompt_bundle_uses_cache_stub_and_full_fallback():
@@ -497,6 +544,95 @@ def test_sanitize_blueprint_candidate_rejects_unauthorized_tactical_intrusion():
     )
 
     assert result == (None, AgentErrorType.CANDIDATE_DISQUALIFIED)
+
+
+def test_sanitize_blueprint_candidate_rejects_korean_synonym_tactical_intrusion():
+    agent = _make_agent()
+
+    result = agent._sanitize_blueprint_candidate(
+        {
+            "scene_breakdown": {
+                "scene_1": {
+                    "summary": "VIP룸 문이 열리자 리스크 관리팀이 들이닥쳐 한시우의 팔목을 비틀려 든다.",
+                    "key_events": ["리스크 관리팀이 들이닥쳐 팔목을 비틀려 한다."],
+                },
+                "scene_2": {
+                    "summary": "팀장이 주먹을 들이밀며 입막음을 강요한다.",
+                    "key_events": ["주먹을 들이밀며 입막음을 강요한다."],
+                },
+            },
+            "integrated_scenario": (
+                "리스크 관리팀이 VIP룸에 들이닥쳐 한시우의 팔목을 비틀고 주먹을 들이밀며 입막음을 강요한다. "
+                * 30
+            ),
+            "opening_transition": {"type": "direct_continuation"},
+            "protagonist_state": {"mood": "냉정"},
+        },
+        strategy_name="dialogue_focused",
+        genre=GenreTypes.WUXIA,
+        tactical_excerpt="한시우가 박성호 PB와 수수료 조건을 조정하며 WTI 주문 여부를 확정한다.",
+    )
+
+    assert result == (None, AgentErrorType.CANDIDATE_DISQUALIFIED)
+
+
+def test_sanitize_blueprint_candidate_rejects_character_only_tactical_intrusion():
+    agent = _make_agent()
+
+    result = agent._sanitize_blueprint_candidate(
+        {
+            "scene_breakdown": {
+                "scene_1": {
+                    "summary": "주인공이 VIP룸 문을 연다.",
+                    "key_events": ["VIP룸 입장"],
+                    "characters": ["주인공", "괴한"],
+                },
+                "scene_2": {
+                    "summary": "상대가 팔목을 비틀며 협박한다.",
+                    "key_events": ["팔목을 비틀며 협박한다."],
+                    "characters": ["주인공"],
+                },
+            },
+            "integrated_scenario": "주인공이 VIP룸으로 들어간다. 상대가 팔목을 비틀며 협박한다. " * 40,
+            "opening_transition": {"type": "jump_opening"},
+            "protagonist_state": {"mood": "경계"},
+        },
+        strategy_name="action_focused",
+        genre=GenreTypes.WUXIA,
+        tactical_excerpt="주인공은 PB와 대치하며 매수 여부를 결정한다.",
+    )
+
+    assert result == (None, AgentErrorType.CANDIDATE_DISQUALIFIED)
+
+
+def test_sanitize_blueprint_candidate_allows_pb_negotiation_with_staff_words_only():
+    agent = _make_agent()
+
+    result = agent._sanitize_blueprint_candidate(
+        {
+            "scene_breakdown": {
+                "scene_1": {
+                    "summary": "박성호가 직원에게 대응표와 주문 확인서를 가져오게 한다.",
+                    "key_events": ["직원이 대응표를 펼치고 주문 확인서를 건넨다."],
+                },
+                "scene_2": {
+                    "summary": "한시우와 박성호가 수수료 조건과 체결 순서를 조율한다.",
+                    "key_events": ["수수료 조건을 조율한다.", "체결 순서를 확인한다."],
+                },
+            },
+            "integrated_scenario": (
+                "박성호가 직원을 불러 대응표와 주문 확인서를 준비시키고, 한시우와 체결 순서를 차분히 맞춰 나간다. "
+                * 30
+            ),
+            "opening_transition": {"type": "direct_continuation"},
+            "protagonist_state": {"mood": "냉정"},
+        },
+        strategy_name="dialogue_focused",
+        genre=GenreTypes.WUXIA,
+        tactical_excerpt="한시우가 박성호 PB와 수수료 조건을 조정하며 WTI 주문 여부를 확정한다.",
+    )
+
+    assert isinstance(result, dict)
 
 
 def test_request_blueprint_generation_rejects_contaminated_integrated_scenario():

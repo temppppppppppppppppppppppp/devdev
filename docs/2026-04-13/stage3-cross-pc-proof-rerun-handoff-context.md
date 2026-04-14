@@ -1,7 +1,7 @@
 # Stage3 Cross-PC Proof Rerun Handoff Context
 
 Date: 2026-04-13
-Status: handoff context after tranche-3 static closure; the later same-day live rerun plus bounded producer-side landings are now superseded by one bounded tactical-authority synonym parity tranche before the `ep7/ep8` proof rerun
+Status: archival handoff context only; the active current-head controller is now the 2026-04-14 bounded Stage3 debt survey, which records `93%` predictive contract-debt resolution and keeps fresh Stage3 runtime operator-gated rather than automatically queued
 Audience: next operator continuing on another PC
 
 ## Purpose
@@ -9,6 +9,18 @@ Audience: next operator continuing on another PC
 - preserve the exact Stage3 context after the three-tranche safe route
 - let the next operator continue from `pull -> context load -> bounded next action` without losing the tranche baseline
 - avoid re-mixing unrelated live-run/material dirt into the Stage3 proof wave
+
+## 2026-04-14 Local Continuation Override
+
+- authoritative gate doc: `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+- authoritative conservative predictive estimate: `93% resolved`
+- fresh Stage3 runtime is not auto-authorized; even with the estimate floor met, explicit operator re-authorization is still required
+- this note is now archival context for the deferred proof-rerun path, not the active local-session controller
+- current project state has Stage3 blueprints through `ep8` and manuscripts through `ep0`, so local `Stage3 continue` semantics start at `ep9` unless the project is rewound first
+- do not read the `ep7/ep8` proof-rerun sequencing below, or `ep9` continuation semantics, as the immediate local action for this session
+- use the rerun sequence below only if a future operator explicitly rewinds `000_260412_a`
+- rollback target `7` means bounded `ep7/ep8` proof rerun
+- rollback target `1` means full `ep1-ep8` proof rerun
 
 ## 2026-04-13 Late Update
 

@@ -71,6 +71,7 @@ class BlueprintConstraintCompiler:
 
         # 현재 화의 Arc 내 위치
         arc_position = ep_num - ep_start + 1
+        is_arc_opening_episode = arc_position <= 1
 
         # 1. 이번 화 핵심 내용 추출
         must_focus = self._extract_episode_focus(arc_data, ep_num, arc_position)
@@ -84,10 +85,16 @@ class BlueprintConstraintCompiler:
             prev_blueprints,
             arc_data=arc_data,
             prev_manuscript_ending=prev_manuscript_ending,
+            is_arc_opening_episode=is_arc_opening_episode,
         )
 
         # 4. 계승 상태 추출
-        inherited_state = self._extract_inherited_state(arc_data, prev_blueprint, genre=genre)
+        inherited_state = self._extract_inherited_state(
+            arc_data,
+            prev_blueprint,
+            genre=genre,
+            is_arc_opening_episode=is_arc_opening_episode,
+        )
 
         # 5. [V63] Arc에서 전달된 constraint_summary (Stage 2 → Stage 3)
         arc_constraint_summary = arc_data.get("constraint_summary", "")
@@ -472,6 +479,7 @@ class BlueprintConstraintCompiler:
         *,
         prev_manuscript_ending: str = "",
         arc_data: dict | None = None,
+        is_arc_opening_episode: bool = False,
     ) -> dict:
         """연속성 정보 추출
 
@@ -544,12 +552,19 @@ class BlueprintConstraintCompiler:
                     conflicts.add(cliffhanger[:50])
             continuity["ongoing_conflicts"] = list(conflicts)[:5]
 
-        if arc_start_location:
+        if arc_start_location and (is_arc_opening_episode or not continuity.get("location")):
             continuity["location"] = arc_start_location
 
         return continuity
 
-    def _extract_inherited_state(self, arc_data: dict, prev_blueprint: dict | None, *, genre: str = "wuxia") -> dict:
+    def _extract_inherited_state(
+        self,
+        arc_data: dict,
+        prev_blueprint: dict | None,
+        *,
+        genre: str = "wuxia",
+        is_arc_opening_episode: bool = False,
+    ) -> dict:
         """계승 상태 추출"""
         # [TF-41] P1-1: 비무협 장르는 internal_energy 기본값 제외
         inherited: dict = {"equipment": [], "injuries": "없음", "companions": [], "mood": "평온"}
@@ -587,7 +602,7 @@ class BlueprintConstraintCompiler:
 
         # Arc의 state_constraints에서 추출
         state = arc_data.get("state_constraints", {})
-        if state:
+        if state and (is_arc_opening_episode or not prev_blueprint):
             arc_start = state.get("arc_start_state", {})
             if arc_start:
                 if arc_start.get("injuries") not in (None, ""):

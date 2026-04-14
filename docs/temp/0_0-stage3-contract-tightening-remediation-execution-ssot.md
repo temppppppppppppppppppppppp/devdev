@@ -1,14 +1,40 @@
 # 0_0 Stage3 Contract Tightening Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (the earlier Stage3 binding/handoff/source-anchor tranches remain landed, the reopened 2026-04-11 truth-first parent tranche is landed on the live workspace, the later fail-only structural hardening tranche is also landed, and the 2026-04-12/13 rerun follow-up slices are now likewise landed on the live workspace: success proof sinks now sit behind committed persistence, Stage3 `runtime_advisory` / `retry_directives` normalization is in place, `PASS_WITH_FIX` success-accounting parity is restored, analyzer sink-alignment coverage is widened, `opening_anchor` / `scene_completeness` structural binding failures now escalate to regenerate-only full repair with explicit visibility, ep-boundary replay leakage plus canonical institution drift on the ep2 -> ep3 seam now force regenerate-only repair through `episode_progression` truth and expanded institution fact-lock coverage, the first 2026-04-13 child-lane follow-up blocks the observed Stage3 retry plateau by denying low-yield inplace reopening after `PASS_WITH_FIX` exhaustion or repeated inplace score/signature plateau, the second same-day live-rerun follow-up now also blocks `Director PASS < quality_gate` patch reopening while suppressing blind live-HUD V46 current-state injection during blueprint scoring unless an explicit `blueprint_scoring_hud` is provided, the same-day child closure-residual follow-up now has live proof on `ep4/ep5` that advisory-only `scenario_density` settles as `PASS_WITH_WARNING` without reopening local patch, the narrower same-day closure-residual observability follow-up is now also landed so Stage3 completion stats separate the current-run pass rate from the cumulative generator pass rate, the later same-day parent binding-family static-kill tranche is now landed so all MAJOR/CRITICAL binding-prevalidation categories route through regenerate-only repair, Phase2 blocks inplace reopen when prior binding issues remain, terminal fallback stays blocked on unresolved binding residuals, the later same-day cost-first decision-surface static survey tranche is likewise landed, the newer same-day producer-side contract-alignment / route-honest failure-surface tranche is now also landed on the live workspace, and the latest same-day bounded `P2/P3` producer-follow-up tranche is now likewise landed: Stage2 shortlist now prefers actionable mission-packet candidates when available, Stage3 placeholder `protagonist_state` shells now fail cheap admission, and Stage4 candidate ordering now prefers stronger manuscript contract traces even in degraded fallback mode; the later same-day adversarial execution-promotion follow-up is now also authoritative, so the immediate-next residual is no longer the paid `ep7/ep8` rerun itself but one bounded tactical-authority synonym parity tranche inside this same parent lane before that rerun, while the older first-ensemble visibility follow-up remains documented but not yet landed)
+Status: partially_realized (3-pass re-audited 2026-04-14 against the live workspace; the current-head bounded Stage3 debt survey records a conservative predictive contract-debt resolution estimate of `93%`, so fresh Stage3 continuation or proof rerun is threshold-cleared but operator-gated rather than the automatic immediate next step. Older `ep9 continuation` and proof-rerun phrasing below should be read as historical queue state unless explicitly re-authorized.)
 Canonical Path: `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2/Stage3 survey docs and lane drafts untracked`
 - Resume Commit: `32d6f0c8b56898fd8a370ae13684043d4cfda91a`
-- Resume Drift Summary: `snapshot main plus the later local `0_temp.txt` continuation is now authoritative; the earlier binding/handoff/source-anchor tranches remain landed, the live workspace on top of current main also carries the reopened truth-first parent tranche, the bounded Stage3 analyzer sink-alignment coverage follow-up, the later fail-only structural hardening tranche for regenerate-only binding categories plus visibility propagation, the later ep3 replay / institution-truth fail-only follow-up across compiler/validator/runtime, the 2026-04-13 child-lane retry-plateau and quality-gate/truth follow-ups, the same-day child closure-residual follow-up that now has live proof on `ep4/ep5`, the narrower same-day closure-residual observability follow-up in `stage3_orchestrator.py`, the later same-day parent binding-family static-kill tranche across validator/runtime/test coverage, the later same-day cost-first decision-surface static survey, and the landed three-tranche safe route through Stage3RepairRouter extraction, strict local-fix contract gating, and the first bounded patch-IR lane; the newer formal `ep8` root-cause survey remains authoritative for ownership, the bounded producer-side contract-alignment / route-honest failure-surface tranche it called for is now also landed on current main, the later same-day `P2/P3` producer-follow-up tranche from the new residual survey is now likewise landed, and the subsequent adversarial audit plus x3 follow-up now promote one stronger parent-owned blocker: Korean tactical-intrusion synonym phrasing can survive both producer sanitize and validator prevalidation, so the immediate-next residual is now one bounded tactical-authority synonym parity tranche before the paid `ep7/ep8` rerun, while stale 2026-04-11 backup-branch work remains excluded from this SSOT's authority`
+- Resume Drift Summary: `snapshot main plus the later local `0_temp.txt` continuation is now authoritative; the earlier binding/handoff/source-anchor tranches remain landed, the live workspace on top of current main also carries the reopened truth-first parent tranche, the bounded Stage3 analyzer sink-alignment coverage follow-up, the later fail-only structural hardening tranche for regenerate-only binding categories plus visibility propagation, the later ep3 replay / institution-truth fail-only follow-up across compiler/validator/runtime, the 2026-04-13 child-lane retry-plateau and quality-gate/truth follow-ups, the same-day child closure-residual follow-up that now has live proof on `ep4/ep5`, the narrower same-day closure-residual observability follow-up in `stage3_orchestrator.py`, the later same-day parent binding-family static-kill tranche across validator/runtime/test coverage, the later same-day cost-first decision-surface static survey, and the landed three-tranche safe route through Stage3RepairRouter extraction, strict local-fix contract gating, and the first bounded patch-IR lane; the newer formal `ep8` root-cause survey remains authoritative for ownership, the bounded producer-side contract-alignment / route-honest failure-surface tranche it called for is now also landed on current main, the later same-day `P2/P3` producer-follow-up tranche from the new residual survey is now likewise landed, the Korean tactical-authority synonym parity tranche from the adversarial follow-up is now also landed locally, and the current local next step is `projects/000_260412_a` Stage3 continuation from `ep9` unless the operator explicitly chooses rollback`
+2026-04-14 bounded survey + rerun gate override:
+
+- Local audit HEAD: `81b426a688c2a5b6279d254c7746baac1261235b`
+- authoritative gate doc: `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+- supporting structural survey: `docs/2026-04-14/stage3-runtime-retry-structural-debt-survey.md`
+- authoritative conservative predictive estimate: `93% resolved`
+- do not auto-authorize or auto-present fresh Stage3 runtime unless a canonical current-head bounded survey records `>=90%` predictive contract-debt resolution
+- if the estimate falls below `90%`, the only authorized next step is bounded debt-remediation survey / execution-SSOT refresh
+- current policy state is `threshold met, authorization not yet consumed`
+- this parent lane keeps the bounded `tactical-authority synonym parity` tranche as queued residual ownership, but the older `ep7/ep8` proof-rerun phrasing is no longer the immediate local action for the current workspace state
+- current project state has Stage3 blueprints through `ep8` and manuscripts through `ep0`, so local `Stage3 continue` semantics start at `ep9` unless the project is rewound first
+- do not auto-present `ep9` continuation, bounded `ep7/ep8` proof rerun, or full `ep1-ep8` proof rerun as the active local next action
+- any fresh Stage3 runtime on `projects/000_260412_a`, whether continuation or rollback-based rerun, now requires explicit operator re-authorization
+- bounded `ep7/ep8` proof rerun still requires explicit rollback target `7`
+- full `ep1-ep8` proof rerun still requires explicit rollback target `1`
+- keep the older same-doc `immediate-next` wording below as deferred queue history rather than the active local controller
+
+2026-04-14 post-parent-tranche local override:
+
+- Local landing HEAD: `81b426a688c2a5b6279d254c7746baac1261235b`
+- the formerly front parent residual `tactical-authority synonym parity` tranche is now landed on the local workspace
+- the same local workspace also carries child-lane T2 residual cleanup, full Tranche 3 retry-feedback surgery, and bounded T4.1 Director candidate-summary expansion
+- no further parent/child pre-rerun code tranche is the immediate local action on current workspace
+- remaining T4.2-T4.5 and gated T5 work stay deferred behind fresh rerun evidence
+- immediate local next step is no longer auto-presented; fresh Stage3 continuation or proof rerun is operator-gated under the bounded survey rule above
+
 Source Survey Docs:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
@@ -35,6 +61,8 @@ Source Survey Docs:
 - `docs/2026-04-13/stage3-producer-contract-tightening-3pass-audit-and-adversarial-review.md`
 - `docs/2026-04-13/stage3-producer-adversarial-followup-x3-addendum.md`
 - `docs/2026-04-11/stage23-current-main-static-parallel-survey.md`
+- `docs/2026-04-14/stage3-runtime-retry-structural-debt-survey.md`
+- `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
 Evidence Artifacts:
 - `docs/이전/2026-04-02/0_0-stage3-static-global-evidence.json`
 - `docs/이전/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-evidence.json`
@@ -632,7 +660,7 @@ Execution consequence:
 
 - keep this lane partial, but treat the newer binding-family static-kill tranche as now landed on the current workspace
 - supersede the narrower `ep6` terminal-quality-gate coherence slice as the immediate-next proof target inside this same parent lane
-- make the next action one fresh rerun proof focused on whether `ep7/ep8` no longer churn through `binding -> inplace -> fallback warning`
+- at the time of this static-kill landing, the next action became one fresh rerun proof focused on whether `ep7/ep8` no longer churn through `binding -> inplace -> fallback warning`
 - do not widen this turn into DecisionKernel or broad patch-IR refactoring
 
 ## 23. 2026-04-13 Cost-First Decision-Surface Static Survey Update
@@ -660,10 +688,10 @@ Static survey result:
 
 Execution consequence:
 
-- keep this lane partial, but change the immediate-next residual from `fresh rerun proof first` to one more bounded static tranche:
+- keep this lane partial, but note that this update changed the then-immediate residual from `fresh rerun proof first` to one more bounded static tranche:
   - contract-driven repair eligibility
   - plus success-state projection normalization
-- after that tranche lands, take the next rerun as the cheapest useful proof step
+- after that tranche landed, the next rerun became the cheapest useful proof step
 - do not open a new queue lane
 - do not widen directly into full DecisionKernel / patch-IR migration from this turn alone
 
@@ -692,7 +720,7 @@ Landed tranche result:
 Execution consequence:
 
 - keep this lane partial, but treat the contract-driven repair-eligibility tranche as now landed on the current workspace
-- restore the immediate-next action to one fresh rerun proof focused on `ep7/ep8`:
+- at the time of this landing, the immediate-next action returned to one fresh rerun proof focused on `ep7/ep8`:
   - confirm binding-driven churn no longer reopens faux-inplace
   - confirm success sinks preserve post-fix warning/fix semantics coherently
 - do not widen this turn into DecisionKernel / patch-IR migration or another new queue lane
@@ -739,8 +767,8 @@ Execution consequence:
   - supported target kinds are currently `dialogue`, `entity_ref`, `field_value`, `local_phrase`, and `local_sentence`
   - unresolvable target snapshots fail closed before the local patch call
   - broader `scene_block`-style repair stays on the legacy whole-blueprint lane for now
-- advance the immediate-next action to the tranche-3 snapshot commit plus one fresh proof rerun
-- keep the rerun target bounded to `ep7/ep8` proof, not a broader live wave
+- at the time of this three-tranche override, the immediate-next action advanced to the tranche-3 snapshot commit plus one fresh proof rerun
+- the rerun target at that point stayed bounded to `ep7/ep8` proof, not a broader live wave
 - do not open a new queue lane for the three-tranche sequence; keep it inside this same parent lane
 
 ## 26. 2026-04-13 EP8 Root-Cause Formalization Update
@@ -821,7 +849,7 @@ Execution consequence:
 
 - keep this parent lane partial and active
 - keep the owner reading from section 26 intact: producer-side contract drift is the primary blocker family
-- restore the immediate-next action to one bounded paid `ep7/ep8` rerun:
+- at the time of this producer-side contract-alignment landing, the immediate-next action returned to one bounded paid `ep7/ep8` rerun:
   1. verify that producer-side admission tightening reduces under-structured candidates before validator churn
   2. verify that `opening_transition` producer-contract parity holds on the rerun path, including alias/missing-field salvage before validator spend
   3. verify that obvious tactical-intrusion and scene-completeness failures now die in producer cheap admission instead of later validator churn
@@ -859,7 +887,7 @@ Execution consequence:
 - keep this parent lane partial and active
 - treat this slice as a bounded `P2/P3` producer follow-up, not as a new queue family
 - keep broader validator/runtime tactical-semantic work deferred
-- restore the immediate-next action to one bounded paid `ep7/ep8` rerun:
+- at the time of this `P2/P3` producer follow-up landing, the immediate-next action returned to one bounded paid `ep7/ep8` rerun:
   1. verify that Stage2 shortlist honesty reduces generic mission-packet spend when a better candidate already exists
   2. verify that Stage3 placeholder-state hardening cuts another cheap under-structured candidate family before validator churn
   3. verify that Stage4 degraded fallback ordering no longer hides the least-bad candidate order behind raw worker return order
@@ -895,11 +923,49 @@ Execution consequence:
 - keep this parent lane partial and active
 - do not open a new queue family
 - supersede the older `rerun-first` reading for the current live workspace
-- make the immediate-next action one bounded static tranche inside this same parent lane:
+- at the time of this adversarial execution-promotion update, the immediate-next action became one bounded static tranche inside this same parent lane:
   1. widen Korean tactical intrusion coverage on the producer sanitize side
   2. widen the same Korean synonym family on the validator `tactical_semantic_fidelity` side
   3. add regression tests that pin both the producer and validator hostile cases
-- only after that tranche lands should this lane take the bounded paid `ep7/ep8` rerun
+- only after that tranche landed would this lane take the bounded paid `ep7/ep8` rerun
 - keep the lower residuals explicit but subordinate:
   - declared `opening_transition` mismatch still leaking to validator
-  - generic verby scene shells still leaking through cheap admission
+- generic verby scene shells still leaking through cheap admission
+
+## 30. 2026-04-14 Stage3 Runtime/Retry Structural Debt Axis-2 Refresh
+
+Evidence basis:
+
+- `docs/2026-04-14/stage3-runtime-retry-structural-debt-survey.md`
+- `modules/domain/agents/three_phase_blueprint_runtime.py`
+- `modules/domain/agents/three_phase_blueprint_generator.py`
+- `modules/domain/agents/blueprint_ensemble.py`
+- `modules/domain/agents/director_ensemble.py`
+- `tests/test_blueprint_patch_mode.py`
+- `tests/test_blueprint_ensemble_generate_ensemble.py`
+- `tests/test_director_modules.py`
+
+Axis-2 survey result:
+
+1. the live retry owner is still the main structural seam, but it is bounded rather than monolithic:
+   - `Stage3RepairRouter` already localizes retry-material normalization
+   - `_run_phase2_generation()`, `_run_pass_with_fix_loop()`, `_run_pass_with_fix_iteration()`, and `_run_retry_cycle()` still live in the same owner
+   - the current risk is drift between routing/state-shaping and orchestration, not an outright contract failure
+2. `blueprint_ensemble.py` remains a mixed admission/repair owner:
+   - `_sanitize_blueprint_candidate()` both filters and mutates
+   - `_generate_single()` and `_request_blueprint_generation()` still sit on the same route as candidate screening
+3. `director_ensemble.py` still mixes compare prompt assembly, gate logic, and sink shaping:
+   - `_resolve_ensemble_selection_state()`, `_apply_ensemble_quality_gates()`, and `_build_ensemble_decision_payload()` share the decision surface
+   - the current test net covers the round-trip, so this is structural debt rather than an exposed live bug
+4. `three_phase_blueprint_generator.py` is already a thin facade:
+   - no Polaris / DecisionKernel split is needed for this lane
+   - `_inplace_patch_blueprint()` stays as an owner-side patch helper, not a new subsystem
+
+Execution consequence:
+
+- no additional must-before-rerun blocker was discovered by this axis-2 structural survey
+- the authoritative current-head gate is now `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`, which uses the more conservative blended estimate of `93% resolved`
+- threshold is met, but fresh Stage3 continuation or proof rerun is still not automatic and requires explicit operator re-authorization
+- the highest-ROI next seam, if we continue debt-first work before rerun, is a bounded `Stage3RetryCoordinator` extraction from `three_phase_blueprint_runtime.py`
+- next after that would be `BlueprintCandidateAdmission`, then a narrower `DirectorDecisionSurfaceBuilder`
+- Polaris / DecisionKernel migration remains a non-goal for this lane

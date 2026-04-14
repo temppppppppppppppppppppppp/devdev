@@ -1,7 +1,7 @@
 # 0_0 Stage3 Quality Closure Five Tranche Remediation Execution SSOT
 
-Date: 2026-04-13 (originally drafted) / 2026-04-14 (Tranche 1 landed)
-Status: `tranche_1_landed_parent_gate_pending` (Tranche 1 opening-transition vocabulary coherence is now committed at `56063603` on `main` with all 5 sub-edits + 8 new test cases + 2 stale test debt fixes, all validation gates green: 145 targeted shard tests passed + ops_validator strict errors=0 + UTF-8 hygiene clean. However the parent `0_0-stage3-contract-tightening-remediation` controller still fronts one bounded tactical-authority synonym parity tranche, so this child lane's Proof Gate 1 rerun is now deferred behind that parent residual rather than being the immediate-next operator action. The 10-terminal parallel investigation, synthesis at 97%, and this execution SSOT remain authoritative for this child lane's tranche design, but queue sequencing still defers to the parent Stage3 controller.)
+Date: 2026-04-13 (originally drafted) / 2026-04-14 (Tranche 1 landed; local workspace now also lands T2 residual cleanup, T3 retry feedback surgery, and bounded T4.1 candidate-summary expansion)
+Status: `tranche_1_to_3_landed_local_t4_1_landed_parent_gate_met_operator_gated` (Tranche 1 opening-transition vocabulary coherence is committed at `56063603` on `main`, and the current local workspace now also carries child-lane T2 residual cleanup, the Tranche 3 retry-feedback surgery bundle, and bounded Tranche 4.1 Director candidate-summary expansion with targeted validation green. The current-head bounded Stage3 debt survey records a conservative predictive contract-debt resolution estimate of `93%`, so the gate floor is met, but fresh Stage3 continuation or proof rerun remains operator-gated rather than the automatic next step.)
 Canonical Path: `docs/2026-04-13/0_0-stage3-quality-closure-five-tranche-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-quality-closure-five-tranche-remediation-execution-ssot.md`
 Commit State:
@@ -9,6 +9,21 @@ Commit State:
 - Baseline Dirty Summary: `dirty: stage3 producer/ensemble/runtime/validator edits, live 000_260412_a rerun artifacts, the 10 t1..t10 deliverables, the 10-terminal parent order, the synthesis doc, and the 2026-04-13 audit/survey docs already present in worktree`
 - Resume Commit: `same-as-baseline`
 - Resume Drift Summary: `none during this SSOT save; each tranche must re-run git rev-parse HEAD at landing time and rebase its line anchors against current head before edit`
+
+2026-04-14 local bounded landing override:
+
+- Local landing HEAD: `81b426a688c2a5b6279d254c7746baac1261235b`
+- authoritative gate doc: `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+- supporting structural survey: `docs/2026-04-14/stage3-runtime-retry-structural-debt-survey.md`
+- authoritative conservative predictive estimate: `93% resolved`
+- do not auto-authorize or auto-present fresh Stage3 runtime unless a canonical current-head bounded survey records `>=90%` predictive contract-debt resolution
+- if the estimate falls below `90%`, the only authorized next step is bounded debt-remediation survey / execution-SSOT refresh
+- current policy state is `threshold met, authorization not yet consumed`
+- the current local workspace now lands child-lane T2 residual cleanup, the full Tranche 3 retry-feedback surgery bundle, and bounded T4.1 Director candidate-summary expansion
+- remaining T4.2-T4.5 work stays deferred until a fresh rerun proves whether additional rubric or sink work is still needed
+- T5 remains gated and must not move before the post-T1/T2/T3 proof conditions in this SSOT are actually satisfied
+- do not auto-present `projects/000_260412_a` Stage3 continuation from `ep9` or any rollback-based proof rerun as the active local next action
+- any fresh Stage3 runtime now requires explicit operator re-authorization even though the `>=90%` estimate floor is met
 Source Survey Docs:
 - `docs/2026-04-13/s2-s3-s4-runtime-improvement-10-terminal-parallel-investigation-order.md`
 - `docs/2026-04-13/s2-s3-s4-runtime-improvement-synthesis.md`
@@ -28,6 +43,8 @@ Source Survey Docs:
 - `docs/2026-04-13/s2-s3-s4-producer-smarts-bounded-3pass-audit.md`
 - `docs/2026-04-13/s2-s3-s4-producer-smarts-p2-p3-followup-survey.md`
 - `docs/2026-04-13/stage3-three-tranche-safe-sequencing-plan.md`
+- `docs/2026-04-14/stage3-runtime-retry-structural-debt-survey.md`
+- `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
 Evidence Artifacts:
 - `0_temp.txt` (latest live-run console capture, ep8 reject family at lines 400–469)
 - `projects/000_260412_a/project_data.db`
@@ -565,6 +582,11 @@ Per tranche, before commit:
 - `python scripts/ops_validator.py --strict`
 
 ### 11.2 Proof Gates (live rerun)
+
+All live proof gates below are subordinate to today's Stage3 rerun gate in `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`:
+
+- no proof gate may run unless a canonical current-head bounded survey records `>=90%` predictive contract-debt resolution
+- even after that floor is met, no proof gate is automatic; each live rerun still requires explicit operator re-authorization
 
 Proof Gate 1 — after Tranche 1:
 

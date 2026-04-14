@@ -397,6 +397,17 @@ class BaseAgent:
         context_tag = getattr(self, "_current_context_tag", None)
         if context_tag:
             payload["attempt_key"] = str(context_tag)
+        nested_meta = context.get("meta")
+        if isinstance(nested_meta, dict):
+            normalized_meta = {key: value for key, value in nested_meta.items() if value is not None}
+            promoted_event_kind = str(normalized_meta.pop("event_kind", "") or "").strip()
+            if promoted_event_kind:
+                payload["event_kind"] = promoted_event_kind
+            context = dict(context)
+            if normalized_meta:
+                context["meta"] = normalized_meta
+            else:
+                context.pop("meta", None)
         payload.update({key: value for key, value in context.items() if value is not None})
         try:
             log_fn(str(message), **payload)

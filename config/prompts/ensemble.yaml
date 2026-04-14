@@ -384,7 +384,7 @@ BLUEPRINT_GENERATION_PROMPT: |
   4. **안티 크로스 장르 오염**: 현재 작품의 정본 근거 없이 다른 장르의 시스템/게임/HUD 레지스터(레벨업, 퀘스트, 게이트, 던전, 상태창 등)를 끌어오지 마세요.
   5. **장면 권위 우선**: integrated_scenario, scene_breakdown.summary, scene_breakdown.key_events 모두 동일 규칙을 따릅니다. 설명용 설계 문장보다 인물 행동, 대사, 상황 변화가 먼저 와야 합니다.
   6. **장면 완성도 계약**: 모든 씬은 최소 1개의 구체적 action/event가 key_events에 들어 있어야 합니다. 비어 있는 key_events, "진행/갈등/절정" 같은 껍데기 요약만 있는 scene shell은 금지입니다.
-  7. **전술 권위 계약**: Arc tactical authority에 없는 난입/괴한/물리 충돌 이벤트를 새로 발명하지 마세요. tactical excerpt에 없는 `난입/괴한/습격/멱살/제압/협박`류 이벤트는 금지입니다.
+  7. **전술 권위 계약**: Arc tactical authority에 없는 난입/괴한/물리 충돌 이벤트를 새로 발명하지 마세요. current episode tactical excerpt에 물리 위협 entry marker(`난입/괴한/들이닥침/침입자/습격/무단침입/취객/심부름센터`)가 없으면 scene_breakdown / integrated_scenario에서 `난입/괴한/들이닥치/습격/침입자/멱살/멱살을 잡/제압/협박/위협/대응/차단/팔목을 비틀/팔을 비틀/손목을 잡아채/주먹을 들이밀/입막음/강요/강박/목을 조르/목덜미를 잡/벽으로 밀치/의자로 가로막`류를 새로 쓰지 마세요.
 
   ### [출력 형식 - 반드시 JSON만 출력]
   각 씬에 반드시 "tension_level" (1~10 정수)을 기재하라. 1=평온, 5=긴장, 8=절정, 10=최고조.
@@ -470,7 +470,7 @@ BLUEPRINT_GENERATION_PROMPT: |
   □ protagonist_state가 빈 객체가 아니고, 감정/부상/장비 중 최소 하나는 실제 값이 채워져 있는가?
   □ ending_hook이 존재하고 다음 화로의 긴장/궁금증을 만드는가?
   □ start_location이 직전 화의 end_location과 일치하는가?
-  □ Arc tactical_doc 범위를 초과하는 사건(다음 화/다른 블록 내용, tactical authority에 없는 난입/괴한/물리 충돌)이 포함되지 않았는가?
+  □ current episode tactical excerpt에 entry marker가 없는데도 `난입/괴한/들이닥침/멱살/제압/협박/팔목을 비틀/주먹을 들이밀/입막음`류 물리 위협을 새로 발명하지 않았는가?
 
   위 항목 중 하나라도 "아니오"면 해당 부분을 수정한 후 출력하세요.
 

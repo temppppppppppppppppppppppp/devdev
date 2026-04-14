@@ -14,7 +14,7 @@ from modules.core.constants import ContextLimits, ManuscriptLimits, smart_trunca
 from modules.core.prompt_loader import PromptLoader
 from modules.core.tactical_utils import extract_episode_tactical
 from modules.domain.agents.scene_cardinality_contract import evaluate_stage3_scene_cardinality
-from modules.domain.agents.unified_blueprint_validator import BLUEPRINT_MIN_CHARS
+from modules.domain.agents.unified_blueprint_validator import BLUEPRINT_MIN_CHARS, _BINDING_PREVALIDATION_CATEGORIES
 from modules.validation.threshold_helper import _threshold
 
 
@@ -171,6 +171,114 @@ def _format_compare_python_warning_block(meta: dict | None) -> str:
         if advisory_focus:
             lines.append(f"- advisory_focus: {advisory_focus[0]}")
     return "\n".join(lines)
+
+
+def _extract_opening_transition_type(blueprint: dict | None) -> str:
+    if not isinstance(blueprint, dict):
+        return "missing"
+    opening_transition = blueprint.get("opening_transition")
+    if isinstance(opening_transition, dict):
+        declared_type = _short_text(opening_transition.get("type", ""), 40)
+        if declared_type:
+            return declared_type
+    return "missing"
+
+
+def _format_protagonist_state_shape_signature(blueprint: dict | None) -> str:
+    if not isinstance(blueprint, dict):
+        return "missing"
+    protagonist_state = blueprint.get("protagonist_state")
+    if not isinstance(protagonist_state, dict) or not protagonist_state:
+        return "missing"
+
+    preferred_order = ("mood", "injuries", "equipment", "objective")
+    ordered_keys = [key for key in preferred_order if key in protagonist_state]
+    ordered_keys.extend(key for key in protagonist_state if key not in preferred_order)
+
+    parts: list[str] = []
+    for key in ordered_keys:
+        label = _short_text(key, 32)
+        if not label:
+            continue
+        value = protagonist_state.get(key)
+        if isinstance(value, list):
+            parts.append(f"{label}:list[{len(value)}]")
+            continue
+        if isinstance(value, dict):
+            parts.append(f"{label}:dict[{len(value)}]")
+            continue
+        if isinstance(value, str):
+            if value.strip():
+                parts.append(f"{label}:set")
+            continue
+        if value is not None:
+            parts.append(f"{label}:set")
+    return ", ".join(parts[:4]) if parts else "missing"
+
+
+def _collect_binding_advisory_badges(meta: dict | None) -> list[str]:
+    if not isinstance(meta, dict):
+        return []
+    badges: list[str] = []
+    for entry in _normalize_python_warning_entries(meta.get("python_warnings", []), limit=6):
+        category = _short_text(entry.get("category", ""), 40)
+        if not category or category not in _BINDING_PREVALIDATION_CATEGORIES or category in badges:
+            continue
+        badges.append(category)
+        if len(badges) >= 4:
+            break
+    return badges
+
+
+def _format_blueprint_binding_snapshot_note(blueprint: dict | None, *, meta: dict | None = None) -> str:
+    source_meta = meta if isinstance(meta, dict) else {}
+    if not source_meta and isinstance(blueprint, dict):
+        blueprint_meta = blueprint.get("_ensemble_meta", {})
+        if isinstance(blueprint_meta, dict):
+            source_meta = blueprint_meta
+
+    opening_transition_type = _extract_opening_transition_type(blueprint)
+    protagonist_state_shape = _format_protagonist_state_shape_signature(blueprint)
+    binding_badges = _collect_binding_advisory_badges(source_meta)
+    binding_badge_text = ", ".join(binding_badges) if binding_badges else "none"
+    return (
+        "binding_snapshot: "
+        f"opening_transition.type={opening_transition_type}; "
+        f"protagonist_state shape={protagonist_state_shape}; "
+        f"binding_advisories={binding_badge_text}"
+    )
+
+
+def _enrich_single_candidate_selection_result(
+    result: dict | None,
+    blueprint: dict | None,
+    *,
+    note_label: str,
+) -> dict:
+    payload = dict(result) if isinstance(result, dict) else {}
+    candidate_advisories = _collect_compare_candidate_advisories([blueprint] if isinstance(blueprint, dict) else [])
+    selected_candidate_advisory = (
+        candidate_advisories[0] if candidate_advisories else {"candidate_index": 0, "quality_risk": False}
+    )
+    snapshot_note = _format_blueprint_binding_snapshot_note(blueprint)
+    selection_reason = _short_text(payload.get("selection_reason", "") or payload.get("reason", ""), 240)
+
+    note_parts: list[str] = []
+    label = _short_text(note_label, 80)
+    existing_notes = _short_text(payload.get("comparison_notes", ""), 240)
+    for value in (label, existing_notes, snapshot_note):
+        if value and value not in note_parts:
+            note_parts.append(value)
+
+    if selection_reason:
+        payload["selection_reason"] = selection_reason
+    payload["comparison_notes"] = " | ".join(note_parts)
+    payload["candidate_advisories"] = candidate_advisories
+    payload["selected_candidate_advisory"] = selected_candidate_advisory
+    payload["quality_risk"] = bool(
+        payload.get("quality_risk", False) or selected_candidate_advisory.get("quality_risk", False)
+    )
+    return payload
 
 
 def _append_unique_compact_items(
@@ -1865,9 +1973,13 @@ class DirectorEnsembleSelector:
             single_result = self._evaluate_single_blueprint(
                 candidates[0], arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
             )
+            single_result = _enrich_single_candidate_selection_result(
+                single_result,
+                candidates[0],
+                note_label="단일 후보",
+            )
             single_result["selected_index"] = 0
             single_result["selected_blueprint"] = candidates[0]
-            single_result["comparison_notes"] = "단일 후보"
             return single_result
 
         logging.info(f" [Director] {len(candidates)}개 후보 비교 중...")
@@ -1959,9 +2071,13 @@ class DirectorEnsembleSelector:
         result = self._evaluate_single_blueprint(
             candidates[0], arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
         )
+        result = _enrich_single_candidate_selection_result(
+            result,
+            candidates[0],
+            note_label="폴백 선택 (비교 실패)",
+        )
         result["selected_index"] = 0
         result["selected_blueprint"] = candidates[0]
-        result["comparison_notes"] = "폴백 선택 (비교 실패)"
         return result
 
     def _build_blueprint_compare_prompt(
@@ -1992,6 +2108,10 @@ class DirectorEnsembleSelector:
             scene_count = meta.get("scene_count", len(blueprint.get("scene_breakdown", {})))
             length = meta.get("length", len(blueprint.get("integrated_scenario", "")))
             advisory_block = _format_compare_python_warning_block(meta)
+            opening_transition_type = _extract_opening_transition_type(blueprint)
+            protagonist_state_shape = _format_protagonist_state_shape_signature(blueprint)
+            binding_badges = _collect_binding_advisory_badges(meta)
+            binding_badge_text = ", ".join(binding_badges) if binding_badges else "none"
 
             integrated = blueprint.get("integrated_scenario", "")
             if not isinstance(integrated, str):
@@ -2004,6 +2124,9 @@ class DirectorEnsembleSelector:
 - 시작 위치: {blueprint.get("start_location", "?")}
 - 종료 위치: {blueprint.get("end_location", "?")}
 - 시간 흐름: {blueprint.get("time_flow", "?")}
+- opening_transition.type: {opening_transition_type}
+- protagonist_state shape: {protagonist_state_shape}
+- binding_advisories: {binding_badge_text}
 - 엔딩 훅: {str(blueprint.get("ending_hook") or "?")[:100]}
 {
                 f'''

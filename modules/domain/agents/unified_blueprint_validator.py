@@ -31,6 +31,7 @@ from modules.core.stage_cross_stage_contract import (
     apply_opening_transition_contract,
     read_declared_opening_transition_type,
 )
+from modules.core.tactical_intrusion_contract import collect_tactical_surface_text, detect_tactical_intrusion_signature
 from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _get_agent_default_model
@@ -81,34 +82,41 @@ _BINDING_PREVALIDATION_REGENERATE_CATEGORIES = set(_BINDING_PREVALIDATION_CATEGO
 # 아니라 type 라벨만 정규화하면 되는 1-line 수정 가능 케이스이다. 다른 binding category가
 # 동시에 firing되지 않고 opening_transition alias가 유일한 binding 위반이면 inplace 허용.
 _BINDING_PREVALIDATION_INPLACE_ALIAS_CATEGORIES = frozenset({"opening_transition"})
-_TACTICAL_INTRUSION_ENTRY_MARKERS = (
-    "취객",
-    "난입",
-    "들이닥",
-    "무단침입",
-    "괴한",
-    "습격",
-    "침입자",
-    "철문",
-    "그림자",
-    "심부름센터",
-    "직원",
+
+
+_TEMPORAL_DEICTIC_RE = re.compile(r"(\d+)\s*(?:년|개월|달|주|일)\s*(?:전|후|뒤)")
+_TEMPORAL_MEMORY_RE = re.compile(
+    r"(\d+)\s*(?:년|개월)\s*(?:전|후|뒤)"
+    r".{0,20}"
+    r"(?:기억|회상|추억|떠올리|떠올렸|생각나)"
 )
-_TACTICAL_INTRUSION_CONFLICT_MARKERS = (
-    "멱살",
-    "결박",
-    "제압",
-    "처리",
-    "대응",
-    "차단",
-    "쫓아낸",
-    "도망치",
-    "위협",
-    "협박",
-    "박살",
-    "쇠파이프",
-    "쇠지렛대",
-    "군화",
+_TEMPORAL_MEMORY_CUES = ("기억", "회상", "추억", "떠올", "생각나")
+_TEMPORAL_REGRESSOR_CUES = ("회귀", "전생", "미래 기억", "미래의 기억", "18년 치 기억", "18년 후의 기억")
+_SCENARIO_DENSITY_ENTITY_SUFFIXES = (
+    "증권",
+    "은행",
+    "투자",
+    "인베스트먼트",
+    "회관",
+    "사무실",
+    "저택",
+    "공원",
+    "거리",
+    "빌딩",
+    "호텔",
+    "병원",
+    "학교",
+    "본부",
+    "본점",
+    "객잔",
+    "약방",
+    "산장",
+    "무관",
+    "서재",
+    "거실",
+    "지점",
+    "센터",
+    "VIP룸",
 )
 
 
@@ -139,6 +147,70 @@ def _compact_stage3_fix_list(raw: object, *, limit: int = 6, item_limit: int = 1
         if len(normalized) >= limit:
             break
     return normalized
+
+
+def _iter_temporal_deictic_truth_strings(*sources: object) -> list[str]:
+    texts: list[str] = []
+    seen: set[str] = set()
+
+    def _walk(value: object, *, depth: int = 0) -> None:
+        if depth > 5 or value is None:
+            return
+        if isinstance(value, str):
+            text = " ".join(value.split()).strip()
+            if text and text not in seen:
+                seen.add(text)
+                texts.append(text)
+            return
+        if isinstance(value, dict):
+            for key, item in value.items():
+                key_text = str(key or "").strip().lower()
+                if key_text in {"integrated_scenario", "scene_breakdown", "ending_hook", "comparison_notes", "feedback"}:
+                    continue
+                _walk(item, depth=depth + 1)
+            return
+        if isinstance(value, list):
+            for item in value[:24]:
+                _walk(item, depth=depth + 1)
+
+    for source in sources:
+        _walk(source)
+    return texts
+
+
+def _extract_temporal_deictic_allowlist_numbers(*sources: object) -> set[int]:
+    allowlist: set[int] = set()
+    for text in _iter_temporal_deictic_truth_strings(*sources):
+        lowered = text.casefold()
+        if not any(marker in lowered for marker in _TEMPORAL_REGRESSOR_CUES):
+            continue
+        for pattern in (_TEMPORAL_DEICTIC_RE, _TEMPORAL_MEMORY_RE):
+            for match in pattern.finditer(text):
+                try:
+                    allowlist.add(int(match.group(1)))
+                except (TypeError, ValueError):
+                    continue
+    return allowlist
+
+
+def _is_temporal_deictic_diegetic_anchor(
+    *,
+    text: str,
+    num: int,
+    arc_data: dict | None,
+    constraint_block: dict | None,
+) -> bool:
+    if num < 5:
+        return False
+    lowered = str(text or "").casefold()
+    if not any(marker in lowered for marker in _TEMPORAL_MEMORY_CUES):
+        return False
+    allowlist = _extract_temporal_deictic_allowlist_numbers(arc_data, constraint_block)
+    if num in allowlist:
+        return True
+    # Regressor identity alone is not enough. Large numeric offsets must match an
+    # explicit canonical anchor in arc/constraint truth to bypass drift detection.
+    return False
 
 
 def _normalize_stage3_fix_pack(raw_payload: object) -> dict:
@@ -1441,6 +1513,8 @@ class UnifiedBlueprintValidator:
         issues.extend(
             self._collect_temporal_deictic_drift_issues(
                 blueprint=blueprint,
+                arc_data=arc_data,
+                constraint_block=constraint_block,
             )
         )
         # [Wave1-B] Scene-specificity and scenario-density prevalidation
@@ -1827,6 +1901,8 @@ class UnifiedBlueprintValidator:
     def _collect_temporal_deictic_drift_issues(
         *,
         blueprint: dict,
+        arc_data: dict | None = None,
+        constraint_block: dict | None = None,
     ) -> list[dict]:
         """Detect temporal-deictic ending-hook drift (e.g., '18년 전' class errors)."""
         if not isinstance(blueprint, dict):
@@ -1834,52 +1910,55 @@ class UnifiedBlueprintValidator:
 
         issues: list[dict] = []
         ending_hook = str(blueprint.get("ending_hook", "") or "")
-
-        # Temporal-deictic patterns that should not appear in ending hooks
-        # These indicate the blueprint is using absolute past references that will
-        # become incorrect as episodes progress
-        _temporal_deictic_re = re.compile(r"(\d+)\s*(?:년|개월|달|주|일)\s*(?:전|후|뒤)")
-        matches = _temporal_deictic_re.findall(ending_hook) if ending_hook else []
-        if matches:
-            for num_str in matches[:2]:
+        if ending_hook:
+            for match in _TEMPORAL_DEICTIC_RE.finditer(ending_hook):
                 try:
-                    num = int(num_str)
-                    if num >= 5:  # large temporal offsets are high-risk
-                        issues.append(
-                            {
-                                "severity": "MAJOR",
-                                "category": "temporal_deictic",
-                                "issue": f"시간 지시어 위험: ending_hook에 '{num_str}년 전' 등 절대 과거 참조",
-                                "evidence": f"ending_hook: {ending_hook[:120]}",
-                                "fix_hint": "ending_hook에서 절대 시간 참조 대신 상대적 표현 사용 또는 제거",
-                            }
-                        )
+                    num = int(match.group(1))
                 except (ValueError, TypeError):
-                    pass
+                    continue
+                if num < 5 or _is_temporal_deictic_diegetic_anchor(
+                    text=ending_hook,
+                    num=num,
+                    arc_data=arc_data,
+                    constraint_block=constraint_block,
+                ):
+                    continue
+                issues.append(
+                    {
+                        "severity": "MAJOR",
+                        "category": "temporal_deictic",
+                        "issue": f"시간 지시어 위험: ending_hook에 '{match.group(0)}' 등 절대 시간 참조",
+                        "evidence": f"ending_hook: {ending_hook[:120]}",
+                        "fix_hint": "ending_hook에서 절대 시간 참조 대신 상대적 표현 사용 또는 제거",
+                    }
+                )
+                if len(issues) >= 2:
+                    break
 
         # Also check integrated_scenario ending portion for deictic issues
         integrated = str(blueprint.get("integrated_scenario", "") or "")
         if integrated:
             # Check only the last 500 chars (ending portion)
             tail = integrated[-500:]
-            _future_memory_re = re.compile(
-                r"(\d+)\s*(?:년|개월)\s*(?:전|후)"
-                r".{0,20}"
-                r"(?:기억|회상|추억|떠올리|떠올렸|생각나)"
-            )
-            for m in _future_memory_re.finditer(tail):
-                num = int(m.group(1))
-                if num >= 5:
-                    issues.append(
-                        {
-                            "severity": "MAJOR",
-                            "category": "temporal_deictic",
-                            "issue": f"시간 지시어 위험: 시나리오 말미에 '{num}년 전' 회상/기억 패턴 감지",
-                            "evidence": f"...{tail[max(0, m.start() - 30) : m.end() + 30]}...",
-                            "fix_hint": "미래-기억 맥락의 절대 시간 참조를 제거하거나 상대적 표현으로 교체",
-                        }
-                    )
-                    break
+            for match in _TEMPORAL_MEMORY_RE.finditer(tail):
+                num = int(match.group(1))
+                if num < 5 or _is_temporal_deictic_diegetic_anchor(
+                    text=match.group(0),
+                    num=num,
+                    arc_data=arc_data,
+                    constraint_block=constraint_block,
+                ):
+                    continue
+                issues.append(
+                    {
+                        "severity": "MAJOR",
+                        "category": "temporal_deictic",
+                        "issue": f"시간 지시어 위험: 시나리오 말미에 '{match.group(0)}' 회상/기억 패턴 감지",
+                        "evidence": f"...{tail[max(0, match.start() - 30) : match.end() + 30]}...",
+                        "fix_hint": "미래-기억 맥락의 절대 시간 참조를 제거하거나 상대적 표현으로 교체",
+                    }
+                )
+                break
 
         return issues[:2]
 
@@ -2362,28 +2441,15 @@ class UnifiedBlueprintValidator:
             return []
 
         tactical_lower = tactical_excerpt.lower()
-        if any(marker in tactical_lower for marker in _TACTICAL_INTRUSION_ENTRY_MARKERS) and any(
-            marker in tactical_lower for marker in _TACTICAL_INTRUSION_CONFLICT_MARKERS
-        ):
+        if detect_tactical_intrusion_signature(tactical_lower):
             return []
 
-        scene_parts: list[str] = []
-        for scene in self._iter_scene_entries(blueprint.get("scene_breakdown", {})):
-            if not isinstance(scene, dict):
-                continue
-            for key in ("title", "summary", "goal", "description", "location"):
-                value = str(scene.get(key, "") or "").strip()
-                if value:
-                    scene_parts.append(value)
-            key_events = scene.get("key_events", [])
-            if isinstance(key_events, list):
-                scene_parts.extend(str(item).strip() for item in key_events if str(item).strip())
-
-        combined_lower = "\n".join([integrated, *scene_parts]).lower()
-        entry_hits = [marker for marker in _TACTICAL_INTRUSION_ENTRY_MARKERS if marker in combined_lower]
-        conflict_hits = [marker for marker in _TACTICAL_INTRUSION_CONFLICT_MARKERS if marker in combined_lower]
-        if not entry_hits or not conflict_hits:
+        combined_lower = collect_tactical_surface_text(blueprint).lower()
+        signature = detect_tactical_intrusion_signature(combined_lower)
+        if not signature:
             return []
+        entry_hits = signature.get("entry_hits", [])
+        conflict_hits = signature.get("conflict_hits", [])
 
         entry_summary = ", ".join(entry_hits[:3])
         conflict_summary = ", ".join(conflict_hits[:3])
@@ -2458,11 +2524,23 @@ class UnifiedBlueprintValidator:
                 }
             )
         # Check 2: Concrete anchor density — count location/institution/number tokens
-        _anchor_re = re.compile(
-            r"[가-힣]{2,6}(?:증권|은행|투자|회관|사무실|저택|공원|거리|빌딩|호텔|병원|학교|본부|본점|객잔|약방|산장|무관)"
-            r"|\d[\d,.]*\s*(?:억|만|천만|백만|원|달러|골드|냥|전|관|kg|km|명|세|층|동|호)"
+        suffix_union = "|".join(re.escape(suffix) for suffix in _SCENARIO_DENSITY_ENTITY_SUFFIXES)
+        contiguous_anchor_re = re.compile(
+            rf"[A-Za-z가-힣]{{2,12}}(?:{suffix_union})"
         )
-        anchors = _anchor_re.findall(integrated)
+        spaced_anchor_re = re.compile(
+            rf"(?:[A-Za-z]{{1,8}}|[가-힣]{{2,8}})(?:\s+(?:[A-Za-z]{{1,12}}|[가-힣]{{1,8}})){{0,2}}\s+(?:{suffix_union})"
+        )
+        numeric_anchor_re = re.compile(r"\d[\d,.]*\s*(?:억|만|천만|백만|원|달러|골드|냥|전|관|kg|km|명|세|층|동|호)")
+        anchors: list[str] = []
+        seen_anchors: set[str] = set()
+        for pattern in (contiguous_anchor_re, spaced_anchor_re, numeric_anchor_re):
+            for match in pattern.finditer(integrated):
+                anchor = " ".join(str(match.group(0) or "").split()).strip()
+                if not anchor or anchor in seen_anchors:
+                    continue
+                seen_anchors.add(anchor)
+                anchors.append(anchor)
         _ANCHOR_MIN = 5
         if len(integrated) >= self.min_chars and len(anchors) < _ANCHOR_MIN:
             issues.append(

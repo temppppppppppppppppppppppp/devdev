@@ -71,6 +71,11 @@ def _build_fixture_project(tmp_path):
                             "artifact_path": "logs/artifacts/stage3/ep_0004/attempt_01/final_blueprint__dialogue_focused.json",
                             "selection_reason": "Best local hook.",
                             "verdict_reason": "Attorney pressure lands cleanly.",
+                            "comparison_notes": "Candidate B preserves the attorney relay most cleanly.",
+                            "selected_candidate_advisory_struct": {
+                                "candidate_index": 1,
+                                "quality_risk": True,
+                            },
                         },
                     },
                     ensure_ascii=False,
@@ -178,6 +183,8 @@ def test_build_stagewise_manuscript_truth_report_normalizes_terminal_truth(tmp_p
     assert report["artifact_counts"]["stage4_terminal_passes"] == 2
     assert report["stage2_arc_truth"][0]["constraint_summary_state"] == "blank"
     assert report["stage2_arc_truth"][1]["constraint_summary_state"] == "present"
+    assert report["stage3_blueprint_truth"][0]["comparison_notes"] == "Candidate B preserves the attorney relay most cleanly."
+    assert report["stage3_blueprint_truth"][0]["selected_candidate_advisory_struct"]["quality_risk"] is True
     assert report["stage4_terminal_truth"][0]["terminal_artifact_kind"] == "patched_after_fix"
     assert report["stage4_terminal_truth"][0]["last_narrative_line"] == "Episode 4 legal hook line"
     assert report["stage4_terminal_truth"][1]["terminal_artifact_kind"] == "final_manuscript"
@@ -212,3 +219,21 @@ def test_render_and_write_stagewise_manuscript_truth_report(tmp_path):
     assert "Episode 4 -> Episode 5 Continuity Repair" in markdown_output.read_text(encoding="utf-8")
     payload = json.loads(json_output.read_text(encoding="utf-8"))
     assert payload["project"] == "projects/fixture"
+
+
+def test_stagewise_manuscript_truth_report_backfills_empty_rationale_from_reason(tmp_path):
+    project = _build_fixture_project(tmp_path)
+    episode_production_path = project / "logs" / "episode_production.jsonl"
+    rows = [json.loads(line) for line in episode_production_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    rows[0]["selection_reason"] = ""
+    rows[0]["verdict_reason"] = ""
+    rows[0]["reason"] = "Fallback rationale from reason."
+    episode_production_path.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n",
+        encoding="utf-8",
+    )
+
+    report = build_stagewise_manuscript_truth_report(project, project_label="projects/fixture")
+
+    assert report["stage4_terminal_truth"][0]["selection_reason"] == "Fallback rationale from reason."
+    assert report["stage4_terminal_truth"][0]["verdict_reason"] == "Fallback rationale from reason."

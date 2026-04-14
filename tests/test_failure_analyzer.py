@@ -515,6 +515,49 @@ def test_failure_analyzer_collect_sink_alignment_missing_buckets_tracks_stage3_f
     assert lifecycle_missing_in_final == {}
 
 
+def test_load_session_decision_alignment_sink_backfills_empty_rationale_from_reason(tmp_path):
+    db = DBManager(tmp_path / "test_stage3_session_reason_backfill.db")
+    try:
+        logs_dir = tmp_path / "logs" / "session"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        attempt_key = "s3:ep21:arc1:a1:sess_reason_backfill"
+        (logs_dir / "decisions.jsonl").write_text(
+            json.dumps(
+                {
+                    "stage": "stage3",
+                    "ep_num": 21,
+                    "round_num": 0,
+                    "decision_type": "blueprint",
+                    "result": "PASS",
+                    "score": 91,
+                    "meta": {
+                        "attempt_key": attempt_key,
+                        "reason": "fallback rationale from reason",
+                        "selection_reason": "",
+                        "verdict_reason": "",
+                    },
+                },
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        rows, missing = analyzer._load_session_decision_alignment_sink(
+            stage=3,
+            lookback=10,
+            include_session_decisions=True,
+            session_id="sess_reason_backfill",
+        )
+
+        assert missing == 0
+        assert rows[attempt_key]["selection_reason"] == "fallback rationale from reason"
+        assert rows[attempt_key]["verdict_reason"] == "fallback rationale from reason"
+    finally:
+        db.close()
+
+
 def test_stage4_raw_evidence_summary_tracks_kind_family_and_surface():
     summary = summarize_stage4_raw_rationale_rows(
         [
@@ -2626,6 +2669,45 @@ def test_load_episode_production_alignment_sink_merges_lifecycle_runtime_scope_a
         db.close()
 
 
+def test_load_episode_production_alignment_sink_backfills_empty_rationale_from_reason(tmp_path):
+    db = DBManager(tmp_path / "test_stage4_episode_reason_backfill.db")
+    try:
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        attempt_key = "s4:ep84:arc1:a1:sess_reason_backfill"
+        row = {
+            "ep": 84,
+            "attempt_key": attempt_key,
+            "verdict": "PASS",
+            "initial_verdict": "PASS",
+            "final_verdict": "PASS",
+            "final_score": 88,
+            "candidate_key": "A|balanced",
+            "content_hash": "hash-reason",
+            "artifact_path": "logs/artifacts/stage4/ep_0084/attempt_01/final.txt",
+            "reason": "fallback rationale from reason",
+            "selection_reason": "",
+            "verdict_reason": "",
+            "patch_trace": {},
+        }
+        (logs_dir / "episode_production.jsonl").write_text(
+            json.dumps(row, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        result = analyzer._load_episode_production_alignment_sink(
+            stage=4,
+            lookback=10,
+            session_id="sess_reason_backfill",
+        )
+
+        assert result[attempt_key]["selection_reason"] == "fallback rationale from reason"
+        assert result[attempt_key]["verdict_reason"] == "fallback rationale from reason"
+    finally:
+        db.close()
+
+
 def test_sink_alignment_backfills_stage_attempt_repair_contract_from_nested_gate_semantics(tmp_path):
     db = DBManager(tmp_path / "test_stage4_nested_gate_repair_backfill.db")
     try:
@@ -2971,6 +3053,11 @@ def test_load_session_decision_entries_preserves_stage4_rationale_and_provenance
                         "artifact_path": "logs/artifacts/stage4/ep_0009/attempt_01/final_manuscript__A_balanced.txt",
                         "selection_reason": "best candidate",
                         "verdict_reason": "final pass rationale",
+                        "comparison_notes": "candidate A preserved the ending cadence best",
+                        "selected_candidate_advisory_struct": {
+                            "quality_risk": True,
+                            "python_warnings": [{"category": "cadence", "message": "tighten the closing beat"}],
+                        },
                         "reason": "final pass rationale",
                         "runtime_advisory": "[advisory] keep continuity",
                         "retry_directives": "preserve the ending cadence",
@@ -2989,8 +3076,48 @@ def test_load_session_decision_entries_preserves_stage4_rationale_and_provenance
         assert rows[0]["attempt_key"] == "s4:ep9:arc1:a1:sess_meta"
         assert rows[0]["selection_reason"] == "best candidate"
         assert rows[0]["verdict_reason"] == "final pass rationale"
+        assert rows[0]["comparison_notes"] == "candidate A preserved the ending cadence best"
+        assert rows[0]["selected_candidate_advisory_struct"]["quality_risk"] is True
         assert rows[0]["runtime_advisory"] == "[advisory] keep continuity"
         assert rows[0]["retry_directives"] == "preserve the ending cadence"
+    finally:
+        db.close()
+
+
+def test_load_session_decision_entries_ignores_legacy_selected_candidate_advisory_without_struct(tmp_path):
+    db = DBManager(tmp_path / "test_stage3_legacy_advisory_shape.db")
+    try:
+        decisions_path = tmp_path / "logs" / "session" / "decisions.jsonl"
+        decisions_path.parent.mkdir(parents=True, exist_ok=True)
+        decisions_path.write_text(
+            json.dumps(
+                {
+                    "stage": "stage3",
+                    "ep_num": 7,
+                    "decision_type": "blueprint",
+                    "result": "PASS",
+                    "score": 88,
+                    "meta": {
+                        "attempt_key": "s3:ep7:arc2:a1:sess_legacy",
+                        "candidate_key": "B|balanced",
+                        "content_hash": "hash-stage3",
+                        "artifact_path": "logs/artifacts/stage3/ep_0007/attempt_01/final_blueprint__B_balanced.json",
+                        "selection_reason": "best candidate",
+                        "selected_candidate_advisory": {"quality_risk": True},
+                    },
+                },
+                ensure_ascii=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        analyzer = FailureAnalyzer(db, project_path=tmp_path)
+        rows = analyzer._load_session_decision_entries(stage=3)
+
+        assert len(rows) == 1
+        assert rows[0]["attempt_key"] == "s3:ep7:arc2:a1:sess_legacy"
+        assert rows[0]["selected_candidate_advisory_struct"] == {}
     finally:
         db.close()
 
@@ -3021,6 +3148,16 @@ def test_failure_analyzer_sink_alignment_summary_aligns_stage3_session_rationale
             fix_scope="inplace",
             runtime_advisory="[stage3 advisory] opening continuity locked",
             retry_directives="preserve arc_start_state carryover",
+            advisory_flags={
+                "comparison_notes": "후보 B가 opening relay와 감정선 연결을 가장 안정적으로 유지",
+                "selected_candidate_advisory_struct": {
+                    "candidate_index": 1,
+                    "quality_risk": True,
+                    "python_warnings": [
+                        {"category": "npc_density", "message": "Arc NPC mention is thin"},
+                    ],
+                },
+            },
         )
         db.save_director_selection(
             ep_num=12,
@@ -3039,6 +3176,16 @@ def test_failure_analyzer_sink_alignment_summary_aligns_stage3_session_rationale
             artifact_path=artifact_path,
             runtime_advisory="[stage3 advisory] opening continuity locked",
             retry_directives="preserve arc_start_state carryover",
+            advisory_warnings={
+                "comparison_notes": "후보 B가 opening relay와 감정선 연결을 가장 안정적으로 유지",
+                "selected_candidate_advisory_struct": {
+                    "candidate_index": 1,
+                    "quality_risk": True,
+                    "python_warnings": [
+                        {"category": "npc_density", "message": "Arc NPC mention is thin"},
+                    ],
+                },
+            },
         )
 
         logs_dir = tmp_path / "logs"
@@ -3061,6 +3208,14 @@ def test_failure_analyzer_sink_alignment_summary_aligns_stage3_session_rationale
                         "reason": "구조 리스크 없이 바로 사용 가능",
                         "selection_reason": "후보 B가 감정선과 연속성 연결이 가장 안정적",
                         "verdict_reason": "구조 리스크 없이 바로 사용 가능",
+                        "comparison_notes": "후보 B가 opening relay와 감정선 연결을 가장 안정적으로 유지",
+                        "selected_candidate_advisory_struct": {
+                            "candidate_index": 1,
+                            "quality_risk": True,
+                            "python_warnings": [
+                                {"category": "npc_density", "message": "Arc NPC mention is thin"},
+                            ],
+                        },
                         "fix_scope": "inplace",
                         "runtime_advisory": "[stage3 advisory] opening continuity locked",
                         "retry_directives": "preserve arc_start_state carryover",
@@ -3123,6 +3278,8 @@ def test_failure_analyzer_sink_alignment_summary_aligns_stage3_session_rationale
         assert result["coverage"]["session_decisions"] == 1
         assert result["selection_reason_mismatches"] == []
         assert result["verdict_reason_mismatches"] == []
+        assert result["comparison_notes_mismatches"] == []
+        assert result["selected_candidate_advisory_mismatches"] == []
         assert result["fix_scope_mismatches"] == []
         assert result["runtime_advisory_mismatches"] == []
         assert result["retry_directives_mismatches"] == []

@@ -12,7 +12,9 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from modules.core.constants import PatchModeThresholds
+from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.partial_fix_contract import build_partial_fix_eval, normalize_patch_target_records
+from modules.core.rationale_contract import resolve_selection_reason_text
 from modules.models.blueprint import validate_blueprint
 from modules.validation.threshold_helper import _threshold
 
@@ -50,6 +52,30 @@ _STAGE3_LOCAL_PATCH_TARGET_KINDS = {
     "local_sentence",
     "scene_block",
 }
+_STAGE3_RETRY_SELECTION_PRAISE_MARKERS = ("훌륭", "강력", "좋", "완성도", "잘 드러", "매우", "탁월")
+_STAGE3_RETRY_DIRECTIVE_LIBRARY = {
+    "opening_transition": {
+        "allowed_values": [
+            "direct_continuation",
+            "explicit_transition",
+            "scene_jump",
+        ],
+        "example": "opening_transition.type=direct_continuation when the opening stays on the prior end-location with no real time jump",
+    },
+    "protagonist_state": {
+        "allowed_values": ["mood", "injuries", "equipment", "objective"],
+        "example": "protagonist_state={mood:'냉정한 압박감', injuries:'없음', equipment:['가죽 서류가방']}",
+    },
+    "tactical_semantic_fidelity": {
+        "allowed_values": ["PB negotiation", "document signing", "position entry", "no invented intrusion"],
+        "example": "If the tactical excerpt has no physical-threat entry marker, do not invent 괴한/난입/입막음/팔목을 비틀다.",
+    },
+    "scenario_density": {
+        "allowed_values": ["named institution", "named person", "numeric anchor"],
+        "example": "Use anchors like 한미증권 청담동 지점 VIP룸, 박성호 PB, 15억, 61.2달러 in integrated_scenario.",
+    },
+}
+_STAGE3_RETRY_HIDDEN_WARNING_PREFIXES = ("local_patch_gate:",)
 
 
 @dataclass
@@ -912,6 +938,94 @@ def _build_stage3_fix_pack_guidance(fix_pack: dict | None) -> str:
     return "[Stage3 partial-fix contract]\n" + "\n".join(lines)
 
 
+def _build_stage3_retry_issue_directive(issue: dict | None) -> str:
+    if not isinstance(issue, dict):
+        return ""
+    category = str(issue.get("category", "") or "").strip()
+    message = " ".join(str(issue.get("issue", "") or "").split()).strip()
+    if not category or not message:
+        return ""
+    directive = f"{category}: {message}"
+    rule = _STAGE3_RETRY_DIRECTIVE_LIBRARY.get(category)
+    if not isinstance(rule, dict):
+        return directive
+    allowed_values = rule.get("allowed_values") or []
+    if allowed_values:
+        directive += " | allowed_values=[" + ", ".join(str(item) for item in allowed_values[:6]) + "]"
+    example = str(rule.get("example", "") or "").strip()
+    if example:
+        directive += f" | example={example}"
+    return directive
+
+
+def _build_stage3_retry_feedback_payload(validation_result: dict | None, *, prefer_binding: bool) -> str:
+    if not isinstance(validation_result, dict):
+        return "validation failed"
+
+    if prefer_binding:
+        lines: list[str] = []
+        binding_directives: list[str] = []
+        non_binding_directives: list[tuple[int, str]] = []
+        regenerate_only_reason = str(validation_result.get("binding_regenerate_only_reason", "") or "").strip()
+        if regenerate_only_reason:
+            lines.append(f"binding_regenerate_only: {regenerate_only_reason}")
+        issues = validation_result.get("issues", [])
+        if isinstance(issues, list):
+            severity_order = {"CRITICAL": 0, "HIGH": 1, "MAJOR": 2, "MEDIUM": 3, "MINOR": 4}
+            for issue in issues:
+                issue_payload = issue if isinstance(issue, dict) else None
+                directive = _build_stage3_retry_issue_directive(issue_payload)
+                if not directive:
+                    continue
+                category = str((issue_payload or {}).get("category", "") or "").strip()
+                if category in _STAGE3_REGENERATE_ONLY_BINDING_CATEGORIES:
+                    if directive not in binding_directives:
+                        binding_directives.append(directive)
+                    continue
+                severity = str((issue_payload or {}).get("severity", "") or "").strip().upper()
+                priority = severity_order.get(severity, 99)
+                non_binding_directives.append((priority, directive))
+            for directive in binding_directives[:6]:
+                if directive not in lines:
+                    lines.append(directive)
+            for _, directive in sorted(non_binding_directives, key=lambda item: (item[0], item[1]))[:2]:
+                if directive not in lines:
+                    lines.append(directive)
+        if lines:
+            return "\n".join(lines)
+
+    feedback = str(validation_result.get("feedback", "validation failed") or "validation failed").strip()
+    return feedback or "validation failed"
+
+
+def _should_emit_stage3_selection_reason(retry_state: "_ThreePhaseRetryState") -> bool:
+    reason = str(retry_state.prev_selection_reason or "").strip()
+    if not reason:
+        return False
+    if retry_state.prev_reject_origin in {"pass_with_fix_unresolved", "binding_prevalidation_reopen"}:
+        return False
+    if retry_state.prev_binding_issue_count > 0:
+        lowered = reason.casefold()
+        if any(marker in lowered for marker in _STAGE3_RETRY_SELECTION_PRAISE_MARKERS):
+            return False
+    return True
+
+
+def _build_stage3_retry_attempt_key(*, context, ep_num: int, arc_data: dict, retry: int) -> str:
+    try:
+        arc_num = int((arc_data or {}).get("arc_no", 0) or 0)
+    except (TypeError, ValueError, AttributeError):
+        arc_num = 0
+    session_id = resolve_logging_session_id(getattr(context, "current_project", None))
+    return build_attempt_key(
+        stage=3,
+        ep_num=ep_num,
+        arc_num=arc_num,
+        attempt_num=max(1, int(retry or 0) + 1),
+        session_id=session_id,
+    )
+
+
 def _build_stage3_partial_fix_eval(
     *,
     fix_pack: dict | None,
@@ -991,6 +1105,27 @@ class ThreePhaseBlueprintRuntime:
             if len(lines) >= max_items:
                 break
         return lines
+
+    def _set_attempt_context_tag(self, *, ep_num: int, arc_data: dict, retry: int) -> str:
+        owner = self.owner
+        attempt_key = _build_stage3_retry_attempt_key(
+            context=getattr(owner, "context", None),
+            ep_num=ep_num,
+            arc_data=arc_data,
+            retry=retry,
+        )
+        for agent in (
+            owner,
+            getattr(owner, "ensemble", None),
+            getattr(owner, "validator", None),
+        ):
+            if agent is None:
+                continue
+            try:
+                setattr(agent, "_current_context_tag", attempt_key)
+            except Exception:
+                continue
+        return attempt_key
 
     def _log_operator_retry_context(
         self,
@@ -1179,29 +1314,21 @@ class ThreePhaseBlueprintRuntime:
         parts: list[str] = []
         if retry_state.prev_reject_strategy:
             parts.append(f"[이전 당선 전략]\n{retry_state.prev_reject_strategy}")
-        if retry_state.prev_selection_reason:
+        if _should_emit_stage3_selection_reason(retry_state):
             parts.append(f"[이전 선택 근거]\n{retry_state.prev_selection_reason}")
         if retry_state.prev_reject_feedback:
             parts.append(f"[이전 REJECT 피드백]\n{retry_state.prev_reject_feedback}")
-        if retry_state.prev_fix_scope:
-            parts.append(f"[Director fix_scope]\n{retry_state.prev_fix_scope}")
-        if retry_state.prev_local_patch_gate:
-            local_patch_gate = retry_state.prev_local_patch_gate
-            parts.append(
-                "[Local patch gate]\n"
-                + " | ".join(
-                    part
-                    for part in (
-                        f"scope={str(local_patch_gate.get('resolved_fix_scope', '') or '').strip()}",
-                        f"target_kind={str(local_patch_gate.get('target_kind', '') or '').strip()}",
-                        f"ready={bool(local_patch_gate.get('local_patch_ready', False))}",
-                        f"reason={str(local_patch_gate.get('reason', '') or '').strip()}",
-                    )
-                    if part and not part.endswith("=")
-                )
-            )
-        if retry_state.prev_validation_warnings:
-            warning_lines = "\n".join(f"- {warning}" for warning in retry_state.prev_validation_warnings[:10])
+        visible_warnings = []
+        for warning in retry_state.prev_validation_warnings:
+            normalized_warning = str(warning or "").strip()
+            if not normalized_warning:
+                continue
+            lowered = normalized_warning.casefold()
+            if any(lowered.startswith(prefix) for prefix in _STAGE3_RETRY_HIDDEN_WARNING_PREFIXES):
+                continue
+            visible_warnings.append(normalized_warning)
+        if visible_warnings:
+            warning_lines = "\n".join(f"- {warning}" for warning in visible_warnings[:10])
             parts.append(f"[이전 검증 경고]\n{warning_lines}")
         if retry_state.prev_score_breakdown:
             parts.append(
@@ -1451,6 +1578,10 @@ class ThreePhaseBlueprintRuntime:
                     "fix_scope": resolved_fix_scope or "",
                 },
             )
+            patch_feedback = str(retry_state.prev_reject_feedback or "").strip()
+            fix_pack_guidance = _build_stage3_fix_pack_guidance(repair_material.effective_fix_pack)
+            if fix_pack_guidance:
+                patch_feedback = f"{fix_pack_guidance}\n\n{patch_feedback}".strip() if patch_feedback else fix_pack_guidance
             try:
                 best_blueprint = self._call_with_operator_heartbeat(
                     title="[Phase 2] in-place patch",
@@ -1459,11 +1590,11 @@ class ThreePhaseBlueprintRuntime:
                         "retry_index": retry + 1,
                         "max_retries": max_retries + 1,
                         "mode": "inplace_patch",
-                        "feedback_chars": len(str(retry_state.prev_reject_feedback or "")),
+                        "feedback_chars": len(str(patch_feedback or "")),
                     },
                     fn=lambda: owner._inplace_patch_blueprint(
                         original_blueprint=retry_state.previous_best,
-                        director_feedback=retry_state.prev_reject_feedback,
+                        director_feedback=patch_feedback,
                         ep_num=ep_num,
                         arc_data=arc_data,
                         normalized_fix_pack=repair_material.effective_fix_pack,
@@ -1495,6 +1626,9 @@ class ThreePhaseBlueprintRuntime:
                     "state_tracker": state_tracker,
                     "prev_blueprints": prev_blueprints,
                     "prev_manuscripts_text": prev_manuscripts_text,
+                    "fix_pack": repair_material.effective_fix_pack,
+                    "repair_contract": repair_material.repair_contract,
+                    "attempt_num": retry + 1,
                 }
                 if single_strategy:
                     ensemble_kwargs["single_strategy"] = single_strategy
@@ -1878,12 +2012,7 @@ class ThreePhaseBlueprintRuntime:
         all_candidates: list[dict],
         score: int,
     ) -> None:
-        validation_selection_reason = str(
-            validation_result.get("selection_reason")
-            or validation_result.get("summary")
-            or validation_result.get("comparison_notes", "")
-            or ""
-        ).strip()
+        validation_selection_reason = resolve_selection_reason_text(validation_result.get("selection_reason", ""))
         validation_verdict_reason = str(
             validation_result.get("verdict_reason")
             or validation_result.get("summary")
@@ -2168,7 +2297,6 @@ class ThreePhaseBlueprintRuntime:
         selected_strategy: str,
         best_blueprint: dict | None,
     ) -> _ThreePhaseRejectStateResult:
-        feedback = validation_result.get("feedback", "validation failed")
         normalized_score = int(score or 0)
         previous_score = int(retry_state.prev_reject_score or 0)
         previous_signature = str(retry_state.prev_reject_signature or "").strip()
@@ -2184,6 +2312,15 @@ class ThreePhaseBlueprintRuntime:
             reject_origin == "quality_gate_reject"
             or validation_result.get("quality_gate_effective_score") is not None
             or validation_result.get("quality_gate_score") is not None
+        )
+        prefer_binding_feedback = bool(
+            reject_origin in {"pass_with_fix_unresolved", "binding_prevalidation_reopen"}
+            or validation_result.get("binding_prevalidation_issue_count")
+            or validation_result.get("binding_regenerate_only_reason")
+        )
+        feedback = _build_stage3_retry_feedback_payload(
+            validation_result,
+            prefer_binding=prefer_binding_feedback,
         )
         resolved_fix_scope = str(validation_result.get("fix_scope", "") or "").strip().lower()
         try:
@@ -2231,30 +2368,17 @@ class ThreePhaseBlueprintRuntime:
             if isinstance(validation_result.get("score_breakdown", {}), dict)
             else {}
         )
-        retry_state.prev_selection_reason = (
-            validation_result.get("selection_reason")
-            or validation_result.get("summary")
-            or validation_result.get("comparison_notes", "")
-            or str(validation_result.get("feedback", ""))
-        )
+        retry_state.prev_selection_reason = resolve_selection_reason_text(validation_result.get("selection_reason", ""))
         issues = validation_result.get("issues", [])
         retry_state.prev_validation_warnings = []
         regenerate_only_reason = str(validation_result.get("binding_regenerate_only_reason", "") or "").strip()
         if regenerate_only_reason:
             retry_state.prev_validation_warnings.append(f"binding_regenerate_only: {regenerate_only_reason}")
-        local_patch_gate_reason = str(retry_state.prev_local_patch_gate.get("reason", "") or "").strip()
-        if (
-            retry_state.prev_local_patch_gate.get("contract_present")
-            and local_patch_gate_reason
-            and local_patch_gate_reason != "contract_local_patch_ready"
-        ):
-            retry_state.prev_validation_warnings.append(f"local_patch_gate: {local_patch_gate_reason}")
         if isinstance(issues, list):
             for issue in issues[:10]:
                 if isinstance(issue, dict):
-                    issue_category = issue.get("category", "issue")
-                    issue_message = issue.get("issue", "")
-                    retry_state.prev_validation_warnings.append(f"{issue_category}: {issue_message}".strip(": "))
+                    directive = _build_stage3_retry_issue_directive(issue)
+                    retry_state.prev_validation_warnings.append(directive or str(issue.get("issue", "") or "").strip())
                 elif issue:
                     retry_state.prev_validation_warnings.append(str(issue))
         plateau_reasons = _build_stage3_retry_plateau_reasons(retry_state)
@@ -3060,6 +3184,7 @@ class ThreePhaseBlueprintRuntime:
         log_retry: bool = True,
     ) -> _ThreePhaseRetryCycleResult:
         owner = self.owner
+        self._set_attempt_context_tag(ep_num=ep_num, arc_data=arc_data, retry=retry)
         if log_retry:
             owner._operator_log(
                 f"[Retry {retry + 1}/{max_retries + 1}] Stage3 retry cycle 시작",

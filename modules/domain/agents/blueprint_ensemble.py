@@ -18,6 +18,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
+from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import AIModels, GenreTypes, smart_truncate
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.project_support import normalize_external_pov_insert_policy
@@ -32,6 +33,7 @@ from modules.core.stage_cross_stage_contract import (
     apply_opening_transition_contract,
     read_declared_opening_transition_type,
 )
+from modules.core.tactical_intrusion_contract import collect_tactical_surface_text, detect_tactical_intrusion_signature
 from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _SYSTEM_CFG, AgentErrorType, BaseAgent
@@ -140,37 +142,6 @@ _BLUEPRINT_META_RECAP_MARKERS = tuple(
     )
 )
 
-_TACTICAL_INTRUSION_ENTRY_MARKERS = (
-    "취객",
-    "난입",
-    "들이닥",
-    "무단침입",
-    "괴한",
-    "습격",
-    "침입자",
-    "철문",
-    "그림자",
-    "심부름센터",
-    "직원",
-)
-
-_TACTICAL_INTRUSION_CONFLICT_MARKERS = (
-    "멱살",
-    "결박",
-    "제압",
-    "처리",
-    "대응",
-    "차단",
-    "쫓아낸",
-    "도망치",
-    "위협",
-    "협박",
-    "박살",
-    "쇠파이프",
-    "쇠지렛대",
-    "군화",
-)
-
 _RETRY_FEEDBACK_DROP_MARKERS = tuple(
     marker.casefold()
     for marker in (
@@ -186,6 +157,35 @@ _RETRY_FEEDBACK_DROP_MARKERS = tuple(
         "[주인공 고평가 연출 가이드]",
     )
 )
+
+
+def _build_stage3_retry_repair_guidance(fix_pack: dict | None, repair_contract: dict | None) -> str:
+    payload = fix_pack if isinstance(fix_pack, dict) else {}
+    contract = repair_contract if isinstance(repair_contract, dict) else {}
+    lines: list[str] = []
+    must_fix = [str(item).strip() for item in (payload.get("must_fix") or []) if str(item or "").strip()]
+    if must_fix:
+        lines.append("- must_fix: " + " | ".join(must_fix[:4]))
+    do_not_regress = [
+        str(item).strip() for item in (payload.get("do_not_regress") or []) if str(item or "").strip()
+    ]
+    if do_not_regress:
+        lines.append("- do_not_regress: " + " | ".join(do_not_regress[:4]))
+    success_condition = str(payload.get("success_condition", "") or "").strip()
+    if success_condition:
+        lines.append("- success_condition: " + success_condition)
+    patch_targets = [str(item).strip() for item in (payload.get("patch_targets") or []) if str(item or "").strip()]
+    if patch_targets:
+        lines.append("- patch_targets: " + ", ".join(patch_targets[:4]))
+    target_kind = str(contract.get("target_kind", "") or payload.get("target_kind", "") or "").strip()
+    if target_kind:
+        lines.append(f"- target_kind: {target_kind}")
+    repair_scope = str(contract.get("repair_scope", "") or contract.get("fix_scope", "") or "").strip()
+    if repair_scope:
+        lines.append(f"- repair_scope: {repair_scope}")
+    if not lines:
+        return ""
+    return "[Stage3 retry repair contract]\n" + "\n".join(lines)
 _RETRY_FEEDBACK_SECTION_WINDOWS = (
     ("[binding prevalidation]", 6),
     ("[python advisory]", 6),
@@ -550,6 +550,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
         cache_name: str,
         prev_blueprint: dict | None,
         constraint_block: dict | None,
+        fix_pack: dict | None,
+        repair_contract: dict | None,
     ) -> tuple[list[dict], list[str]]:
         candidates: list[dict] = []
         worker_error_types: list[str] = []
@@ -581,6 +583,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         cache_name=cache_name,
                         prev_blueprint=prev_blueprint,
                         constraint_block=constraint_block,
+                        fix_pack=fix_pack,
+                        repair_contract=repair_contract,
                     )
                     futures[future] = strategy_name
                     self._operator_log(
@@ -691,6 +695,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
         self,
         qualified_candidates: list[dict],
         disqualified: list[tuple[str, int, int]],
+        *,
+        ep_num: int,
+        arc_data: dict,
+        attempt_num: int | None = None,
     ) -> tuple[dict, list[dict]]:
         self._operator_log(
             f"🧥 [Blueprint] {len(qualified_candidates)}개 후보 통과 -> Director 선택 대기",
@@ -699,6 +707,24 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         for idx, candidate in enumerate(qualified_candidates):
             strategy_name = candidate.get("_strategy", "unknown")
+            if attempt_num:
+                snapshot_payload = {
+                    key: value
+                    for key, value in candidate.items()
+                    if key not in {"_qualified", "_scene_count", "_length"}
+                }
+                snapshot_meta = snapshot_logged_artifact(
+                    getattr(self.context, "current_project", None),
+                    stage=3,
+                    ep_num=ep_num,
+                    arc_num=int((arc_data or {}).get("arc_no", 0) or 0) if isinstance(arc_data, dict) else 0,
+                    attempt_num=max(1, int(attempt_num or 1)),
+                    candidate_key=build_candidate_key(strategy=strategy_name, fallback="stage3_candidate"),
+                    artifact_kind="candidate_blueprint",
+                    payload=snapshot_payload,
+                )
+                if isinstance(snapshot_meta, dict):
+                    candidate["_candidate_artifact_meta"] = snapshot_meta
             candidate["_ensemble_meta"] = {
                 "candidate_index": idx,
                 "strategy": strategy_name,
@@ -729,6 +755,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         state_tracker=None,  # [V60.95] StateTracker (고밀도 HUD 전달)
         prev_blueprints: list[dict] | None = None,  # [V67] 이전 Blueprint 리스트
         prev_manuscripts_text: str = "",  # [V67] 이전 원고 전문 (모순 방지)
+        fix_pack: dict | None = None,
+        repair_contract: dict | None = None,
+        attempt_num: int | None = None,
     ) -> tuple[dict | None, list[dict]]:
         """
         앙상블 Blueprint 생성
@@ -781,6 +810,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
             cache_name=context_bundle["cache_name"],
             prev_blueprint=prev_blueprint,
             constraint_block=context_bundle["constraint_block"],
+            fix_pack=fix_pack,
+            repair_contract=repair_contract,
         )
 
         self.last_error_types = list(worker_error_types)
@@ -796,7 +827,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
             return None, []
 
         logging.info(f" [BPEnsemble] {len(qualified_candidates)}개 후보 → Director 선택 대기")
-        return self._finalize_blueprint_candidates(qualified_candidates, disqualified)
+        return self._finalize_blueprint_candidates(
+            qualified_candidates,
+            disqualified,
+            ep_num=ep_num,
+            arc_data=arc_data,
+            attempt_num=attempt_num,
+        )
 
     def _generate_single(
         self,
@@ -815,11 +852,16 @@ class BlueprintEnsembleGenerator(BaseAgent):
         cache_name: str = "",
         prev_blueprint: dict | None = None,
         constraint_block: dict | None = None,
+        fix_pack: dict | None = None,
+        repair_contract: dict | None = None,
     ) -> dict | tuple[None, str] | None:
         """Generate a single blueprint candidate."""
         try:
             extra_directive = ""
             merged_feedback = feedback or ""
+            repair_guidance = _build_stage3_retry_repair_guidance(fix_pack, repair_contract)
+            if repair_guidance:
+                merged_feedback = f"{repair_guidance}\n\n{merged_feedback}".strip() if merged_feedback else repair_guidance
             if strategy_feedback:
                 merged_feedback = (
                     f"{merged_feedback}\n\n[Strategy feedback]\n{strategy_feedback}"
@@ -1076,51 +1118,24 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
     @staticmethod
     def _collect_candidate_tactical_surface(candidate: dict) -> str:
-        parts: list[str] = []
-        integrated = str(candidate.get("integrated_scenario", "") or "").strip()
-        if integrated:
-            parts.append(integrated)
-
-        scenes = candidate.get("scene_breakdown", {})
-        if isinstance(scenes, dict):
-            scene_iter = scenes.values()
-        elif isinstance(scenes, list):
-            scene_iter = scenes
-        else:
-            scene_iter = []
-
-        for scene in scene_iter:
-            if not isinstance(scene, dict):
-                continue
-            for key in ("title", "summary", "goal", "description", "location"):
-                value = str(scene.get(key, "") or "").strip()
-                if value:
-                    parts.append(value)
-            raw_events = scene.get("key_events", [])
-            if isinstance(raw_events, str):
-                raw_events = [raw_events]
-            if isinstance(raw_events, list):
-                parts.extend(str(item or "").strip() for item in raw_events if str(item or "").strip())
-
-        return "\n".join(parts)
+        return collect_tactical_surface_text(candidate)
 
     def _detect_unauthorized_tactical_intrusion(self, candidate: dict, *, tactical_excerpt: str) -> str:
         authority_text = str(tactical_excerpt or "").strip().lower()
         if not authority_text:
             return ""
-        if any(marker in authority_text for marker in _TACTICAL_INTRUSION_ENTRY_MARKERS) and any(
-            marker in authority_text for marker in _TACTICAL_INTRUSION_CONFLICT_MARKERS
-        ):
+        if detect_tactical_intrusion_signature(authority_text):
             return ""
 
         candidate_text = self._collect_candidate_tactical_surface(candidate).lower()
         if not candidate_text:
             return ""
 
-        entry_hits = [marker for marker in _TACTICAL_INTRUSION_ENTRY_MARKERS if marker in candidate_text]
-        conflict_hits = [marker for marker in _TACTICAL_INTRUSION_CONFLICT_MARKERS if marker in candidate_text]
-        if not entry_hits or not conflict_hits:
+        signature = detect_tactical_intrusion_signature(candidate_text)
+        if not signature:
             return ""
+        entry_hits = signature.get("entry_hits", [])
+        conflict_hits = signature.get("conflict_hits", [])
         return f"entry={entry_hits[0]}; conflict={conflict_hits[0]}"
 
     @staticmethod
@@ -1620,7 +1635,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             self._operator_log(
                 f"⚠️ [Blueprint] '{strategy_name}' 오염 후보 폐기",
                 level="warning",
-                meta={"strategy": strategy_name, "reason": integrated_reason},
+                meta={"strategy": strategy_name, "reason": integrated_reason, "event_kind": "candidate_screening"},
             )
             return None, AgentErrorType.CANDIDATE_DISQUALIFIED
 
@@ -1658,6 +1673,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                             "scene": scene_key,
                             "field": field_name,
                             "reason": reason,
+                            "event_kind": "candidate_screening",
                         },
                     )
                     return None, AgentErrorType.CANDIDATE_DISQUALIFIED
@@ -1686,7 +1702,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 self._operator_log(
                     f"⚠️ [Blueprint] '{strategy_name}' key_events 오염 후보 폐기",
                     level="warning",
-                    meta={"strategy": strategy_name, "scene": scene_key},
+                    meta={"strategy": strategy_name, "scene": scene_key, "event_kind": "candidate_screening"},
                 )
                 return None, AgentErrorType.CANDIDATE_DISQUALIFIED
 
@@ -1723,6 +1739,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 meta={
                     "strategy": strategy_name,
                     "reason": "missing_opening_transition_pure_omission",
+                    "event_kind": "candidate_screening",
                 },
             )
             return None, AgentErrorType.CANDIDATE_DISQUALIFIED
@@ -1750,7 +1767,11 @@ class BlueprintEnsembleGenerator(BaseAgent):
             self._operator_log(
                 f"⚠️ [Blueprint] '{strategy_name}' tactical authority 미달 후보 폐기",
                 level="warning",
-                meta={"strategy": strategy_name, "reason": tactical_intrusion_reason},
+                meta={
+                    "strategy": strategy_name,
+                    "reason": tactical_intrusion_reason,
+                    "event_kind": "candidate_screening",
+                },
             )
             return None, AgentErrorType.CANDIDATE_DISQUALIFIED
 
@@ -1774,6 +1795,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     "strategy": strategy_name,
                     "reason": "episode_progression",
                     "evidence": replay_reason[:240],
+                    "event_kind": "candidate_screening",
                 },
             )
             return None, AgentErrorType.CANDIDATE_DISQUALIFIED
@@ -1788,7 +1810,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             self._operator_log(
                 f"⚠️ [Blueprint] '{strategy_name}' 구조 계약 미달 후보 폐기",
                 level="warning",
-                meta={"strategy": strategy_name, "reason": contract_reason},
+                meta={"strategy": strategy_name, "reason": contract_reason, "event_kind": "candidate_screening"},
             )
             return None, AgentErrorType.CANDIDATE_DISQUALIFIED
 

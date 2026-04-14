@@ -121,6 +121,24 @@ class TestOperatorLogBridge:
         assert kwargs["level"] == "warning"
         assert kwargs["meta"] == {"kind": "test"}
 
+    def test_operator_log_promotes_meta_event_kind_to_top_level(self):
+        client = MagicMock()
+        ui = SimpleNamespace(log=MagicMock())
+        context = SimpleNamespace(ui=ui, current_stage=3, current_ep=9)
+        agent = BaseAgent(context=context, client=client, model_tier="gemini-2.5-flash")
+
+        ok = agent._operator_log(
+            "screened",
+            meta={"event_kind": "candidate_screening", "strategy": "balanced"},
+        )
+
+        assert ok is True
+        ui.log.assert_called_once()
+        args, kwargs = ui.log.call_args
+        assert args == ("screened",)
+        assert kwargs["event_kind"] == "candidate_screening"
+        assert kwargs["meta"] == {"strategy": "balanced"}
+
     def test_operator_log_falls_back_to_message_only_callback(self):
         client = MagicMock()
         callback = MagicMock(side_effect=[TypeError("no kwargs"), None])

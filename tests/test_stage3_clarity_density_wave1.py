@@ -385,6 +385,20 @@ class TestScenarioDensityPrevalidation:
         density_issues = [i for i in issues if "구체성 부족" in i.get("issue", "")]
         assert len(density_issues) == 0
 
+    def test_space_separated_proper_nouns_count_as_anchor_density(self):
+        scenario = (
+            "한정호 저택에서 한시우가 SW 인베스트먼트 투자안을 다시 검토했다. "
+            "한미증권 청담동 지점 VIP룸에서 박성호 PB가 15억 원 포지션을 설명했다. "
+            "성북동 본가 서재에서 61.2달러와 3배 레버리지 수치를 다시 적었다. "
+        ) * 4
+        scenes = {"scene_1": {"goal": "a" * 20}, "scene_2": {"goal": "b" * 20}}
+        v = _make_validator()
+
+        issues = v._collect_scenario_density_issues(integrated=scenario, scenes=scenes, scene_count=2)
+
+        density_issues = [i for i in issues if i.get("advisory_code") == "anchor_density"]
+        assert density_issues == []
+
     def test_empty_scenario_no_crash(self):
         v = _make_validator()
         issues = v._collect_scenario_density_issues(integrated="", scenes={}, scene_count=0)
