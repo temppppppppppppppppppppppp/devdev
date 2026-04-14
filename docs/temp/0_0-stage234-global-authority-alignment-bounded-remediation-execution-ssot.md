@@ -1,18 +1,19 @@
 # 0_0-stage234-global-authority-alignment-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: active (3-pass audited through current-head `Tranche A`; working-tree `Tranche B` closure audit is now recorded; `Tranche C` remains the next unopened slice)
+Status: active (3-pass audited through current-head `Tranche A`; working-tree `Tranche B` and `Tranche C` closure audits are now recorded; `Tranche D` is the next bounded gate)
 Canonical Path: `docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f005794b578d68bb855a960778c75ca3f77787a6`
 - Baseline Dirty Summary: `clean main after Tranche C snapshot, post-C audit cleanup, and evidence-branch split`
 - Resume Commit: `8a9490531f7fa2f0527cb70407cdb804d87d7ddd` (`stage2: emit cross-stage authority packet`)
-- Resume Drift Summary: `current head lands the bounded Tranche A Stage2 emission slice, and the live working tree now also lands the bounded Tranche B Stage3 preferential-consume slice: EpisodeStateArbiter and BlueprintConstraintCompiler consume explicit CrossStageAuthorityPacket transport when present while preserving current arc-start / scattered-field fallback compatibility; the closure audit is now recorded and Tranche C remains unopened`
+- Resume Drift Summary: `current head lands the bounded Tranche A Stage2 emission slice, the live working tree also lands bounded Tranche B Stage3 preferential consume, and the current working tree now also lands bounded Tranche C Stage4 intake/post-pass reuse: Stage4ContextBuilder reuses explicit CrossStageAuthorityPacket numeric lineage with ledger-first fallback, and Stage4PostPassRuntime carries that transport lineage into numeric carryover authority contracts while atomic overlay reuses the settled contract fields; the Tranche C closure audit is now recorded and Tranche D becomes the next gate`
 Source Survey Docs:
 - `docs/2026-04-14/stage234-global-authority-alignment-bounded-survey.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-a-current-head-3pass-audit.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-b-working-tree-3pass-audit.md`
+- `docs/2026-04-14/stage234-global-authority-alignment-tranche-c-working-tree-3pass-audit.md`
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
@@ -44,9 +45,9 @@ Confidence: `96%`
   - carryover UI observability now exposes packet presence/version metadata only; the human-facing message shape stays unchanged
   - legacy `[Carryover Authority Packet]` text compatibility remains green on current-head tests
 - remaining deferred work:
-  - `Tranche C` Stage4 intake + post-pass reuse
+  - `Tranche D` proof / rerun gate revisit
 - current practical next action:
-  - use the recorded `Tranche B` closure to decide whether `Tranche C` opens
+  - use the recorded `Tranche C` closure to decide whether rerun should reopen or remain operator-gated
 
 ## 1. Intent
 
@@ -206,6 +207,6 @@ The post-`Tranche C` branch decision is now exercised as:
 
 Current next action:
 
-1. decide whether `Tranche C` opens immediately or after another bounded audit
-2. keep any Stage4 follow-up bounded to intake/post-pass reuse only
-3. do not widen into broader Stage4 redesign or retry-owner debt in the same wave
+1. open `Tranche D` as a bounded proof / rerun gate revisit
+2. re-audit the governing docs against the current head before deciding whether fresh rerun reopens
+3. do not widen into broader Stage4 redesign, `ChiefWriter` plumbing, or retry-owner debt in the same wave
