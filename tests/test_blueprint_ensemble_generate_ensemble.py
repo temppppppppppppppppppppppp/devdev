@@ -1,6 +1,6 @@
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock
 
 from modules.core.constants import GenreTypes
 from modules.core.prompt_loader import PromptLoader
@@ -32,6 +32,7 @@ def test_generate_ensemble_owner_shell_coordinates_helper_chain():
         "hud_context": "hud",
         "cache_name": "cache/bp",
         "constraint_block": {},
+        "archive_appendix_meta": {"enabled": False, "raw_chars": 0, "consumed_chars": 0, "dropped_chars": 0},
     }
     active_strategies = [{"name": "action_focused"}]
     raw_candidates = [{"scene_breakdown": [1, 2, 3, 4], "integrated_scenario": "x" * 600}]
@@ -80,6 +81,7 @@ def test_generate_ensemble_owner_shell_coordinates_helper_chain():
         ep_num=9,
         arc_data={},
         attempt_num=3,
+        prompt_envelope_meta=ANY,
     )
 
 
@@ -225,6 +227,34 @@ def test_finalize_blueprint_candidates_attaches_meta_and_cleans_temp_fields():
     assert "_qualified" not in all_candidates[0]
     assert "_scene_count" not in all_candidates[0]
     assert "_length" not in all_candidates[0]
+
+
+def test_finalize_blueprint_candidates_carries_prompt_envelope_meta():
+    agent = _make_agent()
+    qualified_candidates = [
+        {
+            "_strategy": "emotion_focused",
+            "_qualified": True,
+            "_scene_count": 4,
+            "_length": 700,
+            "scene_breakdown": [{"scene": 1}],
+            "integrated_scenario": "x" * 700,
+        }
+    ]
+
+    best, all_candidates = agent._finalize_blueprint_candidates(
+        qualified_candidates,
+        [],
+        ep_num=1,
+        arc_data={},
+        prompt_envelope_meta={
+            "total_chars": 4321,
+            "budget_ledger": {"budget_bucket": "stage3.prompt_envelope_total_chars"},
+        },
+    )
+
+    assert best is all_candidates[0]
+    assert all_candidates[0]["_ensemble_meta"]["prompt_envelope"]["total_chars"] == 4321
 
 
 def test_finalize_blueprint_candidates_snapshots_fanout_candidates_when_attempt_num_present(tmp_path):
@@ -826,6 +856,48 @@ def test_format_constraints_surfaces_episode_progression_guardrails_for_producer
     assert "MUST_FOCUS의 새 사건 축으로 전진" in formatted
 
 
+def test_format_constraints_surfaces_episode_state_packet_authority_and_dropped_conflicts():
+    agent = _make_agent()
+
+    formatted = agent._format_constraints(
+        {
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "한미증권 청담동 지점 15층 VIP룸",
+                    "location_source": "prev_blueprint.scene_breakdown.last.location",
+                    "time_context": "[manuscript ending]\n그는 VIP룸 문을 나서며 다음 협상 수를 계산했다.",
+                    "time_source": "prev_manuscript_ending",
+                },
+                "protagonist_truth": {
+                    "equipment": ["가죽 서류가방", "CME 계좌 증빙"],
+                    "injuries": "없음",
+                    "sources": {
+                        "equipment": "prev_blueprint.protagonist_state.equipment",
+                        "injuries": "prev_blueprint.protagonist_state.injuries",
+                    },
+                },
+                "dropped_conflicts": [
+                    {
+                        "field": "opening.location",
+                        "reason": "mid_arc_arc_start_location_override_blocked",
+                        "dropped_value": "본가 개인 서재",
+                    }
+                ],
+                "rewrite_required_reasons": ["mid_arc_arc_start_location_override_blocked"],
+            },
+            "continuity": {"location": "한미증권 청담동 지점 15층 VIP룸"},
+            "inherited_state": {"equipment": ["가죽 서류가방"], "injuries": "없음"},
+        },
+        genre=GenreTypes.HUNTER,
+    )
+
+    assert "[EpisodeStatePacket - authoritative pre-generation carryover]" in formatted
+    assert "단일 carryover truth surface" in formatted
+    assert "opening.location: 한미증권 청담동 지점 15층 VIP룸" in formatted
+    assert "prev_blueprint.scene_breakdown.last.location" in formatted
+    assert "mid_arc_arc_start_location_override_blocked" in formatted
+
+
 def test_select_generate_error_type_prefers_candidate_disqualified_over_schema_bundle():
     assert (
         BlueprintEnsembleGenerator._select_generate_error_type(
@@ -932,6 +1004,28 @@ class TestBlueprintTemporalCarryover:
         assert "[Context Tier 2 - Structured Previous Blueprint Carryover]" in result
         assert "[Context Tier 3 - Manuscript Ending Truth]" in result
         assert "[Context Tier 4 - Archive Appendix / lower priority than Tier 1-3]" in result
+
+    def test_prepare_blueprint_ensemble_context_demotes_archive_appendix_by_default(self):
+        agent = _make_agent()
+        agent._get_or_create_context_cache = MagicMock(return_value={"cache_name": "cache/bp"})
+        agent._build_hud_context = MagicMock(return_value="")
+        prev_manuscripts_text = ("원고 " * 60000) + "MS-TAIL"
+
+        context_bundle = agent._prepare_blueprint_ensemble_context(
+            ep_num=7,
+            arc_data={},
+            constraint_block={},
+            prev_blueprint={"ep_num": 6, "title": "prev"},
+            prev_blueprints=[{"ep_num": 6, "title": "prev", "scene_breakdown": {}}],
+            prev_manuscripts_text=prev_manuscripts_text,
+            state_tracker=None,
+        )
+
+        archive_meta = context_bundle["archive_appendix_meta"]
+        assert archive_meta["enabled"] is True
+        assert archive_meta["demoted"] is True
+        assert archive_meta["raw_chars"] > archive_meta["consumed_chars"]
+        assert "MS-TAIL" in context_bundle["prev_info"]
 
 
 def test_blueprint_generation_prompt_contains_stage3_anti_contamination_contract():

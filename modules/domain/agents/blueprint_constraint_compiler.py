@@ -20,6 +20,7 @@ import logging
 import re
 
 from modules.core.constants import Stage2Limits, smart_truncate
+from modules.core.episode_state_arbiter import EpisodeStateArbiter
 from modules.core.tactical_utils import _EPISODE_HEADER_PATTERNS, extract_episode_tactical
 from modules.models.arc import StateChangesDict
 
@@ -32,7 +33,7 @@ class BlueprintConstraintCompiler:
     """
 
     def __init__(self) -> None:
-        pass
+        self.state_arbiter = EpisodeStateArbiter()
 
     @staticmethod
     def _fit_prompt_text(value: object, max_chars: int, head_ratio: float = 0.55) -> str:
@@ -79,36 +80,19 @@ class BlueprintConstraintCompiler:
         # 2. 정지선 설정 (다음 화 내용)
         stop_line = self._extract_stop_line(arc_data, ep_num, arc_position, ep_count)
 
-        # 3. 연속성 정보 수집
-        continuity = self._extract_continuity(
-            prev_blueprint,
-            prev_blueprints,
-            arc_data=arc_data,
-            prev_manuscript_ending=prev_manuscript_ending,
-            is_arc_opening_episode=is_arc_opening_episode,
-        )
-
-        # 4. 계승 상태 추출
-        inherited_state = self._extract_inherited_state(
-            arc_data,
-            prev_blueprint,
-            genre=genre,
-            is_arc_opening_episode=is_arc_opening_episode,
-        )
-
-        # 5. [V63] Arc에서 전달된 constraint_summary (Stage 2 → Stage 3)
+        # 3. [V63] Arc에서 전달된 constraint_summary (Stage 2 → Stage 3)
         arc_constraint_summary = arc_data.get("constraint_summary", "")
         if not arc_constraint_summary:
             logging.info(f" [V63.4 P1] Arc {arc_no}에 constraint_summary 필드 없음 → Stage 2 제약 전달 누락 가능")
 
-        # 6. [V63.2] Arc state_changes 요약 (Stage 2 → Stage 3 직접 전달)
+        # 4. [V63.2] Arc state_changes 요약 (Stage 2 → Stage 3 직접 전달)
         state_changes_summary = self._summarize_state_changes(arc_data.get("state_changes", {}), ep_num)
         semantic_carryover = self._normalize_semantic_carryover(arc_data.get("semantic_carryover"), ep_num=ep_num)
 
-        # 7. [IFC] Immutable fact carryover from prior arc — [W2] ep_num 전달
+        # 5. [IFC] Immutable fact carryover from prior arc — [W2] ep_num 전달
         immutable_fact_carryover = self._extract_immutable_fact_carryover(arc_data, arc_position, ep_num=ep_num)
 
-        # 8. [S3-FL] Fact-Lock Packet — settled prior canon outranks arc pressure
+        # 6. [S3-FL] Fact-Lock Packet — settled prior canon outranks arc pressure
         fact_lock_packet = self._build_fact_lock_packet(
             prev_blueprint=prev_blueprint,
             prev_manuscript_ending=prev_manuscript_ending,
@@ -116,7 +100,7 @@ class BlueprintConstraintCompiler:
             ep_num=ep_num,
         )
 
-        # 9. [S3-CC] Capital-State Continuity Packet — investment-genre only
+        # 7. [S3-CC] Capital-State Continuity Packet — investment-genre only
         capital_continuity_packet = self._build_capital_continuity_packet(
             prev_blueprint=prev_blueprint,
             prev_manuscript_ending=prev_manuscript_ending,
@@ -125,14 +109,28 @@ class BlueprintConstraintCompiler:
             ep_num=ep_num,
         )
 
-        # 9b. [S3-EP] Episode-Progression Packet — prevent prior-episode replay/drift
+        # 8. [S3-EP] Episode-Progression Packet — prevent prior-episode replay/drift
         episode_progression_packet = self._build_episode_progression_packet(
             prev_blueprint=prev_blueprint,
             arc_data=arc_data,
             ep_num=ep_num,
         )
 
-        # 10. 제약 블록 생성
+        episode_state_packet = self.state_arbiter.arbitrate(
+            arc_data=arc_data,
+            ep_num=ep_num,
+            prev_blueprint=prev_blueprint,
+            prev_blueprints=prev_blueprints,
+            prev_manuscript_ending=prev_manuscript_ending,
+            genre=genre,
+            fact_lock_packet=fact_lock_packet,
+            capital_continuity_packet=capital_continuity_packet,
+            episode_progression_packet=episode_progression_packet,
+        )
+        continuity = self._continuity_from_episode_state_packet(episode_state_packet)
+        inherited_state = self._inherited_state_from_episode_state_packet(episode_state_packet, genre=genre)
+
+        # 9. 제약 블록 생성
         constraint_block = {
             "ep_num": ep_num,
             "arc_no": arc_no,
@@ -148,6 +146,7 @@ class BlueprintConstraintCompiler:
             "fact_lock_packet": fact_lock_packet,  # [S3-FL]
             "capital_continuity_packet": capital_continuity_packet,  # [S3-CC]
             "episode_progression_packet": episode_progression_packet,  # [S3-EP]
+            "episode_state_packet": episode_state_packet,
         }
 
         return constraint_block
@@ -557,6 +556,18 @@ class BlueprintConstraintCompiler:
 
         return continuity
 
+    @staticmethod
+    def _continuity_from_episode_state_packet(packet: dict | None) -> dict:
+        payload = packet if isinstance(packet, dict) else {}
+        opening = payload.get("opening_truth") if isinstance(payload.get("opening_truth"), dict) else {}
+        return {
+            "prev_ending": None,
+            "location": opening.get("location"),
+            "time_context": opening.get("time_context"),
+            "ongoing_conflicts": list(opening.get("ongoing_conflicts") or []),
+            "active_characters": list(opening.get("active_characters") or []),
+        }
+
     def _extract_inherited_state(
         self,
         arc_data: dict,
@@ -629,6 +640,20 @@ class BlueprintConstraintCompiler:
                 if protag.get("mood"):
                     inherited["mood"] = protag["mood"]
 
+        return inherited
+
+    @staticmethod
+    def _inherited_state_from_episode_state_packet(packet: dict | None, *, genre: str = "wuxia") -> dict:
+        payload = packet if isinstance(packet, dict) else {}
+        protagonist = payload.get("protagonist_truth") if isinstance(payload.get("protagonist_truth"), dict) else {}
+        inherited: dict = {
+            "equipment": list(protagonist.get("equipment") or []),
+            "injuries": protagonist.get("injuries") or "없음",
+            "companions": list(protagonist.get("companions") or []),
+            "mood": protagonist.get("mood") or "평온",
+        }
+        if genre == "wuxia":
+            inherited["internal_energy"] = protagonist.get("internal_energy") or "100%"
         return inherited
 
     @staticmethod
