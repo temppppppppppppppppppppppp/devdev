@@ -78,6 +78,126 @@ def _resolve_cross_stage_numeric_semantic_families(arc_data: dict | None) -> set
     return families
 
 
+def _resolve_institution_family(name: str, suffixes: tuple[str, ...]) -> str:
+    matching = [suffix for suffix in suffixes if name.endswith(suffix)]
+    return min(matching, key=len) if matching else ""
+
+
+def _filter_competing_institution_names(
+    *,
+    preferred_names: set[str],
+    candidate_names: set[str],
+    suffixes: tuple[str, ...],
+) -> set[str]:
+    preferred_families = {
+        family
+        for family in (_resolve_institution_family(name, suffixes) for name in preferred_names)
+        if family
+    }
+    filtered: set[str] = set()
+    for name in candidate_names:
+        family = _resolve_institution_family(name, suffixes)
+        if family and family in preferred_families and name not in preferred_names:
+            continue
+        filtered.add(name)
+    return filtered
+
+
+def _collect_fact_lock_institution_anchors(
+    *,
+    bp: dict,
+    ms_text: str,
+    arc_data: dict,
+    ep_num: int,
+) -> list[dict]:
+    _inst_suffixes_ordered = (
+        "투자증권",
+        "자산운용",
+        "인베스트먼트",
+        "PB센터",
+        "증권",
+        "은행",
+        "캐피탈",
+        "보험",
+        "병원",
+        "센터",
+        "그룹",
+        "재단",
+        "협회",
+        "연구소",
+        "본사",
+        "지점",
+        "사무실",
+    )
+    _inst_re = re.compile(
+        r"([\w가-힣A-Za-z]{2,15}(?:" + "|".join(re.escape(s) for s in _inst_suffixes_ordered) + r"))"
+    )
+
+    def _collect_names(raw_texts: list[str]) -> set[str]:
+        names: set[str] = set()
+        for raw_text in raw_texts:
+            for match in _inst_re.finditer(str(raw_text or "")):
+                name = match.group(1).strip()
+                if len(name) >= 4:
+                    names.add(name)
+        return names
+
+    manuscript_institution_names = _collect_names([ms_text]) if ms_text else set()
+
+    blueprint_texts: list[str] = []
+    if bp:
+        bp_scenes = bp.get("scene_breakdown", {})
+        if isinstance(bp_scenes, dict):
+            for scene in bp_scenes.values():
+                if isinstance(scene, dict):
+                    blueprint_texts.append(str(scene.get("location", "") or ""))
+        blueprint_texts.append(str(bp.get("end_location", "") or ""))
+        for key in ("integrated_scenario", "core_tension", "expected_ending", "ending_hook", "time_flow"):
+            blueprint_texts.append(str(bp.get(key, "") or ""))
+        bp_ending_state = bp.get("ending_state", {})
+        if isinstance(bp_ending_state, dict):
+            for value in bp_ending_state.values():
+                blueprint_texts.append(str(value or ""))
+    blueprint_institution_names = _collect_names(blueprint_texts)
+
+    arc_texts: list[str] = []
+    if isinstance(arc_data, dict):
+        state = arc_data.get("state_constraints", {})
+        if isinstance(state, dict):
+            arc_start = state.get("arc_start_state", {})
+            if isinstance(arc_start, dict):
+                arc_texts.append(str(arc_start.get("relationship", "") or ""))
+        arc_texts.append(
+            str(
+                extract_episode_tactical(
+                    arc_data.get("tactical_doc", ""),
+                    ep_num,
+                    episode_details=arc_data.get("episode_details"),
+                    fallback_full=False,
+                )
+                or ""
+            )
+        )
+    arc_institution_names = _collect_names(arc_texts)
+
+    institution_names = set(manuscript_institution_names)
+    institution_names.update(
+        _filter_competing_institution_names(
+            preferred_names=institution_names,
+            candidate_names=blueprint_institution_names,
+            suffixes=_inst_suffixes_ordered,
+        )
+    )
+    institution_names.update(
+        _filter_competing_institution_names(
+            preferred_names=institution_names,
+            candidate_names=arc_institution_names,
+            suffixes=_inst_suffixes_ordered,
+        )
+    )
+    return [{"category": "기관", "fact": f"확정 기관/장소: {inst_name}"} for inst_name in sorted(institution_names)[:4]]
+
+
 class BlueprintConstraintCompiler:
     """
     [V60.80] Blueprint 제약 조건 컴파일러
@@ -822,93 +942,14 @@ class BlueprintConstraintCompiler:
 
         # ── 6. NPC/Institution authority anchor [NPC-CF] ──
         # Prevent downstream blueprints from rewriting canonical institution/venue names
-        _inst_suffixes_ordered = (
-            "투자증권",
-            "자산운용",
-            "인베스트먼트",
-            "PB센터",
-            "증권",
-            "은행",
-            "캐피탈",
-            "보험",
-            "병원",
-            "센터",
-            "그룹",
-            "재단",
-            "협회",
-            "연구소",
-            "본사",
-            "지점",
-            "사무실",
-        )
-        _inst_re = re.compile(
-            r"([\w가-힣A-Za-z]{2,15}(?:" + "|".join(re.escape(s) for s in _inst_suffixes_ordered) + r"))"
-        )
-        manuscript_institution_names: set[str] = set()
-        blueprint_institution_names: set[str] = set()
-        arc_institution_names: set[str] = set()
-
-        # 6a. From manuscript text
-        if ms_text:
-            for m in _inst_re.finditer(ms_text):
-                name = m.group(1).strip()
-                if len(name) >= 4:
-                    manuscript_institution_names.add(name)
-
-        # 6b. From prev_blueprint scene locations + end_location + ending_state
-        _bp_texts_for_inst: list[str] = []
-        if bp:
-            bp_scenes = bp.get("scene_breakdown", {})
-            if isinstance(bp_scenes, dict):
-                for sc in bp_scenes.values():
-                    if isinstance(sc, dict):
-                        _bp_texts_for_inst.append(str(sc.get("location", "") or ""))
-            _bp_texts_for_inst.append(str(bp.get("end_location", "") or ""))
-            for key in ("integrated_scenario", "core_tension", "expected_ending", "ending_hook", "time_flow"):
-                _bp_texts_for_inst.append(str(bp.get(key, "") or ""))
-            bp_es = bp.get("ending_state", {})
-            if isinstance(bp_es, dict):
-                for val in bp_es.values():
-                    _bp_texts_for_inst.append(str(val or ""))
-
-        for text_chunk in _bp_texts_for_inst:
-            for m in _inst_re.finditer(text_chunk):
-                name = m.group(1).strip()
-                if len(name) >= 4:
-                    blueprint_institution_names.add(name)
-
-        # 6c. From current episode tactical authority + arc-start relationship truth
-        if isinstance(arc_data, dict):
-            state = arc_data.get("state_constraints", {})
-            if isinstance(state, dict):
-                arc_start = state.get("arc_start_state", {})
-                if isinstance(arc_start, dict):
-                    arc_rel = str(arc_start.get("relationship", "") or "")
-                    for m in _inst_re.finditer(arc_rel):
-                        name = m.group(1).strip()
-                        if len(name) >= 4:
-                            arc_institution_names.add(name)
-            current_episode_excerpt = extract_episode_tactical(
-                arc_data.get("tactical_doc", ""),
-                ep_num,
-                episode_details=arc_data.get("episode_details"),
-                fallback_full=False,
+        anchors.extend(
+            _collect_fact_lock_institution_anchors(
+                bp=bp,
+                ms_text=ms_text,
+                arc_data=arc_data,
+                ep_num=ep_num,
             )
-            for m in _inst_re.finditer(str(current_episode_excerpt or "")):
-                name = m.group(1).strip()
-                if len(name) >= 4:
-                    arc_institution_names.add(name)
-
-        institution_names = manuscript_institution_names | blueprint_institution_names | arc_institution_names
-        for inst_name in sorted(institution_names)[:4]:
-            anchors.append(
-                {
-                    "category": "기관",
-                    "fact": f"확정 기관/장소: {inst_name}",
-                }
-            )
-            if len(anchors) >= 16:
-                break
+        )
 
         if not anchors:
             return {}
