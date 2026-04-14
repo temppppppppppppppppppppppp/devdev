@@ -10,6 +10,10 @@ from contextlib import nullcontext as _nullcontext
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from modules.core.cross_stage_authority_packet import (
+    collect_numeric_carryover_entries,
+    extract_explicit_cross_stage_authority_packet,
+)
 from modules.core.fact_ledger import _coerce_direct_financial_scalar
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.inventory_state import compute_inventory_count_deltas, normalize_inventory_counts
@@ -128,6 +132,61 @@ def _collect_fact_ledger_carryover_authority_fields(fact_ledger) -> list[str]:
     return sorted(fields)
 
 
+def _collect_state_truth_contract_numeric_fields(state_truth_owner_contract: dict | None) -> list[str]:
+    contract = state_truth_owner_contract if isinstance(state_truth_owner_contract, dict) else {}
+    families = contract.get("field_families")
+    families = families if isinstance(families, dict) else {}
+    carryover_family = families.get("numeric_carryover_authority")
+    carryover_family = carryover_family if isinstance(carryover_family, dict) else {}
+    fields: list[str] = []
+    for raw_field in list(carryover_family.get("fields") or []):
+        field_name = str(raw_field or "").strip()
+        if not field_name or field_name in fields:
+            continue
+        fields.append(field_name)
+    return fields
+
+
+def _collect_packet_numeric_carryover_fields(packet: dict | None) -> list[str]:
+    fields: list[str] = []
+    for entry in collect_numeric_carryover_entries(packet):
+        field_name = str(entry.get("field", "") or "").strip()
+        if not field_name or field_name in fields:
+            continue
+        fields.append(field_name)
+    return fields
+
+
+def _resolve_numeric_carryover_authority_fields(
+    *,
+    fact_ledger,
+    cross_stage_authority_packet: dict | None = None,
+    state_truth_owner_contract: dict | None = None,
+) -> tuple[list[str], dict[str, object]]:
+    contract_fields = _collect_state_truth_contract_numeric_fields(state_truth_owner_contract)
+    if contract_fields:
+        return contract_fields, {}
+
+    carryover_fields = _collect_fact_ledger_carryover_authority_fields(fact_ledger)
+    if not carryover_fields:
+        return [], {}
+
+    packet_fields = _collect_packet_numeric_carryover_fields(cross_stage_authority_packet)
+    overlap_fields = [field_name for field_name in packet_fields if field_name in carryover_fields]
+    if not overlap_fields:
+        return carryover_fields, {}
+
+    ordered_fields = overlap_fields + [field_name for field_name in carryover_fields if field_name not in overlap_fields]
+    transport: dict[str, object] = {
+        "transport_lineage": "cross_stage_authority_packet.numeric_carryover",
+        "transport_fields": overlap_fields[:6],
+    }
+    contract_version = str((cross_stage_authority_packet or {}).get("contract_version", "") or "").strip()
+    if contract_version:
+        transport["transport_contract_version"] = contract_version
+    return ordered_fields, transport
+
+
 def _choose_numeric_carryover_refresh_value(*, field_name: str, actual_truth, final_state_updates) -> tuple[object | None, str]:
     source_candidates = (
         ("actual_truth", actual_truth),
@@ -145,8 +204,18 @@ def _choose_numeric_carryover_refresh_value(*, field_name: str, actual_truth, fi
     return None, ""
 
 
-def _build_numeric_carryover_refresh_plan(*, actual_truth, final_state_updates, fact_ledger) -> dict[str, object]:
-    carryover_fields = _collect_fact_ledger_carryover_authority_fields(fact_ledger)
+def _build_numeric_carryover_refresh_plan(
+    *,
+    actual_truth,
+    final_state_updates,
+    fact_ledger,
+    carryover_fields: list[str] | None = None,
+) -> dict[str, object]:
+    carryover_fields = [
+        str(item).strip()
+        for item in (carryover_fields or _collect_fact_ledger_carryover_authority_fields(fact_ledger))
+        if str(item).strip()
+    ]
     if not carryover_fields:
         return {"overlay": {}, "promoted_fields": [], "promotion_sources": {}}
 
@@ -201,6 +270,7 @@ def _build_state_truth_owner_contract(
     arc_data,
     fact_ledger_carryover_fields: list[str] | None = None,
     numeric_carryover_refresh_plan: dict | None = None,
+    numeric_carryover_transport: dict | None = None,
 ) -> dict:
     manager_fields = _normalize_state_truth_field_names(actual_truth)
     director_fields = _normalize_state_truth_field_names(final_state_updates)
@@ -270,6 +340,18 @@ def _build_state_truth_owner_contract(
             "provenance": "fact_ledger_authority_scope",
         }
         refresh_plan = numeric_carryover_refresh_plan if isinstance(numeric_carryover_refresh_plan, dict) else {}
+        transport = numeric_carryover_transport if isinstance(numeric_carryover_transport, dict) else {}
+        transport_lineage = str(transport.get("transport_lineage", "") or "").strip()
+        transport_contract_version = str(transport.get("transport_contract_version", "") or "").strip()
+        transport_fields = [
+            str(item).strip() for item in list(transport.get("transport_fields") or []) if str(item).strip()
+        ]
+        if transport_lineage:
+            carryover_family["transport_lineage"] = transport_lineage
+        if transport_contract_version:
+            carryover_family["transport_contract_version"] = transport_contract_version
+        if transport_fields:
+            carryover_family["transport_fields"] = transport_fields[:6]
         promoted_fields = [
             str(item).strip() for item in list(refresh_plan.get("promoted_fields") or []) if str(item).strip()
         ]
@@ -989,6 +1071,12 @@ class Stage4PostPassRuntime:
         npc_deaths: list,
         reveal_list: list,
     ) -> dict:
+        fact_ledger = getattr(self.ctx, "fact_ledger", None)
+        cross_stage_authority_packet = extract_explicit_cross_stage_authority_packet(arc_data)
+        carryover_fields, carryover_transport = _resolve_numeric_carryover_authority_fields(
+            fact_ledger=fact_ledger,
+            cross_stage_authority_packet=cross_stage_authority_packet,
+        )
         persisted_state_changes = _merge_storage_only_state_change_families(
             base_state_changes=actual_truth if actual_truth else final_state_updates,
             final_state_updates=final_state_updates,
@@ -997,7 +1085,8 @@ class Stage4PostPassRuntime:
         numeric_carryover_refresh_plan = _build_numeric_carryover_refresh_plan(
             actual_truth=actual_truth,
             final_state_updates=final_state_updates,
-            fact_ledger=getattr(self.ctx, "fact_ledger", None),
+            fact_ledger=fact_ledger,
+            carryover_fields=carryover_fields,
         )
         state_truth_owner_contract = _build_state_truth_owner_contract(
             actual_truth=actual_truth,
@@ -1007,10 +1096,9 @@ class Stage4PostPassRuntime:
             relationship_changes=relationship_changes,
             active_pressure_vectors=active_pressure_vectors,
             arc_data=arc_data,
-            fact_ledger_carryover_fields=_collect_fact_ledger_carryover_authority_fields(
-                getattr(self.ctx, "fact_ledger", None)
-            ),
+            fact_ledger_carryover_fields=carryover_fields,
             numeric_carryover_refresh_plan=numeric_carryover_refresh_plan,
+            numeric_carryover_transport=carryover_transport,
         )
         bible_delta = {
             "new_items": all_new_items,
@@ -1306,11 +1394,18 @@ class Stage4PostPassRuntime:
         *,
         actual_truth,
         final_state_updates,
+        state_truth_owner_contract: dict | None = None,
     ) -> dict[str, object]:
+        fact_ledger = getattr(self.ctx, "fact_ledger", None)
+        carryover_fields, _ = _resolve_numeric_carryover_authority_fields(
+            fact_ledger=fact_ledger,
+            state_truth_owner_contract=state_truth_owner_contract,
+        )
         refresh_plan = _build_numeric_carryover_refresh_plan(
             actual_truth=actual_truth,
             final_state_updates=final_state_updates,
-            fact_ledger=getattr(self.ctx, "fact_ledger", None),
+            fact_ledger=fact_ledger,
+            carryover_fields=carryover_fields,
         )
         overlay = refresh_plan.get("overlay")
         return dict(overlay) if isinstance(overlay, dict) else {}
@@ -1320,9 +1415,14 @@ class Stage4PostPassRuntime:
         relationship_payload = {}
         martial_payload = {}
         pressure_payload = {}
+        state_truth_owner_contract = {}
+        if isinstance(bible_delta, dict):
+            raw_contract = bible_delta.get("state_truth_owner_contract")
+            state_truth_owner_contract = raw_contract if isinstance(raw_contract, dict) else {}
         numeric_carryover_overlay = self._extract_actual_truth_fact_ledger_carryover_overlay(
             actual_truth=actual_truth,
             final_state_updates=final_state_updates,
+            state_truth_owner_contract=state_truth_owner_contract,
         )
 
         if isinstance(bible_delta, dict):

@@ -117,6 +117,33 @@ def _prune_empty_values(payload: dict[str, object]) -> dict[str, object]:
     }
 
 
+def extract_explicit_cross_stage_authority_packet(arc_payload: dict[str, Any] | None) -> dict[str, Any] | None:
+    payload = arc_payload if isinstance(arc_payload, dict) else {}
+    existing = payload.get("cross_stage_authority_packet")
+    if isinstance(existing, dict) and existing.get("contract_version") == CROSS_STAGE_AUTHORITY_PACKET_VERSION:
+        return existing
+    return None
+
+
+def collect_numeric_carryover_entries(packet: dict[str, Any] | None) -> list[dict[str, object]]:
+    numeric_carryover = _coerce_mapping(_coerce_mapping(packet).get("numeric_carryover"))
+    entries: list[dict[str, object]] = []
+    for raw_key, raw_value in numeric_carryover.items():
+        field_name = str(raw_key or "").strip()
+        if not field_name or field_name.endswith("_source"):
+            continue
+        if raw_value in ("", [], {}, None):
+            continue
+        entries.append(
+            {
+                "field": field_name,
+                "value": raw_value,
+                "source": _clip_text(numeric_carryover.get(f"{field_name}_source")),
+            }
+        )
+    return entries
+
+
 def build_cross_stage_authority_packet(
     arc_payload: dict[str, Any] | None,
     *,
@@ -220,7 +247,7 @@ def build_cross_stage_authority_packet(
 
 def resolve_cross_stage_authority_packet(arc_payload: dict[str, Any] | None) -> dict[str, Any] | None:
     payload = arc_payload if isinstance(arc_payload, dict) else {}
-    existing = payload.get("cross_stage_authority_packet")
-    if isinstance(existing, dict) and existing.get("contract_version") == CROSS_STAGE_AUTHORITY_PACKET_VERSION:
+    existing = extract_explicit_cross_stage_authority_packet(payload)
+    if existing:
         return existing
     return build_cross_stage_authority_packet(payload)

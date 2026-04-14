@@ -7,7 +7,7 @@ Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `dfb44351bc41de1243e0def0bfbcb7336bc93388`
 Baseline Dirty Summary: `dirty: scene-flex closure edits plus unrelated stage0/material work already present in worktree`
 Resume Commit: `8a9490531f7fa2f0527cb70407cdb804d87d7ddd`
-Resume Drift Summary: `current-head revalidation after snapshot commit 'stage2: emit cross-stage authority packet' first established the bounded Stage234 Tranche A landing, and the live working tree now also realizes bounded Tranche B Stage3 preferential consume in EpisodeStateArbiter plus BlueprintConstraintCompiler with fallback-safe behavior; the closure audit is now recorded and Tranche C is the next unopened local move inside the Stage234 lane`
+Resume Drift Summary: `current-head revalidation after snapshot commit 'stage2: emit cross-stage authority packet' first established the bounded Stage234 Tranche A landing, the live working tree then realized bounded Tranche B Stage3 preferential consume in EpisodeStateArbiter plus BlueprintConstraintCompiler with fallback-safe behavior, and the current working tree now also realizes bounded Tranche C Stage4 intake/post-pass reuse in Stage4ContextBuilder plus Stage4PostPassRuntime; the closure audit is now recorded and Tranche D becomes the next bounded local gate inside the Stage234 lane`
 2026-04-14 bounded survey + rerun gate override:
 
 - Local audit HEAD: `81b426a688c2a5b6279d254c7746baac1261235b`
@@ -72,20 +72,24 @@ Resume Drift Summary: `current-head revalidation after snapshot commit 'stage2: 
 - authoritative audits:
   - `docs/2026-04-14/stage234-global-authority-alignment-tranche-a-current-head-3pass-audit.md`
   - `docs/2026-04-14/stage234-global-authority-alignment-tranche-b-working-tree-3pass-audit.md`
+  - `docs/2026-04-14/stage234-global-authority-alignment-tranche-c-working-tree-3pass-audit.md`
 - `Tranche A` is now landed on current `main`
 - working-tree `Tranche B` closure audit is now green within bounded scope
+- working-tree `Tranche C` closure audit is now green within bounded scope
 - landed effects:
   - new shared `CrossStageAuthorityPacket` contract under `modules/core/`
   - Stage2 finalized arc payload now emits `cross_stage_authority_packet`
   - Stage2 advisory sinks mirror the packet while preserving legacy carryover summary and text surfaces
   - Stage3 now prefers the explicit packet in `EpisodeStateArbiter` and `BlueprintConstraintCompiler` while preserving scattered fallback compatibility
+  - Stage4 intake now reuses explicit packet lineage in `Stage4ContextBuilder` while keeping FactLedger carryover rows as the stronger prompt-side baseline when present
+  - Stage4 post-pass now preserves packet transport lineage in `numeric_carryover_authority` while keeping `fact_ledger_carryover_baseline` as the owner and reusing the settled contract fields during atomic overlay
   - focused compatibility canaries remain green on the unchanged `four_phase` / `arc_ensemble` carryover text path
 - current next action is no longer `Tranche A`
 - current next bounded action is:
-  1. decide whether `Tranche C` opens immediately or after another bounded audit
-  2. keep any Stage4 follow-up bounded to intake/post-pass reuse only
-  3. avoid broader Stage4 redesign, retry-owner debt, or a vocabulary sweep in the same wave
-- do not widen this lane into broader Stage4 redesign, retry-owner debt, or a vocabulary sweep during the Tranche C decision
+  1. open `Tranche D` as the bounded proof / rerun gate revisit
+  2. re-audit the governing docs against the current head before deciding whether fresh rerun reopens
+  3. avoid broader Stage4 redesign, `ChiefWriter` plumbing, retry-owner debt, or a vocabulary sweep in the same wave
+- do not widen this lane into broader Stage4 redesign, `ChiefWriter` plumbing, retry-owner debt, or a vocabulary sweep during the Tranche D decision
 
 2026-04-10 refresh override:
 

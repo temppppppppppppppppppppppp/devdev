@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
+from modules.core.cross_stage_authority_packet import CROSS_STAGE_AUTHORITY_PACKET_VERSION
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_context_packets import Stage4ContextPackets
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundContext
@@ -2427,6 +2428,111 @@ class TestBuildMandatoryContext:
         assert "total_assets: 10000000 won (EP1 carryover baseline)" in text
         assert "do not overwrite these baselines with arc or blueprint target numbers" in text
         assert text.index("[Stage4 Numeric Carryover Authority]") < text.index("[작품 추적 슬롯 요약]")
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_surfaces_cross_stage_numeric_transport_lineage(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": ["lead actor line"],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        ctx.fact_ledger = MagicMock()
+        ctx.fact_ledger.get_numbers.return_value = {
+            "capital": {
+                "value": 10000000,
+                "unit": "won",
+                "last_ep": 1,
+                "authority_scope": "carryover_baseline",
+            },
+            "total_assets": {
+                "value": 20000000,
+                "unit": "won",
+                "last_ep": 1,
+                "authority_scope": "carryover_baseline",
+            },
+        }
+        ctx.fact_ledger.get_canonical_summary.return_value = "[Canonical Number]"
+        ctx.fact_ledger.to_summary.return_value = ""
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=2,
+            arc_data={
+                "arc_no": 1,
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "numeric_carryover": {
+                        "total_assets": 20000000,
+                        "total_assets_source": "state_constraints.arc_end_state.total_assets",
+                        "capital": 10000000,
+                        "capital_source": "state_constraints.arc_end_state.capital",
+                    },
+                },
+            },
+            arc_tactical="Bridge prior numbers into the next episode.",
+            prev_text="previous manuscript body",
+            prev_ending="the liquidation remains unresolved",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={"summary": "A larger capital stack appears after liquidation."},
+        )
+
+        text = result["mandatory_context"]
+        assert "upstream transport lineage: cross_stage_authority_packet.v1" in text
+        assert text.index("total_assets: 20000000 won (EP1 carryover baseline)") < text.index(
+            "capital: 10000000 won (EP1 carryover baseline)"
+        )
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_falls_back_to_cross_stage_numeric_packet_when_fact_ledger_missing(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.current_project.genre = {"name": "investment", "type": "investment"}
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": [],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=2,
+            arc_data={
+                "arc_no": 1,
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "numeric_carryover": {
+                        "total_assets": "20000000",
+                        "total_assets_source": "state_constraints.arc_end_state.total_assets",
+                    },
+                },
+            },
+            arc_tactical="Bridge prior numbers into the next episode.",
+            prev_text="previous manuscript body",
+            prev_ending="the liquidation remains unresolved",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={"summary": "A larger capital stack appears after liquidation."},
+        )
+
+        text = result["mandatory_context"]
+        assert "FactLedger carryover baseline is unavailable here" in text
+        assert "upstream transport lineage: cross_stage_authority_packet.v1" in text
+        assert "total_assets: 20000000 (cross-stage packet; source=state_constraints.arc_end_state.total_assets)" in text
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_build_mandatory_context_promotes_opening_scene_authority_even_without_work_focus(self, _mock_build):

@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from modules.core.cross_stage_authority_packet import CROSS_STAGE_AUTHORITY_PACKET_VERSION
 from modules.core.stage4_orchestrator import Stage4Orchestrator
 from modules.core.stage4_post_pass_runtime import Stage4PostPassRuntime, _build_state_truth_owner_contract
 from modules.core.stage4_post_processor import Stage4PostProcessor
@@ -1068,6 +1069,59 @@ class TestProcessPassResult:
             next_ep=10,
             state_truth_owner_contract=owner_contract,
         )
+
+    def test_persist_manager_delta_outputs_surfaces_cross_stage_numeric_transport_metadata(self):
+        pp = self._make_pp()
+        pp.post_pass_runtime._sync_world_state_positions = MagicMock()
+        pp.post_pass_runtime._persist_manager_causal_side_effects = MagicMock()
+        pp.post_pass_runtime._persist_manager_state_log = MagicMock()
+        pp.post_pass_runtime._persist_karma_status = MagicMock()
+        pp.post_pass_runtime._log_manager_delta_summary = MagicMock()
+        pp.post_pass_runtime._emit_post_pass_contract_signal = MagicMock()
+        pp.ctx.fact_ledger = MagicMock()
+        pp.ctx.fact_ledger.get_numbers.return_value = {
+            "capital": {"value": 1000000000, "unit": "won", "authority_scope": "carryover_baseline"},
+            "total_assets": {"value": 2000000000, "unit": "won", "authority_scope": "carryover_baseline"},
+        }
+
+        pp.post_pass_runtime._persist_manager_delta_outputs(
+            next_ep=10,
+            key_npcs=[{"name": "npc-a"}],
+            actual_truth={"location": "gate"},
+            final_state_updates={"hp": 90},
+            arc_data={
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "numeric_carryover": {
+                        "total_assets": 2000000000,
+                        "total_assets_source": "state_constraints.arc_end_state.total_assets",
+                        "capital": 1000000000,
+                        "capital_source": "state_constraints.arc_end_state.capital",
+                    },
+                }
+            },
+            state_updates_from_audit={"time_passed": "3h"},
+            knowledge_map={"new_witnesses": ["npc-a"]},
+            karma_matrix=[{"target": "npc-b", "obsession": 70, "value": 10}],
+            curr_inventory_counts={},
+            inventory_count_deltas=[],
+            relationship_changes=[],
+            active_pressure_vectors=[],
+            pressure_vectors_changed=False,
+            causal_links=[],
+            all_new_items=[],
+            lost_items_from_equip=[],
+            new_npc_names=[],
+            npc_deaths=[],
+            reveal_list=[],
+        )
+
+        saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
+        family = saved_bible["state_truth_owner_contract"]["field_families"]["numeric_carryover_authority"]
+        assert family["fields"] == ["total_assets", "capital"]
+        assert family["transport_lineage"] == "cross_stage_authority_packet.numeric_carryover"
+        assert family["transport_contract_version"] == CROSS_STAGE_AUTHORITY_PACKET_VERSION
+        assert family["transport_fields"] == ["total_assets", "capital"]
 
     def test_log_numeric_carryover_authority_summary_emits_ui_note(self):
         pp = self._make_pp()
@@ -2303,6 +2357,46 @@ class TestAtomicMetadataSave:
         assert result["fact_ledger_changes"]["total_assets"] == 25_000_000_000
         assert "bonus_pool" not in result["fact_ledger_changes"]
         assert "location" not in result["fact_ledger_changes"]
+
+    def test_build_atomic_state_payloads_reuses_state_truth_owner_contract_numeric_fields(self):
+        pp = self._make_pp_with_metadata()
+        pp.ctx.fact_ledger.get_numbers.return_value = {
+            "capital": {
+                "value": 10_000_000_000,
+                "unit": "won",
+                "last_ep": 5,
+                "authority_scope": "carryover_baseline",
+            },
+            "total_assets": {
+                "value": 12_000_000_000,
+                "unit": "won",
+                "last_ep": 5,
+                "authority_scope": "carryover_baseline",
+            },
+        }
+
+        result = pp.post_pass_runtime._build_atomic_state_payloads(
+            actual_truth={
+                "capital": 20_000_000_000,
+                "total_assets": 25_000_000_000,
+            },
+            final_state_updates={"hp": 10},
+            bible_delta={
+                "state_truth_owner_contract": {
+                    "field_families": {
+                        "numeric_carryover_authority": {
+                            "fields": ["capital"],
+                            "transport_lineage": "cross_stage_authority_packet.numeric_carryover",
+                        }
+                    }
+                }
+            },
+        )
+
+        assert result["world_state_changes"] == {"hp": 10}
+        assert result["fact_ledger_changes"]["hp"] == 10
+        assert result["fact_ledger_changes"]["capital"] == 20_000_000_000
+        assert "total_assets" not in result["fact_ledger_changes"]
 
     def test_build_atomic_state_payloads_promotes_string_and_director_fallback_numeric_carryover(self):
         pp = self._make_pp_with_metadata()

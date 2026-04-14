@@ -31,6 +31,10 @@ from modules.core.context_advisor import (
     build_context_observation,
 )
 from modules.core.context_compression import ContextCompressor
+from modules.core.cross_stage_authority_packet import (
+    collect_numeric_carryover_entries,
+    extract_explicit_cross_stage_authority_packet,
+)
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.non_wuxia_recovery_policy import normalize_chain_link_for_genre, normalize_genre_type
 from modules.core.semantic_query_broker import SemanticQueryBroker
@@ -70,6 +74,102 @@ _NUMERIC_CARRYOVER_KEY_MARKERS = (
     "balance",
     "networth",
 )
+
+
+def _normalize_numeric_authority_key(value: object) -> str:
+    return re.sub(r"[\s_]+", "", str(value or "")).lower()
+
+
+def _is_numeric_carryover_key(value: object) -> bool:
+    token = _normalize_numeric_authority_key(value)
+    if not token:
+        return False
+    return any(marker in token for marker in _NUMERIC_CARRYOVER_KEY_MARKERS)
+
+
+def _collect_fact_ledger_numeric_carryover_rows(fact_ledger) -> list[dict[str, Any]]:
+    if fact_ledger is None or not hasattr(fact_ledger, "get_numbers"):
+        return []
+    try:
+        numbers = fact_ledger.get_numbers() or {}
+    except Exception as exc:
+        logging.debug("[Stage4ContextBuilder] numeric carryover authority probe failed", exc_info=exc)
+        return []
+    if not isinstance(numbers, dict) or not numbers:
+        return []
+
+    rows: list[dict[str, Any]] = []
+    for key, info in numbers.items():
+        if not isinstance(info, dict):
+            continue
+        if str(info.get("authority_scope") or "").strip().lower() != _CARRYOVER_BASELINE_SCOPE:
+            continue
+        if not _is_numeric_carryover_key(key):
+            continue
+        rows.append(
+            {
+                "field": str(key or "").strip(),
+                "value": info.get("value", "?"),
+                "unit": str(info.get("unit", "") or "").strip(),
+                "basis": f"EP{info.get('last_ep', '?')} carryover baseline",
+            }
+        )
+    return [row for row in rows if row.get("field")]
+
+
+def _collect_packet_numeric_carryover_rows(arc_data: dict | None) -> tuple[list[dict[str, Any]], str]:
+    packet = extract_explicit_cross_stage_authority_packet(arc_data)
+    packet_version = str((packet or {}).get("contract_version", "") or "").strip()
+    if not packet:
+        return [], packet_version
+
+    rows: list[dict[str, Any]] = []
+    for entry in collect_numeric_carryover_entries(packet):
+        field_name = str(entry.get("field", "") or "").strip()
+        if not field_name or not _is_numeric_carryover_key(field_name):
+            continue
+        rows.append(
+            {
+                "field": field_name,
+                "value": entry.get("value", "?"),
+                "source": str(entry.get("source", "") or "").strip(),
+            }
+        )
+    return rows, packet_version
+
+
+def _prioritize_numeric_authority_rows(
+    *,
+    fact_ledger_rows: list[dict[str, Any]],
+    packet_rows: list[dict[str, Any]],
+    limit: int,
+) -> tuple[list[dict[str, Any]], bool]:
+    if fact_ledger_rows and packet_rows:
+        fact_rows_by_field = {
+            str(row.get("field", "") or "").strip(): row
+            for row in fact_ledger_rows
+            if str(row.get("field", "") or "").strip()
+        }
+        ordered_rows: list[dict[str, Any]] = []
+        seen_fields: set[str] = set()
+        for packet_row in packet_rows:
+            field_name = str(packet_row.get("field", "") or "").strip()
+            if field_name in seen_fields or field_name not in fact_rows_by_field:
+                continue
+            ordered_rows.append(fact_rows_by_field[field_name])
+            seen_fields.add(field_name)
+        for fact_row in fact_ledger_rows:
+            field_name = str(fact_row.get("field", "") or "").strip()
+            if not field_name or field_name in seen_fields:
+                continue
+            ordered_rows.append(fact_row)
+            seen_fields.add(field_name)
+        return ordered_rows[:limit], False
+    if fact_ledger_rows:
+        return fact_ledger_rows[:limit], False
+    if packet_rows:
+        return packet_rows[:limit], True
+    return [], False
 
 
 class WorkRetrievalFocusPayload(TypedDict, total=False):
@@ -1069,7 +1169,10 @@ class Stage4ContextBuilder:
             if constraint_summary:
                 lines.append(f"- active constraint spine: {constraint_summary}")
 
-        numeric_authority_block = self._build_numeric_carryover_authority_block(blueprint=blueprint)
+        numeric_authority_block = self._build_numeric_carryover_authority_block(
+            arc_data=arc_data,
+            blueprint=blueprint,
+        )
         if numeric_authority_block:
             lines.extend(["", numeric_authority_block])
 
@@ -1080,59 +1183,46 @@ class Stage4ContextBuilder:
 
     @staticmethod
     def _normalize_numeric_authority_key(value: object) -> str:
-        return re.sub(r"[\s_]+", "", str(value or "")).lower()
+        return _normalize_numeric_authority_key(value)
 
     @classmethod
     def _is_numeric_carryover_key(cls, key: object) -> bool:
-        token = cls._normalize_numeric_authority_key(key)
-        if not token:
-            return False
-        return any(marker in token for marker in _NUMERIC_CARRYOVER_KEY_MARKERS)
-
-    @staticmethod
-    def _format_numeric_authority_basis(info: dict[str, Any]) -> str:
-        last_ep = info.get("last_ep", "?")
-        scope = str(info.get("authority_scope") or "").strip().lower()
-        if scope == _CARRYOVER_BASELINE_SCOPE:
-            return f"EP{last_ep} carryover baseline"
-        return f"EP{last_ep} basis"
+        return _is_numeric_carryover_key(key)
 
     def _build_numeric_carryover_authority_block(
         self,
         *,
+        arc_data: dict | None,
         blueprint: dict | None,
         max_chars: int = 700,
     ) -> str:
-        fact_ledger = getattr(self.ctx, "fact_ledger", None)
-        if fact_ledger is None or not hasattr(fact_ledger, "get_numbers"):
-            return ""
-
-        try:
-            numbers = fact_ledger.get_numbers() or {}
-        except Exception as exc:
-            logging.debug("[Stage4ContextBuilder] numeric carryover authority probe failed", exc_info=exc)
-            return ""
-        if not isinstance(numbers, dict) or not numbers:
+        fact_ledger_rows = _collect_fact_ledger_numeric_carryover_rows(getattr(self.ctx, "fact_ledger", None))
+        packet_rows, packet_version = _collect_packet_numeric_carryover_rows(arc_data)
+        selected_rows, using_packet_fallback = _prioritize_numeric_authority_rows(
+            fact_ledger_rows=fact_ledger_rows,
+            packet_rows=packet_rows,
+            limit=3,
+        )
+        if not selected_rows:
             return ""
 
         authority_lines: list[str] = []
-        for key, info in numbers.items():
-            if not isinstance(info, dict):
+        for row in selected_rows:
+            field_name = str(row.get("field", "") or "").strip()
+            if not field_name:
                 continue
-            if str(info.get("authority_scope") or "").strip().lower() != _CARRYOVER_BASELINE_SCOPE:
-                continue
-            if not self._is_numeric_carryover_key(key):
-                continue
-            value = info.get("value", "?")
-            unit = str(info.get("unit", "") or "").strip()
+            value = row.get("value", "?")
+            unit = str(row.get("unit", "") or "").strip()
             unit_suffix = f" {unit}" if unit else ""
-            basis = self._format_numeric_authority_basis(info)
-            authority_lines.append(f"- {key}: {value}{unit_suffix} ({basis})")
-            if len(authority_lines) >= 3:
-                break
-
-        if not authority_lines:
-            return ""
+            basis = str(row.get("basis", "") or "").strip()
+            if basis:
+                authority_lines.append(f"- {field_name}: {value}{unit_suffix} ({basis})")
+                continue
+            source = str(row.get("source", "") or "").strip()
+            if source:
+                authority_lines.append(f"- {field_name}: {value}{unit_suffix} (cross-stage packet; source={source})")
+            else:
+                authority_lines.append(f"- {field_name}: {value}{unit_suffix} (cross-stage packet)")
 
         blueprint_text = ""
         if isinstance(blueprint, dict):
@@ -1147,10 +1237,21 @@ class Stage4ContextBuilder:
 
         lines = [
             _STAGE4_NUMERIC_CARRYOVER_AUTHORITY_HEADER,
-            "- asset-family FactLedger rows below are prior-episode carryover baselines, not automatic proof that later blueprint target numbers are already realized on-page.",
-            *authority_lines,
-            "- do not overwrite these baselines with arc or blueprint target numbers unless the manuscript explicitly shows the bridge transaction, liquidation, transfer, or funding event.",
+            (
+                "- FactLedger carryover baseline is unavailable here, so the explicit cross-stage packet below is the "
+                "intake carryover floor until stronger persisted authority is available."
+                if using_packet_fallback
+                else "- asset-family FactLedger rows below are prior-episode carryover baselines, not automatic proof "
+                "that later blueprint target numbers are already realized on-page."
+            ),
         ]
+        if packet_version:
+            lines.append(f"- upstream transport lineage: {packet_version}")
+        lines.extend(authority_lines)
+        lines.append(
+            "- do not overwrite these baselines with arc or blueprint target numbers unless the manuscript explicitly "
+            "shows the bridge transaction, liquidation, transfer, or funding event."
+        )
         if blueprint_mentions_assets:
             lines.append(
                 "- if blueprint asset numbers exceed the carryover baseline, treat them as pending claims or targets until the conversion path is written on-page."
