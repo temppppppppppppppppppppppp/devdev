@@ -20,9 +20,46 @@ import logging
 import re
 
 from modules.core.constants import Stage2Limits, smart_truncate
+from modules.core.cross_stage_authority_packet import CROSS_STAGE_AUTHORITY_PACKET_VERSION
 from modules.core.episode_state_arbiter import EpisodeStateArbiter
 from modules.core.tactical_utils import _EPISODE_HEADER_PATTERNS, extract_episode_tactical
 from modules.models.arc import StateChangesDict
+
+
+def _coerce_mapping(value: object) -> dict:
+    return value if isinstance(value, dict) else {}
+
+
+def _resolve_cross_stage_packet(arc_data: dict | None) -> dict:
+    payload = arc_data if isinstance(arc_data, dict) else {}
+    packet = payload.get("cross_stage_authority_packet")
+    if isinstance(packet, dict) and packet.get("contract_version") == CROSS_STAGE_AUTHORITY_PACKET_VERSION:
+        return packet
+    return {}
+
+
+def _resolve_cross_stage_opening_location(arc_data: dict | None) -> tuple[str, str]:
+    opening = _coerce_mapping(_resolve_cross_stage_packet(arc_data).get("opening_carryover"))
+    return str(opening.get("location", "") or "").strip(), str(opening.get("location_source", "") or "").strip()
+
+
+def _resolve_cross_stage_protagonist_carryover(arc_data: dict | None) -> dict:
+    return _coerce_mapping(_resolve_cross_stage_packet(arc_data).get("protagonist_carryover"))
+
+
+def _append_cross_stage_numeric_fields(fields: list[dict], arc_data: dict | None) -> None:
+    numeric = _coerce_mapping(_resolve_cross_stage_packet(arc_data).get("numeric_carryover"))
+    for key, label in (
+        ("capital", "잔고/자본"),
+        ("total_assets", "총자산"),
+        ("portfolio_position", "포지션"),
+        ("investment_calc_final_cash", "최종 현금"),
+        ("investment_calc_final_total_assets", "최종 총자산"),
+    ):
+        value = numeric.get(key)
+        if value in (None, "", [], {}):
+            continue
+        fields.append({"label": label, "value": str(value)[:150]})
 
 
 class BlueprintConstraintCompiler:
@@ -494,12 +531,15 @@ class BlueprintConstraintCompiler:
         }
 
         arc_start_location = ""
+        packet_location, _ = _resolve_cross_stage_opening_location(arc_data)
         if isinstance(arc_data, dict):
             state = arc_data.get("state_constraints", {})
             if isinstance(state, dict):
                 arc_start = state.get("arc_start_state", {})
                 if isinstance(arc_start, dict):
                     arc_start_location = str(arc_start.get("location", "") or "").strip()
+        if not arc_start_location and packet_location:
+            arc_start_location = packet_location
 
         if not prev_blueprint:
             if arc_start_location:
@@ -584,10 +624,33 @@ class BlueprintConstraintCompiler:
 
         arc_start_has_equipment = False
         arc_start_has_injuries = False
+        packet_has_equipment = False
+        packet_has_injuries = False
+        packet_has_internal_energy = False
+
+        protagonist_carryover = _resolve_cross_stage_protagonist_carryover(arc_data)
+        if protagonist_carryover:
+            equipment = protagonist_carryover.get("equipment", [])
+            if isinstance(equipment, list):
+                inherited["equipment"] = equipment[:10]
+                packet_has_equipment = True
+            elif isinstance(equipment, str):
+                inherited["equipment"] = [i.strip() for i in equipment.split(",")][:10]
+                packet_has_equipment = True
+
+            if protagonist_carryover.get("injuries") not in (None, ""):
+                inherited["injuries"] = protagonist_carryover.get("injuries", inherited["injuries"])
+                packet_has_injuries = True
+
+            if genre == "wuxia" and protagonist_carryover.get("internal_energy") not in (None, ""):
+                energy = str(protagonist_carryover.get("internal_energy", "") or "").strip()
+                if energy:
+                    inherited["internal_energy"] = energy if energy.endswith("%") else f"{energy}%"
+                    packet_has_internal_energy = True
 
         # Arc의 joint_docs에서 추출
         joint_docs = arc_data.get("joint_docs", {})
-        if joint_docs:
+        if joint_docs and not packet_has_equipment:
             inventory = joint_docs.get("physical_inventory", [])
             if isinstance(inventory, list):
                 inherited["equipment"] = inventory[:10]
@@ -598,11 +661,11 @@ class BlueprintConstraintCompiler:
         shadow = arc_data.get("status_shadow", {})
         if shadow:
             injuries = shadow.get("expected_injuries", "")
-            if injuries:
+            if injuries and not packet_has_injuries:
                 inherited["injuries"] = injuries
 
             # [TF-41] P1-1: 무협 전용 — 비무협 장르는 내공 상속 스킵
-            if genre == "wuxia":
+            if genre == "wuxia" and not packet_has_internal_energy:
                 energy = shadow.get("internal_energy_loss", "0%")
                 if energy:
                     try:
@@ -1044,6 +1107,7 @@ class BlueprintConstraintCompiler:
         fields: list[dict] = []
         bp = prev_blueprint if isinstance(prev_blueprint, dict) else {}
         ms_text = str(prev_manuscript_ending or "").strip()
+        _append_cross_stage_numeric_fields(fields, arc_data)
 
         def _capital_within_ep(entry: object) -> bool:
             if ep_num <= 0:

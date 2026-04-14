@@ -7,6 +7,7 @@ Tests for:
 - Tranche C: Prevalidation fact reconciliation (provenance, item-state, capital, temporal-deictic)
 """
 
+from modules.core.cross_stage_authority_packet import CROSS_STAGE_AUTHORITY_PACKET_VERSION
 from modules.domain.agents.blueprint_constraint_compiler import BlueprintConstraintCompiler
 from modules.domain.agents.unified_blueprint_validator import UnifiedBlueprintValidator
 
@@ -375,6 +376,33 @@ class TestCapitalContinuityPacket:
         )
         fields = result.get("fields", [])
         assert any("자본" in f["label"] for f in fields)
+
+    def test_investment_genre_prefers_cross_stage_numeric_carryover_when_present(self):
+        result = BlueprintConstraintCompiler._build_capital_continuity_packet(
+            prev_blueprint={
+                "ending_state": {
+                    "balance": "stale-balance",
+                    "capital": "stale-capital",
+                }
+            },
+            prev_manuscript_ending="",
+            arc_data={
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "opening_carryover": {},
+                    "protagonist_carryover": {},
+                    "numeric_carryover": {
+                        "capital": "packet-balance",
+                        "total_assets": "packet-total-assets",
+                    },
+                }
+            },
+            genre="investment",
+        )
+        values = [field.get("value", "") for field in result.get("fields", [])]
+        assert "packet-balance" in values
+        assert "packet-total-assets" in values
+        assert "stale-balance" not in values
 
     def test_investment_genre_extracts_from_state_changes(self):
         result = BlueprintConstraintCompiler._build_capital_continuity_packet(

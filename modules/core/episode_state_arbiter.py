@@ -11,6 +11,8 @@ from __future__ import annotations
 from typing import Any
 import re
 
+from modules.core.cross_stage_authority_packet import CROSS_STAGE_AUTHORITY_PACKET_VERSION
+
 
 def _clip(value: object, limit: int = 160) -> str:
     text = str(value or "").strip()
@@ -58,6 +60,61 @@ def _dedupe_tokens(values: list[str] | None) -> list[str]:
 
 def _normalize_scalar(value: object) -> str:
     return _clip(value, 160)
+
+
+def _coerce_mapping(value: object) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _extract_cross_stage_authority_packet(arc_payload: dict[str, Any] | None) -> dict[str, Any] | None:
+    payload = arc_payload if isinstance(arc_payload, dict) else {}
+    packet = payload.get("cross_stage_authority_packet")
+    if isinstance(packet, dict) and packet.get("contract_version") == CROSS_STAGE_AUTHORITY_PACKET_VERSION:
+        return packet
+    return None
+
+
+def _normalize_percentage(value: object) -> str:
+    text = _normalize_scalar(value)
+    if not text:
+        return ""
+    return text if text.endswith("%") else f"{text}%"
+
+
+def _resolve_packet_opening_location(packet: dict[str, Any] | None) -> tuple[str, str]:
+    opening = _coerce_mapping(_coerce_mapping(packet).get("opening_carryover"))
+    return _normalize_scalar(opening.get("location")), _normalize_scalar(opening.get("location_source"))
+
+
+def _is_current_stage2_source(source: object) -> bool:
+    text = str(source or "").strip()
+    return text.startswith("arc_data.") or text.startswith("cross_stage_authority_packet.")
+
+
+def _apply_packet_protagonist_carryover(
+    *,
+    protagonist_truth: dict[str, Any],
+    packet: dict[str, Any] | None,
+    genre: str,
+) -> None:
+    carryover = _coerce_mapping(_coerce_mapping(packet).get("protagonist_carryover"))
+    equipment = _normalize_equipment(carryover.get("equipment"))
+    if equipment:
+        protagonist_truth["equipment"] = equipment
+        protagonist_truth["sources"]["equipment"] = "cross_stage_authority_packet.protagonist_carryover.equipment"
+
+    injuries = _normalize_scalar(carryover.get("injuries"))
+    if injuries:
+        protagonist_truth["injuries"] = injuries
+        protagonist_truth["sources"]["injuries"] = "cross_stage_authority_packet.protagonist_carryover.injuries"
+
+    if genre == "wuxia":
+        internal_energy = _normalize_percentage(carryover.get("internal_energy"))
+        if internal_energy:
+            protagonist_truth["internal_energy"] = internal_energy
+            protagonist_truth["sources"]["internal_energy"] = (
+                "cross_stage_authority_packet.protagonist_carryover.internal_energy"
+            )
 
 
 def _extract_last_scene(prev_blueprint: dict[str, Any] | None) -> dict[str, Any]:
@@ -131,12 +188,14 @@ class EpisodeStateArbiter:
     ) -> dict[str, Any]:
         arc_payload = arc_data if isinstance(arc_data, dict) else {}
         bp = prev_blueprint if isinstance(prev_blueprint, dict) else {}
+        cross_stage_authority_packet = _extract_cross_stage_authority_packet(arc_payload)
         ep_start = self._safe_int(arc_payload.get("ep_start"))
         arc_position = ep_num - ep_start + 1 if ep_start else 1
         is_arc_opening_episode = arc_position <= 1
 
         opening_truth, opening_conflicts = self._resolve_opening_truth(
             arc_payload=arc_payload,
+            cross_stage_authority_packet=cross_stage_authority_packet,
             prev_blueprint=bp,
             prev_blueprints=prev_blueprints,
             prev_manuscript_ending=prev_manuscript_ending,
@@ -144,41 +203,57 @@ class EpisodeStateArbiter:
         )
         protagonist_truth, protagonist_conflicts = self._resolve_protagonist_truth(
             arc_payload=arc_payload,
+            cross_stage_authority_packet=cross_stage_authority_packet,
             prev_blueprint=bp,
             genre=genre,
             is_arc_opening_episode=is_arc_opening_episode,
         )
         dropped_conflicts = opening_conflicts + protagonist_conflicts
         rewrite_required_reasons = _dedupe_tokens([item.get("reason", "") for item in dropped_conflicts])
+        opening_sources = [
+            "prev_blueprint.scene_breakdown.last.location",
+            "prev_blueprint.end_location",
+            "arc_data.state_constraints.arc_start_state.location",
+        ]
+        if cross_stage_authority_packet:
+            opening_sources.append("cross_stage_authority_packet.opening_carryover.location")
+        opening_sources.append("arc_data.joint_docs.final_location")
+
+        protagonist_sources = [
+            "prev_blueprint.protagonist_state",
+            "arc_data.state_constraints.arc_start_state",
+        ]
+        if cross_stage_authority_packet:
+            protagonist_sources.append("cross_stage_authority_packet.protagonist_carryover")
+        protagonist_sources.extend(
+            [
+                "arc_data.status_shadow",
+                "arc_data.joint_docs.physical_inventory",
+            ]
+        )
+
+        capital_sources = [
+            "prev_manuscript_ending",
+            "prev_blueprint",
+            "arc_data",
+        ]
+        if cross_stage_authority_packet:
+            capital_sources.insert(0, "cross_stage_authority_packet.numeric_carryover")
 
         return {
             "source_precedence": {
-                "opening_truth": [
-                    "prev_blueprint.scene_breakdown.last.location",
-                    "prev_blueprint.end_location",
-                    "arc_data.state_constraints.arc_start_state.location",
-                    "arc_data.joint_docs.final_location",
-                ],
+                "opening_truth": opening_sources,
                 "time_truth": [
                     "prev_manuscript_ending",
                     "prev_blueprint.time_flow",
                 ],
-                "protagonist_truth": [
-                    "prev_blueprint.protagonist_state",
-                    "arc_data.state_constraints.arc_start_state",
-                    "arc_data.status_shadow",
-                    "arc_data.joint_docs.physical_inventory",
-                ],
+                "protagonist_truth": protagonist_sources,
                 "fact_lock_truth": [
                     "prev_manuscript_ending",
                     "prev_blueprint",
                     "arc_data",
                 ],
-                "capital_truth": [
-                    "prev_manuscript_ending",
-                    "prev_blueprint",
-                    "arc_data",
-                ],
+                "capital_truth": capital_sources,
                 "progression_truth": [
                     "prev_blueprint",
                     "arc_data",
@@ -205,6 +280,7 @@ class EpisodeStateArbiter:
         self,
         *,
         arc_payload: dict[str, Any],
+        cross_stage_authority_packet: dict[str, Any] | None,
         prev_blueprint: dict[str, Any],
         prev_blueprints: list[dict[str, Any]] | None,
         prev_manuscript_ending: str,
@@ -219,10 +295,19 @@ class EpisodeStateArbiter:
         joint_docs = arc_payload.get("joint_docs") if isinstance(arc_payload.get("joint_docs"), dict) else {}
         last_scene = _extract_last_scene(prev_blueprint)
         prev_location = _normalize_scalar(last_scene.get("location") or prev_blueprint.get("end_location") or prev_blueprint.get("location"))
-        arc_start_location = _normalize_scalar(start_state.get("location") or joint_docs.get("final_location"))
+        arc_start_location = _normalize_scalar(start_state.get("location"))
+        packet_location, packet_location_source = _resolve_packet_opening_location(cross_stage_authority_packet)
+        joint_docs_location = _normalize_scalar(joint_docs.get("final_location"))
+        stage2_location = arc_start_location or packet_location or joint_docs_location
+        if arc_start_location:
+            stage2_location_source = "arc_data.state_constraints.arc_start_state.location"
+        elif packet_location:
+            stage2_location_source = packet_location_source or "cross_stage_authority_packet.opening_carryover.location"
+        else:
+            stage2_location_source = "arc_data.joint_docs.final_location"
 
         dropped_conflicts: list[dict[str, str]] = []
-        if prev_location:
+        if prev_location and not (is_arc_opening_episode and stage2_location):
             location = prev_location
             location_source = (
                 "prev_blueprint.scene_breakdown.last.location"
@@ -241,10 +326,8 @@ class EpisodeStateArbiter:
                     )
                 )
         else:
-            location = arc_start_location
-            location_source = (
-                "arc_data.state_constraints.arc_start_state.location" if _normalize_scalar(start_state.get("location")) else "arc_data.joint_docs.final_location"
-            )
+            location = stage2_location
+            location_source = stage2_location_source if location else ""
 
         time_source = ""
         time_context = ""
@@ -287,6 +370,7 @@ class EpisodeStateArbiter:
         self,
         *,
         arc_payload: dict[str, Any],
+        cross_stage_authority_packet: dict[str, Any] | None,
         prev_blueprint: dict[str, Any],
         genre: str,
         is_arc_opening_episode: bool,
@@ -314,17 +398,25 @@ class EpisodeStateArbiter:
             prev_blueprint.get("protagonist_state") if isinstance(prev_blueprint.get("protagonist_state"), dict) else {}
         )
 
-        equipment = _normalize_equipment(joint_docs.get("physical_inventory"))
-        if equipment:
-            protagonist_truth["equipment"] = equipment
-            protagonist_truth["sources"]["equipment"] = "arc_data.joint_docs.physical_inventory"
+        _apply_packet_protagonist_carryover(
+            protagonist_truth=protagonist_truth,
+            packet=cross_stage_authority_packet,
+            genre=genre,
+        )
 
-        injuries = _normalize_scalar(status_shadow.get("expected_injuries"))
-        if injuries:
-            protagonist_truth["injuries"] = injuries
-            protagonist_truth["sources"]["injuries"] = "arc_data.status_shadow.expected_injuries"
+        if "equipment" not in protagonist_truth["sources"]:
+            equipment = _normalize_equipment(joint_docs.get("physical_inventory"))
+            if equipment:
+                protagonist_truth["equipment"] = equipment
+                protagonist_truth["sources"]["equipment"] = "arc_data.joint_docs.physical_inventory"
 
-        if genre == "wuxia":
+        if "injuries" not in protagonist_truth["sources"]:
+            injuries = _normalize_scalar(status_shadow.get("expected_injuries"))
+            if injuries:
+                protagonist_truth["injuries"] = injuries
+                protagonist_truth["sources"]["injuries"] = "arc_data.status_shadow.expected_injuries"
+
+        if genre == "wuxia" and "internal_energy" not in protagonist_truth["sources"]:
             energy = status_shadow.get("internal_energy_loss")
             if energy not in (None, ""):
                 try:
@@ -347,15 +439,20 @@ class EpisodeStateArbiter:
                 start_state=start_state,
                 prev_protag=prev_protag,
                 genre=genre,
-            )
+        )
 
         if prev_protag:
+            current_sources = protagonist_truth.get("sources", {})
             prev_equipment = _normalize_equipment(prev_protag.get("equipment"))
-            if prev_equipment:
+            if prev_equipment and not (
+                is_arc_opening_episode and _is_current_stage2_source(current_sources.get("equipment"))
+            ):
                 protagonist_truth["equipment"] = prev_equipment
                 protagonist_truth["sources"]["equipment"] = "prev_blueprint.protagonist_state.equipment"
             prev_injuries = _normalize_scalar(prev_protag.get("injuries"))
-            if prev_injuries:
+            if prev_injuries and not (
+                is_arc_opening_episode and _is_current_stage2_source(current_sources.get("injuries"))
+            ):
                 protagonist_truth["injuries"] = prev_injuries
                 protagonist_truth["sources"]["injuries"] = "prev_blueprint.protagonist_state.injuries"
             prev_companions = _clean_token_list(prev_protag.get("companions"), limit=8)
