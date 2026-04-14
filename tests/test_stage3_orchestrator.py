@@ -232,6 +232,7 @@ class TestStageAttemptObservability:
     def test_build_stage3_source_anchor_summary_surfaces_prev_bp_and_start_state(self):
         summary = _build_stage3_source_anchor_summary(
             {
+                "ep_start": 2,
                 "joint_docs": {"final_location": "SW인베스트먼트 사무실"},
                 "semantic_carryover": {"continuity_checkpoints": ["회귀 사실 유지"]},
                 "state_constraints": {
@@ -256,6 +257,33 @@ class TestStageAttemptObservability:
         assert summary["current_arc_start_location"] == "SW인베스트먼트 사무실"
         assert summary["current_arc_start_inventory_count"] == 2
         assert "anchor_surfaces" in summary
+
+    def test_build_stage3_source_anchor_summary_hides_stale_arc_start_mid_arc(self):
+        summary = _build_stage3_source_anchor_summary(
+            {
+                "ep_start": 7,
+                "joint_docs": {"final_location": "본가 개인 서재"},
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "본가 개인 서재",
+                        "equipment": ["가죽 서류가방", "삼성 애니콜 SGH-D600"],
+                    }
+                },
+            },
+            [
+                {
+                    "ep_num": 8,
+                    "end_location": "한미증권 청담동 지점 15층 VIP룸",
+                    "opening_transition": {"type": "direct_continuation"},
+                }
+            ],
+        )
+
+        assert summary["previous_blueprint_ep"] == 8
+        assert summary["previous_blueprint_end_location"] == "한미증권 청담동 지점 15층 VIP룸"
+        assert "current_arc_start_location" not in summary
+        assert "current_arc_start_inventory_count" not in summary
+        assert "arc_start_location" not in summary.get("anchor_surfaces", [])
 
     def test_handle_success_persists_semantic_context_metadata(self, orch, app_mock):
         pipeline_result = {
@@ -390,7 +418,8 @@ class TestStageAttemptObservability:
         assert ds_kw["selected_label"] == "B"
         assert ds_kw["selected_strategy"] == "dialogue_focused"
         assert ds_kw["verdict"] == "PASS"
-        assert ds_kw["selection_reason"] == "후보 2가 전술 반영과 연속성에서 가장 안정적"
+        assert ds_kw["selection_reason"] == ""
+        assert ds_kw["advisory_warnings"]["comparison_notes"] == "후보 2가 전술 반영과 연속성에서 가장 안정적"
         assert ds_kw["attempt_key"] == sa_kw["attempt_key"]
         assert ds_kw["candidate_key"] == sa_kw["candidate_key"]
         assert ds_kw["artifact_path"] == sa_kw["artifact_path"]
@@ -558,9 +587,11 @@ class TestStageAttemptObservability:
                         "verdict": "PASS",
                         "selected_index": 1,
                         "selection_reason": "candidate 2 edges out the field",
+                        "comparison_notes": "candidate 2 keeps continuity cleaner than candidate 1",
                         "quality_risk": True,
                         "revision_required": True,
                         "selected_candidate_advisory": {
+                            "candidate_index": 1,
                             "quality_risk": True,
                             "python_warnings": [{"message": "Arc NPC mention is thin"}],
                         },
@@ -578,7 +609,37 @@ class TestStageAttemptObservability:
         assert payload is not None
         assert payload["advisory_warnings"]["quality_risk"] is True
         assert payload["advisory_warnings"]["revision_required"] is True
-        assert payload["advisory_warnings"]["selected_candidate_advisory"] == ["Arc NPC mention is thin"]
+        assert "selected_candidate_advisory" not in payload["advisory_warnings"]
+        assert (
+            payload["advisory_warnings"]["comparison_notes"]
+            == "candidate 2 keeps continuity cleaner than candidate 1"
+        )
+        assert payload["advisory_warnings"]["selected_candidate_advisory_struct"]["candidate_index"] == 1
+        assert payload["advisory_warnings"]["selected_candidate_advisory_struct"]["quality_risk"] is True
+
+    def test_build_stage3_director_selection_kwargs_keeps_selection_reason_independent_from_comparison_notes(self):
+        payload = Stage3Orchestrator._build_stage3_director_selection_kwargs(
+            {
+                "final_verdict": "PASS",
+                "phases": {
+                    "validate": {
+                        "verdict": "PASS",
+                        "selected_index": 1,
+                        "comparison_notes": "candidate 2 keeps continuity cleaner than candidate 1",
+                    }
+                },
+            },
+            ep_num=4,
+            attempt_num=1,
+            attempt_key="s3:ep4:arc1:a1",
+            selected_strategy="dialogue_focused",
+            score=93,
+            candidate_key="dialogue_focused",
+        )
+
+        assert payload is not None
+        assert payload["selection_reason"] == ""
+        assert payload["advisory_warnings"]["comparison_notes"] == "candidate 2 keeps continuity cleaner than candidate 1"
 
     def test_build_stage3_director_selection_kwargs_preserves_partial_fix_contract(self):
         payload = Stage3Orchestrator._build_stage3_director_selection_kwargs(
@@ -1617,6 +1678,32 @@ class TestProcessSingleEpisode:
         assert packet.selection_kwargs["runtime_advisory"] == "opening continuity drift"
         assert packet.retry_directives == "opening continuity drift"
         assert packet.artifact_meta["candidate_key"] == "B"
+        assert packet.selection_kwargs["verdict"] == "REJECT"
+
+    def test_stage3_director_selection_kwargs_preserve_initial_verdict_over_final_override(self, orch):
+        payload = Stage3Orchestrator._build_stage3_director_selection_kwargs(
+            {
+                "final_verdict": "REJECT",
+                "phases": {
+                    "validate": {
+                        "verdict": "PASS",
+                        "selection_reason": "candidate B is structurally strongest",
+                        "verdict_reason": "quality gate downgraded later",
+                        "selected_index": 1,
+                        "candidate_count": 2,
+                    }
+                },
+            },
+            ep_num=9,
+            attempt_num=2,
+            attempt_key="s3:ep9:arc2:a2",
+            selected_strategy="B",
+            score=84,
+            candidate_key="B",
+        )
+
+        assert payload is not None
+        assert payload["verdict"] == "PASS"
 
     def test_stage3_sink_payload_builders_share_packet_contract(self, orch):
         packet = Stage3AttemptEvidencePacket(
@@ -1670,6 +1757,12 @@ class TestProcessSingleEpisode:
                     "authoritative_fix_scope": "inplace",
                     "widened": False,
                 },
+                "comparison_notes": "후보 B가 opening continuity와 자본 패킷 계승을 가장 안정적으로 유지",
+                "selected_candidate_advisory": {
+                    "candidate_index": 1,
+                    "quality_risk": True,
+                    "python_warnings": [{"category": "continuity", "message": "opening beat needs a tighter relay"}],
+                },
             },
             reason="local repair로 충분",
             selection_reason=packet.selection_kwargs["selection_reason"],
@@ -1686,6 +1779,7 @@ class TestProcessSingleEpisode:
             duration_ms=3210,
             advisory_flags={"semantic_ctx_chars": 1440},
             validate={
+                "verdict": "PASS_WITH_FIX",
                 "open_review": "opening continuity 재검토",
                 "fix_pack": {
                     "patch_targets": ["scene_2.summary"],
@@ -1706,6 +1800,12 @@ class TestProcessSingleEpisode:
                     "repair_scope": "inplace",
                     "authoritative_fix_scope": "inplace",
                     "widened": False,
+                },
+                "comparison_notes": "후보 B가 opening continuity와 자본 패킷 계승을 가장 안정적으로 유지",
+                "selected_candidate_advisory": {
+                    "candidate_index": 1,
+                    "quality_risk": True,
+                    "python_warnings": [{"category": "continuity", "message": "opening beat needs a tighter relay"}],
                 },
             },
             failure_category="quality_gate",
@@ -1732,6 +1832,11 @@ class TestProcessSingleEpisode:
         assert decision_kwargs["authoritative_fix_scope"] == "inplace"
         assert decision_kwargs["repair_contract"]["subtype"] == "movement"
         assert decision_kwargs["scope_authority"]["widened"] is False
+        assert (
+            decision_kwargs["comparison_notes"]
+            == "후보 B가 opening continuity와 자본 패킷 계승을 가장 안정적으로 유지"
+        )
+        assert decision_kwargs["selected_candidate_advisory_struct"]["quality_risk"] is True
         assert stage_attempt_kwargs["session_id"] == packet.session_id
         assert stage_attempt_kwargs["attempt_key"] == packet.attempt_key
         assert stage_attempt_kwargs["candidate_key"] == packet.candidate_key
@@ -1741,6 +1846,12 @@ class TestProcessSingleEpisode:
         assert stage_attempt_kwargs["failure_category"] == "quality_gate"
         assert stage_attempt_kwargs["reject_reason"] == "opening continuity drift"
         assert stage_attempt_kwargs["open_review"] == "opening continuity 재검토"
+        assert stage_attempt_kwargs["initial_verdict"] == "PASS_WITH_FIX"
+        assert (
+            stage_attempt_kwargs["advisory_flags"]["comparison_notes"]
+            == "후보 B가 opening continuity와 자본 패킷 계승을 가장 안정적으로 유지"
+        )
+        assert stage_attempt_kwargs["advisory_flags"]["selected_candidate_advisory_struct"]["candidate_index"] == 1
         assert stage_attempt_kwargs["advisory_flags"]["fix_pack"]["subtype"] == "movement"
         assert stage_attempt_kwargs["advisory_flags"]["repair_contract"]["provenance"] == "director_authored"
         assert stage_attempt_kwargs["advisory_flags"]["gate_semantics"]["repair_contract"]["subtype"] == "movement"

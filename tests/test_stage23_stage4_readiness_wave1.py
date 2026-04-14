@@ -189,6 +189,53 @@ def test_python_pre_validate_flags_off_arc_intrusion_as_tactical_semantic_fideli
     assert "tactical_semantic_fidelity" in categories
 
 
+def test_python_pre_validate_flags_character_only_intrusion_as_tactical_semantic_fidelity():
+    validator = _make_validator()
+    result = validator._python_pre_validate(
+        blueprint={
+            "ep_num": 5,
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "입장",
+                    "location": "오피스텔",
+                    "goal": "대면",
+                    "summary": "오피스텔 안으로 들어간다.",
+                    "characters": ["한시우", "괴한"],
+                },
+                "scene_2": {
+                    "title": "협박",
+                    "location": "오피스텔",
+                    "goal": "압박",
+                    "summary": "상대가 팔목을 비틀며 협박한다.",
+                    "key_events": ["팔목을 비틀며 협박한다."],
+                    "characters": ["한시우"],
+                },
+            },
+            "integrated_scenario": ("한시우가 오피스텔 안으로 들어간다. 상대가 팔목을 비틀며 협박한다. " * 40).strip(),
+            "start_location": "강남구 원룸 오피스텔",
+            "time_flow": "2006년 2월 말의 밤",
+            "core_tension": "첫 투자 지시와 통제력",
+            "expected_ending": "WTI 주문 체결",
+            "target_beat": "긴장과 통제",
+            "protagonist_state": {"mood": "냉정"},
+        },
+        constraint_block={
+            "must_focus": {
+                "content": "한시우는 오피스텔에서 박성호와 통화하며 WTI 주문 여부를 결정한다.",
+            }
+        },
+        prev_blueprint=None,
+        arc_data={
+            "episode_details": {
+                "ep5": "한시우는 오피스텔에서 WTI 주문 여부를 결정한다.",
+            }
+        },
+    )
+
+    categories = {issue["category"] for issue in result["issues"]}
+    assert "tactical_semantic_fidelity" in categories
+
+
 def test_python_pre_validate_skips_tactical_intrusion_flag_when_authorized_by_arc_focus():
     validator = _make_validator()
     result = validator._python_pre_validate(
@@ -289,3 +336,121 @@ def test_python_pre_validate_flags_disguised_intrusion_from_scene_breakdown_text
 
     categories = {issue["category"] for issue in result["issues"]}
     assert "tactical_semantic_fidelity" in categories
+
+
+def test_python_pre_validate_flags_korean_synonym_intrusion_as_tactical_semantic_fidelity():
+    validator = _make_validator()
+    result = validator._python_pre_validate(
+        blueprint={
+            "ep_num": 5,
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "리스크팀 난입",
+                    "location": "한미증권 청담동 지점 15층 VIP룸",
+                    "goal": "리스크 관리팀의 압박을 버틴다.",
+                    "summary": "리스크 관리팀이 VIP룸에 들이닥쳐 한시우의 팔목을 비틀려 한다.",
+                    "key_events": [
+                        "리스크 관리팀이 들이닥쳐 한시우의 팔목을 비틀려 한다.",
+                        "팀장이 주먹을 들이밀며 입막음을 강요한다.",
+                    ],
+                    "characters": ["한시우", "박성호", "리스크 관리팀장"],
+                },
+                "scene_2": {
+                    "title": "체결 확인",
+                    "location": "한미증권 청담동 지점 15층 VIP룸",
+                    "goal": "WTI 주문 체결",
+                    "summary": "한시우가 흔들림 없이 체결 여부를 확인한다.",
+                    "characters": ["한시우", "박성호"],
+                },
+            },
+            "integrated_scenario": (
+                "리스크 관리팀이 VIP룸에 들이닥쳐 한시우의 팔목을 비틀고 주먹을 들이밀며 입막음을 강요한다. "
+                * 30
+            ).strip(),
+            "start_location": "한미증권 청담동 지점 15층 VIP룸",
+            "time_flow": "2006년 2월 16일 오전",
+            "core_tension": "WTI 주문 체결과 협상 주도권",
+            "expected_ending": "WTI 주문 체결",
+            "target_beat": "협상과 체결",
+            "protagonist_state": {"mood": "냉정"},
+        },
+        constraint_block={
+            "must_focus": {
+                "content": "한시우가 박성호 PB와 수수료 조건을 조정하고 15억 원 규모의 WTI 6월물 주문 체결을 밀어붙임"
+            }
+        },
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={
+            "episode_details": [
+                {
+                    "ep_num": 5,
+                    "details": [
+                        "한시우가 박성호 PB와 수수료 조건을 조정하고 15억 원 규모의 WTI 6월물 주문 체결을 밀어붙임"
+                    ],
+                }
+            ]
+        },
+    )
+
+    categories = {issue["category"] for issue in result["issues"]}
+    assert "tactical_semantic_fidelity" in categories
+
+
+def test_python_pre_validate_skips_tactical_intrusion_fp_on_pb_negotiation_with_staff_words_only():
+    validator = _make_validator()
+    result = validator._python_pre_validate(
+        blueprint={
+            "ep_num": 5,
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "조건표 확인",
+                    "location": "한미증권 청담동 지점 15층 VIP룸",
+                    "goal": "수수료 대응표를 확인한다.",
+                    "summary": "박성호가 직원을 불러 대응표와 주문 확인서를 펼친다.",
+                    "key_events": [
+                        "직원이 대응표를 펼친다.",
+                        "한시우와 박성호가 수수료 조건을 다시 맞춘다.",
+                    ],
+                    "characters": ["한시우", "박성호", "증권사 직원"],
+                },
+                "scene_2": {
+                    "title": "주문 체결",
+                    "location": "한미증권 청담동 지점 15층 VIP룸",
+                    "goal": "WTI 주문 체결",
+                    "summary": "한시우가 체결 순서를 확인하며 주문을 마무리한다.",
+                    "characters": ["한시우", "박성호"],
+                },
+            },
+            "integrated_scenario": (
+                "박성호가 직원을 불러 대응표와 주문 확인서를 준비시키고, 한시우와 체결 순서를 차분히 조율한다. "
+                * 30
+            ).strip(),
+            "start_location": "한미증권 청담동 지점 15층 VIP룸",
+            "time_flow": "2006년 2월 16일 오전",
+            "core_tension": "WTI 주문 체결과 협상 주도권",
+            "expected_ending": "WTI 주문 체결",
+            "target_beat": "협상과 체결",
+            "protagonist_state": {"mood": "냉정"},
+        },
+        constraint_block={
+            "must_focus": {
+                "content": "한시우가 박성호 PB와 수수료 조건을 조정하고 15억 원 규모의 WTI 6월물 주문 체결을 밀어붙임"
+            }
+        },
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={
+            "episode_details": [
+                {
+                    "ep_num": 5,
+                    "details": [
+                        "한시우가 박성호 PB와 수수료 조건을 조정하고 15억 원 규모의 WTI 6월물 주문 체결을 밀어붙임"
+                    ],
+                }
+            ]
+        },
+    )
+
+    categories = {issue["category"] for issue in result["issues"]}
+    assert "tactical_semantic_fidelity" not in categories

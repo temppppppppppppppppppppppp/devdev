@@ -307,6 +307,8 @@ class TestDirectorEnsemble:
             "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
             "start_location": "서울",
             "end_location": "부산",
+            "opening_transition": {"type": "direct_continuation"},
+            "protagonist_state": {"mood": "냉정", "equipment": ["서류가방"]},
             "ending_hook": "다음에 계속",
         }
         result = director.compare_and_select_blueprint(
@@ -316,6 +318,40 @@ class TestDirectorEnsemble:
         assert "Director LLM" in result["reason"]
         assert result["selected_index"] == 0
         assert result["selected_blueprint"] is not None
+        assert result["selection_reason"] == result["reason"]
+        assert "단일 후보" in result["comparison_notes"]
+        assert "opening_transition.type=direct_continuation" in result["comparison_notes"]
+        assert "protagonist_state shape=mood:set, equipment:list[1]" in result["comparison_notes"]
+        assert "binding_advisories=none" in result["comparison_notes"]
+        assert result["selected_candidate_advisory"]["quality_risk"] is False
+        assert len(result["candidate_advisories"]) == 1
+
+    def test_compare_and_select_single_candidate_surfaces_binding_advisory_context(self, director):
+        candidate = {
+            "integrated_scenario": "A" * 1000,
+            "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+            "opening_transition": {"type": "explicit_transition"},
+            "protagonist_state": {"mood": "긴장", "injuries": "없음"},
+            "_ensemble_meta": {
+                "strategy": "steady",
+                "python_warnings": [
+                    {
+                        "severity": "CRITICAL",
+                        "category": "episode_progression",
+                        "message": "replayed scene family from previous episode",
+                    }
+                ],
+                "quality_risk": True,
+            },
+        }
+        result = director.compare_and_select_blueprint(
+            candidates=[candidate], arc_data={"tactical_doc": "전술서 내용"}, ep_num=9
+        )
+        assert result["decision"] == "REJECT"
+        assert "binding_advisories=episode_progression" in result["comparison_notes"]
+        assert result["selection_reason"] == result["reason"]
+        assert result["selected_candidate_advisory"]["quality_risk"] is True
+        assert result["selected_candidate_advisory"]["python_warnings"][0]["category"] == "episode_progression"
 
     def test_compare_and_select_single_candidate_reject_short(self, director):
         """20. Single candidate with short integrated_scenario gets REJECT."""
@@ -410,6 +446,8 @@ class TestDirectorEnsemble:
                     "start_location": "서울",
                     "end_location": "부산",
                     "time_flow": "하루",
+                    "opening_transition": {"type": "direct_continuation"},
+                    "protagonist_state": {"mood": "냉정", "equipment": ["서류가방", "주문표"]},
                     "ending_hook": "다음 화 떡밥",
                     "_ensemble_meta": {
                         "strategy": "steady",
@@ -432,7 +470,47 @@ class TestDirectorEnsemble:
         assert "위치: 인천, 훅: 이전 훅" in prompt
         assert "[Python Advisory]" in prompt
         assert "Need stronger carry-over" in prompt
+        assert "opening_transition.type: direct_continuation" in prompt
+        assert "protagonist_state shape: mood:set, equipment:list[2]" in prompt
+        assert "binding_advisories: none" in prompt
         assert "[시나리오 전문]" in prompt
+
+    def test_build_blueprint_compare_prompt_includes_binding_advisory_badges(self, director):
+        prompt = director._ensemble._build_blueprint_compare_prompt(
+            candidates=[
+                {
+                    "integrated_scenario": "A" * 1200,
+                    "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                    "opening_transition": {"type": "explicit_transition"},
+                    "protagonist_state": {"mood": "긴장", "injuries": "없음", "equipment": ["서류가방"]},
+                    "_ensemble_meta": {
+                        "strategy": "steady",
+                        "python_warnings": [
+                            {
+                                "severity": "MAJOR",
+                                "category": "opening_transition",
+                                "message": "opening_transition.type mismatch",
+                            },
+                            {
+                                "severity": "MAJOR",
+                                "category": "protagonist_state",
+                                "message": "protagonist_state placeholder shell",
+                            },
+                            {
+                                "severity": "CRITICAL",
+                                "category": "episode_progression",
+                                "message": "replayed scene family from previous episode",
+                            },
+                        ],
+                    },
+                }
+            ],
+            arc_data={"tactical_doc": "전술서 본문"},
+            ep_num=9,
+            prev_blueprint={"end_location": "VIP룸", "ending_hook": "이전 훅"},
+        )
+
+        assert "binding_advisories: opening_transition, protagonist_state, episode_progression" in prompt
 
     def test_build_blueprint_compare_result_payload_normalizes_advisories_and_revision_required(self, director):
         candidates = [
@@ -2215,6 +2293,44 @@ class TestLane2DirectorEnsembleSemantics:
         assert result["selected_arc"] is arcs[0]
         assert result["quality_gate_triggered"] is True
         assert "Fallback" in result["comparison_notes"]
+
+    def test_compare_and_select_blueprint_ask_exception_fallback_preserves_advisory_surface(self, director):
+        candidates = [
+            {
+                "integrated_scenario": "A" * 1000,
+                "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                "opening_transition": {"type": "explicit_transition"},
+                "protagonist_state": {"mood": "긴장", "injuries": "없음"},
+                "_ensemble_meta": {
+                    "strategy": "steady",
+                    "python_warnings": [
+                        {
+                            "severity": "CRITICAL",
+                            "category": "episode_progression",
+                            "message": "replayed scene family from previous episode",
+                        }
+                    ],
+                    "quality_risk": True,
+                },
+            },
+            {
+                "integrated_scenario": "B" * 1000,
+                "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                "opening_transition": {"type": "direct_continuation"},
+                "protagonist_state": {"mood": "냉정"},
+            },
+        ]
+        director._ensemble._d.ask = MagicMock(side_effect=RuntimeError("API 장애"))
+
+        result = director.compare_and_select_blueprint(candidates=candidates, arc_data={"tactical_doc": "x"}, ep_num=9)
+
+        assert result["decision"] == "REJECT"
+        assert result["selected_index"] == 0
+        assert result["selected_blueprint"] == candidates[0]
+        assert result["selection_reason"] == result["reason"]
+        assert "폴백 선택 (비교 실패)" in result["comparison_notes"]
+        assert "binding_advisories=episode_progression" in result["comparison_notes"]
+        assert result["selected_candidate_advisory"]["quality_risk"] is True
 
     def test_compare_and_select_arc_index_clamping(self, director):
         """LLM이 selected_index 범위 초과 → 0으로 클램프."""

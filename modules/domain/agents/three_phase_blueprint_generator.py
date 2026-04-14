@@ -204,6 +204,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         patch_contract = normalized_fix_pack if isinstance(normalized_fix_pack, dict) else {}
         patch_packet: dict = {}
         use_patch_ir = False
+        if normalized_fix_pack is not None and isinstance(normalized_fix_pack, dict) and not patch_contract:
+            logging.info("[InPlace] empty Stage3 fix_pack -> full regenerate fallback")
+            return None
         if supports_blueprint_patch_ir(patch_contract):
             patch_packet = build_blueprint_patch_packet(
                 original_blueprint=original_blueprint,

@@ -282,6 +282,18 @@ class TestBlueprintInplacePatchMode:
         assert result["emotion_curve"] == "수정됨"
         assert result["episode_number"] == 1
 
+    def test_inplace_patch_short_circuits_on_empty_fix_pack(self, blueprint_generator, sample_blueprint, sample_arc_data):
+        result = blueprint_generator._inplace_patch_blueprint(
+            original_blueprint=sample_blueprint,
+            director_feedback="빈 계약으로는 로컬 수정 금지",
+            ep_num=1,
+            arc_data=sample_arc_data,
+            normalized_fix_pack={},
+        )
+
+        assert result is None
+        blueprint_generator.ensemble.ask.assert_not_called()
+
     def test_inplace_patch_ir_updates_targeted_field_values(self, blueprint_generator, sample_arc_data):
         original_blueprint = {
             "ep_num": 1,
@@ -660,6 +672,32 @@ class TestBlueprintPatchIntegration:
         assert pipeline["revision_required"] is True
         assert pipeline["phases"]["generate"]["selected_strategy"] == "steady"
         assert pipeline["phases"]["generate"]["selected_score"] == 91
+
+    def test_record_phase3_validation_payload_does_not_backfill_selection_reason_from_comparison_notes(
+        self, blueprint_generator
+    ):
+        pipeline = {"phases": {"generate": {}, "validate": {}}}
+        validation_result = {
+            "issues": [],
+            "confidence": 88,
+            "score": 91,
+            "phase": "director_compare+python_prevalidate",
+            "selected_index": 1,
+            "comparison_notes": "candidate 2 is stronger on arc delivery",
+            "verdict_reason": "pass but keep advisory visible",
+        }
+
+        blueprint_generator.runtime._record_phase3_validation_payload(
+            pipeline_result=pipeline,
+            validation_result=validation_result,
+            verdict="PASS",
+            selected_strategy="steady",
+            all_candidates=[{"ep_num": 1}],
+            score=91,
+        )
+
+        assert pipeline["phases"]["validate"]["selection_reason"] == ""
+        assert pipeline["phases"]["validate"]["comparison_notes"] == "candidate 2 is stronger on arc delivery"
 
     def test_apply_phase3_quality_gate_downgrades_low_score_pass(self, blueprint_generator):
         with patch("modules.domain.agents.three_phase_blueprint_runtime._threshold", return_value=95):
@@ -1306,6 +1344,33 @@ class TestBlueprintPatchIntegration:
             for warning in retry_state.prev_validation_warnings
         )
 
+    def test_build_stage3_retry_feedback_payload_keeps_non_binding_critical_tail_when_binding_preferred(self):
+        from modules.domain.agents.three_phase_blueprint_runtime import _build_stage3_retry_feedback_payload
+
+        payload = _build_stage3_retry_feedback_payload(
+            {
+                "binding_regenerate_only_reason": "Structural binding prevalidation requires regenerate-only repair",
+                "issues": [
+                    {"severity": "CRITICAL", "category": "opening_anchor", "issue": "opening anchor drift"},
+                    {"severity": "CRITICAL", "category": "scene_completeness", "issue": "scene 2 incomplete"},
+                    {"severity": "CRITICAL", "category": "episode_progression", "issue": "replay drift"},
+                    {"severity": "MAJOR", "category": "arc_timeline", "issue": "timeline exceeds arc"},
+                    {"severity": "MAJOR", "category": "mission_clarity", "issue": "mission packet missing"},
+                    {"severity": "MAJOR", "category": "protagonist_state", "issue": "state shell is empty"},
+                    {
+                        "severity": "CRITICAL",
+                        "category": "temporal_deictic",
+                        "issue": "ending hook invents a far-future memory anchor",
+                    },
+                ],
+            },
+            prefer_binding=True,
+        )
+
+        assert "binding_regenerate_only:" in payload
+        assert "opening_anchor: opening anchor drift" in payload
+        assert "temporal_deictic: ending hook invents a far-future memory anchor" in payload
+
     def test_apply_validation_reject_state_tracks_inplace_plateau_counters(self, blueprint_generator):
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
 
@@ -1341,6 +1406,129 @@ class TestBlueprintPatchIntegration:
             "inplace_signature_plateau:inplace|substantive|director" in warning
             for warning in retry_state.prev_validation_warnings
         )
+
+    def test_apply_validation_reject_state_emits_directive_block_with_allowed_values(self, blueprint_generator):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        retry_state = _ThreePhaseRetryState()
+
+        blueprint_generator.runtime._apply_validation_reject_state(
+            validation_result={
+                "feedback": "generic reject",
+                "issues": [
+                    {
+                        "category": "opening_transition",
+                        "issue": "opening_transition.type mismatch: declared=scene_jump normalized=direct_continuation",
+                    }
+                ],
+                "fix_scope": "full",
+            },
+            retry_state=retry_state,
+            score=61,
+            selected_strategy="balanced",
+            best_blueprint={"ep_num": 2},
+        )
+
+        assert any(
+            "allowed_values=[direct_continuation, explicit_transition, scene_jump]" in warning
+            for warning in retry_state.prev_validation_warnings
+        )
+
+    def test_apply_validation_reject_state_leads_with_binding_directives_when_binding_origin(self, blueprint_generator):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        retry_state = _ThreePhaseRetryState()
+
+        blueprint_generator.runtime._apply_validation_reject_state(
+            validation_result={
+                "feedback": "director praise should not lead",
+                "issues": [
+                    {
+                        "category": "opening_transition",
+                        "issue": "opening_transition.type mismatch: declared=scene_jump normalized=direct_continuation",
+                    }
+                ],
+                "fix_scope": "full",
+                "reject_origin": "pass_with_fix_unresolved",
+                "binding_regenerate_only_reason": "binding issues require regenerate-only repair: opening_transition",
+            },
+            retry_state=retry_state,
+            score=72,
+            selected_strategy="balanced",
+            best_blueprint={"ep_num": 2},
+        )
+
+        assert retry_state.prev_reject_feedback.startswith("binding_regenerate_only:")
+        assert "director praise should not lead" not in retry_state.prev_reject_feedback
+
+    def test_build_retry_strategy_feedback_omits_fix_scope_and_local_patch_gate_lines(self, blueprint_generator):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        retry_state = _ThreePhaseRetryState(
+            prev_reject_feedback="retry this",
+            prev_fix_scope="full",
+            prev_local_patch_gate={
+                "resolved_fix_scope": "full",
+                "target_kind": "scene_block",
+                "local_patch_ready": False,
+                "reason": "missing_local_contract",
+            },
+            prev_validation_warnings=["opening_transition: retry with declared type"],
+        )
+
+        feedback = blueprint_generator.runtime._build_retry_strategy_feedback(retry_state)
+
+        assert "[Director fix_scope]" not in feedback
+        assert "[Local patch gate]" not in feedback
+        assert "local_patch_gate:" not in feedback
+        assert "[이전 검증 경고]" in feedback
+
+    def test_apply_validation_reject_state_keeps_local_patch_gate_out_of_retry_warnings(self, blueprint_generator):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        retry_state = _ThreePhaseRetryState()
+        ready_contract = _ready_stage3_local_contract()
+
+        blueprint_generator.runtime._apply_validation_reject_state(
+            validation_result={
+                "feedback": "structural reject",
+                "issues": [],
+                "fix_scope": "inplace",
+                "fix_pack": ready_contract["fix_pack"],
+            },
+            retry_state=retry_state,
+            score=61,
+            selected_strategy="balanced",
+            best_blueprint={"ep_num": 1},
+        )
+
+        assert retry_state.prev_local_patch_gate["reason"] == "missing_authoritative_fix_scope"
+        assert not any(
+            warning.startswith("local_patch_gate:") for warning in retry_state.prev_validation_warnings
+        )
+
+    def test_apply_validation_reject_state_keeps_prev_selection_reason_blank_without_explicit_selection_reason(
+        self, blueprint_generator
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        retry_state = _ThreePhaseRetryState()
+
+        blueprint_generator.runtime._apply_validation_reject_state(
+            validation_result={
+                "feedback": "structural reject",
+                "comparison_notes": "candidate B preserved continuity better",
+                "summary": "legacy summary text",
+                "issues": [],
+                "fix_scope": "full",
+            },
+            retry_state=retry_state,
+            score=61,
+            selected_strategy="balanced",
+            best_blueprint={"ep_num": 1},
+        )
+
+        assert retry_state.prev_selection_reason == ""
 
     def test_run_phase2_generation_blocks_inplace_after_pass_with_fix_unresolved(
         self, blueprint_generator, sample_arc_data
@@ -2338,7 +2526,8 @@ class TestBlueprintPatchIntegration:
         assert pipeline["final_verdict"] == "PASS"
         inplace_call = blueprint_generator._inplace_patch_blueprint.call_args.kwargs
         assert inplace_call["original_blueprint"] == bp1
-        assert inplace_call["director_feedback"] == "로컬 수정만으론 부족"
+        assert inplace_call["director_feedback"].startswith("[Stage3 partial-fix contract]")
+        assert "로컬 수정만으론 부족" in inplace_call["director_feedback"]
         assert inplace_call["ep_num"] == 1
         assert inplace_call["arc_data"] == sample_arc_data
         normalized_fix_pack = inplace_call["normalized_fix_pack"]
@@ -2354,6 +2543,10 @@ class TestBlueprintPatchIntegration:
         assert record["summary"] == expected["summary"]
         assert record["patch_target_id"].startswith("pt:")
         assert blueprint_generator.ensemble.generate_ensemble.call_count == 2
+        fallback_kwargs = blueprint_generator.ensemble.generate_ensemble.call_args_list[1].kwargs
+        assert fallback_kwargs["fix_pack"]["must_fix"] == ready_contract["fix_pack"]["must_fix"]
+        assert fallback_kwargs["repair_contract"]["target_kind"] == ready_contract["repair_contract"]["target_kind"]
+        assert fallback_kwargs["attempt_num"] == 2
 
     def test_compare_mode_quality_risk_persists_in_pipeline(self, blueprint_generator, sample_arc_data):
         bp_a = {
@@ -2573,6 +2766,7 @@ class TestBlueprintPatchIntegration:
         second_kwargs = blueprint_generator.ensemble.generate_ensemble.call_args_list[1].kwargs
         assert second_kwargs["single_strategy"] == "steady"
         assert second_kwargs["rejected_strategy"] == "steady"
+        assert second_kwargs["attempt_num"] == 2
 
     def test_pass_with_fix_full_routes_to_full_regenerate(self, blueprint_generator, sample_arc_data):
         """PASS_WITH_FIX + full은 inplace/partial이 아니라 전체 재생성으로 위임된다."""
@@ -2611,6 +2805,7 @@ class TestBlueprintPatchIntegration:
         second_kwargs = blueprint_generator.ensemble.generate_ensemble.call_args_list[1].kwargs
         assert second_kwargs.get("single_strategy") is None
         assert second_kwargs["rejected_strategy"] == "steady"
+        assert second_kwargs["attempt_num"] == 2
 
     def test_pass_with_fix_high_change_ratio_is_warning_only(self, blueprint_generator, sample_arc_data, caplog):
         """Stage 3 F-2는 high change ratio에서도 warning-only로 남고 PASS를 막지 않는다."""

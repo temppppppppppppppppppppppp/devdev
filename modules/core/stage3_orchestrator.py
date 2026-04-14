@@ -25,6 +25,13 @@ from modules.core.fact_ledger import summarize_fact_ledger_numbers_block
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.project_support import build_style_guide_summary, resolve_project_pov_contract
+from modules.core.rationale_contract import (
+    resolve_comparison_notes_text,
+    first_nonempty_text,
+    resolve_selection_reason_text,
+    resolve_structured_advisory_payload,
+    resolve_verdict_reason_text,
+)
 from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.core.tactical_utils import extract_episode_tactical
 
@@ -109,11 +116,25 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
 
 
 def _first_stage3_text(*values: object) -> str:
-    for value in values:
-        text = str(value or "").strip()
-        if text:
-            return text
-    return ""
+    return first_nonempty_text(*values)
+
+
+def _resolve_stage3_validate_rationale(validate: dict | None, pipeline_result: dict | None = None) -> tuple[str, str, str]:
+    validate = validate if isinstance(validate, dict) else {}
+    pipeline_result = pipeline_result if isinstance(pipeline_result, dict) else {}
+    selection_reason = resolve_selection_reason_text(
+        validate.get("selection_reason", ""),
+        validate.get("feedback", ""),
+        validate.get("summary", ""),
+    )
+    verdict_reason = resolve_verdict_reason_text(
+        validate.get("verdict_reason", ""),
+        validate.get("feedback", ""),
+        pipeline_result.get("error", ""),
+        selection_reason,
+    )
+    comparison_notes = resolve_comparison_notes_text(validate.get("comparison_notes", ""))
+    return selection_reason, verdict_reason, comparison_notes
 
 
 def _build_stage3_fix_pack_retry_directives(validate: dict | None) -> str:
@@ -299,6 +320,11 @@ def _build_stage3_source_anchor_summary(arc_data: dict | None, blueprint_window:
     prev_blueprint = blueprint_window[-1] if isinstance(blueprint_window, list) and blueprint_window else {}
     if not isinstance(prev_blueprint, dict):
         prev_blueprint = {}
+    arc_ep_start_raw = arc_payload.get("ep_start")
+    try:
+        arc_ep_start = int(arc_ep_start_raw) if arc_ep_start_raw not in (None, "") else 0
+    except (TypeError, ValueError):
+        arc_ep_start = 0
 
     start_location = _clip_stage3_anchor_text(start_state.get("location") or joint_docs.get("final_location") or "", 80)
     start_inventory = start_state.get("equipment", [])
@@ -320,16 +346,25 @@ def _build_stage3_source_anchor_summary(arc_data: dict | None, blueprint_window:
     prev_ep = prev_blueprint.get("ep_num") or prev_blueprint.get("episode_number")
     if prev_ep not in (None, ""):
         summary["previous_blueprint_ep"] = prev_ep
+    current_ep = 0
+    if prev_ep not in (None, ""):
+        try:
+            current_ep = int(prev_ep) + 1
+        except (TypeError, ValueError):
+            current_ep = 0
+    if not current_ep and arc_ep_start > 0:
+        current_ep = arc_ep_start
+    is_arc_opening_episode = bool(arc_ep_start > 0 and current_ep == arc_ep_start)
     if prev_end_location:
         summary["previous_blueprint_end_location"] = prev_end_location
     prev_transition_type = _clip_stage3_anchor_text(prev_transition.get("type", ""), 40)
     if prev_transition_type:
         summary["previous_blueprint_opening_transition_type"] = prev_transition_type
-    if start_location:
+    if start_location and (is_arc_opening_episode or not prev_end_location):
         summary["current_arc_start_location"] = start_location
-    if inventory_count:
+    if inventory_count and (is_arc_opening_episode or not prev_end_location):
         summary["current_arc_start_inventory_count"] = inventory_count
-    if inventory_preview:
+    if inventory_preview and (is_arc_opening_episode or not prev_end_location):
         summary["current_arc_start_inventory_preview"] = inventory_preview
     if semantic_keys:
         summary["semantic_carryover_keys"] = semantic_keys[:6]
@@ -341,9 +376,9 @@ def _build_stage3_source_anchor_summary(arc_data: dict | None, blueprint_window:
         anchor_surfaces.append("prev_blueprint_end_location")
     if prev_transition_type:
         anchor_surfaces.append("prev_blueprint_opening_transition")
-    if start_location:
+    if start_location and (is_arc_opening_episode or not prev_end_location):
         anchor_surfaces.append("arc_start_location")
-    if inventory_count:
+    if inventory_count and (is_arc_opening_episode or not prev_end_location):
         anchor_surfaces.append("arc_start_inventory")
     if semantic_keys:
         anchor_surfaces.append("semantic_carryover")
@@ -2776,21 +2811,10 @@ class Stage3Orchestrator:
             seen.add(marker)
             lines.append(f"      {label}: {text}")
 
-        selection_reason = str(
-            validate.get("selection_reason")
-            or validate.get("comparison_notes")
-            or validate.get("feedback")
-            or validate.get("summary")
-            or ""
-        ).strip()
-        verdict_reason = str(
-            validate.get("verdict_reason")
-            or validate.get("feedback")
-            or pipeline_result.get("error")
-            or selection_reason
-            or ""
-        ).strip()
-        comparison_notes = str(validate.get("comparison_notes", "") or "").strip()
+        selection_reason, verdict_reason, comparison_notes = _resolve_stage3_validate_rationale(
+            validate,
+            pipeline_result,
+        )
         open_review = str(validate.get("open_review", "") or "").strip()
         fix_scope_reasoning = str(validate.get("fix_scope_reasoning", "") or "").strip()
 
@@ -2862,6 +2886,10 @@ class Stage3Orchestrator:
         ).strip()
         fix_pack = validate.get("fix_pack")
         fix_pack = dict(fix_pack) if isinstance(fix_pack, dict) and fix_pack else {}
+        comparison_notes = resolve_comparison_notes_text(validate.get("comparison_notes", ""))
+        selected_candidate_advisory_struct = resolve_structured_advisory_payload(
+            validate.get("selected_candidate_advisory")
+        )
         payload = {
             "ep_num": ep_num,
             "verdict": str(verdict or ""),
@@ -2890,6 +2918,10 @@ class Stage3Orchestrator:
             payload["repair_contract"] = repair_contract
         if scope_authority:
             payload["scope_authority"] = scope_authority
+        if comparison_notes:
+            payload["comparison_notes"] = comparison_notes
+        if selected_candidate_advisory_struct:
+            payload["selected_candidate_advisory_struct"] = selected_candidate_advisory_struct
         return payload
 
     @staticmethod
@@ -2917,6 +2949,8 @@ class Stage3Orchestrator:
         scope_authority: dict | None = None,
         runtime_advisory: str = "",
         retry_directives: str = "",
+        comparison_notes: str = "",
+        selected_candidate_advisory_struct: dict | None = None,
     ) -> None:
         if not session_logger:
             return
@@ -2940,6 +2974,12 @@ class Stage3Orchestrator:
             **({"scope_authority": dict(scope_authority)} if isinstance(scope_authority, dict) else {}),
             runtime_advisory=str(runtime_advisory or ""),
             retry_directives=str(retry_directives or ""),
+            comparison_notes=str(comparison_notes or ""),
+            **(
+                {"selected_candidate_advisory_struct": dict(selected_candidate_advisory_struct)}
+                if isinstance(selected_candidate_advisory_struct, dict) and selected_candidate_advisory_struct
+                else {}
+            ),
             attempt_key=str(attempt_key or ""),
             candidate_key=str(candidate_key or ""),
             content_hash=str(content_hash or ""),
@@ -2974,6 +3014,14 @@ class Stage3Orchestrator:
         scope_authority = _compact_stage3_scope_authority(validate.get("scope_authority"))
         if scope_authority:
             resolved_advisory_flags["scope_authority"] = scope_authority
+        comparison_notes = resolve_comparison_notes_text(validate.get("comparison_notes", ""))
+        if comparison_notes:
+            resolved_advisory_flags["comparison_notes"] = comparison_notes
+        selected_candidate_advisory_struct = resolve_structured_advisory_payload(
+            validate.get("selected_candidate_advisory")
+        )
+        if selected_candidate_advisory_struct:
+            resolved_advisory_flags["selected_candidate_advisory_struct"] = selected_candidate_advisory_struct
         if repair_contract or scope_authority:
             gate_semantics = resolved_advisory_flags.get("gate_semantics")
             gate_semantics = dict(gate_semantics) if isinstance(gate_semantics, dict) else {}
@@ -2992,6 +3040,7 @@ class Stage3Orchestrator:
         payload = {
             "stage": 3,
             "verdict": str(verdict),
+            "initial_verdict": str(validate.get("verdict", "") or selection_kwargs.get("verdict", "") or ""),
             "attempt_num": packet.attempt_num,
             "ep_num": ep_num,
             "arc_num": arc_no,
@@ -3079,24 +3128,14 @@ class Stage3Orchestrator:
             return None
 
         verdict = str(pipeline_result.get("final_verdict") or validate.get("verdict") or "").strip()
+        initial_verdict = str(validate.get("verdict") or verdict or "").strip()
         if not verdict:
             return None
 
         selected_index = validate.get("selected_index", 0)
-        selection_reason = str(
-            validate.get("selection_reason")
-            or validate.get("comparison_notes")
-            or validate.get("feedback")
-            or validate.get("summary")
-            or ""
-        ).strip()
-        verdict_reason = str(
-            validate.get("verdict_reason")
-            or validate.get("feedback")
-            or pipeline_result.get("error")
-            or selection_reason
-            or ""
-        ).strip()
+        selection_reason, verdict_reason, comparison_notes = _resolve_stage3_validate_rationale(
+            validate, pipeline_result
+        )
         fix_scope = str(validate.get("fix_scope", "") or "").strip()
 
         _advisory = dict(advisory_flags or {})
@@ -3125,17 +3164,11 @@ class Stage3Orchestrator:
         if scope_authority:
             _advisory["scope_authority"] = scope_authority
         selected_candidate_advisory = validate.get("selected_candidate_advisory", {})
-        if isinstance(selected_candidate_advisory, dict) and selected_candidate_advisory:
-            _warning_messages: list[str] = []
-            for item in selected_candidate_advisory.get("python_warnings", []):
-                if isinstance(item, dict):
-                    _message = str(item.get("message", "") or "").strip()
-                else:
-                    _message = str(item or "").strip()
-                if _message:
-                    _warning_messages.append(_message)
-            if _warning_messages:
-                _advisory["selected_candidate_advisory"] = _warning_messages
+        selected_candidate_advisory_struct = resolve_structured_advisory_payload(selected_candidate_advisory)
+        if comparison_notes:
+            _advisory["comparison_notes"] = comparison_notes
+        if selected_candidate_advisory_struct:
+            _advisory["selected_candidate_advisory_struct"] = selected_candidate_advisory_struct
 
         phase = str(validate.get("phase", "") or "").strip()
         candidate_count = validate.get("candidate_count")
@@ -3154,7 +3187,7 @@ class Stage3Orchestrator:
             "round_num": attempt_num,
             "selected_label": Stage3Orchestrator._stage3_selected_label(selected_index),
             "selected_strategy": str(selected_strategy or ""),
-            "verdict": verdict,
+            "verdict": initial_verdict or verdict,
             "stage": 3,
             "score": int(score or 0),
             "selection_reason": selection_reason,

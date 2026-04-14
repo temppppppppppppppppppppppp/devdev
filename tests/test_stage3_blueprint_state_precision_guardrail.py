@@ -301,6 +301,42 @@ class TestOpeningStateAuthority:
         assert block["inherited_state"]["equipment"] == ["BlackBerry 7130", "Ecuador memo"]
         assert block["inherited_state"]["injuries"] == "없음"
 
+    def test_compile_prefers_prev_blueprint_state_within_arc(self):
+        compiler = BlueprintConstraintCompiler()
+        block = compiler.compile(
+            arc_data={
+                "ep_start": 7,
+                "ep_count": 6,
+                "arc_no": 2,
+                "tactical_doc": "제9화: 포지션 진입",
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "본가 개인 서재",
+                        "equipment": ["BlackBerry 7130", "Ecuador memo"],
+                        "injuries": "없음",
+                    }
+                },
+            },
+            ep_num=9,
+            prev_blueprint={
+                "end_location": "한미증권 청담동 지점 15층 VIP룸",
+                "scene_breakdown": {
+                    "scene_4": {
+                        "location": "한미증권 청담동 지점 15층 VIP룸",
+                        "characters": ["한시우", "박성호"],
+                    }
+                },
+                "protagonist_state": {
+                    "equipment": ["가죽 서류가방", "WTI 포지션 주문표"],
+                    "injuries": "오른손 타박상",
+                },
+            },
+        )
+
+        assert block["continuity"]["location"] == "한미증권 청담동 지점 15층 VIP룸"
+        assert block["inherited_state"]["equipment"] == ["가죽 서류가방", "WTI 포지션 주문표"]
+        assert block["inherited_state"]["injuries"] == "오른손 타박상"
+
 
 # ============================================================
 # Tranche B: Capital-State Continuity Packet
@@ -601,6 +637,36 @@ class TestTemporalDeicticDriftDetection:
         )
         temporal_issues = [i for i in issues if i["category"] == "temporal_deictic"]
         assert len(temporal_issues) >= 1
+
+    def test_allows_canonical_regressor_memory_anchor_from_arc_truth(self):
+        issues = UnifiedBlueprintValidator._collect_temporal_deictic_drift_issues(
+            blueprint={"ending_hook": "18년 후의 기억이 다시 떠올랐다"},
+            arc_data={
+                "constraint_summary": "주인공은 회귀자이며 18년 후의 기억을 투자 판단의 근거로 사용한다.",
+                "bible_root": {"protagonist_config": {"incarnation_type": "회귀자"}},
+            },
+            constraint_block={"arc_constraint_summary": "18년 후의 기억은 정본 continuity anchor다."},
+        )
+        assert issues == []
+
+    def test_regressor_identity_alone_does_not_allow_mismatched_large_temporal_offset(self):
+        issues = UnifiedBlueprintValidator._collect_temporal_deictic_drift_issues(
+            blueprint={"ending_hook": "99년 후의 기억이 떠올랐다"},
+            arc_data={
+                "constraint_summary": "주인공은 회귀자이며 18년 후의 기억을 투자 판단의 근거로 사용한다.",
+                "bible_root": {"protagonist_config": {"incarnation_type": "회귀자"}},
+            },
+            constraint_block={"arc_constraint_summary": "18년 후의 기억은 정본 continuity anchor다."},
+        )
+        assert any(issue["category"] == "temporal_deictic" for issue in issues)
+
+    def test_still_flags_unanchored_large_temporal_offset_without_arc_truth(self):
+        issues = UnifiedBlueprintValidator._collect_temporal_deictic_drift_issues(
+            blueprint={"ending_hook": "12년 후의 진실이 떠올랐다"},
+            arc_data={"bible_root": {"protagonist_config": {"incarnation_type": "일반"}}},
+            constraint_block={"arc_constraint_summary": "현재 화는 일반 스릴러 플롯이다."},
+        )
+        assert any(issue["category"] == "temporal_deictic" for issue in issues)
 
     def test_no_issue_for_normal_ending_hook(self):
         issues = UnifiedBlueprintValidator._collect_temporal_deictic_drift_issues(

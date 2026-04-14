@@ -8,6 +8,12 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
+from modules.core.rationale_contract import (
+    resolve_comparison_notes_text,
+    resolve_selection_reason_text,
+    resolve_structured_advisory_payload,
+    resolve_verdict_reason_text,
+)
 from modules.core.soft_failure import report_soft_failure
 from modules.core.stage4_raw_evidence import summarize_stage4_raw_rationale_rows
 
@@ -797,23 +803,25 @@ class FailureAnalyzer:
                                 meta.get("selection_artifact_path", row.get("selection_artifact_path", "")) or ""
                             ).strip(),
                             "reason": str(meta.get("reason", row.get("reason", "")) or "").strip(),
-                            "selection_reason": str(
-                                meta.get(
-                                    "selection_reason",
-                                    row.get("selection_reason", meta.get("reason", row.get("reason", ""))),
-                                )
-                                or ""
-                            ).strip(),
-                            "verdict_reason": str(
-                                meta.get(
-                                    "verdict_reason",
-                                    row.get(
-                                        "verdict_reason",
-                                        meta.get("reason", row.get("reason", "")),
-                                    ),
-                                )
-                                or ""
-                            ).strip(),
+                            "selection_reason": resolve_selection_reason_text(
+                                meta.get("selection_reason", ""),
+                                row.get("selection_reason", ""),
+                                meta.get("reason", ""),
+                                row.get("reason", ""),
+                            ),
+                            "verdict_reason": resolve_verdict_reason_text(
+                                meta.get("verdict_reason", ""),
+                                row.get("verdict_reason", ""),
+                                meta.get("reason", ""),
+                                row.get("reason", ""),
+                            ),
+                            "comparison_notes": resolve_comparison_notes_text(
+                                meta.get("comparison_notes", ""),
+                                row.get("comparison_notes", ""),
+                            ),
+                            "selected_candidate_advisory_struct": resolve_structured_advisory_payload(
+                                meta.get("selected_candidate_advisory_struct"),
+                            ),
                             "fix_scope": str(meta.get("fix_scope", row.get("fix_scope", "")) or "").strip(),
                             "runtime_advisory": str(
                                 meta.get("runtime_advisory", row.get("runtime_advisory", "")) or ""
@@ -930,6 +938,8 @@ class FailureAnalyzer:
             ("artifact_path", 3),
             ("selection_reason", 2),
             ("verdict_reason", 2),
+            ("comparison_notes", 1),
+            ("selected_candidate_advisory_struct", 1),
             ("fix_scope", 1),
         )
         score = 0
@@ -1282,6 +1292,10 @@ class FailureAnalyzer:
                     "selection_reason": str(row["selection_reason"] or "").strip(),
                     "verdict_reason": str(row["verdict_reason"] or "").strip(),
                     "fix_scope": str(row["fix_scope"] or "").strip(),
+                    "comparison_notes": resolve_comparison_notes_text(advisory_flags.get("comparison_notes", "")),
+                    "selected_candidate_advisory_struct": resolve_structured_advisory_payload(
+                        advisory_flags.get("selected_candidate_advisory_struct")
+                    ),
                     "runtime_advisory": str(row["runtime_advisory"] or "").strip(),
                     "retry_directives": str(row["retry_directives"] or "").strip(),
                     "patch_strategy": str(row["patch_strategy"] or "").strip(),
@@ -1439,6 +1453,10 @@ class FailureAnalyzer:
                     "selection_reason": str(row["selection_reason"] or "").strip(),
                     "verdict_reason": str(row["verdict_reason"] or "").strip(),
                     "fix_scope": str(row["fix_scope"] or "").strip(),
+                    "comparison_notes": resolve_comparison_notes_text(advisory_warnings.get("comparison_notes", "")),
+                    "selected_candidate_advisory_struct": resolve_structured_advisory_payload(
+                        advisory_warnings.get("selected_candidate_advisory_struct")
+                    ),
                     "runtime_advisory": str(advisory_warnings.get("runtime_advisory", "") or "").strip(),
                     "retry_directives": str(advisory_warnings.get("retry_directives", "") or "").strip(),
                     **self._extract_gate_repair_bundle(
@@ -1510,10 +1528,15 @@ class FailureAnalyzer:
                 "candidate_key": "" if lifecycle_only else str(row.get("candidate_key", "") or "").strip(),
                 "content_hash": "" if lifecycle_only else str(row.get("content_hash", "") or "").strip(),
                 "artifact_path": "" if lifecycle_only else str(row.get("artifact_path", "") or "").strip(),
-                "selection_reason": str(row.get("selection_reason", row.get("reason", "")) or "").strip(),
-                "verdict_reason": str(
-                    row.get("verdict_reason", row.get("reason", row.get("selection_reason", ""))) or ""
-                ).strip(),
+                "selection_reason": resolve_selection_reason_text(
+                    row.get("selection_reason", ""),
+                    row.get("reason", ""),
+                ),
+                "verdict_reason": resolve_verdict_reason_text(
+                    row.get("verdict_reason", ""),
+                    row.get("reason", ""),
+                    row.get("selection_reason", ""),
+                ),
                 "selection_candidate_key": (
                     ""
                     if lifecycle_only
@@ -2337,6 +2360,8 @@ class FailureAnalyzer:
         results = {
             "selection_reason_mismatches": [],
             "verdict_reason_mismatches": [],
+            "comparison_notes_mismatches": [],
+            "selected_candidate_advisory_mismatches": [],
             "fix_scope_mismatches": [],
             "runtime_advisory_mismatches": [],
             "retry_directives_mismatches": [],
@@ -2353,6 +2378,12 @@ class FailureAnalyzer:
             rationale_values_by_field.setdefault("verdict_reason", {})["stage_attempts"] = str(
                 stage_attempts[attempt_key].get("verdict_reason", "") or ""
             ).strip()
+            rationale_values_by_field.setdefault("comparison_notes", {})["stage_attempts"] = stage_attempts[
+                attempt_key
+            ].get("comparison_notes", "")
+            rationale_values_by_field.setdefault("selected_candidate_advisory_struct", {})["stage_attempts"] = (
+                stage_attempts[attempt_key].get("selected_candidate_advisory_struct", {})
+            )
             rationale_values_by_field.setdefault("fix_scope", {})["stage_attempts"] = str(
                 stage_attempts[attempt_key].get("fix_scope", "") or ""
             ).strip()
@@ -2370,6 +2401,12 @@ class FailureAnalyzer:
             rationale_values_by_field.setdefault("verdict_reason", {})["director_selections"] = director_selections[
                 attempt_key
             ]["verdict_reason"]
+            rationale_values_by_field.setdefault("comparison_notes", {})["director_selections"] = director_selections[
+                attempt_key
+            ].get("comparison_notes", "")
+            rationale_values_by_field.setdefault("selected_candidate_advisory_struct", {})["director_selections"] = (
+                director_selections[attempt_key].get("selected_candidate_advisory_struct", {})
+            )
             rationale_values_by_field.setdefault("fix_scope", {})["director_selections"] = director_selections[
                 attempt_key
             ]["fix_scope"]
@@ -2387,6 +2424,12 @@ class FailureAnalyzer:
             rationale_values_by_field.setdefault("verdict_reason", {})["session_decisions"] = str(
                 session_decisions[attempt_key].get("verdict_reason", "") or ""
             ).strip()
+            rationale_values_by_field.setdefault("comparison_notes", {})["session_decisions"] = session_decisions[
+                attempt_key
+            ].get("comparison_notes", "")
+            rationale_values_by_field.setdefault("selected_candidate_advisory_struct", {})["session_decisions"] = (
+                session_decisions[attempt_key].get("selected_candidate_advisory_struct", {})
+            )
             rationale_values_by_field.setdefault("fix_scope", {})["session_decisions"] = str(
                 session_decisions[attempt_key].get("fix_scope", "") or ""
             ).strip()
@@ -2408,6 +2451,8 @@ class FailureAnalyzer:
         for field_name, result_key in (
             ("selection_reason", "selection_reason_mismatches"),
             ("verdict_reason", "verdict_reason_mismatches"),
+            ("comparison_notes", "comparison_notes_mismatches"),
+            ("selected_candidate_advisory_struct", "selected_candidate_advisory_mismatches"),
             ("fix_scope", "fix_scope_mismatches"),
         ):
             values_by_sink = rationale_values_by_field.get(field_name, {})
@@ -2476,6 +2521,8 @@ class FailureAnalyzer:
             "artifact_metadata_missing": [],
             "selection_reason_mismatches": [],
             "verdict_reason_mismatches": [],
+            "comparison_notes_mismatches": [],
+            "selected_candidate_advisory_mismatches": [],
             "fix_scope_mismatches": [],
             "runtime_advisory_mismatches": [],
             "retry_directives_mismatches": [],
@@ -2575,6 +2622,11 @@ class FailureAnalyzer:
         consistency_results: dict[str, object],
         raw_rationale_by_attempt: dict[str, dict[str, object]],
     ) -> dict[str, object]:
+        consistency_results = {
+            "comparison_notes_mismatches": [],
+            "selected_candidate_advisory_mismatches": [],
+            **dict(consistency_results or {}),
+        }
         session_scoped_attempts = sum(
             1 for attempt_key in attempts_considered if self._attempt_key_has_session_scope(attempt_key)
         )
@@ -2670,6 +2722,8 @@ class FailureAnalyzer:
                 "artifact_metadata_missing",
                 "selection_reason_mismatches",
                 "verdict_reason_mismatches",
+                "comparison_notes_mismatches",
+                "selected_candidate_advisory_mismatches",
                 "fix_scope_mismatches",
                 "runtime_advisory_mismatches",
                 "retry_directives_mismatches",
@@ -2728,6 +2782,8 @@ class FailureAnalyzer:
                 consistency_results["artifact_metadata_missing"],
                 consistency_results["selection_reason_mismatches"],
                 consistency_results["verdict_reason_mismatches"],
+                consistency_results["comparison_notes_mismatches"],
+                consistency_results["selected_candidate_advisory_mismatches"],
                 consistency_results["fix_scope_mismatches"],
                 consistency_results["runtime_advisory_mismatches"],
                 consistency_results["retry_directives_mismatches"],
@@ -2798,6 +2854,10 @@ class FailureAnalyzer:
             "artifact_metadata_missing": consistency_results["artifact_metadata_missing"][:10],
             "selection_reason_mismatches": consistency_results["selection_reason_mismatches"][:10],
             "verdict_reason_mismatches": consistency_results["verdict_reason_mismatches"][:10],
+            "comparison_notes_mismatches": consistency_results["comparison_notes_mismatches"][:10],
+            "selected_candidate_advisory_mismatches": consistency_results["selected_candidate_advisory_mismatches"][
+                :10
+            ],
             "fix_scope_mismatches": consistency_results["fix_scope_mismatches"][:10],
             "runtime_advisory_mismatches": consistency_results["runtime_advisory_mismatches"][:10],
             "retry_directives_mismatches": consistency_results["retry_directives_mismatches"][:10],

@@ -9,6 +9,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from modules.core.rationale_contract import (
+    resolve_comparison_notes_text,
+    resolve_selection_reason_text,
+    resolve_structured_advisory_payload,
+    resolve_verdict_reason_text,
+)
+
 
 def _coerce_int(value: object) -> int | None:
     try:
@@ -172,6 +179,10 @@ def _stage3_blueprint_truth(project_root: Path, project_label: str) -> list[dict
                 "artifact_sha256": _sha256(artifact_path),
                 "selection_reason": str(meta.get("selection_reason", "") or ""),
                 "verdict_reason": str(meta.get("verdict_reason", "") or ""),
+                "comparison_notes": resolve_comparison_notes_text(meta.get("comparison_notes", "")),
+                "selected_candidate_advisory_struct": resolve_structured_advisory_payload(
+                    meta.get("selected_candidate_advisory_struct")
+                ),
             }
         )
     return rows
@@ -209,8 +220,19 @@ def _stage4_terminal_truth(
                 "artifact_sha256": _sha256(artifact_path),
                 "selection_artifact_path": _display_project_path(project_label, selection_artifact_rel),
                 "final_verdict": str(row.get("final_verdict", row.get("verdict", "")) or ""),
-                "selection_reason": str(row.get("selection_reason", "") or ""),
-                "verdict_reason": str(row.get("verdict_reason", row.get("reason", "")) or ""),
+                "selection_reason": resolve_selection_reason_text(
+                    row.get("selection_reason", ""),
+                    row.get("reason", ""),
+                ),
+                "verdict_reason": resolve_verdict_reason_text(
+                    row.get("verdict_reason", ""),
+                    row.get("reason", ""),
+                    row.get("selection_reason", ""),
+                ),
+                "comparison_notes": resolve_comparison_notes_text(row.get("comparison_notes", "")),
+                "selected_candidate_advisory_struct": resolve_structured_advisory_payload(
+                    row.get("selected_candidate_advisory_struct")
+                ),
                 "open_review": str(row.get("open_review", "") or ""),
                 "first_line": _first_nonempty_line(artifact_path),
                 "last_narrative_line": _last_narrative_line(artifact_path),
@@ -238,8 +260,19 @@ def _episode_4_to_5_continuity(
             "round": _coerce_int(row.get("round")),
             "candidate_key": str(row.get("candidate_key", "") or ""),
             "artifact_path": artifact_path.replace("\\", "/"),
-            "selection_reason": str(row.get("selection_reason", "") or ""),
-            "verdict_reason": str(row.get("verdict_reason", row.get("reason", "")) or ""),
+            "selection_reason": resolve_selection_reason_text(
+                row.get("selection_reason", ""),
+                row.get("reason", ""),
+            ),
+            "verdict_reason": resolve_verdict_reason_text(
+                row.get("verdict_reason", ""),
+                row.get("reason", ""),
+                row.get("selection_reason", ""),
+            ),
+            "comparison_notes": resolve_comparison_notes_text(row.get("comparison_notes", "")),
+            "selected_candidate_advisory_struct": resolve_structured_advisory_payload(
+                row.get("selected_candidate_advisory_struct")
+            ),
             "open_review": str(row.get("open_review", "") or ""),
         }
         if final_verdict == "REJECT":
