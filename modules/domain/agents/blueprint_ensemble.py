@@ -38,6 +38,7 @@ from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _SYSTEM_CFG, AgentErrorType, BaseAgent
 from .scene_cardinality_contract import evaluate_stage3_scene_cardinality
+from .stage3_prompt_envelope import build_stage3_archive_appendix, build_stage3_prompt_envelope_meta
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
@@ -315,6 +316,65 @@ def _append_constraint_section(lines: list[str], header: str, band_lines: list[s
     lines.append("")
 
 
+def _format_episode_state_packet_lines(packet: dict | None) -> list[str]:
+    payload = packet if isinstance(packet, dict) else {}
+    if not payload:
+        return []
+    packet_lines: list[str] = [
+        "[EpisodeStatePacket - authoritative pre-generation carryover]",
+        "  이 packet이 Stage3의 단일 carryover truth surface다. 아래 legacy continuity/state는 이 packet에서 파생된 값으로 읽어라.",
+    ]
+    opening_truth = payload.get("opening_truth") if isinstance(payload.get("opening_truth"), dict) else {}
+    protagonist_truth = payload.get("protagonist_truth") if isinstance(payload.get("protagonist_truth"), dict) else {}
+    location = str(opening_truth.get("location", "") or "").strip()
+    if location:
+        packet_lines.append(f"  - opening.location: {_fit_compact_context(location, 120)}")
+    location_source = str(opening_truth.get("location_source", "") or "").strip()
+    if location_source:
+        packet_lines.append(f"    source: {_fit_compact_context(location_source, 100)}")
+    time_context = str(opening_truth.get("time_context", "") or "").strip()
+    if time_context:
+        packet_lines.append(f"  - opening.time_context: {_fit_compact_context(time_context, 120)}")
+    time_source = str(opening_truth.get("time_source", "") or "").strip()
+    if time_source:
+        packet_lines.append(f"    source: {_fit_compact_context(time_source, 100)}")
+    protagonist_sources = protagonist_truth.get("sources") if isinstance(protagonist_truth.get("sources"), dict) else {}
+    equipment = protagonist_truth.get("equipment")
+    if equipment:
+        if isinstance(equipment, list):
+            equipment_text = ", ".join(str(item or "").strip() for item in equipment[:5] if str(item or "").strip())
+        else:
+            equipment_text = str(equipment or "").strip()
+        if equipment_text:
+            packet_lines.append(f"  - protagonist.equipment: {_fit_compact_context(equipment_text, 120)}")
+    injuries = str(protagonist_truth.get("injuries", "") or "").strip()
+    if injuries:
+        packet_lines.append(f"  - protagonist.injuries: {_fit_compact_context(injuries, 120)}")
+    if isinstance(protagonist_sources, dict):
+        for key in ("equipment", "injuries", "mood", "companions", "internal_energy"):
+            source_text = str(protagonist_sources.get(key, "") or "").strip()
+            if source_text:
+                packet_lines.append(f"    {key}.source: {_fit_compact_context(source_text, 100)}")
+    dropped_conflicts = payload.get("dropped_conflicts") or []
+    if isinstance(dropped_conflicts, list) and dropped_conflicts:
+        packet_lines.append("  - dropped_conflicts:")
+        for item in dropped_conflicts[:3]:
+            if not isinstance(item, dict):
+                continue
+            field = str(item.get("field", "") or "").strip()
+            reason = str(item.get("reason", "") or "").strip()
+            dropped_value = str(item.get("dropped_value", "") or "").strip()
+            line_parts = [part for part in [field, reason, dropped_value] if part]
+            if line_parts:
+                packet_lines.append(f"    · {_fit_compact_context(' | '.join(line_parts), 120)}")
+    rewrite_required = payload.get("rewrite_required_reasons") or []
+    if isinstance(rewrite_required, list) and rewrite_required:
+        packet_lines.append(
+            f"  - rewrite_required_reasons: {', '.join(_fit_compact_context(item, 40) for item in rewrite_required[:5])}"
+        )
+    return packet_lines
+
+
 class BlueprintEnsembleGenerator(BaseAgent):
     """
     [V60.80] Blueprint Ensemble Generator
@@ -406,7 +466,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
         tactical_excerpt = str(must_focus.get("content", "") or "").strip() if isinstance(must_focus, dict) else ""
         if not tactical_excerpt:
             tactical_excerpt = str(arc_focus or "").strip()
-        prev_info = self._format_prev_info_expanded(prev_blueprint, prev_blueprints, prev_manuscripts_text)
+        archive_appendix_text, archive_appendix_meta = build_stage3_archive_appendix(prev_manuscripts_text)
+        prev_info = self._format_prev_info_expanded(
+            prev_blueprint,
+            prev_blueprints,
+            prev_manuscripts_text,
+            archive_appendix_text=archive_appendix_text,
+        )
         hud_context = self._build_hud_context(state_tracker, ep_num)
 
         try:
@@ -432,6 +498,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             "hud_context": hud_context,
             "cache_name": cache_info.get("cache_name"),
             "constraint_block": constraint_block if isinstance(constraint_block, dict) else {},
+            "archive_appendix_meta": archive_appendix_meta,
         }
 
     def _select_blueprint_ensemble_strategies(self, single_strategy: str) -> list[dict]:
@@ -699,6 +766,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         ep_num: int,
         arc_data: dict,
         attempt_num: int | None = None,
+        prompt_envelope_meta: dict | None = None,
     ) -> tuple[dict, list[dict]]:
         self._operator_log(
             f"🧥 [Blueprint] {len(qualified_candidates)}개 후보 통과 -> Director 선택 대기",
@@ -732,6 +800,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 "length": candidate.get("_length", 0),
                 "total_candidates": len(qualified_candidates),
                 "disqualified": disqualified,
+                "prompt_envelope": dict(prompt_envelope_meta or {}),
             }
             candidate.pop("_strategy", None)
             candidate.pop("_qualified", None)
@@ -792,6 +861,30 @@ class BlueprintEnsembleGenerator(BaseAgent):
         active_strategies = self._select_blueprint_ensemble_strategies(single_strategy)
         self.last_error_type = None
         self.last_error_types = []
+        feedback_context = str(feedback or "").strip()
+        repair_guidance = _build_stage3_retry_repair_guidance(fix_pack, repair_contract)
+        if repair_guidance:
+            feedback_context = f"{repair_guidance}\n\n{feedback_context}".strip() if feedback_context else repair_guidance
+        feedback_context = self._compress_retry_feedback(feedback_context)
+        prompt_envelope_meta = build_stage3_prompt_envelope_meta(
+            constraints_str=context_bundle["constraints_str"],
+            arc_focus=context_bundle["arc_focus"],
+            prev_info=context_bundle["prev_info"],
+            hud_context=context_bundle["hud_context"],
+            feedback_context=feedback_context,
+            archive_appendix_meta=context_bundle.get("archive_appendix_meta"),
+        )
+        strategy_feedback_chars = len(str(strategy_specific_feedback or ""))
+        if strategy_feedback_chars > 0:
+            prompt_envelope_meta["strategy_feedback_chars"] = strategy_feedback_chars
+        top_lanes = ", ".join(
+            f"{item['lane']}={item['chars']}" for item in (prompt_envelope_meta.get("dominant_lanes") or [])[:3]
+        )
+        self._operator_log(
+            f"[Blueprint] prompt envelope total={prompt_envelope_meta.get('total_chars', 0)}자"
+            + (f" ({top_lanes})" if top_lanes else ""),
+            meta={"phase": "generate", "prompt_envelope": prompt_envelope_meta},
+        )
 
         candidates, worker_error_types = self._run_blueprint_ensemble_workers(
             ep_num=ep_num,
@@ -833,6 +926,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             ep_num=ep_num,
             arc_data=arc_data,
             attempt_num=attempt_num,
+            prompt_envelope_meta=prompt_envelope_meta,
         )
 
     def _generate_single(
@@ -1281,6 +1375,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         Band hierarchy (conflict resolution order):
           IMMUTABLE > HARD CONSTRAINT > EXPECTED CONTINUITY > ADVISORY
         """
+        episode_state_packet = (
+            constraint_block.get("episode_state_packet") if isinstance(constraint_block.get("episode_state_packet"), dict) else {}
+        )
         # ── Band 1: IMMUTABLE (확정 사실, 변경 불가) ──
         immutable_lines: list[str] = []
 
@@ -1393,6 +1490,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # ── Band 3: EXPECTED CONTINUITY (계승 필수, 불일치 시 경고) ──
         continuity_lines: list[str] = []
+
+        if episode_state_packet:
+            continuity_lines.extend(_format_episode_state_packet_lines(episode_state_packet))
 
         continuity = constraint_block.get("continuity", {})
         if isinstance(continuity, dict):
@@ -1899,7 +1999,12 @@ class BlueprintEnsembleGenerator(BaseAgent):
         return "\n".join(lines)
 
     def _format_prev_info_expanded(
-        self, prev_blueprint: dict | None, prev_blueprints: list[dict] | None = None, prev_manuscripts_text: str = ""
+        self,
+        prev_blueprint: dict | None,
+        prev_blueprints: list[dict] | None = None,
+        prev_manuscripts_text: str = "",
+        *,
+        archive_appendix_text: str | None = None,
     ) -> str:
         """[V67] 이전 Blueprint/원고 확장 정보 포맷팅 (Gemini 대용량 컨텍스트 활용)"""
         sections = []
@@ -1939,13 +2044,17 @@ class BlueprintEnsembleGenerator(BaseAgent):
             )
 
         # ── [V67] 이전 원고 전문 ──
-        if prev_manuscripts_text:
+        archive_appendix = archive_appendix_text
+        if archive_appendix is None:
+            archive_appendix, _ = build_stage3_archive_appendix(prev_manuscripts_text)
+        if archive_appendix:
             ms_section = (
                 "\n[Context Tier 4 - Archive Appendix / lower priority than Tier 1-3]\n"
                 f"\n[V67] ═══ 이전 원고 전문 ═══\n"
                 f"아래는 이전 에피소드의 최종 원고입니다. 이 내용과 모순되는 Blueprint를 절대 생성하지 마세요.\n"
+                f"기본 경로에서는 overload 방지를 위해 archive appendix가 demotion/truncation될 수 있습니다.\n"
                 f"특히: 사망한 캐릭터 재등장, 이미 일어난 이벤트 반복, 위치/시간 불연속에 주의하세요.\n\n"
-                f"{prev_manuscripts_text}"
+                f"{archive_appendix}"
             )
             # 400K자 상한 (Gemini 1.05M 토큰 입력 여유)
             if len(ms_section) > 400000:

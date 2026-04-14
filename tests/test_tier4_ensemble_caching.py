@@ -281,10 +281,19 @@ def test_blueprint_ensemble_uses_shared_context_cache_name():
     agent._get_or_create_context_cache = MagicMock(return_value={"cache_name": "cache/bp"})
 
     candidate = {
-        "scene_breakdown": [{"scene": 1}, {"scene": 2}, {"scene": 3}, {"scene": 4}],
+        "scene_breakdown": [
+            {"title": "s1", "summary": "주인공이 단서를 확인한다.", "key_events": ["단서를 확보한다."]},
+            {"title": "s2", "summary": "주인공이 대응책을 정리한다.", "key_events": ["작전을 조정한다."]},
+            {"title": "s3", "summary": "주인공이 상대 반응을 읽는다.", "key_events": ["상대 의도를 파악한다."]},
+            {"title": "s4", "summary": "주인공이 다음 수를 결정한다.", "key_events": ["다음 행동을 확정한다."]},
+        ],
         "integrated_scenario": "x" * 600,
+        "opening_transition": {"type": "direct_continuation"},
+        "protagonist_state": {"mood": "긴장", "objective": "상황을 통제한다"},
     }
     agent._generate_single = MagicMock(return_value=candidate)
+    agent._qualify_blueprint_candidates = MagicMock(return_value=([candidate], []))
+    agent._finalize_blueprint_candidates = MagicMock(return_value=(candidate, [candidate]))
 
     best, _ = agent.generate_ensemble(
         ep_num=11,
@@ -354,6 +363,7 @@ def test_blueprint_ensemble_cached_path_uses_stub_prompt_and_full_fallback():
             {
                 "scene_breakdown": [{"scene": 1}, {"scene": 2}, {"scene": 3}, {"scene": 4}],
                 "integrated_scenario": "x" * 600,
+                "opening_transition": {"type": "direct_continuation"},
             },
             ensure_ascii=False,
         )
@@ -364,6 +374,7 @@ def test_blueprint_ensemble_cached_path_uses_stub_prompt_and_full_fallback():
         ep_num=11,
         arc_focus="ARC_FOCUS_PAYLOAD",
         constraints_str="CONSTRAINTS_PAYLOAD",
+        tactical_excerpt="TACTICAL_PAYLOAD",
         prev_info="PREV_INFO_PAYLOAD",
         strategy={"display": "액션", "directive": "지시문"},
         hud_context="HUD_PAYLOAD",
@@ -460,10 +471,19 @@ def test_blueprint_ensemble_arc_focus_preserves_tail_context():
     agent._get_or_create_context_cache = MagicMock(return_value={"cache_name": "cache/bp"})
 
     candidate = {
-        "scene_breakdown": [{"scene": 1}, {"scene": 2}, {"scene": 3}, {"scene": 4}],
+        "scene_breakdown": [
+            {"title": "s1", "summary": "주인공이 압박을 버틴다.", "key_events": ["압박을 받아낸다."]},
+            {"title": "s2", "summary": "주인공이 반격 흐름을 만든다.", "key_events": ["반격 타이밍을 잡는다."]},
+            {"title": "s3", "summary": "주인공이 상대 약점을 확인한다.", "key_events": ["약점을 포착한다."]},
+            {"title": "s4", "summary": "주인공이 다음 비트를 준비한다.", "key_events": ["다음 수를 예고한다."]},
+        ],
         "integrated_scenario": "x" * 600,
+        "opening_transition": {"type": "direct_continuation"},
+        "protagonist_state": {"mood": "날 선 집중", "objective": "흐름을 유지한다"},
     }
     agent._generate_single = MagicMock(return_value=candidate)
+    agent._qualify_blueprint_candidates = MagicMock(return_value=([candidate], []))
+    agent._finalize_blueprint_candidates = MagicMock(return_value=(candidate, [candidate]))
 
     must_focus = "HEAD-FOCUS\n" + ("A" * 20000) + "\nTAIL-FOCUS"
     best, _ = agent.generate_ensemble(

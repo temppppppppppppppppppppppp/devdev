@@ -5,6 +5,7 @@
 
 import json
 import logging
+import time
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -311,6 +312,16 @@ class TestStageAttemptObservability:
                     "previous_blueprint_end_location": "서재 앞 복도",
                     "current_arc_start_location": "SW인베스트먼트 사무실",
                 },
+                "episode_state_packet_summary": {
+                    "opening_location": "한미증권 청담동 지점 15층 VIP룸",
+                    "opening_location_source": "prev_blueprint.scene_breakdown.last.location",
+                    "dropped_conflict_count": 1,
+                    "rewrite_required_reasons": ["mid_arc_arc_start_location_override_blocked"],
+                },
+                "prompt_envelope": {
+                    "total_chars": 4820,
+                    "budget_ledger": {"budget_bucket": "stage3.prompt_envelope_total_chars"},
+                },
             },
         }
 
@@ -334,6 +345,9 @@ class TestStageAttemptObservability:
         assert (
             kwargs["advisory_flags"]["source_anchor_summary"]["current_arc_start_location"] == "SW인베스트먼트 사무실"
         )
+        assert kwargs["advisory_flags"]["episode_state_packet_summary"]["opening_location"] == "한미증권 청담동 지점 15층 VIP룸"
+        assert kwargs["advisory_flags"]["episode_state_packet_summary"]["dropped_conflict_count"] == 1
+        assert kwargs["advisory_flags"]["prompt_envelope"]["total_chars"] == 4820
         assert kwargs["runtime_advisory"] == "semantic context drift warning"
         assert kwargs["retry_directives"] == "keep the anchor packet stable on the next pass"
         assert any("source_anchor:" in str(call.args[0]) for call in app_mock.ui.log.call_args_list if call.args)
@@ -376,6 +390,67 @@ class TestStageAttemptObservability:
         assert kwargs["advisory_flags"]["semantic_ctx_sources"] == ["legacy_semantic_context"]
         assert kwargs["runtime_advisory"] == "continuity drift needs review"
         assert kwargs["retry_directives"] == "repair the opening continuity before the next retry"
+
+    def test_finalize_stage3_pipeline_result_promotes_episode_state_packet_summary(self, orch):
+        pipeline_result = {
+            "final_verdict": "PASS",
+            "phases": {
+                "constraint": {
+                    "episode_state_packet_summary": {
+                        "opening_location": "한미증권 청담동 지점 15층 VIP룸",
+                        "opening_location_source": "prev_blueprint.scene_breakdown.last.location",
+                        "dropped_conflict_count": 1,
+                    }
+                }
+            },
+        }
+
+        result = orch._finalize_stage3_blueprint_pipeline_result(
+            pipeline_result=pipeline_result,
+            started_at=time.perf_counter(),
+            started_cost_usd=0.0,
+            semantic_bundle={
+                "semantic_ctx": "short semantic ctx",
+                "source_counts": {"vec_memory": 1},
+                "coverage_warnings": [],
+                "work_focus": {},
+                "observation": {},
+            },
+        )
+
+        summary = result["_stage3_observability"]["episode_state_packet_summary"]
+        assert summary["opening_location"] == "한미증권 청담동 지점 15층 VIP룸"
+        assert summary["dropped_conflict_count"] == 1
+
+    def test_finalize_stage3_pipeline_result_promotes_prompt_envelope(self, orch):
+        pipeline_result = {
+            "final_verdict": "PASS",
+            "phases": {
+                "generate": {
+                    "prompt_envelope": {
+                        "total_chars": 4820,
+                        "budget_ledger": {"budget_bucket": "stage3.prompt_envelope_total_chars"},
+                    }
+                }
+            },
+        }
+
+        result = orch._finalize_stage3_blueprint_pipeline_result(
+            pipeline_result=pipeline_result,
+            started_at=time.perf_counter(),
+            started_cost_usd=0.0,
+            semantic_bundle={
+                "semantic_ctx": "short semantic ctx",
+                "source_counts": {"vec_memory": 1},
+                "coverage_warnings": [],
+                "work_focus": {},
+                "observation": {},
+            },
+        )
+
+        prompt_envelope = result["_stage3_observability"]["prompt_envelope"]
+        assert prompt_envelope["total_chars"] == 4820
+        assert prompt_envelope["budget_ledger"]["budget_bucket"] == "stage3.prompt_envelope_total_chars"
 
     def test_handle_success_persists_stage3_director_selection(self, orch, app_mock, tmp_path):
         app_mock.current_project.paths = MagicMock()

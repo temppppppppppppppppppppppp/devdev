@@ -100,6 +100,10 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
     source_anchor_summary = (
         meta.get("source_anchor_summary") if isinstance(meta.get("source_anchor_summary"), dict) else {}
     )
+    episode_state_packet_summary = (
+        meta.get("episode_state_packet_summary") if isinstance(meta.get("episode_state_packet_summary"), dict) else {}
+    )
+    prompt_envelope = meta.get("prompt_envelope") if isinstance(meta.get("prompt_envelope"), dict) else {}
     flags = {
         "semantic_ctx_chars": int(meta.get("semantic_ctx_chars") or 0),
         "semantic_ctx_sources": sorted(source_counts.keys()),
@@ -111,6 +115,8 @@ def _build_stage3_observability_flags(meta: dict | None) -> dict:
         "provenance_ledger": provenance_ledger,
         "budget_ledger": budget_ledger,
         "source_anchor_summary": source_anchor_summary,
+        "episode_state_packet_summary": episode_state_packet_summary,
+        "prompt_envelope": prompt_envelope,
     }
     return {key: value for key, value in flags.items() if value not in ("", [], {}, None, 0, False)}
 
@@ -1825,6 +1831,7 @@ class Stage3Orchestrator:
                     "anchor_count": len(_prev_ms_for_bp),
                     "blueprint_window_count": len(_blueprint_window),
                     "semantic_ctx_chars": len(_bp_semantic_ctx),
+                    "prev_manuscript_chars": len(_prev_ms_text_for_bp),
                     "wait_state": "three_phase_blueprint_runtime",
                 },
             )
@@ -1971,6 +1978,7 @@ class Stage3Orchestrator:
         if not isinstance(pipeline_result, dict):
             pipeline_result = {"final_verdict": "ERROR", "error": "invalid_pipeline_result"}
 
+        phases = pipeline_result.get("phases", {}) if isinstance(pipeline_result.get("phases"), dict) else {}
         _stage3_observation = semantic_bundle.get("observation") or {}
         _s3_plan = semantic_bundle.get("plan")
         _s3_work_focus = semantic_bundle.get("work_focus") or {}
@@ -1980,6 +1988,14 @@ class Stage3Orchestrator:
         _source_anchor_summary = {}
         if isinstance(_stage3_observation, dict):
             _source_anchor_summary = dict((_stage3_observation or {}).get("source_anchor_summary") or {})
+        _constraint_phase = phases.get("constraint", {}) if isinstance(phases, dict) else {}
+        if not isinstance(_constraint_phase, dict):
+            _constraint_phase = {}
+        _episode_state_packet_summary = dict(_constraint_phase.get("episode_state_packet_summary") or {})
+        _generate_phase = phases.get("generate", {}) if isinstance(phases, dict) else {}
+        if not isinstance(_generate_phase, dict):
+            _generate_phase = {}
+        _prompt_envelope = dict(_generate_phase.get("prompt_envelope") or {})
 
         pipeline_result["_stage3_duration_ms"] = max(0, int((_time.perf_counter() - started_at) * 1000))
         pipeline_result["_stage3_token_cost_usd"] = max(0.0, round(_peek_scope_total_cost_usd() - started_cost_usd, 6))
@@ -1993,6 +2009,8 @@ class Stage3Orchestrator:
             "provenance_ledger": dict((_stage3_observation or {}).get("provenance_ledger") or {}),
             "budget_ledger": dict((_stage3_observation or {}).get("budget_ledger") or {}),
             "source_anchor_summary": _source_anchor_summary,
+            "episode_state_packet_summary": _episode_state_packet_summary,
+            "prompt_envelope": _prompt_envelope,
         }
         return pipeline_result
 

@@ -518,3 +518,62 @@ class TestEndToEndCompileValidate:
         # Should have deployment marker from manuscript
         deployed = [f for f in fields if "투입" in f.get("label", "")]
         assert len(deployed) >= 1, f"No deployment marker found. Fields: {fields}"
+
+
+class TestEpisodeStatePacket:
+    def test_mid_arc_packet_prefers_previous_blueprint_location_and_records_dropped_arc_start_conflict(self):
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {
+            "ep_num": 8,
+            "end_location": "한미증권 청담동 지점 15층 VIP룸",
+            "time_flow": "2006년 2월 늦은 밤",
+            "protagonist_state": {
+                "equipment": ["가죽 서류가방", "CME 계좌 증빙"],
+                "injuries": "없음",
+                "companions": ["박성호"],
+                "mood": "냉정한 압박감",
+            },
+            "scene_breakdown": {
+                "scene_2": {
+                    "location": "한미증권 청담동 지점 15층 VIP룸",
+                    "characters": ["한시우", "박성호"],
+                }
+            },
+        }
+        arc_data = {
+            "ep_start": 7,
+            "ep_count": 4,
+            "arc_no": 2,
+            "joint_docs": {"final_location": "본가 개인 서재"},
+            "state_constraints": {
+                "arc_start_state": {
+                    "location": "본가 개인 서재",
+                    "equipment": ["가죽 서류가방", "삼성 애니콜 SGH-D600"],
+                    "injuries": "오른쪽 손목 결림",
+                }
+            },
+        }
+
+        constraint_block = compiler.compile(
+            arc_data=arc_data,
+            ep_num=9,
+            prev_blueprint=prev_bp,
+            prev_blueprints=[prev_bp],
+            genre="investment",
+            prev_manuscript_ending="그는 VIP룸 문을 나서며 바로 다음 협상 수를 계산했다.",
+        )
+
+        packet = constraint_block.get("episode_state_packet", {})
+        opening_truth = packet.get("opening_truth", {})
+        protagonist_truth = packet.get("protagonist_truth", {})
+
+        assert opening_truth.get("location") == "한미증권 청담동 지점 15층 VIP룸"
+        assert opening_truth.get("location_source") == "prev_blueprint.scene_breakdown.last.location"
+        assert constraint_block.get("continuity", {}).get("location") == "한미증권 청담동 지점 15층 VIP룸"
+        assert protagonist_truth.get("equipment") == ["가죽 서류가방", "CME 계좌 증빙"]
+        assert protagonist_truth.get("injuries") == "없음"
+        assert "mid_arc_arc_start_location_override_blocked" in packet.get("rewrite_required_reasons", [])
+        assert "mid_arc_arc_start_equipment_override_blocked" in packet.get("rewrite_required_reasons", [])
+        assert any(
+            item.get("field") == "opening.location" for item in packet.get("dropped_conflicts", []) if isinstance(item, dict)
+        )

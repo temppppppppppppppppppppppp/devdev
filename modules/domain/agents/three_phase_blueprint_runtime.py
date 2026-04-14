@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from modules.core.constants import PatchModeThresholds
+from modules.core.episode_state_arbiter import summarize_episode_state_packet
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.partial_fix_contract import build_partial_fix_eval, normalize_patch_target_records
 from modules.core.rationale_contract import resolve_selection_reason_text
@@ -1389,6 +1390,9 @@ class ThreePhaseBlueprintRuntime:
             "arc_no": constraint_block.get("arc_no", (arc_data or {}).get("arc_no", 0)),
             "arc_position": constraint_block.get("arc_position", ""),
         }
+        episode_state_packet_summary = summarize_episode_state_packet(constraint_block.get("episode_state_packet"))
+        if episode_state_packet_summary:
+            pipeline_result["phases"]["constraint"]["episode_state_packet_summary"] = episode_state_packet_summary
         owner.stats["phase1_complete"] += 1
         return constraint_block
 
@@ -1675,14 +1679,18 @@ class ThreePhaseBlueprintRuntime:
         )
 
         current_strategy = ""
+        prompt_envelope = {}
         if isinstance(best_blueprint, dict):
             current_strategy = best_blueprint.get("_ensemble_meta", {}).get("strategy", "")
+            prompt_envelope = dict(best_blueprint.get("_ensemble_meta", {}).get("prompt_envelope") or {})
         pipeline_result.pop("failure_reason", None)
         pipeline_result["phases"]["generate"] = {
             "status": "complete",
             "candidates_count": len(all_candidates),
             "selected_strategy": current_strategy or "unknown",
         }
+        if prompt_envelope:
+            pipeline_result["phases"]["generate"]["prompt_envelope"] = prompt_envelope
         owner.stats["phase2_complete"] += 1
         logging.info("✅ [Phase 2] Ensemble 완료 — %d개 후보 → Director 선택 대기", len(all_candidates))
         owner._operator_log(
@@ -1691,6 +1699,7 @@ class ThreePhaseBlueprintRuntime:
                 "phase": "generate",
                 "candidates_count": len(all_candidates),
                 "selected_strategy": current_strategy or "unknown",
+                "prompt_envelope": prompt_envelope,
             },
         )
         return _ThreePhasePhase2Result(best_blueprint, all_candidates)

@@ -32,6 +32,23 @@ Resume Drift Summary: `snapshot main plus the later local `0_temp.txt` continuat
 - remaining T4.2-T4.5 and gated T5 work stay deferred behind fresh rerun evidence
 - immediate local next action is no longer auto-presented; fresh Stage3 continuation or proof rerun is operator-gated under the bounded survey rule above
 
+2026-04-14 long-horizon root-cause remediation override:
+
+- Local survey HEAD: `f58059fefd10ed3f41d7bacca3b908dd47ada418`
+- the current local operator preference explicitly opens a long-horizon debt-first Stage3 lane instead of treating fresh rerun as the practical next move
+- authoritative survey:
+  - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
+- authoritative execution SSOT:
+  - `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
+  - temp mirror: `docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
+- this lane is bounded and architecture-first, not a `Polaris` / `DecisionKernel` migration
+- active target stack:
+  1. `EpisodeStateArbiter` / single pre-generation `EpisodeStatePacket`
+  2. unified Stage3 prompt-envelope budget
+  3. bounded Stage3 boundary split (`EnvelopeBuilder` / `ValidationBoundary` / `RetryCoordinator`)
+- for this local session, do not auto-present fresh Stage3 continuation or proof rerun as the practical next action while this debt-first lane remains the chosen mode
+- keep the older rerun-gate language and older item ordering below as historical backing unless this new lane is later demoted or partially realized
+
 2026-04-10 refresh override:
 
 - the older direct Stage4 consumer/repair P1 wording is now `stale-likely` under current code/test evidence
@@ -169,6 +186,7 @@ Queue Snapshot:
 - `docs/temp/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage3-quality-closure-five-tranche-remediation-execution-ssot.md`
+- `docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
 - `docs/temp/0_0-stage4-partial-fix-hardening-remediation-execution-ssot.md`
@@ -193,29 +211,29 @@ This refresh folds in the `r2` Stage4-only sinkproof result, the later analyzer/
 
 Working order:
 
-1. `0_0-stage3-contract-tightening-remediation` (bounded Stage3 functional lane owns the 2026-04-12/13 live rerun blocker family, and the bounded parent-owned fail-only slices are now landed: `blueprint_0002` over-consumption plus `blueprint_0003` replay / canonical institution drift now route through Stage3 replay suppression, expanded institution fact-lock coverage, and regenerate-only `episode_progression` gating, the child retry-plateau breaker now stops low-yield inplace reopening after `PASS_WITH_FIX unresolved` or repeated inplace score/signature plateau, the same-day quality-gate/truth follow-up now blocks `Director PASS < quality_gate` patch reopening while suppressing blind live-HUD `V46` current-state injection during blueprint scoring unless an explicit `blueprint_scoring_hud` is supplied, the narrower same-day completion-summary observability slice is now also landed so Stage3 separates current-run pass-rate authority from cumulative generator pass-rate authority, the earlier bounded parent-owned post-proof `ep6` terminal-quality-gate coherence tranche is now landed, the later same-day parent binding-family static-kill tranche now forces all MAJOR/CRITICAL binding-prevalidation residuals through regenerate-only repair while blocking inplace reopen after binding rejects, the newer same-day contract-driven repair-eligibility / success-projection tranche is now also landed so explicit Stage3 repair contracts outrank raw `fix_scope` during Phase2 reopen and success sinks preserve `PASS_WITH_FIX` semantics, the later same-day formal `ep8` root-cause survey now reclassifies the front residual as primary producer-side contract drift plus misleading failure wording, the bounded producer-side contract-alignment / route-honest failure-surface tranche is now likewise landed, the latest same-day `P2/P3` producer-follow-up tranche is now also landed so Stage2 shortlist honesty, Stage3 placeholder-state hardening, and Stage4 degraded fallback ordering are tighter on live code, tranche 1 `Stage3RepairRouter Extraction`, tranche 2 strict local-fix contract gating, tranche 3 bounded patch-IR, and the formerly front tactical-authority synonym parity tranche are all now landed locally; the authoritative 2026-04-14 bounded survey records `93%` predictive contract-debt closure, so fresh Stage3 continuation or proof rerun is threshold-cleared but still operator-gated rather than the automatic next queue step)
-2. `0_0-stage3-opening-transition-contract-normalization-remediation` (partially realized upstream contract lane; the landed opening-authority and capital-boundary follow-up remains valid, and the 2026-04-12 live rerun support slice is now also landed so this sibling now carries immediate-next-day / winter-season / blocked-scene-family carryover truth on the ep2 -> ep3 seam ahead of the next proof wave)
-3. `0_0-stage4-consumer-contract-normalization-remediation` (aggregate Stage4 wave; the current rerun shows Stage4 now behaving mainly as downstream verifier: the old ep2 truth-pin family no longer fronts the queue, while ep3 replay / season truth still gets caught post-select, so this item stays near the front for verification bookkeeping but no longer leads the next patch slice)
-4. `0_0-stage4-repair-contract-normalization-remediation` (shared repair-contract readback lane; bounded readback-surface promotion landed, the 2026-04-09 static recheck makes the older residual-P1 wording stale-likely, and this item now remains verification-pending behind the now-landed Stage3 ep3 fail-only slice rather than as the next unopened code slice)
-5. `0_0-stage234-nonwuxia-state-lock-overreach-remediation` (bounded P1 dual-owner lane; Stage2 producer plus Stage4 intake/post-pass tranches are landed, and the remaining work is fresh proof rather than a new broad patch)
-6. `0_0-stage2-contract-normalization-remediation` (verification-backed broader Stage2 lane; persistence-authority shells, Flow Guard severity split, bounded non-wuxia finalizer cleanup, and the later advisory fallback / `ep_num` / carryover-authority truth tranche are now landed on the live workspace, so this lane stays open mainly as proof-pending broader normalization rather than because those older bounded observability seams remain live)
-7. `0_0-stage4-partial-fix-hardening-remediation` (partially realized Stage4 precision lane; the first bounded schema/trace/readback tranche and later proof-operational metadata follow-up are landed, the interrupted `ep2` numauth evidence harvest has now been absorbed by a same-day code tranche that lands companion sink truth plus monitor/proof surfacing, it remains the Stage4 anchor for the partial-fix family, and fresh proof plus the later verifier tranche are still pending)
-8. `0_0-stage3-partial-fix-hardening-remediation` (partially realized Stage3 child lane; the first bounded fix-pack-lite plus `partial_fix_eval` / advisory sink tranche is landed, the later runtime hardening preserves low-score `PASS` patch state, the latest 2026-04-13 follow-up now blocks low-yield inplace reopening after `PASS_WITH_FIX unresolved` or repeated inplace plateau, a later same-day closure-residual follow-up now accepts advisory-only `scenario_density` residuals as `PASS_WITH_WARNING` without reopening the local patch lane, and the completed rerun now live-proves that exact acceptance path on `ep4/ep5`, so this lane returns to deferred verifier / exhaustion / locality debt rather than front-blocker ownership)
-9. `0_0-stage2-partial-fix-hardening-remediation` (partially realized Stage2 child lane; the first bounded fix-pack-lite plus `partial_fix_eval` / advisory sink tranche is landed, it remains the Stage2 consumer lane inside the partial-fix family, and any next child work still waits behind the parent Stage2 proof / observability tranche)
-10. `0_0-stage234-cross-stage-contract-normalization-remediation` (partially realized shared-vocabulary substrate; a first bounded alias-survival tranche is landed around `constraint_summary` family and current-episode mission packet transport into Stage4, the compact 2026-04-12 Stage4-first follow-ups are now three landed slices as `Stage4 strategy_feedback_map`, `style_guide anchor fallback reuse`, and `post-select truth-pin / retry-lane hardening`, while the current rerun follow-up now keeps later shared Stage3/S2 extension pending behind the next proof wave after the landed Stage3 ep3 slices)
-11. `0_0-stage4-interview-round-owner-surface-reduction-remediation` (partially realized structure-first owner-pressure lane; its first bounded post-select extraction is landed, and it remains below the current functional proof stack)
-11. `0_0-stage4-interview-round-owner-surface-reduction-remediation` (partially realized structure-first Stage4 module-boundary lane; first bounded post-select boundary extraction landed, later contract/session/episode/retry/raw-evidence helper work is also landed, and the current live recount still leaves dominant owner pressure at `166 direct methods / 2 180+ / 5 120+`, so proof-first sequencing still outranks renewed structure work)
-12. `stage0-treatment-enrich-retirement-remediation` (partially realized Stage0 hygiene lane; first bounded authority-demotion tranche landed while default-off hardening and later retirement/quarantine remain deferred)
-13. `stage0-bi-tr-production-harness-normalization-remediation` (partially realized long-horizon Stage0 source-of-truth lane; first bounded source-of-truth declaration tranche is landed, while runtime handoff normalization and later production-harness normalization remain deferred)
-14. `0_0-stage2-stage3-stage4-readiness-remediation` (blocked parent lane; cannot outrank executable pending work while the Stage4 front stack, the non-wuxia P1 lane, and the still-open Stage2 child slices remain unresolved)
-15. `frontier-lag-soak-canary-wave1` (older in-progress reference-validation lane; bounded soak harness work remains queue-valid but still sits below executable contract lanes)
-16. `npc-martial-state-substrate-wave1` (blocked soak/substrate lane)
-17. `0_0-stage34-ep2-single-episode-demo-canary` (completed utility lane; retained only as historical backing)
-18. `0_0-stage4-ep2-advisory-escalation-loop-remediation` (runtime-positive substrate; no longer active queue work)
-19. `0_0-stage4-canonical-entity-postselect-remediation` (runtime-positive substrate; no longer active queue work)
-20. `0_0-stage4-flashback-continuity-localfix-remediation` (completed runtime-positive substrate; historical backing only)
-21. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` (runtime-positive substrate lane; historical backing only)
-22. `0_0-stage3-quality-closure-five-tranche-remediation` (newly opened Stage3 quality-closure child lane backed by the 10-terminal parallel investigation + synthesis at 97% confidence; Tranche 1 opening-transition vocabulary coherence is landed on `main`, and the current local workspace now also carries child-lane T2 residual cleanup, full Tranche 3 retry-feedback surgery, and bounded T4.1 Director candidate-summary expansion, so this lane's remaining T4.2-T4.5/T5 work is deferred behind fresh rerun evidence rather than fronting another pre-rerun code slice; no new queue family)
+1. `0_0-stage3-state-arbiter-envelope-bounded-remediation` (new bounded long-horizon Stage3 root-cause lane; the current local operator preference now explicitly promotes pre-generation `EpisodeStateArbiter`, unified Stage3 prompt-envelope budget, and bounded Stage3 boundary split ahead of another rerun-first move, and this lane is architecture-first without widening into `Polaris` / `DecisionKernel`)
+2. `0_0-stage3-contract-tightening-remediation` (bounded Stage3 functional lane owns the 2026-04-12/13 live rerun blocker family, and the bounded parent-owned fail-only slices are now landed: `blueprint_0002` over-consumption plus `blueprint_0003` replay / canonical institution drift now route through Stage3 replay suppression, expanded institution fact-lock coverage, and regenerate-only `episode_progression` gating, the child retry-plateau breaker now stops low-yield inplace reopening after `PASS_WITH_FIX unresolved` or repeated inplace score/signature plateau, the same-day quality-gate/truth follow-up now blocks `Director PASS < quality_gate` patch reopening while suppressing blind live-HUD `V46` current-state injection during blueprint scoring unless an explicit `blueprint_scoring_hud` is supplied, the narrower same-day completion-summary observability slice is now also landed so Stage3 separates current-run pass-rate authority from cumulative generator pass-rate authority, the earlier bounded parent-owned post-proof `ep6` terminal-quality-gate coherence tranche is now landed, the later same-day parent binding-family static-kill tranche now forces all MAJOR/CRITICAL binding-prevalidation residuals through regenerate-only repair while blocking inplace reopen after binding rejects, the newer same-day contract-driven repair-eligibility / success-projection tranche is now also landed so explicit Stage3 repair contracts outrank raw `fix_scope` during Phase2 reopen and success sinks preserve `PASS_WITH_FIX` semantics, the later same-day formal `ep8` root-cause survey now reclassifies the front residual as primary producer-side contract drift plus misleading failure wording, the bounded producer-side contract-alignment / route-honest failure-surface tranche is now likewise landed, the latest same-day `P2/P3` producer-follow-up tranche is now also landed so Stage2 shortlist honesty, Stage3 placeholder-state hardening, and Stage4 degraded fallback ordering are tighter on live code, tranche 1 `Stage3RepairRouter Extraction`, tranche 2 strict local-fix contract gating, tranche 3 bounded patch-IR, and the formerly front tactical-authority synonym parity tranche are all now landed locally; the authoritative 2026-04-14 bounded survey records `93%` predictive contract-debt closure, so fresh Stage3 continuation or proof rerun is threshold-cleared but still operator-gated rather than the automatic next queue step)
+3. `0_0-stage3-opening-transition-contract-normalization-remediation` (partially realized upstream contract lane; the landed opening-authority and capital-boundary follow-up remains valid, and the 2026-04-12 live rerun support slice is now also landed so this sibling now carries immediate-next-day / winter-season / blocked-scene-family carryover truth on the ep2 -> ep3 seam ahead of the next proof wave)
+4. `0_0-stage4-consumer-contract-normalization-remediation` (aggregate Stage4 wave; the current rerun shows Stage4 now behaving mainly as downstream verifier: the old ep2 truth-pin family no longer fronts the queue, while ep3 replay / season truth still gets caught post-select, so this item stays near the front for verification bookkeeping but no longer leads the next patch slice)
+5. `0_0-stage4-repair-contract-normalization-remediation` (shared repair-contract readback lane; bounded readback-surface promotion landed, the 2026-04-09 static recheck makes the older residual-P1 wording stale-likely, and this item now remains verification-pending behind the now-landed Stage3 ep3 fail-only slice rather than as the next unopened code slice)
+6. `0_0-stage234-nonwuxia-state-lock-overreach-remediation` (bounded P1 dual-owner lane; Stage2 producer plus Stage4 intake/post-pass tranches are landed, and the remaining work is fresh proof rather than a new broad patch)
+7. `0_0-stage2-contract-normalization-remediation` (verification-backed broader Stage2 lane; persistence-authority shells, Flow Guard severity split, bounded non-wuxia finalizer cleanup, and the later advisory fallback / `ep_num` / carryover-authority truth tranche are now landed on the live workspace, so this lane stays open mainly as proof-pending broader normalization rather than because those older bounded observability seams remain live)
+8. `0_0-stage4-partial-fix-hardening-remediation` (partially realized Stage4 precision lane; the first bounded schema/trace/readback tranche and later proof-operational metadata follow-up are landed, the interrupted `ep2` numauth evidence harvest has now been absorbed by a same-day code tranche that lands companion sink truth plus monitor/proof surfacing, it remains the Stage4 anchor for the partial-fix family, and fresh proof plus the later verifier tranche are still pending)
+9. `0_0-stage3-partial-fix-hardening-remediation` (partially realized Stage3 child lane; the first bounded fix-pack-lite plus `partial_fix_eval` / advisory sink tranche is landed, the later runtime hardening preserves low-score `PASS` patch state, the latest 2026-04-13 follow-up now blocks low-yield inplace reopening after `PASS_WITH_FIX unresolved` or repeated inplace plateau, a later same-day closure-residual follow-up now accepts advisory-only `scenario_density` residuals as `PASS_WITH_WARNING` without reopening the local patch lane, and the completed rerun now live-proves that exact acceptance path on `ep4/ep5`, so this lane returns to deferred verifier / exhaustion / locality debt rather than front-blocker ownership)
+10. `0_0-stage2-partial-fix-hardening-remediation` (partially realized Stage2 child lane; the first bounded fix-pack-lite plus `partial_fix_eval` / advisory sink tranche is landed, it remains the Stage2 consumer lane inside the partial-fix family, and any next child work still waits behind the parent Stage2 proof / observability tranche)
+11. `0_0-stage234-cross-stage-contract-normalization-remediation` (partially realized shared-vocabulary substrate; a first bounded alias-survival tranche is landed around `constraint_summary` family and current-episode mission packet transport into Stage4, the compact 2026-04-12 Stage4-first follow-ups are now three landed slices as `Stage4 strategy_feedback_map`, `style_guide anchor fallback reuse`, and `post-select truth-pin / retry-lane hardening`, while the current rerun follow-up now keeps later shared Stage3/S2 extension pending behind the next proof wave after the landed Stage3 ep3 slices)
+12. `0_0-stage4-interview-round-owner-surface-reduction-remediation` (partially realized structure-first Stage4 module-boundary lane; first bounded post-select boundary extraction landed, later contract/session/episode/retry/raw-evidence helper work is also landed, and the current live recount still leaves dominant owner pressure at `166 direct methods / 2 180+ / 5 120+`, so proof-first sequencing still outranks renewed structure work)
+13. `stage0-treatment-enrich-retirement-remediation` (partially realized Stage0 hygiene lane; first bounded authority-demotion tranche landed while default-off hardening and later retirement/quarantine remain deferred)
+14. `stage0-bi-tr-production-harness-normalization-remediation` (partially realized long-horizon Stage0 source-of-truth lane; first bounded source-of-truth declaration tranche is landed, while runtime handoff normalization and later production-harness normalization remain deferred)
+15. `0_0-stage2-stage3-stage4-readiness-remediation` (blocked parent lane; cannot outrank executable pending work while the Stage4 front stack, the non-wuxia P1 lane, and the still-open Stage2 child slices remain unresolved)
+16. `frontier-lag-soak-canary-wave1` (older in-progress reference-validation lane; bounded soak harness work remains queue-valid but still sits below executable contract lanes)
+17. `npc-martial-state-substrate-wave1` (blocked soak/substrate lane)
+18. `0_0-stage34-ep2-single-episode-demo-canary` (completed utility lane; retained only as historical backing)
+19. `0_0-stage4-ep2-advisory-escalation-loop-remediation` (runtime-positive substrate; no longer active queue work)
+20. `0_0-stage4-canonical-entity-postselect-remediation` (runtime-positive substrate; no longer active queue work)
+21. `0_0-stage4-flashback-continuity-localfix-remediation` (completed runtime-positive substrate; historical backing only)
+22. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation` (runtime-positive substrate lane; historical backing only)
+23. `0_0-stage3-quality-closure-five-tranche-remediation` (newly opened Stage3 quality-closure child lane backed by the 10-terminal parallel investigation + synthesis at 97% confidence; Tranche 1 opening-transition vocabulary coherence is landed on `main`, and the current local workspace now also carries child-lane T2 residual cleanup, full Tranche 3 retry-feedback surgery, and bounded T4.1 Director candidate-summary expansion, so this lane's remaining T4.2-T4.5/T5 work is deferred behind fresh rerun evidence rather than fronting another pre-rerun code slice; no new queue family)
 
 This order now reflects the stronger runtime picture:
 
@@ -303,48 +321,51 @@ This order now reflects the stronger runtime picture:
 
 ## 4. Execution Order
 
-1. `0_0-stage3-contract-tightening-remediation`
-2. `0_0-stage3-opening-transition-contract-normalization-remediation`
-3. `0_0-stage4-consumer-contract-normalization-remediation`
-4. `0_0-stage4-repair-contract-normalization-remediation`
-5. `0_0-stage234-nonwuxia-state-lock-overreach-remediation`
-6. `0_0-stage2-contract-normalization-remediation`
-7. `0_0-stage4-partial-fix-hardening-remediation`
-8. `0_0-stage3-partial-fix-hardening-remediation`
-9. `0_0-stage2-partial-fix-hardening-remediation`
-10. `0_0-stage234-cross-stage-contract-normalization-remediation`
-11. `0_0-stage4-interview-round-owner-surface-reduction-remediation`
-12. `stage0-treatment-enrich-retirement-remediation`
-13. `stage0-bi-tr-production-harness-normalization-remediation`
-14. `0_0-stage2-stage3-stage4-readiness-remediation`
-15. `frontier-lag-soak-canary-wave1`
-16. `npc-martial-state-substrate-wave1`
-17. `0_0-stage34-ep2-single-episode-demo-canary`
-18. `0_0-stage4-ep2-advisory-escalation-loop-remediation`
-19. `0_0-stage4-canonical-entity-postselect-remediation`
-20. `0_0-stage4-flashback-continuity-localfix-remediation`
-21. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation`
-22. `0_0-stage3-quality-closure-five-tranche-remediation`
+1. `0_0-stage3-state-arbiter-envelope-bounded-remediation`
+2. `0_0-stage3-contract-tightening-remediation`
+3. `0_0-stage3-opening-transition-contract-normalization-remediation`
+4. `0_0-stage4-consumer-contract-normalization-remediation`
+5. `0_0-stage4-repair-contract-normalization-remediation`
+6. `0_0-stage234-nonwuxia-state-lock-overreach-remediation`
+7. `0_0-stage2-contract-normalization-remediation`
+8. `0_0-stage4-partial-fix-hardening-remediation`
+9. `0_0-stage3-partial-fix-hardening-remediation`
+10. `0_0-stage2-partial-fix-hardening-remediation`
+11. `0_0-stage234-cross-stage-contract-normalization-remediation`
+12. `0_0-stage4-interview-round-owner-surface-reduction-remediation`
+13. `stage0-treatment-enrich-retirement-remediation`
+14. `stage0-bi-tr-production-harness-normalization-remediation`
+15. `0_0-stage2-stage3-stage4-readiness-remediation`
+16. `frontier-lag-soak-canary-wave1`
+17. `npc-martial-state-substrate-wave1`
+18. `0_0-stage34-ep2-single-episode-demo-canary`
+19. `0_0-stage4-ep2-advisory-escalation-loop-remediation`
+20. `0_0-stage4-canonical-entity-postselect-remediation`
+21. `0_0-stage4-flashback-continuity-localfix-remediation`
+22. `0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation`
+23. `0_0-stage3-quality-closure-five-tranche-remediation`
 
 Order rationale:
 
-- priority 1 remains the promoted Stage3 contract-tightening lane because the completed rerun proves the landed `ep2 -> ep5` follow-ups are holding, the later same-day parent binding-family static-kill tranche is now landed on the current workspace, and the newer same-day cost-first survey still finds one cheaper parent-owned static tranche before rerun: contract-driven repair eligibility plus success-state projection normalization; the newly documented first-ensemble visibility slice stays as same-lane observability work rather than justification for a new family or queue reorder
-- priority 2 remains the Stage3 opening-transition sibling lane because the rerun keeps its immediate-next-day / winter-season carryover truth slice as valid landed support, even though the next direct Stage3 move now sits in the parent lane rather than another proof-only pass
-- priority 3 remains the aggregate Stage4 consumer-contract wave, but now as a downstream verifier-first lane rather than the first patch owner for this rerun family
-- priority 4 remains the repair-contract lane for closure bookkeeping because the same proof wave still has to decide whether residual mismatch volume survives, but it now sits behind the promoted Stage3 live blocker rather than in front of it
-- priority 5 remains the survey-backed non-wuxia state-lock overreach lane for queue bookkeeping because the bounded Stage4 tranche is now landed, but fresh runtime proof is still outstanding so closure cannot be claimed yet
-- priority 6 remains the broader Stage2 normalization lane because the older bounded advisory fallback / `ep_num` / carryover-truth residue is now landed on current-main, while fresh proof and larger deferred normalization still remain
-- priority 7 is the Stage4 partial-fix hardening lane because it is now the realized anchor for shared `PatchTargetRecord`, `partial_fix_eval`, Stage4-local `repair_trace` expansion, the new proof-operational metadata follow-up, and the newly landed companion-sink / monitor / numeric-surfacing proof-channel tranche, the later `canary_000_ㅇㅇㅇ_stage4_ep1_sinkproof_r1` rerun has already closed the earlier sink-alignment uncertainty inside this same lane, and the next runtime need is a fresh rerun before the later dedicated verifier tranche rather than a new queue topic, and it now stays proof-pending under the front Stage4 proof-wave stack
-- priority 8 is the Stage3 partial-fix hardening lane; it is now a partially realized child lane under Stage3 contract tightening, the first fix-pack-lite / `partial_fix_eval` sink tranche keeps it as the realized consumer after the Stage4 anchor, the 2026-04-10 aborted `00_000` fresh run made it the immediate Stage3 bug owner, the same-day bounded runtime hardening follow-up is now landed, and the latest structural split keeps the remaining work here to verifier hardening / retry exhaustion / locality preservation while the parent absorbs packet layering
-- priority 9 is the promoted Stage2 partial-fix hardening lane; it remains the most direct bounded Stage2 child slice under the still-open residual owner lane, the later merge survey still places it behind the Stage4/Stage3 anchor-consumer pair for schema and sink parity, and its first bounded tranche is now landed
-- priority 10 is the cross-stage contract substrate wave; shared leverage is real, and its first bounded activation tranche is now landed, but the broader owner/strength work still has a wider blast radius than the narrower pending slices above it
-- priority 11 is the partially realized Stage4InterviewRound owner-surface reduction lane; its first bounded post-select extraction is landed, so it stays above Stage0 hygiene for continuity of the structure-first wave but no longer counts as the next unopened slice
-- priority 12 is the partially realized Stage0 enrich retirement lane; its first bounded authority-demotion tranche is landed, so it stays explicit in the queue but no longer counts as the next unopened slice
-- priority 13 is the partially realized Stage0 BI/TR production harness normalization lane; it remains a larger upstream refactor below the nearer enrich hygiene slice in working order, and code-first continuation should stay inside this active lane rather than claim a new unopened slice
-- priority 14 is the blocked parent upstream lane and therefore cannot outrank executable pending work
-- priority 15 remains a low-priority promoted reference-validation lane
-- priority 16 remains blocked and cannot outrank an executable lane
-- priorities 17-21 are completed or runtime-positive historical backing lanes; retain them for evidence, but do not treat them as active work ahead of the pending implementation stack
+- priority 1 is now the bounded Stage3 root-cause lane because the current local operator preference explicitly shifts from rerun-first to debt-first architecture work, and the most durable live-code fix point is now documented as `EpisodeStateArbiter + unified prompt-envelope budget + bounded Stage3 boundary split`
+- priority 2 remains the promoted Stage3 contract-tightening lane because the completed rerun proves the landed `ep2 -> ep5` follow-ups are holding, the later same-day parent binding-family static-kill tranche is now landed on the current workspace, and the newer same-day cost-first survey still finds one cheaper parent-owned static tranche before rerun: contract-driven repair eligibility plus success-state projection normalization; the newly documented first-ensemble visibility slice stays as same-lane observability work rather than justification for a new family or queue reorder
+- priority 3 remains the Stage3 opening-transition sibling lane because the rerun keeps its immediate-next-day / winter-season carryover truth slice as valid landed support, even though the next direct Stage3 move now sits in the new bounded root-cause lane rather than another proof-only pass
+- priority 4 remains the aggregate Stage4 consumer-contract wave, but now as a downstream verifier-first lane rather than the first patch owner for this rerun family
+- priority 5 remains the repair-contract lane for closure bookkeeping because the same proof wave still has to decide whether residual mismatch volume survives, but it now sits behind the promoted Stage3 live blocker rather than in front of it
+- priority 6 remains the survey-backed non-wuxia state-lock overreach lane for queue bookkeeping because the bounded Stage4 tranche is now landed, but fresh runtime proof is still outstanding so closure cannot be claimed yet
+- priority 7 remains the broader Stage2 normalization lane because the older bounded advisory fallback / `ep_num` / carryover-truth residue is now landed on current-main, while fresh proof and larger deferred normalization still remain
+- priority 8 is the Stage4 partial-fix hardening lane because it is now the realized anchor for shared `PatchTargetRecord`, `partial_fix_eval`, Stage4-local `repair_trace` expansion, the new proof-operational metadata follow-up, and the newly landed companion-sink / monitor / numeric-surfacing proof-channel tranche, the later `canary_000_ㅇㅇㅇ_stage4_ep1_sinkproof_r1` rerun has already closed the earlier sink-alignment uncertainty inside this same lane, and the next runtime need is a fresh rerun before the later dedicated verifier tranche rather than a new queue topic, and it now stays proof-pending under the front Stage4 proof-wave stack
+- priority 9 is the Stage3 partial-fix hardening lane; it is now a partially realized child lane under Stage3 contract tightening, the first fix-pack-lite / `partial_fix_eval` sink tranche keeps it as the realized consumer after the Stage4 anchor, the 2026-04-10 aborted `00_000` fresh run made it the immediate Stage3 bug owner, the same-day bounded runtime hardening follow-up is now landed, and the latest structural split keeps the remaining work here to verifier hardening / retry exhaustion / locality preservation while the parent absorbs packet layering
+- priority 10 is the promoted Stage2 partial-fix hardening lane; it remains the most direct bounded Stage2 child slice under the still-open residual owner lane, the later merge survey still places it behind the Stage4/Stage3 anchor-consumer pair for schema and sink parity, and its first bounded tranche is now landed
+- priority 11 is the cross-stage contract substrate wave; shared leverage is real, and its first bounded activation tranche is now landed, but the broader owner/strength work still has a wider blast radius than the narrower pending slices above it
+- priority 12 is the partially realized Stage4InterviewRound owner-surface reduction lane; its first bounded post-select extraction is landed, so it stays above Stage0 hygiene for continuity of the structure-first wave but no longer counts as the next unopened slice
+- priority 13 is the partially realized Stage0 enrich retirement lane; its first bounded authority-demotion tranche is landed, so it stays explicit in the queue but no longer counts as the next unopened slice
+- priority 14 is the partially realized Stage0 BI/TR production harness normalization lane; it remains a larger upstream refactor below the nearer enrich hygiene slice in working order, and code-first continuation should stay inside this active lane rather than claim a new unopened slice
+- priority 15 is the blocked parent upstream lane and therefore cannot outrank executable pending work
+- priority 16 remains a low-priority promoted reference-validation lane
+- priority 17 remains blocked and cannot outrank an executable lane
+- priorities 18-22 are completed or runtime-positive historical backing lanes; retain them for evidence, but do not treat them as active work ahead of the pending implementation stack
+- priority 23 is the child Stage3 quality-closure five-tranche lane; it remains historically authoritative for tranche decomposition, but the current local operator mode now keeps it behind the new root-cause lane rather than treating it as the practical front executor
 - completed scene-flex lane is now historical backing only and is intentionally omitted from the active execution-order set unless regression evidence reopens it
 
 ## 5. Per-Item Status Ledger
@@ -577,6 +598,28 @@ Order rationale:
   - use the next fresh proof wave to decide whether any broader Stage2 normalization residue still needs reactivation; until then, keep mission-authority, alias, dead-field, Golden artifact-truth, and Stage3 `semantic_carryover` semantics deferred inside this SSOT
 - temp cleanup action:
   - keep mirror while this broader Stage2 SSOT remains partial; remove only on explicit closure or replacement
+
+### 0_0-stage3-state-arbiter-envelope-bounded-remediation
+
+- bounded root-cause survey and execution SSOT completed (2026-04-14)
+- execution SSOT: `active (Tranche A/B landed locally; Tranche C pending)`
+- primary seams:
+  - no single pre-generation authoritative `EpisodeStatePacket`
+  - no unified Stage3 whole-envelope budget across retrieval, constraints, and archive carryover
+  - duplicated Stage3-local interpretation surfaces across orchestrator, producer, validator, and retry owner
+- next action:
+  - record current local workspace truth:
+    - `Tranche A` (`EpisodeStateArbiter`) is landed locally
+    - `Tranche B` (unified Stage3 prompt-envelope budget + archive appendix demotion) is landed locally
+  - move to the next bounded tranche only:
+    - `Stage3EnvelopeBuilder`
+    - `Stage3ValidationBoundary`
+    - `Stage3RetryCoordinator`
+  - do not widen this lane into `Polaris` or `DecisionKernel`
+  - do not auto-demote it behind rerun-first wording while the current local operator preference stays debt-first
+  - keep fresh rerun proof deferred until the governing docs are re-audited after this lane's next tranche boundary
+- temp cleanup action:
+  - keep mirror while this remains the active long-horizon Stage3 bounded remediation lane; remove only on explicit closure, demotion, or replacement
 
 ### 0_0-stage3-contract-tightening-remediation
 
