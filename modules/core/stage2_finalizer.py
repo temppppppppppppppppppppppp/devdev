@@ -12,6 +12,10 @@ from typing import Any, Literal, NotRequired, TypedDict
 
 from modules.core.artifact_logging import build_candidate_key, snapshot_logged_artifact
 from modules.core.constants import VolumeSettings
+from modules.core.cross_stage_authority_packet import (
+    build_cross_stage_authority_packet,
+    resolve_cross_stage_authority_packet,
+)
 from modules.core.genre_schema_builder import is_wuxia
 from modules.core.logging_keys import build_attempt_key, resolve_logging_session_id
 from modules.core.metrics_collector import get_metrics_collector
@@ -1834,6 +1838,11 @@ class Stage2Finalizer:
             removed_sections=removed_state_noise,
             phase="post-validate shell",
         )
+        cross_stage_authority_packet = build_cross_stage_authority_packet(refined_arc)
+        if cross_stage_authority_packet:
+            refined_arc["cross_stage_authority_packet"] = cross_stage_authority_packet
+        else:
+            refined_arc.pop("cross_stage_authority_packet", None)
 
         ns2_warnings = _check_block_worldstate_alignment(enriched_block, refined_arc, global_arc_no)
         if ns2_warnings:
@@ -4157,6 +4166,9 @@ class Stage2Finalizer:
         carryover_authority = _build_stage2_carryover_authority_summary(artifact_payload)
         if carryover_authority:
             flags["carryover_authority"] = carryover_authority
+        cross_stage_authority_packet = resolve_cross_stage_authority_packet(artifact_payload)
+        if cross_stage_authority_packet:
+            flags["cross_stage_authority_packet"] = cross_stage_authority_packet
 
         return flags or None
 
@@ -4194,6 +4206,13 @@ class Stage2Finalizer:
         session_logger = getattr(self.ctx, "session_logger", None)
         current_project = getattr(self.ctx, "current_project", None)
         session_id = resolve_logging_session_id(current_project)
+        event_meta = dict(carryover)
+        cross_stage_packet = advisory_flags.get("cross_stage_authority_packet") if isinstance(advisory_flags, dict) else None
+        if isinstance(cross_stage_packet, dict) and cross_stage_packet:
+            event_meta["cross_stage_authority_packet_present"] = 1
+            event_meta["cross_stage_authority_packet_version"] = str(
+                cross_stage_packet.get("contract_version", "") or ""
+            )
         event_kwargs = {
             "session_id": session_id,
             "stage": 2,
@@ -4204,7 +4223,7 @@ class Stage2Finalizer:
             "component": "Stage2Finalizer",
             "event_kind": "carryover_authority",
             "message": message.strip(),
-            "meta": carryover,
+            "meta": event_meta,
         }
         if session_logger:
             try:
