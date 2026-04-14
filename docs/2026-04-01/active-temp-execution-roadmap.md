@@ -666,7 +666,7 @@ Order rationale:
     - re-audit governing docs against the current workspace
     - keep fresh rerun proof deferred until the post-Tranche-C document audit closes
   - after the post-Tranche-C audit:
-    - decide between fresh operator-gated rerun and the next global authority-alignment follow-up
+    - decide between fresh operator-gated rerun and continued proof-pending hold; do not reopen another global authority-alignment follow-up because `Tranche D` is already recorded
   - if the lane extends, keep it bounded:
     - `Stage3EnvelopeBuilder`
     - `Stage3ValidationBoundary`

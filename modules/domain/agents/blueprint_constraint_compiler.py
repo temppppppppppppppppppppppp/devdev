@@ -62,6 +62,22 @@ def _append_cross_stage_numeric_fields(fields: list[dict], arc_data: dict | None
         fields.append({"label": label, "value": str(value)[:150]})
 
 
+def _resolve_cross_stage_numeric_semantic_families(arc_data: dict | None) -> set[str]:
+    numeric = _coerce_mapping(_resolve_cross_stage_packet(arc_data).get("numeric_carryover"))
+    families: set[str] = set()
+    for raw_key in numeric:
+        field_name = str(raw_key or "").strip()
+        if not field_name or field_name.endswith("_source"):
+            continue
+        if field_name in {"capital", "investment_calc_final_cash"}:
+            families.add("capital")
+        elif field_name in {"total_assets", "investment_calc_final_total_assets"}:
+            families.add("total_assets")
+        elif field_name == "portfolio_position":
+            families.add("portfolio_position")
+    return families
+
+
 class BlueprintConstraintCompiler:
     """
     [V60.80] Blueprint 제약 조건 컴파일러
@@ -538,7 +554,7 @@ class BlueprintConstraintCompiler:
                 arc_start = state.get("arc_start_state", {})
                 if isinstance(arc_start, dict):
                     arc_start_location = str(arc_start.get("location", "") or "").strip()
-        if not arc_start_location and packet_location:
+        if packet_location:
             arc_start_location = packet_location
 
         if not prev_blueprint:
@@ -679,13 +695,13 @@ class BlueprintConstraintCompiler:
         if state and (is_arc_opening_episode or not prev_blueprint):
             arc_start = state.get("arc_start_state", {})
             if arc_start:
-                if arc_start.get("injuries") not in (None, ""):
+                if arc_start.get("injuries") not in (None, "") and not packet_has_injuries:
                     inherited["injuries"] = arc_start.get("injuries", inherited["injuries"])
                     arc_start_has_injuries = True
                 # [TF-41] P1-1: 무협 전용 — 비무협 장르는 내공 상속 스킵
-                if genre == "wuxia" and arc_start.get("internal_energy"):
+                if genre == "wuxia" and arc_start.get("internal_energy") and not packet_has_internal_energy:
                     inherited["internal_energy"] = f"{arc_start['internal_energy']}%"
-                if "equipment" in arc_start and arc_start.get("equipment") is not None:
+                if "equipment" in arc_start and arc_start.get("equipment") is not None and not packet_has_equipment:
                     inherited["equipment"] = arc_start.get("equipment", inherited["equipment"])
                     arc_start_has_equipment = True
 
@@ -1108,6 +1124,7 @@ class BlueprintConstraintCompiler:
         bp = prev_blueprint if isinstance(prev_blueprint, dict) else {}
         ms_text = str(prev_manuscript_ending or "").strip()
         _append_cross_stage_numeric_fields(fields, arc_data)
+        packet_numeric_families = _resolve_cross_stage_numeric_semantic_families(arc_data)
 
         def _capital_within_ep(entry: object) -> bool:
             if ep_num <= 0:
@@ -1134,6 +1151,10 @@ class BlueprintConstraintCompiler:
                 ("position", "포지션"),
                 ("investment_status", "투자 현황"),
             ]:
+                if key in {"balance", "capital"} and "capital" in packet_numeric_families:
+                    continue
+                if key == "position" and "portfolio_position" in packet_numeric_families:
+                    continue
                 val = ending_state.get(key)
                 if val:
                     fields.append({"label": label, "value": str(val)[:150]})
@@ -1146,6 +1167,10 @@ class BlueprintConstraintCompiler:
                 ("capital", "자본"),
                 ("portfolio", "포트폴리오"),
             ]:
+                if key in {"balance", "capital"} and "capital" in packet_numeric_families:
+                    continue
+                if key == "portfolio" and "portfolio_position" in packet_numeric_families:
+                    continue
                 val = protag.get(key)
                 if val:
                     fields.append({"label": label, "value": str(val)[:150]})

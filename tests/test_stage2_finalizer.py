@@ -195,6 +195,22 @@ def test_build_cross_stage_authority_packet_surfaces_stage2_transport_families()
     assert packet["provenance"]["emitted_by"] == "Stage2Finalizer"
 
 
+def test_build_cross_stage_authority_packet_preserves_authoritative_empty_equipment_clear():
+    refined_arc = {
+        "joint_docs": {"physical_inventory": ["stale-bag"]},
+        "state_constraints": {
+            "arc_end_state": {
+                "equipment": [],
+            }
+        },
+    }
+
+    packet = build_cross_stage_authority_packet(refined_arc)
+
+    assert packet["protagonist_carryover"]["equipment"] == []
+    assert packet["protagonist_carryover"]["equipment_source"] == "state_constraints.arc_end_state.equipment"
+
+
 class TestFinalizerStructure:
     def test_host_is_required_for_ctx_proxy(self):
         f = Stage2Finalizer(None)

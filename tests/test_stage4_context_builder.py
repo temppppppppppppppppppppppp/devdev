@@ -2535,6 +2535,62 @@ class TestBuildMandatoryContext:
         assert "total_assets: 20000000 (cross-stage packet; source=state_constraints.arc_end_state.total_assets)" in text
 
     @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_build_mandatory_context_supplements_fact_ledger_with_packet_only_numeric_fields(self, _mock_build):
+        ctx = _make_ctx()
+        ctx.current_project.genre = {"name": "investment", "type": "investment"}
+        ctx.sys.guard = MagicMock()
+        ctx.sys.guard.select_retrieval_focus.return_value = {
+            "tracking_slots": [],
+            "mandatory_scene_engines": [],
+            "registry_profiles": [],
+        }
+        ctx.fact_ledger = MagicMock()
+        ctx.fact_ledger.get_numbers.return_value = {
+            "capital": {
+                "value": 10000000,
+                "unit": "won",
+                "last_ep": 1,
+                "authority_scope": "carryover_baseline",
+            }
+        }
+        ctx.fact_ledger.get_canonical_summary.return_value = "[Canonical Number]"
+        ctx.fact_ledger.to_summary.return_value = ""
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=2,
+            arc_data={
+                "arc_no": 1,
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "numeric_carryover": {
+                        "capital": 10000000,
+                        "capital_source": "state_constraints.arc_end_state.capital",
+                        "total_assets": 20000000,
+                        "total_assets_source": "state_constraints.arc_end_state.total_assets",
+                    },
+                },
+            },
+            arc_tactical="Bridge prior numbers into the next episode.",
+            prev_text="previous manuscript body",
+            prev_ending="the liquidation remains unresolved",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="investment",
+            v50_modules_available=False,
+            blueprint={"summary": "A larger capital stack appears after liquidation."},
+        )
+
+        text = result["mandatory_context"]
+        assert "FactLedger carryover baseline remains the stronger surface below" in text
+        assert "capital: 10000000 won (EP1 carryover baseline)" in text
+        assert "total_assets: 20000000" in text
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
     def test_build_mandatory_context_promotes_opening_scene_authority_even_without_work_focus(self, _mock_build):
         ctx = _make_ctx()
         ctx.current_project.genre = {"name": "investment", "type": "investment"}
