@@ -113,7 +113,8 @@ def test_handle_failure_shell_uses_new_helper_family_and_returns_break(orch):
         blueprint={"scene_breakdown": {}},
     )
 
-    orch.ctx.ui.log.assert_called_once()
+    assert orch.ctx.ui.log.call_count == 3
+    assert "Blueprint 생성 실패" in orch.ctx.ui.log.call_args_list[0].args[0]
     orch._record_stage3_failure_attempt.assert_called_once_with(
         working_ep=4,
         pipeline_result={"final_verdict": "REJECT"},

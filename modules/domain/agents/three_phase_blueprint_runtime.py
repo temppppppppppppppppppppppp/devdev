@@ -20,6 +20,8 @@ from modules.models.blueprint import validate_blueprint
 from modules.validation.threshold_helper import _threshold
 
 from .base_agent import AgentErrorType
+from .stage3_retry_coordinator import Stage3RetryCoordinator
+from .stage3_validation_boundary import Stage3ValidationBoundary
 
 if TYPE_CHECKING:
     from .three_phase_blueprint_generator import ThreePhaseBlueprintGenerator
@@ -1069,6 +1071,24 @@ class ThreePhaseBlueprintRuntime:
 
     def __init__(self, owner: "ThreePhaseBlueprintGenerator") -> None:
         self.owner = owner
+        self.retry_coordinator = Stage3RetryCoordinator(
+            self,
+            repair_router_cls=_Stage3RepairRouter,
+            threshold_fn=lambda key, default: _threshold(key, default),
+            patch_mode_thresholds=PatchModeThresholds,
+            build_fix_pack_guidance_fn=_build_stage3_fix_pack_guidance,
+        )
+        self.validation_boundary = Stage3ValidationBoundary(
+            self,
+            resolve_selection_reason_text_fn=resolve_selection_reason_text,
+            threshold_fn=lambda key, default: _threshold(key, default),
+            patch_mode_thresholds=PatchModeThresholds,
+            normalize_fix_pack_fn=_normalize_stage3_fix_pack,
+            normalize_advisory_fix_pack_fn=_normalize_stage3_advisory_fix_pack,
+            normalize_repair_contract_fn=_normalize_stage3_repair_contract,
+            normalize_scope_authority_fn=_normalize_stage3_scope_authority,
+            build_local_patch_gate_fn=_build_stage3_local_patch_gate,
+        )
 
     @staticmethod
     def _preview_feedback_lines(feedback: str, *, max_items: int = 3) -> list[str]:
@@ -1529,180 +1549,25 @@ class ThreePhaseBlueprintRuntime:
         retry_state: _ThreePhaseRetryState,
         max_retries: int,
     ) -> _ThreePhasePhase2Result:
-        owner = self.owner
-        best_blueprint: dict | None = None
-        all_candidates: list[dict] = []
-        rejected_strategy = retry_state.prev_reject_strategy if retry > 0 else ""
-        single_strategy = ""
-        repair_material = _Stage3RepairRouter.build_retry_material(retry_state)
-        repair_route = _Stage3RepairRouter.decide_phase2_retry(
-            retry=retry,
-            retry_state=retry_state,
-            material=repair_material,
-            inplace_threshold=int(_threshold("patch_mode.inplace_below", PatchModeThresholds.INPLACE)),
-        )
-        resolved_fix_scope = repair_route.resolved_fix_scope or repair_material.normalized_requested_fix_scope
-
-        if retry > 0 and resolved_fix_scope == "partial" and rejected_strategy:
-            single_strategy = rejected_strategy
-
-        if repair_route.inplace_retry_candidate and repair_route.block_reasons:
-            logging.info(
-                "[PF-EE] skip Stage3 inplace patch retry; reasons=%s",
-                ", ".join(repair_route.block_reasons),
-            )
-            pipeline_result["inplace_plateau_block_reasons"] = list(repair_route.block_reasons)
-            owner._operator_log(
-                "[Phase 2] inplace patch blocked; switch back to full_ensemble",
-                meta={
-                    "phase": "generate",
-                    "retry_index": retry + 1,
-                    "max_retries": max_retries + 1,
-                    "mode": "full_ensemble",
-                    "inplace_blocked": True,
-                    "inplace_block_reasons": list(repair_route.block_reasons),
-                    "prev_reject_score": retry_state.prev_reject_score,
-                    "fix_scope": resolved_fix_scope or "",
-                },
-            )
-        if repair_route.use_inplace_patch:
-            logging.info(" [Patch Mode] retry=%d blueprint in-place patch 시도", retry)
-            owner._operator_log(
-                (
-                    f"[Phase 2] patch mode 진입 "
-                    f"(retry={retry + 1}/{max_retries + 1}, prev_score={retry_state.prev_reject_score}, "
-                    f"fix_scope={resolved_fix_scope or '-'})"
-                ),
-                meta={
-                    "phase": "generate",
-                    "retry_index": retry + 1,
-                    "max_retries": max_retries + 1,
-                    "mode": "inplace_patch",
-                    "prev_reject_score": retry_state.prev_reject_score,
-                    "fix_scope": resolved_fix_scope or "",
-                },
-            )
-            patch_feedback = str(retry_state.prev_reject_feedback or "").strip()
-            fix_pack_guidance = _build_stage3_fix_pack_guidance(repair_material.effective_fix_pack)
-            if fix_pack_guidance:
-                patch_feedback = f"{fix_pack_guidance}\n\n{patch_feedback}".strip() if patch_feedback else fix_pack_guidance
-            try:
-                best_blueprint = self._call_with_operator_heartbeat(
-                    title="[Phase 2] in-place patch",
-                    meta={
-                        "phase": "generate",
-                        "retry_index": retry + 1,
-                        "max_retries": max_retries + 1,
-                        "mode": "inplace_patch",
-                        "feedback_chars": len(str(patch_feedback or "")),
-                    },
-                    fn=lambda: owner._inplace_patch_blueprint(
-                        original_blueprint=retry_state.previous_best,
-                        director_feedback=patch_feedback,
-                        ep_num=ep_num,
-                        arc_data=arc_data,
-                        normalized_fix_pack=repair_material.effective_fix_pack,
-                    ),
-                )
-            except Exception:
-                logging.exception("[Patch Mode] Blueprint in-place patch 예외")
-                best_blueprint = None
-
-            if best_blueprint:
-                all_candidates = [best_blueprint]
-                pipeline_result["patch_fallback"] = False
-            else:
-                pipeline_result["patch_fallback"] = True
-                logging.info("[Patch Mode] Blueprint in-place 패치 실패 → full rewrite 폴백")
-
-        if not all_candidates:
-            try:
-                ensemble_kwargs = {
-                    "ep_num": ep_num,
-                    "arc_data": arc_data,
-                    "constraint_block": constraint_block,
-                    "prev_blueprint": prev_blueprint,
-                    "feedback": attempt_feedback,
-                    "strategy_specific_feedback": strategy_feedback,
-                    "rejected_strategy": rejected_strategy,
-                    "protagonist_name": protagonist_name,
-                    "protagonist_config": protagonist_config,
-                    "state_tracker": state_tracker,
-                    "prev_blueprints": prev_blueprints,
-                    "prev_manuscripts_text": prev_manuscripts_text,
-                    "fix_pack": repair_material.effective_fix_pack,
-                    "repair_contract": repair_material.repair_contract,
-                    "attempt_num": retry + 1,
-                }
-                if single_strategy:
-                    ensemble_kwargs["single_strategy"] = single_strategy
-                generation_mode = f"single_strategy:{single_strategy}" if single_strategy else "full_ensemble"
-                best_blueprint, all_candidates = self._call_with_operator_heartbeat(
-                    title=f"[Phase 2] 후보 생성 ({generation_mode})",
-                    meta={
-                        "phase": "generate",
-                        "retry_index": retry + 1,
-                        "max_retries": max_retries + 1,
-                        "mode": generation_mode,
-                        "feedback_chars": len(str(attempt_feedback or "")),
-                        "strategy_feedback_chars": len(str(strategy_feedback or "")),
-                        "previous_blueprint_present": bool(prev_blueprint),
-                        "blueprint_window_count": len(prev_blueprints or []),
-                        "prev_manuscript_chars": len(str(prev_manuscripts_text or "")),
-                    },
-                    fn=lambda: owner.ensemble.generate_ensemble(**ensemble_kwargs),
-                )
-            except Exception:
-                logging.exception("[Phase 2] generate_ensemble 예외")
-                best_blueprint, all_candidates = None, []
-
-        if not all_candidates:
-            return self._handle_phase2_generation_failure(
-                retry=retry,
-                ep_num=ep_num,
-                arc_data=arc_data,
-                pipeline_result=pipeline_result,
-                max_retries=max_retries,
-            )
-
-        if best_blueprint is None and all_candidates:
-            best_blueprint = all_candidates[0]
-
-        best_blueprint, all_candidates = self._append_asp_candidate(
+        phase2_result = self.retry_coordinator.run_phase2_generation(
             retry=retry,
             ep_num=ep_num,
+            arc_data=arc_data,
+            constraint_block=constraint_block,
+            prev_blueprint=prev_blueprint,
+            prev_blueprints=prev_blueprints,
+            protagonist_name=protagonist_name,
+            protagonist_config=protagonist_config,
+            state_tracker=state_tracker,
+            prev_manuscripts_text=prev_manuscripts_text,
             attempt_feedback=attempt_feedback,
-            best_blueprint=best_blueprint,
-            all_candidates=all_candidates,
+            strategy_feedback=strategy_feedback,
             adversarial_self_play=adversarial_self_play,
             pipeline_result=pipeline_result,
+            retry_state=retry_state,
+            max_retries=max_retries,
         )
-
-        current_strategy = ""
-        prompt_envelope = {}
-        if isinstance(best_blueprint, dict):
-            current_strategy = best_blueprint.get("_ensemble_meta", {}).get("strategy", "")
-            prompt_envelope = dict(best_blueprint.get("_ensemble_meta", {}).get("prompt_envelope") or {})
-        pipeline_result.pop("failure_reason", None)
-        pipeline_result["phases"]["generate"] = {
-            "status": "complete",
-            "candidates_count": len(all_candidates),
-            "selected_strategy": current_strategy or "unknown",
-        }
-        if prompt_envelope:
-            pipeline_result["phases"]["generate"]["prompt_envelope"] = prompt_envelope
-        owner.stats["phase2_complete"] += 1
-        logging.info("✅ [Phase 2] Ensemble 완료 — %d개 후보 → Director 선택 대기", len(all_candidates))
-        owner._operator_log(
-            f"[Phase 2] 후보 생성 완료 ({len(all_candidates)}개, strategy={current_strategy or 'unknown'})",
-            meta={
-                "phase": "generate",
-                "candidates_count": len(all_candidates),
-                "selected_strategy": current_strategy or "unknown",
-                "prompt_envelope": prompt_envelope,
-            },
-        )
-        return _ThreePhasePhase2Result(best_blueprint, all_candidates)
+        return _ThreePhasePhase2Result(**phase2_result)
 
     def _run_phase3_validation(
         self,
@@ -1964,52 +1829,20 @@ class ThreePhaseBlueprintRuntime:
         state_tracker,
         prev_hud: dict | None,
     ) -> _ThreePhaseValidationEnvelope:
-        owner = self.owner
-        verdict, validation_result = self._call_with_operator_heartbeat(
-            title="[Phase 3] Director compare + judge",
-            meta={
-                "phase": "validate",
-                "candidate_count": len(all_candidates or []),
-                "previous_blueprint_present": bool(prev_blueprint),
-            },
-            fn=lambda: owner.validator.validate(
-                blueprint=best_blueprint,
-                arc_data=arc_data,
-                constraint_block=constraint_block,
-                prev_blueprint=prev_blueprint,
-                director=director,
-                working_ep=ep_num,
-                arc_idx=arc_idx,
-                entity_registry=entity_registry,
-                state_tracker=state_tracker,
-                all_candidates=all_candidates,
-                prev_hud=prev_hud,
-            ),
-        )
-
-        if validation_result.get("selected_blueprint"):
-            best_blueprint = validation_result["selected_blueprint"]
-            selected_idx = validation_result.get("selected_index", 0)
-            logging.info(f"[V60.85] Director selected candidate {selected_idx + 1}")
-            owner._operator_log(
-                f"[Phase 3] Director selected candidate {selected_idx + 1}",
-                meta={"phase": "validate", "selected_index": selected_idx + 1},
-            )
-
-        selected_meta = best_blueprint.get("_ensemble_meta", {}) if isinstance(best_blueprint, dict) else {}
-        selected_strategy = selected_meta.get("strategy", "")
-        score_raw = validation_result.get("score", 0)
-        try:
-            score = int(score_raw)
-        except (ValueError, TypeError):
-            score = 0
-        return _ThreePhaseValidationEnvelope(
+        validation = self.validation_boundary.run_phase3_validation_envelope(
+            ep_num=ep_num,
+            arc_data=arc_data,
+            constraint_block=constraint_block,
+            prev_blueprint=prev_blueprint,
             best_blueprint=best_blueprint,
-            validation_result=validation_result,
-            verdict=verdict,
-            selected_strategy=selected_strategy,
-            score=score,
+            all_candidates=all_candidates,
+            director=director,
+            arc_idx=arc_idx,
+            entity_registry=entity_registry,
+            state_tracker=state_tracker,
+            prev_hud=prev_hud,
         )
+        return _ThreePhaseValidationEnvelope(**validation)
 
     def _record_phase3_validation_payload(
         self,
@@ -2021,104 +1854,14 @@ class ThreePhaseBlueprintRuntime:
         all_candidates: list[dict],
         score: int,
     ) -> None:
-        validation_selection_reason = resolve_selection_reason_text(validation_result.get("selection_reason", ""))
-        validation_verdict_reason = str(
-            validation_result.get("verdict_reason")
-            or validation_result.get("summary")
-            or validation_result.get("feedback", "")
-            or validation_selection_reason
-            or ""
-        ).strip()
-        validation_quality_risk = bool(validation_result.get("quality_risk", False))
-        validation_revision_required = bool(
-            validation_result.get("revision_required", False) or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
+        self.validation_boundary.record_phase3_validation_payload(
+            pipeline_result=pipeline_result,
+            validation_result=validation_result,
+            verdict=verdict,
+            selected_strategy=selected_strategy,
+            all_candidates=all_candidates,
+            score=score,
         )
-        pipeline_result["phases"]["validate"] = {
-            "status": "complete",
-            "verdict": verdict,
-            "issues_count": len(validation_result.get("issues", [])),
-            "confidence": validation_result.get("confidence", 0),
-            "score": validation_result.get("score", 0),
-            "phase": validation_result.get("phase", "unknown"),
-            "selected_index": validation_result.get("selected_index", 0),
-            "comparison_notes": validation_result.get("comparison_notes", ""),
-            "selection_reason": validation_selection_reason,
-            "verdict_reason": validation_verdict_reason,
-            "fix_scope": validation_result.get("fix_scope", ""),
-            "fix_scope_reasoning": validation_result.get("fix_scope_reasoning", ""),
-            "quality_risk": validation_quality_risk,
-            "revision_required": validation_revision_required,
-            "candidate_count": validation_result.get(
-                "candidate_count",
-                len(all_candidates) if isinstance(all_candidates, list) else 1,
-            ),
-        }
-        binding_issue_count = validation_result.get("binding_prevalidation_issue_count", 0)
-        try:
-            binding_issue_count = int(binding_issue_count or 0)
-        except (TypeError, ValueError):
-            binding_issue_count = 0
-        if binding_issue_count > 0:
-            pipeline_result["phases"]["validate"]["binding_prevalidation_issue_count"] = binding_issue_count
-        binding_categories = validation_result.get("binding_prevalidation_categories", [])
-        if isinstance(binding_categories, list):
-            normalized_binding_categories = [
-                str(item).strip() for item in binding_categories if str(item or "").strip()
-            ]
-            if normalized_binding_categories:
-                pipeline_result["phases"]["validate"]["binding_prevalidation_categories"] = (
-                    normalized_binding_categories[:6]
-                )
-        regenerate_only_categories = validation_result.get("binding_regenerate_only_categories", [])
-        if isinstance(regenerate_only_categories, list):
-            normalized_regenerate_only_categories = [
-                str(item).strip() for item in regenerate_only_categories if str(item or "").strip()
-            ]
-            if normalized_regenerate_only_categories:
-                pipeline_result["phases"]["validate"]["binding_regenerate_only_categories"] = (
-                    normalized_regenerate_only_categories[:6]
-                )
-        regenerate_only_reason = str(validation_result.get("binding_regenerate_only_reason", "") or "").strip()
-        if regenerate_only_reason:
-            pipeline_result["phases"]["validate"]["binding_regenerate_only_reason"] = regenerate_only_reason
-        candidate_advisories = validation_result.get("candidate_advisories", [])
-        if isinstance(candidate_advisories, list) and candidate_advisories:
-            pipeline_result["phases"]["validate"]["candidate_advisories"] = candidate_advisories[:3]
-        selected_candidate_advisory = validation_result.get("selected_candidate_advisory", {})
-        if isinstance(selected_candidate_advisory, dict) and selected_candidate_advisory:
-            pipeline_result["phases"]["validate"]["selected_candidate_advisory"] = selected_candidate_advisory
-        normalized_fix_pack = _normalize_stage3_fix_pack(validation_result)
-        if normalized_fix_pack:
-            pipeline_result["phases"]["validate"]["fix_pack"] = normalized_fix_pack
-        advisory_fix_pack = _normalize_stage3_advisory_fix_pack(validation_result)
-        if advisory_fix_pack:
-            pipeline_result["phases"]["validate"]["advisory_fix_pack"] = advisory_fix_pack
-        repair_contract = _normalize_stage3_repair_contract(
-            validation_result,
-            fix_pack=normalized_fix_pack or advisory_fix_pack,
-        )
-        if repair_contract:
-            pipeline_result["phases"]["validate"]["repair_contract"] = repair_contract
-        scope_authority = _normalize_stage3_scope_authority(validation_result)
-        if scope_authority:
-            pipeline_result["phases"]["validate"]["scope_authority"] = scope_authority
-        local_patch_gate = _build_stage3_local_patch_gate(
-            fix_scope=str(validation_result.get("fix_scope", "") or ""),
-            fix_pack=normalized_fix_pack or advisory_fix_pack,
-            repair_contract=repair_contract,
-            scope_authority=scope_authority,
-        )
-        if isinstance(local_patch_gate, dict) and local_patch_gate:
-            pipeline_result["phases"]["validate"]["local_patch_gate"] = dict(local_patch_gate)
-        partial_fix_eval = validation_result.get("partial_fix_eval")
-        if isinstance(partial_fix_eval, dict) and partial_fix_eval:
-            pipeline_result["phases"]["validate"]["partial_fix_eval"] = dict(partial_fix_eval)
-        if validation_quality_risk:
-            pipeline_result["quality_risk"] = True
-        if validation_revision_required:
-            pipeline_result["revision_required"] = True
-        pipeline_result["phases"]["generate"]["selected_strategy"] = selected_strategy or "unknown"
-        pipeline_result["phases"]["generate"]["selected_score"] = score
 
     def _record_phase3_contradictions(
         self,
@@ -2126,14 +1869,10 @@ class ThreePhaseBlueprintRuntime:
         pipeline_result: dict,
         validation_result: dict,
     ) -> None:
-        contradictions = validation_result.get("contradictions", [])
-        if not (isinstance(contradictions, list) and contradictions):
-            return
-
-        logging.warning(f"[Consistency] contradictions={len(contradictions)}")
-        for contradiction in contradictions[:5]:
-            logging.warning(f" {str(contradiction)[:150]}")
-        pipeline_result["phases"]["validate"]["contradictions"] = contradictions
+        self.validation_boundary.record_phase3_contradictions(
+            pipeline_result=pipeline_result,
+            validation_result=validation_result,
+        )
 
     @staticmethod
     def _has_only_advisory_residuals(validation_result: dict | None) -> bool:
@@ -2195,17 +1934,11 @@ class ThreePhaseBlueprintRuntime:
         return set(categories).issubset(low_yield_categories), categories
 
     def _apply_phase3_quality_gate(self, *, verdict: str, score: int, validation_result: dict | None = None) -> str:
-        quality_gate_score = _threshold("scoring.quality_gate_score", 90)
-        if verdict == "PASS" and score < quality_gate_score:
-            if self._has_only_advisory_residuals(validation_result):
-                logging.warning(
-                    f"[QualityGate] Stage3 PASS below threshold ({score} < {quality_gate_score}) "
-                    "but only advisory residuals remain; preserve PASS"
-                )
-                return verdict
-            logging.warning(f"[QualityGate] Stage3 PASS but score={score} < {quality_gate_score}; force REJECT")
-            return "REJECT"
-        return verdict
+        return self.validation_boundary.apply_phase3_quality_gate(
+            verdict=verdict,
+            score=score,
+            validation_result=validation_result,
+        )
 
     @staticmethod
     def _is_quality_gate_terminal_acceptance(validation_result: dict | None) -> bool:
@@ -2225,77 +1958,18 @@ class ThreePhaseBlueprintRuntime:
         best_blueprint: dict | None,
         pipeline_result: dict,
     ) -> tuple[str, dict]:
-        if validation_verdict != "PASS" or verdict != "REJECT":
-            return verdict, validation_result or {}
-
-        normalized_validation = dict(validation_result or {})
-        quality_gate_score = int(_threshold("scoring.quality_gate_score", 90))
-        normalized_validation.setdefault("reject_origin", "quality_gate_reject")
-        normalized_validation["quality_gate_score"] = quality_gate_score
-        normalized_validation["quality_gate_effective_score"] = effective_score
-        normalized_validation["quality_gate_raw_score"] = raw_score
-
-        validate_phase = pipeline_result.setdefault("phases", {}).setdefault("validate", {})
-        validate_phase["quality_gate_score"] = quality_gate_score
-        validate_phase["quality_gate_effective_score"] = effective_score
-        validate_phase["quality_gate_raw_score"] = raw_score
-
-        terminal_retry = retry >= max_retries
-        if terminal_retry and best_blueprint and effective_score >= PatchModeThresholds.REWRITE:
-            normalized_validation["quality_gate_terminal_acceptance"] = True
-            normalized_validation["quality_gate_terminal_acceptance_reason"] = "terminal_below_threshold_warning"
-            normalized_validation["quality_gate_soft_override"] = True
-            normalized_validation["quality_risk"] = True
-            normalized_validation["revision_required"] = True
-            normalized_validation["verdict"] = "PASS_WITH_WARNING"
-            normalized_validation["decision"] = "PASS_WITH_WARNING"
-
-            validate_phase["verdict"] = "PASS_WITH_WARNING"
-            validate_phase["quality_risk"] = True
-            validate_phase["revision_required"] = True
-            validate_phase["quality_gate_terminal_acceptance"] = {
-                "decision": "promote_to_pass_with_warning",
-                "effective_score": effective_score,
-                "quality_gate_score": quality_gate_score,
-                "raw_score": raw_score,
-                "ifc_penalty": ifc_penalty,
-                "retry_index": retry + 1,
-                "max_retries": max_retries + 1,
-            }
-
-            pipeline_result["quality_gate_failed"] = True
-            pipeline_result["quality_risk"] = True
-            pipeline_result["revision_required"] = True
-
-            logging.warning(
-                "[QualityGate] terminal PASS below threshold (%d < %d) on retry %d/%d -> accept PASS_WITH_WARNING",
-                effective_score,
-                quality_gate_score,
-                retry + 1,
-                max_retries + 1,
-            )
-            self._log_operator_retry_context(
-                title=(
-                    f"[QualityGate] effective_score={effective_score} "
-                    f"(raw={raw_score}, ifc_penalty={ifc_penalty}) < threshold -> PASS_WITH_WARNING"
-                ),
-                level="warning",
-                meta={
-                    "phase": "validate",
-                    "score": effective_score,
-                    "raw_score": raw_score,
-                    "ifc_penalty": ifc_penalty,
-                    "retry_index": retry + 1,
-                    "max_retries": max_retries + 1,
-                    "error_category": "quality_gate_terminal_acceptance",
-                },
-                feedback=normalized_validation.get("verdict_reason", "") or normalized_validation.get("feedback", ""),
-                issues=normalized_validation.get("issues", []),
-                fix_scope=str(normalized_validation.get("fix_scope", "") or ""),
-            )
-            return "PASS_WITH_WARNING", normalized_validation
-
-        return verdict, normalized_validation
+        return self.validation_boundary.annotate_or_accept_terminal_quality_gate_result(
+            validation_verdict=validation_verdict,
+            verdict=verdict,
+            validation_result=validation_result,
+            effective_score=effective_score,
+            raw_score=raw_score,
+            ifc_penalty=ifc_penalty,
+            retry=retry,
+            max_retries=max_retries,
+            best_blueprint=best_blueprint,
+            pipeline_result=pipeline_result,
+        )
 
     def _apply_validation_reject_state(
         self,

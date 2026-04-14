@@ -1,14 +1,14 @@
 # 0_0-stage3-state-arbiter-envelope-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: active (3-pass audited; long-horizon bounded execution lane; Tranche A/B landed on the current branch, Tranche C pending)
+Status: active (3-pass audited; long-horizon bounded execution lane; Tranche A/B/C landed locally; post-tranche proof deferred)
 Canonical Path: `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f58059fefd10ed3f41d7bacca3b908dd47ada418`
 - Baseline Dirty Summary: `dirty: live 000_260412_a logs/db, 0_temp.txt, and untracked 2026-04-14 diagnostic notes already present in worktree`
 - Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `current branch now carries Tranche A EpisodeStateArbiter and Tranche B prompt-envelope budget realization`
+- Resume Drift Summary: `current workspace now carries Tranche A EpisodeStateArbiter, Tranche B prompt-envelope budget, and a local Tranche C bounded boundary split across runtime/orchestrator helper shells`
 Source Survey Docs:
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
@@ -20,6 +20,9 @@ Evidence Artifacts:
 - `modules/domain/agents/blueprint_constraint_compiler.py`
 - `modules/domain/agents/blueprint_ensemble.py`
 - `modules/domain/agents/stage3_prompt_envelope.py`
+- `modules/domain/agents/stage3_retry_coordinator.py`
+- `modules/domain/agents/stage3_validation_boundary.py`
+- `modules/core/stage3_envelope_builder.py`
 - `modules/domain/agents/unified_blueprint_validator.py`
 - `modules/domain/agents/three_phase_blueprint_runtime.py`
 - `modules/core/stage4_postselect_runtime.py`
@@ -253,16 +256,31 @@ These are bounded ownership changes, not a cross-stage kernel rewrite.
    - make operator observability show total chars by lane, not retrieval only
 
 3. `Tranche C — Stage3 Boundary Split`
-   - status: `next bounded realization tranche`
-   - extract `Stage3EnvelopeBuilder`
-   - extract `Stage3ValidationBoundary`
-   - extract `Stage3RetryCoordinator`
-   - keep behavior stable while reducing semantic duplication
+   - status: `landed locally on the current workspace`
+   - landed modules:
+     - `Stage3EnvelopeBuilder`
+     - `Stage3ValidationBoundary`
+     - `Stage3RetryCoordinator`
+   - post-tranche complexity recount:
+     - `_run_phase2_generation`: `194 LOC -> 39 LOC` wrapper
+     - `_run_stage3_blueprint_generation_handoff`: `147 LOC -> 22 LOC` wrapper
+     - `_build_stage3_blueprint_semantic_bundle`: `44 LOC -> 18 LOC` wrapper
+   - remaining `120+ LOC` helpers are explicitly classified as bounded seam owners, not new semantic-owner growth:
+     - `Stage3RetryCoordinator.run_phase2_generation`: `136 LOC` (`retry-shell`)
+     - `Stage3ValidationBoundary.record_phase3_validation_payload`: `121 LOC` (`sink-boundary`)
+     - `Stage3EnvelopeBuilder.run_blueprint_generation_handoff`: `123 LOC` (`envelope-shell`)
+   - verification passed on current workspace:
+     - `pytest tests/test_blueprint_patch_mode.py -q`
+     - `pytest tests/test_stage3_orchestrator.py -q`
+     - `pytest tests/test_stage3_orchestrator_lane_e.py tests/test_stage3_orchestrator_legacy_tail_lane_f.py -q`
+     - `pytest tests/test_blueprint_ensemble_generate_ensemble.py tests/test_tier4_ensemble_caching.py -q`
+     - `python -m py_compile ...`
+     - `python scripts/check_utf8_hygiene.py ...`
 
 4. `Tranche D — Post-tranche Proof And Fail-Only Stabilization`
-   - only after A and B land
+   - only after A, B, and C land
    - re-audit docs against live workspace
-   - then consider a fresh operator-gated rerun
+   - then decide between a fresh operator-gated rerun and the next global authority-alignment follow-up
 
 ## 9. Acceptance Criteria
 
@@ -289,19 +307,19 @@ These are bounded ownership changes, not a cross-stage kernel rewrite.
 - queue/doc validation:
   - `python scripts/ops_validator.py --strict`
 
-Fresh rerun validation is explicitly deferred to Tranche D.
+Fresh rerun validation remains explicitly deferred to Tranche D.
 
 ## 11. Guardrails
 
 - do not widen this lane into `Polaris` or `DecisionKernel`
 - do not perform a big-bang Stage3/Stage4 rewrite
-- do not open fresh rerun proof before Tranche A and Tranche B land and the governing docs are re-audited; the current workspace now satisfies the local landing precondition but has not started proof execution
+- do not open fresh rerun proof before Tranche A, B, and C land and the governing docs are re-audited; the current workspace now satisfies the local landing precondition but has not started proof execution
 - keep backward-compatible sink read paths where practical during migration
 - prefer packet-first consolidation over more local lexical heuristics
 
 ## 12. Temp Queue Notes
 
-- temp status: `in_progress (Tranche A/B landed on the current branch; Tranche C pending)`
+- temp status: `in_progress (Tranche A/B/C landed locally; post-tranche proof and next-lane decision pending)`
 - cleanup condition:
   - remove the temp mirror only after the long-horizon lane is realized or explicitly demoted
 - roadmap dependency:
