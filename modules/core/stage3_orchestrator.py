@@ -32,6 +32,7 @@ from modules.core.rationale_contract import (
     resolve_structured_advisory_payload,
     resolve_verdict_reason_text,
 )
+from modules.core.stage3_envelope_builder import Stage3EnvelopeBuilder
 from modules.core.semantic_query_broker import SemanticQueryBroker
 from modules.core.tactical_utils import extract_episode_tactical
 
@@ -821,6 +822,11 @@ class Stage3Orchestrator:
         # [V61.6] Entity Registry 캐시 (Arc 단위)
         self._entity_cache_arc_idx = -1
         self._cached_entity_registry = None
+        self._stage3_envelope_builder = Stage3EnvelopeBuilder(
+            self,
+            anchor_selector_fn=_select_stage3_anchor_recent_window,
+            history_cache_limit=_STAGE3_HISTORY_CACHE_LIMIT,
+        )
 
     @property
     def ctx(self):
@@ -834,6 +840,17 @@ class Stage3Orchestrator:
     @ctx.setter
     def ctx(self, value):
         self._ctx = value
+
+    def _get_stage3_envelope_builder(self) -> Stage3EnvelopeBuilder:
+        builder = getattr(self, "_stage3_envelope_builder", None)
+        if builder is None:
+            builder = Stage3EnvelopeBuilder(
+                self,
+                anchor_selector_fn=_select_stage3_anchor_recent_window,
+                history_cache_limit=_STAGE3_HISTORY_CACHE_LIMIT,
+            )
+            self._stage3_envelope_builder = builder
+        return builder
 
     def _set_agent_telemetry_context(self, *, ep_num: int | None = None) -> None:
         """[LOG-Phase2] BaseAgent llm_calls stage/ep 메타데이터 주입."""
@@ -1680,39 +1697,13 @@ class Stage3Orchestrator:
         entity_registry,
         protagonist_name,
     ) -> dict[str, object]:
-        _stage3_blueprint_window = _select_stage3_anchor_recent_window(prev_blueprints)
-        _stage3_focus_window = _stage3_blueprint_window[-5:] if _stage3_blueprint_window else []
-        _smart_bundle = self._collect_stage3_smart_retrieval_bundle(
-            working_ep=working_ep,
-            arc_data=arc_data,
-            prev_blueprints=_stage3_focus_window,
-            entity_registry=entity_registry,
-            protagonist_name=protagonist_name,
-        )
-        _bp_semantic_ctx = str(_smart_bundle.get("semantic_ctx", "") or "")
-        _s3_work_focus = dict(_smart_bundle.get("work_focus") or {})
-        _s3_plan = _smart_bundle.get("plan")
-        _bp_semantic_ctx = self._inject_stage3_treatment_block_context(
-            semantic_ctx=_bp_semantic_ctx,
+        return self._get_stage3_envelope_builder().build_blueprint_semantic_bundle(
             working_ep=working_ep,
             arc_data=arc_data,
             arc_idx=arc_idx,
-        )
-        _bp_semantic_ctx = self._inject_stage3_timeline_advisory(
-            semantic_ctx=_bp_semantic_ctx,
-            arc_idx=arc_idx,
-            arc_data=arc_data,
-        )
-        return self._finalize_stage3_blueprint_semantic_bundle(
-            semantic_ctx=_bp_semantic_ctx,
-            work_focus=_s3_work_focus,
-            plan=_s3_plan,
-            working_ep=working_ep,
-            arc_data=arc_data,
+            prev_blueprints=prev_blueprints,
             entity_registry=entity_registry,
             protagonist_name=protagonist_name,
-            blueprint_window=_stage3_blueprint_window,
-            focus_window=_stage3_focus_window,
         )
 
     def _legacy_stage3_blueprint_semantic_bundle_tail(
@@ -1729,25 +1720,15 @@ class Stage3Orchestrator:
         blueprint_window: list,
         focus_window: list,
     ) -> dict[str, object]:
-        _bp_semantic_ctx = self._inject_stage3_treatment_block_context(
-            semantic_ctx=semantic_ctx,
+        return self._get_stage3_envelope_builder().build_legacy_blueprint_semantic_bundle_tail(
             working_ep=working_ep,
             arc_data=arc_data,
             arc_idx=arc_idx,
-        )
-        _bp_semantic_ctx = self._inject_stage3_timeline_advisory(
-            semantic_ctx=_bp_semantic_ctx,
-            arc_idx=arc_idx,
-            arc_data=arc_data,
-        )
-        return self._finalize_stage3_blueprint_semantic_bundle(
-            semantic_ctx=_bp_semantic_ctx,
-            work_focus=work_focus,
-            plan=plan,
-            working_ep=working_ep,
-            arc_data=arc_data,
             entity_registry=entity_registry,
             protagonist_name=protagonist_name,
+            semantic_ctx=semantic_ctx,
+            work_focus=work_focus,
+            plan=plan,
             blueprint_window=blueprint_window,
             focus_window=focus_window,
         )
@@ -1764,141 +1745,16 @@ class Stage3Orchestrator:
         entity_registry,
         semantic_bundle: dict[str, object],
     ):
-        ctx = self.ctx
-        from modules.core.spinners import StageSpinner
-
-        _blueprint_window = list(semantic_bundle.get("blueprint_window") or [])
-        _bp_semantic_ctx = str(semantic_bundle.get("semantic_ctx", "") or "")
-
-        with StageSpinner(3, f"제{working_ep}화") as _s3_spinner:
-            _prev_ms_for_bp = []
-            _recent_manuscripts = ctx.current_project.db.get_recent_manuscripts(
-                before_ep=working_ep,
-                limit=_STAGE3_HISTORY_CACHE_LIMIT,
-            )
-            _selected_manuscripts = _select_stage3_anchor_recent_window(_recent_manuscripts)
-            for _ms_row in _selected_manuscripts:
-                _ms_text = _ms_row.get("content", "")
-                _ms_ep_num = _ms_row.get("ep_num", 0)
-                if _ms_text:
-                    _prev_ms_for_bp.append(f"━━━ 제{_ms_ep_num}화 원고 ━━━\n{_ms_text}")
-            _prev_ms_text_for_bp = "\n\n".join(_prev_ms_for_bp) if _prev_ms_for_bp else ""
-            if len(_prev_ms_text_for_bp) > ContextLimits.MAX_CONTEXT_CHARS:
-                _prev_ms_text_for_bp = smart_truncate(
-                    _prev_ms_text_for_bp,
-                    max_chars=ContextLimits.MAX_CONTEXT_CHARS,
-                    head_chars=max(
-                        0, min(int(ContextLimits.MAX_CONTEXT_CHARS * 0.55), ContextLimits.MAX_CONTEXT_CHARS - 80)
-                    ),
-                )
-            if _prev_ms_for_bp:
-                _logging.info(
-                    " [V67] Blueprint용 이전 원고 %d/%d개 로드 (%d자)",
-                    len(_prev_ms_for_bp),
-                    len(_recent_manuscripts),
-                    len(_prev_ms_text_for_bp),
-                )
-
-            _bp_prev_hud = None
-            if hasattr(ctx, "sys") and ctx.sys and hasattr(ctx.sys, "hud") and ctx.sys.hud:
-                try:
-                    _bp_prev_hud = ctx.sys.hud.pro_root
-                    if not isinstance(_bp_prev_hud, dict):
-                        _bp_prev_hud = None
-                except Exception:
-                    _bp_prev_hud = None
-
-            _s3_spinner.update_detail(f"제{working_ep}화 · Blueprint 생성")
-            # This heartbeat makes long blueprint LLM waits legible during live runs.
-            ctx.ui.log(
-                f"      ⏳ 제{working_ep}화 Blueprint 생성 시작 (최대 10회 시도)...",
-                stage="stage3",
-                component="blueprint_generation",
-                ep_num=working_ep,
-                arc_num=arc_idx,
-                event_kind="progress",
-            )
-            ctx.ui.log(
-                f"      ⏳ 제{working_ep}화 Blueprint 대기: ThreePhase runtime 호출 중 "
-                f"(anchors={len(_prev_ms_for_bp)}, window={len(_blueprint_window)}, "
-                f"semantic_ctx={len(_bp_semantic_ctx)}자)",
-                stage="stage3",
-                component="blueprint_generation",
-                ep_num=working_ep,
-                arc_num=arc_idx,
-                event_kind="heartbeat",
-                meta={
-                    "anchor_count": len(_prev_ms_for_bp),
-                    "blueprint_window_count": len(_blueprint_window),
-                    "semantic_ctx_chars": len(_bp_semantic_ctx),
-                    "prev_manuscript_chars": len(_prev_ms_text_for_bp),
-                    "wait_state": "three_phase_blueprint_runtime",
-                },
-            )
-            blueprint, pipeline_result = ctx.agents["three_phase_bp"].generate(
-                ep_num=working_ep,
-                arc_data=arc_data,
-                prev_blueprint=prev_blueprint,
-                prev_blueprints=_blueprint_window,
-                max_retries=9,
-                director=ctx.agents["director"],
-                arc_idx=arc_idx,
-                entity_registry=entity_registry,
-                protagonist_name=protagonist_name,
-                protagonist_config=protagonist_config,
-                state_tracker=ctx.state_tracker,
-                db=ctx.current_project.db,
-                semantic_context=_bp_semantic_ctx,
-                prev_manuscripts_text=_prev_ms_text_for_bp,
-                adversarial_self_play=ctx.adversarial_self_play,
-                prev_hud=_bp_prev_hud,
-            )
-            blueprint, pipeline_result = self._apply_stage3_dead_npc_precheck(
-                blueprint=blueprint,
-                pipeline_result=pipeline_result,
-                working_ep=working_ep,
-                arc_data=arc_data,
-            )
-            _verdict = pipeline_result.get("final_verdict", "UNKNOWN")
-            _attempt_num = self._extract_stage3_attempt_num(pipeline_result)
-            _bp_score = pipeline_result.get(
-                "last_score", pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0)
-            )
-            ctx.ui.log(
-                f"      📊 제{working_ep}화 Blueprint 결과: {_verdict} (attempt={_attempt_num}, score={_bp_score})",
-                stage="stage3",
-                component="blueprint_generation",
-                ep_num=working_ep,
-                arc_num=arc_idx,
-                event_kind="result",
-                meta={"verdict": _verdict, "score": _bp_score, "attempt_num": _attempt_num},
-            )
-            _selected_strategy = pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy")
-            if _selected_strategy:
-                ctx.ui.log(
-                    f"      └─ 선택 전략: {_selected_strategy}",
-                    stage="stage3",
-                    component="blueprint_generation",
-                    ep_num=working_ep,
-                    arc_num=arc_idx,
-                    event_kind="summary",
-                    meta={"selected_strategy": _selected_strategy},
-                )
-            for _line in self._build_stage3_success_operator_lines(pipeline_result):
-                ctx.ui.log(
-                    _line,
-                    stage="stage3",
-                    component="blueprint_generation",
-                    ep_num=working_ep,
-                    arc_num=arc_idx,
-                    event_kind="summary",
-                    meta={
-                        "verdict": _verdict,
-                        "score": _bp_score,
-                        "selected_strategy": _selected_strategy or "",
-                    },
-                )
-            return blueprint, pipeline_result
+        return self._get_stage3_envelope_builder().run_blueprint_generation_handoff(
+            working_ep=working_ep,
+            arc_data=arc_data,
+            arc_idx=arc_idx,
+            prev_blueprint=prev_blueprint,
+            protagonist_name=protagonist_name,
+            protagonist_config=protagonist_config,
+            entity_registry=entity_registry,
+            semantic_bundle=semantic_bundle,
+        )
 
     def _apply_stage3_dead_npc_precheck(
         self,

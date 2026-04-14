@@ -602,22 +602,35 @@ Order rationale:
 ### 0_0-stage3-state-arbiter-envelope-bounded-remediation
 
 - bounded root-cause survey and execution SSOT completed (2026-04-14)
-- execution SSOT: `active (Tranche A/B landed locally; Tranche C pending)`
-- primary seams:
-  - no single pre-generation authoritative `EpisodeStatePacket`
-  - no unified Stage3 whole-envelope budget across retrieval, constraints, and archive carryover
-  - duplicated Stage3-local interpretation surfaces across orchestrator, producer, validator, and retry owner
+- execution SSOT: `active (Tranche A/B/C landed locally; post-tranche proof deferred)`
+- realized local closures:
+  - `EpisodeStatePacket` now exists as the explicit Stage3 pre-generation authority surface
+  - whole-envelope Stage3 prompt budget and archive appendix demotion are live locally
+  - bounded Stage3 boundary split (`EnvelopeBuilder` / `ValidationBoundary` / `RetryCoordinator`) is live locally
 - next action:
   - record current local workspace truth:
     - `Tranche A` (`EpisodeStateArbiter`) is landed locally
     - `Tranche B` (unified Stage3 prompt-envelope budget + archive appendix demotion) is landed locally
-  - move to the next bounded tranche only:
+    - `Tranche C` (`Stage3EnvelopeBuilder` / `Stage3ValidationBoundary` / `Stage3RetryCoordinator`) is landed locally
+  - before any rerun or lane expansion:
+    - re-audit governing docs against the current workspace
+    - keep fresh rerun proof deferred until the post-Tranche-C document audit closes
+  - after the post-Tranche-C audit:
+    - decide between fresh operator-gated rerun and the next global authority-alignment follow-up
+  - if the lane extends, keep it bounded:
     - `Stage3EnvelopeBuilder`
     - `Stage3ValidationBoundary`
     - `Stage3RetryCoordinator`
   - do not widen this lane into `Polaris` or `DecisionKernel`
   - do not auto-demote it behind rerun-first wording while the current local operator preference stays debt-first
-  - keep fresh rerun proof deferred until the governing docs are re-audited after this lane's next tranche boundary
+  - current local complexity delta:
+    - `_run_phase2_generation`: `194 -> 39`
+    - `_run_stage3_blueprint_generation_handoff`: `147 -> 22`
+    - `_build_stage3_blueprint_semantic_bundle`: `44 -> 18`
+  - remaining `120+ LOC` helper shells are classified as bounded seam owners rather than new semantic-owner growth:
+    - `Stage3RetryCoordinator.run_phase2_generation` (`retry-shell`)
+    - `Stage3ValidationBoundary.record_phase3_validation_payload` (`sink-boundary`)
+    - `Stage3EnvelopeBuilder.run_blueprint_generation_handoff` (`envelope-shell`)
 - temp cleanup action:
   - keep mirror while this remains the active long-horizon Stage3 bounded remediation lane; remove only on explicit closure, demotion, or replacement
 
