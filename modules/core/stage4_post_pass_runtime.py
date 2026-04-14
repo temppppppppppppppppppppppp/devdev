@@ -179,7 +179,7 @@ def _resolve_numeric_carryover_authority_fields(
     ordered_fields = overlap_fields + [field_name for field_name in carryover_fields if field_name not in overlap_fields]
     transport: dict[str, object] = {
         "transport_lineage": "cross_stage_authority_packet.numeric_carryover",
-        "transport_fields": overlap_fields[:6],
+        "transport_fields": overlap_fields,
     }
     contract_version = str((cross_stage_authority_packet or {}).get("contract_version", "") or "").strip()
     if contract_version:
@@ -335,7 +335,7 @@ def _build_state_truth_owner_contract(
                 "episode_bible.state_truth_owner_contract",
                 "state_log.state_truth_owner_contract",
             ],
-            "fields": carryover_fields[:6],
+            "fields": carryover_fields,
             "authority_scope": "carryover_baseline",
             "provenance": "fact_ledger_authority_scope",
         }
@@ -351,7 +351,7 @@ def _build_state_truth_owner_contract(
         if transport_contract_version:
             carryover_family["transport_contract_version"] = transport_contract_version
         if transport_fields:
-            carryover_family["transport_fields"] = transport_fields[:6]
+            carryover_family["transport_fields"] = transport_fields
         promoted_fields = [
             str(item).strip() for item in list(refresh_plan.get("promoted_fields") or []) if str(item).strip()
         ]

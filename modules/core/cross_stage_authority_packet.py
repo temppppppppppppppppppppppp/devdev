@@ -103,6 +103,8 @@ def _resolve_equipment_with_source(end_state: dict[str, Any], joint_docs: dict[s
         (end_state.get("equipment"), "state_constraints.arc_end_state.equipment"),
         (joint_docs.get("physical_inventory"), "joint_docs.physical_inventory"),
     ):
+        if isinstance(raw_value, list):
+            return _normalize_list(raw_value), source
         normalized = _normalize_list(raw_value)
         if normalized:
             return normalized, source
@@ -189,14 +191,15 @@ def build_cross_stage_authority_packet(
     )
     protagonist_carryover = _prune_empty_values(
         {
-            "equipment": equipment,
-            "equipment_source": equipment_source,
             "injuries": injuries,
             "injuries_source": injuries_source,
             "internal_energy": internal_energy,
             "internal_energy_source": internal_energy_source,
         }
     )
+    if equipment_source:
+        protagonist_carryover["equipment"] = equipment
+        protagonist_carryover["equipment_source"] = equipment_source
     numeric_carryover = _prune_empty_values(
         {
             "capital": capital,

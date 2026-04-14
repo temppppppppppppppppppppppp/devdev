@@ -87,6 +87,8 @@ Commands run on current `HEAD`:
 - `pytest tests/test_stage3_blueprint_state_precision_guardrail.py::TestCapitalContinuityPacket tests/test_stage3_npc_capital_carryforward_guardrail.py::TestEpisodeStatePacket -q`
 - `pytest tests/test_stage4_context_builder.py::TestBuildMandatoryContext::test_build_mandatory_context_promotes_numeric_carryover_authority_packet tests/test_stage4_context_builder.py::TestBuildMandatoryContext::test_build_mandatory_context_surfaces_cross_stage_numeric_transport_lineage tests/test_stage4_context_builder.py::TestBuildMandatoryContext::test_build_mandatory_context_falls_back_to_cross_stage_numeric_packet_when_fact_ledger_missing -q`
 - `pytest tests/test_stage4_post_processor.py::TestProcessPassResult::test_persist_manager_delta_outputs_surfaces_cross_stage_numeric_transport_metadata tests/test_stage4_post_processor.py::TestAtomicMetadataSave::test_build_atomic_state_payloads_promotes_actual_truth_numeric_carryover_into_fact_ledger tests/test_stage4_post_processor.py::TestAtomicMetadataSave::test_build_atomic_state_payloads_reuses_state_truth_owner_contract_numeric_fields -q`
+- `python scripts/check_utf8_hygiene.py docs/2026-04-14/stage234-global-authority-alignment-tranche-d-current-head-3pass-audit.md docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md docs/2026-04-14/stage234-global-authority-alignment-bounded-survey.md docs/2026-04-01/active-temp-execution-roadmap.md docs/temp/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md docs/temp/execution-roadmap.md docs/temp/queue-state.json`
+- `python scripts/ops_validator.py --strict`
 
 Results:
 
@@ -97,6 +99,8 @@ Results:
 - Stage3 packet-consume regression shard: `13 passed`
 - focused Stage4 intake shard: `3 passed`
 - focused Stage4 post-pass shard: `3 passed`
+- UTF-8 hygiene: pass
+- ops validator: pass
 
 ## 5. Judgment
 

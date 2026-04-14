@@ -676,6 +676,14 @@ class TestEpisodeStatePacket:
                     },
                     "numeric_carryover": {},
                 },
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "Arc Start Office",
+                        "equipment": ["arc-start-briefcase"],
+                        "injuries": "arc-start-wrist",
+                        "internal_energy": 44,
+                    }
+                },
             },
             ep_num=11,
             prev_blueprint={},
@@ -699,6 +707,58 @@ class TestEpisodeStatePacket:
         assert protagonist_truth.get("sources", {}).get("internal_energy") == (
             "cross_stage_authority_packet.protagonist_carryover.internal_energy"
         )
+
+    def test_mid_arc_packet_conflicts_are_recorded_when_previous_blueprint_keeps_authority(self):
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {
+            "ep_num": 8,
+            "end_location": "Prev Blueprint Room",
+            "protagonist_state": {
+                "equipment": ["legacy-case"],
+                "injuries": "stable",
+            },
+            "scene_breakdown": {
+                "scene_2": {
+                    "location": "Prev Blueprint Room",
+                    "characters": ["lead", "ally"],
+                }
+            },
+        }
+        constraint_block = compiler.compile(
+            arc_data={
+                "ep_start": 7,
+                "ep_count": 4,
+                "arc_no": 2,
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "opening_carryover": {
+                        "location": "Packet Back Office",
+                        "location_source": "state_constraints.arc_end_state.location",
+                    },
+                    "protagonist_carryover": {
+                        "equipment": ["packet-briefcase"],
+                        "injuries": "packet-wrist",
+                    },
+                    "numeric_carryover": {},
+                },
+            },
+            ep_num=9,
+            prev_blueprint=prev_bp,
+            prev_blueprints=[prev_bp],
+            genre="investment",
+            prev_manuscript_ending="He exits the room and recalculates the next move.",
+        )
+
+        packet = constraint_block.get("episode_state_packet", {})
+        reasons = packet.get("rewrite_required_reasons", [])
+        conflicts = [item for item in packet.get("dropped_conflicts", []) if isinstance(item, dict)]
+
+        assert "mid_arc_cross_stage_packet_location_override_blocked" in reasons
+        assert "mid_arc_cross_stage_packet_equipment_override_blocked" in reasons
+        assert "mid_arc_cross_stage_packet_injury_override_blocked" in reasons
+        assert any(item.get("field") == "opening.location" for item in conflicts)
+        assert any(item.get("field") == "protagonist.equipment" for item in conflicts)
+        assert any(item.get("field") == "protagonist.injuries" for item in conflicts)
 
     def test_episode_state_packet_falls_back_to_scattered_stage2_fields_when_cross_stage_authority_packet_missing(self):
         compiler = BlueprintConstraintCompiler()

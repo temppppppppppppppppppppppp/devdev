@@ -403,6 +403,7 @@ class TestCapitalContinuityPacket:
         assert "packet-balance" in values
         assert "packet-total-assets" in values
         assert "stale-balance" not in values
+        assert "stale-capital" not in values
 
     def test_investment_genre_extracts_from_state_changes(self):
         result = BlueprintConstraintCompiler._build_capital_continuity_packet(

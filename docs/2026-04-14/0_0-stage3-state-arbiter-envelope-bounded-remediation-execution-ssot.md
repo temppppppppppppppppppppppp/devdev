@@ -280,7 +280,7 @@ These are bounded ownership changes, not a cross-stage kernel rewrite.
 4. `Tranche D — Post-tranche Proof And Fail-Only Stabilization`
    - only after A, B, and C land
    - re-audit docs against live workspace
-   - then decide between a fresh operator-gated rerun and the next global authority-alignment follow-up
+   - then decide between a fresh operator-gated rerun and continued proof-pending hold; do not reopen another global authority-alignment follow-up because `Tranche D` is already recorded
 
 ## 9. Acceptance Criteria
 

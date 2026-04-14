@@ -143,7 +143,7 @@ def _prioritize_numeric_authority_rows(
     fact_ledger_rows: list[dict[str, Any]],
     packet_rows: list[dict[str, Any]],
     limit: int,
-) -> tuple[list[dict[str, Any]], bool]:
+) -> tuple[list[dict[str, Any]], str]:
     if fact_ledger_rows and packet_rows:
         fact_rows_by_field = {
             str(row.get("field", "") or "").strip(): row
@@ -152,24 +152,31 @@ def _prioritize_numeric_authority_rows(
         }
         ordered_rows: list[dict[str, Any]] = []
         seen_fields: set[str] = set()
+        packet_only_present = False
         for packet_row in packet_rows:
             field_name = str(packet_row.get("field", "") or "").strip()
-            if field_name in seen_fields or field_name not in fact_rows_by_field:
+            if field_name in seen_fields:
                 continue
-            ordered_rows.append(fact_rows_by_field[field_name])
+            if field_name in fact_rows_by_field:
+                ordered_rows.append(fact_rows_by_field[field_name])
+                seen_fields.add(field_name)
+                continue
+            ordered_rows.append(packet_row)
             seen_fields.add(field_name)
+            packet_only_present = True
         for fact_row in fact_ledger_rows:
             field_name = str(fact_row.get("field", "") or "").strip()
             if not field_name or field_name in seen_fields:
                 continue
             ordered_rows.append(fact_row)
             seen_fields.add(field_name)
-        return ordered_rows[:limit], False
+        mode = "fact_ledger_plus_packet" if packet_only_present else "fact_ledger"
+        return ordered_rows[:limit], mode
     if fact_ledger_rows:
-        return fact_ledger_rows[:limit], False
+        return fact_ledger_rows[:limit], "fact_ledger"
     if packet_rows:
-        return packet_rows[:limit], True
-    return [], False
+        return packet_rows[:limit], "packet"
+    return [], "none"
 
 
 class WorkRetrievalFocusPayload(TypedDict, total=False):
@@ -1198,7 +1205,7 @@ class Stage4ContextBuilder:
     ) -> str:
         fact_ledger_rows = _collect_fact_ledger_numeric_carryover_rows(getattr(self.ctx, "fact_ledger", None))
         packet_rows, packet_version = _collect_packet_numeric_carryover_rows(arc_data)
-        selected_rows, using_packet_fallback = _prioritize_numeric_authority_rows(
+        selected_rows, authority_mode = _prioritize_numeric_authority_rows(
             fact_ledger_rows=fact_ledger_rows,
             packet_rows=packet_rows,
             limit=3,
@@ -1240,7 +1247,10 @@ class Stage4ContextBuilder:
             (
                 "- FactLedger carryover baseline is unavailable here, so the explicit cross-stage packet below is the "
                 "intake carryover floor until stronger persisted authority is available."
-                if using_packet_fallback
+                if authority_mode == "packet"
+                else "- FactLedger carryover baseline remains the stronger surface below, while explicit cross-stage "
+                "packet rows supplement carryover fields that are not yet persisted there."
+                if authority_mode == "fact_ledger_plus_packet"
                 else "- asset-family FactLedger rows below are prior-episode carryover baselines, not automatic proof "
                 "that later blueprint target numbers are already realized on-page."
             ),
