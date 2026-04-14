@@ -14,6 +14,10 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.stage2_context import Stage2Context
+from modules.core.cross_stage_authority_packet import (
+    CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+    build_cross_stage_authority_packet,
+)
 from modules.core.stage2_finalizer import (
     Stage2Finalizer,
     _build_stage2_carryover_authority_summary,
@@ -149,6 +153,46 @@ def test_build_stage2_carryover_authority_summary_surfaces_start_end_and_finance
     assert summary["end_inventory_count"] == 2
     assert summary["investment_calc_final_total_assets"] == 2000000000
     assert "semantic_carryover_keys" in summary
+
+
+def test_build_cross_stage_authority_packet_surfaces_stage2_transport_families():
+    refined_arc = {
+        "arc_no": 3,
+        "ep_start": 8,
+        "ep_end": 10,
+        "joint_docs": {
+            "final_location": "강남 오피스",
+            "physical_inventory": ["법인 인감", "노트북"],
+            "world_joint": "에콰도르 기사와 WTI 가격을 계속 추적 중",
+        },
+        "state_constraints": {
+            "arc_end_state": {
+                "location": "강남 오피스",
+                "equipment": ["법인 인감", "노트북"],
+                "injuries": "없음",
+                "internal_energy": 100,
+                "capital": "23억",
+                "total_assets": "30억",
+                "portfolio_position": "WTI long",
+            },
+            "investment_calc": {
+                "final_total_assets": 3000000000,
+                "final_cash": 2300000000,
+            },
+        },
+    }
+
+    packet = build_cross_stage_authority_packet(refined_arc)
+
+    assert packet["contract_version"] == CROSS_STAGE_AUTHORITY_PACKET_VERSION
+    assert packet["opening_carryover"]["location"] == "강남 오피스"
+    assert packet["opening_carryover"]["world_joint"] == "에콰도르 기사와 WTI 가격을 계속 추적 중"
+    assert packet["protagonist_carryover"]["equipment"] == ["법인 인감", "노트북"]
+    assert packet["protagonist_carryover"]["injuries"] == "없음"
+    assert packet["numeric_carryover"]["capital"] == "23억"
+    assert packet["numeric_carryover"]["investment_calc_final_total_assets"] == 3000000000
+    assert packet["source_precedence"]["opening_carryover"][0] == "state_constraints.arc_end_state.location"
+    assert packet["provenance"]["emitted_by"] == "Stage2Finalizer"
 
 
 class TestFinalizerStructure:
@@ -1494,10 +1538,17 @@ class TestRunFinalize:
         assert summary["start_location"] == "성북동 본가"
         assert summary["end_location"] == "강남 오피스"
         assert summary["investment_calc_final_total_assets"] == 2000000000
+        cross_stage_packet = save_kw["advisory_flags"]["cross_stage_authority_packet"]
+        assert cross_stage_packet["contract_version"] == CROSS_STAGE_AUTHORITY_PACKET_VERSION
+        assert cross_stage_packet["opening_carryover"]["location"] == "강남 오피스"
+        assert cross_stage_packet["numeric_carryover"]["total_assets"] == "20억원"
+        saved_arcs = finalizer.ctx.current_project.save_v20_anchor.call_args_list[0].args[1]
+        assert saved_arcs[-1]["cross_stage_authority_packet"]["provenance"]["emitted_by"] == "Stage2Finalizer"
         ui_event_kw = finalizer.ctx.current_project.db.save_ui_event.call_args.kwargs
         assert ui_event_kw["event_kind"] == "carryover_authority"
         assert ui_event_kw["attempt_key"] == save_kw["attempt_key"]
         assert ui_event_kw["meta"]["end_location"] == "강남 오피스"
+        assert ui_event_kw["meta"]["cross_stage_authority_packet_version"] == CROSS_STAGE_AUTHORITY_PACKET_VERSION
         assert any(
             "[Stage2 Carryover Authority]" in str(call.args[0])
             for call in finalizer.ctx.ui.log.call_args_list
