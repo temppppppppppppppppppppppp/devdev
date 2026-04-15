@@ -598,6 +598,7 @@ class ChiefWriter(BaseAgent):
         *,
         ep_num: int,
         blueprint: dict,
+        arc_data: dict | None,
         prev_manuscript: str,
         hud_report: str,
         arc_doc: str,
@@ -657,6 +658,7 @@ class ChiefWriter(BaseAgent):
             state_tracker=state_tracker,
             prev_manuscripts_text=prev_manuscripts_text,
             world_state_summary=world_state_summary,
+            arc_data=arc_data,
             chain_link_section=chain_link_section,
             emotional_beat_section=emotional_beat_section,
             upcoming_arc_items=upcoming_arc_items,
@@ -945,6 +947,7 @@ class ChiefWriter(BaseAgent):
         upcoming_arc_items: list[str] = None,
         strategy_budget: str = "full",
         preferred_strategy: str = "",
+        arc_data: dict | None = None,
     ) -> list[dict]:
         """
         3개 후보 원고 병렬 생성
@@ -976,6 +979,7 @@ class ChiefWriter(BaseAgent):
         common_context, cache_name, strategies, strategy_temperatures = self._prepare_generate_ensemble_context(
             ep_num=ep_num,
             blueprint=blueprint,
+            arc_data=arc_data,
             prev_manuscript=prev_manuscript,
             hud_report=hud_report,
             arc_doc=arc_doc,

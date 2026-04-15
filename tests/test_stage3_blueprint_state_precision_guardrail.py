@@ -404,6 +404,7 @@ class TestCapitalContinuityPacket:
         assert "packet-total-assets" in values
         assert "stale-balance" not in values
         assert "stale-capital" not in values
+        assert result.get("source") == "cross_stage_packet"
 
     def test_investment_genre_extracts_from_state_changes(self):
         result = BlueprintConstraintCompiler._build_capital_continuity_packet(

@@ -11,7 +11,10 @@ from __future__ import annotations
 from typing import Any
 import re
 
-from modules.core.cross_stage_authority_packet import CROSS_STAGE_AUTHORITY_PACKET_VERSION
+from modules.core.cross_stage_authority_packet import (
+    CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+    collect_numeric_carryover_entries,
+)
 
 
 def _clip(value: object, limit: int = 160) -> str:
@@ -86,11 +89,29 @@ def _resolve_packet_opening_location(packet: dict[str, Any] | None) -> tuple[str
     return _normalize_scalar(opening.get("location")), _normalize_scalar(opening.get("location_source"))
 
 
+def _packet_has_opening_truth(packet: dict[str, Any] | None) -> bool:
+    location, _ = _resolve_packet_opening_location(packet)
+    return bool(location)
+
+
+def _packet_has_protagonist_truth(packet: dict[str, Any] | None, *, genre: str) -> bool:
+    carryover = _coerce_mapping(_coerce_mapping(packet).get("protagonist_carryover"))
+    if "equipment" in carryover or _normalize_scalar(carryover.get("equipment_source")):
+        return True
+    if _normalize_scalar(carryover.get("injuries")):
+        return True
+    return genre == "wuxia" and bool(_normalize_percentage(carryover.get("internal_energy")))
+
+
+def _packet_has_numeric_truth(packet: dict[str, Any] | None) -> bool:
+    return bool(collect_numeric_carryover_entries(packet))
+
+
 def _is_packet_source(source: object) -> bool:
     return str(source or "").strip().startswith("cross_stage_authority_packet.")
 
 
-def _build_opening_source_precedence(*, has_packet: bool, is_arc_opening_episode: bool) -> list[str]:
+def _build_opening_source_precedence(*, has_packet_opening_truth: bool, is_arc_opening_episode: bool) -> list[str]:
     prev_sources = [
         "prev_blueprint.scene_breakdown.last.location",
         "prev_blueprint.end_location",
@@ -99,25 +120,25 @@ def _build_opening_source_precedence(*, has_packet: bool, is_arc_opening_episode
         "arc_data.state_constraints.arc_start_state.location",
         "arc_data.joint_docs.final_location",
     ]
-    if is_arc_opening_episode and has_packet:
+    if is_arc_opening_episode and has_packet_opening_truth:
         return ["cross_stage_authority_packet.opening_carryover.location", *prev_sources, *stage2_sources]
     ordered = list(prev_sources)
-    if has_packet:
+    if has_packet_opening_truth:
         ordered.append("cross_stage_authority_packet.opening_carryover.location")
     ordered.extend(stage2_sources)
     return ordered
 
 
-def _build_protagonist_source_precedence(*, has_packet: bool, is_arc_opening_episode: bool) -> list[str]:
+def _build_protagonist_source_precedence(*, has_packet_protagonist_truth: bool, is_arc_opening_episode: bool) -> list[str]:
     stage2_sources = [
         "arc_data.state_constraints.arc_start_state",
         "arc_data.status_shadow",
         "arc_data.joint_docs.physical_inventory",
     ]
-    if is_arc_opening_episode and has_packet:
+    if is_arc_opening_episode and has_packet_protagonist_truth:
         return ["cross_stage_authority_packet.protagonist_carryover", "prev_blueprint.protagonist_state", *stage2_sources]
     ordered = ["prev_blueprint.protagonist_state"]
-    if has_packet:
+    if has_packet_protagonist_truth:
         ordered.append("cross_stage_authority_packet.protagonist_carryover")
     ordered.extend(stage2_sources)
     return ordered
@@ -242,12 +263,14 @@ class EpisodeStateArbiter:
         )
         dropped_conflicts = opening_conflicts + protagonist_conflicts
         rewrite_required_reasons = _dedupe_tokens([item.get("reason", "") for item in dropped_conflicts])
+        has_packet_opening_truth = _packet_has_opening_truth(cross_stage_authority_packet)
+        has_packet_protagonist_truth = _packet_has_protagonist_truth(cross_stage_authority_packet, genre=genre)
         opening_sources = _build_opening_source_precedence(
-            has_packet=bool(cross_stage_authority_packet),
+            has_packet_opening_truth=has_packet_opening_truth,
             is_arc_opening_episode=is_arc_opening_episode,
         )
         protagonist_sources = _build_protagonist_source_precedence(
-            has_packet=bool(cross_stage_authority_packet),
+            has_packet_protagonist_truth=has_packet_protagonist_truth,
             is_arc_opening_episode=is_arc_opening_episode,
         )
 
@@ -256,7 +279,7 @@ class EpisodeStateArbiter:
             "prev_blueprint",
             "arc_data",
         ]
-        if cross_stage_authority_packet:
+        if _packet_has_numeric_truth(cross_stage_authority_packet):
             capital_sources.insert(0, "cross_stage_authority_packet.numeric_carryover")
 
         return {

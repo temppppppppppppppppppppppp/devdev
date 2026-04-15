@@ -1120,9 +1120,12 @@ class TestProcessPassResult:
         saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
         family = saved_bible["state_truth_owner_contract"]["field_families"]["numeric_carryover_authority"]
         assert family["fields"] == ["total_assets", "capital"]
+        assert family["owner"] == "fact_ledger_carryover_baseline"
+        assert family["provenance"] == "fact_ledger_authority_scope"
         assert family["transport_lineage"] == "cross_stage_authority_packet.numeric_carryover"
         assert family["transport_contract_version"] == CROSS_STAGE_AUTHORITY_PACKET_VERSION
         assert family["transport_fields"] == ["total_assets", "capital"]
+        assert family["transport_authority_mode"] == "fact_ledger_overlap"
 
     def test_persist_manager_delta_outputs_preserves_all_numeric_transport_fields(self):
         pp = self._make_pp()
@@ -1216,9 +1219,12 @@ class TestProcessPassResult:
         saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
         family = saved_bible["state_truth_owner_contract"]["field_families"]["numeric_carryover_authority"]
         assert family["fields"] == ["total_assets", "capital"]
+        assert family["owner"] == "cross_stage_authority_packet_bootstrap"
+        assert family["provenance"] == "cross_stage_transport_bootstrap"
         assert family["transport_lineage"] == "cross_stage_authority_packet.numeric_carryover"
         assert family["transport_contract_version"] == CROSS_STAGE_AUTHORITY_PACKET_VERSION
         assert family["transport_fields"] == ["total_assets", "capital"]
+        assert family["transport_authority_mode"] == "packet_bootstrap"
 
     def test_log_numeric_carryover_authority_summary_emits_ui_note(self):
         pp = self._make_pp()
@@ -2215,6 +2221,41 @@ class TestStateTruthOwnerContract:
         assert contract["field_families"]["numeric_carryover_authority"]["promotion_sources"] == {
             "capital": "actual_truth",
             "total_assets": "director_state_updates_fallback",
+        }
+
+    def test_marks_packet_bootstrap_carryover_numeric_authority_family(self):
+        contract = _build_state_truth_owner_contract(
+            actual_truth={"location": "archive"},
+            final_state_updates={},
+            curr_inventory_counts={},
+            inventory_count_deltas=[],
+            relationship_changes=[],
+            active_pressure_vectors=[],
+            arc_data={},
+            fact_ledger_carryover_fields=["capital", "total_assets"],
+            numeric_carryover_transport={
+                "transport_lineage": "cross_stage_authority_packet.numeric_carryover",
+                "transport_contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                "transport_fields": ["capital", "total_assets"],
+                "transport_authority_mode": "packet_bootstrap",
+            },
+        )
+
+        assert contract["field_families"]["numeric_carryover_authority"] == {
+            "owner": "cross_stage_authority_packet_bootstrap",
+            "surfaces": [
+                "cross_stage_authority_packet.numeric_carryover",
+                "fact_ledger",
+                "episode_bible.state_truth_owner_contract",
+                "state_log.state_truth_owner_contract",
+            ],
+            "fields": ["capital", "total_assets"],
+            "authority_scope": "carryover_baseline",
+            "provenance": "cross_stage_transport_bootstrap",
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover",
+            "transport_contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+            "transport_fields": ["capital", "total_assets"],
+            "transport_authority_mode": "packet_bootstrap",
         }
 
 

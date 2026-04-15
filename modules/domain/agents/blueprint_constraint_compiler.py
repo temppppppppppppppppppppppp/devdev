@@ -1169,12 +1169,7 @@ class BlueprintConstraintCompiler:
         genre: str,
         ep_num: int = 0,
     ) -> dict:
-        """[S3-CC] Build capital-state continuity packet for investment-genre runs.
-
-        Extracts entering balance class, deployed/available status, pending expenditure,
-        and active position status from prior accepted authority.
-        Only active for investment genre.
-        """
+        """[S3-CC] Build capital-state continuity packet for investment-genre runs."""
         if genre != "investment":
             return {}
 
@@ -1182,6 +1177,7 @@ class BlueprintConstraintCompiler:
         bp = prev_blueprint if isinstance(prev_blueprint, dict) else {}
         ms_text = str(prev_manuscript_ending or "").strip()
         _append_cross_stage_numeric_fields(fields, arc_data)
+        packet_field_count = len(fields)
         packet_numeric_families = _resolve_cross_stage_numeric_semantic_families(arc_data)
 
         def _capital_within_ep(entry: object) -> bool:
@@ -1329,14 +1325,19 @@ class BlueprintConstraintCompiler:
 
         # Deduplicate by label
         seen_labels: set[str] = set()
+        source_origins: set[str] = set()
         unique_fields: list[dict] = []
-        for f in fields:
+        for index, f in enumerate(fields):
             label = f.get("label", "")
             if label not in seen_labels:
                 seen_labels.add(label)
                 unique_fields.append(f)
+                source_origins.add("cross_stage_packet" if index < packet_field_count else "prev_authority")
 
-        return {"fields": unique_fields[:8], "source": "prev_authority"}
+        if source_origins == {"cross_stage_packet"}:
+            return {"fields": unique_fields[:8], "source": "cross_stage_packet"}
+        source = "prev_authority+cross_stage_packet" if "cross_stage_packet" in source_origins else "prev_authority"
+        return {"fields": unique_fields[:8], "source": source}
 
     @staticmethod
     def _extract_immutable_fact_carryover(arc_data: dict, arc_position: int, ep_num: int = 0) -> str:

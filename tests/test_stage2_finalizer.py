@@ -212,6 +212,46 @@ def test_build_cross_stage_authority_packet_preserves_authoritative_empty_equipm
     assert packet["protagonist_carryover"]["equipment_source"] == "state_constraints.arc_end_state.equipment"
 
 
+def test_build_cross_stage_authority_packet_preserves_zero_numeric_carryover_fields():
+    refined_arc = {
+        "state_constraints": {
+            "arc_end_state": {
+                "capital": 0,
+                "total_assets": 0,
+                "portfolio_position": 0,
+            },
+            "investment_calc": {
+                "final_total_assets": 0,
+                "final_cash": 0,
+            },
+        }
+    }
+
+    packet = build_cross_stage_authority_packet(refined_arc)
+
+    assert packet["numeric_carryover"]["capital"] == "0"
+    assert packet["numeric_carryover"]["total_assets"] == "0"
+    assert packet["numeric_carryover"]["portfolio_position"] == "0"
+    assert packet["numeric_carryover"]["investment_calc_final_cash"] == 0
+    assert packet["numeric_carryover"]["investment_calc_final_total_assets"] == 0
+
+
+def test_build_cross_stage_authority_packet_ignores_nullish_end_inventory_string():
+    refined_arc = {
+        "joint_docs": {"physical_inventory": ["seal"]},
+        "state_constraints": {
+            "arc_end_state": {
+                "equipment": "null",
+            }
+        },
+    }
+
+    packet = build_cross_stage_authority_packet(refined_arc)
+
+    assert packet["protagonist_carryover"]["equipment"] == ["seal"]
+    assert packet["protagonist_carryover"]["equipment_source"] == "joint_docs.physical_inventory"
+
+
 def test_build_stage2_carryover_authority_summary_preserves_authoritative_empty_end_inventory_clear():
     refined_arc = {
         "joint_docs": {"final_location": "강남 오피스", "physical_inventory": ["stale-bag"]},
@@ -226,7 +266,7 @@ def test_build_stage2_carryover_authority_summary_preserves_authoritative_empty_
     summary = _build_stage2_carryover_authority_summary(refined_arc)
 
     assert summary["end_location"] == "강남 오피스"
-    assert "end_inventory_count" not in summary
+    assert summary["end_inventory_count"] == 0
     assert "end_inventory_preview" not in summary
 
 
@@ -250,7 +290,7 @@ def test_sync_stage2_end_inventory_contract_preserves_authoritative_empty_clear_
     assert refined_arc["state_constraints"]["arc_end_state"]["equipment"] == []
 
 
-@pytest.mark.parametrize("raw_equipment", ["", "[]"])
+@pytest.mark.parametrize("raw_equipment", ["", "[]", "null", "None", "nil", "n/a"])
 def test_sync_stage2_end_inventory_contract_does_not_treat_malformed_empty_string_as_authoritative_clear(raw_equipment):
     refined_arc = {
         "joint_docs": {"physical_inventory": ["Ghost token"]},
