@@ -1741,6 +1741,7 @@ class FailureAnalyzer:
         director_selections: dict[str, dict],
         session_decisions: dict[str, dict],
         episode_production: dict[str, dict],
+        authority_row: dict[str, object] | None = None,
     ) -> dict[str, list[dict]]:
         results = {
             "raw_rationale_missing": [],
@@ -1754,6 +1755,9 @@ class FailureAnalyzer:
         }
         if stage != 4:
             return results
+        companion_status = str((authority_row or {}).get("selection_companion_status") or "").strip()
+        skip_director_selection_contract_alignment = companion_status == "pre_final_candidate"
+        skip_prefinal_feedback_alignment = companion_status == "pre_final_candidate"
         payload = raw_rationale_by_attempt.get(attempt_key, {})
         payload_kinds = set(payload.get("payload_kinds") or set())
         record_families = set(payload.get("record_families") or set())
@@ -1844,7 +1848,9 @@ class FailureAnalyzer:
         contract_payload_pairs = (
             (
                 "selection_contract_snapshot_raw",
-                (("director_selections", director_selection),),
+                ()
+                if skip_director_selection_contract_alignment
+                else (("director_selections", director_selection),),
             ),
             (
                 "contract_snapshot_raw",
@@ -1907,7 +1913,7 @@ class FailureAnalyzer:
             "feedback_provenance_raw",
             decoded_payloads.get("feedback_provenance_raw"),
         )
-        if isinstance(feedback_payload, dict):
+        if isinstance(feedback_payload, dict) and not skip_prefinal_feedback_alignment:
             for field_name in ("runtime_advisory", "retry_directives"):
                 raw_value = feedback_payload.get(field_name)
                 if not FailureAnalyzer._normalize_alignment_value(raw_value):
@@ -2592,6 +2598,7 @@ class FailureAnalyzer:
                     director_selections=director_selections,
                     session_decisions=session_decisions,
                     episode_production=episode_production,
+                    authority_row=final_authority_by_attempt.get(attempt_key),
                 ),
             ):
                 for key, rows in partial.items():

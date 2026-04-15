@@ -1,0 +1,486 @@
+{
+  "arc_no": 1,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0002.txt",
+    "settlement_packet_path": "drafts/ep_0002.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 2,
+  "ep_num": 2,
+  "manuscript": {
+    "char_count": 4025,
+    "content_hash": "e41472ba53add0c512ff975df6e6a19103960e2b629bcb2af6fa5d3cee086949",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0002.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "open_review": "특이사항 없음. 직전 화 엔딩과의 연결이 가장 매끄럽고, 군더더기 없는 문장으로 긴장감을 잘 살렸음. 공간 이동 묘사도 명확하여 Python의 위치 변화 경고는 오탐으로 판단됨.",
+      "repair_scope": "inplace",
+      "score": 98,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 9,
+        "quality_engagement": 19
+      },
+      "selection_reason": "직전 화 엔딩(아버지의 질문과 주인공이 입을 여는 찰나)에서 중복 서술이나 시간 역행 없이 가장 완벽하게 이어집니다. 불필요한 내적 독백을 배제하고 인물 간의 텐션과 행동 묘사에 집중하여 몰입도를 극대화했습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "시선을 돌렸다"
+        },
+        {
+          "count": 1,
+          "pattern": "침을 삼켰다"
+        }
+      ],
+      "ai_slop_score": 2.0,
+      "burstiness": 15.6,
+      "ced_score": 0.0,
+      "complexity": 47.46,
+      "compression_ratio": 0.4593,
+      "signal_summary": {
+        "ai_slop_total_hits": 2,
+        "burstiness": 15.6,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 47.46,
+        "compression_ratio": 0.4593,
+        "sentence_count": 104
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "tv",
+            "뉴스",
+            "이란",
+            "문제",
+            "보도"
+          ],
+          "source": "ending_hook",
+          "text": "TV 뉴스에서 이란 핵 문제 보도를 확인한 한시우가 결심에 찬 얼굴로 폴더폰을 열어젖힌다."
+        },
+        {
+          "cue_terms": [
+            "아버지",
+            "형들로",
+            "독립",
+            "쟁취하고",
+            "번째"
+          ],
+          "source": "expected_ending",
+          "text": "아버지와 형들로부터 독립을 쟁취하고, 첫 번째 투자를 위한 준비를 시작한다."
+        }
+      ],
+      "capital": 20000000000,
+      "connections": "재벌가 가족",
+      "current_objective": "자신의 힘으로 제국을 세우고 군림",
+      "equipment": [
+        "2006년형 폴더폰"
+      ],
+      "inventory_counts": {
+        "2006년형 폴더폰": 1
+      },
+      "market_insight": "18년치 미래 경제사 (WTI, 서브프라임, 리먼 등)",
+      "reputation": "독립을 선언한 투자 사업가 (준비 중)",
+      "status": "독립 사업 시작 결심 및 실행 준비",
+      "stocks": "보유 중 (처분 예정)",
+      "total_assets": 20000000000,
+      "wealth": "200억 원 (독립 자본)"
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "tv",
+            "뉴스",
+            "이란",
+            "문제",
+            "보도"
+          ],
+          "source": "ending_hook",
+          "text": "TV 뉴스에서 이란 핵 문제 보도를 확인한 한시우가 결심에 찬 얼굴로 폴더폰을 열어젖힌다."
+        },
+        {
+          "cue_terms": [
+            "아버지",
+            "형들로",
+            "독립",
+            "쟁취하고",
+            "번째"
+          ],
+          "source": "expected_ending",
+          "text": "아버지와 형들로부터 독립을 쟁취하고, 첫 번째 투자를 위한 준비를 시작한다."
+        }
+      ],
+      "causal_links": [
+        "한시우의 독립 선언 및 사업 계획 발표 -> 한정호 회장의 암묵적 허락",
+        "한시우의 독립 선언 및 사업 계획 발표 -> 한태준, 한태민 형제의 경멸과 안도",
+        "한시우의 회귀 지식 -> 2006년 국제 유가 급등 예측 및 WTI 원유를 첫 투자 타깃으로 설정"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "신문",
+          "to": 0
+        }
+      ],
+      "inventory_counts": {
+        "2006년형 폴더폰": 1
+      },
+      "karma_matrix": [],
+      "knowledge_map": {
+        "new_misled": [
+          "한태준",
+          "한태민"
+        ],
+        "new_witnesses": [
+          "한정호",
+          "한태준",
+          "한태민"
+        ]
+      },
+      "lost_items": [
+        "신문"
+      ],
+      "new_items": [],
+      "new_npcs": [
+        "한정호",
+        "한태준",
+        "한태민"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "한정호",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한태준",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한태민",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한태준",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "한태민",
+          "to": "오해 대상"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "tv",
+              "뉴스",
+              "이란",
+              "문제",
+              "보도"
+            ],
+            "source": "ending_hook",
+            "text": "TV 뉴스에서 이란 핵 문제 보도를 확인한 한시우가 결심에 찬 얼굴로 폴더폰을 열어젖힌다."
+          },
+          {
+            "cue_terms": [
+              "아버지",
+              "형들로",
+              "독립",
+              "쟁취하고",
+              "번째"
+            ],
+            "source": "expected_ending",
+            "text": "아버지와 형들로부터 독립을 쟁취하고, 첫 번째 투자를 위한 준비를 시작한다."
+          }
+        ],
+        "capital": 20000000000,
+        "connections": "재벌가 가족",
+        "current_objective": "자신의 힘으로 제국을 세우고 군림",
+        "equipment": [
+          "2006년형 폴더폰"
+        ],
+        "inventory_counts": {
+          "2006년형 폴더폰": 1
+        },
+        "market_insight": "18년치 미래 경제사 (WTI, 서브프라임, 리먼 등)",
+        "reputation": "독립을 선언한 투자 사업가 (준비 중)",
+        "status": "독립 사업 시작 결심 및 실행 준비",
+        "stocks": "보유 중 (처분 예정)",
+        "total_assets": 20000000000,
+        "wealth": "200억 원 (독립 자본)"
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "equipment",
+              "location",
+              "protagonist_status"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "promoted_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+            "promotion_sources": {
+              "capital": "actual_truth",
+              "total_assets": "actual_truth"
+            },
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "200억 원",
+      "director_score": 98,
+      "equipment": [
+        "2006년형 폴더폰"
+      ],
+      "location": "한시우의 방",
+      "protagonist_status": "가족으로부터 독립을 허락받고, 첫 투자를 실행할 준비를 마친 상태"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "equipment",
+            "location",
+            "protagonist_status"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "promoted_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+          "promotion_sources": {
+            "capital": "actual_truth",
+            "total_assets": "actual_truth"
+          },
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "revision_required": true
+  },
+  "title": "제2화 다른 대답"
+}

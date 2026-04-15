@@ -3407,6 +3407,9 @@ class Stage4InterviewRound:
         gate_semantics = gate_semantics if isinstance(gate_semantics, dict) else {}
         fix_pack = cls._normalize_fix_pack(fix_pack)
         source = source if isinstance(source, dict) else {}
+        source_repair_contract = (
+            source.get("repair_contract") if isinstance(source.get("repair_contract"), dict) else {}
+        )
 
         subtype_candidates: list[str] = []
 
@@ -3420,12 +3423,22 @@ class Stage4InterviewRound:
                 if token not in subtype_candidates:
                     subtype_candidates.append(token)
 
+        _push(source_repair_contract.get("subtype", ""))
+        _push_many(source_repair_contract.get("subtypes"))
         _push(fix_pack.get("subtype", ""))
         _push_many(fix_pack.get("subtypes"))
         for key in ("subtype", "contradiction_subtype", "drift_subtype"):
             _push(source.get(key, ""))
+            _push(source_repair_contract.get(key, ""))
         for key in ("subtypes", "contradiction_types"):
             _push_many(source.get(key))
+            _push_many(source_repair_contract.get(key))
+        for item in source_repair_contract.get("contradiction_details") or []:
+            if not isinstance(item, dict):
+                continue
+            for key in ("subtype", "contradiction_subtype", "drift_subtype"):
+                _push(item.get(key, ""))
+            _push_many(item.get("contradiction_types"))
         for item in source.get("contradiction_details") or []:
             if not isinstance(item, dict):
                 continue
@@ -3439,30 +3452,46 @@ class Stage4InterviewRound:
             if len(subtype_candidates) > 1:
                 payload["subtypes"] = subtype_candidates[:4]
 
-        fix_scope = str(source.get("fix_scope", "") or gate_semantics.get("repair_scope", "") or "").strip()
+        fix_scope = str(
+            source.get("fix_scope", "")
+            or source_repair_contract.get("fix_scope", "")
+            or gate_semantics.get("repair_scope", "")
+            or ""
+        ).strip()
         if fix_scope:
             payload["fix_scope"] = fix_scope
-        repair_scope = str(gate_semantics.get("repair_scope", "") or source.get("repair_scope", "") or "").strip()
+        repair_scope = str(
+            gate_semantics.get("repair_scope", "")
+            or source.get("repair_scope", "")
+            or source_repair_contract.get("repair_scope", "")
+            or ""
+        ).strip()
         if repair_scope:
             payload["repair_scope"] = repair_scope
         authoritative_fix_scope = str(
-            gate_semantics.get("authoritative_fix_scope", source.get("authoritative_fix_scope", "")) or ""
+            gate_semantics.get(
+                "authoritative_fix_scope",
+                source.get("authoritative_fix_scope", source_repair_contract.get("authoritative_fix_scope", "")),
+            )
+            or ""
         ).strip()
         if authoritative_fix_scope:
             payload["authoritative_fix_scope"] = authoritative_fix_scope
         scope_origin = gate_semantics.get("scope_origin")
+        if not isinstance(scope_origin, dict) or not scope_origin:
+            scope_origin = source_repair_contract.get("scope_origin")
         if isinstance(scope_origin, dict) and scope_origin:
             payload["scope_origin"] = dict(scope_origin)
 
-        provenance = str(fix_pack.get("provenance", "") or "").strip()
+        provenance = str(source_repair_contract.get("provenance", "") or fix_pack.get("provenance", "") or "").strip()
         if provenance:
             payload["provenance"] = provenance
-        provenance_sources = [
-            str(item).strip() for item in (fix_pack.get("provenance_sources") or []) if str(item).strip()
-        ]
+        provenance_sources = cls._normalize_fix_pack_provenance_sources(
+            source_repair_contract.get("provenance_sources") or fix_pack.get("provenance_sources") or []
+        )
         if provenance_sources:
             payload["provenance_sources"] = provenance_sources[:4]
-        target_kind = str(fix_pack.get("target_kind", "") or "").strip()
+        target_kind = str(source_repair_contract.get("target_kind", "") or fix_pack.get("target_kind", "") or "").strip()
         if target_kind:
             payload["target_kind"] = target_kind
 
@@ -4734,6 +4763,7 @@ class Stage4InterviewRound:
             gate_semantics=logging_payload.session_gate_semantics,
             fix_pack=dict(logging_payload.session_fix_pack or {}),
             retry_budget_axes=dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
+            preserve_historical_companion=bool(is_patch or trace_patch_trace),
         )
         self._emit_pass_result_logs(
             next_ep=next_ep,
@@ -4840,9 +4870,12 @@ class Stage4InterviewRound:
         gate_semantics: dict | None = None,
         fix_pack: dict | None = None,
         retry_budget_axes: dict | None = None,
+        preserve_historical_companion: bool = False,
     ) -> None:
         current_db = getattr(getattr(self.ctx, "current_project", None), "db", None)
         if current_db is None or not hasattr(current_db, "update_director_selection_rationale"):
+            return
+        if preserve_historical_companion:
             return
         try:
             current_db.update_director_selection_rationale(
@@ -7296,10 +7329,14 @@ class Stage4InterviewRound:
                 _contract_source["repair_contract"] = dict(_gate_semantics.get("repair_contract") or {})
             if isinstance(_gate_semantics.get("scope_authority"), dict) and _gate_semantics.get("scope_authority"):
                 _contract_source["scope_authority"] = dict(_gate_semantics.get("scope_authority") or {})
-            _patch_trace, _fix_pack = self._resolve_stage4_patch_contract_payloads(
-                director_result=_contract_source,
-                patch_trace=_patch_trace,
-            )
+            if is_patch or patch_fallback:
+                _patch_trace, _fix_pack = self._resolve_stage4_patch_contract_payloads(
+                    director_result=_contract_source,
+                    patch_trace=_patch_trace,
+                )
+            else:
+                _patch_trace = {}
+                _fix_pack = self._build_fix_pack_payload(_contract_source)
             if isinstance(fix_pack, dict) and fix_pack and not _fix_pack:
                 _fix_pack = dict(fix_pack)
             _derived_repair_contract = self._build_repair_contract_payload_from_parts(
@@ -7395,7 +7432,7 @@ class Stage4InterviewRound:
                 "score_breakdown": director_result.get("score_breakdown", {}),
                 "open_review": str(director_result.get("open_review") or ""),
                 "flags": {
-                    "patch_mode": bool(is_patch or _patch_trace),
+                    "patch_mode": bool(is_patch),
                     "patch_fallback": patch_fallback,
                     "tot": tot_used,
                     "mad": mad_used,
