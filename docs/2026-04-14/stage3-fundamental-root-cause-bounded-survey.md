@@ -1,16 +1,17 @@
 # Stage3 Fundamental Root-Cause Bounded Survey
 
 Date: 2026-04-14
-Status: final (3-pass audited; code-first bounded survey)
+Status: final (3-pass audited; code-first bounded survey; current implementation note refreshed after the 2026-04-15 post-tranche current-head audit)
 Canonical Path: `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 Commit State:
 - Baseline Commit: `f58059fefd10ed3f41d7bacca3b908dd47ada418`
 - Baseline Dirty Summary: `dirty: live 000_260412_a logs/db, 0_temp.txt, and untracked 2026-04-14 diagnostic notes already present in worktree`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none`
+- Resume Commit: `e0a63f068cbc6d253901f272c973a1346ac6ec95`
+- Resume Drift Summary: `the survey body remains the root-cause authority; current implementation now includes Stage3 Tranche A/B/C landed on current main plus the later Stage234 residual-closure drift, and the 2026-04-15 post-tranche audit records that no additional pre-proof code tranche is open while fresh rerun remains operator-gated`
 Source Survey Docs:
 - `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
 - `docs/2026-04-14/stage3-runtime-retry-structural-debt-survey.md`
+- `docs/2026-04-15/stage3-state-arbiter-envelope-post-tranche-current-head-3pass-audit.md`
 - `docs/2026-04-01/active-temp-execution-roadmap.md`
 - `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 - `docs/2026-04-13/0_0-stage3-quality-closure-five-tranche-remediation-execution-ssot.md`
@@ -29,6 +30,16 @@ Evidence Artifacts:
 - `modules/core/stage4_postselect_runtime.py`
 Side-Effect Coverage: covered (Stage3 prompt assembly, retry/runtime, validation, S4 carryover contract, operator observability, queue docs)
 Confidence: `96%`
+
+Current-head implementation note:
+
+- the body below remains the 2026-04-14 root-cause basis that selected this lane
+- current implementation note:
+  - `Tranche A/B/C` are landed on current-head `e0a63f06`
+  - post-tranche current-head status is recorded in `stage3-state-arbiter-envelope-post-tranche-current-head-3pass-audit.md`
+  - no additional pre-proof code tranche is open inside this lane
+  - fresh rerun remains operator-gated under `stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+  - legacy semantic-core `180+` hotspots in `blueprint_constraint_compiler.py` and `blueprint_ensemble.py` remain watch items rather than an auto-opened post-tranche extension
 
 ## 1. Intent
 
