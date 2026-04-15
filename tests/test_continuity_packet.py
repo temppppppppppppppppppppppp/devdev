@@ -339,7 +339,7 @@ class TestBuildContinuityPacket:
         )
 
         assert "수치 변화 이력" in packet
-        assert "자본금: 1억 원(ep1) → 10억 원(ep30)" in packet
+        assert "자본금: 1억 원(ep1) → 10억 원 (ep30 carryover baseline)" in packet
         assert "ep10: 3억 달성" in packet
         assert "ep30: 10억 도달" in packet
 

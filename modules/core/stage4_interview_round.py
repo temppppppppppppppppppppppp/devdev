@@ -7064,6 +7064,14 @@ class Stage4InterviewRound:
             default_target_kind=default_target_kind,
             limit=6,
         )
+        if not default_target_kind:
+            for patch_target_record in patch_target_records:
+                if not isinstance(patch_target_record, dict):
+                    continue
+                record_target_kind = str(patch_target_record.get("target_kind") or "").strip()
+                if record_target_kind:
+                    default_target_kind = record_target_kind
+                    break
         if patch_targets:
             trace_payload["patch_targets"] = patch_targets
             if not fix_pack_payload.get("patch_targets"):
@@ -7073,6 +7081,8 @@ class Stage4InterviewRound:
             fix_pack_payload["patch_target_records"] = list(patch_target_records)
         if default_target_kind:
             trace_payload["target_kind"] = default_target_kind
+            if not str(fix_pack_payload.get("target_kind") or "").strip():
+                fix_pack_payload["target_kind"] = default_target_kind
 
         patch_round = trace_payload.get("patch_round")
         try:
@@ -7625,7 +7635,12 @@ class Stage4InterviewRound:
             _scope_authority = dict(_nested_scope_authority)
         _derived_scope_authority = self._build_scope_authority_payload_from_parts(
             gate_semantics=_gate_semantics,
-            source={**_normalized, **_repair_contract},
+            source={
+                **_normalized,
+                **_repair_contract,
+                "repair_contract": _repair_contract,
+                "scope_authority": _scope_authority,
+            },
         )
         if _derived_scope_authority:
             _scope_authority = {**_scope_authority, **_derived_scope_authority}
@@ -7736,6 +7751,12 @@ class Stage4InterviewRound:
             resolve_db_fallbacks=True,
         )
         _model = self._resolve_stage4_db_attempt_model(model)
+        db_projection = _build_stage4_attempt_contract_projection(
+            contract_packet=contract_packet,
+            fix_scope_fallback=fix_scope,
+            empty_fix_scope_as_none=True,
+            include_director_quality_passed=True,
+        )
         return {
             "stage": 4,
             "verdict": verdict or ("PASS" if success else "REJECT"),
@@ -7745,6 +7766,7 @@ class Stage4InterviewRound:
             "score": score,
             "failure_category": failure_category or None,
             "reject_reason": "" if success else (reject_reason or f"score={score}"),
+            "fix_scope": db_projection.get("fix_scope"),
             "model": _model,
             "duration_ms": duration_ms,
             "advisory_flags": contract_packet.advisory_flags,
@@ -7765,12 +7787,9 @@ class Stage4InterviewRound:
             "is_patch": is_patch,
             "is_patch_fallback": is_patch_fallback,
             "patch_strategy": patch_strategy or None,
-            **_build_stage4_attempt_contract_projection(
-                contract_packet=contract_packet,
-                fix_scope_fallback=fix_scope,
-                empty_fix_scope_as_none=True,
-                include_director_quality_passed=True,
-            ),
+            "director_quality_passed": bool(db_projection.get("director_quality_passed", False)),
+            "downstream_override_applied": bool(db_projection.get("downstream_override_applied", False)),
+            "primary_failure_layer": str(db_projection.get("primary_failure_layer") or "").strip() or None,
         }
 
     def _build_stage4_attempt_prelude(

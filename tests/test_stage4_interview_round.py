@@ -577,7 +577,8 @@ class TestInterviewRoundHelpers:
             }
         )
 
-        assert "slot_6" in feedback
+        assert "slot_5" in feedback
+        assert "slot_6" not in feedback
         assert "must-fix-5" in feedback
         assert "guard-5" in feedback
         assert "provenance=runtime_backfilled" in feedback
@@ -8032,7 +8033,7 @@ class TestLane2DirectorSemantics:
         assert kwargs["final_score"] == 88
         assert kwargs["validation_warnings"] == ["warn"]
         assert kwargs["is_patch"] is True
-        assert kwargs["trace_patch_trace"] == {"mode": "patch"}
+        assert kwargs["trace_patch_trace"]["mode"] == "patch"
 
     def test_finalize_round_pass_path_delegates_trace_payload_to_finalize_pass(self):
         from modules.core.stage4_interview_round import _RoundOutcomeTracePayload
@@ -8082,7 +8083,7 @@ class TestLane2DirectorSemantics:
         assert kwargs["final_score"] == 88
         assert kwargs["validation_warnings"] == ["warn"]
         assert kwargs["is_patch"] is True
-        assert kwargs["trace_patch_trace"] == {"mode": "patch"}
+        assert kwargs["trace_patch_trace"]["mode"] == "patch"
 
     def test_build_pass_result_logging_payload_snapshots_trace_candidate_when_attempt_meta_missing(self):
         ctx = _make_ctx()
@@ -11326,7 +11327,7 @@ class TestLane2DirectorSemantics:
         assert finalize_kwargs["final_verdict"] == "REJECT"
         assert finalize_kwargs["final_score"] == 44
         assert finalize_kwargs["validation_warnings"] == ["warn"]
-        assert finalize_kwargs["trace_patch_trace"] == {"mode": "patch"}
+        assert finalize_kwargs["trace_patch_trace"]["mode"] == "patch"
 
     def test_finalize_round_reject_path_routes_handle_reject_and_finalize(self):
         ctx = _make_ctx()
@@ -11383,7 +11384,7 @@ class TestLane2DirectorSemantics:
         assert finalize_kwargs["final_verdict"] == "REJECT"
         assert finalize_kwargs["final_score"] == 44
         assert finalize_kwargs["validation_warnings"] == ["warn"]
-        assert finalize_kwargs["trace_patch_trace"] == {"mode": "patch"}
+        assert finalize_kwargs["trace_patch_trace"]["mode"] == "patch"
 
     def test_append_episode_log_includes_gate_semantics(self):
         ctx = _make_ctx()

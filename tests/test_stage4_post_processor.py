@@ -342,6 +342,24 @@ class TestProcessPassResult:
         assert dump_path.exists()
         assert "test manuscript" in dump_path.read_text(encoding="utf-8")
 
+    def test_save_pass_result_primary_db_projects_approved_hud_updates_into_snapshot(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.sys.hud.snapshot.return_value = {"hp": 10, "location": "old"}
+
+        result = pp._save_pass_result_primary_db(
+            next_ep=3,
+            final_manuscript="test manuscript",
+            final_title="episode title",
+            final_state_updates={"hp": 20},
+            output_dir=tmp_path,
+            approved_hud_updates={"actual_truth": {"hp": 20, "location": "gate"}},
+        )
+
+        assert result is True
+        save_kwargs = pp.ctx.current_project.db.save_manuscript.call_args.kwargs
+        assert save_kwargs["hud_snapshot"] == {"hp": 20, "location": "gate"}
+
     def test_save_pass_result_quality_sidecars_returns_signal_bundle(self):
         pp = self._make_pp()
 
@@ -362,7 +380,6 @@ class TestProcessPassResult:
 
     def test_run_pass_result_local_side_effects_updates_hud_runs_summary_and_defers_txt_export(self, tmp_path):
         pp = self._make_pp()
-        pp.ctx.agents["director"].on_approve_workflow.return_value = {"applied_updates": {"hp": 77}}
         pp._reconcile_capital = MagicMock()
 
         pp._run_pass_result_local_side_effects(
@@ -372,6 +389,7 @@ class TestProcessPassResult:
             final_state_updates={"hp": 77},
             output_dir=tmp_path,
             v50_modules_available=False,
+            approved_hud_updates={"actual_truth": {"hp": 77}},
         )
 
         pp.ctx.sys.hud.bulk_update.assert_called_once_with({"hp": 77})

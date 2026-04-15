@@ -87,6 +87,17 @@ def test_build_stage4_db_attempt_payload_surfaces_query_friendly_override_fields
     assert payload["director_quality_passed"] is True
     assert payload["downstream_override_applied"] is True
     assert payload["primary_failure_layer"] == "downstream_gate"
+    for unexpected in (
+        "director_verdict",
+        "gate_basis",
+        "repair_scope",
+        "authoritative_fix_scope",
+        "fix_pack",
+        "repair_contract",
+        "scope_authority",
+        "retry_budget_axes",
+    ):
+        assert unexpected not in payload
 
 
 def test_stage4_db_attempt_payload_roundtrips_into_stage_attempts_sink(tmp_path):
