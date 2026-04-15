@@ -264,9 +264,9 @@ class TestFactLockPacket:
 
 
 class TestOpeningStateAuthority:
-    """Current-arc opening authority must outrank stale prior-blueprint state."""
+    """Opening-state precedence should stay aligned with packet-only override semantics."""
 
-    def test_compile_prefers_arc_start_state_over_stale_prev_blueprint(self):
+    def test_compile_keeps_prev_blueprint_when_packet_missing_at_arc_opening(self):
         compiler = BlueprintConstraintCompiler()
         block = compiler.compile(
             arc_data={
@@ -276,7 +276,7 @@ class TestOpeningStateAuthority:
                 "tactical_doc": "제11화: 개장 직전 브리핑",
                 "state_constraints": {
                     "arc_start_state": {
-                        "location": "Gangnam HQ",
+                        "location": "Arc Start Office",
                         "equipment": ["BlackBerry 7130", "Ecuador memo"],
                         "injuries": "없음",
                     }
@@ -298,9 +298,9 @@ class TestOpeningStateAuthority:
             },
         )
 
-        assert block["continuity"]["location"] == "Gangnam HQ"
-        assert block["inherited_state"]["equipment"] == ["BlackBerry 7130", "Ecuador memo"]
-        assert block["inherited_state"]["injuries"] == "없음"
+        assert block["continuity"]["location"] == "Old Office"
+        assert block["inherited_state"]["equipment"] == ["Stale pager"]
+        assert block["inherited_state"]["injuries"] == "왼팔 타박상"
 
     def test_compile_prefers_prev_blueprint_state_within_arc(self):
         compiler = BlueprintConstraintCompiler()

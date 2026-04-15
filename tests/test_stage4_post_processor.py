@@ -436,6 +436,7 @@ class TestProcessPassResult:
             actual_truth={"location": "gate"},
             final_state_updates={"hp": 10},
             bible_delta={"relationship_changes": []},
+            arc_data={"arc_no": 2},
         )
         pp.post_pass_runtime._run_post_pass_advisories.assert_called_once()
         assert (
@@ -1168,6 +1169,56 @@ class TestProcessPassResult:
         family = saved_bible["state_truth_owner_contract"]["field_families"]["numeric_carryover_authority"]
         assert family["fields"] == [f"f{i}" for i in range(1, 9)]
         assert family["transport_fields"] == [f"f{i}" for i in range(1, 9)]
+
+    def test_persist_manager_delta_outputs_bootstraps_packet_only_numeric_transport_fields(self):
+        pp = self._make_pp()
+        pp.post_pass_runtime._sync_world_state_positions = MagicMock()
+        pp.post_pass_runtime._persist_manager_causal_side_effects = MagicMock()
+        pp.post_pass_runtime._persist_manager_state_log = MagicMock()
+        pp.post_pass_runtime._persist_karma_status = MagicMock()
+        pp.post_pass_runtime._log_manager_delta_summary = MagicMock()
+        pp.post_pass_runtime._emit_post_pass_contract_signal = MagicMock()
+        pp.ctx.fact_ledger = MagicMock()
+        pp.ctx.fact_ledger.get_numbers.return_value = {}
+
+        pp.post_pass_runtime._persist_manager_delta_outputs(
+            next_ep=10,
+            key_npcs=[{"name": "npc-a"}],
+            actual_truth={"location": "gate"},
+            final_state_updates={"hp": 90},
+            arc_data={
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "numeric_carryover": {
+                        "total_assets": 2000000000,
+                        "total_assets_source": "state_constraints.arc_end_state.total_assets",
+                        "capital": 1000000000,
+                        "capital_source": "state_constraints.arc_end_state.capital",
+                    },
+                }
+            },
+            state_updates_from_audit={"time_passed": "3h"},
+            knowledge_map={"new_witnesses": ["npc-a"]},
+            karma_matrix=[],
+            curr_inventory_counts={},
+            inventory_count_deltas=[],
+            relationship_changes=[],
+            active_pressure_vectors=[],
+            pressure_vectors_changed=False,
+            causal_links=[],
+            all_new_items=[],
+            lost_items_from_equip=[],
+            new_npc_names=[],
+            npc_deaths=[],
+            reveal_list=[],
+        )
+
+        saved_bible = pp.ctx.current_project.db.save_episode_bible.call_args.args[1]
+        family = saved_bible["state_truth_owner_contract"]["field_families"]["numeric_carryover_authority"]
+        assert family["fields"] == ["total_assets", "capital"]
+        assert family["transport_lineage"] == "cross_stage_authority_packet.numeric_carryover"
+        assert family["transport_contract_version"] == CROSS_STAGE_AUTHORITY_PACKET_VERSION
+        assert family["transport_fields"] == ["total_assets", "capital"]
 
     def test_log_numeric_carryover_authority_summary_emits_ui_note(self):
         pp = self._make_pp()
@@ -2404,6 +2455,41 @@ class TestAtomicMetadataSave:
         assert "bonus_pool" not in result["fact_ledger_changes"]
         assert "location" not in result["fact_ledger_changes"]
 
+    def test_build_atomic_state_payloads_bootstraps_packet_only_numeric_carryover_fields(self):
+        pp = self._make_pp_with_metadata()
+        pp.ctx.fact_ledger.get_numbers.return_value = {}
+
+        result = pp.post_pass_runtime._build_atomic_state_payloads(
+            actual_truth={"location": "vault"},
+            final_state_updates={"hp": 10},
+            bible_delta={
+                "state_truth_owner_contract": {
+                    "field_families": {
+                        "numeric_carryover_authority": {
+                            "fields": ["total_assets", "capital"],
+                            "transport_lineage": "cross_stage_authority_packet.numeric_carryover",
+                            "transport_fields": ["total_assets", "capital"],
+                        }
+                    }
+                }
+            },
+            arc_data={
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "numeric_carryover": {
+                        "total_assets": 25_000_000_000,
+                        "capital": 20_000_000_000,
+                    },
+                }
+            },
+        )
+
+        assert result["world_state_changes"] == {"hp": 10}
+        assert result["fact_ledger_changes"]["hp"] == 10
+        assert result["fact_ledger_changes"]["capital"] == 20_000_000_000
+        assert result["fact_ledger_changes"]["total_assets"] == 25_000_000_000
+        assert "location" not in result["fact_ledger_changes"]
+
     def test_build_atomic_state_payloads_reuses_state_truth_owner_contract_numeric_fields(self):
         pp = self._make_pp_with_metadata()
         pp.ctx.fact_ledger.get_numbers.return_value = {
@@ -2653,6 +2739,7 @@ class TestAtomicMetadataSave:
             actual_truth={},
             final_state_updates={"inventory_counts": {"gold": 2}},
             bible_delta={"relationship_changes": []},
+            arc_data={"arc_no": 1, "state_changes": {}},
         )
 
     def test_world_state_save_false_surfaces_last_save_error(self, tmp_path):
