@@ -1,14 +1,14 @@
 # 0_0-stage234-global-authority-alignment-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: pending (3-pass audited through current-head post-residual closure; `Tranche A/B/C`, hostile-reading hardening, and the last bounded residual closures are landed on current `main`; no additional pre-rerun code tranche is open and fresh rerun remains operator-gated)
+Status: pending (3-pass audited through current-head post-medium closure; `Tranche A/B/C`, hostile-reading hardening, the final bounded residual closures, and the later medium authority-drift closure are landed on current `main`; no additional pre-rerun code tranche is open and fresh rerun remains operator-gated)
 Canonical Path: `docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f005794b578d68bb855a960778c75ca3f77787a6`
 - Baseline Dirty Summary: `clean main after Tranche C snapshot, post-C audit cleanup, and evidence-branch split`
-- Resume Commit: `f93808ff25ffb1fde64534b2e50ac25a0dba59b3` (`stage234: close authority residual gaps`)
-- Resume Drift Summary: `current main now carries the full bounded Stage234 chain plus the hostile-reading hardening and final residual closures: Stage2 explicit empty inventory clear now survives fallback, Stage3 institution fact-lock anchor truncation now preserves manuscript authority under the bounded cap, no additional pre-rerun Stage234 code tranche is indicated on current HEAD, and fresh rerun remains threshold-cleared but operator-gated under the canonical Stage3 gate`
+- Resume Commit: `d2f500228ef67bb2f6fd23bbb0e257ba881a358e` (`stage234: close medium authority drift`)
+- Resume Drift Summary: `current main now carries the full bounded Stage234 chain plus the hostile-reading hardening, final residual closures, and the later medium authority-drift closure: Stage4 chief-writer carryover ceiling and handoff digest now reuse the packet-aware numeric authority truth, queue/controller docs are re-synced to pending proof gates, no additional pre-rerun Stage234 code tranche is indicated on current HEAD, and fresh rerun remains threshold-cleared but operator-gated under the canonical Stage3 gate`
 Source Survey Docs:
 - `docs/2026-04-14/stage234-global-authority-alignment-bounded-survey.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-a-current-head-3pass-audit.md`
@@ -16,6 +16,7 @@ Source Survey Docs:
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-c-working-tree-3pass-audit.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-d-current-head-3pass-audit.md`
 - `docs/2026-04-15/stage234-global-authority-alignment-post-residual-current-head-3pass-audit.md`
+- `docs/2026-04-15/stage234-global-authority-alignment-post-medium-current-head-3pass-audit.md`
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
@@ -29,9 +30,25 @@ Evidence Artifacts:
 - `modules/core/stage4_context_builder.py`
 - `modules/core/stage4_postselect_runtime.py`
 - `modules/core/stage4_post_pass_runtime.py`
+- `modules/domain/agents/chief_writer_context.py`
 - `modules/domain/agents/chief_writer_context_packets.py`
-Side-Effect Coverage: covered (cross-stage authority transport, Stage2/3/4 prompt and sink surfaces, roadmap/queue controller updates)
-Confidence: `96%`
+Side-Effect Coverage: covered (cross-stage authority transport, Stage2/3/4 prompt and sink surfaces, chief-writer carryover-ceiling parity, roadmap/queue controller updates)
+Confidence: `97%`
+
+2026-04-15 post-medium current-head closure override:
+
+- Local audit HEAD: `d2f500228ef67bb2f6fd23bbb0e257ba881a358e`
+- authoritative audit doc:
+  - `docs/2026-04-15/stage234-global-authority-alignment-post-medium-current-head-3pass-audit.md`
+- later closure additions beyond the `post-residual` audit:
+  - Stage4 chief-writer carryover ceiling and handoff digest now reuse the same packet-aware numeric authority truth as the mandatory Stage4 authority block
+  - queue/controller docs now record both Stage234 and Stage3 envelope lanes as pending proof-gated lanes rather than active unopened code fronts
+- current gate result:
+  - no additional pre-rerun code tranche is open inside this lane after the medium closure
+  - the Stage4 prompt-facing numeric authority `limit=3` remains a non-blocking watch item rather than a reopen trigger
+  - fresh rerun remains threshold-cleared but operator-gated under `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+- current practical next action:
+  - keep this lane proof-pending until explicit operator re-authorization consumes runtime proof or a later closure/demotion audit supersedes it
 
 2026-04-15 post-residual current-head closure override:
 

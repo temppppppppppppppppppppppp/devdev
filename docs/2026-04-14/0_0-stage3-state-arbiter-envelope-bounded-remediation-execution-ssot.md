@@ -1,19 +1,20 @@
 # 0_0-stage3-state-arbiter-envelope-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: pending (3-pass audited through current-head post-tranche audit; long-horizon bounded execution lane; `Tranche A/B/C` are landed on current `main`; no additional pre-proof code tranche is open and fresh rerun remains operator-gated)
+Status: pending (3-pass audited through current-head post-medium audit; long-horizon bounded execution lane; `Tranche A/B/C` are landed on current `main`, the later Stage234 medium closure does not reopen this lane, no additional pre-proof code tranche is open, and fresh rerun remains operator-gated)
 Canonical Path: `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f58059fefd10ed3f41d7bacca3b908dd47ada418`
 - Baseline Dirty Summary: `dirty: live 000_260412_a logs/db, 0_temp.txt, and untracked 2026-04-14 diagnostic notes already present in worktree`
-- Resume Commit: `e0a63f068cbc6d253901f272c973a1346ac6ec95` (`stage234: record post-residual closure audit`)
-- Resume Drift Summary: `current main now carries the landed Stage3 Tranche A/B/C substrate plus the later Stage234 residual-closure drift, and the current-head post-tranche audit records that no additional pre-proof Stage3 code tranche is open: packet, prompt-envelope, and boundary-split owners remain landed on current HEAD while fresh rerun stays threshold-cleared but operator-gated under the canonical Stage3 gate`
+- Resume Commit: `d2f500228ef67bb2f6fd23bbb0e257ba881a358e` (`stage234: close medium authority drift`)
+- Resume Drift Summary: `current main now carries the landed Stage3 Tranche A/B/C substrate plus the later Stage234 residual and medium authority-drift closures, and the current-head post-medium audit records that no additional pre-proof Stage3 code tranche is open: packet, prompt-envelope, and boundary-split owners remain landed on current HEAD while the downstream Stage4 carryover-ceiling parity closure does not reopen this lane and fresh rerun stays threshold-cleared but operator-gated under the canonical Stage3 gate`
 Source Survey Docs:
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
 - `docs/2026-04-14/stage3-runtime-retry-structural-debt-survey.md`
 - `docs/2026-04-15/stage3-state-arbiter-envelope-post-tranche-current-head-3pass-audit.md`
+- `docs/2026-04-15/stage3-state-arbiter-envelope-post-medium-current-head-3pass-audit.md`
 - `docs/2026-04-01/active-temp-execution-roadmap.md`
 - `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Evidence Artifacts:
@@ -27,8 +28,26 @@ Evidence Artifacts:
 - `modules/domain/agents/unified_blueprint_validator.py`
 - `modules/domain/agents/three_phase_blueprint_runtime.py`
 - `modules/core/stage4_postselect_runtime.py`
-Side-Effect Coverage: covered (Stage3 prompt assembly, retry/runtime, validator contract, observability sinks, roadmap queue state)
-Confidence: `96%`
+Side-Effect Coverage: covered (Stage3 prompt assembly, retry/runtime, validator contract, Stage234 downstream carryover parity dependency, observability sinks, roadmap queue state)
+Confidence: `97%`
+
+2026-04-15 post-medium current-head override:
+
+- Local audit HEAD: `d2f500228ef67bb2f6fd23bbb0e257ba881a358e`
+- authoritative audit doc:
+  - `docs/2026-04-15/stage3-state-arbiter-envelope-post-medium-current-head-3pass-audit.md`
+- landed tranche state on current `main`:
+  - `Tranche A` (`EpisodeStateArbiter`) remains landed
+  - `Tranche B` (`Stage3PromptEnvelope`) remains landed
+  - `Tranche C` (`Stage3EnvelopeBuilder` / `Stage3ValidationBoundary` / `Stage3RetryCoordinator`) remains landed
+  - the later Stage234 chief-writer carryover parity closure and controller sync do not reopen this lane
+- current gate result:
+  - no additional pre-proof code tranche is open inside this lane
+  - bounded shell owners remain within the documented `120+` but non-`180+` band
+  - legacy semantic-core `180+` hotspots in `BlueprintConstraintCompiler` and `BlueprintEnsembleGenerator` remain watch items rather than an auto-opened tranche
+  - fresh rerun remains threshold-cleared but operator-gated under `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+- current practical next action:
+  - keep this lane proof-pending until explicit operator re-authorization consumes runtime proof or a later bounded survey reopens fail-only stabilization
 
 2026-04-15 post-tranche current-head override:
 
