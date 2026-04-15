@@ -1,18 +1,19 @@
 # 0_0-stage3-state-arbiter-envelope-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: active (3-pass audited; long-horizon bounded execution lane; Tranche A/B/C landed locally; post-tranche proof deferred)
+Status: active (3-pass audited through current-head post-tranche audit; long-horizon bounded execution lane; `Tranche A/B/C` are landed on current `main`; fresh rerun remains operator-gated and this lane stays proof-pending rather than code-open)
 Canonical Path: `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f58059fefd10ed3f41d7bacca3b908dd47ada418`
 - Baseline Dirty Summary: `dirty: live 000_260412_a logs/db, 0_temp.txt, and untracked 2026-04-14 diagnostic notes already present in worktree`
-- Resume Commit: `1b946d2c7931c15c5ebbf5e64379482a991878a1` (`refactor: split stage3 runtime boundaries`)
-- Resume Drift Summary: `Tranche C snapshot commit is now the authoritative post-boundary-split anchor; post-C audit cleanup should reason from this snapshot rather than the older Tranche A/B baseline`
+- Resume Commit: `e0a63f068cbc6d253901f272c973a1346ac6ec95` (`stage234: record post-residual closure audit`)
+- Resume Drift Summary: `current main now carries the landed Stage3 Tranche A/B/C substrate plus the later Stage234 residual-closure drift, and the current-head post-tranche audit records that no additional pre-proof Stage3 code tranche is open: packet, prompt-envelope, and boundary-split owners remain landed on current HEAD while fresh rerun stays threshold-cleared but operator-gated under the canonical Stage3 gate`
 Source Survey Docs:
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
 - `docs/2026-04-14/stage3-runtime-retry-structural-debt-survey.md`
+- `docs/2026-04-15/stage3-state-arbiter-envelope-post-tranche-current-head-3pass-audit.md`
 - `docs/2026-04-01/active-temp-execution-roadmap.md`
 - `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Evidence Artifacts:
@@ -28,6 +29,23 @@ Evidence Artifacts:
 - `modules/core/stage4_postselect_runtime.py`
 Side-Effect Coverage: covered (Stage3 prompt assembly, retry/runtime, validator contract, observability sinks, roadmap queue state)
 Confidence: `96%`
+
+2026-04-15 post-tranche current-head override:
+
+- Local audit HEAD: `e0a63f068cbc6d253901f272c973a1346ac6ec95`
+- authoritative audit doc:
+  - `docs/2026-04-15/stage3-state-arbiter-envelope-post-tranche-current-head-3pass-audit.md`
+- landed tranche state on current `main`:
+  - `Tranche A` (`EpisodeStateArbiter`) remains landed
+  - `Tranche B` (`Stage3PromptEnvelope`) remains landed
+  - `Tranche C` (`Stage3EnvelopeBuilder` / `Stage3ValidationBoundary` / `Stage3RetryCoordinator`) remains landed
+- current gate result:
+  - no additional pre-proof code tranche is open inside this lane
+  - bounded shell owners remain within the documented `120+` but non-`180+` band
+  - legacy semantic-core `180+` hotspots in `BlueprintConstraintCompiler` and `BlueprintEnsembleGenerator` remain watch items rather than an auto-opened tranche
+  - fresh rerun remains threshold-cleared but operator-gated under `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+- current practical next action:
+  - keep this lane proof-pending until explicit operator re-authorization consumes runtime proof or a later bounded survey reopens fail-only stabilization
 
 ## 1. Intent
 
@@ -243,20 +261,20 @@ These are bounded ownership changes, not a cross-stage kernel rewrite.
 ## 8. Execution Tranches
 
 1. `Tranche A — EpisodeStateArbiter`
-   - status: `landed on the current branch`
+   - status: `landed on current main`
    - build `EpisodeStatePacket`
    - define source precedence
    - expose `dropped_conflicts` and `rewrite_required_reasons`
    - thread packet into Stage3 constraint assembly and producer prompt assembly
 
 2. `Tranche B — Unified Prompt Envelope Budget`
-   - status: `landed on the current branch`
+   - status: `landed on current main`
    - add whole-envelope ledger
    - demote default archive appendix surfaces
    - make operator observability show total chars by lane, not retrieval only
 
 3. `Tranche C — Stage3 Boundary Split`
-   - status: `landed locally on the current workspace`
+   - status: `landed on current main`
    - landed modules:
      - `Stage3EnvelopeBuilder`
      - `Stage3ValidationBoundary`
@@ -269,7 +287,7 @@ These are bounded ownership changes, not a cross-stage kernel rewrite.
      - `Stage3RetryCoordinator.run_phase2_generation`: `136 LOC` (`retry-shell`)
      - `Stage3ValidationBoundary.record_phase3_validation_payload`: `121 LOC` (`sink-boundary`)
      - `Stage3EnvelopeBuilder.run_blueprint_generation_handoff`: `123 LOC` (`envelope-shell`)
-   - verification passed on current workspace:
+  - verification passed on current main:
      - `pytest tests/test_blueprint_patch_mode.py -q`
      - `pytest tests/test_stage3_orchestrator.py -q`
      - `pytest tests/test_stage3_orchestrator_lane_e.py tests/test_stage3_orchestrator_legacy_tail_lane_f.py -q`
@@ -278,9 +296,12 @@ These are bounded ownership changes, not a cross-stage kernel rewrite.
      - `python scripts/check_utf8_hygiene.py ...`
 
 4. `Tranche D — Post-tranche Proof And Fail-Only Stabilization`
-   - only after A, B, and C land
-   - re-audit docs against live workspace
-   - then decide between a fresh operator-gated rerun and continued proof-pending hold; do not reopen another global authority-alignment follow-up because `Tranche D` is already recorded
+   - status: `current-head audit recorded on current main`
+   - authoritative audit:
+     - `docs/2026-04-15/stage3-state-arbiter-envelope-post-tranche-current-head-3pass-audit.md`
+   - verified result:
+     - no additional pre-proof code tranche is open inside this lane
+     - decide between a fresh operator-gated rerun and continued proof-pending hold; do not reopen another global authority-alignment follow-up because the residual-closure audit is already recorded
 
 ## 9. Acceptance Criteria
 
@@ -319,7 +340,7 @@ Fresh rerun validation remains explicitly deferred to Tranche D.
 
 ## 12. Temp Queue Notes
 
-- temp status: `in_progress (Tranche A/B/C landed locally; post-tranche proof and next-lane decision pending)`
+- temp status: `in_progress (Tranche A/B/C landed on current main; post-tranche proof and next-lane decision pending)`
 - cleanup condition:
   - remove the temp mirror only after the long-horizon lane is realized or explicitly demoted
 - roadmap dependency:
