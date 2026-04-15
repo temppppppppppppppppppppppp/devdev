@@ -1,6 +1,6 @@
 {
   "version": "temp-queue-state-v1",
-  "generated_at": "2026-04-15T01:39:52.150516+00:00",
+  "generated_at": "2026-04-15T02:46:19.529401+00:00",
   "queue_mode": "aggregate",
   "active_item_count": 24,
   "roadmap": {
@@ -13,7 +13,7 @@
       "topic": "0_0-stage3-state-arbiter-envelope-bounded-remediation",
       "temp_path": "docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md",
-      "status": "in_progress",
+      "status": "pending",
       "queue_role": "front_active",
       "roadmap_rank": 1,
       "depends_on": [],
@@ -24,7 +24,7 @@
       "topic": "0_0-stage234-global-authority-alignment-bounded-remediation",
       "temp_path": "docs/temp/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md",
       "canonical_path": "docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md",
-      "status": "in_progress",
+      "status": "pending",
       "queue_role": "front_active",
       "roadmap_rank": 2,
       "depends_on": [],
