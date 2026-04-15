@@ -86,13 +86,41 @@ def _resolve_packet_opening_location(packet: dict[str, Any] | None) -> tuple[str
     return _normalize_scalar(opening.get("location")), _normalize_scalar(opening.get("location_source"))
 
 
-def _is_current_stage2_source(source: object) -> bool:
-    text = str(source or "").strip()
-    return text.startswith("arc_data.") or text.startswith("cross_stage_authority_packet.")
-
-
 def _is_packet_source(source: object) -> bool:
     return str(source or "").strip().startswith("cross_stage_authority_packet.")
+
+
+def _build_opening_source_precedence(*, has_packet: bool, is_arc_opening_episode: bool) -> list[str]:
+    prev_sources = [
+        "prev_blueprint.scene_breakdown.last.location",
+        "prev_blueprint.end_location",
+    ]
+    stage2_sources = [
+        "arc_data.state_constraints.arc_start_state.location",
+        "arc_data.joint_docs.final_location",
+    ]
+    if is_arc_opening_episode and has_packet:
+        return ["cross_stage_authority_packet.opening_carryover.location", *prev_sources, *stage2_sources]
+    ordered = list(prev_sources)
+    if has_packet:
+        ordered.append("cross_stage_authority_packet.opening_carryover.location")
+    ordered.extend(stage2_sources)
+    return ordered
+
+
+def _build_protagonist_source_precedence(*, has_packet: bool, is_arc_opening_episode: bool) -> list[str]:
+    stage2_sources = [
+        "arc_data.state_constraints.arc_start_state",
+        "arc_data.status_shadow",
+        "arc_data.joint_docs.physical_inventory",
+    ]
+    if is_arc_opening_episode and has_packet:
+        return ["cross_stage_authority_packet.protagonist_carryover", "prev_blueprint.protagonist_state", *stage2_sources]
+    ordered = ["prev_blueprint.protagonist_state"]
+    if has_packet:
+        ordered.append("cross_stage_authority_packet.protagonist_carryover")
+    ordered.extend(stage2_sources)
+    return ordered
 
 
 def _apply_packet_protagonist_carryover(
@@ -214,26 +242,13 @@ class EpisodeStateArbiter:
         )
         dropped_conflicts = opening_conflicts + protagonist_conflicts
         rewrite_required_reasons = _dedupe_tokens([item.get("reason", "") for item in dropped_conflicts])
-        opening_sources = [
-            "prev_blueprint.scene_breakdown.last.location",
-            "prev_blueprint.end_location",
-        ]
-        if cross_stage_authority_packet:
-            opening_sources.append("cross_stage_authority_packet.opening_carryover.location")
-        opening_sources.append("arc_data.state_constraints.arc_start_state.location")
-        opening_sources.append("arc_data.joint_docs.final_location")
-
-        protagonist_sources = [
-            "prev_blueprint.protagonist_state",
-        ]
-        if cross_stage_authority_packet:
-            protagonist_sources.append("cross_stage_authority_packet.protagonist_carryover")
-        protagonist_sources.append("arc_data.state_constraints.arc_start_state")
-        protagonist_sources.extend(
-            [
-                "arc_data.status_shadow",
-                "arc_data.joint_docs.physical_inventory",
-            ]
+        opening_sources = _build_opening_source_precedence(
+            has_packet=bool(cross_stage_authority_packet),
+            is_arc_opening_episode=is_arc_opening_episode,
+        )
+        protagonist_sources = _build_protagonist_source_precedence(
+            has_packet=bool(cross_stage_authority_packet),
+            is_arc_opening_episode=is_arc_opening_episode,
         )
 
         capital_sources = [
@@ -311,7 +326,7 @@ class EpisodeStateArbiter:
             stage2_location_source = "arc_data.joint_docs.final_location"
 
         dropped_conflicts: list[dict[str, str]] = []
-        if prev_location and not (is_arc_opening_episode and stage2_location):
+        if prev_location and not (is_arc_opening_episode and packet_location):
             location = prev_location
             location_source = (
                 "prev_blueprint.scene_breakdown.last.location"
@@ -476,7 +491,7 @@ class EpisodeStateArbiter:
                     )
                 )
             if prev_equipment and not (
-                is_arc_opening_episode and _is_current_stage2_source(current_sources.get("equipment"))
+                is_arc_opening_episode and _is_packet_source(current_sources.get("equipment"))
             ):
                 protagonist_truth["equipment"] = prev_equipment
                 protagonist_truth["sources"]["equipment"] = "prev_blueprint.protagonist_state.equipment"
@@ -498,7 +513,7 @@ class EpisodeStateArbiter:
                     )
                 )
             if prev_injuries and not (
-                is_arc_opening_episode and _is_current_stage2_source(current_sources.get("injuries"))
+                is_arc_opening_episode and _is_packet_source(current_sources.get("injuries"))
             ):
                 protagonist_truth["injuries"] = prev_injuries
                 protagonist_truth["sources"]["injuries"] = "prev_blueprint.protagonist_state.injuries"
@@ -532,7 +547,7 @@ class EpisodeStateArbiter:
                         )
                     )
                 if prev_energy and not (
-                    is_arc_opening_episode and _is_current_stage2_source(current_sources.get("internal_energy"))
+                    is_arc_opening_episode and _is_packet_source(current_sources.get("internal_energy"))
                 ):
                     protagonist_truth["internal_energy"] = prev_energy
                     protagonist_truth["sources"]["internal_energy"] = "prev_blueprint.protagonist_state.internal_energy"

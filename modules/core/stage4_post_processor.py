@@ -1008,6 +1008,7 @@ class Stage4PostProcessor:
             actual_truth=delta["actual_truth"],
             final_state_updates=final_state_updates,
             bible_delta=bible_delta,
+            arc_data=arc_data,
         )
         self.post_pass_runtime._run_post_pass_advisories(
             next_ep=next_ep,

@@ -157,6 +157,16 @@ def _collect_packet_numeric_carryover_fields(packet: dict | None) -> list[str]:
     return fields
 
 
+def _collect_packet_numeric_carryover_values(packet: dict | None) -> dict[str, object]:
+    values: dict[str, object] = {}
+    for entry in collect_numeric_carryover_entries(packet):
+        field_name = str(entry.get("field", "") or "").strip()
+        if not field_name or field_name in values:
+            continue
+        values[field_name] = entry.get("value")
+    return values
+
+
 def _resolve_numeric_carryover_authority_fields(
     *,
     fact_ledger,
@@ -168,10 +178,19 @@ def _resolve_numeric_carryover_authority_fields(
         return contract_fields, {}
 
     carryover_fields = _collect_fact_ledger_carryover_authority_fields(fact_ledger)
-    if not carryover_fields:
-        return [], {}
-
     packet_fields = _collect_packet_numeric_carryover_fields(cross_stage_authority_packet)
+    if not carryover_fields:
+        if not packet_fields:
+            return [], {}
+        transport: dict[str, object] = {
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover",
+            "transport_fields": packet_fields,
+        }
+        contract_version = str((cross_stage_authority_packet or {}).get("contract_version", "") or "").strip()
+        if contract_version:
+            transport["transport_contract_version"] = contract_version
+        return packet_fields, transport
+
     overlap_fields = [field_name for field_name in packet_fields if field_name in carryover_fields]
     if not overlap_fields:
         return carryover_fields, {}
@@ -187,7 +206,13 @@ def _resolve_numeric_carryover_authority_fields(
     return ordered_fields, transport
 
 
-def _choose_numeric_carryover_refresh_value(*, field_name: str, actual_truth, final_state_updates) -> tuple[object | None, str]:
+def _choose_numeric_carryover_refresh_value(
+    *,
+    field_name: str,
+    actual_truth,
+    final_state_updates,
+    cross_stage_authority_packet: dict | None = None,
+) -> tuple[object | None, str]:
     source_candidates = (
         ("actual_truth", actual_truth),
         ("director_state_updates_fallback", final_state_updates),
@@ -201,7 +226,12 @@ def _choose_numeric_carryover_refresh_value(*, field_name: str, actual_truth, fi
         if _coerce_direct_financial_scalar(raw_value) is None:
             continue
         return raw_value, source_name
-    return None, ""
+
+    packet_values = _collect_packet_numeric_carryover_values(cross_stage_authority_packet)
+    packet_value = packet_values.get(field_name)
+    if isinstance(packet_value, bool) or _coerce_direct_financial_scalar(packet_value) is None:
+        return None, ""
+    return packet_value, "cross_stage_authority_packet.numeric_carryover"
 
 
 def _build_numeric_carryover_refresh_plan(
@@ -209,6 +239,7 @@ def _build_numeric_carryover_refresh_plan(
     actual_truth,
     final_state_updates,
     fact_ledger,
+    cross_stage_authority_packet: dict | None = None,
     carryover_fields: list[str] | None = None,
 ) -> dict[str, object]:
     carryover_fields = [
@@ -236,6 +267,7 @@ def _build_numeric_carryover_refresh_plan(
             field_name=field_name,
             actual_truth=actual_truth,
             final_state_updates=final_state_updates,
+            cross_stage_authority_packet=cross_stage_authority_packet,
         )
         if not source_name:
             continue
@@ -1086,6 +1118,7 @@ class Stage4PostPassRuntime:
             actual_truth=actual_truth,
             final_state_updates=final_state_updates,
             fact_ledger=fact_ledger,
+            cross_stage_authority_packet=cross_stage_authority_packet,
             carryover_fields=carryover_fields,
         )
         state_truth_owner_contract = _build_state_truth_owner_contract(
@@ -1394,23 +1427,26 @@ class Stage4PostPassRuntime:
         *,
         actual_truth,
         final_state_updates,
+        cross_stage_authority_packet: dict | None = None,
         state_truth_owner_contract: dict | None = None,
     ) -> dict[str, object]:
         fact_ledger = getattr(self.ctx, "fact_ledger", None)
         carryover_fields, _ = _resolve_numeric_carryover_authority_fields(
             fact_ledger=fact_ledger,
+            cross_stage_authority_packet=cross_stage_authority_packet,
             state_truth_owner_contract=state_truth_owner_contract,
         )
         refresh_plan = _build_numeric_carryover_refresh_plan(
             actual_truth=actual_truth,
             final_state_updates=final_state_updates,
             fact_ledger=fact_ledger,
+            cross_stage_authority_packet=cross_stage_authority_packet,
             carryover_fields=carryover_fields,
         )
         overlay = refresh_plan.get("overlay")
         return dict(overlay) if isinstance(overlay, dict) else {}
 
-    def _build_atomic_state_payloads(self, *, actual_truth, final_state_updates, bible_delta):
+    def _build_atomic_state_payloads(self, *, actual_truth, final_state_updates, bible_delta, arc_data=None):
         inventory_payload = {}
         relationship_payload = {}
         martial_payload = {}
@@ -1419,9 +1455,11 @@ class Stage4PostPassRuntime:
         if isinstance(bible_delta, dict):
             raw_contract = bible_delta.get("state_truth_owner_contract")
             state_truth_owner_contract = raw_contract if isinstance(raw_contract, dict) else {}
+        cross_stage_authority_packet = extract_explicit_cross_stage_authority_packet(arc_data)
         numeric_carryover_overlay = self._extract_actual_truth_fact_ledger_carryover_overlay(
             actual_truth=actual_truth,
             final_state_updates=final_state_updates,
+            cross_stage_authority_packet=cross_stage_authority_packet,
             state_truth_owner_contract=state_truth_owner_contract,
         )
 
@@ -1628,7 +1666,7 @@ class Stage4PostPassRuntime:
         )
         self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (비차단): {str(meta_err)[:60]}")
 
-    def _save_world_state_atomic(self, *, next_ep, actual_truth, final_state_updates, bible_delta):
+    def _save_world_state_atomic(self, *, next_ep, actual_truth, final_state_updates, bible_delta, arc_data=None):
         """[B-1-9a:A4] WorldState + FactLedger 원자적 갱신 + 롤백.
 
         Void return. On failure raises → caught by caller's
@@ -1639,6 +1677,7 @@ class Stage4PostPassRuntime:
             actual_truth=actual_truth,
             final_state_updates=final_state_updates,
             bible_delta=bible_delta,
+            arc_data=arc_data,
         )
         snapshots = self._capture_atomic_metadata_snapshots()
 

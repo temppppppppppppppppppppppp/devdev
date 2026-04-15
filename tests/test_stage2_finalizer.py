@@ -250,6 +250,27 @@ def test_sync_stage2_end_inventory_contract_preserves_authoritative_empty_clear_
     assert refined_arc["state_constraints"]["arc_end_state"]["equipment"] == []
 
 
+@pytest.mark.parametrize("raw_equipment", ["", "[]"])
+def test_sync_stage2_end_inventory_contract_does_not_treat_malformed_empty_string_as_authoritative_clear(raw_equipment):
+    refined_arc = {
+        "joint_docs": {"physical_inventory": ["Ghost token"]},
+        "status_shadow": {"item_consumption": []},
+        "state_constraints": {
+            "arc_end_state": {"equipment": raw_equipment},
+            "items_acquired": [],
+        },
+    }
+    prev_arc = {"joint_docs": {"physical_inventory": ["Ghost token"]}}
+
+    canonical_inventory, joint_changed, end_changed = _sync_stage2_end_state_inventory_contract(refined_arc, prev_arc)
+
+    assert canonical_inventory == ["Ghost token"]
+    assert joint_changed is False
+    assert end_changed is True
+    assert refined_arc["joint_docs"]["physical_inventory"] == ["Ghost token"]
+    assert refined_arc["state_constraints"]["arc_end_state"]["equipment"] == ["Ghost token"]
+
+
 class TestFinalizerStructure:
     def test_host_is_required_for_ctx_proxy(self):
         f = Stage2Finalizer(None)

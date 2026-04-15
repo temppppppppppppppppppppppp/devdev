@@ -279,6 +279,32 @@ def _coerce_inventory_items(raw: Any) -> list[Any]:
     return []
 
 
+def _is_authoritative_inventory_declared(raw: Any) -> bool:
+    if raw is None:
+        return False
+    if isinstance(raw, list):
+        return True
+    if isinstance(raw, dict):
+        return bool(raw)
+    if not isinstance(raw, str):
+        return False
+
+    text = raw.strip()
+    if not text:
+        return False
+    if text[:1] not in {"[", "{"}:
+        return True
+    try:
+        parsed = json.loads(text)
+    except (TypeError, ValueError):
+        return True
+    if isinstance(parsed, list):
+        return bool(parsed)
+    if isinstance(parsed, dict):
+        return bool(parsed)
+    return bool(parsed)
+
+
 def _inventory_item_key(item: Any) -> str:
     if isinstance(item, dict):
         candidate = item.get("name") or item.get("item") or item.get("title") or ""
@@ -345,8 +371,9 @@ def _sync_stage2_end_state_inventory_contract(
         joint_docs = {}
         refined_arc["joint_docs"] = joint_docs
 
-    end_inventory_declared = "equipment" in arc_end_state and arc_end_state.get("equipment") is not None
-    end_inventory = _coerce_inventory_items(arc_end_state.get("equipment", []))
+    raw_end_inventory = arc_end_state.get("equipment") if "equipment" in arc_end_state else None
+    end_inventory_declared = _is_authoritative_inventory_declared(raw_end_inventory)
+    end_inventory = _coerce_inventory_items(raw_end_inventory)
     joint_inventory = _coerce_inventory_items(joint_docs.get("physical_inventory", []))
 
     canonical_inventory = end_inventory if end_inventory_declared else []
@@ -923,9 +950,10 @@ def _build_stage2_carryover_authority_summary(refined_arc: dict | None) -> dict 
     end_location = end_location or str(end_state.get("location") or joint_docs.get("final_location") or "").strip()
 
     start_inventory = _coerce_inventory_items(start_state.get("equipment", []))
-    end_inventory_declared = "equipment" in end_state and end_state.get("equipment") is not None
+    raw_end_inventory = end_state.get("equipment") if "equipment" in end_state else None
+    end_inventory_declared = _is_authoritative_inventory_declared(raw_end_inventory)
     end_inventory = (
-        _coerce_inventory_items(end_state.get("equipment", []))
+        _coerce_inventory_items(raw_end_inventory)
         if end_inventory_declared
         else _coerce_inventory_items(joint_docs.get("physical_inventory", []))
     )
