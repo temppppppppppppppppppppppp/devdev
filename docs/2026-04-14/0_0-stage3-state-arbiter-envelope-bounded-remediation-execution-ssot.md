@@ -1,20 +1,21 @@
 # 0_0-stage3-state-arbiter-envelope-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: pending (3-pass audited through current-head post-medium audit; long-horizon bounded execution lane; `Tranche A/B/C` are landed on current `main`, the later Stage234 medium closure does not reopen this lane, no additional pre-proof code tranche is open, and fresh rerun remains operator-gated)
+Status: pending (3-pass audited through current-head post-contract-drift audit; long-horizon bounded execution lane; `Tranche A/B/C` are landed on current `main`, the later Stage234 medium and contract-drift closures do not reopen this lane, no additional pre-proof code tranche is open, and fresh rerun remains operator-gated)
 Canonical Path: `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f58059fefd10ed3f41d7bacca3b908dd47ada418`
 - Baseline Dirty Summary: `dirty: live 000_260412_a logs/db, 0_temp.txt, and untracked 2026-04-14 diagnostic notes already present in worktree`
-- Resume Commit: `d2f500228ef67bb2f6fd23bbb0e257ba881a358e` (`stage234: close medium authority drift`)
-- Resume Drift Summary: `current main now carries the landed Stage3 Tranche A/B/C substrate plus the later Stage234 residual and medium authority-drift closures, and the current-head post-medium audit records that no additional pre-proof Stage3 code tranche is open: packet, prompt-envelope, and boundary-split owners remain landed on current HEAD while the downstream Stage4 carryover-ceiling parity closure does not reopen this lane and fresh rerun stays threshold-cleared but operator-gated under the canonical Stage3 gate`
+- Resume Commit: `5757a23a16289605da26d39ad6d06c84c7e5d3e6` (`stage234: close hostile audit contract drift`)
+- Resume Drift Summary: `current main now carries the landed Stage3 Tranche A/B/C substrate plus the later Stage234 residual, medium authority-drift, and contract-drift closures, and the current-head post-contract-drift audit records that no additional pre-proof Stage3 code tranche is open: packet, prompt-envelope, and boundary-split owners remain landed on current HEAD, packet precedence/provenance reporting is now stricter, `_build_capital_continuity_packet` is back below the 180-LOC guardrail, and fresh rerun stays threshold-cleared but operator-gated under the canonical Stage3 gate`
 Source Survey Docs:
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
 - `docs/2026-04-14/stage3-runtime-retry-structural-debt-survey.md`
 - `docs/2026-04-15/stage3-state-arbiter-envelope-post-tranche-current-head-3pass-audit.md`
 - `docs/2026-04-15/stage3-state-arbiter-envelope-post-medium-current-head-3pass-audit.md`
+- `docs/2026-04-15/stage3-state-arbiter-envelope-post-contract-drift-current-head-3pass-audit.md`
 - `docs/2026-04-01/active-temp-execution-roadmap.md`
 - `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Evidence Artifacts:
@@ -30,6 +31,24 @@ Evidence Artifacts:
 - `modules/core/stage4_postselect_runtime.py`
 Side-Effect Coverage: covered (Stage3 prompt assembly, retry/runtime, validator contract, Stage234 downstream carryover parity dependency, observability sinks, roadmap queue state)
 Confidence: `97%`
+
+2026-04-15 post-contract-drift current-head override:
+
+- Local audit HEAD: `5757a23a16289605da26d39ad6d06c84c7e5d3e6`
+- authoritative audit doc:
+  - `docs/2026-04-15/stage3-state-arbiter-envelope-post-contract-drift-current-head-3pass-audit.md`
+- landed tranche state on current `main`:
+  - `Tranche A` (`EpisodeStateArbiter`) remains landed
+  - `Tranche B` (`Stage3PromptEnvelope`) remains landed
+  - `Tranche C` (`Stage3EnvelopeBuilder` / `Stage3ValidationBoundary` / `Stage3RetryCoordinator`) remains landed
+  - the later Stage234 contract-drift closure tightens packet precedence and capital provenance honesty without reopening this lane
+- current gate result:
+  - no additional pre-proof code tranche is open inside this lane
+  - bounded shell owners remain within the documented `120+` but non-`180+` band
+  - `BlueprintConstraintCompiler._build_capital_continuity_packet` is now back below the `180 LOC` guardrail, while older semantic-core hotspots remain watch items rather than an auto-opened tranche
+  - fresh rerun remains threshold-cleared but operator-gated under `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+- current practical next action:
+  - keep this lane proof-pending until explicit operator re-authorization consumes runtime proof or a later bounded survey reopens fail-only stabilization
 
 2026-04-15 post-medium current-head override:
 
