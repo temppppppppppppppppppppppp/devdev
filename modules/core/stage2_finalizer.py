@@ -345,11 +345,12 @@ def _sync_stage2_end_state_inventory_contract(
         joint_docs = {}
         refined_arc["joint_docs"] = joint_docs
 
+    end_inventory_declared = "equipment" in arc_end_state and arc_end_state.get("equipment") is not None
     end_inventory = _coerce_inventory_items(arc_end_state.get("equipment", []))
     joint_inventory = _coerce_inventory_items(joint_docs.get("physical_inventory", []))
 
-    canonical_inventory = end_inventory
-    if not canonical_inventory and prev_arc:
+    canonical_inventory = end_inventory if end_inventory_declared else []
+    if not end_inventory_declared and prev_arc:
         prev_joint = prev_arc.get("joint_docs", {}) or {}
         curr_status = refined_arc.get("status_shadow", {}) or {}
         canonical_inventory = _compute_inventory_carryover(
@@ -357,7 +358,7 @@ def _sync_stage2_end_state_inventory_contract(
             curr_status.get("item_consumption", []),
             state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", []),
         )
-    if not canonical_inventory:
+    if not end_inventory_declared and not canonical_inventory:
         canonical_inventory = joint_inventory
 
     joint_changed = joint_inventory != canonical_inventory
@@ -922,8 +923,11 @@ def _build_stage2_carryover_authority_summary(refined_arc: dict | None) -> dict 
     end_location = end_location or str(end_state.get("location") or joint_docs.get("final_location") or "").strip()
 
     start_inventory = _coerce_inventory_items(start_state.get("equipment", []))
-    end_inventory = _coerce_inventory_items(end_state.get("equipment", [])) or _coerce_inventory_items(
-        joint_docs.get("physical_inventory", [])
+    end_inventory_declared = "equipment" in end_state and end_state.get("equipment") is not None
+    end_inventory = (
+        _coerce_inventory_items(end_state.get("equipment", []))
+        if end_inventory_declared
+        else _coerce_inventory_items(joint_docs.get("physical_inventory", []))
     )
 
     summary: dict[str, object] = {}

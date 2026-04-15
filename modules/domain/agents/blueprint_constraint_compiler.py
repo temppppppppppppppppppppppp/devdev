@@ -103,6 +103,20 @@ def _filter_competing_institution_names(
     return filtered
 
 
+def _merge_authority_ordered_names(*name_groups: set[str], limit: int) -> list[str]:
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for group in name_groups:
+        for name in sorted(group):
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            ordered.append(name)
+            if len(ordered) >= limit:
+                return ordered
+    return ordered
+
+
 def _collect_fact_lock_institution_anchors(
     *,
     bp: dict,
@@ -181,21 +195,24 @@ def _collect_fact_lock_institution_anchors(
     arc_institution_names = _collect_names(arc_texts)
 
     institution_names = set(manuscript_institution_names)
-    institution_names.update(
-        _filter_competing_institution_names(
-            preferred_names=institution_names,
-            candidate_names=blueprint_institution_names,
-            suffixes=_inst_suffixes_ordered,
-        )
+    filtered_blueprint_names = _filter_competing_institution_names(
+        preferred_names=institution_names,
+        candidate_names=blueprint_institution_names,
+        suffixes=_inst_suffixes_ordered,
     )
-    institution_names.update(
-        _filter_competing_institution_names(
-            preferred_names=institution_names,
-            candidate_names=arc_institution_names,
-            suffixes=_inst_suffixes_ordered,
-        )
+    institution_names.update(filtered_blueprint_names)
+    filtered_arc_names = _filter_competing_institution_names(
+        preferred_names=institution_names,
+        candidate_names=arc_institution_names,
+        suffixes=_inst_suffixes_ordered,
     )
-    return [{"category": "기관", "fact": f"확정 기관/장소: {inst_name}"} for inst_name in sorted(institution_names)[:4]]
+    ordered_names = _merge_authority_ordered_names(
+        manuscript_institution_names,
+        filtered_blueprint_names,
+        filtered_arc_names,
+        limit=4,
+    )
+    return [{"category": "기관", "fact": f"확정 기관/장소: {inst_name}"} for inst_name in ordered_names]
 
 
 class BlueprintConstraintCompiler:
