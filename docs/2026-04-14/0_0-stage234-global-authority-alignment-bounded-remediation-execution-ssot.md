@@ -1,20 +1,21 @@
 # 0_0-stage234-global-authority-alignment-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: active (3-pass audited through current-head `Tranche D`; `Tranche A/B/C` are landed on current `main`; fresh rerun remains operator-gated and this lane is now proof-pending rather than code-open)
+Status: active (3-pass audited through current-head post-residual closure; `Tranche A/B/C`, hostile-reading hardening, and the last bounded residual closures are landed on current `main`; fresh rerun remains operator-gated and this lane stays proof-pending rather than code-open)
 Canonical Path: `docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f005794b578d68bb855a960778c75ca3f77787a6`
 - Baseline Dirty Summary: `clean main after Tranche C snapshot, post-C audit cleanup, and evidence-branch split`
-- Resume Commit: `8a9490531f7fa2f0527cb70407cdb804d87d7ddd` (`stage2: emit cross-stage authority packet`)
-- Resume Drift Summary: `current main now carries bounded Tranche A/B/C end-to-end cross-stage transport realization, and the current-head Tranche D audit records that no further pre-rerun Stage234 code tranche is open: Stage2 emit, Stage3 preferential consume, and Stage4 intake/post-pass reuse are all landed on current HEAD while fresh rerun remains threshold-cleared but operator-gated under the canonical Stage3 gate`
+- Resume Commit: `f93808ff25ffb1fde64534b2e50ac25a0dba59b3` (`stage234: close authority residual gaps`)
+- Resume Drift Summary: `current main now carries the full bounded Stage234 chain plus the hostile-reading hardening and final residual closures: Stage2 explicit empty inventory clear now survives fallback, Stage3 institution fact-lock anchor truncation now preserves manuscript authority under the bounded cap, no additional pre-rerun Stage234 code tranche is indicated on current HEAD, and fresh rerun remains threshold-cleared but operator-gated under the canonical Stage3 gate`
 Source Survey Docs:
 - `docs/2026-04-14/stage234-global-authority-alignment-bounded-survey.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-a-current-head-3pass-audit.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-b-working-tree-3pass-audit.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-c-working-tree-3pass-audit.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-d-current-head-3pass-audit.md`
+- `docs/2026-04-15/stage234-global-authority-alignment-post-residual-current-head-3pass-audit.md`
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
@@ -31,6 +32,21 @@ Evidence Artifacts:
 - `modules/domain/agents/chief_writer_context_packets.py`
 Side-Effect Coverage: covered (cross-stage authority transport, Stage2/3/4 prompt and sink surfaces, roadmap/queue controller updates)
 Confidence: `96%`
+
+2026-04-15 post-residual current-head closure override:
+
+- Local audit HEAD: `f93808ff25ffb1fde64534b2e50ac25a0dba59b3`
+- authoritative audit doc:
+  - `docs/2026-04-15/stage234-global-authority-alignment-post-residual-current-head-3pass-audit.md`
+- landed closure additions beyond the original `Tranche D` audit:
+  - Stage2 explicit empty inventory clear now survives carryover summary and end-state sync fallback
+  - Stage3 institution fact-lock anchor truncation now preserves manuscript-authoritative institution names under the bounded anchor cap
+- current gate result:
+  - no additional pre-rerun code tranche is open inside this lane after the hostile-reading hardening and final residual closures
+  - the Stage4 prompt-facing numeric authority `limit=3` remains a non-blocking watch item rather than a reopen trigger
+  - fresh rerun remains threshold-cleared but operator-gated under `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+- current practical next action:
+  - keep this lane proof-pending until explicit operator re-authorization consumes runtime proof or a later closure/demotion audit supersedes it
 
 2026-04-14 current-head Tranche D rerun-gate override:
 
@@ -225,11 +241,11 @@ Current status:
 
 ## 8. Current Decision
 
-The post-`Tranche D` gate decision is now exercised as:
+The post-`Tranche D` plus post-residual-closure gate decision is now exercised as:
 
 - `fresh rerun`: threshold-cleared but still operator-gated
 - `retry owner debt`: deferred as a lower-ROI follow-up
-- `this lane`: proof-pending with no additional pre-rerun code tranche currently open
+- `this lane`: proof-pending with no additional pre-rerun code tranche currently open after the hostile-reading hardening and final bounded residual closures
 
 Current next action:
 
