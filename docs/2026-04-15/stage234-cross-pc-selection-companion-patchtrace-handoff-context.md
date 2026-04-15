@@ -17,11 +17,14 @@ Audience:
 ## Authoritative Baseline
 
 - branch: `main`
-- pushed baseline commit on `origin/main`: `d9a010069e079452ef0927b9634e0e1724a9427d`
-- commit title: `stage234: snapshot runtime-authority sinkproof closure`
+- published handoff head on `origin/main`: `cbb834101d62eb5ecb53b31d2fcb3d1a4bf8e565`
+- published handoff commit title: `stage234: snapshot selection-companion residual handoff`
+- historical pre-patch baseline on `origin/main`: `d9a010069e079452ef0927b9634e0e1724a9427d`
+- historical baseline commit title: `stage234: snapshot runtime-authority sinkproof closure`
 - patch-set provenance for this handoff:
   - the changes described below were authored on top of `d9a01006`
-  - once this handoff note is visible on another PC via `git pull`, treat that pulled `HEAD` as the new authoritative baseline for the next canary wave
+  - another PC should not reconstruct or re-invent that pre-push local state
+  - once this handoff note is visible on another PC via `git pull`, the pulled `HEAD = cbb83410...` is the authoritative baseline for the next canary wave
 - baseline meaning:
   - Stage4 final sink closure for `stage_attempts`, `hud_snapshot`, and `state_logs.actual_truth` is already committed and pushed
   - the last completed live-proof anchor before the newest local patch is:
@@ -174,7 +177,7 @@ git status --short
 
 Expected baseline:
 
-- `HEAD` should be at or beyond the snapshot commit that includes this handoff note
+- `HEAD = cbb834101d62eb5ecb53b31d2fcb3d1a4bf8e565`
 - clean worktree after pull
 
 Quick sanity check:
@@ -232,7 +235,8 @@ If the canary still warns:
 
 ## Operator Notes To Preserve
 
-- do not run canary from stale `d9a01006`; use the latest pulled `main` that already contains this handoff wave
+- do not reconstruct the old pre-push local patch state by hand; use the latest pulled `main` at `cbb83410...`
+- `d9a01006` is historical provenance only, not the target baseline for the next PC
 - do not treat `director_selections` as a second final sink; current intent is `historical_companion`
 - do not trust the aborted `r5` attempt as proof
 - keep the next wave bounded to `selection-companion / patch-trace` cleanup unless the fresh canary shows a truly new failure class
