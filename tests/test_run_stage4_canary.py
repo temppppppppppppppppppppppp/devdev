@@ -10,10 +10,11 @@ def setup_function():
 
 
 def test_run_canary_saves_and_flushes_before_analyze():
+    monitor = MagicMock()
     app = SimpleNamespace(
         _get_int_input=None,
         _stage_4_v2_chief_writer=MagicMock(),
-        pass_rate_monitor=MagicMock(),
+        pass_rate_monitor=monitor,
         _flush_audit_buffer=MagicMock(),
         memory=None,
         current_project=SimpleNamespace(db=MagicMock()),
@@ -29,7 +30,7 @@ def test_run_canary_saves_and_flushes_before_analyze():
         result = canary_script.run_canary("00_test_06", target_ep=4)
 
     app._stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=4)
-    app.pass_rate_monitor.save.assert_called_once()
+    monitor.save.assert_called_once()
     app._flush_audit_buffer.assert_called_once()
     analyze.assert_called_once_with("_canary/00_test_06", target_ep=4)
     assert result["hard_gates"]["status"] == "pass"
@@ -60,6 +61,64 @@ def test_run_canary_bootstraps_missing_pass_rate_monitor():
     assert app.pass_rate_monitor is monitor
     monitor.save.assert_called_once()
     app._stage_4_v2_chief_writer.assert_called_once_with(limit_mode=False, target_ep=4)
+
+
+def test_run_canary_rebinds_pass_rate_monitor_when_log_path_points_elsewhere():
+    stale_monitor = MagicMock()
+    stale_monitor.log_path = canary_script.PROJECT_ROOT / "projects" / "other" / "logs" / "pass_rate_monitor.json"
+    rebound_monitor = MagicMock()
+    app = SimpleNamespace(
+        _get_int_input=None,
+        _stage_4_v2_chief_writer=MagicMock(),
+        pass_rate_monitor=stale_monitor,
+        _flush_audit_buffer=MagicMock(),
+        memory=None,
+        current_project=SimpleNamespace(db=MagicMock()),
+    )
+    app.current_project.db.conn = MagicMock()
+    app.current_project.db.close = MagicMock()
+
+    with (
+        patch.object(canary_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
+        patch.object(canary_script, "_boot_app", return_value=app),
+        patch.object(canary_script, "PassRateMonitor", return_value=rebound_monitor) as prm_cls,
+        patch.object(canary_script, "analyze_canary", return_value={"hard_gates": {"status": "pass"}}),
+    ):
+        canary_script.run_canary("00_test_06", target_ep=4)
+
+    prm_cls.assert_called_once_with(canary_script.PROJECT_ROOT / "projects" / "_canary" / "00_test_06")
+    assert app.pass_rate_monitor is rebound_monitor
+    rebound_monitor.save.assert_called_once()
+
+
+def test_run_canary_saves_and_flushes_even_when_stage4_raises():
+    monitor = MagicMock()
+    app = SimpleNamespace(
+        _get_int_input=None,
+        _stage_4_v2_chief_writer=MagicMock(side_effect=RuntimeError("stage4 boom")),
+        pass_rate_monitor=monitor,
+        _flush_audit_buffer=MagicMock(),
+        memory=None,
+        current_project=SimpleNamespace(db=MagicMock()),
+    )
+    app.current_project.db.conn = MagicMock()
+    app.current_project.db.close = MagicMock()
+
+    with (
+        patch.object(canary_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
+        patch.object(canary_script, "_boot_app", return_value=app),
+        patch.object(canary_script, "analyze_canary") as analyze,
+    ):
+        try:
+            canary_script.run_canary("00_test_06", target_ep=4)
+        except RuntimeError as exc:
+            assert str(exc) == "stage4 boom"
+        else:
+            raise AssertionError("expected stage4 runtime failure to propagate")
+
+    monitor.save.assert_called_once()
+    app._flush_audit_buffer.assert_called_once()
+    analyze.assert_not_called()
 
 
 def test_run_canary_without_genre_raises():
@@ -216,7 +275,9 @@ def test_prepare_canary_routes_new_target_into_canary_root(tmp_path):
         patch.object(canary_script, "PROJECT_ROOT", tmp_path),
         patch.object(canary_script, "prepare_stage4_canary_project", return_value={"ok": True}) as prepare,
     ):
-        payload = canary_script.prepare_canary("__000403", "canary___000403_stage4_ep3_numauth_r3", from_ep=3, force=False)
+        payload = canary_script.prepare_canary(
+            "__000403", "canary___000403_stage4_ep3_numauth_r3", from_ep=3, force=False
+        )
 
     assert payload == {"ok": True}
     prepare.assert_called_once_with(

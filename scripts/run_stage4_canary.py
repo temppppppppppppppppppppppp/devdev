@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import sys
 from contextlib import contextmanager
@@ -177,11 +178,18 @@ def run_canary(project_name: str, *, target_ep: int, provider_mode: str | None =
             app._get_int_input = lambda *args, **kwargs: kwargs.get("default", 1)
             with patch("builtins.input", side_effect=_auto_input):
                 app._stage_4_v2_chief_writer(limit_mode=False, target_ep=int(target_ep))
-            if getattr(app, "pass_rate_monitor", None):
-                app.pass_rate_monitor.save()
-            if hasattr(app, "_flush_audit_buffer"):
-                app._flush_audit_buffer()
         finally:
+            monitor = getattr(app, "pass_rate_monitor", None)
+            if monitor is not None:
+                try:
+                    monitor.save()
+                except Exception as exc:
+                    logging.warning("[run_stage4_canary] pass_rate_monitor save failed: %s", exc)
+            if hasattr(app, "_flush_audit_buffer"):
+                try:
+                    app._flush_audit_buffer()
+                except Exception as exc:
+                    logging.warning("[run_stage4_canary] audit buffer flush failed: %s", exc)
             _close_app_handles(app)
 
     summary = analyze_canary(runtime_project_name, target_ep=target_ep)
@@ -189,8 +197,19 @@ def run_canary(project_name: str, *, target_ep: int, provider_mode: str | None =
 
 
 def _ensure_pass_rate_monitor(app: SovereignApp, project_root: Path) -> None:
-    if getattr(app, "pass_rate_monitor", None):
-        return
+    expected_log_path = (project_root / "logs" / "pass_rate_monitor.json").resolve()
+    monitor = getattr(app, "pass_rate_monitor", None)
+    if monitor is not None:
+        monitor_log_path = getattr(monitor, "log_path", None)
+        if monitor_log_path is None:
+            return
+        if not isinstance(monitor_log_path, str | Path):
+            return
+        try:
+            if Path(monitor_log_path).resolve() == expected_log_path:
+                return
+        except (OSError, RuntimeError, TypeError, ValueError):
+            return
     app.pass_rate_monitor = PassRateMonitor(project_root)
 
 

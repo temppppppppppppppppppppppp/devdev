@@ -72,7 +72,7 @@ class _RejectGateSemanticsBundle:
 def _normalize_stage4_strategy_feedback_value(value: object) -> str:
     if isinstance(value, str):
         return value.strip()
-    if isinstance(value, (dict, list)):
+    if isinstance(value, dict | list):
         return json.dumps(value, ensure_ascii=False).strip()
     return str(value or "").strip()
 
@@ -633,7 +633,7 @@ class Stage4RejectRuntime:
             if key not in previous_attempt:
                 continue
             value = previous_attempt.get(key)
-            merged[key] = copy.deepcopy(value) if isinstance(value, (dict, list)) else value
+            merged[key] = copy.deepcopy(value) if isinstance(value, dict | list) else value
         return merged
 
     @staticmethod
@@ -1155,6 +1155,7 @@ class Stage4RejectRuntime:
             gate_semantics=reject_logging.session_gate_semantics,
             fix_pack=self.owner._build_fix_pack_payload(sink_source),
             retry_budget_axes=dict(previous_attempt.get("retry_budget_axes") or {}),
+            preserve_historical_companion=bool(is_patch or trace_patch_trace),
         )
         owner._append_episode_log(
             **_build_stage4_reject_episode_log_kwargs(
@@ -1761,6 +1762,7 @@ class Stage4RejectRuntime:
             director_result=sink_source,
             patch_trace=patch_trace,
         )
+        patch_trace = patch_trace if isinstance(patch_trace, dict) else {}
         return owner._record_s4_attempt(
             episode=next_ep,
             round_num=round_num,
@@ -1790,6 +1792,8 @@ class Stage4RejectRuntime:
                 ),
             },
             model=getattr(getattr(round_ctx, "chief_writer", None), "model_tier", None),
+            patch_strategy=str(patch_trace.get("patch_strategy", "") or ""),
+            structural_attempted=bool(patch_trace.get("structural_attempted", False)),
             candidate_key=candidate_key,
             artifact_payload=(previous_attempt or {}).get("best_manuscript", "") or prev_manuscript,
             artifact_kind="rejected_best",
@@ -1816,9 +1820,12 @@ class Stage4RejectRuntime:
         gate_semantics: dict | None = None,
         fix_pack: dict | None = None,
         retry_budget_axes: dict | None = None,
+        preserve_historical_companion: bool = False,
     ) -> None:
         current_db = getattr(getattr(self.owner.ctx, "current_project", None), "db", None)
         if current_db is None or not hasattr(current_db, "update_director_selection_rationale"):
+            return
+        if preserve_historical_companion:
             return
         try:
             current_db.update_director_selection_rationale(

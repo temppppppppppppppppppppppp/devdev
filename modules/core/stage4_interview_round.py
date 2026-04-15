@@ -2460,6 +2460,15 @@ class Stage4InterviewRound:
                 break
         return cleaned
 
+    @staticmethod
+    def _is_placeholder_fix_pack_list(raw: object) -> bool:
+        if not isinstance(raw, list):
+            return False
+        tokens = [str(item or "").strip().lower() for item in raw if str(item or "").strip()]
+        if not tokens:
+            return False
+        return all(token in {"n/a", "na", "none", "not_applicable", "not applicable", "unknown"} for token in tokens)
+
     @classmethod
     def _stamp_fix_pack_provenance(
         cls,
@@ -3491,7 +3500,9 @@ class Stage4InterviewRound:
         )
         if provenance_sources:
             payload["provenance_sources"] = provenance_sources[:4]
-        target_kind = str(source_repair_contract.get("target_kind", "") or fix_pack.get("target_kind", "") or "").strip()
+        target_kind = str(
+            source_repair_contract.get("target_kind", "") or fix_pack.get("target_kind", "") or ""
+        ).strip()
         if target_kind:
             payload["target_kind"] = target_kind
 
@@ -4007,6 +4018,7 @@ class Stage4InterviewRound:
                 is_patch_fallback=is_patch_fallback,
                 prev_score=prev_score,
             )
+            self._last_advisory_summary = copy.deepcopy(selection_advisory or {})
             raw_advisory_payload = self._build_raw_advisory_payload(
                 validation_results,
                 selection_summary=selection_advisory,
@@ -5854,6 +5866,47 @@ class Stage4InterviewRound:
             director_result=director_result,
             patch_trace=patch_trace,
         )
+        stored_advisory_flags = copy.deepcopy(dict(getattr(self, "_last_advisory_summary", None) or {}))
+        retry_budget_axes = dict(getattr(self, "_last_retry_budget_axes", {}) or {})
+        if not retry_budget_axes and isinstance(stored_advisory_flags.get("retry_budget_axes"), dict):
+            retry_budget_axes = dict(stored_advisory_flags.get("retry_budget_axes") or {})
+        final_selection_advisory = self._build_final_selection_advisory_payload(
+            gate_semantics=self._build_gate_semantics_payload(director_result),
+            fix_pack=patch_advisory_payload.get("fix_pack"),
+            retry_budget_axes=retry_budget_axes,
+        )
+        advisory_flags = self._resolve_stage4_db_attempt_advisory_flags(
+            {
+                **stored_advisory_flags,
+                **(
+                    {
+                        key: value
+                        for key, value in final_selection_advisory.items()
+                        if key not in {"gate_semantics", "repair_contract", "scope_authority"}
+                    }
+                ),
+                "gate_semantics": self._merge_stage4_gate_semantics_payloads(
+                    stored_advisory_flags.get("gate_semantics"),
+                    final_selection_advisory.get("gate_semantics"),
+                ),
+                "repair_contract": self._merge_stage4_contract_metadata(
+                    stored_advisory_flags.get("repair_contract"),
+                    final_selection_advisory.get("repair_contract"),
+                ),
+                "scope_authority": self._merge_stage4_contract_metadata(
+                    stored_advisory_flags.get("scope_authority"),
+                    final_selection_advisory.get("scope_authority"),
+                ),
+                **({"retry_budget_axes": retry_budget_axes} if retry_budget_axes else {}),
+                **(
+                    {
+                        key: value
+                        for key, value in patch_advisory_payload.items()
+                        if key != "fix_pack" and value not in ({}, [], "", None)
+                    }
+                ),
+            }
+        )
         attempt_artifact_meta = self._record_s4_attempt(
             episode=next_ep,
             round_num=round_num,
@@ -5865,19 +5918,7 @@ class Stage4InterviewRound:
             arc=round_ctx.arc_data.get("arc_no", 0),
             verdict=verdict,
             fix_scope=director_result.get("fix_scope", "") if isinstance(director_result, dict) else None,
-            advisory_flags={
-                **(dict(getattr(self, "_last_advisory_summary", None) or {})),
-                "gate_semantics": self._build_gate_semantics_payload(director_result),
-                "fix_pack": patch_advisory_payload.get("fix_pack", {}),
-                "retry_budget_axes": dict(getattr(self, "_last_retry_budget_axes", {}) or {}),
-                **(
-                    {
-                        key: value
-                        for key, value in patch_advisory_payload.items()
-                        if key != "fix_pack" and value not in ({}, [], "", None)
-                    }
-                ),
-            },
+            advisory_flags=advisory_flags,
             model=getattr(getattr(round_ctx, "chief_writer", None), "model_tier", None),
             patch_strategy=str(patch_trace.get("patch_strategy", "") or ""),
             structural_attempted=bool(patch_trace.get("structural_attempted", False)),
@@ -7107,7 +7148,9 @@ class Stage4InterviewRound:
                     break
         if patch_targets:
             trace_payload["patch_targets"] = patch_targets
-            if not fix_pack_payload.get("patch_targets"):
+            if not fix_pack_payload.get("patch_targets") or self._is_placeholder_fix_pack_list(
+                fix_pack_payload.get("patch_targets")
+            ):
                 fix_pack_payload["patch_targets"] = list(patch_targets)
         if patch_target_records:
             trace_payload["patch_target_records"] = patch_target_records
@@ -7695,6 +7738,50 @@ class Stage4InterviewRound:
         _model = getattr(_director, "primary_model", None) if _director else None
         return str(_model) if _model else None
 
+    @staticmethod
+    def _merge_stage4_contract_metadata(
+        base_payload: dict | None,
+        override_payload: dict | None,
+    ) -> dict[str, object]:
+        base = dict(base_payload or {}) if isinstance(base_payload, dict) else {}
+        override = dict(override_payload or {}) if isinstance(override_payload, dict) else {}
+        if not base:
+            return override
+        if not override:
+            return base
+        return {
+            **base,
+            **override,
+        }
+
+    @classmethod
+    def _merge_stage4_gate_semantics_payloads(
+        cls,
+        base_payload: dict | None,
+        override_payload: dict | None,
+    ) -> dict[str, object]:
+        base = dict(base_payload or {}) if isinstance(base_payload, dict) else {}
+        override = dict(override_payload or {}) if isinstance(override_payload, dict) else {}
+        if not base:
+            return override
+        if not override:
+            return base
+        merged = {
+            **base,
+            **override,
+        }
+        for nested_key in (
+            "repair_contract",
+            "scope_authority",
+            "scope_origin",
+            "verdict_layers",
+            "strong_advisory_escalation",
+        ):
+            nested = cls._merge_stage4_contract_metadata(base.get(nested_key), override.get(nested_key))
+            if nested:
+                merged[nested_key] = nested
+        return merged
+
     def _build_stage4_pass_rate_attempt_payload(
         self,
         *,
@@ -7838,6 +7925,7 @@ class Stage4InterviewRound:
         is_patch: bool,
         patch_fallback: bool,
         patch_strategy: str,
+        advisory_flags: dict | None,
         candidate_key: str,
         artifact_kind: str,
         artifact_payload,
@@ -7863,7 +7951,12 @@ class Stage4InterviewRound:
             session_id=session_id,
         )
         normalized_patch_strategy = str(patch_strategy or "").strip()
-        if is_patch and not normalized_patch_strategy:
+        patch_lineage = bool(is_patch)
+        if not patch_lineage and isinstance(advisory_flags, dict):
+            partial_fix_eval = advisory_flags.get("partial_fix_eval")
+            if isinstance(partial_fix_eval, dict):
+                patch_lineage = bool(partial_fix_eval.get("is_patch_attempt", False))
+        if patch_lineage and not normalized_patch_strategy:
             normalized_patch_strategy = "patch_fallback_rewrite" if patch_fallback else "patch_with_feedback"
         artifact_meta = self._build_stage4_attempt_artifact_meta(
             episode=episode,
@@ -8047,6 +8140,7 @@ class Stage4InterviewRound:
             is_patch=is_patch,
             patch_fallback=patch_fallback,
             patch_strategy=patch_strategy,
+            advisory_flags=advisory_flags,
             candidate_key=candidate_key,
             artifact_kind=artifact_kind,
             artifact_payload=artifact_payload,
@@ -8093,7 +8187,7 @@ class Stage4InterviewRound:
             score_breakdown=score_breakdown,
             is_patch=is_patch,
             is_patch_fallback=patch_fallback,
-            patch_strategy=patch_strategy,
+            patch_strategy=prelude.normalized_patch_strategy,
             prelude=prelude,
         )
         return self._build_stage4_attempt_return_payload(prelude)
