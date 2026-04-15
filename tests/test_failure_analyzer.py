@@ -943,6 +943,57 @@ def test_failure_analyzer_collect_sink_alignment_raw_rationale_results_tracks_st
     ]
 
 
+def test_failure_analyzer_collect_sink_alignment_raw_rationale_results_ignores_prefinal_companion_contract_and_feedback_drift():
+    attempt_key = "s4:ep81:arc8:a1:sess_prefinal_raw"
+    results = FailureAnalyzer._collect_sink_alignment_raw_rationale_results(
+        stage=4,
+        attempt_key=attempt_key,
+        raw_rationale_by_attempt={
+            attempt_key: {
+                "payload_kinds": {"selection_contract_snapshot_raw", "feedback_provenance_raw"},
+                "record_families": {"contract_snapshot", "feedback_provenance"},
+                "projected_payloads": {
+                    "selection_contract_snapshot_raw": {
+                        "director_verdict": "PASS_WITH_FIX",
+                        "gate_basis": "director_primary_pass_with_fix",
+                        "repair_scope": "inplace",
+                        "scope_authority_fix_scope": "inplace",
+                        "scope_authority_widened": False,
+                    },
+                    "feedback_provenance_raw": {
+                        "runtime_advisory": "raw advisory",
+                        "retry_directives": "raw retry",
+                    },
+                },
+            }
+        },
+        stage_attempts={
+            attempt_key: {
+                "runtime_advisory": "db advisory",
+                "retry_directives": "db retry",
+            }
+        },
+        pass_rate_monitor={},
+        director_selections={
+            attempt_key: {
+                "director_verdict": "REJECT",
+                "gate_basis": "post_select_conflict",
+                "repair_scope": "full",
+                "scope_authority_fix_scope": "full",
+                "scope_authority_widened": True,
+                "runtime_advisory": "director advisory",
+                "retry_directives": "director retry",
+            }
+        },
+        session_decisions={},
+        episode_production={},
+        authority_row={"selection_companion_status": "pre_final_candidate"},
+    )
+
+    assert results["raw_rationale_contract_mismatches"] == []
+    assert results["raw_rationale_feedback_mismatches"] == []
+
+
 def test_failure_analyzer_collect_sink_alignment_raw_rationale_results_tracks_stage4_patch_trace_mismatch():
     attempt_key = "s4:ep81:arc8:a1:sess_patchtrace"
     results = FailureAnalyzer._collect_sink_alignment_raw_rationale_results(

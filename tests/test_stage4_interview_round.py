@@ -6610,6 +6610,88 @@ class TestRecordS4Attempt:
         assert payload["patch_targets"] == ["scene:1"]
         assert payload["partial_fix_eval"]["patch_round"] == 2
 
+    def test_append_episode_log_does_not_project_patch_trace_from_fix_pack_when_not_patch(self, tmp_path):
+        ctx = _make_ctx()
+        ctx.current_project.db.save_attempt_raw_rationale = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        ir._get_round_metrics_delta = MagicMock(
+            return_value={
+                "total_calls": 0,
+                "total_tokens": 0,
+                "total_cost_usd": 0.0,
+                "model_breakdown": {},
+            }
+        )
+
+        with (
+            patch("modules.core.stage4_interview_round.resolve_project_log_dir", return_value=tmp_path / "logs"),
+            patch("modules.core.stage4_interview_round.append_jsonl_record") as append_mock,
+        ):
+            ir._append_episode_log(
+                ep_num=2,
+                round_num=1,
+                director_result={
+                    "selected": "C",
+                    "selected_candidate": {"strategy_name": "tension"},
+                    "verdict": "PASS",
+                    "score": 98,
+                    "selection_reason": "accepted",
+                    "verdict_reason": "direct pass",
+                    "score_breakdown": {},
+                    "action_items": [],
+                    "open_review": "",
+                },
+                is_patch=False,
+                patch_fallback=False,
+                tot_used=False,
+                mad_used=False,
+                asp_used=False,
+                model="writer-model",
+                reject_bucket="",
+                validation_warnings=[],
+                gate_semantics={
+                    "director_verdict": "PASS",
+                    "final_verdict": "PASS",
+                    "gate_basis": "director_primary_pass",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "repair_contract": {
+                        "fix_scope": "inplace",
+                        "repair_scope": "inplace",
+                        "authoritative_fix_scope": "inplace",
+                        "provenance": "director_authored",
+                        "target_kind": "local_phrase",
+                    },
+                    "scope_authority": {
+                        "fix_scope": "inplace",
+                        "repair_scope": "inplace",
+                        "authoritative_fix_scope": "inplace",
+                        "widened": False,
+                    },
+                },
+                fix_pack={
+                    "patch_targets": ["전반적인 톤"],
+                    "must_fix": ["수정 불필요"],
+                    "do_not_regress": ["현재의 긴장감 유지"],
+                    "success_condition": "현재 상태 유지 (PASS)",
+                    "target_kind": "local_phrase",
+                    "provenance": "director_authored",
+                },
+                patch_trace={},
+                attempt_key="s4:ep2:arc1:a2",
+            )
+
+        payload = append_mock.call_args.args[1]
+        assert payload["flags"]["patch_mode"] is False
+        assert payload["patch_trace"]["patch_strategy"] == ""
+        assert payload["patch_trace"]["patch_targets"] == []
+        assert "partial_fix_eval" not in payload["patch_trace"]
+        assert payload["fix_pack"]["target_kind"] == "local_phrase"
+
+        raw_calls = ctx.current_project.db.save_attempt_raw_rationale.call_args_list
+        patch_calls = [call.kwargs for call in raw_calls if call.kwargs["payload_kind"] == "patch_trace_raw"]
+        assert patch_calls == []
+
     def test_pass_with_fix_run_logs_initial_and_final_verdicts(self):
         ctx = _make_ctx()
         ctx.pass_rate_monitor = MagicMock()
@@ -6954,13 +7036,7 @@ class TestRecordS4Attempt:
         assert payload["selection_candidate_key"] == db_kwargs["candidate_key"]
         assert payload["selection_candidate_key"] == "A|균형 전략"
         assert payload["selection_artifact_path"] == db_kwargs["artifact_path"]
-        ctx.current_project.db.update_director_selection_rationale.assert_called_once_with(
-            attempt_key="s4:ep1:arc1:a1",
-            selection_reason="re-audit accepted",
-            verdict_reason="ending needs a local fix",
-            fix_scope="inplace",
-            advisory_warnings=ANY,
-        )
+        ctx.current_project.db.update_director_selection_rationale.assert_not_called()
 
     def test_reject_episode_log_uses_final_attempt_meta_and_preserves_selection_meta(self, tmp_path):
         ctx = _make_ctx()
@@ -8156,6 +8232,22 @@ class TestLane2DirectorSemantics:
             advisory_warnings=ANY,
         )
 
+    def test_sync_pass_result_selection_rationale_skips_when_preserving_historical_companion(self):
+        ctx = _make_ctx()
+        ctx.current_project.db = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir._sync_pass_result_selection_rationale(
+            attempt_key="attempt-1",
+            trace_director_result={"fix_scope": "rewrite"},
+            director_result={"fix_scope": "patch"},
+            selection_reason="selection",
+            verdict_reason="verdict",
+            preserve_historical_companion=True,
+        )
+
+        ctx.current_project.db.update_director_selection_rationale.assert_not_called()
+
     def test_sync_reject_result_selection_rationale_prefers_trace_fix_scope(self):
         ctx = _make_ctx()
         ctx.current_project.db = MagicMock()
@@ -9326,6 +9418,58 @@ class TestLane2DirectorSemantics:
         assert payload.session_fix_pack["patch_targets"] == ["name_anchor"]
         assert payload.session_gate_semantics["repair_contract"]["subtype"] == "고유명사"
         assert payload.session_gate_semantics["repair_contract"]["provenance"] == "director_authored"
+
+    def test_build_pass_result_logging_payload_preserves_nested_repair_contract_subtype(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir._build_retry_advisory_digest = MagicMock(return_value="[advisory] keep continuity")
+
+        payload = ir._build_pass_result_logging_payload(
+            pass_result=SimpleNamespace(
+                attempt_artifact_meta={
+                    "candidate_key": "A|patched",
+                    "content_hash": "hash-final",
+                    "artifact_path": "artifacts/final.txt",
+                },
+                final_manuscript="patched manuscript",
+                previous_attempt={},
+            ),
+            next_ep=1,
+            round_num=0,
+            round_ctx=_make_round_ctx(),
+            director_result={
+                "selection_reason": "pre-fix selection",
+                "verdict_reason": "pre-fix verdict",
+                "fix_scope": "inplace",
+                "fix_pack": {
+                    "patch_targets": ["opening_action"],
+                    "must_fix": ["repair opening handoff"],
+                    "success_condition": "opening continuity restored",
+                    "target_kind": "beat",
+                },
+            },
+            trace_director_result={
+                "selection_reason": "post-fix selection",
+                "verdict_reason": "post-fix verdict",
+                "director_verdict": "PASS",
+                "final_verdict": "PASS",
+                "gate_basis": "patch_reaudit_pass",
+                "repair_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+                "repair_contract": {
+                    "subtype": "opening_action_continuity",
+                    "provenance": "repair_contract_trace",
+                    "target_kind": "beat",
+                },
+            },
+            reason="fallback",
+            is_patch=True,
+            trace_patch_trace={"patch_targets": ["opening_action"], "target_kind": "beat"},
+        )
+
+        assert payload.session_gate_semantics["repair_contract"]["subtype"] == "opening_action_continuity"
+        assert payload.session_gate_semantics["repair_contract"]["provenance"] == "repair_contract_trace"
+        assert payload.session_gate_semantics["repair_contract"]["target_kind"] == "beat"
 
     def test_append_pass_episode_log_delegates_to_stage4_episode_logging(self):
         from modules.core import stage4_episode_logging as s4_episode_logging

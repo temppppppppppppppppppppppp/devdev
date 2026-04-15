@@ -1,0 +1,232 @@
+{
+  "tag": "stage4_complete",
+  "timestamp": "2026-04-15 17:34:50",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 7,
+  "counts": {
+    "stage4_session_scope": 1,
+    "stage4_retry_pathology_signal": 1,
+    "stage4_v75d_blueprint_patch_snapshot": 1,
+    "stage4_cove_runtime_advisory": 1,
+    "stage4_post_pass_contract_signal": 1,
+    "target_ep_reached": 1,
+    "stage4_complete": 1
+  },
+  "latest_event_type": "stage4_complete",
+  "recent_events": [
+    {
+      "type": "stage4_session_scope",
+      "message": "stage4 session scope declared"
+    },
+    {
+      "type": "stage4_retry_pathology_signal",
+      "message": "stage4 retry pathology observed"
+    },
+    {
+      "type": "stage4_v75d_blueprint_patch_snapshot",
+      "message": "stage4 V75-D blueprint patch snapshot persisted"
+    },
+    {
+      "type": "stage4_cove_runtime_advisory",
+      "message": "stage4 CoVe runtime advisory observed"
+    },
+    {
+      "type": "stage4_post_pass_contract_signal",
+      "message": "stage4 post-pass contract persisted"
+    },
+    {
+      "type": "target_ep_reached",
+      "message": "stage4 target episode reached"
+    },
+    {
+      "type": "stage4_complete",
+      "message": "stage4 production completed"
+    }
+  ],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "operational_metadata_scope": "latest_structured_session_plus_runtime_audit_events_and_session_sinks",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth.",
+    "operational_metadata_note": "Operational metadata is best-effort run interpretation and does not override persisted attempt truth."
+  },
+  "proof_digest": {
+    "available": true,
+    "status": "warn",
+    "artifacts": {
+      "db_available": true,
+      "session_decisions_exists": true,
+      "ui_events_jsonl_exists": true,
+      "pass_rate_monitor_exists": true,
+      "episode_production_exists": true,
+      "runtime_audit_jsonl_exists": true,
+      "ui_events_db_available": true,
+      "ui_events_count": 1066,
+      "ui_event_coverage_status": "ok"
+    },
+    "stages": {
+      "stage4": {
+        "status": "warn",
+        "attempts_considered": 2,
+        "complete_final_attempts": 2,
+        "complete_lifecycle_attempts": 2,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 2,
+        "coverage": {
+          "stage_attempts": 2,
+          "pass_rate_monitor": 2,
+          "director_selections": 2,
+          "episode_production": 2,
+          "session_decisions": 2,
+          "attempt_raw_rationale": 0
+        },
+        "issue_counts": {
+          "patch_strategy_mismatches": 1,
+          "fix_scope_mismatches": 1,
+          "runtime_advisory_mismatches": 1,
+          "rationale_metadata_missing": 3
+        },
+        "numeric_consistency_summary": {
+          "status": "ok",
+          "stage": 4,
+          "session_filter": "20260415_171458",
+          "attempt_rows_considered": 2,
+          "attempts_with_signals": 0,
+          "signal_count": 0,
+          "category_counts": {},
+          "severity_counts": {},
+          "ledger_field_counts": {},
+          "signal_examples": [],
+          "observability_note": "Numeric consistency summary surfaces persisted NC advisory text only; owner classification remains external to this summary."
+        }
+      }
+    },
+    "session_lineage": {
+      "plain_log_token": "20260415_171456",
+      "structured_session_id": "20260415_171458",
+      "status": "split_mapped"
+    },
+    "operational_metadata": {
+      "status": "ok",
+      "latest_session_id": "20260415_171458",
+      "stage2_live_session": {
+        "status": "absent",
+        "attempt_count": 0,
+        "episode_count": 0,
+        "episodes": [],
+        "latest_ep": null,
+        "latest_final_verdict": "",
+        "session_decision_count": 0,
+        "ui_event_count": 0,
+        "attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "selection_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "verdict_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "carryover_authority_event_count": 0,
+        "latest_carryover_authority": {}
+      },
+      "stage3_live_session": {
+        "status": "absent",
+        "attempt_count": 0,
+        "episode_count": 0,
+        "episodes": [],
+        "latest_ep": null,
+        "latest_final_verdict": "",
+        "session_decision_count": 0,
+        "ui_event_count": 0,
+        "attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "selection_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "verdict_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "source_anchor_summary_count": 0,
+        "source_anchor_ui_event_count": 0,
+        "latest_source_anchor_summary": {}
+      },
+      "stage4_live_session": {
+        "status": "ok",
+        "attempt_count": 2,
+        "episode_count": 1,
+        "episodes": [
+          2
+        ],
+        "latest_ep": 2,
+        "latest_final_verdict": "PASS",
+        "retry_exercised": true,
+        "patch_exercised": true,
+        "patch_attempt_count": 1,
+        "fallback_patch_count": 0,
+        "pass_count": 1,
+        "session_scope": {
+          "session_id": "20260415_171458",
+          "start_ep": 2,
+          "target_ep": 2,
+          "total_planned_ep": 2
+        },
+        "target_ep_reached": true,
+        "stage4_complete_emitted": true,
+        "post_pass_contract_signal_count": 1,
+        "non_exercised_reasons": []
+      }
+    }
+  }
+}
