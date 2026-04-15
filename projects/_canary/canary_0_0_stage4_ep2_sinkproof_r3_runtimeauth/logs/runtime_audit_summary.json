@@ -1,0 +1,241 @@
+{
+  "tag": "stage4_complete",
+  "timestamp": "2026-04-15 15:08:05",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 5,
+  "counts": {
+    "stage4_session_scope": 1,
+    "stage4_cove_runtime_advisory": 1,
+    "stage4_post_pass_contract_signal": 1,
+    "target_ep_reached": 1,
+    "stage4_complete": 1
+  },
+  "latest_event_type": "stage4_complete",
+  "recent_events": [
+    {
+      "type": "stage4_session_scope",
+      "message": "stage4 session scope declared"
+    },
+    {
+      "type": "stage4_cove_runtime_advisory",
+      "message": "stage4 CoVe runtime advisory observed"
+    },
+    {
+      "type": "stage4_post_pass_contract_signal",
+      "message": "stage4 post-pass contract persisted"
+    },
+    {
+      "type": "target_ep_reached",
+      "message": "stage4 target episode reached"
+    },
+    {
+      "type": "stage4_complete",
+      "message": "stage4 production completed"
+    }
+  ],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "operational_metadata_scope": "latest_structured_session_plus_runtime_audit_events_and_session_sinks",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth.",
+    "operational_metadata_note": "Operational metadata is best-effort run interpretation and does not override persisted attempt truth."
+  },
+  "proof_digest": {
+    "available": true,
+    "status": "warn",
+    "artifacts": {
+      "db_available": true,
+      "session_decisions_exists": true,
+      "ui_events_jsonl_exists": true,
+      "pass_rate_monitor_exists": true,
+      "episode_production_exists": true,
+      "runtime_audit_jsonl_exists": true,
+      "ui_events_db_available": true,
+      "ui_events_count": 888,
+      "ui_event_coverage_status": "ok"
+    },
+    "stages": {
+      "stage4": {
+        "status": "warn",
+        "attempts_considered": 1,
+        "complete_final_attempts": 1,
+        "complete_lifecycle_attempts": 1,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 1,
+        "coverage": {
+          "stage_attempts": 1,
+          "pass_rate_monitor": 1,
+          "director_selections": 1,
+          "episode_production": 1,
+          "session_decisions": 1,
+          "attempt_raw_rationale": 0
+        },
+        "issue_counts": {
+          "gate_repair_metadata_missing": 1,
+          "rationale_metadata_missing": 1
+        },
+        "numeric_consistency_summary": {
+          "status": "warn",
+          "stage": 4,
+          "session_filter": "20260415_145712",
+          "attempt_rows_considered": 1,
+          "attempts_with_signals": 1,
+          "signal_count": 1,
+          "category_counts": {
+            "numeric_carryover_authority": 1
+          },
+          "severity_counts": {
+            "MAJOR": 1
+          },
+          "ledger_field_counts": {
+            "total_assets": 1
+          },
+          "signal_examples": [
+            {
+              "attempt_key": "s4:ep2:arc1:a1:20260415_145712",
+              "ep_num": 2,
+              "attempt_num": 1,
+              "source": "runtime_advisory",
+              "signal_id": "NC-1",
+              "candidate": "후보 A",
+              "severity": "MAJOR",
+              "category": "numeric_carryover_authority",
+              "text": "[numeric carryover authority mismatch] 원고 '200억의 자산' (200.0억) vs resumed FactLedger 'total_assets'=10000000.0억 (EP1 carryover baseline). carryover baseline과 current asset claim의 authority surface 분리 여부 확인 필요",
+              "ledger_field": "total_assets"
+            }
+          ],
+          "observability_note": "Numeric consistency summary surfaces persisted NC advisory text only; owner classification remains external to this summary."
+        }
+      }
+    },
+    "session_lineage": {
+      "plain_log_token": "20260415_145707",
+      "structured_session_id": "20260415_145712",
+      "status": "split_mapped"
+    },
+    "operational_metadata": {
+      "status": "ok",
+      "latest_session_id": "20260415_145712",
+      "stage2_live_session": {
+        "status": "absent",
+        "attempt_count": 0,
+        "episode_count": 0,
+        "episodes": [],
+        "latest_ep": null,
+        "latest_final_verdict": "",
+        "session_decision_count": 0,
+        "ui_event_count": 0,
+        "attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "selection_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "verdict_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "carryover_authority_event_count": 0,
+        "latest_carryover_authority": {}
+      },
+      "stage3_live_session": {
+        "status": "absent",
+        "attempt_count": 0,
+        "episode_count": 0,
+        "episodes": [],
+        "latest_ep": null,
+        "latest_final_verdict": "",
+        "session_decision_count": 0,
+        "ui_event_count": 0,
+        "attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "selection_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "verdict_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "source_anchor_summary_count": 0,
+        "source_anchor_ui_event_count": 0,
+        "latest_source_anchor_summary": {}
+      },
+      "stage4_live_session": {
+        "status": "ok",
+        "attempt_count": 1,
+        "episode_count": 1,
+        "episodes": [
+          2
+        ],
+        "latest_ep": 2,
+        "latest_final_verdict": "PASS",
+        "retry_exercised": false,
+        "patch_exercised": true,
+        "patch_attempt_count": 1,
+        "fallback_patch_count": 0,
+        "pass_count": 1,
+        "session_scope": {
+          "session_id": "20260415_145712",
+          "start_ep": 2,
+          "target_ep": 2,
+          "total_planned_ep": 2
+        },
+        "target_ep_reached": true,
+        "stage4_complete_emitted": true,
+        "post_pass_contract_signal_count": 1,
+        "non_exercised_reasons": [
+          "stage4_retry_not_needed_round1_pass"
+        ]
+      }
+    }
+  }
+}

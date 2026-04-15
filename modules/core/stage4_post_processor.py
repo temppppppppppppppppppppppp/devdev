@@ -2,6 +2,7 @@
 [B-1-1] Stage4 Post-Processor — PASS 후처리 및 세션 종료 로직 분리
 """
 
+import copy
 import hashlib
 import json
 import logging
@@ -765,6 +766,80 @@ class Stage4PostProcessor:
             " (Director state_updates 반영 대기)"
         )
 
+    def _normalize_hud_update_payload(self, approved_hud_updates: dict | None) -> dict[str, object]:
+        if not isinstance(approved_hud_updates, dict) or not approved_hud_updates:
+            return {}
+
+        payload = (
+            approved_hud_updates.get("actual_truth")
+            if isinstance(approved_hud_updates.get("actual_truth"), dict)
+            else approved_hud_updates
+        )
+        if not isinstance(payload, dict):
+            return {}
+
+        normalized: dict[str, object] = {}
+        for raw_key, raw_value in payload.items():
+            key = str(raw_key or "").strip()
+            if not key or key.startswith("_"):
+                continue
+            normalized[key] = copy.deepcopy(raw_value)
+        return normalized
+
+    def _build_projected_hud_snapshot(self, *, approved_hud_updates: dict | None = None):
+        hud_snapshot = None
+        try:
+            hud = getattr(getattr(self.ctx, "sys", None), "hud", None)
+            if hud and hasattr(hud, "snapshot"):
+                hud_snapshot = hud.snapshot()
+        except Exception:
+            hud_snapshot = None
+
+        normalized_updates = self._normalize_hud_update_payload(approved_hud_updates)
+        if normalized_updates:
+            projected_snapshot = copy.deepcopy(hud_snapshot) if isinstance(hud_snapshot, dict) else {}
+            projected_snapshot.update(normalized_updates)
+            return projected_snapshot
+
+        return copy.deepcopy(hud_snapshot) if hud_snapshot is not None else None
+
+    def _resolve_approved_hud_updates(
+        self,
+        *,
+        next_ep: int,
+        final_state_updates: dict | None,
+    ) -> tuple[dict[str, object], str]:
+        if not isinstance(final_state_updates, dict) or not final_state_updates:
+            return {}, ""
+
+        director = None
+        if isinstance(getattr(self.ctx, "agents", None), dict):
+            director = self.ctx.agents.get("director")
+        if director is None or not hasattr(director, "on_approve_workflow"):
+            return {}, ""
+
+        current_hud = {}
+        try:
+            hud = getattr(getattr(self.ctx, "sys", None), "hud", None)
+            if hud and hasattr(hud, "snapshot"):
+                snapshot = hud.snapshot()
+                if isinstance(snapshot, dict):
+                    current_hud = copy.deepcopy(snapshot)
+        except Exception:
+            current_hud = {}
+
+        try:
+            approved = director.on_approve_workflow(
+                ep_num=next_ep,
+                state_updates=final_state_updates,
+                current_hud=current_hud,
+            )
+        except Exception as hud_err:
+            return {}, str(hud_err)
+
+        applied_updates = approved.get("applied_updates") if isinstance(approved, dict) else {}
+        return self._normalize_hud_update_payload(applied_updates), ""
+
     def _save_pass_result_primary_db(
         self,
         *,
@@ -773,14 +848,10 @@ class Stage4PostProcessor:
         final_title: str,
         final_state_updates: dict,
         output_dir,
+        approved_hud_updates: dict | None = None,
     ) -> bool:
         db = self.ctx.current_project.db
-        hud_snapshot = None
-        try:
-            if hasattr(self.ctx.sys, "hud") and hasattr(self.ctx.sys.hud, "snapshot"):
-                hud_snapshot = self.ctx.sys.hud.snapshot()
-        except Exception:
-            pass
+        hud_snapshot = self._build_projected_hud_snapshot(approved_hud_updates=approved_hud_updates)
 
         try:
             with db._lock:
@@ -873,19 +944,19 @@ class Stage4PostProcessor:
         final_state_updates: dict,
         output_dir,
         v50_modules_available: bool,
+        approved_hud_updates: dict | None = None,
+        hud_update_error: str = "",
     ) -> None:
-        if final_state_updates and hasattr(self.ctx.sys, "hud"):
+        if hud_update_error:
+            self.ctx.ui.log(f"   HUD update failed: {hud_update_error}")
+
+        normalized_hud_updates = self._normalize_hud_update_payload(approved_hud_updates)
+        if normalized_hud_updates and hasattr(self.ctx.sys, "hud"):
             try:
-                approved = self.ctx.agents["director"].on_approve_workflow(
-                    ep_num=next_ep,
-                    state_updates=final_state_updates,
-                    current_hud=self.ctx.sys.hud.snapshot() if hasattr(self.ctx.sys.hud, "snapshot") else {},
-                )
-                if approved.get("applied_updates"):
-                    if hasattr(self.ctx.sys.hud, "bulk_update"):
-                        self.ctx.sys.hud.bulk_update(approved["applied_updates"])
-                    else:
-                        self.ctx.sys.hud.update_physical_status(approved["applied_updates"])
+                if hasattr(self.ctx.sys.hud, "bulk_update"):
+                    self.ctx.sys.hud.bulk_update(normalized_hud_updates)
+                else:
+                    self.ctx.sys.hud.update_physical_status(normalized_hud_updates)
             except Exception as hud_err:
                 self.ctx.ui.log(f"   HUD update failed: {hud_err}")
 
@@ -1116,6 +1187,10 @@ class Stage4PostProcessor:
             if isinstance(_quality_labels, dict):
                 final_state_updates = {k: v for k, v in final_state_updates.items() if k != "_director_quality_labels"}
         final_manuscript = self._normalize_reader_facing_manuscript(final_manuscript)
+        approved_hud_updates, hud_update_error = self._resolve_approved_hud_updates(
+            next_ep=next_ep,
+            final_state_updates=final_state_updates,
+        )
 
         # DB 저장 (HUD보다 먼저 — DB 실패 시 HUD 오염 방지) [Sweep56]
         # [P0-D1/D4] lock 보호 + 원자적 트랜잭션으로 부분 저장 방지
@@ -1125,6 +1200,7 @@ class Stage4PostProcessor:
             final_title=final_title,
             final_state_updates=final_state_updates,
             output_dir=output_dir,
+            approved_hud_updates=approved_hud_updates,
         ):
             return False
 
@@ -1142,6 +1218,8 @@ class Stage4PostProcessor:
             final_state_updates=final_state_updates,
             output_dir=output_dir,
             v50_modules_available=v50_modules_available,
+            approved_hud_updates=approved_hud_updates,
+            hud_update_error=hud_update_error,
         )
         post_pass_payload = self._run_pass_result_post_pass_pipeline(
             next_ep=next_ep,
