@@ -1,7 +1,7 @@
 # 0_0-stage3-state-arbiter-envelope-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: active (3-pass audited through current-head post-tranche audit; long-horizon bounded execution lane; `Tranche A/B/C` are landed on current `main`; fresh rerun remains operator-gated and this lane stays proof-pending rather than code-open)
+Status: pending (3-pass audited through current-head post-tranche audit; long-horizon bounded execution lane; `Tranche A/B/C` are landed on current `main`; no additional pre-proof code tranche is open and fresh rerun remains operator-gated)
 Canonical Path: `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Commit State:
@@ -340,7 +340,7 @@ Fresh rerun validation remains explicitly deferred to Tranche D.
 
 ## 12. Temp Queue Notes
 
-- temp status: `in_progress (Tranche A/B/C landed on current main; post-tranche proof and next-lane decision pending)`
+- temp status: `pending (Tranche A/B/C landed on current main; no additional pre-proof code tranche is open; proof remains operator-gated)`
 - cleanup condition:
   - remove the temp mirror only after the long-horizon lane is realized or explicitly demoted
 - roadmap dependency:

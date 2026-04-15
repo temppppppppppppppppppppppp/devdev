@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from modules.core.cross_stage_authority_packet import CROSS_STAGE_AUTHORITY_PACKET_VERSION
 from modules.domain.agents.chief_writer_context import ChiefWriterContextBuilder
 from modules.domain.agents.chief_writer_context_packets import ChiefWriterContextPackets
 from modules.domain.agents.chief_writer_prompts import build_chief_writer_main_prompt
@@ -124,6 +125,42 @@ class TestBuildCommonContext:
 
         assert result == "prompt"
         builder.context_packets.build_common_context_packets.assert_called_once()
+
+    def test_build_common_context_forwards_arc_data_to_packet_bundle(self):
+        host = _make_host()
+        builder = ChiefWriterContextBuilder(host)
+        builder.context_packets.build_common_context_packets = MagicMock(
+            return_value={
+                "prev_ending": "tail",
+                "prev_digest": "digest",
+                "future_guard_section": "future",
+                "past_guard_section": "past",
+                "npc_equipment_section": "equip",
+                "npc_frequency_section": "freq",
+                "hud_trend_section": "trend",
+                "hud_anomaly_section": "warn",
+                "dna_instruction": "dna",
+                "high_density_hud_section": "hd",
+                "prev_manuscripts_section": "prev-full",
+            }
+        )
+        arc_data = {"arc_no": 1, "cross_stage_authority_packet": {"contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION}}
+
+        with patch("modules.domain.agents.chief_writer_context.build_chief_writer_main_prompt", return_value="prompt"):
+            builder.build_common_context(
+                ep_num=5,
+                blueprint={"scene_breakdown": {}, "integrated_scenario": ""},
+                arc_data=arc_data,
+                prev_manuscript="",
+                hud_report="HUD",
+                arc_doc="arc",
+                master_bible=host.context.master_bible,
+                style_guide="",
+                director_feedback="",
+                failure_constraints="",
+            )
+
+        assert builder.context_packets.build_common_context_packets.call_args.kwargs["arc_data"] == arc_data
 
     def test_build_common_context_promotes_stage4_work_identity_authority_into_hard_canon(self):
         host = _make_host()
@@ -897,3 +934,62 @@ class TestIFCPacketInputWiring:
         assert "total_assets: 10000000 won (EP1 carryover baseline)" in section
         assert "pending claim/target" in section
         assert "current truth" in section
+
+    def test_stage4_carryover_ceiling_falls_back_to_cross_stage_packet_when_fact_ledger_missing(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+
+        section = builder.context_packets._build_stage4_carryover_ceiling_section(
+            blueprint={"capital_plan": "target capital plan"},
+            arc_data={
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "numeric_carryover": {
+                        "total_assets": "20000000",
+                        "total_assets_source": "state_constraints.arc_end_state.total_assets",
+                    },
+                }
+            },
+            prev_manuscript="",
+            prev_digest="",
+        )
+
+        assert "Explicit cross-stage packet numeric carryover authority" in section
+        assert "upstream transport lineage: cross_stage_authority_packet.v1" in section
+        assert "total_assets: 20000000 (cross-stage packet; source=state_constraints.arc_end_state.total_assets)" in section
+        assert "FactLedger carryover baseline is unavailable here" in section
+
+    def test_stage4_carryover_ceiling_supplements_fact_ledger_with_packet_only_numeric_fields(self):
+        host = _make_host()
+        host.context.fact_ledger = MagicMock()
+        host.context.fact_ledger.get_numbers.return_value = {
+            "capital": {
+                "value": 10000000,
+                "unit": "won",
+                "last_ep": 1,
+                "authority_scope": "carryover_baseline",
+            }
+        }
+        builder = ChiefWriterContextBuilder(host)
+
+        section = builder.context_packets._build_stage4_carryover_ceiling_section(
+            blueprint={"capital_plan": "target capital plan"},
+            arc_data={
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "numeric_carryover": {
+                        "capital": 10000000,
+                        "capital_source": "state_constraints.arc_end_state.capital",
+                        "total_assets": 20000000,
+                        "total_assets_source": "state_constraints.arc_end_state.total_assets",
+                    },
+                }
+            },
+            prev_manuscript="",
+            prev_digest="",
+        )
+
+        assert "supplemented by explicit cross-stage packet rows" in section
+        assert "upstream transport lineage: cross_stage_authority_packet.v1" in section
+        assert "capital: 10000000 won (EP1 carryover baseline)" in section
+        assert "total_assets: 20000000 (cross-stage packet; source=state_constraints.arc_end_state.total_assets)" in section
+        assert "FactLedger carryover baseline remains the stronger surface below" in section

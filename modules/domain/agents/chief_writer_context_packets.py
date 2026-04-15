@@ -19,9 +19,135 @@ import re
 from typing import TYPE_CHECKING
 
 from modules.core.constants import smart_truncate
+from modules.core.cross_stage_authority_packet import (
+    collect_numeric_carryover_entries,
+    extract_explicit_cross_stage_authority_packet,
+)
 
 if TYPE_CHECKING:
     from .chief_writer_context import ChiefWriterContextBuilder
+
+
+def _collect_fact_ledger_carryover_numeric_rows(
+    fact_ledger,
+    *,
+    key_filter,
+    limit: int | None = None,
+) -> list[dict[str, object]]:
+    if fact_ledger is None or not hasattr(fact_ledger, "get_numbers"):
+        return []
+
+    try:
+        numbers = fact_ledger.get_numbers() or {}
+    except Exception:
+        logging.debug("[ChiefWriterContextPackets] carryover numeric authority probe failed", exc_info=True)
+        return []
+    if not isinstance(numbers, dict):
+        return []
+
+    rows: list[dict[str, object]] = []
+    for key, info in numbers.items():
+        field_name = str(key or "").strip()
+        if not isinstance(info, dict):
+            continue
+        if str(info.get("authority_scope") or "").strip().lower() != "carryover_baseline":
+            continue
+        if not field_name or not key_filter(field_name):
+            continue
+        rows.append(
+            {
+                "field": field_name,
+                "value": info.get("value", "?"),
+                "unit": str(info.get("unit", "") or "").strip(),
+                "basis": f"EP{info.get('last_ep', '?')} carryover baseline",
+            }
+        )
+        if limit is not None and len(rows) >= limit:
+            break
+    return rows
+
+
+def _collect_packet_carryover_numeric_rows(
+    arc_data: dict | None,
+    *,
+    key_filter,
+    limit: int | None = None,
+) -> tuple[list[dict[str, object]], str]:
+    packet = extract_explicit_cross_stage_authority_packet(arc_data if isinstance(arc_data, dict) else None)
+    packet_version = str((packet or {}).get("contract_version", "") or "").strip()
+    if not packet:
+        return [], packet_version
+
+    rows: list[dict[str, object]] = []
+    for entry in collect_numeric_carryover_entries(packet):
+        field_name = str(entry.get("field", "") or "").strip()
+        if not field_name or not key_filter(field_name):
+            continue
+        rows.append(
+            {
+                "field": field_name,
+                "value": entry.get("value", "?"),
+                "source": str(entry.get("source", "") or "").strip(),
+            }
+        )
+        if limit is not None and len(rows) >= limit:
+            break
+    return rows, packet_version
+
+
+def _prioritize_numeric_carryover_rows(
+    *,
+    fact_ledger_rows: list[dict[str, object]],
+    packet_rows: list[dict[str, object]],
+    limit: int,
+) -> tuple[list[dict[str, object]], str]:
+    if fact_ledger_rows and packet_rows:
+        fact_rows_by_field = {
+            str(row.get("field", "") or "").strip(): row
+            for row in fact_ledger_rows
+            if str(row.get("field", "") or "").strip()
+        }
+        ordered_rows: list[dict[str, object]] = []
+        seen_fields: set[str] = set()
+        packet_only_present = False
+        for packet_row in packet_rows:
+            field_name = str(packet_row.get("field", "") or "").strip()
+            if not field_name or field_name in seen_fields:
+                continue
+            if field_name in fact_rows_by_field:
+                ordered_rows.append(fact_rows_by_field[field_name])
+                seen_fields.add(field_name)
+                continue
+            ordered_rows.append(packet_row)
+            seen_fields.add(field_name)
+            packet_only_present = True
+        for fact_row in fact_ledger_rows:
+            field_name = str(fact_row.get("field", "") or "").strip()
+            if not field_name or field_name in seen_fields:
+                continue
+            ordered_rows.append(fact_row)
+            seen_fields.add(field_name)
+        mode = "fact_ledger_plus_packet" if packet_only_present else "fact_ledger"
+        return ordered_rows[:limit], mode
+    if fact_ledger_rows:
+        return fact_ledger_rows[:limit], "fact_ledger"
+    if packet_rows:
+        return packet_rows[:limit], "packet"
+    return [], "none"
+
+
+def _format_numeric_carryover_row(row: dict[str, object]) -> str:
+    field_name = str(row.get("field", "") or "").strip()
+    value = row.get("value", "?")
+    unit = str(row.get("unit", "") or "").strip()
+    unit_suffix = f" {unit}" if unit else ""
+    basis = str(row.get("basis", "") or "").strip()
+    if basis:
+        return f"{field_name}: {value}{unit_suffix} ({basis})"
+    source = str(row.get("source", "") or "").strip()
+    if source:
+        return f"{field_name}: {value}{unit_suffix} (cross-stage packet; source={source})"
+    return f"{field_name}: {value}{unit_suffix} (cross-stage packet)"
 
 
 class ChiefWriterContextPackets:
@@ -142,40 +268,19 @@ class ChiefWriterContextPackets:
         )
 
     def _collect_fact_ledger_carryover_numeric_lines(self, *, limit: int = 3) -> list[str]:
-        fact_ledger = self._resolve_fact_ledger()
-        if fact_ledger is None or not hasattr(fact_ledger, "get_numbers"):
-            return []
-
-        try:
-            numbers = fact_ledger.get_numbers() or {}
-        except Exception:
-            logging.debug("[ChiefWriterContextPackets] carryover numeric authority probe failed", exc_info=True)
-            return []
-        if not isinstance(numbers, dict):
-            return []
-
-        collected: list[str] = []
-        for key, info in numbers.items():
-            if not isinstance(info, dict):
-                continue
-            if not self._is_carryover_baseline_scope(info.get("authority_scope")):
-                continue
-            if not self._is_numeric_carryover_key(key):
-                continue
-            last_ep = info.get("last_ep", "?")
-            value = info.get("value", "?")
-            unit = str(info.get("unit", "") or "").strip()
-            unit_suffix = f" {unit}" if unit else ""
-            collected.append(f"{key}: {value}{unit_suffix} (EP{last_ep} carryover baseline)")
-            if len(collected) >= limit:
-                break
-        return collected
+        rows = _collect_fact_ledger_carryover_numeric_rows(
+            self._resolve_fact_ledger(),
+            key_filter=self._is_numeric_carryover_key,
+            limit=limit,
+        )
+        return [_format_numeric_carryover_row(row) for row in rows]
 
     def build_common_context_packets(
         self,
         *,
         ep_num: int,
         blueprint: dict,
+        arc_data: dict | None,
         prev_manuscript: str,
         current_inventory: list[str],
         current_martial_arts: list[str],
@@ -292,6 +397,7 @@ This is optional and should follow narrative flow first.
 
         carryover_ceiling_section = self._build_stage4_carryover_ceiling_section(
             blueprint=blueprint,
+            arc_data=arc_data,
             prev_manuscript=prev_manuscript,
             prev_digest=prev_digest,
         )
@@ -315,10 +421,24 @@ This is optional and should follow narrative flow first.
         self,
         *,
         blueprint: dict,
+        arc_data: dict | None = None,
         prev_manuscript: str,
         prev_digest: str,
     ) -> str:
-        carryover_numeric_lines = self._collect_fact_ledger_carryover_numeric_lines(limit=3)
+        fact_ledger_rows = _collect_fact_ledger_carryover_numeric_rows(
+            self._resolve_fact_ledger(),
+            key_filter=self._is_numeric_carryover_key,
+        )
+        packet_rows, packet_version = _collect_packet_carryover_numeric_rows(
+            arc_data,
+            key_filter=self._is_numeric_carryover_key,
+        )
+        selected_rows, authority_mode = _prioritize_numeric_carryover_rows(
+            fact_ledger_rows=fact_ledger_rows,
+            packet_rows=packet_rows,
+            limit=3,
+        )
+        carryover_numeric_lines = [_format_numeric_carryover_row(row) for row in selected_rows]
         if not prev_manuscript and not prev_digest and not carryover_numeric_lines:
             return ""
 
@@ -379,8 +499,24 @@ This is optional and should follow narrative flow first.
             lines.append("  - 위 계산·계획·메모를 이번 화에서 처음 완성한 것처럼 다시 쓰지 마라.")
 
         if carryover_numeric_lines:
-            lines.append("- FactLedger carryover baseline numeric authority:")
+            lines.append(
+                "- Explicit cross-stage packet numeric carryover authority:"
+                if authority_mode == "packet"
+                else "- FactLedger carryover baseline numeric authority (supplemented by explicit cross-stage packet rows):"
+                if authority_mode == "fact_ledger_plus_packet"
+                else "- FactLedger carryover baseline numeric authority:"
+            )
             lines.extend(f"  - {item}" for item in carryover_numeric_lines)
+            if packet_version and authority_mode in ("packet", "fact_ledger_plus_packet"):
+                lines.insert(len(lines) - len(carryover_numeric_lines), f"  - upstream transport lineage: {packet_version}")
+            if authority_mode == "packet":
+                lines.append(
+                    "  - FactLedger carryover baseline is unavailable here, so treat these packet rows as the intake carryover floor until stronger persisted authority is available."
+                )
+            elif authority_mode == "fact_ledger_plus_packet":
+                lines.append(
+                    "  - FactLedger carryover baseline remains the stronger surface below; explicit cross-stage packet rows only supplement carryover fields that are not yet persisted there."
+                )
             lines.append(
                 "  - 위 숫자는 직전 화에서 이어지는 persisted baseline이다. 더 큰 blueprint/arc 목표 숫자는 브리지 거래·청산·이체·펀딩이 on-page로 써지기 전까지 현재 확정 자산으로 승격하지 마라."
             )

@@ -3699,6 +3699,7 @@ class Stage4InterviewRound:
         _common_writer_kwargs = {
             "ep_num": next_ep,
             "blueprint": blueprint,
+            "arc_data": _arc_data_full if isinstance(_arc_data_full, dict) else {},
             "prev_manuscript": prev_text,
             "hud_report": hud_report,
             "arc_doc": round_ctx.arc_tactical,

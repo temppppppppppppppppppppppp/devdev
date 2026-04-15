@@ -24,6 +24,11 @@ Evidence Artifacts:
 Side-Effect Coverage: covered (Stage2 carryover summary and inventory-clear parity, Stage3 institution fact-lock anchor parity, roadmap/queue controller updates)
 Confidence: `97%`
 
+Historical Scope Note:
+
+- this audit is durable evidence for baseline `f93808ff` only
+- later Stage234 hostile-audit medium follow-up and queue/controller sync are outside this proof set and should not be read back into this document as latest-workspace coverage
+
 ## 1. Intent
 
 Re-audit the current `HEAD` after the post-`Tranche D` hostile-reading hardening and residual-closure wave, then answer one bounded operational question:

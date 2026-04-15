@@ -148,6 +148,7 @@ class ChiefWriterContextBuilder:
         prev_manuscripts_text: str = "",
         # [V68] 세계 상태 요약 — 장기연재 모순 방지
         world_state_summary: str = "",
+        arc_data: dict | None = None,
         # [V68] 에피소드 연결고리 — 직전 화에서 이어받아야 할 것
         chain_link_section: str = "",
         # [ending_hook] 현재 화 마무리 훅
@@ -191,6 +192,7 @@ class ChiefWriterContextBuilder:
         packet_sections = self.context_packets.build_common_context_packets(
             ep_num=ep_num,
             blueprint=blueprint,
+            arc_data=arc_data,
             prev_manuscript=prev_manuscript,
             current_inventory=current_inventory,
             current_martial_arts=current_martial_arts,

@@ -31,6 +31,11 @@ Evidence Artifacts:
 Side-Effect Coverage: covered (Stage3 packet and prompt-envelope assembly, validator/retry boundary ownership, observability sinks, roadmap/queue controller updates)
 Confidence: `97%`
 
+Historical Scope Note:
+
+- this audit is durable evidence for baseline `e0a63f06` only
+- later Stage234 hostile-audit follow-up drift and queue/controller sync are outside this proof set and should not be read back into this document as latest-workspace coverage
+
 ## 1. Intent
 
 Re-audit the current `HEAD` after `Tranche A/B/C` landed and answer one bounded operational question:
