@@ -161,6 +161,27 @@ class TestInstitutionFactLockAnchor:
         assert len(inst_issues) >= 1
         assert "한미증권" in inst_issues[0]["issue"]
 
+    def test_manuscript_institution_survives_anchor_truncation_priority(self):
+        bp = {
+            "end_location": "Alpha증권",
+            "scene_breakdown": {
+                "scene_1": {"location": "Bravo은행"},
+                "scene_2": {"location": "Charlie병원"},
+            },
+            "ending_state": {"location_detail": "Delta센터"},
+        }
+        result = BlueprintConstraintCompiler._build_fact_lock_packet(
+            prev_blueprint=bp,
+            prev_manuscript_ending="김도진은 Zeta그룹 회의실에서 마지막 결재를 마쳤다.",
+            arc_data={},
+            ep_num=4,
+        )
+
+        names = [a["fact"] for a in result.get("anchors", []) if a["category"] == "기관"]
+        assert len(names) <= 4
+        assert any("Zeta그룹" in name for name in names), names
+        assert not any("Delta센터" in name for name in names), names
+
 
 # ============================================================
 # Tranche B: Capital Carry-Forward Fallback Extraction

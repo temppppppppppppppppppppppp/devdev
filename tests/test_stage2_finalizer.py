@@ -23,6 +23,7 @@ from modules.core.stage2_finalizer import (
     _build_stage2_carryover_authority_summary,
     _compute_inventory_carryover,
     _sync_first_episode_start_state_line,
+    _sync_stage2_end_state_inventory_contract,
     _sync_stage2_end_location_contract,
 )
 
@@ -209,6 +210,44 @@ def test_build_cross_stage_authority_packet_preserves_authoritative_empty_equipm
 
     assert packet["protagonist_carryover"]["equipment"] == []
     assert packet["protagonist_carryover"]["equipment_source"] == "state_constraints.arc_end_state.equipment"
+
+
+def test_build_stage2_carryover_authority_summary_preserves_authoritative_empty_end_inventory_clear():
+    refined_arc = {
+        "joint_docs": {"final_location": "강남 오피스", "physical_inventory": ["stale-bag"]},
+        "state_constraints": {
+            "arc_end_state": {
+                "location": "강남 오피스",
+                "equipment": [],
+            }
+        },
+    }
+
+    summary = _build_stage2_carryover_authority_summary(refined_arc)
+
+    assert summary["end_location"] == "강남 오피스"
+    assert "end_inventory_count" not in summary
+    assert "end_inventory_preview" not in summary
+
+
+def test_sync_stage2_end_inventory_contract_preserves_authoritative_empty_clear_against_prev_arc():
+    refined_arc = {
+        "joint_docs": {"physical_inventory": ["Ghost token"]},
+        "status_shadow": {"item_consumption": []},
+        "state_constraints": {
+            "arc_end_state": {"equipment": []},
+            "items_acquired": [],
+        },
+    }
+    prev_arc = {"joint_docs": {"physical_inventory": ["Ghost token"]}}
+
+    canonical_inventory, joint_changed, end_changed = _sync_stage2_end_state_inventory_contract(refined_arc, prev_arc)
+
+    assert canonical_inventory == []
+    assert joint_changed is True
+    assert end_changed is False
+    assert refined_arc["joint_docs"]["physical_inventory"] == []
+    assert refined_arc["state_constraints"]["arc_end_state"]["equipment"] == []
 
 
 class TestFinalizerStructure:
