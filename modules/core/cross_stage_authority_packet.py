@@ -26,10 +26,13 @@ _NUMERIC_SOURCE_PRECEDENCE = [
     "state_constraints.investment_calc.final_cash",
     "state_constraints.investment_calc.final_total_assets",
 ]
+_NULLISH_INVENTORY_TOKENS = {"null", "none", "nil", "n/a", "na"}
 
 
 def _clip_text(value: object, limit: int = 160) -> str:
-    text = str(value or "").strip()
+    if value is None or isinstance(value, bool | dict | list | tuple | set):
+        return ""
+    text = str(value).strip()
     if len(text) <= limit:
         return text
     return text[: max(0, limit - 3)].rstrip() + "..."
@@ -51,6 +54,8 @@ def _coerce_scalar(value: object, *, limit: int = 160) -> object:
 def _normalize_list(values: object, *, limit: int = 12) -> list[str]:
     if isinstance(values, str):
         stripped = values.strip()
+        if stripped.lower() in _NULLISH_INVENTORY_TOKENS:
+            return []
         raw_items: list[object]
         if stripped.startswith("[") and stripped.endswith("]"):
             stripped = stripped[1:-1]
@@ -67,7 +72,7 @@ def _normalize_list(values: object, *, limit: int = 12) -> list[str]:
             text = _clip_text(raw_item.get("name") or raw_item.get("item") or raw_item.get("value") or "", 80)
         else:
             text = _clip_text(raw_item, 80)
-        if not text or text in seen:
+        if not text or text.lower() in _NULLISH_INVENTORY_TOKENS or text in seen:
             continue
         seen.add(text)
         normalized.append(text)
@@ -104,7 +109,10 @@ def _resolve_equipment_with_source(end_state: dict[str, Any], joint_docs: dict[s
         (joint_docs.get("physical_inventory"), "joint_docs.physical_inventory"),
     ):
         if isinstance(raw_value, list):
-            return _normalize_list(raw_value), source
+            normalized = _normalize_list(raw_value)
+            if normalized or raw_value == []:
+                return normalized, source
+            continue
         normalized = _normalize_list(raw_value)
         if normalized:
             return normalized, source

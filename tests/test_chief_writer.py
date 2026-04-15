@@ -936,6 +936,35 @@ class TestGenerateEnsemble:
         assert len(candidates) == 2
         assert set(called) == {"tension", "balanced"}
 
+    def test_generate_ensemble_forwards_arc_data_into_common_context(self, chief_writer, sample_blueprint, sample_master_bible):
+        chief_writer.context_builder.build_common_context = MagicMock(return_value="ctx")
+        chief_writer._get_or_create_context_cache = MagicMock(return_value={})
+        chief_writer._generate_single_candidate = MagicMock(
+            return_value={
+                "strategy": "balanced",
+                "manuscript": "balanced" * 1000,
+                "title": "balanced",
+                "state_updates": {},
+                "metadata": {},
+            }
+        )
+        arc_data = {"arc_no": 2, "cross_stage_authority_packet": {"contract_version": "cross_stage_authority_packet.v1"}}
+
+        chief_writer.generate_ensemble(
+            ep_num=10,
+            blueprint=sample_blueprint,
+            arc_data=arc_data,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            genre_name="investment",
+            strategy_budget="reduced",
+            preferred_strategy="balanced",
+        )
+
+        assert chief_writer.context_builder.build_common_context.call_args.kwargs["arc_data"] == arc_data
+
     def test_reduced_strategy_budget_without_preferred_uses_balanced_and_tension(
         self, chief_writer, sample_blueprint, sample_master_bible
     ):

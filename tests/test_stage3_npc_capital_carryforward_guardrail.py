@@ -857,6 +857,65 @@ class TestEpisodeStatePacket:
             "cross_stage_authority_packet.protagonist_carryover"
         )
 
+    def test_episode_state_packet_keeps_prev_precedence_when_packet_only_carries_numeric_truth(self):
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {
+            "ep_num": 10,
+            "end_location": "Prev Blueprint Room",
+            "protagonist_state": {
+                "equipment": ["legacy-case"],
+                "injuries": "stable",
+            },
+            "scene_breakdown": {
+                "scene_2": {
+                    "location": "Prev Blueprint Room",
+                    "characters": ["lead", "ally"],
+                }
+            },
+        }
+
+        constraint_block = compiler.compile(
+            arc_data={
+                "ep_start": 11,
+                "ep_count": 3,
+                "arc_no": 3,
+                "joint_docs": {
+                    "final_location": "Stale Joint Office",
+                    "physical_inventory": ["stale-pager"],
+                },
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "opening_carryover": {},
+                    "protagonist_carryover": {},
+                    "numeric_carryover": {
+                        "capital": 0,
+                        "total_assets": 0,
+                    },
+                },
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "Arc Start Office",
+                        "equipment": ["arc-start-briefcase"],
+                        "injuries": "arc-start-wrist",
+                    }
+                },
+            },
+            ep_num=11,
+            prev_blueprint=prev_bp,
+            prev_blueprints=[prev_bp],
+            genre="investment",
+        )
+
+        packet = constraint_block.get("episode_state_packet", {})
+        protagonist_truth = packet.get("protagonist_truth", {})
+        precedence = packet.get("source_precedence", {})
+
+        assert packet.get("opening_truth", {}).get("location") == "Prev Blueprint Room"
+        assert protagonist_truth.get("equipment") == ["legacy-case"]
+        assert precedence.get("opening_truth", [None])[0] == "prev_blueprint.scene_breakdown.last.location"
+        assert precedence.get("protagonist_truth", [None])[0] == "prev_blueprint.protagonist_state"
+        assert precedence.get("capital_truth", [None])[0] == "cross_stage_authority_packet.numeric_carryover"
+
     def test_mid_arc_packet_conflicts_are_recorded_when_previous_blueprint_keeps_authority(self):
         compiler = BlueprintConstraintCompiler()
         prev_bp = {

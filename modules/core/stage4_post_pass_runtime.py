@@ -185,6 +185,7 @@ def _resolve_numeric_carryover_authority_fields(
         transport: dict[str, object] = {
             "transport_lineage": "cross_stage_authority_packet.numeric_carryover",
             "transport_fields": packet_fields,
+            "transport_authority_mode": "packet_bootstrap",
         }
         contract_version = str((cross_stage_authority_packet or {}).get("contract_version", "") or "").strip()
         if contract_version:
@@ -199,6 +200,7 @@ def _resolve_numeric_carryover_authority_fields(
     transport: dict[str, object] = {
         "transport_lineage": "cross_stage_authority_packet.numeric_carryover",
         "transport_fields": overlap_fields,
+        "transport_authority_mode": "fact_ledger_overlap",
     }
     contract_version = str((cross_stage_authority_packet or {}).get("contract_version", "") or "").strip()
     if contract_version:
@@ -360,21 +362,35 @@ def _build_state_truth_owner_contract(
         str(item).strip() for item in (fact_ledger_carryover_fields or []) if str(item).strip()
     ]
     if carryover_fields:
-        carryover_family: dict[str, object] = {
-            "owner": "fact_ledger_carryover_baseline",
-            "surfaces": [
+        transport = numeric_carryover_transport if isinstance(numeric_carryover_transport, dict) else {}
+        transport_mode = str(transport.get("transport_authority_mode", "") or "").strip()
+        carryover_owner = "fact_ledger_carryover_baseline"
+        carryover_surfaces = [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract",
+        ]
+        carryover_provenance = "fact_ledger_authority_scope"
+        if transport_mode == "packet_bootstrap":
+            carryover_owner = "cross_stage_authority_packet_bootstrap"
+            carryover_surfaces = [
+                "cross_stage_authority_packet.numeric_carryover",
                 "fact_ledger",
                 "episode_bible.state_truth_owner_contract",
                 "state_log.state_truth_owner_contract",
-            ],
+            ]
+            carryover_provenance = "cross_stage_transport_bootstrap"
+        carryover_family: dict[str, object] = {
+            "owner": carryover_owner,
+            "surfaces": carryover_surfaces,
             "fields": carryover_fields,
             "authority_scope": "carryover_baseline",
-            "provenance": "fact_ledger_authority_scope",
+            "provenance": carryover_provenance,
         }
         refresh_plan = numeric_carryover_refresh_plan if isinstance(numeric_carryover_refresh_plan, dict) else {}
-        transport = numeric_carryover_transport if isinstance(numeric_carryover_transport, dict) else {}
         transport_lineage = str(transport.get("transport_lineage", "") or "").strip()
         transport_contract_version = str(transport.get("transport_contract_version", "") or "").strip()
+        transport_authority_mode = str(transport.get("transport_authority_mode", "") or "").strip()
         transport_fields = [
             str(item).strip() for item in list(transport.get("transport_fields") or []) if str(item).strip()
         ]
@@ -384,6 +400,8 @@ def _build_state_truth_owner_contract(
             carryover_family["transport_contract_version"] = transport_contract_version
         if transport_fields:
             carryover_family["transport_fields"] = transport_fields
+        if transport_authority_mode:
+            carryover_family["transport_authority_mode"] = transport_authority_mode
         promoted_fields = [
             str(item).strip() for item in list(refresh_plan.get("promoted_fields") or []) if str(item).strip()
         ]

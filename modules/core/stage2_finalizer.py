@@ -261,19 +261,25 @@ def _sync_first_episode_start_state_line(tactical_doc: str, start_state: dict[st
 
 
 def _coerce_inventory_items(raw: Any) -> list[Any]:
+    def _is_nullish_inventory_text(text: str) -> bool:
+        return text.strip().lower() in {"null", "none", "nil", "n/a", "na"}
+
+    def _is_nullish_inventory_item(item: Any) -> bool:
+        return item is None or (isinstance(item, str) and _is_nullish_inventory_text(item))
+
     if isinstance(raw, str):
         text = raw.strip()
-        if not text or text == "[]":
+        if not text or text == "[]" or _is_nullish_inventory_text(text):
             return []
         if text[:1] in {"[", "{"}:
             try:
                 parsed = json.loads(text)
             except (TypeError, ValueError):
-                return [raw]
+                return [] if _is_nullish_inventory_text(text) else [raw]
             return _coerce_inventory_items(parsed)
         return [raw]
     if isinstance(raw, list):
-        return list(raw)
+        return [item for item in list(raw) if not _is_nullish_inventory_item(item)]
     if isinstance(raw, dict):
         return [raw] if raw else []
     return []
@@ -283,14 +289,14 @@ def _is_authoritative_inventory_declared(raw: Any) -> bool:
     if raw is None:
         return False
     if isinstance(raw, list):
-        return True
+        return raw == [] or bool(_coerce_inventory_items(raw))
     if isinstance(raw, dict):
         return bool(raw)
     if not isinstance(raw, str):
         return False
 
     text = raw.strip()
-    if not text:
+    if not text or text.lower() in {"null", "none", "nil", "n/a", "na"}:
         return False
     if text[:1] not in {"[", "{"}:
         return True
@@ -299,7 +305,7 @@ def _is_authoritative_inventory_declared(raw: Any) -> bool:
     except (TypeError, ValueError):
         return True
     if isinstance(parsed, list):
-        return bool(parsed)
+        return bool(_coerce_inventory_items(parsed))
     if isinstance(parsed, dict):
         return bool(parsed)
     return bool(parsed)
@@ -968,7 +974,7 @@ def _build_stage2_carryover_authority_summary(refined_arc: dict | None) -> dict 
             summary["start_inventory_preview"] = preview
     if end_location:
         summary["end_location"] = end_location
-    if end_inventory:
+    if end_inventory or end_inventory_declared:
         summary["end_inventory_count"] = len(end_inventory)
         preview = _build_inventory_preview(end_inventory)
         if preview:
@@ -979,7 +985,8 @@ def _build_stage2_carryover_authority_summary(refined_arc: dict | None) -> dict 
         ("capital", "start_capital"),
         ("portfolio_position", "start_portfolio_position"),
     ):
-        value = _clip_text(start_state.get(source_key, ""), 120)
+        raw_value = start_state.get(source_key, "")
+        value = str(raw_value) if isinstance(raw_value, int | float) and not isinstance(raw_value, bool) else _clip_text(raw_value, 120)
         if value:
             summary[target_key] = value
     for source_key, target_key in (
@@ -987,7 +994,8 @@ def _build_stage2_carryover_authority_summary(refined_arc: dict | None) -> dict 
         ("capital", "end_capital"),
         ("portfolio_position", "end_portfolio_position"),
     ):
-        value = _clip_text(end_state.get(source_key, ""), 120)
+        raw_value = end_state.get(source_key, "")
+        value = str(raw_value) if isinstance(raw_value, int | float) and not isinstance(raw_value, bool) else _clip_text(raw_value, 120)
         if value:
             summary[target_key] = value
 
