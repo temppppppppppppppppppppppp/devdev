@@ -195,6 +195,27 @@ python scripts/ops_validator.py --strict
 
 세부 규칙은 [`tests/README.md`](tests/README.md), [`scripts/README.md`](scripts/README.md)를 참고한다.
 
+## ClickUp 연동
+
+ClickUp은 이 워크스페이스에서 `external visibility surface`로 취급한다. authoritative queue와 판단 근거는 여전히 repo 안의 canonical docs, `docs/temp/` mirror, `queue-state.json`이 가진다.
+
+주요 명령:
+
+```bash
+python -X utf8 scripts/sync_clickup_queue.py --list-id <clickup-list-id> [--dry-run]
+python -X utf8 scripts/build_material_queue_state.py [--output docs/temp/material-queue-state.json] [--active-only]
+python -X utf8 scripts/sync_material_clickup_queue.py --list-id <clickup-list-id> [--dry-run] [--active-only]
+python -X utf8 scripts/setup_clickup_views.py --list-id <clickup-list-id> [--dry-run]
+python -X utf8 scripts/setup_material_clickup_views.py --list-id <clickup-list-id> [--dry-run]
+```
+
+운영 원칙:
+
+- repo-side queue를 ClickUp에 반영할 때는 canonical doc, `docs/temp/` mirror, `docs/temp/queue-state.json`이 먼저 정렬되고 `python scripts/ops_validator.py --strict`까지 통과한 뒤에만 sync한다.
+- material-side ClickUp 반영은 `build_material_queue_state.py`로 snapshot을 만들고 `sync_material_clickup_queue.py`로 미러링한다.
+- ClickUp 전용 설정은 루트 `.env`를 기본으로 읽고, 필요하면 `secrets/clickup.env`와 `CLICKUP_ENV_FILE`, `CLICKUP_MATERIAL_ENV_FILE`로 override한다.
+- fresh run / live-run 중간 상태는 provisional evidence다. post-run merge audit이 끝나기 전에는 mid-run findings를 ClickUp 상태로 밀지 않는다.
+
 ## 문서와 운영 동선
 
 시스템 트랙과 narrative 트랙의 시작 지점이 다르다.
