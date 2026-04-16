@@ -1,14 +1,14 @@
 # 0_0-stage234-global-authority-alignment-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: pending (3-pass audited through current-workspace post-runtime-authority-drift live-canary closure; `Tranche A/B/C`, hostile-reading hardening, the final bounded residual closures, the later medium and contract-drift closures, the later Stage4 runtime-authority-drift sibling residual closure, and the bounded Stage4 DB-attempt final-sink follow-up are all landed on the current workspace; no additional pre-rerun code tranche is open, one bounded Stage4-only live proof is now recorded, and broader rerun remains operator-gated)
+Status: pending (3-pass audited through current-head post-r12 Stage4 current-session closure; `Tranche A/B/C`, hostile-reading hardening, the final bounded residual closures, the later medium and contract-drift closures, the later Stage4 runtime-authority-drift sibling residual closure, and the later `r12` Stage4 current-session closure wave are all landed on the current workspace; no additional pre-rerun code tranche is open, the latest bounded Stage234 closure anchor now points at one Stage4 current-session proof, and broader Stage3 / backend-wide proof remains operator-gated)
 Canonical Path: `docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f005794b578d68bb855a960778c75ca3f77787a6`
 - Baseline Dirty Summary: `clean main after Tranche C snapshot, post-C audit cleanup, and evidence-branch split`
-- Resume Commit: `03be22fcedfc7a196b92b59854d6fc9dfa1418f3` (`current HEAD beneath the bounded runtime-authority-drift closure working tree`)
-- Resume Drift Summary: `the current workspace now carries the full bounded Stage234 chain plus the hostile-reading hardening, final residual closures, the later medium and contract-drift closures, the later Stage4 runtime-authority-drift sibling residual closure, and the bounded live-canary final-sink follow-up: HUD snapshot persistence now matches approved live HUD truth, nested gate scope authority survives DB-attempt normalization, PASS_WITH_FIX target_kind survives logging/persistence, Stage4 DB attempts no longer leak unsupported contract keys into save_stage_attempt, one bounded Stage4-only live proof now records the final sink row plus HUD snapshot and actual_truth, no additional pre-rerun Stage234 code tranche is indicated on the current workspace, and broader rerun remains threshold-cleared but operator-gated under the canonical Stage3 gate`
+- Resume Commit: `810f3fef3d11f4154b284e8002d7aaa8b07f7fe6` (`current HEAD after the r12 closure anchor, PR publication, and queue-sync follow-up`)
+- Resume Drift Summary: `the current workspace now carries the full bounded Stage234 chain plus the hostile-reading hardening, final residual closures, the later medium and contract-drift closures, the later Stage4 runtime-authority-drift sibling residual closure, and the later r12 Stage4 current-session closure wave: pass-rate monitor plus runtime-audit summary persist on exit, reject-path companion/raw-surface sinks preserve historical companion authority, normalized patch-trace lineage survives the winning rewrite-shaped retry, the latest bounded Stage234 closure anchor now points at one canary where the final authority sink / historical companion role / current-session sink alignment / hard gates all close together, no additional pre-rerun Stage234 code tranche is indicated on the current workspace, and broader proof remains threshold-cleared but operator-gated under the canonical Stage3 gate`
 Source Survey Docs:
 - `docs/2026-04-14/stage234-global-authority-alignment-bounded-survey.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-a-current-head-3pass-audit.md`
@@ -21,6 +21,7 @@ Source Survey Docs:
 - `docs/2026-04-15/stage234-global-authority-alignment-post-runtime-authority-drift-current-head-3pass-audit.md`
 - `docs/2026-04-15/stage234-global-authority-alignment-post-runtime-authority-drift-working-tree-3pass-audit.md`
 - `docs/2026-04-15/stage234-global-authority-alignment-post-runtime-authority-drift-live-canary-working-tree-3pass-audit.md`
+- `docs/2026-04-16/stage234-global-authority-alignment-post-r12-stage4-current-session-closure-current-head-3pass-audit.md`
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
@@ -46,6 +47,26 @@ Evidence Artifacts:
 Side-Effect Coverage: covered (cross-stage authority transport, Stage2/3/4 prompt and sink surfaces, chief-writer carryover-ceiling parity, Stage4 HUD snapshot/live-HUD sink alignment, Stage4 advisory/logging contract honesty, Stage4 DB final sink persistence under live canary proof, roadmap/queue controller updates)
 Confidence: `97%`
 
+2026-04-16 post-r12 Stage4 current-session closure override:
+
+- Local audit HEAD: `810f3fef3d11f4154b284e8002d7aaa8b07f7fe6`
+- authoritative audit doc:
+  - `docs/2026-04-16/stage234-global-authority-alignment-post-r12-stage4-current-session-closure-current-head-3pass-audit.md`
+- later closure additions beyond the 2026-04-15 live-canary / selection-companion residual follow-ups:
+  - pass-rate monitor and runtime-audit summary now persist on the same bounded canary exit path
+  - reject-path companion rationale and raw-surface sinks no longer overwrite the historical companion row while normalized patch-trace metadata stays attached to the authoritative attempt sink
+  - structured sink patch-trace normalization now survives rewrite-shaped winning attempts when advisory `partial_fix_eval.is_patch_attempt` proves patch lineage
+- current gate result:
+  - the Stage4 current-session closure objective is satisfied on the current head via `projects/_canary/canary_0_0_stage4_ep2_sinkproof_r12_patchtraceclosure`
+  - `final_authority_contract_summary.status = ok`, `selection_role = historical_companion`, `current_session_sink_alignment_summary.status = ok`, and `hard_gates.status = pass` now close on the same bounded canary
+  - no additional pre-rerun code tranche is open inside this lane after the `r12` closure
+  - this is a bounded current-session closure anchor, not a broader Stage234 lane closure or backend-wide proof claim
+  - broader Stage3 / backend-wide proof remains threshold-cleared but operator-gated under `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+- current practical next action:
+  - keep this lane proof-pending / operator-gated for broader proof, treat the `r12` current-session closure as the latest workspace anchor, and only reopen this lane if later evidence reopens a bounded sibling residual rather than the already closed current-session Stage4 sink-alignment target
+- historical-read note:
+  - every 2026-04-15 / 2026-04-14 override block below remains provenance only; if any lower block's former `current practical next action` or `latest workspace anchor` wording conflicts with the 2026-04-16 block above, the 2026-04-16 block wins
+
 2026-04-15 post-runtime-authority-drift live-canary working-tree closure override:
 
 - Local workspace base HEAD: `03be22fcedfc7a196b92b59854d6fc9dfa1418f3`
@@ -61,7 +82,7 @@ Confidence: `97%`
   - broader rerun remains threshold-cleared but operator-gated under `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
   - current residual warning is the narrower pre-final raw/selection surface drift plus unexercised retry coverage, not a reopen of the repaired final sink
 - current practical next action:
-  - keep this lane operator-gated for broader rerun, treat the live-canary proof as the latest workspace anchor, and only reopen code here if the narrower raw pre-final drift later earns its own sibling residual doc
+  - historical only at that time: keep this lane operator-gated for broader rerun, treat the live-canary proof as the latest workspace anchor, and only reopen code here if the narrower raw pre-final drift later earns its own sibling residual doc
 
 2026-04-15 post-runtime-authority-drift working-tree closure override:
 
@@ -319,11 +340,11 @@ Current status:
 
 ## 8. Current Decision
 
-The post-`Tranche D` plus post-residual-closure gate decision is now exercised as:
+The post-`Tranche D` gate decision, after the hostile-reading / medium / contract / runtime follow-ups and the later `r12` Stage4 current-session closure, is now exercised as:
 
 - `fresh rerun`: threshold-cleared but still operator-gated
 - `retry owner debt`: deferred as a lower-ROI follow-up
-- `this lane`: proof-pending with no additional pre-rerun code tranche currently open after the hostile-reading hardening and final bounded residual closures
+- `this lane`: proof-pending with no additional pre-rerun code tranche currently open after the hostile-reading hardening, later 2026-04-15 closure chain, and the bounded `r12` Stage4 current-session closure anchor
 
 Current next action:
 
