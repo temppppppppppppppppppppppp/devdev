@@ -22,6 +22,7 @@ from modules.core.stage2_finalizer import (
     Stage2Finalizer,
     _build_stage2_carryover_authority_summary,
     _compute_inventory_carryover,
+    _promote_last_tactical_end_state_to_structured_state,
     _sync_first_episode_start_state_line,
     _sync_stage2_end_state_inventory_contract,
     _sync_stage2_end_location_contract,
@@ -268,6 +269,33 @@ def test_build_stage2_carryover_authority_summary_preserves_authoritative_empty_
     assert summary["end_location"] == "강남 오피스"
     assert summary["end_inventory_count"] == 0
     assert "end_inventory_preview" not in summary
+
+
+def test_promote_last_tactical_end_state_to_structured_state_does_not_override_nonempty_structured_fields():
+    refined_arc = {
+        "tactical_doc": (
+            "제 17화:\n"
+            "[시작 상태] 위치: SW인베스트먼트 대표실 | 심리: 냉철한 이익 실현 | 부상: 없음 | 소지품: []\n"
+            "시우는 창가에 선 채 총자산 30억 원을 다시 확인했다.\n"
+            "[종료 상태] 위치: 서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가 | 심리: 다음 사냥을 향한 거대한 야망 | "
+            "부상: 없음 | 소지품: 5억 원의 실현 수익이 찍힌 HTS 잔고 화면 출력물, 절반 남은 WTI 원유 선물 계약서\n"
+        ),
+        "state_constraints": {
+            "arc_end_state": {
+                "location": "기존 오피스",
+                "equipment": ["법인 인감"],
+                "total_assets": "19억 원",
+            }
+        },
+    }
+
+    promoted = _promote_last_tactical_end_state_to_structured_state(refined_arc)
+
+    assert promoted == []
+    end_state = refined_arc["state_constraints"]["arc_end_state"]
+    assert end_state["location"] == "기존 오피스"
+    assert end_state["equipment"] == ["법인 인감"]
+    assert end_state["total_assets"] == "19억 원"
 
 
 def test_sync_stage2_end_inventory_contract_preserves_authoritative_empty_clear_against_prev_arc():
@@ -1266,6 +1294,104 @@ class TestRunFinalize:
         saved_arc = kwargs["all_refined_arcs"][0]
         assert saved_arc["joint_docs"]["final_location"] == "Gangnam HQ"
         assert saved_arc["state_constraints"]["arc_end_state"]["location"] == "Gangnam HQ"
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_finalize_emits_packet_from_promoted_tactical_end_state(
+        self,
+        _validate,
+        finalizer,
+        valid_refined_arc,
+    ):
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["tactical_doc"] = (
+            "제 17화:\n"
+            "[시작 상태] 위치: SW인베스트먼트 대표실 | 심리: 냉철한 이익 실현 | 부상: 없음 | 소지품: []\n"
+            "시우는 원룸 오피스 창가에 기대어 강남 빌딩 숲을 내려다보았다. 그의 총자산은 정확히 30억 원이라는 새로운 고지에 도달했다.\n"
+            "[종료 상태]\n"
+            "- 위치: 서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가\n"
+            "- 심리: 다음 사냥을 향한 거대한 야망\n"
+            "- 부상: 없음\n"
+            "- 총자산: 30억 원\n"
+            "- 소지품: 5억 원의 실현 수익이 찍힌 HTS 잔고 화면 출력물, 절반 남은 WTI 원유 선물 계약서\n"
+        )
+        refined_arc["joint_docs"]["final_location"] = "알 수 없음"
+        refined_arc["joint_docs"]["physical_inventory"] = []
+        refined_arc["state_constraints"] = {
+            "arc_end_state": {
+                "location": "알 수 없음",
+                "total_assets": None,
+            },
+            "items_acquired": [],
+        }
+
+        kwargs = _make_finalize_kwargs(refined_arc)
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        saved_arc = kwargs["all_refined_arcs"][0]
+        end_state = saved_arc["state_constraints"]["arc_end_state"]
+        assert saved_arc["joint_docs"]["final_location"] == "서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가"
+        assert saved_arc["joint_docs"]["physical_inventory"] == [
+            "5억 원의 실현 수익이 찍힌 HTS 잔고 화면 출력물",
+            "절반 남은 WTI 원유 선물 계약서",
+        ]
+        assert end_state["location"] == "서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가"
+        assert end_state["equipment"] == [
+            "5억 원의 실현 수익이 찍힌 HTS 잔고 화면 출력물",
+            "절반 남은 WTI 원유 선물 계약서",
+        ]
+        assert end_state["total_assets"] == "30억 원"
+        assert saved_arc["state_constraints"]["investment_calc"]["final_total_assets"] == 3000000000
+        packet = saved_arc["cross_stage_authority_packet"]
+        assert packet["opening_carryover"]["location"] == "서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가"
+        assert packet["protagonist_carryover"]["equipment"] == [
+            "5억 원의 실현 수익이 찍힌 HTS 잔고 화면 출력물",
+            "절반 남은 WTI 원유 선물 계약서",
+        ]
+        assert packet["numeric_carryover"]["total_assets"] == "30억 원"
+        assert packet["numeric_carryover"]["investment_calc_final_total_assets"] == 3000000000
+
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_finalize_preserves_authoritative_empty_end_inventory_against_tactical_end_state(
+        self,
+        _validate,
+        finalizer,
+        valid_refined_arc,
+    ):
+        refined_arc = deepcopy(valid_refined_arc)
+        refined_arc["tactical_doc"] = (
+            "제 17화:\n"
+            "[시작 상태] 위치: SW인베스트먼트 대표실 | 심리: 냉철한 이익 실현 | 부상: 없음 | 소지품: []\n"
+            "시우는 창가에서 강남 야경을 내려다보며 다음 수를 계산했다.\n"
+            "[종료 상태]\n"
+            "- 위치: 서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가\n"
+            "- 총자산: 30억 원\n"
+            "- 소지품: 5억 원의 실현 수익이 찍힌 HTS 잔고 화면 출력물, 절반 남은 WTI 원유 선물 계약서\n"
+        )
+        refined_arc["joint_docs"]["final_location"] = "알 수 없음"
+        refined_arc["joint_docs"]["physical_inventory"] = ["stale-item"]
+        refined_arc["state_constraints"] = {
+            "arc_end_state": {
+                "location": "알 수 없음",
+                "equipment": [],
+                "total_assets": None,
+            },
+            "items_acquired": [],
+        }
+
+        kwargs = _make_finalize_kwargs(refined_arc)
+        result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        saved_arc = kwargs["all_refined_arcs"][0]
+        end_state = saved_arc["state_constraints"]["arc_end_state"]
+        assert saved_arc["joint_docs"]["final_location"] == "서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가"
+        assert saved_arc["joint_docs"]["physical_inventory"] == []
+        assert end_state["location"] == "서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가"
+        assert end_state["equipment"] == []
+        assert end_state["total_assets"] == "30억 원"
 
     def test_sync_stage2_end_location_contract_collapses_verbose_scene_label(self):
         refined_arc = {

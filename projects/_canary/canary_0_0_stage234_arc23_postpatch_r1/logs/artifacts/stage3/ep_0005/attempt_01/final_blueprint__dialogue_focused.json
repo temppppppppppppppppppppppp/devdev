@@ -1,0 +1,241 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "d28c3a42d7940f7cc7a3e9ade1a721ee2514402b3689df50fd09513dfd8bac5a"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=3; sample_anchors=준비를 마친 한시우는 저택, 지나 강남의 화려한 빌딩, 강남 PB 센터",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1553,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 8662,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 991338,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 5722,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 2644,
+          "lane": "constraints"
+        },
+        {
+          "chars": 153,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 153,
+        "constraints": 2644,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 5722
+      },
+      "shared_context_chars": 8529,
+      "total_chars": 8662
+    },
+    "scene_count": 5,
+    "strategy": "dialogue_focused",
+    "total_candidates": 1
+  },
+  "_inventory_gaps": [
+    {
+      "item": "구형 휴대폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "빈 노트와 펜",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 96,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false
+  },
+  "core_tension": "과거를 알고 있는 한시우와 기존의 위계로 그를 통제하려는 박성호 PB 사이의 기싸움",
+  "end_location": "강남 PB 센터 VIP 룸",
+  "ending_hook": "모니터에 찍힌 막대한 현금성 자산의 총액을 보며 박성호가 마른침을 삼키는 순간, 한시우의 서늘한 목소리가 VIP 룸의 공기를 얼어붙게 만들었다. \"이제, 이 돈을 전부...\"",
+  "ending_state": {
+    "location": "강남 PB 센터 VIP 룸",
+    "protagonist_status": "박성호 PB를 심리적으로 굴복시키고 자산 유동화 작업을 지휘 중",
+    "timeline": {
+      "표현": "2006년 1월 오전"
+    }
+  },
+  "ep_num": 5,
+  "episode_number": 5,
+  "expected_ending": "박성호 PB를 완벽히 장악하고 자산 유동화의 첫 버튼을 누름",
+  "integrated_scenario": "\"내일부터 제 명의 계좌에 대한 본사 감사팀의 열람 권한이...\" 한시우의 통화 너머로 서늘하게 날아든 목소리의 주인공은 큰형 한태준이었다. 복도 한가운데서 마주친 태준의 눈빛에는 의심과 경멸이 섞여 있었다. 한시우는 찰나의 순간 차갑게 가라앉았던 눈빛을 지우고, 철없는 막내아들의 가면을 덮어썼다. \"아, 형님. 아버지가 드디어 제 개인 계좌에 붙여둔 감사팀을 빼주신다고 해서요. 숨 막혀 죽는 줄 알았는데 이제야 좀 살 것 같네요.\" 그 가벼운 대답에 한태준은 미간을 좁히더니, 이내 한심하다는 듯 코웃음을 치며 고개를 돌렸다. 그룹의 후계 구도에 관심조차 없이 유흥비 통제에만 신경 쓰는 멍청한 동생. 한태준이 완벽하게 속아 넘어가 발걸음을 옮기는 뒷모습을 보며, 한시우는 소리 없이 입꼬리를 올렸다. 가장 위험한 첫 번째 고비를 넘긴 것이다.\n\n곧바로 외출 준비를 마친 한시우는 저택을 빠져나와 강남으로 향하는 차에 올랐다. 차창 밖으로 스쳐 지나가는 2006년 겨울의 풍경을 바라보며, 그는 품에서 낡은 노트를 꺼내 들었다. 노트에 적힌 이름 중 하나, '박성호 PB'. 미래에 가문의 자산 구조를 팔아넘기고 교묘하게 빠져나갔던 기회주의자. 한시우의 눈동자가 서늘하게 가라앉았다. 과거에는 그에게 놀아났지만, 이번 생에서는 철저하게 사냥개로 부려먹을 생각이었다. 차가 막히는 도심을 지나 강남의 화려한 빌딩 숲에 진입할 즈음, 한시우는 유약한 도련님의 허물을 완전히 벗어던지고 냉혹한 포식자의 이빨을 드러낼 준비를 마쳤다.\n\n강남 PB 센터의 가장 깊숙한 곳에 위치한 VIP 룸. 육중한 문이 열리고 한시우가 들어서자, 담당 PB인 박성호가 여유로운 미소를 지으며 다가왔다. \"도련님, 오랜만에 뵙습니다. 이번에는 또 어떤 스포츠카를 눈여겨보셨길래 아침부터 발걸음을...\" 박성호의 말은 끝을 맺지 못했다. 소파에 깊숙이 기대앉은 한시우가 뿜어내는 이질적인 압박감 때문이었다. 평소처럼 칭얼대는 목소리 대신, 얼음장같이 차가운 명령이 VIP 룸의 공기를 갈랐다. \"내 명의로 된 모든 신탁 자산, 스폰서 수익, 차명 주식. 전부 오늘 자로 유동화해서 단일 계좌로 모아.\"\n\n예상치 못한 지시에 박성호의 얼굴에서 여유가 증발했다. 그는 당황하며 회장님의 암묵적인 지시와 본사의 승인 절차를 들먹이며 방어하려 했다. 하지만 한시우는 이미 한정호 회장에게서 얻어낸 '감사팀 철수'라는 완벽한 무기를 쥐고 있었다. \"아버지의 통제가 오늘부로 풀렸다는 걸 아직 보고받지 못했나 보군. 내 자산이야. 당장 현금으로 돌려.\" 한시우는 자리에서 일어나 박성호에게 다가갔다. 과거 그의 횡령 사실과 약점들을 은연중에 암시하는 날카로운 단어들이 한시우의 입에서 흘러나오자, 박성호의 이마에 굵은 식은땀이 맺히기 시작했다. 눈앞의 청년은 자신이 알던 철부지 도련님이 아니었다.\n\n완벽하게 기세가 꺾인 박성호는 떨리는 손으로 키보드를 두드리기 시작했다. 모니터 위로 흩어져 있던 한시우의 자산들이 하나둘 해지되며 막대한 현금성 자산으로 뭉쳐지는 과정이 실시간으로 떠올랐다. 그 압도적인 금액을 확인한 박성호가 마른침을 삼키는 순간, 한시우가 모니터 너머를 응시하며 나직하게 입을 열었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부의 찰나적 위기를 부드럽게 넘긴 후, 이동 장면을 통해 분위기를 환기하고 강남 PB 센터에서의 숨 막히는 심리전으로 빠르게 진입하여 텐션을 끌어올린다.",
+  "protagonist_state": {
+    "equipment": [
+      "구형 휴대폰",
+      "빈 노트와 펜"
+    ],
+    "injuries": "없음",
+    "mood": "냉혹한 지배자로서의 통제력 과시"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "한시우를 이용하기 쉬운 철부지 도련님으로 취급",
+      "justification": "한시우가 본사 감사팀 철수 사실과 박성호의 숨겨진 약점을 무기로 그를 완벽하게 굴복시켰기 때문",
+      "target": "박성호 PB",
+      "to_state": "한시우의 압도적인 정보력과 기백에 눌려 두려움을 느끼는 하수인"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "한태준"
+      ],
+      "content": "",
+      "goal": "한태준의 의심을 피하고 유약한 막내 연기 지속",
+      "key_events": [
+        "등 뒤에서 들려온 한태준의 서늘한 질문에 한시우가 순간적으로 굳었던 표정을 푼다.",
+        "한시우가 유흥비 계좌의 감사가 풀려 기쁘다는 듯 철없는 대사를 내뱉으며 상황을 무마한다.",
+        "한태준이 한심하다는 듯 코웃음을 치며 경계심을 거두고 지나쳐 간다."
+      ],
+      "location": "서울 성북동 본가 2층 복도",
+      "summary": "서재 앞 복도에서 큰형 한태준과 마주친 한시우가 철없는 막내의 연기로 위기를 모면한다.",
+      "tension_level": 7,
+      "title": "가면의 유지",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "운전기사"
+      ],
+      "content": "",
+      "goal": "과거의 기억을 바탕으로 박성호 PB를 통제할 전략 수립",
+      "key_events": [
+        "저택을 빠져나와 강남행 차에 오른 한시우가 창밖의 2006년 풍경을 보며 차가운 이성을 되찾는다.",
+        "품에서 노트를 꺼내 과거 가문을 배신했던 박성호 PB의 이름과 그의 약점들을 복기한다.",
+        "유약한 도련님의 가면을 완전히 벗고, 자본 시장을 짓밟을 포식자로서의 눈빛을 드러낸다."
+      ],
+      "location": "이동 중인 차량 내부",
+      "summary": "본가를 벗어나 강남으로 향하는 차 안에서 한시우가 박성호 PB를 굴복시킬 계획을 정리한다.",
+      "tension_level": 5,
+      "title": "사냥 준비",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호 PB"
+      ],
+      "content": "",
+      "goal": "박성호 PB의 기선을 제압하고 자산 유동화 지시",
+      "key_events": [
+        "VIP 룸에 들어선 한시우를 박성호가 평소처럼 스포츠카나 유흥비 이야기를 꺼내며 가볍게 맞이한다.",
+        "한시우가 소파에 깊숙이 기대앉아 서늘한 시선으로 박성호의 말을 끊고 분위기를 반전시킨다.",
+        "명령조의 단호한 목소리로 명의가 분산된 모든 신탁 자산과 스폰서 수익의 즉각적인 유동화를 지시한다."
+      ],
+      "location": "강남 PB 센터 VIP 룸",
+      "summary": "강남 PB 센터 VIP 룸에서 한시우가 박성호의 여유를 부수고 전면적인 자산 유동화를 명령한다.",
+      "tension_level": 8,
+      "title": "포식자의 이빨",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호 PB"
+      ],
+      "content": "",
+      "goal": "한정호 회장의 묵계를 무기로 박성호의 저항을 분쇄",
+      "key_events": [
+        "당황한 박성호가 회장의 암묵적 지시와 절차를 들먹이며 유동화 지시를 거부하려 시도한다.",
+        "한시우가 오늘부로 본사 감사팀의 열람 권한이 철수되었다는 사실을 통보하며 박성호의 퇴로를 차단한다.",
+        "과거 박성호가 저질렀던 미세한 횡령의 흔적을 암시하는 단어를 던져 그를 완전히 공포에 질리게 만든다."
+      ],
+      "location": "강남 PB 센터 VIP 룸",
+      "summary": "본사의 승인을 핑계로 저항하는 박성호에게 한시우가 감사팀 철수 사실을 통보하며 그를 심리적으로 굴복시킨다.",
+      "tension_level": 9,
+      "title": "무너지는 방벽",
+      "type": "action_peak"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우",
+        "박성호 PB"
+      ],
+      "content": "",
+      "goal": "자산 유동화의 시작과 다음 단계에 대한 기대감 고조",
+      "key_events": [
+        "완전히 기세가 꺾인 박성호가 땀을 닦으며 키보드를 두드려 자산 해지 절차를 밟기 시작한다.",
+        "모니터 화면에 흩어져 있던 자산들이 하나의 숫자로 뭉쳐지는 과정이 실시간으로 떠오른다.",
+        "막대한 금액을 확인한 박성호가 마른침을 삼키는 순간, 한시우가 모니터 너머를 응시하며 다음 지시를 내리려 한다."
+      ],
+      "location": "강남 PB 센터 VIP 룸",
+      "summary": "박성호가 두려움에 떨며 유동화 작업을 시작하고, 막대한 자산이 모이는 화면 앞에서 한시우가 입을 연다.",
+      "tension_level": 10,
+      "title": "축적되는 실탄",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 2층 복도",
+  "target_beat": "정보 교환 및 자산 확보의 교두보 마련",
+  "time_flow": "아침 → 오전",
+  "title": "사냥개의 목줄을 쥐다"
+}

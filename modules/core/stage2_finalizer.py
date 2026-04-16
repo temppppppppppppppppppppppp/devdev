@@ -43,8 +43,14 @@ def _peek_scope_total_cost_usd() -> float:
 _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
 _TACTICAL_EPISODE_HEADER_RE = re.compile(r"(?:^|\n)\s*(?:\[\s*)?제\s*\d+\s*화[^\n]*", re.MULTILINE)
 _TACTICAL_START_STATE_LINE_RE = re.compile(r"^\s*\[시작 상태\].*$", re.MULTILINE)
+_TACTICAL_END_STATE_LINE_RE = re.compile(r"^\s*\[종료 상태[^\n]*$", re.MULTILINE)
 _BLOCKING_ARC_PATCH_SIGNAL_CODES = frozenset({"episode_start_future_artifact"})
 _NON_WUXIA_STATE_NOISE_KEYS = ("internal_energy", "realm", "qi_nature", "martial_arts")
+_TACTICAL_STATE_FIELD_LABELS = ("위치", "소지품", "부상", "심리", "내공", "총자산", "자본", "포지션")
+_TACTICAL_UNKNOWN_TEXT_TOKENS = frozenset({"알 수 없음", "위치 미정", "미상", "unknown", "n/a", "na", "none", "null"})
+_TACTICAL_EMPTY_INVENTORY_TOKENS = frozenset(
+    {"", "없음", "무", "변동 없음", "아이템 변동 없음", "소지품 변동 없음", "none", "null", "n/a", "na"}
+)
 
 
 def _extract_first_tactical_episode_section(tactical_doc: str) -> str:
@@ -59,6 +65,18 @@ def _extract_first_tactical_episode_section(tactical_doc: str) -> str:
     first = matches[0].start()
     second = matches[1].start() if len(matches) > 1 else len(text)
     return text[first:second].strip()
+
+
+def _extract_last_tactical_episode_section(tactical_doc: str) -> str:
+    text = str(tactical_doc or "").strip()
+    if not text:
+        return ""
+
+    matches = list(_TACTICAL_EPISODE_HEADER_RE.finditer(text))
+    if not matches:
+        return text
+
+    return text[matches[-1].start() :].strip()
 
 
 def _extract_future_artifact_asset_keywords(start_state_line: str, matched_artifact: str) -> tuple[str, ...]:
@@ -258,6 +276,180 @@ def _sync_first_episode_start_state_line(tactical_doc: str, start_state: dict[st
         first_section = first_section[:insert_pos] + "\n" + generated_line + suffix + first_section[insert_pos:]
 
     return text[:first_start] + first_section + text[first_end:]
+
+
+def _is_effectively_unknown_text(raw: object) -> bool:
+    text = str(raw or "").strip()
+    if not text:
+        return True
+    return text in _TACTICAL_UNKNOWN_TEXT_TOKENS or text.lower() in _TACTICAL_UNKNOWN_TEXT_TOKENS
+
+
+def _strip_tactical_state_header(line: str, *, header: str) -> str:
+    text = str(line or "").strip()
+    bracketed = f"[{header}]"
+    if text.startswith(bracketed):
+        return text[len(bracketed) :].strip()
+    prefixed = f"[{header}:"
+    if text.startswith(prefixed):
+        stripped = text[len(prefixed) :].strip()
+        return stripped[:-1].rstrip() if stripped.endswith("]") else stripped
+    return text
+
+
+def _normalize_tactical_state_block_line(line: str) -> str:
+    text = str(line or "").strip()
+    return re.sub(r"^[\-*•]+\s*", "", text).strip()
+
+
+def _extract_tactical_state_field(block: str, label: str) -> str:
+    text = str(block or "").strip()
+    if not text:
+        return ""
+
+    lines = [_normalize_tactical_state_block_line(line) for line in text.splitlines() if str(line or "").strip()]
+    if not lines:
+        return ""
+
+    candidates: list[str] = []
+    first_content = _strip_tactical_state_header(lines[0], header="종료 상태")
+    if first_content:
+        candidates.append(first_content)
+    candidates.extend(line for line in lines[1:] if line)
+
+    labels = "|".join(re.escape(item) for item in _TACTICAL_STATE_FIELD_LABELS)
+    pattern = re.compile(
+        rf"(?:^|(?:\||/|,)\s*){re.escape(label)}\s*:\s*(.*?)"
+        rf"(?=(?:\s*(?:\||/|,)\s*(?:{labels})\s*:|$))"
+    )
+    for candidate in candidates:
+        match = pattern.search(candidate)
+        if match:
+            return str(match.group(1) or "").strip()
+    return ""
+
+
+def _extract_last_tactical_end_state_block(tactical_doc: str) -> str:
+    section = _extract_last_tactical_episode_section(tactical_doc)
+    if not section:
+        return ""
+    matches = list(_TACTICAL_END_STATE_LINE_RE.finditer(section))
+    if not matches:
+        return ""
+    return section[matches[-1].start() :].strip()
+
+
+def _parse_tactical_inventory_items(raw: str) -> list[Any]:
+    text = str(raw or "").strip()
+    if not text:
+        return []
+    if text in _TACTICAL_EMPTY_INVENTORY_TOKENS or text.lower() in _TACTICAL_EMPTY_INVENTORY_TOKENS:
+        return []
+    if text[:1] in {"[", "{"}:
+        try:
+            parsed = json.loads(text)
+        except (TypeError, ValueError):
+            pass
+        else:
+            return _coerce_inventory_items(parsed)
+    parts = [part.strip() for part in re.split(r"\s*,\s*", text) if part.strip()]
+    return parts if parts else [text]
+
+
+def _is_placeholder_inventory(raw: Any) -> bool:
+    items = _coerce_inventory_items(raw)
+    if not items:
+        return True
+    normalized = {str(_inventory_item_key(item) or "").strip().lower() for item in items}
+    normalized.discard("")
+    if not normalized:
+        return True
+    placeholder_tokens = {token.lower() for token in _TACTICAL_UNKNOWN_TEXT_TOKENS | _TACTICAL_EMPTY_INVENTORY_TOKENS}
+    return normalized <= placeholder_tokens
+
+
+def _is_authoritative_empty_inventory_clear(raw: Any) -> bool:
+    if isinstance(raw, list):
+        return raw == []
+    if not isinstance(raw, str):
+        return False
+    text = raw.strip()
+    if not text or text[:1] not in {"[", "{"}:
+        return False
+    try:
+        parsed = json.loads(text)
+    except (TypeError, ValueError):
+        return False
+    return isinstance(parsed, list) and parsed == []
+
+
+def _extract_last_tactical_total_assets_text(tactical_doc: str) -> str:
+    section = _extract_last_tactical_episode_section(tactical_doc)
+    if not section:
+        return ""
+    pattern = re.compile(
+        r"총자산(?:은|이)?[^.\n]{0,80}?([+-]?\d[\d,]*(?:\.\d+)?(?:\s*[조억만])?(?:\s*\d[\d,]*(?:\.\d+)?\s*[억만])?\s*원?)"
+    )
+    matches = [str(match.group(1) or "").strip() for match in pattern.finditer(section)]
+    return matches[-1] if matches else ""
+
+
+def _promote_last_tactical_end_state_to_structured_state(refined_arc: dict) -> list[str]:
+    if not isinstance(refined_arc, dict):
+        return []
+
+    tactical_doc = str(refined_arc.get("tactical_doc") or "")
+    if not tactical_doc:
+        return []
+
+    state_constraints = refined_arc.get("state_constraints")
+    if not isinstance(state_constraints, dict):
+        state_constraints = {}
+        refined_arc["state_constraints"] = state_constraints
+
+    arc_end_state = state_constraints.get("arc_end_state")
+    if not isinstance(arc_end_state, dict):
+        arc_end_state = {}
+        state_constraints["arc_end_state"] = arc_end_state
+
+    end_state_block = _extract_last_tactical_end_state_block(tactical_doc)
+    promoted: list[str] = []
+
+    tactical_location = collapse_stage2_location_label(_extract_tactical_state_field(end_state_block, "위치"))
+    if tactical_location and _is_effectively_unknown_text(arc_end_state.get("location")):
+        arc_end_state["location"] = tactical_location
+        promoted.append("state_constraints.arc_end_state.location")
+
+    raw_end_inventory = arc_end_state.get("equipment") if "equipment" in arc_end_state else None
+    raw_tactical_inventory = _extract_tactical_state_field(end_state_block, "소지품")
+    if raw_tactical_inventory:
+        tactical_inventory = _parse_tactical_inventory_items(raw_tactical_inventory)
+        if not _is_authoritative_empty_inventory_clear(raw_end_inventory) and _is_placeholder_inventory(raw_end_inventory):
+            arc_end_state["equipment"] = tactical_inventory
+            promoted.append("state_constraints.arc_end_state.equipment")
+
+    raw_total_assets = _extract_tactical_state_field(end_state_block, "총자산") or _extract_last_tactical_total_assets_text(
+        tactical_doc
+    )
+    if raw_total_assets and _is_effectively_unknown_text(arc_end_state.get("total_assets")):
+        arc_end_state["total_assets"] = raw_total_assets
+        promoted.append("state_constraints.arc_end_state.total_assets")
+
+        parsed_total_assets = _to_num_with_korean_units(raw_total_assets)
+        if parsed_total_assets is not None:
+            investment_calc = state_constraints.get("investment_calc")
+            if not isinstance(investment_calc, dict):
+                investment_calc = {}
+            if investment_calc.get("final_total_assets") in (None, "", [], {}):
+                investment_calc["final_total_assets"] = (
+                    int(parsed_total_assets) if float(parsed_total_assets).is_integer() else parsed_total_assets
+                )
+                state_constraints["investment_calc"] = investment_calc
+                promoted.append("state_constraints.investment_calc.final_total_assets")
+
+    state_constraints["arc_end_state"] = arc_end_state
+    refined_arc["state_constraints"] = state_constraints
+    return promoted
 
 
 def _coerce_inventory_items(raw: Any) -> list[Any]:
@@ -1672,6 +1864,14 @@ class Stage2Finalizer:
             critical_missing.append("joint_docs")
 
         curr_joint = refined_arc.get("joint_docs", {})
+        tactical_end_state_promotions = _promote_last_tactical_end_state_to_structured_state(refined_arc)
+        if tactical_end_state_promotions:
+            promoted_preview = ", ".join(
+                field.removeprefix("state_constraints.").removeprefix("arc_end_state.") for field in tactical_end_state_promotions
+            )
+            self.ctx.ui.log(
+                f"      🔧 [End State Tactical Sync] Arc {global_arc_no} 마지막 화 종료 상태 → {promoted_preview}"
+            )
         curr_inventory = _coerce_inventory_items(curr_joint.get("physical_inventory", []))
         if all_refined_arcs:
             prev_joint = all_refined_arcs[-1].get("joint_docs", {})
