@@ -11,17 +11,31 @@ Pipeline Order: `리서치 -> 기획안 -> Stage 0 preprocess -> Phase 0 design 
 
 현재 루트 README는 루트 런타임과 운영 동선을 설명한다. 작품별 TR/BI 라우팅 엔트리와 narrative-family 전용 흐름은 [`README.narrative-router.md`](README.narrative-router.md)로 분리되어 있다.
 
-## 현재 브랜치 기준 스냅샷
+## 현재 운영 상태
 
-Tracked Python 파일 기준으로 집계한 현재 코드 스냅샷이다.
+- 운영 SSOT는 [`AGENTS.md`](AGENTS.md)이며, system-track 시작 하네스는 [`docs/implementation/system-order-init-harness.md`](docs/implementation/system-order-init-harness.md)다.
+- narrative/material-side 진입은 [`README.narrative-router.md`](README.narrative-router.md)와 [`docs/narrative-router/SSOT_narrative-router-integrated-order.md`](docs/narrative-router/SSOT_narrative-router-integrated-order.md)를 따른다.
+- active execution queue의 현재 컨트롤러는 [`docs/2026-04-01/active-temp-execution-roadmap.md`](docs/2026-04-01/active-temp-execution-roadmap.md)이며, mirror copy는 [`docs/temp/execution-roadmap.md`](docs/temp/execution-roadmap.md)다.
+- 최신 merged-main 기준으로 bounded `Stage234` authority-alignment lane은 닫혀 있고, broader `Stage3` / `Stage234` runtime proof는 여전히 `proof-pending / operator-gated` 상태다.
+- material-side standard flow에서는 `work_guard`가 `Phase 0 design`과 `TR` 사이의 standard companion artifact로 승격됐지만, 현재 runtime은 `work_guard` 부재만으로 hard-gated되지는 않는다.
+
+현재 상태를 설명하는 대표 문서:
+
+- [`docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`](docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md)
+- [`docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`](docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md)
+- [`docs/2026-04-16/stage234-s2-s3-s4-authority-alignment-post-merge-current-head-adversarial-3pass-audit.md`](docs/2026-04-16/stage234-s2-s3-s4-authority-alignment-post-merge-current-head-adversarial-3pass-audit.md)
+
+## 현재 git 추적 파일 기준 스냅샷
+
+`git ls-files '*.py'` 기준으로 집계한 현재 코드 스냅샷이다.
 
 | 항목 | 값 |
 | --- | --- |
-| Python 소스 파일 | 442 |
-| Python 테스트 파일 | 414 |
-| Python 소스 LOC | 235,920 |
-| Python 테스트 LOC | 122,938 |
-| `modules/domain/agents/*.py` | 51 |
+| Python 소스 파일 | 502 |
+| Python 테스트 파일 | 447 |
+| Python 소스 LOC | 272,231 |
+| Python 테스트 LOC | 146,990 |
+| `modules/domain/agents/*.py` | 56 |
 | `modules/validation/*.py` | 17 |
 | `modules/core/genre_guards/*.py` | 14 |
 | 데스크톱 셸 | Electron 40 + React 18 |
@@ -176,7 +190,7 @@ pytest tests/ -q
 
 ```bash
 python scripts/check_utf8_hygiene.py README.md
-python scripts/ops_validator.py
+python scripts/ops_validator.py --strict
 ```
 
 세부 규칙은 [`tests/README.md`](tests/README.md), [`scripts/README.md`](scripts/README.md)를 참고한다.
