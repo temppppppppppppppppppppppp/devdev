@@ -7,7 +7,7 @@ Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `dfb44351bc41de1243e0def0bfbcb7336bc93388`
 Baseline Dirty Summary: `dirty: scene-flex closure edits plus unrelated stage0/material work already present in worktree`
 Resume Commit: `810f3fef3d11f4154b284e8002d7aaa8b07f7fe6`
-Resume Drift Summary: `current-head revalidation now includes the full bounded Stage234 chain plus the later medium authority-drift closure, the later hostile-audit contract-drift closure, the later runtime-authority-drift sibling closure, and the later 2026-04-16 r12 current-session closure anchor; both lanes still record no additional pre-rerun/pre-proof code tranche on current main, the latest bounded Stage234 closure anchor now points at one Stage4 current-session proof, and broader rerun remains operator-gated`
+Resume Drift Summary: `current-head revalidation now includes the full bounded Stage234 chain plus the later medium authority-drift closure, the later hostile-audit contract-drift closure, the later runtime-authority-drift sibling closure, the later 2026-04-16 r12 current-session closure anchor, and the compact same-day Stage3 no-reopen re-audit; both lanes still record no additional pre-rerun/pre-proof code tranche on current main, the latest bounded Stage234 closure anchor now points at one Stage4 current-session proof, the latest bounded Stage3 current-head anchor now confirms no reopen after that Stage234 wave, and broader rerun remains operator-gated`
 2026-04-14 bounded survey + rerun gate override:
 
 - Local audit HEAD: `81b426a688c2a5b6279d254c7746baac1261235b`
@@ -117,6 +117,24 @@ Resume Drift Summary: `current-head revalidation now includes the full bounded S
   3. treat any later authority work here as a sibling residual or broader proof question, not a hidden `Tranche E`
 - historical-read note:
   - every older 2026-04-15 / 2026-04-14 Stage234 override block below remains provenance only; if any lower block's former `current next action` wording conflicts with the 2026-04-16 block above, the 2026-04-16 block wins
+
+2026-04-16 Stage3 state-arbiter-envelope post-r12 Stage234 no-reopen override:
+
+- Local audit HEAD: `cb11e19843c464d844845394ba13910d074194ae`
+- authoritative audit:
+  - `docs/2026-04-16/stage3-state-arbiter-envelope-post-r12-stage234-no-reopen-current-head-3pass-audit.md`
+- the latest bounded Stage3 current-head anchor now confirms:
+  - the later Stage234 `r12` closure wave does not reopen the Stage3 lane
+  - the later authority-precedence clarification does not reopen the Stage3 lane
+  - no Stage3 lane code or test diff exists relative to the earlier `5757a23a` current-head audit baseline
+- gate result:
+  - `Tranche A/B/C` remain the authoritative realized Stage3 architecture state on the current head
+  - no additional pre-proof code tranche is open inside this lane after the compact current-head re-audit
+  - fresh rerun remains threshold-cleared but operator-gated under the canonical Stage3 rerun-gate survey
+- current next action stays:
+  1. keep this lane proof-pending while rerun remains operator-gated
+  2. if runtime is later authorized, prefer the bounded `ep9` continuation path before wider rollback proof options
+  3. treat any later code reopen here as fail-only stabilization or a new bounded survey question, not a hidden post-`Tranche C` architecture tranche
 
 2026-04-15 Stage234 post-residual closure override:
 
@@ -432,7 +450,7 @@ This refresh folds in the `r2` Stage4-only sinkproof result, the later analyzer/
 
 Working order:
 
-1. `0_0-stage3-state-arbiter-envelope-bounded-remediation` (bounded long-horizon Stage3 root-cause lane; `Tranche A/B/C` are now landed on current `main`, the 2026-04-15 post-contract-drift current-head audit records that no additional pre-proof code tranche is open even after the later Stage234 medium and contract-drift closures, and this lane now stays proof-pending / operator-gated rather than auto-opening another architecture slice before explicit runtime authorization)
+1. `0_0-stage3-state-arbiter-envelope-bounded-remediation` (bounded long-horizon Stage3 root-cause lane; `Tranche A/B/C` are now landed on current `main`, the 2026-04-16 post-r12 Stage234 no-reopen current-head audit records that the later Stage234 closure wave and authority-precedence clarification still do not open any additional pre-proof Stage3 code tranche, and this lane now stays proof-pending / operator-gated rather than auto-opening another architecture slice before explicit runtime authorization)
 2. `0_0-stage234-global-authority-alignment-bounded-remediation` (bounded cross-stage follow-up lane; `Tranche A/B/C`, hostile-reading hardening, the final bounded residual closures, the later Stage4 carryover-ceiling parity closure, the later hostile-audit contract-drift closure, the later Stage4 runtime-authority-drift sibling residual closure, and the later `r12` Stage4 current-session closure wave are all landed on the current workspace, the 2026-04-16 post-r12 current-session closure audit records that the bounded current-session sink-alignment / hard-gate objective now closes on the same canary without opening any further pre-rerun code tranche, and this lane now stays proof-pending / operator-gated rather than auto-reopening fresh runtime or a hidden `Tranche E`)
 3. `0_0-stage3-contract-tightening-remediation` (bounded Stage3 functional lane owns the 2026-04-12/13 live rerun blocker family, and the bounded parent-owned fail-only slices are now landed: `blueprint_0002` over-consumption plus `blueprint_0003` replay / canonical institution drift now route through Stage3 replay suppression, expanded institution fact-lock coverage, and regenerate-only `episode_progression` gating, the child retry-plateau breaker now stops low-yield inplace reopening after `PASS_WITH_FIX unresolved` or repeated inplace score/signature plateau, the same-day quality-gate/truth follow-up now blocks `Director PASS < quality_gate` patch reopening while suppressing blind live-HUD `V46` current-state injection during blueprint scoring unless an explicit `blueprint_scoring_hud` is supplied, the narrower same-day completion-summary observability slice is now also landed so Stage3 separates current-run pass-rate authority from cumulative generator pass-rate authority, the earlier bounded parent-owned post-proof `ep6` terminal-quality-gate coherence tranche is now landed, the later same-day parent binding-family static-kill tranche now forces all MAJOR/CRITICAL binding-prevalidation residuals through regenerate-only repair while blocking inplace reopen after binding rejects, the newer same-day contract-driven repair-eligibility / success-projection tranche is now also landed so explicit Stage3 repair contracts outrank raw `fix_scope` during Phase2 reopen and success sinks preserve `PASS_WITH_FIX` semantics, the later same-day formal `ep8` root-cause survey now reclassifies the front residual as primary producer-side contract drift plus misleading failure wording, the bounded producer-side contract-alignment / route-honest failure-surface tranche is now likewise landed, the latest same-day `P2/P3` producer-follow-up tranche is now also landed so Stage2 shortlist honesty, Stage3 placeholder-state hardening, and Stage4 degraded fallback ordering are tighter on live code, tranche 1 `Stage3RepairRouter Extraction`, tranche 2 strict local-fix contract gating, tranche 3 bounded patch-IR, and the formerly front tactical-authority synonym parity tranche are all now landed locally; the authoritative 2026-04-14 bounded survey records `93%` predictive contract-debt closure, so fresh Stage3 continuation or proof rerun is threshold-cleared but still operator-gated rather than the automatic next queue step)
 4. `0_0-stage3-opening-transition-contract-normalization-remediation` (partially realized upstream contract lane; the landed opening-authority and capital-boundary follow-up remains valid, and the 2026-04-12 live rerun support slice is now also landed so this sibling now carries immediate-next-day / winter-season / blocked-scene-family carryover truth on the ep2 -> ep3 seam ahead of the next proof wave)
@@ -826,7 +844,7 @@ Order rationale:
 ### 0_0-stage3-state-arbiter-envelope-bounded-remediation
 
 - bounded root-cause survey and execution SSOT completed (2026-04-14)
-- execution SSOT: `active (current-head post-contract-drift audit recorded; lane now proof-pending / operator-gated)`
+- execution SSOT: `active (current-head post-r12 Stage234 no-reopen audit recorded; lane remains proof-pending / operator-gated)`
 - realized current-head closures:
   - `EpisodeStatePacket` now exists as the explicit Stage3 pre-generation authority surface
   - whole-envelope Stage3 prompt budget and archive appendix demotion are live on current `main`
@@ -836,7 +854,7 @@ Order rationale:
   - treat `Tranche B` (unified Stage3 prompt-envelope budget + archive appendix demotion) as landed on current `main`
   - treat `Tranche C` (`Stage3EnvelopeBuilder` / `Stage3ValidationBoundary` / `Stage3RetryCoordinator`) as landed on current `main`
   - keep this lane proof-pending while fresh rerun remains operator-gated under the canonical Stage3 rerun gate
-  - if runtime is later authorized, consume proof through the explicit continuation or rollback path rather than opening a hidden post-`Tranche C` architecture tranche
+  - if runtime is later authorized, prefer the bounded `ep9` continuation path before wider rollback proof options, and do not open a hidden post-`Tranche C` architecture tranche
   - if the lane later reopens on code evidence, keep it bounded:
     - `Stage3EnvelopeBuilder`
     - `Stage3ValidationBoundary`
