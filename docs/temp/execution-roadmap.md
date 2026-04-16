@@ -1,13 +1,28 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-01
-Status: active (3-pass re-audited 2026-04-16 against the live workspace; the latest bounded Stage234 closure anchor now points at the `r12` Stage4 current-session closure, so the lane no longer has an open pre-rerun code tranche and one bounded Stage4 current-session proof is recorded, while broader Stage3 / Stage234 runtime remains operator-gated rather than auto-presented. The current-head bounded Stage3 debt survey still records a conservative predictive contract-debt resolution estimate of `93%`. Older `ep9 continuation` and proof-rerun wording below remains historical queue state unless explicitly re-authorized.)
+Status: active (3-pass re-audited 2026-04-16 against merged `main`; the latest bounded Stage234 closure anchor still points at the `r12` Stage4 current-session closure, so the lane no longer has an open pre-rerun code tranche and one bounded Stage4 current-session proof is recorded, while broader Stage3 / Stage234 runtime remains operator-gated rather than auto-presented. The current-head bounded Stage3 debt survey still records a conservative predictive contract-debt resolution estimate of `93%`. Older `ep9 continuation` and proof-rerun wording below remains historical queue state unless explicitly re-authorized.)
 Canonical Path: `docs/2026-04-01/active-temp-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `dfb44351bc41de1243e0def0bfbcb7336bc93388`
 Baseline Dirty Summary: `dirty: scene-flex closure edits plus unrelated stage0/material work already present in worktree`
-Resume Commit: `810f3fef3d11f4154b284e8002d7aaa8b07f7fe6`
-Resume Drift Summary: `current-head revalidation now includes the full bounded Stage234 chain plus the later medium authority-drift closure, the later hostile-audit contract-drift closure, the later runtime-authority-drift sibling closure, the later 2026-04-16 r12 current-session closure anchor, and the compact same-day Stage3 no-reopen re-audit; both lanes still record no additional pre-rerun/pre-proof code tranche on current main, the latest bounded Stage234 closure anchor now points at one Stage4 current-session proof, the latest bounded Stage3 current-head anchor now confirms no reopen after that Stage234 wave, and broader rerun remains operator-gated`
+Resume Commit: `eb5460ac9797cdb097bf5050ec902f6436f796fc`
+Resume Drift Summary: `merged-main revalidation now includes the full bounded Stage234 chain plus the later medium authority-drift closure, the later hostile-audit contract-drift closure, the later runtime-authority-drift sibling closure, the later 2026-04-16 r12 current-session closure anchor, the compact same-day Stage3 no-reopen re-audit, and the merged-main adversarial drift refresh: both lanes still record no additional pre-rerun/pre-proof code tranche on current main, the latest bounded Stage234 closure anchor still points at one Stage4 current-session proof, the latest bounded Stage3 current-head anchor still confirms no reopen after that Stage234 wave, and older pre-merge current-head SHAs below are now provenance-only rather than the literal merged-head anchor`
+2026-04-16 merged-main post-merge adversarial drift override:
+
+- Local audit HEAD: `eb5460ac9797cdb097bf5050ec902f6436f796fc`
+- authoritative audit:
+  - `docs/2026-04-16/stage234-s2-s3-s4-authority-alignment-post-merge-current-head-adversarial-3pass-audit.md`
+- merged-main conclusions:
+  - merged `main` is tree-identical to the audited `r12` closure branch head on code/content state
+  - post-merge adversarial re-audit finds no `S2 -> S3 -> S4` authority-alignment reopen after PR #1 merge
+  - the bounded Stage234 `r12` closure anchor and the bounded Stage3 no-reopen judgment both remain valid on merged `main`
+  - older pre-merge literal `current-head` SHAs below remain provenance-only when their wording conflicts with this merged-main block
+- current next action stays:
+  1. keep the Stage3 and Stage234 lanes proof-pending while runtime remains operator-gated
+  2. if runtime is later authorized, prefer bounded `ep9` continuation before wider rollback proof options
+  3. do not reopen Stage234 code or a hidden post-`Tranche C` tranche from merge-only drift
+
 2026-04-14 bounded survey + rerun gate override:
 
 - Local audit HEAD: `81b426a688c2a5b6279d254c7746baac1261235b`
@@ -98,7 +113,7 @@ Resume Drift Summary: `current-head revalidation now includes the full bounded S
 
 2026-04-16 Stage234 post-r12 Stage4 current-session closure override:
 
-- Local audit HEAD: `810f3fef3d11f4154b284e8002d7aaa8b07f7fe6`
+- Local audit HEAD: `810f3fef3d11f4154b284e8002d7aaa8b07f7fe6` (historical branch-head closure anchor; merged-main current-head is governed by the post-merge adversarial drift block above)
 - authoritative audit:
   - `docs/2026-04-16/stage234-global-authority-alignment-post-r12-stage4-current-session-closure-current-head-3pass-audit.md`
 - the latest bounded Stage234 closure anchor is now the compact `r12` current-session proof:
@@ -120,7 +135,7 @@ Resume Drift Summary: `current-head revalidation now includes the full bounded S
 
 2026-04-16 Stage3 state-arbiter-envelope post-r12 Stage234 no-reopen override:
 
-- Local audit HEAD: `cb11e19843c464d844845394ba13910d074194ae`
+- Local audit HEAD: `cb11e19843c464d844845394ba13910d074194ae` (historical branch-head no-reopen anchor; merged-main current-head is governed by the post-merge adversarial drift block above)
 - authoritative audit:
   - `docs/2026-04-16/stage3-state-arbiter-envelope-post-r12-stage234-no-reopen-current-head-3pass-audit.md`
 - the latest bounded Stage3 current-head anchor now confirms:

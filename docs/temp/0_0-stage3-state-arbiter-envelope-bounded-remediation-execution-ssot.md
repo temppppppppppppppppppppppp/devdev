@@ -1,14 +1,14 @@
 # 0_0-stage3-state-arbiter-envelope-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: pending (3-pass audited through current-head post-r12 Stage234 no-reopen audit; long-horizon bounded execution lane; `Tranche A/B/C` are landed on current `main`, the later Stage234 medium and contract-drift closures plus the later Stage234 `r12` closure wave do not reopen this lane, no additional pre-proof code tranche is open, and fresh rerun remains operator-gated)
+Status: pending (3-pass audited through merged-main post-merge adversarial current-head re-audit; long-horizon bounded execution lane; `Tranche A/B/C` are landed on current `main`, the later Stage234 medium and contract-drift closures plus the later Stage234 `r12` closure wave do not reopen this lane, no additional pre-proof code tranche is open, and fresh rerun remains operator-gated)
 Canonical Path: `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f58059fefd10ed3f41d7bacca3b908dd47ada418`
 - Baseline Dirty Summary: `dirty: live 000_260412_a logs/db, 0_temp.txt, and untracked 2026-04-14 diagnostic notes already present in worktree`
-- Resume Commit: `cb11e19843c464d844845394ba13910d074194ae` (`current HEAD after the later Stage234 r12 closure and authority-precedence clarification`)
-- Resume Drift Summary: `current head still carries the landed Stage3 Tranche A/B/C substrate, and the later Stage234 medium / contract-drift closures plus the later Stage234 r12 current-session closure wave do not reopen this lane: no Stage3 lane code or test diff exists relative to the earlier 5757a23a current-head audit baseline, packet / prompt-envelope / boundary-split owners remain landed on current HEAD, semantic-core watch items remain watch-only rather than a new tranche trigger, and fresh rerun stays threshold-cleared but operator-gated under the canonical Stage3 gate`
+- Resume Commit: `eb5460ac9797cdb097bf5050ec902f6436f796fc` (`merged main after PR #1; no Stage3 lane code/content delta relative to the audited branch closure head`)
+- Resume Drift Summary: `merged main still carries the landed Stage3 Tranche A/B/C substrate, and the later Stage234 medium / contract-drift closures plus the later Stage234 r12 current-session closure wave do not reopen this lane: post-merge adversarial re-audit found no Stage3 lane reopen on merged main, packet / prompt-envelope / boundary-split owners remain landed, semantic-core watch items remain watch-only rather than a new tranche trigger, and older pre-merge current-head SHA wording below is now provenance-only rather than the literal merged-head anchor`
 Source Survey Docs:
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
@@ -17,6 +17,7 @@ Source Survey Docs:
 - `docs/2026-04-15/stage3-state-arbiter-envelope-post-medium-current-head-3pass-audit.md`
 - `docs/2026-04-15/stage3-state-arbiter-envelope-post-contract-drift-current-head-3pass-audit.md`
 - `docs/2026-04-16/stage3-state-arbiter-envelope-post-r12-stage234-no-reopen-current-head-3pass-audit.md`
+- `docs/2026-04-16/stage234-s2-s3-s4-authority-alignment-post-merge-current-head-adversarial-3pass-audit.md`
 - `docs/2026-04-01/active-temp-execution-roadmap.md`
 - `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Evidence Artifacts:
@@ -32,6 +33,19 @@ Evidence Artifacts:
 - `modules/core/stage4_postselect_runtime.py`
 Side-Effect Coverage: covered (Stage3 prompt assembly, retry/runtime, validator contract, Stage234 downstream carryover parity dependency, observability sinks, roadmap queue state)
 Confidence: `97%`
+
+2026-04-16 merged-main post-merge adversarial drift override:
+
+- Local audit HEAD: `eb5460ac9797cdb097bf5050ec902f6436f796fc`
+- authoritative audit doc:
+  - `docs/2026-04-16/stage234-s2-s3-s4-authority-alignment-post-merge-current-head-adversarial-3pass-audit.md`
+- current gate result:
+  - merged `main` introduces no `S2 -> S3 -> S4` authority-alignment code/content delta relative to the audited branch closure head
+  - post-merge adversarial re-audit finds no Stage3 lane reopen on the merged head
+  - `Tranche A/B/C` remain the authoritative realized Stage3 architecture state on merged `main`
+  - older pre-merge `current-head` SHAs in the lower override blocks remain provenance-only when their literal head wording conflicts with this merged-main block
+- current practical next action:
+  - keep this lane proof-pending / operator-gated until runtime is explicitly re-authorized, and if runtime later opens, prefer bounded `ep9` continuation before wider rollback proof options
 
 2026-04-16 post-r12 Stage234 current-head no-reopen override:
 
