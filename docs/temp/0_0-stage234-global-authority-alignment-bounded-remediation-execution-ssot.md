@@ -1,14 +1,14 @@
 # 0_0-stage234-global-authority-alignment-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: pending (3-pass audited through current-head post-r12 Stage4 current-session closure; `Tranche A/B/C`, hostile-reading hardening, the final bounded residual closures, the later medium and contract-drift closures, the later Stage4 runtime-authority-drift sibling residual closure, and the later `r12` Stage4 current-session closure wave are all landed on the current workspace; no additional pre-rerun code tranche is open, the latest bounded Stage234 closure anchor now points at one Stage4 current-session proof, and broader Stage3 / backend-wide proof remains operator-gated)
+Status: pending (3-pass audited through merged-main post-merge adversarial current-head re-audit; `Tranche A/B/C`, hostile-reading hardening, the final bounded residual closures, the later medium and contract-drift closures, the later Stage4 runtime-authority-drift sibling residual closure, and the later `r12` Stage4 current-session closure wave are all landed on the current workspace; no additional pre-rerun code tranche is open, the latest bounded Stage234 closure anchor now points at one Stage4 current-session proof, and broader Stage3 / backend-wide proof remains operator-gated)
 Canonical Path: `docs/2026-04-14/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage234-global-authority-alignment-bounded-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `f005794b578d68bb855a960778c75ca3f77787a6`
 - Baseline Dirty Summary: `clean main after Tranche C snapshot, post-C audit cleanup, and evidence-branch split`
-- Resume Commit: `810f3fef3d11f4154b284e8002d7aaa8b07f7fe6` (`current HEAD after the r12 closure anchor, PR publication, and queue-sync follow-up`)
-- Resume Drift Summary: `the current workspace now carries the full bounded Stage234 chain plus the hostile-reading hardening, final residual closures, the later medium and contract-drift closures, the later Stage4 runtime-authority-drift sibling residual closure, and the later r12 Stage4 current-session closure wave: pass-rate monitor plus runtime-audit summary persist on exit, reject-path companion/raw-surface sinks preserve historical companion authority, normalized patch-trace lineage survives the winning rewrite-shaped retry, the latest bounded Stage234 closure anchor now points at one canary where the final authority sink / historical companion role / current-session sink alignment / hard gates all close together, no additional pre-rerun Stage234 code tranche is indicated on the current workspace, and broader proof remains threshold-cleared but operator-gated under the canonical Stage3 gate`
+- Resume Commit: `eb5460ac9797cdb097bf5050ec902f6436f796fc` (`merged main after PR #1; tree-identical to the audited r12 closure branch head on code/content state`)
+- Resume Drift Summary: `the merged current workspace still carries the full bounded Stage234 chain plus the hostile-reading hardening, final residual closures, the later medium and contract-drift closures, the later Stage4 runtime-authority-drift sibling residual closure, and the later r12 Stage4 current-session closure wave: post-merge adversarial re-audit found no S2/S3/S4 authority-alignment code reopen on merged main, the latest bounded Stage234 closure anchor still points at one canary where the final authority sink / historical companion role / current-session sink alignment / hard gates all close together, and older pre-merge current-head SHA wording below is now provenance-only rather than the literal merged-head anchor`
 Source Survey Docs:
 - `docs/2026-04-14/stage234-global-authority-alignment-bounded-survey.md`
 - `docs/2026-04-14/stage234-global-authority-alignment-tranche-a-current-head-3pass-audit.md`
@@ -22,6 +22,7 @@ Source Survey Docs:
 - `docs/2026-04-15/stage234-global-authority-alignment-post-runtime-authority-drift-working-tree-3pass-audit.md`
 - `docs/2026-04-15/stage234-global-authority-alignment-post-runtime-authority-drift-live-canary-working-tree-3pass-audit.md`
 - `docs/2026-04-16/stage234-global-authority-alignment-post-r12-stage4-current-session-closure-current-head-3pass-audit.md`
+- `docs/2026-04-16/stage234-s2-s3-s4-authority-alignment-post-merge-current-head-adversarial-3pass-audit.md`
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
 - `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
@@ -46,6 +47,21 @@ Evidence Artifacts:
 - `tests/test_runtime_authority_contract.py`
 Side-Effect Coverage: covered (cross-stage authority transport, Stage2/3/4 prompt and sink surfaces, chief-writer carryover-ceiling parity, Stage4 HUD snapshot/live-HUD sink alignment, Stage4 advisory/logging contract honesty, Stage4 DB final sink persistence under live canary proof, roadmap/queue controller updates)
 Confidence: `97%`
+
+2026-04-16 merged-main post-merge adversarial drift override:
+
+- Local audit HEAD: `eb5460ac9797cdb097bf5050ec902f6436f796fc`
+- authoritative audit doc:
+  - `docs/2026-04-16/stage234-s2-s3-s4-authority-alignment-post-merge-current-head-adversarial-3pass-audit.md`
+- current gate result:
+  - merged `main` is tree-identical to the audited `r12` closure branch head on code/content state
+  - post-merge adversarial re-audit finds no `S2 -> S3 -> S4` authority-alignment reopen on the merged head
+  - the existing `r12` current-session closure remains a valid bounded Stage234 anchor on merged `main`
+  - older pre-merge `current-head` SHAs in the lower override blocks remain provenance-only when their literal head wording conflicts with this merged-main block
+- current practical next action:
+  - keep this lane proof-pending / operator-gated for broader proof, use this merged-main adversarial re-audit as the current-head governance anchor, and do not reopen Stage234 code unless later evidence opens a new bounded sibling residual
+- historical-read note:
+  - every lower 2026-04-16 / 2026-04-15 / 2026-04-14 override block remains provenance only; if any lower block's former literal `current-head` wording conflicts with the merged-main block above, the merged-main block wins
 
 2026-04-16 post-r12 Stage4 current-session closure override:
 
