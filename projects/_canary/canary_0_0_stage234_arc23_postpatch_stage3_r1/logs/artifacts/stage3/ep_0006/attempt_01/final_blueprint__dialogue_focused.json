@@ -1,0 +1,212 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "570376785eaa3a836289382181cd73c4f3b13756d3f4d8f83013f190a9778ce9"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1556,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 10697,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 10697
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 22471,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 977529,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 19426,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 2707,
+          "lane": "constraints"
+        },
+        {
+          "chars": 195,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 195,
+        "constraints": 2707,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 19426
+      },
+      "shared_context_chars": 22338,
+      "total_chars": 22471
+    },
+    "python_warnings": [
+      {
+        "category": "temporal_deictic",
+        "focus": "미래-기억 맥락의 절대 시간 참조를 제거하거나 상대적 표현으로 교체",
+        "message": "시간 지시어 위험: 시나리오 말미에 '18년 전의 기억' 회상/기억 패턴 감지",
+        "severity": "MAJOR",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 4,
+    "strategy": "dialogue_focused",
+    "total_candidates": 1
+  },
+  "_inventory_gaps": [
+    {
+      "item": "구형 휴대폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "빈 노트와 펜",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "SW인베스트먼트 설립 서류 가안",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 94,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "revision_required": false
+  },
+  "core_tension": "가문의 감시를 피해 완벽한 독립 법인과 실탄을 구축하는 과정",
+  "end_location": "강남 비즈니스 호텔 스위트룸",
+  "ending_hook": "뉴스 앵커의 다급한 목소리가 방 안을 채우는 순간, 탁자 위의 구형 휴대폰이 신경질적으로 울리기 시작했다. 발신자는...",
+  "ending_state": {
+    "location": "강남 비즈니스 호텔 스위트룸",
+    "protagonist_status": "초기 자본을 확보하고 본격적인 투자를 시작하려던 찰나, 예상치 못한 연락을 받고 긴장함",
+    "timeline": {
+      "표현": "2006년 1월 저녁"
+    }
+  },
+  "ep_num": 6,
+  "episode_number": 6,
+  "expected_ending": "이란 핵 뉴스 보도를 확인하며 본격적인 시장 진입을 선언함",
+  "integrated_scenario": "한시우의 서늘한 목소리가 VIP 룸의 공기를 얼어붙게 만들었다. \"이제, 이 돈을 전부 내가 지정하는 차명 계좌로 즉시 이체해.\" 박성호 PB는 모니터에 찍힌 20억 원이라는 거액과 한시우의 무감각한 얼굴을 번갈아 보며 덜덜 떨리는 손으로 마우스를 쥐었다. \"도, 도련님. 아무리 감사팀이 철수했다고는 하나, 이 정도 규모의 자금이 한 번에 움직이면 지점장 선에서 보고가...\" 한시우는 소파에 깊숙이 기대앉은 채 픽 실소를 터뜨렸다. \"박성호. 네가 재작년 고객 수익률 조작해서 메운 손실금, 그게 세상에 알려지는 것보다 지점장 보고가 더 두렵다는 뜻인가?\" 그 한마디에 박성호의 얼굴에서 핏기가 완전히 가셨다. 그는 더 이상 아무런 반항도 하지 못한 채, 한시우가 내민 쪽지의 계좌 번호로 20억 원의 자금을 남김없이 송금했다. 엔터키가 눌리는 경쾌한 마찰음과 함께, 가문의 통제망에서 완전히 벗어난 완벽한 실탄이 한시우의 손에 쥐어졌다.\n\n목적을 달성한 한시우는 미련 없이 PB 센터를 빠져나왔다. 홀로 남겨진 박성호는 화면에 뜬 '이체 완료' 메시지를 보며 넥타이를 거칠게 풀어 헤쳤다. 밖에서 대기하던 리스크팀 직원이 조심스레 들어와 무슨 일이냐고 물었지만, 박성호는 신경질적으로 소리치며 입을 다물게 했다. 그는 방금 전까지 자신이 알던 유약한 막내 도련님이 완벽히 죽고, 뼛속까지 냉혹한 포식자가 그 자리를 대신했음을 본능적으로 깨닫고 공포에 질려 있었다.\n\n오후, 강남의 한 비즈니스 호텔 스위트룸. 철저한 보안과 프라이버시가 보장되는 이곳에 임시 거처를 마련한 한시우는 탁자 위에 빈 노트와 펜을 꺼내놓았다. 그는 전생의 기억을 더듬어, 조세회피처 법인 설립에 가장 능통한 브로커에게 전화를 걸었다. \"케이맨 제도에 페이퍼 컴퍼니를 하나 세우고 싶습니다. 법인명은 SW인베스트먼트. 지분 구조는 철저히 블라인드 처리하고, 자금 추적이 불가능한 다중 우회로를 설계하세요.\" 수화기 너머의 브로커가 까다로운 조건에 난색을 표했지만, 한시우가 제시한 압도적인 수수료와 정확한 실무 지식 앞에 결국 승낙했다. 전화를 끊은 한시우는 노트에 SW인베스트먼트의 지배 구조와 초기 자금 운용 가안을 꼼꼼하게 작성했다. 펜끝이 종이를 스칠 때마다, 훗날 거대한 제국을 무너뜨릴 독가시가 하나씩 벼려지고 있었다.\n\n어느덧 창밖으로 어둠이 깔리고, 서울의 화려한 야경이 스위트룸의 통유리창을 채웠다. 한시우는 리모컨을 들어 벽걸이 TV의 전원을 켰다. 화면이 밝아지며 저녁 8시 메인 뉴스가 흘러나왔다. \"다음 소식입니다. 이란이 우라늄 농축 재개를 공식 선언하며 국제 사회의 긴장이 최고조에 달하고 있습니다. 이에 따라 글로벌 원유 시장이 요동치며 WTI 가격이 폭등 조짐을 보이고...\" 앵커의 다급한 목소리가 방 안을 울리는 순간, 한시우의 입가에 짙은 미소가 번졌다. 18년 전의 기억과 현실이 완벽하게 일치하는 순간이었다. 이제 시장의 흐름은 그의 손바닥 위에 있었다. 그가 본격적인 매수 포지션 진입을 위해 노트북을 펼치려는 찰나, 탁자 위에 놓인 구형 휴대폰이 신경질적인 진동음을 내며 울리기 시작했다. 화면에 뜬 발신자의 이름을 확인한 한시우의 미소가 차갑게 굳어졌다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부 박성호와의 대치에서 빠른 템포로 긴장감을 끌어올린 뒤, 중반부 법인 설립 과정에서 차분하고 치밀한 정보 전달로 호흡을 조절. 결말부 뉴스 시청 장면에서 다시 텐션을 높여 클리프행어로 연결.",
+  "protagonist_state": {
+    "equipment": [
+      "구형 휴대폰",
+      "빈 노트와 펜",
+      "SW인베스트먼트 설립 서류 가안"
+    ],
+    "injuries": "없음",
+    "mood": "차가운 확신과 승리감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "실무적 긴장감",
+      "justification": "자신의 치명적인 약점을 잡힌 채 강제로 거액의 자금을 유동화하며 한시우의 진면목을 목격했기 때문",
+      "target": "박성호 PB",
+      "to_state": "절대적인 공포와 복종"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호 PB"
+      ],
+      "content": "",
+      "goal": "박성호 PB를 완전히 장악하고 20억 원의 자금을 지정 계좌로 이체",
+      "key_events": [
+        "한시우가 지정된 차명 계좌로 자금 이체를 명령함",
+        "박성호가 지점장 보고를 핑계로 주저하자, 한시우가 과거 그의 횡령 사실을 정확히 짚어내며 협박함",
+        "공포에 질린 박성호가 이체 승인 버튼을 누르며 20억 원의 실탄 확보가 완료됨"
+      ],
+      "location": "강남 PB 센터 VIP 룸",
+      "summary": "한시우가 박성호의 약점을 찔러 반항 의지를 꺾고, 가문의 추적이 불가능한 계좌로 20억 원을 즉시 송금하게 만든다.",
+      "tension_level": 8,
+      "title": "완벽한 굴복",
+      "type": "dialogue_duel"
+    },
+    "scene_2": {
+      "characters": [
+        "박성호 PB",
+        "리스크팀 직원"
+      ],
+      "content": "",
+      "goal": "박성호 PB의 시점을 통해 한시우의 변화가 주는 공포감을 객관화",
+      "key_events": [
+        "한시우가 미련 없이 VIP 룸을 떠남",
+        "박성호가 넥타이를 풀어 헤치며 식은땀을 닦아냄",
+        "리스크팀 직원이 거액의 이체 사유를 묻자, 박성호가 신경질적으로 입을 다물라며 자신이 쥐락펴락하던 도련님이 아님을 직감함"
+      ],
+      "location": "강남 PB 센터 VIP 룸",
+      "summary": "한시우가 떠난 후, 박성호가 극도의 두려움에 떨며 부하 직원의 입을 단속하고 상황의 심각성을 깨닫는다.",
+      "tension_level": 5,
+      "title": "포식자의 잔상",
+      "type": "side_glimpse"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "해외 법인 브로커(전화)"
+      ],
+      "content": "",
+      "goal": "해외 페이퍼 컴퍼니 설립을 통한 완벽한 자금 은닉망 구축",
+      "key_events": [
+        "강남의 비즈니스 호텔 스위트룸에 도착한 한시우가 노트를 펼침",
+        "조세회피처 전문 브로커에게 전화를 걸어 케이맨 제도에 'SW인베스트먼트' 설립을 지시함",
+        "가문의 감사팀조차 뚫을 수 없는 다중 우회 지배 구조를 설계하고 법인 설립 서류 가안 작성을 마침"
+      ],
+      "location": "강남 비즈니스 호텔 스위트룸",
+      "summary": "호텔 스위트룸에 자리 잡은 한시우가 브로커와 통화하며 SW인베스트먼트의 설립 구조를 기획한다.",
+      "tension_level": 6,
+      "title": "유령 법인 설립",
+      "type": "tension_build"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "뉴스 앵커(TV)"
+      ],
+      "content": "",
+      "goal": "저녁 뉴스를 통한 시장 예측 증명 및 다음 전개를 위한 훅 제시",
+      "key_events": [
+        "저녁 8시, 한시우가 호텔 방의 TV를 켬",
+        "뉴스 앵커가 이란의 우라늄 농축 재개와 글로벌 유가 폭등 조짐을 보도함",
+        "자신의 예측이 완벽히 맞아떨어졌음에 차가운 미소를 지으며 본격적인 매수 포지션을 준비함",
+        "그 순간, 탁자 위의 구형 휴대폰이 신경질적으로 울리며 정적을 깸"
+      ],
+      "location": "강남 비즈니스 호텔 스위트룸",
+      "summary": "저녁 뉴스에서 이란 핵 문제 보도를 확인하며 시장 진입을 준비하던 중, 예상치 못한 전화가 걸려온다.",
+      "tension_level": 9,
+      "title": "예고된 폭등",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "강남 PB 센터 VIP 룸",
+  "target_beat": "자금 확보의 카타르시스와 완벽한 통제력 과시",
+  "time_flow": "오전 → 저녁",
+  "title": "실탄 장전과 신호탄"
+}
