@@ -1,0 +1,490 @@
+{
+  "arc_no": 1,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0002.txt",
+    "settlement_packet_path": "drafts/ep_0002.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 2,
+  "ep_num": 2,
+  "manuscript": {
+    "char_count": 7073,
+    "content_hash": "05e41d0d5d0d98327a5cfbf2f1780f990ad6fdf36ae938a80b83cee03b788765",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0002.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "director_primary_pass",
+      "open_review": "특이사항 없음. 주인공의 단호한 태도 변화와 가족들의 반응이 잘 어우러져 긴장감을 높였으며, PB와의 통화에서 전문 용어를 적절히 사용하여 몰입감을 주었습니다. 이전 피드백이었던 타임라인 오류도 깔끔하게 해결되었습니다.",
+      "repair_scope": "inplace",
+      "score": 95,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 7,
+        "quality_engagement": 18
+      },
+      "selection_reason": "후보 A는 이전 화와의 연속성을 완벽하게 유지하며, 이전 피드백에서 지적된 타임라인 충돌(폴더폰 확인 시점)을 '오늘 아침 꺼내 두었던'으로 자연스럽게 수정하여 반영했습니다. 또한 씬 헤더 마크다운이 정상적으로 적용되었고, 가족과의 대립 및 PB와의 통화 씬에서 긴장감과 몰입도가 뛰어납니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [],
+      "ai_slop_score": 0.0,
+      "burstiness": 18.32,
+      "ced_score": 0.0,
+      "complexity": 47.65,
+      "compression_ratio": 0.4427,
+      "signal_summary": {
+        "ai_slop_total_hits": 0,
+        "burstiness": 18.32,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 47.65,
+        "compression_ratio": 0.4427,
+        "sentence_count": 187
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "tv",
+            "뉴스",
+            "이란",
+            "문제",
+            "보도"
+          ],
+          "source": "ending_hook",
+          "text": "TV 뉴스에서 이란 핵 문제 보도를 확인한 한시우가 결심에 찬 얼굴로 폴더폰을 열어젖힌다."
+        }
+      ],
+      "capital": 20000000000,
+      "connections": "재벌가 가족, 승마계 인맥, PB 박성호",
+      "current_objective": "200억으로 WTI 원유 선물 매수 포지션 진입",
+      "equipment": [
+        "2006년형 폴더폰",
+        "다크 그레이 슈트",
+        "고급 손목시계"
+      ],
+      "inventory_counts": {
+        "2006년형 폴더폰": 1,
+        "고급 손목시계": 1,
+        "다크 그레이 슈트": 1
+      },
+      "market_insight": "18년치 미래 경제사 (WTI 등)",
+      "reputation": "독립 선언 및 투자 사업 시작",
+      "status": "독립 선언 및 투자 사업 시작",
+      "stocks": [],
+      "total_assets": 20000000000,
+      "wealth": "200억 (투자 준비 중)"
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "tv",
+            "뉴스",
+            "이란",
+            "문제",
+            "보도"
+          ],
+          "source": "ending_hook",
+          "text": "TV 뉴스에서 이란 핵 문제 보도를 확인한 한시우가 결심에 찬 얼굴로 폴더폰을 열어젖힌다."
+        }
+      ],
+      "causal_links": [
+        "한시우의 독립 선언: 한시우가 가족에게 그룹에 들어가지 않고 자신의 사업을 시작하겠다고 선언함.",
+        "한정호의 묵인: 한정호 회장이 한시우의 독립 선언을 방관하는 형태로 허락함.",
+        "형제들의 경멸과 안도: 한태준과 한태민이 한시우의 독립 선언을 비웃고 경멸하지만, 동시에 후계 구도에서 이탈한 것에 안도함.",
+        "WTI 유가 급등 예견: 한시우가 미래 지식을 바탕으로 이란 핵 문제로 인한 WTI 유가 급등을 예측함.",
+        "박성호에게 투자 지시: 한시우가 PB 박성호에게 200억 전액을 WTI 원유 선물 매수 포지션에 투자하도록 지시함."
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "고급 손목시계",
+          "to": 1
+        },
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "다크 그레이 슈트",
+          "to": 1
+        },
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "신문",
+          "to": 0
+        }
+      ],
+      "inventory_counts": {
+        "2006년형 폴더폰": 1,
+        "고급 손목시계": 1,
+        "다크 그레이 슈트": 1
+      },
+      "karma_matrix": [
+        {
+          "obsession": 0,
+          "target": "한정호",
+          "value": 5
+        },
+        {
+          "obsession": 0,
+          "target": "한태준",
+          "value": -5
+        },
+        {
+          "obsession": 0,
+          "target": "한태민",
+          "value": -5
+        }
+      ],
+      "knowledge_map": {
+        "new_misled": [
+          "한태준",
+          "한태민"
+        ],
+        "new_witnesses": [
+          "한정호",
+          "박성호"
+        ]
+      },
+      "lost_items": [
+        "신문"
+      ],
+      "new_items": [
+        "다크 그레이 슈트",
+        "고급 손목시계"
+      ],
+      "new_npcs": [
+        "한정호",
+        "한태준",
+        "한태민",
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "한정호",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한태준",
+          "to": "오해 대상"
+        },
+        {
+          "from": "",
+          "npc": "한태민",
+          "to": "오해 대상"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "tv",
+              "뉴스",
+              "이란",
+              "문제",
+              "보도"
+            ],
+            "source": "ending_hook",
+            "text": "TV 뉴스에서 이란 핵 문제 보도를 확인한 한시우가 결심에 찬 얼굴로 폴더폰을 열어젖힌다."
+          }
+        ],
+        "capital": 20000000000,
+        "connections": "재벌가 가족, 승마계 인맥, PB 박성호",
+        "current_objective": "200억으로 WTI 원유 선물 매수 포지션 진입",
+        "equipment": [
+          "2006년형 폴더폰",
+          "다크 그레이 슈트",
+          "고급 손목시계"
+        ],
+        "inventory_counts": {
+          "2006년형 폴더폰": 1,
+          "고급 손목시계": 1,
+          "다크 그레이 슈트": 1
+        },
+        "market_insight": "18년치 미래 경제사 (WTI 등)",
+        "reputation": "독립 선언 및 투자 사업 시작",
+        "status": "독립 선언 및 투자 사업 시작",
+        "stocks": [],
+        "total_assets": 20000000000,
+        "wealth": "200억 (투자 준비 중)"
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "inventory",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "promoted_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+            "promotion_sources": {
+              "capital": "actual_truth",
+              "total_assets": "actual_truth"
+            },
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "200억 원",
+      "director_score": 95,
+      "inventory": [
+        "2006년형 폴더폰",
+        "고급 손목시계",
+        "명품 의류"
+      ],
+      "location": "한시우의 방",
+      "protagonist_status": "가족으로부터 독립을 허락받고, 자본금 200억을 동원한 첫 투자를 실행할 준비를 마친 상태",
+      "timeline": {
+        "expression": "2006년 1월 17일 오전",
+        "표현": "2006년 1월 17일 오전"
+      }
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "inventory",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "promoted_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+          "promotion_sources": {
+            "capital": "actual_truth",
+            "total_assets": "actual_truth"
+          },
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "revision_required": true
+  },
+  "title": "제2화: 다른 대답"
+}

@@ -3412,6 +3412,34 @@ class TestRecordS4Attempt:
         assert payload["repair_trace"][0]["guard_result"]["status"] == "pass"
         assert payload["repair_trace"][0]["new_excerpt"] == "new venue"
 
+    def test_build_stage4_patch_advisory_payload_replaces_placeholder_patch_targets_with_trace_targets(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+
+        payload = ir._build_stage4_patch_advisory_payload(
+            director_result={
+                "fix_pack": {
+                    "patch_targets": ["N/A"],
+                    "must_fix": ["N/A"],
+                    "do_not_regress": ["N/A"],
+                    "success_condition": "N/A",
+                    "target_kind": "local_phrase",
+                }
+            },
+            patch_trace={
+                "patch_strategy": "inplace_patch",
+                "patch_target_records": [
+                    {
+                        "summary": "replace duplicated opening paragraph",
+                        "target_kind": "local_phrase",
+                    }
+                ],
+            },
+        )
+
+        assert payload["fix_pack"]["patch_targets"] == ["replace duplicated opening paragraph"]
+        assert payload["fix_pack"]["patch_target_records"][0]["summary"] == "replace duplicated opening paragraph"
+
     def test_log_session_decision_surfaces_authoritative_fix_scope_metadata(self):
         ctx = _make_ctx()
         ctx.session_logger = MagicMock()
@@ -3880,6 +3908,8 @@ class TestRecordS4Attempt:
         assert kw["is_patch"] is True
         assert kw["generation_method"] == "patch"
         assert kw["patch_strategy"] == "patch_with_feedback"
+        db_kw = ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert db_kw["patch_strategy"] == "patch_with_feedback"
 
     def test_record_s4_attempt_defaults_patch_strategy_for_patch_fallback(self):
         ctx = _make_ctx()
@@ -3902,6 +3932,32 @@ class TestRecordS4Attempt:
         assert kw["is_patch"] is True
         assert kw["generation_method"] == "ensemble"
         assert kw["patch_strategy"] == "patch_fallback_rewrite"
+        db_kw = ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert db_kw["patch_strategy"] == "patch_fallback_rewrite"
+
+    def test_record_s4_attempt_defaults_patch_strategy_for_advisory_patch_lineage(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir._record_s4_attempt(
+            episode=2,
+            round_num=1,
+            success=True,
+            score=96,
+            is_patch=False,
+            patch_fallback=False,
+            arc=1,
+            verdict="PASS",
+            advisory_flags={"partial_fix_eval": {"is_patch_attempt": True}},
+        )
+
+        kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["is_patch"] is False
+        assert kw["generation_method"] == "ensemble"
+        assert kw["patch_strategy"] == "patch_with_feedback"
+        db_kw = ctx.current_project.db.save_stage_attempt.call_args.kwargs
+        assert db_kw["patch_strategy"] == "patch_with_feedback"
 
     def test_patch_records_method_patch(self):
         ctx = _make_ctx()
@@ -5537,6 +5593,32 @@ class TestRecordS4Attempt:
     def test_build_positive_verdict_payload_records_attempt_and_trace_meta(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
+        ir._last_advisory_summary = {
+            "gate_semantics": {
+                "repair_contract": {
+                    "subtype": "timeline",
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                },
+                "scope_authority": {
+                    "fix_scope": "inplace",
+                    "repair_scope": "inplace",
+                    "authoritative_fix_scope": "inplace",
+                    "widened": False,
+                },
+            },
+            "repair_contract": {
+                "subtype": "timeline",
+                "fix_scope": "inplace",
+                "repair_scope": "inplace",
+            },
+            "scope_authority": {
+                "fix_scope": "inplace",
+                "repair_scope": "inplace",
+                "authoritative_fix_scope": "inplace",
+                "widened": False,
+            },
+        }
         ir._record_s4_attempt = MagicMock(return_value={"candidate_key": "stage4|A"})
         round_ctx = _make_round_ctx()
 
@@ -5580,6 +5662,8 @@ class TestRecordS4Attempt:
         assert record_kwargs["patch_strategy"] == "inplace_patch_structural"
         assert record_kwargs["structural_attempted"] is True
         assert record_kwargs["selection_reason"] == "best candidate"
+        assert record_kwargs["advisory_flags"]["repair_contract"]["subtype"] == "timeline"
+        assert record_kwargs["advisory_flags"]["gate_semantics"]["repair_contract"]["subtype"] == "timeline"
 
     def test_pass_with_fix_loop_logs_explicit_abort_when_feedback_missing(self):
         ctx = _make_ctx()
@@ -7619,6 +7703,7 @@ class TestLane2DirectorSemantics:
                     },
                     "fix_pack": {
                         "target_kind": "entity_ref",
+                        "subtype": "movement",
                         "patch_targets": ["opening_location_name"],
                     },
                 },
@@ -7646,6 +7731,7 @@ class TestLane2DirectorSemantics:
         assert len(payload_calls) == 1
         payload = json.loads(payload_calls[0]["payload"])
         assert payload["selection_summary"]["truth_gate"] == 1
+        assert payload["selection_summary"]["repair_contract"]["subtype"] == "movement"
         candidate_payload = payload["candidate_validation_payloads"][0]
         assert candidate_payload["candidate_label"] == "A"
         assert candidate_payload["truth_gate_warnings"][0]["severity"] == "CRITICAL"
@@ -7664,6 +7750,7 @@ class TestLane2DirectorSemantics:
         assert surface_payload["selection_reason"] == "best candidate"
         assert surface_payload["verdict_reason"] == "conflict"
         assert surface_payload["advisory_warnings"]["gate_semantics"]["gate_basis"] == "quality_floor_fail"
+        assert ir._last_advisory_summary["repair_contract"]["subtype"] == "movement"
 
     def test_build_director_decision_core_parts_injects_stage3_pov_and_writing_directive(self):
         ctx = _make_ctx()
@@ -8268,6 +8355,22 @@ class TestLane2DirectorSemantics:
             fix_scope="partial",
             advisory_warnings=ANY,
         )
+
+    def test_sync_reject_result_selection_rationale_skips_when_preserving_historical_companion(self):
+        ctx = _make_ctx()
+        ctx.current_project.db = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+
+        ir.reject_runtime._sync_reject_result_selection_rationale(
+            attempt_key="attempt-1",
+            trace_director_result={"fix_scope": "partial"},
+            director_result={"fix_scope": "full"},
+            selection_reason="selection",
+            verdict_reason="verdict",
+            preserve_historical_companion=True,
+        )
+
+        ctx.current_project.db.update_director_selection_rationale.assert_not_called()
 
     def test_build_reject_retry_snapshot_preserves_candidate_and_retry_metadata(self):
         ctx = _make_ctx()
@@ -9079,7 +9182,10 @@ class TestLane2DirectorSemantics:
                 "score_breakdown": {"consistency": 0},
             },
             candidate_key="A|balanced",
-            patch_trace=None,
+            patch_trace={
+                "patch_strategy": "patch_with_feedback",
+                "structural_attempted": True,
+            },
             previous_attempt={
                 "best_manuscript": "candidate manuscript",
                 "gate_basis": "post_select_conflict",
@@ -9123,6 +9229,8 @@ class TestLane2DirectorSemantics:
         assert kwargs["retry_directives"] == "retry directives"
         assert kwargs["error_category"] == "LOGIC_ERROR"
         assert kwargs["reject_bucket"] == "post_select_conflict"
+        assert kwargs["patch_strategy"] == "patch_with_feedback"
+        assert kwargs["structural_attempted"] is True
         assert kwargs["advisory_flags"]["gate_semantics"]["gate_basis"] == "post_select_conflict"
         assert kwargs["advisory_flags"]["gate_semantics"]["repair_scope"] == "full"
         assert (
