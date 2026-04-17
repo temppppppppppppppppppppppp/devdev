@@ -765,3 +765,37 @@ class TestIntegrationPrevalidate:
         # Should have no fact-lock related issues
         fl_issues = [i for i in result["issues"] if i["category"].startswith("fact_lock")]
         assert len(fl_issues) == 0
+
+
+def test_fact_lock_packet_suppresses_prev_opening_anchors_when_arc_opening_authority_exists():
+    result = BlueprintConstraintCompiler._build_fact_lock_packet(
+        prev_blueprint={
+            "end_location": "Prev Blueprint Room",
+            "time_flow": "January night",
+            "ending_hook": "phone rings in the lounge",
+            "protagonist_state": {"equipment": ["carryover-item"]},
+        },
+        prev_manuscript_ending="stale manuscript tail",
+        arc_data={
+            "ep_start": 11,
+            "cross_stage_authority_packet": {
+                "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                "opening_carryover": {
+                    "location": "Packet Hall",
+                    "location_source": "state_constraints.arc_end_state.location",
+                },
+                "protagonist_carryover": {},
+                "numeric_carryover": {},
+            },
+            "state_changes": {"timeline": {"start": {"description": "late February 2006"}}},
+            "state_constraints": {"arc_start_state": {"location": "Packet Hall"}},
+        },
+        ep_num=11,
+    )
+
+    facts = [anchor.get("fact", "") for anchor in result.get("anchors", []) if isinstance(anchor, dict)]
+
+    assert any("carryover-item" in fact for fact in facts)
+    assert not any("Prev Blueprint Room" in fact for fact in facts)
+    assert not any("January night" in fact for fact in facts)
+    assert not any("phone rings in the lounge" in fact for fact in facts)

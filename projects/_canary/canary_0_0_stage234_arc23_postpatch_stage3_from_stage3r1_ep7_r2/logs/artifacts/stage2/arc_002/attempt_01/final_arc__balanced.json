@@ -1,0 +1,338 @@
+{
+  "_director_compare_meta": {
+    "comparison_notes": "후보 1과 3은 joint_docs의 final_location과 physical_inventory가 누락되어 치명적인 오류가 있습니다. 반면 후보 2는 이전 Arc의 종료 상태를 완벽히 계승하고, joint_docs와 마지막 화 종료 상태가 정확히 일치하며, 블록 DNA의 핵심 사건(WTI 15억 베팅, 이란 핵 위기 적중)과 복선('에콰도르')을 훌륭하게 서사로 풀어냈습니다.",
+    "director_decision": "PASS",
+    "feedback": "전술서 내 논리적 모순이 없으며, 이전 아크와의 상태 연속성 및 수치적 정합성이 완벽하게 일치하므로 별도의 수정이 필요하지 않습니다.",
+    "fix_scope": "inplace",
+    "quality_gate_reasons": [],
+    "quality_gate_triggered": false,
+    "selection_reason": "조인트 문서와 상태 연속성이 완벽히 일치하며 DNA를 충실히 반영함"
+  },
+  "_ensemble_meta": {
+    "all_scores": [
+      [
+        "creative",
+        73
+      ],
+      [
+        "balanced",
+        70
+      ],
+      [
+        "conservative",
+        69
+      ]
+    ],
+    "best_score": 70,
+    "best_strategy": "balanced",
+    "candidate_index": 1,
+    "diversity": {
+      "high_similarity_pairs": [],
+      "max_similarity": 0.3,
+      "pairwise": [
+        {
+          "pair": "A-B",
+          "similarity": 0.25
+        },
+        {
+          "pair": "A-C",
+          "similarity": 0.27
+        },
+        {
+          "pair": "B-C",
+          "similarity": 0.3
+        }
+      ],
+      "warning": ""
+    },
+    "score": 70,
+    "strategy": "balanced",
+    "total_candidates": 3
+  },
+  "_strategy": "balanced",
+  "arc_drive": {
+    "active_villainy": {
+      "antagonist_identity": {
+        "primary": "형들 (한정호 회장의 장남, 차남 등)",
+        "secondary": "그룹 내 한시우를 견제하는 세력"
+      },
+      "impact_on_protagonist": "한시우는 자신의 독립적인 자산 증식이 그룹의 레이더망에 포착되고 있음을 직감하거나, 미묘한 압박을 느끼기 시작한다. 이는 그가 자신의 자산을 더욱 은밀하게 운용하고, 그룹의 추적을 따돌릴 '자산 방화벽' 구축의 필요성을 절감하게 만드는 계기가 된다.",
+      "reaction_plan": {
+        "details": [
+          "한시우의 한미증권 계좌에 대한 은밀한 정보 조회를 시도 (그룹 내 영향력을 이용)",
+          "한미증권 내부 인사를 통해 한시우의 투자 성향 및 자산 규모 파악 지시",
+          "한시우의 일상생활에 대한 비공식적인 감시 강화 (개인 비서, 운전기사 등을 통한 정보 취득)"
+        ],
+        "initial_phase": "정보 수집 및 감시 강화"
+      },
+      "trigger_event_for_reaction": "한시우의 독립적인 자산 증식 규모가 그룹의 감시망에 포착되거나, 그의 행동이 그룹의 이해관계와 미묘하게 충돌하기 시작할 때. (예: 한미증권 내 그의 VIP 등급이 너무 높아져 그룹 보고 라인에 노출될 위험이 생길 때)."
+    },
+    "arc_goal": "WTI 원유 선물 투자 성공을 통해 초기 자본을 획기적으로 증대하고, 한미증권 내에서 '초고위험/초고수익 VIP'를 넘어선 '통제 불가능한 큰 손'으로서의 입지를 확립하며, 다음 투자 기회(금/에콰도르)를 위한 발판을 마련한다.",
+    "core_scenes_focus": [
+      "WTI 원유 선물 포지션의 극적인 수익 실현 및 청산 과정",
+      "박성호 PB의 태도 변화와 한시우에 대한 충성 맹세 (혹은 그에 준하는 행동)",
+      "증대된 자본을 바탕으로 다음 투자 기회(금 시장 분석, 에콰도르 상황 점검)를 모색하는 한시우의 전략적 사고 과정",
+      "그룹 내 감시망을 더욱 효과적으로 회피하기 위한 시스템 구축의 시작"
+    ],
+    "immediate_reward": {
+      "description": "WTI 원유 선물 포지션의 성공적인 청산으로 최소 100% 이상의 수익률을 달성하여 초기 투자금 20억을 35억 이상으로 증대시킨다. 동시에 한미증권 VIP 전담 라인을 넘어선 '전담 팀' 수준의 지원과 정보를 확보하며, 박성호 PB를 완전히 자신의 통제 하에 두는 '충성스러운 조력자'로 만든다. 이는 향후 그룹의 감시망을 우회하고 필요한 정보를 얻는 핵심 통로가 될 것이다.",
+      "qualitative_target": [
+        "한미증권 내 '절대 VIP' 지위 확보",
+        "박성호 PB의 완전한 충성 확보",
+        "다음 투자(금/에콰도르)를 위한 정보 및 인프라 구축"
+      ],
+      "quantitative_target": {
+        "initial_capital": "20억",
+        "target_capital_after_arc": "35억 이상 (실현 수익)",
+        "target_profit_rate": "최소 100% 이상 (15억 투자금 기준)"
+      },
+      "type": "capital_gain_and_status_shift"
+    },
+    "mission_statement": "주인공의 결핍을 폭발적인 동력으로 바꾸는 '욕망 설계자'로서, 2006년 경제 이벤트와 붕괴장을 이용해 20억을 135조로 키우고, 형들의 몰락과 시장 광기를 통제권과 자산 방화벽으로 바꿔 자기 삶을 완전히 되찾는 서사를 구축한다.",
+    "narrative_arc_structure": [
+      "Block 2: WTI 원유 선물 포지션 진입 및 초기 수익 발생 (현재)",
+      "Block 3: 이란 핵 위기 심화 및 유가 급등, WTI 포지션의 폭발적 수익 실현 및 청산",
+      "Block 4: 박성호 PB의 완전한 충성 확보 및 한미증권 내 절대 VIP 지위 확립, 다음 투자(금/에콰도르) 준비 시작",
+      "Block 5: 그룹 내 한시우의 독립적인 움직임에 대한 감지 시작, 미묘한 견제와 정보 수집 시도"
+    ],
+    "protagonist_lack_evolution": {
+      "evolution_this_arc": {
+        "Authority": "PB 박성호의 태도 변화를 통해 '권위'의 싹을 틔운다. 무시당하던 위치에서 존중받는 투자자로 전환되며, 타인의 시선과 평가를 통제하기 시작한다.",
+        "Economy": "초기 자본의 유의미한 증대와 투자 역량 증명으로 '경제적 안정'을 향한 첫 번째 가시적 성과를 달성한다. 단순한 '안정'이 아닌, '성장 동력'으로서의 경제적 기반을 다진다."
+      },
+      "lack_summary": {
+        "Authority": "안정",
+        "Economy": "안정",
+        "Martial": "신체적 기능 저하"
+      }
+    },
+    "short_term_objective": "서사적 긴장감 고조",
+    "status": "LOCKED"
+  },
+  "arc_no": 2,
+  "beat_sequence": [
+    "제 7화: 스텔스 모드 가동 및 여의도 입성 → 가족의 무관심을 방패 삼아 본가를 빠져나와 전장으로 향함",
+    "제 8화: 한미증권 VIP룸 대면 → 박성호 PB의 채권 권유를 자르고 WTI 6월물 3배 레버리지 지시",
+    "제 9화: 탐욕의 계약 → 리스크를 경고하는 PB에게 수수료 두 배를 미끼로 던져 15억 원 포지션 진입 강행",
+    "제 10화: 통제실의 고독 → 본가 침실에서 가격 변동의 압박을 견디며 다음 타겟(에콰도르, 금)을 암시함",
+    "제 11화: 핵 농축 선언과 카타르시스 → 이란 발 뉴스로 유가 급등, 미실현 수익 3억 달성과 PB의 완전한 굴복"
+  ],
+  "constraint_summary": "█                   [V60.28] 절대 금지 - 위반 시 즉시 REJECT                    █\n│ 🚫 MUST NOT DO (절대 금지 - 위반 시 즉시 REJECT)                               │\n│   (획득 금지 아이템 없음)                                                     │\n│   (수여물 금지 목록 없음)                                                     │\n│ □ items_acquired에 금지 목록 아이템 없는가?                                     │\n|  [X] 획득 금지 - 이미 보유 중인 아이템:                        |\n|  [*] 이미 수여받은 권한/패 - 재수여 금지:                      |",
+  "cross_stage_authority_packet": {
+    "contract_version": "cross_stage_authority_packet.v1",
+    "numeric_carryover": {
+      "capital": "5억원",
+      "capital_source": "state_constraints.arc_end_state.capital",
+      "portfolio_position": "WTI 6월물 15억원 매수 (미실현 수익 3억원)",
+      "portfolio_position_source": "state_constraints.arc_end_state.portfolio_position",
+      "total_assets": "23억원",
+      "total_assets_source": "state_constraints.arc_end_state.total_assets"
+    },
+    "opening_carryover": {
+      "location": "서울 성북동 본가 침실",
+      "location_source": "state_constraints.arc_end_state.location",
+      "world_joint": "이란 핵 농축 재개 공식화로 인한 글로벌 에너지 시장의 공급 충격 발생, 한미증권 내 한시우 전용 VIP 주문 라인 활성화",
+      "world_joint_source": "joint_docs.world_joint"
+    },
+    "protagonist_carryover": {
+      "equipment": [
+        "구형 휴대폰",
+        "개인 수첩",
+        "SW인베스트먼트 설립 서류 가안",
+        "WTI 6월물 15억 원 매수 체결 확인서",
+        "한미증권 VIP 전용 다이렉트 라인 핫라인 전화기"
+      ],
+      "equipment_source": "state_constraints.arc_end_state.equipment",
+      "injuries": "없음",
+      "injuries_source": "state_constraints.arc_end_state.injuries"
+    },
+    "provenance": {
+      "arc_no": 2,
+      "emitted_by": "Stage2Finalizer",
+      "ep_end": 11,
+      "ep_start": 7,
+      "legacy_summary_surface": "advisory_flags.carryover_authority",
+      "legacy_text_surface": "[Carryover Authority Packet]",
+      "stage": 2
+    },
+    "source_precedence": {
+      "numeric_carryover": [
+        "state_constraints.arc_end_state.capital",
+        "state_constraints.arc_end_state.total_assets",
+        "state_constraints.arc_end_state.portfolio_position",
+        "state_constraints.investment_calc.final_cash",
+        "state_constraints.investment_calc.final_total_assets"
+      ],
+      "opening_carryover": [
+        "state_constraints.arc_end_state.location",
+        "joint_docs.final_location",
+        "joint_docs.world_joint"
+      ],
+      "protagonist_carryover": [
+        "state_constraints.arc_end_state.equipment",
+        "joint_docs.physical_inventory",
+        "state_constraints.arc_end_state.injuries",
+        "state_constraints.arc_end_state.internal_energy"
+      ]
+    }
+  },
+  "ep_count": 5,
+  "ep_end": 11,
+  "ep_start": 7,
+  "episode_details": [
+    {
+      "details": [
+        "성북동 본가에서 20억 자금 확인 및 외출 준비",
+        "가족들의 무관심 속 완벽한 스텔스 모드로 여의도 향발"
+      ],
+      "ep_num": 7
+    },
+    {
+      "details": [
+        "한미증권 VIP룸에서 박성호 PB와 대면",
+        "안전 자산을 권유하는 PB에게 WTI 6월물 3배 레버리지 매수 지시"
+      ],
+      "ep_num": 8
+    },
+    {
+      "details": [
+        "박성호의 만류와 한시우의 압박 교차",
+        "수수료 두 배 조건으로 15억 원 증거금 투입 및 포지션 진입 완료"
+      ],
+      "ep_num": 9
+    },
+    {
+      "details": [
+        "본가 침실에서 글로벌 뉴스 모니터링 및 마진콜 압박 견딤",
+        "다음 타겟인 금과 에콰도르 사태 복선 암시"
+      ],
+      "ep_num": 10
+    },
+    {
+      "details": [
+        "이란 핵 농축 재개 선언으로 WTI 가격 폭등",
+        "미실현 수익 3억 달성 및 박성호 PB의 태도 돌변, 전용 핫라인 개설"
+      ],
+      "ep_num": 11
+    }
+  ],
+  "global_arc_no": 2,
+  "hybrid_composition": {
+    "mixing_logic": "투자 베팅과 심리전 중심",
+    "primary": "투자물",
+    "secondary": [
+      "현대판타지",
+      "기업물"
+    ]
+  },
+  "joint_docs": {
+    "final_location": "서울 성북동 본가 침실",
+    "physical_inventory": [
+      "구형 휴대폰",
+      "개인 수첩",
+      "SW인베스트먼트 설립 서류 가안",
+      "WTI 6월물 15억 원 매수 체결 확인서",
+      "한미증권 VIP 전용 다이렉트 라인 핫라인 전화기"
+    ],
+    "world_joint": "이란 핵 농축 재개 공식화로 인한 글로벌 에너지 시장의 공급 충격 발생, 한미증권 내 한시우 전용 VIP 주문 라인 활성화"
+  },
+  "pacing_decision": {
+    "density_focus": "물리적 공간 이동은 적으나, VIP룸에서의 협상, 포지션 진입 후의 마진콜 리스크 견디기, 뉴스 발표 시점의 카타르시스 등 심리적 긴장감(Tension 8)을 극대화하는 데 집중함.",
+    "ep_count_reasoning": "단일 투자 이벤트(WTI 진입 및 수익 실현)를 다루지만, 15억이라는 거액의 레버리지 베팅이 주는 심리적 압박과 PB와의 기싸움을 밀도 있게 표현하기 위해 5화로 배정함.",
+    "pace_mode": "standard"
+  },
+  "rationale_digest": "",
+  "seed_injection": null,
+  "seeds": null,
+  "semantic_carryover": {},
+  "state_changes": {
+    "major_items": [
+      {
+        "action": "획득",
+        "episode": 9,
+        "name": "WTI 6월물 15억 원 매수 체결 확인서"
+      },
+      {
+        "action": "획득",
+        "episode": 11,
+        "name": "한미증권 VIP 전용 다이렉트 라인 핫라인 전화기"
+      }
+    ],
+    "npc_deaths": [],
+    "npc_introductions": [
+      {
+        "episode": 8,
+        "name": "박성호"
+      }
+    ],
+    "npc_martial_state_changes": [],
+    "relationship_changes": [
+      {
+        "episode": 11,
+        "from": "재벌가 도련님의 취미 투자로 얕봄",
+        "npc": "박성호",
+        "to": "의외로 과감한 베팅에 당혹, 큰 손일 수도 있다는 재평가 및 복종"
+      }
+    ],
+    "resolved_plots": [],
+    "skill_acquisitions": [],
+    "timeline": {
+      "end": {
+        "day": 28,
+        "description": "2006년 2월 말",
+        "month": 2,
+        "year": 2006
+      },
+      "start": {
+        "day": 1,
+        "description": "2006년 2월 초",
+        "month": 2,
+        "year": 2006
+      }
+    }
+  },
+  "state_constraints": {
+    "arc_end_state": {
+      "capital": "5억원",
+      "equipment": [
+        "구형 휴대폰",
+        "개인 수첩",
+        "SW인베스트먼트 설립 서류 가안",
+        "WTI 6월물 15억 원 매수 체결 확인서",
+        "한미증권 VIP 전용 다이렉트 라인 핫라인 전화기"
+      ],
+      "injuries": "없음",
+      "location": "서울 성북동 본가 침실",
+      "portfolio_position": "WTI 6월물 15억원 매수 (미실현 수익 3억원)",
+      "total_assets": "23억원"
+    },
+    "arc_start_state": {
+      "capital": "20억원",
+      "equipment": [],
+      "injuries": "없음",
+      "location": "서울 성북동 본가 침실",
+      "portfolio_position": "현금 20억원",
+      "total_assets": "20억원"
+    },
+    "distributed_items": [],
+    "items_acquired": [],
+    "items_consumed": [
+      "현금 15억원"
+    ],
+    "protagonist_items": [
+      "WTI 6월물 15억 원 매수 체결 확인서",
+      "한미증권 VIP 전용 다이렉트 라인 핫라인 전화기"
+    ]
+  },
+  "status_shadow": {
+    "expected_injuries": "없음",
+    "internal_energy_loss": "총 자본 20억 원 중 15억 원이 WTI 선물 증거금으로 묶임 (가용 유동성 5억 원으로 축소). 미실현 수익 +3억 원 발생.",
+    "item_consumption": [
+      "현금 15억원"
+    ],
+    "key_stat_change": "총 자본 20억 원 중 15억 원이 WTI 선물 증거금으로 묶임 (가용 유동성 5억 원으로 축소). 미실현 수익 +3억 원 발생."
+  },
+  "tactical_doc": "제 7화:\n[시작 상태] 위치: 서울 성북동 본가 침실, 소지품: [], 부상: 없음, 총자산: 20억원, 자본: 20억원, 포지션: 현금 20억원\n이전 시기 종료로부터 약 3주가 흐른 2006년 2월 초. 서울 성북동 본가의 아침은 여전히 그룹 후계 구도를 둘러싼 형들의 암투로 소란스러웠다. 그러나 한시우의 침실만큼은 폭풍의 눈처럼 고요했다. 아버지 한정호 회장에게 독립을 선언한 이후, 그를 향한 가문의 모든 견제와 감시망은 완벽하게 거두어졌다. 늙은 집사나 가사도우미조차 그를 '사업에 관심 없는 한량 도련님'으로 치부하며 시선을 거둔 상태였다. 시우는 책상 위에 놓인 개인 수첩을 펼쳤다. 그곳에는 정확히 20억 원이라는 숫자가 적혀 있었다. 과거의 굴레를 벗어던지고 확보한 순수한 실탄. 그는 SW인베스트먼트 설립 서류 가안을 서류 가방에 챙겨 넣고 자리에서 일어났다. 거실을 가로질러 현관을 나서는 동안 누구도 그의 행선지를 묻지 않았다. 완벽한 스텔스 모드. 시우의 입가에 서늘한 미소가 번졌다. 그가 향하는 곳은 자본주의의 최전선, 여의도였다.\n[종료 상태] 위치: 서울 여의도 증권가 거리 | 심리: 전투를 앞둔 고양감 | 부상: 없음 | 소지품: 구형 휴대폰, 개인 수첩, SW인베스트먼트 설립 서류 가안\n\n제 8화:\n[시작 상태] 위치: 서울 여의도 증권가 거리 | 심리: 전투를 앞둔 고양감 | 부상: 없음 | 소지품: 구형 휴대폰, 개인 수첩, SW인베스트먼트 설립 서류 가안\n여의도 한미증권 본점. 육중한 유리문을 밀고 들어선 시우는 곧장 VIP 전용 엘리베이터에 올랐다. 프라이빗 뱅킹 센터의 가장 깊숙한 곳에 위치한 VIP룸 문이 열리자, 담당 PB 박성호가 특유의 비즈니스 미소를 지으며 그를 맞이했다. 박성호의 머릿속에 한시우는 여전히 '재벌가 도련님의 취미 투자' 정도로 분류되어 있었다. 고급 커피가 세팅된 테이블에 마주 앉자마자, 박성호는 화려한 브로셔를 꺼내 들었다. \"고객님, 최근 시장 변동성이 커서요. 제가 특별히 추천드리는 안정적인 우량 채권형 펀드가 있습니다. 연 수익률이...\" 시우는 커피잔을 내려놓으며 단칼에 그의 말을 끊었다. \"원자재 트레이딩으로 시작할 겁니다.\" 박성호가 당황해 말을 멈추자, 시우가 서늘한 눈빛으로 모니터를 가리켰다. \"WTI 6월물. 3배 레버리지. 15억 넣어.\" 단호하고 건조한 명령. 박성호의 얼굴에서 비즈니스 미소가 순식간에 증발했다. \n[종료 상태] 위치: 서울 여의도 한미증권 VIP룸 | 심리: 상대를 압도하는 주도권 장악 | 부상: 없음 | 소지품: 구형 휴대폰, 개인 수첩, SW인베스트먼트 설립 서류 가안\n\n제 9화:\n[시작 상태] 위치: 서울 여의도 한미증권 VIP룸 | 심리: 상대를 압도하는 주도권 장악 | 부상: 없음 | 소지품: 구형 휴대폰, 개인 수첩, SW인베스트먼트 설립 서류 가안\n\"고, 고객님. 그건 너무 위험합니다.\" 박성호가 더듬거리며 만류했다. \"원유 선물은 변동성이 극심합니다. 게다가 3배 레버리지라니요. 5%만 역행해도 손절 라인에 도달하고, 자칫하면 15억 원의 증거금이 순식간에 녹아내립니다.\" 원론적인 리스크 경고. 그러나 시우는 흔들림이 없었다. 원유는 수요가 아니라 공급이 움직인다. 이란이 핵 농축을 재개하면 미국이 제재를 걸고, 일일 250만 배럴의 대체재 없는 물량이 시장에서 증발한다. 가격 폭등은 정해진 미래였다. \"내 돈이야. 틀리면 내가 책임져.\" 시우가 몸을 앞으로 숙이며 박성호의 눈을 똑바로 응시했다. \"맞으면, 수수료 두 배 줄게. 당장 처리해.\" 돈 앞에서 원칙은 무너진다. 막대한 수수료의 유혹과 시우의 압도적인 기세에 눌린 박성호는 결국 마른침을 삼키며 주문 창을 열었다. 타닥거리는 키보드 소리와 함께 15억 원의 현금이 WTI 6월물 3배 레버리지 롱 포지션 증거금으로 전환되었다. 시우는 체결 확인서를 받아 들고 자리에서 일어났다. 주사위는 던져졌다.\n[종료 상태] 위치: 서울 여의도 한미증권 VIP룸 | 심리: 첫 베팅 완료에 따른 냉철함 유지 | 부상: 없음 | 소지품: 구형 휴대폰, 개인 수첩, SW인베스트먼트 설립 서류 가안, WTI 6월물 15억 원 매수 체결 확인서\n\n제 10화:\n[시작 상태] 위치: 서울 여의도 한미증권 VIP룸 | 심리: 첫 베팅 완료에 따른 냉철함 유지 | 부상: 없음 | 소지품: 구형 휴대폰, 개인 수첩, SW인베스트먼트 설립 서류 가안, WTI 6월물 15억 원 매수 체결 확인서\n며칠 뒤, 서울 성북동 본가 침실. 시우의 방은 이제 SW인베스트먼트의 임시 통제실이나 다름없었다. 책상 위 노트북 화면에는 글로벌 경제 뉴스와 WTI 실시간 차트가 번갈아 떠올랐다. 유가는 배럴당 60달러 선에서 미세하게 등락을 반복하고 있었다. 레버리지 상품 특성상 약간의 하락에도 수천만 원의 평가 손실이 발생했고, 박성호 PB는 하루가 멀다 하고 전화를 걸어와 불안감을 내비쳤다. \"고객님, 지금이라도 포지션을 일부 정리하시는 게...\" 시우는 무미건조한 목소리로 대답했다. \"가만히 두세요.\" 전화를 끊은 시우는 수첩을 펼쳐 다음 페이지를 바라보았다. 그의 시선은 이미 원유 너머를 향해 있었다. \"금도 간다... 그리고 에콰도르.\" 그는 나지막이 중얼거렸다. 이란 발 충격이 가시화되기 전, 고독한 기다림의 시간. 15억 원이라는 거액이 묶여 있음에도 시우의 심박수는 평온했다. 그는 이미 결과를 알고 있는 자의 여유를 즐기며, 다가올 폭발의 순간을 기다렸다.\n[종료 상태] 위치: 서울 성북동 본가 침실 | 심리: 확신에 찬 인내 | 부상: 없음 | 소지품: 구형 휴대폰, 개인 수첩, SW인베스트먼트 설립 서류 가안, WTI 6월물 15억 원 매수 체결 확인서\n\n제 11화:\n[시작 상태] 위치: 서울 성북동 본가 침실 | 심리: 확신에 찬 인내 | 부상: 없음 | 소지품: 구형 휴대폰, 개인 수첩, SW인베스트먼트 설립 서류 가안, WTI 6월물 15억 원 매수 체결 확인서\n2월 말, 마침내 방아쇠가 당겨졌다. '이란, 핵 농축 재개 공식 선언.' 글로벌 뉴스 속보가 화면을 뒤덮는 순간, 차트 위의 붉은 기둥이 미친 듯이 솟구치기 시작했다. 배럴당 60달러였던 WTI는 순식간에 64달러를 돌파했다. 3배 레버리지의 마법이 발동했다. 원유 가격의 상승분은 증거금 15억 원을 바탕으로 폭발적인 수익을 창출해냈다. 미실현 수익 +3억 원. 총 평가액 18억 원. 시우의 휴대폰이 요란하게 울렸다. 화면에 뜬 이름은 박성호. 전화를 받자마자 흥분으로 떨리는 목소리가 들려왔다. \"고, 고객님! 대단하십니다! 정확히 맞추셨습니다!\" 취미 투자를 깔보던 오만함은 온데간데없고, 경외감에 찬 복종만이 남아 있었다. 시우는 차분하게 대답했다. \"수수료 약속은 지킵니다. 대신, 내 주문만 다이렉트로 처리할 전용 핫라인 개설하세요.\" 그날 오후, 시우의 침실 책상 위에는 한미증권 VIP 전용 다이렉트 라인 전화기가 설치되었다. 그룹의 감시망을 벗어난 첫 번째 독립적인 승리이자, 거대한 부의 제국을 향한 첫 번째 주춧돌이 완벽하게 놓이는 순간이었다.\n[종료 상태] 위치: 서울 성북동 본가 침실 | 심리: 첫 승리의 카타르시스와 다음 계획을 향한 투지 | 부상: 없음 | 소지품: 구형 휴대폰, 개인 수첩, SW인베스트먼트 설립 서류 가안, WTI 6월물 15억 원 매수 체결 확인서, 한미증권 VIP 전용 다이렉트 라인 핫라인 전화기",
+  "title": "검은 황금",
+  "volume_no": 0
+}

@@ -1,0 +1,211 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "a4b758c9cb729c59bb1d9c5733a1a9f2ab2bc5e9364a012a64c3b392a3516cf2"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1277,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 10697,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": true,
+        "raw_chars": 10697
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 24351,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 975649,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 20793,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 3110,
+          "lane": "constraints"
+        },
+        {
+          "chars": 289,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 149,
+        "constraints": 3110,
+        "feedback_context": 289,
+        "hud_context": 10,
+        "prev_info": 20793
+      },
+      "shared_context_chars": 24062,
+      "total_chars": 24351
+    },
+    "python_warnings": [
+      {
+        "category": "continuity",
+        "focus": "위치 이동 경위를 설명하거나 시작 위치 수정",
+        "message": "위치 불연속: 강남 비즈니스 호텔 스위트룸 → 서울 성북동 본가 침실",
+        "severity": "MAJOR",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 1
+  },
+  "_inventory_gaps": [
+    {
+      "item": "구형 휴대폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "빈 노트와 펜",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "SW인베스트먼트 설립 서류 가안",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 92,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "revision_required": false
+  },
+  "core_tension": "가족의 감시를 뚫고 20억의 자본과 함께 여의도라는 전장에 진입하는 과정",
+  "end_location": "여의도 증권가 이면도로",
+  "ending_hook": "날카로운 금속 마찰음과 함께, 거대한 철제 바리케이드가 굉음을 내며 시우의 머리 위로 쏟아져 내렸다.",
+  "ending_state": {
+    "location": "여의도 증권가 이면도로",
+    "protagonist_status": "폭주하는 군중과 무너지는 바리케이드에 휩쓸려 반사적으로 회피 동작을 취한 상태",
+    "timeline": {
+      "표현": "2006년 2월 초 오전"
+    }
+  },
+  "ep_num": 7,
+  "episode_number": 7,
+  "expected_ending": "여의도에 입성하자마자 예기치 못한 물리적 충돌에 휘말림",
+  "integrated_scenario": "2006년 2월 초, 서울 성북동 본가 침실. 한시우는 구형 휴대폰의 액정을 뚫어지게 응시했다. 화면에 선명하게 찍힌 숫자는 정확히 20억 원. 박성호 PB를 심리적으로 굴복시켜 유동화한 자금이 가문의 추적이 불가능한 차명 계좌로 무사히 안착한 것을 확인하는 순간이었다. 그는 서랍 깊숙한 곳에서 빈 노트와 펜, 그리고 며칠 밤을 새워 완성한 SW인베스트먼트 설립 서류 가안을 꺼내 코트 안주머니에 갈무리했다. 이제 이 좁고 답답한 방을 벗어나 거대한 자본의 전쟁터로 향할 시간이었다. 거울 앞을 지나치며 그는 유약하고 철없는 막내아들의 가면을 다시 한번 견고하게 뒤집어썼다.\n\n방문을 열고 1층으로 내려가자, 넓은 식당에는 큰형 한태준과 아버지 한정호 회장이 자리하고 있었다. 시우가 가벼운 발걸음으로 다가가자, 계열사 구조조정을 논의하던 두 사람의 시선이 싸늘하게 식었다. 한태준은 노골적인 경멸을 담아 혀를 찼고, 한정호는 아예 시선을 거두어버렸다. 시우는 그들의 무관심과 냉대를 기꺼이 받아내며, 철없는 미소를 지은 채 아침 인사만을 남기고 저택의 현관을 나섰다. 등 뒤로 꽂히는 한심하다는 듯한 시선들이 오히려 그의 등줄기에 짜릿한 해방감을 선사했다. 완벽한 스텔스 모드의 시작이었다.\n\n대기 중이던 가문의 검은색 세단에 올라탄 시우는 운전기사에게 강남의 쇼핑몰로 향할 것을 지시했다. 하지만 그의 진짜 목적지는 달랐다. 백화점 지하 주차장에 차가 멈추자마자, 시우는 기사에게 대기를 명하고 인파 속으로 빠르게 섞여 들었다. 복잡한 매장 동선을 활용해 기사의 시야에서 완전히 벗어난 그는, 직원용 비상계단과 하역장 통로를 거침없이 가로질렀다. 망설임 없는 그의 발걸음은 가문의 얕은 감시망을 완벽하게 농락하고 있었다. 하역장을 빠져나와 낡은 택시에 올라탄 시우의 입가에 차가운 미소가 번졌다. 진짜 목적지인 여의도를 향해 차가 매끄럽게 출발했다.\n\n오전 10시, 택시가 여의도 증권가 이면도로에 진입하는 순간 공기가 달라졌다. 거대한 빌딩 숲 사이로 매서운 빌딩풍이 몰아쳤다. 차에서 내린 시우가 옷깃을 여미며 걸음을 내딛으려는 찰나, 도로 한복판에서 굉음이 터져 나왔다. 특정 기업의 상장 폐지에 분노한 수백 명의 소액 주주 시위대가 경찰의 저지선을 뚫고 맹렬하게 돌진하고 있었다. 걷잡을 수 없는 인파의 해일이 시우가 서 있는 인도 쪽으로 밀려들었고, 흥분한 군중의 압력에 떠밀린 거대한 철제 바리케이드가 비틀거리기 시작했다. 날카로운 금속 마찰음과 함께 바리케이드가 시우의 머리 위를 향해 무너져 내리는 순간, 그의 몸이 반사적으로 아스팔트 바닥을 향해 몸을 던졌다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "location_shift"
+    ],
+    "type": "jump_opening"
+  },
+  "pacing_notes": "초반부는 내밀한 준비와 심리전에 집중하며 텐션을 서서히 끌어올리고, 중반부 탈출 씬에서 속도감을 더한 뒤, 결말부에서 급격한 물리적 위기를 던져 역동적인 템포를 완성한다.",
+  "protagonist_state": {
+    "equipment": [
+      "구형 휴대폰",
+      "빈 노트와 펜",
+      "SW인베스트먼트 설립 서류 가안"
+    ],
+    "injuries": "없음",
+    "mood": "차가운 확신과 고도의 집중 상태"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "경계",
+      "justification": "시우가 철없는 외출을 감행하는 모습을 보며 그를 완벽한 위협 외 존재로 확신함",
+      "target": "한태준",
+      "to_state": "완전한 무시와 방심"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "초기 자금 확인 및 외출 준비",
+      "key_events": [
+        "한시우가 구형 휴대폰 액정에 찍힌 20억 원의 이체 내역을 확인하고 차가운 미소를 짓는다.",
+        "빈 노트와 펜, SW인베스트먼트 설립 서류 가안을 코트 안주머니에 깊숙이 챙겨 넣는다.",
+        "거울 앞에서 철없고 유약한 막내아들의 표정을 연습하며 완벽한 연기를 준비한다."
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "성북동 본가 침실에서 20억 원의 자금을 확인하고 서류를 챙긴다.",
+      "tension_level": 5,
+      "title": "20억의 실탄",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "한태준",
+        "한정호"
+      ],
+      "content": "",
+      "goal": "가족들의 의심을 피하며 저택을 빠져나간다.",
+      "key_events": [
+        "1층 식당을 지나치던 시우가 사업 얘기를 나누던 한정호와 한태준에게 가볍게 아침 인사를 건넨다.",
+        "한태준이 한심하다는 듯 혀를 차고, 한정호는 시선조차 주지 않은 채 대화를 이어간다.",
+        "시우가 그들의 노골적인 무관심에 안도하며 콧노래를 부르는 척 저택 현관을 나선다."
+      ],
+      "location": "서울 성북동 본가 1층",
+      "summary": "1층에서 마주친 가족들의 냉대와 무관심을 역이용해 외출한다.",
+      "tension_level": 6,
+      "title": "투명 인간",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "운전기사"
+      ],
+      "content": "",
+      "goal": "가문의 얕은 감시망을 따돌리고 완벽한 독립 동선을 확보한다.",
+      "key_events": [
+        "가문의 세단을 타고 강남 백화점에 도착한 시우가 운전기사에게 주차장 대기를 지시한다.",
+        "매장 안으로 들어서자마자 빠른 걸음으로 비상계단과 직원용 하역장 통로를 거침없이 가로지른다.",
+        "기사의 시야에서 완전히 벗어난 뒤, 하역장 뒷골목에서 대기 중이던 일반 택시에 올라타 여의도를 목적지로 외친다."
+      ],
+      "location": "강남 백화점 ~ 이동 중인 택시",
+      "summary": "백화점 인파와 복잡한 동선을 활용해 운전기사를 따돌리고 여의도로 향한다.",
+      "tension_level": 7,
+      "title": "추적 단절",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "시위대"
+      ],
+      "content": "",
+      "goal": "여의도 입성과 동시에 벌어진 돌발 위기 모면",
+      "key_events": [
+        "택시에서 내려 여의도 증권가 이면도로에 발을 내딛는 순간, 상장 폐지에 분노한 거대한 시위대가 경찰 저지선을 뚫고 밀려온다.",
+        "흥분한 군중의 거센 압력에 떠밀려 시우가 서 있던 인도 쪽의 철제 바리케이드가 중심을 잃는다.",
+        "날카로운 금속 마찰음과 함께 거대한 바리케이드가 시우의 머리 위로 쏟아져 내린다."
+      ],
+      "location": "여의도 증권가 이면도로",
+      "summary": "여의도에 도착하자마자 거친 시위대와 충돌하며 물리적 위기를 맞는다.",
+      "tension_level": 9,
+      "title": "아스팔트의 정글",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 침실",
+  "target_beat": "은밀한 탈주와 예기치 못한 충돌",
+  "time_flow": "아침 → 오전",
+  "title": "스텔스 모드"
+}

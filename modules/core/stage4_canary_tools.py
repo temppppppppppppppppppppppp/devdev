@@ -143,9 +143,7 @@ def build_stage3_canary_summary(project_root: str | Path, *, target_ep: int | No
         ).fetchall()
         latest_session_id = latest_session_id_from_rows(stage3_attempt_rows)
 
-        blueprint_rows = db.conn.execute(
-            "SELECT ep_num FROM blueprints ORDER BY ep_num ASC"
-        ).fetchall()
+        blueprint_rows = db.conn.execute("SELECT ep_num FROM blueprints ORDER BY ep_num ASC").fetchall()
 
         analyzer = FailureAnalyzer(db, project_path=root)
         sink_alignment_summary = analyzer.sink_alignment_summary(
@@ -195,22 +193,26 @@ def _build_stage3_attempt_detail(rows) -> list[dict]:
     episodes: dict[int, list[dict]] = {}
     for row in rows:
         ep = int(row["ep_num"] or 0)
-        episodes.setdefault(ep, []).append({
-            "attempt_num": int(row["attempt_num"] or 0),
-            "verdict": str(row["verdict"] or "").strip(),
-            "score": row["score"],
-        })
+        episodes.setdefault(ep, []).append(
+            {
+                "attempt_num": int(row["attempt_num"] or 0),
+                "verdict": str(row["verdict"] or "").strip(),
+                "score": row["score"],
+            }
+        )
     result = []
     for ep in sorted(episodes):
         attempts = episodes[ep]
         final = attempts[-1]
-        result.append({
-            "ep_num": ep,
-            "attempt_count": len(attempts),
-            "final_verdict": final["verdict"],
-            "final_score": final["score"],
-            "all_verdicts": [a["verdict"] for a in attempts],
-        })
+        result.append(
+            {
+                "ep_num": ep,
+                "attempt_count": len(attempts),
+                "final_verdict": final["verdict"],
+                "final_score": final["score"],
+                "all_verdicts": [a["verdict"] for a in attempts],
+            }
+        )
     return result
 
 
@@ -331,9 +333,9 @@ def _collect_stage3_cleanup_impact(db: DBManager, *, from_ep: int) -> dict[str, 
         cur.execute("SELECT COUNT(*) AS c FROM blueprints WHERE ep_num >= ?", (from_ep,)).fetchone()["c"]
     )
     impact["stage3_attempts"] = int(
-        cur.execute(
-            "SELECT COUNT(*) AS c FROM stage_attempts WHERE stage = 3 AND ep_num >= ?", (from_ep,)
-        ).fetchone()["c"]
+        cur.execute("SELECT COUNT(*) AS c FROM stage_attempts WHERE stage = 3 AND ep_num >= ?", (from_ep,)).fetchone()[
+            "c"
+        ]
     )
     impact["stage3_director_selections"] = int(
         cur.execute(
@@ -353,8 +355,7 @@ def _delete_stage3_db_outputs(db: DBManager, *, from_ep: int) -> None:
     try:
         cur.execute("DELETE FROM blueprints WHERE ep_num >= ?", (from_ep,))
         cur.execute(
-            "DELETE FROM director_selections WHERE ep_num >= ? AND "
-            + DBManager._director_stage_predicate(3),
+            "DELETE FROM director_selections WHERE ep_num >= ? AND " + DBManager._director_stage_predicate(3),
             (from_ep,),
         )
         cur.execute("DELETE FROM stage_attempts WHERE stage = 3 AND ep_num >= ?", (from_ep,))
@@ -526,7 +527,12 @@ def reset_stage34_outputs(project_root: str | Path, *, from_ep: int = 1) -> dict
     }
 
 
-def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | None = None) -> dict:
+def build_stage4_canary_summary(
+    project_root: str | Path,
+    *,
+    target_ep: int | None = None,
+    required_draft_eps: list[int] | tuple[int, ...] | set[int] | None = None,
+) -> dict:
     """Summarize a prepared or completed Stage 4 canary project."""
     root = Path(project_root)
     db_path = root / "project_data.db"
@@ -580,12 +586,11 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
     canary_prep = _read_json(root / "logs" / "canary_prep.json")
     runtime_summary = _read_json(root / "logs" / "runtime_audit_summary.json")
     draft_files = sorted(root.glob("drafts/ep_*.txt"))
+    draft_eps = sorted(_extract_ep_num(path.name) for path in draft_files if _extract_ep_num(path.name) is not None)
     pass_rate_monitor_exists = (root / "logs" / "pass_rate_monitor.json").exists()
     canary_scope = str(canary_prep.get("canary_scope", "") or "").strip().lower()
     hard_gate_sink_alignment_scope = (
-        "current_session"
-        if canary_scope == "stage4_only" and current_session_sink_alignment_summary
-        else "run_wide"
+        "current_session" if canary_scope == "stage4_only" and current_session_sink_alignment_summary else "run_wide"
     )
     hard_gate_sink_alignment_summary = (
         current_session_sink_alignment_summary
@@ -601,6 +606,8 @@ def build_stage4_canary_summary(project_root: str | Path, *, target_ep: int | No
     hard_gates = _evaluate_stage4_canary_gates(
         target_ep=target_ep,
         draft_count=len(draft_files),
+        draft_eps=draft_eps,
+        required_draft_eps=required_draft_eps,
         runtime_summary=runtime_summary,
         pass_rate_monitor_exists=pass_rate_monitor_exists,
         patch_trace_summary=patch_trace_summary,
@@ -679,15 +686,10 @@ def _build_stage4_gate_repair_surface_summary(
         scope_authority_widened = scope_authority.get("widened", False)
 
     mismatch_source = (
-        current_session_sink_alignment_summary
-        if current_session_sink_alignment_summary
-        else sink_alignment_summary
+        current_session_sink_alignment_summary if current_session_sink_alignment_summary else sink_alignment_summary
     )
     mismatch_scope = "current_session" if current_session_sink_alignment_summary else "run_wide"
-    mismatch_counts = {
-        field: len(mismatch_source.get(field) or [])
-        for field in _GATE_REPAIR_MISMATCH_FIELDS
-    }
+    mismatch_counts = {field: len(mismatch_source.get(field) or []) for field in _GATE_REPAIR_MISMATCH_FIELDS}
     has_gate_surface = bool(
         gate_repair_summary
         or repair_contract
@@ -899,7 +901,9 @@ def _build_stage4_canary_proof_scope_summary(
             else "stage4_live_canary_with_stage3_sink_probe"
         ),
         "backend_wide_proof": False,
-        "scope_status": "stage4_only" if stage4_only_canary else ("partial_multi_stage_probe" if stage3_observed else "stage4_only"),
+        "scope_status": "stage4_only"
+        if stage4_only_canary
+        else ("partial_multi_stage_probe" if stage3_observed else "stage4_only"),
         "stage4_live_context_regression": "covered",
         "stage4_sink_alignment_status": _summary_status(stage4_sink_alignment_summary, default="missing"),
         "stage3_sink_probe_status": _summary_status(stage3_sink_alignment_summary, default="missing"),
@@ -1199,7 +1203,8 @@ def _collect_actual_world_state_minimums(world_state: dict) -> dict:
         for name, info in (world_state.get("active_items") or {}).items()
         if isinstance(info, dict)
         and str(name).strip()
-        and str(info.get("status", "보유") or "보유").strip() not in {"소실", "파괴", "소모", "lost", "consumed", "destroyed"}
+        and str(info.get("status", "보유") or "보유").strip()
+        not in {"소실", "파괴", "소모", "lost", "consumed", "destroyed"}
     )
     relationships = {
         str(name).strip(): str(value).strip()
@@ -1266,11 +1271,7 @@ def _validate_truth_store_reset(db: DBManager, *, from_ep: int) -> dict:
         for name, expected_relation in expected_minimums["relationships"].items()
         if actual_minimums["relationships"].get(name, "") != expected_relation
     ]
-    minimum_truth_ok = (
-        not missing_minimum_npcs
-        and not missing_minimum_active_items
-        and not relationship_mismatches
-    )
+    minimum_truth_ok = not missing_minimum_npcs and not missing_minimum_active_items and not relationship_mismatches
     return {
         "status": "ok" if cleanup_ok and minimum_truth_ok else "fail",
         "cleanup_status": "ok" if cleanup_ok else "fail",
@@ -1310,7 +1311,8 @@ def _collect_stage34_cleanup_impact(db: DBManager, *, from_ep: int) -> dict[str,
     )
     impact["stage3_director_selections"] = int(
         cur.execute(
-            "SELECT COUNT(*) AS c FROM director_selections WHERE ep_num >= ? AND " + DBManager._director_stage_predicate(3),
+            "SELECT COUNT(*) AS c FROM director_selections WHERE ep_num >= ? AND "
+            + DBManager._director_stage_predicate(3),
             (from_ep,),
         ).fetchone()["c"]
     )
@@ -1462,6 +1464,8 @@ def _evaluate_stage4_canary_gates(
     *,
     target_ep: int | None,
     draft_count: int,
+    draft_eps: list[int] | None = None,
+    required_draft_eps: list[int] | tuple[int, ...] | set[int] | None = None,
     runtime_summary: dict,
     pass_rate_monitor_exists: bool,
     patch_trace_summary: dict,
@@ -1475,8 +1479,14 @@ def _evaluate_stage4_canary_gates(
     warnings: list[str] = []
     runtime_tag = str((runtime_summary or {}).get("tag", "") or "")
     runtime_total_events = int((runtime_summary or {}).get("total_events", 0) or 0)
+    normalized_draft_eps = sorted({int(ep) for ep in (draft_eps or []) if int(ep) > 0})
+    normalized_required_draft_eps = sorted({int(ep) for ep in (required_draft_eps or []) if int(ep) > 0})
 
-    if target_ep is not None and draft_count != int(target_ep):
+    if normalized_required_draft_eps:
+        missing_required_drafts = [ep for ep in normalized_required_draft_eps if ep not in normalized_draft_eps]
+        if missing_required_drafts:
+            errors.append(f"required_draft_missing:{missing_required_drafts}")
+    elif target_ep is not None and draft_count != int(target_ep):
         errors.append(f"draft_count_mismatch:{draft_count}!={int(target_ep)}")
     if runtime_tag and runtime_tag != "stage4_complete":
         errors.append(f"runtime_tag_not_complete:{runtime_tag}")

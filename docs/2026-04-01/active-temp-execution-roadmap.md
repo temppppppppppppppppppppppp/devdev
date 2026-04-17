@@ -1,13 +1,63 @@
 # Active Temp Execution Roadmap
 
 Date: 2026-04-01
-Status: active (3-pass re-audited 2026-04-16 against merged `main`; the latest bounded Stage234 closure anchor still points at the `r12` Stage4 current-session closure, so the lane no longer has an open pre-rerun code tranche and one bounded Stage4 current-session proof is recorded, while broader Stage3 / Stage234 runtime remains operator-gated rather than auto-presented. The current-head bounded Stage3 debt survey still records a conservative predictive contract-debt resolution estimate of `93%`. Older `ep9 continuation` and proof-rerun wording below remains historical queue state unless explicitly re-authorized.)
+Status: active (3-pass re-audited 2026-04-17 against the user-requested merged branch head; the latest bounded Stage234 closure anchor still points at the `r12` Stage4 current-session closure, the later Arc2/3 post-patch proof chain still records `Stage2 proof green / exact-lineage Stage3 proof green`, and the newest Stage34 single-episode demo follow-up now narrows the remaining blocker further into a frontier/source-contract mismatch after the partial `stage34_ep7_r3` attempt and the fail-fast demo guard landed. Broader Stage3 / Stage234 runtime still remains operator-gated rather than auto-presented. Older `ep9 continuation` and proof-rerun wording below remains historical queue state unless explicitly re-authorized.)
 Canonical Path: `docs/2026-04-01/active-temp-execution-roadmap.md`
 Temp Mirror Path: `docs/temp/execution-roadmap.md`
 Baseline Commit: `dfb44351bc41de1243e0def0bfbcb7336bc93388`
 Baseline Dirty Summary: `dirty: scene-flex closure edits plus unrelated stage0/material work already present in worktree`
-Resume Commit: `eb5460ac9797cdb097bf5050ec902f6436f796fc`
-Resume Drift Summary: `merged-main revalidation now includes the full bounded Stage234 chain plus the later medium authority-drift closure, the later hostile-audit contract-drift closure, the later runtime-authority-drift sibling closure, the later 2026-04-16 r12 current-session closure anchor, the compact same-day Stage3 no-reopen re-audit, and the merged-main adversarial drift refresh: both lanes still record no additional pre-rerun/pre-proof code tranche on current main, the latest bounded Stage234 closure anchor still points at one Stage4 current-session proof, the latest bounded Stage3 current-head anchor still confirms no reopen after that Stage234 wave, and older pre-merge current-head SHAs below are now provenance-only rather than the literal merged-head anchor`
+Resume Commit: `6325ad427afd75c73abc37b32b29ec217ffe2f9a`
+Resume Drift Summary: `branch-head revalidation now additionally includes the partial `stage34_ep7_r3` follow-up and the new Stage34 demo fail-fast guard on the user-requested branch head: the lane still records no new Stage2 pre-proof code tranche, the Arc2/3 Stage2 proof anchor remains green, the formerly bounded Stage3 opening residual now has exact-lineage PASS proof, and the remaining blocker is no longer interpreted as only `frozen_authority_draft_missing:ep6` but as the broader Stage34 single-episode demo frontier/source-contract mismatch for `ep7` on this lineage`
+2026-04-17 Arc2/3 Stage34 single-episode demo frontier override:
+
+- Local audit HEAD: `6325ad427afd75c73abc37b32b29ec217ffe2f9a`
+- authoritative docs:
+  - `docs/2026-04-16/0_0-stage234-arc23-post-patch-rerun-proof-execution-ssot.md`
+  - `docs/2026-04-17/stage234-arc23-stage34-single-episode-demo-frontier-context.md`
+- merged conclusions:
+  - the Stage34 demo utility now supports sparse-target analysis and can downgrade exact frozen-authority absence to warning when earlier authority history exists
+  - the fresh partial `stage34_ep7_r3` run proves that this source lineage still starts Stage4 at `ep3`, so the current runtime contract is sequential catch-up to `ep7`, not an `ep7`-only proof surface
+  - the demo runner now fails fast if `start_ep != target_ep`, preventing another long-running partial replay on a non-aligned source
+- current next action is now:
+  1. keep this Arc2/3 proof lane bounded and `partially realized`, not closed
+  2. do not reuse the partial `stage34_ep7_r3` canary as the next clean replay target
+  3. before any new downstream Stage34 replay, choose either frontier-aligned source preparation or a deeper sparse-Stage4 runner revision
+- historical-read note:
+  - if lower 2026-04-16 wording still describes the blocker only as `frozen_authority_draft_missing:ep6`, this higher block wins because the stronger frontier/source-contract mismatch is now directly evidenced
+
+2026-04-16 Arc2/3 exact failed-lineage Stage3 follow-up override:
+
+- Local audit HEAD: `6325ad427afd75c73abc37b32b29ec217ffe2f9a`
+- authoritative docs:
+  - `docs/2026-04-16/0_0-stage234-arc23-post-patch-rerun-proof-execution-ssot.md`
+  - `docs/2026-04-16/stage234-arc23-post-patch-rerun-proof-post-run-merge-audit.md`
+- merged conclusions:
+  - the exact failed-lineage Stage3 rerun now passes `ep7` after the bounded prompt-side suppression of stale previous-opening immutable fact-lock anchors on authoritative arc openings
+  - the earlier Stage3 `arc_timeline` / `opening_transition` residual is cleared in bounded scope rather than remaining the active next owner
+  - the remaining open blocker for closure-grade downstream replay is `frozen_authority_draft_missing:ep6` in the single-episode Stage34 demo utility
+- current next action is now:
+  1. keep this Arc2/3 proof lane bounded and `partially realized`, not closed
+  2. do not route the immediate next action back into the Stage3 opening-transition lane from this proof alone
+  3. only attempt another downstream Stage34 replay after the frozen-authority source-contract blocker is resolved or the utility contract is explicitly revised
+- historical-read note:
+  - if the lower 2026-04-16 post-run merge block still routes the next action into the Stage3 opening-transition lane, this higher block wins
+
+2026-04-16 Arc2/3 post-patch post-run merge override:
+
+- Local audit HEAD: `6325ad427afd75c73abc37b32b29ec217ffe2f9a`
+- authoritative post-run merge audit:
+  - `docs/2026-04-16/stage234-arc23-post-patch-rerun-proof-post-run-merge-audit.md`
+- merged conclusions:
+  - the earlier Arc2/3 Stage2 post-patch rerun proof remains green in bounded scope
+  - the clean `r2` downstream consume replay fails at Stage3 `ep7` on `arc_timeline` plus `opening_transition` before any new Stage4 `ep7` artifact is persisted
+  - the Stage34 single-episode demo utility remains structurally partial for this `ep7` lane because the source lineage still lacks frozen-authority draft `ep6`
+- current next action is now:
+  1. keep this Arc2/3 proof lane bounded and `partially realized`, not closed
+  2. route the immediate follow-up to the existing Stage3 opening-transition / boundary-contract lane before any new Arc2/3 Stage34 replay is attempted
+  3. do not reopen Stage2 packet work or a broader Stage234 runtime wave from this result alone
+- historical-read note:
+  - if older wording below implies that this lane should auto-continue straight into another downstream replay, this block wins
+
 2026-04-16 Arc2/3 post-patch formal proof route override:
 
 - Local audit HEAD: `cf744f871d3fd0d98d51e0fda7c83de8024f143b`

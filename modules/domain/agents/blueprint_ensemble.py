@@ -167,9 +167,7 @@ def _build_stage3_retry_repair_guidance(fix_pack: dict | None, repair_contract: 
     must_fix = [str(item).strip() for item in (payload.get("must_fix") or []) if str(item or "").strip()]
     if must_fix:
         lines.append("- must_fix: " + " | ".join(must_fix[:4]))
-    do_not_regress = [
-        str(item).strip() for item in (payload.get("do_not_regress") or []) if str(item or "").strip()
-    ]
+    do_not_regress = [str(item).strip() for item in (payload.get("do_not_regress") or []) if str(item or "").strip()]
     if do_not_regress:
         lines.append("- do_not_regress: " + " | ".join(do_not_regress[:4]))
     success_condition = str(payload.get("success_condition", "") or "").strip()
@@ -187,6 +185,8 @@ def _build_stage3_retry_repair_guidance(fix_pack: dict | None, repair_contract: 
     if not lines:
         return ""
     return "[Stage3 retry repair contract]\n" + "\n".join(lines)
+
+
 _RETRY_FEEDBACK_SECTION_WINDOWS = (
     ("[binding prevalidation]", 6),
     ("[python advisory]", 6),
@@ -338,6 +338,9 @@ def _format_episode_state_packet_lines(packet: dict | None) -> list[str]:
     time_source = str(opening_truth.get("time_source", "") or "").strip()
     if time_source:
         packet_lines.append(f"    source: {_fit_compact_context(time_source, 100)}")
+    transition_expectation = str(opening_truth.get("opening_transition_expectation", "") or "").strip()
+    if transition_expectation:
+        packet_lines.append(f"  - opening.transition_expectation: {_fit_compact_context(transition_expectation, 120)}")
     protagonist_sources = protagonist_truth.get("sources") if isinstance(protagonist_truth.get("sources"), dict) else {}
     equipment = protagonist_truth.get("equipment")
     if equipment:
@@ -864,7 +867,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         feedback_context = str(feedback or "").strip()
         repair_guidance = _build_stage3_retry_repair_guidance(fix_pack, repair_contract)
         if repair_guidance:
-            feedback_context = f"{repair_guidance}\n\n{feedback_context}".strip() if feedback_context else repair_guidance
+            feedback_context = (
+                f"{repair_guidance}\n\n{feedback_context}".strip() if feedback_context else repair_guidance
+            )
         feedback_context = self._compress_retry_feedback(feedback_context)
         prompt_envelope_meta = build_stage3_prompt_envelope_meta(
             constraints_str=context_bundle["constraints_str"],
@@ -955,7 +960,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
             merged_feedback = feedback or ""
             repair_guidance = _build_stage3_retry_repair_guidance(fix_pack, repair_contract)
             if repair_guidance:
-                merged_feedback = f"{repair_guidance}\n\n{merged_feedback}".strip() if merged_feedback else repair_guidance
+                merged_feedback = (
+                    f"{repair_guidance}\n\n{merged_feedback}".strip() if merged_feedback else repair_guidance
+                )
             if strategy_feedback:
                 merged_feedback = (
                     f"{merged_feedback}\n\n[Strategy feedback]\n{strategy_feedback}"
@@ -1376,7 +1383,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
           IMMUTABLE > HARD CONSTRAINT > EXPECTED CONTINUITY > ADVISORY
         """
         episode_state_packet = (
-            constraint_block.get("episode_state_packet") if isinstance(constraint_block.get("episode_state_packet"), dict) else {}
+            constraint_block.get("episode_state_packet")
+            if isinstance(constraint_block.get("episode_state_packet"), dict)
+            else {}
         )
         # ── Band 1: IMMUTABLE (확정 사실, 변경 불가) ──
         immutable_lines: list[str] = []

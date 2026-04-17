@@ -1,0 +1,207 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "f8665ebbff5387da6369263ce1d7622163a95851f9bc84390642b12fa2a62709"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=3; sample_anchors=사각거리, 이름으로 개설된 모든 은행, 세탁 및 우회 투자",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1430,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 4714,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 995286,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 2856,
+          "lane": "constraints"
+        },
+        {
+          "chars": 1534,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 181,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 181,
+        "constraints": 2856,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 1534
+      },
+      "shared_context_chars": 4581,
+      "total_chars": 4714
+    },
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 1
+  },
+  "_inventory_gaps": [
+    {
+      "item": "구형 휴대폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "빈 노트와 펜",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 85,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false
+  },
+  "core_tension": "미래의 지식을 자본으로 치환하기 위한 치열한 내면의 전략 수립",
+  "end_location": "서울 성북동 본가 침실",
+  "ending_hook": "거친 숨을 몰아쉬며 완성한 계획서 위로, 예고 없이 방문을 두드리는 세 번의 노크 소리가 떨어져 내렸다.",
+  "ending_state": {
+    "location": "서울 성북동 본가 침실 책상 앞",
+    "protagonist_status": "초기 자금 확보를 위한 이론적 무장 완료 및 외부의 개입 직전",
+    "timeline": {
+      "표현": "2006년 1월 아침"
+    }
+  },
+  "ep_num": 2,
+  "episode_number": 2,
+  "expected_ending": "가족의 감시를 우회할 20억 규모의 초기 자금 운용 및 SW인베스트먼트 설립 계획안 완성",
+  "integrated_scenario": "차가운 금속 촉감이 닿았지만, 한시우의 손끝은 미세하게 떨리고 있었다. 문 너머에서는 평온한 2006년의 아침 식사 준비 소리가 들려왔으나, 시우는 당장 저 문을 열고 나갈 수 없었다. 무방비 상태로 자신을 혐오하고 짓밟을 가족들을 마주하는 것은 섶을 지고 불 속으로 뛰어드는 짓이었다. 그는 천천히 문손잡이에서 손을 떼고 뒷걸음질 쳤다. 지금 필요한 것은 막연한 두려움이 아니라, 철저하고 냉혹한 생존의 무기였다. 시우는 방 한가운데 놓인 묵직한 마호가니 책상으로 다가갔다. 탁자 위에 놓인 매끄러운 금속 재질의 구형 휴대폰을 집어 들고 폴더를 다시 한번 열어 날짜를 눈에 새긴 그는, 서랍을 열어 빈 노트와 만년필을 꺼냈다. 빈 페이지를 펼친 시우의 눈빛이 차갑게 가라앉았다. 그는 18년 동안 겪었던 뼈아픈 실패와 굴욕의 역사, 그리고 세상을 뒤흔들었던 거시경제의 파도들을 복기하기 시작했다. 펜촉이 종이 위를 사각거리며 스칠 때마다 2008년 리먼 브라더스 파산, 서브프라임 모기지 사태, 그리고 미친 듯이 요동칠 WTI 유가 폭등의 지표들이 빼곡하게 채워졌다. 머릿속에 각인된 미래의 데이터들은 너무도 선명했다. 하지만 그 지표들을 적어 내려가는 시우의 손등에는 굵은 핏대가 솟아올랐다. 철저하게 이용당하고 버려졌던 전생의 마지막 순간, 차가운 길바닥에서 삼켜야 했던 피눈물이 떠올랐기 때문이다. 감정이 격해진 탓에 펜촉이 종이를 찢고 나갔지만, 시우는 거친 숨을 토해내며 억지로 이성을 다잡았다. 분노만으로는 아무것도 바꿀 수 없었다. 노트의 다음 장을 넘긴 시우는 현재 자신이 처한 객관적인 상황을 분석했다. 한정호 회장의 막내아들이라는 타이틀은 훌륭한 배경막처럼 보였지만, 실상은 정교한 감시망에 불과했다. 시우의 이름으로 개설된 대한은행과 K-증권의 모든 계좌 내역은 본가의 자산 관리 팀을 통해 큰형 한민우와 아버지에게 실시간으로 보고되는 구조였다. 국내 주식 시장에서 조금이라도 의미 있는 규모의 자금을 굴린다면, 채 하루도 지나지 않아 형들의 견제와 아버지가 보낸 감사팀의 추궁을 받아야만 했다. 시우는 펜의 뒷부분으로 입술을 꾹 누르며 고민에 빠졌다. 가족들의 눈을 완벽하게 가리면서도 폭발적인 레버리지를 일으킬 수 있는 사각지대가 필요했다. 수십 분의 침묵 끝에 시우의 눈이 번뜩였다. 해외 선물 시장, 그리고 차명 법인. 국내의 금융 감시망을 우회하기 위해서는 조세회피처에 적을 둔 'SW인베스트먼트' 같은 페이퍼 컴퍼니 형태의 법인이 필수적이었다. 당장 자신의 이름이 드러나지 않는 껍데기를 세우고, 그 뒤에 숨어 글로벌 자본 시장의 변동성을 취해야만 했다. 시우는 노트 위에 복잡한 자금 세탁 및 우회 투자 경로의 밑그림을 거침없이 그려 나갔다. 흩어진 개인 자산을 유동화하여 약 20억 원의 초기 시드머니를 법인으로 흘려보낼 구조를 설계하는 그의 표정은 과거의 유약한 막내아들이 아닌 노련한 사냥꾼의 그것이었다. 마침내 완벽에 가까운 초기 계획안이 노트의 마지막 페이지를 장식했다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 내면의 분노와 회한을 다루며 감정적 밀도를 높이고, 중반부 이후부터는 냉철한 이성으로 전략을 수립하는 과정을 속도감 있게 전개하여 서스펜스를 구축한다.",
+  "protagonist_state": {
+    "equipment": [
+      "매끄러운 금속 재질의 구형 휴대폰",
+      "빈 노트와 펜"
+    ],
+    "injuries": "없음",
+    "mood": "냉혹한 이성과 억눌린 분노의 공존"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "두려움과 회피의 대상",
+      "justification": "과거의 실패를 복기하며 그들의 통제망을 역이용하겠다는 확고한 의지를 다짐",
+      "target": "가족(한정호, 형들)",
+      "to_state": "철저히 기만하고 이용해야 할 체스말"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "문 너머의 소음에 귀 기울이던 한시우는 손잡이를 놓는다. 무기가 없는 상태로 전장으로 나갈 수는 없다.",
+      "goal": "당장의 마찰을 피하고 이성적인 계획을 세우기 위해 침실로 물러남",
+      "key_events": [
+        "문손잡이에서 천천히 손을 떼고 침실 안쪽의 마호가니 책상으로 다가감",
+        "책상 위 매끄러운 금속 재질의 구형 휴대폰을 집어 들고 배터리를 분리했다가 다시 끼우며 2006년이라는 현실 감각을 다잡음"
+      ],
+      "location": "서울 성북동 본가 침실 문 앞",
+      "summary": "문손잡이를 쥐고 떨던 한시우가 가족과의 섣불리 마주치는 것을 피하기 위해 방 안으로 다시 발걸음을 돌림.",
+      "tension_level": 5
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "과거의 아픔을 이겨내고 냉혹한 자본의 흐름을 쥐기 위해 시우는 눈을 번뜩이며 지표들을 쏟아낸다.",
+      "goal": "과거의 뼈아픈 실패를 거울삼아 미래의 거시경제 지표를 정리함",
+      "key_events": [
+        "책상 서랍을 열어 빈 노트와 만년필을 꺼내 2008년 리먼 브라더스 파산과 WTI 유가 폭등 지표를 적어 내려감",
+        "가족들에게 철저히 버려졌던 기억이 떠올라 펜을 쥔 손에 핏대가 서고 펜촉이 종이를 찢음"
+      ],
+      "location": "서울 성북동 본가 침실 책상",
+      "summary": "책상 서랍에서 빈 노트를 꺼내 다가올 거시경제 위기와 과거의 실패들을 기록하며 감정을 억누름.",
+      "tension_level": 7
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "감시망을 피하기 위해 시우는 철저히 자신을 숨길 수 있는 해외로 눈을 돌린다.",
+      "goal": "현재 자신을 옭아매고 있는 가족들의 금융 감시망을 객관적으로 파악함",
+      "key_events": [
+        "국내 주식 시장에서 움직일 경우 하루도 안 돼 형들의 견제와 감사팀의 추궁이 들어올 것을 복기함",
+        "가족들의 눈을 완벽하게 가리면서도 폭발적인 레버리지를 일으킬 사각지대로 해외 선물 시장을 지목함"
+      ],
+      "location": "서울 성북동 본가 침실 책상",
+      "summary": "자신의 명의로 된 계좌들이 사실상 큰형과 아버지의 통제 아래 있음을 뼈저리게 자각함.",
+      "tension_level": 6
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "모든 계획의 얼개를 잡은 직후, 누군가 방문을 두드리며 긴장감을 끌어올린다.",
+      "goal": "해외 선물 투자와 이를 은폐할 차명 법인 설립의 밑그림을 완성함",
+      "key_events": [
+        "자신의 이름이 드러나지 않을 페이퍼 컴퍼니 형태의 법인 설립 계획을 노트 마지막 장에 구조화함",
+        "계획을 마무리하고 거친 숨을 내쉬는 순간 방문 밖에서 누군가의 발소리가 멈춰 섬"
+      ],
+      "location": "서울 성북동 본가 침실 책상",
+      "summary": "추적을 피할 페이퍼 컴퍼니 설립 구조를 완성하는 순간, 정적을 깨는 소리가 들려옴.",
+      "tension_level": 8
+    }
+  },
+  "start_location": "서울 성북동 본가 침실 문 앞",
+  "target_beat": "감정의 폭발 이후 이어지는 차가운 이성적 설계",
+  "time_flow": "2006년 1월 어느 날 아침",
+  "title": "반격의 밑그림"
+}

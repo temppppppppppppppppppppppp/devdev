@@ -1,0 +1,2 @@
+{"timestamp": "2026-04-16 19:22:37", "type": "blueprint_fail", "message": "ep_7_all_retries_exhausted", "data": {"ep_num": 7, "final_verdict": "FAILED"}}
+{"timestamp": "2026-04-16 19:22:37", "type": "stage4_session_scope", "message": "stage4 session scope declared", "data": {"session_id": "20260416_182309", "start_ep": 3, "target_ep": 7, "total_planned_ep": 6}}
