@@ -43,6 +43,53 @@ def _resolve_cross_stage_opening_location(arc_data: dict | None) -> tuple[str, s
     return str(opening.get("location", "") or "").strip(), str(opening.get("location_source", "") or "").strip()
 
 
+def _is_arc_opening_episode(*, arc_data: dict | None, ep_num: int) -> bool:
+    payload = arc_data if isinstance(arc_data, dict) else {}
+    ep_start = payload.get("ep_start")
+    try:
+        ep_start_int = int(ep_start) if ep_start not in (None, "") else 0
+    except (TypeError, ValueError):
+        return False
+    return bool(ep_start_int and ep_num == ep_start_int)
+
+
+def _resolve_authoritative_arc_opening_location(arc_data: dict | None) -> str:
+    packet_location, _ = _resolve_cross_stage_opening_location(arc_data)
+    if packet_location:
+        return packet_location
+    payload = arc_data if isinstance(arc_data, dict) else {}
+    state = _coerce_mapping(payload.get("state_constraints"))
+    arc_start = _coerce_mapping(state.get("arc_start_state"))
+    location = str(arc_start.get("location", "") or "").strip()
+    if location:
+        return location
+    joint_docs = _coerce_mapping(payload.get("joint_docs"))
+    return str(joint_docs.get("final_location", "") or "").strip()
+
+
+def _resolve_authoritative_arc_timeline_text(arc_data: dict | None) -> str:
+    payload = arc_data if isinstance(arc_data, dict) else {}
+    state_changes = _coerce_mapping(payload.get("state_changes"))
+    timeline = _coerce_mapping(state_changes.get("timeline"))
+    for key in ("start", "end"):
+        point = timeline.get(key)
+        if isinstance(point, dict):
+            for field in ("description", "expression", "text", "raw"):
+                text = str(point.get(field, "") or "").strip()
+                if text:
+                    return text
+            year = str(point.get("year", "") or "").strip()
+            month = str(point.get("month", "") or "").strip()
+            day = str(point.get("day", "") or "").strip()
+            parts = [part for part in (year, month, day) if part]
+            if parts:
+                return " ".join(parts)
+        text = str(point or "").strip()
+        if text:
+            return text
+    return ""
+
+
 def _resolve_cross_stage_protagonist_carryover(arc_data: dict | None) -> dict:
     return _coerce_mapping(_resolve_cross_stage_packet(arc_data).get("protagonist_carryover"))
 
@@ -90,9 +137,7 @@ def _filter_competing_institution_names(
     suffixes: tuple[str, ...],
 ) -> set[str]:
     preferred_families = {
-        family
-        for family in (_resolve_institution_family(name, suffixes) for name in preferred_names)
-        if family
+        family for family in (_resolve_institution_family(name, suffixes) for name in preferred_names) if family
     }
     filtered: set[str] = set()
     for name in candidate_names:
@@ -143,9 +188,7 @@ def _collect_fact_lock_institution_anchors(
         "지점",
         "사무실",
     )
-    _inst_re = re.compile(
-        r"([\w가-힣A-Za-z]{2,15}(?:" + "|".join(re.escape(s) for s in _inst_suffixes_ordered) + r"))"
-    )
+    _inst_re = re.compile(r"([\w가-힣A-Za-z]{2,15}(?:" + "|".join(re.escape(s) for s in _inst_suffixes_ordered) + r"))")
 
     def _collect_names(raw_texts: list[str]) -> set[str]:
         names: set[str] = set()
@@ -891,6 +934,11 @@ class BlueprintConstraintCompiler:
         anchors: list[dict] = []
         ms_text = str(prev_manuscript_ending or "").strip()
         bp = prev_blueprint if isinstance(prev_blueprint, dict) else {}
+        is_arc_opening = _is_arc_opening_episode(arc_data=arc_data, ep_num=ep_num)
+        suppress_prev_opening_fact_lock = is_arc_opening and (
+            bool(_resolve_authoritative_arc_opening_location(arc_data))
+            or bool(_resolve_authoritative_arc_timeline_text(arc_data))
+        )
 
         if not ms_text and not bp:
             return {}
@@ -908,22 +956,22 @@ class BlueprintConstraintCompiler:
                     last = scenes.get(scene_keys[-1], {})
                     if isinstance(last, dict):
                         end_loc = last.get("location", "")
-        if end_loc:
+        if end_loc and not suppress_prev_opening_fact_lock:
             anchors.append({"category": "위치", "fact": f"직전 종료 위치: {str(end_loc)[:120]}"})
 
         # ── 2. Time/day anchor ──
         time_flow = bp.get("time_flow", "")
         ending_state = bp.get("ending_state", {})
-        if isinstance(ending_state, dict) and ending_state.get("timeline"):
+        if isinstance(ending_state, dict) and ending_state.get("timeline") and not suppress_prev_opening_fact_lock:
             tl = ending_state["timeline"]
             tl_str = ", ".join(f"{k}:{v}" for k, v in tl.items()) if isinstance(tl, dict) else str(tl)
             anchors.append({"category": "시간", "fact": f"직전 종료 시점: {str(tl_str)[:120]}"})
-        elif time_flow:
+        elif time_flow and not suppress_prev_opening_fact_lock:
             anchors.append({"category": "시간", "fact": f"직전 시간 흐름: {str(time_flow)[:120]}"})
 
         # ── 3. Ending hook anchor (prevents rewrite of how the previous ep ended) ──
         ending_hook = bp.get("ending_hook", "")
-        if ending_hook:
+        if ending_hook and not suppress_prev_opening_fact_lock:
             anchors.append({"category": "엔딩훅", "fact": f"직전 화 엔딩: {str(ending_hook)[:200]}"})
 
         # ── 4. Protagonist state anchor ──

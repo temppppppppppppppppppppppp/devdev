@@ -1,0 +1,199 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "daff2786d3a3d1490008fdbfc242e4ace8abf14b5aba2ad85874aaa8b396d78e"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=3; sample_anchors=비틀거리, 달그락거리, 1층",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1318,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 2095,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 997905,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 1717,
+          "lane": "constraints"
+        },
+        {
+          "chars": 167,
+          "lane": "arc_focus"
+        },
+        {
+          "chars": 133,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 167,
+        "constraints": 1717,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 68
+      },
+      "shared_context_chars": 1962,
+      "total_chars": 2095
+    },
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 1
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 83,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false
+  },
+  "core_tension": "미래의 참혹한 기억과 현재의 평온함 사이의 인지 부조화",
+  "end_location": "서울 성북동 본가 침실",
+  "ending_hook": "차가운 금속 촉감이 닿았지만, 한시우의 손끝은 미세하게 떨리고 있었다.",
+  "ending_state": {
+    "location": "서울 성북동 본가 침실 문 앞",
+    "protagonist_status": "극심한 두통이 가라앉고 있으나 심리적 불안정 상태",
+    "timeline": {
+      "표현": "2006년 1월 아침"
+    }
+  },
+  "ep_num": 1,
+  "episode_number": 1,
+  "expected_ending": "방문을 열기 전 밀려오는 두려움과 막막함",
+  "integrated_scenario": "얼음장 같은 한기가 전신을 덮치는 감각과 함께 한시우가 번쩍 눈을 떴다. 코끝을 찌르던 2024년 단칸방의 곰팡이 냄새 대신, 은은한 디퓨저 향이 폐부를 채웠다. 한시우는 숨을 헐떡이며 상체를 일으켰다. 시야에 들어온 것은 낡고 얼룩진 벽지가 아니라, 최고급 마호가니 가구와 샹들리에가 장식된 넓은 방이었다. 서울 성북동 본가 침실. 한시우가 두 손으로 얼굴을 감싸 쥐었다. 거친 숨소리가 고요한 방안을 울렸다. 탁자 위에 놓인 투박한 구형 휴대폰이 눈에 들어왔다. 떨리는 손으로 폴더를 열자, 액정 화면에 '2006년 1월'이라는 날짜가 선명하게 빛나고 있었다. 한시우는 그 숫자를 멍하니 응시하며 자신이 고독사 직후 과거로 돌아왔다는 비현실적인 사실을 직면했다.\n\n그 순간, 뇌수를 찢는 듯한 극심한 편두통이 한시우를 덮쳤다. 한시우는 억눌린 비명을 지르며 침대 아래 카펫 위로 굴러떨어졌다. 2006년부터 2024년까지, 가문이 산산조각 나고 형제들이 파멸하며 종국에는 한시우 자신마저 철저히 버려져 홀로 죽음을 맞이했던 18년 치의 기억이 폭포수처럼 쏟아져 내렸다. 미래의 참혹한 기억과 현재의 평온한 감각이 강제로 동기화되며 뇌 신경을 태워버릴 듯한 고통을 만들어냈다. 한시우는 카펫을 쥐어뜯으며 식은땀을 쏟아냈다. 눈앞이 점멸하고 호흡이 가빠지는 가운데, 한시우는 과거의 실패와 절망이 고스란히 각인되는 끔찍한 감각을 맨몸으로 견뎌내야만 했다.\n\n영겁 같던 고통이 서서히 잦아들자, 한시우는 비틀거리며 몸을 일으켜 욕실로 향했다. 세면대 수도꼭지를 틀어 찬물을 얼굴에 끼얹었다. 물방울이 뚝뚝 떨어지는 거울 속에는, 삶의 의지를 잃고 쇠약해졌던 30대의 얼굴 대신 생기가 도는 스무 살 한시우의 얼굴이 있었다. 한시우는 거울 속 자신의 눈동자를 깊게 들여다보았다. 잃어버렸던 젊음과 아직 파괴되지 않은 일상이 눈앞에 존재했다. 두려움, 억울함, 그리고 기적처럼 주어진 두 번째 기회에 대한 안도감이 뒤섞여 한시우의 눈시울을 붉혔다. 한시우는 세면대 가장자리를 꽉 움켜쥐며, 다시는 그 비참한 미래를 반복하지 않겠다는 묵직한 감정을 속으로 삼켰다.\n\n욕실을 나온 한시우는 침실 문 앞까지 걸어갔다. 두꺼운 방문 너머로 희미하게 1층에서 분주히 움직이는 고용인들의 발소리와 식기가 달그락거리는 소리가 들려왔다. 2024년에는 상상조차 할 수 없었던, 한시우가 그토록 그리워했던 평온한 일상의 소음이었다. 그러나 한시우는 당장 문을 열고 나갈 수 없었다. 지금 문을 열면, 훗날 서로를 물어뜯고 가문을 몰락시킬 아버지와 형들을 아무렇지 않은 척 마주해야 했다. 18년의 끔찍한 진실을 혼자 짊어진 채, 한시우는 문손잡이 위로 조심스럽게 손을 뻗었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "no_prev_anchor"
+    ],
+    "type": "jump_opening"
+  },
+  "pacing_notes": "감정선 위주로 천천히 전개하며 혼란과 고통을 부각",
+  "protagonist_state": {
+    "equipment": [
+      "구형 휴대폰"
+    ],
+    "injuries": "없음",
+    "mood": "극도의 혼란과 두려움"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "죽음의 감각이 가시지 않은 상태에서 과거의 안락한 방에서 깨어난 한시우의 인지 부조화 묘사.",
+      "goal": "회귀 직후의 시공간적 혼란과 현실 자각",
+      "key_events": [
+        "단칸방의 곰팡이 냄새 대신 본가의 디퓨저 향을 맡으며 상체를 일으킴",
+        "탁자 위에 놓인 구형 휴대폰의 폴더를 열어 2006년 1월이라는 날짜를 확인함"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "2024년의 비참한 죽음 직후, 한시우가 2006년 본가 침실에서 눈을 뜨며 극도의 혼란을 겪음.",
+      "tension_level": 5,
+      "title": "낯선 천장, 익숙한 방",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "과거의 실패와 고독사의 기억이 뇌리에 박히며 겪는 생생한 고통의 순간.",
+      "goal": "기억 동기화로 인한 육체적, 심리적 고통 묘사",
+      "key_events": [
+        "뇌수를 찢는 듯한 두통에 비명을 억누르며 침대 아래 카펫으로 굴러떨어짐",
+        "가문의 몰락과 비참했던 죽음의 감각이 강제로 동기화되며 식은땀을 흘림"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "회귀를 자각하는 순간 18년 치의 끔찍한 미래 기억이 쏟아져 내리며 한시우에게 극심한 편두통이 발생함.",
+      "tension_level": 7,
+      "title": "18년의 무게",
+      "type": "emotional_reveal"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "육체적 고통이 잦아든 후, 시각적으로 확인하는 자신의 젊은 모습과 내면의 복잡한 감정 교차.",
+      "goal": "감정의 갈무리와 현실 수용",
+      "key_events": [
+        "비틀거리며 욕실로 향해 찬물로 세수를 함",
+        "거울 속 스무 살 한시우의 얼굴을 응시하며 두려움과 안도감이 섞인 눈물을 흘림"
+      ],
+      "location": "서울 성북동 본가 침실 욕실",
+      "summary": "거울 속 젊은 자신을 마주하며 과거의 상실감을 딛고 살아남겠다는 비장한 감정을 품음.",
+      "tension_level": 4,
+      "title": "거울 속의 이방인",
+      "type": "tension_build"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "평온한 과거의 일상과 끔찍한 미래의 진실 사이에서 망설이는 한시우의 심리 묘사.",
+      "goal": "가족을 마주해야 하는 두려움과 내면적 갈등 극대화",
+      "key_events": [
+        "1층에서 들려오는 고용인들의 발소리와 식기 소리에 귀를 기울임",
+        "미래에 서로를 파멸시킬 가족을 마주해야 한다는 압박감에 문손잡이를 쥐고 주저함"
+      ],
+      "location": "서울 성북동 본가 침실 문 앞",
+      "summary": "방문 밖에서 들려오는 일상 소음에 안도하면서도, 파국을 향해 갈 가족들을 마주할 준비가 되지 않은 내면의 갈등.",
+      "tension_level": 6,
+      "title": "문 너머의 일상",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 침실",
+  "target_beat": "회귀 자각과 감정적 동요",
+  "time_flow": "2006년 1월 어느 날 아침",
+  "title": "2006년의 아침"
+}

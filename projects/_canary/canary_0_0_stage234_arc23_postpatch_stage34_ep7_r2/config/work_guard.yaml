@@ -1,0 +1,120 @@
+work_identity:
+  work_id: 투자물_골든_카나리아 테스트_canonical_v1
+  family: blockguide
+  work_type: investment_family_office_control
+  one_line_truth: 고독사한 재벌가 막내가 18년치 경제 캘린더와 exit 설계 감각으로 모두가 늦었다고 할 때 먼저 사고 먼저 팔며, 결국 가문이 막내의 방화벽과 운용 규칙 안으로 들어오게 만든다
+  protagonist_weapon:
+    - 18년치 경제 캘린더 기억과 이벤트가 가격에 반영되기 전 출구부터 먼저 설계하는 감각
+    - 과열장에서는 먼저 팔고 붕괴장에서는 먼저 유동성을 쥐는 cycle reading
+    - 가족 자산과 개인 자산 사이에 방화벽을 세우고 도움과 운용권을 분리하는 거버넌스 집착
+  business_axes:
+    - 매크로 이벤트 선점 (원자재, 금융위기, 플랫폼, 크립토, 테슬라, AI)
+    - 자본 운용 (선물, 주식, CDS, OTC, ETF)
+    - 디스트레스 유동성 우위
+    - 패밀리오피스 구조화
+    - 자산을 관계와 거버넌스로 환전하는 후반 전환
+  control_axes:
+    - 포지션 진입/청산 결정권
+    - 배분 우선권과 딜 접근권
+    - 독립 법인과 운용 방화벽
+    - 패밀리오피스 운용권
+    - 가족 자산 유입 조건 설정권
+  mandatory_lexicon:
+    - 포지션
+    - 익절
+    - 출구
+    - 유동성
+    - 배분
+    - 실사
+    - 리스크팀
+    - 운용권
+    - 방화벽
+    - CDS
+    - OTC
+    - TWAP
+    - 패밀리오피스
+  forbidden_flattenings:
+    - 회개물 스타트
+    - 비굴한 해명 / 인정 구걸
+    - 자기연민 소비
+    - success -> pure punishment spiral
+    - opening 3화 setup-only trilogy
+    - proof only -> late conversion drift
+    - 주인공 고유성 없는 대형 성과
+    - 운빨 생존을 실력처럼 처리
+    - 활약 후 태도 변화 없음
+    - 자산 증가 숫자만 남고 평가 수정 / 운용권 변화가 사라짐
+    - 내부자 거래 자랑물
+    - 이유 없는 자선이나 손해 감수로 주인공 미화
+    - 개인 물량이 글로벌 시장 전체를 뒤집는 과대 나비효과
+    - 회귀 정체를 추리물처럼 과장
+  tracking_slots:
+    - 모두가 늦었다고 할 때 먼저 사고 먼저 파는 정확도에 대한 재평가
+    - 자본 증식이 다음 cycle 입장권과 딜 접근권으로 바뀌는 구조
+    - 가족 자산과 개인 자산 사이 방화벽 강화
+    - 가문이 먼저 자료를 들고 와 막내의 규칙 안에서 도움을 청하는 역전
+  mandatory_scene_engines:
+    - 회귀 직후 3화 안에 thesis를 실행 가능한 포지션과 다음 전장 입장권으로 바꾸는 장면
+    - 이벤트가 가격에 반영되기 전 포지션을 선점하고 실제 뉴스 직후 proof를 회수하는 장면
+    - 익절 타이밍을 먼저 잡아 PB, 리스크팀, 증권가의 태도 변화를 강제하는 장면
+    - 과열장에서는 exit, 붕괴장에서는 유동성 우위를 보여주며 다음 cycle 입장권을 확보하는 장면
+    - 자산 수익을 운용 방화벽과 패밀리오피스 규칙으로 환전하는 장면
+  protagonist_evaluation:
+    admiration_axes:
+      - 남들보다 먼저 읽음
+      - 가격보다 이득 구조와 출구를 먼저 봄
+      - 비굴하지 않음
+      - 손실을 통제하고 크게 베팅함
+      - 돈을 운용 규칙과 통제권으로 바꾼다
+    forbidden_praise_patterns:
+      - 재벌이라서 결국 돈으로 해결한다
+      - 회귀빨로 우연히 맞췄다
+      - 불쌍해서 챙겨준다
+      - 착해서 인정한다
+      - 참고 견댌으니 보답받는다
+    observer_tiers:
+      - 박성호 PB
+      - 리스크팀 / 증권가
+      - 마이클 첸 / 제이슨 / 정민재
+      - 한태준과 가족
+      - 패밀리오피스 파트너 / 시장 플레이어
+    evaluation_thresholds:
+      - Episode 2 또는 TR Block 2~3 내 첫 실행 / 첫 포지션 진입이 visible해야 한다
+      - Episode 3 또는 TR Block 3~4 내 원유 proof scene과 PB tone shift 1회 이상
+      - Episode 4 또는 TR Block 4 내 첫 signboard / next-cycle ticket이 visible해야 한다
+      - ARC 1 종료 전 증권가 소문과 실무 재평가 가시화
+      - 중반 이후 자산 증가가 반드시 딜 접근권 / 운용권 변화로 환전
+      - 후반에는 가문이 먼저 실사 자료를 들고 와 규칙을 묻는 단계까지 도달
+  role_fit_constraints:
+    - name: PB 선행 금지
+      role: 박성호 PB / 실무 게이트키퍼
+      disallowed_actions:
+        - 주인공 대신 투자 thesis 완성
+        - 이유 없는 숭배나 무상 지원
+      exceptions:
+        - 실적과 수수료 계산 때문에 태도를 바꾸는 것은 허용
+    - name: 가족 공짜 구원 금지
+      role: 한태준과 가족
+      disallowed_actions:
+        - 이유 없는 화해
+        - 조건 없는 자금 지원
+        - 주인공에게 운용권을 선물
+      exceptions:
+        - 막을 수 없는 성과 이후 조건을 받아들이는 것은 허용
+    - name: 파트너 감화 금지
+      role: 마이클 첸 / 정민재 / 외부 파트너
+      disallowed_actions:
+        - 이유 없는 선의 지원
+        - 계산 이전의 충성
+      exceptions:
+        - 수익과 거버넌스 계산상 붙는 선택
+custom_rules:
+  - opening은 3화 기본, 4화 soft cap으로 읽는다
+  - 회귀 충격 정리 / 독립 선언 / 법인 준비만으로 3화를 전부 쓰지 않는다
+  - 첫 proof는 늦어도 Episode 3 안에, 첫 signboard 또는 next ticket은 늦어도 Episode 4 안에 붙인다
+  - 가격이 아니라 이득 구조와 exit를 먼저 본다
+  - 위기는 피해 연출보다 유동성 보존과 우선순위 선택권 증명으로 사용한다
+  - 반격 예약 없는 손해는 금지
+  - 회귀의 비밀은 권위 과시가 아니라 정보 비대칭으로만 작동한다
+  - 자산 증가는 반드시 다음 접근권, 배분 우선권, 운용권, 방화벽 강화 중 하나로 환전되어야 한다
+  - 가족을 돕더라도 운용권은 넘기지 않는다

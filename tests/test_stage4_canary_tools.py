@@ -77,11 +77,15 @@ def test_prepare_stage4_canary_project_copies_and_resets_stage4_only(tmp_path):
     try:
         assert target_db.get_blueprint(1)["ep_num"] == 1
         assert target_db.get_manuscript(1) is None
-        stage4_count = target_db.conn.execute("SELECT COUNT(*) AS c FROM stage_attempts WHERE stage = 4").fetchone()["c"]
-        stage3_count = target_db.conn.execute("SELECT COUNT(*) AS c FROM stage_attempts WHERE stage = 3").fetchone()["c"]
-        sel_count = target_db.conn.execute(
-            "SELECT COUNT(*) AS c FROM director_selections WHERE stage = 4"
-        ).fetchone()["c"]
+        stage4_count = target_db.conn.execute("SELECT COUNT(*) AS c FROM stage_attempts WHERE stage = 4").fetchone()[
+            "c"
+        ]
+        stage3_count = target_db.conn.execute("SELECT COUNT(*) AS c FROM stage_attempts WHERE stage = 3").fetchone()[
+            "c"
+        ]
+        sel_count = target_db.conn.execute("SELECT COUNT(*) AS c FROM director_selections WHERE stage = 4").fetchone()[
+            "c"
+        ]
         assert stage4_count == 0
         assert sel_count == 0
         assert stage3_count == 1
@@ -765,6 +769,44 @@ def test_evaluate_stage4_canary_gates_ignores_companion_only_sink_warn_when_auth
     assert "sink_alignment_status:warn" not in gates["warnings"]
 
 
+def test_evaluate_stage4_canary_gates_supports_sparse_required_draft_eps():
+    gates = _evaluate_stage4_canary_gates(
+        target_ep=7,
+        draft_count=3,
+        draft_eps=[1, 2, 7],
+        required_draft_eps=[7],
+        runtime_summary={"tag": "stage4_complete", "total_events": 1},
+        pass_rate_monitor_exists=True,
+        patch_trace_summary={},
+        sink_alignment_summary={
+            "status": "ok",
+            "final_sink_missing": {},
+            "lifecycle_sink_missing": {},
+            "lifecycle_missing_in_final_sinks": {},
+            "initial_verdict_mismatches": [],
+            "patch_strategy_mismatches": [],
+            "selection_candidate_key_mismatches": [],
+            "legacy_key_attempts": 0,
+        },
+        rationale_contract_summary={
+            "status": "ok",
+            "missing_columns": [],
+            "rows_missing_selection_reason": [],
+            "rows_missing_verdict_reason": [],
+            "rows_missing_retry_context": [],
+            "stage4_row_count": 0,
+            "retry_required_row_count": 0,
+        },
+        final_authority_contract_summary={"status": "ok"},
+        companion_audit_summary={"status": "ok"},
+        gate_repair_surface_summary={"status": "ok"},
+    )
+
+    assert gates["status"] == "pass"
+    assert "draft_count_mismatch:3!=7" not in gates["errors"]
+    assert "required_draft_missing:[7]" not in gates["errors"]
+
+
 def test_build_stage4_branch_inventory_tracks_pass_patch_and_retry_coverage(tmp_path):
     pass_project = tmp_path / "pass_project"
     patch_project = tmp_path / "patch_project"
@@ -828,20 +870,33 @@ def test_build_stage3_canary_summary_includes_episode_telemetry(tmp_path):
         db.save_anchor("genre_info", {"type": "wuxia", "name": "wuxia"})
         db.save_blueprint(1, {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "bp"}]})
         db.save_stage_attempt(
-            stage=3, verdict="PASS", ep_num=1, attempt_num=1,
-            score=90, session_id="sess", attempt_key="s3:1:1:1:sess",
+            stage=3,
+            verdict="PASS",
+            ep_num=1,
+            attempt_num=1,
+            score=90,
+            session_id="sess",
+            attempt_key="s3:1:1:1:sess",
         )
         db.save_llm_call(
-            session_id="sess", stage=3, ep_num=1,
-            agent_name="ChiefWriter", model="gemini-2.5-pro",
-            prompt_chars=5000, response_chars=3000, duration_ms=12000,
-            success=True, input_tokens=1000, output_tokens=500,
+            session_id="sess",
+            stage=3,
+            ep_num=1,
+            agent_name="ChiefWriter",
+            model="gemini-2.5-pro",
+            prompt_chars=5000,
+            response_chars=3000,
+            duration_ms=12000,
+            success=True,
+            input_tokens=1000,
+            output_tokens=500,
             total_cost_usd=0.005,
         )
     finally:
         db.close()
     (root / "logs" / "stage3_canary_prep.json").write_text(
-        '{"source_project": "base"}', encoding="utf-8",
+        '{"source_project": "base"}',
+        encoding="utf-8",
     )
 
     summary = build_stage3_canary_summary(root, target_ep=1)
@@ -872,31 +927,52 @@ def test_stage3_episode_telemetry_timing_decomposition(tmp_path):
         db.save_anchor("genre_info", {"type": "wuxia", "name": "wuxia"})
         db.save_blueprint(1, {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "bp"}]})
         db.save_stage_attempt(
-            stage=3, verdict="PASS", ep_num=1, attempt_num=1,
-            score=90, session_id="sess", attempt_key="s3:1:1:1:sess",
+            stage=3,
+            verdict="PASS",
+            ep_num=1,
+            attempt_num=1,
+            score=90,
+            session_id="sess",
+            attempt_key="s3:1:1:1:sess",
         )
         # Call 1: normal ask, 1 retry, 2 continuations
         # duration_ms=25000 (wall clock), api_elapsed_ms=8000 (raw API)
         db.save_llm_call(
-            session_id="sess", stage=3, ep_num=1,
-            agent_name="ChiefWriter", model="gemini-2.5-pro",
-            prompt_chars=5000, response_chars=3000,
-            duration_ms=25000, success=True,
-            api_elapsed_ms=8000, retry_count=1, continuation_count=2,
+            session_id="sess",
+            stage=3,
+            ep_num=1,
+            agent_name="ChiefWriter",
+            model="gemini-2.5-pro",
+            prompt_chars=5000,
+            response_chars=3000,
+            duration_ms=25000,
+            success=True,
+            api_elapsed_ms=8000,
+            retry_count=1,
+            continuation_count=2,
         )
         # Call 2: cached context, 0 retries, 0 continuations
         # duration_ms=5000 (includes API_DELAY), api_elapsed_ms=3000 (raw API)
         db.save_llm_call(
-            session_id="sess", stage=3, ep_num=1,
-            agent_name="ChiefWriter", model="gemini-2.5-pro",
-            prompt_chars=2000, response_chars=1500,
-            duration_ms=5000, success=True, context_tag="cached_context",
-            api_elapsed_ms=3000, retry_count=0, continuation_count=0,
+            session_id="sess",
+            stage=3,
+            ep_num=1,
+            agent_name="ChiefWriter",
+            model="gemini-2.5-pro",
+            prompt_chars=2000,
+            response_chars=1500,
+            duration_ms=5000,
+            success=True,
+            context_tag="cached_context",
+            api_elapsed_ms=3000,
+            retry_count=0,
+            continuation_count=0,
         )
     finally:
         db.close()
     (root / "logs" / "stage3_canary_prep.json").write_text(
-        '{"source_project": "base"}', encoding="utf-8",
+        '{"source_project": "base"}',
+        encoding="utf-8",
     )
 
     summary = build_stage3_canary_summary(root, target_ep=1)

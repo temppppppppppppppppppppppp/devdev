@@ -128,6 +128,7 @@ def run_canary(project_name: str, *, target_ep: int) -> dict:
     try:
         _ensure_pass_rate_monitor(app, project_root)
         app._get_int_input = lambda *args, **kwargs: kwargs.get("default", 1)
+        _assert_single_episode_demo_frontier(app, target_ep=target_ep)
         with patch("builtins.input", side_effect=_auto_input):
             _run_stage34_ep_demo(app, target_ep=target_ep)
         if getattr(app, "pass_rate_monitor", None):
@@ -140,13 +141,49 @@ def run_canary(project_name: str, *, target_ep: int) -> dict:
     return analyze_canary(runtime_project_name, target_ep=target_ep)
 
 
+def _assert_single_episode_demo_frontier(app: SovereignApp, *, target_ep: int) -> int:
+    start_ep = _resolve_demo_stage4_start_ep(app)
+    if start_ep != int(target_ep):
+        latest_written_ep = max(0, int(start_ep) - 1)
+        raise RuntimeError(
+            "stage34 single-episode demo requires frontier alignment "
+            f"(start_ep={start_ep}, target_ep={int(target_ep)}, latest_written_ep={latest_written_ep}); "
+            "current project would trigger sequential Stage4 catch-up instead of a single-episode proof run"
+        )
+    return start_ep
+
+
+def _resolve_demo_stage4_start_ep(app: SovereignApp) -> int:
+    current_project = getattr(app, "current_project", None)
+    latest_ep_fn = getattr(current_project, "get_latest_episode_number", None)
+    if callable(latest_ep_fn):
+        try:
+            return max(1, int(latest_ep_fn() or 1))
+        except Exception:
+            pass
+
+    current_db = getattr(current_project, "db", None)
+    db_latest_ep_fn = getattr(current_db, "get_latest_episode_number", None)
+    if callable(db_latest_ep_fn):
+        try:
+            return max(1, int(db_latest_ep_fn() or 1))
+        except Exception:
+            pass
+
+    return 1
+
+
 def analyze_canary(project_name: str, *, target_ep: int) -> dict:
     project_root = resolve_workspace_project_dir(PROJECT_ROOT, project_name, prefer_canary=True, require_exists=True)
     prep_payload = _load_demo_prep(project_root)
     _assert_demo_target_matches_prep(prep_payload, target_ep=target_ep)
 
     stage3_summary = build_stage3_canary_summary(project_root, target_ep=target_ep)
-    stage4_summary = build_stage4_canary_summary(project_root, target_ep=target_ep)
+    stage4_summary = build_stage4_canary_summary(
+        project_root,
+        target_ep=target_ep,
+        required_draft_eps=[int(target_ep)],
+    )
     boundary_summary = _build_demo_boundary_summary(project_root, target_ep=target_ep, prep_payload=prep_payload)
 
     stage3_session_id = str(stage3_summary.get("latest_session_id", "") or "")
@@ -222,27 +259,58 @@ def _build_demo_boundary_summary(project_root: Path, *, target_ep: int, prep_pay
         "draft_file_eps": [ep for ep in draft_eps if ep > target_ep],
         "blueprint_file_eps": [ep for ep in blueprint_file_eps if ep > target_ep],
     }
-    errors = [
-        f"{surface}_beyond_target:{eps}"
-        for surface, eps in beyond_target.items()
-        if eps
-    ]
+    errors = [f"{surface}_beyond_target:{eps}" for surface, eps in beyond_target.items() if eps]
+    warnings: list[str] = []
     frozen_authority_ep = int(prep_payload.get("frozen_authority_ep") or max(0, target_ep - 1))
-    frozen_authority_draft_exists = (
-        True if frozen_authority_ep <= 0 else (project_root / "drafts" / f"ep_{frozen_authority_ep:04d}.txt").exists()
-    )
+    frozen_authority_draft_exists = True if frozen_authority_ep <= 0 else frozen_authority_ep in draft_eps
+    frozen_authority_manuscript_exists = True if frozen_authority_ep <= 0 else frozen_authority_ep in manuscript_eps
+    latest_available_draft_ep = max((ep for ep in draft_eps if ep < target_ep), default=0)
+    latest_available_manuscript_ep = max((ep for ep in manuscript_eps if ep < target_ep), default=0)
     anchor_validation = prep_payload.get("cleanup", {}).get("anchor_validation", {}) or {}
+    if not frozen_authority_manuscript_exists:
+        if latest_available_manuscript_ep > 0:
+            warnings.append(f"frozen_authority_manuscript_missing:ep{frozen_authority_ep}")
+            warnings.append(
+                f"frozen_authority_manuscript_gap:ep{latest_available_manuscript_ep}->ep{frozen_authority_ep}"
+            )
+        else:
+            errors.append(f"frozen_authority_manuscript_missing:ep{frozen_authority_ep}")
     if not frozen_authority_draft_exists:
-        errors.append(f"frozen_authority_draft_missing:ep{frozen_authority_ep}")
+        if latest_available_draft_ep > 0:
+            warnings.append(f"frozen_authority_draft_missing:ep{frozen_authority_ep}")
+            warnings.append(f"frozen_authority_draft_gap:ep{latest_available_draft_ep}->ep{frozen_authority_ep}")
+        else:
+            errors.append(f"frozen_authority_draft_missing:ep{frozen_authority_ep}")
     if str(anchor_validation.get("status", "") or "missing") != "ok":
         errors.append(f"prep_anchor_validation_status:{anchor_validation.get('status', 'missing')}")
+    closure_grade_ready = frozen_authority_manuscript_exists and frozen_authority_draft_exists
+    authority_continuity_gap_eps = (
+        list(range(latest_available_manuscript_ep + 1, frozen_authority_ep + 1))
+        if latest_available_manuscript_ep and latest_available_manuscript_ep < frozen_authority_ep
+        else []
+    )
+    if errors:
+        status = "fail"
+        proof_grade = "invalid"
+    elif warnings:
+        status = "warn"
+        proof_grade = "demo_partial_source_authority"
+    else:
+        status = "pass"
+        proof_grade = "closure_ready"
 
     return {
         "summary_role": "stage34_single_episode_demo_boundary",
-        "status": "fail" if errors else "pass",
+        "status": status,
+        "proof_grade": proof_grade,
         "target_ep": target_ep,
         "frozen_authority_ep": frozen_authority_ep,
+        "frozen_authority_manuscript_exists": frozen_authority_manuscript_exists,
         "frozen_authority_draft_exists": frozen_authority_draft_exists,
+        "latest_available_manuscript_ep": latest_available_manuscript_ep,
+        "latest_available_draft_ep": latest_available_draft_ep,
+        "closure_grade_ready": closure_grade_ready,
+        "authority_continuity_gap_eps": authority_continuity_gap_eps,
         "prep_anchor_validation_status": str(anchor_validation.get("status", "") or "missing"),
         "stage3_attempt_eps": stage3_eps,
         "stage4_attempt_eps": stage4_eps,
@@ -252,6 +320,7 @@ def _build_demo_boundary_summary(project_root: Path, *, target_ep: int, prep_pay
         "blueprint_file_eps": blueprint_file_eps,
         "beyond_target": beyond_target,
         "errors": errors,
+        "warnings": warnings,
     }
 
 
@@ -277,20 +346,28 @@ def _build_multi_stage_summary(
     if stage3_session_id and stage4_session_id and not shared_session_id:
         errors.append("stage3_stage4_session_split")
     if str((stage3_current_session_summary or {}).get("status", "") or "missing") != "ok":
-        errors.append(f"stage3_current_session_status:{(stage3_current_session_summary or {}).get('status', 'missing')}")
+        errors.append(
+            f"stage3_current_session_status:{(stage3_current_session_summary or {}).get('status', 'missing')}"
+        )
     if str(stage4_current_summary.get("status", "") or "missing") != "ok":
         errors.append(f"stage4_current_session_status:{stage4_current_summary.get('status', 'missing')}")
     if str(stage4_rationale_summary.get("status", "") or "missing") != "ok":
         errors.append(f"stage4_rationale_status:{stage4_rationale_summary.get('status', 'missing')}")
     if str(stage4_companion_summary.get("status", "") or "missing") != "ok":
         errors.append(f"stage4_companion_status:{stage4_companion_summary.get('status', 'missing')}")
-    if str(boundary_summary.get("status", "") or "missing") != "pass":
+    boundary_status = str(boundary_summary.get("status", "") or "missing")
+    if boundary_status == "fail":
         errors.append(f"demo_boundary_status:{boundary_summary.get('status', 'missing')}")
+    elif boundary_status == "warn":
+        warnings.append("demo_boundary_status:warn")
+        if not bool(boundary_summary.get("closure_grade_ready", False)):
+            warnings.append("demo_source_authority_partial")
 
     status = "fail" if errors else ("warn" if warnings else "pass")
     return {
         "summary_role": "stage34_single_episode_demo_proof_scope",
         "status": status,
+        "proof_grade": str(boundary_summary.get("proof_grade", "") or "missing"),
         "shared_session_id": shared_session_id,
         "covered_surfaces": [
             "ep1_frozen_authority",

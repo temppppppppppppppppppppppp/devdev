@@ -1,0 +1,254 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "0b0cdf2befbe245e336b9dbe5182ed3ff4c41ee94607880b891328da7507424e"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=1; sample_anchors=자산을 관리하는 일반 은행",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 1개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1237,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 7003,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 992997,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 4033,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 2694,
+          "lane": "constraints"
+        },
+        {
+          "chars": 133,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 133,
+        "constraints": 2694,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 4033
+      },
+      "shared_context_chars": 6870,
+      "total_chars": 7003
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 5,
+    "strategy": "dialogue_focused",
+    "total_candidates": 3
+  },
+  "_inventory_gaps": [
+    {
+      "item": "구형 휴대폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "빈 노트와 펜",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "경영 불참을 미끼로 한정호의 철저한 감시망을 벗어나려는 치열한 심리전",
+  "end_location": "서울 성북동 본가 2층 복도",
+  "ending_hook": "\"내일부터 제 명의 계좌에 대한 본사 감사팀의 열람 권한이...\" 한시우의 말이 끝나기도 전에, 등 뒤에서 서늘한 목소리가 날아들었다. \"그게 무슨 소리냐, 시우야.\"",
+  "ending_state": {
+    "location": "서울 성북동 본가 2층 복도",
+    "protagonist_status": "한정호의 감시를 벗어나 자금 융통의 자유를 얻었으나, 통화 중 예기치 않은 난입자에 직면함",
+    "timeline": {
+      "표현": "2006년 1월 아침"
+    }
+  },
+  "ep_num": 4,
+  "episode_number": 4,
+  "expected_ending": "감시망 해제를 얻어내고 초기 자금 확보를 위한 첫 통화를 시도함",
+  "integrated_scenario": "육중한 마호가니 문이 열리고, 한시우는 2006년의 한정호 회장과 마주한다. 서재 안은 짙은 시가 향과 압도적인 정적으로 가득 차 있다. 한정호는 서류에서 눈을 떼지 않은 채 막내아들을 향해 무언의 압박을 가한다. 과거의 한시우였다면 이 시선만으로도 숨을 헐떡였겠지만, 끔찍한 죽음의 문턱을 넘어온 현재의 그는 다르다. 내면에서 들끓는 분노를 철저히 억누른 채, 한시우는 유약하지만 단호한 표정을 지어 보이며 카펫 위에 조용히 선다. 기선 제압을 위한 고의적인 침묵이 이어지지만 한시우는 미세한 표정 변화조차 보이지 않는다.\n\n마침내 고개를 든 한정호가 입을 연다. 그는 최근 두 형이 피 터지게 다투고 있는 물류 계열사의 기획조정실 자리를 언급하며 한시우의 속내를 떠본다. 한시우는 고개를 숙이며, 자신은 그룹 경영이나 승계에 참여할 뜻이 전혀 없음을 선언한다. 예상치 못한 막내의 폭탄 발언에 한정호의 눈빛이 날카롭게 빛난다. 한정호는 이것이 형들의 견제를 피하기 위한 얄팍한 수인지, 아니면 다른 꿍꿍이가 있는지 파악하기 위해 날 선 질문들을 던진다.\n\n한시우는 완벽한 논리로 대응한다. \"형님들의 경쟁에 불필요한 변수가 되어 그룹에 혼란을 주고 싶지 않습니다. 저는 그저 조용히, 가문의 이름에 누를 끼치지 않는 선에서 제 몫의 삶을 살고 싶습니다.\" 이 대답은 후계 구도의 안정을 최우선으로 여기는 한정호의 철저한 타산과 정확히 맞아떨어진다. 한시우의 맑은 눈빛에서 어떤 야망도 읽어내지 못한 한정호는 미세한 흥미와 함께 안도감을 느낀다. 그는 막내가 드디어 제 분수를 파악했다고 판단한다.\n\n한정호는 한시우의 경영 불참 선언을 수용하는 조건으로, 그간 한시우의 개인 계좌와 자금 흐름을 일거수일투족 감시하던 본사 감사팀의 인력을 철수시키겠다고 약속한다. 드디어 완벽한 자유, 즉 '보이지 않는 목줄'을 끊어내는 데 성공한 것이다. 한시우는 정중히 허리를 굽혀 인사하며, 바닥을 향한 얼굴에 번지는 차가운 미소를 완벽하게 숨긴다.\n\n서재를 나선 한시우는 복도를 걸으며 억눌렀던 숨을 길게 토해낸다. 주머니에서 구형 휴대폰을 꺼내 전원을 켠 그는, 곧바로 자신의 개인 자산을 관리하는 일반 은행 창구 번호를 누른다. 본격적인 자금 유동화를 위한 첫 번째 확인 작업이다. \"내일부터 제 명의 계좌에 대한 본사 감사팀의 열람 권한이...\" 한시우가 나지막하게 통화를 이어가던 찰나, 등 뒤에서 예상치 못한 인물의 목소리가 그의 대사를 끊고 날아든다. \"경영에서 손을 떼겠다고? 그게 무슨 소리냐, 시우야.\"",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부 서재 내부에서의 극심한 심리전과 정적인 긴장감을 길게 가져가며, 한정호와의 대화에서 오가는 팽팽한 기싸움에 집중한다. 중반부 감시망 해제 획득으로 독자에게 카타르시스를 제공한 뒤, 후반부 복도로 나와 첫 행동을 개시하는 순간을 빠르게 전개하여 템포를 올리고 예상치 못한 인물의 등장으로 텐션을 다시 끌어올린다.",
+  "protagonist_state": {
+    "equipment": [
+      "구형 휴대폰",
+      "빈 노트와 펜"
+    ],
+    "injuries": "없음",
+    "mood": "차갑게 가라앉은 이성과 완벽한 연기 후의 성취감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "기대 제로, 유약한 막내로 치부",
+      "justification": "한시우가 논리적으로 경영 불참을 선언하고 형들의 경쟁에 방해가 되지 않겠다는 뜻을 명확히 밝혔기 때문",
+      "target": "한정호",
+      "to_state": "미세한 관심, 스스로 물러난 것에 대한 안도와 신뢰"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "한정호"
+      ],
+      "content": "",
+      "description": "짙은 시가 향이 배어 있는 서재 안, 한정호 회장은 서류에서 눈을 떼지 않은 채 무언의 압박을 가한다. 과거의 한시우라면 이 침묵만으로도 질렸겠지만, 죽음을 경험하고 온 그는 내면의 분노를 철저히 억누르며 유약하면서도 단정한 막내의 가면을 쓴 채 제자리에 선다.",
+      "goal": "한정호의 기선 제압을 견뎌내고 침착함을 유지한다",
+      "key_events": [
+        "마호가니 문을 열고 들어선 한시우가 서재 중앙의 카펫 위에 멈춰 섬",
+        "한정호가 서류를 넘기며 고의적으로 침묵을 유지해 기선을 제압하려 함",
+        "한시우가 미세한 표정 변화조차 없이, 과거와 달리 차분하게 시선을 내리깔고 대기함"
+      ],
+      "location": "서울 성북동 본가 서재 안",
+      "summary": "서재 문을 열고 들어선 한시우가 한정호 회장의 압도적인 위압감 앞에서도 흔들림 없이 감정을 통제하며 마주 선다.",
+      "tension_level": 8,
+      "title": "사자의 굴",
+      "type": "direct_continuation"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "한정호"
+      ],
+      "content": "",
+      "description": "마침내 고개를 든 한정호가 최근 두 형이 다투고 있는 물류 계열사를 언급하며 한시우의 속내를 떠본다. 한시우는 일말의 망설임도 없이 자신은 그룹 경영이나 승계에 아무런 관심이 없으며, 가문의 이름에 누를 끼치지 않는 조용한 삶을 원한다고 선언한다.",
+      "goal": "그룹 경영 불참을 선언하여 후계 구도의 변수에서 스스로 탈락한다",
+      "key_events": [
+        "한정호가 물류 계열사 기획조정실 자리를 제안하며 한시우의 야심을 시험함",
+        "한시우가 정중하지만 단호한 어조로 경영 불참 의사를 밝힘",
+        "예상치 못한 막내의 대답에 한정호의 서늘했던 눈빛에 미세한 파문이 일어남"
+      ],
+      "location": "서울 성북동 본가 서재 안",
+      "summary": "한정호가 계열사 입사에 대한 의중을 묻자, 한시우는 그룹 경영에 전혀 참여할 뜻이 없음을 명확히 밝힌다.",
+      "tension_level": 9,
+      "title": "폭탄 선언",
+      "type": "dialogue_duel"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "한정호"
+      ],
+      "content": "",
+      "description": "한정호는 이것이 형들의 견제를 피하기 위한 얄팍한 수인지 의심하며 날카로운 질문들을 쏟아낸다. 한시우는 '형님들의 경쟁에 불필요한 변수가 되어 그룹에 혼란을 주고 싶지 않다'는 완벽한 논리로 대응한다. 이는 후계 구도의 안정을 최우선으로 여기는 한정호의 철저한 타산과 정확히 맞아떨어진다.",
+      "goal": "한정호의 의심을 불식시키고 그의 이해관계에 부합하는 논리를 제시한다",
+      "key_events": [
+        "한정호가 펜을 내려놓고 한시우의 눈을 꿰뚫어 보며 숨겨진 의도를 캐물음",
+        "한시우가 형들의 경쟁 구도를 언급하며 자신이 빠지는 것이 그룹에 이득임을 논리적으로 설명함",
+        "한정호가 한시우의 눈빛에서 어떤 야망도 읽어내지 못하고 속으로 안도함"
+      ],
+      "location": "서울 성북동 본가 서재 안",
+      "summary": "한정호는 한시우의 진의를 파악하기 위해 날 선 질문을 던지고, 한시우는 형들의 경쟁에 방해가 되지 않겠다는 논리로 맞선다.",
+      "tension_level": 8,
+      "title": "의심과 타산",
+      "type": "side_glimpse"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "한정호"
+      ],
+      "content": "",
+      "description": "한시우가 주제 파악을 했다고 판단한 한정호는 미세한 흥미와 안도감을 동시에 느낀다. 그는 한시우의 제안을 수락하며, 앞으로 경영에 관여하지 않는 한 기본 품위 유지비와 신탁 자산에 대한 본사 감사팀의 일상적인 감시를 철수시키겠다고 선언한다. 한시우는 속으로 쾌재를 부르며 겉으로는 깊이 고개를 숙인다.",
+      "goal": "경영 불참의 대가로 개인 자산에 대한 감사팀의 감시망 해제를 얻어낸다",
+      "key_events": [
+        "한정호가 책상 서랍을 닫으며 한시우의 개인 계좌에 붙여둔 감사 인력 철수를 지시하겠다고 선언함",
+        "한시우가 감사하다는 말과 함께 허리를 굽혀 인사하며, 얼굴에 번지는 차가운 미소를 숨김",
+        "서재에서의 독대가 끝나고 한시우가 문을 향해 돌아섬"
+      ],
+      "location": "서울 성북동 본가 서재 안",
+      "summary": "한정호는 한시우의 경영 불참을 수용하고, 그 대가로 한시우의 개인 계좌에 대한 감사팀의 감시를 거두기로 약속한다.",
+      "tension_level": 6,
+      "title": "족쇄를 풀다",
+      "type": "resolution"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우",
+        "미상의 인물"
+      ],
+      "content": "",
+      "description": "서재 밖으로 나온 한시우는 억눌렀던 숨을 내쉬며 구형 휴대폰의 전원을 켠다. 즉시 자신의 계좌를 관리하는 일반 은행 번호를 누른 그는 감시망 해제를 확인하기 위해 입을 연다. 그러나 그가 말을 채 맺기도 전에, 복도 끝에서 들려온 서늘한 목소리가 그의 행동을 제지한다.",
+      "goal": "감시망 해제 직후 첫 행동을 개시하려던 찰나, 누군가의 개입으로 긴장감을 유발한다",
+      "key_events": [
+        "한시우가 서재 문을 닫고 복도로 나와 휴대폰으로 은행에 전화를 검",
+        "한시우가 '내일부터 제 명의 계좌에 대한 본사 감사팀의 열람 권한이...'라고 통화를 시작함",
+        "등 뒤에서 '경영에서 손을 떼겠다고? 그게 무슨 소리냐'라는 목소리가 끼어들며 대화가 중단됨"
+      ],
+      "location": "서울 성북동 본가 2층 복도",
+      "summary": "서재를 나선 한시우가 휴대폰을 꺼내 은행 창구에 확인 전화를 거는 순간, 등 뒤에서 들려온 목소리에 대화가 끊긴다.",
+      "tension_level": 7,
+      "title": "예기치 않은 난입",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 서재 앞",
+  "target_beat": "서재 독대를 통한 심리적 승리 및 자유 획득",
+  "time_flow": "아침",
+  "title": "보이지 않는 목줄"
+}

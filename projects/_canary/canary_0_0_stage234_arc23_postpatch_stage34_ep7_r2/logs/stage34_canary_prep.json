@@ -1,0 +1,84 @@
+{
+  "prepared_at": "2026-04-16T18:23:00",
+  "source_project": "_canary/canary_0_0_stage234_arc23_postpatch_stage3_r1",
+  "target_project": "_canary/canary_0_0_stage234_arc23_postpatch_stage34_ep7_r2",
+  "from_ep": 7,
+  "cleanup": {
+    "from_ep": 7,
+    "db_impact": {
+      "manuscripts": 0,
+      "state_logs": 0,
+      "episode_bibles": 0,
+      "causal_graph": 0,
+      "episode_meta": 0,
+      "episode_quality_labels": 0,
+      "stage4_attempts": 0,
+      "stage4_director_selections": 0,
+      "blueprints_kept": 1,
+      "orphan_chain_link_anchors": 0,
+      "blueprints_removed": 1,
+      "stage3_attempts": 1,
+      "stage3_director_selections": 1
+    },
+    "anchor_validation": {
+      "status": "ok",
+      "cleanup_status": "ok",
+      "minimum_truth_status": "ok",
+      "from_ep": 7,
+      "orphan_chain_links": [],
+      "fact_ledger_history_at_or_after": {},
+      "world_state_alive_npcs_at_or_after": [],
+      "world_state_active_items_at_or_after": [],
+      "world_state_last_updated_ep": 2,
+      "expected_minimum_world_state": {
+        "npc_names": [
+          "가사도우미",
+          "늙은 집사",
+          "시스템",
+          "한시우의 가족 (아버지, 형들, 고용인 등)"
+        ],
+        "relationships": {
+          "가사도우미": "오해 대상",
+          "늙은 집사": "오해 대상",
+          "시스템": "목격자",
+          "한시우의 가족 (아버지, 형들, 고용인 등)": "오해 대상"
+        },
+        "active_items": [
+          "SW인베스트먼트",
+          "가죽 양장 노트",
+          "구형 폴더폰",
+          "묵직한 만년필"
+        ]
+      },
+      "actual_minimum_world_state": {
+        "npc_names": [
+          "가사도우미",
+          "늙은 집사",
+          "시스템",
+          "한시우의 가족 (아버지, 형들, 고용인 등)"
+        ],
+        "relationships": {
+          "시스템": "목격자",
+          "한시우의 가족 (아버지, 형들, 고용인 등)": "오해 대상",
+          "가사도우미": "오해 대상",
+          "늙은 집사": "오해 대상"
+        },
+        "active_items": [
+          "SW인베스트먼트",
+          "가죽 양장 노트",
+          "구형 폴더폰",
+          "묵직한 만년필"
+        ]
+      },
+      "missing_world_state_npcs": [],
+      "missing_world_state_active_items": [],
+      "world_state_relationship_mismatches": []
+    },
+    "file_cleanup": {
+      "draft_files_removed": 0,
+      "log_entries_removed": 10,
+      "memory_entries_removed": 0,
+      "blueprint_files_removed": 0
+    }
+  }
+}

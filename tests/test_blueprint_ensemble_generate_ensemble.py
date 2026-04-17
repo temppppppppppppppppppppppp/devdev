@@ -592,8 +592,7 @@ def test_sanitize_blueprint_candidate_rejects_korean_synonym_tactical_intrusion(
                 },
             },
             "integrated_scenario": (
-                "리스크 관리팀이 VIP룸에 들이닥쳐 한시우의 팔목을 비틀고 주먹을 들이밀며 입막음을 강요한다. "
-                * 30
+                "리스크 관리팀이 VIP룸에 들이닥쳐 한시우의 팔목을 비틀고 주먹을 들이밀며 입막음을 강요한다. " * 30
             ),
             "opening_transition": {"type": "direct_continuation"},
             "protagonist_state": {"mood": "냉정"},
@@ -651,8 +650,7 @@ def test_sanitize_blueprint_candidate_allows_pb_negotiation_with_staff_words_onl
                 },
             },
             "integrated_scenario": (
-                "박성호가 직원을 불러 대응표와 주문 확인서를 준비시키고, 한시우와 체결 순서를 차분히 맞춰 나간다. "
-                * 30
+                "박성호가 직원을 불러 대응표와 주문 확인서를 준비시키고, 한시우와 체결 순서를 차분히 맞춰 나간다. " * 30
             ),
             "opening_transition": {"type": "direct_continuation"},
             "protagonist_state": {"mood": "냉정"},
@@ -896,6 +894,29 @@ def test_format_constraints_surfaces_episode_state_packet_authority_and_dropped_
     assert "opening.location: 한미증권 청담동 지점 15층 VIP룸" in formatted
     assert "prev_blueprint.scene_breakdown.last.location" in formatted
     assert "mid_arc_arc_start_location_override_blocked" in formatted
+
+
+def test_format_constraints_surfaces_opening_transition_expectation():
+    agent = _make_agent()
+
+    formatted = agent._format_constraints(
+        {
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "Packet Hall",
+                    "location_source": "state_constraints.arc_end_state.location",
+                    "opening_transition_expectation": (
+                        "Use explicit_transition; never declare direct_continuation when the opening anchor moved."
+                    ),
+                }
+            }
+        },
+        genre=GenreTypes.HUNTER,
+    )
+
+    assert "opening.transition_expectation" in formatted
+    assert "direct_continuation" in formatted
+    assert "explicit_transition" in formatted
 
 
 def test_select_generate_error_type_prefers_candidate_disqualified_over_schema_bundle():

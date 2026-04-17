@@ -100,10 +100,7 @@ class TestInstitutionFactLockAnchor:
 
     def test_institution_anchors_bounded(self):
         """Institution anchors are bounded to max 4."""
-        text = (
-            "한국투자증권, 미래에셋증권, 삼성증권, NH투자증권, "
-            "KB증권, 대신증권, 키움증권에서 동시에 회의했다."
-        )
+        text = "한국투자증권, 미래에셋증권, 삼성증권, NH투자증권, KB증권, 대신증권, 키움증권에서 동시에 회의했다."
         result = BlueprintConstraintCompiler._build_fact_lock_packet(
             prev_blueprint={"end_location": "증권가"},
             prev_manuscript_ending=text,
@@ -113,7 +110,6 @@ class TestInstitutionFactLockAnchor:
         anchors = result.get("anchors", [])
         inst_anchors = [a for a in anchors if a["category"] == "기관"]
         assert len(inst_anchors) <= 4
-
 
     def test_manuscript_institution_outranks_conflicting_blueprint_institution(self):
         bp = {
@@ -597,7 +593,9 @@ class TestEpisodeStatePacket:
         assert "mid_arc_arc_start_location_override_blocked" in packet.get("rewrite_required_reasons", [])
         assert "mid_arc_arc_start_equipment_override_blocked" in packet.get("rewrite_required_reasons", [])
         assert any(
-            item.get("field") == "opening.location" for item in packet.get("dropped_conflicts", []) if isinstance(item, dict)
+            item.get("field") == "opening.location"
+            for item in packet.get("dropped_conflicts", [])
+            if isinstance(item, dict)
         )
 
     def test_mid_arc_packet_keeps_previous_blueprint_authority_even_when_cross_stage_packet_is_present(self):
@@ -856,6 +854,110 @@ class TestEpisodeStatePacket:
         assert packet.get("source_precedence", {}).get("protagonist_truth", [None])[0] == (
             "cross_stage_authority_packet.protagonist_carryover"
         )
+
+    def test_episode_state_packet_prefers_arc_timeline_time_truth_on_arc_opening(self):
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {
+            "ep_num": 10,
+            "end_location": "Prev Blueprint Room",
+            "time_flow": "January night",
+            "scene_breakdown": {
+                "scene_2": {
+                    "location": "Prev Blueprint Room",
+                    "characters": ["lead", "ally"],
+                }
+            },
+        }
+
+        constraint_block = compiler.compile(
+            arc_data={
+                "ep_start": 11,
+                "ep_count": 3,
+                "arc_no": 3,
+                "state_changes": {
+                    "timeline": {
+                        "start": {
+                            "year": 2006,
+                            "month": 2,
+                            "day": 28,
+                            "description": "late February 2006",
+                        }
+                    }
+                },
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "Arc Start Office",
+                    }
+                },
+            },
+            ep_num=11,
+            prev_blueprint=prev_bp,
+            prev_blueprints=[prev_bp],
+            prev_manuscript_ending="Cold January air leaked through the hotel window.",
+            genre="investment",
+        )
+
+        packet = constraint_block.get("episode_state_packet", {})
+        opening_truth = packet.get("opening_truth", {})
+
+        assert opening_truth.get("time_source") == "arc_data.state_changes.timeline"
+        assert opening_truth.get("time_context") == "late February 2006"
+        assert packet.get("source_precedence", {}).get("time_truth", [None])[0] == "arc_data.state_changes.timeline"
+
+    def test_episode_state_packet_surfaces_arc_opening_transition_expectation_on_anchor_shift(self):
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {
+            "ep_num": 10,
+            "end_location": "Prev Blueprint Room",
+            "time_flow": "January night",
+            "scene_breakdown": {
+                "scene_2": {
+                    "location": "Prev Blueprint Room",
+                    "characters": ["lead", "ally"],
+                }
+            },
+        }
+
+        constraint_block = compiler.compile(
+            arc_data={
+                "ep_start": 11,
+                "ep_count": 3,
+                "arc_no": 3,
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "opening_carryover": {
+                        "location": "Packet Hall",
+                        "location_source": "state_constraints.arc_end_state.location",
+                    },
+                    "protagonist_carryover": {},
+                    "numeric_carryover": {},
+                },
+                "state_changes": {
+                    "timeline": {
+                        "start": {
+                            "description": "late February 2006",
+                        }
+                    }
+                },
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "Packet Hall",
+                    }
+                },
+            },
+            ep_num=11,
+            prev_blueprint=prev_bp,
+            prev_blueprints=[prev_bp],
+            prev_manuscript_ending="Cold January air leaked through the hotel window.",
+            genre="investment",
+        )
+
+        packet = constraint_block.get("episode_state_packet", {})
+        opening_truth = packet.get("opening_truth", {})
+
+        assert opening_truth.get("location") == "Packet Hall"
+        assert "do not declare direct_continuation" in opening_truth.get("opening_transition_expectation", "")
+        assert "explicit_transition" in opening_truth.get("opening_transition_expectation", "")
 
     def test_episode_state_packet_keeps_prev_precedence_when_packet_only_carries_numeric_truth(self):
         compiler = BlueprintConstraintCompiler()
