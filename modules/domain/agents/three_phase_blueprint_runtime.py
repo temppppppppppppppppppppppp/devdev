@@ -1470,6 +1470,7 @@ class ThreePhaseBlueprintRuntime:
         retry: int,
         ep_num: int,
         arc_data: dict,
+        constraint_block: dict,
         pipeline_result: dict,
         max_retries: int,
     ) -> _ThreePhasePhase2Result:
@@ -1491,10 +1492,13 @@ class ThreePhaseBlueprintRuntime:
             pipeline_result["failure_reason"] = error_type
 
         operator_feedback = "Ensemble 생성 실패. 다시 시도합니다."
+        reject_reason = "Ensemble 생성 실패. 다시 시도하세요."
         if error_type == AgentErrorType.SCHEMA_INCOMPATIBLE:
             operator_feedback = "schema_incompatible로 즉시 중단합니다."
+            reject_reason = "schema_incompatible로 즉시 중단합니다."
         elif error_type == AgentErrorType.CANDIDATE_DISQUALIFIED:
-            operator_feedback = "replay/authority/구조 계약 미달 후보만 생성되어 재시도합니다."
+            operator_feedback = self._build_candidate_disqualified_retry_feedback(constraint_block)
+            reject_reason = operator_feedback
 
         logging.warning("❌ [Phase 2] Ensemble 생성 실패")
         self._log_operator_retry_context(
@@ -1516,11 +1520,7 @@ class ThreePhaseBlueprintRuntime:
             arc_data=arc_data,
             retry=retry,
             max_retries=max_retries,
-            reject_reason=(
-                "replay/authority/구조 계약 미달 후보만 생성됨. 다시 시도하세요."
-                if error_type == AgentErrorType.CANDIDATE_DISQUALIFIED
-                else "Ensemble 생성 실패. 다시 시도하세요."
-            ),
+            reject_reason=reject_reason,
             event_tag=(
                 "generate_candidate_disqualified"
                 if error_type == AgentErrorType.CANDIDATE_DISQUALIFIED
@@ -1528,6 +1528,38 @@ class ThreePhaseBlueprintRuntime:
             ),
         )
         return _ThreePhasePhase2Result(None, [], should_continue=True)
+
+    @staticmethod
+    def _build_candidate_disqualified_retry_feedback(constraint_block: dict) -> str:
+        base = "replay/authority/구조 계약 미달 후보만 생성됨. 다시 시도하세요."
+        if not isinstance(constraint_block, dict):
+            return base
+
+        progression_pkt = constraint_block.get("episode_progression_packet", {})
+        if not isinstance(progression_pkt, dict):
+            return base
+
+        surface_guidance = progression_pkt.get("surface_guidance", [])
+        future_reservations = progression_pkt.get("future_beat_reservations", [])
+        has_surface_guidance = isinstance(surface_guidance, list) and bool(surface_guidance)
+        has_future_reservations = isinstance(future_reservations, list) and bool(future_reservations)
+        if not has_surface_guidance and not has_future_reservations:
+            return base
+
+        lines = [base]
+        if has_surface_guidance:
+            lines.append("[Replay reroute guidance]")
+            for guidance in surface_guidance[:4]:
+                text = str(guidance or "").strip()
+                if text:
+                    lines.append(f"- {text}")
+        if has_future_reservations:
+            lines.append("[Next-episode reserved beat]")
+            for guidance in future_reservations[:3]:
+                text = str(guidance or "").strip()
+                if text:
+                    lines.append(f"- {text}")
+        return "\n".join(lines)
 
     def _run_phase2_generation(
         self,

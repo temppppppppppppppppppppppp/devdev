@@ -1,0 +1,255 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "5a29637264677e67ee4b9d99759666a1ebda982ad21d05223640c72075781a47"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=마호가니 문이 열리며 서재, 넓은 서재, 말은 서재",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1257,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 4751,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 995249,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 2709,
+          "lane": "constraints"
+        },
+        {
+          "chars": 1762,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 137,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 137,
+        "constraints": 2709,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 1762
+      },
+      "shared_context_chars": 4618,
+      "total_chars": 4751
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 5,
+    "strategy": "action_focused",
+    "total_candidates": 3
+  },
+  "_inventory_gaps": [
+    {
+      "item": "2006년형 구형 폴더폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "last_score": 90,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "가문의 절대 권력자인 아버지와의 기싸움과 후계 구도 자진 하차 선언",
+  "end_location": "서울 성북동 본가 저택 복도",
+  "ending_hook": "굳게 닫힌 서재 문을 등진 한시우가 주머니에서 낡은 폴더폰을 꺼내며 거침없이 발걸음을 옮겼다.",
+  "ending_state": {
+    "location": "서울 성북동 본가 저택 복도",
+    "protagonist_status": "과거의 굴레를 끊어내고 첫 번째 독자적 행동을 개시하려는 상태",
+    "timeline": {
+      "표현": "2006년 1월 초 오전"
+    }
+  },
+  "ep_num": 2,
+  "episode_number": 2,
+  "expected_ending": "아버지의 통제를 벗어나 완전한 독립을 선언하고 서재를 나섬",
+  "integrated_scenario": "차가운 황동 문고리를 쥔 한시우는 망설임 없이 손목에 힘을 주었다. 묵직한 마호가니 문이 열리며 서재 특유의 짙은 시가 향과 가죽 냄새가 훅 끼쳐왔다. 넓은 서재 중앙, 거대한 흑단목 책상 너머에는 제국의 지배자인 아버지 한정호가 앉아 있었다. 그는 막내아들이 들어왔음에도 서류에서 눈을 떼지 않은 채 숨막히는 침묵으로 공간을 짓눌렀다. 과거의 한시우였다면 이 고의적인 방치에 식은땀을 흘리며 안절부절못했겠지만, 지금의 그는 달랐다. 한시우는 카펫 위로 발소리를 죽여 걸어간 뒤, 책상 앞 정확한 위치에 서서 미동도 없이 아버지를 내려다보았다.\n\n침묵을 깬 것은 한정호였다. 그가 신경질적으로 만년필을 내려놓으며 날카로운 시선을 쏘아보냈다. 방탕한 생활에 대한 질책과 함께, 지방 계열사로 내려가라는 통보가 이어졌다. 그러나 한시우는 변명하거나 매달리지 않았다. 오히려 서늘할 정도로 차분한 목소리로 \"그럴 일은 없을 겁니다, 회장님.\" 하고 대답했다. '아버지'가 아닌 '회장님'이라는 호칭에 방 안의 공기가 얼어붙었다.\n\n서재 한구석에 도열해 있던 김 비서실장의 눈동자가 미세하게 흔들렸다. 늘 아버지를 두려워하며 변명하기 급급했던 망나니 막내가, 지금은 포식자 앞에서도 전혀 위축되지 않은 채 꼿꼿하게 서 있었기 때문이다. 김 실장은 한시우의 눈빛에서 전에 없던 이질적이고 위험한 기운을 감지하고 마른침을 삼켰다. 한정호 역시 흥미와 불쾌감이 섞인 얼굴로 몸을 앞으로 기울였다.\n\n한시우는 흔들림 없는 시선으로 한정호의 안광을 정면으로 받아냈다. 그리고 그룹의 자금, 인맥, 그 어떤 지원도 거부하겠다는 폭탄선언을 던졌다. \"오늘부로 저는 태성 그룹의 후계 구도에서 완전히 빠지겠습니다.\" 그 말은 서재에 물리적인 타격을 입힌 것처럼 묵직하게 울려 퍼졌다. 한정호가 호랑이 같은 기세로 뿜어내는 압박감 속에서도 한시우는 단 한 발자국도 물러서지 않았다. 오히려 자신의 몫으로 배정된 신탁 자금조차 필요 없다는 뜻을 명확히 하며, 스스로 가문의 그늘을 벗어나는 길을 택했다.\n\n용건을 마친 한시우는 정중하지만 차가운 각도로 고개를 숙여 인사한 뒤, 미련 없이 몸을 돌렸다. 육중한 마호가니 문이 닫히는 소리가 서재의 정적을 갈랐다. 복도로 나온 한시우는 그제야 짧게 숨을 내쉬었다. 절대자와의 기싸움은 전신에 긴장감을 남겼지만, 그의 입가에는 완벽한 해방감과 통제권을 쥔 자의 서늘한 미소가 걸려 있었다. 주머니에서 2006년형 구형 폴더폰을 꺼내 든 한시우는 액정을 튕겨 열며 거침없이 복도를 걸어 나갔다. 이제 진짜 사냥을 시작할 때였다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부 침묵의 기싸움으로 긴장을 서서히 끌어올리다, 호칭 변화와 후계 구도 이탈 선언으로 절정을 맞이함. 이후 서재를 빠져나오며 속도감 있게 클리프행어로 연결.",
+  "protagonist_state": {
+    "equipment": [
+      "2006년형 구형 폴더폰"
+    ],
+    "injuries": "없음",
+    "mood": "절대자와의 대면을 넘긴 후의 완벽한 해방감과 냉철함"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "기대 제로의 방탕한 막내아들",
+      "justification": "변명 대신 정면으로 맞서며 후계 구도를 자진 이탈하는 모습을 보였기 때문",
+      "target": "한정호",
+      "to_state": "예측 불가능한 이질감을 주는 존재"
+    },
+    {
+      "from_state": "한심한 도련님",
+      "justification": "회장의 압박 속에서도 전혀 흔들림 없는 태도와 기세를 목격함",
+      "target": "김 비서실장",
+      "to_state": "위험하고 서늘한 기백을 가진 자"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "한정호",
+        "김 비서실장"
+      ],
+      "content": "",
+      "description": "서재 특유의 무거운 공기와 침묵으로 기선을 제압하려는 아버지에 맞서, 한시우가 완전히 달라진 태도를 보여주는 오프닝.",
+      "goal": "아버지 한정호와의 대면 시작 및 기싸움",
+      "key_events": [
+        "차가운 황동 문고리를 돌려 묵직한 마호가니 문을 열고 서재로 진입",
+        "서류만 들여다보며 고의적인 침묵으로 압박을 가하는 한정호",
+        "과거와 달리 식은땀 한 방울 흘리지 않고 책상 앞 정확한 위치에 서서 미동 없이 대기하는 한시우"
+      ],
+      "location": "본가 저택 아버지의 서재",
+      "summary": "서재 문을 열고 들어간 한시우가 한정호의 묵직한 압박감에도 굴하지 않고 당당히 맞선다.",
+      "tension_level": 7,
+      "title": "문 너머의 제왕",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "한정호"
+      ],
+      "content": "",
+      "description": "변명이나 애원을 기대했던 한정호의 예상을 완벽하게 빗나가는 한시우의 차가운 대응.",
+      "goal": "기존의 탕아 프레임을 깨부수는 한시우의 반격",
+      "key_events": [
+        "한정호가 신경질적으로 만년필을 던지며 방탕한 생활을 질책하고 지방 발령을 통보함",
+        "한시우가 눈을 피하지 않고 '그럴 일은 없을 겁니다, 회장님'이라며 차갑게 대답함",
+        "'아버지'가 아닌 '회장님'이라는 호칭에 서재 안의 공기가 급격히 얼어붙음"
+      ],
+      "location": "본가 저택 아버지의 서재",
+      "summary": "질책과 함께 지방 계열사 발령을 통보하는 한정호에게 한시우가 정면으로 반박한다.",
+      "tension_level": 8,
+      "title": "예상 밖의 수",
+      "type": "dialogue_duel"
+    },
+    "scene_3": {
+      "characters": [
+        "김 비서실장",
+        "한시우",
+        "한정호"
+      ],
+      "content": "",
+      "description": "늘 위축되어 있던 막내아들의 이질적인 변화를 가장 가까이서 목격하는 조연의 내면 묘사.",
+      "goal": "제3자의 시선을 통한 한시우의 변화 부각",
+      "key_events": [
+        "서재 구석에 도열한 김 비서실장이 한시우의 흐트러짐 없는 호흡과 꼿꼿한 자세를 관찰함",
+        "포식자 앞에서도 위축되지 않는 이질적인 기운에 김 비서실장이 마른침을 삼킴",
+        "한정호가 흥미와 불쾌감이 섞인 표정으로 몸을 앞으로 기울이며 비로소 한시우를 직시함"
+      ],
+      "location": "본가 저택 아버지의 서재",
+      "summary": "김 비서실장이 이전과 전혀 다른 한시우의 기백과 자세를 관찰하며 경악한다.",
+      "tension_level": 7,
+      "title": "균열의 시작",
+      "type": "side_glimpse"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "한정호"
+      ],
+      "content": "",
+      "description": "물리적 타격에 버금가는 심리적 충돌. 한정호의 맹렬한 기세를 한시우가 정면으로 베어내는 절정의 순간.",
+      "goal": "그룹 자금 거부 및 완벽한 독립 선언",
+      "key_events": [
+        "한시우가 그룹의 자금과 인맥 등 모든 지원을 거부하겠다고 단호하게 선언",
+        "태성 그룹의 후계 구도에서 완전히 빠지겠다는 선언이 서재에 물리적 타격처럼 울려 퍼짐",
+        "한정호가 뿜어내는 호랑이 같은 기세와 압박감 속에서도 단 한 발자국도 물러서지 않고 시선을 마주침"
+      ],
+      "location": "본가 저택 아버지의 서재",
+      "summary": "한시우가 그룹의 모든 지원을 거부하고 후계 구도에서 자발적으로 하차하겠다고 폭탄선언을 던진다.",
+      "tension_level": 9,
+      "title": "후계 구도 이탈",
+      "type": "action_peak"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "절대자와의 기싸움을 끝내고 온전한 통제권을 쥔 주인공의 행보가 시작되는 클리프행어.",
+      "goal": "독립적인 행보의 시작 암시",
+      "key_events": [
+        "정중하지만 차가운 각도로 인사를 마친 한시우가 미련 없이 몸을 돌려 서재를 빠져나옴",
+        "육중한 문이 닫힌 뒤 복도에서 짧게 숨을 내쉬며 완벽한 해방감을 만끽함",
+        "주머니에서 2006년형 구형 폴더폰을 꺼내 액정을 튕겨 열며 거침없이 발걸음을 옮김"
+      ],
+      "location": "본가 저택 복도",
+      "summary": "서재를 나선 한시우가 구형 폴더폰을 꺼내며 자신만의 새로운 판을 짤 준비를 마친다.",
+      "tension_level": 8,
+      "title": "새로운 판",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 저택, 아버지의 서재 앞 복도",
+  "target_beat": "아버지와의 정면 대결 및 독립 선언",
+  "time_flow": "2006년 1월 초 오전",
+  "title": "서재의 선언"
+}

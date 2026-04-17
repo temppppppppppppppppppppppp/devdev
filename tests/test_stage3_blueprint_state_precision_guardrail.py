@@ -204,8 +204,13 @@ class TestFactLockPacket:
                 "tactical_doc": (
                     "### 제 3화: 씨앗을 심는 법\n"
                     "다음 날부터 그는 대한그룹의 법률 자문이 아닌 바깥 변호사를 만나 법인 설립을 진행하고 "
-                    "PB센터에서 자산 현금화를 요청한다."
+                    "PB센터에서 자산 현금화를 요청한다.\n"
+                    "### 제 4화: 거래의 조건\n"
+                    "지점장 전결과 컴플라이언스 심사 간소화를 거쳐 실제 포지션 체결을 완료한다."
                 ),
+                "episode_details": [
+                    {"ep_num": 4, "details": ["지점장 전결과 컴플라이언스 심사 간소화를 거쳐 실제 포지션 체결을 완료한다."]}
+                ],
                 "state_changes": {
                     "timeline": {
                         "start": {"year": 2006, "month": 1},
@@ -238,6 +243,10 @@ class TestFactLockPacket:
         assert "대한그룹" in prompt
         assert "겨울" in prompt
         assert "한정호 회장의 서재" in prompt
+        assert "진행 surface 가이드" in prompt
+        assert "직전 대치의 결과 이후 단계로 이동" in prompt
+        assert "reserved beat" in prompt
+        assert "결과 완료를 선소비하지 말고" in prompt
 
     def test_anchor_count_bounded_to_12(self):
         """Packet should not exceed 12 anchors even with many manuscript matches."""

@@ -1,0 +1,11 @@
+{
+  "work_id": "golden_canary_deepclone_probe_a",
+  "run_class": "seed_baseline_sync",
+  "last_sequential_block_pass": 0,
+  "next_unit_type": "block",
+  "next_block_id": "Block 001",
+  "manual_audit_ready": false,
+  "resume_basis": "template",
+  "updated_at": "2026-04-17",
+  "notes": "Initial scaffold created on 2026-04-17."
+}

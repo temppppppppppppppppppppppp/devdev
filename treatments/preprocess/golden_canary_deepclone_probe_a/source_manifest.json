@@ -1,0 +1,55 @@
+{
+  "work_identity": {
+    "work_id": "golden_canary_deepclone_probe_a",
+    "title": "골든 루트",
+    "primary_profile": "business_growth_profile",
+    "secondary_profile": "investment_market_profile"
+  },
+  "canonical_sources": [
+    "treatments/phase0/투자물_골든_카나리아 테스트_canonical_v1_phase0_design.json",
+    "work_guards/01_투자물_골든_카나리아 테스트_canonical_v1.yaml",
+    "docs/2026-04-17/golden-canary-deepclone-probe-a-bootstrap.md"
+  ],
+  "reference_only_sources": [
+    "narrative_ssot/50_projects/golden_canary_deepclone_probe_a/10_reference_selection/reference_selection.json",
+    "C:/Users/wjjo/Desktop/재료 생산 R&D 랩/docs/2026-04-17/bulhaeng-chaebol-ep0052-0101-session-context.md",
+    "C:/Users/wjjo/Desktop/재료 생산 R&D 랩/artifacts/2026-04-17/bulhaeng-chaebol-ep0101-close-reading-ledger.json",
+    "narrative_ssot/10_reference_bank/cards/yeonbong_1jo_sinipsawon_A.md",
+    "narrative_ssot/10_reference_bank/cards/sinheung_jaebeol_A.md",
+    "narrative_ssot/10_reference_bank/cards/yeonbong_1jo_sinipsawon_B.md",
+    "narrative_ssot/10_reference_bank/cards/jusigui_sin_B.md"
+  ],
+  "core_materials": [
+    "Opening 3화 안에 시장 thesis를 실제 포지션으로 바꾸고 same-block proof를 회수해야 한다.",
+    "첫 수익과 정확도는 숫자만이 아니라 PB tone shift, 예외 계좌, named seat 같은 observer-visible receipt로 환전되어야 한다.",
+    "Signboard와 next ticket은 분리하되 internal named seat는 B03~B04 안에 visible해야 한다.",
+    "가족의 방관과 저평가는 독립 선언의 환경으로만 쓰고, opening 3부작을 setup-only로 소모하지 않는다.",
+    "글로벌 execution lane은 국제 desk priority response list 같은 next-cycle ticket으로 번역되어야 한다.",
+    "Deep-cloning donor doctrine은 pressure -> proof -> receipt -> next-hook cadence만 빌리고 donor 사건과 기믹은 복제하지 않는다."
+  ],
+  "npc_pool": [
+    "박성호 PB: retail rule과 VIP line 사이의 초기 gatekeeper이자 첫 proof 뒤 tone shift를 몸으로 보여주는 observer.",
+    "리스크팀/지점장/본부장: same-block receipt를 이름 있는 자리와 승인 체계로 잠가 주는 internal authority tier.",
+    "한정호와 가족 line: opening 수익을 authority 재평가와 운용권 문제로 환전하는 후반 평가 축.",
+    "글로벌 execution desk or partner: opening 승리를 다음 국제 전장 입장권으로 이어 주는 bridge helper."
+  ],
+  "crisis_pool": [
+    "WTI thesis가 실행 없이 설명으로만 남아 opening 3화가 setup-only로 흐르는 위험.",
+    "첫 proof는 나왔지만 PB/리스크팀 receipt가 없어 평가 이동이 visible하지 않은 위험.",
+    "Internal named seat 없이 바로 글로벌 ticket으로 점프해 signboard 판정이 공중에 뜨는 위험.",
+    "Deep-cloning cadence를 쓰면서 donor 고유 가족 정치와 불법 금융 디테일까지 오염되는 위험."
+  ],
+  "hard_constraints": [
+    "한시우는 회귀자이며 회귀 비밀을 authority brag로 쓰지 않는다.",
+    "Opening 기본 창은 TR 2~6이며 first proof는 늦어도 B03 안에, next-cycle ticket은 늦어도 B04 안에 visible해야 한다.",
+    "자산 증가는 반드시 PB 재평가, 예외 계좌, named seat, priority response list, 운용권 변화 중 하나로 환전되어야 한다.",
+    "이 probe는 canonical 골든 카나리아의 투자/패밀리오피스 lane을 유지하는 upstream-only 실험판이다."
+  ],
+  "do_not_fake": [
+    "PB/리스크팀/증권가 tone shift를 추상 인정으로 뭉개지 말 것.",
+    "원유 thesis와 포지션 proof를 숫자 없는 막연한 촉으로 처리하지 말 것.",
+    "Donor의 재벌 정치, 검은 기운, 고유 시장 조작 디테일을 복제하지 말 것.",
+    "Setup-only opening 3부작, proof-only late conversion drift, 이유 없는 자선/구원으로 protagonist를 미화하지 말 것."
+  ],
+  "manual_audit_note": "1. 바로 쓸 수 있는 것: opening proof/receipt cadence, PB tone shift -> named seat -> next ticket 체인, 자산을 authority로 환전하는 observer 구조.\\n2. 비어 있는 것: probe 전용 canon pitch와 opening static compare 결과는 아직 없으므로 canonical baseline pair를 임시 authority로 사용한다.\\n3. 상상으로 때우면 안 되는 것: donor 고유 설정과 막연한 투자 뽕, 추상 인정 서사."
+}

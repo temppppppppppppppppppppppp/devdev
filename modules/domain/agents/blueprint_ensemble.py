@@ -1484,6 +1484,20 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 progression_lines.append(
                     "  - MUST_FOCUS의 새 사건 축으로 전진하고 직전 대치 장면을 길게 반복하지 말 것"
                 )
+            surface_guidance = progression_pkt.get("surface_guidance", [])
+            if isinstance(surface_guidance, list) and surface_guidance:
+                progression_lines.append("  - 같은 축 반복 방지용 진행 surface 가이드")
+                for guidance in surface_guidance[:4]:
+                    text = str(guidance or "").strip()
+                    if text:
+                        progression_lines.append(f"    · {_fit_compact_context(text, 120)}")
+            future_reservations = progression_pkt.get("future_beat_reservations", [])
+            if isinstance(future_reservations, list) and future_reservations:
+                progression_lines.append("  - 다음 화 reserved beat 선소비 금지")
+                for guidance in future_reservations[:4]:
+                    text = str(guidance or "").strip()
+                    if text:
+                        progression_lines.append(f"    · {_fit_compact_context(text, 120)}")
             if progression_lines:
                 hard_lines.append("[Episode Progression - 직전 화 replay 금지]")
                 hard_lines.extend(progression_lines)

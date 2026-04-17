@@ -348,6 +348,21 @@ class BlueprintConstraintCompiler:
             arc_data=arc_data,
             ep_num=ep_num,
         )
+        future_beat_reservations = self._build_episode_progression_future_beat_reservations(
+            must_focus=must_focus,
+            stop_line=stop_line,
+        )
+        if future_beat_reservations:
+            episode_progression_packet = dict(episode_progression_packet or {})
+            episode_progression_packet["future_beat_reservations"] = future_beat_reservations
+        progression_surface_guidance = self._build_episode_progression_surface_guidance(
+            must_focus=must_focus,
+            stop_line=stop_line,
+            episode_progression_packet=episode_progression_packet,
+        )
+        if progression_surface_guidance:
+            episode_progression_packet = dict(episode_progression_packet or {})
+            episode_progression_packet["surface_guidance"] = progression_surface_guidance
 
         episode_state_packet = self.state_arbiter.arbitrate(
             arc_data=arc_data,
@@ -467,6 +482,20 @@ class BlueprintConstraintCompiler:
                         parts.append(f"type:{scene_type}")
                     if parts:
                         lines.append("    - " + " | ".join(parts))
+            surface_guidance = progression_pkt.get("surface_guidance", [])
+            if isinstance(surface_guidance, list) and surface_guidance:
+                lines.append("  - [같은 축 반복 방지용 진행 surface 가이드]")
+                for guidance in surface_guidance[:4]:
+                    text = str(guidance or "").strip()
+                    if text:
+                        lines.append(f"    - {self._fit_prompt_text(text, 140)}")
+            future_reservations = progression_pkt.get("future_beat_reservations", [])
+            if isinstance(future_reservations, list) and future_reservations:
+                lines.append("  - [다음 화 reserved beat — 이번 화 선소비 금지]")
+                for guidance in future_reservations[:4]:
+                    text = str(guidance or "").strip()
+                    if text:
+                        lines.append(f"    - {self._fit_prompt_text(text, 140)}")
             lines.append("")
 
         # MUST FOCUS
@@ -1207,6 +1236,114 @@ class BlueprintConstraintCompiler:
             "blocked_scene_families": blocked_scene_families,
             "source": "prev_blueprint+arc_authority",
         }
+
+    @staticmethod
+    def _build_episode_progression_surface_guidance(
+        *,
+        must_focus: dict,
+        stop_line: dict,
+        episode_progression_packet: dict,
+    ) -> list[str]:
+        if not isinstance(episode_progression_packet, dict):
+            return []
+
+        blocked_families = episode_progression_packet.get("blocked_scene_families", [])
+        if not isinstance(blocked_families, list) or len(blocked_families) < 2:
+            return []
+
+        must_focus_text = ""
+        if isinstance(must_focus, dict):
+            must_focus_text = str(must_focus.get("content", "") or "").strip()
+
+        next_stop_text = ""
+        if isinstance(stop_line, dict):
+            next_stop_text = str(stop_line.get("content", "") or "").strip()
+
+        guidance: list[str] = [
+            "시작 anchor 계승은 짧게 처리하고 이번 화의 주 장면은 직전 대치의 결과 이후 단계로 이동하라.",
+            "같은 장소를 다시 써야 하면 복도, 대기 구역, 창구, 이동 동선 같은 하위 공간으로 분산하라.",
+            "직전 화와 같은 2인 대치를 주 장면으로 반복하지 말고 보조 인물이나 기관 결정 라인을 열어라.",
+            "MUST_FOCUS는 협상 재탕보다 승인, 전달, 집행, 후속 처리처럼 앞으로 전진하는 surface에서 소화하라.",
+        ]
+
+        if next_stop_text:
+            guidance.append(
+                "다음 화 결과를 선소비하지 말고 이번 화는 현재 화에서 닫혀야 하는 실행 단계까지만 완료하라."
+            )
+
+        lowered_focus = must_focus_text.casefold()
+        if any(token in lowered_focus for token in ("승인", "서류", "절차", "체결", "보고", "전달", "집행")):
+            guidance.append(
+                "MUST_FOCUS에 절차성 이벤트가 보이면 감정 대치보다 승인 서류, 내부 보고, 실제 체결 같은 처리 surface를 우선하라."
+            )
+
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for raw in guidance:
+            text = str(raw or "").strip()
+            if not text or text in seen:
+                continue
+            seen.add(text)
+            deduped.append(text)
+        return deduped[:5]
+
+    @staticmethod
+    def _build_episode_progression_future_beat_reservations(
+        *,
+        must_focus: dict,
+        stop_line: dict,
+    ) -> list[str]:
+        if not isinstance(stop_line, dict) or stop_line.get("is_arc_finale"):
+            return []
+
+        next_stop_text = " ".join(str(stop_line.get("content", "") or "").split()).strip()
+        if not next_stop_text:
+            return []
+
+        next_ep = stop_line.get("next_ep", "?")
+        must_focus_text = ""
+        if isinstance(must_focus, dict):
+            must_focus_text = " ".join(str(must_focus.get("content", "") or "").split()).strip()
+
+        guidance = [
+            (
+                f"제{next_ep}화 reserved beat anchor: "
+                f"{BlueprintConstraintCompiler._fit_prompt_text(next_stop_text, 150)}"
+            ),
+            "이번 화에서는 위 reserved beat의 결과 완료를 선소비하지 말고 조건 제시, 압박, 준비, 직전 단계까지만 처리하라.",
+        ]
+
+        lowered_stop = next_stop_text.casefold()
+        if any(
+            token in lowered_stop
+            for token in ("승인", "전결", "심사", "서류", "체결", "동결", "입금", "수락", "처리", "개통")
+        ):
+            guidance.append(
+                "승인, 전결, 컴플라이언스, 서류, 체결, 동결 같은 결과형 절차는 다음 화 reserved beat이므로 이번 화에서 완료 처리하지 말라."
+            )
+        if any(
+            token in lowered_stop
+            for token in ("이동", "카페", "모니터", "차트", "뉴스", "속보", "폭등", "에콰도르", "발화점")
+        ):
+            guidance.append(
+                "장소 이동, 시장 모니터링, 후속 뉴스 반응 같은 후속 surface는 다음 화 reserved beat이므로 이번 화 엔딩에서는 예고 수준만 남겨라."
+            )
+
+        lowered_focus = must_focus_text.casefold()
+        if must_focus_text and any(token in lowered_focus for token in ("협상", "압박", "조건", "설득", "대치")):
+            guidance.append(
+                "이번 화 MUST_FOCUS가 같은 사건 축을 다루더라도 결론 완료는 넘기고, 협상/압박/설득의 마지막 직전까지만 도달하라."
+            )
+
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for raw in guidance:
+            text = str(raw or "").strip()
+            if not text or text in seen:
+                continue
+            seen.add(text)
+            deduped.append(text)
+        return deduped[:4]
 
     @staticmethod
     def _build_capital_continuity_packet(

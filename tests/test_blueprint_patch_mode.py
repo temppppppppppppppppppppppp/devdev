@@ -536,6 +536,7 @@ class TestBlueprintPatchIntegration:
             retry=0,
             ep_num=1,
             arc_data=sample_arc_data,
+            constraint_block={},
             pipeline_result=pipeline,
             max_retries=2,
         )
@@ -548,6 +549,7 @@ class TestBlueprintPatchIntegration:
     def test_phase2_generation_failure_retries_on_candidate_disqualified_bundle(
         self, blueprint_generator, sample_arc_data
     ):
+        blueprint_generator.context.pass_rate_monitor = MagicMock(record_attempt=MagicMock())
         blueprint_generator.ensemble.last_error_type = AgentErrorType.TIMEOUT
         blueprint_generator.ensemble.last_error_types = [
             AgentErrorType.TIMEOUT,
@@ -560,6 +562,17 @@ class TestBlueprintPatchIntegration:
             retry=0,
             ep_num=1,
             arc_data=sample_arc_data,
+            constraint_block={
+                "episode_progression_packet": {
+                    "surface_guidance": [
+                        "시작 anchor 계승은 짧게 처리하고 이번 화의 주 장면은 직전 대치의 결과 이후 단계로 이동하라."
+                    ],
+                    "future_beat_reservations": [
+                        "제2화 reserved beat anchor: 승인 완료 후 실제 체결에 들어간다.",
+                        "승인, 전결, 컴플라이언스, 서류, 체결, 동결 같은 결과형 절차는 다음 화 reserved beat이므로 이번 화에서 완료 처리하지 말라.",
+                    ],
+                }
+            },
             pipeline_result=pipeline,
             max_retries=2,
         )
@@ -568,6 +581,12 @@ class TestBlueprintPatchIntegration:
         assert result.should_continue is True
         assert pipeline["failure_reason"] == AgentErrorType.CANDIDATE_DISQUALIFIED
         assert pipeline["phases"]["generate"]["error_type"] == AgentErrorType.CANDIDATE_DISQUALIFIED
+        record_attempt = blueprint_generator.context.pass_rate_monitor.record_attempt
+        reject_reason = record_attempt.call_args.kwargs["reject_reason"]
+        assert "Replay reroute guidance" in reject_reason
+        assert "직전 대치의 결과 이후 단계로 이동" in reject_reason
+        assert "Next-episode reserved beat" in reject_reason
+        assert "승인 완료 후 실제 체결" in reject_reason
 
     def test_phase3_validation_continuity_reject_short_circuits(self, blueprint_generator, sample_arc_data):
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState

@@ -1,0 +1,67 @@
+{
+  "work_id": "golden_canary_deepclone_probe_a",
+  "selection_date": "2026-04-17",
+  "work_identity_override": {
+    "title": "골든 루트",
+    "commercial_label": "골든 카나리아 Probe A",
+    "slug_aliases": [
+      "골든 카나리아 Deepclone Probe A",
+      "투자물_골든_카나리아 테스트_canonical_v1"
+    ],
+    "reason": "정본 골든 카나리아와 동일한 작품 축을 유지하되, deep-cloning donor doctrine을 upstream-only probe로 분리해 baseline 비교가 가능하게 한다."
+  },
+  "profile_override": {
+    "primary_profile": "business_growth_profile",
+    "secondary_profile": "investment_market_profile",
+    "reason": "Baseline pilot mix와 동일한 프로파일 조합을 유지해 deep-cloning probe의 차이가 opening/proof cadence에서 먼저 드러나도록 한다."
+  },
+  "opening_bundle_contract_override": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "원자재 thesis 첫 증명과 PB/VIP named-seat 고정",
+    "macro_battlefield_map": [
+      "시장 thesis를 즉시 포지션으로 바꾸는 entry pressure",
+      "원유 proof scene과 same-block receipt 확보",
+      "PB tone shift와 예외 계좌 또는 이름 있는 자리를 고정",
+      "다음 글로벌 전장 ticket으로 연결"
+    ],
+    "bundle_goal": "TR 2~6 안에 thesis -> proof -> receipt -> named seat -> next ticket 체인을 독자에게 명확히 증명한다.",
+    "first_signboard_block": 3,
+    "representative_reevaluation_block": 2,
+    "next_battlefield_ticket_block": 4,
+    "timing_reconciliation_note": "Deep-cloning probe에서는 opening을 장면별 proof/receipt cadence로 읽는다. 외부 국제 ticket이 더 늦게 열리더라도 B02~B04 안에서 internal named seat과 PB tone shift가 visible해야 한다."
+  },
+  "selected_cards": [
+    {
+      "card_slug": "yeonbong_1jo_sinipsawon",
+      "track": "A",
+      "handoff_label": "READY",
+      "selection_reason": "Baseline opening basket 유지. 단, probe에서는 donor doctrine의 proof/receipt cadence와 결합해 entry pressure를 더 빠르게 reader-facing chain으로 잠근다.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    },
+    {
+      "card_slug": "sinheung_jaebeol",
+      "track": "A",
+      "handoff_label": "sinheung_jaebeol_A",
+      "selection_reason": "권위 시위와 실무 재평가 구조를 유지하되, humiliation-first가 아니라 named-seat receipt 구조로 환전되는지 비교하기 위한 baseline authority card다.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    },
+    {
+      "card_slug": "yeonbong_1jo_sinipsawon",
+      "track": "B",
+      "handoff_label": "READY",
+      "selection_reason": "성장 곡선 baseline 유지. probe에서는 deep-cloning의 bridge/payoff cadence를 붙여 opening 이후 industry-level scaling lane이 더 선명해지는지 확인한다.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    },
+    {
+      "card_slug": "jusigui_sin",
+      "track": "B",
+      "handoff_label": "READY",
+      "selection_reason": "institutional-capture lane baseline 유지. probe에서는 donor ledger의 proof scene / receipt type을 참고해 정보 -> 평판 -> 기관 seat 전환이 더 빨리 visible해지는지 본다.",
+      "must_not_copy_applied": true,
+      "contamination_risk_reviewed": true
+    }
+  ]
+}

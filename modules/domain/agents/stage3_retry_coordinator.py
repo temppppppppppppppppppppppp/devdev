@@ -267,6 +267,7 @@ class Stage3RetryCoordinator:
                     retry=retry,
                     ep_num=ep_num,
                     arc_data=arc_data,
+                    constraint_block=constraint_block,
                     pipeline_result=pipeline_result,
                     max_retries=max_retries,
                 )

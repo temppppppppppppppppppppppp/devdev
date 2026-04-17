@@ -1,0 +1,54 @@
+{
+  "events": [
+    "TR 2~3 안에 thesis를 first execution과 same-block proof로 전환한다.",
+    "TR 3~4 안에 PB tone shift와 예외 계좌 또는 named seat receipt를 확보한다.",
+    "TR 4 안에 next-cycle ticket 또는 글로벌 desk 입장권을 visible하게 잠근다.",
+    "자산 수익은 다음 사이클 접근권과 family authority recalibration으로 환전한다."
+  ],
+  "npc_candidates": [
+    "박성호 PB: 첫 proof 이후 tone shift를 가장 먼저 보이는 초기 gatekeeper.",
+    "리스크팀/지점장/본부장: named seat와 예외 계좌 승인으로 signboard를 보증하는 내부 authority.",
+    "한정호와 가족 line: opening 수익을 authority 문제로 바꾸는 평가자.",
+    "글로벌 execution partner or desk: next-cycle ticket의 국제 lane bridge."
+  ],
+  "crisis_candidates": [
+    "첫 포지션 진입이 늦어져 opening이 setup-only로 흐르는 위험.",
+    "proof는 있으나 receipt가 없어 observer 재평가가 visible하지 않은 위험.",
+    "Internal signboard 없이 글로벌 ticket으로 급점프해 opening authority가 공중에 뜨는 위험.",
+    "deep-cloning donor cadence를 쓰며 donor 고유 사건이나 기믹을 그대로 베끼는 오염."
+  ],
+  "terms": [
+    "포지션",
+    "익절",
+    "유동성",
+    "배분",
+    "리스크팀",
+    "예외 계좌",
+    "named seat",
+    "priority response list",
+    "운용권",
+    "방화벽"
+  ],
+  "scene_details": [
+    "Opening representative spike는 thesis 설명이 아니라 first proof receipt 장면이어야 한다.",
+    "First reward retention은 현금 수익과 observer-visible 태도 변화가 함께 남는 방식이어야 한다.",
+    "Authority gain route는 PB tone shift -> internal named seat -> global ticket 순서로 읽는다.",
+    "Bridge/payoff rhythm은 same-block receipt를 우선하고, 국제 lane 확장은 next-hook으로 넘긴다."
+  ],
+  "notes": "Probe A manual-audit normalized bundle. Deep-cloning donor doctrine is reduced to pressure/proof/receipt cadence only. Use this as Phase0 fuel, not as scene-by-scene donor copy.",
+  "opening_bundle_contract": {
+    "bundle_window": "TR 2~6",
+    "macro_battlefield": "원자재 thesis 첫 증명과 PB/VIP named-seat 고정",
+    "macro_battlefield_map": [
+      "시장 thesis를 즉시 포지션으로 바꾸는 entry pressure",
+      "원유 proof scene과 same-block receipt 확보",
+      "PB tone shift와 예외 계좌 또는 이름 있는 자리를 고정",
+      "다음 글로벌 전장 ticket으로 연결"
+    ],
+    "bundle_goal": "TR 2~6 안에 thesis -> proof -> receipt -> named seat -> next ticket 체인을 독자에게 명확히 증명한다.",
+    "first_signboard_block": 3,
+    "representative_reevaluation_block": 2,
+    "next_battlefield_ticket_block": 4,
+    "timing_reconciliation_note": "Deep-cloning probe에서는 opening을 장면별 proof/receipt cadence로 읽는다. 외부 국제 ticket이 더 늦게 열리더라도 B02~B04 안에서 internal named seat과 PB tone shift가 visible해야 한다."
+  }
+}
