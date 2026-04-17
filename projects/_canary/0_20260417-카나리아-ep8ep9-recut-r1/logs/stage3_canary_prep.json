@@ -1,0 +1,23 @@
+{
+  "prepared_at": "2026-04-17T14:01:28",
+  "source_project": "0_20260417-카나리아",
+  "target_project": "0_20260417-카나리아-ep8ep9-recut-r1",
+  "canary_scope": "stage3_only",
+  "reruns_stage3_generation": true,
+  "preserves_stage2_arcs": true,
+  "preserves_stage4_outputs": true,
+  "from_ep": 8,
+  "cleanup": {
+    "from_ep": 8,
+    "db_impact": {
+      "blueprints": 1,
+      "stage3_attempts": 3,
+      "stage3_director_selections": 3
+    },
+    "file_cleanup": {
+      "blueprint_files_removed": 1,
+      "stage3_artifact_dirs_removed": 1,
+      "log_entries_removed": 7
+    }
+  }
+}

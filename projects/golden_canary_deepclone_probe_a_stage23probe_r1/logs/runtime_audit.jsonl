@@ -1,0 +1,15 @@
+{"timestamp": "2026-04-17 18:03:22", "type": "field_repair", "message": "hybrid_composition missing", "data": {"arc_idx": 1}}
+{"timestamp": "2026-04-17 18:03:22", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 18:04:08", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 3}}
+{"timestamp": "2026-04-17 18:10:10", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '이전 Arc 종료 위치' → '서울 성북동 본가 저택 내 한시우의 개인실, 상태: 전투 준비를 마친 완벽한 몰입 상태'", "시작 부상 수정: '' → '없음'"]}}
+{"timestamp": "2026-04-17 18:10:56", "type": "field_repair", "message": "hybrid_composition missing", "data": {"arc_idx": 2}}
+{"timestamp": "2026-04-17 18:10:56", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 18:11:34", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 5}}
+{"timestamp": "2026-04-17 18:17:24", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "시작 위치 수정: '이전 Arc 종료 위치' → '한미증권 본점 VIP HTS 통제실 내 한시우 전용 프라이빗 룸'", "시작 부상 수정: '' → '없음'"]}}
+{"timestamp": "2026-04-17 18:19:51", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 18:20:40", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "target_arc_no": 4, "items_tracked": 7}}
+{"timestamp": "2026-04-17 18:24:45", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "시작 위치 수정: '이전 Arc 종료 위치' → '서울 강남 SW인베스트먼트 소규모 원룸 오피스'", "시작 부상 수정: '' → '없음'", "arc_end_state 위치 동기화: '알 수 없음' → '한미증권 본점 VIP 프라이빗 룸'"]}}
+{"timestamp": "2026-04-17 18:27:23", "type": "field_repair", "message": "hybrid_composition default injected", "data": {"arc_no": 4}}
+{"timestamp": "2026-04-17 18:27:23", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 18:28:11", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "target_arc_no": 5, "items_tracked": 8}}
+{"timestamp": "2026-04-17 18:28:11", "type": "v60_10_state_extractor_error", "message": "StateExtractor failed, using fallback", "data": {"error": "[Errno 22] Invalid argument", "target_arc_no": 5}}

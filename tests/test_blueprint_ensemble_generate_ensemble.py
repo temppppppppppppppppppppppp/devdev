@@ -843,6 +843,14 @@ def test_format_constraints_surfaces_episode_progression_guardrails_for_producer
                         "type": "tension_build",
                     }
                 ],
+                "surface_guidance": [
+                    "시작 anchor 계승은 짧게 처리하고 이번 화의 주 장면은 직전 대치의 결과 이후 단계로 이동하라.",
+                    "직전 화와 같은 2인 대치를 주 장면으로 반복하지 말고 보조 인물이나 기관 결정 라인을 열어라.",
+                ],
+                "future_beat_reservations": [
+                    "제10화 reserved beat anchor: 포지션 진입 직후 카페로 이동해 차트를 모니터링한다.",
+                    "장소 이동, 시장 모니터링, 후속 뉴스 반응 같은 후속 surface는 다음 화 reserved beat이므로 이번 화 엔딩에서는 예고 수준만 남겨라.",
+                ],
             },
         },
         genre=GenreTypes.HUNTER,
@@ -852,6 +860,10 @@ def test_format_constraints_surfaces_episode_progression_guardrails_for_producer
     assert "PB의 맹렬한 반대" in formatted
     assert "한미증권 청담동 지점 15층 VIP룸" in formatted
     assert "MUST_FOCUS의 새 사건 축으로 전진" in formatted
+    assert "같은 축 반복 방지용 진행 surface 가이드" in formatted
+    assert "기관 결정 라인" in formatted
+    assert "다음 화 reserved beat 선소비 금지" in formatted
+    assert "카페로 이동해 차트를 모니터링" in formatted
 
 
 def test_format_constraints_surfaces_episode_state_packet_authority_and_dropped_conflicts():

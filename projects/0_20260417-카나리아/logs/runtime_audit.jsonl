@@ -1,0 +1,25 @@
+{"timestamp": "2026-04-17 10:35:38", "type": "field_repair", "message": "hybrid_composition missing", "data": {"arc_idx": 1}}
+{"timestamp": "2026-04-17 10:35:38", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 10:36:12", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 4}}
+{"timestamp": "2026-04-17 10:42:45", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "시작 위치 수정: '이전 Arc 종료 위치' → '서울 성북동 본가 저택 내 한시우의 개인 서재'", "시작 부상 수정: '' → '없음'", "arc_end_state 위치 동기화: '알 수 없음' → '서울 여의도 SW인베스트먼트 대표실'"]}}
+{"timestamp": "2026-04-17 10:43:43", "type": "field_repair", "message": "hybrid_composition missing", "data": {"arc_idx": 2}}
+{"timestamp": "2026-04-17 10:43:43", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 10:44:28", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 4}}
+{"timestamp": "2026-04-17 10:55:14", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 10:55:14", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "dialogue_focused", "score": 90, "final_verdict": "PASS_WITH_WARNING", "quality_risk": false, "revision_required": true}}
+{"timestamp": "2026-04-17 10:57:22", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 10:57:22", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "action_focused", "score": 90, "final_verdict": "PASS_WITH_WARNING", "quality_risk": false, "revision_required": true}}
+{"timestamp": "2026-04-17 11:00:52", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 11:00:52", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "emotion_focused", "score": 91, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-17 11:06:53", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 11:06:53", "type": "blueprint_success", "message": "ep_4_blueprint_generated", "data": {"ep_num": 4, "arc_no": 1, "strategy": "dialogue_focused", "score": 91, "final_verdict": "PASS", "quality_risk": false, "revision_required": true}}
+{"timestamp": "2026-04-17 11:11:36", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 11:11:36", "type": "blueprint_success", "message": "ep_5_blueprint_generated", "data": {"ep_num": 5, "arc_no": 1, "strategy": "emotion_focused", "score": 95, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-04-17 11:18:49", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 11:18:49", "type": "blueprint_success", "message": "ep_6_blueprint_generated", "data": {"ep_num": 6, "arc_no": 1, "strategy": "dialogue_focused", "score": 93, "final_verdict": "PASS", "quality_risk": false, "revision_required": true}}
+{"timestamp": "2026-04-17 11:23:19", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 11:23:19", "type": "blueprint_success", "message": "ep_7_blueprint_generated", "data": {"ep_num": 7, "arc_no": 2, "strategy": "dialogue_focused", "score": 96, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-04-17 11:27:00", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 11:27:00", "type": "blueprint_success", "message": "ep_8_blueprint_generated", "data": {"ep_num": 8, "arc_no": 2, "strategy": "dialogue_focused", "score": 95, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-04-17 11:55:28", "type": "blueprint_fail", "message": "ep_9_all_retries_exhausted", "data": {"ep_num": 9, "final_verdict": "FAILED"}}
+{"timestamp": "2026-04-17 13:40:03", "type": "blueprint_fail", "message": "ep_9_all_retries_exhausted", "data": {"ep_num": 9, "final_verdict": "FAILED"}}

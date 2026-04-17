@@ -1,0 +1,214 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "692e66076ceba9ea355c93cab15d83b9e46f54624ff5218a67e529d842d7fcf8"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=비틀거리, 회장님께서 서재, 짜인 아버지의 개인 서재",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1302,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 2084,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 997916,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 1702,
+          "lane": "constraints"
+        },
+        {
+          "chars": 171,
+          "lane": "arc_focus"
+        },
+        {
+          "chars": 133,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 171,
+        "constraints": 1702,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 68
+      },
+      "shared_context_chars": 1951,
+      "total_chars": 2084
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "dialogue_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "last_score": 90,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "미래의 참혹한 기억과 평온한 2006년 현실 사이의 괴리 극복",
+  "end_location": "서울 성북동 본가 저택, 아버지의 서재 앞 복도",
+  "ending_hook": "차가운 황동 문고리를 쥔 한시우의 입가에 서늘한 미소가 번졌다.",
+  "ending_state": {
+    "location": "서울 성북동 본가 저택, 아버지의 서재 앞",
+    "protagonist_status": "과거의 기억을 온전히 수용하고 첫 번째 대면을 준비하는 상태",
+    "timeline": {
+      "표현": "2006년 1월 초 오전"
+    }
+  },
+  "ep_num": 1,
+  "episode_number": 1,
+  "expected_ending": "과거의 탕아가 아닌 새로운 자아로 아버지의 호출에 응함",
+  "integrated_scenario": "숨이 턱 막히는 고통과 함께 눈을 번쩍 뜬 한시우는 거칠게 숨을 몰아쉬었다. 온몸을 적신 식은땀이 서늘한 공기에 닿아 소름을 돋게 했다. 익숙하면서도 낯선 천장, 코끝을 스치는 옅은 디퓨저 향기. 그는 떨리는 손으로 협탁을 더듬어 차가운 금속성의 물건을 쥐었다. 묵직한 구형 폴더폰. 폴더를 열자 푸르스름한 액정 빛이 시우의 얼굴을 비췄다. 화면 정중앙에 선명하게 박힌 숫자, '2006년 1월'. 시우는 멍한 눈으로 날짜를 응시하다가 비틀거리며 침대에서 일어났다. 욕실로 향한 그는 거울 속에 비친 자신의 얼굴을 마주했다. 피로와 패배감에 찌들어 주름지던 미래의 중년 사내가 아닌, 생기가 돌고 젊은 이십 대의 청년이 그곳에 있었다. 가문이 산산조각 나고 형제들의 피비린내 나는 암투 속에서 모든 것을 잃었던 참혹한 미래. 그것이 단순한 악몽이 아님을 직감한 시우는 수도꼭지를 틀어 차가운 물에 얼굴을 파묻었다.\n\n얼음장 같은 물이 피부에 닿자 걷잡을 수 없이 요동치던 심장 박동이 서서히 잦아들었다. 시우는 수건으로 물기를 닦아내며 머릿속에 엉켜있는 미래의 기억들을 하나씩 분류하기 시작했다. 아버지가 쓰러진 이후 벌어질 무자비한 후계 구도, 무능한 탕아로 낙인찍혀 철저히 버려졌던 자신의 과거. 똑같은 전철을 밟을 수는 없었다. 그는 거울 속 자신과 눈을 맞추며, 이번 생에서는 그 누구의 체스말도 되지 않겠다고 차갑게 다짐했다.\n\n그때, 조심스러운 노크 소리가 침묵을 깼다. \"도련님, 김 집사입니다.\" 문 너머로 들려오는 익숙하고 노회한 목소리였다. \"회장님께서 서재로 부르십니다.\" 과거의 한시우였다면 아침부터 시작되는 잔소리를 예감하며 신경질적인 반응을 보였을 터였다. 그러나 시우는 옷매무새를 가다듬으며 낮고 차분한 목소리로 입을 열었다. \"금방 가겠다고 전하세요.\" 문 밖에서 잠시 침묵이 흘렀다. 평소와 너무나도 다른 막내의 정중하고 건조한 어조에 당황한 기색이 역력했다. \"네, 알겠습니다.\" 멀어지는 발걸음 소리를 들으며 시우는 방을 나설 채비를 마쳤다.\n\n방문을 나서자 끝없이 이어지는 화려한 대리석 복도가 그를 맞이했다. 시우는 걸음을 옮기며 현재 자신의 위치를 냉정하게 평가했다. 한정호 회장의 귀여운 막내, 하지만 후계 구도에서는 완벽하게 배제된 재롱둥이. 그것이 현재의 한시우였다. 복도 끝, 육중한 마호가니로 짜인 아버지의 개인 서재 문이 시야에 들어왔다. 그 문 너머에는 대한민국 경제를 쥐고 흔드는 거목이자, 평생 자신을 억눌렀던 거대한 산이 기다리고 있었다. 시우는 서재 문 앞에 멈춰 서서 짧게 숨을 들이마셨다. 두려움은 없었다. 그는 천천히 손을 뻗어 차가운 황동 문고리를 틀어쥐었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "no_prev_anchor"
+    ],
+    "type": "jump_opening"
+  },
+  "pacing_notes": "초반부 회귀의 충격과 혼란은 짧고 강렬하게 묘사하고, 이후 감정을 통제하며 차가워지는 주인공의 내면 변화를 밀도 있게 그려 긴장감을 점진적으로 끌어올린다.",
+  "protagonist_state": {
+    "equipment": [
+      "2006년형 구형 폴더폰"
+    ],
+    "injuries": "없음",
+    "mood": "혼란 수습 후 극도의 냉정함 유지"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "철없는 막내 도련님을 대하는 일상적 피로감",
+      "justification": "신경질을 낼 줄 알았던 한시우가 정중하고 냉정한 어조로 대답했기 때문",
+      "target": "김 집사",
+      "to_state": "평소와 다른 차분한 태도에서 느끼는 미세한 당혹감"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "회귀 자각 및 현실 파악",
+      "key_events": [
+        "악몽 같은 미래의 기억에서 깨어나며 거칠게 숨을 몰아쉼",
+        "협탁을 더듬어 구형 폴더폰을 찾아 액정에 뜬 '2006년 1월'을 확인",
+        "거울 속 젊어진 자신의 얼굴을 보며 과거로 돌아왔다는 사실을 확신"
+      ],
+      "location": "서울 성북동 본가 저택 내 한시우의 침실",
+      "summary": "가쁜 숨을 몰아쉬며 깨어난 한시우가 구형 폴더폰의 날짜를 확인하고 2006년으로 돌아왔음을 깨닫는다.",
+      "tension_level": 7,
+      "title": "2006년의 아침",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "미래의 정보 정리 및 감정 통제",
+      "key_events": [
+        "찬물로 세수를 하며 걷잡을 수 없이 요동치는 혼란을 억누름",
+        "형들의 암투와 아버지가 쓰러진 이후의 참혹한 미래를 차분히 복기",
+        "이번 생에서는 철저히 자신만의 힘을 기르겠다고 거울 속 자신을 향해 다짐"
+      ],
+      "location": "침실 내 욕실",
+      "summary": "가문의 몰락과 비참했던 미래를 떠올린 한시우가 감정을 추스르고 다가올 위기들을 복기한다.",
+      "tension_level": 5,
+      "title": "기억의 파편",
+      "type": "emotional_reveal"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "김 집사"
+      ],
+      "content": "",
+      "goal": "아버지의 호출 접수 및 태도 변화 노출",
+      "key_events": [
+        "조심스러운 노크 소리와 함께 김 집사가 아버지 한정호의 호출을 전함",
+        "평소의 신경질적인 반응 대신 정중하고 차분한 목소리로 알겠다고 대답하는 한시우",
+        "달라진 막내의 어조에 문 밖에서 흠칫 놀라며 당혹감을 느끼는 김 집사의 기척"
+      ],
+      "location": "침실 문 앞",
+      "summary": "김 집사가 문을 두드려 회장의 호출을 알리고, 한시우는 과거와 다른 차분한 태도로 응답한다.",
+      "tension_level": 6,
+      "title": "예정된 호출",
+      "type": "tension_build"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "첫 번째 시험대 앞에서의 긴장감 조성",
+      "key_events": [
+        "화려한 대리석 복도를 걸으며 가문 내 자신의 현재 위치(기대받지 않는 탕아)를 객관적으로 평가",
+        "서재 앞에 서서 평생 자신을 억눌렀던 아버지 한정호의 압도적인 존재감을 떠올림",
+        "망설임 없이 차가운 마호가니 문고리를 틀어쥐며 새로운 시작을 준비함"
+      ],
+      "location": "본가 저택 복도",
+      "summary": "단정한 차림으로 복도를 걸어 아버지의 서재 앞에 도착한 한시우가 문고리를 잡는다.",
+      "tension_level": 8,
+      "title": "서재로 향하는 길",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 저택 내 한시우의 침실",
+  "target_beat": "회귀 자각 -> 현실 적응 -> 첫 번째 위협(아버지의 호출) 직면",
+  "time_flow": "2006년 1월 초, 이른 아침",
+  "title": "깨어난 탕아"
+}

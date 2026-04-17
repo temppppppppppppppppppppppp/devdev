@@ -1,0 +1,11 @@
+{
+  "identity_locked": true,
+  "profile_locked": true,
+  "material_sufficient": true,
+  "manual_audit_pass": true,
+  "remaining_risks": [
+    "Probe 전용 canon pitch file은 아직 별도 작성하지 않았고, 현재 authority는 canonical 골든 카나리아 pair와 probe bootstrap note에 기대고 있다.",
+    "Opening bundle contract는 deep-cloning doctrine으로 재정규화했지만 static compare 결과는 아직 없다.",
+    "현재 probe는 upstream-only다. Stage3 lane packet 연결은 아직 포함하지 않는다."
+  ]
+}

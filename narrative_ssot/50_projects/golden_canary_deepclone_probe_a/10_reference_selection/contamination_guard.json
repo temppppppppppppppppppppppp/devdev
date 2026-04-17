@@ -1,0 +1,5 @@
+{
+  "must_not_copy_reviewed": true,
+  "contamination_risk_reviewed": true,
+  "notes": "selected_cards의 must_not_copy_applied / contamination_risk_reviewed=true를 확인했다. Stage0 초안은 구조 차용 전용이며 고유명·시그니처 장치는 금지 상태를 유지한다."
+}

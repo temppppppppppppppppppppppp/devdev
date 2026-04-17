@@ -1,0 +1,6 @@
+{
+  "work_id": "golden_canary_deepclone_probe_a",
+  "intake_date": "2026-04-17",
+  "status": "pilot_scaffold_created",
+  "notes": "Upstream-only deep-cloning probe forked from Golden Canary baseline for comparison against canonical pair."
+}

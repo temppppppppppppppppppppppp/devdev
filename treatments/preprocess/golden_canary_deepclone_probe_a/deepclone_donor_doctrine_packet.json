@@ -1,0 +1,171 @@
+{
+  "schema": "geuldobi.deepclone_donor_doctrine_packet.v1",
+  "work_id": "golden_canary_deepclone_probe_a",
+  "created_at": "2026-04-17",
+  "status": "active",
+  "scope": "upstream-only donor doctrine input for Probe A before any bounded canary",
+  "donor_basis": {
+    "work_title": "불행을 보는 재벌집 손자",
+    "evidence_span": "ep0001-0101",
+    "source_anchors": [
+      "C:\\Users\\wjjo\\Desktop\\재료 생산 R&D 랩\\docs\\2026-04-16\\bulhaeng-chaebol-ep0001-0050-doctrine-review.md",
+      "C:\\Users\\wjjo\\Desktop\\재료 생산 R&D 랩\\docs\\2026-04-16\\bulhaeng-chaebol-ep0026-0050-tranche-synthesis.md",
+      "C:\\Users\\wjjo\\Desktop\\재료 생산 R&D 랩\\docs\\2026-04-17\\bulhaeng-chaebol-ep0081-0090-checkpoint.md",
+      "C:\\Users\\wjjo\\Desktop\\재료 생산 R&D 랩\\artifacts\\2026-04-17\\bulhaeng-chaebol-ep0101-close-reading-ledger.json"
+    ]
+  },
+  "usage_contract": {
+    "allowed_targets": [
+      "Phase0 rewrite",
+      "work_guard rewrite",
+      "opening TR 2~6 bounded rewrite",
+      "static compare baseline"
+    ],
+    "disallowed_targets": [
+      "raw donor scene copy",
+      "direct character/name/organization transplant",
+      "black-aura gimmick reuse",
+      "real-world Korean election or chaebol skin copy",
+      "Stage3 runtime lane injection before upstream compare closes"
+    ]
+  },
+  "doctrine_summary": {
+    "one_line": "예측 우위를 구조 자산으로 바꾸고, public proof를 private receipt로 잠근 뒤 다음 gate를 즉시 여는 bridge-first donor.",
+    "primary_reward_model": "reward as right-to-act",
+    "core_conversion_chain": [
+      "entry pressure",
+      "first execution",
+      "public proof",
+      "private receipt",
+      "named seat or priority access",
+      "next gate opening"
+    ]
+  },
+  "cross_work_rules": [
+    "큰 reward는 감정적 승리보다 권한, 채널, 좌석, 증권, 호명, 접근권 같은 구조 자산으로 먼저 회수한다.",
+    "public proof는 그대로 끝내지 말고 private room에서 receipt로 잠가야 한다.",
+    "helper는 친구형 동료보다 relay, witness, translator, fixer 역할로 쓰는 편이 강하다.",
+    "후계 또는 권력 donor는 칭찬보다 견제, 시험, 새 갈등축 설치로 성장시킨다.",
+    "ending hook은 closure보다 pending gate를 남기는 쪽이 강하다.",
+    "bridge와 payoff를 완전히 분리하기보다 hybrid braid로 다음 판을 곧바로 여는 편이 효율적이다."
+  ],
+  "opening_translation_packet": {
+    "bundle_window": "TR 2~6",
+    "primary_chain": [
+      "thesis가 설명으로 머물지 않고 early execution으로 전환된다.",
+      "proof는 opening 안에서 reader-facing하게 보인다.",
+      "receipt는 관찰자 태도 변화 또는 seat/access 변화로 visible해야 한다.",
+      "next ticket은 global 또는 next-cycle battlefield로 열리되 opening 수령 없이 공중에 뜨면 안 된다."
+    ],
+    "entry_pressure_rules": [
+      "주인공은 opening에서 이미 압박과 선택 강제를 안고 들어와야 한다.",
+      "entry는 구경이 아니라 판을 치러 들어오는 느낌이어야 한다.",
+      "setup-only 문장보다 immediate stake와 action intent가 먼저 보여야 한다."
+    ],
+    "proof_rules": [
+      "proof는 thesis의 첫 적중이나 포지션 전환이 reader-visible한 장면이어야 한다.",
+      "proof는 설명 문단이 아니라 누군가가 반응할 수 있는 사건이어야 한다.",
+      "proof는 되도록 opening block 안에서 same-block receipt로 연결되어야 한다."
+    ],
+    "receipt_rules": [
+      "receipt는 현금만이 아니라 seat, exception lane, signboard, authority shift도 포함한다.",
+      "receipt는 public applause보다 private admission, approval, access unlock으로 잠그는 편이 강하다.",
+      "observer tone shift가 없으면 proof는 절반만 먹힌 것으로 본다."
+    ],
+    "hook_rules": [
+      "ending hook은 '다음 제도 변화의 문턱'이나 '다음 gate 접근권'을 남기는 쪽이 좋다.",
+      "hook은 다음 행동을 미루는 cliff보다 다음 시스템 진입 직전의 pending state가 강하다."
+    ],
+    "bridge_payoff_rules": [
+      "opening은 payoff만 몰기보다 bridge와 receipt를 동시에 braided하게 배치한다.",
+      "큰 국제 lane 확장은 next-hook으로 넘기되 opening 내부 receipt는 비워두지 않는다."
+    ]
+  },
+  "lane_contracts": {
+    "public_proof_lane": [
+      "시장 반응, 보도, 공개 지목, 공개 실적 확인처럼 제3자가 볼 수 있는 형태의 proof를 확보한다.",
+      "public proof는 protagonist monologue만으로 대체하지 않는다."
+    ],
+    "private_receipt_lane": [
+      "회장실, PB room, 승인 room, 개인 desk, 상담 room 같은 private conversion space를 둔다.",
+      "이 공간에서 전권, 채널, 예외 계좌, named seat, 우선 응답권 같은 receipt를 잠근다."
+    ],
+    "observer_shift_lane": [
+      "관찰자는 가족/사내 witness에서 기관/시장/권력 observer로 점점 넓어져야 한다.",
+      "opening에서는 최소 1회 이상 observer tone shift가 visible해야 한다."
+    ],
+    "helper_lane": [
+      "helper는 친밀감보다 전달, 증인, 번역, 조율 기능이 분명해야 한다.",
+      "helper는 protagonist의 cleverness를 칭찬하기보다 구조를 다음 단계로 이어주는 relay여야 한다."
+    ],
+    "authority_lane": [
+      "최종 authority는 좁고 분명해야 한다.",
+      "public chaos가 커져도 실제 승인과 receipt는 소수 authority가 잠가야 한다.",
+      "주인공은 gifted succession이 아니라 earned access로 올라가야 한다."
+    ]
+  },
+  "episode_101_reference_signal": {
+    "entry_pressure": "주인공은 이미 700만 달러 포지션을 선점한 상태로 private room에 들어가 추가 공급과 판 이름을 동시에 얻어내야 한다.",
+    "proof_shape": "시장 thesis가 private room에서 즉시 포지션 sizing과 달러채 논리로 증명된다.",
+    "receipt_shape": "1,000만 달러 포지션 완성, 공급 봉인, 3배 wager lock, 미국 체류 자금 회수 평가까지 같은 회동에서 잠긴다.",
+    "hook_shape": "외부 시장 전체에 수요 폭발과 소문이 퍼지며 protagonist 포지션으로 demand funnel이 열린다.",
+    "bridge_vs_payoff": "bridge"
+  },
+  "probe_a_mapping_hints": {
+    "public_proof_examples": [
+      "시장 thesis의 첫 적중",
+      "원유 또는 원자재 포지션의 초기 proof",
+      "외부 수익/리포트/반응이 visible한 순간"
+    ],
+    "private_receipt_examples": [
+      "PB tone shift",
+      "예외 계좌 또는 named seat",
+      "priority response list 편입",
+      "내부 승인 lane 접근권"
+    ],
+    "next_ticket_examples": [
+      "다음 commodity cycle 접근권",
+      "global desk 또는 execution partner 연결",
+      "더 큰 institutional seat의 입구"
+    ]
+  },
+  "s2_watchpoints": [
+    "must_focus가 proof를 뒤로 미루지 말고 opening 전면에 놓는지 확인한다.",
+    "episode_details가 사건을 설명만 하고 늦게 소모하지 않는지 확인한다.",
+    "tactical_doc 안에 mission truth가 prose에만 묻히지 않고 packet처럼 읽히는지 확인한다.",
+    "proof와 receipt가 같은 화 안에 살아 있으면서도 같은 문장으로 납작하게 합쳐지지 않는지 확인한다.",
+    "hook이 다음 gate를 열되 opening receipt 없이 공중에 뜨지 않는지 확인한다."
+  ],
+  "porting_guardrails": {
+    "must_translate_not_copy": [
+      "public proof -> private receipt 구조",
+      "reward as structural asset",
+      "helper as relay or witness",
+      "no gifted heir access",
+      "pending gate ending",
+      "bridge-first cadence with early receipt"
+    ],
+    "must_not_port": [
+      "검은 기운",
+      "한국 재벌가 실명 정치 구도",
+      "대선/청와대/대통령 사돈 같은 현실 정치 skin",
+      "무기명 채권/금융실명제의 직접 사건 복제",
+      "김대환-김석호 관계의 실명 대칭"
+    ],
+    "contamination_red_flags": [
+      "donor 인물명 또는 조직명이 그대로 등장함",
+      "real-world Korean chaebol/politics detail이 골든 카나리아에 직접 이식됨",
+      "proof 대신 donor cleverness를 설명만 함",
+      "public spectacle만 있고 private receipt가 없음",
+      "seat/access reward 없이 단순 수익 사이다로만 끝남"
+    ]
+  },
+  "next_use_order": [
+    "Phase0 rewrite",
+    "work_guard rewrite",
+    "opening TR 2~6 bounded rewrite",
+    "static compare",
+    "S2 late-risk audit",
+    "bounded baseline vs Probe A canary if still warranted"
+  ]
+}
