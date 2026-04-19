@@ -1,0 +1,267 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "60c4989ff991e4245f9b2acdb0e5319621acd5ae5a138b0287933452c91af7e5"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=PB센터, 포트폴리오 전체를 타 증권, 20억",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1410,
+    "prevalidation_issue_count": 2,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 6033,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 993967,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 3638,
+          "lane": "constraints"
+        },
+        {
+          "chars": 2009,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 221,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 155,
+        "constraints": 3638,
+        "feedback_context": 221,
+        "hud_context": 10,
+        "prev_info": 2009
+      },
+      "shared_context_chars": 5812,
+      "strategy_feedback_chars": 2389,
+      "total_chars": 6033
+    },
+    "python_warnings": [
+      {
+        "category": "opening_transition",
+        "focus": "opening_transition.type을 prev ending anchor와 start_location/time_flow/scene_1 contract에 맞게 정규화",
+        "message": "opening_transition.type mismatch: declared 'explicit_transition' vs normalized 'direct_continuation'",
+        "severity": "MAJOR",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 4,
+    "strategy": "dialogue_focused",
+    "total_candidates": 3
+  },
+  "_inventory_gaps": [
+    {
+      "item": "가죽 수첩",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "만년필",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "폴더폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_categories": [
+      "opening_transition"
+    ],
+    "binding_prevalidation_issue_count": 1,
+    "binding_regenerate_only_categories": [
+      "opening_transition"
+    ],
+    "binding_regenerate_only_reason": "Structural binding prevalidation requires regenerate-only repair: opening_transition",
+    "final_verdict": "PASS",
+    "last_score": 92,
+    "partial_fix_eval": {
+      "do_not_regress_held": true,
+      "fallback_reason": "",
+      "is_patch_attempt": true,
+      "must_fix_resolved": true,
+      "patch_round": 1,
+      "patch_target_id": "pt:52a8695bbdfa",
+      "success_condition_met": true,
+      "target_kind": "local_sentence"
+    },
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "가문의 암묵적 통제를 벗어나 독자적인 자본을 확보하려는 시우와 관성을 유지하려는 PB의 충돌",
+  "end_location": "강남 PB센터 VIP 라운지",
+  "ending_hook": "\"내일 오전 10시. 1원 단위까지 맞춰서 입금 확인하겠습니다.\" 라운지 문이 닫히고, 박성호는 식은땀이 밴 손으로 서류를 내려다보았다.",
+  "ending_state": {
+    "location": "강남 PB센터 VIP 라운지",
+    "protagonist_status": "첫 번째 시드머니 20억 원의 유동화 절차를 확정 짓고 다음 단계를 준비함",
+    "timeline": {
+      "표현": "2006년 1월 오전"
+    }
+  },
+  "ep_num": 2,
+  "episode_number": 2,
+  "expected_ending": "승마 스폰서십을 끊어내고 20억 원의 현금화를 강제하며 PB센터를 나섬",
+  "integrated_scenario": "한시우는 방 한구석을 장식하고 있는 화려한 승마 트로피들을 서늘한 눈으로 훑어본 뒤 미련 없이 몸을 돌렸다. 안주머니에는 18년 치 매크로 지표가 빼곡히 적힌 가죽 수첩과 만년필이 자리하고 있었다. 머리를 짓누르던 기억 압축 해제의 두통은 이성적인 통제 아래 둔탁한 맥박 정도로 가라앉았다. 거실을 지나며 마주친 본가 고용인들의 가벼운 목례를 뒤로한 채, 시우는 대기 중인 차량에 올라타 강남으로 향했다. 차창 밖으로 스쳐 지나가는 2006년의 아침 풍경을 보며, 그는 머릿속으로 신탁 자산 해지 프로세스의 법적 허점과 권리 조항을 차갑게 복기했다.\n\n강남 PB센터 VIP 라운지. 박성호 PB는 평소처럼 막내 도련님의 비위를 맞추기 위해 최고급 다과와 최근 수입된 명마 카탈로그를 테이블에 세팅해 둔 상태였다. 그는 시우가 들어서자마자 의례적인 미소를 띠며 안부를 묻고 브리핑을 시작하려 했다. 그러나 시우는 소파에 기대어 앉지도 않은 채, 손을 들어 박성호의 말을 단칼에 잘랐다. \"잡담은 됐고. 내 명의로 된 신탁 계좌 원장과 승마 스폰서십 계약서부터 가져오세요.\" 평소의 철없는 억양은 온데간데없고, 감정이 철저히 배제된 서늘한 목소리였다. 박성호는 순간 얼굴의 미소를 잃고 당황하며 준비해둔 서류철을 꺼내놓았다.\n\n서류를 빠르게 훑어본 시우는 즉각적인 스폰서십 전면 해지와 잔여 자산 20억 원의 현금화를 지시했다. 예상치 못한 폭탄선언에 박성호는 식은땀을 흘리며 만류에 나섰다. \"시우 님, 이 스폰서십은 본가 비서실에서 각별히 신경 쓰는 건입니다. 갑자기 해지하시면 위약금 문제도 있고, 무엇보다 회장님께서...\" 박성호는 우회적으로 그룹의 암묵적 지침을 방패막이로 삼으려 했다. 승마는 시우를 후계 구도에서 얌전히 배제하기 위한 가문의 족쇄였기 때문이다. 하지만 시우는 그 얄팍한 수를 비웃듯 계약서의 해지 조항을 정확히 짚어냈다. \"내 법적 명의로 된 자산입니다. 비서실의 결재선이 닿을 이유가 없죠. 절차가 지연된다면, 내일 당장 포트폴리오 전체를 타 증권사로 이전하겠습니다.\" 명확한 금융 지식과 단호한 압박 앞에 박성호는 더 이상 변명할 틈을 찾지 못하고 해지 서류를 내밀 수밖에 없었다.\n\n시우가 품에서 만년필을 꺼내 거침없이 서명란을 채웠다. \"내일 오전 10시. 1원 단위까지 맞춰서 입금 확인하겠습니다.\" 서류를 밀어낸 시우가 자리에서 일어났다. 박성호는 이 비정상적인 상황을 한태준 이사나 비서실에 즉각 보고해야 할지 머릿속으로 미친 듯이 주판알을 튕겼다. 그런 박성호의 내면을 꿰뚫어 보듯, 시우가 문손잡이를 잡은 채 차갑게 경고했다. \"내일 내 계좌에 숫자가 찍히기 전까지, 쓸데없는 곳으로 소문이 새어나가지 않길 바랍니다. 박 팀장님.\" 라운지 문이 닫히고 홀로 남은 박성호는, 그저 철부지 장난감인 줄 알았던 막내 도련님의 완전히 달라진 이면 앞에서 축축해진 손바닥을 내려다보았다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 빠른 이동과 결의를 보여주며 속도감을 높이고, 중반부 VIP 라운지에서의 대화씬은 대사의 티키타카와 서브텍스트를 통해 긴장감을 끌어올린다. 후반부는 서명과 경고를 통해 통제권을 완전히 가져오는 카타르시스를 제공한다.",
+  "protagonist_state": {
+    "equipment": [
+      "가죽 수첩",
+      "만년필",
+      "폴더폰"
+    ],
+    "injuries": "두통 옅어짐",
+    "mood": "냉철함, 통제력 유지"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "비위 맞추기 쉬운 철부지 VIP 고객",
+      "justification": "시우가 보여준 법적 지식과 단호한 결단력, 그리고 본가의 지침을 무시하는 태도 때문",
+      "target": "박성호",
+      "to_state": "속내를 알 수 없고 통제 불가능한, 경계해야 할 자본주"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "과거의 족쇄였던 승마 관련 물품들을 무시하고, 가죽 수첩을 챙겨 본가를 빠져나오는 과정.",
+      "goal": "본가를 벗어나 강남으로 이동하며 결의를 다짐",
+      "key_events": [
+        "수첩과 만년필을 안주머니에 챙기며 외출 준비 완료",
+        "거실을 빠르게 가로질러 본가 고용인들의 시선을 뒤로하고 차량 탑승",
+        "강남으로 이동하는 차창 밖 풍경을 보며 신탁 자산 해지 프로세스의 법적 허점 점검"
+      ],
+      "location": "서울 성북동 본가 저택 내 한시우의 개인실 -> 이동 중인 차량",
+      "summary": "시우가 방 한구석의 트로피들을 뒤로한 채 외출 준비를 마치고 대기 중인 차량에 탑승하여 강남으로 향한다.",
+      "tension_level": 4,
+      "title": "방을 나서는 발걸음",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "VIP 라운지에서 기다리던 박성호가 평소처럼 비위를 맞추려다 시우의 서늘한 태도에 당황하는 장면.",
+      "goal": "PB 박성호의 안일한 예상을 깨부수고 대화의 주도권을 장악함",
+      "key_events": [
+        "박성호가 준비한 최고급 다과와 최근 수입된 명마에 대한 브리핑을 시작하려 함",
+        "시우가 손을 들어 말을 끊고, 곧바로 개인 명의 신탁 계좌의 원장과 스폰서십 계약서를 요구함",
+        "평소와 전혀 다른 시우의 눈빛과 억양에 박성호가 미소를 잃고 당황하여 서류를 꺼냄"
+      ],
+      "location": "강남 PB센터 VIP 라운지",
+      "summary": "강남 PB센터에 도착한 시우가 박성호의 의례적인 환대를 단칼에 자르고 본론으로 직행한다.",
+      "tension_level": 6,
+      "title": "어긋난 예상",
+      "type": "side_glimpse"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "후계 구도에서 시우를 배제하기 위한 장치였던 승마 지원금을 끊어내고 온전한 개인 자본으로 전환하는 협상.",
+      "goal": "승마 스폰서십 전면 해지 및 20억 현금화 지시 관철",
+      "key_events": [
+        "시우가 계약서의 해지 조항을 짚으며 즉각적인 스폰서십 중단과 잔여 자산 20억 원의 전액 현금화를 지시함",
+        "박성호가 비서실의 지침과 위약금 문제를 거론하며 우회적으로 회장님의 뜻임을 시사하며 압박하려 함",
+        "시우가 자신의 법적 권리와 타 증권사로의 포트폴리오 이전 가능성을 무기로 박성호의 변명을 원천 차단함",
+        "반박할 틈을 찾지 못한 박성호가 떨리는 손으로 해지 서류와 출금 전표를 작성함"
+      ],
+      "location": "강남 PB센터 VIP 라운지",
+      "summary": "시우가 승마 스폰서십 해지를 지시하자 박성호가 그룹의 암묵적 지침을 언급하며 만류하지만, 시우가 논리로 압살한다.",
+      "tension_level": 8,
+      "title": "족쇄의 해지",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "단순한 변덕이 아닌 치밀한 계획임을 보여주어 박성호가 본가에 섣불리 보고하지 못하게 입을 막는 과정.",
+      "goal": "현금화 타임라인 확정 및 PB의 태도 변화 유도",
+      "key_events": [
+        "시우가 만년필로 서류에 서명한 뒤, 내일 오전까지 예외 없이 20억 원이 유동화되어야 함을 통보함",
+        "박성호가 이 사실을 한태준 등 형들의 라인에 보고해야 할지 속으로 계산을 굴림",
+        "시우가 박성호의 시선을 정확히 마주치며, 내일 오전 확인 전까지 불필요한 잡음이 새어나가지 않도록 주의를 줌"
+      ],
+      "location": "강남 PB센터 VIP 라운지",
+      "summary": "서류에 서명한 시우가 정확한 입금 기한을 못 박고 라운지를 나서며 박성호에게 경고를 남긴다.",
+      "tension_level": 7,
+      "title": "새로운 포지션",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 저택 내 한시우의 개인실",
+  "target_beat": "승마 스폰서십 해지 및 20억 유동화 지시",
+  "time_flow": "2006년 1월 아침 -> 오전",
+  "title": "유동화의 시작"
+}

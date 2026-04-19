@@ -1,19 +1,25 @@
 # 0_0 Stage4 Repair-Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (proof-pending Stage4 substrate lane; bounded sink/readback fixes plus operator-visible first-class snapshot promotion have landed, and the later live-workspace tranche now also lands Stage4 raw-evidence persistence plus FailureAnalyzer raw-rationale health/watchlist/operator-summary substrate; the 2026-04-12 static refresh reopens no new Stage4 P0/P1, marks the older repair-P1 wording stale-likely under current code/test evidence, and keeps this lane near the front of the merged proof wave because Stage4 consumer/repair still own the runtime closure/demotion check for residual mismatch volume on current HEAD)
+Status: closed (2026-04-19 closure review; the old repair `proof-pending` wording is stale against the current-head `r12` mismatch-volume proof, patch-trace/gate-repair/scope-provenance parity now bank cleanly on the fresh current-session run, and the next honest front owner moves outside Stage4 repair to the Stage3 state-arbiter envelope lane)
 Canonical Path: `docs/2026-04-02/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md`
+Temp Mirror Path: `docs/temp/0_0-stage4-repair-contract-normalization-remediation-execution-ssot.md` (removed during the 2026-04-19 closure tranche)
 Commit State:
 - Baseline Commit: `aaf495d65c95c9ffe7ea99277f315a69609252db`
 - Baseline Dirty Summary: `dirty: Stage4 contract docs/code/test deltas active; roadmap/temp queue already dirty; current ep2 canary work in progress`
-- Resume Commit: `2b7cb64f2d1fe2cd1152806a5cc37795609f9755`
-- Resume Drift Summary: `current main@2b7cb64f is authoritative after the stale-base reset; the 2026-04-12 static refresh reopens no new Stage4 P0/P1, marks the older repair-P1 wording stale-likely under current code/test evidence, confirms that raw-evidence persistence plus FailureAnalyzer raw-rationale health/watchlist/operator-summary substrate are now landed, and keeps this lane proof-pending inside the front merged proof wave because Stage4 consumer/repair still own runtime closure/demotion checks on residual mismatch volume`
+- Resume Commit: `029df1a74af89a7b5387c449f4723a5df0d000d4`
+- Resume Drift Summary: `current HEAD@029df1a7 is authoritative for queue closure; the older repair-P1 wording is stale against the 2026-04-16 r12 current-head proof anchor, current-session repair/readback mismatch volume is now remeasured and banked, and this lane now closes as historical backing while the board moves to the Stage3 state-arbiter envelope lane`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-repair-contract-grammar-global-bounded-survey.md`
 - `docs/2026-04-06/rol-global-terminal4-stage4-pipeline-p0p1.md`
+- `docs/2026-04-16/stage234-global-authority-alignment-post-r12-stage4-current-session-closure-current-head-3pass-audit.md`
+- `docs/2026-04-19/stage4-repair-contract-reactivation-refresh.md`
+- `docs/2026-04-19/stage4-repair-contract-closure-review.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage4-repair-contract-grammar-global-evidence.json`
+- `projects/_canary/canary_0_0_stage4_ep2_sinkproof_r12_patchtraceclosure/logs/canary_summary.json`
+- `projects/_canary/canary_0_0_stage4_ep2_sinkproof_r12_patchtraceclosure/logs/canary_companion_audit.json`
+- `projects/_canary/canary_0_0_stage4_ep2_sinkproof_r12_patchtraceclosure/logs/runtime_audit_summary.json`
 Side-Effect Coverage: covered
 Parent Lane:
 - `0_0-stage4-consumer-contract-normalization-remediation`
@@ -268,13 +274,12 @@ Acceptance shape:
 
 ## 12. Temp Queue Notes
 
-- temp status: partial
+- temp status: closed
 - cleanup condition:
-  - remove the temp mirror only after bounded realization closes or the lane is superseded by a broader Stage4 contract wave
+  - remove the temp mirror during the 2026-04-19 closure tranche
 - roadmap dependency:
-  - subordinate to `0_0-stage4-consumer-contract-normalization-remediation`
-  - below active `ep2` runtime verification work
-  - remains the next open Stage4 substrate because numeric carryover work still depends on shared repair/readback grammar staying truthful
+  - this lane now becomes historical backing rather than a front item
+  - the next honest front owner is `0_0-stage3-state-arbiter-envelope-bounded-remediation`
 
 ## 13. Validation and Closure Hooks
 
@@ -383,3 +388,43 @@ Deferred / blocked:
 
 - fresh canary/live proof remains intentionally deferred by operator order
 - `pytest tests/test_bridge_quality_summary.py -k "surfaces_gate_repair_summary" -q` is environment-blocked in this shell because `fastapi` is not installed, so bridge verification here is limited to compile + static diff review
+
+## 16. 2026-04-19 Reactivation Refresh
+
+Source doc:
+
+- `docs/2026-04-19/stage4-repair-contract-reactivation-refresh.md`
+
+Current reading:
+
+- the lane had stayed open only because fresh mismatch-volume remeasurement on current HEAD was missing
+- `r12` now provides that measurement:
+  - `patch_strategy_mismatches = 0`
+  - `fix_pack_patch_targets_mismatches = 0`
+  - `raw_rationale_patch_trace_mismatches = 0`
+  - `raw_rationale_surface_mismatches = 0`
+  - `gate_repair_surface_summary.status = ok`
+  - `companion_audit_summary.status = ok`
+
+Queue consequence:
+
+- the old `proof-pending` wording is stale
+- the next honest move is closure-review, not another repair/readback rerun tranche
+
+## 17. 2026-04-19 Closure Review
+
+Source doc:
+
+- `docs/2026-04-19/stage4-repair-contract-closure-review.md`
+
+Closure judgment:
+
+- bounded Stage4 repair/readback closure is now satisfied by the current-head `r12` proof chain
+- patch-trace parity, gate-repair completeness, companion separation, and scope/provenance parity are all banked as historical backing
+- the remaining live debt now belongs outside this lane
+
+Queue move:
+
+- close this lane
+- remove the temp mirror during this tranche
+- promote `0_0-stage3-state-arbiter-envelope-bounded-remediation` to the front of the active roadmap

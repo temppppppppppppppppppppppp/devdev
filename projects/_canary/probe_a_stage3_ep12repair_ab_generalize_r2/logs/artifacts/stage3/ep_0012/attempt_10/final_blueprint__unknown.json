@@ -1,0 +1,218 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "83bbeea42abb40bbd6d8c8dd94564ecce851ef558306d0813a1e5582466e1c39"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1417,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 20928,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 979072,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 17033,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 3465,
+          "lane": "constraints"
+        },
+        {
+          "chars": 290,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 130,
+        "constraints": 3465,
+        "feedback_context": 290,
+        "hud_context": 10,
+        "prev_info": 17033
+      },
+      "shared_context_chars": 20638,
+      "total_chars": 20928
+    },
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 1
+  },
+  "_inventory_gaps": [
+    {
+      "item": "가죽 수첩",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "만년필",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "폴더폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "OTP 카드",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "박성호 PB의 직통 핫라인 명함",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "last_score": 88,
+    "quality_gate_failed": true,
+    "quality_risk": true,
+    "revision_required": true
+  },
+  "core_tension": "한시우의 속도를 감당하지 못하는 시스템과의 충돌 및 새로운 위협",
+  "end_location": "한미증권 본점 지하 주차장",
+  "ending_hook": "거친 타이어 마찰음과 함께 앞을 가로막은 검은 세단에서 정체불명의 인영들이 쏟아져 내렸다.",
+  "ending_state": {
+    "location": "한미증권 본점 지하 주차장",
+    "protagonist_status": "VIP 전담 라인을 구축한 직후, 갑작스러운 물리적 위협에 둘러싸여 전투를 준비하는 상태",
+    "timeline": {
+      "표현": "2006년 2월 초 저녁"
+    }
+  },
+  "ep_num": 12,
+  "episode_number": 12,
+  "expected_ending": "새로운 위협에 직면하며 물리적 충돌을 예고함",
+  "integrated_scenario": "여의도 횡단보도 앞, 빌딩 숲을 수놓은 대형 전광판들이 일제히 붉은색 텍스트를 토해내고 있었다. 국제 유가 폭등을 알리는 긴급 속보가 거리를 휩쓰는 가운데, 한시우는 폴더폰 액정에 선명하게 찍힌 '300,000,000'이라는 숫자를 서늘한 눈으로 내려다보았다. 18년 전의 기억이 현실의 자본으로 치환되는 순간이었지만, 그의 입가에는 옅은 미소조차 번지지 않았다. 통화를 끊고 폴더폰을 안주머니에 넣은 한시우는 신호가 바뀌자마자 망설임 없이 횡단보도를 건너 한미증권 본점의 거대한 회전문을 밀고 들어갔다.\n\n본점 로비는 퇴근을 서두르는 금융맨들과 쏟아지는 뉴스로 인해 어수선한 분위기였다. 한시우가 대리석 바닥을 울리며 엘리베이터 홀로 다가갈 때, 비상계단 쪽에서 거친 숨소리가 들려왔다. 넥타이가 비뚤어진 채 헐레벌떡 뛰어온 박성호였다. 불과 얼마 전까지만 해도 재벌가 막내의 무모한 도박이라며 속으로 비웃었던 그는, 이제 눈앞의 청년을 완전히 다른 차원의 포식자로 인식하고 있었다. 박성호는 한시우를 발견하자마자 로비 한가운데서 90도로 허리를 꺾었다. 덜덜 떨리는 그의 태도에 주변을 지나던 직원들이 기이한 시선으로 쳐다보았지만, 박성호는 타인의 시선을 신경 쓸 겨를조차 없었다. 오직 눈앞의 거대한 권력에 복종하겠다는 본능만이 그를 지배하고 있었다.\n\n박성호의 안내를 받아 VIP 상담실로 들어선 한시우는 상석에 깊숙이 몸을 묻었다. 방음문이 닫히자마자 박성호는 유가 65달러 돌파와 경이로운 수익률에 대해 횡설수설하며 찬사를 늘어놓기 시작했다. 그러나 한시우는 테이블을 손가락으로 가볍게 두드리며 그의 말을 단칼에 잘라냈다. 한시우는 시장이 요동칠 때마다 백오피스의 결재 라인을 거치는 기존 방식으로는 자신의 템포를 맞출 수 없다고 압박했다. 그는 어떤 상황에서도 즉각적인 주문 집행과 자금 이체가 가능한 오직 자신만을 위한 전담 라인을 요구했다. 박성호는 잠시 내부 규정을 떠올리며 망설였지만, 한시우의 등골 서늘한 시선을 마주하고는 이내 완전히 백기를 들었다. 그는 지갑에서 일반 명함이 아닌, 자신의 직통 핫라인 번호와 권한 코드가 적힌 특별 명함을 꺼내 두 손으로 공손히 바쳤다. 명함을 받아 든 한시우는 다음 딜을 위한 유동성 확보를 지시하며 자리에서 일어났다.\n\n모든 목적을 달성하고 본점을 빠져나온 한시우는 지하 주차장으로 발걸음을 옮겼다. 서늘한 콘크리트 냄새가 감도는 주차장은 묘하게 적막했다. 자신의 차량이 주차된 구역으로 다가가던 한시우의 걸음이 미세하게 느려졌다. 그 순간, 어둠 속에 숨어 있던 검은 세단 한 대가 헤드라이트를 끈 채 거친 엔진음을 뿜어내며 한시우의 앞을 가로막았다. 타이어가 바닥을 긁는 날카로운 마찰음이 주차장을 울렸고, 차문이 거칠게 열리며 정체를 알 수 없는 인영들이 쏟아져 내렸다. 한시우는 안주머니의 만년필을 쥔 채, 자신을 에워싸는 그림자들을 향해 차가운 시선을 던졌다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 주인공의 성과 확인과 권력 우위 확립에 집중하여 빠른 템포로 전개하고, 후반부 지하 주차장 씬에서 급격히 긴장감을 끌어올려 액션 클리프행어로 마무리한다.",
+  "protagonist_state": {
+    "equipment": [
+      "가죽 수첩",
+      "만년필",
+      "폴더폰",
+      "OTP 카드",
+      "박성호 PB의 직통 핫라인 명함"
+    ],
+    "injuries": "두통 완전히 가라앉음",
+    "mood": "차가운 몰입 상태에서 다가오는 위협에 대한 예리한 긴장감으로 전환"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "얕봄, 당혹감",
+      "justification": "한시우의 압도적인 통찰력과 베팅 성공을 실시간으로 목격하며 권력의 격차를 뼈저리게 실감함",
+      "target": "박성호",
+      "to_state": "완전한 경외와 복종"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "여의도 횡단보도 앞, 한시우는 폴더폰에 찍힌 3억 원을 확인하고 차갑게 기기를 닫는다. 붉은 신호가 바뀌자 망설임 없이 본점 회전문을 향해 걸어간다.",
+      "goal": "3억 원의 수익 확인 후 한미증권 본점 진입",
+      "key_events": [
+        "폴더폰 액정의 3억 원 수익 확인 및 통화 종료",
+        "가죽 수첩을 안주머니에 챙기며 횡단보도 횡단",
+        "한미증권 본점 로비로 진입"
+      ],
+      "location": "여의도 횡단보도 앞 -> 한미증권 본점 로비",
+      "summary": "미실현 수익을 확인한 한시우가 횡단보도를 건너 한미증권 본점으로 들어선다.",
+      "tension_level": 5,
+      "title": "붉은 신호등",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호",
+        "본점 직원들"
+      ],
+      "content": "",
+      "description": "본점 로비에서 숨을 헐떡이며 달려온 박성호가 한시우를 발견하고 주변의 시선에도 아랑곳하지 않은 채 허리를 굽혀 극도로 깍듯하게 맞이한다.",
+      "goal": "박성호 PB의 태도 돌변 및 권력 우위 확인",
+      "key_events": [
+        "박성호가 로비 한가운데서 90도로 허리를 굽혀 인사함",
+        "주변 직원들이 당황하며 두 사람을 쳐다봄",
+        "박성호가 덜덜 떨리는 손으로 한시우를 VIP 상담실로 안내함"
+      ],
+      "location": "한미증권 본점 로비",
+      "summary": "로비로 뛰어내려온 박성호가 한시우에게 90도로 인사하며 경외감을 드러낸다.",
+      "tension_level": 6,
+      "title": "역전된 권력",
+      "type": "side_glimpse"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "VIP 상담실에서 한시우는 박성호의 칭송을 단칼에 자르고 즉각적인 주문 처리가 가능한 전담 라인을 요구한다. 박성호는 완전히 굴복하며 직통 핫라인 명함을 바친다.",
+      "goal": "독자적인 핫라인 구축 및 명함 획득",
+      "key_events": [
+        "박성호의 횡설수설하는 찬사를 한시우가 손을 들어 제지함",
+        "기존 백오피스 결재 라인의 한계를 지적하며 전담 채널 구축을 압박함",
+        "박성호가 내부 규정을 우회하여 직통 핫라인 번호가 적힌 특별 명함을 두 손으로 바침"
+      ],
+      "location": "한미증권 본점 VIP 상담실",
+      "summary": "한시우가 박성호의 보고 체계를 질타하며 전용 VIP 라인 개설을 강요한다.",
+      "tension_level": 7,
+      "title": "VIP 전담 라인",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "정체불명의 인영들"
+      ],
+      "content": "",
+      "description": "모든 목적을 달성하고 지하 주차장으로 내려온 한시우의 앞을 검은 세단이 거칠게 가로막고, 정체를 알 수 없는 자들이 차에서 내리며 위협을 가해온다.",
+      "goal": "물리적 위기 조성 및 긴장감 극대화",
+      "key_events": [
+        "한시우가 본점 지하 주차장으로 발걸음을 옮김",
+        "헤드라이트를 끈 검은 세단이 거친 마찰음을 내며 한시우의 퇴로를 차단함",
+        "차문이 열리고 쏟아져 내린 인영들이 한시우를 에워쌈"
+      ],
+      "location": "한미증권 본점 지하 주차장",
+      "summary": "본점을 나선 한시우가 지하 주차장에서 정체불명의 차량과 인영들에게 가로막힌다.",
+      "tension_level": 9,
+      "title": "지하 주차장의 그림자",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "여의도 횡단보도 앞",
+  "target_beat": "박성호의 완전한 굴복과 전용 라인 확보, 그리고 새로운 물리적 위협의 등장",
+  "time_flow": "2006년 2월 초 저녁",
+  "title": "역전된 권력과 VIP 라인"
+}

@@ -1,0 +1,195 @@
+{
+  "tag": "stage3_complete",
+  "timestamp": "2026-04-18 19:44:25",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 2,
+  "counts": {
+    "db_commit": 1,
+    "blueprint_success": 1
+  },
+  "latest_event_type": "blueprint_success",
+  "recent_events": [
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "blueprint_success",
+      "message": "ep_7_blueprint_generated"
+    }
+  ],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "operational_metadata_scope": "latest_structured_session_plus_runtime_audit_events_and_session_sinks",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth.",
+    "operational_metadata_note": "Operational metadata is best-effort run interpretation and does not override persisted attempt truth."
+  },
+  "proof_digest": {
+    "available": true,
+    "status": "ok",
+    "artifacts": {
+      "db_available": true,
+      "session_decisions_exists": true,
+      "ui_events_jsonl_exists": true,
+      "pass_rate_monitor_exists": true,
+      "episode_production_exists": false,
+      "runtime_audit_jsonl_exists": true,
+      "ui_events_db_available": true,
+      "ui_events_count": 571,
+      "ui_event_coverage_status": "ok"
+    },
+    "stages": {
+      "stage3": {
+        "status": "ok",
+        "attempts_considered": 1,
+        "complete_final_attempts": 1,
+        "complete_lifecycle_attempts": 0,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 1,
+        "coverage": {
+          "stage_attempts": 1,
+          "pass_rate_monitor": 1,
+          "director_selections": 1,
+          "episode_production": 0,
+          "session_decisions": 1,
+          "attempt_raw_rationale": 0
+        },
+        "issue_counts": {}
+      }
+    },
+    "session_lineage": {
+      "plain_log_token": "20260418_193305",
+      "structured_session_id": "20260418_193306",
+      "status": "split_mapped"
+    },
+    "operational_metadata": {
+      "status": "ok",
+      "latest_session_id": "20260418_193306",
+      "stage2_live_session": {
+        "status": "absent",
+        "attempt_count": 0,
+        "episode_count": 0,
+        "episodes": [],
+        "latest_ep": null,
+        "latest_final_verdict": "",
+        "session_decision_count": 0,
+        "ui_event_count": 0,
+        "attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "selection_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "verdict_reason_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 0,
+          "total": 0,
+          "status": "missing"
+        },
+        "carryover_authority_event_count": 0,
+        "latest_carryover_authority": {}
+      },
+      "stage3_live_session": {
+        "status": "ok",
+        "attempt_count": 1,
+        "episode_count": 1,
+        "episodes": [
+          7
+        ],
+        "latest_ep": 7,
+        "latest_final_verdict": "PASS",
+        "session_decision_count": 1,
+        "ui_event_count": 8,
+        "attempt_key_coverage": {
+          "present": 1,
+          "total": 1,
+          "status": "ok"
+        },
+        "artifact_path_coverage": {
+          "present": 1,
+          "total": 1,
+          "status": "ok"
+        },
+        "selection_reason_coverage": {
+          "present": 1,
+          "total": 1,
+          "status": "ok"
+        },
+        "verdict_reason_coverage": {
+          "present": 1,
+          "total": 1,
+          "status": "ok"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 1,
+          "total": 1,
+          "status": "ok"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 1,
+          "total": 1,
+          "status": "ok"
+        },
+        "source_anchor_summary_count": 1,
+        "source_anchor_ui_event_count": 1,
+        "latest_source_anchor_summary": {
+          "blueprint_window_count": 6,
+          "previous_blueprint_ep": 6,
+          "previous_blueprint_end_location": "성북동 본가 저택 내 한시우의 개인실 (트레이딩 룸)",
+          "previous_blueprint_opening_transition_type": "explicit_transition",
+          "current_arc_start_location": "서울 성북동 본가 저택 내 한시우의 개인실, 상태: 전투 준비를 마친 완벽한 몰입 상태",
+          "anchor_surfaces": [
+            "prev_blueprint_end_location",
+            "prev_blueprint_opening_transition",
+            "arc_start_location"
+          ]
+        }
+      },
+      "stage4_live_session": {
+        "status": "absent",
+        "attempt_count": 0,
+        "episode_count": 0,
+        "episodes": [],
+        "latest_ep": null,
+        "latest_final_verdict": "",
+        "retry_exercised": false,
+        "patch_exercised": false,
+        "patch_attempt_count": 0,
+        "fallback_patch_count": 0,
+        "pass_count": 0,
+        "session_scope": {},
+        "target_ep_reached": false,
+        "stage4_complete_emitted": false,
+        "post_pass_contract_signal_count": 0,
+        "non_exercised_reasons": []
+      }
+    }
+  }
+}

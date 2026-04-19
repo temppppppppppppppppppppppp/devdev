@@ -1,14 +1,14 @@
 # 0_0 Stage4 Consumer-Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (proof-pending front Stage4 consumer verifier lane; flashback, NpcDrift, fix-pack provenance, post-pass state owner-boundary, intake authority, and sink-alignment follow-up patches remain landed or historically runtime-positive, the 2026-04-11 current-main static refresh reopens no new Stage4 P0/P1, the older consumer-P1 wording is stale-likely under current code/test evidence, and the 2026-04-12 live rerun follow-up now says the active ep3 blocker is upstream Stage3 replay / season-truth drift while this lane remains the downstream runtime closure/demotion check)
+Status: closed (2026-04-19 closure review; the old consumer `proof-pending` wording is stale against the current-head `r12` closure anchor, `r2` and `r12` together bank the Stage4 current-session final-authority and sink-alignment family, the 2026-04-12 live follow-up already moved the active blocker upstream to Stage3 replay/progression drift, and the next honest front owner is now the sibling Stage4 repair/readback lane rather than another consumer-first proof tranche)
 Canonical Path: `docs/2026-04-02/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md`
+Temp Mirror Path: `docs/temp/0_0-stage4-consumer-contract-normalization-remediation-execution-ssot.md` (removed during the 2026-04-19 closure tranche)
 Commit State:
 - Baseline Commit: `09a7b478c2a2c16d708cc041aaa6e194278e7f9b`
 - Baseline Dirty Summary: `dirty: active Stage4 docs/code/test deltas, prepared canary targets, temp roadmap/queue active`
-- Resume Commit: `2b7cb64f2d1fe2cd1152806a5cc37795609f9755`
-- Resume Drift Summary: `current main@2b7cb64f is authoritative after the stale-base reset; the 2026-04-11 static refresh reopens no new Stage4 P0/P1, marks the older consumer-P1 wording stale-likely under current code/test evidence, and keeps this lane proof-pending at the front of the merged proof wave because Stage4 still owns runtime closure/demotion checks on numeric carryover authority`
+- Resume Commit: `029df1a74af89a7b5387c449f4723a5df0d000d4`
+- Resume Drift Summary: `current HEAD@029df1a7 is authoritative for queue closure; the older consumer-P1 wording is stale against the 2026-04-16 current-head r12 closure anchor, the 2026-04-12 live follow-up already moved the active blocker upstream to Stage3 replay/progression drift, and this lane now closes as historical backing while Stage4 repair/readback grammar becomes the next honest front owner`
 Source Survey Docs:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-bounded-survey.md`
@@ -26,6 +26,9 @@ Source Survey Docs:
 - `docs/2026-04-06/rol-global-terminal4-stage4-pipeline-p0p1.md`
 - `docs/2026-04-07/stage4-consumer-front-implementation-context.md`
 - `docs/2026-04-07/stage234-handoff-harness-merge-audit.md`
+- `docs/2026-04-16/stage234-global-authority-alignment-post-r12-stage4-current-session-closure-current-head-3pass-audit.md`
+- `docs/2026-04-19/stage4-consumer-contract-reactivation-refresh.md`
+- `docs/2026-04-19/stage4-consumer-contract-closure-review.md`
 Evidence Artifacts:
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-evidence.json`
 - `docs/2026-04-02/0_0-stage4-consumer-finalization-global-evidence.json`
@@ -37,6 +40,9 @@ Evidence Artifacts:
 - `docs/2026-04-03/0_0-stage34-ep2-fresh-run-post-run-merge-evidence.json`
 - `docs/2026-04-03/0_0-stage4-ep2-sinkproof-r2-runtime-closure-evidence.json`
 - `docs/2026-04-03/0_0-stage4-numeric-asset-authority-carryover-bounded-survey-evidence.json`
+- `projects/_canary/canary_0_0_stage4_ep2_sinkproof_r12_patchtraceclosure/logs/canary_summary.json`
+- `projects/_canary/canary_0_0_stage4_ep2_sinkproof_r12_patchtraceclosure/logs/canary_companion_audit.json`
+- `projects/_canary/canary_0_0_stage4_ep2_sinkproof_r12_patchtraceclosure/logs/runtime_audit_summary.json`
 Side-Effect Coverage: covered
 Parent Lane:
 - `0_0-stage2-stage3-stage4-readiness-remediation`
@@ -355,15 +361,13 @@ Realization update (2026-04-07):
 
 ## 12. Temp Queue Notes
 
-- temp status: `partial`
+- temp status: `closed`
 - cleanup condition:
-  - keep the temp mirror as the new aggregate Stage4 contract-normalization lane until explicit realization or replacement
+  - remove the temp mirror during the 2026-04-19 closure tranche
 - roadmap dependency:
-  - this lane becomes the new highest-level Stage4 contract wave
-  - the immediate bounded follow-up is now `numeric asset authority / carryover owner-boundary` investigation inside the existing Stage4 consumer family
-  - the flashback lane now sits below that as a completed runtime-positive substrate lane rather than the next front seam
-  - the NpcDrift lane now sits below that as a runtime-positive substrate lane rather than an immediate live blocker
-  - existing Stage4 partial lanes remain below it as substrate
+  - this lane now becomes historical backing rather than the front queue item
+  - the next honest front owner is `0_0-stage4-repair-contract-normalization-remediation`
+  - the flashback and NpcDrift lanes remain substrate/historical backing below the Stage4 sibling wave
 
 ## 13. Validation and Closure Hooks
 
@@ -478,3 +482,42 @@ Current reading:
 - the previous zero-promotion path is no longer the current code state for structured asset-family fields: post-pass now refreshes carryover baseline candidates from `actual_truth` first and `final_state_updates` fallback, and records promotion metadata in the owner contract
 - operator explicitly deferred fresh canary/live proof, so this lane remains proof-pending for runtime measurement rather than broad new implementation inside the same topic
 - until that proof runs, keep queue order unchanged and use fresh proof to decide whether the older consumer P1 framing can be demoted and whether `0_0-stage4-repair-contract-normalization-remediation` is still the next active Stage4 substrate lane; do not reinterpret this as Stage4 consumer closure or as a newly reopened P1
+
+## 17. 2026-04-19 Reactivation Refresh
+
+Source doc:
+
+- `docs/2026-04-19/stage4-consumer-contract-reactivation-refresh.md`
+
+Current reading:
+
+- `r2` already closed the Stage4-only sink-alignment uncertainty for the current-session pass path
+- `r12` now provides the current-head closure anchor this lane had still been waiting for:
+  - `final_authority_contract_summary.status = ok`
+  - `current_session_sink_alignment_summary.status = ok`
+  - `hard_gates.status = pass`
+  - patch-trace and raw-rationale mismatch counts all zero
+- the 2026-04-12 live follow-up already moved the active blocker upstream to Stage3 replay/progression drift rather than leaving it in Stage4 consumer ownership
+
+Queue consequence:
+
+- the old `proof-pending front Stage4 consumer verifier lane` wording is stale
+- the next honest move is closure-review, not another consumer-first rerun tranche
+
+## 18. 2026-04-19 Closure Review
+
+Source doc:
+
+- `docs/2026-04-19/stage4-consumer-contract-closure-review.md`
+
+Closure judgment:
+
+- bounded Stage4 consumer closure is now satisfied by the combined `r2 -> r12` chain
+- current-session final-authority landing, sink alignment, companion-role demotion, and patch-trace parity are all banked as historical backing
+- the remaining live Stage4 debt is sibling repair/readback grammar work, not another consumer-first proof wave
+
+Queue move:
+
+- close this lane
+- remove the temp mirror during this tranche
+- promote `0_0-stage4-repair-contract-normalization-remediation` to the front of the active roadmap

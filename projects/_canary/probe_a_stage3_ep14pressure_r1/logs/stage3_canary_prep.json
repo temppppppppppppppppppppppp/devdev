@@ -1,0 +1,23 @@
+{
+  "prepared_at": "2026-04-18T21:00:16",
+  "source_project": "probe_a_stage3_ep13carry_r1",
+  "target_project": "probe_a_stage3_ep14pressure_r1",
+  "canary_scope": "stage3_only",
+  "reruns_stage3_generation": true,
+  "preserves_stage2_arcs": true,
+  "preserves_stage4_outputs": true,
+  "from_ep": 14,
+  "cleanup": {
+    "from_ep": 14,
+    "db_impact": {
+      "blueprints": 0,
+      "stage3_attempts": 0,
+      "stage3_director_selections": 0
+    },
+    "file_cleanup": {
+      "blueprint_files_removed": 0,
+      "stage3_artifact_dirs_removed": 0,
+      "log_entries_removed": 7
+    }
+  }
+}

@@ -1,0 +1,203 @@
+{
+  "schema": "geuldobi.loop_canary_scorecard.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "backfilled",
+  "role": "Loop-oriented bounded canary gate surface for narrative doctrine evaluation.",
+  "document_ref": "docs/2026-04-18/golden-canary-deepclone-probe-a-loop-canary-scorecard.md",
+  "evaluation_unit": [
+    "stage3_bounded_episode_tranche"
+  ],
+  "required_inputs": [
+    "projects/_canary/probe_a_stage3_ep15predict_r1/logs/stage3_canary_summary.json",
+    "projects/_canary/probe_a_stage3_ep15predict_r1/logs/session/decisions.jsonl",
+    "projects/_canary/probe_a_stage3_ep15predict_r1/logs/session/ui_events.jsonl",
+    "projects/_canary/probe_a_stage3_ep15predict_r1/logs/session/llm_io.jsonl",
+    "projects/_canary/probe_a_stage3_ep14pressure_r1/plans/blueprints/blueprint_0014.txt",
+    "projects/_canary/probe_a_stage3_ep12authority_r1/plans/arcs/arc_003.txt",
+    "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+    "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
+    "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+  ],
+  "hard_gates": {
+    "episode_loop_contract_floor": {
+      "required_items": [
+        "pressure_visible",
+        "execution_visible",
+        "proof_visible",
+        "receipt_visible",
+        "observer_shift_visible",
+        "next_gate_visible"
+      ],
+      "minimum_hit_count": 4,
+      "forbidden_joint_miss": [
+        "receipt_visible",
+        "next_gate_visible"
+      ],
+      "status": "fail",
+      "evidence": [
+        "No accepted episode-15 blueprint artifact was produced. blueprint_db_count and blueprint_file_count both stop at 14.",
+        "The tranche therefore never reaches a realizable loop surface for pressure, proof, receipt, or next gate."
+      ],
+      "notes": [
+        "This is a structural failure to instantiate the episode, not merely a low-scoring weak pass."
+      ]
+    },
+    "receipt_transport_gate": {
+      "rule": "If a structural receipt appears in the tranche artifact, its trace must survive in at least two downstream surfaces.",
+      "status": "fail",
+      "evidence": [
+        "Episode 14's authority and carryover surfaces never reach an accepted episode-15 artifact because all ten candidate generations are rejected before finalization.",
+        "The summary records blueprint_db_count_short and blueprint_file_count_short, confirming transport break at the episode boundary."
+      ],
+      "notes": [
+        "The break occurs before narrative realization, so this is a seam-contract failure rather than proof that the receipt family itself vanished."
+      ]
+    },
+    "anti_contamination_gate": {
+      "rule": "Donor surfaces may remain only as example-family language. Direct donor scene-copy or law-copy fails the gate.",
+      "status": "pass",
+      "evidence": [
+        "The failure trace shows replay/authority/structure contract mismatch, not donor-copy contamination.",
+        "No contamination-specific advisory or repair signal appears in the final failure row."
+      ],
+      "notes": []
+    },
+    "lawful_bridge_gate": {
+      "rule": "The tranche must open a lawful next gate without replay drift, setup-only delay, or future-beat consumption.",
+      "status": "fail",
+      "evidence": [
+        "All ten candidate-generation retries fail under the same replay reroute guidance.",
+        "The failure trace explicitly says the opening anchor must stay short and move beyond the previous confrontation, but the hard constraints keep forcing the same phone-pressure axis."
+      ],
+      "notes": [
+        "This is the core failure mode."
+      ]
+    }
+  },
+  "weighted_metrics": {
+    "loop_deadline_hit": {
+      "weight": 15,
+      "status": "fail",
+      "score": 0,
+      "evidence": [
+        "The tactical slot for episode 15 is never realized into a blueprint artifact."
+      ],
+      "notes": []
+    },
+    "structural_receipt_conversion": {
+      "weight": 20,
+      "status": "fail",
+      "score": 0,
+      "evidence": [
+        "Episode 15 never converts Arc 3 pressure into explicit prediction authority because no candidate survives the seam contract."
+      ],
+      "notes": []
+    },
+    "receipt_transport_survival": {
+      "weight": 15,
+      "status": "fail",
+      "score": 0,
+      "evidence": [
+        "Receipt transport cannot be credited without an accepted episode-15 artifact."
+      ],
+      "notes": []
+    },
+    "carryover_persistence": {
+      "weight": 15,
+      "status": "fail",
+      "score": 0,
+      "na_allowed": true,
+      "evidence": [
+        "The system never proves whether episode 14 carryover can survive into episode 15 because generation fails before acceptance."
+      ],
+      "notes": []
+    },
+    "legal_bridge_efficiency": {
+      "weight": 15,
+      "status": "fail",
+      "score": 0,
+      "evidence": [
+        "The runtime burns through ten retries and still fails with replay reroute guidance on every cycle."
+      ],
+      "notes": []
+    },
+    "anti_contamination_pass": {
+      "weight": 10,
+      "status": "pass",
+      "score": 8,
+      "evidence": [
+        "Observed failure mode is seam conflict, not donor contamination."
+      ],
+      "notes": [
+        "This is the only clear positive in the tranche."
+      ]
+    },
+    "reward_rotation_health": {
+      "weight": 10,
+      "status": "fail",
+      "score": 0,
+      "evidence": [
+        "Episode 14 rotates strongly toward gold, while episode 15 hard constraints demand WTI prediction authority. The rotation cannot be realized cleanly."
+      ],
+      "notes": []
+    }
+  },
+  "watchlists": {
+    "anti_fatigue_risk": {
+      "status": "watch",
+      "red_flags": [
+        "same_receipt_family_repeats_across_two_or_more_tranches",
+        "proof_grows_without_observer_shift",
+        "next_gate_surface_collapses_to_one_hook_class",
+        "earned_access_is_replaced_by_gifted_access"
+      ],
+      "notes": [
+        "The repeated replay guidance suggests the engine is trapped between reusing episode-14 scene families and obeying episode-15 hard constraints."
+      ]
+    },
+    "saturation_trigger": {
+      "status": "watch",
+      "red_flags": [
+        "authority_gain_rises_while_constraints_flatten",
+        "reward_size_rises_while_reader_payoff_stays_flat",
+        "signboard_and_next_gate_collapse_into_one_repeated_device"
+      ],
+      "notes": [
+        "Gold rotation may have opened one tranche too early, creating cross-target seam conflict instead of healthy escalation."
+      ]
+    }
+  },
+  "interpretation_bands": [
+    {
+      "band": "gate_fail",
+      "meaning": "Execution hold regardless of numeric score."
+    },
+    {
+      "band": "85-100",
+      "meaning": "Strong pass. Bounded realization candidate."
+    },
+    {
+      "band": "70-84",
+      "meaning": "Pass with repair. Apply one targeted fix and rerun."
+    },
+    {
+      "band": "55-69",
+      "meaning": "Weak pass. Doctrine promotion remains on hold."
+    },
+    {
+      "band": "<55",
+      "meaning": "Fail. Recheck tranche design or doctrine interpretation."
+    }
+  ],
+  "operator_fields": {
+    "target_project": "probe_a_stage3_ep15predict_r1",
+    "target_tranche": "Stage3 ep15 prediction-authority proof",
+    "target_stage": 3,
+    "gate_result": "gate_fail_prediction_authority_seam_conflict",
+    "weighted_total": 8,
+    "weighted_total_after_na_adjustment": 8,
+    "operator_summary": "Episode 15 does not fail because the doctrine stopped working. It fails because the seam contract becomes self-conflicting: episode 14 ends by strongly opening a gold next-gate, while episode 15 hard constraints demand a WTI 80-dollar prophecy and the replay guard forbids reusing the same office/phone confrontation surface. All ten retries die in replay reroute before any artifact is accepted.",
+    "next_action": "Do not push forward to ep16. First run an ep14->ep15 seam audit and decide whether to soften the ep14 gold hook or relax the episode-15 replay surface so the WTI prediction slot can instantiate."
+  }
+}

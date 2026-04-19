@@ -1,0 +1,39 @@
+{
+  "primary_profile": "business_growth_profile",
+  "secondary_profile": "investment_market_profile",
+  "resource_axis": [
+    "실행 가능한 포지션, 현금, 배분 우선권, next-cycle ticket",
+    "PB 예외 계좌와 named seat 같은 접근권",
+    "가족 자산과 분리된 운용 방화벽"
+  ],
+  "power_axis": [
+    "Thesis를 가격 반영 전에 읽는 정확도",
+    "Exit를 먼저 계산해 observer 태도를 바꾸는 timing authority",
+    "PB, 리스크팀, 글로벌 desk가 tone shift로 드러내는 실무 재평가"
+  ],
+  "control_axis": [
+    "포지션 진입과 청산 결정권",
+    "예외 계좌, named seat, priority response list 같은 gate access control",
+    "가족 자산을 probe 주인공의 규칙 안으로만 들이는 방화벽"
+  ],
+  "payoff_axis": [
+    "same-block proof와 receipt",
+    "PB tone shift와 internal named seat 확보",
+    "next-cycle ticket과 global lane opening",
+    "후반 authority와 운용권 이동"
+  ],
+  "failure_axis": [
+    "setup-only trilogy",
+    "proof only and no receipt",
+    "signboard ambiguity와 late ticket drift",
+    "donor contamination",
+    "개인 물량이 글로벌 시장 전체를 뒤집는 과대 나비효과"
+  ],
+  "hud_interpretation": {
+    "capital": "현금, 포지션 규모, 회수 여력",
+    "deal_type": "포지션 진입, 익절, gate reopening, global ticket conversion",
+    "resource_power_hud": "자산 증가와 observer/authority 이동을 함께 보여주는 resource-power HUD",
+    "business_lines": "원자재, PB-VIP, 글로벌 execution, family office line",
+    "company_state": "SW인베스트먼트와 가문 권력 구도의 현재 접근권 상태"
+  }
+}

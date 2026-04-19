@@ -1,176 +1,50 @@
 {
   "version": "clickup-queue-sync-v1",
-  "updated_at": "2026-04-15T22:59:33.851292+00:00",
+  "updated_at": "2026-04-19T06:11:42.833290+00:00",
   "list_id": "901817292518",
   "queue_state_path": "docs/temp/queue-state.json",
   "tasks": {
-    "0_0-stage3-state-arbiter-envelope-bounded-remediation": {
-      "task_id": "86ex93c2p",
-      "name": "0_0-stage3-state-arbiter-envelope-bounded-remediation",
-      "desired_status": "Ready",
-      "resolved_status": "ready",
-      "synced_at": "2026-04-15T22:59:17.371951+00:00"
-    },
-    "0_0-stage234-global-authority-alignment-bounded-remediation": {
-      "task_id": "86ex93c2y",
-      "name": "0_0-stage234-global-authority-alignment-bounded-remediation",
-      "desired_status": "Ready",
-      "resolved_status": "ready",
-      "synced_at": "2026-04-15T22:59:18.642028+00:00"
-    },
-    "0_0-stage3-contract-tightening-remediation": {
-      "task_id": "86ex7683q",
-      "name": "0_0-stage3-contract-tightening-remediation",
-      "desired_status": "Proof Pending",
-      "resolved_status": "review",
-      "synced_at": "2026-04-15T22:59:19.271809+00:00"
-    },
-    "0_0-stage3-opening-transition-contract-normalization-remediation": {
-      "task_id": "86ex7684c",
-      "name": "0_0-stage3-opening-transition-contract-normalization-remediation",
-      "desired_status": "Realizing",
-      "resolved_status": "in progress",
-      "synced_at": "2026-04-15T22:59:19.912310+00:00"
-    },
-    "0_0-stage4-consumer-contract-normalization-remediation": {
-      "task_id": "86ex7683f",
-      "name": "0_0-stage4-consumer-contract-normalization-remediation",
-      "desired_status": "Proof Pending",
-      "resolved_status": "review",
-      "synced_at": "2026-04-15T22:59:20.542835+00:00"
-    },
-    "0_0-stage4-repair-contract-normalization-remediation": {
-      "task_id": "86ex7683j",
-      "name": "0_0-stage4-repair-contract-normalization-remediation",
-      "desired_status": "Proof Pending",
-      "resolved_status": "review",
-      "synced_at": "2026-04-15T22:59:21.162296+00:00"
-    },
-    "0_0-stage234-nonwuxia-state-lock-overreach-remediation": {
-      "task_id": "86ex7683m",
-      "name": "0_0-stage234-nonwuxia-state-lock-overreach-remediation",
-      "desired_status": "Proof Pending",
-      "resolved_status": "review",
-      "synced_at": "2026-04-15T22:59:22.092086+00:00"
-    },
-    "0_0-stage2-contract-normalization-remediation": {
-      "task_id": "86ex7683n",
-      "name": "0_0-stage2-contract-normalization-remediation",
-      "desired_status": "Realizing",
-      "resolved_status": "in progress",
-      "synced_at": "2026-04-15T22:59:22.801665+00:00"
-    },
-    "0_0-stage4-partial-fix-hardening-remediation": {
-      "task_id": "86ex7683t",
-      "name": "0_0-stage4-partial-fix-hardening-remediation",
-      "desired_status": "Proof Pending",
-      "resolved_status": "review",
-      "synced_at": "2026-04-15T22:59:23.892906+00:00"
-    },
-    "0_0-stage3-partial-fix-hardening-remediation": {
-      "task_id": "86ex7683z",
-      "name": "0_0-stage3-partial-fix-hardening-remediation",
-      "desired_status": "Proof Pending",
-      "resolved_status": "review",
-      "synced_at": "2026-04-15T22:59:24.522524+00:00"
-    },
-    "0_0-stage2-partial-fix-hardening-remediation": {
-      "task_id": "86ex76846",
-      "name": "0_0-stage2-partial-fix-hardening-remediation",
-      "desired_status": "Proof Pending",
-      "resolved_status": "review",
-      "synced_at": "2026-04-15T22:59:25.126776+00:00"
-    },
-    "0_0-stage234-cross-stage-contract-normalization-remediation": {
-      "task_id": "86ex7684b",
-      "name": "0_0-stage234-cross-stage-contract-normalization-remediation",
-      "desired_status": "Realizing",
-      "resolved_status": "in progress",
-      "synced_at": "2026-04-15T22:59:25.814756+00:00"
-    },
     "0_0-stage4-interview-round-owner-surface-reduction-remediation": {
       "task_id": "86ex7684j",
       "name": "0_0-stage4-interview-round-owner-surface-reduction-remediation",
-      "desired_status": "Realizing",
-      "resolved_status": "in progress",
-      "synced_at": "2026-04-15T22:59:26.449538+00:00"
+      "desired_status": "Parked",
+      "resolved_status": "parked",
+      "synced_at": "2026-04-19T06:11:38.461255+00:00"
     },
     "stage0-treatment-enrich-retirement-remediation": {
       "task_id": "86ex7684n",
       "name": "stage0-treatment-enrich-retirement-remediation",
-      "desired_status": "Realizing",
-      "resolved_status": "in progress",
-      "synced_at": "2026-04-15T22:59:27.077753+00:00"
+      "desired_status": "Parked",
+      "resolved_status": "parked",
+      "synced_at": "2026-04-19T06:11:39.087319+00:00"
     },
     "stage0-bi-tr-production-harness-normalization-remediation": {
       "task_id": "86ex7684v",
       "name": "stage0-bi-tr-production-harness-normalization-remediation",
-      "desired_status": "Realizing",
-      "resolved_status": "in progress",
-      "synced_at": "2026-04-15T22:59:27.704076+00:00"
+      "desired_status": "Parked",
+      "resolved_status": "parked",
+      "synced_at": "2026-04-19T06:11:40.263250+00:00"
     },
     "0_0-stage2-stage3-stage4-readiness-remediation": {
       "task_id": "86ex7684x",
       "name": "0_0-stage2-stage3-stage4-readiness-remediation",
       "desired_status": "Blocked",
       "resolved_status": "blocked",
-      "synced_at": "2026-04-15T22:59:28.291699+00:00"
+      "synced_at": "2026-04-19T06:11:41.031725+00:00"
     },
     "frontier-lag-soak-canary-wave1": {
       "task_id": "86ex7684y",
       "name": "frontier-lag-soak-canary-wave1",
-      "desired_status": "Realizing",
-      "resolved_status": "in progress",
-      "synced_at": "2026-04-15T22:59:29.122352+00:00"
+      "desired_status": "Parked",
+      "resolved_status": "parked",
+      "synced_at": "2026-04-19T06:11:41.851628+00:00"
     },
     "npc-martial-state-substrate-wave1": {
       "task_id": "86ex7684z",
       "name": "npc-martial-state-substrate-wave1",
       "desired_status": "Blocked",
       "resolved_status": "blocked",
-      "synced_at": "2026-04-15T22:59:29.763118+00:00"
-    },
-    "0_0-stage34-ep2-single-episode-demo-canary": {
-      "task_id": "86ex76850",
-      "name": "0_0-stage34-ep2-single-episode-demo-canary",
-      "desired_status": "Closed",
-      "resolved_status": "complete",
-      "synced_at": "2026-04-15T22:59:30.391728+00:00"
-    },
-    "0_0-stage4-ep2-advisory-escalation-loop-remediation": {
-      "task_id": "86ex76858",
-      "name": "0_0-stage4-ep2-advisory-escalation-loop-remediation",
-      "desired_status": "Closed",
-      "resolved_status": "complete",
-      "synced_at": "2026-04-15T22:59:31.222122+00:00"
-    },
-    "0_0-stage4-canonical-entity-postselect-remediation": {
-      "task_id": "86ex76859",
-      "name": "0_0-stage4-canonical-entity-postselect-remediation",
-      "desired_status": "Closed",
-      "resolved_status": "complete",
-      "synced_at": "2026-04-15T22:59:31.841645+00:00"
-    },
-    "0_0-stage4-flashback-continuity-localfix-remediation": {
-      "task_id": "86ex7685b",
-      "name": "0_0-stage4-flashback-continuity-localfix-remediation",
-      "desired_status": "Closed",
-      "resolved_status": "complete",
-      "synced_at": "2026-04-15T22:59:32.693392+00:00"
-    },
-    "0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation": {
-      "task_id": "86ex7685e",
-      "name": "0_0-stage4-npcdrift-relation-tag-semantic-localfix-remediation",
-      "desired_status": "Closed",
-      "resolved_status": "complete",
-      "synced_at": "2026-04-15T22:59:33.284404+00:00"
-    },
-    "0_0-stage3-quality-closure-five-tranche-remediation": {
-      "task_id": "86ex93c3y",
-      "name": "0_0-stage3-quality-closure-five-tranche-remediation",
-      "desired_status": "Ready",
-      "resolved_status": "ready",
-      "synced_at": "2026-04-15T22:59:33.851292+00:00"
+      "synced_at": "2026-04-19T06:11:42.833290+00:00"
     }
   }
 }

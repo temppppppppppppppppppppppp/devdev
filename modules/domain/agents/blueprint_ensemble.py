@@ -14,6 +14,7 @@ utf8-hygiene: allow-file -- legacy Korean prompt text in this generator predates
 """
 
 import logging
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
@@ -103,6 +104,46 @@ AI_TELL_BLUEPRINT_GUARDRAIL = """
 - 매 씬의 도입과 종결 리듬을 같게 반복하지 마세요.
 - 독자가 "익숙한 AI 문장"이라고 느낄 만한 접속구·감탄구 남용을 피하세요.
 """
+
+
+def _extract_year_month(text: object) -> tuple[int, int] | None:
+    raw = str(text or "").strip()
+    if not raw:
+        return None
+    match = re.search(r"(?P<year>20\d{2}|19\d{2})\s*년\D{0,8}(?P<month>1[0-2]|0?[1-9])\s*월", raw)
+    if not match:
+        return None
+    try:
+        return int(match.group("year")), int(match.group("month"))
+    except (TypeError, ValueError):
+        return None
+
+
+def _year_month_conflicts(left: object, right: object) -> bool:
+    left_point = _extract_year_month(left)
+    right_point = _extract_year_month(right)
+    return bool(left_point is not None and right_point is not None and left_point != right_point)
+
+
+def _resolve_authoritative_opening_time_context(constraint_block: dict | None) -> str:
+    payload = constraint_block if isinstance(constraint_block, dict) else {}
+    episode_state_packet = payload.get("episode_state_packet")
+    if isinstance(episode_state_packet, dict):
+        opening_truth = episode_state_packet.get("opening_truth")
+        if isinstance(opening_truth, dict):
+            time_context = str(opening_truth.get("time_context", "") or "").strip()
+            if time_context:
+                return time_context
+    episode_progression_packet = payload.get("episode_progression_packet")
+    if isinstance(episode_progression_packet, dict):
+        truths = episode_progression_packet.get("time_truths", [])
+        if isinstance(truths, list):
+            for truth in truths:
+                truth_text = str(truth or "").strip()
+                if truth_text:
+                    return truth_text
+    return ""
+
 
 _BLUEPRINT_SYSTEM_UI_MARKERS = tuple(
     marker.casefold()
@@ -470,11 +511,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
         if not tactical_excerpt:
             tactical_excerpt = str(arc_focus or "").strip()
         archive_appendix_text, archive_appendix_meta = build_stage3_archive_appendix(prev_manuscripts_text)
+        authoritative_time_context = _resolve_authoritative_opening_time_context(constraint_block)
         prev_info = self._format_prev_info_expanded(
             prev_blueprint,
             prev_blueprints,
             prev_manuscripts_text,
             archive_appendix_text=archive_appendix_text,
+            authoritative_time_context=authoritative_time_context,
         )
         hud_context = self._build_hud_context(state_tracker, ep_num)
 
@@ -1114,14 +1157,34 @@ class BlueprintEnsembleGenerator(BaseAgent):
         prev_blueprint: dict | None = None,
         constraint_block: dict | None = None,
     ) -> dict | tuple[None, str]:
-        response = self._ask_with_cached_context(
-            cache_name=cache_name,
-            prompt=prompt,
-            temperature=0.7,
-            thinking_level="medium",
-            full_prompt_fallback=full_prompt_fallback,
-            response_schema=BLUEPRINT_SCHEMA,
-        )
+        try:
+            response = self._ask_with_cached_context(
+                cache_name=cache_name,
+                prompt=prompt,
+                temperature=0.7,
+                thinking_level="medium",
+                full_prompt_fallback=full_prompt_fallback,
+                response_schema=BLUEPRINT_SCHEMA,
+            )
+        except Exception as exc:
+            if not self._is_blueprint_schema_numeric_overflow(exc):
+                raise
+            self._operator_log(
+                f"[Blueprint] '{strategy_name}' schema numeric overflow -> retry without response_schema",
+                level="warning",
+                meta={
+                    "strategy": strategy_name,
+                    "fallback_reason": "schema_numeric_overflow",
+                },
+            )
+            response = self._ask_with_cached_context(
+                cache_name=cache_name,
+                prompt=prompt,
+                temperature=0.7,
+                thinking_level="medium",
+                full_prompt_fallback=full_prompt_fallback,
+                response_schema=None,
+            )
         self._operator_log(
             f"[Blueprint] '{strategy_name}' response received ({len(response):,} chars)",
             meta={"strategy": strategy_name, "response_chars": len(response)},
@@ -1139,6 +1202,17 @@ class BlueprintEnsembleGenerator(BaseAgent):
             prev_blueprint=prev_blueprint,
             constraint_block=constraint_block,
         )
+
+    @staticmethod
+    def _is_blueprint_schema_numeric_overflow(error: Exception) -> bool:
+        message = str(error or "").lower()
+        if not message:
+            return False
+        if "integer string conversion" in message:
+            return True
+        if "int_max_str_digits" in message:
+            return True
+        return "exceeds the limit" in message and "digits" in message and "integer" in message
 
     @staticmethod
     def _scene_has_meaningful_payload(scene: dict) -> bool:
@@ -1256,7 +1330,18 @@ class BlueprintEnsembleGenerator(BaseAgent):
         declared_type = read_declared_opening_transition_type(candidate)
         if declared_type:
             raw_type = str(raw_contract.get("type", "") or "").strip() if isinstance(raw_contract, dict) else ""
+            inferred_contract = apply_opening_transition_contract(candidate, prev_blueprint=prev_blueprint)
+            inferred_type = (
+                str(inferred_contract.get("type", "") or "").strip() if isinstance(inferred_contract, dict) else ""
+            )
             if raw_type == declared_type and isinstance(raw_contract, dict):
+                if inferred_type and inferred_type != declared_type:
+                    normalized_contract = dict(raw_contract)
+                    normalized_contract["type"] = inferred_type
+                    if inferred_contract.get("signals") and not normalized_contract.get("signals"):
+                        normalized_contract["signals"] = inferred_contract.get("signals")
+                    candidate["opening_transition"] = normalized_contract
+                    return "inferred"
                 return ""
             normalized_contract = dict(raw_contract) if isinstance(raw_contract, dict) else {}
             normalized_contract["type"] = declared_type
@@ -1271,6 +1356,94 @@ class BlueprintEnsembleGenerator(BaseAgent):
         if inferred_contract:
             return "inferred"
         return "missing"
+
+    @staticmethod
+    def _resolve_prev_blueprint_time_flow_fallback(prev_blueprint: dict | None) -> str:
+        if not isinstance(prev_blueprint, dict):
+            return ""
+
+        ending_state = prev_blueprint.get("ending_state", {})
+        if isinstance(ending_state, dict):
+            raw_timeline = ending_state.get("timeline", {})
+            if isinstance(raw_timeline, dict):
+                for key in ("표현", "expression", "text"):
+                    value = str(raw_timeline.get(key, "") or "").strip()
+                    if value:
+                        return value
+            else:
+                value = str(raw_timeline or "").strip()
+                if value:
+                    return value
+
+        return str(prev_blueprint.get("time_flow", "") or "").strip()
+
+    @classmethod
+    def _resolve_constraint_time_flow_fallback(cls, constraint_block: dict | None) -> str:
+        if not isinstance(constraint_block, dict):
+            return ""
+
+        episode_progression = constraint_block.get("episode_progression_packet", {})
+        if isinstance(episode_progression, dict):
+            for raw in episode_progression.get("time_truths") or []:
+                text = str(raw or "").strip()
+                if not text:
+                    continue
+                match = re.search(
+                    r"((?:\d{4}년\s*)?\d{1,2}월(?:\s*\d{1,2}일)?(?:\s*(?:초|중순|말))?(?:\s*(?:오전|오후|새벽|아침|점심|저녁|밤|심야|자정|정오))?)",
+                    text,
+                )
+                if match:
+                    return match.group(1).strip()
+
+        episode_state_packet = constraint_block.get("episode_state_packet", {})
+        opening_truth = episode_state_packet.get("opening_truth") if isinstance(episode_state_packet, dict) else {}
+        if isinstance(opening_truth, dict):
+            time_context = str(opening_truth.get("time_context", "") or "").strip()
+            if re.search(r"\d{4}년|\d{1,2}월|오전|오후|새벽|아침|점심|저녁|밤|심야", time_context):
+                return time_context
+
+        continuity = constraint_block.get("continuity", {})
+        if isinstance(continuity, dict):
+            time_context = str(continuity.get("time_context", "") or "").strip()
+            if re.search(r"\d{4}년|\d{1,2}월|오전|오후|새벽|아침|점심|저녁|밤|심야", time_context):
+                return time_context
+
+        return ""
+
+    @classmethod
+    def _normalize_direct_continuation_time_flow(
+        cls,
+        candidate: dict,
+        *,
+        prev_blueprint: dict | None,
+        constraint_block: dict | None = None,
+    ) -> str:
+        """Fill a missing opening time anchor only for safe direct-continuation carryover.
+
+        We keep ``opening_anchor`` structurally strict in the validator, but when the
+        candidate already resolved to ``direct_continuation`` we can safely inherit the
+        prior episode's terminal time anchor instead of forcing a replay/regenerate loop.
+        """
+        if not isinstance(candidate, dict):
+            return ""
+        if str(candidate.get("time_flow", "") or "").strip():
+            return ""
+
+        opening_transition = candidate.get("opening_transition", {})
+        opening_type = (
+            str(opening_transition.get("type", "") or "").strip() if isinstance(opening_transition, dict) else ""
+        )
+        if opening_type != "direct_continuation":
+            return ""
+
+        fallback = cls._resolve_constraint_time_flow_fallback(constraint_block)
+        if not fallback:
+            fallback = cls._resolve_prev_blueprint_time_flow_fallback(prev_blueprint)
+        if not fallback:
+            return ""
+
+        candidate["time_flow"] = fallback
+        return fallback
 
     def _build_protagonist_instructions(self, protagonist_config: dict, genre: str = "wuxia") -> str:
         """
@@ -1484,10 +1657,38 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 progression_lines.append(
                     "  - MUST_FOCUS의 새 사건 축으로 전진하고 직전 대치 장면을 길게 반복하지 말 것"
                 )
+            next_gate_strength = progression_pkt.get("next_gate_strength_mode", {})
+            if isinstance(next_gate_strength, dict) and next_gate_strength.get("mode") == "foreshadow_only":
+                introduced = ", ".join(
+                    str(item or "").strip() for item in next_gate_strength.get("introduced_target_families", [])[:3]
+                )
+                reserved = ", ".join(
+                    str(item or "").strip() for item in next_gate_strength.get("reserved_target_families", [])[:3]
+                )
+                progression_lines.append(
+                    "  - 새 타깃 handoff는 foreshadow 수준으로만 남기고, 현재 미해결 타깃 압박을 먼저 정리할 것"
+                )
+                if introduced or reserved:
+                    progression_lines.append(
+                        "    · "
+                        + _fit_compact_context(
+                            f"introduced={introduced or '-'} / reserved={reserved or '-'}",
+                            120,
+                        )
+                    )
+            lawful_window = progression_pkt.get("lawful_repetition_window", {})
+            if isinstance(lawful_window, dict) and lawful_window.get("mode") == "allow_escalated_repeat":
+                progression_lines.append(
+                    "  - 같은 장소/같은 상대라도 장면 목표나 권력 위계가 달라지면 lawful repetition으로 전진 가능"
+                )
+                if lawful_window.get("allow_same_channel_if_decision_escalates"):
+                    progression_lines.append(
+                        "    · 동일 통화/동일 채널도 결정·단언·압박 수위가 올라가면 replay로만 보지 말 것"
+                    )
             surface_guidance = progression_pkt.get("surface_guidance", [])
             if isinstance(surface_guidance, list) and surface_guidance:
                 progression_lines.append("  - 같은 축 반복 방지용 진행 surface 가이드")
-                for guidance in surface_guidance[:4]:
+                for guidance in surface_guidance[:6]:
                     text = str(guidance or "").strip()
                     if text:
                         progression_lines.append(f"    · {_fit_compact_context(text, 120)}")
@@ -1658,7 +1859,12 @@ class BlueprintEnsembleGenerator(BaseAgent):
         """[V64 P2-7] 위임 → modules.core.hud_utils.build_hud_context (blueprint variant)"""
         return _build_hud_context_shared(state_tracker, ep_num, variant="blueprint")
 
-    def _format_prev_info(self, prev_blueprint: dict | None) -> str:
+    def _format_prev_info(
+        self,
+        prev_blueprint: dict | None,
+        *,
+        authoritative_time_context: str = "",
+    ) -> str:
         """이전 Blueprint 정보 포맷팅 (레거시 - 단일 Blueprint)"""
         if not prev_blueprint:
             return "(첫 에피소드 - 이전 화 없음)"
@@ -1677,23 +1883,37 @@ class BlueprintEnsembleGenerator(BaseAgent):
         if end_location:
             lines.append(f"종료 위치: {end_location}")
 
-        # [V61.5] 시간 흐름 정보 추가
         time_flow = prev_blueprint.get("time_flow", "")
-        if time_flow:
-            lines.append(f"시간 흐름: {time_flow}")
+        normalized_authoritative_time = str(authoritative_time_context or "").strip()
 
         # [V61.5] ending_state 필드 (있으면)
         ending_state = prev_blueprint.get("ending_state", {})
+        ending_timeline_text = ""
+        if isinstance(ending_state, dict) and ending_state.get("timeline"):
+            tl = ending_state["timeline"]
+            if isinstance(tl, dict):
+                ending_timeline_text = ", ".join(f"{k}:{v}" for k, v in tl.items())
+            else:
+                ending_timeline_text = str(tl)
+
+        time_conflict = bool(normalized_authoritative_time) and (
+            _year_month_conflicts(time_flow, normalized_authoritative_time)
+            or _year_month_conflicts(ending_timeline_text, normalized_authoritative_time)
+        )
+        if normalized_authoritative_time:
+            lines.append(f"현재 화 opening time truth: {normalized_authoritative_time}")
+            if time_conflict:
+                lines.append(
+                    "⚠️ 직전 Blueprint의 시간 표기는 현재 화 opening truth와 충돌하여 direct-prev 권위에서 제외됨"
+                )
+        if time_flow and not time_conflict:
+            lines.append(f"시간 흐름: {time_flow}")
+
         if ending_state:
             if ending_state.get("location"):
                 lines.append(f"종료 위치 (상세): {ending_state['location']}")
-            if ending_state.get("timeline"):
-                tl = ending_state["timeline"]
-                if isinstance(tl, dict):
-                    tl_str = ", ".join(f"{k}:{v}" for k, v in tl.items())
-                else:
-                    tl_str = str(tl)
-                lines.append(f"종료 시점: {tl_str}")
+            if ending_timeline_text and not time_conflict:
+                lines.append(f"종료 시점: {ending_timeline_text}")
             if ending_state.get("protagonist_status"):
                 lines.append(f"주인공 상태: {ending_state['protagonist_status']}")
 
@@ -1876,6 +2096,21 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 f"[Blueprint] '{strategy_name}' opening_transition contract normalized",
                 meta={"strategy": strategy_name, "route": opening_transition_route},
             )
+        inherited_time_flow = self._normalize_direct_continuation_time_flow(
+            candidate,
+            prev_blueprint=prev_blueprint,
+            constraint_block=constraint_block,
+        )
+        if inherited_time_flow:
+            logging.info(
+                "[BPEnsemble] inherited direct-continuation time_flow for %s: %s",
+                strategy_name,
+                inherited_time_flow,
+            )
+            self._operator_log(
+                f"[Blueprint] '{strategy_name}' direct_continuation time_flow inherited",
+                meta={"strategy": strategy_name, "time_flow": inherited_time_flow[:120]},
+            )
 
         tactical_intrusion_reason = self._detect_unauthorized_tactical_intrusion(
             candidate,
@@ -2028,12 +2263,16 @@ class BlueprintEnsembleGenerator(BaseAgent):
         prev_manuscripts_text: str = "",
         *,
         archive_appendix_text: str | None = None,
+        authoritative_time_context: str = "",
     ) -> str:
         """[V67] 이전 Blueprint/원고 확장 정보 포맷팅 (Gemini 대용량 컨텍스트 활용)"""
         sections = []
 
         # ── 직전 Blueprint 상세 (필수 계승) ──
-        direct_prev = self._format_prev_info(prev_blueprint)
+        direct_prev = self._format_prev_info(
+            prev_blueprint,
+            authoritative_time_context=authoritative_time_context,
+        )
         sections.append("[Context Tier 1 - Direct Previous Episode Truth]")
         sections.append(direct_prev)
 

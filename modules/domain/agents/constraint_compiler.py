@@ -20,6 +20,36 @@ import re
 from modules.core.genre_schema_builder import get_item_suffixes
 
 
+def _normalize_item_list(raw_items) -> list[str]:
+    if raw_items is None:
+        return []
+    if isinstance(raw_items, str):
+        raw_items = [item.strip() for item in raw_items.split(",") if item.strip()]
+    if not isinstance(raw_items, list):
+        return []
+
+    normalized: list[str] = []
+    for item in raw_items:
+        if isinstance(item, dict):
+            value = item.get("name") or item.get("item") or ""
+        else:
+            value = item
+        text = str(value).strip() if value is not None else ""
+        if text:
+            normalized.append(text)
+    return normalized
+
+
+def _resolve_protagonist_items(state_constraints: dict) -> list[str]:
+    if not isinstance(state_constraints, dict):
+        return []
+
+    protagonist_items = state_constraints.get("protagonist_items")
+    if protagonist_items is not None:
+        return _normalize_item_list(protagonist_items)
+    return _normalize_item_list(state_constraints.get("items_acquired", []))
+
+
 class ConstraintCompiler:
     """
     [V60.11] 제약 조건 컴파일러
@@ -29,9 +59,7 @@ class ConstraintCompiler:
 
     def __init__(self, genre: str = "") -> None:
         self._item_suffixes = get_item_suffixes(genre)
-        _suffix_group = "|".join(
-            sorted((re.escape(s) for s in self._item_suffixes), key=len, reverse=True)
-        )
+        _suffix_group = "|".join(sorted((re.escape(s) for s in self._item_suffixes), key=len, reverse=True))
         _suffix_group = _suffix_group or r"아이템"
 
         # 아이템 획득 패턴 (장르 동적 접미사)
@@ -91,7 +119,7 @@ class ConstraintCompiler:
 
     def _collect_all_items(self, prev_arcs: list[dict]) -> dict[str, int]:
         """모든 획득 아이템과 획득 시점 수집
-        [V62.3] 구조화 필드(items_acquired, inventory)는 전체 Arc 스캔 (O(n), 가벼움)
+        [V62.3] 구조화 필드(protagonist_items/items_acquired, inventory)는 전체 Arc 스캔 (O(n), 가벼움)
                 regex 스캔(tactical_doc)은 최근 REGEX_WINDOW개만 (비용 절감)
         """
         items = {}  # {아이템명: 획득 Arc 번호}
@@ -100,26 +128,17 @@ class ConstraintCompiler:
         for idx, arc in enumerate(prev_arcs):
             arc_no = arc.get("arc_no", 0)
 
-            # state_constraints.items_acquired (구조화 → 전체 스캔)
-            acquired = (arc.get("state_constraints") or {}).get("items_acquired") or []  # [V70] None 방어
-            if isinstance(acquired, list):
-                for item in acquired:
-                    item = str(item) if isinstance(item, dict) else item
-                    if item and len(item) >= 2:
-                        items[item] = arc_no
+            # state_constraints.protagonist_items / items_acquired (구조화 → 전체 스캔)
+            acquired = _resolve_protagonist_items(arc.get("state_constraints") or {})
+            for item in acquired:
+                if item and len(item) >= 2:
+                    items[item] = arc_no
 
             # joint_docs.physical_inventory (구조화 → 전체 스캔)
-            inventory = (arc.get("joint_docs") or {}).get("physical_inventory") or []  # [V70] None 방어
-            if isinstance(inventory, list):
-                for item in inventory:
-                    item = str(item) if isinstance(item, dict) else item
-                    if item and len(item) >= 2 and item not in items:
-                        items[item] = arc_no
-            elif isinstance(inventory, str):
-                for item in inventory.split(","):
-                    item = item.strip()
-                    if item and len(item) >= 2 and item not in items:
-                        items[item] = arc_no
+            inventory = _normalize_item_list((arc.get("joint_docs") or {}).get("physical_inventory"))
+            for item in inventory:
+                if item and len(item) >= 2 and item not in items:
+                    items[item] = arc_no
 
             # tactical_doc regex (비싼 연산 → 최근 REGEX_WINDOW개만)
             if idx >= regex_start:
@@ -220,18 +239,24 @@ class ConstraintCompiler:
         # [V60.13 FIX] 폴백: arc_end_state 우선 사용
         joint = last_arc.get("joint_docs", {})
         state_constraints = last_arc.get("state_constraints", {})
+        arc_end_state = state_constraints.get("arc_end_state", {})
 
-        equipment = joint.get("physical_inventory", [])
-        if isinstance(equipment, str):
-            equipment = [i.strip() for i in equipment.split(",") if i.strip()]
+        equipment = []
+        if isinstance(arc_end_state, dict) and "equipment" in arc_end_state:
+            equipment = _normalize_item_list(arc_end_state.get("equipment"))
+        elif isinstance(joint, dict):
+            equipment = _normalize_item_list(joint.get("physical_inventory"))
 
         # [V62.2] 내공 + 부상: 아크 간 자연 회복 → 항상 100% / 없음
         internal_energy = 100
         injuries = ""
 
-        arc_end_state = state_constraints.get("arc_end_state", {})
         return {
-            "location": joint.get("final_location", "알 수 없음"),
+            "location": (
+                arc_end_state.get("location")
+                if isinstance(arc_end_state, dict) and arc_end_state.get("location")
+                else joint.get("final_location", "알 수 없음")
+            ),
             "injuries": [injuries] if injuries and injuries != "없음" else [],
             "internal_energy": internal_energy,
             "equipment": equipment,
@@ -270,7 +295,7 @@ class ConstraintCompiler:
                 lines.append(f"  ❌ '{item}' - Arc {arc_no}에서 이미 획득함 → 다시 획득 금지!")
             lines.append("=" * 72)
             lines.append("")
-            lines.append("⚠️ items_acquired에 위 아이템이 포함되면 즉시 REJECT됩니다!")
+            lines.append("⚠️ protagonist_items(legacy alias: items_acquired)에 위 아이템이 포함되면 즉시 REJECT됩니다!")
             lines.append("")
 
         # ═══════════════════════════════════════════════════════════════
@@ -381,7 +406,7 @@ class ConstraintCompiler:
         lines.append("┌" + "─" * 70 + "┐")
         lines.append("│ 🔍 SELF-CHECK (생성 후 자체 검증)".ljust(71) + "│")
         lines.append("├" + "─" * 70 + "┤")
-        lines.append("│ □ items_acquired에 금지 목록 아이템 없는가?".ljust(71) + "│")
+        lines.append("│ □ protagonist_items(legacy alias: items_acquired)에 금지 목록 아이템 없는가?".ljust(71) + "│")
         lines.append("│ □ arc_start_state.location = 이전 Arc 종료 위치인가?".ljust(71) + "│")
         lines.append("│ □ arc_start_state.equipment = 이전 Arc 종료 소지품인가?".ljust(71) + "│")
         lines.append("│ □ tactical_doc에 '다시 획득' 문구 없는가?".ljust(71) + "│")

@@ -1,0 +1,5 @@
+{"timestamp": "2026-04-19 10:09:58", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "target_arc_no": 4, "items_tracked": 7}}
+{"timestamp": "2026-04-19 10:15:39", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "[PATCH-B] 이전 Arc 소지품 소멸: ['18년 치 매크로 이벤트가 암호화되어 적힌 양장 수첩', '20억 원이 예치된 개인 계좌 OTP 카드', 'SW인베스트먼트 법인 계좌 보안 매체', 'SW인베스트먼트 법인 설립 신청서 가안', 'WTI 6월물 절반 청산 및 잔여 홀딩 내역서'] (처분/폐기 사유 미기재)", "시작 위치 수정: '이전 Arc 종료 위치' → '서울 강남, SW인베스트먼트 원룸 오피스 내 한시우의 데스크 앞'", "시작 부상 수정: '' → '없음'", "arc_end_state 위치 동기화: '알 수 없음' → '서울 강남, 철저한 보안이 적용된 SW인베스트먼트 개인 오피스'"]}}
+{"timestamp": "2026-04-19 10:18:52", "type": "field_repair", "message": "hybrid_composition default injected", "data": {"arc_no": 4}}
+{"timestamp": "2026-04-19 10:18:53", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-19 10:19:34", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "target_arc_no": 5, "items_tracked": 8}}

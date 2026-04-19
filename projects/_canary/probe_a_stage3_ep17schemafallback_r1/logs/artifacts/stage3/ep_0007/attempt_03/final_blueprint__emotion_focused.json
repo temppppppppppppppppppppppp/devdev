@@ -1,0 +1,215 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "107b67690a3c1d17f0aaa71bc66efb9de67befdcfaa37c8d9eb36f2d4991b1f3"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1253,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 14435,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 985565,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 9835,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 3813,
+          "lane": "constraints"
+        },
+        {
+          "chars": 638,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 139,
+        "constraints": 3813,
+        "feedback_context": 638,
+        "hud_context": 10,
+        "prev_info": 9835
+      },
+      "shared_context_chars": 13797,
+      "strategy_feedback_chars": 2698,
+      "total_chars": 14435
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "_inventory_gaps": [
+    {
+      "item": "가죽 수첩",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "만년필",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "폴더폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "OTP 카드",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "fix_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "가족의 물리적 감시망을 완전히 벗어나기 위한 거점 이동과 PB와의 새로운 대치 준비",
+  "end_location": "한미증권 본점 미팅룸",
+  "ending_hook": "테이블 위로 떨어진 가죽 수첩의 둔탁한 소리와 함께, 한시우의 차가운 시선이 박성호의 헐떡이는 숨통을 조용히 겨누고 있었다.",
+  "ending_state": {
+    "location": "한미증권 본점 미팅룸",
+    "protagonist_status": "새로운 거래 거점을 요구하며 협상의 주도권을 쥔 상태",
+    "timeline": {
+      "표현": "2006년 2월 초 낮"
+    }
+  },
+  "ep_num": 7,
+  "episode_number": 7,
+  "expected_ending": "한미증권 본점에 도착하여 완벽한 은폐가 가능한 전용 거점을 요구하며 끝남",
+  "integrated_scenario": "한시우의 시선이 모니터 위에서 깜빡이는 WTI 차트와 책상에 놓인 OTP 카드에 머물렀다. 20억 원의 실탄이 장전되었고, 시장의 변동성은 그의 가죽 수첩에 적힌 미래의 궤적과 정확히 일치하고 있었다. 그러나 한시우는 방아쇠를 당기려던 손을 멈췄다. 굳게 닫힌 문 너머로 본가 고용인들의 분주한 발소리가 미세하게 들려왔기 때문이다. 아무리 사설 통신망을 깔고 하드웨어를 독립시켰다 한들, 이 성북동 저택은 아버지 한정호 회장의 거대한 판옵티콘이나 다름없었다. 수십, 수백억 단위로 불어날 레버리지 포지션을 유지하기 위해서는 가족의 시선조차 닿지 않는 완벽한 물리적 은폐 공간이 필요했다. 한시우는 미련 없이 자리에서 일어나 안주머니에 가죽 수첩과 OTP 카드를 챙겨 넣었다.\n\n외출 준비를 마친 한시우는 1층 거실을 가로질렀다. 과거의 자신을 옭아매고 억눌렀던 저택의 화려한 샹들리에와 무거운 공기가 이제는 아무런 감흥도 주지 못했다. 현관을 나서며 그는 가문과의 정서적 단절을 다시 한번 차갑게 확인했다. 대기 중인 차량 뒷좌석에 올라탄 한시우는 운전기사에게 짧고 단호하게 지시했다. 강남의 PB센터가 아닌, 여의도 한미증권 본점이었다. 차창 밖으로 멀어지는 본가의 철문을 바라보며, 한시우는 다시는 저들의 규칙 안에 갇히지 않겠다는 결의를 굳혔다.\n\n한편, 한시우의 갑작스러운 목적지 변경 통보를 받은 박성호 PB는 사색이 되어 강남에서 여의도 본점으로 차를 몰았다. 본점 로비에 헐레벌떡 도착한 박성호는 인파 속에서도 홀로 이질적인 고요함을 뿜어내고 있는 한시우를 발견했다. 숨을 헐떡이며 다가간 박성호는 준비했던 의례적인 변명과 인사를 입 밖으로 꺼내지 못했다. 한시우의 깊고 서늘한 눈빛은 이미 시장의 거대한 흐름을 읽어낸 포식자의 그것이었고, 박성호는 자신이 마주한 인물이 더 이상 다루기 쉬운 도련님이 아님을 뼈저리게 실감했다.\n\n두 사람은 본점의 인적이 드문 VIP 미팅룸에 마주 앉았다. 박성호가 떨리는 손으로 형식적인 계좌 운용 서류를 내밀었지만, 한시우는 그것을 가볍게 밀어냈다. 한시우의 목소리는 낮고 분명했다. 그는 강남 PB센터의 관리망이나 본가의 트레이딩 룸이 아닌, 한미증권 본점 내부에 누구의 간섭도 받지 않는 완벽한 블라인드 거점을 요구했다. 회장님의 눈을 피해야 한다는 사실에 박성호가 하얗게 질린 얼굴로 회사 규정을 언급하려 입을 뗐다. 하지만 한시우는 대답 대신 안주머니에서 낡은 가죽 수첩을 꺼내 테이블 위에 소리 나게 내려놓았다. 서늘하게 가라앉은 한시우의 시선이 박성호의 숨통을 조여오고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 본가에서의 이성적인 상황 판단과 감정적 단절을 차분하게 묘사하여 긴장감을 조절하고, 후반부 여의도 본점에서의 대면 씬에서는 박성호의 당혹감과 한시우의 압도적인 태도를 대비시켜 긴장도를 점진적으로 끌어올린다.",
+  "protagonist_state": {
+    "equipment": [
+      "가죽 수첩",
+      "만년필",
+      "폴더폰",
+      "OTP 카드"
+    ],
+    "injuries": "두통 완전히 가라앉음",
+    "mood": "냉철하고 주도적인 상태"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "갑작스러운 거액 유동화에 당황하면서도 여전히 관리자로서의 알량한 위치를 의식함",
+      "justification": "한시우가 일방적으로 동선을 통제하고 기존의 룰을 깨는 거점 마련을 요구했기 때문",
+      "target": "박성호",
+      "to_state": "한시우의 통제 불가능한 요구와 서늘한 기백에 완전히 압도되어 주도권을 상실함"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "본가 저택의 물리적 한계를 자각하고 완전한 독립을 결심한다.",
+      "key_events": [
+        "모니터에 띄워진 WTI 차트와 OTP 카드를 확인하던 한시우가 문밖을 지나는 고용인의 발소리에 시선을 돌림",
+        "아무리 네트워크를 독립시켜도 성북동 본가라는 공간 자체가 한정호 회장의 거대한 판옵티콘임을 이성적으로 직시함",
+        "천문학적인 레버리지 베팅을 위해 가족의 시선이 절대 닿지 않는 완벽한 물리적 방화벽이 필요함을 깨닫고 가죽 수첩을 챙김"
+      ],
+      "location": "성북동 본가 저택 내 한시우의 개인실 (트레이딩 룸)",
+      "summary": "한시우가 개인실에서 첫 거래 세팅을 마친 직후, 저택 내 고용인들의 동선과 가족의 감시망이 가진 물리적 취약점을 꿰뚫어 본다.",
+      "tension_level": 5,
+      "title": "불완전한 요새",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "과거의 굴레였던 본가를 벗어나 여의도 금융가로 진입한다.",
+      "key_events": [
+        "외출 준비를 마친 한시우가 1층 거실을 가로지르며, 과거 자신을 옭아매던 저택의 화려한 인테리어를 무감각하게 응시함",
+        "대기 중인 차량에 탑승한 뒤, 기사에게 강남 PB센터가 아닌 여의도 한미증권 본점으로 목적지를 변경할 것을 지시함",
+        "차창 밖으로 멀어지는 본가를 바라보며, 다시는 저들의 규칙에 휘둘리지 않겠다는 차가운 결의를 다짐"
+      ],
+      "location": "성북동 본가 저택 -> 이동 중인 차량",
+      "summary": "한시우가 저택을 빠져나오며 가문과의 정서적, 물리적 단절을 재확인하고 한미증권 본점으로 향한다.",
+      "tension_level": 4,
+      "title": "새장을 벗어나는 발걸음",
+      "type": "emotional_reveal"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "한시우의 갑작스러운 동선 변경에 당황하는 박성호의 심리를 보여준다.",
+      "key_events": [
+        "강남에서 여의도로 급히 차를 몰고 온 박성호가 본점 로비에서 여유롭게 대기 중인 한시우를 발견하고 숨을 고름",
+        "박성호가 서둘러 VIP 응접실로 안내하려 하지만, 한시우의 서늘하고 깊은 눈빛에 압도되어 준비했던 의례적인 인사를 삼킴",
+        "자신이 상대하는 인물이 더 이상 통제 가능한 재벌가 막내가 아님을 박성호가 본능적으로 깨달음"
+      ],
+      "location": "한미증권 본점 로비",
+      "summary": "여의도 본점으로 급히 불려 온 박성호 PB가 한시우의 압도적인 분위기에 짓눌리며 상황의 통제권을 완전히 상실한다.",
+      "tension_level": 5,
+      "title": "당혹스러운 호출",
+      "type": "side_glimpse"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "실전 트레이딩을 위한 완벽한 은폐 거점을 요구하며 다음 화의 협상을 예고한다.",
+      "key_events": [
+        "본점의 일반적인 VIP 미팅룸에 마주 앉은 한시우가 박성호가 내민 추가 서류들을 가볍게 밀어냄",
+        "한시우가 강남 PB센터의 백오피스나 자택이 아닌, 한미증권 본점 심장부에 자신만의 완벽한 독립 거점이 필요함을 선언함",
+        "당황한 박성호가 규정을 들먹이며 난색을 표하려 하자, 한시우가 가죽 수첩을 테이블 위에 내려놓으며 서늘한 시선으로 그를 압박함"
+      ],
+      "location": "한미증권 본점 미팅룸",
+      "summary": "본점 미팅룸에 마주 앉은 한시우가 박성호에게 가족의 감시망에서 완전히 벗어난 전용 공간을 요구하며 기싸움의 포문을 연다.",
+      "tension_level": 6,
+      "title": "새로운 조건",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "성북동 본가 저택 내 한시우의 개인실 (트레이딩 룸)",
+  "target_beat": "가족의 물리적 감시망을 인지하고 완벽한 독립 거점을 확보하기 위해 여의도 본점으로 이동, PB를 상대로 새로운 조건을 제시한다.",
+  "time_flow": "오전 -> 낮",
+  "title": "완벽한 은폐와 새로운 거점"
+}

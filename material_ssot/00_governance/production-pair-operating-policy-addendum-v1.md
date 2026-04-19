@@ -88,6 +88,20 @@ Operational reading:
 - keep it out of active baseline lanes
 - treat any existing benchmark alias as a historical snapshot until freshness is refreshed
 
+### 3.7 Donor Decision State
+
+Use the donor decision states defined in `donor-review-and-adoption-contract-v1.md`:
+
+- `adopted`
+- `considered_but_rejected`
+- `not_applicable`
+
+Operational rule:
+
+- donor review is mandatory for new, newly touched, regenerated, or promotion-target pairs
+- donor adoption is optional
+- pair readiness is blocked until one donor decision is visible in canonical material-side authority
+
 ## 4. Migration Debt Rule
 
 ### 4.1 What Counts As Migration Debt
@@ -246,5 +260,25 @@ Every live-pair audit, repair note, or promotion note should state:
 5. evidence mode
 6. open migration debt: `yes/no`
 7. benchmark grade if a benchmark was run
+8. donor decision: `adopted | considered_but_rejected | not_applicable`
+
+## 9A. Donor Decision Gate
+
+For new, newly touched, regenerated, or promotion-target pairs:
+
+- donor review is required before the pair may be called `pair complete`, `promotion-target`, or `active baseline candidate`
+- donor adoption is not mandatory
+- the required thing is a visible donor decision plus a short reason
+
+If the donor decision is `adopted`:
+
+- canonical law should live in `Phase0 + work_guard`
+- donor-specific packet or registry surfaces should remain annex/provenance surfaces
+- donor-specific proper nouns or scene-order logic should not be treated as pair-core law by default
+
+If the donor decision is `considered_but_rejected` or `not_applicable`:
+
+- the pair may still proceed
+- the rejection or non-applicability reason should remain visible to later pair operators
 
 This keeps benchmark quality, schema cleanliness, and promotion readiness from being collapsed into one vague label.

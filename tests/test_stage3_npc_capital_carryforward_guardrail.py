@@ -178,6 +178,30 @@ class TestInstitutionFactLockAnchor:
         assert any("Zeta그룹" in name for name in names), names
         assert not any("Delta센터" in name for name in names), names
 
+    def test_competitor_institution_in_dialogue_does_not_override_location_anchor(self):
+        bp = {
+            "end_location": "한미증권 본점 미팅룸",
+            "scene_breakdown": {
+                "scene_1": {"location": "한미증권 본점 미팅룸"},
+                "scene_2": {"location": "한미증권 본점 미팅룸 앞 복도"},
+            },
+            "integrated_scenario": (
+                "한시우는 환경을 열어주지 않으면 길 건너 대일증권으로 가겠다고 압박했다. "
+                "박성호는 한미증권 본점 규정을 들먹이며 시간을 끌었다."
+            ),
+            "ending_state": {"location_detail": "한미증권 본점 미팅룸"},
+        }
+        result = BlueprintConstraintCompiler._build_fact_lock_packet(
+            prev_blueprint=bp,
+            prev_manuscript_ending="",
+            arc_data={},
+            ep_num=9,
+        )
+
+        names = [a["fact"] for a in result.get("anchors", []) if a["category"] == "기관"]
+        assert any("한미증권" in name for name in names), names
+        assert not any("대일증권" in name for name in names), names
+
 
 # ============================================================
 # Tranche B: Capital Carry-Forward Fallback Extraction
@@ -465,6 +489,27 @@ class TestPhantomCapitalDriftDetection:
         )
         phantom_issues = [i for i in issues if i["category"] == "phantom_capital"]
         assert len(phantom_issues) >= 1
+
+    def test_phantom_capital_ignores_remaining_position_amount_with_nearby_realized_cash(self):
+        """A remaining deployed position should not be mistaken for available cash drift."""
+        constraint_block = {
+            "capital_continuity_packet": {
+                "fields": [
+                    {"label": "투입 확정", "value": "7.5억 원 (투입/체결 완료 — 가용 아님)"},
+                    {"label": "최종 현금", "value": "1750000000"},
+                ],
+            },
+        }
+        integrated = (
+            "이미 5억 원의 현금이 안전하게 계좌에 꽂혀 있었고, "
+            "남은 7.5억 원의 3배 레버리지 포지션은 여전히 시장의 미세한 진동을 타고 있었다."
+        )
+        issues = UnifiedBlueprintValidator._collect_capital_state_drift_issues(
+            integrated=integrated,
+            constraint_block=constraint_block,
+        )
+        phantom_issues = [i for i in issues if i["category"] == "phantom_capital"]
+        assert phantom_issues == []
 
 
 # ============================================================
@@ -958,6 +1003,171 @@ class TestEpisodeStatePacket:
         assert opening_truth.get("location") == "Packet Hall"
         assert "do not declare direct_continuation" in opening_truth.get("opening_transition_expectation", "")
         assert "explicit_transition" in opening_truth.get("opening_transition_expectation", "")
+
+    def test_episode_progression_packet_prefers_current_episode_excerpt_month_over_arc_start(self):
+        packet = BlueprintConstraintCompiler._build_episode_progression_packet(
+            prev_blueprint={
+                "ep_num": 16,
+                "time_flow": "2006년 4월 중순 자정 무렵",
+                "scene_breakdown": {
+                    "scene_4": {
+                        "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+                        "characters": ["한시우"],
+                        "title": "남겨진 뇌관",
+                        "type": "cliffhanger",
+                    }
+                },
+            },
+            arc_data={
+                "ep_start": 13,
+                "ep_end": 17,
+                "tactical_doc": (
+                    "제 17화: 증권사 내부 권력의 역전과 예외 계좌 격상\n"
+                    "2006년 5월 말, 에콰도르 쇼크 직후.\n"
+                    "한미증권 리스크팀이 예외 계좌를 승인한다."
+                ),
+                "state_changes": {
+                    "timeline": {
+                        "start": {"description": "2006년 4월 중순"},
+                        "end": {"description": "2006년 5월 말, 에콰도르 쇼크 직후"},
+                    }
+                },
+            },
+            ep_num=17,
+        )
+
+        time_truths = packet.get("time_truths", [])
+
+        assert any("2006년 5월" in truth for truth in time_truths)
+        assert not any("2006년 4월" in truth for truth in time_truths)
+
+    def test_episode_progression_packet_prefers_arc_end_month_over_future_next_gate_month_on_final_immediate_continuation(
+        self,
+    ):
+        packet = BlueprintConstraintCompiler._build_episode_progression_packet(
+            prev_blueprint={
+                "ep_num": 16,
+                "time_flow": "2006년 4월 중순 자정 무렵",
+                "scene_breakdown": {
+                    "scene_5": {
+                        "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+                        "characters": ["한시우"],
+                        "title": "남겨진 뇌관",
+                        "type": "cliffhanger",
+                    }
+                },
+            },
+            arc_data={
+                "ep_start": 13,
+                "ep_end": 17,
+                "tactical_doc": (
+                    "제 17화: 증권사 내부 권력의 역전과 예외 계좌 격상\n"
+                    "[시작 상태] 위치: 서울 강남, SW인베스트먼트 원룸 오피스, 소지품: WTI 6월물 절반 청산 및 잔여 홀딩 내역서\n"
+                    "에콰도르 쇼크 직후, 한미증권 내부는 발칵 뒤집힌다.\n"
+                    "한시우는 다음 단계를 구상하며 '7월에 중동이 다시 터진다'고 독백한다."
+                ),
+                "state_changes": {
+                    "timeline": {
+                        "start": {"description": "2006년 4월 중순"},
+                        "end": {"description": "2006년 5월 말, 에콰도르 쇼크 직후"},
+                    }
+                },
+            },
+            ep_num=17,
+        )
+
+        time_truths = packet.get("time_truths", [])
+
+        assert any("2006년 5월" in truth for truth in time_truths)
+        assert not any("7월" in truth for truth in time_truths)
+
+    def test_episode_progression_packet_ignores_episode_details_future_gate_when_tactical_doc_has_current_month(self):
+        packet = BlueprintConstraintCompiler._build_episode_progression_packet(
+            prev_blueprint={
+                "ep_num": 16,
+                "time_flow": "2006년 4월 중순 자정 무렵",
+                "scene_breakdown": {
+                    "scene_5": {
+                        "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+                        "characters": ["한시우"],
+                        "title": "남겨진 뇌관",
+                        "type": "cliffhanger",
+                    }
+                },
+            },
+            arc_data={
+                "ep_start": 13,
+                "ep_end": 17,
+                "episode_details": [
+                    {
+                        "ep_num": 17,
+                        "details": [
+                            "예측 적중에 경악한 한미증권 리스크팀이 예외 계좌를 특별 격상한다.",
+                            "한시우는 7월 중동 위기를 대비하며 다음 판을 구상한다.",
+                        ],
+                    }
+                ],
+                "tactical_doc": (
+                    "제 17화: 증권사 내부 권력의 역전과 예외 계좌 격상\n"
+                    "2006년 5월 말, 에콰도르 쇼크 직후.\n"
+                    "한미증권 리스크팀이 예외 계좌를 승인한다."
+                ),
+                "state_changes": {
+                    "timeline": {
+                        "start": {"description": "2006년 4월 중순"},
+                        "end": {"description": "2006년 5월 말, 에콰도르 쇼크 직후"},
+                    }
+                },
+            },
+            ep_num=17,
+        )
+
+        time_truths = packet.get("time_truths", [])
+
+        assert any("2006년 5월" in truth for truth in time_truths)
+        assert not any("7월" in truth for truth in time_truths)
+
+    def test_episode_state_packet_promotes_progression_time_when_mid_arc_prev_month_is_stale(self):
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {
+            "ep_num": 16,
+            "time_flow": "2006년 4월 중순 자정 무렵",
+            "scene_breakdown": {
+                "scene_5": {
+                    "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+                    "characters": ["한시우"],
+                }
+            },
+        }
+
+        constraint_block = compiler.compile(
+            arc_data={
+                "ep_start": 13,
+                "ep_end": 17,
+                "arc_no": 3,
+                "tactical_doc": (
+                    "제 17화: 증권사 내부 권력의 역전과 예외 계좌 격상\n"
+                    "2006년 5월 말, 에콰도르 쇼크 직후.\n"
+                    "한미증권 리스크팀이 예외 계좌를 승인한다."
+                ),
+                "state_changes": {
+                    "timeline": {
+                        "start": {"description": "2006년 4월 중순"},
+                        "end": {"description": "2006년 5월 말, 에콰도르 쇼크 직후"},
+                    }
+                },
+            },
+            ep_num=17,
+            prev_blueprint=prev_bp,
+            prev_blueprints=[prev_bp],
+            genre="investment",
+        )
+
+        opening_truth = constraint_block.get("episode_state_packet", {}).get("opening_truth", {})
+
+        assert opening_truth.get("time_source") == "episode_progression_packet.time_truths"
+        assert "2006년 5월" in str(opening_truth.get("time_context", ""))
+        assert "2006년 4월" not in str(opening_truth.get("time_context", ""))
 
     def test_episode_state_packet_keeps_prev_precedence_when_packet_only_carries_numeric_truth(self):
         compiler = BlueprintConstraintCompiler()

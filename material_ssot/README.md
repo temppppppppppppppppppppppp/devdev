@@ -25,6 +25,7 @@ Normalized fresh-creation route:
 - when operators are creating a fresh work from reusable materials, use this normalized upstream route:
   - `10_research` engine pack or normalized work material pack
   - `20_pitch/synthesis/` one-page synthesis
+  - `00_governance/donor-review-and-adoption-contract-v1.md` donor review
   - `20_pitch/pitch-selection-checklist.md` audit
   - `20_pitch/canon/` pitch freeze
   - `20_pitch/work-guard-translation-map.md` -> work-specific `work_guard`
@@ -68,6 +69,7 @@ Current governance anchors:
 
 - `00_governance/authority-map.md`
 - `00_governance/stage-read-order.md`
+- `00_governance/donor-review-and-adoption-contract-v1.md`
 - `00_governance/legacy-map.md`
 - `00_governance/delegation-envelope-spec-v1.md`
 - `00_governance/work-current-truth-template-v1.md`

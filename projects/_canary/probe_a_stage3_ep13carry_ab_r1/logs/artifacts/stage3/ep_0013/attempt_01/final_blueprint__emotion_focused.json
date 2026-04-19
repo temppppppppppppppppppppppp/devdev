@@ -1,0 +1,289 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "4a824d20ec3aeeecf091c961442914ceb8922fd33790ee3c462b73e3181c5bfd"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=2; sample_anchors=한미증권, 그는 미련 없이 증권",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 2개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1089,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 24150,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 975850,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 18375,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 5245,
+          "lane": "constraints"
+        },
+        {
+          "chars": 290,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 230,
+        "constraints": 5245,
+        "feedback_context": 290,
+        "hud_context": 10,
+        "prev_info": 18375
+      },
+      "shared_context_chars": 23860,
+      "total_chars": 24150
+    },
+    "python_warnings": [
+      {
+        "category": "opening_transition",
+        "focus": "opening_transition.type을 prev ending anchor와 start_location/time_flow/scene_1 contract에 맞게 정규화",
+        "message": "opening_transition.type mismatch: declared 'explicit_transition' vs normalized 'direct_continuation'",
+        "severity": "MAJOR",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 5,
+    "strategy": "emotion_focused",
+    "total_candidates": 1
+  },
+  "_inventory_gaps": [
+    {
+      "item": "가죽 수첩",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "만년필",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "폴더폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "OTP 카드",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "WTI 6월물 3배 레버리지 매수 체결 내역서",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_categories": [
+      "opening_transition"
+    ],
+    "binding_prevalidation_issue_count": 1,
+    "binding_regenerate_only_categories": [
+      "opening_transition"
+    ],
+    "binding_regenerate_only_reason": "Structural binding prevalidation requires regenerate-only repair: opening_transition",
+    "final_verdict": "PASS",
+    "last_score": 91,
+    "partial_fix_eval": {
+      "do_not_regress_held": true,
+      "fallback_reason": "",
+      "is_patch_attempt": true,
+      "must_fix_resolved": true,
+      "patch_round": 1,
+      "patch_target_id": "pt:52a8695bbdfa",
+      "success_condition_met": true,
+      "target_kind": "local_sentence"
+    },
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "횡보장 속에서 수익 실현 압박을 견뎌내고, 완전한 독립을 위한 새로운 거점을 확보하는 과정의 심리적 압박감",
+  "end_location": "강남의 신규 원룸 오피스",
+  "ending_hook": "텅 빈 오피스 창가에 선 한시우의 시선이 금 시세가 뜬 모니터의 작은 불빛에 고정되었다. '기름의 시대가 끝나면, 황금의 시대가 온다.'",
+  "ending_state": {
+    "location": "강남의 신규 원룸 오피스",
+    "protagonist_status": "외부의 감시에서 벗어난 독립적인 거점을 확보하고, 유가 포지션을 유지한 채 다음 타겟을 조준하기 시작함.",
+    "timeline": {
+      "표현": "2006년 4월 중순 저녁"
+    }
+  },
+  "ep_num": 13,
+  "episode_number": 13,
+  "expected_ending": "가족과 증권사의 감시를 피해 새로운 거점을 확보하고, 다음 투자를 조용히 준비하며 끝남.",
+  "integrated_scenario": "2006년 2월의 폭등 이후, 유가는 6주간 지루한 횡보를 거듭하며 4월 중순에 접어들었다. 한미증권의 호화로운 VIP 라운지의 정적 속에서, 한시우는 인내의 시간을 보내고 있었다. 폭발적인 수익률에 경악했던 박성호 PB는 이제 매일같이 전화를 걸어 불안감을 토로했다. 시장의 열기가 식었다며, 이쯤에서 수익을 실현하는 것이 현명하다는 그의 목소리에는 애원이 섞여 있었다. 하지만 한시우의 대답은 늘 같았다. '아직 때가 아닙니다.' 그 차가운 한마디에 박성호는 더 이상 말을 잇지 못했다. 한편, 증권사 백오피스에서는 박성호의 내적 갈등이 깊어지고 있었다. 리스크관리팀은 거의 매일같이 찾아와 비정상적인 규모의 레버리지 포지션을 청산하라고 압박했다. 박성호는 한시우의 비범함을 근거로 방어했지만, 몇 주째 제자리걸음인 수익률 그래프를 볼 때마다 식은땀이 흘렀다. 결국 인내심이 바닥난 박성호는 온갖 시장 분석 자료를 들고 직접 라운지로 향했다. 그는 필사적으로 한시우를 설득하려 했다. 모멘텀이 죽었고, 기술적으로 조정이 올 수밖에 없다고 열변을 토했다. 한시우는 그의 보고서를 거들떠보지도 않았다. 그저 창밖을 응시하던 그는 조용히 입을 열었다. '이사님. 이런 방해를 받으려고 여길 쓰고 있는 게 아닙니다.' 그 서늘한 음성에 박성호의 말문이 막혔다. 그 순간 한시우는 결심했다. 이 감시와 간섭에서 벗어나야만 한다고. 그는 미련 없이 증권사를 나섰다. 곧장 강남의 한 부동산 사무소로 향한 한시우는 자신의 동선이 노출되지 않을, 보안이 철저한 소규모 원룸 오피스를 단숨에 계약했다. 누구의 감시도 닿지 않는 완벽한 요새였다. 그날 저녁, 텅 빈 오피스에는 책상과 컴퓨터만이 덩그러니 놓였다. 한시우는 직접 설치한 모니터 두 개를 켰다. 왼쪽 화면에는 여전히 지루하게 흘러가는 WTI 유가 차트가, 그리고 오른쪽 화면에는 시장의 관심 밖에서 조용히 고개를 드는 금 시세 그래프가 떠올랐다. 한시우는 낡은 가죽 수첩을 펼쳐 만년필로 짧은 메모를 남겼다. 텅 빈 오피스, 창밖으로 펼쳐진 도시의 야경을 등진 그의 입가에서 나지막한 독백이 흘러나왔다. '기름의 시대가 끝나면, 황금의 시대가 온다.' 그의 시선은 이미 다음 전장을 향하고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 횡보장의 지루함과 심리적 압박을 묘사하며 정적인 긴장감을 쌓고, 중반부 이후 거점 이동을 통해 빠르게 템포를 전환하여 마지막에 새로운 복선을 제시하며 마무리한다.",
+  "protagonist_state": {
+    "equipment": [
+      "가죽 수첩",
+      "만년필",
+      "폴더폰",
+      "OTP 카드",
+      "WTI 6월물 3배 레버리지 매수 체결 내역서"
+    ],
+    "injuries": "없음",
+    "mood": "인내심과 냉철한 통제력을 유지하며, 외부의 압박에 흔들리지 않음."
+  },
+  "relationship_changes": [
+    {
+      "from_state": "경외와 맹종",
+      "justification": "예측과 달리 장기간 횡보하는 시장 상황에 그의 믿음이 흔들리고, 한시우의 압도적인 통제력에 완전히 종속된다.",
+      "target": "박성호",
+      "to_state": "불안과 의심 속에서 통제당하는 상태"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호 (전화 통화)"
+      ],
+      "content": "",
+      "goal": "6주간의 유가 횡보장 속에서 주인공이 느끼는 압박과, 그럼에도 불구하고 흔들리지 않는 내면을 보여준다.",
+      "key_events": [
+        "2006년 2월 초 이후 6주가 흘러 4월 중순이 되었음이 묘사된다.",
+        "박성호가 전화로 유가 횡보에 대한 불안감을 토로하며 미실현 수익이라도 챙기자고 간곡히 권유한다.",
+        "한시우가 '아직 때가 아니다'라며 단호하게 거절하고, 박성호의 불안을 자신의 통제력 아래 둠을 확인하며 전화를 끊는다."
+      ],
+      "location": "한미증권 본점 최상위 프라이빗 라운지",
+      "summary": "6주간의 유가 횡보장에 지친 박성호가 익절을 권유하지만, 한시우는 냉정하게 거절하며 인내의 시간을 보낸다.",
+      "tension_level": 5,
+      "title": "지루한 평원 위의 외로운 깃발",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "박성호",
+        "리스크관리팀 직원"
+      ],
+      "content": "",
+      "goal": "박성호와 리스크관리팀의 시각을 통해 한시우의 비정상적인 베팅이 증권사 내에서 얼마나 큰 압박을 유발하는지 보여준다.",
+      "key_events": [
+        "박성호가 몇 주째 제자리걸음인 한시우의 계좌 수익률 모니터를 보며 초조하게 한숨을 쉰다.",
+        "리스크관리팀 직원이 찾아와 이례적인 규모의 레버리지 포지션을 장기 유지하는 것에 대한 위험성을 재차 경고하며 압박한다.",
+        "박성호가 한시우의 비범함을 떠올리며 억지로 그를 옹호하지만, 속으로는 그의 판단에 대한 믿음이 흔들리기 시작한다."
+      ],
+      "location": "한미증권 본점 백오피스",
+      "summary": "박성호가 한시우의 포지션을 보며 초조해하고, 리스크관리팀의 압박에 시달리며 내적 갈등을 겪는다.",
+      "tension_level": 6,
+      "title": "흔들리는 조력자",
+      "type": "side_glimpse"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "박성호의 마지막 설득 시도를 완벽히 묵살하며 권력 관계를 재확인하고, 현재의 거점을 떠나야 할 이유를 확립한다.",
+      "key_events": [
+        "박성호가 각종 시장 분석 차트와 보고서를 들고 라운지로 찾아와 한시우를 필사적으로 설득하려 한다.",
+        "한시우가 박성호의 보고를 무시한 채 창밖을 보며 '이런 방해를 받으려고 여기 온 게 아니다'라고 차갑게 말한다.",
+        "한시우의 서늘하고 확고한 태도에 박성호가 완전히 압도당해 할 말을 잃고, 한시우는 이 감시망을 벗어나야겠다고 결심한다."
+      ],
+      "location": "한미증권 본점 최상위 프라이빗 라운지",
+      "summary": "박성호가 직접 찾아와 익절을 간청하지만, 한시우는 이를 묵살하고 감시망에서 벗어날 결심을 굳힌다.",
+      "tension_level": 7,
+      "title": "최후통첩",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "부동산 중개인"
+      ],
+      "content": "",
+      "goal": "가족과 증권사의 감시에서 벗어날 수 있는 물리적 방화벽을 신속하게 확보하는 실행력을 보여준다.",
+      "key_events": [
+        "한시우가 증권사를 나와 곧바로 강남의 한 부동산 사무소로 향한다.",
+        "보안이 철저하고 외부 노출이 적으며, 법인 명의로 단기 임대 가능한 소규모 원룸 오피스를 즉시 계약한다.",
+        "텅 빈 오피스에 들어선 한시우가 창밖을 내려다보며 완전한 독립을 위한 첫 단추를 꿰었다는 만족감을 느낀다."
+      ],
+      "location": "강남 부동산 사무소 -> 강남의 신규 원룸 오피스",
+      "summary": "한시우가 즉시 강남으로 이동해 누구의 명의와도 연결되지 않은 소규모 오피스를 계약하며 새로운 거점을 확보한다.",
+      "tension_level": 3,
+      "title": "레이더 밖으로",
+      "type": "resolution"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "현재의 투자가 끝이 아님을 암시하고, 다음 타겟인 '금'에 대한 복선을 제시하며 독자의 궁금증을 유발한다.",
+      "key_events": [
+        "한시우가 새로 얻은 오피스에 간소하게 책상과 컴퓨터를 설치하고 자신만의 공간을 구축한다.",
+        "모니터 하나에는 여전히 횡보 중인 WTI 유가 차트를, 다른 하나에는 조용히 상승 중인 금 가격 동향 뉴스를 띄운다.",
+        "가죽 수첩에 무언가를 짧게 기록하며 '기름의 시대가 끝나면, 황금의 시대가 온다'고 나지막이 독백한다."
+      ],
+      "location": "강남의 신규 원룸 오피스",
+      "summary": "새로 얻은 오피스에서 한시우가 유가 차트와 함께 금 시세 동향을 확인하며 다음 단계를 암시한다.",
+      "tension_level": 5,
+      "title": "새로운 지평선",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "한미증권 본점 최상위 프라이빗 라운지",
+  "target_beat": "압박을 이겨내고 독립적인 의사결정 공간을 확보하는 주인공의 통제력과 선구안을 보여주는 것",
+  "time_flow": "2006년 2월 초 밤 → 2006년 4월 중순 저녁",
+  "title": "횡보장 속의 압박과 새로운 거점 확보"
+}

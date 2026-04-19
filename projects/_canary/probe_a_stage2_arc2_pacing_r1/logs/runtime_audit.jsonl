@@ -1,0 +1,4 @@
+{"timestamp": "2026-04-19 11:34:11", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 3}}
+{"timestamp": "2026-04-19 11:40:49", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '서울 성북동 본가 저택 내 한시우의 개인실' → '서울 성북동 본가 저택 내 한시우의 개인실, 상태: 전투 준비를 마친 완벽한 몰입 상태'", "tactical_doc 위치 텍스트 동기화: '서울 성북동 본가 저택 내 한시우의 개인실' → '서울 성북동 본가 저택 내 한시우의 개인실, 상태: 전투 준비를 마친 완벽한 몰입 상태'", "arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 1건 제거: ['SW인베스트먼트 법인 설립 신청서 가안']"]}}
+{"timestamp": "2026-04-19 11:41:39", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-19 11:42:28", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 5}}

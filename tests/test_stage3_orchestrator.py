@@ -187,6 +187,97 @@ class TestInitFactLedgerIfNeeded:
         assert app_mock.fact_ledger is None
 
 
+class TestDetectInventoryGaps:
+    def test_uses_previous_blueprint_equipment_as_fallback_owned_inventory(self, app_mock):
+        app_mock.world_state.get_owned_items.return_value = []
+        app_mock.current_project.db.get_previous_blueprint.return_value = {
+            "protagonist_state": {"equipment": ["가죽 수첩", "만년필", "폴더폰", "OTP 카드"]}
+        }
+        app_mock.constraint_db = None
+        orch = Stage3Orchestrator(app=app_mock)
+
+        blueprint = {
+            "protagonist_state": {
+                "equipment": [
+                    "가죽 수첩",
+                    "만년필",
+                    "폴더폰",
+                    "OTP 카드",
+                    "WTI 6월물 절반 청산 및 잔여 홀딩 내역서",
+                ]
+            }
+        }
+        arc_data = {"arc_no": 3, "state_constraints": {}, "tactical_doc": ""}
+
+        gaps = orch._detect_inventory_gaps(blueprint, arc_data, working_ep=17)
+
+        assert gaps == [
+            {
+                "item": "WTI 6월물 절반 청산 및 잔여 홀딩 내역서",
+                "source": "protagonist_state",
+                "note": "현재 미보유 — 획득 장면 필요",
+            }
+        ]
+
+    def test_suppresses_gap_for_current_arc_planned_item_when_narrative_seeds_acquisition(self, app_mock):
+        app_mock.world_state.get_owned_items.return_value = []
+        app_mock.current_project.db.get_previous_blueprint.return_value = {
+            "protagonist_state": {"equipment": ["가죽 수첩", "만년필", "폴더폰", "OTP 카드"]}
+        }
+        app_mock.constraint_db = None
+        orch = Stage3Orchestrator(app=app_mock)
+
+        blueprint = {
+            "protagonist_state": {
+                "equipment": [
+                    "가죽 수첩",
+                    "만년필",
+                    "폴더폰",
+                    "OTP 카드",
+                    "한미증권 'Exception Account' 승인 문서 사본",
+                ]
+            },
+            "integrated_scenario": (
+                "박성호는 한미증권 최상위 VIP조차 받기 힘든 예외 계좌 승인 문서 사본을 두 손으로 바쳤다."
+            ),
+        }
+        arc_data = {
+            "arc_no": 3,
+            "state_constraints": {
+                "protagonist_items": ["한미증권 리스크관리팀 발행 'Exception Account' 승인 문서 사본"]
+            },
+            "tactical_doc": "",
+        }
+
+        gaps = orch._detect_inventory_gaps(blueprint, arc_data, working_ep=17)
+
+        assert gaps == []
+
+    def test_uses_previous_blueprint_aliases_even_when_authoritative_inventory_is_long_form(self, app_mock):
+        app_mock.world_state.get_owned_items.return_value = [
+            "18년 치 매크로 이벤트가 암호화되어 적힌 양장 수첩",
+            "20억 원이 예치된 개인 계좌 OTP 카드",
+            "SW인베스트먼트 법인 계좌 보안 매체",
+        ]
+        app_mock.current_project.db.get_previous_blueprint.return_value = {
+            "protagonist_state": {"equipment": ["가죽 수첩", "만년필", "폴더폰", "OTP 카드"]}
+        }
+        app_mock.constraint_db = None
+        orch = Stage3Orchestrator(app=app_mock)
+
+        blueprint = {
+            "protagonist_state": {"equipment": ["가죽 수첩", "만년필", "폴더폰", "OTP 카드"]},
+            "integrated_scenario": (
+                "한시우는 가죽 수첩을 펼치고 만년필을 들었다. 곧이어 폴더폰을 집어 들고 OTP 카드 버튼을 눌렀다."
+            ),
+        }
+        arc_data = {"arc_no": 4, "state_constraints": {}, "tactical_doc": ""}
+
+        gaps = orch._detect_inventory_gaps(blueprint, arc_data, working_ep=18)
+
+        assert gaps == []
+
+
 # ── Entity Registry Cache ────────────────────────────────────
 
 
@@ -345,7 +436,10 @@ class TestStageAttemptObservability:
         assert (
             kwargs["advisory_flags"]["source_anchor_summary"]["current_arc_start_location"] == "SW인베스트먼트 사무실"
         )
-        assert kwargs["advisory_flags"]["episode_state_packet_summary"]["opening_location"] == "한미증권 청담동 지점 15층 VIP룸"
+        assert (
+            kwargs["advisory_flags"]["episode_state_packet_summary"]["opening_location"]
+            == "한미증권 청담동 지점 15층 VIP룸"
+        )
         assert kwargs["advisory_flags"]["episode_state_packet_summary"]["dropped_conflict_count"] == 1
         assert kwargs["advisory_flags"]["prompt_envelope"]["total_chars"] == 4820
         assert kwargs["runtime_advisory"] == "semantic context drift warning"
@@ -686,8 +780,7 @@ class TestStageAttemptObservability:
         assert payload["advisory_warnings"]["revision_required"] is True
         assert "selected_candidate_advisory" not in payload["advisory_warnings"]
         assert (
-            payload["advisory_warnings"]["comparison_notes"]
-            == "candidate 2 keeps continuity cleaner than candidate 1"
+            payload["advisory_warnings"]["comparison_notes"] == "candidate 2 keeps continuity cleaner than candidate 1"
         )
         assert payload["advisory_warnings"]["selected_candidate_advisory_struct"]["candidate_index"] == 1
         assert payload["advisory_warnings"]["selected_candidate_advisory_struct"]["quality_risk"] is True
@@ -714,7 +807,9 @@ class TestStageAttemptObservability:
 
         assert payload is not None
         assert payload["selection_reason"] == ""
-        assert payload["advisory_warnings"]["comparison_notes"] == "candidate 2 keeps continuity cleaner than candidate 1"
+        assert (
+            payload["advisory_warnings"]["comparison_notes"] == "candidate 2 keeps continuity cleaner than candidate 1"
+        )
 
     def test_build_stage3_director_selection_kwargs_preserves_partial_fix_contract(self):
         payload = Stage3Orchestrator._build_stage3_director_selection_kwargs(
@@ -1908,8 +2003,7 @@ class TestProcessSingleEpisode:
         assert decision_kwargs["repair_contract"]["subtype"] == "movement"
         assert decision_kwargs["scope_authority"]["widened"] is False
         assert (
-            decision_kwargs["comparison_notes"]
-            == "후보 B가 opening continuity와 자본 패킷 계승을 가장 안정적으로 유지"
+            decision_kwargs["comparison_notes"] == "후보 B가 opening continuity와 자본 패킷 계승을 가장 안정적으로 유지"
         )
         assert decision_kwargs["selected_candidate_advisory_struct"]["quality_risk"] is True
         assert stage_attempt_kwargs["session_id"] == packet.session_id

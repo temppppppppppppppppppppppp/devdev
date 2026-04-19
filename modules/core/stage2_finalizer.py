@@ -278,6 +278,77 @@ def _sync_first_episode_start_state_line(tactical_doc: str, start_state: dict[st
     return text[:first_start] + first_section + text[first_end:]
 
 
+def _sync_last_tactical_end_state_block(
+    tactical_doc: str,
+    end_state: dict[str, Any],
+    joint_docs: dict[str, Any] | None = None,
+) -> str:
+    text = str(tactical_doc or "")
+    if not text or not isinstance(end_state, dict) or not end_state:
+        return text
+
+    episode_matches = list(_TACTICAL_EPISODE_HEADER_RE.finditer(text))
+    if not episode_matches:
+        return text
+
+    last_start = episode_matches[-1].start()
+    last_end = len(text)
+    last_section = text[last_start:last_end]
+    end_state_matches = list(_TACTICAL_END_STATE_LINE_RE.finditer(last_section))
+    if not end_state_matches:
+        return text
+
+    block_start = end_state_matches[-1].start()
+    block = last_section[block_start:]
+    raw_lines = [line.rstrip() for line in block.splitlines()]
+    if not raw_lines:
+        return text
+
+    header_line = raw_lines[0].strip() or "[종료 상태]"
+    detail_lines = [line for line in raw_lines[1:] if str(line).strip()]
+    updated_lines = list(detail_lines)
+    joint_docs = joint_docs if isinstance(joint_docs, dict) else {}
+
+    canonical_location = collapse_stage2_location_label(end_state.get("location")) or collapse_stage2_location_label(
+        joint_docs.get("final_location")
+    )
+    canonical_equipment = _coerce_inventory_items(end_state.get("equipment", []))
+    if not canonical_equipment:
+        canonical_equipment = _coerce_inventory_items(joint_docs.get("physical_inventory", []))
+
+    field_values: tuple[tuple[str, object], ...] = (
+        ("위치", canonical_location or end_state.get("location") or joint_docs.get("final_location", "")),
+        ("소지품", canonical_equipment),
+        ("부상", end_state.get("injuries", "")),
+        ("내공", end_state.get("internal_energy", "")),
+        ("총자산", end_state.get("total_assets", "")),
+        ("자본", end_state.get("capital", "")),
+        ("포지션", end_state.get("portfolio_position", "")),
+    )
+
+    for label, value in field_values:
+        rendered = _render_start_state_field_value(value)
+        if label == "위치":
+            rendered = collapse_stage2_location_label(rendered) or rendered
+        if not rendered:
+            continue
+
+        replacement = f"- {label}: {rendered}"
+        found = False
+        for idx, line in enumerate(updated_lines):
+            normalized = _normalize_tactical_state_block_line(line)
+            if normalized.startswith(f"{label}:"):
+                updated_lines[idx] = replacement
+                found = True
+                break
+        if not found:
+            updated_lines.append(replacement)
+
+    new_block = "\n".join([header_line] + updated_lines)
+    last_section = last_section[:block_start] + new_block
+    return text[:last_start] + last_section + text[last_end:]
+
+
 def _is_effectively_unknown_text(raw: object) -> bool:
     text = str(raw or "").strip()
     if not text:
@@ -424,13 +495,14 @@ def _promote_last_tactical_end_state_to_structured_state(refined_arc: dict) -> l
     raw_tactical_inventory = _extract_tactical_state_field(end_state_block, "소지품")
     if raw_tactical_inventory:
         tactical_inventory = _parse_tactical_inventory_items(raw_tactical_inventory)
-        if not _is_authoritative_empty_inventory_clear(raw_end_inventory) and _is_placeholder_inventory(raw_end_inventory):
+        current_inventory = _coerce_inventory_items(raw_end_inventory)
+        if _is_placeholder_inventory(raw_end_inventory) and current_inventory != tactical_inventory:
             arc_end_state["equipment"] = tactical_inventory
             promoted.append("state_constraints.arc_end_state.equipment")
 
-    raw_total_assets = _extract_tactical_state_field(end_state_block, "총자산") or _extract_last_tactical_total_assets_text(
-        tactical_doc
-    )
+    raw_total_assets = _extract_tactical_state_field(
+        end_state_block, "총자산"
+    ) or _extract_last_tactical_total_assets_text(tactical_doc)
     if raw_total_assets and _is_effectively_unknown_text(arc_end_state.get("total_assets")):
         arc_end_state["total_assets"] = raw_total_assets
         promoted.append("state_constraints.arc_end_state.total_assets")
@@ -520,6 +592,148 @@ def _inventory_item_dedupe_key(item: Any) -> str:
     return str(item)
 
 
+def _inventory_semantic_tokens(value: str) -> set[str]:
+    text = str(value or "").strip().lower()
+    if not text:
+        return set()
+    cleaned = re.sub(r"[^0-9a-z가-힣]+", " ", text)
+    return {token for token in re.findall(r"[a-z0-9]+|[가-힣]{2,}", cleaned) if token and token not in {"the", "and"}}
+
+
+def _inventory_items_semantically_match(left: str, right: str) -> bool:
+    left_text = str(left or "").strip()
+    right_text = str(right or "").strip()
+    if not left_text or not right_text:
+        return False
+    if left_text == right_text:
+        return True
+
+    left_lower = left_text.lower()
+    right_lower = right_text.lower()
+    if len(left_lower) >= 6 and left_lower in right_lower:
+        return True
+    if len(right_lower) >= 6 and right_lower in left_lower:
+        return True
+
+    left_tokens = _inventory_semantic_tokens(left_text)
+    right_tokens = _inventory_semantic_tokens(right_text)
+    if not left_tokens or not right_tokens:
+        return False
+
+    overlap = left_tokens & right_tokens
+    if len(overlap) >= 3:
+        return True
+    if len(overlap) >= 2 and ({"wti", "금", "선물", "잔고", "계좌", "법인"} & overlap):
+        return True
+    return False
+
+
+def _looks_like_document_inventory_item(item: Any) -> bool:
+    text = _inventory_item_key(item)
+    if not text:
+        return False
+    return any(
+        keyword in text
+        for keyword in ("증명서", "원장", "내역서", "계약서", "서류", "문서", "메모", "등록증", "합의서", "명함")
+    )
+
+
+def _looks_like_transient_transaction_receipt(item: Any) -> bool:
+    text = _inventory_item_key(item)
+    if not text:
+        return False
+    transaction_markers = (
+        "체결 내역",
+        "체결내역",
+        "거래내역",
+        "잔여 계약",
+        "잔여 홀딩",
+        "포지션",
+        "청산",
+        "매수 체결",
+        "매도 체결",
+        "주문 내역",
+        "롱 포지션",
+        "숏 포지션",
+    )
+    asset_markers = ("WTI", "원유", "금 선물", "gold", "선물", "레버리지")
+    return any(marker in text for marker in transaction_markers) and any(marker in text for marker in asset_markers)
+
+
+def _document_items_same_family(left: Any, right: Any) -> bool:
+    if not (_looks_like_document_inventory_item(left) and _looks_like_document_inventory_item(right)):
+        return False
+    overlap = _inventory_semantic_tokens(_inventory_item_key(left)) & _inventory_semantic_tokens(
+        _inventory_item_key(right)
+    )
+    if len(overlap) >= 3:
+        return True
+    return {"잔고", "법인", "계좌"} <= overlap
+
+
+def _inventory_document_preference_tuple(item: Any) -> tuple[float, int, int]:
+    text = _inventory_item_key(item)
+    numeric = _to_num_with_korean_units(text)
+    family_score = 0
+    if "원장" in text:
+        family_score += 4
+    if "등록증" in text:
+        family_score += 4
+    if "사본" in text:
+        family_score += 3
+    if "메모" in text:
+        family_score += 2
+    if "서류" in text:
+        family_score += 2
+    if "증명서" in text:
+        family_score += 1
+    return (numeric or 0.0, family_score + len(_inventory_semantic_tokens(text)), len(text))
+
+
+def _normalize_declared_end_inventory_semantics(
+    declared_inventory: Any,
+    *,
+    prev_inventory: Any,
+    consumed: Any,
+    acquired: Any,
+) -> list[Any]:
+    prev_items = _coerce_inventory_items(prev_inventory)
+    consumed_items = _coerce_inventory_items(consumed)
+    acquired_items = _coerce_inventory_items(acquired)
+    normalized: list[Any] = []
+
+    for item in _coerce_inventory_items(declared_inventory):
+        item_text = _inventory_item_key(item)
+        if not item_text:
+            continue
+        if any(_inventory_items_semantically_match(item_text, consumed_item) for consumed_item in consumed_items):
+            continue
+        if _looks_like_transient_transaction_receipt(item):
+            supported = any(_inventory_items_semantically_match(item_text, prev_item) for prev_item in prev_items)
+            supported = supported or any(
+                _inventory_items_semantically_match(item_text, acquired_item) for acquired_item in acquired_items
+            )
+            if not supported:
+                continue
+        normalized.append(item)
+
+    collapsed: list[Any] = []
+    for item in normalized:
+        item_text = _inventory_item_key(item)
+        matched_index = -1
+        for idx, kept in enumerate(collapsed):
+            if _document_items_same_family(item, kept):
+                matched_index = idx
+                break
+        if matched_index < 0:
+            collapsed.append(item)
+            continue
+        kept = collapsed[matched_index]
+        if _inventory_document_preference_tuple(item) > _inventory_document_preference_tuple(kept):
+            collapsed[matched_index] = item
+    return collapsed
+
+
 def _compute_inventory_carryover(prev_inventory: Any, consumed: Any, acquired: Any) -> list[Any]:
     prev_items = _coerce_inventory_items(prev_inventory)
     acquired_items = _coerce_inventory_items(acquired)
@@ -573,15 +787,23 @@ def _sync_stage2_end_state_inventory_contract(
     end_inventory_declared = _is_authoritative_inventory_declared(raw_end_inventory)
     end_inventory = _coerce_inventory_items(raw_end_inventory)
     joint_inventory = _coerce_inventory_items(joint_docs.get("physical_inventory", []))
+    prev_joint = prev_arc.get("joint_docs", {}) or {} if prev_arc else {}
+    curr_status = refined_arc.get("status_shadow", {}) or {}
+    acquired_items = state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", [])
 
     canonical_inventory = end_inventory if end_inventory_declared else []
+    if end_inventory_declared:
+        canonical_inventory = _normalize_declared_end_inventory_semantics(
+            canonical_inventory,
+            prev_inventory=prev_joint.get("physical_inventory", []),
+            consumed=curr_status.get("item_consumption", []),
+            acquired=acquired_items,
+        )
     if not end_inventory_declared and prev_arc:
-        prev_joint = prev_arc.get("joint_docs", {}) or {}
-        curr_status = refined_arc.get("status_shadow", {}) or {}
         canonical_inventory = _compute_inventory_carryover(
             prev_joint.get("physical_inventory", []),
             curr_status.get("item_consumption", []),
-            state_constraints.get("protagonist_items") or state_constraints.get("items_acquired", []),
+            acquired_items,
         )
     if not end_inventory_declared and not canonical_inventory:
         canonical_inventory = joint_inventory
@@ -1178,7 +1400,11 @@ def _build_stage2_carryover_authority_summary(refined_arc: dict | None) -> dict 
         ("portfolio_position", "start_portfolio_position"),
     ):
         raw_value = start_state.get(source_key, "")
-        value = str(raw_value) if isinstance(raw_value, int | float) and not isinstance(raw_value, bool) else _clip_text(raw_value, 120)
+        value = (
+            str(raw_value)
+            if isinstance(raw_value, int | float) and not isinstance(raw_value, bool)
+            else _clip_text(raw_value, 120)
+        )
         if value:
             summary[target_key] = value
     for source_key, target_key in (
@@ -1187,7 +1413,11 @@ def _build_stage2_carryover_authority_summary(refined_arc: dict | None) -> dict 
         ("portfolio_position", "end_portfolio_position"),
     ):
         raw_value = end_state.get(source_key, "")
-        value = str(raw_value) if isinstance(raw_value, int | float) and not isinstance(raw_value, bool) else _clip_text(raw_value, 120)
+        value = (
+            str(raw_value)
+            if isinstance(raw_value, int | float) and not isinstance(raw_value, bool)
+            else _clip_text(raw_value, 120)
+        )
         if value:
             summary[target_key] = value
 
@@ -1867,7 +2097,8 @@ class Stage2Finalizer:
         tactical_end_state_promotions = _promote_last_tactical_end_state_to_structured_state(refined_arc)
         if tactical_end_state_promotions:
             promoted_preview = ", ".join(
-                field.removeprefix("state_constraints.").removeprefix("arc_end_state.") for field in tactical_end_state_promotions
+                field.removeprefix("state_constraints.").removeprefix("arc_end_state.")
+                for field in tactical_end_state_promotions
             )
             self.ctx.ui.log(
                 f"      🔧 [End State Tactical Sync] Arc {global_arc_no} 마지막 화 종료 상태 → {promoted_preview}"
@@ -1912,6 +2143,15 @@ class Stage2Finalizer:
             self.ctx.ui.log(
                 f"      🔧 [End Location Sync] Arc {global_arc_no} 종료 위치 → {canonical_end_location or '위치 미정'}"
             )
+
+        synced_end_tactical_doc = _sync_last_tactical_end_state_block(
+            refined_arc.get("tactical_doc", ""),
+            (refined_arc.get("state_constraints", {}) or {}).get("arc_end_state", {}),
+            refined_arc.get("joint_docs", {}),
+        )
+        if synced_end_tactical_doc != refined_arc.get("tactical_doc", ""):
+            refined_arc["tactical_doc"] = synced_end_tactical_doc
+            self.ctx.ui.log(f"      🔧 [End State Header Sync] Arc {global_arc_no} 마지막 화 종료 상태 헤더 동기화")
 
         if not refined_arc.get("status_shadow"):
             self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] status_shadow 누락 - 기본값 주입")
@@ -4447,7 +4687,9 @@ class Stage2Finalizer:
         current_project = getattr(self.ctx, "current_project", None)
         session_id = resolve_logging_session_id(current_project)
         event_meta = dict(carryover)
-        cross_stage_packet = advisory_flags.get("cross_stage_authority_packet") if isinstance(advisory_flags, dict) else None
+        cross_stage_packet = (
+            advisory_flags.get("cross_stage_authority_packet") if isinstance(advisory_flags, dict) else None
+        )
         if isinstance(cross_stage_packet, dict) and cross_stage_packet:
             event_meta["cross_stage_authority_packet_present"] = 1
             event_meta["cross_stage_authority_packet_version"] = str(

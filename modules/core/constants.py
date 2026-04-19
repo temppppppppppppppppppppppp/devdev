@@ -199,18 +199,25 @@ def log_patch_diff(stage: str, original: str, patched: str, *, max_diff_lines: i
     _delta_pct = ((_patch_len - _orig_len) / _orig_len * 100) if _orig_len > 0 else 0.0
     logging.info(
         "[InPlace-Diff] %s: %d자 → %d자 (%+.1f%%)",
-        stage, _orig_len, _patch_len, _delta_pct,
+        stage,
+        _orig_len,
+        _patch_len,
+        _delta_pct,
     )
 
     orig_lines = original.splitlines(keepends=True)
     patch_lines = patched.splitlines(keepends=True)
 
-    diff = list(difflib.unified_diff(
-        orig_lines, patch_lines,
-        fromfile=f"{stage}/before", tofile=f"{stage}/after",
-        lineterm="",
-        n=2,  # context lines
-    ))
+    diff = list(
+        difflib.unified_diff(
+            orig_lines,
+            patch_lines,
+            fromfile=f"{stage}/before",
+            tofile=f"{stage}/after",
+            lineterm="",
+            n=2,  # context lines
+        )
+    )
     if not diff:
         logging.info("[InPlace-Diff] %s: 변경 없음", stage)
         return
@@ -236,7 +243,7 @@ class Stage2Limits:
     """[V60.74] Stage 2 Arc 설계 관련 상수"""
 
     # 가변 페이싱 범위
-    MIN_EP_COUNT = 3  # 최소 화수 (Blitz)
+    MIN_EP_COUNT = 2  # 최소 화수 (compressed / Blitz)
     MAX_EP_COUNT = 6  # 최대 화수 (Epic)
     DEFAULT_EP_COUNT = 4  # 기본 화수 (Standard) [PC-1-A] 5→4
 
@@ -326,7 +333,7 @@ class VolumeSettings:
 
     ARCS_PER_VOLUME = 5  # 권당 아크 개수
     EPISODES_PER_ARC = 4  # 아크당 기본 에피소드 개수 (Standard 기준) [PC-1-A] 5→4
-    MIN_EPISODES_PER_ARC = 3  # 아크당 최소 에피소드 (Blitz 최소)
+    MIN_EPISODES_PER_ARC = 2  # 아크당 최소 에피소드 (compressed / Blitz 최소)
     MAX_EPISODES_PER_ARC = 6  # 아크당 최대 에피소드 (Epic 최대)
 
 

@@ -54,6 +54,133 @@ def _normalize_from_ep(from_ep: int, *, allow_partial: bool = False) -> int:
     return normalized
 
 
+def _normalize_keep_arcs(keep_arcs: int) -> int:
+    normalized = max(0, int(keep_arcs or 0))
+    if normalized < 1:
+        raise ValueError("Stage 2 canary prep requires keep_arcs >= 1")
+    return normalized
+
+
+# ─────────────────────────────────────────────────────────────
+# Stage 2-only canary helpers
+# ─────────────────────────────────────────────────────────────
+
+
+def prepare_stage2_canary_project(
+    source_root: str | Path,
+    target_root: str | Path,
+    *,
+    keep_arcs: int,
+    force: bool = False,
+) -> dict:
+    """Copy a baseline project and keep only the first N Stage 2 arcs on the copy."""
+
+    source = Path(source_root)
+    target = Path(target_root)
+    keep_arcs = _normalize_keep_arcs(keep_arcs)
+    if not source.exists():
+        raise FileNotFoundError(f"source project not found: {source}")
+    if source.resolve() == target.resolve():
+        raise ValueError("source and target project must be different for stage2 canary prep")
+    if target.exists():
+        if not force:
+            raise FileExistsError(f"target project already exists: {target}")
+        shutil.rmtree(target)
+
+    shutil.copytree(source, target)
+    cleanup = reset_stage2_outputs(target, keep_arcs=keep_arcs)
+    payload = {
+        "prepared_at": datetime.now().isoformat(timespec="seconds"),
+        "source_project": _build_project_name(source),
+        "target_project": _build_project_name(target),
+        "canary_scope": "stage2_only",
+        "keep_arcs": int(keep_arcs),
+        "cleanup": cleanup,
+    }
+    _write_json(target / "logs" / "stage2_canary_prep.json", payload)
+    return payload
+
+
+def reset_stage2_outputs(project_root: str | Path, *, keep_arcs: int) -> dict:
+    """Trim Stage 2 outputs to the first ``keep_arcs`` arcs and clear proof logs."""
+
+    root = Path(project_root)
+    keep_arcs = _normalize_keep_arcs(keep_arcs)
+    db_path = root / "project_data.db"
+    if not db_path.exists():
+        raise FileNotFoundError(f"project database not found: {db_path}")
+
+    db = DBManager(db_path)
+    try:
+        impact = _collect_stage2_cleanup_impact(db, keep_arcs=keep_arcs)
+        _delete_stage2_db_outputs(db, keep_arcs=keep_arcs)
+    finally:
+        db.close()
+
+    files = _clear_stage2_files(root, keep_arcs=keep_arcs)
+    return {
+        "keep_arcs": int(keep_arcs),
+        "db_impact": impact,
+        "file_cleanup": files,
+    }
+
+
+def build_stage2_canary_summary(
+    project_root: str | Path,
+    *,
+    expected_final_arc_count: int | None = None,
+) -> dict:
+    """Summarize Stage 2 carryover proof for the latest arc pair in a canary project."""
+
+    root = Path(project_root)
+    db_path = root / "project_data.db"
+    if not db_path.exists():
+        raise FileNotFoundError(f"project database not found: {db_path}")
+    project_locator = _build_project_locator(root)
+
+    db = DBManager(db_path)
+    try:
+        arcs = db.load_anchor("arcs") or []
+        stage2_attempt_rows = db.conn.execute(
+            """
+            SELECT id, arc_num, ep_num, attempt_num, verdict, score, session_id, attempt_key, artifact_path
+            FROM stage_attempts
+            WHERE stage = 2
+            ORDER BY id ASC
+            """
+        ).fetchall()
+        latest_session_id = latest_session_id_from_rows(stage2_attempt_rows)
+    finally:
+        db.close()
+
+    carryover_pairs = _build_stage2_carryover_pairs(arcs)
+    latest_pair = carryover_pairs[-1] if carryover_pairs else {}
+    canary_prep = _read_json(root / "logs" / "stage2_canary_prep.json")
+    hard_gates = _evaluate_stage2_canary_gates(
+        expected_final_arc_count=expected_final_arc_count,
+        actual_arc_count=len(arcs),
+        stage2_attempt_rows=stage2_attempt_rows,
+        latest_pair=latest_pair,
+    )
+
+    return {
+        "summary_role": "stage2_only_canary",
+        "project": root.name,
+        "project_locator": project_locator,
+        "project_root": str(root),
+        "prepared_from": canary_prep.get("source_project"),
+        "keep_arcs": canary_prep.get("keep_arcs"),
+        "expected_final_arc_count": int(expected_final_arc_count) if expected_final_arc_count is not None else None,
+        "actual_arc_count": len(arcs),
+        "latest_session_id": latest_session_id,
+        "stage2_attempt_count": len(stage2_attempt_rows),
+        "latest_stage2_attempt": _build_stage2_attempt_summary(stage2_attempt_rows[-1]) if stage2_attempt_rows else {},
+        "carryover_pairs": carryover_pairs,
+        "latest_carryover_pair": latest_pair,
+        "hard_gates": hard_gates,
+    }
+
+
 # ─────────────────────────────────────────────────────────────
 # Stage 3-only canary helpers
 # ─────────────────────────────────────────────────────────────
@@ -130,6 +257,8 @@ def build_stage3_canary_summary(project_root: str | Path, *, target_ep: int | No
     if not db_path.exists():
         raise FileNotFoundError(f"project database not found: {db_path}")
     project_locator = _build_project_locator(root)
+    canary_prep = _read_json(root / "logs" / "stage3_canary_prep.json")
+    scope_from_ep = _normalize_from_ep(canary_prep.get("from_ep") or 1, allow_partial=True)
 
     db = DBManager(db_path)
     try:
@@ -141,23 +270,31 @@ def build_stage3_canary_summary(project_root: str | Path, *, target_ep: int | No
             ORDER BY id ASC
             """
         ).fetchall()
-        latest_session_id = latest_session_id_from_rows(stage3_attempt_rows)
+        canary_scope_attempt_rows = [
+            row for row in stage3_attempt_rows if int(row["ep_num"] or 0) >= int(scope_from_ep)
+        ]
+        latest_session_id = latest_session_id_from_rows(canary_scope_attempt_rows)
 
         blueprint_rows = db.conn.execute("SELECT ep_num FROM blueprints ORDER BY ep_num ASC").fetchall()
 
         analyzer = FailureAnalyzer(db, project_path=root)
-        sink_alignment_summary = analyzer.sink_alignment_summary(
-            stage=3,
-            include_session_decisions=True,
-            session_id=latest_session_id,
-        )
+        if latest_session_id:
+            sink_alignment_summary = analyzer.sink_alignment_summary(
+                stage=3,
+                include_session_decisions=True,
+                session_id=latest_session_id,
+            )
+        else:
+            sink_alignment_summary = _build_stage3_scope_skipped_sink_alignment_summary(
+                from_ep=scope_from_ep,
+                target_ep=target_ep,
+            )
         episode_telemetry = _build_stage3_episode_telemetry(db, stage3_attempt_rows)
     finally:
         db.close()
 
     blueprint_ep_nums = sorted({int(row["ep_num"]) for row in blueprint_rows})
     blueprint_files = sorted(root.glob("plans/blueprints/blueprint_*.txt"))
-    canary_prep = _read_json(root / "logs" / "stage3_canary_prep.json")
 
     attempt_detail = _build_stage3_attempt_detail(stage3_attempt_rows)
     hard_gates = _evaluate_stage3_canary_gates(
@@ -175,6 +312,7 @@ def build_stage3_canary_summary(project_root: str | Path, *, target_ep: int | No
         "project_root": str(root),
         "target_ep": int(target_ep) if target_ep is not None else None,
         "prepared_from": canary_prep.get("source_project"),
+        "scope_from_ep": int(scope_from_ep),
         "latest_session_id": latest_session_id,
         "stage3_attempts": len(stage3_attempt_rows),
         "blueprint_db_count": len(blueprint_ep_nums),
@@ -287,6 +425,224 @@ def _build_stage3_episode_telemetry(db, attempt_rows) -> list[dict]:
     return result
 
 
+def _collect_stage2_cleanup_impact(db: DBManager, *, keep_arcs: int) -> dict[str, int]:
+    arcs = db.load_anchor("arcs") or []
+    removed_arcs = arcs[keep_arcs:]
+    removed_arc_nos = [int(arc.get("arc_no", 0) or 0) for arc in removed_arcs if isinstance(arc, dict)]
+    removed_session_ids = _collect_stage2_removed_session_ids(db, keep_arcs=keep_arcs)
+    from_ep = _infer_stage2_from_ep(removed_arcs)
+    impact = {
+        "existing_arc_count": len(arcs),
+        "kept_arc_count": min(len(arcs), int(keep_arcs)),
+        "removed_arc_count": len(removed_arcs),
+        "stage2_attempts_removed": int(
+            db.conn.execute(
+                "SELECT COUNT(*) AS c FROM stage_attempts WHERE stage = 2 AND arc_num > ?", (keep_arcs,)
+            ).fetchone()["c"]
+        ),
+        "stage2_director_selections_removed": int(
+            db.conn.execute(
+                "SELECT COUNT(*) AS c FROM director_selections WHERE ep_num > ? AND "
+                + DBManager._director_stage_predicate(2),
+                (keep_arcs,),
+            ).fetchone()["c"]
+        ),
+        "cost_log_rows_removed": int(
+            db.conn.execute(
+                "SELECT COUNT(*) AS c FROM cost_log WHERE scope_type = 'arc' AND scope_id > ?",
+                (keep_arcs,),
+            ).fetchone()["c"]
+        ),
+        "ui_event_sessions_removed": len(removed_session_ids),
+        "llm_calls_removed": 0,
+        "arc_payload_anchors_removed": max(0, len(arcs) - int(keep_arcs)),
+        "arc_summary_anchors_removed": len(_stage2_summary_anchor_keys_to_delete(db, keep_arcs=keep_arcs)),
+    }
+    if from_ep is not None:
+        impact["from_ep"] = int(from_ep)
+        impact["llm_calls_removed"] = int(
+            db.conn.execute(
+                "SELECT COUNT(*) AS c FROM llm_calls WHERE stage = 2 AND ep_num >= ?", (from_ep,)
+            ).fetchone()["c"]
+        )
+    if removed_arc_nos:
+        impact["from_arc"] = min(removed_arc_nos)
+    return impact
+
+
+def _delete_stage2_db_outputs(db: DBManager, *, keep_arcs: int) -> None:
+    arcs = db.load_anchor("arcs") or []
+    kept_arcs = list(arcs[:keep_arcs])
+    removed_arcs = list(arcs[keep_arcs:])
+    removed_session_ids = _collect_stage2_removed_session_ids(db, keep_arcs=keep_arcs)
+    from_ep = _infer_stage2_from_ep(removed_arcs)
+    summary_keys = _stage2_summary_anchor_keys_to_delete(db, keep_arcs=keep_arcs)
+
+    cur = db.cursor
+    started_tx = not db.conn.in_transaction
+    if started_tx:
+        cur.execute("BEGIN")
+    try:
+        if not db.save_anchor("arcs", kept_arcs):
+            raise RuntimeError("failed to save arcs anchor during Stage 2 canary reset")
+        if summary_keys:
+            cur.executemany("DELETE FROM anchors WHERE key = ?", [(key,) for key in summary_keys])
+        cur.execute(
+            "DELETE FROM director_selections WHERE ep_num > ? AND " + DBManager._director_stage_predicate(2),
+            (keep_arcs,),
+        )
+        cur.execute("DELETE FROM stage_attempts WHERE stage = 2 AND arc_num > ?", (keep_arcs,))
+        cur.execute("DELETE FROM cost_log WHERE scope_type = 'arc' AND scope_id > ?", (keep_arcs,))
+        if from_ep is not None:
+            cur.execute("DELETE FROM llm_calls WHERE stage = 2 AND ep_num >= ?", (from_ep,))
+        if removed_session_ids:
+            placeholders = ",".join("?" for _ in removed_session_ids)
+            cur.execute(f"DELETE FROM ui_events WHERE session_id IN ({placeholders})", tuple(removed_session_ids))
+        db.conn.commit()
+    except Exception:
+        db.conn.rollback()
+        raise
+    try:
+        db.conn.execute("VACUUM")
+    except Exception:
+        pass
+
+
+def _clear_stage2_files(project_root: Path, *, keep_arcs: int) -> dict[str, int]:
+    arc_plan_files_removed = 0
+    plans_dir = project_root / "plans" / "arcs"
+    if plans_dir.exists():
+        for arc_file in plans_dir.glob("arc_*.txt"):
+            arc_no = _extract_arc_num(arc_file.name)
+            if arc_no is not None and arc_no > keep_arcs:
+                arc_file.unlink(missing_ok=True)
+                arc_plan_files_removed += 1
+
+    stage2_artifact_dirs_removed = 0
+    stage2_artifacts_dir = project_root / "logs" / "artifacts" / "stage2"
+    if stage2_artifacts_dir.exists():
+        for child in list(stage2_artifacts_dir.iterdir()):
+            arc_no = _extract_arc_num(child.name)
+            if arc_no is not None and arc_no > keep_arcs:
+                _remove_path(child)
+                stage2_artifact_dirs_removed += 1
+
+    log_entries_removed = 0
+    logs_dir = project_root / "logs"
+    if logs_dir.exists():
+        for log_name in (
+            "pass_rate_monitor.json",
+            "quality_metrics.jsonl",
+            "runtime_audit.jsonl",
+            "runtime_audit_summary.json",
+        ):
+            log_path = logs_dir / log_name
+            if log_path.exists():
+                log_path.unlink(missing_ok=True)
+                log_entries_removed += 1
+        for session_log in logs_dir.glob("session_*.log"):
+            session_log.unlink(missing_ok=True)
+            log_entries_removed += 1
+        session_dir = logs_dir / "session"
+        if session_dir.exists():
+            for session_file in session_dir.iterdir():
+                if session_file.is_file():
+                    session_file.unlink(missing_ok=True)
+                    log_entries_removed += 1
+
+    return {
+        "arc_plan_files_removed": arc_plan_files_removed,
+        "stage2_artifact_dirs_removed": stage2_artifact_dirs_removed,
+        "log_entries_removed": log_entries_removed,
+    }
+
+
+def _build_stage2_carryover_pairs(arcs: list[dict]) -> list[dict]:
+    pairs: list[dict] = []
+    for idx in range(1, len(arcs)):
+        previous_arc = arcs[idx - 1] if isinstance(arcs[idx - 1], dict) else {}
+        current_arc = arcs[idx] if isinstance(arcs[idx], dict) else {}
+        prev_end_equipment = _stage2_equipment_list(previous_arc, state_key="arc_end_state")
+        curr_start_equipment = _stage2_equipment_list(current_arc, state_key="arc_start_state")
+        curr_end_equipment = _stage2_equipment_list(current_arc, state_key="arc_end_state")
+        curr_joint_inventory = _stage2_joint_inventory_list(current_arc)
+        protagonist_items = _stage2_plain_list(
+            ((current_arc.get("state_constraints") or {}).get("protagonist_items"))
+            if isinstance(current_arc, dict)
+            else None
+        )
+        items_acquired = _stage2_plain_list(
+            ((current_arc.get("state_constraints") or {}).get("items_acquired"))
+            if isinstance(current_arc, dict)
+            else None
+        )
+        pairs.append(
+            {
+                "previous_arc_no": int(previous_arc.get("arc_no", idx) or idx),
+                "current_arc_no": int(current_arc.get("arc_no", idx + 1) or (idx + 1)),
+                "previous_end_equipment_count": len(prev_end_equipment),
+                "current_start_equipment_count": len(curr_start_equipment),
+                "current_end_equipment_count": len(curr_end_equipment),
+                "current_joint_inventory_count": len(curr_joint_inventory),
+                "carryover_match": prev_end_equipment == curr_start_equipment,
+                "joint_inventory_matches_end_equipment": curr_joint_inventory == curr_end_equipment,
+                "previous_end_equipment_preview": prev_end_equipment[:3],
+                "current_start_equipment_preview": curr_start_equipment[:3],
+                "current_end_equipment_preview": curr_end_equipment[:3],
+                "current_protagonist_items": protagonist_items,
+                "current_items_acquired": items_acquired,
+            }
+        )
+    return pairs
+
+
+def _build_stage2_attempt_summary(row) -> dict:
+    if not row:
+        return {}
+    return {
+        "arc_num": int(row["arc_num"] or 0),
+        "ep_num": int(row["ep_num"] or 0),
+        "attempt_num": int(row["attempt_num"] or 0),
+        "verdict": str(row["verdict"] or "").strip(),
+        "score": row["score"],
+        "session_id": str(row["session_id"] or "").strip(),
+        "attempt_key": str(row["attempt_key"] or "").strip(),
+        "artifact_path": str(row["artifact_path"] or "").strip(),
+    }
+
+
+def _evaluate_stage2_canary_gates(
+    *,
+    expected_final_arc_count: int | None,
+    actual_arc_count: int,
+    stage2_attempt_rows,
+    latest_pair: dict,
+) -> dict:
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if expected_final_arc_count is not None and actual_arc_count < int(expected_final_arc_count):
+        errors.append(f"arc_count_short:{actual_arc_count}<{int(expected_final_arc_count)}")
+    if not stage2_attempt_rows:
+        errors.append("no_stage2_attempts")
+    if latest_pair:
+        if not latest_pair.get("carryover_match", False):
+            errors.append(
+                f"carryover_mismatch:arc{latest_pair.get('previous_arc_no')}->arc{latest_pair.get('current_arc_no')}"
+            )
+        if not latest_pair.get("joint_inventory_matches_end_equipment", False):
+            errors.append(f"joint_inventory_end_equipment_mismatch:arc{latest_pair.get('current_arc_no')}")
+    else:
+        warnings.append("no_carryover_pair_available")
+
+    status = "fail" if errors else ("warn" if warnings else "pass")
+    return {
+        "status": status,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
 def _evaluate_stage3_canary_gates(
     *,
     target_ep: int | None,
@@ -313,7 +669,7 @@ def _evaluate_stage3_canary_gates(
 
     if sink_alignment_summary:
         status = str(sink_alignment_summary.get("status", "") or "").strip()
-        if status and status != "ok":
+        if status and status not in {"ok", "skipped"}:
             warnings.append(f"sink_alignment_status:{status}")
     else:
         warnings.append("sink_alignment_summary_empty")
@@ -323,6 +679,50 @@ def _evaluate_stage3_canary_gates(
         "status": status,
         "errors": errors,
         "warnings": warnings,
+    }
+
+
+def _build_stage3_scope_skipped_sink_alignment_summary(*, from_ep: int, target_ep: int | None) -> dict:
+    target_text = f"target_ep={int(target_ep)}" if target_ep is not None else "target_ep=unspecified"
+    operator_summary = (
+        "Stage3 sink alignment skipped: no current-scope Stage3 session exists "
+        f"for from_ep>={int(from_ep)} ({target_text})."
+    )
+    return {
+        "stage": 3,
+        "session_filter": "",
+        "attempts_considered": 0,
+        "coverage": {
+            "stage_attempts": 0,
+            "pass_rate_monitor": 0,
+            "director_selections": 0,
+            "episode_production": 0,
+            "session_decisions": 0,
+            "attempt_raw_rationale": 0,
+        },
+        "coverage_gap_count": 0,
+        "structured_issue_count": 0,
+        "raw_issue_count": 0,
+        "top_issue_headline": {
+            "headline": "Stage3 sink_alignment_skipped_no_scope_session",
+            "priority": "OK",
+            "focus": "sink_alignment_skipped",
+            "count": 0,
+            "next_action": "Run Stage3 within the prepared scope before evaluating current-session sink parity.",
+        },
+        "complete_final_attempts": 0,
+        "director_lifecycle_attempts": 0,
+        "complete_lifecycle_attempts": 0,
+        "final_sink_missing": {},
+        "lifecycle_sink_missing": {},
+        "lifecycle_missing_in_final_sinks": {},
+        "final_authority_contract": {},
+        "session_scoped_attempts": 0,
+        "legacy_key_attempts": 0,
+        "stage_attempt_rows_without_attempt_key": 0,
+        "session_decision_rows_without_attempt_key": 0,
+        "status": "skipped",
+        "operator_summary": operator_summary,
     }
 
 
@@ -1451,11 +1851,12 @@ def _clear_stage34_files(project_root: Path, *, from_ep: int) -> dict[str, int]:
     blueprints_removed = 0
     blueprints_dir = project_root / "plans" / "blueprints"
     if blueprints_dir.exists():
-        for blueprint in blueprints_dir.glob("ep_*.json"):
-            ep_num = _extract_ep_num(blueprint.name)
-            if ep_num is not None and ep_num >= from_ep:
-                blueprint.unlink(missing_ok=True)
-                blueprints_removed += 1
+        for pattern in ("ep_*.json", "blueprint_*.txt"):
+            for blueprint in blueprints_dir.glob(pattern):
+                ep_num = _extract_ep_num(blueprint.name)
+                if ep_num is not None and ep_num >= from_ep:
+                    blueprint.unlink(missing_ok=True)
+                    blueprints_removed += 1
     cleanup["blueprint_files_removed"] = blueprints_removed
     return cleanup
 
@@ -1634,6 +2035,17 @@ def _build_project_name(project_root: Path) -> str:
         return project_root.name
 
 
+def _extract_arc_num(filename: str) -> int | None:
+    stem = Path(filename).stem
+    digits = "".join(ch for ch in stem if ch.isdigit())
+    if not digits:
+        return None
+    try:
+        return int(digits)
+    except ValueError:
+        return None
+
+
 def _extract_ep_num(filename: str) -> int | None:
     stem = Path(filename).stem
     digits = "".join(ch for ch in stem if ch.isdigit())
@@ -1664,3 +2076,69 @@ def _read_json(path: Path) -> dict:
 def _write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _collect_stage2_removed_session_ids(db: DBManager, *, keep_arcs: int) -> list[str]:
+    rows = db.conn.execute(
+        """
+        SELECT DISTINCT session_id
+        FROM stage_attempts
+        WHERE stage = 2 AND arc_num > ?
+        ORDER BY session_id ASC
+        """,
+        (keep_arcs,),
+    ).fetchall()
+    return [str(row["session_id"] or "").strip() for row in rows if str(row["session_id"] or "").strip()]
+
+
+def _infer_stage2_from_ep(removed_arcs: list[dict]) -> int | None:
+    for arc in removed_arcs:
+        if not isinstance(arc, dict):
+            continue
+        try:
+            ep_start = int(arc.get("ep_start", 0) or 0)
+        except (TypeError, ValueError):
+            ep_start = 0
+        if ep_start > 0:
+            return ep_start
+    return None if removed_arcs else None
+
+
+def _stage2_summary_anchor_keys_to_delete(db: DBManager, *, keep_arcs: int) -> list[str]:
+    rows = db.conn.execute("SELECT key FROM anchors WHERE key LIKE 'arc_summary_%' ORDER BY key ASC").fetchall()
+    keys: list[str] = []
+    for row in rows:
+        key = str(row["key"] or "").strip()
+        arc_no = _extract_arc_num(key)
+        if arc_no is not None and arc_no > keep_arcs:
+            keys.append(key)
+    return keys
+
+
+def _stage2_plain_list(raw) -> list[str] | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, list):
+        return None
+    return [str(item).strip() for item in raw if str(item).strip()]
+
+
+def _stage2_equipment_list(arc: dict, *, state_key: str) -> list[str]:
+    if not isinstance(arc, dict):
+        return []
+    constraints = arc.get("state_constraints")
+    if not isinstance(constraints, dict):
+        return []
+    state = constraints.get(state_key)
+    if not isinstance(state, dict):
+        return []
+    return _stage2_plain_list(state.get("equipment")) or []
+
+
+def _stage2_joint_inventory_list(arc: dict) -> list[str]:
+    if not isinstance(arc, dict):
+        return []
+    joint_docs = arc.get("joint_docs")
+    if not isinstance(joint_docs, dict):
+        return []
+    return _stage2_plain_list(joint_docs.get("physical_inventory")) or []

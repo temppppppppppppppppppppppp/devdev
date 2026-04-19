@@ -58,8 +58,9 @@ def test_block_enricher_source_has_future_timeouts():
 
 def test_arc_draft_validator_source_has_items_list_guards():
     src = _read("modules/domain/agents/arc_draft_validator.py")
-    assert "if not isinstance(current_items, list):" in src
-    assert "if not isinstance(items_acquired, list):" in src
+    assert "_resolve_protagonist_items" in src
+    assert "current_items = list(_resolve_protagonist_items(_csc_dup))" in src
+    assert "protagonist_items = _resolve_protagonist_items(_sc_forb)" in src
 
 
 def test_director_auditor_source_handles_non_dict_char_logic_result():
@@ -77,7 +78,7 @@ def test_continuity_manuscript_source_has_scene_breakdown_dict_guards():
 def test_stage2_finalizer_and_scene_checks_source_have_dict_guards():
     s2f = _read("modules/core/stage2_finalizer.py")
     bvs = _read("modules/validation/blocking_validator_scene_checks.py")
-    assert 'if _as.get("npc_status") and isinstance(_as["npc_status"], dict):' in s2f
+    assert "if isinstance(npc_status, dict) and npc_status:" in s2f
     assert "if not scene_breakdown or not isinstance(scene_breakdown, dict):" in bvs
 
 

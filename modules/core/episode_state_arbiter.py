@@ -249,6 +249,39 @@ def _resolve_arc_timeline_text(arc_payload: dict[str, Any]) -> tuple[str, str]:
     return "", ""
 
 
+def _parse_timeline_year_month(raw: object) -> tuple[int, int] | None:
+    text = _normalize_scalar(raw)
+    if not text:
+        return None
+    year_match = re.search(r"(\d{4})년", text)
+    month_match = re.search(r"(\d{1,2})월", text)
+    if not month_match:
+        return None
+    return (int(year_match.group(1)) if year_match else 0, int(month_match.group(1)))
+
+
+def _timeline_year_month_conflicts(left: object, right: object) -> bool:
+    left_point = _parse_timeline_year_month(left)
+    right_point = _parse_timeline_year_month(right)
+    return bool(left_point is not None and right_point is not None and left_point != right_point)
+
+
+def _resolve_progression_time_text(packet: dict[str, Any] | None) -> str:
+    if not isinstance(packet, dict):
+        return ""
+    for raw in packet.get("time_truths") or []:
+        text = _normalize_scalar(raw)
+        if not text:
+            continue
+        match = re.search(
+            r"((?:\d{4}년\s*)?\d{1,2}월(?:\s*\d{1,2}일)?(?:\s*(?:초|중순|말))?(?:\s*(?:오전|오후|새벽|아침|점심|저녁|밤|심야|자정|정오))?)",
+            text,
+        )
+        if match:
+            return match.group(1).strip()
+    return ""
+
+
 def summarize_episode_state_packet(packet: dict[str, Any] | None) -> dict[str, Any]:
     if not isinstance(packet, dict):
         return {}
@@ -294,6 +327,7 @@ class EpisodeStateArbiter:
         opening_truth, opening_conflicts = self._resolve_opening_truth(
             arc_payload=arc_payload,
             cross_stage_authority_packet=cross_stage_authority_packet,
+            episode_progression_packet=episode_progression_packet,
             prev_blueprint=bp,
             prev_blueprints=prev_blueprints,
             prev_manuscript_ending=prev_manuscript_ending,
@@ -369,6 +403,7 @@ class EpisodeStateArbiter:
         *,
         arc_payload: dict[str, Any],
         cross_stage_authority_packet: dict[str, Any] | None,
+        episode_progression_packet: dict[str, Any] | None,
         prev_blueprint: dict[str, Any],
         prev_blueprints: list[dict[str, Any]] | None,
         prev_manuscript_ending: str,
@@ -436,11 +471,19 @@ class EpisodeStateArbiter:
         time_source = ""
         time_context = ""
         arc_timeline_text, arc_timeline_source = _resolve_arc_timeline_text(arc_payload)
+        progression_time_text = _resolve_progression_time_text(episode_progression_packet)
         bp_time_flow = _normalize_scalar(prev_blueprint.get("time_flow"))
         manuscript_tail = str(prev_manuscript_ending or "").strip()
         if is_arc_opening_episode and arc_timeline_text:
             time_source = arc_timeline_source
             time_context = arc_timeline_text
+        elif progression_time_text and (
+            not bp_time_flow
+            or _timeline_year_month_conflicts(progression_time_text, bp_time_flow)
+            or _timeline_year_month_conflicts(progression_time_text, manuscript_tail)
+        ):
+            time_source = "episode_progression_packet.time_truths"
+            time_context = progression_time_text
         elif manuscript_tail:
             time_source = "prev_manuscript_ending"
             time_context = (
@@ -451,6 +494,9 @@ class EpisodeStateArbiter:
         elif bp_time_flow:
             time_source = "prev_blueprint.time_flow"
             time_context = bp_time_flow
+        elif progression_time_text:
+            time_source = "episode_progression_packet.time_truths"
+            time_context = progression_time_text
 
         opening_transition_expectation = ""
         if is_arc_opening_episode and prev_location and location and prev_location != location:

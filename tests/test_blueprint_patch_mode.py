@@ -282,7 +282,9 @@ class TestBlueprintInplacePatchMode:
         assert result["emotion_curve"] == "수정됨"
         assert result["episode_number"] == 1
 
-    def test_inplace_patch_short_circuits_on_empty_fix_pack(self, blueprint_generator, sample_blueprint, sample_arc_data):
+    def test_inplace_patch_short_circuits_on_empty_fix_pack(
+        self, blueprint_generator, sample_blueprint, sample_arc_data
+    ):
         result = blueprint_generator._inplace_patch_blueprint(
             original_blueprint=sample_blueprint,
             director_feedback="빈 계약으로는 로컬 수정 금지",
@@ -564,6 +566,16 @@ class TestBlueprintPatchIntegration:
             arc_data=sample_arc_data,
             constraint_block={
                 "episode_progression_packet": {
+                    "next_gate_strength_mode": {
+                        "mode": "foreshadow_only",
+                        "reason": "새 타깃 handoff는 foreshadow 수준으로만 남기고 현재 압박을 먼저 정리한다.",
+                    },
+                    "lawful_repetition_window": {
+                        "mode": "allow_escalated_repeat",
+                        "allow_same_location_if_goal_changes": True,
+                        "allow_same_counterparty_if_goal_changes": True,
+                        "allow_same_channel_if_decision_escalates": True,
+                    },
                     "surface_guidance": [
                         "시작 anchor 계승은 짧게 처리하고 이번 화의 주 장면은 직전 대치의 결과 이후 단계로 이동하라."
                     ],
@@ -583,8 +595,13 @@ class TestBlueprintPatchIntegration:
         assert pipeline["phases"]["generate"]["error_type"] == AgentErrorType.CANDIDATE_DISQUALIFIED
         record_attempt = blueprint_generator.context.pass_rate_monitor.record_attempt
         reject_reason = record_attempt.call_args.kwargs["reject_reason"]
+        assert "Next-gate strength modulator" in reject_reason
+        assert "새 타깃 handoff는 foreshadow 수준" in reject_reason
         assert "Replay reroute guidance" in reject_reason
+        assert "lawful repetition이나 authority escalation surface 자체를 막는 지시는 아닙니다" in reject_reason
         assert "직전 대치의 결과 이후 단계로 이동" in reject_reason
+        assert "Lawful repetition window" in reject_reason
+        assert "같은 장소라도 장면 목표가 달라졌다면" in reject_reason
         assert "Next-episode reserved beat" in reject_reason
         assert "승인 완료 후 실제 체결" in reject_reason
 
@@ -801,6 +818,45 @@ class TestBlueprintPatchIntegration:
             "reason": "low_yield_advisory_local_patch",
         }
         blueprint_generator.runtime._run_pass_with_fix_loop.assert_not_called()
+
+    def test_refresh_phase3_validate_phase_after_reaudit_replaces_stale_binding_reason(self, blueprint_generator):
+        pipeline_result = {
+            "phases": {
+                "validate": {
+                    "selection_reason": "score strong (91.0); binding prevalidation repair required",
+                    "verdict_reason": "score strong (91.0); binding prevalidation repair required",
+                    "binding_prevalidation_issue_count": 1,
+                    "binding_prevalidation_categories": ["opening_transition"],
+                    "fix_scope": "inplace",
+                    "candidate_count": 3,
+                }
+            }
+        }
+
+        blueprint_generator.runtime._refresh_phase3_validate_phase_after_reaudit(
+            pipeline_result=pipeline_result,
+            validation_result={
+                "verdict": "PASS",
+                "phase": "director",
+                "issues": [],
+                "score": 91,
+                "confidence": 0.9,
+                "selection_reason": "score strong (91.0)",
+                "verdict_reason": "score strong (91.0)",
+                "fix_scope": "",
+                "fix_scope_reasoning": "",
+                "quality_risk": False,
+                "revision_required": False,
+                "binding_prevalidation_issue_count": 0,
+            },
+        )
+
+        validate_phase = pipeline_result["phases"]["validate"]
+        assert validate_phase["selection_reason"] == "score strong (91.0)"
+        assert validate_phase["verdict_reason"] == "score strong (91.0)"
+        assert "binding_prevalidation_issue_count" not in validate_phase
+        assert "binding_prevalidation_categories" not in validate_phase
+        assert validate_phase["candidate_count"] == 3
 
     def test_run_phase3_validation_logs_quality_gate_reason(self, blueprint_generator, sample_arc_data):
         from modules.domain.agents.three_phase_blueprint_runtime import (
@@ -1522,9 +1578,7 @@ class TestBlueprintPatchIntegration:
         )
 
         assert retry_state.prev_local_patch_gate["reason"] == "missing_authoritative_fix_scope"
-        assert not any(
-            warning.startswith("local_patch_gate:") for warning in retry_state.prev_validation_warnings
-        )
+        assert not any(warning.startswith("local_patch_gate:") for warning in retry_state.prev_validation_warnings)
 
     def test_apply_validation_reject_state_keeps_prev_selection_reason_blank_without_explicit_selection_reason(
         self, blueprint_generator

@@ -1,0 +1,209 @@
+{
+  "schema": "geuldobi.loop_canary_scorecard.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "backfilled",
+  "role": "Loop-oriented bounded canary gate surface for narrative doctrine evaluation.",
+  "document_ref": "docs/2026-04-18/golden-canary-deepclone-probe-a-loop-canary-scorecard.md",
+  "evaluation_unit": [
+    "stage3_bounded_episode_tranche"
+  ],
+  "required_inputs": [
+    "projects/_canary/probe_a_stage3_ep13carry_r1/logs/stage3_canary_summary.json",
+    "projects/_canary/probe_a_stage3_ep13carry_r1/plans/blueprints/blueprint_0013.txt",
+    "projects/_canary/probe_a_stage3_ep13carry_r1/logs/artifacts/stage3/ep_0013/attempt_01/final_blueprint__emotion_focused.json",
+    "projects/_canary/probe_a_stage3_ep13carry_r1/logs/session/decisions.jsonl",
+    "projects/_canary/probe_a_stage3_ep12authority_r1/plans/blueprints/blueprint_0012.txt",
+    "projects/_canary/probe_a_stage3_ep12authority_r1/logs/artifacts/stage3/ep_0012/attempt_01/final_blueprint__emotion_focused.json",
+    "projects/_canary/probe_a_stage3_ep12authority_r1/plans/arcs/arc_003.txt",
+    "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+    "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
+    "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+  ],
+  "hard_gates": {
+    "episode_loop_contract_floor": {
+      "required_items": [
+        "pressure_visible",
+        "execution_visible",
+        "proof_visible",
+        "receipt_visible",
+        "observer_shift_visible",
+        "next_gate_visible"
+      ],
+      "minimum_hit_count": 4,
+      "forbidden_joint_miss": [
+        "receipt_visible",
+        "next_gate_visible"
+      ],
+      "status": "pass",
+      "evidence": [
+        "Episode 13 keeps pressure visible through the six-week WTI box-range and Park Seongho's repeated take-profit panic.",
+        "Execution remains visible through Siu's refusal to trim, his cold authority over the PB lane, and the deliberate migration toward the Gangnam one-room office.",
+        "Receipt, observer shift, and next gate all remain present in the same tranche: the black hotline card survives, the securities firm treats Siu as an uncontrollable exception, and the new fortress lane opens cleanly."
+      ],
+      "notes": [
+        "This tranche is not a recap-only opener. It actively transports authority, position, and base-state into Arc 3."
+      ]
+    },
+    "receipt_transport_gate": {
+      "rule": "If a structural receipt appears in the tranche artifact, its trace must survive in at least two downstream surfaces.",
+      "status": "pass",
+      "evidence": [
+        "Episode 12's private-authority receipt survives into episode 13 scene 1 as Park Seongho's black business card held in Siu's hand.",
+        "The same authority survives behaviorally in scene 2 to scene 4, where Park Seongho and the back office treat Siu as a rule-breaking exception rather than a normal client.",
+        "Arc 3's tactical contract preserves the downstream object family again at episode 13 end-state: the hotline business card, the live WTI position, and the Gangnam office base."
+      ],
+      "notes": [
+        "The receipt is portable across the arc boundary in object, behavior, and state-contract surfaces."
+      ]
+    },
+    "anti_contamination_gate": {
+      "rule": "Donor surfaces may remain only as example-family language. Direct donor scene-copy or law-copy fails the gate.",
+      "status": "pass",
+      "evidence": [
+        "The carryover beat is expressed through work-native Korean securities-firm hierarchy, back-office anxiety, and a self-built Gangnam trading hideout.",
+        "No donor-copy repair signal appears. The only runtime repair is opening-transition alias normalization."
+      ],
+      "notes": []
+    },
+    "lawful_bridge_gate": {
+      "rule": "The tranche must open a lawful next gate without replay drift, setup-only delay, or future-beat consumption.",
+      "status": "pass",
+      "evidence": [
+        "Episode 13 realizes Arc 3's opening contract exactly: long-hold pressure, VIP-room fatigue, and migration to an independent operating base.",
+        "It does not prematurely consume episode 16's Ecuador shock or later payoff beats."
+      ],
+      "notes": []
+    }
+  },
+  "weighted_metrics": {
+    "loop_deadline_hit": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "Arc 3's opening slot is satisfied on episode 13 itself: hold-pressure, PB deference, and the Gangnam base shift all land where the tactical doc expects them."
+      ],
+      "notes": []
+    },
+    "structural_receipt_conversion": {
+      "weight": 20,
+      "status": "pass",
+      "score": 18,
+      "evidence": [
+        "The authority object from episode 12 is not dropped. It becomes part of a wider operating regime: protected information lane, obedient PB behavior, and independent base migration.",
+        "The tranche turns private authority into durable operating freedom rather than letting it collapse into atmosphere."
+      ],
+      "notes": [
+        "Two points are held back because this episode is more about transport and consolidation than about minting a brand-new receipt family."
+      ]
+    },
+    "receipt_transport_survival": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "Episode 12's hotline-card authority survives immediately into episode 13's opening image, PB posture, and end-state contract."
+      ],
+      "notes": []
+    },
+    "carryover_persistence": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "na_allowed": true,
+      "evidence": [
+        "Filled-position state, authority receipt, and new-base migration all persist together across the Arc 2 to Arc 3 boundary."
+      ],
+      "notes": [
+        "This is the cleanest arc-boundary persistence proof in the current bounded chain."
+      ]
+    },
+    "legal_bridge_efficiency": {
+      "weight": 15,
+      "status": "pass",
+      "score": 14,
+      "evidence": [
+        "The runtime reaches a final PASS on the first attempt with no retry loop, and the only binding issue is prevalidation alias normalization for opening_transition.type."
+      ],
+      "notes": [
+        "One point is held back because the tranche needed a narrow alias repair before finalization."
+      ]
+    },
+    "anti_contamination_pass": {
+      "weight": 10,
+      "status": "pass",
+      "score": 9,
+      "evidence": [
+        "The episode remains work-native in surface language: VIP room pressure, risk-team anxiety, and a cramped Gangnam office as the hero's independent fortress."
+      ],
+      "notes": []
+    },
+    "reward_rotation_health": {
+      "weight": 10,
+      "status": "pass",
+      "score": 10,
+      "evidence": [
+        "Reward rotates in a healthy way again: direct hotline authority becomes independent operating space and psychological insulation during a pressure tranche."
+      ],
+      "notes": []
+    }
+  },
+  "watchlists": {
+    "anti_fatigue_risk": {
+      "status": "clear",
+      "red_flags": [
+        "same_receipt_family_repeats_across_two_or_more_tranches",
+        "proof_grows_without_observer_shift",
+        "next_gate_surface_collapses_to_one_hook_class",
+        "earned_access_is_replaced_by_gifted_access"
+      ],
+      "notes": [
+        "The reward medium changes from hotline authority to hardened independent base-state, so fatigue risk remains low."
+      ]
+    },
+    "saturation_trigger": {
+      "status": "clear",
+      "red_flags": [
+        "authority_gain_rises_while_constraints_flatten",
+        "reward_size_rises_while_reader_payoff_stays_flat",
+        "signboard_and_next_gate_collapse_into_one_repeated_device"
+      ],
+      "notes": [
+        "No saturation trigger is visible because the tranche adds friction and isolation instead of simple status inflation."
+      ]
+    }
+  },
+  "interpretation_bands": [
+    {
+      "band": "gate_fail",
+      "meaning": "Execution hold regardless of numeric score."
+    },
+    {
+      "band": "85-100",
+      "meaning": "Strong pass. Bounded realization candidate."
+    },
+    {
+      "band": "70-84",
+      "meaning": "Pass with repair. Apply one targeted fix and rerun."
+    },
+    {
+      "band": "55-69",
+      "meaning": "Weak pass. Doctrine promotion remains on hold."
+    },
+    {
+      "band": "<55",
+      "meaning": "Fail. Recheck tranche design or doctrine interpretation."
+    }
+  ],
+  "operator_fields": {
+    "target_project": "probe_a_stage3_ep13carry_r1",
+    "target_tranche": "Stage3 ep13 cross-arc carryover proof",
+    "target_stage": 3,
+    "gate_result": "all_loop_gates_pass",
+    "weighted_total": 96,
+    "weighted_total_after_na_adjustment": 96,
+    "operator_summary": "Episode 13 proves that Arc 2's authority receipt survives the boundary as a physical hotline object, continued institutional deference, and a lawful migration into the Gangnam one-room operating base. This is a clean cross-arc carryover pass, not a recap-only opener.",
+    "next_action": "Treat Arc 3 opening carryover as proved. The next useful proof target is ep14 hold-pressure survival, where risk-team pressure and unwavering conviction must persist without flattening the new-base lane."
+  }
+}

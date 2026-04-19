@@ -22,15 +22,15 @@ def test_arc_critic_source_has_int_coercion_for_scores():
 
 def test_arc_critic_source_has_no_legacy_constraint_head_cut():
     src = _read("modules/domain/agents/arc_critic.py")
-    assert 'constraints[:9000]' not in src
+    assert "constraints[:9000]" not in src
 
 
 def test_director_auditor_source_has_safe_int_scoring_path():
     src = _read("modules/domain/agents/director_auditor.py")
     assert "def _safe_int_score(value, default=50):" in src
-    assert 'first_score = _safe_int_score(first_eval.get("score", 50), 50)' in src
-    assert 'scores.append(_safe_int_score(e.get("score", 50), 50))' in src
-    assert 'abs(_safe_int_score(e.get("score", 50), 50) - median_score)' in src
+    assert 'first_score = self._safe_int_score(first_eval.get("score", 50), 50)' in src
+    assert 'scores.append(self._safe_int_score(e.get("score", 50), 50))' in src
+    assert 'abs(self._safe_int_score(e.get("score", 50), 50) - median_score)' in src
 
 
 def test_multi_agent_deliberation_source_has_int_coercion():
@@ -66,8 +66,8 @@ def test_constraint_db_source_has_arc_no_parse_guard():
 def test_stage_orchestrators_source_have_score_int_coercion():
     s2 = _read("modules/core/stage2_orchestrator.py")
     s4 = _read("modules/core/stage4_interview_round.py")
-    assert '_rej_score = int(_fin.get("score", 0))' in s2
-    assert '_prev_score = int(previous_attempt.get("score", 0)) if previous_attempt else 0' in s4
+    assert 'rejected_score = int(fin.get("score", 0))' in s2
+    assert 'final_score = int(director_result.get("score", score))' in s4
 
 
 def test_quality_dashboard_source_has_score_int_coercion():

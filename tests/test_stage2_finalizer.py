@@ -13,19 +13,20 @@ import pytest
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.core.stage2_context import Stage2Context
 from modules.core.cross_stage_authority_packet import (
     CROSS_STAGE_AUTHORITY_PACKET_VERSION,
     build_cross_stage_authority_packet,
 )
+from modules.core.stage2_context import Stage2Context
 from modules.core.stage2_finalizer import (
     Stage2Finalizer,
     _build_stage2_carryover_authority_summary,
     _compute_inventory_carryover,
     _promote_last_tactical_end_state_to_structured_state,
     _sync_first_episode_start_state_line,
-    _sync_stage2_end_state_inventory_contract,
+    _sync_last_tactical_end_state_block,
     _sync_stage2_end_location_contract,
+    _sync_stage2_end_state_inventory_contract,
 )
 
 
@@ -298,6 +299,31 @@ def test_promote_last_tactical_end_state_to_structured_state_does_not_override_n
     assert end_state["total_assets"] == "19억 원"
 
 
+def test_promote_last_tactical_end_state_to_structured_state_rehydrates_inventory_from_tactical_when_structured_empty():
+    refined_arc = {
+        "tactical_doc": (
+            "제 17화:\n"
+            "[시작 상태] 위치: SW인베스트먼트 대표실 | 심리: 냉철한 이익 실현 | 부상: 없음 | 소지품: []\n"
+            "시우는 창가에 선 채 총자산 30억 원을 다시 확인했다.\n"
+            "[종료 상태] 위치: 서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가 | 심리: 다음 사냥을 향한 거대한 야망 | "
+            "부상: 없음 | 소지품: 양장 수첩, 법인 등록증, OTP 카드\n"
+        ),
+        "state_constraints": {
+            "arc_end_state": {
+                "location": "서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가",
+                "equipment": [],
+                "total_assets": "30억 원",
+            }
+        },
+    }
+
+    promoted = _promote_last_tactical_end_state_to_structured_state(refined_arc)
+
+    assert promoted == ["state_constraints.arc_end_state.equipment"]
+    end_state = refined_arc["state_constraints"]["arc_end_state"]
+    assert end_state["equipment"] == ["양장 수첩", "법인 등록증", "OTP 카드"]
+
+
 def test_sync_stage2_end_inventory_contract_preserves_authoritative_empty_clear_against_prev_arc():
     refined_arc = {
         "joint_docs": {"physical_inventory": ["Ghost token"]},
@@ -316,6 +342,61 @@ def test_sync_stage2_end_inventory_contract_preserves_authoritative_empty_clear_
     assert end_changed is False
     assert refined_arc["joint_docs"]["physical_inventory"] == []
     assert refined_arc["state_constraints"]["arc_end_state"]["equipment"] == []
+
+
+def test_sync_stage2_end_inventory_contract_prunes_semantically_consumed_transient_receipt_from_declared_end_inventory():
+    refined_arc = {
+        "joint_docs": {"physical_inventory": ["WTI 6월물 3배 레버리지 매수 체결 내역서", "양장 수첩"]},
+        "status_shadow": {"item_consumption": ["WTI 원유 6월물 3배 레버리지 매수 체결 내역서 (전량 청산 및 파기)"]},
+        "state_constraints": {
+            "arc_end_state": {"equipment": ["WTI 6월물 3배 레버리지 매수 체결 내역서", "양장 수첩"]},
+            "items_acquired": [],
+        },
+    }
+    prev_arc = {"joint_docs": {"physical_inventory": ["양장 수첩"]}}
+
+    canonical_inventory, joint_changed, end_changed = _sync_stage2_end_state_inventory_contract(refined_arc, prev_arc)
+
+    assert canonical_inventory == ["양장 수첩"]
+    assert joint_changed is True
+    assert end_changed is True
+    assert refined_arc["joint_docs"]["physical_inventory"] == ["양장 수첩"]
+    assert refined_arc["state_constraints"]["arc_end_state"]["equipment"] == ["양장 수첩"]
+
+
+def test_sync_stage2_end_inventory_contract_prefers_current_numeric_snapshot_document_over_stale_variant():
+    refined_arc = {
+        "joint_docs": {
+            "physical_inventory": [
+                "17.5억 원의 현금 유동성이 찍힌 법인 계좌 잔고 증명서",
+                "잔고 50억 원이 찍힌 법인 계좌 원장",
+                "양장 수첩",
+            ]
+        },
+        "status_shadow": {"item_consumption": []},
+        "state_constraints": {
+            "arc_end_state": {
+                "equipment": [
+                    "17.5억 원의 현금 유동성이 찍힌 법인 계좌 잔고 증명서",
+                    "잔고 50억 원이 찍힌 법인 계좌 원장",
+                    "양장 수첩",
+                ]
+            },
+            "items_acquired": [],
+        },
+    }
+    prev_arc = {"joint_docs": {"physical_inventory": ["양장 수첩"]}}
+
+    canonical_inventory, joint_changed, end_changed = _sync_stage2_end_state_inventory_contract(refined_arc, prev_arc)
+
+    assert canonical_inventory == [
+        "잔고 50억 원이 찍힌 법인 계좌 원장",
+        "양장 수첩",
+    ]
+    assert joint_changed is True
+    assert end_changed is True
+    assert refined_arc["joint_docs"]["physical_inventory"] == canonical_inventory
+    assert refined_arc["state_constraints"]["arc_end_state"]["equipment"] == canonical_inventory
 
 
 @pytest.mark.parametrize("raw_equipment", ["", "[]", "null", "None", "nil", "n/a"])
@@ -1354,7 +1435,7 @@ class TestRunFinalize:
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
-    def test_finalize_preserves_authoritative_empty_end_inventory_against_tactical_end_state(
+    def test_finalize_promotes_tactical_end_inventory_over_placeholder_structured_empty(
         self,
         _validate,
         finalizer,
@@ -1388,9 +1469,15 @@ class TestRunFinalize:
         saved_arc = kwargs["all_refined_arcs"][0]
         end_state = saved_arc["state_constraints"]["arc_end_state"]
         assert saved_arc["joint_docs"]["final_location"] == "서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가"
-        assert saved_arc["joint_docs"]["physical_inventory"] == []
+        assert saved_arc["joint_docs"]["physical_inventory"] == [
+            "5억 원의 실현 수익이 찍힌 HTS 잔고 화면 출력물",
+            "절반 남은 WTI 원유 선물 계약서",
+        ]
         assert end_state["location"] == "서울 강남, SW인베스트먼트 소규모 원룸 오피스 창가"
-        assert end_state["equipment"] == []
+        assert end_state["equipment"] == [
+            "5억 원의 실현 수익이 찍힌 HTS 잔고 화면 출력물",
+            "절반 남은 WTI 원유 선물 계약서",
+        ]
         assert end_state["total_assets"] == "30억 원"
 
     def test_sync_stage2_end_location_contract_collapses_verbose_scene_label(self):
@@ -1970,3 +2057,67 @@ def test_sync_first_episode_start_state_line_rewrites_stale_equipment_and_insert
     assert "총자산: 30억원" in synced
     assert "자본: 17.5억원" in synced
     assert "포지션: WTI 12.5억원 롱" in synced
+
+
+def test_sync_last_tactical_end_state_block_rewrites_stale_fields_and_appends_missing_equipment():
+    tactical_doc = (
+        "제40화 균열과 정적\n"
+        '[시작 상태] 위치: 택셀, 소지품: ["검"], 부상: 없음\n'
+        "본문\n"
+        "[종료 상태]\n"
+        "- 위치: 여의도 임시 사무실\n"
+        "- 총자산: 23억원\n"
+    )
+
+    synced = _sync_last_tactical_end_state_block(
+        tactical_doc,
+        {
+            "location": "강남 오피스",
+            "equipment": ["법인 인감", "OTP 카드"],
+            "total_assets": "30억원",
+            "capital": "17.5억원",
+        },
+        {"final_location": "강남 오피스", "physical_inventory": ["법인 인감", "OTP 카드"]},
+    )
+
+    assert "- 위치: 강남 오피스" in synced
+    assert '- 소지품: ["법인 인감", "OTP 카드"]' in synced
+    assert "- 총자산: 30억원" in synced
+    assert "- 자본: 17.5억원" in synced
+
+
+@patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+@patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+def test_finalize_syncs_last_episode_end_state_block_from_structured_authority(
+    _validate,
+    finalizer,
+    valid_refined_arc,
+):
+    refined_arc = deepcopy(valid_refined_arc)
+    refined_arc["tactical_doc"] = (
+        "제17화\n"
+        "[시작 상태] 위치: SW인베스트먼트 임시 사무실 | 심리: 추적 지속 | 부상: 없음 | 소지품: []\n"
+        "본문\n"
+        "[종료 상태]\n"
+        "- 위치: 여의도 임시 사무실\n"
+        "- 총자산: 23억원\n"
+    )
+    refined_arc["joint_docs"]["final_location"] = "강남 오피스"
+    refined_arc["joint_docs"]["physical_inventory"] = ["법인 인감", "OTP 카드"]
+    refined_arc["state_constraints"] = {
+        "arc_end_state": {
+            "location": "강남 오피스",
+            "equipment": ["법인 인감", "OTP 카드"],
+            "total_assets": "30억원",
+        },
+        "items_acquired": [],
+    }
+
+    kwargs = _make_finalize_kwargs(refined_arc)
+    result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+    assert result["action"] == "break"
+    saved_arc = kwargs["all_refined_arcs"][0]
+    assert "- 위치: 강남 오피스" in saved_arc["tactical_doc"]
+    assert '- 소지품: ["법인 인감", "OTP 카드"]' in saved_arc["tactical_doc"]
+    assert "- 총자산: 30억원" in saved_arc["tactical_doc"]

@@ -125,6 +125,7 @@ class TestSelfCheckPrompt:
         assert "내공" not in prompt
         assert "부상" not in prompt or "부상/자원 손실" in prompt
         # 범용 표현 확인
+        assert "protagonist_items" in prompt
         assert "items_acquired" in prompt
         assert "arc_start_state.location" in prompt
 

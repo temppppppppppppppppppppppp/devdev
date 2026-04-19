@@ -1,0 +1,251 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "5f9280b855b581427a469137c8d538d408cf2dccde3b70b1fca945e484b7d956"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=한미증권, 장비만을 챙겨 조용히 VIP룸, 65달러",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1059,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 24150,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 975850,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 18375,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 5245,
+          "lane": "constraints"
+        },
+        {
+          "chars": 290,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 230,
+        "constraints": 5245,
+        "feedback_context": 290,
+        "hud_context": 10,
+        "prev_info": 18375
+      },
+      "shared_context_chars": 23860,
+      "total_chars": 24150
+    },
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 1
+  },
+  "_inventory_gaps": [
+    {
+      "item": "가죽 수첩",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "만년필",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "폴더폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "OTP 카드",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "WTI 6월물 3배 레버리지 매수 체결 내역서",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "개인 노트북",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 94,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false
+  },
+  "core_tension": "유가 횡보장을 견디는 한시우와 그를 압박하는 주변인들의 심리적 대립",
+  "end_location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+  "ending_hook": "텅 빈 오피스, 미동 없는 차트. 한시우는 만족스러운 미소와 함께 중얼거렸다. \"이제 무대는 완벽해졌군.\"",
+  "ending_state": {
+    "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+    "protagonist_status": "외부의 감시에서 완전히 벗어난 독립 거점에서 다음 시장 변동을 기다리는 상태",
+    "timeline": {
+      "표현": "2006년 4월 중순 저녁"
+    }
+  },
+  "ep_num": 13,
+  "episode_number": 13,
+  "expected_ending": "가족과 증권사의 감시에서 벗어난 새로운 독립 거점을 확보하고 다음 움직임을 준비한다.",
+  "integrated_scenario": "2006년 4월 중순. 6주라는 시간은 강철 같은 신경을 가진 트레이더도 말려 죽이기에 충분한 시간이었다. WTI 6월물 가격은 65달러 언저리에서 미동도 하지 않았다. 한미증권 VIP 프라이빗 룸의 공기는 답답하게 정체되어 있었다. 박성호 PB는 하루가 다르게 야위어 갔다. 그는 오늘도 어김없이 찾아와 거의 애원하듯 말했다. \"고객님, 이 정도면 충분합니다. 2억이 넘는 수익입니다. 일단 현금화하고 다시 기회를...\" 하지만 한시우는 신문에서 눈길조차 주지 않았다. \"아직 때가 아닙니다, 이사님.\" 그 한마디에 박성호는 모든 말을 삼킨 채 물러나야 했다. VIP룸 문이 닫히고, 박성호는 복도 벽에 기대 거친 숨을 몰아쉬었다. 그는 떨리는 손으로 상사에게 전화를 걸었다. \"팀장님... 그분은... 시장이 아니라 시간을 보고 있는 것 같습니다. 마치 정해진 그날이 오기만을 기다리는 사람처럼요.\" 수화기 너머에서는 침묵만이 흘렀다. 한시우는 이제 한미증권 내에서 공포와 경외가 뒤섞인 존재가 되어 있었다. 한편 룸 안에 홀로 남은 한시우는 신문을 접었다. 박성호의 잦은 방문은 더 이상 조언이 아닌, 감시의 연장선이었다. 증권사라는 시스템 안에 있는 한, 완벽한 독립은 불가능했다. 한시우는 즉시 폴더폰을 열어 부동산 중개인에게 전화를 걸었다. \"강남 역세권, 보안 좋은 소형 오피스. 오늘 바로 입주 가능한 곳으로.\" 몇 번의 짧은 통화와 거액의 즉시 이체로 모든 계약은 한 시간 만에 끝났다. 한시우는 자신의 가죽 수첩과 개인 장비만을 챙겨 조용히 VIP룸을 나섰다. 아무런 미련도, 인사도 없었다. 몇 시간 후, 한시우는 강남의 텅 빈 원룸 오피스 한가운데에 서 있었다. 값비싼 가구와 카펫 대신, 차가운 시멘트 바닥과 휑한 공간이 그를 맞았다. 그는 직접 조립한 간이 책상 위에 노트북을 올려놓고 전원을 연결했다. 모니터에 떠오른 것은 지난 6주간 지겹도록 봐온 WTI 유가 차트였다. 여전히 죽은 듯 평온한 그래프. 그러나 한시우의 표정은 그 어느 때보다 편안해 보였다. 그는 미동 없는 차트를 향해 나지막이 속삭였다. 이제 누구의 방해도 없는, 오롯이 그 자신만의 요새였다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_area_shift"
+    ],
+    "type": "explicit_transition"
+  },
+  "pacing_notes": "초반부에는 6주간의 시간 경과와 횡보장에서 오는 심리적 압박을 박성호의 시점을 통해 간접적으로 묘사하며 긴장감을 쌓는다. 중반부에 한시우가 거점을 옮기기로 결심하고 실행하는 과정을 빠르고 단호하게 보여주어 그의 성격을 부각한다. 후반부는 새로운 거점에서 다시 전열을 가다듬는 모습을 통해 다음 사건에 대한 기대감을 고조시킨다.",
+  "protagonist_state": {
+    "equipment": [
+      "가죽 수첩",
+      "만년필",
+      "폴더폰",
+      "OTP 카드",
+      "WTI 6월물 3배 레버리지 매수 체결 내역서",
+      "개인 노트북"
+    ],
+    "injuries": "없음",
+    "mood": "완벽한 통제에서 오는 평온함과 다가올 폭풍에 대한 차가운 기대감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "경외와 불안",
+      "justification": "6주간의 횡보장 속에서도 전혀 흔들리지 않는 한시우의 모습을 보며, 인간의 범주를 벗어난 존재로 인식하기 시작한다.",
+      "target": "박성호",
+      "to_state": "이해를 포기한 절대적 공포"
+    },
+    {
+      "from_state": "예의주시 대상",
+      "justification": "비정상적인 포지션을 유지하는 한시우의 행동을 통제하려 했으나, 그의 확신과 막대한 수수료 앞에서 어떠한 조치도 취하지 못하고 관찰만 하게 된다.",
+      "target": "한미증권 리스크관리팀",
+      "to_state": "개입 불가능한 특수 관리 대상"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "박성호의 익절 권유를 거절하며, 횡보장 속에서도 포지션을 유지하겠다는 한시우의 절대적인 의지를 보여준다.",
+      "key_events": [
+        "박성호가 6주간의 횡보장으로 인한 리스크와 피로감을 호소하며 익절을 권유한다.",
+        "한시우는 '아직 때가 아니다'라며 박성호의 모든 제안을 일축한다.",
+        "박성호는 한시우의 평온함과 자신의 초조함을 비교하며 극심한 압박감과 경외감을 동시에 느낀다."
+      ],
+      "location": "한미증권 본점 VIP 전용 프라이빗 룸",
+      "summary": "유가 횡보가 6주째 이어지자 초조해진 박성호 PB가 VIP룸을 찾아와 익절을 간곡히 권유하지만, 한시우는 신문에서 눈도 떼지 않은 채 단호하게 거절하며 그를 돌려보낸다.",
+      "tension_level": 5,
+      "title": "6주간의 교착",
+      "type": "dialogue_duel"
+    },
+    "scene_2": {
+      "characters": [
+        "박성호",
+        "리스크관리팀장(목소리)"
+      ],
+      "content": "",
+      "goal": "한시우의 비정상적인 베팅과 평정심이 증권사 내부에서 어떤 파장을 일으키는지 보여준다.",
+      "key_events": [
+        "박성호가 복도에서 떨리는 손으로 팀장에게 전화를 걸어 상황을 보고한다.",
+        "한시우의 포지션이 단순한 투자가 아닌, 시장에 대한 선전포고처럼 느껴진다고 토로한다.",
+        "팀장은 한시우의 배경과 막대한 수수료를 언급하며 '좌불안석으로 지켜보는 것' 외에는 방법이 없다고 결론 내린다."
+      ],
+      "location": "한미증권 본점 VIP룸 앞 복도",
+      "summary": "VIP룸에서 쫓겨난 박성호가 팀장에게 한시우의 상태를 보고한다. '그는 시장을 비웃고 있다'는 박성호의 보고에 리스크관리팀은 SW인베스트먼트 계좌를 '특수 관리 대상'으로 지정하지만, 어떠한 개입도 하지 못한다.",
+      "tension_level": 6,
+      "title": "관찰자의 공포",
+      "type": "side_glimpse"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "가족과 증권사의 감시망에서 완전히 벗어날 독립적인 거점을 확보한다.",
+      "key_events": [
+        "한시우가 박성호의 존재 자체가 감시라는 사실을 깨닫고 새로운 거점의 필요성을 느낀다.",
+        "폴더폰을 이용해 부동산 중개인에게 연락, 단 몇 통의 통화만으로 강남 역세권의 원룸 오피스 임대 계약을 완료한다.",
+        "가죽 수첩과 개인 장비만을 챙긴 채, 아무에게도 알리지 않고 VIP룸을 빠져나온다."
+      ],
+      "location": "한미증권 본점 VIP 전용 프라이빗 룸 -> 서울 시내(이동 중)",
+      "summary": "박성호의 방문을 통해 증권사 VIP룸조차 완벽한 방화벽이 될 수 없음을 깨달은 한시우는, 즉시 강남의 소형 오피스를 원격으로 계약하고 모든 개인 장비를 챙겨 조용히 한미증권을 떠난다.",
+      "tension_level": 4,
+      "title": "레이더 밖으로",
+      "type": "resolution"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "독립된 공간에서 다시 전열을 가다듬고, 다가올 폭풍을 기다리는 긴장감을 조성한다.",
+      "key_events": [
+        "한시우가 텅 빈 오피스 한가운데에 간이 책상을 펴고 노트북을 설치한다.",
+        "모니터에 6주째 횡보 중인 WTI 유가 차트를 띄운다.",
+        "미동 없는 그래프를 보며 초조해하기는커녕, 오히려 모든 것이 계획대로라는 듯 만족스러운 표정을 짓는다."
+      ],
+      "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+      "summary": "강남의 텅 빈 오피스에 도착한 한시우가 최소한의 장비 세팅을 마친다. 여전히 미동도 없는 WTI 유가 차트를 응시하던 그의 입가에 옅은 미소가 떠오른다.",
+      "tension_level": 5,
+      "title": "새로운 요새",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "한미증권 본점 VIP 전용 프라이빗 룸",
+  "target_beat": "압박 속에서도 자신의 예측에 대한 절대적 신념을 잃지 않고, 오히려 감시망을 벗어나기 위해 더 완벽한 환경을 스스로 구축하는 한시우의 통제력을 보여주는 것.",
+  "time_flow": "2006년 4월 중순, 낮부터 저녁까지",
+  "title": "횡보장 속의 압박과 새로운 거점 확보"
+}

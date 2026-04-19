@@ -1,0 +1,233 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "eed484b761ed4bb3c2604f479cf27ae43bb24e49d8202a2130dee2fdcad79537"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1278,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 28671,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 971329,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 23339,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4796,
+          "lane": "constraints"
+        },
+        {
+          "chars": 290,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 236,
+        "constraints": 4796,
+        "feedback_context": 290,
+        "hud_context": 10,
+        "prev_info": 23339
+      },
+      "shared_context_chars": 28381,
+      "total_chars": 28671
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 5,
+    "strategy": "emotion_focused",
+    "total_candidates": 2
+  },
+  "_inventory_gaps": [
+    {
+      "item": "가죽 수첩",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "만년필",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "폴더폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "OTP 카드",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "WTI 6월물 절반 청산 및 잔여 홀딩 내역서",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "fix_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "시장의 광기 속에서 탐욕을 통제하고 기계적인 절반 익절을 실행하는 심리적 우위",
+  "end_location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+  "ending_hook": "절반의 화약이 터진 자리에, 더 거대한 뇌관이 고요히 타들어가고 있었다.",
+  "ending_state": {
+    "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+    "protagonist_status": "5억 원의 현금 수익을 확정하고, 남은 절반의 레버리지 포지션을 쥔 채 시장의 다음 움직임을 주시함",
+    "timeline": {
+      "표현": "2006년 4월 중순 새벽"
+    }
+  },
+  "ep_num": 16,
+  "episode_number": 16,
+  "expected_ending": "5억 원의 현금 수익을 확정하고 남은 절반의 포지션으로 다음 변동성을 기다림",
+  "integrated_scenario": "에콰도르 정부의 옥시덴탈 페트롤리엄 계약 강제 해지라는 짧은 속보가 블룸버그 단말기 하단을 스쳐 지나가는 순간, 6주간 짓눌려 있던 WTI 6월물 호가창이 발작적으로 진동하기 시작한다. 68달러 선에서 팽팽하게 맞서던 매도 벽이 순식간에 증발하고, 붉은색 매수 캔들이 화면을 뚫을 듯이 솟구친다. 한시우는 강남의 텅 빈 오피스에 홀로 앉아 그 거대한 광기의 시작을 서늘한 눈으로 지켜본다. 가죽 수첩에 적어둔 '에콰도르 쇼크'라는 단어 위에 만년필로 선명한 밑줄을 그으며, 그는 기억이 현실의 자본으로 환전되는 첫 순간을 맞이한다.\n\n시장의 패닉 바잉과 숏 커버링 물량이 뒤엉키며 유가는 단숨에 마의 장벽이던 75달러를 돌파한다. 글로벌 트레이더들의 비명과 환호가 교차하는 아비규환 속에서도 한시우의 오피스는 기괴할 정도로 고요하다. 미실현 수익금이 초 단위로 폭발적으로 늘어나지만, 그는 마우스에 손을 얹은 채 미동조차 하지 않는다. 그는 인간의 탐욕이 만들어내는 '공포의 정점'이자 매수세가 일시적으로 정체되는 그 찰나의 순간을 차갑게 기다린다.\n\n호가창의 가장 얇은 틈새, 매수 광기가 턱밑까지 차오른 최고점의 순간. 한시우는 마침내 책상 위의 OTP 카드를 집어 든다. 망설임 없는 손길로 비밀번호를 입력하고, 전체 3배 레버리지 롱 포지션의 정확히 '절반'을 매도하는 버튼을 누른다. 거대한 물량이 쏟아지며 순식간에 체결되고, 그의 계좌에는 5억 원이라는 막대한 현금 수익이 꽂힌다. 그것은 단순한 숫자 놀음이 아니라, 한시우 스스로가 시장의 변동성을 완벽하게 통제해 냈다는 물리적인 증명이다.\n\n같은 시각, 한미증권 본점 백오피스에서 뜬눈으로 모니터를 주시하던 박성호 PB는 HTS에 뜬 '절반 매도 체결' 알림을 보고 굳어버린다. 탐욕에 눈이 멀어 전량 홀딩하거나 공포에 질려 전량 매도하는 일반적인 투자자들과 달리, 가장 비싼 호가에 기계처럼 절반을 넘기고 리스크를 통제하는 한시우의 판단력에 그는 뼛속까지 전율한다. 박성호는 자신이 모시는 고객이 단순한 재벌가 막내가 아니라, 시장을 위에서 내려다보는 괴물임을 본능적으로 깨닫는다.\n\n다시 강남의 오피스. 한시우는 새롭게 출력된 'WTI 6월물 절반 청산 및 잔여 홀딩 내역서'를 가죽 수첩에 정갈하게 끼워 넣는다. 계좌에 찍힌 17억 5000만 원의 현금과 여전히 차트 위에서 붉은빛을 뿜어내는 나머지 절반의 포지션. 그는 식어버린 커피를 한 모금 마시며 의자 등받이에 몸을 기댄다. 절반의 이익을 확정 지은 자의 여유와, 아직 끝나지 않은 폭주를 기다리는 포식자의 서늘한 시선이 모니터의 푸른 불빛 속에 교차한다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "",
+  "protagonist_state": {
+    "equipment": [
+      "가죽 수첩",
+      "만년필",
+      "폴더폰",
+      "OTP 카드",
+      "WTI 6월물 절반 청산 및 잔여 홀딩 내역서"
+    ],
+    "injuries": "없음",
+    "mood": "탐욕에 흔들리지 않는 완벽한 통제력과 5억 원의 수익을 확정한 서늘한 만족감"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "에콰도르 정부의 옥시덴탈 페트롤리엄 계약 강제 해지 속보가 뜨자마자, 68달러 선에서 짓눌려 있던 WTI 호가창이 발작을 일으킨다. 매도 벽이 순식간에 허물어지고 붉은 매수 기둥이 솟구치는 것을 보며, 한시우는 완벽히 통제된 상황에 대한 서늘한 만족감을 느낀다.",
+      "goal": "에콰도르 사태 속보에 따른 유가 폭등 시작 확인",
+      "key_events": [
+        "에콰도르 정부의 긴급 성명 속보가 블룸버그 단말기를 도배함",
+        "WTI 6월물 가격이 68달러에서 70달러를 단숨에 돌파하며 수직 상승함",
+        "한시우가 가죽 수첩의 '에콰도르 쇼크' 메모에 만년필로 밑줄을 그음"
+      ],
+      "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+      "summary": "뉴스 티커의 짧은 문장과 함께 멈춰 있던 WTI 호가창이 미친 듯이 솟구치기 시작한다.",
+      "tension_level": 5,
+      "title": "발작하는 호가창",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "글로벌 트레이더들의 숏 커버링 물량까지 쏟아지며 WTI 유가가 마의 장벽으로 불리던 75달러를 돌파한다. 오피스 안은 고요하지만 모니터 속 시장은 아비규환이다. 한시우는 흔들림 없는 눈빛으로 미실현 수익금이 폭발적으로 늘어나는 숫자를 응시하며, 감정에 휩쓸리지 않고 자신이 정한 '공포의 정점'을 계산한다.",
+      "goal": "시장의 광기가 정점에 달하는 순간을 냉철하게 대기",
+      "key_events": [
+        "유가 75달러 돌파와 함께 시장의 매수 광기가 극에 달함",
+        "수익금이 기하급수적으로 불어남에도 한시우는 마우스에서 손을 뗀 채 관망함",
+        "거래량이 일시적으로 정체되는 '광기의 정점' 시그널을 포착함"
+      ],
+      "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+      "summary": "유가가 75달러를 돌파하며 시장이 광기에 휩싸이지만, 한시우는 정확한 익절 타점을 기다린다.",
+      "tension_level": 6,
+      "title": "75달러의 벽",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "가장 호가가 얇아진 광기의 꼭대기에서, 한시우는 마침내 책상 위의 OTP 카드를 집어 든다. 망설임 없이 비밀번호를 입력하고 '전체 포지션의 50% 매도' 버튼을 누른다. 거대한 물량이 시장의 매수세를 잡아먹으며 체결되고, 계좌에 5억 원의 현금 수익이 완벽하게 확정되는 순간의 묵직한 감각을 음미한다.",
+      "goal": "전체 포지션의 절반을 매도하여 5억 원의 수익 확정",
+      "key_events": [
+        "OTP 카드를 조작하여 3배 레버리지 롱 포지션의 정확히 절반을 매도 주문함",
+        "주문이 즉각 체결되며 5억 원의 현금 수익이 계좌 잔고로 꽂힘",
+        "기존의 매수 체결 내역서 옆에 새로운 '절반 청산 및 잔여 홀딩 내역서'를 출력함"
+      ],
+      "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+      "summary": "한시우가 OTP 카드를 누르고 정확히 포지션의 절반을 매도해 5억 원을 현금화한다.",
+      "tension_level": 6,
+      "title": "완벽한 절반 익절",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "박성호"
+      ],
+      "content": "",
+      "description": "한미증권 본점 백오피스에서 뜬눈으로 밤을 새우던 박성호는 SW인베스트먼트 계좌에서 발생한 대규모 매도 주문을 확인한다. 전량 매도도, 홀딩도 아닌 '정확히 절반'을 가장 비싼 호가에 넘긴 그 서늘한 판단력에 박성호는 숨을 들이킨다. 그것은 운이 아니라 시장을 완전히 내려다보는 포식자의 통제력임을 뼈저리게 실감한다.",
+      "goal": "최고점에서 이루어진 기계적인 분할 매도에 대한 박성호의 경악",
+      "key_events": [
+        "박성호가 모니터에 뜬 75달러 최고점에서의 절반 매도 체결 알림을 확인함",
+        "탐욕에 먹히지 않고 이성을 유지한 한시우의 거래 방식에 극도의 경외감을 느낌",
+        "떨리는 손으로 넥타이를 고쳐 매며 이 거대한 흐름의 목격자가 되었음을 자각함"
+      ],
+      "location": "한미증권 본점 최상위 프라이빗 라운지 백오피스",
+      "summary": "HTS를 지켜보던 박성호가 최고점에서의 완벽한 절반 매도 타이밍을 목격하고 전율한다.",
+      "tension_level": 4,
+      "title": "관찰자의 전율",
+      "type": "side_glimpse"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "강남의 텅 빈 오피스. 한시우는 새롭게 갱신된 17억 5000만 원의 현금 잔고와 여전히 맹렬하게 타오르고 있는 WTI 잔여 홀딩 내역서를 번갈아 바라본다. 18년의 기억이 현실의 거대한 자본으로 치환되는 감각을 느끼며, 그는 의자 깊숙이 몸을 기댄다. 아직 시장의 폭주가 끝나지 않았음을 아는 그의 시선이 차갑게 가라앉는다.",
+      "goal": "확정된 수익과 남은 절반의 포지션을 확인하며 다음을 기약함",
+      "key_events": [
+        "새롭게 출력된 절반 청산 내역서를 가죽 수첩 사이에 끼워 넣음",
+        "계좌의 현금 잔고와 미실현 상태로 남은 절반의 레버리지 포지션을 점검함",
+        "커피를 한 모금 마시며 여전히 흔들리는 호가창을 무심하고 차갑게 내려다봄"
+      ],
+      "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+      "summary": "5억 원의 현금을 확보한 한시우가 아직 차트에 남아있는 절반의 포지션을 응시한다.",
+      "tension_level": 5,
+      "title": "남겨진 뇌관",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+  "target_beat": "",
+  "time_flow": "2006년 4월 중순 자정 무렵",
+  "title": "에콰도르 쇼크와 완벽한 절반 익절"
+}

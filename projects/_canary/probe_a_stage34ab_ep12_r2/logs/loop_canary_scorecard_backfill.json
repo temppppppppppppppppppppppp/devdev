@@ -1,0 +1,207 @@
+{
+  "schema": "geuldobi.loop_canary_scorecard.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "backfilled",
+  "role": "Loop-oriented bounded canary gate surface for narrative doctrine evaluation.",
+  "document_ref": "docs/2026-04-18/golden-canary-deepclone-probe-a-loop-canary-scorecard.md",
+  "evaluation_unit": [
+    "stage3_bounded_episode_tranche"
+  ],
+  "required_inputs": [
+    "projects/_canary/probe_a_stage34ab_ep12_r2/logs/stage3_canary_summary.json",
+    "projects/_canary/probe_a_stage34ab_ep12_r2/plans/blueprints/blueprint_0001.txt",
+    "projects/_canary/probe_a_stage34ab_ep12_r2/plans/blueprints/blueprint_0002.txt",
+    "projects/_canary/probe_a_stage34ab_ep12_r2/logs/artifacts/stage3/ep_0002/attempt_02/final_blueprint__dialogue_focused.json",
+    "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+    "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
+    "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+  ],
+  "hard_gates": {
+    "episode_loop_contract_floor": {
+      "required_items": [
+        "pressure_visible",
+        "execution_visible",
+        "proof_visible",
+        "receipt_visible",
+        "observer_shift_visible",
+        "next_gate_visible"
+      ],
+      "minimum_hit_count": 4,
+      "forbidden_joint_miss": [
+        "receipt_visible",
+        "next_gate_visible"
+      ],
+      "status": "pass",
+      "evidence": [
+        "Episode 1 covers pressure, execution, and next-gate setup through regression shock, notebook writing, and PB call.",
+        "Episode 2 adds proof, procedural receipt locking, observer shift, and a lawful next gate through the PB-center confrontation."
+      ],
+      "notes": [
+        "The tranche clears the contract floor, but receipt is still procedural rather than fully crystallized."
+      ]
+    },
+    "receipt_transport_gate": {
+      "rule": "If a structural receipt appears in the tranche artifact, its trace must survive in at least two downstream surfaces.",
+      "status": "pass_with_warning",
+      "evidence": [
+        "Episode 2 final blueprint preserves the liquidity-lock through scene 3, scene 4, ending_hook, and ending_state.",
+        "Stage3 summary does not yet preserve receipt-specific language as a dedicated surface."
+      ],
+      "notes": [
+        "The tranche shows a procedural receipt lock, but not a fully matured multi-surface transport result yet."
+      ]
+    },
+    "anti_contamination_gate": {
+      "rule": "Donor surfaces may remain only as example-family language. Direct donor scene-copy or law-copy fails the gate.",
+      "status": "pass",
+      "evidence": [
+        "The output uses PB-center, sponsorship cancellation, and seed-money logic inside this work's own finance-family setup.",
+        "No direct donor plot incident or donor-specific gimmick is copied scene-by-scene."
+      ],
+      "notes": [
+        "Seed example family flavor remains strong, so this is a bounded pass rather than a purity pass."
+      ]
+    },
+    "lawful_bridge_gate": {
+      "rule": "The tranche must open a lawful next gate without replay drift, setup-only delay, or future-beat consumption.",
+      "status": "pass",
+      "evidence": [
+        "Episode 2 uses direct_continuation and ends on the next-morning deposit checkpoint instead of consuming later beats.",
+        "No retry loop or replay drift appears inside the Probe A ep2 run itself."
+      ],
+      "notes": []
+    }
+  },
+  "weighted_metrics": {
+    "loop_deadline_hit": {
+      "weight": 15,
+      "status": "pass_with_repair",
+      "score": 10,
+      "evidence": [
+        "The tranche reaches first PB confrontation and liquidity lock by episode 2.",
+        "Full cash receipt is deferred to the next immediate beat, so the loop lands but not in its strongest form."
+      ],
+      "notes": []
+    },
+    "structural_receipt_conversion": {
+      "weight": 20,
+      "status": "pass_with_repair",
+      "score": 12,
+      "evidence": [
+        "Episode 2 converts authority conflict into signed liquidation procedure and a time-locked liquidity checkpoint.",
+        "The reward is more than admiration, but it has not yet matured into a durable structural receipt on the page."
+      ],
+      "notes": []
+    },
+    "receipt_transport_survival": {
+      "weight": 15,
+      "status": "pass_with_warning",
+      "score": 9,
+      "evidence": [
+        "Receipt logic survives inside the final blueprint artifact.",
+        "The summary surface does not yet carry receipt-specific truth forward."
+      ],
+      "notes": [
+        "This is the clearest weak spot in the current Stage3 baseline."
+      ]
+    },
+    "carryover_persistence": {
+      "weight": 15,
+      "status": "na",
+      "score": null,
+      "na_allowed": true,
+      "evidence": [
+        "This bounded run stops at episode 2, so no next-episode carryover opening is available."
+      ],
+      "notes": []
+    },
+    "legal_bridge_efficiency": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "Episode 1 to 2 transitions cleanly.",
+        "Episode 2 ends on a lawful bridge: next-morning deposit confirmation and PB silence constraint."
+      ],
+      "notes": []
+    },
+    "anti_contamination_pass": {
+      "weight": 10,
+      "status": "watch",
+      "score": 8,
+      "evidence": [
+        "PB/gatekeeper receipt family dominates the opening, but donor scene-copy is absent."
+      ],
+      "notes": []
+    },
+    "reward_rotation_health": {
+      "weight": 10,
+      "status": "pass_with_watch",
+      "score": 6,
+      "evidence": [
+        "The tranche rotates from memory weaponization to PB confrontation and liquidity lock."
+      ],
+      "notes": [
+        "Reward surface remains narrow because the run ends before a second receipt class fully opens."
+      ]
+    }
+  },
+  "watchlists": {
+    "anti_fatigue_risk": {
+      "status": "warning",
+      "red_flags": [
+        "same_receipt_family_repeats_across_two_or_more_tranches",
+        "proof_grows_without_observer_shift",
+        "next_gate_surface_collapses_to_one_hook_class",
+        "earned_access_is_replaced_by_gifted_access"
+      ],
+      "notes": [
+        "Opening is healthy, but PB/gatekeeper receipt family dominates and still needs the next tranche to prove rotation."
+      ]
+    },
+    "saturation_trigger": {
+      "status": "watch",
+      "red_flags": [
+        "authority_gain_rises_while_constraints_flatten",
+        "reward_size_rises_while_reader_payoff_stays_flat",
+        "signboard_and_next_gate_collapse_into_one_repeated_device"
+      ],
+      "notes": [
+        "No hard saturation yet, but the run is too short to clear this watchlist."
+      ]
+    }
+  },
+  "interpretation_bands": [
+    {
+      "band": "gate_fail",
+      "meaning": "Execution hold regardless of numeric score."
+    },
+    {
+      "band": "85-100",
+      "meaning": "Strong pass. Bounded realization candidate."
+    },
+    {
+      "band": "70-84",
+      "meaning": "Pass with repair. Apply one targeted fix and rerun."
+    },
+    {
+      "band": "55-69",
+      "meaning": "Weak pass. Doctrine promotion remains on hold."
+    },
+    {
+      "band": "<55",
+      "meaning": "Fail. Recheck tranche design or doctrine interpretation."
+    }
+  ],
+  "operator_fields": {
+    "target_project": "probe_a_stage34ab_ep12_r2",
+    "target_tranche": "Stage3 ep1-2 only",
+    "target_stage": 3,
+    "gate_result": "all_loop_gates_pass_with_platform_warning",
+    "weighted_total": 60,
+    "weighted_total_after_na_adjustment": 71,
+    "operator_summary": "Stage3 ep12 clears the loop floor and bridge logic, but receipt conversion and transport remain procedural and summary-light. This is a pass-with-repair baseline, not a strong-pass baseline.",
+    "next_action": "Run ep3 or a dedicated seam audit next. The highest-value question is whether the procedural receipt from ep2 matures into a durable receipt and carryover opening."
+  }
+}

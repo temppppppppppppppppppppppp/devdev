@@ -1,0 +1,4 @@
+{"timestamp": "2026-04-17 23:05:55", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 4}}
+{"timestamp": "2026-04-17 23:15:50", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 1건 제거: ['WTI 6월물 3배 레버리지 매수 체결 내역서']"]}}
+{"timestamp": "2026-04-17 23:17:06", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 23:17:37", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "target_arc_no": 4, "items_tracked": 7}}

@@ -2,8 +2,11 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import ANY, MagicMock
 
+import pytest
+
 from modules.core.constants import GenreTypes
 from modules.core.prompt_loader import PromptLoader
+from modules.core.response_schemas import BLUEPRINT_SCHEMA
 from modules.domain.agents.base_agent import AgentErrorType
 from modules.domain.agents.blueprint_ensemble import BlueprintEnsembleGenerator
 
@@ -388,6 +391,54 @@ def test_request_blueprint_generation_rejects_missing_required_fields():
     )
 
     assert result == (None, AgentErrorType.SCHEMA_INCOMPATIBLE)
+
+
+def test_request_blueprint_generation_retries_without_schema_on_numeric_overflow():
+    agent = _make_agent()
+    agent._ask_with_cached_context = MagicMock(
+        side_effect=[
+            RuntimeError("Exceeds the limit (4300 digits) for integer string conversion: value has 4853 digits"),
+            "{}",
+        ]
+    )
+    agent._extract_json_robust = MagicMock(
+        return_value={
+            "scene_breakdown": {
+                "scene_1": {"summary": "주인공이 회의실 문을 연다.", "key_events": ["회의실 문을 연다."]},
+                "scene_2": {"summary": "PB가 압박 전화를 건다.", "key_events": ["PB가 압박 전화를 건다."]},
+            },
+            "integrated_scenario": "주인공이 회의실 문을 열고 PB의 압박 전화를 받는다. " * 40,
+            "opening_transition": {"type": "direct_continuation"},
+            "protagonist_state": {"mood": "냉정"},
+        }
+    )
+
+    result = agent._request_blueprint_generation(
+        cache_name="cache/bp",
+        prompt="PROMPT",
+        full_prompt_fallback="FALLBACK",
+        strategy_name="action_focused",
+        genre=GenreTypes.WUXIA,
+    )
+
+    assert isinstance(result, dict)
+    assert agent._ask_with_cached_context.call_count == 2
+    assert agent._ask_with_cached_context.call_args_list[0].kwargs["response_schema"] == BLUEPRINT_SCHEMA
+    assert agent._ask_with_cached_context.call_args_list[1].kwargs["response_schema"] is None
+
+
+def test_request_blueprint_generation_reraises_non_numeric_schema_error():
+    agent = _make_agent()
+    agent._ask_with_cached_context = MagicMock(side_effect=RuntimeError("cached boom"))
+
+    with pytest.raises(RuntimeError, match="cached boom"):
+        agent._request_blueprint_generation(
+            cache_name="cache/bp",
+            prompt="PROMPT",
+            full_prompt_fallback="FALLBACK",
+            strategy_name="action_focused",
+            genre=GenreTypes.WUXIA,
+        )
 
 
 def test_sanitize_blueprint_candidate_normalizes_declared_opening_transition_alias():
@@ -843,6 +894,18 @@ def test_format_constraints_surfaces_episode_progression_guardrails_for_producer
                         "type": "tension_build",
                     }
                 ],
+                "next_gate_strength_mode": {
+                    "mode": "foreshadow_only",
+                    "introduced_target_families": ["gold"],
+                    "reserved_target_families": ["oil"],
+                    "reason": "금 handoff는 foreshadow 수준으로만 남기고 유가 압박을 먼저 마감한다.",
+                },
+                "lawful_repetition_window": {
+                    "mode": "allow_escalated_repeat",
+                    "allow_same_location_if_goal_changes": True,
+                    "allow_same_counterparty_if_goal_changes": True,
+                    "allow_same_channel_if_decision_escalates": True,
+                },
                 "surface_guidance": [
                     "시작 anchor 계승은 짧게 처리하고 이번 화의 주 장면은 직전 대치의 결과 이후 단계로 이동하라.",
                     "직전 화와 같은 2인 대치를 주 장면으로 반복하지 말고 보조 인물이나 기관 결정 라인을 열어라.",
@@ -862,6 +925,8 @@ def test_format_constraints_surfaces_episode_progression_guardrails_for_producer
     assert "MUST_FOCUS의 새 사건 축으로 전진" in formatted
     assert "같은 축 반복 방지용 진행 surface 가이드" in formatted
     assert "기관 결정 라인" in formatted
+    assert "새 타깃 handoff는 foreshadow 수준으로만 남기고" in formatted
+    assert "lawful repetition으로 전진 가능" in formatted
     assert "다음 화 reserved beat 선소비 금지" in formatted
     assert "카페로 이동해 차트를 모니터링" in formatted
 
@@ -971,6 +1036,29 @@ class TestBlueprintTemporalCarryover:
         result = agent._format_prev_info_expanded(prev_bp, None, "")
 
         assert "원고 기준" not in result
+
+    def test_format_prev_info_expanded_demotes_stale_prev_time_when_opening_truth_conflicts(self):
+        agent = _make_agent()
+        prev_bp = {
+            "time_flow": "2006년 4월 중순 자정 무렵",
+            "ending_state": {
+                "timeline": {"표현": "2006년 4월 중순 새벽"},
+                "protagonist_status": "5억 원의 현금 수익을 확정하고 다음 움직임을 주시함",
+            },
+        }
+
+        result = agent._format_prev_info_expanded(
+            prev_bp,
+            None,
+            "",
+            authoritative_time_context="2006년 5월",
+        )
+
+        assert "현재 화 opening time truth: 2006년 5월" in result
+        assert "direct-prev 권위에서 제외" in result
+        assert "시간 흐름: 2006년 4월 중순 자정 무렵" not in result
+        assert "종료 시점: 표현:2006년 4월 중순 새벽" not in result
+        assert "주인공 상태: 5억 원의 현금 수익을 확정하고 다음 움직임을 주시함" in result
 
     def test_format_prev_info_expanded_replaces_raw_scenario_with_structured_carryover(self):
         agent = _make_agent()
@@ -1193,3 +1281,114 @@ def test_tranche1_normalize_opening_transition_returns_inferred_when_continuity_
         "explicit_transition",
         "jump_opening",
     }
+
+
+def test_tranche1_normalize_opening_transition_reconciles_declared_canonical_mismatch():
+    candidate = {
+        "start_location": "한미증권 본사",
+        "time_flow": "오전",
+        "opening_transition": {"type": "explicit_transition"},
+        "scene_breakdown": {
+            "scene_1": {
+                "location": "한미증권 본사",
+                "summary": "회의가 곧장 이어진다",
+            }
+        },
+    }
+
+    route = BlueprintEnsembleGenerator._normalize_opening_transition_contract(
+        candidate,
+        prev_blueprint={"end_location": "한미증권 본사", "time_flow": "오전"},
+    )
+
+    assert route == "inferred"
+    assert candidate["opening_transition"]["type"] == "direct_continuation"
+
+
+def test_tranche1_normalize_direct_continuation_time_flow_inherits_prev_ending_timeline():
+    candidate = {
+        "start_location": "SW인베스트먼트 신규 원룸 오피스",
+        "scene_breakdown": {
+            "scene_1": {
+                "location": "SW인베스트먼트 신규 원룸 오피스",
+                "summary": "오피스에서 장세를 주시한다.",
+                "key_events": ["호가창을 본다."],
+            }
+        },
+        "opening_transition": {"type": "direct_continuation"},
+    }
+
+    inherited = BlueprintEnsembleGenerator._normalize_direct_continuation_time_flow(
+        candidate,
+        prev_blueprint={
+            "time_flow": "2006년 4월 중순 늦은 밤 -> 자정 무렵",
+            "ending_state": {"timeline": {"표현": "2006년 4월 중순 자정 무렵"}},
+        },
+    )
+
+    assert inherited == "2006년 4월 중순 자정 무렵"
+    assert candidate["time_flow"] == "2006년 4월 중순 자정 무렵"
+
+
+def test_tranche1_normalize_direct_continuation_time_flow_skips_non_direct_transition():
+    candidate = {
+        "start_location": "SW인베스트먼트 신규 원룸 오피스",
+        "opening_transition": {"type": "jump_opening"},
+    }
+
+    inherited = BlueprintEnsembleGenerator._normalize_direct_continuation_time_flow(
+        candidate,
+        prev_blueprint={
+            "time_flow": "2006년 4월 중순 늦은 밤 -> 자정 무렵",
+            "ending_state": {"timeline": {"표현": "2006년 4월 중순 자정 무렵"}},
+        },
+    )
+
+    assert inherited == ""
+    assert "time_flow" not in candidate
+
+
+def test_tranche1_normalize_direct_continuation_time_flow_prefers_constraint_time_truth():
+    candidate = {
+        "start_location": "SW인베스트먼트 신규 원룸 오피스",
+        "opening_transition": {"type": "direct_continuation"},
+    }
+
+    inherited = BlueprintEnsembleGenerator._normalize_direct_continuation_time_flow(
+        candidate,
+        prev_blueprint={
+            "time_flow": "2006년 4월 중순 늦은 밤 -> 자정 무렵",
+            "ending_state": {"timeline": {"표현": "2006년 4월 중순 자정 무렵"}},
+        },
+        constraint_block={
+            "episode_progression_packet": {
+                "time_truths": ["현재 Arc 시간축은 2006년 5월(봄 축)이다."],
+            }
+        },
+    )
+
+    assert inherited == "2006년 5월"
+    assert candidate["time_flow"] == "2006년 5월"
+
+
+def test_tranche1_normalize_direct_continuation_time_flow_accepts_month_only_constraint_truth():
+    candidate = {
+        "start_location": "SW인베스트먼트 신규 원룸 오피스",
+        "opening_transition": {"type": "direct_continuation"},
+    }
+
+    inherited = BlueprintEnsembleGenerator._normalize_direct_continuation_time_flow(
+        candidate,
+        prev_blueprint={
+            "time_flow": "2006년 4월 중순 늦은 밤 -> 자정 무렵",
+            "ending_state": {"timeline": {"표현": "2006년 4월 중순 자정 무렵"}},
+        },
+        constraint_block={
+            "episode_progression_packet": {
+                "time_truths": ["현재 Arc 시간축은 5월(봄 축)이다."],
+            }
+        },
+    )
+
+    assert inherited == "5월"
+    assert candidate["time_flow"] == "5월"

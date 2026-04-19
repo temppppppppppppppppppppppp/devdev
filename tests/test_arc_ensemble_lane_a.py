@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from modules.domain.agents.arc_ensemble import ArcEnsembleGenerator
+from modules.domain.agents.arc_ensemble import _WUXIA_ENERGY_BLOCK, ArcEnsembleGenerator, _build_non_wuxia_energy_block
 
 
 def _make_context():
@@ -44,6 +44,15 @@ def _base_candidate(**overrides) -> dict:
     }
     candidate.update(overrides)
     return candidate
+
+
+def test_energy_blocks_require_full_end_inventory_and_delta_split():
+    assert "종료 상태: 위치, 내공%, 부상, 소지품 (종료 시 전체 목록)" in _WUXIA_ENERGY_BLOCK
+    assert "protagonist_items/items_consumed" in _WUXIA_ENERGY_BLOCK
+
+    non_wuxia_block = _build_non_wuxia_energy_block("investment", ["capital"])
+    assert "부상, 소지품 (종료 시 전체 목록)" in non_wuxia_block
+    assert "protagonist_items/items_consumed" in non_wuxia_block
 
 
 def test_generate_ensemble_single_strategy_live_shell_routes_only_selected_strategy():

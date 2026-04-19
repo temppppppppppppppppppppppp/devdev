@@ -1,0 +1,27 @@
+{
+  "prepared_at": "2026-04-19T10:07:38",
+  "source_project": "_canary/probe_a_stage3_ep17schemafallback_r1",
+  "target_project": "_canary/probe_a_stage24_arc4_r1",
+  "canary_scope": "stage2_only",
+  "keep_arcs": 3,
+  "cleanup": {
+    "keep_arcs": 3,
+    "db_impact": {
+      "existing_arc_count": 3,
+      "kept_arc_count": 3,
+      "removed_arc_count": 0,
+      "stage2_attempts_removed": 0,
+      "stage2_director_selections_removed": 0,
+      "cost_log_rows_removed": 0,
+      "ui_event_sessions_removed": 0,
+      "llm_calls_removed": 0,
+      "arc_payload_anchors_removed": 0,
+      "arc_summary_anchors_removed": 0
+    },
+    "file_cleanup": {
+      "arc_plan_files_removed": 0,
+      "stage2_artifact_dirs_removed": 0,
+      "log_entries_removed": 21
+    }
+  }
+}

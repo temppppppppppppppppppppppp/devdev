@@ -36,6 +36,7 @@ Scope: material-side stage progression only
 - read `20_pitch/cider-doctrine-v1.md` immediately after the README
 - read `20_pitch/material-benchmark-readiness-harness-v1.md` before calling any pitch selection-ready or `Phase0-ready`
 - read `20_pitch/pitch-philosophy.md` before touching synthesis or canon promotion
+- read `00_governance/donor-review-and-adoption-contract-v1.md` before calling a fresh candidate `Phase0-ready` or a touched pair `TR/BI-ready`
 - when building a fresh candidate from reusable material truth, start with `20_pitch/synthesis/README.md`
 - place the one-page operator handoff under `20_pitch/synthesis/` before promoting anything into canon
 - run `20_pitch/pitch-selection-checklist.md` before calling a synthesis selection-ready
@@ -62,6 +63,7 @@ Scope: material-side stage progression only
 - read `40_phase0_design/README.md`
 - prefer `treatments/phase0/{work_id}_phase0_design.json` when it exists
 - otherwise fall back to `treatments/preprocess/{work_id}/phase0_ready_snapshot.json`
+- keep donor decision visibility checked here before calling a work `TR-ready`
 - if the work follows the standard material-side path, check companion `work_guard` visibility here before entering `TR`
 - this companion check is advisory only and does not rewrite current stage detection
 
@@ -70,6 +72,7 @@ Scope: material-side stage progression only
 - read `50_tr/README.md`
 - use `treatments/NN_{work_id}_tr_block_070_draft.json` when the work is in the numbered live set
 - otherwise fall back to `treatments/{work_id}_tr_block_070_draft.json`
+- keep donor decision visibility checked before calling a pair `TR-ready` or `pair complete`
 - if a frozen work-specific guard exists, keep its library path visible during early `TR` drift checks
 
 ### F. BI
@@ -77,6 +80,7 @@ Scope: material-side stage progression only
 - read `60_bi/README.md`
 - use `bible/NN_bi_{work_id}.json` when the work is in the numbered live set
 - otherwise fall back to `bible/0_bi_{work_id}.json`
+- keep donor decision visibility checked before calling a pair `BI-ready`, promotion-target, or active baseline candidate
 
 ## 3. Boundary Rules
 

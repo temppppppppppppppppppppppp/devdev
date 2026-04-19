@@ -165,7 +165,13 @@ def _iter_temporal_deictic_truth_strings(*sources: object) -> list[str]:
         if isinstance(value, dict):
             for key, item in value.items():
                 key_text = str(key or "").strip().lower()
-                if key_text in {"integrated_scenario", "scene_breakdown", "ending_hook", "comparison_notes", "feedback"}:
+                if key_text in {
+                    "integrated_scenario",
+                    "scene_breakdown",
+                    "ending_hook",
+                    "comparison_notes",
+                    "feedback",
+                }:
                     continue
                 _walk(item, depth=depth + 1)
             return
@@ -1033,22 +1039,12 @@ class UnifiedBlueprintValidator:
             if regenerate_only_categories
             else ""
         )
-        if python_warnings:
-            ensemble_meta = blueprint.get("_ensemble_meta", {}) if isinstance(blueprint, dict) else {}
-            if not isinstance(ensemble_meta, dict):
-                ensemble_meta = {}
-            ensemble_meta["python_warnings"] = python_warnings
-            ensemble_meta["quality_risk"] = quality_risk
-            if advisory_fix_pack:
-                ensemble_meta["advisory_fix_pack"] = advisory_fix_pack
-            if isinstance(blueprint, dict):
-                blueprint["_ensemble_meta"] = ensemble_meta
-        elif advisory_fix_pack and isinstance(blueprint, dict):
-            ensemble_meta = blueprint.get("_ensemble_meta", {})
-            if not isinstance(ensemble_meta, dict):
-                ensemble_meta = {}
-            ensemble_meta["advisory_fix_pack"] = advisory_fix_pack
-            blueprint["_ensemble_meta"] = ensemble_meta
+        self._sync_prevalidation_ensemble_meta(
+            blueprint if isinstance(blueprint, dict) else None,
+            python_warnings=python_warnings,
+            advisory_fix_pack=advisory_fix_pack,
+            quality_risk=quality_risk,
+        )
 
         result = {
             "verdict": final_verdict,
@@ -1439,6 +1435,41 @@ class UnifiedBlueprintValidator:
             "critical_summary": "; ".join(critical_items) if critical_items else "",
         }
 
+    @staticmethod
+    def _sync_prevalidation_ensemble_meta(
+        blueprint: dict | None,
+        *,
+        python_warnings: list[dict],
+        advisory_fix_pack: dict,
+        quality_risk: bool,
+    ) -> None:
+        if not isinstance(blueprint, dict):
+            return
+
+        ensemble_meta = blueprint.get("_ensemble_meta", {})
+        if not isinstance(ensemble_meta, dict):
+            ensemble_meta = {}
+
+        if python_warnings:
+            ensemble_meta["python_warnings"] = python_warnings
+        else:
+            ensemble_meta.pop("python_warnings", None)
+
+        if advisory_fix_pack:
+            ensemble_meta["advisory_fix_pack"] = advisory_fix_pack
+        else:
+            ensemble_meta.pop("advisory_fix_pack", None)
+
+        if quality_risk:
+            ensemble_meta["quality_risk"] = True
+        else:
+            ensemble_meta.pop("quality_risk", None)
+
+        if ensemble_meta:
+            blueprint["_ensemble_meta"] = ensemble_meta
+        else:
+            blueprint.pop("_ensemble_meta", None)
+
     def _python_pre_validate(
         self,
         blueprint: dict,
@@ -1792,31 +1823,54 @@ class UnifiedBlueprintValidator:
                     _deployed_amounts.append(am.group(1).strip())
 
         if _deployed_amounts:
-            _avail_ctx_re = re.compile(r"(?:예치|보유|잔고|잔액|가용|여유|남은)")
             normalized_integrated = integrated.replace(",", "").replace(" ", "")
+            _avail_ctx_re = re.compile(
+                r"(?:"
+                r"예치|보유|잔고|잔액|가용(?:현금|자금)?|"
+                r"여유(?:현금|자금|잔고|돈)?|"
+                r"남은(?:현금|자금|잔고|돈)|"
+                r"현금(?:이|은|을|으로)?(?:계좌|잔고|수익)?|"
+                r"계좌(?:에|로)?(?:꽂|들어|입금|찍)"
+                r")"
+            )
+            _position_ctx_re = re.compile(r"(?:포지션|홀딩|잔여홀딩|잔여포지션|레버리지|계약|선물|롱|숏|증거금|미실현)")
             for amount in _deployed_amounts:
                 amount_norm = amount.replace(",", "").replace(" ", "")
-                # Use first 4+ significant digits for fuzzy matching
-                search_key = amount_norm[:6] if len(amount_norm) >= 6 else amount_norm
-                if search_key and search_key in normalized_integrated:
-                    # Check surrounding context for "available" language
-                    idx = normalized_integrated.find(search_key)
-                    ctx_start = max(0, idx - 40)
-                    ctx_end = min(len(normalized_integrated), idx + len(search_key) + 40)
-                    context_window = integrated[ctx_start:ctx_end] if ctx_end <= len(integrated) else ""
-                    if not context_window:
-                        context_window = normalized_integrated[ctx_start:ctx_end]
+                if not amount_norm:
+                    continue
+
+                search_from = 0
+                while True:
+                    idx = normalized_integrated.find(amount_norm, search_from)
+                    if idx < 0:
+                        break
+                    search_from = idx + len(amount_norm)
+
+                    ctx_start = max(0, idx - 28)
+                    ctx_end = min(len(normalized_integrated), idx + len(amount_norm) + 48)
+                    context_window = normalized_integrated[ctx_start:ctx_end]
+                    local_prefix = normalized_integrated[max(0, idx - 8) : idx]
+                    local_suffix = normalized_integrated[
+                        idx + len(amount_norm) : min(len(normalized_integrated), idx + len(amount_norm) + 20)
+                    ]
+
+                    # Remaining deployed positions such as "남은 7.5억 원의 레버리지 포지션" are not
+                    # phantom cash drift, even if a nearby clause also mentions separate realized cash.
+                    if _position_ctx_re.search(local_prefix) or _position_ctx_re.search(local_suffix):
+                        continue
                     if _avail_ctx_re.search(context_window):
                         issues.append(
                             {
                                 "severity": "MAJOR",
                                 "category": "phantom_capital",
                                 "issue": f"유령 자본: 투입 확정 '{amount}'이 가용/예치 상태로 재등장",
-                                "evidence": "capital packet에서 투입 확정, blueprint에서 예치/보유 맥락 감지",
+                                "evidence": "capital packet에서 투입 확정, blueprint에서 amount-bound 예치/보유 맥락 감지",
                                 "fix_hint": "이미 투입/체결된 자본은 가용 자본에서 제외",
                             }
                         )
                         break  # one phantom issue is enough signal
+                if any(issue.get("category") == "phantom_capital" for issue in issues):
+                    break
 
         return issues[:3]
 
@@ -1846,6 +1900,12 @@ class UnifiedBlueprintValidator:
             r"(?:증거금|투입|추가\s*증거금|예치|잔고|잔액|가용\s*현금|가용\s*자금|총자산|자산|유동성|자본|청산\s*대금)"
         )
         price_ctx_re = re.compile(r"(?:온스당|호가|가격|지표|금리|FOMC)")
+        price_prefix_re = re.compile(
+            r"(?:WTI|브렌트|유가(?:가)?|원유(?:가)?|금값(?:이)?|은값(?:이)?|배럴당|온스당|호가(?:창)?|선물가)\s*$"
+        )
+        price_suffix_re = re.compile(
+            r"^\s*(?:선|선을|선이|를\s*향해|를\s*돌파|를\s*뚫고|돌파하는|붕괴|돌파|급락|급등|하락|상승|수직\s*상승|향해)"
+        )
 
         authoritative_krw_fields: list[str] = []
         authoritative_usd_fields: list[str] = []
@@ -1880,9 +1940,15 @@ class UnifiedBlueprintValidator:
                 ctx_start = max(0, match.start() - 28)
                 ctx_end = min(len(text), match.end() + 56)
                 context_window = text[ctx_start:ctx_end]
+                local_prefix = text[max(0, match.start() - 12) : match.start()]
+                local_suffix = text[match.end() : min(len(text), match.end() + 12)]
                 if not capital_ctx_re.search(context_window):
                     continue
-                if price_ctx_re.search(context_window):
+                if (
+                    price_ctx_re.search(context_window)
+                    or price_prefix_re.search(local_prefix)
+                    or price_suffix_re.search(local_suffix)
+                ):
                     continue
                 authority = "; ".join(authoritative_krw_fields[:2])
                 return [
@@ -2220,6 +2286,14 @@ class UnifiedBlueprintValidator:
         raw_must_focus = constraint_block.get("must_focus", {})
         if isinstance(raw_must_focus, dict):
             must_focus = str(raw_must_focus.get("content", "") or "").strip()
+        lawful_window = progression_packet.get("lawful_repetition_window", {})
+        if not isinstance(lawful_window, dict):
+            lawful_window = {}
+        lawful_tokens = [
+            str(token or "").strip().casefold()
+            for token in lawful_window.get("escalation_tokens", []) or []
+            if str(token or "").strip()
+        ]
 
         def _normalize_location_variants(raw: object) -> set[str]:
             location = str(raw or "").strip()
@@ -2238,6 +2312,109 @@ class UnifiedBlueprintValidator:
             if not isinstance(raw, list):
                 return set()
             return {str(item or "").strip() for item in raw if str(item or "").strip()}
+
+        def _extract_target_families(raw: object) -> set[str]:
+            text = str(raw or "").casefold()
+            if not text:
+                return set()
+            families = {
+                "oil": ("wti", "유가", "원유", "오일", "브렌트", "텍사스산"),
+                "gold": ("금 가격", "금값", "금 시장", "금 선물", "골드", "gold"),
+                "equity": ("주식", "증시", "코스피", "코스닥", "나스닥", "종목"),
+                "fx": ("환율", "달러", "엔화", "외환", "환시장", "fx"),
+                "crypto": ("비트코인", "이더리움", "가상자산", "코인", "btc", "eth"),
+            }
+            return {family for family, tokens in families.items() if any(token in text for token in tokens)}
+
+        def _scene_goal_text(scene: dict) -> str:
+            if not isinstance(scene, dict):
+                return ""
+            key_events = scene.get("key_events", [])
+            event_text = ""
+            if isinstance(key_events, list):
+                event_text = " ".join(str(item or "").strip() for item in key_events if str(item or "").strip())
+            return " ".join(
+                part
+                for part in (
+                    str(scene.get("title", "") or "").strip(),
+                    str(scene.get("goal", "") or "").strip(),
+                    str(scene.get("summary", "") or "").strip(),
+                    event_text,
+                    str(scene.get("type", "") or "").strip(),
+                )
+                if part
+            ).casefold()
+
+        def _is_lawful_repetition(scene: dict, family: dict) -> bool:
+            if lawful_window.get("mode") != "allow_escalated_repeat":
+                return False
+
+            scene_text = _scene_goal_text(scene)
+            if not scene_text:
+                return False
+
+            family_type = str(family.get("type", "") or "").strip().casefold()
+            scene_type = str(scene.get("type", "") or "").strip().casefold()
+            family_text = " ".join(
+                part
+                for part in (
+                    str(family.get("label", "") or "").strip(),
+                    str(family.get("location", "") or "").strip(),
+                    family_type,
+                )
+                if part
+            ).casefold()
+
+            signal_count = 0
+            if scene_type and family_type and scene_type != family_type:
+                signal_count += 1
+            if lawful_tokens and any(token in scene_text for token in lawful_tokens):
+                signal_count += 1
+            if any(
+                token in scene_text
+                for token in (
+                    "단언",
+                    "예언",
+                    "결정",
+                    "확정",
+                    "압박",
+                    "경고",
+                    "조정",
+                    "하락",
+                    "돌파",
+                    "버텨",
+                    "예측",
+                    "전담",
+                    "직통",
+                    "핫라인",
+                    "라인",
+                    "명함",
+                    "개설",
+                    "격상",
+                    "권한",
+                    "경외",
+                    "역전",
+                    "돌변",
+                    "예외 계좌",
+                    "접견실",
+                    "전용",
+                )
+            ):
+                signal_count += 1
+            scene_targets = _extract_target_families(scene_text)
+            family_targets = _extract_target_families(family_text)
+            if scene_targets and set(scene_targets) - set(family_targets):
+                signal_count += 1
+            if (
+                lawful_window.get("allow_same_channel_if_decision_escalates")
+                and any(token in scene_text for token in ("전화", "콜", "핫라인", "직통", "통화"))
+                and any(
+                    token in scene_text
+                    for token in ("단언", "결정", "압박", "경고", "예언", "전담", "직통", "명함", "개설", "격상")
+                )
+            ):
+                signal_count += 1
+            return signal_count >= 2
 
         matched_families: list[str] = []
         seen_family_keys: set[str] = set()
@@ -2284,6 +2461,8 @@ class UnifiedBlueprintValidator:
                 family_location = str(family.get("location", "") or "").strip()
                 if must_focus and any(token and token in must_focus for token in (family_label, family_location)):
                     continue
+                if _is_lawful_repetition(scene_value, family):
+                    continue
 
                 matched_families.append(
                     f"{scene_key}->{family_key} ({family_location or family_label}; overlap={overlap_count})"
@@ -2328,7 +2507,15 @@ class UnifiedBlueprintValidator:
         months = [int(value) for value in re.findall(r"(\d{1,2})월", text)]
         if not months:
             return None
-        month = months[0] if pick == "start" else months[-1]
+        if (
+            pick == "end"
+            and len(months) > 1
+            and re.match(r"\s*(\d{4})년\s*(\d{1,2})월", text)
+            and any(marker in text for marker in ("앞둔", "앞두고", "대비", "준비", "예고", "구상"))
+        ):
+            month = months[0]
+        else:
+            month = months[0] if pick == "start" else months[-1]
         year = int(year_match.group(1)) if year_match else 0
         return year, month
 
@@ -2525,9 +2712,7 @@ class UnifiedBlueprintValidator:
             )
         # Check 2: Concrete anchor density — count location/institution/number tokens
         suffix_union = "|".join(re.escape(suffix) for suffix in _SCENARIO_DENSITY_ENTITY_SUFFIXES)
-        contiguous_anchor_re = re.compile(
-            rf"[A-Za-z가-힣]{{2,12}}(?:{suffix_union})"
-        )
+        contiguous_anchor_re = re.compile(rf"[A-Za-z가-힣]{{2,12}}(?:{suffix_union})")
         spaced_anchor_re = re.compile(
             rf"(?:[A-Za-z]{{1,8}}|[가-힣]{{2,8}})(?:\s+(?:[A-Za-z]{{1,12}}|[가-힣]{{1,8}})){{0,2}}\s+(?:{suffix_union})"
         )

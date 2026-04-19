@@ -23,6 +23,52 @@ def test_validate_grant_timeline_detects_duplicate_from_state_constraints():
     assert any("\ucca0\ud608\uc0ac\uc790\ud328" in msg and "state_constraints" in msg for msg in result["critical"])
 
 
+def test_validate_required_fields_accepts_declared_empty_protagonist_items():
+    validator = ArcDraftValidator()
+
+    result = validator._validate_required_fields(
+        {
+            "arc_no": 2,
+            "ep_count": 3,
+            "ep_start": 4,
+            "ep_end": 6,
+            "tactical_doc": "TACTICAL",
+            "joint_docs": {"final_location": "시장", "physical_inventory": [], "world_joint": "stable"},
+            "state_constraints": {
+                "arc_start_state": {"location": "시장", "equipment": []},
+                "arc_end_state": {"location": "산문", "equipment": []},
+                "protagonist_items": [],
+                "items_consumed": [],
+                "grants_received": [],
+            },
+        }
+    )
+
+    assert "중요 필드 누락: protagonist_items" not in result["warnings"]
+
+
+def test_validate_duplicate_acquisition_prefers_explicit_empty_protagonist_items_over_legacy_alias():
+    validator = ArcDraftValidator()
+
+    prev_arcs = [
+        {
+            "state_constraints": {"protagonist_items": ["ledger"]},
+            "tactical_doc": "",
+        }
+    ]
+    arc = {
+        "state_constraints": {
+            "protagonist_items": [],
+            "items_acquired": ["ledger"],
+        },
+        "tactical_doc": "",
+    }
+
+    result = validator._validate_duplicate_acquisition(arc, prev_arcs)
+
+    assert result["critical"] == []
+
+
 def test_genre_suffixes_loaded_for_non_wuxia():
     validator = ArcDraftValidator(genre="sports")
     assert "\ud2b8\ub85c\ud53c" in validator.weapon_keywords

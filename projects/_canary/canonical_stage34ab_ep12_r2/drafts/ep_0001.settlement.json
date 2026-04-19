@@ -1,0 +1,376 @@
+{
+  "arc_no": 1,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0001.txt",
+    "settlement_packet_path": "drafts/ep_0001.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 1,
+  "ep_num": 1,
+  "manuscript": {
+    "char_count": 4439,
+    "content_hash": "c41a5a606aa9cbd8d3194c2ada40e163a6c9e0bb09361656d0ffb36482dc18d1",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0001.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 이전 피드백이 정확히 반영되어 주인공의 복합적인 심리가 잘 살아나는 훌륭한 도입부가 완성되었습니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "이전 피드백에서 지시한 엔딩 훅의 미세한 감정 묘사(손끝의 떨림)가 완벽하게 반영되었으며, 회귀 직후의 혼란과 결의가 장르적 특성에 맞게 훌륭하게 표현되었습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [],
+      "ai_slop_score": 0.0,
+      "burstiness": 13.47,
+      "ced_score": 0.0,
+      "complexity": 42.29,
+      "compression_ratio": 0.4718,
+      "signal_summary": {
+        "ai_slop_total_hits": 0,
+        "burstiness": 13.47,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 42.29,
+        "compression_ratio": 0.4718,
+        "sentence_count": 123
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "차가운",
+            "금속",
+            "촉감",
+            "닿았지",
+            "한시우"
+          ],
+          "source": "ending_hook",
+          "text": "차가운 금속 촉감이 닿았지만, 한시우의 손끝은 미세하게 떨리고 있었다."
+        }
+      ],
+      "capital": 0,
+      "connections": "가족 (형식적, 무관심)",
+      "current_objective": "가족의 무관심을 방패 삼아 개인 자산을 유동화하고, SW인베스트먼트라는 유령 같은 법인을 세워 초기 자본 확보",
+      "equipment": [
+        "구형 폴더폰"
+      ],
+      "inventory_counts": {
+        "구형 폴더폰": 1
+      },
+      "market_insight": "18년 치의 거시경제 데이터 및 시장 지식",
+      "reputation": "미래 지식을 가진 회귀자 (자신만 인지)",
+      "status": "회귀 및 미래 기억 동기화 완료, 새로운 생존 전략 수립 중",
+      "stocks": [],
+      "total_assets": 0,
+      "wealth": 0
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "차가운",
+            "금속",
+            "촉감",
+            "닿았지",
+            "한시우"
+          ],
+          "source": "ending_hook",
+          "text": "차가운 금속 촉감이 닿았지만, 한시우의 손끝은 미세하게 떨리고 있었다."
+        }
+      ],
+      "causal_links": [
+        "2024년 고독사"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "구형 폴더폰",
+          "to": 1
+        }
+      ],
+      "inventory_counts": {
+        "구형 폴더폰": 1
+      },
+      "karma_matrix": [],
+      "knowledge_map": {
+        "new_misled": [
+          "한시우의 가족 (아버지, 형들, 고용인 등)"
+        ],
+        "new_witnesses": [
+          "시스템"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [
+        "구형 폴더폰"
+      ],
+      "new_npcs": [],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "시스템",
+          "to": "목격자"
+        },
+        {
+          "from": "",
+          "npc": "한시우의 가족 (아버지, 형들, 고용인 등)",
+          "to": "오해 대상"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "차가운",
+              "금속",
+              "촉감",
+              "닿았지",
+              "한시우"
+            ],
+            "source": "ending_hook",
+            "text": "차가운 금속 촉감이 닿았지만, 한시우의 손끝은 미세하게 떨리고 있었다."
+          }
+        ],
+        "capital": 0,
+        "connections": "가족 (형식적, 무관심)",
+        "current_objective": "가족의 무관심을 방패 삼아 개인 자산을 유동화하고, SW인베스트먼트라는 유령 같은 법인을 세워 초기 자본 확보",
+        "equipment": [
+          "구형 폴더폰"
+        ],
+        "inventory_counts": {
+          "구형 폴더폰": 1
+        },
+        "market_insight": "18년 치의 거시경제 데이터 및 시장 지식",
+        "reputation": "미래 지식을 가진 회귀자 (자신만 인지)",
+        "status": "회귀 및 미래 기억 동기화 완료, 새로운 생존 전략 수립 중",
+        "stocks": [],
+        "total_assets": 0,
+        "wealth": 0
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "0원",
+      "director_score": 90,
+      "location": "서울 성북동 본가 침실 문 앞",
+      "protagonist_status": "극심한 두통이 가라앉고 심리적 무장을 마친 상태",
+      "timeline": "2006년 1월 12일 목요일"
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 83,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false
+  },
+  "title": "낯선 천장, 익숙한 방"
+}

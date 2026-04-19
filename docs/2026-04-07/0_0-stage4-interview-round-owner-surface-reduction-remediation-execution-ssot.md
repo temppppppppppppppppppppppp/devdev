@@ -1,16 +1,17 @@
 ﻿# 0_0 Stage4 Interview-Round Owner-Surface Reduction Remediation Execution SSOT
 
 Date: 2026-04-07
-Status: in_progress (the first bounded post-select boundary extraction landed on 2026-04-07, later contract/session/episode/retry/raw-evidence helper work also landed on the live workspace, but the current recount still leaves this as a structure-first, proof-deferred lane with dominant owner pressure in `Stage4InterviewRound`)
+Status: parked (2026-04-19 reactivation refresh; the first bounded post-select boundary extraction landed on 2026-04-07, later contract/session/episode/retry/raw-evidence helper work also landed, the current recount still leaves this as a structure-first owner-pressure lane with dominant debt in `Stage4InterviewRound`, and the honest queue reading is now parked architecture debt rather than active implementation progress)
 Canonical Path: `docs/2026-04-07/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage4-interview-round-owner-surface-reduction-remediation-execution-ssot.md`
 Commit State:
 - Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
 - Baseline Dirty Summary: `dirty: prior Stage3 opening-transition tranche plus docs/temp mirrors already modified in worktree`
-- Resume Commit: `2b7cb64f2d1fe2cd1152806a5cc37795609f9755`
-- Resume Drift Summary: `live 3-pass re-audit on the current workspace now finds `Stage4InterviewRound` at 166 direct methods / 2 180+ / 5 120+; the first module-boundary extraction remains landed, later contract/raw-evidence helper work is also landed, and the next useful move is proof-first plus later owner-pressure reopening rather than claiming the older 159-method recount as current truth`
+- Resume Commit: `029df1a74af89a7b5387c449f4723a5df0d000d4`
+- Resume Drift Summary: `current HEAD@029df1a7 is authoritative for queue refresh; the first module-boundary extraction and later helper-heavy contract/raw-evidence work remain landed, the current live recount still leaves `Stage4InterviewRound` at 166 direct methods / 2 180+ / 5 120+, and after the Stage4 consumer/repair sibling closures this lane now reads as honest parked architecture debt rather than active progress`
 Source Survey Docs:
 - `docs/2026-04-07/0_0-stage4-interview-round-owner-surface-reduction-bounded-survey.md`
+- `docs/2026-04-19/stage4-interview-round-owner-surface-reactivation-refresh.md`
 Evidence Artifacts:
 - `none; live AST recount and focused regression evidence are recorded inline below`
 Side-Effect Coverage: covered
@@ -167,14 +168,13 @@ Implementation rule:
 
 ## 11. Temp Queue Notes
 
-- temp status: `in_progress`
+- temp status: `parked_future_wave`
 - cleanup condition:
-  - keep the mirror while this remains a recognized partial structure lane
+  - keep the mirror while this remains the next visible parked Stage4 architecture candidate
   - remove only on explicit closure, deactivation, or replacement
 - roadmap dependency:
-  - below the active Stage4 consumer / repair / non-wuxia lanes
-  - below the broader pending functional waves
-  - above soak-only reference lanes
+  - below all closed Stage2 / Stage3 / Stage4 functional sibling lanes as historical backing
+  - above later parked Stage0 hygiene lanes and soak-only reference lanes
 
 ## 12. Validation and Closure Hooks
 
@@ -206,3 +206,20 @@ Pass 3, execution and readability:
 
 Confidence: `97%`
 
+## 14. 2026-04-19 Reactivation Refresh
+
+Source doc:
+
+- `docs/2026-04-19/stage4-interview-round-owner-surface-reactivation-refresh.md`
+
+Current reading:
+
+- the Stage4 functional sibling lanes are now closed, but this structure lane is not stale
+- the current live recount still leaves real owner pressure in `Stage4InterviewRound`
+- the honest board meaning is `parked architecture candidate`, not `active in-progress implementation`
+
+Queue consequence:
+
+- keep this lane visible
+- keep the temp mirror
+- treat it as the next parked candidate rather than a front-active or closure-ready lane

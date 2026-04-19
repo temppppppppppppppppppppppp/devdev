@@ -1,14 +1,14 @@
 # 0_0 Stage3 Contract Tightening Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (3-pass re-audited 2026-04-14 against the live workspace; the current-head bounded Stage3 debt survey records a conservative predictive contract-debt resolution estimate of `93%`, so fresh Stage3 continuation or proof rerun is threshold-cleared but operator-gated rather than the automatic immediate next step. Older `ep9 continuation` and proof-rerun phrasing below should be read as historical queue state unless explicitly re-authorized.)
+Status: closed (closure-review passed on 2026-04-19; the fresh bounded `ep9/ep13/ep15/ep16/ep17` proof chain shows the validator/binding/retry family is no longer front-active debt, and the remaining opening/carryover truth now belongs to the sibling Stage3 opening-transition lane rather than this parent owner)
 Canonical Path: `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
+Temp Mirror Path: `docs/temp/0_0-stage3-contract-tightening-remediation-execution-ssot.md` (removed during the 2026-04-19 closure cleanup)
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2/Stage3 survey docs and lane drafts untracked`
-- Resume Commit: `32d6f0c8b56898fd8a370ae13684043d4cfda91a`
-- Resume Drift Summary: `snapshot main plus the later local `0_temp.txt` continuation is now authoritative; the earlier binding/handoff/source-anchor tranches remain landed, the live workspace on top of current main also carries the reopened truth-first parent tranche, the bounded Stage3 analyzer sink-alignment coverage follow-up, the later fail-only structural hardening tranche for regenerate-only binding categories plus visibility propagation, the later ep3 replay / institution-truth fail-only follow-up across compiler/validator/runtime, the 2026-04-13 child-lane retry-plateau and quality-gate/truth follow-ups, the same-day child closure-residual follow-up that now has live proof on `ep4/ep5`, the narrower same-day closure-residual observability follow-up in `stage3_orchestrator.py`, the later same-day parent binding-family static-kill tranche across validator/runtime/test coverage, the later same-day cost-first decision-surface static survey, and the landed three-tranche safe route through Stage3RepairRouter extraction, strict local-fix contract gating, and the first bounded patch-IR lane; the newer formal `ep8` root-cause survey remains authoritative for ownership, the bounded producer-side contract-alignment / route-honest failure-surface tranche it called for is now also landed on current main, the later same-day `P2/P3` producer-follow-up tranche from the new residual survey is now likewise landed, the Korean tactical-authority synonym parity tranche from the adversarial follow-up is now also landed locally, and the current local next step is `projects/000_260412_a` Stage3 continuation from `ep9` unless the operator explicitly chooses rollback`
+- Resume Commit: `029df1a74af89a7b5387c449f4723a5df0d000d4`
+- Resume Drift Summary: `the 2026-04-19 queue controller is now authoritative; both Stage2 sibling lanes are closed, the newer A+B repair checkpoint plus the bounded `ep9/ep13/ep15/ep16/ep17` proof chain are now the live authority for this lane, and the older `ep9 continuation` wording is historical queue residue rather than the active controller`
 2026-04-14 bounded survey + rerun gate override:
 
 - Local audit HEAD: `81b426a688c2a5b6279d254c7746baac1261235b`
@@ -36,6 +36,10 @@ Commit State:
 - immediate local next step is no longer auto-presented; fresh Stage3 continuation or proof rerun is operator-gated under the bounded survey rule above
 
 Source Survey Docs:
+- `docs/2026-04-19/stage3-contract-tightening-closure-review.md`
+- `docs/2026-04-19/stage3-contract-tightening-reactivation-refresh.md`
+- `docs/2026-04-19/golden-canary-deepclone-probe-a-ab-repair-banked-generalization-checkpoint.md`
+- `docs/2026-04-19/active-temp-execution-roadmap.md`
 - `docs/이전/2026-04-02/0_0-stage3-static-global-bounded-survey.md`
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
 - `docs/이전/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-audit.md`
@@ -64,6 +68,11 @@ Source Survey Docs:
 - `docs/2026-04-14/stage3-runtime-retry-structural-debt-survey.md`
 - `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
 Evidence Artifacts:
+- `projects/_canary/probe_a_stage3_ep9boundary_ab_r2/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep13carry_ab_r2/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep15repair_ab_r3/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep16authority_ab_r3/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17schemafallback_r1/logs/stage3_canary_summary.json`
 - `docs/이전/2026-04-02/0_0-stage3-static-global-evidence.json`
 - `docs/이전/2026-04-01/0_0-stage3-semantic-fidelity-runtime-closure-evidence.json`
 - `projects/000_260408/project_data.db`
@@ -969,3 +978,58 @@ Execution consequence:
 - the highest-ROI next seam, if we continue debt-first work before rerun, is a bounded `Stage3RetryCoordinator` extraction from `three_phase_blueprint_runtime.py`
 - next after that would be `BlueprintCandidateAdmission`, then a narrower `DirectorDecisionSurfaceBuilder`
 - Polaris / DecisionKernel migration remains a non-goal for this lane
+
+## 31. 2026-04-19 Reactivation Refresh
+
+Evidence basis:
+
+- `docs/2026-04-19/stage3-contract-tightening-reactivation-refresh.md`
+- `docs/2026-04-19/golden-canary-deepclone-probe-a-ab-repair-banked-generalization-checkpoint.md`
+- `projects/_canary/probe_a_stage3_ep9boundary_ab_r2/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep13carry_ab_r2/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep15repair_ab_r3/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep16authority_ab_r3/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17schemafallback_r1/logs/stage3_canary_summary.json`
+
+Refresh result:
+
+1. the older `ep9 continuation` / operator-gated proof wording is now historical queue text, not the live front controller
+2. the fresh bounded proof chain shows current contract-tightening family passes at one-shot scale:
+   - `ep13 = PASS (94)`
+   - `ep15 = PASS (99)`
+   - `ep16 = PASS (96)`
+   - `ep17 = PASS (90)`
+3. the remaining aggregate `hard_gates.status = fail` line in those summaries is legacy warning residue:
+   - `ep1_final_verdict:PASS_WITH_WARNING`
+   - `ep9_final_verdict:PASS_WITH_WARNING`
+4. the sibling boundary is now clearer:
+   - validator / binding / retry family belongs here
+   - opening / carryover transition truth belongs to `0_0-stage3-opening-transition-contract-normalization-remediation`
+
+Execution consequence:
+
+- do not keep this lane front-active just because the aggregate canary still remembers legacy warning residue
+- treat the lane as closure-review ready
+
+## 32. 2026-04-19 Closure Review
+
+Evidence basis:
+
+- `docs/2026-04-19/stage3-contract-tightening-closure-review.md`
+- `docs/2026-04-19/stage3-contract-tightening-reactivation-refresh.md`
+- `docs/2026-04-19/golden-canary-deepclone-probe-a-ab-repair-banked-generalization-checkpoint.md`
+- `projects/_canary/probe_a_stage3_ep9boundary_ab_r2/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep13carry_ab_r2/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep15repair_ab_r3/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep16authority_ab_r3/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17schemafallback_r1/logs/stage3_canary_summary.json`
+
+Closure result:
+
+1. the bounded Stage3 contract-tightening owner is now closed
+2. the fresh proof chain satisfies the lane's honest closure claim:
+   - current validator / binding / retry residue is no longer front-active debt
+   - the lane keeps its evidence as historical backing rather than active workload
+3. the correct next queue owner is the sibling `0_0-stage3-opening-transition-contract-normalization-remediation`
+4. reopening trigger stays narrow:
+   - only reopen if fresh Stage3 evidence shows new bounded validator / binding / retry drift beyond the banked `ep9/ep13/ep15/ep16/ep17` chain

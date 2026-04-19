@@ -1,7 +1,7 @@
 # 0_0 Stage2-Stage3 Stage4-Readiness Remediation Execution SSOT
 
 Date: 2026-04-01
-Status: blocked — Stage2/3 structural improvement is runtime-visible, but Stage4 remains blocked by unresolved finalization seams (ep3 strong-advisory fix-pack + ep4 post-select continuity); Stage4 still paused
+Status: blocked — Stage2/3 structural improvement is runtime-visible, but Stage4 remains blocked by unresolved finalization seams (ep3 strong-advisory fix-pack + ep4 post-select continuity); Stage4 still paused, and the 2026-04-19 reactivation refresh confirms this lane remains honest `blocked holding` rather than stale blocked debt
 Canonical Path: `docs/2026-04-01/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/0_0-stage2-stage3-stage4-readiness-remediation-execution-ssot.md`
 Commit State:
@@ -16,6 +16,7 @@ Source Survey Docs:
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-lane3-artifact-truth-vertical-slice-draft.md`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-lane4-stage4-intake-readiness-draft.md`
 - `docs/2026-04-01/0_0-stage2-stage3-context-hierarchy-bounded-survey.md`
+- `docs/2026-04-19/stage2-stage3-stage4-readiness-reactivation-refresh.md`
 Evidence Artifacts:
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-evidence.json`
 - `docs/2026-04-01/0_0-stage2-stage3-context-hierarchy-bounded-evidence.json`
@@ -318,6 +319,24 @@ Static validation completed:
 - `python -m py_compile modules/domain/agents/arc_ensemble.py modules/domain/agents/blueprint_ensemble.py tests/test_arc_ensemble_lane_a.py tests/test_blueprint_ensemble_generate_ensemble.py`
 - `ruff check modules/domain/agents/arc_ensemble.py modules/domain/agents/blueprint_ensemble.py tests/test_arc_ensemble_lane_a.py tests/test_blueprint_ensemble_generate_ensemble.py`
 - `pytest tests/test_arc_ensemble_lane_a.py tests/test_blueprint_ensemble_generate_ensemble.py -q`
+
+## 17. 2026-04-19 Reactivation Refresh
+
+Source doc:
+
+- `docs/2026-04-19/stage2-stage3-stage4-readiness-reactivation-refresh.md`
+
+Current reading:
+
+- Stage2/3 structural improvement remains runtime-visible
+- the unresolved Stage4 finalization seams are still the real blocker
+- sibling lane closures do not by themselves reopen this `0_0` readiness lane
+
+Queue consequence:
+
+- keep this lane visible
+- keep the temp mirror
+- preserve it as blocked holding until explicit proof authorization or fresh `0_0` runtime evidence appears
 - `pytest tests/test_stage3_clarity_density_wave1.py tests/test_stage23_stage4_readiness_wave1.py -q`
 - `pytest tests/test_tier4_ensemble_caching.py -k "arc_ensemble or blueprint_ensemble_prev_info or constraint_summary or single_format_constraints_definition" -q`
 

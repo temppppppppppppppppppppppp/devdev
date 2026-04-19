@@ -1,0 +1,287 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "80d18121602ee9dcd84dd29c8807da3ab8155e4fb3efc394f1716204fa6574d6"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=한미증권, 증권사 본점의 VIP룸, 한미증권 본점",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1333,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 23696,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 976304,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 18373,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4793,
+          "lane": "constraints"
+        },
+        {
+          "chars": 290,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 230,
+        "constraints": 4793,
+        "feedback_context": 290,
+        "hud_context": 10,
+        "prev_info": 18373
+      },
+      "shared_context_chars": 23406,
+      "total_chars": 23696
+    },
+    "python_warnings": [
+      {
+        "category": "opening_transition",
+        "focus": "opening_transition.type을 prev ending anchor와 start_location/time_flow/scene_1 contract에 맞게 정규화",
+        "message": "opening_transition.type mismatch: declared 'explicit_transition' vs normalized 'direct_continuation'",
+        "severity": "MAJOR",
+        "source": "python_prevalidate"
+      }
+    ],
+    "quality_risk": true,
+    "scene_count": 5,
+    "strategy": "emotion_focused",
+    "total_candidates": 1
+  },
+  "_inventory_gaps": [
+    {
+      "item": "가죽 수첩",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "만년필",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "폴더폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "OTP 카드",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "박성호의 직통 핫라인 명함",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_categories": [
+      "opening_transition"
+    ],
+    "binding_prevalidation_issue_count": 1,
+    "binding_regenerate_only_categories": [
+      "opening_transition"
+    ],
+    "binding_regenerate_only_reason": "Structural binding prevalidation requires regenerate-only repair: opening_transition",
+    "final_verdict": "PASS",
+    "last_score": 96,
+    "partial_fix_eval": {
+      "do_not_regress_held": true,
+      "fallback_reason": "",
+      "is_patch_attempt": true,
+      "must_fix_resolved": true,
+      "patch_round": 1,
+      "patch_target_id": "pt:52a8695bbdfa",
+      "success_condition_met": true,
+      "target_kind": "local_sentence"
+    },
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "피를 말리는 횡보장 속에서의 심리적 압박과 스스로 선택한 고립",
+  "end_location": "서울 강남, SW인베스트먼트 원룸 오피스 내 한시우의 데스크 앞",
+  "ending_hook": "모니터의 푸른 불빛만이 유일한 온기인 그 좁은 방에서, 한시우는 마침내 완벽한 이방인이 되었다.",
+  "ending_state": {
+    "location": "서울 강남, SW인베스트먼트 원룸 오피스 내 한시우의 데스크 앞",
+    "protagonist_status": "모든 외부의 간섭을 차단하고 스스로 만든 고립된 요새에서 시장의 다음 호흡을 기다리는 상태",
+    "timeline": {
+      "표현": "2006년 4월 중순 밤"
+    }
+  },
+  "ep_num": 13,
+  "episode_number": 13,
+  "expected_ending": "가족과 기관의 눈을 피한 강남 오피스에 완벽히 은둔하며 다음 변동성을 대기함",
+  "integrated_scenario": "여의도의 차가운 밤바람이 한시우의 코트 자락을 스치고 지나갔다. 손끝에 닿는 박성호의 검은 명함은 확실한 전리품이었으나, 동시에 한미증권이라는 거대한 기관의 울타리 안에 자신이 머물고 있음을 상기시켰다. 성북동 본가의 감시망은 피했지만, 증권사 본점의 VIP룸 역시 수많은 눈과 귀가 존재하는 곳이었다. 진정으로 가족의 맹목적인 추적과 기관의 은밀한 시선에서 벗어나기 위해서는 자신만의 완벽한 요새가 필요했다. 그는 미련 없이 발걸음을 돌려 강남의 이면도로를 머릿속에 그렸다.\n\n시간은 무심하게 흘러 2006년 4월 중순. 봄기운이 완연해진 바깥 풍경과 달리, 한미증권 본점의 VIP 프라이빗 룸은 숨 막히는 정적과 건조한 긴장감에 휩싸여 있었다. 장장 6주째, WTI 유가는 뚜렷한 방향성을 잃고 지루한 횡보를 거듭했다. 3배 레버리지라는 극단적인 포지션을 쥔 상태에서의 횡보장은 시간이 지날수록 피를 말리는 압박으로 다가왔다. 매일 아침 변동 없는 차트를 확인하는 박성호 PB의 셔츠 깃은 식은땀으로 축축하게 젖어 들어갔다. 그러나 한시우는 미동조차 없었다. 그는 그저 가죽 수첩의 낡은 종이 위를 만년필로 가볍게 두드리며, 보이지 않는 시장의 맥박을 짚어낼 뿐이었다.\n\n결국 인내심의 한계에 달한 박성호가 조심스럽게 입을 열었다. \"대표님, 지금이라도 절반 정도는 익절하시는 게 어떻겠습니까. 횡보가 길어지면 리스크 관리 차원에서도...\" 그의 목소리에는 짙은 두려움이 배어 있었다. 한시우는 천천히 고개를 들어 박성호의 흔들리는 동공을 직시했다. \"시장의 공포에 전염되셨습니까, 박 차장님.\" 낮고 서늘한 음성이 방 안의 공기를 단숨에 얼어붙게 만들었다. \"제 목표가는 아직 오지 않았습니다. 흔들릴 거라면 나가 계십시오.\" 단호하고 이성적인 거절 앞에 박성호는 입술을 깨물며 물러설 수밖에 없었다.\n\n백오피스로 밀려나듯 돌아온 박성호는 리스크팀장과의 통화에서 헛웃음을 흘렸다. \"그 청년은... 우리가 상식선에서 통제할 수 있는 사람이 아닙니다.\" 6주간의 피 말리는 장세 속에서도 단 한 번의 감정 동요조차 보이지 않는 괴물. 증권사 내부에 한시우를 일반적인 고객이 아닌, 예외적인 권위로 각인시키는 순간이었다.\n\n며칠 뒤, 한시우는 강남의 낡고 비좁은 원룸 오피스에 홀로 앉아 있었다. 화려한 VIP룸의 접대를 버리고 스스로 선택한 완벽한 단절의 공간. 최소한의 모니터와 책상만이 덩그러니 놓인 그곳에서, 그는 비로소 완전한 해방감과 지독한 고독을 동시에 마주했다. 세상의 모든 소음을 차단한 채 오직 수첩의 기록에만 의지해야 하는 외로운 길. 모니터의 푸른 불빛이 그의 무표정한 얼굴을 비추는 가운데, 한시우는 조용히 다음 폭풍을 기다리며 깊은 어둠 속으로 침잠했다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 밤거리에서의 짧은 결단으로 시작해, 중반부 6주간의 시간 도약과 함께 횡보장의 심리적 압박을 밀도 있게 그려낸다. 박성호의 불안과 한시우의 냉철함이 대비되며 긴장을 끌어올리고, 후반부는 강남 오피스로의 공간 이동을 통해 스스로 고립을 택한 주인공의 내면 묘사로 여운을 남긴다.",
+  "protagonist_state": {
+    "equipment": [
+      "가죽 수첩",
+      "만년필",
+      "폴더폰",
+      "OTP 카드",
+      "박성호의 직통 핫라인 명함"
+    ],
+    "injuries": "없음",
+    "mood": "세상과 단절된 채 오직 자신의 확신에만 기대는 차가운 고독과 통제감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "경외심을 품고 전담 라인을 구축함",
+      "justification": "6주간의 피 말리는 횡보장 속에서 익절 권유를 단칼에 거절당하며, 한시우가 자신들과는 다른 차원의 확신을 가졌음을 깨달음",
+      "target": "박성호",
+      "to_state": "한시우의 비인간적인 인내심에 압도되어 상식적인 조언조차 포기함"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "기관의 감시망을 벗어날 독자적 거점의 필요성 자각",
+      "key_events": [
+        "박성호의 명함을 수첩에 끼워 넣으며, 증권사라는 거대한 기관의 울타리가 가진 정보 노출의 한계를 냉철하게 계산함",
+        "가족의 시선과 한미증권의 모니터링이 닿지 않는 강남 이면도로의 소규모 원룸 오피스를 새로운 거점으로 낙점함"
+      ],
+      "location": "한미증권 본점 앞 거리",
+      "summary": "여의도의 밤바람을 맞으며 한시우는 본점 VIP룸조차 완벽한 사각지대가 아님을 깨닫고 새로운 은신처를 구상한다.",
+      "tension_level": 4,
+      "title": "밤바람 속의 결단",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "6주간의 유가 횡보장이 주는 심리적 압박 묘사",
+      "key_events": [
+        "2006년 4월 중순, WTI 유가가 방향성을 잃고 6주째 좁은 박스권에서 횡보하는 숨 막히는 차트의 흐름",
+        "3배 레버리지의 압박을 견디지 못한 박성호가 매일 아침 VIP룸에서 식은땀을 흘리며 초조함을 감추지 못함",
+        "한시우는 불안해하는 박성호와 대조적으로 가죽 수첩의 기록과 현재의 호가창을 무심하게 교차 검증하며 침묵을 지킴"
+      ],
+      "location": "한미증권 본점 VIP 전용 프라이빗 룸",
+      "summary": "시간이 흘러 4월, 유가의 지루한 횡보 속에서 박성호는 피를 말리지만 한시우는 미동도 하지 않는다.",
+      "tension_level": 5,
+      "title": "말라붙은 피",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "박성호의 익절 권유를 서늘하게 쳐내며 통제력 과시",
+      "key_events": [
+        "박성호가 조심스럽게 다가와 리스크 관리 차원에서 현재 수익이라도 확정 짓자며 간곡히 익절을 권유함",
+        "한시우가 만년필을 소리 나게 내려놓으며, 박성호의 두려움이 시장의 군중 심리에 동화되었음을 날카롭게 지적함",
+        "자신의 목표가는 아직 도달하지 않았음을 단언하며, 흔들릴 거라면 방에서 나가라고 차갑게 선을 그음"
+      ],
+      "location": "한미증권 본점 VIP 전용 프라이빗 룸",
+      "summary": "인내심의 한계에 달한 박성호가 익절을 제안하지만, 한시우는 서늘한 논리와 확신으로 이를 일축한다.",
+      "tension_level": 6,
+      "title": "흔들리지 않는 닻",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "박성호",
+        "리스크팀장(전화)"
+      ],
+      "content": "",
+      "goal": "한시우의 비인간적 평정심에 대한 기관의 경외",
+      "key_events": [
+        "백오피스에 주저앉은 박성호가 넥타이를 거칠게 풀며 리스크팀장의 마진콜 우려 전화를 받음",
+        "박성호가 헛웃음을 흘리며 '그 청년은 우리가 상식선에서 조언하거나 통제할 수 있는 부류가 아니다'라고 대답함",
+        "6주간의 피 말리는 횡보장 속에서도 감정 동요가 없는 한시우를 증권사 내부에서 점차 '규정 외의 괴물'로 인식하기 시작함"
+      ],
+      "location": "한미증권 본점 백오피스",
+      "summary": "백오피스로 쫓겨나듯 나온 박성호가 리스크팀과의 통화에서 한시우를 통제 불능의 예외로 인정한다.",
+      "tension_level": 4,
+      "title": "관찰자의 체념",
+      "type": "side_glimpse"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "스스로 선택한 단절과 새로운 거점에서의 고독",
+      "key_events": [
+        "화려한 본점 VIP룸을 뒤로하고, 최소한의 트레이딩 장비만 세팅된 강남의 낡은 원룸 오피스에 홀로 들어섬",
+        "가족과 기관의 모든 시선을 차단하고 스스로 선택한 고립의 무게를 가죽 수첩을 쓰다듬으며 묵묵히 받아들임",
+        "어두운 방 안, 모니터의 푸른 불빛만이 그의 서늘한 눈동자를 비추며 다음 변동성을 향한 기다림이 시작됨"
+      ],
+      "location": "서울 강남, SW인베스트먼트 원룸 오피스",
+      "summary": "강남의 좁은 원룸 오피스로 거점을 옮긴 한시우가 세상과 단절된 채 다음 폭풍을 기다린다.",
+      "tension_level": 5,
+      "title": "고독한 요새",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "한미증권 본점 앞 거리",
+  "target_beat": "횡보장의 압박을 이겨내는 초인적인 인내심과, 완벽한 통제를 위해 스스로 고독을 선택하는 감정적 무게감의 전달",
+  "time_flow": "2006년 2월 초 밤 -> 2006년 4월 중순",
+  "title": "횡보장 속의 압박과 새로운 거점 확보"
+}

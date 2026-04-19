@@ -1,15 +1,19 @@
 # 0_0 Stage3 Opening Transition Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (the first bounded `opening_transition.type` normalization tranche remains landed, the reopened 2026-04-11 sibling follow-up is also landed on the live workspace, and the 2026-04-12 live rerun support slice is now likewise landed: opening authority for `arc_start_state` now outranks stale prior-blueprint opening state, the investment `capital_continuity_packet` now applies capital-boundary filtering so future-episode finance events do not leak into the current packet, and the compiler now surfaces bounded immediate-next-day / season-truth / blocked-scene-family carryover truth for the ep2 -> ep3 seam; proof remains pending, while broader retuning remains deferred)
+Status: closed (closure-review passed on 2026-04-19; the fresh bounded `ep13/ep17/ep18` carryover chain shows the Stage3 producer-side opening/carryover truth family is no longer front-active debt, and any broader downstream continuity residue now belongs to Stage4 consumer ownership rather than this sibling lane)
 Canonical Path: `docs/2026-04-02/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md`
+Temp Mirror Path: `docs/temp/0_0-stage3-opening-transition-contract-normalization-remediation-execution-ssot.md` (removed during the 2026-04-19 closure cleanup)
 Commit State:
 - Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
 - Baseline Dirty Summary: `clean`
-- Resume Commit: `2b7cb64f2d1fe2cd1152806a5cc37795609f9755`
-- Resume Drift Summary: `the first bounded `opening_transition` contract tranche remains landed on current main, the live workspace now also lands the reopened opening-authority / capital-boundary filtering follow-up, and the 2026-04-12 live rerun support slice is now also landed through compiler-side immediate-next-day / season-truth / blocked-scene-family carryover surfacing while stale 2026-04-11 backup work remains non-authoritative`
+- Resume Commit: `029df1a74af89a7b5387c449f4723a5df0d000d4`
+- Resume Drift Summary: `the 2026-04-19 queue controller is now authoritative; the Stage3 contract-tightening parent lane is closed, the later `ep13/ep17/ep18` carryover proof chain is now the live authority for this sibling lane, and the older proof-pending wording is historical queue residue rather than the current controller`
 Source Survey Docs:
+- `docs/2026-04-19/stage3-opening-transition-reactivation-refresh.md`
+- `docs/2026-04-19/stage3-opening-transition-closure-review.md`
+- `docs/2026-04-19/active-temp-execution-roadmap.md`
+- `docs/2026-04-18/golden-canary-deepclone-probe-a-ep13-cross-arc-carryover-proof.md`
 - `docs/2026-04-02/0_0-stage34-ep2-focused-bounded-canary-audit.md`
 - `docs/2026-04-02/0_0-stage34-ep2-single-episode-demo-run-audit.md`
 - `docs/2026-04-02/0_0-stage4-flashback-continuity-localfix-remediation-execution-ssot.md`
@@ -17,6 +21,11 @@ Source Survey Docs:
 - `docs/2026-04-01/active-temp-execution-roadmap.md`
 - `docs/2026-04-11/stage23-current-main-static-parallel-survey.md`
 Evidence Artifacts:
+- `projects/_canary/probe_a_stage3_ep13carry_ab_r2/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17bindingfix_r1/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17receiptsem_r1/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17schemafallback_r1/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep18carry_r3/logs/stage3_canary_summary.json`
 - `docs/2026-04-02/0_0-stage34-ep2-focused-bounded-canary-evidence.json`
 - `docs/2026-04-02/0_0-stage34-ep2-single-episode-demo-run-evidence.json`
 Side-Effect Coverage: covered
@@ -228,3 +237,57 @@ Execution consequence:
 - keep broader prompt retuning and stronger mismatch hardening deferred behind proof
 
 Confidence for this landing update: `97%`
+
+## 14. 2026-04-19 Reactivation Refresh
+
+Evidence basis:
+
+- `docs/2026-04-19/stage3-opening-transition-reactivation-refresh.md`
+- `docs/2026-04-18/golden-canary-deepclone-probe-a-ep13-cross-arc-carryover-proof.md`
+- `projects/_canary/probe_a_stage3_ep13carry_ab_r2/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17bindingfix_r1/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17receiptsem_r1/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17schemafallback_r1/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep18carry_r3/logs/stage3_canary_summary.json`
+
+Refresh result:
+
+1. the older `proof remains pending` wording is now stale queue text, not the live front controller
+2. later bounded carryover proof now exists beyond the original `ep2 -> ep3` support slice:
+   - `ep13 = PASS (94)`
+   - `ep17 = PASS (90~96)` across the current late-opening proof family
+   - `ep18 = PASS (94)`
+3. the remaining aggregate `hard_gates.status = fail` line in those summaries is legacy warning residue:
+   - `ep1_final_verdict:PASS_WITH_WARNING`
+   - `ep9_final_verdict:PASS_WITH_WARNING`
+4. the sibling boundary is now clearer:
+   - producer-side opening / carryover truth belongs here
+   - downstream continuity residue belongs to Stage4 consumer ownership
+
+Execution consequence:
+
+- do not keep this lane front-active just because the aggregate canary still remembers legacy warning residue
+- treat the lane as closure-review ready
+
+## 15. 2026-04-19 Closure Review
+
+Evidence basis:
+
+- `docs/2026-04-19/stage3-opening-transition-closure-review.md`
+- `docs/2026-04-19/stage3-opening-transition-reactivation-refresh.md`
+- `docs/2026-04-18/golden-canary-deepclone-probe-a-ep13-cross-arc-carryover-proof.md`
+- `projects/_canary/probe_a_stage3_ep13carry_ab_r2/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17bindingfix_r1/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17receiptsem_r1/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep17schemafallback_r1/logs/stage3_canary_summary.json`
+- `projects/_canary/probe_a_stage3_ep18carry_r3/logs/stage3_canary_summary.json`
+
+Closure result:
+
+1. the bounded Stage3 opening-transition owner is now closed
+2. the fresh carryover proof chain satisfies the lane's honest closure claim:
+   - current producer-side opening / carryover truth is no longer front-active debt
+   - the lane keeps its evidence as historical backing rather than active workload
+3. the correct next queue owner is `0_0-stage4-consumer-contract-normalization-remediation`
+4. reopening trigger stays narrow:
+   - only reopen if fresh Stage3 evidence shows new bounded producer-side opening / carryover drift beyond the banked `ep13/ep17/ep18` chain

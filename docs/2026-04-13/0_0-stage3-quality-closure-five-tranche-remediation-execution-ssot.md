@@ -1,14 +1,14 @@
 # 0_0 Stage3 Quality Closure Five Tranche Remediation Execution SSOT
 
 Date: 2026-04-13 (originally drafted) / 2026-04-14 (Tranche 1 landed; local workspace now also lands T2 residual cleanup, T3 retry feedback surgery, and bounded T4.1 candidate-summary expansion)
-Status: `tranche_1_to_3_landed_local_t4_1_landed_parent_gate_met_operator_gated` (Tranche 1 opening-transition vocabulary coherence is committed at `56063603` on `main`, and the current local workspace now also carries child-lane T2 residual cleanup, the Tranche 3 retry-feedback surgery bundle, and bounded Tranche 4.1 Director candidate-summary expansion with targeted validation green. The current-head bounded Stage3 debt survey records a conservative predictive contract-debt resolution estimate of `93%`, so the gate floor is met, but fresh Stage3 continuation or proof rerun remains operator-gated rather than the automatic next step.)
+Status: closed (2026-04-19 closure review; `T1~T3` plus bounded `T4.1` are landed historical backing, the rerun-gate floor remains met but unconsumed, deferred `T4.2~T5` stay proof-contingent, and this lane no longer represents honest active or parked queue debt)
 Canonical Path: `docs/2026-04-13/0_0-stage3-quality-closure-five-tranche-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/0_0-stage3-quality-closure-five-tranche-remediation-execution-ssot.md`
+Temp Mirror Path: `docs/temp/0_0-stage3-quality-closure-five-tranche-remediation-execution-ssot.md` (removed during the 2026-04-19 closure tranche)
 Commit State:
 - Baseline Commit: `32d6f0c8b56898fd8a370ae13684043d4cfda91a`
 - Baseline Dirty Summary: `dirty: stage3 producer/ensemble/runtime/validator edits, live 000_260412_a rerun artifacts, the 10 t1..t10 deliverables, the 10-terminal parent order, the synthesis doc, and the 2026-04-13 audit/survey docs already present in worktree`
-- Resume Commit: `same-as-baseline`
-- Resume Drift Summary: `none during this SSOT save; each tranche must re-run git rev-parse HEAD at landing time and rebase its line anchors against current head before edit`
+- Resume Commit: `029df1a74af89a7b5387c449f4723a5df0d000d4`
+- Resume Drift Summary: `current HEAD@029df1a7 is authoritative for queue closure; the parent contract-tightening lane and the sibling state-arbiter lane are now both closed, the rerun-gate floor remains met but operator authorization is still unconsumed, and the deferred `T4.2~T5` family now reads as contingent proof backlog rather than active queue debt`
 
 2026-04-14 local bounded landing override:
 
@@ -45,6 +45,8 @@ Source Survey Docs:
 - `docs/2026-04-13/stage3-three-tranche-safe-sequencing-plan.md`
 - `docs/2026-04-14/stage3-runtime-retry-structural-debt-survey.md`
 - `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
+- `docs/2026-04-19/stage3-quality-closure-five-tranche-reactivation-refresh.md`
+- `docs/2026-04-19/stage3-quality-closure-five-tranche-closure-review.md`
 Evidence Artifacts:
 - `0_temp.txt` (latest live-run console capture, ep8 reject family at lines 400–469)
 - `projects/000_260412_a/project_data.db`
@@ -745,3 +747,41 @@ This SSOT does not authorize:
 - the 30 new test cases are specified by name and intent but not body; the executor must write them within the existing memory-conservative test pattern
 
 These three items are explicit, bounded, and addressable inside the tranche they belong to. None of them blocks the SSOT structure or the realization order.
+
+## 19. 2026-04-19 Reactivation Refresh
+
+Source doc:
+
+- `docs/2026-04-19/stage3-quality-closure-five-tranche-reactivation-refresh.md`
+
+Current reading:
+
+- the lane had stayed mirrored because it still looked like the top parked Stage3 continuation plan after the rerun-gate floor was crossed
+- the later board state is narrower:
+  - the parent contract-tightening lane is closed
+  - the sibling state-arbiter lane is closed
+  - rerun remains operator-gated and unconsumed
+  - deferred `T4.2~T5` work is still proof-contingent
+
+Queue consequence:
+
+- the old parked/operator-gated wording is now stale as an active queue signal
+- the next honest move is closure-review, not continued queue mirroring
+
+## 20. 2026-04-19 Closure Review
+
+Source doc:
+
+- `docs/2026-04-19/stage3-quality-closure-five-tranche-closure-review.md`
+
+Closure judgment:
+
+- bounded Stage3 quality-closure planning is now satisfied for queue-governing purposes
+- landed `T1~T3` plus bounded `T4.1` remain canonical historical backing
+- deferred `T4.2~T5` remains visible only as contingent proof backlog, not active queue debt
+
+Queue move:
+
+- close this lane
+- remove the temp mirror during this tranche
+- let `0_0-stage4-interview-round-owner-surface-reduction-remediation` become the next visible parked candidate

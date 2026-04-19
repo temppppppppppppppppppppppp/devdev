@@ -1,0 +1,205 @@
+{
+  "schema": "geuldobi.loop_canary_scorecard.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "backfilled",
+  "role": "Loop-oriented bounded canary gate surface for narrative doctrine evaluation.",
+  "document_ref": "docs/2026-04-18/golden-canary-deepclone-probe-a-loop-canary-scorecard.md",
+  "evaluation_unit": [
+    "stage3_bounded_episode_tranche"
+  ],
+  "required_inputs": [
+    "projects/_canary/probe_a_stage3_ep12authority_r1/logs/stage3_canary_summary.json",
+    "projects/_canary/probe_a_stage3_ep12authority_r1/plans/blueprints/blueprint_0011.txt",
+    "projects/_canary/probe_a_stage3_ep12authority_r1/plans/blueprints/blueprint_0012.txt",
+    "projects/_canary/probe_a_stage3_ep12authority_r1/logs/artifacts/stage3/ep_0011/attempt_01/final_blueprint__dialogue_focused.json",
+    "projects/_canary/probe_a_stage3_ep12authority_r1/logs/artifacts/stage3/ep_0012/attempt_01/final_blueprint__emotion_focused.json",
+    "projects/_canary/probe_a_stage3_ep12authority_r1/plans/arcs/arc_003.txt",
+    "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+    "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
+    "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+  ],
+  "hard_gates": {
+    "episode_loop_contract_floor": {
+      "required_items": [
+        "pressure_visible",
+        "execution_visible",
+        "proof_visible",
+        "receipt_visible",
+        "observer_shift_visible",
+        "next_gate_visible"
+      ],
+      "minimum_hit_count": 4,
+      "forbidden_joint_miss": [
+        "receipt_visible",
+        "next_gate_visible"
+      ],
+      "status": "pass",
+      "evidence": [
+        "Episode 11 lands visible payoff through 65달러 돌파 and 미실현 수익 3억.",
+        "Episode 12 converts that payoff into a private-authority receipt: special reception room access, direct blind-order rules, and the black direct-hotline card."
+      ],
+      "notes": [
+        "The loop closes with a durable authority object, not merely emotional awe."
+      ]
+    },
+    "receipt_transport_gate": {
+      "rule": "If a structural receipt appears in the tranche artifact, its trace must survive in at least two downstream surfaces.",
+      "status": "pass",
+      "evidence": [
+        "Episode 11 visible payoff creates the leverage surface: 3억 미실현 수익 and public proof of prediction accuracy.",
+        "Episode 12 scene_1 and scene_2 convert that leverage into institutional surrender and upgraded room access.",
+        "Episode 12 scene_3 and protagonist_state preserve the durable receipt as 박성호의 직통 핫라인 명함 plus a hardened information firewall."
+      ],
+      "notes": [
+        "Visible payoff is successfully translated into durable private-authority infrastructure."
+      ]
+    },
+    "anti_contamination_gate": {
+      "rule": "Donor surfaces may remain only as example-family language. Direct donor scene-copy or law-copy fails the gate.",
+      "status": "pass",
+      "evidence": [
+        "The conversion beat is work-native: risk papers, special reception room, blind-order routing, and a black hotline card as private institutional authority.",
+        "No contamination or advisory repair signal appears in the runtime decision row."
+      ],
+      "notes": []
+    },
+    "lawful_bridge_gate": {
+      "rule": "The tranche must open a lawful next gate without replay drift, setup-only delay, or future-beat consumption.",
+      "status": "pass",
+      "evidence": [
+        "Episode 12 cashes out the payoff into authority capture without consuming Arc 3's later carryover beats.",
+        "Arc 3's opening slot remains available for long-hold pressure and new-base consolidation."
+      ],
+      "notes": []
+    }
+  },
+  "weighted_metrics": {
+    "loop_deadline_hit": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "Current Arc 2 contract reaches private-authority capture by episode 12 exactly where the tactical doc places the VIP-line conversion."
+      ],
+      "notes": []
+    },
+    "structural_receipt_conversion": {
+      "weight": 20,
+      "status": "pass",
+      "score": 19,
+      "evidence": [
+        "The 3억 visible payoff is converted into a durable access/authority receipt: direct hotline, center-level routing, and explicit blind treatment of the account.",
+        "The authority object is portable and inventory-like, not just atmospheric respect."
+      ],
+      "notes": [
+        "One point is held back because the authority remains institution-specific rather than system-wide."
+      ]
+    },
+    "receipt_transport_survival": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "Episode 11 payoff survives directly into episode 12 institutional surrender and hotline transfer."
+      ],
+      "notes": []
+    },
+    "carryover_persistence": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "na_allowed": true,
+      "evidence": [
+        "The sequence from fill -> visible payoff -> authority capture now forms a coherent three-step power escalation chain."
+      ],
+      "notes": [
+        "This is the strongest power-side carryover proof in Arc 2."
+      ]
+    },
+    "legal_bridge_efficiency": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "Episode 12 uses the freshly proven payoff immediately to lock in a direct operating channel, with no extra stall or sideways negotiation."
+      ],
+      "notes": []
+    },
+    "anti_contamination_pass": {
+      "weight": 10,
+      "status": "pass",
+      "score": 9,
+      "evidence": [
+        "The authority-capture beat is expressed through Korean securities-firm hierarchy, internal risk paperwork, and VVIP hotline ritual rather than donor mimicry."
+      ],
+      "notes": []
+    },
+    "reward_rotation_health": {
+      "weight": 10,
+      "status": "pass",
+      "score": 10,
+      "evidence": [
+        "Reward rotates again in a healthy way: market number payoff becomes private institutional leverage and a persistent command channel."
+      ],
+      "notes": []
+    }
+  },
+  "watchlists": {
+    "anti_fatigue_risk": {
+      "status": "clear",
+      "red_flags": [
+        "same_receipt_family_repeats_across_two_or_more_tranches",
+        "proof_grows_without_observer_shift",
+        "next_gate_surface_collapses_to_one_hook_class",
+        "earned_access_is_replaced_by_gifted_access"
+      ],
+      "notes": [
+        "The authority receipt is materially different from the prior payoff receipt, so fatigue risk remains low."
+      ]
+    },
+    "saturation_trigger": {
+      "status": "clear",
+      "red_flags": [
+        "authority_gain_rises_while_constraints_flatten",
+        "reward_size_rises_while_reader_payoff_stays_flat",
+        "signboard_and_next_gate_collapse_into_one_repeated_device"
+      ],
+      "notes": [
+        "No immediate saturation trigger is visible because the gain changes medium again, from number to institution."
+      ]
+    }
+  },
+  "interpretation_bands": [
+    {
+      "band": "gate_fail",
+      "meaning": "Execution hold regardless of numeric score."
+    },
+    {
+      "band": "85-100",
+      "meaning": "Strong pass. Bounded realization candidate."
+    },
+    {
+      "band": "70-84",
+      "meaning": "Pass with repair. Apply one targeted fix and rerun."
+    },
+    {
+      "band": "55-69",
+      "meaning": "Weak pass. Doctrine promotion remains on hold."
+    },
+    {
+      "band": "<55",
+      "meaning": "Fail. Recheck tranche design or doctrine interpretation."
+    }
+  ],
+  "operator_fields": {
+    "target_project": "probe_a_stage3_ep12authority_r1",
+    "target_tranche": "Stage3 ep12 private-authority capture proof",
+    "target_stage": 3,
+    "gate_result": "all_loop_gates_pass",
+    "weighted_total": 98,
+    "weighted_total_after_na_adjustment": 98,
+    "operator_summary": "The visible payoff hardens into durable private authority. Episode 12 converts public numeric proof into a direct hotline, information firewall, and VVIP handling rule. This closes Arc 2 as a clean authority-capture pass.",
+    "next_action": "Treat Arc 2 authority capture as proved. The next useful proof target is ep13 cross-arc carryover, where the hotline card, filled-position state, and new-base migration must survive into Arc 3 without flattening."
+  }
+}

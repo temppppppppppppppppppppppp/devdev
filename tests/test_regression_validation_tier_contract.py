@@ -21,13 +21,14 @@ def test_regression_validation_tier_contract_matches_python_inventory():
 
 def test_mutation_boundaries_are_labeled_on_smoke_and_canary_entrypoints():
     expected_markers = {
-        "scripts/run_stage2_smoke.py": 'VALIDATION_TIER = FOCUSED_MUTATION',
-        "scripts/run_stage3_smoke.py": 'VALIDATION_TIER = FOCUSED_MUTATION',
-        "scripts/run_stage4_smoke.py": 'VALIDATION_TIER = FOCUSED_MUTATION',
-        "scripts/run_stage3_canary.py": 'VALIDATION_TIER = FULL_CANARY_PROOF',
-        "scripts/run_stage4_canary.py": 'VALIDATION_TIER = FULL_CANARY_PROOF',
-        "scripts/run_stage34_canary.py": 'VALIDATION_TIER = FULL_CANARY_PROOF',
-        "scripts/run_stage34_ep_demo_canary.py": 'VALIDATION_TIER = FULL_CANARY_PROOF',
+        "scripts/run_stage2_smoke.py": "VALIDATION_TIER = FOCUSED_MUTATION",
+        "scripts/run_stage3_smoke.py": "VALIDATION_TIER = FOCUSED_MUTATION",
+        "scripts/run_stage4_smoke.py": "VALIDATION_TIER = FOCUSED_MUTATION",
+        "scripts/run_stage2_canary.py": "VALIDATION_TIER = FULL_CANARY_PROOF",
+        "scripts/run_stage3_canary.py": "VALIDATION_TIER = FULL_CANARY_PROOF",
+        "scripts/run_stage4_canary.py": "VALIDATION_TIER = FULL_CANARY_PROOF",
+        "scripts/run_stage34_canary.py": "VALIDATION_TIER = FULL_CANARY_PROOF",
+        "scripts/run_stage34_ep_demo_canary.py": "VALIDATION_TIER = FULL_CANARY_PROOF",
         "scripts/e2e_menu_smoke.ps1": "Validation tier: focused_mutation",
     }
 

@@ -1,0 +1,23 @@
+{
+  "prepared_at": "2026-04-18T14:28:57",
+  "source_project": "canonical_stage34ab_ep12_r2",
+  "target_project": "canonical_stage3_hookaudit_ep2_r2",
+  "canary_scope": "stage3_only",
+  "reruns_stage3_generation": true,
+  "preserves_stage2_arcs": true,
+  "preserves_stage4_outputs": true,
+  "from_ep": 2,
+  "cleanup": {
+    "from_ep": 2,
+    "db_impact": {
+      "blueprints": 0,
+      "stage3_attempts": 1,
+      "stage3_director_selections": 1
+    },
+    "file_cleanup": {
+      "blueprint_files_removed": 0,
+      "stage3_artifact_dirs_removed": 0,
+      "log_entries_removed": 6
+    }
+  }
+}
