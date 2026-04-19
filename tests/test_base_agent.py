@@ -743,6 +743,25 @@ class TestJsonSafetyC11:
         text = json.dumps({"items": items})
         result = agent._extract_json_robust(text)
         assert isinstance(result, dict)
+
+    def test_huge_integer_regex_fallback_returns_string_not_crash(self, agent):
+        huge_num = "9" * 5001
+        broken = f'{{"name": "test", "runaway": {huge_num}, broken syntax here'
+
+        result = agent._parse_and_repair_hard(broken)
+
+        assert isinstance(result, dict)
+        assert result.get("name") == "test"
+        assert result.get("runaway") == huge_num
+
+    def test_extract_json_robust_preserves_huge_integer_as_string(self, agent):
+        huge_num = "9" * 5001
+        text = f'{{"huge": {huge_num}}}'
+
+        result = agent._extract_json_robust(text)
+
+        assert isinstance(result, dict)
+        assert result.get("huge") == huge_num
         # 100개 방문 상한 → 일부만 추출되어도 크래시 없음
 
 

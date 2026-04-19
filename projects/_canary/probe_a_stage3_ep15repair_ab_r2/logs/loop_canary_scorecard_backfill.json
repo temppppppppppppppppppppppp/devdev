@@ -1,0 +1,208 @@
+{
+  "schema": "geuldobi.loop_canary_scorecard.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "backfilled",
+  "role": "Loop-oriented bounded canary gate surface for narrative doctrine evaluation.",
+  "document_ref": "docs/2026-04-18/golden-canary-deepclone-probe-a-loop-canary-scorecard.md",
+  "evaluation_unit": [
+    "stage3_bounded_episode_tranche"
+  ],
+  "required_inputs": [
+    "projects/_canary/probe_a_stage3_ep11payoff_r1/logs/stage3_canary_summary.json",
+    "projects/_canary/probe_a_stage3_ep11payoff_r1/plans/blueprints/blueprint_0010.txt",
+    "projects/_canary/probe_a_stage3_ep11payoff_r1/plans/blueprints/blueprint_0011.txt",
+    "projects/_canary/probe_a_stage3_ep11payoff_r1/logs/artifacts/stage3/ep_0010/attempt_01/final_blueprint__dialogue_focused.json",
+    "projects/_canary/probe_a_stage3_ep11payoff_r1/logs/artifacts/stage3/ep_0011/attempt_01/final_blueprint__dialogue_focused.json",
+    "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+    "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
+    "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+  ],
+  "hard_gates": {
+    "episode_loop_contract_floor": {
+      "required_items": [
+        "pressure_visible",
+        "execution_visible",
+        "proof_visible",
+        "receipt_visible",
+        "observer_shift_visible",
+        "next_gate_visible"
+      ],
+      "minimum_hit_count": 4,
+      "forbidden_joint_miss": [
+        "receipt_visible",
+        "next_gate_visible"
+      ],
+      "status": "pass",
+      "evidence": [
+        "Episode 10 works as a lawful decompression beat: recovery, crowd skepticism, and next-target sketching.",
+        "Episode 11 converts the filled position into visible public proof, explicit 3억 미실현 수익, observer shock, and a new authority-channel demand."
+      ],
+      "notes": [
+        "The first visible payoff slot closes without needing structural repair or warning-level reroute."
+      ]
+    },
+    "receipt_transport_gate": {
+      "rule": "If a structural receipt appears in the tranche artifact, its trace must survive in at least two downstream surfaces.",
+      "status": "pass",
+      "evidence": [
+        "Episode 9 closes with a filled 15억 WTI 3x long position.",
+        "Episode 10 preserves that live position while shifting to a breathing/watch posture rather than resetting it.",
+        "Episode 11 turns the live position into visible 65달러 돌파, 미실현 수익 3억, and renewed command pressure on 박성호."
+      ],
+      "notes": [
+        "Fill receipt survives and matures into visible payoff receipt."
+      ]
+    },
+    "anti_contamination_gate": {
+      "rule": "Donor surfaces may remain only as example-family language. Direct donor scene-copy or law-copy fails the gate.",
+      "status": "pass",
+      "evidence": [
+        "The payoff is carried by work-native economic surfaces: emergency ticker, WTI 65달러 돌파, HTS account movement, and PB panic.",
+        "No donor-copy warning appears in decisions or runtime traces."
+      ],
+      "notes": []
+    },
+    "lawful_bridge_gate": {
+      "rule": "The tranche must open a lawful next gate without replay drift, setup-only delay, or future-beat consumption.",
+      "status": "pass",
+      "evidence": [
+        "Episode 10 functions as a short, contract-respecting calm-before-impact beat rather than a sideways stall.",
+        "Episode 11 lands the visible payoff but stops before full exit or total authority formalization, preserving ep12's VIP-line conversion lane."
+      ],
+      "notes": []
+    }
+  },
+  "weighted_metrics": {
+    "loop_deadline_hit": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "Current Arc 2 contract reaches first visible payoff by episode 11 exactly where the tactical doc places it."
+      ],
+      "notes": []
+    },
+    "structural_receipt_conversion": {
+      "weight": 20,
+      "status": "pass",
+      "score": 19,
+      "evidence": [
+        "The filled position converts into a visible numeric payoff receipt: 유가 65달러 돌파 and 미실현 수익 3억.",
+        "The payoff also upgrades authority by letting 한시우 dictate future communication speed and dedicated handling."
+      ],
+      "notes": [
+        "One point is held back because the gain remains unrealized rather than exited."
+      ]
+    },
+    "receipt_transport_survival": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "Episode 9 fill -> episode 10 watchful decompression -> episode 11 visible payoff is a clean three-step maturation chain."
+      ],
+      "notes": []
+    },
+    "carryover_persistence": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "na_allowed": true,
+      "evidence": [
+        "The same filled exposure remains authoritative across ep9, ep10, and ep11 without reset or accidental softening."
+      ],
+      "notes": [
+        "This is the strongest continuity proof so far across execution, breath beat, and payoff."
+      ]
+    },
+    "legal_bridge_efficiency": {
+      "weight": 15,
+      "status": "pass",
+      "score": 14,
+      "evidence": [
+        "The contract uses one breathing episode before payoff, but that beat still contributes by staging crowd skepticism and next-target planning."
+      ],
+      "notes": [
+        "One point is held back because the tempo is slightly slower than the most aggressive possible payoff cadence."
+      ]
+    },
+    "anti_contamination_pass": {
+      "weight": 10,
+      "status": "pass",
+      "score": 9,
+      "evidence": [
+        "The payoff scene is defined by work-specific market telemetry, institution reaction, and PB fear rather than donor mimicry."
+      ],
+      "notes": []
+    },
+    "reward_rotation_health": {
+      "weight": 10,
+      "status": "pass",
+      "score": 9,
+      "evidence": [
+        "Reward rotates from authority receipt to access receipt to fill receipt to visible payoff and then into a new dedicated-channel demand."
+      ],
+      "notes": [
+        "One point is held back because formal VIP-line capture is still reserved for the next lane."
+      ]
+    }
+  },
+  "watchlists": {
+    "anti_fatigue_risk": {
+      "status": "clear",
+      "red_flags": [
+        "same_receipt_family_repeats_across_two_or_more_tranches",
+        "proof_grows_without_observer_shift",
+        "next_gate_surface_collapses_to_one_hook_class",
+        "earned_access_is_replaced_by_gifted_access"
+      ],
+      "notes": [
+        "The tranche avoids fatigue because the reward visibly changes form again: filled risk becomes public numeric payoff and channel leverage."
+      ]
+    },
+    "saturation_trigger": {
+      "status": "clear",
+      "red_flags": [
+        "authority_gain_rises_while_constraints_flatten",
+        "reward_size_rises_while_reader_payoff_stays_flat",
+        "signboard_and_next_gate_collapse_into_one_repeated_device"
+      ],
+      "notes": [
+        "No immediate saturation trigger is visible. The payoff is concrete, numeric, and publicly legible."
+      ]
+    }
+  },
+  "interpretation_bands": [
+    {
+      "band": "gate_fail",
+      "meaning": "Execution hold regardless of numeric score."
+    },
+    {
+      "band": "85-100",
+      "meaning": "Strong pass. Bounded realization candidate."
+    },
+    {
+      "band": "70-84",
+      "meaning": "Pass with repair. Apply one targeted fix and rerun."
+    },
+    {
+      "band": "55-69",
+      "meaning": "Weak pass. Doctrine promotion remains on hold."
+    },
+    {
+      "band": "<55",
+      "meaning": "Fail. Recheck tranche design or doctrine interpretation."
+    }
+  ],
+  "operator_fields": {
+    "target_project": "probe_a_stage3_ep11payoff_r1",
+    "target_tranche": "Stage3 ep10->ep11 first visible payoff proof",
+    "target_stage": 3,
+    "gate_result": "all_loop_gates_pass",
+    "weighted_total": 96,
+    "weighted_total_after_na_adjustment": 96,
+    "operator_summary": "The first visible payoff lands cleanly. Episode 10 preserves the filled position while staging crowd skepticism, and episode 11 cashes that setup out into a public 65달러 breakout, 3억 미실현 수익, and renewed authority pressure on 박성호. This is a strong, structurally clean pass.",
+    "next_action": "Treat first visible payoff as proved. The next useful proof target is ep12, where the payoff should harden into private-authority capture and dedicated VIP-line conversion."
+  }
+}

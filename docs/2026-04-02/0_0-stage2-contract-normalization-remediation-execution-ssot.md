@@ -1,15 +1,21 @@
 # 0_0 Stage2 Contract Normalization Remediation Execution SSOT
 
 Date: 2026-04-02
-Status: partially_realized (the earlier Stage2 persistence-authority / proof-layer tranches remain landed, and the later 2026-04-11/2026-04-12 live-workspace hardening pass now also lands the previously reopened bounded parent-lane residue: Stage2 `runtime_advisory` fallback now survives persistence/sink surfaces, `single_arc_attempt` `ep_num` semantics are normalized around arc ordinal with `meta.current_ep_start` preserved, and carryover authority now synchronizes start-state location plus finance truth into both structured state and tactical rendering; this SSOT therefore remains open only as a broader proof-pending / normalization lane below the front Stage4 and Stage3 stack, not because those three bounded residues are still live)
+Status: closed (closure-review passed on 2026-04-19; the bounded `arc_005` state-shell and stale-receipt proof chain removed the front-visible same-family Stage2 complaint, and any broader packet-to-txt normalization now belongs to deferred future reopening only if later-family evidence actually reopens it)
 Canonical Path: `docs/2026-04-02/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md`
+Temp Mirror Path: `docs/temp/0_0-stage2-contract-normalization-remediation-execution-ssot.md` (removed during the 2026-04-19 closure cleanup)
 Commit State:
 - Baseline Commit: `c5c5180bd3493bced341e21f29abb754a163de56`
 - Baseline Dirty Summary: `dirty: canary_0_0_stage34_arc2_fixpack_r1 runtime logs/db/artifacts modified; 2026-04-02 Stage2 survey docs and lane drafts untracked`
-- Resume Commit: `2b7cb64f2d1fe2cd1152806a5cc37795609f9755`
-- Resume Drift Summary: `current main is now authoritative after reset; the earlier Stage2 warn-first pair remains closed, and the later live-workspace tranche now lands the previously reopened parent-lane residue around runtime-advisory fallback, `ep_num` / `current_ep_start` semantics, and broader carryover-authority start-state truth; this SSOT now stays partial because fresh proof and broader Stage2 normalization are still pending, while stale 2026-04-11 backup work remains excluded from authority`
+- Resume Commit: `029df1a74af89a7b5387c449f4723a5df0d000d4`
+- Resume Drift Summary: `the 2026-04-19 queue controller is now authoritative; Stage2 pacing has been closed and removed from the active temp queue, so this SSOT is no longer an operator-parked lower-priority backlog item and now governs the front-active Stage2 shell/round-trip residue instead`
 Source Survey Docs:
+- `docs/2026-04-19/stage2-contract-normalization-closure-review.md`
+- `docs/2026-04-19/stage2-contract-normalization-arc5-inventory-semantic-rerun-proof.md`
+- `docs/2026-04-19/stage2-contract-normalization-arc5-state-shell-rerun-proof.md`
+- `docs/2026-04-19/stage2-contract-normalization-reactivation-refresh.md`
+- `docs/2026-04-19/stage2-pacing-closure-review.md`
+- `docs/2026-04-19/active-temp-execution-roadmap.md`
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-bounded-survey.md`
 - `docs/2026-04-01/0_0-stage2-stage3-context-hierarchy-bounded-survey.md`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-bounded-survey.md`
@@ -22,6 +28,13 @@ Source Survey Docs:
 - `docs/2026-04-11/stage23-current-main-static-parallel-survey.md`
 - `2026-04-09 current-state re-audit embedded in this SSOT`
 Evidence Artifacts:
+- `projects/_canary/probe_a_stage2_arc5_inventorysem_r1/logs/session/decisions.jsonl`
+- `projects/_canary/probe_a_stage2_arc5_inventorysem_r1/logs/session/ui_events.jsonl`
+- `projects/_canary/probe_a_stage2_arc5_inventorysem_r1/logs/stage2_canary_summary.json`
+- `projects/_canary/probe_a_stage2_arc5_inventorysem_r1/logs/artifacts/stage2/arc_005/attempt_01/final_arc__balanced.json`
+- `projects/_canary/probe_a_stage2_arc5_stateshell_r1/logs/session/decisions.jsonl`
+- `projects/_canary/probe_a_stage2_arc5_stateshell_r1/logs/session/ui_events.jsonl`
+- `projects/_canary/probe_a_stage2_arc5_stateshell_r1/logs/artifacts/stage2/arc_005/attempt_01/final_arc__balanced.json`
 - `docs/2026-04-02/0_0-stage2-production-consumption-global-evidence.json`
 - `docs/2026-03-31/0_0-stage2-stage3-stage4-readiness-parallel-evidence.json`
 - `docs/2026-04-05/00_0405-stage2-artifact-truth-observability-evidence.json`
@@ -40,15 +53,15 @@ Side-Effect Coverage: covered
 
 ## 1. Intent
 
-Keep this execution SSOT open but operator-parked by default now that the older warn-first proof-sink pair has been closed on fresh `000_260408_ㅇ` evidence, the later producer-side cleanup tranche has already landed, and the same-day static parallel audit reopened no live Stage2 `P0-P2`.
+Keep this execution SSOT open as the current front-active Stage2 lane after the pacing closure, while explicitly refusing to reopen the older proof-sink bookkeeping slices as if they were still the live next patch.
 
 This execution SSOT still exists because the latest current-state re-audit plus static code survey now prove:
 
 - the earlier `director_selections.verdict_reason` / intermediate `attempt_key` residual pair is no longer the governing next step
 - the later producer-side compare-meta normalization / `arc_design` parity tranche is no longer the governing next step either
 - the remaining live Stage2 risk is no longer the earlier `runtime_advisory` / `ep_num` / carryover-truth trio
-- the remaining Stage2 questions are now fresh-proof bookkeeping and broader deferred normalization, not those already-landed bounded observability fixes
-- therefore this parent lane should now be read as a proof-pending, operator-parked broader Stage2 lane rather than as the current direct Stage2 bug owner
+- the remaining Stage2 questions are now state-shell cleanliness, artifact packet-to-txt round-trip drift, and broader deferred normalization
+- therefore this parent lane should now be read as the current direct Stage2 owner for bounded shell/round-trip cleanup, not as an operator-parked backlog lane
 
 ## 1A. 2026-04-12 Current Execution Update
 
@@ -115,12 +128,128 @@ Pass 3. Execution/use verdict:
 
 Current adversarially confirmed priority for realization:
 
-1. authoritative `stage_attempts` rationale coverage
-2. blank-`attempt_key` hard-warn surfacing
-3. `session_decisions.verdict_reason` fallback tightening
-4. `runtime_advisory` / `retry_directives` Stage2 proof inclusion
+1. packet-to-txt round-trip normalization for location/item/state truth
+2. opening carryover instruction realization and state-header completeness
+3. keep-or-drop / alias clarity for Stage2-owned state shells
+4. only then any renewed proof-layer follow-up if fresh evidence reopens it
 
 Confidence for this revalidation anchor: `96%`
+
+## 1C. 2026-04-19 Reactivation After Pacing Closure
+
+Evidence basis:
+
+- `docs/2026-04-19/stage2-contract-normalization-reactivation-refresh.md`
+- `docs/2026-04-19/stage2-pacing-closure-review.md`
+- `docs/2026-04-19/active-temp-execution-roadmap.md`
+- `docs/2026-04-10/00_000-stage2-fresh-run-post-run-merge-audit.md`
+- `docs/2026-04-11/stage23-current-main-static-parallel-survey.md`
+- `docs/2026-04-05/00_0405-stage2-artifact-truth-observability-bounded-survey.md`
+
+Current reading:
+
+1. the pacing lane is now closed and removed from the active temp queue, so this SSOT becomes the actual front-active Stage2 sibling lane
+2. the old direct-next-step reading around proof sinks, `runtime_advisory`, `ep_num`, and broader carryover-authority truth is now historical landed backing rather than the active next patch
+3. the strongest live Stage2 residue is the shell/round-trip family:
+   - opening carryover instruction realization
+   - carried equipment or other carried facts missing from state headers
+   - packet-to-txt round-trip drift for location/item/state truth
+   - keep-or-drop and alias clarity at the Stage2 emission boundary
+4. this reactivation still does **not** justify a broad mission-authority rewrite or a new queue lane
+
+Current bounded execution order:
+
+1. refresh the governing SSOT and temp mirror to current queue meaning
+2. narrow the first code tranche to Stage2 artifact emission / state-shell cleanliness
+3. only reopen broader mission-authority extraction if the bounded shell tranche proves insufficient
+
+When this 2026-04-19 reactivation section conflicts with older queue-priority notes below, Section `1C` governs the current reading of the lane.
+
+## 1D. 2026-04-19 Arc 5 Fresh State-Shell Proof
+
+Evidence basis:
+
+- `docs/2026-04-19/stage2-contract-normalization-arc5-state-shell-rerun-proof.md`
+- `projects/_canary/probe_a_stage2_arc5_stateshell_r1/logs/session/decisions.jsonl`
+- `projects/_canary/probe_a_stage2_arc5_stateshell_r1/logs/session/ui_events.jsonl`
+- `projects/_canary/probe_a_stage2_arc5_stateshell_r1/logs/artifacts/stage2/arc_005/attempt_01/final_arc__balanced.json`
+- `projects/_canary/probe_a_stage2_arc5_pacing_r1/logs/session/decisions.jsonl`
+- `projects/_canary/probe_a_stage2_arc5_pacing_r1/logs/artifacts/stage2/arc_005/attempt_01/final_arc__conservative.json`
+
+Current reading after the fresh rerun:
+
+1. the first fresh `arc_005` rerun after the end-state header sync tranche stayed healthy enough to bank:
+   - initial Director verdict: `PASS_WITH_FIX (92)`
+   - same-attempt final verdict: `PASS (100)`
+2. the dominant first-pass complaint has shifted:
+   - the older rerun complained about missing opening carryover instruction realization and empty carried-equipment state headers
+   - the fresh rerun now complains instead about stale `WTI`/`17.5억` receipt remnants and gold-liquidation receipt handling
+3. the UI trace explicitly records `End State Header Sync`, so the latest tranche did execute on the fresh path
+4. therefore the governing Stage2 residue is now narrower than the broad shell/header family named in Section `1C`
+
+Current bounded execution order after the fresh proof:
+
+1. bank the header-sync improvement as landed bounded evidence for opening carryover plus state-header completeness
+2. move the next Stage2 code tranche from generic shell/header sync to stale receipt / inventory-semantic keep-or-drop filtering
+3. only reopen broader mission-authority or alias normalization if the narrower receipt/inventory tranche proves insufficient
+
+When this fresh-proof section conflicts with the broader reactivation framing above, Section `1D` governs the current next-tranche interpretation.
+
+## 1E. 2026-04-19 Arc 5 Fresh Inventory-Semantic Proof
+
+Evidence basis:
+
+- `docs/2026-04-19/stage2-contract-normalization-arc5-inventory-semantic-rerun-proof.md`
+- `projects/_canary/probe_a_stage2_arc5_inventorysem_r1/logs/session/decisions.jsonl`
+- `projects/_canary/probe_a_stage2_arc5_inventorysem_r1/logs/session/ui_events.jsonl`
+- `projects/_canary/probe_a_stage2_arc5_inventorysem_r1/logs/stage2_canary_summary.json`
+- `projects/_canary/probe_a_stage2_arc5_inventorysem_r1/logs/artifacts/stage2/arc_005/attempt_01/final_arc__balanced.json`
+
+Current reading after the fresh rerun:
+
+1. the first fresh `arc_005` rerun after the stale-receipt / inventory-semantic tranche now clears on the first Director pass:
+   - initial Director verdict: `PASS (95)`
+   - no `PASS_WITH_FIX` hop required
+2. the prior front-visible stale inventory complaints are gone:
+   - stale `WTI` transaction receipt no longer survives in accepted end inventory
+   - stale `17.5억` balance-proof variant no longer survives in accepted end inventory
+3. the accepted end inventory now keeps the current-state proof object instead (`2006년 연말 결산 50억 원 잔고 증명서`)
+4. therefore this Stage2 lane is no longer carrying an active same-family localfix complaint on `arc_005`
+
+Current bounded execution order after the fresh proof:
+
+1. bank the end-state header sync tranche as landed bounded evidence
+2. bank the stale receipt / inventory-semantic filter tranche as landed bounded evidence
+3. move this Stage2 lane toward closure review instead of opening another same-family repair tranche
+4. only reopen further code realization if a later family rerun exposes a genuinely different Stage2-local residue
+
+When this fresh-proof section conflicts with the earlier narrower-repair framing above, Section `1E` governs the current next-tranche interpretation.
+
+## 1F. 2026-04-19 Closure Review
+
+Evidence basis:
+
+- `docs/2026-04-19/stage2-contract-normalization-closure-review.md`
+- `docs/2026-04-19/stage2-contract-normalization-arc5-state-shell-rerun-proof.md`
+- `docs/2026-04-19/stage2-contract-normalization-arc5-inventory-semantic-rerun-proof.md`
+- `projects/_canary/probe_a_stage2_arc5_inventorysem_r1/logs/session/decisions.jsonl`
+- `projects/_canary/probe_a_stage2_arc5_inventorysem_r1/logs/stage2_canary_summary.json`
+
+Current reading after closure review:
+
+1. the bounded `arc_005` proof chain now clears the front-visible same-family Stage2 complaint
+2. the lane no longer has an active localfix tranche that honestly outranks the Stage3 sibling lanes
+3. broader deferred packet-to-txt normalization remains real, but it is no longer an active queue-owned realization obligation without fresh later-family evidence
+4. this execution SSOT should therefore move from `partially_realized` to `closed`
+
+Current closure consequence:
+
+1. mark the canonical SSOT closed
+2. remove the temp mirror from the active temp queue
+3. promote the next front item to `0_0-stage3-contract-tightening-remediation`
+4. reopen this lane only if later-family Stage2 proof shows a genuinely different local residue
+
+When this closure section conflicts with earlier reactivation framing above, Section `1F` governs the current queue meaning of the lane.
 
 ## 2. Baseline Facts
 
@@ -135,6 +264,8 @@ Confidence for this revalidation anchor: `96%`
 - 2026-04-06 Opus revalidation proves the remaining Stage2-local high-severity seam is no longer just generic packet drift: `joint_docs.world_joint` and `status_shadow` can still be overwritten by `enriched_block` payloads at validation/finalization time before canonical persistence.
 - Fresh `01_golden` evidence confirms a residual Stage2-local contract mismatch: operator-visible cleanup can close falsely, with accepted artifacts still retaining `internal_energy` after console-level removal claims.
 - The same `01_golden` evidence also confirms that stale summary sinks and implicit `Arc 5` closure were observed under an abrupt IDE shutdown, so they remain bounded observability and abnormal-shutdown-tolerance debt rather than a queue-promotion trigger over the current persistence tranche.
+- Fresh `arc_005` state-shell proof shows the earlier missing opening-carryover and empty state-header slice has improved.
+- Fresh `arc_005` inventory-semantic proof shows the stale receipt / stale financial snapshot slice has also improved, so the lane now reads as closure-review ready rather than same-family patch hungry.
 
 ## 3. Scope
 
@@ -327,7 +458,7 @@ Realization direction:
 
 ## 11. Guardrails
 
-- keep this active tranche below the current `Stage4 consumer` / `Stage4 repair` front pair unless explicit reprioritization changes the queue again
+- keep this active tranche below no older queue text except the current 2026-04-19 roadmap; if older queue-priority notes conflict, the current roadmap and Section `1C` win
 - do not widen this lane into downstream consumer rename cleanup in the same turn
 - do not widen this lane into `Stage3` contract tightening in the same turn
 - do not widen the persistence tranche into a broad Stage2 architecture sweep in the same turn
@@ -336,11 +467,11 @@ Realization direction:
 
 ## 12. Temp Queue Notes
 
-- temp status: `partially_realized (open, lower priority than active Stage4 and Stage3 lanes)`
+- temp status: `partially_realized (open, front-active Stage2 sibling lane after pacing closure)`
 - cleanup condition:
-  - keep the temp mirror as an open lower-priority queue item until explicit closure, formal deactivation, or explicit reactivation
+  - keep the temp mirror as an open front-active queue item until explicit closure or formal demotion
 - roadmap dependency:
-  - this item stays below active `Stage4` lanes, the active `0_0-stage234-nonwuxia-state-lock-overreach-remediation` lane, and the reopened `0_0-stage3-contract-tightening-remediation` tranche
+  - current precedence is governed by `docs/2026-04-19/active-temp-execution-roadmap.md`, where this item now holds roadmap rank `1`
 
 ## 13. Validation and Closure Hooks
 

@@ -1,0 +1,94 @@
+{
+  "summary_role": "stage2_only_canary",
+  "project": "probe_a_stage23probe_r1_arc23only_r1",
+  "project_locator": "projects/_canary/probe_a_stage23probe_r1_arc23only_r1",
+  "project_root": "C:\\Users\\PC\\Desktop\\글도비\\projects\\_canary\\probe_a_stage23probe_r1_arc23only_r1",
+  "prepared_from": "golden_canary_deepclone_probe_a_stage23probe_r1",
+  "keep_arcs": 2,
+  "expected_final_arc_count": 3,
+  "actual_arc_count": 3,
+  "latest_session_id": "20260417_230418",
+  "stage2_attempt_count": 3,
+  "latest_stage2_attempt": {
+    "arc_num": 3,
+    "ep_num": 3,
+    "attempt_num": 1,
+    "verdict": "PASS",
+    "score": 100,
+    "session_id": "20260417_230418",
+    "attempt_key": "s2:ep3:arc3:a1:20260417_230418",
+    "artifact_path": "logs/artifacts/stage2/arc_003/attempt_01/final_arc__creative.json"
+  },
+  "carryover_pairs": [
+    {
+      "previous_arc_no": 1,
+      "current_arc_no": 2,
+      "previous_end_equipment_count": 0,
+      "current_start_equipment_count": 0,
+      "current_end_equipment_count": 0,
+      "current_joint_inventory_count": 0,
+      "carryover_match": true,
+      "joint_inventory_matches_end_equipment": true,
+      "previous_end_equipment_preview": [],
+      "current_start_equipment_preview": [],
+      "current_end_equipment_preview": [],
+      "current_protagonist_items": null,
+      "current_items_acquired": []
+    },
+    {
+      "previous_arc_no": 2,
+      "current_arc_no": 3,
+      "previous_end_equipment_count": 0,
+      "current_start_equipment_count": 0,
+      "current_end_equipment_count": 7,
+      "current_joint_inventory_count": 7,
+      "carryover_match": true,
+      "joint_inventory_matches_end_equipment": true,
+      "previous_end_equipment_preview": [],
+      "current_start_equipment_preview": [],
+      "current_end_equipment_preview": [
+        "18년 치 매크로 이벤트가 암호화되어 적힌 양장 수첩",
+        "SW인베스트먼트 법인 설립 신청서 가안",
+        "20억 원이 예치된 개인 계좌 OTP 카드"
+      ],
+      "current_protagonist_items": [
+        "WTI 6월물 절반 청산 및 잔여 홀딩 내역서",
+        "한미증권 리스크관리팀 발행 'Exception Account' 승인 문서 사본"
+      ],
+      "current_items_acquired": [
+        "WTI 6월물 절반 청산 및 잔여 홀딩 내역서",
+        "한미증권 리스크관리팀 발행 'Exception Account' 승인 문서 사본"
+      ]
+    }
+  ],
+  "latest_carryover_pair": {
+    "previous_arc_no": 2,
+    "current_arc_no": 3,
+    "previous_end_equipment_count": 0,
+    "current_start_equipment_count": 0,
+    "current_end_equipment_count": 7,
+    "current_joint_inventory_count": 7,
+    "carryover_match": true,
+    "joint_inventory_matches_end_equipment": true,
+    "previous_end_equipment_preview": [],
+    "current_start_equipment_preview": [],
+    "current_end_equipment_preview": [
+      "18년 치 매크로 이벤트가 암호화되어 적힌 양장 수첩",
+      "SW인베스트먼트 법인 설립 신청서 가안",
+      "20억 원이 예치된 개인 계좌 OTP 카드"
+    ],
+    "current_protagonist_items": [
+      "WTI 6월물 절반 청산 및 잔여 홀딩 내역서",
+      "한미증권 리스크관리팀 발행 'Exception Account' 승인 문서 사본"
+    ],
+    "current_items_acquired": [
+      "WTI 6월물 절반 청산 및 잔여 홀딩 내역서",
+      "한미증권 리스크관리팀 발행 'Exception Account' 승인 문서 사본"
+    ]
+  },
+  "hard_gates": {
+    "status": "pass",
+    "errors": [],
+    "warnings": []
+  }
+}

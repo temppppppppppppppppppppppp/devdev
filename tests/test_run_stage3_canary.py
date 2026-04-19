@@ -106,7 +106,13 @@ def test_stage3_canary_summary_gates_pass():
     detail = [
         {"ep_num": 1, "attempt_count": 1, "final_verdict": "PASS", "final_score": 90, "all_verdicts": ["PASS"]},
         {"ep_num": 2, "attempt_count": 1, "final_verdict": "PASS", "final_score": 88, "all_verdicts": ["PASS"]},
-        {"ep_num": 3, "attempt_count": 2, "final_verdict": "PASS", "final_score": 85, "all_verdicts": ["REJECT", "PASS"]},
+        {
+            "ep_num": 3,
+            "attempt_count": 2,
+            "final_verdict": "PASS",
+            "final_score": 85,
+            "all_verdicts": ["REJECT", "PASS"],
+        },
         {"ep_num": 4, "attempt_count": 1, "final_verdict": "PASS", "final_score": 92, "all_verdicts": ["PASS"]},
     ]
 
@@ -143,7 +149,13 @@ def test_stage3_canary_summary_gates_fail_on_rejected_episode():
 
     detail = [
         {"ep_num": 1, "attempt_count": 1, "final_verdict": "PASS", "final_score": 90, "all_verdicts": ["PASS"]},
-        {"ep_num": 2, "attempt_count": 3, "final_verdict": "REJECT", "final_score": 40, "all_verdicts": ["REJECT", "REJECT", "REJECT"]},
+        {
+            "ep_num": 2,
+            "attempt_count": 3,
+            "final_verdict": "REJECT",
+            "final_score": 40,
+            "all_verdicts": ["REJECT", "REJECT", "REJECT"],
+        },
     ]
     result = _evaluate_stage3_canary_gates(
         target_ep=2,
@@ -154,6 +166,24 @@ def test_stage3_canary_summary_gates_fail_on_rejected_episode():
     )
     assert result["status"] == "fail"
     assert any("ep2_final_verdict:REJECT" in e for e in result["errors"])
+
+
+def test_stage3_canary_summary_gates_treat_skipped_sink_alignment_as_neutral():
+    from modules.core.stage4_canary_tools import _evaluate_stage3_canary_gates
+
+    result = _evaluate_stage3_canary_gates(
+        target_ep=2,
+        blueprint_db_count=1,
+        blueprint_file_count=1,
+        attempt_detail=[
+            {"ep_num": 1, "attempt_count": 1, "final_verdict": "PASS", "final_score": 90, "all_verdicts": ["PASS"]},
+        ],
+        sink_alignment_summary={"status": "skipped"},
+    )
+
+    assert result["status"] == "fail"
+    assert any("blueprint_db_count_short" in e for e in result["errors"])
+    assert result["warnings"] == []
 
 
 def test_stage3_attempt_detail_builder():
@@ -185,13 +215,20 @@ def test_parse_args_prepare():
 
 
 def test_parse_args_full():
-    with patch("sys.argv", [
-        "run_stage3_canary.py", "full",
-        "--source-project", "src",
-        "--target-project", "tgt",
-        "--target-ep", "8",
-        "--force",
-    ]):
+    with patch(
+        "sys.argv",
+        [
+            "run_stage3_canary.py",
+            "full",
+            "--source-project",
+            "src",
+            "--target-project",
+            "tgt",
+            "--target-ep",
+            "8",
+            "--force",
+        ],
+    ):
         args = canary_script.parse_args()
     assert args.command == "full"
     assert args.target_ep == 8
@@ -229,9 +266,13 @@ def test_reset_stage3_outputs_allows_partial_from_ep(tmp_path):
     fake_db = MagicMock()
     with (
         patch.object(stage4_canary_tools, "DBManager", return_value=fake_db),
-        patch.object(stage4_canary_tools, "_collect_stage3_cleanup_impact", return_value={"stage3_attempts": 4}) as impact,
+        patch.object(
+            stage4_canary_tools, "_collect_stage3_cleanup_impact", return_value={"stage3_attempts": 4}
+        ) as impact,
         patch.object(stage4_canary_tools, "_delete_stage3_db_outputs") as delete_outputs,
-        patch.object(stage4_canary_tools, "_clear_stage3_files", return_value={"blueprint_files_removed": 4}) as clear_files,
+        patch.object(
+            stage4_canary_tools, "_clear_stage3_files", return_value={"blueprint_files_removed": 4}
+        ) as clear_files,
     ):
         payload = stage4_canary_tools.reset_stage3_outputs(project_root, from_ep=5)
 

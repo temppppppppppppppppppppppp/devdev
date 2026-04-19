@@ -1,0 +1,116 @@
+{
+  "summary_role": "stage2_only_canary",
+  "project": "probe_a_stage2_arc5_pacing_r1",
+  "project_locator": "projects/_canary/probe_a_stage2_arc5_pacing_r1",
+  "project_root": "projects\\_canary\\probe_a_stage2_arc5_pacing_r1",
+  "prepared_from": "golden_canary_deepclone_probe_a_stage23probe_r1",
+  "keep_arcs": 4,
+  "expected_final_arc_count": 5,
+  "actual_arc_count": 5,
+  "latest_session_id": "20260419_121217",
+  "stage2_attempt_count": 4,
+  "latest_stage2_attempt": {
+    "arc_num": 5,
+    "ep_num": 5,
+    "attempt_num": 1,
+    "verdict": "PASS",
+    "score": 100,
+    "session_id": "20260419_121217",
+    "attempt_key": "s2:ep5:arc5:a1:20260419_121217",
+    "artifact_path": "logs/artifacts/stage2/arc_005/attempt_01/final_arc__conservative.json"
+  },
+  "carryover_pairs": [
+    {
+      "previous_arc_no": 1,
+      "current_arc_no": 2,
+      "previous_end_equipment_count": 0,
+      "current_start_equipment_count": 0,
+      "current_end_equipment_count": 0,
+      "current_joint_inventory_count": 0,
+      "carryover_match": true,
+      "joint_inventory_matches_end_equipment": true,
+      "previous_end_equipment_preview": [],
+      "current_start_equipment_preview": [],
+      "current_end_equipment_preview": [],
+      "current_protagonist_items": null,
+      "current_items_acquired": []
+    },
+    {
+      "previous_arc_no": 2,
+      "current_arc_no": 3,
+      "previous_end_equipment_count": 0,
+      "current_start_equipment_count": 0,
+      "current_end_equipment_count": 0,
+      "current_joint_inventory_count": 0,
+      "carryover_match": true,
+      "joint_inventory_matches_end_equipment": true,
+      "previous_end_equipment_preview": [],
+      "current_start_equipment_preview": [],
+      "current_end_equipment_preview": [],
+      "current_protagonist_items": null,
+      "current_items_acquired": []
+    },
+    {
+      "previous_arc_no": 3,
+      "current_arc_no": 4,
+      "previous_end_equipment_count": 0,
+      "current_start_equipment_count": 0,
+      "current_end_equipment_count": 0,
+      "current_joint_inventory_count": 0,
+      "carryover_match": true,
+      "joint_inventory_matches_end_equipment": true,
+      "previous_end_equipment_preview": [],
+      "current_start_equipment_preview": [],
+      "current_end_equipment_preview": [],
+      "current_protagonist_items": null,
+      "current_items_acquired": []
+    },
+    {
+      "previous_arc_no": 4,
+      "current_arc_no": 5,
+      "previous_end_equipment_count": 0,
+      "current_start_equipment_count": 0,
+      "current_end_equipment_count": 10,
+      "current_joint_inventory_count": 10,
+      "carryover_match": true,
+      "joint_inventory_matches_end_equipment": true,
+      "previous_end_equipment_preview": [],
+      "current_start_equipment_preview": [],
+      "current_end_equipment_preview": [
+        "법인 등록증",
+        "OTP 카드",
+        "보안 매체"
+      ],
+      "current_protagonist_items": [
+        "2006년도 SW인베스트먼트 연말 결산서"
+      ],
+      "current_items_acquired": []
+    }
+  ],
+  "latest_carryover_pair": {
+    "previous_arc_no": 4,
+    "current_arc_no": 5,
+    "previous_end_equipment_count": 0,
+    "current_start_equipment_count": 0,
+    "current_end_equipment_count": 10,
+    "current_joint_inventory_count": 10,
+    "carryover_match": true,
+    "joint_inventory_matches_end_equipment": true,
+    "previous_end_equipment_preview": [],
+    "current_start_equipment_preview": [],
+    "current_end_equipment_preview": [
+      "법인 등록증",
+      "OTP 카드",
+      "보안 매체"
+    ],
+    "current_protagonist_items": [
+      "2006년도 SW인베스트먼트 연말 결산서"
+    ],
+    "current_items_acquired": []
+  },
+  "hard_gates": {
+    "status": "pass",
+    "errors": [],
+    "warnings": []
+  }
+}

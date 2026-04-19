@@ -1,0 +1,211 @@
+{
+  "schema": "geuldobi.loop_canary_scorecard.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "backfilled",
+  "role": "Loop-oriented bounded canary gate surface for narrative doctrine evaluation.",
+  "document_ref": "docs/2026-04-18/golden-canary-deepclone-probe-a-loop-canary-scorecard.md",
+  "evaluation_unit": [
+    "stage3_bounded_episode_tranche"
+  ],
+  "required_inputs": [
+    "projects/_canary/probe_a_stage3_ep6payoff_r1/logs/stage3_canary_summary.json",
+    "projects/_canary/probe_a_stage3_ep6payoff_r1/plans/blueprints/blueprint_0005.txt",
+    "projects/_canary/probe_a_stage3_ep6payoff_r1/plans/blueprints/blueprint_0006.txt",
+    "projects/_canary/probe_a_stage3_ep6payoff_r1/logs/artifacts/stage3/ep_0005/attempt_02/final_blueprint__dialogue_focused.json",
+    "projects/_canary/probe_a_stage3_ep6payoff_r1/logs/artifacts/stage3/ep_0006/attempt_03/final_blueprint__dialogue_focused.json",
+    "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+    "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
+    "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+  ],
+  "hard_gates": {
+    "episode_loop_contract_floor": {
+      "required_items": [
+        "pressure_visible",
+        "execution_visible",
+        "proof_visible",
+        "receipt_visible",
+        "observer_shift_visible",
+        "next_gate_visible"
+      ],
+      "minimum_hit_count": 4,
+      "forbidden_joint_miss": [
+        "receipt_visible",
+        "next_gate_visible"
+      ],
+      "status": "pass",
+      "evidence": [
+        "Episode 5 ends with legal blind-structure completion, external expert submission, and next-day liquidity readiness.",
+        "Episode 6 converts that setup into physical room conversion, 20억 transfer completion, capital-on-screen verification, observer-shift escalation, and imminent first-position ignition."
+      ],
+      "notes": [
+        "All six loop-contract items remain visible even though the tranche stops one beat before realized market consequence."
+      ]
+    },
+    "receipt_transport_gate": {
+      "rule": "If a structural receipt appears in the tranche artifact, its trace must survive in at least two downstream surfaces.",
+      "status": "pass",
+      "evidence": [
+        "Episode 5 ending_state preserves completed firewall setup plus next-day liquidity arrival.",
+        "Episode 6 scene_3 shows 박성호 forcing the 20억 transfer through the institutional lane.",
+        "Episode 6 scene_4 shows the SW인베스트먼트 balance updated to 2,000,000,000.",
+        "Episode 6 ending_state preserves the tranche as imminent first-position entry rather than a reset."
+      ],
+      "notes": [
+        "The legal/setup receipt survives as operational capital control, not just as memory."
+      ]
+    },
+    "anti_contamination_gate": {
+      "rule": "Donor surfaces may remain only as example-family language. Direct donor scene-copy or law-copy fails the gate.",
+      "status": "pass",
+      "evidence": [
+        "The payoff surface is work-native: 성북동 private trading room, PB backoffice risk override, WTI timing, and macro notebook verification.",
+        "Observer shift is carried by 박성호's operational fear and compliance rather than donor-specific scene furniture."
+      ],
+      "notes": [
+        "This tranche reads more like a work-specific market ignition lane than a donor imitation lane."
+      ]
+    },
+    "lawful_bridge_gate": {
+      "rule": "The tranche must open a lawful next gate without replay drift, setup-only delay, or future-beat consumption.",
+      "status": "pass",
+      "evidence": [
+        "Episode 6 uses an explicit_transition from the legal/firewall closeout into the home trading-room and PB execution lane without replay drift.",
+        "The ending hook stops at just-before-entry ignition, preserving actual fill and immediate market consequence for the next tranche."
+      ],
+      "notes": []
+    }
+  },
+  "weighted_metrics": {
+    "loop_deadline_hit": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "The opening stack now reaches physical capital control and first-position countdown by episode 6 without flattening."
+      ],
+      "notes": []
+    },
+    "structural_receipt_conversion": {
+      "weight": 20,
+      "status": "pass",
+      "score": 18,
+      "evidence": [
+        "Reward rotates from legal firewall readiness into actual capital transfer, private trading-room sovereignty, and market-entry ignition authority.",
+        "박성호's compliance hardens into a durable observer-shift receipt rather than a one-scene reaction."
+      ],
+      "notes": [
+        "Two points are held back because realized trade consequence and visible profit receipt have not landed yet."
+      ]
+    },
+    "receipt_transport_survival": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "The ep5 firewall and liquidity promise survives directly into ep6 transfer completion, balance verification, and OTP ignition."
+      ],
+      "notes": []
+    },
+    "carryover_persistence": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "na_allowed": true,
+      "evidence": [
+        "The tranche cleanly carries authority from family approval to legal firewall to capital-control execution with no reset."
+      ],
+      "notes": [
+        "This is the strongest cross-lane persistence proof in the opening stack so far."
+      ]
+    },
+    "legal_bridge_efficiency": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "The bridge exits setup cleanly and reaches capital-on-screen ignition without overspending the next beat."
+      ],
+      "notes": []
+    },
+    "anti_contamination_pass": {
+      "weight": 10,
+      "status": "pass",
+      "score": 9,
+      "evidence": [
+        "The episode is driven by work-native capital mechanics and institutional reaction rather than donor scenery or donor law copy."
+      ],
+      "notes": [
+        "A small amount of seed example-family flavor still remains in the broader opening stack."
+      ]
+    },
+    "reward_rotation_health": {
+      "weight": 10,
+      "status": "pass",
+      "score": 7,
+      "evidence": [
+        "Reward rotates again, this time into capital control and first-entry ignition rather than repeating family or legal receipts."
+      ],
+      "notes": [
+        "Three points are held back because the tranche stops before actual trade fill and immediate consequence."
+      ]
+    }
+  },
+  "watchlists": {
+    "anti_fatigue_risk": {
+      "status": "watch",
+      "red_flags": [
+        "same_receipt_family_repeats_across_two_or_more_tranches",
+        "proof_grows_without_observer_shift",
+        "next_gate_surface_collapses_to_one_hook_class",
+        "earned_access_is_replaced_by_gifted_access"
+      ],
+      "notes": [
+        "Receipt families are still rotating healthily, but ep7 should prove that the market lane produces consequence rather than endless ignition."
+      ]
+    },
+    "saturation_trigger": {
+      "status": "clear",
+      "red_flags": [
+        "authority_gain_rises_while_constraints_flatten",
+        "reward_size_rises_while_reader_payoff_stays_flat",
+        "signboard_and_next_gate_collapse_into_one_repeated_device"
+      ],
+      "notes": [
+        "No immediate saturation trigger is visible because the lane shifts from family authority to legal shield to capital-control ignition."
+      ]
+    }
+  },
+  "interpretation_bands": [
+    {
+      "band": "gate_fail",
+      "meaning": "Execution hold regardless of numeric score."
+    },
+    {
+      "band": "85-100",
+      "meaning": "Strong pass. Bounded realization candidate."
+    },
+    {
+      "band": "70-84",
+      "meaning": "Pass with repair. Apply one targeted fix and rerun."
+    },
+    {
+      "band": "55-69",
+      "meaning": "Weak pass. Doctrine promotion remains on hold."
+    },
+    {
+      "band": "<55",
+      "meaning": "Fail. Recheck tranche design or doctrine interpretation."
+    }
+  ],
+  "operator_fields": {
+    "target_project": "probe_a_stage3_ep6payoff_r1",
+    "target_tranche": "Stage3 ep5->ep6 market-entry ignition proof",
+    "target_stage": 3,
+    "gate_result": "all_loop_gates_pass_with_platform_warning",
+    "weighted_total": 94,
+    "weighted_total_after_na_adjustment": 94,
+    "operator_summary": "The opening stack now reaches work-native market-entry ignition. Episode 6 converts legal firewall readiness into actual capital transfer, observer-shift hardening, and first-position countdown without replay drift. This is a strong pass, but it is still an ignition proof rather than a realized market-payoff proof.",
+    "next_action": "Treat first market-entry ignition as provisionally proven. The next useful proof target is ep7, where the actual fill, immediate market consequence, and post-entry receipt must land."
+  }
+}

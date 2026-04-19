@@ -20,6 +20,7 @@ CONTRACT_SAFE_TESTS = (
 )
 
 FOCUSED_MUTATION_TESTS = (
+    "tests/test_run_stage2_canary.py",
     "tests/test_run_stage4_canary.py",
     "tests/test_run_stage34_canary.py",
     "tests/test_run_stage3_canary.py",
@@ -34,6 +35,7 @@ FOCUSED_MUTATION_SCRIPTS = (
 )
 
 FULL_CANARY_PROOF_SCRIPTS = (
+    "scripts/run_stage2_canary.py",
     "scripts/run_stage4_canary.py",
     "scripts/run_stage34_canary.py",
     "scripts/run_stage3_canary.py",
@@ -50,6 +52,7 @@ RECOMMENDED_VALIDATION_SUBSETS = {
         "tests/test_runtime_print_allowlist.py",
     ),
     FOCUSED_MUTATION: (
+        "tests/test_run_stage2_canary.py",
         "tests/test_run_stage4_canary.py",
         "tests/test_run_stage34_canary.py",
         "tests/test_run_stage3_canary.py",
@@ -59,6 +62,7 @@ RECOMMENDED_VALIDATION_SUBSETS = {
         "scripts/run_stage4_smoke.py",
     ),
     FULL_CANARY_PROOF: (
+        "scripts/run_stage2_canary.py",
         "scripts/run_stage4_canary.py",
         "scripts/run_stage34_canary.py",
         "scripts/run_stage3_canary.py",
@@ -86,7 +90,5 @@ def build_tier_inventory() -> dict[str, object]:
                 "mutates_project_state": True,
             },
         },
-        "recommended_subsets": {
-            tier: list(entries) for tier, entries in RECOMMENDED_VALIDATION_SUBSETS.items()
-        },
+        "recommended_subsets": {tier: list(entries) for tier, entries in RECOMMENDED_VALIDATION_SUBSETS.items()},
     }

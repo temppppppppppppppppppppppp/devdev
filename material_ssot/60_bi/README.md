@@ -18,3 +18,4 @@ Current live path:
 Current note:
 
 - routed and harness paths currently guarantee canonical BI outputs
+- fresh, newly touched, regenerated, or promotion-target pairs must show a donor decision before `BI` pair readiness may be claimed; see `../00_governance/donor-review-and-adoption-contract-v1.md`

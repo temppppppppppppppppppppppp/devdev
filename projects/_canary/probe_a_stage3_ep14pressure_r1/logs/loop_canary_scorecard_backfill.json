@@ -1,0 +1,210 @@
+{
+  "schema": "geuldobi.loop_canary_scorecard.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "backfilled",
+  "role": "Loop-oriented bounded canary gate surface for narrative doctrine evaluation.",
+  "document_ref": "docs/2026-04-18/golden-canary-deepclone-probe-a-loop-canary-scorecard.md",
+  "evaluation_unit": [
+    "stage3_bounded_episode_tranche"
+  ],
+  "required_inputs": [
+    "projects/_canary/probe_a_stage3_ep14pressure_r1/logs/stage3_canary_summary.json",
+    "projects/_canary/probe_a_stage3_ep14pressure_r1/plans/blueprints/blueprint_0014.txt",
+    "projects/_canary/probe_a_stage3_ep14pressure_r1/logs/artifacts/stage3/ep_0014/attempt_03/final_blueprint__dialogue_focused.json",
+    "projects/_canary/probe_a_stage3_ep14pressure_r1/logs/session/decisions.jsonl",
+    "projects/_canary/probe_a_stage3_ep13carry_r1/plans/blueprints/blueprint_0013.txt",
+    "projects/_canary/probe_a_stage3_ep12authority_r1/plans/arcs/arc_003.txt",
+    "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+    "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
+    "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+  ],
+  "hard_gates": {
+    "episode_loop_contract_floor": {
+      "required_items": [
+        "pressure_visible",
+        "execution_visible",
+        "proof_visible",
+        "receipt_visible",
+        "observer_shift_visible",
+        "next_gate_visible"
+      ],
+      "minimum_hit_count": 4,
+      "forbidden_joint_miss": [
+        "receipt_visible",
+        "next_gate_visible"
+      ],
+      "status": "pass",
+      "evidence": [
+        "Episode 14 makes pressure explicit through the risk-team margin-call fax and Park Seongho's repeated panic calls.",
+        "Execution remains visible because Siu destroys the warning physically, refuses any liquidation, and keeps command authority over the PB lane.",
+        "The tranche also lands a next-gate signal by shifting attention from WTI pressure toward the emerging gold cycle."
+      ],
+      "notes": [
+        "This is a lawful pressure-survival episode, not a stall-only holding pattern."
+      ]
+    },
+    "receipt_transport_gate": {
+      "rule": "If a structural receipt appears in the tranche artifact, its trace must survive in at least two downstream surfaces.",
+      "status": "pass",
+      "evidence": [
+        "Episode 13's authority/base-state survives into episode 14 as a same-location continuation inside the Gangnam one-room office.",
+        "The hotline authority survives behaviorally when Park Seongho calls into Siu's space and gets silenced rather than negotiated with.",
+        "The final artifact preserves the durable carryover surface again through protagonist equipment, including the hotline card and operating tools."
+      ],
+      "notes": [
+        "Inventory naming is slightly flattened, but the receipt family itself survives."
+      ]
+    },
+    "anti_contamination_gate": {
+      "rule": "Donor surfaces may remain only as example-family language. Direct donor scene-copy or law-copy fails the gate.",
+      "status": "pass",
+      "evidence": [
+        "The pressure beat is expressed through Korean securities-firm bureaucracy: faxed margin-call warning, PB escalation, and a self-built trading hideout.",
+        "No donor-copy repair signal appears in the final decision row."
+      ],
+      "notes": []
+    },
+    "lawful_bridge_gate": {
+      "rule": "The tranche must open a lawful next gate without replay drift, setup-only delay, or future-beat consumption.",
+      "status": "pass",
+      "evidence": [
+        "The final accepted attempt does not replay episode 13's relocation beat. It advances from pressure management into next-cycle target lock on gold.",
+        "It still stops short of episode 15's full prediction duel and later Ecuador payoff beats."
+      ],
+      "notes": [
+        "Earlier candidate attempts were replay-prone, but the final accepted artifact obeys the bridge contract."
+      ]
+    }
+  },
+  "weighted_metrics": {
+    "loop_deadline_hit": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "Arc 3's episode-14 slot is satisfied directly: risk-team warning, unwavering conviction, and a glimpse of the next macro chessboard."
+      ],
+      "notes": []
+    },
+    "structural_receipt_conversion": {
+      "weight": 20,
+      "status": "pass",
+      "score": 16,
+      "evidence": [
+        "Episode 14 uses the existing authority receipt to absorb institutional pressure and create strategic breathing room for the next cycle.",
+        "The reward is not a fresh object but a hardened operating regime: warning destroyed, PB subordinated, and new target selected."
+      ],
+      "notes": [
+        "Four points are held back because this tranche consolidates prior receipts more than it mints a new one."
+      ]
+    },
+    "receipt_transport_survival": {
+      "weight": 15,
+      "status": "pass",
+      "score": 14,
+      "evidence": [
+        "The hotline-based authority survives clearly in behavior, location continuity, and protagonist equipment."
+      ],
+      "notes": [
+        "One point is held back because the inventory surface uses shortened object names and triggers TF-49 gaps."
+      ]
+    },
+    "carryover_persistence": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "na_allowed": true,
+      "evidence": [
+        "Authority receipt, new-base lane, and live-hold position all persist through another full pressure tranche without flattening."
+      ],
+      "notes": []
+    },
+    "legal_bridge_efficiency": {
+      "weight": 15,
+      "status": "pass",
+      "score": 11,
+      "evidence": [
+        "The final result is a strong PASS, but the runtime needed three attempts after replay-reroute guidance before settling on the correct bridge shape."
+      ],
+      "notes": [
+        "This is the main operational warning in the tranche."
+      ]
+    },
+    "anti_contamination_pass": {
+      "weight": 10,
+      "status": "pass",
+      "score": 9,
+      "evidence": [
+        "The pressure-survival beat remains work-native in its objects and institutions: faxed warning, PB hotline, shredding, and the Gangnam office."
+      ],
+      "notes": []
+    },
+    "reward_rotation_health": {
+      "weight": 10,
+      "status": "pass",
+      "score": 10,
+      "evidence": [
+        "Reward rotates in a healthy way from private authority to strategic foresight: the tranche converts pressure resistance into a new target lock on gold."
+      ],
+      "notes": []
+    }
+  },
+  "watchlists": {
+    "anti_fatigue_risk": {
+      "status": "clear",
+      "red_flags": [
+        "same_receipt_family_repeats_across_two_or_more_tranches",
+        "proof_grows_without_observer_shift",
+        "next_gate_surface_collapses_to_one_hook_class",
+        "earned_access_is_replaced_by_gifted_access"
+      ],
+      "notes": [
+        "The tranche stays healthy because it uses pressure and strategic redirection rather than repeating the same payoff display."
+      ]
+    },
+    "saturation_trigger": {
+      "status": "watch",
+      "red_flags": [
+        "authority_gain_rises_while_constraints_flatten",
+        "reward_size_rises_while_reader_payoff_stays_flat",
+        "signboard_and_next_gate_collapse_into_one_repeated_device"
+      ],
+      "notes": [
+        "No saturation failure is visible yet, but repeated pressure-management episodes could flatten if the next tranche does not convert foresight into a sharper prediction or consequence beat."
+      ]
+    }
+  },
+  "interpretation_bands": [
+    {
+      "band": "gate_fail",
+      "meaning": "Execution hold regardless of numeric score."
+    },
+    {
+      "band": "85-100",
+      "meaning": "Strong pass. Bounded realization candidate."
+    },
+    {
+      "band": "70-84",
+      "meaning": "Pass with repair. Apply one targeted fix and rerun."
+    },
+    {
+      "band": "55-69",
+      "meaning": "Weak pass. Doctrine promotion remains on hold."
+    },
+    {
+      "band": "<55",
+      "meaning": "Fail. Recheck tranche design or doctrine interpretation."
+    }
+  ],
+  "operator_fields": {
+    "target_project": "probe_a_stage3_ep14pressure_r1",
+    "target_tranche": "Stage3 ep14 hold-pressure survival proof",
+    "target_stage": 3,
+    "gate_result": "all_loop_gates_pass_with_platform_warning",
+    "weighted_total": 90,
+    "weighted_total_after_na_adjustment": 90,
+    "operator_summary": "Episode 14 proves that Arc 3's new-base and authority lane can survive a full institutional pressure beat. The margin-call fax is destroyed, Park Seongho is subordinated again, and the tranche lawfully pivots toward the gold cycle. The content pass is strong, but replay reroute on the way in and TF-49 inventory gaps keep this in the warning lane.",
+    "next_action": "Treat ep14 hold-pressure survival as proved with operational warning. The next useful proof target is ep15 prediction-authority proof, where long-hold pressure must mature into a sharper future-call without replay drift."
+  }
+}

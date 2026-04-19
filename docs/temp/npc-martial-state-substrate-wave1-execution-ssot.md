@@ -1,7 +1,7 @@
 ﻿# NPC Martial State Substrate Wave1 Execution SSOT
 
 Date: 2026-03-27
-Status: blocked (parked follow-up item after 2026-03-28 queue reorder; future work requires fresh Stage 4 / STV seam evidence)
+Status: blocked (2026-04-19 reactivation refresh; partially landed storage substrate remains preserved, but the remaining Stage 4 / STV seam still requires fresh bounded evidence before reopen, so the honest queue reading remains blocked holding)
 Canonical Path: `docs/2026-03-27/npc-martial-state-substrate-wave1-execution-ssot.md`
 Temp Mirror Path: `docs/temp/npc-martial-state-substrate-wave1-execution-ssot.md`
 Commit State:
@@ -13,6 +13,7 @@ Source Survey Docs:
 - `docs/2026-03-27/npc-technique-realm-persistence-compact-survey.md`
 - `docs/2026-03-27/npc-technique-realm-owner-model-design-memo.md`
 - `docs/2026-03-27/npc-technique-realm-execution-readiness-deep-dive-audit.md`
+- `docs/2026-04-19/npc-martial-state-substrate-wave1-reactivation-refresh.md`
 Evidence Artifacts:
 - none
 Side-Effect Coverage: covered
@@ -497,3 +498,21 @@ Director reorder 3-pass:
   - PASS
 
 Director reorder confidence: `97%`
+
+## 24. 2026-04-19 Reactivation Refresh
+
+Source doc:
+
+- `docs/2026-04-19/npc-martial-state-substrate-wave1-reactivation-refresh.md`
+
+Current reading:
+
+- the partially landed storage substrate is still real
+- the remaining Stage 4 / STV seam follow-up is still real in principle
+- but there is still no fresh bounded seam diff or fresh survey evidence to justify reopen
+
+Queue consequence:
+
+- keep this lane visible
+- keep the temp mirror
+- preserve it as blocked holding rather than promoting or closing it

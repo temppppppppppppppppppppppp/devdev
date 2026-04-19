@@ -1,0 +1,23 @@
+{
+  "prepared_at": "2026-04-18T18:35:16",
+  "source_project": "probe_a_stage34ab_ep12_r2",
+  "target_project": "probe_a_stage3_ep3seam_r1",
+  "canary_scope": "stage3_only",
+  "reruns_stage3_generation": true,
+  "preserves_stage2_arcs": true,
+  "preserves_stage4_outputs": true,
+  "from_ep": 3,
+  "cleanup": {
+    "from_ep": 3,
+    "db_impact": {
+      "blueprints": 0,
+      "stage3_attempts": 0,
+      "stage3_director_selections": 0
+    },
+    "file_cleanup": {
+      "blueprint_files_removed": 0,
+      "stage3_artifact_dirs_removed": 0,
+      "log_entries_removed": 7
+    }
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "summary_role": "stage3_only_canary",
+  "project": "canonical_stage3_hookaudit_ep2_r1",
+  "project_locator": "projects/_canary/canonical_stage3_hookaudit_ep2_r1",
+  "project_root": "C:\\Users\\PC\\Desktop\\글도비\\projects\\_canary\\canonical_stage3_hookaudit_ep2_r1",
+  "target_ep": 2,
+  "prepared_from": "canonical_stage34ab_ep12_r2",
+  "latest_session_id": "20260418_135931",
+  "stage3_attempts": 2,
+  "blueprint_db_count": 1,
+  "blueprint_ep_nums": [
+    1
+  ],
+  "blueprint_file_count": 1,
+  "blueprint_files": [
+    "blueprint_0001.txt"
+  ],
+  "attempt_detail": [
+    {
+      "ep_num": 1,
+      "attempt_count": 1,
+      "final_verdict": "PASS_WITH_WARNING",
+      "final_score": 90,
+      "all_verdicts": [
+        "PASS_WITH_WARNING"
+      ]
+    },
+    {
+      "ep_num": 2,
+      "attempt_count": 1,
+      "final_verdict": "FAILED",
+      "final_score": 0,
+      "all_verdicts": [
+        "FAILED"
+      ]
+    }
+  ],
+  "episode_telemetry": [
+    {
+      "ep_num": 1,
+      "attempt_count": 1,
+      "final_verdict": "PASS_WITH_WARNING",
+      "final_score": 90,
+      "llm_call_count": 11,
+      "total_duration_ms": 619458,
+      "total_cost_usd": 0.42941,
+      "total_api_elapsed_ms": 448487,
+      "total_retries": 0,
+      "total_continuations": 0
+    },
+    {
+      "ep_num": 2,
+      "attempt_count": 1,
+      "final_verdict": "FAILED",
+      "final_score": 0,
+      "llm_call_count": 76,
+      "total_duration_ms": 6698076,
+      "total_cost_usd": 4.292927,
+      "total_api_elapsed_ms": 3908598,
+      "total_retries": 7,
+      "total_continuations": 0
+    }
+  ],
+  "sink_alignment_summary": {
+    "stage": 3,
+    "session_filter": "20260418_135931",
+    "attempts_considered": 1,
+    "coverage": {
+      "stage_attempts": 1,
+      "pass_rate_monitor": 1,
+      "director_selections": 1,
+      "episode_production": 0,
+      "session_decisions": 1,
+      "attempt_raw_rationale": 0
+    },
+    "raw_rationale_summary": {
+      "attempts_with_raw_rationale": 0,
+      "attempts_with_projected_payloads": 0,
+      "payload_kinds_present": [],
+      "record_families_present": [],
+      "surfaces_present": [],
+      "projected_payload_kinds_present": [],
+      "payload_kind_attempt_counts": {},
+      "record_family_attempt_counts": {},
+      "surface_attempt_counts": {},
+      "projected_payload_attempt_counts": {},
+      "payload_kind_examples": {},
+      "record_family_examples": {},
+      "surface_examples": {},
+      "projected_payload_examples": {}
+    },
+    "raw_rationale_health": {},
+    "raw_rationale_watchlist": [],
+    "raw_rationale_watchlist_headline": {},
+    "raw_rationale_operator_summary": "",
+    "coverage_gap_count": 0,
+    "structured_issue_count": 2,
+    "raw_issue_count": 0,
+    "top_issue_headline": {
+      "headline": "P2 structured_sink_drift x2",
+      "priority": "P2",
+      "focus": "structured_sink_drift",
+      "count": 2,
+      "next_action": "Inspect structured sink mismatches before trusting cross-sink contract parity."
+    },
+    "complete_final_attempts": 1,
+    "director_lifecycle_attempts": 0,
+    "complete_lifecycle_attempts": 0,
+    "final_sink_missing": {},
+    "lifecycle_sink_missing": {},
+    "lifecycle_missing_in_final_sinks": {},
+    "final_verdict_mismatches": [],
+    "final_score_mismatches": [],
+    "initial_verdict_mismatches": [],
+    "director_verdict_mismatches": [],
+    "gate_basis_mismatches": [],
+    "repair_scope_mismatches": [],
+    "fix_pack_target_kind_mismatches": [],
+    "fix_pack_patch_targets_mismatches": [],
+    "retry_budget_axes_mismatches": [],
+    "repair_contract_subtype_mismatches": [],
+    "repair_contract_provenance_mismatches": [],
+    "scope_authority_fix_scope_mismatches": [],
+    "scope_authority_authoritative_fix_scope_mismatches": [],
+    "scope_authority_widened_mismatches": [],
+    "patch_strategy_mismatches": [],
+    "candidate_key_mismatches": [],
+    "selection_candidate_key_mismatches": [],
+    "content_hash_mismatches": [],
+    "artifact_path_mismatches": [],
+    "artifact_metadata_missing": [
+      {
+        "attempt_key": "s3:ep2:arc1:a10:20260418_135931",
+        "field": "content_hash",
+        "sinks": [
+          "stage_attempts",
+          "pass_rate_monitor",
+          "session_decisions"
+        ]
+      },
+      {
+        "attempt_key": "s3:ep2:arc1:a10:20260418_135931",
+        "field": "artifact_path",
+        "sinks": [
+          "stage_attempts",
+          "pass_rate_monitor",
+          "session_decisions"
+        ]
+      }
+    ],
+    "selection_reason_mismatches": [],
+    "verdict_reason_mismatches": [],
+    "comparison_notes_mismatches": [],
+    "selected_candidate_advisory_mismatches": [],
+    "fix_scope_mismatches": [],
+    "runtime_advisory_mismatches": [],
+    "retry_directives_mismatches": [],
+    "gate_repair_metadata_missing": [],
+    "rationale_metadata_missing": [],
+    "artifact_missing_files": [],
+    "raw_rationale_missing": [],
+    "raw_rationale_kind_missing": [],
+    "raw_rationale_family_missing": [],
+    "raw_rationale_surface_mismatches": [],
+    "raw_rationale_contract_mismatches": [],
+    "raw_rationale_feedback_mismatches": [],
+    "raw_rationale_patch_trace_mismatches": [],
+    "raw_rationale_retry_chain_mismatches": [],
+    "selection_companion_pre_final_rows": [],
+    "selection_companion_missing_rows": [],
+    "final_authority_contract": {},
+    "session_scoped_attempts": 1,
+    "legacy_key_attempts": 0,
+    "stage_attempt_rows_without_attempt_key": 0,
+    "session_decision_rows_without_attempt_key": 0,
+    "status": "warn",
+    "operator_summary": "Stage3 sink alignment warn: 1 attempt(s), final 1/1, lifecycle 0/0, coverage gaps 0, sink issues 2. Top issue: P2 structured_sink_drift x2. Next: Inspect structured sink mismatches before trusting cross-sink contract parity."
+  },
+  "hard_gates": {
+    "status": "fail",
+    "errors": [
+      "blueprint_db_count_short:1<2",
+      "blueprint_file_count_short:1<2",
+      "ep1_final_verdict:PASS_WITH_WARNING",
+      "ep2_final_verdict:FAILED"
+    ],
+    "warnings": [
+      "sink_alignment_status:warn"
+    ]
+  }
+}

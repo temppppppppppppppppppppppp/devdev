@@ -1,14 +1,14 @@
 # 0_0-stage3-state-arbiter-envelope-bounded-remediation Execution SSOT
 
 Date: 2026-04-14
-Status: pending (3-pass audited through merged-main post-merge adversarial current-head re-audit; long-horizon bounded execution lane; `Tranche A/B/C` are landed on current `main`, the later Stage234 medium and contract-drift closures plus the later Stage234 `r12` closure wave do not reopen this lane, no additional pre-proof code tranche is open, and fresh rerun remains operator-gated)
+Status: closed (2026-04-19 closure review; `Tranche A/B/C` remain landed on current `main`, the later Stage234 medium / contract-drift / `r12` no-reopen and merged-main adversarial audits keep this lane in landed-no-reopen posture, no additional pre-proof code tranche is open, and fresh rerun remains operator-gated rather than honest front-active implementation debt)
 Canonical Path: `docs/2026-04-14/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
-Temp Mirror Path: `docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md`
+Temp Mirror Path: `docs/temp/0_0-stage3-state-arbiter-envelope-bounded-remediation-execution-ssot.md` (removed during the 2026-04-19 closure tranche)
 Commit State:
 - Baseline Commit: `f58059fefd10ed3f41d7bacca3b908dd47ada418`
 - Baseline Dirty Summary: `dirty: live 000_260412_a logs/db, 0_temp.txt, and untracked 2026-04-14 diagnostic notes already present in worktree`
-- Resume Commit: `eb5460ac9797cdb097bf5050ec902f6436f796fc` (`merged main after PR #1; no Stage3 lane code/content delta relative to the audited branch closure head`)
-- Resume Drift Summary: `merged main still carries the landed Stage3 Tranche A/B/C substrate, and the later Stage234 medium / contract-drift closures plus the later Stage234 r12 current-session closure wave do not reopen this lane: post-merge adversarial re-audit found no Stage3 lane reopen on merged main, packet / prompt-envelope / boundary-split owners remain landed, semantic-core watch items remain watch-only rather than a new tranche trigger, and older pre-merge current-head SHA wording below is now provenance-only rather than the literal merged-head anchor`
+- Resume Commit: `029df1a74af89a7b5387c449f4723a5df0d000d4`
+- Resume Drift Summary: `current HEAD@029df1a7 is authoritative for queue closure; the landed Stage3 Tranche A/B/C substrate remains intact, the later Stage234 medium / contract-drift / r12 no-reopen and merged-main adversarial audits do not reopen this lane, no additional pre-proof code tranche is open, and the remaining rerun option is operator-gated proof backlog rather than front-active implementation work`
 Source Survey Docs:
 - `docs/2026-04-14/stage3-fundamental-root-cause-bounded-survey.md`
 - `docs/2026-04-14/stage3-debt-remediation-bounded-survey-and-rerun-gate.md`
@@ -18,6 +18,8 @@ Source Survey Docs:
 - `docs/2026-04-15/stage3-state-arbiter-envelope-post-contract-drift-current-head-3pass-audit.md`
 - `docs/2026-04-16/stage3-state-arbiter-envelope-post-r12-stage234-no-reopen-current-head-3pass-audit.md`
 - `docs/2026-04-16/stage234-s2-s3-s4-authority-alignment-post-merge-current-head-adversarial-3pass-audit.md`
+- `docs/2026-04-19/stage3-state-arbiter-envelope-reactivation-refresh.md`
+- `docs/2026-04-19/stage3-state-arbiter-envelope-closure-review.md`
 - `docs/2026-04-01/active-temp-execution-roadmap.md`
 - `docs/2026-04-02/0_0-stage3-contract-tightening-remediation-execution-ssot.md`
 Evidence Artifacts:
@@ -407,13 +409,13 @@ Fresh rerun validation remains explicitly deferred to Tranche D.
 
 ## 12. Temp Queue Notes
 
-- temp status: `pending (Tranche A/B/C landed on current main; no additional pre-proof code tranche is open; proof remains operator-gated)`
+- temp status: `closed (2026-04-19 closure review; no additional pre-proof code tranche is open, and any fresh rerun remains operator-gated rather than an active implementation order)`
 - cleanup condition:
-  - remove the temp mirror only after the long-horizon lane is realized or explicitly demoted
+  - temp mirror removed during the 2026-04-19 closure tranche
 - roadmap dependency:
-  - `docs/2026-04-01/active-temp-execution-roadmap.md`
+  - `docs/2026-04-19/active-temp-execution-roadmap.md`
 - local controller note:
-  - for the current local session, this lane represents the operator's debt-first long-horizon option and should be treated as a valid front alternative to fresh rerun proof
+  - this lane is now canonical historical backing; reopen only on explicit runtime re-authorization or fresh fail-only evidence that genuinely reopens packet/envelope/boundary debt
 
 ## 13. Validation and Closure Hooks
 
@@ -439,3 +441,40 @@ Pass 3:
 
 - turned the root-cause findings into bounded implementation waves
 - made rerun intentionally post-tranche rather than immediate
+
+## 15. 2026-04-19 Reactivation Refresh
+
+Source doc:
+
+- `docs/2026-04-19/stage3-state-arbiter-envelope-reactivation-refresh.md`
+
+Current reading:
+
+- the lane had stayed open because the older wording still treated proof-pending as if it were front-active queue debt
+- the later medium / contract-drift / `r12` no-reopen and merged-main adversarial audits now all agree:
+  - `Tranche A/B/C` remain landed
+  - no additional pre-proof code tranche is open
+  - rerun remains operator-gated
+
+Queue consequence:
+
+- the old `pending` wording is stale
+- the next honest move is closure-review, not another front-active implementation tranche
+
+## 16. 2026-04-19 Closure Review
+
+Source doc:
+
+- `docs/2026-04-19/stage3-state-arbiter-envelope-closure-review.md`
+
+Closure judgment:
+
+- bounded Stage3 state-arbiter-envelope closure is satisfied for queue-governing purposes
+- the lane now survives as canonical historical backing plus a parked proof option
+- the board should no longer present this lane as front-active implementation work
+
+Queue move:
+
+- close this lane
+- remove the temp mirror during this tranche
+- move the board into parked mode with `0_0-stage3-quality-closure-five-tranche-remediation` as the next parked candidate

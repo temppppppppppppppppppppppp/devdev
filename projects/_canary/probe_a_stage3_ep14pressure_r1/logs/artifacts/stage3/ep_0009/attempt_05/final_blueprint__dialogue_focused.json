@@ -1,0 +1,265 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "14ef13aa2fcb932e19f7745a94984b71109748711a4d4b63818bf5b679327aeb"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=2; sample_anchors=접근할 수 없는 본점, 15억",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 2개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1574,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 17123,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 982877,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 12465,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 3859,
+          "lane": "constraints"
+        },
+        {
+          "chars": 652,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 137,
+        "constraints": 3859,
+        "feedback_context": 652,
+        "hud_context": 10,
+        "prev_info": 12465
+      },
+      "shared_context_chars": 16471,
+      "strategy_feedback_chars": 2966,
+      "total_chars": 17123
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 5,
+    "strategy": "dialogue_focused",
+    "total_candidates": 3
+  },
+  "_inventory_gaps": [
+    {
+      "item": "가죽 수첩",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "만년필",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "폴더폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "OTP 카드",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "15억 원이라는 거액을 초고위험 파생상품에 밀어넣는 결단과 실행",
+  "end_location": "한미증권 본점 VIP 전용 프라이빗 룸",
+  "ending_hook": "모니터의 붉은 체결창이 점멸하는 가운데, 한시우는 조용히 방의 조명을 낮췄다.",
+  "ending_state": {
+    "location": "한미증권 본점 VIP 전용 프라이빗 룸",
+    "protagonist_status": "15억 원의 롱 포지션 진입을 마치고 폭등장을 기다리는 상태",
+    "timeline": {
+      "표현": "2006년 2월 초 늦은 낮"
+    }
+  },
+  "ep_num": 9,
+  "episode_number": 9,
+  "expected_ending": "WTI 3배 레버리지 롱 포지션 진입을 완료하고 다가올 시장의 변동을 기다림",
+  "integrated_scenario": "\"안내하시죠.\" 한시우의 서늘한 목소리가 미팅룸의 무거운 공기를 갈랐다. 박성호는 홀린 듯 고개를 끄덕이며, 일반 VIP조차 접근할 수 없는 본점 심장부의 굳게 닫힌 내선 문으로 그를 이끌었다. 보안 카드가 태그되는 짧은 비프음과 함께 두꺼운 방음문이 열리자, 외부의 소음이 완벽하게 차단된 고요한 복도가 모습을 드러냈다. 한시우는 걸음을 옮기며 천장의 CCTV 사각지대와 벽면을 타고 흐르는 독립 회선의 배선 상태를 무심한 눈길로 훑었다. 완벽한 물리적 방화벽. 가족의 시선도, 시장의 소음도 닿지 않는 완벽한 요새였다. 복도 끝에 위치한 가장 은밀한 프라이빗 룸의 문이 열렸다. 최고급 가죽 의자와 6개의 대형 모니터가 반원형으로 배치된 공간은 오직 한 사람만을 위한 전장이었다. 박성호가 땀을 닦으며 마스터 계정 접속용 보안 동글을 테이블 위에 조심스럽게 내려놓았다. 그가 시스템 환경에 대해 입을 떼려던 찰나, 한시우는 안주머니에서 낡은 가죽 수첩과 OTP 카드를 꺼내 테이블 중앙에 툭 던졌다. \"여기서부터는 제 시간입니다. 나가보시죠.\" 단호하고 건조한 축출 명령에 박성호는 입술을 달싹였지만, 결국 허리를 굽히고 방을 빠져나갈 수밖에 없었다.\n\n굳게 닫힌 프라이빗 룸 문밖으로 밀려난 박성호는 다리에 힘이 풀려 벽에 등을 기댔다. 넥타이를 거칠게 풀어 헤치며 숨을 고르던 그는 이내 떨리는 손으로 휴대폰을 꺼내 들었다. 본점 리스크 관리팀과의 통화가 연결되자마자 수화기 너머로 날카로운 고성이 쏟아졌다. 한 개인 고객에게 15억 원이라는 거액의 초고위험 파생상품 거래 한도를 일시적으로 열어주는 것은 규정 위반이라는 항의였다. 하지만 박성호는 물러설 곳이 없었다. \"수수료 두 배입니다. 타사로 이탈하면 그 책임은 팀장님이 지실 겁니까?\" 그는 한시우가 던져준 미끼를 방패막이 삼아 상부를 거칠게 압박했다. 결국 실적이라는 거대한 명분 앞에 리스크팀은 백기를 들었고, 원격으로 시스템의 락이 해제되었다.\n\n그 시각, 프라이빗 룸 내부. 한시우는 모니터 우측 하단에 떠오른 '특별 한도 해제 승인' 팝업을 차가운 눈으로 응시했다. 그는 가죽 수첩을 펼쳐 18년 전 자신의 피로 썼던 굵직한 매크로 지표와 현재 HTS의 WTI 원유 선물 실시간 호가창을 번갈아 대조했다. 오차는 없었다. 시장은 그가 기억하는 정확한 궤도를 따라 파멸과 기회의 경계선으로 굴러가고 있었다. 한시우는 망설임 없이 키보드 위로 손을 뻗었다. OTP 카드의 버튼을 눌러 생성된 난수를 입력하고, 15억 원 전액을 WTI 3배 레버리지 롱 포지션으로 설정했다. 엔터 키를 누르는 경쾌한 타건음과 함께 거대한 매수 주문이 시스템을 타고 전송되었다. 잠시 후, 화면 전체에 붉은색 '매수 체결 완료' 글씨가 폭포수처럼 쏟아져 내리며 점멸했다. 15억의 방아쇠가 당겨진 것이다. 잔고 창에 찍힌 거대한 롱 포지션 증거금을 확인한 한시우는 폴더폰을 열어 시간을 확인했다. 거대한 자본의 흐름에 완벽하게 올라탔다는 서늘한 쾌감이 등줄기를 타고 흘렀다. 그는 가죽 수첩에 짧은 체크 마크를 기입하고 만년필 뚜껑을 닫았다. 폭등장이 시작되기 직전, 요동치기 위해 숨을 고르는 고요한 모니터 불빛 아래서 한시우의 입가에 짙은 호선이 그려졌다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 VIP 룸으로 이동하며 공간적 압도감을 조성하고, 중반부는 박성호의 외부 실랑이와 한시우의 내부 집중을 교차 편집(side glimpse 활용)하여 긴장감을 끌어올린다. 후반부 매수 체결 순간에 텐션을 최고조(9)로 터뜨린 뒤 차갑게 가라앉히며 마무리한다.",
+  "protagonist_state": {
+    "equipment": [
+      "가죽 수첩",
+      "만년필",
+      "폴더폰",
+      "OTP 카드"
+    ],
+    "injuries": "두통 완전히 가라앉음",
+    "mood": "거대한 베팅 앞에서도 흔들림 없는 극도의 냉철함"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "당혹과 저항",
+      "justification": "한시우의 압박과 수수료 조건에 굴복하여 내부 규정을 우회하고 파생상품 거래 한도를 열어줌.",
+      "target": "박성호",
+      "to_state": "완전한 통제하의 실행책"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "박성호가 보안 카드를 찍고 굳게 닫힌 내선 문을 연다. 일반 고객은 접근할 수 없는 본점 심장부의 복도를 지나며, 한시우는 주변의 물리적 보안 상태와 통신 인프라를 무심하게 점검한다.",
+      "goal": "VIP 전용 구역 진입",
+      "key_events": [
+        "박성호가 식은땀을 닦으며 보안 구역의 카드키를 태그함",
+        "외부 소음이 완벽히 차단된 두꺼운 방음문을 통과해 본점 심장부로 진입",
+        "한시우가 복도의 CCTV 사각지대와 독립 회선 배선 상태를 눈으로 훑으며 만족감을 느낌"
+      ],
+      "location": "한미증권 본점 미팅룸 앞 복도 -> VIP 통제 구역",
+      "summary": "박성호의 안내를 받아 한미증권 본점의 은밀한 VIP 전용 프라이빗 룸으로 향하는 한시우.",
+      "tension_level": 4,
+      "title": "내선의 문 너머",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "독립된 전용 회선과 다중 모니터가 세팅된 프라이빗 룸 내부. 박성호가 HTS 접속 권한과 보안 키를 인계하려 하지만, 한시우는 가죽 수첩과 OTP 카드를 책상 위에 올려두며 그를 방 밖으로 물린다.",
+      "goal": "트레이딩 환경 장악 및 박성호 축출",
+      "key_events": [
+        "최고급 가죽 의자와 6개의 모니터가 세팅된 프라이빗 룸 내부 확인",
+        "박성호가 마스터 계정 로그인용 보안 동글을 테이블 위에 조심스럽게 내려놓음",
+        "한시우가 안주머니에서 가죽 수첩과 OTP 카드를 꺼내며 박성호에게 퇴장을 지시함"
+      ],
+      "location": "한미증권 본점 VIP 전용 프라이빗 룸",
+      "summary": "프라이빗 룸에 입성한 한시우가 외부와 단절된 환경을 확인하고 본격적인 거래 준비를 마친다.",
+      "tension_level": 6,
+      "title": "완벽한 요새",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "박성호"
+      ],
+      "content": "",
+      "description": "굳게 닫힌 프라이빗 룸 문밖에서 박성호가 다리가 풀려 벽에 기댄다. 리스크팀에서 15억 규모의 3배 레버리지 거래 한도 일시 해제에 대한 우려를 표명하지만, 박성호가 수수료 두 배 조건을 방패막이로 삼아 억지로 시스템 락을 해제시킨다.",
+      "goal": "초고위험 파생상품 거래 한도 해제",
+      "key_events": [
+        "박성호가 프라이빗 룸 밖 복도로 밀려나와 넥타이를 거칠게 풀어 헤침",
+        "리스크 관리팀과의 통화에서 초고위험 파생상품 15억 일시 한도 해제를 두고 고성이 오감",
+        "수수료 실적을 명분으로 내세워 상부의 예외 승인을 받아내고 원격으로 락을 풂"
+      ],
+      "location": "한미증권 본점 VIP 전용 프라이빗 룸 외부 복도",
+      "summary": "밖으로 밀려난 박성호가 한시우의 비정상적인 거래 규모와 권한 요구에 대해 내부 리스크팀과 실랑이를 벌인다.",
+      "tension_level": 7,
+      "title": "문밖의 실랑이",
+      "type": "side_glimpse"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "한시우가 HTS를 구동하고 WTI 원유 선물 실시간 호가창을 띄워 수첩의 타점과 대조한다. 리스크팀의 한도 해제 알림이 화면에 뜨자마자 지체 없이 15억 원 전액을 3배 레버리지 롱 포지션으로 쏟아붓는다.",
+      "goal": "WTI 3배 레버리지 롱 포지션 진입",
+      "key_events": [
+        "한시우가 가죽 수첩을 펼쳐 18년 전 기록해둔 정확한 타점과 현재 HTS 호가창을 대조함",
+        "모니터 우측 하단에 '특별 한도 해제 승인' 알림이 팝업됨",
+        "망설임 없이 OTP 비밀번호를 입력하고 15억 원 전액을 WTI 3배 레버리지 매수 주문으로 전송함",
+        "화면에 거대한 체결 물량이 쏟아지며 붉은색 '매수 체결 완료' 글씨가 점멸함"
+      ],
+      "location": "한미증권 본점 VIP 전용 프라이빗 룸",
+      "summary": "한시우가 WTI 3배 레버리지 상품에 15억 원을 전량 매수하며 거대한 포지션 진입을 완료한다.",
+      "tension_level": 9,
+      "title": "15억의 방아쇠",
+      "type": "action_peak"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "체결 내역을 확인한 한시우가 폴더폰을 열어 시간을 확인한다. 거대한 자본의 흐름에 올라탔다는 서늘한 쾌감을 느끼며 모니터 불빛 아래서 만년필을 굴린다. 시장이 요동치기 직전의 고요함 속에서 자리에서 일어난다.",
+      "goal": "포지션 구축 완료 및 시장 관망",
+      "key_events": [
+        "잔고 창에 찍힌 15억 원의 롱 포지션 증거금을 차가운 눈으로 확인",
+        "폴더폰을 열어 현재 시간을 확인한 뒤 가죽 수첩에 체크 마크를 기입함",
+        "폭등장이 시작되기 직전의 고요한 모니터 화면을 응시하며 만년필 뚜껑을 닫음"
+      ],
+      "location": "한미증권 본점 VIP 전용 프라이빗 룸",
+      "summary": "포지션 진입을 마친 한시우가 다가올 폭풍을 예감하며 다음 행보를 준비한다.",
+      "tension_level": 5,
+      "title": "고요한 폭풍의 눈",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "한미증권 본점 미팅룸 앞 복도",
+  "target_beat": "VIP 전용 프라이빗 룸 입성 및 15억 원 규모의 WTI 3배 레버리지 롱 포지션 진입 완료",
+  "time_flow": "낮",
+  "title": "15억의 방아쇠"
+}

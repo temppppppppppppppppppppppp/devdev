@@ -464,22 +464,19 @@ class FourPhaseArcGenerator(BaseAgent):
             prev_arcs: 이전 Arc 리스트
 
         Returns:
-            (ep_count, reasoning) - 3~6 범위의 화수와 결정 이유
+            (ep_count, reasoning) - 2~6 범위의 화수와 결정 이유
         """
         min_ep_count = 2
         max_ep_count = Stage2Limits.MAX_EP_COUNT
-
-        # 블록 내용 추출
-        block_content = ""
-        if isinstance(curr_block, dict):
-            for key in ["context", "event_villain", "solution", "reward", "content"]:
-                val = curr_block.get(key, "")
-                if isinstance(val, str):
-                    block_content += val + " "
-                elif isinstance(val, dict):
-                    block_content += json.dumps(val, ensure_ascii=False) + " "
-
-        content_len = len(block_content.strip())
+        metrics = self._collect_pacing_metrics(curr_block)
+        block_content = metrics["block_content"]
+        content_len = metrics["content_len"]
+        sentence_count = metrics["sentence_count"]
+        event_slot_count = metrics["event_slot_count"]
+        expansion_signal_count = metrics["expansion_signal_count"]
+        loop_heavy_without_expansion = bool(
+            event_slot_count <= 4 and expansion_signal_count == 0 and sentence_count >= 15
+        )
 
         # [V66.1] Python 휴리스틱: 텍스트 길이 + 문장 수 기반 판단
         if content_len < 350:
@@ -489,13 +486,17 @@ class FourPhaseArcGenerator(BaseAgent):
             ep_count = 3
             reasoning = f"블록 정보량 부족 ({content_len}자 < 500자) → 3화 압축"
         elif content_len > 1500:
-            ep_count = max_ep_count  # 6화
-            reasoning = f"블록 정보량 풍부 ({content_len}자 > 1500자) → 최대 화수"
+            if loop_heavy_without_expansion:
+                ep_count = Stage2Limits.DEFAULT_EP_COUNT
+                reasoning = (
+                    f"블록 길이는 길지만 사건 슬롯은 제한적 ({content_len}자, 슬롯 {event_slot_count}개, "
+                    f"확장 신호 {expansion_signal_count}개) → 표준 {Stage2Limits.DEFAULT_EP_COUNT}화"
+                )
+            else:
+                ep_count = max_ep_count  # 6화
+                reasoning = f"블록 정보량 풍부 ({content_len}자 > 1500자) → 최대 화수"
         else:
             # [PC-1-B] 500~1500자 구간: 문장 수 비례로 2~5화 결정
-            import re
-
-            sentence_count = len(re.split(r"[.。!?!\?\n]+", block_content))  # utf8-hygiene: allow-line regex quantifier
             if sentence_count <= 5:
                 ep_count = 2
                 reasoning = f"낮은 정보량 ({content_len}자, {sentence_count}문장) → 2화"
@@ -503,11 +504,20 @@ class FourPhaseArcGenerator(BaseAgent):
                 ep_count = 3
                 reasoning = f"보통 정보량 ({content_len}자, {sentence_count}문장) → 3화"
             elif sentence_count >= 15:
-                ep_count = 5  # [PC-1-B] 6→5
-                reasoning = f"높은 정보량 ({content_len}자, {sentence_count}문장) → 5화"
+                if loop_heavy_without_expansion:
+                    ep_count = Stage2Limits.DEFAULT_EP_COUNT
+                    reasoning = (
+                        f"문장 밀도는 높지만 사건 슬롯은 제한적 ({content_len}자, {sentence_count}문장, "
+                        f"슬롯 {event_slot_count}개) → 기본 {Stage2Limits.DEFAULT_EP_COUNT}화"
+                    )
+                else:
+                    ep_count = 5  # [PC-1-B] 6→5
+                    reasoning = f"높은 정보량 ({content_len}자, {sentence_count}문장) → 5화"
             else:
                 ep_count = Stage2Limits.DEFAULT_EP_COUNT  # 4화
-                reasoning = f"표준 정보량 ({content_len}자, {sentence_count}문장) → 기본 {Stage2Limits.DEFAULT_EP_COUNT}화"
+                reasoning = (
+                    f"표준 정보량 ({content_len}자, {sentence_count}문장) → 기본 {Stage2Limits.DEFAULT_EP_COUNT}화"
+                )
 
         # [TF-9] tension_level 보정 — treatment 설계 의도 반영
         tension_level = curr_block.get("tension_level") if isinstance(curr_block, dict) else None
@@ -524,6 +534,74 @@ class FourPhaseArcGenerator(BaseAgent):
 
         return ep_count, reasoning
 
+    @staticmethod
+    def _collect_pacing_metrics(curr_block: dict | None) -> dict[str, int | str | bool]:
+        block_content = ""
+        sentence_count = 0
+        content_len = 0
+        event_slot_count = 0
+        expansion_signal_count = 0
+        content_fields = FourPhaseArcGenerator._extract_pacing_content_fields(curr_block)
+
+        for key, val in content_fields.items():
+            if FourPhaseArcGenerator._has_meaningful_pacing_value(val):
+                event_slot_count += 1
+            if isinstance(val, str):
+                block_content += val + " "
+            elif isinstance(val, dict):
+                block_content += json.dumps(val, ensure_ascii=False) + " "
+
+        if isinstance(curr_block, dict):
+            for key in (
+                "episode_details",
+                "plot_suspension",
+                "work_focus",
+                "must_focus",
+                "constraint_summary",
+                "block_theme",
+            ):
+                if FourPhaseArcGenerator._has_meaningful_pacing_value(curr_block.get(key)):
+                    expansion_signal_count += 1
+
+        content_len = len(block_content.strip())
+        if block_content.strip():
+            sentence_count = len(re.split(r"[.。!?!\?\n]+", block_content))  # utf8-hygiene: allow-line regex quantifier
+
+        return {
+            "block_content": block_content,
+            "content_len": content_len,
+            "sentence_count": sentence_count,
+            "event_slot_count": event_slot_count,
+            "expansion_signal_count": expansion_signal_count,
+        }
+
+    @staticmethod
+    def _extract_pacing_content_fields(curr_block: dict | None) -> dict[str, object]:
+        field_names = ("context", "event_villain", "solution", "reward")
+        if not isinstance(curr_block, dict):
+            return {name: "" for name in field_names}
+
+        nested_content = curr_block.get("content")
+        nested_dict = nested_content if isinstance(nested_content, dict) else {}
+        extracted: dict[str, object] = {}
+        for name in field_names:
+            direct_val = curr_block.get(name)
+            if FourPhaseArcGenerator._has_meaningful_pacing_value(direct_val):
+                extracted[name] = direct_val
+            else:
+                extracted[name] = nested_dict.get(name, "")
+        return extracted
+
+    @staticmethod
+    def _has_meaningful_pacing_value(value: object) -> bool:
+        if isinstance(value, str):
+            return bool(value.strip())
+        if isinstance(value, dict):
+            return bool(value)
+        if isinstance(value, list):
+            return bool(value)
+        return value not in (None, "")
+
     def _build_pacing_signal_payload(
         self,
         curr_block: dict,
@@ -531,30 +609,28 @@ class FourPhaseArcGenerator(BaseAgent):
         pacing_reason: str,
     ) -> dict:
         """Collect density signals while leaving the final ep_count judgment to the LLM."""
-        block_content = ""
         item_hint_count = 0
         reward_present = False
         solution_present = False
+        metrics = self._collect_pacing_metrics(curr_block)
+        block_content = str(metrics["block_content"])
+        content_len = int(metrics["content_len"])
+        sentence_count = int(metrics["sentence_count"])
+        event_slot_count = int(metrics["event_slot_count"])
+        expansion_signal_count = int(metrics["expansion_signal_count"])
 
         if isinstance(curr_block, dict):
-            for key in ["context", "event_villain", "solution", "reward", "content"]:
-                val = curr_block.get(key, "")
-                if key == "reward":
-                    reward_present = bool(val)
-                if key == "solution":
-                    solution_present = bool(val)
+            content_fields = self._extract_pacing_content_fields(curr_block)
+            reward_present = self._has_meaningful_pacing_value(content_fields.get("reward"))
+            solution_present = self._has_meaningful_pacing_value(content_fields.get("solution"))
+            for key in {"event_villain", "solution", "reward"}:
+                val = content_fields.get(key, "")
                 if isinstance(val, str):
-                    block_content += val + " "
-                    if key in {"event_villain", "solution", "reward"}:
-                        item_hint_count += len(re.findall(r"[가-힣A-Za-z0-9_]+", val))
+                    item_hint_count += len(re.findall(r"[가-힣A-Za-z0-9_]+", val))
                 elif isinstance(val, dict):
                     serialized = json.dumps(val, ensure_ascii=False)
-                    block_content += serialized + " "
-                    if key in {"event_villain", "solution", "reward"}:
-                        item_hint_count += len(re.findall(r"[가-힣A-Za-z0-9_]+", serialized))
+                    item_hint_count += len(re.findall(r"[가-힣A-Za-z0-9_]+", serialized))
 
-        content_len = len(block_content.strip())
-        sentence_count = len(re.split(r"[.。?!\n]+", block_content)) if block_content.strip() else 0  # utf8-hygiene: allow-line regex quantifier
         tension_level = curr_block.get("tension_level") if isinstance(curr_block, dict) else None
         low_resource_block = bool(item_hint_count <= 8 and not reward_present and not solution_present)
 
@@ -568,6 +644,8 @@ class FourPhaseArcGenerator(BaseAgent):
         return {
             "content_len": content_len,
             "sentence_count": sentence_count,
+            "event_slot_count": event_slot_count,
+            "expansion_signal_count": expansion_signal_count,
             "tension_level": tension_level,
             "item_hint_count": item_hint_count,
             "reward_present": reward_present,
@@ -631,7 +709,9 @@ class FourPhaseArcGenerator(BaseAgent):
 
         _full_json = json.dumps(original_arc, ensure_ascii=False, indent=2)
         if len(_full_json) > 30000:
-            logging.warning("[TRUNCATION] _inplace_patch_arc: Arc JSON %d자 > 30KB 상한 → InPlace 불가", len(_full_json))
+            logging.warning(
+                "[TRUNCATION] _inplace_patch_arc: Arc JSON %d자 > 30KB 상한 → InPlace 불가", len(_full_json)
+            )
             return None  # 절단 시 깨진 JSON → full rewrite 폴백
         original_json = _full_json
 
@@ -684,6 +764,7 @@ class FourPhaseArcGenerator(BaseAgent):
                 logging.warning("[TF-23] InPlace: arc_end_state 누락 → 실패")
                 return None
             from modules.models.arc import validate_arc
+
             result = validate_arc(result)
             logging.info(f"✅ [TF-23] Arc {arc_no} in-place 수정 완료")
             return result
@@ -810,6 +891,7 @@ class FourPhaseArcGenerator(BaseAgent):
         original_text = smart_truncate(full_json, max_chars=30000, head_chars=16500)
 
         if patch_template:
+
             def _esc(value: str) -> str:
                 return value.replace("{", "{{").replace("}", "}}")
 
@@ -840,10 +922,14 @@ class FourPhaseArcGenerator(BaseAgent):
         negative_examples = self.negative_injector.generate_injection()
         self_check = self.negative_injector.generate_self_check_prompt()
         genre_energy_warning = (
-            f"⚠️ 이 작품은 {self._genre} 장르입니다. tactical_doc의 [시작 상태]/[종료 상태]에\n"
-            '"내공", "정신력", "마나" 등의 수치화된 능력치를 사용하지 마세요.\n'
-            "심리 상태는 서술형으로 표현하세요. (예: \"극도의 긴장 상태\", \"자신감 회복\")"
-        ) if self._genre not in ("wuxia",) else ""
+            (
+                f"⚠️ 이 작품은 {self._genre} 장르입니다. tactical_doc의 [시작 상태]/[종료 상태]에\n"
+                '"내공", "정신력", "마나" 등의 수치화된 능력치를 사용하지 마세요.\n'
+                '심리 상태는 서술형으로 표현하세요. (예: "극도의 긴장 상태", "자신감 회복")'
+            )
+            if self._genre not in ("wuxia",)
+            else ""
+        )
         full_constraint_block = "\n\n".join(
             part
             for part in [
@@ -1164,7 +1250,9 @@ class FourPhaseArcGenerator(BaseAgent):
                 }
             )
 
-        _forgotten.sort(key=lambda item: (item.get("last_seen_ep", 0), item.get("first_seen_ep", 0), item.get("name", "")))
+        _forgotten.sort(
+            key=lambda item: (item.get("last_seen_ep", 0), item.get("first_seen_ep", 0), item.get("name", ""))
+        )
         return _forgotten[:limit]
 
     def _build_forgotten_npc_advisory(self, *, before_ep: int, window: int = 10) -> tuple[str, set[str]]:
@@ -1478,9 +1566,7 @@ class FourPhaseArcGenerator(BaseAgent):
                 if top_failures:
                     lines.append(
                         "주요 실패 원인: "
-                        + ", ".join(
-                            f"{item.get('category', '?')}({item.get('count', 0)})" for item in top_failures[:3]
-                        )
+                        + ", ".join(f"{item.get('category', '?')}({item.get('count', 0)})" for item in top_failures[:3])
                     )
                 if top_agents:
                     agent = top_agents[0]
@@ -1605,7 +1691,9 @@ class FourPhaseArcGenerator(BaseAgent):
             if isinstance(tactical_doc, dict):
                 tactical_doc = json.dumps(tactical_doc, ensure_ascii=False)
             if tactical_doc:
-                arc_history_lines.append(f"━━━ Arc {prev_arc_no} (제{prev_ep_start}화~제{prev_ep_end}화) ━━━\n{tactical_doc}")
+                arc_history_lines.append(
+                    f"━━━ Arc {prev_arc_no} (제{prev_ep_start}화~제{prev_ep_end}화) ━━━\n{tactical_doc}"
+                )
         if arc_history_lines:
             full_history = "\n\n".join(arc_history_lines)
             if len(full_history) > ContextLimits.MAX_CONTEXT_CHARS:

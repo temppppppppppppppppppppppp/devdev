@@ -10,6 +10,7 @@ Core docs:
 
 - `authority-map.md`
 - `stage-read-order.md`
+- `donor-review-and-adoption-contract-v1.md`
 - `legacy-map.md`
 - `work-coverage-matrix.md`
 - `bootstrap-status.md`
@@ -61,12 +62,13 @@ Suggested read order:
 2. `authority-map.md`
 3. `legacy-map.md`
 4. `stage-read-order.md`
-5. `work-coverage-matrix.md`
-6. `production-pair-schema-standard-v1.md` when normalizing or auditing existing `BI/TR` pairs
-7. `production-pair-operating-policy-addendum-v1.md` when deciding live migration debt, grade refresh, or provenance fallback
-8. `production-pair-operational-registry-v1.md` when reading current live inventory, durable pair state, or benchmark freshness
-9. `production-pair-benchmark-spec-v1.md` after schema normalization is clear
-10. `pre-new-pitch-operational-readiness-v1.md` before starting a fresh pitch wave
+5. `donor-review-and-adoption-contract-v1.md` before promoting fresh candidates into `Phase0` or calling a touched pair ready
+6. `work-coverage-matrix.md`
+7. `production-pair-schema-standard-v1.md` when normalizing or auditing existing `BI/TR` pairs
+8. `production-pair-operating-policy-addendum-v1.md` when deciding live migration debt, donor decision visibility, grade refresh, or provenance fallback
+9. `production-pair-operational-registry-v1.md` when reading current live inventory, durable pair state, or benchmark freshness
+10. `production-pair-benchmark-spec-v1.md` after schema normalization is clear
+11. `pre-new-pitch-operational-readiness-v1.md` before starting a fresh pitch wave
 
 Role:
 

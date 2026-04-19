@@ -1,0 +1,5 @@
+{"timestamp": "2026-04-19 11:48:31", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 4}}
+{"timestamp": "2026-04-19 11:54:13", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["[C-1] tactical_doc 메타 용어 'Arc'를 서사 용어로 치환", "시작 위치 수정: '이전 Arc 종료 위치' → '한미증권 본점 VIP HTS 통제실 내 한시우 전용 프라이빗 룸'", "시작 부상 수정: '' → '없음'", "arc_end_state 위치 동기화: '알 수 없음' → '한미증권 본점 VIP HTS 통제실 내 한시우 전용 프라이빗 룸'"]}}
+{"timestamp": "2026-04-19 11:55:02", "type": "field_repair", "message": "hybrid_composition missing", "data": {"arc_idx": 3}}
+{"timestamp": "2026-04-19 11:55:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-19 11:55:43", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "target_arc_no": 4, "items_tracked": 7}}

@@ -1,0 +1,88 @@
+Topic: audit-report-candidate-revalidation
+Date: 2026-04-19
+Baseline Commit: 029df1a74af89a7b5387c449f4723a5df0d000d4
+
+[history-and-secrets]
+- .gitignore ignores .env at line 11.
+- .env exists in the working tree with populated secret-bearing keys:
+  - line 1 GOOGLE_API_KEY
+  - line 2 VERTEX_API_KEY
+  - line 3 VERTEX_PROJECT_ID
+  - line 4 VERTEX_LOCATION
+  - line 5 CLAUDE_API
+- git history includes .env exposure:
+  - b69763dc "Upload .env and projects folder as requested"
+  - 2f1de059 later changes/deletion still leave the older blob in history
+
+[bridge-server-surface]
+- modules/api/bridge_server.py:2365 FastAPI app declaration
+- public routes in modules/api/bridge_server.py:
+  - 2373 POST /run
+  - 2486 POST /run/{run_id}/input
+  - 2516 POST /stop
+  - 2534 GET /status
+  - 2577 GET /quality/summary
+  - 2594 GET /quality/dashboard
+  - 2608 GET /safe-ops/preview
+  - 2624 POST /quality/review
+  - 2671 WS /events
+- no auth dependency or CORS middleware found in bridge_server.py:
+  - no CORSMiddleware
+  - no Depends(
+  - no Security(
+
+[logging]
+- modules/core/logger.py uses logging.FileHandler only:
+  - 81
+  - 99
+  - 227
+  - 237
+- no RotatingFileHandler or TimedRotatingFileHandler found in modules/core/logger.py
+- modules/core/session_logger.py persists prompt/response/thinking style payloads and rotates by size, not by redaction policy:
+  - 108-145
+  - 268-359
+
+[schema-enforcement]
+- requirements.txt lists pydantic but no jsonschema package.
+- no import jsonschema or jsonschema.validate call found in workspace .py files.
+- response_schema runtime path exists:
+  - modules/core/response_schemas.py:749 get_schema_for_task
+  - modules/core/response_schemas.py:771 validate_response_against_schema
+  - modules/core/response_schemas.py:776 provider response_schema handles type/value guarantees
+  - modules/domain/agents/base_agent.py:1135 response_schema forwarded
+  - modules/domain/agents/base_agent.py:1423 response_schema forwarded
+  - modules/domain/agents/base_agent.py:2313 response_schema forwarded
+  - modules/core/providers/openai_provider.py:57 strict JSON schema wiring
+- partial fail-open candidates remain:
+  - modules/domain/agents/blueprint_ensemble.py:1161 retries with response_schema=None after overflow
+  - modules/models/blueprint.py:76 returns raw dict on validation failure
+  - modules/models/arc.py:302 returns raw dict on validation failure
+  - modules/models/manuscript.py:43 returns raw dict on validation failure
+- validate_bible_structure / validate_treatment_structure / validate_phase0_files remain wired:
+  - modules/core/stage0_handoff.py:361
+  - modules/core/stage0_handoff.py:578
+  - modules/core/project_manager.py:896
+
+[runtime-behavior]
+- modules/core/stage4_interview_round.py lines: 8193
+- Stage3 break semantics are intentional:
+  - modules/core/stage3_orchestrator.py:1005 result break check
+  - modules/core/stage3_orchestrator.py:3353 returns {"break": True}
+- StateTracker init is guarded, not an obvious live race:
+  - modules/core/stage2_orchestrator.py:338
+  - modules/core/stage3_orchestrator.py:1062
+  - main_a.py:3879
+- Stage2 still has a raw recovery prompt on failure path:
+  - modules/core/stage2_orchestrator.py:707
+- Stage2 also uses asyncio.to_thread for prompt offload:
+  - modules/core/stage2_orchestrator.py:709
+  - modules/core/stage2_orchestrator.py:1712
+- Stage4 pause is TTY-gated:
+  - modules/core/stage4_post_processor.py:1332
+
+[report-credibility]
+- [COMPAT] thin delegate literal occurrences in source/runtime code: 5, all in main_a.py
+- DBRepositoryProtocol method stubs in modules/protocols/db_repository.py: 59
+- response_schema appears in 36 Python files
+- ThreadPoolExecutor/as_completed appears in 23 Python files when docs/logs are excluded
+- main_a.py lines: 4836

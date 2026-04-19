@@ -1,11 +1,12 @@
 Date: 2026-04-02
-Status: in_progress (first bounded source-of-truth declaration tranche landed on 2026-04-07; the lane remains an active long-horizon Stage0 normalization track)
+Status: parked (2026-04-19 reactivation refresh; first bounded source-of-truth declaration tranche landed on 2026-04-07, the remaining runtime handoff and production-harness normalization debt is still real, and the honest queue reading is now parked Stage0 source-of-truth debt rather than active implementation progress)
 Canonical Path: `docs/2026-04-02/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage0-bi-tr-production-harness-normalization-remediation-execution-ssot.md`
 Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
 Baseline Dirty Summary: `dirty: prior Stage3 and Stage4 bounded tranches, the Stage0 enrich tranche, and queue docs were already in flight during the 2026-04-07 re-audit`
 Source Survey Docs:
 - `docs/2026-04-02/stage0-bible-generation-dna-sync-stage2-consume-bounded-survey.md`
+- `docs/2026-04-19/stage0-bi-tr-production-harness-normalization-reactivation-refresh.md`
 Evidence Artifacts:
 - `docs/2026-04-02/stage0-bible-generation-dna-sync-stage2-consume-evidence.json`
 Side-Effect Coverage:
@@ -208,3 +209,21 @@ Pass 3. Execution / readability
 - queue truth now reflects that this lane is active rather than unopened
 
 Confidence: `97%`
+
+# 11. 2026-04-19 Reactivation Refresh
+
+Source doc:
+
+- `docs/2026-04-19/stage0-bi-tr-production-harness-normalization-reactivation-refresh.md`
+
+Current reading:
+
+- the first bounded source-of-truth declaration tranche is landed
+- the remaining runtime handoff and production-harness normalization work is still real
+- the lane is not stale, but it is also not active progress anymore
+
+Queue consequence:
+
+- keep this lane visible
+- keep the temp mirror
+- treat it as parked Stage0 source-of-truth debt rather than active implementation progress

@@ -37,7 +37,7 @@ ARC_CRITIQUE_PROMPT = """
 ### [비평 기준 - 각 항목 0-10점]
 
 1. **아이템 연속성 (10점)**
-   - items_acquired에 이미 획득한 아이템이 포함되었는가?
+   - protagonist_items(legacy alias: items_acquired)에 이미 획득한 아이템이 포함되었는가?
    - 이전 Arc 소지품이 누락되지 않았는가?
    - 새 획득 아이템에 타당한 맥락이 있는가?
 
@@ -161,7 +161,9 @@ class ArcCritic(BaseAgent):
 
         prompt = ARC_CRITIQUE_PROMPT.format_map(
             SafeDict(
-                generated_arc=self._escape_braces(self._fit_critic_prompt_text(json.dumps(generated_arc, ensure_ascii=False, indent=2), 18000)),
+                generated_arc=self._escape_braces(
+                    self._fit_critic_prompt_text(json.dumps(generated_arc, ensure_ascii=False, indent=2), 18000)
+                ),
                 prev_arc_summary=self._escape_braces(prev_summary),
                 constraints=self._escape_braces(constraints if constraints else "(없음)"),
             )
@@ -251,11 +253,12 @@ class ArcCritic(BaseAgent):
             for key, value in auto_fixes["state_constraints"].items():
                 old_value = fixed["state_constraints"].get(key)
                 if old_value != value:
-                    logging.info(f" [V60.73] state_constraints 자동 수정: {key}: {old_value} → {value} (tactical_doc 불일치 주의)"
+                    logging.info(
+                        f" [V60.73] state_constraints 자동 수정: {key}: {old_value} → {value} (tactical_doc 불일치 주의)"
                     )
                 fixed["state_constraints"][key] = value
 
-        # items_acquired 수정 (중복 제거)
+        # protagonist_items 수정 (legacy alias: items_acquired)
         if "remove_items" in auto_fixes:
             # [BUG-F] protagonist_items 우선 폴백
             _fsc = fixed.get("state_constraints", {})

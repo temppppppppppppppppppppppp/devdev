@@ -24,9 +24,9 @@ _COMMON_EXAMPLES = {
         "bad_examples": [
             {
                 "context": "Arc 1에서 핵심 아이템을 획득한 상태",
-                "mistake": "Arc 2의 items_acquired에 동일 아이템 포함",
+                "mistake": "Arc 2의 protagonist_items(legacy alias: items_acquired)에 동일 아이템 포함",
                 "why_wrong": "이미 획득한 아이템을 다시 획득할 수 없음",
-                "correct": "items_acquired에서 기존 아이템 제외. 새로운 아이템 획득",
+                "correct": "protagonist_items에서 기존 아이템 제외. arc_end_state.equipment는 종료 시 전체 소지품 기준으로 유지",
             },
             {
                 "context": "Arc 2에서 특별한 지위/칭호를 수여받은 상태",
@@ -253,14 +253,19 @@ class NegativeExampleInjector:
 
     def record_rejection(self, arc: dict, rejection_reason: str, category: str):
         """REJECT 사례 기록 - [V60.74] 스레드 안전"""
+        state_constraints = arc.get("state_constraints", {})
+        protagonist_items = state_constraints.get("protagonist_items")
+        if protagonist_items is None:
+            protagonist_items = state_constraints.get("items_acquired", [])
         with _rejection_lock:
             self.rejection_history.append(
                 {
                     "arc_no": arc.get("arc_no", "?"),
                     "reason": rejection_reason,
                     "category": category,
-                    "items_acquired": arc.get("state_constraints", {}).get("items_acquired", []),
-                    "grants_received": arc.get("state_constraints", {}).get("grants_received", []),
+                    "protagonist_items": protagonist_items,
+                    "items_acquired": state_constraints.get("items_acquired", []),
+                    "grants_received": state_constraints.get("grants_received", []),
                     "timestamp": "now",
                 }
             )
@@ -357,7 +362,7 @@ class NegativeExampleInjector:
 
 다음 항목을 모두 확인하고 "예"로 답할 수 있어야 합니다:
 
-□ items_acquired에 이전 Arc에서 이미 획득한 아이템이 없는가?
+□ protagonist_items(legacy alias: items_acquired)에 이전 Arc에서 이미 획득한 아이템이 없는가?
 □ grants_received에 이전 Arc에서 이미 수여받은 것이 없는가?
 □ arc_start_state.location이 이전 Arc의 final_location과 일치하는가?
 □ 이전 Arc의 불리한 상태(부상/자원 손실 등)가 적절히 계승되었는가?
@@ -375,7 +380,7 @@ class NegativeExampleInjector:
             "duplicate_acquisition": """
 ⚠️ [중복 획득 경고]
 이전 Arc에서 이미 획득한 아이템을 다시 획득하려 합니다!
-→ items_acquired 목록에서 해당 아이템을 제거하세요.
+→ protagonist_items(legacy alias: items_acquired) 목록에서 해당 아이템을 제거하세요.
 → 대신 '새로운' 아이템을 획득하거나, 기존 아이템을 '활용'하는 장면으로 변경하세요.
 """,
             "location_mismatch": """

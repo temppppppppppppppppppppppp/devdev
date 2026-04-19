@@ -1,0 +1,197 @@
+{
+  "schema": "geuldobi.loop_abstraction_packet.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "active",
+  "scope": "Canonical multi-donor abstraction layer for serial surrogate-satisfaction loop design before bounded realization.",
+  "role": {
+    "canonical_home": [
+      "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+      "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml"
+    ],
+    "registry_surfaces": [
+      "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/donor_registry.json"
+    ],
+    "translation_annexes": [
+      "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/deepclone_donor_doctrine_packet.json"
+    ],
+    "provenance_surfaces": [
+      "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/source_manifest.json"
+    ],
+    "digest_surfaces": [
+      "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/material_bundle_summary.json"
+    ],
+    "consumer_surfaces": [
+      "treatments/golden_canary_deepclone_probe_a_fullblock_v1_tr_block_070_draft.json"
+    ]
+  },
+  "core_loop_law": {
+    "one_line": "Each episode should convert visible pressure into visible progress, lock a private satisfaction receipt, trigger observer reevaluation, and open the next gate without exhausting future beats.",
+    "primary_reward_model": "reward as right-to-act",
+    "loop_chain": [
+      "entry_pressure",
+      "execution",
+      "public_proof",
+      "private_receipt",
+      "observer_shift",
+      "next_gate"
+    ],
+    "success_conditions": [
+      "The protagonist creates visible headway inside the current episode.",
+      "Reward is converted into a structural asset, access shift, authority shift, or durable receipt instead of generic profit alone.",
+      "At least one observer or gatekeeper visibly reevaluates the protagonist.",
+      "The episode ends with a legal next gate rather than a hollow cliffhanger."
+    ],
+    "failure_modes": [
+      "Setup-only delay with no visible proof or receipt.",
+      "Public proof with no private receipt or access lock.",
+      "Reward is flattened into generic admiration, profit, or reevaluation language.",
+      "The next gate is opened by consuming a future beat instead of a lawful bridge move.",
+      "The protagonist receives gifted access instead of earned access."
+    ]
+  },
+  "slot_taxonomy": {
+    "pressure_slots": [
+      "entry_threat",
+      "deadline_pressure",
+      "status_humiliation",
+      "resource_constraint",
+      "gatekeeper_refusal"
+    ],
+    "execution_slots": [
+      "decisive_move",
+      "position_entry",
+      "rule_reframing",
+      "preemptive_claim",
+      "countermeasure_launch"
+    ],
+    "public_proof_slots": [
+      "market_validation",
+      "public_result",
+      "third_party_reaction",
+      "visible_accuracy",
+      "reader_facing_impact"
+    ],
+    "private_receipt_slots": [
+      "access_unlock",
+      "private_admission",
+      "named_seat_equivalent",
+      "exception_lane",
+      "signboard_receipt",
+      "authority_receipt"
+    ],
+    "observer_shift_slots": [
+      "gatekeeper_attitude_shift",
+      "internal_witness_conversion",
+      "family_recalibration",
+      "institutional_reclassification",
+      "market_or_power_observer_shift"
+    ],
+    "next_gate_slots": [
+      "next_cycle_ticket",
+      "new_lane_unlock",
+      "pending_meeting",
+      "strategic_revelation_hold",
+      "legal_bridge_to_larger_field"
+    ],
+    "reward_portfolio_classes": [
+      "cash_gain",
+      "access_gain",
+      "priority_gain",
+      "authority_gain",
+      "protection_gain",
+      "rule_change_gain",
+      "relationship_reposition_gain",
+      "signboard_gain"
+    ],
+    "hook_portfolio_classes": [
+      "pending_gate",
+      "revelation_hook",
+      "access_hook",
+      "relational_pressure_hook",
+      "strategic_bridge_hook"
+    ]
+  },
+  "generalized_mapping_examples": [
+    {
+      "donor_surface": "PB tone shift",
+      "generalized_slot": "gatekeeper_attitude_shift",
+      "minimum_truth": "A gatekeeper who previously constrained the protagonist visibly changes posture after proof."
+    },
+    {
+      "donor_surface": "named seat",
+      "generalized_slot": "named_seat_equivalent",
+      "minimum_truth": "A private structural receipt proves that the protagonist now occupies a privileged operating position."
+    },
+    {
+      "donor_surface": "priority response list",
+      "generalized_slot": "next_cycle_ticket",
+      "minimum_truth": "The current episode opens a specific, higher-order lane for the next episode or tranche."
+    },
+    {
+      "donor_surface": "exception account",
+      "generalized_slot": "exception_lane",
+      "minimum_truth": "The protagonist is granted a privileged execution or approval lane unavailable to ordinary actors."
+    }
+  ],
+  "donor_integration_contract": {
+    "purpose": "A donor provides evidence, examples, and mapping hints. It does not replace the canonical loop law.",
+    "new_donor_rules": [
+      "Every new donor must be reduced to generalized slots before it is allowed to influence canonical material-side law.",
+      "A donor may extend mapping examples, reward rotation notes, and contamination red flags without rewriting the core loop law by default.",
+      "Conflicts between donors should be resolved at the generalized slot layer, not by importing donor-specific nouns into canonical law.",
+      "A donor is accepted only if it improves loop evidence, not merely style or novelty."
+    ],
+    "must_translate_not_copy": [
+      "public proof to private receipt structure",
+      "reward as structural asset",
+      "earned access over gifted access",
+      "bridge-first cadence",
+      "observer reevaluation as payoff amplifier"
+    ],
+    "red_flags": [
+      "donor proper nouns or organizations survive unchanged in canonical law",
+      "donor scenery replaces the abstract mechanic",
+      "proof is narrated as cleverness without a visible event",
+      "public spectacle appears without private satisfaction receipt",
+      "repeated donor-flavored receipts narrow the reward portfolio"
+    ]
+  },
+  "evaluation_contract": {
+    "episode_loop_contract": [
+      "pressure_visible",
+      "execution_visible",
+      "proof_visible",
+      "receipt_visible",
+      "observer_shift_visible",
+      "next_gate_visible"
+    ],
+    "minimum_acceptance_rule": "An episode should satisfy at least four loop-contract items, and it should not miss both receipt_visible and next_gate_visible at the same time.",
+    "active_canary_scorecard_ref": "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_canary_scorecard_v1.json",
+    "canary_scorecard_candidates": [
+      "loop_deadline_hit",
+      "structural_receipt_conversion",
+      "receipt_transport_survival",
+      "carryover_persistence",
+      "legal_bridge_efficiency",
+      "anti_contamination_pass",
+      "reward_rotation_health"
+    ]
+  },
+  "upgrade_hooks": {
+    "multi_donor_ready": true,
+    "donor_registry_ref": "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/donor_registry.json",
+    "future_extensions": [
+      "additional donor annex packets",
+      "reward rotation matrix",
+      "loop fatigue heuristics",
+      "S2/S3 receipt preservation hardening",
+      "genre-specific slot aliases"
+    ],
+    "merge_policy": [
+      "Core loop law changes require stronger evidence than donor annex updates.",
+      "New donors may enrich examples and reward classes without immediately changing canonical thresholds.",
+      "Canonical law remains donor-free even when multiple donors are active."
+    ]
+  }
+}

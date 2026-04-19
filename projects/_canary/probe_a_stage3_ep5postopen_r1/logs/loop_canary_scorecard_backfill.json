@@ -1,0 +1,213 @@
+{
+  "schema": "geuldobi.loop_canary_scorecard.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "backfilled",
+  "role": "Loop-oriented bounded canary gate surface for narrative doctrine evaluation.",
+  "document_ref": "docs/2026-04-18/golden-canary-deepclone-probe-a-loop-canary-scorecard.md",
+  "evaluation_unit": [
+    "stage3_bounded_episode_tranche"
+  ],
+  "required_inputs": [
+    "projects/_canary/probe_a_stage3_ep5postopen_r1/logs/stage3_canary_summary.json",
+    "projects/_canary/probe_a_stage3_ep5postopen_r1/plans/blueprints/blueprint_0004.txt",
+    "projects/_canary/probe_a_stage3_ep5postopen_r1/plans/blueprints/blueprint_0005.txt",
+    "projects/_canary/probe_a_stage3_ep5postopen_r1/logs/artifacts/stage3/ep_0004/attempt_01/final_blueprint__emotion_focused.json",
+    "projects/_canary/probe_a_stage3_ep5postopen_r1/logs/artifacts/stage3/ep_0005/attempt_02/final_blueprint__dialogue_focused.json",
+    "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+    "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
+    "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+  ],
+  "hard_gates": {
+    "episode_loop_contract_floor": {
+      "required_items": [
+        "pressure_visible",
+        "execution_visible",
+        "proof_visible",
+        "receipt_visible",
+        "observer_shift_visible",
+        "next_gate_visible"
+      ],
+      "minimum_hit_count": 4,
+      "forbidden_joint_miss": [
+        "receipt_visible",
+        "next_gate_visible"
+      ],
+      "status": "pass",
+      "evidence": [
+        "Episode 4 ends with explicit capital independence and next-action readiness.",
+        "Episode 5 converts that independence into external firewall execution, thesis confirmation, expert obedience, and next-day capital deployment."
+      ],
+      "notes": [
+        "The post-opening tranche keeps all six loop-contract items alive outside the family study lane."
+      ]
+    },
+    "receipt_transport_gate": {
+      "rule": "If a structural receipt appears in the tranche artifact, its trace must survive in at least two downstream surfaces.",
+      "status": "pass",
+      "evidence": [
+        "Episode 4 ending_state establishes severed family control and independent operating authority.",
+        "Episode 5 opening uses that independence immediately to move into legal structuring without hesitation.",
+        "Episode 5 ending_state preserves the tranche as complete firewall setup plus imminent liquidity receipt."
+      ],
+      "notes": [
+        "Receipt truth survives and is operationalized, not merely remembered."
+      ]
+    },
+    "anti_contamination_gate": {
+      "rule": "Donor surfaces may remain only as example-family language. Direct donor scene-copy or law-copy fails the gate.",
+      "status": "pass",
+      "evidence": [
+        "The episode's payoff comes through a work-native legal/firewall lane and an external professional observer, not donor-specific scenery.",
+        "The market thesis proof is localized through IAEA news timing and SW인베스트먼트 structuring rather than donor beat copying."
+      ],
+      "notes": [
+        "This is the cleanest post-opening anti-contamination showing so far."
+      ]
+    },
+    "lawful_bridge_gate": {
+      "rule": "The tranche must open a lawful next gate without replay drift, setup-only delay, or future-beat consumption.",
+      "status": "pass",
+      "evidence": [
+        "Episode 5 opens as direct_continuation from ep4 independence, not as replay.",
+        "The episode ends on completed firewall prep plus next-day liquidity deployment, leaving the market-entry beat intact."
+      ],
+      "notes": []
+    }
+  },
+  "weighted_metrics": {
+    "loop_deadline_hit": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "The opening window lands capital independence by ep4 and external firewall setup by ep5 without drift."
+      ],
+      "notes": []
+    },
+    "structural_receipt_conversion": {
+      "weight": 20,
+      "status": "pass",
+      "score": 17,
+      "evidence": [
+        "Reward rotates from family authority receipt into a legal blind-structure receipt and imminent business-account readiness.",
+        "The legal team submits rather than resists, creating a durable external operating shield."
+      ],
+      "notes": [
+        "The actual business account activation is one step away, so three points are held back."
+      ]
+    },
+    "receipt_transport_survival": {
+      "weight": 15,
+      "status": "pass",
+      "score": 14,
+      "evidence": [
+        "Episode 4 independence result directly powers episode 5 legal execution.",
+        "Episode 5 ending_state keeps both firewall completion and liquidity timing alive."
+      ],
+      "notes": [
+        "Summary surfaces are still thinner than artifact surfaces, so one point is held back."
+      ]
+    },
+    "carryover_persistence": {
+      "weight": 15,
+      "status": "pass",
+      "score": 14,
+      "na_allowed": true,
+      "evidence": [
+        "The ep4 family-authority receipt becomes ep5 external-firewall execution authority with no reset or flattening."
+      ],
+      "notes": [
+        "This is a strong narrative carryover proof across a lane change."
+      ]
+    },
+    "legal_bridge_efficiency": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "The bridge cleanly exits the family lane and enters the legal/market-prep lane without replay or future-beat overspend."
+      ],
+      "notes": []
+    },
+    "anti_contamination_pass": {
+      "weight": 10,
+      "status": "pass",
+      "score": 9,
+      "evidence": [
+        "External legal observer and firewall construction feel more work-specific than donor-specific."
+      ],
+      "notes": [
+        "A small amount of seed example-family flavor still remains in the broader opening stack."
+      ]
+    },
+    "reward_rotation_health": {
+      "weight": 10,
+      "status": "pass",
+      "score": 8,
+      "evidence": [
+        "Reward rotates from family-authority independence to external expert submission, legal firewall creation, and impending market deployment."
+      ],
+      "notes": [
+        "Healthy rotation is present, though the capital-deployment receipt itself has not fully landed yet."
+      ]
+    }
+  },
+  "watchlists": {
+    "anti_fatigue_risk": {
+      "status": "watch",
+      "red_flags": [
+        "same_receipt_family_repeats_across_two_or_more_tranches",
+        "proof_grows_without_observer_shift",
+        "next_gate_surface_collapses_to_one_hook_class",
+        "earned_access_is_replaced_by_gifted_access"
+      ],
+      "notes": [
+        "The tranche survives the first lane change, which is a strong anti-fatigue sign, but longer proof is still needed."
+      ]
+    },
+    "saturation_trigger": {
+      "status": "clear",
+      "red_flags": [
+        "authority_gain_rises_while_constraints_flatten",
+        "reward_size_rises_while_reader_payoff_stays_flat",
+        "signboard_and_next_gate_collapse_into_one_repeated_device"
+      ],
+      "notes": [
+        "No immediate saturation trigger is visible in the first post-opening tranche."
+      ]
+    }
+  },
+  "interpretation_bands": [
+    {
+      "band": "gate_fail",
+      "meaning": "Execution hold regardless of numeric score."
+    },
+    {
+      "band": "85-100",
+      "meaning": "Strong pass. Bounded realization candidate."
+    },
+    {
+      "band": "70-84",
+      "meaning": "Pass with repair. Apply one targeted fix and rerun."
+    },
+    {
+      "band": "55-69",
+      "meaning": "Weak pass. Doctrine promotion remains on hold."
+    },
+    {
+      "band": "<55",
+      "meaning": "Fail. Recheck tranche design or doctrine interpretation."
+    }
+  ],
+  "operator_fields": {
+    "target_project": "probe_a_stage3_ep5postopen_r1",
+    "target_tranche": "Stage3 ep4->ep5 post-opening proof",
+    "target_stage": 3,
+    "gate_result": "all_loop_gates_pass_with_platform_warning",
+    "weighted_total": 92,
+    "weighted_total_after_na_adjustment": 92,
+    "operator_summary": "The first post-opening tranche survives the lane shift. Family-authority gain is successfully converted into external firewall execution, legal-observer submission, and imminent capital deployment. This is a strong loop pass beyond the opening-family lane.",
+    "next_action": "Treat post-opening lane survival as provisionally proven. The next useful proof target is whether actual market-entry payout keeps the same rotation strength after the setup/firewall tranche."
+  }
+}

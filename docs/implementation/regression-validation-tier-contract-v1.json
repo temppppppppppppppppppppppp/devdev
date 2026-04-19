@@ -22,6 +22,7 @@
       "summary": "Targeted smoke and runner helper coverage that touches fixture or project state but stays narrower than full live canary proof.",
       "mutates_project_state": true,
       "tests": [
+        "tests/test_run_stage2_canary.py",
         "tests/test_run_stage4_canary.py",
         "tests/test_run_stage34_canary.py",
         "tests/test_run_stage3_canary.py",
@@ -39,6 +40,7 @@
       "mutates_project_state": true,
       "tests": [],
       "scripts": [
+        "scripts/run_stage2_canary.py",
         "scripts/run_stage4_canary.py",
         "scripts/run_stage34_canary.py",
         "scripts/run_stage3_canary.py",
@@ -56,6 +58,7 @@
       "tests/test_runtime_print_allowlist.py"
     ],
     "focused_mutation": [
+      "tests/test_run_stage2_canary.py",
       "tests/test_run_stage4_canary.py",
       "tests/test_run_stage34_canary.py",
       "tests/test_run_stage3_canary.py",
@@ -65,6 +68,7 @@
       "scripts/run_stage4_smoke.py"
     ],
     "full_canary_proof": [
+      "scripts/run_stage2_canary.py",
       "scripts/run_stage4_canary.py",
       "scripts/run_stage34_canary.py",
       "scripts/run_stage3_canary.py",

@@ -1,0 +1,740 @@
+{
+  "_schema_version": "blockguide.phase0.v1",
+  "_work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "_family": "blockguide",
+  "_consistency_reference_only": true,
+  "project": {
+    "title_ko": "골든 루트 (가제)",
+    "core_premise": "2006년부터 2024년까지의 경제 이벤트와 붕괴장을 이용해 20억을 135조로 키우되, 초반부터 첫 투자 증명을 구조 자산과 접근권으로 환전해 형들의 몰락과 시장 광기를 통제권과 자산 방화벽으로 바꿔 자기 삶을 완전히 되찾는 것.",
+    "format": "investment + 회귀물 + 패밀리오피스 통제권 장악",
+    "logline": "고독사한 재벌가 막내 한시우는 2006년으로 돌아와 WTI, 리먼, 비트코인, 테슬라, AI 사이클을 차례로 먹는다. 그러나 이 판의 진짜 실력은 수익 그 자체가 아니라 첫 proof를 private receipt와 좌석으로 잠그는 데 있고, 마지막 승부는 135조 운용권을 누구 손에 남길지에 있다.",
+    "start_year": 2006,
+    "end_year": 2024
+  },
+  "setting": {
+    "group_background": "한정호 회장의 재벌 그룹은 형들의 확장 실패와 횡령 의혹으로 흔들렸고, 이제 막내 한시우의 자산 방화벽과 실사 원칙을 무시할 수 없는 상태가 됐다.",
+    "execution_doctrine": "돈보다 통제권. 시장에서는 exit를 먼저 짜고 public proof를 만든 뒤 private receipt로 잠그며, 가족 앞에서는 실사와 방화벽을 먼저 세운다.",
+    "generalized_loop_law": {
+      "one_line": "각 화는 visible pressure를 visible progress로 바꾸고, private satisfaction receipt를 잠근 뒤, observer reevaluation을 일으키며, future beat를 소모하지 않는 next gate를 열어야 한다.",
+      "primary_reward_model": "reward as right-to-act",
+      "loop_chain": [
+        "entry_pressure",
+        "execution",
+        "public_proof",
+        "private_receipt",
+        "observer_shift",
+        "next_gate"
+      ],
+      "success_conditions": [
+        "현재 화 안에서 protagonist headway가 visible해야 한다.",
+        "reward는 generic profit만이 아니라 structural asset, access shift, authority shift, protection gain 중 하나로 환전되어야 한다.",
+        "최소 1개 observer 또는 gatekeeper가 태도 변화를 보여야 한다.",
+        "ending은 hollow cliffhanger가 아니라 legal next gate로 닫혀야 한다."
+      ],
+      "failure_modes": [
+        "setup-only delay",
+        "public proof only with no private receipt",
+        "reward flattened into admiration or profit language",
+        "future beat consumption without lawful bridge",
+        "gifted access replacing earned access"
+      ]
+    },
+    "starter_company": {
+      "name": "SW인베스트먼트",
+      "state": "원자재 트레이딩 법인으로 출발해 135조 패밀리오피스로 전환 완료",
+      "assets": [
+        "18년치 경제 캘린더 기억",
+        "글로벌 거래선과 블록딜 execution",
+        "127조 동원 가능 현금",
+        "가족 자산과 분리된 운용 규칙"
+      ],
+      "liabilities": [
+        "회귀 비밀 유지",
+        "형들의 부실 재유입 위험",
+        "승계 사냥꾼과 외부 시선"
+      ]
+    },
+    "economic_context": {
+      "btc_spot": "10만 달러 직전 랠리와 최종 익절을 이미 통과한 상태",
+      "ai_cycle": "엔비디아 2조 달러 사이클을 수확하고 전략 자산만 남긴 상태",
+      "rate_cycle": "금리 인하 신호가 시장에 반영된 구간",
+      "current_risks": [
+        "승계 구조 개입",
+        "가족 부실의 재유입",
+        "예언자처럼 보인 18년의 흔적을 캐려는 외부 시선"
+      ],
+      "locked_in_advantages": [
+        "127조 현금 우위",
+        "패밀리오피스 운용 규칙",
+        "마이클 첸 중심의 글로벌 execution 라인",
+        "형들이 스스로 망가뜨린 가문 권력 공백"
+      ]
+    }
+  },
+  "protagonist": {
+    "world_origin": "현대인",
+    "incarnation_type": "회귀자",
+    "regression_point": {
+      "death_year": 2024,
+      "death_cause": "가문 몰락 이후 고독사",
+      "return_year": 2006,
+      "return_month": "2006년 1월",
+      "return_age": 26,
+      "return_context": "승마 국가대표 은퇴 직후"
+    },
+    "execution_doctrine": "가격이 아니라 이득 구조와 proof/receipt 전환을 먼저 본다. 확신 구간에서만 크게 베팅하고, first execution 뒤에는 observer tone shift와 access receipt까지 같은 opening 안에 잠근다.",
+    "governance_doctrine": "가족 자산과 개인 자산 사이에 방화벽을 둔다. 도움은 주되 gifted succession은 허용하지 않고, earned access만 연다.",
+    "episode_loop_contract": [
+      "pressure_visible",
+      "execution_visible",
+      "proof_visible",
+      "receipt_visible",
+      "observer_shift_visible",
+      "next_gate_visible"
+    ],
+    "reward_rotation_principle": "보상은 현금 숫자에 고정하지 않고 access, priority, authority, protection, rule-change, signboard class로 회전시키되 compounding 감각은 유지한다.",
+    "hook_rotation_principle": "next gate는 cliffhanger 하나로 고정하지 않고 pending gate, revelation, access unlock, relational pressure, strategic bridge 형태로 rotation한다.",
+    "secrecy_rule": "회귀의 비밀은 끝까지 공개하지 않는다. 인정은 받아도 정체는 넘기지 않는다.",
+    "pov": "혼합",
+    "external_pov_insert_policy": "제한적 허용"
+  },
+  "phase0_design": {
+    "arcs": [
+      {
+        "arc_id": "ARC-01",
+        "title": "원자재 thesis 첫 증명과 first private receipt를 잠근 뒤 금융위기 숏을 준비하다",
+        "block_range": "1-10",
+        "time_window": "2006년 1월 초 -> 2007년 9월 ~ 12월",
+        "capital_target": "150억 (미실현 포함)",
+        "front_sectors": [
+          "투자/금융",
+          "원자재/에너지",
+          "원자재/귀금속",
+          "정리/준비",
+          "조선/철강",
+          "금융/파생상품"
+        ],
+        "support_sectors": [
+          "투자/금융",
+          "원자재/에너지"
+        ],
+        "main_opponents": [
+          "한정호",
+          "한태준",
+          "한태민",
+          "박성호",
+          "시장 컨센서스"
+        ],
+        "new_npcs": [],
+        "emotion_curve": "{'type': 'rebirth', 'intensity': 9} -> {'type': 'calm_before_storm', 'intensity': 7}",
+        "quiet_blocks": [],
+        "defeat_blocks": []
+      },
+      {
+        "arc_id": "ARC-02",
+        "title": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "block_range": "11-20",
+        "time_window": "2008년 3월 -> 2010년 7월 ~ 12월",
+        "capital_target": "2000억",
+        "front_sectors": [
+          "금융/투자은행",
+          "에너지/금융",
+          "금융",
+          "정리",
+          "대기",
+          "주식",
+          "암호화폐",
+          "테크"
+        ],
+        "support_sectors": [
+          "금융/투자은행",
+          "에너지/금융"
+        ],
+        "main_opponents": [
+          "마이클 첸",
+          "글로벌 패닉",
+          "한태준"
+        ],
+        "new_npcs": [],
+        "emotion_curve": "{'type': 'triumph', 'intensity': 9} -> {'type': 'independence', 'intensity': 5}",
+        "quiet_blocks": [],
+        "defeat_blocks": []
+      },
+      {
+        "arc_id": "ARC-03",
+        "title": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "block_range": "21-30",
+        "time_window": "2011년 1월 ~ 6월 -> 2017년 7월 ~ 12월",
+        "capital_target": "13조 (현금 10조 + 크립토 1조 + 주식 2조)",
+        "front_sectors": [
+          "플랫폼/모바일",
+          "엔터테인먼트",
+          "이커머스/중국",
+          "게임",
+          "암호화폐",
+          "암호화폐/스마트컨트랙트"
+        ],
+        "support_sectors": [
+          "플랫폼/모바일",
+          "엔터테인먼트"
+        ],
+        "main_opponents": [
+          "김범수",
+          "양현석",
+          "텐센트",
+          "월가 IPO 데스크",
+          "크립토 회의론"
+        ],
+        "new_npcs": [],
+        "emotion_curve": "{'type': 'expansion', 'intensity': 7} -> {'type': 'perfect_exit', 'intensity': 10}",
+        "quiet_blocks": [],
+        "defeat_blocks": []
+      },
+      {
+        "arc_id": "ARC-04",
+        "title": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "block_range": "31-40",
+        "time_window": "2018년 1월 ~ 6월 -> 2020년 12월",
+        "capital_target": "45조",
+        "front_sectors": [
+          "관망",
+          "전기차/테크",
+          "크립토/테크",
+          "파생상품",
+          "전체",
+          "테크",
+          "전기차",
+          "테크/크립토"
+        ],
+        "support_sectors": [
+          "관망",
+          "전기차/테크"
+        ],
+        "main_opponents": [
+          "시장 비관론",
+          "코로나 패닉",
+          "테슬라 숏셀러",
+          "한정호"
+        ],
+        "new_npcs": [],
+        "emotion_curve": "{'type': 'patience', 'intensity': 5} -> {'type': 'calm_satisfaction', 'intensity': 7}",
+        "quiet_blocks": [],
+        "defeat_blocks": []
+      },
+      {
+        "arc_id": "ARC-05",
+        "title": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "block_range": "41-50",
+        "time_window": "2021년 1월 ~ 2월 -> 2022년 11월 2일 ~ 21일",
+        "capital_target": "56조",
+        "front_sectors": [
+          "밈/크립토",
+          "크립토",
+          "밈코인",
+          "관망",
+          "크립토 파생"
+        ],
+        "support_sectors": [
+          "밈/크립토",
+          "크립토"
+        ],
+        "main_opponents": [
+          "멜빈 캐피털",
+          "밈 FOMO",
+          "도권",
+          "SBF",
+          "디스트레스 셀러"
+        ],
+        "new_npcs": [],
+        "emotion_curve": "{'type': 'active_tension', 'intensity': 7} -> {'type': 'ultimate_contrarian', 'intensity': 10}",
+        "quiet_blocks": [],
+        "defeat_blocks": []
+      },
+      {
+        "arc_id": "ARC-06",
+        "title": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "block_range": "51-60",
+        "time_window": "2023년 1월 ~ 3월 -> 2024년 12월 31일",
+        "capital_target": "135조",
+        "front_sectors": [
+          "AI/크립토",
+          "AI 반도체",
+          "크립토",
+          "크립토/AI",
+          "자산관리",
+          "해당 없음"
+        ],
+        "support_sectors": [
+          "AI/크립토",
+          "AI 반도체"
+        ],
+        "main_opponents": [
+          "리처드 리",
+          "게리 겐슬러",
+          "반감기 FOMO",
+          "형들의 잔존 인맥",
+          "승계 사냥꾼들"
+        ],
+        "new_npcs": [],
+        "emotion_curve": "{'type': 'dawn', 'intensity': 7} -> {'type': 'happy_ending', 'intensity': 8}",
+        "quiet_blocks": [],
+        "defeat_blocks": []
+      }
+    ],
+    "opening_bundle_contract": {
+      "bundle_window": "TR 2~6",
+      "macro_battlefield": "원자재 thesis 첫 증명과 gatekeeper access-shift receipt 고정",
+      "macro_battlefield_map": [
+        "시장 thesis를 즉시 포지션으로 바꾸는 entry pressure",
+        "WTI/원유 first execution과 public proof",
+        "gatekeeper attitude shift와 private seat-equivalent receipt",
+        "exception-lane family 또는 priority-lane family unlock",
+        "다음 cycle 입장권 확보"
+      ],
+      "generalized_slot_projection": {
+        "pressure_slot": "entry_threat or gatekeeper_refusal",
+        "execution_slot": "position_entry or preemptive_claim",
+        "public_proof_slot": "market_validation or visible_accuracy",
+        "private_receipt_slot": "access_unlock, exception_lane, named_seat_equivalent, or authority_receipt",
+        "observer_shift_slot": "gatekeeper_attitude_shift or institutional_reclassification",
+        "next_gate_slot": "next_cycle_ticket or legal_bridge_to_larger_field"
+      },
+      "seed_example_family_note": "PB tone shift, named seat, 예외 계좌, priority lane은 opening receipt/access shift를 설명하기 위한 seed example family이며 canonical law 자체는 generalized slot projection으로 읽는다.",
+      "bundle_goal": "TR 2~6 안에 thesis -> proof -> receipt -> seat-equivalent/access shift -> next ticket 체인을 독자에게 명확히 증명한다.",
+      "first_signboard_block": 3,
+      "representative_reevaluation_block": 2,
+      "next_battlefield_ticket_block": 4,
+      "timing_reconciliation_note": "ARC-01이 B1-10까지 이어지더라도 opening reader-earning contract는 B02~B04 안에 public proof와 private receipt가 모두 visible해야 한다. 회귀 충격 정리, 독립 선언, 법인 준비는 named-seat와 observer shift를 늦추는 변명이 될 수 없다."
+    },
+    "npc_timeline": [
+      {
+        "name": "한정호",
+        "entry_block": 1,
+        "active_blocks": "1-60",
+        "function": "아버지이자 가문 심판자",
+        "turning_blocks": [
+          30,
+          40,
+          59,
+          60
+        ],
+        "final_state": "막내의 실사 원칙과 운용권 방화벽을 인정한다."
+      },
+      {
+        "name": "박성호",
+        "entry_block": 2,
+        "active_blocks": "2-53",
+        "function": "초반 PB gatekeeper이자 first observer tone shift와 private receipt를 잠그는 witness",
+        "turning_blocks": [
+          2,
+          17,
+          53
+        ],
+        "final_state": "하락 구간도 한시우의 매수 구간으로 읽고, 우선 응답권과 named-seat 접근을 열어 주는 실무 파트너가 된다."
+      },
+      {
+        "name": "마이클 첸",
+        "entry_block": 7,
+        "active_blocks": "7-60",
+        "function": "글로벌 execution 파트너이자 최종 우정 축",
+        "turning_blocks": [
+          15,
+          37,
+          39,
+          58,
+          60
+        ],
+        "final_state": "패밀리오피스 글로벌 운용을 맡는 평생 파트너이자 친구가 된다."
+      },
+      {
+        "name": "제이슨",
+        "entry_block": 25,
+        "active_blocks": "25-48",
+        "function": "크립토 OTC 집행자",
+        "turning_blocks": [
+          30,
+          43,
+          47,
+          48
+        ],
+        "final_state": "배신 이후 멀어진 전 파트너로 남는다."
+      },
+      {
+        "name": "김범수",
+        "entry_block": 21,
+        "active_blocks": "21-24",
+        "function": "모바일 플랫폼 축의 전략 파트너",
+        "turning_blocks": [
+          21,
+          24
+        ],
+        "final_state": "한시우를 판을 짜는 투자자로 인정한다."
+      },
+      {
+        "name": "양현석",
+        "entry_block": 22,
+        "active_blocks": "22-24",
+        "function": "K-콘텐츠 확장 인정 축",
+        "turning_blocks": [
+          22,
+          24
+        ],
+        "final_state": "수익이 나자 한시우의 감각을 조용히 인정한다."
+      },
+      {
+        "name": "비탈릭 부테린",
+        "entry_block": 27,
+        "active_blocks": "27-30",
+        "function": "블록체인 기술 축의 신뢰 파트너",
+        "turning_blocks": [
+          27,
+          29,
+          30
+        ],
+        "final_state": "투기 광풍 속에서도 가치 판단을 공유한 동맹으로 남는다."
+      },
+      {
+        "name": "정민재",
+        "entry_block": 49,
+        "active_blocks": "49-60",
+        "function": "패밀리오피스 실장 겸 후반 집행자",
+        "turning_blocks": [
+          49,
+          59,
+          60
+        ],
+        "final_state": "운용권 봉인 구조를 실제로 집행하는 내부 운영 책임자가 된다."
+      },
+      {
+        "name": "리처드 리",
+        "entry_block": 53,
+        "active_blocks": "53-56",
+        "function": "AI 버블론의 대표 관찰자",
+        "turning_blocks": [
+          53,
+          54,
+          56
+        ],
+        "final_state": "숫자보다 서사를 크게 떠들다 틀린 베어의 사례로 남는다."
+      },
+      {
+        "name": "어머니",
+        "entry_block": 1,
+        "active_blocks": "1-60",
+        "function": "가족 화해의 정서 축",
+        "turning_blocks": [
+          1,
+          40,
+          60
+        ],
+        "final_state": "막내와 같은 집에서 새해를 맞는 평화의 기준점이 된다."
+      },
+      {
+        "name": "한태준",
+        "entry_block": 1,
+        "active_blocks": "1-59",
+        "function": "큰형이자 몰락한 경쟁자",
+        "turning_blocks": [
+          5,
+          15,
+          40,
+          59
+        ],
+        "final_state": "막내에게 손 벌릴 수밖에 없는 실패한 후계자로 밀려난다."
+      },
+      {
+        "name": "한태민",
+        "entry_block": 1,
+        "active_blocks": "1-59",
+        "function": "둘째형이자 부실의 또 다른 축",
+        "turning_blocks": [
+          5,
+          40,
+          59
+        ],
+        "final_state": "횡령 의혹과 실패로 무력화된 채 통제권 바깥으로 밀려난다."
+      }
+    ],
+    "foreshadow_map": [
+      {
+        "id": "F-001",
+        "thread": "그룹 돈을 받지 않는 독립 자산 선언",
+        "planted_blocks": [
+          1,
+          5
+        ],
+        "payoff_blocks": [
+          40,
+          59,
+          60
+        ],
+        "status": "harvested",
+        "payoff": "형들의 부실이 터져도 한시우 자산은 방화벽 안에 남고, 마지막엔 패밀리오피스 구조로 봉인된다."
+      },
+      {
+        "id": "F-002",
+        "thread": "형들의 후계 싸움과 그룹 붕괴",
+        "planted_blocks": [
+          1,
+          5,
+          20
+        ],
+        "payoff_blocks": [
+          40,
+          59,
+          60
+        ],
+        "status": "harvested",
+        "payoff": "아버지가 막내에게 직접 도움을 청하고, 운용권 구조를 다시 짜는 계기가 된다."
+      },
+      {
+        "id": "F-003",
+        "thread": "마이클 첸의 장기 파트너화",
+        "planted_blocks": [
+          7,
+          15,
+          37
+        ],
+        "payoff_blocks": [
+          39,
+          58,
+          60
+        ],
+        "status": "harvested",
+        "payoff": "월가 거래 파트너에서 평생의 친구이자 글로벌 운용 파트너로 격상된다."
+      },
+      {
+        "id": "F-004",
+        "thread": "테슬라 S&P500 편입과 출구 설계",
+        "planted_blocks": [
+          32,
+          37,
+          38
+        ],
+        "payoff_blocks": [
+          39,
+          40
+        ],
+        "status": "harvested",
+        "payoff": "편입 당일까지의 캘린더를 이용해 15조 포지션 출구를 설계하고 5조 현금을 회수한다."
+      },
+      {
+        "id": "F-005",
+        "thread": "루나·FTX 붕괴를 현금 우위로 바꾸는 축",
+        "planted_blocks": [
+          45,
+          48,
+          49
+        ],
+        "payoff_blocks": [
+          50,
+          56,
+          58
+        ],
+        "status": "harvested",
+        "payoff": "폐허에서 쌓은 물량과 현금 우위가 2024년 대량 익절의 실탄이 된다."
+      },
+      {
+        "id": "F-006",
+        "thread": "AI·ETF·반감기·재진입의 연쇄 캘린더",
+        "planted_blocks": [
+          51,
+          53,
+          54
+        ],
+        "payoff_blocks": [
+          55,
+          56,
+          57,
+          58
+        ],
+        "status": "harvested",
+        "payoff": "ETF 승인, 반감기 익절, 여름 재진입, 10만 직전 전량 익절까지 하나의 사슬로 회수된다."
+      },
+      {
+        "id": "F-007",
+        "thread": "패밀리오피스 봉인과 운용권 규칙화",
+        "planted_blocks": [
+          40,
+          59
+        ],
+        "payoff_blocks": [
+          60
+        ],
+        "status": "harvested",
+        "payoff": "가족 자산과 개인 자산을 분리한 채, 행복을 지키기 위해 예언자의 권위를 제도 아래 봉인한다."
+      }
+    ],
+    "opponent_transition_plan": [
+      {
+        "arc": "ARC-01",
+        "section_rotation": "원자재로 첫 증명을 만들고 금융위기 숏을 준비하다",
+        "block_range": "1-10",
+        "entry_block": 1,
+        "main_actors": [
+          "한정호",
+          "한태준",
+          "한태민",
+          "박성호",
+          "시장 컨센서스"
+        ],
+        "goal": "막내의 첫 투자 선언을 도박이나 재롱으로 치부하고 레이더 밖에 묶어 둔다.",
+        "methods": [
+          "무관심",
+          "빈정거림",
+          "PB 회의론",
+          "시장 컨센서스 추종"
+        ],
+        "weakness": "한시우를 무시할수록 그는 더 조용하게 선행 진입한다.",
+        "transition_block": 11
+      },
+      {
+        "arc": "ARC-02",
+        "section_rotation": "금융위기를 수확하고 저점과 비트코인 씨앗을 심다",
+        "block_range": "11-20",
+        "entry_block": 11,
+        "main_actors": [
+          "마이클 첸",
+          "글로벌 패닉",
+          "한태준"
+        ],
+        "goal": "숏 포지션을 너무 일찍 접게 만들거나, 수익을 노린 가족 감시로 자산 구조를 드러내게 한다.",
+        "methods": [
+          "롱 전환 압박",
+          "계좌 추적",
+          "공포 확산",
+          "현금 대기 조롱"
+        ],
+        "weakness": "패닉의 극점과 가족의 조급함을 동시에 읽는 한시우에게 속도전에서 밀린다.",
+        "transition_block": 21
+      },
+      {
+        "arc": "ARC-03",
+        "section_rotation": "플랫폼·콘텐츠·크립토로 네트워크 자산을 증폭하다",
+        "block_range": "21-30",
+        "entry_block": 21,
+        "main_actors": [
+          "김범수",
+          "양현석",
+          "텐센트",
+          "월가 IPO 데스크",
+          "크립토 회의론"
+        ],
+        "goal": "한시우를 돈만 넣는 재무 투자자로 묶어 두고 성장 동선 설계를 빼앗는다.",
+        "methods": [
+          "VC 선점",
+          "지분 방어",
+          "중국 자본 압박",
+          "크립토 비관론"
+        ],
+        "weakness": "한시우는 돈이 아니라 유통, 타이밍, exit 구조를 묶어서 제안한다.",
+        "transition_block": 31
+      },
+      {
+        "arc": "ARC-04",
+        "section_rotation": "크립토 윈터와 팬데믹 저점을 넘어 테슬라를 선점하다",
+        "block_range": "31-40",
+        "entry_block": 31,
+        "main_actors": [
+          "시장 비관론",
+          "코로나 패닉",
+          "테슬라 숏셀러",
+          "한정호"
+        ],
+        "goal": "바닥 구간에서 현금을 못 쓰게 만들거나, 편입 직전 과열 구간에서 출구 설계를 망치게 한다.",
+        "methods": [
+          "바닥론/추가하락론",
+          "팬데믹 공포",
+          "과열 논리",
+          "가족 부실 유입"
+        ],
+        "weakness": "한시우는 매수보다 출구 설계를 더 먼저 계산하고, 가족 요청도 실사 조건으로 받는다.",
+        "transition_block": 41
+      },
+      {
+        "arc": "ARC-05",
+        "section_rotation": "광기를 수확하고 붕괴장 바닥을 다시 줍다",
+        "block_range": "41-50",
+        "entry_block": 41,
+        "main_actors": [
+          "멜빈 캐피털",
+          "밈 FOMO",
+          "도권",
+          "SBF",
+          "디스트레스 셀러"
+        ],
+        "goal": "광기에 휩쓸려 exit를 놓치게 하거나, 붕괴장 현금 우위를 잃게 만든다.",
+        "methods": [
+          "밈 광기",
+          "도지 과열",
+          "루나 붕괴",
+          "FTX 신뢰 붕괴",
+          "강제 청산"
+        ],
+        "weakness": "한시우는 광기에서는 먼저 팔고, 폐허에서는 가장 늦게 남는 현금을 쥔다.",
+        "transition_block": 51
+      },
+      {
+        "arc": "ARC-06",
+        "section_rotation": "AI·ETF 사이클을 정리하며 가족과 운용권을 재편하다",
+        "block_range": "51-60",
+        "entry_block": 51,
+        "main_actors": [
+          "리처드 리",
+          "게리 겐슬러",
+          "반감기 FOMO",
+          "형들의 잔존 인맥",
+          "승계 사냥꾼들"
+        ],
+        "goal": "AI/ETF 랠리에서 exit와 재진입 순서를 흐트러뜨리고, 마지막엔 135조 운용권을 가족 구조 안으로 다시 끌어들인다.",
+        "methods": [
+          "AI 버블론",
+          "ETF 회의론",
+          "추격 매수",
+          "금리 인하 지연론",
+          "승계 구조 개입"
+        ],
+        "weakness": "한시우는 수익률보다 통제권과 자산 방화벽을 먼저 잠근다.",
+        "transition_block": 60
+      }
+    ],
+    "capital_curve": [
+      {
+        "block": 1,
+        "title": "회귀, 그리고 선언",
+        "capital_after": "20억 (정리 후)"
+      },
+      {
+        "block": 10,
+        "title": "카운트다운",
+        "capital_after": "150억 (미실현 포함)"
+      },
+      {
+        "block": 20,
+        "title": "새로운 10년",
+        "capital_after": "2000억"
+      },
+      {
+        "block": 30,
+        "title": "정점",
+        "capital_after": "13조 (현금 10조 + 크립토 1조 + 주식 2조)"
+      },
+      {
+        "block": 40,
+        "title": "연말 랠리",
+        "capital_after": "45조"
+      },
+      {
+        "block": 50,
+        "title": "왕의 몰락",
+        "capital_after": "56조"
+      },
+      {
+        "block": 60,
+        "title": "골든 루트",
+        "capital_after": "135조"
+      }
+    ],
+    "defeat_blocks": []
+  }
+}

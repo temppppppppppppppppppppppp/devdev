@@ -243,7 +243,7 @@ ARC_STATE_SCHEMA = types.Schema(
         ),
         "equipment": types.Schema(
             type=types.Type.ARRAY,
-            description="주인공이 실제 소지한 핵심 물품명 배열. 문장형 설명/배경 묘사 금지.",
+            description="해당 시점 기준 주인공 canonical 전체 소지품 배열. delta(획득/소모)나 문장형 설명 금지.",
             items=types.Schema(type=types.Type.STRING),
         ),
         "injuries": types.Schema(type=types.Type.STRING, enum=["없음", "정상", "경상", "중상", "위독"]),
@@ -268,7 +268,7 @@ ARC_STATE_CONSTRAINTS_SCHEMA = types.Schema(
         "protagonist_items": types.Schema(
             type=types.Type.ARRAY,
             items=types.Schema(type=types.Type.STRING),
-            description="주인공이 직접 소지하게 되는 아이템만 기록. 타인에게 지급한 것은 제외.",
+            description="이 Arc에서 새로 획득해 종료 시점까지 주인공이 직접 소지하는 delta만 기록. arc_end_state.equipment 전체 목록과 구분.",
         ),
         "distributed_items": types.Schema(
             type=types.Type.ARRAY,
@@ -278,7 +278,7 @@ ARC_STATE_CONSTRAINTS_SCHEMA = types.Schema(
         "items_consumed": types.Schema(
             type=types.Type.ARRAY,
             items=types.Schema(type=types.Type.STRING),
-            description="이 Arc에서 소모/사용되어 사라진 아이템 (금전, 소모품 등)",
+            description="이 Arc에서 소모/사용되어 종료 시 소지품에서 빠지는 delta (금전, 소모품 등)",
         ),
         # [F-A] 투자물 수치 검산용 구조화 필드 (optional)
         "investment_calc": types.Schema(
@@ -393,7 +393,7 @@ ARC_DESIGN_SCHEMA = types.Schema(
                 ),
                 "physical_inventory": types.Schema(
                     type=types.Type.ARRAY,
-                    description="arc_end_state.equipment와 같은 canonical 종료 소지품 배열.",
+                    description="arc_end_state.equipment와 동일해야 하는 canonical 종료 소지품 배열. delta만 적는 것을 금지.",
                     items=types.Schema(type=types.Type.STRING),
                 ),
                 "world_joint": types.Schema(type=types.Type.STRING),

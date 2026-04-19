@@ -27,6 +27,46 @@ from modules.core.constants import Stage2Limits
 from modules.core.genre_schema_builder import get_item_suffixes
 
 
+def _state_constraints_payload(arc: dict) -> dict:
+    state_constraints = arc.get("state_constraints", {})
+    return state_constraints if isinstance(state_constraints, dict) else {}
+
+
+def _declared_field(mapping: dict, field: str) -> bool:
+    if not isinstance(mapping, dict) or field not in mapping:
+        return False
+
+    value = mapping.get(field)
+    if isinstance(value, list | dict):
+        return True
+    return value is not None and value != ""
+
+
+def _declared_field_in_arc_or_state(arc: dict, *fields: str) -> bool:
+    state_constraints = _state_constraints_payload(arc)
+    return any(_declared_field(arc, field) or _declared_field(state_constraints, field) for field in fields)
+
+
+def _resolve_protagonist_items(state_constraints: dict) -> list:
+    if not isinstance(state_constraints, dict):
+        return []
+
+    protagonist_items = state_constraints.get("protagonist_items")
+    if protagonist_items is not None:
+        if isinstance(protagonist_items, list):
+            return protagonist_items
+        if isinstance(protagonist_items, str):
+            return [protagonist_items] if protagonist_items else []
+        return []
+
+    legacy_items = state_constraints.get("items_acquired", [])
+    if isinstance(legacy_items, list):
+        return legacy_items
+    if isinstance(legacy_items, str):
+        return [legacy_items] if legacy_items else []
+    return []
+
+
 class ArcDraftValidator:
     """
     [V60.11] Arc 초안 빠른 검증기
@@ -202,20 +242,20 @@ class ArcDraftValidator:
 
         # [V60.41] 필수 필드는 WARNING으로 변경 (재생성으로 해결 가능)
         required_fields = ["arc_no", "tactical_doc", "joint_docs", "state_constraints", "ep_start", "ep_end"]
-        # [V60.42 Fix] 중요 필드 정의 추가
-        # [BUG-F] protagonist_items도 허용 (API 스키마 정합)
-        required_important = ["ep_count", "items_acquired", "protagonist_items", "grants_received"]
+        required_important = [
+            ("ep_count", ("ep_count",)),
+            ("protagonist_items", ("protagonist_items", "items_acquired")),
+            ("grants_received", ("grants_received",)),
+        ]
 
         for field in required_fields:
             if field not in arc or not arc[field]:
                 warnings.append(f"필수 필드 누락: {field}")
                 penalty += 10
 
-        for field in required_important:
-            # 중요 필드는 arc 또는 state_constraints 내부에 있을 수 있음
-            value = arc.get(field) or arc.get("state_constraints", {}).get(field)
-            if not value and value != 0:  # 0은 유효한 값
-                warnings.append(f"중요 필드 누락: {field}")
+        for label, aliases in required_important:
+            if not _declared_field_in_arc_or_state(arc, *aliases):
+                warnings.append(f"중요 필드 누락: {label}")
                 penalty += 5
 
         return {"penalty": penalty, "critical": critical, "warnings": warnings}
@@ -232,12 +272,8 @@ class ArcDraftValidator:
         # 이전 Arc들에서 획득한 모든 아이템 수집
         all_acquired = set()
         for prev_arc in prev_arcs:
-            # state_constraints.items_acquired
-            # [BUG-F] protagonist_items 우선 폴백
-            _psc_adv = prev_arc.get("state_constraints", {})
-            items = _psc_adv.get("protagonist_items") or _psc_adv.get("items_acquired", [])
-            if isinstance(items, list):
-                all_acquired.update(_ikey(i) for i in items)
+            _psc_adv = _state_constraints_payload(prev_arc)
+            all_acquired.update(_ikey(i) for i in _resolve_protagonist_items(_psc_adv))
 
             # joint_docs.physical_inventory
             inventory = prev_arc.get("joint_docs", {}).get("physical_inventory", [])
@@ -256,11 +292,8 @@ class ArcDraftValidator:
                         all_acquired.add(item)
 
         # 현재 Arc의 획득 아이템
-        # [BUG-F] protagonist_items 우선 폴백
-        _csc_dup = arc.get("state_constraints", {})
-        current_items = _csc_dup.get("protagonist_items") or _csc_dup.get("items_acquired", [])
-        if not isinstance(current_items, list):
-            current_items = [current_items] if isinstance(current_items, str) else []
+        _csc_dup = _state_constraints_payload(arc)
+        current_items = list(_resolve_protagonist_items(_csc_dup))
         tactical = self._safe_tactical(arc)
 
         # tactical_doc에서도 획득 패턴 추출
@@ -390,7 +423,9 @@ class ArcDraftValidator:
         if isinstance(tactical, dict):
             try:
                 tactical = "\n".join(str(value) for value in tactical.values() if value)
-                warnings.append("tactical_doc\uc774 dict \ud615\ud0dc\ub85c \ubc18\ud658\ub428 - \uc790\ub3d9 \ubcc0\ud658 \uc2dc\ub3c4")
+                warnings.append(
+                    "tactical_doc\uc774 dict \ud615\ud0dc\ub85c \ubc18\ud658\ub428 - \uc790\ub3d9 \ubcc0\ud658 \uc2dc\ub3c4"
+                )
             except Exception:
                 tactical = str(tactical)
         else:
@@ -416,12 +451,14 @@ class ArcDraftValidator:
         return ep_start, ep_count, expected_eps, min_length, warn_length
 
     @staticmethod
-    def _validate_tactical_length(length: int, *, ep_count: int, min_length: int, warn_length: int) -> tuple[list[str], int]:
+    def _validate_tactical_length(
+        length: int, *, ep_count: int, min_length: int, warn_length: int
+    ) -> tuple[list[str], int]:
         warnings = []
         penalty = 0
         if length < warn_length:
             warnings.append(
-                f"tactical_doc \ubd84\ub7c9 \uc2ec\uac01 \ubbf8\ub2ec: {length}\uc790 (\ucd5c\uc18c {min_length}\uc790 = {ep_count}\ud654 \xd7 500\uc790)"
+                f"tactical_doc \ubd84\ub7c9 \uc2ec\uac01 \ubbf8\ub2ec: {length}\uc790 (\ucd5c\uc18c {min_length}\uc790 = {ep_count}\ud654 \xd7 450\uc790)"
             )
             penalty += 25
         elif length < min_length:
@@ -441,9 +478,15 @@ class ArcDraftValidator:
             penalty += 15
 
         min_ep_length = 300
-        short_eps = [f"{ep_no}\ud654({len(content)}\uc790)" for ep_no, content in episode_sections.items() if len(content) < min_ep_length]
+        short_eps = [
+            f"{ep_no}\ud654({len(content)}\uc790)"
+            for ep_no, content in episode_sections.items()
+            if len(content) < min_ep_length
+        ]
         if short_eps:
-            warnings.append(f"\ubd84\ub7c9 \ubd80\uc871 \ud654: {', '.join(short_eps)} (\ucd5c\uc18c {min_ep_length}\uc790)")
+            warnings.append(
+                f"\ubd84\ub7c9 \ubd80\uc871 \ud654: {', '.join(short_eps)} (\ucd5c\uc18c {min_ep_length}\uc790)"
+            )
             penalty += len(short_eps) * 3
 
         if len(episode_sections) >= 2:
@@ -459,14 +502,14 @@ class ArcDraftValidator:
         if episode_sections:
             found_eps = sorted(episode_sections.keys())
             if found_eps != expected_eps[: len(found_eps)]:
-                warnings.append(f"\ud654 \uc21c\uc11c \ubd88\uc77c\uce58: \ubc1c\uacac={found_eps}, \uae30\ub300={expected_eps}")
+                warnings.append(
+                    f"\ud654 \uc21c\uc11c \ubd88\uc77c\uce58: \ubc1c\uacac={found_eps}, \uae30\ub300={expected_eps}"
+                )
                 penalty += 5
 
         return warnings, penalty
 
-    def _validate_tactical_episode_density(
-        self, episode_sections: dict[int, str]
-    ) -> tuple[list[str], list[str], int]:
+    def _validate_tactical_episode_density(self, episode_sections: dict[int, str]) -> tuple[list[str], list[str], int]:
         warnings = []
         suggestions = []
         penalty = 0
@@ -474,11 +517,25 @@ class ArcDraftValidator:
         sparse_eps = []
         for ep_no, content in episode_sections.items():
             has_dialogue = '"' in content or '"' in content
-            has_action = any(kw in content for kw in ["\ud588\ub2e4", "\ud588\ub2e4", "\ub410\ub2e4", "\uc600\ub2e4", "\ud55c\ub2e4", "\ubcf8\ub2e4", "\uac14\ub2e4", "\uc654\ub2e4"])
+            has_action = any(
+                kw in content
+                for kw in [
+                    "\ud588\ub2e4",
+                    "\ud588\ub2e4",
+                    "\ub410\ub2e4",
+                    "\uc600\ub2e4",
+                    "\ud55c\ub2e4",
+                    "\ubcf8\ub2e4",
+                    "\uac14\ub2e4",
+                    "\uc654\ub2e4",
+                ]
+            )
             if not has_dialogue and not has_action and len(content) > 50:
                 sparse_eps.append(ep_no)
         if sparse_eps:
-            suggestions.append(f"\ub0b4\uc6a9 \ube48\uc57d\ud55c \ud654: {sparse_eps} (\ub300\uc0ac/\ud589\ub3d9 \ucd94\uac00 \uad8c\uc7a5)")
+            suggestions.append(
+                f"\ub0b4\uc6a9 \ube48\uc57d\ud55c \ud654: {sparse_eps} (\ub300\uc0ac/\ud589\ub3d9 \ucd94\uac00 \uad8c\uc7a5)"
+            )
 
         low_beat_eps = []
         for ep_no, content in episode_sections.items():
@@ -486,7 +543,9 @@ class ArcDraftValidator:
             if beat_count < 3 and len(content) > 100:
                 low_beat_eps.append(f"{ep_no}\ud654({beat_count}\ube44\ud2b8)")
         if low_beat_eps:
-            warnings.append(f"\ube44\ud2b8 \ubd80\uc871 \ud654: {', '.join(low_beat_eps)} (\ucd5c\uc18c 3\ube44\ud2b8 \ud544\uc694)")
+            warnings.append(
+                f"\ube44\ud2b8 \ubd80\uc871 \ud654: {', '.join(low_beat_eps)} (\ucd5c\uc18c 3\ube44\ud2b8 \ud544\uc694)"
+            )
             penalty += len(low_beat_eps) * 2
 
         incomplete_eps = []
@@ -499,16 +558,16 @@ class ArcDraftValidator:
 
         return warnings, suggestions, penalty
 
-    def _validate_tactical_episode_metadata(
-        self, episode_sections: dict[int, str], arc: dict
-    ) -> tuple[list[str], int]:
+    def _validate_tactical_episode_metadata(self, episode_sections: dict[int, str], arc: dict) -> tuple[list[str], int]:
         warnings = []
         penalty = 0
 
         actual_ep_count = len(episode_sections)
         declared_ep_count = arc.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
         if actual_ep_count > 0 and abs(actual_ep_count - declared_ep_count) >= 2:
-            warnings.append(f"ep_count \ubd88\uc77c\uce58: \uc120\uc5b8={declared_ep_count}, \uc2e4\uc81c={actual_ep_count}")
+            warnings.append(
+                f"ep_count \ubd88\uc77c\uce58: \uc120\uc5b8={declared_ep_count}, \uc2e4\uc81c={actual_ep_count}"
+            )
             penalty += 5
 
         checkpoint_result = self._validate_state_checkpoints(episode_sections, arc)
@@ -604,7 +663,9 @@ class ArcDraftValidator:
         warnings.extend(layout_warnings)
         penalty += layout_penalty
 
-        density_warnings, density_suggestions, density_penalty = self._validate_tactical_episode_density(episode_sections)
+        density_warnings, density_suggestions, density_penalty = self._validate_tactical_episode_density(
+            episode_sections
+        )
         warnings.extend(density_warnings)
         suggestions.extend(density_suggestions)
         penalty += density_penalty
@@ -847,19 +908,16 @@ class ArcDraftValidator:
             forbidden_items.extend(items)
 
         # 현재 Arc의 획득 아이템과 비교
-        # [BUG-F] protagonist_items 우선 폴백
-        _sc_forb = arc.get("state_constraints", {})
-        items_acquired = _sc_forb.get("protagonist_items") or _sc_forb.get("items_acquired", [])
-        if not isinstance(items_acquired, list):
-            items_acquired = []
+        _sc_forb = _state_constraints_payload(arc)
+        protagonist_items = _resolve_protagonist_items(_sc_forb)
         tactical = self._safe_tactical(arc)
 
         for forbidden in forbidden_items:
             if not forbidden or len(forbidden) < 2:
                 continue
 
-            # items_acquired에서 검사
-            for item in items_acquired:
+            # protagonist_items(legacy alias: items_acquired)에서 검사
+            for item in protagonist_items:
                 if self._is_same_item(forbidden, item):
                     critical.append(f"제약 위반: 금지 아이템 '{forbidden}' 획득 시도")
                     penalty += 35

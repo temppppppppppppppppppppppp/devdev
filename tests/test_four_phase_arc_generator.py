@@ -368,6 +368,44 @@ def test_generate_passes_pacing_suggestion_and_density_signals():
     assert pacing_signals["reward_present"] is False
 
 
+def test_determine_ep_count_caps_loop_dense_block_without_expansion_signals():
+    gen = _make_generator()
+    block = {
+        "content": {
+            "context": "회귀했다. 다시 시작한다. " * 40,
+            "event_villain": "아버지가 묻는다. 형들은 비웃는다. " * 15,
+            "solution": "법인을 세운다. 해외 선물로 간다. " * 40,
+            "reward": "관심은 없지만 경계는 생긴다. " * 20,
+        },
+        "tension_level": 6,
+    }
+
+    ep_count, reasoning = FourPhaseArcGenerator._determine_ep_count(gen, block, 1, [])
+
+    assert ep_count == 4
+    assert "사건 슬롯은 제한적" in reasoning
+
+
+def test_determine_ep_count_keeps_expanded_lane_when_expansion_signals_exist():
+    gen = _make_generator()
+    block = {
+        "content": {
+            "context": "원유가 오른다. 시장이 술렁인다. " * 40,
+            "event_villain": "PB가 말린다. 그러나 결국 따른다. " * 15,
+            "solution": "레버리지를 건다. 포지션을 연다. " * 40,
+            "reward": "수익이 찍히고 내부 톤이 바뀐다. " * 20,
+        },
+        "episode_details": ["a", "b", "c"],
+        "plot_suspension": ["x", "y"],
+        "tension_level": 8,
+    }
+
+    ep_count, reasoning = FourPhaseArcGenerator._determine_ep_count(gen, block, 1, [])
+
+    assert ep_count == 6
+    assert "최대 화수" in reasoning or "tension=8" in reasoning
+
+
 def test_pre_collected_grants_normalizes_dict_item_name():
     gen = _make_generator()
     prev_arcs = [
@@ -763,7 +801,9 @@ def test_generate_prev_context_includes_stage_attempt_and_quality_feedback():
             "arc_no": 2,
             "ep_start": 7,
             "ep_end": 10,
-            "state_constraints": {"arc_end_state": {"location": "서울", "equipment": [], "injuries": "없음", "internal_energy": 100}},
+            "state_constraints": {
+                "arc_end_state": {"location": "서울", "equipment": [], "injuries": "없음", "internal_energy": 100}
+            },
             "joint_docs": {},
             "status_shadow": {},
         }
@@ -857,7 +897,9 @@ def test_generate_prev_context_includes_forgotten_npc_and_dormant_promise_adviso
             "arc_no": 2,
             "ep_start": 8,
             "ep_end": 12,
-            "state_constraints": {"arc_end_state": {"location": "개봉", "equipment": [], "injuries": "없음", "internal_energy": 100}},
+            "state_constraints": {
+                "arc_end_state": {"location": "개봉", "equipment": [], "injuries": "없음", "internal_energy": 100}
+            },
             "joint_docs": {},
             "status_shadow": {},
         }

@@ -1,0 +1,4 @@
+{"timestamp": "2026-04-17 22:51:02", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 5}}
+{"timestamp": "2026-04-17 23:02:05", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 1건 제거: ['WTI 6월물 15억 원 매수 체결 확인서']"]}}
+{"timestamp": "2026-04-17 23:03:11", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 23:03:49", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "target_arc_no": 4, "items_tracked": 5}}

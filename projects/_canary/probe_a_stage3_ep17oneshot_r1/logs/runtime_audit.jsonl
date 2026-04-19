@@ -1,0 +1,3 @@
+{"timestamp": "2026-04-19 09:54:58", "type": "continuity_pin_unresolved", "message": "stage3 continuity pin unresolved", "data": {"ep_num": 17, "items": [{"type": "proper_noun_pin", "expected": "Exception Account", "observed": "7월. 중동이 다시 터집니다., 그때는 절반만 던지는 일은 없을 겁니다., 여름이 오면, 이깟 5억 따위는 휴지조각으로 보일 테니까요."}]}}
+{"timestamp": "2026-04-19 09:54:58", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-19 09:54:58", "type": "blueprint_success", "message": "ep_17_blueprint_generated", "data": {"ep_num": 17, "arc_no": 3, "strategy": "dialogue_focused", "score": 93, "final_verdict": "PASS", "quality_risk": false, "revision_required": true}}

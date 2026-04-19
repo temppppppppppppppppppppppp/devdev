@@ -1,0 +1,207 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "8fa94dd549da29ce6a5f20dbd1dd2c9abe1bee11f338d74b2dc73144c69ec06e"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=0; sample_anchors=",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 0개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1586,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 2399,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 997601,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 2021,
+          "lane": "constraints"
+        },
+        {
+          "chars": 167,
+          "lane": "arc_focus"
+        },
+        {
+          "chars": 133,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 167,
+        "constraints": 2021,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 68
+      },
+      "shared_context_chars": 2266,
+      "total_chars": 2399
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 2
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "18년 치 기억의 강제 동기화가 불러온 육체적 붕괴 위기",
+  "end_location": "서울 성북동 본가 침실 바닥",
+  "ending_hook": "육중한 방문이 부서질 듯 열려젖혀지는 파열음과 함께, 뇌를 찢는 고통 속에서 시우의 의식이 칠흑 같은 심연으로 곤두박질쳤다.",
+  "ending_state": {
+    "location": "서울 성북동 본가 침실 바닥",
+    "protagonist_status": "극심한 편두통과 기억 동기화 후유증으로 코피를 흘리며 기절",
+    "timeline": {
+      "표현": "2006년 1월 겨울"
+    }
+  },
+  "ep_num": 1,
+  "episode_number": 1,
+  "expected_ending": "기억 동기화의 고통을 견디지 못하고 의식을 잃으며 쓰러짐",
+  "integrated_scenario": "한시우는 헉, 하는 단발마와 함께 상체를 튕기듯 일으켰다. 허파가 찢어질 듯 팽창하며 낯선 공기가 밀려들었다. 2024년 겨울, 난방조차 끊긴 차디찬 단칸방에서 맞이했던 비참한 고독사의 감각이 아직 온몸의 신경에 들러붙어 있었다. 심장이 멈추고 썩어 들어가던 시체의 감각이 생생한데, 코끝을 찌르는 것은 퀴퀴한 곰팡내가 아니라 고급스러운 디퓨저 향이었다. 시우는 거친 숨을 몰아쉬며 두 손으로 자신의 목을 감싸 쥐었다. 맥박이 미친 듯이 뛰고 있었다. 살아있다. 시야에 들어온 것은 얼룩진 낡은 벽지가 아니었다. 화려한 샹들리에가 은은하게 빛나는 넓은 공간, 바로 성북동 본가의 침실이었다. 땀에 젖은 손발이 사시나무처럼 떨렸다. 그는 짐승처럼 네 발로 기어 침대 협탁을 미친 듯이 더듬었다. 손끝에 묵직하고 각진 구형 폴더폰이 잡혔다. 떨리는 손가락으로 액정을 열자, 눈을 찌르는 푸른 백라이트 위로 선명한 숫자가 찍혀 있었다. 2006년 1월. 시우의 동공이 지진을 일으키듯 격렬하게 흔들렸다.\n\n\"하아, 하아...\" 현실을 부정하듯 마른세수를 하던 시우가 자리에서 일어서려는 순간이었다. 쾅! 머릿속에서 거대한 폭탄이 터진 듯한 충격이 덮쳐왔다. 시야가 붉게 점멸하며 고막을 찢어버릴 듯한 이명이 울렸다. 2024년까지 그가 겪었던 가문의 철저한 몰락, 형제들의 피 비린내 나는 암투, 그리고 철저히 버려져 홀로 죽어갔던 18년 치의 방대한 기억이 뇌리에 강제로 쑤셔 박히기 시작했다. \"크아악!\" 시우는 머리를 감싸 쥐고 바닥으로 나뒹굴었다. 이것은 단순한 두통이 아니었다. 뇌혈관이 터질 듯 팽창하고 두개골이 산산조각 나는 듯한 끔찍한 물리적 고통이었다.\n\n방 안은 순식간에 아수라장으로 변했다. 고통을 이기지 못한 시우가 바닥을 구르며 발버둥 쳤고, 그 발길질에 원목 탁자가 맥없이 쓰러졌다. 탁자 위에 놓여 있던 수백만 원짜리 도자기 스탠드가 바닥으로 추락해 산산조각이 났다. 쨍그랑! 날카로운 파편이 사방으로 튀어 오르며 시우의 뺨과 손등을 스치고 지나갔지만, 그는 살점이 베이는 얕은 상처 따위는 전혀 인지하지 못했다. 시우는 최고급 페르시안 카펫을 쥐어뜯으며 짐승의 으르렁거림 같은 비명을 토해냈다. 과거의 참담했던 실패, 숨이 멎어가던 죽음의 순간, 그리고 현재의 폭발적인 감각이 하나의 거대한 소용돌이가 되어 그의 이성을 짓뭉갰다. 바닥에 엎드린 채 숨을 헐떡이는 그의 콧구멍에서 검붉은 코피가 뚝뚝 떨어져 카펫을 검게 물들였다.\n\n우당탕탕! 둔탁한 파열음과 가구가 부서지는 소리가 굳게 닫힌 방문 밖까지 울려 퍼졌다. 18년 치의 거대한 정보량과 참혹한 감정이 2006년의 어린 뇌세포 하나하나에 물리적으로 각인되는 과정은 이미 육체의 한계를 아득히 초과하고 있었다. 핏발이 선 시우의 눈동자가 하얗게 뒤집히며 경련하기 시작할 때, 복도에서 다급한 발걸음 소리가 요란하게 들려왔다. \"도련님! 무슨 일이십니까!\" 고용인의 다급한 외침과 함께 육중한 방문 손잡이가 거칠게 돌아갔다. 철컥, 쾅! 시우는 바닥에 고인 자신의 피를 흐릿한 시선으로 응시하며 마지막 숨을 쥐어짜 냈다. 뇌를 찢어발기는 듯한 극심한 편두통의 절정 속에서, 문이 열려젖히는 파열음과 함께 시우의 의식이 끝없는 칠흑의 심연으로 곤두박질쳤다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "no_prev_anchor"
+    ],
+    "type": "jump_opening"
+  },
+  "pacing_notes": "초반부는 회귀의 충격을 짧고 강렬하게 배치하고, 중반부터는 기억 동기화 과정을 단순한 두통이 아닌 육체가 파괴되는 듯한 물리적 액션 씬으로 묘사하여 긴장감을 최고조로 끌어올린다.",
+  "protagonist_state": {
+    "equipment": [
+      "구형 폴더폰"
+    ],
+    "injuries": "코피, 깨진 도자기 파편에 긁힌 얕은 찰과상",
+    "mood": "극도의 혼란과 물리적 고통"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "2024년의 비참한 죽음 직후, 고급스러운 본가 침실에서 깨어난 한시우. 낯선 공기와 자신의 맥박을 확인하며 주변을 더듬어 2006년 1월이라는 날짜를 발견한다.",
+      "goal": "2006년 본가 침실에서 눈을 뜨며 회귀를 자각한다.",
+      "key_events": [
+        "가쁜 숨을 몰아쉬며 단칸방이 아닌 화려한 샹들리에가 있는 본가 침실임을 인지함",
+        "침대 협탁을 더듬어 구형 폴더폰을 찾아내고, 액정에 찍힌 '2006년 1월'을 확인하며 동공이 흔들림"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "고독사의 감각을 안고 깨어난 시우가 구형 폴더폰의 날짜를 확인하고 경악한다.",
+      "tension_level": 5,
+      "title": "귀환의 충격",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "현실을 부정하며 몸을 일으키려는 찰나, 18년간 겪었던 가문의 몰락과 죽음의 기억이 강제로 뇌리에 주입되기 시작한다.",
+      "goal": "과거와 현재의 인지 부조화로 인한 이상 징후 발생.",
+      "key_events": [
+        "시야가 붉게 점멸하며 고막을 찢을 듯한 이명이 발생함",
+        "방대한 정보량이 뇌에 쑤셔 박히며 머리를 감싸 쥐고 바닥으로 나뒹굴게 됨"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "자리에서 일어서려던 시우에게 극심한 이명과 함께 18년 치 기억이 쏟아진다.",
+      "tension_level": 7,
+      "title": "기억의 충돌",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "단순한 두통을 넘어선 두개골이 쪼개지는 고통. 시우가 몸부림치며 방 안은 순식간에 아수라장이 되고 육체적 한계에 부딪힌다.",
+      "goal": "기억 동기화로 인한 극심한 편두통과 육체적 발작을 묘사한다.",
+      "key_events": [
+        "발버둥 치는 과정에서 원목 탁자를 걷어차고 수백만 원짜리 도자기 스탠드가 산산조각 남",
+        "파편에 뺨이 긁히고 콧구멍에서 검붉은 코피가 쏟아져 카펫을 적심"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "두통을 이기지 못한 시우가 바닥을 구르며 방 안의 가구를 파손한다.",
+      "tension_level": 9,
+      "title": "물리적 고통",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "고용인(목소리)"
+      ],
+      "content": "",
+      "description": "가구가 부서지는 소란에 복도에서 발걸음 소리가 다가오고, 문이 열리는 찰나 시우의 인내가 한계를 넘어선다.",
+      "goal": "물리적 한계에 달성한 위기 상황에서 누군가 난입하며 의식을 잃는다.",
+      "key_events": [
+        "방 밖에서 '도련님!' 하는 다급한 외침과 함께 육중한 방문 손잡이가 거칠게 돌아감",
+        "문이 열려젖히는 파열음과 동시에 극심한 고통 속에서 시우의 의식이 칠흑 속으로 끊어짐"
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "파열음에 밖에서 고용인이 다급하게 문을 여는 순간, 시우가 의식을 잃는다.",
+      "tension_level": 10,
+      "title": "한계 초과",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 침실",
+  "target_beat": "2024년 고독사 후 2006년으로 회귀 및 18년 치 기억 동기화로 인한 극한의 편두통 발생",
+  "time_flow": "2006년 1월, 어느 늦은 밤 (회귀 직후 수 분 이내)",
+  "title": "18년의 기억, 찢어지는 각성"
+}

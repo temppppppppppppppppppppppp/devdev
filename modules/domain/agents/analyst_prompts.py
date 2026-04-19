@@ -203,13 +203,13 @@ PLAN_ARC_PROMPT_V25 = """
 █                                                                              █
 █   🚨🚨🚨 [V60.38] tactical_doc 분량 필수 조건 - 위반 시 즉시 REJECT 🚨🚨🚨   █
 █                                                                              █
-█   ⚠️ tactical_doc 총 분량: 최소 (ep_count × 500)자 이상                      █
-█   ⚠️ 각 화별 분량: 최소 500자 이상                                           █
-█   ⚠️ 1,500자 미만 = CRITICAL REJECT (시스템 자동 거부)                        █
-█   ⚠️ 2,000자 미만 = MAJOR 감점                                               █
+█   ⚠️ tactical_doc 총 분량: 최소 (ep_count × 450)자 이상                      █
+█   ⚠️ 각 화별 분량: 최소 450자 이상                                           █
+█   ⚠️ 위 기준 미만 = CRITICAL REJECT (시스템 자동 거부)                        █
+█   ⚠️ 권장선(ep_count × 600) 미만 = MAJOR 감점                                █
 █                                                                              █
-█   💡 TIP: 각 화마다 공간묘사(100자) + 핵심사건(200자) + 상태변화(100자) +     █
-█          인과관계(100자) = 최소 500자 확보                                    █
+█   💡 TIP: 각 화마다 공간묘사(80자) + 핵심사건(180자) + 상태변화(90자) +       █
+█          인과관계(100자) = 최소 450자 확보                                    █
 █                                                                              █
 ████████████████████████████████████████████████████████████████████████████████
 
@@ -302,7 +302,7 @@ PLAN_ARC_PROMPT_V25 = """
    # 🚨 [Arc 50 특수 규칙]:
    - 만약 `arc_no`가 **50**인 경우, 반드시 `ending_library` 패턴 중 최소 1개를 선택하여 포함하라. (대서사시의 종지부 및 여운 형성)
 2. **DNA 절대 준수**: {curr_block}에 명시된 핵심 사건과 보상은 반드시 포함하되, 방식만 패턴 라이브러리를 통해 변주하라.
-3. **가변 페이싱**: Blitz(3~4화), Standard(5화), Epic(6~7화) 가이드에 따라 사건의 밀도를 판단하여 `ep_count`를 결정하라.
+3. **가변 페이싱**: Blitz(2~3화), Standard(4~5화), Epic(6화) 가이드에 따라 사건의 밀도를 판단하여 `ep_count`를 결정하라.
 4. **합리적 이기주의**: 주인공은 전생/회빙환의 지식을 이용하여 상황을 의도적으로 지배하고 설계해야 함.
 5. 번호 절대 준수: {curr_block}에 적힌 Block 번호나 회차 번호는 무시하라. 오직 시스템이 부여한 **{ep_start}**를 첫 번째 회차 번호로 사용하여 beat_sequence를 작성하라. 이를 어길 시 서사 무결성 파괴로 간주한다.
 
@@ -353,10 +353,10 @@ PLAN_ARC_PROMPT_V25 = """
         "mixing_logic": "패턴 조합 및 복선 연출 통합 전략"
     }},
     "pacing_decision": {{
-        "chosen_pacing": "Blitz(3-4화) / Standard(4-5화) / Epic(5-6화) 중 선택",
+        "chosen_pacing": "Blitz(2-3화) / Standard(4-5화) / Epic(6화) 중 선택",
         "reasoning": "사건 밀도와 긴장감 분석 근거"
     }},
-    "ep_count": "{ep_count_suggestion} (시스템 추천) 또는 3~6 중 사건 밀도에 맞게 직접 결정",
+    "ep_count": "{ep_count_suggestion} (시스템 추천) 또는 2~6 중 사건 밀도에 맞게 직접 결정",
     "ep_start": {ep_start},
     "ep_end": "ep_start + ep_count - 1 로 계산",
     "title": "에피소드 묶음 제목",
@@ -400,7 +400,7 @@ PLAN_ARC_PROMPT_V25 = """
 
     ❌ 잘못된 예 (REJECT됨):
     - 주인공이 금화로 강철도를 구매해서 병사들에게 지급
-    - items_acquired: ["강철도"]  ← 틀림! 병사들에게 준 것은 주인공 아이템이 아님
+    - protagonist_items: ["강철도"]  ← 틀림! 병사들에게 준 것은 주인공 아이템이 아님
 
     ✅ 올바른 예:
     - 주인공이 금화로 강철도를 구매해서 병사들에게 지급
@@ -488,8 +488,9 @@ PLAN_ARC_PROMPT_V25 = """
        - 위치: {{이 화 종료 위치}}
        - {episode_state_label}: {{이 화 종료 수치}} (±변화량 명시)
        - 부상: {{이 화 종료 부상}}
-       - 획득: {{새로 획득한 아이템}}
-       - 소모: {{사용/소모한 아이템}}
+       - 소지품: {{이 화 종료 시 전체 소지품}}
+       - 획득: {{새로 획득해 종료 시점까지 남는 아이템}}
+       - 소모: {{사용/소모되어 종료 시점에 사라진 아이템}}
 
     ═══════════════════════════════════════════════════════════════════
 
@@ -497,6 +498,7 @@ PLAN_ARC_PROMPT_V25 = """
     1. 제 {ep_start}화 시작 상태 = 이전 Arc 종료 상태 (state_constraints.arc_start_state)
     2. 제 N화 종료 상태 = 제 N+1화 시작 상태 (반드시 일치)
     3. 제 {ep_end}화 종료 상태 = state_constraints.arc_end_state
+    4. 소지품은 종료 시 전체 목록(SSOT)이고, 획득/소모는 delta 추적용이다.
 
     🔴 검증 자동화:
     - 화간 상태 불일치 시 REJECT
@@ -557,7 +559,7 @@ ANALYST_SELF_CRITIC_PROMPT = """
 
 5. **[V49.3 신규] state_constraints 일관성 검사**:
    - `state_constraints.arc_start_state`가 직전 Arc의 종료 상태와 일치하는가?
-   - `items_acquired`에 있는 아이템이 `arc_end_state.equipment`에 포함되어 있는가?
+   - `protagonist_items`(legacy alias: `items_acquired`)에 있는 아이템이 `arc_end_state.equipment`에 포함되어 있는가?
    - `items_consumed`에 있는 아이템이 `arc_start_state.equipment`에 있었는가?
    - `continuity_checkpoints`가 `tactical_doc`의 상태 변화와 일치하는가?
 

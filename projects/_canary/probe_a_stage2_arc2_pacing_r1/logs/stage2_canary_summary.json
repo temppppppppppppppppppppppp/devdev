@@ -1,0 +1,83 @@
+{
+  "summary_role": "stage2_only_canary",
+  "project": "probe_a_stage2_arc2_pacing_r1",
+  "project_locator": "projects/_canary/probe_a_stage2_arc2_pacing_r1",
+  "project_root": "projects\\_canary\\probe_a_stage2_arc2_pacing_r1",
+  "prepared_from": "golden_canary_deepclone_probe_a_stage23probe_r1",
+  "keep_arcs": 1,
+  "expected_final_arc_count": 2,
+  "actual_arc_count": 2,
+  "latest_session_id": "20260419_113315",
+  "stage2_attempt_count": 2,
+  "latest_stage2_attempt": {
+    "arc_num": 2,
+    "ep_num": 2,
+    "attempt_num": 1,
+    "verdict": "PASS",
+    "score": 100,
+    "session_id": "20260419_113315",
+    "attempt_key": "s2:ep2:arc2:a1:20260419_113315",
+    "artifact_path": "logs/artifacts/stage2/arc_002/attempt_01/final_arc__balanced.json"
+  },
+  "carryover_pairs": [
+    {
+      "previous_arc_no": 1,
+      "current_arc_no": 2,
+      "previous_end_equipment_count": 0,
+      "current_start_equipment_count": 0,
+      "current_end_equipment_count": 5,
+      "current_joint_inventory_count": 5,
+      "carryover_match": true,
+      "joint_inventory_matches_end_equipment": true,
+      "previous_end_equipment_preview": [],
+      "current_start_equipment_preview": [],
+      "current_end_equipment_preview": [
+        "18년 치 매크로 이벤트가 암호화되어 적힌 양장 수첩",
+        "20억 원이 예치된 개인 계좌 OTP 카드",
+        "SW인베스트먼트 법인 계좌"
+      ],
+      "current_protagonist_items": [
+        "SW인베스트먼트 법인 계좌",
+        "WTI 6월물 매수 포지션 HTS 원장",
+        "박성호 PB의 VIP 전담 직통 번호가 적힌 메모"
+      ],
+      "current_items_acquired": [
+        "SW인베스트먼트 법인 계좌",
+        "WTI 6월물 매수 포지션 HTS 원장",
+        "박성호 PB의 VIP 전담 직통 번호가 적힌 메모"
+      ]
+    }
+  ],
+  "latest_carryover_pair": {
+    "previous_arc_no": 1,
+    "current_arc_no": 2,
+    "previous_end_equipment_count": 0,
+    "current_start_equipment_count": 0,
+    "current_end_equipment_count": 5,
+    "current_joint_inventory_count": 5,
+    "carryover_match": true,
+    "joint_inventory_matches_end_equipment": true,
+    "previous_end_equipment_preview": [],
+    "current_start_equipment_preview": [],
+    "current_end_equipment_preview": [
+      "18년 치 매크로 이벤트가 암호화되어 적힌 양장 수첩",
+      "20억 원이 예치된 개인 계좌 OTP 카드",
+      "SW인베스트먼트 법인 계좌"
+    ],
+    "current_protagonist_items": [
+      "SW인베스트먼트 법인 계좌",
+      "WTI 6월물 매수 포지션 HTS 원장",
+      "박성호 PB의 VIP 전담 직통 번호가 적힌 메모"
+    ],
+    "current_items_acquired": [
+      "SW인베스트먼트 법인 계좌",
+      "WTI 6월물 매수 포지션 HTS 원장",
+      "박성호 PB의 VIP 전담 직통 번호가 적힌 메모"
+    ]
+  },
+  "hard_gates": {
+    "status": "pass",
+    "errors": [],
+    "warnings": []
+  }
+}

@@ -21,6 +21,7 @@ Bootstrap rule:
 
 - use `synthesis/` as the normalized landing lane for fresh-candidate one-page syntheses
 - feed `synthesis/` from `10_research/20_fewshot_bank` and, when present, `10_research/30_work_materials/{work_id}/90_material_pack.json`
+- run `00_governance/donor-review-and-adoption-contract-v1.md` donor review before calling a candidate `Phase0-ready`
 - run `pitch-selection-checklist.md` on a synthesis before promoting it
 - use `canon/` to register work-level pitch anchors
 - use `intake/legacy_import/` for migrated legacy pitch payloads
@@ -42,6 +43,7 @@ Current canon rule:
 - `material_ssot/00_governance/production-pair-operational-registry-v1.md` is the current pair-side operational registry when a pitch operator needs family exemplars or benchmark freshness reading
 - the machine gate targets candidate/canon/working-synthesis docs only; checklist audits, integration handoffs, and retire notes are not promotion targets
 - `pitch-philosophy.md` is the canonical pitch philosophy and minimum contract
+- `material_ssot/00_governance/donor-review-and-adoption-contract-v1.md` is the canonical donor-review gate for fresh candidates and touched pairs
 - `investment-opening-pacing-spec-v1.md` is the family-side upstream pace ruler for investment-family / business-power openings before `Phase0`
 - `protagonist-first-constitution.md` is the current house-law document for protagonist design
 - `pitch-selection-checklist.md` is the current fresh-candidate selection checklist

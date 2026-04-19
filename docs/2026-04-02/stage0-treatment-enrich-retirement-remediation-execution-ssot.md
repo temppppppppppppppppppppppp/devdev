@@ -1,11 +1,12 @@
 Date: 2026-04-02
-Status: in_progress (first bounded authority-demotion tranche landed on 2026-04-07; Stage0 hygiene lane remains below nearer runtime-facing work)
+Status: parked (2026-04-19 reactivation refresh; first bounded authority-demotion tranche landed on 2026-04-07, the enrich path still carries real later retirement/quarantine debt, and the honest queue reading is now parked hygiene debt rather than active implementation progress)
 Canonical Path: `docs/2026-04-02/stage0-treatment-enrich-retirement-remediation-execution-ssot.md`
 Temp Mirror Path: `docs/temp/stage0-treatment-enrich-retirement-remediation-execution-ssot.md`
 Baseline Commit: `eac3386ce3b19f720e6e12548721df5abe2ee755`
 Baseline Dirty Summary: `dirty: prior Stage3/Stage4 bounded tranches and queue docs already in flight during Stage0 enrich re-audit`
 Source Survey Docs:
 - `docs/2026-04-02/stage0-bible-generation-dna-sync-stage2-consume-bounded-survey.md`
+- `docs/2026-04-19/stage0-treatment-enrich-retirement-reactivation-refresh.md`
 Evidence Artifacts:
 - `docs/2026-04-02/stage0-bible-generation-dna-sync-stage2-consume-evidence.json`
 Side-Effect Coverage:
@@ -159,5 +160,23 @@ Pass 3. Execution/Readability
 - first bounded tranche는 operator-facing wording demotion으로 제한
 - retirement lane 성격과 later tranche shape 명시
 - next unopened lane shift만 문서적으로 반영 가능하도록 정리
+
+# 12. 2026-04-19 Reactivation Refresh
+
+Source doc:
+
+- `docs/2026-04-19/stage0-treatment-enrich-retirement-reactivation-refresh.md`
+
+Current reading:
+
+- the first authority-demotion tranche is landed
+- the remaining enrich retirement/quarantine work is still real
+- the lane is not stale, but it is also not active progress anymore
+
+Queue consequence:
+
+- keep this lane visible
+- keep the temp mirror
+- treat it as parked hygiene debt rather than active implementation progress
 
 Confidence: 97%

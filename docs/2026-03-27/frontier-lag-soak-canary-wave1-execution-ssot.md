@@ -1,7 +1,7 @@
 # Frontier Lag Soak Canary Wave1 Execution SSOT
 
 Date: 2026-03-27
-Status: in_progress (queue-promoted active item; bounded soak realization authorized; code diff not started in this turn)
+Status: parked (2026-04-19 reactivation refresh; the bounded soak-harness and state-audit design remains real, but the honest queue reading is now parked low-priority reference-validation debt rather than active implementation progress)
 Canonical Path: `docs/2026-03-27/frontier-lag-soak-canary-wave1-execution-ssot.md`
 Temp Mirror Path: `docs/temp/frontier-lag-soak-canary-wave1-execution-ssot.md`
 Commit State:
@@ -11,6 +11,7 @@ Commit State:
 - Resume Drift Summary: `opened after 3-lane corroborated merge audit; promoted on 2026-03-28 after Director reorder because npc-martial remained blocked off the active lane and no live wuxia canary thread remained`
 Source Survey Docs:
 - `docs/2026-03-27/frontier-lag-soak-canary-compact-survey.md`
+- `docs/2026-04-19/frontier-lag-soak-canary-wave1-reactivation-refresh.md`
 Evidence Artifacts:
 - none
 Side-Effect Coverage: covered
@@ -258,8 +259,24 @@ Promotion 3-pass:
   - no active npc-martial seam diff or active wuxia canary thread remains to justify holding this item back
   - PASS
 - Pass 3. Execution Readability
-  - the active queue item is now explicit
-  - the next implementation turn can start directly on the bounded soak harness seam
+  - promotion remained bounded to queue authority only
   - PASS
+
+## 16. 2026-04-19 Reactivation Refresh
+
+Source doc:
+
+- `docs/2026-04-19/frontier-lag-soak-canary-wave1-reactivation-refresh.md`
+
+Current reading:
+
+- the bounded soak-harness and post-run state-audit work is still real
+- the lane is not stale, but it is also not active progress anymore
+
+Queue consequence:
+
+- keep this lane visible
+- keep the temp mirror
+- treat it as parked low-priority reference-validation debt rather than active implementation progress
 
 Promotion confidence: `97%`

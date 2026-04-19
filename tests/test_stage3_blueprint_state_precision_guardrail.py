@@ -209,7 +209,10 @@ class TestFactLockPacket:
                     "지점장 전결과 컴플라이언스 심사 간소화를 거쳐 실제 포지션 체결을 완료한다."
                 ),
                 "episode_details": [
-                    {"ep_num": 4, "details": ["지점장 전결과 컴플라이언스 심사 간소화를 거쳐 실제 포지션 체결을 완료한다."]}
+                    {
+                        "ep_num": 4,
+                        "details": ["지점장 전결과 컴플라이언스 심사 간소화를 거쳐 실제 포지션 체결을 완료한다."],
+                    }
                 ],
                 "state_changes": {
                     "timeline": {
@@ -247,6 +250,68 @@ class TestFactLockPacket:
         assert "직전 대치의 결과 이후 단계로 이동" in prompt
         assert "reserved beat" in prompt
         assert "결과 완료를 선소비하지 말고" in prompt
+
+    def test_build_lawful_repetition_window_detects_authority_capture_tokens(self):
+        packet = {
+            "blocked_scene_families": [
+                {
+                    "scene_key": "scene_3",
+                    "label": "수익 확인 전화",
+                    "location": "한미증권 본점 VIP룸",
+                    "characters": ["한시우", "박성호"],
+                }
+            ]
+        }
+
+        result = BlueprintConstraintCompiler._build_episode_progression_lawful_repetition_window(
+            must_focus={"content": "박성호의 태도 돌변과 전담 VIP 라인 개설, 직통 핫라인 명함 획득"},
+            stop_line={"content": ""},
+            episode_progression_packet=packet,
+        )
+
+        assert result["mode"] == "allow_escalated_repeat"
+        assert "전담" in result["escalation_tokens"]
+        assert "직통" in result["escalation_tokens"]
+        assert "명함" in result["escalation_tokens"]
+
+    def test_surface_guidance_softens_when_authority_capture_lawful_window_is_active(self):
+        packet = {
+            "blocked_scene_families": [
+                {"scene_key": "scene_2", "label": "VIP룸 대치"},
+                {"scene_key": "scene_3", "label": "PB 통화"},
+            ],
+            "lawful_repetition_window": {
+                "mode": "allow_escalated_repeat",
+                "allow_same_location_if_goal_changes": True,
+                "allow_same_counterparty_if_goal_changes": True,
+                "allow_same_channel_if_decision_escalates": True,
+            },
+        }
+
+        result = BlueprintConstraintCompiler._build_episode_progression_surface_guidance(
+            must_focus={"content": "박성호의 태도 돌변과 전담 VIP 라인 개설, 직통 핫라인 명함 획득"},
+            stop_line={"content": "다음 화는 유가 포지션 압박 대응"},
+            episode_progression_packet=packet,
+        )
+
+        joined = "\n".join(result)
+        assert "위계가 달라진 surface로 승격하라" in joined
+        assert "authority receipt 포착" in joined
+        assert "lawful repetition으로 설계하라" in joined
+
+    def test_surface_guidance_adds_semantic_guard_for_exception_account_receipt(self):
+        result = BlueprintConstraintCompiler._build_episode_progression_surface_guidance(
+            must_focus={
+                "content": "리스크관리팀이 SW인베스트먼트 계좌를 'Exception Account'로 특별 격상하고 승인 문서를 전달한다."
+            },
+            stop_line={"content": "한시우는 7월 중동 위기를 대비하며 다음 판을 구상한다."},
+            episode_progression_packet={"blocked_scene_families": []},
+        )
+
+        joined = "\n".join(result)
+        assert "모든 통제 면제나 무제한 특권이 아니라" in joined
+        assert "privileged execution lane" in joined
+        assert "후순위 개입, 수동 승인, 별도 보고선" in joined
 
     def test_anchor_count_bounded_to_12(self):
         """Packet should not exceed 12 anchors even with many manuscript matches."""
@@ -808,3 +873,37 @@ def test_fact_lock_packet_suppresses_prev_opening_anchors_when_arc_opening_autho
     assert not any("Prev Blueprint Room" in fact for fact in facts)
     assert not any("January night" in fact for fact in facts)
     assert not any("phone rings in the lounge" in fact for fact in facts)
+
+
+def test_fact_lock_packet_suppresses_prev_time_anchor_when_episode_authority_month_conflicts():
+    result = BlueprintConstraintCompiler._build_fact_lock_packet(
+        prev_blueprint={
+            "end_location": "SW인베스트먼트 신규 원룸 오피스",
+            "time_flow": "2006년 4월 중순 자정 무렵",
+            "ending_state": {"timeline": {"표현": "2006년 4월 중순 새벽"}},
+            "ending_hook": "절반의 화약이 터진 자리에, 더 거대한 뇌관이 고요히 타들어가고 있었다.",
+            "protagonist_state": {"equipment": ["WTI 6월물 절반 청산 및 잔여 홀딩 내역서"]},
+        },
+        prev_manuscript_ending="Shock afterglow still lingered in the office.",
+        arc_data={
+            "ep_start": 13,
+            "ep_end": 17,
+            "tactical_doc": (
+                "제 17화: 증권사 내부 권력의 역전과 예외 계좌 격상\n"
+                "2006년 5월 말, 에콰도르 쇼크 직후.\n"
+                "한미증권 내부는 발칵 뒤집힌다."
+            ),
+            "state_changes": {
+                "timeline": {
+                    "start": {"description": "2006년 4월 중순"},
+                    "end": {"description": "2006년 5월 말, 에콰도르 쇼크 직후"},
+                }
+            },
+        },
+        ep_num=17,
+    )
+
+    facts = [anchor.get("fact", "") for anchor in result.get("anchors", []) if isinstance(anchor, dict)]
+
+    assert any("WTI 6월물 절반 청산 및 잔여 홀딩 내역서" in fact for fact in facts)
+    assert not any("2006년 4월 중순" in fact for fact in facts)

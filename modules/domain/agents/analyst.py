@@ -430,9 +430,7 @@ class Analyst(BaseAgent):
         # 2. 소지품 검증
         # [Sweep50] 빈 리스트 [] 보존 — or 연산자가 falsy 값 무시하는 패턴 수정
         prev_inventory = (
-            prev_end.get("equipment")
-            if "equipment" in prev_end
-            else prev_joint.get("physical_inventory", [])
+            prev_end.get("equipment") if "equipment" in prev_end else prev_joint.get("physical_inventory", [])
         )
         curr_inventory = curr_start.get("equipment", [])
 
@@ -752,7 +750,9 @@ class Analyst(BaseAgent):
         content_len = 0
         if isinstance(curr_block, dict):
             _content_parts, content_len = self._extract_content_parts(curr_block)
-            if content_len < 500:
+            if content_len < 350:
+                original_guess = 3
+            elif content_len < 500:
                 original_guess = 4
             elif content_len < 1000:
                 original_guess = 5
@@ -836,9 +836,7 @@ class Analyst(BaseAgent):
             "protagonist_hud_state": self._escape_braces(hud_context) if hud_context else "",
             **self._build_genre_placeholders(current_genre, critical_keys),
         }
-        pacing_guide = (
-            f"시스템 권장: {target_ep_count}화 (Blitz:2-3 / Standard:3-4 / Epic:5-6, 실제 허용 범위: {ep_count_range_text})"
-        )
+        pacing_guide = f"시스템 권장: {target_ep_count}화 (Blitz:2-3 / Standard:4-5 / Epic:6, 실제 허용 범위: {ep_count_range_text})"
 
         return {
             "clean_arc_no": clean_arc_no,
@@ -970,11 +968,11 @@ class Analyst(BaseAgent):
         chosen_pacing_lower = chosen_pacing.lower() if isinstance(chosen_pacing, str) else ""
 
         if "epic" in chosen_pacing_lower:
-            pacing_min, pacing_max = 5, max_ep_count
+            pacing_min, pacing_max = 6, max_ep_count
         elif "standard" in chosen_pacing_lower:
             pacing_min, pacing_max = 4, 5
         elif "blitz" in chosen_pacing_lower:
-            pacing_min, pacing_max = 3, 4
+            pacing_min, pacing_max = 2, 3
         else:
             pacing_min, pacing_max = min_ep_count, max_ep_count
 
@@ -1021,9 +1019,7 @@ class Analyst(BaseAgent):
 
     def _run_single_arc_self_critic(self, draft_result: dict, curr_block) -> dict:
         critic_block_ctx = _format_block_numeric_targets(curr_block)
-        critic_stable = f"{get_analyst_self_critic_prompt()}" + (
-            f"\n\n{critic_block_ctx}" if critic_block_ctx else ""
-        )
+        critic_stable = f"{get_analyst_self_critic_prompt()}" + (f"\n\n{critic_block_ctx}" if critic_block_ctx else "")
         critic_variable = f"[Draft to Review]: {json.dumps(draft_result, ensure_ascii=False)}"
         critic_input = critic_stable + f"\n{critic_variable}"
         return self._extract_json_robust(
@@ -1515,9 +1511,7 @@ class Analyst(BaseAgent):
 
             # [TF-S2PE-03] 파싱 전실패 감지 — orchestrator가 성공으로 오인 방지
             if enriched_result.get("parsing_error"):
-                logging.warning(
-                    "[Analyst Enrich] JSON 파싱 전실패: block_id=%s", _block_id
-                )
+                logging.warning("[Analyst Enrich] JSON 파싱 전실패: block_id=%s", _block_id)
                 raw_block["_enrich_skipped"] = True
                 return raw_block
 

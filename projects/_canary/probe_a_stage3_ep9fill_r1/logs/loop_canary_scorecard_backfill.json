@@ -1,0 +1,210 @@
+{
+  "schema": "geuldobi.loop_canary_scorecard.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "backfilled",
+  "role": "Loop-oriented bounded canary gate surface for narrative doctrine evaluation.",
+  "document_ref": "docs/2026-04-18/golden-canary-deepclone-probe-a-loop-canary-scorecard.md",
+  "evaluation_unit": [
+    "stage3_bounded_episode_tranche"
+  ],
+  "required_inputs": [
+    "projects/_canary/probe_a_stage3_ep9fill_r1/logs/stage3_canary_summary.json",
+    "projects/_canary/probe_a_stage3_ep9fill_r1/plans/blueprints/blueprint_0008.txt",
+    "projects/_canary/probe_a_stage3_ep9fill_r1/plans/blueprints/blueprint_0009.txt",
+    "projects/_canary/probe_a_stage3_ep9fill_r1/logs/artifacts/stage3/ep_0008/attempt_04/final_blueprint__emotion_focused.json",
+    "projects/_canary/probe_a_stage3_ep9fill_r1/logs/artifacts/stage3/ep_0009/attempt_05/final_blueprint__dialogue_focused.json",
+    "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+    "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
+    "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+  ],
+  "hard_gates": {
+    "episode_loop_contract_floor": {
+      "required_items": [
+        "pressure_visible",
+        "execution_visible",
+        "proof_visible",
+        "receipt_visible",
+        "observer_shift_visible",
+        "next_gate_visible"
+      ],
+      "minimum_hit_count": 4,
+      "forbidden_joint_miss": [
+        "receipt_visible",
+        "next_gate_visible"
+      ],
+      "status": "pass",
+      "evidence": [
+        "Episode 8 secures the gatekeeper break: doubled fees, transfer threat, and example-family authority pressure force access.",
+        "Episode 9 cashes that access out into room entry, limit release, 15억 WTI 3x long order, visible fill completion, and a wait-for-volatility next gate."
+      ],
+      "notes": [
+        "This is the first natural Arc 2 slot where actual fill lands, and the loop contract is fully visible."
+      ]
+    },
+    "receipt_transport_gate": {
+      "rule": "If a structural receipt appears in the tranche artifact, its trace must survive in at least two downstream surfaces.",
+      "status": "pass",
+      "evidence": [
+        "Episode 8 ends with 박성호's total surrender and the internal door opening.",
+        "Episode 9 scene_1 and scene_2 convert that surrender into VIP room entry, security dongle handoff, and single-user command authority.",
+        "Episode 9 scene_4 and ending_state convert that authority into an actual 15억 filled long position."
+      ],
+      "notes": [
+        "Access receipt is not merely remembered; it is turned into an executed market position."
+      ]
+    },
+    "anti_contamination_gate": {
+      "rule": "Donor surfaces may remain only as example-family language. Direct donor scene-copy or law-copy fails the gate.",
+      "status": "pass",
+      "evidence": [
+        "The tranche is driven by work-native financial logic: risk-team limit release, VIP HTS room access, WTI order routing, and fill confirmation.",
+        "The remaining runtime warning is a local density advisory, not a donor contamination issue."
+      ],
+      "notes": []
+    },
+    "lawful_bridge_gate": {
+      "rule": "The tranche must open a lawful next gate without replay drift, setup-only delay, or future-beat consumption.",
+      "status": "pass",
+      "evidence": [
+        "Episode 8 spends the prerequisite access lane without overshooting into the trade.",
+        "Episode 9 uses that access immediately for fill and then stops at pre-surge observation rather than stealing the later payoff beat."
+      ],
+      "notes": [
+        "This is a clean contract-respecting bridge: ep8 breaks the gate, ep9 pulls the trigger."
+      ]
+    }
+  },
+  "weighted_metrics": {
+    "loop_deadline_hit": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "Under the current Arc 2 contract, actual fill lands by episode 9, which is the first natural execution slot."
+      ],
+      "notes": []
+    },
+    "structural_receipt_conversion": {
+      "weight": 20,
+      "status": "pass",
+      "score": 18,
+      "evidence": [
+        "The reward rotates from access leverage into a durable filled position: 15억 WTI 3x long with explicit fill confirmation and position evidence.",
+        "박성호's role degrades further into a pure execution instrument."
+      ],
+      "notes": [
+        "Two points are held back because realized P/L consequence is still later than this tranche."
+      ]
+    },
+    "receipt_transport_survival": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "Episode 8's negotiated access survives directly into room control, risk unlock, and the actual order fill."
+      ],
+      "notes": []
+    },
+    "carryover_persistence": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "na_allowed": true,
+      "evidence": [
+        "The tranche preserves pressure from ep7 deferral into ep8 gate break and ep9 fill with no replay reset."
+      ],
+      "notes": [
+        "This is the cleanest proof yet that the loop can carry through multiple prerequisite beats without collapsing."
+      ]
+    },
+    "legal_bridge_efficiency": {
+      "weight": 15,
+      "status": "pass",
+      "score": 13,
+      "evidence": [
+        "The bridge now converts access directly into execution, but it still required an extra gatekeeper episode before the actual fill."
+      ],
+      "notes": [
+        "Two points are held back because the path remains somewhat longer than the most aggressive loop tempo."
+      ]
+    },
+    "anti_contamination_pass": {
+      "weight": 10,
+      "status": "pass",
+      "score": 9,
+      "evidence": [
+        "The filled-position beat is carried by work-specific institution, desk, limit, and order-routing surfaces."
+      ],
+      "notes": []
+    },
+    "reward_rotation_health": {
+      "weight": 10,
+      "status": "pass",
+      "score": 8,
+      "evidence": [
+        "Reward rotates from authority receipt to access receipt to actual fill receipt, rather than looping endlessly on the same access badge."
+      ],
+      "notes": [
+        "One more step is still needed for realized payoff and public/private aftermath."
+      ]
+    }
+  },
+  "watchlists": {
+    "anti_fatigue_risk": {
+      "status": "watch",
+      "red_flags": [
+        "same_receipt_family_repeats_across_two_or_more_tranches",
+        "proof_grows_without_observer_shift",
+        "next_gate_surface_collapses_to_one_hook_class",
+        "earned_access_is_replaced_by_gifted_access"
+      ],
+      "notes": [
+        "The fill finally lands, so the immediate risk is lower than in ep7. The next fatigue watch is whether the aftermath repeats passive waiting instead of converting into a vivid consequence beat."
+      ]
+    },
+    "saturation_trigger": {
+      "status": "clear",
+      "red_flags": [
+        "authority_gain_rises_while_constraints_flatten",
+        "reward_size_rises_while_reader_payoff_stays_flat",
+        "signboard_and_next_gate_collapse_into_one_repeated_device"
+      ],
+      "notes": [
+        "No immediate saturation trigger is visible because the reward class finally changes from access to filled exposure."
+      ]
+    }
+  },
+  "interpretation_bands": [
+    {
+      "band": "gate_fail",
+      "meaning": "Execution hold regardless of numeric score."
+    },
+    {
+      "band": "85-100",
+      "meaning": "Strong pass. Bounded realization candidate."
+    },
+    {
+      "band": "70-84",
+      "meaning": "Pass with repair. Apply one targeted fix and rerun."
+    },
+    {
+      "band": "55-69",
+      "meaning": "Weak pass. Doctrine promotion remains on hold."
+    },
+    {
+      "band": "<55",
+      "meaning": "Fail. Recheck tranche design or doctrine interpretation."
+    }
+  ],
+  "operator_fields": {
+    "target_project": "probe_a_stage3_ep9fill_r1",
+    "target_tranche": "Stage3 ep8->ep9 actual fill proof",
+    "target_stage": 3,
+    "gate_result": "all_loop_gates_pass_with_platform_warning",
+    "weighted_total": 93,
+    "weighted_total_after_na_adjustment": 93,
+    "operator_summary": "The current Arc 2 contract finally cashes out into actual fill. Episode 8 breaks the gatekeeper, and episode 9 converts access into a 15억 WTI 3x long fill with visible position evidence. The remaining warning is local density only, not structural drift.",
+    "next_action": "Treat actual fill as proved under the current arc contract. The next useful proof target is ep11, where realized market consequence and first visible payoff should land."
+  }
+}

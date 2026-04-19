@@ -13,3 +13,8 @@
 {"timestamp": "2026-04-17 18:27:23", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
 {"timestamp": "2026-04-17 18:28:11", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "target_arc_no": 5, "items_tracked": 8}}
 {"timestamp": "2026-04-17 18:28:11", "type": "v60_10_state_extractor_error", "message": "StateExtractor failed, using fallback", "data": {"error": "[Errno 22] Invalid argument", "target_arc_no": 5}}
+{"timestamp": "2026-04-17 21:05:50", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "target_arc_no": 5, "items_tracked": 10}}
+{"timestamp": "2026-04-17 21:11:22", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 5, "corrections": ["시작 위치 수정: '이전 Arc 종료 위치' → '한미증권 본점 VIP 프라이빗 룸'", "시작 부상 수정: '' → '없음'"]}}
+{"timestamp": "2026-04-17 21:12:32", "type": "field_repair", "message": "hybrid_composition missing", "data": {"arc_idx": 5}}
+{"timestamp": "2026-04-17 21:12:32", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-17 21:18:23", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "target_arc_no": 6, "items_tracked": 0}}

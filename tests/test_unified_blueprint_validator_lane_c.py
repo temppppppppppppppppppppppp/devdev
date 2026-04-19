@@ -625,6 +625,162 @@ def test_lane_c_python_pre_validate_flags_episode_progression_replay_as_critical
     assert "scene_1->scene_4" in issue["issue"] or "scene_4->scene_2" in issue["issue"]
 
 
+def test_lane_c_python_pre_validate_allows_lawful_repetition_when_goal_escalates():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "패닉콜을 받다",
+                    "goal": "박성호의 패닉콜에 응답하며 유가는 80달러까지 간다고 단언한다.",
+                    "summary": "여의도 본점 PB실에서 같은 핫라인 전화를 받지만 이번에는 하락장을 버티라는 결정이 핵심이다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["직통 핫라인으로 유가 80달러 전망을 단언한다."],
+                    "location": "여의도 본점 PB실",
+                    "type": "authority_escalation",
+                },
+                "scene_2": {
+                    "title": "리스크팀을 압박하다",
+                    "goal": "같은 본점에서 리스크팀을 눌러 다음 조치를 막는다.",
+                    "summary": "박성호가 연결한 본점 라인으로 버티기 결정을 고정한다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["같은 채널에서 결정을 확정한다."],
+                    "location": "여의도 본점 PB실",
+                    "type": "decision_lock",
+                },
+            },
+            "integrated_scenario": "B" * 900,
+        },
+        constraint_block={
+            "must_focus": {
+                "content": "WTI가 68달러까지 조정받는 와중에도 박성호 패닉콜을 받고 유가는 80달러까지 간다고 단언한다."
+            },
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_3",
+                        "label": "핫라인 압박",
+                        "location": "여의도 본점 PB실",
+                        "location_variants": ["여의도 본점 PB실", "여의도 본점", "PB실"],
+                        "characters": ["한시우", "박성호"],
+                        "type": "phone_pressure",
+                    },
+                    {
+                        "scene_key": "scene_4",
+                        "label": "본점 설득",
+                        "location": "여의도 본점 PB실",
+                        "location_variants": ["여의도 본점 PB실", "여의도 본점", "PB실"],
+                        "characters": ["한시우", "박성호"],
+                        "type": "dialogue_duel",
+                    },
+                ],
+                "lawful_repetition_window": {
+                    "mode": "allow_escalated_repeat",
+                    "allow_same_location_if_goal_changes": True,
+                    "allow_same_counterparty_if_goal_changes": True,
+                    "allow_same_channel_if_decision_escalates": True,
+                    "escalation_tokens": ["단언", "압박", "조정"],
+                },
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_3": {
+                    "location": "여의도 본점 PB실",
+                    "characters": ["한시우", "박성호"],
+                },
+                "scene_4": {
+                    "location": "여의도 본점 PB실",
+                    "characters": ["한시우", "박성호"],
+                },
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not any(issue["category"] == "episode_progression" for issue in pre_result["issues"])
+
+
+def test_lane_c_python_pre_validate_allows_lawful_repetition_when_authority_capture_escalates():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "직통 명함 전달",
+                    "goal": "같은 VIP룸에서 박성호가 전담 라인과 직통 명함을 건네며 권한 역전을 확정한다.",
+                    "summary": "한미증권 본점 VIP룸에서 박성호가 경외심 속에 전담 라인 개설과 직통 핫라인 명함 전달을 보고한다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["박성호가 전담 VIP 라인 개설과 직통 명함 획득을 보고한다."],
+                    "location": "한미증권 본점 VIP룸",
+                    "type": "authority_capture",
+                },
+                "scene_2": {
+                    "title": "권한 역전 확인",
+                    "goal": "같은 방에서 관계 역전을 확인하고 다음 지시 체계를 고정한다.",
+                    "summary": "박성호가 경외심 속에 같은 공간에서 보고선 변경을 수용한다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["박성호가 앞으로 한시우의 직통 전담 채널을 최우선으로 두겠다고 확인한다."],
+                    "location": "한미증권 본점 VIP룸",
+                    "type": "relationship_shift",
+                },
+            },
+            "integrated_scenario": "C" * 900,
+        },
+        constraint_block={
+            "must_focus": {
+                "content": "박성호 PB의 태도 돌변과 경외, 전담 VIP 라인 개설, 직통 핫라인 명함 획득을 통해 권한 역전을 확정한다."
+            },
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_3",
+                        "label": "수익 확인 전화",
+                        "location": "한미증권 본점 VIP룸",
+                        "location_variants": ["한미증권 본점 VIP룸", "VIP룸", "한미증권 본점"],
+                        "characters": ["한시우", "박성호"],
+                        "type": "dialogue_duel",
+                    },
+                    {
+                        "scene_key": "scene_4",
+                        "label": "수익 보고",
+                        "location": "한미증권 본점 VIP룸",
+                        "location_variants": ["한미증권 본점 VIP룸", "VIP룸", "한미증권 본점"],
+                        "characters": ["한시우", "박성호"],
+                        "type": "tension_build",
+                    },
+                ],
+                "lawful_repetition_window": {
+                    "mode": "allow_escalated_repeat",
+                    "allow_same_location_if_goal_changes": True,
+                    "allow_same_counterparty_if_goal_changes": True,
+                    "allow_same_channel_if_decision_escalates": True,
+                    "escalation_tokens": ["전담", "직통", "명함", "경외", "격상"],
+                },
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_3": {
+                    "location": "한미증권 본점 VIP룸",
+                    "characters": ["한시우", "박성호"],
+                },
+                "scene_4": {
+                    "location": "한미증권 본점 VIP룸",
+                    "characters": ["한시우", "박성호"],
+                },
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not any(issue["category"] == "episode_progression" for issue in pre_result["issues"])
+
+
 def test_lane_c_build_director_validation_result_escalates_binding_issue_to_pass_with_fix():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     blueprint = {}
@@ -859,6 +1015,68 @@ def test_lane_c_python_pre_validate_skips_price_only_dollar_mentions_for_capital
     assert all(issue["category"] != "capital_unit" for issue in pre_result["issues"])
 
 
+def test_lane_c_python_pre_validate_skips_wti_price_drop_mentions_for_capital_unit():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {"goal": "g1", "summary": "s1", "characters": ["Hero"]},
+                "scene_2": {"goal": "g2", "summary": "s2", "characters": ["PB"]},
+                "scene_3": {"goal": "g3", "summary": "s3", "characters": ["Hero", "PB"]},
+            },
+            "integrated_scenario": (
+                "WTI 6월물 호가창이 무너지고 유가는 68달러 선을 붕괴한다. "
+                "박성호는 포지션을 정리하자고 애원하지만, 한시우는 80달러까지 간다고 단언한다. " + "A" * 900
+            ),
+        },
+        constraint_block={
+            "capital_continuity_packet": {
+                "fields": [
+                    {"label": "투입 확정", "value": "15억 원 (투입/체결 완료 — 가용 아님)"},
+                    {"label": "보유 자본", "value": "20억 원 (예치/보유 상태)"},
+                ]
+            }
+        },
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert all(issue["category"] != "capital_unit" for issue in pre_result["issues"])
+
+
+def test_lane_c_python_pre_validate_skips_oil_price_rally_mentions_for_capital_unit():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {"goal": "g1", "summary": "s1", "characters": ["Hero"]},
+                "scene_2": {"goal": "g2", "summary": "s2", "characters": ["PB"]},
+                "scene_3": {"goal": "g3", "summary": "s3", "characters": ["Hero", "PB"]},
+            },
+            "integrated_scenario": (
+                "유가가 75달러를 향해 수직 상승하기 시작하자 시장 전체가 패닉 바잉에 빠졌다. "
+                "모두가 매수 버튼을 누르는 바로 그 순간 한시우는 절반 익절만 지시했다. " + "A" * 900
+            ),
+        },
+        constraint_block={
+            "capital_continuity_packet": {
+                "fields": [
+                    {"label": "투입 확정", "value": "15억 원 (투입/체결 완료 — 가용 아님)"},
+                    {"label": "보유 자본", "value": "20억 원 (예치/보유 상태)"},
+                ]
+            }
+        },
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert all(issue["category"] != "capital_unit" for issue in pre_result["issues"])
+
+
 def test_lane_c_build_director_validation_result_escalates_capital_unit_issue_to_pass_with_fix():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
     blueprint = {}
@@ -1067,6 +1285,33 @@ def test_lane_c_arc_timeline_requires_terminal_episode_to_match_arc_end():
     assert issues[0]["category"] == "arc_timeline"
 
 
+def test_lane_c_arc_timeline_ignores_future_foreshadow_month_in_terminal_expression():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    issues = validator._collect_arc_timeline_alignment_issues(
+        blueprint={
+            "ep_num": 17,
+            "ending_state": {
+                "timeline": {
+                    "표현": "2006년 5월, 7월의 위기를 앞둔 폭풍 전야",
+                }
+            },
+        },
+        arc_data={
+            "ep_start": 13,
+            "ep_end": 17,
+            "state_changes": {
+                "timeline": {
+                    "start": {"year": 2006, "month": 5},
+                    "end": {"year": 2006, "month": 5, "description": "2006년 5월 말, 에콰도르 쇼크 직후"},
+                }
+            },
+        },
+    )
+
+    assert issues == []
+
+
 # ===========================================================================
 # Tranche 1 (2026-04-14): Opening-Transition Vocabulary Coherence
 # ===========================================================================
@@ -1193,3 +1438,23 @@ def test_lane_c_opening_transition_full_when_co_fires_with_other_binding():
     assert "Structural binding prevalidation categories require regenerate-only repair" in fix_scope_reasoning
     categories = {issue["category"] for issue in binding_issues}
     assert categories == {"opening_transition", "protagonist_state"}
+
+
+def test_lane_c_sync_prevalidation_ensemble_meta_clears_stale_warning_residue():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+    blueprint = {
+        "_ensemble_meta": {
+            "python_warnings": [{"category": "opening_transition", "message": "stale"}],
+            "advisory_fix_pack": {"patch_targets": ["integrated_scenario"]},
+            "quality_risk": True,
+        }
+    }
+
+    validator._sync_prevalidation_ensemble_meta(
+        blueprint,
+        python_warnings=[],
+        advisory_fix_pack={},
+        quality_risk=False,
+    )
+
+    assert "_ensemble_meta" not in blueprint

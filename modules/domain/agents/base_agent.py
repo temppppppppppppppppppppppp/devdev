@@ -1948,6 +1948,40 @@ class BaseAgent:
     except (ValueError, TypeError):
         _MAX_JSON_PAYLOAD = 500_000
 
+    @staticmethod
+    def _safe_json_parse_int(raw: str):
+        digits = str(raw or "").strip().lstrip("+-")
+        if len(digits) > 256:
+            return str(raw)
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return str(raw)
+
+    @staticmethod
+    def _safe_json_parse_float(raw: str):
+        digits = str(raw or "").strip().lstrip("+-").replace(".", "", 1)
+        if len(digits) > 256:
+            return str(raw)
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return str(raw)
+
+    @classmethod
+    def _coerce_json_scalar_token(cls, raw: str):
+        token = str(raw or "").strip()
+        lowered = token.lower()
+        if lowered == "true":
+            return True
+        if lowered == "false":
+            return False
+        if lowered == "null":
+            return None
+        if "." in token:
+            return cls._safe_json_parse_float(token)
+        return cls._safe_json_parse_int(token)
+
     def _extract_json_robust(self, text):
         """
         [V40.5 Ultimate Sovereign]
@@ -1981,7 +2015,12 @@ class BaseAgent:
             # 3. 2단계 파싱 (json -> ast)  [V64.P4] specific exception types
             data = None
             try:
-                data = json.loads(raw_json, strict=False)
+                data = json.loads(
+                    raw_json,
+                    strict=False,
+                    parse_int=self._safe_json_parse_int,
+                    parse_float=self._safe_json_parse_float,
+                )
             except (json.JSONDecodeError, ValueError):
                 try:
                     data = ast.literal_eval(raw_json)
@@ -2097,16 +2136,7 @@ class BaseAgent:
                 kv_num_pattern = r'"(\w+)"\s*:\s*([-+]?\d+(?:\.\d+)?|true|false|null)(?:\s*[,}\]])'
                 for k, v in re.findall(kv_num_pattern, json_str, re.IGNORECASE):
                     if k not in result_dict:
-                        if v.lower() == "true":
-                            result_dict[k] = True
-                        elif v.lower() == "false":
-                            result_dict[k] = False
-                        elif v.lower() == "null":
-                            result_dict[k] = None
-                        elif "." in v:
-                            result_dict[k] = float(v)
-                        else:
-                            result_dict[k] = int(v)
+                        result_dict[k] = self._coerce_json_scalar_token(v)
                 if result_dict:
                     logging.info(f"→ 정규식으로 {len(result_dict)}개 키-값 추출 성공")
                     return result_dict

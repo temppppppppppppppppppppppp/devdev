@@ -1,0 +1,112 @@
+{
+  "summary_role": "stage2_only_canary",
+  "project": "probe_a_stage2_arc5_inventorysem_r1",
+  "project_locator": "projects/_canary/probe_a_stage2_arc5_inventorysem_r1",
+  "project_root": "C:\\Users\\PC\\Desktop\\글도비\\projects\\_canary\\probe_a_stage2_arc5_inventorysem_r1",
+  "prepared_from": "golden_canary_deepclone_probe_a_stage23probe_r1",
+  "keep_arcs": 4,
+  "expected_final_arc_count": 5,
+  "actual_arc_count": 5,
+  "latest_session_id": "20260419_131353",
+  "stage2_attempt_count": 4,
+  "latest_stage2_attempt": {
+    "arc_num": 5,
+    "ep_num": 5,
+    "attempt_num": 1,
+    "verdict": "PASS",
+    "score": 95,
+    "session_id": "20260419_131353",
+    "attempt_key": "s2:ep5:arc5:a1:20260419_131353",
+    "artifact_path": "logs/artifacts/stage2/arc_005/attempt_01/final_arc__balanced.json"
+  },
+  "carryover_pairs": [
+    {
+      "previous_arc_no": 1,
+      "current_arc_no": 2,
+      "previous_end_equipment_count": 0,
+      "current_start_equipment_count": 0,
+      "current_end_equipment_count": 0,
+      "current_joint_inventory_count": 0,
+      "carryover_match": true,
+      "joint_inventory_matches_end_equipment": true,
+      "previous_end_equipment_preview": [],
+      "current_start_equipment_preview": [],
+      "current_end_equipment_preview": [],
+      "current_protagonist_items": null,
+      "current_items_acquired": []
+    },
+    {
+      "previous_arc_no": 2,
+      "current_arc_no": 3,
+      "previous_end_equipment_count": 0,
+      "current_start_equipment_count": 0,
+      "current_end_equipment_count": 0,
+      "current_joint_inventory_count": 0,
+      "carryover_match": true,
+      "joint_inventory_matches_end_equipment": true,
+      "previous_end_equipment_preview": [],
+      "current_start_equipment_preview": [],
+      "current_end_equipment_preview": [],
+      "current_protagonist_items": null,
+      "current_items_acquired": []
+    },
+    {
+      "previous_arc_no": 3,
+      "current_arc_no": 4,
+      "previous_end_equipment_count": 0,
+      "current_start_equipment_count": 0,
+      "current_end_equipment_count": 0,
+      "current_joint_inventory_count": 0,
+      "carryover_match": true,
+      "joint_inventory_matches_end_equipment": true,
+      "previous_end_equipment_preview": [],
+      "current_start_equipment_preview": [],
+      "current_end_equipment_preview": [],
+      "current_protagonist_items": null,
+      "current_items_acquired": []
+    },
+    {
+      "previous_arc_no": 4,
+      "current_arc_no": 5,
+      "previous_end_equipment_count": 0,
+      "current_start_equipment_count": 0,
+      "current_end_equipment_count": 7,
+      "current_joint_inventory_count": 7,
+      "carryover_match": true,
+      "joint_inventory_matches_end_equipment": true,
+      "previous_end_equipment_preview": [],
+      "current_start_equipment_preview": [],
+      "current_end_equipment_preview": [
+        "18년 치 매크로 이벤트가 암호화되어 적힌 양장 수첩",
+        "SW인베스트먼트 법인 설립 신청서 가안",
+        "박성호 PB의 직통 핫라인 번호가 적힌 명함"
+      ],
+      "current_protagonist_items": null,
+      "current_items_acquired": []
+    }
+  ],
+  "latest_carryover_pair": {
+    "previous_arc_no": 4,
+    "current_arc_no": 5,
+    "previous_end_equipment_count": 0,
+    "current_start_equipment_count": 0,
+    "current_end_equipment_count": 7,
+    "current_joint_inventory_count": 7,
+    "carryover_match": true,
+    "joint_inventory_matches_end_equipment": true,
+    "previous_end_equipment_preview": [],
+    "current_start_equipment_preview": [],
+    "current_end_equipment_preview": [
+      "18년 치 매크로 이벤트가 암호화되어 적힌 양장 수첩",
+      "SW인베스트먼트 법인 설립 신청서 가안",
+      "박성호 PB의 직통 핫라인 번호가 적힌 명함"
+    ],
+    "current_protagonist_items": null,
+    "current_items_acquired": []
+  },
+  "hard_gates": {
+    "status": "pass",
+    "errors": [],
+    "warnings": []
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "prepared_at": "2026-04-19T11:26:29",
+  "source_project": "golden_canary_deepclone_probe_a_stage23probe_r1",
+  "target_project": "probe_a_stage2_opener_pacing_r1",
+  "canary_scope": "stage2_only_custom_zero_arc",
+  "reruns_stage2_generation": true,
+  "keep_arcs": 0,
+  "cleanup": {
+    "db_impact": {
+      "existing_arc_count": 5,
+      "kept_arc_count": 0,
+      "removed_arc_count": 5,
+      "stage2_attempts_removed": 4,
+      "stage2_director_selections_removed": 4,
+      "cost_log_rows_removed": 4,
+      "ui_event_sessions_removed": 2,
+      "llm_calls_removed": 66,
+      "arc_payload_anchors_removed": 5,
+      "arc_summary_anchors_removed": 5,
+      "from_ep": 1,
+      "from_arc": 1
+    },
+    "file_cleanup": {
+      "arc_plan_files_removed": 5,
+      "stage2_artifact_dirs_removed": 4,
+      "log_entries_removed": 8
+    }
+  }
+}

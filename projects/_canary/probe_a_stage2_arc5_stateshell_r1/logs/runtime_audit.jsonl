@@ -1,0 +1,5 @@
+{"timestamp": "2026-04-19 12:50:01", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "target_arc_no": 5, "items_tracked": 9}}
+{"timestamp": "2026-04-19 12:56:23", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 5, "corrections": ["시작 위치 수정: '이전 Arc 종료 위치' → '한미증권 본점 VIP 프라이빗 룸'", "시작 부상 수정: '' → '없음'"]}}
+{"timestamp": "2026-04-19 12:58:28", "type": "field_repair", "message": "hybrid_composition default injected", "data": {"arc_no": 5}}
+{"timestamp": "2026-04-19 12:58:29", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-19 12:59:03", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "target_arc_no": 6, "items_tracked": 8}}

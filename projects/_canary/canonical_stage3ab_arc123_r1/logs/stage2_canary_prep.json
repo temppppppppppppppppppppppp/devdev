@@ -1,0 +1,29 @@
+{
+  "prepared_at": "2026-04-17T22:49:24",
+  "source_project": "_canary/canary_0_0_stage234_arc23_postpatch_stage3_r1",
+  "target_project": "_canary/canonical_stage23probe_r1_arc23only_r1",
+  "canary_scope": "stage2_only",
+  "keep_arcs": 2,
+  "cleanup": {
+    "keep_arcs": 2,
+    "db_impact": {
+      "existing_arc_count": 3,
+      "kept_arc_count": 2,
+      "removed_arc_count": 1,
+      "stage2_attempts_removed": 1,
+      "stage2_director_selections_removed": 1,
+      "cost_log_rows_removed": 2,
+      "ui_event_sessions_removed": 1,
+      "llm_calls_removed": 23,
+      "arc_payload_anchors_removed": 1,
+      "arc_summary_anchors_removed": 1,
+      "from_ep": 12,
+      "from_arc": 3
+    },
+    "file_cleanup": {
+      "arc_plan_files_removed": 1,
+      "stage2_artifact_dirs_removed": 1,
+      "log_entries_removed": 7
+    }
+  }
+}

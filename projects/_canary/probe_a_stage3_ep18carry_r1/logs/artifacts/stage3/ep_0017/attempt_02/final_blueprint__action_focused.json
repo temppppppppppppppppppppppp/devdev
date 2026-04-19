@@ -1,0 +1,258 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "df6a2274006b1264adfa90941b90fb405fb0eca451a4d66046a87b1eed2e871d"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1325,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 30333,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 969667,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 24934,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4480,
+          "lane": "constraints"
+        },
+        {
+          "chars": 635,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 274,
+        "constraints": 4480,
+        "feedback_context": 635,
+        "hud_context": 10,
+        "prev_info": 24934
+      },
+      "shared_context_chars": 29698,
+      "strategy_feedback_chars": 2861,
+      "total_chars": 30333
+    },
+    "scene_count": 5,
+    "strategy": "action_focused",
+    "total_candidates": 1
+  },
+  "_inventory_gaps": [
+    {
+      "item": "가죽 수첩",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "만년필",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "폴더폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "OTP 카드",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "WTI 6월물 절반 청산 및 잔여 홀딩 내역서",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "한미증권 'Exception Account' 승인 문서 사본",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 91,
+    "partial_fix_eval": {
+      "do_not_regress_held": true,
+      "fallback_reason": "",
+      "is_patch_attempt": true,
+      "must_fix_resolved": true,
+      "patch_round": 1,
+      "patch_target_id": "",
+      "success_condition_met": true,
+      "target_kind": ""
+    },
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "fix_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "증권사의 굴복을 이끌어낸 압도적 성과와 새롭게 다가오는 7월 중동 위기의 전조",
+  "end_location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+  "ending_hook": "만년필 촉이 종이에 닿기 직전, 보조 모니터의 금(GOLD) 선물 호가창이 거대한 매수세와 함께 붉게 점멸하기 시작했다.",
+  "ending_state": {
+    "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+    "protagonist_status": "한미증권의 통제를 완전히 벗어난 절대적 권한을 쥐고 7월 중동 전쟁을 향한 거대한 포지션 구축을 시작함",
+    "timeline": {
+      "표현": "2006년 5월의 맑은 아침"
+    }
+  },
+  "ep_num": 17,
+  "episode_number": 17,
+  "expected_ending": "예외 계좌라는 새로운 무기를 얻고 금 시장의 이상 징후를 포착함",
+  "integrated_scenario": "에콰도르 쇼크가 휩쓸고 간 4월의 밤이 지나고, 거침없는 상승세와 함께 2006년 5월이 밝았다. 강남의 좁은 원룸 오피스 안, 한시우는 갓 출력된 '절반 청산 및 잔여 홀딩 내역서'를 가죽 수첩 사이에 끼워 넣었다. 밤새 미친 듯이 요동치던 WTI 차트는 75달러 선을 기점으로 거친 숨을 고르고 있었다. 그는 만년필을 들어 수첩의 '4월'을 지우고, '2006년 5월'이라는 새로운 페이지를 펼치며 다가올 다음 전장을 묵묵히 조준했다.\n\n같은 시각, 한미증권 본점 리스크관리팀 사무실은 무거운 정적에 휩싸여 있었다. 리스크팀원이 화면에 띄운 SW인베스트먼트의 거래 로그는 경악 그 자체였다. 75달러 최고점에서 정확히 50%의 물량만 기계적으로 털어낸 기록. 탐욕에 휩싸인 시장에서 오직 한 사람만이 완벽한 통제력을 유지하고 있었다. 모니터를 짚고 있던 리스크관리팀장은 식은땀을 흘리며 중얼거렸다. \"이건 예측이 아니라, 시장을 위에서 내려다보는 거다.\" 그는 결국 본부장 전결 규정마저 무시한 채, SW인베스트먼트 계좌를 마진콜과 강제 청산의 위협에서 완전히 면제하는 'Exception Account' 특별 격상 서류에 서명하고 만다.\n\n몇 시간 뒤, 박성호 PB가 넥타이가 비뚤어진 것도 모른 채 강남 오피스의 문을 두드렸다. 그는 90도로 허리를 굽히며 한미증권 최상위 VIP조차 받기 힘든 예외 계좌 승인 문서 사본을 두 손으로 바쳤다. 과거의 오만함은 온데간데없고, 오직 맹종만이 남은 태도였다. 그러나 한시우는 자리에서 일어나지도 않은 채 문서를 받아 책상 한쪽에 무심하게 던져둘 뿐이었다. 그 당연하다는 듯한 태도가 박성호의 숨통을 더욱 강하게 조였다.\n\n한시우는 지체 없이 다음 지시를 내렸다. 잔여 WTI 6월물 포지션의 롤오버와, 현재 확보한 17.5억 원의 현금을 동원할 새로운 레버리지 라인을 5월 내로 완벽히 세팅하라는 명령이었다. 박성호가 조심스럽게 다음 타겟의 이유를 묻자, 한시우의 서늘한 목소리가 오피스를 갈랐다. \"7월, 중동이 다시 터집니다.\" 그 단언에 박성호는 온몸에 소름이 돋는 것을 느끼며 즉각적인 실행을 맹세하고 뒷걸음질로 방을 빠져나갔다.\n\n홀로 남은 한시우는 책상 위의 'Exception Account' 승인 문서를 집어 들었다. 그것은 단순한 종이 쪼가리가 아니라, 증권사의 모든 통제를 벗어나 다음 사이클의 거대한 딜에 참여할 수 있는 완벽한 무기이자 입장권이었다. 그가 가죽 수첩의 '7월 이스라엘-헤즈볼라 전쟁' 페이지 옆에 문서를 내려놓고 만년필을 쥐는 순간, 보조 모니터에 띄워둔 안전자산 금(GOLD) 선물의 호가창이 비정상적인 대량 매수세와 함께 불길하게 점멸하기 시작했다. 진짜 전쟁의 서막이었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 에콰도르 쇼크 이후의 결과를 확인하며 증권사 내부의 권력 역전을 빠르게 보여준다. 중반부 박성호의 방문을 통해 주인공의 절대적 우위를 확립하고, 후반부 7월 중동 위기를 예고하며 긴장감을 다시 최고조로 끌어올린다.",
+  "protagonist_state": {
+    "equipment": [
+      "가죽 수첩",
+      "만년필",
+      "폴더폰",
+      "OTP 카드",
+      "WTI 6월물 절반 청산 및 잔여 홀딩 내역서",
+      "한미증권 'Exception Account' 승인 문서 사본"
+    ],
+    "injuries": "없음",
+    "mood": "서늘한 지배감과 다음 전장을 향한 극도의 집중력"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "경외",
+      "justification": "최고점에서의 완벽한 익절과 예외 계좌 격상이라는 비현실적 결과를 직접 목격하고 전달하면서, 한시우를 거스를 수 없는 존재로 각인함",
+      "target": "박성호",
+      "to_state": "완벽한 맹종과 두려움"
+    },
+    {
+      "from_state": "통제 시도 및 경계",
+      "justification": "한시우의 거래 기록이 일반적인 트레이더의 범주를 아득히 벗어났음을 인정하고 스스로 규정을 무너뜨림",
+      "target": "한미증권 리스크관리팀",
+      "to_state": "통제 포기 및 예외 인정"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "에콰도르 쇼크 이후의 시장을 관망하며 다음 스텝을 준비한다.",
+      "key_events": [
+        "한시우가 갓 출력된 '절반 청산 및 잔여 홀딩 내역서'를 가죽 수첩 사이에 끼워 넣음",
+        "에콰도르 쇼크로 인해 밤새 미친 듯이 요동치는 WTI 차트를 무심한 눈으로 관찰함",
+        "만년필을 들어 수첩의 '4월'을 지우고, '2006년 5월'이라는 새로운 페이지를 펼침"
+      ],
+      "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+      "summary": "절반의 포지션을 청산한 한시우가 요동치는 차트를 뒤로하고 가죽 수첩에 다음 타임라인을 기록한다.",
+      "tension_level": 6,
+      "title": "잔여 뇌관의 통제",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "리스크관리팀장",
+        "리스크팀원"
+      ],
+      "content": "",
+      "goal": "한미증권 리스크팀이 한시우의 완벽한 타점에 경악하며 예외 계좌 승인을 강행한다.",
+      "key_events": [
+        "리스크팀원이 75달러 최고점에서 정확히 50% 물량만 털어낸 SW인베스트먼트의 거래 로그를 화면에 띄움",
+        "리스크관리팀장이 모니터를 짚은 채 식은땀을 흘리며 '이건 예측이 아니라 시장을 내려다보는 것'이라며 경악함",
+        "팀장이 본부장 전결 규정을 무시하고 SW인베스트먼트 계좌를 마진콜 면제 대상인 'Exception Account'로 특별 격상하는 서류에 서명함"
+      ],
+      "location": "한미증권 본점 리스크관리팀 사무실",
+      "summary": "한미증권 본점 리스크팀장이 최고점에서의 완벽한 절반 매도 기록을 확인하고 규정을 파괴한다.",
+      "tension_level": 7,
+      "title": "규정의 붕괴",
+      "type": "side_glimpse"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "박성호가 직접 승인 문서를 들고 찾아와 한시우에게 완전히 굴복한다.",
+      "key_events": [
+        "박성호가 넥타이가 비뚤어진 것도 모른 채 강남 원룸 오피스의 문을 두드리고 들어옴",
+        "박성호가 90도로 허리를 굽히며 한미증권 최상위 VIP조차 받기 힘든 'Exception Account' 승인 문서 사본을 두 손으로 바침",
+        "한시우가 자리에서 일어나지도 않은 채 문서를 받아 책상 한쪽에 무심하게 던져둠"
+      ],
+      "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+      "summary": "박성호 PB가 헐떡이며 강남 오피스에 도착해 예외 계좌 승인 문서를 바치며 맹종을 맹세한다.",
+      "tension_level": 8,
+      "title": "맹신과 굴복",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "goal": "한시우가 다음 타겟인 7월 중동 위기를 언급하며 박성호에게 새로운 자금 준비를 지시한다.",
+      "key_events": [
+        "한시우가 잔여 WTI 6월물 포지션의 롤오버와 17.5억 원의 현금을 동원할 새로운 레버리지 라인을 5월 내로 세팅하라고 지시함",
+        "박성호가 조심스럽게 다음 타겟을 묻자, 한시우가 '7월, 중동이 다시 터집니다'라고 단언함",
+        "질문조차 허락하지 않는 한시우의 서늘한 기세에 박성호가 숨을 삼키며 즉각적인 실행을 약속하고 뒷걸음질로 퇴장함"
+      ],
+      "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+      "summary": "한시우가 7월 중동 위기를 대비한 거대한 포지션 구축을 지시하고 박성호는 공포 섞인 경외를 느낀다.",
+      "tension_level": 8,
+      "title": "7월의 십자포화",
+      "type": "tension_build"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "예외 계좌라는 무기를 손에 쥔 한시우가 다가올 전쟁을 준비하며 텐션을 최고조로 끌어올린다.",
+      "key_events": [
+        "박성호가 떠난 후, 한시우가 'Exception Account' 승인 문서를 가죽 수첩의 '7월 이스라엘-헤즈볼라 전쟁' 페이지 옆에 나란히 놓음",
+        "증권사의 모든 통제를 벗어난 무제한의 딜 접근권을 확보했음을 물리적으로 확인하며 만년필 뚜껑을 엶",
+        "수첩에 새로운 타점을 적어 내리려는 찰나, 보조 모니터에 띄워둔 안전자산 금(GOLD) 선물의 호가창이 비정상적인 대량 매수세와 함께 붉게 점멸하기 시작함"
+      ],
+      "location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+      "summary": "홀로 남은 한시우가 예외 계좌 문서를 확인하는 순간, 모니터의 금값 차트가 심상치 않은 진동을 시작한다.",
+      "tension_level": 9,
+      "title": "새로운 전장의 입장권",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 강남, SW인베스트먼트 신규 원룸 오피스",
+  "target_beat": "증권사의 완전한 굴복과 다음 전장을 향한 시야 확장",
+  "time_flow": "2006년 4월 중순 새벽 → 2006년 5월 오전",
+  "title": "증권사 내부 권력의 역전과 예외 계좌 격상"
+}

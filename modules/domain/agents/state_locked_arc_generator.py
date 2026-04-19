@@ -18,6 +18,45 @@ from modules.core.prompt_loader import SafeDict
 
 from .base_agent import BaseAgent
 
+
+def _normalize_item_list(raw_items) -> list[str]:
+    if raw_items is None:
+        return []
+    if isinstance(raw_items, str):
+        raw_items = [item.strip() for item in raw_items.split(",") if item.strip()]
+    if not isinstance(raw_items, list):
+        return []
+
+    normalized: list[str] = []
+    for item in raw_items:
+        if isinstance(item, dict):
+            value = item.get("name") or item.get("item") or ""
+        else:
+            value = item
+        text = str(value).strip() if value is not None else ""
+        if text:
+            normalized.append(text)
+    return normalized
+
+
+def _dedupe_items(items) -> list[str]:
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for item in _normalize_item_list(items):
+        if item in seen:
+            continue
+        seen.add(item)
+        deduped.append(item)
+    return deduped
+
+
+def _resolve_protagonist_items(payload: dict) -> list[str]:
+    protagonist_items = payload.get("protagonist_items")
+    if protagonist_items is not None:
+        return _dedupe_items(protagonist_items)
+    return _dedupe_items(payload.get("items_acquired", []))
+
+
 # [V60.34] 화별 생성 템플릿 - DraftValidator 호환 형식으로 수정
 EPISODE_TEMPLATE = """
 [V60.34 STATE-LOCKED EPISODE GENERATOR]
@@ -53,8 +92,9 @@ EPISODE_TEMPLATE = """
 - 위치: [종료 시 위치]
 - 내공: [소모 후 %]
 - 부상: [부상 상태]
-- 획득: [새 아이템 또는 "없음"]
-- 소모: [사용 아이템 또는 "없음"]
+- 소지품: [종료 시 전체 소지품]
+- 획득: [새로 획득해 종료 시점까지 남는 아이템 또는 "없음"]
+- 소모: [사용/소모되어 종료 시점에 사라진 아이템 또는 "없음"]
 
 ⚠️ 반드시 "## 제 {ep_num}화:" 형식으로 시작하세요!
 ⚠️ 본문 600자 이상 필수!
@@ -79,7 +119,8 @@ STATE_EXTRACTION_PROMPT = """
     "end_location": "종료 위치",
     "end_energy": 숫자(0-100),
     "end_injuries": "부상 상태 또는 '없음'",
-    "items_acquired": ["획득 아이템"],
+    "end_equipment": ["종료 시 전체 소지품"],
+    "protagonist_items": ["이 화에서 새로 획득해 종료 시점까지 남는 아이템"],
     "items_consumed": ["소모 아이템"],
     "key_events": ["핵심 사건 1줄 요약"]
 }}
@@ -119,7 +160,7 @@ ARC_SYNTHESIS_PROMPT = """
     "state_constraints": {{
         "arc_start_state": {arc_start_state},
         "arc_end_state": {arc_end_state},
-        "items_acquired": ["Arc 전체에서 획득한 아이템"],
+        "protagonist_items": ["Arc 전체에서 새로 획득해 종료 시점까지 남는 아이템"],
         "items_consumed": ["Arc 전체에서 소모한 아이템"]
     }},
     "joint_docs": {{
@@ -245,6 +286,7 @@ class StateLockedArcGenerator(BaseAgent):
                     "ep_num": ep_num,
                     "start_energy": current_state["energy"],
                     "end_energy": end_state["energy"],
+                    "protagonist_items": end_state.get("protagonist_items", []),
                     "items_acquired": end_state.get("items_acquired", []),
                 }
             )
@@ -254,15 +296,8 @@ class StateLockedArcGenerator(BaseAgent):
                 "location": end_state["location"],
                 "energy": end_state["energy"],
                 "injuries": end_state["injuries"],
-                "equipment": [
-                    str(x) if isinstance(x, dict) else x
-                    for x in current_state.get("equipment", []) + end_state.get("items_acquired", [])
-                ],
+                "equipment": list(end_state.get("equipment", [])),
             }
-            # 소모 아이템 제거
-            for item in end_state.get("items_consumed", []):
-                if item in current_state["equipment"]:
-                    current_state["equipment"].remove(item)
 
             logging.info(f"✅ [Phase B] 제 {ep_num}화 완료: 내공 {current_state['energy']}%")
 
@@ -464,12 +499,26 @@ class StateLockedArcGenerator(BaseAgent):
             except (ValueError, TypeError):
                 end_energy = start_state.get("energy", 50)
 
+            protagonist_items = _resolve_protagonist_items(response if isinstance(response, dict) else {})
+            items_consumed = _dedupe_items(response.get("items_consumed", []))
+            end_equipment = _dedupe_items(response.get("end_equipment", []))
+            if not end_equipment:
+                end_equipment = list(_normalize_item_list(start_state.get("equipment", [])))
+                for item in protagonist_items:
+                    if item not in end_equipment:
+                        end_equipment.append(item)
+                for item in items_consumed:
+                    if item in end_equipment:
+                        end_equipment.remove(item)
+
             return {
                 "location": response.get("end_location", start_state["location"]),
                 "energy": end_energy,
                 "injuries": response.get("end_injuries", start_state["injuries"]),
-                "items_acquired": response.get("items_acquired", []),
-                "items_consumed": response.get("items_consumed", []),
+                "equipment": end_equipment,
+                "protagonist_items": protagonist_items,
+                "items_acquired": list(protagonist_items),
+                "items_consumed": items_consumed,
                 "key_events": response.get("key_events", []),
             }
 
@@ -479,6 +528,8 @@ class StateLockedArcGenerator(BaseAgent):
                 "location": start_state["location"],
                 "energy": start_state["energy"],
                 "injuries": start_state["injuries"],
+                "equipment": list(_normalize_item_list(start_state.get("equipment", []))),
+                "protagonist_items": [],
                 "items_acquired": [],
                 "items_consumed": [],
                 "key_events": [],
@@ -499,22 +550,26 @@ class StateLockedArcGenerator(BaseAgent):
         for ep in episodes:
             tactical_parts.append(ep["text"])
             beat_sequence.append(f"제 {ep['ep_num']}화: {ep['beat'][:50]}")
-            all_acquired.extend(ep.get("end_state", {}).get("items_acquired", []))
+            all_acquired.extend(_resolve_protagonist_items(ep.get("end_state", {})))
             all_consumed.extend(ep.get("end_state", {}).get("items_consumed", []))
 
         tactical_doc = "\n\n".join(tactical_parts)
 
-        # 최종 소지품 계산
-        final_equipment = list(start_state.get("equipment", []))
-        for item in all_acquired:
-            if item not in final_equipment:
-                final_equipment.append(item)
-        for item in all_consumed:
-            if item in final_equipment:
-                final_equipment.remove(item)
+        # 최종 소지품 계산: 마지막 화 종료 상태를 우선 authority로 사용
+        final_equipment = _dedupe_items(end_state.get("equipment", []))
+        if not final_equipment and (start_state.get("equipment") or all_acquired or all_consumed):
+            final_equipment = list(_normalize_item_list(start_state.get("equipment", [])))
+            for item in _dedupe_items(all_acquired):
+                if item not in final_equipment:
+                    final_equipment.append(item)
+            for item in _dedupe_items(all_consumed):
+                if item in final_equipment:
+                    final_equipment.remove(item)
 
         # 내공 손실 계산
         energy_loss = start_state["energy"] - end_state["energy"]
+        protagonist_items = _dedupe_items(all_acquired)
+        items_consumed = _dedupe_items(all_consumed)
 
         return {
             "arc_no": arc_no,
@@ -537,8 +592,9 @@ class StateLockedArcGenerator(BaseAgent):
                     "injuries": end_state["injuries"],
                     "internal_energy": end_state["energy"],
                 },
-                "items_acquired": list({str(x) if isinstance(x, dict) else x for x in all_acquired}),
-                "items_consumed": list({str(x) if isinstance(x, dict) else x for x in all_consumed}),
+                "protagonist_items": protagonist_items,
+                "items_acquired": list(protagonist_items),
+                "items_consumed": items_consumed,
             },
             "joint_docs": {
                 "final_location": end_state["location"],
@@ -548,7 +604,7 @@ class StateLockedArcGenerator(BaseAgent):
             "status_shadow": {
                 "internal_energy_loss": f"{energy_loss}%",
                 "expected_injuries": end_state["injuries"],
-                "item_consumption": list({str(x) if isinstance(x, dict) else x for x in all_consumed}),
+                "item_consumption": items_consumed,
             },
         }
 

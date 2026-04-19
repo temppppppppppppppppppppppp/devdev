@@ -178,6 +178,7 @@ def test_prepare_stage34_canary_project_resets_blueprints_and_stage3_stage4_outp
 
     (source / "drafts" / "ep_0001.txt").write_text("draft", encoding="utf-8")
     (source / "plans" / "blueprints" / "ep_0001.json").write_text('{"ep_num": 1}', encoding="utf-8")
+    (source / "plans" / "blueprints" / "blueprint_0001.txt").write_text("blueprint", encoding="utf-8")
     (source / "logs" / "episode_production.jsonl").write_text('{"ep": 1}\n', encoding="utf-8")
 
     result = prepare_stage34_canary_project(source, target)
@@ -197,6 +198,7 @@ def test_prepare_stage34_canary_project_resets_blueprints_and_stage3_stage4_outp
         target_db.close()
 
     assert (target / "plans" / "blueprints" / "ep_0001.json").exists() is False
+    assert (target / "plans" / "blueprints" / "blueprint_0001.txt").exists() is False
     assert sorted(p.name for p in (target / "logs").iterdir()) == ["stage34_canary_prep.json"]
 
 
@@ -304,7 +306,8 @@ def test_build_stage4_canary_summary_surfaces_warn_gates(tmp_path):
     assert summary["gate_repair_surface_summary"]["mismatch_counts"]["repair_contract_subtype_mismatches"] == 0
     assert summary["rationale_contract_summary"]["status"] == "ok"
     assert summary["rationale_contract_summary"]["field_nonempty_counts"]["selection_reason"] == 1
-    assert summary["hard_gates"]["status"] == "warn"
+    assert summary["hard_gates"]["status"] == "fail"
+    assert "final_sink_missing" in summary["hard_gates"]["errors"]
     assert "pass_rate_monitor_cache_missing" in summary["hard_gates"]["warnings"]
     assert "stage4_retry_contract_not_exercised" in summary["hard_gates"]["warnings"]
     assert "patch_trace_not_exercised" not in summary["hard_gates"]["warnings"]
@@ -990,3 +993,49 @@ def test_stage3_episode_telemetry_timing_decomposition(tmp_path):
     assert ep1["total_continuations"] == 2
     # The gap (30000 - 11000 = 19000ms) is orchestration overhead, NOT "API hang"
     assert ep1["total_duration_ms"] - ep1["total_api_elapsed_ms"] == 19000
+
+
+def test_build_stage3_canary_summary_skips_sink_alignment_when_prepared_scope_has_no_new_attempts(tmp_path):
+    from modules.core.stage4_canary_tools import build_stage3_canary_summary
+
+    root = tmp_path / "stage3_scope_skip"
+    _make_project_root(root)
+    db = DBManager(root / "project_data.db")
+    try:
+        db.save_anchor("genre_info", {"type": "wuxia", "name": "wuxia"})
+        db.save_blueprint(17, {"ep_num": 17, "scene_list": [{"scene_no": 1, "summary": "bp"}]})
+        db.save_stage_attempt(
+            stage=3,
+            verdict="PASS",
+            ep_num=17,
+            attempt_num=2,
+            score=91,
+            session_id="20260419_055020",
+            attempt_key="s3:ep17:arc3:a2:20260419_055020",
+        )
+    finally:
+        db.close()
+    (root / "logs" / "stage3_canary_prep.json").write_text(
+        json.dumps(
+            {
+                "source_project": "base",
+                "from_ep": 18,
+                "cleanup": {
+                    "db_impact": {"stage3_attempts": 0},
+                    "file_cleanup": {"log_entries_removed": 7},
+                },
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    summary = build_stage3_canary_summary(root, target_ep=18)
+
+    assert summary["scope_from_ep"] == 18
+    assert summary["latest_session_id"] == ""
+    assert summary["sink_alignment_summary"]["status"] == "skipped"
+    assert summary["sink_alignment_summary"]["coverage"]["pass_rate_monitor"] == 0
+    assert "sink_alignment_status:skipped" not in summary["hard_gates"]["warnings"]
+    assert "blueprint_db_count_short:1<18" in summary["hard_gates"]["errors"]

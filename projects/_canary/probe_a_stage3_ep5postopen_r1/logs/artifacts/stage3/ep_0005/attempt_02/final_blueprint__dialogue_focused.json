@@ -1,0 +1,233 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "0899e3caea59f81843099e6896d10f19101a47be5399d6b75cac55b1e5fc3543"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1366,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 10750,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 989250,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 6322,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 3444,
+          "lane": "constraints"
+        },
+        {
+          "chars": 811,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 163,
+        "constraints": 3444,
+        "feedback_context": 811,
+        "hud_context": 10,
+        "prev_info": 6322
+      },
+      "shared_context_chars": 9939,
+      "strategy_feedback_chars": 2885,
+      "total_chars": 10750
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 5,
+    "strategy": "dialogue_focused",
+    "total_candidates": 2
+  },
+  "_inventory_gaps": [
+    {
+      "item": "가죽 수첩",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "만년필",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    },
+    {
+      "item": "폴더폰",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "fix_scope": "inplace"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "가문의 추적을 완벽히 차단할 독자적 방화벽 구축과 시간과의 싸움",
+  "end_location": "여의도 법무법인 1층 로비 앞",
+  "ending_hook": "\"내일 뵙겠습니다, 이사님.\" 수화기 너머 박성호의 목소리가 미세하게 떨리는 순간, 한시우는 대답 대신 통화 종료 버튼을 눌렀다.",
+  "ending_state": {
+    "location": "여의도 법무법인 1층 로비 앞",
+    "protagonist_status": "법인 설립 서류 작업을 강제하고 유동화 자금 수령을 앞둔 완벽한 준비 상태",
+    "timeline": {
+      "표현": "2006년 1월 저녁"
+    }
+  },
+  "ep_num": 5,
+  "episode_number": 5,
+  "expected_ending": "SW인베스트먼트의 설립 요건을 강제하고 본격적인 시장 진입을 예고함",
+  "integrated_scenario": "거대한 저택의 적막 속에서 아버지 한정호와의 기싸움을 마친 한시우는, 입가에 걸렸던 서늘한 호선을 지우며 2층 복도를 걸어 내려왔다. 등 뒤로 닫힌 서재 문 너머의 공기는 더 이상 그를 옭아매지 못했다. 안주머니에 자리한 가죽 수첩의 묵직한 질감을 느끼며, 그는 1층 거실을 가로질렀다. 고용인들이 황급히 고개를 숙였지만 한시우는 눈길조차 주지 않은 채 현관을 나섰다. 대기 중이던 차량 뒷좌석에 몸을 실은 그가 운전기사에게 짧게 지시했다. \"여의도로 갑니다.\"\n\n강변북로를 미끄러지듯 달리는 차량 안, 고요를 깨고 라디오 뉴스 속보가 흘러나왔다. 국제원자력기구(IAEA)가 이란의 핵 프로그램을 유엔 안전보장이사회에 회부하기로 결의했다는 앵커의 긴박한 목소리였다. 창밖을 응시하던 한시우의 눈동자가 이채를 띠었다. 그는 안주머니에서 폴더폰을 꺼내 날짜를 확인한 뒤, 가죽 수첩을 펼쳤다. 2006년 1월. 수첩 첫 장에 붉은 잉크로 그어둔 'WTI 원유 선물 폭등 기점'과 현실의 뉴스가 톱니바퀴처럼 완벽하게 맞물려 돌아가고 있었다. 머릿속에 들어찬 미래의 지표들이 단순한 기억이 아닌, 당장 내일부터 현금으로 환전될 절대적인 무기임이 입증되는 순간이었다.\n\n여의도에 위치한 대형 법무법인 VIP 회의실. 기업 법무를 전담하는 강 변호사는 맞은편에 앉은 재벌가 막내아들을 여유로운 미소로 대하고 있었다. 단순한 증여세 회피용 차명 계좌나 유흥비 세탁용 페이퍼 컴퍼니를 원할 것이란 예상은, 한시우가 테이블 위로 던진 한 장의 서류로 인해 산산조각 났다. 만년필로 직접 그려진 지분 구조도였다. \"SW인베스트먼트. 내일 오후까지 법인 등록과 사업자 계좌 개설을 끝내야 합니다.\" 한시우의 목소리는 낮고 건조했다. 강 변호사가 절차상의 이유와 본가 법무팀의 관여 여부를 묻자, 한시우는 상법 제344조의 3과 특정 금융거래정보법의 예외 조항을 읊으며 그의 말을 단칼에 잘랐다. \"성북동 영감님의 법무팀이 영장 없이 들여다볼 수 없는 완벽한 블라인드 구조를 짜라는 겁니다. 그게 당신들 수임료에 포함된 값이니까.\"\n\n강 변호사의 이마에 식은땀이 맺혔다. 눈앞의 청년은 후계 구도에서 밀려나 투정 부리는 도련님이 아니었다. 서류에 명시된 다중 우회 출자 구조와 리스크 헷징 조항들은 수십 년 차 M&A 전문가조차 혀를 내두를 만큼 치밀했다. 강 변호사는 급히 자세를 고쳐 앉으며 깍듯한 존칭과 함께 내일 오전까지 모든 세팅을 마치겠다고 맹세하듯 답했다. 법무법인 로비를 나서자 매서운 겨울바람이 불어왔다. 여의도의 빌딩 숲 사이로 어스름이 깔리는 순간, 한시우의 폴더폰이 진동했다. 박성호 PB였다. \"이사님, 지시하신 20억 유동화 건, 내일 오전 중으로 입금 완료될 예정입니다.\" 보고를 듣는 한시우의 시선이 차갑게 빛나는 마천루들을 향했다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 저택을 벗어나는 빠른 템포로 진행하며, 중반부 이동 씬에서 뉴스를 통해 내적 확신을 다지는 정적인 긴장감을 부여. 후반부 법무법인 씬에서는 대화의 주도권을 쥐고 흔드는 속도감 있는 전개로 전문가를 굴복시키는 카타르시스를 연출.",
+  "protagonist_state": {
+    "equipment": [
+      "가죽 수첩",
+      "만년필",
+      "폴더폰"
+    ],
+    "injuries": "두통 완전히 가라앉음",
+    "mood": "완전한 해방감과 차가운 목적의식"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "재벌가 막내에 대한 의례적인 태도와 은근한 무시",
+      "justification": "자신이 제안하려던 허술한 구조를 논리적으로 박살 내고, 완벽한 블라인드 신탁 구조를 강제했기 때문",
+      "target": "강 변호사",
+      "to_state": "압도적인 법률 지식과 통제력에 대한 경외와 복종"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "한정호와의 독대를 마친 한시우가 서늘한 미소를 거두고 차가운 이성을 되찾는다.",
+      "goal": "아버지와의 대치 직후, 지체 없이 다음 계획으로 이동",
+      "key_events": [
+        "서재 문을 등지고 2층 복도를 걸어 내려오며 안주머니의 가죽 수첩을 확인",
+        "거실에 남아있던 고용인들의 시선을 무시하고 현관을 나섬",
+        "대기 중인 차량 뒷좌석에 탑승하며 운전기사에게 여의도행을 지시"
+      ],
+      "location": "성북동 본가 저택 2층 복도 -> 이동 중인 차량",
+      "summary": "서재 앞 복도에서 돌아선 한시우가 저택을 빠져나와 여의도로 향한다.",
+      "tension_level": 4,
+      "title": "저택을 나서는 발걸음",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "가죽 수첩에 적힌 미래의 기록이 현실의 뉴스 속보와 정확히 일치함을 확인하는 순간.",
+      "goal": "이란 핵 문제 뉴스를 통한 첫 투자 타당성 입증",
+      "key_events": [
+        "강변북로를 달리는 차량 안, 라디오에서 IAEA의 이란 핵 프로그램 유엔 안보리 회부 관련 긴급 뉴스가 흘러나옴",
+        "한시우가 폴더폰을 열어 날짜와 시간을 확인한 뒤 가죽 수첩의 첫 번째 타겟 지표와 대조함",
+        "국제 유가(WTI) 폭등 시나리오가 오차 없이 굴러가기 시작했음을 확인하고 입가에 옅은 미소를 지음"
+      ],
+      "location": "이동 중인 차량 내부",
+      "summary": "차량 이동 중 라디오 뉴스를 통해 이란 핵 위기를 확인하고 타이밍을 확신한다.",
+      "tension_level": 5,
+      "title": "확신으로 바뀌는 지표",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "강 변호사"
+      ],
+      "content": "",
+      "description": "재벌 3세의 단순한 변덕으로 치부하던 변호사를 법적 논리와 압도적인 구조 설계로 짓누른다.",
+      "goal": "가문의 감시를 피할 완벽한 페이퍼 컴퍼니 설립 요구",
+      "key_events": [
+        "여의도 법무법인 VIP 회의실, 강 변호사가 의례적인 미소로 한시우를 맞이함",
+        "한시우가 인사도 생략한 채 만년필로 직접 그린 복잡한 지분 구조도와 법인 설립 요건을 테이블에 던짐",
+        "강 변호사가 일반적인 자산 관리 명목의 차명 회사를 제안하자, 한시우가 상법 조항의 허점을 짚으며 본가 법무팀조차 뚫을 수 없는 완벽한 블라인드 신탁 구조를 요구함"
+      ],
+      "location": "여의도 대형 법무법인 VIP 회의실",
+      "summary": "여의도 대형 법무법인에서 강 변호사를 만나 SW인베스트먼트 설립을 지시한다.",
+      "tension_level": 7,
+      "title": "방화벽의 설계",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "강 변호사"
+      ],
+      "content": "",
+      "description": "어린 도련님이 아닌, 완벽한 통제력을 가진 괴물 앞임을 깨닫는 전문가의 내면.",
+      "goal": "전문가의 시선을 통해 한시우의 비범함을 객관적으로 노출",
+      "key_events": [
+        "한시우가 단 하루 만에 법인 등록과 계좌 개설을 끝낼 패스트트랙 비용으로 파격적인 수임료를 제시함",
+        "강 변호사가 서류에 적힌 치밀한 리스크 헷징 조항들을 훑어보며 등줄기에 식은땀을 흘림",
+        "강 변호사가 자세를 고쳐 앉고 깍듯한 존칭을 쓰며 내일 오전까지 모든 서류 작업을 완료하겠다고 확언함"
+      ],
+      "location": "여의도 대형 법무법인 VIP 회의실",
+      "summary": "강 변호사가 한시우의 치밀함에 압도되어 태도를 바꾼다.",
+      "tension_level": 6,
+      "title": "포식자의 증명",
+      "type": "side_glimpse"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우",
+        "박성호(전화 통화)"
+      ],
+      "content": "",
+      "description": "방화벽과 초기 자본이라는 두 개의 무기가 완성되기 직전의 고요한 긴장감.",
+      "goal": "모든 준비를 마치고 다음 날의 본격적인 자본 투입 예고",
+      "key_events": [
+        "어스름이 깔린 여의도 빌딩 숲으로 걸어 나온 한시우의 폴더폰이 진동함",
+        "전화를 건 박성호 PB가 내일 오전 20억 유동화 작업이 차질 없이 완료될 것임을 보고함",
+        "한시우가 짧은 지시를 남기고 일방적으로 전화를 끊어버림"
+      ],
+      "location": "여의도 법무법인 1층 로비 앞",
+      "summary": "법무법인을 나선 한시우가 박성호 PB의 전화를 받으며 다음 단계를 지시한다.",
+      "tension_level": 8,
+      "title": "전장의 입구",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "성북동 본가 저택 2층 복도",
+  "target_beat": "가문의 자금망에서 벗어날 독자적 법인(SW인베스트먼트)의 설립 요건을 확정하고, 다가올 시장 진입을 위한 외부 방화벽 구축 완료.",
+  "time_flow": "2006년 1월 늦은 오후 -> 저녁",
+  "title": "레이더 밖의 요새"
+}

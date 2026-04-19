@@ -1,0 +1,209 @@
+{
+  "schema": "geuldobi.loop_canary_scorecard.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "backfilled",
+  "role": "Loop-oriented bounded canary gate surface for narrative doctrine evaluation.",
+  "document_ref": "docs/2026-04-18/golden-canary-deepclone-probe-a-loop-canary-scorecard.md",
+  "evaluation_unit": [
+    "stage3_bounded_episode_tranche"
+  ],
+  "required_inputs": [
+    "projects/_canary/probe_a_stage3_ep3seam_r1/logs/stage3_canary_summary.json",
+    "projects/_canary/probe_a_stage3_ep3seam_r1/plans/blueprints/blueprint_0002.txt",
+    "projects/_canary/probe_a_stage3_ep3seam_r1/plans/blueprints/blueprint_0003.txt",
+    "projects/_canary/probe_a_stage3_ep3seam_r1/logs/artifacts/stage3/ep_0002/attempt_02/final_blueprint__dialogue_focused.json",
+    "projects/_canary/probe_a_stage3_ep3seam_r1/logs/artifacts/stage3/ep_0003/attempt_02/final_blueprint__emotion_focused.json",
+    "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+    "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
+    "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+  ],
+  "hard_gates": {
+    "episode_loop_contract_floor": {
+      "required_items": [
+        "pressure_visible",
+        "execution_visible",
+        "proof_visible",
+        "receipt_visible",
+        "observer_shift_visible",
+        "next_gate_visible"
+      ],
+      "minimum_hit_count": 4,
+      "forbidden_joint_miss": [
+        "receipt_visible",
+        "next_gate_visible"
+      ],
+      "status": "pass",
+      "evidence": [
+        "Episode 2 covers pressure, execution, proof, procedural receipt, observer shift, and a lawful next-day gate.",
+        "Episode 3 preserves the receipt result as confirmed seed capital, deepens observer shift through the brothers' reaction, and opens the father-study gate."
+      ],
+      "notes": [
+        "The seam tranche clears the loop floor with all six items represented across ep2-3."
+      ]
+    },
+    "receipt_transport_gate": {
+      "rule": "If a structural receipt appears in the tranche artifact, its trace must survive in at least two downstream surfaces.",
+      "status": "pass_with_warning",
+      "evidence": [
+        "Episode 2 ending_state fixes the protagonist as having secured the first 20억 liquidity procedure.",
+        "Episode 3 integrated scenario opens by naming that 20억 initial capital confirmation as the first cut through the family's leash.",
+        "Episode 3 scene_1 again treats the locked liquidity as active operating truth."
+      ],
+      "notes": [
+        "Artifact-to-artifact transport is now proven, but summary-level receipt wording is still thin."
+      ]
+    },
+    "anti_contamination_gate": {
+      "rule": "Donor surfaces may remain only as example-family language. Direct donor scene-copy or law-copy fails the gate.",
+      "status": "pass",
+      "evidence": [
+        "The seam uses this work's family hierarchy and PB-center conflict rather than donor-specific incidents.",
+        "PB and family-gatekeeper surfaces remain example-family flavor, not scene-copy logic."
+      ],
+      "notes": [
+        "Flavor remains seed-heavy, so this is a bounded pass rather than a purity pass."
+      ]
+    },
+    "lawful_bridge_gate": {
+      "rule": "The tranche must open a lawful next gate without replay drift, setup-only delay, or future-beat consumption.",
+      "status": "pass",
+      "evidence": [
+        "Episode 3 opening_transition is direct_continuation from the PB-center exit.",
+        "The receipt result is not replayed as exposition-only filler; it becomes the basis for the brothers scene and the father-study hook."
+      ],
+      "notes": []
+    }
+  },
+  "weighted_metrics": {
+    "loop_deadline_hit": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "The tranche reaches first proof/receipt before the opening deadline collapses and opens the next authority gate by episode 3."
+      ],
+      "notes": []
+    },
+    "structural_receipt_conversion": {
+      "weight": 20,
+      "status": "pass_with_repair",
+      "score": 14,
+      "evidence": [
+        "The reward matures from signed liquidation authority into confirmed initial capital that changes the protagonist's posture.",
+        "The receipt is still closer to a liquidity lock than a richer institutional seat or authority artifact."
+      ],
+      "notes": []
+    },
+    "receipt_transport_survival": {
+      "weight": 15,
+      "status": "pass_with_warning",
+      "score": 12,
+      "evidence": [
+        "Episode 2 ending_hook and ending_state carry the receipt logic.",
+        "Episode 3 opening and scene_1 keep that receipt alive as active operating truth."
+      ],
+      "notes": [
+        "The seam proof is real, but summary surfaces still under-report the receipt."
+      ]
+    },
+    "carryover_persistence": {
+      "weight": 15,
+      "status": "pass",
+      "score": 13,
+      "na_allowed": true,
+      "evidence": [
+        "Episode 3 begins with the PB-center exit and explicitly retains the 20억 confirmation as the cause of the next move."
+      ],
+      "notes": [
+        "This is a narrative carryover proof rather than an inventory carryover proof."
+      ]
+    },
+    "legal_bridge_efficiency": {
+      "weight": 15,
+      "status": "pass",
+      "score": 15,
+      "evidence": [
+        "The bridge from ep2 to ep3 is clean, direct, and opens a new authority field without consuming the father confrontation itself."
+      ],
+      "notes": []
+    },
+    "anti_contamination_pass": {
+      "weight": 10,
+      "status": "watch",
+      "score": 8,
+      "evidence": [
+        "PB/family gatekeeper example-family language is still prominent."
+      ],
+      "notes": []
+    },
+    "reward_rotation_health": {
+      "weight": 10,
+      "status": "pass_with_watch",
+      "score": 7,
+      "evidence": [
+        "The reward rotates from liquidity lock to emotional/social dominance and a larger authority gate."
+      ],
+      "notes": [
+        "The tranche is healthier than ep12, but still narrow enough that later openings must prove broader reward-class rotation."
+      ]
+    }
+  },
+  "watchlists": {
+    "anti_fatigue_risk": {
+      "status": "watch",
+      "red_flags": [
+        "same_receipt_family_repeats_across_two_or_more_tranches",
+        "proof_grows_without_observer_shift",
+        "next_gate_surface_collapses_to_one_hook_class",
+        "earned_access_is_replaced_by_gifted_access"
+      ],
+      "notes": [
+        "The seam is healthier now, but PB/family authority remains the dominant receipt family."
+      ]
+    },
+    "saturation_trigger": {
+      "status": "watch",
+      "red_flags": [
+        "authority_gain_rises_while_constraints_flatten",
+        "reward_size_rises_while_reader_payoff_stays_flat",
+        "signboard_and_next_gate_collapse_into_one_repeated_device"
+      ],
+      "notes": [
+        "No immediate saturation trigger, but this is still too short a run to clear saturation risk."
+      ]
+    }
+  },
+  "interpretation_bands": [
+    {
+      "band": "gate_fail",
+      "meaning": "Execution hold regardless of numeric score."
+    },
+    {
+      "band": "85-100",
+      "meaning": "Strong pass. Bounded realization candidate."
+    },
+    {
+      "band": "70-84",
+      "meaning": "Pass with repair. Apply one targeted fix and rerun."
+    },
+    {
+      "band": "55-69",
+      "meaning": "Weak pass. Doctrine promotion remains on hold."
+    },
+    {
+      "band": "<55",
+      "meaning": "Fail. Recheck tranche design or doctrine interpretation."
+    }
+  ],
+  "operator_fields": {
+    "target_project": "probe_a_stage3_ep3seam_r1",
+    "target_tranche": "Stage3 ep2->ep3 seam proof",
+    "target_stage": 3,
+    "gate_result": "all_loop_gates_pass_with_platform_warning",
+    "weighted_total": 84,
+    "weighted_total_after_na_adjustment": 84,
+    "operator_summary": "The ep2 procedural receipt now survives into ep3 opening and drives the next authority field. This is real seam proof, but not yet a fully closed Stage3 strong-pass baseline because receipt transport remains summary-light and reward-class breadth is still narrow.",
+    "next_action": "Treat ep2->ep3 receipt survival as proven. The next proof target is whether the father-study gate converts that seam gain into a richer structural receipt or institutional authority receipt."
+  }
+}

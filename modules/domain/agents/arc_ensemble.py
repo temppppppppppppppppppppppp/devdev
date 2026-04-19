@@ -707,7 +707,8 @@ _WUXIA_ENERGY_BLOCK = """\
   ### [V60.40] 화간 상태 체크포인트 필수
   각 화는 반드시 시작 상태와 종료 상태를 명시하라:
   - 시작 상태: 위치, 내공%, 부상, 소지품 (이전 화 종료 상태 기반 + 자연 회복 적용)
-  - 종료 상태: 위치, 내공%, 부상, 획득/소모 아이템
+  - 종료 상태: 위치, 내공%, 부상, 소지품 (종료 시 전체 목록)
+  - protagonist_items/items_consumed에는 새 획득·소모 delta만 기록
   - ⚠️ 내공이 화를 넘기며 계속 떨어지는 패턴은 REJECT 사유임"""
 
 
@@ -736,7 +737,8 @@ def _build_non_wuxia_energy_block(genre: str, critical_keys: list[str] | None = 
   ### [V60.40] 화간 상태 체크포인트 필수
   각 화는 반드시 시작 상태와 종료 상태를 명시하라:
   - 시작 상태: 위치, {_key_label}({_desc}), 부상, 소지품
-  - 종료 상태: 위치, {_key_label}({_desc}), 부상, 획득/소모 아이템
+  - 종료 상태: 위치, {_key_label}({_desc}), 부상, 소지품 (종료 시 전체 목록)
+  - protagonist_items/items_consumed에는 새 획득·소모 delta만 기록
   - ⚠️ "내공", "기력", "내력" 등 무협 용어 사용 시 REJECT"""
 
 
@@ -1910,12 +1912,12 @@ class ArcEnsembleGenerator(BaseAgent):
                         score -= 5
                         issues.append(f"소지품 미계승: {item}")
 
-        # 4. tactical_doc 품질 (25점) - [V60.73] 가변 페이싱 기준 (화당 500자)
+        # 4. tactical_doc 품질 (25점) - [V60.73] 가변 페이싱 기준 (화당 450자)
         tactical = candidate.get("tactical_doc", "")
         # [V60.37] 타입 안전성
         if not isinstance(tactical, str):
             tactical = str(tactical) if tactical else ""
-        min_length = candidate_ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 3화=1500자, 4화=2000자, 6화=3000자
+        min_length = candidate_ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 2화=900자, 4화=1800자, 6화=2700자
         recommended_length = candidate_ep_count * 600  # 권장: 화당 600자
         if len(tactical) < min_length:
             score -= 40  # 최소 기준 미달은 사실상 실격
@@ -2107,7 +2109,9 @@ class ArcEnsembleGenerator(BaseAgent):
                     clean_item = str(item).strip()[:60]
                     if clean_item:
                         lines.append(f"   ❌ {clean_item}")
-                lines.append("   ⚠️ items_acquired에 위 아이템명이 포함되면 즉시 REJECT됩니다.")
+                lines.append(
+                    "   ⚠️ protagonist_items(legacy alias: items_acquired)에 위 아이템명이 포함되면 즉시 REJECT됩니다."
+                )
 
         # 3. 기본 경고
         if not lines:

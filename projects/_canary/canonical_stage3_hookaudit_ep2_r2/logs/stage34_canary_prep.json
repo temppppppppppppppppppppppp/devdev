@@ -1,0 +1,54 @@
+{
+  "prepared_at": "2026-04-18T13:01:38",
+  "source_project": "_canary/canonical_stage23probe_r1_arc23only_r1",
+  "target_project": "_canary/canonical_stage34ab_ep12_r2",
+  "from_ep": 1,
+  "cleanup": {
+    "from_ep": 1,
+    "db_impact": {
+      "manuscripts": 2,
+      "state_logs": 2,
+      "episode_bibles": 2,
+      "causal_graph": 8,
+      "episode_meta": 2,
+      "episode_quality_labels": 2,
+      "stage4_attempts": 4,
+      "stage4_director_selections": 4,
+      "blueprints_kept": 7,
+      "orphan_chain_link_anchors": 2,
+      "blueprints_removed": 7,
+      "stage3_attempts": 7,
+      "stage3_director_selections": 7
+    },
+    "anchor_validation": {
+      "status": "ok",
+      "cleanup_status": "ok",
+      "minimum_truth_status": "ok",
+      "from_ep": 1,
+      "orphan_chain_links": [],
+      "fact_ledger_history_at_or_after": {},
+      "world_state_alive_npcs_at_or_after": [],
+      "world_state_active_items_at_or_after": [],
+      "world_state_last_updated_ep": 0,
+      "expected_minimum_world_state": {
+        "npc_names": [],
+        "relationships": {},
+        "active_items": []
+      },
+      "actual_minimum_world_state": {
+        "npc_names": [],
+        "relationships": {},
+        "active_items": []
+      },
+      "missing_world_state_npcs": [],
+      "missing_world_state_active_items": [],
+      "world_state_relationship_mismatches": []
+    },
+    "file_cleanup": {
+      "draft_files_removed": 2,
+      "log_entries_removed": 13,
+      "memory_entries_removed": 0,
+      "blueprint_files_removed": 7
+    }
+  }
+}

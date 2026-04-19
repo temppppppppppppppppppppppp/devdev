@@ -1,0 +1,4 @@
+{"timestamp": "2026-04-18 13:39:03", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-18 13:39:03", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "dialogue_focused", "score": 95, "final_verdict": "PASS_WITH_WARNING", "quality_risk": false, "revision_required": true}}
+{"timestamp": "2026-04-18 13:45:11", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-18 13:45:11", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "dialogue_focused", "score": 92, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}

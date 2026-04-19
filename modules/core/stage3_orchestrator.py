@@ -9,12 +9,13 @@ V68 lazy init: state_tracker, world_state, fact_ledger를 self.app에 할당
 
 import json as _json
 import logging as _logging
+import re as _re
 import time as _time
 import traceback as _traceback
 from dataclasses import dataclass
 
 from modules.core.artifact_logging import build_candidate_key, normalize_artifact_meta, snapshot_logged_artifact
-from modules.core.constants import ContextLimits, Emojis, ErrorMessages, smart_truncate
+from modules.core.constants import Emojis, ErrorMessages, smart_truncate
 from modules.core.context_advisor import (
     RetrievalSources,
     build_context_budget_ledger,
@@ -26,14 +27,14 @@ from modules.core.logging_keys import build_attempt_key, resolve_logging_session
 from modules.core.metrics_collector import get_metrics_collector
 from modules.core.project_support import build_style_guide_summary, resolve_project_pov_contract
 from modules.core.rationale_contract import (
-    resolve_comparison_notes_text,
     first_nonempty_text,
+    resolve_comparison_notes_text,
     resolve_selection_reason_text,
     resolve_structured_advisory_payload,
     resolve_verdict_reason_text,
 )
-from modules.core.stage3_envelope_builder import Stage3EnvelopeBuilder
 from modules.core.semantic_query_broker import SemanticQueryBroker
+from modules.core.stage3_envelope_builder import Stage3EnvelopeBuilder
 from modules.core.tactical_utils import extract_episode_tactical
 
 try:
@@ -126,7 +127,9 @@ def _first_stage3_text(*values: object) -> str:
     return first_nonempty_text(*values)
 
 
-def _resolve_stage3_validate_rationale(validate: dict | None, pipeline_result: dict | None = None) -> tuple[str, str, str]:
+def _resolve_stage3_validate_rationale(
+    validate: dict | None, pipeline_result: dict | None = None
+) -> tuple[str, str, str]:
     validate = validate if isinstance(validate, dict) else {}
     pipeline_result = pipeline_result if isinstance(pipeline_result, dict) else {}
     selection_reason = resolve_selection_reason_text(
@@ -2340,7 +2343,7 @@ class Stage3Orchestrator:
                 blueprint["_stage3_meta"]["scope_authority"] = compact_scope_authority
 
         if isinstance(blueprint, dict) and working_ep > 1:
-            inventory_gaps = self._detect_inventory_gaps(blueprint, arc_data)
+            inventory_gaps = self._detect_inventory_gaps(blueprint, arc_data, working_ep=working_ep)
             if inventory_gaps:
                 blueprint["_inventory_gaps"] = inventory_gaps
                 ctx.ui.log(
@@ -3076,24 +3079,133 @@ class Stage3Orchestrator:
             "director_thinking": str(validate.get("_director_thinking", "") or ""),
         }
 
-    def _detect_inventory_gaps(self, blueprint: dict, arc_data: dict) -> list[dict]:
+    @staticmethod
+    def _extract_blueprint_equipment_items(blueprint: dict | None) -> set[str]:
+        if not isinstance(blueprint, dict):
+            return set()
+        protagonist_state = blueprint.get("protagonist_state", {})
+        if not isinstance(protagonist_state, dict):
+            return set()
+        equipment = protagonist_state.get("equipment", [])
+        if not isinstance(equipment, list):
+            return set()
+        return {str(item).strip() for item in equipment if str(item or "").strip()}
+
+    @staticmethod
+    def _inventory_semantic_tokens(value: str) -> set[str]:
+        text = str(value or "").strip().lower()
+        if not text:
+            return set()
+        text = _re.sub(r"['\"`“”‘’\[\]\(\){}<>:;,.!?/\\|+-]", " ", text)
+        return {token for token in _re.findall(r"[a-z0-9]+|[가-힣]{2,}", text) if token and token not in {"the", "and"}}
+
+    @classmethod
+    def _inventory_items_semantically_match(cls, left: str, right: str) -> bool:
+        left_text = str(left or "").strip()
+        right_text = str(right or "").strip()
+        if not left_text or not right_text:
+            return False
+        if left_text == right_text:
+            return True
+
+        left_lower = left_text.lower()
+        right_lower = right_text.lower()
+        if len(left_lower) >= 6 and left_lower in right_lower:
+            return True
+        if len(right_lower) >= 6 and right_lower in left_lower:
+            return True
+
+        left_tokens = cls._inventory_semantic_tokens(left_text)
+        right_tokens = cls._inventory_semantic_tokens(right_text)
+        if not left_tokens or not right_tokens:
+            return False
+        overlap = left_tokens & right_tokens
+        if len(overlap) >= 3:
+            return True
+        if len(overlap) >= 2 and any(token.isascii() for token in overlap):
+            return True
+        return False
+
+    @classmethod
+    def _narrative_semantically_mentions_item(cls, item: str, narrative_text: str) -> bool:
+        item_text = str(item or "").strip()
+        text = str(narrative_text or "").strip()
+        if not item_text or not text:
+            return False
+        if item_text in text:
+            return True
+
+        item_tokens = cls._inventory_semantic_tokens(item_text)
+        text_tokens = cls._inventory_semantic_tokens(text)
+        if not item_tokens or not text_tokens:
+            return False
+        overlap = item_tokens & text_tokens
+        if len(overlap) >= 3:
+            return True
+        if len(item_tokens) <= 3 and overlap == item_tokens:
+            return True
+        return False
+
+    def _load_previous_blueprint_owned_items(self, current_ep: int) -> set[str]:
+        if current_ep <= 1:
+            return set()
+        db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+        if db is None or not hasattr(db, "get_previous_blueprint"):
+            return set()
+        try:
+            previous_blueprint = db.get_previous_blueprint(current_ep)
+        except Exception as prev_err:
+            _logging.debug("[SilentPass:S3] previous blueprint inventory fallback failed: %s", prev_err)
+            return set()
+        return self._extract_blueprint_equipment_items(previous_blueprint)
+
+    def _get_inventory_constraint_db(self):
+        constraint_db = getattr(self.app, "constraint_db", None)
+        if constraint_db is not None:
+            return constraint_db
+        current_project = getattr(self.ctx, "current_project", None)
+        if current_project is None:
+            return None
+        try:
+            from modules.core.constraint_db import ConstraintDB
+
+            genre_code = ""
+            selected_genre = getattr(self.ctx, "selected_genre", None)
+            if isinstance(selected_genre, dict):
+                genre_code = str(selected_genre.get("type", "") or "").strip()
+            constraint_db = ConstraintDB(current_project, genre=genre_code or "wuxia")
+        except Exception as cdb_err:
+            _logging.debug("[SilentPass:S3] ConstraintDB lazy init failed: %s", cdb_err)
+            return None
+        try:
+            setattr(self.app, "constraint_db", constraint_db)
+        except Exception:
+            pass
+        return constraint_db
+
+    def _detect_inventory_gaps(self, blueprint: dict, arc_data: dict, *, working_ep: int | None = None) -> list[dict]:
         """[TF-49] Blueprint 참조 아이템 중 현재 미보유 항목 탐지."""
         ctx = self.ctx
 
         # 1. 현재 소지품
         owned = set()
+        previous_blueprint_owned = set()
         if ctx.world_state:
             try:
                 owned = set(ctx.world_state.get_owned_items())
             except Exception as e:
                 _logging.debug("[SilentPass:S3] get_owned_items failed: %s", e)
         if not owned:
-            _cdb = getattr(self.app, "constraint_db", None)
+            _cdb = self._get_inventory_constraint_db()
             if _cdb:
                 try:
                     owned = set(_cdb.get_current_inventory(arc_data.get("arc_no", 1) - 1))
                 except Exception as e:
                     _logging.debug("[SilentPass:S3] get_current_inventory fallback failed: %s", e)
+        if working_ep and int(working_ep) > 1:
+            previous_blueprint_owned = self._load_previous_blueprint_owned_items(int(working_ep))
+            if not owned:
+                owned = set(previous_blueprint_owned)
 
         # 2. Arc 계획된 신규 아이템 (미보유 중 이번 Arc에서 획득 예정)
         _sc = arc_data.get("state_constraints", {}) if isinstance(arc_data, dict) else {}
@@ -3135,12 +3247,46 @@ class Stage3Orchestrator:
                 if item and item in integrated and item not in referenced:
                     referenced[item] = "integrated_scenario"
 
+        narrative_text_parts: list[str] = []
+        if isinstance(integrated, str) and integrated.strip():
+            narrative_text_parts.append(integrated)
+        if isinstance(scenes, list):
+            for scene in scenes:
+                if isinstance(scene, dict):
+                    scene_text = " ".join(str(v) for v in scene.values() if isinstance(v, str))
+                elif isinstance(scene, str):
+                    scene_text = scene
+                else:
+                    scene_text = ""
+                if scene_text.strip():
+                    narrative_text_parts.append(scene_text)
+        narrative_text = "\n".join(narrative_text_parts)
+        seeded_planned_items = {
+            item for item in planned if self._narrative_semantically_mentions_item(item, narrative_text)
+        }
+
         # 4. 갭 = 참조됨 + 미보유
-        return [
-            {"item": item, "source": src, "note": "현재 미보유 — 획득 장면 필요"}
-            for item, src in referenced.items()
-            if item not in owned
-        ]
+        gaps: list[dict] = []
+        for item, src in referenced.items():
+            owned_by_authority = item in owned or any(
+                self._inventory_items_semantically_match(item, owned_item) for owned_item in owned
+            )
+            if owned_by_authority:
+                continue
+
+            owned_by_prev_blueprint_alias = item in previous_blueprint_owned or any(
+                self._inventory_items_semantically_match(item, prev_item) for prev_item in previous_blueprint_owned
+            )
+            if owned_by_prev_blueprint_alias:
+                continue
+
+            if any(
+                self._inventory_items_semantically_match(item, planned_item) for planned_item in seeded_planned_items
+            ):
+                continue
+
+            gaps.append({"item": item, "source": src, "note": "현재 미보유 — 획득 장면 필요"})
+        return gaps
 
     def _handle_failure(
         self, working_ep, pipeline_result, success_count, fail_count, arc_no: int | None = None, blueprint=None

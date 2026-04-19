@@ -1541,18 +1541,48 @@ class ThreePhaseBlueprintRuntime:
 
         surface_guidance = progression_pkt.get("surface_guidance", [])
         future_reservations = progression_pkt.get("future_beat_reservations", [])
+        lawful_window = progression_pkt.get("lawful_repetition_window", {})
+        next_gate_strength = progression_pkt.get("next_gate_strength_mode", {})
         has_surface_guidance = isinstance(surface_guidance, list) and bool(surface_guidance)
         has_future_reservations = isinstance(future_reservations, list) and bool(future_reservations)
-        if not has_surface_guidance and not has_future_reservations:
+        has_lawful_window = isinstance(lawful_window, dict) and bool(lawful_window)
+        has_next_gate_strength = isinstance(next_gate_strength, dict) and bool(next_gate_strength)
+        if (
+            not has_surface_guidance
+            and not has_future_reservations
+            and not has_lawful_window
+            and not has_next_gate_strength
+        ):
             return base
 
         lines = [base]
+        if has_next_gate_strength and next_gate_strength.get("mode") == "foreshadow_only":
+            lines.append("[Next-gate strength modulator]")
+            reason = str(next_gate_strength.get("reason", "") or "").strip()
+            if reason:
+                lines.append(f"- {reason}")
         if has_surface_guidance:
-            lines.append("[Replay reroute guidance]")
-            for guidance in surface_guidance[:4]:
+            if has_lawful_window:
+                lines.append("[Replay reroute guidance — bounded]")
+                lines.append(
+                    "- 아래 guidance는 동일 장면 재탕 금지용이며, lawful repetition이나 authority escalation surface 자체를 막는 지시는 아닙니다."
+                )
+            else:
+                lines.append("[Replay reroute guidance]")
+            for guidance in surface_guidance[:6]:
                 text = str(guidance or "").strip()
                 if text:
                     lines.append(f"- {text}")
+        if has_lawful_window and lawful_window.get("mode") == "allow_escalated_repeat":
+            lines.append("[Lawful repetition window]")
+            if lawful_window.get("allow_same_location_if_goal_changes"):
+                lines.append(
+                    "- 같은 장소라도 장면 목표가 달라졌다면 replay 대신 lawful repetition으로 전진할 수 있습니다."
+                )
+            if lawful_window.get("allow_same_counterparty_if_goal_changes"):
+                lines.append("- 같은 상대라도 대화 목적이나 권력 위계가 달라지면 새 장면으로 설계할 수 있습니다.")
+            if lawful_window.get("allow_same_channel_if_decision_escalates"):
+                lines.append("- 같은 통화/채널도 결정·단언·압박 수위가 올라가면 escalation surface가 될 수 있습니다.")
         if has_future_reservations:
             lines.append("[Next-episode reserved beat]")
             for guidance in future_reservations[:3]:
@@ -1895,6 +1925,75 @@ class ThreePhaseBlueprintRuntime:
             score=score,
         )
 
+    def _refresh_phase3_validate_phase_after_reaudit(
+        self,
+        *,
+        pipeline_result: dict,
+        validation_result: dict,
+    ) -> None:
+        validate_phase = pipeline_result.setdefault("phases", {}).setdefault("validate", {})
+        selection_reason = resolve_selection_reason_text(validation_result.get("selection_reason", ""))
+        verdict_reason = str(
+            validation_result.get("verdict_reason")
+            or validation_result.get("summary")
+            or validation_result.get("feedback", "")
+            or selection_reason
+            or ""
+        ).strip()
+
+        validate_phase["status"] = "complete"
+        validate_phase["verdict"] = validation_result.get("verdict", validate_phase.get("verdict", ""))
+        validate_phase["issues_count"] = len(validation_result.get("issues", []))
+        validate_phase["confidence"] = validation_result.get("confidence", validate_phase.get("confidence", 0))
+        validate_phase["score"] = validation_result.get("score", validate_phase.get("score", 0))
+        validate_phase["phase"] = validation_result.get("phase", validate_phase.get("phase", "unknown"))
+        validate_phase["comparison_notes"] = validation_result.get(
+            "comparison_notes", validate_phase.get("comparison_notes", "")
+        )
+        validate_phase["selection_reason"] = selection_reason
+        validate_phase["verdict_reason"] = verdict_reason
+        validate_phase["fix_scope"] = validation_result.get("fix_scope", "")
+        validate_phase["fix_scope_reasoning"] = validation_result.get("fix_scope_reasoning", "")
+        validate_phase["quality_risk"] = bool(validation_result.get("quality_risk", False))
+        validate_phase["revision_required"] = bool(validation_result.get("revision_required", False))
+
+        binding_issue_count = validation_result.get("binding_prevalidation_issue_count", 0)
+        try:
+            binding_issue_count = int(binding_issue_count or 0)
+        except (TypeError, ValueError):
+            binding_issue_count = 0
+        if binding_issue_count > 0:
+            validate_phase["binding_prevalidation_issue_count"] = binding_issue_count
+        else:
+            validate_phase.pop("binding_prevalidation_issue_count", None)
+
+        binding_categories = validation_result.get("binding_prevalidation_categories") or []
+        if binding_categories:
+            validate_phase["binding_prevalidation_categories"] = list(binding_categories)
+        else:
+            validate_phase.pop("binding_prevalidation_categories", None)
+
+        for key in (
+            "binding_regenerate_only_categories",
+            "binding_regenerate_only_reason",
+            "fix_pack",
+            "advisory_fix_pack",
+            "repair_contract",
+            "scope_authority",
+            "local_patch_gate",
+            "partial_fix_eval",
+        ):
+            value = validation_result.get(key)
+            if value:
+                if isinstance(value, dict):
+                    validate_phase[key] = dict(value)
+                elif isinstance(value, list):
+                    validate_phase[key] = list(value)
+                else:
+                    validate_phase[key] = value
+            else:
+                validate_phase.pop(key, None)
+
     def _record_phase3_contradictions(
         self,
         *,
@@ -2162,6 +2261,11 @@ class ThreePhaseBlueprintRuntime:
                 executed_patch_attempts += 1
             if iteration_result.fix_ok:
                 pipeline_result["final_verdict"] = "PASS"
+                pipeline_result["last_score"] = current_validation.get("score", score)
+                self._refresh_phase3_validate_phase_after_reaudit(
+                    pipeline_result=pipeline_result,
+                    validation_result=current_validation,
+                )
                 logging.info("[TF-32-V] Blueprint patch resolved -> PASS")
                 return _ThreePhasePassWithFixResult(best_blueprint=current_blueprint)
             if iteration_result.should_break:

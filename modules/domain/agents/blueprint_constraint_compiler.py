@@ -90,6 +90,185 @@ def _resolve_authoritative_arc_timeline_text(arc_data: dict | None) -> str:
     return ""
 
 
+def _render_timeline_point_text(raw: object) -> str:
+    if isinstance(raw, dict):
+        for field in ("description", "expression", "text", "raw", "표현"):
+            text = str(raw.get(field, "") or "").strip()
+            if text:
+                return text
+        year = str(raw.get("year", "") or "").strip()
+        month = str(raw.get("month", "") or "").strip()
+        day = str(raw.get("day", "") or "").strip()
+        parts = [part for part in (year, month, day) if part]
+        if parts:
+            return " ".join(parts)
+    return str(raw or "").strip()
+
+
+def _parse_timeline_year_month(raw: object, *, pick: str = "start") -> tuple[int, int] | None:
+    if isinstance(raw, dict):
+        year = raw.get("year")
+        month = raw.get("month")
+        if year is not None and month is not None:
+            try:
+                return int(year), int(month)
+            except (TypeError, ValueError):
+                return None
+        raw = (
+            raw.get("표현")
+            or raw.get("expression")
+            or raw.get("text")
+            or raw.get("raw")
+            or raw.get("description")
+            or ""
+        )
+    text = str(raw or "").strip()
+    if not text:
+        return None
+    year_match = re.search(r"(\d{4})년", text)
+    month_match = re.findall(r"(\d{1,2})월", text)
+    if not month_match:
+        return None
+    month = int(month_match[0] if pick == "start" else month_match[-1])
+    year = int(year_match.group(1)) if year_match else 0
+    return year, month
+
+
+def _extract_leading_episode_timeline_anchor(raw: object) -> tuple[str, tuple[int, int] | None]:
+    text = str(raw or "").strip()
+    if not text:
+        return "", None
+    lead_lines = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip() and not line.strip().startswith("[") and not line.strip().startswith("Beat ")
+    ]
+    if lead_lines and re.match(r"^제\s*\d+화[:：]?", lead_lines[0]):
+        lead_lines = lead_lines[1:]
+    lead_segments: list[str] = []
+    for line in lead_lines[:2]:
+        sentence = re.split(r"[.!?]", line, maxsplit=1)[0].strip()
+        if sentence:
+            lead_segments.append(sentence)
+    lead = " ".join(lead_segments)[:240]
+    match = re.search(
+        r"((?:\d{4}년\s*)?\d{1,2}월(?:\s*\d{1,2}일)?(?:\s*(?:초|중순|말))?(?:\s*(?:오전|오후|새벽|아침|점심|저녁|밤|심야|자정|정오))?)",
+        lead,
+    )
+    if not match:
+        return "", None
+    anchor = match.group(1).strip(" ,.")
+    return anchor, _parse_timeline_year_month(anchor, pick="start")
+
+
+def _excerpt_implies_immediate_continuation(raw: object) -> bool:
+    text = str(raw or "").strip()
+    if not text:
+        return False
+    lead_lines = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip() and not line.strip().startswith("[") and not line.strip().startswith("Beat ")
+    ]
+    if lead_lines and re.match(r"^제\s*\d+화[:：]?", lead_lines[0]):
+        lead_lines = lead_lines[1:]
+    lead = " ".join(lead_lines[:2])[:240]
+    return any(
+        marker in lead
+        for marker in (
+            "직후",
+            "곧이어",
+            "곧바로",
+            "같은 시각",
+            "같은 날",
+            "당일",
+            "바로 다음",
+            "이어서",
+        )
+    )
+
+
+def _resolve_arc_end_episode_marker(arc_data: dict | None) -> int:
+    payload = arc_data if isinstance(arc_data, dict) else {}
+
+    def _coerce_positive_int(value: object) -> int:
+        try:
+            marker = int(value)
+        except (TypeError, ValueError):
+            return 0
+        return marker if marker > 0 else 0
+
+    ep_end = _coerce_positive_int(payload.get("ep_end"))
+    if ep_end > 0:
+        return ep_end
+    ep_start = _coerce_positive_int(payload.get("ep_start"))
+    ep_count = _coerce_positive_int(payload.get("ep_count"))
+    if ep_start > 0 and ep_count > 0:
+        return ep_start + ep_count - 1
+    return 0
+
+
+def _resolve_authoritative_episode_timeline_anchor(
+    arc_data: dict | None,
+    *,
+    ep_num: int = 0,
+    prev_blueprint: dict | None = None,
+) -> tuple[str, tuple[int, int] | None]:
+    payload = arc_data if isinstance(arc_data, dict) else {}
+    state_changes = _coerce_mapping(payload.get("state_changes"))
+    timeline = _coerce_mapping(state_changes.get("timeline"))
+    start_raw = timeline.get("start")
+    end_raw = timeline.get("end")
+    start_point = _parse_timeline_year_month(start_raw, pick="start")
+    end_point = _parse_timeline_year_month(end_raw, pick="end")
+    arc_end_ep = _resolve_arc_end_episode_marker(payload)
+
+    if ep_num > 0:
+        excerpt_text = str(
+            extract_episode_tactical(
+                payload.get("tactical_doc", ""),
+                ep_num,
+                fallback_full=False,
+            )
+            or ""
+        ).strip()
+        if not excerpt_text:
+            excerpt_text = str(
+                extract_episode_tactical(
+                    payload.get("tactical_doc", ""),
+                    ep_num,
+                    episode_details=payload.get("episode_details"),
+                    fallback_full=False,
+                )
+                or ""
+            ).strip()
+        excerpt_anchor, excerpt_point = _extract_leading_episode_timeline_anchor(excerpt_text)
+        if excerpt_point is not None:
+            return excerpt_anchor or excerpt_text, excerpt_point
+        prev_time_flow = str(prev_blueprint.get("time_flow") if isinstance(prev_blueprint, dict) else "").strip()
+        prev_point = _parse_timeline_year_month(prev_time_flow, pick="start")
+        if _excerpt_implies_immediate_continuation(excerpt_text):
+            if ep_num > 0 and arc_end_ep > 0 and ep_num >= arc_end_ep and end_point is not None:
+                if prev_point is None or prev_point != end_point:
+                    return _render_timeline_point_text(end_raw), end_point
+            if prev_point is not None:
+                return prev_time_flow, prev_point
+
+    if ep_num > 0 and arc_end_ep > 0 and ep_num >= arc_end_ep and end_point is not None:
+        return _render_timeline_point_text(end_raw), end_point
+    if start_point is not None:
+        return _render_timeline_point_text(start_raw), start_point
+    if end_point is not None:
+        return _render_timeline_point_text(end_raw), end_point
+    return "", None
+
+
+def _timeline_year_month_conflicts(left: object, right: object) -> bool:
+    left_point = _parse_timeline_year_month(left, pick="start")
+    right_point = _parse_timeline_year_month(right, pick="start")
+    return bool(left_point is not None and right_point is not None and left_point != right_point)
+
+
 def _resolve_cross_stage_protagonist_carryover(arc_data: dict | None) -> dict:
     return _coerce_mapping(_resolve_cross_stage_packet(arc_data).get("protagonist_carryover"))
 
@@ -201,21 +380,33 @@ def _collect_fact_lock_institution_anchors(
 
     manuscript_institution_names = _collect_names([ms_text]) if ms_text else set()
 
-    blueprint_texts: list[str] = []
+    blueprint_location_texts: list[str] = []
+    blueprint_narrative_texts: list[str] = []
     if bp:
         bp_scenes = bp.get("scene_breakdown", {})
         if isinstance(bp_scenes, dict):
             for scene in bp_scenes.values():
                 if isinstance(scene, dict):
-                    blueprint_texts.append(str(scene.get("location", "") or ""))
-        blueprint_texts.append(str(bp.get("end_location", "") or ""))
+                    blueprint_location_texts.append(str(scene.get("location", "") or ""))
+        blueprint_location_texts.append(str(bp.get("end_location", "") or ""))
         for key in ("integrated_scenario", "core_tension", "expected_ending", "ending_hook", "time_flow"):
-            blueprint_texts.append(str(bp.get(key, "") or ""))
+            blueprint_narrative_texts.append(str(bp.get(key, "") or ""))
         bp_ending_state = bp.get("ending_state", {})
         if isinstance(bp_ending_state, dict):
             for value in bp_ending_state.values():
-                blueprint_texts.append(str(value or ""))
-    blueprint_institution_names = _collect_names(blueprint_texts)
+                blueprint_location_texts.append(str(value or ""))
+    blueprint_location_names = _collect_names(blueprint_location_texts)
+    filtered_blueprint_location_names = _filter_competing_institution_names(
+        preferred_names=manuscript_institution_names,
+        candidate_names=blueprint_location_names,
+        suffixes=_inst_suffixes_ordered,
+    )
+    blueprint_narrative_names = _collect_names(blueprint_narrative_texts)
+    filtered_blueprint_narrative_names = _filter_competing_institution_names(
+        preferred_names=manuscript_institution_names | filtered_blueprint_location_names,
+        candidate_names=blueprint_narrative_names,
+        suffixes=_inst_suffixes_ordered,
+    )
 
     arc_texts: list[str] = []
     if isinstance(arc_data, dict):
@@ -238,12 +429,8 @@ def _collect_fact_lock_institution_anchors(
     arc_institution_names = _collect_names(arc_texts)
 
     institution_names = set(manuscript_institution_names)
-    filtered_blueprint_names = _filter_competing_institution_names(
-        preferred_names=institution_names,
-        candidate_names=blueprint_institution_names,
-        suffixes=_inst_suffixes_ordered,
-    )
-    institution_names.update(filtered_blueprint_names)
+    institution_names.update(filtered_blueprint_location_names)
+    institution_names.update(filtered_blueprint_narrative_names)
     filtered_arc_names = _filter_competing_institution_names(
         preferred_names=institution_names,
         candidate_names=arc_institution_names,
@@ -251,7 +438,8 @@ def _collect_fact_lock_institution_anchors(
     )
     ordered_names = _merge_authority_ordered_names(
         manuscript_institution_names,
-        filtered_blueprint_names,
+        filtered_blueprint_location_names,
+        filtered_blueprint_narrative_names,
         filtered_arc_names,
         limit=4,
     )
@@ -355,6 +543,21 @@ class BlueprintConstraintCompiler:
         if future_beat_reservations:
             episode_progression_packet = dict(episode_progression_packet or {})
             episode_progression_packet["future_beat_reservations"] = future_beat_reservations
+        next_gate_strength_mode = self._build_episode_progression_next_gate_strength_mode(
+            must_focus=must_focus,
+            stop_line=stop_line,
+        )
+        if next_gate_strength_mode:
+            episode_progression_packet = dict(episode_progression_packet or {})
+            episode_progression_packet["next_gate_strength_mode"] = next_gate_strength_mode
+        lawful_repetition_window = self._build_episode_progression_lawful_repetition_window(
+            must_focus=must_focus,
+            stop_line=stop_line,
+            episode_progression_packet=episode_progression_packet,
+        )
+        if lawful_repetition_window:
+            episode_progression_packet = dict(episode_progression_packet or {})
+            episode_progression_packet["lawful_repetition_window"] = lawful_repetition_window
         progression_surface_guidance = self._build_episode_progression_surface_guidance(
             must_focus=must_focus,
             stop_line=stop_line,
@@ -482,10 +685,37 @@ class BlueprintConstraintCompiler:
                         parts.append(f"type:{scene_type}")
                     if parts:
                         lines.append("    - " + " | ".join(parts))
+            next_gate_strength = progression_pkt.get("next_gate_strength_mode", {})
+            if isinstance(next_gate_strength, dict) and next_gate_strength.get("mode") == "foreshadow_only":
+                lines.append("  - [next-gate 강도 조절]")
+                introduced_targets = ", ".join(
+                    self._episode_progression_target_family_label(item)
+                    for item in next_gate_strength.get("introduced_target_families", [])[:3]
+                )
+                reserved_targets = ", ".join(
+                    self._episode_progression_target_family_label(item)
+                    for item in next_gate_strength.get("reserved_target_families", [])[:3]
+                )
+                if introduced_targets and reserved_targets:
+                    lines.append(
+                        f"    - 새 타깃({introduced_targets})은 foreshadow 수준으로만 남기고 현재 미해결 타깃({reserved_targets})을 먼저 마감하라."
+                    )
+                reason = str(next_gate_strength.get("reason", "") or "").strip()
+                if reason:
+                    lines.append(f"    - {self._fit_prompt_text(reason, 140)}")
+            lawful_window = progression_pkt.get("lawful_repetition_window", {})
+            if isinstance(lawful_window, dict) and lawful_window.get("mode") == "allow_escalated_repeat":
+                lines.append("  - [lawful repetition window]")
+                if lawful_window.get("allow_same_location_if_goal_changes"):
+                    lines.append("    - 같은 장소라도 장면 목표가 바뀌면 lawful repetition으로 전진 가능")
+                if lawful_window.get("allow_same_counterparty_if_goal_changes"):
+                    lines.append("    - 같은 상대라도 권력 위계/대화 목적이 달라지면 재사용 가능")
+                if lawful_window.get("allow_same_channel_if_decision_escalates"):
+                    lines.append("    - 같은 통화/채널이라도 결정·단언·압박 수위가 올라가면 replay로만 보지 말 것")
             surface_guidance = progression_pkt.get("surface_guidance", [])
             if isinstance(surface_guidance, list) and surface_guidance:
                 lines.append("  - [같은 축 반복 방지용 진행 surface 가이드]")
-                for guidance in surface_guidance[:4]:
+                for guidance in surface_guidance[:6]:
                     text = str(guidance or "").strip()
                     if text:
                         lines.append(f"    - {self._fit_prompt_text(text, 140)}")
@@ -964,9 +1194,20 @@ class BlueprintConstraintCompiler:
         ms_text = str(prev_manuscript_ending or "").strip()
         bp = prev_blueprint if isinstance(prev_blueprint, dict) else {}
         is_arc_opening = _is_arc_opening_episode(arc_data=arc_data, ep_num=ep_num)
+        authoritative_episode_time_text, _ = _resolve_authoritative_episode_timeline_anchor(arc_data, ep_num=ep_num)
+        prev_time_anchor_text = ""
+        ending_state = bp.get("ending_state", {})
+        if isinstance(ending_state, dict):
+            raw_timeline = ending_state.get("timeline", {})
+            prev_time_anchor_text = _render_timeline_point_text(raw_timeline)
+        if not prev_time_anchor_text:
+            prev_time_anchor_text = str(bp.get("time_flow", "") or "").strip()
         suppress_prev_opening_fact_lock = is_arc_opening and (
             bool(_resolve_authoritative_arc_opening_location(arc_data))
             or bool(_resolve_authoritative_arc_timeline_text(arc_data))
+        )
+        suppress_prev_time_fact_lock = _timeline_year_month_conflicts(
+            prev_time_anchor_text, authoritative_episode_time_text
         )
 
         if not ms_text and not bp:
@@ -990,12 +1231,16 @@ class BlueprintConstraintCompiler:
 
         # ── 2. Time/day anchor ──
         time_flow = bp.get("time_flow", "")
-        ending_state = bp.get("ending_state", {})
-        if isinstance(ending_state, dict) and ending_state.get("timeline") and not suppress_prev_opening_fact_lock:
+        if (
+            isinstance(ending_state, dict)
+            and ending_state.get("timeline")
+            and not suppress_prev_opening_fact_lock
+            and not suppress_prev_time_fact_lock
+        ):
             tl = ending_state["timeline"]
             tl_str = ", ".join(f"{k}:{v}" for k, v in tl.items()) if isinstance(tl, dict) else str(tl)
             anchors.append({"category": "시간", "fact": f"직전 종료 시점: {str(tl_str)[:120]}"})
-        elif time_flow and not suppress_prev_opening_fact_lock:
+        elif time_flow and not suppress_prev_opening_fact_lock and not suppress_prev_time_fact_lock:
             anchors.append({"category": "시간", "fact": f"직전 시간 흐름: {str(time_flow)[:120]}"})
 
         # ── 3. Ending hook anchor (prevents rewrite of how the previous ep ended) ──
@@ -1081,27 +1326,6 @@ class BlueprintConstraintCompiler:
                     break
             return ordered
 
-        def _parse_timeline_point(raw: object, *, pick: str) -> tuple[int, int] | None:
-            if isinstance(raw, dict):
-                year = raw.get("year")
-                month = raw.get("month")
-                if year is not None and month is not None:
-                    try:
-                        return int(year), int(month)
-                    except (TypeError, ValueError):
-                        return None
-                raw = raw.get("표현") or raw.get("expression") or raw.get("text") or raw.get("raw") or ""
-            text = str(raw or "").strip()
-            if not text:
-                return None
-            year_match = re.search(r"(\d{4})년", text)
-            month_match = re.findall(r"(\d{1,2})월", text)
-            if not month_match:
-                return None
-            month = int(month_match[0] if pick == "start" else month_match[-1])
-            year = int(year_match.group(1)) if year_match else 0
-            return year, month
-
         def _season_from_month(month: int) -> str:
             if month in (12, 1, 2):
                 return "겨울"
@@ -1175,15 +1399,19 @@ class BlueprintConstraintCompiler:
             if any(marker in excerpt_text for marker in ("다음 날", "다음날", "이튿날", "익일")):
                 time_truths.append("이번 화는 직전 화 직후/다음 날 축에서 시작한다.")
 
-            timeline = arc_data.get("state_changes", {}).get("timeline", {})
-            if isinstance(timeline, dict):
-                start_point = _parse_timeline_point(timeline.get("start"), pick="start")
-                end_point = _parse_timeline_point(timeline.get("end"), pick="end")
-                ref_point = start_point or end_point
-                if ref_point is not None:
-                    year, month = ref_point
-                    prefix = f"{year}년 {month}월" if year > 0 else f"{month}월"
-                    time_truths.append(f"현재 Arc 시간축은 {prefix}({_season_from_month(month)} 축)이다.")
+            authoritative_episode_time_text, authoritative_episode_point = (
+                _resolve_authoritative_episode_timeline_anchor(
+                    arc_data,
+                    ep_num=ep_num,
+                    prev_blueprint=bp,
+                )
+            )
+            if authoritative_episode_point is not None:
+                year, month = authoritative_episode_point
+                prefix = f"{year}년 {month}월" if year > 0 else f"{month}월"
+                time_truths.append(f"현재 Arc 시간축은 {prefix}({_season_from_month(month)} 축)이다.")
+            elif authoritative_episode_time_text:
+                time_truths.append(f"현재 Arc 시간 진실: {authoritative_episode_time_text[:120]}")
 
             _inst_suffixes_ordered = (
                 "투자증권",
@@ -1248,8 +1476,7 @@ class BlueprintConstraintCompiler:
             return []
 
         blocked_families = episode_progression_packet.get("blocked_scene_families", [])
-        if not isinstance(blocked_families, list) or len(blocked_families) < 2:
-            return []
+        has_replay_pressure = isinstance(blocked_families, list) and len(blocked_families) >= 2
 
         must_focus_text = ""
         if isinstance(must_focus, dict):
@@ -1259,19 +1486,83 @@ class BlueprintConstraintCompiler:
         if isinstance(stop_line, dict):
             next_stop_text = str(stop_line.get("content", "") or "").strip()
 
-        guidance: list[str] = [
-            "시작 anchor 계승은 짧게 처리하고 이번 화의 주 장면은 직전 대치의 결과 이후 단계로 이동하라.",
-            "같은 장소를 다시 써야 하면 복도, 대기 구역, 창구, 이동 동선 같은 하위 공간으로 분산하라.",
-            "직전 화와 같은 2인 대치를 주 장면으로 반복하지 말고 보조 인물이나 기관 결정 라인을 열어라.",
-            "MUST_FOCUS는 협상 재탕보다 승인, 전달, 집행, 후속 처리처럼 앞으로 전진하는 surface에서 소화하라.",
-        ]
+        combined_text = f"{must_focus_text} {next_stop_text}".strip()
+        lowered_focus = must_focus_text.casefold()
+        lowered_combined = combined_text.casefold()
+        lawful_window = episode_progression_packet.get("lawful_repetition_window", {})
+        has_lawful_window = isinstance(lawful_window, dict) and lawful_window.get("mode") == "allow_escalated_repeat"
+        authority_capture_mode = has_lawful_window and any(
+            token in lowered_focus
+            for token in ("전담", "직통", "핫라인", "라인", "명함", "개설", "격상", "권한", "접견실", "전용")
+        )
+        privileged_lane_mode = any(
+            token in lowered_combined
+            for token in (
+                "예외 계좌",
+                "exception account",
+                "특별 격상",
+                "승인 문서",
+                "승인선",
+                "개입 기준",
+                "표준 마진 룰",
+            )
+        )
+
+        guidance: list[str] = []
+        if has_replay_pressure:
+            guidance.extend(
+                [
+                    "시작 anchor 계승은 짧게 처리하고 이번 화의 주 장면은 직전 대치의 결과 이후 단계로 이동하라.",
+                    "같은 장소를 다시 써야 하면 복도, 대기 구역, 창구, 이동 동선 같은 하위 공간으로 분산하라.",
+                    "직전 화와 같은 2인 대치를 주 장면으로 반복하지 말고 보조 인물이나 기관 결정 라인을 열어라.",
+                    "MUST_FOCUS는 협상 재탕보다 승인, 전달, 집행, 후속 처리처럼 앞으로 전진하는 surface에서 소화하라.",
+                ]
+            )
+            if has_lawful_window:
+                guidance[1] = (
+                    "같은 장소를 다시 써야 하면 하위 공간 분산만 고집하지 말고 접견실, 전용 라인, 별도 창구처럼 "
+                    "위계가 달라진 surface로 승격하라."
+                )
+                guidance[2] = (
+                    "직전 화와 같은 2인 축이라도 새 결정, 새 단언, 태도 돌변, 권한 격상처럼 결과 단계가 달라졌다면 "
+                    "replay가 아니라 escalation surface로 전진하라."
+                )
+            if authority_capture_mode:
+                guidance[3] = (
+                    "MUST_FOCUS가 전담/직통/명함/권한 격상 계열이면 협상 재탕보다 태도 돌변, 전용 라인 개설, "
+                    "authority receipt 포착 같은 결과 surface에서 소화하라."
+                )
+
+        if privileged_lane_mode:
+            guidance.append(
+                "예외 계좌/Exception Account는 모든 통제 면제나 무제한 특권이 아니라, 전용 처리선·우선 검토·개입 기준 완화 같은 privileged execution lane으로 묘사하라."
+            )
+            guidance.append(
+                "리스크팀과 본부장의 통제는 사라지는 것이 아니라 후순위 개입, 수동 승인, 별도 보고선 형태로 남아 있어야 한다."
+            )
 
         if next_stop_text:
             guidance.append(
                 "다음 화 결과를 선소비하지 말고 이번 화는 현재 화에서 닫혀야 하는 실행 단계까지만 완료하라."
             )
 
-        lowered_focus = must_focus_text.casefold()
+        next_gate_strength = episode_progression_packet.get("next_gate_strength_mode", {})
+        if isinstance(next_gate_strength, dict) and next_gate_strength.get("mode") == "foreshadow_only":
+            guidance.append(
+                "새 자산/새 전장 축을 감지해도 이번 화 엔딩에서는 direct handoff가 아니라 foreshadow 수준으로만 남겨라."
+            )
+            guidance.append(
+                "현재 타깃이 아직 미해결이면 '이제 금으로 간다' 같은 선언형 closing보다 현재 사건 축의 압박·판단·보류를 우선 마감하라."
+            )
+
+        if has_lawful_window:
+            guidance.append(
+                "같은 장소나 같은 상대를 다시 써도 장면 목표, 권력 위계, 시장 상태가 달라졌다면 lawful repetition으로 설계하라."
+            )
+            guidance.append(
+                "동일 통화/동일 채널도 새 결정, 새 단언, 새 압박이 걸리면 replay가 아니라 escalation surface가 될 수 있다."
+            )
+
         if any(token in lowered_focus for token in ("승인", "서류", "절차", "체결", "보고", "전달", "집행")):
             guidance.append(
                 "MUST_FOCUS에 절차성 이벤트가 보이면 감정 대치보다 승인 서류, 내부 보고, 실제 체결 같은 처리 surface를 우선하라."
@@ -1285,7 +1576,165 @@ class BlueprintConstraintCompiler:
                 continue
             seen.add(text)
             deduped.append(text)
-        return deduped[:5]
+        return deduped[:7]
+
+    @staticmethod
+    def _episode_progression_extract_target_families(raw: object) -> list[str]:
+        text = str(raw or "").casefold()
+        if not text:
+            return []
+
+        family_tokens = {
+            "oil": ("wti", "유가", "원유", "오일", "브렌트", "텍사스산"),
+            "gold": ("금 가격", "금값", "금 시장", "금 선물", "골드", "gold"),
+            "equity": ("주식", "증시", "코스피", "코스닥", "나스닥", "종목"),
+            "fx": ("환율", "달러", "엔화", "외환", "환시장", "fx"),
+            "crypto": ("비트코인", "이더리움", "가상자산", "코인", "btc", "eth"),
+        }
+        matches: list[str] = []
+        for family, tokens in family_tokens.items():
+            if any(token in text for token in tokens):
+                matches.append(family)
+        return matches
+
+    @staticmethod
+    def _episode_progression_contains_unresolved_pressure(raw: object) -> bool:
+        text = str(raw or "").casefold()
+        if not text:
+            return False
+        return any(
+            token in text
+            for token in (
+                "조정",
+                "하락",
+                "압박",
+                "경고",
+                "포지션",
+                "마진콜",
+                "버텨",
+                "돌파",
+                "예언",
+                "단언",
+                "진입",
+                "청산",
+                "보유",
+            )
+        )
+
+    @staticmethod
+    def _episode_progression_target_family_label(raw: object) -> str:
+        family = str(raw or "").strip().casefold()
+        labels = {
+            "oil": "유가/원유",
+            "gold": "금",
+            "equity": "주식",
+            "fx": "환율/외환",
+            "crypto": "가상자산",
+        }
+        return labels.get(family, family)
+
+    @classmethod
+    def _build_episode_progression_next_gate_strength_mode(
+        cls,
+        *,
+        must_focus: dict,
+        stop_line: dict,
+    ) -> dict:
+        if not isinstance(must_focus, dict) or not isinstance(stop_line, dict) or stop_line.get("is_arc_finale"):
+            return {}
+
+        must_focus_text = " ".join(str(must_focus.get("content", "") or "").split()).strip()
+        stop_line_text = " ".join(str(stop_line.get("content", "") or "").split()).strip()
+        if not must_focus_text or not stop_line_text:
+            return {}
+
+        focus_targets = cls._episode_progression_extract_target_families(must_focus_text)
+        reserved_targets = cls._episode_progression_extract_target_families(stop_line_text)
+        introduced_targets = [item for item in focus_targets if item not in reserved_targets]
+        if not introduced_targets or not reserved_targets:
+            return {}
+        if not cls._episode_progression_contains_unresolved_pressure(stop_line_text):
+            return {}
+
+        introduced_label = ", ".join(
+            cls._episode_progression_target_family_label(item) for item in introduced_targets[:2]
+        )
+        reserved_label = ", ".join(cls._episode_progression_target_family_label(item) for item in reserved_targets[:2])
+        return {
+            "mode": "foreshadow_only",
+            "introduced_target_families": introduced_targets[:3],
+            "reserved_target_families": reserved_targets[:3],
+            "reason": (
+                f"현재 MUST_FOCUS가 새 타깃({introduced_label})을 열더라도, "
+                f"다음 화 reserved beat는 아직 {reserved_label} 미해결 압박을 요구하므로 "
+                "이번 화 엔딩의 target handoff는 예고 수준으로만 남겨라."
+            ),
+        }
+
+    @classmethod
+    def _build_episode_progression_lawful_repetition_window(
+        cls,
+        *,
+        must_focus: dict,
+        stop_line: dict,
+        episode_progression_packet: dict,
+    ) -> dict:
+        if not isinstance(episode_progression_packet, dict):
+            return {}
+        blocked_families = episode_progression_packet.get("blocked_scene_families", [])
+        if not isinstance(blocked_families, list) or not blocked_families:
+            return {}
+
+        must_focus_text = str(must_focus.get("content", "") or "").strip() if isinstance(must_focus, dict) else ""
+        stop_line_text = str(stop_line.get("content", "") or "").strip() if isinstance(stop_line, dict) else ""
+        combined_text = f"{must_focus_text} {stop_line_text}".strip().casefold()
+        if not combined_text:
+            return {}
+
+        authority_capture_tokens = (
+            "전담",
+            "직통",
+            "핫라인",
+            "라인",
+            "명함",
+            "개설",
+            "격상",
+            "권한",
+            "경외",
+            "역전",
+            "돌변",
+            "예외 계좌",
+            "접견실",
+            "전용",
+        )
+        escalation_tokens = [
+            token
+            for token in (
+                "단언",
+                "예언",
+                "결정",
+                "확정",
+                "압박",
+                "경고",
+                "조정",
+                "하락",
+                "돌파",
+                "버텨",
+                "예측",
+                *authority_capture_tokens,
+            )
+            if token in combined_text
+        ]
+        if not escalation_tokens:
+            return {}
+
+        return {
+            "mode": "allow_escalated_repeat",
+            "allow_same_location_if_goal_changes": True,
+            "allow_same_counterparty_if_goal_changes": True,
+            "allow_same_channel_if_decision_escalates": True,
+            "escalation_tokens": escalation_tokens[:6],
+        }
 
     @staticmethod
     def _build_episode_progression_future_beat_reservations(
