@@ -437,6 +437,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         self.strategies = BLUEPRINT_STRATEGIES
         self.max_workers = 3
         self.last_error_types: list[str] = []
+        self.last_disqualified_candidates: list[dict] = []
 
     @staticmethod
     def _select_generate_error_type(error_types: list[str]) -> str | None:
@@ -778,6 +779,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
     def _qualify_blueprint_candidates(self, candidates: list[dict]) -> tuple[list[dict], list[tuple[str, int, int]]]:
         qualified_candidates: list[dict] = []
         disqualified: list[tuple[str, int, int]] = []
+        disqualified_details: list[dict] = []
 
         for candidate in candidates:
             strategy_name = candidate.get("_strategy", "unknown")
@@ -799,9 +801,18 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 logging.info(f" {strategy_name}: 통과 (씬 {scene_count}개, {integrated_len}자)")
             else:
                 disqualified.append((strategy_name, scene_count, integrated_len))
+                disqualified_details.append(
+                    {
+                        "strategy": strategy_name,
+                        "scene_count": scene_count,
+                        "integrated_len": integrated_len,
+                        "contract_reason": contract_reason or "",
+                    }
+                )
                 reason_suffix = f", 사유={contract_reason}" if contract_reason else ""
                 logging.info(f" {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자{reason_suffix})")
 
+        self.last_disqualified_candidates = disqualified_details
         return qualified_candidates, disqualified
 
     def _finalize_blueprint_candidates(
@@ -907,6 +918,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         active_strategies = self._select_blueprint_ensemble_strategies(single_strategy)
         self.last_error_type = None
         self.last_error_types = []
+        self.last_disqualified_candidates = []
         feedback_context = str(feedback or "").strip()
         repair_guidance = _build_stage3_retry_repair_guidance(fix_pack, repair_contract)
         if repair_guidance:

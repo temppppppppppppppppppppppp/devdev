@@ -124,6 +124,14 @@ def test_qualify_blueprint_candidates_tracks_pass_and_fail_metadata():
     assert qualified[0]["_scene_count"] == 4
     assert qualified[0]["_length"] == 900
     assert disqualified == [("dialogue_focused", 3, 320)]
+    assert agent.last_disqualified_candidates == [
+        {
+            "strategy": "dialogue_focused",
+            "scene_count": 3,
+            "integrated_len": 320,
+            "contract_reason": "",
+        }
+    ]
 
 
 def test_qualify_blueprint_candidates_accepts_dense_three_scene_blueprint():
