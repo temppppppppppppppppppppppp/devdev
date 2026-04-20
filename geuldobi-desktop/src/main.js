@@ -898,6 +898,34 @@ function getMaterialRoot() {
   return getEngineRoot();
 }
 
+function getMaterialVisibilityConfigPath() {
+  return path.join(getMaterialRoot(), "config", "material_visibility.json");
+}
+
+function getAllowedMaterialFiles(folder) {
+  const configPath = getMaterialVisibilityConfigPath();
+  if (!fs.existsSync(configPath)) {
+    return null;
+  }
+  try {
+    const payload = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    const folders = payload && typeof payload === "object" ? payload.folders : null;
+    const folderPayload = folders && typeof folders === "object" ? folders[folder] : null;
+    const visibleFiles = folderPayload && typeof folderPayload === "object" ? folderPayload.visible_files : null;
+    if (!Array.isArray(visibleFiles)) {
+      return null;
+    }
+    return new Set(
+      visibleFiles
+        .map((value) => String(value || "").trim())
+        .filter(Boolean)
+    );
+  } catch (err) {
+    debugLog("[material] visibility config parse failed", { configPath, message: err.message });
+    return null;
+  }
+}
+
 ipcMain.handle(IPC_CHANNELS.material.listFiles, async (_, folder) => {
   if (folder !== "bible" && folder !== "treatments") {
     return { ok: false, files: [], message: "invalid folder" };
@@ -908,8 +936,10 @@ ipcMain.handle(IPC_CHANNELS.material.listFiles, async (_, folder) => {
       fs.mkdirSync(dir, { recursive: true });
       return { ok: true, files: [] };
     }
+    const allowedFiles = getAllowedMaterialFiles(folder);
     const entries = fs.readdirSync(dir)
       .filter(f => !f.startsWith("."))
+      .filter(f => allowedFiles === null || allowedFiles.has(f))
       .map(f => {
         const stat = fs.statSync(path.join(dir, f));
         return { name: f, size: stat.size, isDir: stat.isDirectory() };

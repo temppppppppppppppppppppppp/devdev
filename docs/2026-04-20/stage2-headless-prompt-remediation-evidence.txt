@@ -1,0 +1,42 @@
+Stage2 Headless Prompt Remediation Evidence
+Date: 2026-04-20
+Baseline Commit: 466bbe4c1bc400d4539fb8ad19fa001856b8acce
+Baseline Dirty Summary: dirty: .gitignore modified; local sensitive recovery-code file now ignored
+
+[Runtime Prompt Surfaces]
+- modules/core/stage2_orchestrator.py:713
+  - failure-path prompt: `선택 (기본: 2): `
+- modules/core/stage2_orchestrator.py:728
+  - manual intervention prompt: `[Enter]로 재시도, 'skip', 'quit'`
+- modules/core/stage2_orchestrator.py:1714
+  - completion pause: `[Enter] 메뉴로 돌아가기`
+
+[Existing Interactive / Headless Split Signals]
+- modules/core/stage2_orchestrator.py:395-400
+  - interactive Stage2 already distinguishes `target_arc_count is None` for operator Arc-count input
+- main_a.py:2966-2988
+  - `target_arc_count=1` is used by automated paths too, so `target_arc_count` alone is not a safe headless detector
+- scripts/canary_stage2_headless.py:1-105
+  - dedicated Stage2 headless runner exists, but it does not currently set a Stage2-specific non-interactive policy
+- modules/core/stage4_post_processor.py:1327-1338
+  - Stage4 already has a bounded `skip_pause` seam and suppresses pause in automated runs
+
+[Desktop Prompt Bridge Boundary]
+- modules/api/process_runner.py:602-627
+  - Mode B detects partial-line prompts and waits for prompt callbacks
+- modules/api/prompt_broker.py:98-127
+  - prompt broker waits for user input or timeout
+- geuldobi-desktop/src/main.js:107-109
+  - desktop attaches through localhost bridge / websocket
+- geuldobi-desktop/src/main.js:497
+  - desktop sets `GEULDOBI_DESKTOP_MODE=1`
+
+[Implication]
+- a naive `stdin.isatty()` gate would risk treating desktop bridge runs as non-interactive
+- the safe bounded fix is an explicit Stage2 headless policy seam for truly unattended runs, while preserving the existing interactive and desktop prompt flows
+
+[Existing Tests / Anchors]
+- tests/test_stage2_orchestrator_lane_f.py:211-240
+  - interactive skip-choice path currently expects prompt-driven behavior
+- tests/test_run_stage2_canary.py:8-29
+  - Stage2 canary contract already depends on the dedicated headless runner script

@@ -1,5 +1,6 @@
 {
   "_schema_version": "2.1",
+  "_utf8_hygiene_note": "utf8-hygiene: allow-file rationale: live BI dialogue and quoted exclamatory tokens intentionally contain Korean non-ASCII adjacent to question and exclamation punctuation; byte-level UTF-8 verified.",
   "_schema_description": "골든 카나리아 투자물 BI - 60블록 legacy TR salvage sync",
   "_last_updated": "2026-04-07",
   "_genre": "investment",
@@ -1474,6 +1475,19 @@
         "디스트레스 물량을 받을 현금 우위 유지 여부",
         "AI/ETF/반감기 같은 이벤트가 겹칠 때의 순서 계산",
         "행복을 지키기 위해 예언자의 권위를 봉인해야 하는 마지막 선택"
+      ],
+      "contamination_guard": [
+        "Deep-cloning donor doctrine은 visible pressure -> execution -> public proof -> private receipt / access-shift cadence만 generalized slot으로 유지하고 donor 고유 사건과 한국 재벌 정치 skin은 canonical law로 들이지 않는다.",
+        "PB tone shift, named seat, 예외 계좌는 seed example family일 뿐이며 canonical law는 observer shift / private receipt / next-gate access slot 기준으로 읽는다.",
+        "Opening B02~B06 보상은 현금 숫자 alone으로 끝내지 않고 seat-equivalent receipt, priority lane, next-cycle ticket 중 하나로 환전한다.",
+        "가족 갈등은 donor식 가문 정치 복제가 아니라 패밀리오피스 통제권과 자산 방화벽 문제로 재저작한다."
+      ],
+      "do_not_fake": [
+        "PB/리스크팀/증권가 tone shift를 추상 인정으로 뭉개지 말 것.",
+        "원유 thesis와 포지션 proof를 숫자 없는 막연한 촉으로 처리하지 말 것.",
+        "Donor의 재벌 정치, 검은 기운, 고유 시장 조작 디테일을 복제하지 말 것.",
+        "named seat, 예외 계좌, priority response list를 generalized slot 설명 없이 canonical law 자체처럼 남용하지 말 것.",
+        "Setup-only opening 3부작, proof-only late conversion drift, 이유 없는 자선/구원으로 protagonist를 미화하지 말 것."
       ]
     },
     "plot_roadmap": [

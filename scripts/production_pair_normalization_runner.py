@@ -28,6 +28,7 @@ from check_bi_tr_consumability import (
 )
 from modules.core.stage0_handoff import get_effective_bible_root, normalize_bible_to_canonical_view, normalize_treatment_blocks
 from modules.core.work_identity_surface import resolve_phase0_work_identity_surface
+from modules.narrative_router.artifact_paths import resolve_phase0_path
 
 LIVE_BIBLE_DIR = ROOT / "bible"
 LIVE_TREATMENT_DIR = ROOT / "treatments"
@@ -317,17 +318,25 @@ def gather_metadata_strings(tr_data: Any, bi_data: Any) -> list[str]:
     return values
 
 
-def resolve_phase0_status(work_id: str, metadata_strings: list[str], untouched_historical: bool) -> tuple[str, bool, bool]:
+def resolve_phase0_status(
+    work_id: str,
+    metadata_strings: list[str],
+    untouched_historical: bool,
+) -> tuple[str, bool, bool, Path]:
     root_phase0 = PHASE0_DIR / f"{work_id}_phase0_design.json"
+    resolved_phase0 = resolve_phase0_path(work_id, root=ROOT)
     preprocess_manifest = PREPROCESS_DIR / work_id / "source_manifest.json"
     root_exists = root_phase0.is_file()
+    resolved_exists = resolved_phase0.is_file()
     preprocess_available = preprocess_manifest.is_file()
     authority_named = any(work_id in value and ("phase0" in value or "preprocess" in value) for value in metadata_strings)
     if root_exists:
-        return "root-phase0-present", preprocess_available, True
+        return "root-phase0-present", preprocess_available, True, resolved_phase0
+    if resolved_exists:
+        return "waiting-room-phase0-present", preprocess_available, False, resolved_phase0
     if untouched_historical and preprocess_available and authority_named:
-        return "preprocess-fallback-alias-pass", preprocess_available, False
-    return "missing-root-phase0", preprocess_available, False
+        return "preprocess-fallback-alias-pass", preprocess_available, False, resolved_phase0
+    return "missing-root-phase0", preprocess_available, False, resolved_phase0
 
 
 def add_finding(
@@ -821,9 +830,16 @@ def build_report(
             add_finding(findings, source_severity, "BI-META-SOURCE-TR", "BI _source_tr is missing.", fix_target="BI._source_tr")
 
     metadata_strings = gather_metadata_strings(tr_data, canonical_bi)
-    root_phase0_status, preprocess_authority_available, _root_phase0_exists = resolve_phase0_status(work_id, metadata_strings, untouched_historical)
+    (
+        root_phase0_status,
+        preprocess_authority_available,
+        _root_phase0_exists,
+        resolved_phase0_path,
+    ) = resolve_phase0_status(work_id, metadata_strings, untouched_historical)
     if root_phase0_status == "preprocess-fallback-alias-pass":
         add_finding(findings, "alias", "PHASE0-FALLBACK", "Root treatments/phase0 file is missing, but historical preprocess authority fallback is available.", fix_target=f"treatments/phase0/{work_id}_phase0_design.json")
+    elif root_phase0_status == "waiting-room-phase0-present":
+        notes.append(f"phase0 hidden in waiting room: {resolved_phase0_path.relative_to(ROOT).as_posix()}")
     elif root_phase0_status == "missing-root-phase0":
         add_finding(
             findings,
@@ -842,7 +858,7 @@ def build_report(
         counts=counts,
     )
     bi_section_blockers = inspect_bi_family_sections(master_bible=master_bible, family=family, findings=findings, counts=counts)
-    phase0_data = load_json(PHASE0_DIR / f"{work_id}_phase0_design.json")
+    phase0_data = load_json(resolved_phase0_path)
     promoted_drifts = inspect_promoted_slots(
         family=family,
         phase0_data=phase0_data,

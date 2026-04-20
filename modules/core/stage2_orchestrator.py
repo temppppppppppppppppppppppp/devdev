@@ -14,6 +14,7 @@ SovereignApp에서 분리된 Stage 2 관련 메서드:
 
 import asyncio
 import logging
+import os
 from pathlib import Path
 from typing import Any, Literal, NotRequired, TypedDict
 
@@ -101,6 +102,22 @@ class Stage2Orchestrator:
             return text
         head_chars = max(200, min(max_chars - 50, int(max_chars * head_ratio)))
         return smart_truncate(text, max_chars=max_chars, head_chars=head_chars)
+
+    def _stage2_failure_prompt_policy(self) -> str:
+        raw_policy = str(os.environ.get("GEULDOBI_STAGE2_FAILURE_POLICY") or "").strip().lower()
+        if raw_policy in {"abort", "prompt"}:
+            return raw_policy
+
+        raw_headless = str(os.environ.get("GEULDOBI_STAGE2_HEADLESS") or "").strip().lower()
+        if raw_headless in {"1", "true", "yes", "on"}:
+            return "abort"
+
+        return "prompt"
+
+    def _stage2_should_suppress_prompts(self) -> bool:
+        # Keep interactive and desktop prompt flows intact by default.
+        # Only explicit Stage2 headless runs may suppress failure / pause prompts.
+        return self._stage2_failure_prompt_policy() == "abort"
 
     @property
     def ctx(self):
@@ -703,6 +720,10 @@ class Stage2Orchestrator:
 
         if all_refined_arcs:
             self.ctx.ui.log(f"💾 [Auto-Save] 현재까지 {len(all_refined_arcs)}개 Arc 저장 완료.")
+
+        if self._stage2_should_suppress_prompts():
+            self.ctx.ui.log("⏹️ [Stage2 Headless] 실패 리포트 저장 후 자동 중단합니다.")
+            return {"action": "abort"}
 
         while True:
             logging.info("[1] 건너뛰고 계속")
@@ -1709,7 +1730,7 @@ class Stage2Orchestrator:
         self.ctx.ui.log("✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.")
         if callable(getattr(self.ctx, "write_audit_summary", None)):
             self.ctx.write_audit_summary("stage2_complete")
-        if target_arc_count is None:
+        if target_arc_count is None and not self._stage2_should_suppress_prompts():
             try:
                 await asyncio.to_thread(input, "\n[Enter] 메뉴로 돌아가기")
             except (EOFError, KeyboardInterrupt, ValueError):

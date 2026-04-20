@@ -45,6 +45,28 @@
     "자산 증가는 반드시 PB 재평가, 예외 계좌, named seat, priority response list, 운용권 변화 중 하나로 환전되어야 한다.",
     "이 probe는 canonical 골든 카나리아의 투자/패밀리오피스 lane을 유지하는 upstream-only 실험판이다."
   ],
+  "donor_review": {
+    "decision": "adopted",
+    "scope": "Deep-cloning donor doctrine의 opening pressure -> proof -> receipt -> next-hook cadence와 observer shift / access receipt 계열만 generalized slot으로 번역해 canonical law에 반영한다.",
+    "canonical_translation_surfaces": [
+      "treatments/phase0/_waiting_room/2026-04-20_donor_ready_root_wave/golden_canary_deepclone_probe_a_phase0_design.json",
+      "work_guards/_waiting_room/2026-04-20_donor_ready_root_wave/golden_canary_deepclone_probe_a.yaml"
+    ],
+    "annex_refs": [
+      "treatments/preprocess/golden_canary_deepclone_probe_a/deepclone_donor_doctrine_packet.json"
+    ],
+    "blocked_surfaces": [
+      "donor 고유 인물명, 조직명, 재벌 정치 skin의 직접 이식",
+      "donor 사건 순서나 scene-order의 직접 복제",
+      "PB tone shift, named seat, 예외 계좌를 canonical law 자체로 오인하는 표현"
+    ]
+  },
+  "contamination_guard": [
+    "Deep-cloning donor doctrine은 visible pressure -> execution -> public proof -> private receipt / access-shift cadence만 generalized slot으로 유지하고 donor 고유 사건과 한국 재벌 정치 skin은 canonical law로 들이지 않는다.",
+    "PB tone shift, named seat, 예외 계좌는 seed example family일 뿐이며 canonical law는 observer shift / private receipt / next-gate access slot 기준으로 읽는다.",
+    "Opening B02~B06 보상은 현금 숫자 alone으로 끝내지 않고 seat-equivalent receipt, priority lane, next-cycle ticket 중 하나로 환전한다.",
+    "가족 갈등은 donor식 가문 정치 복제가 아니라 패밀리오피스 통제권과 자산 방화벽 문제로 재저작한다."
+  ],
   "do_not_fake": [
     "PB/리스크팀/증권가 tone shift를 추상 인정으로 뭉개지 말 것.",
     "원유 thesis와 포지션 proof를 숫자 없는 막연한 촉으로 처리하지 말 것.",

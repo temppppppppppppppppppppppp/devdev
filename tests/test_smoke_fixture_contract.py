@@ -7,7 +7,6 @@ from scripts.smoke_fixture_contract import (
     PACKAGED_SMOKE_PROJECT,
 )
 
-
 ROOT = Path(".")
 RUN_STAGE2 = (ROOT / "scripts/run_stage2_smoke.py").read_text(encoding="utf-8")
 RUN_STAGE3 = (ROOT / "scripts/run_stage3_smoke.py").read_text(encoding="utf-8")
@@ -50,6 +49,7 @@ def test_stage2_smoke_resets_rich_fixture_start_state_and_uses_pass_side_score()
     assert "db.conn.commit()\n            return True" in RUN_STAGE2
     assert "ctx.perf_timer = _NullPerfTimer()" in RUN_STAGE2
     assert "_install_narrative_analyzer_smoke_stub()" in RUN_STAGE2
+    assert 'os.environ["GEULDOBI_STAGE2_HEADLESS"] = "1"' in RUN_STAGE2
     assert "raise RuntimeError(f\"stage2 smoke wrote failure reports: {report_names}\")" in RUN_STAGE2
     assert "manual_arcs = [make_mock_arc(i + 1, roadmap[i]) for i in range(3)]" not in RUN_STAGE2
 

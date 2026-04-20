@@ -14,8 +14,6 @@ Usage:
 from __future__ import annotations
 
 import asyncio
-import json
-import logging
 import os
 import sys
 import time
@@ -26,8 +24,14 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 os.chdir(_REPO_ROOT)
 sys.path.insert(0, str(_REPO_ROOT))
 
-from dotenv import load_dotenv
-load_dotenv(override=True)
+
+def _load_workspace_env() -> None:
+    from dotenv import load_dotenv
+
+    load_dotenv(override=True)
+
+
+_load_workspace_env()
 
 
 def main():
@@ -37,6 +41,7 @@ def main():
 
     project_name = sys.argv[1]
     target_arc_count = int(sys.argv[2]) if len(sys.argv) > 2 else 5
+    os.environ["GEULDOBI_STAGE2_HEADLESS"] = "1"
 
     print(f"[Canary] project={project_name}, target_arc_count={target_arc_count}")
     print(f"[Canary] Working directory: {os.getcwd()}")

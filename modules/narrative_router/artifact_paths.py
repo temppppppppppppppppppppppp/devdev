@@ -41,6 +41,13 @@ def _direct_subfolder_matches(folder: Path, pattern: str) -> tuple[Path, ...]:
     return tuple(sorted(folder.glob(f"*/{pattern}"), key=lambda path: path.as_posix()))
 
 
+def _waiting_room_matches(folder: Path, pattern: str) -> tuple[Path, ...]:
+    waiting_room = folder / "_waiting_room"
+    if not waiting_room.is_dir():
+        return ()
+    return tuple(sorted(waiting_room.glob(f"*/{pattern}"), key=lambda path: path.as_posix()))
+
+
 def canonical_phase0_path(work_id: str, *, root: Path | None = None) -> Path:
     return _root(root) / "treatments" / "phase0" / f"{work_id}_phase0_design.json"
 
@@ -50,9 +57,13 @@ def legacy_phase0_path(work_id: str, *, root: Path | None = None) -> Path:
 
 
 def phase0_candidate_paths(work_id: str, *, root: Path | None = None) -> tuple[Path, ...]:
-    return (
-        canonical_phase0_path(work_id, root=root),
-        legacy_phase0_path(work_id, root=root),
+    base = _root(root) / "treatments" / "phase0"
+    return _dedupe(
+        (
+            canonical_phase0_path(work_id, root=root),
+            *_waiting_room_matches(base, f"{work_id}_phase0_design.json"),
+            legacy_phase0_path(work_id, root=root),
+        )
     )
 
 
@@ -80,7 +91,9 @@ def tr_candidate_paths(work_id: str, *, root: Path | None = None) -> tuple[Path,
         (
             canonical_tr_path(work_id, root=root),
             *_prefixed_matches(base, f"[0-9][0-9]_{work_id}_tr_block_070_draft.json"),
+            *_waiting_room_matches(base, f"[0-9][0-9]_{work_id}_tr_block_070_draft.json"),
             legacy_tr_path(work_id, root=root),
+            *_waiting_room_matches(base, f"{work_id}_tr_block_070_draft.json"),
         )
     )
 
@@ -109,7 +122,9 @@ def bi_candidate_paths(work_id: str, *, root: Path | None = None) -> tuple[Path,
         (
             canonical_bi_path(work_id, root=root),
             *_prefixed_matches(base, f"[0-9][0-9]_bi_{work_id}.json"),
+            *_waiting_room_matches(base, f"[0-9][0-9]_bi_{work_id}.json"),
             legacy_bi_path(work_id, root=root),
+            *_waiting_room_matches(base, f"0_bi_{work_id}.json"),
         )
     )
 
@@ -139,8 +154,10 @@ def work_guard_candidate_paths(work_id: str, *, root: Path | None = None) -> tup
             canonical_work_guard_path(work_id, root=root),
             *_prefixed_matches(base, f"[0-9][0-9]_{work_id}.yaml"),
             *_direct_subfolder_matches(base, f"[0-9][0-9]_{work_id}.yaml"),
+            *_waiting_room_matches(base, f"[0-9][0-9]_{work_id}.yaml"),
             legacy_work_guard_path(work_id, root=root),
             *_direct_subfolder_matches(base, f"{work_id}.yaml"),
+            *_waiting_room_matches(base, f"{work_id}.yaml"),
         )
     )
 
