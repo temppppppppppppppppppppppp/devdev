@@ -90,6 +90,7 @@ class Stage3AttemptEvidencePacket:
     selection_kwargs: dict | None
     runtime_advisory: str
     retry_directives: str
+    selection_contract: dict | None = None
 
 
 def _peek_scope_total_cost_usd() -> float:
@@ -2215,6 +2216,29 @@ class Stage3Orchestrator:
             advisory_flags=observability_flags,
             artifact_meta=artifact_meta,
         )
+        selection_contract = self._build_stage3_selection_contract(
+            pipeline_result,
+            blueprint=blueprint,
+            selected_strategy=selected_strategy,
+            candidate_key=candidate_key,
+            artifact_meta=artifact_meta,
+        )
+        if isinstance(selection_kwargs, dict) and isinstance(selection_contract, dict) and selection_contract:
+            selection_kwargs = dict(selection_kwargs)
+            advisory_warnings = selection_kwargs.get("advisory_warnings")
+            advisory_warnings = dict(advisory_warnings) if isinstance(advisory_warnings, dict) else {}
+            advisory_warnings["selection_contract"] = dict(selection_contract)
+            selection_kwargs["advisory_warnings"] = advisory_warnings or None
+        if not self._selection_contract_sink_ok(selection_contract) and callable(getattr(ctx, "audit_event", None)):
+            ctx.audit_event(
+                "stage3_selection_contract_mismatch",
+                "selection companion sinks suppressed",
+                {
+                    "ep_num": working_ep,
+                    "attempt_key": attempt_key,
+                    "selection_contract": dict(selection_contract or {}),
+                },
+            )
         runtime_advisory = _resolve_stage3_runtime_advisory(
             pipeline_result,
             selection_kwargs,
@@ -2247,6 +2271,7 @@ class Stage3Orchestrator:
             selection_kwargs=selection_kwargs,
             runtime_advisory=runtime_advisory,
             retry_directives=retry_directives,
+            selection_contract=selection_contract,
         )
 
     def _record_stage3_success_observability(
@@ -2269,9 +2294,10 @@ class Stage3Orchestrator:
         selection_kwargs = runtime_payload.selection_kwargs
         score = runtime_payload.score
         candidate_key = runtime_payload.candidate_key
+        selection_contract_ok = self._selection_contract_sink_ok(runtime_payload.selection_contract)
 
         session_logger = getattr(ctx, "session_logger", None)
-        if session_logger:
+        if session_logger and selection_contract_ok:
             try:
                 decision_kwargs = self._build_stage3_session_decision_kwargs(
                     ep_num=working_ep,
@@ -2347,7 +2373,7 @@ class Stage3Orchestrator:
                     validate=_s3_validate,
                 )
             )
-            if hasattr(db, "save_director_selection") and selection_kwargs:
+            if hasattr(db, "save_director_selection") and selection_kwargs and selection_contract_ok:
                 try:
                     db.save_director_selection(**selection_kwargs)
                 except Exception as ds_err:
@@ -2870,6 +2896,118 @@ class Stage3Orchestrator:
             return chr(ord("A") + idx)
         return ""
 
+    @classmethod
+    def _stage3_candidate_label_from_marker(cls, marker: object) -> str:
+        text = str(marker or "").strip()
+        if not text:
+            return ""
+        if len(text) == 1 and text.isalpha():
+            return text.upper()
+        try:
+            numeric = int(text)
+        except (TypeError, ValueError):
+            return ""
+        if numeric <= 0:
+            return ""
+        return cls._stage3_selected_label(numeric - 1)
+
+    @classmethod
+    def _extract_stage3_candidate_mentions(cls, *texts: object) -> list[str]:
+        patterns = (
+            _re.compile(r"\bcandidate\s*([A-Z]|\d{1,2})\b", _re.IGNORECASE),
+            _re.compile(r"\bblueprint\s*([A-Z]|\d{1,2})\b", _re.IGNORECASE),
+            _re.compile(r"\boption\s*([A-Z]|\d{1,2})\b", _re.IGNORECASE),
+            _re.compile(r"후보\s*([A-Z]|\d{1,2})"),
+            _re.compile(r"([A-Z])\s*안"),
+        )
+        labels: list[str] = []
+        seen: set[str] = set()
+        for raw in texts:
+            text = str(raw or "")
+            if not text:
+                continue
+            for pattern in patterns:
+                for match in pattern.finditer(text):
+                    label = cls._stage3_candidate_label_from_marker(match.group(1))
+                    if label and label not in seen:
+                        seen.add(label)
+                        labels.append(label)
+        return labels
+
+    @classmethod
+    def _build_stage3_selection_contract(
+        cls,
+        pipeline_result: dict,
+        *,
+        blueprint,
+        selected_strategy: str,
+        candidate_key: str,
+        artifact_meta: dict | None,
+    ) -> dict:
+        validate = (
+            (pipeline_result.get("phases") or {}).get("validate", {}) if isinstance(pipeline_result, dict) else {}
+        )
+        validate = validate if isinstance(validate, dict) else {}
+        selected_index = validate.get("selected_index")
+        selected_label = cls._stage3_selected_label(selected_index)
+
+        ensemble_meta = blueprint.get("_ensemble_meta", {}) if isinstance(blueprint, dict) else {}
+        ensemble_meta = ensemble_meta if isinstance(ensemble_meta, dict) else {}
+        blueprint_label = cls._stage3_selected_label(ensemble_meta.get("candidate_index"))
+        blueprint_strategy = str(ensemble_meta.get("strategy", "") or "").strip()
+        blueprint_candidate_key = str(ensemble_meta.get("candidate_key", "") or "").strip()
+
+        selected_candidate_advisory = validate.get("selected_candidate_advisory", {})
+        selected_candidate_advisory = (
+            selected_candidate_advisory if isinstance(selected_candidate_advisory, dict) else {}
+        )
+        advisory_label = cls._stage3_selected_label(selected_candidate_advisory.get("candidate_index"))
+        if not selected_label:
+            selected_label = advisory_label or blueprint_label
+
+        selection_reason, verdict_reason, _comparison_notes = _resolve_stage3_validate_rationale(
+            validate, pipeline_result
+        )
+        rationale_mentions = cls._extract_stage3_candidate_mentions(
+            selection_reason,
+            verdict_reason,
+        )
+        mismatch_reasons: list[str] = []
+        if selected_label and blueprint_label and selected_label != blueprint_label:
+            mismatch_reasons.append(f"selected_label={selected_label}; blueprint_label={blueprint_label}")
+        if selected_label and advisory_label and selected_label != advisory_label:
+            mismatch_reasons.append(f"selected_label={selected_label}; advisory_label={advisory_label}")
+        if selected_strategy and blueprint_strategy and selected_strategy != blueprint_strategy:
+            mismatch_reasons.append(f"selected_strategy={selected_strategy}; blueprint_strategy={blueprint_strategy}")
+        if candidate_key and blueprint_candidate_key and candidate_key != blueprint_candidate_key:
+            mismatch_reasons.append(f"candidate_key={candidate_key}; blueprint_candidate_key={blueprint_candidate_key}")
+        artifact_candidate_key = str((artifact_meta or {}).get("candidate_key", "") or "").strip()
+        if candidate_key and artifact_candidate_key and candidate_key != artifact_candidate_key:
+            mismatch_reasons.append(f"candidate_key={candidate_key}; artifact_candidate_key={artifact_candidate_key}")
+        non_selected_mentions = [label for label in rationale_mentions if selected_label and label != selected_label]
+        if non_selected_mentions:
+            mismatch_reasons.append("rationale_mentions_non_selected_label=" + ",".join(non_selected_mentions))
+
+        snapshot = {
+            "status": "ok" if not mismatch_reasons else "mismatch",
+            "selected_label": selected_label,
+            "selected_strategy": str(selected_strategy or ""),
+            "candidate_key": str(candidate_key or ""),
+            "artifact_candidate_key": artifact_candidate_key,
+            "blueprint_label": blueprint_label,
+            "blueprint_strategy": blueprint_strategy,
+            "advisory_label": advisory_label,
+            "rationale_mentions": rationale_mentions,
+            "mismatch_reasons": mismatch_reasons,
+        }
+        return {key: value for key, value in snapshot.items() if value not in ("", [], None)}
+
+    @staticmethod
+    def _selection_contract_sink_ok(selection_contract: dict | None) -> bool:
+        if not isinstance(selection_contract, dict):
+            return True
+        return str(selection_contract.get("status", "ok") or "ok") == "ok"
+
     @staticmethod
     def _build_stage3_session_decision_kwargs(
         *,
@@ -3021,6 +3159,10 @@ class Stage3Orchestrator:
         selection_kwargs = packet.selection_kwargs or {}
         validate = validate if isinstance(validate, dict) else {}
         resolved_advisory_flags = dict(advisory_flags or {})
+        selection_contract = packet.selection_contract if isinstance(packet.selection_contract, dict) else {}
+        selection_contract_ok = Stage3Orchestrator._selection_contract_sink_ok(selection_contract)
+        if selection_contract:
+            resolved_advisory_flags["selection_contract"] = dict(selection_contract)
         for key in ("fix_pack", "advisory_fix_pack", "partial_fix_eval"):
             value = validate.get(key)
             if isinstance(value, dict) and value:
@@ -3032,7 +3174,7 @@ class Stage3Orchestrator:
         if scope_authority:
             resolved_advisory_flags["scope_authority"] = scope_authority
         comparison_notes = resolve_comparison_notes_text(validate.get("comparison_notes", ""))
-        if comparison_notes:
+        if comparison_notes and selection_contract_ok:
             resolved_advisory_flags["comparison_notes"] = comparison_notes
         selected_candidate_advisory_struct = resolve_structured_advisory_payload(
             validate.get("selected_candidate_advisory")
@@ -3071,8 +3213,12 @@ class Stage3Orchestrator:
             "candidate_key": packet.candidate_key,
             "content_hash": packet.artifact_meta["content_hash"],
             "artifact_path": packet.artifact_meta["artifact_path"],
-            "selection_reason": str(selection_kwargs.get("selection_reason", "") or ""),
-            "verdict_reason": str(selection_kwargs.get("verdict_reason", "") or ""),
+            "selection_reason": ""
+            if not selection_contract_ok
+            else str(selection_kwargs.get("selection_reason", "") or ""),
+            "verdict_reason": ""
+            if not selection_contract_ok
+            else str(selection_kwargs.get("verdict_reason", "") or ""),
             "fix_scope": str(selection_kwargs.get("fix_scope", "") or ""),
             "fix_scope_reasoning": str(selection_kwargs.get("fix_scope_reasoning", "") or ""),
             "open_review": str(validate.get("open_review", "") or "") if isinstance(validate, dict) else "",
@@ -3541,7 +3687,8 @@ class Stage3Orchestrator:
             return
 
         _sl = getattr(ctx, "session_logger", None)
-        if _sl:
+        _selection_contract_ok = self._selection_contract_sink_ok(_packet.selection_contract)
+        if _sl and _selection_contract_ok:
             try:
                 _decision_kwargs = self._build_stage3_session_decision_kwargs(
                     ep_num=working_ep,
@@ -3625,7 +3772,7 @@ class Stage3Orchestrator:
                 )
             except Exception as _sa_err:
                 _logging.debug("[stage_attempts] Stage3 REJECT record failed (best-effort: %s)", _sa_err)
-            if hasattr(_packet.db, "save_director_selection") and _packet.selection_kwargs:
+            if hasattr(_packet.db, "save_director_selection") and _packet.selection_kwargs and _selection_contract_ok:
                 try:
                     _packet.db.save_director_selection(**_packet.selection_kwargs)
                 except Exception as _ds_err:

@@ -23,8 +23,10 @@ Stage 3 사전검사기 + Director 최종 판정
 import json
 import logging
 import re
+from pathlib import Path
 
 from modules.core.constants import AIModels, Stage2Limits
+from modules.core.genre_guards.work_guard import WorkGuardConfigError, load_work_guard_config
 from modules.core.partial_fix_contract import normalize_patch_target_records
 from modules.core.scene_obligation_heuristics import build_blueprint_scene_profile
 from modules.core.stage_cross_stage_contract import (
@@ -74,6 +76,7 @@ _BINDING_PREVALIDATION_CATEGORIES = {
     "fact_lock_institution",
     "tactical_semantic_fidelity",
     "opening_transition",
+    "work_identity_opening",
 }
 # MAJOR/CRITICAL binding prevalidation issues are structural contract breaches.
 # They should never be routed through local faux-inplace repair.
@@ -326,6 +329,7 @@ class UnifiedBlueprintValidator:
             model_tier or _get_agent_default_model("unified_blueprint_validator") or AIModels.FLASH_ANALYSIS_MODEL
         )
         self.min_chars = BLUEPRINT_MIN_CHARS
+        self._work_guard_cache: dict[str, dict] = {}
 
     def _safe_causal_history(self) -> str:
         """get_causal_history_summary()를 안전하게 호출한다 (DB 오류 시 빈 문자열)."""
@@ -336,6 +340,174 @@ class UnifiedBlueprintValidator:
         except Exception as e:
             logging.warning(f"[S3-P1-2] get_causal_history_summary DB 오류: {e!s:.100}")
             return ""
+
+    def _load_active_work_guard_data(self) -> dict:
+        current_project = getattr(self.context, "current_project", None)
+        project_paths = getattr(current_project, "paths", None)
+        root = getattr(project_paths, "root", None)
+        if not isinstance(root, str | Path):
+            return {}
+
+        work_guard_path = Path(root) / "config" / "work_guard.yaml"
+        cache_key = str(work_guard_path)
+        cached = self._work_guard_cache.get(cache_key)
+        if cached is not None:
+            return cached
+        if not work_guard_path.exists():
+            self._work_guard_cache[cache_key] = {}
+            return {}
+
+        try:
+            loaded = load_work_guard_config(work_guard_path)
+        except (OSError, WorkGuardConfigError) as exc:
+            logging.debug("[Stage3] work_guard load failed during opening doctrine check: %s", exc)
+            loaded = {}
+
+        normalized = loaded if isinstance(loaded, dict) else {}
+        self._work_guard_cache[cache_key] = normalized
+        return normalized
+
+    def _collect_work_identity_opening_issues(
+        self,
+        *,
+        integrated: str,
+        scenes: dict,
+        scene_count: int,
+        working_ep: int,
+    ) -> list[dict]:
+        if working_ep <= 0 or working_ep > 4 or scene_count < 2 or not isinstance(scenes, dict):
+            return []
+
+        work_guard_data = self._load_active_work_guard_data()
+        if not isinstance(work_guard_data, dict) or not work_guard_data:
+            return []
+
+        work_identity = work_guard_data.get("work_identity", {})
+        if not isinstance(work_identity, dict):
+            work_identity = {}
+        evaluation_contract = work_identity.get("evaluation_contract", {})
+        if not isinstance(evaluation_contract, dict):
+            evaluation_contract = {}
+
+        contract_fragments = [
+            str(work_identity.get("one_line_truth", "") or "").strip(),
+            *[str(item or "").strip() for item in work_identity.get("tracking_slots", []) or []],
+            *[str(item or "").strip() for item in work_identity.get("mandatory_scene_engines", []) or []],
+            *[str(item or "").strip() for item in work_guard_data.get("custom_rules", []) or []],
+            *[str(item or "").strip() for item in evaluation_contract.get("episode_loop_contract", []) or []],
+            str(evaluation_contract.get("minimum_acceptance_rule", "") or "").strip(),
+        ]
+        contract_text = " ".join(fragment for fragment in contract_fragments if fragment).casefold()
+        if not contract_text:
+            return []
+
+        if not all(token in contract_text for token in ("public proof", "private receipt", "next gate")):
+            return []
+        if not any(token in contract_text for token in ("observer shift", "visible pressure", "execution")):
+            return []
+
+        def _scene_text(scene: dict) -> str:
+            if not isinstance(scene, dict):
+                return ""
+            parts = [
+                str(scene.get("title", "") or "").strip(),
+                str(scene.get("goal", "") or "").strip(),
+                str(scene.get("summary", "") or "").strip(),
+                str(scene.get("type", "") or "").strip(),
+            ]
+            key_events = scene.get("key_events", [])
+            if isinstance(key_events, list):
+                parts.extend(str(item or "").strip() for item in key_events if str(item or "").strip())
+            return " ".join(part for part in parts if part)
+
+        def _normalize_location(raw: object) -> str:
+            return re.sub(r"\s+", " ", str(raw or "").strip().casefold())
+
+        blueprint_text = " ".join(
+            fragment
+            for fragment in [
+                str(integrated or "").strip(),
+                *[_scene_text(scene) for scene in scenes.values() if isinstance(scene, dict)],
+            ]
+            if fragment
+        ).casefold()
+        if not blueprint_text:
+            return []
+
+        unique_locations = {
+            _normalize_location(scene.get("location", ""))
+            for scene in scenes.values()
+            if isinstance(scene, dict) and _normalize_location(scene.get("location", ""))
+        }
+        receipt_tokens = (
+            "private receipt",
+            "access shift",
+            "seat-equivalent",
+            "seat equivalent",
+            "seat",
+            "access",
+            "접근권",
+            "응답권",
+            "우선 응답권",
+            "예외 계좌",
+            "명함",
+            "라인",
+            "pb tone shift",
+        )
+        observer_shift_tokens = (
+            "observer shift",
+            "tone shift",
+            "gatekeeper",
+            "observer",
+            "witness",
+            "태도 변화",
+            "시선 변화",
+            "재평가",
+            "경외",
+            "허용",
+        )
+        next_gate_tokens = (
+            "next gate",
+            "next-cycle ticket",
+            "next cycle",
+            "ticket",
+            "signboard",
+            "다음 gate",
+            "다음 단계",
+            "다음 사이클",
+            "입장권",
+            "후속 연결",
+            "다음 연결",
+            "사인보드",
+        )
+
+        has_receipt = any(token in blueprint_text for token in receipt_tokens)
+        has_observer_shift = any(token in blueprint_text for token in observer_shift_tokens)
+        has_next_gate = any(token in blueprint_text for token in next_gate_tokens)
+        if has_receipt and has_observer_shift and has_next_gate:
+            return []
+        if len(unique_locations) > 2 and (has_receipt or has_next_gate):
+            return []
+
+        return [
+            {
+                "severity": "MAJOR",
+                "category": "work_identity_opening",
+                "issue": (
+                    "opening authority drift: work_guard requires the early loop to move beyond public proof "
+                    "into private receipt / observer shift / next gate, but the current blueprint stays under-surfaced"
+                ),
+                "evidence": (
+                    f"ep={working_ep}; unique_locations={len(unique_locations)}; "
+                    f"receipt_visible={int(has_receipt)}; observer_shift_visible={int(has_observer_shift)}; "
+                    f"next_gate_visible={int(has_next_gate)}"
+                ),
+                "fix_hint": (
+                    "opening scenes must surface at least one private receipt/access-shift beat and one visible "
+                    "next gate instead of closing on isolated internal proof only"
+                ),
+            }
+        ]
 
     def _apply_dead_npc_advisory(
         self,
@@ -661,6 +833,7 @@ class UnifiedBlueprintValidator:
             prev_blueprint,
             state_tracker,
             arc_data=arc_data,
+            working_ep_override=working_ep,
         )
         candidate_arc_no = arc_data.get("arc_no", 0) if isinstance(arc_data, dict) else arc_idx
         if candidate_arc_no <= 0:
@@ -876,6 +1049,7 @@ class UnifiedBlueprintValidator:
             prev_blueprint,
             state_tracker,
             arc_data=arc_data,
+            working_ep_override=working_ep,
         )
 
         arc_no = arc_data.get("arc_no", 0) if arc_data else arc_idx
@@ -1477,6 +1651,7 @@ class UnifiedBlueprintValidator:
         prev_blueprint: dict | None,
         state_tracker=None,  # [V60.95] 고밀도 HUD 검증용
         arc_data=None,  # [ValidationHardening] intent fidelity check용
+        working_ep_override: int | None = None,
     ) -> dict:
         """Python 사전검사 (무료, 빠름)"""
         blueprint = blueprint if isinstance(blueprint, dict) else {}
@@ -1491,6 +1666,10 @@ class UnifiedBlueprintValidator:
             if marker is not None:
                 working_ep = marker
                 break
+        if working_ep <= 0:
+            override_marker = self._coerce_episode_marker(working_ep_override)
+            if override_marker is not None:
+                working_ep = override_marker
 
         issues: list[dict] = []
         issues.extend(
@@ -1512,6 +1691,14 @@ class UnifiedBlueprintValidator:
             self._collect_arc_compliance_prevalidation_issues(
                 constraint_block=constraint_block,
                 integrated=integrated,
+            )
+        )
+        issues.extend(
+            self._collect_work_identity_opening_issues(
+                integrated=integrated,
+                scenes=scenes,
+                scene_count=scene_count,
+                working_ep=working_ep,
             )
         )
         issues.extend(
@@ -1590,6 +1777,7 @@ class UnifiedBlueprintValidator:
                 blueprint=blueprint,
                 prev_blueprint=prev_blueprint,
                 constraint_block=constraint_block,
+                normalized_opening_transition=normalized_opening_transition,
             )
         )
         issues.extend(
@@ -2264,6 +2452,7 @@ class UnifiedBlueprintValidator:
         blueprint: dict,
         prev_blueprint: dict | None,
         constraint_block: dict,
+        normalized_opening_transition: dict | None = None,
     ) -> list[dict]:
         """Detect replay of prior-episode scene families that should have progressed forward."""
         if not isinstance(prev_blueprint, dict) or not isinstance(constraint_block, dict):
@@ -2289,6 +2478,17 @@ class UnifiedBlueprintValidator:
         lawful_window = progression_packet.get("lawful_repetition_window", {})
         if not isinstance(lawful_window, dict):
             lawful_window = {}
+        episode_state_packet = constraint_block.get("episode_state_packet", {})
+        if not isinstance(episode_state_packet, dict):
+            episode_state_packet = {}
+        opening_truth = episode_state_packet.get("opening_truth", {})
+        if not isinstance(opening_truth, dict):
+            opening_truth = {}
+        normalized_opening_transition = (
+            normalized_opening_transition if isinstance(normalized_opening_transition, dict) else {}
+        )
+        normalized_transition_type = str(normalized_opening_transition.get("type", "") or "").strip().casefold()
+        opening_transition_expectation = str(opening_truth.get("opening_transition_expectation", "") or "").strip()
         lawful_tokens = [
             str(token or "").strip().casefold()
             for token in lawful_window.get("escalation_tokens", []) or []
@@ -2344,6 +2544,18 @@ class UnifiedBlueprintValidator:
                 )
                 if part
             ).casefold()
+
+        def _is_authorized_opening_shift(scene_key: str) -> bool:
+            if str(scene_key or "").strip().casefold() != "scene_1":
+                return False
+            expectation = opening_transition_expectation.casefold()
+            if not expectation:
+                return False
+            if "do not declare direct_continuation" in expectation:
+                return True
+            if normalized_transition_type not in {"explicit_transition", "jump_opening"}:
+                return False
+            return "explicit_transition" in expectation or "jump_opening" in expectation
 
         def _is_lawful_repetition(scene: dict, family: dict) -> bool:
             if lawful_window.get("mode") != "allow_escalated_repeat":
@@ -2459,6 +2671,8 @@ class UnifiedBlueprintValidator:
 
                 family_label = str(family.get("label", "") or family.get("location", "") or family_key).strip()
                 family_location = str(family.get("location", "") or "").strip()
+                if _is_authorized_opening_shift(scene_key):
+                    continue
                 if must_focus and any(token and token in must_focus for token in (family_label, family_location)):
                     continue
                 if _is_lawful_repetition(scene_value, family):
