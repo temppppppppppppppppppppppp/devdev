@@ -246,3 +246,53 @@ def test_handle_stage2_arc_failure_skip_choice_uses_skip_helper(tmp_path):
         arcs_source=[{"ep_count": 3}, {"ep_count": 4}],
         current_ep_start=8,
     )
+
+
+def test_handle_stage2_arc_failure_headless_policy_auto_aborts_without_prompt(tmp_path):
+    ctx = _make_ctx()
+    ctx.current_project = SimpleNamespace(
+        name="proj",
+        paths=SimpleNamespace(root=tmp_path),
+    )
+    orch = Stage2Orchestrator(app=MagicMock(), context=ctx)
+    orch._resolve_stage2_arc_failure_report_path = MagicMock(
+        return_value=tmp_path / "logs" / "arc_2_failure_report.txt"
+    )
+    orch._build_stage2_arc_failure_report_context = MagicMock(
+        return_value={"arc_rejects": [], "current_constraints": "seed", "prev_items": ["sword"]}
+    )
+    orch._build_stage2_arc_failure_report_lines = MagicMock(return_value=["report"])
+    orch._write_stage2_arc_failure_report = AsyncMock()
+    orch._log_stage2_arc_failure_summary = MagicMock()
+
+    with (
+        patch.dict("os.environ", {"GEULDOBI_STAGE2_HEADLESS": "1"}, clear=False),
+        patch("builtins.input", side_effect=AssertionError("headless path must not prompt")),
+    ):
+        result = asyncio.run(
+            orch._handle_stage2_arc_failure(
+                global_arc_no=2,
+                batch_start=0,
+                batch_end=2,
+                all_refined_arcs=[],
+                arcs_source=[{"ep_count": 3}, {"ep_count": 4}],
+                constraint_db=MagicMock(),
+                refined_arc={"tactical_doc": "draft"},
+                current_ep_start=8,
+            )
+        )
+
+    assert result == {"action": "abort"}
+    orch._write_stage2_arc_failure_report.assert_awaited_once()
+    log_texts = [call.args[0] for call in ctx.ui.log.call_args_list if call.args]
+    assert any("자동 중단" in text for text in log_texts)
+
+
+def test_complete_stage2_pipeline_headless_policy_skips_menu_return_pause():
+    orch = Stage2Orchestrator(app=MagicMock(), context=_make_ctx())
+
+    with (
+        patch.dict("os.environ", {"GEULDOBI_STAGE2_HEADLESS": "1"}, clear=False),
+        patch("builtins.input", side_effect=AssertionError("headless completion must not prompt")),
+    ):
+        asyncio.run(orch._complete_stage2_pipeline(target_arc_count=None))

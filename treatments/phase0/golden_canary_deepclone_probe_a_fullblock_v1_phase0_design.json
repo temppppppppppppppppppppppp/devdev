@@ -2,6 +2,7 @@
   "_schema_version": "blockguide.phase0.v1",
   "_work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
   "_family": "blockguide",
+  "_work_guard": "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
   "_consistency_reference_only": true,
   "project": {
     "title_ko": "골든 루트 (가제)",
@@ -697,6 +698,19 @@
         "weakness": "한시우는 수익률보다 통제권과 자산 방화벽을 먼저 잠근다.",
         "transition_block": 60
       }
+    ],
+    "contamination_guard": [
+      "Deep-cloning donor doctrine은 visible pressure -> execution -> public proof -> private receipt / access-shift cadence만 generalized slot으로 유지하고 donor 고유 사건과 한국 재벌 정치 skin은 canonical law로 들이지 않는다.",
+      "새 donor는 generalized slot으로 환원된 뒤에만 canonical contract에 영향을 줄 수 있으며 sealed 1~60 ladder를 donor noun으로 in-place rewrite하지 않는다.",
+      "full-block reward rotation은 access, authority, protection, signboard class로 유지하고 donor-flavored receipt repetition으로 좁히지 않는다.",
+      "가족 갈등은 donor식 가문 정치 복제가 아니라 패밀리오피스 통제권과 자산 방화벽 문제로 재저작한다."
+    ],
+    "do_not_fake": [
+      "gatekeeper/리스크팀/증권가 tone shift를 추상 인정으로 뭉개지 말 것.",
+      "원유 thesis와 포지션 proof를 숫자 없는 막연한 촉으로 처리하지 말 것.",
+      "Donor의 재벌 정치, 검은 기운, 고유 시장 조작 디테일을 복제하지 말 것.",
+      "named seat, 예외 계좌, 우선 응답권을 generalized slot 설명 없이 donor law처럼 되풀이하지 말 것.",
+      "Setup-only opening 3부작, proof-only late conversion drift, reward portfolio collapse로 서사를 평탄화하지 말 것."
     ],
     "capital_curve": [
       {

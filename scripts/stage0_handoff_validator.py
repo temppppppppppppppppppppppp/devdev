@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from modules.narrative_router.artifact_paths import phase0_candidate_paths  # noqa: E402
+
 # ---------------------------------------------------------------------------
 # Valid profile enum (must match contracts/*.schema.json)
 # ---------------------------------------------------------------------------
@@ -227,10 +229,7 @@ def _validate_phase0_ready_snapshot(data: dict) -> list[str]:
 
 
 def _phase0_candidate_paths(work_id: str) -> tuple[Path, ...]:
-    return (
-        ROOT / "treatments" / "phase0" / f"{work_id}_phase0_design.json",
-        ROOT / "treatments" / f"{work_id}_phase0_design.json",
-    )
+    return phase0_candidate_paths(work_id, root=ROOT)
 
 
 def _validate_phase0_design(data: dict) -> list[str]:

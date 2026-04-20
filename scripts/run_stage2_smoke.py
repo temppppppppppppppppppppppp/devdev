@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 import builtins
 import json
+import os
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
@@ -24,8 +25,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.db_manager import DBManager  # noqa: E402
-from modules.core.smoke_fixture_tools import assert_smoke_fixture_ready, reset_stage2_smoke_state  # noqa: E402
 from modules.core.slack_bot import notifier  # noqa: E402
+from modules.core.smoke_fixture_tools import assert_smoke_fixture_ready, reset_stage2_smoke_state  # noqa: E402
 from modules.core.stage2_context import Stage2Context  # noqa: E402
 from modules.core.stage2_orchestrator import Stage2Orchestrator  # noqa: E402
 from modules.domain.agents.state_tracker import StateTracker  # noqa: E402
@@ -274,6 +275,7 @@ async def run_stage2_smoke() -> None:
 
         # Silence optional external side effects.
         notifier.send_notification = lambda *args, **kwargs: None
+        os.environ["GEULDOBI_STAGE2_HEADLESS"] = "1"
         builtins.input = lambda *args, **kwargs: ""
         _install_narrative_analyzer_smoke_stub()
 

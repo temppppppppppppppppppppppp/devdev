@@ -54,6 +54,30 @@
     "자산 증가는 반드시 PB 재평가, 예외 계좌, named seat, priority response list, 운용권 변화 중 하나로 환전되어야 한다.",
     "이 probe는 canonical 골든 카나리아의 투자/패밀리오피스 lane을 유지하는 upstream-only 실험판이다."
   ],
+  "donor_review": {
+    "decision": "adopted",
+    "scope": "Sealed 1~60 full-block donorized baseline은 Deep-cloning donor doctrine의 pressure -> proof -> receipt -> next-hook cadence를 generalized slot으로만 확장하며 donor noun이나 scene-order를 canonical law로 승격하지 않는다.",
+    "canonical_translation_surfaces": [
+      "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+      "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml"
+    ],
+    "annex_refs": [
+      "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/deepclone_donor_doctrine_packet.json",
+      "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/donor_registry.json",
+      "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+    ],
+    "blocked_surfaces": [
+      "donor 고유 인물명, 조직명, 재벌 정치 skin의 직접 이식",
+      "single-donor authority로 late-game 또는 all-block law를 덮어쓰는 시도",
+      "named seat, 예외 계좌, PB tone shift를 generalized slot 없이 canonical law로 고정하는 표현"
+    ]
+  },
+  "contamination_guard": [
+    "Deep-cloning donor doctrine은 visible pressure -> execution -> public proof -> private receipt / access-shift cadence만 generalized slot으로 유지하고 donor 고유 사건과 한국 재벌 정치 skin은 canonical law로 들이지 않는다.",
+    "새 donor는 generalized slot으로 환원된 뒤에만 canonical contract에 영향을 줄 수 있으며 sealed 1~60 ladder를 donor noun으로 in-place rewrite하지 않는다.",
+    "full-block reward rotation은 access, authority, protection, signboard class로 유지하고 donor-flavored receipt repetition으로 좁히지 않는다.",
+    "가족 갈등은 donor식 가문 정치 복제가 아니라 패밀리오피스 통제권과 자산 방화벽 문제로 재저작한다."
+  ],
   "do_not_fake": [
     "PB/리스크팀/증권가 tone shift를 추상 인정으로 뭉개지 말 것.",
     "원유 thesis와 포지션 proof를 숫자 없는 막연한 촉으로 처리하지 말 것.",

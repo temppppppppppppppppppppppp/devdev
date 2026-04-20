@@ -1,6 +1,6 @@
 # Production Pair Operational Registry v1
 
-Date: 2026-04-12 (last updated; initial 2026-04-08 benchmark freshness wave)
+Date: 2026-04-20 (last updated; initial 2026-04-08 benchmark freshness wave)
 Status: active
 Scope: durable operational registry for current schema-clean production pairs
 
@@ -53,6 +53,7 @@ Freshness closeout artifact:
 | `office_checkup_next_day` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS re-closed by 2026-04-12 bounded benchmark-preservation + manual closeout; current sell-in top shelf |
 | `pantech_cyworld_reborn` | `blockguide` | `numbered_live_pair` | `newly_touched_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS certified by 2026-04-12 manual closeout; current sell-in top shelf |
 | `wuxia_heavenly_physician` | `wuxguide` | `numbered_live_pair` | `regenerated_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS re-closed by 2026-04-12 bounded benchmark-preservation + manual closeout; current sell-in top shelf |
+| `golden_canary_deepclone_probe_a_fullblock_v1` | `blockguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREENPLUS` | `current` | `GREEN` | deployable GREENPLUS certified by 2026-04-20 initial benchmark + manual closeout; donorized full-block gold sample / current sell-in top shelf |
 | `jangyeongshil_industrial_revolution` | `blockguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREEN` | `current` | `RED` | negative exemplar archive on opening pacing; spot audit confirmed work-level opening promise miss despite positive alias history |
 | `manual_meridian_archivist` | `wuxguide` | `unslotted_live_pair` | `new_live_pair` | `pass` | `GREEN` | `current` | `GREEN` | provisional keep; not a discard candidate, but not a fresh declared-contract opening exemplar certification |
 
@@ -78,6 +79,15 @@ Freshness closeout artifact:
   - if a row still says `provisional keep`, `repair-first`, `whole-run YELLOW`, `UNTRIAGED`, or similar qualifier, do not treat it as deployable `GREENPLUS` even if the alias column still shows `GREENPLUS`
 
 ## 6. Update Log
+
+- `golden_canary_deepclone_probe_a_fullblock_v1` initial benchmark + deployable closeout recorded under:
+  - `docs/2026-04-20/golden_canary_deepclone_probe_a_fullblock_v1_initial_greenplus_benchmark.md`
+  - `docs/2026-04-20/golden_canary_deepclone_probe_a_fullblock_v1_deployable_greenplus_closeout.md`
+  - operator effect:
+    - `unbenchmarked -> current` closes through a fresh initial benchmark (`P0 6/6`, `P1 19/20`, `60/60 has_cider:true`)
+    - opening legacy-heuristic ambiguity closes through explicit numbered manual closeout on `B02/B03/B04/B06/B07`
+    - the donorized `1~60` gold sample is admitted as a deployable `GREENPLUS` unslotted live pair
+    - current deployable `GREENPLUS` shelf moves from `6` to `7`
 
 - deployable `GREENPLUS` shelf expansion wave recorded under `docs/2026-04-12/deployable-greenplus-shelf-expansion-wave.md`
   - result:

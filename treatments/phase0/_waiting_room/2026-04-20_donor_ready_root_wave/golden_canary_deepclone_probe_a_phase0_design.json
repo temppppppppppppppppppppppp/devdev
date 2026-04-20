@@ -2,6 +2,7 @@
   "_schema_version": "blockguide.phase0.v1",
   "_work_id": "golden_canary_deepclone_probe_a",
   "_family": "blockguide",
+  "_work_guard": "work_guards/_waiting_room/2026-04-20_donor_ready_root_wave/golden_canary_deepclone_probe_a.yaml",
   "_consistency_reference_only": true,
   "project": {
     "title_ko": "골든 루트 (가제)",
@@ -653,6 +654,19 @@
         "weakness": "한시우는 수익률보다 통제권과 자산 방화벽을 먼저 잠근다.",
         "transition_block": 60
       }
+    ],
+    "contamination_guard": [
+      "Deep-cloning donor doctrine은 visible pressure -> execution -> public proof -> private receipt / access-shift cadence만 generalized slot으로 유지하고 donor 고유 사건과 한국 재벌 정치 skin은 canonical law로 들이지 않는다.",
+      "PB tone shift, named seat, 예외 계좌는 seed example family일 뿐이며 canonical law는 observer shift / private receipt / next-gate access slot 기준으로 읽는다.",
+      "Opening B02~B06 보상은 현금 숫자 alone으로 끝내지 않고 seat-equivalent receipt, priority lane, next-cycle ticket 중 하나로 환전한다.",
+      "가족 갈등은 donor식 가문 정치 복제가 아니라 패밀리오피스 통제권과 자산 방화벽 문제로 재저작한다."
+    ],
+    "do_not_fake": [
+      "PB/리스크팀/증권가 tone shift를 추상 인정으로 뭉개지 말 것.",
+      "원유 thesis와 포지션 proof를 숫자 없는 막연한 촉으로 처리하지 말 것.",
+      "Donor의 재벌 정치, 검은 기운, 고유 시장 조작 디테일을 복제하지 말 것.",
+      "named seat, 예외 계좌, priority response list를 generalized slot 설명 없이 canonical law 자체처럼 남용하지 말 것.",
+      "Setup-only opening 3부작, proof-only late conversion drift, 이유 없는 자선/구원으로 protagonist를 미화하지 말 것."
     ],
     "capital_curve": [
       {
