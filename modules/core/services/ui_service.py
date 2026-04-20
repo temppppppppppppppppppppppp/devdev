@@ -14,6 +14,8 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from modules.core.material_visibility import list_visible_material_files, visibility_config_path
+
 
 class UIService:
     """UI 선택/입력/표시 헬퍼 서비스.
@@ -98,9 +100,15 @@ class UIService:
     def select_bible(self) -> str | None:
         """bible 폴더에서 성경(Lore) JSON 파일 선택. 원본: main_a.py:1117"""
         bible_dir = Path("bible")
-        files = sorted(list(bible_dir.glob("*.json")))
+        files = list_visible_material_files("bible")
         if not files:
-            self._log("❌ bible 폴더에 JSON 파일이 없습니다.")
+            if bible_dir.exists() and any(bible_dir.glob("*.json")):
+                self._log(
+                    "❌ bible 폴더에 노출된 JSON 파일이 없습니다. "
+                    f"필요하면 {visibility_config_path().as_posix()}를 확인하십시오."
+                )
+            else:
+                self._log("❌ bible 폴더에 JSON 파일이 없습니다.")
             return None
 
         options = [f"{i}. {f.name}" for i, f in enumerate(files, 1)]
@@ -131,9 +139,15 @@ class UIService:
         if not treat_dir.exists():
             treat_dir.mkdir(parents=True, exist_ok=True)
 
-        files = sorted(list(treat_dir.glob("*.json")))
+        files = list_visible_material_files("treatments")
         if not files:
-            self._log("❌ treatments 폴더에 JSON 파일이 없습니다.")
+            if any(treat_dir.glob("*.json")):
+                self._log(
+                    "❌ treatments 폴더에 노출된 JSON 파일이 없습니다. "
+                    f"필요하면 {visibility_config_path().as_posix()}를 확인하십시오."
+                )
+            else:
+                self._log("❌ treatments 폴더에 JSON 파일이 없습니다.")
             return None
 
         project = self._project_fn()
