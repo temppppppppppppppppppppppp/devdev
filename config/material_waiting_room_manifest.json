@@ -1,0 +1,120 @@
+{
+  "_schema": "material_waiting_room.v1",
+  "date": "2026-04-20",
+  "policy": {
+    "name": "donor_ready_root_wave",
+    "description": "Keep only the current donor-ready fullblock sample on the visible TR/BI/Phase0/work_guard root shelves and move other root material files into restore-only waiting rooms.",
+    "notes": [
+      "Resolver-based tools are allowed to reopen hidden files from waiting rooms by direct work_id lookup.",
+      "Genre template subfolders such as work_guards/investment stay in place in this wave.",
+      "The waiting room is a hidden holding lane, not a destructive archive.",
+      "The pre-move mixed-root reading is preserved in docs/2026-04-20/bi-tr-root-lane-audit.md."
+    ]
+  },
+  "keep_files": {
+    "treatments": [
+      "golden_canary_deepclone_probe_a_fullblock_v1_tr_block_070_draft.json"
+    ],
+    "bible": [
+      "0_bi_golden_canary_deepclone_probe_a_fullblock_v1.json"
+    ],
+    "treatments_phase0": [
+      "golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json"
+    ],
+    "work_guards": [
+      "golden_canary_deepclone_probe_a_fullblock_v1.yaml"
+    ]
+  },
+  "waiting_rooms": {
+    "treatments": {
+      "path": "treatments/_waiting_room/2026-04-20_donor_ready_root_wave",
+      "moved_files": [
+        "01_tr_투자물_골든_카나리아 테스트_canonical_v1.json",
+        "02_chaebol_allowance_zero_tr_block_070_draft.json",
+        "03_chaebol_ent_empire_tr_block_070_draft.json",
+        "04_defense_defect_engineer_tr_block_070_draft.json",
+        "07_office_checkup_next_day_tr_block_070_draft.json",
+        "08_pantech_cyworld_reborn_tr_block_070_draft.json",
+        "09_wuxia_heavenly_physician_tr_block_070_draft.json",
+        "africa_farm_king_tr_block_001_draft.json",
+        "empire_youngest_allsector_tr_block_070_draft.json",
+        "golden_canary_deepclone_probe_a_tr_block_070_draft.json",
+        "gulf_tycoon_heir_tr_block_001_draft.json",
+        "hoegui_surgeon_tr_block_020_draft.json",
+        "jaebeol3se_loss_line_tr_block_005_draft.json",
+        "jangyeongshil_industrial_revolution_tr_block_010_draft.json",
+        "jangyeongshil_industrial_revolution_tr_block_011_015_draft.json",
+        "jangyeongshil_industrial_revolution_tr_block_016_020_draft.json",
+        "jangyeongshil_industrial_revolution_tr_block_021_025_draft.json",
+        "jangyeongshil_industrial_revolution_tr_block_025_draft.json",
+        "manual_meridian_archivist_tr_block_070_draft.json",
+        "quiet_chaebol_heir_arc05_npc_lock.md",
+        "quiet_chaebol_heir_tr_block_001_draft.json",
+        "quiet_chaebol_heir_tr_block_001_draft.json.pre_scrub_backup",
+        "smart_new_hire_tr_block_001_draft.json",
+        "smart_new_hire_tr_block_070_draft.json"
+      ]
+    },
+    "bible": {
+      "path": "bible/_waiting_room/2026-04-20_donor_ready_root_wave",
+      "moved_files": [
+        "01_bi_투자물_골든_카나리아 테스트_canonical_v1.json",
+        "02_bi_chaebol_allowance_zero.json",
+        "03_bi_chaebol_ent_empire.json",
+        "04_bi_defense_defect_engineer.json",
+        "07_bi_office_checkup_next_day.json",
+        "08_bi_pantech_cyworld_reborn.json",
+        "09_bi_wuxia_heavenly_physician.json",
+        "0_bi_empire_youngest_allsector.json",
+        "0_bi_golden_canary_deepclone_probe_a.json",
+        "0_bi_hoegui_surgeon.json",
+        "0_bi_smart_new_hire.json",
+        "jangyeongshil_industrial_revolution_bi.json",
+        "manual_meridian_archivist_bi.json"
+      ]
+    },
+    "treatments_phase0": {
+      "path": "treatments/phase0/_waiting_room/2026-04-20_donor_ready_root_wave",
+      "moved_files": [
+        "africa_farm_king_phase0_design.json",
+        "chaebol_allowance_zero_phase0_design.json",
+        "chaebol_ent_empire_phase0_design.json",
+        "defense_defect_engineer_phase0_design.json",
+        "empire_youngest_allsector_phase0_design.json",
+        "failed_future_ceo_intern_phase0_design.json",
+        "gatekeeper_heir_phase0_design.json",
+        "golden_canary_deepclone_probe_a_phase0_design.json",
+        "gulf_tycoon_heir_phase0_design.json",
+        "gulf_tycoon_heir_phase0_prompt_roadmap.json",
+        "hoegui_surgeon_phase0_design.json",
+        "jaebeol3se_loss_line_phase0_design.json",
+        "jangyeongshil_industrial_revolution_phase0_design.json",
+        "manual_meridian_archivist_phase0_design.json",
+        "office_checkup_next_day_phase0_design.json",
+        "pantech_cyworld_reborn_phase0_design.json",
+        "pantech_cyworld_reborn_phase0_design.v2_backup.json",
+        "quiet_chaebol_heir_phase0_design.json",
+        "smart_new_hire_phase0_design.json",
+        "wuxia_heavenly_physician_phase0_design.json",
+        "투자물_골든_카나리아 테스트_canonical_v1_phase0_design.json"
+      ]
+    },
+    "work_guards": {
+      "path": "work_guards/_waiting_room/2026-04-20_donor_ready_root_wave",
+      "moved_files": [
+        "01_투자물_골든_카나리아 테스트_canonical_v1.yaml",
+        "02_chaebol_allowance_zero.yaml",
+        "03_chaebol_ent_empire.yaml",
+        "04_defense_defect_engineer.yaml",
+        "07_office_checkup_next_day.yaml",
+        "08_pantech_cyworld_reborn.yaml",
+        "09_wuxia_heavenly_physician.yaml",
+        "10_permit_window_grade9.yaml",
+        "11_manual_meridian_archivist.yaml",
+        "12_hoegui_surgeon.yaml",
+        "13_jangyeongshil_industrial_revolution.yaml",
+        "golden_canary_deepclone_probe_a.yaml"
+      ]
+    }
+  }
+}

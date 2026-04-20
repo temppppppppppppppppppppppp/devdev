@@ -1,0 +1,15 @@
+{
+  "_schema": "material_visibility.v1",
+  "folders": {
+    "treatments": {
+      "visible_files": [
+        "golden_canary_deepclone_probe_a_fullblock_v1_tr_block_070_draft.json"
+      ]
+    },
+    "bible": {
+      "visible_files": [
+        "0_bi_golden_canary_deepclone_probe_a_fullblock_v1.json"
+      ]
+    }
+  }
+}

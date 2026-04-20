@@ -1,6 +1,16 @@
 # Work Guards
 
+Date: 2026-04-20
+Status: active operator note
+
 `work_guards/`는 Stage 0에서 선택적으로 가져올 작품가드 원본 라이브러리다.
+
+Current donor-ready shelf rule:
+
+- root `work_guards/` visible keep file은 `golden_canary_deepclone_probe_a_fullblock_v1.yaml`만 둔다.
+- non-keep root publish files는 `work_guards/_waiting_room/2026-04-20_donor_ready_root_wave/`로 이동한다.
+- `investment/` 같은 genre template subfolder는 이번 wave에서 유지한다.
+- resolver-based tools may still reopen hidden publish files by direct `work_id`.
 
 - 런타임 적용 파일은 언제나 `{project}/config/work_guard.yaml`이다.
 - 이 폴더 아래 YAML은 템플릿/샘플/원본 보관용이다.
