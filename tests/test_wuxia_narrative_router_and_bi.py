@@ -254,6 +254,34 @@ def test_artifact_paths_accept_numbered_tr_bi_files(temp_dir):
     assert bi_path.name == "06_bi_gatekeeper_heir.json"
 
 
+def test_artifact_paths_accept_waiting_room_partial_tr_files(temp_dir):
+    waiting_room = temp_dir / "treatments" / "_waiting_room" / "2026-04-20_donor_ready_root_wave"
+    waiting_room.mkdir(parents=True)
+    _write_json(waiting_room / "jangyeongshil_industrial_revolution_tr_block_010_draft.json", [])
+    _write_json(waiting_room / "jangyeongshil_industrial_revolution_tr_block_016_020_draft.json", [])
+    _write_json(waiting_room / "jangyeongshil_industrial_revolution_tr_block_025_draft.json", [])
+    _write_json(waiting_room / "hoegui_surgeon_tr_block_020_draft.json", [])
+
+    jang_path = resolve_tr_path("jangyeongshil_industrial_revolution", root=temp_dir)
+    hoegui_path = resolve_tr_path("hoegui_surgeon", root=temp_dir)
+
+    assert jang_path.name == "jangyeongshil_industrial_revolution_tr_block_025_draft.json"
+    assert hoegui_path.name == "hoegui_surgeon_tr_block_020_draft.json"
+
+
+def test_artifact_paths_accept_waiting_room_legacy_bi_files(temp_dir):
+    waiting_room = temp_dir / "bible" / "_waiting_room" / "2026-04-20_donor_ready_root_wave"
+    waiting_room.mkdir(parents=True)
+    _write_json(waiting_room / "jangyeongshil_industrial_revolution_bi.json", {})
+    _write_json(waiting_room / "0_bi_hoegui_surgeon.json", {})
+
+    jang_path = resolve_bi_path("jangyeongshil_industrial_revolution", root=temp_dir)
+    hoegui_path = resolve_bi_path("hoegui_surgeon", root=temp_dir)
+
+    assert jang_path.name == "jangyeongshil_industrial_revolution_bi.json"
+    assert hoegui_path.name == "0_bi_hoegui_surgeon.json"
+
+
 def test_artifact_paths_accept_work_guard_in_genre_subfolder(temp_dir):
     work_guard_path = temp_dir / "work_guards" / "investment" / "demo.yaml"
     work_guard_path.parent.mkdir(parents=True, exist_ok=True)

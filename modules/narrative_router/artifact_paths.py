@@ -48,6 +48,50 @@ def _waiting_room_matches(folder: Path, pattern: str) -> tuple[Path, ...]:
     return tuple(sorted(waiting_room.glob(f"*/{pattern}"), key=lambda path: path.as_posix()))
 
 
+def _many_matches(folder: Path, patterns: tuple[str, ...]) -> tuple[Path, ...]:
+    matches: list[Path] = []
+    for pattern in patterns:
+        matches.extend(sorted(folder.glob(pattern), key=lambda path: path.as_posix()))
+    return tuple(matches)
+
+
+def _waiting_room_many_matches(folder: Path, patterns: tuple[str, ...]) -> tuple[Path, ...]:
+    matches: list[Path] = []
+    for pattern in patterns:
+        matches.extend(_waiting_room_matches(folder, pattern))
+    return tuple(matches)
+
+
+def _tr_match_sort_key(path: Path) -> tuple[int, int, str]:
+    name = path.name
+    token = name.split("_tr_block_", 1)[1].rsplit("_draft", 1)[0]
+    parts = token.split("_")
+    try:
+        block_end = int(parts[-1])
+    except ValueError:
+        block_end = -1
+    is_range = 1 if len(parts) > 1 else 0
+    return (-block_end, is_range, path.as_posix())
+
+
+def _tr_wildcard_matches(folder: Path, work_id: str) -> tuple[Path, ...]:
+    patterns = (
+        f"[0-9][0-9]_{work_id}_tr_block_*_draft.json",
+        f"{work_id}_tr_block_*_draft.json",
+    )
+    matches = list(_many_matches(folder, patterns))
+    return tuple(sorted(matches, key=_tr_match_sort_key))
+
+
+def _waiting_room_tr_wildcard_matches(folder: Path, work_id: str) -> tuple[Path, ...]:
+    patterns = (
+        f"[0-9][0-9]_{work_id}_tr_block_*_draft.json",
+        f"{work_id}_tr_block_*_draft.json",
+    )
+    matches = list(_waiting_room_many_matches(folder, patterns))
+    return tuple(sorted(matches, key=_tr_match_sort_key))
+
+
 def canonical_phase0_path(work_id: str, *, root: Path | None = None) -> Path:
     return _root(root) / "treatments" / "phase0" / f"{work_id}_phase0_design.json"
 
@@ -94,6 +138,9 @@ def tr_candidate_paths(work_id: str, *, root: Path | None = None) -> tuple[Path,
             *_waiting_room_matches(base, f"[0-9][0-9]_{work_id}_tr_block_070_draft.json"),
             legacy_tr_path(work_id, root=root),
             *_waiting_room_matches(base, f"{work_id}_tr_block_070_draft.json"),
+            # The donor-ready root wave hides non-070 and partial ladders in waiting rooms.
+            *_tr_wildcard_matches(base, work_id),
+            *_waiting_room_tr_wildcard_matches(base, work_id),
         )
     )
 
@@ -126,10 +173,9 @@ def bi_candidate_paths(work_id: str, *, root: Path | None = None) -> tuple[Path,
     return _dedupe(
         (
             canonical_bi_path(work_id, root=root),
-            *_prefixed_matches(base, f"[0-9][0-9]_bi_{work_id}.json"),
-            *_waiting_room_matches(base, f"[0-9][0-9]_bi_{work_id}.json"),
+            *_many_matches(base, wildcard_patterns),
+            *_waiting_room_many_matches(base, wildcard_patterns),
             legacy_bi_path(work_id, root=root),
-            *_waiting_room_matches(base, f"0_bi_{work_id}.json"),
         )
     )
 
