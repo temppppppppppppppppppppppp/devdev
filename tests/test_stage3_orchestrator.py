@@ -5,6 +5,7 @@
 
 import json
 import logging
+import textwrap
 import time
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -19,6 +20,8 @@ from modules.core.stage3_orchestrator import (
     _build_stage3_source_anchor_summary,
     _build_stage3_work_focus_advisory,
     _classify_stage3_failure_category,
+    _compose_stage3_work_focus_text,
+    _resolve_stage3_work_focus,
     _select_stage3_anchor_recent_window,
     _summarize_stage3_observability_for_ui,
 )
@@ -2263,6 +2266,98 @@ def test_stage3_work_focus_advisory_preserves_tail_context(app_mock):
 
     assert len(text) <= 180
     assert "TAIL-REL" in text
+
+
+def test_compose_stage3_work_focus_text_prefers_current_episode_excerpt():
+    text = _compose_stage3_work_focus_text(
+        arc_data={
+            "title": "arc title",
+            "summary": "arc summary",
+            "tactical_doc": "제 1화: FIRST_SIGNAL\n제 2화: SECOND_SIGNAL\n제 3화: THIRD_SIGNAL",
+            "episode_details": [
+                {"ep_num": 1, "details": ["FIRST_SIGNAL"]},
+                {"ep_num": 2, "details": ["SECOND_SIGNAL thesis position"]},
+                {"ep_num": 3, "details": ["THIRD_SIGNAL exit"]},
+            ],
+        },
+        current_ep=2,
+        prev_blueprints=[],
+        entity_registry=None,
+    )
+
+    assert "SECOND_SIGNAL" in text
+    assert "FIRST_SIGNAL" not in text
+    assert "THIRD_SIGNAL" not in text
+
+
+def test_resolve_stage3_work_focus_uses_current_episode_excerpt(tmp_path):
+    from modules.core.genre_guards.work_guard import WorkGuard
+
+    class _BaseGuard:
+        FORBIDDEN_TERMS = []
+        ALLOWED_TERMS = []
+        MANDATORY_CONCEPTS = []
+
+        def get_genre_name(self):
+            return "TEST"
+
+        def get_v20_purism_prompt(self):
+            return "base"
+
+        def get_impossible_actions(self, current_state=None):
+            return []
+
+        def get_justification_patterns(self):
+            return []
+
+        def get_hierarchy_rules(self):
+            return {}
+
+        def check_state_action_consistency(self, manuscript, current_state):
+            return {"violations": []}
+
+        def run_deep_validation(self, manuscript, current_state=None):
+            return {"has_critical": False, "violations": [], "summary": "", "feedback": ""}
+
+    work_guard_path = tmp_path / "work_guard.yaml"
+    work_guard_path.write_text(
+        textwrap.dedent(
+            """\
+            work_identity:
+              mandatory_scene_engines:
+                - "SECOND_SIGNAL thesis position"
+                - "THIRD_SIGNAL exit timing"
+              tracking_slots:
+                - "SECOND_SLOT receipt lane"
+                - "THIRD_SLOT exit lane"
+            """
+        ),
+        encoding="utf-8",
+    )
+    ctx = SimpleNamespace(
+        sys=SimpleNamespace(
+            guard=WorkGuard(_BaseGuard(), work_guard_path),
+        )
+    )
+
+    focus = _resolve_stage3_work_focus(
+        ctx,
+        arc_data={
+            "title": "arc title",
+            "tactical_doc": "제 1화: FIRST_SIGNAL\n제 2화: SECOND_SIGNAL SECOND_SLOT\n제 3화: THIRD_SIGNAL THIRD_SLOT",
+            "episode_details": [
+                {"ep_num": 1, "details": ["FIRST_SIGNAL"]},
+                {"ep_num": 2, "details": ["SECOND_SIGNAL", "SECOND_SLOT"]},
+                {"ep_num": 3, "details": ["THIRD_SIGNAL", "THIRD_SLOT"]},
+            ],
+        },
+        current_ep=2,
+        prev_blueprints=[],
+        entity_registry=None,
+    )
+
+    assert focus["mandatory_scene_engines"] == ["SECOND_SIGNAL thesis position"]
+    assert focus["tracking_slots"] == ["SECOND_SLOT receipt lane"]
 
     def test_target_prompt_uses_hybrid_project_head(self, app_mock):
         app_mock.current_project.db.get_latest_blueprint_number.return_value = 0

@@ -686,6 +686,171 @@ class TestBlueprintPatchIntegration:
         assert retry_state.prev_phase2_focus_strategy == "dialogue_focused"
         assert pipeline["phases"]["generate"]["focus_strategy"] == "dialogue_focused"
 
+    def test_phase2_generation_failure_records_focus_strategy_from_screening_disqualified_candidates(
+        self, blueprint_generator, sample_arc_data
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        blueprint_generator.context.pass_rate_monitor = MagicMock(record_attempt=MagicMock())
+        blueprint_generator.ensemble.last_error_type = AgentErrorType.CANDIDATE_DISQUALIFIED
+        blueprint_generator.ensemble.last_error_types = [AgentErrorType.CANDIDATE_DISQUALIFIED]
+        blueprint_generator.ensemble.last_disqualified_candidates = [
+            {
+                "strategy": "action_focused",
+                "scene_count": 0,
+                "integrated_len": 0,
+                "contract_reason": "screening_disqualified",
+                "ordinal": 0,
+            },
+            {
+                "strategy": "dialogue_focused",
+                "scene_count": 0,
+                "integrated_len": 0,
+                "contract_reason": "screening_disqualified",
+                "ordinal": 1,
+            },
+        ]
+        retry_state = _ThreePhaseRetryState()
+        pipeline = {"phases": {"generate": {}}}
+
+        result = blueprint_generator.runtime._handle_phase2_generation_failure(
+            retry=0,
+            ep_num=2,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            pipeline_result=pipeline,
+            retry_state=retry_state,
+            max_retries=2,
+        )
+
+        assert result.should_continue is True
+        assert retry_state.prev_phase2_focus_strategy == "action_focused"
+        assert pipeline["phases"]["generate"]["focus_strategy"] == "action_focused"
+
+    def test_phase2_generation_failure_rotates_focus_strategy_after_repeated_screening_plateau(
+        self, blueprint_generator, sample_arc_data
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        blueprint_generator.context.pass_rate_monitor = MagicMock(record_attempt=MagicMock())
+        blueprint_generator.ensemble.last_error_type = AgentErrorType.CANDIDATE_DISQUALIFIED
+        blueprint_generator.ensemble.last_error_types = [AgentErrorType.CANDIDATE_DISQUALIFIED]
+        blueprint_generator.ensemble.last_disqualified_candidates = [
+            {
+                "strategy": "action_focused",
+                "scene_count": 0,
+                "integrated_len": 0,
+                "contract_reason": "screening_disqualified",
+                "ordinal": 0,
+            },
+            {
+                "strategy": "emotion_focused",
+                "scene_count": 0,
+                "integrated_len": 0,
+                "contract_reason": "screening_disqualified",
+                "ordinal": 1,
+            },
+            {
+                "strategy": "dialogue_focused",
+                "scene_count": 0,
+                "integrated_len": 0,
+                "contract_reason": "screening_disqualified",
+                "ordinal": 2,
+            },
+        ]
+        retry_state = _ThreePhaseRetryState(
+            prev_phase2_failure_signature=blueprint_generator.runtime._normalize_phase2_failure_signature(
+                error_type=AgentErrorType.CANDIDATE_DISQUALIFIED,
+                feedback=blueprint_generator.runtime._build_candidate_disqualified_retry_feedback({}),
+            ),
+            prev_phase2_focus_strategy="action_focused",
+            repeated_phase2_failure_streak=1,
+        )
+        pipeline = {"phases": {"generate": {}}}
+
+        result = blueprint_generator.runtime._handle_phase2_generation_failure(
+            retry=1,
+            ep_num=2,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            pipeline_result=pipeline,
+            retry_state=retry_state,
+            max_retries=2,
+        )
+
+        assert result.should_continue is True
+        assert retry_state.prev_phase2_focus_strategy == "emotion_focused"
+        assert pipeline["phases"]["generate"]["focus_strategy"] == "emotion_focused"
+
+    def test_phase2_generation_failure_preserves_richer_focus_pool_across_single_strategy_retry(
+        self, blueprint_generator, sample_arc_data
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        blueprint_generator.context.pass_rate_monitor = MagicMock(record_attempt=MagicMock())
+        blueprint_generator.ensemble.last_error_type = AgentErrorType.CANDIDATE_DISQUALIFIED
+        blueprint_generator.ensemble.last_error_types = [AgentErrorType.CANDIDATE_DISQUALIFIED]
+        blueprint_generator.ensemble.last_disqualified_candidates = [
+            {
+                "strategy": "action_focused",
+                "scene_count": 0,
+                "integrated_len": 0,
+                "contract_reason": "screening_disqualified",
+                "ordinal": 0,
+            }
+        ]
+        retry_state = _ThreePhaseRetryState(
+            prev_phase2_failure_signature=blueprint_generator.runtime._normalize_phase2_failure_signature(
+                error_type=AgentErrorType.CANDIDATE_DISQUALIFIED,
+                feedback=blueprint_generator.runtime._build_candidate_disqualified_retry_feedback({}),
+            ),
+            prev_phase2_focus_strategy="action_focused",
+            prev_phase2_focus_pool=[
+                {
+                    "strategy": "action_focused",
+                    "scene_count": 0,
+                    "integrated_len": 0,
+                    "contract_reason": "screening_disqualified",
+                    "ordinal": 0,
+                },
+                {
+                    "strategy": "emotion_focused",
+                    "scene_count": 0,
+                    "integrated_len": 0,
+                    "contract_reason": "screening_disqualified",
+                    "ordinal": 1,
+                },
+                {
+                    "strategy": "dialogue_focused",
+                    "scene_count": 0,
+                    "integrated_len": 0,
+                    "contract_reason": "screening_disqualified",
+                    "ordinal": 2,
+                },
+            ],
+            repeated_phase2_failure_streak=1,
+        )
+        pipeline = {"phases": {"generate": {}}}
+
+        result = blueprint_generator.runtime._handle_phase2_generation_failure(
+            retry=1,
+            ep_num=2,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            pipeline_result=pipeline,
+            retry_state=retry_state,
+            max_retries=2,
+        )
+
+        assert result.should_continue is True
+        assert [item["strategy"] for item in retry_state.prev_phase2_focus_pool] == [
+            "action_focused",
+            "emotion_focused",
+            "dialogue_focused",
+        ]
+        assert retry_state.prev_phase2_focus_strategy == "emotion_focused"
+        assert pipeline["phases"]["generate"]["focus_strategy"] == "emotion_focused"
+
     def test_phase3_validation_continuity_reject_short_circuits(self, blueprint_generator, sample_arc_data):
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
 
