@@ -101,6 +101,7 @@ class _ThreePhaseRetryState:
     prev_quality_gate_reject: bool = False
     prev_reject_signature: str = ""
     prev_phase2_failure_signature: str = ""
+    prev_phase2_focus_strategy: str = ""
     prev_binding_issue_count: int = 0
     repeated_reject_score_streak: int = 0
     repeated_reject_signature_streak: int = 0
@@ -1186,7 +1187,28 @@ class ThreePhaseBlueprintRuntime:
     @staticmethod
     def _reset_phase2_failure_streak(retry_state: _ThreePhaseRetryState) -> None:
         retry_state.prev_phase2_failure_signature = ""
+        retry_state.prev_phase2_focus_strategy = ""
         retry_state.repeated_phase2_failure_streak = 0
+
+    @staticmethod
+    def _select_phase2_focus_strategy(owner) -> str:
+        disqualified = getattr(getattr(owner, "ensemble", None), "last_disqualified_candidates", None) or []
+        if not isinstance(disqualified, list):
+            return ""
+        ranked = [
+            item for item in disqualified if isinstance(item, dict) and str(item.get("strategy", "") or "").strip()
+        ]
+        if not ranked:
+            return ""
+        ranked.sort(
+            key=lambda item: (
+                int(item.get("scene_count") or 0),
+                int(item.get("integrated_len") or 0),
+                str(item.get("strategy", "") or "").strip(),
+            ),
+            reverse=True,
+        )
+        return str(ranked[0].get("strategy", "") or "").strip()
 
     def _update_phase2_failure_streak(
         self,
@@ -1203,6 +1225,7 @@ class ThreePhaseBlueprintRuntime:
                 else 1
             )
             retry_state.prev_phase2_failure_signature = signature
+            retry_state.prev_phase2_focus_strategy = self._select_phase2_focus_strategy(self.owner)
             return retry_state.repeated_phase2_failure_streak
         self._reset_phase2_failure_streak(retry_state)
         return 0
@@ -1564,6 +1587,8 @@ class ThreePhaseBlueprintRuntime:
                 "break_threshold": _STAGE3_PHASE2_DISQUALIFIED_PLATEAU_STREAK,
                 "error_type": error_type,
             }
+        if retry_state.prev_phase2_focus_strategy:
+            pipeline_result["phases"]["generate"]["focus_strategy"] = retry_state.prev_phase2_focus_strategy
         pipeline_result["reject_reason"] = reject_reason
 
         logging.warning("❌ [Phase 2] Ensemble 생성 실패")
@@ -1576,6 +1601,7 @@ class ThreePhaseBlueprintRuntime:
                 "max_retries": max_retries + 1,
                 "error_category": str(error_type or "generate_failed"),
                 "repeat_streak": repeated_failure_streak,
+                "focus_strategy": retry_state.prev_phase2_focus_strategy,
             },
             feedback=operator_feedback,
         )

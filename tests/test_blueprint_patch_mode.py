@@ -657,6 +657,35 @@ class TestBlueprintPatchIntegration:
         record_attempt = blueprint_generator.context.pass_rate_monitor.record_attempt
         assert record_attempt.call_args.kwargs["error_category"] == "generate_candidate_disqualified_plateau"
 
+    def test_phase2_generation_failure_records_focus_strategy_for_candidate_disqualified(
+        self, blueprint_generator, sample_arc_data
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        blueprint_generator.context.pass_rate_monitor = MagicMock(record_attempt=MagicMock())
+        blueprint_generator.ensemble.last_error_type = AgentErrorType.CANDIDATE_DISQUALIFIED
+        blueprint_generator.ensemble.last_error_types = [AgentErrorType.CANDIDATE_DISQUALIFIED]
+        blueprint_generator.ensemble.last_disqualified_candidates = [
+            {"strategy": "dialogue_focused", "scene_count": 3, "integrated_len": 620, "contract_reason": ""},
+            {"strategy": "action_focused", "scene_count": 2, "integrated_len": 720, "contract_reason": ""},
+        ]
+        retry_state = _ThreePhaseRetryState()
+        pipeline = {"phases": {"generate": {}}}
+
+        result = blueprint_generator.runtime._handle_phase2_generation_failure(
+            retry=0,
+            ep_num=2,
+            arc_data=sample_arc_data,
+            constraint_block={},
+            pipeline_result=pipeline,
+            retry_state=retry_state,
+            max_retries=2,
+        )
+
+        assert result.should_continue is True
+        assert retry_state.prev_phase2_focus_strategy == "dialogue_focused"
+        assert pipeline["phases"]["generate"]["focus_strategy"] == "dialogue_focused"
+
     def test_phase3_validation_continuity_reject_short_circuits(self, blueprint_generator, sample_arc_data):
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
 
@@ -1324,6 +1353,60 @@ class TestBlueprintPatchIntegration:
         assert pipeline["reject_reason"] == "동일 replay/authority reroute guidance가 3회 연속 반복되어 조기 중단"
         assert blueprint_generator.ensemble.generate_ensemble.call_count == 3
         assert pipeline["phases"]["generate"]["plateau_guard"]["triggered"] is True
+
+    def test_candidate_disqualified_retry_switches_to_focus_strategy(self, blueprint_generator, sample_arc_data):
+        bp2 = {
+            "ep_num": 2,
+            "scene_list": [{"scene_no": 1, "summary": "reroute 적용"}],
+            "_ensemble_meta": {"strategy": "dialogue_focused"},
+        }
+
+        blueprint_generator.constraint_compiler.compile.return_value = {
+            "episode_progression_packet": {
+                "surface_guidance": [
+                    "시작 anchor 계승은 짧게 처리하고 이번 화의 주 장면은 직전 대치의 결과 이후 단계로 이동하라."
+                ]
+            }
+        }
+
+        def _first_attempt(**kwargs):
+            blueprint_generator.ensemble.last_error_type = AgentErrorType.CANDIDATE_DISQUALIFIED
+            blueprint_generator.ensemble.last_error_types = [AgentErrorType.CANDIDATE_DISQUALIFIED]
+            blueprint_generator.ensemble.last_disqualified_candidates = [
+                {"strategy": "dialogue_focused", "scene_count": 3, "integrated_len": 620, "contract_reason": ""},
+                {"strategy": "action_focused", "scene_count": 2, "integrated_len": 720, "contract_reason": ""},
+            ]
+            return None, []
+
+        def _second_attempt(**kwargs):
+            assert kwargs["single_strategy"] == "dialogue_focused"
+            assert kwargs["rejected_strategy"] == "dialogue_focused"
+            return bp2, [bp2]
+
+        _attempts = {"count": 0}
+
+        def _generate_ensemble_side_effect(**kwargs):
+            _attempts["count"] += 1
+            if _attempts["count"] == 1:
+                return _first_attempt(**kwargs)
+            return _second_attempt(**kwargs)
+
+        blueprint_generator.ensemble.generate_ensemble.side_effect = _generate_ensemble_side_effect
+        blueprint_generator.validator.validate.return_value = ("PASS", {"score": 94, "issues": [], "confidence": 89})
+
+        result, pipeline = blueprint_generator.runtime.generate(
+            ep_num=2,
+            arc_data=sample_arc_data,
+            max_retries=1,
+            director=MagicMock(),
+        )
+
+        assert result is not None
+        assert pipeline["final_verdict"] == "PASS"
+        assert blueprint_generator.ensemble.generate_ensemble.call_count == 2
+        second_kwargs = blueprint_generator.ensemble.generate_ensemble.call_args_list[1].kwargs
+        assert second_kwargs["single_strategy"] == "dialogue_focused"
+        assert second_kwargs["rejected_strategy"] == "dialogue_focused"
 
     def test_generate_failure_retry_records_intermediate_stage3_reject(self, blueprint_generator, sample_arc_data):
         bp = {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "retry success"}]}

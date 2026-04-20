@@ -213,6 +213,9 @@ class Stage3RetryCoordinator:
         resolved_fix_scope = repair_route.resolved_fix_scope or repair_material.normalized_requested_fix_scope
         if retry > 0 and resolved_fix_scope == "partial" and rejected_strategy:
             single_strategy = rejected_strategy
+        elif retry > 0 and retry_state.prev_phase2_focus_strategy:
+            single_strategy = retry_state.prev_phase2_focus_strategy
+            rejected_strategy = rejected_strategy or single_strategy
 
         self._record_inplace_block(
             retry=retry,
