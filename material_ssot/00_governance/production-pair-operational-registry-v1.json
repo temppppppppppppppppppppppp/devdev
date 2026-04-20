@@ -1,6 +1,6 @@
 {
   "_schema_version": "production_pair_operational_registry.v1",
-  "updated_at": "2026-04-12",
+  "updated_at": "2026-04-20",
   "notes": [
     "Operational states here are durable governance overrides for the normalization runner.",
     "Benchmark freshness tracks whether a benchmark or bounded benchmark-preservation audit has been recorded after the latest material touch or regeneration.",
@@ -8,7 +8,8 @@
     "RED is terminal in current operator governance: negative exemplar archive, no repair budget, and do not reopen unless the governing law itself changes.",
     "Opening pacing triage is a separate operator field from benchmark_alias; YELLOW triage suspends opening exemplar use pending manual re-audit but does not automatically rewrite alias filenames.",
     "Benchmark_alias=GREENPLUS alone is not enough for current sell-in use. Operational deployable GREENPLUS now means quality-first top shelf: benchmark_freshness=current, opening pacing triage GREEN, no whole-run YELLOW/UNTRIAGED hold, no active repair/re-audit/hold note, and no remaining legacy-heuristic-only ambiguity on the opening claim.",
-    "2026-04-12 explicit closeout wave promoted pair01, office_checkup_next_day, chaebol_ent_empire, pantech_cyworld_reborn, and wuxia_heavenly_physician to deployable GREENPLUS. The current sell-in top shelf now reads deployable GREENPLUS 6, and no current live GREENPLUS row remains outside the shelf.",
+    "2026-04-12 explicit closeout wave promoted pair01, office_checkup_next_day, chaebol_ent_empire, pantech_cyworld_reborn, and wuxia_heavenly_physician to deployable GREENPLUS under the then-current shelf law.",
+    "2026-04-20 initial benchmark plus explicit manual closeout admitted golden_canary_deepclone_probe_a_fullblock_v1 as deployable GREENPLUS. The current sell-in top shelf now reads deployable GREENPLUS 7.",
     "2026-04-10 chaebol_allowance_zero is now explicitly classified as RED for live operation; keep the withdrawn GREENPLUS file only as a historical tombstone / anti-benchmark.",
     "2026-04-10 opening pacing triage operator result currently reads RED 3 / YELLOW 2 / GREEN 9 / UNTRIAGED 1 across the discoverable live TR inventory; incomplete B01~B10 opening windows are held as UNTRIAGED instead of being provisionally kept, the kill-first spot audit promoted jangyeongshil_industrial_revolution to RED while clearing pantech_cyworld_reborn out of kill-first, the forensic spot audit promoted jaebeol3se_loss_line to RED, the same-day targeted repair on chaebol_ent_empire moved its signboard from B09 to B08 and exited opening YELLOW, and the same-day bounded repair on pantech_cyworld_reborn moved its representative reevaluation from B10 to B02 and exited opening YELLOW.",
     "2026-04-10 YELLOW split is now cost-first: office_checkup_next_day/smart_new_hire remain repair-first, while both temporary escalation queues are now resolved (jangyeongshil_industrial_revolution -> RED, jaebeol3se_loss_line -> RED). chaebol_ent_empire and pantech_cyworld_reborn left the current YELLOW shelf after same-day bounded repairs.",
@@ -181,6 +182,29 @@
         ]
       },
       "operator_note": "Regenerated live pair repaired on 2026-04-11 via bounded late-run pressure reinjection at B61/B65/B66. The 2026-04-12 bounded preservation closeout re-closes freshness as current, and the same-day manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 permission chain. Whole-run pacing reread stays GREEN with only B70 epilogue closure as the sole late blank, so pair 09 is now admitted as current sell-in top shelf."
+    },
+    {
+      "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+      "family": "blockguide",
+      "reference_only": false,
+      "inventory_role": "unslotted_live_pair",
+      "operational_state": "new_live_pair",
+      "schema_status": "pass",
+      "benchmark_alias": "GREENPLUS",
+      "benchmark_freshness": "current",
+      "benchmark_artifact": "docs/2026-04-20/golden_canary_deepclone_probe_a_fullblock_v1_deployable_greenplus_closeout.md",
+      "opening_pacing_triage": {
+        "grade": "GREEN",
+        "recommended_action": "keep_active_inventory",
+        "evidence_mode": "manual_spot_audit_override",
+        "artifact": "docs/2026-04-20/golden_canary_deepclone_probe_a_fullblock_v1_deployable_greenplus_closeout.md",
+        "opening_exemplar_use": "deployable_greenplus_certified_manual_closeout",
+        "trigger_codes": [
+          "INITIAL-BENCHMARK-PASS",
+          "MANUAL-CLOSEOUT-PASS"
+        ]
+      },
+      "operator_note": "Benchmark-fresh unslotted live pair. The 2026-04-20 initial benchmark closes unbenchmarked -> current with P0 6/6, P1 19/20, and 60/60 same-block cider. The same-day manual closeout removes the remaining opening legacy-heuristic ambiguity by reconciling the live B02/B03/B04/B06 receipt chain with the work-guard timing thresholds, so this donorized full-block gold sample is now admitted as current sell-in top shelf."
     },
     {
       "work_id": "jangyeongshil_industrial_revolution",
