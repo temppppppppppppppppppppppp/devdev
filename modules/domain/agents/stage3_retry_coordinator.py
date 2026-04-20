@@ -269,6 +269,7 @@ class Stage3RetryCoordinator:
                     arc_data=arc_data,
                     constraint_block=constraint_block,
                     pipeline_result=pipeline_result,
+                    retry_state=retry_state,
                     max_retries=max_retries,
                 )
             )
@@ -276,6 +277,7 @@ class Stage3RetryCoordinator:
         if best_blueprint is None and all_candidates:
             best_blueprint = all_candidates[0]
 
+        self.runtime._reset_phase2_failure_streak(retry_state)
         best_blueprint, all_candidates = self.runtime._append_asp_candidate(
             retry=retry,
             ep_num=ep_num,

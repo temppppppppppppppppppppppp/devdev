@@ -79,6 +79,7 @@ _STAGE3_RETRY_DIRECTIVE_LIBRARY = {
     },
 }
 _STAGE3_RETRY_HIDDEN_WARNING_PREFIXES = ("local_patch_gate:",)
+_STAGE3_PHASE2_DISQUALIFIED_PLATEAU_STREAK = 3
 
 
 @dataclass
@@ -99,9 +100,11 @@ class _ThreePhaseRetryState:
     prev_reject_origin: str = ""
     prev_quality_gate_reject: bool = False
     prev_reject_signature: str = ""
+    prev_phase2_failure_signature: str = ""
     prev_binding_issue_count: int = 0
     repeated_reject_score_streak: int = 0
     repeated_reject_signature_streak: int = 0
+    repeated_phase2_failure_streak: int = 0
     inplace_reject_streak: int = 0
     advisory_only_reject_streak: int = 0
 
@@ -1171,6 +1174,40 @@ class ThreePhaseBlueprintRuntime:
             self._emit_operator_progress(owner, f"      이슈: {line}", level=level, meta=payload, force_console=True)
 
     @staticmethod
+    def _normalize_phase2_failure_signature(*, error_type, feedback: str) -> str:
+        normalized_error = str(error_type or "").strip()
+        normalized_feedback = " ".join(str(feedback or "").split())
+        if len(normalized_feedback) > 240:
+            normalized_feedback = normalized_feedback[:240]
+        if not normalized_error and not normalized_feedback:
+            return ""
+        return f"{normalized_error}|{normalized_feedback}"
+
+    @staticmethod
+    def _reset_phase2_failure_streak(retry_state: _ThreePhaseRetryState) -> None:
+        retry_state.prev_phase2_failure_signature = ""
+        retry_state.repeated_phase2_failure_streak = 0
+
+    def _update_phase2_failure_streak(
+        self,
+        *,
+        retry_state: _ThreePhaseRetryState,
+        error_type,
+        feedback: str,
+    ) -> int:
+        signature = self._normalize_phase2_failure_signature(error_type=error_type, feedback=feedback)
+        if error_type == AgentErrorType.CANDIDATE_DISQUALIFIED and signature:
+            retry_state.repeated_phase2_failure_streak = (
+                retry_state.repeated_phase2_failure_streak + 1
+                if signature == retry_state.prev_phase2_failure_signature
+                else 1
+            )
+            retry_state.prev_phase2_failure_signature = signature
+            return retry_state.repeated_phase2_failure_streak
+        self._reset_phase2_failure_streak(retry_state)
+        return 0
+
+    @staticmethod
     def _force_console_progress(message: str) -> None:
         text = str(message or "").strip()
         if not text:
@@ -1472,6 +1509,7 @@ class ThreePhaseBlueprintRuntime:
         arc_data: dict,
         constraint_block: dict,
         pipeline_result: dict,
+        retry_state: _ThreePhaseRetryState,
         max_retries: int,
     ) -> _ThreePhasePhase2Result:
         owner = self.owner
@@ -1500,6 +1538,34 @@ class ThreePhaseBlueprintRuntime:
             operator_feedback = self._build_candidate_disqualified_retry_feedback(constraint_block)
             reject_reason = operator_feedback
 
+        repeated_failure_streak = self._update_phase2_failure_streak(
+            retry_state=retry_state,
+            error_type=error_type,
+            feedback=operator_feedback,
+        )
+        plateau_guard_triggered = (
+            error_type == AgentErrorType.CANDIDATE_DISQUALIFIED
+            and repeated_failure_streak >= _STAGE3_PHASE2_DISQUALIFIED_PLATEAU_STREAK
+        )
+        if plateau_guard_triggered:
+            plateau_summary = (
+                f"동일 replay/authority reroute guidance가 {repeated_failure_streak}회 연속 반복되어 조기 중단"
+            )
+            operator_feedback = (
+                "[Retry plateau guard]\n"
+                f"- {plateau_summary}\n"
+                "- 같은 guidance 재생성만 반복되므로 constraint/progression anchor를 먼저 점검한 뒤 재실행하세요.\n"
+                f"{operator_feedback}"
+            )
+            reject_reason = plateau_summary
+            pipeline_result["phases"]["generate"]["plateau_guard"] = {
+                "triggered": True,
+                "repeat_streak": repeated_failure_streak,
+                "break_threshold": _STAGE3_PHASE2_DISQUALIFIED_PLATEAU_STREAK,
+                "error_type": error_type,
+            }
+        pipeline_result["reject_reason"] = reject_reason
+
         logging.warning("❌ [Phase 2] Ensemble 생성 실패")
         self._log_operator_retry_context(
             title=f"[Phase 2] 후보 생성 실패 - retry {retry + 1}/{max_retries + 1}",
@@ -1509,6 +1575,7 @@ class ThreePhaseBlueprintRuntime:
                 "retry_index": retry + 1,
                 "max_retries": max_retries + 1,
                 "error_category": str(error_type or "generate_failed"),
+                "repeat_streak": repeated_failure_streak,
             },
             feedback=operator_feedback,
         )
@@ -1522,11 +1589,17 @@ class ThreePhaseBlueprintRuntime:
             max_retries=max_retries,
             reject_reason=reject_reason,
             event_tag=(
-                "generate_candidate_disqualified"
-                if error_type == AgentErrorType.CANDIDATE_DISQUALIFIED
-                else "generate_failed"
+                "generate_candidate_disqualified_plateau"
+                if plateau_guard_triggered
+                else (
+                    "generate_candidate_disqualified"
+                    if error_type == AgentErrorType.CANDIDATE_DISQUALIFIED
+                    else "generate_failed"
+                )
             ),
         )
+        if plateau_guard_triggered:
+            return _ThreePhasePhase2Result(None, [], should_break=True)
         return _ThreePhasePhase2Result(None, [], should_continue=True)
 
     @staticmethod
