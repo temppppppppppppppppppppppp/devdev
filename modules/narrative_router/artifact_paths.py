@@ -118,6 +118,11 @@ def canonical_bi_path(work_id: str, *, root: Path | None = None) -> Path:
 
 def bi_candidate_paths(work_id: str, *, root: Path | None = None) -> tuple[Path, ...]:
     base = _root(root) / "bible"
+    wildcard_patterns = (
+        f"[0-9][0-9]_bi_{work_id}.json",
+        f"0_bi_{work_id}.json",
+        f"{work_id}_bi.json",
+    )
     return _dedupe(
         (
             canonical_bi_path(work_id, root=root),
