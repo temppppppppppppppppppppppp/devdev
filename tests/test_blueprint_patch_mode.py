@@ -527,12 +527,15 @@ class TestBlueprintPatchIntegration:
         assert pipeline["phases"]["constraint"]["cached"] is False
 
     def test_phase2_generation_failure_breaks_on_schema_incompatible(self, blueprint_generator, sample_arc_data):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
         blueprint_generator.ensemble.last_error_type = AgentErrorType.TIMEOUT
         blueprint_generator.ensemble.last_error_types = [
             AgentErrorType.TIMEOUT,
             AgentErrorType.SCHEMA_INCOMPATIBLE,
         ]
         pipeline = {"phases": {"generate": {}}}
+        retry_state = _ThreePhaseRetryState()
 
         result = blueprint_generator.runtime._handle_phase2_generation_failure(
             retry=0,
@@ -540,6 +543,7 @@ class TestBlueprintPatchIntegration:
             arc_data=sample_arc_data,
             constraint_block={},
             pipeline_result=pipeline,
+            retry_state=retry_state,
             max_retries=2,
         )
 
@@ -547,10 +551,13 @@ class TestBlueprintPatchIntegration:
         assert result.should_continue is False
         assert pipeline["failure_reason"] == AgentErrorType.SCHEMA_INCOMPATIBLE
         assert pipeline["phases"]["generate"]["error_type"] == AgentErrorType.SCHEMA_INCOMPATIBLE
+        assert pipeline["reject_reason"] == "schema_incompatible로 즉시 중단합니다."
 
     def test_phase2_generation_failure_retries_on_candidate_disqualified_bundle(
         self, blueprint_generator, sample_arc_data
     ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
         blueprint_generator.context.pass_rate_monitor = MagicMock(record_attempt=MagicMock())
         blueprint_generator.ensemble.last_error_type = AgentErrorType.TIMEOUT
         blueprint_generator.ensemble.last_error_types = [
@@ -559,6 +566,7 @@ class TestBlueprintPatchIntegration:
             AgentErrorType.CANDIDATE_DISQUALIFIED,
         ]
         pipeline = {"phases": {"generate": {}}}
+        retry_state = _ThreePhaseRetryState()
 
         result = blueprint_generator.runtime._handle_phase2_generation_failure(
             retry=0,
@@ -586,6 +594,7 @@ class TestBlueprintPatchIntegration:
                 }
             },
             pipeline_result=pipeline,
+            retry_state=retry_state,
             max_retries=2,
         )
 
@@ -604,6 +613,49 @@ class TestBlueprintPatchIntegration:
         assert "같은 장소라도 장면 목표가 달라졌다면" in reject_reason
         assert "Next-episode reserved beat" in reject_reason
         assert "승인 완료 후 실제 체결" in reject_reason
+        assert pipeline["reject_reason"].startswith("replay/authority/구조 계약 미달 후보만 생성됨")
+
+    def test_phase2_generation_failure_breaks_on_repeated_candidate_disqualified_plateau(
+        self, blueprint_generator, sample_arc_data
+    ):
+        from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
+
+        blueprint_generator.context.pass_rate_monitor = MagicMock(record_attempt=MagicMock())
+        blueprint_generator.ensemble.last_error_type = AgentErrorType.CANDIDATE_DISQUALIFIED
+        blueprint_generator.ensemble.last_error_types = [AgentErrorType.CANDIDATE_DISQUALIFIED]
+        constraint_block = {
+            "episode_progression_packet": {
+                "surface_guidance": [
+                    "시작 anchor 계승은 짧게 처리하고 이번 화의 주 장면은 직전 대치의 결과 이후 단계로 이동하라."
+                ]
+            }
+        }
+        prior_feedback = blueprint_generator.runtime._build_candidate_disqualified_retry_feedback(constraint_block)
+        retry_state = _ThreePhaseRetryState(
+            prev_phase2_failure_signature=blueprint_generator.runtime._normalize_phase2_failure_signature(
+                error_type=AgentErrorType.CANDIDATE_DISQUALIFIED,
+                feedback=prior_feedback,
+            ),
+            repeated_phase2_failure_streak=2,
+        )
+        pipeline = {"phases": {"generate": {}}}
+
+        result = blueprint_generator.runtime._handle_phase2_generation_failure(
+            retry=2,
+            ep_num=2,
+            arc_data=sample_arc_data,
+            constraint_block=constraint_block,
+            pipeline_result=pipeline,
+            retry_state=retry_state,
+            max_retries=9,
+        )
+
+        assert result.should_break is True
+        assert result.should_continue is False
+        assert pipeline["reject_reason"] == "동일 replay/authority reroute guidance가 3회 연속 반복되어 조기 중단"
+        assert pipeline["phases"]["generate"]["plateau_guard"]["repeat_streak"] == 3
+        record_attempt = blueprint_generator.context.pass_rate_monitor.record_attempt
+        assert record_attempt.call_args.kwargs["error_category"] == "generate_candidate_disqualified_plateau"
 
     def test_phase3_validation_continuity_reject_short_circuits(self, blueprint_generator, sample_arc_data):
         from modules.domain.agents.three_phase_blueprint_runtime import _ThreePhaseRetryState
@@ -1241,6 +1293,37 @@ class TestBlueprintPatchIntegration:
         assert result["scene_list"] == bp["scene_list"]
         assert pipeline["final_verdict"] == "PASS"
         assert blueprint_generator.ensemble.generate_ensemble.call_count == 2
+
+    def test_candidate_disqualified_plateau_breaks_retry_loop_early(self, blueprint_generator, sample_arc_data):
+        blueprint_generator.context.pass_rate_monitor = MagicMock()
+        blueprint_generator.context.current_project = MagicMock(metrics_session_id="sess_stage3_plateau")
+        blueprint_generator.constraint_compiler.compile.return_value = {
+            "episode_progression_packet": {
+                "surface_guidance": [
+                    "시작 anchor 계승은 짧게 처리하고 이번 화의 주 장면은 직전 대치의 결과 이후 단계로 이동하라."
+                ]
+            }
+        }
+
+        def _always_candidate_disqualified(*args, **kwargs):
+            blueprint_generator.ensemble.last_error_type = AgentErrorType.CANDIDATE_DISQUALIFIED
+            blueprint_generator.ensemble.last_error_types = [AgentErrorType.CANDIDATE_DISQUALIFIED]
+            return None, []
+
+        blueprint_generator.ensemble.generate_ensemble.side_effect = _always_candidate_disqualified
+
+        result, pipeline = blueprint_generator.runtime.generate(
+            ep_num=2,
+            arc_data=sample_arc_data,
+            max_retries=9,
+            director=MagicMock(),
+        )
+
+        assert result is None
+        assert pipeline["final_verdict"] == "FAILED"
+        assert pipeline["reject_reason"] == "동일 replay/authority reroute guidance가 3회 연속 반복되어 조기 중단"
+        assert blueprint_generator.ensemble.generate_ensemble.call_count == 3
+        assert pipeline["phases"]["generate"]["plateau_guard"]["triggered"] is True
 
     def test_generate_failure_retry_records_intermediate_stage3_reject(self, blueprint_generator, sample_arc_data):
         bp = {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "retry success"}]}
