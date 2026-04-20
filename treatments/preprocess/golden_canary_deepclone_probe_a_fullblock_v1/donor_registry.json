@@ -1,0 +1,100 @@
+{
+  "schema": "geuldobi.donor_registry.v1",
+  "work_id": "golden_canary_deepclone_probe_a_fullblock_v1",
+  "created_at": "2026-04-18",
+  "status": "active",
+  "purpose": "Track donor candidates, accepted donor annexes, contribution scope, and upgrade rules without allowing donor-specific surfaces to overwrite canonical loop law.",
+  "canonical_law_refs": [
+    "treatments/phase0/golden_canary_deepclone_probe_a_fullblock_v1_phase0_design.json",
+    "work_guards/golden_canary_deepclone_probe_a_fullblock_v1.yaml",
+    "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/loop_abstraction_packet.json"
+  ],
+  "governance": {
+    "canonical_principle": "Canonical loop law remains donor-free. Donors are evidence sources and translation annexes, not the law itself.",
+    "status_classes": [
+      "candidate",
+      "active_seed",
+      "active_support",
+      "reference_only",
+      "deprecated",
+      "rejected"
+    ],
+    "acceptance_rule": [
+      "A donor must arrive with a donor-specific annex packet or equivalent evidence bundle.",
+      "A donor must be reduced to generalized slots before it can affect canonical material-side law.",
+      "A donor is admitted for loop evidence, not merely style or novelty.",
+      "A donor may extend mapping examples, reward rotation hints, and red-flag watchlists without rewriting canonical law."
+    ],
+    "canonical_change_rule": [
+      "A single donor cannot rewrite the core loop law by itself.",
+      "Canonical loop-law changes require either repeated evidence across multiple donors or one donor plus strong runtime/canary confirmation.",
+      "When donors disagree, conflicts are resolved at the generalized-slot layer, not by importing donor-specific nouns into canonical law."
+    ]
+  },
+  "active_donor_set": [
+    "probe_a_seed_001"
+  ],
+  "donor_entries": [
+    {
+      "donor_id": "probe_a_seed_001",
+      "label": "Probe A Seed Donor",
+      "status": "active_seed",
+      "source_packet": "treatments/preprocess/golden_canary_deepclone_probe_a_fullblock_v1/deepclone_donor_doctrine_packet.json",
+      "source_work_title": "불행을 보는 재벌주의자",
+      "evidence_span": "ep0001-0101",
+      "strengths": [
+        "public proof to private receipt conversion",
+        "reward as right-to-act",
+        "observer shift as payoff amplifier",
+        "bridge-first next-gate cadence"
+      ],
+      "allowed_influence": [
+        "mapping examples",
+        "opening loop cadence hints",
+        "reward portfolio candidates",
+        "contamination red flags",
+        "benchmark hypotheses for canary comparison"
+      ],
+      "blocked_influence": [
+        "direct import of donor proper nouns or organizations into canonical law",
+        "direct scene-copy logic",
+        "canonical threshold rewrite without stronger evidence",
+        "single-donor authority over late-game or all-block law"
+      ],
+      "known_limits": [
+        "opening and early-loop evidence is stronger than late-block evidence",
+        "donor-specific receipts are vivid but can overfit if not generalized",
+        "master-donor authority is not yet justified"
+      ],
+      "contamination_risks": [
+        "PB or named-seat vocabulary becoming pseudo-law instead of one example family",
+        "proof being described as donor cleverness rather than visible event",
+        "reward collapsing into donor-flavored receipt repetition"
+      ],
+      "promotion_conditions": [
+        "Probe A style evidence remains positive after loop scorecard is introduced",
+        "generalized-slot mapping continues to outperform donor-noun-heavy variants",
+        "late-block bounded evidence does not contradict opening-loop gains"
+      ]
+    }
+  ],
+  "onboarding_checklist": [
+    "Create a donor annex packet or equivalent evidence bundle.",
+    "Extract donor surfaces into generalized slot mappings.",
+    "Record strengths, limits, and contamination risks.",
+    "Declare allowed influence and blocked influence.",
+    "Register the donor without changing canonical law yet.",
+    "Validate the donor through loop-oriented canary comparisons before law promotion."
+  ],
+  "retirement_policy": {
+    "deprecate_when": [
+      "A donor repeatedly underperforms on loop scorecard checks.",
+      "A donor cannot be generalized without persistent contamination.",
+      "A better donor or donor bundle supersedes its contribution."
+    ],
+    "retain_as_reference_when": [
+      "The donor still provides useful red flags or example mappings.",
+      "The donor remains historically important to explain prior design choices."
+    ]
+  }
+}
