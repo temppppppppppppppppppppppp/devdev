@@ -18,7 +18,9 @@ from modules.core.stage3_orchestrator import (
     Stage3Orchestrator,
     _build_stage3_source_anchor_summary,
     _build_stage3_work_focus_advisory,
+    _classify_stage3_failure_category,
     _select_stage3_anchor_recent_window,
+    _summarize_stage3_observability_for_ui,
 )
 
 # ── Fixtures ─────────────────────────────────────────────────
@@ -1498,6 +1500,66 @@ class TestGenerateBlueprint:
         assert "validate_verdict=REJECT" in reason
         assert "issues=1" in reason
 
+    def test_build_stage3_reject_reason_appends_plateau_and_source_anchor_for_replay_failures(self):
+        reason = Stage3Orchestrator._build_stage3_reject_reason(
+            {
+                "reject_reason": "동일 replay/authority reroute guidance가 3회 연속 반복되어 조기 중단",
+                "phases": {
+                    "generate": {
+                        "error_type": "candidate_disqualified",
+                        "plateau_guard": {
+                            "triggered": True,
+                            "repeat_streak": 3,
+                            "break_threshold": 3,
+                        },
+                    }
+                },
+                "_stage3_observability": {
+                    "source_anchor_summary": {
+                        "previous_blueprint_ep": 1,
+                        "previous_blueprint_end_location": "서울 성북동 본가",
+                        "previous_blueprint_opening_transition_type": "jump_opening",
+                    }
+                },
+            }
+        )
+
+        assert "plateau=3/3" in reason
+        assert "source_anchor=prev_ep=1:서울 성북동 본가 | prev_opening=jump_opening" in reason
+
+    def test_classify_stage3_failure_category_detects_generate_plateau(self):
+        category = _classify_stage3_failure_category(
+            {
+                "reject_reason": "동일 replay/authority reroute guidance가 3회 연속 반복되어 조기 중단",
+                "phases": {
+                    "generate": {
+                        "error_type": "candidate_disqualified",
+                        "plateau_guard": {
+                            "triggered": True,
+                            "repeat_streak": 3,
+                            "break_threshold": 3,
+                        },
+                    }
+                },
+            }
+        )
+
+        assert category == "generate_plateau"
+
+    def test_summarize_stage3_observability_for_ui_compacts_tail(self):
+        summary = _summarize_stage3_observability_for_ui(
+            {
+                "source_anchor_summary": {"previous_blueprint_ep": 1},
+                "episode_state_packet_summary": {"opening_location": "한미증권 청담동 지점 15층 VIP룸"},
+                "semantic_ctx_sources": ["legacy_semantic_context"],
+                "semantic_ctx_chars": 222,
+                "provenance_ledger": {"source_pack": "stage3"},
+                "budget_ledger": {"budget_bucket": "smart_retrieval.stage3_total_budget"},
+            }
+        )
+
+        assert summary == "source_anchor,episode_state,semantic_sources,semantic_chars,+2"
+
     def test_build_stage3_success_operator_lines_includes_advisory_without_caps(self):
         lines = Stage3Orchestrator._build_stage3_success_operator_lines(
             {
@@ -2084,6 +2146,52 @@ class TestHandleFailure:
         result = orch._handle_failure(3, pr, 0, 2)  # 2 + 1 = 3
         assert result["fail_count"] == 3
         assert result.get("break") is True
+
+    def test_handle_failure_surfaces_plateau_and_compact_observability(self, orch, app_mock):
+        pipeline_result = {
+            "final_verdict": "FAILED",
+            "reject_reason": "동일 replay/authority reroute guidance가 3회 연속 반복되어 조기 중단",
+            "phases": {
+                "generate": {
+                    "selected_strategy": "full_ensemble",
+                    "error_type": "candidate_disqualified",
+                    "plateau_guard": {
+                        "triggered": True,
+                        "repeat_streak": 3,
+                        "break_threshold": 3,
+                        "error_type": "candidate_disqualified",
+                    },
+                }
+            },
+            "_stage3_duration_ms": 3210,
+            "_stage3_observability": {
+                "semantic_ctx_chars": 222,
+                "source_counts": {"legacy_semantic_context": 1},
+                "provenance_ledger": {"source_pack": "stage3"},
+                "budget_ledger": {"budget_bucket": "smart_retrieval.stage3_total_budget"},
+                "source_anchor_summary": {
+                    "previous_blueprint_ep": 1,
+                    "previous_blueprint_end_location": "서울 성북동 본가",
+                    "previous_blueprint_opening_transition_type": "jump_opening",
+                },
+                "episode_state_packet_summary": {
+                    "opening_location": "한미증권 청담동 지점 15층 VIP룸",
+                },
+            },
+        }
+
+        orch._handle_failure(4, pipeline_result, 0, 0, arc_no=2)
+
+        kwargs = app_mock.current_project.db.save_stage_attempt.call_args.kwargs
+        assert kwargs["failure_category"] == "generate_plateau"
+        log_texts = [call.args[0] for call in app_mock.ui.log.call_args_list if call.args]
+        assert any("plateau_guard: 3/3회 동일 reroute 반복 (candidate_disqualified)" in text for text in log_texts)
+        assert any(
+            "source_anchor: prev_ep=1:서울 성북동 본가 | prev_opening=jump_opening" in text for text in log_texts
+        )
+        assert any(
+            "observability=source_anchor,episode_state,semantic_sources,semantic_chars,+2" in text for text in log_texts
+        )
 
 
 # ── Main Entry Point ─────────────────────────────────────────
