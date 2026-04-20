@@ -598,6 +598,67 @@ class TestStageAttemptObservability:
         assert ds_kw["candidate_key"] == sa_kw["candidate_key"]
         assert ds_kw["artifact_path"] == sa_kw["artifact_path"]
 
+    def test_handle_success_suppresses_stage3_companion_sinks_on_selection_contract_mismatch(
+        self, orch, app_mock, tmp_path
+    ):
+        app_mock.current_project.paths = MagicMock()
+        app_mock.current_project.paths.root = tmp_path
+        orch.ctx.session_logger = MagicMock()
+        pipeline_result = {
+            "final_verdict": "PASS",
+            "last_score": 92,
+            "phases": {
+                "generate": {"selected_strategy": "dialogue_focused", "selected_score": 92},
+                "validate": {
+                    "phase": "director_compare",
+                    "selected_index": 1,
+                    "selection_reason": "candidate 3 carries the family breakfast follow-up.",
+                    "comparison_notes": "candidate 3 adds the stronger family authority surface.",
+                    "verdict_reason": "candidate 3 looks richer on family texture.",
+                    "verdict": "PASS",
+                    "selected_candidate_advisory": {"candidate_index": 1},
+                },
+            },
+            "_stage3_duration_ms": 1600,
+            "_stage3_observability": {
+                "semantic_ctx_chars": 900,
+                "source_counts": {"vec_memory": 2},
+                "advisor_path_used": True,
+            },
+        }
+
+        orch._handle_success(
+            working_ep=2,
+            arc_no=1,
+            arc_data={"arc_no": 1},
+            blueprint={
+                "integrated_scenario": "ok",
+                "scene_breakdown": {"s1": "scene"},
+                "_ensemble_meta": {
+                    "candidate_index": 1,
+                    "strategy": "dialogue_focused",
+                    "candidate_key": "dialogue_focused",
+                },
+            },
+            pipeline_result=pipeline_result,
+            prev_blueprints=[],
+            success_count=0,
+            fail_count=0,
+        )
+
+        app_mock.current_project.db.save_stage_attempt.assert_called_once()
+        app_mock.current_project.db.save_director_selection.assert_not_called()
+        orch.ctx.session_logger.log_decision.assert_not_called()
+        sa_kw = app_mock.current_project.db.save_stage_attempt.call_args.kwargs
+        assert sa_kw["selection_reason"] == ""
+        assert sa_kw["verdict_reason"] == ""
+        assert sa_kw["advisory_flags"]["selection_contract"]["status"] == "mismatch"
+        assert "comparison_notes" not in sa_kw["advisory_flags"]
+        assert any(
+            call.args and call.args[0] == "stage3_selection_contract_mismatch"
+            for call in app_mock._audit_event.call_args_list
+        )
+
     def test_handle_failure_persists_stage3_director_selection(self, orch, app_mock, tmp_path):
         app_mock.current_project.paths = MagicMock()
         app_mock.current_project.paths.root = tmp_path
@@ -646,6 +707,60 @@ class TestStageAttemptObservability:
         assert ds_kw["advisory_warnings"]["contradictions"] == ["timeline mismatch"]
         assert ds_kw["runtime_advisory"] == "timeline mismatch detected"
         assert ds_kw["retry_directives"] == "repair the timeline anchors before the next retry"
+
+    def test_handle_failure_suppresses_stage3_director_selection_on_selection_contract_mismatch(
+        self, orch, app_mock, tmp_path
+    ):
+        app_mock.current_project.paths = MagicMock()
+        app_mock.current_project.paths.root = tmp_path
+        orch.ctx.session_logger = MagicMock()
+        pipeline_result = {
+            "final_verdict": "REJECT",
+            "last_score": 41,
+            "phases": {
+                "generate": {"selected_strategy": "action_focused", "selected_score": 41},
+                "validate": {
+                    "phase": "director_compare",
+                    "selected_index": 0,
+                    "selection_reason": "candidate 2 has the cleaner fallback.",
+                    "comparison_notes": "candidate 2 should have won on fallback clarity.",
+                    "verdict_reason": "candidate 2 is more stable.",
+                    "verdict": "REJECT",
+                    "fix_scope": "full",
+                },
+            },
+            "_stage3_duration_ms": 777,
+            "_stage3_observability": {
+                "semantic_ctx_chars": 333,
+                "source_counts": {"legacy_semantic_context": 1},
+                "advisor_path_used": False,
+            },
+        }
+
+        orch._handle_failure(
+            working_ep=3,
+            pipeline_result=pipeline_result,
+            success_count=0,
+            fail_count=0,
+            arc_no=1,
+            blueprint={
+                "integrated_scenario": "candidate",
+                "scene_breakdown": {"s1": "scene"},
+                "_ensemble_meta": {
+                    "candidate_index": 0,
+                    "strategy": "action_focused",
+                    "candidate_key": "action_focused",
+                },
+            },
+        )
+
+        app_mock.current_project.db.save_stage_attempt.assert_called_once()
+        app_mock.current_project.db.save_director_selection.assert_not_called()
+        orch.ctx.session_logger.log_decision.assert_not_called()
+        sa_kw = app_mock.current_project.db.save_stage_attempt.call_args.kwargs
+        assert sa_kw["selection_reason"] == ""
+        assert sa_kw["verdict_reason"] == ""
+        assert sa_kw["advisory_flags"]["selection_contract"]["status"] == "mismatch"
 
     def test_handle_success_writes_session_decision_row_with_join_metadata(self, orch, app_mock, tmp_path):
         app_mock.current_project.paths = MagicMock()

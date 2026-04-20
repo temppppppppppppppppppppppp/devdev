@@ -1,3 +1,4 @@
+import textwrap
 from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock
 
@@ -623,6 +624,197 @@ def test_lane_c_python_pre_validate_flags_episode_progression_replay_as_critical
     issue = next(issue for issue in pre_result["issues"] if issue["category"] == "episode_progression")
     assert issue["severity"] == "CRITICAL"
     assert "scene_1->scene_4" in issue["issue"] or "scene_4->scene_2" in issue["issue"]
+
+
+def test_lane_c_python_pre_validate_flags_work_identity_opening_drift(tmp_path):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    (config_dir / "work_guard.yaml").write_text(
+        textwrap.dedent(
+            """\
+            work_identity:
+              tracking_slots:
+                - visible pressure -> execution -> public proof -> private receipt -> observer shift -> next gate
+              mandatory_scene_engines:
+                - first proof must lock into private receipt and next gate
+            custom_rules:
+              - first proof must not end at public proof only
+            """
+        ),
+        encoding="utf-8",
+    )
+    context = MagicMock()
+    context.current_project.paths.root = tmp_path
+    validator = UnifiedBlueprintValidator(context=context, client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "ep_num": 1,
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "Regression shock",
+                    "goal": "Sort the memory flood alone in the bedroom.",
+                    "summary": "He stays in the bedroom and decides to think before acting.",
+                    "characters": ["Lead"],
+                    "key_events": ["Lead stares at the calendar in silence."],
+                    "location": "Private bedroom",
+                    "type": "opening_hook",
+                },
+                "scene_2": {
+                    "title": "Internal vow",
+                    "goal": "Promise to use the knowledge later.",
+                    "summary": "The lead makes a private vow but opens no outside line.",
+                    "characters": ["Lead"],
+                    "key_events": ["No outside observer or gate opens here."],
+                    "location": "Private bedroom",
+                    "type": "decision_lock",
+                },
+            },
+            "integrated_scenario": "A" * 900,
+        },
+        constraint_block={},
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
+    )
+
+    issue = next(issue for issue in pre_result["issues"] if issue["category"] == "work_identity_opening")
+    assert issue["severity"] == "MAJOR"
+    assert "private receipt" in issue["issue"]
+
+
+def test_lane_c_python_pre_validate_accepts_work_identity_opening_when_receipt_shift_and_next_gate_visible(tmp_path):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    (config_dir / "work_guard.yaml").write_text(
+        textwrap.dedent(
+            """\
+            work_identity:
+              tracking_slots:
+                - visible pressure -> execution -> public proof -> private receipt -> observer shift -> next gate
+            custom_rules:
+              - first proof must not end at public proof only
+            """
+        ),
+        encoding="utf-8",
+    )
+    context = MagicMock()
+    context.current_project.paths.root = tmp_path
+    validator = UnifiedBlueprintValidator(context=context, client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "ep_num": 2,
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "Public proof",
+                    "goal": "Take the first visible execution step on the trading floor.",
+                    "summary": "The market move becomes public proof in front of the PB desk.",
+                    "characters": ["Lead", "PB"],
+                    "key_events": ["The PB acknowledges the first proof."],
+                    "location": "Trading floor",
+                    "type": "execution_visible",
+                },
+                "scene_2": {
+                    "title": "Private receipt",
+                    "goal": "Lock the proof into private receipt and observer shift.",
+                    "summary": "A private receipt opens an access shift and the PB tone shift becomes visible.",
+                    "characters": ["Lead", "PB"],
+                    "key_events": ["The PB opens a priority-response line for the lead."],
+                    "location": "PB room",
+                    "type": "authority_capture",
+                },
+                "scene_3": {
+                    "title": "Next gate",
+                    "goal": "Fix the next gate before the episode closes.",
+                    "summary": "The next gate is a signed follow-up line and a next-cycle ticket.",
+                    "characters": ["Lead", "PB"],
+                    "key_events": ["The follow-up line is fixed before close."],
+                    "location": "PB room",
+                    "type": "next_gate_visible",
+                },
+            },
+            "integrated_scenario": "B" * 900,
+        },
+        constraint_block={},
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not any(issue["category"] == "work_identity_opening" for issue in pre_result["issues"])
+
+
+def test_lane_c_python_pre_validate_allows_authorized_scene1_anchor_shift_without_replay_false_positive():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "opening_transition": {"type": "explicit_transition"},
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "Cut to the packet hall",
+                    "goal": "Open on the new packet-authorized location.",
+                    "summary": "An explicit transition moves the opening into Packet Hall.",
+                    "characters": ["lead", "pb"],
+                    "key_events": ["The opening anchor is deliberately shifted."],
+                    "location": "Packet Hall",
+                    "type": "opening_hook",
+                },
+                "scene_2": {
+                    "title": "Desk confirmation",
+                    "goal": "Confirm the same PB line one more time.",
+                    "summary": "The lead and PB reuse the same office pressure beat.",
+                    "characters": ["lead", "pb"],
+                    "key_events": ["The same office pressure beat returns."],
+                    "location": "PB Office",
+                    "type": "decision_lock",
+                },
+            },
+            "integrated_scenario": "C" * 900,
+        },
+        constraint_block={
+            "must_focus": {"content": "Move the opening to Packet Hall and then confirm the office line."},
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_4",
+                        "label": "old hall pressure",
+                        "location": "Packet Hall",
+                        "location_variants": ["Packet Hall"],
+                        "characters": ["lead", "pb"],
+                        "type": "dialogue_duel",
+                    },
+                    {
+                        "scene_key": "scene_5",
+                        "label": "office pressure",
+                        "location": "PB Office",
+                        "location_variants": ["PB Office"],
+                        "characters": ["lead", "pb"],
+                        "type": "decision_lock",
+                    },
+                ]
+            },
+            "episode_state_packet": {
+                "opening_truth": {
+                    "opening_transition_expectation": (
+                        "This arc opening moved from Prev Blueprint Room to Packet Hall; "
+                        "do not declare direct_continuation. Use explicit_transition."
+                    )
+                }
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_4": {"location": "Packet Hall", "characters": ["lead", "pb"]},
+                "scene_5": {"location": "PB Office", "characters": ["lead", "pb"]},
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not any(issue["category"] == "episode_progression" for issue in pre_result["issues"])
 
 
 def test_lane_c_python_pre_validate_allows_lawful_repetition_when_goal_escalates():
