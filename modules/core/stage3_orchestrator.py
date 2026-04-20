@@ -6,6 +6,7 @@
 패턴: self.app = SovereignApp 인스턴스 (Stage2/4 Orchestrator와 동일)
 V68 lazy init: state_tracker, world_state, fact_ledger를 self.app에 할당
 """
+# utf8-hygiene: allow-file -- regex-heavy Stage3 operator/orchestration helpers intentionally include punctuation classes.
 
 import json as _json
 import logging as _logging
@@ -46,6 +47,34 @@ _DB_ADVISORY_NOTICE = "(Python 자동 감지 — 오탐 가능, 참고용)"
 _STAGE3_HISTORY_RECENT_LIMIT = 24
 _STAGE3_HISTORY_ANCHOR_LIMIT = 6
 _STAGE3_HISTORY_CACHE_LIMIT = 36
+_STAGE3_UI_OBSERVABILITY_LIMIT = 4
+_STAGE3_UI_OBSERVABILITY_PRIORITY = (
+    "source_anchor_summary",
+    "episode_state_packet_summary",
+    "semantic_ctx_sources",
+    "semantic_ctx_chars",
+    "coverage_warnings",
+    "provenance_ledger",
+    "budget_ledger",
+    "prompt_envelope",
+    "advisor_path_used",
+    "planned_slots_count",
+    "work_focus_present",
+)
+_STAGE3_UI_OBSERVABILITY_LABELS = {
+    "source_anchor_summary": "source_anchor",
+    "episode_state_packet_summary": "episode_state",
+    "semantic_ctx_sources": "semantic_sources",
+    "semantic_ctx_chars": "semantic_chars",
+    "coverage_warnings": "coverage",
+    "provenance_ledger": "provenance",
+    "budget_ledger": "budget",
+    "prompt_envelope": "prompt_envelope",
+    "advisor_path_used": "advisor_path",
+    "planned_slots_count": "planned_slots",
+    "work_focus_present": "work_focus",
+}
+_STAGE3_UI_OBSERVABILITY_HIDDEN_KEYS = {"semantic_ctx_source_counts"}
 
 
 @dataclass(slots=True)
@@ -418,6 +447,48 @@ def _format_stage3_source_anchor_summary(summary: dict | None) -> str:
     return " | ".join(parts[:4])
 
 
+def _summarize_stage3_observability_for_ui(flags: dict | None) -> str:
+    if not isinstance(flags, dict) or not flags:
+        return "-"
+    labels: list[str] = []
+    seen: set[str] = set()
+    for key in _STAGE3_UI_OBSERVABILITY_PRIORITY:
+        if key not in flags or key in _STAGE3_UI_OBSERVABILITY_HIDDEN_KEYS:
+            continue
+        labels.append(_STAGE3_UI_OBSERVABILITY_LABELS.get(key, key))
+        seen.add(key)
+    for key in sorted(flags):
+        if key in seen or key in _STAGE3_UI_OBSERVABILITY_HIDDEN_KEYS:
+            continue
+        labels.append(_STAGE3_UI_OBSERVABILITY_LABELS.get(key, key))
+    if len(labels) <= _STAGE3_UI_OBSERVABILITY_LIMIT:
+        return ",".join(labels)
+    visible = labels[:_STAGE3_UI_OBSERVABILITY_LIMIT]
+    visible.append(f"+{len(labels) - _STAGE3_UI_OBSERVABILITY_LIMIT}")
+    return ",".join(visible)
+
+
+def _build_stage3_generate_failure_highlights(pipeline_result: dict | None) -> list[str]:
+    if not isinstance(pipeline_result, dict):
+        return []
+    phases = pipeline_result.get("phases", {})
+    if not isinstance(phases, dict):
+        return []
+    generate = phases.get("generate", {})
+    if not isinstance(generate, dict):
+        return []
+    plateau = generate.get("plateau_guard")
+    if not isinstance(plateau, dict) or not plateau.get("triggered"):
+        return []
+    repeat_streak = int(plateau.get("repeat_streak") or 0)
+    break_threshold = int(plateau.get("break_threshold") or 0)
+    error_type = str(plateau.get("error_type", "") or "").strip()
+    detail = f"{repeat_streak}/{break_threshold}회 동일 reroute 반복"
+    if error_type:
+        detail += f" ({error_type})"
+    return [f"plateau_guard: {detail}"]
+
+
 def _select_stage3_anchor_recent_window(
     items: list | None,
     *,
@@ -469,6 +540,8 @@ def _classify_stage3_failure_category(pipeline_result: dict) -> str | None:
 
     verdict = str(pipeline_result.get("final_verdict", "") or "").upper()
     error_text = str(pipeline_result.get("error", "") or "").strip()
+    reject_reason = str(pipeline_result.get("reject_reason", "") or "")
+    reject_reason_lower = reject_reason.lower()
     if verdict == "ERROR" or error_text:
         return "generation_error"
     if pipeline_result.get("quality_gate_failed"):
@@ -476,6 +549,23 @@ def _classify_stage3_failure_category(pipeline_result: dict) -> str | None:
 
     phases = pipeline_result.get("phases", {})
     validate = phases.get("validate", {}) if isinstance(phases, dict) else {}
+    generate = phases.get("generate", {}) if isinstance(phases, dict) else {}
+    if isinstance(generate, dict):
+        plateau = generate.get("plateau_guard")
+        if isinstance(plateau, dict) and plateau.get("triggered"):
+            return "generate_plateau"
+        if any(
+            token in reject_reason_lower
+            for token in (
+                "replay reroute guidance",
+                "replay/authority/",
+                "직전 대치의 결과 이후 단계로 이동",
+            )
+        ):
+            return "replay_reroute"
+        error_type = str(generate.get("error_type", "") or "").strip().lower()
+        if "candidate_disqualified" in error_type:
+            return "candidate_disqualified"
     if isinstance(validate, dict):
         contradictions = validate.get("contradictions")
         if isinstance(contradictions, list) and contradictions:
@@ -483,10 +573,9 @@ def _classify_stage3_failure_category(pipeline_result: dict) -> str | None:
         if validate.get("issues_count"):
             return "validation_issue"
 
-    reject_reason = str(pipeline_result.get("reject_reason", "") or "")
-    if "dead_npc_precheck" in reject_reason.lower():
+    if "dead_npc_precheck" in reject_reason_lower:
         return "canonical_precheck"
-    if "continuity" in reject_reason.lower():
+    if "continuity" in reject_reason_lower:
         return "continuity"
     return "reject"
 
@@ -2620,6 +2709,7 @@ class Stage3Orchestrator:
         if error_text:
             parts.append(error_text)
         reject_reason = str(pipeline_result.get("reject_reason", "") or "").strip()
+        reject_reason_lower = reject_reason.lower()
         if reject_reason:
             parts.append(reject_reason)
 
@@ -2634,6 +2724,12 @@ class Stage3Orchestrator:
         if isinstance(phases, dict):
             generate = phases.get("generate", {})
             if isinstance(generate, dict):
+                plateau = generate.get("plateau_guard")
+                if isinstance(plateau, dict) and plateau.get("triggered"):
+                    repeat_streak = int(plateau.get("repeat_streak") or 0)
+                    break_threshold = int(plateau.get("break_threshold") or 0)
+                    if repeat_streak > 0 and break_threshold > 0:
+                        parts.append(f"plateau={repeat_streak}/{break_threshold}")
                 strategy = str(generate.get("selected_strategy", "") or "").strip()
                 if strategy:
                     parts.append(f"strategy={strategy[:40]}")
@@ -2654,6 +2750,20 @@ class Stage3Orchestrator:
                     _contr = "; ".join(str(c) for c in contradictions)
                     if _contr:
                         parts.append(f"contradictions={_contr}")
+
+        stage3_observability = (
+            pipeline_result.get("_stage3_observability")
+            if isinstance(pipeline_result.get("_stage3_observability"), dict)
+            else {}
+        )
+        source_anchor_summary = (
+            stage3_observability.get("source_anchor_summary")
+            if isinstance(stage3_observability.get("source_anchor_summary"), dict)
+            else {}
+        )
+        source_anchor_line = _format_stage3_source_anchor_summary(source_anchor_summary)
+        if source_anchor_line and ("replay" in reject_reason_lower or "plateau=" in " | ".join(parts)):
+            parts.append(f"source_anchor={_clip_stage3_anchor_text(source_anchor_line, limit=120)}")
 
         if not parts:
             verdict = str(pipeline_result.get("final_verdict", "REJECT") or "REJECT")
@@ -3096,7 +3206,9 @@ class Stage3Orchestrator:
         text = str(value or "").strip().lower()
         if not text:
             return set()
-        text = _re.sub(r"['\"`“”‘’\[\]\(\){}<>:;,.!?/\\|+-]", " ", text)
+        text = _re.sub(
+            r"['\"`“”‘’\[\]\(\){}<>:;,.!?/\\|+-]", " ", text
+        )  # utf8-hygiene: allow-line regex punctuation class
         return {token for token in _re.findall(r"[a-z0-9]+|[가-힣]{2,}", text) if token and token not in {"the", "and"}}
 
     @classmethod
@@ -3299,10 +3411,12 @@ class Stage3Orchestrator:
         _reject_reason = self._build_stage3_reject_reason(pipeline_result)
         _failure_category = _classify_stage3_failure_category(pipeline_result)
         _observability_flags = _build_stage3_observability_flags(pipeline_result.get("_stage3_observability"))
+        _observability_summary = _summarize_stage3_observability_for_ui(_observability_flags)
         _selected_strategy = str(
             pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown") or "unknown"
         )
         _source_anchor_line = _format_stage3_source_anchor_summary(_observability_flags.get("source_anchor_summary"))
+        _generate_failure_highlights = _build_stage3_generate_failure_highlights(pipeline_result)
         ctx.ui.log(
             f"      └─ REJECT 사유: {_reject_reason}",
             stage="stage3",
@@ -3312,9 +3426,29 @@ class Stage3Orchestrator:
             event_kind="summary",
             meta={"failure_category": _failure_category, "selected_strategy": _selected_strategy},
         )
+        for _line in _generate_failure_highlights:
+            ctx.ui.log(
+                f"      {_line}",
+                stage="stage3",
+                component="blueprint_generation",
+                ep_num=working_ep,
+                arc_num=arc_no or 0,
+                event_kind="summary",
+                meta={"failure_category": _failure_category, "selected_strategy": _selected_strategy},
+            )
+        if _source_anchor_line:
+            ctx.ui.log(
+                f"      source_anchor: {_source_anchor_line}",
+                stage="stage3",
+                component="blueprint_generation",
+                ep_num=working_ep,
+                arc_num=arc_no or 0,
+                event_kind="summary",
+                meta={"source_anchor_summary": _observability_flags.get("source_anchor_summary")},
+            )
         ctx.ui.log(
             f"      판정 근거: category={_failure_category} | strategy={_selected_strategy} | "
-            f"observability={','.join(_observability_flags) if _observability_flags else '-'}",
+            f"observability={_observability_summary}",
             stage="stage3",
             component="blueprint_generation",
             ep_num=working_ep,
@@ -3326,16 +3460,6 @@ class Stage3Orchestrator:
                 "observability_flags": _observability_flags,
             },
         )
-        if _source_anchor_line:
-            ctx.ui.log(
-                f"      source_anchor: {_source_anchor_line}",
-                stage="stage3",
-                component="blueprint_generation",
-                ep_num=working_ep,
-                arc_num=arc_no or 0,
-                event_kind="summary",
-                meta={"source_anchor_summary": _observability_flags.get("source_anchor_summary")},
-            )
         self._record_stage3_failure_attempt(
             working_ep=working_ep,
             pipeline_result=pipeline_result,
