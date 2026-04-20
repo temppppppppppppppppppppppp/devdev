@@ -673,15 +673,41 @@ def _build_style_guide_advisory(project, *, max_chars: int = 600) -> str:
 def _compose_stage3_work_focus_text(
     *,
     arc_data: dict | None,
+    current_ep: int = 0,
     prev_blueprints: list[dict] | None,
     entity_registry: dict | None,
 ) -> str:
     parts: list[str] = []
     if isinstance(arc_data, dict):
-        for key in ("title", "summary", "block_theme", "tactical_doc", "arc_tactical", "constraint_summary"):
+        for key in ("title", "summary", "block_theme", "constraint_summary"):
             value = str(arc_data.get(key, "") or "").strip()
             if value:
                 parts.append(value)
+        if current_ep > 0:
+            tactical_excerpt = extract_episode_tactical(
+                arc_data.get("tactical_doc", ""),
+                current_ep,
+                episode_details=arc_data.get("episode_details"),
+                fallback_full=False,
+                prefer_full_doc=True,
+                full_doc_budget_chars=1200,
+            )
+            if not tactical_excerpt:
+                tactical_excerpt = extract_episode_tactical(
+                    arc_data.get("arc_tactical", ""),
+                    current_ep,
+                    episode_details=arc_data.get("episode_details"),
+                    fallback_full=False,
+                    prefer_full_doc=True,
+                    full_doc_budget_chars=1200,
+                )
+            if tactical_excerpt:
+                parts.append(tactical_excerpt)
+        else:
+            for key in ("tactical_doc", "arc_tactical"):
+                value = str(arc_data.get(key, "") or "").strip()
+                if value:
+                    parts.append(value)
         plot_suspension = arc_data.get("plot_suspension", []) or []
         if isinstance(plot_suspension, list) and plot_suspension:
             parts.append(" ".join(str(item).strip() for item in plot_suspension[:4] if str(item).strip()))
@@ -717,6 +743,7 @@ def _resolve_stage3_work_focus(
     ctx,
     *,
     arc_data: dict | None,
+    current_ep: int = 0,
     prev_blueprints: list[dict] | None,
     entity_registry: dict | None,
 ) -> dict[str, object]:
@@ -726,6 +753,7 @@ def _resolve_stage3_work_focus(
 
     focus_text = _compose_stage3_work_focus_text(
         arc_data=arc_data,
+        current_ep=current_ep,
         prev_blueprints=prev_blueprints,
         entity_registry=entity_registry,
     )
@@ -1504,6 +1532,7 @@ class Stage3Orchestrator:
                 _s3_work_focus = _resolve_stage3_work_focus(
                     ctx,
                     arc_data=arc_data,
+                    current_ep=working_ep,
                     prev_blueprints=prev_blueprints,
                     entity_registry=entity_registry,
                 )
@@ -1710,6 +1739,7 @@ class Stage3Orchestrator:
             or _resolve_stage3_work_focus(
                 ctx,
                 arc_data=arc_data,
+                current_ep=working_ep,
                 prev_blueprints=focus_window,
                 entity_registry=entity_registry,
             ),

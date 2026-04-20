@@ -102,6 +102,7 @@ class _ThreePhaseRetryState:
     prev_reject_signature: str = ""
     prev_phase2_failure_signature: str = ""
     prev_phase2_focus_strategy: str = ""
+    prev_phase2_focus_pool: list[dict] = field(default_factory=list)
     prev_binding_issue_count: int = 0
     repeated_reject_score_streak: int = 0
     repeated_reject_signature_streak: int = 0
@@ -1188,27 +1189,83 @@ class ThreePhaseBlueprintRuntime:
     def _reset_phase2_failure_streak(retry_state: _ThreePhaseRetryState) -> None:
         retry_state.prev_phase2_failure_signature = ""
         retry_state.prev_phase2_focus_strategy = ""
+        retry_state.prev_phase2_focus_pool = []
         retry_state.repeated_phase2_failure_streak = 0
 
     @staticmethod
-    def _select_phase2_focus_strategy(owner) -> str:
-        disqualified = getattr(getattr(owner, "ensemble", None), "last_disqualified_candidates", None) or []
+    def _normalize_phase2_focus_pool(disqualified: object) -> list[dict]:
         if not isinstance(disqualified, list):
-            return ""
-        ranked = [
-            item for item in disqualified if isinstance(item, dict) and str(item.get("strategy", "") or "").strip()
-        ]
-        if not ranked:
-            return ""
+            return []
+        ranked: list[dict] = []
+        seen_strategies: set[str] = set()
+        for item in disqualified:
+            if not isinstance(item, dict):
+                continue
+            strategy_name = str(item.get("strategy", "") or "").strip()
+            if not strategy_name or strategy_name in seen_strategies:
+                continue
+            seen_strategies.add(strategy_name)
+            ranked.append(
+                {
+                    "strategy": strategy_name,
+                    "scene_count": int(item.get("scene_count") or 0),
+                    "integrated_len": int(item.get("integrated_len") or 0),
+                    "ordinal": int(item.get("ordinal") or 0),
+                    "contract_reason": str(item.get("contract_reason", "") or "").strip(),
+                }
+            )
         ranked.sort(
             key=lambda item: (
                 int(item.get("scene_count") or 0),
                 int(item.get("integrated_len") or 0),
+                -(int(item.get("ordinal") or 0)),
                 str(item.get("strategy", "") or "").strip(),
             ),
             reverse=True,
         )
-        return str(ranked[0].get("strategy", "") or "").strip()
+        if not ranked:
+            return []
+        return ranked
+
+    @classmethod
+    def _snapshot_phase2_focus_pool(cls, owner, *, retry_state: _ThreePhaseRetryState | None = None) -> list[dict]:
+        current_pool = cls._normalize_phase2_focus_pool(
+            getattr(getattr(owner, "ensemble", None), "last_disqualified_candidates", None)
+        )
+        if retry_state is None:
+            return current_pool
+        stored_pool = cls._normalize_phase2_focus_pool(getattr(retry_state, "prev_phase2_focus_pool", None))
+        if current_pool and (not stored_pool or len(current_pool) > len(stored_pool)):
+            retry_state.prev_phase2_focus_pool = current_pool
+            return retry_state.prev_phase2_focus_pool
+        retry_state.prev_phase2_focus_pool = stored_pool
+        return retry_state.prev_phase2_focus_pool
+
+    @classmethod
+    def _select_phase2_focus_strategy(cls, owner, *, retry_state: _ThreePhaseRetryState | None = None) -> str:
+        ranked = cls._normalize_phase2_focus_pool(getattr(retry_state, "prev_phase2_focus_pool", None))
+        if not ranked:
+            ranked = cls._normalize_phase2_focus_pool(
+                getattr(getattr(owner, "ensemble", None), "last_disqualified_candidates", None)
+            )
+        if not ranked:
+            return ""
+        strategy_pool: list[str] = []
+        for item in ranked:
+            strategy_name = str(item.get("strategy", "") or "").strip()
+            if strategy_name and strategy_name not in strategy_pool:
+                strategy_pool.append(strategy_name)
+        if not strategy_pool:
+            return ""
+
+        previous_focus = str(getattr(retry_state, "prev_phase2_focus_strategy", "") or "").strip()
+        repeated_failure_streak = int(getattr(retry_state, "repeated_phase2_failure_streak", 0) or 0)
+        if repeated_failure_streak > 1 and previous_focus in strategy_pool and len(strategy_pool) > 1:
+            previous_index = strategy_pool.index(previous_focus)
+            next_index = min(previous_index + 1, len(strategy_pool) - 1)
+            return strategy_pool[next_index]
+
+        return strategy_pool[0]
 
     def _update_phase2_failure_streak(
         self,
@@ -1225,7 +1282,11 @@ class ThreePhaseBlueprintRuntime:
                 else 1
             )
             retry_state.prev_phase2_failure_signature = signature
-            retry_state.prev_phase2_focus_strategy = self._select_phase2_focus_strategy(self.owner)
+            self._snapshot_phase2_focus_pool(self.owner, retry_state=retry_state)
+            retry_state.prev_phase2_focus_strategy = self._select_phase2_focus_strategy(
+                self.owner,
+                retry_state=retry_state,
+            )
             return retry_state.repeated_phase2_failure_streak
         self._reset_phase2_failure_streak(retry_state)
         return 0
