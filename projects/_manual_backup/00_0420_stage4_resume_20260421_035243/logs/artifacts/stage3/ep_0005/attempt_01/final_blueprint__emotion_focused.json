@@ -1,0 +1,196 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "8bf4e25257a732a7398953dc3176748e9eb8bf0543d8623ff5d0b518bcb927a5"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1330,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 10710,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 989290,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 6062,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4175,
+          "lane": "constraints"
+        },
+        {
+          "chars": 247,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 247,
+        "constraints": 4175,
+        "feedback_context": 216,
+        "hud_context": 10,
+        "prev_info": 6062
+      },
+      "shared_context_chars": 10494,
+      "total_chars": 10710
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "fix_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "육체적 한계를 딛고 자본의 룰을 이용해 PB를 통제하는 과정",
+  "end_location": "서울 성북동 본가, 한시우의 개인 침실",
+  "ending_hook": "통화가 끊긴 적막한 방 안, 핏자국 묻은 손끝에 닿은 휴대전화의 온기만이 그가 당겨버린 거대한 방아쇠의 무게를 증명하고 있었다.",
+  "ending_state": {
+    "location": "서울 성북동 본가, 한시우의 개인 침실",
+    "protagonist_status": "PB의 굴복을 확인하고 다가올 폭등장을 차분히 기다리는 상태",
+    "timeline": {
+      "표현": "2006년 2월 15일 아침 - 이란 핵 위기 뉴스 속보 직전"
+    }
+  },
+  "ep_num": 5,
+  "episode_number": 5,
+  "expected_ending": "수수료 2배 제안으로 PB를 굴복시키고 폭풍의 눈 속에서 대기",
+  "integrated_scenario": "SW인베스트먼트 임시 사무실의 서늘한 공기 속, 한시우의 핏기 가신 손가락이 기어이 노트북의 엔터키를 짓눌렀다. 화면에 매수 포지션 진입 완료 메시지가 떠오르는 순간, 팽팽하게 당겨졌던 신경이 한계에 달하며 코피가 왈칵 쏟아졌다. 그는 랩탑 키보드 위로 떨어지는 붉은 핏방울을 소매로 거칠게 닦아냈다. 시야가 점멸하는 극심한 두통이 몰아쳤지만, 그의 입가에는 희미한 미소가 번졌다. 고통 속에서도 한시우는 침착하게 구형 랩탑과 법인 인감, 통장 사본을 가방에 쓸어 담았다. 누구에게도 이 흔적을 들켜서는 안 되었다. 비틀거리는 걸음으로 사무실을 빠져나온 그는 차가운 공기를 깊게 들이마시며 억지로 정신을 부여잡았다.\n\n얼마 후, 서울 성북동 본가의 저택. 한시우는 고요한 복도를 지나 자신의 개인 침실로 돌아왔다. 욕실로 향한 그는 세면대에 찬물을 틀고 얼굴에 묻은 핏자국을 씻어냈다. 거울 속에는 18년의 기억을 강제로 욱여넣고 뇌의 과부하를 겪고 있는 창백한 청년이 서 있었다. 하지만 그의 눈빛만큼은 그 어느 때보다 형형하게 빛났다. 두통이 서서히 가라앉자, 그는 젖은 머리를 쓸어 넘기며 다음 단계를 준비했다. 직접 진입한 포지션 외에, 합법적인 창구를 통한 대규모 자금 투입이 필요했다. 그는 침대에 걸터앉아 구형 휴대전화를 꺼내 들었다.\n\n신호음이 몇 번 울리지 않아 박성호 PB가 전화를 받았다. 한시우는 인사치레를 생략하고 건조한 목소리로 15억 원의 자금을 WTI 3배 레버리지로 전량 매수할 것을 지시했다. 수화기 너머에서는 당혹감 어린 침묵이 흘렀다. 이내 박 PB는 한숨을 섞어가며 파생상품의 위험성을 설명하기 시작했다. 그의 정중한 어조 밑바닥에는 재벌가 도련님이 홧김에 벌이는 무모한 불장난이라는 얕봄과 편견이 짙게 깔려 있었다. 박 PB는 원유 시장의 변동성을 운운하며 지시를 우회적으로 거절하려 들었다. 한시우는 그의 장황한 설교를 끊지 않고 잠자코 들었다. 자신이 쥔 미래의 지식을 구태여 증명할 필요는 없었다.\n\n박 PB의 말이 끝나갈 무렵, 한시우는 낮고 차가운 목소리로 입을 열었다. \"수수료 2배. 당장 체결하세요.\" 그 짧은 한마디에 수화기 너머의 공기가 얼어붙었다. 시장의 논리와 도련님의 치기를 운운하던 박 PB의 태도는, 자본이 제시하는 폭력적인 보상 앞에서 순식간에 무너져 내렸다. 박 PB는 방금 전까지의 만류가 무색하게 떨리는 목소리로 즉각적인 실행을 약속했다. 일방적으로 통화를 종료한 한시우는 텅 빈 침실 한가운데 섰다. 사람의 신념과 편견이 돈 앞에서 얼마나 쉽게 꺾이는지 목도한 그의 내면에는 씁쓸함과 동시에 냉혹한 투지가 피어올랐다. 거대한 폭풍이 몰아치기 직전의 고요함 속에서, 그는 조용히 다가올 시간을 기다렸다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 육체적 한계를 극복하는 긴장감(6)으로 시작하여, 중반부 본가 복귀로 호흡을 고른 뒤(4), 후반부 전화 통화에서 심리적 우위를 점하는 감정적 카타르시스(5)로 이어지도록 템포를 조절함.",
+  "protagonist_state": {
+    "equipment": [
+      "구형 휴대전화",
+      "법인 통장 사본",
+      "SW인베스트먼트 법인 인감",
+      "구형 랩탑"
+    ],
+    "injuries": "두통 완화, 코피 멎음",
+    "mood": "냉혹한 투지와 씁쓸함"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "재벌가 도련님의 취미 투자로 치부하며 얕봄",
+      "justification": "수수료 2배라는 파격적인 제안을 통해 자본 시장의 본질적인 논리로 상대를 억눌렀기 때문",
+      "target": "박성호 PB",
+      "to_state": "압도적인 자본의 제안 앞에 굴복하며 실무적 복종"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "극심한 고통 속에서도 기어이 엔터키를 눌러 매수 주문을 체결하고, 흔적을 지운 뒤 사무실을 빠져나온다.",
+      "goal": "육체적 고통을 이겨내고 첫 포지션을 확정짓는다",
+      "key_events": [
+        "시야가 점멸하는 고통 속에서 피 묻은 손가락으로 기어이 엔터키를 짓눌러 주문을 체결함",
+        "체결 알림음을 확인한 후, 랩탑 키보드에 떨어진 코피를 소매로 거칠게 닦아냄",
+        "구형 랩탑과 법인 인감을 가방에 챙겨 은밀하게 임시 사무실을 빠져나옴"
+      ],
+      "location": "SW인베스트먼트 임시 사무실",
+      "summary": "SW인베스트먼트 임시 사무실에서 두통과 코피를 견디며 HTS 매수 주문을 강행한다.",
+      "tension_level": 6,
+      "title": "엔터키의 무게",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "거울을 보며 감정을 통제하고, 박성호 PB를 통한 15억 원 규모의 추가 자금 투입 계획을 점검한다.",
+      "goal": "신체를 추스르고 다음 자금 투입을 준비한다",
+      "key_events": [
+        "본가 침실로 돌아와 욕실 세면대에서 찬물로 얼굴의 핏자국을 씻어냄",
+        "거울 속 창백한 자신의 얼굴을 응시하며 뇌의 과부하로 인한 고통을 억누름",
+        "침대에 걸터앉아 구형 휴대전화를 꺼내 들고 박성호 PB에게 연락할 준비를 함"
+      ],
+      "location": "서울 성북동 본가, 한시우의 개인 침실",
+      "summary": "본가 침실로 돌아와 피로를 씻어내고 추가 레버리지 지시를 준비한다.",
+      "tension_level": 4,
+      "title": "고요한 요새",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호 PB"
+      ],
+      "content": "",
+      "description": "한시우가 15억 원 WTI 3배 레버리지 매수를 지시하자, 박 PB가 파생상품의 위험성을 핑계로 은근히 무시하며 거절하려 한다.",
+      "goal": "박성호 PB에게 15억 원 레버리지 매수를 지시한다",
+      "key_events": [
+        "구형 휴대전화로 박 PB에게 연락해 인사 없이 15억 원 WTI 3배 레버리지 매수를 지시함",
+        "박 PB가 한숨을 쉬며 원유 시장의 변동성과 위험성을 장황하게 설명하기 시작함",
+        "재벌가 도련님의 치기로 얕보는 박 PB의 태도 앞에서도 한시우는 반박 없이 차가운 침묵을 유지함"
+      ],
+      "location": "서울 성북동 본가, 한시우의 개인 침실",
+      "summary": "박성호 PB에게 매수 지시를 내리지만, PB는 이를 도련님의 무모한 취미로 치부하며 만류한다.",
+      "tension_level": 5,
+      "title": "오만과 편견",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호 PB"
+      ],
+      "content": "",
+      "description": "논리적 설득 대신 압도적인 보상을 제시하여 상대의 태도를 바꾸고, 다가올 폭풍을 기다린다.",
+      "goal": "자본의 논리로 PB의 편견을 부수고 통제권을 쥔다",
+      "key_events": [
+        "한시우가 설교를 끊고 건조한 목소리로 '수수료 2배'라는 조건을 던짐",
+        "만류하던 박 PB의 목소리가 떨리며 즉각 지시를 이행하겠다고 태도를 180도 바꿈",
+        "일방적으로 통화를 끊은 한시우가 자본 앞에 꺾이는 인간의 편견을 마주하며 투지를 다짐"
+      ],
+      "location": "서울 성북동 본가, 한시우의 개인 침실",
+      "summary": "수수료 2배를 제안하여 박 PB를 즉각 굴복시키고 자본의 힘을 씁쓸하게 확인한다.",
+      "tension_level": 5,
+      "title": "자본의 목줄",
+      "type": "emotional_reveal"
+    }
+  },
+  "start_location": "SW인베스트먼트 임시 사무실",
+  "target_beat": "감정의 미묘한 변화 묘사와 내면 심리 부각",
+  "time_flow": "새벽 → 아침",
+  "title": "오만과 편견"
+}

@@ -1,0 +1,228 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "9988d68c76c62e1791955f884eb1f7b9e0511789e5f121c39f8a9860b2e7f06d"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=SW인베스트먼트, 인베스트먼트 빌딩, 한시우는 차가운 빌딩",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1842,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 25705,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 974295,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 20755,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4529,
+          "lane": "constraints"
+        },
+        {
+          "chars": 217,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 194,
+        "constraints": 4529,
+        "feedback_context": 217,
+        "hud_context": 10,
+        "prev_info": 20755
+      },
+      "shared_context_chars": 25488,
+      "total_chars": 25705
+    },
+    "scene_count": 5,
+    "strategy": "emotion_focused",
+    "total_candidates": 1
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 96,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false
+  },
+  "core_tension": "막대한 레버리지 압박 속 지루한 횡보장을 견디는 고독한 심리전",
+  "end_location": "성북동 카페 창가 자리",
+  "ending_hook": "화면을 가득 채운 비관적인 뉴스 헤드라인 위로, 한시우의 입가에 기괴할 만큼 서늘한 미소가 번졌다.",
+  "ending_state": {
+    "location": "성북동 카페 창가 자리",
+    "protagonist_status": "외부의 압박을 차단하고 폭등의 전조를 기다리는 완벽한 평정심",
+    "timeline": {
+      "표현": "2006년 7월 하순의 늦은 오후"
+    }
+  },
+  "ep_num": 15,
+  "episode_number": 15,
+  "expected_ending": "시장의 극단적 비관론 속에서도 흔들리지 않는 확신을 다짐",
+  "integrated_scenario": "SW인베스트먼트 빌딩의 육중한 회전문을 빠져나오는 순간, 한시우의 뇌리를 찢어발길 듯한 날카로운 이명이 덮쳐왔다. 시야가 기형적으로 일그러지고 아스팔트 바닥이 융기하듯 솟아오르는 착각에 걸음이 크게 휘청거렸다. 거대한 역사의 흐름에 억지로 개입하여 막대한 자본을 쥐어짜 낸 대가였다. 한시우는 차가운 빌딩 외벽에 어깨를 기대고 거친 숨을 몰아쉬었다. 그의 손은 가방 속에 든 금 선물 매수 체결 확인서를 부서질 듯 꽉 움켜쥐고 있었다. 몇 분의 억겁 같은 시간이 흐른 뒤, 이명이 잦아들고 시야의 초점이 돌아왔다. 핏발 선 눈을 감았다 뜬 그의 눈빛은 고통을 딛고 일어선 포식자의 그것처럼 차갑게 가라앉아 있었다. 그는 길가에 정차된 택시에 올라타며 임시 오피스로 향했다.\n\n시간은 무심하게 흘러 2006년 7월의 한가운데를 관통하고 있었다. SW인베스트먼트 임시 오피스의 공기는 무겁고 정체되어 있었다. 한시우의 구형 랩탑 화면에 띄워진 금 선물 호가창은 마치 죽은 자의 심전도처럼 미동조차 없었다. 끝을 알 수 없는 지루한 횡보장이었다. 막대한 레버리지가 걸린 포지션은 단 1틱의 미세한 움직임에도 억 단위의 평가 손익을 널뛰게 만들었지만, 시장은 방향성을 잃은 채 좁은 박스권에 갇혀 있었다. 한시우는 등받이에 기대어 그 지독한 정적을 견뎌냈다. 과거의 삶에서 그는 이런 횡보장의 심리적 압박을 견디지 못하고 섣부른 매매를 반복하다 파멸했었다. 하지만 지금의 그는 달랐다. 침묵하는 모니터 앞에서 그는 자신의 내면을 예리하게 벼려냈다.\n\n적막을 깬 것은 테이블 위에 놓인 구형 휴대전화의 진동이었다. 발신자는 박성호 PB였다. 전화를 받은 한시우의 귓가로 조바심이 가득 묻어나는 목소리가 흘러나왔다. 두 달 가까이 묶여 있는 거액의 자금과 꼼짝하지 않는 금 가격에 문지기의 평정심이 먼저 무너진 것이다. 박성호는 최근 코스피의 상승세와 강남 부동산 시장의 들썩임을 장황하게 늘어놓으며, 지금이라도 금 포지션을 일부 청산하고 주식이나 부동산으로 자산을 전환하는 것이 어떻겠냐고 조심스럽게 권유했다. 한시우는 그의 말이 끝나기를 기다리지 않았다. \"박성호 PB님.\" 서늘하게 가라앉은 목소리가 수화기를 타고 넘어갔다. \"내가 당신에게 일반적인 기준의 두 배가 넘는 수수료를 지불하는 건, 흔해 빠진 시장 분석이나 들으려는 게 아닙니다. 내 포지션에 대한 어떠한 의견 제시도 앞으로 불허합니다.\" 단호한 축객령에 수화기 너머의 숨소리가 멎었고, 한시우는 일방적으로 통화를 종료했다.\n\n오피스의 답답한 공기를 환기하기 위해 한시우는 랩탑을 챙겨 성북동의 한적한 카페로 자리를 옮겼다. 창가 자리에 앉아 에스프레소를 주문한 그는 다시금 전 세계의 거시 경제 지표와 뉴스 피드를 살폈다. 시장의 분위기는 완벽한 비관론으로 돌아서 있었다. 블룸버그의 칼럼니스트부터 여의도의 애널리스트들까지, 모두가 금을 '매력 잃은 죽은 자산'이라 칭하며 조롱 섞인 분석을 내놓고 있었다. 그러나 그 쏟아지는 비관의 기사들을 읽어 내려가는 한시우의 눈동자에는 오히려 짙은 안도감이 번지고 있었다. 대중이 완벽하게 등을 돌리고, 전문가들이 입을 모아 비관할 때가 바로 거대한 자본이 방향을 트는 변곡점임을 그는 뼈저리게 알고 있었다.\n\n카페 벽면에 걸린 TV에서는 경제 채널의 토론 프로그램이 한창이었다. 패널들은 금에 물린 투자자들을 동정하는 척하며 사실상 조롱하고 있었다. '기나긴 겨울', '기회비용의 상실' 같은 단어들이 카페의 백색소음 위로 둥둥 떠다녔다. 한시우는 턱을 괸 채 그 화면을 응시했다. 모두가 절망을 이야기하는 이 완벽한 고독의 공간에서, 오직 그만이 다가올 거대한 폭풍의 숨결을 느끼고 있었다. 랩탑 화면을 조용히 덮는 한시우의 입가에, 기괴할 만큼 서늘하고 오만한 미소가 천천히 번져갔다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부 물리적 고통의 묘사에서 시작해, 중반부 지루한 횡보장의 심리적 압박을 거쳐, 후반부 극단적 비관론 속에서 피어나는 주인공의 내적 확신으로 이어지는 점진적인 감정 고조를 유도함.",
+  "protagonist_state": {
+    "equipment": [
+      "구형 휴대전화",
+      "법인 통장 사본",
+      "SW인베스트먼트 법인 인감",
+      "구형 랩탑",
+      "금 선물 매수 체결 확인서"
+    ],
+    "injuries": "두통의 여파로 인한 얕은 피로감",
+    "mood": "고독한 인내 속 예리하게 벼려진 확신"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "맹목적 복종 속에서도 시장 상황에 흔들리는 불안감",
+      "justification": "주인공이 수익 실현 전까지의 횡보장을 견디는 과정에서 문지기의 어설픈 개입을 원천 차단함",
+      "target": "박성호 PB",
+      "to_state": "주인공의 철저한 통제 아래 의견 제시조차 금지당한 완벽한 억압 상태"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "미래 개입의 반동을 이겨내고 이성을 되찾는다.",
+      "key_events": [
+        "빌딩 회전문을 빠져나오자마자 시야가 일그러지며 걸음이 휘청거림",
+        "차가운 외벽에 몸을 기대고 가방 속 금 선물 매수 체결 확인서를 꽉 움켜쥐며 고통을 인내함",
+        "서서히 이명이 잦아들자, 핏발 선 눈을 감았다 뜨며 차가운 이성을 회복하고 택시에 탑승함"
+      ],
+      "location": "서울 강남, SW인베스트먼트 1층 로비 밖",
+      "summary": "SW인베스트먼트 빌딩을 나선 직후 덮쳐온 극심한 두통과 이명을 견뎌내며 스스로를 통제한다.",
+      "tension_level": 6,
+      "title": "무너지는 감각의 여파",
+      "type": "direct_continuation"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "지루한 횡보장 속에서 흔들리지 않는 평정심을 유지한다.",
+      "key_events": [
+        "2006년 7월, 임시 오피스 책상 위 구형 랩탑 화면에 갇힌 듯 미동 없는 금 선물 호가창을 응시함",
+        "막대한 레버리지가 걸린 상태에서 단 1틱의 움직임에도 피가 마르는 심리적 압박이 묘사됨",
+        "과거의 실패를 반추하며, 현재의 고독한 인내가 거대한 자본을 쥐기 위한 필수적인 과정임을 되새김"
+      ],
+      "location": "SW인베스트먼트 임시 오피스",
+      "summary": "SW인베스트먼트 오피스에서 두 달간 이어지는 금 시장의 지루한 횡보장을 묵묵히 모니터링한다.",
+      "tension_level": 4,
+      "title": "죽은 자산의 시간",
+      "type": "daily_routine"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호 PB(전화)"
+      ],
+      "content": "",
+      "goal": "박성호 PB의 주제넘은 조언을 차단하고 위계를 재확인한다.",
+      "key_events": [
+        "구형 휴대전화로 걸려 온 박성호 PB의 전화를 건조하게 받음",
+        "박성호가 국내 증시 호황과 부동산 시장을 언급하며 금 포지션 청산 및 자산 전환을 조심스럽게 권유함",
+        "한시우가 서늘한 목소리로 '내가 당신에게 수수료를 두 배로 주는 건 시장 분석을 듣기 위함이 아니다'라며 단칼에 묵살함"
+      ],
+      "location": "SW인베스트먼트 임시 오피스",
+      "summary": "금 가격 횡보에 불안해진 박성호 PB가 주식/부동산 전환을 권유하지만, 한시우가 이를 냉혹하게 묵살한다.",
+      "tension_level": 5,
+      "title": "문지기의 조바심",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "시장의 비관적인 전망 속에서 오히려 확신을 굳힌다.",
+      "key_events": [
+        "환경을 환기하기 위해 랩탑을 챙겨 성북동의 한적한 카페로 이동하여 자리를 잡음",
+        "블룸버그와 국내 경제 뉴스를 살피며, 전문가들이 입을 모아 금을 '매력 없는 자산'으로 평가절하하는 기사들을 정독함",
+        "모두가 등을 돌리는 이 완벽한 비관의 순간이야말로 다가올 폭등의 가장 확실한 전조임을 깨닫고 깊은 안도감을 느낌"
+      ],
+      "location": "성북동 카페",
+      "summary": "성북동 카페로 자리를 옮긴 한시우가 쏟아지는 시장의 비관론을 확인하며 자신의 판단에 대한 내면의 결의를 다진다.",
+      "tension_level": 4,
+      "title": "비관론을 마주하는 자세",
+      "type": "emotional_reveal"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "극단적 비관론 속에서 다가올 폭등을 예감하며 긴장감을 조성한다.",
+      "key_events": [
+        "카페 벽걸이 TV의 경제 채널에서 '금, 기나긴 겨울에 진입했나'라는 자극적인 헤드라인의 토론 프로그램이 방송됨",
+        "패널들이 금 투자자들의 막대한 손실을 조롱하듯 분석하는 소리를 배경음악처럼 흘려들음",
+        "구형 랩탑 화면을 조용히 덮으며, 대중의 절망이 극에 달한 지금이 곧 거대한 판이 뒤집힐 순간임을 확신하는 서늘한 미소를 지음"
+      ],
+      "location": "성북동 카페",
+      "summary": "TV에서 금 시장에 대한 절망적인 분석이 흘러나오는 가운데, 한시우는 홀로 서늘한 미소를 짓는다.",
+      "tension_level": 5,
+      "title": "어둠 속의 미소",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 강남, SW인베스트먼트 1층 로비 밖",
+  "target_beat": "시장의 비관론과 주변의 만류를 이겨내고 자신만의 확고한 투자 원칙을 고수하는 주인공의 내적 단단함 부각",
+  "time_flow": "2006년 7월 중",
+  "title": "죽은 자산과 인내의 시간"
+}

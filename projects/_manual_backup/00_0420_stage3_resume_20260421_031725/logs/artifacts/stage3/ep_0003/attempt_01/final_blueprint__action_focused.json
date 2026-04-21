@@ -1,0 +1,231 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "0e495785ebb2a32084872db5b835bec9fe8cd61dc086a892518ccd57d5740992"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=3; sample_anchors=회장님께서 서재, 순간 서재, 뒤로 육중한 서재",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1056,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 7384,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 992616,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 3762,
+          "lane": "constraints"
+        },
+        {
+          "chars": 3334,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 145,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 145,
+        "constraints": 3762,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 3334
+      },
+      "shared_context_chars": 7251,
+      "total_chars": 7384
+    },
+    "scene_count": 5,
+    "strategy": "action_focused",
+    "total_candidates": 1
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 94,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false
+  },
+  "core_tension": "한정호의 압도적인 기세를 견뎌내고 원하는 수준의 무관심을 얻어낼 수 있는가",
+  "end_location": "서울 성북동 본가 저택 복도",
+  "ending_hook": "서재 문이 닫히자마자, 한시우는 주머니 속 구형 휴대전화의 폴더를 거칠게 열어젖혔다. 액정 위로 떠오른 번호는 그가 뜯어먹을 첫 번째 사냥감이었다.",
+  "ending_state": {
+    "location": "서울 성북동 본가 저택 복도",
+    "protagonist_status": "가문의 감시망에서 일시적으로 벗어나 실탄(자금) 확보를 위한 다음 행동을 준비함",
+    "timeline": {
+      "표현": "2006년 1월 낮"
+    }
+  },
+  "ep_num": 3,
+  "episode_number": 3,
+  "expected_ending": "성공적으로 후계 구도에서 발을 빼며 가문의 레이더망에서 벗어남",
+  "integrated_scenario": "전화가 끊어지기 무섭게 적막을 찢고 육중한 참나무 문에 노크 소리가 울렸다. \"도련님, 회장님께서 서재로 부르십니다.\" 집사의 건조한 목소리였다. 한시우는 거친 숨을 고르며 서랍 깊숙한 곳에 피 묻은 노트와 부러진 볼펜을 밀어 넣었다. 거울을 보며 소매로 턱 끝에 굳어 있던 코피 자국을 거칠게 닦아낸 그는 미련 없이 방문을 나섰다.\n본가의 길고 서늘한 복도를 걷는 동안, 한시우의 머릿속은 차갑게 식어갔다. 과거의 그는 이 복도를 걸을 때마다 숨이 막혔고, 서재 문 앞에서는 사시나무 떨듯 떨었다. 하지만 지금의 발걸음에는 어떠한 망설임도 없었다. 서재 문 앞을 지키는 경호원들의 날카로운 시선을 무시한 채, 그는 심호흡조차 하지 않고 직접 문고리를 돌려 안으로 들어섰다.\n서재 안은 숨이 막힐 듯한 한기로 가득 차 있었다. 거대한 마호가니 책상 너머에 앉은 한정호 회장은 눈빛만으로도 사람의 목을 조르는 듯한 압박감을 뿜어내고 있었다. 한정호는 막내아들의 최근 기행과 쓰러진 이유를 날카롭게 캐물었다. 하지만 한시우는 주눅 들지 않았다. 오히려 형들의 눈치를 볼 필요 없이 단도직입적으로 폭탄을 던졌다. \"그룹 일에는 관심 없습니다. 제 몫의 후계 구도에서 완전히 빠지겠습니다.\"\n순간 서재의 공기가 얼어붙었다. 한정호는 쥐고 있던 결재 서류를 책상 위로 거칠게 내던지며 분노 섞인 기세를 뿜어냈다. 자리에서 일어난 그가 한시우의 턱 밑까지 다가와 짐승 같은 살기를 드러냈지만, 한시우는 단 한 발자국도 물러서지 않고 정면으로 그 시선을 받아냈다. 과거라면 바닥에 주저앉았을 압박감 속에서도 흔들림 없는 눈동자를 마주한 한정호는, 이내 이질감을 느끼면서도 흥미가 식었다는 듯 차갑게 축객령을 내렸다.\n등 뒤로 육중한 서재 문이 마찰음을 내며 닫혔다. 한시우의 입꼬리가 비틀려 올라갔다. 가장 까다로운 감시망이자 족쇄였던 가문의 시선을 '무관심'이라는 이름으로 완벽하게 차단해 낸 것이다. 복도를 걸어 나오며 그는 주머니 속 구형 휴대전화를 거칠게 움켜쥐었다. 판을 뒤집을 사냥터는 정해졌고, 목줄은 풀렸다. 이제 남은 건 그 판에 밀어 넣을 피 냄새 나는 실탄을 긁어모으는 것뿐이다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반의 짧은 정비 이후 서재로 진입하며 텐션을 급격히 끌어올린다. 한정호와의 대치 씬에서는 대사의 티키타카보다 행동과 기세의 충돌에 집중하여 긴장감을 극대화한다. 마지막 씬은 빠른 템포로 전환하여 다음 행동에 대한 기대감을 조성한다.",
+  "protagonist_state": {
+    "equipment": [
+      "구형 휴대전화"
+    ],
+    "injuries": "두통 미약, 코피 자국 닦아냄",
+    "mood": "냉혹한 계산과 투지"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "기대 제로의 귀여운 막내",
+      "justification": "한정호의 살기 어린 압박을 눈 하나 깜짝하지 않고 버텨냈으나, 자발적으로 권력을 포기하겠다는 선언이 한정호의 기준에서는 어리석은 도피로 보였기 때문.",
+      "target": "한정호",
+      "to_state": "의외라는 시선과 약간의 관심, 하지만 여전히 재롱 수준으로 방치"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "집사"
+      ],
+      "content": "전화가 끊어지기 무섭게 방문 밖에서 노크 소리가 울린다. 회장님께서 찾으신다는 집사의 말에 한시우는 신속하게 노트를 숨긴다.",
+      "description": "한시우는 피 묻은 노트를 서랍에 숨기고 옷매무새를 가다듬으며 아버지와의 대면을 준비한다.",
+      "goal": "아버지의 호출을 받고 대면 준비",
+      "key_events": [
+        "통화 종료 직후 방문을 두드리는 집사의 건조한 목소리",
+        "서랍 깊숙한 곳에 피 묻은 노트와 부러진 볼펜을 숨김",
+        "거울 앞에서 소매로 남은 핏자국을 닦아내며 감정을 지움"
+      ],
+      "location": "서울 성북동 본가 저택 한시우의 개인 침실",
+      "summary": "브로커와의 통화 직후, 회장의 서재로 오라는 집사의 전갈을 받는다.",
+      "tension_level": 5,
+      "title": "호출",
+      "type": "tension_build"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "복도를 걷는 한시우의 발걸음에는 망설임이 없다. 서재 문 앞에 서서 잠시 멈칫하던 과거와 달리, 거침없이 문고리를 돌린다.",
+      "description": "과거의 기억과 현재의 감각이 교차하는 가운데, 한시우는 철저히 자신을 낮추고 무관심을 유도할 전략을 되새긴다.",
+      "goal": "서재로 이동하며 심리적 무장",
+      "key_events": [
+        "적막한 저택의 복도를 걸으며 가문의 권력을 상징하는 장식물들을 지나침",
+        "서재 문 앞을 지키는 경호원들의 날카로운 시선을 무시함",
+        "심호흡 없이 육중한 참나무 문을 직접 열고 들어감"
+      ],
+      "location": "서울 성북동 본가 저택 복도",
+      "summary": "본가의 길고 서늘한 복도를 지나 아버지 한정호의 서재 문 앞에 선다.",
+      "tension_level": 6,
+      "title": "사자의 굴로",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "한정호"
+      ],
+      "content": "한정호의 날 선 질문에 한시우는 경영권 분쟁에서 완전히 손을 떼겠다고 답한다. 공기가 얼어붙는 듯한 압박감 속에서도 그의 시선은 흔들리지 않는다.",
+      "description": "한정호는 막내의 갑작스러운 기절과 최근의 기행을 캐묻고, 한시우는 이를 역이용해 자신의 몫을 포기하겠다고 선언한다.",
+      "goal": "후계 구도 포기 선언",
+      "key_events": [
+        "책상 너머에서 뿜어져 나오는 한정호의 살벌한 안력과 압박",
+        "한시우가 형들의 눈치를 보지 않고 '제 몫의 후계 구도에서 빠지겠다'고 폭탄선언",
+        "한정호가 서류를 집어 던지며 분노를 표출하지만 한시우는 눈 하나 깜짝하지 않음"
+      ],
+      "location": "서울 성북동 본가 저택 한정호의 서재",
+      "summary": "한정호의 억압적인 기운 앞에서도 굴하지 않고 그룹 경영에 관심이 없음을 못 박는다.",
+      "tension_level": 9,
+      "title": "서재의 대치",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "한정호"
+      ],
+      "content": "물리적인 위협에 가까운 기세에도 한시우가 버텨내자, 한정호는 혀를 차며 그를 내보낸다. 한시우가 원하던 완벽한 '방치'의 순간이다.",
+      "description": "늘 주눅 들어 있던 막내의 이질적인 태도에 한정호는 찰나의 흥미를 느끼지만, 이내 쓸모없는 패로 치부해버린다.",
+      "goal": "한정호의 의심을 거두고 무관심을 획득",
+      "key_events": [
+        "한정호가 자리에서 일어나 한시우의 턱 밑까지 다가와 살기를 뿜어냄",
+        "한시우가 뒷걸음질 치지 않고 정면으로 시선을 받아냄",
+        "흥미가 식었다는 듯 한정호가 손을 저으며 축객령을 내림"
+      ],
+      "location": "서울 성북동 본가 저택 한정호의 서재",
+      "summary": "한정호는 한시우의 선언이 진심인지 시험하지만, 결국 그를 내쫓듯 물러나게 한다.",
+      "tension_level": 8,
+      "title": "달라진 시선",
+      "type": "side_glimpse"
+    },
+    "scene_5": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "서재 밖으로 나온 한시우는 더 이상 아버지의 눈치를 보는 막내가 아니다. 그는 즉시 휴대전화를 꺼내 들고 사냥을 위한 실탄 마련에 착수한다.",
+      "description": "가장 큰 감시망을 스스로 닫아버린 한시우는 즉각적으로 자금 확보를 위한 행동에 돌입하려 한다.",
+      "goal": "자유로운 행동 반경 확보 및 다음 단계 돌입",
+      "key_events": [
+        "육중한 서재 문이 닫히는 소리와 함께 팽팽했던 긴장이 끊어짐",
+        "복도를 걸어 나오며 주머니 속 구형 휴대전화를 꽉 움켜쥠",
+        "액정을 열어 다음 연락처를 확인하며 차가운 미소를 지음"
+      ],
+      "location": "서울 성북동 본가 저택 복도",
+      "summary": "서재를 빠져나온 한시우가 사냥을 위한 다음 타겟을 향해 움직이기 시작한다.",
+      "tension_level": 7,
+      "title": "족쇄를 풀다",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 저택 한시우의 개인 침실",
+  "target_beat": "후계 구도 자발적 포기 선언을 통한 가문의 감시망 탈피 및 독자적 행동 반경 확보",
+  "time_flow": "2006년 1월 오전 → 낮",
+  "title": "서재에서의 선언"
+}

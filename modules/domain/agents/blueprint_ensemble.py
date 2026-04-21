@@ -125,6 +125,39 @@ def _year_month_conflicts(left: object, right: object) -> bool:
     return bool(left_point is not None and right_point is not None and left_point != right_point)
 
 
+def _extract_year_month_day(raw: object) -> tuple[int, int, int] | None:
+    if isinstance(raw, dict):
+        year = raw.get("year")
+        month = raw.get("month")
+        if year not in (None, "") and month not in (None, ""):
+            try:
+                day = raw.get("day")
+                day_value = int(day) if day not in (None, "") else 0
+                return int(year), int(month), day_value
+            except (TypeError, ValueError):
+                return None
+        for key in ("표현", "expression", "text", "description"):
+            value = raw.get(key)
+            if value not in (None, ""):
+                raw = value
+                break
+        else:
+            raw = ""
+
+    text = str(raw or "").strip()
+    if not text:
+        return None
+    year_match = re.search(r"(?P<year>20\d{2}|19\d{2})\s*년", text)
+    month_match = re.search(r"(?P<month>1[0-2]|0?[1-9])\s*월", text)
+    if not month_match:
+        return None
+    day_match = re.search(r"(?P<day>[12]\d|3[01]|0?[1-9])\s*일", text)
+    year = int(year_match.group("year")) if year_match else 0
+    month = int(month_match.group("month"))
+    day = int(day_match.group("day")) if day_match else 0
+    return year, month, day
+
+
 def _resolve_authoritative_opening_time_context(constraint_block: dict | None) -> str:
     payload = constraint_block if isinstance(constraint_block, dict) else {}
     episode_state_packet = payload.get("episode_state_packet")
@@ -669,13 +702,16 @@ class BlueprintEnsembleGenerator(BaseAgent):
     ) -> tuple[list[dict], list[str]]:
         candidates: list[dict] = []
         worker_error_types: list[str] = []
+        screened_disqualified_details: list[dict] = []
         timer_started_at = time.monotonic()
 
         try:
             with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
                 futures = {}
-                for strategy in active_strategies:
+                strategy_ordinals: dict[str, int] = {}
+                for strategy_index, strategy in enumerate(active_strategies):
                     strategy_name = strategy["name"]
+                    strategy_ordinals[strategy_name] = strategy_index
                     future = executor.submit(
                         self._generate_single,
                         ep_num=ep_num,
@@ -723,6 +759,16 @@ class BlueprintEnsembleGenerator(BaseAgent):
                                 worker_error_type = future_output[1]
                             if worker_error_type:
                                 worker_error_types.append(worker_error_type)
+                                if worker_error_type == AgentErrorType.CANDIDATE_DISQUALIFIED:
+                                    screened_disqualified_details.append(
+                                        {
+                                            "strategy": strategy_name,
+                                            "scene_count": 0,
+                                            "integrated_len": 0,
+                                            "contract_reason": "screening_disqualified",
+                                            "ordinal": strategy_ordinals.get(strategy_name, len(strategy_ordinals)),
+                                        }
+                                    )
                             if result and isinstance(result, dict):
                                 result["_strategy"] = strategy_name
                                 candidates.append(result)
@@ -774,6 +820,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
         except Exception as exc:
             logging.debug("[BlueprintEnsemble] PerfTimer 기록 실패 (무시): %s", exc)
 
+        if screened_disqualified_details:
+            screened_disqualified_details.sort(key=lambda item: int(item.get("ordinal") or 0))
+            self.last_disqualified_candidates = screened_disqualified_details
+
         return candidates, worker_error_types
 
     def _qualify_blueprint_candidates(self, candidates: list[dict]) -> tuple[list[dict], list[tuple[str, int, int]]]:
@@ -812,7 +862,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 reason_suffix = f", 사유={contract_reason}" if contract_reason else ""
                 logging.info(f" {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자{reason_suffix})")
 
-        self.last_disqualified_candidates = disqualified_details
+        existing_screened_disqualified = [
+            item for item in (self.last_disqualified_candidates or []) if isinstance(item, dict)
+        ]
+        self.last_disqualified_candidates = existing_screened_disqualified + disqualified_details
         return qualified_candidates, disqualified
 
     def _finalize_blueprint_candidates(
@@ -1456,6 +1509,53 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         candidate["time_flow"] = fallback
         return fallback
+
+    @staticmethod
+    def _normalize_terminal_arc_ending_timeline(candidate: dict, *, constraint_block: dict | None = None) -> str:
+        if not isinstance(candidate, dict) or not isinstance(constraint_block, dict):
+            return ""
+
+        lock = constraint_block.get("terminal_timeline_lock", {})
+        if not isinstance(lock, dict) or lock.get("mode") != "exact_terminal_match":
+            return ""
+
+        authoritative_text = str(lock.get("expression", "") or "").strip()
+        authoritative_timeline = lock.get("timeline")
+        authoritative_point = _extract_year_month_day(authoritative_timeline or authoritative_text)
+        if not authoritative_text and authoritative_point is None:
+            return ""
+
+        ending_state = candidate.get("ending_state")
+        if not isinstance(ending_state, dict):
+            ending_state = {}
+            candidate["ending_state"] = ending_state
+
+        current_timeline = ending_state.get("timeline")
+        if not current_timeline:
+            ending_state["timeline"] = authoritative_timeline or {"표현": authoritative_text}
+            return authoritative_text
+
+        current_point = _extract_year_month_day(current_timeline)
+        if authoritative_point is None:
+            if not _year_month_conflicts(current_timeline, authoritative_text):
+                ending_state["timeline"] = authoritative_timeline or {"표현": authoritative_text}
+                return authoritative_text
+            return ""
+
+        if current_point is None:
+            if not _year_month_conflicts(current_timeline, authoritative_text):
+                ending_state["timeline"] = authoritative_timeline or {"표현": authoritative_text}
+                return authoritative_text
+            return ""
+
+        same_year_month = current_point[:2] == authoritative_point[:2]
+        day_is_underspecified = current_point[2] == 0
+        exact_match = current_point == authoritative_point
+        if same_year_month and (day_is_underspecified or exact_match):
+            ending_state["timeline"] = authoritative_timeline or {"표현": authoritative_text}
+            return authoritative_text
+
+        return ""
 
     def _build_protagonist_instructions(self, protagonist_config: dict, genre: str = "wuxia") -> str:
         """
@@ -2122,6 +2222,20 @@ class BlueprintEnsembleGenerator(BaseAgent):
             self._operator_log(
                 f"[Blueprint] '{strategy_name}' direct_continuation time_flow inherited",
                 meta={"strategy": strategy_name, "time_flow": inherited_time_flow[:120]},
+            )
+        normalized_terminal_timeline = self._normalize_terminal_arc_ending_timeline(
+            candidate,
+            constraint_block=constraint_block,
+        )
+        if normalized_terminal_timeline:
+            logging.info(
+                "[BPEnsemble] normalized terminal arc ending timeline for %s: %s",
+                strategy_name,
+                normalized_terminal_timeline,
+            )
+            self._operator_log(
+                f"[Blueprint] '{strategy_name}' terminal ending timeline normalized",
+                meta={"strategy": strategy_name, "timeline": normalized_terminal_timeline[:120]},
             )
 
         tactical_intrusion_reason = self._detect_unauthorized_tactical_intrusion(

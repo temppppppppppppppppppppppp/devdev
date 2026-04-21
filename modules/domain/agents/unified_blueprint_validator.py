@@ -434,6 +434,33 @@ class UnifiedBlueprintValidator:
         if not blueprint_text:
             return []
 
+        def _has_positive_contract_token(tokens: tuple[str, ...]) -> bool:
+            negation_markers = (
+                "no ",
+                "not ",
+                "without ",
+                "does not ",
+                "did not ",
+                "never ",
+                "?놁씠",
+                "?놁떎",
+                "?딆쓬",
+                "?꾨땺",
+                "?ㅼ쓬",
+                "誘몄젙",
+                "臾?",
+            )
+            for token in tokens:
+                start = blueprint_text.find(token)
+                while start != -1:
+                    window_start = max(0, start - 24)
+                    window_end = min(len(blueprint_text), start + len(token) + 24)
+                    window = blueprint_text[window_start:window_end]
+                    if not any(marker in window for marker in negation_markers):
+                        return True
+                    start = blueprint_text.find(token, start + len(token))
+            return False
+
         unique_locations = {
             _normalize_location(scene.get("location", ""))
             for scene in scenes.values()
@@ -481,12 +508,10 @@ class UnifiedBlueprintValidator:
             "사인보드",
         )
 
-        has_receipt = any(token in blueprint_text for token in receipt_tokens)
-        has_observer_shift = any(token in blueprint_text for token in observer_shift_tokens)
-        has_next_gate = any(token in blueprint_text for token in next_gate_tokens)
+        has_receipt = _has_positive_contract_token(receipt_tokens)
+        has_observer_shift = _has_positive_contract_token(observer_shift_tokens)
+        has_next_gate = _has_positive_contract_token(next_gate_tokens)
         if has_receipt and has_observer_shift and has_next_gate:
-            return []
-        if len(unique_locations) > 2 and (has_receipt or has_next_gate):
             return []
 
         return [
@@ -2596,6 +2621,13 @@ class UnifiedBlueprintValidator:
                     "돌파",
                     "버텨",
                     "예측",
+                    "청산",
+                    "익절",
+                    "진입",
+                    "매수",
+                    "매도",
+                    "체결",
+                    "주문",
                     "전담",
                     "직통",
                     "핫라인",
@@ -2704,13 +2736,15 @@ class UnifiedBlueprintValidator:
         ]
 
     @staticmethod
-    def _parse_timeline_point(raw, *, pick: str) -> tuple[int, int] | None:
+    def _parse_timeline_point(raw, *, pick: str) -> tuple[int, int, int] | None:
         if isinstance(raw, dict):
             year = raw.get("year")
             month = raw.get("month")
             if year is not None and month is not None:
                 try:
-                    return int(year), int(month)
+                    day = raw.get("day")
+                    day_value = int(day) if day not in (None, "") else 0
+                    return int(year), int(month), day_value
                 except (TypeError, ValueError):
                     return None
             raw = raw.get("표현") or raw.get("expression") or raw.get("text") or raw.get("raw") or ""
@@ -2721,6 +2755,7 @@ class UnifiedBlueprintValidator:
         months = [int(value) for value in re.findall(r"(\d{1,2})월", text)]
         if not months:
             return None
+        days = [int(value) for value in re.findall(r"(\d{1,2})일", text)]
         if (
             pick == "end"
             and len(months) > 1
@@ -2731,7 +2766,8 @@ class UnifiedBlueprintValidator:
         else:
             month = months[0] if pick == "start" else months[-1]
         year = int(year_match.group(1)) if year_match else 0
-        return year, month
+        day = days[0] if pick == "start" and days else (days[-1] if days else 0)
+        return year, month, day
 
     def _collect_arc_timeline_alignment_issues(
         self,

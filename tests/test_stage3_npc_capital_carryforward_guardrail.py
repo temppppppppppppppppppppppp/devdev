@@ -712,7 +712,7 @@ class TestEpisodeStatePacket:
         assert "mid_arc_arc_start_location_override_blocked" in packet.get("rewrite_required_reasons", [])
         assert "mid_arc_arc_start_equipment_override_blocked" in packet.get("rewrite_required_reasons", [])
 
-    def test_episode_state_packet_prefers_cross_stage_authority_packet_for_stage2_opening_and_protagonist_truth(self):
+    def test_episode_state_packet_prefers_arc_start_truth_when_arc_opening_packet_conflicts(self):
         compiler = BlueprintConstraintCompiler()
         constraint_block = compiler.compile(
             arc_data={
@@ -757,22 +757,25 @@ class TestEpisodeStatePacket:
         packet = constraint_block.get("episode_state_packet", {})
         protagonist_truth = packet.get("protagonist_truth", {})
 
-        assert constraint_block.get("continuity", {}).get("location") == "Packet Hall"
-        assert packet.get("opening_truth", {}).get("location_source") == "state_constraints.arc_end_state.location"
-        assert constraint_block.get("inherited_state", {}).get("equipment") == ["packet-sword"]
-        assert constraint_block.get("inherited_state", {}).get("injuries") == "packet-clear"
-        assert constraint_block.get("inherited_state", {}).get("internal_energy") == "88%"
+        assert constraint_block.get("continuity", {}).get("location") == "Arc Start Office"
+        assert (
+            packet.get("opening_truth", {}).get("location_source")
+            == "arc_data.state_constraints.arc_start_state.location"
+        )
+        assert constraint_block.get("inherited_state", {}).get("equipment") == ["arc-start-briefcase"]
+        assert constraint_block.get("inherited_state", {}).get("injuries") == "arc-start-wrist"
+        assert constraint_block.get("inherited_state", {}).get("internal_energy") == "44%"
         assert protagonist_truth.get("sources", {}).get("equipment") == (
-            "cross_stage_authority_packet.protagonist_carryover.equipment"
+            "arc_data.state_constraints.arc_start_state.equipment"
         )
         assert protagonist_truth.get("sources", {}).get("injuries") == (
-            "cross_stage_authority_packet.protagonist_carryover.injuries"
+            "arc_data.state_constraints.arc_start_state.injuries"
         )
         assert protagonist_truth.get("sources", {}).get("internal_energy") == (
-            "cross_stage_authority_packet.protagonist_carryover.internal_energy"
+            "arc_data.state_constraints.arc_start_state.internal_energy"
         )
 
-    def test_episode_state_packet_keeps_prev_blueprint_authority_on_arc_opening_when_packet_missing(self):
+    def test_episode_state_packet_uses_arc_start_truth_on_arc_opening_when_packet_missing(self):
         compiler = BlueprintConstraintCompiler()
         prev_bp = {
             "ep_num": 10,
@@ -821,19 +824,22 @@ class TestEpisodeStatePacket:
         packet = constraint_block.get("episode_state_packet", {})
         protagonist_truth = packet.get("protagonist_truth", {})
 
-        assert packet.get("opening_truth", {}).get("location") == "Prev Blueprint Room"
-        assert packet.get("opening_truth", {}).get("location_source") == "prev_blueprint.scene_breakdown.last.location"
-        assert protagonist_truth.get("equipment") == ["legacy-case"]
-        assert protagonist_truth.get("injuries") == "stable"
-        assert protagonist_truth.get("internal_energy") == "91%"
+        assert packet.get("opening_truth", {}).get("location") == "Arc Start Office"
+        assert (
+            packet.get("opening_truth", {}).get("location_source")
+            == "arc_data.state_constraints.arc_start_state.location"
+        )
+        assert protagonist_truth.get("equipment") == ["arc-start-briefcase"]
+        assert protagonist_truth.get("injuries") == "arc-start-wrist"
+        assert protagonist_truth.get("internal_energy") == "44%"
         assert packet.get("source_precedence", {}).get("opening_truth", [None])[0] == (
-            "prev_blueprint.scene_breakdown.last.location"
+            "arc_data.state_constraints.arc_start_state.location"
         )
         assert packet.get("source_precedence", {}).get("protagonist_truth", [None])[0] == (
-            "prev_blueprint.protagonist_state"
+            "arc_data.state_constraints.arc_start_state"
         )
 
-    def test_episode_state_packet_reflects_arc_opening_packet_priority_in_source_precedence(self):
+    def test_episode_state_packet_reflects_arc_opening_stage2_priority_in_source_precedence(self):
         compiler = BlueprintConstraintCompiler()
         prev_bp = {
             "ep_num": 10,
@@ -891,13 +897,13 @@ class TestEpisodeStatePacket:
         packet = constraint_block.get("episode_state_packet", {})
         protagonist_truth = packet.get("protagonist_truth", {})
 
-        assert packet.get("opening_truth", {}).get("location") == "Packet Hall"
-        assert protagonist_truth.get("equipment") == ["packet-sword"]
+        assert packet.get("opening_truth", {}).get("location") == "Arc Start Office"
+        assert protagonist_truth.get("equipment") == ["arc-start-briefcase"]
         assert packet.get("source_precedence", {}).get("opening_truth", [None])[0] == (
-            "cross_stage_authority_packet.opening_carryover.location"
+            "arc_data.state_constraints.arc_start_state.location"
         )
         assert packet.get("source_precedence", {}).get("protagonist_truth", [None])[0] == (
-            "cross_stage_authority_packet.protagonist_carryover"
+            "arc_data.state_constraints.arc_start_state"
         )
 
     def test_episode_state_packet_prefers_arc_timeline_time_truth_on_arc_opening(self):
@@ -946,7 +952,7 @@ class TestEpisodeStatePacket:
         opening_truth = packet.get("opening_truth", {})
 
         assert opening_truth.get("time_source") == "arc_data.state_changes.timeline"
-        assert opening_truth.get("time_context") == "late February 2006"
+        assert opening_truth.get("time_context") == "2006년 2월 28일 - late February 2006"
         assert packet.get("source_precedence", {}).get("time_truth", [None])[0] == "arc_data.state_changes.timeline"
 
     def test_episode_state_packet_surfaces_arc_opening_transition_expectation_on_anchor_shift(self):
@@ -1003,6 +1009,60 @@ class TestEpisodeStatePacket:
         assert opening_truth.get("location") == "Packet Hall"
         assert "do not declare direct_continuation" in opening_truth.get("opening_transition_expectation", "")
         assert "explicit_transition" in opening_truth.get("opening_transition_expectation", "")
+
+    def test_episode_state_packet_surfaces_arc_opening_transition_expectation_on_time_cut(self):
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {
+            "ep_num": 9,
+            "end_location": "한미증권 VIP룸",
+            "time_flow": "오전",
+            "ending_state": {
+                "timeline": {
+                    "표현": "2006년 2월 28일 오전",
+                }
+            },
+            "scene_breakdown": {
+                "scene_4": {
+                    "location": "한미증권 VIP룸",
+                    "characters": ["한시우", "박성호"],
+                }
+            },
+        }
+
+        constraint_block = compiler.compile(
+            arc_data={
+                "ep_start": 10,
+                "ep_count": 4,
+                "arc_no": 3,
+                "state_changes": {
+                    "timeline": {
+                        "start": {
+                            "year": 2006,
+                            "month": 4,
+                            "day": 15,
+                            "description": "약 2주 후, 2006년 4월 중순",
+                        }
+                    }
+                },
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "한미증권 VIP룸",
+                    }
+                },
+            },
+            ep_num=10,
+            prev_blueprint=prev_bp,
+            prev_blueprints=[prev_bp],
+            prev_manuscript_ending="",
+            genre="investment",
+        )
+
+        packet = constraint_block.get("episode_state_packet", {})
+        opening_truth = packet.get("opening_truth", {})
+
+        assert opening_truth.get("location") == "한미증권 VIP룸"
+        assert "do not declare direct_continuation" in opening_truth.get("opening_transition_expectation", "")
+        assert "jump_opening" in opening_truth.get("opening_transition_expectation", "")
 
     def test_episode_progression_packet_prefers_current_episode_excerpt_month_over_arc_start(self):
         packet = BlueprintConstraintCompiler._build_episode_progression_packet(
@@ -1127,6 +1187,31 @@ class TestEpisodeStatePacket:
         assert any("2006년 5월" in truth for truth in time_truths)
         assert not any("7월" in truth for truth in time_truths)
 
+    def test_episode_progression_lawful_repetition_window_detects_execution_rotation_tokens(self):
+        result = BlueprintConstraintCompiler._build_episode_progression_lawful_repetition_window(
+            must_focus={
+                "content": (
+                    "예외 계좌 승인 직후 남은 원유 롱 포지션을 전량 청산하고 "
+                    "확보된 자금 15억 원으로 금 선물 레버리지 매수에 즉시 진입한다."
+                )
+            },
+            stop_line={"content": "두 달간 금 선물 포지션을 보유하며 시장의 비관론을 견딘다."},
+            episode_progression_packet={
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_3",
+                        "label": "원유 보고",
+                        "location": "서울 강남, SW인베스트먼트 VIP 상담실",
+                        "characters": ["한시우", "박성호 PB"],
+                        "type": "dialogue_duel",
+                    }
+                ]
+            },
+        )
+
+        assert result["mode"] == "allow_escalated_repeat"
+        assert any(token in result["escalation_tokens"] for token in ("청산", "매수", "진입"))
+
     def test_episode_state_packet_promotes_progression_time_when_mid_arc_prev_month_is_stale(self):
         compiler = BlueprintConstraintCompiler()
         prev_bp = {
@@ -1168,6 +1253,217 @@ class TestEpisodeStatePacket:
         assert opening_truth.get("time_source") == "episode_progression_packet.time_truths"
         assert "2006년 5월" in str(opening_truth.get("time_context", ""))
         assert "2006년 4월" not in str(opening_truth.get("time_context", ""))
+
+    def test_episode_state_packet_prefers_current_episode_tactical_start_location_mid_arc(self):
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {
+            "ep_num": 11,
+            "time_flow": "2006년 4월 중순 → 5월 초",
+            "end_location": "SW인베스트먼트 임시 오피스",
+            "scene_breakdown": {
+                "scene_5": {
+                    "location": "SW인베스트먼트 임시 오피스",
+                    "characters": ["한시우"],
+                }
+            },
+        }
+
+        constraint_block = compiler.compile(
+            arc_data={
+                "ep_start": 10,
+                "ep_end": 13,
+                "arc_no": 3,
+                "tactical_doc": (
+                    "제 12화: 5월 16일의 폭등\n"
+                    "[시작 상태] 위치: 성북동 프라이빗 카페, 부상: 없음, 소지품: 평상복, 구형 휴대전화\n"
+                    "2006년 5월 16일, 에콰도르 뉴스가 터진다.\n"
+                    "[종료 상태] 위치: 서울 강남, SW인베스트먼트 VIP 상담실\n"
+                ),
+                "state_changes": {
+                    "timeline": {
+                        "start": {"description": "2006년 4월 중순"},
+                        "end": {"description": "2006년 5월 말, 에콰도르 쇼크 직후"},
+                    }
+                },
+            },
+            ep_num=12,
+            prev_blueprint=prev_bp,
+            prev_blueprints=[prev_bp],
+            genre="investment",
+        )
+
+        opening_truth = constraint_block.get("episode_state_packet", {}).get("opening_truth", {})
+        precedence = (
+            constraint_block.get("episode_state_packet", {}).get("source_precedence", {}).get("opening_truth", [])
+        )
+
+        assert opening_truth.get("location") == "성북동 프라이빗 카페"
+        assert opening_truth.get("location_source") == "arc_data.tactical_doc.current_episode.start_state.location"
+        assert "do not declare direct_continuation" in opening_truth.get("opening_transition_expectation", "")
+        assert precedence[0] == "arc_data.tactical_doc.current_episode.start_state.location"
+
+    def test_episode_state_packet_reads_inline_current_episode_tactical_start_location_mid_arc(self):
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {
+            "ep_num": 3,
+            "end_location": "서울 성북동 본가 저택 복도",
+            "scene_breakdown": {
+                "scene_5": {
+                    "location": "서울 성북동 본가 저택 복도",
+                    "characters": ["한시우"],
+                }
+            },
+            "protagonist_state": {
+                "equipment": ["구형 휴대전화"],
+                "injuries": "두통 미약, 코피 자국 닦아냄",
+            },
+        }
+
+        constraint_block = compiler.compile(
+            arc_data={
+                "ep_start": 1,
+                "ep_end": 4,
+                "arc_no": 1,
+                "tactical_doc": (
+                    "Beat 4: 실탄 장전과 폭풍전야 [시작 상태] 위치: 아버지 서재, 부상: 없음, 소지품: 평상복, 구형 휴대전화 "
+                    "서재를 나선 한시우는 지체 없이 즉각적인 행동에 돌입한다."
+                ),
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "opening_carryover": {
+                        "location": "서울 성북동 본가, 한시우의 개인 침실",
+                        "location_source": "state_constraints.arc_end_state.location",
+                    },
+                    "protagonist_carryover": {
+                        "equipment": ["20억 원 예치 법인 통장 사본", "HTS 설치 구형 랩탑"],
+                        "injuries": "없음",
+                    },
+                },
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "서울 성북동 본가 저택",
+                        "equipment": ["평상복", "구형 휴대전화"],
+                        "injuries": "없음",
+                    }
+                },
+            },
+            ep_num=4,
+            prev_blueprint=prev_bp,
+            prev_blueprints=[prev_bp],
+            genre="investment",
+        )
+
+        packet = constraint_block.get("episode_state_packet", {})
+        opening_truth = packet.get("opening_truth", {})
+
+        assert opening_truth.get("location") == "아버지 서재"
+        assert opening_truth.get("location_source") == "arc_data.tactical_doc.current_episode.start_state.location"
+        assert "mid_arc_arc_start_location_override_blocked" not in packet.get("rewrite_required_reasons", [])
+        assert "mid_arc_cross_stage_packet_location_override_blocked" not in packet.get("rewrite_required_reasons", [])
+
+    def test_episode_state_packet_mid_arc_tactical_start_suppresses_future_packet_and_arc_start_rewrite_pressure(self):
+        compiler = BlueprintConstraintCompiler()
+        prev_bp = {
+            "ep_num": 3,
+            "end_location": "서울 성북동 본가 저택 복도",
+            "scene_breakdown": {
+                "scene_5": {
+                    "location": "서울 성북동 본가 저택 복도",
+                    "characters": ["한시우"],
+                }
+            },
+            "protagonist_state": {
+                "equipment": ["구형 휴대전화"],
+                "injuries": "두통 미약, 코피 자국 닦아냄",
+            },
+        }
+
+        constraint_block = compiler.compile(
+            arc_data={
+                "ep_start": 1,
+                "ep_end": 4,
+                "arc_no": 1,
+                "tactical_doc": (
+                    "Beat 4: 실탄 장전과 폭풍전야 [시작 상태] 위치: 아버지 서재, 부상: 없음, 소지품: 평상복, 구형 휴대전화 "
+                    "서재를 나선 한시우는 지체 없이 즉각적인 행동에 돌입한다."
+                ),
+                "joint_docs": {
+                    "physical_inventory": ["stale-briefcase"],
+                },
+                "status_shadow": {
+                    "expected_injuries": "stale-shoulder",
+                },
+                "cross_stage_authority_packet": {
+                    "contract_version": CROSS_STAGE_AUTHORITY_PACKET_VERSION,
+                    "opening_carryover": {
+                        "location": "서울 성북동 본가, 한시우의 개인 침실",
+                        "location_source": "state_constraints.arc_end_state.location",
+                    },
+                    "protagonist_carryover": {
+                        "equipment": ["20억 원 예치 법인 통장 사본", "HTS 설치 구형 랩탑"],
+                        "injuries": "없음",
+                    },
+                },
+                "state_constraints": {
+                    "arc_start_state": {
+                        "location": "서울 성북동 본가 저택",
+                        "equipment": ["평상복", "구형 휴대전화"],
+                        "injuries": "없음",
+                    }
+                },
+            },
+            ep_num=4,
+            prev_blueprint=prev_bp,
+            prev_blueprints=[prev_bp],
+            genre="investment",
+        )
+
+        packet = constraint_block.get("episode_state_packet", {})
+        protagonist_truth = packet.get("protagonist_truth", {})
+
+        assert protagonist_truth.get("equipment") == ["구형 휴대전화"]
+        assert protagonist_truth.get("injuries") == "두통 미약, 코피 자국 닦아냄"
+        assert "mid_arc_arc_start_equipment_override_blocked" not in packet.get("rewrite_required_reasons", [])
+        assert "mid_arc_cross_stage_packet_equipment_override_blocked" not in packet.get("rewrite_required_reasons", [])
+        assert "mid_arc_arc_start_injury_override_blocked" not in packet.get("rewrite_required_reasons", [])
+        assert "mid_arc_cross_stage_packet_injury_override_blocked" not in packet.get("rewrite_required_reasons", [])
+
+    def test_terminal_timeline_lock_surfaces_exact_arc_end_in_constraint_prompt(self):
+        compiler = BlueprintConstraintCompiler()
+        constraint_block = compiler.compile(
+            arc_data={
+                "ep_start": 1,
+                "ep_end": 4,
+                "ep_count": 4,
+                "arc_no": 1,
+                "tactical_doc": "Beat 4: 실탄 장전과 폭풍전야 [시작 상태] 위치: 아버지 서재, 부상: 없음, 소지품: 평상복",
+                "state_changes": {
+                    "timeline": {
+                        "start": {"year": 2006, "month": 1, "description": "회귀 직후"},
+                        "end": {"year": 2006, "month": 1, "day": 15, "description": "법인 설립 및 20억 자금 확보 완료"},
+                    }
+                },
+            },
+            ep_num=4,
+            prev_blueprint={
+                "ep_num": 3,
+                "end_location": "서울 성북동 본가 저택 복도",
+                "scene_breakdown": {
+                    "scene_5": {
+                        "location": "서울 성북동 본가 저택 복도",
+                        "characters": ["한시우"],
+                    }
+                },
+            },
+            prev_blueprints=[],
+            genre="investment",
+        )
+
+        prompt = compiler.compile_to_prompt(constraint_block)
+
+        assert constraint_block.get("terminal_timeline_lock", {}).get("mode") == "exact_terminal_match"
+        assert "TERMINAL TIMELINE LOCK" in prompt
+        assert "2006년 1월 15일 - 법인 설립 및 20억 자금 확보 완료" in prompt
 
     def test_episode_state_packet_keeps_prev_precedence_when_packet_only_carries_numeric_truth(self):
         compiler = BlueprintConstraintCompiler()
@@ -1222,10 +1518,10 @@ class TestEpisodeStatePacket:
         protagonist_truth = packet.get("protagonist_truth", {})
         precedence = packet.get("source_precedence", {})
 
-        assert packet.get("opening_truth", {}).get("location") == "Prev Blueprint Room"
-        assert protagonist_truth.get("equipment") == ["legacy-case"]
-        assert precedence.get("opening_truth", [None])[0] == "prev_blueprint.scene_breakdown.last.location"
-        assert precedence.get("protagonist_truth", [None])[0] == "prev_blueprint.protagonist_state"
+        assert packet.get("opening_truth", {}).get("location") == "Arc Start Office"
+        assert protagonist_truth.get("equipment") == ["arc-start-briefcase"]
+        assert precedence.get("opening_truth", [None])[0] == "arc_data.state_constraints.arc_start_state.location"
+        assert precedence.get("protagonist_truth", [None])[0] == "arc_data.state_constraints.arc_start_state"
         assert precedence.get("capital_truth", [None])[0] == "cross_stage_authority_packet.numeric_carryover"
 
     def test_mid_arc_packet_conflicts_are_recorded_when_previous_blueprint_keeps_authority(self):

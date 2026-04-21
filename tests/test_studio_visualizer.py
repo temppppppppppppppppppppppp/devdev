@@ -65,3 +65,18 @@ def test_prompt_avoids_duplicate_console_render_and_keeps_prompt_metadata():
     assert response_event["message"] == "[prompt_response]"
     assert response_event["selection_value"] == "3"
     assert response_event["meta"]["prompt_text"] == "prompt: "
+
+
+def test_log_survives_console_oserror_and_still_emits_operator_event():
+    ui = StudioVisualizer()
+    ui.console = MagicMock()
+    ui.console.print.side_effect = OSError("invalid handle")
+    sink = MagicMock()
+    ui.set_operator_event_sink(sink)
+
+    ui.log("operator-visible message", component="Stage4")
+
+    ui.console.print.assert_called_once()
+    event = sink.call_args.args[0]
+    assert event["message"] == "operator-visible message"
+    assert event["meta"]["console_render_failed"] is True

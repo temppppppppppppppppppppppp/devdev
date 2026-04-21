@@ -1,0 +1,216 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "action_focused",
+    "content_hash": "ec422b1ba82ad96dd5f6303430dcf945d4ce347fe17bb9f9c1adca5a6e074b34"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "현재 화 tactical authority, opening-state, 엔딩 훅은 유지",
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "missing_relationship_npcs=한정호 | anchor_count=2; sample_anchors=비틀거리, 실패한 투자",
+      "must_fix": [
+        "Arc 관계 변화 핵심 인물을 현재 화 시나리오/회상/계획에 명시: 한정호",
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 2개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 Arc 관계 변화 인물 중 최소 1명을 현재 화 맥락으로 명시한다 / integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 1,
+    "disqualified": [],
+    "length": 1686,
+    "prevalidation_issue_count": 2,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 3072,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 996928,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 2477,
+          "lane": "constraints"
+        },
+        {
+          "chars": 322,
+          "lane": "feedback_context"
+        },
+        {
+          "chars": 195,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 195,
+        "constraints": 2477,
+        "feedback_context": 322,
+        "hud_context": 10,
+        "prev_info": 68
+      },
+      "shared_context_chars": 2750,
+      "strategy_feedback_chars": 3072,
+      "total_chars": 3072
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "action_focused",
+    "total_candidates": 2
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "미래 지식의 폭발적 유입으로 인한 뇌의 과부하와 신체 붕괴 위기",
+  "end_location": "서울 성북동 본가 저택 한시우의 개인 침실 바닥",
+  "ending_hook": "피 묻은 노트를 가슴에 꽉 끌어안은 채, 시야가 새카맣게 암전되며 바닥으로 무너져 내린다.",
+  "ending_state": {
+    "location": "서울 성북동 본가 저택 한시우의 개인 침실 바닥",
+    "protagonist_status": "체력 고갈 및 뇌의 과부하로 인한 일시적 기절 상태",
+    "timeline": {
+      "표현": "2006년 초겨울 아침"
+    }
+  },
+  "ep_num": 1,
+  "episode_number": 1,
+  "expected_ending": "미래의 핵심 데이터를 간신히 기록한 후 의식을 잃음",
+  "integrated_scenario": "2024년의 겨울은 뼛속까지 시리도록 지독하게 추웠다. 온기 하나 없는 낡은 원룸의 차가운 장판 위에서, 한시우는 검붉은 피를 토하며 고독하게 죽어갔다. 실패한 투자의 대가는 가혹했고, 가문에서 철저히 버림받은 끝에 남은 것은 빚쟁이들의 무자비한 폭력과 망가질 대로 망가진 육체뿐이었다. 흐려지는 의식 속에서 마지막 숨을 내뱉고 눈을 감는 순간, 온몸을 짓누르던 끔찍한 추위와 고통이 거짓말처럼 증발했다.\n\n\"헉!\"\n\n거친 숨을 들이켜며 한시우의 상반신이 용수철처럼 튕기듯 솟구쳤다. 폐부로 밀려드는 공기는 훈훈했고, 등 뒤로 느껴지는 감촉은 빈민굴의 딱딱한 바닥이 아닌 최고급 실크 시트였다. 식은땀으로 범벅이 된 얼굴을 거칠게 쓸어내린 그는 낯설고도 익숙한 방 안의 풍경에 경악을 금치 못했다. 널찍한 공간, 천장의 고급스러운 샹들리에, 벽에 걸린 낯익은 명화. 그곳은 그가 까마득한 옛날, 가문에서 짓밟히고 쫓겨났던 서울 성북동 본가의 개인 침실이었다. 떨리는 손을 뻗어 침대 탁자 위의 구형 휴대전화를 집어 들었다. 폴더를 열자 액정에 선명하게 찍힌 날짜는 2006년 1월. 죽음의 문턱을 넘어 18년 전의 과거로 기적처럼 회귀한 것이다.\n\n상황을 온전히 파악하며 안도하기도 전에, 두개골을 단숨에 쪼개버릴 듯한 극심한 고통이 한시우의 뇌리를 덮쳤다. \"크으윽!\" 그는 본능적으로 비명을 삼키며 침대 아래로 굴러떨어졌다. 차가운 바닥을 뒹굴며 양손으로 머리를 감싸 쥐었지만, 뇌수를 파고드는 고통은 멈추지 않았다. 2006년부터 2024년까지, 18년 동안 그가 겪고 분석했던 전 세계의 경제 데이터, 증시의 폭락과 폭등, 유가 변동의 사이클, 서브프라임 모기지 사태의 참상 등 방대한 미래의 지식들이 강제로 압축되어 새겨지기 시작했다. 마치 거대한 폭포수가 바늘구멍 같은 좁은 틈으로 쏟아져 들어오는 듯한 끔찍한 감각이었다. 눈앞이 붉게 번쩍이고 이명이 고막을 찢을 듯 날카롭게 울렸다.\n\n한시우는 피가 날 정도로 입술을 꽉 깨물며 억지로 몸을 일으켜 세웠다. 이 방대한 기억들이 휘발되거나 머리가 터져버리기 전에 전부 기록해야만 했다. 비틀거리는 걸음으로 책상에 다가간 그는 서랍을 거칠게 열어젖히고 빈 노트와 펜을 꺼냈다. 손끝이 경련을 일으키며 펜을 쥔 손이 덜덜 떨렸지만, 그는 미친 듯이 종이 위로 글씨를 휘갈기기 시작했다. 2006년 상반기의 주요 지수, 곧 터질 글로벌 경제 이슈, 굵직한 테마주의 흐름과 변곡점. 종이가 찢어질 듯한 기세로 펜촉이 춤을 추었다. 뇌의 심각한 과부하로 인해 코에서 붉은 피가 뚝뚝 떨어져 노트 위를 적셨지만, 한시우는 개의치 않고 피 묻은 손으로 기록을 이어나갔다.\n\n마지막 장에 당장 다가올 가장 중요한 변곡점의 날짜와 수치를 적어 내린 순간, 펜촉이 툭 부러지며 종이를 뚫었다. 거친 숨을 몰아쉬며 피로 얼룩진 노트를 내려다보는 한시우의 눈동자에는 지독한 생존 의지와 짐승 같은 광기가 서려 있었다. 두 번 다시 그 비참한 방구석에서 개처럼 죽지 않으리라. 가문에 기대지 않고 오직 이 지식만으로 세상의 정점에 서리라. 굳은 결의를 다지는 찰나, 한계에 달한 뇌가 비명을 지르며 시야가 급격히 암전되었다. \"하아...\" 짧은 단발마를 끝으로, 피 묻은 노트를 가슴에 꽉 끌어안은 채 한시우의 몸이 차가운 대리석 바닥으로 무너져 내렸다. 정적에 휩싸인 방 안, 의식을 잃고 쓰러진 그의 손아귀에는 미래의 판도를 뒤집을 절대적인 무기가 단단히 쥐어져 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "no_prev_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "jump_opening"
+  },
+  "pacing_notes": "전투 씬이 없지만 신체적 고통과 절박한 행동 묘사를 통해 액션 씬에 준하는 높은 긴장감과 속도감을 유지할 것.",
+  "protagonist_state": {
+    "equipment": [
+      "구형 휴대전화",
+      "피 묻은 빈 노트",
+      "부러진 볼펜"
+    ],
+    "injuries": "뇌의 과부하로 인한 극심한 두통, 코피, 전신 근육 경련",
+    "mood": "경악과 혼란을 넘어선 지독한 생존 의지"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "죽음의 한기에서 벗어나 따뜻한 침실에서 깨어난 한시우가 주변을 살피며 회귀를 자각한다.",
+      "description": "차가운 방바닥에서 죽음을 맞이한 직후, 최고급 실크 시트 위에서 눈을 뜬다. 휴대전화의 날짜를 확인하고 회귀를 깨닫는다.",
+      "goal": "비참한 죽음 직후 과거로 회귀했음을 자각",
+      "key_events": [
+        "2024년 낡은 원룸에서 피를 토하며 고독사",
+        "2006년 성북동 본가 저택의 침실에서 튕기듯 기상",
+        "구형 휴대전화의 액정을 통해 2006년 1월임을 확인"
+      ],
+      "location": "2024년 원룸 → 2006년 성북동 본가 저택 한시우의 침실",
+      "summary": "2024년 낡은 원룸에서 고독사한 한시우가 2006년 성북동 본가의 침실에서 거친 숨을 내쉬며 깨어난다.",
+      "tension_level": 8,
+      "title": "2024년의 끝, 2006년의 시작",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "미래의 데이터가 머릿속에 폭포수처럼 쏟아지며 신체적 한계를 시험하는 고통이 이어진다.",
+      "description": "상황을 파악할 틈도 없이 두개골을 쪼개는 듯한 고통이 덮친다. 비명을 참으며 바닥을 뒹군다.",
+      "goal": "미래 지식의 유입으로 인한 신체적 고통 묘사",
+      "key_events": [
+        "갑작스러운 극심한 두통에 침대 아래로 굴러떨어짐",
+        "2006년부터 2024년까지의 경제 지표와 사건들이 뇌리에 강제 주입됨",
+        "이명과 시야 혼미 속에서 비명을 억누름"
+      ],
+      "location": "성북동 본가 저택 한시우의 침실 바닥",
+      "summary": "18년 치의 방대한 경제 데이터가 뇌리에 강제로 새겨지며 극심한 두통이 발생한다.",
+      "tension_level": 9,
+      "title": "기억의 폭발",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "살아남기 위한 생존 본능으로 신체의 한계를 무시한 채 미래의 정보를 종이에 박제한다.",
+      "description": "고통을 이겨내고 책상으로 기어가 펜을 잡는다. 종이가 찢어질 기세로 데이터를 기록한다.",
+      "goal": "미래 지식이 휘발되기 전 강박적인 기록",
+      "key_events": [
+        "비틀거리며 책상 서랍에서 빈 노트와 펜을 꺼냄",
+        "경련하는 손으로 2006년 상반기 주요 경제 지수와 이슈를 기록",
+        "뇌의 과부하로 코피가 쏟아져 노트를 붉게 적심"
+      ],
+      "location": "성북동 본가 저택 한시우의 침실 책상 앞",
+      "summary": "코피를 쏟으며 책상 앞 빈 노트에 미래의 주요 경제 변곡점들을 미친 듯이 휘갈겨 적는다.",
+      "tension_level": 10,
+      "title": "피로 쓴 기록",
+      "type": "action_peak"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "노트를 꽉 쥔 채 쓰러지며 다음 전개를 위한 강렬한 물리적 위기감을 조성한다.",
+      "description": "모든 기록을 마친 후 다시는 비참하게 죽지 않겠다는 다짐과 함께 시야가 좁아지며 바닥으로 무너진다.",
+      "goal": "기록 완료 직후 한계에 달한 신체의 붕괴",
+      "key_events": [
+        "가장 중요한 변곡점의 날짜를 적는 순간 펜촉이 부러짐",
+        "피 묻은 노트를 내려다보며 과거의 비참함을 반복하지 않겠다는 결의",
+        "한계에 달한 뇌의 과부하로 인해 노트를 품에 안고 기절함"
+      ],
+      "location": "성북동 본가 저택 한시우의 침실",
+      "summary": "마지막 변곡점을 적고 펜이 부러지는 순간, 생존을 향한 결의를 다지며 의식을 잃고 쓰러진다.",
+      "tension_level": 9,
+      "title": "암전",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "2024년 낡은 원룸",
+  "target_beat": "죽음에서 회귀로 이어지는 충격과 방대한 미래 지식의 각인 및 기록",
+  "time_flow": "2024년 겨울 밤 → 2006년 1월 새벽",
+  "title": "회귀의 아침"
+}
