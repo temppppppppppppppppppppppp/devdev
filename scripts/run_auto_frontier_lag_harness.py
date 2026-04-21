@@ -36,6 +36,7 @@ DEFAULT_SEED_PROFILE = "00_20260314"
 DEFAULT_BATCH_SIZE = 1
 DEFAULT_POLL_INTERVAL_SECONDS = 30 * 60
 PROCESS_CHECK_INTERVAL_SECONDS = 5
+DEFAULT_OPERATIONAL_ATTEMPT_CAP = 5
 MANUAL_PROFILE_DOC = "docs/2026-03-14/main-a-manual-stage0-selection-harness-00_20260314.md"
 HARNESS_SSOT_DOC = "docs/2026-03-14/auto-frontier-lag-n-arc-test-harness-ssot.md"
 PROMPT_WAIT_MARKERS = (
@@ -44,6 +45,11 @@ PROMPT_WAIT_MARKERS = (
     "[Enter] 메뉴로 돌아가기",
     "👉 Choice",
     "선택 (기본:",
+)
+ATTEMPT_OVERFLOW_PATTERNS = (
+    ("stage2", re.compile(r"\[Stage 2\].*?attempt\s+(\d+)/(\d+)", re.IGNORECASE)),
+    ("stage3", re.compile(r"\[Retry\s+(\d+)/(\d+)\]", re.IGNORECASE)),
+    ("stage4", re.compile(r"\[Round\s+(\d+)/(\d+)\]", re.IGNORECASE)),
 )
 
 
@@ -202,6 +208,8 @@ def parse_args() -> argparse.Namespace:
     plan.add_argument("--seed-profile", default=DEFAULT_SEED_PROFILE)
     plan.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     plan.add_argument("--target-project", default="")
+    plan.add_argument("--reuse-existing-project", action="store_true")
+    plan.add_argument("--operational-attempt-cap", type=int, default=DEFAULT_OPERATIONAL_ATTEMPT_CAP)
     plan.add_argument("--soak-profile", default="", help="named soak profile (e.g. 'soak')")
 
     worker = subparsers.add_parser("worker", help="internal worker that boots app and runs the pipeline")
@@ -209,6 +217,7 @@ def parse_args() -> argparse.Namespace:
     worker.add_argument("--arc-count", type=int, required=True)
     worker.add_argument("--seed-profile", default=DEFAULT_SEED_PROFILE)
     worker.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
+    worker.add_argument("--reuse-existing-project", action="store_true")
     worker.add_argument("--soak-profile", default="", help="named soak profile (e.g. 'soak')")
 
     run = subparsers.add_parser("run", help="spawn worker, watchdog it, analyze outputs, write SSOT")
@@ -218,6 +227,8 @@ def parse_args() -> argparse.Namespace:
     run.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     run.add_argument("--poll-interval-seconds", type=int, default=DEFAULT_POLL_INTERVAL_SECONDS)
     run.add_argument("--target-project", default="")
+    run.add_argument("--reuse-existing-project", action="store_true")
+    run.add_argument("--operational-attempt-cap", type=int, default=DEFAULT_OPERATIONAL_ATTEMPT_CAP)
     run.add_argument("--soak-profile", default="", help="named soak profile (e.g. 'soak')")
 
     analyze = subparsers.add_parser("analyze", help="analyze an existing harness run and write SSOT")
@@ -239,6 +250,8 @@ def main() -> int:
             batch_size=args.batch_size,
             target_project=args.target_project or "",
             trigger=args.trigger,
+            reuse_existing_project=bool(getattr(args, "reuse_existing_project", False)),
+            operational_attempt_cap=max(1, int(getattr(args, "operational_attempt_cap", DEFAULT_OPERATIONAL_ATTEMPT_CAP))),
             soak_profile=soak,
         )
         _print_json(payload)
@@ -250,6 +263,7 @@ def main() -> int:
             arc_count=int(args.arc_count),
             seed_profile=args.seed_profile,
             batch_size=int(args.batch_size),
+            reuse_existing_project=bool(getattr(args, "reuse_existing_project", False)),
             soak_profile=soak,
         )
         _print_json(payload)
@@ -267,6 +281,8 @@ def main() -> int:
         poll_interval_seconds=max(1, int(args.poll_interval_seconds or DEFAULT_POLL_INTERVAL_SECONDS)),
         target_project=args.target_project or "",
         trigger=args.trigger,
+        reuse_existing_project=bool(getattr(args, "reuse_existing_project", False)),
+        operational_attempt_cap=max(1, int(getattr(args, "operational_attempt_cap", DEFAULT_OPERATIONAL_ATTEMPT_CAP))),
         soak_profile=soak,
     )
     _print_json(payload)
@@ -309,6 +325,8 @@ def build_execution_plan(
     batch_size: int,
     target_project: str,
     trigger: str,
+    reuse_existing_project: bool = False,
+    operational_attempt_cap: int = DEFAULT_OPERATIONAL_ATTEMPT_CAP,
     soak_profile: SoakProfile | None = None,
 ) -> dict[str, Any]:
     profile = default_profile(seed_profile)
@@ -321,6 +339,8 @@ def build_execution_plan(
         "batch_size": max(1, int(batch_size or DEFAULT_BATCH_SIZE)),
         "seed_profile": seed_profile,
         "target_project": target_name,
+        "reuse_existing_project": bool(reuse_existing_project),
+        "operational_attempt_cap": max(1, int(operational_attempt_cap or DEFAULT_OPERATIONAL_ATTEMPT_CAP)),
         "project_locator": f"projects/{target_name}",
         "manual_profile_doc": MANUAL_PROFILE_DOC,
         "harness_ssot_doc": HARNESS_SSOT_DOC,
@@ -339,6 +359,8 @@ def run_harness(
     poll_interval_seconds: int,
     target_project: str,
     trigger: str,
+    reuse_existing_project: bool = False,
+    operational_attempt_cap: int = DEFAULT_OPERATIONAL_ATTEMPT_CAP,
     soak_profile: SoakProfile | None = None,
 ) -> dict[str, Any]:
     plan = build_execution_plan(
@@ -347,11 +369,13 @@ def run_harness(
         batch_size=batch_size,
         target_project=target_project,
         trigger=trigger,
+        reuse_existing_project=reuse_existing_project,
+        operational_attempt_cap=operational_attempt_cap,
         soak_profile=soak_profile,
     )
     project_name = str(plan["target_project"])
     project_root = PROJECT_ROOT / "projects" / project_name
-    if project_root.exists():
+    if project_root.exists() and not reuse_existing_project:
         raise FileExistsError(f"target project already exists: {project_root}")
 
     command = build_worker_command(
@@ -359,6 +383,7 @@ def run_harness(
         arc_count=arc_count,
         seed_profile=seed_profile,
         batch_size=batch_size,
+        reuse_existing_project=reuse_existing_project,
         soak_profile_name="soak" if soak_profile is not None else "",
     )
     process = subprocess.Popen(
@@ -368,7 +393,7 @@ def run_harness(
     )
 
     poll_history: list[dict[str, Any]] = []
-    previous = capture_poll_snapshot(project_root, process=process)
+    previous = capture_poll_snapshot(project_root, process=process, operational_attempt_cap=operational_attempt_cap)
     poll_history.append(previous)
     idle_windows = 0
     watchdog_status = "progressing"
@@ -381,8 +406,14 @@ def run_harness(
             break
         now = time.monotonic()
         if now >= next_poll_deadline:
-            current = capture_poll_snapshot(project_root, process=process)
+            current = capture_poll_snapshot(project_root, process=process, operational_attempt_cap=operational_attempt_cap)
             poll_history.append(current)
+            overflow = current.get("attempt_overflow") or {}
+            if overflow.get("exceeded"):
+                watchdog_status = "failed"
+                termination_reason = "operational_attempt_cap_exceeded"
+                _terminate_process_tree(process)
+                break
             watchdog_status, idle_windows = classify_poll_transition(previous, current, idle_windows)
             if watchdog_status in {"stalled", "failed"}:
                 termination_reason = watchdog_status
@@ -395,7 +426,7 @@ def run_harness(
         time.sleep(sleep_for)
 
     exit_code = process.wait()
-    final_snapshot = capture_poll_snapshot(project_root, process=process)
+    final_snapshot = capture_poll_snapshot(project_root, process=process, operational_attempt_cap=operational_attempt_cap)
     final_snapshot["process_exit_code"] = exit_code
     poll_history.append(final_snapshot)
     _write_poll_history(project_root, poll_history)
@@ -419,7 +450,13 @@ def run_harness(
 
 
 def build_worker_command(
-    *, target_project: str, arc_count: int, seed_profile: str, batch_size: int, soak_profile_name: str = ""
+    *,
+    target_project: str,
+    arc_count: int,
+    seed_profile: str,
+    batch_size: int,
+    reuse_existing_project: bool = False,
+    soak_profile_name: str = "",
 ) -> list[str]:
     cmd = [
         sys.executable,
@@ -434,6 +471,8 @@ def build_worker_command(
         "--batch-size",
         str(max(1, int(batch_size or DEFAULT_BATCH_SIZE))),
     ]
+    if reuse_existing_project:
+        cmd.append("--reuse-existing-project")
     if soak_profile_name:
         cmd.extend(["--soak-profile", str(soak_profile_name)])
     return cmd
@@ -452,7 +491,13 @@ def _menu_choice_for_value(options: tuple[str, ...] | list[str], expected: str) 
 
 
 def run_worker(
-    *, target_project: str, arc_count: int, seed_profile: str, batch_size: int, soak_profile: SoakProfile | None = None
+    *,
+    target_project: str,
+    arc_count: int,
+    seed_profile: str,
+    batch_size: int,
+    reuse_existing_project: bool = False,
+    soak_profile: SoakProfile | None = None,
 ) -> dict[str, Any]:
     profile = default_profile(seed_profile)
     selected_genre = {"type": profile.genre_type, "name": profile.genre_name}
@@ -469,6 +514,7 @@ def run_worker(
             "arc_count": int(arc_count),
             "batch_size": max(1, int(batch_size or DEFAULT_BATCH_SIZE)),
             "seed_profile": seed_profile,
+            "reuse_existing_project": bool(reuse_existing_project),
             "manual_profile_doc": MANUAL_PROFILE_DOC,
             "harness_ssot_doc": HARNESS_SSOT_DOC,
             "profile": asdict(profile),
@@ -478,11 +524,15 @@ def run_worker(
         _update_manifest(project_root, manifest)
 
         try:
-            _apply_stage0_existing_profile(app, profile)
-            _update_manifest(project_root, {"status": "stage0_existing_complete", "updated_at": _now_iso()})
+            if reuse_existing_project:
+                _assert_existing_project_frontier_ready(app)
+                _update_manifest(project_root, {"status": "existing_project_ready", "updated_at": _now_iso()})
+            else:
+                _apply_stage0_existing_profile(app, profile)
+                _update_manifest(project_root, {"status": "stage0_existing_complete", "updated_at": _now_iso()})
 
-            _apply_stage0_style_profile(app, profile)
-            _update_manifest(project_root, {"status": "stage0_style_complete", "updated_at": _now_iso()})
+                _apply_stage0_style_profile(app, profile)
+                _update_manifest(project_root, {"status": "stage0_style_complete", "updated_at": _now_iso()})
 
             _ensure_pass_rate_monitor(app, project_root)
             _update_manifest(project_root, {"status": "frontier_running", "updated_at": _now_iso()})
@@ -591,6 +641,20 @@ def _apply_stage0_style_profile(app: SovereignApp, profile: HarnessProfile) -> N
         raise RuntimeError("stage0 style-analysis replay did not persist style_guide")
 
 
+def _assert_existing_project_frontier_ready(app: SovereignApp) -> None:
+    saved_bible = app.current_project.db.load_anchor("bible") or {}
+    plot_roadmap = (
+        saved_bible.get("MasterBible", saved_bible).get("plot_roadmap", []) if isinstance(saved_bible, dict) else []
+    )
+    if not saved_bible or not plot_roadmap:
+        raise RuntimeError("existing project is not frontier-ready: bible/plot_roadmap anchor missing")
+
+    style_anchor = app.current_project.db.load_anchor("style_guide") or {}
+    style_file = Path(app.current_project.paths.root) / "stage0_output" / "style_guide.json"
+    if not style_anchor and not style_file.exists():
+        raise RuntimeError("existing project is not frontier-ready: style_guide missing")
+
+
 def _worker_runtime_input(prompt: str = "") -> str:
     text = str(prompt or "")
     if "건너뛰고 다음 Arc로?" in text:
@@ -620,7 +684,12 @@ def _shutdown_worker_app(app: SovereignApp) -> None:
     _close_app_handles(app)
 
 
-def capture_poll_snapshot(project_root: Path, *, process: subprocess.Popen[Any] | None = None) -> dict[str, Any]:
+def capture_poll_snapshot(
+    project_root: Path,
+    *,
+    process: subprocess.Popen[Any] | None = None,
+    operational_attempt_cap: int = DEFAULT_OPERATIONAL_ATTEMPT_CAP,
+) -> dict[str, Any]:
     session_log = resolve_active_session_log(project_root)
     log_tail = _tail_text(session_log, max_lines=20)
     stage3_attempts, stage4_attempts, director_stage3_rows, director_stage4_rows = _read_attempt_counts(project_root)
@@ -643,6 +712,7 @@ def capture_poll_snapshot(project_root: Path, *, process: subprocess.Popen[Any] 
         "runtime_audit_total_events": int(runtime_summary.get("total_events", 0) or 0),
         "harness_phase": str(manifest.get("status", "") or ""),
         "prompt_blocked": detect_prompt_blocked(log_tail),
+        "attempt_overflow": detect_attempt_overflow(log_tail, max(1, int(operational_attempt_cap or DEFAULT_OPERATIONAL_ATTEMPT_CAP))),
     }
     return snapshot
 
@@ -669,8 +739,32 @@ def detect_prompt_blocked(log_tail: list[str]) -> bool:
     return any(marker in merged for marker in PROMPT_WAIT_MARKERS)
 
 
+def detect_attempt_overflow(log_tail: list[str], cap: int) -> dict[str, Any]:
+    for raw_line in reversed(log_tail):
+        line = str(raw_line or "")
+        for stage_name, pattern in ATTEMPT_OVERFLOW_PATTERNS:
+            match = pattern.search(line)
+            if not match:
+                continue
+            attempt = int(match.group(1))
+            total = int(match.group(2))
+            if attempt > cap:
+                return {
+                    "exceeded": True,
+                    "stage": stage_name,
+                    "attempt": attempt,
+                    "total": total,
+                    "cap": int(cap),
+                    "line": line,
+                }
+    return {"exceeded": False, "cap": int(cap)}
+
+
 def classify_poll_transition(previous: dict[str, Any], current: dict[str, Any], idle_windows: int) -> tuple[str, int]:
     if current.get("process_exit_code") not in (None, 0):
+        return "failed", idle_windows
+    overflow = current.get("attempt_overflow") or {}
+    if overflow.get("exceeded"):
         return "failed", idle_windows
 
     merged_tail = "\n".join(str(line) for line in current.get("session_log_tail", []))

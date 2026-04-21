@@ -42,6 +42,59 @@ WorkGuard companion contract:
 - 대상이 작품/`work_id`/`treatments/`/`bible/` 산출물, `material_ssot`, 기획안, `Phase 0`, `TR draft`, `BI`, `work_guard`, `TR/BI pair` 제작이면 서사 파이프라인 오더다.
 - `다음 스텝`, `계속`, `승인`만으로는 narrative-router 트리거가 아니다. 현재 대상이 작품 파이프라인일 때만 트리거다.
 
+## Codex Lead Shortcut (System Track Only)
+
+- accepted aliases:
+  - `코덱스 리드`
+  - `코덱스 리드 모드로 시작`
+  - `코덱스 리드 나와`
+  - `시스템 리드`
+  - `리드 모드로 시작`
+  - `아무튼 리드`
+  - `야 리드 나와`
+  - `리드 나와`
+  - `Codex Lead`
+  - `Codex Lead mode`
+  - `Codex Lead로 시작`
+- 사용자가 위 alias 또는 그에 준하는 짧은 리드 호출 표현을 쓰면 기본적으로 시스템 트랙의 `Codex Lead` operating shortcut으로 해석한다.
+- 코드/시스템 맥락이 이미 있거나 현재 대상이 명시되지 않은 상태에서 `리드`를 단독 호출해도 기본적으로 이 shortcut으로 해석한다.
+- 이 shortcut은 narrative order보다 우선하지 않는다. 대상이 작품/`work_id`/`TR`/`BI`면 먼저 narrative-router 판정을 따른다.
+- 즉, `리드` shortcut은 기본값이 시스템 트랙이지만 narrative surface가 명확하면 narrative-router가 계속 우선한다.
+- `Codex Lead` shortcut으로 해석된 경우 기본 read order는:
+  - `docs/2026-04-21/codex-centered-ai-dev-team-operating-model-3pass-audit.md`
+  - 작업을 바로 시작하거나 manual wave를 열면 `docs/2026-04-21/codex-ai-dev-manual-wave-runbook-3pass-audit.md`
+- 이 shortcut의 기본 운영 의미는:
+  - `GitHub`를 AI dev-team SSOT로 사용
+  - `Codex`를 primary technical authority로 사용
+  - `Claude`를 junior helper lane으로 제한
+  - `n8n`을 `dispatcher + reporter`로만 사용
+  - `ClickUp`을 human-facing summary surface로만 사용
+- 사용자가 더 구체적인 issue/branch/runbook 지시를 주면 그 지시를 우선한다.
+
+## Meta Lead Shortcut (System Track Only)
+
+- accepted aliases:
+  - `메타 리드`
+  - `메타 리드 나와`
+  - `상위 리드`
+  - `상위 리드 나와`
+  - `리드 위 리드`
+  - `메타 리드 모드로 시작`
+  - `전체 우선순위 다시 짜`
+  - `팀 구조 재편해`
+- 사용자가 위 alias 또는 그에 준하는 상위 리드 호출 표현을 쓰면 기본적으로 시스템 트랙의 `Meta Lead` operating shortcut으로 해석한다.
+- `Meta Lead`는 상시 실행 리드가 아니라, 다중 issue / 다중 worker / 리드 과부하 상황에서만 호출되는 전략층으로 해석한다.
+- 이 shortcut은 narrative order보다 우선하지 않는다. 대상이 작품/`work_id`/`TR`/`BI`면 먼저 narrative-router 판정을 따른다.
+- `Meta Lead` shortcut의 기본 read order는:
+  - `docs/2026-04-21/codex-centered-ai-dev-team-operating-model-3pass-audit.md`
+  - `docs/2026-04-21/codex-lead-app-requirements-3pass-audit.md`
+- `Meta Lead` shortcut의 기본 운영 의미는:
+  - 여러 issue wave 사이 우선순위와 worker 재배치를 판단
+  - `Lead` 과부하 여부와 lane 확장 필요 여부를 판단
+  - `Lead`를 직접 대체하지 않고, 구조 재편과 전략 결정을 우선 담당
+  - worker 세부 파일 리뷰, allowlist 미세 조정, 개별 canary 판정은 기본적으로 여전히 `Lead`가 담당
+- 사용자가 더 구체적인 조직 재편 / 증원 / pause-resume / 우선순위 지시를 주면 그 지시를 우선한다.
+
 ## Material-Side Alias Rule
 
 - `재료 사이드`, `재료 사이드 하네스`, `material-side`, `material-side harness`, `material_ssot`, `글도비 파이프라인 이전`, `기획안~TR/BI`, `TR/BI pair 제작`은 기본적으로 `material_ssot` 중심의 material-side order를 뜻한다.

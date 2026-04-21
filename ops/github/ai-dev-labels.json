@@ -1,0 +1,57 @@
+[
+  {
+    "name": "ai:ready",
+    "color": "0E8A16",
+    "description": "Issue is ready for Codex Lead intake."
+  },
+  {
+    "name": "ai:split",
+    "color": "5319E7",
+    "description": "Codex Lead has frozen worker lanes and scope."
+  },
+  {
+    "name": "ai:coding",
+    "color": "1D76DB",
+    "description": "One or more worker lanes are actively implementing."
+  },
+  {
+    "name": "ai:review",
+    "color": "FBCA04",
+    "description": "Worker output is waiting for Codex Lead review."
+  },
+  {
+    "name": "ai:canary",
+    "color": "D93F0B",
+    "description": "Integration branch is under canary validation."
+  },
+  {
+    "name": "ai:blocked",
+    "color": "B60205",
+    "description": "The lane is blocked and needs lead intervention."
+  },
+  {
+    "name": "ai:done",
+    "color": "0E8A16",
+    "description": "The issue completed its AI lane and is merge-ready or merged."
+  },
+  {
+    "name": "scope:single-file",
+    "color": "C2E0C6",
+    "description": "Bounded to a single file or equivalent tiny surface."
+  },
+  {
+    "name": "scope:multi-file",
+    "color": "BFDADC",
+    "description": "Touches multiple files but remains bounded."
+  },
+  {
+    "name": "risk:low",
+    "color": "C5DEF5",
+    "description": "Low-risk bounded change."
+  },
+  {
+    "name": "risk:high",
+    "color": "E99695",
+    "description": "High-risk or high-blast-radius change."
+  }
+]
