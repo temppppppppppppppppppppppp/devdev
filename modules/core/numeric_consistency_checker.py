@@ -171,9 +171,7 @@ _TITLE_PROGRESSIONS = {
 }
 
 _TITLE_RANK = {
-    title: (domain, idx)
-    for domain, titles in _TITLE_PROGRESSIONS.items()
-    for idx, title in enumerate(titles)
+    title: (domain, idx) for domain, titles in _TITLE_PROGRESSIONS.items() for idx, title in enumerate(titles)
 }
 
 # "처음" 마커
@@ -647,6 +645,7 @@ class NumericConsistencyChecker:
         """FactLedger value를 억 단위 float로 변환."""
         s = str(value).replace(",", "").strip()
         unit = str(unit).strip()
+        unit_token = unit.lower().replace(" ", "").replace("_", "")
         try:
             num = float(re.sub(r"[^\d.\-]", "", s))
         except (ValueError, TypeError):
@@ -654,6 +653,8 @@ class NumericConsistencyChecker:
         if "만" in unit:
             return num / 10000
         if "원" in unit and "억" not in unit and "만" not in unit:
+            return num / 1_0000_0000
+        if unit_token in {"won", "krw"}:
             return num / 1_0000_0000
         # Some carryover-baseline rows are stored as raw KRW without a unit tag.
         if not unit and abs(num) >= 1_0000_0000:
