@@ -552,6 +552,57 @@ class TestDirectorEnsemble:
         assert payload["quality_risk"] is False
         assert len(payload["candidate_advisories"]) == 2
 
+    def test_build_blueprint_compare_result_payload_promotes_selected_advisory_fix_pack_to_contract(self, director):
+        candidates = [
+            {
+                "integrated_scenario": "A" * 1000,
+                "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+                "_ensemble_meta": {
+                    "strategy": "steady",
+                    "prevalidation_issue_count": 1,
+                    "quality_risk": False,
+                    "advisory_fix_pack": {
+                        "patch_targets": ["integrated_scenario"],
+                        "patch_target_records": [
+                            {
+                                "summary": "integrated_scenario",
+                                "field_path": "integrated_scenario",
+                                "target_kind": "local_sentence",
+                            }
+                        ],
+                        "target_kind": "local_sentence",
+                        "must_fix": ["tighten one awkward style sentence"],
+                        "success_condition": "integrated_scenario removes the awkward style phrasing",
+                        "evidence_summary": "python_style_warning",
+                    },
+                },
+            }
+        ]
+
+        payload = director._ensemble._build_blueprint_compare_result_payload(
+            result={
+                "selected_index": 0,
+                "decision": "PASS_WITH_FIX",
+                "score": 100,
+                "reason": "usable",
+                "comparison_notes": "notes",
+                "feedback": "tighten one awkward style sentence",
+                "contradictions": [],
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "local style cleanup only",
+            },
+            candidates=candidates,
+            ep_num=8,
+        )
+
+        assert payload["fix_scope"] == "inplace"
+        assert payload["authoritative_fix_scope"] == "inplace"
+        assert payload["repair_scope"] == "inplace"
+        assert payload["advisory_fix_pack"]["target_kind"] == "local_sentence"
+        assert payload["fix_pack"]["patch_targets"] == ["integrated_scenario"]
+        assert payload["repair_contract"]["authoritative_fix_scope"] == "inplace"
+        assert payload["scope_authority"]["authoritative_fix_scope"] == "inplace"
+
     def test_build_blueprint_compare_prompt_marks_episode_progression_advisory_as_hard_gate(self, director):
         prompt = director._ensemble._build_blueprint_compare_prompt(
             candidates=[

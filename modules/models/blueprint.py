@@ -29,12 +29,16 @@ class BlueprintRelationshipChange(BaseModel):
 class BlueprintScene(BaseModel):
     model_config = ConfigDict(extra="allow")
 
+    type: str = ""
+    title: str = ""
     goal: str = ""
     summary: str = ""
+    description: str = ""
     characters: list[str] | str = Field(default_factory=list)
     key_events: list[str] | str = Field(default_factory=list)
     location: str = ""
     content: str = ""
+    tension_level: int = 0
 
 
 class Blueprint(BaseModel):
@@ -47,7 +51,7 @@ class Blueprint(BaseModel):
 
     # ── Schema 정의 필드 ──
     episode_number: int = 0
-    scene_breakdown: dict[str, BlueprintScene | str] = Field(default_factory=dict)
+    scene_breakdown: dict[str, BlueprintScene] = Field(default_factory=dict)
     integrated_scenario: str = ""
     pacing_notes: str = ""
     target_beat: str = ""

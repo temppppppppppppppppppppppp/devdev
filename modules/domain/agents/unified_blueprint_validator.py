@@ -21,6 +21,7 @@ Stage 3 사전검사기 + Director 최종 판정
 """
 
 import json
+import calendar
 import logging
 import re
 from pathlib import Path
@@ -615,6 +616,19 @@ class UnifiedBlueprintValidator:
         return _merge_stage3_fix_packs(advisory_packs)
 
     @staticmethod
+    def _build_issue_fix_pack(issues: list) -> dict:
+        if not isinstance(issues, list):
+            return {}
+        issue_packs: list[object] = []
+        for issue in issues:
+            if not isinstance(issue, dict):
+                continue
+            fix_pack = issue.get("fix_pack")
+            if isinstance(fix_pack, dict) and fix_pack:
+                issue_packs.append(fix_pack)
+        return _merge_stage3_fix_packs(issue_packs)
+
+    @staticmethod
     def _coerce_episode_marker(value: object) -> int | None:
         try:
             marker = int(value)
@@ -992,7 +1006,8 @@ class UnifiedBlueprintValidator:
             else ""
         )
         revision_required = bool(revision_required or verdict in ("PASS_WITH_FIX", "PASS_WITH_WARNING"))
-        fix_pack = _normalize_stage3_fix_pack(compare_result)
+        issue_fix_pack = self._build_issue_fix_pack(selected_pre_result.get("issues", []))
+        fix_pack = _normalize_stage3_fix_pack(compare_result) or issue_fix_pack
         advisory_fix_pack = self._build_advisory_fix_pack(selected_pre_result.get("issues", []))
 
         result = {
@@ -1292,7 +1307,8 @@ class UnifiedBlueprintValidator:
         ).strip()
         if authoritative_fix_scope:
             result["authoritative_fix_scope"] = authoritative_fix_scope
-        fix_pack = _normalize_stage3_fix_pack(director_result)
+        issue_fix_pack = self._build_issue_fix_pack(pre_result["issues"])
+        fix_pack = _normalize_stage3_fix_pack(director_result) or issue_fix_pack
         if fix_pack:
             result["fix_pack"] = fix_pack
         if repair_contract:
@@ -2736,6 +2752,21 @@ class UnifiedBlueprintValidator:
         ]
 
     @staticmethod
+    def _infer_relative_month_day(text: str, *, pick: str, year: int = 0, month: int = 0) -> int:
+        source = str(text or "").strip()
+        if not source or month <= 0:
+            return 0
+
+        if re.search(r"\d{1,2}월\s*(초|초반|상순)", source):
+            return 1 if pick == "start" else 10
+        if re.search(r"\d{1,2}월\s*(중순|중반)", source):
+            return 15
+        if re.search(r"\d{1,2}월\s*(말|말미|하순|후반)", source):
+            last_day = calendar.monthrange(year or 2000, month)[1]
+            return max(21, last_day - 7) if pick == "start" else last_day
+        return 0
+
+    @staticmethod
     def _parse_timeline_point(raw, *, pick: str) -> tuple[int, int, int] | None:
         if isinstance(raw, dict):
             year = raw.get("year")
@@ -2743,8 +2774,24 @@ class UnifiedBlueprintValidator:
             if year is not None and month is not None:
                 try:
                     day = raw.get("day")
-                    day_value = int(day) if day not in (None, "") else 0
-                    return int(year), int(month), day_value
+                    year_value = int(year)
+                    month_value = int(month)
+                    if day not in (None, ""):
+                        return year_value, month_value, int(day)
+                    raw_text = (
+                        raw.get("표현")
+                        or raw.get("expression")
+                        or raw.get("text")
+                        or raw.get("raw")
+                        or ""
+                    )
+                    inferred_day = UnifiedBlueprintValidator._infer_relative_month_day(
+                        str(raw_text),
+                        pick=pick,
+                        year=year_value,
+                        month=month_value,
+                    )
+                    return year_value, month_value, inferred_day
                 except (TypeError, ValueError):
                     return None
             raw = raw.get("표현") or raw.get("expression") or raw.get("text") or raw.get("raw") or ""
@@ -2766,7 +2813,17 @@ class UnifiedBlueprintValidator:
         else:
             month = months[0] if pick == "start" else months[-1]
         year = int(year_match.group(1)) if year_match else 0
-        day = days[0] if pick == "start" and days else (days[-1] if days else 0)
+        if pick == "start" and days:
+            day = days[0]
+        elif days:
+            day = days[-1]
+        else:
+            day = UnifiedBlueprintValidator._infer_relative_month_day(
+                text,
+                pick=pick,
+                year=year,
+                month=month,
+            )
         return year, month, day
 
     def _collect_arc_timeline_alignment_issues(
@@ -2804,8 +2861,56 @@ class UnifiedBlueprintValidator:
         if not bp_expr:
             bp_expr = bp_timeline.get("expression") if isinstance(bp_timeline, dict) else ""
         bp_expr = str(bp_expr or bp_timeline or "").strip()
-        arc_start_expr = str(timeline.get("start") or "").strip()
-        arc_expr = str(timeline.get("end") or "").strip()
+        def _render_timeline_expr(raw: object) -> str:
+            if isinstance(raw, dict):
+                return str(raw.get("표현") or raw.get("expression") or raw).strip()
+            return str(raw or "").strip()
+
+        arc_start_expr = _render_timeline_expr(timeline.get("start"))
+        arc_expr = _render_timeline_expr(timeline.get("end"))
+        integrated_scenario = str(blueprint.get("integrated_scenario", "") or "").strip()
+
+        def _build_fix_pack(*, authoritative_expr: str, reason_label: str) -> dict:
+            patch_target_records: list[dict[str, object]] = [
+                {
+                    "summary": "ending_state.timeline",
+                    "field_path": "ending_state.timeline",
+                    "target_kind": "field_value",
+                },
+                {
+                    "summary": "time_flow",
+                    "field_path": "time_flow",
+                    "target_kind": "field_value",
+                },
+            ]
+            must_fix = [
+                f"ending_state.timeline을 Arc 권위 시점 '{authoritative_expr}'에 정렬",
+                f"time_flow를 Arc 권위 시점 '{authoritative_expr}'과 모순되지 않게 정규화",
+            ]
+            if integrated_scenario and any(token in integrated_scenario for token in ("새해 첫날", "1월 1일", "2006년 1월 1일")):
+                patch_target_records.append(
+                    {
+                        "summary": "integrated_scenario timeline cue",
+                        "field_path": "integrated_scenario",
+                        "target_kind": "field_value",
+                    }
+                )
+                must_fix.append("integrated_scenario의 선행 날짜/새해 첫날 단서를 제거")
+            return {
+                "target_kind": "field_value",
+                "patch_target_records": patch_target_records,
+                "must_fix": must_fix,
+                "do_not_regress": [
+                    "Arc 핵심 사건과 인물 관계는 유지",
+                    "시간축 외의 장면 구조는 불필요하게 넓히지 말 것",
+                ],
+                "success_condition": (
+                    f"ending_state.timeline과 time_flow가 '{authoritative_expr}' 권위 시점과 정렬되고 "
+                    "조기 날짜 단서가 남지 않는다"
+                )[:220],
+                "evidence_summary": f"{reason_label}: authoritative_timeline={authoritative_expr}"[:220],
+            }
+
         require_terminal_exact_match = bool(
             arc_end is not None
             and (arc_start is None or arc_start == arc_end or (ep_num > 0 and arc_end_ep > 0 and ep_num >= arc_end_ep))
@@ -2821,6 +2926,10 @@ class UnifiedBlueprintValidator:
                     "issue": f"ending_state.timeline 불일치: blueprint '{bp_expr}' vs arc '{arc_expr}'",
                     "evidence": f"blueprint_timeline={bp_end}, arc_timeline={arc_end}",
                     "fix_hint": "ending_state.timeline과 time_flow를 arc state_changes.timeline 종료 시점에 맞추기",
+                    "fix_pack": _build_fix_pack(
+                        authoritative_expr=arc_expr or arc_start_expr or "arc timeline",
+                        reason_label="terminal_arc_timeline_mismatch",
+                    ),
                 }
             ]
 
@@ -2835,6 +2944,10 @@ class UnifiedBlueprintValidator:
                     ),
                     "evidence": f"blueprint_timeline={bp_end}, arc_start={arc_start}, arc_end={arc_end}",
                     "fix_hint": "ending_state.timeline과 time_flow를 arc state_changes.timeline 시작 이후 범위에 맞추기",
+                    "fix_pack": _build_fix_pack(
+                        authoritative_expr=arc_start_expr or arc_expr or "arc timeline window",
+                        reason_label="arc_timeline_before_window",
+                    ),
                 }
             ]
         if arc_end is not None and bp_end > arc_end:
@@ -2848,6 +2961,10 @@ class UnifiedBlueprintValidator:
                     ),
                     "evidence": f"blueprint_timeline={bp_end}, arc_start={arc_start}, arc_end={arc_end}",
                     "fix_hint": "ending_state.timeline과 time_flow를 arc state_changes.timeline 종료 이전 범위에 맞추기",
+                    "fix_pack": _build_fix_pack(
+                        authoritative_expr=arc_expr or arc_start_expr or "arc timeline window",
+                        reason_label="arc_timeline_after_window",
+                    ),
                 }
             ]
         return []

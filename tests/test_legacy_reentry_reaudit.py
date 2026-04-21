@@ -72,7 +72,17 @@ def test_blueprint_schema_scene_breakdown_is_typed():
     assert scene_schema.additional_properties is None
     assert set(scene_schema.properties.keys()) == {f"scene_{idx}" for idx in range(1, 6)}
     scene_entry_schema = scene_schema.properties["scene_1"]
-    assert any(branch.type.value == "OBJECT" for branch in scene_entry_schema.any_of)
+    assert scene_entry_schema.type.value == "OBJECT"
+    assert set(scene_entry_schema.required) >= {
+        "type",
+        "title",
+        "goal",
+        "summary",
+        "characters",
+        "key_events",
+        "location",
+        "tension_level",
+    }
     assert "title" in BLUEPRINT_SCHEMA.properties
     assert "ending_hook" in BLUEPRINT_SCHEMA.properties
     assert "opening_transition" in BLUEPRINT_SCHEMA.properties
@@ -83,8 +93,26 @@ def test_blueprint_model_uses_typed_scene_entries():
         {
             "episode_number": 3,
             "scene_breakdown": {
-                "scene_1": {"goal": "Secure the clue", "characters": ["Seo Jun"], "location": "Archive"},
-                "scene_2": "Short fallback",
+                "scene_1": {
+                    "type": "investigation",
+                    "title": "Archive Entry",
+                    "goal": "Secure the clue",
+                    "summary": "Seo Jun enters the archive and secures the clue.",
+                    "characters": ["Seo Jun"],
+                    "key_events": ["Seo Jun unlocks the archive drawer."],
+                    "location": "Archive",
+                    "tension_level": 4,
+                },
+                "scene_2": {
+                    "type": "handoff",
+                    "title": "Courier Contact",
+                    "goal": "Transfer the clue safely",
+                    "summary": "Seo Jun hands the clue to the courier.",
+                    "characters": ["Seo Jun", "Courier"],
+                    "key_events": ["The courier verifies the seal."],
+                    "location": "Archive Exit",
+                    "tension_level": 3,
+                },
             },
             "integrated_scenario": "Scenario",
         }
@@ -92,7 +120,8 @@ def test_blueprint_model_uses_typed_scene_entries():
 
     assert isinstance(bp.scene_breakdown["scene_1"], BlueprintScene)
     assert bp.scene_breakdown["scene_1"].goal == "Secure the clue"
-    assert bp.model_dump()["scene_breakdown"]["scene_2"] == "Short fallback"
+    assert isinstance(bp.scene_breakdown["scene_2"], BlueprintScene)
+    assert bp.model_dump()["scene_breakdown"]["scene_2"]["title"] == "Courier Contact"
 
 
 def test_blueprint_constraint_compiler_preserves_semantic_carryover():

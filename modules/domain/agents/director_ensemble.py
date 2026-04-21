@@ -512,6 +512,47 @@ def _collect_compare_candidate_advisories(candidates: list) -> list[dict]:
     return advisories
 
 
+def _resolve_stage3_contract_fields(
+    *,
+    result: dict,
+    decision: str,
+    selected_candidate_advisory: dict | None,
+) -> dict[str, object]:
+    advisory = selected_candidate_advisory if isinstance(selected_candidate_advisory, dict) else {}
+    advisory_fix_pack = _normalize_fix_pack(advisory.get("advisory_fix_pack"))
+    fix_pack = _normalize_fix_pack(result.get("fix_pack"))
+    if not fix_pack and decision == "PASS_WITH_FIX" and advisory_fix_pack:
+        fix_pack = advisory_fix_pack
+
+    authoritative_fix_scope = str(result.get("authoritative_fix_scope", result.get("fix_scope", "")) or "").strip()
+    if decision in ("REJECT", "PASS_WITH_FIX") and not authoritative_fix_scope and fix_pack:
+        authoritative_fix_scope = str(result.get("fix_scope", "") or "").strip()
+
+    fix_scope = str(result.get("fix_scope", authoritative_fix_scope) or authoritative_fix_scope).strip()
+    repair_scope = _normalize_repair_scope(result.get("repair_scope", "") or authoritative_fix_scope)
+    repair_contract = _build_director_repair_contract_payload(
+        contradiction_types=[],
+        fix_pack=fix_pack,
+        fix_scope=fix_scope,
+        repair_scope=repair_scope,
+        authoritative_fix_scope=authoritative_fix_scope,
+    )
+    scope_authority = _build_director_scope_authority_payload(
+        fix_scope=fix_scope,
+        repair_scope=repair_scope,
+        authoritative_fix_scope=authoritative_fix_scope,
+    )
+    return {
+        "authoritative_fix_scope": authoritative_fix_scope,
+        "fix_scope": fix_scope,
+        "repair_scope": repair_scope,
+        "fix_pack": fix_pack,
+        "advisory_fix_pack": advisory_fix_pack,
+        "repair_contract": repair_contract,
+        "scope_authority": scope_authority,
+    }
+
+
 _VALID_FIX_SCOPES = frozenset({"inplace", "partial", "full"})
 
 
@@ -2268,6 +2309,11 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
             if 0 <= selected_idx < len(candidate_advisories)
             else {"candidate_index": selected_idx, "quality_risk": False}
         )
+        contract_fields = _resolve_stage3_contract_fields(
+            result=result,
+            decision=str(decision or ""),
+            selected_candidate_advisory=selected_candidate_advisory,
+        )
         quality_risk = bool(result.get("quality_risk", False) or selected_candidate_advisory.get("quality_risk", False))
         revision_required = bool(
             result.get("revision_required", False) or decision in ("PASS_WITH_FIX", "PASS_WITH_WARNING")
@@ -2333,7 +2379,9 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
             "reason": result.get("reason", ""),
             "feedback": result.get("feedback", "") if decision in ("REJECT", "PASS_WITH_FIX") else "",
             "comparison_notes": result.get("comparison_notes", ""),
-            "fix_scope": result.get("fix_scope", ""),
+            "fix_scope": contract_fields["fix_scope"],
+            "repair_scope": contract_fields["repair_scope"],
+            "authoritative_fix_scope": contract_fields["authoritative_fix_scope"],
             "fix_scope_reasoning": result.get("fix_scope_reasoning", ""),
             "selection_reason": result.get("selection_reason", "") or reason,
             "verdict_reason": result.get("verdict_reason", "") or reason,
@@ -2341,6 +2389,10 @@ Architect가 repair loop에서 처리 가능한 범위라면 PASS_WITH_FIX를 �
             "revision_required": revision_required,
             "candidate_advisories": candidate_advisories,
             "selected_candidate_advisory": selected_candidate_advisory,
+            "fix_pack": contract_fields["fix_pack"],
+            "advisory_fix_pack": contract_fields["advisory_fix_pack"],
+            "repair_contract": contract_fields["repair_contract"],
+            "scope_authority": contract_fields["scope_authority"],
             "_director_thinking": thinking,
         }
 

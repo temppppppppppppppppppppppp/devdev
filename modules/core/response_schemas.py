@@ -576,38 +576,34 @@ BLUEPRINT_PREFLIGHT_SCHEMA = types.Schema(
 
 
 BLUEPRINT_SCENE_ENTRY_SCHEMA = types.Schema(
-    anyOf=[
-        types.Schema(
-            type=types.Type.OBJECT,
-            properties={
-                "type": types.Schema(type=types.Type.STRING),
-                "title": types.Schema(type=types.Type.STRING),
-                "goal": types.Schema(type=types.Type.STRING),
-                "summary": types.Schema(type=types.Type.STRING),
-                "description": types.Schema(type=types.Type.STRING),
-                "characters": types.Schema(
-                    anyOf=[
-                        types.Schema(type=types.Type.STRING),
-                        types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
-                    ]
-                ),
-                "key_events": types.Schema(
-                    anyOf=[
-                        types.Schema(type=types.Type.STRING),
-                        types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
-                    ]
-                ),
-                "location": types.Schema(type=types.Type.STRING),
-                "content": types.Schema(type=types.Type.STRING),
-                "tension_level": types.Schema(type=types.Type.INTEGER),
-            },
+    type=types.Type.OBJECT,
+    properties={
+        "type": types.Schema(type=types.Type.STRING),
+        "title": types.Schema(type=types.Type.STRING),
+        "goal": types.Schema(type=types.Type.STRING),
+        "summary": types.Schema(type=types.Type.STRING),
+        "description": types.Schema(type=types.Type.STRING),
+        "characters": types.Schema(
+            anyOf=[
+                types.Schema(type=types.Type.STRING),
+                types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+            ]
         ),
-        types.Schema(type=types.Type.STRING),
-    ],
+        "key_events": types.Schema(
+            anyOf=[
+                types.Schema(type=types.Type.STRING),
+                types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+            ]
+        ),
+        "location": types.Schema(type=types.Type.STRING),
+        "content": types.Schema(type=types.Type.STRING),
+        "tension_level": types.Schema(type=types.Type.INTEGER),
+    },
+    required=["type", "title", "goal", "summary", "characters", "key_events", "location", "tension_level"],
     description=(
-        "Scene entry value. Prefer an object with type/title, goal/summary, characters, "
-        "key_events, location, and tension_level; short string fallback remains allowed "
-        "for compatibility."
+        "Scene entry value. Runtime screening requires fully structured scene cards, "
+        "so each scene must provide type/title, goal/summary, characters, key_events, "
+        "location, and tension_level."
     ),
 )
 

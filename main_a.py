@@ -44,6 +44,36 @@ def _persist_boot_failure_traceback() -> str | None:
 _bootstrap_engine_sys_path()
 
 
+def _reconfigure_stdio_stream(stream, *, encoding: str = "utf-8", errors: str = "replace"):
+    """Safely normalize stdio without taking ownership of the underlying FD.
+
+    For runner/pipe mode we prefer ``reconfigure()`` over wrapping ``.buffer`` in a
+    new ``TextIOWrapper``. Re-wrapping can close the underlying pipe during GC or
+    teardown, which later surfaces as ``ValueError: I/O operation on closed file``.
+    """
+
+    if stream is None or getattr(stream, "closed", False):
+        return stream
+
+    reconfigure = getattr(stream, "reconfigure", None)
+    if callable(reconfigure):
+        try:
+            reconfigure(encoding=encoding, errors=errors)
+            return stream
+        except (ValueError, OSError):
+            pass
+
+    try:
+        import io
+
+        buffer = getattr(stream, "buffer", None)
+        if buffer is None or getattr(buffer, "closed", False):
+            return stream
+        return io.TextIOWrapper(buffer, encoding=encoding, errors=errors, write_through=True)
+    except (AttributeError, OSError, ValueError):
+        return stream
+
+
 def _bootstrap_windows_stdio_utf8() -> None:
     """Normalize Windows console stdio before bootstrap notices hit stderr."""
 
@@ -54,15 +84,12 @@ def _bootstrap_windows_stdio_utf8() -> None:
         return
 
     try:
-        import io
-
         # Console-only fallback. Durable sinks still need explicit UTF-8 writers.
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
-        if hasattr(sys.stdin, "reconfigure"):
-            sys.stdin.reconfigure(encoding="utf-8", errors="replace")
+        sys.stdout = _reconfigure_stdio_stream(sys.stdout, encoding="utf-8", errors="replace")
+        sys.stderr = _reconfigure_stdio_stream(sys.stderr, encoding="utf-8", errors="replace")
+        sys.stdin = _reconfigure_stdio_stream(sys.stdin, encoding="utf-8", errors="replace")
         _STDIO_BOOTSTRAPPED = True
-    except (AttributeError, OSError):
+    except (AttributeError, OSError, ValueError):
         return
 
 
@@ -103,16 +130,10 @@ except OSError as _fh_err:
 # pytest 환경에서는 capture fd 충돌 방지를 위해 스킵
 if not _STDIO_BOOTSTRAPPED and sys.platform == "win32" and "pytest" not in sys.modules:
     try:
-        import io
-
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
-        # [BUG-FIX] stdin을 새 TextIOWrapper로 교체하면 GC가 원본을 수집할 때
-        # underlying buffer를 닫아 ValueError: I/O operation on closed file 발생.
-        # reconfigure()로 기존 wrapper를 유지하면서 인코딩만 변경.
-        if hasattr(sys.stdin, "reconfigure"):
-            sys.stdin.reconfigure(encoding="utf-8", errors="replace")
-    except (AttributeError, OSError):
+        sys.stdout = _reconfigure_stdio_stream(sys.stdout, encoding="utf-8", errors="replace")
+        sys.stderr = _reconfigure_stdio_stream(sys.stderr, encoding="utf-8", errors="replace")
+        sys.stdin = _reconfigure_stdio_stream(sys.stdin, encoding="utf-8", errors="replace")
+    except (AttributeError, OSError, ValueError):
         pass
 
 import json

@@ -555,6 +555,48 @@ def test_lane_c_python_pre_validate_flags_arc_timeline_drift_as_major():
     assert "2006년 4월 중순 심야" in issue["issue"]
 
 
+def test_lane_c_parse_timeline_point_interprets_relative_month_day_markers():
+    assert UnifiedBlueprintValidator._parse_timeline_point({"표현": "2006년 2월 초 오후"}, pick="end") == (2006, 2, 10)
+    assert UnifiedBlueprintValidator._parse_timeline_point({"표현": "2006년 2월 초 오후"}, pick="start") == (2006, 2, 1)
+    assert UnifiedBlueprintValidator._parse_timeline_point({"표현": "2006년 2월 말 심야"}, pick="end") == (2006, 2, 28)
+    assert UnifiedBlueprintValidator._parse_timeline_point({"표현": "2006년 4월 중순 새벽"}, pick="end") == (2006, 4, 15)
+
+
+def test_lane_c_python_pre_validate_accepts_relative_month_phrase_inside_arc_window():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "episode_number": 5,
+            "scene_breakdown": {
+                "scene_1": {"goal": "g1", "summary": "s1", "characters": ["한시우"]},
+                "scene_2": {"goal": "g2", "summary": "s2", "characters": ["한시우"]},
+                "scene_3": {"goal": "g3", "summary": "s3", "characters": ["한시우"]},
+            },
+            "integrated_scenario": "A" * 900,
+            "time_flow": "2006년 2월 초 오후",
+            "ending_state": {
+                "timeline": {"표현": "2006년 2월 초 오후"},
+            },
+        },
+        constraint_block={},
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={
+            "ep_start": 5,
+            "ep_end": 9,
+            "state_changes": {
+                "timeline": {
+                    "start": {"year": 2006, "month": 2, "day": 1, "description": "2006년 2월 초, 법인 설립 마무리"},
+                    "end": {"year": 2006, "month": 2, "day": 28, "description": "2006년 2월 말, 이란 핵 농축 재개 선언 직후"},
+                }
+            },
+        },
+    )
+
+    assert not any(issue["category"] == "arc_timeline" for issue in pre_result["issues"])
+
+
 def test_lane_c_python_pre_validate_flags_episode_progression_replay_as_critical():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
