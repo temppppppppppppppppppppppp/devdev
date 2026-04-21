@@ -156,6 +156,22 @@ class TestFactLedgerCross:
         assert len(fl_warns) == 1
         assert "capital'=21.5억" in fl_warns[0]["text"]
 
+    def test_carryover_authority_won_unit_does_not_false_positive_on_same_eok_value(self):
+        fl = MagicMock()
+        fl.get_numbers.return_value = {
+            "capital": {
+                "value": 2_000_000_000,
+                "unit": "won",
+                "last_ep": 3,
+                "authority_scope": "carryover_baseline",
+            },
+        }
+        checker = NumericConsistencyChecker(fact_ledger=fl)
+        warns = checker.check("자본 20억을 가지고 시장에 들어간다.", ep_num=4)
+
+        fl_warns = [w for w in warns if w["check"] == "FactLedger 교차"]
+        assert fl_warns == []
+
 
 # ── 3. 산술 일관성 ──────────────────────────────────────────────
 
