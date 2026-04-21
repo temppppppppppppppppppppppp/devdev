@@ -1,13 +1,13 @@
  python main_a.py
 [V61.3] Faulthandler 활성화 → crash_dump.log
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                             🎹 V40 SOVEREIGN COCKPIT                             ┃
-┃                          Multi-Genre Production Factory                          ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                              🎹 V40 GENRE SELECTOR                               ┃
-┃                              장르별 전문 공정 선택                               ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                           🎹 V40 SOVEREIGN COCKPIT                                                            ┃
+┃                                                        Multi-Genre Production Factory                                                         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                             🎹 V40 GENRE SELECTOR                                                             ┃
+┃                                                             장르별 전문 공정 선택                                                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 📚 [V40 Multi-Genre Factory] 장르를 선택하십시오:
 
@@ -41,43 +41,37 @@
       10. 의학 (Medical Fiction)
          → 현대 배경, 의사 성장/병원 시스템, 수술/진료
 
-✏️ Choice (1.무협 / 2.헌터 / 3.투자 / 4.판타지 / 5.작곡가 / 6.요리 / 7.대체역사 /   
-8.배우물 / 9.스포츠 / 10.의학): 3
+✏️ Choice (1.무협 / 2.헌터 / 3.투자 / 4.판타지 / 5.작곡가 / 6.요리 / 7.대체역사 / 8.배우물 / 9.스포츠 / 10.의학): 3
    ✅ [투자 (Investment Fiction)] 전문 공정이 선택되었습니다.
       📌 HUD 시스템: INVESTMENT
       📦 프리셋 초기화: investment
 
 [Enter] 프로젝트 선택으로 이동
-    1. 00_260421
-    2. 0_20260417-카나리아
+    1. 00_0420
+    2. MagicMock
     3. _canary
     4. _manual_backup
     5. _unknown_project
-    6. golden_canary_deepclone_probe_a_stage23probe_r1
-    7. test
-    8. test_project
-    9. 기록용
-    10. 스트레스 테스트 모음
+    6. test
+    7. test_project
+    8. 골든 카나리아
+    9. 카나리아 테스트
 
-👉 Choice: 1
+👉 Choice: 8
       ✅ [TF7-P0-03] preset_registry DB에서 복원 완료
    💾 프로젝트 장르 정보 저장: 투자 (Investment Fiction)
       ✅ [투자 (Investment Fiction)] HUD 시스템 초기화 완료
       🔍 [V61.3] HUD 호환성 체크: FinanceHUDManager
          ✅ 필수 속성 모두 존재
-         ⚠️ 선택적 속성 누락 (정상): inventory (property), techniques (property),   
-snapshot (method), bulk_update (method)
+         ⚠️ 선택적 속성 누락 (정상): inventory (property), techniques (property), snapshot (method), bulk_update (method)
    🛡️ [투자 (Investment Fiction)] Guard 시스템 초기화 완료
    ✅ [System] Vector DB integrity check complete.
    ✅ [VecMemory] sqlite-vec 벡터 엔진 초기화 완료
 [V61.3] Faulthandler 활성화 → crash_dump.log
-      🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + 
-ConstraintCompiler)
-      🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight + 
-Critic + Consensus)
+      🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + ConstraintCompiler)
+      🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight + Critic + Consensus)
       🔧 [V60.42] Arc Corrector 초기화 (MAJOR 이슈 부분 수정: 활성화)
-      ⚡ [V60.25] Stage 2 Optimizer 활성화 (StateSnapshot + AutoCorrector +         
-ConstraintAmplifier)
+      ⚡ [V60.25] Stage 2 Optimizer 활성화 (StateSnapshot + AutoCorrector + ConstraintAmplifier)
       🎭 Director 장르 설정: investment
       🛡️ Director Guard 연결 완료
       ✍️ Writer Guard/Genre 연결 완료
@@ -107,10 +101,10 @@ ConstraintAmplifier)
       🧭 [SC] Context Advisor 활성화
       📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: investment)
    ✅ [System] 모든 에이전트 안전하게 초기화 완료
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                           🎹 V40 SOVEREIGN PRODUCTION                            ┃
-┃              Genre: 투자 (Investment Fiction) | Project: 00_260421               ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                          🎹 V40 SOVEREIGN PRODUCTION                                                          ┃
+┃                                           Genre: 투자 (Investment Fiction) | Project: 골든 카나리아                                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 👇 Select Command:
    0. Stage 0: Bible/역설계/스타일 추출 [❌]
@@ -156,26 +150,23 @@ ConstraintAmplifier)
 
 👉 Choice (1-1, 미입력 시 1번): 
    로드맵 선택
-   ✅ 로드맵 선택 완료: 
-golden_canary_deepclone_probe_a_fullblock_v1_tr_block_070_draft.json
-      ⚠️ [Stage0 Utility] Treatment Block 농축은 canonical Stage0 pair pass 경로가 
-아닙니다.
-         비정규 semantic rewrite utility이며 일부 block의 
-title/content/joint_docs/status_shadow를 다시 쓸 수 있습니다.
+   ✅ 로드맵 선택 완료: golden_canary_deepclone_probe_a_fullblock_v1_tr_block_070_draft.json
+      ⚠️ [Stage0 Utility] Treatment Block 농축은 canonical Stage0 pair pass 경로가 아닙니다.
+         비정규 semantic rewrite utility이며 일부 block의 title/content/joint_docs/status_shadow를 다시 쓸 수 있습니다.
          원본 Treatment는 보존되고 결과는 *_enriched.json 별도 파일로 저장됩니다.
-   🔧 비정규 semantic rewrite utility를 실행하시겠습니까? (y/N): n
+   🔧 비정규 semantic rewrite utility를 실행하시겠습니까? (y/N):
    
 📌 [V60.87] 주인공 기본 설정
       🌍 주인공의 세계관 출신을 선택하세요:
          [1] 현대인 - 제약 없음 (권장: 회귀/빙의물)
          [2] 원시인 - 현대 지식/용어 사용 제한 (권장: 무협/판타지)
-   선택 (기본: 1):
+   선택 (기본: 1): 1
       🎭 주인공의 유형을 선택하세요:
          [1] 회귀자 - 먼 미래에서 과거로 회귀 (기억 보존)
          [2] 빙의자 - 다른 사람의 몸에 빙의
          [3] 환생자 - 아기로 다시 태어남
          [4] 기타 - 특별한 유형 없음
-   선택 (기본: 1):
+   선택 (기본: 1): 1
       📖 서술 시점을 선택하세요:
          [1] 1인칭 - 주인공 '나'의 시점 (몰입감↑, 정보 제한)
          [2] 3인칭 - 주인공을 '그/그녀'로 지칭 (자유도↑)
@@ -187,24 +178,20 @@ title/content/joint_docs/status_shadow를 다시 쓸 수 있습니다.
          [2] 제한적 허용
          [3] 적극 허용
    선택 (기본: 2): 2
-      ✅ 설정 완료: 현대인 / 일반 / 혼합
-      💾 [V60.87] 주인공 설정이 Bible에 저장됨: {'world_origin': '현대인', 
-'incarnation_type': '일반', 'regression_point': {'death_year': 2024, 'death_cause': 
-'가문 몰락 이후 고독사', 'return_year': 2006, 'return_month': '2006년 1월',         
-'return_age': 26, 'return_context': '승마 국가대표 은퇴 직후'}, 
-'execution_doctrine': '가격이 아니라 이득 구조와 exit를 먼저 본다. 확신 구간에서만  
-크게 베팅하고, 나머지는 현금과 통제권을 지킨다.', 'governance_doctrine': '가족      
-자산과 개인 자산 사이에 방화벽을 둔다. 도움은 주되 운용권은 넘기지 않는다.',        
-'secrecy_rule': '회귀의 비밀은 끝까지 공개하지 않는다. 인정은 받아도 정체는 넘기지  
-않는다.', 'pov': '혼합', 'external_pov_insert_policy': '제한적 허용'}
+      ✅ 설정 완료: 현대인 / 회귀자 / 혼합
+      💾 [V60.87] 주인공 설정이 Bible에 저장됨: {'world_origin': '현대인', 'incarnation_type': '회귀자', 'regression_point': {'death_year': 2024,
+'death_cause': '가문 몰락 이후 고독사', 'return_year': 2006, 'return_month': '2006년 1월', 'return_age': 26, 'return_context': '승마 국가대표    
+은퇴 직후'}, 'execution_doctrine': '가격이 아니라 이득 구조와 exit를 먼저 본다. 확신 구간에서만 크게 베팅하고, 나머지는 현금과 통제권을 지킨다.',
+'governance_doctrine': '가족 자산과 개인 자산 사이에 방화벽을 둔다. 도움은 주되 운용권은 넘기지 않는다.', 'secrecy_rule': '회귀의 비밀은 끝까지  
+공개하지 않는다. 인정은 받아도 정체는 넘기지 않는다.', 'pov': '혼합', 'external_pov_insert_policy': '제한적 허용'}
    🆕 [New Project] 기존 원고가 없습니다. 신규 프로젝트로 기동합니다.
    ✨ [Success] 설계도(50개)와 원고 역사가 무결하게 통합되었습니다.
 
 [Enter] 메뉴로 돌아가기
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                           🎹 V40 SOVEREIGN PRODUCTION                            ┃
-┃              Genre: 투자 (Investment Fiction) | Project: 00_260421               ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                          🎹 V40 SOVEREIGN PRODUCTION                                                          ┃
+┃                                           Genre: 투자 (Investment Fiction) | Project: 골든 카나리아                                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 👇 Select Command:
    0. Stage 0: Bible/역설계/스타일 추출 [✅]
@@ -236,7 +223,7 @@ title/content/joint_docs/status_shadow를 다시 쓸 수 있습니다.
      [5] 📈 Block 확장 - 기존 Treatment에 블록 추가
      [6] 🎨 스타일 레퍼런스 분석 - 참조 원고에서 문체 DNA 추출
      [7] 🛡 작품가드 설정 (선택)
-   
+
   [0] 취소
 
   선택 (기본: 1): 6
@@ -265,17 +252,16 @@ title/content/joint_docs/status_shadow를 다시 쓸 수 있습니다.
    - 참조 작품: 참조작품1
    - 모범 문단: 15개
    - Anti-AI 패턴: 10개
-   - 저장: 
-C:\Users\wjjo\Desktop\글도비\projects\00_260421\stage0_output\style_guide.json      
+   - 저장: C:\Users\PC\Desktop\글도비\projects\골든 카나리아\stage0_output\style_guide.json
    ✅ [V70] StyleGuide DB 저장 완료 (anchor: style_guide)
 
 [Enter] 메뉴로 돌아가기
 
 [Enter] 메뉴로 돌아가기
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                           🎹 V40 SOVEREIGN PRODUCTION                            ┃
-┃              Genre: 투자 (Investment Fiction) | Project: 00_260421               ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                          🎹 V40 SOVEREIGN PRODUCTION                                                          ┃
+┃                                           Genre: 투자 (Investment Fiction) | Project: 골든 카나리아                                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 👇 Select Command:
    0. Stage 0: Bible/역설계/스타일 추출 [✅]
@@ -307,7 +293,7 @@ C:\Users\wjjo\Desktop\글도비\projects\00_260421\stage0_output\style_guide.jso
      [5] 📈 Block 확장 - 기존 Treatment에 블록 추가
      [6] 🎨 스타일 레퍼런스 분석 - 참조 원고에서 문체 DNA 추출
      [7] 🛡 작품가드 설정 (선택)
-
+   
   [0] 취소
 
   선택 (기본: 1): 7
@@ -325,57 +311,16 @@ C:\Users\wjjo\Desktop\글도비\projects\00_260421\stage0_output\style_guide.jso
    [3] work_guards/investment/jaebeol3se_loss_line.yaml
 
   가져올 번호: 1
-    작품가드 가져오기 완료: 
-work_guards\golden_canary_deepclone_probe_a_fullblock_v1.yaml -> 
-C:\Users\wjjo\Desktop\글도비\projects\00_260421\config\work_guard.yaml
+    작품가드 가져오기 완료: work_guards\golden_canary_deepclone_probe_a_fullblock_v1.yaml -> C:\Users\PC\Desktop\글도비\projects\골든 
+카나리아\config\work_guard.yaml
 
 [Enter] 메뉴로 돌아가기
 
 [Enter] 메뉴로 돌아가기
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                           🎹 V40 SOVEREIGN PRODUCTION                            ┃
-┃              Genre: 투자 (Investment Fiction) | Project: 00_260421               ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-👇 Select Command:
-   0. Stage 0: Bible/역설계/스타일 추출 [✅]
-   1. Stage 1: Volume Strategy (선택) [⏭️ 스킵가능]
-   2. Stage 2: Arc Tactical Design (유동) [❌]
-   3. 📐 Stage 3: Episode Blueprinting (Batch Design)
-   4. 🚀 Stage 4: Sovereign Production (Writing)
-   5. Exit
-   6. 🔄 One-Stop: Arc-by-Arc 자동 파이프라인
-   7. 🧭 One-Stop: Frontier Lag (S3=-1 / S4=-2)
-   44. ⏪ [ROLLBACK] Stage 4 회차별 롤백 (Episode Rewind)
-   77. 🔥 [WIPE] 원고 생산 기록만 삭제 (Stage 4 초기화)
-   88. 🔥 [RESET] Stage 2 (Arcs) 초기화
-   99. ⏪ Stage 2 정밀 되감기 (Selective Rewind)
-
-   👉 Choice: 0
-
-⚙️ Phase 0: S-Grade 데이터 주권 동기화 가동...
-   📌 현재 장르: 투자 (Investment Fiction) (investment)
-
-==================================================
-     📚 Stage 0 - 프로젝트 설정
-   ==================================================
-
-  [1] 기존 방식 - Bible/Treatment 파일 선택
-     [2] 🆕 컨셉 → Bible 생성 (AI 확장)
-     [3] 🔄 역설계 - 기존 원고에서 Bible/스타일 추출
-     [4] 📥 Bible JSON 임포트
-     [5] 📈 Block 확장 - 기존 Treatment에 블록 추가
-     [6] 🎨 스타일 레퍼런스 분석 - 참조 원고에서 문체 DNA 추출
-     [7] 🛡 작품가드 설정 (선택)
-
-  [0] 취소
-
-  선택 (기본: 1): 0
-   ❌ Stage 0이 취소되었습니다.
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                           🎹 V40 SOVEREIGN PRODUCTION                            ┃
-┃              Genre: 투자 (Investment Fiction) | Project: 00_260421               ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                          🎹 V40 SOVEREIGN PRODUCTION                                                          ┃
+┃                                           Genre: 투자 (Investment Fiction) | Project: 골든 카나리아                                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 👇 Select Command:
    0. Stage 0: Bible/역설계/스타일 추출 [✅]
@@ -398,8 +343,8 @@ C:\Users\wjjo\Desktop\글도비\projects\00_260421\config\work_guard.yaml
 ============================================================
   [V44] 글도비 성능 메트릭 리포트
 ============================================================
-세션 ID: 20260421_110615
-실행 시간: 0:02:25.909676
+세션 ID: 20260421_230524
+실행 시간: 0:02:56.450754
 
 [호출 통계]
 - 총 호출: 0회
@@ -415,9 +360,7 @@ C:\Users\wjjo\Desktop\글도비\projects\00_260421\config\work_guard.yaml
 
 [모델별 통계]
 ============================================================
-   📊 [Metrics] 세션 메트릭 저장: 
-C:\Users\wjjo\Desktop\글도비\projects\00_260421\logs\metrics\metrics_20260421_110615
-.json
+   📊 [Metrics] 세션 메트릭 저장: C:\Users\PC\Desktop\글도비\projects\골든 카나리아\logs\metrics\metrics_20260421_230524.json
    📈 [PassRate] 통과율 기록 저장: 0건
    📚 [V51.4] 실패 학습 기록 저장(DB): 0건
    🎭 [V51.5] 캐릭터 음성 저장: 0명
@@ -427,4 +370,4 @@ C:\Users\wjjo\Desktop\글도비\projects\00_260421\logs\metrics\metrics_20260421
    [System] DB 커밋 완료
    [System] DB 연결 안전하게 해제됨
    ✅ [System] 종료 완료
-PS C:\Users\wjjo\Desktop\글도비> 
+PS C:\Users\PC\Desktop\글도비> 

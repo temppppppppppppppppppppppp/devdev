@@ -22,7 +22,7 @@ def _coerce_text_value_set(values: object) -> set[str]:
     result: set[str] = set()
     if isinstance(values, dict):
         iterable = values.keys()
-    elif isinstance(values, (set, list, tuple)):
+    elif isinstance(values, set | list | tuple):
         iterable = values
     elif values in ("", None):
         return result
@@ -1411,7 +1411,8 @@ class FailureAnalyzer:
             director_rows = self.db.conn.execute(
                 """
                 SELECT id, attempt_key, selected_label, selected_strategy, verdict, score, candidate_key, content_hash, artifact_path,
-                       selection_reason, verdict_reason, fix_scope, advisory_warnings
+                       selection_reason, verdict_reason, fix_scope, advisory_warnings, initial_verdict, final_verdict,
+                       downstream_override_applied
                 FROM director_selections
                 WHERE COALESCE(stage, CASE WHEN ? = 3 THEN 3 ELSE 4 END) = ? AND COALESCE(attempt_key, '') != ''
                 ORDER BY id DESC
@@ -1442,11 +1443,16 @@ class FailureAnalyzer:
                     or advisory_warnings.get("retry_budget_axes")
                     or str(row["fix_scope"] or "").strip()
                 )
+                initial_verdict = str(row["initial_verdict"] or row["verdict"] or "")
+                final_verdict = str(row["final_verdict"] or initial_verdict or "")
                 director_selections[attempt_key] = {
                     "selected_label": str(row["selected_label"] or "").strip(),
                     "selected_strategy": str(row["selected_strategy"] or "").strip(),
-                    "initial_verdict": str(row["verdict"] or ""),
+                    "initial_verdict": initial_verdict,
+                    "final_verdict": final_verdict,
                     "initial_score": self._coerce_int(row["score"]),
+                    "downstream_override_applied": bool(row["downstream_override_applied"])
+                    or bool(initial_verdict and final_verdict and initial_verdict != final_verdict),
                     "candidate_key": str(row["candidate_key"] or "").strip(),
                     "content_hash": str(row["content_hash"] or "").strip(),
                     "artifact_path": str(row["artifact_path"] or "").strip(),
@@ -1848,9 +1854,7 @@ class FailureAnalyzer:
         contract_payload_pairs = (
             (
                 "selection_contract_snapshot_raw",
-                ()
-                if skip_director_selection_contract_alignment
-                else (("director_selections", director_selection),),
+                () if skip_director_selection_contract_alignment else (("director_selections", director_selection),),
             ),
             (
                 "contract_snapshot_raw",

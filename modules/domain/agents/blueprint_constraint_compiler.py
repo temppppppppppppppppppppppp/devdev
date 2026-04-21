@@ -1653,6 +1653,10 @@ class BlueprintConstraintCompiler:
             token in lowered_focus
             for token in ("전담", "직통", "핫라인", "라인", "명함", "개설", "격상", "권한", "접견실", "전용")
         )
+        post_execution_monitoring_mode = has_lawful_window and any(
+            token in lowered_focus
+            for token in ("관망", "버틴", "보유", "유지", "기다리", "대기", "초조", "불안", "평온", "심리")
+        )
         privileged_lane_mode = any(
             token in lowered_combined
             for token in (
@@ -1690,6 +1694,13 @@ class BlueprintConstraintCompiler:
                     "MUST_FOCUS가 전담/직통/명함/권한 격상 계열이면 협상 재탕보다 태도 돌변, 전용 라인 개설, "
                     "authority receipt 포착 같은 결과 surface에서 소화하라."
                 )
+        if post_execution_monitoring_mode:
+            guidance.append(
+                "MUST_FOCUS가 post-execution monitoring이면 같은 VIP룸이라도 재주문 장면을 반복하지 말고 시장 추이, 보유 유지 이유, 상대 초조와 주인공 평온의 비대칭으로 전진하라."
+            )
+            guidance.append(
+                "같은 방을 다시 써도 관망, 버팀, 심리 흔들림, 압박의 수위 변화처럼 상태가 바뀌는 결과를 보여주면 lawful repetition이다."
+            )
 
         if privileged_lane_mode:
             guidance.append(
@@ -1865,6 +1876,24 @@ class BlueprintConstraintCompiler:
             "접견실",
             "전용",
         )
+        post_execution_monitoring_tokens = (
+            "관망",
+            "버틴",
+            "보유",
+            "유지",
+            "기다리",
+            "대기",
+            "초조",
+            "불안",
+            "평온",
+            "심리",
+            "압박",
+            "시장",
+            "추이",
+            "흐름",
+            "집행",
+            "모니터",
+        )
         escalation_tokens = [
             token
             for token in (
@@ -1890,6 +1919,10 @@ class BlueprintConstraintCompiler:
             )
             if token in combined_text
         ]
+        if not escalation_tokens:
+            monitoring_matches = [token for token in post_execution_monitoring_tokens if token in combined_text]
+            if len(monitoring_matches) >= 2:
+                escalation_tokens = monitoring_matches
         if not escalation_tokens:
             return {}
 

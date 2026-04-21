@@ -1,0 +1,231 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "8ab7493812949e7e6fd0c834451154554c6efe0c21dfff88bc471d60b8b108d6"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=3; sample_anchors=비틀거리, 한미증권, 3세",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1444,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 17265,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 982735,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 12640,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 3837,
+          "lane": "constraints"
+        },
+        {
+          "chars": 561,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 217,
+        "constraints": 3837,
+        "feedback_context": 561,
+        "hud_context": 10,
+        "prev_info": 12640
+      },
+      "shared_context_chars": 16704,
+      "strategy_feedback_chars": 3329,
+      "total_chars": 17265
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 3,
+    "strategy": "dialogue_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 98,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "core_tension": "박성호를 완전히 장악하고 새로운 관계 서열을 정립하는 과정",
+  "end_location": "여의도 한미증권 VIP룸",
+  "ending_hook": "한시우가 새로 받은 보안폰으로 걸려온 의문의 전화를 받고 묻는다. '어디라고 했지?'",
+  "ending_state": {
+    "location": "여의도 한미증권 VIP룸",
+    "protagonist_status": "박성호를 완전히 장악하고, 의문의 전화를 받으며 새로운 국면을 맞이함.",
+    "timeline": {
+      "day": 15,
+      "description": "2006년 2월 중순",
+      "month": 2,
+      "year": 2006
+    }
+  },
+  "ep_num": 9,
+  "episode_number": 9,
+  "expected_ending": "박성호의 완전한 복종을 확인하고, 의문의 전화로 다음 사건을 암시하며 마무리.",
+  "integrated_scenario": "VIP룸의 공기는 여전히 뜨거웠지만, 그 열기의 종류는 완전히 달라져 있었다. 유가 폭등의 흥분은 가라앉고, 신적인 예지 능력에 대한 경외와 공포가 그 자리를 채웠다. 박성호는 덜덜 떨리는 손으로 마우스를 쥔 채, 모니터에 찍힌 비현실적인 수익률을 몇 번이고 다시 확인했다. 숫자는 변하지 않았다. 그의 눈이 천천히, 아주 천천히 소파에 앉아 미동도 없는 한시우에게로 향했다. 그 눈빛은 더 이상 재벌 3세를 보는 눈이 아니었다. 이해할 수 없는 존재, 감히 가늠할 수 없는 심연을 마주한 자의 것이었다. 마침내 박성호의 무릎이 꺾였다. 그는 한시우의 앞에서 90도로 허리를 숙였다. 이마가 바닥에 닿을 듯한 완벽한 사죄의 자세였다. \"제가... 제가 어리석었습니다. 대표님의 뜻을 감히 헤아리려 했습니다. 용서하십시오.\" 목소리는 형편없이 갈라져 나왔다. 한시우는 대답 대신 그를 내려다볼 뿐이었다. 그 침묵이 박성호의 마지막 남은 자존심까지 부서뜨렸다. 박성호는 비틀거리며 일어나 서랍 깊숙한 곳에서 포장도 뜯지 않은 작은 상자를 꺼내왔다. 그는 두 손으로 공손히, 마치 제물처럼 그것을 한시우 앞의 테이블에 올렸다. \"저희 VVIP 고객님들 중에서도 극소수에게만 지급되는 보안폰입니다. 어떤 통신사 기록에도 남지 않고, 추적과 도청이 원천적으로 불가능합니다. 부디... 받아주십시오.\" 한시우는 그제야 시선을 옮겨 검은색 상자를 한번, 그리고 다시 박성호의 얼굴을 한번 쳐다보았다. 그리고는 무심한 손길로 상자를 열어 내용물을 확인하고는 옆에 내려놓았다. 그 사소한 행동 하나에 박성호는 자신이 용서받았음을, 아니, 새로운 주인을 섬길 기회를 얻었음을 직감했다. \"이제부터 박 팀장님은, 나한테만 보고합니다.\" 서늘한 목소리가 박성호의 귓가에 박혔다. \"지점장도, 본사도 아닙니다. 오직 나한테만.\" 박성호는 숨을 삼키며 허리를 더욱 숙였다. \"명심하겠습니다, 대표님.\" 한시우는 만족한 듯 고개를 끄덕였다. \"금. 골드. 관련 선물 거래 채널, 구조, 수수료, 최대 레버리지까지. 한미증권이 가진 모든 정보를 정리해서, 내일 아침까지 보고하세요.\" 유가의 충격이 가시기도 전에 나온 다음 지시에 박성호는 더 이상 질문하지 않았다. 그는 이제 의심하는 자가 아니라, 명령을 수행하는 자였다. \"알겠습니다, 대표님! 즉시 준비해서 올리겠습니다!\" 박성호가 다시 한번 90도로 인사하고 돌아서려던 바로 그 순간이었다. 테이블 위에 놓여 있던 새 보안폰이 짧은 진동과 함께 화면을 밝혔다. 박성호의 심장이 쿵 내려앉았다. 방금 건넨, 세상에 그 존재를 아는 이가 한시우와 자신밖에 없을 그 번호로 걸려온 전화였다. 한시우는 조금도 놀란 기색 없이, 태연하게 폰을 들어 통화 버튼을 눌렀다. VIP룸 안에는 박성호의 거친 숨소리만이 가득했다. 한시우는 수화기 너머의 목소리를 잠시 듣고 있었다. 그의 표정에는 아무런 변화도 없었다. 이윽고 한시우의 입이 열렸다. \"어디라고 했지?\"",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "대화를 통해 박성호의 심리 변화와 새로운 서열 정립을 명확히 보여준다. 마지막 장면의 미스터리한 전화로 다음 화에 대한 궁금증을 극대화한다.",
+  "protagonist_state": {
+    "equipment": [
+      "2G 휴대폰",
+      "자산 현황 메모장",
+      "SW인베스트먼트 법인 등기 서류",
+      "SW인베스트먼트 법인 인감",
+      "VIP 전용 보안폰"
+    ],
+    "injuries": "없음",
+    "mood": "완벽한 통제에 대한 차가운 만족감, 다음 단계를 준비하는 냉철함"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "의심과 공포",
+      "justification": "한시우의 예측이 눈앞에서 천문학적인 수익으로 실현되는 것을 목격하며, 그를 인간의 범주를 넘어선 존재로 인식하게 됨.",
+      "target": "박성호",
+      "to_state": "경외와 절대 복종"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "박성호가 한시우 앞에서 완전히 무너지고 복종을 맹세하게 만든다.",
+      "key_events": [
+        "박성호가 미실현 수익이 찍힌 HTS 화면을 보고 넋이 나간 채 중얼거린다.",
+        "한시우의 싸늘한 시선에 정신을 차린 박성호가 '제가 틀렸습니다'라며 90도로 허리를 숙여 사죄한다.",
+        "박성호가 떨리는 손으로 서랍에서 포장도 뜯지 않은 상자를 꺼내 한시우에게 바치듯 내민다.",
+        "박성호가 그것이 외부 도청이 불가능한 VVIP 전용 보안폰이며, 오직 대표님만을 위한 것이라고 설명한다."
+      ],
+      "location": "여의도 한미증권 VIP룸",
+      "summary": "천문학적인 수익에 넋이 나간 박성호가 한시우에게 90도로 허리를 숙여 사죄한다. 그는 경외와 공포 속에서 VIP 전용 보안폰을 상납하며 충성을 맹세한다.",
+      "tension_level": 7,
+      "title": "무너진 자존심",
+      "type": "side_glimpse"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "한시우가 박성호에게 첫 명령을 내려 새로 정립된 서열을 각인시킨다.",
+      "key_events": [
+        "한시우가 보안폰을 건네받아 훑어본 뒤 테이블 위에 내려놓는다.",
+        "한시우가 박성호에게 '이제부터 박 팀장님은 나한테만 보고합니다.'라고 선언한다.",
+        "한시우가 '금. 골드. 관련 선물 거래 채널, 구조, 수수료, 최대 레버리지까지. 내일 아침까지 보고하세요.'라고 지시한다.",
+        "박성호가 질문 대신 '알겠습니다, 대표님! 즉시 준비하겠습니다!'라며 군기가 잡힌 목소리로 대답한다."
+      ],
+      "location": "여의도 한미증권 VIP룸",
+      "summary": "한시우는 보안폰을 무심하게 받아들고는 박성호에게 자신에게만 보고할 것을 명령한다. 이어서 금 선물 거래에 대한 상세 보고서를 내일 아침까지 준비하라고 지시한다.",
+      "tension_level": 6,
+      "title": "첫 번째 명령",
+      "type": "dialogue_duel"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "예상치 못한 연락으로 새로운 사건의 시작을 암시하며 긴장감을 최고조로 끌어올린다.",
+      "key_events": [
+        "박성호가 90도로 인사하고 보고서 준비를 위해 나가려 한다.",
+        "그 순간, 테이블 위에 있던 VIP 보안폰이 짧은 진동음과 함께 울린다.",
+        "박성호가 '어떻게 벌써...'라는 표정으로 굳어버린다.",
+        "한시우가 태연하게 전화를 받고, 잠시 듣고 있다가 나직하게 묻는다. '어디라고 했지?'"
+      ],
+      "location": "여의도 한미증권 VIP룸",
+      "summary": "박성호가 자리를 뜨려는 순간, 한시우가 막 받은 보안폰이 울린다. 존재를 아는 사람이 없는 번호로 걸려온 전화에 한시우가 응답하며 던지는 질문이 공간을 얼어붙게 만든다.",
+      "tension_level": 8,
+      "title": "의문의 발신자",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "여의도 한미증권 VIP룸",
+  "target_beat": "한시우가 박성호를 완전히 자신의 수족으로 만들어 다음 투자를 위한 발판을 마련한다.",
+  "time_flow": "저녁",
+  "title": "새로운 서열"
+}

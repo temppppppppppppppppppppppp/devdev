@@ -1,0 +1,241 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "58054b6f23e7fb0edc09c12fe214ac390d310d57925e2deecd1301d61763f32f"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=2; sample_anchors=통화가 끝나고 사무실, 15억",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 2개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1247,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 20912,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 979088,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 15647,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4802,
+          "lane": "constraints"
+        },
+        {
+          "chars": 236,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 236,
+        "constraints": 4802,
+        "feedback_context": 217,
+        "hud_context": 10,
+        "prev_info": 15647
+      },
+      "shared_context_chars": 20695,
+      "total_chars": 20912
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 2개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 100,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "core_tension": "유가 횡보에 따른 박성호의 압박과, 힌트를 던져 그를 혼란시키며 때를 기다리는 한시우의 심리전.",
+  "end_location": "강남의 소규모 오피스",
+  "ending_hook": "모니터의 불빛만이 그의 흔들리는 눈동자를 비췄다. '안다고 해서, 모든 게 쉬운 건 아니군.'",
+  "ending_state": {
+    "location": "강남의 소규모 오피스",
+    "protagonist_status": "박성호의 압박을 차단하고, 에콰도르 사태 직전의 마지막 밤을 홀로 보내며 마음을 다잡는 상태.",
+    "timeline": {
+      "표현": "2006년 4월 초 밤"
+    }
+  },
+  "ep_num": 11,
+  "episode_number": 11,
+  "expected_ending": "박성호의 압박을 새로운 정보로 제압하고, 다가올 사건의 무게를 홀로 감내하며 결의를 다진다.",
+  "integrated_scenario": "칠흑 같은 밤이 내린 강남의 오피스. 한시우는 직전의 결의를 다지던 모습 그대로, 텅 빈 사무실의 적막을 기꺼이 받아들이고 있었다. 창문에 비쳤던 자신의 얼굴에서 시선을 거둔 그는, 가져온 노트북을 켜고 익숙하게 해외 뉴스 사이트를 열었다. 그의 손가락은 WTI 유가 차트가 아닌, 지정학 리스크를 다루는 외신 칼럼과 남미 섹션으로 향했다. 수많은 정보의 파편 속에서 그의 눈이 좇는 단어는 단 하나, '에콰도르'였다. 아직은 작은 소요 사태로만 다뤄지는 그곳의 소식들을 그는 맹수가 사냥감을 노리듯 집요하게 파고들었다.\n\n그때, 사무실의 고요함을 깨뜨리며 테이블 위의 VIP 보안폰이 짧게 진동했다. 발신자는 박성호였다. 전화를 받자마자, 수화기 너머로 잔뜩 날이 선 그의 목소리가 터져 나왔다. 며칠째 횡보하는 유가에 그의 인내심은 바닥을 드러낸 듯했다. 리스크관리팀의 압박, 언제 동결될지 모르는 계좌, 그리고 눈앞에서 녹아내릴지 모르는 15억 원에 대한 공포가 그의 말을 통해 고스란히 전해졌다. 박성호는 지금이라도 익절하여 수익을 확보해야 한다고, 이것이 자신과 한시우 모두를 위한 길이라고 애원하듯 말했다.\n\n한시우는 그의 절박한 호소를 어떤 감정의 동요도 없이 끝까지 들었다. 수화기 너머로 박성호의 거친 숨소리만 남았을 때, 한시우가 나직이 입을 열었다. \"박 팀장님, 혹시 에콰도르 뉴스는 챙겨보고 있습니까?\" 전혀 예상치 못한 질문에 박성호는 말문이 막혔다. 지금 유가만 해도 머리가 터질 지경인데, 남미의 작은 나라 소식이라니. 한시우는 당황한 박성호를 그대로 몰아붙였다. 지금 중요한 건 눈앞의 유가 등락이 아니라, 더 큰 파도의 진원지를 읽는 것이라고. 그는 파도가 끝나면 다음을 준비해야 한다며, '금(Gold)' 선물 시장에 대한 모든 자료를 내일 아침까지 보고하라고 지시했다. 박성호는 한시우가 그리는 거대한 그림의 윤곽조차 가늠하지 못한 채, 기계적으로 '알겠습니다'라고 답할 수밖에 없었다.\n\n통화가 끝나고 사무실에는 다시 정적이 찾아왔다. 한시우는 의자에 등을 기댄 채 잠시 눈을 감았다. 모든 것을 통제하고, 원하는 방향으로 판을 이끌고 있었지만 그의 마음 한구석은 무겁게 가라앉아 있었다. 모니터 화면에는 에콰도르의 혼란스러운 시위 사진이 떠 있었다. 미래를 안다는 것. 그것은 절대적인 무기였지만, 동시에 벗을 수 없는 굴레이기도 했다. 그는 눈을 감으며 나직이 읊조렸다. \"안다고 해서, 모든 게 쉬운 건 아니군.\" 그의 흔들리는 눈동자를 모니터의 차가운 불빛만이 외롭게 비추고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 한시우의 냉철한 분석과 기다림을 묘사하며 정적인 긴장감을 쌓는다. 중반부 박성호와의 통화에서 갈등을 증폭시키고, 새로운 힌트를 통해 독자의 궁금증을 유발한다. 마지막은 다시 한시우의 내면으로 돌아와 감정적인 여운을 남기며 마무리한다.",
+  "protagonist_state": {
+    "equipment": [
+      "2G 휴대폰",
+      "자산 현황 메모장",
+      "SW인베스트먼트 법인 등기 서류",
+      "SW인베스트먼트 법인 인감",
+      "VIP 전용 보안폰"
+    ],
+    "injuries": "없음",
+    "mood": "겉으로는 냉철하지만, 홀로 모든 것을 감당해야 하는 고독감과 책임감."
+  },
+  "relationship_changes": [
+    {
+      "from_state": "한시우의 예측력에 경악하면서도, 시장 상황에 따라 불안해하고 설득을 시도하는 대리인",
+      "justification": "유가 횡보에 대한 불안감을 호소했으나, 한시우가 전혀 다른 차원의 정보(에콰도르, 금)를 던지자 그의 의도를 파악하는 것조차 불가능하다고 느끼며 심리적으로 완전히 종속된다.",
+      "target": "박성호",
+      "to_state": "한시우의 예측 범위를 이해하는 것을 포기하고, 그의 지시를 의문 없이 수행해야 하는 하수인으로 자신의 위치를 재인식함"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "한시우가 자신만의 공간에서 냉철하게 해외 정보를 분석하며 때를 기다리는 모습을 보여준다.",
+      "key_events": [
+        "한시우가 창밖 야경을 등지고 노트북 화면에 집중한다.",
+        "수많은 뉴스 속에서 '에콰도르', '정치 불안' 같은 키워드를 중심으로 정보를 수집한다.",
+        "유가 변동 그래프 대신 지정학적 리스크에만 집중하며 차분하게 상황을 분석한다."
+      ],
+      "location": "강남의 소규모 오피스",
+      "summary": "텅 빈 사무실, 한시우는 홀로 노트북으로 해외 뉴스피드를 훑는다. 그의 시선은 유가가 아닌, 남미의 정치 섹션, '에콰도르'라는 키워드에 고정되어 있다.",
+      "tension_level": 4,
+      "title": "고독한 감시자",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호 (목소리 출연)"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "횡보하는 유가에 패닉에 빠진 박성호의 압박을 받고, 이를 통해 한시우의 통제력과 평정심을 부각한다.",
+      "key_events": [
+        "VIP 전용 보안폰이 날카롭게 울리며 정적을 깬다.",
+        "박성호가 리스크관리팀의 압박이 거세다며, 이대로 가다간 계좌가 동결될 수도 있다고 절박하게 호소한다.",
+        "한시우는 박성호의 말을 끝까지 들으며 어떤 감정도 내비치지 않고, 침묵으로 상대를 압박한다."
+      ],
+      "location": "강남의 소규모 오피스",
+      "summary": "VIP 보안폰이 울리고, 다급한 박성호의 목소리가 들려온다. 그는 유가가 움직이지 않는다며, 지금이라도 수익을 실현해야 한다고 애원하듯 한시우를 설득하려 한다.",
+      "tension_level": 6,
+      "title": "불안의 메아리",
+      "type": "dialogue_duel"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호 (목소리 출연)"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "박성호의 불안을 잠재우는 대신, '에콰도르'와 '금'이라는 새로운 힌트를 던져 그의 사고를 마비시키고 주도권을 완벽히 장악한다.",
+      "key_events": [
+        "한시우가 박성호의 말을 끊고 '지금 유가보다 중요한 건 에콰도르의 정치 상황'이라고 말한다.",
+        "박성호가 이해하지 못하고 되묻자, 한시우는 '파도가 끝난 뒤에 어디로 갈지 준비해야 한다'며 '금 선물' 관련 자료를 준비하라고 지시한다.",
+        "박성호는 한시우의 거대한 계획을 짐작조차 하지 못한 채, 알겠다는 대답밖에 하지 못하고 전화를 끊는다."
+      ],
+      "location": "강남의 소규모 오피스",
+      "summary": "한시우는 박성호의 호소에 '에콰도르 뉴스는 챙겨보고 있습니까?'라는 생뚱맞은 질문을 던진다. 이어서 유가 다음은 '금'이라며, 관련 보고서를 준비하라고 지시해 박성호를 혼란에 빠뜨린다.",
+      "tension_level": 5,
+      "title": "의도된 혼란",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "모든 소음이 사라진 뒤, 미래를 아는 자로서 느끼는 고독과 감정적 부담을 드러내며 감정적인 여운을 남긴다.",
+      "key_events": [
+        "전화가 끊긴 보안폰을 내려놓은 한시우가 의자에 깊숙이 몸을 묻는다.",
+        "모니터 속 에콰도르 시위대 사진을 잠시 응시하던 그의 표정이 미세하게 굳어진다.",
+        "한시우가 눈을 감으며 '안다고 해서, 모든 게 쉬운 건 아니군.'이라고 혼잣말을 읊조린다."
+      ],
+      "location": "강남의 소규모 오피스",
+      "summary": "통화가 끝난 사무실에 다시 정적이 흐른다. 한시우는 에콰도르 관련 기사를 띄운 모니터를 보며 깊은 한숨을 내쉰다. 그의 얼굴에 냉철한 투자자의 모습 뒤에 숨겨진 인간적인 고뇌가 스쳐 지나간다.",
+      "tension_level": 4,
+      "title": "아는 자의 무게",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "강남의 소규모 오피스",
+  "target_beat": "한시우가 박성호의 압박을 새로운 정보(에콰도르, 금)로 차단하고, 다가올 폭풍을 홀로 기다리는 고독한 결의를 다지는 장면.",
+  "time_flow": "저녁 → 밤",
+  "title": "폭풍 전의 속삭임"
+}

@@ -20,8 +20,8 @@ Stage 3 사전검사기 + Director 최종 판정
    - [V60.96] 죽은 NPC 경고 포함 시 REJECT 권고
 """
 
-import json
 import calendar
+import json
 import logging
 import re
 from pathlib import Path
@@ -1610,11 +1610,44 @@ class UnifiedBlueprintValidator:
             }
         ]
 
+    @staticmethod
+    def _is_authorized_opening_location_shift(
+        *,
+        constraint_block: dict | None,
+        curr_start_location: str,
+        normalized_opening_transition: dict | None,
+    ) -> bool:
+        if not isinstance(constraint_block, dict):
+            return False
+
+        episode_state_packet = constraint_block.get("episode_state_packet", {})
+        if not isinstance(episode_state_packet, dict):
+            return False
+        opening_truth = episode_state_packet.get("opening_truth", {})
+        if not isinstance(opening_truth, dict):
+            return False
+
+        expectation = str(opening_truth.get("opening_transition_expectation", "") or "").strip().casefold()
+        if "do not declare direct_continuation" not in expectation:
+            return False
+
+        normalized_opening_transition = (
+            normalized_opening_transition if isinstance(normalized_opening_transition, dict) else {}
+        )
+        normalized_transition_type = str(normalized_opening_transition.get("type", "") or "").strip().casefold()
+        if normalized_transition_type not in {"explicit_transition", "jump_opening"}:
+            return False
+
+        authoritative_location = str(opening_truth.get("location", "") or "").strip()
+        return bool(authoritative_location) and authoritative_location == curr_start_location
+
     def _collect_continuity_prevalidation_issues(
         self,
         *,
         blueprint: dict,
         prev_blueprint: dict | None,
+        constraint_block: dict | None = None,
+        normalized_opening_transition: dict | None = None,
     ) -> list[dict]:
         if not isinstance(prev_blueprint, dict):
             return []
@@ -1626,6 +1659,12 @@ class UnifiedBlueprintValidator:
         if prev_end_location == curr_start_location:
             return []
         if self._is_location_transition_valid(prev_end_location, curr_start_location):
+            return []
+        if self._is_authorized_opening_location_shift(
+            constraint_block=constraint_block,
+            curr_start_location=str(curr_start_location or "").strip(),
+            normalized_opening_transition=normalized_opening_transition,
+        ):
             return []
 
         return [
@@ -1746,6 +1785,8 @@ class UnifiedBlueprintValidator:
             self._collect_continuity_prevalidation_issues(
                 blueprint=blueprint,
                 prev_blueprint=prev_blueprint,
+                constraint_block=constraint_block,
+                normalized_opening_transition=normalized_opening_transition,
             )
         )
         # [S3-FL] Fact reconciliation checks against fact-lock and capital-continuity packets
@@ -2661,6 +2702,25 @@ class UnifiedBlueprintValidator:
                 )
             ):
                 signal_count += 1
+            if any(
+                token in scene_text
+                for token in (
+                    "관망",
+                    "버틴",
+                    "보유",
+                    "유지",
+                    "기다리",
+                    "대기",
+                    "초조",
+                    "불안",
+                    "평온",
+                    "심리",
+                    "시장",
+                    "추이",
+                    "흐름",
+                )
+            ):
+                signal_count += 1
             scene_targets = _extract_target_families(scene_text)
             family_targets = _extract_target_families(family_text)
             if scene_targets and set(scene_targets) - set(family_targets):
@@ -2778,13 +2838,7 @@ class UnifiedBlueprintValidator:
                     month_value = int(month)
                     if day not in (None, ""):
                         return year_value, month_value, int(day)
-                    raw_text = (
-                        raw.get("표현")
-                        or raw.get("expression")
-                        or raw.get("text")
-                        or raw.get("raw")
-                        or ""
-                    )
+                    raw_text = raw.get("표현") or raw.get("expression") or raw.get("text") or raw.get("raw") or ""
                     inferred_day = UnifiedBlueprintValidator._infer_relative_month_day(
                         str(raw_text),
                         pick=pick,
@@ -2861,6 +2915,7 @@ class UnifiedBlueprintValidator:
         if not bp_expr:
             bp_expr = bp_timeline.get("expression") if isinstance(bp_timeline, dict) else ""
         bp_expr = str(bp_expr or bp_timeline or "").strip()
+
         def _render_timeline_expr(raw: object) -> str:
             if isinstance(raw, dict):
                 return str(raw.get("표현") or raw.get("expression") or raw).strip()
@@ -2887,7 +2942,9 @@ class UnifiedBlueprintValidator:
                 f"ending_state.timeline을 Arc 권위 시점 '{authoritative_expr}'에 정렬",
                 f"time_flow를 Arc 권위 시점 '{authoritative_expr}'과 모순되지 않게 정규화",
             ]
-            if integrated_scenario and any(token in integrated_scenario for token in ("새해 첫날", "1월 1일", "2006년 1월 1일")):
+            if integrated_scenario and any(
+                token in integrated_scenario for token in ("새해 첫날", "1월 1일", "2006년 1월 1일")
+            ):
                 patch_target_records.append(
                     {
                         "summary": "integrated_scenario timeline cue",

@@ -1,0 +1,409 @@
+{
+  "_director_compare_meta": {
+    "comparison_notes": "모든 후보가 블록 DNA를 충실히 따르며 모순 없이 Arc를 설계했습니다. 후보 1은 낡은 2G폰을 파괴하고 VIP 보안폰을 획득하는 장면을 통해 주인공의 '서열' 변화를 가장 명확하고 상징적으로 보여주어 최고점으로 평가했습니다. 후보 2, 3 역시 훌륭하지만, 후보 1의 극적 연출과 정교한 상태 변화(소모품 처리)가 가장 뛰어납니다. Python 사실 검증 Advisory의 수치 괴리 경고는, 검증기가 '총자산'과 '현금 자본'을 혼동하여 발생한 오탐으로, 세 후보 모두 투자 계산은 정확합니다.",
+    "director_decision": "PASS",
+    "feedback": "The tactical document is logically sound, internally consistent, and aligns perfectly with the preceding arc's state and the overall blueprint.",
+    "fix_scope": "inplace",
+    "quality_gate_reasons": [],
+    "quality_gate_triggered": false,
+    "selection_reason": "후보 1은 블록 DNA의 핵심을 완벽히 구현했으며, 낡은 2G폰을 파괴하는 상징적 연출을 통해 권력 획득의 서사를 가장 극적으로 표현함."
+  },
+  "_ensemble_meta": {
+    "all_scores": [
+      [
+        "creative",
+        94
+      ],
+      [
+        "conservative",
+        94
+      ],
+      [
+        "balanced",
+        94
+      ]
+    ],
+    "best_score": 94,
+    "best_strategy": "creative",
+    "candidate_index": 0,
+    "diversity": {
+      "high_similarity_pairs": [],
+      "max_similarity": 0.27,
+      "pairwise": [
+        {
+          "pair": "A-B",
+          "similarity": 0.26
+        },
+        {
+          "pair": "A-C",
+          "similarity": 0.26
+        },
+        {
+          "pair": "B-C",
+          "similarity": 0.27
+        }
+      ],
+      "warning": ""
+    },
+    "score": 94,
+    "strategy": "creative",
+    "total_candidates": 3
+  },
+  "_strategy": "creative",
+  "arc_drive": {
+    "narrative_drive": {
+      "active_villainy": {
+        "antagonist_name": "박성호 PB",
+        "impact_on_protagonist": "주인공은 박성호 PB의 저항을 꺾고 그를 자신의 통제 하에 두는 데 성공하며, 금융 시스템 내에서 자신의 의지를 관철시킬 수 있음을 증명한다. 이는 가족 내 무력감 해소와 권위 확보의 첫 번째 실질적 승리이다.",
+        "initial_stance": "재벌가 도련님의 취미 투자로 주인공을 얕봄. 고위험 투자를 만류하며 통제하려 함.",
+        "reaction_plan": {
+          "phase_1_resistance": "주인공의 3배 레버리지 WTI 15억 매수 요청에 '본부 확인 필요' 등 절차적 제약을 내세워 저지 시도. 위험성을 강조하며 고객의 의사결정을 폄하.",
+          "phase_2_capitulation_and_facilitation": "주인공의 '수수료 두 배' 제안과 '담당 교체' 압박, 그리고 이란 핵 위기 발발로 인한 수익 발생이 가시화되자, 자신의 탐욕(수수료)과 직업적 생존(고객 이탈 방지)을 위해 즉각 태도를 전환. 상위 본부장 결재를 건너뛰는 '긴급 예외 메모'를 통해 VIP 전담 라인을 개설하고, 주인공의 지시를 우선적으로 처리하는 '실무적 복종' 상태로 전환. 이는 단순한 수동적 대기가 아닌, 시스템을 우회하여 주인공의 요구를 능동적으로 수용하는 '게이트키퍼의 전향'을 의미."
+        }
+      },
+      "arc_specific_reward": {
+        "description": "한미증권 내부 시스템에 '한시우 전용 VIP 전담 라인'을 개설하고, 담당 PB 박성호의 태도를 '고객을 깔보는 자'에서 '고객의 전화를 먼저 받는 자'로 완전히 전환시킨다. 이는 금융 시스템 내에서 주인공의 영향력을 공식적으로 인정받는 첫 번째 가시적 성과이며, 향후 대규모 자산 운용의 기반을 마련한다.",
+        "quantifiable_metric": "자산 20억 → 23억 (미실현 수익 3억) 및 금융 시스템 내 '예외 승인선' 확보",
+        "type": "권위 및 시스템 통제권 확보"
+      },
+      "core_scene_ratio": "100% (현재 블록 자체가 핵심 동력 전환 장면)",
+      "protagonist_lack_to_desire": {
+        "summary": "신체적 무력감과 가족 내 무시에서 비롯된 '인정받고 싶은 욕구'를, 경제적 안정과 권위 확보를 위한 '압도적 자산 증식'이라는 폭발적인 동력으로 전환한다.",
+        "transformation_mechanism": "가족의 무관심 속에서 얻은 20억을 밑천 삼아, 과거의 지식(회귀)을 활용한 고위험-고수익 투자(WTI 선물 3배 레버리지)를 통해 '막내의 재롱'이라는 조롱을 '예외 승인선'이라는 특별 대우로 뒤집으며 존재 가치를 증명한다. 이는 단순한 돈벌이를 넘어, 자신을 얕보는 이들(PB, 가족)에게 통제력과 영향력을 행사하는 첫걸음이 된다."
+      }
+    },
+    "short_term_objective": "서사적 긴장감 고조",
+    "status": "LOCKED"
+  },
+  "arc_no": 2,
+  "beat_sequence": [
+    "제5화: SW인베스트먼트 법인 설립과 해외 선물 계좌 개설이 완료되고, 한시우는 여의도 한미증권에서 담당 PB 박성호를 만난다.",
+    "제6화: 한시우는 박성호의 만류를 묵살하고 15억 원을 WTI 원유 선물에 3배 레버리지로 투자하라고 강압적으로 지시한다.",
+    "제7화: 투자가 집행되고, 시장의 불확실성 속에서 박성호는 초조해하지만 한시우는 미래에 대한 확신으로 평온을 유지하며 다음 수를 구상한다.",
+    "제8화: 이란의 핵 농축 재개 선언 뉴스가 터지고 국제 유가가 급등하며, 한시우의 포지션은 막대한 미실현 수익을 기록하기 시작한다.",
+    "제9화: 막대한 수익률에 경악한 박성호의 태도가 180도 바뀌고, 한시우는 그를 완벽히 통제하며 VIP 전담 라인과 우선 응답권을 확보한다."
+  ],
+  "constraint_summary": "█                   [V60.28] 절대 금지 - 위반 시 즉시 REJECT                    █\n🚨🚨🚨 다음 아이템은 절대 획득하지 마세요! 🚨🚨🚨\n❌ '2G 휴대폰' - Arc 1에서 이미 획득함 → 다시 획득 금지!\n❌ '자산 현황 메모장' - Arc 1에서 이미 획득함 → 다시 획득 금지!\n❌ 'SW인베스트먼트 가계약서' - Arc 1에서 이미 획득함 → 다시 획득 금지!\n❌ '해외 계좌 개설 신청서' - Arc 1에서 이미 획득함 → 다시 획득 금지!\n│ 🚫 MUST NOT DO (절대 금지 - 위반 시 즉시 REJECT)                               │\n│ [아이템 획득 금지 - 이미 보유 중]                                                │\n│   (수여물 금지 목록 없음)                                                     │\n│ □ protagonist_items(legacy alias: items_acquired)에 금지 목록 아이템 없는가?    │",
+  "cross_stage_authority_packet": {
+    "contract_version": "cross_stage_authority_packet.v1",
+    "numeric_carryover": {
+      "capital": "5억원",
+      "capital_source": "state_constraints.arc_end_state.capital",
+      "investment_calc_final_cash": 500000000,
+      "investment_calc_final_cash_source": "state_constraints.investment_calc.final_cash",
+      "investment_calc_final_total_assets": 2300000000,
+      "investment_calc_final_total_assets_source": "state_constraints.investment_calc.final_total_assets",
+      "portfolio_position": "WTI 6월물 15억 롱 포지션 보유",
+      "portfolio_position_source": "state_constraints.arc_end_state.portfolio_position",
+      "total_assets": "23억원 (미실현 수익 3억 포함)",
+      "total_assets_source": "state_constraints.arc_end_state.total_assets"
+    },
+    "opening_carryover": {
+      "location": "서울 여의도 한미증권 VIP룸",
+      "location_source": "state_constraints.arc_end_state.location",
+      "world_joint": "이란 핵 위기 가시화로 글로벌 원자재 시장의 변동성이 폭발하기 시작했으며, 한미증권 내에서 한시우의 계좌는 일반 고객이 아닌 '예외 승인선'을 타는 특별 관리 대상으로 격상되어 전담 PB의 절대적인 충성을 확보한 상태다.",
+      "world_joint_source": "joint_docs.world_joint"
+    },
+    "protagonist_carryover": {
+      "equipment": [
+        "한미증권 VIP 전용 보안 스마트폰",
+        "WTI 6월물 15억 매수 체결 확인서",
+        "SW인베스트먼트 법인 인감",
+        "자산 현황 메모장"
+      ],
+      "equipment_source": "state_constraints.arc_end_state.equipment",
+      "injuries": "없음",
+      "injuries_source": "state_constraints.arc_end_state.injuries"
+    },
+    "provenance": {
+      "arc_no": 2,
+      "emitted_by": "Stage2Finalizer",
+      "ep_end": 9,
+      "ep_start": 5,
+      "legacy_summary_surface": "advisory_flags.carryover_authority",
+      "legacy_text_surface": "[Carryover Authority Packet]",
+      "stage": 2
+    },
+    "source_precedence": {
+      "numeric_carryover": [
+        "state_constraints.arc_end_state.capital",
+        "state_constraints.arc_end_state.total_assets",
+        "state_constraints.arc_end_state.portfolio_position",
+        "state_constraints.investment_calc.final_cash",
+        "state_constraints.investment_calc.final_total_assets"
+      ],
+      "opening_carryover": [
+        "state_constraints.arc_end_state.location",
+        "joint_docs.final_location",
+        "joint_docs.world_joint"
+      ],
+      "protagonist_carryover": [
+        "state_constraints.arc_end_state.equipment",
+        "joint_docs.physical_inventory",
+        "state_constraints.arc_end_state.injuries",
+        "state_constraints.arc_end_state.internal_energy"
+      ]
+    }
+  },
+  "ep_count": 5,
+  "ep_end": 9,
+  "ep_start": 5,
+  "episode_details": [
+    {
+      "details": [
+        "여의도 한미증권 VIP룸 - 한시우, 법인 설립 및 계좌 개설 완료 보고 받음",
+        "한미증권 VIP룸 - 담당 PB 박성호와 첫 대면, 팽팽한 긴장감 형성"
+      ],
+      "ep_num": 5
+    },
+    {
+      "details": [
+        "한미증권 VIP룸 - 한시우, 박성호에게 WTI 원유 15억 3배 레버리지 매수 지시",
+        "한미증권 VIP룸 - 박성호, 극렬히 반대하지만 결국 압박과 회유에 굴복하여 주문 체결"
+      ],
+      "ep_num": 6
+    },
+    {
+      "details": [
+        "한미증권 VIP룸 - 투자 집행 후, 박성호는 초조해하고 한시우는 평온을 유지",
+        "한미증권 VIP룸 - 한시우, 다음 투자처(금, 에콰도르)에 대한 복선 암시"
+      ],
+      "ep_num": 7
+    },
+    {
+      "details": [
+        "뉴스 속보 - 이란 핵 농축 재개 선언, 국제 유가 급등 시작",
+        "한미증권 VIP룸 - 한시우의 포지션에 막대한 미실현 수익 발생, 박성호의 경악"
+      ],
+      "ep_num": 8
+    },
+    {
+      "details": [
+        "한미증권 VIP룸 - 박성호, 한시우에게 90도로 사과하며 VIP 전용 보안폰 상납",
+        "한미증권 VIP룸 - 한시우, 박성호를 완전히 장악하고 새로운 관계 서열 정립"
+      ],
+      "ep_num": 9
+    }
+  ],
+  "global_arc_no": 2,
+  "hybrid_composition": {
+    "mixing_logic": "주인공이 회귀 지식을 활용해 첫 번째 투자 관문을 통과하는 과정을 중심으로, 게이트키퍼 역할을 하는 NPC와의 갈등과 굴복을 통해 주인공의 능력을 증명하고, 향후 조력자 관계의 기반을 마련한다.",
+    "primary": "Problem-Solving",
+    "secondary": [
+      "Character Introduction",
+      "Dramatic Confrontation"
+    ]
+  },
+  "joint_docs": {
+    "final_location": "서울 여의도 한미증권 VIP룸",
+    "physical_inventory": [
+      "한미증권 VIP 전용 보안 스마트폰",
+      "WTI 6월물 15억 매수 체결 확인서",
+      "SW인베스트먼트 법인 인감",
+      "자산 현황 메모장"
+    ],
+    "world_joint": "이란 핵 위기 가시화로 글로벌 원자재 시장의 변동성이 폭발하기 시작했으며, 한미증권 내에서 한시우의 계좌는 일반 고객이 아닌 '예외 승인선'을 타는 특별 관리 대상으로 격상되어 전담 PB의 절대적인 충성을 확보한 상태다."
+  },
+  "pacing_decision": {
+    "density_focus": "준비 과정은 압축하고, PB 박성호와의 심리전 및 주인공의 예측이 현실화되는 순간의 긴장과 카타르시스에 서사를 집중한다. 불필요한 시장 분석 설명은 줄이고, 인물 간의 대화와 행동을 통해 상황 변화를 촘촘하게 묘사한다.",
+    "ep_count_reasoning": "총 5화 구성. 법인 설립 완료 및 계좌 개설(1화), PB와의 대립 및 투자 실행(1화), 긴장감 속 대기(1화), 예측 실현 및 수익 발생(1화), 관계 역전 및 보상 획득(1화)으로 각 단계별 사건과 감정 변화를 충분히 보여주기에 표준 페이스가 적합하다.",
+    "pace_mode": "standard"
+  },
+  "rationale_digest": "관계(박성호 (한미증권 PB)): WTI 원유 선물 투자 예측이 정확히 실현되어 막대한 수익 발생\n성장근거: 첫 투자 성공을 통해 단순한 '미래 지식'을 '현실 자산'으로 변환하는 능력을 증명했다. 이로 인해 금융권의 첫 번째 교두보(박성호)를 확보하고, 독립적인 자금 운용 시스템을 가동하기 시작했다. 이는 단순 자산...\n복선: 한시우가 유가 급등을 지켜보며 혼잣말로 '금도 간다'라고 중얼거린다.\n복선: 한시우가 해외 뉴스 채널을 보던 중 '에콰도르'라는 단어를 스치듯 언급한다.\n연속성: 주인공이 획득한 '한미증권 VIP 전용 보안 스마트폰'은 2G 휴대폰을 대체하는 새로운 통신 수단이다.; SW인베스트먼트 법인 설립 및 계좌 개설이 완료됨에 따라, 가계약서와 신청서는 효력을 다하고 소모 처리...; 가족들은 여전히 한시우의 독립을 '무의미한 재롱'으로 치부하고 있어, 컴플라이언스 팀의 감시망은 작동하...",
+  "seed_injection": null,
+  "seeds": null,
+  "semantic_carryover": {
+    "continuity_checkpoints": [
+      "주인공이 획득한 '한미증권 VIP 전용 보안 스마트폰'은 2G 휴대폰을 대체하는 새로운 통신 수단이다.",
+      "SW인베스트먼트 법인 설립 및 계좌 개설이 완료됨에 따라, 가계약서와 신청서는 효력을 다하고 소모 처리되었다.",
+      "가족들은 여전히 한시우의 독립을 '무의미한 재롱'으로 치부하고 있어, 컴플라이언스 팀의 감시망은 작동하지 않는다."
+    ],
+    "foreshadow_anchors": [
+      "한시우가 유가 급등을 지켜보며 혼잣말로 '금도 간다'라고 중얼거린다.",
+      "한시우가 해외 뉴스 채널을 보던 중 '에콰도르'라는 단어를 스치듯 언급한다."
+    ],
+    "growth_justification": "첫 투자 성공을 통해 단순한 '미래 지식'을 '현실 자산'으로 변환하는 능력을 증명했다. 이로 인해 금융권의 첫 번째 교두보(박성호)를 확보하고, 독립적인 자금 운용 시스템을 가동하기 시작했다. 이는 단순 자산 증가를 넘어, 향후 더 큰 투자를...",
+    "relationship_rationale": [
+      {
+        "justification": "자신의 전문성과 상식을 뛰어넘는 한시우의 투자 실력과 배짱을 직접 목격하고, 생존을 위해 자발적으로 충성을 바치기로 결심함.",
+        "npc": "박성호 (한미증권 PB)",
+        "trigger": "WTI 원유 선물 투자 예측이 정확히 실현되어 막대한 수익 발생"
+      }
+    ]
+  },
+  "state_changes": {
+    "major_items": [
+      {
+        "action": "획득",
+        "episode": 5,
+        "name": "SW인베스트먼트 법인 등기 서류"
+      },
+      {
+        "action": "소모",
+        "episode": 5,
+        "name": "SW인베스트먼트 가계약서"
+      },
+      {
+        "action": "소모",
+        "episode": 5,
+        "name": "해외 계좌 개설 신청서"
+      },
+      {
+        "action": "획득",
+        "episode": 6,
+        "name": "WTI 6월물 15억 매수 체결 확인서"
+      },
+      {
+        "action": "획득",
+        "episode": 9,
+        "name": "한미증권 VIP 전용 보안 스마트폰"
+      },
+      {
+        "action": "소모",
+        "episode": 9,
+        "name": "2G 휴대폰"
+      }
+    ],
+    "npc_deaths": [],
+    "npc_introductions": [
+      {
+        "episode": 5,
+        "name": "박성호"
+      }
+    ],
+    "npc_martial_state_changes": [],
+    "relationship_changes": [
+      {
+        "episode": 9,
+        "from": "의심과 무시",
+        "npc": "박성호",
+        "to": "경외와 복종"
+      }
+    ],
+    "resolved_plots": [],
+    "skill_acquisitions": [],
+    "timeline": {
+      "end": {
+        "day": 15,
+        "description": "2006년 2월 중순",
+        "month": 2,
+        "year": 2006
+      },
+      "start": {
+        "day": 25,
+        "description": "2006년 1월 말",
+        "month": 1,
+        "year": 2006
+      }
+    }
+  },
+  "state_constraints": {
+    "arc_end_state": {
+      "capital": "5억원",
+      "equipment": [
+        "한미증권 VIP 전용 보안 스마트폰",
+        "WTI 6월물 15억 매수 체결 확인서",
+        "SW인베스트먼트 법인 인감",
+        "자산 현황 메모장"
+      ],
+      "injuries": "없음",
+      "location": "서울 여의도 한미증권 VIP룸",
+      "portfolio_position": "WTI 6월물 15억 롱 포지션 보유",
+      "total_assets": "23억원 (미실현 수익 3억 포함)"
+    },
+    "arc_start_state": {
+      "capital": "20억원",
+      "equipment": [
+        "2G 휴대폰",
+        "자산 현황 메모장",
+        "SW인베스트먼트 가계약서",
+        "해외 계좌 개설 신청서"
+      ],
+      "injuries": "없음",
+      "location": "서울 성북동 본가 침실",
+      "portfolio_position": "전액 현금 대기",
+      "total_assets": "20억원"
+    },
+    "continuity_checkpoints": [
+      "주인공이 획득한 '한미증권 VIP 전용 보안 스마트폰'은 2G 휴대폰을 대체하는 새로운 통신 수단이다.",
+      "SW인베스트먼트 법인 설립 및 계좌 개설이 완료됨에 따라, 가계약서와 신청서는 효력을 다하고 소모 처리되었다.",
+      "가족들은 여전히 한시우의 독립을 '무의미한 재롱'으로 치부하고 있어, 컴플라이언스 팀의 감시망은 작동하지 않는다."
+    ],
+    "distributed_items": [],
+    "foreshadowings": [
+      {
+        "description": "한시우가 유가 급등을 지켜보며 혼잣말로 '금도 간다'라고 중얼거린다.",
+        "expected_payoff": "다음 투자 대상으로 금 시장의 변동성을 활용할 것을 암시. (Arc 3~4)",
+        "id": "FS_GOLD_01",
+        "type": "사건"
+      },
+      {
+        "description": "한시우가 해외 뉴스 채널을 보던 중 '에콰도르'라는 단어를 스치듯 언급한다.",
+        "expected_payoff": "남미 지역의 정치/경제적 불안정성과 관련된 투자 기회를 포착하고 있음을 암시. (중장기적 복선)",
+        "id": "FS_ECUADOR_01",
+        "type": "사건"
+      }
+    ],
+    "investment_calc": {
+      "final_cash": 500000000,
+      "final_total_assets": 2300000000,
+      "transactions": [
+        {
+          "action": "매수",
+          "asset": "WTI 원유 6월물",
+          "entry_price": 60,
+          "ep_no": 6,
+          "exit_price": 0,
+          "leverage": 3,
+          "principal": 1500000000,
+          "stated_profit": 300000000
+        }
+      ]
+    },
+    "items_acquired": [
+      "SW인베스트먼트 법인 등기 서류",
+      "한미증권 VIP 전용 보안 스마트폰",
+      "WTI 6월물 15억 매수 체결 확인서",
+      "SW인베스트먼트 법인 인감"
+    ],
+    "items_consumed": [
+      "SW인베스트먼트 가계약서",
+      "해외 계좌 개설 신청서",
+      "2G 휴대폰"
+    ],
+    "power_changes": {
+      "end_power": 25,
+      "growth_justification": "첫 투자 성공을 통해 단순한 '미래 지식'을 '현실 자산'으로 변환하는 능력을 증명했다. 이로 인해 금융권의 첫 번째 교두보(박성호)를 확보하고, 독립적인 자금 운용 시스템을 가동하기 시작했다. 이는 단순 자산 증가를 넘어, 향후 더 큰 투자를 집행할 수 있는 '신용'과 '권력'의 기반이 된다.",
+      "start_power": 10
+    },
+    "protagonist_items": [
+      "SW인베스트먼트 법인 등기 서류",
+      "한미증권 VIP 전용 보안 스마트폰",
+      "WTI 6월물 15억 매수 체결 확인서",
+      "SW인베스트먼트 법인 인감"
+    ],
+    "relationship_changes": [
+      {
+        "from": "무시와 얕봄 ('재벌가 도련님의 취미 투자')",
+        "justification": "자신의 전문성과 상식을 뛰어넘는 한시우의 투자 실력과 배짱을 직접 목격하고, 생존을 위해 자발적으로 충성을 바치기로 결심함.",
+        "target": "박성호 (한미증권 PB)",
+        "to": "경외와 복종 ('미래를 보는 괴물')",
+        "trigger": "WTI 원유 선물 투자 예측이 정확히 실현되어 막대한 수익 발생"
+      }
+    ]
+  },
+  "status_shadow": {
+    "expected_injuries": "없음",
+    "internal_energy_loss": "가용 유동성 20억 중 15억 증거금 묶임 (잔여 비상금 5억). 미실현 평가익 +3억 발생.",
+    "item_consumption": [
+      "초기 자본금 15억원 (선물 증거금으로 전환)",
+      "SW인베스트먼트 가계약서",
+      "해외 계좌 개설 신청서",
+      "2G 휴대폰"
+    ],
+    "key_stat_change": "가용 유동성 20억 중 15억 증거금 묶임 (잔여 비상금 5억). 미실현 평가익 +3억 발생."
+  },
+  "tactical_doc": "[전술 기록 시작]\n\n**제 5화: 여의도의 문법**\n\n[시작 상태] 위치: 서울 성북동 본가 침실 / 심리: 차분한 기대감 / 부상: 없음 / 소지품: ['2G 휴대폰', '자산 현황 메모장', 'SW인베스트먼트 가계약서', '해외 계좌 개설 신청서']\n\n2006년 1월 마지막 주, 한시우는 박성호 PB로부터 모든 준비가 끝났다는 전화를 받았다. SW인베스트먼트의 법인 등기가 완료되었고, 법인 명의의 해외 선물 계좌 또한 개설되었다. 20억 원의 자금도 모두 법인 계좌로 이체되어 있었다. 가족들의 무관심은 여전히 최고의 방패였다. 한시우는 책상 서랍에 있던 가계약서와 신청서를 찢어버리고, 여의도로 향했다. 한미증권 빌딩 최상층, VVIP 고객만을 위한 프라이빗 룸에서 박성호가 그를 맞았다. 겉으로는 이전과 같은 공손한 미소였지만, 그의 눈빛에는 막내 도련님의 '재롱'이 어디까지 갈지 지켜보겠다는 오만함이 숨겨져 있었다. \"대표님, 모든 준비가 끝났습니다. 이제 어떤 포트폴리오를 구상하고 계신지...\". 박성호가 서류를 내밀며 말을 꺼냈다. 한시우는 그를 응시하며 짧게 말했다. \"포트폴리오가 아니라, 타겟입니다. 단 하나의 타겟.\"\n\n[종료 상태] 위치: 서울 여의도 한미증권 VIP룸 / 심리: 통제와 주도권 장악 / 부상: 없음 / 소지품: ['2G 휴대폰', '자산 현황 메모장', 'SW인베스트먼트 법인 등기 서류', 'SW인베스트먼트 법인 인감']\n\n**제 6화: 3배의 무게**\n\n[시작 상태] 위치: 서울 여의도 한미증권 VIP룸 / 심리: 통제와 주도권 장악 / 부상: 없음 / 소지품: ['2G 휴대폰', '자산 현황 메모장', 'SW인베스트먼트 법인 등기 서류', 'SW인베스트먼트 법인 인감']\n\n\"지금 바로 CME WTI 6월물에 15억, 3배 레버리지로 롱 포지션 진입하세요.\" 한시우의 지시에 박성호의 얼굴이 하얗게 질렸다. \"네? 대표님, 농담이시죠? 원유는 변동성이 너무... 게다가 3배 레버리지는 자살행위입니다!\" 박성호는 거의 비명을 지르다시피 했다. 하지만 한시우는 눈 하나 깜짝하지 않았다. \"내 돈입니다. 틀리면 내가 책임지고, 맞으면 박 뱅커님 수수료는 두 배로 챙겨드리죠. 대신 조건이 있습니다. 지금부터 내 전화는 무조건 먼저 받으세요. 그럴 자신 없으면, 지금 당장 담당자 바꾸겠습니다.\" 박성호는 선택의 기로에 놓였다. 재벌가 막내의 치기 어린 도박에 동참했다가 커리어가 끝장날 것인가, 아니면 눈앞의 VIP를 놓칠 것인가. 한시우의 서늘한 눈빛과 '수수료 두 배'라는 달콤한 유혹 사이에서 그는 결국 후자를 택했다. 떨리는 손으로 그는 단말기에 주문을 입력했다. 'WTI CRUDE OIL JUN 06... 1.5BN KRW... LEVERAGE 3X... BUY'. 체결음이 울리는 순간, 돌이킬 수 없는 강을 건넜다는 공포가 박성호를 덮쳤다.\n\n[종료 상태] 위치: 서울 여의도 한미증권 VIP룸 / 심리: 계획 실행의 만족감 / 부상: 없음 / 소지품: ['2G 휴대폰', '자산 현황 메모장', 'WTI 6월물 15억 매수 체결 확인서', 'SW인베스트먼트 법인 인감']\n\n**제 7화: 폭풍 전야**\n\n[시작 상태] 위치: 서울 여의도 한미증권 VIP룸 / 심리: 계획 실행의 만족감 / 부상: 없음 / 소지품: ['2G 휴대폰', '자산 현황 메모장', 'WTI 6월물 15억 매수 체결 확인서', 'SW인베스트먼트 법인 인감']\n\n투자가 집행된 후 며칠 동안 시장은 미미한 등락을 반복했다. 박성호는 1시간 간격으로 한시우에게 전화를 걸어 유가 변동을 보고하며 안절부절못했다. 하지만 한시우는 오히려 그를 귀찮아하며 \"뉴스가 나오기 전까지는 전화하지 마세요\"라고 선을 그었다. 그는 한미증권 VIP룸에 마련된 개인 공간에서 홀로 시간을 보냈다. 그는 차트를 보지 않았다. 대신, 월스트리트저널과 로이터 통신 등 해외 언론을 뒤지며 다른 정보를 수집했다. 전생의 기억과 현재의 정보를 교차 검증하며 다음 사냥감을 물색하는 것이다. 그의 입에서 무심코 '금도 간다' 혹은 '에콰도르라...' 같은 혼잣말이 흘러나왔다. 그의 평온함은 박성호에게 더 큰 공포였다. 저 자신감은 대체 어디서 나오는 것인가. 모든 것을 건 도박사의 광기인가, 아니면 정말 미래를 보는 자의 여유인가. 시간은 더디게 흘러갔고, 국제 정세는 보이지 않는 압력솥처럼 서서히 끓어오르고 있었다.\n\n[종료 상태] 위치: 서울 여의도 한미증권 VIP룸 / 심리: 확신에 찬 기다림 / 부상: 없음 / 소지품: ['2G 휴대폰', '자산 현황 메모장', 'WTI 6월물 15억 매수 체결 확인서', 'SW인베스트먼트 법인 인감']\n\n**제 8화: 검은 황금의 포효**\n\n[시작 상태] 위치: 서울 여의도 한미증권 VIP룸 / 심리: 확신에 찬 기다림 / 부상: 없음 / 소지품: ['2G 휴대폰', '자산 현황 메모장', 'WTI 6월물 15억 매수 체결 확인서', 'SW인베스트먼트 법인 인감']\n\n2월 중순, 마침내 뉴스가 터졌다. [속보] 이란, IAEA 사찰단 추방 및 핵 농축 활동 전면 재개 선언. 그 순간, 국제 원유 시장은 미친 듯이 요동쳤다. WTI 가격은 개장과 동시에 수직으로 치솟았다. 60달러 선에서 거래되던 유가는 순식간에 62달러, 63달러를 돌파했다. 박성호의 전화가 빗발쳤다. 이전의 조심스러운 목소리는 온데간데없고, 흥분과 경외가 뒤섞인 떨리는 음성이 수화기를 뚫고 나왔다. \"대, 대표님! 보고 계십니까! 유가가 폭등하고 있습니다! 평가 수익이 벌써 2억을 넘었습니다!\" 한시우는 창밖 여의도의 야경을 바라보며 담담하게 답했다. \"이제 시작일 뿐입니다. 3억 넘으면 다시 전화하세요.\" 박성호는 전화를 끊고 망연자실하게 모니터를 바라보았다. 숫자들이 실시간으로 바뀌며 돈을 복사하고 있었다. 이것은 투자가 아니었다. 예언의 실현이었다.\n\n[종료 상태] 위치: 서울 여의도 한미증권 VIP룸 / 심리: 예언의 실현, 냉정한 기쁨 / 부상: 없음 / 소지품: ['2G 휴대폰', '자산 현황 메모장', 'WTI 6월물 15억 매수 체결 확인서', 'SW인베스트먼트 법인 인감']\n\n**제 9화: 새로운 서열**\n\n[시작 상태] 위치: 서울 여의도 한미증권 VIP룸 / 심리: 예언의 실현, 냉정한 기쁨 / 부상: 없음 / 소지품: ['2G 휴대폰', '자산 현황 메모장', 'WTI 6월물 15억 매수 체결 확인서', 'SW인베스트먼트 법인 인감']\n\n다음 날, 평가 수익이 3억 원을 돌파하자 박성호는 직접 VIP룸으로 달려왔다. 그는 90도로 허리를 숙이며 새로운 휴대폰과 서류를 내밀었다. \"대표님, 이건 저희 VIP 전담 라인에만 지급되는 최고 등급의 보안폰입니다. 24시간 언제든 저와 직통으로 연결됩니다.\" 그는 더 이상 한시우를 '도련님'이나 '대표님'으로 부르지 않았다. 그의 눈에는 오직 '주인'을 보는 듯한 경외심만이 가득했다. 한시우는 낡은 2G폰에서 유심을 빼내 부러뜨리고, 새로운 보안폰을 받아들었다. \"앞으로 내 포지션에 대해선 일일 보고 형식으로 올리세요. 그리고 내 지시 없이는 절대 임의로 움직이지 마세요.\" \"물론입니다, 대표님! 명심하겠습니다!\" 박성호의 목소리에는 한 치의 망설임도 없었다. 15억 원을 투자한 포지션의 가치는 18억 원으로 불어났고, 남은 현금 5억 원을 더한 총자산은 23억 원이 되어 있었다. 돈은 숫자를 넘어 권력이 되었다. 여의도 한복판에서, 한시우는 자신만의 왕국을 세울 첫 번째 기사를 손에 넣었다.\n\n[종료 상태] 위치: 서울 여의도 한미증권 VIP룸 / 심리: 완벽한 통제와 새로운 시작 / 부상: 없음 / 소지품: ['한미증권 VIP 전용 보안 스마트폰', 'WTI 6월물 15억 매수 체결 확인서', 'SW인베스트먼트 법인 인감', '자산 현황 메모장']\n\n[전술 기록 종료]",
+  "title": "검은 황금 (Black Gold)",
+  "volume_no": 0
+}

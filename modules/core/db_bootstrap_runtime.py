@@ -369,6 +369,9 @@ class DBBootstrapRuntime:
             "director_selections",
             self.owner._column_def_pairs(
                 ("director_thinking", "TEXT"),
+                ("initial_verdict", "TEXT DEFAULT ''"),
+                ("final_verdict", "TEXT DEFAULT ''"),
+                ("downstream_override_applied", "INTEGER DEFAULT 0"),
             ),
             log_label="director_selections",
         )
@@ -395,15 +398,9 @@ class DBBootstrapRuntime:
             )
             """
         )
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_arr_attempt_key ON attempt_raw_rationale(attempt_key)"
-        )
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_arr_kind ON attempt_raw_rationale(payload_kind)"
-        )
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_arr_stage_ep ON attempt_raw_rationale(stage, ep_num)"
-        )
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_arr_attempt_key ON attempt_raw_rationale(attempt_key)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_arr_kind ON attempt_raw_rationale(payload_kind)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_arr_stage_ep ON attempt_raw_rationale(stage, ep_num)")
 
     def _create_selection_and_logging_tables(self) -> None:
         self._create_adjunct_retention_tables()

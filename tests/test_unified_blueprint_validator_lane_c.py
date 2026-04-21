@@ -418,6 +418,90 @@ def test_lane_c_python_pre_validate_flags_declared_opening_transition_mismatch()
     assert blueprint["opening_transition"]["type"] == "jump_opening"
 
 
+def test_lane_c_python_pre_validate_skips_continuity_for_authorized_opening_shift():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "Arrival beat",
+                    "summary": "The lead arrives at Packet Hall and locks the new footing immediately." * 6,
+                    "location": "Packet Hall",
+                }
+            },
+            "integrated_scenario": (
+                "The lead arrives at Packet Hall under a declared cut and advances the plan. " * 20
+            ),
+            "start_location": "Packet Hall",
+            "time_flow": "Later that afternoon",
+            "core_tension": "The lead must survive the moved opening without losing initiative.",
+            "expected_ending": "The new hall arrival settles into a controlled escalation.",
+            "target_beat": "State the arrival and pivot into the next pressure move.",
+            "protagonist_state": {"mood": "guarded"},
+            "opening_transition": {"type": "explicit_transition"},
+        },
+        constraint_block={
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "Packet Hall",
+                    "opening_transition_expectation": (
+                        "current episode tactical start state moved from the previous ending location; "
+                        "do not declare direct_continuation. "
+                        "Use explicit_transition or jump_opening and state the new arrival immediately."
+                    ),
+                }
+            }
+        },
+        prev_blueprint={"end_location": "Prev Blueprint Room", "time_flow": "Moments earlier"},
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not any(issue["category"] == "continuity" for issue in pre_result["issues"])
+
+
+def test_lane_c_python_pre_validate_keeps_continuity_when_authorized_shift_location_mismatches_blueprint():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "Wrong arrival",
+                    "summary": "The lead opens in an unmatched room without honoring the authorized location." * 6,
+                    "location": "Wrong Room",
+                }
+            },
+            "integrated_scenario": ("The lead opens in the wrong room despite the packet pointing elsewhere. " * 20),
+            "start_location": "Wrong Room",
+            "time_flow": "Later that afternoon",
+            "core_tension": "The opening drifts away from the authorized location anchor.",
+            "expected_ending": "The mismatch should remain visible to validation.",
+            "target_beat": "Expose the mismatch.",
+            "protagonist_state": {"mood": "uneasy"},
+            "opening_transition": {"type": "explicit_transition"},
+        },
+        constraint_block={
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "Packet Hall",
+                    "opening_transition_expectation": (
+                        "current episode tactical start state moved from the previous ending location; "
+                        "do not declare direct_continuation. "
+                        "Use explicit_transition or jump_opening and state the new arrival immediately."
+                    ),
+                }
+            }
+        },
+        prev_blueprint={"end_location": "Prev Blueprint Room", "time_flow": "Moments earlier"},
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert any(issue["category"] == "continuity" for issue in pre_result["issues"])
+
+
 def test_lane_c_python_pre_validate_flags_stop_line_leak_as_critical():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
@@ -559,7 +643,11 @@ def test_lane_c_parse_timeline_point_interprets_relative_month_day_markers():
     assert UnifiedBlueprintValidator._parse_timeline_point({"표현": "2006년 2월 초 오후"}, pick="end") == (2006, 2, 10)
     assert UnifiedBlueprintValidator._parse_timeline_point({"표현": "2006년 2월 초 오후"}, pick="start") == (2006, 2, 1)
     assert UnifiedBlueprintValidator._parse_timeline_point({"표현": "2006년 2월 말 심야"}, pick="end") == (2006, 2, 28)
-    assert UnifiedBlueprintValidator._parse_timeline_point({"표현": "2006년 4월 중순 새벽"}, pick="end") == (2006, 4, 15)
+    assert UnifiedBlueprintValidator._parse_timeline_point({"표현": "2006년 4월 중순 새벽"}, pick="end") == (
+        2006,
+        4,
+        15,
+    )
 
 
 def test_lane_c_python_pre_validate_accepts_relative_month_phrase_inside_arc_window():
@@ -588,7 +676,12 @@ def test_lane_c_python_pre_validate_accepts_relative_month_phrase_inside_arc_win
             "state_changes": {
                 "timeline": {
                     "start": {"year": 2006, "month": 2, "day": 1, "description": "2006년 2월 초, 법인 설립 마무리"},
-                    "end": {"year": 2006, "month": 2, "day": 28, "description": "2006년 2월 말, 이란 핵 농축 재개 선언 직후"},
+                    "end": {
+                        "year": 2006,
+                        "month": 2,
+                        "day": 28,
+                        "description": "2006년 2월 말, 이란 핵 농축 재개 선언 직후",
+                    },
                 }
             },
         },
@@ -1220,6 +1313,78 @@ def test_lane_c_python_pre_validate_allows_lawful_repetition_when_execution_rota
             "scene_breakdown": {
                 "scene_3": {"location": "서울 강남, SW인베스트먼트 VIP 상담실", "characters": ["한시우", "박성호"]},
                 "scene_4": {"location": "서울 강남, SW인베스트먼트 VIP 상담실", "characters": ["한시우", "박성호"]},
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not any(issue["category"] == "episode_progression" for issue in pre_result["issues"])
+
+
+def test_lane_c_python_pre_validate_allows_post_execution_monitoring_same_room():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "시장 관망",
+                    "goal": "같은 VIP룸에서 시장 추이를 관망하며 보유 유지 이유를 정리한다.",
+                    "summary": "박성호는 초조해하고 한시우는 평온을 유지한 채 포지션을 계속 들고 간다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["박성호가 초조하게 반응한다.", "한시우가 관망과 보유 유지를 선언한다."],
+                    "location": "여의도 한미증권 VIP룸",
+                    "type": "market_watch",
+                },
+                "scene_2": {
+                    "title": "압박 유지",
+                    "goal": "같은 방에서 압박의 수위 변화와 심리 비대칭을 드러낸다.",
+                    "summary": "재주문은 없지만 박성호의 불안과 한시우의 평온이 정면충돌한다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["익절 압박이 거세지지만 한시우는 아직 버틴다."],
+                    "location": "여의도 한미증권 VIP룸",
+                    "type": "pressure_hold",
+                },
+            },
+            "integrated_scenario": "F" * 900,
+        },
+        constraint_block={
+            "must_focus": {
+                "content": "투자 집행 후 같은 VIP룸에서 박성호는 초조해하고 한시우는 평온을 유지하며 시장을 관망한다."
+            },
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_2",
+                        "label": "주문 대치",
+                        "location": "여의도 한미증권 VIP룸",
+                        "location_variants": ["여의도 한미증권 VIP룸", "VIP룸"],
+                        "characters": ["한시우", "박성호"],
+                        "type": "dialogue_duel",
+                    },
+                    {
+                        "scene_key": "scene_3",
+                        "label": "주문 체결",
+                        "location": "여의도 한미증권 VIP룸",
+                        "location_variants": ["여의도 한미증권 VIP룸", "VIP룸"],
+                        "characters": ["한시우", "박성호"],
+                        "type": "execution_lock",
+                    },
+                ],
+                "lawful_repetition_window": {
+                    "mode": "allow_escalated_repeat",
+                    "allow_same_location_if_goal_changes": True,
+                    "allow_same_counterparty_if_goal_changes": True,
+                    "allow_same_channel_if_decision_escalates": True,
+                    "escalation_tokens": ["초조", "평온", "유지", "관망"],
+                },
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_2": {"location": "여의도 한미증권 VIP룸", "characters": ["한시우", "박성호"]},
+                "scene_3": {"location": "여의도 한미증권 VIP룸", "characters": ["한시우", "박성호"]},
             }
         },
         state_tracker=None,
