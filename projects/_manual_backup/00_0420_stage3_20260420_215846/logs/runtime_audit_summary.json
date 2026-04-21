@@ -1,0 +1,281 @@
+{
+  "tag": "shutdown_final",
+  "timestamp": "2026-04-20 20:51:24",
+  "summary_role": "runtime_heartbeat_with_proof_digest",
+  "total_events": 20,
+  "counts": {
+    "v60_25_auto_correct": 5,
+    "field_repair": 2,
+    "db_commit": 6,
+    "v60_10_state_extracted": 5,
+    "blueprint_success": 1,
+    "blueprint_fail": 1
+  },
+  "latest_event_type": "blueprint_fail",
+  "recent_events": [
+    {
+      "type": "v60_25_auto_correct",
+      "message": "arc auto-corrected"
+    },
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "v60_10_state_extracted",
+      "message": "StateExtractor generated context"
+    },
+    {
+      "type": "v60_25_auto_correct",
+      "message": "arc auto-corrected"
+    },
+    {
+      "type": "field_repair",
+      "message": "hybrid_composition missing"
+    },
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "v60_10_state_extracted",
+      "message": "StateExtractor generated context"
+    },
+    {
+      "type": "db_commit",
+      "message": "데이터베이스 저장 완료"
+    },
+    {
+      "type": "blueprint_success",
+      "message": "ep_1_blueprint_generated"
+    },
+    {
+      "type": "blueprint_fail",
+      "message": "ep_2_all_retries_exhausted"
+    }
+  ],
+  "contract": {
+    "summary_scope": "runtime_heartbeat_plus_compact_proof_digest",
+    "attempt_truth_authoritative": false,
+    "authoritative_attempt_sinks": [
+      "stage_attempts",
+      "pass_rate_monitor",
+      "session_decisions",
+      "episode_production",
+      "director_selections"
+    ],
+    "proof_digest_truth_scope": "committed_persistence_only",
+    "operational_metadata_scope": "latest_structured_session_plus_runtime_audit_events_and_session_sinks",
+    "authoritative_attempt_truth_note": "Use DB/JSONL/artifact sink join for authoritative attempt truth.",
+    "operational_metadata_note": "Operational metadata is best-effort run interpretation and does not override persisted attempt truth."
+  },
+  "proof_digest": {
+    "available": true,
+    "status": "warn",
+    "artifacts": {
+      "db_available": true,
+      "session_decisions_exists": true,
+      "ui_events_jsonl_exists": true,
+      "pass_rate_monitor_exists": true,
+      "episode_production_exists": false,
+      "runtime_audit_jsonl_exists": true,
+      "ui_events_db_available": true,
+      "ui_events_count": 563,
+      "ui_event_coverage_status": "ok"
+    },
+    "stages": {
+      "stage2": {
+        "status": "ok",
+        "attempts_considered": 5,
+        "complete_final_attempts": 5,
+        "complete_lifecycle_attempts": 0,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 5,
+        "coverage": {
+          "stage_attempts": 5,
+          "pass_rate_monitor": 5,
+          "director_selections": 5,
+          "episode_production": 0,
+          "session_decisions": 5,
+          "attempt_raw_rationale": 0
+        },
+        "issue_counts": {}
+      },
+      "stage3": {
+        "status": "warn",
+        "attempts_considered": 2,
+        "complete_final_attempts": 2,
+        "complete_lifecycle_attempts": 0,
+        "legacy_key_attempts": 0,
+        "session_scoped_attempts": 2,
+        "coverage": {
+          "stage_attempts": 2,
+          "pass_rate_monitor": 2,
+          "director_selections": 2,
+          "episode_production": 0,
+          "session_decisions": 2,
+          "attempt_raw_rationale": 0
+        },
+        "issue_counts": {
+          "artifact_metadata_missing": 2
+        }
+      }
+    },
+    "session_lineage": {
+      "plain_log_token": "20260420_184714",
+      "structured_session_id": "20260420_184719",
+      "status": "split_mapped"
+    },
+    "operational_metadata": {
+      "status": "ok",
+      "latest_session_id": "20260420_184719",
+      "stage2_live_session": {
+        "status": "ok",
+        "attempt_count": 5,
+        "episode_count": 5,
+        "episodes": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "latest_ep": 5,
+        "latest_final_verdict": "PASS",
+        "session_decision_count": 15,
+        "ui_event_count": 15,
+        "attempt_key_coverage": {
+          "present": 5,
+          "total": 5,
+          "status": "ok"
+        },
+        "artifact_path_coverage": {
+          "present": 5,
+          "total": 5,
+          "status": "ok"
+        },
+        "selection_reason_coverage": {
+          "present": 5,
+          "total": 5,
+          "status": "ok"
+        },
+        "verdict_reason_coverage": {
+          "present": 5,
+          "total": 5,
+          "status": "ok"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 15,
+          "total": 15,
+          "status": "ok"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 5,
+          "total": 15,
+          "status": "partial"
+        },
+        "carryover_authority_event_count": 5,
+        "latest_carryover_authority": {
+          "start_location": "여의도 한미증권 VIP룸",
+          "start_inventory_count": 9,
+          "start_inventory_preview": [
+            "평상복",
+            "구형 휴대전화",
+            "20억 원 예치 법인 통장 사본"
+          ],
+          "end_location": "SW인베스트먼트 대표실",
+          "end_inventory_count": 9,
+          "end_inventory_preview": [
+            "평상복",
+            "구형 휴대전화",
+            "20억 원 예치 법인 통장 사본"
+          ],
+          "start_total_assets": "45억 원",
+          "cross_stage_authority_packet_present": 1,
+          "cross_stage_authority_packet_version": "cross_stage_authority_packet.v1"
+        }
+      },
+      "stage3_live_session": {
+        "status": "ok",
+        "attempt_count": 2,
+        "episode_count": 2,
+        "episodes": [
+          1,
+          2
+        ],
+        "latest_ep": 2,
+        "latest_final_verdict": "FAILED",
+        "session_decision_count": 2,
+        "ui_event_count": 14,
+        "attempt_key_coverage": {
+          "present": 2,
+          "total": 2,
+          "status": "ok"
+        },
+        "artifact_path_coverage": {
+          "present": 1,
+          "total": 2,
+          "status": "partial"
+        },
+        "selection_reason_coverage": {
+          "present": 1,
+          "total": 2,
+          "status": "partial"
+        },
+        "verdict_reason_coverage": {
+          "present": 1,
+          "total": 2,
+          "status": "partial"
+        },
+        "decision_attempt_key_coverage": {
+          "present": 2,
+          "total": 2,
+          "status": "ok"
+        },
+        "decision_artifact_path_coverage": {
+          "present": 1,
+          "total": 2,
+          "status": "partial"
+        },
+        "source_anchor_summary_count": 2,
+        "source_anchor_ui_event_count": 2,
+        "latest_source_anchor_summary": {
+          "blueprint_window_count": 1,
+          "previous_blueprint_ep": 1,
+          "previous_blueprint_end_location": "서울 성북동 본가, 한시우의 개인 침실",
+          "previous_blueprint_opening_transition_type": "jump_opening",
+          "semantic_carryover_keys": [
+            "relationship_rationale",
+            "growth_justification",
+            "foreshadow_anchors",
+            "continuity_checkpoints"
+          ],
+          "continuity_checkpoint_count": 3,
+          "anchor_surfaces": [
+            "prev_blueprint_end_location",
+            "prev_blueprint_opening_transition",
+            "semantic_carryover"
+          ]
+        }
+      },
+      "stage4_live_session": {
+        "status": "absent",
+        "attempt_count": 0,
+        "episode_count": 0,
+        "episodes": [],
+        "latest_ep": null,
+        "latest_final_verdict": "",
+        "retry_exercised": false,
+        "patch_exercised": false,
+        "patch_attempt_count": 0,
+        "fallback_patch_count": 0,
+        "pass_count": 0,
+        "session_scope": {},
+        "target_ep_reached": false,
+        "stage4_complete_emitted": false,
+        "post_pass_contract_signal_count": 0,
+        "non_exercised_reasons": []
+      }
+    }
+  }
+}

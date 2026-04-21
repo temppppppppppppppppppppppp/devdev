@@ -1,0 +1,207 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "15d470b7c8656c68b5e1928f2ce8704096c5b6a66d651f9fa1d1c4e259d26255"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=4; sample_anchors=SW인베스트먼트, 아침 해가 성북동 저택, 거침없는 걸음으로 저택",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 4개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1590,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 12624,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 987376,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 7390,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4801,
+          "lane": "constraints"
+        },
+        {
+          "chars": 216,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 207,
+        "constraints": 4801,
+        "feedback_context": 216,
+        "hud_context": 10,
+        "prev_info": 7390
+      },
+      "shared_context_chars": 12408,
+      "total_chars": 12624
+    },
+    "scene_count": 4,
+    "strategy": "dialogue_focused",
+    "total_candidates": 1
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false
+  },
+  "core_tension": "거대한 베팅 후 결과가 터지기 직전의 심리적 압박과 평정심 유지",
+  "end_location": "성북동 카페",
+  "ending_hook": "평화롭던 카페의 백색소음을 찢고, 뉴스 채널의 정규 방송이 다급하게 끊어지며 붉은색 '속보' 자막이 화면 하단을 잠식하기 시작했다.",
+  "ending_state": {
+    "location": "성북동 카페 창가 자리",
+    "protagonist_status": "모든 세팅을 마치고 다가올 폭등의 첫 신호를 지켜보는 상태",
+    "timeline": {
+      "표현": "2006년 2월 15일 아침 - 속보 송출 직전"
+    }
+  },
+  "ep_num": 6,
+  "episode_number": 6,
+  "expected_ending": "이란 핵 위기 속보가 터지기 직전의 팽팽한 긴장감 속에서 대기",
+  "integrated_scenario": "통화가 끊긴 적막한 방 안, 핏자국 묻은 손끝에 닿은 휴대전화의 온기만이 그가 당겨버린 거대한 방아쇠의 무게를 증명하고 있었다. 한시우는 짧은 숨을 내쉬며 창밖으로 시선을 돌렸다. 여전히 밝아오는 2006년 2월 15일의 아침 해가 성북동 저택의 차가운 담벼락을 비추고 있었다. 박성호 PB를 자본의 논리와 수수료라는 목줄로 굴복시키고, 15억 원이라는 거액을 WTI 원유 선물 3배 레버리지에 밀어 넣었다. 이제 남은 것은 그가 알고 있는 역사의 수레바퀴가 예정된 궤도에 진입하는 것을 지켜보는 일뿐이었다. 한시우는 구형 랩탑과 법인 통장 사본, 그리고 SW인베스트먼트 법인 인감을 서류 가방에 빈틈없이 챙겨 넣었다. 언제 한정호 회장의 호출이 다시 떨어질지 모르는, 이 숨 막히는 본가의 공기를 잠시 벗어나야 했다. 거침없는 걸음으로 저택을 빠져나온 그는 차가운 아침 공기를 폐부 깊숙이 들이마셨다.\n\n저택을 빠져나와 도착한 곳은 성북동 초입의 한적한 카페였다. 이른 아침의 카페는 인적이 드물었고, 구석에 켜진 벽걸이 TV만이 조용히 아침 뉴스를 송출하고 있었다. 창가 구석 자리에 앉은 한시우는 가방에서 구형 랩탑을 꺼내 부팅했다. 익숙한 구동음과 함께 HTS 화면이 열렸다. 화면 중앙에는 방금 전 박성호 PB를 통해 강제로 체결시킨 WTI 원유 선물 매수 포지션이 선명하게 찍혀 있었다. 막대한 자본이 투입된 화면 앞에서도 한시우의 표정은 바위처럼 흔들림이 없었다. 초보자들처럼 호가창의 미세한 틱 움직임에 일희일비하며 감정을 소모할 이유가 없었다. 그는 옅은 미소를 지으며 미련 없이 랩탑의 덮개를 '탁' 소리가 나게 덮어버렸다. 차트를 닫고 평정심을 유지하는 것, 그것이 미래를 손에 쥔 포식자의 첫 번째 덕목이었다.\n\n눈앞의 화면이 물리적으로 사라지자, 그의 머릿속에 각인된 18년 치의 거대한 경제 데이터가 다시금 선명하게 떠올랐다. 이란 핵 위기로 촉발될 오늘의 유가 폭등은 그저 얄팍한 시드머니를 불리는 시작에 불과했다. 한시우는 테이블 위로 깍지를 낀 채 낮게 중얼거렸다. \"다음은... 에콰도르다.\" 옥시덴탈 페트롤리엄 강제 계약 해지 사태. 남미의 지정학적 리스크가 불러올 또 다른 자본의 소용돌이. 그는 머릿속으로 다음 사냥감의 타임라인을 정교하게 조율하기 시작했다. 가문의 레이더를 피해 온전히 자신만의 통제력을 갖추기 위해서는, 이번 원유 베팅에서 얻을 막대한 수익을 지체 없이 다음 화약고에 투입해야 했다. 누구보다 먼저 읽고, 누구보다 먼저 출구를 확보하는 완벽한 연쇄 고리. 두통이 가라앉은 뇌리는 그 어느 때보다 차갑고 명석하게 회전하고 있었다.\n\n점원이 내려놓은 에스프레소 잔에서 씁쓸한 향기가 피어올랐다. 한시우는 잔을 들어 천천히 입술을 축였다. 시계의 초침이 그가 기억하는 '그 시간'을 향해 묵묵히 전진하고 있었다. 평화롭던 카페 안, 벽걸이 TV 속에서 날씨를 전하던 아나운서가 돌연 인상을 찌푸리며 인이어를 누르는 모습이 한시우의 시야에 들어왔다. 앵커의 다급한 목소리와 함께 정규 방송이 거칠게 끊어졌다. 이내 화면 하단으로 붉은색 자막이 스멀스멀 기어 나오기 시작했다. 거대한 폭풍이 마침내 현실의 둑을 무너뜨리는 순간이었다. 한시우는 그 붉은빛을 조용히 응시하며 남은 커피를 삼켰다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor",
+      "scene_transition_cue"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부는 거액의 베팅을 마친 직후의 차분한 이동과 평정심 유지에 집중하고, 중반부에서 다음 목표를 향한 치밀한 내면 묘사로 지적 쾌감을 부여한 뒤, 후반부에 뉴스 속보가 터지는 찰나의 순간을 포착해 긴장감을 최고조로 끌어올린다.",
+  "protagonist_state": {
+    "equipment": [
+      "구형 휴대전화",
+      "법인 통장 사본",
+      "SW인베스트먼트 법인 인감",
+      "구형 랩탑"
+    ],
+    "injuries": "두통 완화, 코피 멎음",
+    "mood": "폭풍 전야의 차분함과 예리하게 벼려진 집중력"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "통화가 끊긴 직후의 적막한 침실. 한시우는 핏자국이 남은 손을 씻어내고 구형 랩탑과 서류들을 가방에 챙겨 차가운 아침 공기 속으로 나선다.",
+      "goal": "본가의 압박감에서 벗어나 시장을 관망할 독립적인 공간 확보",
+      "key_events": [
+        "휴대전화의 온기를 느끼며 박성호 PB를 완전히 통제했음을 확인",
+        "구형 랩탑, 법인 통장 사본, SW인베스트먼트 법인 인감을 서류 가방에 수납",
+        "경호원들의 시선을 무시한 채 숨 막히는 성북동 본가 저택을 빠져나옴"
+      ],
+      "location": "서울 성북동 본가, 한시우의 개인 침실 → 성북동 카페",
+      "summary": "박성호 PB를 굴복시킨 직후, 한시우는 흔적을 챙겨 성북동 본가를 빠져나와 한적한 카페로 향한다.",
+      "tension_level": 4,
+      "title": "요새를 벗어나다",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "카페 구석 자리에 앉아 HTS를 부팅한다. 15억 원 3배 레버리지의 WTI 매수 포지션이 체결된 것을 확인하고는 의도적으로 화면을 닫아버린다.",
+      "goal": "포지션 진입 확인 후 HTS를 닫아버림으로써 평정심과 확신을 증명",
+      "key_events": [
+        "성북동 초입의 한적한 카페 창가 자리에 착석하여 에스프레소 주문",
+        "구형 랩탑을 열어 HTS 상에 WTI 원유 선물 매수 포지션이 완벽히 진입되었음을 확인",
+        "호가창의 움직임에 흔들리지 않기 위해 옅은 미소와 함께 랩탑 덮개를 단호히 닫음"
+      ],
+      "location": "성북동 카페",
+      "summary": "카페에 도착한 한시우는 랩탑을 열어 매수 포지션을 확인한 뒤, 미련 없이 덮개를 덮고 기다림을 시작한다.",
+      "tension_level": 5,
+      "title": "덮어버린 차트",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "눈앞의 화면 대신 머릿속의 타임라인을 펼친다. 이란 핵 위기 이후 자본을 증식시킬 다음 화약고로 남미 지정학적 리스크를 지목한다.",
+      "goal": "18년 치의 미래 지식을 바탕으로 원유 다음의 타겟인 에콰도르 사태를 계획",
+      "key_events": [
+        "두통이 가라앉은 뇌리 속에서 2006년 상반기의 거시경제 지표들을 순서대로 나열",
+        "에콰도르 옥시덴탈 페트롤리엄 강제 계약 해지 사태를 다음 목표로 낮게 중얼거림",
+        "가문의 레이더망을 피해 자본을 굴릴 연속적인 레버리지 연쇄 고리를 머릿속으로 설계"
+      ],
+      "location": "성북동 카페",
+      "summary": "차트를 닫은 한시우는 머릿속으로 18년 치 경제 데이터를 점검하며 다음 타겟인 에콰도르 사태를 중얼거린다.",
+      "tension_level": 6,
+      "title": "다음 사냥감",
+      "type": "omniscient_hint"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "시간이 다가오며 카페의 백색소음 사이로 뉴스 앵커의 다급한 목소리가 끼어든다. 한시우는 차분히 커피를 마시며 폭풍의 시작을 지켜본다.",
+      "goal": "이란 핵 위기 속보가 터지는 찰나의 순간을 포착하여 극적인 긴장감 조성",
+      "key_events": [
+        "에스프레소 잔을 들어 올리며 벽걸이 TV 쪽으로 시선을 고정",
+        "날씨를 전하던 아나운서가 돌연 인이어를 누르며 표정이 굳어짐",
+        "정규 방송이 다급하게 중단되고 화면 하단에 붉은색 '속보' 자막이 나타나기 시작함"
+      ],
+      "location": "성북동 카페",
+      "summary": "평화로운 카페 안, 벽걸이 TV의 정규 방송이 끊기고 붉은색 속보 자막이 송출되기 시작한다.",
+      "tension_level": 8,
+      "title": "점화의 순간",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가, 한시우의 개인 침실",
+  "target_beat": "성북동 카페 - 한시우 - 포지션 진입 후 차트를 닫고 평정심 유지; 내면 묘사 - 한시우 - 에콰도르 사태를 다음 목표로 중얼거리며 18년 치 지식 점검",
+  "time_flow": "아침",
+  "title": "폭풍을 기다리며"
+}

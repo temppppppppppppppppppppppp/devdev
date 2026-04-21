@@ -1,0 +1,202 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "8813626b3dc0734359f6905be4399a688ff7321686284ce87601b80d32c7183f"
+  },
+  "_ensemble_meta": {
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1257,
+    "prevalidation_issue_count": 0,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 17201,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 982799,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 12775,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 3989,
+          "lane": "constraints"
+        },
+        {
+          "chars": 217,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 210,
+        "constraints": 3989,
+        "feedback_context": 217,
+        "hud_context": 10,
+        "prev_info": 12775
+      },
+      "shared_context_chars": 16984,
+      "total_chars": 17201
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 2
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "fix_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "막대한 평가 수익을 눈앞에 두고 횡보장을 견뎌야 하는 심리적 압박과 외부의 익절 종용",
+  "end_location": "SW인베스트먼트 임시 오피스",
+  "ending_hook": "텅 빈 사무실을 채우는 랩탑의 냉각팬 소리만이, 그가 견뎌내야 할 지독한 시간의 서막을 알리고 있었다.",
+  "ending_state": {
+    "location": "SW인베스트먼트 임시 오피스",
+    "protagonist_status": "외부의 압박을 차단하고 오직 랩탑 화면만을 응시하며 횡보장을 버텨낼 심리적 준비를 마친 상태",
+    "timeline": {
+      "표현": "2006년 4월 15일 낮"
+    }
+  },
+  "ep_num": 10,
+  "episode_number": 10,
+  "expected_ending": "타인의 간섭이 배제된 자신만의 공간에서 고독한 인내를 시작함",
+  "integrated_scenario": "여의도 한미증권 VIP룸. 블룸버그 단말기 화면을 수놓던 붉은 상승 곡선이 마침내 거친 숨을 고르기 시작했다. 배럴당 70달러. 전 세계의 자본이 숨죽여 지켜보는 그 거대한 심리적 저항선 앞에서 WTI 원유 선물 가격은 기어이 횡보장으로 접어들었다. 불과 몇 시간 전만 해도 경이로움에 환호하던 박성호 PB의 얼굴에는 이제 짙은 피로와 숨길 수 없는 초조함이 번져 있었다. 단 1틱의 움직임에도 수천만 원이 증발하고 생성되는 살얼음판 같은 횡보장. 한시우는 화면에 반사된 자신의 서늘한 눈동자를 응시하며 이 정체가 가져올 심리적 압박을 조용히 음미했다.\n\n곧이어 VIP룸의 무거운 정적을 깨고 박성호의 내선 전화가 날카롭게 울렸다. 수화기 너머로 들려오는 것은 본사 리스크관리팀의 다급한 목소리였다. 비정상적인 레버리지 규모와 현재 확보한 막대한 평가 수익을 지키기 위해 당장 포지션을 청산해야 한다는 기관의 보수적인 압박이 시작된 것이다. 전화를 끊은 박성호는 마른침을 삼키며 한시우에게 다가갔다. 그는 조심스럽지만 절박한 어조로, 지금 당장 익절하여 수익을 확정 짓는 것이 가장 안전한 길이라며 설득을 시도했다. 그것은 개인의 탐욕을 넘어 거대한 자본의 무게에 짓눌린 평범한 금융인의 본능적인 공포였다.\n\n그러나 한시우의 대답은 얼음장처럼 차가웠다. 그는 흔들림 없는 시선으로 박성호를 향해 단 한 계약도 청산하지 않겠다는 뜻을 분명히 전했다. 모두가 공포에 질려 도망치려 할 때 자리를 지키는 자만이 진짜 부를 거머쥘 수 있다는 사실을, 한시우는 지난 생의 뼈저린 실패를 통해 이미 알고 있었다. 거대한 자본 앞에서는 결국 누구나 나약해진다는 씁쓸한 자각 속에서도, 그는 타인의 두려움에 자신의 결정을 맡길 생각이 추호도 없었다. 박성호와 리스크관리팀의 거듭된 우려를 단호하게 잘라낸 한시우는 테이블 위에 놓인 WTI 매수 체결 확인서와 구형 랩탑, 그리고 법인 인감을 서류 가방에 챙겨 넣었다.\n\n한미증권의 안락하지만 통제받는 공간을 미련 없이 벗어난 한시우는 택시에 올라타 강남으로 향했다. 목적지는 아직 아무런 집기도 제대로 갖춰지지 않은 SW인베스트먼트의 임시 오피스였다. 누구의 간섭도, 얄팍한 조언도 닿지 않는 온전한 자신만의 요새. 텅 빈 사무실의 차가운 공기 속에서 한시우는 책상 위에 구형 랩탑을 올려놓고 전원을 켰다. 화면 위로 다시금 지루한 횡보를 이어가는 70달러 선의 호가창이 떠올랐다. 이제부터는 시장과의 싸움이 아닌, 자신과의 고독한 심리전이었다. 그는 묵묵히 차트를 응시하며 다가올 폭풍을 견뎌낼 준비를 마쳤다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부의 외부적 긴장(시장의 횡보)이 중반부의 인간적 갈등(박성호의 압박)으로 이어지고, 후반부에는 한시우 내면의 단단한 결의와 고독한 인내로 수렴되도록 감정선을 조절합니다.",
+  "protagonist_state": {
+    "equipment": [
+      "구형 휴대전화",
+      "법인 통장 사본",
+      "SW인베스트먼트 법인 인감",
+      "구형 랩탑",
+      "WTI 매수 체결 확인서"
+    ],
+    "injuries": "두통 완화, 코피 멎음",
+    "mood": "완벽한 통제감 속에서 피어오르는 씁쓸함과 단단한 결의"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "맹목적인 복종과 경외",
+      "justification": "수백억 단위의 변동성을 버텨내는 한시우의 강심장 앞에서 일반적인 금융인으로서의 한계를 실감함",
+      "target": "박성호 PB",
+      "to_state": "자본의 무게에 짓눌린 두려움과 한시우의 비인간적 결단력에 대한 질림"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호 PB"
+      ],
+      "content": "",
+      "description": "거침없이 치솟던 WTI 원유 선물 가격이 배럴당 70달러라는 거대한 심리적 저항선에 부딪힌다. 환호하던 박성호 PB의 얼굴에 점차 초조함이 깃들기 시작한다.",
+      "goal": "유가 상승이 멈추고 횡보장이 시작됨을 확인",
+      "key_events": [
+        "WTI 원유 선물 가격이 70달러 선에 도달한 후 방향성을 잃고 횡보하기 시작함",
+        "단 1틱의 미세한 변동에도 막대한 평가 손익이 널뛰는 상황 발생",
+        "박성호 PB가 마른침을 삼키며 호가창에서 눈을 떼지 못함",
+        "한시우는 흔들림 없이 화면을 응시하며 시장의 공포가 시작됨을 직감함"
+      ],
+      "location": "여의도 한미증권 VIP룸",
+      "summary": "블룸버그 단말기 앞에서 유가가 70달러 선에서 횡보하기 시작하자, VIP룸의 공기가 차갑게 식어간다.",
+      "tension_level": 5,
+      "title": "70달러의 벽",
+      "type": "tension_build"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호 PB"
+      ],
+      "content": "",
+      "description": "본사 리스크관리팀에서 비정상적인 레버리지 포지션을 우려하는 다급한 연락이 온다. 자본의 무게에 짓눌린 박성호가 한시우를 설득하려 시도한다.",
+      "goal": "리스크관리팀과 박성호 PB의 익절 압박",
+      "key_events": [
+        "VIP룸의 내선 전화가 울리고, 박성호가 굳은 표정으로 리스크관리팀의 경고를 청취함",
+        "박성호가 한시우에게 다가가 현재의 막대한 수익을 확정 짓자고 조심스럽게 제안함",
+        "레버리지의 위험성을 재차 강조하며, 횡보장에서의 손실 가능성을 브리핑함",
+        "한시우는 박성호의 말을 끊지 않고 끝까지 들으며, 일반적인 금융인의 한계를 씁쓸하게 확인함"
+      ],
+      "location": "여의도 한미증권 VIP룸",
+      "summary": "리스크관리팀의 전화를 받은 박성호가 한시우에게 절박하게 익절을 권유한다.",
+      "tension_level": 6,
+      "title": "문지기의 공포",
+      "type": "dialogue_duel"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호 PB"
+      ],
+      "content": "",
+      "description": "타인의 두려움에 편승하지 않겠다는 한시우의 굳은 의지가 드러난다. 그는 단 한 계약도 청산하지 않겠다고 선언하며 짐을 챙겨 일어선다.",
+      "goal": "압박을 물리치고 자신의 통제권을 재확인",
+      "key_events": [
+        "한시우가 건조한 목소리로 단 1계약의 임의 청산도 불허한다는 지시를 재확인함",
+        "모두가 공포에 질릴 때 자리를 지키는 자만이 부를 거머쥔다는 내면의 독백",
+        "리스크팀의 우려를 무시하고 테이블 위의 WTI 매수 체결 확인서와 법인 인감을 서류 가방에 챙김",
+        "당황한 박성호를 남겨둔 채 한미증권 VIP룸을 미련 없이 빠져나옴"
+      ],
+      "location": "여의도 한미증권 VIP룸",
+      "summary": "한시우는 박성호의 제안을 차갑게 거절하고, 자신의 권한을 확고히 다진 뒤 짐을 챙긴다.",
+      "tension_level": 7,
+      "title": "단호한 거절",
+      "type": "emotional_reveal"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "누구의 간섭도 닿지 않는 텅 빈 사무실. 한시우는 구형 랩탑을 켜고 자신만의 싸움을 준비한다.",
+      "goal": "자신만의 공간에서 횡보장을 견딜 준비 완료",
+      "key_events": [
+        "한시우가 택시를 타고 강남의 SW인베스트먼트 임시 오피스에 도착함",
+        "적막한 사무실 책상 위에 구형 랩탑을 올려놓고 전원을 켬",
+        "여전히 70달러 선에서 멈춰 있는 지루한 호가창을 화면에 띄움",
+        "외부의 소음을 차단하고 오직 자신만의 판단으로 버텨낼 지독한 시간의 시작을 알림"
+      ],
+      "location": "SW인베스트먼트 오피스",
+      "summary": "SW인베스트먼트 오피스에 도착한 한시우가 홀로 랩탑을 세팅하며 고독한 인내를 시작한다.",
+      "tension_level": 5,
+      "title": "고독한 요새",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "여의도 한미증권 VIP룸",
+  "target_beat": "위험 회피를 종용하는 기존 시스템(리스크관리팀, PB)의 압박을 단호히 거절하고, 자신의 판단만을 믿으며 버티기에 돌입하는 주인공의 내면적 강인함을 부각",
+  "time_flow": "2006년 4월 15일 오전 → 낮",
+  "title": "횡보장의 압박"
+}

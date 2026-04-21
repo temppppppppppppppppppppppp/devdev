@@ -1,0 +1,210 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "2b7c150c4dbb548992ddb12860a2dd39a519c6801cb1c52b01f32d4b8b3639e3"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "현재 화 tactical authority, opening-state, 엔딩 훅은 유지"
+      ],
+      "evidence_summary": "missing_relationship_npcs=한정호",
+      "must_fix": [
+        "Arc 관계 변화 핵심 인물을 현재 화 시나리오/회상/계획에 명시: 한정호"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 Arc 관계 변화 인물 중 최소 1명을 현재 화 맥락으로 명시한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1540,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 2883,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 997117,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 2477,
+          "lane": "constraints"
+        },
+        {
+          "chars": 195,
+          "lane": "arc_focus"
+        },
+        {
+          "chars": 133,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 195,
+        "constraints": 2477,
+        "feedback_context": 133,
+        "hud_context": 10,
+        "prev_info": 68
+      },
+      "shared_context_chars": 2750,
+      "total_chars": 2883
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "fix_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "fix_scope": "inplace"
+    }
+  },
+  "core_tension": "죽음의 기억과 회귀의 혼란, 그리고 머릿속에 쏟아지는 방대한 미래 지식 사이의 자아 충돌",
+  "end_location": "서울 성북동 본가, 한시우의 개인 침실",
+  "ending_hook": "손안에 쥔 작은 인감이, 앞으로 그가 뒤흔들 거대한 세상의 첫 번째 열쇠처럼 묵직하게 느껴졌다.",
+  "ending_state": {
+    "location": "서울 성북동 본가, 한시우의 개인 침실",
+    "protagonist_status": "회귀에 대한 혼란을 수습하고 방대한 미래 지식을 바탕으로 내면의 결의를 확고히 다진 상태",
+    "timeline": {
+      "표현": "2006년 초겨울 아침"
+    }
+  },
+  "ep_num": 1,
+  "episode_number": 1,
+  "expected_ending": "과거의 상처를 딛고 새로운 삶을 받아들이는 차분한 결의",
+  "integrated_scenario": "뼛속까지 스며드는 냉기. 2024년 겨울, 난방비조차 내지 못해 얼음장처럼 차갑게 식어버린 원룸의 바닥. 한시우는 그곳에서 웅크린 채 마지막 숨을 헐떡이고 있었다. 철저한 고독 속에서 심장의 고동이 서서히 멎어가던 그 끔찍한 감각. 후회와 절망으로 점철된 생의 마지막 순간이 망막에 점멸하는 순간, 한시우는 폐부가 찢어질 듯한 숨을 들이켜며 상체를 일으켰다.\n\n\"허억, 헉……!\"\n\n온몸이 식은땀으로 흠뻑 젖어 있었다. 얼어붙을 것 같던 추위는 온데간데없고, 피부에 닿는 침구는 최고급 실크의 부드러운 감촉을 띠고 있었다. 한시우는 떨리는 손으로 자신의 가슴을 짚었다. 미친 듯이 뛰고 있는 심장 박동이 고스란히 전해졌다. 그는 살아있었다. 거친 숨을 고르며 주변을 둘러본 한시우의 동공이 잘게 흔들렸다. 앤틱한 원목 가구와 은은한 조명. 이곳은 그가 20대 초반까지 머물렀던, 그러나 쫓겨나듯 떠나야만 했던 성북동 본가의 개인 침실이었다.\n\n비틀거리는 걸음으로 욕실로 향한 한시우는 세면대 거울을 짚고 섰다. 거울 너머에는 삶의 무게에 짓눌려 초췌해진 40대의 중년이 아닌, 아직 앳된 티를 벗지 못한 젊은 청년이 자신을 마주 보고 있었다. 떨리는 손으로 세면대의 찬물을 틀어 얼굴에 끼얹었다. 차가운 물의 감각이 이것이 꿈이 아님을 증명하고 있었다. 침실로 돌아온 그는 탁자 위에 놓인 투박한 폴더형 구형 휴대전화를 집어 들었다. 폴더를 열자 흑백에 가까운 액정 위로 선명한 숫자가 떠올랐다. '2006년'. 한시우의 입술 사이로 헛웃음이 새어 나왔다. 가족들의 철저한 무관심 속에서 스스로를 갉아먹기만 했던, 바로 그 시기로 돌아온 것이다.\n\n그 순간, 뇌수를 직접 찌르는 듯한 극심한 두통이 한시우를 덮쳤다. \"윽!\" 한시우는 머리를 부여잡고 카펫 바닥에 무릎을 꿇었다. 단순한 통증이 아니었다. 2024년까지 그가 바닥을 구르며 뼈저리게 체득했던 18년 치의 거시경제 지표, 주식 시장의 폭락과 상승장, 세계 경제를 뒤흔든 굵직한 사건들이 활자처럼 선명하게 뇌리에 각인되고 있었다. 마치 거대한 정보의 해일이 좁은 뇌강을 억지로 비집고 들어오는 것 같았다. 십여 분의 영겁 같은 시간이 흐른 뒤, 통증이 썰물처럼 빠져나갔다. 이마에 맺힌 땀을 닦아낸 한시우의 눈빛은 이전의 유약함을 완전히 벗어던진 채 서늘하게 가라앉아 있었다.\n\n그는 천천히 몸을 일으켜 방 한쪽의 묵직한 오크우드 책상으로 다가갔다. 그곳에는 지금의 그가 가진 전부가 놓여 있었다. HTS 프로그램이 설치된 구형 랩탑, 20억 원이라는 숫자가 선명하게 찍힌 법인 통장 사본, 그리고 이제 막 파낸 SW인베스트먼트의 법인 인감. 과거의 그는 이 돈을 쥐고도 형들의 눈치를 보며 아무것도 하지 못했다. 그저 적당히 방탕하게 굴며 후계 구도에 위협이 되지 않음을 증명하려 애썼을 뿐이다. 그러나 그 비굴한 순응의 대가는 철저한 파멸과 고독사였다. 한시우는 법인 인감을 손안에 꽉 쥐었다. 나무 인장의 단단한 감촉이 손바닥을 파고들었다. 창밖으로 2006년 초겨울의 차가운 아침 햇살이 저택의 정원을 비추기 시작했다. 거울 속의 젊은 얼굴은 더 이상 과거의 유약한 막내가 아니었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "no_prev_anchor"
+    ],
+    "type": "jump_opening"
+  },
+  "pacing_notes": "도입부의 죽음 직전 묘사에서 빠른 호흡으로 긴장감을 유발하고, 회귀 자각 과정에서 감정적 동요를 밀도 있게 다룸. 후반부 두통과 정보 각인 씬에서 긴장도를 다시 높인 뒤, 결의를 다지는 장면으로 차분하게 마무리하여 다음 전개에 대한 기대감을 조성함.",
+  "protagonist_state": {
+    "equipment": [
+      "평상복",
+      "구형 휴대전화",
+      "20억 원 예치 법인 통장 사본",
+      "HTS 설치 구형 랩탑",
+      "SW인베스트먼트 법인 인감"
+    ],
+    "injuries": "없음",
+    "mood": "극심한 혼란에서 차가운 확신으로 변화"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "고독사의 기억과 회귀 직후의 혼란 묘사",
+      "key_events": [
+        "난방조차 끊긴 2024년 원룸에서의 쓸쓸한 죽음의 감각을 회상",
+        "숨이 막히는 고통 속에서 눈을 번쩍 뜨며 성북동 저택 침대에서 기상",
+        "죽지 않고 살아있다는 사실과 이질적인 주변 풍경에 극심한 혼란을 느낌"
+      ],
+      "location": "서울 성북동 본가, 한시우의 개인 침실",
+      "summary": "2024년 차디찬 원룸에서 고독사하던 기억을 생생하게 느끼며 성북동 저택 침대에서 거친 숨을 내쉬며 깨어나는 한시우.",
+      "tension_level": 6,
+      "title": "끝과 시작",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "회귀 사실의 자각과 내면의 감정 동요",
+      "key_events": [
+        "비틀거리며 욕실로 향해 거울 속에 비친 앳된 자신의 얼굴을 확인",
+        "탁자 위에 놓인 투박한 구형 휴대전화의 폴더를 열어 '2006년'이라는 액정 화면을 응시",
+        "가족들에게 외면받고 철저히 부서지기 전의 시간으로 돌아왔다는 사실에 실소와 허탈감을 내뱉음"
+      ],
+      "location": "서울 성북동 본가, 한시우의 개인 침실",
+      "summary": "거울에 비친 자신의 젊은 얼굴과 구형 휴대전화의 날짜를 확인하며 2006년으로 돌아왔음을 깨닫는다.",
+      "tension_level": 5,
+      "title": "낯선 과거의 얼굴",
+      "type": "emotional_reveal"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "미래 지식의 각인과 두통",
+      "key_events": [
+        "머리를 부여잡고 바닥에 주저앉을 만큼 극심한 두통이 발생",
+        "2024년까지 겪었던 거시경제 지표, 폭락장, 유가 변동 등 18년 치의 방대한 데이터가 선명하게 떠오름",
+        "고통이 서서히 가라앉으며 이 지식들이 단순한 환상이 아님을 직감함"
+      ],
+      "location": "서울 성북동 본가, 한시우의 개인 침실",
+      "summary": "갑작스럽게 머리를 깨는 듯한 두통이 밀려오며 18년 치의 경제 데이터가 뇌리에 박힌다.",
+      "tension_level": 7,
+      "title": "정보의 해일",
+      "type": "tension_build"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "goal": "현재 상황 파악 및 감정적 결의",
+      "key_events": [
+        "책상 위에 놓인 HTS가 설치된 구형 랩탑과 20억 원이 찍힌 법인 통장 사본, SW인베스트먼트 법인 인감을 차례로 쓰다듬음",
+        "과거 무력하게 집안에서 버려졌던 자신의 모습을 떠올리며 감정을 억누름",
+        "창밖으로 밝아오는 2006년의 아침 햇살을 바라보며, 이번 생은 철저히 자신의 힘으로 서겠다는 내면의 다짐을 굳힘"
+      ],
+      "location": "서울 성북동 본가, 한시우의 개인 침실",
+      "summary": "책상 위의 물건들을 확인하며 과거의 상처를 반복하지 않겠다는 묵직한 결의를 다진다.",
+      "tension_level": 5,
+      "title": "침묵 속의 다짐",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가, 한시우의 개인 침실",
+  "target_beat": "회귀 사실 자각 및 미래 지식 획득의 감정적 수용",
+  "time_flow": "2024년 겨울(죽음 직전) → 2006년 초겨울 아침",
+  "title": "회귀의 아침"
+}

@@ -134,6 +134,62 @@ def test_qualify_blueprint_candidates_tracks_pass_and_fail_metadata():
     ]
 
 
+def test_run_blueprint_ensemble_workers_tracks_screening_disqualified_strategies():
+    agent = _make_agent()
+    agent._generate_single = MagicMock(
+        side_effect=[
+            (None, AgentErrorType.CANDIDATE_DISQUALIFIED),
+            (None, AgentErrorType.CANDIDATE_DISQUALIFIED),
+        ]
+    )
+
+    candidates, worker_error_types = agent._run_blueprint_ensemble_workers(
+        ep_num=2,
+        active_strategies=[
+            {"name": "action_focused"},
+            {"name": "dialogue_focused"},
+        ],
+        arc_focus="focus",
+        constraints_str="constraints",
+        tactical_excerpt="tactical",
+        prev_info="prev",
+        feedback="",
+        strategy_specific_feedback="",
+        rejected_strategy="",
+        protagonist_name="한시우",
+        protagonist_config={"pov": "혼합"},
+        hud_context="hud",
+        genre=GenreTypes.WUXIA,
+        cache_name="cache/bp",
+        prev_blueprint=None,
+        constraint_block={},
+        fix_pack=None,
+        repair_contract=None,
+    )
+
+    assert candidates == []
+    assert worker_error_types == [
+        AgentErrorType.CANDIDATE_DISQUALIFIED,
+        AgentErrorType.CANDIDATE_DISQUALIFIED,
+    ]
+    assert agent.last_disqualified_candidates == [
+        {
+            "strategy": "action_focused",
+            "scene_count": 0,
+            "integrated_len": 0,
+            "contract_reason": "screening_disqualified",
+            "ordinal": 0,
+        },
+        {
+            "strategy": "dialogue_focused",
+            "scene_count": 0,
+            "integrated_len": 0,
+            "contract_reason": "screening_disqualified",
+            "ordinal": 1,
+        },
+    ]
+
+
 def test_qualify_blueprint_candidates_accepts_dense_three_scene_blueprint():
     agent = _make_agent()
 
@@ -1400,3 +1456,61 @@ def test_tranche1_normalize_direct_continuation_time_flow_accepts_month_only_con
 
     assert inherited == "5월"
     assert candidate["time_flow"] == "5월"
+
+
+def test_tranche1_normalize_terminal_arc_ending_timeline_promotes_exact_arc_end_for_terminal_episode():
+    candidate = {
+        "ending_state": {
+            "timeline": {
+                "표현": "2006년 1월 늦은 오후",
+            }
+        }
+    }
+
+    normalized = BlueprintEnsembleGenerator._normalize_terminal_arc_ending_timeline(
+        candidate,
+        constraint_block={
+            "terminal_timeline_lock": {
+                "mode": "exact_terminal_match",
+                "expression": "2006년 1월 15일 - 법인 설립 및 20억 자금 확보 완료",
+                "timeline": {
+                    "year": 2006,
+                    "month": 1,
+                    "day": 15,
+                    "description": "법인 설립 및 20억 자금 확보 완료",
+                },
+            }
+        },
+    )
+
+    assert normalized == "2006년 1월 15일 - 법인 설립 및 20억 자금 확보 완료"
+    assert candidate["ending_state"]["timeline"]["day"] == 15
+
+
+def test_tranche1_normalize_terminal_arc_ending_timeline_skips_cross_month_drift():
+    candidate = {
+        "ending_state": {
+            "timeline": {
+                "표현": "2006년 2월 초",
+            }
+        }
+    }
+
+    normalized = BlueprintEnsembleGenerator._normalize_terminal_arc_ending_timeline(
+        candidate,
+        constraint_block={
+            "terminal_timeline_lock": {
+                "mode": "exact_terminal_match",
+                "expression": "2006년 1월 15일 - 법인 설립 및 20억 자금 확보 완료",
+                "timeline": {
+                    "year": 2006,
+                    "month": 1,
+                    "day": 15,
+                    "description": "법인 설립 및 20억 자금 확보 완료",
+                },
+            }
+        },
+    )
+
+    assert normalized == ""
+    assert candidate["ending_state"]["timeline"]["표현"] == "2006년 2월 초"

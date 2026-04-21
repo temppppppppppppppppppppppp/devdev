@@ -745,6 +745,72 @@ def test_lane_c_python_pre_validate_accepts_work_identity_opening_when_receipt_s
     assert not any(issue["category"] == "work_identity_opening" for issue in pre_result["issues"])
 
 
+def test_lane_c_python_pre_validate_flags_work_identity_opening_drift_for_multi_location_partial_progression(tmp_path):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    (config_dir / "work_guard.yaml").write_text(
+        textwrap.dedent(
+            """\
+            work_identity:
+              tracking_slots:
+                - visible pressure -> execution -> public proof -> private receipt -> observer shift -> next gate
+              mandatory_scene_engines:
+                - first proof must lock into private receipt and next gate
+            custom_rules:
+              - first proof must not end at public proof only
+            """
+        ),
+        encoding="utf-8",
+    )
+    context = MagicMock()
+    context.current_project.paths.root = tmp_path
+    validator = UnifiedBlueprintValidator(context=context, client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "ep_num": 4,
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "Hallway pressure",
+                    "goal": "Move fast after the previous ending.",
+                    "summary": "Public proof starts in the hallway.",
+                    "characters": ["Lead", "PB"],
+                    "key_events": ["The lead pushes the first move into the open."],
+                    "location": "Hallway",
+                    "type": "execution_visible",
+                },
+                "scene_2": {
+                    "title": "VIP room paperwork",
+                    "goal": "Secure private receipt language without a real observer shift.",
+                    "summary": "A private receipt is mentioned, but the PB does not reevaluate the lead.",
+                    "characters": ["Lead", "PB"],
+                    "key_events": ["The paperwork stays procedural and no observer shift lands."],
+                    "location": "VIP room",
+                    "type": "dialogue_duel",
+                },
+                "scene_3": {
+                    "title": "Temporary office setup",
+                    "goal": "Keep moving without locking a visible next gate.",
+                    "summary": "The setup keeps moving, but no signboard or next-cycle ticket is fixed.",
+                    "characters": ["Lead"],
+                    "key_events": ["The route changes again without locking the authority ladder."],
+                    "location": "Temporary office",
+                    "type": "setup_motion",
+                },
+            },
+            "integrated_scenario": "C" * 900,
+        },
+        constraint_block={},
+        prev_blueprint=None,
+        state_tracker=None,
+        arc_data={},
+    )
+
+    issue = next(issue for issue in pre_result["issues"] if issue["category"] == "work_identity_opening")
+    assert issue["severity"] == "MAJOR"
+    assert "next gate" in issue["issue"]
+
+
 def test_lane_c_python_pre_validate_allows_authorized_scene1_anchor_shift_without_replay_false_positive():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
@@ -808,6 +874,79 @@ def test_lane_c_python_pre_validate_allows_authorized_scene1_anchor_shift_withou
             "scene_breakdown": {
                 "scene_4": {"location": "Packet Hall", "characters": ["lead", "pb"]},
                 "scene_5": {"location": "PB Office", "characters": ["lead", "pb"]},
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not any(issue["category"] == "episode_progression" for issue in pre_result["issues"])
+
+
+def test_lane_c_python_pre_validate_allows_authorized_scene1_time_cut_without_replay_false_positive():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "opening_transition": {"type": "jump_opening"},
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "2주 뒤의 재입장",
+                    "goal": "같은 VIP룸이라도 2주 뒤 새 압박 국면에 진입한다.",
+                    "summary": "한시우가 4월 중순의 VIP룸에서 다시 압박을 받는다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["4월 중순으로 점프한 opening time cut을 먼저 선언한다."],
+                    "location": "한미증권 VIP룸",
+                    "type": "opening_hook",
+                },
+                "scene_2": {
+                    "title": "버티기 압박",
+                    "goal": "같은 방에서 익절 압박을 받는다.",
+                    "summary": "박성호가 익절 압박을 건네지만 한시우는 아직 버틴다고 말한다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["박성호가 익절 압박을 전달한다."],
+                    "location": "한미증권 VIP룸",
+                    "type": "tension_build",
+                },
+            },
+            "integrated_scenario": "D" * 900,
+        },
+        constraint_block={
+            "must_focus": {"content": "약 2주 후, 같은 VIP룸에서 박성호의 익절 압박을 받되 아직 버틴다고 단언한다."},
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_3",
+                        "label": "직통 라인 확보",
+                        "location": "한미증권 VIP룸",
+                        "location_variants": ["한미증권 VIP룸", "VIP룸"],
+                        "characters": ["한시우", "박성호"],
+                        "type": "authority_capture",
+                    },
+                    {
+                        "scene_key": "scene_4",
+                        "label": "다음 타깃 포착",
+                        "location": "한미증권 VIP룸",
+                        "location_variants": ["한미증권 VIP룸", "VIP룸"],
+                        "characters": ["한시우", "박성호"],
+                        "type": "cliffhanger",
+                    },
+                ]
+            },
+            "episode_state_packet": {
+                "opening_truth": {
+                    "opening_transition_expectation": (
+                        "opening time jumped beyond the previous ending time while reusing the same anchor; "
+                        "do not declare direct_continuation. "
+                        "Use explicit_transition or jump_opening and state the time cut immediately."
+                    )
+                }
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_3": {"location": "한미증권 VIP룸", "characters": ["한시우", "박성호"]},
+                "scene_4": {"location": "한미증권 VIP룸", "characters": ["한시우", "박성호"]},
             }
         },
         state_tracker=None,
@@ -964,6 +1103,81 @@ def test_lane_c_python_pre_validate_allows_lawful_repetition_when_authority_capt
                     "location": "한미증권 본점 VIP룸",
                     "characters": ["한시우", "박성호"],
                 },
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert not any(issue["category"] == "episode_progression" for issue in pre_result["issues"])
+
+
+def test_lane_c_python_pre_validate_allows_lawful_repetition_when_execution_rotates_same_room():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "원유 전량 청산",
+                    "goal": "같은 VIP 상담실에서 남은 원유 롱 포지션을 전량 청산한다.",
+                    "summary": "한시우가 같은 방에서 남은 원유 포지션을 정리하며 자금을 확보한다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["남은 원유 롱 포지션을 전량 청산한다.", "청산 확인서를 회수한다."],
+                    "location": "서울 강남, SW인베스트먼트 VIP 상담실",
+                    "type": "execution_rotation",
+                },
+                "scene_2": {
+                    "title": "금 선물 체결",
+                    "goal": "같은 방에서 확보 자금으로 금 선물 15억 원 매수에 즉시 진입한다.",
+                    "summary": "예외 계좌 권한으로 즉각 체결을 밀어붙인다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["금 선물 15억 원 매수 주문을 넣는다.", "체결 확인서를 받는다."],
+                    "location": "서울 강남, SW인베스트먼트 VIP 상담실",
+                    "type": "execution_lock",
+                },
+            },
+            "integrated_scenario": "E" * 900,
+        },
+        constraint_block={
+            "must_focus": {
+                "content": (
+                    "예외 계좌 승인 직후 남은 원유 롱 포지션을 전량 청산하고 "
+                    "확보된 자금 15억 원으로 금 선물 레버리지 매수에 즉시 진입한다."
+                )
+            },
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_3",
+                        "label": "예외 계좌 승인",
+                        "location": "서울 강남, SW인베스트먼트 VIP 상담실",
+                        "location_variants": ["서울 강남, SW인베스트먼트 VIP 상담실", "VIP 상담실"],
+                        "characters": ["한시우", "박성호"],
+                        "type": "authority_capture",
+                    },
+                    {
+                        "scene_key": "scene_4",
+                        "label": "승인 문서 수령",
+                        "location": "서울 강남, SW인베스트먼트 VIP 상담실",
+                        "location_variants": ["서울 강남, SW인베스트먼트 VIP 상담실", "VIP 상담실"],
+                        "characters": ["한시우", "박성호"],
+                        "type": "relationship_shift",
+                    },
+                ],
+                "lawful_repetition_window": {
+                    "mode": "allow_escalated_repeat",
+                    "allow_same_location_if_goal_changes": True,
+                    "allow_same_counterparty_if_goal_changes": True,
+                    "allow_same_channel_if_decision_escalates": True,
+                    "escalation_tokens": ["청산", "매수", "진입", "체결"],
+                },
+            },
+        },
+        prev_blueprint={
+            "scene_breakdown": {
+                "scene_3": {"location": "서울 강남, SW인베스트먼트 VIP 상담실", "characters": ["한시우", "박성호"]},
+                "scene_4": {"location": "서울 강남, SW인베스트먼트 VIP 상담실", "characters": ["한시우", "박성호"]},
             }
         },
         state_tracker=None,
@@ -1475,6 +1689,33 @@ def test_lane_c_arc_timeline_requires_terminal_episode_to_match_arc_end():
 
     assert len(issues) == 1
     assert issues[0]["category"] == "arc_timeline"
+
+
+def test_lane_c_arc_timeline_preserves_same_month_day_window_for_non_terminal_episode():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    issues = validator._collect_arc_timeline_alignment_issues(
+        blueprint={
+            "ep_num": 5,
+            "ending_state": {
+                "timeline": {
+                    "표현": "2006년 2월 20일 오후",
+                }
+            },
+        },
+        arc_data={
+            "ep_start": 5,
+            "ep_end": 9,
+            "state_changes": {
+                "timeline": {
+                    "start": {"year": 2006, "month": 2, "day": 15},
+                    "end": {"year": 2006, "month": 2, "day": 28},
+                }
+            },
+        },
+    )
+
+    assert issues == []
 
 
 def test_lane_c_arc_timeline_ignores_future_foreshadow_month_in_terminal_expression():

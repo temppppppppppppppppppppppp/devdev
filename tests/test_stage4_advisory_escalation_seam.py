@@ -116,16 +116,18 @@ class TestAdvisoryEscalationFixScope:
     def test_non_advisory_fix_scope_violation_does_not_get_partial(self):
         """G2-only (no advisory) must NOT inject fix_scope='partial'."""
         ir = _make_ir(advisory_summary={})
-        result = ir._normalize_director_gate_semantics({
-            "director_verdict": "PASS_WITH_FIX",
-            "final_verdict": "PASS_WITH_FIX",
-            "verdict": "PASS_WITH_FIX",
-            "authoritative_fix_scope": "",
-            "fix_scope": "",
-            "repair_scope": "none",
-            "gate_basis": "",
-            "fix_pack": {},
-        })
+        result = ir._normalize_director_gate_semantics(
+            {
+                "director_verdict": "PASS_WITH_FIX",
+                "final_verdict": "PASS_WITH_FIX",
+                "verdict": "PASS_WITH_FIX",
+                "authoritative_fix_scope": "",
+                "fix_scope": "",
+                "repair_scope": "none",
+                "gate_basis": "",
+                "fix_pack": {},
+            }
+        )
         assert result["final_verdict"] == "REJECT"
         assert result["gate_basis"] == "fix_scope_contract_violation"
         # fix_scope stays blank for non-advisory G2
@@ -393,6 +395,38 @@ class TestAdvisoryEscalationHappyPathRegression:
         assert result["strong_advisory_escalation"]["backfilled_from"] == ["npc_drift_relation_tag_semantic"]
         assert result["fix_pack"]["provenance_sources"] == ["npc_drift_relation_tag_semantic"]
 
+    def test_pass_with_textual_relation_to_protag_npc_drift_synthesizes_local_fix_contract(self):
+        ir = _make_ir(advisory_summary={"npc_drift": 1})
+        ir._last_advisory_metadata = {
+            "npc_drift": [
+                {
+                    "npc": "박성호PB",
+                    "field": "relation_to_protag",
+                    "expected": "주인공을 얕보지만 계획에 동원되는 조력자",
+                    "expected_truth": "주인공을 얕보지만 계획에 동원되는 조력자",
+                    "found_in_ms": "박성호PB는 주인공을 별 감정 없는 거래 상대로만 여겼다",
+                    "_cand_idx": 0,
+                }
+            ]
+        }
+        result = ir._normalize_director_gate_semantics(
+            _base_pass_result(
+                selected="A",
+                authoritative_fix_scope="inplace",
+                fix_scope="inplace",
+                fix_pack={},
+            )
+        )
+
+        assert result["final_verdict"] == "PASS_WITH_FIX"
+        assert result["fix_pack"]["target_kind"] == "local_phrase"
+        assert "박성호PB" in result["fix_pack"]["patch_targets"][0]
+        assert "relation_to_protag 관계 표현" in result["fix_pack"]["must_fix"][0]
+        assert "prior truth:" in result["fix_pack"]["do_not_regress"][0]
+        assert result["strong_advisory_escalation"]["backfilled_from"] == ["npc_drift_relation_field_localfix"]
+        assert result["fix_pack"]["provenance"] == "runtime_synthesized"
+        assert result["fix_pack"]["provenance_sources"] == ["npc_drift_relation_field_localfix"]
+
     def test_pass_with_flashback_contradiction_synthesizes_local_fix_contract_from_zero(self):
         """Flashback local continuity contradictions may synthesize a zero-to-local fix contract."""
         ir = _make_ir(advisory_summary={"flashback": 1})
@@ -514,14 +548,16 @@ class TestAdvisoryEscalationHappyPathRegression:
     def test_reject_verdict_unchanged(self):
         """Existing REJECT must not be re-escalated or modified."""
         ir = _make_ir(advisory_summary={"truth_gate": 1})
-        result = ir._normalize_director_gate_semantics({
-            "director_verdict": "REJECT",
-            "final_verdict": "REJECT",
-            "verdict": "REJECT",
-            "authoritative_fix_scope": "",
-            "fix_scope": "full",
-            "gate_basis": "director_primary_reject",
-        })
+        result = ir._normalize_director_gate_semantics(
+            {
+                "director_verdict": "REJECT",
+                "final_verdict": "REJECT",
+                "verdict": "REJECT",
+                "authoritative_fix_scope": "",
+                "fix_scope": "full",
+                "gate_basis": "director_primary_reject",
+            }
+        )
         assert result["final_verdict"] == "REJECT"
         assert result["gate_basis"] == "director_primary_reject"
         assert result["fix_scope"] == "full"
@@ -699,8 +735,13 @@ class TestPostSelectConflictRetryRouting:
         previous_attempt = {
             "score": 95,
             "fix_scope": "full",
-            "fix_pack": {"patch_targets": ["anchor"], "must_fix": ["x"], "do_not_regress": ["y"],
-                         "success_condition": "ok", "target_kind": "dialogue"},
+            "fix_pack": {
+                "patch_targets": ["anchor"],
+                "must_fix": ["x"],
+                "do_not_regress": ["y"],
+                "success_condition": "ok",
+                "target_kind": "dialogue",
+            },
             "reject_bucket": "post_select_conflict",
             "selected_strategy_key": "balanced",
             "prior_attempts": [],
@@ -803,11 +844,12 @@ class TestAdvisoryEscalationObservability:
         policy_calls = [
             call
             for call in ir.ctx.ui.log.call_args_list
-            if call.kwargs.get("component") == "director_gate"
-            and call.kwargs.get("event_kind") == "policy"
+            if call.kwargs.get("component") == "director_gate" and call.kwargs.get("event_kind") == "policy"
         ]
         assert policy_calls
-        assert any(call.kwargs.get("meta", {}).get("triggered_by") == ["flashback", "truth_gate"] for call in policy_calls)
+        assert any(
+            call.kwargs.get("meta", {}).get("triggered_by") == ["flashback", "truth_gate"] for call in policy_calls
+        )
 
     def test_non_local_fix_reject_logs_contract_reason(self):
         ir = _make_ir(advisory_summary={"flashback": 1})
@@ -824,8 +866,7 @@ class TestAdvisoryEscalationObservability:
         policy_calls = [
             call
             for call in ir.ctx.ui.log.call_args_list
-            if call.kwargs.get("component") == "director_gate"
-            and call.kwargs.get("event_kind") == "policy"
+            if call.kwargs.get("component") == "director_gate" and call.kwargs.get("event_kind") == "policy"
         ]
         assert any(
             call.kwargs.get("meta", {}).get("gate_basis") == "strong_advisory_escalation_non_local_fix"

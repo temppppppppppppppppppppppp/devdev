@@ -2,6 +2,7 @@
 Stage4 retry/runtime orchestration split.
 """
 
+import copy
 import hashlib
 import logging
 from dataclasses import dataclass
@@ -248,7 +249,7 @@ class Stage4RetryRuntime:
         previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
         if not candidates or not previous_attempt:
             return candidates
-        if isinstance(previous_attempt.get("reuse_contract"), dict):
+        if self._should_bypass_duplicate_suppression_due_to_reuse_contract(previous_attempt):
             return candidates
 
         prior_hash = str(previous_attempt.get("content_hash", "") or "").strip()
@@ -309,6 +310,45 @@ class Stage4RetryRuntime:
             prior_hash[:16],
         )
         return filtered
+
+    @staticmethod
+    def _should_bypass_duplicate_suppression_due_to_reuse_contract(previous_attempt: dict | None) -> bool:
+        previous_attempt = previous_attempt if isinstance(previous_attempt, dict) else {}
+        reuse_contract = previous_attempt.get("reuse_contract")
+        if not isinstance(reuse_contract, dict) or not reuse_contract:
+            return False
+
+        conflict_contract = previous_attempt.get("conflict_contract")
+        if not isinstance(conflict_contract, dict) or not conflict_contract:
+            return True
+
+        if not bool(conflict_contract.get("bounded_local_fix_hint")):
+            return False
+
+        rewrite_required_reasons = {
+            str(item or "").strip().lower()
+            for item in (conflict_contract.get("rewrite_required_reasons") or [])
+            if str(item or "").strip()
+        }
+        if rewrite_required_reasons:
+            return False
+
+        conflict_types = {
+            str(item.get("conflict_type", "") or "").strip().lower()
+            for item in (conflict_contract.get("conflicts") or [])
+            if isinstance(item, dict) and str(item.get("conflict_type", "") or "").strip()
+        }
+        contradiction_types = {
+            str(item or "").strip().lower()
+            for item in (conflict_contract.get("contradiction_types") or [])
+            if str(item or "").strip()
+        }
+        effective_types = conflict_types | contradiction_types
+        if {"continuity", "history"}.issubset(effective_types):
+            return False
+        if "history" in effective_types or "proper_noun" in effective_types:
+            return False
+        return True
 
     def execute_pass_with_fix_loop(
         self,
@@ -929,8 +969,22 @@ class Stage4RetryRuntime:
                 prev_manuscripts_text=round_ctx.prev_manuscripts_text,
                 story_context=re_story_context,
             )
-            re_audit = owner._normalize_director_gate_semantics(re_audit)
-            re_audit = owner._enforce_pass_with_fix_contract(re_audit)
+            # PASS_WITH_FIX re-audit judges the already-patched manuscript only.
+            # Do not let stale advisory caches from the previous round re-escalate
+            # a fresh PASS after the targeted local patch has already addressed it.
+            advisory_summary_snapshot = copy.deepcopy(getattr(owner, "_last_advisory_summary", None) or {})
+            advisory_details_snapshot = copy.deepcopy(getattr(owner, "_last_advisory_details", None) or [])
+            advisory_metadata_snapshot = copy.deepcopy(getattr(owner, "_last_advisory_metadata", None) or {})
+            try:
+                owner._last_advisory_summary = {}
+                owner._last_advisory_details = []
+                owner._last_advisory_metadata = {}
+                re_audit = owner._normalize_director_gate_semantics(re_audit)
+                re_audit = owner._enforce_pass_with_fix_contract(re_audit)
+            finally:
+                owner._last_advisory_summary = advisory_summary_snapshot
+                owner._last_advisory_details = advisory_details_snapshot
+                owner._last_advisory_metadata = advisory_metadata_snapshot
             return _PassWithFixReauditPayload(
                 should_abort=False,
                 re_audit=re_audit,

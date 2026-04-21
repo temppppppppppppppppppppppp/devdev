@@ -87,8 +87,15 @@ class StudioVisualizer:
             meta = {**meta, **context}
         emit_console = bool(meta.pop("emit_console", True))
         visible = bool(meta.get("visible", True))
+        console_render_failed = False
         if visible and emit_console:
-            self.console.print(f"   [dim]{message}[/]")
+            try:
+                self.console.print(f"   [dim]{message}[/]")
+            except OSError as exc:  # pragma: no cover - depends on console handle state
+                console_render_failed = True
+                logging.getLogger("UI").warning("console render failed: %s", exc)
+        if console_render_failed:
+            meta["console_render_failed"] = True
         logging.getLogger("UI").info(message)  # [TF-26] 파일 듀얼 출력
         if self._operator_event_sink is None:
             return

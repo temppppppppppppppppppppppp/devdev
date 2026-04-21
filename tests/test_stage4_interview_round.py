@@ -196,6 +196,79 @@ def _normalize_test_pass_episode_log_request(*, request, session_id=None):
     )
 
 
+def test_retry_duplicate_suppression_does_not_auto_bypass_for_rewrite_required_post_select_reuse_contract():
+    ctx = _make_ctx()
+    ir = Stage4InterviewRound(ctx)
+
+    duplicate_manuscript = "same rejected manuscript"
+    duplicate_hash = ir.retry_runtime._compute_candidate_content_hash(duplicate_manuscript)
+    candidates = [
+        {"manuscript": duplicate_manuscript},
+        {"manuscript": "fresh manuscript candidate"},
+    ]
+    previous_attempt = {
+        "content_hash": duplicate_hash,
+        "reject_bucket": "post_select_conflict",
+        "reuse_contract": {"mode": "best_manuscript_baseline"},
+        "conflict_contract": {
+            "bounded_local_fix_hint": False,
+            "rewrite_required_reasons": ["history_truth"],
+            "conflicts": [{"conflict_type": "history"}],
+            "contradiction_types": ["history"],
+        },
+    }
+
+    filtered = ir.retry_runtime.suppress_equivalent_retry_candidates(
+        candidates=candidates,
+        previous_attempt=previous_attempt,
+        retry_family="rewrite_regenerate",
+        reject_bucket="post_select_conflict",
+        fix_pack_reason="",
+        ep_num=4,
+        round_num=1,
+        arc_num=1,
+    )
+
+    assert len(filtered) == 1
+    assert filtered[0]["manuscript"] == "fresh manuscript candidate"
+
+
+def test_retry_duplicate_suppression_still_bypasses_for_bounded_local_fix_reuse_contract():
+    ctx = _make_ctx()
+    ir = Stage4InterviewRound(ctx)
+
+    duplicate_manuscript = "same rejected manuscript"
+    duplicate_hash = ir.retry_runtime._compute_candidate_content_hash(duplicate_manuscript)
+    candidates = [
+        {"manuscript": duplicate_manuscript},
+        {"manuscript": "fresh manuscript candidate"},
+    ]
+    previous_attempt = {
+        "content_hash": duplicate_hash,
+        "reject_bucket": "post_select_conflict",
+        "reuse_contract": {"mode": "best_manuscript_baseline"},
+        "conflict_contract": {
+            "bounded_local_fix_hint": True,
+            "rewrite_required_reasons": [],
+            "conflicts": [{"conflict_type": "continuity"}],
+            "contradiction_types": ["opening_action_continuity"],
+        },
+    }
+
+    filtered = ir.retry_runtime.suppress_equivalent_retry_candidates(
+        candidates=candidates,
+        previous_attempt=previous_attempt,
+        retry_family="rewrite_regenerate",
+        reject_bucket="post_select_conflict",
+        fix_pack_reason="",
+        ep_num=4,
+        round_num=1,
+        arc_num=1,
+    )
+
+    assert len(filtered) == 2
+
+
 def _call_pass_log_builder(builder, request, *, session_id=None):
     return builder(request=_normalize_test_pass_episode_log_request(request=request, session_id=session_id))
 
@@ -5983,6 +6056,50 @@ class TestRecordS4Attempt:
         assert payload.should_abort is True
         assert payload.re_audit == {}
         assert payload.applied_patch_history == ["patch summary"]
+
+    def test_run_pass_with_fix_reaudit_does_not_reuse_stale_strong_advisory_cache(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        director = MagicMock()
+        director.select_and_judge_ensemble.return_value = {"verdict": "PASS", "score": 97}
+        ir._last_advisory_summary = {"flashback": 1}
+        ir._last_advisory_details = ["stale flashback advisory"]
+        ir._last_advisory_metadata = {
+            "flashback": [
+                {
+                    "marker": "과거의",
+                    "issue": "회귀 전 죽음의 장소를 원룸으로 잘못 회상함",
+                    "contradiction_subtype": "location",
+                    "expected_truth": "서울 성북동 본가 저택 한시우의 개인 침실",
+                    "local_fixable": True,
+                    "_cand_idx": 0,
+                }
+            ]
+        }
+
+        payload = ir.retry_runtime._run_pass_with_fix_reaudit(
+            director=director,
+            round_ctx=round_ctx,
+            round_num=0,
+            score=92,
+            current_feedback="tighten ending",
+            current_audit_result={"verdict": "PASS_WITH_FIX", "fix_scope": "inplace"},
+            patched_candidates=[{"state_updates": {"ending": "tightened"}}],
+            patched_manuscript="patched manuscript " * 50,
+            final_state_updates={"seed": True},
+            director_mandatory_context="MANDATORY",
+            applied_patch_history=[],
+            last_patch_trace={"patch_strategy": "inplace_patch"},
+            f2_advisory="",
+        )
+
+        assert payload.should_abort is False
+        assert payload.re_audit["verdict"] == "PASS"
+        assert "strong_advisory_escalation" not in payload.re_audit
+        assert ir._last_advisory_summary == {"flashback": 1}
+        assert ir._last_advisory_details == ["stale flashback advisory"]
+        assert ir._last_advisory_metadata["flashback"][0]["contradiction_subtype"] == "location"
 
     def test_apply_pass_with_fix_reaudit_verdict_rejects_quality_floor_failure(self):
         ctx = _make_ctx()

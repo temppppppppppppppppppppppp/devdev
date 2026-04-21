@@ -2741,6 +2741,66 @@ class Stage4InterviewRound:
             "evidence_summary": evidence_summary,
         }
 
+    def _build_npc_drift_relation_field_fix_pack(self, director_result: dict | None) -> dict:
+        if not isinstance(director_result, dict):
+            return {}
+        metadata = getattr(self, "_last_advisory_metadata", None) or {}
+        drift_items = metadata.get("npc_drift") or []
+        if not isinstance(drift_items, list) or not drift_items:
+            return {}
+        selected_idx = self._selected_candidate_index_for_fix_contract(director_result)
+        relevant: list[dict] = []
+        for item in drift_items:
+            if not isinstance(item, dict):
+                continue
+            subtype = str(item.get("subtype", item.get("drift_subtype", "")) or "").strip().lower()
+            if subtype == "relation_tag_semantic":
+                continue
+            field = str(item.get("field", "") or "").strip().lower()
+            if field != "relation_to_protag":
+                continue
+            cand_idx = item.get("_cand_idx")
+            if selected_idx is not None and cand_idx not in {None, selected_idx}:
+                continue
+            expected_truth = str(item.get("expected_truth", item.get("expected", "")) or "").strip()
+            if not expected_truth:
+                continue
+            relevant.append(item)
+        if not relevant:
+            return {}
+
+        npc_labels: list[str] = []
+        truth_markers: list[str] = []
+        patch_targets: list[str] = []
+        for item in relevant:
+            npc = str(item.get("npc", "") or "").strip()
+            if npc and npc not in npc_labels:
+                npc_labels.append(npc)
+            expected_truth = str(item.get("expected_truth", item.get("expected", "")) or "").strip()
+            if expected_truth:
+                truth_marker = f"{npc}:{expected_truth}" if npc else expected_truth
+                if truth_marker not in truth_markers:
+                    truth_markers.append(truth_marker)
+            target_label = f"{npc} relation_to_protag 관계 서술 문장" if npc else "relation_to_protag 관계 서술 문장"
+            if target_label not in patch_targets:
+                patch_targets.append(target_label)
+
+        do_not_regress = [f"prior truth: {item}" for item in truth_markers[:2]]
+        do_not_regress.append("canonical relation_to_protag 방향과 관계 축을 뒤집는 새 관계 설정을 추가하지 말 것")
+        evidence_summary = "runtime npc_drift relation_to_protag localfix"
+        if truth_markers:
+            evidence_summary = f"{evidence_summary}: {'; '.join(truth_markers[:2])}"
+        target_suffix = f" ({', '.join(npc_labels[:2])})" if npc_labels else ""
+        return {
+            "patch_targets": patch_targets[:3] or [f"relation_to_protag 관계 서술 문장{target_suffix}"],
+            "must_fix": ["relation_to_protag 관계 표현을 canonical truth에 맞게 국소 수정"],
+            "do_not_regress": do_not_regress[:4],
+            "success_condition": "NpcDrift relation_to_protag 경고가 사라지고 관계 서술이 canonical truth와 합치한다",
+            "target_kind": "local_phrase",
+            "subtype": "relation_field",
+            "evidence_summary": evidence_summary,
+        }
+
     @staticmethod
     def _infer_flashback_contradiction_subtype(item: dict | None) -> str:
         if not isinstance(item, dict):
@@ -2878,6 +2938,9 @@ class Stage4InterviewRound:
         semantic_fix_pack = (
             self._build_npc_drift_relation_tag_fix_pack(director_result) if "npc_drift" in triggered else {}
         )
+        relation_field_fix_pack = (
+            self._build_npc_drift_relation_field_fix_pack(director_result) if "npc_drift" in triggered else {}
+        )
         flashback_fix_pack = (
             self._build_flashback_continuity_fix_pack(director_result) if "flashback" in triggered else {}
         )
@@ -2889,6 +2952,15 @@ class Stage4InterviewRound:
                 semantic_fix_pack,
                 provenance="runtime_synthesized",
                 provenance_sources=["npc_drift_relation_tag_semantic"],
+            )
+        if not fix_pack and relation_field_fix_pack:
+            escalation["local_fix_contract_backfilled"] = True
+            escalation["backfilled_from"] = ["npc_drift_relation_field_localfix"]
+            escalation["backfill_target_kind"] = relation_field_fix_pack.get("target_kind", "")
+            return self._stamp_fix_pack_provenance(
+                relation_field_fix_pack,
+                provenance="runtime_synthesized",
+                provenance_sources=["npc_drift_relation_field_localfix"],
             )
         if not fix_pack and flashback_fix_pack:
             escalation["local_fix_contract_backfilled"] = True
@@ -2933,6 +3005,36 @@ class Stage4InterviewRound:
                         semantic_changed = True
             if semantic_changed and "npc_drift_relation_tag_semantic" not in specialized_sources:
                 specialized_sources.append("npc_drift_relation_tag_semantic")
+        if relation_field_fix_pack:
+            relation_field_changed = False
+            if not fix_pack.get("target_kind"):
+                fix_pack["target_kind"] = relation_field_fix_pack.get("target_kind", "")
+                target_kind = str(fix_pack.get("target_kind", "") or "").strip().lower()
+                changed = True
+                relation_field_changed = True
+            if target_kind in {"entity_ref", "local_phrase", "local_sentence"}:
+                for key in ("patch_targets", "must_fix", "do_not_regress"):
+                    if not fix_pack.get(key) and relation_field_fix_pack.get(key):
+                        fix_pack[key] = list(relation_field_fix_pack.get(key) or [])
+                        changed = True
+                        relation_field_changed = True
+                if not fix_pack.get("success_condition") and relation_field_fix_pack.get("success_condition"):
+                    fix_pack["success_condition"] = str(relation_field_fix_pack.get("success_condition", "") or "")
+                    changed = True
+                    relation_field_changed = True
+                if relation_field_fix_pack.get("evidence_summary"):
+                    existing_summary = str(fix_pack.get("evidence_summary", "") or "").strip()
+                    relation_field_summary = str(relation_field_fix_pack.get("evidence_summary", "") or "").strip()
+                    if relation_field_summary and relation_field_summary not in existing_summary:
+                        fix_pack["evidence_summary"] = (
+                            f"{existing_summary}; {relation_field_summary}"
+                            if existing_summary
+                            else relation_field_summary
+                        )
+                        changed = True
+                        relation_field_changed = True
+            if relation_field_changed and "npc_drift_relation_field_localfix" not in specialized_sources:
+                specialized_sources.append("npc_drift_relation_field_localfix")
         if flashback_fix_pack:
             flashback_changed = False
             if not fix_pack.get("target_kind"):

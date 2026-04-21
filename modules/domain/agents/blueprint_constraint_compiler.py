@@ -38,8 +38,87 @@ def _resolve_cross_stage_packet(arc_data: dict | None) -> dict:
     return {}
 
 
-def _resolve_cross_stage_opening_location(arc_data: dict | None) -> tuple[str, str]:
-    opening = _coerce_mapping(_resolve_cross_stage_packet(arc_data).get("opening_carryover"))
+def _resolve_arc_start_state(arc_data: dict | None) -> dict:
+    payload = arc_data if isinstance(arc_data, dict) else {}
+    state = _coerce_mapping(payload.get("state_constraints"))
+    return _coerce_mapping(state.get("arc_start_state"))
+
+
+def _cross_stage_packet_conflicts_with_arc_start_state(
+    *,
+    packet: dict | None,
+    arc_data: dict | None,
+    genre: str = "",
+) -> bool:
+    start_state = _resolve_arc_start_state(arc_data)
+    if not start_state:
+        return False
+
+    opening = _coerce_mapping(_coerce_mapping(packet).get("opening_carryover"))
+    start_location = str(start_state.get("location", "") or "").strip()
+    packet_location = str(opening.get("location", "") or "").strip()
+    if start_location and packet_location and packet_location != start_location:
+        return True
+
+    protagonist = _coerce_mapping(_coerce_mapping(packet).get("protagonist_carryover"))
+    start_equipment = [
+        str(item or "").strip() for item in (start_state.get("equipment") or []) if str(item or "").strip()
+    ]
+    packet_equipment = [
+        str(item or "").strip() for item in (protagonist.get("equipment") or []) if str(item or "").strip()
+    ]
+    if start_equipment and packet_equipment and packet_equipment != start_equipment:
+        return True
+
+    start_injuries = str(start_state.get("injuries", "") or "").strip()
+    packet_injuries = str(protagonist.get("injuries", "") or "").strip()
+    if start_injuries and packet_injuries and packet_injuries != start_injuries:
+        return True
+
+    if genre == "wuxia":
+        start_energy = str(start_state.get("internal_energy", "") or "").strip()
+        packet_energy = str(protagonist.get("internal_energy", "") or "").strip()
+        if start_energy and packet_energy and packet_energy != start_energy:
+            return True
+
+    numeric = _coerce_mapping(_coerce_mapping(packet).get("numeric_carryover"))
+    for key in ("capital", "total_assets", "portfolio_position"):
+        start_value = str(start_state.get(key, "") or "").strip()
+        packet_value = str(numeric.get(key, "") or "").strip()
+        if start_value and packet_value and packet_value != start_value:
+            return True
+    return False
+
+
+def _resolve_effective_cross_stage_packet(
+    arc_data: dict | None,
+    *,
+    is_arc_opening_episode: bool = False,
+    genre: str = "",
+) -> dict:
+    packet = _resolve_cross_stage_packet(arc_data)
+    if (
+        is_arc_opening_episode
+        and packet
+        and _cross_stage_packet_conflicts_with_arc_start_state(packet=packet, arc_data=arc_data, genre=genre)
+    ):
+        return {}
+    return packet
+
+
+def _resolve_cross_stage_opening_location(
+    arc_data: dict | None,
+    *,
+    is_arc_opening_episode: bool = False,
+    genre: str = "",
+) -> tuple[str, str]:
+    opening = _coerce_mapping(
+        _resolve_effective_cross_stage_packet(
+            arc_data,
+            is_arc_opening_episode=is_arc_opening_episode,
+            genre=genre,
+        ).get("opening_carryover")
+    )
     return str(opening.get("location", "") or "").strip(), str(opening.get("location_source", "") or "").strip()
 
 
@@ -53,16 +132,24 @@ def _is_arc_opening_episode(*, arc_data: dict | None, ep_num: int) -> bool:
     return bool(ep_start_int and ep_num == ep_start_int)
 
 
-def _resolve_authoritative_arc_opening_location(arc_data: dict | None) -> str:
-    packet_location, _ = _resolve_cross_stage_opening_location(arc_data)
+def _resolve_authoritative_arc_opening_location(
+    arc_data: dict | None,
+    *,
+    is_arc_opening_episode: bool = False,
+    genre: str = "",
+) -> str:
+    packet_location, _ = _resolve_cross_stage_opening_location(
+        arc_data,
+        is_arc_opening_episode=is_arc_opening_episode,
+        genre=genre,
+    )
     if packet_location:
         return packet_location
-    payload = arc_data if isinstance(arc_data, dict) else {}
-    state = _coerce_mapping(payload.get("state_constraints"))
-    arc_start = _coerce_mapping(state.get("arc_start_state"))
+    arc_start = _resolve_arc_start_state(arc_data)
     location = str(arc_start.get("location", "") or "").strip()
     if location:
         return location
+    payload = arc_data if isinstance(arc_data, dict) else {}
     joint_docs = _coerce_mapping(payload.get("joint_docs"))
     return str(joint_docs.get("final_location", "") or "").strip()
 
@@ -73,18 +160,7 @@ def _resolve_authoritative_arc_timeline_text(arc_data: dict | None) -> str:
     timeline = _coerce_mapping(state_changes.get("timeline"))
     for key in ("start", "end"):
         point = timeline.get(key)
-        if isinstance(point, dict):
-            for field in ("description", "expression", "text", "raw"):
-                text = str(point.get(field, "") or "").strip()
-                if text:
-                    return text
-            year = str(point.get("year", "") or "").strip()
-            month = str(point.get("month", "") or "").strip()
-            day = str(point.get("day", "") or "").strip()
-            parts = [part for part in (year, month, day) if part]
-            if parts:
-                return " ".join(parts)
-        text = str(point or "").strip()
+        text = _render_timeline_point_text(point)
         if text:
             return text
     return ""
@@ -92,16 +168,25 @@ def _resolve_authoritative_arc_timeline_text(arc_data: dict | None) -> str:
 
 def _render_timeline_point_text(raw: object) -> str:
     if isinstance(raw, dict):
-        for field in ("description", "expression", "text", "raw", "표현"):
-            text = str(raw.get(field, "") or "").strip()
-            if text:
-                return text
         year = str(raw.get("year", "") or "").strip()
         month = str(raw.get("month", "") or "").strip()
         day = str(raw.get("day", "") or "").strip()
-        parts = [part for part in (year, month, day) if part]
-        if parts:
-            return " ".join(parts)
+        date_parts = []
+        if year:
+            date_parts.append(f"{year}년")
+        if month:
+            date_parts.append(f"{month}월")
+        if day:
+            date_parts.append(f"{day}일")
+        date_text = " ".join(date_parts)
+        for field in ("description", "expression", "text", "raw", "표현"):
+            text = str(raw.get(field, "") or "").strip()
+            if date_text and text:
+                return f"{date_text} - {text}"
+            if text:
+                return text
+        if date_text:
+            return date_text
     return str(raw or "").strip()
 
 
@@ -263,18 +348,62 @@ def _resolve_authoritative_episode_timeline_anchor(
     return "", None
 
 
+def _build_terminal_timeline_lock(arc_data: dict | None, *, ep_num: int = 0) -> dict:
+    payload = arc_data if isinstance(arc_data, dict) else {}
+    arc_end_ep = _resolve_arc_end_episode_marker(payload)
+    if not (ep_num > 0 and arc_end_ep > 0 and ep_num >= arc_end_ep):
+        return {}
+
+    state_changes = _coerce_mapping(payload.get("state_changes"))
+    timeline = _coerce_mapping(state_changes.get("timeline"))
+    end_raw = timeline.get("end")
+    end_text = _render_timeline_point_text(end_raw)
+    if not end_text and not isinstance(end_raw, dict):
+        return {}
+
+    return {
+        "mode": "exact_terminal_match",
+        "expression": end_text,
+        "timeline": end_raw,
+        "arc_end_ep": arc_end_ep,
+    }
+
+
 def _timeline_year_month_conflicts(left: object, right: object) -> bool:
     left_point = _parse_timeline_year_month(left, pick="start")
     right_point = _parse_timeline_year_month(right, pick="start")
     return bool(left_point is not None and right_point is not None and left_point != right_point)
 
 
-def _resolve_cross_stage_protagonist_carryover(arc_data: dict | None) -> dict:
-    return _coerce_mapping(_resolve_cross_stage_packet(arc_data).get("protagonist_carryover"))
+def _resolve_cross_stage_protagonist_carryover(
+    arc_data: dict | None,
+    *,
+    is_arc_opening_episode: bool = False,
+    genre: str = "",
+) -> dict:
+    return _coerce_mapping(
+        _resolve_effective_cross_stage_packet(
+            arc_data,
+            is_arc_opening_episode=is_arc_opening_episode,
+            genre=genre,
+        ).get("protagonist_carryover")
+    )
 
 
-def _append_cross_stage_numeric_fields(fields: list[dict], arc_data: dict | None) -> None:
-    numeric = _coerce_mapping(_resolve_cross_stage_packet(arc_data).get("numeric_carryover"))
+def _append_cross_stage_numeric_fields(
+    fields: list[dict],
+    arc_data: dict | None,
+    *,
+    is_arc_opening_episode: bool = False,
+    genre: str = "",
+) -> None:
+    numeric = _coerce_mapping(
+        _resolve_effective_cross_stage_packet(
+            arc_data,
+            is_arc_opening_episode=is_arc_opening_episode,
+            genre=genre,
+        ).get("numeric_carryover")
+    )
     for key, label in (
         ("capital", "잔고/자본"),
         ("total_assets", "총자산"),
@@ -288,8 +417,19 @@ def _append_cross_stage_numeric_fields(fields: list[dict], arc_data: dict | None
         fields.append({"label": label, "value": str(value)[:150]})
 
 
-def _resolve_cross_stage_numeric_semantic_families(arc_data: dict | None) -> set[str]:
-    numeric = _coerce_mapping(_resolve_cross_stage_packet(arc_data).get("numeric_carryover"))
+def _resolve_cross_stage_numeric_semantic_families(
+    arc_data: dict | None,
+    *,
+    is_arc_opening_episode: bool = False,
+    genre: str = "",
+) -> set[str]:
+    numeric = _coerce_mapping(
+        _resolve_effective_cross_stage_packet(
+            arc_data,
+            is_arc_opening_episode=is_arc_opening_episode,
+            genre=genre,
+        ).get("numeric_carryover")
+    )
     families: set[str] = set()
     for raw_key in numeric:
         field_name = str(raw_key or "").strip()
@@ -580,6 +720,7 @@ class BlueprintConstraintCompiler:
         )
         continuity = self._continuity_from_episode_state_packet(episode_state_packet)
         inherited_state = self._inherited_state_from_episode_state_packet(episode_state_packet, genre=genre)
+        terminal_timeline_lock = _build_terminal_timeline_lock(arc_data, ep_num=ep_num)
 
         # 9. 제약 블록 생성
         constraint_block = {
@@ -598,6 +739,7 @@ class BlueprintConstraintCompiler:
             "capital_continuity_packet": capital_continuity_packet,  # [S3-CC]
             "episode_progression_packet": episode_progression_packet,  # [S3-EP]
             "episode_state_packet": episode_state_packet,
+            "terminal_timeline_lock": terminal_timeline_lock,
         }
 
         return constraint_block
@@ -727,6 +869,18 @@ class BlueprintConstraintCompiler:
                     if text:
                         lines.append(f"    - {self._fit_prompt_text(text, 140)}")
             lines.append("")
+
+        terminal_timeline_lock = constraint_block.get("terminal_timeline_lock", {})
+        if isinstance(terminal_timeline_lock, dict) and terminal_timeline_lock.get("mode") == "exact_terminal_match":
+            end_text = str(terminal_timeline_lock.get("expression", "") or "").strip()
+            if end_text:
+                lines.append("### ⏱ TERMINAL TIMELINE LOCK (Arc 마지막 화)")
+                lines.append(
+                    "이번 화는 Arc 마지막 화입니다. ending_state.timeline은 아래 종료 시점과 정확히 맞아야 합니다."
+                )
+                lines.append(f"  - authoritative arc end: {self._fit_prompt_text(end_text, 160)}")
+                lines.append("  - 같은 월/같은 날의 vague 표현만 두고 정확한 종료 시점을 비워 두지 마세요.")
+                lines.append("")
 
         # MUST FOCUS
         lines.append("### 🎯 MUST_FOCUS (이번 화 핵심 - 반드시 포함)")
@@ -986,13 +1140,13 @@ class BlueprintConstraintCompiler:
         }
 
         arc_start_location = ""
-        packet_location, _ = _resolve_cross_stage_opening_location(arc_data)
-        if isinstance(arc_data, dict):
-            state = arc_data.get("state_constraints", {})
-            if isinstance(state, dict):
-                arc_start = state.get("arc_start_state", {})
-                if isinstance(arc_start, dict):
-                    arc_start_location = str(arc_start.get("location", "") or "").strip()
+        packet_location, _ = _resolve_cross_stage_opening_location(
+            arc_data,
+            is_arc_opening_episode=is_arc_opening_episode,
+        )
+        arc_start = _resolve_arc_start_state(arc_data)
+        if arc_start:
+            arc_start_location = str(arc_start.get("location", "") or "").strip()
         if packet_location:
             arc_start_location = packet_location
 
@@ -1083,7 +1237,11 @@ class BlueprintConstraintCompiler:
         packet_has_injuries = False
         packet_has_internal_energy = False
 
-        protagonist_carryover = _resolve_cross_stage_protagonist_carryover(arc_data)
+        protagonist_carryover = _resolve_cross_stage_protagonist_carryover(
+            arc_data,
+            is_arc_opening_episode=is_arc_opening_episode,
+            genre=genre,
+        )
         if protagonist_carryover:
             equipment = protagonist_carryover.get("equipment", [])
             if isinstance(equipment, list):
@@ -1149,9 +1307,9 @@ class BlueprintConstraintCompiler:
             # protagonist_state 확인
             protag = prev_blueprint.get("protagonist_state", {})
             if protag:
-                if protag.get("equipment") and not arc_start_has_equipment:
+                if protag.get("equipment") and not is_arc_opening_episode and not arc_start_has_equipment:
                     inherited["equipment"] = protag["equipment"]
-                if protag.get("injuries") and not arc_start_has_injuries:
+                if protag.get("injuries") and not is_arc_opening_episode and not arc_start_has_injuries:
                     inherited["injuries"] = protag["injuries"]
                 if protag.get("companions"):
                     inherited["companions"] = protag["companions"]
@@ -1203,7 +1361,7 @@ class BlueprintConstraintCompiler:
         if not prev_time_anchor_text:
             prev_time_anchor_text = str(bp.get("time_flow", "") or "").strip()
         suppress_prev_opening_fact_lock = is_arc_opening and (
-            bool(_resolve_authoritative_arc_opening_location(arc_data))
+            bool(_resolve_authoritative_arc_opening_location(arc_data, is_arc_opening_episode=True, genre="investment"))
             or bool(_resolve_authoritative_arc_timeline_text(arc_data))
         )
         suppress_prev_time_fact_lock = _timeline_year_month_conflicts(
@@ -1721,6 +1879,13 @@ class BlueprintConstraintCompiler:
                 "돌파",
                 "버텨",
                 "예측",
+                "청산",
+                "익절",
+                "진입",
+                "매수",
+                "매도",
+                "체결",
+                "주문",
                 *authority_capture_tokens,
             )
             if token in combined_text
@@ -1810,9 +1975,19 @@ class BlueprintConstraintCompiler:
         fields: list[dict] = []
         bp = prev_blueprint if isinstance(prev_blueprint, dict) else {}
         ms_text = str(prev_manuscript_ending or "").strip()
-        _append_cross_stage_numeric_fields(fields, arc_data)
+        is_arc_opening = _is_arc_opening_episode(arc_data=arc_data, ep_num=ep_num)
+        _append_cross_stage_numeric_fields(
+            fields,
+            arc_data,
+            is_arc_opening_episode=is_arc_opening,
+            genre=genre,
+        )
         packet_field_count = len(fields)
-        packet_numeric_families = _resolve_cross_stage_numeric_semantic_families(arc_data)
+        packet_numeric_families = _resolve_cross_stage_numeric_semantic_families(
+            arc_data,
+            is_arc_opening_episode=is_arc_opening,
+            genre=genre,
+        )
 
         def _capital_within_ep(entry: object) -> bool:
             if ep_num <= 0:
