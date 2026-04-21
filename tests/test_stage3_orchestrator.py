@@ -2054,6 +2054,14 @@ class TestProcessSingleEpisode:
 
         assert payload is not None
         assert payload["verdict"] == "PASS"
+        assert payload["initial_verdict"] == "PASS"
+        assert payload["final_verdict"] == "REJECT"
+        assert payload["downstream_override_applied"] is True
+        assert payload["advisory_warnings"]["verdict_layers"] == {
+            "initial_verdict": "PASS",
+            "final_verdict": "REJECT",
+            "downstream_override_applied": True,
+        }
 
     def test_stage3_sink_payload_builders_share_packet_contract(self, orch):
         packet = Stage3AttemptEvidencePacket(
@@ -2196,6 +2204,7 @@ class TestProcessSingleEpisode:
         assert stage_attempt_kwargs["reject_reason"] == "opening continuity drift"
         assert stage_attempt_kwargs["open_review"] == "opening continuity 재검토"
         assert stage_attempt_kwargs["initial_verdict"] == "PASS_WITH_FIX"
+        assert stage_attempt_kwargs["downstream_override_applied"] is False
         assert (
             stage_attempt_kwargs["advisory_flags"]["comparison_notes"]
             == "후보 B가 opening continuity와 자본 패킷 계승을 가장 안정적으로 유지"
@@ -2211,7 +2220,62 @@ class TestProcessSingleEpisode:
         assert pass_rate_kwargs["artifact_path"] == packet.artifact_meta["artifact_path"]
         assert pass_rate_kwargs["success"] is False
         assert pass_rate_kwargs["reject_reason"] == "opening continuity drift"
+        assert pass_rate_kwargs["director_verdict"] == ""
+        assert pass_rate_kwargs["downstream_override_applied"] is False
         assert pass_rate_kwargs["score_breakdown"] == {"continuity": 62}
+
+    def test_stage3_sink_payload_builders_mark_downstream_override(self, orch):
+        packet = Stage3AttemptEvidencePacket(
+            db=MagicMock(),
+            attempt_num=1,
+            session_id="stage3-session",
+            attempt_key="s3:ep8:arc2:a1",
+            score=100,
+            selected_strategy="emotion_focused",
+            candidate_key="emotion_focused",
+            artifact_meta={
+                "candidate_key": "emotion_focused",
+                "content_hash": "hash-stage3-override",
+                "artifact_path": "logs/artifacts/stage3/ep_0008/attempt_01/final_blueprint__emotion_focused.json",
+            },
+            selection_kwargs={
+                "verdict": "PASS_WITH_FIX",
+                "initial_verdict": "PASS_WITH_FIX",
+                "final_verdict": "PASS_WITH_WARNING",
+                "selection_reason": "candidate 1 holds the arc shell",
+                "verdict_reason": "advisory-only residual accepted",
+                "fix_scope": "inplace",
+            },
+            runtime_advisory="scenario density residual",
+            retry_directives="do not reopen local patch loop",
+        )
+
+        stage_attempt_kwargs = orch._build_stage3_stage_attempt_kwargs(
+            ep_num=8,
+            arc_no=2,
+            verdict="PASS_WITH_WARNING",
+            packet=packet,
+            model="gpt-test",
+            prompt_version="stage3.vtest",
+            duration_ms=2100,
+            advisory_flags={},
+            validate={"verdict": "PASS_WITH_FIX"},
+        )
+        pass_rate_kwargs = orch._build_stage3_pass_rate_attempt_kwargs(
+            working_ep=8,
+            arc_no=2,
+            packet=packet,
+            success=True,
+            duration_ms=2100,
+            token_cost=0.456,
+            final_verdict="PASS_WITH_WARNING",
+            score_breakdown={"scenario_density": 100},
+        )
+
+        assert stage_attempt_kwargs["initial_verdict"] == "PASS_WITH_FIX"
+        assert stage_attempt_kwargs["downstream_override_applied"] is True
+        assert pass_rate_kwargs["director_verdict"] == "PASS_WITH_FIX"
+        assert pass_rate_kwargs["downstream_override_applied"] is True
 
 
 # ── Result Handlers ──────────────────────────────────────────

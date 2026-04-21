@@ -1,0 +1,230 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "dialogue_focused",
+    "content_hash": "b6584942dc2754f0faa9d160e3e8bb68d11168adbe4dffddccfab4eb6d65f620"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=0; sample_anchors=",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 0개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1075,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 3184,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 996816,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 2605,
+          "lane": "constraints"
+        },
+        {
+          "chars": 342,
+          "lane": "feedback_context"
+        },
+        {
+          "chars": 159,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 159,
+        "constraints": 2605,
+        "feedback_context": 342,
+        "hud_context": 10,
+        "prev_info": 68
+      },
+      "shared_context_chars": 2842,
+      "strategy_feedback_chars": 3243,
+      "total_chars": 3184
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "dialogue_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 0개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 100,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "core_tension": "과거로 회귀한 한시우가 미래 지식을 이용해 첫 행동을 개시하려는 긴장감",
+  "end_location": "서울 성북동 본가 침실",
+  "ending_hook": "수화기 너머에서 차분한 목소리가 흘러나왔다. \"네, 박성호입니다.\"",
+  "ending_state": {
+    "location": "서울 성북동 본가 침실",
+    "protagonist_status": "미래 지식을 바탕으로 첫 계획을 실행하려는 각성 상태",
+    "timeline": {
+      "표현": "2006년 1월 3일 저녁"
+    }
+  },
+  "ep_num": 1,
+  "episode_number": 1,
+  "expected_ending": "미래의 핵심 조력자가 될 인물에게 첫 연락을 시도하며 다음 화를 기약한다.",
+  "integrated_scenario": "마지막 기억인 폭발의 열기 대신 스며든 서늘한 공기에 한시우는 눈을 떴다. 눈에 들어온 것은 20년 전 사라졌던, 성북동 본가의 익숙한 제 방 천장이었다. 믿을 수 없는 현실에 황급히 제 손을 들어 올렸다. 흉터 하나 없이 매끈한 20대의 손. 패닉에 휩싸여 방 안을 헤매던 한시우의 시선이 책상 위 낡은 달력에 꽂혔다. 2006년 1월 3일. 세상은 멸망하지 않았다. 그저, 되돌아왔을 뿐이다. 꿈결 같은 현실을 부정하려는 듯, 한시우는 낡은 리모컨을 찾아 TV 전원을 켰다. 9시 뉴스의 익숙한 시그널과 함께 앵커의 얼굴이 화면을 채웠다. \"…이란 정부가 오늘 국제원자력기구(IAEA)의 봉인을 제거하고 핵연료 연구를 재개할 것이라고 발표하면서, 국제 사회의 긴장이 다시금 고조되고 있습니다.\" 앵커의 목소리가 고막을 때리는 순간, 한시우의 머릿속에서 미래의 파편들이 맞춰졌다. 맞다. 이것이 시작이었다. 전 세계를 뒤흔들었던 유가 폭등의 서막. 죽음 끝에서 얻은 단 한 번의 기회. 단순한 생존이 아닌, 완벽한 승리를 쟁취할 기회였다. 머릿속이 차갑게 식어갈 무렵, 날카로운 전화벨 소리가 방의 정적을 갈랐다. 익숙한 번호. 아버지, 한정호 회장이었다. \"시우냐. 아직도 방에 틀어박혀 있나?\" 수화기 너머의 목소리엔 온기 대신 냉랭한 의무감만이 실려 있었다. 과거의 한시우라면 주눅 들어 변명을 늘어놓았을 터였다. 하지만 지금의 한시우는 달랐다. \"네. 그냥 생각할 게 좀 있어서요.\" 예상치 못한 차분한 대답에 전화기 너머에서 순간 침묵이 흘렀다. \"…네가 무슨. 됐다. 사고나 치지 말고 조용히 지내라.\" 일방적으로 끊긴 전화. 과거엔 심장을 후벼 팠을 그 무시가, 이제는 완벽한 방패가 되어줄 터였다. 한시우의 시선이 다시 TV로 향했다. 유가 전망을 떠드는 전문가들의 얼굴 위로, 그는 오직 자신만이 아는 미래의 차트를 그리고 있었다. 결심이 섰다. 한시우는 망설임 없이 책상 서랍을 열어 낡은 주소록을 꺼냈다. 먼지 쌓인 페이지를 넘겨 찾아낸 이름. 그는 기억에 의존해 전화번호를 눌렀다. 심장이 세차게 뛰었다. 신호음이 두 번 울리고, 수화기 너머에서 침착한 목소리가 흘러나왔다. \"네, 박성호입니다.\"",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "no_prev_anchor"
+    ],
+    "type": "jump_opening"
+  },
+  "pacing_notes": "초반부는 주인공의 혼란과 각성에 집중하여 몰입감을 높이고, 뉴스 보도를 통해 미래 정보의 신뢰성을 확보한다. 아버지와의 짧은 통화로 과거의 암울했던 입지를 보여준 뒤, 마지막 장면에서 주인공의 첫 행동을 제시하며 다음 화에 대한 기대감을 최고조로 끌어올린다.",
+  "protagonist_state": {
+    "equipment": [],
+    "injuries": "없음",
+    "mood": "극도의 혼란에서 차가운 각성으로 전환"
+  },
+  "relationship_changes": [],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "한시우가 자신이 과거 2006년으로 회귀했음을 깨닫는다.",
+      "key_events": [
+        "한시우가 자신의 옛 침대에서 눈을 뜨며 생경함과 익숙함을 동시에 느낀다.",
+        "상처 하나 없이 젊어진 자신의 손을 보고 충격에 빠진다.",
+        "책상 위 먼지 쌓인 달력에서 '2006년 1월 3일'이라는 날짜를 확인하고 회귀 사실을 확신한다."
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "낯선 듯 익숙한 자신의 옛 방에서 깨어난 한시우는, 젊어진 자신의 신체와 방 안의 낡은 달력을 보고 자신이 과거로 돌아왔다는 사실을 자각하며 극심한 혼란에 빠진다.",
+      "tension_level": 4,
+      "title": "익숙한 천장",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "TV 뉴스를 통해 현재 시점이 자신의 기억과 일치함을 확인하고, 미래에 대한 확신을 얻는다.",
+      "key_events": [
+        "한시우가 방 안의 낡은 브라운관 TV를 켠다.",
+        "뉴스 앵커가 이란의 핵연료 연구 재개 소식을 심각하게 보도한다.",
+        "한시우는 해당 뉴스가 자신이 기억하는 미래의 유가 폭등 사태의 시발점이었음을 떠올리고 눈빛이 차갑게 변한다."
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "혼란 속에서 현실감을 찾기 위해 TV를 켠 한시우는, 9시 뉴스에서 보도되는 '이란 핵 문제'를 보고 자신의 기억이 정확하며 미래를 바꿀 기회가 왔음을 직감한다.",
+      "tension_level": 6,
+      "title": "9시 뉴스",
+      "type": "tension_build"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "한정호 (목소리 출연)"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "과거 자신을 무시하던 아버지와의 통화를 통해 변화된 자신의 태도를 보이고, 가족 내에서의 과거 입지를 확인한다.",
+      "key_events": [
+        "방에 있는 유선 전화기가 울리고, 한시우가 받자 아버지 한정호의 목소리가 들린다.",
+        "한정호는 기대감 없이 한시우가 뭘 하고 있는지 묻는다.",
+        "한시우가 이전과 달리 \"생각할 게 좀 있어서요.\"라고 짧고 담담하게 대답한다.",
+        "예상 밖의 대답에 잠시 말이 없던 한정호는 \"사고나 치지 말라\"는 말을 남기고 전화를 끊는다."
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "아버지 한정호 회장에게서 걸려 온 전화를 받은 한시우. 한심한 막내아들을 대하는 듯한 아버지의 말투에, 한시우는 과거와 달리 변명 대신 차분하고 무미건조하게 대응하여 전화를 끊는다.",
+      "tension_level": 5,
+      "title": "아버지의 전화",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우",
+        "박성호 (목소리 출연)"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "미래를 바꾸기 위한 첫 번째 행동을 개시하며 다음 화에 대한 궁금증을 유발한다.",
+      "key_events": [
+        "한시우가 굳은 표정으로 책상 서랍을 뒤져 낡은 가죽 주소록을 찾아낸다.",
+        "주소록에서 '박성호'라는 이름을 확인하고 유선 전화기의 다이얼을 누른다.",
+        "신호음이 몇 번 울린 후, \"네, 박성호입니다.\"라는 차분한 남자의 목소리가 들려온다."
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "결심을 굳힌 한시우는 책상 서랍에서 낡은 주소록을 꺼내 특정 인물의 번호를 찾아 전화를 건다. 수화기 너머에서 한 남자의 목소리가 들려오며 장면이 끝난다.",
+      "tension_level": 7,
+      "title": "첫 번째 전화",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 침실",
+  "target_beat": "회귀 자각 및 미래 정보 확인, 첫 번째 조력자에게 접촉 시도",
+  "time_flow": "저녁",
+  "title": "귀환"
+}

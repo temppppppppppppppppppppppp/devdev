@@ -2315,6 +2315,9 @@ class DBManager:
         director_thinking: str = "",
         runtime_advisory: str = "",
         retry_directives: str = "",
+        initial_verdict: str = "",
+        final_verdict: str = "",
+        downstream_override_applied: bool = False,
     ) -> None:
         """Persist director selection result."""
         if not self.accepts_runtime_telemetry_writes:
@@ -2328,21 +2331,35 @@ class DBManager:
                 advisory_payload["runtime_advisory"] = str(runtime_advisory or "")
             if retry_directives:
                 advisory_payload["retry_directives"] = str(retry_directives or "")
+            resolved_initial_verdict = str(initial_verdict or verdict or "")
+            resolved_final_verdict = str(final_verdict or verdict or "")
+            resolved_downstream_override = bool(
+                downstream_override_applied
+                or (
+                    resolved_initial_verdict
+                    and resolved_final_verdict
+                    and resolved_initial_verdict != resolved_final_verdict
+                )
+            )
             _adv_json = json.dumps(advisory_payload, ensure_ascii=False) if advisory_payload else None
             self.cursor.execute(
                 "INSERT INTO director_selections "
-                "(stage, ep_num, round_num, selected_label, selected_strategy, verdict, score, "
+                "(stage, ep_num, round_num, selected_label, selected_strategy, verdict, initial_verdict, final_verdict, "
+                "downstream_override_applied, score, "
                 "selection_reason, candidate_count, fix_scope, advisory_warnings, verdict_reason, "
                 "pre_firewall_score, firewall_triggered, firewall_reason, attempt_key, "
                 "candidate_key, content_hash, artifact_path, director_thinking) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     stage,
                     ep_num,
                     round_num,
                     selected_label,
                     selected_strategy,
-                    verdict,
+                    resolved_initial_verdict,
+                    resolved_initial_verdict,
+                    resolved_final_verdict,
+                    1 if resolved_downstream_override else 0,
                     score,
                     selection_reason or "",
                     candidate_count,

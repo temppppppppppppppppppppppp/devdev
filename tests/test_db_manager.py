@@ -718,6 +718,42 @@ def test_update_director_selection_rationale_merges_advisory_warnings(db):
     assert advisory["scope_authority"]["widened"] is True
 
 
+def test_save_director_selection_persists_verdict_layers(db):
+    db.save_director_selection(
+        8,
+        1,
+        "A",
+        "emotion_focused",
+        "PASS_WITH_FIX",
+        score=100,
+        selection_reason="candidate 1 wins on continuity",
+        verdict_reason="advisory-only residual accepted downstream",
+        stage=3,
+        attempt_key="s3:ep8:arc2:a1",
+        candidate_key="emotion_focused",
+        content_hash="hash-stage3-override",
+        artifact_path="logs/artifacts/stage3/ep_0008/attempt_01/final_blueprint__emotion_focused.json",
+        initial_verdict="PASS_WITH_FIX",
+        final_verdict="PASS_WITH_WARNING",
+        downstream_override_applied=True,
+    )
+
+    row = db.conn.execute(
+        """
+        SELECT verdict, initial_verdict, final_verdict, downstream_override_applied
+        FROM director_selections
+        WHERE attempt_key = 's3:ep8:arc2:a1'
+        ORDER BY id DESC
+        LIMIT 1
+        """
+    ).fetchone()
+
+    assert row["verdict"] == "PASS_WITH_FIX"
+    assert row["initial_verdict"] == "PASS_WITH_FIX"
+    assert row["final_verdict"] == "PASS_WITH_WARNING"
+    assert row["downstream_override_applied"] == 1
+
+
 def test_get_stage4_final_authority_rows_marks_selection_as_companion_when_patch_changes_artifact(db):
     attempt_key = "s4:ep5:arc2:a2:sess-authority"
     db.save_director_selection(
@@ -1271,9 +1307,7 @@ def test_save_ui_event_respects_outer_transaction_rollback(db):
             assert persisted is True
             raise RuntimeError("rollback trigger")
 
-    row = db.conn.execute(
-        "SELECT COUNT(*) AS cnt FROM ui_events WHERE session_id = 'sess-ui-tx'"
-    ).fetchone()
+    row = db.conn.execute("SELECT COUNT(*) AS cnt FROM ui_events WHERE session_id = 'sess-ui-tx'").fetchone()
     assert row["cnt"] == 0
 
 
@@ -1321,6 +1355,7 @@ def test_save_director_selection_persists_firewall_metadata(db):
     assert row["pre_firewall_score"] == 100
     assert row["firewall_triggered"] == 1
     assert row["firewall_reason"] == "Contradiction Firewall: CRITICAL 1건"
+
 
 def test_save_director_selection_keeps_selection_reason_up_to_500_chars(db):
     long_reason = "r" * 450

@@ -1,0 +1,241 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "74f7e1d2d19cd9ef6bcc678dde6171a6c1cd7c2585c2e07183e21a38660ed5cd"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=2; sample_anchors=혼란만을 안고 사무실, 15억",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 2개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1323,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 26797,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 973203,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 21747,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 4605,
+          "lane": "constraints"
+        },
+        {
+          "chars": 218,
+          "lane": "arc_focus"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 218,
+        "constraints": 4605,
+        "feedback_context": 217,
+        "hud_context": 10,
+        "prev_info": 21747
+      },
+      "shared_context_chars": 26580,
+      "total_chars": 26797
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 2개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 100,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "repair_scope": "none",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "repair_scope": "none",
+      "widened": false
+    }
+  },
+  "core_tension": "금 가격 횡보에 따른 박성호의 불안감 증폭과, 미래를 아는 한시우의 평온함 사이의 심리적 대립.",
+  "end_location": "강남의 소규모 오피스",
+  "ending_hook": "한시우는 꺼진 모니터에 비친 자신의 얼굴을 보며 나직이 읊조렸다. '폭풍은, 가장 고요한 바다에서 시작되는 법이니까.'",
+  "ending_state": {
+    "location": "강남의 소규모 오피스",
+    "protagonist_status": "금 가격 횡보를 두 달간 인내하며, 서브프라임 모기지 사태의 징조를 포착하고 다음 단계를 준비하는 상태.",
+    "timeline": {
+      "표현": "2006년 7월 말 저녁"
+    }
+  },
+  "ep_num": 15,
+  "episode_number": 15,
+  "expected_ending": "박성호의 불안이 극에 달하고, 한시우는 다음 위기의 징조를 발견하며 홀로 인내의 시간을 견딘다.",
+  "integrated_scenario": "새벽의 푸른빛이 감도는 강남의 오피스. 15억 규모의 금 선물 매수 주문이 체결된 모니터 앞에서 박성호는 넋이 나간 채 서 있었다. 그의 귓가에 한시우의 나직한 목소리가 울렸다. '이제... 침묵이 깨지길 기다리면 됩니다.' 그 말은 박성호에게 사형 선고처럼 들렸지만, 한시우는 마치 오랜 숙제를 끝낸 사람처럼 태연하게 커피를 내릴 뿐이었다. 불안에 떠는 박성호에게 이만 들어가보라며 등을 떠미는 한시우의 모습은 절대자의 여유, 그 자체였다.\n\n그렇게 인고의 시간이 시작되었다. 하루, 이틀, 일주일... 그리고 한 달. 금 가격은 마치 얼어붙은 강처럼 미동도 하지 않았다. 박성호의 속은 시커멓게 타들어 갔다. 매일 불어나는 이자와 리스크관리팀의 보이지 않는 압박이 그의 숨통을 조였다. 결국 참다못한 박성호는 VIP 보안폰으로 한시우에게 전화를 걸었다. '대표님, 벌써 한 달입니다. 아무 움직임이 없습니다. 지금이라도...' 그의 애원 섞인 목소리는 그러나 수화기 너머의 차가운 한마디에 막혔다. '그래서요?' 더 이상의 대화는 무의미했다. 박성호는 절망감에 휩싸여 전화를 끊었다.\n\n그리고 다시 한 달이 흘렀다. 2006년 7월 말, 두 달간의 횡보는 굳건했던 박성호의 마지막 이성마저 마비시켰다. 그는 결국 직접 한시우의 오피스로 향했다. 두 달 만에 마주한 한시우는 처음과 똑같이 평온했지만, 박성호는 몰라보게 수척해져 있었다. 그는 무릎이라도 꿇을 기세로 '대표님, 제발 그만하시죠. 이건 미친 짓입니다.'라며 애원했다. 하지만 한시우는 그의 절규를 배경음악처럼 흘려들으며 노트북 화면에 시선을 고정하고 있었다. 잠시 후, 한시우는 '이거나 보시죠'라며 노트북을 박성호에게 돌렸다. 화면에 떠 있는 것은 로이터 통신의 작은 단신. '미국 서브프라임 모기지 연체율 상승, 일부 금융기관 우려.' 금과는 아무런 상관도 없어 보이는 기사였다. 박성호는 '이게... 지금 금이랑 무슨 상관입니까?'라고 되물었지만, 한시우는 그저 의미심장한 미소만 지을 뿐이었다.\n\n결국 박성호는 아무런 해답도 얻지 못한 채, 더 큰 혼란만을 안고 사무실을 나섰다. 텅 빈 사무실에 다시 홀로 남은 한시우는 창밖의 저녁노을을 등진 채 다시 노트북 화면을 바라봤다. 화면 속 '서브프라임 모기지'라는 단어가 그의 눈에 박혔다. 그것은 다가올 거대한 쓰나미의 첫 번째 작은 파문에 불과했다. 모든 것을 알고 있는 자의 고독과 무게가 그의 어깨를 짓눌렀다. 한시우는 조용히 노트북을 덮었다. 꺼진 모니터에 비친 자신의 차가운 얼굴을 향해, 그는 나직이 읊조렸다. '폭풍은, 가장 고요한 바다에서 시작되는 법이니까.' 그의 눈빛은 인내의 끝에서 시작될 거대한 사냥을 예고하고 있었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부에는 시간의 흐름과 함께 박성호의 심리적 압박이 점증하는 것을 보여주며 긴장감을 쌓는다. 중반 이후, 한시우가 던지는 새로운 정보(서브프라임)를 통해 미스터리를 증폭시키고, 마지막은 한시우의 내면 독백으로 마무리하여 감정적 여운과 다음 화에 대한 기대감을 남긴다.",
+  "protagonist_state": {
+    "equipment": [
+      "2G 휴대폰",
+      "자산 현황 메모장",
+      "SW인베스트먼트 법인 등기 서류",
+      "SW인베스트먼트 법인 인감",
+      "VIP 전용 보안폰"
+    ],
+    "injuries": "없음",
+    "mood": "새로운 사냥감을 노리는 포식자의 냉정함과 절대적 자신감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "경외와 공포",
+      "justification": "한시우의 예측(WTI)을 목격하며 가졌던 경외심이, 두 달간의 비상식적인 인내와 이해할 수 없는 행동(서브프라임 기사) 앞에서 혼란과 무력감으로 변질된다.",
+      "target": "박성호",
+      "to_state": "이해 불가능한 존재에 대한 혼란과 무력감"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "금 선물 매수 직후, 한시우의 평온함과 박성호의 불안감의 극명한 대비를 통해 앞으로 이어질 인내의 시간의 시작을 알린다.",
+      "key_events": [
+        "박성호가 '미친 짓입니다'라며 텅 빈 눈으로 HTS 화면을 바라본다.",
+        "한시우는 그의 반응에 아랑곳하지 않고 커피를 내리며 '이제... 침묵이 깨지길 기다리면 됩니다.'라고 읊조린다.",
+        "한시우는 불안에 떠는 박성호에게 오늘은 이만 들어가서 쉬라며, 진짜 싸움은 지금부터라고 말한다."
+      ],
+      "location": "강남의 소규모 오피스",
+      "summary": "15억 금 선물 매수 직후, 망연자실한 박성호와 달리 한시우는 이제 침묵을 기다릴 시간이라며 태연하게 상황을 관망한다.",
+      "tension_level": 4,
+      "title": "침묵의 시작",
+      "type": "opening_hook"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "한 달 동안 금 가격이 횡보하자, 박성호의 심리적 압박이 가중되는 모습을 보여준다.",
+      "key_events": [
+        "박성호가 사무실에서 초조하게 금 시세 그래프를 보며 땀을 닦는다.",
+        "결심한 듯 VIP 보안폰으로 한시우에게 전화해 '대표님, 한 달입니다. 아무 움직임이 없습니다.'라며 애원하듯 말한다.",
+        "한시우는 수화기 너머에서 '그래서요?'라고 짧게 반문하며, 박성호의 모든 말을 차단한다.",
+        "박성호는 한시우의 태도에 절망감을 느끼며 전화를 끊는다."
+      ],
+      "location": "한미증권 사무실 / 강남의 소규모 오피스 (전화 통화)",
+      "summary": "한 달 후, 금 가격이 미동도 없자 박성호는 VIP 보안폰으로 한시우에게 전화해 초조함을 토로하지만, 돌아오는 것은 냉정한 침묵뿐이다.",
+      "tension_level": 5,
+      "title": "한 달의 고요",
+      "type": "side_glimpse"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "두 달의 시간이 흐른 뒤, 불안이 극에 달한 박성호를 상대로 한시우가 새로운 정보(서브프라임)를 던져 혼란을 가중시키고 주도권을 재확인한다.",
+      "key_events": [
+        "두 달 만에 수척해진 박성호가 한시우의 오피스로 찾아와 '제발 그만하시죠'라며 무릎이라도 꿇을 기세로 애원한다.",
+        "한시우는 태연하게 로이터 통신 뉴스피드를 보다가, '이거나 보시죠'라며 노트북 화면을 돌려준다.",
+        "화면에는 '미국 서브프라임 모기지 연체율 상승, 일부 금융기관 우려'라는 제목의 기사가 떠 있다.",
+        "박성호는 금과 아무 상관없어 보이는 기사에 '이게 무슨...'이라며 말을 잇지 못하고 혼란에 빠진다."
+      ],
+      "location": "강남의 소규모 오피스",
+      "summary": "두 달째 금 가격이 횡보하자 직접 오피스로 찾아온 박성호. 한시우는 그의 애원을 무시하고, '서브프라임 모기지 연체율 상승' 기사를 보여준다.",
+      "tension_level": 6,
+      "title": "균열의 징조",
+      "type": "dialogue_duel"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "다가올 거대한 폭풍의 실체를 아는 한시우의 내면적 고뇌와 결의를 보여주며 다음 화에 대한 궁금증을 증폭시킨다.",
+      "key_events": [
+        "박성호가 돌아간 텅 빈 사무실, 한시우는 다시 서브프라임 모기지 기사로 시선을 돌린다.",
+        "그의 눈에는 단순한 투자자의 흥미가 아닌, 모든 것을 알고 있는 자의 무거운 고뇌가 서려 있다.",
+        "한시우는 노트북을 덮고 창밖을 바라보며, 미래를 아는 것의 무게를 되새긴다.",
+        "꺼진 모니터에 비친 자신의 얼굴을 향해 '폭풍은, 가장 고요한 바다에서 시작되는 법이니까.'라고 나직이 읊조린다."
+      ],
+      "location": "강남의 소규모 오피스",
+      "summary": "혼란에 빠진 박성호가 돌아간 뒤, 홀로 남은 한시우는 서브프라임 기사를 보며 다가올 미래의 무게를 실감한다.",
+      "tension_level": 5,
+      "title": "고요한 바다",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "강남의 소규모 오피스",
+  "target_beat": "두 달간의 인내 끝에, 한시우가 다음 위기의 징조를 포착하고 홀로 결의를 다지는 장면.",
+  "time_flow": "2006년 5월 말 새벽 → 2006년 7월 말 저녁",
+  "title": "인내의 시간"
+}

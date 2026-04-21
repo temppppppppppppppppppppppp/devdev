@@ -3161,6 +3161,12 @@ class Stage3Orchestrator:
         resolved_advisory_flags = dict(advisory_flags or {})
         selection_contract = packet.selection_contract if isinstance(packet.selection_contract, dict) else {}
         selection_contract_ok = Stage3Orchestrator._selection_contract_sink_ok(selection_contract)
+        initial_verdict = str(
+            selection_kwargs.get("initial_verdict", "")
+            or validate.get("verdict", "")
+            or selection_kwargs.get("verdict", "")
+        )
+        downstream_override_applied = bool(initial_verdict and str(verdict or "") and initial_verdict != str(verdict))
         if selection_contract:
             resolved_advisory_flags["selection_contract"] = dict(selection_contract)
         for key in ("fix_pack", "advisory_fix_pack", "partial_fix_eval"):
@@ -3199,7 +3205,7 @@ class Stage3Orchestrator:
         payload = {
             "stage": 3,
             "verdict": str(verdict),
-            "initial_verdict": str(validate.get("verdict", "") or selection_kwargs.get("verdict", "") or ""),
+            "initial_verdict": initial_verdict,
             "attempt_num": packet.attempt_num,
             "ep_num": ep_num,
             "arc_num": arc_no,
@@ -3224,6 +3230,7 @@ class Stage3Orchestrator:
             "open_review": str(validate.get("open_review", "") or "") if isinstance(validate, dict) else "",
             "runtime_advisory": str(packet.runtime_advisory or ""),
             "retry_directives": str(packet.retry_directives or ""),
+            "downstream_override_applied": downstream_override_applied,
         }
         if failure_category:
             payload["failure_category"] = failure_category
@@ -3245,6 +3252,11 @@ class Stage3Orchestrator:
         generation_method: str = "blueprint",
         reject_reason: str = "",
     ) -> dict:
+        selection_kwargs = packet.selection_kwargs if isinstance(packet.selection_kwargs, dict) else {}
+        director_verdict = str(selection_kwargs.get("initial_verdict", "") or selection_kwargs.get("verdict", "") or "")
+        downstream_override_applied = bool(
+            director_verdict and str(final_verdict or "") and director_verdict != str(final_verdict or "")
+        )
         payload = {
             "stage": 3,
             "episode": working_ep,
@@ -3256,10 +3268,12 @@ class Stage3Orchestrator:
             "token_cost": token_cost,
             "attempt_key": packet.attempt_key,
             "final_verdict": str(final_verdict or ""),
+            "director_verdict": director_verdict,
             "candidate_key": packet.candidate_key,
             "content_hash": packet.artifact_meta["content_hash"],
             "artifact_path": packet.artifact_meta["artifact_path"],
             "score_breakdown": score_breakdown or None,
+            "downstream_override_applied": downstream_override_applied,
         }
         if reject_reason:
             payload["reject_reason"] = str(reject_reason or "")
@@ -3290,10 +3304,11 @@ class Stage3Orchestrator:
         if not isinstance(validate, dict) or not validate:
             return None
 
-        verdict = str(pipeline_result.get("final_verdict") or validate.get("verdict") or "").strip()
-        initial_verdict = str(validate.get("verdict") or verdict or "").strip()
-        if not verdict:
+        final_verdict = str(pipeline_result.get("final_verdict") or validate.get("verdict") or "").strip()
+        initial_verdict = str(validate.get("verdict") or final_verdict or "").strip()
+        if not final_verdict:
             return None
+        downstream_override_applied = bool(initial_verdict and final_verdict and initial_verdict != final_verdict)
 
         selected_index = validate.get("selected_index", 0)
         selection_reason, verdict_reason, comparison_notes = _resolve_stage3_validate_rationale(
@@ -3350,13 +3365,27 @@ class Stage3Orchestrator:
             "round_num": attempt_num,
             "selected_label": Stage3Orchestrator._stage3_selected_label(selected_index),
             "selected_strategy": str(selected_strategy or ""),
-            "verdict": initial_verdict or verdict,
+            "verdict": initial_verdict or final_verdict,
+            "initial_verdict": initial_verdict or final_verdict,
+            "final_verdict": final_verdict or initial_verdict,
+            "downstream_override_applied": downstream_override_applied,
             "stage": 3,
             "score": int(score or 0),
             "selection_reason": selection_reason,
             "candidate_count": max(1, int(candidate_count or 1)),
             "fix_scope": fix_scope,
-            "advisory_warnings": _advisory or None,
+            "advisory_warnings": (
+                {
+                    **_advisory,
+                    "verdict_layers": {
+                        "initial_verdict": initial_verdict or final_verdict,
+                        "final_verdict": final_verdict or initial_verdict,
+                        "downstream_override_applied": downstream_override_applied,
+                    },
+                }
+                if _advisory or initial_verdict or final_verdict
+                else None
+            ),
             "verdict_reason": verdict_reason,
             "attempt_key": str(attempt_key or ""),
             "candidate_key": _artifact["candidate_key"],

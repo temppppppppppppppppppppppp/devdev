@@ -1212,6 +1212,28 @@ class TestEpisodeStatePacket:
         assert result["mode"] == "allow_escalated_repeat"
         assert any(token in result["escalation_tokens"] for token in ("청산", "매수", "진입"))
 
+    def test_episode_progression_lawful_repetition_window_detects_post_execution_monitoring_tokens(self):
+        result = BlueprintConstraintCompiler._build_episode_progression_lawful_repetition_window(
+            must_focus={
+                "content": "투자 집행 후 같은 VIP룸에서 박성호는 초조해하고 한시우는 평온을 유지하며 시장을 관망한다."
+            },
+            stop_line={"content": "며칠 뒤 같은 자리에서 시장 추이를 다시 확인한다."},
+            episode_progression_packet={
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_4",
+                        "label": "VIP룸 주문 체결",
+                        "location": "여의도 한미증권 VIP룸",
+                        "characters": ["한시우", "박성호"],
+                        "type": "execution_lock",
+                    }
+                ]
+            },
+        )
+
+        assert result["mode"] == "allow_escalated_repeat"
+        assert any(token in result["escalation_tokens"] for token in ("초조", "평온", "유지", "관망"))
+
     def test_episode_state_packet_promotes_progression_time_when_mid_arc_prev_month_is_stale(self):
         compiler = BlueprintConstraintCompiler()
         prev_bp = {

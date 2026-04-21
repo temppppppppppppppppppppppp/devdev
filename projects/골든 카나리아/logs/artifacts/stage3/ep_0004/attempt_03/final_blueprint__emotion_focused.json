@@ -1,0 +1,258 @@
+{
+  "_candidate_artifact_meta": {
+    "artifact_path": "",
+    "candidate_key": "emotion_focused",
+    "content_hash": "0ab697c44ce2ef03bf07ba84d06f9db6bb0b426e86924c27bdc3c1168a98f6db"
+  },
+  "_ensemble_meta": {
+    "advisory_fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "evidence_summary": "anchor_count=3; sample_anchors=SW인베스트먼트, 장소인 프라이빗 뱅킹 센터, 20억",
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_target_records": [
+        {
+          "container_id": "stage3_blueprint",
+          "container_kind": "blueprint",
+          "field_path": "integrated_scenario",
+          "patch_target_id": "pt:52a8695bbdfa",
+          "stage": "stage3",
+          "summary": "integrated_scenario",
+          "target_kind": "local_sentence"
+        }
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "candidate_index": 0,
+    "disqualified": [],
+    "length": 1187,
+    "prevalidation_issue_count": 1,
+    "prompt_envelope": {
+      "archive_appendix": {
+        "configured_cap": 120000,
+        "consumed_chars": 0,
+        "demoted": false,
+        "dropped_chars": 0,
+        "enabled": false,
+        "raw_chars": 0
+      },
+      "budget_ledger": {
+        "budget_bucket": "stage3.prompt_envelope_total_chars",
+        "configured_cap": 1000000,
+        "consumed_chars": 8924,
+        "dropped_chars": 0,
+        "effective_cap": 1000000,
+        "fallback_cap": 1000000,
+        "headroom_chars": 991076,
+        "overflow_chars": 0,
+        "trim_applied": false
+      },
+      "dominant_lanes": [
+        {
+          "chars": 4938,
+          "lane": "prev_info"
+        },
+        {
+          "chars": 3309,
+          "lane": "constraints"
+        },
+        {
+          "chars": 478,
+          "lane": "feedback_context"
+        }
+      ],
+      "lane_chars": {
+        "arc_focus": 189,
+        "constraints": 3309,
+        "feedback_context": 478,
+        "hud_context": 10,
+        "prev_info": 4938
+      },
+      "shared_context_chars": 8446,
+      "strategy_feedback_chars": 3251,
+      "total_chars": 8924
+    },
+    "python_warnings": [],
+    "quality_risk": false,
+    "scene_count": 4,
+    "strategy": "emotion_focused",
+    "total_candidates": 3
+  },
+  "_inventory_gaps": [
+    {
+      "item": "SW인베스트먼트 설립 서류",
+      "note": "현재 미보유 — 획득 장면 필요",
+      "source": "protagonist_state"
+    }
+  ],
+  "_stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 100,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "repair_scope": "none",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "repair_scope": "none",
+      "widened": false
+    }
+  },
+  "core_tension": "가족으로부터의 완전한 독립과 첫 실탄을 장전하는 과정의 무게감",
+  "end_location": "서울 성북동 본가 침실",
+  "ending_hook": "TV 화면 속 타오르는 유가 그래프를 응시하는 한시우의 굳은 얼굴, 그리고 손안에서 삐걱거리는 펜.",
+  "ending_state": {
+    "location": "서울 성북동 본가 침실",
+    "protagonist_status": "SW인베스트먼트 설립을 앞두고, 유가 폭등의 전조를 확인하며 본격적인 행동 개시를 준비하는 상태.",
+    "timeline": {
+      "day": 4,
+      "description": "초기 자금 20억 확보 및 법인 설립 착수",
+      "month": 1,
+      "year": 2006
+    }
+  },
+  "ep_num": 4,
+  "episode_number": 4,
+  "expected_ending": "자신의 예측이 현실화되는 것을 확인하며, 다가올 미래에 대한 무거운 책임감을 느낀다.",
+  "integrated_scenario": "서재 안의 공기를 가득 채웠던 폭풍은, 아버지 한정호의 입에서 나온 단 한마디로 거짓말처럼 가라앉았다. '그래서, 그 돈으로 뭘 할 생각이지?'라는 질문에 대한 한시우의 침묵은 길지 않았다. 그는 자신의 계획을 말하는 대신, 그저 조용히 아버지를 응시했다. 그 눈빛을 읽은 한정호는 뜻밖에도 차갑게 웃었다. 그는 비서에게 전화를 걸어, 한시우의 모든 법적, 재정적 고리를 그룹에서 끊어내라고 지시했다. 경악하는 형들의 아우성은 더 이상 한시우의 귀에 들리지 않았다. 서재를 나서는 한시우의 등 뒤로, 새로운 관계의 서막이 올랐다. 망나니 막내아들은 죽고, 독립된 사업가 한시우가 태어나는 순간이었다. 본가를 나선 한시우는 곧바로 박성호에게 전화를 걸어 당장 만날 것을 요구했다. 약속 장소인 프라이빗 뱅킹 센터 VIP룸에 먼저 도착한 박성호는 초조하게 한시우를 기다렸다. 문이 열리고 들어선 한시우는 어제와 완전히 다른 사람이었다. 어깨를 움츠렸던 무기력한 도련님은 온데간데없고, 압도적인 아우라를 풍기는 한 명의 지배자가 서 있었다. 한시우는 자리에 앉지도 않은 채 명령했다. '내 명의의 모든 자산, 오늘 안으로 전액 현금으로 바꿔주십시오.' 20억이라는 숫자에 대한 부연 설명도, 이유에 대한 변명도 없었다. 박성호는 순간 숨을 삼켰다. 눈앞의 젊은이가 대한민국을 호령하는 한정호 회장과 똑같은 눈을 하고 있음을 깨달았기 때문이다. 그는 본능적으로 직감했다. 이 남자의 편에 서야 한다. 그는 모든 규정과 절차를 무시하고서라도 이 명령을 완수하겠다고 맹세했다. 그날 밤, 성북동 본가의 낡은 침실로 돌아온 한시우는 퀵서비스로 도착한 서류 봉투를 뜯었다. 박성호의 필체가 적힌 메모와 함께, 'SW인베스트먼트'라는 이름이 선명한 법인 설립 서류가 들어있었다. 대표이사 한시우. 자신의 이름 세 글자를 손끝으로 쓸어내리는 한시우의 감회는 남달랐다. 이것이 자신의 성이고, 자신의 왕국이 될 것이다. 그가 막 서류에 펜을 가져가던 순간, 무심코 켜두었던 TV에서 긴급 뉴스 속보가 터져 나왔다. '이란 핵 문제 재점화, 국제 유가 장중 폭등!' 앵커의 다급한 목소리와 함께 화면 가득 치솟는 붉은 그래프가 한시우의 눈에 박혔다. 미래가, 그가 알고 있던 그대로 거대한 파도가 되어 밀려오고 있었다. 한시우는 미소 짓지 않았다. 다만 손안의 펜을 더욱 단단히 움켜쥘 뿐이었다. 첫 번째 실탄은, 이제 막 약실에 장전되었다.",
+  "location": "",
+  "opening_transition": {
+    "signals": [
+      "same_location_anchor"
+    ],
+    "type": "direct_continuation"
+  },
+  "pacing_notes": "초반부 가족과의 갈등을 빠르게 매듭짓고, 중반부에서 주인공의 권위와 능력을 확실히 보여준다. 후반부는 조용한 내면 묘사를 통해 감정적 깊이를 더하고, 엔딩에서 다시 외부 사건과 연결하며 긴장감을 증폭시킨다.",
+  "protagonist_state": {
+    "equipment": [
+      "2G 휴대폰",
+      "자산 현황 메모장",
+      "SW인베스트먼트 설립 서류"
+    ],
+    "injuries": "없음",
+    "mood": "냉철한 결단력, 무거운 책임감"
+  },
+  "relationship_changes": [
+    {
+      "from_state": "기대 제로의 한심한 막내아들",
+      "justification": "그룹의 돈을 거부하고 자신의 돈으로 무언가를 하겠다는 선언에, 한정호는 실망 대신 냉정한 사업가로서의 흥미를 보이며 그의 독립을 인정했다.",
+      "target": "한정호",
+      "to_state": "알 수 없는 가능성을 지닌 독립된 존재"
+    },
+    {
+      "from_state": "의심과 경계의 대상",
+      "justification": "한시우가 보여준 전문가적 통찰력과 한정호 회장을 연상시키는 카리스마에 완전히 압도되어, 자신의 미래를 그에게 걸기로 결심했다.",
+      "target": "박성호",
+      "to_state": "완벽한 복종과 신뢰를 보내는 조력자"
+    }
+  ],
+  "scene_breakdown": {
+    "scene_1": {
+      "characters": [
+        "한시우",
+        "한정호",
+        "한태준",
+        "한태민"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "아버지 한정호와의 관계를 재정립하고, 완전한 독립의 허락을 받아낸다.",
+      "key_events": [
+        "한정호가 한시우의 '뭘 할 거냐'는 질문에 '네 돈으로 네가 알아서 하라'고 차갑게 답한다.",
+        "한정호는 그 자리에서 김 비서에게 전화해, 한시우의 모든 재산을 분리하고 법적으로 독립시키는 절차를 진행하라고 지시한다.",
+        "형 한태준이 '아버지, 제정신이세요?'라며 반발하지만, 한정호는 '시끄럽다'는 한마디로 일축한다.",
+        "한시우는 아무 말 없이 아버지를 응시하다가, 조용히 고개를 숙이고 서재를 나선다."
+      ],
+      "location": "서울 성북동 본가 서재",
+      "summary": "한시우의 선언에, 아버지 한정호는 분노 대신 냉정한 사업가로서의 면모를 보이며 그의 독립을 허락한다. 이 결정에 형들은 경악하지만, 한정호의 의지는 확고하다.",
+      "tension_level": 6,
+      "title": "아버지의 대답",
+      "type": "dialogue_duel"
+    },
+    "scene_2": {
+      "characters": [
+        "한시우",
+        "박성호"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "20억 자산의 즉시 현금화를 지시하고, 박성호를 완벽한 조력자로 만든다.",
+      "key_events": [
+        "한시우가 PB센터 VIP룸에 들어서자마자 박성호에게 '내 모든 자산, 오늘부로 전액 현금화해주십시오'라고 지시한다.",
+        "박성호가 절차와 시간을 언급하며 조심스러워하자, 한시우는 '가장 빠른 길로. 수수료는 상관없습니다'라고 말을 자른다.",
+        "한시우의 단호한 눈빛과 태도에서 이전의 무기력한 도련님이 아닌, 냉철한 투자자의 모습을 본 박성호는 등에서 식은땀을 흘린다.",
+        "박성호는 '알겠습니다. 제가 모든 방법을 동원해서 오늘 중으로 처리하겠습니다'라며 90도로 허리를 숙인다."
+      ],
+      "location": "강남 프라이빗 뱅킹 센터 VIP룸",
+      "summary": "프라이빗 뱅킹 센터에 나타난 한시우는 이전과 180도 다른 위압감으로 박성호를 대하며 전 자산의 현금화를 명령한다. 박성호는 그의 모습에서 한정호 회장의 그림자를 보고 완전히 압도당한다.",
+      "tension_level": 4,
+      "title": "VIP의 탄생",
+      "type": "side_glimpse"
+    },
+    "scene_3": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "자신의 회사 'SW인베스트먼트'의 설립 서류를 받으며 독립의 무게를 실감한다.",
+      "key_events": [
+        "저녁 늦게 퀵서비스로 서류 봉투가 도착하고, 한시우는 자신의 방에서 그것을 열어본다.",
+        "봉투 안에는 'SW인베스트먼트' 법인설립신청서와 계좌개설서류가 완벽하게 준비되어 있다.",
+        "한시우는 대표이사 '한시우'라고 적힌 부분을 손가락으로 천천히 쓸어본다.",
+        "과거의 방탕했던 자신을 떠올리며, 이제는 되돌릴 수 없는 길에 들어섰다는 무거운 책임감과 함께 희미한 해방감을 느낀다."
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "본가 침실로 돌아온 한시우에게 박성호가 보낸 서류가 도착한다. 'SW인베스트먼트'라는 이름이 적힌 법인 설립 서류를 보며, 한시우는 처음으로 자신의 길을 간다는 사실에 복잡한 감정을 느낀다.",
+      "tension_level": 3,
+      "title": "나만의 성",
+      "type": "emotional_reveal"
+    },
+    "scene_4": {
+      "characters": [
+        "한시우"
+      ],
+      "content": "",
+      "description": "",
+      "goal": "다가올 유가 폭등의 전조를 확인하며, 다음 행동에 대한 긴장감을 최고조로 끌어올린다.",
+      "key_events": [
+        "한시우가 법인 설립 서류에 서명하려던 순간, TV에서 긴급 뉴스 속보가 울린다.",
+        "앵커가 격앙된 목소리로 '이란, 핵 연구 재개 선언. 국제 유가 장중 5% 폭등' 소식을 전한다.",
+        "한시우는 TV 화면 속 치솟는 WTI 가격 그래프에서 눈을 떼지 못한다.",
+        "손에 쥔 펜을 부러질 듯 강하게 쥐며, 한시우의 얼굴에 차가운 미소 대신 극도의 냉정함이 서린다."
+      ],
+      "location": "서울 성북동 본가 침실",
+      "summary": "서류를 검토하던 한시우의 눈에, TV에서 흘러나오는 긴급 뉴스가 들어온다. 이란 핵 문제 재점화로 국제 유가가 급등하고 있다는 보도는 그의 예측이 현실이 되었음을 증명한다.",
+      "tension_level": 5,
+      "title": "예고된 파도",
+      "type": "cliffhanger"
+    }
+  },
+  "start_location": "서울 성북동 본가 서재",
+  "target_beat": "주인공이 가족의 그늘에서 벗어나 자신의 자본과 정보력을 바탕으로 첫 번째 사업체 설립이라는 구체적인 행동에 착수하고, 그의 예측이 현실화되는 것을 확인하며 독자에게 능력에 대한 신뢰를 심어준다.",
+  "time_flow": "저녁",
+  "title": "실탄 장전"
+}

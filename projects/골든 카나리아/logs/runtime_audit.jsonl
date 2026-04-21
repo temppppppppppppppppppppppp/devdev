@@ -1,0 +1,51 @@
+{"timestamp": "2026-04-21 23:21:17", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']"]}}
+{"timestamp": "2026-04-21 23:22:15", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-21 23:23:10", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "target_arc_no": 2, "items_tracked": 4}}
+{"timestamp": "2026-04-21 23:31:56", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 1건 제거: ['초기 자본금 15억원 (선물 증거금으로 전환)']"]}}
+{"timestamp": "2026-04-21 23:36:22", "type": "field_repair", "message": "non-wuxia persistence state noise removed", "data": {"arc_no": 2, "phase": "pre-persistence shell", "fields": ["arc_start_state: internal_energy", "arc_end_state: internal_energy"]}}
+{"timestamp": "2026-04-21 23:36:22", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-21 23:37:11", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "target_arc_no": 3, "items_tracked": 4}}
+{"timestamp": "2026-04-21 23:45:39", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 1건 제거: ['WTI 6월물 15억 매수 체결 확인서']"]}}
+{"timestamp": "2026-04-21 23:51:25", "type": "field_repair", "message": "non-wuxia persistence state noise removed", "data": {"arc_no": 3, "phase": "pre-persistence shell", "fields": ["arc_start_state: internal_energy", "arc_end_state: internal_energy"]}}
+{"timestamp": "2026-04-21 23:51:25", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-21 23:52:01", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "target_arc_no": 4, "items_tracked": 5}}
+{"timestamp": "2026-04-22 00:00:28", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 1건 제거: ['현금 15억원 (금 선물 투자 증거금으로 사용)']"]}}
+{"timestamp": "2026-04-22 00:07:36", "type": "field_repair", "message": "non-wuxia persistence state noise removed", "data": {"arc_no": 4, "phase": "pre-persistence shell", "fields": ["arc_start_state: internal_energy", "arc_end_state: internal_energy"]}}
+{"timestamp": "2026-04-22 00:07:36", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 00:08:28", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "target_arc_no": 5, "items_tracked": 6}}
+{"timestamp": "2026-04-22 00:19:58", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 5, "corrections": ["arc_start_state에서 무협 전용 필드 제거: ['internal_energy']", "arc_end_state에서 무협 전용 필드 제거: ['internal_energy']", "items_consumed 추상 개념 2건 제거: ['WTI 6월물 잔여 포지션 원장', '금 선물 50% 부분 익절 거래 확인서']"]}}
+{"timestamp": "2026-04-22 00:21:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 00:22:21", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "target_arc_no": 6, "items_tracked": 8}}
+{"timestamp": "2026-04-22 00:33:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 00:33:02", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false, "revision_required": true}}
+{"timestamp": "2026-04-22 00:37:58", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 00:37:58", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "dialogue_focused", "score": 98, "final_verdict": "PASS", "quality_risk": false, "revision_required": true}}
+{"timestamp": "2026-04-22 00:40:15", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 00:40:15", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-22 00:48:05", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 00:48:05", "type": "blueprint_success", "message": "ep_4_blueprint_generated", "data": {"ep_num": 4, "arc_no": 1, "strategy": "emotion_focused", "score": 100, "final_verdict": "PASS", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-04-22 00:56:04", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 00:56:04", "type": "blueprint_success", "message": "ep_5_blueprint_generated", "data": {"ep_num": 5, "arc_no": 2, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-22 00:58:25", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 00:58:25", "type": "blueprint_success", "message": "ep_6_blueprint_generated", "data": {"ep_num": 6, "arc_no": 2, "strategy": "emotion_focused", "score": 98, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-22 01:01:50", "type": "blueprint_fail", "message": "ep_7_all_retries_exhausted", "data": {"ep_num": 7, "final_verdict": "FAILED"}}
+{"timestamp": "2026-04-22 01:15:27", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 01:15:27", "type": "blueprint_success", "message": "ep_7_blueprint_generated", "data": {"ep_num": 7, "arc_no": 2, "strategy": "dialogue_focused", "score": 95, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-22 01:18:42", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 01:18:43", "type": "blueprint_success", "message": "ep_8_blueprint_generated", "data": {"ep_num": 8, "arc_no": 2, "strategy": "emotion_focused", "score": 100, "final_verdict": "PASS_WITH_WARNING", "quality_risk": false, "revision_required": true}}
+{"timestamp": "2026-04-22 01:23:12", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 01:23:12", "type": "blueprint_success", "message": "ep_9_blueprint_generated", "data": {"ep_num": 9, "arc_no": 2, "strategy": "dialogue_focused", "score": 98, "final_verdict": "PASS_WITH_WARNING", "quality_risk": true, "revision_required": true}}
+{"timestamp": "2026-04-22 01:27:55", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 01:27:55", "type": "blueprint_success", "message": "ep_10_blueprint_generated", "data": {"ep_num": 10, "arc_no": 3, "strategy": "emotion_focused", "score": 94, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-22 01:30:09", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 01:30:09", "type": "blueprint_success", "message": "ep_11_blueprint_generated", "data": {"ep_num": 11, "arc_no": 3, "strategy": "emotion_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-22 01:32:22", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 01:32:22", "type": "blueprint_success", "message": "ep_12_blueprint_generated", "data": {"ep_num": 12, "arc_no": 3, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-22 01:34:31", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 01:34:31", "type": "blueprint_success", "message": "ep_13_blueprint_generated", "data": {"ep_num": 13, "arc_no": 3, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-22 01:43:10", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 01:43:10", "type": "blueprint_success", "message": "ep_14_blueprint_generated", "data": {"ep_num": 14, "arc_no": 4, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-22 01:45:25", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 01:45:25", "type": "blueprint_success", "message": "ep_15_blueprint_generated", "data": {"ep_num": 15, "arc_no": 4, "strategy": "emotion_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false, "revision_required": false}}
+{"timestamp": "2026-04-22 01:47:36", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-04-22 01:47:36", "type": "blueprint_success", "message": "ep_16_blueprint_generated", "data": {"ep_num": 16, "arc_no": 4, "strategy": "emotion_focused", "score": 95, "final_verdict": "PASS_WITH_WARNING", "quality_risk": false, "revision_required": true}}
