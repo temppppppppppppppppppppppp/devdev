@@ -30,6 +30,7 @@ from modules.core.provider_mode import (  # noqa: E402
     VERTEX_AI_MODE,
     normalize_provider_mode,
 )
+from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
 from modules.core.stage4_canary_tools import (  # noqa: E402
     build_stage4_branch_inventory,
     build_stage4_canary_summary,
@@ -193,6 +194,14 @@ def run_canary(project_name: str, *, target_ep: int, provider_mode: str | None =
             _close_app_handles(app)
 
     summary = analyze_canary(runtime_project_name, target_ep=target_ep)
+    summary["benchmark_archive"] = safe_archive_benchmark_record(
+        workspace_root=PROJECT_ROOT,
+        project=runtime_project_name,
+        lane="stage4-canary",
+        target_ep=target_ep,
+        status="completed" if summary.get("hard_gates", {}).get("status") == "pass" else "partial",
+        notes=f"stage4 canary run; provider_mode={_normalize_provider_mode(provider_mode)}; target_ep={target_ep}",
+    )
     return summary
 
 

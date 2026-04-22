@@ -4,12 +4,32 @@ Bounded Stage3 prompt-envelope helpers.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from modules.core.constants import ContextLimits, smart_truncate
 from modules.core.context_advisor import build_context_budget_ledger
 
 _STAGE3_ARCHIVE_APPENDIX_DEFAULT_CAP = 120_000
+_STAGE3_CARRYOVER_ORDER_FAMILIES: tuple[tuple[str, tuple[str, ...], str], ...] = (
+    ("gold", ("금 선물", "금 시장", "금값", "골드", "gold", "금 관련", "금 데이터"), "금"),
+    ("oil", ("wti", "유가", "원유", "오일", "브렌트"), "유가/원유"),
+    ("equity", ("코스피", "코스닥", "증시", "주식", "종목"), "주식"),
+    ("fx", ("환율", "외환", "환시장", "달러", "엔화", "fx"), "환율/외환"),
+    ("crypto", ("비트코인", "이더리움", "가상자산", "코인", "btc", "eth"), "가상자산"),
+)
+_STAGE3_CARRYOVER_ORDER_SIGNALS: tuple[str, ...] = (
+    "지시",
+    "자료",
+    "보고",
+    "보고서",
+    "정리",
+    "조사",
+    "챙겨",
+    "내일 아침",
+    "내일까지",
+    "열리기 전까지",
+)
 
 
 def _fit_stage3_prompt_lane(text: str, *, max_chars: int, head_ratio: float = 0.55) -> str:
@@ -17,6 +37,74 @@ def _fit_stage3_prompt_lane(text: str, *, max_chars: int, head_ratio: float = 0.
         return text
     head_chars = max(0, min(int(max_chars * head_ratio), max_chars - 80))
     return smart_truncate(text, max_chars=max_chars, head_chars=head_chars)
+
+
+def build_stage3_recent_carryover_digest(
+    prev_manuscripts_text: str,
+    *,
+    max_items: int = 4,
+) -> str:
+    raw = str(prev_manuscripts_text or "")
+    if not raw:
+        return ""
+
+    block_pattern = re.compile(r"━━━\s*제(\d+)화 원고\s*━━━\s*\n", re.MULTILINE)
+    matches = list(block_pattern.finditer(raw))
+    if not matches:
+        return ""
+
+    carryover_rows: list[str] = []
+    seen_keys: set[tuple[str, str]] = set()
+    recent_matches = matches[-4:]
+    for index, match in enumerate(recent_matches):
+        ep_num = match.group(1)
+        block_start = match.end()
+        block_end = recent_matches[index + 1].start() if index + 1 < len(recent_matches) else len(raw)
+        block_text = raw[block_start:block_end].strip()
+        if not block_text:
+            continue
+
+        sentences = [
+            part.strip()
+            for part in re.split(  # utf8-hygiene: allow-line regex metacharacters (?<=...).
+                r"(?<=[.!?。！？])\s+|\n+",  # utf8-hygiene: allow-line regex metacharacters (?<=...).
+                block_text,
+            )
+            if part and part.strip()
+        ]
+        if not sentences:
+            sentences = [block_text]
+
+        windows: list[str] = []
+        for sentence_index in range(len(sentences)):
+            for width in (1, 2, 3):
+                window = " ".join(sentences[sentence_index : sentence_index + width]).strip()
+                if window:
+                    windows.append(window)
+
+        for window in windows:
+            compact = " ".join(window.split()).strip()
+            if not compact:
+                continue
+            lowered = compact.casefold()
+            if not any(signal in lowered for signal in _STAGE3_CARRYOVER_ORDER_SIGNALS):
+                continue
+            for family_key, tokens, label in _STAGE3_CARRYOVER_ORDER_FAMILIES:
+                if not any(token.casefold() in lowered for token in tokens):
+                    continue
+                seen_key = (ep_num, family_key)
+                if seen_key in seen_keys:
+                    continue
+                seen_keys.add(seen_key)
+                carryover_rows.append(
+                    f"- 제{ep_num}화 carryover order ({label}): {compact[:160]} "
+                    "(이미 내려진 지시/대기 과업이면 새 지시처럼 반복하지 말 것)"
+                )
+                break
+            if len(carryover_rows) >= max_items:
+                return "\n".join(carryover_rows)
+
+    return "\n".join(carryover_rows[:max_items])
 
 
 def build_stage3_archive_appendix(

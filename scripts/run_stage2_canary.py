@@ -16,6 +16,7 @@ from modules.core.stage4_canary_tools import (  # noqa: E402
     build_stage2_canary_summary,
     prepare_stage2_canary_project,
 )
+from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
 from scripts.canary_path_utils import project_name_from_path, resolve_workspace_project_dir  # noqa: E402
 from scripts.regression_validation_tiers import FULL_CANARY_PROOF  # noqa: E402
 
@@ -104,7 +105,18 @@ def run_canary(project_name: str, *, target_arc_count: int, expected_final_arcs:
         cwd=PROJECT_ROOT,
         check=True,
     )
-    return analyze_canary(runtime_project_name, expected_final_arcs=expected_final_arcs)
+    payload = analyze_canary(runtime_project_name, expected_final_arcs=expected_final_arcs)
+    payload["benchmark_archive"] = safe_archive_benchmark_record(
+        workspace_root=PROJECT_ROOT,
+        project=runtime_project_name,
+        lane="stage2-canary",
+        status="completed" if payload.get("hard_gates", {}).get("status") == "pass" else "partial",
+        notes=(
+            f"stage2 canary run; target_arc_count={target_arc_count}; "
+            f"expected_final_arcs={expected_final_arcs if expected_final_arcs is not None else ''}"
+        ),
+    )
+    return payload
 
 
 def analyze_canary(project_name: str, *, expected_final_arcs: int | None = None) -> dict:

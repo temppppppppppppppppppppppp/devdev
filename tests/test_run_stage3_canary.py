@@ -25,6 +25,11 @@ def test_run_stage3_canary_calls_stage3_only_and_analyzes():
         patch.object(canary_script, "_load_project_genre", return_value={"type": "wuxia", "name": "wuxia"}),
         patch.object(canary_script, "_boot_app", return_value=app),
         patch.object(canary_script, "analyze_canary", return_value={"hard_gates": {"status": "pass"}}) as analyze,
+        patch.object(
+            canary_script,
+            "safe_archive_benchmark_record",
+            return_value={"status": "ok", "run_id": "canary-s3"},
+        ) as archive,
         patch("modules.core.stage3_context.Stage3Context") as mock_ctx_cls,
     ):
         mock_ctx_cls.from_app.return_value = MagicMock()
@@ -34,7 +39,9 @@ def test_run_stage3_canary_calls_stage3_only_and_analyzes():
     app.pass_rate_monitor.save.assert_called_once()
     app._flush_audit_buffer.assert_called_once()
     analyze.assert_called_once_with("_canary/test_s3_canary", target_ep=4)
+    archive.assert_called_once()
     assert result["hard_gates"]["status"] == "pass"
+    assert result["benchmark_archive"]["run_id"] == "canary-s3"
 
     # Stage 4 was never called
     assert not hasattr(app, "_stage_4_v2_chief_writer")

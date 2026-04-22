@@ -22,6 +22,7 @@ from main_a import SovereignApp  # noqa: E402
 from modules.core.db_manager import DBManager  # noqa: E402
 from modules.core.failure_analyzer import FailureAnalyzer  # noqa: E402
 from modules.core.pass_rate_monitor import PassRateMonitor  # noqa: E402
+from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
 from modules.core.stage4_canary_tools import (  # noqa: E402
     build_stage4_canary_summary,
     latest_session_id_from_rows,
@@ -116,7 +117,16 @@ def run_canary(project_name: str, *, target_ep: int) -> dict:
     finally:
         _close_app_handles(app)
 
-    return analyze_canary(runtime_project_name, target_ep=target_ep)
+    payload = analyze_canary(runtime_project_name, target_ep=target_ep)
+    payload["benchmark_archive"] = safe_archive_benchmark_record(
+        workspace_root=PROJECT_ROOT,
+        project=runtime_project_name,
+        lane="stage34-canary",
+        target_ep=target_ep,
+        status="completed" if payload.get("multi_stage_proof_scope_summary", {}).get("status") == "pass" else "partial",
+        notes=f"stage34 frontier canary run; target_ep={target_ep}",
+    )
+    return payload
 
 
 def analyze_canary(project_name: str, *, target_ep: int) -> dict:

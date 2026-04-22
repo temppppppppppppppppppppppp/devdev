@@ -395,6 +395,77 @@ def _resolve_numeric_carryover_contract_fields(
     return resolved_fix_pack, resolved_scope, reasoning
 
 
+def _synthesize_firewall_fix_pack(
+    raw_fix_pack: object,
+    *,
+    contradiction_details: list[dict] | None,
+    firewall_reason: str,
+    feedback: object,
+) -> dict:
+    fix_pack = _normalize_fix_pack(raw_fix_pack)
+    if not fix_pack:
+        fix_pack = {}
+
+    patch_targets = list(fix_pack.get("patch_targets") or [])
+    must_fix = list(fix_pack.get("must_fix") or [])
+    do_not_regress = list(fix_pack.get("do_not_regress") or [])
+    contradiction_types: list[str] = []
+
+    for item in contradiction_details or []:
+        if not isinstance(item, dict):
+            continue
+        contradiction_type = str(item.get("type", "") or "").strip()
+        if contradiction_type and contradiction_type not in contradiction_types:
+            contradiction_types.append(contradiction_type)
+        target_label = contradiction_type or "local contradiction"
+        if target_label and target_label not in patch_targets:
+            patch_targets.append(target_label[:80])
+        fix_suggestion = str(item.get("fix_suggestion", "") or "").strip()
+        violation = str(item.get("current_violation", "") or "").strip()
+        if fix_suggestion and fix_suggestion not in must_fix:
+            must_fix.append(fix_suggestion[:180])
+        elif violation and violation not in must_fix:
+            must_fix.append(violation[:180])
+
+    if isinstance(feedback, dict):
+        for entry in _normalize_fix_pack_list(feedback.get("action_items"), limit=4, item_limit=180):
+            if entry not in must_fix:
+                must_fix.append(entry)
+
+    base_guard = "선택 후보의 장면 구조와 핵심 tension은 유지하되 local contradiction만 제거할 것"
+    if base_guard not in do_not_regress:
+        do_not_regress.append(base_guard)
+    if firewall_reason:
+        reason_guard = f"firewall_reason 유지: {firewall_reason}"
+        if reason_guard not in do_not_regress:
+            do_not_regress.append(reason_guard[:180])
+
+    fix_pack["patch_targets"] = patch_targets[:3] or ["local contradiction sentences"]
+    fix_pack["must_fix"] = must_fix[:4] or ["local contradiction를 문장 수준에서 제거"]
+    fix_pack["do_not_regress"] = do_not_regress[:4]
+    if not str(fix_pack.get("success_condition", "") or "").strip():
+        type_label = ", ".join(contradiction_types[:2]) or "local contradiction"
+        fix_pack["success_condition"] = (
+            f"{type_label} contradiction가 사라지고, 선택 후보의 핵심 장면 흐름은 유지된다"
+        )
+    if not str(fix_pack.get("target_kind", "") or "").strip():
+        fix_pack["target_kind"] = "local_sentence"
+    if contradiction_types and not str(fix_pack.get("subtype", "") or "").strip():
+        fix_pack["subtype"] = contradiction_types[0]
+    if not str(fix_pack.get("evidence_summary", "") or "").strip():
+        summary = ", ".join(contradiction_types[:3]) or "firewall_fixable_local_contradiction"
+        fix_pack["evidence_summary"] = summary[:220]
+    if not str(fix_pack.get("provenance", "") or "").strip():
+        fix_pack["provenance"] = "runtime_synthesized"
+    fix_pack["provenance_sources"] = _append_unique_compact_items(
+        fix_pack.get("provenance_sources") or [],
+        ("director_firewall.local_contradiction",),
+        limit=4,
+        item_limit=120,
+    )
+    return fix_pack
+
+
 def _build_director_repair_contract_payload(
     *,
     contradiction_types: list[str],
@@ -468,6 +539,17 @@ def _resolve_stage4_contract_fields(
         authoritative_fix_scope=authoritative_fix_scope,
         fix_scope_reasoning=fix_scope_reasoning,
     )
+    if final_verdict == "PASS_WITH_FIX" and state.firewall_fixable and not fix_pack:
+        fix_pack = _synthesize_firewall_fix_pack(
+            result.get("fix_pack"),
+            contradiction_details=state.contradiction_details,
+            firewall_reason=str(state.firewall_reason or "").strip(),
+            feedback=result.get("feedback"),
+        )
+        if not authoritative_fix_scope:
+            authoritative_fix_scope = "inplace"
+        if not fix_scope_reasoning:
+            fix_scope_reasoning = str(state.firewall_reason or "").strip()
     fix_scope = authoritative_fix_scope
     contradiction_summary_lines = _build_contradiction_summary_lines(
         state.contradiction_details or [],

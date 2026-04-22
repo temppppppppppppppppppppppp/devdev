@@ -1,0 +1,449 @@
+{
+  "arc_no": 2,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0009.txt",
+    "settlement_packet_path": "drafts/ep_0009.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 9,
+  "ep_num": 9,
+  "manuscript": {
+    "char_count": 5444,
+    "content_hash": "2b5a93b18d344649dfc887e4904b88baf089c0df38c590850fe18acb67a733f3",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0009.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 이전 지시사항이었던 장소 앵커가 자연스럽게 도입부에 추가되었으며, 박성호의 심리 변화와 한시우의 압도적인 장악력이 매우 설득력 있게 묘사되었습니다. 마지막 의문의 전화 씬도 다음 화에 대한 기대감을 훌륭하게 끌어올립니다.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "이전 피드백이었던 도입부 장소 앵커('여의도 한미증권 VIP룸')가 자연스럽게 추가되었으며, 이전 화와의 연속성 및 Blueprint의 모든 씬이 완벽하게 구현되었습니다. 긴장감 넘치는 묘사와 인물 간의 권력 역전이 훌륭하게 표현되었습니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "순식간에"
+        }
+      ],
+      "ai_slop_score": 1.0,
+      "burstiness": 18.89,
+      "ced_score": 0.0,
+      "complexity": 50.08,
+      "compression_ratio": 0.4468,
+      "signal_summary": {
+        "ai_slop_total_hits": 1,
+        "burstiness": 18.89,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 50.08,
+        "compression_ratio": 0.4468,
+        "sentence_count": 137
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "한시우",
+            "새로",
+            "받은",
+            "보안폰",
+            "걸려온"
+          ],
+          "source": "ending_hook",
+          "text": "한시우가 새로 받은 보안폰으로 걸려온 의문의 전화를 받고 묻는다. '어디라고 했지?'"
+        }
+      ],
+      "capital": 1500000000,
+      "connections": "박성호 (한시우의 비범한 통찰력과 압도적인 존재감에 완전히 굴복하여, 한미증권의 컴플라이언스를 위반하고 한시우만을 위한 전담 실무자가 된 충성스러운 조력자이자 부속품)",
+      "current_objective": "CME WTI 원유 선물 포지션의 성공적인 수익 창출을 통해 초기 자금을 확보하고, 박성호를 완전히 통제하여 투자 실행 체계를 공고히 한다. 유가 상승 이후 금값 상승이라는 다음 투자 기회를 포착하여 자산 증식을 가속화하고, 독립적인 정보 통제 수단을 확보한다. 미지의 접촉에 대한 진위를 파악한다.",
+      "equipment": [
+        "전용 보안 스마트폰"
+      ],
+      "inventory_counts": {
+        "전용 보안 스마트폰": 1
+      },
+      "market_insight": "이란 사태로 인한 유가 폭등과 그에 따른 금값 상승을 정확히 예측하는 등, 거시 경제의 연쇄 반응을 완벽하게 꿰뚫고 통제하는 지배적인 통찰력. 레버리지 상품의 위험성을 역이용하여 극대화된 수익을 창출하며, 다음 타겟인 금 선물 시장을 명확히 지목함.",
+      "reputation": "예측 불가능한 시장의 폭풍 속에서도 흔들림 없는 통찰력과 강철 같은 의지로 막대한 수익을 창출하며, 조력자를 완벽히 장악하고 다음 투자 기회를 선점하는 압도적인 시장 지배자. 미지의 존재로부터도 주목받기 시작함.",
+      "status": "CME WTI 원유 선물 포지션에서 초기 자본금 대비 32% 이상의 막대한 수익을 성공적으로 창출. 박성호를 완전히 장악하여 독립적인 투자 실행 체계를 구축했으며, 전용 보안 스마트폰을 획득하여 정보 통제력을 강화함. 다음 투자 기회(금)를 예견하고 준비 중인 가운데, 미지의 존재로부터 예상치 못한 접촉을 받음.",
+      "stocks": [],
+      "total_assets": 1990300000,
+      "wealth": 1990300000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "한시우",
+            "새로",
+            "받은",
+            "보안폰",
+            "걸려온"
+          ],
+          "source": "ending_hook",
+          "text": "한시우가 새로 받은 보안폰으로 걸려온 의문의 전화를 받고 묻는다. '어디라고 했지?'"
+        }
+      ],
+      "causal_links": [
+        "한시우의 WTI 원유 선물 투자 성공 (4억 9천만 원 이상 수익) -> 박성호 팀장의 한시우에 대한 완전한 굴복 및 충성 맹세",
+        "박성호 팀장의 굴복 -> 한시우의 한미증권 내부 정보 및 실행 체계에 대한 독점적 통제권 확보 (컴플라이언스 위반 지시)",
+        "한시우의 가문 감시망 회피 및 독립적 거버넌스 구축 필요성 -> 한미증권으로부터 전용 보안 스마트폰 획득",
+        "전용 보안 스마트폰 획득 -> 미지의 발신자로부터 '발신자 번호 표시 제한' 전화 수신 (새로운 복선 발생)"
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": 1,
+          "from": 0,
+          "name": "전용 보안 스마트폰",
+          "to": 1
+        }
+      ],
+      "inventory_counts": {
+        "전용 보안 스마트폰": 1
+      },
+      "karma_matrix": [],
+      "knowledge_map": {
+        "new_misled": [],
+        "new_witnesses": [
+          "박성호 (한시우의 압도적인 통찰력과 지배력, 그리고 독립적인 행동 양식을 직접 목격하고 완전히 굴복함)"
+        ]
+      },
+      "lost_items": [],
+      "new_items": [
+        "전용 보안 스마트폰"
+      ],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호 (한시우의 압도적인 통찰력과 지배력, 그리고 독립적인 행동 양식을 직접 목격하고 완전히 굴복함)",
+          "to": "목격자"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "한시우",
+              "새로",
+              "받은",
+              "보안폰",
+              "걸려온"
+            ],
+            "source": "ending_hook",
+            "text": "한시우가 새로 받은 보안폰으로 걸려온 의문의 전화를 받고 묻는다. '어디라고 했지?'"
+          }
+        ],
+        "capital": 1500000000,
+        "connections": "박성호 (한시우의 비범한 통찰력과 압도적인 존재감에 완전히 굴복하여, 한미증권의 컴플라이언스를 위반하고 한시우만을 위한 전담 실무자가 된 충성스러운 조력자이자 부속품)",
+        "current_objective": "CME WTI 원유 선물 포지션의 성공적인 수익 창출을 통해 초기 자금을 확보하고, 박성호를 완전히 통제하여 투자 실행 체계를 공고히 한다. 유가 상승 이후 금값 상승이라는 다음 투자 기회를 포착하여 자산 증식을 가속화하고, 독립적인 정보 통제 수단을 확보한다. 미지의 접촉에 대한 진위를 파악한다.",
+        "equipment": [
+          "전용 보안 스마트폰"
+        ],
+        "inventory_counts": {
+          "전용 보안 스마트폰": 1
+        },
+        "market_insight": "이란 사태로 인한 유가 폭등과 그에 따른 금값 상승을 정확히 예측하는 등, 거시 경제의 연쇄 반응을 완벽하게 꿰뚫고 통제하는 지배적인 통찰력. 레버리지 상품의 위험성을 역이용하여 극대화된 수익을 창출하며, 다음 타겟인 금 선물 시장을 명확히 지목함.",
+        "reputation": "예측 불가능한 시장의 폭풍 속에서도 흔들림 없는 통찰력과 강철 같은 의지로 막대한 수익을 창출하며, 조력자를 완벽히 장악하고 다음 투자 기회를 선점하는 압도적인 시장 지배자. 미지의 존재로부터도 주목받기 시작함.",
+        "status": "CME WTI 원유 선물 포지션에서 초기 자본금 대비 32% 이상의 막대한 수익을 성공적으로 창출. 박성호를 완전히 장악하여 독립적인 투자 실행 체계를 구축했으며, 전용 보안 스마트폰을 획득하여 정보 통제력을 강화함. 다음 투자 기회(금)를 예견하고 준비 중인 가운데, 미지의 존재로부터 예상치 못한 접촉을 받음.",
+        "stocks": [],
+        "total_assets": 1990300000,
+        "wealth": 1990300000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "inventory_counts",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "equipment",
+              "location",
+              "protagonist_status"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ],
+            "transport_authority_mode": "fact_ledger_overlap",
+            "transport_contract_version": "cross_stage_authority_packet.v1",
+            "transport_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "19억 9,300만 원",
+      "director_score": 90,
+      "equipment": [
+        "2G 휴대폰",
+        "자산 현황 메모장",
+        "SW인베스트먼트 법인 등기 서류",
+        "SW인베스트먼트 법인 인감",
+        "VIP 전용 보안폰"
+      ],
+      "location": "여의도 한미증권 VIP룸",
+      "protagonist_status": "박성호를 완전히 장악하고, 의문의 전화를 받으며 새로운 국면을 맞이함."
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "inventory_counts",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "equipment",
+            "location",
+            "protagonist_status"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ],
+          "transport_authority_mode": "fact_ledger_overlap",
+          "transport_contract_version": "cross_stage_authority_packet.v1",
+          "transport_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS_WITH_WARNING",
+    "fix_pack": {
+      "do_not_regress": [
+        "Arc shell, opening-state, ending hook은 유지"
+      ],
+      "must_fix": [
+        "기관명/인물명/수치 anchor를 1~2개 이상 보강 (현재 3개)"
+      ],
+      "patch_targets": [
+        "integrated_scenario"
+      ],
+      "success_condition": "integrated_scenario가 구체적 기관명, 인물명, 수치 anchor를 추가한다",
+      "target_kind": "local_sentence"
+    },
+    "last_score": 98,
+    "quality_gate_failed": false,
+    "quality_risk": true,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "target_kind": "local_sentence"
+    },
+    "revision_required": true,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "title": "제9화: 의문의 발신자"
+}

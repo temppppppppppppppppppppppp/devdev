@@ -26,6 +26,11 @@ def test_run_canary_saves_and_flushes_before_analyze():
         patch.object(canary_script, "_load_project_genre", return_value={"type": "investment", "name": "investment"}),
         patch.object(canary_script, "_boot_app", return_value=app),
         patch.object(canary_script, "analyze_canary", return_value={"hard_gates": {"status": "pass"}}) as analyze,
+        patch.object(
+            canary_script,
+            "safe_archive_benchmark_record",
+            return_value={"status": "ok", "run_id": "canary-s4"},
+        ) as archive,
     ):
         result = canary_script.run_canary("00_test_06", target_ep=4)
 
@@ -33,7 +38,9 @@ def test_run_canary_saves_and_flushes_before_analyze():
     monitor.save.assert_called_once()
     app._flush_audit_buffer.assert_called_once()
     analyze.assert_called_once_with("_canary/00_test_06", target_ep=4)
+    archive.assert_called_once()
     assert result["hard_gates"]["status"] == "pass"
+    assert result["benchmark_archive"]["run_id"] == "canary-s4"
 
 
 def test_run_canary_bootstraps_missing_pass_rate_monitor():

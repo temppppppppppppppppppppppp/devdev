@@ -21,6 +21,7 @@ from main_a import SovereignApp  # noqa: E402
 from modules.core.db_manager import DBManager  # noqa: E402
 from modules.core.pass_rate_monitor import PassRateMonitor  # noqa: E402
 from modules.core.stage2_context import Stage2Context  # noqa: E402
+from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
 from scripts.canary_path_utils import project_name_from_path, resolve_workspace_project_dir  # noqa: E402
 
 
@@ -107,6 +108,19 @@ def run_direct_stage2(project_name: str, *, target_total_arcs: int) -> dict:
     }
     summary_path = project_root / "logs" / "stage2_direct_supervised_result.json"
     summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    archive_status = "completed" if payload["success"] else "partial"
+    archive_notes = (
+        f"direct supervised stage2; target_total_arcs={target_total_arcs}; "
+        f"current_arcs_before={before_arcs}; current_arcs_after={after_arcs}"
+    )
+    payload["benchmark_archive"] = safe_archive_benchmark_record(
+        workspace_root=PROJECT_ROOT,
+        project=runtime_project_name,
+        lane="stage2-direct-supervised",
+        status=archive_status,
+        notes=archive_notes,
+    )
     summary_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     return payload
 

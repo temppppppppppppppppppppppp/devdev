@@ -26,6 +26,7 @@ from modules.core.stage4_canary_tools import (  # noqa: E402
     build_stage3_canary_summary,
     prepare_stage3_canary_project,
 )
+from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
 from scripts.canary_path_utils import project_name_from_path, resolve_workspace_project_dir  # noqa: E402
 from scripts.regression_validation_tiers import FULL_CANARY_PROOF  # noqa: E402
 
@@ -113,7 +114,16 @@ def run_canary(project_name: str, *, target_ep: int) -> dict:
     finally:
         _close_app_handles(app)
 
-    return analyze_canary(runtime_project_name, target_ep=target_ep)
+    payload = analyze_canary(runtime_project_name, target_ep=target_ep)
+    payload["benchmark_archive"] = safe_archive_benchmark_record(
+        workspace_root=PROJECT_ROOT,
+        project=runtime_project_name,
+        lane="stage3-canary",
+        target_ep=target_ep,
+        status="completed" if payload.get("hard_gates", {}).get("status") == "pass" else "partial",
+        notes=f"stage3 canary run; target_ep={target_ep}",
+    )
+    return payload
 
 
 def _run_stage3_only(app: SovereignApp, *, target_ep: int) -> dict:
