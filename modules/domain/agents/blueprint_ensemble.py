@@ -39,7 +39,11 @@ from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import _SYSTEM_CFG, AgentErrorType, BaseAgent
 from .scene_cardinality_contract import evaluate_stage3_scene_cardinality
-from .stage3_prompt_envelope import build_stage3_archive_appendix, build_stage3_prompt_envelope_meta
+from .stage3_prompt_envelope import (
+    build_stage3_archive_appendix,
+    build_stage3_prompt_envelope_meta,
+    build_stage3_recent_carryover_digest,
+)
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
@@ -415,6 +419,17 @@ def _format_episode_state_packet_lines(packet: dict | None) -> list[str]:
     transition_expectation = str(opening_truth.get("opening_transition_expectation", "") or "").strip()
     if transition_expectation:
         packet_lines.append(f"  - opening.transition_expectation: {_fit_compact_context(transition_expectation, 120)}")
+    active_characters = opening_truth.get("active_characters") or []
+    if isinstance(active_characters, list):
+        active_character_text = ", ".join(str(item or "").strip() for item in active_characters[:5] if str(item or "").strip())
+    else:
+        active_character_text = str(active_characters or "").strip()
+    if active_character_text:
+        packet_lines.append(f"  - opening.active_characters: {_fit_compact_context(active_character_text, 120)}")
+        if "do not declare direct_continuation" not in transition_expectation.casefold():
+            packet_lines.append(
+                "    direct_continuation이면 opening.active_characters는 이미 현장에 있는 상태로 간주하고 재입장 동선을 새로 쓰지 마라."
+            )
     protagonist_sources = protagonist_truth.get("sources") if isinstance(protagonist_truth.get("sources"), dict) else {}
     equipment = protagonist_truth.get("equipment")
     if equipment:
@@ -2422,6 +2437,16 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # ── [pre-rerun] 직전 원고 말미 → 시간 진실 소스 ──
         if prev_manuscripts_text:
+            carryover_digest = build_stage3_recent_carryover_digest(prev_manuscripts_text)
+            if carryover_digest:
+                sections.append("[Context Tier 3A - Recent Carryover Orders / Pending Actions]")
+                sections.append(
+                    "\n[carryover] ═══ 최근 원고 기준 미해결 지시 / 대기 과업 ═══\n"
+                    "아래는 이미 내려졌거나 진행 중인 지시입니다.\n"
+                    "direct_continuation이나 same-night opening에서는 이를 새 지시처럼 다시 시작하지 말고,\n"
+                    "진행 상태 보고, 압박의 변화, 우선순위 조정, 새 결과 surface로만 전진하세요.\n\n"
+                    f"{carryover_digest}"
+                )
             sections.append("[Context Tier 3 - Manuscript Ending Truth]")
             ending_excerpt = prev_manuscripts_text.strip()[-800:]
             sections.append(

@@ -1,0 +1,311 @@
+{
+  "project": "골든 카나리아",
+  "project_root": "C:\\Users\\wjjo\\Desktop\\글도비\\projects\\골든 카나리아",
+  "target_ep": 15,
+  "latest_written_ep_before": 10,
+  "latest_written_ep_after": 11,
+  "runtime_audit_tag": "stage3_complete",
+  "monitor_policy": {
+    "poll_interval_seconds": 300,
+    "max_attempts": 5,
+    "termination_grace_seconds": 20,
+    "attempt_authority_sink": "stage_attempts",
+    "attempt_threshold_rule": "terminate when stage4 attempt_num > 5",
+    "round_threshold_rule": "terminate when observed round > 5"
+  },
+  "monitor_launched_at": "2026-04-22T14:55:29",
+  "monitor_checks": [
+    {
+      "checked_at": "2026-04-22T15:00:30",
+      "max_attempt_num": 0,
+      "ep_num": null,
+      "episodes": [],
+      "latest_round_seen": 1,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T15:05:31",
+      "max_attempt_num": 1,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 10,
+          "max_attempt_num": 1,
+          "row_count": 1,
+          "latest_id": 47,
+          "latest_ts": "2026-04-22T15:04:04"
+        }
+      ],
+      "latest_round_seen": 2,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T15:10:32",
+      "max_attempt_num": 2,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 10,
+          "max_attempt_num": 2,
+          "row_count": 2,
+          "latest_id": 48,
+          "latest_ts": "2026-04-22T15:07:17"
+        }
+      ],
+      "latest_round_seen": 3,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T15:15:33",
+      "max_attempt_num": 2,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 10,
+          "max_attempt_num": 2,
+          "row_count": 2,
+          "latest_id": 48,
+          "latest_ts": "2026-04-22T15:07:17"
+        }
+      ],
+      "latest_round_seen": 3,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T15:20:34",
+      "max_attempt_num": 3,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 10,
+          "max_attempt_num": 3,
+          "row_count": 3,
+          "latest_id": 49,
+          "latest_ts": "2026-04-22T15:15:41"
+        }
+      ],
+      "latest_round_seen": 4,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T15:25:36",
+      "max_attempt_num": 4,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 10,
+          "max_attempt_num": 4,
+          "row_count": 4,
+          "latest_id": 50,
+          "latest_ts": "2026-04-22T15:21:06"
+        }
+      ],
+      "latest_round_seen": 4,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T15:30:37",
+      "max_attempt_num": 4,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 10,
+          "max_attempt_num": 4,
+          "row_count": 4,
+          "latest_id": 50,
+          "latest_ts": "2026-04-22T15:21:06"
+        }
+      ],
+      "latest_round_seen": 4,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T15:35:38",
+      "max_attempt_num": 4,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 10,
+          "max_attempt_num": 4,
+          "row_count": 4,
+          "latest_id": 50,
+          "latest_ts": "2026-04-22T15:21:06"
+        }
+      ],
+      "latest_round_seen": 4,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T15:40:40",
+      "max_attempt_num": 4,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 10,
+          "max_attempt_num": 4,
+          "row_count": 4,
+          "latest_id": 50,
+          "latest_ts": "2026-04-22T15:21:06"
+        }
+      ],
+      "latest_round_seen": 4,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T15:45:41",
+      "max_attempt_num": 4,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 11,
+          "max_attempt_num": 1,
+          "row_count": 1,
+          "latest_id": 51,
+          "latest_ts": "2026-04-22T15:43:15"
+        },
+        {
+          "ep_num": 10,
+          "max_attempt_num": 4,
+          "row_count": 4,
+          "latest_id": 50,
+          "latest_ts": "2026-04-22T15:21:06"
+        }
+      ],
+      "latest_round_seen": 4,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T15:50:43",
+      "max_attempt_num": 4,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 11,
+          "max_attempt_num": 1,
+          "row_count": 1,
+          "latest_id": 51,
+          "latest_ts": "2026-04-22T15:43:15"
+        },
+        {
+          "ep_num": 10,
+          "max_attempt_num": 4,
+          "row_count": 4,
+          "latest_id": 50,
+          "latest_ts": "2026-04-22T15:21:06"
+        }
+      ],
+      "latest_round_seen": 4,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T15:55:44",
+      "max_attempt_num": 4,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 11,
+          "max_attempt_num": 2,
+          "row_count": 2,
+          "latest_id": 52,
+          "latest_ts": "2026-04-22T15:51:31"
+        },
+        {
+          "ep_num": 10,
+          "max_attempt_num": 4,
+          "row_count": 4,
+          "latest_id": 50,
+          "latest_ts": "2026-04-22T15:21:06"
+        }
+      ],
+      "latest_round_seen": 4,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T16:00:45",
+      "max_attempt_num": 4,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 11,
+          "max_attempt_num": 3,
+          "row_count": 3,
+          "latest_id": 53,
+          "latest_ts": "2026-04-22T15:58:23"
+        },
+        {
+          "ep_num": 10,
+          "max_attempt_num": 4,
+          "row_count": 4,
+          "latest_id": 50,
+          "latest_ts": "2026-04-22T15:21:06"
+        }
+      ],
+      "latest_round_seen": 4,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T16:05:46",
+      "max_attempt_num": 4,
+      "ep_num": 10,
+      "episodes": [
+        {
+          "ep_num": 11,
+          "max_attempt_num": 3,
+          "row_count": 3,
+          "latest_id": 53,
+          "latest_ts": "2026-04-22T15:58:23"
+        },
+        {
+          "ep_num": 10,
+          "max_attempt_num": 4,
+          "row_count": 4,
+          "latest_id": 50,
+          "latest_ts": "2026-04-22T15:21:06"
+        }
+      ],
+      "latest_round_seen": 4,
+      "latest_round_total": 10
+    },
+    {
+      "checked_at": "2026-04-22T16:10:47",
+      "max_attempt_num": 4,
+      "ep_num": 11,
+      "episodes": [
+        {
+          "ep_num": 11,
+          "max_attempt_num": 4,
+          "row_count": 4,
+          "latest_id": 54,
+          "latest_ts": "2026-04-22T16:06:08"
+        },
+        {
+          "ep_num": 10,
+          "max_attempt_num": 4,
+          "row_count": 4,
+          "latest_id": 50,
+          "latest_ts": "2026-04-22T15:21:06"
+        }
+      ],
+      "latest_round_seen": 5,
+      "latest_round_total": 10
+    }
+  ],
+  "monitor_check_count": 15,
+  "baseline_stage4_attempt_id": 46,
+  "latest_round_seen": 6,
+  "latest_round_total": 10,
+  "terminated_by_monitor": true,
+  "termination_reason": "stage4_round_limit_exceeded",
+  "termination_method": "terminate",
+  "terminated_ep": null,
+  "terminated_attempt_num": 6,
+  "child_exit_code": 1,
+  "success": false,
+  "benchmark_archive": {
+    "status": "ok",
+    "lane": "stage4-supervised",
+    "target_ep": 15,
+    "run_id": "20260422_161424__stage4-supervised__target-ep15__ffb29efc",
+    "record_root": "C:\\Users\\wjjo\\Desktop\\글도비\\benchmarks\\골든 카나리아\\20260422_161424__stage4-supervised__target-ep15__ffb29efc"
+  }
+}

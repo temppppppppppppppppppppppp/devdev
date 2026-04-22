@@ -1,0 +1,512 @@
+{
+  "arc_no": 2,
+  "artifacts": {
+    "episode_bible_table": "episode_bibles",
+    "human_facing_txt_path": "drafts/ep_0007.txt",
+    "settlement_packet_path": "drafts/ep_0007.settlement.json",
+    "state_log_table": "state_logs"
+  },
+  "blueprint_ep": 7,
+  "ep_num": 7,
+  "manuscript": {
+    "char_count": 5276,
+    "content_hash": "b712af448bbee7603dce27578f1cc14a3325c4f46b93fe08892e98b490b9505a",
+    "db_table": "manuscripts",
+    "human_facing_txt_path": "drafts/ep_0007.txt"
+  },
+  "packet_version": "stage4_settlement_packet_v1",
+  "quality": {
+    "labels": {
+      "consistency_checklist": {
+        "arithmetic": "OK",
+        "dialogue_naturalness": "OK",
+        "emotional_authenticity": "OK",
+        "event_ordering": "OK",
+        "fiction_term_leak": "OK",
+        "identity_consistency": "OK",
+        "npc_identity": "OK",
+        "npc_knowledge_boundary": "OK",
+        "numeric_accuracy": "OK",
+        "opening_diversity": "OK",
+        "pacing_quality": "OK",
+        "percent_calculation": "OK",
+        "pov_discipline": "OK",
+        "scene_overlap": "OK",
+        "scene_variety": "OK",
+        "secret_consistency": "OK",
+        "space_continuity": "OK",
+        "time_progression": "OK",
+        "timeline_arc_consistency": "OK",
+        "title_consistency": "OK"
+      },
+      "director_verdict": "PASS",
+      "gate_basis": "patch_reaudit_pass",
+      "open_review": "특이사항 없음. 원고는 이전 서사와의 연속성, Blueprint의 의도, 장르적 재미를 모두 완벽하게 충족함. 특히 한정된 공간(VIP룸)과 인물(한시우, 박성호)만으로 극도의 긴장감을 조성하고, 주인공의 비범함을 효과적으로 드러내는 연출이 뛰어남.",
+      "repair_scope": "inplace",
+      "score": 90,
+      "score_breakdown": {
+        "blueprint_coverage": 20,
+        "continuity_contradiction": 40,
+        "length": 10,
+        "python_warnings": 10,
+        "quality_engagement": 20
+      },
+      "selection_reason": "후보 A는 제공된 유일한 원고이며, 검토 결과 Blueprint의 모든 요구사항을 완벽하게 충족하고 이전 서사와의 연속성에도 전혀 문제가 없는 100점짜리 원고입니다. 다른 후보를 검토할 필요 없이 즉시 통과 가능합니다.",
+      "verdict": "PASS"
+    },
+    "signals": {
+      "ai_slop_hits": [
+        {
+          "count": 1,
+          "pattern": "순식간에"
+        },
+        {
+          "count": 1,
+          "pattern": "숨을 삼켰다"
+        },
+        {
+          "count": 1,
+          "pattern": "시선을 돌렸다"
+        },
+        {
+          "count": 1,
+          "pattern": "입을 열었다"
+        },
+        {
+          "count": 1,
+          "pattern": "침을 삼켰다"
+        }
+      ],
+      "ai_slop_score": 5.0,
+      "burstiness": 22.24,
+      "ced_score": 0.0,
+      "complexity": 44.42,
+      "compression_ratio": 0.4458,
+      "signal_summary": {
+        "ai_slop_total_hits": 5,
+        "burstiness": 22.24,
+        "ced_breakdown": {
+          "issue_count": 0,
+          "warning_count": 0
+        },
+        "complexity": 44.42,
+        "compression_ratio": 0.4458,
+        "sentence_count": 146
+      }
+    }
+  },
+  "settlement": {
+    "actual_truth": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "진짜",
+            "폭풍",
+            "아직",
+            "했으니까",
+            "한시우"
+          ],
+          "source": "ending_hook",
+          "text": "'진짜 폭풍은, 아직 시작도 안 했으니까.' 한시우의 차가운 음성이 째깍거리는 초침 소리를 집어삼켰다."
+        },
+        {
+          "cue_terms": [
+            "다가올",
+            "거대한",
+            "시장",
+            "폭등",
+            "앞두고"
+          ],
+          "source": "expected_ending",
+          "text": "다가올 거대한 시장의 폭등을 앞두고 폭풍전야의 긴장감을 형성하며 마무리"
+        }
+      ],
+      "capital": 1500000000,
+      "connections": "가족 인맥 (재정적 단절), 박성호 (한시우의 압도적인 통찰력과 의지에 완전히 복종하며 실무를 집행하는 조력자)",
+      "current_objective": "CME WTI 원유 선물 포지션의 초기 변동성을 견디고 성공적인 수익을 창출하여 초기 자금을 확보한다. 박성호를 통해 투자 실행 체계를 공고히 하고, 유가 상승 이후 금값 상승이라는 다음 투자 기회를 포착하여 자산 증식을 가속화한다.",
+      "equipment": [],
+      "market_insight": "유가 급등에 이은 금값 상승을 예측하는 등, 거시 경제의 거대한 해일과 다음 파도를 정확히 읽어내는 완벽한 통찰력. 증권사 시스템 및 레버리지 활용에 대한 깊은 이해와 통제력.",
+      "reputation": "미래 시장의 거대한 흐름을 읽어내고 조력자를 완벽히 통제하며 고위험 투자를 강행하는 압도적인 투자자. 초기 손실에도 흔들림 없는 강철 같은 의지로 시장을 관망하며 다음 파도를 준비하는 지휘자.",
+      "status": "SW인베스트먼트 법인 설립 및 CME WTI 원유 선물 3배 레버리지 매수 포지션 진입 완료. 초기 평가손실 발생에도 불구하고 흔들림 없이 시장을 관망하며 박성호를 완벽히 장악. 다음 투자 기회(금)를 예견하며 독립적인 투자 제국 건설의 기반을 다지는 중.",
+      "stocks": [],
+      "total_assets": 1990300000,
+      "wealth": 1990300000
+    },
+    "episode_bible": {
+      "active_pressure_vectors": [
+        {
+          "cue_terms": [
+            "진짜",
+            "폭풍",
+            "아직",
+            "했으니까",
+            "한시우"
+          ],
+          "source": "ending_hook",
+          "text": "'진짜 폭풍은, 아직 시작도 안 했으니까.' 한시우의 차가운 음성이 째깍거리는 초침 소리를 집어삼켰다."
+        },
+        {
+          "cue_terms": [
+            "다가올",
+            "거대한",
+            "시장",
+            "폭등",
+            "앞두고"
+          ],
+          "source": "expected_ending",
+          "text": "다가올 거대한 시장의 폭등을 앞두고 폭풍전야의 긴장감을 형성하며 마무리"
+        }
+      ],
+      "causal_links": [
+        {
+          "description": "한시우는 박성호의 라이선스 박탈을 언급하며 강력하게 압박했고, 박성호는 결국 모든 저항을 포기하고 지시를 따랐다.",
+          "source": "한시우의 압도적인 의지와 위협",
+          "target": "박성호의 WTI 원유 선물 3배 레버리지 매수 포지션 강행 및 완전한 복종"
+        },
+        {
+          "description": "단 몇 초 만에 천만 원에 가까운 손실이 발생하자 박성호는 마진콜을 우려하며 극도의 불안감을 느꼈다.",
+          "source": "WTI 원유 선물 포지션의 초기 평가손실 발생",
+          "target": "박성호의 극심한 공포와 패닉"
+        },
+        {
+          "description": "한시우가 눈앞의 손실이 아닌 다음 시장의 흐름(금값 상승)을 예측하자, 박성호는 그를 단순한 도박사가 아닌 시장의 지휘자로 인식하게 되었다.",
+          "source": "한시우의 유가 급등 및 금값 상승 예견",
+          "target": "박성호의 한시우에 대한 인식 변화 및 경외감"
+        }
+      ],
+      "inventory_count_deltas": [
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "노란 대봉투",
+          "to": 0
+        },
+        {
+          "delta": -1,
+          "from": 1,
+          "name": "은색 폴더폰",
+          "to": 0
+        }
+      ],
+      "inventory_counts": {},
+      "karma_matrix": [],
+      "knowledge_map": {
+        "new_misled": [],
+        "new_witnesses": [
+          "박성호"
+        ]
+      },
+      "lost_items": [
+        "은색 폴더폰",
+        "노란 대봉투"
+      ],
+      "new_items": [],
+      "new_npcs": [
+        "박성호"
+      ],
+      "npc_deaths": [],
+      "relationship_changes": [
+        {
+          "from": "",
+          "npc": "박성호",
+          "to": "목격자"
+        }
+      ],
+      "reveals": [],
+      "state_changes": {
+        "active_pressure_vectors": [
+          {
+            "cue_terms": [
+              "진짜",
+              "폭풍",
+              "아직",
+              "했으니까",
+              "한시우"
+            ],
+            "source": "ending_hook",
+            "text": "'진짜 폭풍은, 아직 시작도 안 했으니까.' 한시우의 차가운 음성이 째깍거리는 초침 소리를 집어삼켰다."
+          },
+          {
+            "cue_terms": [
+              "다가올",
+              "거대한",
+              "시장",
+              "폭등",
+              "앞두고"
+            ],
+            "source": "expected_ending",
+            "text": "다가올 거대한 시장의 폭등을 앞두고 폭풍전야의 긴장감을 형성하며 마무리"
+          }
+        ],
+        "capital": 1500000000,
+        "connections": "가족 인맥 (재정적 단절), 박성호 (한시우의 압도적인 통찰력과 의지에 완전히 복종하며 실무를 집행하는 조력자)",
+        "current_objective": "CME WTI 원유 선물 포지션의 초기 변동성을 견디고 성공적인 수익을 창출하여 초기 자금을 확보한다. 박성호를 통해 투자 실행 체계를 공고히 하고, 유가 상승 이후 금값 상승이라는 다음 투자 기회를 포착하여 자산 증식을 가속화한다.",
+        "equipment": [],
+        "market_insight": "유가 급등에 이은 금값 상승을 예측하는 등, 거시 경제의 거대한 해일과 다음 파도를 정확히 읽어내는 완벽한 통찰력. 증권사 시스템 및 레버리지 활용에 대한 깊은 이해와 통제력.",
+        "reputation": "미래 시장의 거대한 흐름을 읽어내고 조력자를 완벽히 통제하며 고위험 투자를 강행하는 압도적인 투자자. 초기 손실에도 흔들림 없는 강철 같은 의지로 시장을 관망하며 다음 파도를 준비하는 지휘자.",
+        "status": "SW인베스트먼트 법인 설립 및 CME WTI 원유 선물 3배 레버리지 매수 포지션 진입 완료. 초기 평가손실 발생에도 불구하고 흔들림 없이 시장을 관망하며 박성호를 완벽히 장악. 다음 투자 기회(금)를 예견하며 독립적인 투자 제국 건설의 기반을 다지는 중.",
+        "stocks": [],
+        "total_assets": 1990300000,
+        "wealth": 1990300000
+      },
+      "state_truth_owner_contract": {
+        "actual_truth_fallback_used": false,
+        "actual_truth_primary_owner": "manager_actual_truth",
+        "contract_version": "stage4_state_truth_owner_contract_v1",
+        "field_families": {
+          "active_pressure_vectors": {
+            "fields": [
+              "active_pressure_vectors"
+            ],
+            "owner": "runtime_blueprint_overlay",
+            "provenance": "blueprint_filtered_by_manuscript",
+            "surfaces": [
+              "state_log.active_pressure_vectors",
+              "state_log.actual_truth.active_pressure_vectors",
+              "world_state",
+              "episode_bible"
+            ]
+          },
+          "actual_truth_surface": {
+            "fields": [
+              "active_pressure_vectors",
+              "capital",
+              "connections",
+              "current_objective",
+              "equipment",
+              "market_insight",
+              "reputation",
+              "status",
+              "stocks",
+              "total_assets",
+              "wealth"
+            ],
+            "owner": "manager_actual_truth",
+            "surfaces": [
+              "episode_bible.state_changes",
+              "state_log.actual_truth"
+            ]
+          },
+          "final_state_updates": {
+            "fields": [
+              "capital",
+              "director_score",
+              "location",
+              "protagonist_status",
+              "relationship_changes",
+              "timeline"
+            ],
+            "owner": "director_state_updates",
+            "surfaces": [
+              "world_state_changes",
+              "fact_ledger_changes"
+            ]
+          },
+          "inventory_counts": {
+            "fields": [
+              "inventory_counts",
+              "inventory_count_deltas"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger"
+            ]
+          },
+          "numeric_carryover_authority": {
+            "authority_scope": "carryover_baseline",
+            "fields": [
+              "capital",
+              "total_assets"
+            ],
+            "owner": "fact_ledger_carryover_baseline",
+            "promoted_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+            "promotion_sources": {
+              "capital": "actual_truth",
+              "total_assets": "actual_truth"
+            },
+            "provenance": "fact_ledger_authority_scope",
+            "surfaces": [
+              "fact_ledger",
+              "episode_bible.state_truth_owner_contract",
+              "state_log.state_truth_owner_contract"
+            ],
+            "transport_authority_mode": "fact_ledger_overlap",
+            "transport_contract_version": "cross_stage_authority_packet.v1",
+            "transport_fields": [
+              "capital",
+              "total_assets"
+            ],
+            "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+          },
+          "relationship_changes": {
+            "fields": [
+              "relationship_changes"
+            ],
+            "owner": "runtime_storage_overlay",
+            "surfaces": [
+              "state_log",
+              "world_state",
+              "fact_ledger",
+              "episode_bible"
+            ]
+          }
+        }
+      },
+      "time_passed": ""
+    },
+    "final_state_updates": {
+      "capital": "약 20억 원 (15억 원 증거금을 사용한 45억 원 규모 WTI 원유 선물 매수 포지션 보유 중)",
+      "director_score": 90,
+      "location": "여의도 한미증권 VIP룸",
+      "protagonist_status": "자신의 예측대로 시장이 움직일 것을 확신하며, 공포에 질린 대리인을 완벽하게 통제하고 있는 상태. 15억 원 증거금으로 WTI 원유 선물 3배 레버리지 매수 포지션 보유 중.",
+      "relationship_changes": [
+        {
+          "from_state": "명령에 굴복하여 주문을 체결한 후 극도의 불안 상태",
+          "justification": "수십억의 자금이 걸린 상황에서도 전혀 동요하지 않고 다음 타겟(금, 에콰도르)을 논하는 한시우의 비정상적인 평온함을 목격했기 때문.",
+          "target": "박성호",
+          "to_state": "한시우의 흔들림 없는 확신 앞에 압도당하며, 그가 그리는 더 큰 그림을 두려워하고 경외하기 시작함"
+        }
+      ],
+      "timeline": {
+        "표현": "2006년 1월 말, 저녁"
+      }
+    },
+    "meta_save_failed": false,
+    "state_truth_owner_contract": {
+      "actual_truth_fallback_used": false,
+      "actual_truth_primary_owner": "manager_actual_truth",
+      "contract_version": "stage4_state_truth_owner_contract_v1",
+      "field_families": {
+        "active_pressure_vectors": {
+          "fields": [
+            "active_pressure_vectors"
+          ],
+          "owner": "runtime_blueprint_overlay",
+          "provenance": "blueprint_filtered_by_manuscript",
+          "surfaces": [
+            "state_log.active_pressure_vectors",
+            "state_log.actual_truth.active_pressure_vectors",
+            "world_state",
+            "episode_bible"
+          ]
+        },
+        "actual_truth_surface": {
+          "fields": [
+            "active_pressure_vectors",
+            "capital",
+            "connections",
+            "current_objective",
+            "equipment",
+            "market_insight",
+            "reputation",
+            "status",
+            "stocks",
+            "total_assets",
+            "wealth"
+          ],
+          "owner": "manager_actual_truth",
+          "surfaces": [
+            "episode_bible.state_changes",
+            "state_log.actual_truth"
+          ]
+        },
+        "final_state_updates": {
+          "fields": [
+            "capital",
+            "director_score",
+            "location",
+            "protagonist_status",
+            "relationship_changes",
+            "timeline"
+          ],
+          "owner": "director_state_updates",
+          "surfaces": [
+            "world_state_changes",
+            "fact_ledger_changes"
+          ]
+        },
+        "inventory_counts": {
+          "fields": [
+            "inventory_counts",
+            "inventory_count_deltas"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger"
+          ]
+        },
+        "numeric_carryover_authority": {
+          "authority_scope": "carryover_baseline",
+          "fields": [
+            "capital",
+            "total_assets"
+          ],
+          "owner": "fact_ledger_carryover_baseline",
+          "promoted_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "promotion_rule": "post_pass_structured_numeric_refresh_v1",
+          "promotion_sources": {
+            "capital": "actual_truth",
+            "total_assets": "actual_truth"
+          },
+          "provenance": "fact_ledger_authority_scope",
+          "surfaces": [
+            "fact_ledger",
+            "episode_bible.state_truth_owner_contract",
+            "state_log.state_truth_owner_contract"
+          ],
+          "transport_authority_mode": "fact_ledger_overlap",
+          "transport_contract_version": "cross_stage_authority_packet.v1",
+          "transport_fields": [
+            "capital",
+            "total_assets"
+          ],
+          "transport_lineage": "cross_stage_authority_packet.numeric_carryover"
+        },
+        "relationship_changes": {
+          "fields": [
+            "relationship_changes"
+          ],
+          "owner": "runtime_storage_overlay",
+          "surfaces": [
+            "state_log",
+            "world_state",
+            "fact_ledger",
+            "episode_bible"
+          ]
+        }
+      }
+    }
+  },
+  "stage": 4,
+  "stage3_meta": {
+    "binding_prevalidation_issue_count": 0,
+    "final_verdict": "PASS",
+    "last_score": 95,
+    "quality_gate_failed": false,
+    "quality_risk": false,
+    "repair_contract": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace"
+    },
+    "revision_required": false,
+    "scope_authority": {
+      "authoritative_fix_scope": "inplace",
+      "fix_scope": "inplace",
+      "repair_scope": "inplace",
+      "widened": false
+    }
+  },
+  "title": "제7화 폭풍 전야"
+}

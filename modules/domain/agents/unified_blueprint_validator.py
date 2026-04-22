@@ -122,6 +122,35 @@ _SCENARIO_DENSITY_ENTITY_SUFFIXES = (
     "센터",
     "VIP룸",
 )
+_DIRECT_OPENING_REENTRY_KR_CUES = (
+    "들어온",
+    "들어오",
+    "들어왔",
+    "들어서",
+    "들어선",
+    "입장",
+    "문을 열고 들어",
+    "안으로 들어",
+    "걸어 들어",
+    "따라 들어",
+)
+_DIRECT_OPENING_REENTRY_EN_CUES = (
+    "re-enter",
+    "re enters",
+    "enter",
+    "walk in",
+    "walks in",
+    "walked in",
+    "step in",
+    "steps in",
+    "stepped in",
+    "come in",
+    "comes in",
+    "came in",
+    "arrive",
+    "arrives",
+    "arrived",
+)
 
 
 def _safe_int(value, default=0):
@@ -1641,6 +1670,156 @@ class UnifiedBlueprintValidator:
         authoritative_location = str(opening_truth.get("location", "") or "").strip()
         return bool(authoritative_location) and authoritative_location == curr_start_location
 
+    @staticmethod
+    def _extract_scene_one_payload(blueprint: dict) -> dict:
+        scenes = blueprint.get("scene_breakdown", {})
+        if isinstance(scenes, list):
+            scenes = {f"scene_{idx + 1}": scene for idx, scene in enumerate(scenes) if isinstance(scene, dict)}
+        if not isinstance(scenes, dict) or not scenes:
+            return {}
+
+        scene_one = scenes.get("scene_1")
+        if isinstance(scene_one, dict):
+            return scene_one
+
+        first_scene = next((scene for scene in scenes.values() if isinstance(scene, dict)), None)
+        return first_scene if isinstance(first_scene, dict) else {}
+
+    @staticmethod
+    def _collect_scene_surface_text(scene: dict) -> str:
+        if not isinstance(scene, dict):
+            return ""
+        key_events = scene.get("key_events", [])
+        event_text = ""
+        if isinstance(key_events, list):
+            event_text = " ".join(str(item or "").strip() for item in key_events if str(item or "").strip())
+        return " ".join(
+            part
+            for part in (
+                str(scene.get("title", "") or "").strip(),
+                str(scene.get("goal", "") or "").strip(),
+                str(scene.get("summary", "") or "").strip(),
+                event_text,
+                str(scene.get("type", "") or "").strip(),
+            )
+            if part
+        )
+
+    @staticmethod
+    def _scene_implies_character_reentry(scene_text: str, character: str) -> bool:
+        normalized_text = re.sub(r"\s+", " ", str(scene_text or "").strip())
+        normalized_character = str(character or "").strip()
+        if not normalized_text or not normalized_character:
+            return False
+
+        def _contains_character_near_cue(text: str, cue: str) -> bool:
+            start = text.find(cue)
+            while start != -1:
+                window_start = max(0, start - 48)
+                window_end = min(len(text), start + len(cue) + 24)
+                if normalized_character in text[window_start:window_end]:
+                    return True
+                start = text.find(cue, start + len(cue))
+            return False
+
+        for cue in _DIRECT_OPENING_REENTRY_KR_CUES:
+            if _contains_character_near_cue(normalized_text, cue):
+                return True
+
+        lowered_text = normalized_text.casefold()
+        lowered_character = normalized_character.casefold()
+        for cue in _DIRECT_OPENING_REENTRY_EN_CUES:
+            start = lowered_text.find(cue)
+            while start != -1:
+                window_start = max(0, start - 48)
+                window_end = min(len(lowered_text), start + len(cue) + 24)
+                if lowered_character in lowered_text[window_start:window_end]:
+                    return True
+                start = lowered_text.find(cue, start + len(cue))
+        return False
+
+    def _collect_direct_opening_active_character_reentry_issues(
+        self,
+        *,
+        blueprint: dict,
+        constraint_block: dict | None,
+        normalized_opening_transition: dict | None,
+    ) -> list[dict]:
+        if not isinstance(constraint_block, dict):
+            return []
+
+        normalized_opening_transition = (
+            normalized_opening_transition if isinstance(normalized_opening_transition, dict) else {}
+        )
+        normalized_transition_type = str(normalized_opening_transition.get("type", "") or "").strip().casefold()
+        if normalized_transition_type != "direct_continuation":
+            return []
+
+        episode_state_packet = constraint_block.get("episode_state_packet", {})
+        if not isinstance(episode_state_packet, dict):
+            return []
+        opening_truth = episode_state_packet.get("opening_truth", {})
+        if not isinstance(opening_truth, dict):
+            return []
+
+        active_characters = [
+            str(item or "").strip()
+            for item in (opening_truth.get("active_characters") or [])
+            if str(item or "").strip()
+        ]
+        if not active_characters:
+            return []
+
+        scene_one = self._extract_scene_one_payload(blueprint)
+        if not scene_one:
+            return []
+
+        scene_text = self._collect_scene_surface_text(scene_one)
+        if not scene_text:
+            return []
+
+        scene_characters_raw = scene_one.get("characters", [])
+        if isinstance(scene_characters_raw, str):
+            scene_characters = {scene_characters_raw.strip()} if scene_characters_raw.strip() else set()
+        elif isinstance(scene_characters_raw, list):
+            scene_characters = {str(item or "").strip() for item in scene_characters_raw if str(item or "").strip()}
+        else:
+            scene_characters = set()
+
+        conflicted_names: list[str] = []
+        for name in active_characters:
+            if name not in scene_characters and name not in scene_text:
+                continue
+            if self._scene_implies_character_reentry(scene_text, name):
+                conflicted_names.append(name)
+
+        if not conflicted_names:
+            return []
+
+        opening_location = str(opening_truth.get("location", "") or "").strip()
+        scene_location = str(
+            scene_one.get("location", "") or blueprint.get("start_location", "") or blueprint.get("location", "") or ""
+        ).strip()
+        return [
+            {
+                "severity": "CRITICAL",
+                "category": "opening_transition",
+                "issue": (
+                    "direct_continuation opening에서 carryover active character를 다시 입장시키고 있음: "
+                    + ", ".join(conflicted_names[:3])
+                ),
+                "evidence": (
+                    f"opening.active_characters={active_characters[:4]}; "
+                    f"opening.location={opening_location or scene_location}; "
+                    f"scene_1_text={scene_text[:160]}"
+                ),
+                "fix_hint": (
+                    "direct_continuation이면 carryover active character를 이미 현장에 있는 상태로 열고, "
+                    "새 입장/재입장은 explicit_transition 또는 jump_opening에서만 선언"
+                ),
+            }
+        ]
+
     def _collect_continuity_prevalidation_issues(
         self,
         *,
@@ -1654,20 +1833,26 @@ class UnifiedBlueprintValidator:
 
         prev_end_location = self._extract_prev_blueprint_end_location(prev_blueprint)
         curr_start_location = blueprint.get("start_location", blueprint.get("location", ""))
+        issues = self._collect_direct_opening_active_character_reentry_issues(
+            blueprint=blueprint,
+            constraint_block=constraint_block,
+            normalized_opening_transition=normalized_opening_transition,
+        )
+
         if not prev_end_location or not curr_start_location:
-            return []
+            return issues
         if prev_end_location == curr_start_location:
-            return []
+            return issues
         if self._is_location_transition_valid(prev_end_location, curr_start_location):
-            return []
+            return issues
         if self._is_authorized_opening_location_shift(
             constraint_block=constraint_block,
             curr_start_location=str(curr_start_location or "").strip(),
             normalized_opening_transition=normalized_opening_transition,
         ):
-            return []
+            return issues
 
-        return [
+        issues.append(
             {
                 "severity": "MAJOR",
                 "category": "continuity",
@@ -1675,7 +1860,8 @@ class UnifiedBlueprintValidator:
                 "evidence": "이전 화 종료 위치와 현재 화 시작 위치 불일치",
                 "fix_hint": "위치 이동 경위를 설명하거나 시작 위치 수정",
             }
-        ]
+        )
+        return issues
 
     @staticmethod
     def _build_python_prevalidation_result(issues: list[dict]) -> dict:
@@ -2738,6 +2924,7 @@ class UnifiedBlueprintValidator:
 
         matched_families: list[str] = []
         seen_family_keys: set[str] = set()
+        opening_direct_replay = False
 
         for scene_key, scene_value in scenes.items():
             if not isinstance(scene_value, dict):
@@ -2789,22 +2976,29 @@ class UnifiedBlueprintValidator:
                 matched_families.append(
                     f"{scene_key}->{family_key} ({family_location or family_label}; overlap={overlap_count})"
                 )
+                if scene_key.strip().casefold() == "scene_1" and normalized_transition_type == "direct_continuation":
+                    opening_direct_replay = True
                 seen_family_keys.add(family_key)
                 break
 
-        if len(matched_families) < 2:
+        if len(matched_families) < 2 and not opening_direct_replay:
             return []
 
         must_focus_excerpt = must_focus[:160] if must_focus else "(must_focus unavailable)"
+        issue_prefix = (
+            "direct_continuation opening이 직전 화에서 이미 소비한 scene family를 다시 시작함"
+            if opening_direct_replay
+            else "직전 화에서 이미 소비한 scene family를 이번 화에서 다시 재연함"
+        )
         return [
             {
                 "severity": "CRITICAL",
                 "category": "episode_progression",
-                "issue": (
-                    f"직전 화에서 이미 소비한 scene family를 이번 화에서 다시 재연함: {'; '.join(matched_families[:3])}"
-                ),
+                "issue": f"{issue_prefix}: {'; '.join(matched_families[:3])}",
                 "evidence": f"matched_replay_families={matched_families[:3]}; must_focus={must_focus_excerpt}",
                 "fix_hint": (
+                    "직전 화의 opening carryover를 다시 열지 말고, 이미 현장에 있는 인물/상태에서 바로 이어서 전진하거나 "
+                    "필요하면 explicit_transition/jump_opening으로 새 전환을 선언하라. "
                     "직전 화의 서재 대치/식사/방 TV 같은 완료 장면을 반복하지 말고 "
                     "현재 화 MUST_FOCUS의 새 사건 축으로 전진"
                 ),

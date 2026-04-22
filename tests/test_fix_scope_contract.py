@@ -275,3 +275,55 @@ class TestDirectorEnsembleValidation:
         assert payload["repair_scope"] == "inplace"
         assert payload["authoritative_fix_scope"] == ""
         assert payload["authoritative_fix_scope_violation"]["type"] == "blank_authoritative_fix_scope"
+
+    def test_stage4_firewall_fixable_backfills_fix_pack_when_director_left_it_blank(self):
+        from modules.domain.agents.director_ensemble import DirectorEnsembleSelector, _EnsembleSelectionState
+
+        class _FakeDirector:
+            def _operator_log(self, *_args, **_kwargs):
+                return None
+
+        selector = DirectorEnsembleSelector(_FakeDirector())
+        state = _EnsembleSelectionState(
+            selected_letter="A",
+            selected_idx=0,
+            selected_candidate={"manuscript": "candidate manuscript"},
+            original_verdict="PASS_WITH_FIX",
+            score=97,
+            pre_firewall_score=97,
+            score_breakdown_raw={"continuity_contradiction": 35},
+            contradiction_check={},
+            numeric_consistency_review=[],
+            consistency_checklist={},
+            v60_97_swapped=False,
+            firewall_fixable=True,
+            firewall_reason="Fixable Contradiction Firewall: local contradiction 2건",
+            contradiction_details=[
+                {
+                    "severity": "MAJOR",
+                    "type": "고유명사",
+                    "current_violation": "박성호 소속을 잘못 표기함",
+                    "fix_suggestion": "박성호 소속을 SW인베스트먼트로 통일",
+                }
+            ],
+        )
+
+        payload = selector._build_ensemble_decision_payload(
+            ep_num=11,
+            result={
+                "fix_scope": "inplace",
+                "fix_scope_reasoning": "",
+                "fix_pack": {},
+                "feedback": {"action_items": ["박성호 소속을 SW인베스트먼트로 통일"]},
+            },
+            state=state,
+            final_verdict="PASS_WITH_FIX",
+            adaptive_result={},
+        )
+
+        assert payload["fix_pack"]["target_kind"] == "local_sentence"
+        assert payload["fix_pack"]["patch_targets"]
+        assert payload["fix_pack"]["must_fix"]
+        assert payload["fix_pack"]["do_not_regress"]
+        assert payload["fix_pack"]["success_condition"]
+        assert payload["repair_contract"]["provenance"] == "runtime_synthesized"

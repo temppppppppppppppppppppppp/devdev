@@ -502,6 +502,64 @@ def test_lane_c_python_pre_validate_keeps_continuity_when_authorized_shift_locat
     assert any(issue["category"] == "continuity" for issue in pre_result["issues"])
 
 
+def test_lane_c_python_pre_validate_flags_direct_opening_active_character_reentry():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "VIP룸 문이 다시 열린다",
+                    "goal": "박성호와 함께 리스크관리팀장이 VIP룸으로 들어온다.",
+                    "summary": "한시우가 전화를 끊자 박성호와 함께 리스크관리팀장이 VIP룸으로 들어온다.",
+                    "characters": ["한시우", "박성호", "리스크관리팀장"],
+                    "key_events": ["박성호와 함께 리스크관리팀장이 VIP룸으로 들어온다."],
+                    "location": "여의도 한미증권 VIP룸",
+                    "type": "opening_hook",
+                },
+                "scene_2": {
+                    "title": "방 안 압박이 이어진다",
+                    "goal": "VIP룸 안 압박이 바로 이어진다.",
+                    "summary": "한시우가 VIP룸 안에서 리스크관리팀장의 압박을 받는다.",
+                    "characters": ["한시우", "박성호", "리스크관리팀장"],
+                    "key_events": ["VIP룸 안 압박이 끊기지 않고 이어진다."],
+                    "location": "여의도 한미증권 VIP룸",
+                    "type": "tension_build",
+                },
+            },
+            "integrated_scenario": (
+                "한시우가 전화를 끊자 박성호와 함께 리스크관리팀장이 VIP룸으로 들어온다. " * 20
+            ),
+            "start_location": "여의도 한미증권 VIP룸",
+            "time_flow": "그날 밤 직후",
+            "core_tension": "전화를 받은 직후의 연속성을 유지해야 한다.",
+            "expected_ending": "VIP룸 안의 압박이 바로 이어진다.",
+            "target_beat": "direct_continuation opening을 유지한다.",
+            "protagonist_state": {"mood": "guarded"},
+            "opening_transition": {"type": "direct_continuation"},
+        },
+        constraint_block={
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "여의도 한미증권 VIP룸",
+                    "active_characters": ["한시우", "박성호"],
+                    "opening_transition_expectation": (
+                        "same location and same-night carryover; direct_continuation is allowed if the active cast "
+                        "remains on stage without re-entry."
+                    ),
+                }
+            }
+        },
+        prev_blueprint={"end_location": "여의도 한미증권 VIP룸", "time_flow": "그날 밤"},
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert any(
+        issue["category"] == "opening_transition" and "박성호" in issue["issue"] for issue in pre_result["issues"]
+    )
+
+
 def test_lane_c_python_pre_validate_flags_stop_line_leak_as_critical():
     validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
 
@@ -1089,6 +1147,74 @@ def test_lane_c_python_pre_validate_allows_authorized_scene1_time_cut_without_re
     )
 
     assert not any(issue["category"] == "episode_progression" for issue in pre_result["issues"])
+
+
+def test_lane_c_python_pre_validate_flags_direct_opening_single_replay_family():
+    validator = UnifiedBlueprintValidator(context=MagicMock(), client=None)
+
+    pre_result = validator._python_pre_validate(
+        blueprint={
+            "opening_transition": {"type": "direct_continuation"},
+            "start_location": "한미증권 VIP룸",
+            "time_flow": "그날 밤 직후",
+            "core_tension": "새 압박으로 전진해야 한다.",
+            "expected_ending": "새 결정으로 이어진다.",
+            "target_beat": "직전 화 장면 반복을 피하고 전진해야 한다.",
+            "scene_breakdown": {
+                "scene_1": {
+                    "title": "같은 VIP룸에서 같은 압박을 다시 시작한다",
+                    "goal": "직전 화에서 끝난 VIP룸 압박 장면을 그대로 다시 반복한다.",
+                    "summary": "한시우와 박성호가 같은 VIP룸에서 같은 압박을 다시 주고받는다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["VIP룸 압박 장면을 다시 반복한다."],
+                    "location": "한미증권 VIP룸",
+                    "type": "dialogue_duel",
+                },
+                "scene_2": {
+                    "title": "압박을 한 번 더 되풀이한다",
+                    "goal": "새 사건 없이 같은 압박을 되풀이한다.",
+                    "summary": "같은 정보와 같은 결정을 다시 주고받는다.",
+                    "characters": ["한시우", "박성호"],
+                    "key_events": ["같은 압박을 되풀이한다."],
+                    "location": "한미증권 VIP룸",
+                    "type": "dialogue_duel",
+                }
+            },
+            "integrated_scenario": "같은 VIP룸 압박을 다시 반복한다. " * 40,
+            "protagonist_state": {"mood": "rigid"},
+        },
+        constraint_block={
+            "must_focus": {"content": "새로운 외부 압박과 다음 결정을 전진시켜야 한다."},
+            "episode_progression_packet": {
+                "blocked_scene_families": [
+                    {
+                        "scene_key": "scene_4",
+                        "label": "VIP룸 압박",
+                        "location": "한미증권 VIP룸",
+                        "location_variants": ["한미증권 VIP룸", "VIP룸"],
+                        "characters": ["한시우", "박성호"],
+                        "type": "dialogue_duel",
+                    }
+                ]
+            },
+            "episode_state_packet": {
+                "opening_truth": {
+                    "opening_transition_expectation": "same-room carryover; direct_continuation only if the scene advances.",
+                }
+            },
+        },
+        prev_blueprint={
+            "end_location": "한미증권 VIP룸",
+            "time_flow": "그날 밤",
+            "scene_breakdown": {
+                "scene_4": {"location": "한미증권 VIP룸", "characters": ["한시우", "박성호"]},
+            }
+        },
+        state_tracker=None,
+        arc_data={},
+    )
+
+    assert any(issue["category"] == "episode_progression" for issue in pre_result["issues"])
 
 
 def test_lane_c_python_pre_validate_allows_lawful_repetition_when_goal_escalates():

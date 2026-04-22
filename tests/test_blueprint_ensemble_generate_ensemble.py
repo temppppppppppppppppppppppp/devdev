@@ -1060,6 +1060,29 @@ def test_format_constraints_surfaces_opening_transition_expectation():
     assert "explicit_transition" in formatted
 
 
+def test_format_constraints_surfaces_opening_active_characters_for_direct_carryover():
+    agent = _make_agent()
+
+    formatted = agent._format_constraints(
+        {
+            "episode_state_packet": {
+                "opening_truth": {
+                    "location": "Packet Hall",
+                    "active_characters": ["Lead", "PB"],
+                    "opening_transition_expectation": (
+                        "same-room carryover; direct_continuation is allowed if the active cast remains on stage."
+                    ),
+                }
+            }
+        },
+        genre=GenreTypes.HUNTER,
+    )
+
+    assert "opening.active_characters" in formatted
+    assert "Lead, PB" in formatted
+    assert "재입장 동선" in formatted
+
+
 def test_select_generate_error_type_prefers_candidate_disqualified_over_schema_bundle():
     assert (
         BlueprintEnsembleGenerator._select_generate_error_type(
@@ -1091,6 +1114,23 @@ class TestBlueprintTemporalCarryover:
 
         assert "원고 기준" in result
         assert "2006년 1월 18일" in result
+
+    def test_format_prev_info_expanded_promotes_recent_carryover_orders_from_archive(self):
+        agent = _make_agent()
+        prev_bp = {"ending_hook": "late call", "end_location": "office"}
+        manuscript_text = (
+            "━━━ 제9화 원고 ━━━\n"
+            "한시우는 박성호를 내려다보며 말했다. 금. 골드. 관련된 선물 상품과 국제 금 시장 변동성까지 모두 정리해라. "
+            "내일 아침 장이 열리기 전까지 보고서로 만들어.\n\n"
+            "━━━ 제10화 원고 ━━━\n"
+            "강남 오피스에 도착한 한시우는 창밖을 보며 다음 수를 계산했다.\n"
+        )
+
+        result = agent._format_prev_info_expanded(prev_bp, None, manuscript_text)
+
+        assert "[Context Tier 3A - Recent Carryover Orders / Pending Actions]" in result
+        assert "제9화 carryover order (금)" in result
+        assert "새 지시처럼 반복하지 말 것" in result
 
     def test_format_prev_info_expanded_without_manuscript_omits_truth_section(self):
         """prev_manuscripts_text가 없으면 원고 기준 섹션 없음."""

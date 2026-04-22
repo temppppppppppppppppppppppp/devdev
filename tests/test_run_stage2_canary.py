@@ -13,6 +13,11 @@ def test_run_stage2_canary_invokes_headless_runner_and_analyzes():
         patch.object(canary_script, "project_name_from_path", return_value="_canary/s2_canary"),
         patch.object(canary_script.subprocess, "run") as run_subprocess,
         patch.object(canary_script, "analyze_canary", return_value={"hard_gates": {"status": "pass"}}) as analyze,
+        patch.object(
+            canary_script,
+            "safe_archive_benchmark_record",
+            return_value={"status": "ok", "run_id": "canary-s2"},
+        ) as archive,
     ):
         result = canary_script.run_canary("s2_canary", target_arc_count=2, expected_final_arcs=5)
 
@@ -27,7 +32,9 @@ def test_run_stage2_canary_invokes_headless_runner_and_analyzes():
         check=True,
     )
     analyze.assert_called_once_with("_canary/s2_canary", expected_final_arcs=5)
+    archive.assert_called_once()
     assert result["hard_gates"]["status"] == "pass"
+    assert result["benchmark_archive"]["run_id"] == "canary-s2"
 
 
 def test_analyze_stage2_canary_writes_summary(tmp_path):

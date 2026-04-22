@@ -21,6 +21,7 @@ from modules.core.db_manager import DBManager  # noqa: E402
 from modules.core.pass_rate_monitor import PassRateMonitor  # noqa: E402
 from modules.core.stage3_context import Stage3Context  # noqa: E402
 from modules.domain.agents.three_phase_blueprint_runtime import ThreePhaseBlueprintRuntime  # noqa: E402
+from scripts.benchmark_archive_runtime import safe_archive_benchmark_record  # noqa: E402
 from scripts.canary_path_utils import project_name_from_path, resolve_workspace_project_dir  # noqa: E402
 
 
@@ -86,8 +87,25 @@ def run_direct_stage3(project_name: str, *, target_ep: int, operational_attempt_
         "operational_attempt_cap": operational_attempt_cap,
         "result": result,
     }
+    latest_blueprint_ep = _load_latest_blueprint_ep(project_root)
+    payload["latest_blueprint_ep"] = latest_blueprint_ep
+    payload["success"] = latest_blueprint_ep >= target_ep
     summary_path = project_root / "logs" / "stage3_direct_supervised_result.json"
     summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    archive_status = "completed" if payload["success"] else "partial"
+    archive_notes = (
+        f"direct supervised stage3; target_ep={target_ep}; latest_blueprint_ep={latest_blueprint_ep}; "
+        f"operational_attempt_cap={operational_attempt_cap}"
+    )
+    payload["benchmark_archive"] = safe_archive_benchmark_record(
+        workspace_root=PROJECT_ROOT,
+        project=runtime_project_name,
+        lane="stage3-direct-supervised",
+        target_ep=target_ep,
+        status=archive_status,
+        notes=archive_notes,
+    )
     summary_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     return payload
 
@@ -144,6 +162,14 @@ def _load_project_genre(project_root: Path) -> dict:
         return {}
     genre_name = str(genre.get("name", "") or genre_type).strip()
     return {"type": genre_type, "name": genre_name}
+
+
+def _load_latest_blueprint_ep(project_root: Path) -> int:
+    db = DBManager(project_root / "project_data.db")
+    try:
+        return int(db.get_latest_blueprint_number() or 0)
+    finally:
+        db.close()
 
 
 def _auto_input(prompt: str = "") -> str:

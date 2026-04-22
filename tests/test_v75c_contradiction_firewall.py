@@ -447,6 +447,12 @@ def test_fixable_firewall_promotes_local_name_drift_to_pass_with_fix():
     assert result["firewall_fixable"] is True
     assert result["fix_scope"] == "inplace"
     assert "Fixable Contradiction Firewall" in result["fix_scope_reasoning"]
+    assert result["fix_pack"]["target_kind"] == "local_sentence"
+    assert result["fix_pack"]["patch_targets"]
+    assert result["fix_pack"]["must_fix"]
+    assert result["fix_pack"]["do_not_regress"]
+    assert result["fix_pack"]["success_condition"]
+    assert result["fix_pack"]["provenance"] == "runtime_synthesized"
     assert result["contradiction_details"][0]["type"] == "고유명사"
     assert any("이름 표기만 한진호로 통일" in item for item in result["action_items"])
 
