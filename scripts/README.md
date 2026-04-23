@@ -76,6 +76,7 @@ ClickUp sync notes:
 | Audit live benchmark companion-link coverage and stale index rows read-only, with strict missing-target failure and remediation hints | `python scripts/audit_benchmark_companion_links.py [--format text|json] [--strict]` |
 | Render one-line operator report surfaces across live benchmark records and optional explicit compare pairs read-only | `python scripts/report_benchmark_operator_lines.py [--format text|json] [--pair <left> <right>]` |
 | Render a GitHub-comment-ready markdown snapshot from the benchmark operator report surface | `python scripts/render_benchmark_operator_comment_md.py [--title <heading>] [--pair <left> <right>]` |
+| Preview or post the benchmark operator markdown snapshot directly to a GitHub issue comment | `python scripts/post_benchmark_operator_comment.py [--repo <owner/name> --issue-number <n> --post] [--pair <left> <right>]` |
 | Create a `narrative_ssot` project scaffold | `python -X utf8 scripts/create_narrative_project_scaffold.py --work-id <work_id>` |
 | Build Stage0 preprocess drafts from selected reference cards and optional title/profile/opening overrides | `python -X utf8 scripts/build_stage0_from_reference_selection.py --work-id <work_id>` |
 | Build a Phase0 planning seed from Stage0 authority | `python -X utf8 scripts/build_phase0_seed_from_stage0.py --work-id <work_id>` |
