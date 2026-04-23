@@ -87,6 +87,11 @@ def audit_benchmark_companion_links(
             linked_surfaces=linked_surfaces,
             missing_surfaces=missing_surfaces,
         )
+        remediation_hints = _build_remediation_hints(
+            run_id=run_id,
+            companion_links=companion_links,
+            missing_surfaces=missing_surfaces,
+        )
         records.append(
             {
                 "run_id": run_id,
@@ -102,6 +107,7 @@ def audit_benchmark_companion_links(
                 ),
                 "linked_surfaces": linked_surfaces,
                 "missing_surfaces": missing_surfaces,
+                "remediation_hints": remediation_hints,
             }
         )
 
@@ -181,6 +187,13 @@ def format_audit_text(payload: dict[str, Any]) -> str:
                 f"companion={record.get('companion_state')} "
                 f"linked={linked} missing={missing}"
             )
+            remediation_hints = record.get("remediation_hints", [])
+            if isinstance(remediation_hints, list):
+                for hint in remediation_hints:
+                    lines.append(
+                        "  remediation: "
+                        f"{hint.get('surface')} -> {hint.get('suggested_command')}"
+                    )
     return "\n".join(lines)
 
 
@@ -253,6 +266,45 @@ def _collect_strict_failure_reasons(summary: dict[str, Any]) -> list[str]:
     if missing_target_count > 0:
         failures.append(f"records_with_missing_targets={missing_target_count}")
     return failures
+
+
+def _build_remediation_hints(
+    *,
+    run_id: str,
+    companion_links: object,
+    missing_surfaces: list[str],
+) -> list[dict[str, str]]:
+    if not isinstance(companion_links, dict):
+        return []
+    hints: list[dict[str, str]] = []
+    flag_by_surface = {
+        "post_run_evidence_json": "--post-run-evidence-json",
+        "post_run_merge_audit_md": "--post-run-merge-audit-md",
+        "supporting_context_md": "--supporting-context-md",
+    }
+    placeholder_by_surface = {
+        "post_run_evidence_json": "<valid-json-path>",
+        "post_run_merge_audit_md": "<valid-markdown-path>",
+        "supporting_context_md": "<valid-markdown-path>",
+    }
+    for surface in missing_surfaces:
+        raw_value = str(companion_links.get(surface, "") or "")
+        flag = flag_by_surface.get(surface, "")
+        replacement = raw_value or placeholder_by_surface.get(surface, "<valid-path>")
+        if not flag:
+            continue
+        hints.append(
+            {
+                "surface": surface,
+                "current_value": raw_value,
+                "suggested_flag": flag,
+                "suggested_command": (
+                    f"python scripts/link_benchmark_companions.py {run_id} "
+                    f"{flag} {replacement}"
+                ),
+            }
+        )
+    return hints
 
 
 def main(argv: list[str] | None = None) -> int:

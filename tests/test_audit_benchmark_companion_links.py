@@ -264,6 +264,37 @@ def test_audit_benchmark_companion_links_reports_missing_targets(tmp_path):
     record = audit["records"][0]
     assert record["companion_state"] == "missing_target"
     assert record["missing_surfaces"] == ["post_run_evidence_json", "supporting_context_md"]
+    assert record["remediation_hints"] == [
+        {
+            "surface": "post_run_evidence_json",
+            "current_value": "docs/2026-04-23/missing-evidence.json",
+            "suggested_flag": "--post-run-evidence-json",
+            "suggested_command": (
+                "python scripts/link_benchmark_companions.py "
+                f"{run_id} --post-run-evidence-json docs/2026-04-23/missing-evidence.json"
+            ),
+        },
+        {
+            "surface": "supporting_context_md",
+            "current_value": "docs/2026-04-23/missing-context.md",
+            "suggested_flag": "--supporting-context-md",
+            "suggested_command": (
+                "python scripts/link_benchmark_companions.py "
+                f"{run_id} --supporting-context-md docs/2026-04-23/missing-context.md"
+            ),
+        },
+    ]
+    text = module.format_audit_text(audit)
+    assert (
+        "remediation: post_run_evidence_json -> "
+        f"python scripts/link_benchmark_companions.py {run_id} "
+        "--post-run-evidence-json docs/2026-04-23/missing-evidence.json"
+    ) in text
+    assert (
+        "remediation: supporting_context_md -> "
+        f"python scripts/link_benchmark_companions.py {run_id} "
+        "--supporting-context-md docs/2026-04-23/missing-context.md"
+    ) in text
 
 
 def test_audit_benchmark_companion_links_cli_supports_json_output(tmp_path):
