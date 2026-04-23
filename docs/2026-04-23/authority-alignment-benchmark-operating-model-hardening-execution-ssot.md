@@ -1,7 +1,7 @@
 # Authority Alignment Benchmark Operating Model Hardening Execution SSOT
 
 Date: 2026-04-23
-Status: execution-ready (3-pass audited; parked future wave; upstream proof and benchmark governor lane; read-only benchmark comparator plus first watchpoint seed landed on 2026-04-23; note-backed rerun, guarded-summary staleness, explicit evidence-json companion watchpoints, and benchmark companion-link sidecars landed later the same day)
+Status: execution-ready (3-pass audited; parked future wave; upstream proof and benchmark governor lane; read-only benchmark comparator plus first watchpoint seed landed on 2026-04-23; note-backed rerun, guarded-summary staleness, explicit evidence-json companion watchpoints, benchmark companion-link sidecars, and operator-facing report/markdown/comment helpers landed later the same day)
 Canonical Path: `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
 Temp Mirror Path: `docs/temp/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
 Commit State:
@@ -25,12 +25,18 @@ Evidence Artifacts:
 - `scripts/archive_benchmark_record.py`
 - `scripts/benchmark_archive_runtime.py`
 - `scripts/compare_benchmark_records.py`
+- `scripts/report_benchmark_operator_lines.py`
+- `scripts/render_benchmark_operator_comment_md.py`
+- `scripts/post_benchmark_operator_comment.py`
 - `scripts/diff_canary_summaries.py`
 - `scripts/regression_validation_tiers.py`
 - `benchmarks/README.md`
 - `benchmarks/benchmark_index.csv`
 - `tests/test_archive_benchmark_record.py`
 - `tests/test_compare_benchmark_records.py`
+- `tests/test_report_benchmark_operator_lines.py`
+- `tests/test_render_benchmark_operator_comment_md.py`
+- `tests/test_post_benchmark_operator_comment.py`
 - `tests/test_diff_canary_summaries.py`
 - `tests/test_regression_validation_tier_contract.py`
 - `tests/test_stage2_finalizer.py`
@@ -80,6 +86,7 @@ execution_meta:
   - canary-summary diff exists
   - a first read-only benchmark-to-benchmark comparator now exists over `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv`
   - a first comparator-backed watchpoint vocabulary now exists for coarse status, tag, proof-digest, Stage4 regression signals, note-backed rerun progression, guarded-summary staleness attention, explicit evidence-json companion summaries, and sidecar-linked companion loading
+  - read-only operator-facing wrappers now exist for batch report lines, GitHub-comment-ready markdown rendering, and optional issue comment posting over the same benchmark surfaces
   - full markdown post-run merge-audit mapping is still missing
 - Current queue posture has now been refreshed to match that reality:
   - `authority-alignment-benchmark-operating-model-hardening` is the visible rank-1 parked proof lane
@@ -114,6 +121,7 @@ Excluded:
 - Current watchpoint posture is partial:
   - generic regression tiers exist
   - the benchmark comparator now emits a small first watchpoint vocabulary plus note-backed rerun, stale-summary attention, explicit evidence-json companion summaries, and auto-follow for explicit companion-link sidecars
+  - operator-facing wrappers now expose the same surface as one-line report payloads, issue-comment-ready markdown, and optional `gh issue comment` posting helpers without changing comparator or audit semantics
   - full rerun and markdown post-run merge-audit linkage is still not normalized into comparator outputs, and live record-level link population is still manual
 
 ## 5. Pass 2. Semantic Classification
@@ -188,6 +196,8 @@ Excluded:
    - extend the first watchpoint vocabulary beyond coarse comparator-backed signals, shallow rerun markers, explicit evidence-json companions, and sidecar link metadata
    - normalize markdown post-run merge audit linkage
 4. Operator-facing benchmark hardening surface
+   - first seed landed as `scripts/report_benchmark_operator_lines.py`
+   - current surface also includes `scripts/render_benchmark_operator_comment_md.py` and `scripts/post_benchmark_operator_comment.py` so the same benchmark operator payload can be previewed, rendered as markdown, or posted to GitHub issue comments without redefining truth or gate semantics
    - make first-owner and regression readouts easier to inspect without elevating telemetry to truth
 5. Downstream proof gate alignment
    - wire the lane so `#3`, `#4`, and `#7` can reference the same benchmark and authority proof standard
@@ -205,6 +215,9 @@ Excluded:
 - `pytest tests/test_archive_benchmark_record.py -q`
 - `pytest tests/test_diff_canary_summaries.py -q`
 - `pytest tests/test_regression_validation_tier_contract.py -q`
+- `pytest tests/test_report_benchmark_operator_lines.py -q`
+- `pytest tests/test_render_benchmark_operator_comment_md.py -q`
+- `pytest tests/test_post_benchmark_operator_comment.py -q`
 - `pytest tests/test_stage2_finalizer.py -k "cross_stage_authority_packet" -q`
 - `pytest tests/test_stage3_npc_capital_carryforward_guardrail.py -k "cross_stage_authority_packet or capital_truth" -q`
 - `pytest tests/test_stage4_post_processor.py -k "state_truth_owner_contract or numeric_carryover" -q`
