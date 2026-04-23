@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -50,6 +51,20 @@ REMEDIATION_SURFACE_PRIORITY = (
     "post_run_evidence_json",
     "post_run_merge_audit_md",
     "supporting_context_md",
+)
+MERGE_AUDIT_SEVERITY_RANK = {
+    "none": 0,
+    "low": 1,
+    "medium": 2,
+    "high": 3,
+    "critical": 4,
+}
+MERGE_AUDIT_RESIDUAL_MARKERS = (
+    ("partially_realized", "partially realized"),
+    ("not_resolved", "not resolved"),
+    ("proof_not_closed", "proof not closed"),
+    ("downstream_proof_not_closed", "downstream consume proof not closed"),
+    ("blocker", "blocker"),
 )
 
 
@@ -151,6 +166,10 @@ def load_benchmark_record(
         if linked_evidence_path:
             effective_evidence_path = linked_evidence_path
     companion_evidence = _load_companion_evidence(effective_evidence_path, workspace_root=workspace)
+    companion_merge_audit = _load_companion_merge_audit(
+        str(companion_links.get("post_run_merge_audit_md_resolved", "") or ""),
+        workspace_root=workspace,
+    )
 
     runtime_summary = manifest.get("runtime_summary", {}) if isinstance(manifest, dict) else {}
     workspace_git = manifest.get("workspace_git", {}) if isinstance(manifest, dict) else {}
@@ -219,6 +238,7 @@ def load_benchmark_record(
         "runtime_audit_summary": runtime_audit_summary,
         "companion_links": companion_links,
         "companion_evidence": companion_evidence,
+        "companion_merge_audit": companion_merge_audit,
         "guarded_runner_summary": _load_stage4_guarded_result(record_root),
         "note_markers": _extract_note_markers(
             _pick_first_nonempty(
@@ -608,6 +628,52 @@ def _load_companion_evidence(
     }
 
 
+def _load_companion_merge_audit(
+    merge_audit_md: str | Path | None,
+    *,
+    workspace_root: Path,
+) -> dict[str, Any]:
+    if merge_audit_md in (None, ""):
+        return {
+            "available": False,
+            "source_path": "",
+            "title": "",
+            "status": "",
+            "confidence_percent": None,
+            "finding_count": 0,
+            "max_severity": "",
+            "remaining_watchpoint_count": 0,
+            "residual_markers": [],
+        }
+    candidate = _resolve_existing_path(str(merge_audit_md), workspace_root=workspace_root)
+    if candidate is None:
+        raise FileNotFoundError(f"companion merge audit markdown not found: {merge_audit_md}")
+    text = candidate.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    severity_values = [
+        match.group(1).strip().lower()
+        for line in lines
+        for match in [re.match(r"^\s*Severity:\s*([A-Za-z_ -]+)\s*$", line)]
+        if match
+    ]
+    max_severity = max(
+        severity_values,
+        key=lambda item: MERGE_AUDIT_SEVERITY_RANK.get(item, -1),
+        default="",
+    )
+    return {
+        "available": True,
+        "source_path": _display_relative_path(workspace_root, candidate),
+        "title": _extract_markdown_title(lines),
+        "status": _extract_markdown_labeled_value(lines, "Status"),
+        "confidence_percent": _extract_markdown_confidence_percent(lines),
+        "finding_count": sum(1 for line in lines if re.match(r"^###\s+Finding\b", line)),
+        "max_severity": max_severity,
+        "remaining_watchpoint_count": _count_markdown_list_items_under_heading(lines, "Remaining Watchpoints"),
+        "residual_markers": _detect_merge_audit_residual_markers(text),
+    }
+
+
 def _classify_missing_companion_surfaces(companion_links: object) -> list[str]:
     if not isinstance(companion_links, dict):
         return []
@@ -800,6 +866,59 @@ def _extract_note_markers(notes: object) -> dict[str, Any]:
     markers["child_exit_code"] = _coerce_optional_int(kv_map.get("child_exit_code"))
     markers["terminated_ep"] = _coerce_optional_int(kv_map.get("terminated_ep"))
     markers["terminated_attempt_num"] = _coerce_optional_int(kv_map.get("terminated_attempt_num"))
+    return markers
+
+
+def _extract_markdown_title(lines: list[str]) -> str:
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            return stripped[2:].strip()
+    return ""
+
+
+def _extract_markdown_labeled_value(lines: list[str], label: str) -> str:
+    pattern = re.compile(rf"^\s*{re.escape(label)}:\s*(.+?)\s*$")
+    for line in lines:
+        match = pattern.match(line)
+        if match:
+            return match.group(1).strip().strip("`")
+    return ""
+
+
+def _extract_markdown_confidence_percent(lines: list[str]) -> int | None:
+    raw = _extract_markdown_labeled_value(lines, "Confidence")
+    match = re.search(r"(\d+)\s*%", raw)
+    if not match:
+        return None
+    return _coerce_optional_int(match.group(1))
+
+
+def _count_markdown_list_items_under_heading(lines: list[str], heading: str) -> int:
+    active = False
+    count = 0
+    target = heading.strip().lower()
+    for line in lines:
+        stripped = line.strip()
+        if re.match(r"^##\s+", stripped):
+            active = stripped[2:].strip().lower() == target
+            continue
+        if not active:
+            continue
+        if re.match(r"^\d+\.\s+", stripped) or re.match(r"^-\s+", stripped):
+            count += 1
+    return count
+
+
+def _detect_merge_audit_residual_markers(text: str) -> list[str]:
+    lowered = str(text or "").lower()
+    markers = [
+        marker_id
+        for marker_id, phrase in MERGE_AUDIT_RESIDUAL_MARKERS
+        if phrase in lowered
+    ]
+    if "## remaining watchpoints" in lowered:
+        markers.append("remaining_watchpoints")
     return markers
 
 
@@ -1141,6 +1260,70 @@ def _build_watchpoints(
                         scope="post_run_evidence_json",
                         side=side,
                         message=f"{side} companion evidence reports gate repair status {gate_repair_status}",
+                    )
+                )
+        companion_merge_audit = record.get("companion_merge_audit", {})
+        if isinstance(companion_merge_audit, dict) and companion_merge_audit.get("available"):
+            merge_audit_status = str(companion_merge_audit.get("status", "") or "")
+            merge_audit_max_severity = str(companion_merge_audit.get("max_severity", "") or "")
+            merge_audit_finding_count = _coerce_int(companion_merge_audit.get("finding_count"))
+            merge_audit_summary_bits = []
+            if merge_audit_status:
+                merge_audit_summary_bits.append(f"status={merge_audit_status}")
+            if merge_audit_max_severity:
+                merge_audit_summary_bits.append(f"max_severity={merge_audit_max_severity}")
+            if merge_audit_finding_count > 0:
+                merge_audit_summary_bits.append(f"finding_count={merge_audit_finding_count}")
+            if merge_audit_summary_bits:
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_merge_audit_summary_recorded",
+                        severity="info",
+                        scope="post_run_merge_audit_md",
+                        side=side,
+                        message=f"{side} merge audit summary: " + ", ".join(merge_audit_summary_bits),
+                    )
+                )
+            if MERGE_AUDIT_SEVERITY_RANK.get(merge_audit_max_severity, -1) >= MERGE_AUDIT_SEVERITY_RANK["medium"]:
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_merge_audit_severity_attention",
+                        severity="warn",
+                        scope="post_run_merge_audit_md",
+                        side=side,
+                        message=f"{side} merge audit max_severity is {merge_audit_max_severity}",
+                    )
+                )
+            remaining_watchpoint_count = _coerce_int(companion_merge_audit.get("remaining_watchpoint_count"))
+            if remaining_watchpoint_count > 0:
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_merge_audit_remaining_watchpoints",
+                        severity="warn",
+                        scope="post_run_merge_audit_md",
+                        side=side,
+                        message=(
+                            f"{side} merge audit records {remaining_watchpoint_count} "
+                            "remaining watchpoints"
+                        ),
+                    )
+                )
+            residual_markers = [
+                str(item)
+                for item in companion_merge_audit.get("residual_markers", [])
+                if str(item or "")
+            ]
+            if residual_markers:
+                watchpoints.append(
+                    _watchpoint(
+                        "post_run_merge_audit_residual_attention",
+                        severity="warn",
+                        scope="post_run_merge_audit_md",
+                        side=side,
+                        message=(
+                            f"{side} merge audit residual markers: "
+                            + ",".join(residual_markers)
+                        ),
                     )
                 )
         note_markers = record.get("note_markers", {}) if isinstance(record.get("note_markers", {}), dict) else {}
