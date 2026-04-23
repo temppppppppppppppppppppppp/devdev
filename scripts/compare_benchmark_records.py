@@ -296,6 +296,7 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
     )
     operator_summary = _build_operator_summary(remediation_summary)
     operator_summary = _with_comparator_ci_gate(operator_summary, watchpoints=watchpoints)
+    operator_report_line = _build_operator_report_line(operator_summary)
     changed_sections = [
         section
         for section, changed in (
@@ -319,6 +320,7 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
             "remediation_hints": remediation_hints,
             "remediation_summary": remediation_summary,
             "operator_summary": operator_summary,
+            "operator_report_line": operator_report_line,
             "watchpoints": watchpoints,
             "changed_sections": changed_sections,
         },
@@ -746,6 +748,20 @@ def _with_comparator_ci_gate(
     summary["ci_gate"] = "pass"
     summary["gate_basis"] = "clean"
     return summary
+
+
+def _build_operator_report_line(operator_summary: dict[str, Any]) -> str:
+    status = str(operator_summary.get("status", "") or "")
+    ci_gate = str(operator_summary.get("ci_gate", "") or "")
+    gate_basis = str(operator_summary.get("gate_basis", "") or "")
+    headline = str(operator_summary.get("headline", "") or "")
+    bits = [
+        f"status={status}" if status else "",
+        f"ci_gate={ci_gate}" if ci_gate else "",
+        f"gate_basis={gate_basis}" if gate_basis else "",
+        f"headline={headline}" if headline else "",
+    ]
+    return "; ".join(bit for bit in bits if bit)
 
 
 def _extract_note_markers(notes: object) -> dict[str, Any]:
@@ -1395,20 +1411,9 @@ def _render_text(diff: dict[str, Any], *, left_label: str, right_label: str) -> 
             for item in delta["remediation_hints"]
         ]
         lines.append("Remediation hints: " + " | ".join(remediation_bits))
-    operator_summary = delta.get("operator_summary", {})
-    if isinstance(operator_summary, dict):
-        status = str(operator_summary.get("status", "") or "")
-        ci_gate = str(operator_summary.get("ci_gate", "") or "")
-        gate_basis = str(operator_summary.get("gate_basis", "") or "")
-        headline = str(operator_summary.get("headline", "") or "")
-        if status or ci_gate or gate_basis:
-            lines.append(
-                "Operator summary: "
-                + (f"status={status}; " if status else "")
-                + (f"ci_gate={ci_gate}; " if ci_gate else "")
-                + (f"gate_basis={gate_basis}" if gate_basis else "").rstrip("; ")
-                + (f"; headline={headline}" if headline else "")
-            )
+    operator_report_line = str(delta.get("operator_report_line", "") or "")
+    if operator_report_line:
+        lines.append("Operator summary: " + operator_report_line)
     remediation_summary = delta.get("remediation_summary", {})
     if isinstance(remediation_summary, dict) and int(remediation_summary.get("hint_count", 0) or 0) > 0:
         surface_bits = [
