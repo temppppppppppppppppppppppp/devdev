@@ -71,6 +71,7 @@ ClickUp sync notes:
 | Run `WG-V1` shape validation on a draft or publishable `work_guard` | `python -X utf8 scripts/run_work_guard_v1.py --path <yaml>` |
 | Build execution roadmap, optionally rewriting queue-state ranks to dependency-respecting order first | `python scripts/build_execution_roadmap.py [--rewrite-roadmap-ranks]` |
 | Check whether the active temp queue is locally ready for GitHub issue-driven workflow | `python scripts/github_issue_readiness.py` |
+| Compare two archived benchmark records by record path or run_id | `python scripts/compare_benchmark_records.py <left> <right> [--format text|json]` |
 | Create a `narrative_ssot` project scaffold | `python -X utf8 scripts/create_narrative_project_scaffold.py --work-id <work_id>` |
 | Build Stage0 preprocess drafts from selected reference cards and optional title/profile/opening overrides | `python -X utf8 scripts/build_stage0_from_reference_selection.py --work-id <work_id>` |
 | Build a Phase0 planning seed from Stage0 authority | `python -X utf8 scripts/build_phase0_seed_from_stage0.py --work-id <work_id>` |
