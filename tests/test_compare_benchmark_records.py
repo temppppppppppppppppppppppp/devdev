@@ -454,6 +454,9 @@ def test_compare_benchmark_records_cli_supports_json_output(tmp_path):
         "ci_gate": "pass",
         "gate_basis": "clean",
     }
+    assert payload["delta"]["operator_report_line"] == (
+        "status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed"
+    )
 
 
 def test_compare_benchmark_records_surfaces_note_and_proof_digest_watchpoints(tmp_path):
@@ -568,6 +571,9 @@ def test_compare_benchmark_records_surfaces_note_and_proof_digest_watchpoints(tm
     assert diff["delta"]["operator_summary"]["status"] == "clean"
     assert diff["delta"]["operator_summary"]["ci_gate"] == "warn"
     assert diff["delta"]["operator_summary"]["gate_basis"] == "warn_watchpoints"
+    assert diff["delta"]["operator_report_line"] == (
+        "status=clean; ci_gate=warn; gate_basis=warn_watchpoints; headline=no remediation needed"
+    )
 
 
 def test_compare_benchmark_records_surfaces_stage4_runtime_watchpoints(tmp_path):
@@ -1087,6 +1093,10 @@ def test_compare_benchmark_records_surfaces_missing_target_hygiene_with_remediat
         "ci_gate": "warn",
         "gate_basis": "remediation_hints",
     }
+    assert diff["delta"]["operator_report_line"] == (
+        "status=needs_remediation; ci_gate=warn; gate_basis=remediation_hints; "
+        "headline=repair post_run_evidence_json first"
+    )
     assert "remediation_hints" in diff["delta"]["changed_sections"]
     assert {
         "id": "benchmark_companion_missing_target",

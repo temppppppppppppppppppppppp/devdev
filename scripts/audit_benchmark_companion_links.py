@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
 
 from scripts.compare_benchmark_records import (
     REMEDIATION_SURFACE_PRIORITY,
+    _build_operator_report_line,
     _build_operator_summary,
     _coerce_record_root,
     _display_relative_path,
@@ -140,11 +141,13 @@ def audit_benchmark_companion_links(
     )
     operator_summary = _build_operator_summary(remediation_summary)
     operator_summary = _with_audit_ci_gate(operator_summary, strict_failure_reasons=strict_failure_reasons)
+    operator_report_line = _build_operator_report_line(operator_summary)
     return {
         "benchmark_root": _display_relative_path(workspace, benchmark_dir),
         "summary": summary,
         "remediation_summary": remediation_summary,
         "operator_summary": operator_summary,
+        "operator_report_line": operator_report_line,
         "strict": {
             "status": "fail" if strict_failure_reasons else "pass",
             "failure_reasons": strict_failure_reasons,
@@ -175,20 +178,9 @@ def format_audit_text(payload: dict[str, Any]) -> str:
     strict_failures = strict.get("failure_reasons", []) if isinstance(strict, dict) else []
     if isinstance(strict_failures, list) and strict_failures:
         lines.append("Strict failures: " + ", ".join(str(item) for item in strict_failures))
-    operator_summary = payload.get("operator_summary", {})
-    if isinstance(operator_summary, dict):
-        status = str(operator_summary.get("status", "") or "")
-        ci_gate = str(operator_summary.get("ci_gate", "") or "")
-        gate_basis = str(operator_summary.get("gate_basis", "") or "")
-        headline = str(operator_summary.get("headline", "") or "")
-        if status or ci_gate or gate_basis:
-            lines.append(
-                "Operator summary: "
-                + (f"status={status}; " if status else "")
-                + (f"ci_gate={ci_gate}; " if ci_gate else "")
-                + (f"gate_basis={gate_basis}" if gate_basis else "").rstrip("; ")
-                + (f"; headline={headline}" if headline else "")
-            )
+    operator_report_line = str(payload.get("operator_report_line", "") or "")
+    if operator_report_line:
+        lines.append("Operator summary: " + operator_report_line)
     remediation_summary = payload.get("remediation_summary", {})
     if isinstance(remediation_summary, dict):
         hint_count = int(remediation_summary.get("hint_count", 0) or 0)

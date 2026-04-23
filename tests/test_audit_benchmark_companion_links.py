@@ -233,6 +233,9 @@ def test_audit_benchmark_companion_links_reports_stale_rows_and_link_states(tmp_
         "ci_gate": "pass",
         "gate_basis": "clean",
     }
+    assert audit["operator_report_line"] == (
+        "status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed"
+    )
     record_map = {item["run_id"]: item for item in audit["records"]}
     assert record_map[run_a]["companion_state"] == "linked"
     assert record_map[run_a]["linked_surfaces"] == ["supporting_context_md"]
@@ -297,6 +300,10 @@ def test_audit_benchmark_companion_links_reports_missing_targets(tmp_path):
         "ci_gate": "fail",
         "gate_basis": "strict_failure",
     }
+    assert audit["operator_report_line"] == (
+        "status=needs_remediation; ci_gate=fail; gate_basis=strict_failure; "
+        "headline=repair post_run_evidence_json first"
+    )
     record = audit["records"][0]
     assert record["companion_state"] == "missing_target"
     assert record["missing_surfaces"] == ["post_run_evidence_json", "supporting_context_md"]
@@ -386,6 +393,9 @@ def test_audit_benchmark_companion_links_cli_supports_json_output(tmp_path):
         "ci_gate": "pass",
         "gate_basis": "clean",
     }
+    assert payload["operator_report_line"] == (
+        "status=clean; ci_gate=pass; gate_basis=clean; headline=no remediation needed"
+    )
 
 
 def test_audit_benchmark_companion_links_cli_strict_fails_on_missing_targets(tmp_path):
