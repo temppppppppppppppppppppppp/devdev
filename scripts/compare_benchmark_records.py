@@ -46,6 +46,11 @@ STATUS_RANK = {
     "snapshot": 2,
     "completed": 3,
 }
+REMEDIATION_SURFACE_PRIORITY = (
+    "post_run_evidence_json",
+    "post_run_merge_audit_md",
+    "supporting_context_md",
+)
 
 
 def _watchpoint(
@@ -680,9 +685,16 @@ def _build_remediation_summary(remediation_hints: list[dict[str, str]]) -> dict[
         if not surface:
             continue
         count_by_surface[surface] = count_by_surface.get(surface, 0) + 1
+    surfaces_by_priority = [
+        surface
+        for surface in REMEDIATION_SURFACE_PRIORITY
+        if count_by_surface.get(surface, 0) > 0
+    ]
     return {
         "hint_count": len(remediation_hints),
         "count_by_surface": count_by_surface,
+        "highest_priority_surface": surfaces_by_priority[0] if surfaces_by_priority else "",
+        "surfaces_by_priority": surfaces_by_priority,
     }
 
 
@@ -1339,9 +1351,11 @@ def _render_text(diff: dict[str, Any], *, left_label: str, right_label: str) -> 
             f"{surface}={count}"
             for surface, count in sorted(remediation_summary.get("count_by_surface", {}).items())
         ]
+        highest_priority_surface = str(remediation_summary.get("highest_priority_surface", "") or "")
         lines.append(
             "Remediation summary: "
             f"hint_count={remediation_summary.get('hint_count', 0)}"
+            + (f"; highest_priority_surface={highest_priority_surface}" if highest_priority_surface else "")
             + (f"; count_by_surface={', '.join(surface_bits)}" if surface_bits else "")
         )
     lines.append(f"Improvement signals: {delta['improvement_signals']}")
