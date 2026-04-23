@@ -518,12 +518,19 @@ def _load_companion_links(record_root: Path, *, workspace_root: Path) -> dict[st
             "post_run_merge_audit_md": "",
             "post_run_merge_audit_md_resolved": "",
             "post_run_merge_audit_md_missing": False,
+            "supporting_context_md": "",
+            "supporting_context_md_resolved": "",
+            "supporting_context_md_missing": False,
         }
     payload = _load_json(links_path)
     evidence_raw = str(payload.get("post_run_evidence_json", "") or "") if isinstance(payload, dict) else ""
     merge_audit_raw = str(payload.get("post_run_merge_audit_md", "") or "") if isinstance(payload, dict) else ""
+    supporting_context_raw = str(payload.get("supporting_context_md", "") or "") if isinstance(payload, dict) else ""
     evidence_path = _resolve_existing_path(evidence_raw, workspace_root=workspace_root) if evidence_raw else None
     merge_audit_path = _resolve_existing_path(merge_audit_raw, workspace_root=workspace_root) if merge_audit_raw else None
+    supporting_context_path = (
+        _resolve_existing_path(supporting_context_raw, workspace_root=workspace_root) if supporting_context_raw else None
+    )
     return {
         "available": True,
         "source_path": _display_relative_path(workspace_root, links_path),
@@ -538,6 +545,13 @@ def _load_companion_links(record_root: Path, *, workspace_root: Path) -> dict[st
             _display_relative_path(workspace_root, merge_audit_path) if merge_audit_path is not None else ""
         ),
         "post_run_merge_audit_md_missing": bool(merge_audit_raw and merge_audit_path is None),
+        "supporting_context_md": supporting_context_raw,
+        "supporting_context_md_resolved": (
+            _display_relative_path(workspace_root, supporting_context_path)
+            if supporting_context_path is not None
+            else ""
+        ),
+        "supporting_context_md_missing": bool(supporting_context_raw and supporting_context_path is None),
     }
 
 
@@ -850,6 +864,32 @@ def _build_watchpoints(
                         message=(
                             f"{side} companion links include post_run_merge_audit_md "
                             f"{companion_links.get('post_run_merge_audit_md_resolved')}"
+                        ),
+                    )
+                )
+            if bool(companion_links.get("supporting_context_md_missing")):
+                watchpoints.append(
+                    _watchpoint(
+                        "supporting_context_link_missing",
+                        severity="warn",
+                        scope="benchmark_companion_links",
+                        side=side,
+                        message=(
+                            f"{side} companion links reference missing supporting_context_md "
+                            f"{companion_links.get('supporting_context_md')}"
+                        ),
+                    )
+                )
+            elif str(companion_links.get("supporting_context_md_resolved", "") or ""):
+                watchpoints.append(
+                    _watchpoint(
+                        "supporting_context_linked",
+                        severity="info",
+                        scope="benchmark_companion_links",
+                        side=side,
+                        message=(
+                            f"{side} companion links include supporting_context_md "
+                            f"{companion_links.get('supporting_context_md_resolved')}"
                         ),
                     )
                 )
