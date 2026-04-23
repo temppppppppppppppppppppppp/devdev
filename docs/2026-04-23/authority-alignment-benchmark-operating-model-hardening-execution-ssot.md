@@ -1,7 +1,7 @@
 # Authority Alignment Benchmark Operating Model Hardening Execution SSOT
 
 Date: 2026-04-23
-Status: execution-ready (3-pass audited; parked future wave; upstream proof and benchmark governor lane; read-only benchmark comparator seed landed on 2026-04-23)
+Status: execution-ready (3-pass audited; parked future wave; upstream proof and benchmark governor lane; read-only benchmark comparator plus first watchpoint seed landed on 2026-04-23)
 Canonical Path: `docs/2026-04-23/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
 Temp Mirror Path: `docs/temp/authority-alignment-benchmark-operating-model-hardening-execution-ssot.md`
 Commit State:
@@ -79,7 +79,8 @@ execution_meta:
 - The comparison layer is incomplete:
   - canary-summary diff exists
   - a first read-only benchmark-to-benchmark comparator now exists over `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv`
-  - explicit benchmark-hardening watchpoint normalization is still missing
+  - a first comparator-backed watchpoint vocabulary now exists for coarse status, tag, proof-digest, and Stage4 regression signals
+  - rerun and post-run merge-audit mapping is still missing
 - Current queue posture has now been refreshed to match that reality:
   - `authority-alignment-benchmark-operating-model-hardening` is the visible rank-1 parked proof lane
   - `stage234-session-memory-max-utilization` remains visible as the downstream rank-2 rollout lane
@@ -112,7 +113,8 @@ Excluded:
   - rerun proof and post-run merge audit are still document-backed
 - Current watchpoint posture is partial:
   - generic regression tiers exist
-  - issue-specific benchmark watchpoints do not yet
+  - the benchmark comparator now emits a small first watchpoint vocabulary
+  - rerun and post-run merge-audit linkage is still not normalized into comparator outputs
 
 ## 5. Pass 2. Semantic Classification
 
@@ -179,9 +181,11 @@ Excluded:
 2. Benchmark-record comparison surface
    - first seed landed as `scripts/compare_benchmark_records.py`
    - current surface compares `benchmark_index.csv`, `manifest.json`, and `stage_metrics.csv` in read-only mode
-   - next step is to normalize watchpoint vocabulary and rerun/post-run merge-audit mapping on top of this comparator
+   - current surface also emits a first watchpoint vocabulary for coarse status/tag shifts plus Stage4 attempt, pass-like, cost, and proof-digest attention
+   - next step is to normalize rerun/post-run merge-audit mapping on top of this comparator-backed watchpoint surface
 3. Rerun diff and watchpoint contract
-   - define explicit watchpoint vocabulary and normalize rerun/post-run merge audit linkage
+   - extend the first watchpoint vocabulary beyond coarse comparator-backed signals
+   - normalize rerun/post-run merge audit linkage
 4. Operator-facing benchmark hardening surface
    - make first-owner and regression readouts easier to inspect without elevating telemetry to truth
 5. Downstream proof gate alignment
