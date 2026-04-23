@@ -45,6 +45,8 @@ def _write_record(
     stage4_cost_usd: float,
     status: str,
     git_head: str,
+    notes: str = "",
+    proof_digest_status: str | None = None,
 ) -> Path:
     record_root = workspace / "benchmarks" / "golden-canary" / run_id
     record_root.mkdir(parents=True, exist_ok=True)
@@ -56,7 +58,7 @@ def _write_record(
         "lane": "stage4-supervised",
         "target_ep": 15,
         "status": status,
-        "notes": "",
+        "notes": notes,
         "runtime_summary": {
             "runtime_audit_tag": "stage4_complete" if status == "completed" else "stage3_complete",
             "latest_session_id": "20260423_120000",
@@ -109,6 +111,25 @@ def _write_record(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    if proof_digest_status is not None:
+        logs_dir = record_root / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        (logs_dir / "runtime_audit_summary.json").write_text(
+            json.dumps(
+                {
+                    "tag": manifest["runtime_summary"]["runtime_audit_tag"],
+                    "summary_role": "runtime_heartbeat_with_proof_digest",
+                    "latest_event_type": "stage4_complete" if status == "completed" else "stage3_complete",
+                    "proof_digest": {
+                        "status": proof_digest_status,
+                    },
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
     with (record_root / "stage_metrics.csv").open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(
             handle,
@@ -185,6 +206,14 @@ def test_build_benchmark_record_diff_reports_better_result(tmp_path):
     assert "stage4.pass_like_count" in diff["delta"]["improvement_signals"]
     assert "run_meta.status" in diff["delta"]["improvement_signals"]
     assert diff["delta"]["regression_signals"] == []
+    watchpoint_ids = [item["id"] for item in diff["delta"]["watchpoints"]]
+    assert watchpoint_ids == [
+        "status_upgraded",
+        "runtime_audit_tag_changed",
+        "stage4_attempt_count_improved",
+        "stage4_pass_like_improved",
+        "stage4_cost_improved",
+    ]
 
 
 def test_compare_benchmark_records_resolves_run_ids_from_index(tmp_path):
@@ -264,6 +293,11 @@ def test_compare_benchmark_records_resolves_run_ids_from_index(tmp_path):
     assert diff["right"]["record_root"] == right_root.relative_to(tmp_path).as_posix()
     assert diff["delta"]["verdict"] == "worse"
     assert "stage4.attempt_count" in diff["delta"]["regression_signals"]
+    watchpoint_ids = [item["id"] for item in diff["delta"]["watchpoints"]]
+    assert watchpoint_ids == [
+        "stage4_attempt_count_regressed",
+        "stage4_cost_regressed",
+    ]
 
 
 def test_compare_benchmark_records_cli_supports_json_output(tmp_path):
@@ -311,5 +345,57 @@ def test_compare_benchmark_records_cli_supports_json_output(tmp_path):
     payload = json.loads(result.stdout)
 
     assert payload["delta"]["verdict"] == "better"
-    assert payload["delta"]["changed_sections"] == ["run_meta", "stage_metrics"]
+    assert payload["delta"]["changed_sections"] == ["run_meta", "stage_metrics", "watchpoints"]
     assert payload["delta"]["stage_metrics"]["stage4"]["pass_like_count"] == 2
+
+
+def test_compare_benchmark_records_surfaces_note_and_proof_digest_watchpoints(tmp_path):
+    module = _load_compare_module()
+    left_root = _write_record(
+        tmp_path,
+        run_id="20260423_120000__stage4-supervised__target-ep15__aaaa1111",
+        stage4_attempts=12,
+        stage4_pass_like=4,
+        stage4_duration_ms=8000,
+        stage4_tokens=12000,
+        stage4_cost_usd=1.5,
+        status="operational_failure",
+        git_head="aaaa1111",
+        notes="terminated_by_monitor=true; termination_reason=stage4_round_limit_exceeded",
+        proof_digest_status="warn",
+    )
+    right_root = _write_record(
+        tmp_path,
+        run_id="20260423_130000__stage4-supervised__target-ep15__bbbb2222",
+        stage4_attempts=10,
+        stage4_pass_like=5,
+        stage4_duration_ms=7900,
+        stage4_tokens=11800,
+        stage4_cost_usd=1.45,
+        status="completed",
+        git_head="bbbb2222",
+        proof_digest_status="ok",
+    )
+
+    diff = module.compare_benchmark_records(
+        str(left_root),
+        str(right_root),
+        workspace_root=tmp_path,
+        benchmark_root="benchmarks",
+    )
+
+    watchpoints = diff["delta"]["watchpoints"]
+    assert {
+        "id": "proof_digest_attention",
+        "severity": "warn",
+        "scope": "runtime_audit_summary",
+        "side": "left",
+        "message": "left proof_digest.status is warn",
+    } in watchpoints
+    assert {
+        "id": "monitor_termination_recorded",
+        "severity": "warn",
+        "scope": "notes",
+        "side": "left",
+        "message": "left record notes indicate monitor termination (stage4_round_limit_exceeded)",
+    } in watchpoints

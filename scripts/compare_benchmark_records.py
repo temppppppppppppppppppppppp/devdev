@@ -47,6 +47,25 @@ STATUS_RANK = {
 }
 
 
+def _watchpoint(
+    watchpoint_id: str,
+    *,
+    severity: str,
+    scope: str,
+    message: str,
+    side: str = "",
+) -> dict[str, str]:
+    payload = {
+        "id": watchpoint_id,
+        "severity": severity,
+        "scope": scope,
+        "message": message,
+    }
+    if side:
+        payload["side"] = side
+    return payload
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Compare two archived benchmark records read-only.")
     parser.add_argument("left", help="baseline benchmark record path or run_id")
@@ -95,6 +114,7 @@ def load_benchmark_record(
     record_root, index_row = _resolve_record_root(str(identifier), workspace_root=workspace, benchmark_root=benchmark_dir)
     manifest = _load_json(record_root / "manifest.json")
     stage_metrics = _load_stage_metrics(record_root, manifest=manifest)
+    runtime_audit_summary = _load_runtime_audit_summary(record_root)
 
     runtime_summary = manifest.get("runtime_summary", {}) if isinstance(manifest, dict) else {}
     workspace_git = manifest.get("workspace_git", {}) if isinstance(manifest, dict) else {}
@@ -160,6 +180,13 @@ def load_benchmark_record(
             manifest.get("notes") if isinstance(manifest, dict) else None,
             index_row.get("notes"),
         ),
+        "runtime_audit_summary": runtime_audit_summary,
+        "note_markers": _extract_note_markers(
+            _pick_first_nonempty(
+                manifest.get("notes") if isinstance(manifest, dict) else None,
+                index_row.get("notes"),
+            )
+        ),
         "stage_metrics": stage_metrics,
     }
 
@@ -221,11 +248,17 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
         improvements=improvement_signals,
         regressions=regression_signals,
     )
+    watchpoints = _build_watchpoints(
+        left_record=left_record,
+        right_record=right_record,
+        stage_metrics_delta=stage_metrics_delta,
+    )
     changed_sections = [
         section
         for section, changed in (
             ("run_meta", bool(run_meta_delta)),
             ("stage_metrics", bool(stage_metrics_delta)),
+            ("watchpoints", bool(watchpoints)),
         )
         if changed
     ]
@@ -239,6 +272,7 @@ def build_benchmark_record_diff(left_record: dict[str, Any], right_record: dict[
             "improvement_signals": improvement_signals,
             "regression_signals": regression_signals,
             "verdict": verdict,
+            "watchpoints": watchpoints,
             "changed_sections": changed_sections,
         },
     }
@@ -321,6 +355,25 @@ def _load_stage_metrics(record_root: Path, *, manifest: dict[str, Any]) -> dict[
     return metrics
 
 
+def _load_runtime_audit_summary(record_root: Path) -> dict[str, Any]:
+    summary_path = record_root / "logs" / "runtime_audit_summary.json"
+    if not summary_path.exists():
+        return {
+            "available": False,
+            "summary_role": "",
+            "latest_event_type": "",
+            "proof_digest_status": "",
+        }
+    payload = _load_json(summary_path)
+    proof_digest = payload.get("proof_digest", {}) if isinstance(payload, dict) else {}
+    return {
+        "available": True,
+        "summary_role": str(payload.get("summary_role", "") or ""),
+        "latest_event_type": str(payload.get("latest_event_type", "") or ""),
+        "proof_digest_status": str(proof_digest.get("status", "") or "") if isinstance(proof_digest, dict) else "",
+    }
+
+
 def _normalize_stage_metric_row(stage: str, row: object) -> dict[str, Any]:
     payload = row if isinstance(row, dict) else {}
     normalized = {
@@ -332,6 +385,25 @@ def _normalize_stage_metric_row(stage: str, row: object) -> dict[str, Any]:
     for field in STAGE_FLOAT_FIELDS:
         normalized[field] = round(_coerce_float(payload.get(field)), 6)
     return normalized
+
+
+def _extract_note_markers(notes: object) -> dict[str, Any]:
+    text = str(notes or "").strip()
+    markers = {
+        "terminated_by_monitor": False,
+        "termination_reason": "",
+    }
+    if not text:
+        return markers
+    lowered = text.lower()
+    markers["terminated_by_monitor"] = "terminated_by_monitor=true" in lowered
+    termination_tag = "termination_reason="
+    if termination_tag in lowered:
+        start = lowered.index(termination_tag) + len(termination_tag)
+        end = lowered.find(";", start)
+        raw_reason = text[start:] if end == -1 else text[start:end]
+        markers["termination_reason"] = raw_reason.strip()
+    return markers
 
 
 def _classify_metric_signal(
@@ -378,6 +450,143 @@ def _build_verdict(
     if regressions:
         return "worse"
     return "unchanged"
+
+
+def _build_watchpoints(
+    *,
+    left_record: dict[str, Any],
+    right_record: dict[str, Any],
+    stage_metrics_delta: dict[str, dict[str, Any]],
+) -> list[dict[str, str]]:
+    watchpoints: list[dict[str, str]] = []
+
+    status_signal = _classify_status_signal(left_record.get("status"), right_record.get("status"))
+    if status_signal == "improvement":
+        watchpoints.append(
+            _watchpoint(
+                "status_upgraded",
+                severity="info",
+                scope="run",
+                message=f"status improved from {left_record.get('status')} to {right_record.get('status')}",
+            )
+        )
+    elif status_signal == "regression":
+        watchpoints.append(
+            _watchpoint(
+                "status_regressed",
+                severity="warn",
+                scope="run",
+                message=f"status regressed from {left_record.get('status')} to {right_record.get('status')}",
+            )
+        )
+
+    if left_record.get("runtime_audit_tag") != right_record.get("runtime_audit_tag"):
+        watchpoints.append(
+            _watchpoint(
+                "runtime_audit_tag_changed",
+                severity="info",
+                scope="run",
+                message=(
+                    "runtime_audit_tag changed from "
+                    f"{left_record.get('runtime_audit_tag')} to {right_record.get('runtime_audit_tag')}"
+                ),
+            )
+        )
+
+    for side, record in (("left", left_record), ("right", right_record)):
+        runtime_audit_summary = record.get("runtime_audit_summary", {})
+        if isinstance(runtime_audit_summary, dict):
+            proof_digest_status = str(runtime_audit_summary.get("proof_digest_status", "") or "")
+            if proof_digest_status and proof_digest_status != "ok":
+                watchpoints.append(
+                    _watchpoint(
+                        "proof_digest_attention",
+                        severity="warn",
+                        scope="runtime_audit_summary",
+                        side=side,
+                        message=f"{side} proof_digest.status is {proof_digest_status}",
+                    )
+                )
+        note_markers = record.get("note_markers", {})
+        if isinstance(note_markers, dict):
+            termination_reason = str(note_markers.get("termination_reason", "") or "")
+            terminated_by_monitor = bool(note_markers.get("terminated_by_monitor"))
+            if terminated_by_monitor or termination_reason:
+                reason_tail = f" ({termination_reason})" if termination_reason else ""
+                watchpoints.append(
+                    _watchpoint(
+                        "monitor_termination_recorded",
+                        severity="warn",
+                        scope="notes",
+                        side=side,
+                        message=f"{side} record notes indicate monitor termination{reason_tail}",
+                    )
+                )
+
+    stage4_delta = stage_metrics_delta.get("stage4", {})
+    if stage4_delta:
+        attempt_delta = stage4_delta.get("attempt_count", 0)
+        if attempt_delta < 0:
+            watchpoints.append(
+                _watchpoint(
+                    "stage4_attempt_count_improved",
+                    severity="info",
+                    scope="stage4",
+                    message=f"stage4 attempt_count improved by {-attempt_delta}",
+                )
+            )
+        elif attempt_delta > 0:
+            watchpoints.append(
+                _watchpoint(
+                    "stage4_attempt_count_regressed",
+                    severity="warn",
+                    scope="stage4",
+                    message=f"stage4 attempt_count increased by {attempt_delta}",
+                )
+            )
+
+        pass_like_delta = stage4_delta.get("pass_like_count", 0)
+        if pass_like_delta > 0:
+            watchpoints.append(
+                _watchpoint(
+                    "stage4_pass_like_improved",
+                    severity="info",
+                    scope="stage4",
+                    message=f"stage4 pass_like_count improved by {pass_like_delta}",
+                )
+            )
+        elif pass_like_delta < 0:
+            watchpoints.append(
+                _watchpoint(
+                    "stage4_pass_like_regressed",
+                    severity="warn",
+                    scope="stage4",
+                    message=f"stage4 pass_like_count regressed by {-pass_like_delta}",
+                )
+            )
+
+        cost_delta = stage4_delta.get("total_cost_usd", 0.0)
+        if isinstance(cost_delta, (int, float)) and abs(float(cost_delta)) >= 1e-9:
+            if float(cost_delta) < 0:
+                watchpoints.append(
+                    _watchpoint(
+                        "stage4_cost_improved",
+                        severity="info",
+                        scope="stage4",
+                        message=f"stage4 total_cost_usd decreased by {abs(float(cost_delta)):.6f}",
+                    )
+                )
+            else:
+                watchpoints.append(
+                    _watchpoint(
+                        "stage4_cost_regressed",
+                        severity="warn",
+                        scope="stage4",
+                        message=f"stage4 total_cost_usd increased by {float(cost_delta):.6f}",
+                    )
+                )
+
+    return watchpoints
 
 
 def _stage_has_signal(stage: dict[str, Any]) -> bool:
@@ -474,6 +683,12 @@ def _render_text(diff: dict[str, Any], *, left_label: str, right_label: str) -> 
             continue
         field_bits = [f"{field}_delta={value}" for field, value in stage_delta.items()]
         lines.append(f"{stage}: " + "; ".join(field_bits))
+    if delta["watchpoints"]:
+        watchpoint_bits = [
+            f"{item['id']}[{item.get('side', 'shared')}]"
+            for item in delta["watchpoints"]
+        ]
+        lines.append("Watchpoints: " + ", ".join(watchpoint_bits))
     lines.append(f"Improvement signals: {delta['improvement_signals']}")
     lines.append(f"Regression signals: {delta['regression_signals']}")
     return "\n".join(lines)
