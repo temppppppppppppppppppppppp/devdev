@@ -233,3 +233,38 @@ def test_validate_dependency_graph_rejects_non_list_depends_on():
 
     with pytest.raises(ValueError, match="depends_on must be a list"):
         validate_dependency_graph(items)
+
+
+def test_validate_dependency_graph_allows_rank_aligned_dependencies():
+    items = [
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": 1},
+        {"topic": "beta", "depends_on": ["alpha"], "roadmap_rank": 2},
+    ]
+
+    validate_dependency_graph(items)
+
+
+def test_validate_dependency_graph_rejects_rank_inversion():
+    items = [
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": 2},
+        {"topic": "beta", "depends_on": ["alpha"], "roadmap_rank": 1},
+    ]
+
+    with pytest.raises(ValueError, match="rank inversion"):
+        validate_dependency_graph(items)
+
+
+@pytest.mark.parametrize(
+    ("alpha_rank", "beta_rank"),
+    [
+        (None, 2),
+        (1, None),
+    ],
+)
+def test_validate_dependency_graph_allows_missing_rank_on_either_side(alpha_rank, beta_rank):
+    items = [
+        {"topic": "alpha", "depends_on": [], "roadmap_rank": alpha_rank},
+        {"topic": "beta", "depends_on": ["alpha"], "roadmap_rank": beta_rank},
+    ]
+
+    validate_dependency_graph(items)
